@@ -163,12 +163,12 @@ class ProtScreenMicrographs(XmippProtocol):
     
     def regenerateSummary(self,summaryFile):
         import time
-        summaryTime=time.ctime(os.path.getmtime(summaryFile))
+        summaryTime=os.path.getmtime(summaryFile)
         md=xmipp.MetaData(summaryFile)
         regenerate=False
         for objId in md:
             fnCTF=md.getValue(xmipp.MDL_CTF_MODEL,objId)
-            ctfTime=time.ctime(os.path.getmtime(fnCTF))
+            ctfTime=os.path.getmtime(fnCTF)
             if ctfTime>summaryTime:
                 regenerate=True
                 break

@@ -116,7 +116,7 @@ DO_NMA=0
 
 VSHALIGNMENT=0.0
 SHALIGNMENT_FOLDER="sh_alignment"
-SHALIGNMENT_TAR="${SH_ALIGNMENT_FOLDER}.tgz"
+SHALIGNMENT_TAR="${SHALIGNMENT_FOLDER}.tgz"
 DO_SHALIGNMENT=0
 
 #External libraries arrays. For adding a new external library, define his decompress folder and tar names, put them in EXTERNAL_LIBRARIES and EXTERNAL_LIBRARIES_FILES arrays, and put 1 whther it has to be installed by default, 0 otherwise in EXTERNAL_LIBRARIES_DEFAULT in the appropiate positions. You will also need to stablish a DO* variable in the *DO array, to let the script work
@@ -225,13 +225,13 @@ toc()
 # Print a green msg using terminal escaped color sequence
 echoGreen()
 {
-    printf "$GREEN %b $ENDC\n" "$1"
+    printf "$GREEN ${1} $ENDC\n"
 }
 
 # Pinrt a red msg using terminal escaped color sequence
 echoRed()
 {
-    printf "$RED %b $ENDC\n" "$1"
+    printf "$RED ${1} $ENDC\n"
 }
 
 # Check last return status by checking GLOB_STATE and GLOB_COMMAND vars. It can receive a parameter, If 1 is given means the program has to exit if non-zero return state is detected
@@ -354,33 +354,33 @@ doIt()
 
 welcomeMessage()
 {
-  echo -e "${BLACK}0000000000000000000000000000000000000000000000000001"              
-  echo -e "${BLACK}0000000000000000P!!00000!!!!!00000!!0000000000000001"
-  echo -e "${BLACK}000000000000P'  ${RED}.:==.           ,=;:.  ${BLACK}\"400000000001"
-  echo -e "${BLACK}0000000000!  ${RED}.;=::.::,         .=:.-:=,.  ${BLACK}!000000001"
-  echo -e "${BLACK}0000000P' ${RED}.=:-......::=      ::;.......-:=. ${BLACK}\"0000001"
-  echo -e "${BLACK}0000000,${RED}.==-.........::;.   .;::.-.......-=:${BLACK}.a#00001"
-  echo -e "${BLACK}0000000'${RED}.=;......--:.:.:=:.==::.:--:.:...,=- ${BLACK}!000001"
-  echo -e "${BLACK}000000    ${RED}-=...:.:.:-:::::=;::.::.:.:..-:=-    ${BLACK}00001"
-  echo -e "${BLACK}0000P       ${RED}==:.:-::. ${YELLOW}.aa.${RED} :::::::::.::=:      ${BLACK}\"4001"
-  echo -e "${BLACK}00001        ${RED}:;:::::..${YELLOW}:#0:${RED} =::::::::::::        ${BLACK}j#01"
-  echo -e "${BLACK}0001   ${YELLOW}aa _aas  _aa_  .aa, _a__aa_.  .a__aas,    ${BLACK}j#1"
-  echo -e "${BLACK}"'0001   '"${YELLOW}"'4WU*!4#gW9!##i .##; 3##P!9#Ai .##U!!Q#_   '"${BLACK}"'j#1'
-  echo -e "${BLACK}"'001    '"${YELLOW}"'3O.  :xO.  ]Oi .XX: ]O( .  X2 .XC;  :xX.   '"${BLACK}"'01'
-  echo -e "${BLACK}"'001    '"${YELLOW}"'dU.  :jU.  %Ui .WW: ]UL,..aXf .Ums  jd*    '"${BLACK}"'01'
-  echo -e "${BLACK}"'0001   '"${YELLOW}"'4W.  :dW. .%W1 :WW: %WVXNWO~  .#U*#WV!    _'"${BLACK}"'01'
-  echo -e "${BLACK}"'0001        '"${RED}"'.............. '"${YELLOW}"'%#1  '"${RED}"'.... '"${YELLOW}"'.#A)        '"${BLACK}"'j01'
-  echo -e "${BLACK}"'00001      '"${RED}"':=::-:::::;;;;: '"${YELLOW}"'301 '"${RED}"'::::: '"${YELLOW}"'.0A)       '"${BLACK}"'j#01'
-  echo -e "${BLACK}0000L    ${RED}.;::.--::::::::;: ,,..:::::... .::.   ${BLACK}_d001"
-  echo -e "${BLACK}000000  ${RED}:;:...-.-.:.:::=;   =;:::---.:....::,  ${BLACK}00001"
-  echo -e "${BLACK}000000!${RED}:::.....-.:.::::-     :=:-.:.-......:= ${BLACK}!00001"
-  echo -e "${BLACK}000000a  ${RED}=;.........:;        .:;........,;;  ${BLACK}a00001"
-  echo -e "${BLACK}"'0000000La '"${RED}"'--:_....:=-           :=:...:_:--'"${BLACK}"'_a#000001'
-  echo -e "${BLACK}"'0000000000a  '"${RED}"'-=;,:=              -;::=:-  '"${BLACK}"'a000000001'
-  echo -e "${BLACK}"'00000000000Laaa '"${RED}"'-\aa              ar- '"${BLACK}"'aaa00000000001'
-  echo -e "${BLACK}00000000000000#00000000aaaaaad000000#00#0#0000000001"
+  printf "${BLACK}0000000000000000000000000000000000000000000000000001\n"
+  printf "${BLACK}0000000000000000P!!00000!!!!!00000!!0000000000000001\n"
+  printf "${BLACK}000000000000P'  ${RED}.:==.           ,=;:.  ${BLACK}\"400000000001\n"
+  printf "${BLACK}0000000000!  ${RED}.;=::.::,         .=:.-:=,.  ${BLACK}!000000001\n"
+  printf "${BLACK}0000000P' ${RED}.=:-......::=      ::;.......-:=. ${BLACK}\"0000001\n"
+  printf "${BLACK}0000000,${RED}.==-.........::;.   .;::.-.......-=:${BLACK}.a#00001\n"
+  printf "${BLACK}0000000'${RED}.=;......--:.:.:=:.==::.:--:.:...,=- ${BLACK}!000001\n"
+  printf "${BLACK}000000    ${RED}-=...:.:.:-:::::=;::.::.:.:..-:=-    ${BLACK}00001\n"
+  printf "${BLACK}0000P       ${RED}==:.:-::. ${YELLOW}.aa.${RED} :::::::::.::=:      ${BLACK}\"4001\n"
+  printf "${BLACK}00001        ${RED}:;:::::..${YELLOW}:#0:${RED} =::::::::::::        ${BLACK}j#01\n"
+  printf "${BLACK}0001   ${YELLOW}aa _aas  _aa_  .aa, _a__aa_.  .a__aas,    ${BLACK}j#1\n"
+  printf "${BLACK}"'0001   '"${YELLOW}"'4WU*!4#gW9!##i .##; 3##P!9#Ai .##U!!Q#_   '"${BLACK}j#1\n"
+  printf "${BLACK}"'001    '"${YELLOW}"'3O.  :xO.  ]Oi .XX: ]O( .  X2 .XC;  :xX.   '"${BLACK}01\n"
+  printf "${BLACK}"'001    '"${YELLOW}"'dU.  :jU.  ]Ui .WW: ]UL,..aXf .Ums  jd*    '"${BLACK}01\n"
+  printf "${BLACK}"'0001   '"${YELLOW}"'4W.  :dW. .]W1 :WW: ]WVXNWO~  .#U*#WV!     '"${BLACK}01\n"
+  printf "${BLACK}"'0001        '"${RED}"'.............. '"${YELLOW}"'[#1  '"${RED}"'.... '"${YELLOW}"'.#A)        '"${BLACK}j01\n"
+  printf "${BLACK}"'00001      '"${RED}"':=::-:::::;;;;: '"${YELLOW}"'301 '"${RED}"'::::: '"${YELLOW}"'.0A)       '"${BLACK}j#01\n"
+  printf "${BLACK}0000L    ${RED}.;::.--::::::::;: ,,..:::::... .::.   ${BLACK}_d001\n"
+  printf "${BLACK}000000  ${RED}:;:...-.-.:.:::=;   =;:::---.:....::,  ${BLACK}00001\n"
+  printf "${BLACK}000000!${RED}:::.....-.:.::::-     :=:-.:.-......:= ${BLACK}!00001\n"
+  printf "${BLACK}000000a  ${RED}=;.........:;        .:;........,;;  ${BLACK}a00001\n"
+  printf "${BLACK}"'0000000La '"${RED}"'--:_....:=-           :=:...:_:--'"${BLACK}_a#000001\n"
+  printf "${BLACK}"'0000000000a  '"${RED}"'-=;,:=              -;::=:-  '"${BLACK}a000000001\n"
+  printf "${BLACK}"'00000000000Laaa '"${RED}"'-\aa                - '"${BLACK}aaa00000000001\n"
+  printf "${BLACK}00000000000000#00000000aaaaaad000000#00#0#0000000001"
   echo ""
-  echo -e "${WHITE}Welcome to $TITLE ${ENDC}"
+  printf "${WHITE}Welcome to $TITLE ${ENDC}\n"
   echo ""
   return 0;
 }
@@ -388,116 +388,112 @@ welcomeMessage()
 #function that prints the script usage help
 helpMessage()
 {
-  echo -e ""
-  echo -e "###################################"
-  echo -e '# XMIPP INSTALLATION SCRIPT USAGE #'
-  echo -e "###################################"
-  echo -e "${RED}NAME"
-  echo -e "${WHITE}  install.sh - XMIPP installation script. "
-  echo -e ""
-  echo -e "${RED}SYNOPSIS"
-  echo -e "${WHITE}  ./install.sh ${BLUE}[OPERATIONS] [OPTIONS]${WHITE}"
-  echo -e ""
-  echo -e "${RED}DESCRIPTION"
-  echo -e "${WHITE}  Script that automates the XMIPP compilation process. When this script is executed, the compilation sequence starts, depending on the selected options. If no option is given, the script follows the sequence:"
-  echo -e "1- untar the external libraries, xmipp_python and xmipp_python modules."
-  echo -e "2- Configure and compile one by one every external library"
-  echo -e "3- Configure and compile xmipp_python"
-  echo -e "4- Compile and install python modules in xmipp_python"
-  echo -e "5- Launch SConscript to compile Xmipp"
-  echo -e "6- Run the unitary tests"
-  echo -e ""
-  echo -e "No option is mandatory. The default behaviour (without any given option) Following options are accepted:"
-  echo -e ""
-  echo -e ""
-  echo -e "GENERAL OPTIONS:"
-  echo -e ""
-  echo -e "${BLUE}--disable-all${WHITE},${BLUE} -d${WHITE}"
-  echo -e "    Disable every option in order to let the user to enable just some of them."
-  echo -e "${BLUE}--num-cpus=${YELLOW}<NUMCPU>${WHITE},${BLUE} -j ${YELLOW}<NUMCPU>${WHITE}"
-  echo -e "    Provides a number of CPUs for the compilation process. Default value is 2."
-  echo -e "${BLUE}--configure-args=${YELLOW}<ARGS>${WHITE}"
-  echo -e "    Store the arguments the user wants to provide to configure process before compilation start."
-  echo -e "${BLUE}--compile-args=${YELLOW}<ARGS>${WHITE}"
-  echo -e "    Store the arguments the user wants to provide to compilation process."
-  echo -e "${BLUE}--unattended=${YELLOW}[true|false]${WHITE}"
-  echo -e "    Tells the script to asume default where no option is given on every question and don't show any GUI. This is intended to be used when no human will be watching the screen (i.e. other scripts)."
-  echo -e "${BLUE}--help,${BLUE} -h${WHITE}"
-  echo -e "    Shows this help message"
-  echo -e ""
-  echo -e ""
-  echo -e "OPERATIONS:"
-  echo -e ""
-  echo -e "${BLUE}--untar${WHITE},${BLUE} -u${WHITE}"
-  echo -e "    Untar the list of libraries provided to the script (or default libraries array if not provided)."
-  echo -e "${BLUE}--configure${WHITE},${BLUE} -f${WHITE}"
-  echo -e "    Configure the list of libraries provided to the script (or default libraries array if not provided)."
-  echo -e "${BLUE}--compile${WHITE},${BLUE} -c${WHITE}"
-  echo -e "    Compile the list of libraries provided to the script (or default libraries array if not provided)."
-  echo -e ""
-  echo -e ""
-  echo -e "EXTERNAL LIBRARIES OPTIONS:"
-  echo -e ""
-  echo -e "${BLUE}--alglib=${YELLOW}[true|false]${WHITE}"
-  echo -e "    Execute or not selected operation over alglib library. When just --alglib is given, true is asumed."
-  echo -e "${BLUE}--bilib=${YELLOW}[true|false]${WHITE}"
-  echo -e "    Execute or not selected operation over bilib library. When just --bilib is given, true is asumed."
-  echo -e "${BLUE}--condor=${YELLOW}[true|false]${WHITE}"
-  echo -e "    Execute or not selected operation over condor library. When just --condor is given, true is asumed."
-  echo -e "${BLUE}--fftw=${YELLOW}[true|false]${WHITE}"
-  echo -e "    Execute or not selected operation over fftw library. When just --fftw is given, true is asumed."
-  echo -e "${BLUE}--gtest=${YELLOW}[true|false]${WHITE}"
-  echo -e "    Execute or not selected operation over gtest library. When just --gtest is given, true is asumed."
-  echo -e "${BLUE}--hdf5=${YELLOW}[true|false]${WHITE}"
-  echo -e "    Execute or not selected operation over hdf5 library. When just --hdf5 is given, true is asumed."
-  echo -e "${BLUE}--imagej=${YELLOW}[true|false]${WHITE}"
-  echo -e "    Execute or not selected operation over imagej library. When just --hdf5 is given, true is asumed."
-  echo -e "${BLUE}--jpeg=${YELLOW}[true|false]${WHITE}"
-  echo -e "    Execute or not selected operation over jpeg library. When just --jpeg is given, true is asumed."
-  echo -e "${BLUE}--scons=${YELLOW}[true|false]${WHITE}"
-  echo -e "    Execute or not selected operation over scons library. When just --scons is given, true is asumed."
-  echo -e "${BLUE}--sqlite=${YELLOW}[true|false]${WHITE}"
-  echo -e "    Execute or not selected operation over sqlite library. When just --sqlite is given, true is asumed."
-  echo -e "${BLUE}--tiff=${YELLOW}[true|false]${WHITE}"
-  echo -e "    Execute or not selected operation over tiff library. When just --tiff is given, true is asumed."
-  echo -e "${BLUE}--nma=${YELLOW}[true|false]${WHITE}"
-  echo -e "    Execute or not selected operation over nma library. When just --nma is given, true is asumed."
-  echo -e "${BLUE}--sh-alignment=${YELLOW}[true|false]${WHITE}"
-  echo -e "    Execute or not selected operation over nma library. When just --sh-alignment is given, true is asumed."
-  echo -e "${BLUE}--cltomo=${YELLOW}[true|false]${WHITE}"
-  echo -e "    Execute or not selected operation over cltomo library. When just --cltomo is given, true is asumed."
-  echo -e ""
-  echo -e ""
-  echo -e "PYTHON-RELATED OPTIONS:"
-  echo -e ""
-  echo -e "${BLUE}--python=${YELLOW}[true|false]${WHITE}"
-  echo -e "    Execute selected operation over xmipp_python. Just --python is equal to --python=true."
-  echo -e "${BLUE}--matplotlib=${YELLOW}[true|false]${WHITE}"
-  echo -e "    Execute selected operation over matplotlib module. --matplotlib is equivalent to --matplotlib=true."
-  echo -e "${BLUE}--mpi4py=${YELLOW}[true|false]${WHITE}"
-  echo -e "    Execute selected operation over mpi4py module. --mpi4py is equivalent to --mpi4py=true."
-  echo -e "${BLUE}--numpy=${YELLOW}[true|false]${WHITE}"
-  echo -e "    Execute selected operation over numpy module. --numpy is equivalent to --numpy=true."
-  echo -e "${BLUE}--scipy=${YELLOW}[true|false]${WHITE}"
-  echo -e "    Execute selected operation over scipy module. --scipy is equivalent to --scipy=true."
-  echo -e "${BLUE}--psutil=${YELLOW}[true|false]${WHITE}"
-  echo -e "    Execute selected operation over psutil module. --scipy is equivalent to --psutil=true."
-  echo -e "${BLUE}--tcl-tk=${YELLOW}[true|false]${WHITE}"
-  echo -e "    Execute selected operation over tcl and tk libraries. --tcl-tk is equivalent to --tcl-tk=true."
-  echo -e "${BLUE}--tcl=${YELLOW}[true|false]${WHITE}"
-  echo -e "    Execute selected operation over tcl library. If --tcl is given, --tcl=true will be understood."
-  echo -e "${BLUE}--tk=${YELLOW}[true|false]${WHITE}"
-  echo -e "    Execute selected operation over tk library. Where --tk means --tk=true."
-  echo -e "${BLUE}--pymodules=${YELLOW}[true|false]${WHITE}"
-  echo -e "    Execute or not selected operation over every python modules. When just --pymodules is given, true is asumed."
-  echo -e ""
-  echo -e ""
-  echo -e "XMIPP-RELATED OPTIONS:"
-  echo -e ""
-  echo -e "${BLUE}--gui=${YELLOW}[true|false]${WHITE}"
-  echo -e "    When launching scons compilation, select true whether you want the Xmipp compilation GUI or false otherwise. Where --gui means --gui=true."
-  echo -e ""
-  echo -e ""
+  printf "\n"
+  printf "###################################\n"
+  printf '# XMIPP INSTALLATION SCRIPT USAGE #\n'
+  printf "###################################\n"
+  printf "${RED}NAME\n"
+  printf "${WHITE}  install.sh - XMIPP installation script. \n"
+  printf "\n"
+  printf "${RED}SYNOPSIS\n"
+  printf "${WHITE}  ./install.sh ${BLUE}[OPERATIONS] [OPTIONS]${WHITE}\n"
+  printf "\n"
+  printf "${RED}DESCRIPTION\n"
+  printf "${WHITE}  Script that automates the XMIPP compilation process. When this script is executed, the compilation sequence starts, depending on the selected options. If no option is given, the script follows the sequence:\n"
+  printf "1- untar the external libraries, xmipp_python and xmipp_python modules.\n"
+  printf "2- Configure and compile one by one every external library\n"
+  printf "3- Configure and compile xmipp_python\n"
+  printf "4- Compile and install python modules in xmipp_python\n"
+  printf "5- Launch SConscript to compile Xmipp\n"
+  printf "6- Run the unitary tests\n"
+  printf "\n"
+  printf "No option is mandatory. The default behaviour (without any given option) is untar, configure and compile a subset of the external libraries, python and launch the Xmipp compilation with GUI. Following options are accepted:\n"
+  printf "\n"
+  printf "\n"
+  printf "GENERAL OPTIONS:\n"
+  printf "\n"
+  printf "${BLUE}--disable-all${WHITE},${BLUE} -d${WHITE}\n"
+  printf "    Disable every option in order to let the user to enable just some of them.\n"
+  printf "${BLUE}--num-cpus=${YELLOW}<NUMCPU>${WHITE},${BLUE} -j ${YELLOW}<NUMCPU>${WHITE}\n"
+  printf "    Provides a number of CPUs for the compilation process. Default value is 2.\n"
+  printf "${BLUE}--configure-args=${YELLOW}<ARGS>${WHITE}\n"
+  printf "    Store the arguments the user wants to provide to configure process before compilation start.\n"
+  printf "${BLUE}--compile-args=${YELLOW}<ARGS>${WHITE}\n"
+  printf "    Store the arguments the user wants to provide to compilation process.\n"
+  printf "${BLUE}--unattended=${YELLOW}[true|false]${WHITE}\n"
+  printf "    Tells the script to asume default where no option is given on every question and don't show any GUI. This is intended to be used when no human will be watching the screen (i.e. other scripts).\n"
+  printf "${BLUE}--help,${BLUE} -h${WHITE}\n"
+  printf "    Shows this help message\n"
+  printf "\n"
+  printf "\n"
+  printf "OPERATIONS:\n"
+  printf "\n"
+  printf "${BLUE}--untar${WHITE},${BLUE} -u${WHITE}\n"
+  printf "    Untar the list of libraries provided to the script (or default libraries array if not provided).\n"
+  printf "${BLUE}--configure${WHITE},${BLUE} -f${WHITE}\n"
+  printf "    Configure the list of libraries provided to the script (or default libraries array if not provided).\n"
+  printf "${BLUE}--compile${WHITE},${BLUE} -c${WHITE}\n"
+  printf "    Compile the list of libraries provided to the script (or default libraries array if not provided).\n"
+  printf "\n"
+  printf "\n"
+  printf "EXTERNAL LIBRARIES OPTIONS:\n"
+  printf "\n"
+  printf "${BLUE}--alglib=${YELLOW}[true|false]${WHITE}\n"
+  printf "    Execute or not selected operation over alglib library. When just --alglib is given, true is asumed.\n"
+  printf "${BLUE}--bilib=${YELLOW}[true|false]${WHITE}\n"
+  printf "    Execute or not selected operation over bilib library. When just --bilib is given, true is asumed.\n"
+  printf "${BLUE}--condor=${YELLOW}[true|false]${WHITE}\n"
+  printf "    Execute or not selected operation over condor library. When just --condor is given, true is asumed.\n"
+  printf "${BLUE}--fftw=${YELLOW}[true|false]${WHITE}\n"
+  printf "    Execute or not selected operation over fftw library. When just --fftw is given, true is asumed.\n"
+  printf "${BLUE}--gtest=${YELLOW}[true|false]${WHITE}\n"
+  printf "    Execute or not selected operation over gtest library. When just --gtest is given, true is asumed.\n"
+  printf "${BLUE}--hdf5=${YELLOW}[true|false]${WHITE}\n"
+  printf "    Execute or not selected operation over hdf5 library. When just --hdf5 is given, true is asumed.\n"
+  printf "${BLUE}--imagej=${YELLOW}[true|false]${WHITE}\n"
+  printf "    Execute or not selected operation over imagej library. When just --hdf5 is given, true is asumed.\n"
+  printf "${BLUE}--jpeg=${YELLOW}[true|false]${WHITE}\n"
+  printf "    Execute or not selected operation over jpeg library. When just --jpeg is given, true is asumed.\n"
+  printf "${BLUE}--scons=${YELLOW}[true|false]${WHITE}\n"
+  printf "    Execute or not selected operation over scons library. When just --scons is given, true is asumed.\n"
+  printf "${BLUE}--sqlite=${YELLOW}[true|false]${WHITE}\n"
+  printf "    Execute or not selected operation over sqlite library. When just --sqlite is given, true is asumed.\n"
+  printf "${BLUE}--tiff=${YELLOW}[true|false]${WHITE}\n"
+  printf "    Execute or not selected operation over tiff library. When just --tiff is given, true is asumed.\n"
+  printf "${BLUE}--nma=${YELLOW}[true|false]${WHITE}\n"
+  printf "    Execute or not selected operation over nma library. When just --nma is given, true is asumed.\n"
+  printf "${BLUE}--cltomo=${YELLOW}[true|false]${WHITE}\n"
+  printf "    Execute or not selected operation over cltomo library. When just --cltomo is given, true is asumed.\n"
+  printf "\n"
+  printf "\n"
+  printf "PYTHON-RELATED OPTIONS:\n"
+  printf "\n"
+  printf "${BLUE}--python=${YELLOW}[true|false]${WHITE}\n"
+  printf "    Execute selected operation over xmipp_python. Just --python is equal to --python=true.\n"
+  printf "${BLUE}--matplotlib=${YELLOW}[true|false]${WHITE}\n"
+  printf "    Execute selected operation over matplotlib module. --matplotlib is equivalent to --matplotlib=true.\n"
+  printf "${BLUE}--mpi4py=${YELLOW}[true|false]${WHITE}\n"
+  printf "    Execute selected operation over mpi4py module. --mpi4py is equivalent to --mpi4py=true.\n"
+  printf "${BLUE}--numpy=${YELLOW}[true|false]${WHITE}\n"
+  printf "    Execute selected operation over numpy module. --numpy is equivalent to --numpy=true.\n"
+  printf "${BLUE}--psutil=${YELLOW}[true|false]${WHITE}\n"
+  printf "    Execute selected operation over psutil module. --scipy is equivalent to --psutil=true.\n"
+  printf "${BLUE}--tcl-tk=${YELLOW}[true|false]${WHITE}\n"
+  printf "    Execute selected operation over tcl and tk libraries. --tcl-tk is equivalent to --tcl-tk=true.\n"
+  printf "${BLUE}--tcl=${YELLOW}[true|false]${WHITE}\n"
+  printf "    Execute selected operation over tcl library. If --tcl is given, --tcl=true will be understood.\n"
+  printf "${BLUE}--tk=${YELLOW}[true|false]${WHITE}\n"
+  printf "    Execute selected operation over tk library. Where --tk means --tk=true.\n"
+  printf "${BLUE}--pymodules=${YELLOW}[true|false]${WHITE}\n"
+  printf "    Execute or not selected operation over every python modules. When just --pymodules is given, true is asumed.\n"
+  printf "\n"
+  printf "\n"
+  printf "XMIPP-RELATED OPTIONS:\n"
+  printf "\n"
+  printf "${BLUE}--gui=${YELLOW}[true|false]${WHITE}\n"
+  printf "    When launching scons compilation, select true whether you want the Xmipp compilation GUI or false otherwise. Where --gui means --gui=true.\n"
+  printf "\n"
+  printf "\n"
   return 0;
 }
 
@@ -538,9 +534,9 @@ takeArguments()
         ;;
       --unattended=*) #[true|false]
         WITH_UNATTENDED=$(echo "$1"|cut -d '=' -f2)
-        if [ "${WITH_UNATTENDED}" == "true" ]; then
+        if [ "${WITH_UNATTENDED}" = "true" ]; then
           DO_UNATTENDED=1
-        elif [ "${WITH_UNATTENDED}" == "false" ];then 
+        elif [ "${WITH_UNATTENDED}" = "false" ];then 
           DO_UNATTENDED=0
         else
           echoRed "Parameter --unattended only accept true or false values. Ignored and assuming default value."
@@ -564,9 +560,9 @@ takeArguments()
         ;;
       --alglib=*)
         WITH_ALGLIB=$(echo "$1"|cut -d '=' -f2)
-        if [ "${WITH_ALGLIB}" == "true" ]; then
+        if [ "${WITH_ALGLIB}" = "true" ]; then
           doIt library ${ALGLIB_TAR} 1
-        elif [ "${WITH_ALGLIB}" == "false" ]; then
+        elif [ "${WITH_ALGLIB}" = "false" ]; then
           doIt library ${ALGLIB_TAR} 0
         else
           echoRed "Parameter --alglib only accept true or false values. Ignored and assuming default value."
@@ -577,9 +573,9 @@ takeArguments()
         ;;
       --bilib=*)
         WITH_BILIB=$(echo "$1"|cut -d '=' -f2)
-        if [ "${WITH_BILIB}" == "true" ]; then
+        if [ "${WITH_BILIB}" = "true" ]; then
           doIt library ${BILIB_TAR} 1
-        elif [ "${WITH_BILIB}" == "false" ]; then
+        elif [ "${WITH_BILIB}" = "false" ]; then
           doIt library ${BILIB_TAR} 0
         else
           echoRed "Parameter --bilib only accept true or false values. Ignored and assuming default value."
@@ -590,9 +586,9 @@ takeArguments()
         ;;
       --condor=*)
         WITH_CONDOR=$(echo "$1"|cut -d '=' -f2)
-        if [ "${WITH_CONDOR}" == "true" ]; then
+        if [ "${WITH_CONDOR}" = "true" ]; then
           doIt library ${CONDOR_TAR} 1
-        elif [ "${WITH_CONDOR}" == "false" ]; then
+        elif [ "${WITH_CONDOR}" = "false" ]; then
           doIt library ${CONDOR_TAR} 0
         else
           echoRed "Parameter --condor only accept true or false values. Ignored and assuming default value."
@@ -603,9 +599,9 @@ takeArguments()
         ;;
       --fftw=*)
         WITH_FFTW=$(echo "$1"|cut -d '=' -f2)
-        if [ "${WITH_FFTW}" == "true" ]; then
+        if [ "${WITH_FFTW}" = "true" ]; then
           doIt library ${FFTW_TAR} 1
-        elif [ "${WITH_FFTW}" == "false" ]; then
+        elif [ "${WITH_FFTW}" = "false" ]; then
           doIt library ${FFTW_TAR} 0
         else
           echoRed "Parameter --fftw only accept true or false values. Ignored and assuming default value."
@@ -616,9 +612,9 @@ takeArguments()
         ;;
       --gtest=*)
         WITH_GTEST=$(echo "$1"|cut -d '=' -f2)
-        if [ "${WITH_GTEST}" == "true" ]; then
+        if [ "${WITH_GTEST}" = "true" ]; then
           doIt library ${GTEST_TAR} 1
-        elif [ "${WITH_GTEST}" == "false" ]; then
+        elif [ "${WITH_GTEST}" = "false" ]; then
           doIt library ${GTEST_TAR} 0
         else
           echoRed "Parameter --gtest only accept true or false values. Ignored and assuming default value."
@@ -629,9 +625,9 @@ takeArguments()
         ;;
       --hdf5=*)
         WITH_HDF5=$(echo "$1"|cut -d '=' -f2)
-        if [ "${WITH_HDF5}" == "true" ]; then
+        if [ "${WITH_HDF5}" = "true" ]; then
           doIt library ${HDF5_TAR} 1
-        elif [ "${WITH_HDF5}" == "false" ]; then
+        elif [ "${WITH_HDF5}" = "false" ]; then
           doIt library ${HDF5_TAR} 0
         else
           echoRed "Parameter --hdf5 only accept true or false values. Ignored and assuming default value."
@@ -642,9 +638,9 @@ takeArguments()
         ;;
       --imagej=*)
         WITH_IMAGEJ=$(echo "$1"|cut -d '=' -f2)
-        if [ "${WITH_IMAGEJ}" == "true" ]; then
+        if [ "${WITH_IMAGEJ}" = "true" ]; then
           doIt library ${IMAGEJ_TAR} 1
-        elif [ "${WITH_IMAGEJ}" == "false" ]; then
+        elif [ "${WITH_IMAGEJ}" = "false" ]; then
           doIt library ${IMAGEJ_TAR} 0
         else
           echoRed "Parameter --imagej only accept true or false values. Ignored and assuming default value."
@@ -655,9 +651,9 @@ takeArguments()
         ;;
       --jpeg=*)
         WITH_JPEG=$(echo "$1"|cut -d '=' -f2)
-        if [ "${WITH_JPEG}" == "true" ]; then
+        if [ "${WITH_JPEG}" = "true" ]; then
           doIt library ${JPEG_TAR} 1
-        elif [ "${WITH_JPEG}" == "false" ]; then
+        elif [ "${WITH_JPEG}" = "false" ]; then
           doIt library ${JPEG_TAR} 0
         else
           echoRed "Parameter --jpeg only accept true or false values. Ignored and assuming default value."
@@ -668,9 +664,9 @@ takeArguments()
         ;;
       --scons=*)
         WITH_SCONS=$(echo "$1"|cut -d '=' -f2)
-        if [ "${WITH_SCONS}" == "true" ]; then
+        if [ "${WITH_SCONS}" = "true" ]; then
           doIt library ${SCONS_TAR} 1
-        elif [ "${WITH_SCONS}" == "false" ]; then
+        elif [ "${WITH_SCONS}" = "false" ]; then
           doIt library ${SCONS_TAR} 0
         else
           echoRed "Parameter --scons only accept true or false values. Ignored and assuming default value."
@@ -681,9 +677,9 @@ takeArguments()
         ;;
       --sqlite=*)
         WITH_SQLITE=$(echo "$1"|cut -d '=' -f2)
-        if [ "${WITH_SQLITE}" == "true" ]; then
+        if [ "${WITH_SQLITE}" = "true" ]; then
           doIt library ${SQLITE_TAR} 1
-        elif [ "${WITH_SQLITE}" == "false" ]; then
+        elif [ "${WITH_SQLITE}" = "false" ]; then
           doIt library ${SQLITE_TAR} 0
         else
           echoRed "Parameter --sqlite only accept true or false values. Ignored and assuming default value."
@@ -694,9 +690,9 @@ takeArguments()
         ;;
       --tiff=*)
         WITH_TIFF=$(echo "$1"|cut -d '=' -f2)
-        if [ "${WITH_TIFF}" == "true" ]; then
+        if [ "${WITH_TIFF}" = "true" ]; then
           doIt library ${TIFF_TAR} 1
-        elif [ "${WITH_TIFF}" == "false" ]; then
+        elif [ "${WITH_TIFF}" = "false" ]; then
           doIt library ${TIFF_TAR} 0
         else
           echoRed "Parameter --tiff only accept true or false values. Ignored and assuming default value."
@@ -707,36 +703,29 @@ takeArguments()
         ;;
       --nma=*)
         WITH_NMA=$(echo "$1"|cut -d '=' -f2)
-        if [ "${WITH_NMA}" == "true" ]; then
+        if [ "${WITH_NMA}" = "true" ]; then
           doIt library ${NMA_TAR} 1
-        elif [ "${WITH_NMA}" == "false" ]; then
+        elif [ "${WITH_NMA}" = "false" ]; then
           doIt library ${NMA_TAR} 0
         else
           echoRed "Parameter --nma only accept true or false values. Ignored and assuming default value."
         fi
         ;;
-      --sh-alignment)
-        doIt library ${SHALIGNMENT_TAR} 1
-        ;;
-      --sh-alignment=*)
-        WITH_SHALIGNMENT=$(echo "$1"|cut -d '=' -f2)
-        if [ "${WITH_SHALIGNMENT}" == "true" ]; then
-          doIt library ${ALIGNMENT_TAR} 1
-        elif [ "${WITH_ALIGNMENT}" == "false" ]; then
-          doIt library ${ALIGNMENT_TAR} 0
-        else
-          echoRed "Parameter --sh-alignment only accept true or false values. Ignored and assuming default value."
-        fi
-        ;;
       --cltomo)
         DO_CLTOMO=1
+        doIt library ${SHALIGNMENT_TAR} 1
+        doIt pymodule ${SCIPY_TAR} 1
         ;;
       --cltomo=*)
         WITH_CLTOMO=$(echo "$1"|cut -d '=' -f2)
-        if [ "${WITH_CLTOMO}" == "true" ]; then
+        if [ "${WITH_CLTOMO}" = "true" ]; then
           DO_CLTOMO=1
-        elif [ "${WITH_CLTOMO}" == "false" ]; then
+          doIt library ${SHALIGNMENT_TAR} 1
+          doIt pymodule ${SCIPY_TAR} 1
+        elif [ "${WITH_CLTOMO}" = "false" ]; then
           DO_CLTOMO=0
+          doIt library ${SHALIGNMENT_TAR} 0
+          doIt pymodule ${SCIPY_TAR} 0
         else
           echoRed "Parameter --cltomo only accept true or false values. Ignored and assuming default value."
         fi
@@ -747,10 +736,10 @@ takeArguments()
         ;;
       --python=*)
         WITH_PYTHON=$(echo "$1"|cut -d '=' -f2)
-        if [ "${WITH_PYTHON}" == "true" ]; then
+        if [ "${WITH_PYTHON}" = "true" ]; then
           DO_PYTHON=1
           DO_PYMOD=1
-        elif [ "${WITH_PYTHON}" == "false" ]; then
+        elif [ "${WITH_PYTHON}" = "false" ]; then
           DO_PYTHON=1
           DO_PYMOD=1
         else
@@ -762,9 +751,9 @@ takeArguments()
         ;;
       --matplotlib=*)
         WITH_MATLIBPLOT=$(echo "$1"|cut -d '=' -f2)
-        if [ "${WITH_MATLIBPLOT}" == "true" ]; then
+        if [ "${WITH_MATLIBPLOT}" = "true" ]; then
           doIt pymodule ${MATLIBPLOT_TAR} 1
-        elif [ "${WITH_MATLIBPLOT}" == "false" ]; then
+        elif [ "${WITH_MATLIBPLOT}" = "false" ]; then
           doIt pymodule ${MATLIBPLOT_TAR} 0
         else
           echoRed "Parameter --matplotlib only accept true or false values. Ignored and assuming default value."
@@ -775,9 +764,9 @@ takeArguments()
         ;;
       --mpi4py=*)
         WITH_PYMPI=$(echo "$1"|cut -d '=' -f2)
-        if [ "${WITH_PYMPI}" == "true" ]; then
+        if [ "${WITH_PYMPI}" = "true" ]; then
           doIt pymodule ${PYMPI_TAR} 1
-        elif [ "${WITH_PYMPI}" == "false" ]; then
+        elif [ "${WITH_PYMPI}" = "false" ]; then
           doIt pymodule ${PYMPI_TAR} 0
         else
           echoRed "Parameter --mpi4py only accept true or false values. Ignored and assuming default value."
@@ -788,25 +777,12 @@ takeArguments()
         ;;
       --numpy=*)
         WITH_NUMPY=$(echo "$1"|cut -d '=' -f2)
-        if [ "${WITH_NUMPY}" == "true" ]; then
+        if [ "${WITH_NUMPY}" = "true" ]; then
           doIt pymodule ${NUMPY_TAR} 1
-        elif [ "${WITH_NUMPY}" == "false" ]; then
+        elif [ "${WITH_NUMPY}" = "false" ]; then
           doIt pymodule ${NUMPY_TAR} 0
         else
           echoRed "Parameter --numpy only accept true or false values. Ignored and assuming default value."
-        fi
-        ;;
-      --scipy)
-        doIt pymodule ${SCIPY_TAR} 1
-        ;;
-      --scipy=*)
-        WITH_SCIPY=$(echo "$1"|cut -d '=' -f2)
-        if [ "${WITH_SCIPY}" == "true" ]; then
-          doIt pymodule ${SCIPY_TAR} 1
-        elif [ "${WITH_SCIPY}" == "false" ]; then
-          doIt pymodule ${SCIPY_TAR} 0
-        else
-          echoRed "Parameter --scipy only accept true or false values. Ignored and assuming default value."
         fi
         ;;
       --psutil)
@@ -814,9 +790,9 @@ takeArguments()
         ;;
       --psutil=*)
         WITH_PSUTIL=$(echo "$1"|cut -d '=' -f2)
-        if [ "${WITH_PSUTIL}" == "true" ]; then
+        if [ "${WITH_PSUTIL}" = "true" ]; then
           doIt pymodule ${PSUTIL_TAR} 1
-        elif [ "${WITH_PSUTIL}" == "false" ]; then
+        elif [ "${WITH_PSUTIL}" = "false" ]; then
           doIt pymodule ${PSUTIL_TAR} 0
         else
           echoRed "Parameter --psutil only accept true or false values. Ignored and assuming default value."
@@ -827,9 +803,9 @@ takeArguments()
         ;;
       --tcl-tk=*)
         WITH_TCLTK=$(echo "$1"|cut -d '=' -f2)
-        if [ "${WITH_TCLTK}" == "true" ]; then
+        if [ "${WITH_TCLTK}" = "true" ]; then
           DO_TCLTK=1
-        elif [ "${WITH_TCLTK}" == "false" ]; then
+        elif [ "${WITH_TCLTK}" = "false" ]; then
           DO_TCLTK=0
         else
           echoRed "Parameter --tcl-tk only accept true or false values. Ignored and assuming default value."
@@ -840,9 +816,9 @@ takeArguments()
         ;;
       --tcl=*)
         WITH_TCL=$(echo "$1"|cut -d '=' -f2)
-        if [ "${WITH_TCL}" == "true" ]; then
+        if [ "${WITH_TCL}" = "true" ]; then
           doIt pymodule ${TCL_TAR} 1
-        elif [ "${WITH_TCL}" == "false" ]; then
+        elif [ "${WITH_TCL}" = "false" ]; then
           doIt pymodule ${TCL_TAR} 0
         else
           echoRed "Parameter --tcl only accept true or false values. Ignored and assuming default value."
@@ -853,9 +829,9 @@ takeArguments()
         ;;
       --tk=*)
         WITH_TK=$(echo "$1"|cut -d '=' -f2)
-        if [ "${WITH_TK}" == "true" ]; then
+        if [ "${WITH_TK}" = "true" ]; then
           doIt pymodule ${TK_TAR} 1
-        elif [ "${WITH_TK}" == "false" ]; then
+        elif [ "${WITH_TK}" = "false" ]; then
           doIt pymodule ${TK_TAR} 0
         else
           echoRed "Parameter --tk only accept true or false values. Ignored and assuming default value."
@@ -866,19 +842,19 @@ takeArguments()
         ;;
       --pymodules=*)
         WITH_PYMOD=$(echo "$1"|cut -d '=' -f2)
-        if [ "${WITH_PYMOD}" == "true" ]; then
+        if [ "${WITH_PYMOD}" = "true" ]; then
           DO_PYMOD=1
-        elif [ "${WITH_PYMOD}" == "false" ]; then
+        elif [ "${WITH_PYMOD}" = "false" ]; then
           DO_PYMOD=0
         else
           echoRed "Parameter --pymodules only accept true or false values. Ignored and assuming default value."
         fi
         ;;
       --gui=*)
-        WITH_GUI==$(echo "$1"|cut -d '=' -f2)
-        if [ "${WITH_GUI}" == "true" ]; then
+        WITH_GUI=$(echo "$1"|cut -d '=' -f2)
+        if [ "${WITH_GUI}" = "true" ]; then
           WITH_GUI=1
-        elif [ "${WITH_GUI}" == "false" ]; then
+        elif [ "${WITH_GUI}" = "false" ]; then
           WITH_GUI=0
         else
           echoRed "Parameter --gui only accept true or false values. Ignored and assuming default value."
@@ -1270,13 +1246,13 @@ decompressExternals()
   while [ ${lib} -lt ${#EXTERNAL_LIBRARIES[@]} ]; do
     if [ ${EXTERNAL_LIBRARIES_DO[$lib]} -eq 1 ]; then
       if [ -d ${EXTERNAL_LIBRARIES[$lib]} ]; then
-        if [ $DO_UNATTENDED -eq 0 ] && [ ${DELETE_ANSWER} != "Y" ] && [ ${DELETE_ANSWER} != "N" ]; then
+        if ([ $DO_UNATTENDED -eq 0 ] && [ ${DELETE_ANSWER} != "Y" ] && [ ${DELETE_ANSWER} != "N" ]); then
           echo "${EXTERNAL_LIBRARIES[$lib]} folder exists, do you want to permanently remove it? (y)es/(n)o/(Y)es-to-all/(N)o-to-all"
           read DELETE_ANSWER
         else
           DELETE_ANSWER="Y"
         fi
-        if [ ${DELETE_ANSWER} == "y" -o ${DELETE_ANSWER} == "Y" ]; then
+	if ([ ${DELETE_ANSWER} = "y" ] || [ ${DELETE_ANSWER} = "Y" ]); then
           echoExecRedirectEverything "rm -rf ${EXTERNAL_LIBRARIES[$lib]}" "/dev/null"
         else
           echoRed "Library ${EXTERNAL_LIBRARIES[$lib]} folder remains untouched."
@@ -1300,13 +1276,13 @@ decompressPython()
   echoGreen "*** Decompressing Python ***"
   if [ ${DO_PYTHON} -eq 1 ]; then
     if [ -d ${PYTHON_FOLDER} ]; then
-      if [ $DO_UNATTENDED -eq 0 ] && [ ${DELETE_ANSWER} != "Y" ] && [ ${DELETE_ANSWER} != "N" ]; then
+      if ([ $DO_UNATTENDED -eq 0 ] && [ ${DELETE_ANSWER} != "Y" ] && [ ${DELETE_ANSWER} != "N" ]); then
         echo "${PYTHON_FOLDER} folder exists, do you want to permanently remove it? (y)es/(n)o/(Y)es-to-all/(N)o-to-all"
         read DELETE_ANSWER
       else
         DELETE_ANSWER="Y"
       fi
-      if [ ${DELETE_ANSWER} == "y" -o ${DELETE_ANSWER} == "Y" ]; then
+      if ([ ${DELETE_ANSWER} = "y" ] || [ ${DELETE_ANSWER} = "Y" ]); then
         echoExecRedirectEverything "rm -rf ${PYTHON_FOLDER}" "/dev/null"
       else
         echoRed "${PYTHON_FOLDER} folder remains untouched."
@@ -1329,13 +1305,13 @@ decompressPythonModules()
   while [ ${lib} -lt ${#PYTHON_MODULES[@]} ]; do
     if [ ${PYTHON_MODULES_DO[$lib]} -eq 1 ]; then
       if [ -d ${PYTHON_MODULES[$lib]} ]; then
-        if [ $DO_UNATTENDED -eq 0 ] && [ ${DELETE_ANSWER} != "Y" ] && [ ${DELETE_ANSWER} != "N" ]; then
+        if ([ $DO_UNATTENDED -eq 0 ] && [ ${DELETE_ANSWER} != "Y" ] && [ ${DELETE_ANSWER} != "N" ]); then
           echo "${PYTHON_MODULES[$lib]} folder exists, do you want to permanently remove it? (y)es/(n)o/(Y)es-to-all/(N)o-to-all"
           read DELETE_ANSWER
         else
           DELETE_ANSWER="Y"
         fi
-        if [ ${DELETE_ANSWER} == "y" -o ${DELETE_ANSWER} == "Y" ]; then
+	if ([ ${DELETE_ANSWER} = "y" ] || [ ${DELETE_ANSWER} = "Y" ]); then
           echoExecRedirectEverything "rm -rf ${PYTHON_MODULES[$lib]}" "/dev/null"
         else
           echoRed "Library ${PYTHON_MODULES[$lib]} folder remains untouched."
@@ -1707,8 +1683,8 @@ if [ $DO_PYTHON -eq 1 ]; then
     printf 'export TK_LIBRARY=$EXT_PYTHON/$PYTHON_FOLDER/tcl/tk$VTCLTK \n\n' >> $PYTHON_BIN
     printf '$EXT_PYTHON/$PYTHON_FOLDER/python.exe "$@"\n' >> $PYTHON_BIN
   elif [ $IS_MAC -eq 1 ]; then
-    printf 'PYTHON_FOLDER=%b \n' "${PYTHON_FOLDER}" >> $PYTHON_BIN
-    printf 'VTCLTK=%b \n\n' "${VTCLTK}" >> $PYTHON_BIN
+    printf "PYTHON_FOLDER=${PYTHON_FOLDER} \n" >> $PYTHON_BIN
+    printf "VTCLTK=${VTCLTK} \n\n" >> $PYTHON_BIN
     printf 'EXT_PYTHON=$XMIPP_HOME/external/python \n' >> $PYTHON_BIN
     printf 'export LD_LIBRARY_PATH=$EXT_PYTHON/$PYTHON_FOLDER:$EXT_PYTHON/tcl$VTCLTK/macosx:$EXT_PYTHON/tk$VTCLTK/macosx:$LD_LIBRARY_PATH \n' >> $PYTHON_BIN
     printf 'export PYTHONPATH=$XMIPP_HOME/lib:$XMIPP_HOME/protocols:$XMIPP_HOME/applications/tests/pythonlib:$XMIPP_HOME/lib/python2.7/site-packages:$PYTHONPATH \n' >> $PYTHON_BIN
@@ -1717,8 +1693,8 @@ if [ $DO_PYTHON -eq 1 ]; then
     printf 'export DYLD_FALLBACK_LIBRARY_PATH=$EXT_PYTHON/$PYTHON_FOLDER:$EXT_PYTHON/tcl$VTCLTK/macosx:$EXT_PYTHON/tk$VTCLTK/macosx:$DYLD_FALLBACK_LIBRARY_PATH \n' >> $PYTHON_BIN	
     printf '$EXT_PYTHON/$PYTHON_FOLDER/python.exe "$@"\n' >> $PYTHON_BIN
   else
-    printf 'PYTHON_FOLDER=%b \n' "${PYTHON_FOLDER}" >> $PYTHON_BIN
-    printf 'VTCLTK=%b \n\n' "${VTCLTK}" >> $PYTHON_BIN
+    printf "PYTHON_FOLDER=${PYTHON_FOLDER} \n" >> $PYTHON_BIN
+    printf "VTCLTK=${VTCLTK} \n\n" >> $PYTHON_BIN
     printf 'EXT_PYTHON=$XMIPP_HOME/external/python \n' >> $PYTHON_BIN
     printf 'export LD_LIBRARY_PATH=$EXT_PYTHON/$PYTHON_FOLDER:$EXT_PYTHON/tcl$VTCLTK/unix:$EXT_PYTHON/tk$VTCLTK/unix:$LD_LIBRARY_PATH \n' >> $PYTHON_BIN
     printf 'export PYTHONPATH=$XMIPP_HOME/lib:$XMIPP_HOME/protocols:$XMIPP_HOME/applications/tests/pythonlib:$XMIPP_HOME/lib/python2.7/site-packages:$PYTHONPATH \n' >> $PYTHON_BIN
