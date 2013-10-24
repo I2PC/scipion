@@ -61,7 +61,9 @@ class ProtScreenMicrographs(XmippProtocol):
 
         # Create verifyFiles for the MPI and output directories
         MD = xmipp.MetaData(self.MicrographsMd)
-        MD.removeDisabled() 
+        #if removed in import do not process them
+        MD.removeDisabled()
+	
         # Now the estimation actions
         for objId in MD:
             inputFile = MD.getValue(xmipp.MDL_MICROGRAPH, objId)

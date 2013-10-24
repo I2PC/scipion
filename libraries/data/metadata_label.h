@@ -1112,6 +1112,10 @@ private:
         MDL::addLabel(MDL_TRANSFORM_MATRIX, LABEL_VECTOR_DOUBLE, "transformMatrix");
 
         MDL::addLabel(MDL_VOLTAGE, LABEL_DOUBLE, "voltage");
+        MDL::addLabel(MDL_VOLUME_SCORE_SUM, LABEL_DOUBLE, "volScoreSum");
+        MDL::addLabel(MDL_VOLUME_SCORE_MEAN, LABEL_DOUBLE, "volScoreMean");
+        MDL::addLabel(MDL_VOLUME_SCORE_MIN, LABEL_DOUBLE, "volScoreMin");
+        MDL::addLabel(MDL_VOLUME_SCORE_SUM_TH, LABEL_DOUBLE, "volScoreSumTh");
         MDL::addLabel(MDL_VOLUME_SCORE1, LABEL_DOUBLE, "volScore1");
         MDL::addLabel(MDL_VOLUME_SCORE2, LABEL_DOUBLE, "volScore2");
         MDL::addLabel(MDL_VOLUME_SCORE3, LABEL_DOUBLE, "volScore3");
