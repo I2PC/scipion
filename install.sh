@@ -36,6 +36,7 @@ OS_TYPE=$(uname)
 IS_MAC=0
 IS_MINGW=0
 IS_LINUX=0
+DELETE_ANSWER="n"
 
 #Some flags variables
 DO_UNTAR=1
@@ -1237,7 +1238,6 @@ initial_definitions()
 
 decompressExternals()
 {
-  DELETE_ANSWER="n"
   tic
   echo
   echoExecRedirectEverything "cd ${EXT_PATH}" "/dev/null"
@@ -1269,7 +1269,6 @@ decompressExternals()
 
 decompressPython()
 {
-  DELETE_ANSWER="n"
   tic
   echo
   echoExecRedirectEverything "cd ${EXT_PATH}/python" "/dev/null"
@@ -1296,7 +1295,6 @@ decompressPython()
 
 decompressPythonModules()
 {
-  DELETE_ANSWER="n"
   tic
   echo
   echoExecRedirectEverything "cd ${EXT_PATH}/python" "/dev/null"
@@ -1433,19 +1431,25 @@ fi
 #################### ALGLIB ###########################
 shouldIDoIt library ${ALGLIB_TAR}
 if ([ $? -eq 1 ] && ([ $DO_COMPILE -eq 1 ] || [ $DO_CONFIGURE -eq 1 ])); then
-  echo "Note: alglib configure and compile is delegated into Scons. For compiling it xcompile must be used."
+  echo
+  echoGreen "Note: alglib configure and compile is delegated into Scons. For compiling it xcompile must be used."
+  echo
 fi
 
 #################### BILIB ###########################
 shouldIDoIt library ${BILIB_TAR}
 if ([ $? -eq 1 ] && ([ $DO_COMPILE -eq 1 ] || [ $DO_CONFIGURE -eq 1 ])); then
-  echo "Note: bilib configure and compile is delegated into Scons. For compiling it xcompile must be used."
+  echo
+  echoGreen "Note: bilib configure and compile is delegated into Scons. For compiling it xcompile must be used."
+  echo
 fi
 
 #################### CONDOR ###########################
 shouldIDoIt library ${CONDOR_TAR}
 if ([ $? -eq 1 ] && ([ $DO_COMPILE -eq 1 ] || [ $DO_CONFIGURE -eq 1 ])); then
-  echo "Note: condor configure and compile is delegated into Scons. For compiling it xcompile must be used."
+  echo
+  echoGreen "Note: condor configure and compile is delegated into Scons. For compiling it xcompile must be used."
+  echo
 fi
 
 #################### FFTW ###########################
@@ -1484,7 +1488,9 @@ fi
 #################### GTEST ###########################
 shouldIDoIt library ${GTEST_TAR}
 if ([ $? -eq 1 ] && ([ $DO_COMPILE -eq 1 ] || [ $DO_CONFIGURE -eq 1 ])); then
-  echo "Note: gtest configure and compile is delegated into Scons. For compiling it xcompile must be used."
+  echo
+  echoGreen "Note: gtest configure and compile is delegated into Scons. For compiling it xcompile must be used."
+  echo
 fi
 
 #################### HDF5 ###########################
@@ -1505,7 +1511,9 @@ fi
 #################### IMAGEJ ###########################
 shouldIDoIt library ${IMAGEJ_TAR}
 if ([ $? -eq 1 ] && ([ $DO_COMPILE -eq 1 ] || [ $DO_CONFIGURE -eq 1 ])); then
-  echo "Note: imagej configure and compile is delegated into Scons. For compiling it xcompile must be used."
+  echo
+  echoGreen "Note: imagej configure and compile is delegated into Scons. For compiling it xcompile must be used."
+  echo
 fi
 
 #################### JPEG ###########################
@@ -1526,7 +1534,9 @@ fi
 #################### IMAGEJ ###########################
 shouldIDoIt library ${SCONS_TAR}
 if ([ $? -eq 1 ] && ([ $DO_COMPILE -eq 1 ] || [ $DO_CONFIGURE -eq 1 ])); then
-  echo "Note: scons doesn't need to be configured nor compiled. "
+  echo
+  echoGreen "Note: scons doesn't need to be configured nor compiled. "
+  echo
 fi
 
 #################### SQLITE ###########################
