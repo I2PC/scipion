@@ -116,7 +116,7 @@ DO_NMA=0
 
 VSHALIGNMENT=0.0
 SHALIGNMENT_FOLDER="sh_alignment"
-SHALIGNMENT_TAR="${SH_ALIGNMENT_FOLDER}.tgz"
+SHALIGNMENT_TAR="${SHALIGNMENT_FOLDER}.tgz"
 DO_SHALIGNMENT=0
 
 #External libraries arrays. For adding a new external library, define his decompress folder and tar names, put them in EXTERNAL_LIBRARIES and EXTERNAL_LIBRARIES_FILES arrays, and put 1 whther it has to be installed by default, 0 otherwise in EXTERNAL_LIBRARIES_DEFAULT in the appropiate positions. You will also need to stablish a DO* variable in the *DO array, to let the script work
@@ -462,8 +462,6 @@ helpMessage()
   printf "    Execute or not selected operation over tiff library. When just --tiff is given, true is asumed.\n"
   printf "${BLUE}--nma=${YELLOW}[true|false]${WHITE}\n"
   printf "    Execute or not selected operation over nma library. When just --nma is given, true is asumed.\n"
-  printf "${BLUE}--sh-alignment=${YELLOW}[true|false]${WHITE}\n"
-  printf "    Execute or not selected operation over nma library. When just --sh-alignment is given, true is asumed.\n"
   printf "${BLUE}--cltomo=${YELLOW}[true|false]${WHITE}\n"
   printf "    Execute or not selected operation over cltomo library. When just --cltomo is given, true is asumed.\n"
   printf "\n"
@@ -478,8 +476,6 @@ helpMessage()
   printf "    Execute selected operation over mpi4py module. --mpi4py is equivalent to --mpi4py=true.\n"
   printf "${BLUE}--numpy=${YELLOW}[true|false]${WHITE}\n"
   printf "    Execute selected operation over numpy module. --numpy is equivalent to --numpy=true.\n"
-  printf "${BLUE}--scipy=${YELLOW}[true|false]${WHITE}\n"
-  printf "    Execute selected operation over scipy module. --scipy is equivalent to --scipy=true.\n"
   printf "${BLUE}--psutil=${YELLOW}[true|false]${WHITE}\n"
   printf "    Execute selected operation over psutil module. --scipy is equivalent to --psutil=true.\n"
   printf "${BLUE}--tcl-tk=${YELLOW}[true|false]${WHITE}\n"
@@ -715,28 +711,21 @@ takeArguments()
           echoRed "Parameter --nma only accept true or false values. Ignored and assuming default value."
         fi
         ;;
-      --sh-alignment)
-        doIt library ${SHALIGNMENT_TAR} 1
-        ;;
-      --sh-alignment=*)
-        WITH_SHALIGNMENT=$(echo "$1"|cut -d '=' -f2)
-        if [ "${WITH_SHALIGNMENT}" = "true" ]; then
-          doIt library ${ALIGNMENT_TAR} 1
-        elif [ "${WITH_ALIGNMENT}" = "false" ]; then
-          doIt library ${ALIGNMENT_TAR} 0
-        else
-          echoRed "Parameter --sh-alignment only accept true or false values. Ignored and assuming default value."
-        fi
-        ;;
       --cltomo)
         DO_CLTOMO=1
+        doIt library ${SHALIGNMENT_TAR} 1
+        doIt pymodule ${SCIPY_TAR} 1
         ;;
       --cltomo=*)
         WITH_CLTOMO=$(echo "$1"|cut -d '=' -f2)
         if [ "${WITH_CLTOMO}" = "true" ]; then
           DO_CLTOMO=1
+          doIt library ${SHALIGNMENT_TAR} 1
+          doIt pymodule ${SCIPY_TAR} 1
         elif [ "${WITH_CLTOMO}" = "false" ]; then
           DO_CLTOMO=0
+          doIt library ${SHALIGNMENT_TAR} 0
+          doIt pymodule ${SCIPY_TAR} 0
         else
           echoRed "Parameter --cltomo only accept true or false values. Ignored and assuming default value."
         fi
@@ -794,19 +783,6 @@ takeArguments()
           doIt pymodule ${NUMPY_TAR} 0
         else
           echoRed "Parameter --numpy only accept true or false values. Ignored and assuming default value."
-        fi
-        ;;
-      --scipy)
-        doIt pymodule ${SCIPY_TAR} 1
-        ;;
-      --scipy=*)
-        WITH_SCIPY=$(echo "$1"|cut -d '=' -f2)
-        if [ "${WITH_SCIPY}" = "true" ]; then
-          doIt pymodule ${SCIPY_TAR} 1
-        elif [ "${WITH_SCIPY}" = "false" ]; then
-          doIt pymodule ${SCIPY_TAR} 0
-        else
-          echoRed "Parameter --scipy only accept true or false values. Ignored and assuming default value."
         fi
         ;;
       --psutil)
