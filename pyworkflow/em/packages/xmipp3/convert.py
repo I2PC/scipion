@@ -413,9 +413,6 @@ def writeSetOfImages(imgSet, filename, imgToFunc, ctfDir, rowFunc):
     if ctfDir is None:
         ctfDir = dirname(filename)
     
-    if not hasattr(imgSet, '__iter__'):
-        imgSet = [imgSet]
-        
     for img in imgSet:
         objId = md.addObject()
         imgRow = XmippMdRow()
@@ -423,7 +420,6 @@ def writeSetOfImages(imgSet, filename, imgToFunc, ctfDir, rowFunc):
         if rowFunc:
             rowFunc(img, imgRow)
         imgRow.writeToMd(md, objId)
-        #writeImgToMetadata(md, img, hasCtf, ctfDir, imgToFunc, rowFunc )
         
     md.write(filename)
     imgSet._xmippMd = String(filename)
