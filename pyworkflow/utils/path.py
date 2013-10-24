@@ -32,6 +32,7 @@ import os
 import shutil
 from os.path import exists, join, splitext, isdir, isfile, expanduser, basename, dirname, split, relpath
 import pyworkflow as pw
+from glob import glob
 
 
 def findFile(filename, *paths):
@@ -151,5 +152,13 @@ def createLink(source, dest):
         os.remove(dest)
     destDir = split(dest)[0]
     os.symlink(relpath(source,destDir),dest)
+    
+def getLastFile(pattern):
+    """ Return the last file matching the pattern. """
+    files = glob(pattern)
+    if len(files):
+        files.sort()
+        return files[-1]
+    return None
 
 

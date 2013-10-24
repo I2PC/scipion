@@ -380,7 +380,7 @@ class FormWindow(Window):
          callback: callback function to call when Save or Excecute are press.
         """
         Window.__init__(self, title, master, icon='scipion_bn.xbm', 
-                        weight=False, minsize=(550, 450), **args)
+                        weight=False, minsize=(600, 450), **args)
 
         self.callback = callback
         self.widgetDict = {} # Store tkVars associated with params

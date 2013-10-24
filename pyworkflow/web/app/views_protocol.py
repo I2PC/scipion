@@ -22,7 +22,7 @@ def form(request):
     elif action == 'copy':
         protocol = project.copyProtocol(protocol)
         
-    wizards = findWizards(protocol.getDefinition(), WEB_DJANGO)
+    wizards = findWizards(protocol, WEB_DJANGO)
     
     # TODO: Add error page validation when protocol is None
     for section in protocol._definition.iterSections():

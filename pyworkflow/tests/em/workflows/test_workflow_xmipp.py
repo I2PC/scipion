@@ -379,7 +379,7 @@ class TestXmippWorkflow(TestWorkflow):
         protOnlyAlign = XmippProtCL2DAlign(maximumShift=5, numberOfIterations=2, 
                                  numberOfMpi=2, numberOfThreads=1, useReferenceImage=False)
 
-        protOnlyAlign.inputImages.set(protExtract.outputParticles)
+        protOnlyAlign.inputParticles.set(protExtract.outputParticles)
         self.proj.launchProtocol(protOnlyAlign, wait=True)        
         
         self.assertIsNotNone(protOnlyAlign.outputParticles, "There was a problem with Only align2d")  

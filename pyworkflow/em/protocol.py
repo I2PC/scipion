@@ -450,7 +450,27 @@ class ProtParticlePicking(EMProtocol):
 
 
 class ProtAlign(EMProtocol):
-    pass
+    """ This class will serve as a base for all protocols that align a set of 2D images.
+    All Align protocols receive as input:
+        A set of partices
+    and will allow the option to generate the aligned particles.
+    """
+    def _defineParams(self, form):
+        form.addSection(label='Input')
+        
+        form.addParam('inputParticles', PointerParam, important=True,
+                      label="Input Particles", pointerClass='SetOfParticles')
+        form.addParam('writeAlignedParticles', BooleanParam, default=True,
+                      label="Write aligned particles?", 
+                      help="If set to <Yes>, the aligment will be applied to \n"
+                           "input particles and a new aligned set will be created.")
+        # Hook that should be implemented in subclasses
+        self._defineAlignParams(form)
+        
+    def _defineAlignParams(self, form):
+        """ This method should be implemented by subclasses
+        to add other parameter relatives to the specific align protocol."""
+        pass  
 
 
 class ProtClassify(EMProtocol):
