@@ -262,15 +262,24 @@ echoExec()
   return $GLOB_STATE
 }
 
+# Function that echoes the provided command passed as first argument and redirect it to file passed as second one checking its returning state. If 1 is given as third argument, then a non-zero exit status will result in a program exit.
 echoExecRedirectEverything()
 {
+  if ([ $# -gt 3 ] || [ $# -lt 2 ]); then
+    echoRed "Error: bad parameter number on echoExecRedirectEverything function. Exiting"
+    exitGracefully
+  fi
   COMMAND="$1"
   REDIRECTION="$2"
   GLOB_COMMAND=${COMMAND}
   echo '-->' $COMMAND '>' $REDIRECTION '2>&1'
   ${COMMAND} > ${REDIRECTION} 2>&1
   GLOB_STATE=$?
-  check_state
+  if [ $# -eq 2 ]; then
+    check_state
+  else
+    check_state 1
+  fi
   return $GLOB_STATE
 }
 
@@ -1061,9 +1070,9 @@ compile_library()
   _PATH=${EXT_PATH}/${PREFIX_PATH}/${LIB}/${SUFFIX_PATH}
   echo
   echoGreen "*** Compiling ${LIB} ..."
-  echoExecRedirectEverything "cd ${_PATH}" "/dev/null"
-  echoExecRedirectEverything "make -j $NUMBER_OF_CPU" "$BUILD_PATH/${LIB}_make.log"
-  echoExecRedirectEverything "cd -" "/dev/null"
+  echoExecRedirectEverything "cd ${_PATH}" "/dev/null" 1
+  echoExecRedirectEverything "make -j $NUMBER_OF_CPU" "$BUILD_PATH/${LIB}_make.log" 1
+  echoExecRedirectEverything "cd -" "/dev/null" 1
   toc
   echo
 }
@@ -1079,13 +1088,13 @@ configure_library()
   _PATH=${EXT_PATH}/${PREFIX_PATH}/${LIB}/${SUFFIX_PATH}
   echo
   echoGreen "*** Configuring ${LIB} ..."
-  echoExecRedirectEverything "cd ${_PATH}" "/dev/null"
+  echoExecRedirectEverything "cd ${_PATH}" "/dev/null" 1
 
   echo "--> Enabling shared libraries..."
   CONFIGFLAGS="--enable-shared ${CONFIGFLAGS}"
   
-  echoExecRedirectEverything "./configure ${CONFIGFLAGS}" "${BUILD_PATH}/${LIB}_configure.log"
-  echoExecRedirectEverything "cd -" "/dev/null"
+  echoExecRedirectEverything "./configure ${CONFIGFLAGS}" "${BUILD_PATH}/${LIB}_configure.log" 1
+  echoExecRedirectEverything "cd -" "/dev/null" 1
   toc
   echo
 }
@@ -1101,9 +1110,9 @@ clean_library()
   _PATH=${EXT_PATH}/${PREFIX_PATH}/${LIB}/${SUFFIX_PATH}
   echo
   echoGreen "*** Cleaning ${LIB} ..."
-  echoExecRedirectEverything "cd ${_PATH}" "/dev/null"
+  echoExecRedirectEverything "cd ${_PATH}" "/dev/null" 1
   echoExecRedirectEverything "make distclean" "/dev/null"
-  echoExecRedirectEverything "cd -" "/dev/null"
+  echoExecRedirectEverything "cd -" "/dev/null" 1
   toc
   echo
 }
@@ -1116,8 +1125,9 @@ compile_pymodule()
   echo
   echoGreen "*** Compiling ${MOD} ..."
   #_PYTHON=$EXT_PATH/python/$PYTHON_FOLDER/python
-  echoExecRedirectEverything "cd $_PATH" "/dev/null"
-  echoExecRedirectEverything "xmipp_python setup.py install --prefix $XMIPP_HOME" "$BUILD_PATH/${MOD}_setup_install.log"
+  echoExecRedirectEverything "cd $_PATH" "/dev/null" 1
+  echoExecRedirectEverything "xmipp_python setup.py install --prefix $XMIPP_HOME" "$BUILD_PATH/${MOD}_setup_install.log" 1
+  echoExecRedirectEverything "cd -" "/dev/null" 1
   toc
   echo
 }
@@ -1127,7 +1137,7 @@ compile_pymodule()
 install_libs()
 {
   tic
-  echoExecRedirectEverything "cd $XMIPP_HOME" "/dev/null"
+  echoExecRedirectEverything "cd $XMIPP_HOME" "/dev/null" 1
   LIBPATH=external/$1; shift
   COMMON="$1"; shift
   VERSION=$1; shift
@@ -1146,12 +1156,12 @@ install_libs()
   for suffix in $SUFFIXES; do
      LIBNAME=$COMMON$suffix
      if $COPY; then
-	     echoExecRedirectEverything "cp -f $LIBPATH/$LIBNAME lib/$LIBNAME" "/dev/null"
+	     echoExecRedirectEverything "cp -f $LIBPATH/$LIBNAME lib/$LIBNAME" "/dev/null" 1
      else
-	     echoExecRedirectEverything "ln -sf ../$LIBPATH/$LIBNAME lib/$LIBNAME " "/dev/null"
+	     echoExecRedirectEverything "ln -sf ../$LIBPATH/$LIBNAME lib/$LIBNAME " "/dev/null" 1
      fi
   done
-  echoExecRedirectEverything "cd -" "/dev/null"
+  echoExecRedirectEverything "cd -" "/dev/null" 1
   toc
   echo
 }
@@ -1161,7 +1171,7 @@ install_libs()
 uninstall_libs()
 {
   tic
-  echoExecRedirectEverything "cd $XMIPP_HOME" "/dev/null"
+  echoExecRedirectEverything "cd $XMIPP_HOME" "/dev/null" 1
   LIBPATH=external/$1; shift
   COMMON="$1"; shift
   VERSION=$1; shift
@@ -1183,7 +1193,7 @@ uninstall_libs()
        echoExecRedirectEverything "rm -f lib/$LIBNAME" "/dev/null"
      fi
   done
-  echoExecRedirectEverything "cd -" "/dev/null"
+  echoExecRedirectEverything "cd -" "/dev/null" 1
   toc
   echo
 }
@@ -1191,26 +1201,26 @@ uninstall_libs()
 install_bin()
 {
   tic
-  echoExecRedirectEverything "cd $XMIPP_HOME" "/dev/null"
+  echoExecRedirectEverything "cd $XMIPP_HOME" "/dev/null" 1
   BINPATH=../external/$1
   LINKNAME=bin/$2
   echo
   echoGreen "*** Installing bin ${LINKNAME} ..."
-  echoExecRedirectEverything "ln -sf $BINPATH $LINKNAME" "/dev/null"
-  echoExecRedirectEverything "cd -" "/dev/null"
+  echoExecRedirectEverything "ln -sf $BINPATH $LINKNAME" "/dev/null" 1
+  echoExecRedirectEverything "cd -" "/dev/null" 1
   toc
   echo
 }
 
 uninstall_bin()
 {
-  echoExecRedirectEverything "cd $XMIPP_HOME" "/dev/null"
+  echoExecRedirectEverything "cd $XMIPP_HOME" "/dev/null" 1
   BINPATH=../external/$1
   LINKNAME=bin/$2
   echo
   echoGreen "*** Uninstalling bin ${LINKNAME} ..."
   echoExecRedirectEverything "rm $LINKNAME" "/dev/null"
-  echoExecRedirectEverything "cd -" "/dev/null"
+  echoExecRedirectEverything "cd -" "/dev/null" 1
   echo
 }
 
@@ -1220,7 +1230,7 @@ create_dir()
   if [ -d $DIR ]; then 
     echoRed "--> Dir $DIR exists."
   else
-    echoExecRedirectEverything "mkdir $DIR" "/dev/null"
+    echoExecRedirectEverything "mkdir $DIR" "/dev/null" 1
   fi
 }
 
@@ -1240,7 +1250,7 @@ decompressExternals()
 {
   tic
   echo
-  echoExecRedirectEverything "cd ${EXT_PATH}" "/dev/null"
+  echoExecRedirectEverything "cd ${EXT_PATH}" "/dev/null" 1
   echoGreen "*** Decompressing external libraries ..."
   lib=0
   while [ ${lib} -lt ${#EXTERNAL_LIBRARIES[@]} ]; do
@@ -1259,11 +1269,11 @@ decompressExternals()
         fi
       fi
       #echoExec "tar -xvzf ${EXTERNAL_LIBRARIES_FILES[$lib]}"
-      echoExecRedirectEverything "tar -xvzf ${EXTERNAL_LIBRARIES_FILES[$lib]}" "/dev/null"
+      echoExecRedirectEverything "tar -xvzf ${EXTERNAL_LIBRARIES_FILES[$lib]}" "/dev/null" 1
     fi
     lib=$(expr $lib + 1)
   done
-  echoExecRedirectEverything "cd -" "/dev/null"
+  echoExecRedirectEverything "cd -" "/dev/null" 1
   toc
 }
 
@@ -1271,7 +1281,7 @@ decompressPython()
 {
   tic
   echo
-  echoExecRedirectEverything "cd ${EXT_PATH}/python" "/dev/null"
+  echoExecRedirectEverything "cd ${EXT_PATH}/python" "/dev/null" 1
   echoGreen "*** Decompressing Python ***"
   if [ ${DO_PYTHON} -eq 1 ]; then
     if [ -d ${PYTHON_FOLDER} ]; then
@@ -1287,9 +1297,9 @@ decompressPython()
         echoRed "${PYTHON_FOLDER} folder remains untouched."
       fi   
     fi
-    echoExecRedirectEverything "tar -xvzf ${PYTHON_TAR}" "/dev/null"
+    echoExecRedirectEverything "tar -xvzf ${PYTHON_TAR}" "/dev/null" 1
   fi
-  echoExecRedirectEverything "cd -" "/dev/null"
+  echoExecRedirectEverything "cd -" "/dev/null" 1
   toc
 }
 
@@ -1297,7 +1307,7 @@ decompressPythonModules()
 {
   tic
   echo
-  echoExecRedirectEverything "cd ${EXT_PATH}/python" "/dev/null"
+  echoExecRedirectEverything "cd ${EXT_PATH}/python" "/dev/null" 1
   echoGreen "*** Decompressing Python modules ..."
   lib=0
   while [ ${lib} -lt ${#PYTHON_MODULES[@]} ]; do
@@ -1315,11 +1325,11 @@ decompressPythonModules()
           echoRed "Library ${PYTHON_MODULES[$lib]} folder remains untouched."
         fi
       fi
-      echoExecRedirectEverything "tar -xvzf ${PYTHON_MODULES_FILES[$lib]}" "/dev/null"
+      echoExecRedirectEverything "tar -xvzf ${PYTHON_MODULES_FILES[$lib]}" "/dev/null" 1
     fi
     lib=$(expr $lib + 1)
   done
-  echoExecRedirectEverything "cd -" "/dev/null"
+  echoExecRedirectEverything "cd -" "/dev/null" 1
   toc
 }
 
@@ -1331,17 +1341,17 @@ preparePythonEnvironment()
     export LD_LIBRARY_PATH="${EXT_PYTHON}/${PYTHON_FOLDER}:${EXT_PYTHON}/${TK_FOLDER}/macosx:${EXT_PYTHON}/${TCL_FOLDER}/macosx:${LD_LIBRARY_PATH}"
     export DYLD_FALLBACK_LIBRARY_PATH="${EXT_PYTHON}/${PYTHON_FOLDER}:${EXT_PYTHON}/${TK_FOLDER}/macosx:${EXT_PYTHON}/${TCL_FOLDER}/macosx:${DYLD_FALLBACK_LIBRARY_PATH}"
     echoExecRedirectEverything "ln -s ${XMIPP_HOME}/bin/xmipp_python ${XMIPP_HOME}/bin/python2.7" "/dev/null"
-    echoExecRedirectEverything "cd ${EXT_PYTHON}/${MATLIBPLOT_FOLDER}" "/dev/null"
+    echoExecRedirectEverything "cd ${EXT_PYTHON}/${MATLIBPLOT_FOLDER}" "/dev/null" 1
     echoExecRedirectEverything "ln -s ${XMIPP_HOME}/bin/xmipp_python ${XMIPP_HOME}/bin/pythonXmipp" "/dev/null" 
-    echoExecRedirectEverything "make -f make.osx clean" "/dev/null"
-    echoExecRedirectEverything "make -f make.osx PREFIX=${XMIPP_HOME} PYVERSION=Xmipp fetch deps mpl_install" "/dev/null"
+    echoExecRedirectEverything "make -f make.osx clean" "/dev/null" 1
+    echoExecRedirectEverything "make -f make.osx PREFIX=${XMIPP_HOME} PYVERSION=Xmipp fetch deps mpl_install" "/dev/null" 1
     echoExecRedirectEverything "rm ${XMIPP_HOME}/bin/pythonXmipp" "/dev/null"
     echoExecRedirectEverything "rm ${XMIPP_HOME}/bin/python2.7" "/dev/null"
   elif [ $IS_MINGW -eq 1 ]; then
     export LDFLAGS="-L${EXT_PYTHON}/${PYTHON_FOLDER} -L${XMIPP_HOME}/lib -L${EXT_PYTHON}/${TK_FOLDER}/win -L${EXT_PYTHON}/${TCL_FOLDER}/win"
     export LD_LIBRARY_PATH="${EXT_PYTHON}/${PYTHON_FOLDER}:${EXT_PYTHON}/${TK_FOLDER}/win:${EXT_PYTHON}/${TCL_FOLDER}/win:${LD_LIBRARY_PATH}"
     echoExecRedirectEverything "ln -s ${XMIPP_HOME}/bin/xmipp_python ${XMIPP_HOME}/bin/python2.7" "/dev/null"
-    echoExecRedirectEverything "cd ${EXT_PYTHON}/${MATLIBPLOT_FOLDER}" "/dev/null"
+    echoExecRedirectEverything "cd ${EXT_PYTHON}/${MATLIBPLOT_FOLDER}" "/dev/null" 1
     echoExecRedirectEverything "ln -s ${XMIPP_HOME}/bin/xmipp_python ${XMIPP_HOME}/bin/pythonXmipp" "/dev/null"
   else
     export LDFLAGS="-L${EXT_PYTHON}/${PYTHON_FOLDER} -L${XMIPP_HOME}/lib -L${EXT_PYTHON}/${TK_FOLDER}/unix -L${EXT_PYTHON}/${TCL_FOLDER}/unix"
@@ -1349,19 +1359,20 @@ preparePythonEnvironment()
 
     shouldIDoIt pymodule ${MATLIBPLOT_TAR}
     if [ $? -eq 1 ]; then
-      echoExecRedirectEverything "cp ${EXT_PYTHON}/matplotlib_setupext.py ${EXT_PYTHON}/${MATLIBPLOT_FOLDER}/setupext.py" "/dev/null"
+      echoExecRedirectEverything "cp ${EXT_PYTHON}/matplotlib_setupext.py ${EXT_PYTHON}/${MATLIBPLOT_FOLDER}/setupext.py" "/dev/null" 1
     fi
     #The following is needed from matplotlib to works
     shouldIDoIt pymodule ${TK_TAR}
     if [ $? -eq 1 ]; then
-      echoExecRedirectEverything "cd ${EXT_PYTHON}/${TK_FOLDER}/unix/" "/dev/null"
+      echoExecRedirectEverything "cd ${EXT_PYTHON}/${TK_FOLDER}/unix/" "/dev/null" 1
       echoExecRedirectEverything "ln -sf libtk8.5.so  libtk.so" "/dev/null"
-      echoExecRedirectEverything "ln -sf libtk8.5.so  libtk.so" "/dev/null"
+      echoExecRedirectEverything "cd -" "/dev/null" 1
     fi
-    shouldIDoIt pymodule ${TK_TAR}
+    shouldIDoIt pymodule ${TCL_TAR}
     if [ $? -eq 1 ]; then
-      echoExecRedirectEverything "cd ${EXT_PYTHON}/${TCL_FOLDER}/unix/" "/dev/null"
+      echoExecRedirectEverything "cd ${EXT_PYTHON}/${TCL_FOLDER}/unix/" "/dev/null" 1
       echoExecRedirectEverything "ln -sf libtcl8.5.so  libtcl.so" "/dev/null"
+      echoExecRedirectEverything "cd -" "/dev/null" 1
     fi
   fi
 }
@@ -1597,16 +1608,18 @@ fi
 shouldIDoIt library ${NMA_TAR}
 if [ $? -eq 1 ]; then
   if [ $DO_COMPILE  -eq 1 ]; then
-    echoExecRedirectEverything "cd ${XMIPP_HOME}/external/NMA/ElNemo" "/dev/null"
-    echoExecRedirectEverything "make" "/dev/null"
+    echoExecRedirectEverything "cd ${XMIPP_HOME}/external/NMA/ElNemo" "/dev/null" 1
+    echoExecRedirectEverything "make" "/dev/null" 1
     echoExecRedirectEverything "cp nma_* ${XMIPP_HOME}/bin" "/dev/null"
-    echoExecRedirectEverything "cd ${XMIPP_HOME}/external/NMA/NMA_cart" "/dev/null"
-    echoExecRedirectEverything "make" "/dev/null" 
+    echoExecRedirectEverything "cp -" "/dev/null"  1
+    echoExecRedirectEverything "cd ${XMIPP_HOME}/external/NMA/NMA_cart" "/dev/null" 1
+    echoExecRedirectEverything "make" "/dev/null" 1
     echoExecRedirectEverything "cp nma_* ${XMIPP_HOME}/bin" "/dev/null"
-    echoExecRedirectEverything "cd ${XMIPP_HOME}" "/dev/null"
+    echoExecRedirectEverything "cp -" "/dev/null"  1
+    echoExecRedirectEverything "cd ${XMIPP_HOME}" "/dev/null" 1
     echoExecRedirectEverything "cp ${XMIPP_HOME}/external/NMA/nma_* ${XMIPP_HOME}/bin" "/dev/null"
     echoExecRedirectEverything "cp ${XMIPP_HOME}/external/NMA/m_inout_Bfact.py ${XMIPP_HOME}/bin" "/dev/null"
-    echoExecRedirectEverything "cp -" "/dev/null" 
+    echoExecRedirectEverything "cp -" "/dev/null"  1
   fi
 fi
 
@@ -1797,8 +1810,8 @@ if [ $DO_CLTOMO -eq 1 ]; then
   fi
   shouldIDoIt library ${SHALIGNMENT_TAR}
   if [ $? -eq 1 ]; then
-    echoExecRedirectEverything "cd ${EXT_PATH}/${SHALIGNMENT_FOLDER}" "/dev/null"
-    echoExecRedirectEverything "./compile.sh" "/dev/null"
+    echoExecRedirectEverything "cd ${EXT_PATH}/${SHALIGNMENT_FOLDER}" "/dev/null" 1
+    echoExecRedirectEverything "./compile.sh" "/dev/null" 1
   fi
 fi
 
@@ -1815,7 +1828,7 @@ fi
 
 if [ $DO_SETUP -eq 1 ]; then
   echoGreen "Compiling XMIPP ..."
-  echoExecRedirectEverything "cd ${XMIPP_HOME}" "/dev/null"
+  echoExecRedirectEverything "cd ${XMIPP_HOME}" "/dev/null" 1
   echoExec "./setup.py -j ${NUMBER_OF_CPU} configure ${CONFIGURE_ARGS} compile ${COMPILE_ARGS} ${GUI_ARGS} install"
 fi
 
