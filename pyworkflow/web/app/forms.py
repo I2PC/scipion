@@ -339,8 +339,9 @@ class ShowjForm(forms.Form):
             self.fields['volumesToRenderComboBox'] = forms.ChoiceField(label='Select Volume',
                                                             required=False,
                                                             choices = volumesToRenderComboBoxValues)
-            if self.data['mode'] != 'gallery':
+            if self.data['mode'] == 'table':
                 self.fields['volumesToRenderComboBox'].widget=forms.HiddenInput()
+            if self.data['mode'] != 'gallery':                
                 self.fields['resliceComboBox'].widget=forms.HiddenInput()
         else:
             self.fields['resliceComboBox'].widget=forms.HiddenInput()   
