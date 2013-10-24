@@ -36,6 +36,7 @@ OS_TYPE=$(uname)
 IS_MAC=0
 IS_MINGW=0
 IS_LINUX=0
+DELETE_ANSWER="n"
 
 #Some flags variables
 DO_UNTAR=1
@@ -1237,7 +1238,6 @@ initial_definitions()
 
 decompressExternals()
 {
-  DELETE_ANSWER="n"
   tic
   echo
   echoExecRedirectEverything "cd ${EXT_PATH}" "/dev/null"
@@ -1269,7 +1269,6 @@ decompressExternals()
 
 decompressPython()
 {
-  DELETE_ANSWER="n"
   tic
   echo
   echoExecRedirectEverything "cd ${EXT_PATH}/python" "/dev/null"
@@ -1296,7 +1295,6 @@ decompressPython()
 
 decompressPythonModules()
 {
-  DELETE_ANSWER="n"
   tic
   echo
   echoExecRedirectEverything "cd ${EXT_PATH}/python" "/dev/null"
@@ -1429,6 +1427,118 @@ fi
 #################### COMPILING EXTERNAL LIBRARIES ################################
 ##################################################################################
 
+
+#################### ALGLIB ###########################
+shouldIDoIt library ${ALGLIB_TAR}
+if ([ $? -eq 1 ] && ([ $DO_COMPILE -eq 1 ] || [ $DO_CONFIGURE -eq 1 ])); then
+  echo
+  echoGreen "Note: alglib configure and compile is delegated into Scons. For compiling it xcompile must be used."
+  echo
+fi
+
+#################### BILIB ###########################
+shouldIDoIt library ${BILIB_TAR}
+if ([ $? -eq 1 ] && ([ $DO_COMPILE -eq 1 ] || [ $DO_CONFIGURE -eq 1 ])); then
+  echo
+  echoGreen "Note: bilib configure and compile is delegated into Scons. For compiling it xcompile must be used."
+  echo
+fi
+
+#################### CONDOR ###########################
+shouldIDoIt library ${CONDOR_TAR}
+if ([ $? -eq 1 ] && ([ $DO_COMPILE -eq 1 ] || [ $DO_CONFIGURE -eq 1 ])); then
+  echo
+  echoGreen "Note: condor configure and compile is delegated into Scons. For compiling it xcompile must be used."
+  echo
+fi
+
+#################### FFTW ###########################
+shouldIDoIt library ${FFTW_TAR}
+if [ $? -eq 1 ]; then
+  if [ $DO_CLEAN  -eq 1 ]; then
+    uninstall_libs ${FFTW_FOLDER}/.libs libfftw3 3 true
+    uninstall_libs ${FFTW_FOLDER}/threads/.libs libfftw3_threads 3 true
+    uninstall_libs ${FFTW_FOLDER}/.libs libfftw3f 3 true
+  fi
+  if [ $DO_CONFIGURE  -eq 1 ]; then
+    if [ $IS_MINGW -eq 1 ]; then
+      FFTWFLAGS=" CPPFLAGS=-I/c/MinGW/include CFLAGS=-I/c/MinGW/include"
+    else
+      FFTWFLAGS=""
+    fi
+    FLAGS="${FFTWFLAGS} --enable-threads"
+    configure_library ${FFTW_FOLDER} "." "." ${FLAGS}
+  fi
+  if [ $DO_COMPILE  -eq 1 ]; then
+    compile_library ${FFTW_FOLDER} "." "." ${FLAGS}
+    install_libs ${FFTW_FOLDER}/.libs libfftw3 3 true
+    install_libs ${FFTW_FOLDER}/threads/.libs libfftw3_threads 3 true
+  fi
+
+  if [ $DO_CONFIGURE  -eq 1 ]; then
+    FLAGS="${FFTWFLAGS} --enable-float"
+    configure_library ${FFTW_FOLDER} "." "." ${FLAGS}
+  fi
+  if [ $DO_COMPILE  -eq 1 ]; then
+    compile_library ${FFTW_FOLDER} "." "." ${FLAGS}
+    install_libs ${FFTW_FOLDER}/.libs libfftw3f 3 true
+  fi
+fi
+
+#################### GTEST ###########################
+shouldIDoIt library ${GTEST_TAR}
+if ([ $? -eq 1 ] && ([ $DO_COMPILE -eq 1 ] || [ $DO_CONFIGURE -eq 1 ])); then
+  echo
+  echoGreen "Note: gtest configure and compile is delegated into Scons. For compiling it xcompile must be used."
+  echo
+fi
+
+#################### HDF5 ###########################
+shouldIDoIt library ${HDF5_TAR}
+if [ $? -eq 1 ]; then
+  if [ $DO_CLEAN  -eq 1 ]; then
+    uninstall_libs ${HDF5_FOLDER}/src/.libs libhdf5 7 false
+    uninstall_libs ${HDF5_FOLDER}/c++/src/.libs libhdf5_cpp 7 false
+  fi
+  if [ $DO_COMPILE  -eq 1 ]; then
+    configure_library ${HDF5_FOLDER} "." "." "CPPFLAGS=-w --enable-cxx"
+    compile_library ${HDF5_FOLDER} "." "." "CPPFLAGS=-w --enable-cxx"
+    install_libs ${HDF5_FOLDER}/src/.libs libhdf5 7 false
+    install_libs ${HDF5_FOLDER}/c++/src/.libs libhdf5_cpp 7 false
+  fi
+fi
+
+#################### IMAGEJ ###########################
+shouldIDoIt library ${IMAGEJ_TAR}
+if ([ $? -eq 1 ] && ([ $DO_COMPILE -eq 1 ] || [ $DO_CONFIGURE -eq 1 ])); then
+  echo
+  echoGreen "Note: imagej configure and compile is delegated into Scons. For compiling it xcompile must be used."
+  echo
+fi
+
+#################### JPEG ###########################
+shouldIDoIt library ${JPEG_TAR}
+if [ $? -eq 1 ]; then
+  if [ $DO_CLEAN  -eq 1 ]; then
+    uninstall_libs ${JPEG_FOLDER}/.libs libjpeg 8 false
+  fi
+  if [ $DO_CONFIGURE  -eq 1 ]; then
+    configure_library ${JPEG_FOLDER} "." "." "CPPFLAGS=-w"
+  fi
+  if [ $DO_COMPILE  -eq 1 ]; then
+    compile_library ${JPEG_FOLDER} "." "." "CPPFLAGS=-w"
+    install_libs ${JPEG_FOLDER}/.libs libjpeg 8 false
+  fi
+fi
+
+#################### IMAGEJ ###########################
+shouldIDoIt library ${SCONS_TAR}
+if ([ $? -eq 1 ] && ([ $DO_COMPILE -eq 1 ] || [ $DO_CONFIGURE -eq 1 ])); then
+  echo
+  echoGreen "Note: scons doesn't need to be configured nor compiled. "
+  echo
+fi
+
 #################### SQLITE ###########################
 shouldIDoIt library ${SQLITE_TAR}
 if [ $? -eq 1 ]; then
@@ -1468,54 +1578,6 @@ if [ $? -eq 1 ]; then
   fi
 fi
 
-#################### FFTW ###########################
-shouldIDoIt library ${FFTW_TAR}
-if [ $? -eq 1 ]; then
-  if [ $DO_CLEAN  -eq 1 ]; then
-    uninstall_libs ${FFTW_FOLDER}/.libs libfftw3 3 true
-    uninstall_libs ${FFTW_FOLDER}/threads/.libs libfftw3_threads 3 true
-    uninstall_libs ${FFTW_FOLDER}/.libs libfftw3f 3 true
-  fi
-  if [ $DO_CONFIGURE  -eq 1 ]; then
-    if [ $IS_MINGW -eq 1 ]; then
-      FFTWFLAGS=" CPPFLAGS=-I/c/MinGW/include CFLAGS=-I/c/MinGW/include"
-    else
-      FFTWFLAGS=""
-    fi
-    FLAGS="${FFTWFLAGS} --enable-threads"
-    configure_library ${FFTW_FOLDER} "." "." ${FLAGS}
-  fi
-  if [ $DO_COMPILE  -eq 1 ]; then
-    compile_library ${FFTW_FOLDER} "." "." ${FLAGS}
-    install_libs ${FFTW_FOLDER}/.libs libfftw3 3 true
-    install_libs ${FFTW_FOLDER}/threads/.libs libfftw3_threads 3 true
-  fi
-
-  if [ $DO_CONFIGURE  -eq 1 ]; then
-    FLAGS="${FFTWFLAGS} --enable-float"
-    configure_library ${FFTW_FOLDER} "." "." ${FLAGS}
-  fi
-  if [ $DO_COMPILE  -eq 1 ]; then
-    compile_library ${FFTW_FOLDER} "." "." ${FLAGS}
-    install_libs ${FFTW_FOLDER}/.libs libfftw3f 3 true
-  fi
-fi
-
-#################### JPEG ###########################
-shouldIDoIt library ${JPEG_TAR}
-if [ $? -eq 1 ]; then
-  if [ $DO_CLEAN  -eq 1 ]; then
-    uninstall_libs ${JPEG_FOLDER}/.libs libjpeg 8 false
-  fi
-  if [ $DO_CONFIGURE  -eq 1 ]; then
-    configure_library ${JPEG_FOLDER} "." "." "CPPFLAGS=-w"
-  fi
-  if [ $DO_COMPILE  -eq 1 ]; then
-    compile_library ${JPEG_FOLDER} "." "." "CPPFLAGS=-w"
-    install_libs ${JPEG_FOLDER}/.libs libjpeg 8 false
-  fi
-fi
-
 #################### TIFF ###########################
 shouldIDoIt library ${TIFF_TAR}
 if [ $? -eq 1 ]; then
@@ -1528,21 +1590,6 @@ if [ $? -eq 1 ]; then
   if [ $DO_COMPILE  -eq 1 ]; then
     compile_library ${TIFF_FOLDER} "." "." "CPPFLAGS=-w --with-jpeg-include-dir=${EXT_PATH}/${VJPEG} --with-jpeg-lib-dir=${XMIPP_HOME}/lib"
     install_libs ${TIFF_FOLDER}/libtiff/.libs libtiff 3 false
-  fi
-fi
-
-#################### HDF5 ###########################
-shouldIDoIt library ${HDF5_TAR}
-if [ $? -eq 1 ]; then
-  if [ $DO_CLEAN  -eq 1 ]; then
-    uninstall_libs ${HDF5_FOLDER}/src/.libs libhdf5 7 false
-    uninstall_libs ${HDF5_FOLDER}/c++/src/.libs libhdf5_cpp 7 false
-  fi
-  if [ $DO_COMPILE  -eq 1 ]; then
-    configure_library ${HDF5_FOLDER} "." "." "CPPFLAGS=-w --enable-cxx"
-    compile_library ${HDF5_FOLDER} "." "." "CPPFLAGS=-w --enable-cxx"
-    install_libs ${HDF5_FOLDER}/src/.libs libhdf5 7 false
-    install_libs ${HDF5_FOLDER}/c++/src/.libs libhdf5_cpp 7 false
   fi
 fi
 
@@ -1736,6 +1783,10 @@ shouldIDoIt pymodule ${PYMPI_TAR}
 if [ $? -eq 1 ]; then
   compile_pymodule ${PYMPI_FOLDER}
 fi
+
+##################################################################################
+#################### COMPILING SHALIGNMENT AND SCIPY #############################
+##################################################################################
 
 if [ $DO_CLTOMO -eq 1 ]; then
   # Fast Rotational Matching
