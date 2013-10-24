@@ -936,7 +936,7 @@ public class GalleryData {
 		if (!md.containsLabel(idlabel))
 			return null;
 
-		MetaData row;
+		MetaData mdRow = new MetaData();
 		MetaData imagesmd = new MetaData();
 		int index = 0;
 		String imagepath;
@@ -948,16 +948,17 @@ public class GalleryData {
 				if (imagepath != null && ImageGeneric.exists(imagepath)) {
 					id2 = imagesmd.addObject();
 					if (useGeo) {
-						row = md.getRow(id);
-						row.setValueString(idlabel, imagepath,
-								row.firstObject());
-						imagesmd.setRow(row, id2);
+						md.getRow(id, mdRow);
+						mdRow.setValueString(idlabel, imagepath,
+								mdRow.firstObject());
+						imagesmd.setRow(mdRow, id2);
 					} else
 						imagesmd.setValueString(idlabel, imagepath, id2);
 				}
 			}
 			index++;
 		}
+		mdRow.destroy();
 		return imagesmd;
 	}
 

@@ -360,7 +360,7 @@ public class MetadataTest
 			MetaData imagesmd = new MetaData();
 			String imagepath;
 			int idlabel = MDLabel.MDL_IMAGE;
-			MetaData row;
+			MetaData mdRow = new MetaData();
 			
 			long id2;
 			for (long id : md.findObjects())
@@ -369,9 +369,9 @@ public class MetadataTest
 				if (imagepath != null && ImageGeneric.exists(imagepath))
 				{
 					id2 = imagesmd.addObject();
-					row = md.getRow(id);
-					row.setValueString(idlabel, imagepath, row.firstObject());
-					imagesmd.setRow(row, id2);
+					md.getRow(id, mdRow);
+					mdRow.setValueString(idlabel, imagepath, mdRow.firstObject());
+					imagesmd.setRow(mdRow, id2);
 				}
 			}
 			
@@ -379,6 +379,7 @@ public class MetadataTest
 			
 			imagesmd.destroy();
 			md.destroy();
+			mdRow.destroy();
 			
 			System.out.println("updateMetaDataRowWithRow ended...");
 		}
