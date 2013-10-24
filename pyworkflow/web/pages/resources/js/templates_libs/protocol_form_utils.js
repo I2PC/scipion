@@ -127,17 +127,25 @@ $(document).ready(function() {
 			/* Launch the viewers with the options chosen */
 			var action = "/viewer/";
 			
-			$.post(action, $("#protocolForm").serialize(), function(html) {
+			$.post(action, $("#protocolForm").serialize(), function(json) {
 				$('.messi').remove();
 				$('.messi-modal').remove();
-								
-				if(html=="errorInput"){
-					var msg = messiError("Input was not selected, please choose one.");
-					launchMessiSimple("Error",msg);
-				} else {
-					customPopupHTML(html,775,470);
-				}
-			});
+				
+				$.each(json, function(key, value) {
+					if(key=="url_form"){
+						customPopup(value,500,350);
+					}
+					else if(key=="html"){
+						customPopupHTML(value,800,600);
+					}
+					else if(key=="url"){
+						customPopup(value,1024,600);
+					}
+					else if(key=="plot"){
+						customPopup(value,600,500);
+					}
+				});
+			},"json");
 		}
 		// Important. Stop the normal POST
 		return false;
