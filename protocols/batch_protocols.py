@@ -677,7 +677,7 @@ class XmippProjectGUI():
             run = self.lastRunSelected
             showButtons = False
             try:
-                if not exists(run['script']):
+                if (run is None) or (not exists(run['script'])):
                     return
                 
                 run_state = run['run_state']
