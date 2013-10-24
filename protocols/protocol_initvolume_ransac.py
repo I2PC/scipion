@@ -10,8 +10,7 @@
 
 from protlib_base import *
 from os.path import join, exists, split, basename
-from xmipp import MetaData, MetaDataInfo, MD_APPEND, MDL_MAXCC, MDL_WEIGHT, \
-    MDL_IMAGE, \
+from xmipp import MetaData, MetaDataInfo, MD_APPEND, MDL_MAXCC, MDL_WEIGHT, MDL_IMAGE, \
     MDL_VOLUME_SCORE_SUM, MDL_VOLUME_SCORE_SUM_TH, MDL_VOLUME_SCORE_MEAN, MDL_VOLUME_SCORE_MIN
 
 from math import floor
