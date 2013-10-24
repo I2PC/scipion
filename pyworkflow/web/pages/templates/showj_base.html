@@ -385,6 +385,7 @@
 
 			<form id="showjForm" action="/showj/" method="post"> {% csrf_token %}
 				<div id="modeContainer" class="sectionMenu">
+					<!-- TABLE -->
 					<input type="submit" value="table" name="select_mode" onclick="document.forms['showjForm'].id_mode.value='table';" class="submitButton
 					 {% if form.mode.value != 'table' %}
 					  tableOff
@@ -396,6 +397,8 @@
 					  disabled
 					  {% endif %}
 					  />
+					
+					<!-- GALLERY -->
 					<input type="submit" value="gallery" name="select_mode" onclick="document.forms['showjForm'].id_mode.value='gallery';" class="submitButton
 					 {% if form.mode.value != 'gallery'  %}
 					  galleryOff
@@ -409,7 +412,7 @@
 					 {% endif %}
 					 />
 					 
-					
+					<!-- VOLUME VISUALIZE WITH ASTEX -->
 					{% if form.dims.value == '3d' %} 
 					<input type="submit" value="volume_astex" name="select_mode" onclick="document.forms['showjForm'].id_mode.value='volume_astex';" class="submitButton
 					 {% if form.mode.value != 'volume_astex' %}
@@ -418,10 +421,10 @@
 					  visualizeVolOn
 					 {% endif %}
 					 "
-					 
-					   
 					 />
 					 {% endif %}
+					 
+					 <!-- VOLUME VISUALIZE WITH CHIMERA -->
 					 {% if form.dims.value == '3d' %} 
 					<input type="submit" value="volume_chimera" name="select_mode" onclick="document.forms['showjForm'].id_mode.value='volume_chimera';" class="submitButton
 					 {% if form.mode.value != 'volume_chimera' %}

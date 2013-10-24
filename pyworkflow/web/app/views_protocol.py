@@ -13,6 +13,7 @@ from django.http import HttpResponse
 def form(request):
     project, protocol = loadProtocolProject(request, requestType='GET')
     action = request.GET.get('action', None)
+    protRunIdViewer = request.GET.get('protRunIdViewer', None)
     hosts = [host.getLabel() for host in project.getSettings().getHosts()]
     
     visualize = 0 
@@ -55,6 +56,7 @@ def form(request):
     
     context = {'projectName':project.getName(),
                'protocol':protocol,
+               'protRunIdViewer':protRunIdViewer,
                'definition':protocol._definition,
                'visualize':visualize,
                'favicon': getResourceIcon('favicon'),
