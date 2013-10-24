@@ -11,7 +11,8 @@
 from protlib_base import *
 from os.path import join, exists, split, basename
 from xmipp import MetaData, MetaDataInfo, MD_APPEND, MDL_MAXCC, MDL_WEIGHT, \
-    MDL_IMAGE, MDL_VOLUME_SCORE1, MDL_VOLUME_SCORE2, MDL_VOLUME_SCORE3, MDL_VOLUME_SCORE4
+    MDL_IMAGE, \
+    MDL_VOLUME_SCORE_SUM, MDL_VOLUME_SCORE_SUM_TH, MDL_VOLUME_SCORE_MEAN, MDL_VOLUME_SCORE_MIN
 
 from math import floor
 from numpy import array, savetxt, sum, zeros
@@ -313,8 +314,8 @@ def scoreFinalVolumes(log,WorkingDir,NumVolumes):
             avg=sum/N
             id=mdOut.addObject()
             mdOut.setValue(MDL_IMAGE,fnRoot+".vol",id)
-            mdOut.setValue(MDL_VOLUME_SCORE1,float(sum),id)
-            mdOut.setValue(MDL_VOLUME_SCORE2,float(thresholdedSum),id)
-            mdOut.setValue(MDL_VOLUME_SCORE3,float(avg),id)
-            mdOut.setValue(MDL_VOLUME_SCORE4,float(minCC),id)
+            mdOut.setValue(MDL_VOLUME_SCORE_SUM,float(sum),id)
+            mdOut.setValue(MDL_VOLUME_SCORE_SUM_TH,float(thresholdedSum),id)
+            mdOut.setValue(MDL_VOLUME_SCORE_MEAN,float(avg),id)
+            mdOut.setValue(MDL_VOLUME_SCORE_MIN,float(minCC),id)
     mdOut.write(os.path.join(WorkingDir,"proposedVolumes.xmd"))
