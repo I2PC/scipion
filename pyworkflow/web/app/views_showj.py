@@ -180,6 +180,7 @@ def showj(request, inputParameters=None):
                'projectName': request.session['projectName'],
                'form': showjForm,
                
+#               NAPA DE LUXE: ESTO es un poco cutre
                'STATIC_URL' :settings.STATIC_URL,
                'volLink': volLink,
                'volType': 2, #0->byte, 1 ->Integer, 2-> Float
@@ -455,6 +456,12 @@ def visualizeObject(request):
         fn = project.getTmpPath(obj.getName() + '_images.xmd')
         writeSetOfParticles(obj, fn)
         inputParameters['path']= join(projectPath, fn)
+    elif isinstance(obj, Image):
+        fn = project.getTmpPath(obj.getName() + '_image.xmd')
+        writeSetOfParticles(obj, fn)
+        inputParameters['path']= join(projectPath, fn)
+        
+        
     elif isinstance(obj, SetOfClasses2D):
         fn = project.getTmpPath(obj.getName() + '_classes.xmd')
         writeSetOfClasses2D(obj, fn)
