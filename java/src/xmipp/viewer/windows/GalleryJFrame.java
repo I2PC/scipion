@@ -1869,9 +1869,11 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 					ImagesWindowFactory.openCTFWindow(imp, ctfModel, psdFile);
 				else
 				{
-					MetaData mdRow = data.md.getRow(data.ids[row]);
+					MetaData mdRow = new MetaData(); 
+					data.md.getRow(data.ids[row], mdRow);
 					String sortFn = psdFile.replace(".psd", ".tmpSort.xmd");
 					mdRow.write(sortFn);
+					mdRow.destroy();
 					ImagesWindowFactory.openCTFImage(imp, ctfModel, psdFile, ctfTasks, data.md.getFilename(), row, sortFn);
 				}
 

@@ -332,6 +332,10 @@ enum MDLabel
 
     MDL_TEST_SIZE,// < number of test assigned to a program
 
+    MDL_VOLUME_SCORE_SUM, /// < Score corresponding to the sum of cc with cc>threshold
+    MDL_VOLUME_SCORE_SUM_TH, ///< Score corresponding to the sum of cc-threshold with cc>threshold
+    MDL_VOLUME_SCORE_MEAN, ///< Score corresponding to the mean of cc with cc>threshold
+    MDL_VOLUME_SCORE_MIN, ///< Score corresponding to the min of cc with cc>threshold
     MDL_VOLUME_SCORE1,/// < Score 1 for volumes
     MDL_VOLUME_SCORE2,/// < Score 2 for volumes
     MDL_VOLUME_SCORE3,/// < Score 3 for volumes
