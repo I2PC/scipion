@@ -127,4 +127,23 @@ class ProtocolViewer(Protocol, Viewer):
     def _viewAll(self, *args):
         """ Visualize all data give the parameters. """
         pass
+    
+    #TODO: This method should not be necessary, instead NumericListParam should return a list and not a String 
+    def _getListFromRangeString(self, rangeStr):
+        ''' Create a list of integer from a string with range definitions
+        Examples:
+        "1,5-8,10" -> [1,5,6,7,8,10]
+        "2,6,9-11" -> [2,6,9,10,11]
+        "2 5, 6-8" -> [2,5,6,7,8]
+        '''
+        elements = rangeStr.split(',')
+        values = []
+        for e in elements:
+            if '-' in e:
+                limits = e.split('-')
+                values += range(int(limits[0]), int(limits[1])+1)
+            else:
+                # If values are separated by comma also splitted 
+                values += map(int, e.split())
+        return values
 
