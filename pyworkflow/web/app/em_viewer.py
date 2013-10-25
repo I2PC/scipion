@@ -71,30 +71,39 @@ def viewer(request):
     project, protocolViewer = loadProtocolProject(request)
     updateProtocolParams(request, protocolViewer, project)
     protId = request.POST.get('protRunIdViewer', None)
-    viewerParam = request.POST.get('viewerParam', None)
     protocol = project.mapper.selectById(int(protId))
     functionName = protocolViewer.getViewFunction()
     
-    if viewerParam == "None":
-        function = globals().get(functionName, None)
-        
-        if function is None:
-            pass  # redirect to error: viewer not found
-        elif not callable(function):
-            pass  # redirect to error: name is not a function
-        else:
-            ioDict = function(request, protocol, protocolViewer)
+    function = globals().get(functionName, None)
+    
+    if function is None:
+        pass  # redirect to error: viewer not found
+    elif not callable(function):
+        pass  # redirect to error: name is not a function
     else:
-        functionName = protocolViewer.getVisualizeDictWeb()[viewerParam]
-        function = globals().get(functionName, None)
-        
-        if function is None:
-            pass  # redirect to error: viewer not found
-        elif not callable(function):
-            pass  # redirect to error: name is not a function
-        else:
-            ioDict= {}
-            ioDict["url"] = function(request, protocol, protocolViewer)
+        ioDict = function(request, protocol, protocolViewer)
+    
+    jsonStr = json.dumps(ioDict, ensure_ascii=False)
+    print jsonStr
+    return HttpResponse(jsonStr, mimetype='application/javascript')
+
+def viewerElm(request):
+    project, protocolViewer = loadProtocolProject(request)
+    updateProtocolParams(request, protocolViewer, project)
+    protId = request.POST.get('protRunIdViewer', None)
+    viewerParam = request.POST.get('viewerParam', None)
+    protocol = project.mapper.selectById(int(protId))
+
+    functionName = protocolViewer.getVisualizeDictWeb()[viewerParam]
+    function = globals().get(functionName, None)
+    
+    if function is None:
+        pass  # redirect to error: viewer not found
+    elif not callable(function):
+        pass  # redirect to error: name is not a function
+    else:
+        ioDict= {}
+        ioDict["url"] = function(request, protocol, protocolViewer)
     
     jsonStr = json.dumps(ioDict, ensure_ascii=False)
     return HttpResponse(jsonStr, mimetype='application/javascript')
@@ -110,9 +119,7 @@ def viewerML2D(request, protocol, protocolViewer):
     else:
         ioDict["plots"]= doSomePlotsML2D(protocolViewer, protocol)
         
-    print ioDict
     return ioDict
-
 
 def doShowClasses(request, protocol, protocolViewer):
     from views_showj import visualizeObject

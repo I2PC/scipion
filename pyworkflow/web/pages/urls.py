@@ -54,6 +54,7 @@ urlpatterns = patterns('',
     #VIEWERS
     url(r'^launch_viewer/$', 'app.em_viewer.launch_viewer'),
     url(r'^viewer/$', 'app.em_viewer.viewer'),
+    url(r'^viewerElm/$', 'app.em_viewer.viewerElm'),
     url(r'^view_plots/$', 'app.em_viewer.view_plots'),
     url(r'^view_plot_xmipp/$', 'app.em_viewer.view_plot_xmipp'),
     

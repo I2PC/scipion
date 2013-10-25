@@ -140,7 +140,29 @@ $(document).ready(function() {
 						customPopup(value,700,500);
 					}
 				});
-				window.opener.location.reload(true);
+			},"json");
+		} else if (mode == 'viewerElm') {
+			
+			new Messi("<img src='/resources/visualize.gif'/>  Loading Viewer...",{
+				modal : true
+				});
+			
+			/* Launch the viewers with the options chosen */
+			var action = "/viewerElm/";
+			
+			$.post(action, $("#protocolForm").serialize(), function(json) {
+				$('.messi').remove();
+				$('.messi-modal').remove();
+				
+				$.each(json, function(key, value) {
+					if(key=="url"){
+						customPopup(value,1024,600);
+					} else if(key=="plot"){
+						customPopup(value,600,500);
+					} else {
+						customPopup(value,700,500);
+					}
+				});
 			},"json");
 		}
 		// Important. Stop the normal POST
