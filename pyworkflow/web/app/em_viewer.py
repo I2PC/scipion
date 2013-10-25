@@ -30,51 +30,88 @@ def launch_viewer(request):
         elif not callable(function):
             pass  # redirect to error: name is not a function
         else:
-            ioDict = function(request, protocol, viewer)
+            ioDict = function(project, protocol, viewer)
        
         jsonStr = json.dumps(ioDict, ensure_ascii=False)
     return HttpResponse(jsonStr, mimetype='application/javascript')
 
-def viewerXmipp(request, protocol, viewer):
-    protId = request.GET.get('protocolId', None)
+def viewerXmipp(project, protocol, viewer):
     
     if getattr(protocol, 'outputMicrographs', False):
         objId = protocol.outputMicrographs.getObjId()
     elif getattr(protocol, 'outputParticles', False):
         objId = protocol.outputParticles.getObjId()
     
-    url_plotter = "/view_plot/?protocolId="+protId
-    
     from views_showj import visualizeObject
     url_showj = "/visualize_object/?objectId="+str(objId)
+
+    protId = protocol.getObjId()
+    url_plotter = "/view_plot/?protocolId="+ str(protId)
     
     ioDict = {"url": url_showj , "plot" : url_plotter}
     return ioDict
 
-def viewerForm(request, protocol, viewer):
+def viewerForm(project, protocol, viewer):
+    protId = protocol.getObjId()
     viewerClassName = viewer.__class__.__name__
-    ioDict = {"url_form": "/form/?protocolClass="+ viewerClassName +"&action=visualize"}
-    return ioDict  
+    
+    ioDict = {"url_form": "/form/?protocolClass="+ viewerClassName +
+              "&protRunIdViewer="+ str(protId) +
+              "&action=visualize"}
+    
+    return ioDict 
 
 ############## 2ND STEP: VIEWER FUNCTION METHODS ##############
 def viewer(request):
-    project, protocol = loadProtocolProject(request)
-    updateProtocolParams(request, protocol, project)
+    project, protocolViewer = loadProtocolProject(request)
+    updateProtocolParams(request, protocolViewer, project)
+    protId = request.POST.get('protRunIdViewer', None)
+    protocol = project.mapper.selectById(int(protId))
     
-    functionName = protocol.getViewFunction()
+    functionName = protocolViewer.getViewFunction()
     function = globals().get(functionName, None)    
     
     if function is None:
-        pass  # redirect to error: wizard not found
+        pass  # redirect to error: viewer not found
     elif not callable(function):
         pass  # redirect to error: name is not a function
     else:
-        return function(request, protocol, viewer)
-
-def viewerML2D (request, protocol, viewer):
+        ioDict = function(request, protocol, protocolViewer)
     
+    jsonStr = json.dumps(ioDict, ensure_ascii=False)
+    print jsonStr
+    return HttpResponse(jsonStr, mimetype='application/javascript')
 
-    return HttpResponse("<h1>Under Construction</h1>");
+def viewerML2D(request, protocol, protocolViewer):
+    ioDict = {}
+    
+    if protocolViewer.doShowClasses:
+        from views_showj import visualizeObject
+        objId = protocol.outputClasses.getObjId()
+        url_showj = "/visualize_object/?objectId="+str(objId)
+        ioDict["url"]= url_showj
+        
+    if protocolViewer.doShowPlots:
+        xplotter = protocolViewer.createPlots(protocol, protocolViewer._plotVars)
+        canvas = xplotter.getCanvas()
+        response= HttpResponse(content_type='image/png')
+        canvas.print_png(response)
+        
+        url_plotter = "/view_plot_web/?protocolId="+ str(protocol.getObjId())
+        
+        ioDict["plot"]= url_plotter
+#        if xplotter:
+#            xplotter.show()
+
+#    else:
+#        html = "plots()"
+        
+#        plots = [p for p in  protocolViewer._plotVars if protocolViewer.getAttributeValue(p)]
+#        xplotter = protocolViewer.createPlots(protocol, plots)
+#        if xplotter:
+#            xplotter.show()
+
+    return ioDict
 
 ############## AUX METHODS ##############
 def view_plot(request):
@@ -107,3 +144,10 @@ def view_plot(request):
         response= HttpResponse(content_type='image/png')
         canvas.print_png(response)
         return response
+    
+def view_plot_web(xplotter):
+    canvas = xplotter.getCanvas()
+    response= HttpResponse(content_type='image/png')
+    canvas.print_png(response)
+    return response
+    

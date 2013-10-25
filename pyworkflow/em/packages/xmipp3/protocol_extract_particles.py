@@ -366,6 +366,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         
         # Create output SetOfParticles
         imgSet = self._createSetOfParticles()
+        imgSet.load()
         imgSet.copyInfo(self.inputMics)
         #imgSet.setHasCTF(self.fnCTF is not None)       
         imgSet.setHasCTF(self.ctfRelations.get() is not None)
@@ -374,6 +375,14 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
             imgSet.setSamplingRate(self.inputMics.getSamplingRate()*self.downFactor.get())
         imgSet.setCoordinates(self.inputCoords)
         readSetOfParticles(fnImages, imgSet, imgSet.hasCTF())
+        # For each particle retrieve micId from SetOFCoordinates and set it on the CTFModel
+        for img in imgSet:
+            coord = self.inputCoords[img.getId()]
+            ctfModel = img.getCTF()
+            if ctfModel is not None:
+                ctfModel.setId(coord.getMicId())
+                img.setCTF(ctfModel)
+                imgSet.update(img)
         imgSet.write()
         
         self._defineOutputs(outputParticles=imgSet)

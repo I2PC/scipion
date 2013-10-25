@@ -259,7 +259,7 @@ def launchXmippProtCL2DAlign(test):
     xmippProtCL2DAlign = XmippProtCL2DAlign(maximumShift=5, numberOfIterations=5, 
                              numberOfMpi=2, numberOfThreads=1, useReferenceImage=False)
     
-    xmippProtCL2DAlign.inputImages.set(test.protImport.outputParticles)
+    xmippProtCL2DAlign.inputParticles.set(test.protImport.outputParticles)
     test.proj.launchProtocol(xmippProtCL2DAlign, wait=True)
     return xmippProtCL2DAlign
 

@@ -33,6 +33,7 @@ class SqliteMapper(Mapper):
     def __init__(self, dbName, dictClasses=None):
         Mapper.__init__(self, dictClasses)
         self.__initObjDict()
+        self.__initUpdateDict()
         try:
             self.db = SqliteDb(dbName)
         except Exception, ex:
@@ -218,6 +219,10 @@ class SqliteMapper(Mapper):
     def __initObjDict(self):
         """ Clear the objDict cache """        
         self.objDict = {}
+        
+    def __initUpdateDict(self):
+        """ Clear the updateDict cache """        
+        self.updateDict = {}
          
     def selectBy(self, iterate=False, objectFilter=None, **args):
         """Select object meetings some criterias"""

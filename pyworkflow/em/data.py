@@ -278,6 +278,10 @@ class Set(EMObject):
         self._size.set(self._size.get() + 1)
         self._idMap[item.getId()] = item
         
+    def update(self, item):
+        """ Update an existing item. """
+        self._mapper.update(item)
+                
     def __str__(self):
         self.loadIfEmpty()
         return "%-20s (%d items)" % (self.getClassName(), self.getSize())
