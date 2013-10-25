@@ -1607,20 +1607,25 @@ fi
 #################### NMA ###########################
 shouldIDoIt library ${NMA_TAR}
 if [ $? -eq 1 ]; then
-  if [ $DO_COMPILE  -eq 1 ]; then
-    echoExecRedirectEverything "cd ${XMIPP_HOME}/external/NMA/ElNemo" "/dev/null" 1
-    echoExecRedirectEverything "make" "/dev/null" 1
-    echoExecRedirectEverything "cp nma_* ${XMIPP_HOME}/bin" "/dev/null"
-    echoExecRedirectEverything "cp -" "/dev/null"  1
-    echoExecRedirectEverything "cd ${XMIPP_HOME}/external/NMA/NMA_cart" "/dev/null" 1
-    echoExecRedirectEverything "make" "/dev/null" 1
-    echoExecRedirectEverything "cp nma_* ${XMIPP_HOME}/bin" "/dev/null"
-    echoExecRedirectEverything "cp -" "/dev/null"  1
-    echoExecRedirectEverything "cd ${XMIPP_HOME}" "/dev/null" 1
-    echoExecRedirectEverything "cp ${XMIPP_HOME}/external/NMA/nma_* ${XMIPP_HOME}/bin" "/dev/null"
-    echoExecRedirectEverything "cp ${XMIPP_HOME}/external/NMA/m_inout_Bfact.py ${XMIPP_HOME}/bin" "/dev/null"
-    echoExecRedirectEverything "cp -" "/dev/null"  1
+  echoExecRedirectEverything "cd ${XMIPP_HOME}/external/NMA/ElNemo" "${XMIPP_HOME}/build/make_NMA.log" 1
+  if [ $DO_CLEAN -eq 1 ]; then
+    echoExecRedirectEverything "make clean" "${XMIPP_HOME}/build/make_NMA.log"
   fi
+  if [ $DO_COMPILE  -eq 1 ]; then
+    FC=${FC:-gfortran}
+    FFLAGS=${fc:-'-O3'}
+    echoExecRedirectEverything "make FC=${FC} FFLAGS=${FFLAGS}" "${XMIPP_HOME}/build/make_NMA.log" 1
+    echoExecRedirectEverything "cp nma_* ${XMIPP_HOME}/bin" "${XMIPP_HOME}/build/make_NMA.log"
+    echoExecRedirectEverything "cd -" "${XMIPP_HOME}/build/make_NMA.log"  1
+    echoExecRedirectEverything "cd ${XMIPP_HOME}/external/NMA/NMA_cart" "${XMIPP_HOME}/build/make_NMA.log" 1
+    echoExecRedirectEverything "make" "${XMIPP_HOME}/build/make_NMA.log" 1
+    echoExecRedirectEverything "cp nma_* ${XMIPP_HOME}/bin" "${XMIPP_HOME}/build/make_NMA.log"
+    echoExecRedirectEverything "cd -" "${XMIPP_HOME}/build/make_NMA.log"  1
+    echoExecRedirectEverything "cd ${XMIPP_HOME}" "${XMIPP_HOME}/build/make_NMA.log" 1
+    echoExecRedirectEverything "cp ${XMIPP_HOME}/external/NMA/nma_* ${XMIPP_HOME}/bin" "${XMIPP_HOME}/build/make_NMA.log"
+    echoExecRedirectEverything "cp ${XMIPP_HOME}/external/NMA/m_inout_Bfact.py ${XMIPP_HOME}/bin" "${XMIPP_HOME}/build/make_NMA.log"
+  fi
+  echoExecRedirectEverything "cd -" "${XMIPP_HOME}/build/make_NMA.log"  1
 fi
 
 #################### TCL/TK ###########################

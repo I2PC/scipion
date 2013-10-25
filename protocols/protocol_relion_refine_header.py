@@ -39,6 +39,11 @@ from a stack <(Spider/MRC)> or metadata file that make up your data set.
 """
 ContinueFrom = ""
 
+# {hidden}Number of classes
+"""The number of classes (K) for a multi-reference refinement. These classes will be made in an unsupervised manner from a single reference by division of the data into random subsets during the first iteration.
+"""
+NumberOfClasses = 1
+
 # {file}(*.vol, *.mrc){validate}(PathExists) Initial 3D reference volume:
 """
 A 3D map in MRC/Spider format. Make sure this map has the same dimensions and 
