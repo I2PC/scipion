@@ -35,19 +35,15 @@ class ProtScreenMicrographs(XmippProtocol):
         self.inputFilename('microscope', 'micrographs', 'acquisition')
         self.inputProperty('TiltPairs', 'MicrographsMd')
         self.micrographs = self.getFilename('micrographs')
-        if not self.TiltPairs:
-            self.MicrographsMd = self.Input['micrographs']
-        else:
-            self.inputFilename('tilted_pairs')
-            self.MicrographsMd = self.Input['tilted_pairs']
+	self.MicrographsMd = self.Input['micrographs']
+        if self.TiltPairs:
+            self.MicrographsMd='micrographPairs@'+self.MicrographsMd
 
     def defineSteps(self):
         extraDir=self.workingDirPath('extra')
         parent_id = self.insertStep('createDir',verifyfiles=[extraDir],path=extraDir)
 
         filesToImport = [self.Input[k] for k in ['microscope', 'acquisition']]
-        if self.TiltPairs:
-            filesToImport.append(self.MicrographsMd)
         self.insertImportOfFiles(filesToImport)
 
         # Read Microscope parameters
@@ -163,12 +159,12 @@ class ProtScreenMicrographs(XmippProtocol):
     
     def regenerateSummary(self,summaryFile):
         import time
-        summaryTime=os.path.getmtime(summaryFile)
+        summaryTime=time.ctime(os.path.getmtime(summaryFile))
         md=xmipp.MetaData(summaryFile)
         regenerate=False
         for objId in md:
             fnCTF=md.getValue(xmipp.MDL_CTF_MODEL,objId)
-            ctfTime=os.path.getmtime(fnCTF)
+            ctfTime=time.ctime(os.path.getmtime(fnCTF))
             if ctfTime>summaryTime:
                 regenerate=True
                 break
