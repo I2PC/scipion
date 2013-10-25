@@ -58,3 +58,33 @@ class ImageHandler(object):
         
     def getDimensions(self):
         pass
+        
+        
+def paramsToTransform(params):
+    """ Convert from geometry params (with Spider/Xmipp standard) to
+    the Transform object (transformation matrix)
+    """
+    # TODO: Remove dependency to Xmipp
+    import xmipp
+    from data import Transform
+    t = Transform()
+    e = xmipp.Euler_angles2matrix(params.angleRot, params.angleTilt, params.anglePsi)
+    m = t._matrix
+    m[:3, :3] = e
+    m[:, 3] = [params.shiftX, params.shiftY, params.shiftZ, 0.]
+    # TODO: Consider mirror and scale
+    return t
+
+       
+def transformToParams(transform):
+    """ Inverse convertion from a Transform to param. """
+    import xmipp
+    from data import TransformParams
+    p = TransformParams()    
+    m = transform._matrix
+    e = m[:3, :3]
+    p.angleRot, p.angleTilt, p.anglePsi = xmipp.Euler_matrix2angles(e)
+    p.shiftX, p.shiftY, p.shiftZ = m[:, 3]
+    # TODO: Consider mirror and scale
+    return p
+
