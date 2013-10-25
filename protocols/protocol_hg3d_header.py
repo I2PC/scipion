@@ -33,9 +33,14 @@ AngularSampling = 5
 #{expert} Number of RANSAC iterations
 """ Number of initial volumes to test by RANSAC
 """
-NRansac = 380
+NRansac = 100
 
-#{expert}{condition}(DimRed =="No") Number of random samples
+#{expert} Number of iterations per RANSAC image group
+""" Number of iterations per smaller dataset group
+"""
+NumHg = 20
+
+#{expert} Number of random samples
 NumSamples = 8
 
 #{expert} Inlier threshold
@@ -107,7 +112,7 @@ VolumesToShow=""
 # {end_of_header} USUALLY YOU DO NOT NEED TO MODIFY ANYTHING BELOW THIS LINE ...
 #------------------------------------------------------------------------------------------------
 
-from from protocol_hg3d import *
+from protocol_hg3d import *
 #        
 # Main
 #     

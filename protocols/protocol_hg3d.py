@@ -19,17 +19,17 @@ from numpy import array, savetxt, sum, zeros
 from protlib_xmipp import getMdSize
 from protlib_utils import getListFromRangeString, runJob, runShowJ
 from protlib_filesystem import copyFile, deleteFile, moveFile, removeFilenamePrefix
-from protlib_initvolume import *
+from protlib_hg3d import *
 
 class ProtHG3D(ProtHG3DBase):
     def __init__(self, scriptname, project):
-        ProtInitVolumeBase.__init__(self, protDict.initvolume_ransac.name, scriptname, project)
+        ProtHG3DBase.__init__(self, protDict.hg3d.name, scriptname, project)
         self.Import += 'from protocol_hg3d import *'
         
     def defineSteps(self):
-        ProtInitVolumeBase.defineSteps(self)
+        ProtHG3DBase.defineSteps(self)
 
-        self.NumHg = 1;
+        #self.NumHg = 1;
         # Generate projection gallery from the initial volume
         if (self.InitialVolume != ''):
             self.insertStep("projectInitialVolume",WorkingDir=self.WorkingDir,InitialVolume=self.InitialVolume,Xdim2=self.Xdim2,
@@ -38,8 +38,8 @@ class ProtHG3D(ProtHG3DBase):
         # RANSAC iterations
         for n in range(self.NRansac):
             self.insertParallelStep('ransacIteration',WorkingDir=self.WorkingDir,n=n,SymmetryGroup=self.SymmetryGroup,Xdim=self.Xdim,
-                                    Xdim2=self.Xdim2,NumGrids=self.NumGrids,NumSamples=self.NumSamples,DimRed=self.DimRed,
-                                    InitialVolume=self.InitialVolume,AngularSampling=self.AngularSampling,
+                                    Xdim2=self.Xdim2,NumSamples=self.NumSamples,InitialVolume=self.InitialVolume,
+                                    AngularSampling=self.AngularSampling,
                                     UseSA=self.UseSA, NIterRandom=self.NIterRandom, Rejection=self.Rejection,
                                     parent_step_id=XmippProjectDb.FIRST_STEP)
         
@@ -84,7 +84,7 @@ class ProtHG3D(ProtHG3DBase):
         return errors
 
     def summary(self):
-        message=ProtInitVolumeBase.summary(self)
+        message=ProtHG3DBase.summary(self)
         message.append("RANSAC iterations: %d"%self.NRansac)
         
         for n in range(self.NumVolumes):
@@ -234,7 +234,7 @@ def reconstruct(log,fnRoot,symmetryGroup,maskRadius):
     runJob(log,"xmipp_reconstruct_fourier","-i %s.xmd -o %s.vol --sym %s " %(fnRoot,fnRoot,symmetryGroup))
     runJob(log,"xmipp_transform_mask","-i %s.vol --mask circular -%d "%(fnRoot,maskRadius))
 
-def ransacIteration(log,WorkingDir,n,SymmetryGroup,Xdim,Xdim2,NumGrids,NumSamples,DimRed,InitialVolume,AngularSampling,UseSA,
+def ransacIteration(log,WorkingDir,n,SymmetryGroup,Xdim,Xdim2,NumSamples,InitialVolume,AngularSampling,UseSA,
                     NIterRandom,Rejection):
     
     NumSameFile = 20

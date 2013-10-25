@@ -27,7 +27,7 @@ protocols = {
         'create_volume_mask': ('Create mask', '3D/Mask'),
         'projmatch': ('Projection Matching', '3D/ProjMatch'),
         'ml3d': ('ML3D', '3D/ML3D'),
-        'hg3d': ('HG3D', '3D/HG3D'),
+        'hg3d': ('HG3D', '3D/InitialVolume/HG3D'),
         'nma': ('Normal Mode Analysis', '3D/NMA'),
         'nma_alignment': ('Flexible alignment', '3D/NMA_alignment'),
         'resolution3D': ('Resolution 3D', '3D/Resolution'),
