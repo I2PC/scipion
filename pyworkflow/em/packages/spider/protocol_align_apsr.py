@@ -23,13 +23,12 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
-from pyworkflow.em.constants import NO_INDEX
 """
 This sub-package contains protocol for particles filters operations
 """
 
-
 from pyworkflow.em import *  
+from pyworkflow.em.constants import NO_INDEX
 from pyworkflow.utils import removeExt, removeBaseExt, makePath, getLastFile
 from constants import *
 from spider import SpiderShell

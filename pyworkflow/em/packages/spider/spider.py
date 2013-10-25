@@ -27,8 +27,12 @@
 This sub-package will contains Spider protocols
 """
 import os
-from os.path import join, dirname, abspath, exists
+from os.path import join, dirname, abspath, exists, basename
+from pyworkflow.utils.path import copyFile, removeExt, replaceExt
+from pyworkflow.utils import runJob
 import subprocess
+
+END_HEADER = 'END BATCH HEADER'
 
 
 def loadEnvironment():
@@ -54,7 +58,38 @@ def getTemplate(templateName):
         raise Exception("getTemplate: template '%s' was not found in templates directory" % templateName)
     
     return templateFile
+
+def copyTemplate(templateName, destDir):
+    """ Copy a template file to a diretory """
+    template = getTemplate(templateName)
+    templateDest = join(destDir, basename(template))
+    copyFile(template, templateDest)
     
+def runSpiderTemplate(templateName, ext, paramsDict):
+    """ This function will create a valid Spider script
+    by copying the template and replacing the values in dictionary.
+    After the new file is read, the Spider interpreter is invoked.
+    """
+    copyTemplate(templateName, '.')
+    scriptName = replaceExt(templateName, ext)
+    print "scriptName:", scriptName
+    
+    fIn = open(templateName, 'r')
+    fOut = open(scriptName, 'w')
+    replace = True # After the end of header, not more value replacement
+    
+    for line in fIn:
+        if END_HEADER in line:
+            replace = False
+        if replace:
+            line = line % paramsDict
+        fOut.write(line)
+    fIn.close()
+    fOut.close()    
+
+    scriptName = removeExt(scriptName)  
+    runJob(None, "spider", "%(ext)s @%(scriptName)s" % locals())
+
 
 class SpiderShell(object):
     """ This class will open a child process running Spider interpreter
@@ -93,13 +128,23 @@ class SpiderShell(object):
         """
         templateFile = getTemplate(templateName)        
         f = open(templateFile, 'r')
+        replace = True # After the end of header, not more value replacement
         
         for line in f:
             line = line.strip()
+            
+            if END_HEADER in line:
+                replace = False
+            
             if not line.startswith(';'): # Skip comment lines
-                line = line % paramsDict
+                try:
+                    if replace:
+                        line = line % paramsDict
+                except Exception, ex:
+                    print ex, "on line: ", line
             self.runCmd(line)
         
+        f.close()
         if self._debug and self._log:
             self._log.close()
         
@@ -108,3 +153,23 @@ class SpiderShell(object):
             self.runCmd("end")
         self._proc.wait()
         # self._proc.kill() TODO: Check if necesary
+        
+
+class SpiderDocFile(object):
+    """ Handler class to read/write spider docfile. """
+    def __init__(self, filename, mode='r'):
+        self._file = open(filename, mode)
+        self._count = 0
+        
+    def writeValues(self, *values):
+        """ Write values in spider docfile. """
+        self._count += 1
+            # write data lines
+        line = "%5d %2d" % (self._count, len(values))
+        for v in values:
+            line += " %11g" % float(v)
+            
+        print >> self._file, line
+
+    def close(self):
+        self._file.close()

@@ -5,20 +5,19 @@
 
 ; ---------------- Parameters ----------------
 
-[idim]          = 80    ; image dimension (square)
-[radius]        = -1    ; particle radius (pixels, used if no custom mask, <0==IDIM/2)
-[cas-option]    = 1     ; correspondence analysis (1), PCA (2), IPCA (3)
-[add-constant]  = 0     ; additive constant if using correspondence analysis (0==automatic)
-[num-factors]   = 25    ; number of eigenfactors to calculate
+[idim]          = %(dim)d              ; image dimension (square)
+[radius]        = %(radius)d           ; particle radius (pixels, used if no custom mask, <0==IDIM/2)
+[cas-option]    = %(analysisType)d     ; correspondence analysis (1), PCA (2), IPCA (3)
+[add-constant]  = %(addConstant)d      ; additive constant if using correspondence analysis (0==automatic)
+[num-factors]   = %(numberOfFactors)d  ; number of eigenfactors to calculate
 
 ; ------------------ Inputs ------------------
 fr l
-[selection_doc]listparticles   ; selection doc file
+[selection_doc]%(spiderSel)s   ; selection doc file
 fr l
-[particles]Filtered/flt*****   ; particle file-pattern
-;[particles]ali/sar******       ; particle file-pattern
+[particles]%(spiderParticles)s@******  ; particle file-pattern
 fr l
-[custom_mask]stkmask@4         ; (optional) custom mask
+[custom_mask]%(spiderMask)s@1          ; (optional) custom mask
 
 ; ------------------ Outputs ------------------
 
@@ -29,9 +28,9 @@ fr l
 fr l
 [ps_eigenvalue_hist][ca_dir]/ps_eigenvalues    ; eigenvalue histogram, encapsulated PostScript
 fr l
-[eigen_img][ca_dir]/eigenimg***                ; eigenimage template
+[eigen_img][ca_dir]/eigenimg@***                ; eigenimage template
 fr l
-[reconstituted_img][ca_dir]/reconstituted***   ; reconstituted image template
+[reconstituted_img][ca_dir]/reconstituted@***   ; reconstituted image template
 fr l
 [ps_factor_map][ca_dir]/factormap              ; eigenvalue factor map, PostScript format
 fr l
