@@ -30,6 +30,8 @@ class ProtRelionRefinner( ProtRelionBase):
     def __init__(self, scriptname, project):
         ProtRelionBase.__init__(self, protDict.relion_refine.name, scriptname, project)
         self.Import = 'from protocol_relion_refine import *'
+        self.relionType='refine'
+
     def summary(self):
         lines = ProtRelionBase.summary(self)
         return lines
@@ -136,8 +138,8 @@ class ProtRelionRefinner( ProtRelionBase):
 #        for item in verifyFiles:
 #            f.write("%s\n" % item)
 #        f.close
-        self.insertRunJobStep(self.program, params,verifyFiles)
-        ###################self.insertRunJobStep('echo shortcut', params,verifyFiles)
+        ###################self.insertRunJobStep(self.program, params,verifyFiles)
+        self.insertRunJobStep('echo shortcut', params,verifyFiles)
 
     def createFilenameTemplates(self):
         myDict=ProtRelionBase.createFilenameTemplates(self)
@@ -159,6 +161,7 @@ class ProtRelionRefinner( ProtRelionBase):
         #myDict['volumeFinal']      = self.extraIter2 + "class%(ref3d)03d.spi"
         #myDict['volumeMRCFinal']   = self.extraIter2 + "class%(ref3d)03d.mrc:mrc"
         myDict['volumeFinal']   = self.extraIter2 + "class%(ref3d)03d.mrc:mrc"
+        myDict['modelXmFinal']=self.ExtraDir+'/relion_model.xmd'
 
         return myDict
 

@@ -20,7 +20,6 @@ from protlib_filesystem import xmippExists, findAcquisitionInfo, moveFile, \
                                replaceBasenameExt
 from protocol_ml2d import lastIteration
 from protlib_filesystem import createLink
-from protlib_gui_figure import XmippPlotter
 
 from protocol_relion_base import ProtRelionBase, runNormalizeRelion, convertImagesMd, renameOutput, \
                                  convertRelionBinaryData, convertRelionMetadata
@@ -29,6 +28,7 @@ class ProtRelionClassifier(ProtRelionBase):
     def __init__(self, scriptname, project):
         ProtRelionBase.__init__(self, protDict.relion_classify.name, scriptname, project)
         self.Import = 'from protocol_relion_classify import *'
+        self.relionType='classify'
 
     def summary(self):
         lines = ProtRelionBase.summary(self, self.NumberOfIterations)
@@ -61,6 +61,7 @@ class ProtRelionClassifier(ProtRelionBase):
         for v in self.relionFiles:
             myDict[v+'Re']=self.extraIter + v +'.star'
             myDict[v+'Xm']=self.extraIter + v +'.xmd'
+        myDict['imagesAssignedToClass']='imagesAssignedToClass@'+self.ExtraDir+'/dataForVisualize.xmd'
         return myDict
 
     def insertRelionClassify(self):
@@ -135,8 +136,8 @@ class ProtRelionClassifier(ProtRelionBase):
 #        for item in verifyFiles:
 #            f.write("%s\n" % item)
 #        f.close
-        self.insertRunJobStep(self.program, params,verifyFiles)
-        ###################self.insertRunJobStep('echo shortcut', params,verifyFiles)
+        ###################self.insertRunJobStep(self.program, params,verifyFiles)
+        self.insertRunJobStep('echo shortcut', params,verifyFiles)
 
     
                 

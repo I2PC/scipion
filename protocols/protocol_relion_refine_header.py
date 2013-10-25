@@ -275,17 +275,16 @@ SelectedIters = ''
 DisplayVolumeSlicesAlong='z'
 
 # {view} Display reconstructed volume
-""" Volume as given by the reconstruction algorithm
+""" Volume as given by the reconstruction algorithm.
+    For each iteration two volumes are presented (each one reconstructed with
+    the 50% of the images) plus a single final colume reconstructed using 
+    all the data)
 """
 DisplayReconstruction=False
-
-
-
 
 #------------------------------------------------------------------------------------------------
 # {section}{visualize} Overall Results
 #------------------------------------------------------------------------------------------------
-
 # {view} Display resolution plots (SSNR)
 DisplayResolutionPlotsSSNR=True
 
@@ -306,7 +305,7 @@ DisplayAngularDistributionWith='2D'
 # {hidden}{view} Display resolution plots (FSC)
 DisplayResolutionPlotsFSC=False
 
-# {view} No. Images assigned to class
+# {hidden} No. Images assigned to class
 """ Images assigned to each class per iteration"""
 TableImagesPerClass=True
 
