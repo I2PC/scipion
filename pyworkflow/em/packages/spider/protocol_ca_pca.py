@@ -99,7 +99,7 @@ class SpiderProtCAPCA(ProtAlign):
         docFile = SpiderDocFile(docFn, mode='w')
         for i, p in enumerate(particles):
             ih.convert(p.getLocation(), (i+1, spiderStk))
-            docFile.writeValues(1.0)
+            docFile.writeValues(i+1)
             
         docFile.close()
         # Copy mask if selected
