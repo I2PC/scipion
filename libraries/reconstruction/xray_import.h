@@ -59,8 +59,8 @@ public:
     bool flatFix;
     /// Flag to apply dark field correction
     bool darkFix;
-    /// Flag to apply log10 corrections
-    bool log10Fix;
+    /// Flag to apply log corrections
+    bool logFix;
     /// Flag to apply self-attenuation corrections
     bool selfAttFix;
     /// Xray microscopy data origin;

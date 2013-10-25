@@ -98,7 +98,7 @@ void ProgXrayImport::defineParams()
     addParamsLine("  alias -f;");
     addParamsLine("  [--log]                            : Apply log to pixel values");
     addParamsLine("  [--correct]                        : Correct for the self-attenuation of X-ray projections applying ");
-    addParamsLine("           : a log10 and multiplying by -1");
+    addParamsLine("           : a log and multiplying by -1");
     addParamsLine("  alias -c;");
     addExampleLine("The most standard call is",false);
     addExampleLine("xmipp_xray_import --data 10s --flat flatfields --oroot ProcessedData/img --crop 7");
@@ -151,7 +151,7 @@ void ProgXrayImport::readParams()
     thrNum    = getIntParam("--thr");
     fnBPMask  = getParam("--bad_pixels_filter");
     selfAttFix   = checkParam("--correct");
-    log10Fix   = (selfAttFix)? true : checkParam("--log");
+    logFix   = (selfAttFix)? true : checkParam("--log");
 }
 
 // Show ====================================================================
@@ -474,9 +474,9 @@ void runThread(ThreadArgument &thArg)
                 mask += ptrProg->bpMask();
             boundMedianFilter(Iaux(), mask);
 
-            if (ptrProg->log10Fix)
+            if (ptrProg->logFix)
             {
-                Iaux().selfLog10();
+                Iaux().selfLog();
                 if (ptrProg->selfAttFix)
                     Iaux() *= -1.;
             }
