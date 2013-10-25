@@ -1838,7 +1838,7 @@ fi
 if [ $DO_SETUP -eq 1 ]; then
   echoGreen "Compiling XMIPP ..."
   echoExec "cd ${XMIPP_HOME}" "/dev/null" 1
-  echoExec "./setup.py -j ${NUMBER_OF_CPU} configure ${CONFIGURE_ARGS} compile ${COMPILE_ARGS} ${GUI_ARGS} install" 1
+  echoExec "./setup.py -j ${NUMBER_OF_CPU} configure ${CONFIGURE_ARGS} compile ${COMPILE_ARGS} ${GUI_ARGS} install"
 fi
 
 exit ${GLOB_STATE}
