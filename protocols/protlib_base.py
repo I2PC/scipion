@@ -338,15 +338,28 @@ class XmippProject():
                 self._registerRunProtocol(prot.PrevRunName, prot.PrevRun, runsDict)
                 runsDict[prot.PrevRunName].addDep(extRunName)
            
-    def _printGraph(self, runsDict):
+    def _printGraph(self, runsDict, modeXmipp=True, dot=False):
+        """ Print the graph in DOT format. """
+        
         from protlib_xmipp import greenStr, redStr
-        for k, dd in runsDict.iteritems():
-            deps = [str(e) for e in dd.deps]
-            if dd.isRoot:
-                k = '>>> ' + greenStr(k)
-            else:
-                k = greenStr(k)
-            print '%s REFERENCED FROM: %s' % (k, redStr(', '.join(deps)))            
+        
+        if dot:
+            print "digraph project_graph {"
+            for k, dd in runsDict.iteritems():
+                k = k.replace(' ', '_')
+                deps = [str(e) for e in dd.deps]
+                for dep in deps:
+                    print "%s -> %s ;" % (k, dep)   
+            print "}"  
+        if modeXmipp:
+            for k, dd in runsDict.iteritems():
+                deps = [str(e) for e in dd.deps]
+                if dd.isRoot:
+                    k = '>>> ' + greenStr(k)
+                else:
+                    k = greenStr(k)
+                print '%s REFERENCED FROM: %s' % (k, redStr(', '.join(deps)))
+                print "  (level = %d)" % dd.level     
     
     def getRunsDependencies(self, printGraph=False):
         ''' Return a dictionary with run_name as key and value
@@ -376,10 +389,14 @@ class XmippProject():
                                 dd2.addDep(dd.extRunName)
         
         #Create special node ROOT
-        roots = [k for k, v in runsDict.iteritems() if v.isRoot]
-        ddRoot = DepData(runsDict, self.getName(), None)
+        #roots = [k for k, v in runsDict.iteritems() if v.isRoot]
+        ddRoot = DepData(runsDict, self.getName(), None, level=0)
         ddRoot.state = 6
-        ddRoot.deps = roots        
+        #ddRoot.deps = roots
+        
+        for k, v in runsDict.iteritems():
+            if v.isRoot and v is not ddRoot:
+                ddRoot.addDep(k)   
 
         if printGraph:
             self._printGraph(runsDict)
@@ -388,10 +405,10 @@ class XmippProject():
 
 class DepData():
     '''Simple structure to hold runs dependencies data '''
-    def __init__(self, runsDict, extRunName, protocol):
+    def __init__(self, runsDict, extRunName, protocol, level=1):
         self.runsDict = runsDict
         self.extRunName = extRunName
-        
+        self.level = level
         if protocol is not None:
             self.protName = protocol.Name
             self.runName = protocol.RunName
@@ -402,7 +419,10 @@ class DepData():
         
     def addDep(self, extRunName):
         self.deps.append(extRunName)
-        self.runsDict[extRunName].isRoot = False
+        ddChild = self.runsDict[extRunName]
+        ddChild.isRoot = False
+        if self.level + 1 > ddChild.level:
+            ddChild.level = self.level + 1
         
     def hasDep(self, extRunName):
         return extRunName in self.deps
