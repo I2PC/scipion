@@ -20,6 +20,7 @@ def form(request):
     
     if action == 'visualize':
         visualize = 1
+        viewerDict = protocol.getVisualizeDictWeb()
     elif action == 'copy':
         protocol = project.copyProtocol(protocol)
         
@@ -48,6 +49,13 @@ def form(request):
                 param.hasWizard = True
                 param.wizardName = wizards[paramName].getView()
 #                print "param: ", paramName, " has wizard", " view: "
+            
+            if visualize == 1:
+                if paramName in viewerDict:
+                    param.hasViewer = True
+#                    param.viewerName = viewerDict[paramName].getViewFunction()
+
+#                    print "param: ", paramName, " has viewer"
                 
             param.htmlCond = param.condition.get()
             param.htmlDepend = ','.join(param._dependants)

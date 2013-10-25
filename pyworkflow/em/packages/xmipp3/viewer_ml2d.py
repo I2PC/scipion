@@ -67,11 +67,11 @@ class XmippML2DViewer(ProtocolViewer):
     
     def _getVisualizeDict(self):
         return {'doShowClasses': self._viewIterRefs,
+                'doShowPlots': self._viewAllPlots,
                 'doShowLL': self._viewPlot,
                 'doShowPmax': self._viewPlot,
                 'doShowSignalChange': self._viewPlot,
-                'doShowMirror': self._viewPlot,
-                'doShowPlots': self._viewAllPlots}
+                'doShowMirror': self._viewPlot}
         
     def _viewAll(self, *args):
         if self.doShowClasses:
@@ -80,6 +80,7 @@ class XmippML2DViewer(ProtocolViewer):
             self._viewAllPlots()
         else:
             plots = [p for p in  self._plotVars if self.getAttributeValue(p)]
+            print plots
             xplotter = self.createPlots(self.protocol, plots)
             if xplotter:
                 xplotter.show()
@@ -186,6 +187,15 @@ class XmippML2DViewer(ProtocolViewer):
             xplotter.plot(iters, signal_change, color='green')
         
         return xplotter
+    
+    
+    def getVisualizeDictWeb(self):
+        return {'doShowClasses': "doShowClasses",
+                'doShowPlots': "doAllPlotsML2D",
+                'doShowLL': "doShowLL",
+                'doShowPmax': "doShowPmax",
+                'doShowSignalChange': "doShowSignalChange",
+                'doShowMirror': "doShowMirror"}
 
     @classmethod
     def getView(cls):

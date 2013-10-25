@@ -132,19 +132,15 @@ $(document).ready(function() {
 				$('.messi-modal').remove();
 				
 				$.each(json, function(key, value) {
-					if(key=="url_form"){
-						customPopup(value,500,350);
-					}
-					else if(key=="html"){
-						customPopupHTML(value,800,600);
-					}
-					else if(key=="url"){
+					if(key=="url"){
 						customPopup(value,1024,600);
-					}
-					else if(key=="plot"){
+					} else if(key=="plot"){
 						customPopup(value,600,500);
+					} else {
+						customPopup(value,700,500);
 					}
 				});
+				window.opener.location.reload(true);
 			},"json");
 		}
 		// Important. Stop the normal POST
