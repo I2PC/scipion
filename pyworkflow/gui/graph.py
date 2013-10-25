@@ -58,15 +58,26 @@ class LevelTree(object):
         self.createNode = createNode or self._defaultCreateNode
         self.createEdge = createEdge or self._defaultCreateEdge
         rootNode = self.graph.getRoot()
+        self._setLevel(rootNode, 0, None)
         self._paintNodeWithChilds(rootNode, 1)
         m = 9999
         for left, right in rootNode.hLimits:
             m = min(m, left)
         self._createEdges(rootNode, -m + self.DY)
         
+    def _setLevel(self, node, level, parent):
+        """ Set the level of the nodes. """
+        node.level = level
+        node.parent = parent
+        nextLevel = level + 1
+        for child in node.getChilds():
+            if nextLevel > getattr(child, 'level', 0):
+                self._setLevel(child, nextLevel, node)
+                 
     def _paintNodeWithChilds(self, node, level):
         y = level * self.DY
-        childs = node.getChilds()
+        
+        childs = [c for c in node.getChilds() if c.parent is node]
         n = len(childs)
         
         self._paintNode(node, y)
@@ -206,9 +217,10 @@ class LevelTree(object):
         """
         nx = x + node.offset
         node.item.moveTo(nx, node.y)
-        #print "node: ", node.t.text, " x:", nx
+        
         for c in node.getChilds():
-            self._createEdges(c, nx)
+            if c.parent is node:
+                self._createEdges(c, nx)
             self.createEdge(node.item, c.item)
             
 

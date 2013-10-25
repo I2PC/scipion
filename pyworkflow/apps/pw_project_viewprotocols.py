@@ -496,6 +496,7 @@ class ProtocolsView(tk.Frame):
 
     def updateRunsGraph(self):      
         g = self.project.getRunsGraph(refresh=False)
+        #g.printDot()
         lt = LevelTree(g)
         self.runsGraph.clear()
         lt.setCanvas(self.runsGraph)

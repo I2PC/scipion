@@ -89,4 +89,14 @@ class Graph(object):
         for node in self.getNodes():
             print "Node: ", node
             print " Childs: ", ','.join([str(c) for c in node.getChilds()])
+            
+    def _escape(self, label):
+        return label.replace('.', '_').replace(' ', '_')
+    
+    def printDot(self):
+        print "\ndigraph {"
+        for node in self.getNodes():
+            for child in node.getChilds():
+                print "   %s -> %s; " % (self._escape(node.label), self._escape(child.label))
+        print "}"
         
