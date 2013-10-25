@@ -319,3 +319,12 @@ def scoreFinalVolumes(log,WorkingDir,NumVolumes):
             mdOut.setValue(MDL_VOLUME_SCORE_MEAN,float(avg),id)
             mdOut.setValue(MDL_VOLUME_SCORE_MIN,float(minCC),id)
     mdOut.write(os.path.join(WorkingDir,"proposedVolumes.xmd"))
+    
+    
+def integrateVolumes(log,WorkingDir,NumVolumes,NumIter):
+    
+    fnOut = 'proposedVolume.xmd'
+    for n in range(NumVolumes-1):
+        fnRoot=os.path.join(WorkingDir,'proposedVolume%05d'%n)
+        fnRoot2=os.path.join(WorkingDir,'proposedVolume%05d'%n+1)
+        runJob(log,"xmipp_metadata_utilities","-i %s --set union_all %s -o %s"%(fnRoot,fnRoot2,fnOut))
