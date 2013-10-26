@@ -251,27 +251,30 @@ AdditionalArguments = ""
 #------------------------------------------------------------------------------------------------
 # {section}{visualize} Results per Iteration and Ref3D
 #------------------------------------------------------------------------------------------------
-# {list_combo}( all, selection) Which ref3D you want to visualize?
+# {list_combo}( all, selection) Which class you want to visualize?
 """ 
-   If you want two see the reference volume 2 and 5 
+   All is equal to number of classes
+   If you want two see  classes 2 and 5 
    choose selection and write
-   2 5. In relion first reference is 1. All is equal to number of classes
+   2 5. In relion first reference is 1. 
 """
 DisplayRef3DNo='all'
 
 # {condition}(DisplayRef3DNo=='selection') Selected references 3D
 """ Which reference do you want to visualize 
-If you want two see references 2 and 5 
+   All is equal to number of classes
+   If you want two see  classes 2 and 5 
    choose selection and write
-   2 5. In relion first iteration is 0. All is equal to all references from  1 to 
-   number of references"""
+   2 5. In relion first reference is 1. 
+"""
 SelectedRef3DNo = ''
 
 # {list_combo}(last, all, selection) Which iteration you want to visualize?
 """ Which iteration do you want to visualize 
+Set ot zero to see reference seed volumes
 If you want two see iterations 2 and 5 
    choose selection and write
-   2 5. In relion first iteration is 0. All is equal to all iterations from  1 to 
+   2 5. In relion first iteration is 1. All is equal to all iterations from  1 to 
    number of iterations. Last is equal to number of iterations """
 VisualizeIter = 'last'
 
@@ -289,50 +292,57 @@ SelectedIters = ''
 """
 DisplayVolumeSlicesAlong='z'
 
+#------------------------------------------------------------------------------------------------
+# {section}{visualize} Overall Results
+#------------------------------------------------------------------------------------------------
+
 # {view} Display reconstructed volume
 """ Volume as given by the reconstruction algorithm
 """
 DisplayReconstruction=False
 
+# {view} Images Assigned to each Class
+""" Images assigned to each class.
+"""
+DisplayImagesClassification=False
 
 
 
-#------------------------------------------------------------------------------------------------
-# {section}{visualize} Overall Results
-#------------------------------------------------------------------------------------------------
-
-# {view} Display resolution plots (SSNR)
-DisplayResolutionPlotsSSNR=True
+# {view} Display signal to noise ratio plots (SSNR)
+DisplayResolutionPlotsSSNR=False
 
 ###############################
 # {hidden}{view} Display resolution plots (FSC)
+"""Not available for classify"""
 DisplayResolutionPlotsFSC=False
 
 # {hidden}{expert} Display a threshold in resolution plots (FSC)
 ResolutionThreshold=0.5
 
 # {view} Display angular distribution?
-DisplayAngularDistribution=True
-# {condition}(DisplayAngularDistribution) {list} (2D, 3D) Display Angular distribution in
+DisplayAngularDistribution=False
+# {condition}(DisplayAngularDistribution) {list_combo} (2D, 3D) Display Angular distribution in
 """ 2D option uses matplotlib while 3D uses chimera
 """
 DisplayAngularDistributionWith='2D'
 
-# {hidden}{view} Display resolution plots (FSC)
-DisplayResolutionPlotsFSC=False
+# {expert} Scale RedSpheres
+""" when using chimera for displaying red angular
+distribution set radius of maximum sphere"""
+SpheresMaxradius=-1.
 
 # {view} No. Images assigned to class
 """ Images assigned to each class per iteration"""
-TableImagesPerClass=True
+TableImagesPerClass=False
 
 # {view} Changes Offset, Ang, No Part
 """ changes in orientation, offset. number images assigned to each class"""
-TableChange=True
+TableChange=False
 
 # {view} LikeliHood Per Image
 """ Max likelihood per image may be used to delete images with smaller value. 
 The higher, the better. Considere remove particles with low values"""
-Likelihood=True
+Likelihood=False
 
 # {view} AveragePmax
 """ Average (per class) of the maximum value of normalized probability function """
@@ -346,9 +356,3 @@ from protocol_relion_classify import *
 if __name__ == '__main__':
     protocolMain(ProtRelionClassifier)
 
-###############################
-# {view} Display resolution plots (FSC)
-#DisplayResolutionPlotsFSC=True
-
-# {expert} Display a threshold in resolution plots (FSC)
-#ResolutionThreshold=0.5

@@ -142,6 +142,12 @@ class Canvas(tk.Frame):
     def clear(self):
         '''Clear all items from the canvas'''
         self.canvas.delete(tk.ALL)
+        
+    def updateScrollRegion(self):
+        self.canvas.update_idletasks()
+        x1, y1, x2, y2 = self.canvas.bbox('all')
+        m = 5
+        self.canvas.config(scrollregion=(x1-m, y1-m, x2+m, y2+m)) 
        
         
 class TextBox():
@@ -252,6 +258,7 @@ def showDependencyTree(canvas, runsDict, rootName):
     #canvas.grid(row=0, column=0, sticky='nsew')
     
     def showNode(dd, y):
+       
         if dd.prot is None:
             nodeText = dd.extRunName
         else:
@@ -327,17 +334,20 @@ def showDependencyTree(canvas, runsDict, rootName):
   
         return sep + DX
         
-    def showLevel(dd, level, y):
-        n = len(dd.deps)
-        
+    def showLevel(dd, y):
+        # Only take into account direct childs
+        childs = [runsDict[rn] for rn in dd.deps if dd.level + 1 == runsDict[rn].level]
+#        print "showLevel, node: %s, level: %d" % (dd.extRunName, dd.level)
+#        for rn in dd.deps:
+#            print "   dep: %s, level: %d" % (rn, runsDict[rn].level) 
+        n = len(childs)
         showNode(dd, y)
         ny = y + dd.height + DY
         
         if n > 0:
             #width = (xmax - xmin) / n
-            childs = [runsDict[rn] for rn in dd.deps]
             for c in childs:
-                showLevel(c, level + 1, ny)
+                showLevel(c, ny)
                 
             if n > 1:
                 offset = 0
@@ -375,27 +385,24 @@ def showDependencyTree(canvas, runsDict, rootName):
     def showDD(dd, x):
         nx = x + dd.offset
         dd.t.moveTo(nx, dd.y)
-        #print "dd: ", dd.t.text, " x:", nx
         childs = [runsDict[rn] for rn in dd.deps]
         for c in childs:
-            showDD(c, nx)  
-            canvas.createEdge(dd.t, c.t)
+            if c.level == dd.level + 1:
+                showDD(c, nx)  
+            try:
+                canvas.createEdge(dd.t, c.t)
+            except Exception, ex:
+                print "ERROR: %s, node: %s" % (str(ex), dd.extRunName)
     
     rootNode = runsDict[rootName]
-    dd = showLevel(rootNode, 1, DY)
+    dd = showLevel(rootNode, DY)
     m = 9999
     for left, right in dd.hLimits:
         m = min(m, left)
     
     showDD(dd, -m + DY)
     
-    return canvas
+    canvas.updateScrollRegion()
     
-#    from protlib_gui_ext import ToolTip, centerWindows
-#    centerWindows(root)
-#    root.deiconify()
-#    root.mainloop()  
-    #xplotter.show()
-
-
+    return canvas
 

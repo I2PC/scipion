@@ -30,6 +30,8 @@ class ProtRelionRefinner( ProtRelionBase):
     def __init__(self, scriptname, project):
         ProtRelionBase.__init__(self, protDict.relion_refine.name, scriptname, project)
         self.Import = 'from protocol_relion_refine import *'
+        self.relionType='refine'
+
     def summary(self):
         lines = ProtRelionBase.summary(self)
         return lines
@@ -136,8 +138,8 @@ class ProtRelionRefinner( ProtRelionBase):
 #        for item in verifyFiles:
 #            f.write("%s\n" % item)
 #        f.close
-        self.insertRunJobStep(self.program, params,verifyFiles)
-        ###################self.insertRunJobStep('echo shortcut', params,verifyFiles)
+        ###################self.insertRunJobStep(self.program, params,verifyFiles)
+        self.insertRunJobStep('echo shortcut', params,verifyFiles)
 
     def createFilenameTemplates(self):
         myDict=ProtRelionBase.createFilenameTemplates(self)
@@ -159,140 +161,8 @@ class ProtRelionRefinner( ProtRelionBase):
         #myDict['volumeFinal']      = self.extraIter2 + "class%(ref3d)03d.spi"
         #myDict['volumeMRCFinal']   = self.extraIter2 + "class%(ref3d)03d.mrc:mrc"
         myDict['volumeFinal']   = self.extraIter2 + "class%(ref3d)03d.mrc:mrc"
+        myDict['modelXmFinal']=self.ExtraDir+'/relion_model.xmd'
 
         return myDict
 
-#import os
-#def convertRelionMetadata2(log,
-#                            inputs,
-#                            lastIterationVolumeFns,
-#                            lastIterationMetadata,
-#                            outputs,
-#                            relionFiles,
-#                            relionDataTemplate,
-#                            standardOutputClassFns,
-#                            standardOutputImageFn ,
-#                            standardOutputVolumeFn,
-#                            workingDir
-#                            ):
-#    #find last iteration
-#    NumberOfIterations=0
-#    _outputs=[]
-#    _inputs=[]
-#    for i in range (0,1000):
-#        fileName = relionDataTemplate.replace('000',"%03d",i)
-#        if exists(fileName):
-#            NumberOfIterations = i
-#            for v in outputs:
-#                 _outputs += v.replace('000',"%03d",i)
-#            for v in inputs:
-#                 _inputs  += v.replace('000',"%03d",i)
-#        else:
-#            break
-#    #data to store in Working dir so it can be easily accessed by users
-#    lastIteration = NumberOfIterations
-#    _lastIterationVolumeFns = []
-#    for v in lastIterationVolumeFns:
-#        _lastIterationVolumeFns += v.replace('000',"%03d",lastIteration)
-#    #standardOutputClassFns += ["images_ref3d%06d@"%ref3d + self.workingDirPath("classes_ref3D.xmd")]
-#    _lastIterationMetadata = lastIterationMetadata.replace('000',"%03d",lastIteration)
-#
-#    convertRelionMetadata(None,
-#                    _inputs,
-#                    _outputs,
-#                    _lastIterationVolumeFns,
-#                    _lastIterationMetadata,
-#                    standardOutputClassFns,
-#                    standardOutputImageFn,
-#                    standardOutputVolumeFn = "volumes@" + self.workingDirPath("volumes.xmd")
-#                    )
-#
-#def convertRelionMetadata(log, inputs,
-#                          outputs,
-#                          lastIterationVolumeFns,
-#                          lastIterationMetadata,
-#                          standardOutputClassFns,
-#                          standardOutputImageFn,
-#                          standardOutputVolumeFn
-#                          ):
-#    """ Convert the relion style MetaData to one ready for xmipp.
-#    Main differences are: STAR labels are named different and
-#    optimiser.star -> changes in orientation, offset. number images assigned to each class
-#    data.star -> loglikelihood (per image) may be used to delete worst images (10%)
-#                 orientation.shift per particle
-#    model.star:average_P_max (plot per iteration)
-#               block: model_classes
-#                  class distribution, number of particles per class
-#                  estimated error in orientation and translation
-#               block: model_class_N: 
-#                    resolution-dependent SNR: report resol where it drops below 1? (not that important?)
-#                                    (only in auto-refine) Gold-std FSC: make plot!
-#    """
-#    for i,o in zip(inputs,outputs):
-#        exportReliontoMetadataFile(i,o)
-#    #create images. xmd and class metadata
-#    #lastIteration = self.NumberOfIterations
-#    #this images cames from relion
-#    md = MetaData(lastIterationMetadata)
-#    #total number Image
-#    numberImages = md.size()
-#    #total number volumes 
-#    comment  = " numberImages=%d..................................................... "%numberImages
-#    comment += " numberRef3D=%d........................................................."%NumberOfClasses
-#    md.setComment(comment)
-#    md.write(standardOutputImageFn)
-#    #data_images_ref3d000001
-#    mdOut = MetaData()
-#    mdOut.setComment(comment)
-#    f = FileName(standardOutputClassFns[0])
-#    f=f.removeBlockName()
-#    if exists(f):
-#        os.remove(f)
-#    mdOut.clear()
-#    mdOut.importObjects(md, MDValueEQ(MDL_REF3D, 1))
-#    mdOut.write(standardOutputClassFns[i],MD_APPEND)
-#        
-#    #volume.xmd, metada with volumes
-#    mdOut.clear()
-#    for lastIterationVolumeFn in lastIterationVolumeFns:
-#        objId = mdOut.addObject()
-#        mdOut.setValue(MDL_IMAGE, lastIterationVolumeFn, objId)
-#    mdOut.write(standardOutputVolumeFn)
-#    
-#def convertRelionBinaryData2(log, inputs, outputs):
-#    #find last iteration
-#    NumberOfIterations=0
-#    _outputs=[]
-#    _inputs=[]
-#    for i in range (0,1000):
-#        fileName = relionDataTemplate.replace('000',"%03d",i)
-#        if exists(fileName):
-#            NumberOfIterations = i
-#            for v in outputs:
-#                 _outputs += v.replace('000',"%03d",i)
-#            for v in inputs:
-#                 _inputs  += v.replace('000',"%03d",i)
-#        else:
-#            break
-#    #data to store in Working dir so it can be easily accessed by users
-#    lastIteration = NumberOfIterations
-#    convertRelionMetadata(None,
-#                    _inputs,
-#                    _outputs)
-    
-#def convertRelionBinaryData(log, inputs,outputs):
-#    """Make sure mrc files are volumes properlly defined"""
-#    program = "xmipp_image_convert"
-#    for i,o in zip(inputs,outputs):
-#        args = "-i %s -o %s  --type vol"%(i,o)
-#        runJob(log, program, args )
-#
-#def renameOutput(log, WorkingDir, ProgId):
-#    ''' Remove ml2d prefix from:
-#        ml2dclasses.stk, ml2dclasses.xmd and ml2dimages.xmd'''
-#    prefix = '%s2d' % ProgId
-#    for f in ['%sclasses.stk', '%sclasses.xmd', '%simages.xmd']:
-#        f = join(WorkingDir, f % prefix)
-#        nf = f.replace(prefix, '')
-#        moveFile(log, f, nf)
-#                
+               

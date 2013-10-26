@@ -244,9 +244,9 @@ VisualizeGSVolume = True
 #------------------------------------------------------------------------------------------------
 # {section}{visualize} Results per Iteration and Ref3D
 #------------------------------------------------------------------------------------------------
-# {list_combo}( all, selection) Which ref3D you want to visualize?
+# {hidden}{list_combo}( all, selection) Which ref3D you want to visualize?
 """ 
-   If you want two see the reference volume 2 and 5 write
+   If you want to see the reference volume 2 and 5 write
    2 5. In relaion first reference is 1
 """
 DisplayRef3DNo='all'
@@ -266,7 +266,7 @@ If you want two see iterations 2 and 5 write
    2 5. In relion first iteration is 0"""
 SelectedIters = ''
 
-# {list_combo}(x, y, z, surface) Display volumes 
+# {list_combo}(x, y, z, surface) Display 3D maps along 
 """ x -> Visualize volumes in slices along x
     y -> Visualize volumes in slices along y
     z -> Visualize volumes in slices along z
@@ -275,22 +275,21 @@ SelectedIters = ''
 DisplayVolumeSlicesAlong='z'
 
 # {view} Display reconstructed volume
-""" Volume as given by the reconstruction algorithm
+""" Volume as given by the reconstruction algorithm.
+    For each iteration two volumes are presented (each one reconstructed with
+    the 50% of the images) plus a single final colume reconstructed using 
+    all the data)
 """
 DisplayReconstruction=False
-
-
-
 
 #------------------------------------------------------------------------------------------------
 # {section}{visualize} Overall Results
 #------------------------------------------------------------------------------------------------
-
 # {view} Display resolution plots (SSNR)
 DisplayResolutionPlotsSSNR=True
 
 ###############################
-# {hidden}{view} Display resolution plots (FSC)
+# {view} Display resolution plots (FSC)
 DisplayResolutionPlotsFSC=False
 
 # {expert} Display a threshold in resolution plots (FSC)
@@ -303,10 +302,15 @@ DisplayAngularDistribution=True
 """
 DisplayAngularDistributionWith='2D'
 
+# {expert} Scale RedSpheres
+""" when using chimera for displaying red angular
+distribution set radius of maximum sphere"""
+SpheresMaxradius=-1.
+
 # {hidden}{view} Display resolution plots (FSC)
 DisplayResolutionPlotsFSC=False
 
-# {view} No. Images assigned to class
+# {hidden} No. Images assigned to class
 """ Images assigned to each class per iteration"""
 TableImagesPerClass=True
 
