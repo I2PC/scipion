@@ -35,6 +35,11 @@ AngularSampling = 5
 """
 NRansac = 100
 
+# Number of Different Classes
+""" Number of different heterogeneous classes 
+"""
+NumHgClasses = 2
+
 #{expert} Number of iterations per RANSAC image group
 """ Number of iterations per smaller dataset group
 """
