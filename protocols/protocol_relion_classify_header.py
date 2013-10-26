@@ -326,6 +326,11 @@ DisplayAngularDistribution=False
 """
 DisplayAngularDistributionWith='2D'
 
+# {expert} Scale RedSpheres
+""" when using chimera for displaying red angular
+distribution set radius of maximum sphere"""
+SpheresMaxradius=-1.
+
 # {view} No. Images assigned to class
 """ Images assigned to each class per iteration"""
 TableImagesPerClass=False

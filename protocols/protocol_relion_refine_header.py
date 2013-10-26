@@ -244,9 +244,9 @@ VisualizeGSVolume = True
 #------------------------------------------------------------------------------------------------
 # {section}{visualize} Results per Iteration and Ref3D
 #------------------------------------------------------------------------------------------------
-# {list_combo}( all, selection) Which ref3D you want to visualize?
+# {hidden}{list_combo}( all, selection) Which ref3D you want to visualize?
 """ 
-   If you want two see the reference volume 2 and 5 write
+   If you want to see the reference volume 2 and 5 write
    2 5. In relaion first reference is 1
 """
 DisplayRef3DNo='all'
@@ -266,7 +266,7 @@ If you want two see iterations 2 and 5 write
    2 5. In relion first iteration is 0"""
 SelectedIters = ''
 
-# {list_combo}(x, y, z, surface) Display volumes 
+# {list_combo}(x, y, z, surface) Display 3D maps along 
 """ x -> Visualize volumes in slices along x
     y -> Visualize volumes in slices along y
     z -> Visualize volumes in slices along z
@@ -289,7 +289,7 @@ DisplayReconstruction=False
 DisplayResolutionPlotsSSNR=True
 
 ###############################
-# {hidden}{view} Display resolution plots (FSC)
+# {view} Display resolution plots (FSC)
 DisplayResolutionPlotsFSC=False
 
 # {expert} Display a threshold in resolution plots (FSC)
@@ -301,6 +301,11 @@ DisplayAngularDistribution=True
 """ 2D option uses matplotlib while 3D uses chimera
 """
 DisplayAngularDistributionWith='2D'
+
+# {expert} Scale RedSpheres
+""" when using chimera for displaying red angular
+distribution set radius of maximum sphere"""
+SpheresMaxradius=-1.
 
 # {hidden}{view} Display resolution plots (FSC)
 DisplayResolutionPlotsFSC=False
