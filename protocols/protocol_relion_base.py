@@ -690,7 +690,7 @@ def renameOutput(log, WorkingDir, ProgId):
 def runNormalizeRelion(log,inputMd,outputMd,normType,bgRadius,Nproc,):
     stack = inputMd
     if exists(outputMd):
-        remove(outputMd)
+        os.remove(outputMd)
     program = "xmipp_transform_normalize"
     args = "-i %(stack)s -o %(outputMd)s "
 
