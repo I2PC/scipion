@@ -138,8 +138,8 @@ class ProtRelionRefinner( ProtRelionBase):
 #        for item in verifyFiles:
 #            f.write("%s\n" % item)
 #        f.close
-        ###################self.insertRunJobStep(self.program, params,verifyFiles)
-        self.insertRunJobStep('echo shortcut', params,verifyFiles)
+        self.insertRunJobStep(self.program, params,verifyFiles)
+        ###################self.insertRunJobStep('echo shortcut', params,verifyFiles)
 
     def createFilenameTemplates(self):
         myDict=ProtRelionBase.createFilenameTemplates(self)
