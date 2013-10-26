@@ -173,6 +173,12 @@ If set to 0, no low-pass filter will be applied to the initial reference(s).
 """
 InitialLowPassFilterA = 60
 
+# {hidden} Number of iterations:
+"""
+Number of iterations to be performed. Note that the current implementation does NOT comprise a convergence criterium. Therefore, the calculations will need to be stopped by the user if further iterations do not yield improvements in resolution or classes.
+"""
+NumberOfIterations = 1
+
 # Particles mask diameter (A):
 """
 The experimental images will be masked with a soft circular mask with this diameter. Make sure this radius is not set too small because that may mask away part of the signal! If set to a value larger than the image size no masking will be performed.
