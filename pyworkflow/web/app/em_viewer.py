@@ -103,7 +103,8 @@ def viewerElm(request):
         pass  # redirect to error: name is not a function
     else:
         ioDict= {}
-        ioDict["url"] = function(request, protocol, protocolViewer)
+        typeUrl, url = function(request, protocol, protocolViewer)
+        ioDict[typeUrl] = url
     
     jsonStr = json.dumps(ioDict, ensure_ascii=False)
     return HttpResponse(jsonStr, mimetype='application/javascript')
@@ -113,40 +114,48 @@ def viewerML2D(request, protocol, protocolViewer):
     ioDict = {}
 
     if protocolViewer.doShowClasses:
-        ioDict["url"]= doShowClasses(request, protocol, protocolViewer)
+        typeUrl, url = doShowClasses(request, protocol, protocolViewer)
+        ioDict[typeUrl]= url
     if protocolViewer.doShowPlots:
-        ioDict["plot"]= doAllPlotsML2D(request, protocol, protocolViewer)
+        typeUrl, url = doAllPlotsML2D(request, protocol, protocolViewer)
+        ioDict[typeUrl]= url
     else:
-        ioDict["plots"]= doSomePlotsML2D(protocolViewer, protocol)
+        typeUrl, url = doSomePlotsML2D(protocol, protocolViewer)
+        if url != None:
+            ioDict[typeUrl]= url
         
     return ioDict
 
 def doShowClasses(request, protocol, protocolViewer):
     from views_showj import visualizeObject
     objId = protocol.outputClasses.getObjId()
-    return "/visualize_object/?objectId="+str(objId)
+    return "showj","/visualize_object/?objectId="+str(objId)
             
 def doAllPlotsML2D(request, protocol, protocolViewer):
-    return "/view_plots/?function=allPlotsML2D&protViewerClass="+ str(protocolViewer.getClassName())+ "&protId="+ str(protocol.getObjId())
+    return "plots","/view_plots/?function=allPlotsML2D&protViewerClass="+ str(protocolViewer.getClassName())+ "&protId="+ str(protocol.getObjId())
 
-def doShowLL(request, protocol, protocolViewer):
-    return "/view_plots/?function=somePLotsML2D&plots=doShowLL&protViewerClass="+ str(protocolViewer.getClassName())+ "&protId="+ str(protocol.getObjId())
-
-def doShowPmax(request, protocol, protocolViewer):
-    return "/view_plots/?function=somePLotsML2D&plots=doShowPmax&protViewerClass="+ str(protocolViewer.getClassName())+ "&protId="+ str(protocol.getObjId())
-
-def doShowSignalChange(request, protocol, protocolViewer):
-    return "/view_plots/?function=somePLotsML2D&plots=doShowSignalChange&protViewerClass="+ str(protocolViewer.getClassName())+ "&protId="+ str(protocol.getObjId())
-    
-def doShowMirror(request, protocol, protocolViewer):
-    return "/view_plots/?function=somePLotsML2D&plots=doShowMirror&protViewerClass="+ str(protocolViewer.getClassName())+ "&protId="+ str(protocol.getObjId())
-
-def doSomePlotsML2D(protocolViewer, protocol):
+def doSomePlotsML2D(protocol, protocolViewer):
     plots=""
     for p in protocolViewer._plotVars:
         if protocolViewer.getAttributeValue(p):
-            plots = plots + p + "-" 
-    return "/view_plots/?function=somePLotsML2D&plots="+str(plots)+"&protViewerClass="+ str(protocolViewer.getClassName())+ "&protId="+ str(protocol.getObjId())
+            plots = plots + p + "-"
+    
+    if plots != "":
+        return "plots","/view_plots/?function=somePLotsML2D&plots="+str(plots)+"&protViewerClass="+ str(protocolViewer.getClassName())+ "&protId="+ str(protocol.getObjId())
+    else:
+        return "", None
+
+def doShowLL(request, protocol, protocolViewer):
+    return "plot","/view_plots/?function=somePLotsML2D&plots=doShowLL&protViewerClass="+ str(protocolViewer.getClassName())+ "&protId="+ str(protocol.getObjId())
+
+def doShowPmax(request, protocol, protocolViewer):
+    return "plot","/view_plots/?function=somePLotsML2D&plots=doShowPmax&protViewerClass="+ str(protocolViewer.getClassName())+ "&protId="+ str(protocol.getObjId())
+
+def doShowSignalChange(request, protocol, protocolViewer):
+    return "plot","/view_plots/?function=somePLotsML2D&plots=doShowSignalChange&protViewerClass="+ str(protocolViewer.getClassName())+ "&protId="+ str(protocol.getObjId())
+    
+def doShowMirror(request, protocol, protocolViewer):
+    return "plot","/view_plots/?function=somePLotsML2D&plots=doShowMirror&protViewerClass="+ str(protocolViewer.getClassName())+ "&protId="+ str(protocol.getObjId())
 
 def allPlotsML2D(request, protocolViewer, protocol):
     xplotter = protocolViewer.createPlots(protocol, protocolViewer._plotVars)

@@ -132,12 +132,12 @@ $(document).ready(function() {
 				$('.messi-modal').remove();
 				
 				$.each(json, function(key, value) {
-					if(key=="url"){
+					if(key=="showj"){
 						customPopup(value,1024,600);
 					} else if(key=="plot"){
 						customPopup(value,600,500);
 					} else {
-						customPopup(value,700,500);
+						customPopup(value,800,600);
 					}
 				});
 			},"json");
@@ -155,12 +155,12 @@ $(document).ready(function() {
 				$('.messi-modal').remove();
 				
 				$.each(json, function(key, value) {
-					if(key=="url"){
+					if(key=="showj"){
 						customPopup(value,1024,600);
 					} else if(key=="plot"){
 						customPopup(value,600,500);
-					} else {
-						customPopup(value,700,500);
+					} else if(key=="plots"){
+						customPopup(value,800,600);
 					}
 				});
 			},"json");
