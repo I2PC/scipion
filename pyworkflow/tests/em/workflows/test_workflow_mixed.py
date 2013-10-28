@@ -260,8 +260,9 @@ class TestMixedWorkflow_2(TestWorkflow):
         self.protDict['protPP'] = protPP
 
         print "<Run extract particles with Same as picking>"
-        protExtract = XmippProtExtractParticles(boxSize=110, downsampleType=1, doFlip=False, doInvert=True, runMode=1)
+        protExtract = XmippProtExtractParticles(boxSize=110, downsampleType=1, doFlip=True, doInvert=True, runMode=1)
         protExtract.inputCoordinates.set(protPP.outputCoordinates)
+        protExtract.ctfRelations.set(protCTF.outputCTF)
         #protExtract.inputMicrographs.set(protDownsampling.outputMicrographs)
         self.proj.launchProtocol(protExtract, wait=True)
         

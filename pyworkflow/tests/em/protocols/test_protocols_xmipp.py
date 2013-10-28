@@ -73,7 +73,7 @@ class TestImportMicrographs(TestXmippBase):
         sphericalAberration=2
         
         protImport = self.runImportMicrograph(pattern, samplingRate=samplingRate, scannedPixelSize=scannedPixelSize, magnification=magnification, voltage=voltage, sphericalAberration=sphericalAberration)
-        m = protImport.outputMicrographs.getMicroscope()
+        m = protImport.outputMicrographs.getAcquisition()
         # Check that sampling rate on output micrographs is equal to 
         self.assertTrue(protImport.outputMicrographs.getScannedPixelSize() == scannedPixelSize, "Incorrect ScannedPixelSize on output micrographs.")
         self.assertTrue(m.magnification.get() == magnification, "Incorrect Magnification on output micrographs.")
@@ -89,7 +89,7 @@ class TestImportMicrographs(TestXmippBase):
         sphericalAberration=2.5
         
         protImport = self.runImportMicrograph(pattern, samplingRate=samplingRate, scannedPixelSize=scannedPixelSize, magnification=magnification, voltage=voltage, sphericalAberration=sphericalAberration)
-        m = protImport.outputMicrographs.getMicroscope()
+        m = protImport.outputMicrographs.getAcquisition()
         # Check that sampling rate on output micrographs is equal to 
         self.assertTrue(protImport.outputMicrographs.getSamplingRate() == samplingRate, "Incorrect SamplingRate on output micrographs.")
         self.assertTrue(m.voltage.get() == voltage, "Incorrect Voltage on output micrographs.")

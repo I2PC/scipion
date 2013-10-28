@@ -50,18 +50,20 @@ class EMObject(OrderedObject):
         return None
 
 
-class Microscope(EMObject):
-    """Microscope information"""
+class Acquisition(EMObject):
+    """Acquisition information"""
     def __init__(self, **args):
         EMObject.__init__(self, **args)
         self.magnification = Float(60000)
         self.voltage = Float(300)
         self.sphericalAberration = Float(2.0)
+        self.amplitudeContrast = Float(0.1)
         
     def copyInfo(self, other):
         self.magnification.set(other.magnification.get())
         self.voltage.set(other.voltage.get())
         self.sphericalAberration.set(other.sphericalAberration.get())
+        self.amplitudeContrast.set(other.amplitudeContrast.get())
     
 
 # TODO: Move this class and Set to a separated base module
@@ -289,7 +291,11 @@ class SetOfImages(Set):
         self._hasProjectionMatrix = Boolean(False)
         self._isPhaseFlippled = Boolean(False)
         self._isAmplitudeCorrected = Boolean(False)
+        self._acquisition = Acquisition()
            
+        
+    def getAcquisition(self, index=0):
+        return self._acquisition
         
     def hasCTF(self):
         """Return True if the SetOfImages has associated a CTF model"""
@@ -332,6 +338,7 @@ class SetOfImages(Set):
         """ Copy basic information (sampling rate, scannedPixelSize and ctf)
         from other set of images to current one"""
         self.copyAttributes(other, '_samplingRate')
+        self._acquisition.copyInfo(other._acquisition)
         
     def getFiles(self):
         filePaths = set()
@@ -363,24 +370,19 @@ class SetOfMicrographs(SetOfImages):
     """Represents a set of Micrographs"""
     def __init__(self, **args):
         SetOfImages.__init__(self, **args)
-        self._microscope = Microscope()
         self._scannedPixelSize = Float()
-        
-    def getMicroscope(self, index=0):
-        return self._microscope
         
     def copyInfo(self, other):
         """ Copy basic information (voltage, spherical aberration and sampling rate)
         from other set of micrographs to current one.
         """
         SetOfImages.copyInfo(self, other)
-        self._microscope.copyInfo(other._microscope)
         self._scannedPixelSize.set(other.getScannedPixelSize())
         
     def setSamplingRate(self, samplingRate):
         """ Set the sampling rate and adjust the scannedPixelSize. """
         self._samplingRate.set(samplingRate)
-        self._scannedPixelSize.set(1e-4 * samplingRate * self._microscope.magnification.get())
+        self._scannedPixelSize.set(1e-4 * samplingRate * self._acquisition.magnification.get())
                
     def getScannedPixelSize(self):
         return self._scannedPixelSize.get()
@@ -388,7 +390,7 @@ class SetOfMicrographs(SetOfImages):
     def setScannedPixelSize(self, scannedPixelSize):
         """ Set scannedPixelSize and update samplingRate. """
         self._scannedPixelSize.set(scannedPixelSize)
-        self._samplingRate.set((1e+4 * scannedPixelSize) / self._microscope.magnification.get())
+        self._samplingRate.set((1e+4 * scannedPixelSize) / self._acquisition.magnification.get())
 
 
 class SetOfParticles(SetOfImages):

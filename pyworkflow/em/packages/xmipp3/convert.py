@@ -96,20 +96,31 @@ def xmippToLocation(xmippFilename):
     else:
         return NO_INDEX, str(xmippFilename)
 
-def imageToRow(img, imgRow, ctfDir, hasCtf, imgLabel):
+#def imageToRow(img, imgRow, ctfDir, hasCtf, imgLabel):
+#    imgDict = { 
+#               "_id": xmipp.MDL_ITEM_ID,
+#               }
+#    index, filename = img.getLocation()
+#    fn = locationToXmipp(index, filename)
+#    if hasCtf:
+#        rootFn = "%06d_%s" % (img.getId(), replaceBaseExt(img.getFileName(), "ctfparam"))
+#        ctfFn = join(ctfDir, rootFn)
+#        writeCTFModel(img.getCTF(), ctfFn)
+#        imgRow.setValue(xmipp.MDL_CTF_MODEL, ctfFn)
+#    imgRow.setValue(imgLabel, fn)
+#    objectToRow(img, imgRow, imgDict)
+
+def imageToRow(img, imgRow, ctfFn, imgLabel):
     imgDict = { 
                "_id": xmipp.MDL_ITEM_ID,
                }
     index, filename = img.getLocation()
     fn = locationToXmipp(index, filename)
-    if hasCtf:
-        rootFn = "%06d_%s" % (img.getId(), replaceBaseExt(img.getFileName(), "ctfparam"))
-        ctfFn = join(ctfDir, rootFn)
-        writeCTFModel(img.getCTF(), ctfFn)
+    if ctfFn is not None:
         imgRow.setValue(xmipp.MDL_CTF_MODEL, ctfFn)
     imgRow.setValue(imgLabel, fn)
     objectToRow(img, imgRow, imgDict)
-    
+        
 def rowToImage(md, objId, imgLabel, imgClass, hasCtf):
     """ Create a Particle from a row of a metadata. """
     imgDict = { 
@@ -126,17 +137,17 @@ def rowToImage(md, objId, imgLabel, imgClass, hasCtf):
     
     return img
     
-def micrographToRow(mic, micRow, ctfDir, hasCtf):
+def micrographToRow(mic, micRow, ctfFn):
     """ Set labels values from Micrograph mic to md row. """
-    imageToRow(mic, micRow, ctfDir, hasCtf, imgLabel=xmipp.MDL_MICROGRAPH)
+    imageToRow(mic, micRow, ctfFn, imgLabel=xmipp.MDL_MICROGRAPH)
     
 def rowToMicrograph(md, objId, hasCtf):
     """ Create a Micrograph object from a row of Xmipp metadata. """
     return rowToImage(md, objId, xmipp.MDL_MICROGRAPH, Micrograph, hasCtf)
 
-def volumeToRow(vol, volRow, ctfDir, hasCtf):
+def volumeToRow(vol, volRow, ctfFn):
     """ Set labels values from Micrograph mic to md row. """
-    imageToRow(vol, volRow, ctfDir=None, hasCtf=False, imgLabel=xmipp.MDL_IMAGE)
+    imageToRow(vol, volRow, ctfFn=None, imgLabel=xmipp.MDL_IMAGE)
     
 def rowToVolume(md, objId, hasCtf):
     """ Create a Micrograph object from a row of Xmipp metadata. """
@@ -171,9 +182,9 @@ def rowToParticle(md, objId, hasCtf):
     """ Create a Particle from a row of a metadata. """
     return rowToImage(md, objId, xmipp.MDL_IMAGE, Particle, hasCtf)
     
-def particleToRow(part, partRow, ctfDir, hasCtf):
+def particleToRow(part, partRow, ctfFn):
     """ Set labels values from Particle to md row. """
-    imageToRow(part, partRow, ctfDir, hasCtf, imgLabel=xmipp.MDL_IMAGE)
+    imageToRow(part, partRow, ctfFn, imgLabel=xmipp.MDL_IMAGE)
 
 def rowToClass2D(md, objId, samplingRate):
     """ Create a Class2D from a row of a metadata. """
@@ -408,6 +419,9 @@ def writeSetOfImages(imgSet, filename, imgToFunc, ctfDir, rowFunc):
         rowFunc: this function can be used to setup the row before 
             adding to metadata.
     """
+    
+    particlesCtfFn = []
+    
     md = xmipp.MetaData()
     hasCtf = imgSet.hasCTF()
     if ctfDir is None:
@@ -416,7 +430,18 @@ def writeSetOfImages(imgSet, filename, imgToFunc, ctfDir, rowFunc):
     for img in imgSet:
         objId = md.addObject()
         imgRow = XmippMdRow()
-        imgToFunc(img, imgRow, ctfDir, hasCtf)
+        ctfFn = None
+        if img.hasCTF():
+            ctfModel = img.getCTF()
+            rootFn = replaceBaseExt(img.getFileName(), "ctfparam")
+            #rootFn = "%06d_%s" % (img.getId(), replaceBaseExt(img.getFileName(), "ctfparam"))
+            ctfFn = join(ctfDir, rootFn)
+            ctfModel.sphericalAberration = Float(imgSet.getAcquisition().sphericalAberration.get())
+            if ctfModel.getId() not in particlesCtfFn:
+                particlesCtfFn.append(ctfModel.getId())
+                writeCTFModel(ctfModel, ctfFn)
+        imgToFunc(img, imgRow, ctfFn)
+        
         if rowFunc:
             rowFunc(img, imgRow)
         imgRow.writeToMd(md, objId)
