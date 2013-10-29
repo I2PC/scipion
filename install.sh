@@ -354,6 +354,7 @@ shouldIDoIt()
         echoRed "Error: bad parameter ($2) on shouldIDoIt. File not found. Exiting"
         exitGracefully
       fi
+      ind=$(expr $ind - 1)
       elemAt $ind "${EXTERNAL_LIBRARIES_DO}"
       ANS=${INTERELEMARRAY}
       ;;
@@ -364,6 +365,7 @@ shouldIDoIt()
         echoRed "Error: bad parameter ($2) on shouldIDoIt. File not found. Exiting"
         exitGracefully
       fi
+      ind=$(expr $ind - 1)
       elemAt $ind "${PYTHON_MODULES_DO}"
       ANS=${INTERELEMARRAY}
       ;;
@@ -494,6 +496,8 @@ helpMessage()
   printf "\n"
   printf "OPERATIONS:\n"
   printf "\n"
+  printf "${BLUE}--clean${WHITE},${BLUE} -u${WHITE}\n"
+  printf "    Clean the list of libraries provided to the script (or default libraries array if not provided).\n"
   printf "${BLUE}--untar${WHITE},${BLUE} -u${WHITE}\n"
   printf "    Untar the list of libraries provided to the script (or default libraries array if not provided).\n"
   printf "${BLUE}--configure${WHITE},${BLUE} -f${WHITE}\n"
@@ -571,6 +575,7 @@ takeArguments()
         DO_UNTAR=0
         DO_COMPILE=0
         DO_CONFIGURE=0
+	DO_CLEAN=0
         for lib in ${EXTERNAL_LIBRARIES_FILES}; do
           doIt library ${lib} 0
         done
@@ -611,6 +616,9 @@ takeArguments()
       --help|-h)
         helpMessage
         exitGracefully
+        ;;
+      --clean|-l)
+        DO_CLEAN=1
         ;;
       --untar|-u)
         DO_UNTAR=1
