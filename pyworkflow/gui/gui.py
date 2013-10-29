@@ -33,7 +33,6 @@ import tkFont
 
 from pyworkflow.object import OrderedObject
 from pyworkflow.utils.path import findResource
-from dialog import showInfo, showError
 
 """
 Some GUI CONFIGURATION parameters
@@ -149,6 +148,7 @@ def getImage(imageName, imgDict=None, tk=True):
     return image
 
 def getPILImage(imageXmipp, dim=None, normalize=True):
+    """ Given an image read by Xmipp, convert it to PIL. """
     from PIL import Image
     import xmipp
     
@@ -156,12 +156,25 @@ def getPILImage(imageXmipp, dim=None, normalize=True):
         imageXmipp.convert2DataType(xmipp.DT_UCHAR, xmipp.CW_ADJUST)
         
     imageData = imageXmipp.getData()
-
     image = Image.fromarray(imageData)
     if dim:
         size = int(dim), int(dim)
         image.thumbnail(size, Image.ANTIALIAS)
     return image
+
+def getImageFromPath(imagePath):
+    """ Read an image using Xmipp, convert to PIL
+    and then return as expected by Tk.
+    """
+    import xmipp
+    img = xmipp.Image(imagePath)
+    imgPIL = getPILImage(img)
+    from PIL import ImageTk
+    imgTk = ImageTk.PhotoImage(imgPIL)
+    
+    return imgTk
+
+
 
 """
 Windows geometry utilities
@@ -317,8 +330,10 @@ class Window():
                                  image=self.getImage(sub.icon.get()))
                 
     def showError(self, msg, header="Error"):
+        from dialog import showError
         showError(header, msg, self.root)
         
     def showInfo(self, msg, header="Info"):
+        from dialog import showInfo
         showInfo(header, msg, self.root)
         

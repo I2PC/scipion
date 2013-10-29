@@ -51,7 +51,7 @@ class SpiderProtCustomMask(ProtAlign):
     def _defineParams(self, form):
         form.addSection(label='Input')
         form.addParam('inputImage', PointerParam, label="Input image", important=True, 
-                      pointerClass='Particle',
+                      pointerClass='Mask',
                       help='Select the input image to create the mask. \n'
                            'It is recommended to used an average image.')        
         form.addParam('filterRadius1', FloatParam, default=0.6,
@@ -102,13 +102,17 @@ class SpiderProtCustomMask(ProtAlign):
         maskSet = self._createSetOfParticles()
         maskSet.copyInfo(self.inputImg)
         
-        for i in range(1, 8): # 7 images in mask stack
-            img = Particle()
-            img.setLocation(i, maskFn)
-            maskSet.append(img)
-            
-        maskSet.write()
-        self._defineOutputs(outputMask=maskSet)
+#        for i in range(1, 8): # 7 images in mask stack
+#            img = Particle()
+#            img.setLocation(i, maskFn)
+#            maskSet.append(img)
+#            
+#        maskSet.write()
+#        self._defineOutputs(outputMask=maskSet)
+        mask = Mask()
+        mask.copyInfo(self.inputImg)
+        mask.setLocation(4, maskFn)
+        self._defineOutputs(outputMask=mask)
             
     def _summary(self):
         summary = []

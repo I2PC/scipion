@@ -14,7 +14,8 @@ from forms import VolVisualizationForm
 from pyworkflow.em import *
 from pyworkflow.em.packages.xmipp3.convert import *
 
-    
+
+
 def showj(request, inputParameters=None):
     #############
     # WEB INPUT PARAMETERS
@@ -22,12 +23,13 @@ def showj(request, inputParameters=None):
     _imageVolName=''
     _stats=None
     
+     
     
     if request.method == 'POST': # If the form has been submitted... Post method
         inputParameters=request.POST.copy()
     else:
         request.session['defaultZoom'] = inputParameters['zoom'] if 'zoom' in inputParameters else '150px'
-    
+        
     #Init Dataset
     #NAPA DE LUXE: Check type of Dataset 
     dataset = loadDatasetXmipp(inputParameters['path']) 

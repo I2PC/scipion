@@ -73,7 +73,7 @@ class XmippCL2DViewer(ProtocolViewer):
         elif classesToShow == CLASS_CORES:
             fnSubset = "_core"
         elif classesToShow == CLASS_STABLE_CORES:
-            fnSubset = "_stable_core"
+            fnSubset = "_stable_core" 
         return fnSubset
                         
     def _viewClassHierarchy(self, e=None):
@@ -119,6 +119,19 @@ class XmippCL2DViewer(ProtocolViewer):
         if self.doShowClassHierarchy:
             self._viewClassHierarchy()
 
-            
+    def getVisualizeDictWeb(self):
+        return {'doShowClassHierarchy': "viewClassHierarchy",
+                'doShowLastLevel': "viewLevelFiles"}
+        
+    @classmethod
+    def getView(cls):
+        """ This function will notify the web viewer for this protocol"""
+        return "viewerForm"
+    
+    @classmethod
+    def getViewFunction(cls):
+        """ This will return the name of the function to view
+        in web one (or all) params of the protocol"""
+        return "viewerCL2D"
         
 

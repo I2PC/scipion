@@ -58,15 +58,27 @@ class LevelTree(object):
         self.createNode = createNode or self._defaultCreateNode
         self.createEdge = createEdge or self._defaultCreateEdge
         rootNode = self.graph.getRoot()
+        self._setLevel(rootNode, 0, None)
+        print "self.DY", self.DY
         self._paintNodeWithChilds(rootNode, 1)
         m = 9999
         for left, right in rootNode.hLimits:
             m = min(m, left)
         self._createEdges(rootNode, -m + self.DY)
         
+    def _setLevel(self, node, level, parent):
+        """ Set the level of the nodes. """
+        node.level = level
+        node.parent = parent
+        nextLevel = level + 1
+        for child in node.getChilds():
+            if nextLevel > getattr(child, 'level', 0):
+                self._setLevel(child, nextLevel, node)
+                 
     def _paintNodeWithChilds(self, node, level):
         y = level * self.DY
-        childs = node.getChilds()
+        
+        childs = [c for c in node.getChilds() if c.parent is node]
         n = len(childs)
         
         self._paintNode(node, y)
@@ -107,18 +119,18 @@ class LevelTree(object):
 #            for l, r in node.hLimits:
 #                print "[%d, %d]" % (l, r)
         
-    def _defaultCreateNode(self, node, y):
+    def _defaultCreateNode(self, canvas, node, y):
         """ If not createNode is specified, this one will be used
         by default. 
         """
-        if self.canvas is None:
+        if canvas is None:
             raise Exception("method setCanvas should be called before using _defaultCreateNode")
         nodeText = node.getName()
         textColor = 'black'
         if nodeText.startswith('Project'):
             textColor='white'
         
-        return self.canvas.createTextbox(nodeText, 100, y, bgColor='light blue', textColor=textColor)
+        return canvas.createTextbox(nodeText, 100, y, bgColor='light blue', textColor=textColor)
         
     def _defaultCreateEdge(self, srcItem, dstItem):
         if self.canvas is None:
@@ -134,7 +146,7 @@ class LevelTree(object):
         Returns:
            the create item in the canvas.
         """
-        item = self.createNode(node, y)
+        item = self.createNode(self.canvas, node, y)
         node.width, node.height = item.getDimensions()
         node.half = node.width / 2
         node.hLimits = [[-node.half, node.half]]
@@ -206,32 +218,20 @@ class LevelTree(object):
         """
         nx = x + node.offset
         node.item.moveTo(nx, node.y)
-        #print "node: ", node.t.text, " x:", nx
+        
         for c in node.getChilds():
-            self._createEdges(c, nx)
+            if c.parent is node:
+                self._createEdges(c, nx)
             self.createEdge(node.item, c.item)
             
 
 
-class TNode(object):
-    def __init__(self, text, x=0, y=0):
-        self.text = text
-        self.moveTo(x, y)
-        self.width, self.height = 0, 0
-        
-    def getDimensions(self):
-        return (self.width, self.height)
-    
-    def moveTo(self, x, y):
-        self.x = x
-        self.y = y
-    
-def createNode(node, y):
-    return TNode(node.getName(), y=y)
+def createNode(canvas, node, y):
+    from canvas import ImageBox
+    return ImageBox(canvas, node.path, text=node.getName(), y=y)
     
 def createEdge(srcItem, dstItem):
     pass
-    
     
     
 if __name__ == '__main__':
@@ -239,19 +239,56 @@ if __name__ == '__main__':
     from pyworkflow.utils.graph import Graph
     
     root = tk.Tk()
-    canvas = Canvas(root, width=400, height=400)
+    canvas = Canvas(root, width=600, height=500)
     canvas.grid(row=0, column=0, sticky='nsew')
     root.grid_columnconfigure(0, weight=1)
     root.grid_rowconfigure(0, weight=1)
     
-    g = Graph(rootName='A')
-    a = g.getRoot()
-    b = g.createNode('B')
-    c = g.createNode('C')
-    a.addChild(b, c)
-    
-    lt = LevelTree(g)
-    lt.setCanvas(canvas)
-    lt.paint(createNode, createEdge)
+    def example1():
+        """ Display a very simple graph: A, B and C. """
+        g = Graph(rootName='A')
+        a = g.getRoot()
+        b = g.createNode('B')
+        c = g.createNode('C')
+        a.addChild(b, c)
+        lt = LevelTree(g)
+        lt.setCanvas(canvas)
+        #lt.paint(createNode, createEdge)
+        lt.paint()
+
+    def example2():
+        path = '%d@/home/josem/Scipion/projects/analu_MCM/Runs/XmippProtCL2D4394/extra/level_%02d/classes_sorted.stk'
+        name = 'level_%02d_%02d'
+        
+        def getInfo(level, classNo):
+            return name % (level, classNo), path % (classNo, level)
+        
+        n, p = getInfo(0, 1)
+        g = Graph(rootName=n)
+        a = g.getRoot()
+        a.path = p
+        
+        maxLevel = 1
+        
+        def addChilds(node, nodeNumber, level):
+            imgNo = nodeNumber * 2 
+            for off in [-1, 0]:
+                n, p = getInfo(level+1, imgNo + off)
+                b = g.createNode(n)
+                b.path = p
+                node.addChild(b)
+                if level < maxLevel:
+                    addChilds(b, imgNo + off, level + 1)
+                        
+            
+        addChilds(a, 1, 0)
+            
+        lt = LevelTree(g)
+        lt.DY = 135
+        lt.setCanvas(canvas)
+        lt.paint(createNode)
+        
+    example2()
+    canvas.updateScrollRegion()
     
     root.mainloop()             

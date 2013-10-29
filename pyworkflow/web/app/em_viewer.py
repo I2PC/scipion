@@ -2,7 +2,8 @@ import json
 import pyworkflow.gui.graph as gg
 from pyworkflow.em import *
 from views_util import *
-from views_protocol import updateProtocolParams 
+from views_protocol import updateProtocolParams
+from views_showj import visualizeObject
 from pyworkflow.manager import Manager
 from pyworkflow.gui.tree import TreeProvider, ProjectRunsTreeProvider
 from pyworkflow.em import emProtocolsDict
@@ -25,6 +26,7 @@ def launch_viewer(request):
         protocol = project.mapper.selectById(int(protId))
         
         viewers = findViewers(protocol.getClassName(), WEB_DJANGO)
+        print viewers
         
         viewer = viewers[0]()
         functionName = viewer.getView()
@@ -84,16 +86,16 @@ def viewer(request):
         ioDict = function(request, protocol, protocolViewer)
     
     jsonStr = json.dumps(ioDict, ensure_ascii=False)
-    print jsonStr
+#    print jsonStr
     return HttpResponse(jsonStr, mimetype='application/javascript')
 
-def viewerElm(request):
+def viewerElement(request):
     project, protocolViewer = loadProtocolProject(request)
     updateProtocolParams(request, protocolViewer, project)
     protId = request.POST.get('protRunIdViewer', None)
     viewerParam = request.POST.get('viewerParam', None)
     protocol = project.mapper.selectById(int(protId))
-
+    
     functionName = protocolViewer.getVisualizeDictWeb()[viewerParam]
     function = globals().get(functionName, None)
     
@@ -108,6 +110,76 @@ def viewerElm(request):
     
     jsonStr = json.dumps(ioDict, ensure_ascii=False)
     return HttpResponse(jsonStr, mimetype='application/javascript')
+
+############## VIEWER XMIPP CL2D ##############
+def viewerCL2D(request, protocol, protocolViewer):
+    ioDict = {}
+   
+    text = viewLevelFiles(request, protocol, protocolViewer)
+    ioDict["showj"] = text
+    
+    if protocolViewer.doShowClassHierarchy:
+        text = viewClassHierarchy(request, protocol, protocolViewer)
+        ioDict["html"] = text
+                    
+    return ioDict
+
+def viewLevelFiles(request, protocol, protocolViewer):
+    fnSubset = protocolViewer._getSubset()
+    levelFiles = protocol._getLevelMdFiles(fnSubset)
+    url=""
+    if levelFiles:
+        levelFiles.sort()
+        lastLevelFile = levelFiles[-1]
+        if protocolViewer.doShowLastLevel:
+            url = "/showj/?path="+lastLevelFile
+        else:
+            if protocolViewer.showSeveralLevels.empty():
+                print 'Please select the levels that you want to visualize.'
+            else:
+                listOfLevels = []
+                try:
+                    listOfLevels = protocolViewer._getListFromRangeString(protocolViewer.showSeveralLevels.get())
+                except Exception:
+                    print 'Invalid levels range.'
+                    
+                files = "";
+                for level in listOfLevels:
+                    fn = protocol._getExtraPath("level_%02d/level_classes%s.xmd"%(level,fnSubset))
+                    if os.path.exists(fn):
+                        files += "classes_sorted@"+fn+" "
+                    else:
+                        print 'Level %s does not exist.' % level
+                if files != "":
+                    print 'runShowJ(files)' 
+        return url
+        
+
+def viewClassHierarchy(request, protocol, protocolViewer):
+    fnSubset = protocolViewer._getSubset()
+    fnHierarchy = protocol._getExtraPath("classes%s_hierarchy.txt" % fnSubset)
+    if os.path.exists(fnHierarchy):
+        html = textfileViewer(fnHierarchy, [fnHierarchy])
+    return html
+
+def textfileViewer(title, fileList):
+    f = open(fileList[0], 'r')
+        
+    style = "background-color:black;color:white;font-family:Monospace;padding:1em;font-size:90%;"
+    title = "<title>"+ title + "</title>"
+    html = "<div style="+ style +">"+ title
+    
+    x = 0
+    while 1:
+        line = f.readline()
+        if not line:
+            break
+        if len(line) > 1:
+            x = x+1
+            html = html +"<p><span style='color:cyan;'>" + str(x) + ":    </span>"+ line +" </p>"
+            
+    html = html + "</div>"
+    return html
 
 ############## VIEWER XMIPP ML2D ##############
 def viewerML2D(request, protocol, protocolViewer):
@@ -127,7 +199,6 @@ def viewerML2D(request, protocol, protocolViewer):
     return ioDict
 
 def doShowClasses(request, protocol, protocolViewer):
-    from views_showj import visualizeObject
     objId = protocol.outputClasses.getObjId()
     return "showj","/visualize_object/?objectId="+str(objId)
             

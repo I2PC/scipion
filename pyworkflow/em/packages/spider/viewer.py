@@ -24,15 +24,33 @@
 # *
 # **************************************************************************
 """
-This sub-package will contains Spider protocols
+This module implement the wrappers around xmipp_showj
+visualization program.
 """
-
-from spider import *
-
-from protocol_filters import SpiderProtFilter
-from protocol_align_apsr import SpiderProtAlignAPSR
+from pyworkflow.em.packages.xmipp3.viewer import Viewer, XmippViewer, runShowJ, DESKTOP_TKINTER, WEB_DJANGO
 from protocol_custommask import SpiderProtCustomMask
 from protocol_ca_pca import SpiderProtCAPCA
-from protocol_ward import SpiderProtClassifyWard
 
-from viewer import SpiderViewerCustomMask
+
+
+class SpiderViewerCustomMask(Viewer):
+    """ Wrapper to visualize different type of objects
+    with the Xmipp program xmipp_showj
+    """
+    _environments = [DESKTOP_TKINTER, WEB_DJANGO]
+    _targets = [SpiderProtCustomMask, SpiderProtCAPCA]
+
+    def visualize(self, obj, **args):
+        
+        if isinstance(obj, SpiderProtCustomMask):
+            mask = obj.outputMask
+            XmippViewer().visualize(mask)
+            # Remove location to visualize the whole stack
+            runShowJ(mask.getFileName())
+            
+        elif isinstance(obj, SpiderProtCAPCA):
+            runShowJ(obj._getPath('CA', 'reconstituted.stk'))
+            runShowJ(obj._getPath('CA', 'eigenimg.stk'))
+
+
+

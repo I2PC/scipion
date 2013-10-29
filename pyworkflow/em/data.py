@@ -163,6 +163,11 @@ class Image(Item):
         """ Copy basic information """
         self.copyAttributes(other, '_samplingRate')
         
+    def copyLocation(self, other):
+        """ Copy location index and filename from other image. """
+        self.setIndex(other.getIndex())
+        self.setFileName(other.getFileName())
+        
     def hasCTF(self):
         return self._ctfModel is not None
     
@@ -189,6 +194,9 @@ class Particle(Image):
     def __init__(self, **args):
         Image.__init__(self, **args)
 
+class Mask(Particle):
+    """ Represent a mask. """
+    pass
 
 class Volume(Image):
     """ Represents an EM Volume object """
@@ -565,7 +573,32 @@ class SetOfCoordinates(Set):
         filePaths.add(self.getFileName())
         return filePaths
 
-    
+
+class Transform(EMObject):
+    """ This class will contain a transformation matrix
+    that can be applied to 2D/3D objects like images and volumes.
+    It should contain information about euler angles, translation(or shift)
+    and mirroring.
+    """
+    def __init__(self, **args):
+        EMObject.__init__(self, **args)
+        from numpy import eye
+        self._matrix = eye(4)
+        self._matrix[3, 3] = 0.
+      
+      
+class TransformParams(object):
+    """ Class to store transform parameters in the way
+    expected by Xmipp/Spider.
+    """
+    def __init__(self, **args):
+        defaults = {'shiftX': 0., 'shiftY': 0., 'shiftZ': 0.,
+                    'angleRot': 0., 'angleTilt': 0., 'anglePsi': 0.,
+                    'scale': 1., 'mirror': False}.update(args)
+        for k, v in defaults.iteritems():
+            setattr(self, k, v)  
+
+        
 class ImageClassAssignment(EMObject):
     """ This class represents the relation of
     an image assigned to a class. It serve to

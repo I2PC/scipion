@@ -29,7 +29,7 @@ This sub-package contains Spider protocol for PCA.
 
 
 from pyworkflow.em import *  
-from pyworkflow.utils import removeExt, removeBaseExt, makePath, moveFile
+from pyworkflow.utils import removeExt, removeBaseExt, makePath, moveFile, copyFile, basename
 from constants import *
 from spider import SpiderShell
 from convert import locationToSpider
@@ -37,12 +37,11 @@ from glob import glob
 
       
 # TODO: Remove from ProtAlign, and put in other category     
-class SpiderProtPCA(ProtAlign):
-    """ Reference-free alignment shift and rotational alignment of an image series. 
-    Uses Spider AP SR command.
+class SpiderProtClassifyWard(ProtClassify):
+    """ Ward's method, using 'CL HC' 
     """
     def __init__(self):
-        ProtAlign.__init__(self)
+        ProtClassify.__init__(self)
         self._params = {'ext': 'stk',
                         'inputImage': 'input_image',
                         'outputMask': 'output_mask'
@@ -56,62 +55,50 @@ class SpiderProtPCA(ProtAlign):
         
         #form.addParam('maskType', )
               
-        form.addParam('filterRadius1', FloatParam, default=0.6,
-                      label='Fourier radius for input image',
-                      help='Fourier radius for input image.')        
-        form.addParam('sdFactor', FloatParam, default=0.1,
-                      label='First threshold',
-                      help='first threshold == image average plus this number * s.d.')
-        form.addParam('filterRadius2', FloatParam, default=0.1,
-                      label='Fourier radius for initial binary mask',
-                      help='Fourier radius for initial binary mask.')       
-        form.addParam('maskThreshold', FloatParam, default=0.01,
-                      label='Mask threshold',
-                      help='Threshold for filtered mask.')
+        form.addParam('imcFile', StringParam, default="",
+                      label='IMC file generated in CA-PCA')        
+        form.addParam('numberOfFactors', IntParam, default=10,
+                      label='Number of factors',
+                      help='After running, examine the eigenimages and decide which ones to use.\n'
+                           'Typically all but the first few are noisy.')
         
         
     def _defineSteps(self):
-        # Define some names
-        # Insert processing steps
-        self.outFn = self._getPath('%(inputImage)s.%(ext)s' % self._params)
-        self.inputImg = self.inputImage.get()
-        index, filename = self.inputImg.getLocation()
-        self._insertFunctionStep('convertInput', index, filename)
-        self._insertFunctionStep('createMask', 
-                                 self.filterRadius1.get(), self.sdFactor.get(),
-                                 self.filterRadius2.get(), self.maskThreshold.get())
+        self._insertFunctionStep('classifyWard', self.imcFile.get(), self.numberOfFactors.get())
         #self._insertFunctionStep('createOutput')
-        
-    def convertInput(self, index, filename):
-        """ Convert the input image to a Spider (with stk extension). """
-        ImageHandler().convert((index, filename), (1, self.outFn))
-        
-    def createMask(self, filterRadius1, sdFactor, filterRadius2, maskThreshold):
+#; classification, hierarchical
+#cl hc
+#[cas_prefix]_IMC  ; INPUT
+#(1-x27)  ; factors to use
+#(0)      ; no factor weighting
+#(5)      ; clustering criterion (5==Ward's method)
+#Y        ; dendrogram PostScript file?
+#[ps_dendrogram]   ; OUTPUT
+#Y        ; dendrogram document file?
+#[dendrogram_doc]  ; OUTPUT
+    
+    def classifyWard(self, imcFile, numberOfFactors):
         """ Apply the selected filter to particles. 
         Create the set of particles.
         """
         self._params.update(locals()) # Store input params in dict
         
+        
+        # Copy file to working directory, it could be also a link
+        imcLocalFile = basename(imcFile)
+        copyFile(imcFile, self._getPath(imcLocalFile))
+        imcLocalFile = removeExt(imcLocalFile)
 
         self._enterWorkingDir() # Do operations inside the run working dir
 
+
         spi = SpiderShell(ext=self._params['ext'], log='script.stk') # Create the Spider process to send commands 
-        spi.runScript('PCA.txt', self._params)
-        spi.close(end=False)
+        spi.runFunction('CL HC', imcLocalFile, '1-%d' % numberOfFactors, 0, 5, 
+                        'Y', 'dendogram', 'Y', 'docdendro')
+        spi.close()
         
         self._leaveWorkingDir() # Go back to project dir
 
-        maskFn = self._getPath('%(outputMask)s.%(ext)s' % self._params )
-        maskSet = self._createSetOfParticles()
-        maskSet.copyInfo(self.inputImg)
-        
-        for i in range(1, 8): # 7 images in mask stack
-            img = Particle()
-            img.setLocation(i, maskFn)
-            maskSet.append(img)
-            
-        maskSet.write()
-        self._defineOutputs(outputMask=maskSet)
             
     def _summary(self):
         summary = []
