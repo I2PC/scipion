@@ -37,6 +37,8 @@ IS_MAC=0
 IS_MINGW=0
 IS_LINUX=0
 DELETE_ANSWER="n"
+INTERARRAY=
+INTERELEMARRAY=
 
 #Some flags variables
 DO_UNTAR=1
@@ -121,10 +123,10 @@ SHALIGNMENT_TAR="${SHALIGNMENT_FOLDER}.tgz"
 DO_SHALIGNMENT=0
 
 #External libraries arrays. For adding a new external library, define his decompress folder and tar names, put them in EXTERNAL_LIBRARIES and EXTERNAL_LIBRARIES_FILES arrays, and put 1 whther it has to be installed by default, 0 otherwise in EXTERNAL_LIBRARIES_DEFAULT in the appropiate positions. You will also need to stablish a DO* variable in the *DO array, to let the script work
-EXTERNAL_LIBRARIES=(         $ALGLIB_FOLDER $BILIB_FOLDER $CONDOR_FOLDER $FFTW_FOLDER $GTEST_FOLDER $HDF5_FOLDER $IMAGEJ_FOLDER $JPEG_FOLDER $SCONS_FOLDER $SQLITE_FOLDER $TIFF_FOLDER $NMA_FOLDER $SHALIGNMENT_FOLDER )
-EXTERNAL_LIBRARIES_FILES=(   $ALGLIB_TAR    $BILIB_TAR    $CONDOR_TAR    $FFTW_TAR    $GTEST_TAR    $HDF5_TAR    $IMAGEJ_TAR    $JPEG_TAR    $SCONS_TAR    $SQLITE_TAR    $TIFF_TAR    $NMA_TAR    $SHALIGNMENT_TAR    )
-EXTERNAL_LIBRARIES_DO=(      $DO_ALGLIB     $DO_BILIB     $DO_CONDOR     $DO_FFTW     $DO_GTEST     $DO_HDF5     $DO_IMAGEJ     $DO_JPEG     $DO_SCONS     $DO_SQLITE     $DO_TIFF     $DO_NMA     $DO_SHALIGNMENT     )
-EXTERNAL_LIBRARIES_DEFAULT=(        1             1              1            1             1            1              1            1             1              1            1           0                   0       )
+EXTERNAL_LIBRARIES="         $ALGLIB_FOLDER $BILIB_FOLDER $CONDOR_FOLDER $FFTW_FOLDER $GTEST_FOLDER $HDF5_FOLDER $IMAGEJ_FOLDER $JPEG_FOLDER $SCONS_FOLDER $SQLITE_FOLDER $TIFF_FOLDER $NMA_FOLDER $SHALIGNMENT_FOLDER "
+EXTERNAL_LIBRARIES_FILES="   $ALGLIB_TAR    $BILIB_TAR    $CONDOR_TAR    $FFTW_TAR    $GTEST_TAR    $HDF5_TAR    $IMAGEJ_TAR    $JPEG_TAR    $SCONS_TAR    $SQLITE_TAR    $TIFF_TAR    $NMA_TAR    $SHALIGNMENT_TAR    "
+EXTERNAL_LIBRARIES_DO="      $DO_ALGLIB     $DO_BILIB     $DO_CONDOR     $DO_FFTW     $DO_GTEST     $DO_HDF5     $DO_IMAGEJ     $DO_JPEG     $DO_SCONS     $DO_SQLITE     $DO_TIFF     $DO_NMA     $DO_SHALIGNMENT     "
+EXTERNAL_LIBRARIES_DEFAULT="        1             1              1            1             1            1              1            1             1              1            1           0                   0       "
 
 
 #Python definitions
@@ -172,10 +174,10 @@ TK_TAR="${TK_FOLDER}.tgz"
 DO_TK=0
 
 #Python modules arrays. For adding a new python module, define his decompress folder and tar names, put them in PYTHON_MODULES and PYTHON_MODULES_FILES arrays, and put 1 whther it has to be installed by default, 0 otherwise in PYTHON_MODULES_DEFAULT in the appropiate position. You will also need to stablish a DO* variable in the *DO array, to let the script work
-PYTHON_MODULES=(        $MATLIBPLOT_FOLDER $PYMPI_FOLDER $NUMPY_FOLDER $SCIPY_FOLDER $TCL_FOLDER $TK_FOLDER $PSUTIL_FOLDER )
-PYTHON_MODULES_FILES=(  $MATLIBPLOT_TAR    $PYMPI_TAR    $NUMPY_TAR    $SCIPY_TAR    $TCL_TAR    $TK_TAR    $PSUTIL_TAR    )
-PYTHON_MODULES_DO=(     $DO_MATLIBPLOT     $DO_PYMPI     $DO_NUMPY     $DO_SCIPY     $DO_TCL     $DO_TK     $DO_PSUTIL     )
-PYTHON_MODULES_DEFAULT=(           1             1             1             0           1          1          1           )
+PYTHON_MODULES="        $MATLIBPLOT_FOLDER $PYMPI_FOLDER $NUMPY_FOLDER $SCIPY_FOLDER $TCL_FOLDER $TK_FOLDER $PSUTIL_FOLDER "
+PYTHON_MODULES_FILES="  $MATLIBPLOT_TAR    $PYMPI_TAR    $NUMPY_TAR    $SCIPY_TAR    $TCL_TAR    $TK_TAR    $PSUTIL_TAR    "
+PYTHON_MODULES_DO="     $DO_MATLIBPLOT     $DO_PYMPI     $DO_NUMPY     $DO_SCIPY     $DO_TCL     $DO_TK     $DO_PSUTIL     "
+PYTHON_MODULES_DEFAULT="           1             1             1             0           1          1          1           "
 
 
 ##################################################################################
@@ -184,10 +186,56 @@ PYTHON_MODULES_DEFAULT=(           1             1             1             0  
 
 #function that searchs in an array for an element and returns the position of that element in the array
 indexOf(){
-  local i=1 S=$1; shift
-  while [ $S != $1 ]
-  do    ((i++)); shift
-        [ -z "$1" ] && { i=0; break; }
+  local i=1 S=$1 found=0; shift
+    for elem in $@; do
+      if [ -n $elem ]; then
+      if [ "$S" != "$elem" ]; then
+        i=$(expr $i + 1)
+      else
+        found=$i
+      fi
+      fi
+    done
+  return $found
+}
+
+setElem()
+{
+  local i=1 elemS=$1 value=$2; shift 2
+  array=$@
+  found=1
+  INTERARRAY=''
+  for elem in $@; do
+    if [ $i -eq $elemS ]; then
+      INTERARRAY="${INTERARRAY} ${value}"
+      found=0
+    else
+      INTERARRAY="${INTERARRAY} ${elem}"
+    fi
+    i=$(expr $i + 1)
+  done
+  return $found
+}
+
+elemAt()
+{
+  local i=0 S=$1 found=0; shift
+  INTERELEMARRAY=''
+  for elem in $@; do
+    if [ $i -eq $S ]; then
+      INTERELEMARRAY=${elem}
+      found=$i
+    fi
+    i=$(expr $i + 1)
+  done
+  return $found
+}
+
+len()
+{
+  local i=0
+  for elem in $@; do
+    i=$(expr $i + 1)
   done
   return $i
 }
@@ -300,22 +348,24 @@ shouldIDoIt()
 
   case $1 in
     library)
-      indexOf $2 ${EXTERNAL_LIBRARIES_FILES[@]}
-      ind=$(expr $? - 1)
-      if [ ${ind} -lt 0 ]; then
+      indexOf "$2" "${EXTERNAL_LIBRARIES_FILES}"
+      ind=$?
+      if [ ${ind} -lt 1 ]; then
         echoRed "Error: bad parameter ($2) on shouldIDoIt. File not found. Exiting"
         exitGracefully
       fi
-      ANS=${EXTERNAL_LIBRARIES_DO[$ind]}
+      elemAt $ind "${EXTERNAL_LIBRARIES_DO}"
+      ANS=${INTERELEMARRAY}
       ;;
     pymodule)
-      indexOf $2 ${PYTHON_MODULES_FILES[@]}
-      ind=$(expr $? - 1)
-      if [ ${ind} -lt 0 ]; then
+      indexOf "$2" "${PYTHON_MODULES_FILES}"
+      ind=$?
+      if [ ${ind} -lt 1 ]; then
         echoRed "Error: bad parameter ($2) on shouldIDoIt. File not found. Exiting"
         exitGracefully
       fi
-      ANS=${PYTHON_MODULES_DO[$ind]}
+      elemAt $ind "${PYTHON_MODULES_DO}"
+      ANS=${INTERELEMARRAY}
       ;;
     *)
       echoRed "Error: bad parameter ($1) on shouldIDoIt function. Exiting"
@@ -340,22 +390,24 @@ doIt()
 
   case $1 in
     library)
-      indexOf $2 ${EXTERNAL_LIBRARIES_FILES[@]}
-      ind=$(expr $? - 1)
-      if [ ${ind} -lt 0 ]; then
+      indexOf "$2" "${EXTERNAL_LIBRARIES_FILES}"
+      ind=$?
+      if [ ${ind} -lt 1 ]; then
         echoRed "Error: bad parameter ($2) on doIt. File not found. Exiting"
         exitGracefully
       fi
-      EXTERNAL_LIBRARIES_DO[$ind]=$3
+      setElem $ind $3 "${EXTERNAL_LIBRARIES_DO}"
+      EXTERNAL_LIBRARIES_DO=${INTERARRAY}
       ;;
     pymodule)
-      indexOf $2 ${PYTHON_MODULES_FILES[@]}
-      ind=$(expr $? - 1)
-      if [ ${ind} -lt 0 ]; then
+      indexOf "$2" "${PYTHON_MODULES_FILES}"
+      ind=$?
+      if [ ${ind} -lt 1 ]; then
         echoRed "Error: bad parameter ($2) on shouldIDoIt. File not found. Exiting"
         exitGracefully
       fi
-      PYTHON_MODULES_DO[$ind]=$3
+      setElem $ind $3 "${PYTHON_MODULES_DO}"
+      PYTHON_MODULES_DO=${INTERARRAY}
       ;;
     *)
       echoRed "Error: bad parameter ($1) on shouldIDoIt function. Exiting"
@@ -519,10 +571,10 @@ takeArguments()
         DO_UNTAR=0
         DO_COMPILE=0
         DO_CONFIGURE=0
-        for lib in ${EXTERNAL_LIBRARIES_FILES[@]}; do
+        for lib in ${EXTERNAL_LIBRARIES_FILES}; do
           doIt library ${lib} 0
         done
-        for mod in ${PYTHON_MODULES_FILES[@]}; do
+        for mod in ${PYTHON_MODULES_FILES}; do
           doIt pymodule ${mod} 0
         done
         DO_PYTHON=0
@@ -894,14 +946,24 @@ takeDefaults()
 {
 # Update *_DO arrays to represent what the *_DEFAULT arrays say we should do by default
   lib=0
-  while [ $lib -lt ${#EXTERNAL_LIBRARIES_FILES[@]} ]; do
-    EXTERNAL_LIBRARIES_DO[$lib]=${EXTERNAL_LIBRARIES_DEFAULT[$lib]}
+  len "${EXTERNAL_LIBRARIES_FILES}"
+  length=$?
+  while [ $lib -lt $length ]; do
+    elemAt $lib "${EXTERNAL_LIBRARIES_DEFAULT}"
+    aux=${INTERELEMARRAY}
+    setElem $lib $aux "${EXTERNAL_LIBRARIES_DO}"
+    EXTERNAL_LIBRARIES_DO=${INTERARRAY}
     lib=$(expr $lib + 1)
   done
 
   mod=0
-  while [ ${mod} -lt ${#PYTHON_MODULES_FILES[@]} ]; do
-    PYTHON_MODULES_DO[$mod]=${PYTHON_MODULES_DEFAULT[$mod]}
+  len "${PYTHON_MODULES_FILES}"
+  length=$?
+  while [ $mod -lt $length ]; do
+    elemAt $mod "${PYTHON_MODULES_DEFAULT}"
+    aux=${INTERELEMARRAY}
+    setElem $mod $aux "${PYTHON_MODULES_DO}"
+    PYTHON_MODULES_DO=${INTERARRAY}
     mod=$(expr $mod + 1)
   done
 }
@@ -1257,23 +1319,27 @@ decompressExternals()
   echoExec "cd ${EXT_PATH}" "/dev/null" 1
   echoGreen "*** Decompressing external libraries ..."
   lib=0
-  while [ ${lib} -lt ${#EXTERNAL_LIBRARIES[@]} ]; do
-    if [ ${EXTERNAL_LIBRARIES_DO[$lib]} -eq 1 ]; then
-      if [ -d ${EXTERNAL_LIBRARIES[$lib]} ]; then
+  len "${EXTERNAL_LIBRARIES}"
+  length=$?
+  while [ $lib -lt $length ]; do
+    elemAt $lib "${EXTERNAL_LIBRARIES_DO}"
+    if [ ${INTERELEMARRAY} -eq 1 ]; then
+      elemAt $lib "${EXTERNAL_LIBRARIES}"
+      if [ -d ${INTERELEMARRAY} ]; then
         if ([ $DO_UNATTENDED -eq 0 ] && [ ${DELETE_ANSWER} != "Y" ] && [ ${DELETE_ANSWER} != "N" ]); then
-          echo "${EXTERNAL_LIBRARIES[$lib]} folder exists, do you want to permanently remove it? (y)es/(n)o/(Y)es-to-all/(N)o-to-all"
+          echo "${INTERELEMARRAY} folder exists, do you want to permanently remove it? (y)es/(n)o/(Y)es-to-all/(N)o-to-all"
           read DELETE_ANSWER
         else
           DELETE_ANSWER="Y"
         fi
 	if ([ ${DELETE_ANSWER} = "y" ] || [ ${DELETE_ANSWER} = "Y" ]); then
-          echoExec "rm -rf ${EXTERNAL_LIBRARIES[$lib]}" "/dev/null"
+          echoExec "rm -rf ${INTERELEMARRAY}" "/dev/null"
         else
-          echoRed "Library ${EXTERNAL_LIBRARIES[$lib]} folder remains untouched."
+          echoRed "Library ${INTERELEMARRAY} folder remains untouched."
         fi
       fi
-      #echoExec "tar -xvzf ${EXTERNAL_LIBRARIES_FILES[$lib]}"
-      echoExec "tar -xvzf ${EXTERNAL_LIBRARIES_FILES[$lib]}" "/dev/null" 1
+      elemAt $lib "${EXTERNAL_LIBRARIES_FILES}"
+      echoExec "tar -xvzf ${INTERELEMARRAY}" "/dev/null" 1
     fi
     lib=$(expr $lib + 1)
   done
@@ -1314,22 +1380,28 @@ decompressPythonModules()
   echoExec "cd ${EXT_PATH}/python" "/dev/null" 1
   echoGreen "*** Decompressing Python modules ..."
   lib=0
-  while [ ${lib} -lt ${#PYTHON_MODULES[@]} ]; do
-    if [ ${PYTHON_MODULES_DO[$lib]} -eq 1 ]; then
-      if [ -d ${PYTHON_MODULES[$lib]} ]; then
+  len "${PYTHON_MODULES}"
+  length=$?
+  while [ $lib -lt $length ]; do
+    elemAt $lib "${PYTHON_MODULES_DO}"
+    if [ ${INTERELEMARRAY} -eq 1 ]; then
+      elemAt $lib "${PYTHON_MODULES}"
+      if [ -d ${INTERELEMARRAY} ]; then
         if ([ $DO_UNATTENDED -eq 0 ] && [ ${DELETE_ANSWER} != "Y" ] && [ ${DELETE_ANSWER} != "N" ]); then
-          echo "${PYTHON_MODULES[$lib]} folder exists, do you want to permanently remove it? (y)es/(n)o/(Y)es-to-all/(N)o-to-all"
+          elemAt $lib "${PYTHON_MODULES}"
+          echo "${INTERELEMARRAY} folder exists, do you want to permanently remove it? (y)es/(n)o/(Y)es-to-all/(N)o-to-all"
           read DELETE_ANSWER
         else
           DELETE_ANSWER="Y"
         fi
 	if ([ ${DELETE_ANSWER} = "y" ] || [ ${DELETE_ANSWER} = "Y" ]); then
-          echoExec "rm -rf ${PYTHON_MODULES[$lib]}" "/dev/null"
+          echoExec "rm -rf ${INTERELEMARRAY}" "/dev/null"
         else
-          echoRed "Library ${PYTHON_MODULES[$lib]} folder remains untouched."
+          echoRed "Library ${INTERELEMARRAY} folder remains untouched."
         fi
       fi
-      echoExec "tar -xvzf ${PYTHON_MODULES_FILES[$lib]}" "/dev/null" 1
+      elemAt $lib "${PYTHON_MODULES_FILES}"
+      echoExec "tar -xvzf ${INTERELEMARRAY}" "/dev/null" 1
     fi
     lib=$(expr $lib + 1)
   done
@@ -1720,7 +1792,7 @@ if [ $DO_PYTHON -eq 1 ]; then
     echo "--> export LDFLAGS=${LDFLAGS}"
     echo "--> export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}"
   else
-    export LDFLAGS="-L${EXT_PYTHON/$PYTHON_FOLDER} -L${XMIPP_HOME}/lib -L${EXT_PYTHON}/${TK_FOLDER}/unix -L${EXT_PYTHON}/${TCL_FOLDER}/unix"
+    export LDFLAGS="-L${EXT_PYTHON}/${PYTHON_FOLDER} -L${XMIPP_HOME}/lib -L${EXT_PYTHON}/${TK_FOLDER}/unix -L${EXT_PYTHON}/${TCL_FOLDER}/unix"
     export LD_LIBRARY_PATH="${EXT_PYTHON}/${PYTHON_FOLDER}:${EXT_PYTHON}/${TK_FOLDER}/unix:${EXT_PYTHON}/${TCL_FOLDER}/unix:${LD_LIBRARY_PATH}"
     echo "--> export CPPFLAGS=${CPPFLAGS}"
     echo "--> export LDFLAGS=${LDFLAGS}"

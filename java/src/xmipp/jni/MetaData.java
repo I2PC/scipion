@@ -29,7 +29,7 @@ import java.io.File;
 import java.util.Arrays;
 import java.util.logging.Level;
 
-import xmipp.utils.DEBUG;
+//import xmipp.utils.DEBUG;
 
 /**
  * Protocol for integrating native C++ code - @see ImageDouble.java
@@ -452,15 +452,15 @@ public class MetaData {
 	/*********** Non-native functions ********************/
 	/** Create empty metadata */
 	public MetaData() {
-		DEBUG.printFormat("Java: Creating metadata\n");
-		DEBUG.printStackTrace();
+		//DEBUG.printFormat("Java: Creating metadata\n");
+		//DEBUG.printStackTrace();
 		create();
 	}
 
 	/** Create a metadata and read data from filename */
 	public MetaData(String filename) {
-		DEBUG.printFormat("Java: Creating metadata from filename: %s\n", filename);
-		DEBUG.printStackTrace();
+		//DEBUG.printFormat("Java: Creating metadata from filename: %s\n", filename);
+		//DEBUG.printStackTrace();
 		create();
 		read(filename);
 	}
