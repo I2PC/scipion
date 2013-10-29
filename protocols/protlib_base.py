@@ -390,7 +390,7 @@ class XmippProject():
         
         #Create special node ROOT
         #roots = [k for k, v in runsDict.iteritems() if v.isRoot]
-        ddRoot = DepData(runsDict, self.getName(), None, level=0)
+        ddRoot = DepData(runsDict, self.getName(), None)
         ddRoot.state = 6
         #ddRoot.deps = roots
         
@@ -405,7 +405,7 @@ class XmippProject():
 
 class DepData():
     '''Simple structure to hold runs dependencies data '''
-    def __init__(self, runsDict, extRunName, protocol, level=1):
+    def __init__(self, runsDict, extRunName, protocol, level=0):
         self.runsDict = runsDict
         self.extRunName = extRunName
         self.level = level
@@ -423,6 +423,7 @@ class DepData():
         ddChild.isRoot = False
         if self.level + 1 > ddChild.level:
             ddChild.level = self.level + 1
+            ddChild.parent = self
         
     def hasDep(self, extRunName):
         return extRunName in self.deps

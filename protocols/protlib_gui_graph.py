@@ -336,10 +336,7 @@ def showDependencyTree(canvas, runsDict, rootName):
         
     def showLevel(dd, y):
         # Only take into account direct childs
-        childs = [runsDict[rn] for rn in dd.deps if dd.level + 1 == runsDict[rn].level]
-#        print "showLevel, node: %s, level: %d" % (dd.extRunName, dd.level)
-#        for rn in dd.deps:
-#            print "   dep: %s, level: %d" % (rn, runsDict[rn].level) 
+        childs = [runsDict[rn] for rn in dd.deps if dd is runsDict[rn].parent]
         n = len(childs)
         showNode(dd, y)
         ny = y + dd.height + DY
@@ -357,29 +354,14 @@ def showDependencyTree(canvas, runsDict, rootName):
                     c = childs[i+1]
                     c.offset = offset
                 
-#                print "\n\n----A------"
-#                print "Parent: %s" % dd.t.text.replace('\n', '_')
-#                for c in childs:
-#                    print "  child: %s, width: %d, offset: %d" % (c.t.text.replace('\n', '_'), c.width, c.offset)
-                
                 total = childs[0].half + offset + childs[-1].half
                 half = total/2
                 for c in childs:
                     c.offset -= half - childs[0].half
                 
-#                print "\n----B------"
-#                print "childs[0].half: ", childs[0].half
-#                print "Parent: %s" % dd.t.text.replace('\n', '_')
-#                for c in childs:
-#                    print "  child: %s, width: %d, offset: %d" % (c.t.text.replace('\n', '_'), c.width, c.offset)
             else:
                 childs[0].offset = 0
             getHLimits(dd)
-#            print "\n=====C========"
-#            print "Parent: %s" % dd.t.text.replace('\n', '_')
-#            print " offset: %d, width: %d" % (dd.offset, dd.width)
-#            for l, r in dd.hLimits:
-#                print "[%d, %d]" % (l, r)
         return dd
 
     def showDD(dd, x):
@@ -387,7 +369,7 @@ def showDependencyTree(canvas, runsDict, rootName):
         dd.t.moveTo(nx, dd.y)
         childs = [runsDict[rn] for rn in dd.deps]
         for c in childs:
-            if c.level == dd.level + 1:
+            if c.parent is dd:
                 showDD(c, nx)  
             try:
                 canvas.createEdge(dd.t, c.t)
