@@ -14,13 +14,15 @@ from forms import VolVisualizationForm
 from pyworkflow.em import *
 from pyworkflow.em.packages.xmipp3.convert import *
 
-    
+
+
 def showj(request, inputParameters=None):
     #############
     # WEB INPUT PARAMETERS
     _imageDimensions = ''
     _imageVolName=''
     
+     
     if request.method == 'POST': # If the form has been submitted... Post method
         _path = request.POST.get('path')
         _blockComboBox = request.POST.get('blockComboBox')
@@ -33,7 +35,7 @@ def showj(request, inputParameters=None):
         _render = inputParameters['allowRender']
         _labelsToRenderComboBox = inputParameters['labelsToRenderComboBox'] if 'labelsToRenderComboBox' in inputParameters else ''
         request.session['defaultZoom'] = inputParameters['zoom'] if 'zoom' in inputParameters else '150px' 
-    
+        
     print("path",_path)
     
     

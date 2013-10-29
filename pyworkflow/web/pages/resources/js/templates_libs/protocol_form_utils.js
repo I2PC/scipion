@@ -134,6 +134,10 @@ $(document).ready(function() {
 				$.each(json, function(key, value) {
 					if(key=="showj"){
 						customPopup(value,1024,600);
+					} else if(key=="url"){
+						customPopup(value,1024,600);
+					} else if(key=="html"){
+						customPopupHTML(value,600,500);
 					} else if(key=="plot"){
 						customPopup(value,600,500);
 					} else {
@@ -141,7 +145,7 @@ $(document).ready(function() {
 					}
 				});
 			},"json");
-		} else if (mode == 'viewerElm') {
+		} else if (mode == 'viewerElement') {
 			
 			new Messi("<img src='/resources/visualize.gif'/>  Loading Viewer...",{
 				modal : true
@@ -157,9 +161,11 @@ $(document).ready(function() {
 				$.each(json, function(key, value) {
 					if(key=="showj"){
 						customPopup(value,1024,600);
+					} else if(key=="html"){
+						customPopupHTML(value,600,500);
 					} else if(key=="plot"){
 						customPopup(value,600,500);
-					} else if(key=="plots"){
+					} else {
 						customPopup(value,800,600);
 					}
 				});
