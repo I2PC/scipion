@@ -18,9 +18,13 @@
 	function putMode(mode){
 		$("#protocolForm").attr('data-mode', mode);
 	}
-	function putModeWiz(mode, functionName){
+	function putModeWiz(functionName){
 		$("input#wizName").attr("value", functionName);
 		putMode("wiz");
+	}
+	function putModeViewElm(param, func){
+		$("input#viewerParam").attr("value", param);
+		putMode("viewerElement");
 	}
 	</script>
 	 <script>
@@ -37,6 +41,7 @@
 			<input type="hidden" name="protocolId" value="{{protocol.getObjId}}"/>
 			<input type="hidden" name="protRunIdViewer" value="{{protRunIdViewer}}"/>
 			<input type="hidden" id="wizName" name="wizName" value=""/>
+			<input type="hidden" id="viewerParam" name="viewerParam" value="None"/>
 			<input type="hidden" id="comment" name="comment" value="{{protocol.getObjComment}}"/>
 			
 			{% if visualize == 0 %} <!-- used to analyze results --> 
@@ -180,11 +185,11 @@
 									</td>
 								{% elif param.hasWizard %}
 									<td class="ico">
-										<input type="submit" class="buttonWiz" value="" onclick="javascript:putModeWiz('wiz', '{{param.wizardName}}');"/>
+										<input type="submit" class="buttonWiz" value="" onclick="javascript:putModeWiz('{{param.wizardName}}');"/>
 									</td>
-								{% elif visualize == 1 %}
+								{% elif param.hasViewer %}
 									<td class="ico">
-										<input type="submit" class="buttonViewer" value="" onclick="javascript:alert('Not Implemented yet');"/>
+										<input type="submit" class="buttonViewer" value="" onclick="javascript:putModeViewElm('{{paramName}}');"/>
 									</td>
 								{% else %}
 									<td>

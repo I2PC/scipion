@@ -146,4 +146,6 @@ class ProtocolViewer(Protocol, Viewer):
                 # If values are separated by comma also splitted 
                 values += map(int, e.split())
         return values
-
+    
+    def getClassName(self):
+        return self.__class__.__name__

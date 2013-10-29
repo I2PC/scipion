@@ -53,9 +53,10 @@ urlpatterns = patterns('',
     
     #VIEWERS
     url(r'^launch_viewer/$', 'app.em_viewer.launch_viewer'),
-    url(r'^view_plot/$', 'app.em_viewer.view_plot'),
-    url(r'^view_plot_web/$', 'app.em_viewer.view_plot_web'),
     url(r'^viewer/$', 'app.em_viewer.viewer'),
+    url(r'^viewerElement/$', 'app.em_viewer.viewerElement'),
+    url(r'^view_plots/$', 'app.em_viewer.view_plots'),
+    url(r'^view_plot_xmipp/$', 'app.em_viewer.view_plot_xmipp'),
     
     #SHOWJ
     url(r'^showj/', 'app.views_showj.showj'), #Load web

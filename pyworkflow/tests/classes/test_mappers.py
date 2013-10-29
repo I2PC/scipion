@@ -9,7 +9,7 @@ import os.path
 import unittest
 import pyworkflow.mapper.postgresql
 from pyworkflow.object import *
-from pyworkflow.em.data import Microscope
+from pyworkflow.em.data import Acquisition
 
 # @see test_object.TestPyworkflow.test_SqliteMapper
 class TestPostgreSqlMapper(unittest.TestCase):
@@ -55,7 +55,7 @@ class TestPostgreSqlMapper(unittest.TestCase):
         """ Test mapper insertion of an object with attributes (children)"""
         mapper=TestPostgreSqlMapper.mapper
         if mapper != None:
-            micro=Microscope()
+            micro=Acquisition()
             micro.voltage=Float(200.0)
             parentId=mapper.insert(micro)
             mapper.commit()
@@ -79,7 +79,7 @@ class TestPostgreSqlMapper(unittest.TestCase):
        # deleteChilds test is implicit in delete, for complex objects
        mapper=TestPostgreSqlMapper.mapper
        if mapper != None:
-           micro=Microscope()
+           micro=Acquisition()
            micro.voltage=Float(200.0)
            parentId=mapper.insert(micro)
            voltageId=micro.voltage.getObjId()
@@ -106,7 +106,7 @@ class TestPostgreSqlMapper(unittest.TestCase):
     def test_updates(self):
         mapper=TestPostgreSqlMapper.mapper
         if mapper != None:
-            micro=Microscope()
+            micro=Acquisition()
             micro.voltage=Float(180.0)
             parentId=mapper.insert(micro)
             mapper.commit()
@@ -172,10 +172,10 @@ class TestPostgreSqlDb(unittest.TestCase):
             db.createTables()
 
 
-    def insertMicroscope(self):
+    def insertAcquisition(self):
         mapper=self.getMapper()
         if mapper != None:
-            micro=Microscope()
+            micro=Acquisition()
             micro.voltage=Float(200.0)
             parentId=mapper.insert(micro)
             mapper.commit()
@@ -210,14 +210,14 @@ class TestPostgreSqlDb(unittest.TestCase):
 
     def test_selectObjectsByParent(self):
         if TestPostgreSqlDb.database != None:
-            parentId=self.insertMicroscope()
+            parentId=self.insertAcquisition()
             childrenList=TestPostgreSqlDb.database.selectObjectsByParent(parentId)
             self.assertTrue(self.allChildrenBelongToParent(childrenList,parentId))
 
 
     def test_selectObjectsByAncestor(self):
         if TestPostgreSqlDb.database != None:        
-            parentId=self.insertMicroscope()
+            parentId=self.insertAcquisition()
             childrenList=TestPostgreSqlDb.database.selectObjectsByAncestor(str(parentId))
             self.assertTrue(self.allChildrenBelongToParent(childrenList,parentId))
 
@@ -250,7 +250,7 @@ class TestPostgreSqlDb(unittest.TestCase):
 
     def test_deleteChildObjects(self):
           if TestPostgreSqlDb.database != None:
-            id=self.insertMicroscope()
+            id=self.insertAcquisition()
             print str(id)
             TestPostgreSqlDb.database.deleteChildObjects(str(id))
             obj_list=TestPostgreSqlDb.database.selectObjectsByParent(id)

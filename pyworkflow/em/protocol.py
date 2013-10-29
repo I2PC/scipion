@@ -92,6 +92,9 @@ class ProtImportMicrographs(EMProtocol):
                    label='Microscope voltage (in kV)')
         form.addParam('sphericalAberration', FloatParam, default=2.26,
                    label='Spherical aberration (in mm)')
+        form.addParam('ampContrast', FloatParam, default=0.1,
+                      label='Amplitude Contrast',
+                      help='It should be a positive number, typically between 0.05 and 0.3.')
         form.addParam('samplingRateMode', EnumParam, default=SAMPLING_FROM_IMAGE,
                    label='Sampling rate mode',
                    choices=['From image', 'From scanner'])
@@ -109,10 +112,10 @@ class ProtImportMicrographs(EMProtocol):
     def _defineSteps(self):
         self._insertFunctionStep('importMicrographs', self.pattern.get(),
                                 self.voltage.get(), self.sphericalAberration.get(),
-                                self.samplingRate.get(), self.scannedPixelSize.get(),
-                                self.magnification.get())
+                                self.ampContrast.get(), self.samplingRate.get(), 
+                                self.scannedPixelSize.get(), self.magnification.get())
         
-    def importMicrographs(self, pattern, voltage, sphericalAberration, 
+    def importMicrographs(self, pattern, voltage, sphericalAberration, amplitudeContrast,
                           samplingRate, scannedPixelSize, magnification):
         """ Copy micrographs matching the filename pattern
         Register other parameters.
@@ -124,10 +127,11 @@ class ProtImportMicrographs(EMProtocol):
             raise Exception('importMicrographs:There is not filePaths matching pattern')
         
         micSet = self._createSetOfMicrographs() 
-        # Setting microscope properties
-        micSet._microscope.magnification.set(magnification)
-        micSet._microscope.voltage.set(voltage)
-        micSet._microscope.sphericalAberration.set(sphericalAberration)
+        # Setting Acquisition properties
+        micSet._acquisition.magnification.set(magnification)
+        micSet._acquisition.voltage.set(voltage)
+        micSet._acquisition.sphericalAberration.set(sphericalAberration)
+        micSet._acquisition.amplitudeContrast.set(amplitudeContrast)
         
         if self.samplingRateMode == SAMPLING_FROM_IMAGE:
             micSet.setSamplingRate(samplingRate)
@@ -296,9 +300,9 @@ class ProtCTFMicrographs(EMProtocol):
         
         form.addParam('inputMicrographs', PointerParam, important=True,
                       label="Input Micrographs", pointerClass='SetOfMicrographs')
-        form.addParam('ampContrast', FloatParam, default=0.1,
-                      label='Amplitude Contrast',
-                      help='It should be a positive number, typically between 0.05 and 0.3.')
+#        form.addParam('ampContrast', FloatParam, default=0.1,
+#                      label='Amplitude Contrast',
+#                      help='It should be a positive number, typically between 0.05 and 0.3.')
         form.addParam('lowRes', FloatParam, default=0.05,
                       label='Lowest resolution',
                       help='Give a value in digital frequency (i.e. between 0.0 and 0.5). '
@@ -352,13 +356,13 @@ class ProtCTFMicrographs(EMProtocol):
         # Get pointer to input micrographs 
         self.inputMics = self.inputMicrographs.get() 
                                 
-        self._params = {'voltage': self.inputMics._microscope.voltage.get(),
-                        'sphericalAberration': self.inputMics._microscope.sphericalAberration.get(),
-                        'magnification': self.inputMics._microscope.magnification.get(),
+        self._params = {'voltage': self.inputMics._acquisition.voltage.get(),
+                        'sphericalAberration': self.inputMics._acquisition.sphericalAberration.get(),
+                        'magnification': self.inputMics._acquisition.magnification.get(),
                         'samplingRate': self.inputMics.getSamplingRate(),
                         'scannedPixelSize': self.inputMics.getScannedPixelSize(),
                         'windowSize': self.windowSize.get(),
-                        'ampContrast': self.ampContrast.get(),
+                        'ampContrast': self.inputMics._acquisition.amplitudeContrast.get(),
                         'lowRes': self.lowRes.get(),
                         'highRes': self.highRes.get(),
                         # Convert from microns to Amstrongs
