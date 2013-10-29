@@ -70,6 +70,7 @@ def runSpiderTemplate(templateName, ext, paramsDict):
     by copying the template and replacing the values in dictionary.
     After the new file is read, the Spider interpreter is invoked.
     """
+    loadEnvironment()
     copyTemplate(templateName, '.')
     scriptName = replaceExt(templateName, ext)
     print "scriptName:", scriptName
