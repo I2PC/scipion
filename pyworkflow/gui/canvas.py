@@ -114,7 +114,9 @@ class Canvas(tk.Canvas, Scrollable):
         tb = RoundedTextBox(self, text, x, y, bgColor, textColor)
         self.items[tb.id] = tb
         return tb
-
+    
+    def addItem(self, item):
+        self.items[item.id] = item
     
     def createEdge(self, srcItem, dstItem):
         edge = Edge(self, srcItem, dstItem)
@@ -364,8 +366,25 @@ class TextCircle(TextItem):
         super(TextCircle,self).__init__(canvas, text, x, y, bgColor, textColor)
 
     def _paintBounds(self, x, y, w, h, fillColor):
-        return self.canvas.create_oval(x, y, w, h, fill=fillColor) 
+        return self.canvas.create_oval(x, y, w, h, fill=fillColor)
+    
+    
+class ImageBox(Item):
+    def __init__(self, canvas, imgPath, x=0, y=0, text=None):
+        Item.__init__(self, canvas, x, y)
+        # Create the image
+        from pyworkflow.gui import getImage, getImageFromPath
+        self.image = getImageFromPath(imgPath)
+
+        if text is not None:
+            label = tk.Label(canvas, image=self.image, text=text, compound=tk.TOP)
+            self.id = self.canvas.create_window(x, y, window=label)
+        else:
+            self.id = self.canvas.create_image(x, y, image=self.image)
+         
         
+    def setSelected(self, value): #Ignore selection highlight
+        pass
 
 class Connector(Item):
     """ Default connector has no graphical representation (hence, it'ss invisible). Subclasses offer different looks"""
@@ -499,20 +518,24 @@ if __name__ == '__main__':
     root.grid_columnconfigure(0, weight=1)
     root.grid_rowconfigure(0, weight=1)
     
-    tb1 = canvas.createTextCircle("Project", 100, 100, "blue")
-    tb2 = canvas.createTextbox("This is an intentionally quite big, big box,\nas you may appreciate looking carefully\nat it,\nas many times\nas you might need", 300, 200)
-    tb2.addSocket("output1",RoundConnector, "bottom",fillColor="green")
-    tb2.addSocket("output2",SquareConnector, "bottom",fillColor="yellow")
-    tb2.addSocket("output3",SquareConnector, "bottom",fillColor="blue")
-    tb3 = canvas.createRoundedTextbox("otro mas\n", 100, 200, "red")
-    tb4 = canvas.createRoundedTextbox("tb4", 300, 300, "yellow")
-    tb4.addSocket("input1",SquareConnector, "top",outline="red")
-    tb5 = canvas.createTextCircle("tb5", 400, 300, "grey")
-    tb5.addSocket("input1",SquareConnector, "top")
-    e1 = canvas.createEdge(tb1, tb2)
-    e2 = canvas.createEdge(tb1, tb3)
-    c1= canvas.createCable(tb2,"output2",tb4,"input1")
-    c2= canvas.createCable(tb2,"output3",tb5,"input1")
-    tb3.moveTo(100, 300)
+    def canvasExample1():    
+        tb1 = canvas.createTextCircle("Project", 100, 100, "blue")
+        tb2 = canvas.createTextbox("This is an intentionally quite big, big box,\nas you may appreciate looking carefully\nat it,\nas many times\nas you might need", 300, 200)
+        tb2.addSocket("output1",RoundConnector, "bottom",fillColor="green")
+        tb2.addSocket("output2",SquareConnector, "bottom",fillColor="yellow")
+        tb2.addSocket("output3",SquareConnector, "bottom",fillColor="blue")
+        tb3 = canvas.createRoundedTextbox("otro mas\n", 100, 200, "red")
+        tb4 = canvas.createRoundedTextbox("tb4", 300, 300, "yellow")
+        tb4.addSocket("input1",SquareConnector, "top",outline="red")
+        tb5 = canvas.createTextCircle("tb5", 400, 300, "grey")
+        tb5.addSocket("input1",SquareConnector, "top")
+        e1 = canvas.createEdge(tb1, tb2)
+        e2 = canvas.createEdge(tb1, tb3)
+        c1= canvas.createCable(tb2,"output2",tb4,"input1")
+        c2= canvas.createCable(tb2,"output3",tb5,"input1")
+        tb3.moveTo(100, 300)
+        
+       
+    canvasExample1()
 
     root.mainloop()

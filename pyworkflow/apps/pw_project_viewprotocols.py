@@ -503,7 +503,7 @@ class ProtocolsView(tk.Frame):
         lt.paint(self.createRunItem)
         self.runsGraph.updateScrollRegion()
         
-    def createRunItem(self, node, y):
+    def createRunItem(self, canvas, node, y):
         """ If not nodeBuildFunc is specified, this one will be used by default."""
         nodeText = node.label
         textColor = 'black'

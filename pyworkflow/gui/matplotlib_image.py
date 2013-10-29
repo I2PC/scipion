@@ -162,3 +162,48 @@ def getPngData(filename):
 
 def createBgImage(dim):
     return np.ones((dim, dim, 3))
+
+
+
+if __name__ == '__main__':
+    import matplotlib.pyplot as plt
+    
+    step = 0.25
+    rightMost = 0.0 # Used to arrange leaf nodes at the bottom
+    
+    def plotNode(node):
+        global rightMost
+        childs = node.get('childs', None)
+        if childs:
+            x1, y1 = plotNode(childs[0])
+            x2, y2 = plotNode(childs[1])
+            h = node.get('height')
+            xm = (x1 + x2)/2
+            x = [x1, x1, x2, x2]
+            y = [y1, h, h, y2]
+            plt.plot(x, y, color='b')
+            plt.plot(xm, h, 'ro')
+            plt.annotate("%.3g" % h, (xm, h), xytext=(0, -8),
+                         textcoords='offset points', va='top', ha='center')
+            point = (xm, h)
+        else:
+            rightMost += step
+            point = (rightMost, 0.)
+        return point
+    
+    nodes = {'height': 2.1,
+             'childs': [{'height': 0}, 
+                        {'height': 1.1, 
+                         'childs': [{'height': 0}, 
+                                    {'height': 0.85,
+                                     'childs': [{'height': 0.55,
+                                                 'childs': [{}, {}]}, 
+                                                {'height': 0.65,
+                                                 'childs': [{}, {}]} ]}]}]}
+    
+    plotNode(nodes)
+    
+    plt.xlim([0., rightMost + step])
+
+    plt.show()
+    
