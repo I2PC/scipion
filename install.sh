@@ -398,6 +398,7 @@ doIt()
         echoRed "Error: bad parameter ($2) on doIt. File not found. Exiting"
         exitGracefully
       fi
+      ind=$(expr $ind - 1)
       setElem $ind $3 "${EXTERNAL_LIBRARIES_DO}"
       EXTERNAL_LIBRARIES_DO=${INTERARRAY}
       ;;
@@ -408,6 +409,7 @@ doIt()
         echoRed "Error: bad parameter ($2) on shouldIDoIt. File not found. Exiting"
         exitGracefully
       fi
+      ind=$(expr $ind - 1)
       setElem $ind $3 "${PYTHON_MODULES_DO}"
       PYTHON_MODULES_DO=${INTERARRAY}
       ;;
@@ -959,7 +961,8 @@ takeDefaults()
   while [ $lib -lt $length ]; do
     elemAt $lib "${EXTERNAL_LIBRARIES_DEFAULT}"
     aux=${INTERELEMARRAY}
-    setElem $lib $aux "${EXTERNAL_LIBRARIES_DO}"
+    aux2=$(expr $lib + 1)
+    setElem $aux2 $aux "${EXTERNAL_LIBRARIES_DO}"
     EXTERNAL_LIBRARIES_DO=${INTERARRAY}
     lib=$(expr $lib + 1)
   done
@@ -970,7 +973,8 @@ takeDefaults()
   while [ $mod -lt $length ]; do
     elemAt $mod "${PYTHON_MODULES_DEFAULT}"
     aux=${INTERELEMARRAY}
-    setElem $mod $aux "${PYTHON_MODULES_DO}"
+    aux2=$(expr $mod + 1)
+    setElem $aux2 $aux "${PYTHON_MODULES_DO}"
     PYTHON_MODULES_DO=${INTERARRAY}
     mod=$(expr $mod + 1)
   done

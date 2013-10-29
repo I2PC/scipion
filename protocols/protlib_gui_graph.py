@@ -293,7 +293,7 @@ def showDependencyTree(canvas, runsDict, rootName):
         for each level of the tree'''
         dd.hLimits = [[-dd.half, dd.half]]
         #print "getHLimits, parent: ", dd.t.text
-        for c in [runsDict[rn] for rn in dd.deps]:
+        for c in [runsDict[rn] for rn in dd.deps if dd is runsDict[rn].parent]:
             count = 1
             #printHLimits(c, " child")
             
