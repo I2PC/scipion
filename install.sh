@@ -1680,10 +1680,10 @@ if [ $? -eq 1 ]; then
     uninstall_libs ${TIFF_FOLDER}/libtiff/.libs libtiff 3 false
   fi
   if [ $DO_CONFIGURE  -eq 1 ]; then
-    configure_library ${TIFF_FOLDER} "." "." "CPPFLAGS=-w --with-jpeg-include-dir=${EXT_PATH}/${VJPEG} --with-jpeg-lib-dir=${XMIPP_HOME}/lib"
+    configure_library ${TIFF_FOLDER} "." "." "CPPFLAGS=-w --with-jpeg-include-dir=${EXT_PATH}/${JPEG_FOLDER} --with-jpeg-lib-dir=${XMIPP_HOME}/lib"
   fi
   if [ $DO_COMPILE  -eq 1 ]; then
-    compile_library ${TIFF_FOLDER} "." "." "CPPFLAGS=-w --with-jpeg-include-dir=${EXT_PATH}/${VJPEG} --with-jpeg-lib-dir=${XMIPP_HOME}/lib"
+    compile_library ${TIFF_FOLDER} "." "." "CPPFLAGS=-w --with-jpeg-include-dir=${EXT_PATH}/${JPEG_FOLDER} --with-jpeg-lib-dir=${XMIPP_HOME}/lib"
     install_libs ${TIFF_FOLDER}/libtiff/.libs libtiff 3 false
   fi
 fi
