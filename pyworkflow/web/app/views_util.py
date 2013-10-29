@@ -237,26 +237,8 @@ def getImageDim(request, imagePath):
     img.read(str(imgFn), xmipp.HEADER)
     return img.getDimensions()
 
-def readVolumeAndReslice(projectPath, volName, axis, dataType):
-    img = xmipp.Image()
-    imgFn = os.path.join(projectPath, volName)
-    #FALTARIA LO DEL MAPPED
-    img.read(str(imgFn))
-    img.convert2DataType(dataType, xmipp.CW_ADJUST)
-    if axis !=xmipp.VIEW_Z_NEG:
-        img.reslice(axis)
-    fileName, fileExtension = os.path.splitext(volName)
-    _imageVolName = '%s_tmp%s' % (fileName, '.mrc')
-    img.write(str(_imageVolName))
-    
-    print "justoantes"
-    stats=img.computeStats()
-    print "stats",stats
-    
-    return _imageVolName, stats 
 
-
-def readVolume(request, path, getImageDim, convert, dataType, reslice, axis, getStats):
+def readImageVolume(request, path, getImageDim, convert, dataType, reslice, axis, getStats):
     _newPath=path
     _imageDim=None
     _stats=None
@@ -264,7 +246,7 @@ def readVolume(request, path, getImageDim, convert, dataType, reslice, axis, get
     img = xmipp.Image()
     imgFn = os.path.join(request.session['projectPath'], path)
     
-    if not convert and not reslice and not getStats:
+    if not convert and not reslice and not getStats and not getImageDim:
         img.read(str(imgFn), xmipp.HEADER)
     else:
         img.read(str(imgFn))
@@ -276,7 +258,6 @@ def readVolume(request, path, getImageDim, convert, dataType, reslice, axis, get
          img.convert2DataType(dataType, xmipp.CW_ADJUST)
          
     if reslice:
-        print "je",xmipp.VIEW_Z_NEG
         if axis !=xmipp.VIEW_Z_NEG:
             img.reslice(axis)    
     

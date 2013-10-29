@@ -23,12 +23,8 @@ def showj(request, inputParameters=None):
     _imageVolName=''
     _stats=None
     
-     
-    
     if request.method == 'POST': # If the form has been submitted... Post method
         inputParameters=request.POST.copy()
-    else:
-        request.session['defaultZoom'] = inputParameters['zoom'] if 'zoom' in inputParameters else '150px'
         
     #Init Dataset
     #NAPA DE LUXE: Check type of Dataset 
@@ -48,34 +44,31 @@ def showj(request, inputParameters=None):
         labelsToRenderComboBoxValues = getLabelsToRenderComboBoxValues(inputParameters['tableLayoutConfiguration'].columnsLayout)
         inputParameters['labelsToRenderComboBox']=labelsToRenderComboBoxValues[0][0] if len(labelsToRenderComboBoxValues) > 0 else ''
 
+    dataset.setLabelToRender(inputParameters['labelsToRenderComboBox']) 
     
     if inputParameters['labelsToRenderComboBox'] == '':
         inputParameters['zoom']=0
         _imageDimensions = None
     else:
         _imageVolName = inputParameters['volumesToRenderComboBox'] if ("volumesToRenderComboBox" in inputParameters and inputParameters['volumesToRenderComboBox'] != '') else tableDataset.getElementById(0,inputParameters['labelsToRenderComboBox'])
-        
-        _getStats=False
-        _convert=True
-        _dataType=xmipp.DT_UCHAR
-        _reslice=False 
+        _getImageDim=True 
+        _convert = inputParameters['dims']=='3d' and (inputParameters['mode']=='gallery' or inputParameters['mode']=='volume_astex' or inputParameters['mode']=='volume_chimera')
+        _reslice = inputParameters['dims']=='3d' and inputParameters['mode']=='gallery'
+        _getStats = inputParameters['dims']=='3d' and (inputParameters['mode']=='volume_astex' or inputParameters['mode']=='volume_chimera')
+        _dataType = xmipp.DT_FLOAT if inputParameters['dims']=='3d' and inputParameters['mode']=='volume_astex' else xmipp.DT_UCHAR
+            
+        _imageVolName, _imageDimensions, _stats = readImageVolume(request, _imageVolName, _getImageDim, _convert, _dataType, _reslice, int(inputParameters['resliceComboBox']), _getStats)
         
         if inputParameters['dims']=='3d':
-            if inputParameters['mode']=='column' or inputParameters['mode']=='table':
-                _convert=False
-            elif inputParameters['mode']=='gallery':
-                _reslice=True 
-            elif inputParameters['mode']=='volume_astex' or inputParameters['mode']=='volume_chimera':
-                _getStats=True
-                if inputParameters['mode']=='volume_astex':
-                    _dataType = xmipp.DT_FLOAT
-            
-        _imageVolName, _imageDimensions, _stats = readVolume(request, _imageVolName, True, _convert, _dataType, _reslice, inputParameters['resliceComboBox'], _getStats)
+            dataset.setNumberSlices(_imageDimensions[2])
+            dataset.setVolumeName(_imageVolName)
 
-    dataset.setLabelToRender(inputParameters['labelsToRenderComboBox'])    
-    if _imageDimensions != None and _imageDimensions[2]>1:
-        dataset.setNumberSlices(_imageDimensions[2])
-        dataset.setVolumeName(_imageVolName)
+    #Store dataset and labelsToRender in session 
+    request.session['dataset'] = dataset
+    request.session['labelsToRenderComboBox'] = inputParameters['labelsToRenderComboBox']
+    request.session['blockComboBox'] = inputParameters['blockComboBox']
+#        if (_imageDimensions != ''):
+    request.session['imageDimensions'] = _imageDimensions
 
     showjForm = ShowjForm(dataset,
                           inputParameters['tableLayoutConfiguration'],
@@ -83,50 +76,6 @@ def showj(request, inputParameters=None):
         
     if showjForm.is_valid() is False:
         print showjForm.errors
-
-    threshold = (_stats[2] + _stats[3])/2 if _stats != None else 1
-    volLink = ""
-    chimeraHtml = ""
-    volPath = os.path.join(request.session['projectPath'], _imageVolName)
-    
-    if showjForm.data['mode']=='volume_astex':
-        
-        fileName, fileExtension = os.path.splitext(_imageVolName)
-        
-#        volPath='/home/adrian/Scipion/tests/input/showj/emd_1042.map'
-        
-        # Astex viewer            
-        #Hay qye ver como gestionamos el tema de la extension (con .map no me lei un map.gz)
-        linkName = 'test_link_' + request.session._session_key + '.map'
-        volLinkPath = os.path.join(pw.WEB_RESOURCES, 'astex', 'tmp', linkName)
-        from pyworkflow.utils.path import cleanPath, createLink
-        cleanPath(volLinkPath)
-        print "volPath",volPath
-        print "volLinkPath",volLinkPath
-        createLink(volPath, volLinkPath)
-        volLink = os.path.join('/', settings.STATIC_ROOT, 'astex', 'tmp', linkName)
-     
-    elif showjForm.data['mode']=='volume_chimera':   
-        from subprocess import Popen, PIPE, STDOUT
-#        p = Popen(['/home/adrian/.local/UCSF-Chimera64-2013-10-16/bin/chimera', volPath], stdout=PIPE, stdin=PIPE, stderr=PIPE)
-        p = Popen([os.environ.get('CHIMERA_HEADLESS'), volPath], stdout=PIPE, stdin=PIPE, stderr=PIPE)
-        outputHtmlFile = os.path.join(pw.WEB_RESOURCES, 'astex', 'tmp', 'test.html')
-        #chimeraCommand= 'volume #0 level ' + str(threshold) + '; export format WebGL ' + outputHtmlFile + '; stop'
-        chimeraCommand= 'export format WebGL ' + outputHtmlFile + '; stop'
-        stdout_data, stderr_data = p.communicate(input=chimeraCommand)
-        print "stdout_data",stdout_data
-        print "stderr_data",stderr_data
-        f = open(outputHtmlFile)
-        chimeraHtml = f.read().decode('string-escape').decode("utf-8").split("</html>")[1]
-        
-        
-    #Store dataset and labelsToRender in session 
-    request.session['dataset'] = dataset
-    request.session['labelsToRenderComboBox'] = inputParameters['labelsToRenderComboBox']
-    request.session['blockComboBox'] = inputParameters['blockComboBox']
-#    request.session['tableLayoutConfiguration'] = tableLayoutConfiguration
-    if (_imageDimensions != ''):
-        request.session['imageDimensions'] = _imageDimensions
 
     #Create context to be send
     context = {'css': getResourceCss('showj'),
@@ -152,15 +101,46 @@ def showj(request, inputParameters=None):
                'defaultZoom': request.session['defaultZoom'],
                'projectName': request.session['projectName'],
                
-               'form': showjForm,
+               'form': showjForm}
+    
+    if inputParameters['mode']=='volume_astex' or inputParameters['mode']=='volume_chimera':
+
+        threshold = (_stats[2] + _stats[3])/2 if _stats != None else 1
+        volPath = os.path.join(request.session['projectPath'], _imageVolName)
+        
+        context.update({"threshold":threshold,
+                        'minStats':_stats[2] if _stats != None else 1,
+                        'maxStats':_stats[3] if _stats != None else 1, })
+        
+        if inputParameters['mode']=='volume_astex':
+    
+            #        volPath='/home/adrian/Scipion/tests/input/showj/emd_1042.map'        
+#            fileName, fileExtension = os.path.splitext(_imageVolName)
+            
+            linkName = 'test_link_' + request.session._session_key + '.map'
+            volLinkPath = os.path.join(pw.WEB_RESOURCES, 'astex', 'tmp', linkName)
+            from pyworkflow.utils.path import cleanPath, createLink
+            cleanPath(volLinkPath)
+            createLink(volPath, volLinkPath)
+            volLink = os.path.join('/', settings.STATIC_ROOT, 'astex', 'tmp', linkName)
+            
+            context.update({"volLink":volLink})
+         
+        elif inputParameters['mode']=='volume_chimera':   
+            from subprocess import Popen, PIPE, STDOUT
+            p = Popen([os.environ.get('CHIMERA_HEADLESS'), volPath], stdout=PIPE, stdin=PIPE, stderr=PIPE)
+            outputHtmlFile = os.path.join(pw.WEB_RESOURCES, 'astex', 'tmp', 'test.html')
+            #chimeraCommand= 'volume #0 level ' + str(threshold) + '; export format WebGL ' + outputHtmlFile + '; stop'
+            chimeraCommand= 'export format WebGL ' + outputHtmlFile + '; stop'
+            stdout_data, stderr_data = p.communicate(input=chimeraCommand)
+#            print "stdout_data",stdout_data
+#            print "stderr_data",stderr_data
+            f = open(outputHtmlFile)
+            chimeraHtml = f.read().decode('string-escape').decode("utf-8").split("</html>")[1]
+            
+            context.update({"chimeraHtml":chimeraHtml})
                
-               
-               'volLink': volLink, #Astex Viewer
 #               'volType': 2, #0->byte, 1 ->Integer, 2-> Float
-               'minStats':_stats[2] if _stats != None else 1,
-               'maxStats':_stats[3] if _stats != None else 1, 
-               'threshold': threshold,
-               'chimeraHtml':chimeraHtml} #Form
     
     return_page = '%s%s%s' % ('showj_', showjForm.data['mode'], '.html')
     return render_to_response(return_page, RequestContext(request, context))
@@ -464,6 +444,7 @@ def visualizeObject(request):
     else:
         raise Exception('Showj Web visualizer: No object identifier or path found')         
 
+    request.session['defaultZoom'] = inputParameters['zoom']
     return showj(request, inputParameters)  
 
 
