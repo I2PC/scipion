@@ -1,0 +1,16 @@
+#!/bin/bash
+#bash sshServerScript machine user pw commands
+
+echo "Managing pipe"
+
+
+password=$1
+
+echo "passwordinpipe"
+echo password
+
+mkfifo scipionPipe
+chmod 700
+echo password > scipionPipe
+echo "salida pipe"
+
