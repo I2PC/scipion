@@ -317,13 +317,6 @@ class ShowjForm(forms.Form):
                                                          required=False,
                                                          choices = tuple(zip(dataset.listTables(), dataset.listTables())))
         
-#        if tableLayoutConfiguration is not None:
-#            self.fields['tableLayoutConfiguration'] = forms.CharField(widget=forms.HiddenInput(),
-#                                                                      initial=json.dumps({'columnsLayout': tableLayoutConfiguration.columnsLayout, 'colsOrder': tableLayoutConfiguration.colsOrder}, ensure_ascii=False, cls=ColumnLayoutConfigurationEncoder))
-#        else:    
-#            print "lC",self.data['tableLayoutConfiguration']
-#            print "lC",self.cleaned_data['tableLayoutConfiguration']
-#        
         labelsToRenderComboBoxValues = getLabelsToRenderComboBoxValues(tableLayoutConfiguration.columnsLayout)
         if len(labelsToRenderComboBoxValues) > 0:
             self.fields['labelsToRenderComboBox'] = forms.ChoiceField(label='Select Label',

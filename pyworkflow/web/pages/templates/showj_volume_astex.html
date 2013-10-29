@@ -33,8 +33,8 @@ $(function() {
 	$( "#slider" ).slider({
 		range: "min",
 		value: {{threshold}},
-		min: 0,
-		max: 20000,
+		min: {{minStats}},
+		max: {{maxStats}},
 		change: function( event, ui ) {
 			value = ui.value/100
 			$( "#amount" ).val(+ (value) );
@@ -64,9 +64,10 @@ function av_map_level(l){
 <div id="astexContainer">
 
 	<!-- ASTEX VIEWER -->
+	{% load static %}
 	<applet
 		width="600px" height="600px" name="av"
-		archive="{{ STATIC_URL }}astex/OpenAstexViewer.jar"
+		archive="{% static "astex/OpenAstexViewer.jar" %}"
 		codebase=".."
 		code="MoleculeViewerApplet.class">
 		<!-- <param name="scriptFile" value=""> -->
@@ -78,7 +79,7 @@ function av_map_level(l){
 				map volMap -reread true;"> -->
 				
 				
-		<param name="script" value="map load volMap {{volLink}} {{volType}} {{threshold}};
+		<param name="script" value="map load volMap {{volLink}} 2 {{threshold}};
 		map volMap contour 0 solid on;
 		radius 50;
 		center map volMap;
