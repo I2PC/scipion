@@ -146,7 +146,7 @@ def countAtoms(fnPDB):
     fh = open(fnPDB, 'r')
     Natoms=0
     for line in fh:
-        if line.find('ATOM')!=-1:
+        if line.find('ATOM')!=-1 or line.find('HETATM')!=-1:
             Natoms+=1
     fh.close()
     return Natoms
