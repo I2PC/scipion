@@ -44,7 +44,10 @@ class SpiderProtClassifyWard(ProtClassify):
         ProtClassify.__init__(self)
         self._params = {'ext': 'stk',
                         'inputImage': 'input_image',
-                        'outputMask': 'output_mask'
+                        'outputMask': 'output_mask',
+                        'dendroPs': 'dendrogram',
+                        'dendroDoc': 'docdendro',
+                        'averages': 'averages'
                         }
     
     def _defineParams(self, form):
@@ -63,26 +66,20 @@ class SpiderProtClassifyWard(ProtClassify):
                            'Typically all but the first few are noisy.')
         
         
+    def _getFileName(self, key):
+        #TODO: Move to a base Spider protocol
+        template = '%(' + key + ')s.%(ext)s'
+        return self._getPath(template % self._params)
+    
     def _defineSteps(self):
         self._insertFunctionStep('classifyWard', self.imcFile.get(), self.numberOfFactors.get())
-        #self._insertFunctionStep('createOutput')
-#; classification, hierarchical
-#cl hc
-#[cas_prefix]_IMC  ; INPUT
-#(1-x27)  ; factors to use
-#(0)      ; no factor weighting
-#(5)      ; clustering criterion (5==Ward's method)
-#Y        ; dendrogram PostScript file?
-#[ps_dendrogram]   ; OUTPUT
-#Y        ; dendrogram document file?
-#[dendrogram_doc]  ; OUTPUT
+        self._insertFunctionStep('buildDendrogram', True)
     
     def classifyWard(self, imcFile, numberOfFactors):
         """ Apply the selected filter to particles. 
         Create the set of particles.
         """
         self._params.update(locals()) # Store input params in dict
-        
         
         # Copy file to working directory, it could be also a link
         imcLocalFile = basename(imcFile)
@@ -91,13 +88,78 @@ class SpiderProtClassifyWard(ProtClassify):
 
         self._enterWorkingDir() # Do operations inside the run working dir
 
-
         spi = SpiderShell(ext=self._params['ext'], log='script.stk') # Create the Spider process to send commands 
         spi.runFunction('CL HC', imcLocalFile, '1-%d' % numberOfFactors, 0, 5, 
-                        'Y', 'dendogram', 'Y', 'docdendro')
+                        'Y', self._params['dendroPs'], 'Y', self._params['dendroDoc'])
         spi.close()
         
         self._leaveWorkingDir() # Go back to project dir
+        
+        
+    def buildDendrogram(self, writeAverages=False):
+        """ Parse Spider docfile with the information to build the dendogram.
+        Params:
+            dendroFile: docfile with a row per image. 
+                 Each row contains the image id and the height.
+        """ 
+        dendroFile = self._getFileName('dendroDoc')
+        f = open(dendroFile)
+        values = []
+        for line in f:
+            line = line.strip()
+            if not line.startswith(';'):
+                values.append(float(line.split()[3]))
+        f.close()
+        self.dendroValues = values
+        
+        return self._buildDendrogram(0, len(values)-1, 1, writeAverages)
+    
+    def _buildDendrogram(self, leftIndex, rightIndex, index, writeAverages=False):
+        """ This function is recursively called to create the dendogram graph(binary tree)
+        and also to write the average image files.
+        Params:
+            leftIndex, rightIndex: the indinxes within the list where to search.
+            index: the index of the class average.
+            writeImages: flag to select when to write averages.
+        From self:
+            self.dendroValues: the list with the heights of each node
+            self.dendroImages: image stack filename to read particles
+            self.dendroAverages: stack name where to write averages
+        It will search for the max in values list (between minIndex and maxIndex).
+        Nodes to the left of the max are left childs and the other right childs.
+        """
+        maxValue = self.dendroValues[leftIndex]
+        maxIndex = 0
+        for i, v in enumerate(self.dendroValues[leftIndex+1:rightIndex]):
+            if v > maxValue:
+                maxValue = v
+                maxIndex = i+1
+        
+        m = maxIndex + leftIndex
+        node = {'height': maxValue, 'childs': [], 
+                'length': 1, 'index': index}#len(self.dendroValues[leftIndex:rightIndex])}
+        
+        ih = ImageHandler()
+
+        if writeAverages:
+            node['image'] = ih.read((m+1, self.dendroImages))
+            
+        def addChildNode(left, right, index):
+            if right > left:
+                child = self._buildDendrogram(left, right, index, writeAverages)
+                node['childs'].append(child)
+                node['length'] += child['length'] 
+                if writeAverages:
+                    node['image'] += child['image']
+                    del child['image']
+                
+        if rightIndex > leftIndex + 1:
+            addChildNode(leftIndex, m, 2*index)
+            addChildNode(m+1, rightIndex, 2*index+1)
+            if writeAverages:
+                #TODO: node['image'] /= float(node['length'])
+                ih.write(node['image'], (index, self.dendroAverages))
+        return node
 
             
     def _summary(self):
