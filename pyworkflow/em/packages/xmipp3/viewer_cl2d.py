@@ -134,4 +134,3 @@ class XmippCL2DViewer(ProtocolViewer):
         in web one (or all) params of the protocol"""
         return "viewerCL2D"
         
-

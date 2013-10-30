@@ -134,12 +134,19 @@ $(document).ready(function() {
 				$.each(json, function(key, value) {
 					if(key=="showj"){
 						customPopup(value,1024,600);
+					} else if(key=="showjs"){
+						for(x=0;x<value.length;x++){
+							customPopup(value[x],1024,600);
+						}
 					} else if(key=="url"){
 						customPopup(value,1024,600);
 					} else if(key=="html"){
 						customPopupHTML(value,600,500);
 					} else if(key=="plot"){
 						customPopup(value,600,500);
+					} else if(key=="error"){
+						var msg = messiError(value);
+						launchMessiSimple("Error",msg);
 					} else {
 						customPopup(value,800,600);
 					}
@@ -152,7 +159,7 @@ $(document).ready(function() {
 				});
 			
 			/* Launch the viewers with the options chosen */
-			var action = "/viewerElm/";
+			var action = "/viewerElement/";
 			
 			$.post(action, $("#protocolForm").serialize(), function(json) {
 				$('.messi').remove();
@@ -161,10 +168,19 @@ $(document).ready(function() {
 				$.each(json, function(key, value) {
 					if(key=="showj"){
 						customPopup(value,1024,600);
+					} else if(key=="showjs"){
+						for(x=0;x<value.length;x++){
+							customPopup(value[x],1024,600);
+						}
+					} else if(key=="url"){
+						customPopup(value,1024,600);
 					} else if(key=="html"){
 						customPopupHTML(value,600,500);
 					} else if(key=="plot"){
 						customPopup(value,600,500);
+					} else if(key=="error"){
+						var msg = messiError(value);
+						launchMessiSimple("Error",msg);
 					} else {
 						customPopup(value,800,600);
 					}
