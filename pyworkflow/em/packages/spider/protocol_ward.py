@@ -43,8 +43,7 @@ class SpiderProtClassifyWard(ProtClassify):
     def __init__(self):
         ProtClassify.__init__(self)
         self._params = {'ext': 'stk',
-                        'inputImage': 'input_image',
-                        'outputMask': 'output_mask',
+                        'particles': 'particles_input',
                         'dendroPs': 'dendrogram',
                         'dendroDoc': 'docdendro',
                         'averages': 'averages'
@@ -52,7 +51,7 @@ class SpiderProtClassifyWard(ProtClassify):
     
     def _defineParams(self, form):
         form.addSection(label='Input')
-        form.addParam('inputImages', PointerParam, label="Input images", important=True, 
+        form.addParam('inputParticles', PointerParam, label="Input particles", important=True, 
                       pointerClass='SetOfParticles',
                       help='Input images to perform PCA')
         
@@ -72,9 +71,18 @@ class SpiderProtClassifyWard(ProtClassify):
         return self._getPath(template % self._params)
     
     def _defineSteps(self):
+        self._insertFunctionStep('convertInput', self.inputParticles.getFileName())
         self._insertFunctionStep('classifyWard', self.imcFile.get(), self.numberOfFactors.get())
         self._insertFunctionStep('buildDendrogram', True)
     
+    def convertInput(self, inputFilename):
+        """ Convert the input particles to a Spider stack. """
+        particles = self.inputParticles.get()
+        ih = ImageHandler()
+        
+        for i, p in enumerate(particles):
+            ih.convert(p.getLocation(), (i+1, self.particlesStk))
+            
     def classifyWard(self, imcFile, numberOfFactors):
         """ Apply the selected filter to particles. 
         Create the set of particles.
@@ -111,6 +119,8 @@ class SpiderProtClassifyWard(ProtClassify):
                 values.append(float(line.split()[3]))
         f.close()
         self.dendroValues = values
+        #TODO: COPY the input particles
+        #self.dendroImages = self.inputParticles.
         
         return self._buildDendrogram(0, len(values)-1, 1, writeAverages)
     
