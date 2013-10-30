@@ -41,6 +41,8 @@ class SpiderProtFilter(ProtFilterParticles):
     def __init__(self):
         ProtFilterParticles.__init__(self)
         self._op = "FQ"
+        self._params = {'ext': 'stk', 
+                        'particles': 'particles_filtered'}
 
     def _defineProcessParams(self, form):
         form.addParam('filterType', EnumParam, choices=['Top-hat', 'Gaussian', 'Fermi', 'Butterworth', 'Raised cosine'],
@@ -119,8 +121,7 @@ class SpiderProtFilter(ProtFilterParticles):
         
     def _defineSteps(self):
         # Define some names
-        self.inputStk = self._getPath('input_images.stk')
-        self.outputStk = self._getPath('output_images.stk')
+        self.particlesStk = self._getPath('%(particles)s.%(ext)s' % self._params)
         # Insert processing steps
         self._insertFunctionStep('convertInput')
         self._insertFunctionStep('filterParticles')
@@ -132,7 +133,7 @@ class SpiderProtFilter(ProtFilterParticles):
         ih = ImageHandler()
         
         for i, p in enumerate(particles):
-            ih.convert(p.getLocation(), (i+1, self.inputStk))
+            ih.convert(p.getLocation(), (i+1, self.particlesStk))
 
     def filterParticles(self):
         """ Apply the selected filter to particles. 
@@ -168,17 +169,15 @@ class SpiderProtFilter(ProtFilterParticles):
 
         self._enterWorkingDir() # Do operations inside the run working dir
         
-        spi = SpiderShell(ext='stk') # Create the Spider process to send commands        
+        spi = SpiderShell(ext=self._params['ext']) # Create the Spider process to send commands        
         #inputStk = removeBaseExt(self.inputStk)
-        outputStk = removeBaseExt(self.outputStk)
-        inputStk = outputStk
+        particlesStk = removeBaseExt(self.particlesStk)
         
         for i in range(1, n+1):
-            inStr = locationToSpider(i, inputStk)
-            outStr = locationToSpider(i, outputStk)
-            spi.runFunction(OP, inStr, outStr, filterNumber, *args)
+            locStr = locationToSpider(i, particlesStk)
+            spi.runFunction(OP, locStr, locStr, filterNumber, *args)
             img = Image()
-            img.setLocation(i, self.outputStk)
+            img.setLocation(i, self.particlesStk)
             imgSet.append(img)
             
         self._leaveWorkingDir() # Go back to project dir
