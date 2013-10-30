@@ -236,7 +236,7 @@ OffsetSearchStepPix = 1
 """
 PerformLocalAngularSearch = False
 
-# {hidden} Local angular search range
+# {condition}(PerformLocalAngularSearch=='True')Local angular search range
 """
 """
 LocalAngularSearchRange = 5.0
