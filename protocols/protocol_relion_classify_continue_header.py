@@ -11,14 +11,14 @@
 # {eval} expandCommentRun()
 # {cite}
 CiteRelion3D = """
-"A Bayesian view on cryo-EM structure determination" 
+A Bayesian view on cryo-EM structure determination" 
 by Sjors H.W. Scheres (DOI: 10.1016/j.jmb.2011.11.010)
 """
 
 #------------------------------------------------------------------------------------------
 # {section} Input
 #------------------------------------------------------------------------------------------
-# {file}(images*.xmd){validate}(PathExists) Input images:
+# {hidden}{file}(images*.xmd){validate}(PathExists) Input images:
 """ 
 Provide a list of images from a stack <(Spider/MRC)> or metadata file that make up your data set.
 The filenames should be relative to the <ProjectDir> where you are running the <Protocols>
@@ -29,29 +29,31 @@ scale corrections in image groups.
 """
 ImgMd = ""
 
-# {hidden}Continue from here:
+# {run}(relion_classify) Continue from protocol:
 """ 
-Select the *_optimiser.star file for the iteration from which you want to continue a previous run. 
-Note that the Output rootname of the continued run and the rootname of the previous run cannot be the same. 
-If they are the same, the program will automatically add a '_ctX' to the output rootname, 
-with X being the iteration from which one continues the previous run.Provide a list of images 
-from a stack <(Spider/MRC)> or metadata file that make up your data set.
+Continue a relion classify protocol. Provide protocol name
 """
-ContinueFrom = ""
+ImportRun = ""
 
-# Number of classes
+# Continue from iteration:
+""" 
+Continue a relion classify protocol. Provide iteration number
+"""
+ContinueFromIteration = "1"
+
+# {hidden}Number of classes
 """The number of classes (K) for a multi-reference refinement. These classes will be made in an unsupervised manner from a single reference by division of the data into random subsets during the first iteration.
 """
 NumberOfClasses = 1
 
-# {file}(*.vol, *.mrc){validate}(PathExists) Initial 3D reference volume:
+# {hidden}{file}(*.vol, *.mrc){validate}(PathExists) Initial 3D reference volume:
 """
 A 3D map in MRC/Spider format. Make sure this map has the same dimensions and 
 the same pixel size as your input images.
 """
 Ref3D = ""
 
-# Ref. map is on absolute greyscale?
+# {hidden}Ref. map is on absolute greyscale?
 """ The probabilities are based on squared differences, so that the absolute grey scale is important.
 Probabilities are calculated based on a Gaussian noise model, 
 which contains a squared difference term between the reference and the experimental image. 
@@ -66,7 +68,7 @@ This procedure is relatively quick and typically does not negatively affect the 
 subsequent MAP refinement. Therefore, if in doubt it is recommended to set this option to No."""
 IsMapAbsoluteGreyScale = True
 
-#normalize input images
+# {hidden}normalize input images
 """ 
 Normalize input images ?
 average background value must be 0 and a stddev value must be 1. 
@@ -75,7 +77,7 @@ Note that the average and stddev values for the background are
 """
 DoNormalizeInputImage = False
 
-# {expert} Padding factor:
+# {hidden}{expert} Padding factor:
 """
 The padding factor used for oversampling of the Fourier transform. The default is 3x padding, 
 which is combined with nearest-neighbour interpolation. However, for large 3D maps, storing the 
@@ -92,7 +94,7 @@ K*2*8*(size*pad)^3/1024/1024/1024
 """
 PaddingFactor = 3.0
 
-# Symmetry group
+# {hidden}Symmetry group
 """ 
 See [http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Symmetry]
 for a description of the symmetry groups format
@@ -101,7 +103,7 @@ If no symmetry is present, give c1
 SymmetryGroup = 'c1'
 
 #------------------------------------------------------------------------------------------------
-# {section}{has_question} CTF
+# {hidden}{section}{has_question} CTF
 #------------------------------------------------------------------------------------------------
 
 # Use CTF-amplitude correction?
@@ -163,7 +165,7 @@ DoIntensityCorrection = False
 # {section} Optimisation
 #------------------------------------------------------------------------------------------------
 
-# Initial low-pass filter (A): 
+# {hidden}Initial low-pass filter (A): 
 """
 It is recommended to strongly low-pass filter your initial reference map. 
 If it has not yet been low-pass filtered, it may be done internally using this option. 
@@ -177,7 +179,7 @@ Number of iterations to be performed. Note that the current implementation does 
 """
 NumberOfIterations = 25
 
-# Regularisation paramter T:
+# {hidden}Regularisation paramter T:
 """
 Bayes law strictly determines the relative weight between the contribution of the experimental data and the prior.
  However, in practice one may need to adjust this weight to put slightly more weight on the experimental 
@@ -189,19 +191,19 @@ Bayes law strictly determines the relative weight between the contribution of th
 """
 RegularisationParamT = 1
 
-# Particles mask diameter (A):
+# {hidden}Particles mask diameter (A):
 """
 The experimental images will be masked with a soft circular mask with this diameter. Make sure this radius is not set too small because that may mask away part of the signal! If set to a value larger than the image size no masking will be performed.
 """
 MaskDiameterA = 200
 
-# Mask references structures?
+# {hidden}Mask references structures?
 """
 If set to yes, a mask will also be applied to the reconstructed references. This is useful to set the solvent region of your reconstruction to 0. Either a soft spherical mask (based on the diameter of the experimental image mask given above) or a user-provided mask (next option) may be used. The user-provided mask should have values between 0 and 1 only. Solvent flattening is recommended, but make sure not to mask any signal away.
 """
 DoMaskParticles = True
 
-# {file} Reference mask
+# {hidden}{file} Reference mask
 """
 A Spider/mrc map containing a (soft) mask with the same dimensions as the reference(s), and values between 0 and 1, with 1 being 100% protein and 0 being 100% solvent. The reconstructed reference map will be multiplied by this mask.If no mask is given, a soft spherical mask based on the diameter of the mask for the experimental images will be applied.  
  
@@ -351,8 +353,8 @@ AvgPMAX=False
 # {end_of_header} USUALLY YOU DO NOT NEED TO MODIFY ANYTHING BELOW THIS LINE
 #------------------------------------------------------------------------------------------------
 
-from protocol_relion_classify import *
+from protocol_relion_classify_continue import *
 
 if __name__ == '__main__':
-    protocolMain(ProtRelionClassifier)
+    protocolMain(ProtRelionClassifierContinue)
 

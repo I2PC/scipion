@@ -386,6 +386,7 @@ class XmippProject():
                     if dd2 and dd.extRunName != dd2.extRunName and not dd2.hasDep(dd.extRunName):
                         for k, v in dd.prot.ParamsDict.iteritems():
                             if k != 'RunName' and type(v) == str and v.startswith(dd2.prot.WorkingDir + '/'):
+                                #print >>sys.stderr, "%s depends on %s, because param '%s' (value='%s') starts with '%s'" % (dd.extRunName, dd2.extRunName, k, v, dd2.prot.WorkingDir + '/')
                                 dd2.addDep(dd.extRunName)
         
         #Create special node ROOT
@@ -398,7 +399,7 @@ class XmippProject():
             if v.isRoot and v is not ddRoot:
                 ddRoot.addDep(k)   
 
-        if printGraph:
+        if printGraph:# or True:
             self._printGraph(runsDict)
                 
         return runsDict
@@ -418,12 +419,13 @@ class DepData():
         runsDict[extRunName] = self
         
     def addDep(self, extRunName):
-        self.deps.append(extRunName)
-        ddChild = self.runsDict[extRunName]
-        ddChild.isRoot = False
-        if self.level + 1 > ddChild.level:
-            ddChild.level = self.level + 1
-            ddChild.parent = self
+        if extRunName not in self.deps:
+            self.deps.append(extRunName)
+            ddChild = self.runsDict[extRunName]
+            ddChild.isRoot = False
+            if self.level + 1 > ddChild.level:
+                ddChild.level = self.level + 1
+                ddChild.parent = self
         
     def hasDep(self, extRunName):
         return extRunName in self.deps

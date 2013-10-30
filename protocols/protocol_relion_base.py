@@ -86,7 +86,8 @@ class ProtRelionBase(XmippProtocol):
         return errors 
     
     def defineSteps(self): 
-        self.doContinue = len(self.ContinueFrom) > 0
+        #remove ContinueFrom
+        #self.doContinue = len(self.ContinueFrom) > 0
         #in the future we need to deal with continue
         restart = False
         #temporary normalized files
