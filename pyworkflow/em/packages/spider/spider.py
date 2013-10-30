@@ -174,3 +174,5 @@ class SpiderDocFile(object):
 
     def close(self):
         self._file.close()
+        
+        

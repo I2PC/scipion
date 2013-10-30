@@ -33,7 +33,6 @@ This module contains converter functions that will serve to:
 import os
 
 import xmipp
-from protlib_particles import readPosCoordinates
 from xmipp3 import XmippMdRow, getLabelPythonType
 from pyworkflow.em import *
 from pyworkflow.em.constants import NO_INDEX
@@ -379,6 +378,8 @@ def readSetOfCoordinates(posDir, micSet, coordSet):
             name should be the same of the micrographs.
         coordSet: the SetOfCoordinates that will be populated.
     """
+    from protlib_particles import readPosCoordinates
+    
     # Read the boxSize from the config.xmd metadata
     md = xmipp.MetaData('properties@' + join(posDir, 'config.xmd'))
     boxSize = md.getValue(xmipp.MDL_PICKING_PARTICLE_SIZE, md.firstObject())
