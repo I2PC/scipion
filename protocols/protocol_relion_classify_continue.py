@@ -26,13 +26,13 @@ from protocol_relion_base import ProtRelionBase, runNormalizeRelion, convertImag
 
 class ProtRelionClassifierContinue(ProtRelionBase):
     def __init__(self, scriptname, project):
-        ProtRelionBase.__init__(self, protDict.relion_classify.name, scriptname, project)
+        ProtRelionBase.__init__(self, protDict.relion_classify_continue.name, scriptname, project)
         self.Import = 'from protocol_relion_classify_continue import *'
         self.relionType='classify'
-        self.continueFrom = self.setPreviousRun(self.ImportRun)
+        self.setPreviousRun(self.ImportRun)
 
     def summary(self):
-        lines = ProtRelionBase.summary(self, self.continueFrom.NumberOfIterations)
+        lines = ProtRelionBase.summary(self, self.PrevRun.NumberOfIterations)
         lines += ['Number of classes = <%d>' % self.NumberOfClasses]
         lines += ['Continuation from run: <%s>' % self.ImportRun]
         # add table images classes for last iteration (one of the tables?)
