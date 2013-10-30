@@ -231,30 +231,44 @@ def get_slice(request):
     img.save(response, "PNG")
     return response
 
-
-def getImageXdim(request, imagePath):
-    return getImageDim(request, imagePath)[0]
-
 def getImageDim(request, imagePath):
     img = xmipp.Image()
     imgFn = os.path.join(request.session['projectPath'], imagePath)
     img.read(str(imgFn), xmipp.HEADER)
     return img.getDimensions()
 
-def readVolumeAndReslice(projectPath, volName, axis, dataType):
+
+def readImageVolume(request, path, getImageDim, convert, dataType, reslice, axis, getStats):
+    _newPath=path
+    _imageDim=None
+    _stats=None
+    
     img = xmipp.Image()
-    imgFn = os.path.join(projectPath, volName)
-    #FALTARIA LO DEL MAPPED
-    img.read(str(imgFn))
-    img.convert2DataType(dataType, xmipp.CW_ADJUST)
-    if axis !=xmipp.VIEW_Z_NEG:
-        img.reslice(axis)
-    fileName, fileExtension = os.path.splitext(volName)
-    _imageVolName = '%s_tmp%s' % (fileName, '.mrc')
-    img.write(str(_imageVolName))
-    return _imageVolName 
-
-
-
-
+    imgFn = os.path.join(request.session['projectPath'], path)
+    
+    if not convert and not reslice and not getStats and not getImageDim:
+        img.read(str(imgFn), xmipp.HEADER)
+    else:
+        img.read(str(imgFn))
+        
+    if getImageDim:
+         _imageDim = img.getDimensions()   
+        
+    if convert:
+         img.convert2DataType(dataType, xmipp.CW_ADJUST)
+         
+    if reslice:
+        if axis !=xmipp.VIEW_Z_NEG:
+            img.reslice(axis)    
+    
+    if getStats:
+        _stats=img.computeStats()
+    
+    if convert or reslice:
+        fileName, fileExtension = os.path.splitext(path)
+        _newPath = '%s_tmp%s' % (fileName, '.mrc')
+        img.write(str(_newPath))
+    
+    return _newPath, _imageDim, _stats
+    
     

@@ -21,142 +21,61 @@ def showj(request, inputParameters=None):
     # WEB INPUT PARAMETERS
     _imageDimensions = ''
     _imageVolName=''
+    _stats=None
     
-     
     if request.method == 'POST': # If the form has been submitted... Post method
-        _path = request.POST.get('path')
-        _blockComboBox = request.POST.get('blockComboBox')
-        _render = request.POST.get('allowRender')
-        _labelsToRenderComboBox = request.POST.get('labelsToRenderComboBox')
-         
-    else: #If the form is called by get 
-        _path = inputParameters['path']
-        _blockComboBox = inputParameters['blockComboBox'] if 'blockComboBox' in inputParameters else '' 
-        _render = inputParameters['allowRender']
-        _labelsToRenderComboBox = inputParameters['labelsToRenderComboBox'] if 'labelsToRenderComboBox' in inputParameters else ''
-        request.session['defaultZoom'] = inputParameters['zoom'] if 'zoom' in inputParameters else '150px' 
+        inputParameters=request.POST.copy()
         
-    print("path",_path)
-    
-    
     #Init Dataset
     #NAPA DE LUXE: Check type of Dataset 
-    dataset = loadDatasetXmipp(_path) 
-    
-    if _blockComboBox == '':
-        _blockComboBox = dataset.listTables()[0]
+    dataset = loadDatasetXmipp(inputParameters['path']) 
+    if inputParameters['blockComboBox'] == '':
+        inputParameters['blockComboBox'] = dataset.listTables()[0]
     
     #Get table from block name
-    dataset.setTableName(_blockComboBox)
+    dataset.setTableName(inputParameters['blockComboBox'])
     tableDataset=dataset.getTable()
     
     #Load table layout configuration. How to display columns and attributes (visible, render, editable)  
-    #tableLayoutConfiguration = TableLayoutConfiguration(tableDataset, _render) if 'blockComboBox' not in request.session or _blockComboBox != request.session['blockComboBox'] or request.method == 'GET' else None
-    tableLayoutConfiguration = TableLayoutConfiguration(dataset, tableDataset, _render)
+    inputParameters['tableLayoutConfiguration']= TableLayoutConfiguration(dataset, tableDataset, inputParameters['allowRender'])
 
-    #Initialize Showj Form (button toolbar)
-    if request.method == 'POST': # If the form has been submitted... Post method
-        if _labelsToRenderComboBox != '':
-#            if _labelsToRenderComboBox != request.session['labelsToRenderComboBox']:
-#            print request.POST.get('volumesToRenderComboBox') if ('volumesToRenderComboBox' in request.POST and request.POST.get('volumesToRenderComboBox') != '') else "taka"
-            _imageVolName = request.POST.get('volumesToRenderComboBox') if ('volumesToRenderComboBox' in request.POST and request.POST.get('volumesToRenderComboBox') != '') else tableDataset.getElementById(0,_labelsToRenderComboBox)
-            if request.POST.get('dims')=='3d':
-                if request.POST.get('mode')=='volume_astex':
-                    _imageVolName = readVolumeAndReslice(request.session['projectPath'], _imageVolName, int(request.POST.get('resliceComboBox')), xmipp.DT_FLOAT)
-                elif request.POST.get('mode')=='column' or request.POST.get('mode')=='gallery':        
-                    _imageVolName = readVolumeAndReslice(request.session['projectPath'], _imageVolName, int(request.POST.get('resliceComboBox')), xmipp.DT_UCHAR)
-                
-                
-                
-            _imageDimensions = getImageDim(request, _imageVolName)
-        else:
-            _imageDimensions = None
+    #If no label is set to render, set the first one if exists
+    if inputParameters['labelsToRenderComboBox'] == '':
+        labelsToRenderComboBoxValues = getLabelsToRenderComboBoxValues(inputParameters['tableLayoutConfiguration'].columnsLayout)
+        inputParameters['labelsToRenderComboBox']=labelsToRenderComboBoxValues[0][0] if len(labelsToRenderComboBoxValues) > 0 else ''
 
-    else:
-        if _labelsToRenderComboBox == '':
-            labelsToRenderComboBoxValues = getLabelsToRenderComboBoxValues(tableLayoutConfiguration.columnsLayout)
-            _labelsToRenderComboBox=labelsToRenderComboBoxValues[0][0] if len(labelsToRenderComboBoxValues) > 0 else ''
-            inputParameters['labelsToRenderComboBox']=_labelsToRenderComboBox
-            
-        if inputParameters['labelsToRenderComboBox'] == '':
-            inputParameters['zoom']=0
-            _imageDimensions = None
-        else:    
-            _imageVolName = tableDataset.getElementById(0,inputParameters['labelsToRenderComboBox'])
-            if inputParameters['dims']=='3d':
-                if inputParameters['mode']=='volume_astex':
-                    _imageVolName = readVolumeAndReslice(request.session['projectPath'], _imageVolName, inputParameters['resliceComboBox'], xmipp.DT_FLOAT)
-                elif inputParameters['mode']=='column' or inputParameters['mode']=='gallery':    
-                    _imageVolName = readVolumeAndReslice(request.session['projectPath'], _imageVolName, inputParameters['resliceComboBox'], xmipp.DT_UCHAR)
-                
-            _imageDimensions = getImageDim(request, _imageVolName)
-            
-        inputParameters['blockComboBox']=_blockComboBox
-        inputParameters['tableLayoutConfiguration']=tableLayoutConfiguration
-
-    if _imageDimensions != None and _imageDimensions[2]>1:
-        dataset.setNumberSlices(_imageDimensions[2])
-        dataset.setVolumeName(_imageVolName)
-
+    dataset.setLabelToRender(inputParameters['labelsToRenderComboBox']) 
     
-                    
+    if inputParameters['labelsToRenderComboBox'] == '':
+        inputParameters['zoom']=0
+        _imageDimensions = None
+    else:
+        _imageVolName = inputParameters['volumesToRenderComboBox'] if ("volumesToRenderComboBox" in inputParameters and inputParameters['volumesToRenderComboBox'] != '') else tableDataset.getElementById(0,inputParameters['labelsToRenderComboBox'])
+        _getImageDim=True 
+        _convert = inputParameters['dims']=='3d' and (inputParameters['mode']=='gallery' or inputParameters['mode']=='volume_astex' or inputParameters['mode']=='volume_chimera')
+        _reslice = inputParameters['dims']=='3d' and inputParameters['mode']=='gallery'
+        _getStats = inputParameters['dims']=='3d' and (inputParameters['mode']=='volume_astex' or inputParameters['mode']=='volume_chimera')
+        _dataType = xmipp.DT_FLOAT if inputParameters['dims']=='3d' and inputParameters['mode']=='volume_astex' else xmipp.DT_UCHAR
+            
+        _imageVolName, _imageDimensions, _stats = readImageVolume(request, _imageVolName, _getImageDim, _convert, _dataType, _reslice, int(inputParameters['resliceComboBox']), _getStats)
+        
+        if inputParameters['dims']=='3d':
+            dataset.setNumberSlices(_imageDimensions[2])
+            dataset.setVolumeName(_imageVolName)
+
+    #Store dataset and labelsToRender in session 
+    request.session['dataset'] = dataset
+    request.session['labelsToRenderComboBox'] = inputParameters['labelsToRenderComboBox']
+    request.session['blockComboBox'] = inputParameters['blockComboBox']
+#        if (_imageDimensions != ''):
+    request.session['imageDimensions'] = _imageDimensions
+
     showjForm = ShowjForm(dataset,
-                          tableLayoutConfiguration,
+                          inputParameters['tableLayoutConfiguration'],
                           request.POST if request.method == 'POST' else inputParameters) # A form bound for the POST data and unbound for the GET
         
     if showjForm.is_valid() is False:
         print showjForm.errors
-
-    dataset.setLabelToRender(_labelsToRenderComboBox)
-    
-    volLink=''
-#    threshold =0.285 #Para emd_1042.map
-    #threshold =11580 #Para hand.vol
-    threshold = 1
-    chimeraHtml=''
-    
-    
-    volPath = os.path.join(request.session['projectPath'], _imageVolName)
-    print "path",volPath
-    if showjForm.data['mode']=='volume_astex':
-        
-        fileName, fileExtension = os.path.splitext(_imageVolName)
-        
-#        volPath='/home/adrian/Scipion/tests/input/showj/emd_1042.map'
-        
-        # Astex viewer            
-        from random import randint
-        #Hay qye ver como gestionamos el tema de la extension (con .map no me lei un map.gz)
-        linkName = 'test_link_' + str(randint(0, 10000)) + '.map'
-        volLinkPath = os.path.join(pw.HOME, 'web', 'pages', 'resources', 'astex', 'tmp', linkName)
-        from pyworkflow.utils.path import cleanPath, createLink
-        cleanPath(volLinkPath)
-        createLink(volPath, volLinkPath)
-        volLink = os.path.join('/', 'static', 'astex', 'tmp', linkName)
-     
-    elif showjForm.data['mode']=='volume_chimera':   
-        from subprocess import Popen, PIPE, STDOUT
-#        p = Popen(['/home/adrian/.local/UCSF-Chimera64-2013-10-16/bin/chimera', volPath], stdout=PIPE, stdin=PIPE, stderr=PIPE)
-        p = Popen([os.environ.get('CHIMERA_HEADLESS'), volPath], stdout=PIPE, stdin=PIPE, stderr=PIPE)
-        outputHtmlFile = os.path.join(pw.HOME, 'web', 'pages', 'resources', 'astex', 'tmp', 'test.html')
-        #chimeraCommand= 'volume #0 level ' + str(threshold) + '; export format WebGL ' + outputHtmlFile + '; stop'
-        chimeraCommand= 'export format WebGL ' + outputHtmlFile + '; stop'
-        stdout_data, stderr_data = p.communicate(input=chimeraCommand)
-        print "stdout_data",stdout_data
-        print "stderr_data",stderr_data
-        f = open(outputHtmlFile)
-        chimeraHtml = f.read().decode('string-escape').decode("utf-8").split("</html>")[1]
-        
-        
-    #Store dataset and labelsToRender in session 
-    request.session['dataset'] = dataset
-    request.session['labelsToRenderComboBox'] = _labelsToRenderComboBox
-    request.session['blockComboBox'] = _blockComboBox
-#    request.session['tableLayoutConfiguration'] = tableLayoutConfiguration
-    #Esto falla y creo que es por el tamano
-    #request.session['table'] = tableDataset
-    if (_imageDimensions != ''):
-        request.session['imageDimensions'] = _imageDimensions
 
     #Create context to be send
     context = {'css': getResourceCss('showj'),
@@ -175,19 +94,53 @@ def showj(request, inputParameters=None):
                'jquery_hover_intent':getResourceJs('jquery_hover_intent'),
                
                'dataset': dataset,
-               'tableLayoutConfiguration': json.dumps({'columnsLayout': tableLayoutConfiguration.columnsLayout, 'colsOrder': tableLayoutConfiguration.colsOrder}, ensure_ascii=False, cls=ColumnLayoutConfigurationEncoder), #Data variables
+               'tableLayoutConfiguration': json.dumps({'columnsLayout': inputParameters['tableLayoutConfiguration'].columnsLayout, 'colsOrder': inputParameters['tableLayoutConfiguration'].colsOrder}, ensure_ascii=False, cls=ColumnLayoutConfigurationEncoder), #Data variables
                'tableDataset': tableDataset,
+               
                'imageDimensions': request.session['imageDimensions'],
                'defaultZoom': request.session['defaultZoom'],
                'projectName': request.session['projectName'],
-               'form': showjForm,
                
-#               NAPA DE LUXE: ESTO es un poco cutre
-               'STATIC_URL' :settings.STATIC_URL,
-               'volLink': volLink,
-               'volType': 2, #0->byte, 1 ->Integer, 2-> Float
-               'threshold': threshold,
-               'chimeraHtml':chimeraHtml} #Form
+               'form': showjForm}
+    
+    if inputParameters['mode']=='volume_astex' or inputParameters['mode']=='volume_chimera':
+
+        threshold = (_stats[2] + _stats[3])/2 if _stats != None else 1
+        volPath = os.path.join(request.session['projectPath'], _imageVolName)
+        
+        context.update({"threshold":threshold,
+                        'minStats':_stats[2] if _stats != None else 1,
+                        'maxStats':_stats[3] if _stats != None else 1, })
+        
+        if inputParameters['mode']=='volume_astex':
+    
+            #        volPath='/home/adrian/Scipion/tests/input/showj/emd_1042.map'        
+#            fileName, fileExtension = os.path.splitext(_imageVolName)
+            
+            linkName = 'test_link_' + request.session._session_key + '.map'
+            volLinkPath = os.path.join(pw.WEB_RESOURCES, 'astex', 'tmp', linkName)
+            from pyworkflow.utils.path import cleanPath, createLink
+            cleanPath(volLinkPath)
+            createLink(volPath, volLinkPath)
+            volLink = os.path.join('/', settings.STATIC_ROOT, 'astex', 'tmp', linkName)
+            
+            context.update({"volLink":volLink})
+         
+        elif inputParameters['mode']=='volume_chimera':   
+            from subprocess import Popen, PIPE, STDOUT
+            p = Popen([os.environ.get('CHIMERA_HEADLESS'), volPath], stdout=PIPE, stdin=PIPE, stderr=PIPE)
+            outputHtmlFile = os.path.join(pw.WEB_RESOURCES, 'astex', 'tmp', 'test.html')
+            #chimeraCommand= 'volume #0 level ' + str(threshold) + '; export format WebGL ' + outputHtmlFile + '; stop'
+            chimeraCommand= 'export format WebGL ' + outputHtmlFile + '; stop'
+            stdout_data, stderr_data = p.communicate(input=chimeraCommand)
+#            print "stdout_data",stdout_data
+#            print "stderr_data",stderr_data
+            f = open(outputHtmlFile)
+            chimeraHtml = f.read().decode('string-escape').decode("utf-8").split("</html>")[1]
+            
+            context.update({"chimeraHtml":chimeraHtml})
+               
+#               'volType': 2, #0->byte, 1 ->Integer, 2-> Float
     
     return_page = '%s%s%s' % ('showj_', showjForm.data['mode'], '.html')
     return render_to_response(return_page, RequestContext(request, context))
@@ -408,79 +361,93 @@ def showVolVisualization(request):
 ######################## DISPATCHER ###############################    
 ###################################################################  
 def visualizeObject(request):
-    #Napa de Luxe
-    probandoCTFParam = False
-    probandoVolume = False
-    
-    objectId = request.GET.get("objectId")    
-    projectPath = request.session['projectPath']
-    project = Project(projectPath)
-    project.load()
-    
-    obj = project.mapper.selectById(int(objectId))
-    if obj.isPointer():
-        obj = obj.get()
-
     #Initialize default values
-    inputParameters = {'allowRender': True,
-                       'mode': 'gallery', #Gallery,table,column,volume_astex, volume_chimera
-                       'zoom': '150px',
-                       'dims': '2d',
-                       'goto': 1,
-                       'colRowMode': 'Off',
-                       'mirrorY': False,
-                       'applyTransformMatrix': False,
-                       'onlyShifts': False,
-                       'wrap': False,
-                       'resliceComboBox': xmipp.VIEW_Z_NEG,
-                       'imageMaxWidth': 512,
-                       'imageMinWidth': 30,
-                       'imageMaxHeight': 512,
-                       'imageMinHeight': 30}      
-    
-    if probandoCTFParam:
-        inputParameters['path']= join(projectPath, "Runs/XmippProtCTFMicrographs175/extra/BPV_1386/xmipp_ctf.ctfparam")
-        inputParameters['mode']= 'column'
-    elif isinstance(obj, SetOfMicrographs):
-        fn = project.getTmpPath(obj.getName() + '_micrographs.xmd')
-        writeSetOfMicrographs(obj, fn)
-        inputParameters['path']= join(projectPath, fn)
-    elif isinstance(obj, SetOfVolumes):
-        fn = project.getTmpPath(obj.getName()+ '_volumes.xmd')
-        writeSetOfVolumes(obj, fn)
-        inputParameters['path']= join(projectPath, fn)
-        inputParameters['setOfVolumes']= obj
-        inputParameters['setOfVolumesId']= obj.getObjId()
-        inputParameters['dims']= '3d'
-        inputParameters['mode']= 'table'
-    elif isinstance(obj, SetOfImages):
-#        PAJM aqui falla para el cl2d align y se esta perdiendo la matrix de transformacion en la conversion
-        fn = project.getTmpPath(obj.getName() + '_images.xmd')
-        writeSetOfParticles(obj, fn)
-        inputParameters['path']= join(projectPath, fn)
-    elif isinstance(obj, Image):
-        fn = project.getTmpPath(obj.getName() + '_image.xmd')
-        fnSet = fn.replace('.xmd', '.sqlite')
-        cleanPath(fn, fnSet)
-        
-        imgSet = SetOfImages()
-        imgSet.setFileName(fnSet)
-        img = Image()
-        #img.copyInfo(obj)
-        img.copyLocation(obj)
-        imgSet.append(img)
-        writeSetOfParticles(imgSet, fn)
-        inputParameters['path']= join(projectPath, fn)
-        
-    elif isinstance(obj, SetOfClasses2D):
-        fn = project.getTmpPath(obj.getName() + '_classes.xmd')
-        writeSetOfClasses2D(obj, fn)
-        inputParameters['path']= join(projectPath, fn)
-#        runShowJ(obj.getClassesMdFileName())
-    else:
-        raise Exception('Showj Web visualizer: can not visualize class: %s' % obj.getClassName())
+    inputParameters = {'allowRender': True,                 # Image can be displayed, depending on column layout 
+                       'mode': 'gallery',                   # Mode Options: gallery, table, column, volume_astex, volume_chimera
+                       'zoom': '150px',                     # Zoom set by default
+                       'blockComboBox': '',                 # Metadata Block to display. If None the first one will be displayed
+                       'labelsToRenderComboBox': '',        # Column to be displayed in gallery mode. If None the first one will be displayed
+                       'volumesToRenderComboBox': '',       # If 3D, Volume to be displayed in gallery, volume_astex and volume_chimera mode. If None the first one will be displayed
+                       'dims': '2d',                        # Object Dimensions
+                       'goto': 1,                           # Element selected (metadata record) by default. It can be a row in table mode or an image in gallery mode
+                       'colRowMode': 'Off',                 # In gallery mode 'On' means columns can be adjust manually by the user. When 'Off' columns are adjusted automatically to screen width. 
+                       'mirrorY': False,                    # When 'True' image are mirrored in Y Axis 
+                       'applyTransformMatrix': False,       # When 'True' if there is transform matrix, it will be applied
+                       'onlyShifts': False,                 # When 'True' if there is transform matrix, only shifts will be applied
+                       'wrap': False,                       # When 'True' if there is transform matrix, only shifts will be applied
+                       'resliceComboBox': xmipp.VIEW_Z_NEG, # If 3D, axis to slice volume 
+                       'imageMaxWidth': 512,                # Maximum image width (in pixels)
+                       'imageMinWidth': 30,                 # Minimum image width (in pixels)
+                       'imageMaxHeight': 512,               # Maximum image height (in pixels)
+                       'imageMinHeight': 30}                # Minimum image height (in pixels)
 
-    if isinstance(obj, SetOfVolumes) and probandoVolume:
-        return render_to_response('volume_visualization.html', inputParameters)
+# NAPA DE LUXE: PARA probarlo sin sesion iniciada    
+#    request.session['projectPath'] = "/home/adrian/Scipion/projects/TestXmippWorkflow/"
+#    request.session['projectName'] = "Juanitpo"
+    
+    if "projectPath" in request.session:
+        projectPath = request.session['projectPath']
+    else:         
+        raise Exception('Showj Web visualizer: No project loaded')
+    
+    if "objectId" in request.GET: 
+        objectId = request.GET.get("objectId")
+
+        project = Project(projectPath)
+        project.load()
+        
+        obj = project.mapper.selectById(int(objectId))
+        if obj.isPointer():
+            obj = obj.get()
+
+        if isinstance(obj, SetOfMicrographs):
+            fn = project.getTmpPath(obj.getName() + '_micrographs.xmd')
+            writeSetOfMicrographs(obj, fn)
+            inputParameters['path']= join(projectPath, fn)
+        elif isinstance(obj, SetOfVolumes):
+            fn = project.getTmpPath(obj.getName()+ '_volumes.xmd')
+            writeSetOfVolumes(obj, fn)
+            inputParameters['path']= join(projectPath, fn)
+#            inputParameters['setOfVolumes']= obj
+#            inputParameters['setOfVolumesId']= obj.getObjId()
+            inputParameters['dims']= '3d'
+            inputParameters['mode']= 'table'
+        elif isinstance(obj, SetOfImages):
+    #        PAJM aqui falla para el cl2d align y se esta perdiendo la matrix de transformacion en la conversion
+            fn = project.getTmpPath(obj.getName() + '_images.xmd')
+            writeSetOfParticles(obj, fn)
+            inputParameters['path']= join(projectPath, fn)
+        elif isinstance(obj, Image):
+            fn = project.getTmpPath(obj.getName() + '_image.xmd')
+            fnSet = fn.replace('.xmd', '.sqlite')
+            cleanPath(fn, fnSet)
+            
+            imgSet = SetOfImages()
+            imgSet.setFileName(fnSet)
+            img = Image()
+            #img.copyInfo(obj)
+            img.copyLocation(obj)
+            imgSet.append(img)
+            writeSetOfParticles(imgSet, fn)
+            inputParameters['path']= join(projectPath, fn)
+            
+        elif isinstance(obj, SetOfClasses2D):
+            fn = project.getTmpPath(obj.getName() + '_classes.xmd')
+            writeSetOfClasses2D(obj, fn)
+            inputParameters['path']= join(projectPath, fn)
+        else:
+            raise Exception('Showj Web visualizer: can not visualize class: %s' % obj.getClassName())
+    
+    elif "path" in request.GET:
+        inputParameters.update(request.GET.items())
+        inputParameters.update({'path':join(projectPath, request.GET.get("path"))})
     else:
-        return showj(request, inputParameters)  
+        raise Exception('Showj Web visualizer: No object identifier or path found')         
+
+    request.session['defaultZoom'] = inputParameters['zoom']
+    return showj(request, inputParameters)  
+
+
+def testingSSH(request):
+    context = {}
+    return render_to_response("testing_ssh.html", RequestContext(request, context))

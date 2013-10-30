@@ -64,4 +64,7 @@ urlpatterns = patterns('',
     url(r'^showVolVisualization/', 'app.views_showj.showVolVisualization'),
     url(r'^visualize_object/$', 'app.views_showj.visualizeObject'),
     url(r'^visualize_volume/$', 'app.views_showj.visualizeVolume'),
+    
+    #TESTING
+    url(r'^testingSSH/', 'app.views_showj.testingSSH'), #Load web
 )

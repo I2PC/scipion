@@ -1,9 +1,26 @@
-#!/bin/sh
+#!/bin/bash
+#bash sshServerScript machine user pw commands
+
 echo "Initializing Server Script"
+
+
+machine=$1
+commands=$2
+user=$3
+pw=$4
+
 #ssh -X scipion@scipion.cnb.csic.es "gedit"
 #ssh -X aquintana@crunchy.cnb.csic.es "ls"
-#export SSH_ASKPASS=/home/adrian/workspace/scipionv2/scipionSSHServer/sshaskpass.sh
-export SSH_ASKPASS=./sshaskpass.sh
-export DISPLAY=:0
 #setsid ssh -X -o StrictHostKeyChecking=no aquintana@crunchy.cnb.csic.es "cd ojala2;xterm -e xmipp_protocols"
-setsid ssh -X -o StrictHostKeyChecking=no aquintana@crunchy.cnb.csic.es "source /gpfs/fs1/apps/eman/EMAN2/eman2.bashrc&&xterm -e e2projectmanager.py"
+
+#export SSH_ASKPASS=./sshaskpass.sh
+#export DISPLAY=:0
+#setsid ssh -X -o StrictHostKeyChecking=no aquintana@crunchy.cnb.csic.es "source /gpfs/fs1/apps/eman/EMAN2/eman2.bashrc&&xterm -e e2projectmanager.py"
+
+
+export SSH_ASKPASS=scipionPipe
+export DISPLAY=:0
+
+echo "Executing command:"
+echo "setsid ssh -X -o StrictHostKeyChecking=no $2@$1 $4"
+setsid ssh -X -o StrictHostKeyChecking=no $2@$1 "$4"

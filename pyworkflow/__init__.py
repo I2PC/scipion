@@ -34,6 +34,7 @@ def join(*paths):
     return os.path.join(HOME, *paths)
 
 RESOURCES = [join('resources')]
+WEB_RESOURCES = os.path.join(HOME, 'web', 'pages', 'resources')
 
 if "SCIPION_HOME" not in os.environ:
     raise Exception("SCIPION_HOME is not defined as environment variable")
