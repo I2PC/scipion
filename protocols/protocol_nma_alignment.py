@@ -92,7 +92,7 @@ def performNMA(log, WorkingDir, InSelFile, PDBfile, Modesfile, SamplingRate,
                TrustRegionScale,ProjMatch,DiscreteAngularSampling,NProc):
     arguments="-i "+InSelFile+" --pdb "+PDBfile+" --modes "+Modesfile+" --sampling_rate "+\
               str(SamplingRate) +" --discrAngStep " +str(DiscreteAngularSampling) +" --odir "+WorkingDir+"/tmp --centerPDB "+\
-              " --trustradius_scale "+str(TrustRegionScale)
+              " --trustradius_scale "+str(TrustRegionScale)+" --resume"
     if PDBfile.find("pseudoatoms.pdb")!=-1:
         arguments+=" --fixed_Gaussian"
     if ProjMatch:
