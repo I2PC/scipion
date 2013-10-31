@@ -360,7 +360,6 @@ class XmippImagePreviewDialog(XmippPreviewDialog):
         filename = obj.getFileName()
         if index:
             filename = "%03d@%s" % (index, filename)
-        print "Filename=%s" % filename
         
         self.image = xmipp.Image()
         try:
