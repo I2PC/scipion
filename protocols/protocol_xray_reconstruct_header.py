@@ -19,22 +19,9 @@
 # {run}(xray_fast_align) Align Tomograms Run
 ImportRun = ''
 
-# {list_combo}(imod, tomo3d) Reconstruction program
-"""Tomo series from Mistral microscope (Alba synchrotron) are expected to be
- in nexus format in hdf5 files, while from U41-TXM line (Bessy) you only set 
- the data folder and the indexes for initial and final images for both tomogram 
- and flatfields."""
-recProgram = "imod"
+#{eval} expandXrayReconstruct()
 
-# {validate}(IsInt) Thickness
-thickness = ''
-
-# {expert} Contrast inversion
-"""Before reconstruct invert the contrast of the images. It is mandatory to 
-   recover real absorption coefficient volumes."""
-DoInvertContrast = True
-
-# {eval} expandParallel(threads=0,hours=6,mpi=1)
+# {eval} expandParallel(threads=1,mpi=0,condition="recProgram=='tomo3d'")
 
 #------------------------------------------------------------------------------------------------
 #------------------------------------------------------------------------------------------------

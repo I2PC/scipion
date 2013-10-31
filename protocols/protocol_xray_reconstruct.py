@@ -1,6 +1,6 @@
 #!/usr/bin/env xmipp_python
 #------------------------------------------------------------------------------------------------
-# General script for Xmipp-based pre-processing of micrographs
+# General script for Xmipp-based reconstruction of X-ray tomograms
 # Author: Joaquin Oton, Oct 2013
 
 from glob import glob
@@ -33,7 +33,7 @@ class ProtXrayRecon(XmippProtocol):
         recVolList = []
         
         for objId in md:
-            fnRootIn = removeFilenameExt(md.getValue(xmipp.MDL_IMAGE, objId))
+            fnRootIn = removeFilenameExt(md.getValue(xmipp.MDL_TOMOGRAMMD, objId))
             fnIn = fnRootIn + '.mrc'
             fnBaseName = basename(fnRootIn)
             tomoDir = self.workingDirPath(fnBaseName)
@@ -85,7 +85,7 @@ class ProtXrayRecon(XmippProtocol):
         if size > 1:
             message += "<%d> tomograms" % (size)
         elif size == 1:
-            message += "<%s> tomogram" % removeBasenameExt(md.getValue(xmipp.MDL_IMAGE, md.firstObject()))
+            message += "<%s> tomogram" % removeBasenameExt(md.getValue(xmipp.MDL_TOMOGRAMMD, md.firstObject()))
         
         message += ' of thickness <%s>' % self.thickness
         return [message]
@@ -101,6 +101,6 @@ def createResultMd(log, volList, resultMd):
     mdOut = xmipp.MetaData()
      
     for vol in volList:
-        mdOut.setValue(xmipp.MDL_IMAGE, vol, mdOut.addObject())
+        mdOut.setValue(xmipp.MDL_TOMOGRAM_VOLUME, vol, mdOut.addObject())
      
     mdOut.write('tomograms@%s' % (resultMd), xmipp.MD_APPEND)

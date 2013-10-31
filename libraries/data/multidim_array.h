@@ -4847,6 +4847,18 @@ public:
         *ptr = static_cast< T >(log10(static_cast< double >(*ptr)));
     }
 
+    /** Log.
+     *
+     * Each component of the result is the log of the original components.
+     */
+    void selfLog()
+    {
+        T* ptr=NULL;
+        size_t n;
+        FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(*this,n,ptr)
+        *ptr = static_cast< T >(log(static_cast< double >(*ptr)));
+    }
+
     /** Reverse matrix values over X axis, keep in this object.
      *
      * Maybe better with an example:
