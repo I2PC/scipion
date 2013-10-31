@@ -35,19 +35,15 @@ class ProtScreenMicrographs(XmippProtocol):
         self.inputFilename('microscope', 'micrographs', 'acquisition')
         self.inputProperty('TiltPairs', 'MicrographsMd')
         self.micrographs = self.getFilename('micrographs')
-        if not self.TiltPairs:
-            self.MicrographsMd = self.Input['micrographs']
-        else:
-            self.inputFilename('tilted_pairs')
-            self.MicrographsMd = self.Input['tilted_pairs']
+	self.MicrographsMd = self.Input['micrographs']
+        if self.TiltPairs:
+            self.MicrographsMd='micrographPairs@'+self.MicrographsMd
 
     def defineSteps(self):
         extraDir=self.workingDirPath('extra')
         parent_id = self.insertStep('createDir',verifyfiles=[extraDir],path=extraDir)
 
         filesToImport = [self.Input[k] for k in ['microscope', 'acquisition']]
-        if self.TiltPairs:
-            filesToImport.append(self.MicrographsMd)
         self.insertImportOfFiles(filesToImport)
 
         # Read Microscope parameters
@@ -61,6 +57,8 @@ class ProtScreenMicrographs(XmippProtocol):
 
         # Create verifyFiles for the MPI and output directories
         MD = xmipp.MetaData(self.MicrographsMd)
+        #if removed in import do not process them
+        MD.removeDisabled()
         
         # Now the estimation actions
         for objId in MD:

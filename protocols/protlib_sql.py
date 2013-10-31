@@ -72,6 +72,9 @@ class SqliteDb:
             print errMsg, e.args[0]
             if(e.args[0].find('database is locked') != -1):
                 print 'consider deleting the database (%s)' % self.dbName
+                print >> sys.stderr, 'Trace: ' + e.args
+                print >> sys.stderr, 'Command: ' + sqlCmd
+                print >> sys.stderr, 'Database: ' + self.dbName
             sys.exit(1)  
         self.connection.commit()
     
@@ -348,7 +351,8 @@ class XmippProjectDb(SqliteDb):
         steps_total = self.cur.execute(sqlCommand).fetchone()[0]
         steps_done = self.cur.execute(sqlCommand + ' AND finish IS NOT NULL').fetchone()[0]
         if steps_done > 0 and steps_done == steps_total:
-            self.updateRunState(SqliteDb.RUN_FINISHED, run['run_id'])
+            if run['run_state'] != SqliteDb.RUN_FINISHED:
+                self.updateRunState(SqliteDb.RUN_FINISHED, run['run_id'])
             #run['state'] = SqliteDb.RUN_FINISHED
         return (steps_done, steps_total)
 

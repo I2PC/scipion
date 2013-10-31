@@ -334,6 +334,10 @@ enum MDLabel
 
     MDL_TEST_SIZE,// < number of test assigned to a program
 
+    MDL_VOLUME_SCORE_SUM, /// < Score corresponding to the sum of cc with cc>threshold
+    MDL_VOLUME_SCORE_SUM_TH, ///< Score corresponding to the sum of cc-threshold with cc>threshold
+    MDL_VOLUME_SCORE_MEAN, ///< Score corresponding to the mean of cc with cc>threshold
+    MDL_VOLUME_SCORE_MIN, ///< Score corresponding to the min of cc with cc>threshold
     MDL_VOLUME_SCORE1,/// < Score 1 for volumes
     MDL_VOLUME_SCORE2,/// < Score 2 for volumes
     MDL_VOLUME_SCORE3,/// < Score 3 for volumes
@@ -1114,6 +1118,10 @@ private:
         MDL::addLabel(MDL_TRANSFORM_MATRIX, LABEL_VECTOR_DOUBLE, "transformMatrix");
 
         MDL::addLabel(MDL_VOLTAGE, LABEL_DOUBLE, "voltage");
+        MDL::addLabel(MDL_VOLUME_SCORE_SUM, LABEL_DOUBLE, "volScoreSum");
+        MDL::addLabel(MDL_VOLUME_SCORE_MEAN, LABEL_DOUBLE, "volScoreMean");
+        MDL::addLabel(MDL_VOLUME_SCORE_MIN, LABEL_DOUBLE, "volScoreMin");
+        MDL::addLabel(MDL_VOLUME_SCORE_SUM_TH, LABEL_DOUBLE, "volScoreSumTh");
         MDL::addLabel(MDL_VOLUME_SCORE1, LABEL_DOUBLE, "volScore1");
         MDL::addLabel(MDL_VOLUME_SCORE2, LABEL_DOUBLE, "volScore2");
         MDL::addLabel(MDL_VOLUME_SCORE3, LABEL_DOUBLE, "volScore3");
