@@ -34,26 +34,21 @@ from pyworkflow.viewer import Viewer, Wizard, DESKTOP_TKINTER, WEB_DJANGO
 from pyworkflow.em import SetOfImages, SetOfMicrographs, Volume, ProtCTFMicrographs
 from protocol_filters import *
 from protocol_ca_pca import SpiderProtCAPCA
-from pyworkflow.em.packages.xmipp3.wizard import ListTreeProvider, XmippDownsampleDialog, XmippMaskRadiusWizard, XmippMaskPreviewDialog
+from protocol_align_apsr import SpiderProtAlignAPSR
+from pyworkflow.em.packages.xmipp3.wizard import ListTreeProvider, XmippDownsampleDialog, XmippParticleMaskRadiusWizard, XmippRadiiWizard, XmippMaskPreviewDialog
 import xmipp
 import pyworkflow.gui.dialog as dialog
 from pyworkflow.gui.widgets import LabelSlider
 from pyworkflow import findResource
 
-class SpiderProtMaskWizard(XmippMaskRadiusWizard):
+class SpiderProtMaskWizard(XmippParticleMaskRadiusWizard):
     
     _targets = [(SpiderProtCAPCA, ['maskRadius'])]
+         
     
-    def show(self, form):
-        protocol = form.protocol
-        provider = self._getProvider(protocol)
+class SpiderProtMaskRadiiWizard(XmippRadiiWizard):
     
-        if provider is not None:
-            d = XmippMaskPreviewDialog(form.root, provider, maskRadius=protocol.maskRadius.get())
-            if d.resultYes():
-                form.setVar('maskRadius', d.getRadius())
-        else:
-            dialog.showWarning("Empty input", "Select elements first", form.root)
+    _targets = [(SpiderProtAlignAPSR, ['innerRadius', 'outerRadius'])]    
 
     def _getText(self, obj):
         index = obj.getIndex()
@@ -61,7 +56,7 @@ class SpiderProtMaskWizard(XmippMaskRadiusWizard):
         if index:
             return "%03d@%s" % (index, text)
         return text
-
+        
     def _getProvider(self, protocol):
         """ This should be implemented to return the list
         of object to be displayed in the tree.
@@ -76,11 +71,11 @@ class SpiderProtMaskWizard(XmippMaskRadiusWizard):
             provider = ListTreeProvider(particles)
             provider.getText = self._getText
             
-        return provider            
+        return provider
 
     @classmethod    
     def getView(self):
-        return "wiz_particle_mask"  
+        return "wiz_particle_mask_radii"      
     
 #class SpiderGaussianFilterWizard(Wizard):
 #    _targets = [(SpiderProtFilter, ['filterRadius'])]
