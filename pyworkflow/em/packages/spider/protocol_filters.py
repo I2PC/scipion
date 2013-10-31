@@ -124,7 +124,7 @@ class SpiderProtFilter(ProtFilterParticles):
         self.particlesStk = self._getPath('%(particles)s.%(ext)s' % self._params)
         # Insert processing steps
         self._insertFunctionStep('convertInput')
-        self._insertFunctionStep('filterParticles')
+        self._insertFunctionStep('filterParticles', self.filterType.get())
         #self._insertFunctionStep('createOutput')
         
     def convertInput(self):
@@ -135,7 +135,7 @@ class SpiderProtFilter(ProtFilterParticles):
         for i, p in enumerate(particles):
             ih.convert(p.getLocation(), (i+1, self.particlesStk))
 
-    def filterParticles(self):
+    def filterParticles(self, filterType):
         """ Apply the selected filter to particles. 
         Create the set of particles.
         """
@@ -148,16 +148,16 @@ class SpiderProtFilter(ProtFilterParticles):
         
         args = []
         
-        if self.filterType <= FILTER_GAUSSIAN:
+        if filterType <= FILTER_GAUSSIAN:
             args.append(self.filterRadius.get())
         else:
             args.append('%f %f' % (self.lowFreq.get(), self.highFreq.get()))
             
-        if self.filterType == FILTER_FERMI:
+        if filterType == FILTER_FERMI:
             args.append(self.temperature.get())
         
         # Map to spected filter number in Spider for operation FQ    
-        filterNumber = self.filterType.get() * 2 + 1
+        filterNumber = filterType * 2 + 1
         
         # Consider low-pass or high-pass
         filterNumber += self.filterMode.get()
@@ -173,6 +173,7 @@ class SpiderProtFilter(ProtFilterParticles):
         #inputStk = removeBaseExt(self.inputStk)
         particlesStk = removeBaseExt(self.particlesStk)
         
+        print "N: ", n
         for i in range(1, n+1):
             locStr = locationToSpider(i, particlesStk)
             spi.runFunction(OP, locStr, locStr, filterNumber, *args)

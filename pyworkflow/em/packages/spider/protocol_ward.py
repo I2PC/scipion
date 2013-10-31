@@ -71,17 +71,18 @@ class SpiderProtClassifyWard(ProtClassify):
         return self._getPath(template % self._params)
     
     def _defineSteps(self):
-        self._insertFunctionStep('convertInput', self.inputParticles.getFileName())
+        self._insertFunctionStep('convertInput', self.inputParticles.get().getFileName())
         self._insertFunctionStep('classifyWard', self.imcFile.get(), self.numberOfFactors.get())
-        self._insertFunctionStep('buildDendrogram', True)
+        self._insertFunctionStep('buildDendroStep')
     
     def convertInput(self, inputFilename):
         """ Convert the input particles to a Spider stack. """
         particles = self.inputParticles.get()
         ih = ImageHandler()
+        particlesStk = self._getFileName('particles')
         
         for i, p in enumerate(particles):
-            ih.convert(p.getLocation(), (i+1, self.particlesStk))
+            ih.convert(p.getLocation(), (i+1, particlesStk))
             
     def classifyWard(self, imcFile, numberOfFactors):
         """ Apply the selected filter to particles. 
@@ -92,6 +93,7 @@ class SpiderProtClassifyWard(ProtClassify):
         # Copy file to working directory, it could be also a link
         imcLocalFile = basename(imcFile)
         copyFile(imcFile, self._getPath(imcLocalFile))
+        print "copy from '%s' to '%s' " % (imcFile, imcLocalFile)
         imcLocalFile = removeExt(imcLocalFile)
 
         self._enterWorkingDir() # Do operations inside the run working dir
@@ -103,6 +105,9 @@ class SpiderProtClassifyWard(ProtClassify):
         
         self._leaveWorkingDir() # Go back to project dir
         
+        
+    def buildDendroStep(self):
+        self.buildDendrogram(True)
         
     def buildDendrogram(self, writeAverages=False):
         """ Parse Spider docfile with the information to build the dendogram.
@@ -119,8 +124,10 @@ class SpiderProtClassifyWard(ProtClassify):
                 values.append(float(line.split()[3]))
         f.close()
         self.dendroValues = values
+        print "self.dendroValues: ", len(values)
         #TODO: COPY the input particles
-        #self.dendroImages = self.inputParticles.
+        self.dendroImages = self._getFileName('particles')
+        self.dendroAverages = self._getFileName('averages')
         
         return self._buildDendrogram(0, len(values)-1, 1, writeAverages)
     

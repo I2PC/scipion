@@ -35,7 +35,9 @@ from pyworkflow.gui.graph import LevelTree
 from pyworkflow.gui.canvas import Canvas, ImageBox
 from pyworkflow.em.packages.xmipp3.viewer import XmippViewer, runShowJ
 
+from protocol_filters import SpiderProtFilter
 from protocol_custommask import SpiderProtCustomMask
+from protocol_align_apsr import SpiderProtAlignAPSR
 from protocol_ca_pca import SpiderProtCAPCA
 from protocol_ward import SpiderProtClassifyWard
 
@@ -46,11 +48,19 @@ class SpiderViewerCustomMask(Viewer):
     with the Xmipp program xmipp_showj
     """
     _environments = [DESKTOP_TKINTER, WEB_DJANGO]
-    _targets = [SpiderProtCustomMask, SpiderProtCAPCA]
+    _targets = [SpiderProtCustomMask, SpiderProtCAPCA, SpiderProtFilter, SpiderProtAlignAPSR]
 
     def visualize(self, obj, **args):
         
-        if isinstance(obj, SpiderProtCustomMask):
+        if isinstance(obj, SpiderProtFilter):
+            XmippViewer().visualize(obj.outputParticles)
+            
+        elif isinstance(obj, SpiderProtAlignAPSR):
+            xv = XmippViewer()
+            xv.visualize(obj.outputAverage)
+            xv.visualize(obj.outputParticles)
+            
+        elif isinstance(obj, SpiderProtCustomMask):
             mask = obj.outputMask
             XmippViewer().visualize(mask)
             # Remove location to visualize the whole stack

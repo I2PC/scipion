@@ -148,9 +148,9 @@ class SpiderProtAlignAPSR(ProtAlign):
             line = line.strip()
             if len(line) and not line.startswith(';'):
                 angle, shiftX, shiftY = [float(s) for s in line.split()[2:]]
-                spi.runFunction('RT SQ', 
-                                '%s@%d' % (PART_BIGEN, i), '%s@%d' % (PART_OUTPUT, i),
-                                (angle, 1), (shiftX, shiftY))
+                inLoc = locationToSpider(i, PART_BIGEN)
+                outLoc = locationToSpider(i, PART_OUTPUT)
+                spi.runFunction('RT SQ', inLoc, outLoc, (angle, 1), (shiftX, shiftY))
             
         spi.close()
 #        for doc in docFiles:

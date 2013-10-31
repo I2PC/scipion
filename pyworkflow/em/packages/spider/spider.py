@@ -116,7 +116,7 @@ class SpiderShell(object):
     
     def runCmd(self, cmd):
         if self._debug:
-            print "SPIDER: ", cmd
+            #print "SPIDER: ", cmd
             print >> self._log, cmd
         print >> self._proc.stdin, cmd
         self._proc.stdin.flush()
