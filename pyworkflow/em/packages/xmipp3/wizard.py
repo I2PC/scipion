@@ -355,7 +355,13 @@ class XmippImagePreviewDialog(XmippPreviewDialog):
         self.preview.grid(row=0, column=0) 
         
     def _itemSelected(self, obj):
+        
+        index = obj.getIndex()
         filename = obj.getFileName()
+        if index:
+            filename = "%03d@%s" % (index, filename)
+        print "Filename=%s" % filename
+        
         self.image = xmipp.Image()
         try:
             self.image.readPreview(filename, self.dim)

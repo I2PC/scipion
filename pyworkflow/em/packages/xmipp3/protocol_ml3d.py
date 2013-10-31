@@ -350,7 +350,8 @@ class XmippProtML3D(ProtRefine3D, ProtClassify3D):
             shutil.move(f, nf)
                                                     
     def createOutput(self):
-        lastIter = self._lastIteration()
+        #lastIter = self._lastIteration()
+        lastIter = 'iter%03d' % self._lastIteration()
         md = xmipp.MetaData(self._getExtraPath(lastIter, 'iter_volumes.xmd'))
         md.addItemId()
         fn = self._getPath('output_volumes.xmd')
@@ -397,9 +398,11 @@ class XmippProtML3D(ProtRefine3D, ProtClassify3D):
     
     def _lastIteration(self):
         ''' Find the last iteration number '''
-        iter = 0        
+        iter = 1        
         while True:
-            if os.path.exists(self._getExtraPath('iter%03d' % iter, 'iter_volumes.xmd')):
+            if not os.path.exists(self._getExtraPath('iter%03d' % iter, 'iter_volumes.xmd')):
                 break
             iter = iter + 1
-        return 'iter%03d' % iter
+        #return 'iter%03d' % (iter - 1)
+        return iter - 1
+    
