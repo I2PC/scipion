@@ -560,8 +560,9 @@ class XmippProtocol(object):
     def createFilenameDict(self):
         ''' This will create some common templates and update
         with each protocol particular dictionary'''
-        _baseProtocolNames.update(self.createFilenameTemplates())
-        return _baseProtocolNames
+        protocolNamesDict = dict(_baseProtocolNames)
+        protocolNamesDict.update(self.createFilenameTemplates())
+        return protocolNamesDict
         
     def inputProperty(self, *keys):
         ''' Take property Key from self.PrevRun and set to self.

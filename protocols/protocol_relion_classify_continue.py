@@ -18,7 +18,6 @@ from protlib_xmipp import redStr, cyanStr
 from protlib_gui_ext import showWarning, showTable, showError
 from protlib_filesystem import xmippExists, findAcquisitionInfo, moveFile, \
                                replaceBasenameExt
-from protocol_ml2d import lastIteration
 from protlib_filesystem import createLink
 
 from protocol_relion_base import ProtRelionBase, runNormalizeRelion, convertImagesMd, renameOutput, \
@@ -27,26 +26,41 @@ from protocol_relion_base import ProtRelionBase, runNormalizeRelion, convertImag
 class ProtRelionClassifierContinue(ProtRelionBase):
     def __init__(self, scriptname, project):
         ProtRelionBase.__init__(self, protDict.relion_classify_continue.name, scriptname, project)
-        self.Import = 'from protocol_relion_classify_continue import *'
-        self.relionType='classify'
         self.setPreviousRun(self.ImportRun)
+        self.Import = 'from protocol_relion_classify_continue import *'
+        self.relionType='classifyContinue'
 
     def summary(self):
-        lines = ProtRelionBase.summary(self, self.PrevRun.NumberOfIterations)
-        lines += ['Number of classes = <%d>' % self.NumberOfClasses]
-        lines += ['Continuation from run: <%s>' % self.ImportRun]
-        # add table images classes for last iteration (one of the tables?)
+        lines         = ProtRelionBase.summary(self)
+        lastIteration = self.lastIter()
+        lines += ['Continuation from run: <%s>, iter: <%d>' % (self.PrevRunName, self.ContinueFromIteration)]
+        if (lastIteration - self.ContinueFromIteration) < 0 :
+            performedIteration=0
+        else:
+            performedIteration=lastIteration - self.ContinueFromIteration
+        lines += ['Performed <%d> iterations. Pending Iterations <%d>' % (performedIteration ,self.NumberOfIterations - self.ContinueFromIteration)]
+        #lines += ['Input fileName = <%s>' %self.getFilename('optimiserRe', iter=int(self.ContinueFromIteration))]
+        lines += ['test = <%s>'%self.getFilename('optimiserRe',iter=3)]
+        lines += ['test = <%s>'%self.PrevRun.getFilename('optimiserRe',iter=3)]
+        #lines += ['WorkingDir = <%s>'%self.WorkingDir]
+        #lines += ['WorkingDir2 = <%s>'%self.PrevRun.WorkingDir]
+        #lines += ['lastIter = <%s>'%self.lastIter()]
+        #lines += ['lastIter2 = <%s>'%self.PrevRun.lastIter()]
         return lines
     
     def validate(self):
         #errors = ProtRelionBase.validate(self)
+        lastIterationPrecRun=self.PrevRun.lastIter()
         errors=[]
+        if lastIterationPrecRun < self.ContinueFromIteration:
+            errors +=['protocol <%s> last iteration is <%d> so I cannot continue from iteration <%d> '%
+                      (self.PrevRunName,lastIterationPrecRun,self.ContinueFromIteration)]
         return errors 
     
     def defineSteps(self): 
-        ProtRelionBase.defineSteps(self)
+        self.insertStep('createDir', verifyfiles=[self.ExtraDir], path=self.ExtraDir)
         # launch relion program
-        self.insertRelionClassify()
+        self.insertRelionClassifyContinue()
         #self.ImgStar = self.extraPath(replaceBasenameExt(tmpFileNameXMD, '.star'))
         lastIteration = self.NumberOfIterations
         NumberOfClasses=self.NumberOfClasses
@@ -66,54 +80,23 @@ class ProtRelionClassifierContinue(ProtRelionBase):
         myDict['imagesAssignedToClass']='imagesAssignedToClass@'+self.ExtraDir+'/dataForVisualize.xmd'
         return myDict
 
-    def insertRelionClassify(self):
-        args = {'--iter': self.NumberOfIterations,
-                '--tau2_fudge': self.RegularisationParamT,
-                '--flatten_solvent': '',
-                #'--zero_mask': '',# this is an option but is almost always true
+    def insertRelionClassifyContinue(self):
+        _workingDir=join(self.PrevRun.projectDir,self.PrevRun.WorkingDir)
+        inputFileName = self.getFilename('optimiserRe', iter=int(self.ContinueFromIteration), workingDir=_workingDir)
+        args = {
+                '--o': '%s/relion' % self.ExtraDir,
+                '--continue': inputFileName,
+                
+                '--iter': self.NumberOfIterations,
+                
+                '--tau2_fudge': self.RegularisationParamT,# should not be changed 
+                '--flatten_solvent': '',# use always
+                '--zero_mask': '',# use always. This is confussing since Sjors gui creates the command line with this option
+                                  # but then the program complains about it. 
+                '--oversampling': '1',
                 '--norm': '',
                 '--scale': '',
-                '--o': '%s/relion' % self.ExtraDir
                 }
-        if len(self.ReferenceMask):
-            args['--solvent_mask'] = self.ReferenceMask
-            
-        if self.doContinue:
-            args['--continue'] = self.ContinueFrom
-        else: # Not continue
-            args.update({'--i': self.ImgStar,
-                         '--particle_diameter': self.MaskDiameterA,
-                         '--angpix': self.SamplingRate,
-                         '--ref': self.Ref3D,
-                         '--oversampling': '1'
-                         })
-            
-            if not self.IsMapAbsoluteGreyScale:
-                args[' --firstiter_cc'] = '' 
-                
-            if self.InitialLowPassFilterA > 0:
-                args['--ini_high'] = self.InitialLowPassFilterA
-                
-            # CTF stuff
-            if self.DoCTFCorrection:
-                args['--ctf'] = ''
-            
-            if self.HasReferenceCTFCorrected:
-                args['--ctf_corrected_ref'] = ''
-                
-            if self.HaveDataPhaseFlipped:
-                args['--ctf_phase_flipped'] = ''
-                
-            if self.IgnoreCTFUntilFirstPeak:
-                args['--ctf_intact_first_peak'] = ''
-                
-            args['--sym'] = self.SymmetryGroup.upper()
-            
-            args['--K'] = self.NumberOfClasses
-            
-        # Sampling stuff
-        # Find the index(starting at 0) of the selected
-        # sampling rate, as used in relion program
         iover = 1 #TODO: check this DROP THIS
         index = ['30','15','7.5','3.7','1.8',
                  '0.9','0.5','0.2','0.1'].index(self.AngularSamplingDeg)
@@ -133,14 +116,5 @@ class ProtRelionClassifierContinue(ProtRelionBase):
         verifyFiles=[]
         #relionFiles=['data','model','optimiser','sampling']
         for v in self.relionFiles:
-             verifyFiles += [self.getFilename(v+'Re', iter=self.NumberOfIterations )]
-#        f = open('/tmp/myfile','w')
-#        for item in verifyFiles:
-#            f.write("%s\n" % item)
-#        f.close
+             verifyFiles += [self.getFilename(v+'Re', iter=self.NumberOfIterations, workingDir=self.WorkingDir )]
         self.insertRunJobStep(self.program, params,verifyFiles)
-        ###################self.insertRunJobStep('echo shortcut', params,verifyFiles)
-
-    
-                
-

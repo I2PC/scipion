@@ -42,17 +42,11 @@ class ProtRelionBase(XmippProtocol):
 
     def summary(self,totalNumberOfIter=0):
         lines = ["Wrapper implemented for RELION **1.2**"]
-        lastIteration=self.lastIter()
-        if totalNumberOfIter < 1:
-            lines += ['Performed <%d> iterations ' % lastIteration]
-        else:
-            lines += ['Performed <%d/%d> iterations ' % (lastIteration,totalNumberOfIter)]
-            
         return lines 
 
     def lastIter(self):
         NumberOfIterations=0
-        relionDataTemplate = self.getFilename('dataRe', iter=0 )
+        relionDataTemplate = self.getFilename('dataRe', iter=0 , workingDir=self.WorkingDir)
         for i in range (0,1000):
             fileName = relionDataTemplate.replace('000',("%03d"%i))
             if exists(fileName):
@@ -116,12 +110,13 @@ class ProtRelionBase(XmippProtocol):
                         inputMd=tmpFileNameXMD, 
                         outputRelion=self.ImgStar                            
                         )
+        
     def defineSteps2(self,lastIteration,NumberOfClasses,ExtraInputs=None,ExtraOutputs=None):
         verifyFiles=[]
         inputs=[]
         for i in range (0,lastIteration+1):
             for v in self.relionFiles:
-                 verifyFiles += [self.getFilename(v+'Xm', iter=i )]
+                 verifyFiles += [self.getFilename(v+'Xm', iter=i, workingDir=self.WorkingDir )]
 #            for v in self.relionFiles:
 #                 inputs += [self.getFilename(v+'Re', iter=i )]
         if not ExtraOutputs is None:
@@ -132,17 +127,17 @@ class ProtRelionBase(XmippProtocol):
         standardOutputClassFns = []
         for ref3d in range (1,NumberOfClasses+1):
             try:
-                lastIterationVolumeFns += [self.getFilename('volume', iter=lastIteration, ref3d=ref3d )]
+                lastIterationVolumeFns += [self.getFilename('volume', iter=lastIteration, ref3d=ref3d, workingDir=self.WorkingDir )]
             except:
-                lastIterationVolumeFns += [self.getFilename('volumeFinal', iter=lastIteration, ref3d=ref3d )]
+                lastIterationVolumeFns += [self.getFilename('volumeFinal', iter=lastIteration, ref3d=ref3d, workingDir=self.WorkingDir )]
             
             standardOutputClassFns += ["images_ref3d%06d@"%ref3d + self.workingDirPath("classes_ref3D.xmd")]
-        lastIterationMetadata = "images@"+self.getFilename('data'+'Xm', iter=lastIteration )
+        lastIterationMetadata = "images@"+self.getFilename('data'+'Xm', iter=lastIteration, workingDir=self.WorkingDir )
         
         extra = self.workingDirPath('extra')
         inputMetadatas = []
         for it in range (1,self.NumberOfIterations+1): #always list all iterations
-            inputMetadatas += ["images@"+self.getFilename('data'+'Xm', iter=it )]
+            inputMetadatas += ["images@"+self.getFilename('data'+'Xm', iter=it, workingDir=self.WorkingDir )]
 
         self.insertStep('convertRelionMetadata', verifyfiles=verifyFiles,
                         inputs  = inputs,
@@ -155,7 +150,7 @@ class ProtRelionBase(XmippProtocol):
                         standardOutputVolumeFn = "volumes@" + self.workingDirPath("volumes.xmd"),
                         extraDir=extra,
                         inputMetadatas=inputMetadatas,
-                        imagesAssignedToClassFn=self.getFilename('imagesAssignedToClass')
+                        imagesAssignedToClassFn=self.getFilename('imagesAssignedToClass', workingDir=self.WorkingDir)
                         )
 #Do NOT change relion binary files, let us use MRC
 #                 for ref3d in range(1,NumberOfClasses+1):
@@ -168,8 +163,7 @@ class ProtRelionBase(XmippProtocol):
 #                        )
 
     def createFilenameTemplates(self):
-        extra = self.workingDirPath('extra')
-        self.extraIter = join(extra, 'relion_it%(iter)03d_')
+        self.extraIter = join(self.WorkingDir, 'extra', 'relion_it%(iter)03d_')
         myDict={}
 
         return myDict
@@ -228,9 +222,9 @@ class ProtRelionBase(XmippProtocol):
         lastIteration = iterations[-1]
         lastRef3D = ref3Ds[-1]
         if(self.relionType=='classify'):
-            lastVolume = self.getFilename('volume', iter=lastIteration, ref3d=lastRef3D )
+            lastVolume = self.getFilename('volume', iter=lastIteration, ref3d=lastRef3D, workingDir=self.WorkingDir )
         else:
-            lastVolume = self.getFilename('volumeh1', iter=lastIteration, ref3d=lastRef3D )
+            lastVolume = self.getFilename('volumeh1', iter=lastIteration, ref3d=lastRef3D, workingDir=self.WorkingDir )
             
         if not xmippExists(lastVolume):
             message = "No data available for <iteration %d> and <class %d>"%\
@@ -245,20 +239,20 @@ class ProtRelionBase(XmippProtocol):
         inputs=[]
         for i in iterations:
             for v in self.relionFiles:
-                fileName =self.getFilename(v+'Xm', iter=i )
+                fileName =self.getFilename(v+'Xm', iter=i, workingDir=self.WorkingDir )
                 if not xmippExists(fileName):
                     outputs += [fileName]
-                    inputs += [self.getFilename(v+'Re', iter=i )]
+                    inputs += [self.getFilename(v+'Re', iter=i , workingDir=self.WorkingDir)]
         lastIterationVolumeFns = []
         standardOutputClassFns = []
         for ref3d in range (1,self.NumberOfClasses+1):
-            lastIterationVolumeFns += [self.getFilename('volume', iter=lastIteration, ref3d=ref3d )]
+            lastIterationVolumeFns += [self.getFilename('volume', iter=lastIteration, ref3d=ref3d, workingDir=self.WorkingDir )]
             standardOutputClassFns += ["images_ref3d%06d@"%ref3d + self.workingDirPath("classes_ref3D.xmd")]
-        lastIterationMetadata = "images@"+self.getFilename('data'+'Xm', iter=lastIteration )
+        lastIterationMetadata = "images@"+self.getFilename('data'+'Xm', iter=lastIteration, workingDir=self.WorkingDir )
 
         if doPlot('TableImagesPerClass'):
             mdOut = MetaData()
-            inMetadataFn = self.getFilename('imagesAssignedToClass')
+            inMetadataFn = self.getFilename('imagesAssignedToClass', workingDir=self.WorkingDir)
             if xmippExists(inMetadataFn):
                 mdOut.read(inMetadataFn)
             else:
@@ -291,7 +285,7 @@ class ProtRelionBase(XmippProtocol):
                 _c = ('Iteration','Avg PMax')
                 
                 for it in range (1,self.NumberOfIterations+1): #alwaya list all iteration
-                    fileName = 'model_general@'+ self.getFilename('model'+'Xm', iter=it )
+                    fileName = 'model_general@'+ self.getFilename('model'+'Xm', iter=it , workingDir=self.WorkingDir)
                     md = MetaData(fileName)
                     pmax = md.getValue(MDL_AVGPMAX,md.firstObject())
                     _r.append(("Iter_%d" % it, pmax))
@@ -299,14 +293,14 @@ class ProtRelionBase(XmippProtocol):
                 _c = ('Iteration','Avg PMax h1', 'Avg PMax h2')
                 
                 for it in range (1,self.NumberOfIterations+1): #alwaya list all iteration
-                    fileName = 'model_general@'+ self.getFilename('half1_model'+'Xm', iter=it )
+                    fileName = 'model_general@'+ self.getFilename('half1_model'+'Xm', iter=it , workingDir=self.WorkingDir)
                     md = MetaData(fileName)
                     pmax1 = md.getValue(MDL_AVGPMAX,md.firstObject())
-                    fileName = 'model_general@'+ self.getFilename('half2_model'+'Xm', iter=it )
+                    fileName = 'model_general@'+ self.getFilename('half2_model'+'Xm', iter=it , workingDir=self.WorkingDir)
                     md = MetaData(fileName)
                     pmax2 = md.getValue(MDL_AVGPMAX,md.firstObject())
                     _r.append(("Iter_%d" % it, pmax1,pmax2))
-                fileName = 'model_general@'+ self.getFilename('modelXmFinal')
+                fileName = 'model_general@'+ self.getFilename('modelXmFinal', workingDir=self.WorkingDir)
                 md = MetaData(fileName)
                 pmax1 = md.getValue(MDL_AVGPMAX,md.firstObject())
                 _r.append(("all_particles", pmax1,'---'))
@@ -323,14 +317,14 @@ class ProtRelionBase(XmippProtocol):
             for ref3d in ref3Ds:
                 for it in iterations:
                   for name in names:
-                    self.display3D(self.getFilename(name, iter=it, ref3d=ref3d ))
+                    self.display3D(self.getFilename(name, iter=it, ref3d=ref3d , workingDir=self.WorkingDir))
             if(self.relionType=='refine'):
-                self.display3D(self.getFilename('volumeFinal',ref3d=1))
+                self.display3D(self.getFilename('volumeFinal',ref3d=1, workingDir=self.WorkingDir))
                 
         if doPlot('DisplayImagesClassification'):
             for ref3d in ref3Ds:
                 for iter in iterations:
-                    md=MetaData('images@'+ self.getFilename('dataXm', iter=iter ))
+                    md=MetaData('images@'+ self.getFilename('dataXm', iter=iter, workingDir=self.WorkingDir ))
                     mdOut = MetaData()
                     mdOut.importObjects(md, MDValueEQ(MDL_REF3D, ref3d))
                     ntf = NamedTemporaryFile(dir=TmpDir, suffix='_it%03d_class%03d.xmd'%(iter,ref3d),delete=False)
@@ -365,7 +359,7 @@ class ProtRelionBase(XmippProtocol):
                 legendName=[]
                 blockName = 'model_class_%d@'%ref3d
                 for it in iterations:
-                    file_name = blockName + self.getFilename(name, iter=it )
+                    file_name = blockName + self.getFilename(name, iter=it, workingDir=self.WorkingDir )
                     #file_name = self.getFilename('ResolutionXmdFile', iter=it, ref=ref3d)
                     if xmippExists(file_name):
                         mdOut = MetaData(file_name)
@@ -387,7 +381,7 @@ class ProtRelionBase(XmippProtocol):
                 plot_title = 'SSNR for all images, final iteration'
                 a = xplotter.createSubPlot(plot_title, 'Armstrongs^-1', 'log(SSNR)', yformat=False)
                 blockName = 'model_class_%d@'%1
-                file_name = blockName + self.getFilename('modelXmFinal')
+                file_name = blockName + self.getFilename('modelXmFinal', workingDir=self.WorkingDir)
                 if xmippExists(file_name):
                     mdOut = MetaData(file_name)
                     md.clear()
@@ -428,7 +422,7 @@ class ProtRelionBase(XmippProtocol):
                 legendName=[]
                 blockName = 'model_class_%d@'%ref3d
                 for it in iterations:
-                    file_name = blockName + self.getFilename(name, iter=it )
+                    file_name = blockName + self.getFilename(name, iter=it, workingDir=self.WorkingDir )
                     #file_name = self.getFilename('ResolutionXmdFile', iter=it, ref=ref3d)
                     if xmippExists(file_name):
                         mdOut = MetaData(file_name)
@@ -448,7 +442,7 @@ class ProtRelionBase(XmippProtocol):
                 plot_title = 'FSC for all images, final iteration'
                 a = xplotter.createSubPlot(plot_title, 'Armstrongs^-1', 'log(SSNR)', yformat=False)
                 blockName = 'model_class_%d@'%1
-                file_name = blockName + self.getFilename('modelXmFinal')
+                file_name = blockName + self.getFilename('modelXmFinal', workingDir=self.WorkingDir)
                 if xmippExists(file_name):
                     mdOut = MetaData(file_name)
                     # only cross by 1 is important
@@ -470,15 +464,15 @@ class ProtRelionBase(XmippProtocol):
                 names = ['volumeh1','volumeh2']
 
             if(self.DisplayAngularDistributionWith == '3D'):
-                fileNameVol = self.getFilename(names[0], iter=iterations[-1], ref3d=1 )
+                fileNameVol = self.getFilename(names[0], iter=iterations[-1], ref3d=1, workingDir=self.WorkingDir )
                 (Xdim, Ydim, Zdim, Ndim) = getImageSize(fileNameVol)
                 for it in iterations:
                     for ref3d in ref3Ds:
                         print "Computing data for iteration; %03d and class %03d"% (it, ref3d)
                         #relion save volume either in spider or mrc therefore try first one of them and then the other
                         #name[0] or name[1] as bakcground is an arbitrary selection
-                        fileNameVol = self.getFilename(names[0], iter=it, ref3d=ref3d )
-                        fileNameMd  = 'images@'+ self.getFilename('data'+'Xm', iter=it)
+                        fileNameVol = self.getFilename(names[0], iter=it, ref3d=ref3d, workingDir=self.WorkingDir )
+                        fileNameMd  = 'images@'+ self.getFilename('data'+'Xm', iter=it, workingDir=self.WorkingDir)
                         print "fileNameVol", fileNameVol
                         print "fileNameMd", fileNameMd
                         md=MetaData(fileNameMd)
@@ -511,7 +505,7 @@ class ProtRelionBase(XmippProtocol):
                   for ref3d in ref3Ds:
                     print "Computing data for iteration; %03d and class %03d"% (it, ref3d)
                     #relion save volume either in spider or mrc therefore try first one of them and then the other
-                    fileNameMd  = 'images@'+ self.getFilename('data'+'Xm', iter=it)
+                    fileNameMd  = 'images@'+ self.getFilename('data'+'Xm', iter=it, workingDir=self.WorkingDir)
                     md=MetaData(fileNameMd)
                     mdOut = MetaData()
                     mdOut.importObjects(md, MDValueEQ(MDL_REF3D, ref3d))
@@ -533,7 +527,7 @@ class ProtRelionBase(XmippProtocol):
             print " Computing average changes in: offset, abgles, and class belonging"
             for it in iterations:
                 print "Computing data for iteration; %03d and class %03d"% (it, ref3d)
-                fileName = self.getFilename('optimiser'+'Xm', iter=it )
+                fileName = self.getFilename('optimiser'+'Xm', iter=it , workingDir=self.WorkingDir)
                 md = MetaData(fileName)
                 #agregar por ref3D
                 firstObject = md.firstObject()
@@ -550,7 +544,7 @@ class ProtRelionBase(XmippProtocol):
         if doPlot('Likelihood'):
             for it in iterations:
                 print "Computing data for iteration; %03d"% (it)
-                fileName = 'images@'+ self.getFilename('data'+'Xm', iter=it )
+                fileName = 'images@'+ self.getFilename('data'+'Xm', iter=it, workingDir=self.WorkingDir )
                 md = MetaData(fileName)
                 md.sort(MDL_LL, False)
                 md.write(fileName)
@@ -590,7 +584,7 @@ class ProtRelionBase(XmippProtocol):
     def imagesAssignedToClass2(self):
             inputMetadatas = []
             for it in range (1,self.NumberOfIterations+1): #always list all iterations
-                inputMetadatas += ["images@"+self.getFilename('data'+'Xm', iter=it )]
+                inputMetadatas += ["images@"+self.getFilename('data'+'Xm', iter=it, workingDir=self.WorkingDir )]
             return imagesAssignedToClass(inputMetadatas)
 
 def imagesAssignedToClass(inputMetadatas):

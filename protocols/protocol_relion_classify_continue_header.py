@@ -39,7 +39,7 @@ ImportRun = ""
 """ 
 Continue a relion classify protocol. Provide iteration number
 """
-ContinueFromIteration = "1"
+ContinueFromIteration = 1
 
 # {hidden}Number of classes
 """The number of classes (K) for a multi-reference refinement. These classes will be made in an unsupervised manner from a single reference by division of the data into random subsets during the first iteration.
@@ -177,7 +177,7 @@ InitialLowPassFilterA = 60
 """
 Number of iterations to be performed. Note that the current implementation does NOT comprise a convergence criterium. Therefore, the calculations will need to be stopped by the user if further iterations do not yield improvements in resolution or classes.
 """
-NumberOfIterations = 25
+NumberOfIterations = 35
 
 # {hidden}Regularisation paramter T:
 """

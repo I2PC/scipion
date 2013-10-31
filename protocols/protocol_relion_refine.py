@@ -34,6 +34,8 @@ class ProtRelionRefinner( ProtRelionBase):
 
     def summary(self):
         lines = ProtRelionBase.summary(self)
+        lastIteration=self.lastIter()
+        lines += ['Performed <%d> iterations ' % lastIteration]
         return lines
     
     def validate(self):
@@ -132,7 +134,7 @@ class ProtRelionRefinner( ProtRelionBase):
         #refine does not predefine the number of iterations so no verify is possible
         #let us check that at least iter 1 is done
         for v in self.relionFiles:
-             verifyFiles += [self.getFilename(v+'Re', iter=1 )]
+             verifyFiles += [self.getFilename(v+'Re', iter=1, workingDir=self.WorkingDir )]
              #verifyFiles += [self.getFilename(v+'Re', iter=self.NumberOfIterations )]
 #        f = open('/tmp/myfile','w')
 #        for item in verifyFiles:
