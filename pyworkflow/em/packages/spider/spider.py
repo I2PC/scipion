@@ -171,6 +171,13 @@ class SpiderDocFile(object):
             line += " %11g" % float(v)
             
         print >> self._file, line
+        
+    def iterValues(self):
+        for line in self._file:
+            line = line.strip()
+            if not line.startswith(';'):
+                values = [float(s) for s in line.split()[2:]]
+                yield values
 
     def close(self):
         self._file.close()
