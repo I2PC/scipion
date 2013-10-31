@@ -48,9 +48,22 @@ def delete_project(request):
         
     return HttpResponse(mimetype='application/javascript')
 
-def createNode(node, y):
+class WebNode(object):
+    def __init__(self, text, x=0, y=0):
+        self.text = text
+        self.moveTo(x, y)
+        self.width, self.height = 0, 0
+        
+    def getDimensions(self):
+        return (self.width, self.height)
+    
+    def moveTo(self, x, y):
+        self.x = x
+        self.y = y
+
+def createNode(canvas, node, y):
     try:
-        item = gg.TNode(node.getName(), y=y)
+        item = WebNode(node.getName(), y=y)
         item.width = node.w
         item.height = node.h
     except Exception:
@@ -82,7 +95,7 @@ def project_graph (request):
         root = g.getRoot()
         root.w = 100
         root.h = 40
-        root.item = gg.TNode('project', x=0, y=0)
+        root.item = WebNode('project', x=0, y=0)
         
         
         for box in boxList.split(','):

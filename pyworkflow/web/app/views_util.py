@@ -231,6 +231,9 @@ def get_slice(request):
     img.save(response, "PNG")
     return response
 
+def getImageXdim(request, imagePath):
+    return getImageDim(request, imagePath)[0]
+
 def getImageDim(request, imagePath):
     img = xmipp.Image()
     imgFn = os.path.join(request.session['projectPath'], imagePath)

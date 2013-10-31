@@ -57,8 +57,9 @@ class SpiderProtClassifyWard(ProtClassify):
         
         #form.addParam('maskType', )
               
-        form.addParam('imcFile', StringParam, default="",
-                      label='IMC file generated in CA-PCA')        
+        form.addParam('pcaFilePointer', PointerParam, pointerClass='PcaFile',
+                      label="PCA file", 
+                      help='IMC or SEQ file generated in CA-PCA')        
         form.addParam('numberOfFactors', IntParam, default=10,
                       label='Number of factors',
                       help='After running, examine the eigenimages and decide which ones to use.\n'
@@ -71,8 +72,10 @@ class SpiderProtClassifyWard(ProtClassify):
         return self._getPath(template % self._params)
     
     def _defineSteps(self):
+        pcaFile = self.pcaFilePointer.get().filename.get()
+        
         self._insertFunctionStep('convertInput', self.inputParticles.get().getFileName())
-        self._insertFunctionStep('classifyWard', self.imcFile.get(), self.numberOfFactors.get())
+        self._insertFunctionStep('classifyWard', pcaFile, self.numberOfFactors.get())
         self._insertFunctionStep('buildDendroStep')
     
     def convertInput(self, inputFilename):

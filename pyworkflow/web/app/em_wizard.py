@@ -96,6 +96,32 @@ def wiz_particle_mask(protocol, request):
             
             return render_to_response('wiz_particle_mask.html', context)
 
+def wiz_particle_mask_radii(protocol, request):
+    particles = protocol.inputParticles.get()
+    
+    res = validateParticles(particles) 
+    
+    if res is not 1:
+        return HttpResponse(res)
+    else:
+        parts = getParticleSubset(particles,100)
+        
+        if len(parts) == 0:
+            return HttpResponse("errorIterate");
+        else:
+            xdim = getImageXdim(request, parts[0].text)
+            inner_radius = protocol.innerRadius.get()
+            outer_radius = protocol.outerRadius.get()
+                
+            context = {'objects': parts,
+                       'raphael': getResourceJs('raphael'),
+                       'innerRadius': inner_radius,
+                       'outerRadius': outer_radius,
+                       'xdim':xdim
+                       }
+            
+            return render_to_response('wiz_particle_mask.html', context)
+
 def wiz_volume_mask(protocol, request):
     volumes = protocol.input3DReferences.get()
     
@@ -124,7 +150,7 @@ def wiz_volume_mask(protocol, request):
                    'xdim': xdim
                    }
         
-        return render_to_response('wiz_volume_mask.html', context)    
+        return render_to_response('wiz_volume_mask.html', context)
 
 def wiz_volume_mask_radii(protocol, request):
     volumes = protocol.input3DReferences.get()
@@ -202,8 +228,12 @@ def getParticleSubset(particles, num):
         if i == num: # Only load up to NUM particles
             break
         index = particle.getIndex()
+        print index
+        
         text = particle.getFileName()
         particle.basename = basename(text)
+        
+        
         if index:
             particle.text = "%03d@%s" % (index, text)
             particle.basename = "%03d@%s" % (index, basename(text))

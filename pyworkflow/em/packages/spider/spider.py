@@ -28,6 +28,8 @@ This sub-package will contains Spider protocols
 """
 import os
 from os.path import join, dirname, abspath, exists, basename
+from pyworkflow.object import String
+from pyworkflow.em.data import EMObject
 from pyworkflow.utils.path import copyFile, removeExt, replaceExt
 from pyworkflow.utils import runJob
 import subprocess
@@ -172,5 +174,16 @@ class SpiderDocFile(object):
 
     def close(self):
         self._file.close()
+        
+        
+class PcaFile(EMObject):
+    """ This is a container of files produced by CA PCA Spider protocol.
+    It is possible to use the cas_IMC or cas_SEQ files.
+    """
+    def __init__(self, **args):
+        EMObject.__init__(self, **args)
+        
+        self.filename = String()
+        
         
         
