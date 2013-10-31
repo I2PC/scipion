@@ -99,6 +99,25 @@ class XmippML2DViewer(ProtocolViewer):
         lastIter = self.protocol._lastIteration()
         runShowJ('classes@' + self.protocol._getIterClasses())
         print "lastIter: ", lastIter
+    
+    def getVisualizeDictWeb(self):
+        return {'doShowClasses': "doShowClasses",
+                'doShowPlots': "doAllPlotsML2D",
+                'doShowLL': "doShowLL",
+                'doShowPmax': "doShowPmax",
+                'doShowSignalChange': "doShowSignalChange",
+                'doShowMirror': "doShowMirror"}
+
+    @classmethod
+    def getView(cls):
+        """ This function will notify the web viewer for this protocol"""
+        return "viewerForm"
+    
+    @classmethod
+    def getViewFunction(cls):
+        """ This will return the name of the function to view
+        in web one (or all) params of the protocol"""
+        return "viewerML2D"
         
 def createPlots(protML, selectedPlots):
     ''' Launch some plot for an ML2D protocol run '''
@@ -188,23 +207,4 @@ def createPlots(protML, selectedPlots):
     
     return xplotter
 
-    
-    def getVisualizeDictWeb(self):
-        return {'doShowClasses': "doShowClasses",
-                'doShowPlots': "doAllPlotsML2D",
-                'doShowLL': "doShowLL",
-                'doShowPmax': "doShowPmax",
-                'doShowSignalChange': "doShowSignalChange",
-                'doShowMirror': "doShowMirror"}
-
-    @classmethod
-    def getView(cls):
-        """ This function will notify the web viewer for this protocol"""
-        return "viewerForm"
-    
-    @classmethod
-    def getViewFunction(cls):
-        """ This will return the name of the function to view
-        in web one (or all) params of the protocol"""
-        return "viewerML2D"
     
