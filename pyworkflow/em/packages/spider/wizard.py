@@ -35,7 +35,7 @@ from pyworkflow.em import SetOfImages, SetOfMicrographs, Volume, ProtCTFMicrogra
 from protocol_filters import *
 from protocol_ca_pca import SpiderProtCAPCA
 from protocol_align_apsr import SpiderProtAlignAPSR
-from pyworkflow.em.packages.xmipp3.wizard import ListTreeProvider, XmippDownsampleDialog, XmippParticleMaskRadiusWizard, XmippRadiiWizard, XmippMaskPreviewDialog
+from pyworkflow.em.packages.xmipp3.wizard import ListTreeProvider, XmippImagePreviewDialog, XmippDownsampleDialog, XmippParticleMaskRadiusWizard, XmippRadiiWizard, XmippFilterParticlesWizard
 import xmipp
 import pyworkflow.gui.dialog as dialog
 from pyworkflow.gui.widgets import LabelSlider
@@ -77,51 +77,27 @@ class SpiderProtMaskRadiiWizard(XmippRadiiWizard):
     def getView(self):
         return "wiz_particle_mask_radii"      
     
-#class SpiderGaussianFilterWizard(Wizard):
-#    _targets = [(SpiderProtFilter, ['filterRadius'])]
-#    _environments = [DESKTOP_TKINTER, WEB_DJANGO]
-#
-#    def _getText(self, obj):
-#        index = obj.getIndex()
-#        text = os.path.basename(obj.getFileName())
-#        if index:
-#            return "%03d@%s" % (index, text)
-#        return text
-#        
-#    def _getProvider(self, protocol):
-#        """ This should be implemented to return the list
-#        of object to be displayed in the tree.
-#        """
-#        provider = None
-#        if protocol.inputParticles.hasValue():
-#            particles = [] 
-#            for i, par in enumerate(protocol.inputParticles.get()):
-#                particles.append(par)
-#                if i == 100: # Limit the maximum number of particles to display
-#                    break
-#            provider = ListTreeProvider(particles)
-#            provider.getText = self._getText
-#            
-#        return provider
-#            
-#    def show(self, form):
-#        protocol = form.protocol
-#        if protocol.inputParticles.hasValue():
-#            pars = [par for par in protocol.inputParticles.get()]
-#            d = SpiderGaussianFilterDialog(form.root, ListTreeProvider(pars), radius=protocol.filterRadius.get())
-#            if d.resultYes():
-#                form.setVar('filterRadius', d.getRadius())
-#        else:
-#            dialog.showWarning("Input particles", "Select particles first", form.root)
-#    
-#    @classmethod
-#    def getView(self):
-#        return "wiz_filter"
-#
-#
+class SpiderGaussianFilterWizard(XmippFilterParticlesWizard):
+    _targets = [(SpiderProtFilter, ['filterRadius'])]
+            
+    def show(self, form):
+        protocol = form.protocol
+        if protocol.inputParticles.hasValue():
+            pars = [par for par in protocol.inputParticles.get()]
+            d = SpiderGaussianFilterDialog(form.root, ListTreeProvider(pars), filterRadius=protocol.filterRadius.get())
+            if d.resultYes():
+                form.setVar('filterRadius', d.getRadius())
+        else:
+            dialog.showWarning("Input particles", "Select particles first", form.root)
+    
+    @classmethod
+    def getView(self):
+        return "wiz_filter_spider"
+
+
 #class SpiderFermiFilterWizard(SpiderGaussianFilterWizard):
 #    
-#    _targets = [(SpiderProtFilter, ['lowFreq', 'highFreq'])]
+#    _targets = [(SpiderProtFilter, ['c', 'highFreq'])]
 #    _environments = [DESKTOP_TKINTER, WEB_DJANGO]
 #    
 #    def show(self, form):
@@ -143,39 +119,49 @@ class SpiderProtMaskRadiiWizard(XmippRadiiWizard):
 #
 #
 ##--------------- Dialogs used by Wizards --------------------------        
-#       
-#        
-#class SpiderGaussianFilterDialog(XmippDownsampleDialog):
-#    
-#    def _beforePreview(self):
-#        XmippDownsampleDialog._beforePreview(self)
-#        self.lastObj = None
-#        self.rightPreviewLabel = "Filtered particle"
-#        self.message = "Filtering particle..."
-#        self.previewLabel = "Particle"
-#        self.rightImage = xmipp.Image()
-#        self.dim = 256           
-#        self.dim_par = self.firstItem.getDim()[0]
-#        
-#    def _createControls(self, frame):
-#        self.radiusSlider = LabelSlider(frame, 'Radius', from_=0, to=int(self.dim_par/2), value=self.radius, step=1, callback=lambda a, b, c:self.updateFilteredImage())
-#        self.radiusSlider.grid(row=0, column=0, padx=5, pady=5) 
-#        
-#    def getRadius(self):
-#        return int(self.radius.get())
-#
-#    def updateFilteredImage(self):
-#        self.rightPreview.updateData(self.rightImage.getData())
-#        
-#    def _computeRightPreview(self):
-#        """ This function should compute the right preview
-#        using the self.lastObj that was selected
-#        """
-#        #xmipp.fastEstimateEnhancedPSD(self.rightImage, self.lastObj.getFileName(), self.getDownsample(), self.dim, 2)
-#        #Do the spider filtering running spider command and set the self.rightImage
-#        pass
-#        
-#
+       
+        
+class SpiderGaussianFilterDialog(XmippDownsampleDialog):
+    
+    def _beforePreview(self):
+        XmippImagePreviewDialog._beforePreview(self)
+        self.lastObj = None
+        self.rightPreviewLabel = "Filtered particle"
+        self.message = "Filtering particle..."
+        self.previewLabel = "Particle"
+        self.rightImage = xmipp.Image()
+        self.dim = 256           
+        self.dim_par = self.firstItem.getDim()[0]
+        
+    def _createControls(self, frame):
+        #self.radiusSlider = LabelSlider(frame, 'Radius', from_=0, to=int(self.dim_par/2), value=self.filterRadius, step=1, callback=lambda a, b, c:self.updateFilteredImage())
+        self.radiusSlider = LabelSlider(frame, 'Radius', from_=0, to=int(self.dim_par/2), value=self.filterRadius, step=1, callback=None)
+        self.radiusSlider.grid(row=0, column=0, padx=5, pady=5) 
+        radiusButton = tk.Button(frame, text='Preview', command=self._doPreview)
+        radiusButton.grid(row=0, column=1, padx=5, pady=5)
+        
+    def _doPreview(self, e=None):
+        if self.lastObj is None:
+            dialog.showError("Empty selection", "Select an item first before preview", self)
+        else:
+            self._itemSelected(self.lastObj)
+            
+    def getRadius(self):
+        return self.filterRadius
+
+    def updateFilteredImage(self):
+        self.rightPreview.updateData(self.rightImage.getData())
+        
+    def _computeRightPreview(self):
+        """ This function should compute the right preview
+        using the self.lastObj that was selected
+        """
+        #xmipp.fastEstimateEnhancedPSD(self.rightImage, self.lastObj.getFileName(), self.getDownsample(), self.dim, 2)
+        #TODO: Do the spider filtering running spider command and set the self.rightImage
+        xmipp.gaussianFilter(self.rightImage, "%03d@%s" % (self.lastObj.getIndex(), self.lastObj.getFileName()), self.getRadius(), self.dim)
+        
+        
+
 #class SpiderFermiFilterDialog(XmippDownsampleDialog):
 #    
 #    def _beforePreview(self):
