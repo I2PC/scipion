@@ -1,0 +1,77 @@
+;
+; RUN REFERENCE-FREE ALIGNMENT
+;
+; Using SPIDER command AP SR
+
+; ---------------- Parameters ----------------
+[innerRadius] = %(innerRadius)d        ; first ring radius for alignment, pixels
+[outerRadius] = %(outerRadius)d        ; expected object diameter, pixels
+[dim] = %(dim)d                        ; size in pixels of the particles
+
+; ---------------- Input files ----------------
+
+[numberOfParticles] = %(numberOfParticles)d  ; Pass the number of images instead of the selfile
+fr g
+[unaligned]%(particles)s@******  ; input (filtered?) particles
+fr g
+[unalignedBig]%(particlesBig)s@******  ; particles with BIG endian (TODO: Remove this later)
+
+; --------------- Output files ---------------
+
+fr g
+[apsr_avg]%(avgPattern)s***   ; reference-free average template
+fr g
+[apsr_doc]%(docPattern)s***   ; reference-free alignment doc template
+
+; ------------- END BATCH HEADER -------------
+
+vm
+echo "Performing reference-free alignment"; date
+
+; calculate center coordinate
+[center] = ([dim]+1)/2
+
+; calculate radius for last alignment ring
+[lastRing] = ([outerRadius]-1)/2
+
+
+; GENERATE BLOB FOR CENTRATION
+
+; generate disc
+PT
+_1       ; OUTPUT
+[dim],[dim]  ; dimensions
+C        ; _C_ircle
+[center],[center]  ; center coords
+[outerRadius]      ; object radius
+N
+
+; low-pass filter disc
+FQ
+_1      ; INPUT
+_2      ; OUTPUT
+(3)     ; Gaussian low-pass
+(0.02)  ; filter radius
+
+
+; CONVERT TO BIG ENDIAN (ONLY AFTER XMIPP RESULT IN LITTLEENDIAN)
+
+; loop through particles
+DO LB2 [i]=1,[numberOfParticles]
+    CP
+    [unaligned][i]
+    [unalignedBig][i]
+LB2
+; end particle-loop
+
+; run reference-free alignment
+AP SR
+[unalignedBig]        ; particles to be aligned
+1-[numberOfParticles]  ; selection file
+[outerRadius]      ; expected size of the object
+[innerRadius],[lastRing]  ; first and last ring radius
+_2                 ; centering image
+[apsr_avg]
+[apsr_doc]
+
+en

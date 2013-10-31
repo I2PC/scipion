@@ -113,8 +113,9 @@ class ProtocolViewer(Protocol, Viewer):
         """Open the Protocol GUI Form given a Protocol instance"""
         from gui.form import FormWindow
         self.protocol = obj
+        self.windows = args.get('windows', None)
         self.formWindow = FormWindow("Protocol Viewer: " + self.getClassName(), self, 
-                       self._viewAll, args.get('windows', None),
+                       self._viewAll, self.windows,
                        visualizeDict=self._getVisualizeDict(),
                        visualizeMode=True)
         self.formWindow.visualizeMode = True

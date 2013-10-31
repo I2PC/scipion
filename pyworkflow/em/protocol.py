@@ -36,7 +36,7 @@ from pyworkflow.protocol import *
 from pyworkflow.protocol.params import *
 from constants import *
 from data import * 
-from pyworkflow.utils.path import removeBaseExt, join, basename
+from pyworkflow.utils.path import removeBaseExt, join, basename, cleanPath
 
 
 
@@ -48,9 +48,12 @@ class EMProtocol(Protocol):
         Protocol.__init__(self, **args)
         
     def __createSet(self, SetClass, template, suffix):
-        """ Create a set and set the filename using the suffix. """
+        """ Create a set and set the filename using the suffix. 
+        If the file exists, it will be delete. """
         setObj = SetClass()
-        setObj.setFileName(self._getPath(template % suffix))
+        setFn = self._getPath(template % suffix)
+        cleanPath(setFn)
+        setObj.setFileName(setFn)
         return setObj
         
     def _createSetOfMicrographs(self, suffix=''):

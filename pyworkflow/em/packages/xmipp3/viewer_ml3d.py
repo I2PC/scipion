@@ -183,6 +183,7 @@ class XmippML3DViewer(ProtocolViewer):
         
         if self.iterToShow.get() == LAST_ITER:
             self.visualizeIters = [self.lastIter]
+            
         elif self.iterToShow.get() == ALL_ITER:
             self.visualizeIters = range(1, self.lastIter + 1)
         elif self.iterToShow.get() == SELECTED_ITERS:
@@ -200,7 +201,24 @@ class XmippML3DViewer(ProtocolViewer):
             xplotter.show()
         
 
+    def getVisualizeDictWeb(self):
+        return {'doShowGreyScaleRefVol': "viewCorrectedVols",
+                'doShowFilterRefVol': "viewFilteredVols",
+                'doShowSeedsVols': "viewGeneratedVols",
+#                'doShow2DAvgs': self._view2DAvgs,
+#                'doShow3DRefsVolumes': self._view3DRefsVolumes,
+#                'doShowAngDist': self._viewAngDist,
+#                'doShowDataDist': self._viewDataDist
+                }
+
     @classmethod
-    def getView(self):
+    def getView(cls):
+        """ This function will notify the web viewer for this protocol"""
+        return "viewerForm"
+    
+    @classmethod
+    def getViewFunction(cls):
+        """ This will return the name of the function to view
+        in web one (or all) params of the protocol"""
         return "viewerML3D"
     

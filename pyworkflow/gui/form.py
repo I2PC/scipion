@@ -662,7 +662,8 @@ class FormWindow(Window):
             try:
                 param.set(var.get())
             except ValueError:
-                print "Error setting param for: ", paramName
+                if len(var.get()):
+                    print "Error setting param for: ", paramName, "value: '%s'" % var.get()
                 param.set(None)
                 
     def setProtocolLabel(self, paramName):

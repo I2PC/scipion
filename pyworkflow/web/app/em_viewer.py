@@ -26,7 +26,6 @@ def launch_viewer(request):
         protocol = project.mapper.selectById(int(protId))
         
         viewers = findViewers(protocol.getClassName(), WEB_DJANGO)
-        print viewers
         
         viewer = viewers[0]()
         functionName = viewer.getView()
@@ -114,53 +113,55 @@ def viewerElement(request):
 ############## VIEWER XMIPP CL2D ##############
 def viewerCL2D(request, protocol, protocolViewer):
     ioDict = {}
-   
-    text = viewLevelFiles(request, protocol, protocolViewer)
-    ioDict["showj"] = text
+    
+#    if protocolViewer.doShowLastLevel:
+    typeUrl, url = viewLevelFiles(request, protocol, protocolViewer)
+    ioDict[typeUrl]= url
     
     if protocolViewer.doShowClassHierarchy:
-        text = viewClassHierarchy(request, protocol, protocolViewer)
-        ioDict["html"] = text
-                    
+        typeUrl, url = viewClassHierarchy(request, protocol, protocolViewer)
+        ioDict[typeUrl]= url
+    
     return ioDict
 
 def viewLevelFiles(request, protocol, protocolViewer):
     fnSubset = protocolViewer._getSubset()
     levelFiles = protocol._getLevelMdFiles(fnSubset)
-    url=""
+    
     if levelFiles:
         levelFiles.sort()
         lastLevelFile = levelFiles[-1]
         if protocolViewer.doShowLastLevel:
-            url = "/showj/?path="+lastLevelFile
+            return "showj", "/visualize_object/?path="+lastLevelFile
         else:
             if protocolViewer.showSeveralLevels.empty():
-                print 'Please select the levels that you want to visualize.'
+                return 'error','Please select the levels that you want to visualize.'
             else:
                 listOfLevels = []
                 try:
                     listOfLevels = protocolViewer._getListFromRangeString(protocolViewer.showSeveralLevels.get())
                 except Exception:
-                    print 'Invalid levels range.'
+                    return 'error','Invalid levels range.'
                     
                 files = "";
                 for level in listOfLevels:
                     fn = protocol._getExtraPath("level_%02d/level_classes%s.xmd"%(level,fnSubset))
                     if os.path.exists(fn):
-                        files += "classes_sorted@"+fn+" "
+                        files += "/visualize_object/?path="+ fn + "-"
                     else:
-                        print 'Level %s does not exist.' % level
+                        return 'error','Level %s does not exist.' % level
                 if files != "":
-                    print 'runShowJ(files)' 
-        return url
-        
+                    files = files.split("-")
+                    files.pop()
+                    return "showjs", files
+                    
 
 def viewClassHierarchy(request, protocol, protocolViewer):
     fnSubset = protocolViewer._getSubset()
     fnHierarchy = protocol._getExtraPath("classes%s_hierarchy.txt" % fnSubset)
     if os.path.exists(fnHierarchy):
         html = textfileViewer(fnHierarchy, [fnHierarchy])
-    return html
+    return "html", html
 
 def textfileViewer(title, fileList):
     f = open(fileList[0], 'r')

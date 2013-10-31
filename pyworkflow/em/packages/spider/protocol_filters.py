@@ -41,6 +41,8 @@ class SpiderProtFilter(ProtFilterParticles):
     def __init__(self):
         ProtFilterParticles.__init__(self)
         self._op = "FQ"
+        self._params = {'ext': 'stk', 
+                        'particles': 'particles_filtered'}
 
     def _defineProcessParams(self, form):
         form.addParam('filterType', EnumParam, choices=['Top-hat', 'Gaussian', 'Fermi', 'Butterworth', 'Raised cosine'],
@@ -119,11 +121,10 @@ class SpiderProtFilter(ProtFilterParticles):
         
     def _defineSteps(self):
         # Define some names
-        self.inputStk = self._getPath('input_images.stk')
-        self.outputStk = self._getPath('output_images.stk')
+        self.particlesStk = self._getPath('%(particles)s.%(ext)s' % self._params)
         # Insert processing steps
         self._insertFunctionStep('convertInput')
-        self._insertFunctionStep('filterParticles')
+        self._insertFunctionStep('filterParticles', self.filterType.get())
         #self._insertFunctionStep('createOutput')
         
     def convertInput(self):
@@ -132,9 +133,9 @@ class SpiderProtFilter(ProtFilterParticles):
         ih = ImageHandler()
         
         for i, p in enumerate(particles):
-            ih.convert(p.getLocation(), (i+1, self.inputStk))
+            ih.convert(p.getLocation(), (i+1, self.particlesStk))
 
-    def filterParticles(self):
+    def filterParticles(self, filterType):
         """ Apply the selected filter to particles. 
         Create the set of particles.
         """
@@ -147,16 +148,16 @@ class SpiderProtFilter(ProtFilterParticles):
         
         args = []
         
-        if self.filterType <= FILTER_GAUSSIAN:
+        if filterType <= FILTER_GAUSSIAN:
             args.append(self.filterRadius.get())
         else:
             args.append('%f %f' % (self.lowFreq.get(), self.highFreq.get()))
             
-        if self.filterType == FILTER_FERMI:
+        if filterType == FILTER_FERMI:
             args.append(self.temperature.get())
         
         # Map to spected filter number in Spider for operation FQ    
-        filterNumber = self.filterType.get() * 2 + 1
+        filterNumber = filterType * 2 + 1
         
         # Consider low-pass or high-pass
         filterNumber += self.filterMode.get()
@@ -168,17 +169,16 @@ class SpiderProtFilter(ProtFilterParticles):
 
         self._enterWorkingDir() # Do operations inside the run working dir
         
-        spi = SpiderShell(ext='stk') # Create the Spider process to send commands        
+        spi = SpiderShell(ext=self._params['ext']) # Create the Spider process to send commands        
         #inputStk = removeBaseExt(self.inputStk)
-        outputStk = removeBaseExt(self.outputStk)
-        inputStk = outputStk
+        particlesStk = removeBaseExt(self.particlesStk)
         
+        print "N: ", n
         for i in range(1, n+1):
-            inStr = locationToSpider(i, inputStk)
-            outStr = locationToSpider(i, outputStk)
-            spi.runFunction(OP, inStr, outStr, filterNumber, *args)
+            locStr = locationToSpider(i, particlesStk)
+            spi.runFunction(OP, locStr, locStr, filterNumber, *args)
             img = Image()
-            img.setLocation(i, self.outputStk)
+            img.setLocation(i, self.particlesStk)
             imgSet.append(img)
             
         self._leaveWorkingDir() # Go back to project dir

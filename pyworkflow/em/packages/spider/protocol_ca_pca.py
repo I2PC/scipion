@@ -71,7 +71,7 @@ class SpiderProtCAPCA(ProtAlign):
                       label='Mask radius (pix)', condition='maskType==0',
                       help='If -1, the entire radius (in pixels) will be considered.')
         form.addParam('maskImage', PointerParam, label="Mask image", condition='maskType==1',
-                      pointerClass='Particle', help="Select a mask file")       
+                      pointerClass='Mask', help="Select a mask file")       
         
     def _defineSteps(self):
         # Insert processing steps

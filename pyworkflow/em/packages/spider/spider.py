@@ -37,9 +37,7 @@ END_HEADER = 'END BATCH HEADER'
 
 def loadEnvironment():
     """ Load the environment variables needed for use EMAN2 tools. """
-    # TODO: Read SPIDER_HOME from the host config.
-    SPIDER_HOME = os.environ['SPIDER_HOME']
-    SPIDER_DIR = join(SPIDER_HOME, "spider")
+    SPIDER_DIR = os.environ['SPIDER_DIR']
     
     os.environ['SPBIN_DIR'] = join(SPIDER_DIR, 'bin', '')
     os.environ['SPMAN_DIR'] = join(SPIDER_DIR, 'man', '')
@@ -118,7 +116,7 @@ class SpiderShell(object):
     
     def runCmd(self, cmd):
         if self._debug:
-            print "SPIDER: ", cmd
+            #print "SPIDER: ", cmd
             print >> self._log, cmd
         print >> self._proc.stdin, cmd
         self._proc.stdin.flush()
@@ -174,3 +172,5 @@ class SpiderDocFile(object):
 
     def close(self):
         self._file.close()
+        
+        

@@ -31,7 +31,7 @@ from pyworkflow.em import *
 from pyworkflow.em.constants import NO_INDEX
 from pyworkflow.utils import removeExt, removeBaseExt, makePath, getLastFile
 from constants import *
-from spider import SpiderShell
+from spider import SpiderShell, runSpiderTemplate
 from convert import locationToSpider
 from glob import glob
         
@@ -85,31 +85,42 @@ class SpiderProtAlignAPSR(ProtAlign):
         
         self._enterWorkingDir() # Do operations inside the run working dir
         
-        spi = SpiderShell(ext='stk', log='script.log') # Create the Spider process to send commands        
+#        spi = SpiderShell(ext='stk', log='script.log') # Create the Spider process to send commands        
+#        
         # Create the images docfile
         #selfile = 'input_particles_sel'
         #spi.runFunction('DOC CREATE', selfile, 0, '1-%d' % n)
         particles = self.inputParticles.get()
         n = particles.getSize()
         
-        # Generate a filtered disc
-        spi.runFunction('PT', '_1', (100,100), 'C', (50,50), 45, 'N')
-        spi.runFunction('FQ', '_1', '_2', 3, 0.02)
-        # Ensure the stack has Big endian as expected by SPIDER
-        for i in range(1, n+1):
-            spi.runFunction('CP', '%s@%d' % (PART_INPUT, i), '%s@%d' % (PART_BIGEN, i))
+#        # Generate a filtered disc
+#        spi.runFunction('PT', '_1', (100,100), 'C', (50,50), 45, 'N')
+#        spi.runFunction('FQ', '_1', '_2', 3, 0.02)
+#        # Ensure the stack has Big endian as expected by SPIDER
+#        for i in range(1, n+1):
+#            spi.runFunction('CP', '%s@%d' % (PART_INPUT, i), '%s@%d' % (PART_BIGEN, i))
+#        spi.close() # This is done to ensure that AP SR is done
+                    # we need a better way to wait on completion
         # Align images
         alignDir = 'align'
         makePath(alignDir)
         avgPattern = join(alignDir, 'avg_iter***')
         docPattern = join(alignDir, 'doc_iter***')
 
-        spi.runFunction('AP SR', 
-                        '%s@******' % PART_BIGEN, '1-%d' % n, 
-                        90, (1,45), '_2', avgPattern, docPattern)
+#        spi.runFunction('AP SR', 
+#                        '%s@******' % PART_BIGEN, '1-%d' % n, 
+#                        90, (1,45), '_2', avgPattern, docPattern)
+        params = {'innerRadius': self.innerRadius.get(),
+                  'outerRadius': self.outerRadius.get(),
+                  'numberOfParticles': n,
+                  'dim': 100,
+                  'particles': PART_INPUT,
+                  'particlesBig': PART_BIGEN,
+                  'avgPattern': avgPattern,
+                  'docPattern': docPattern,
+                  }
+        runSpiderTemplate('ap_sr.txt', 'stk', params)
         
-        spi.close() # This is done to ensure that AP SR is done
-                    # we need a better way to wait on completion
                     
         
         spi = SpiderShell(ext='stk', log='script2.log') # Create the Spider process to send commands
@@ -137,9 +148,9 @@ class SpiderProtAlignAPSR(ProtAlign):
             line = line.strip()
             if len(line) and not line.startswith(';'):
                 angle, shiftX, shiftY = [float(s) for s in line.split()[2:]]
-                spi.runFunction('RT SQ', 
-                                '%s@%d' % (PART_BIGEN, i), '%s@%d' % (PART_OUTPUT, i),
-                                (angle, 1), (shiftX, shiftY))
+                inLoc = locationToSpider(i, PART_BIGEN)
+                outLoc = locationToSpider(i, PART_OUTPUT)
+                spi.runFunction('RT SQ', inLoc, outLoc, (angle, 1), (shiftX, shiftY))
             
         spi.close()
 #        for doc in docFiles:

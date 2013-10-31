@@ -59,7 +59,6 @@ class LevelTree(object):
         self.createEdge = createEdge or self._defaultCreateEdge
         rootNode = self.graph.getRoot()
         self._setLevel(rootNode, 0, None)
-        print "self.DY", self.DY
         self._paintNodeWithChilds(rootNode, 1)
         m = 9999
         for left, right in rootNode.hLimits:
@@ -244,6 +243,12 @@ if __name__ == '__main__':
     root.grid_columnconfigure(0, weight=1)
     root.grid_rowconfigure(0, weight=1)
     
+    import sys
+    
+    maxLevel = 2
+    if len(sys.argv) > 1:
+        maxLevel = int(sys.argv[1])
+    
     def example1():
         """ Display a very simple graph: A, B and C. """
         g = Graph(rootName='A')
@@ -257,27 +262,30 @@ if __name__ == '__main__':
         lt.paint()
 
     def example2():
+        avg = '%03d@/home/josem/Scipion/projects/analu_MCM/Runs/SpiderProtClassifyWard4236/averages.stk'
+        name2 = "class_%03d"
         path = '%d@/home/josem/Scipion/projects/analu_MCM/Runs/XmippProtCL2D4394/extra/level_%02d/classes_sorted.stk'
         name = 'level_%02d_%02d'
         
         def getInfo(level, classNo):
             return name % (level, classNo), path % (classNo, level)
         
-        n, p = getInfo(0, 1)
+        def getInfo2(level, classNo):
+            return name2 % classNo, avg % classNo
+        
+        n, p = getInfo2(0, 1)
         g = Graph(rootName=n)
         a = g.getRoot()
         a.path = p
         
-        maxLevel = 1
-        
         def addChilds(node, nodeNumber, level):
             imgNo = nodeNumber * 2 
-            for off in [-1, 0]:
-                n, p = getInfo(level+1, imgNo + off)
+            for off in [0, 1]:
+                n, p = getInfo2(level+1, imgNo + off)
                 b = g.createNode(n)
                 b.path = p
                 node.addChild(b)
-                if level < maxLevel:
+                if level < maxLevel - 2:
                     addChilds(b, imgNo + off, level + 1)
                         
             

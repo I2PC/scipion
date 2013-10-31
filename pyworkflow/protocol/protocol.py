@@ -250,7 +250,8 @@ class Protocol(Step):
         attributes of self, also store the key in attrList.
         """
         for key, value in attrDict.iteritems():
-            attrList.append(key)
+            if key not in attrList:
+                attrList.append(key)
             setattr(self, key, value)
         
     def _defineInputs(self, **args):
@@ -261,10 +262,12 @@ class Protocol(Step):
     def _defineOutputs(self, **args):
         """ This function should be used to specify
         expected outputs""" 
+        for k, v in args.iteritems():
+            if hasattr(self, k):
+                self._deleteChild(k, v)
+            self._insertChild(k, v)
         self._storeAttributes(self._outputs, args)
         
-        for k, v in args.iteritems():
-            self._insertChild(k, v)
                 
     @staticmethod
     def hasDefinition(cls):
@@ -373,6 +376,10 @@ class Protocol(Step):
         """
         setattr(self, key, child)
         self.mapper.insertChild(self, key, child)
+        
+    def _deleteChild(self, key, child):
+        """ Delete a child from the mapper. """
+        self.mapper.delete(child)
         
     def _defineSteps(self):
         """ Define all the steps that will be executed. """

@@ -41,6 +41,7 @@ class ImageHandler(object):
         from packages.xmipp3 import locationToXmipp
         
         self._img = xmipp.Image()
+        self._imgClass = xmipp.Image
         self._locationToStr = locationToXmipp
         
     def convert(self, inputLoc, outputLoc):
@@ -58,6 +59,14 @@ class ImageHandler(object):
         
     def getDimensions(self):
         pass
+    
+    def read(self, location):
+        """ Read an image from a location. """
+        return self._imgClass(self._locationToStr(*location))
+    
+    def write(self, image, location):
+        """ Write an image to disk. """
+        image.write(self._locationToStr(*location))
         
         
 def paramsToTransform(params):
