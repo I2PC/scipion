@@ -53,10 +53,13 @@ class ProtRelionRefinner( ProtRelionBase):
         #I just check that the 0 and 1 are done (0 -> is the input after filtration
         lastIteration   = 1
         NumberOfClasses = 1
+        firstIteration = 1
         extra = self.workingDirPath('extra')
         ExtraInputs  = [ join(extra,'relion_model.star')] 
         ExtraOutputs = [ join(extra,'relion_model.xmd')] 
-        ProtRelionBase.defineSteps2(self,lastIteration,NumberOfClasses,ExtraInputs,ExtraOutputs)
+        ProtRelionBase.defineSteps2(self, firstIteration
+                                        , lastIteration
+                                        , NumberOfClasses,ExtraInputs,ExtraOutputs)
                        
     def insertRelionRefine(self):
         args = {#'--iter': self.NumberOfIterations,
@@ -70,44 +73,39 @@ class ProtRelionRefinner( ProtRelionBase):
         if len(self.ReferenceMask):
             args['--solvent_mask'] = self.ReferenceMask
             
-        if self.doContinue:
-            args['--continue'] = self.ContinueFrom
-            #note: no movie realigment is included, since 1) it is not the core of relion and 2) by design continue
-            #does not allow to change parameters in xmipp.        
-        else: # Not continue
-            args.update({'--i': self.ImgStar,
-                         '--particle_diameter': self.MaskDiameterA,
-                         '--angpix': self.SamplingRate,
-                         '--ref': self.Ref3D,
-                         '--oversampling': '1'
-                         })
+        args.update({'--i': self.ImgStar,
+                     '--particle_diameter': self.MaskDiameterA,
+                     '--angpix': self.SamplingRate,
+                     '--ref': self.Ref3D,
+                     '--oversampling': '1'
+                     })
+        
+        if not self.IsMapAbsoluteGreyScale:
+            args[' --firstiter_cc'] = '' 
             
-            if not self.IsMapAbsoluteGreyScale:
-                args[' --firstiter_cc'] = '' 
-                
-            if self.InitialLowPassFilterA > 0:
-                args['--ini_high'] = self.InitialLowPassFilterA
-                
-            # CTF stuff
-            if self.DoCTFCorrection:
-                args['--ctf'] = ''
+        if self.InitialLowPassFilterA > 0:
+            args['--ini_high'] = self.InitialLowPassFilterA
             
-            if self.HasReferenceCTFCorrected:
-                args['--ctf_corrected_ref'] = ''
-                
-            if self.HaveDataPhaseFlipped:
-                args['--ctf_phase_flipped'] = ''
-                
-            if self.IgnoreCTFUntilFirstPeak:
-                args['--ctf_intact_first_peak'] = ''
-                
-            args['--sym'] = self.SymmetryGroup.upper()
-            args['--auto_refine']=''
-            args['--split_random_halves']=''
+        # CTF stuff
+        if self.DoCTFCorrection:
+            args['--ctf'] = ''
+        
+        if self.HasReferenceCTFCorrected:
+            args['--ctf_corrected_ref'] = ''
             
-            if args['--sym'][:1] == 'C':
-                args['--low_resol_join_halves'] = "40";
-            #args['--K'] = self.NumberOfClasses
+        if self.HaveDataPhaseFlipped:
+            args['--ctf_phase_flipped'] = ''
+            
+        if self.IgnoreCTFUntilFirstPeak:
+            args['--ctf_intact_first_peak'] = ''
+            
+        args['--sym'] = self.SymmetryGroup.upper()
+        args['--auto_refine']=''
+        args['--split_random_halves']=''
+        
+        if args['--sym'][:1] == 'C':
+            args['--low_resol_join_halves'] = "40";
+        #args['--K'] = self.NumberOfClasses
             
         # Sampling stuff
         # Find the index(starting at 0) of the selected

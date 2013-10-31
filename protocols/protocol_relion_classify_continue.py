@@ -28,7 +28,10 @@ class ProtRelionClassifierContinue(ProtRelionBase):
         ProtRelionBase.__init__(self, protDict.relion_classify_continue.name, scriptname, project)
         self.setPreviousRun(self.ImportRun)
         self.Import = 'from protocol_relion_classify_continue import *'
-        self.relionType='classifyContinue'
+        self.relionType='classify'
+        self.NumberOfClasses  = self.PrevRun.NumberOfClasses
+        self.SamplingRate     = self.PrevRun.SamplingRate
+        self.MaskDiameterA    = self.PrevRun.MaskDiameterA
 
     def summary(self):
         lines         = ProtRelionBase.summary(self)
@@ -38,10 +41,10 @@ class ProtRelionClassifierContinue(ProtRelionBase):
             performedIteration=0
         else:
             performedIteration=lastIteration - self.ContinueFromIteration
-        lines += ['Performed <%d> iterations. Pending Iterations <%d>' % (performedIteration ,self.NumberOfIterations - self.ContinueFromIteration)]
+        lines += ['Performed <%d> iterations (number estimated from the files in working directory)' % performedIteration ]
         #lines += ['Input fileName = <%s>' %self.getFilename('optimiserRe', iter=int(self.ContinueFromIteration))]
-        lines += ['test = <%s>'%self.getFilename('optimiserRe',iter=3)]
-        lines += ['test = <%s>'%self.PrevRun.getFilename('optimiserRe',iter=3)]
+        #lines += ['test = <%s>'%self.getFilename('optimiserRe',iter=3)]
+        #lines += ['test = <%s>'%self.PrevRun.getFilename('optimiserRe',iter=3)]
         #lines += ['WorkingDir = <%s>'%self.WorkingDir]
         #lines += ['WorkingDir2 = <%s>'%self.PrevRun.WorkingDir]
         #lines += ['lastIter = <%s>'%self.lastIter()]
@@ -64,7 +67,10 @@ class ProtRelionClassifierContinue(ProtRelionBase):
         #self.ImgStar = self.extraPath(replaceBasenameExt(tmpFileNameXMD, '.star'))
         lastIteration = self.NumberOfIterations
         NumberOfClasses=self.NumberOfClasses
-        ProtRelionBase.defineSteps2(self,lastIteration,NumberOfClasses)
+        firstIteration = self.ContinueFromIteration
+        ProtRelionBase.defineSteps2(self, firstIteration
+                                        , lastIteration 
+                                        , NumberOfClasses)
 
     def createFilenameTemplates(self):
         myDict=ProtRelionBase.createFilenameTemplates(self)        
@@ -117,4 +123,5 @@ class ProtRelionClassifierContinue(ProtRelionBase):
         #relionFiles=['data','model','optimiser','sampling']
         for v in self.relionFiles:
              verifyFiles += [self.getFilename(v+'Re', iter=self.NumberOfIterations, workingDir=self.WorkingDir )]
-        self.insertRunJobStep(self.program, params,verifyFiles)
+        #self.insertRunJobStep(self.program, params,verifyFiles)
+        self.insertRunJobStep('echo shortcut', params,verifyFiles)
