@@ -23,6 +23,7 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
+from pyworkflow.em.packages.spider.spider import PcaFile
 """
 This sub-package contains protocol for 
 Correspondence Analysis or Principal Component Analysis
@@ -46,7 +47,12 @@ class SpiderProtCAPCA(ProtAlign):
                         'spiderParticles': 'particles_spider',
                         'spiderSel': 'particles_selfile',
                         'outputParticles': 'particles_output',
-                        'spiderMask': 'mask'
+                        'spiderMask': 'mask',
+                        'imcFile': join('CA', 'cas_IMC'),
+                        'seqFile': join('CA', 'cas_SEQ'),
+                        'eigFile': join('CA', 'cas_EIG'),
+                        'eigenimages': join('CA', 'eigenimg'),
+                        'reconstituted': join('CA', 'reconstituted')
                         }
     
     def _defineParams(self, form):
@@ -133,6 +139,15 @@ class SpiderProtCAPCA(ProtAlign):
         runSpiderTemplate('ca_pca.txt', self._params['ext'], self._params)
         
         self._leaveWorkingDir() # Go back to project dir
+        
+        # Generate outputs
+        imc = PcaFile()
+        imc.filename.set(self._getFileName('imcFile'))
+        seq = PcaFile()
+        seq.filename.set(self._getFileName('seqFile'))
+        
+        self._defineOutputs(imcFile=imc, seqFile=seq)
+        
             
     def _summary(self):
         summary = []

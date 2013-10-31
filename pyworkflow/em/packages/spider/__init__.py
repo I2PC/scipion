@@ -35,4 +35,4 @@ from protocol_custommask import SpiderProtCustomMask
 from protocol_ca_pca import SpiderProtCAPCA
 from protocol_ward import SpiderProtClassifyWard
 
-from viewer import SpiderViewerCustomMask, SpiderViewerWard
+from viewer import *
