@@ -31,7 +31,7 @@ This sub-package contains Spider protocol for PCA.
 from pyworkflow.em import *  
 from pyworkflow.utils import removeExt, removeBaseExt, makePath, moveFile, copyFile, basename
 from constants import *
-from spider import SpiderShell
+from spider import SpiderShell, SpiderDocFile
 from convert import locationToSpider
 from glob import glob
 
@@ -119,16 +119,17 @@ class SpiderProtClassifyWard(ProtClassify):
                  Each row contains the image id and the height.
         """ 
         dendroFile = self._getFileName('dendroDoc')
-        f = open(dendroFile)
+        # Dendrofile is a docfile with at least 3 data colums (class, height, id)
+        doc = SpiderDocFile(dendroFile)
         values = []
-        for line in f:
-            line = line.strip()
-            if not line.startswith(';'):
-                values.append(float(line.split()[3]))
-        f.close()
+        indexes = []
+        for c, h, _ in doc.iterValues(): 
+            indexes.append(c)
+            values.append(h)
+        doc.close()
+        
         self.dendroValues = values
-        print "self.dendroValues: ", len(values)
-        #TODO: COPY the input particles
+        self.dendroIndexes = indexes
         self.dendroImages = self._getFileName('particles')
         self.dendroAverages = self._getFileName('averages')
         
@@ -162,7 +163,9 @@ class SpiderProtClassifyWard(ProtClassify):
         ih = ImageHandler()
 
         if writeAverages:
-            node['image'] = ih.read((m+1, self.dendroImages))
+            particleNumber = self.dendroIndexes[m+1]
+            node['image'] = ih.read((particleNumber, self.dendroImages))
+            node['imageList'] = [particleNumber]
             
         def addChildNode(left, right, index):
             if right > left:
@@ -171,6 +174,7 @@ class SpiderProtClassifyWard(ProtClassify):
                 node['length'] += child['length'] 
                 if writeAverages:
                     node['image'] += child['image']
+                    node['imageList'] += child['imageList']
                     del child['image']
                 
         if rightIndex > leftIndex + 1:
@@ -179,6 +183,12 @@ class SpiderProtClassifyWard(ProtClassify):
             if writeAverages:
                 #TODO: node['image'] /= float(node['length'])
                 ih.write(node['image'], (index, self.dendroAverages))
+                fn = self._getTmpPath('doc_class%03d.stk' % index)
+                f = open(fn, 'w+')
+                print "writing file: %s, %d images." % (fn, len(node['imageList']))
+                for i in node['imageList']:
+                    f.write('%s\n' % i)
+                f.close()
         return node
 
             
