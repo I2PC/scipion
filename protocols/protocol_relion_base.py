@@ -184,18 +184,18 @@ class ProtRelionBase(XmippProtocol):
 
     def visualize(self):
         
-        plots = [k for k in ['TableImagesPerClass'
-                           , 'DisplayResolutionPlotsFSC'
-                           , 'DisplayResolutionPlotsSSNR'
-                           , 'TableChange'
-                           , 'Likelihood'
-                           , 'DisplayReconstruction'
-                           , 'DisplayAngularDistribution'
-                           , 'DisplayImagesClassification'
-                           ] if self.ParamsDict[k]]
-
-        if len(plots):
-            self.launchRelionPlots(plots)
+#        plots = [k for k in ['TableImagesPerClass'
+#                           , 'DisplayResolutionPlotsFSC'
+#                           , 'DisplayResolutionPlotsSSNR'
+#                           , 'TableChange'
+#                           , 'Likelihood'
+#                           , 'DisplayReconstruction'
+#                           , 'DisplayAngularDistribution'
+#                           , 'DisplayImagesClassification'
+#                           ] if self.ParamsDict[k]]
+#
+#        if len(plots):
+        self.launchRelionPlots(plots)
 
     def visualizeVar(self, varName):
         self.launchRelionPlots([varName])
@@ -295,7 +295,7 @@ class ProtRelionBase(XmippProtocol):
             if(self.relionType=='classify'):
                 _c = ('Iteration','Avg PMax')
                 
-                for it in range (firstIter,lastIteration+1): #alwaya list all iteration
+                for it in iterations: # range (firstIter,lastIteration+1): #alwaya list all iteration
                     fileName = 'model_general@'+ self.getFilename('model'+'Xm', iter=it , workingDir=self.WorkingDir)
                     md = MetaData(fileName)
                     pmax = md.getValue(MDL_AVGPMAX,md.firstObject())
@@ -303,7 +303,7 @@ class ProtRelionBase(XmippProtocol):
             else:
                 _c = ('Iteration','Avg PMax h1', 'Avg PMax h2')
                 
-                for it in range (firstIter,lastIteration+1): #alwaya list all iteration
+                for it in iterations:#range (firstIter,lastIteration+1): #alwaya list all iteration
                     fileName = 'model_general@'+ self.getFilename('half1_model'+'Xm', iter=it , workingDir=self.WorkingDir)
                     md = MetaData(fileName)
                     pmax1 = md.getValue(MDL_AVGPMAX,md.firstObject())
