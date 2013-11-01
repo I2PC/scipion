@@ -46,7 +46,7 @@ class SpiderProtFilter(ProtFilterParticles):
 
     def _defineProcessParams(self, form):
         form.addParam('filterType', EnumParam, choices=['Top-hat', 'Gaussian', 'Fermi', 'Butterworth', 'Raised cosine'],
-                      label="Filter type", default=0,
+                      label="Filter type", default=3,
                       help="""Select what type of filter do you want to apply.
                       
 <Top-hat>   <low-pass>. truncation. Filter is a "top-hat" function that truncates

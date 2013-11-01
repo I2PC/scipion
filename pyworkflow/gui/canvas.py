@@ -377,13 +377,18 @@ class ImageBox(Item):
         self.image = getImageFromPath(imgPath)
 
         if text is not None:
-            label = tk.Label(canvas, image=self.image, text=text, compound=tk.TOP)
-            self.id = self.canvas.create_window(x, y, window=label)
+            self.label = tk.Label(canvas, image=self.image, text=text, 
+                                  compound=tk.TOP, bg='gray')
+            self.id = self.canvas.create_window(x, y, window=self.label)
+            self.label.bind('<Button-1>', self._onClick)
         else:
             self.id = self.canvas.create_image(x, y, image=self.image)
          
         
     def setSelected(self, value): #Ignore selection highlight
+        pass
+    
+    def _onClick(self, e=None):
         pass
 
 class Connector(Item):
