@@ -35,7 +35,7 @@ from protocol_custommask import SpiderProtCustomMask
 from protocol_ca_pca import SpiderProtCAPCA
 from protocol_ward import SpiderProtClassifyWard
 
-from wizard import SpiderProtMaskWizard, SpiderProtMaskRadiiWizard #SpiderGaussianFilterWizard, SpiderFermiFilterWizard
+from wizard import SpiderProtMaskWizard, SpiderProtMaskRadiiWizard, SpiderGaussianFilterWizard #, SpiderFermiFilterWizard
 
 from viewer import SpiderViewerGeneric
 from viewer_capca import SpiderViewerCAPCA
