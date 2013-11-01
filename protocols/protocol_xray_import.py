@@ -34,7 +34,7 @@ class ProtXrayImport(XmippProtocol):
         
         tomogramList = self.getTomograms()
         if len(tomogramList) == 0:
-            if self.TomogramProvider == "Mistral":
+            if self.Synchrotron == "Alba":
                 errors.append("There are no tomograms to process in " + self.DirTomograms)   
 
         return errors
@@ -42,7 +42,7 @@ class ProtXrayImport(XmippProtocol):
     def summary(self):
         message = []
         
-        if self.TomogramProvider == "Mistral":
+        if self.Synchrotron == "Alba":
             if self.ImportFrom == "single file":
                 message.append("Import of [%s] tomogram" % self.Tomogram)   
             else:
@@ -57,7 +57,7 @@ class ProtXrayImport(XmippProtocol):
     
     def getTomograms(self):
         ''' Return a list with micrographs in WorkingDir'''
-        if self.TomogramProvider == "Mistral":
+        if self.Synchrotron == "Alba":
             if self.ImportFrom == "single file":
                 return [self.Tomogram]
             else:
@@ -69,13 +69,13 @@ class ProtXrayImport(XmippProtocol):
         resultMd = self.workingDirPath('tomograms.xmd')
         if os.path.exists(resultMd):
             from protlib_utils import runShowJ
-            runShowJ(resultMd, extraParams='--mode gallery')
+            runShowJ(resultMd)
         pass
         
     def insertTomogramStep(self, tomogram):
         self.ParamsDict['tomogram'] = tomogram
         
-        if self.TomogramProvider == "Mistral":
+        if self.Synchrotron == "Alba":
             params = '--mistral "%(tomogram)s" '
         else:
             params = '--bessy "%(tomogram)s" %(TIni)s %(TEnd)s %(FIni)s %(FEnd)s '
@@ -89,6 +89,10 @@ class ProtXrayImport(XmippProtocol):
             params += '--crop %(Crop)d '
         if self.DoBadPixelsMask:
             params += '--bad_pixels_filter "%(BadPixelsMask)s" '
+
+        # At this moment hdf5 library does not support parallel access
+        if self.Synchrotron != "Alba":
+            params += '--thr "%(NumberOfThreads)s" '
     
         _, tomoDir, tomoRoot = getTomoDirs(self.WorkingDir, tomogram)
         params += '--oroot "%s" ' % tomoRoot
@@ -120,12 +124,12 @@ def createResultMd(log, WorkingDir, TomogramList, resultMd):
     
     for tomogram in TomogramList:
         tomoBaseName, _, tomoRoot = getTomoDirs(WorkingDir, tomogram)
-        mdOut.setValue(xmipp.MDL_IMAGE, tomoRoot + '.mrc', mdOut.addObject())
+        mdOut.setValue(xmipp.MDL_TOMOGRAMMD, tomoRoot + '.xmd', mdOut.addObject())
         
-        blockList = xmipp.getBlocksInMetaDataFile(tomoRoot+'.xmd')
-        for block in blockList:
-            md.read("%(block)s@%(tomoRoot)s.xmd" % locals())
-            md.write('%(block)s_%(tomoBaseName)s@%(resultMd)s' % locals(), xmipp.MD_APPEND)
+#         blockList = xmipp.getBlocksInMetaDataFile(tomoRoot+'.xmd')
+#         for block in blockList:
+#             md.read("%(block)s@%(tomoRoot)s.xmd" % locals())
+#             md.write('%(block)s_%(tomoBaseName)s@%(resultMd)s' % locals(), xmipp.MD_APPEND)
     
     mdOut.write('tomograms@%s' % (resultMd), xmipp.MD_APPEND)
         

@@ -32,8 +32,9 @@ class ProtRelionClassifier(ProtRelionBase):
 
     def summary(self):
         lines = ProtRelionBase.summary(self, self.NumberOfIterations)
+        lastIteration=self.lastIter()
+        lines += ['Performed <%d/%d> iterations ' % (lastIteration,self.NumberOfIterations)]
         lines += ['Number of classes = <%d>' % self.NumberOfClasses]
-        # add table images clases for last iteration (one of the tables?)
         return lines
     
     
@@ -46,9 +47,12 @@ class ProtRelionClassifier(ProtRelionBase):
         # launch relion program
         self.insertRelionClassify()
         #self.ImgStar = self.extraPath(replaceBasenameExt(tmpFileNameXMD, '.star'))
+        firstIteration = 1
         lastIteration = self.NumberOfIterations
         NumberOfClasses=self.NumberOfClasses
-        ProtRelionBase.defineSteps2(self,lastIteration,NumberOfClasses)
+        ProtRelionBase.defineSteps2(self, firstIteration
+                                        , lastIteration
+                                        , NumberOfClasses)
 
     def createFilenameTemplates(self):
         myDict=ProtRelionBase.createFilenameTemplates(self)        
@@ -76,38 +80,35 @@ class ProtRelionClassifier(ProtRelionBase):
         if len(self.ReferenceMask):
             args['--solvent_mask'] = self.ReferenceMask
             
-        if self.doContinue:
-            args['--continue'] = self.ContinueFrom
-        else: # Not continue
-            args.update({'--i': self.ImgStar,
-                         '--particle_diameter': self.MaskDiameterA,
-                         '--angpix': self.SamplingRate,
-                         '--ref': self.Ref3D,
-                         '--oversampling': '1'
-                         })
+        args.update({'--i': self.ImgStar,
+                     '--particle_diameter': self.MaskDiameterA,
+                     '--angpix': self.SamplingRate,
+                     '--ref': self.Ref3D,
+                     '--oversampling': '1'
+                     })
+        
+        if not self.IsMapAbsoluteGreyScale:
+            args[' --firstiter_cc'] = '' 
             
-            if not self.IsMapAbsoluteGreyScale:
-                args[' --firstiter_cc'] = '' 
-                
-            if self.InitialLowPassFilterA > 0:
-                args['--ini_high'] = self.InitialLowPassFilterA
-                
-            # CTF stuff
-            if self.DoCTFCorrection:
-                args['--ctf'] = ''
+        if self.InitialLowPassFilterA > 0:
+            args['--ini_high'] = self.InitialLowPassFilterA
             
-            if self.HasReferenceCTFCorrected:
-                args['--ctf_corrected_ref'] = ''
-                
-            if self.HaveDataPhaseFlipped:
-                args['--ctf_phase_flipped'] = ''
-                
-            if self.IgnoreCTFUntilFirstPeak:
-                args['--ctf_intact_first_peak'] = ''
-                
-            args['--sym'] = self.SymmetryGroup.upper()
+        # CTF stuff
+        if self.DoCTFCorrection:
+            args['--ctf'] = ''
+        
+        if self.HasReferenceCTFCorrected:
+            args['--ctf_corrected_ref'] = ''
             
-            args['--K'] = self.NumberOfClasses
+        if self.HaveDataPhaseFlipped:
+            args['--ctf_phase_flipped'] = ''
+            
+        if self.IgnoreCTFUntilFirstPeak:
+            args['--ctf_intact_first_peak'] = ''
+            
+        args['--sym'] = self.SymmetryGroup.upper()
+        
+        args['--K'] = self.NumberOfClasses
             
         # Sampling stuff
         # Find the index(starting at 0) of the selected

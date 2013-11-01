@@ -235,19 +235,6 @@ AdditionalArguments = ""
 # {eval} expandParallel()
 
 #------------------------------------------------------------------------------------------------
-# {section}{visualize} Preparation
-#------------------------------------------------------------------------------------------------
-
-# {view} Show the grey-scale corrected ref. map?
-VisualizeCRVolume = True
-
-# {view} Show the low-pass filtered ref. map?
-VisualizeFRVolume = True
-
-# {view} Show the generated seeds volumes?
-VisualizeGSVolume = True
-
-#------------------------------------------------------------------------------------------------
 # {section}{visualize} Results per Iteration and Ref3D
 #------------------------------------------------------------------------------------------------
 # {hidden}{list_combo}( all, selection) Which ref3D you want to visualize?
@@ -280,6 +267,9 @@ SelectedIters = ''
 """
 DisplayVolumeSlicesAlong='z'
 
+#------------------------------------------------------------------------------------------------
+# {section}{visualize} Overall Results
+#------------------------------------------------------------------------------------------------
 # {view} Display reconstructed volume
 """ Volume as given by the reconstruction algorithm.
     For each iteration two volumes are presented (each one reconstructed with
@@ -288,9 +278,6 @@ DisplayVolumeSlicesAlong='z'
 """
 DisplayReconstruction=False
 
-#------------------------------------------------------------------------------------------------
-# {section}{visualize} Overall Results
-#------------------------------------------------------------------------------------------------
 # {view} Display resolution plots (SSNR)
 DisplayResolutionPlotsSSNR=True
 
