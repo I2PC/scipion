@@ -161,7 +161,8 @@ class ProtRelionRefinner( ProtRelionBase):
         #myDict['volumeFinal']      = self.extraIter2 + "class%(ref3d)03d.spi"
         #myDict['volumeMRCFinal']   = self.extraIter2 + "class%(ref3d)03d.mrc:mrc"
         myDict['volumeFinal']   = self.extraIter2 + "class%(ref3d)03d.mrc:mrc"
-        myDict['modelXmFinal']=self.ExtraDir+'/relion_model.xmd'
+        myDict['modelXmFinalRe']=self.ExtraDir+'/relion_model.star'
+        myDict['modelXmFinalXm']=self.ExtraDir+'/relion_model.xmd'
         myDict['imagesAssignedToClass']=''
 
         return myDict

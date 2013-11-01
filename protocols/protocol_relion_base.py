@@ -242,6 +242,12 @@ class ProtRelionBase(XmippProtocol):
         else:
             lastVolume = self.getFilename('volumeh1', iter=lastIteration, ref3d=lastRef3D, workingDir=self.WorkingDir )
             _volume='volumeFinal'
+            fileNameRe =self.getFilename('modelXmFinalRe')
+            fileNameXm =self.getFilename('modelXmFinalXm')
+            if xmippExists(fileNameRe) and (not xmippExists(fileNameXm)):
+                #since relion crasesh very often after finishing its job
+                #I cannot assume that conversion is done
+                exportReliontoMetadataFile(fileNameRe,fileNameXm)
         if not xmippExists(lastVolume):
             message = "No data available for <iteration %d> and <class %d>"%\
                        (int(lastIteration),int(lastRef3D))
@@ -250,23 +256,11 @@ class ProtRelionBase(XmippProtocol):
         
         #if relion has not finished metadata has not been converted to xmipp
         #do it now if needed
-        #=============
-        #outputs=[]#output files
-        #inputs=[]
         for i in iterations:
             for v in self.relionFiles:
                 fileName =self.getFilename(v+'Xm', iter=i)
                 if not xmippExists(fileName):
-                    #outputs += [fileName]
-                    #inputs += [self.getFilename(v+'Re', iter=i )]
                     exportReliontoMetadataFile(self.getFilename(v+'Re', iter=i ),fileName)
-#        lastIterationVolumeFns = []
-#        standardOutputClassFns = []
-#        for ref3d in range (1,self.NumberOfClasses+1):
-#            lastIterationVolumeFns += [self.getFilename(_volume, iter=lastIteration, ref3d=ref3d, workingDir=self.WorkingDir )]
-#            standardOutputClassFns += ["images_ref3d%06d@"%ref3d + self.workingDirPath("classes_ref3D.xmd")]
-#        lastIterationMetadata = "images@"+self.getFilename('data'+'Xm', iter=lastIteration, workingDir=self.WorkingDir )
-
         if doPlot('TableImagesPerClass'):
             mdOut = MetaData()
             inMetadataFn = self.getFilename('imagesAssignedToClass', workingDir=self.WorkingDir)
@@ -317,7 +311,7 @@ class ProtRelionBase(XmippProtocol):
                     md = MetaData(fileName)
                     pmax2 = md.getValue(MDL_AVGPMAX,md.firstObject())
                     _r.append(("Iter_%d" % it, pmax1,pmax2))
-                fileName = 'model_general@'+ self.getFilename('modelXmFinal', workingDir=self.WorkingDir)
+                fileName = 'model_general@'+ self.getFilename('modelXmFinalXm', workingDir=self.WorkingDir)
                 if(self.relionType=='refine' and iterations[-1]==self.NumberOfIterations):
                     md = MetaData(fileName)
                     pmax1 = md.getValue(MDL_AVGPMAX,md.firstObject())
@@ -395,7 +389,7 @@ class ProtRelionBase(XmippProtocol):
               xplotter.draw()
               
             if(self.relionType=='refine'):
-                file_name = blockName + self.getFilename('modelXmFinal')
+                file_name = blockName + self.getFilename('modelXmFinalXm')
                 if xmippExists(file_name):
                     gridsize1 = [1, 1]
                     xplotter = XmippPlotter(*gridsize1,windowTitle="ResolutionSSNRAll")
@@ -456,8 +450,10 @@ class ProtRelionBase(XmippProtocol):
               xplotter.draw()
               
             if(self.relionType=='refine'):
-                file_name = blockName + self.getFilename('modelXmFinal', workingDir=self.WorkingDir)
+                file_name = blockName + self.getFilename('modelXmFinalXm', workingDir=self.WorkingDir)
+                print "final model", file_name
                 if xmippExists(file_name):
+                    print "final model exists"
                     gridsize1 = [1, 1]
                     xplotter = XmippPlotter(*gridsize1,windowTitle="ResolutionSSNRAll")
                     plot_title = 'FSC for all images, final iteration'

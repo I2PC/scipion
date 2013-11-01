@@ -29,9 +29,10 @@ class ProtRelionClassifierContinue(ProtRelionBase):
         self.setPreviousRun(self.ImportRun)
         self.Import = 'from protocol_relion_classify_continue import *'
         self.relionType='classify'
-        self.NumberOfClasses  = self.PrevRun.NumberOfClasses
-        self.SamplingRate     = self.PrevRun.SamplingRate
-        self.MaskDiameterA    = self.PrevRun.MaskDiameterA
+        self.NumberOfClasses      = self.PrevRun.NumberOfClasses
+        self.SamplingRate         = self.PrevRun.SamplingRate
+        self.MaskDiameterA        = self.PrevRun.MaskDiameterA
+        self.RegularisationParamT = self.PrevRun.RegularisationParamT
 
     def summary(self):
         lines         = ProtRelionBase.summary(self)
@@ -84,11 +85,14 @@ class ProtRelionClassifierContinue(ProtRelionBase):
             myDict[v+'Re']=self.extraIter + v +'.star'
             myDict[v+'Xm']=self.extraIter + v +'.xmd'
         myDict['imagesAssignedToClass']='imagesAssignedToClass@'+self.ExtraDir+'/dataForVisualize.xmd'
+        extraIter = join('%(workingDir)s', 'extra', 'relion_it%(iter)03d_optimiser.star')
+        myDict['optimiserCont'] = extraIter
         return myDict
 
     def insertRelionClassifyContinue(self):
+        import sys
         _workingDir=join(self.PrevRun.projectDir,self.PrevRun.WorkingDir)
-        inputFileName = self.getFilename('optimiserRe', iter=int(self.ContinueFromIteration), workingDir=_workingDir)
+        inputFileName = self.getFilename('optimiserCont', iter=int(self.ContinueFromIteration),workingDir=_workingDir)
         args = {
                 '--o': '%s/relion' % self.ExtraDir,
                 '--continue': inputFileName,
@@ -123,5 +127,5 @@ class ProtRelionClassifierContinue(ProtRelionBase):
         #relionFiles=['data','model','optimiser','sampling']
         for v in self.relionFiles:
              verifyFiles += [self.getFilename(v+'Re', iter=self.NumberOfIterations, workingDir=self.WorkingDir )]
-        #self.insertRunJobStep(self.program, params,verifyFiles)
-        self.insertRunJobStep('echo shortcut', params,verifyFiles)
+        self.insertRunJobStep(self.program, params,verifyFiles)
+        #############self.insertRunJobStep('echo shortcut', params,verifyFiles)
