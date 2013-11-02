@@ -90,6 +90,7 @@ STATUS_COLORS = {
                STATUS_ABORTED: '#F5CCCB',
                #STATUS_SAVED: '#124EB0',
                }
+
 def populateTree(self, tree, prefix, obj, level=0):
     text = obj.text.get()
     if text:
@@ -337,10 +338,11 @@ class ProtocolsView(tk.Frame):
         leftFrame.rowconfigure(1, weight=1)
 
         # Protocols Tree Pane        
-        protFrame = ttk.Labelframe(leftFrame, text=' Protocols ', width=300, height=500)
+        protFrame = ttk.Labelframe(leftFrame, text=self.protCfg.text.get(), width=300, height=500)
         protFrame.grid(row=1, column=0, sticky='news', padx=5, pady=5)
         gui.configureWeigths(protFrame)
         self.protTree = self.createProtocolsTree(protFrame)
+        self.updateProtocolsTree(self.protCfg)
         
         # Create the right Pane that will be composed by:
         # a Action Buttons TOOLBAR in the top
@@ -474,9 +476,13 @@ class ProtocolsView(tk.Frame):
         tree.tag_configure('protocol_base', image=self.getImage('class_obj.gif'))
         f = tkFont.Font(family='verdana', size='10', weight='bold')
         tree.tag_configure('section', font=f)
-        populateTree(self, tree, '', self.protCfg)
         tree.grid(row=0, column=0, sticky='news')
         return tree
+    
+    def updateProtocolsTree(self, protCfg):
+        self.protCfg = protCfg
+        self.protTree.clear()
+        populateTree(self, self.protTree, '', self.protCfg)
         
     def createRunsTree(self, parent):
         self.provider = RunsTreeProvider(self.project, self._runActionClicked)

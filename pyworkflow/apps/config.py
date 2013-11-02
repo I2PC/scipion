@@ -82,7 +82,7 @@ class ProjectSettings(OrderedObject):
     def __init__(self, **args):
         OrderedObject.__init__(self, **args)
         self.config = ProjectConfig()
-        self.hostList = SettingList() # List to store different protocol configurations
+        self.hostList = SettingList() # List to store different hosts configurations
         self.menuList = SettingList() # Store different menus
         self.protMenuList = SettingList() # Store different protocol configurations
         self.mapper = None # This should be set when load, or write 
@@ -148,6 +148,13 @@ class ProjectSettings(OrderedObject):
     
     def getCurrentProtocolMenu(self):
         return self.protMenuList.getItem()
+    
+    def setCurrentProtocolMenu(self, index):
+        """ Set the new protocol Menu given its index.
+        The new ProtocolMenu will be returned.
+        """
+        self.protMenuList.setIndex(index)
+        return self.getCurrentProtocolMenu()
     
     def write(self, dbPath=None):
         self.setName('ProjectSettings')
@@ -242,7 +249,7 @@ def addMenus(settings):
     
 def addProtocols(settings):
     """ Write protocols configuration. """
-    menu = ProtocolConfig()
+    menu = ProtocolConfig("Protocols SPA")
     
     # ------------------- Micrographs ----------------------------
     m1 = menu.addSubMenu('Micrographs', tag='section')
@@ -287,6 +294,31 @@ def addProtocols(settings):
                   tag = 'protocol_base')
     
     settings.addProtocolMenu(menu)
+    
+    addSpiderMSAProtocols(settings)
+    
+    
+def addSpiderMSAProtocols(settings):
+    """ Write protocols related to Spider MSA workflow. """
+    menu = ProtocolConfig("MSA workflow")
+    
+    # ------------------- Particles ----------------------------
+    m1 = menu.addSubMenu('MSA workflow', tag='section')
+    
+    m1.addSubMenu('Import', value='ProtImportParticles', 
+                  tag='protocol', icon='bookmark.png')
+    m1.addSubMenu(' Filter', tag='protocol', 
+                  value='SpiderProtFilter')
+    m1.addSubMenu(' Align', tag='protocol_base', 
+                  value='ProtAlign')
+    m1.addSubMenu('Dimension reduction', tag='protocol',  
+                  value='SpiderProtCAPCA')
+    m1.addSubMenu('Classification', tag='protocol',
+                  value='SpiderProtClassifyWard')
+            
+    settings.addProtocolMenu(menu)
+    settings.protMenuList.setIndex(1)
+       
     
 def getScipionHome(userHome):
     """ Returns default SCIPION_HOME from HOME. """
