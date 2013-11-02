@@ -91,7 +91,7 @@ STATUS_COLORS = {
                #STATUS_SAVED: '#124EB0',
                }
 
-def populateTree(self, tree, prefix, obj, level=0):
+def populateTree(self, tree, treeItems, prefix, obj, level=0):
     text = obj.text.get()
     if text:
         value = obj.value.get(text)
@@ -102,9 +102,12 @@ def populateTree(self, tree, prefix, obj, level=0):
         if len(img):
             img = self.getImage(img)
         item = tree.insert(prefix, 'end', key, text=text, image=img, tags=(tag))
-        
-        if level < 2:
+        treeItems[item] = obj
+        # Check if the attribute should be open or close
+        openItem = obj.getAttributeValue('openItem', level < 2)
+        if openItem:
             tree.item(item, open=True)
+            
         if obj.value.hasValue() and tag == 'protocol_base':
             protClassName = value.split('.')[-1] # Take last part
             prot = emProtocolsDict.get(protClassName, None)
@@ -121,7 +124,7 @@ def populateTree(self, tree, prefix, obj, level=0):
         key = prefix
     
     for sub in obj:
-        populateTree(self, tree, key, sub, level+1)
+        populateTree(self, tree, treeItems, key, sub, level+1)
     
 
 class RunsTreeProvider(ProjectRunsTreeProvider):
@@ -482,7 +485,16 @@ class ProtocolsView(tk.Frame):
     def updateProtocolsTree(self, protCfg):
         self.protCfg = protCfg
         self.protTree.clear()
-        populateTree(self, self.protTree, '', self.protCfg)
+        self.protTree.unbind('<<TreeviewOpen>>')
+        self.protTree.unbind('<<TreeviewClose>>')
+        self.protTreeItems = {}
+        populateTree(self, self.protTree, self.protTreeItems, '', self.protCfg)
+        self.protTree.bind('<<TreeviewOpen>>', lambda e: self._treeViewItemChange(True))
+        self.protTree.bind('<<TreeviewClose>>', lambda e: self._treeViewItemChange(False))
+        
+    def _treeViewItemChange(self, openItem):
+        item = self.protTree.focus()
+        self.protTreeItems[item].openItem.set(openItem)
         
     def createRunsTree(self, parent):
         self.provider = RunsTreeProvider(self.project, self._runActionClicked)

@@ -183,7 +183,7 @@ class MenuConfig(OrderedObject):
     Each menu can contains submenus.
     Leaf elements can contain actions"""
     def __init__(self, text=None, value=None, 
-                 icon=None, tag=None, **args):
+                 icon=None, tag=None, openItem=False, **args):
         """Constructor for the Menu config item.
         Arguments:
           text: text to be displayed
@@ -199,6 +199,7 @@ class MenuConfig(OrderedObject):
         self.icon = String(icon)
         self.tag = String(tag)
         self.childs = List()
+        self.openItem = Boolean(openItem)
         
     def addSubMenu(self, text, value=None, **args):
         subMenu = type(self)(text, value, **args)
@@ -218,8 +219,11 @@ class MenuConfig(OrderedObject):
     
 class ProtocolConfig(MenuConfig):
     """Store protocols configuration """
-    pass    
-    
+    def __init__(self, text=None, value=None, **args):
+        MenuConfig.__init__(self, text, value, **args)
+        if 'openItem' not in args:
+            self.openItem.set(self.tag.get() != 'protocol_base')
+            
     
 def addMenus(settings):
     """Write default configuration files"""
@@ -307,7 +311,7 @@ def addSpiderMSAProtocols(settings):
     
     m1.addSubMenu('Import', value='ProtImportParticles', 
                   tag='protocol', icon='bookmark.png')
-    m1.addSubMenu(' Filter', tag='protocol', 
+    m1.addSubMenu(' Filter', tag='protocol', openItem=True,
                   value='SpiderProtFilter')
     m1.addSubMenu(' Align', tag='protocol_base', 
                   value='ProtAlign')

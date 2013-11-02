@@ -171,6 +171,10 @@ class ProjectWindow(gui.Window):
     
     def saveSettings(self):
         self.settings.write()
+        
+    def _onClosing(self):
+        self.saveSettings() 
+        gui.Window._onClosing(self)
     
     def _viewComboSelected(self, e=None):
         if self.viewVar.get() != self.view:
