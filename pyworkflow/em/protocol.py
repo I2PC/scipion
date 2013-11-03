@@ -456,6 +456,10 @@ class ProtParticlePicking(EMProtocol):
         return summary
 
 
+class ProtCreateMask(EMProtocol):
+    """ For those protocols who create mask as output. """
+    pass
+
 class ProtAlign(EMProtocol):
     """ This class will serve as a base for all protocols that align a set of 2D images.
     All Align protocols receive as input:

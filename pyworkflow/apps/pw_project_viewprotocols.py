@@ -494,7 +494,8 @@ class ProtocolsView(tk.Frame):
         
     def _treeViewItemChange(self, openItem):
         item = self.protTree.focus()
-        self.protTreeItems[item].openItem.set(openItem)
+        if item in self.protTreeItems:
+            self.protTreeItems[item].openItem.set(openItem)
         
     def createRunsTree(self, parent):
         self.provider = RunsTreeProvider(self.project, self._runActionClicked)

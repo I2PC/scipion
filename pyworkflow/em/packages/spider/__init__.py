@@ -34,6 +34,7 @@ from protocol_align_apsr import SpiderProtAlignAPSR
 from protocol_custommask import SpiderProtCustomMask
 from protocol_ca_pca import SpiderProtCAPCA
 from protocol_ward import SpiderProtClassifyWard
+from protocol_mda import SpiderWfMDA
 
 from wizard import SpiderProtMaskWizard, SpiderProtMaskRadiiWizard, SpiderGaussianFilterWizard #, SpiderFermiFilterWizard
 

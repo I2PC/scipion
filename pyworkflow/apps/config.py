@@ -183,7 +183,7 @@ class MenuConfig(OrderedObject):
     Each menu can contains submenus.
     Leaf elements can contain actions"""
     def __init__(self, text=None, value=None, 
-                 icon=None, tag=None, openItem=False, **args):
+                 icon=None, tag=None, **args):
         """Constructor for the Menu config item.
         Arguments:
           text: text to be displayed
@@ -199,7 +199,7 @@ class MenuConfig(OrderedObject):
         self.icon = String(icon)
         self.tag = String(tag)
         self.childs = List()
-        self.openItem = Boolean(openItem)
+        self.openItem = Boolean(args.get('openItem', False))
         
     def addSubMenu(self, text, value=None, **args):
         subMenu = type(self)(text, value, **args)
@@ -309,19 +309,20 @@ def addSpiderMSAProtocols(settings):
     # ------------------- Particles ----------------------------
     m1 = menu.addSubMenu('MSA workflow', tag='section')
     
-    m1.addSubMenu('Import', value='ProtImportParticles', 
-                  tag='protocol', icon='bookmark.png')
-    m1.addSubMenu(' Filter', tag='protocol', openItem=True,
+    m1.addSubMenu(' Import particles', tag='protocol', icon='bookmark.png',
+                  value='ProtImportParticles')
+    m1.addSubMenu(' Filter (optional)', tag='protocol',
                   value='SpiderProtFilter')
-    m1.addSubMenu(' Align', tag='protocol_base', 
+    m1.addSubMenu(' Align', tag='protocol_base', openItem=True, 
                   value='ProtAlign')
-    m1.addSubMenu('Dimension reduction', tag='protocol',  
+    m1.addSubMenu(' Create mask (optional)', tag='protocol',
+                  value='SpiderProtCustomMask')
+    m1.addSubMenu(' Dimension reduction', tag='protocol',  
                   value='SpiderProtCAPCA')
-    m1.addSubMenu('Classification', tag='protocol',
+    m1.addSubMenu(' Classification', tag='protocol',
                   value='SpiderProtClassifyWard')
             
     settings.addProtocolMenu(menu)
-    settings.protMenuList.setIndex(1)
        
     
 def getScipionHome(userHome):
