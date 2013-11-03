@@ -299,15 +299,15 @@ def addProtocols(settings):
     
     settings.addProtocolMenu(menu)
     
-    addSpiderMSAProtocols(settings)
+    addSpiderMDAProtocols(settings)
     
     
-def addSpiderMSAProtocols(settings):
-    """ Write protocols related to Spider MSA workflow. """
-    menu = ProtocolConfig("MSA workflow")
+def addSpiderMDAProtocols(settings):
+    """ Write protocols related to Spider MDA workflow. """
+    menu = ProtocolConfig("MDA workflow")
     
     # ------------------- Particles ----------------------------
-    m1 = menu.addSubMenu('MSA workflow', tag='section')
+    m1 = menu.addSubMenu('MDA workflow', tag='section')
     
     m1.addSubMenu(' Import particles', tag='protocol', icon='bookmark.png',
                   value='ProtImportParticles')
@@ -321,6 +321,9 @@ def addSpiderMSAProtocols(settings):
                   value='SpiderProtCAPCA')
     m1.addSubMenu(' Classification', tag='protocol',
                   value='SpiderProtClassifyWard')
+    
+    m2 = menu.addSubMenu('Protocol MDA', tag='protocol',
+                         value='SpiderWfMDA')
             
     settings.addProtocolMenu(menu)
        

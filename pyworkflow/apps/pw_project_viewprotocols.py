@@ -281,6 +281,9 @@ class RunIOTreeProvider(TreeProvider):
         return actions
     
     def getObjectInfo(self, obj):
+        if obj is None or not obj.hasValue():
+            return None
+        
         if isinstance(obj, String):
             value = obj.get()
             info = {'key': value, 'text': value, 'values': (''), 'open': True}
@@ -288,6 +291,9 @@ class RunIOTreeProvider(TreeProvider):
             image = 'db_output.gif'
             parent = self.outputStr
             name = obj.getLastName()
+            
+            print "obj: ", obj
+            print "obj.getLastName(): ", obj.getLastName()
             
             if isinstance(obj, Pointer):
                 obj = obj.get()

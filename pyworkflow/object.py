@@ -135,6 +135,9 @@ class Object(object):
         for _, attr in self.getAttributesToStore():
             attr.cleanObjId()
             
+    def getObjParentId(self):
+        return self._objParentId
+            
     def getObjLabel(self):
         """ Return the label associated with this object"""
         return self._objLabel

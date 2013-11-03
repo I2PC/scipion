@@ -354,6 +354,7 @@ class ProtocolClassParam(StringParam):
     def __init__(self, **args):
         StringParam.__init__(self, **args)
         self.protocolClassName = String(args.get('protocolClassName'))
+        self.allowSubclasses = Boolean(args.get('allowSubclasses', False))
         
         
 class DigFreqParam(FloatParam):

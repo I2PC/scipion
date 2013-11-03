@@ -320,7 +320,20 @@ class ParamWidget():
             var = tk.StringVar()
             entry = tk.Entry(content, width=25, textvariable=var, state="readonly")
             entry.grid(row=0, column=0, sticky='w')
-            self._addButton("Select", 'zoom.png', self._browseProtocolClass)
+
+            protClassName = self.param.protocolClassName.get()
+            
+            if self.param.allowSubclasses:
+                from pyworkflow.em import findSubClasses, emProtocolsDict
+                classes = findSubClasses(emProtocolsDict, protClassName).keys()
+            else:
+                classes = [protClassName]
+            
+            if len(classes) > 1:
+                self._addButton("Select", 'zoom.png', self._browseProtocolClass)
+            else:
+                var.set(classes[0])
+            
             self._addButton("Edit", "edit.gif", self._openProtocolForm)
             #btn = Button(content, "Edit", command=self._openProtocolForm)
             #btn.grid(row=1, column=0)          
@@ -368,12 +381,18 @@ class ParamWidget():
             self.set(dlg.value)
             
     def _openProtocolForm(self, e=None):
-        className = self.get()
+        className = self.get().strip()
         
-        if len(className.strip()):
-            from pyworkflow.em import findClass
-            cls = findClass(self.get())
-            prot = cls()
+        if len(className):
+            instanceName = self.param.protocolClassName.get() + "Instance"
+            protocol = self.window.protocol
+            if not hasattr(protocol, instanceName):
+                from pyworkflow.em import findClass
+                cls = findClass(className)
+                protocol._insertChild(instanceName, cls())
+            
+            prot = getattr(protocol, instanceName)
+                
             prot.allowHeader.set(False)
             f = FormWindow("title", prot, self._protocolFormCallback, self.window, childMode=True)
             f.show()

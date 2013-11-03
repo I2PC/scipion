@@ -332,6 +332,7 @@ class ProjectRunsTreeProvider(TreeProvider):
     """
     def __init__(self, project):
         self.project = project
+        self._objDict = {}
     
     def getObjects(self):
         return self.project.getRuns() 
@@ -340,8 +341,15 @@ class ProjectRunsTreeProvider(TreeProvider):
         return [('Run', 250), ('State', 100), ('Time', 100)]
     
     def getObjectInfo(self, obj):
-        return {'key': obj.getObjId(),
+        objId = obj.getObjId()
+        self._objDict[objId] = obj
+        
+        info = {'key': obj.getObjId(),
                 'text': obj.getRunName(),
                 'values': (obj.status.get(), obj.getElapsedTime())}
+        objPid = obj.getObjParentId()
+        if objPid in self._objDict:
+            info['parent'] = self._objDict[objPid]
       
+        return info
 

@@ -56,12 +56,29 @@ class SpiderWfMDA(ProtClassify):
                       help='Input images to perform MDA')
         
         #form.addParam('maskType', )
-              
-        form.addParam('filterProtocolClass', ProtocolClassParam, 
-                      protocolClassName='ProtFilterParticles',
-                      label="Filter protocol", 
-                      help='Select which Filter Protocol do you want to use')        
+        #form.addSection(label='1.Filter')      
+        form.addParam('filterProtocol', ProtocolClassParam, 
+                      protocolClassName='SpiderProtFilter',
+                      label="1.Filter protocol", 
+                      help='Select which Filter Protocol do you want to use')      
         
+        #form.addSection(label='2.Align')      
+        form.addParam('alignProtocol', ProtocolClassParam, allowSubclasses=True,
+                      protocolClassName='ProtAlign',
+                      label="2.Align protocol", 
+                      help='Select which Filter Protocol do you want to use')  
+           
+        #form.addSection(label='3.Dimension reduction')      
+        form.addParam('dimredProtocol', ProtocolClassParam, 
+                      protocolClassName='SpiderProtCAPCA',
+                      label="3. Dimension reduction", 
+                      help='Select which Filter Protocol do you want to use')      
+        
+        #form.addSection(label='4.Classification')      
+        form.addParam('classifyProtocol', ProtocolClassParam, 
+                      protocolClassName='SpiderProtClassifyWard',
+                      label="4. Classification protocol", 
+                      help='Select which Filter Protocol do you want to use')         
         
     def _getFileName(self, key):
         #TODO: Move to a base Spider protocol
