@@ -327,21 +327,41 @@ class BooleanParam(Param):
 
         
 class PointerParam(Param):
+    """ This type of Param will serve to select existing objects
+    in the database that will be input for some protocol.
+    """
     def __init__(self, **args):
         Param.__init__(self, paramClass=Pointer, **args)
         # This will be the class to be pointed
         self.pointerClass = String(args.get('pointerClass'))
         # Some conditions on the pointed candidates
         self.pointerCondition = String(args.get('pointerCondition', None))
-        
         self.allowNull = Boolean(args.get('allowNull', False))
      
+        
+class RelationParam(Param):
+    def __init__(self, **args):
+        Param.__init__(self, paramClass=Pointer, **args)
+        # This will be the name of the relation
+        self.relationName = String(args.get('relationName'))
+        # This will be the parent param
+        self.relationParent = String(args.get('relationParent'))
+        self.relationReverse = Boolean(args.get('relationReverse', False))
+        self.allowNull = Boolean(args.get('allowNull', False))
+        
+        
+class ProtocolClassParam(StringParam):
+    def __init__(self, **args):
+        StringParam.__init__(self, **args)
+        self.protocolClassName = String(args.get('protocolClassName'))
+        
         
 class DigFreqParam(FloatParam):
     """ Digital frequency param. """
     def __init__(self, **args):
         FloatParam.__init__(self, **args)
         self.addValidator(FreqValidator)
+        
         
 class NumericListParam(StringParam):
     """ This class will serve to have list representations as strings.
@@ -362,19 +382,6 @@ class TupleParam(Param):
     """
     def __init__(self, **args):
         Param.__init__(self, **args)
-        
-class RelationParam(Param):
-    def __init__(self, **args):
-        Param.__init__(self, paramClass=Pointer, **args)
-        # This will be the name of the relation
-        self.relationName = String(args.get('relationName'))
-        # This will be the parent param
-        
-        self.relationParent = String(args.get('relationParent'))
-        
-        self.relationReverse = Boolean(args.get('relationReverse', False))
-
-        self.allowNull = Boolean(args.get('allowNull', False))
 # ------------------------------------------------------------------------
 #         Validators
 #-------------------------------------------------------------------------
