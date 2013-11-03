@@ -38,7 +38,8 @@ from gui import configureWeigths, Window
 from text import TaggedText
 from widgets import Button
 from pyworkflow.protocol.params import *
-from dialog import showInfo, TextDialog
+from dialog import showInfo, TextDialog, ListDialog, SubclassesTreeProvider, RelationsTreeProvider
+from tree import TreeProvider
 
 
 class BoolVar():
@@ -175,7 +176,26 @@ class SectionWidget(SectionFrame):
     def set(self, value):
         self.var.set(value)
     
+               
+#TODO: Move this class from here
+class ProtocolClassTreeProvider(TreeProvider):
+    """Will implement the methods to provide the object info
+    of subclasses objects(of className) found by mapper"""
+    def __init__(self, protocolClassName):
+        self.protocolClassName = protocolClassName
+     
+    def getObjects(self):
+        from pyworkflow.em import findSubClasses, emProtocolsDict
+        return [String(s) for s in findSubClasses(emProtocolsDict, self.protocolClassName).keys()]
+        
+    def getColumns(self):
+        return [('Protocol', 250)]
     
+    def getObjectInfo(self, obj):
+        return {'key': obj.get(),
+                'values': (obj.get(),)}
+        
+            
 class ParamWidget():
     """For each one in the Protocol parameters, there will be
     one of this in the Form GUI.
@@ -237,6 +257,9 @@ class ParamWidget():
     def _showHelpMessage(self, e=None):
         showInfo("Help", self.param.help.get(), self.parent)
         
+    def _showInfo(self, msg):
+        showInfo("Info", msg, self.parent)
+        
     def _showWizard(self, e=None):
         wizClass = self.window.wizards[self.paramName]
         wizClass().show(self.window)
@@ -292,6 +315,15 @@ class ParamWidget():
             if t is RelationParam:
                 btnFunc = self._browseRelation
             self._addButton("Select", 'zoom.png', btnFunc)
+        
+        elif t is ProtocolClassParam:
+            var = tk.StringVar()
+            entry = tk.Entry(content, width=25, textvariable=var, state="readonly")
+            entry.grid(row=0, column=0, sticky='w')
+            self._addButton("Select", 'zoom.png', self._browseProtocolClass)
+            self._addButton("Edit", "edit.gif", self._openProtocolForm)
+            #btn = Button(content, "Edit", command=self._openProtocolForm)
+            #btn.grid(row=1, column=0)          
         else:
             #v = self.setVarValue(paramName)
             var = tk.StringVar()
@@ -316,7 +348,6 @@ class ParamWidget():
     def _browseObject(self, e=None):
         """Select an object from DB
         This function is suppose to be used only for PointerParam"""
-        from pyworkflow.gui.dialog import SubclassesTreeProvider, ListDialog
         tp = SubclassesTreeProvider(self.window.protocol.mapper, self.param)
         dlg = ListDialog(self.parent, "Select object", tp)
         if dlg.value is not None:
@@ -325,12 +356,33 @@ class ParamWidget():
     def _browseRelation(self, e=None):
         """Select a relation from DB
         This function is suppose to be used only for RelationParam"""
-        from pyworkflow.gui.dialog import RelationsTreeProvider, ListDialog
         tp = RelationsTreeProvider(self.window.protocol, self.param)
         dlg = ListDialog(self.parent, "Select object", tp)
         if dlg.value is not None:
             self.set(dlg.value)
+            
+    def _browseProtocolClass(self, e=None):
+        tp = ProtocolClassTreeProvider(self.param.protocolClassName.get())
+        dlg = ListDialog(self.parent, "Select protocol", tp)
+        if dlg.value is not None:
+            self.set(dlg.value)
+            
+    def _openProtocolForm(self, e=None):
+        className = self.get()
         
+        if len(className.strip()):
+            from pyworkflow.em import findClass
+            cls = findClass(self.get())
+            prot = cls()
+            prot.allowHeader.set(False)
+            f = FormWindow("title", prot, self._protocolFormCallback, self.window, childMode=True)
+            f.show()
+        else:
+            self._showInfo("Select the protocol class first")
+        
+    def _protocolFormCallback(self, e=None):
+        pass
+    
     def _onVarChanged(self, *args):
         if self.callback is not None:
             self.callback(self.paramName)        
@@ -390,6 +442,7 @@ class FormWindow(Window):
         self.hostList = hostList
         self.protocol = protocol
         self.visualizeMode = args.get('visualizeMode', False)  # This control when to close or not after execute
+        self.childMode = args.get('childMode', False) # Allow to open child protocols form (for workflows)
         
         from pyworkflow.viewer import DESKTOP_TKINTER
         from pyworkflow.em import findWizards
@@ -428,16 +481,17 @@ class FormWindow(Window):
                           command=self.close)
         btnClose.grid(row=0, column=0, padx=5, pady=5, sticky='sw')
         t = '  Visualize  '
-        # Now save is not available for Visualize
-        if not self.visualizeMode:
+        # Save button is not added in VISUALIZE or CHID modes
+        if not self.visualizeMode and not self.childMode:
             btnSave = tk.Button(btnFrame, text="Save", image=self.getImage('filesave.png'), compound=tk.LEFT, font=self.font, 
                               command=self.save)
             btnSave.grid(row=0, column=1, padx=5, pady=5, sticky='sw')
             t = '   Execute   '
         # Add Execute/Visualize button
-        btnExecute = Button(btnFrame, text=t, fg='white', bg='#7D0709', font=self.font, 
-                        activeforeground='white', activebackground='#A60C0C', command=self.execute)
-        btnExecute.grid(row=0, column=2, padx=(15, 50), pady=5, sticky='se')
+        if not self.childMode:
+            btnExecute = Button(btnFrame, text=t, fg='white', bg='#7D0709', font=self.font, 
+                            activeforeground='white', activebackground='#A60C0C', command=self.execute)
+            btnExecute.grid(row=0, column=2, padx=(15, 50), pady=5, sticky='se')
         
         self.root.columnconfigure(0, weight=1)
         self.root.rowconfigure(1, weight=1)

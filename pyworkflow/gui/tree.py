@@ -226,8 +226,9 @@ class BoundTree(Tree):
         self._objects = self.provider.getObjects()
         for obj in self._objects:
             # If the object is a pointer that has a null value do not show
-            if ((not obj.isPointer()) or (obj.isPointer() and obj.get() is not None)): 
-                objDict = self.provider.getObjectInfo(obj)
+            #if ((not obj.isPointer()) or (obj.isPointer() and obj.get() is not None)): 
+            objDict = self.provider.getObjectInfo(obj)
+            if objDict is not None:
                 key = objDict.get('key')
                 text = objDict.get('text', key)
                 parent = objDict.get('parent', None)
@@ -266,6 +267,8 @@ class ObjectTreeProvider(TreeProvider):
         self._parentDict = {}
     
     def getObjectInfo(self, obj):
+        if obj.isPointer() and not obj.hasValue():
+            return None
         cls = obj.getClassName()
         if obj.getName() is None:
             t = cls
