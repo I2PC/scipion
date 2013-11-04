@@ -40,8 +40,6 @@ from spider import PcaFile
 from protocol_filters import SpiderProtFilter
 from protocol_custommask import SpiderProtCustomMask
 from protocol_align_apsr import SpiderProtAlignAPSR
-from protocol_ca_pca import SpiderProtCAPCA
-from protocol_ward import SpiderProtClassifyWard
 
     
 class SpiderViewerGeneric(Viewer):
@@ -69,5 +67,4 @@ class SpiderViewerGeneric(Viewer):
             XmippViewer().visualize(mask)
             # Remove location to visualize the whole stack
             runShowJ(mask.getFileName())
-            
             

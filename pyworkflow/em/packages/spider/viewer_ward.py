@@ -143,6 +143,21 @@ class SpiderViewerWard(ProtocolViewer):
         lt.paint(self._createNode)
         canvas.updateScrollRegion()
         
+    def getVisualizeDictWeb(self):
+        return {'doShowDendrogram': self.visualizeDendrogram,
+                'doShowClasses': self.visualizeClasses}
+        
+    @classmethod
+    def getView(cls):
+        """ This function will notify the web viewer for this protocol"""
+        return "viewerForm"
+    
+    @classmethod
+    def getViewFunction(cls):
+        """ This will return the name of the function to view
+        in web one (or all) params of the protocol"""
+        return "viewerWARD"
+        
         
 class SpiderImageBox(ImageBox):
     def _onClick(self, e=None):
