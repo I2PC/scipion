@@ -21,6 +21,7 @@ from xmipp_viewer_ML2D import *
 from xmipp_viewer_CL2D import *
 
 from spider_viewer_CAPCA import *
+from spider_viewer_WARD import *
 
 ############## 1ST STEP: LAUNCH VIEWER METHODS ##############
 def launch_viewer(request):
@@ -116,7 +117,6 @@ def viewerElement(request):
     return HttpResponse(jsonStr, mimetype='application/javascript')
 
 ############## AUX METHODS ##############
-
 def view_plots(request):
     projectName = request.session['projectName']
     project = loadProject(projectName)

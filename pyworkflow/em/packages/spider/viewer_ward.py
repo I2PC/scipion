@@ -144,8 +144,8 @@ class SpiderViewerWard(ProtocolViewer):
         canvas.updateScrollRegion()
         
     def getVisualizeDictWeb(self):
-        return {'doShowDendrogram': self.visualizeDendrogram,
-                'doShowClasses': self.visualizeClasses}
+        return {'doShowDendrogram': "doVisualizeDendrogram",
+                'doShowClasses': "doVisualizeClasses"}
         
     @classmethod
     def getView(cls):
