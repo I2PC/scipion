@@ -37,12 +37,12 @@ from convert import locationToSpider
 from glob import glob
 
 
-# TODO: Remove from ProtAlign, and put in other category     
-class SpiderProtCAPCA(ProtAlign):
+
+class SpiderProtCAPCA(EMProtocol):
     """ Correspondence Analysis or Principal Component Analysis.
     """
     def __init__(self):
-        ProtAlign.__init__(self)
+        EMProtocol.__init__(self)
         self._params = {'ext': 'stk',
                         'spiderParticles': 'particles_spider',
                         'spiderSel': 'particles_selfile',

@@ -59,7 +59,19 @@ def findClass(className):
     if className in emObjectsDict:
         return emObjectsDict[className]
     raise Exception("findClass: class '%s' not found." % className)
+
+def findSubClasses(classDict, className):
+    """ Find all subclasses of a give className. """
+    cls = classDict[className]
+    subclasses = {}
     
+    for k, v in classDict.iteritems():
+        if issubclass(v, cls):
+            subclasses[k] = v
+    
+    return subclasses
+
+
 def findViewers(className, environment):
     """ Find the available viewers for this class. """
     viewers = []

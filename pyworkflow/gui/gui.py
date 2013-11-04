@@ -317,7 +317,8 @@ class Window():
         menu = tk.Menu(self.root)
         self._addMenuChilds(menu, menuConfig)
         self.root.config(menu=menu)
-            
+        return menu
+        
     def _addMenuChilds(self, menu, menuConfig):
         """Helper function for creating main menu"""
         for sub in menuConfig:

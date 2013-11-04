@@ -226,8 +226,9 @@ class BoundTree(Tree):
         self._objects = self.provider.getObjects()
         for obj in self._objects:
             # If the object is a pointer that has a null value do not show
-            if ((not obj.isPointer()) or (obj.isPointer() and obj.get() is not None)): 
-                objDict = self.provider.getObjectInfo(obj)
+            #if ((not obj.isPointer()) or (obj.isPointer() and obj.get() is not None)): 
+            objDict = self.provider.getObjectInfo(obj)
+            if objDict is not None:
                 key = objDict.get('key')
                 text = objDict.get('text', key)
                 parent = objDict.get('parent', None)
@@ -266,6 +267,8 @@ class ObjectTreeProvider(TreeProvider):
         self._parentDict = {}
     
     def getObjectInfo(self, obj):
+        if obj.isPointer() and not obj.hasValue():
+            return None
         cls = obj.getClassName()
         if obj.getName() is None:
             t = cls
@@ -329,6 +332,7 @@ class ProjectRunsTreeProvider(TreeProvider):
     """
     def __init__(self, project):
         self.project = project
+        self._objDict = {}
     
     def getObjects(self):
         return self.project.getRuns() 
@@ -337,8 +341,15 @@ class ProjectRunsTreeProvider(TreeProvider):
         return [('Run', 250), ('State', 100), ('Time', 100)]
     
     def getObjectInfo(self, obj):
-        return {'key': obj.getObjId(),
+        objId = obj.getObjId()
+        self._objDict[objId] = obj
+        
+        info = {'key': obj.getObjId(),
                 'text': obj.getRunName(),
                 'values': (obj.status.get(), obj.getElapsedTime())}
+        objPid = obj.getObjParentId()
+        if objPid in self._objDict:
+            info['parent'] = self._objDict[objPid]
       
+        return info
 

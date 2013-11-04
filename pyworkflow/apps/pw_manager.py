@@ -156,10 +156,10 @@ class ManagerWindow(gui.Window):
         lf.grid(row=0, column=1, sticky='news', padx=10, pady=10, rowspan=2)
         text = TaggedText(lf, width=40, height=15, bd=0)
         text.grid(row=0, column=0, sticky='news')
-        text.setReadOnly(True)
         gui.configureWeigths(lf)
         
         self.createProjectList(text)
+        text.setReadOnly(True)
         self.text = text
         f.rowconfigure(0, weight=1)
         f.rowconfigure(1, weight=1)

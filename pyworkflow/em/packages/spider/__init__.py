@@ -33,6 +33,11 @@ from protocol_filters import SpiderProtFilter
 from protocol_align_apsr import SpiderProtAlignAPSR
 from protocol_custommask import SpiderProtCustomMask
 from protocol_ca_pca import SpiderProtCAPCA
+from protocol_ward import SpiderProtClassifyWard
+from protocol_mda import SpiderWfMDA
+
 from wizard import SpiderProtMaskWizard, SpiderProtMaskRadiiWizard, SpiderGaussianFilterWizard #, SpiderFermiFilterWizard
 
-from viewer import *
+from viewer import SpiderViewerGeneric
+from viewer_capca import SpiderViewerCAPCA
+from viewer_ward import SpiderViewerWard

@@ -350,6 +350,7 @@ def askString(title, label, parent, entryWidth=20):
     return d.value
     
 
+#TODO: Move this class from here
 class SubclassesTreeProvider(TreeProvider):
     """Will implement the methods to provide the object info
     of subclasses objects(of className) found by mapper"""
@@ -371,6 +372,7 @@ class SubclassesTreeProvider(TreeProvider):
         return {'key': '%s.%s' % (obj.getName(), obj.strId()),
                 'values': (obj.strId(), obj.getClassName())}
 
+#TODO: Move this class from here
 class RelationsTreeProvider(SubclassesTreeProvider):
     """Will implement the methods to provide the object info
     of subclasses objects(of className) found by mapper"""
@@ -383,8 +385,8 @@ class RelationsTreeProvider(SubclassesTreeProvider):
             self.getObjects = lambda: queryFunc(relationParam.relationName.get(), parentObject)
         else:
             self.getObjects = lambda: []
-               
-        
+
+                
 class ListDialog(Dialog):
     """Dialog to select an element from a list.
     It is implemented using a Tree widget"""

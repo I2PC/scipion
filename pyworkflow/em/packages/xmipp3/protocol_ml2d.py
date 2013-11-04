@@ -36,12 +36,11 @@ from convert import createXmippInputImages, readSetOfClasses2D
 #from xmipp3 import XmippProtocol
         
         
-class XmippProtML2D(ProtAlign, ProtClassify):
+class XmippProtML2D(ProtClassify):
     """ Protocol to preprocess a set of micrographs in the project. """
     _label = 'Xmipp ML2D'
     
     def __init__(self, **args):
-        ProtAlign.__init__(self, **args)
         ProtClassify.__init__(self, **args)
         
         self.progId = "ml"

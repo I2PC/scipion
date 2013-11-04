@@ -36,13 +36,13 @@ from convert import locationToSpider
 from glob import glob
 
 
-# TODO: Remove from ProtAlign, and put in other category     
-class SpiderProtCustomMask(ProtAlign):
+
+class SpiderProtCustomMask(ProtCreateMask):
     """ Reference-free alignment shift and rotational alignment of an image series. 
     Uses Spider AP SR command.
     """
     def __init__(self):
-        ProtAlign.__init__(self)
+        ProtCreateMask.__init__(self)
         self._params = {'ext': 'stk',
                         'inputImage': 'input_image',
                         'outputMask': 'output_mask'
@@ -99,16 +99,6 @@ class SpiderProtCustomMask(ProtAlign):
         self._leaveWorkingDir() # Go back to project dir
 
         maskFn = self._getPath('%(outputMask)s.%(ext)s' % self._params )
-        #maskSet = self._createSetOfParticles()
-        #maskSet.copyInfo(self.inputImg)
-        
-#        for i in range(1, 8): # 7 images in mask stack
-#            img = Particle()
-#            img.setLocation(i, maskFn)
-#            maskSet.append(img)
-#            
-#        maskSet.write()
-#        self._defineOutputs(outputMask=maskSet)
         mask = Mask()
         mask.copyInfo(self.inputImg)
         mask.setLocation(4, maskFn)

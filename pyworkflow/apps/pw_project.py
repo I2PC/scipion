@@ -58,39 +58,7 @@ import pyworkflow.apps.config as config
 from config import *
 from pw_browser import BrowserWindow
 
-
-def populateTree(self, tree, prefix, obj, level=0):
-    text = obj.text.get()
-    if text:
-        value = obj.value.get(text)
-        key = '%s.%s' % (prefix, value)
-        img = obj.icon.get('')
-        tag = obj.tag.get('')
-            
-        if len(img):
-            img = self.getImage(img)
-        item = tree.insert(prefix, 'end', key, text=text, image=img, tags=(tag))
-        
-        if level < 2:
-            tree.item(item, open=True)
-        if obj.value.hasValue() and tag == 'protocol_base':
-            protClassName = value.split('.')[-1] # Take last part
-            prot = emProtocolsDict.get(protClassName, None)
-            if prot is not None:
-                tree.item(item, image=self.getImage('class_obj.gif'))
-                for k, v in emProtocolsDict.iteritems():
-                    if not v is prot and issubclass(v, prot):
-                        key = '%s.%s' % (item, k)
-                        tree.insert(item, 'end', key, text=k, tags=('protocol'))
-                        
-            else:
-                raise Exception("Class '%s' not found" % obj.value.get())
-    else:
-        key = prefix
-    
-    for sub in obj:
-        populateTree(self, tree, key, sub, level+1)
-    
+   
     
 VIEW_PROTOCOLS = 'Protocols'
 VIEW_DATA = 'Data'
@@ -115,7 +83,7 @@ class ProjectWindow(gui.Window):
         content.grid(row=0, column=0, sticky='news')
         self.content = content
         
-        self.createMainMenu(self.menuCfg)
+        self.createMainMenu()
         
         header = self.createHeaderFrame(content)
         header.grid(row=0, column=0, sticky='new')
@@ -127,6 +95,43 @@ class ProjectWindow(gui.Window):
                           }
         self.switchView(VIEW_PROTOCOLS)
 
+    def createMainMenu(self):
+        menu = gui.Window.createMainMenu(self, self.menuCfg) 
+        self._createProtocolsMenu(menu)
+                
+    def _createProtocolsMenu(self, menu):
+        """ Add all possible configurations of protocols 
+        to be selected from the menu.
+        """
+        self.protMenu = tk.Menu(self.root, tearoff=0)
+        menu.add_cascade(label='Protocols', menu=self.protMenu)
+        protList = self.settings.protMenuList
+        for i, pm in enumerate(protList):
+            def addSubMenu(i, l):
+                self.protMenu.add_command(label=l, command=lambda: self._onSelectProtocols(i))
+                self._unmarkProtocolMenu(i)
+            addSubMenu(i, pm.text.get())
+        self._markProtocolMenu()
+        
+    def _markProtocolMenu(self):
+        self.protMenu.entryconfig(self.protIndex, image=self.getImage('button_ok.png'), compound=tk.LEFT)
+        
+    def _unmarkProtocolMenu(self, protIndex):
+        self.protMenu.entryconfig(protIndex, image=self.getImage('button_empty.png'), compound=tk.LEFT)
+                  
+    def _onSelectProtocols(self, protIndex):
+        """ This function will be called when a protocol menu
+        is selected. The index of the new menu is passed. 
+        """
+        self.protCfg = self.settings.setCurrentProtocolMenu(protIndex)
+        self.saveSettings()
+        if self.view == VIEW_PROTOCOLS: # Force to reload protocol view if selected
+            self.viewWidget.updateProtocolsTree(self.protCfg)
+        self._unmarkProtocolMenu(self.protIndex)
+        self.protIndex = protIndex
+        self._markProtocolMenu()
+            #self.switchView(self.view)
+        
     def createHeaderFrame(self, parent):
         """ Create the Header frame at the top of the windows.
         It has (from left to right):
@@ -166,6 +171,10 @@ class ProjectWindow(gui.Window):
     
     def saveSettings(self):
         self.settings.write()
+        
+    def _onClosing(self):
+        self.saveSettings() 
+        gui.Window._onClosing(self)
     
     def _viewComboSelected(self, e=None):
         if self.viewVar.get() != self.view:
@@ -216,6 +225,7 @@ class ProjectWindow(gui.Window):
         self.generalCfg = self.settings.getConfig()
         self.menuCfg = self.settings.getCurrentMenu()
         self.protCfg = self.settings.getCurrentProtocolMenu()
+        self.protIndex = self.settings.protMenuList.getIndex()
                 
 #    def loadProjectConfig(self):
 #        self.settings = config.loadSettings(self.project.getSettingsPath())
