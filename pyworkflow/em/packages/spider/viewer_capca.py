@@ -159,3 +159,20 @@ class SpiderViewerCAPCA(ProtocolViewer):
         a.plot(xFactors, yFactors, 'o')
         xplotter.show()
         
+    def getVisualizeDictWeb(self):
+        return {'doShowEigenImages': 'doShowEigenImages',
+                'doShowReconsImages': 'doShowReconsImages',
+                'doShowHistogram': self._plotHistogram,
+                'doShowFactorMaps': self._plotFactorMaps,
+                'doShowPcaFile': 'doShowPcaFile' }
+        
+    @classmethod
+    def getView(cls):
+        """ This function will notify the web viewer for this protocol"""
+        return "viewerForm"
+    
+    @classmethod
+    def getViewFunction(cls):
+        """ This will return the name of the function to view
+        in web one (or all) params of the protocol"""
+        return "viewerCAPCA"

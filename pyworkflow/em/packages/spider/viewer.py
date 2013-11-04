@@ -67,5 +67,4 @@ class SpiderViewerGeneric(Viewer):
             XmippViewer().visualize(mask)
             # Remove location to visualize the whole stack
             runShowJ(mask.getFileName())
-         
-         
+            
