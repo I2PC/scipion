@@ -315,6 +315,8 @@ void CTFDescription::produceSideInfo()
     //    h: Planck constant
     //    m: electron mass
     //    e: electron charge
+    // lambda units in amstron
+
     lambda=12.2643247/sqrt(local_kV*(1.+0.978466e-6*local_kV)); // See http://en.wikipedia.org/wiki/Electron_diffraction
     //
     defocus_average   = -(DeltafU + DeltafV) * 0.5;
@@ -930,44 +932,28 @@ double errorBetween2CTFs( MetaData &MD1,
 
 
 double errorMaxFreqCTFs( MetaData &MD1,
-                         MetaData &MD2)
+                         double phaseRad)
 {
-    //This is a quick and extremely dirty solution
-    //return angstroms
-
-    CTFDescription CTF1, CTF2;
+    CTFDescription CTF1;
 
     CTF1.enable_CTF=true;
     CTF1.enable_CTFnoise=false;
     CTF1.readFromMetadataRow(MD1,MD1.firstObject());
-    double defocus1 = (CTF1.DeltafU + CTF1.DeltafV)/2.0;
     CTF1.produceSideInfo();
 
-    CTF2.enable_CTF=true;
-    CTF2.enable_CTFnoise=false;
-    CTF2.readFromMetadataRow(MD2,MD2.firstObject());
-    double defocus2 = (CTF2.DeltafU + CTF2.DeltafV)/2.0;
-    CTF2.produceSideInfo();
 
+//#define DEBUG
 #ifdef DEBUG
+    std::cerr << "DEBUG_ROB: CTF1.DeltaU: " << CTF1.DeltafU << std::endl;
+    std::cerr << "DEBUG_ROB: CTF1.DeltaV: " << CTF1.DeltafV << std::endl;
+    std::cerr << "DEBUG_ROB: var: " << phaseRad/(CTF1.K1*abs(CTF1.DeltafU - CTF1.DeltafV)) << std::endl;
+    std::cerr << "DEBUG_ROB: var: " << sqrt(phaseRad/(CTF1.K1*abs(CTF1.DeltafU - CTF1.DeltafV))) << std::endl;
+    std::cerr << "DEBUG_ROB: var: " << 1/sqrt(phaseRad/(CTF1.K1*abs(CTF1.DeltafU - CTF1.DeltafV))) << std::endl;
 
-    Matrix1D<double> freq(2); // Frequencies for Fourier plane
-    double iTm=1.0/CTF1.Tm;
-    for (int i=0; i<64; ++i)
-    {
-        FFT_IDX2DIGFREQ(i, 256, YY(freq));
-        FFT_IDX2DIGFREQ(i, 256, XX(freq));
-        freq *= iTm;
-        CTF1.precomputeValues(XX(freq),YY(freq));
-        CTF2.precomputeValues(XX(freq),YY(freq));
-        std::cerr << "DEBUG_ROB: "
-        << XX(freq) << " "
-        << CTF1.getValuePureWithoutDampingAt() << " "
-        << CTF2.getValuePureWithoutDampingAt() << " "
-        << std::endl;
-    }
 #endif
-    return 1.0/sqrt(PI/(CTF1.K1*abs(defocus1-defocus2)));
+#undef DEBUG
+    //Armstrong ^-1
+    return 1.0/sqrt(phaseRad/(CTF1.K1*abs(CTF1.DeltafU - CTF1.DeltafV)));
 }
 
 
@@ -993,7 +979,7 @@ double errorMaxFreqCTFs2D( MetaData &MD1,
     double iTm=1.0/CTF1.Tm;
     size_t xDim, yDim;
     xDim = yDim = Xdim;
-#define DEBUG
+//#define DEBUG
 #ifdef DEBUG
 
     Image<double> arg1(xDim,yDim);
@@ -1016,7 +1002,6 @@ double errorMaxFreqCTFs2D( MetaData &MD1,
 
     int counter = 0 ;
     double _freq=0.;
-    std::cerr << "DEBUG_ROB: phaseRad: " << phaseRad << std::endl;
     for (int i=0; i<(int)yDim; ++i)
     {
         FFT_IDX2DIGFREQ(i, yDim, YY(freq));

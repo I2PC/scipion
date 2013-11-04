@@ -95,25 +95,19 @@ TEST_F( CtfTest, errorMaxFreqCTFs)
     long objectId = metadata1.addObject();
     metadata1.setValue(MDL_CTF_SAMPLING_RATE, 2., objectId);
     metadata1.setValue(MDL_CTF_VOLTAGE, 300., objectId);
-    metadata1.setValue(MDL_CTF_DEFOCUSU, 7500., objectId);
+    metadata1.setValue(MDL_CTF_DEFOCUSU, 6000., objectId);
     metadata1.setValue(MDL_CTF_DEFOCUSV, 7500., objectId);
     metadata1.setValue(MDL_CTF_DEFOCUS_ANGLE, 45., objectId);
     metadata1.setValue(MDL_CTF_CS, 2., objectId);
     metadata1.setValue(MDL_CTF_Q0, 0.1, objectId);
-
-    MetaData metadata2;
-    objectId = metadata2.addObject();
-    metadata2.setValue(MDL_CTF_SAMPLING_RATE, 2., objectId);
-    metadata2.setValue(MDL_CTF_VOLTAGE, 300., objectId);
-    metadata2.setValue(MDL_CTF_DEFOCUSU, 5000., objectId);
-    metadata2.setValue(MDL_CTF_DEFOCUSV, 5000., objectId);
-    metadata2.setValue(MDL_CTF_DEFOCUS_ANGLE, 45., objectId);
-    metadata2.setValue(MDL_CTF_CS, 2., objectId);
-    metadata2.setValue(MDL_CTF_Q0, 0.1, objectId);
-
-    double resolution = errorMaxFreqCTFs(metadata1,
-                             metadata2);
-    EXPECT_FLOAT_EQ(resolution,7.0156283);
+    double resolution;
+//    for (double f=0; f < 4000; f+=100.){
+//    		metadata1.setValue(MDL_CTF_DEFOCUSV, f, objectId);
+//            resolution = errorMaxFreqCTFs(metadata1,HALFPI);
+//            std::cerr << "f=" << f << " " << resolution <<std::endl;
+//    }
+    resolution = errorMaxFreqCTFs(metadata1,HALFPI);
+    EXPECT_FLOAT_EQ(resolution,7.6852355);
     XMIPP_CATCH
 }
 
@@ -142,7 +136,7 @@ TEST_F( CtfTest, errorMaxFreqCTFs2D)
 
     double resolution = errorMaxFreqCTFs2D(metadata1,
                              metadata2,256,HALFPI);
-    EXPECT_NEAR(resolution,3.94458,0.00001);
+    EXPECT_NEAR(resolution,13.921659080780355,0.00001);
     XMIPP_CATCH
 }
 

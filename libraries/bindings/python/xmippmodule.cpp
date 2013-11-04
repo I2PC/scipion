@@ -815,22 +815,20 @@ xmipp_errorBetween2CTFs(PyObject *obj, PyObject *args, PyObject *kwargs)
 PyObject *
 xmipp_errorMaxFreqCTFs(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
-    PyObject *pyMd1, *pyMd2;
+    PyObject *pyMd1;
+    double phaseDiffRad;
 
-    if (PyArg_ParseTuple(args, "OO", &pyMd1, &pyMd2))
+    if (PyArg_ParseTuple(args, "Od", &pyMd1, &phaseDiffRad))
     {
         try
         {
             if (!MetaData_Check(pyMd1))
                 PyErr_SetString(PyExc_TypeError,
                                 "Expected MetaData as first argument");
-            else if (!MetaData_Check(pyMd2))
-                PyErr_SetString(PyExc_TypeError,
-                                "Expected MetaData as second argument");
             else
             {
                 double resolutionA = errorMaxFreqCTFs(MetaData_Value(pyMd1),
-                                                      MetaData_Value(pyMd2)
+                                                      phaseDiffRad
                                                      );
                 return Py_BuildValue("f", resolutionA);
             }
