@@ -86,6 +86,12 @@ class SpiderViewerCAPCA(ProtocolViewer):
             showTextfileViewer("PCA files", [self.protocol.imcFile.filename.get()])
             
     def _plotHistogram(self, param=None):
+        from pyworkflow.em.packages.xmipp3.plotter import XmippPlotter
+        fn = self.protocol._getFileName('eigFile')
+        xplotter = self.prepPlotHistogram(fn)
+        xplotter.show()
+       
+    def prepPlotHistogram(self, filename, param=None):
         """ First we parse the cas_EIG file and we read:
         first line: take the number of eigen values.
         then one line per factor and we read the percent and cumulative percent.
@@ -94,7 +100,8 @@ class SpiderViewerCAPCA(ProtocolViewer):
         from matplotlib.ticker import FormatStrFormatter
         from pyworkflow.em.packages.xmipp3.plotter import XmippPlotter
         
-        fn = self.protocol._getFileName('eigFile')
+#        fn = self.protocol._getFileName('eigFile')
+        fn = filename
         f = open(fn)
         values = f.readline().split()
         n = int(values[0]) # Number of factors
@@ -123,15 +130,23 @@ class SpiderViewerCAPCA(ProtocolViewer):
         a.set_ylim([0, percents[0] + 5])
         #a.set_xlim([0.8, n + 1])
         
-        xplotter.show()
+#        xplotter.show()
+        return xplotter
         
         #showTextfileViewer("PCA files", [])
         
     def _plotFactorMaps(self, param=None):
         from pyworkflow.em.packages.xmipp3.plotter import XmippPlotter
+        fn = self.protocol._getFileName('imcFile')
+        xplotter = self.prepPlotFactorMaps(fn)
+        xplotter.show()
+        
+    def prepPlotFactorMaps(self, filename, param=None):
+        from pyworkflow.em.packages.xmipp3.plotter import XmippPlotter
         
         # Parse the file
-        fn = self.protocol._getFileName('imcFile')
+#        fn = self.protocol._getFileName('imcFile')
+        fn = filename
         f = open(fn)
         values = f.readline().split()
         n = int(values[0]) # Number of images
@@ -157,13 +172,15 @@ class SpiderViewerCAPCA(ProtocolViewer):
         a = xplotter.createSubPlot("Factor %d vs %d" % (x, y), 
                                    "Factor %d" % x, "Factor %d" % y)
         a.plot(xFactors, yFactors, 'o')
-        xplotter.show()
+#        xplotter.show()
+        
+        return xplotter
         
     def getVisualizeDictWeb(self):
         return {'doShowEigenImages': 'doShowEigenImages',
                 'doShowReconsImages': 'doShowReconsImages',
-                'doShowHistogram': self._plotHistogram,
-                'doShowFactorMaps': self._plotFactorMaps,
+                'doShowHistogram': "doPlotHistogram",
+                'doShowFactorMaps': "doPlotFactorMaps",
                 'doShowPcaFile': 'doShowPcaFile' }
         
     @classmethod
