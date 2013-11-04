@@ -93,7 +93,7 @@ class SpiderProtCAPCA(SpiderProtocol):
         # Copy mask if selected
         if self.maskType > 0: # mask from file
             maskFn = self._getFileName('spiderMask')
-            ih.convert(self.maskImage.get().getLocation(), 
+            ImageHandler().convert(self.maskImage.get().getLocation(), 
                        (1, maskFn))
         # Copy template scripts
         copyTemplate('ploteigen.gnu', self._getPath())

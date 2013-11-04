@@ -141,4 +141,18 @@ class SpiderProtAlignAPSR(ProtAlign, SpiderProtocol):
         summary = []
         return summary
     
+    def _validate(self):
+        errors = []
+        particles = self.inputParticles.get()
+        xdim = particles.getDimensions()[0]
+        r = xdim / 2
+        innerRadius = self.innerRadius.get()
+        outerRadius = self.outerRadius.get()
+        if innerRadius > r or innerRadius < 0:
+            errors.append("<innerRadius> should be between 0 and %d" % r)        
+        if outerRadius > r or outerRadius < 0:
+            errors.append("<outerRadius> should be between 0 and %d" % r)
+        
+        return errors
+    
 
