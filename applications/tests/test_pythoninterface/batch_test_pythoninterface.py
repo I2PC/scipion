@@ -168,28 +168,20 @@ class TestXmippPythonInterface(unittest.TestCase):
 
     def test_xmipp_errorMaxFreqCTFs(self):
         '''activateMathExtensions'''
+        from math import pi
         md1 = MetaData()
         id = md1.addObject()
         md1.setValue(MDL_CTF_SAMPLING_RATE, 2., id)
         md1.setValue(MDL_CTF_VOLTAGE, 300., id);
-        md1.setValue(MDL_CTF_DEFOCUSU, 7500., id);
+        md1.setValue(MDL_CTF_DEFOCUSU, 6000., id);
         md1.setValue(MDL_CTF_DEFOCUSV, 7500., id);
         md1.setValue(MDL_CTF_DEFOCUS_ANGLE, 45., id);
         md1.setValue(MDL_CTF_CS, 2., id);
         md1.setValue(MDL_CTF_Q0, 0.1, id);
 
-        md2 = MetaData()
-        id = md2.addObject()
-        md2.setValue(MDL_CTF_SAMPLING_RATE, 2., id)
-        md2.setValue(MDL_CTF_VOLTAGE, 300., id);
-        md2.setValue(MDL_CTF_DEFOCUSU, 5000., id);
-        md2.setValue(MDL_CTF_DEFOCUSV, 5000., id);
-        md2.setValue(MDL_CTF_DEFOCUS_ANGLE, 45., id);
-        md2.setValue(MDL_CTF_CS, 2., id);
-        md2.setValue(MDL_CTF_Q0, 0.1, id);
-        resolution = errorMaxFreqCTFs(md1,md2)
+        resolution = errorMaxFreqCTFs(md1,pi/2.)
 
-        self.assertAlmostEqual(resolution, 7.0156283,2)
+        self.assertAlmostEqual(resolution, 7.6852355,2)
 
 
     def test_xmipp_errorMaxFreqCTFs2D(self):
