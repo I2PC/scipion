@@ -138,12 +138,16 @@ $(document).ready(function() {
 						for(x=0;x<value.length;x++){
 							customPopup(value[x],1024,600);
 						}
-					} else if(key=="url"){
+					}else if(key=="url"){
 						customPopup(value,1024,600);
 					} else if(key=="html"){
 						customPopupHTML(value,600,500);
 					} else if(key=="plot"){
 						customPopup(value,600,500);
+					} else if(key=="plots"){
+						for(x=0;x<value.length;x++){
+							customPopup(value[x],600,500)
+						}
 					} else if(key=="error"){
 						var msg = messiError(value);
 						launchMessiSimple("Error",msg);

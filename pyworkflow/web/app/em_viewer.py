@@ -113,18 +113,39 @@ def viewerElement(request):
 ############## VIEWER SPIDER CAPCA ############
 def viewerCAPCA(request, protocol, protocolViewer):
     ioDict = {}
-
-    if protocolViewer.doShowEigenImages:
-        typeUrl, url = doShowEigenImages(request, protocol, protocolViewer)
+    # SHOWJS
+    if protocolViewer.doShowEigenImages and protocolViewer.doShowReconsImages:
+        typeUrl, url = doShowImagesCAPCA(request, protocol, protocolViewer)
         ioDict[typeUrl]= url
-    if protocolViewer.doShowReconsImages:
-        typeUrl, url = doShowReconsImages(request, protocol, protocolViewer)
+    else:   
+        if protocolViewer.doShowEigenImages:
+            typeUrl, url = doShowEigenImages(request, protocol, protocolViewer)
+            ioDict[typeUrl]= url
+        elif protocolViewer.doShowReconsImages:
+            typeUrl, url = doShowReconsImages(request, protocol, protocolViewer)
+            ioDict[typeUrl]= url
+    # PLOTS
+    if protocolViewer.doShowHistogram and protocolViewer.doShowFactorMaps:
+        typeUrl, url = doPlotsCAPCA(request, protocol, protocolViewer)
         ioDict[typeUrl]= url
+    else:
+        if protocolViewer.doShowHistogram:
+            typeUrl, url = doPlotsCAPCA(request, protocol, protocolViewer)
+            ioDict[typeUrl]= url
+        elif protocolViewer.doShowFactorMaps:
+            typeUrl, url = doPlotFactorMaps(request, protocol, protocolViewer)
+            ioDict[typeUrl]= url
+    # FILE VIEWER
     if protocolViewer.doShowPcaFile:
         typeUrl, url = doShowPcaFile(request, protocol, protocolViewer)
         ioDict[typeUrl]= url
         
     return ioDict
+
+def doShowImagesCAPCA(request, protocol, protocolViewer):
+    _, eigenUrl = doShowEigenImages(request, protocol, protocolViewer)
+    _, reconsUrl = doShowReconsImages(request, protocol, protocolViewer)
+    return "showjs", [str(eigenUrl) , str(reconsUrl)]
 
 def doShowEigenImages(request, protocol, protocolViewer):
     return "showj", "/visualize_object/?path="+ protocol._getFileName('eigenimages')
@@ -135,6 +156,27 @@ def doShowReconsImages(request, protocol, protocolViewer):
 def doShowPcaFile(request, protocol, protocolViewer):
     html = textfileViewer("PCA files", [protocol.imcFile.filename.get()])
     return "html", html
+
+def doPlotsCAPCA(request, protocol, protocolViewer):
+    _, histogram = doPlotHistogram(request, protocol, protocolViewer)
+    _, factorMaps = doPlotFactorMaps(request, protocol, protocolViewer)
+    return "plots", [str(histogram) , str(factorMaps)]
+
+def doPlotHistogram(request, protocol, protocolViewer):
+    return "plot","/view_plots/?function=plotHistogram&protViewerClass="+ str(protocolViewer.getClassName())+ "&protId="+ str(protocol.getObjId())
+
+def plotHistogram(request, protocol, protocolViewer):
+    fn = protocol._getFileName('eigFile')
+    xplotter = protocolViewer.prepPlotHistogram(fn)
+    return xplotter
+
+def doPlotFactorMaps(request, protocol, protocolViewer):
+    return "plot","/view_plots/?function=plotFactorMaps&protViewerClass="+ str(protocolViewer.getClassName())+ "&protId="+ str(protocol.getObjId())
+
+def plotFactorMaps(request, protocol, protocolViewer):
+    fn = protocol._getFileName('imcFile')
+    xplotter = protocolViewer.prepPlotFactorMaps(fn)
+    return xplotter
 
 ############## VIEWER XMIPP CL2D ##############
 def viewerCL2D(request, protocol, protocolViewer):
@@ -239,27 +281,27 @@ def doSomePlotsML2D(protocol, protocolViewer):
             plots = plots + p + "-"
     
     if plots != "":
-        return "plots","/view_plots/?function=somePLotsML2D&plots="+str(plots)+"&protViewerClass="+ str(protocolViewer.getClassName())+ "&protId="+ str(protocol.getObjId())
+        return "plots","/view_plots/?function=somePlotsML2D&plots="+str(plots)+"&protViewerClass="+ str(protocolViewer.getClassName())+ "&protId="+ str(protocol.getObjId())
     else:
         return "", None
 
 def doShowLL(request, protocol, protocolViewer):
-    return "plot","/view_plots/?function=somePLotsML2D&plots=doShowLL&protViewerClass="+ str(protocolViewer.getClassName())+ "&protId="+ str(protocol.getObjId())
+    return "plot","/view_plots/?function=somePlotsML2D&plots=doShowLL&protViewerClass="+ str(protocolViewer.getClassName())+ "&protId="+ str(protocol.getObjId())
 
 def doShowPmax(request, protocol, protocolViewer):
-    return "plot","/view_plots/?function=somePLotsML2D&plots=doShowPmax&protViewerClass="+ str(protocolViewer.getClassName())+ "&protId="+ str(protocol.getObjId())
+    return "plot","/view_plots/?function=somePlotsML2D&plots=doShowPmax&protViewerClass="+ str(protocolViewer.getClassName())+ "&protId="+ str(protocol.getObjId())
 
 def doShowSignalChange(request, protocol, protocolViewer):
-    return "plot","/view_plots/?function=somePLotsML2D&plots=doShowSignalChange&protViewerClass="+ str(protocolViewer.getClassName())+ "&protId="+ str(protocol.getObjId())
+    return "plot","/view_plots/?function=somePlotsML2D&plots=doShowSignalChange&protViewerClass="+ str(protocolViewer.getClassName())+ "&protId="+ str(protocol.getObjId())
     
 def doShowMirror(request, protocol, protocolViewer):
-    return "plot","/view_plots/?function=somePLotsML2D&plots=doShowMirror&protViewerClass="+ str(protocolViewer.getClassName())+ "&protId="+ str(protocol.getObjId())
+    return "plot","/view_plots/?function=somePlotsML2D&plots=doShowMirror&protViewerClass="+ str(protocolViewer.getClassName())+ "&protId="+ str(protocol.getObjId())
 
-def allPlotsML2D(request, protocolViewer, protocol):
+def allPlotsML2D(request, protocol, protocolViewer):
     xplotter = createPlots(protocol, protocolViewer._plotVars)
     return xplotter
 
-def somePLotsML2D(request, protocolViewer, protocol):
+def somePlotsML2D(request, protocol, protocolViewer):
     plots = request.GET.get('plots', None)
     plots = str(plots).split("-")
     if len(plots) > 1:
@@ -282,7 +324,7 @@ def view_plots(request):
     functionName = request.GET.get('function', None)
     function = globals().get(functionName, None)
     
-    xplotter = function(request, protocolViewer, protocol)
+    xplotter = function(request, protocol, protocolViewer)
     
     canvas = xplotter.getCanvas()
     response = HttpResponse(content_type='image/png')
