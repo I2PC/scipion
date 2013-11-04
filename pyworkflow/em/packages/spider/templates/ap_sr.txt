@@ -12,9 +12,7 @@
 
 [numberOfParticles] = %(numberOfParticles)d  ; Pass the number of images instead of the selfile
 fr g
-[unaligned]%(particles)s@******  ; input (filtered?) particles
-fr g
-[unalignedBig]%(particlesBig)s@******  ; particles with BIG endian (TODO: Remove this later)
+[particles]%(particles)s@******  ; input unaliged particles
 
 ; --------------- Output files ---------------
 
@@ -54,19 +52,9 @@ _2      ; OUTPUT
 (0.02)  ; filter radius
 
 
-; CONVERT TO BIG ENDIAN (ONLY AFTER XMIPP RESULT IN LITTLEENDIAN)
-
-; loop through particles
-DO LB2 [i]=1,[numberOfParticles]
-    CP
-    [unaligned][i]
-    [unalignedBig][i]
-LB2
-; end particle-loop
-
 ; run reference-free alignment
 AP SR
-[unalignedBig]        ; particles to be aligned
+[particles]        ; particles to be aligned
 1-[numberOfParticles]  ; selection file
 [outerRadius]      ; expected size of the object
 [innerRadius],[lastRing]  ; first and last ring radius

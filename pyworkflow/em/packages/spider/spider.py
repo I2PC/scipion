@@ -30,6 +30,7 @@ import os
 from os.path import join, dirname, abspath, exists, basename
 from pyworkflow.object import String
 from pyworkflow.em.data import EMObject
+from pyworkflow.em import EMProtocol
 from pyworkflow.utils.path import copyFile, removeExt, replaceExt
 from pyworkflow.utils import runJob
 import subprocess
@@ -74,16 +75,20 @@ def runSpiderTemplate(templateName, ext, paramsDict):
     copyTemplate(templateName, '.')
     scriptName = replaceExt(templateName, ext)
     print "scriptName:", scriptName
-    
+
     fIn = open(templateName, 'r')
     fOut = open(scriptName, 'w')
     replace = True # After the end of header, not more value replacement
     
-    for line in fIn:
+    for i, line in enumerate(fIn):
         if END_HEADER in line:
             replace = False
         if replace:
-            line = line % paramsDict
+            try:
+                line = line % paramsDict
+            except Exception, ex:
+                print ex, "on line (%d): %s" % (i+1, line)
+                raise ex
         fOut.write(line)
     fIn.close()
     fOut.close()    
@@ -192,5 +197,31 @@ class PcaFile(EMObject):
         
         self.filename = String()
         
+     
+class SpiderProtocol(EMProtocol):
+    """ Sub-class of EMProtocol to group some common Spider utils. """
+            
+    def convertInput(self, attrName, stackFn, selFn):
+        """ Convert from an input pointer of SetOfImages to Spider.
+        Params:
+            attrName: the attribute name of the input pointer
+            stackFn: the name of the stack for converted images
+            selFn: the name of the selection file.
+        """
+        """ Convert the input particles to a Spider stack. """
+        imgSetPointer = getattr(self, attrName)
+        from convert import writeSetOfImages
+        writeSetOfImages(imgSetPointer.get(), stackFn, selFn)
         
         
+    def _getFileName(self, key):
+        """ Give a key, append the extension
+        and prefix the protocol working dir. 
+        """
+        template = '%(' + key + ')s.%(ext)s'
+        
+        return self._getPath(template % self._params)
+    
+
+    
+    

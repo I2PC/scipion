@@ -28,6 +28,10 @@ This module contains converter functions related to Spider
 """
 
 from pyworkflow.em.constants import NO_INDEX
+from pyworkflow.em.convert import ImageHandler
+from pyworkflow.utils.path import moveFile
+from spider import SpiderDocFile, runSpiderTemplate
+from os.path import splitext
    
     
 def locationToSpider(index, filename):
@@ -49,3 +53,26 @@ def spiderToLocation(spiderFilename):
     else:
         return NO_INDEX, str(spiderFilename)
 
+
+def writeSetOfImages(imgSet, stackFn, selFn):
+    """ This function will write a SetOfMicrographs as a Spider stack and selfile.
+    Params:
+        imgSet: the SetOfMicrograph instance.
+        stackFn: the filename where to write the stack.
+        selFn: the filename of the Spider selection file.
+    """
+    ih = ImageHandler()
+    doc = SpiderDocFile(selFn, 'w+')
+    
+    for i, img in enumerate(imgSet):
+        ih.convert(img.getLocation(), (i+1, stackFn))
+        doc.writeValues(i+1)
+        
+    doc.close()
+    
+    fn, ext = splitext(stackFn)
+    # Change to BigEndian
+    runSpiderTemplate("cp_endian.txt", ext[1:], {'particles': fn, 'numberOfParticles': imgSet.getSize()})
+    
+    moveFile(fn + '_big' + ext, stackFn)
+    

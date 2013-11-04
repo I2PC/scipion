@@ -29,6 +29,7 @@ for EM data objects like: Image, SetOfImage and others
 """
 
 from constants import *
+from convert import ImageHandler
 from pyworkflow.object import *
 from pyworkflow.mapper.sqlite import SqliteMapper
 from posixpath import join
@@ -127,11 +128,7 @@ class Image(Item):
     
     def getDim(self):
         """Return image dimensions as tuple: (Ydim, Xdim)"""
-        imagePath = '%s@%s' % (self._index, self._filename) 
-            
-        imgXmipp = xmipp.Image(imagePath)
-        
-        return imgXmipp.getDimensions()
+        return ImageHandler().getDimensions(self.getLocation())
     
     def getIndex(self):
         return self._index.get()
@@ -227,6 +224,11 @@ class Set(EMObject):
     def __iterItems(self):
         return self._mapper.selectAll(iterate=True)
     
+    def getFirstItem(self):
+        """ Return the first item in the Set. """
+        self.loadIfEmpty()
+        return self._mapper.selectFirst()
+    
     def __iter__(self):
         """ Iterate over the set of images. """
         self.loadIfEmpty()
@@ -287,6 +289,10 @@ class Set(EMObject):
     def __str__(self):
         self.loadIfEmpty()
         return "%-20s (%d items)" % (self.getClassName(), self.getSize())
+    
+    def getDimensions(self):
+        """Return first image dimensions as a tuple: (xdim, ydim, zdim, n)"""
+        return self.getFirstItem().getDim()
                 
     
 class SetOfImages(Set):
