@@ -11,7 +11,7 @@ from django.http import HttpResponse
 
 from pyworkflow.em.packages.xmipp3.convert import writeSetOfParticles
 from pyworkflow.em.packages.xmipp3.plotter import XmippPlotter
-from pyworkflow.viewer import WEB_DJANGO
+from pyworkflow.viewer import WEB_DJANGO, createPlots
 
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 from matplotlib.figure import Figure
@@ -109,6 +109,32 @@ def viewerElement(request):
     
     jsonStr = json.dumps(ioDict, ensure_ascii=False)
     return HttpResponse(jsonStr, mimetype='application/javascript')
+
+############## VIEWER SPIDER CAPCA ############
+def viewerCAPCA(request, protocol, protocolViewer):
+    ioDict = {}
+
+    if protocolViewer.doShowEigenImages:
+        typeUrl, url = doShowEigenImages(request, protocol, protocolViewer)
+        ioDict[typeUrl]= url
+    if protocolViewer.doShowReconsImages:
+        typeUrl, url = doShowReconsImages(request, protocol, protocolViewer)
+        ioDict[typeUrl]= url
+    if protocolViewer.doShowPcaFile:
+        typeUrl, url = doShowPcaFile(request, protocol, protocolViewer)
+        ioDict[typeUrl]= url
+        
+    return ioDict
+
+def doShowEigenImages(request, protocol, protocolViewer):
+    return "showj", "/visualize_object/?path="+ protocol._getFileName('eigenimages')
+
+def doShowReconsImages(request, protocol, protocolViewer):
+    return "showj", "/visualize_object/?path="+ protocol._getFileName('reconstituted')
+
+def doShowPcaFile(request, protocol, protocolViewer):
+    html = textfileViewer("PCA files", [protocol.imcFile.filename.get()])
+    return "html", html
 
 ############## VIEWER XMIPP CL2D ##############
 def viewerCL2D(request, protocol, protocolViewer):
@@ -230,7 +256,7 @@ def doShowMirror(request, protocol, protocolViewer):
     return "plot","/view_plots/?function=somePLotsML2D&plots=doShowMirror&protViewerClass="+ str(protocolViewer.getClassName())+ "&protId="+ str(protocol.getObjId())
 
 def allPlotsML2D(request, protocolViewer, protocol):
-    xplotter = protocolViewer.createPlots(protocol, protocolViewer._plotVars)
+    xplotter = createPlots(protocol, protocolViewer._plotVars)
     return xplotter
 
 def somePLotsML2D(request, protocolViewer, protocol):
@@ -239,7 +265,7 @@ def somePLotsML2D(request, protocolViewer, protocol):
     if len(plots) > 1:
         plots.remove(plots[len(plots)-1])
     
-    xplotter = protocolViewer.createPlots(protocol, plots)
+    xplotter = createPlots(protocol, plots)
     return xplotter
 
 ############## AUX METHODS ##############

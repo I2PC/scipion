@@ -110,8 +110,10 @@ class SpiderViewerCAPCA(ProtocolViewer):
 
     def _viewParam(self, param=None):
         if param == 'doShowEigenImages':
+            print self.protocol._getFileName('eigenimages')
             runShowJ(self.protocol._getFileName('eigenimages'))
         elif param == 'doShowReconsImages':
+            print self.protocol._getFileName('reconstituted')
             runShowJ(self.protocol._getFileName('reconstituted'))
         elif param == 'doShowPcaFile':
             showTextfileViewer("PCA files", [self.protocol.imcFile.filename.get()])
@@ -189,6 +191,24 @@ class SpiderViewerCAPCA(ProtocolViewer):
                                    "Factor %d" % x, "Factor %d" % y)
         a.plot(xFactors, yFactors, 'o')
         xplotter.show()
+        
+    def getVisualizeDictWeb(self):
+        return {'doShowEigenImages': 'doShowEigenImages',
+                'doShowReconsImages': 'doShowReconsImages',
+                'doShowHistogram': self._plotHistogram,
+                'doShowFactorMaps': self._plotFactorMaps,
+                'doShowPcaFile': 'doShowPcaFile' }
+        
+    @classmethod
+    def getView(cls):
+        """ This function will notify the web viewer for this protocol"""
+        return "viewerForm"
+    
+    @classmethod
+    def getViewFunction(cls):
+        """ This will return the name of the function to view
+        in web one (or all) params of the protocol"""
+        return "viewerCAPCA"
         
     
 class SpiderViewerWard(ProtocolViewer):
