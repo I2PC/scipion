@@ -113,8 +113,8 @@ class SpiderProtAlignAPSR(ProtAlign, SpiderProtocol):
                 angle, shiftX, shiftY = [float(s) for s in line.split()[2:]]
                 inLoc = locationToSpider(i, particlesPrefix)
                 incore = "_1"
-                spi.runFunction('RT SQ', inLoc, incore, (angle, 1), (shiftX, shiftY))
-                spi.runFunction('CP', incore, inLoc, (angle, 1), (shiftX, shiftY))
+                spi.runFunction('RT SQ', inLoc, incore, angle, (shiftX, shiftY))
+                spi.runFunction('CP', incore, inLoc)
             
         spi.close()
             

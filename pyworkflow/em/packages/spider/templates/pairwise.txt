@@ -8,27 +8,20 @@
 
 ; -------------- Parameters --------------
 x17 = %(dim)d                                ; image dimension
-x42 = %(diam)d                                 ; expected object diameter, pixels
+x42 = %(diameter)d                                 ; expected object diameter, pixels
 x41 = %(innerRadius)d                                  ; inner radius for alignment, pixels
 x43 = %(searchRange)d                                  ; translation search range, for AP SH (for alignment to final average)
 x44 = %(stepSize)d                                  ; translation step size, for AP SH
-[numberOfParticles] = %(numberOfParticles)d  ; Pass the number of images instead of the selfile
 
 ; ------------- Input files -------------
-;fr l
-;[selection_list]listparticles            ; particle list (now an output)
-;fr l
-;[unaligned_image]flt/flt******           ; particle template
+fr l
+[selection_list]%(particlesSel)s          ; particle list 
 fr g
-[unaligned_image]%(particles)s@******  ; input (filtered?) particles
-fr g
-[unalignedBig]%(particlesBig)s@******  ; particles with BIG endian (TODO: Remove this later)
+[unaligned_image]%(particles)s@******      ; input unaligned particles
 
 ; ------------- Output files -------------
 fr l
 [pair_dir]pairwise                       ; toplevel output directory
-fr l
-[selection_list]listparticles            ; particle list (previously an input)
 fr l
 [pair_doc][pair_dir]/pairdoc***          ; pair-document template
 fr l
@@ -38,7 +31,7 @@ fr l
 fr l
 [intermed_avg]interim*****               ; intermediate-average template, in DEPTH_DIR
 fr l
-[centered_avg]interim_centered           ; intermediate-average, centered, in DEPTH_DIR
+[centered_avg]interim_cent***            ; intermediate-average, centered, in DEPTH_DIR
 fr l
 [final_avg][pair_dir]/rfreeavg001        ; reference-free alignment average
 fr l
@@ -48,7 +41,7 @@ fr l
 fr l
 [aligned_dir]ali                         ; aligned-image directory
 fr l
-[aligned_images][aligned_dir]/sar******  ; aligned-image template
+[aligned_images]%(particles)s@******  ; aligned-image template
 
 ; ----------- END BATCH HEADER -----------
 
@@ -62,7 +55,7 @@ vm
 echo "Preparing pairing docs"; date
 
 ; calculate particle-radius
-x42=(x42-1)/1.6  ; padding it a bit
+x42=(x42-1)/1.4   ; padding it a bit
 
 ; check outer alignment radius
 [check-radius] = int(x17/2) - x42 - x43
@@ -72,11 +65,8 @@ x42=(x42-1)/1.6  ; padding it a bit
 if([check-radius].lt.2) x42 = int(x17/2) - x43 - 3
 ; x17==image-dimension, x43==search-range
 
-; create selection list
-doc create
-[selection_list]
-(1)
-1-[numberOfParticles]
+vm
+echo "Using outer alignment radius of {***x42} pixels" ; echo
 
 ; get #particles
 ud n [num-particles]
@@ -354,7 +344,7 @@ do lb8 [pair-depth] = 1,[last-depth]
     lb5
     ; end pair-of-pair loop
 
-    ; close docs	
+    ; close docs    
     ud ice
     [pair_doc][pair-depth]
 lb8
@@ -367,30 +357,34 @@ sd e
 vm
 echo "Aligning to final average"; date
 
-[zero-one] = 1  ; dummy register
+[one] = 1  ; dummy register
 
 ; center last intermediate average
 cg ph x21,x22,x12,x13
-[depth_dir]{***[next-depth]}/[intermed_avg][zero-one]
+[depth_dir]{***[next-depth]}/[intermed_avg][one]
 
 sh
-[depth_dir]{***[next-depth]}/[intermed_avg][zero-one]
-[depth_dir]{***[next-depth]}/[centered_avg]
+[depth_dir]{***[next-depth]}/[intermed_avg][one]
+[depth_dir]{***[next-depth]}/[centered_avg][one]
 -x12,-x13  ; x,y-shifts
+
+; clean up pre-existing file
+de
+[final_align_doc]
 
 ; align to centered average
 ap sh
 [depth_dir]{***[next-depth]}/[centered_avg]  ; INPUT: reference template
-(1)                ; reference-image#
-x43,x44            ; translation range, step size
-x41,x42            ; first, last ring
-*                  ; INPUT: reference angles
-[unaligned_image]  ; INPUT: experimental-image template
-[selection_list]   ; INPUT: selection doc
-*                  ; INPUT: previous alignment doc
-(0)                ; no angular restriction
-(1)                ; check mirrored positions
-[final_align_doc]  ; OUTPUT: alignment doc
+[one]               ; reference image#
+x43,x44             ; translation range, step size
+x41,x42             ; first, last ring
+*                   ; INPUT: reference angles
+[unaligned_image]   ; INPUT: experimental-image template
+[selection_list]    ; INPUT: selection doc
+*                   ; INPUT: previous alignment doc
+(0)                 ; no angular restriction
+(1)                 ; check mirrored positions
+[final_align_doc]   ; OUTPUT: alignment doc
 
 ;ap mq
 ;[depth_dir]{***[next-depth]}/[centered_avg]  ; INPUT: reference template
@@ -460,7 +454,8 @@ echo "Done"; date
 
 en d
 
-; Modified 2010-08-24
+; Modified 2012-10-04
+;    TO DO: use named registers
 ;    2010-08-24 (trs) -- AP MQ and OR MQ replaced with AP SH and OR SH
 ;    2010-02-08 (trs) -- fits outer alignment radius to image
 ;    2009-06-12 (trs) -- centers penultimate average
