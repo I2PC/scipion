@@ -10,7 +10,7 @@
 from protlib_base import *
 from protlib_particles import *
 import xmipp
-from xmipp import MetaData, FileName, MDL_IMAGE, MDL_SAMPLINGRATE
+from xmipp import MetaData, FileName, MDL_IMAGE, MDL_SAMPLINGRATE, MDL_MICROGRAPH, MDL_CTF_MODEL
 import glob
 import os
 from os.path import relpath, dirname
