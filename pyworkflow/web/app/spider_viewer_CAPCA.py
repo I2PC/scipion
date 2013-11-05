@@ -52,7 +52,7 @@ def doPlotHistogram(request, protocolViewer):
     return "plot","/view_plots/?function=plotHistogram&protViewerClass="+ str(protocolViewer.getClassName())+ "&protId="+ str(protocolViewer.protocol.getObjId())
 
 def plotHistogram(request, protocolViewer):
-    xplotter = protocolViewer.prepPlotHistogram()
+    xplotter = protocolViewer._plotHistogram()
     return xplotter
 
 def doPlotFactorMaps(request, protocolViewer):
@@ -61,7 +61,7 @@ def doPlotFactorMaps(request, protocolViewer):
 def plotFactorMaps(request, protocolViewer):
     print "first factor:", protocolViewer.firstFactor.get()
     print "second factor:", protocolViewer.secondFactor.get()
-    xplotter = protocolViewer.prepPlotFactorMaps()
+    xplotter = protocolViewer._plotFactorMaps()
     return xplotter
 
 def doShowPcaFile(request, protocolViewer):
