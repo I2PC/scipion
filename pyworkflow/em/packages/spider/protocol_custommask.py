@@ -31,18 +31,20 @@ This sub-package contains protocol for particles filters operations
 from pyworkflow.em import *  
 from pyworkflow.utils import removeExt, removeBaseExt, makePath, moveFile
 from constants import *
-from spider import SpiderShell
+from spider import SpiderShell, SpiderProtocol
 from convert import locationToSpider
 from glob import glob
 
 
 
-class SpiderProtCustomMask(ProtCreateMask):
+class SpiderProtCustomMask(ProtCreateMask, SpiderProtocol):
     """ Reference-free alignment shift and rotational alignment of an image series. 
     Uses Spider AP SR command.
     """
     def __init__(self):
         ProtCreateMask.__init__(self)
+        SpiderProtocol.__init__(self)
+        
         self._params = {'ext': 'stk',
                         'inputImage': 'input_image',
                         'outputMask': 'output_mask'

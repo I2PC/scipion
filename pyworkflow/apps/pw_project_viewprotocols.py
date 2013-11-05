@@ -292,9 +292,6 @@ class RunIOTreeProvider(TreeProvider):
             parent = self.outputStr
             name = obj.getLastName()
             
-            print "obj: ", obj
-            print "obj.getLastName(): ", obj.getLastName()
-            
             if isinstance(obj, Pointer):
                 obj = obj.get()
                 image = 'db_input.gif'

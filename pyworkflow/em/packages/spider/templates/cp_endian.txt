@@ -1,0 +1,28 @@
+;
+; RUN CP to ENSURE THE stack file is in BigEndian (as expected by Spider)
+; This step can be removed after we can write directly with BigEndian...or Spider can read it.
+;
+; Using SPIDER command CP
+
+
+; ---------------- Input files ----------------
+
+[numberOfParticles] = %(numberOfParticles)d  ; Pass the number of images instead of the selfile
+fr g
+[particles]%(particles)s@******  ; input particles to change the endianess
+fr g
+[particlesBig]%(particles)s_big@****** ; output big endian particles
+
+; ------------- END BATCH HEADER -------------
+
+; CONVERT TO BIG ENDIAN (ONLY AFTER XMIPP RESULT IN LITTLEENDIAN)
+
+; loop through particles
+DO LB2 [i]=1,[numberOfParticles]
+    CP
+    [particles][i]
+    [particlesBig][i]
+LB2
+; end particle-loop
+
+en

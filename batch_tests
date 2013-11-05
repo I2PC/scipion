@@ -19,4 +19,6 @@ python -m unittest pyworkflow.tests.em.workflows.test_workflow_xmipp
 
 # For data:
 python -m unittest pyworkflow.tests.em.data.test_data
-\n
+
+# For Spider MDA workflow:
+python -m unittest pyworkflow.tests.em.workflows.test_workflow_spiderMDA

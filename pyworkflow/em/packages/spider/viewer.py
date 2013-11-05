@@ -47,7 +47,7 @@ class SpiderViewerGeneric(Viewer):
     with the Xmipp program xmipp_showj
     """
     _environments = [DESKTOP_TKINTER, WEB_DJANGO]
-    _targets = [PcaFile, SpiderProtCustomMask, SpiderProtFilter, SpiderProtAlignAPSR]
+    _targets = [PcaFile, SpiderProtCustomMask, SpiderProtFilter]
 
     def visualize(self, obj, **args):
         
@@ -57,15 +57,9 @@ class SpiderViewerGeneric(Viewer):
         elif isinstance(obj, SpiderProtFilter):
             XmippViewer().visualize(obj.outputParticles)
             
-        elif isinstance(obj, SpiderProtAlignAPSR):
-            xv = XmippViewer()
-            xv.visualize(obj.outputAverage)
-            xv.visualize(obj.outputParticles)
-            
         elif isinstance(obj, SpiderProtCustomMask):
             mask = obj.outputMask
             XmippViewer().visualize(mask)
             # Remove location to visualize the whole stack
             runShowJ(mask.getFileName())
-         
-         
+            

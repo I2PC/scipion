@@ -117,6 +117,24 @@ def browse_objects(request):
                              ensure_ascii=False)
         return HttpResponse(jsonStr, mimetype='application/javascript')
 
+def textfileViewer(title, fileList):
+    f = open(fileList[0], 'r')
+        
+    style = "background-color:black;color:white;font-family:Monospace;padding:1em;font-size:90%;"
+    title = "<title>"+ title + "</title>"
+    html = "<div style="+ style +">"+ title
+    
+    x = 0
+    while 1:
+        line = f.readline()
+        if not line:
+            break
+        if len(line) > 1:
+            x = x+1
+            html = html +"<p><span style='color:cyan;'>" + str(x) + ":    </span>"+ line +" </p>"
+            
+    html = html + "</div>"
+    return html
 
 def get_image(request):
 #    from django.http import HttpResponse

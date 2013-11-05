@@ -31,18 +31,20 @@ This sub-package contains protocol for particles filters operations
 from pyworkflow.em import *  
 from pyworkflow.utils import removeExt, removeBaseExt
 from constants import *
-from spider import SpiderShell
+from spider import SpiderShell, SpiderProtocol
 from convert import locationToSpider
         
 
       
-class SpiderProtFilter(ProtFilterParticles):
-    """ Protocol base for Xmipp filters. """
+class SpiderProtFilter(ProtFilterParticles, SpiderProtocol):
+    """ Protocol for Spider filters. """
     def __init__(self):
         ProtFilterParticles.__init__(self)
+        SpiderProtocol.__init__(self)
         self._op = "FQ"
         self._params = {'ext': 'stk', 
-                        'particles': 'particles_filtered'}
+                        'particles': 'particles_filtered',
+                        'particlesSel': 'particles_filtered_sel'}
 
     def _defineProcessParams(self, form):
         form.addParam('filterType', EnumParam, choices=['Top-hat', 'Gaussian', 'Fermi', 'Butterworth', 'Raised cosine'],
@@ -123,17 +125,9 @@ class SpiderProtFilter(ProtFilterParticles):
         # Define some names
         self.particlesStk = self._getPath('%(particles)s.%(ext)s' % self._params)
         # Insert processing steps
-        self._insertFunctionStep('convertInput')
+        self._insertFunctionStep('convertInput', 'inputParticles', 
+                                 self._getFileName('particles'), self._getFileName('particlesSel'))
         self._insertFunctionStep('filterParticles', self.filterType.get())
-        #self._insertFunctionStep('createOutput')
-        
-    def convertInput(self):
-        """ Convert the input particles to a Spider stack. """
-        particles = self.inputParticles.get()
-        ih = ImageHandler()
-        
-        for i, p in enumerate(particles):
-            ih.convert(p.getLocation(), (i+1, self.particlesStk))
 
     def filterParticles(self, filterType):
         """ Apply the selected filter to particles. 
@@ -173,7 +167,6 @@ class SpiderProtFilter(ProtFilterParticles):
         #inputStk = removeBaseExt(self.inputStk)
         particlesStk = removeBaseExt(self.particlesStk)
         
-        print "N: ", n
         for i in range(1, n+1):
             locStr = locationToSpider(i, particlesStk)
             spi.runFunction(OP, locStr, locStr, filterNumber, *args)

@@ -53,8 +53,6 @@ def form(request):
             if visualize == 1:
                 if paramName in viewerDict:
                     param.hasViewer = True
-#                    param.viewerName = viewerDict[paramName].getViewFunction()
-
 #                    print "param: ", paramName, " has viewer"
                 
             param.htmlCond = param.condition.get()

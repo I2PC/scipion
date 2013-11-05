@@ -86,6 +86,10 @@ class SpiderViewerCAPCA(ProtocolViewer):
             showTextfileViewer("PCA files", [self.protocol.imcFile.filename.get()])
             
     def _plotHistogram(self, param=None):
+        xplotter = self.prepPlotHistogram()
+        xplotter.show()
+       
+    def prepPlotHistogram(self, param=None):
         """ First we parse the cas_EIG file and we read:
         first line: take the number of eigen values.
         then one line per factor and we read the percent and cumulative percent.
@@ -123,11 +127,16 @@ class SpiderViewerCAPCA(ProtocolViewer):
         a.set_ylim([0, percents[0] + 5])
         #a.set_xlim([0.8, n + 1])
         
-        xplotter.show()
+#        xplotter.show()
+        return xplotter
         
         #showTextfileViewer("PCA files", [])
         
     def _plotFactorMaps(self, param=None):
+        xplotter = self.prepPlotFactorMaps()
+        xplotter.show()
+        
+    def prepPlotFactorMaps(self, param=None):
         from pyworkflow.em.packages.xmipp3.plotter import XmippPlotter
         
         # Parse the file
@@ -157,5 +166,24 @@ class SpiderViewerCAPCA(ProtocolViewer):
         a = xplotter.createSubPlot("Factor %d vs %d" % (x, y), 
                                    "Factor %d" % x, "Factor %d" % y)
         a.plot(xFactors, yFactors, 'o')
-        xplotter.show()
+#        xplotter.show()
         
+        return xplotter
+        
+    def getVisualizeDictWeb(self):
+        return {'doShowEigenImages': 'doShowEigenImages',
+                'doShowReconsImages': 'doShowReconsImages',
+                'doShowHistogram': "doPlotHistogram",
+                'doShowFactorMaps': "doPlotFactorMaps",
+                'doShowPcaFile': 'doShowPcaFile' }
+        
+    @classmethod
+    def getView(cls):
+        """ This function will notify the web viewer for this protocol"""
+        return "viewerForm"
+    
+    @classmethod
+    def getViewFunction(cls):
+        """ This will return the name of the function to view
+        in web one (or all) params of the protocol"""
+        return "viewerCAPCA"
