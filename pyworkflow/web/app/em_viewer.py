@@ -128,11 +128,12 @@ def view_plots(request):
     protViewerClass = request.GET.get('protViewerClass', None)
     protocolClass = emProtocolsDict.get(protViewerClass, None)
     protocolViewer = protocolClass()
+    protocolViewer.setProtocol(protocol)
     
     functionName = request.GET.get('function', None)
     function = globals().get(functionName, None)
     
-    xplotter = function(request, protocol, protocolViewer)
+    xplotter = function(request, protocolViewer)
     
     canvas = xplotter.getCanvas()
     response = HttpResponse(content_type='image/png')

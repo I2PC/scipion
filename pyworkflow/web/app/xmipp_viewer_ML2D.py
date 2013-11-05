@@ -22,7 +22,7 @@ def doShowClasses(request, protocolViewer):
     return "showj","/visualize_object/?objectId="+str(objId)
             
 def doAllPlotsML2D(request, protocolViewer):
-    return "plots","/view_plots/?function=allPlotsML2D&protViewerClass="+ str(protocolViewer.getClassName())+ "&protId="+ str(protocolViewer.protocol.getObjId())
+    return "plotsComposite","/view_plots/?function=allPlotsML2D&protViewerClass="+ str(protocolViewer.getClassName())+ "&protId="+ str(protocolViewer.protocol.getObjId())
 
 def doSomePlotsML2D(protocolViewer):
     plots=""
@@ -31,7 +31,7 @@ def doSomePlotsML2D(protocolViewer):
             plots = plots + p + "-"
     
     if plots != "":
-        return "plots","/view_plots/?function=somePlotsML2D&plots="+str(plots)+"&protViewerClass="+ str(protocolViewer.getClassName())+ "&protId="+ str(protocolViewer.protocol.getObjId())
+        return "plotsComposite","/view_plots/?function=somePlotsML2D&plots="+str(plots)+"&protViewerClass="+ str(protocolViewer.getClassName())+ "&protId="+ str(protocolViewer.protocol.getObjId())
     else:
         return "", None
 

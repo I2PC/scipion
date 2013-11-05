@@ -52,8 +52,7 @@ def doPlotHistogram(request, protocolViewer):
     return "plot","/view_plots/?function=plotHistogram&protViewerClass="+ str(protocolViewer.getClassName())+ "&protId="+ str(protocolViewer.protocol.getObjId())
 
 def plotHistogram(request, protocolViewer):
-    fn = protocolViewer.protocol._getFileName('eigFile')
-    xplotter = protocolViewer.prepPlotHistogram(fn)
+    xplotter = protocolViewer.prepPlotHistogram()
     return xplotter
 
 def doPlotFactorMaps(request, protocolViewer):

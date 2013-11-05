@@ -86,12 +86,10 @@ class SpiderViewerCAPCA(ProtocolViewer):
             showTextfileViewer("PCA files", [self.protocol.imcFile.filename.get()])
             
     def _plotHistogram(self, param=None):
-        from pyworkflow.em.packages.xmipp3.plotter import XmippPlotter
-        fn = self.protocol._getFileName('eigFile')
-        xplotter = self.prepPlotHistogram(fn)
+        xplotter = self.prepPlotHistogram()
         xplotter.show()
        
-    def prepPlotHistogram(self, filename, param=None):
+    def prepPlotHistogram(self, param=None):
         """ First we parse the cas_EIG file and we read:
         first line: take the number of eigen values.
         then one line per factor and we read the percent and cumulative percent.
@@ -100,8 +98,7 @@ class SpiderViewerCAPCA(ProtocolViewer):
         from matplotlib.ticker import FormatStrFormatter
         from pyworkflow.em.packages.xmipp3.plotter import XmippPlotter
         
-#        fn = self.protocol._getFileName('eigFile')
-        fn = filename
+        fn = self.protocol._getFileName('eigFile')
         f = open(fn)
         values = f.readline().split()
         n = int(values[0]) # Number of factors
@@ -136,17 +133,14 @@ class SpiderViewerCAPCA(ProtocolViewer):
         #showTextfileViewer("PCA files", [])
         
     def _plotFactorMaps(self, param=None):
-        from pyworkflow.em.packages.xmipp3.plotter import XmippPlotter
-        fn = self.protocol._getFileName('imcFile')
-        xplotter = self.prepPlotFactorMaps(fn)
+        xplotter = self.prepPlotFactorMaps()
         xplotter.show()
         
-    def prepPlotFactorMaps(self, filename, param=None):
+    def prepPlotFactorMaps(self, param=None):
         from pyworkflow.em.packages.xmipp3.plotter import XmippPlotter
         
         # Parse the file
-#        fn = self.protocol._getFileName('imcFile')
-        fn = filename
+        fn = self.protocol._getFileName('imcFile')
         f = open(fn)
         values = f.readline().split()
         n = int(values[0]) # Number of images
