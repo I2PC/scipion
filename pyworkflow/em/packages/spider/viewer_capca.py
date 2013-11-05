@@ -187,3 +187,4 @@ class SpiderViewerCAPCA(ProtocolViewer):
         """ This will return the name of the function to view
         in web one (or all) params of the protocol"""
         return "viewerCAPCA"
+    
