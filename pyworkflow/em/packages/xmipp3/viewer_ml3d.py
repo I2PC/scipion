@@ -196,7 +196,8 @@ class XmippML3DViewer(ProtocolViewer):
                     self.formWindow.showError('Invalid iterations range.')
             
     def _viewPlot(self, paramName):
-        xplotter = self.createPlots(self.protocol, [paramName])
+        from viewer_ml2d import createPlots
+        xplotter = createPlots(self.protocol, [paramName])
         if xplotter:
             xplotter.show()
         
