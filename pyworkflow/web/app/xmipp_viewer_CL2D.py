@@ -2,22 +2,22 @@ import os
 from views_util import *
 
 ############## VIEWER XMIPP CL2D ##############
-def viewerCL2D(request, protocol, protocolViewer):
+def viewerCL2D(request, protocolViewer):
     ioDict = {}
     
 #    if protocolViewer.doShowLastLevel:
-    typeUrl, url = viewLevelFiles(request, protocol, protocolViewer)
+    typeUrl, url = viewLevelFiles(request, protocolViewer)
     ioDict[typeUrl]= url
     
     if protocolViewer.doShowClassHierarchy:
-        typeUrl, url = viewClassHierarchy(request, protocol, protocolViewer)
+        typeUrl, url = viewClassHierarchy(request, protocolViewer)
         ioDict[typeUrl]= url
     
     return ioDict
 
-def viewLevelFiles(request, protocol, protocolViewer):
+def viewLevelFiles(request, protocolViewer):
     fnSubset = protocolViewer._getSubset()
-    levelFiles = protocol._getLevelMdFiles(fnSubset)
+    levelFiles = protocolViewer.protocol._getLevelMdFiles(fnSubset)
     
     if levelFiles:
         levelFiles.sort()
@@ -36,7 +36,7 @@ def viewLevelFiles(request, protocol, protocolViewer):
                     
                 files = "";
                 for level in listOfLevels:
-                    fn = protocol._getExtraPath("level_%02d/level_classes%s.xmd"%(level,fnSubset))
+                    fn = protocolViewer.protocol._getExtraPath("level_%02d/level_classes%s.xmd"%(level,fnSubset))
                     if os.path.exists(fn):
                         files += "/visualize_object/?path="+ fn + "-"
                     else:
@@ -47,9 +47,9 @@ def viewLevelFiles(request, protocol, protocolViewer):
                     return "showjs", files
                     
 
-def viewClassHierarchy(request, protocol, protocolViewer):
+def viewClassHierarchy(request, protocolViewer):
     fnSubset = protocolViewer._getSubset()
-    fnHierarchy = protocol._getExtraPath("classes%s_hierarchy.txt" % fnSubset)
+    fnHierarchy = protocolViewer.protocol._getExtraPath("classes%s_hierarchy.txt" % fnSubset)
     if os.path.exists(fnHierarchy):
         html = textfileViewer(fnHierarchy, [fnHierarchy])
     return "html", html

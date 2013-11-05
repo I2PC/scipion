@@ -79,6 +79,7 @@ def viewer(request):
     updateProtocolParams(request, protocolViewer, project)
     protId = request.POST.get('protRunIdViewer', None)
     protocol = project.mapper.selectById(int(protId))
+    protocolViewer.setProtocol(protocol)
     functionName = protocolViewer.getViewFunction()
     
     function = globals().get(functionName, None)
@@ -88,7 +89,7 @@ def viewer(request):
     elif not callable(function):
         pass  # redirect to error: name is not a function
     else:
-        ioDict = function(request, protocol, protocolViewer)
+        ioDict = function(request, protocolViewer)
     
     jsonStr = json.dumps(ioDict, ensure_ascii=False)
 #    print jsonStr
@@ -100,6 +101,7 @@ def viewerElement(request):
     protId = request.POST.get('protRunIdViewer', None)
     viewerParam = request.POST.get('viewerParam', None)
     protocol = project.mapper.selectById(int(protId))
+    protocolViewer.setProtocol(protocol)
     
     functionName = protocolViewer.getVisualizeDictWeb()[viewerParam]
     function = globals().get(functionName, None)
@@ -110,7 +112,7 @@ def viewerElement(request):
         pass  # redirect to error: name is not a function
     else:
         ioDict= {}
-        typeUrl, url = function(request, protocol, protocolViewer)
+        typeUrl, url = function(request, protocolViewer)
         ioDict[typeUrl] = url
     
     jsonStr = json.dumps(ioDict, ensure_ascii=False)

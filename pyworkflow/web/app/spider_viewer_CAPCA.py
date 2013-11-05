@@ -1,69 +1,70 @@
 from views_util import *
 
 ############## VIEWER SPIDER CAPCA ############
-def viewerCAPCA(request, protocol, protocolViewer):
+def viewerCAPCA(request, protocolViewer):
     ioDict = {}
     # SHOWJS
     if protocolViewer.doShowEigenImages and protocolViewer.doShowReconsImages:
-        typeUrl, url = doShowImagesCAPCA(request, protocol, protocolViewer)
+        typeUrl, url = doShowImagesCAPCA(request, protocolViewer)
         ioDict[typeUrl]= url
     else:   
         if protocolViewer.doShowEigenImages:
-            typeUrl, url = doShowEigenImages(request, protocol, protocolViewer)
+            typeUrl, url = doShowEigenImages(request, protocolViewer)
             ioDict[typeUrl]= url
         elif protocolViewer.doShowReconsImages:
-            typeUrl, url = doShowReconsImages(request, protocol, protocolViewer)
+            typeUrl, url = doShowReconsImages(request, protocolViewer)
             ioDict[typeUrl]= url
     # PLOTS
     if protocolViewer.doShowHistogram and protocolViewer.doShowFactorMaps:
-        typeUrl, url = doPlotsCAPCA(request, protocol, protocolViewer)
+        typeUrl, url = doPlotsCAPCA(request, protocolViewer)
         ioDict[typeUrl]= url
     else:
         if protocolViewer.doShowHistogram:
-            typeUrl, url = doPlotsCAPCA(request, protocol, protocolViewer)
+            typeUrl, url = doPlotsCAPCA(request, protocolViewer)
             ioDict[typeUrl]= url
         elif protocolViewer.doShowFactorMaps:
-            typeUrl, url = doPlotFactorMaps(request, protocol, protocolViewer)
+            typeUrl, url = doPlotFactorMaps(request, protocolViewer)
             ioDict[typeUrl]= url
     # FILE VIEWER
     if protocolViewer.doShowPcaFile:
-        typeUrl, url = doShowPcaFile(request, protocol, protocolViewer)
+        typeUrl, url = doShowPcaFile(request, protocolViewer)
         ioDict[typeUrl]= url
         
     return ioDict
 
-def doShowImagesCAPCA(request, protocol, protocolViewer):
-    _, eigenUrl = doShowEigenImages(request, protocol, protocolViewer)
-    _, reconsUrl = doShowReconsImages(request, protocol, protocolViewer)
+def doShowImagesCAPCA(request, protocolViewer):
+    _, eigenUrl = doShowEigenImages(request, protocolViewer)
+    _, reconsUrl = doShowReconsImages(request, protocolViewer)
     return "showjs", [str(eigenUrl) , str(reconsUrl)]
 
-def doShowEigenImages(request, protocol, protocolViewer):
-    return "showj", "/visualize_object/?path="+ protocol._getFileName('eigenimages')
+def doShowEigenImages(request, protocolViewer):
+    return "showj", "/visualize_object/?path="+ protocolViewer.protocol._getFileName('eigenimages')
 
-def doShowReconsImages(request, protocol, protocolViewer):
-    return "showj", "/visualize_object/?path="+ protocol._getFileName('reconstituted')
+def doShowReconsImages(request, protocolViewer):
+    return "showj", "/visualize_object/?path="+ protocolViewer.protocol._getFileName('reconstituted')
 
-def doPlotsCAPCA(request, protocol, protocolViewer):
-    _, histogram = doPlotHistogram(request, protocol, protocolViewer)
-    _, factorMaps = doPlotFactorMaps(request, protocol, protocolViewer)
+def doPlotsCAPCA(request, protocolViewer):
+    _, histogram = doPlotHistogram(request, protocolViewer)
+    _, factorMaps = doPlotFactorMaps(request, protocolViewer)
     return "plots", [str(histogram) , str(factorMaps)]
 
-def doPlotHistogram(request, protocol, protocolViewer):
-    return "plot","/view_plots/?function=plotHistogram&protViewerClass="+ str(protocolViewer.getClassName())+ "&protId="+ str(protocol.getObjId())
+def doPlotHistogram(request, protocolViewer):
+    return "plot","/view_plots/?function=plotHistogram&protViewerClass="+ str(protocolViewer.getClassName())+ "&protId="+ str(protocolViewer.protocol.getObjId())
 
-def plotHistogram(request, protocol, protocolViewer):
-    fn = protocol._getFileName('eigFile')
+def plotHistogram(request, protocolViewer):
+    fn = protocolViewer.protocol._getFileName('eigFile')
     xplotter = protocolViewer.prepPlotHistogram(fn)
     return xplotter
 
-def doPlotFactorMaps(request, protocol, protocolViewer):
-    return "plot","/view_plots/?function=plotFactorMaps&protViewerClass="+ str(protocolViewer.getClassName())+ "&protId="+ str(protocol.getObjId())
+def doPlotFactorMaps(request, protocolViewer):
+    return "plot","/view_plots/?function=plotFactorMaps&protViewerClass="+ str(protocolViewer.getClassName())+ "&protId="+ str(protocolViewer.protocol.getObjId())
 
-def plotFactorMaps(request, protocol, protocolViewer):
-    fn = protocol._getFileName('imcFile')
-    xplotter = protocolViewer.prepPlotFactorMaps(fn)
+def plotFactorMaps(request, protocolViewer):
+    print "first factor:", protocolViewer.firstFactor.get()
+    print "second factor:", protocolViewer.secondFactor.get()
+    xplotter = protocolViewer.prepPlotFactorMaps()
     return xplotter
 
-def doShowPcaFile(request, protocol, protocolViewer):
-    html = textfileViewer("PCA files", [protocol.imcFile.filename.get()])
+def doShowPcaFile(request, protocolViewer):
+    html = textfileViewer("PCA files", [protocolViewer.protocol.imcFile.filename.get()])
     return "html", html
