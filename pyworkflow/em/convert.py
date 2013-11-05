@@ -57,8 +57,14 @@ class ImageHandler(object):
         outputStr = self._locationToStr(*outputLoc)
         self._img.write(outputStr)
         
-    def getDimensions(self):
-        pass
+    def getDimensions(self, location):
+        """ It will return a tuple with the images dimensions.
+        The tuple will contains:
+            (x, y, z, n) where x, y, z are image dimensions (z=1 for 2D) and 
+            n is the number of elements if stack.
+        """ 
+        img = self.read(location)
+        return img.getDimensions()
     
     def read(self, location):
         """ Read an image from a location. """

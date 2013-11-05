@@ -32,17 +32,16 @@ Correspondence Analysis or Principal Component Analysis
 from pyworkflow.em import *  
 from pyworkflow.utils import removeExt, removeBaseExt, makePath, moveFile
 from constants import *
-from spider import SpiderShell, SpiderDocFile, copyTemplate, runSpiderTemplate
+from spider import SpiderShell, SpiderDocFile, SpiderProtocol, copyTemplate, runSpiderTemplate
 from convert import locationToSpider
 from glob import glob
 
 
 
-class SpiderProtCAPCA(EMProtocol):
-    """ Correspondence Analysis or Principal Component Analysis.
-    """
+class SpiderProtCAPCA(SpiderProtocol):
+    """ Correspondence Analysis or Principal Component Analysis. """
     def __init__(self):
-        EMProtocol.__init__(self)
+        SpiderProtocol.__init__(self)
         self._params = {'ext': 'stk',
                         'spiderParticles': 'particles_spider',
                         'spiderSel': 'particles_selfile',
@@ -81,37 +80,20 @@ class SpiderProtCAPCA(EMProtocol):
         
     def _defineSteps(self):
         # Insert processing steps
-        self._insertFunctionStep('convertInput')
+        self._insertFunctionStep('convertInput', 'inputParticles',
+                                 self._getFileName('spiderParticles'), self._getFileName('spiderSel'))
+        self._insertFunctionStep('convertMask')
         self._insertFunctionStep('runCAPCA', self.analysisType.get(), 
                                  self.numberOfFactors.get(), self.maskType.get())
-        #self._insertFunctionStep('createOutput')
         
-    def _getFileName(self, key):
-        """ Give a key, append the extension
-        and prefix the protocol working dir. 
+    def convertMask(self):
+        """ Convert the input mask if needed and
+        copy some spider needed scripts. 
         """
-        template = '%(' + key + ')s.%(ext)s'
-        return self._getPath(template % self._params)
-        
-    def convertInput(self):
-        """ Convert the input particles to a Spider stack. 
-        Also generate the Spider docfile.
-        """
-        particles = self.inputParticles.get()
-        ih = ImageHandler()
-        spiderStk = self._getFileName('spiderParticles')
-        # Also create the docfile
-        docFn = self._getFileName('spiderSel')
-        docFile = SpiderDocFile(docFn, mode='w')
-        for i, p in enumerate(particles):
-            ih.convert(p.getLocation(), (i+1, spiderStk))
-            docFile.writeValues(i+1)
-            
-        docFile.close()
         # Copy mask if selected
         if self.maskType > 0: # mask from file
             maskFn = self._getFileName('spiderMask')
-            ih.convert(self.maskImage.get().getLocation(), 
+            ImageHandler().convert(self.maskImage.get().getLocation(), 
                        (1, maskFn))
         # Copy template scripts
         copyTemplate('ploteigen.gnu', self._getPath())
@@ -121,7 +103,9 @@ class SpiderProtCAPCA(EMProtocol):
         """ Apply the selected filter to particles. 
         Create the set of particles.
         """
-        self._params.update({'dim': 100,
+        dim = self.inputParticles.get().getDimensions()[0]
+        
+        self._params.update({'dim': dim,
                              'radius': self.maskRadius.get(),
                              'analysisType': analysisType + 1, # Index starts at 0
                              'addConstant': self.addConstant.get(),

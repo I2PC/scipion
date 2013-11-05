@@ -31,19 +31,22 @@ This sub-package contains Spider protocol for PCA.
 from pyworkflow.em import *  
 from pyworkflow.utils import removeExt, removeBaseExt, makePath, moveFile, copyFile, basename
 from constants import *
-from spider import SpiderShell, SpiderDocFile
+from spider import SpiderShell, SpiderDocFile, SpiderProtocol
 from convert import locationToSpider
 from glob import glob
 
       
 # TODO: Remove from ProtAlign, and put in other category     
-class SpiderProtClassifyWard(ProtClassify):
+class SpiderProtClassifyWard(ProtClassify, SpiderProtocol):
     """ Ward's method, using 'CL HC' 
     """
     def __init__(self):
         ProtClassify.__init__(self)
+        SpiderProtocol.__init__(self)
+        
         self._params = {'ext': 'stk',
-                        'particles': 'particles_input',
+                        'particles': 'particles',
+                        'particlesSel': 'particles_sel',
                         'dendroPs': 'dendrogram',
                         'dendroDoc': 'docdendro',
                         'averages': 'averages'
@@ -74,18 +77,10 @@ class SpiderProtClassifyWard(ProtClassify):
     def _defineSteps(self):
         pcaFile = self.pcaFilePointer.get().filename.get()
         
-        self._insertFunctionStep('convertInput', self.inputParticles.get().getFileName())
+        self._insertFunctionStep('convertInput', 'inputParticles',
+                                 self._getFileName('particles'), self._getFileName('particlesSel'))
         self._insertFunctionStep('classifyWard', pcaFile, self.numberOfFactors.get())
         self._insertFunctionStep('buildDendroStep')
-    
-    def convertInput(self, inputFilename):
-        """ Convert the input particles to a Spider stack. """
-        particles = self.inputParticles.get()
-        ih = ImageHandler()
-        particlesStk = self._getFileName('particles')
-        
-        for i, p in enumerate(particles):
-            ih.convert(p.getLocation(), (i+1, particlesStk))
             
     def classifyWard(self, imcFile, numberOfFactors):
         """ Apply the selected filter to particles. 
@@ -185,7 +180,6 @@ class SpiderProtClassifyWard(ProtClassify):
                 ih.write(node['image'], (index, self.dendroAverages))
                 fn = self._getTmpPath('doc_class%03d.stk' % index)
                 f = open(fn, 'w+')
-                print "writing file: %s, %d images." % (fn, len(node['imageList']))
                 for i in node['imageList']:
                     f.write('%s\n' % i)
                 f.close()
