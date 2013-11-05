@@ -23,7 +23,7 @@ DIR = 3 # base dir
 DEPS = 4
 
 BASIC_DEPS = ['fftw', 'tiff', 'jpeg', 'sqlite', 'hdf5']
-PYTHON_DIR = join("#","external","python","Python-2.7.2")
+PYTHON_DIR = join("external","python","Python-2.7.2")
 CUDA_PATH = env['CUDA_SDK_PATH']
 
 Libraries = {'fftw': {INCS: [join('external','fftw-3.3.1')],
@@ -47,7 +47,7 @@ Libraries = {'fftw': {INCS: [join('external','fftw-3.3.1')],
              'cuda': {INCS: [CUDA_PATH + s for s in ['/CUDALibraries/common/inc', '/shared/inc']],
                       LIBS: ['cudart', 'cutil', 'shrutil_x86_64']
                      },
-             'XmippExternal': {INCS: ['external/bilib' + s for s in ['', '/headers', '/types']],
+             'XmippExternal': {INCS: [join('external','bilib') + s for s in ['', '/headers', '/types']],
                                LIBS: ['XmippExternal'],
                                SRC: [join('external','bilib','sources','*.cc'), 
                                      join('external','inria','*.cc'),
@@ -94,7 +94,10 @@ Libraries = {'fftw': {INCS: [join('external','fftw-3.3.1')],
                                 },              
               # Python binding named: xmipp.so
               'xmipp': {INCS: [PYTHON_DIR, join(PYTHON_DIR, 'Include'),
-                                       join('lib','python2.7','site-packages','numpy','core','include')],
+                                       join('lib','python2.7','site-packages','numpy','core','include'),
+                                       join('libraries','bindings','python'),
+                                       'libraries',
+                                       'external'],
                                LIBS: ['xmipp'],
                                SRC: [join('libraries','bindings','python','*.cpp')],
                                DIR: join('libraries','bindings','python'),
@@ -458,12 +461,12 @@ def AddLibrary(name, basedir, sources, includes, libpath=[], libs=[],
 	if cudaFiles:
             envToUse.Append(NVCCFLAGS="-shared --compiler-options '-fPIC'")
         libs += ['cutil_x86_64', 'shrutil_x86_64', 'cudart']
-    	includes += [env['CUDA_SDK_PATH'] + "/CUDALibraries/common/inc",
-                   env['CUDA_SDK_PATH'] + "/shared/inc"]
-    	libpath += [env['CUDA_SDK_PATH'] + "/CUDALibraries/common/lib",
-                       env['CUDA_SDK_PATH'] + "/shared/lib",
-                       env['CUDA_SDK_PATH'] + "/CUDALibraries/common/lib/linux",
-		       "/usr/local/cuda/lib64",
+    	includes += [join(env['CUDA_SDK_PATH'],"CUDALibraries","common","inc"),
+                   join(env['CUDA_SDK_PATH'],"shared","inc")]
+    	libpath += [join(env['CUDA_SDK_PATH'],"CUDALibraries","common","lib"),
+                       join(env['CUDA_SDK_PATH'],"shared","lib"),
+                       join(env['CUDA_SDK_PATH'],"CUDALibraries","common","lib","linux"),
+		       join("/usr","local","cuda","lib64"),
                        env['CUDA_LIB_PATH']]
     else:
         envToUse = env
@@ -566,11 +569,11 @@ def AddLibraryNG(name, mpi=False,#deps=[],
     if cudaFiles:
         envToUse.Append(NVCCFLAGS="-shared --compiler-options '-fPIC'")
         libs += ['cutil_x86_64', 'shrutil_x86_64', 'cudart']
-        includes += [env['CUDA_SDK_PATH'] + "/CUDALibraries/common/inc",
-                   env['CUDA_SDK_PATH'] + "/shared/inc"]
-        libpath += [env['CUDA_SDK_PATH'] + "/CUDALibraries/common/lib",
-                       env['CUDA_SDK_PATH'] + "/shared/lib",
-                       env['CUDA_SDK_PATH'] + "/CUDALibraries/common/lib/linux", "/usr/local/cuda/lib64",
+        includes += [join(env['CUDA_SDK_PATH'],"CUDALibraries","common","inc"),
+                   join(env['CUDA_SDK_PATH'],"shared","inc")]
+        libpath += [join(env['CUDA_SDK_PATH'],"CUDALibraries","common","lib"),
+                       join(env['CUDA_SDK_PATH'],"shared","lib"),
+                       join(env['CUDA_SDK_PATH'],"CUDALibraries","common","lib","linux"), join("/usr","local","cuda","lib64"),
                        env['CUDA_LIB_PATH']]
     else:
         envToUse = env
@@ -793,8 +796,8 @@ def AddImageJPlugin(name, pluginDir, outDir, requiredPlugins=[]):
 
 # Gtest
 if int(env['gtest']):
-    DataSources = Glob('external/gtest-1.6.0/fused-src/gtest', 'gtest-all.cc', [])
-    AddLibrary('gtest', 'external/gtest-1.6.0/fused-src/gtest', DataSources, ['#'],
+    DataSources = Glob(join('external','gtest-1.6.0','fused-src','gtest'), 'gtest-all.cc', [])
+    AddLibrary('gtest', join('external','gtest-1.6.0','fused-src','gtest'), DataSources, ['#'],
                [], [])
 
 # Bilib
