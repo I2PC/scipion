@@ -78,8 +78,8 @@ class SpiderViewerWard(ProtocolViewer):
         
         node = self.protocol.buildDendrogram()
         self.plotNode(node, self.minHeight.get())    
-        self.plt.xlim([0., self.rightMost + self.step])
-        self.plt.ylim([-0.1, 105])
+        self.plt.set_xlim(0., self.rightMost + self.step)
+        self.plt.set_ylim(-10, 105)
         
         return self._showOrReturn(xplotter)
     
@@ -89,19 +89,21 @@ class SpiderViewerWard(ProtocolViewer):
         if h > minHeight and len(childs) > 1:
             x1, y1 = self.plotNode(childs[0], minHeight)
             x2, y2 = self.plotNode(childs[1], minHeight)
-            length = node.get('length')
-            index = node.get('index')
             xm = (x1 + x2)/2
             x = [x1, x1, x2, x2]
             y = [y1, h, h, y2]
             self.plt.plot(x, y, color='b')
-            self.plt.plot(xm, h, 'ro')
-            self.plt.annotate("%d(%d)" % (index, length), (xm, h), xytext=(0, -8),
-                         textcoords='offset points', va='top', ha='center')
             point = (xm, h)
         else:
             self.rightMost += self.step
             point = (self.rightMost, 0.)
+        
+        length = node.get('length')
+        index = node.get('index')
+        self.plt.annotate("%d(%d)" % (index, length), point, xytext=(0, -5),
+                     textcoords='offset points', va='top', ha='center', size='x-small')
+        self.plt.plot(point[0], point[1], 'ro')
+        
         return point
     
     def _createNode(self, canvas, node, y):
