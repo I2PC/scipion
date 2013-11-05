@@ -38,10 +38,12 @@ def doShowImagesCAPCA(request, protocolViewer):
     return "showjs", [str(eigenUrl) , str(reconsUrl)]
 
 def doShowEigenImages(request, protocolViewer):
-    return "showj", "/visualize_object/?path="+ protocolViewer.protocol._getFileName('eigenimages')
+    path = protocolViewer.protocol._getFileName('eigenimages')
+    return "showj", "/visualize_object/?path="+ path
 
 def doShowReconsImages(request, protocolViewer):
-    return "showj", "/visualize_object/?path="+ protocolViewer.protocol._getFileName('reconstituted')
+    path = protocolViewer.protocol._getFileName('reconstituted')
+    return "showj", "/visualize_object/?path="+ path
 
 def doPlotsCAPCA(request, protocolViewer):
     _, histogram = doPlotHistogram(request, protocolViewer)
@@ -49,18 +51,24 @@ def doPlotsCAPCA(request, protocolViewer):
     return "plots", [str(histogram) , str(factorMaps)]
 
 def doPlotHistogram(request, protocolViewer):
-    return "plot","/view_plots/?function=plotHistogram&protViewerClass="+ str(protocolViewer.getClassName())+ "&protId="+ str(protocolViewer.protocol.getObjId())
+    protViewerClass = str(protocolViewer.getClassName())
+    protId = str(protocolViewer.protocol.getObjId())
+    return "plot","/view_plots/?function=plotHistogram&protViewerClass="+ protViewerClass + "&protId="+ protId
 
 def plotHistogram(request, protocolViewer):
     xplotter = protocolViewer._plotHistogram()
     return xplotter
 
 def doPlotFactorMaps(request, protocolViewer):
-    return "plot","/view_plots/?function=plotFactorMaps&protViewerClass="+ str(protocolViewer.getClassName())+ "&protId="+ str(protocolViewer.protocol.getObjId())
+    first = str(protocolViewer.firstFactor.get())
+    second = str(protocolViewer.secondFactor.get())
+    protViewerClass = str(protocolViewer.getClassName())
+    protId = str(protocolViewer.protocol.getObjId())
+    return "plot","/view_plots/?function=plotFactorMaps&protViewerClass="+ protViewerClass + "&protId="+ protId +"&first="+ first +"&second="+second 
 
 def plotFactorMaps(request, protocolViewer):
-    print "first factor:", protocolViewer.firstFactor.get()
-    print "second factor:", protocolViewer.secondFactor.get()
+    protocolViewer.firstFactor.set(request.GET.get('first', None))
+    protocolViewer.secondFactor.set(request.GET.get('second', None))
     xplotter = protocolViewer._plotFactorMaps()
     return xplotter
 

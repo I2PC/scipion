@@ -1,11 +1,8 @@
 import json
-import pyworkflow.gui.graph as gg
 from pyworkflow.em import *
 from views_util import *
 from views_protocol import updateProtocolParams
-from views_showj import visualizeObject
 from pyworkflow.manager import Manager
-from pyworkflow.gui.tree import TreeProvider, ProjectRunsTreeProvider
 from pyworkflow.em import emProtocolsDict
 from django.http import HttpResponse
 
@@ -131,6 +128,8 @@ def view_plots(request):
     protocolViewer = protocolClass()
     protocolViewer.setProtocol(protocol)
     protocolViewer.showPlot = False # Get xplotter instead of show()
+    
+    updateProtocolParams(request, protocolViewer, project)
     
     functionName = request.GET.get('function', None)
     function = globals().get(functionName, None)
