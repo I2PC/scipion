@@ -114,17 +114,21 @@ def importImages(log, InputFile, WorkingDir, DoCopy, ImportAll, SubsetMode, Nsub
             if imgNo != None:
                 imgFn = "%s@%s" % (imgNo, imgFn)
             md.setValue(MDL_IMAGE, imgFn, id)
-
+            
+        if md.containsLabel(MDL_MICROGRAPH):
+          for id in md:
             imgFn = md.getValue(MDL_MICROGRAPH, id)
             imgNo, imgFn = splitFilename(imgFn)
             imgFn = xmippRelpath(fixPath(imgFn, projectPath, inputRelativePath, '.'))
             if imgNo != None:
                 imgFn = "%s@%s" % (imgNo, imgFn)
             md.setValue(MDL_MICROGRAPH, imgFn, id)
-            
-            imgFn = md.getValue(MDL_CTF_PARAMS, id)
+
+        if md.containsLabel(MDL_CTF_MODEL):
+          for id in md:
+            imgFn = md.getValue(MDL_CTF_MODEL, id)
             imgFn = xmippRelpath(fixPath(imgFn, projectPath, inputRelativePath, '.'))
-            md.setValue(MDL_CTF_PARAMS, imgFn, id)
+            md.setValue(MDL_CTF_MODEL, imgFn, id)
             
         outExt = '.stk'
     else:
