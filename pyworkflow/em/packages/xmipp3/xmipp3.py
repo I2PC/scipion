@@ -254,10 +254,16 @@ class XmippDataSet(ds.DataSet):
     def __init__(self, filename):
         self._filename = filename
         blocks = xmipp.getBlocksInMetaDataFile(filename)
+        if len(blocks) == 0: # If there are no block, at an empty one
+            blocks = ['']
         ds.DataSet.__init__(self, blocks)
         
     def _loadTable(self, tableName):
-        md = xmipp.MetaData(tableName + "@" + self._filename)
+        if len(tableName):
+            mdFn = tableName + "@" + self._filename
+        else:
+            mdFn = self._filename
+        md = xmipp.MetaData(mdFn)
         return self._convertMdToTable(md)
         
     def _convertLabelToColumn(self, label):

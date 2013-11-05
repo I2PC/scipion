@@ -59,7 +59,7 @@ class SpiderViewerWard(ProtocolViewer):
                       help='Maximum level of classes to show')
 
     def _getVisualizeDict(self):
-        return {'doShowDendrogram': self.visualizeDendrogram,
+        return {'doShowDendrogram': self._plotDendrogram,
                 'doShowClasses': self.visualizeClasses
                 }
         
@@ -67,19 +67,21 @@ class SpiderViewerWard(ProtocolViewer):
         if self.doShowClasses:
             self.visualizeClasses()
         if self.doShowDendrogram:
-            self.visualizeDendrogram()
+            self._plotDendrogram()
             
-    def visualizeDendrogram(self, e=None):
-        import matplotlib.pyplot as plt
-        self.plt = plt
+    def _plotDendrogram(self, e=None):
+        from pyworkflow.em.packages.xmipp3.plotter import XmippPlotter
+        xplotter = XmippPlotter()
+        self.plt = xplotter.createSubPlot("Dendrogram", "", "")
         self.step = 0.25
         self.rightMost = 0.0 # Used to arrange leaf nodes at the bottom
         
         node = self.protocol.buildDendrogram()
         self.plotNode(node, self.minHeight.get())    
-        plt.xlim([0., self.rightMost + self.step])
-        plt.ylim([-0.1, 105])
-        plt.show()
+        self.plt.xlim([0., self.rightMost + self.step])
+        self.plt.ylim([-0.1, 105])
+        
+        return self._showOrReturn(xplotter)
     
     def plotNode(self, node, minHeight=-1):
         childs = node.get('childs', [])

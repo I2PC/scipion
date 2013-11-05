@@ -80,6 +80,7 @@ def viewer(request):
     protId = request.POST.get('protRunIdViewer', None)
     protocol = project.mapper.selectById(int(protId))
     protocolViewer.setProtocol(protocol)
+    protocolViewer.showPlot = False # Get xplotter instead of show()
     functionName = protocolViewer.getViewFunction()
     
     function = globals().get(functionName, None)
@@ -102,7 +103,7 @@ def viewerElement(request):
     viewerParam = request.POST.get('viewerParam', None)
     protocol = project.mapper.selectById(int(protId))
     protocolViewer.setProtocol(protocol)
-    
+    protocolViewer.showPlot = False # Get xplotter instead of show()
     functionName = protocolViewer.getVisualizeDictWeb()[viewerParam]
     function = globals().get(functionName, None)
     
@@ -129,6 +130,7 @@ def view_plots(request):
     protocolClass = emProtocolsDict.get(protViewerClass, None)
     protocolViewer = protocolClass()
     protocolViewer.setProtocol(protocol)
+    protocolViewer.showPlot = False # Get xplotter instead of show()
     
     functionName = request.GET.get('function', None)
     function = globals().get(functionName, None)
