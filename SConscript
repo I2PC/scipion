@@ -112,7 +112,7 @@ Libraries = {'fftw': {INCS: [join('external','fftw-3.3.1')],
                                DIR: join('libraries','parallel'),
                                DEPS: ['XmippExternal', 'XmippData', 'XmippClassif', 'XmippRecons', env['MPI_LIB']] + BASIC_DEPS
                                 },                                                   
-              'XmippJNI': {INCS: ['libraries', 'external', join('libraries','bindings','java')],
+              'XmippJNI': {INCS: ['libraries', 'external', join('libraries','bindings','java')] + env['JNI_CPPPATH'],
                                LIBS: ['XmippJNI'],
                                SRC: [join('libraries','bindings','java','*.cpp')],
                                DIR: join('libraries','bindings','java'),
