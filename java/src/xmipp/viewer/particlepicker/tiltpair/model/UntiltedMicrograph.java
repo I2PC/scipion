@@ -57,9 +57,10 @@ public class UntiltedMicrograph extends Micrograph
 	{
 		angles = null;
 		getParticles().clear();
-		new File(picker.getOutputPath(getPosFile())).delete();
 		getTiltedMicrograph().getParticles().clear();
-		new File(picker.getOutputPath(getTiltedMicrograph().getPosFile())).delete();
+		//JMRT: I think is very very dangerous to delete the existing pos files.
+		//new File(picker.getOutputPath(getPosFile())).delete();
+		//new File(picker.getOutputPath(getTiltedMicrograph().getPosFile())).delete();
 		initAligner();
 	}
 
