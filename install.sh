@@ -507,6 +507,8 @@ helpMessage()
   printf "${BLUE}--compile${WHITE},${BLUE} -c${WHITE}\n"
   printf "    Compile the list of libraries provided to the script (or default libraries array if not provided).\n"
   printf "\n"
+  printf "    NOTE: If you don't provide any operation, the script will asume you want all of them. This is used as a shortcut for recompiling from zero a library/module. For example, the command ./install.sh --disable-all --hdf5 will be the same as ./install.sh --disable-all --untar --clean --configure --compile --hdf5.\n"
+  printf "\n"
   printf "\n"
   printf "EXTERNAL LIBRARIES OPTIONS:\n"
   printf "\n"
@@ -562,6 +564,8 @@ helpMessage()
   printf "\n"
   printf "XMIPP-RELATED OPTIONS:\n"
   printf "\n"
+  printf "${BLUE}--xmipp=${YELLOW}[true|false]${WHITE}\n"
+  printf "    Execute selected operation over xmipp. --xmipp is equivalent to --xmipp=true.\n"
   printf "${BLUE}--gui=${YELLOW}[true|false]${WHITE}\n"
   printf "    When launching scons compilation, select true whether you want the Xmipp compilation GUI or false otherwise. Where --gui means --gui=true.\n"
   printf "\n"
@@ -926,6 +930,20 @@ takeArguments()
           echoRed "Parameter --pymodules only accept true or false values. Ignored and assuming default value."
         fi
         ;;
+      --xmipp)
+        DO_SETUP=1
+        ;;
+      --xmipp=*)
+        WITH_XMIPP=$(echo "$1"|cut -d '=' -f2)
+        if [ "${WITH_XMIPP}" = "true" ]; then
+          DO_SETUP=1
+        elif [ "${WITH_XMIPP}" = "false" ]; then
+          DO_SETUP=0
+        else
+          echoRed "Parameter --xmipp only accept true or false values. Ignored and assuming default value."
+        fi
+        ;;
+
       --gui=*)
         WITH_GUI=$(echo "$1"|cut -d '=' -f2)
         if [ "${WITH_GUI}" = "true" ]; then
@@ -945,11 +963,14 @@ takeArguments()
     shift
   done
 
-#        "clean=true")         DO_CLEAN=true;;
-#        "clean=false")        DO_CLEAN=false;;
-#        "gui=false")          GUI_ARGS="";;
-#        "setup=true")         DO_SETUP=true;;
-
+  # Some decisions to make after arguments are taken
+  # to allow a user do everything on a library/module by just typing its name...
+  if ([ ${DO_CLEAN} -eq 0 ] && [ ${DO_UNTAR} -eq 0 ] && [ ${DO_CONFIGURE} -eq 0 ] && [ ${DO_COMPILE} -eq 0 ] ); then
+    DO_UNTAR=1
+    DO_CLEAN=1
+    DO_CONFIGURE=1
+    DO_COMPILE=1
+  fi
 }
 
 takeDefaults()
