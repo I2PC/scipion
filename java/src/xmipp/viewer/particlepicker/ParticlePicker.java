@@ -546,13 +546,13 @@ public abstract class ParticlePicker
 	{
 		// inverty = true;
 		md.readPlain(file, "xcoor ycoor particleSize");
-		System.err.format("After readPlain: md.size: %d\n", md.size());
+		//System.err.format("After readPlain: md.size: %d\n", md.size());
 		
 		long fid = md.firstObject();
 		int size = md.getValueInt(MDLabel.MDL_PICKING_PARTICLE_SIZE, fid);
 		
 		int half = size / 2;
-		System.err.format("Operate string: %s\n", String.format("xcoor=xcoor+%d,ycoor=ycoor+%d", half, half));
+		//System.err.format("Operate string: %s\n", String.format("xcoor=xcoor+%d,ycoor=ycoor+%d", half, half));
 		md.operate(String.format("xcoor=xcoor+%d,ycoor=ycoor+%d", half, half));
 		
 		setSize(Math.round(size * scale));
