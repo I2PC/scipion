@@ -43,5 +43,10 @@ def doVisualizeClasses(request, protocolViewer):
     pass
 
 def doVisualizeDendrogram(request, protocolViewer):
-    pass
+    protViewerClass = str(protocolViewer.getClassName())
+    protId = str(protocolViewer.protocol.getObjId())
+    return "plot","/view_plots/?function=visualizeDendrogram&protViewerClass="+ protViewerClass + "&protId="+ protId
 
+def visualizeDendrogram(request, protocolViewer):
+    xplotter = protocolViewer._plotDendrogram()
+    return xplotter
