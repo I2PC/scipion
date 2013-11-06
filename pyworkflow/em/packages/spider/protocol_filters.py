@@ -183,4 +183,28 @@ class SpiderProtFilter(ProtFilterParticles, SpiderProtocol):
         summary = []
         return summary
     
-
+    #TODO: Refactor this function to be used also by method filterParticles
+    def filter_spider(self, inputLocStr, outputLocStr, **pars):
+        """ Function to filter an image located on inputLocStr and
+        write it to outputLocStr. """
+         
+        spi = SpiderShell(ext='spi') # Create the Spider process to send commands         
+        filterNumber = self.filterType.get() * 2 + 1
+        # Consider low-pass or high-pass
+        filterNumber += self.filterMode.get()
+        OP = self._op
+        if not self.usePadding:
+            OP += ' NP'
+            
+        args = []
+        
+        if self.filterType.get() <= FILTER_GAUSSIAN:
+            args.append(pars['filterRadius'])
+        else:
+            args.append('%f %f' % (pars['lowFreq'], pars['highFreq']))
+            
+        if self.filterType.get() == FILTER_FERMI:
+            args.append([self.temperature.get()])
+            
+        spi.runFunction(OP, inputLocStr, outputLocStr, filterNumber, *args)
+        spi.close()

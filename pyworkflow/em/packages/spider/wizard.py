@@ -39,7 +39,9 @@ from pyworkflow.em.packages.xmipp3.wizard import ListTreeProvider, XmippImagePre
 import xmipp
 import pyworkflow.gui.dialog as dialog
 from pyworkflow.gui.widgets import LabelSlider
-from pyworkflow import findResource
+from constants import *
+from spider import SpiderShell
+from convert import locationToSpider
 
 class SpiderProtMaskWizard(XmippParticleMaskRadiusWizard):
     
@@ -77,51 +79,36 @@ class SpiderProtMaskRadiiWizard(XmippRadiiWizard):
     def getView(self):
         return "wiz_particle_mask_radii"      
     
-class SpiderGaussianFilterWizard(XmippFilterParticlesWizard):
-    _targets = [(SpiderProtFilter, ['filterRadius'])]
-            
+
+class SpiderFilterWizard(XmippFilterParticlesWizard):    
+    _targets = [(SpiderProtFilter, ['filterRadius', 'lowFreq', 'highFreq'])]
+    _environments = [DESKTOP_TKINTER, WEB_DJANGO]
+    
     def show(self, form):
         protocol = form.protocol
-        if protocol.inputParticles.hasValue():
-            pars = [par for par in protocol.inputParticles.get()]
-            d = SpiderGaussianFilterDialog(form.root, ListTreeProvider(pars), filterRadius=protocol.filterRadius.get())
+        provider = self._getProvider(protocol)
+
+        if provider is not None:
+            d = SpiderFilterDialog(form.root, provider, 
+                                          protocolParent=protocol)
             if d.resultYes():
-                form.setVar('filterRadius', d.getRadius())
+                if protocol.filterType <= FILTER_GAUSSIAN:
+                    form.setVar('filterRadius', d.getRadius())
+                else:
+                    form.setVar('lowFreq', d.getLowFreq())
+                    form.setVar('highFreq', d.getHighFreq())
         else:
-            dialog.showWarning("Input particles", "Select particles first", form.root)
+            dialog.showWarning("Input particles", "Select particles first", form.root)  
     
-    @classmethod
+    @classmethod    
     def getView(self):
-        return "wiz_filter_spider"
+        return "wiz_filter_spider"   
 
 
-#class SpiderFermiFilterWizard(SpiderGaussianFilterWizard):
-#    
-#    _targets = [(SpiderProtFilter, ['c', 'highFreq'])]
-#    _environments = [DESKTOP_TKINTER, WEB_DJANGO]
-#    
-#    def show(self, form):
-#        protocol = form.protocol
-#        provider = self._getProvider(protocol)
-#
-#        if provider is not None:
-#            d = SpiderFermiFilterDialog(form.root, provider, 
-#                                          lowFreq=protocol.lowFreq.get(), highFreq=protocol.highFreq.get())
-#            if d.resultYes():
-#                form.setVar('lowFreq', d.getLowFreq())
-#                form.setVar('highFreq', d.getHighFreq())
-#        else:
-#            dialog.showWarning("Input particles", "Select particles first", form.root)  
-#    
-#    @classmethod    
-#    def getView(self):
-#        return "wiz_bandpass"   
-#
-#
 ##--------------- Dialogs used by Wizards --------------------------        
        
-        
-class SpiderGaussianFilterDialog(XmippDownsampleDialog):
+#class SpiderGaussianFilterDialog(XmippDownsampleDialog):
+class SpiderFilterDialog(XmippDownsampleDialog):
     
     def _beforePreview(self):
         XmippImagePreviewDialog._beforePreview(self)
@@ -130,24 +117,37 @@ class SpiderGaussianFilterDialog(XmippDownsampleDialog):
         self.message = "Filtering particle..."
         self.previewLabel = "Particle"
         self.rightImage = xmipp.Image()
-        self.dim = 256           
-        self.dim_par = self.firstItem.getDim()[0]
         
     def _createControls(self, frame):
-        #self.radiusSlider = LabelSlider(frame, 'Radius', from_=0, to=int(self.dim_par/2), value=self.filterRadius, step=1, callback=lambda a, b, c:self.updateFilteredImage())
-        self.radiusSlider = LabelSlider(frame, 'Radius', from_=0, to=int(self.dim_par/2), value=self.filterRadius, step=1, callback=None)
-        self.radiusSlider.grid(row=0, column=0, padx=5, pady=5) 
-        radiusButton = tk.Button(frame, text='Preview', command=self._doPreview)
-        radiusButton.grid(row=0, column=1, padx=5, pady=5)
+        self.freqFrame = ttk.LabelFrame(frame, text="Frequencies", padding="5 5 5 5")
+        self.freqFrame.grid(row=0, column=0)
+        if self.protocolParent.filterType <= FILTER_GAUSSIAN:
+            self.radiusSlider = self.addFreqSlider('Radius', self.protocolParent.filterRadius.get(), col=0)
+        else:
+            self.lfSlider = self.addFreqSlider('Low freq', self.protocolParent.lowFreq.get(), col=0)
+            self.hfSlider = self.addFreqSlider('High freq', self.protocolParent.highFreq.get(), col=1)            
+        radiusButton = tk.Button(self.freqFrame, text='Preview', command=self._doPreview)
+        radiusButton.grid(row=0, column=2, padx=5, pady=5)
         
     def _doPreview(self, e=None):
         if self.lastObj is None:
             dialog.showError("Empty selection", "Select an item first before preview", self)
         else:
-            self._itemSelected(self.lastObj)
+            self._computeRightPreview()
             
     def getRadius(self):
-        return self.filterRadius
+        return self.radiusSlider.get()
+    
+    def addFreqSlider(self, label, value, col):
+        slider = LabelSlider(self.freqFrame, label, from_=0, to=0.5, value=value, callback=None)
+        slider.grid(row=0, column=col, padx=5, pady=5)
+        return slider
+    
+    def getLowFreq(self):
+        return self.lfSlider.get()
+        
+    def getHighFreq(self):
+        return self.hfSlider.get()
 
     def updateFilteredImage(self):
         self.rightPreview.updateData(self.rightImage.getData())
@@ -156,50 +156,37 @@ class SpiderGaussianFilterDialog(XmippDownsampleDialog):
         """ This function should compute the right preview
         using the self.lastObj that was selected
         """
-        #xmipp.fastEstimateEnhancedPSD(self.rightImage, self.lastObj.getFileName(), self.getDownsample(), self.dim, 2)
-        #TODO: Do the spider filtering running spider command and set the self.rightImage
-        xmipp.gaussianFilter(self.rightImage, "%03d@%s" % (self.lastObj.getIndex(), self.lastObj.getFileName()), self.getRadius(), self.dim)
+        from pyworkflow.em.packages.xmipp3 import locationToXmipp
         
-        
+        # Copy image to filter to Tmp project folder
+        outputName = os.path.join("Tmp", "filtered_particle")
+        outputPath = outputName + ".spi"
 
-#class SpiderFermiFilterDialog(XmippDownsampleDialog):
-#    
-#    def _beforePreview(self):
-#        XmippDownsampleDialog._beforePreview(self)
-#        self.lastObj = None
-#        self.rightPreviewLabel = "Filtered"
-#        self.message = "Computing filtered image..."
-#        self.previewLabel = "Image"
-#        self.rightImage = xmipp.Image()
-#
-#    def _createControls(self, frame):
-#        self.freqFrame = ttk.LabelFrame(frame, text="Frequencies", padding="5 5 5 5")
-#        self.freqFrame.grid(row=0, column=0)
-#        self.lfSlider = self.addFreqSlider('Low freq', self.lowFreq, col=0)
-#        self.hfSlider = self.addFreqSlider('High freq', self.highFreq, col=1)
-#
-#    def addFreqSlider(self, label, value, col):
-#        slider = LabelSlider(self.freqFrame, label, from_=0, to=0.5, value=value, callback=lambda a, b, c:self.updateFilteredImage())
-#        slider.grid(row=0, column=col, padx=5, pady=5)
-#        return slider
-#    
-#    def getLowFreq(self):
-#        return self.lfSlider.get()
-#        
-#    def getHighFreq(self):
-#        return self.hfSlider.get()
-#
-#    def updateFilteredImage(self):
-#        self.rightPreview.updateData(self.rightImage.getData())
-#                
-#    def _computeRightPreview(self):
-#        """ This function should compute the right preview
-#        using the self.lastObj that was selected
-#        """
-#        #xmipp.bandPassFilter(self.rightImage, "%03d@%s" % (self.lastObj.getIndex(), self.lastObj.getFileName()), self.getLowFreq(), self.getHighFreq(), self.getFreqDecay(), self.dim)
-#        #Do the spider filtering running spider command and set the self.rightImage
-#        pass
-#  
+        outputLoc = (1, outputPath)
+        ih = ImageHandler()
+        ih.convert(self.lastObj.getLocation(), outputLoc) 
+                
+        outputLocSpiStr = locationToSpider(1, outputName)
+        
+        #just for testing
+        outputLocSpiStr_test = locationToSpider(1, outputName + "test")
+        
+        if self.protocolParent.filterType <= FILTER_GAUSSIAN:
+            self.protocolParent.filter_spider(outputLocSpiStr, outputLocSpiStr_test, filterRadius=self.getRadius()) 
+        else:
+            self.protocolParent.filter_spider(outputLocSpiStr, outputLocSpiStr_test, lowFreq=self.getLowFreq(), highFreq=self.getHighFreq())               
+
+        # Get output image and update filtered image
+        img = xmipp.Image()
+        locXmippStr = locationToXmipp(1, outputPath)
+        img.read(locXmippStr)
+        self.rightImage = img
+        self.updateFilteredImage()
+
+       
+
+ 
+  
 
 
     

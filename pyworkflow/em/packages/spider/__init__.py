@@ -37,7 +37,7 @@ from protocol_ward import SpiderProtClassifyWard
 from protocol_mda import SpiderWfMDA
 from protocol_align_pairwise import SpiderProtAlignPairwise
 
-from wizard import SpiderProtMaskWizard, SpiderProtMaskRadiiWizard, SpiderGaussianFilterWizard #, SpiderFermiFilterWizard
+from wizard import SpiderProtMaskWizard, SpiderProtMaskRadiiWizard, SpiderFilterWizard
 
 from viewer import SpiderViewerGeneric
 from viewer_capca import SpiderViewerCAPCA
