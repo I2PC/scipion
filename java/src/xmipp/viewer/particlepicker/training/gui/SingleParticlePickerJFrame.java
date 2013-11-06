@@ -685,7 +685,7 @@ public class SingleParticlePickerJFrame extends ParticlePickerJFrame
 		if (index == micrographstb.getSelectedRow() && canvas != null && canvas.getIw().isVisible())
 			return;
 		if (ppicker.isChanged())
-			ppicker.saveData();// Saving changes when switching
+			ppicker.saveData(getMicrograph());// Saving changes when switching
 		index = micrographstb.getSelectedRow();
 		SingleParticlePickerMicrograph next = ppicker.getMicrographs().get(index);
 
@@ -693,6 +693,7 @@ public class SingleParticlePickerJFrame extends ParticlePickerJFrame
 
 		ppicker.getMicrograph().releaseImage();
 		ppicker.setMicrograph(next);
+		ppicker.saveConfig();
 		initializeCanvas();
 		if (ppicker.getMode() == Mode.Supervised)
 		{
