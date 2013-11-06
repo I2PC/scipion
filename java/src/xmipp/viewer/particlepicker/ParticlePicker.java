@@ -136,6 +136,7 @@ public abstract class ParticlePicker
 
 	public void loadConfig()
 	{
+		
 		String file = configfile;
 		filters.clear();
 		if (!new File(file).exists())
@@ -143,6 +144,7 @@ public abstract class ParticlePicker
 			color = getNextColor();
 			size = getDefaultSize();
 			setMicrograph(getMicrographs().get(0));
+			
 			filters.add(new IJCommand("Gaussian Blur...", "sigma=2"));
 			return;
 		}
@@ -162,7 +164,6 @@ public abstract class ParticlePicker
 				size = md.getValueInt(MDLabel.MDL_PICKING_PARTICLE_SIZE, id);
 			}
 			md.destroy();
-
 			String command, options;
 			md = new MetaData("filters@" + file);
 			long[] ids = md.findObjects();
@@ -207,6 +208,7 @@ public abstract class ParticlePicker
 			md.writeBlock("filters@" + file);
 			md.destroy();
 
+			
 		}
 		catch (Exception e)
 		{
@@ -456,6 +458,8 @@ public abstract class ParticlePicker
 	public void saveData()
 	{
 		saveConfig();
+		saveData(getMicrograph());
+		setChanged(false);
 	}// function saveData
 
 	public abstract void saveData(Micrograph m);
