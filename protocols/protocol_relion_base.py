@@ -196,7 +196,7 @@ class ProtRelionBase(XmippProtocol):
                            ] if self.ParamsDict[k]]
 
         if len(plots):
-        self.launchRelionPlots(plots)
+            self.launchRelionPlots(plots)
 
     def visualizeVar(self, varName):
         self.launchRelionPlots([varName])
