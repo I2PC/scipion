@@ -398,7 +398,7 @@ doIt()
         echoRed "Error: bad parameter ($2) on doIt. File not found. Exiting"
         exitGracefully
       fi
-      ind=$(expr $ind - 1)
+#      ind=$(expr $ind - 1)
       setElem $ind $3 "${EXTERNAL_LIBRARIES_DO}"
       EXTERNAL_LIBRARIES_DO=${INTERARRAY}
       ;;
@@ -409,7 +409,7 @@ doIt()
         echoRed "Error: bad parameter ($2) on shouldIDoIt. File not found. Exiting"
         exitGracefully
       fi
-      ind=$(expr $ind - 1)
+ #     ind=$(expr $ind - 1)
       setElem $ind $3 "${PYTHON_MODULES_DO}"
       PYTHON_MODULES_DO=${INTERARRAY}
       ;;
