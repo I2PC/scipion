@@ -184,17 +184,18 @@ class ProtRelionBase(XmippProtocol):
 
     def visualize(self):
         
-#        plots = [k for k in ['TableImagesPerClass'
-#                           , 'DisplayResolutionPlotsFSC'
-#                           , 'DisplayResolutionPlotsSSNR'
-#                           , 'TableChange'
-#                           , 'Likelihood'
-#                           , 'DisplayReconstruction'
-#                           , 'DisplayAngularDistribution'
-#                           , 'DisplayImagesClassification'
-#                           ] if self.ParamsDict[k]]
-#
-#        if len(plots):
+        plots = [k for k in ['TableImagesPerClass'
+                           , 'DisplayResolutionPlotsFSC'
+                           , 'DisplayResolutionPlotsSSNR'
+                           , 'TableChange'
+                           , 'Likelihood'
+                           , 'DisplayReconstruction'
+                           , 'DisplayAngularDistribution'
+                           , 'DisplayImagesClassification'
+                           , 'AvgPMAX'
+                           ] if self.ParamsDict[k]]
+
+        if len(plots):
         self.launchRelionPlots(plots)
 
     def visualizeVar(self, varName):
