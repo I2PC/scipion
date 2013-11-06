@@ -26,7 +26,6 @@
 
 from views_util import *
 
-############## VIEWER SPIDER WARD ############
 def viewerWARD(request, protocolViewer):
     ioDict = {}
     

@@ -26,7 +26,6 @@
 
 from views_util import *
 
-############## VIEWER SPIDER CAPCA ############
 def viewerCAPCA(request, protocolViewer):
     ioDict = {}
     # SHOWJS

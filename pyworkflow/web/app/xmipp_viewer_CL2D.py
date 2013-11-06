@@ -27,7 +27,6 @@
 import os
 from views_util import *
 
-############## VIEWER XMIPP CL2D ##############
 def viewerCL2D(request, protocolViewer):
     ioDict = {}
     
