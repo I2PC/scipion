@@ -126,7 +126,7 @@ class ProtRelionRefinner( ProtRelionBase):
         
         # Join in a single line all key, value pairs of the args dict    
         params = ' '.join(['%s %s' % (k, str(v)) for k, v in args.iteritems()])
-        params += self.AdditionalArguments
+        params += ' ' + self.AdditionalArguments
         verifyFiles=[]
         #relionFiles=['data','model','optimiser','sampling']
         #refine does not predefine the number of iterations so no verify is possible

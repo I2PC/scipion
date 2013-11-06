@@ -77,7 +77,7 @@ Note that the average and stddev values for the background are
 """
 DoNormalizeInputImage = False
 
-# {expert} Padding factor:
+# {hidden}{expert} Padding factor:
 """
 The padding factor used for oversampling of the Fourier transform. The default is 3x padding, 
 which is combined with nearest-neighbour interpolation. However, for large 3D maps, storing the 
