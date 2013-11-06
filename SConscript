@@ -22,7 +22,7 @@ SRC = 2 # Sources
 DIR = 3 # base dir
 DEPS = 4
 
-BASIC_DEPS = ['fftw', 'tiff', 'jpeg', 'sqlite', 'hdf5']
+BASIC_DEPS = ['fftw', 'tiff', 'jpeg', 'sqlite', 'hdf5','hdf5_cpp']
 PYTHON_DIR = join("external","python","Python-2.7.2")
 CUDA_PATH = env['CUDA_SDK_PATH']
 
@@ -40,6 +40,9 @@ Libraries = {'fftw': {INCS: [join('external','fftw-3.3.1')],
                      },
              'hdf5': {INCS: [join('external','hdf5-1.8.10','src')],
                         LIBS: ['hdf5']
+                     },        
+             'hdf5_cpp': {INCS: [join('external','hdf5-1.8.10','c++')],
+                        LIBS: ['hdf5_cpp']
                      },        
 #             'python': {INCS: [PYTHON_DIR],
 #                        LIBS: ['']

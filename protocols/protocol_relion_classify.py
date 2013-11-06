@@ -128,7 +128,7 @@ class ProtRelionClassifier(ProtRelionBase):
         
         # Join in a single line all key, value pairs of the args dict    
         params = ' '.join(['%s %s' % (k, str(v)) for k, v in args.iteritems()])
-        params += self.AdditionalArguments
+        params += ' ' + self.AdditionalArguments
         verifyFiles=[]
         #relionFiles=['data','model','optimiser','sampling']
         for v in self.relionFiles:

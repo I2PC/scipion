@@ -101,7 +101,8 @@ class ProtRelionClassifierContinue(ProtRelionBase):
                 
                 '--tau2_fudge': self.RegularisationParamT,# should not be changed 
                 '--flatten_solvent': '',# use always
-                '--zero_mask': '',# use always. This is confussing since Sjors gui creates the command line with this option
+                '--zero_mask': '',# use always. This is confussing since Sjors gui creates the command line
+                                  # with this option
                                   # but then the program complains about it. 
                 '--oversampling': '1',
                 '--norm': '',
@@ -122,7 +123,7 @@ class ProtRelionClassifierContinue(ProtRelionBase):
         
         # Join in a single line all key, value pairs of the args dict    
         params = ' '.join(['%s %s' % (k, str(v)) for k, v in args.iteritems()])
-        params += self.AdditionalArguments
+        params += ' ' + self.AdditionalArguments
         verifyFiles=[]
         #relionFiles=['data','model','optimiser','sampling']
         for v in self.relionFiles:
