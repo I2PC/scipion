@@ -59,7 +59,7 @@ class SpiderViewerWard(ProtocolViewer):
                       help='Maximum level of classes to show')
 
     def _getVisualizeDict(self):
-        return {'doShowDendrogram': self.visualizeDendrogram,
+        return {'doShowDendrogram': self._plotDendrogram,
                 'doShowClasses': self.visualizeClasses
                 }
         
@@ -67,19 +67,21 @@ class SpiderViewerWard(ProtocolViewer):
         if self.doShowClasses:
             self.visualizeClasses()
         if self.doShowDendrogram:
-            self.visualizeDendrogram()
+            self._plotDendrogram()
             
-    def visualizeDendrogram(self, e=None):
-        import matplotlib.pyplot as plt
-        self.plt = plt
+    def _plotDendrogram(self, e=None):
+        from pyworkflow.em.packages.xmipp3.plotter import XmippPlotter
+        xplotter = XmippPlotter()
+        self.plt = xplotter.createSubPlot("Dendrogram", "", "")
         self.step = 0.25
         self.rightMost = 0.0 # Used to arrange leaf nodes at the bottom
         
         node = self.protocol.buildDendrogram()
         self.plotNode(node, self.minHeight.get())    
-        plt.xlim([0., self.rightMost + self.step])
-        plt.ylim([-0.1, 105])
-        plt.show()
+        self.plt.set_xlim(0., self.rightMost + self.step)
+        self.plt.set_ylim(-10, 105)
+        
+        return self._showOrReturn(xplotter)
     
     def plotNode(self, node, minHeight=-1):
         childs = node.get('childs', [])
@@ -87,19 +89,21 @@ class SpiderViewerWard(ProtocolViewer):
         if h > minHeight and len(childs) > 1:
             x1, y1 = self.plotNode(childs[0], minHeight)
             x2, y2 = self.plotNode(childs[1], minHeight)
-            length = node.get('length')
-            index = node.get('index')
             xm = (x1 + x2)/2
             x = [x1, x1, x2, x2]
             y = [y1, h, h, y2]
             self.plt.plot(x, y, color='b')
-            self.plt.plot(xm, h, 'ro')
-            self.plt.annotate("%d(%d)" % (index, length), (xm, h), xytext=(0, -8),
-                         textcoords='offset points', va='top', ha='center')
             point = (xm, h)
         else:
             self.rightMost += self.step
             point = (self.rightMost, 0.)
+        
+        length = node.get('length')
+        index = node.get('index')
+        self.plt.annotate("%d(%d)" % (index, length), point, xytext=(0, -5),
+                     textcoords='offset points', va='top', ha='center', size='x-small')
+        self.plt.plot(point[0], point[1], 'ro')
+        
         return point
     
     def _createNode(self, canvas, node, y):

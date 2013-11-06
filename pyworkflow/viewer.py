@@ -108,6 +108,7 @@ class ProtocolViewer(Protocol, Viewer):
         Protocol.__init__(self, **args)
         Viewer.__init__(self, **args)
         self.allowHeader.set(False)
+        self.showPlot = True # This flag will be used to display a plot or return the plotter
         
     def setProtocol(self, protocol):
         self.protocol = protocol
@@ -124,13 +125,23 @@ class ProtocolViewer(Protocol, Viewer):
         self.formWindow.visualizeMode = True
         self.formWindow.show(center=True)     
 
+    def _showOrReturn(self, xplotter):
+        if self.showPlot:
+            xplotter.show()
+        else:
+            return xplotter
+        
     def _getVisualizeDict(self):
         """ Create the visualization dict for view individual params. """
         return {}
     
     def _viewAll(self, *args):
         """ Visualize all data give the parameters. """
-        pass
+        for k, v in self._getVisualizeDict().iteritems():
+            print "k: %s, v: %s" % (k, v)
+            if self.getAttributeValue(k, False):
+                print "   calling v..."
+                v(k)
     
     #TODO: This method should not be necessary, instead NumericListParam should return a list and not a String 
     def _getListFromRangeString(self, rangeStr):

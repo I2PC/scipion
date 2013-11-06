@@ -1,6 +1,31 @@
+# **************************************************************************
+# *
+# * Authors:    Jose Gutierrez (jose.gutierrez@cnb.csic.es)
+# *
+# * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
+# *
+# * This program is free software; you can redistribute it and/or modify
+# * it under the terms of the GNU General Public License as published by
+# * the Free Software Foundation; either version 2 of the License, or
+# * (at your option) any later version.
+# *
+# * This program is distributed in the hope that it will be useful,
+# * but WITHOUT ANY WARRANTY; without even the implied warranty of
+# * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# * GNU General Public License for more details.
+# *
+# * You should have received a copy of the GNU General Public License
+# * along with this program; if not, write to the Free Software
+# * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+# * 02111-1307  USA
+# *
+# *  All comments concerning this program package may be sent to the
+# *  e-mail address 'jose.gutierrez@cnb.csic.es'
+# *
+# **************************************************************************
+
 from views_util import *
 
-############## VIEWER SPIDER CAPCA ############
 def viewerCAPCA(request, protocolViewer):
     ioDict = {}
     # SHOWJS
@@ -38,10 +63,12 @@ def doShowImagesCAPCA(request, protocolViewer):
     return "showjs", [str(eigenUrl) , str(reconsUrl)]
 
 def doShowEigenImages(request, protocolViewer):
-    return "showj", "/visualize_object/?path="+ protocolViewer.protocol._getFileName('eigenimages')
+    path = protocolViewer.protocol._getFileName('eigenimages')
+    return "showj", "/visualize_object/?path="+ path
 
 def doShowReconsImages(request, protocolViewer):
-    return "showj", "/visualize_object/?path="+ protocolViewer.protocol._getFileName('reconstituted')
+    path = protocolViewer.protocol._getFileName('reconstituted')
+    return "showj", "/visualize_object/?path="+ path
 
 def doPlotsCAPCA(request, protocolViewer):
     _, histogram = doPlotHistogram(request, protocolViewer)
@@ -49,19 +76,25 @@ def doPlotsCAPCA(request, protocolViewer):
     return "plots", [str(histogram) , str(factorMaps)]
 
 def doPlotHistogram(request, protocolViewer):
-    return "plot","/view_plots/?function=plotHistogram&protViewerClass="+ str(protocolViewer.getClassName())+ "&protId="+ str(protocolViewer.protocol.getObjId())
+    protViewerClass = str(protocolViewer.getClassName())
+    protId = str(protocolViewer.protocol.getObjId())
+    return "plot","/view_plots/?function=plotHistogram&protViewerClass="+ protViewerClass + "&protId="+ protId
 
 def plotHistogram(request, protocolViewer):
-    xplotter = protocolViewer.prepPlotHistogram()
+    xplotter = protocolViewer._plotHistogram()
     return xplotter
 
 def doPlotFactorMaps(request, protocolViewer):
-    return "plot","/view_plots/?function=plotFactorMaps&protViewerClass="+ str(protocolViewer.getClassName())+ "&protId="+ str(protocolViewer.protocol.getObjId())
+    first = str(protocolViewer.firstFactor.get())
+    second = str(protocolViewer.secondFactor.get())
+    protViewerClass = str(protocolViewer.getClassName())
+    protId = str(protocolViewer.protocol.getObjId())
+    return "plot","/view_plots/?function=plotFactorMaps&protViewerClass="+ protViewerClass + "&protId="+ protId +"&first="+ first +"&second="+second 
 
 def plotFactorMaps(request, protocolViewer):
-    print "first factor:", protocolViewer.firstFactor.get()
-    print "second factor:", protocolViewer.secondFactor.get()
-    xplotter = protocolViewer.prepPlotFactorMaps()
+    protocolViewer.firstFactor.set(request.GET.get('first', None))
+    protocolViewer.secondFactor.set(request.GET.get('second', None))
+    xplotter = protocolViewer._plotFactorMaps()
     return xplotter
 
 def doShowPcaFile(request, protocolViewer):
