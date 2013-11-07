@@ -188,6 +188,18 @@ def loadProtTree(project):
     root = TreeItem('root', 'root')
     populateTree(root, protCfg)
     return root    
+
+def update_graph_view(request):
+    status = request.GET.get('status', None)
+    projectName = request.session['projectName']
+    project = loadProject(projectName) 
+#    status = project.getSettings().graphView.get()
+    if status == "True":
+        project.getSettings().graphView.set(True)
+    else :
+        project.getSettings().graphView.set(False)
+    project.getSettings().write()
+    return HttpResponse(mimetype='application/javascript')
     
 def project_content(request):        
     projectName = request.GET.get('projectName', None)
@@ -201,6 +213,7 @@ def project_content(request):
    
     project = loadProject(projectName)    
     provider = ProjectRunsTreeProvider(project)
+    graphView = project.getSettings().graphView.get()
     
     root = loadProtTree(project)
     
@@ -225,6 +238,7 @@ def project_content(request):
                'provider':provider,
                'messi_css': getResourceCss('messi'),
                'view': 'protocols',
+               'graphView': graphView,
                'contentConfig': 'divided'}
     
     return render_to_response('project_content.html', context)

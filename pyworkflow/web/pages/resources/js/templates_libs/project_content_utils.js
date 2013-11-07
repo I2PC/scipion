@@ -214,6 +214,7 @@ function switchGraph() {
 			$("div#graphActiv").attr("data-mode", "active");
 			$("div#graphActiv").attr("style", "");
 			$("div#treeTool").hide();
+			updateGraphView("True");
 			// Table OFF
 			$("div#runTable").attr("data-mode", "inactive");
 			$("div#runTable").attr("style", "display:none;");
@@ -227,6 +228,7 @@ function switchGraph() {
 			$("div#graphActiv").attr("data-mode", "inactive");
 			$("div#graphActiv").attr("style", "display:none;");
 			$("div#treeTool").show();
+			updateGraphView("False")
 		}
 		callPaintGraph();
 		$("div#graphActiv").attr("data-time", "not");
@@ -237,6 +239,7 @@ function switchGraph() {
 			$("div#graphActiv").attr("data-mode", "active");
 			$("div#graphActiv").attr("style", "");
 			$("div#treeTool").hide();
+			updateGraphView("True");
 			// Table OFF
 			$("div#runTable").attr("data-mode", "inactive");
 			$("div#runTable").attr("style", "display:none;");
@@ -274,6 +277,7 @@ function switchGraph() {
 			$("div#graphActiv").attr("data-mode", "inactive");
 			$("div#graphActiv").attr("style", "display:none;");
 			$("div#treeTool").show();
+			updateGraphView("False");
 			
 			// getElement in graph
 			var s = $("div#graphActiv").attr("data-option");
@@ -301,6 +305,13 @@ function switchGraph() {
 		}
 	}
 }
+
+function updateGraphView(status) {
+	$.ajax({
+		type : "GET", url : "/update_graph_view/?status=" + status
+	});
+}
+
 
 /*
  * Dialog form to verify the right option to delete
