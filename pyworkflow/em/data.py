@@ -662,27 +662,14 @@ class ImageClassAssignment(EMObject):
 #         return self.flip.get()       
      
     
-class Class2D(EMObject):
+class Class2D(Item):
     """ Represent a Class that group some elements 
     from a classification. 
     """
     def __init__(self, **args):
-        EMObject.__init__(self, **args)
-        self._id =  Integer()
-        self._hasRepresentativeImage = Boolean(False)
+        Item.__init__(self, **args)
         self._average = None
         self._imageAssignments = List()
-    
-    #TODO: replace this id with objId
-    def getId(self):
-        return self._id.get()
-        
-    def setId(self, imgId):
-        """ This id identifies the element inside a set """
-        self._id.set(imgId)
-        
-    def hasId(self):
-        return self._id.hasValue()
     
     def __iter__(self):
         """ Iterate over the assigments of images
@@ -698,7 +685,7 @@ class Class2D(EMObject):
         self._imageAssignments.append(imgCA)
     
     def setAverage(self, representativeImage):
-        self._representativeImage = representativeImage
+        self._average = representativeImage
     
     def getAverage(self):
         """ Usually the representative is an average of 
@@ -729,6 +716,9 @@ class SetOfClasses2D(Set):
         """ Return a SetOfImages composed by all the average images 
         of the 2D classes. """
         return self._averages
+    
+    def setAverages(self, averages):
+        self._averages = averages
     
     def getImages(self):
         """ Return the SetOFImages used to create the SetOfClasses2D. """

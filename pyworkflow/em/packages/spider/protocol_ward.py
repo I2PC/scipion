@@ -81,7 +81,6 @@ class SpiderProtClassifyWard(ProtClassify, SpiderProtocol):
         self._insertFunctionStep('convertInput', 'inputParticles',
                                  self._getFileName('particles'), self._getFileName('particlesSel'))
         self._insertFunctionStep('classifyWard', pcaFile, self.numberOfFactors.get())
-        self._insertFunctionStep('buildDendroStep')
         self._insertFunctionStep('createOutput')
             
     def classifyWard(self, imcFile, numberOfFactors):
@@ -105,9 +104,37 @@ class SpiderProtClassifyWard(ProtClassify, SpiderProtocol):
         
         self._leaveWorkingDir() # Go back to project dir
         
+
+    def createOutput(self):
+        rootNode = self.buildDendrogram(True)
+        classes = self._createSetOfClasses2D()
+        averages = self._createSetOfParticles()
+        g = graph.Graph(root=rootNode)        
+        self._fillClassesFromNodes(classes, averages, g.getNodes())
         
-    def buildDendroStep(self):
-        self.buildDendrogram(True)
+        self._defineOutputs(outputClasses=classes)
+         
+    
+    def _fillClassesFromNodes(self, classes, averages, nodeList):
+        for node in nodeList:
+            if node.path:
+                avg = Particle()
+                avg.setLocation(node.avgCount, self.dendroAverages)
+                cls = Class2D()
+                cls.setAverage(avg.clone())
+                for i in node.imageList:
+                    imgCA = ImageClassAssignment()
+                    imgCA.setImageId(i) # FIXME: this is wrong if the id is different from index
+                    cls.addImageClassAssignment(imgCA)
+                classes.append(cls)
+                avg.setId(cls.getId())
+                averages.append(avg)
+                
+        classes.setImages(self.inputParticles.get())
+        classes.setAverages(averages)
+        averages.write()
+        classes.write()
+          
         
     def buildDendrogram(self, writeAverages=False):
         """ Parse Spider docfile with the information to build the dendogram.
@@ -159,25 +186,28 @@ class SpiderProtClassifyWard(ProtClassify, SpiderProtocol):
         
         ih = ImageHandler()
 
+        particleNumber = self.dendroIndexes[m+1]
+        node.imageList = [particleNumber]
+        
         if writeAverages:
-            particleNumber = self.dendroIndexes[m+1]
             node.image = ih.read((particleNumber, self.dendroImages))
-            node.imageList = [particleNumber]
             
         def addChildNode(left, right, index):
             if right > left:
                 child = self._buildDendrogram(left, right, index, writeAverages)
                 node.addChild(child)
                 node.length += child.length
+                node.imageList += child.imageList
+                
                 if writeAverages:
                     node.image += child.image
-                    node.imageList += child.imageList
                     del child.image # Allow to free child image memory
                 
         if rightIndex > leftIndex + 1:
             addChildNode(leftIndex, m, 2*index)
             addChildNode(m+1, rightIndex, 2*index+1)
             node.avgCount = self.dendroAverageCount + 1
+            self.dendroAverageCount += 1
             node.path = '%d@%s' % (node.avgCount, self.dendroAverages)
             if writeAverages:
                 #TODO: node['image'] /= float(node['length'])
@@ -188,11 +218,6 @@ class SpiderProtClassifyWard(ProtClassify, SpiderProtocol):
                     doc.writeValues(i)
                 doc.close()
         return node
-
-    def createOutput(self):
-        classes = self._createSetOfClasses2D()
-        
-        
             
     def _summary(self):
         summary = []
@@ -207,6 +232,7 @@ class DendroNode(graph.Node):
         self.height = height
         self.length = 1
         self.path = None
+        self.selected = False
         
     def getChilds(self):
         return [c for c in self._childs if c.path]

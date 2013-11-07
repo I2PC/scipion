@@ -23,15 +23,17 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
-from pyworkflow.gui.widgets import Button
 """
 This module implement the wrappers around xmipp_showj
 visualization program.
 """
 import Tkinter as tk
+from pyworkflow.em import ProtUserSelection
 from pyworkflow.protocol.params import *
 from pyworkflow.viewer import Viewer, ProtocolViewer, DESKTOP_TKINTER, WEB_DJANGO
 from pyworkflow.utils.graph import Graph
+from pyworkflow.gui import Window
+from pyworkflow.gui.widgets import Button
 from pyworkflow.gui.graph import LevelTree
 from pyworkflow.gui.canvas import Canvas, ImageBox
 from pyworkflow.em.packages.xmipp3.viewer import XmippViewer, runShowJ
@@ -123,8 +125,9 @@ class SpiderViewerWard(ProtocolViewer):
         g = Graph(root=node)
         self.graph = g
                
-        root = tk.Toplevel()
-        canvas = Canvas(root, width=1200, height=1000)
+        self.win = Window("Select classes", self.formWindow, minsize=(1200, 800))
+        root = self.win.root
+        canvas = Canvas(root)
         canvas.grid(row=0, column=0, sticky='nsew')
         root.grid_columnconfigure(0, weight=1)
         root.grid_rowconfigure(0, weight=1) 
@@ -136,12 +139,27 @@ class SpiderViewerWard(ProtocolViewer):
         lt.setCanvas(canvas)
         lt.paint(self._createNode, maxLevel=self.maxLevel.get()-1)
         canvas.updateScrollRegion()
+        self.win.show()
         
     def saveClasses(self, e=None):
         """ Store selected classes. """
-        for node in self.graph.getNodes():
-            if node.selected:
-                print "selected: ", node.getName(), node.path
+        try:
+            selectedNodes = [node for node in self.graph.getNodes() if node.selected]
+            suffix = 'Selection'
+            prot = ProtUserSelection()
+            self.project._setupProtocol(prot)
+            prot.makePathsAndClean()
+            classes = prot._createSetOfClasses2D(suffix)
+            averages = prot._createSetOfParticles(suffix)
+            self.protocol._fillClassesFromNodes(classes, averages, selectedNodes)
+            self.protocol._defineOutputs(outputSelection=classes)
+            
+            self.project.launchProtocol(prot, wait=True)
+            self.win.showInfo("Protocol %s created. " % prot.getName())
+        except Exception, ex:
+            self.win.showError(str(ex))
+            
+        
         
     def getVisualizeDictWeb(self):
         return {'doShowDendrogram': "doVisualizeDendrogram",

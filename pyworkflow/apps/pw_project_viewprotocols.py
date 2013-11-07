@@ -632,6 +632,7 @@ class ProtocolsView(tk.Frame):
 
         self.viewers = findViewers(prot.getClassName(), DESKTOP_TKINTER)
         self.viewer = self.viewers[0]()
+        self.viewer.project = self.project
         self.viewer.visualize(prot, windows=self.windows)
         
                 

@@ -123,6 +123,8 @@ class ProtocolViewer(Protocol, Viewer):
                        visualizeDict=self._getVisualizeDict(),
                        visualizeMode=True)
         self.formWindow.visualizeMode = True
+        self.showInfo = self.formWindow.showInfo
+        self.showError = self.formWindow.showError
         self.formWindow.show(center=True)     
 
     def _showOrReturn(self, xplotter):

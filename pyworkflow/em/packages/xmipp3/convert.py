@@ -545,10 +545,10 @@ def readSetOfClasses2D(classes2DSet, filename, classesBlock='classes', **args):
     classes2DSet._xmippMd = String(filename)
          
 
-def createXmippInputImages(self, imgSet, rowFunc=None):  
+def createXmippInputImages(self, imgSet, rowFunc=None, imagesFn=None):  
     imgsMd = getattr(imgSet, '_xmippMd', None)
     if imgsMd is None:
-        imgsFn = self._getPath('input_images.xmd')
+        imgsFn = self._getPath(imagesFn or 'input_images.xmd')
         ctfDir = self._getExtraPath()
         writeSetOfParticles(imgSet, imgsFn, ctfDir, rowFunc)
     else:
