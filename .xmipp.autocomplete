@@ -31,7 +31,7 @@ _xcompile()
     
     #  The basic options we'll complete.
     #
-    opts="debug profile warn fast static prepend quiet java gtest mpi matlab cuda --help --help-options
+    opts="debug profile warn fast static prepend quiet java gtest mpi matlab cuda unattended --help --help-options
     --clean"
 
    COMPREPLY=($(compgen -W "${opts}" -- ${cur}))  
