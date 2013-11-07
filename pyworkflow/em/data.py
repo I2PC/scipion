@@ -670,7 +670,7 @@ class Class2D(EMObject):
         EMObject.__init__(self, **args)
         self._id =  Integer()
         self._hasRepresentativeImage = Boolean(False)
-        self._representativeImage = Image()
+        self._average = None
         self._imageAssignments = List()
     
     #TODO: replace this id with objId
@@ -697,46 +697,38 @@ class Class2D(EMObject):
     def addImageClassAssignment(self, imgCA):
         self._imageAssignments.append(imgCA)
     
-    def setRepresentativeImage(self, representativeImage):
+    def setAverage(self, representativeImage):
         self._representativeImage = representativeImage
     
-    def getRepresentativeImage(self):
+    def getAverage(self):
         """ Usually the representative is an average of 
         the images assigned to that class.
         """
-        return self._representativeImage
+        return self._average
     
-    def getHasRepresentativeImage(self):
+    def hasAverage(self):
         """ Return true if have an average image. """
-        return self._hasRepresentativeImage.get()
+        return self._average is not None
     
-    def setHasRepresentativeImage(self, hasRepresentativeImage):
-        self._hasRepresentativeImage.set(hasRepresentativeImage)
-        
-        
+
 class SetOfClasses2D(Set):
     """ Store results from a 2D classification. """
     def __init__(self, **args):
         Set.__init__(self, **args)
-        self._hasRepresentativeImages = True # True if the classes have associated average image
+        self._averages = None # Store the averages images of each class(SetOfParticles)
         self._imagesPointer = Pointer()
         
-    def iterImagesClass(self):
+    def iterClassImages(self):
         """ Iterate over the images of a class. """
         pass
     
-    def hasRepresentativeImages(self):
-        return self._hasRepresentativeImages
+    def hasAverages(self):
+        return self._averages is not None
     
-    def getRepresentativeImages(self):
+    def getAverages(self):
         """ Return a SetOfImages composed by all the average images 
         of the 2D classes. """
-        imgs = SetOfImages()
-        
-        for class2D in self:
-            imgs.append(class2D.getHasRepresentativeImage())
-            
-        return imgs
+        return self._averages
     
     def getImages(self):
         """ Return the SetOFImages used to create the SetOfClasses2D. """

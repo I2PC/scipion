@@ -30,6 +30,7 @@ This sub-package contains Spider protocol for PCA.
 
 from pyworkflow.em import *  
 from pyworkflow.utils import removeExt, removeBaseExt, makePath, moveFile, copyFile, basename
+import pyworkflow.utils.graph as graph
 from constants import *
 from spider import SpiderShell, SpiderDocFile, SpiderProtocol
 from convert import locationToSpider
@@ -81,6 +82,7 @@ class SpiderProtClassifyWard(ProtClassify, SpiderProtocol):
                                  self._getFileName('particles'), self._getFileName('particlesSel'))
         self._insertFunctionStep('classifyWard', pcaFile, self.numberOfFactors.get())
         self._insertFunctionStep('buildDendroStep')
+        self._insertFunctionStep('createOutput')
             
     def classifyWard(self, imcFile, numberOfFactors):
         """ Apply the selected filter to particles. 
@@ -127,6 +129,7 @@ class SpiderProtClassifyWard(ProtClassify, SpiderProtocol):
         self.dendroIndexes = indexes
         self.dendroImages = self._getFileName('particles')
         self.dendroAverages = self._getFileName('averages')
+        self.dendroAverageCount = 0 # Write only the number of needed averages
         
         return self._buildDendrogram(0, len(values)-1, 1, writeAverages)
     
@@ -152,42 +155,58 @@ class SpiderProtClassifyWard(ProtClassify, SpiderProtocol):
                 maxIndex = i+1
         
         m = maxIndex + leftIndex
-        node = {'height': maxValue, 'childs': [], 
-                'length': 1, 'index': index}#len(self.dendroValues[leftIndex:rightIndex])}
+        node = DendroNode(index, maxValue)
         
         ih = ImageHandler()
 
         if writeAverages:
             particleNumber = self.dendroIndexes[m+1]
-            node['image'] = ih.read((particleNumber, self.dendroImages))
-            node['imageList'] = [particleNumber]
+            node.image = ih.read((particleNumber, self.dendroImages))
+            node.imageList = [particleNumber]
             
         def addChildNode(left, right, index):
             if right > left:
                 child = self._buildDendrogram(left, right, index, writeAverages)
-                node['childs'].append(child)
-                node['length'] += child['length'] 
+                node.addChild(child)
+                node.length += child.length
                 if writeAverages:
-                    node['image'] += child['image']
-                    node['imageList'] += child['imageList']
-                    del child['image']
+                    node.image += child.image
+                    node.imageList += child.imageList
+                    del child.image # Allow to free child image memory
                 
         if rightIndex > leftIndex + 1:
             addChildNode(leftIndex, m, 2*index)
             addChildNode(m+1, rightIndex, 2*index+1)
+            node.avgCount = self.dendroAverageCount + 1
+            node.path = '%d@%s' % (node.avgCount, self.dendroAverages)
             if writeAverages:
                 #TODO: node['image'] /= float(node['length'])
-                ih.write(node['image'], (index, self.dendroAverages))
+                ih.write(node.image, (node.avgCount, self.dendroAverages))
                 fn = self._getTmpPath('doc_class%03d.stk' % index)
-                f = open(fn, 'w+')
-                for i in node['imageList']:
-                    f.write('%s\n' % i)
-                f.close()
+                doc = SpiderDocFile(fn, 'w+')
+                for i in node.imageList:
+                    doc.writeValues(i)
+                doc.close()
         return node
 
+    def createOutput(self):
+        classes = self._createSetOfClasses2D()
+        
+        
             
     def _summary(self):
         summary = []
         return summary
     
 
+class DendroNode(graph.Node):
+    """ Special type of Node to store dendogram values. """
+    def __init__(self, index, height):
+        graph.Node.__init__(self, 'class_%03d' % index)
+        self.index = index
+        self.height = height
+        self.length = 1
+        self.path = None
+        
+    def getChilds(self):
+        return [c for c in self._childs if c.path]

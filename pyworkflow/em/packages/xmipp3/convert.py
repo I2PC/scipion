@@ -197,8 +197,7 @@ def rowToClass2D(md, objId, samplingRate):
         img = Image()
         img.setLocation(index, filename)
         img.setSamplingRate(samplingRate)
-        class2D.setHasRepresentativeImage(True)
-        class2D.setRepresentativeImage(img)
+        class2D.setAverage(img)
     
     rowToObject(md, objId, class2D, classDict) 
     
@@ -223,8 +222,8 @@ def class2DToRow(class2D, classRow):
     classDict = { 
                "_id": xmipp.MDL_REF,
                }
-    if class2D.getHasRepresentativeImage():
-        index, filename = class2D.getRepresentativeImage().getLocation()
+    if class2D.hasAverage():
+        index, filename = class2D.getAverage().getLocation()
         fn = locationToXmipp(index, filename)
         classRow.setValue(xmipp.MDL_IMAGE, fn)
     n = long(len(class2D.getImageAssignments()))

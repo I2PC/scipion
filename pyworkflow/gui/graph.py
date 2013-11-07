@@ -42,7 +42,7 @@ class LevelTree(object):
     def setCanvas(self, canvas):
         self.canvas = canvas
         
-    def paint(self, createNode=None, createEdge=None):
+    def paint(self, createNode=None, createEdge=None, maxLevel=9999):
         """ Paint the Graph.
         Params:
             canvas: the canvas object to paint the graph.
@@ -57,6 +57,7 @@ class LevelTree(object):
         """
         self.createNode = createNode or self._defaultCreateNode
         self.createEdge = createEdge or self._defaultCreateEdge
+        self.maxLevel = maxLevel
         rootNode = self.graph.getRoot()
         self._setLevel(rootNode, 0, None)
         self._paintNodeWithChilds(rootNode, 1)
@@ -70,6 +71,8 @@ class LevelTree(object):
         node.level = level
         node.parent = parent
         nextLevel = level + 1
+        if nextLevel > self.maxLevel:
+            return
         for child in node.getChilds():
             if nextLevel > getattr(child, 'level', 0):
                 self._setLevel(child, nextLevel, node)
@@ -77,10 +80,14 @@ class LevelTree(object):
     def _paintNodeWithChilds(self, node, level):
         y = level * self.DY
         
+        self._paintNode(node, y)
+        
+        if level > self.maxLevel:
+            return
+        
         childs = [c for c in node.getChilds() if c.parent is node]
         n = len(childs)
-        
-        self._paintNode(node, y)
+
         if n > 0:
             #width = (xmax - xmin) / n
             for c in childs:
@@ -217,6 +224,9 @@ class LevelTree(object):
         """
         nx = x + node.offset
         node.item.moveTo(nx, node.y)
+        
+        if node.level == self.maxLevel:
+            return 
         
         for c in node.getChilds():
             if c.parent is node:
