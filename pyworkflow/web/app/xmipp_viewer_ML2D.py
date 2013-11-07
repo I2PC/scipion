@@ -24,7 +24,7 @@
 # *
 # **************************************************************************
 
-from pyworkflow.viewer import createPlots
+from pyworkflow.em.packages.xmipp3.viewer_ml2d import createPlots
 
 def viewerML2D(request, protocolViewer):
     ioDict = {}
