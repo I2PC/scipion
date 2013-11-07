@@ -107,7 +107,7 @@ class SpiderFilterWizard(XmippFilterParticlesWizard):
         return "wiz_filter_spider"   
 
 
-##--------------- Dialogs used by Wizards --------------------------        
+#--------------- Dialogs used by Wizards --------------------------        
        
 #class SpiderGaussianFilterDialog(XmippDownsampleDialog):
 class SpiderFilterDialog(XmippDownsampleDialog):

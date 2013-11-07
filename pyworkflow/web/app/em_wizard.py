@@ -146,7 +146,7 @@ def wiz_particle_mask_radii(protocol, request):
                        'xdim':xdim
                        }
             
-            return render_to_response('wiz_particle_mask.html', context)
+            return render_to_response('wiz_particle_mask_radii.html', context)
 
 def wiz_volume_mask(protocol, request):
     volumes = protocol.input3DReferences.get()
@@ -204,6 +204,36 @@ def wiz_volume_mask_radii(protocol, request):
                    }
         
         return render_to_response('wiz_volume_mask_radii.html', context)
+
+def wiz_filter_spider(protocol, request):
+    particles = protocol.inputParticles.get()
+    
+    res = validateParticles(particles) 
+    
+    if res is not 1:
+        return HttpResponse(res)
+    else:
+        parts = getParticleSubset(particles,100)
+        
+        if len(parts) == 0:
+            return HttpResponse("errorIterate");
+        else:
+            xdim = getImageXdim(request, parts[0].text)
+    
+            mask_radius = protocol.maskRadius.get()
+             
+            if mask_radius > xdim :
+                mask_radius = xdim
+            elif mask_radius == -1 :
+                mask_radius = xdim/2
+                
+            context = {'objects': parts,
+                       'raphael': getResourceJs('raphael'),
+                       'maskRadius': mask_radius,
+                       'xdim':xdim
+                       }
+            
+            return render_to_response('wiz_filter_spider.html', context)
 
 def wiz_bandpass(protocol, request):
     particles = protocol.inputParticles.get()
