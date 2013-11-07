@@ -81,7 +81,7 @@ class SpiderProtMaskRadiiWizard(XmippRadiiWizard):
     
 
 class SpiderFilterWizard(XmippFilterParticlesWizard):    
-    _targets = [(SpiderProtFilter, ['filterRadius', 'lowFreq', 'highFreq'])]
+    _targets = [(SpiderProtFilter, ['filterRadius', 'lowFreq', 'highFreq', 'temperature'])]
     _environments = [DESKTOP_TKINTER, WEB_DJANGO]
     
     def show(self, form):
@@ -97,6 +97,8 @@ class SpiderFilterWizard(XmippFilterParticlesWizard):
                 else:
                     form.setVar('lowFreq', d.getLowFreq())
                     form.setVar('highFreq', d.getHighFreq())
+                    if protocol.filterType == FILTER_FERMI:
+                        form.setVar('temperature', d.getTemperature())
         else:
             dialog.showWarning("Input particles", "Select particles first", form.root)  
     
@@ -125,9 +127,11 @@ class SpiderFilterDialog(XmippDownsampleDialog):
             self.radiusSlider = self.addFreqSlider('Radius', self.protocolParent.filterRadius.get(), col=0)
         else:
             self.lfSlider = self.addFreqSlider('Low freq', self.protocolParent.lowFreq.get(), col=0)
-            self.hfSlider = self.addFreqSlider('High freq', self.protocolParent.highFreq.get(), col=1)            
+            self.hfSlider = self.addFreqSlider('High freq', self.protocolParent.highFreq.get(), col=1)        
+            if self.protocolParent.filterType == FILTER_FERMI:
+                self.tempSlider = self.addFreqSlider('Temperature', self.protocolParent.temperature.get(), col=2)
         radiusButton = tk.Button(self.freqFrame, text='Preview', command=self._doPreview)
-        radiusButton.grid(row=0, column=2, padx=5, pady=5)
+        radiusButton.grid(row=0, column=3, padx=5, pady=5)
         
     def _doPreview(self, e=None):
         if self.lastObj is None:
@@ -149,6 +153,9 @@ class SpiderFilterDialog(XmippDownsampleDialog):
     def getHighFreq(self):
         return self.hfSlider.get()
 
+    def getTemperature(self):
+        return self.tempSlider.get()
+    
     def updateFilteredImage(self):
         self.rightPreview.updateData(self.rightImage.getData())
         
@@ -170,9 +177,10 @@ class SpiderFilterDialog(XmippDownsampleDialog):
         
         if self.protocolParent.filterType <= FILTER_GAUSSIAN:
             self.protocolParent.filter_spider(outputLocSpiStr, outputLocSpiStr, filterRadius=self.getRadius()) 
-        else:
-            self.protocolParent.filter_spider(outputLocSpiStr, outputLocSpiStr, lowFreq=self.getLowFreq(), highFreq=self.getHighFreq())               
-
+        elif self.protocolParent.filterType == FILTER_FERMI:
+            self.protocolParent.filter_spider(outputLocSpiStr, outputLocSpiStr, lowFreq=self.getLowFreq(), highFreq=self.getHighFreq(), temperature=self.getTemperature())
+        else:               
+            self.protocolParent.filter_spider(outputLocSpiStr, outputLocSpiStr, lowFreq=self.getLowFreq(), highFreq=self.getHighFreq())
         # Get output image and update filtered image
         img = xmipp.Image()
         locXmippStr = locationToXmipp(1, outputPath)
