@@ -171,8 +171,8 @@ def countParticles(directory, pattern='*.pos'):
     micrographs = 0
     import glob    
     for fnPos in glob.glob(os.path.join(directory,pattern)):
-        md=readPosCoordinates(fnPos)
-        pos_particles=md.size()
+        md = readPosCoordinates(fnPos)
+        pos_particles = md.size()
         if pos_particles > 0:
             particles += pos_particles
             micrographs += 1

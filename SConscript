@@ -22,7 +22,7 @@ SRC = 2 # Sources
 DIR = 3 # base dir
 DEPS = 4
 
-BASIC_DEPS = ['fftw', 'tiff', 'jpeg', 'sqlite', 'hdf5']
+BASIC_DEPS = ['fftw', 'tiff', 'jpeg', 'sqlite', 'hdf5','hdf5_cpp']
 PYTHON_DIR = join("external","python","Python-2.7.2")
 CUDA_PATH = env['CUDA_SDK_PATH']
 
@@ -41,13 +41,16 @@ Libraries = {'fftw': {INCS: [join('external','fftw-3.3.1')],
              'hdf5': {INCS: [join('external','hdf5-1.8.10','src')],
                         LIBS: ['hdf5']
                      },        
-             'python': {INCS: [PYTHON_DIR],
-                        LIBS: ['']
-                     },
+             'hdf5_cpp': {INCS: [join('external','hdf5-1.8.10','c++')],
+                        LIBS: ['hdf5_cpp']
+                     },        
+#             'python': {INCS: [PYTHON_DIR],
+#                        LIBS: ['']
+#                     },
              'cuda': {INCS: [CUDA_PATH + s for s in ['/CUDALibraries/common/inc', '/shared/inc']],
                       LIBS: ['cudart', 'cutil', 'shrutil_x86_64']
                      },
-             'XmippExternal': {INCS: ['external/bilib' + s for s in ['', '/headers', '/types']],
+             'XmippExternal': {INCS: [join('external','bilib') + s for s in ['', '/headers', '/types']],
                                LIBS: ['XmippExternal'],
                                SRC: [join('external','bilib','sources','*.cc'), 
                                      join('external','inria','*.cc'),
@@ -94,19 +97,28 @@ Libraries = {'fftw': {INCS: [join('external','fftw-3.3.1')],
                                 },              
               # Python binding named: xmipp.so
               'xmipp': {INCS: [PYTHON_DIR, join(PYTHON_DIR, 'Include'),
-                                       join('lib','python2.7','site-packages','numpy','core','include')],
+                                       join('lib','python2.7','site-packages','numpy','core','include'),
+                                       join('libraries','bindings','python'),
+                                       'libraries',
+                                       'external'],
                                LIBS: ['xmipp'],
                                SRC: [join('libraries','bindings','python','*.cpp')],
                                DIR: join('libraries','bindings','python'),
-                               DEPS: ['XmippExternal', 'XmippData', 'XmippRecons', 'python'] + BASIC_DEPS
+                               DEPS: ['XmippExternal', 'XmippData', 'XmippRecons'] + BASIC_DEPS
                                 }, 
              'XmippParallel': {INCS: ['external', env['MPI_INCLUDE']],
-                               LIBS: ['XmippRecons'],
+                               LIBS: ['XmippParallel'],
                                SRC: [join('libraries','parallel','*.cpp')],
                                DIR: join('libraries','parallel'),
                                DEPS: ['XmippExternal', 'XmippData', 'XmippClassif', 'XmippRecons', env['MPI_LIB']] + BASIC_DEPS
                                 },                                                   
-             
+              'XmippJNI': {INCS: ['libraries', 'external', join('libraries','bindings','java')] + env['JNI_CPPPATH'],
+                               LIBS: ['XmippJNI'],
+                               SRC: [join('libraries','bindings','java','*.cpp')],
+                               DIR: join('libraries','bindings','java'),
+                               DEPS: ['XmippData', 'pthread', 'XmippRecons', 'XmippClassif', 'XmippExternal'] + BASIC_DEPS
+                                },                                                   
+            
             }
 
 def getLibraryDict(name):
@@ -127,7 +139,7 @@ MACOSX = env['PLATFORM'] == 'darwin'
 MINGW = env['PLATFORM'] == 'win32'
 if CYGWIN:
 	TIFFLibs.append('z')
-SQliteDir = "external/sqlite-3.6.23"
+SQliteDir = join("external", "sqlite-3.6.23")
 SQLiteLibs = ['sqlite3']
 
 
@@ -299,19 +311,19 @@ def AddXmippProgram(name, libs=[], folder='programs', incPaths=[], libPaths=[],
     finalLibs = libs + ['XmippData', 'XmippExternal'] + FFTWLibs + SQLiteLibs + TIFFLibs + JPEGLibs + HDF5Libs
     if useCudaEnvironment:
     	finalLibs += ['cudart', 'cutil', 'shrutil_x86_64' ]
-    	finalIncludePath += [env['CUDA_SDK_PATH'] + "/CUDALibraries/common/inc",
-                           env['CUDA_SDK_PATH'] + "/shared/inc"]
-    	finalLibPath += [env['CUDA_SDK_PATH'] + "/CUDALibraries/common/lib",
-                       env['CUDA_SDK_PATH'] + "/shared/lib",
-                       env['CUDA_SDK_PATH'] + "/CUDALibraries/common/lib/linux",
-		       "/usr/local/cuda/lib64",
+    	finalIncludePath += [join(env['CUDA_SDK_PATH'], "CUDALibraries","common","inc"),
+                           join(env['CUDA_SDK_PATH'], "shared","inc")]
+    	finalLibPath += [join(env['CUDA_SDK_PATH'],"CUDALibraries","common","lib"),
+                       join(env['CUDA_SDK_PATH'],"shared","lib"),
+                       join(env['CUDA_SDK_PATH'],"CUDALibraries","common","lib","linux"),
+		       join("/usr","local","cuda","lib64"),
                        env['CUDA_LIB_PATH']]
     if 'XmippRecons' in finalLibs and not 'XmippClassif' in finalLibs:
         finalLibs.append('XmippClassif')
     if 'XmippRecons' in finalLibs and int(env['cuda']):
         finalLibs.append("XmippReconsCuda");
     if 'XmippInterface' in finalLibs:
-      finalLibPath += ['libraries/interface']+PythonLibDir
+      finalLibPath += [join('libraries','interface')]+PythonLibDir
       finalLibs += PythonLibs
       finalIncludePath += PythonInc
     program = AddProgram(name, 'applications/%s/%s' % (folder, name), '*.cpp', [],
@@ -323,7 +335,7 @@ def AddXmippProgram(name, libs=[], folder='programs', incPaths=[], libPaths=[],
 def AddXmippTest(name, testprog, command):
     #testprog = AddXmippProgram(name, ['gtest'], 'tests')
     testname = 'xmipp_' + name
-    xmlFileName = 'applications/tests/OUTPUT/' + testname + ".xml"
+    xmlFileName = join('applications','tests','OUTPUT', testname) + ".xml"
     if  os.path.exists(xmlFileName):
        os.remove(xmlFileName)
     testcase = env.Alias('run_' + name , env.Command(xmlFileName, testname, command))
@@ -363,21 +375,21 @@ def AddXmippMPIProgram(name, libs=[]):
 		finalLibs.append("XmippReconsCuda");
     for i in range(len(libs)):
        if libs[i] == 'XmippRecons':
-          finalLibPath += ['libraries/reconstruction']
+          finalLibPath += [join('libraries','reconstruction')]
        elif libs[i] == 'XmippInterface':
-          finalLibPath += ['libraries/interface']+PythonLibDir
+          finalLibPath += [join('libraries','interface')]+PythonLibDir
           finalLibs += PythonLibs
           finalIncludePath += PythonInc
        elif libs[i] == 'XmippRecons_Interface':
-          finalLibPath += ['libraries/interface']
+          finalLibPath += [join('libraries','interface')]
           finalLibs.insert(i + 1, 'XmippInterface')
        elif libs[i] == 'XmippReconsMPI':
-          finalLibPath += ['libraries/reconstruction_mpi']
+          finalLibPath += [join('libraries','reconstruction_mpi')]
        elif libs[i] == 'XmippClassif':
-          finalLibPath += ['libraries/classification']
+          finalLibPath += [join('libraries','classification')]
        elif libs[i] == 'XmippDimred':
-          finalLibPath += ['libraries/dimred']
-    AddMPIProgram(name, 'applications/programs/' + name, '*.cpp', [],
+          finalLibPath += [join('libraries','dimred')]
+    AddMPIProgram(name, join('applications','programs',name), '*.cpp', [],
         finalIncludePath, finalLibPath, finalLibs, [], [])
 
 # For Roberto's new lib
@@ -452,12 +464,12 @@ def AddLibrary(name, basedir, sources, includes, libpath=[], libs=[],
 	if cudaFiles:
             envToUse.Append(NVCCFLAGS="-shared --compiler-options '-fPIC'")
         libs += ['cutil_x86_64', 'shrutil_x86_64', 'cudart']
-    	includes += [env['CUDA_SDK_PATH'] + "/CUDALibraries/common/inc",
-                   env['CUDA_SDK_PATH'] + "/shared/inc"]
-    	libpath += [env['CUDA_SDK_PATH'] + "/CUDALibraries/common/lib",
-                       env['CUDA_SDK_PATH'] + "/shared/lib",
-                       env['CUDA_SDK_PATH'] + "/CUDALibraries/common/lib/linux",
-		       "/usr/local/cuda/lib64",
+    	includes += [join(env['CUDA_SDK_PATH'],"CUDALibraries","common","inc"),
+                   join(env['CUDA_SDK_PATH'],"shared","inc")]
+    	libpath += [join(env['CUDA_SDK_PATH'],"CUDALibraries","common","lib"),
+                       join(env['CUDA_SDK_PATH'],"shared","lib"),
+                       join(env['CUDA_SDK_PATH'],"CUDALibraries","common","lib","linux"),
+		       join("/usr","local","cuda","lib64"),
                        env['CUDA_LIB_PATH']]
     else:
         envToUse = env
@@ -560,11 +572,11 @@ def AddLibraryNG(name, mpi=False,#deps=[],
     if cudaFiles:
         envToUse.Append(NVCCFLAGS="-shared --compiler-options '-fPIC'")
         libs += ['cutil_x86_64', 'shrutil_x86_64', 'cudart']
-        includes += [env['CUDA_SDK_PATH'] + "/CUDALibraries/common/inc",
-                   env['CUDA_SDK_PATH'] + "/shared/inc"]
-        libpath += [env['CUDA_SDK_PATH'] + "/CUDALibraries/common/lib",
-                       env['CUDA_SDK_PATH'] + "/shared/lib",
-                       env['CUDA_SDK_PATH'] + "/CUDALibraries/common/lib/linux", "/usr/local/cuda/lib64",
+        includes += [join(env['CUDA_SDK_PATH'],"CUDALibraries","common","inc"),
+                   join(env['CUDA_SDK_PATH'],"shared","inc")]
+        libpath += [join(env['CUDA_SDK_PATH'],"CUDALibraries","common","lib"),
+                       join(env['CUDA_SDK_PATH'],"shared","lib"),
+                       join(env['CUDA_SDK_PATH'],"CUDALibraries","common","lib","linux"), join("/usr","local","cuda","lib64"),
                        env['CUDA_LIB_PATH']]
     else:
         envToUse = env
@@ -591,7 +603,7 @@ def AddLibraryNG(name, mpi=False,#deps=[],
             )
     for lib in libs:
         for ext in ['.a', '.so', '.dll', '.dylib']:
-            rootname = 'lib/lib' + lib
+            rootname = join('lib','lib' + lib)
             if exists(rootname + ext):
                 Depends(library, rootname + ext)
 
@@ -787,8 +799,8 @@ def AddImageJPlugin(name, pluginDir, outDir, requiredPlugins=[]):
 
 # Gtest
 if int(env['gtest']):
-    DataSources = Glob('external/gtest-1.6.0/fused-src/gtest', 'gtest-all.cc', [])
-    AddLibrary('gtest', 'external/gtest-1.6.0/fused-src/gtest', DataSources, ['#'],
+    DataSources = Glob(join('external','gtest-1.6.0','fused-src','gtest'), 'gtest-all.cc', [])
+    AddLibrary('gtest', join('external','gtest-1.6.0','fused-src','gtest'), DataSources, ['#'],
                [], [])
 
 # Bilib
@@ -860,7 +872,7 @@ pythonLibName = 'xmipp'
 #           libpath, libraries, '')
 
 
-pythonbinding = AddLibraryNG(pythonLibName)
+pythonbinding = AddLibraryNG(pythonLibName, mpi=False, shlibprefix='')
 
 # in MACOSX Python requires module libraries as .so instead of .dylib
 if MACOSX:
@@ -991,7 +1003,8 @@ if int(env['java']):
     JavaInterfaceSources = Glob('libraries/bindings/java', '*.cpp', [])
     JavaDependLibraries = ['XmippData', 'pthread', 'XmippRecons', 'XmippClassif', 'XmippExternal']
     # Compilation of the c code needed for java jni binding
-    javaJniC = AddLibrary('XmippJNI', 'libraries/bindings/java', JavaInterfaceSources, ['#libraries', '#external', '#', '#'+HDF5Dir] + env['JNI_CPPPATH'], ['lib'],JavaDependLibraries)
+    javaJniC = AddLibraryNG('XmippJNI')
+    #javaJniC = AddLibrary('XmippJNI', 'libraries/bindings/java', JavaInterfaceSources, ['#libraries', '#external', '#', '#'+HDF5Dir] + env['JNI_CPPPATH'], ['lib'],JavaDependLibraries)
 
     # Create some jar links
     cmd = env.Command(join(libDir, 'ij.jar'), 'external/imagej/ij.jar', SymLink)
@@ -1186,18 +1199,13 @@ SymLink('bin/xmipp_imagej', 'external/runImageJ')
 # MPI
 AddXmippMPIProgram('mpi_angular_class_average', ['XmippRecons'])
 AddXmippMPIProgram('mpi_angular_continuous_assign', ['XmippRecons'])
-if not int(env['release']):
-    AddXmippMPIProgram('mpi_angular_gcar_commonlines', ['XmippRecons'])
 AddXmippMPIProgram('mpi_angular_projection_matching', ['XmippRecons'])
 AddXmippMPIProgram('mpi_angular_project_library', ['XmippRecons'])
 AddXmippMPIProgram('mpi_classify_CL2D', ['XmippRecons'])
 AddProgramLink('classify_CL2D', 'mpi_classify_CL2D')
-if not int(env['release']):
-    AddXmippMPIProgram('mpi_classify_CL3D', ['XmippRecons'])
-    AddProgramLink('classify_CL3D', 'mpi_classify_CL3D')
+AddXmippMPIProgram('mpi_classify_CLTomo_prog', ['XmippRecons','XmippInterface'])
+AddProgramLink('classify_CLTomo', 'mpi_classify_CLTomo')
 AddXmippMPIProgram('mpi_classify_CL2D_core_analysis', ['XmippRecons'])
-if not int(env['release']):
-    AddXmippMPIProgram('mpi_classify_FTTRI', ['XmippRecons'])
 AddXmippMPIProgram('mpi_ctf_correct_idr', ['XmippRecons'])
 AddXmippMPIProgram('mpi_ctf_sort_psds', ['XmippRecons'])
 AddXmippMPIProgram('mpi_image_operate')
@@ -1261,18 +1269,23 @@ if int(env['gtest']):
      #env.Default('run_tests'     )
 
 if int(env['matlab']):
-    def AddMatlabBinding(name):
-        print 'compiling Matlab wrapper for ' + name
-        command = env['MATLAB_DIR'] + '/bin/mex -O -outdir libraries/bindings/matlab -I. -Ilibraries/data -Ilibraries -Llib -Ilibraries/reconstruction -lXmippRecons -lXmippData -lXmippExternal libraries/bindings/matlab/tom_xmipp_' + name + '_wrapper.cpp'
-        output = os.popen(command).read()
-        if len(output) > 0:
-            print output
+    def CompileMatlab(name, dependencies=[]):
+        ''' name parameter is expected without .java extension '''
+        source = 'libraries/bindings/matlab/'+name+".cpp"
+        target = 'libraries/bindings/matlab/'+name+".mexa64"
+        command = env['MATLAB_DIR'] + '/bin/mex -O -outdir libraries/bindings/matlab -I. -Ilibraries -Llib -lXmippRecons -lXmippData -lXmippExternal '+source
+        compileCmd = env.Command(target, source, command)
+        env.Default(compileCmd)
+        return compileCmd
 
     bindings = ['adjust_ctf', 'align2d', 'ctf_correct_phase',
         'mask', 'mirror', 'morphology', 'normalize', 'psd_enhance',
         'resolution', 'rotate', 'scale', 'scale_pyramid', 'volume_segment']
     for i in range(len(bindings)):
-       AddMatlabBinding(bindings[i])
+        CompileMatlab('xmipp_read')
+        CompileMatlab('xmipp_nma_read_alignment')
+        CompileMatlab('xmipp_nma_save_cluster')
+        CompileMatlab('xmipp_read_structure_factor')
 
 # Clean
 # Configuration or cleaning
