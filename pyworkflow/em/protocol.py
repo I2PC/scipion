@@ -79,14 +79,9 @@ class EMProtocol(Protocol):
         self.mapper.insertRelation(RELATION_DATASOURCE, self, srcObj, dstObj)
         #self.mapper.commit()
         
+class ProtImportImages(EMProtocol):
+    """Common protocol to import a set of images in the project"""
 
-class ProtImportMicrographs(EMProtocol):
-    """Protocol to import a set of micrographs in the project"""
-    _label = 'Import micrographs'
-    _path = join('Micrographs', 'Import')
-    
-    def __init__(self, **args):
-        EMProtocol.__init__(self, **args)         
         
     def _defineParams(self, form):
         form.addSection(label='Input')
@@ -98,6 +93,77 @@ class ProtImportMicrographs(EMProtocol):
         form.addParam('ampContrast', FloatParam, default=0.1,
                       label='Amplitude Contrast',
                       help='It should be a positive number, typically between 0.05 and 0.3.')
+        
+    def importImages(self, createSetFunction, pattern, voltage, sphericalAberration, amplitudeContrast):
+        """ Copy images matching the filename pattern
+        Register other parameters.
+        """
+        from pyworkflow.em import findClass
+        from glob import glob
+        filePaths = glob(pattern)
+        
+        if len(filePaths) == 0:
+            raise Exception('importImages:There is not filePaths matching pattern')
+        
+        imgSet = createSetFunction 
+        # Setting Acquisition properties
+        imgSet._acquisition.voltage.set(voltage)
+        imgSet._acquisition.sphericalAberration.set(sphericalAberration)
+        imgSet._acquisition.amplitudeContrast.set(amplitudeContrast)
+        
+        # Call a function that should be implemented by each subclass
+        self._setOtherPars(imgSet)
+        
+        outFiles = [imgSet.getFileName()]
+       
+        filePaths.sort()
+        for f in filePaths:
+            dst = self._getPath(basename(f))            
+            shutil.copyfile(f, dst)
+            img = findClass(self._className)()
+            img.setFileName(dst)
+            imgSet.append(img)
+            outFiles.append(dst)
+        
+        imgSet.write()
+        args = {}
+        outputSet = self._getOutputSet(self._className)
+        args[outputSet] = imgSet
+        self._defineOutputs(**args)
+        
+        return outFiles
+  
+    def _validate(self):
+        validateMsgs = []
+        if self.pattern.get() == "":
+            validateMsgs.append('Pattern cannot be EMPTY.')
+        return validateMsgs
+    
+    def getFiles(self):
+        return getattr(self, self._getOutputSet(self._className)).getFiles()
+    
+    def _summary(self):
+        summary = []
+
+        outputSet = self._getOutputSet(self._className)
+        if not hasattr(self, outputSet):
+            summary.append("Output " + self._className + "s not ready yet.") 
+        else:
+            summary.append("Import of %d " % getattr(self, outputSet).getSize() + self._className + "s from %s" % self.pattern.get())
+            summary.append("Sampling rate : %f" % self.samplingRate.get())
+        
+        return summary
+    
+    def _getOutputSet(self, setName):
+        return "output" + setName + "s"
+        
+class ProtImportMicrographs(ProtImportImages):
+    """Protocol to import a set of micrographs in the project"""
+
+    _className = 'Micrograph'
+    
+    def _defineParams(self, form):
+        ProtImportImages._defineParams(self, form)
         form.addParam('samplingRateMode', EnumParam, default=SAMPLING_FROM_IMAGE,
                    label='Sampling rate mode',
                    choices=['From image', 'From scanner'])
@@ -113,114 +179,37 @@ class ProtImportMicrographs(EMProtocol):
         
         
     def _defineSteps(self):
-        self._insertFunctionStep('importMicrographs', self.pattern.get(),
+        self._insertFunctionStep('importImages', self._createSetOfMicrographs(), self.pattern.get(),
                                 self.voltage.get(), self.sphericalAberration.get(),
-                                self.ampContrast.get(), self.samplingRate.get(), 
-                                self.scannedPixelSize.get(), self.magnification.get())
-        
-    def importMicrographs(self, pattern, voltage, sphericalAberration, amplitudeContrast,
-                          samplingRate, scannedPixelSize, magnification):
-        """ Copy micrographs matching the filename pattern
-        Register other parameters.
-        """
-        from glob import glob
-        filePaths = glob(pattern)
-        
-        if len(filePaths) == 0:
-            raise Exception('importMicrographs:There is not filePaths matching pattern')
-        
-        micSet = self._createSetOfMicrographs() 
-        # Setting Acquisition properties
-        micSet._acquisition.magnification.set(magnification)
-        micSet._acquisition.voltage.set(voltage)
-        micSet._acquisition.sphericalAberration.set(sphericalAberration)
-        micSet._acquisition.amplitudeContrast.set(amplitudeContrast)
-        
+                                self.ampContrast.get()) #, self.samplingRate.get(), 
+                                #self.scannedPixelSize.get(), self.magnification.get())
+                                
+    def _setOtherPars(self, micSet):
+        micSet._acquisition.magnification.set(self.magnification.get())
         if self.samplingRateMode == SAMPLING_FROM_IMAGE:
-            micSet.setSamplingRate(samplingRate)
+            micSet.setSamplingRate(self.samplingRate.get())
         else:
-            micSet.setScannedPixelSize(scannedPixelSize)
-        outFiles = [micSet.getFileName()]
-       
-        filePaths.sort()
-        for f in filePaths:
-            dst = self._getPath(basename(f))            
-            shutil.copyfile(f, dst)
-            mic = Micrograph()
-            mic.setFileName(dst)
-            micSet.append(mic)
-            outFiles.append(dst)
-        
-        micSet.write()
-        self._defineOutputs(outputMicrographs=micSet)
-        
-        return outFiles
-    
-    def getFiles(self):
-        return self.outputMicrographs.getFiles()
+            micSet.setScannedPixelSize(self.scannedPixelSize.get())   
+      
 
-    def _summary(self):
-        summary = []
-
-        if not hasattr(self, 'outputMicrographs'):
-            summary.append("Output micrographs not ready yet.") 
-        else:
-            summary.append("Import of %d micrographs from %s" % (self.outputMicrographs.getSize(), self.pattern.get()))
-            summary.append("Sampling rate : %f" % self.samplingRate.get())
-        
-        return summary
-    
-    def _validate(self):
-        validateMsgs = []
-        if self.pattern.get() == "":
-            validateMsgs.append('Pattern cannot be EMPTY.')
-        return validateMsgs
-
-
-class ProtImportParticles(EMProtocol):
+class ProtImportParticles(ProtImportImages):
     """Protocol to import a set of particles in the project"""
-    _label = 'Import images'
-    _path = join('Images', 'Import')
-    
-    def __init__(self, **args):
-        EMProtocol.__init__(self, **args)         
+ 
+    _className = 'Particle'
         
     def _defineParams(self, form):
-        form.addSection(label='Input')
-        form.addParam('pattern', StringParam, 
-                      label="Pattern")        
+        ProtImportImages._defineParams(self, form)
         form.addParam('samplingRate', FloatParam,
                    label='Sampling rate (A/px)')
         
         
     def _defineSteps(self):
-        self._insertFunctionStep('importParticles', self.pattern.get(), self.samplingRate.get())
+        self._insertFunctionStep('importImages', self._createSetOfParticles(), self.pattern.get(),
+                                self.voltage.get(), self.sphericalAberration.get(),
+                                self.ampContrast.get())
         
-    def importParticles(self, pattern, samplingRate):
-        """ Copy images matching the filename pattern
-        Register other parameters.
-        """
-        from glob import glob
-        filePaths = glob(pattern)
-        if len(filePaths) == 0:
-            raise Exception('importParticles:There are not filePaths matching pattern')
-        imgSet = self._createSetOfParticles()
-        imgSet.setSamplingRate(samplingRate)
-
-        outFiles = [imgSet.getFileName()]
-        
-        for f in filePaths:
-            dst = self._getPath(basename(f))            
-            shutil.copyfile(f, dst)
-            img = Image()
-            img.setFileName(dst)
-            imgSet.append(img)
-            outFiles.append(dst)
-                       
-        imgSet.write()
-        self._defineOutputs(outputParticles=imgSet)
-        
-        return outFiles
+    def _setOtherPars(self, imgSet):
+        pass
     
     def getFiles(self):
         return self.outputParticles.getFiles()
