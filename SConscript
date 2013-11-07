@@ -1199,18 +1199,13 @@ SymLink('bin/xmipp_imagej', 'external/runImageJ')
 # MPI
 AddXmippMPIProgram('mpi_angular_class_average', ['XmippRecons'])
 AddXmippMPIProgram('mpi_angular_continuous_assign', ['XmippRecons'])
-if not int(env['release']):
-    AddXmippMPIProgram('mpi_angular_gcar_commonlines', ['XmippRecons'])
 AddXmippMPIProgram('mpi_angular_projection_matching', ['XmippRecons'])
 AddXmippMPIProgram('mpi_angular_project_library', ['XmippRecons'])
 AddXmippMPIProgram('mpi_classify_CL2D', ['XmippRecons'])
 AddProgramLink('classify_CL2D', 'mpi_classify_CL2D')
-if not int(env['release']):
-    AddXmippMPIProgram('mpi_classify_CL3D', ['XmippRecons'])
-    AddProgramLink('classify_CL3D', 'mpi_classify_CL3D')
+AddXmippMPIProgram('mpi_classify_CLTomo_prog', ['XmippRecons','XmippInterface'])
+AddProgramLink('classify_CLTomo', 'mpi_classify_CLTomo')
 AddXmippMPIProgram('mpi_classify_CL2D_core_analysis', ['XmippRecons'])
-if not int(env['release']):
-    AddXmippMPIProgram('mpi_classify_FTTRI', ['XmippRecons'])
 AddXmippMPIProgram('mpi_ctf_correct_idr', ['XmippRecons'])
 AddXmippMPIProgram('mpi_ctf_sort_psds', ['XmippRecons'])
 AddXmippMPIProgram('mpi_image_operate')
