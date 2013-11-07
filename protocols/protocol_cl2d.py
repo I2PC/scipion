@@ -158,7 +158,7 @@ def evaluateClasses(log,WorkingDir,ExtraDir,subset):
         if level>0:
             previousFile=os.path.join(ExtraDir,"level_%02d/level_classes%s.xmd"%(level-1,subset))
             if os.path.exists(previousFile):
-                fnOut=getProtocolFilename("hierarchy",ExtraDir=ExtraDir,subset=subset)
+                fnOut="%s/classes%s_hierarchy.txt"%(ExtraDir,subset)
                 args="--i1 %s --i2 %s -o %s"%(previousFile,filename,fnOut)
                 if os.path.exists(fnOut):
                     args+=" --append"
