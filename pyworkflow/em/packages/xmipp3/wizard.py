@@ -536,20 +536,24 @@ class XmippMaskPreviewDialog(XmippImagePreviewDialog):
         self.dim_par = self.firstItem.getDim()[0]
         self.ratio = self.dim / float(self.dim_par)
         self.previewLabel = 'Central slice'
+        if self.maskRadius == -1:
+            self.iniRadius = self.dim_par/2
+        else:
+            self.iniRadius = self.maskRadius
     
     def _createPreview(self, frame):
         """ Should be implemented by subclasses to 
         create the items preview. 
         """
         from pyworkflow.gui.matplotlib_image import MaskPreview    
-        self.preview = MaskPreview(frame, self.dim, label=self.previewLabel, outerRadius=self.maskRadius*self.ratio)
+        self.preview = MaskPreview(frame, self.dim, label=self.previewLabel, outerRadius=self.iniRadius*self.ratio)
         self.preview.grid(row=0, column=0) 
     
     def _createControls(self, frame):
         self.addRadiusBox(frame) 
         
     def addRadiusBox(self, parent):
-        self.radiusSlider = LabelSlider(parent, 'Outer radius', from_=0, to=int(self.dim_par/2), value=self.maskRadius, step=1, callback=lambda a, b, c:self.updateRadius())
+        self.radiusSlider = LabelSlider(parent, 'Outer radius', from_=0, to=int(self.dim_par/2), value=self.iniRadius, step=1, callback=lambda a, b, c:self.updateRadius())
         self.radiusSlider.grid(row=0, column=0, padx=5, pady=5) 
     
     def updateRadius(self):
