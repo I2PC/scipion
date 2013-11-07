@@ -12,7 +12,10 @@
 <script>	
 	$(function() {
     	$("#tabs").tabs();
-    	$("#browser").treeview(); 
+    	$("#browser").treeview();
+    	{% if graphView %}
+    		switchGraph()
+    	{% endif %}
   	});
 </script>
 {% endblock %} {% block sideLeft %}
