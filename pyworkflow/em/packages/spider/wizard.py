@@ -168,13 +168,10 @@ class SpiderFilterDialog(XmippDownsampleDialog):
                 
         outputLocSpiStr = locationToSpider(1, outputName)
         
-        #just for testing
-        outputLocSpiStr_test = locationToSpider(1, outputName + "test")
-        
         if self.protocolParent.filterType <= FILTER_GAUSSIAN:
-            self.protocolParent.filter_spider(outputLocSpiStr, outputLocSpiStr_test, filterRadius=self.getRadius()) 
+            self.protocolParent.filter_spider(outputLocSpiStr, outputLocSpiStr, filterRadius=self.getRadius()) 
         else:
-            self.protocolParent.filter_spider(outputLocSpiStr, outputLocSpiStr_test, lowFreq=self.getLowFreq(), highFreq=self.getHighFreq())               
+            self.protocolParent.filter_spider(outputLocSpiStr, outputLocSpiStr, lowFreq=self.getLowFreq(), highFreq=self.getHighFreq())               
 
         # Get output image and update filtered image
         img = xmipp.Image()

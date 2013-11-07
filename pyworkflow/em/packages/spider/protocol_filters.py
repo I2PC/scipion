@@ -204,7 +204,7 @@ class SpiderProtFilter(ProtFilterParticles, SpiderProtocol):
             args.append('%f %f' % (pars['lowFreq'], pars['highFreq']))
             
         if self.filterType.get() == FILTER_FERMI:
-            args.append([self.temperature.get()])
+            args.append(self.temperature.get())
             
         spi.runFunction(OP, inputLocStr, outputLocStr, filterNumber, *args)
         spi.close()
