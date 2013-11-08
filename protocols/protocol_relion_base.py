@@ -268,6 +268,7 @@ class ProtRelionBase(XmippProtocol):
             if xmippExists(inMetadataFn):
                 mdOut.read(inMetadataFn)
             else:
+                print "Computing table of images assigned to each clase (this may take some time"
                 mdOut = self.imagesAssignedToClass2(firstIter,lastIteration)
             _r = []
             maxRef3D = 1
@@ -283,7 +284,7 @@ class ProtRelionBase(XmippProtocol):
                     tmp[0]=('Iter_%d'%oldIter)
                     _r.append(tuple(tmp))
                     oldIter = _iter
-                    tmp = ['---']*(self.NumberOfClasses+1)
+                    tmp = ['---']*(lastIteration+1)
                 tmp [_ref3D] = str(_count)
             tmp[0]=('Iter_%d'%oldIter)
             _r.append(tuple(tmp))
@@ -598,7 +599,7 @@ class ProtRelionBase(XmippProtocol):
 
     def imagesAssignedToClass2(self,firstIter, lastIteration):
             inputMetadatas = []
-            for it in range (firstIter,self.NumberOfIterations+1): #always list all iterations
+            for it in range (firstIter,lastIteration+1): #always list all iterations
                 inputMetadatas += ["images@"+self.getFilename('data'+'Xm', iter=it, workingDir=self.WorkingDir )]
             return imagesAssignedToClass(inputMetadatas)
 
@@ -608,6 +609,7 @@ def imagesAssignedToClass(inputMetadatas):
         maxRef3D = 1
         it=1
         for mdName in inputMetadatas:
+            print "processing metadata", mdName
             md = MetaData(mdName)
             mdAux.aggregate(md, AGGR_COUNT, MDL_REF3D, MDL_REF3D, MDL_COUNT)
             mdAux.fillConstant(MDL_ITER,it)
