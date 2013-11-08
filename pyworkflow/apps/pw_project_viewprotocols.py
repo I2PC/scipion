@@ -179,54 +179,6 @@ class ProtocolTreeProvider(ObjectTreeProvider):
         else:
             objList = [protocol]
         ObjectTreeProvider.__init__(self, objList)
-#        self.viewer = XmippViewer()
-#        
-#    def show(self, obj):
-#        self.viewer.visualize(obj)
-#        
-#    def getObjectPreview(self, obj):
-#        desc = "<name>: " + obj.getName()
-#        
-#        return (None, desc)
-#    
-#    def getObjectActions(self, obj):
-#        if isinstance(obj, Pointer):
-#            obj = obj.get()
-#            
-#        if isinstance(obj, SetOfMicrographs):
-#            return [('Open Micrographs with Xmipp', lambda: self.viewer.visualize(obj))]
-#        if isinstance(obj, SetOfImages):
-#            return [('Open Images with Xmipp', lambda: self.viewer.visualize(obj))]
-#        if isinstance(obj, XmippSetOfClasses2D):
-#            return [('Open SetOfClasses2D with Xmipp', lambda: self.viewer.visualize(obj))]
-#        return []   
-#    
-#    def getObjectInfo(self, obj):
-#        info = ObjectTreeProvider.getObjectInfo(self, obj)
-#        attrName = obj.getLastName()
-#        if hasattr(self.protocol, attrName):
-#            if isinstance(obj, Pointer) and obj.hasValue():
-#                info['image'] = 'db_input.gif'
-#            else:
-#                if (self.protocol._definition.hasParam(attrName) or
-#                    attrName in ['numberOfMpi', 'numberOfThreads']):
-#                    info['parent'] = self.params
-#                elif attrName in self.statusList:
-#                    if info['parent'] is self.protocol:
-#                        info['parent'] = self.status
-#                    
-#            if attrName.startswith('output'):# in self.protocol._outputs:
-#                info['image'] = 'db_output.gif'
-#        if obj is self.params or obj is self.status:
-#            info['parent'] = self.protocol
-#        return info     
-#    
-#    def _getChilds(self, obj):
-#        childs = ObjectTreeProvider._getChilds(self, obj)
-#        if obj is self.protocol:
-#            childs.insert(0, self.status)
-#            childs.insert(1, self.params)
-#        return childs
     
 
 class RunIOTreeProvider(TreeProvider):
@@ -259,25 +211,15 @@ class RunIOTreeProvider(TreeProvider):
         return (None, desc)
     
     def getObjectActions(self, obj):
-        from pyworkflow.em import findViewers
         from pyworkflow.viewer import DESKTOP_TKINTER
         
         if isinstance(obj, Pointer):
             obj = obj.get()
-            
         actions = []    
         viewers = findViewers(obj.getClassName(), DESKTOP_TKINTER)
         for v in viewers:
             actions.append(('Open with %s' % v.__name__, lambda : self.visualize(v, obj)))
             
-#        if isinstance(obj, SetOfMicrographs):
-#            return [('Open Micrographs with Xmipp', lambda: self.viewer.visualize(obj))]
-#        if isinstance(obj, XmippSetOfCoordinates):
-#            return [('Open Coordinates with Xmipp', lambda: self.viewer.visualize(obj))]
-#        if isinstance(obj, SetOfImages):
-#            return [('Open Images with Xmipp', lambda: self.viewer.visualize(obj))]
-#        if isinstance(obj, XmippSetOfClasses2D):
-#            return [('Open SetOfClasses2D with Xmipp', lambda: self.viewer.visualize(obj))]
         return actions
     
     def getObjectInfo(self, obj):
@@ -516,8 +458,8 @@ class ProtocolsView(tk.Frame):
         
         self.updateRunsGraph()
 
-    def updateRunsGraph(self):      
-        g = self.project.getRunsGraph(refresh=False)
+    def updateRunsGraph(self, refresh=False):      
+        g = self.project.getRunsGraph(refresh=refresh)
         #g.printDot()
         lt = LevelTree(g)
         self.runsGraph.clear()
@@ -604,36 +546,48 @@ class ProtocolsView(tk.Frame):
         self.summaryText.clear()
         self.summaryText.addText(self.selectedProtocol.summary())
         
+    def _scheduleRunsUpdate(self, ms=1000):
+        self.runsTree.after(ms, self.refreshRuns)
+        
     def _executeSaveProtocol(self, prot, onlySave=False):
         if onlySave:
             self.project.saveProtocol(prot)
+            msg = "Protocol sucessfully saved."
         else:
             self.project.launchProtocol(prot)
-        self.runsTree.after(1000, self.runsTree.update)
+            msg = "Protocol sucessfully launched."
+            
+        self._scheduleRunsUpdate()
+        
+        return msg
         
     def _continueProtocol(self, prot):
         self.project.continueProtocol(prot)
-        self.runsTree.after(1000, self.runsTree.update)        
+        self._scheduleRunsUpdate()
         
     def _deleteProtocol(self, prot):
         if askYesNo("Confirm DELETE", "<ALL DATA> related to this <protocol run> will be <DELETED>. \n"
                     "Do you really want to continue?", self.root):
             self.project.deleteProtocol(prot)
-            self.runsTree.update()
+            self._scheduleRunsUpdate()
             
     def _stopProtocol(self, prot):
         if askYesNo("Confirm STOP", "Do you really want to <STOP> this run?", self.root):
             self.project.stopProtocol(prot)
-            self.runsTree.update()        
+            self._scheduleRunsUpdate()
 
     def _analyzeResults(self, prot):
         from pyworkflow.em import findViewers
         from pyworkflow.viewer import DESKTOP_TKINTER
 
-        self.viewers = findViewers(prot.getClassName(), DESKTOP_TKINTER)
-        self.viewer = self.viewers[0]()
-        self.viewer.project = self.project
-        self.viewer.visualize(prot, windows=self.windows)
+        viewers = findViewers(prot.getClassName(), DESKTOP_TKINTER)
+        if len(viewers):
+            #TODO: If there are more than one viewer we should display a selection menu
+            firstViewer = viewers[0]() # Instanciate the first available viewer
+            firstViewer.project = self.project
+            firstViewer.visualize(prot, windows=self.windows)
+        else:
+            self.windows.showError("There is not viewer for protocol: <%s>" % prot.getClassName())
         
                 
     def _runActionClicked(self, action):
