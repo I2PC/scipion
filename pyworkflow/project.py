@@ -138,7 +138,7 @@ class Project(object):
         protocol.setStatus(STATUS_LAUNCHED)
         self._setupProtocol(protocol)
         
-        protocol.setMapper(self.mapper) # mapper is used in makePathAndClean
+        #protocol.setMapper(self.mapper) # mapper is used in makePathAndClean
         protocol.makePathsAndClean() # Create working dir if necessary
         self.mapper.commit()
         
@@ -246,6 +246,7 @@ class Project(object):
         name = protocol.getClassName() + protocol.strId()
         protocol.setName(name)
         protocol.setWorkingDir(self.getPath(PROJECT_RUNS, name))
+        protocol.setMapper(self.mapper)
         self._setHostConfig(protocol)
         # Update with changes
         self._storeProtocol(protocol)
@@ -278,20 +279,26 @@ class Project(object):
             n.run = r
             n.label = r.getRunName()
             
-            for key, attr in r.iterOutputAttributes(EMObject):
+            for _, attr in r.iterOutputAttributes(EMObject):
                 outputDict[attr.getName()] = n # mark this output as produced by r
-                #print "   %s: %s" % (key, attr.getName())
+            
+        def _checkInputAttr(node, pointed):
+            """ Check if an attr is registered as output"""
+            pointedName = pointed.getName()
+            if pointedName in outputDict:
+                parentNode = outputDict[pointedName]
+                parentNode.addChild(node)
+                return True
+            return False
             
         for r in runs:
             node = g.getNode(r.strId())
-            #print '\n=========================\n', r.getName()
-            #print "> Inputs:"
-            for key, attr in r.iterInputAttributes():
+            for _, attr in r.iterInputAttributes():
                 if attr.hasValue():
-                    attrName = attr.get().getName()
-                    if attrName in outputDict:
-                        parentNode = outputDict[attrName]
-                        parentNode.addChild(node)
+                    pointed = attr.get()
+                    # Only checking pointed object and its parent, if more levels
+                    # we need to go up to get the correct dependencies
+                    _checkInputAttr(node, pointed) or _checkInputAttr(node, self.mapper.getParent(pointed))
                     
         rootNode = g.getRoot()
         rootNode.run = None

@@ -323,10 +323,9 @@ class Protocol(Step):
         of this protocol. Now the input are assumed to be these attribute
         which are pointers and have no condition.
         """
-        for paramName, param in self._definition.iterParams():
-            attr = getattr(self, paramName)
-            if attr.isPointer() and not param.hasCondition():
-                yield paramName, attr
+        for key, attr in self.getAttributes():
+            if attr.isPointer() and attr.hasValue():
+                yield key, attr
                 
     def iterOutputAttributes(self, outputClass):
         """ Iterate over the outputs produced by this protocol. """

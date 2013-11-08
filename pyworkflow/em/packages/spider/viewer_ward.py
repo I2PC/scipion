@@ -23,6 +23,7 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
+from pyworkflow.protocol.constants import STATUS_FINISHED
 """
 This module implement the wrappers around xmipp_showj
 visualization program.
@@ -147,14 +148,17 @@ class SpiderViewerWard(ProtocolViewer):
             selectedNodes = [node for node in self.graph.getNodes() if node.selected]
             suffix = 'Selection'
             prot = ProtUserSelection()
+            prot.inputClasses = Pointer()
+            prot.inputClasses.set(self.protocol.outputClasses)
             self.project._setupProtocol(prot)
             prot.makePathsAndClean()
             classes = prot._createSetOfClasses2D(suffix)
             averages = prot._createSetOfParticles(suffix)
             self.protocol._fillClassesFromNodes(classes, averages, selectedNodes)
-            self.protocol._defineOutputs(outputSelection=classes)
-            
-            self.project.launchProtocol(prot, wait=True)
+            prot._defineOutputs(outputSelection=classes)
+            prot.setStatus(STATUS_FINISHED)
+            self.project._storeProtocol(prot)
+            #self.project.launchProtocol(prot, wait=True)
             self.win.showInfo("Protocol %s created. " % prot.getName())
         except Exception, ex:
             self.win.showError(str(ex))
