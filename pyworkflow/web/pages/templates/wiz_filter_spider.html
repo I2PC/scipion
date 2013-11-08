@@ -1,67 +1,164 @@
 {% extends 'wiz_base.html' %} 
-{% block title %} Spider Filter {% endblock %} 
-{% block name %} Spider Filter {% endblock %} 
+{% block title %} Spider Particle Filter {% endblock %}
+{% block name %} Spider Particle Filter {% endblock %}
 {% block head %}
 	<script type="text/javascript" src="{{raphael}}"></script>
-{% endblock %} 
+	<script>
+		function returnParams(){
+			if ({{protocol.filterType.get}} < 2){
+				putSelection('input#radius_val', 'filterRadius_input');
+			} else {
+				putSelection('input#high_val', 'highFreq_input');
+				putSelection('input#low_val', 'lowFreq_input');
+				if ({{protocol.filterType.get}} == 2){
+					putSelection('input#temp_val', 'temperature_input');
+				}
+			}
+		}
+	</script>
+{% endblock %}	
 {% block list %}
 <tr>
 	<th>Object</th>
 </tr>
 {% for obj in objects %}
-	{% if forloop.counter0 == 0 %} 
-	<script>
-		firstElm = {{obj.getObjId}};
-	</script>
-	{% endif %}
+{% if forloop.counter0 == 0 %} 
+<script>
+	firstElm  = {{obj.getObjId}};
+</script>
+{% endif %}
 <tr id="{{obj.getObjId}}" class="no-selected"
 	style="background-color: #fafafa;"
-	onclick="compositeParticle(($(this)));" value="{{obj.text}}">
+	onclick="compositeSpiderFilter(($(this)), {{protocol.filterType.get}});" 
+	value="{{obj.text}}">
 	<td>{{obj.basename}}</td>
 </tr>
 {% endfor %} {% endblock %} {% block images %}
 <tr>
-	<td>Central Slice
+	<td>
 		<div id="wrapper" class="image">
 			<div id="particle"></div>
-			<div id="canvas"></div>
-		</div>
+		</div>Particle
+	</td>
+	<td>
+		<div id="wrapper" class="image">
+			<div id="filteredParticle"></div>
+		</div>Filtered Particle
 	</td>
 </tr>
 {% endblock %} 
 {% block options %}
-<fieldset id="sliderOptionsLite">
-	<div id="sliderUni">
-		<span id="title">Outer radius<span>
+<fieldset id="sliderOptions">
+	<legend>Frequencies</legend>
+	{% if protocol.filterType.get < 2 %}
+	<div id="radius">
+		<span id="title_freq">Radius<span>
 		<div id="slider" class="slider_radius"></div>
-		<div id="slider_radius_result">{{maskRadius}}</div>
-		<input id="radius_val" type="hidden" value="{{maskRadius}}"/>
+		<div id="slider_radius_result">{{protocol.filterRadius.get}}</div>
+		<input id="radius_val" type="hidden" value="{{protocol.filterRadius.get}}"/>
 	</div>
+	{% else %}
+		<div id="lowFreq">
+			<span id="title_freq">Low freq<span>
+			<div id="slider" class="slider_low"></div>
+			<div id="slider_low_result">{{protocol.lowFreq.get}}</div>
+			<input id="low_val" type="hidden" value="{{protocol.lowFreq.get}}"/>
+		</div>
+		
+		<div id="highFreq">
+			<span id="title_freq">High freq<span>
+			<div id="slider" class="slider_high"></div>
+			<div id="slider_high_result">{{protocol.highFreq.get}}</div>
+			<input id="high_val" type="hidden" value="{{protocol.highFreq.get}}"/>
+		</div>
+		{% if protocol.filterType.get == 2 %}
+		<div id="temp">
+			<span id="title_freq">Temperature<span>
+			<div id="slider" class="slider_temp"></div>
+			<div id="slider_temp_result">{{protocol.temperature.get}}</div>
+			<input id="temp_val" type="hidden" value="{{protocol.temperature.get}}"/>
+		</div>
+		{% endif %}
+	{% endif %}
 </fieldset>
+
 <script>
 $(".slider_radius").slider({
 	animate : true,
 	range : "min",
-	value : "{{maskRadius}}",
-	min : 0,
-	max : "{{xdim}}",
-	step : 1,
+	value : "{{protocol.filterRadius.get}}",
+	min : 0.00,
+	max : 0.50,
+	step : 0.01,
 	//this gets a live reading of the value and prints it on the page
 	slide : function(event, ui) {
 		$("#slider_radius_result").html(ui.value);
-		
-		//update the circle
-		putCircle((ui.value*125)/{{xdim}}, "canvas", "blue");
 	},
 	//this updates the hidden form field so we can submit the data using a form
 	change : function(event, ui) {
 		$('#radius_val').attr('value', ui.value);
+// 		previewSpiderFilter({{protocol.filterType.get}});
 	}
 });
+
+$(".slider_low").slider({
+	animate : true,
+	range : "min",
+	value : "{{protocol.lowFreq.get}}",
+	min : 0.00,
+	max : 0.50,
+	step : 0.01,
+	//this gets a live reading of the value and prints it on the page
+	slide : function(event, ui) {
+		$("#slider_low_result").html(ui.value);
+	},
+	//this updates the hidden form field so we can submit the data using a form
+	change : function(event, ui) {
+		$('#low_val').attr('value', ui.value);
+// 		previewSpiderFilter({{protocol.filterType.get}});
+	}
+});
+$(".slider_high").slider({
+	animate : true,
+	range : "min",
+	value : "{{protocol.highFreq.get}}",
+	min : 0.00,
+	max : 0.50,
+	step : 0.01,
+	//this gets a live reading of the value and prints it on the page
+	slide : function(event, ui) {
+		$("#slider_high_result").html(ui.value);
+	},
+	//this updates the hidden form field so we can submit the data using a form
+	change : function(event, ui) {
+		$('#high_val').attr('value', ui.value);
+// 		previewSpiderFilter({{protocol.filterType.get}});
+	}
+});
+
+$(".slider_temp").slider({
+	animate : true,
+	range : "min",
+	value : "{{protocol.temperature.get}}",
+	min : 0.00,
+	max : 0.50,
+	step : 0.01,
+	//this gets a live reading of the value and prints it on the page
+	slide : function(event, ui) {
+		$("#slider_temp_result").html(ui.value);
+	},
+	//this updates the hidden form field so we can submit the data using a form
+	change : function(event, ui) {
+		$('#temp_val').attr('value', ui.value);
+// 		previewSpiderFilter({{protocol.filterType.get}});
+	}
+});
+
 //Load the First Element of the list
-window.onload = compositeParticle($("tr#"+firstElm));
+window.onload = compositeSpiderFilter($("tr#"+firstElm), {{protocol.filterType.get}});
 </script>
+
 {% endblock %}
 {% block function %}
-	onclick="putSelection('input#radius_val', 'maskRadius_input')"
+	onclick="returnParams()"
 {% endblock %}

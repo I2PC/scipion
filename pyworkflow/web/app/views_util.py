@@ -153,6 +153,7 @@ def textfileViewer(title, fileList):
     x = 0
     while 1:
         line = f.readline()
+        
         if not line:
             break
         if len(line) > 1:
