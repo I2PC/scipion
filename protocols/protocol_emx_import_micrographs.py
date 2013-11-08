@@ -61,7 +61,8 @@ class ProtEmxImportMicrographs(XmippProtocol):
         microscopeFn = self.getFilename('microscope')
         _verifyFiles.append(microscopeFn)
         
-        self.insertStep("createMicrographs", verifyfiles=_verifyFiles,
+        self.insertStep("createMicrographs", 
+                        verifyfiles=_verifyFiles,
                         emxFileName=self.EmxFileName,
                         binaryFilename=self.binaryFile,
                         micsFileName=micsFn,
@@ -154,12 +155,30 @@ def validateSchema(log, emxFileName):
     
     if code:
         raise Exception(err)
-    
-def createMicrographs(log, emxFileName, binaryFilename, micsFileName, projectDir, ctfDir):
+
+
+def createMicrographs(log,
+                      emxFileName, 
+                      binaryFilename, 
+                      micsFileName, 
+                      projectDir, 
+                      ctfDir,
+                      acqFn, 
+                      SamplingRate,
+                      microscopeFn, 
+                      Voltage, 
+                      SphericalAberration
+                      ):
     filesPrefix = dirname(emxFileName)
     emxData = loadEmxData(emxFileName)
-    Voltage, SphericalAberration, SamplingRate = emxMicsToXmipp(emxData, micsFileName, filesPrefix, ctfDir)
-    createAcquisition(log, acqFn, samplingRate )
+    _Voltage, _SphericalAberration, _SamplingRate = emxMicsToXmipp(emxData, micsFileName, filesPrefix, ctfDir)
+    if _SamplingRate > 0:
+        SamplingRate = _SamplingRate
+    if _Voltage > 0:
+        Voltage = _Voltage
+    if _SphericalAberration > 0:
+        SphericalAberration = _SphericalAberration
+    createAcquisition(log, acqFn, SamplingRate )
     createMicroscope(log, microscopeFn, Voltage, SphericalAberration, SamplingRate)
     
 def createAcquisition(log, fnacq, SamplingRate):

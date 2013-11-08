@@ -112,8 +112,26 @@ def emxMicsToXmipp(emxData, outputFileName=MICFILE, filesPrefix=None, ctfRoot=No
         if ctf.pixelSpacing__Y is not None:
             if ctf.pixelSpacing__X != ctf.pixelSpacing__Y:
                 raise Exception ('pixelSpacingX != pixelSpacingY. Xmipp does not support it') 
+            samplingRate    = ctf.pixelSpacing__X
+            if (oldSamplingRate > -1):
+                if oldSamplingRate != samplingRate:
+                    raise Exception ('Xmipp emx import cannot import emx files with different samplingRate') 
+            oldSamplingRate = samplingRate
+
+        if ctf.voltage is not None:
+            voltage         = ctf.voltage
+            oldVoltage      = voltage
+            if (oldVoltage > -1):
+                if oldVoltage != voltage:
+                    raise Exception ('Xmipp emx import cannot import emx files with different voltage') 
+
+        if ctf.cs is not None:
+            cs              = ctf.cs
+            oldCs           = cs
+            if (oldCs > -1):
+                if oldCs != cs:
+                    raise Exception ('Xmipp emx import cannot import emx files with different cs') 
             
-        samplingRate = ctf.pixelSpacing__X
         # Create the .ctfparam, replacing the micrograph name
         mdCtf = RowMetaData()
         
@@ -129,8 +147,6 @@ def emxMicsToXmipp(emxData, outputFileName=MICFILE, filesPrefix=None, ctfRoot=No
     mdMic.sort(MDL_MICROGRAPH)
     # Write micrographs metadata
     mdMic.write('Micrographs@' + outputFileName)
-    voltage=ctf.acceleratingVoltage
-    cs=ctf.cs
     return voltage, cs, samplingRate
 
 def emxCoordsToXmipp(emxData, filesRoot):
