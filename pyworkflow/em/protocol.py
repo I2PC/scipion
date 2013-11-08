@@ -209,7 +209,7 @@ class ProtImportParticles(ProtImportImages):
                                 self.ampContrast.get())
         
     def _setOtherPars(self, imgSet):
-        pass
+        imgSet.setSamplingRate(self.samplingRate.get())
     
     def getFiles(self):
         return self.outputParticles.getFiles()
