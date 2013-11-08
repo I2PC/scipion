@@ -159,11 +159,10 @@ class XmippML3DViewer(ProtocolViewer):
                     xplotter.show() 
                     
     def _plotStatistics(self, e=None):
-        pass
-#        from viewer_ml2d import createPlots
-#        xplotter = createPlots(self.protocol, ['DoShowLL', 'DoShowPmax'])
-#        if xplotter is not None:
-#            xplotter.show() 
+        from viewer_ml2d import createPlots
+        xplotter = createPlots(self.protocol, ['doShowLL', 'doShowPmax'])
+        if xplotter is not None:
+            xplotter.show() 
                 
     def _viewIterationFile(self, filePath):
         self.setVisualizeIterations()
@@ -195,11 +194,23 @@ class XmippML3DViewer(ProtocolViewer):
                 except Exception, ex:
                     self.formWindow.showError('Invalid iterations range.')
             
-    def _viewPlot(self, paramName):
-        from viewer_ml2d import createPlots
-        xplotter = createPlots(self.protocol, [paramName])
-        if xplotter:
-            xplotter.show()
+    def _viewAll(self, *args):
+        if self.doShowGreyScaleRefVol:
+            self._viewCorrectedVols()
+        if self.doShowFilterRefVol:
+            self._viewFilteredVols()
+        if self.doShowSeedsVols:
+            self._viewGeneratedVols()
+        if self.doShow2DAvgs:
+            self._view2DAvgs()
+        if self.doShow3DRefsVolumes:
+            self._view3DRefsVolumes()
+        if self.doShowAngDist:
+            self._plotAngularDistribution()
+        if self.doShowDataDist:
+            self._plotClassDistribution()
+        if self.doShowStatistics: 
+            self._plotStatistics()
         
 
     def getVisualizeDictWeb(self):
