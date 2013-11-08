@@ -406,3 +406,18 @@ class XmippProtML3D(ProtRefine3D, ProtClassify3D):
         #return 'iter%03d' % (iter - 1)
         return iter - 1
     
+    #TODO: This method is exactly the same as in protocol_ml2d, try to unify them.
+    def _getIterClasses(self, iter=None, block=None):
+        """ Return the classes metadata for this iteration.
+        block parameter can be 'info' or 'classes'.
+        """
+        if iter is None:
+            iter = self._lastIteration()
+
+        extra = self._getPath('ml2dextra')
+        mdFile = join(extra, 'iter%03d' % iter, 'iter_classes.xmd')
+        if block:
+            mdFile = block + '@' + mdFile
+        
+        return mdFile
+    
