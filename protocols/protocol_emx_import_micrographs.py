@@ -50,25 +50,29 @@ class ProtEmxImportMicrographs(XmippProtocol):
                         )
         self.insertStep("createDir", verifyfiles=[self.ExtraDir], 
                         path=self.ExtraDir)
+        _verifyFiles=[]
+        #createMicrographs
+        micsFn       = self.getFilename('micrographs')
+        _verifyFiles.append(micsFn)
+        #createAcquisition
+        acqFn        = self.getFilename('acquisition')
+        _verifyFiles.append(acqFn)
+        #createMicroscope
+        microscopeFn = self.getFilename('microscope')
+        _verifyFiles.append(microscopeFn)
         
-        micsFn = self.getFilename('micrographs')
-        self.insertStep("createMicrographs", verifyfiles=[micsFn],
+        self.insertStep("createMicrographs", verifyfiles=_verifyFiles,
                         emxFileName=self.EmxFileName,
                         binaryFilename=self.binaryFile,
                         micsFileName=micsFn,
                         projectDir=self.projectDir,
                         ctfDir=self.ExtraDir,
+                        acqFn=acqFn, 
+                        SamplingRate=self.SamplingRate,
+                        microscopeFn=microscopeFn, 
+                        Voltage=self.Voltage, 
+                        SphericalAberration=self.SphericalAberration
                         )
-        
-        acqFn = self.getFilename('acquisition')
-        self.insertStep('createAcquisition', verifyfiles=[acqFn],
-                        fnOut=acqFn, SamplingRate=self.SamplingRate)
-        
-        microscopeFn = self.getFilename('microscope')
-        self.insertStep('createMicroscope', verifyfiles=[microscopeFn],
-                        fnOut=microscopeFn, Voltage=self.Voltage, 
-                        SphericalAberration=self.SphericalAberration,
-                        SamplingRate=self.SamplingRate)
         
         if PARTICLE in self.objDict:
             part = self.objDict[PARTICLE]
@@ -112,10 +116,10 @@ class ProtEmxImportMicrographs(XmippProtocol):
             self._loadInfo()   
             
             if self.object is None:
-                errors.append('Canot find any object in EMX file <%s>' % self.EmxFileName)
+                errors.append('Cannot find any object in EMX file <%s>' % self.EmxFileName)
             else:
                 if self.binaryFile is None:
-                    errors.append('Canot find binary data <%s> associated with EMX metadata file' % self.binaryFile)
+                    errors.append('Cannot find binary data <%s> associated with EMX metadata file' % self.binaryFile)
                 for k, v in self.propDict.iteritems():
                         if len(getattr(self, k)) == 0:
                             errors.append('<%s> was left empty and <%s> does not have this property' % (k, self.classElement))
@@ -135,8 +139,6 @@ class ProtEmxImportMicrographs(XmippProtocol):
             from protlib_utils import runShowJ
             runShowJ(micsFn)
 
-
-
 def loadEmxData(emxFileName):
     """ Given an EMX filename, load data. """
     emxData = EmxData()
@@ -151,29 +153,28 @@ def validateSchema(log, emxFileName):
     code, out, err = validateSchema(emxFileName)
     
     if code:
-        raise Exception(err) 
-    
+        raise Exception(err)
     
 def createMicrographs(log, emxFileName, binaryFilename, micsFileName, projectDir, ctfDir):
     filesPrefix = dirname(emxFileName)
     emxData = loadEmxData(emxFileName)
-    emxMicsToXmipp(emxData, micsFileName, filesPrefix, ctfDir)
+    Voltage, SphericalAberration, SamplingRate = emxMicsToXmipp(emxData, micsFileName, filesPrefix, ctfDir)
+    createAcquisition(log, acqFn, samplingRate )
+    createMicroscope(log, microscopeFn, Voltage, SphericalAberration, SamplingRate)
     
-    
-def createAcquisition(log, fnOut, SamplingRate):
+def createAcquisition(log, fnacq, SamplingRate):
         # Create the acquisition info file
     mdAcq = RowMetaData()
     mdAcq.setValue(MDL_SAMPLINGRATE, float(SamplingRate))
-    mdAcq.write(fnOut)
+    mdAcq.write(acqFn)
     
-    
-def createMicroscope(log, fnOut, Voltage, SphericalAberration, SamplingRate):
+def createMicroscope(log, microscopeFn, Voltage, SphericalAberration, SamplingRate):
     md = RowMetaData()
     md.setValue(MDL_CTF_VOLTAGE, float(Voltage))    
     md.setValue(MDL_CTF_CS, float(SphericalAberration))    
     md.setValue(MDL_CTF_SAMPLING_RATE, float(SamplingRate))
-    md.setValue(MDL_MAGNIFICATION, 60000.0)
-    md.write(fnOut)
+    #md.setValue(MDL_MAGNIFICATION, 60000.0)
+    md.write(microscopeFn)
     
 def createCoordinates(log, emxFileName, oroot):
     emxData = loadEmxData(emxFileName)

@@ -66,8 +66,13 @@ def emxMicsToXmipp(emxData, outputFileName=MICFILE, filesPrefix=None, ctfRoot=No
     mdMic = MetaData()
     if ctfRoot is None:
         ctfRoot = dirname(outputFileName)
-    
+
     samplingRate = 0.
+    voltage      = 0.
+    cs           = 0.
+    oldSamplingRate = -1.
+    oldVoltage      = -1.
+    oldCs           = -1.
     
     for micrograph in emxData.iterClasses(MICROGRAPH):
         micIndex = micrograph.get(INDEX)
@@ -124,7 +129,9 @@ def emxMicsToXmipp(emxData, outputFileName=MICFILE, filesPrefix=None, ctfRoot=No
     mdMic.sort(MDL_MICROGRAPH)
     # Write micrographs metadata
     mdMic.write('Micrographs@' + outputFileName)
-
+    voltage=ctf.acceleratingVoltage
+    cs=ctf.cs
+    return voltage, cs, samplingRate
 
 def emxCoordsToXmipp(emxData, filesRoot):
     """ This function will iterate for each particle and 
@@ -170,7 +177,8 @@ def emxParticlesToXmipp(emxData, outputFileName=PARTFILE, filesPrefix=None, ctfR
     If CTF information is found, for each particle will contains information about the CTF
     """
     #iterate though emxData
-    md = MetaData()
+    md    = MetaData()
+    mdMic = MetaData()
     if ctfRoot is None:
         ctfRoot = dirname(outputFileName)
     
@@ -196,9 +204,14 @@ def emxParticlesToXmipp(emxData, outputFileName=PARTFILE, filesPrefix=None, ctfR
         md.setValue(MDL_IMAGE, pFileName, objId)
         
         mic = particle.getForeignObject(MICROGRAPH)
+
         if mic is not None:
             micFileName = mic.get(FILENAME)
+            if filesPrefix is not None:
+                micFileName = join(filesPrefix, micFileName)
             md.setValue(MDL_MICROGRAPH, micFileName, objId)
+
+
 
         if particle.has('centerCoord__X'):
             md.setValue(MDL_XCOOR, int(particle.get('centerCoord__X')), objId)

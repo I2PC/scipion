@@ -268,7 +268,7 @@ class ProtRelionBase(XmippProtocol):
             if xmippExists(inMetadataFn):
                 mdOut.read(inMetadataFn)
             else:
-                mdOut = self.imagesAssignedToClass2(firstIter)
+                mdOut = self.imagesAssignedToClass2(firstIter,lastIteration)
             _r = []
             maxRef3D = 1
             _c = tuple(['Iter/Ref'] + ['Ref3D_%d' % ref3d for ref3d in ref3Ds])
@@ -596,7 +596,7 @@ class ProtRelionBase(XmippProtocol):
         else:
             print "file ", file_name, "does not exist"
 
-    def imagesAssignedToClass2(self,firstIter):
+    def imagesAssignedToClass2(self,firstIter, lastIteration):
             inputMetadatas = []
             for it in range (firstIter,self.NumberOfIterations+1): #always list all iterations
                 inputMetadatas += ["images@"+self.getFilename('data'+'Xm', iter=it, workingDir=self.WorkingDir )]
