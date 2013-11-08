@@ -189,9 +189,4 @@ class SpiderFilterDialog(XmippDownsampleDialog):
         self.updateFilteredImage()
 
        
-
- 
-  
-
-
     

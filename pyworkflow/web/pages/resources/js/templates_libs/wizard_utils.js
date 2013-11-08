@@ -24,8 +24,6 @@
  *
  **************************************************************************/
 
-
-
 // *** Common Methods *** //
 
 function selectList(elm, mode) {
@@ -246,4 +244,36 @@ function previewSigma() {
 
 	$("img#imgFiltered").attr("src", uri);
 }
+
+// *** Methods Wizard Spider Particle filter *** //
+
+function compositeSpiderFilter(elm, mode){
+	selectParticle(elm,"raphael");
+//	previewSpiderFilter(mode);
+}
+
+function previewSpiderFilter(mode) {
+	// get the img path
+	var path_img = $("tr#" + $("table#list").attr("value")).attr("value");
+
+	// load and set the image
+	var uri = "/get_image_filter_spider/?image=" + path_img + "&mode=" + mode + "&dim=250";
+
+	// check values
+	if (mode < 2){
+		var radius = $('input#radius_val').val();
+		uri += "&radius="+radius;
+	} else {
+		var highFreq = $('input#high_val').val();
+		var lowFreq = $('input#low_val').val();
+		uri += "&highFreq="+highFreq+"&lowFreq="+lowFreq;
+		
+		if (mode == 2){
+			var temperature = $('input#temp_val').val();
+			uri += "&temperature="+temperature;
+		}
+	}
+	putImage(uri, "filteredParticle", 250, 250);
+}
+
 

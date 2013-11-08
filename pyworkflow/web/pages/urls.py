@@ -51,6 +51,7 @@ urlpatterns = patterns('',
     url(r'^get_image_psd/$', 'app.em_wizard.get_image_psd'),
     url(r'^get_image_bandpass/$', 'app.em_wizard.get_image_bandpass'),
     url(r'^get_image_gaussian/$', 'app.em_wizard.get_image_gaussian'),
+    url(r'^get_image_filter_spider/$', 'app.em_wizard.get_image_filter_spider'),
     
     #VIEWERS
     url(r'^launch_viewer/$', 'app.em_viewer.launch_viewer'),

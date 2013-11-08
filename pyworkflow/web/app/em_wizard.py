@@ -56,7 +56,6 @@ def wizard(request):
 
 def wiz_downsampling(protocol, request):
     micrographs = protocol.inputMicrographs.get()
-    
     res = validateSet(micrographs)
     
     if res is not 1:
@@ -94,7 +93,6 @@ def wiz_ctf(protocol, request):
 
 def wiz_particle_mask(protocol, request):
     particles = protocol.inputParticles.get()
-    
     res = validateParticles(particles) 
     
     if res is not 1:
@@ -124,7 +122,6 @@ def wiz_particle_mask(protocol, request):
 
 def wiz_particle_mask_radii(protocol, request):
     particles = protocol.inputParticles.get()
-    
     res = validateParticles(particles) 
     
     if res is not 1:
@@ -150,7 +147,6 @@ def wiz_particle_mask_radii(protocol, request):
 
 def wiz_volume_mask(protocol, request):
     volumes = protocol.input3DReferences.get()
-    
     res = validateSet(volumes)
     
     if res is not 1:
@@ -180,7 +176,6 @@ def wiz_volume_mask(protocol, request):
 
 def wiz_volume_mask_radii(protocol, request):
     volumes = protocol.input3DReferences.get()
-    
     res = validateSet(volumes)
     
     if res is not 1:
@@ -207,7 +202,6 @@ def wiz_volume_mask_radii(protocol, request):
 
 def wiz_filter_spider(protocol, request):
     particles = protocol.inputParticles.get()
-    
     res = validateParticles(particles) 
     
     if res is not 1:
@@ -218,26 +212,15 @@ def wiz_filter_spider(protocol, request):
         if len(parts) == 0:
             return HttpResponse("errorIterate");
         else:
-            xdim = getImageXdim(request, parts[0].text)
-    
-            mask_radius = protocol.maskRadius.get()
-             
-            if mask_radius > xdim :
-                mask_radius = xdim
-            elif mask_radius == -1 :
-                mask_radius = xdim/2
-                
             context = {'objects': parts,
                        'raphael': getResourceJs('raphael'),
-                       'maskRadius': mask_radius,
-                       'xdim':xdim
+                       'protocol': protocol
                        }
             
             return render_to_response('wiz_filter_spider.html', context)
 
 def wiz_bandpass(protocol, request):
     particles = protocol.inputParticles.get()
-    
     res = validateParticles(particles) 
     
     if res is not 1:
@@ -258,7 +241,6 @@ def wiz_bandpass(protocol, request):
 
 def wiz_gaussian(protocol, request):
     particles = protocol.inputParticles.get()
-    
     res = validateParticles(particles) 
     
     if res is not 1:
@@ -283,18 +265,16 @@ def getParticleSubset(particles, num):
     for i, particle in enumerate(particles):
         if i == num: # Only load up to NUM particles
             break
+        particle.text = particle.getFileName()
+        particle.basename = basename(particle.text)
+        
         index = particle.getIndex()
-        print index
-        
-        text = particle.getFileName()
-        particle.basename = basename(text)
-        
-        
         if index:
-            particle.text = "%03d@%s" % (index, text)
-            particle.basename = "%03d@%s" % (index, basename(text))
-        particleList.append(particle)
+            particle.text = "%03d@%s" % (index, particle.text)
+            particle.basename = "%03d@%s" % (index, particle.basename)
         
+        particleList.append(particle)
+
     return particleList
 
 def validateSet(setOf):
@@ -357,7 +337,7 @@ def get_image_bandpass(request):
     
     # compute the Fourier Filter in the image
     xmipp.bandPassFilter(imgXmipp, str(imagePath), float(lowFreq), float(highFreq), float(decay), int(dim))
-        
+    
     # from PIL import Image
     img = getPILImage(imgXmipp, dim)
         
@@ -386,3 +366,42 @@ def get_image_gaussian(request):
     response = HttpResponse(mimetype="image/png")
     img.save(response, "PNG")
     return response
+
+def get_image_filter_spider(request):
+    """
+    Function to get the computing image with a spider filter applied
+    """
+    imagePath = request.GET.get('image', None)
+    dim = request.GET.get('dim', None)
+    mode = request.GET.get('mode', None)
+    
+    # Instance of the protocol necessary
+    
+    # check values
+    if mode < 2:
+        radius = request.GET.get('radius', None)
+    else: 
+        highFreq = request.GET.get('highFreq', None)
+        lowFreq = request.GET.get('lowFreq', None)
+        if mode == 2:
+            temperature = request.GET.get('temperature', None)    
+
+    # Get output image and update filtered image
+    imgXmipp = xmipp.Image()
+    
+    
+    # compute the Spider Filter in the image
+    #
+    #
+    #
+    
+    
+    
+    # from PIL import Image
+    img = getPILImage(imgXmipp, dim)
+    
+    response = HttpResponse(mimetype="image/png")
+    img.save(response, "PNG")
+    return response
+    
+    
