@@ -140,7 +140,7 @@ $(document).ready(function() {
 					launchMessiSimple("Error",msg);
 				} else if(type_wiz=='wiz_particle_mask' || type_wiz=='wiz_volume_mask'){
 					customPopupHTML(html,520,460);
-				} else if(type_wiz=='wiz_volume_mask_radii'){
+				} else if(type_wiz=='wiz_volume_mask_radii' || type_wiz=='wiz_particle_mask_radii'){
 					customPopupHTML(html,530,520);
 				} else{
 					customPopupHTML(html,775,470);
