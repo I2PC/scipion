@@ -648,6 +648,17 @@ struct ArrayDim
     // Number of elements in NZYX
     size_t nzyxdim;
 
+    ArrayDim()
+    {
+    	ndim = 0;
+    	zdim = 0;
+    	ydim = 0;
+    	xdim = 0;
+    	yxdim = 0;
+    	zyxdim = 0;
+    	nzyxdim = 0;
+    }
+
     bool operator==(ArrayDim &adim)
     {
         return (this->ndim == adim.ndim &&

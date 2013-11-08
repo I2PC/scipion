@@ -22,7 +22,7 @@ SRC = 2 # Sources
 DIR = 3 # base dir
 DEPS = 4
 
-BASIC_DEPS = ['fftw', 'tiff', 'jpeg', 'sqlite', 'hdf5']
+BASIC_DEPS = ['fftw', 'tiff', 'jpeg', 'sqlite', 'hdf5','hdf5_cpp', 'rt']
 PYTHON_DIR = join("external","python","Python-2.7.2")
 CUDA_PATH = env['CUDA_SDK_PATH']
 
@@ -40,6 +40,9 @@ Libraries = {'fftw': {INCS: [join('external','fftw-3.3.1')],
                      },
              'hdf5': {INCS: [join('external','hdf5-1.8.10','src')],
                         LIBS: ['hdf5']
+                     },        
+             'hdf5_cpp': {INCS: [join('external','hdf5-1.8.10','c++')],
+                        LIBS: ['hdf5_cpp']
                      },        
 #             'python': {INCS: [PYTHON_DIR],
 #                        LIBS: ['']
@@ -109,7 +112,7 @@ Libraries = {'fftw': {INCS: [join('external','fftw-3.3.1')],
                                DIR: join('libraries','parallel'),
                                DEPS: ['XmippExternal', 'XmippData', 'XmippClassif', 'XmippRecons', env['MPI_LIB']] + BASIC_DEPS
                                 },                                                   
-              'XmippJNI': {INCS: ['libraries', 'external', join('libraries','bindings','java')],
+              'XmippJNI': {INCS: ['libraries', 'external', join('libraries','bindings','java')] + env['JNI_CPPPATH'],
                                LIBS: ['XmippJNI'],
                                SRC: [join('libraries','bindings','java','*.cpp')],
                                DIR: join('libraries','bindings','java'),
@@ -1196,18 +1199,13 @@ SymLink('bin/xmipp_imagej', 'external/runImageJ')
 # MPI
 AddXmippMPIProgram('mpi_angular_class_average', ['XmippRecons'])
 AddXmippMPIProgram('mpi_angular_continuous_assign', ['XmippRecons'])
-if not int(env['release']):
-    AddXmippMPIProgram('mpi_angular_gcar_commonlines', ['XmippRecons'])
 AddXmippMPIProgram('mpi_angular_projection_matching', ['XmippRecons'])
 AddXmippMPIProgram('mpi_angular_project_library', ['XmippRecons'])
 AddXmippMPIProgram('mpi_classify_CL2D', ['XmippRecons'])
 AddProgramLink('classify_CL2D', 'mpi_classify_CL2D')
-if not int(env['release']):
-    AddXmippMPIProgram('mpi_classify_CL3D', ['XmippRecons'])
-    AddProgramLink('classify_CL3D', 'mpi_classify_CL3D')
+AddXmippMPIProgram('mpi_classify_CLTomo_prog', ['XmippRecons','XmippInterface'])
+AddProgramLink('classify_CLTomo', 'mpi_classify_CLTomo')
 AddXmippMPIProgram('mpi_classify_CL2D_core_analysis', ['XmippRecons'])
-if not int(env['release']):
-    AddXmippMPIProgram('mpi_classify_FTTRI', ['XmippRecons'])
 AddXmippMPIProgram('mpi_ctf_correct_idr', ['XmippRecons'])
 AddXmippMPIProgram('mpi_ctf_sort_psds', ['XmippRecons'])
 AddXmippMPIProgram('mpi_image_operate')
@@ -1271,18 +1269,23 @@ if int(env['gtest']):
      #env.Default('run_tests'     )
 
 if int(env['matlab']):
-    def AddMatlabBinding(name):
-        print 'compiling Matlab wrapper for ' + name
-        command = env['MATLAB_DIR'] + '/bin/mex -O -outdir libraries/bindings/matlab -I. -Ilibraries/data -Ilibraries -Llib -Ilibraries/reconstruction -lXmippRecons -lXmippData -lXmippExternal libraries/bindings/matlab/tom_xmipp_' + name + '_wrapper.cpp'
-        output = os.popen(command).read()
-        if len(output) > 0:
-            print output
+    def CompileMatlab(name, dependencies=[]):
+        ''' name parameter is expected without .java extension '''
+        source = 'libraries/bindings/matlab/'+name+".cpp"
+        target = 'libraries/bindings/matlab/'+name+".mexa64"
+        command = env['MATLAB_DIR'] + '/bin/mex -O -outdir libraries/bindings/matlab -I. -Ilibraries -Llib -lXmippRecons -lXmippData -lXmippExternal '+source
+        compileCmd = env.Command(target, source, command)
+        env.Default(compileCmd)
+        return compileCmd
 
     bindings = ['adjust_ctf', 'align2d', 'ctf_correct_phase',
         'mask', 'mirror', 'morphology', 'normalize', 'psd_enhance',
         'resolution', 'rotate', 'scale', 'scale_pyramid', 'volume_segment']
     for i in range(len(bindings)):
-       AddMatlabBinding(bindings[i])
+        CompileMatlab('xmipp_read')
+        CompileMatlab('xmipp_nma_read_alignment')
+        CompileMatlab('xmipp_nma_save_cluster')
+        CompileMatlab('xmipp_read_structure_factor')
 
 # Clean
 # Configuration or cleaning
