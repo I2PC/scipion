@@ -31,6 +31,7 @@
 #include "xmipp_image_macros.h"
 #include "xmipp_image_generic.h"
 
+
 String FileNameVersion=METADATA_XMIPP_STAR;
 
 void setMetadataVersion(String version)
@@ -67,7 +68,7 @@ void FileName::compose(size_t no, const String &str)
 
     if (no != ALL_IMAGES)
     {
-        size_t first = str.rfind("@");
+        size_t first = str.rfind(AT);
         if (first != npos)
         {
             std::vector<String> prefixes;
@@ -102,7 +103,7 @@ void FileName::compose(const String &blockName, const String &str)
     if (blockName.empty())
         *this = str;
     else
-        *this = (FileName) (blockName + (String) "@" + str);
+        formatStringFast(*this, "%s@%s", blockName.c_str(), str.c_str());
 }
 
 // Constructor: string, number and filename, mainly for numered metadata blocks..
@@ -116,7 +117,7 @@ void FileName::composeBlock(const String &blockName, size_t no, const String &ro
 // Is in stack ............................................................
 bool FileName::isInStack() const
 {
-    return find("@") != String::npos;
+    return find(AT) != String::npos;
 }
 
 // Decompose ..............................................................
@@ -392,9 +393,9 @@ String FileName::getFileFormat() const
 {
     size_t first;
     FileName result;
-    if (find("#") != npos)
+    if (find(NUM) != npos)
         return "raw";
-    else if ((first = rfind(":")) != npos)
+    else if ((first = rfind(COLON)) != npos)
         result = substr(first + 1);
     else if ((first = rfind(".")) != npos)
         result = substr(first + 1);
@@ -415,10 +416,10 @@ size_t FileName::getFileSize() const
 
 FileName FileName::removeFileFormat() const
 {
-    size_t found = rfind("#");
+    size_t found = rfind(NUM);
     if (found != String::npos)
         return substr(0, found);
-    found = rfind(":");
+    found = rfind(COLON);
     if (found != String::npos)
         return substr(0, found);
     return *this;
@@ -446,7 +447,7 @@ int FileName::getNumber() const
 // Get number from file ....................................................
 size_t FileName::getPrefixNumber(size_t pos) const
 {
-    size_t first = rfind("@");
+    size_t first = rfind(AT);
     size_t result = ALL_IMAGES;
     if (first != npos)
     {
@@ -465,18 +466,19 @@ size_t FileName::getPrefixNumber(size_t pos) const
 
 String FileName::getBlockName() const
 {
-    size_t first = rfind("@");
+    size_t first = rfind(AT);
     String result = "";
     if (first != npos)
     {
-        std::vector<String> prefixes;
-        int nPref = splitString(substr(0, first),",",prefixes, false);
+        result = substr(0, first);
+        if ((first = result.find(COMMA)) != npos) // Assign and compare at the same time
+          result = result.substr(first+1);
 
         /* using isdigit instead of isalpha allows to
          * detect as blockname rootnames starting by "/"
          */
-        if (!isdigit(prefixes[nPref-1].at(0)))
-            result = prefixes[nPref-1];
+        if (result.empty() || isdigit(result[0]))
+            result = "";
     }
     return result;
 
@@ -484,20 +486,25 @@ String FileName::getBlockName() const
 
 FileName FileName::removeBlockName() const
 {
-    size_t first = rfind("@");
+    size_t first = rfind(AT);
 
     if (first != npos)
     {
-        std::vector<String> prefixes;
-        int nPref = splitString(substr(0, first),",",prefixes, false);
+        String block = substr(0, first);
+        size_t second = block.find(COMMA);
 
-        if (!isdigit(prefixes[nPref-1].at(0)))
+        if (second == npos)
         {
-            if (nPref == 1)
-                return substr(first + 1);
-            else
-                return substr(0,first - prefixes[nPref-1].size() - 1) +
-                       substr(first);
+          if (!isdigit(block[0])){
+            return substr(first + 1);
+          }
+        }
+        else
+        {
+          String prefix = block.substr(0, second);
+          block = block.substr(second + 1);
+          if (!isdigit(block[0]))
+            return prefix + substr(first);
         }
     }
     return *this;
@@ -505,7 +512,7 @@ FileName FileName::removeBlockName() const
 
 FileName FileName::removePrefixNumber() const
 {
-    size_t first = rfind("@");
+    size_t first = rfind(AT);
 
     if (first != npos)
     {
@@ -522,7 +529,7 @@ FileName FileName::removePrefixNumber() const
 
 FileName FileName::removeAllPrefixes() const
 {
-    size_t first = rfind("@");
+    size_t first = rfind(AT);
     if (first != npos)
         return substr(first + 1);
     return *this;
@@ -644,16 +651,16 @@ void FileName::deleteFile() const
 bool FileName::existsTrim() const
 {
     FileName auxF(*this);
-    size_t found = find_first_of("@");
+    size_t found = find_first_of(AT);
 
     if (found != String::npos)
         auxF =  substr(found+1);
 
-    found = auxF.find_first_of("#");
+    found = auxF.find_first_of(NUM);
 
     if ( found != String::npos)
         auxF = auxF.substr(0, found);
-    found = auxF.find_first_of(":");
+    found = auxF.find_first_of(COLON);
 
     if (found != String::npos)
         auxF = auxF.substr(0, found);
