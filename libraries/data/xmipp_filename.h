@@ -50,6 +50,13 @@ typedef struct stat Stat;
 #define METADATA_XMIPP_STAR "# XMIPP_STAR_1"
 #define METADATA_XMIPP_SQLITE "SQLite format 3"
 
+
+/** Some filename macros */
+#define AT '@'
+#define COMMA ','
+#define COLON ':'
+#define NUM '#'
+
 //@{
 /** Filenames.
  *
