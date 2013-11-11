@@ -168,6 +168,7 @@ def get_image(request):
     from pyworkflow.gui import getImage, getPILImage
     
     imageNo = None
+    # TO DO: Change the way to obtain the separate string of the imagePath
     imagePath = request.GET.get('image')
     imageDim = request.GET.get('dim', 150)
     
