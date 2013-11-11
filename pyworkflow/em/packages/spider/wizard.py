@@ -175,12 +175,23 @@ class SpiderFilterDialog(XmippDownsampleDialog):
                 
         outputLocSpiStr = locationToSpider(1, outputName)
         
+        pars = {}
+        pars["filterType"] = self.protocolParent.filterType.get()
+        pars["filterMode"] = self.protocolParent.filterMode.get()
+        pars["usePadding"] = self.protocolParent.usePadding.get()
+        pars["op"] = "FQ"
+        
         if self.protocolParent.filterType <= FILTER_GAUSSIAN:
-            self.protocolParent.filter_spider(outputLocSpiStr, outputLocSpiStr, filterRadius=self.getRadius()) 
-        elif self.protocolParent.filterType == FILTER_FERMI:
-            self.protocolParent.filter_spider(outputLocSpiStr, outputLocSpiStr, lowFreq=self.getLowFreq(), highFreq=self.getHighFreq(), temperature=self.getTemperature())
-        else:               
-            self.protocolParent.filter_spider(outputLocSpiStr, outputLocSpiStr, lowFreq=self.getLowFreq(), highFreq=self.getHighFreq())
+            pars['filterRadius'] = self.getRadius()
+        else:
+            pars['lowFreq'] = self.getLowFreq()
+            pars['highFreq'] = self.getHighFreq()
+            
+        if self.protocolParent.filterType == FILTER_FERMI:
+            pars['temperature'] = self.getTemperature()
+
+        filter_spider(outputLocSpiStr, outputLocSpiStr, **pars)
+        
         # Get output image and update filtered image
         img = xmipp.Image()
         locXmippStr = locationToXmipp(1, outputPath)
