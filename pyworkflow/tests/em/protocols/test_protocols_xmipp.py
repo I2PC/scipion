@@ -223,7 +223,7 @@ class TestXmippML2D(TestXmippBase):
         print "Run ML2D"
         protML2D = XmippProtML2D(numberOfReferences=2, maxIters=3, 
                                  numberOfMpi=2, numberOfThreads=2)
-        protML2D.inputImages.set(self.protImport.outputParticles)
+        protML2D.inputParticles.set(self.protImport.outputParticles)
         self.proj.launchProtocol(protML2D, wait=True)        
         
         self.assertIsNotNone(protML2D.outputClasses, "There was a problem with ML2D")  
