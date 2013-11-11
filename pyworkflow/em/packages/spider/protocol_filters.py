@@ -107,7 +107,8 @@ class SpiderProtFilter(ProtFilterParticles, SpiderProtocol):
                       condition='filterType <= %d' % FILTER_GAUSSIAN,
                       help='Low frequency cuttoff to apply the filter.\n')  
         form.addParam('lowFreq', DigFreqParam, default=0.1, 
-                      label='Low Frequency (0 < f < 0.5)',
+                 
+         label='Low Frequency (0 < f < 0.5)',
                       condition='filterType > %d' % FILTER_GAUSSIAN,
                       help='Low frequency cuttoff to apply the filter.\n')          
         form.addParam('highFreq', DigFreqParam, default=0.2, 
@@ -167,6 +168,7 @@ class SpiderProtFilter(ProtFilterParticles, SpiderProtocol):
         #inputStk = removeBaseExt(self.inputStk)
         particlesStk = removeBaseExt(self.particlesStk)
         
+    
         for i in range(1, n+1):
             locStr = locationToSpider(i, particlesStk)
             spi.runFunction(OP, locStr, locStr, filterNumber, *args)
