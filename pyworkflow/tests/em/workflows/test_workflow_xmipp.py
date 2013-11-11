@@ -349,7 +349,7 @@ class TestXmippWorkflow(TestWorkflow):
         print "Run ML2D"
         protML2D = XmippProtML2D(numberOfReferences=1, maxIters=4, doMlf=True,
                                  numberOfMpi=2, numberOfThreads=1)
-        protML2D.inputImages.set(protExtract.outputParticles)
+        protML2D.inputParticles.set(protExtract.outputParticles)
         self.proj.launchProtocol(protML2D, wait=True)        
         
         self.assertIsNotNone(protML2D.outputClasses, "There was a problem with ML2D") 
