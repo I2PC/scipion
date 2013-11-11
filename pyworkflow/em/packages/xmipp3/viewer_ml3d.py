@@ -82,6 +82,23 @@ class XmippML3DViewer(ProtocolViewer):
                 'doShowStatistics': self._plotStatistics
                 }
         
+    def _viewAll(self, *args):
+        if self.doShowGreyScaleRefVol:
+            self._viewCorrectedVols()
+        if self.doShowFilterRefVol:
+            self._viewFilteredVols()
+        if self.doShowSeedsVols:
+            self._viewGeneratedVols()
+        if self.doShow2DAvgs:
+            self._view2DAvgs()
+        if self.doShow3DRefsVolumes:
+            self._view3DRefsVolumes()
+        if self.doShowAngDist:
+            self._plotAngularDistribution()
+        if self.doShowDataDist:
+            self._plotClassDistribution()
+        if self.doShowStatistics: 
+            self._plotStatistics()
         
     def _viewCorrectedVols(self, e=None):
         runShowJ(self.protocol._getExtraPath("corrected_volumes.stk"))
@@ -129,7 +146,8 @@ class XmippML3DViewer(ProtocolViewer):
                     plot_title = 'ref %d' % r
                     xplotter.plotAngularDistribution(plot_title, md2)
                 if xplotter is not None:
-                    xplotter.show()
+                    return self._showOrReturn(xplotter)
+                    
 
     def _plotClassDistribution(self, e=None):
         from numpy import arange
@@ -156,13 +174,13 @@ class XmippML3DViewer(ProtocolViewer):
                 a.set_xlim([0.8, nrefs + 1])
                 a.bar(refs3d, weights, width, color='b')
                 if xplotter is not None:
-                    xplotter.show() 
+                    return self._showOrReturn(xplotter)
                     
     def _plotStatistics(self, e=None):
         from viewer_ml2d import createPlots
         xplotter = createPlots(self.protocol, ['doShowLL', 'doShowPmax'])
         if xplotter is not None:
-            xplotter.show() 
+            return self._showOrReturn(xplotter)
                 
     def _viewIterationFile(self, filePath):
         self.setVisualizeIterations()
@@ -193,34 +211,17 @@ class XmippML3DViewer(ProtocolViewer):
                     self.visualizeIters = self._getListFromRangeString(self.selectedIters.get())
                 except Exception, ex:
                     self.formWindow.showError('Invalid iterations range.')
-            
-    def _viewAll(self, *args):
-        if self.doShowGreyScaleRefVol:
-            self._viewCorrectedVols()
-        if self.doShowFilterRefVol:
-            self._viewFilteredVols()
-        if self.doShowSeedsVols:
-            self._viewGeneratedVols()
-        if self.doShow2DAvgs:
-            self._view2DAvgs()
-        if self.doShow3DRefsVolumes:
-            self._view3DRefsVolumes()
-        if self.doShowAngDist:
-            self._plotAngularDistribution()
-        if self.doShowDataDist:
-            self._plotClassDistribution()
-        if self.doShowStatistics: 
-            self._plotStatistics()
         
 
     def getVisualizeDictWeb(self):
-        return {'doShowGreyScaleRefVol': "viewCorrectedVols",
-                'doShowFilterRefVol': "viewFilteredVols",
-                'doShowSeedsVols': "viewGeneratedVols",
-#                'doShow2DAvgs': self._view2DAvgs,
-#                'doShow3DRefsVolumes': self._view3DRefsVolumes,
-#                'doShowAngDist': self._viewAngDist,
-#                'doShowDataDist': self._viewDataDist
+        return {'doShowGreyScaleRefVol': 'viewCorrectedVols',
+                'doShowFilterRefVol': 'viewFilteredVolsProtocol',
+                'doShowSeedsVols': 'viewGeneratedVols',
+                'doShow2DAvgs': 'view2DAvgs',
+                'doShow3DRefsVolumes': 'view3DRefsVolumes',
+                'doShowAngDist': 'doPlotAngularDistribution',
+                'doShowDataDist': 'doPlotClassDistribution',
+                'doShowStatistics': 'doPlotStatistics'
                 }
 
     @classmethod

@@ -42,6 +42,7 @@ from matplotlib.dates import DateFormatter
 
 from xmipp_viewer_ml2d import *
 from xmipp_viewer_cl2d import *
+from xmipp_viewer_ml3d import *
 
 from spider_viewer_capca import *
 from spider_viewer_ward import *
