@@ -1,13 +1,13 @@
 #!/bin/bash
-#bash sshServerScript machine user pw commands
+#bash sshServerScript machine user pw commands path_askpass
 
 echo "Initializing Server Script"
 
 
 machine=$1
-commands=$2
-user=$3
-pw=$4
+user=$2
+commands=$3
+path_askpass=$4
 
 #ssh -X scipion@scipion.cnb.csic.es "gedit"
 #ssh -X aquintana@crunchy.cnb.csic.es "ls"
@@ -22,5 +22,5 @@ export SSH_ASKPASS=scipionPipe
 export DISPLAY=:0
 
 echo "Executing command:"
-echo "setsid ssh -X -o StrictHostKeyChecking=no $2@$1 $4"
-setsid ssh -X -o StrictHostKeyChecking=no $2@$1 "$4"
+echo "setsid ssh -X -o StrictHostKeyChecking=no $user@$machine $commands"
+setsid ssh -X -o StrictHostKeyChecking=no $user@$machine "$commands"
