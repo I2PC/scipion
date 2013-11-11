@@ -34,6 +34,10 @@ from pyworkflow.project import Project
 from django.shortcuts import render_to_response
 from pyworkflow.gui import getImage, getPILImage
 from django.http import HttpResponse
+from pyworkflow.em.convert import ImageHandler
+from pyworkflow.em.packages.xmipp3.convert import xmippToLocation, locationToXmipp
+from pyworkflow.em.packages.spider.convert import locationToSpider
+from pyworkflow.em.packages.spider.wizard import filter_spider
 
 def wizard(request):
     # Get the Wizard Name
@@ -172,7 +176,7 @@ def wiz_volume_mask(protocol, request):
                    'xdim': xdim
                    }
         
-        return render_to_response('wiz_volume_mask.html', context)
+        return render_to_response('wiz_volumeImageHandler_mask.html', context)
 
 def wiz_volume_mask_radii(protocol, request):
     volumes = protocol.input3DReferences.get()
@@ -214,6 +218,9 @@ def wiz_filter_spider(protocol, request):
         else:
             context = {'objects': parts,
                        'raphael': getResourceJs('raphael'),
+                       'filterType': protocol.filterType.get(),
+                       'filterMode': protocol.filterMode.get(),
+                       'usePadding': protocol.usePadding.get(),
                        'protocol': protocol
                        }
             
@@ -312,7 +319,7 @@ def get_image_psd(request):
     # create a xmipp image empty
     imgXmipp = xmipp.Image()
     
-    # compute the PSD image
+    # compImageHandlerute the PSD image
     xmipp.fastEstimateEnhancedPSD(imgXmipp, str(imagePath), float(downsample), int(dim), 2)
         
     # from PIL import Image
@@ -359,11 +366,10 @@ def get_image_gaussian(request):
     
     # compute the Gaussian Filter in the image
     xmipp.gaussianFilter(imgXmipp, str(imagePath), float(freqSigma), int(dim))
-        
     # from PIL import Image
     img = getPILImage(imgXmipp, dim)
         
-    response = HttpResponse(mimetype="image/png")
+    response = HttpResponse(mimetype="imag($(this))e/png")
     img.save(response, "PNG")
     return response
 
@@ -371,37 +377,47 @@ def get_image_filter_spider(request):
     """
     Function to get the computing image with a spider filter applied
     """
+    pars={}
+    
     imagePath = request.GET.get('image', None)
     dim = request.GET.get('dim', None)
-    mode = request.GET.get('mode', None)
+    filterType = int(request.GET.get('filterType', None))
+    pars["filterType"] = filterType
+    pars["filterMode"] = int(request.GET.get('filterMode', None))
+    pars["usePadding"] = request.GET.get('usePadding', None)    
+    pars["op"]="FQ"
     
-    # Instance of the protocol necessary
+    # Copy image to filter to Tmp project folder
+    outputName = os.path.join("Tmp", "filtered_particle")
+    outputPath = outputName + ".spi"
+    
+    outputLoc = (1, outputPath)
+    ih = ImageHandler()
+    ih.convert(xmippToLocation(imagePath), outputLoc)
+    outputLocSpiStr = locationToSpider(1, outputName)
     
     # check values
-    if mode < 2:
-        radius = request.GET.get('radius', None)
+    if filterType < 2:
+        pars["filterRadius"] = request.GET.get('radius', None)
     else: 
-        highFreq = request.GET.get('highFreq', None)
-        lowFreq = request.GET.get('lowFreq', None)
-        if mode == 2:
-            temperature = request.GET.get('temperature', None)    
+        pars["highFreq"] = float(request.GET.get('highFreq', None))
+        pars["lowFreq"] = float(request.GET.get('lowFreq', None))
+        if filterType == 2:
+            pars["temperature"] = request.GET.get('temperature', None)    
 
-    # Get output image and update filtered image
-    imgXmipp = xmipp.Image()
+    filter_spider(outputLocSpiStr, outputLocSpiStr, **pars)
     
-    
-    # compute the Spider Filter in the image
-    #
-    #
-    #
-    
-    
+     # Get output image and update filtered image
+    img = xmipp.Image()
+    locXmippStr = locationToXmipp(1, outputPath)
+    img.read(locXmippStr)
     
     # from PIL import Image
-    img = getPILImage(imgXmipp, dim)
+    img = getPILImage(img, dim)
     
     response = HttpResponse(mimetype="image/png")
     img.save(response, "PNG")
     return response
+    
     
     

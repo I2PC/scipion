@@ -107,7 +107,8 @@ class SpiderProtFilter(ProtFilterParticles, SpiderProtocol):
                       condition='filterType <= %d' % FILTER_GAUSSIAN,
                       help='Low frequency cuttoff to apply the filter.\n')  
         form.addParam('lowFreq', DigFreqParam, default=0.1, 
-                      label='Low Frequency (0 < f < 0.5)',
+                 
+         label='Low Frequency (0 < f < 0.5)',
                       condition='filterType > %d' % FILTER_GAUSSIAN,
                       help='Low frequency cuttoff to apply the filter.\n')          
         form.addParam('highFreq', DigFreqParam, default=0.2, 
@@ -167,6 +168,7 @@ class SpiderProtFilter(ProtFilterParticles, SpiderProtocol):
         #inputStk = removeBaseExt(self.inputStk)
         particlesStk = removeBaseExt(self.particlesStk)
         
+    
         for i in range(1, n+1):
             locStr = locationToSpider(i, particlesStk)
             spi.runFunction(OP, locStr, locStr, filterNumber, *args)
@@ -183,28 +185,3 @@ class SpiderProtFilter(ProtFilterParticles, SpiderProtocol):
         summary = []
         return summary
     
-    #TODO: Refactor this function to be used also by method filterParticles
-    def filter_spider(self, inputLocStr, outputLocStr, **pars):
-        """ Function to filter an image located on inputLocStr and
-        write it to outputLocStr. """
-         
-        spi = SpiderShell(ext='spi') # Create the Spider process to send commands         
-        filterNumber = self.filterType.get() * 2 + 1
-        # Consider low-pass or high-pass
-        filterNumber += self.filterMode.get()
-        OP = self._op
-        if not self.usePadding:
-            OP += ' NP'
-            
-        args = []
-        
-        if self.filterType.get() <= FILTER_GAUSSIAN:
-            args.append(pars['filterRadius'])
-        else:
-            args.append('%f %f' % (pars['lowFreq'], pars['highFreq']))
-            
-        if self.filterType.get() == FILTER_FERMI:
-            args.append(pars['temperature'])
-            
-        spi.runFunction(OP, inputLocStr, outputLocStr, filterNumber, *args)
-        spi.close()

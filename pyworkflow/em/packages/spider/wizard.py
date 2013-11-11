@@ -104,7 +104,7 @@ class SpiderFilterWizard(XmippFilterParticlesWizard):
     
     @classmethod    
     def getView(self):
-        return "wiz_filter_spider"   
+        return "wiz_filter_spider"
 
 
 #--------------- Dialogs used by Wizards --------------------------        
@@ -175,12 +175,23 @@ class SpiderFilterDialog(XmippDownsampleDialog):
                 
         outputLocSpiStr = locationToSpider(1, outputName)
         
+        pars = {}
+        pars["filterType"] = self.protocolParent.filterType.get()
+        pars["filterMode"] = self.protocolParent.filterMode.get()
+        pars["usePadding"] = self.protocolParent.usePadding.get()
+        pars["op"] = "FQ"
+        
         if self.protocolParent.filterType <= FILTER_GAUSSIAN:
-            self.protocolParent.filter_spider(outputLocSpiStr, outputLocSpiStr, filterRadius=self.getRadius()) 
-        elif self.protocolParent.filterType == FILTER_FERMI:
-            self.protocolParent.filter_spider(outputLocSpiStr, outputLocSpiStr, lowFreq=self.getLowFreq(), highFreq=self.getHighFreq(), temperature=self.getTemperature())
-        else:               
-            self.protocolParent.filter_spider(outputLocSpiStr, outputLocSpiStr, lowFreq=self.getLowFreq(), highFreq=self.getHighFreq())
+            pars['filterRadius'] = self.getRadius()
+        else:
+            pars['lowFreq'] = self.getLowFreq()
+            pars['highFreq'] = self.getHighFreq()
+            
+        if self.protocolParent.filterType == FILTER_FERMI:
+            pars['temperature'] = self.getTemperature()
+
+        filter_spider(outputLocSpiStr, outputLocSpiStr, **pars)
+        
         # Get output image and update filtered image
         img = xmipp.Image()
         locXmippStr = locationToXmipp(1, outputPath)
@@ -188,5 +199,29 @@ class SpiderFilterDialog(XmippDownsampleDialog):
         self.rightImage = img
         self.updateFilteredImage()
 
-       
+#TODO: Refactor this function to be used also by method filterParticles
+def filter_spider(inputLocStr, outputLocStr, **pars):
+    """ Function to filter an image located on inputLocStr and
+    write it to outputLocStr. """
+     
+    spi = SpiderShell(ext='spi') # Create the Spider process to send commands         
+    filterNumber = pars["filterType"] * 2 + 1
+    # Consider low-pass or high-pass
+    filterNumber += pars["filterMode"]
+    OP = pars["op"]
+    if not pars["usePadding"]:
+        OP += ' NP'
+        
+    args = []
+    
+    if pars["filterType"] <= FILTER_GAUSSIAN:
+        args.append(pars['filterRadius'])
+    else:
+        args.append('%f %f' % (pars['lowFreq'], pars['highFreq']))
+        
+    if pars["filterType"] == FILTER_FERMI:
+        args.append(pars['temperature'])
+        
+    spi.runFunction(OP, inputLocStr, outputLocStr, filterNumber, *args)
+    spi.close()
     

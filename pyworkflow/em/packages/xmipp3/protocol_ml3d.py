@@ -357,6 +357,7 @@ class XmippProtML3D(ProtRefine3D, ProtClassify3D):
         fn = self._getPath('output_volumes.xmd')
         md.write('Volumes@%s' % fn)
         volumes = self._createSetOfVolumes()
+        volumes.setSamplingRate(self.inputImages.get().getSamplingRate())
         readSetOfVolumes(fn, volumes)
         volumes.write()
         self._defineOutputs(outputVolumes=volumes)

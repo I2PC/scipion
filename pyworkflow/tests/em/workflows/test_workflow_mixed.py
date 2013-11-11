@@ -283,7 +283,7 @@ class TestMixedWorkflow_2(TestWorkflow):
         protML2D = XmippProtML2D(numberOfReferences=8, maxIters=2, 
                                  numberOfMpi=2, numberOfThreads=2)
 #        protML2D.inputImages.set(protExtract.outputParticles)
-        protML2D.inputImages.set(protExtract.outputParticles)
+        protML2D.inputParticles.set(protExtract.outputParticles)
         self.proj.launchProtocol(protML2D, wait=True)        
         
         self.assertIsNotNone(protML2D.outputClasses, "There was a problem with ML2D")  

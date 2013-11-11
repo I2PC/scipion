@@ -29,7 +29,7 @@
 {% endif %}
 <tr id="{{obj.getObjId}}" class="no-selected"
 	style="background-color: #fafafa;"
-	onclick="compositeSpiderFilter(($(this)), {{protocol.filterType.get}});" 
+	onclick="compositeSpiderFilter(($(this)), {{filterType}}, {{filterMode}}, '{{usePadding}}')" 
 	value="{{obj.text}}">
 	<td>{{obj.basename}}</td>
 </tr>
@@ -97,7 +97,7 @@ $(".slider_radius").slider({
 	//this updates the hidden form field so we can submit the data using a form
 	change : function(event, ui) {
 		$('#radius_val').attr('value', ui.value);
-// 		previewSpiderFilter({{protocol.filterType.get}});
+		previewSpiderFilter({{filterType}}, {{filterMode}}, '{{usePadding}}');
 	}
 });
 
@@ -115,7 +115,7 @@ $(".slider_low").slider({
 	//this updates the hidden form field so we can submit the data using a form
 	change : function(event, ui) {
 		$('#low_val').attr('value', ui.value);
-// 		previewSpiderFilter({{protocol.filterType.get}});
+		previewSpiderFilter({{filterType}}, {{filterMode}}, '{{usePadding}}');
 	}
 });
 $(".slider_high").slider({
@@ -132,7 +132,7 @@ $(".slider_high").slider({
 	//this updates the hidden form field so we can submit the data using a form
 	change : function(event, ui) {
 		$('#high_val').attr('value', ui.value);
-// 		previewSpiderFilter({{protocol.filterType.get}});
+		previewSpiderFilter({{filterType}}, {{filterMode}}, '{{usePadding}}');
 	}
 });
 
@@ -150,12 +150,12 @@ $(".slider_temp").slider({
 	//this updates the hidden form field so we can submit the data using a form
 	change : function(event, ui) {
 		$('#temp_val').attr('value', ui.value);
-// 		previewSpiderFilter({{protocol.filterType.get}});
+		previewSpiderFilter({{filterType}}, {{filterMode}}, '{{usePadding}}');
 	}
 });
 
 //Load the First Element of the list
-window.onload = compositeSpiderFilter($("tr#"+firstElm), {{protocol.filterType.get}});
+window.onload = compositeSpiderFilter($("tr#"+firstElm), {{filterType}}, {{filterMode}}, '{{usePadding}}')
 </script>
 
 {% endblock %}
