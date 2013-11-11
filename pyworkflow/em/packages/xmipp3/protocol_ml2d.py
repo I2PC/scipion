@@ -48,7 +48,7 @@ class XmippProtML2D(ProtClassify):
         
     def _defineParams(self, form):
         form.addSection(label='Input')
-        form.addParam('inputImages', PointerParam, label="Input images", important=True, 
+        form.addParam('inputParticles', PointerParam, label="Input particles", important=True, 
                       pointerClass='SetOfParticles',
                       help='Select the input images from the project.'
                            'It should be a SetOfImages class')        
@@ -60,7 +60,7 @@ class XmippProtML2D(ProtClassify):
         form.addParam('numberOfReferences', IntParam, default=3, condition='doGenerateReferences',
                       label='Number of references:',
                       help='Number of references to be generated.')
-        form.addParam('referenceImages', PointerParam, condition='not doGenerateReferences',
+        form.addParam('referenceParticles', PointerParam, condition='not doGenerateReferences',
                       label="Reference image(s)", 
                       pointerClass='SetOfImages',
                       help='Image(s) that will serve as class references')
@@ -156,16 +156,15 @@ class XmippProtML2D(ProtClassify):
         self.program = "xmipp_%s_align2d" % self.progId       
         
         # Convert input images if necessary
-        imgsFn = createXmippInputImages(self, self.inputImages.get())
+        imgsFn = createXmippInputImages(self, self.inputParticles.get())
         
         params = ' -i %s --oroot %s' % (imgsFn, self.oroot)
         # Number of references will be ignored if -ref is passed as expert option
         if self.doGenerateReferences:
             params += ' --nref %d' % self.numberOfReferences.get()
         else:
-            self.inputRefs = self.inputReferences.get()
-            refsFn = self._insertConvertStep('inputRefs', XmippSetOfParticles,
-                                             self._getPath('input_references.xmd'))
+            self.inputRefs = self.referenceParticles.get()
+            refsFn = createXmippInputImages(self, self.inputRefs, imagesFn='input_references.xmd')
             params += ' --ref %s' % refsFn
         
         if self.doMlf:
@@ -175,7 +174,7 @@ class XmippProtML2D(ProtClassify):
                 params += ' --not_phase_flipped'
             if self.highResLimit.get() > 0:
                 params += ' --limit_resolution 0 %f' % self.highResLimit.get()
-            params += ' --sampling_rate %f' % self.inputImages.get().getSamplingRate()
+            params += ' --sampling_rate %f' % self.inputParticles.get().getSamplingRate()
         else:
             if self.doFast:
                 params += ' --fast'
@@ -197,7 +196,7 @@ class XmippProtML2D(ProtClassify):
         
     def createOutput(self):
         classes2DSet = self._createSetOfClasses2D()
-        classes2DSet.setImages(self.inputImages.get())
+        classes2DSet.setImages(self.inputParticles.get())
         readSetOfClasses2D(classes2DSet, self.oroot + 'classes.xmd')
         classes2DSet.write()
         self._defineOutputs(outputClasses=classes2DSet)
@@ -207,7 +206,7 @@ class XmippProtML2D(ProtClassify):
         if not hasattr(self, 'outputClasses'):
             summary.append("Output classes not ready yet.")
         else:
-            summary.append("Input Images: %s" % self.inputImages.get().getNameId())
+            summary.append("Input Images: %s" % self.inputParticles.get().getNameId())
             summary.append("Number of references: %d" % self.numberOfReferences.get())
             summary.append("Output classes: %s" % self.outputClasses.get())
         return summary

@@ -40,11 +40,11 @@ from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 from matplotlib.figure import Figure
 from matplotlib.dates import DateFormatter
 
-from xmipp_viewer_ML2D import *
-from xmipp_viewer_CL2D import *
+from xmipp_viewer_ml2d import *
+from xmipp_viewer_cl2d import *
 
-from spider_viewer_CAPCA import *
-from spider_viewer_WARD import *
+from spider_viewer_capca import *
+from spider_viewer_ward import *
 
 ############## 1ST STEP: LAUNCH VIEWER METHODS ##############
 def launch_viewer(request):

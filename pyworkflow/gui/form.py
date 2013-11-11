@@ -38,9 +38,12 @@ from gui import configureWeigths, Window
 from text import TaggedText
 from widgets import Button
 from pyworkflow.protocol.params import *
-from dialog import showInfo, TextDialog, ListDialog, SubclassesTreeProvider, RelationsTreeProvider
+from pyworkflow.protocol import Protocol
+from dialog import showInfo, TextDialog, ListDialog
 from tree import TreeProvider
 
+
+#-------------------- Variables wrappers around more complex objects -----------------------------
 
 class BoolVar():
     """Wrapper around tk.IntVar"""
@@ -100,7 +103,86 @@ class ComboVar():
             
         return self.value         
         
+
+#---------------- Some used providers for the TREES -------------------------------
+
+class ProtocolClassTreeProvider(TreeProvider):
+    """Will implement the methods to provide the object info
+    of subclasses objects(of className) found by mapper"""
+    def __init__(self, protocolClassName):
+        self.protocolClassName = protocolClassName
+     
+    def getObjects(self):
+        from pyworkflow.em import findSubClasses, emProtocolsDict
+        return [String(s) for s in findSubClasses(emProtocolsDict, self.protocolClassName).keys()]
         
+    def getColumns(self):
+        return [('Protocol', 250)]
+    
+    def getObjectInfo(self, obj):
+        return {'key': obj.get(),
+                'values': (obj.get(),)}
+    
+
+class SubclassesTreeProvider(TreeProvider):
+    """Will implement the methods to provide the object info
+    of subclasses objects(of className) found by mapper"""
+    def __init__(self, mapper, pointerParam):
+        self.className = pointerParam.pointerClass.get()
+        self.condition = pointerParam.pointerCondition.get()
+        self.mapper = mapper
+        
+    def getObjects(self):
+        return self.mapper.selectByClass(self.className, objectFilter=self.objFilter)
+            
+    def objFilter(self, obj):
+        result = True
+        if self.condition:
+            result = obj.evalCondition(self.condition)
+        return result
+        
+    def getColumns(self):
+        return [('Object', 400), ('Class', 150)]
+    
+    def getObjectInfo(self, obj):
+        parent = self.mapper.getParent(obj)
+        nameParts = [parent.getLastName(), obj.getLastName()]
+        if not isinstance(parent, Protocol):
+            parent2 = self.mapper.getParent(parent)
+            nameParts.insert(0, parent2.getLastName())
+        objName = '.'.join(nameParts)
+        return {'key': objName, 'values': (obj.getClassName(),)}
+
+    def getObjectActions(self, obj):
+        from pyworkflow.viewer import DESKTOP_TKINTER
+        from pyworkflow.em import findViewers
+        
+        if isinstance(obj, Pointer):
+            obj = obj.get()
+        actions = []    
+        viewers = findViewers(obj.getClassName(), DESKTOP_TKINTER)
+        for v in viewers:
+            actions.append(('Open with %s' % v.__name__, lambda : v().visualize(obj)))
+            
+        return actions
+    
+    
+class RelationsTreeProvider(SubclassesTreeProvider):
+    """Will implement the methods to provide the object info
+    of subclasses objects(of className) found by mapper"""
+    def __init__(self, protocol, relationParam):
+        parentObject = protocol.getAttributeValue(relationParam.relationParent.get())
+        if parentObject is not None:
+            queryFunc =  protocol.mapper.getRelationChilds      
+            if relationParam.relationReverse:
+                queryFunc =  protocol.mapper.getRelationParents
+            self.getObjects = lambda: queryFunc(relationParam.relationName.get(), parentObject)
+        else:
+            self.getObjects = lambda: []   
+            
+   
+#---------------------- Other widgets ----------------------------------------
+         
 class SectionFrame(tk.Frame):
     """This class will be used to create a frame for the Section
     That will have a header with red color and a content frame
@@ -177,25 +259,6 @@ class SectionWidget(SectionFrame):
         self.var.set(value)
     
                
-#TODO: Move this class from here
-class ProtocolClassTreeProvider(TreeProvider):
-    """Will implement the methods to provide the object info
-    of subclasses objects(of className) found by mapper"""
-    def __init__(self, protocolClassName):
-        self.protocolClassName = protocolClassName
-     
-    def getObjects(self):
-        from pyworkflow.em import findSubClasses, emProtocolsDict
-        return [String(s) for s in findSubClasses(emProtocolsDict, self.protocolClassName).keys()]
-        
-    def getColumns(self):
-        return [('Protocol', 250)]
-    
-    def getObjectInfo(self, obj):
-        return {'key': obj.get(),
-                'values': (obj.get(),)}
-        
-            
 class ParamWidget():
     """For each one in the Protocol parameters, there will be
     one of this in the Form GUI.
@@ -362,7 +425,8 @@ class ParamWidget():
         """Select an object from DB
         This function is suppose to be used only for PointerParam"""
         tp = SubclassesTreeProvider(self.window.protocol.mapper, self.param)
-        dlg = ListDialog(self.parent, "Select object", tp)
+        dlg = ListDialog(self.parent, "Select object", tp, 
+                         "Double click an item to preview the object")
         if dlg.value is not None:
             self.set(dlg.value)
             
@@ -635,7 +699,6 @@ class FormWindow(Window):
         
     def execute(self, e=None):
         errors = self.protocol.validate()
-        print "errors: ", errors
         
         if len(errors):
             self.showError(errors)
@@ -643,13 +706,11 @@ class FormWindow(Window):
             self._close()
         
     def _close(self, onlySave=False):
-        print "=" * 200
         try:
-            self.callback(self.protocol, onlySave)
+            message = self.callback(self.protocol, onlySave)
             if not self.visualizeMode:
-                if onlySave:
-                    self.showInfo("Protocol saved sucessfully")
-                else:
+                self.showInfo(message, "Protocol action")
+                if not onlySave:
                     self.close()
         except Exception, ex:
             self.showError("Error during save: " + str(ex))

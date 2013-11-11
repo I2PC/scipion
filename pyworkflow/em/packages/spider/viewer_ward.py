@@ -23,14 +23,18 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
+from pyworkflow.protocol.constants import STATUS_FINISHED
 """
 This module implement the wrappers around xmipp_showj
 visualization program.
 """
 import Tkinter as tk
+from pyworkflow.em import ProtUserSelection
 from pyworkflow.protocol.params import *
 from pyworkflow.viewer import Viewer, ProtocolViewer, DESKTOP_TKINTER, WEB_DJANGO
 from pyworkflow.utils.graph import Graph
+from pyworkflow.gui import Window
+from pyworkflow.gui.widgets import Button
 from pyworkflow.gui.graph import LevelTree
 from pyworkflow.gui.canvas import Canvas, ImageBox
 from pyworkflow.em.packages.xmipp3.viewer import XmippViewer, runShowJ
@@ -84,8 +88,8 @@ class SpiderViewerWard(ProtocolViewer):
         return self._showOrReturn(xplotter)
     
     def plotNode(self, node, minHeight=-1):
-        childs = node.get('childs', [])
-        h = node.get('height')
+        childs = node.getChilds()
+        h = node.height
         if h > minHeight and len(childs) > 1:
             x1, y1 = self.plotNode(childs[0], minHeight)
             x2, y2 = self.plotNode(childs[1], minHeight)
@@ -98,8 +102,8 @@ class SpiderViewerWard(ProtocolViewer):
             self.rightMost += self.step
             point = (self.rightMost, 0.)
         
-        length = node.get('length')
-        index = node.get('index')
+        length = node.length
+        index = node.index
         self.plt.annotate("%d(%d)" % (index, length), point, xytext=(0, -5),
                      textcoords='offset points', va='top', ha='center', size='x-small')
         self.plt.plot(point[0], point[1], 'ro')
@@ -107,7 +111,8 @@ class SpiderViewerWard(ProtocolViewer):
         return point
     
     def _createNode(self, canvas, node, y):
-        node.box = SpiderImageBox(canvas, node.path, text=node.getName(), y=y)
+        node.selected = False
+        node.box = SpiderImageBox(canvas, node, y)
         return node.box
 
     def visualizeClasses(self, e=None):
@@ -117,35 +122,48 @@ class SpiderViewerWard(ProtocolViewer):
         def getInfo2(level, classNo):
             return classTemplate % classNo, averages % classNo
         
-        n, p = getInfo2(0, 1)
-        g = Graph(rootName=n)
-        a = g.getRoot()
-        a.path = p
-        maxLevel = self.maxLevel.get()
-        
-        def addChilds(node, nodeNumber, level):
-            imgNo = nodeNumber * 2 
-            for off in [0, 1]:
-                n, p = getInfo2(level+1, imgNo + off)
-                b = g.createNode(n)
-                b.path = p
-                node.addChild(b)
-                if level < maxLevel - 2:
-                    addChilds(b, imgNo + off, level + 1)
+        node = self.protocol.buildDendrogram()
+        g = Graph(root=node)
+        self.graph = g
                
-        root = tk.Toplevel()
-        canvas = Canvas(root, width=600, height=500)
+        self.win = Window("Select classes", self.formWindow, minsize=(1200, 800))
+        root = self.win.root
+        canvas = Canvas(root)
         canvas.grid(row=0, column=0, sticky='nsew')
         root.grid_columnconfigure(0, weight=1)
-        root.grid_rowconfigure(0, weight=1)         
-            
-        addChilds(a, 1, 0)
+        root.grid_rowconfigure(0, weight=1) 
+        btn = Button(root, "Save classes", command=self.saveClasses)
+        btn.grid(row=1, column=0, sticky='n', padx=5, pady=5)        
             
         lt = LevelTree(g)
         lt.DY = 135 # TODO: change in percent of the image size
         lt.setCanvas(canvas)
-        lt.paint(self._createNode)
+        lt.paint(self._createNode, maxLevel=self.maxLevel.get()-1)
         canvas.updateScrollRegion()
+        self.win.show()
+        
+    def saveClasses(self, e=None):
+        """ Store selected classes. """
+        try:
+            selectedNodes = [node for node in self.graph.getNodes() if node.selected]
+            suffix = 'Selection'
+            prot = ProtUserSelection()
+            prot.inputClasses = Pointer()
+            prot.inputClasses.set(self.protocol.outputClasses)
+            self.project._setupProtocol(prot)
+            prot.makePathsAndClean()
+            classes = prot._createSetOfClasses2D(suffix)
+            averages = prot._createSetOfParticles(suffix)
+            self.protocol._fillClassesFromNodes(classes, averages, selectedNodes)
+            prot._defineOutputs(outputSelection=classes)
+            prot.setStatus(STATUS_FINISHED)
+            self.project._storeProtocol(prot)
+            #self.project.launchProtocol(prot, wait=True)
+            self.win.showInfo("Protocol %s created. " % prot.getName())
+        except Exception, ex:
+            self.win.showError(str(ex))
+            
+        
         
     def getVisualizeDictWeb(self):
         return {'doShowDendrogram': "doVisualizeDendrogram",
@@ -164,13 +182,18 @@ class SpiderViewerWard(ProtocolViewer):
         
         
 class SpiderImageBox(ImageBox):
+    def __init__(self, canvas, node, y):
+        ImageBox.__init__(self, canvas, node.path, text=node.getName(), y=y)
+        
     def _onClick(self, e=None):
-        self.selected = getattr(self, 'selected', False)
+        if self.node.path is None:
+            return
         # On click change the selection state
-        self.selected = not self.selected
-        if self.selected:
+        self.node.selected = not self.node.selected
+        if self.node.selected:
             self.label.config(bd=2, bg='green')
             
         else:
             self.label.config(bd=0, bg='grey')
+            
             

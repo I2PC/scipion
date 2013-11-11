@@ -197,8 +197,7 @@ def rowToClass2D(md, objId, samplingRate):
         img = Image()
         img.setLocation(index, filename)
         img.setSamplingRate(samplingRate)
-        class2D.setHasRepresentativeImage(True)
-        class2D.setRepresentativeImage(img)
+        class2D.setAverage(img)
     
     rowToObject(md, objId, class2D, classDict) 
     
@@ -223,8 +222,8 @@ def class2DToRow(class2D, classRow):
     classDict = { 
                "_id": xmipp.MDL_REF,
                }
-    if class2D.getHasRepresentativeImage():
-        index, filename = class2D.getRepresentativeImage().getLocation()
+    if class2D.hasAverage():
+        index, filename = class2D.getAverage().getLocation()
         fn = locationToXmipp(index, filename)
         classRow.setValue(xmipp.MDL_IMAGE, fn)
     n = long(len(class2D.getImageAssignments()))
@@ -546,10 +545,10 @@ def readSetOfClasses2D(classes2DSet, filename, classesBlock='classes', **args):
     classes2DSet._xmippMd = String(filename)
          
 
-def createXmippInputImages(self, imgSet, rowFunc=None):  
+def createXmippInputImages(self, imgSet, rowFunc=None, imagesFn=None):  
     imgsMd = getattr(imgSet, '_xmippMd', None)
     if imgsMd is None:
-        imgsFn = self._getPath('input_images.xmd')
+        imgsFn = self._getPath(imagesFn or 'input_images.xmd')
         ctfDir = self._getExtraPath()
         writeSetOfParticles(imgSet, imgsFn, ctfDir, rowFunc)
     else:

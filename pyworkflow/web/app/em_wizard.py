@@ -34,6 +34,10 @@ from pyworkflow.project import Project
 from django.shortcuts import render_to_response
 from pyworkflow.gui import getImage, getPILImage
 from django.http import HttpResponse
+from pyworkflow.em.convert import ImageHandler
+from pyworkflow.em.packages.xmipp3.convert import xmippToLocation, locationToXmipp
+from pyworkflow.em.packages.spider.convert import locationToSpider
+from pyworkflow.em.packages.spider.wizard import filter_spider
 
 def wizard(request):
     # Get the Wizard Name
@@ -56,7 +60,6 @@ def wizard(request):
 
 def wiz_downsampling(protocol, request):
     micrographs = protocol.inputMicrographs.get()
-    
     res = validateSet(micrographs)
     
     if res is not 1:
@@ -94,7 +97,6 @@ def wiz_ctf(protocol, request):
 
 def wiz_particle_mask(protocol, request):
     particles = protocol.inputParticles.get()
-    
     res = validateParticles(particles) 
     
     if res is not 1:
@@ -124,7 +126,6 @@ def wiz_particle_mask(protocol, request):
 
 def wiz_particle_mask_radii(protocol, request):
     particles = protocol.inputParticles.get()
-    
     res = validateParticles(particles) 
     
     if res is not 1:
@@ -150,7 +151,6 @@ def wiz_particle_mask_radii(protocol, request):
 
 def wiz_volume_mask(protocol, request):
     volumes = protocol.input3DReferences.get()
-    
     res = validateSet(volumes)
     
     if res is not 1:
@@ -176,11 +176,10 @@ def wiz_volume_mask(protocol, request):
                    'xdim': xdim
                    }
         
-        return render_to_response('wiz_volume_mask.html', context)
+        return render_to_response('wiz_volumeImageHandler_mask.html', context)
 
 def wiz_volume_mask_radii(protocol, request):
     volumes = protocol.input3DReferences.get()
-    
     res = validateSet(volumes)
     
     if res is not 1:
@@ -207,7 +206,6 @@ def wiz_volume_mask_radii(protocol, request):
 
 def wiz_filter_spider(protocol, request):
     particles = protocol.inputParticles.get()
-    
     res = validateParticles(particles) 
     
     if res is not 1:
@@ -218,26 +216,18 @@ def wiz_filter_spider(protocol, request):
         if len(parts) == 0:
             return HttpResponse("errorIterate");
         else:
-            xdim = getImageXdim(request, parts[0].text)
-    
-            mask_radius = protocol.maskRadius.get()
-             
-            if mask_radius > xdim :
-                mask_radius = xdim
-            elif mask_radius == -1 :
-                mask_radius = xdim/2
-                
             context = {'objects': parts,
                        'raphael': getResourceJs('raphael'),
-                       'maskRadius': mask_radius,
-                       'xdim':xdim
+                       'filterType': protocol.filterType.get(),
+                       'filterMode': protocol.filterMode.get(),
+                       'usePadding': protocol.usePadding.get(),
+                       'protocol': protocol
                        }
             
             return render_to_response('wiz_filter_spider.html', context)
 
 def wiz_bandpass(protocol, request):
     particles = protocol.inputParticles.get()
-    
     res = validateParticles(particles) 
     
     if res is not 1:
@@ -258,7 +248,6 @@ def wiz_bandpass(protocol, request):
 
 def wiz_gaussian(protocol, request):
     particles = protocol.inputParticles.get()
-    
     res = validateParticles(particles) 
     
     if res is not 1:
@@ -283,18 +272,16 @@ def getParticleSubset(particles, num):
     for i, particle in enumerate(particles):
         if i == num: # Only load up to NUM particles
             break
+        particle.text = particle.getFileName()
+        particle.basename = basename(particle.text)
+        
         index = particle.getIndex()
-        print index
-        
-        text = particle.getFileName()
-        particle.basename = basename(text)
-        
-        
         if index:
-            particle.text = "%03d@%s" % (index, text)
-            particle.basename = "%03d@%s" % (index, basename(text))
-        particleList.append(particle)
+            particle.text = "%03d@%s" % (index, particle.text)
+            particle.basename = "%03d@%s" % (index, particle.basename)
         
+        particleList.append(particle)
+
     return particleList
 
 def validateSet(setOf):
@@ -332,7 +319,7 @@ def get_image_psd(request):
     # create a xmipp image empty
     imgXmipp = xmipp.Image()
     
-    # compute the PSD image
+    # compImageHandlerute the PSD image
     xmipp.fastEstimateEnhancedPSD(imgXmipp, str(imagePath), float(downsample), int(dim), 2)
         
     # from PIL import Image
@@ -357,7 +344,7 @@ def get_image_bandpass(request):
     
     # compute the Fourier Filter in the image
     xmipp.bandPassFilter(imgXmipp, str(imagePath), float(lowFreq), float(highFreq), float(decay), int(dim))
-        
+    
     # from PIL import Image
     img = getPILImage(imgXmipp, dim)
         
@@ -379,10 +366,58 @@ def get_image_gaussian(request):
     
     # compute the Gaussian Filter in the image
     xmipp.gaussianFilter(imgXmipp, str(imagePath), float(freqSigma), int(dim))
-        
     # from PIL import Image
     img = getPILImage(imgXmipp, dim)
         
+    response = HttpResponse(mimetype="imag($(this))e/png")
+    img.save(response, "PNG")
+    return response
+
+def get_image_filter_spider(request):
+    """
+    Function to get the computing image with a spider filter applied
+    """
+    pars={}
+    
+    imagePath = request.GET.get('image', None)
+    dim = request.GET.get('dim', None)
+    filterType = int(request.GET.get('filterType', None))
+    pars["filterType"] = filterType
+    pars["filterMode"] = int(request.GET.get('filterMode', None))
+    pars["usePadding"] = request.GET.get('usePadding', None)    
+    pars["op"]="FQ"
+    
+    # Copy image to filter to Tmp project folder
+    outputName = os.path.join("Tmp", "filtered_particle")
+    outputPath = outputName + ".spi"
+    
+    outputLoc = (1, outputPath)
+    ih = ImageHandler()
+    ih.convert(xmippToLocation(imagePath), outputLoc)
+    outputLocSpiStr = locationToSpider(1, outputName)
+    
+    # check values
+    if filterType < 2:
+        pars["filterRadius"] = request.GET.get('radius', None)
+    else: 
+        pars["highFreq"] = float(request.GET.get('highFreq', None))
+        pars["lowFreq"] = float(request.GET.get('lowFreq', None))
+        if filterType == 2:
+            pars["temperature"] = request.GET.get('temperature', None)    
+
+    filter_spider(outputLocSpiStr, outputLocSpiStr, **pars)
+    
+     # Get output image and update filtered image
+    img = xmipp.Image()
+    locXmippStr = locationToXmipp(1, outputPath)
+    img.read(locXmippStr)
+    
+    # from PIL import Image
+    img = getPILImage(img, dim)
+    
     response = HttpResponse(mimetype="image/png")
     img.save(response, "PNG")
     return response
+    
+    
+    

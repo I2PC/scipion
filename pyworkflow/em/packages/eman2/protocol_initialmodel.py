@@ -44,7 +44,7 @@ class EmanProtInitModel(ProtInitialVolume):
     def _defineParams(self, form):
         form.addSection(label='Input')
         form.addParam('inputClasses', PointerParam, label="Input classes", important=True, 
-                      pointerClass='SetOfClasses2D', pointerCondition='hasRepresentativeImages',
+                      pointerClass='SetOfClasses2D', pointerCondition='hasAverages',
                       help='Select the input images from the project.'
                            'It should be a SetOfClasses2D class')
         form.addParam('numberOfIterations', IntParam, default=8,
@@ -84,7 +84,7 @@ class EmanProtInitModel(ProtInitialVolume):
 
     def getXmippStackFilename(self):
         for cls in self.inputClasses.get():
-            img = cls.getRepresentativeImage()
+            img = cls.getAverage()
             return img.getFileName()
 
     def _insertSteps(self):
