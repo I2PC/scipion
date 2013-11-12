@@ -24,6 +24,12 @@
 # *
 # **************************************************************************
 
+import os
+
+LAST_ITER = 0
+ALL_ITER = 1
+SELECTED_ITERS = 2
+
 def viewerML3D(request, protocolViewer):
     ioDict = {}
     
@@ -77,21 +83,28 @@ def view3DRefsVolumes(request, protocolViewer):
     pass
 
 def doPlotAngularDistribution(request, protocolViewer):
+    iterToShow = str(protocolViewer.iterToShow.get())
     protViewerClass = str(protocolViewer.getClassName())
     protId = str(protocolViewer.protocol.getObjId())
-    return "plot","/view_plots/?function=plotAngularDistribution&protViewerClass="+ protViewerClass + "&protId="+ protId
+    return "plot","/view_plots/?function=plotAngularDistribution&protViewerClass="+ protViewerClass + "&protId="+ protId +"&iterToShow="+ iterToShow
 
 def plotAngularDistribution(request, protocolViewer):
-    xplotter = protocolViewer._plotAngularDistribution()
+    protocolViewer.iterToShow.set(request.GET.get('iterToShow', None))
+    plots, errors = protocolViewer._createAngularDistributionPlots()
+    xplotter = plots[0]
     return xplotter
-
+    
 def doPlotClassDistribution(request, protocolViewer):
+    iterToShow = str(protocolViewer.iterToShow.get())
+    protocolViewer.iterToShow.set(request.GET.get('iterToShow', None))
     protViewerClass = str(protocolViewer.getClassName())
     protId = str(protocolViewer.protocol.getObjId())
-    return "plot","/view_plots/?function=plotClassDistribution&protViewerClass="+ protViewerClass + "&protId="+ protId
+    return "plot","/view_plots/?function=plotClassDistribution&protViewerClass="+ protViewerClass + "&protId="+ protId +"&iterToShow="+ iterToShow
 
 def plotClassDistribution(request, protocolViewer):
-    xplotter = protocolViewer._plotClassDistribution()
+    protocolViewer.iterToShow.set(request.GET.get('iterToShow', None))
+    plots, errors = protocolViewer._createClassDistributionPlots()
+    xplotter = plots[0]
     return xplotter
 
 def doPlotStatistics(request, protocolViewer):
