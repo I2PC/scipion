@@ -26,19 +26,26 @@
 """
 This module implement the classes to create plots on xmipp.
 """
-import Tkinter as tk
-import ttk
-import matplotlib
-matplotlib.use('TkAgg')
-import numpy as np
-import matplotlib.ticker as ticker
-import matplotlib.gridspec as gridspec
-import matplotlib.pyplot as plt
+_interactive = True
 
 class XmippPlotter(object):
     ''' Class to create several plots'''
+    plt = None
+    
     def __init__(self, x=1, y=1, mainTitle="", figsize=None, dpi=100, windowTitle=""):
         
+        if self.plt is None:
+            import matplotlib
+            if _interactive:
+                backend = 'TkAgg'
+            else:
+                backend = 'Agg'
+            matplotlib.use(backend)
+            import matplotlib.pyplot as plt
+            self.plt = plt
+            if _interactive:
+                plt.ion()
+            
         if figsize is None: # Set some defaults values
             if x == 1 and y == 1:
                 figsize = (6, 5)
@@ -50,6 +57,7 @@ class XmippPlotter(object):
                 figsize = (8, 6)
         
         # Create grid
+        import matplotlib.gridspec as gridspec
         self.grid = gridspec.GridSpec(x, y)#, height_ratios=[7,4])
         self.grid.update(left=0.15, right=0.95, hspace=0.25, wspace=0.4)#, top=0.8, bottom=0.2)  
         self.gridx = x
@@ -65,8 +73,11 @@ class XmippPlotter(object):
         self.plot_axis_fontsize = 10
         self.plot_text_fontsize = 8
         self.plot_yformat = '%1.2e'
-        plt.ion()
 
+    def activate(self):
+        """ Activate this figure. """
+        self.plt.figure(self.figure.number)
+        
     def getCanvas(self):
         return self.figure.canvas
     
@@ -97,6 +108,7 @@ class XmippPlotter(object):
         a.set_ylabel(ylabel)
             
         if yformat:
+            import matplotlib.ticker as ticker
             formatter = ticker.FormatStrFormatter(self.plot_yformat)
             a.yaxis.set_major_formatter(formatter)
         a.xaxis.get_label().set_fontsize(self.plot_axis_fontsize)
@@ -181,14 +193,14 @@ class XmippPlotter(object):
         md = MetaData(mdFilename)
         self.plotMd(md, mdLabelX, mdLabelY, color='g',**args)
         
-    @classmethod
-    def show(cls):
-        plt.tight_layout()
-        plt.show()
+    def show(self):
+        self.plt.tight_layout()
+        self.plt.show()
 
     def draw(self):
-        plt.tight_layout()
-        plt.draw()
+        #self.activate()
+        self.plt.tight_layout()
+        self.plt.draw()
         
     def savefig(self, *args, **kwargs):
         self.figure.savefig(*args, **kwargs)

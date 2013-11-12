@@ -36,9 +36,8 @@ from pyworkflow.em.packages.xmipp3.convert import writeSetOfParticles
 from pyworkflow.em.packages.xmipp3.plotter import XmippPlotter
 from pyworkflow.viewer import WEB_DJANGO
 
-from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
-from matplotlib.figure import Figure
-from matplotlib.dates import DateFormatter
+import pyworkflow.em.packages.xmipp3.plotter as plotter
+plotter._interactive = False 
 
 from xmipp_viewer_ml2d import *
 from xmipp_viewer_cl2d import *
