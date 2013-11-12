@@ -110,7 +110,8 @@ class XmippML3DViewer(ProtocolViewer):
         runShowJ(self.protocol._getExtraPath("generated_volumes.stk"))
         
     def _view2DAvgs(self, e=None):
-        self._viewIterationFile("ml2dextra/iter%03d/iter_classes.xmd")
+        extra = '%s2d' % self.protocol.getProgramId() + 'extra'
+        self._viewIterationFile(extra + "/iter%03d/iter_classes.xmd")
         
     def _view3DRefsVolumes(self, e=None):
         self._viewIterationFile("extra/iter%03d/vol000001.vol")
@@ -118,7 +119,8 @@ class XmippML3DViewer(ProtocolViewer):
     def _plotAngularDistribution(self, e=None):
         self.setVisualizeIterations()
         for iter in self.visualizeIters:
-            extraPath = self.protocol._getPath("ml2dextra/iter%03d/iter_classes.xmd" % iter)
+            extra = '%s2d' % self.protocol.getProgramId() + 'extra'
+            extraPath = self.protocol._getPath(extra + "/iter%03d/iter_classes.xmd" % iter)
             print "extraPath=%s" % extraPath
             if not os.path.exists(extraPath):
                 self.formWindow.showError('Iteration %s does not exist.' % iter)        
@@ -154,7 +156,8 @@ class XmippML3DViewer(ProtocolViewer):
         from matplotlib.ticker import FormatStrFormatter
         self.setVisualizeIterations()
         for iter in self.visualizeIters:
-            extraPath = self.protocol._getPath("ml2dextra/iter%03d/iter_classes.xmd" % iter)
+            extra = '%s2d' % self.protocol.getProgramId() + 'extra'
+            extraPath = self.protocol._getPath(extra + "/iter%03d/iter_classes.xmd" % iter)
             print "extraPath=%s" % extraPath
             if not os.path.exists(extraPath):
                 self.formWindow.showError('Iteration %s does not exist.' % iter)        
