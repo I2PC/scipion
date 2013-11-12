@@ -146,7 +146,8 @@ class XmippML3DViewer(ProtocolViewer):
                     plot_title = 'ref %d' % r
                     xplotter.plotAngularDistribution(plot_title, md2)
                 if xplotter is not None:
-                    return self._showOrReturn(xplotter)
+                    xplotter.show()
+#                    return self._showOrReturn(xplotter)
                     
 
     def _plotClassDistribution(self, e=None):
