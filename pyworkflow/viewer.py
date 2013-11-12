@@ -103,7 +103,7 @@ class Wizard(object):
     
     
 class ProtocolViewer(Protocol, Viewer):
-    """ This class will serve as base for viwers that will have form and parameters. """
+    """ This class will serve as base for viewers that will have form and parameters. """
     def __init__(self, **args):
         Protocol.__init__(self, **args)
         Viewer.__init__(self, **args)
@@ -127,6 +127,12 @@ class ProtocolViewer(Protocol, Viewer):
         self.showError = self.formWindow.showError
         self.formWindow.show(center=True)     
 
+    def _showPlots(self, plots, errors):
+        if len(errors):
+            self.showError('\n'.join(errors))
+        if len(plots):
+            plots[0].show() # Show from any plot, 0 or any other
+            
     def _showOrReturn(self, xplotter):
         if self.showPlot:
             xplotter.show()

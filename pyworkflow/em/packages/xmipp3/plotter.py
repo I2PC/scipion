@@ -65,6 +65,7 @@ class XmippPlotter(object):
         self.plot_axis_fontsize = 10
         self.plot_text_fontsize = 8
         self.plot_yformat = '%1.2e'
+        plt.ion()
 
     def getCanvas(self):
         return self.figure.canvas
@@ -180,7 +181,8 @@ class XmippPlotter(object):
         md = MetaData(mdFilename)
         self.plotMd(md, mdLabelX, mdLabelY, color='g',**args)
         
-    def show(self):
+    @classmethod
+    def show(cls):
         plt.tight_layout()
         plt.show()
 
