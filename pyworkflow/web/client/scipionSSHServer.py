@@ -5,64 +5,113 @@ Created on Sep 30, 2013
 '''
 from bottle import route, run, template, request
 import subprocess
+from os.path import join
 
-@route('/openInteractiveProtocolMenu')
-def openInteractiveProtocolMenu():
-    commands, machine, user = readParametersFromScipion()
-    password = getPassword(machine,user)
+templatesPath = "templates"
+scriptsPath = "scripts"
+
+@route('/openScipionLocalMenu')
+def openScipionLocalMenu():
+    inputParameters = readParameters()
+    password = getPassword(inputParameters['machine'], inputParameters['user'])
     
         
-    return template('interactive_protocol_menu.tpl',
-                    commands=(';').join(commands),
-                    machine=machine,
-                    user=user,
-                    password=password)
+    forwardTemplate = template(join(templatesPath, 'error_page.tpl'), inputParameters = inputParameters)
+        
+    if inputParameters['action'] == "InteractiveProtocolMenu":        
+        forwardTemplate =  template(join(templatesPath,'interactive_protocol_menu.tpl'),
+                                    commands = (';').join(inputParameters['commands']),
+                                    machine = inputParameters['machine'],
+                                    user = inputParameters['user'],
+                                    password = password)
+    elif inputParameters['action'] == "TransferFilesMenu":
+        forwardTemplate =  template(join(templatesPath,'transfer_file_menu.tpl'),
+                                    commands = (';').join(inputParameters['commands']),
+                                    machine = inputParameters['machine'],
+                                    user = inputParameters['user'],
+                                    password = password)
+        
+    return forwardTemplate
 
 @route('/runInteractiveProtocol', method='POST')
 def runInteractiveProtocol():
-    print "runningInteractiveProtocol"
-    commands, machine, user, password = readParametersLocal()
-    callScript(commands, machine, user, password)
+    print "Running Interactive Protocol"
+    inputParameters = readParameters()
+    callInteractiveProtocolScript(inputParameters)
+    
+#    return template('<b>Hello {{name}}</b>!', name="Name")
+    return template('<b>Protocol Executed</b>!')
+
+@route('/runTransferFiles', method='POST')
+def runTransferFiles():
+    print "Running Transfer Files"
+    inputParameters = readParameters()
+    #TOBEDONE
+    callTransferFilesScript(inputParameters)
     
 #    return template('<b>Hello {{name}}</b>!', name="Name")
     return template('<b>Protocol Executed</b>!')
 
 
-def readParametersFromScipion():
-    print "readingparameter"
+def readParameters():
+    print "Reading Parameters..."
     
-    machine=request.query.get("machine","takarras.cnb.csic.es")
-    user=request.query.get("user","aquintana")
-    commands=request.query.getall("commands")
+    inputParameters = {'path_askpass':'scipionPipe'}
     
-    print "Execute ", commands, " as ", user," at ", machine,    
-        
-    return commands, machine, user 
+    
+    inputParameters['action'] = request.query.get("action") #InteractiveProtocolMenu || TransferFilesMenu || RunInteractiveProtocol || RunTransferFiles 
+    
+    inputParameters['machine'] = request.query.get("machine")
+    inputParameters['user'] = request.query.get("user")
+    inputParameters['commands'] = request.query.getall("commands")
+    if inputParameters['action'] == "RunInteractiveProtocol" or inputParameters['action'] == "RunTransferFiles":
+        inputParameters['password'] = request.forms.get('password')
+    if inputParameters['action'] == "TransferFilesMenu" or inputParameters['action'] == "RunTransferFiles": 
+        inputParameters['mode'] = request.query.get("mode","COPY")
+        inputParameters['fileList'] = request.query.get("fileList","fileList")
+        inputParameters['sourcePath'] = request.query.get("sourcePath")
+        inputParameters['targetPath'] = request.query.get("targetPath")
+        inputParameters['canRsync'] = request.query.get("canRsync","true")
+        inputParameters['availableTunnel'] = request.query.get("availableTunnel","true")
+        inputParameters['portTunnel'] = request.query.get("portTunnel",None)
+         
+    
+    print "Parameters: ", inputParameters
+    return inputParameters 
 
-def readParametersLocal():
-    print "readingparameterLocal"
-    machine = request.forms.get('machine')
-    user = request.forms.get('user')
-    password = request.forms.get('password')
-    commands = request.forms.get('commands')
-    return commands, machine, user, password  
     
 def getPassword(machine,user):
-    print "gettingpassword"
+    print "Getting Password. TBD: Store password locally"
     return ""
     
-def callScript(commands, machine, user, password):     
-   
-    print "callingscript"
+def callInteractiveProtocolScript(inputParameters):     
+    print "Calling Interactive Protocol Script"
 
-    shellCommand="bash managePipe "+password
-    print "shellCommand",shellCommand
+    shellCommand="bash " + join(scriptsPath,"managePipe") + inputParameters['password']
+    print "shellCommand ", shellCommand
     subprocess.call(shellCommand, shell=True) 
     
-    shellCommand="bash sshServerScript "+machine +" "+user+" "+password+" \""+commands+"\""
-    print "shellCommand",shellCommand
+    shellCommand="bash " + join(scriptsPath,"sshServerScript") + \
+        inputParameters['machine'] + " " + inputParameters['user'] + " " + \
+        " \"" + inputParameters['commands'] + "\" " + inputParameters['path_askpass']
+    print "shellCommand ", shellCommand
+    subprocess.call(shellCommand, shell=True) 
+
+def callTransferFilesScript(inputParameters):     
+    print "Calling Transfer Files Script"
+
+    shellCommand="bash " + join(scriptsPath,"managePipe") + inputParameters['password']
+    print "shellCommand ", shellCommand
     subprocess.call(shellCommand, shell=True) 
     
+    
+    #POR AKI
+    shellCommand="bash " + join(scriptsPath,"rsyncScript") + inputParameters['commands'] + " " + \
+        inputParameters['user'] + " \"" + inputParameters['commands'] + "\""
+    print "shellCommand ", shellCommand
+    subprocess.call(shellCommand, shell=True)    
+  
+  
     
 
 run(host='localhost', port=8081)

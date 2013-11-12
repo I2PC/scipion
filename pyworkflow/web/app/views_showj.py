@@ -6,7 +6,6 @@ from django.shortcuts import render_to_response
 from pyworkflow.tests import getInputPath
 from pyworkflow.web.app.forms import ShowjForm, getLabelsToRenderComboBoxValues
 from django.template import RequestContext
-from os.path import join    
 from collections import OrderedDict
 import json
 from pyworkflow.web.app.views_util import *
@@ -267,8 +266,8 @@ def visualizeVolume(request):
         volume = setOfVolume[volumeId]
         # Chimera 
         from subprocess import Popen, PIPE, STDOUT
-#         inputVolume = join(os.getcwd(),volume.getFileName())
-#         outputHtmlFile = join(os.getcwd(),project.getTmpPath("volume_" + str(volume.getObjId()) + '.html'))
+#         inputVolume = os.path.join(os.getcwd(),volume.getFileName())
+#         outputHtmlFile = os.path.join(os.getcwd(),project.getTmpPath("volume_" + str(volume.getObjId()) + '.html'))
         inputVolume = volume.getFileName()
         outputHtmlFile = project.getTmpPath("volume_" + str(volume.getObjId()) + '.html')
         if (request.GET.get('threshold') is None or request.GET.get('threshold') == ''):
@@ -403,11 +402,11 @@ def visualizeObject(request):
         if isinstance(obj, SetOfMicrographs):
             fn = project.getTmpPath(obj.getName() + '_micrographs.xmd')
             writeSetOfMicrographs(obj, fn)
-            inputParameters['path']= join(projectPath, fn)
+            inputParameters['path']= os.path.join(projectPath, fn)
         elif isinstance(obj, SetOfVolumes):
             fn = project.getTmpPath(obj.getName()+ '_volumes.xmd')
             writeSetOfVolumes(obj, fn)
-            inputParameters['path']= join(projectPath, fn)
+            inputParameters['path']= os.path.join(projectPath, fn)
 #            inputParameters['setOfVolumes']= obj
 #            inputParameters['setOfVolumesId']= obj.getObjId()
             inputParameters['dims']= '3d'
@@ -416,7 +415,7 @@ def visualizeObject(request):
     #        PAJM aqui falla para el cl2d align y se esta perdiendo la matrix de transformacion en la conversion
             fn = project.getTmpPath(obj.getName() + '_images.xmd')
             writeSetOfParticles(obj, fn)
-            inputParameters['path']= join(projectPath, fn)
+            inputParameters['path']= os.path.join(projectPath, fn)
         elif isinstance(obj, Image):
             fn = project.getTmpPath(obj.getName() + '_image.xmd')
             fnSet = fn.replace('.xmd', '.sqlite')
@@ -429,18 +428,18 @@ def visualizeObject(request):
             img.copyLocation(obj)
             imgSet.append(img)
             writeSetOfParticles(imgSet, fn)
-            inputParameters['path']= join(projectPath, fn)
+            inputParameters['path']= os.path.join(projectPath, fn)
             
         elif isinstance(obj, SetOfClasses2D):
             fn = project.getTmpPath(obj.getName() + '_classes.xmd')
             writeSetOfClasses2D(obj, fn)
-            inputParameters['path']= join(projectPath, fn)
+            inputParameters['path']= os.path.join(projectPath, fn)
         else:
             raise Exception('Showj Web visualizer: can not visualize class: %s' % obj.getClassName())
     
     elif "path" in request.GET:
         inputParameters.update(request.GET.items())
-        inputParameters.update({'path':join(projectPath, request.GET.get("path"))})
+        inputParameters.update({'path':os.path.join(projectPath, request.GET.get("path"))})
     else:
         raise Exception('Showj Web visualizer: No object identifier or path found')         
 
