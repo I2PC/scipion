@@ -24,11 +24,29 @@
 # *
 # **************************************************************************
 """
-This sub-package will contains Xmipp3.0 specific protocols
+This module implement the first version of viewers using 
+around xmipp_showj visualization program.
 """
 
-from eman2 import *
-from data import *
+from pyworkflow.viewer import Viewer, DESKTOP_TKINTER, WEB_DJANGO
+from pyworkflow.em.packages.xmipp3.viewer import XmippViewer
+
 from protocol_boxing import EmanProtBoxing
 from protocol_initialmodel import EmanProtInitModel
-from viewer import EmanViewerGeneric
+
+    
+class EmanViewerGeneric(Viewer):
+    """ Wrapper to visualize different type of objects
+    with the Xmipp program xmipp_showj
+    """
+    _environments = [DESKTOP_TKINTER, WEB_DJANGO]
+    _targets = [EmanProtBoxing, EmanProtInitModel]
+
+    def visualize(self, obj, **args):
+        
+        if isinstance(obj, EmanProtBoxing):
+            XmippViewer().visualize(obj.outputCoordinates)
+            
+        elif isinstance(obj, EmanProtInitModel):
+            XmippViewer().visualize(obj.outputVolumes)
+            
