@@ -11,9 +11,6 @@
 		initializeGoToEvents()
 	});
 	
-	
-	
-	
 	function initializeGoToEvents(){
 		$('#id_goto').click(function(){
 			updateSelection();	
@@ -183,8 +180,7 @@
 {% block content_view %}	
 
 
-	{% if form.dims.value == '2d' %}
-
+	{% if dataset.getNumberSlices == 1 %}
 		{% for id,enable,data,transformationMatrix in dataset.getDataToRenderAndExtra %}
 			<div class="img_container" id="img_container___{{id}}">
 				<div class="img_inner_container">

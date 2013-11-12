@@ -49,17 +49,19 @@ def showj(request, inputParameters=None):
         inputParameters['zoom']=0
         _imageDimensions = None
     else:
-        _imageVolName = inputParameters['volumesToRenderComboBox'] if ("volumesToRenderComboBox" in inputParameters and inputParameters['volumesToRenderComboBox'] != '') else tableDataset.getElementById(0,inputParameters['labelsToRenderComboBox'])
-        _getImageDim=True 
-        _convert = inputParameters['dims']=='3d' and (inputParameters['mode']=='gallery' or inputParameters['mode']=='volume_astex' or inputParameters['mode']=='volume_chimera')
-        _reslice = inputParameters['dims']=='3d' and inputParameters['mode']=='gallery'
-        _getStats = inputParameters['dims']=='3d' and (inputParameters['mode']=='volume_astex' or inputParameters['mode']=='volume_chimera')
-        _dataType = xmipp.DT_FLOAT if inputParameters['dims']=='3d' and inputParameters['mode']=='volume_astex' else xmipp.DT_UCHAR
-            
-        _imageVolName, _imageDimensions, _stats = readImageVolume(request, _imageVolName, _getImageDim, _convert, _dataType, _reslice, int(inputParameters['resliceComboBox']), _getStats)
         
-        if inputParameters['dims']=='3d':
-            dataset.setNumberSlices(_imageDimensions[2])
+        _imageVolName = inputParameters['volumesToRenderComboBox'] if ("volumesToRenderComboBox" in inputParameters and inputParameters['volumesToRenderComboBox'] != '') else tableDataset.getElementById(0,inputParameters['labelsToRenderComboBox'])
+        _imageDimensions = readDimensions(request, _imageVolName)
+        dataset.setNumberSlices(_imageDimensions[2])
+        
+        _convert = dataset.getNumberSlices()>1 and (inputParameters['mode']=='gallery' or inputParameters['mode']=='volume_astex' or inputParameters['mode']=='volume_chimera')
+        _reslice = dataset.getNumberSlices()>1 and inputParameters['mode']=='gallery'
+        _getStats = dataset.getNumberSlices()>1 and (inputParameters['mode']=='volume_astex' or inputParameters['mode']=='volume_chimera')
+        _dataType = xmipp.DT_FLOAT if dataset.getNumberSlices()>1 and inputParameters['mode']=='volume_astex' else xmipp.DT_UCHAR
+            
+        _imageVolName, _stats = readImageVolume(request, _imageVolName, _convert, _dataType, _reslice, int(inputParameters['resliceComboBox']), _getStats)
+        
+        if dataset.getNumberSlices()>1:
             dataset.setVolumeName(_imageVolName)
 
     #Store dataset and labelsToRender in session 
@@ -367,7 +369,7 @@ def visualizeObject(request):
                        'blockComboBox': '',                 # Metadata Block to display. If None the first one will be displayed
                        'labelsToRenderComboBox': '',        # Column to be displayed in gallery mode. If None the first one will be displayed
                        'volumesToRenderComboBox': '',       # If 3D, Volume to be displayed in gallery, volume_astex and volume_chimera mode. If None the first one will be displayed
-                       'dims': '2d',                        # Object Dimensions
+#                       'dims': '2d',                        # Object Dimensions
                        'goto': 1,                           # Element selected (metadata record) by default. It can be a row in table mode or an image in gallery mode
                        'colRowMode': 'Off',                 # In gallery mode 'On' means columns can be adjust manually by the user. When 'Off' columns are adjusted automatically to screen width. 
                        'mirrorY': False,                    # When 'True' image are mirrored in Y Axis 
@@ -409,7 +411,7 @@ def visualizeObject(request):
             inputParameters['path']= os.path.join(projectPath, fn)
 #            inputParameters['setOfVolumes']= obj
 #            inputParameters['setOfVolumesId']= obj.getObjId()
-            inputParameters['dims']= '3d'
+#            inputParameters['dims']= '3d'
             inputParameters['mode']= 'table'
         elif isinstance(obj, SetOfImages):
     #        PAJM aqui falla para el cl2d align y se esta perdiendo la matrix de transformacion en la conversion
