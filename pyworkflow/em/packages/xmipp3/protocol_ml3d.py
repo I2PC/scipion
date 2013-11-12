@@ -415,8 +415,9 @@ class XmippProtML3D(ProtRefine3D, ProtClassify3D):
         if iter is None:
             iter = self._lastIteration()
 
-        extra = self._getPath('ml2dextra')
+        extra = self._getPath('%s2d' % self.getProgramId() + 'extra')
         mdFile = join(extra, 'iter%03d' % iter, 'iter_classes.xmd')
+
         if block:
             mdFile = block + '@' + mdFile
         
