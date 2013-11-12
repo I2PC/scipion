@@ -7,8 +7,18 @@ from bottle import route, run, template, request
 import subprocess
 from os.path import join
 
-templatesPath = "templates"
-scriptsPath = "scripts"
+
+path = {"templates": "templates",
+        "scripts": "scripts"}
+
+scripts = {"pipe": "managePipeScript",
+           "transferFiles": "transferFilesScript",
+           "interactiveProtocol": "interactiveProtocolScript"}
+
+templates = {"interactiveProtocol": "interactive_protocol_menu.tpl",
+             "transferFiles":"transfer_files_menu.tpl",
+             "error": "error_page.tpl"}
+
 
 @route('/openScipionLocalMenu')
 def openScipionLocalMenu():
@@ -16,16 +26,16 @@ def openScipionLocalMenu():
     password = getPassword(inputParameters['machine'], inputParameters['user'])
     
         
-    forwardTemplate = template(join(templatesPath, 'error_page.tpl'), inputParameters = inputParameters)
+    forwardTemplate = template(join(path["templates"], templates["error"]), inputParameters = inputParameters)
         
     if inputParameters['action'] == "InteractiveProtocolMenu":        
-        forwardTemplate =  template(join(templatesPath,'interactive_protocol_menu.tpl'),
+        forwardTemplate =  template(join(path["templates"],templates["interactiveProtocol"]),
                                     commands = (';').join(inputParameters['commands']),
                                     machine = inputParameters['machine'],
                                     user = inputParameters['user'],
                                     password = password)
     elif inputParameters['action'] == "TransferFilesMenu":
-        forwardTemplate =  template(join(templatesPath,'transfer_file_menu.tpl'),
+        forwardTemplate =  template(join(path["templates"],templates["transferFiles"]),
                                     commands = (';').join(inputParameters['commands']),
                                     machine = inputParameters['machine'],
                                     user = inputParameters['user'],
@@ -48,8 +58,7 @@ def runTransferFiles():
     inputParameters = readParameters()
     #TOBEDONE
     callTransferFilesScript(inputParameters)
-    
-#    return template('<b>Hello {{name}}</b>!', name="Name")
+
     return template('<b>Protocol Executed</b>!')
 
 
@@ -86,12 +95,9 @@ def getPassword(machine,user):
     
 def callInteractiveProtocolScript(inputParameters):     
     print "Calling Interactive Protocol Script"
-
-    shellCommand="bash " + join(scriptsPath,"managePipe") + inputParameters['password']
-    print "shellCommand ", shellCommand
-    subprocess.call(shellCommand, shell=True) 
+    managePipe(inputParameters['password'])
     
-    shellCommand="bash " + join(scriptsPath,"sshServerScript") + \
+    shellCommand="bash " + join(path["scripts"],scripts["interactiveProtocol"]) + " " + \
         inputParameters['machine'] + " " + inputParameters['user'] + " " + \
         " \"" + inputParameters['commands'] + "\" " + inputParameters['path_askpass']
     print "shellCommand ", shellCommand
@@ -99,19 +105,21 @@ def callInteractiveProtocolScript(inputParameters):
 
 def callTransferFilesScript(inputParameters):     
     print "Calling Transfer Files Script"
-
-    shellCommand="bash " + join(scriptsPath,"managePipe") + inputParameters['password']
-    print "shellCommand ", shellCommand
-    subprocess.call(shellCommand, shell=True) 
+    managePipe(inputParameters['password'])
     
-    
-    #POR AKI
-    shellCommand="bash " + join(scriptsPath,"rsyncScript") + inputParameters['commands'] + " " + \
-        inputParameters['user'] + " \"" + inputParameters['commands'] + "\""
+    shellCommand="bash " + join(path["scripts"],scripts["transferFiles"]) + " " + inputParameters['commands'] + " " + \
+        inputParameters['remoteuser'] + " " + inputParameters['path_askpass'] + " " + \
+        inputParameters['fileList'] + " " + inputParameters['sourcePath'] + " " + \
+        inputParameters['targetPath'] + " " + inputParameters['canRsync'] + " " + \
+        inputParameters['availableTunnel'] + " " + inputParameters['portTunnel'] 
     print "shellCommand ", shellCommand
     subprocess.call(shellCommand, shell=True)    
   
-  
+def managePipe(password):
+    print "Managing Pipe"
+    shellCommand="bash " + join(path["scripts"],scripts["pipe"]) + " " + password
+    print "Shell Command: ", shellCommand
+    subprocess.call(shellCommand, shell=True)       
     
 
 run(host='localhost', port=8081)

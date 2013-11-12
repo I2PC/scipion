@@ -56,34 +56,38 @@ def launch_viewer(request):
         
         viewers = findViewers(protocol.getClassName(), WEB_DJANGO)
         
-        viewer = viewers[0]()
-        functionName = viewer.getView()
-        function = globals().get(functionName, None)
-        
-        if function is None:
-            pass  # redirect to error: viewer not found
-        elif not callable(function):
-            pass  # redirect to error: name is not a function
+        if len(viewers) == 0:
+            msg = "There is not viewer for protocol: <strong>" + protocol.getClassName() +"</strong>"
+            ioDict = {'error': msg}
         else:
-            ioDict = function(project, protocol, viewer)
-       
+            viewer = viewers[0]()
+            functionName = viewer.getView()
+            function = globals().get(functionName, None)
+            
+            if function is None:
+                pass  # redirect to error: viewer not found
+            elif not callable(function):
+                pass  # redirect to error: name is not a function
+            else:
+                ioDict = function(project, protocol, viewer)
+           
         jsonStr = json.dumps(ioDict, ensure_ascii=False)
+        
     return HttpResponse(jsonStr, mimetype='application/javascript')
 
 def viewerXmipp(project, protocol, viewer):
+    ioDict={}
     
     if getattr(protocol, 'outputMicrographs', False):
         objId = protocol.outputMicrographs.getObjId()
     elif getattr(protocol, 'outputParticles', False):
         objId = protocol.outputParticles.getObjId()
-    
+        protId = protocol.getObjId()
+        ioDict["plot"] = "/view_plot_xmipp/?protocolId="+ str(protId)
+        
     from views_showj import visualizeObject
-    url_showj = "/visualize_object/?objectId="+str(objId)
-
-    protId = protocol.getObjId()
-    url_plotter = "/view_plot_xmipp/?protocolId="+ str(protId)
+    ioDict["url"] = "/visualize_object/?objectId="+str(objId)
     
-    ioDict = {"url": url_showj , "plot" : url_plotter}
     return ioDict
 
 def viewerForm(project, protocol, viewer):

@@ -287,21 +287,23 @@ def getImageDim(request, imagePath):
     return img.getDimensions()
 
 
-def readImageVolume(request, path, getImageDim, convert, dataType, reslice, axis, getStats):
+def readDimensions(request, path):
+    img = xmipp.Image()
+    imgFn = os.path.join(request.session['projectPath'], path)
+    img.read(str(imgFn), xmipp.HEADER)
+    return img.getDimensions()
+
+def readImageVolume(request, path, convert, dataType, reslice, axis, getStats):
     _newPath=path
-    _imageDim=None
     _stats=None
     
     img = xmipp.Image()
     imgFn = os.path.join(request.session['projectPath'], path)
     
-    if not convert and not reslice and not getStats and not getImageDim:
+    if not convert and not reslice and not getStats:
         img.read(str(imgFn), xmipp.HEADER)
     else:
         img.read(str(imgFn))
-        
-    if getImageDim:
-         _imageDim = img.getDimensions()   
         
     if convert:
          img.convert2DataType(dataType, xmipp.CW_ADJUST)
@@ -318,6 +320,6 @@ def readImageVolume(request, path, getImageDim, convert, dataType, reslice, axis
         _newPath = '%s_tmp%s' % (fileName, '.mrc')
         img.write(str(_newPath))
     
-    return _newPath, _imageDim, _stats
+    return _newPath, _stats
     
     

@@ -42,10 +42,12 @@ def doVisualizeClasses(request, protocolViewer):
     pass
 
 def doVisualizeDendrogram(request, protocolViewer):
+    minHeight = str(protocolViewer.minHeight.get())
     protViewerClass = str(protocolViewer.getClassName())
     protId = str(protocolViewer.protocol.getObjId())
-    return "plot","/view_plots/?function=visualizeDendrogram&protViewerClass="+ protViewerClass + "&protId="+ protId
+    return "plot","/view_plots/?function=visualizeDendrogram&protViewerClass="+ protViewerClass + "&protId="+ protId + "&minHeight="+ minHeight
 
 def visualizeDendrogram(request, protocolViewer):
+    protocolViewer.minHeight.set(request.GET.get('minHeight', None))
     xplotter = protocolViewer._plotDendrogram()
     return xplotter
