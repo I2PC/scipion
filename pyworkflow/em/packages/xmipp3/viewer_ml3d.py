@@ -125,35 +125,38 @@ class XmippML3DViewer(ProtocolViewer):
             if not os.path.exists(extraPath):
                 self.formWindow.showError('Iteration %s does not exist.' % iter)        
             else:
-                md = MetaData("classes@%s" % extraPath)
-                md2 = MetaData()
-                md2.aggregate(md, AGGR_SUM, MDL_REF3D, MDL_WEIGHT, MDL_WEIGHT)
-                nrefs = md2.size()
-                figsize = None
-                if nrefs == 1:
-                    gridsize = [1, 1]
-                    figsize = (4, 4)
-                elif nrefs == 2:
-                    gridsize = [1, 2]
-                    figsize = (8, 4)
-                else:
-                    gridsize = [(nrefs+1)/2, 2]
-                    figsize = (8, 12)
-        
-                xplotter = XmippPlotter(*gridsize, figsize=figsize, 
-                                        windowTitle="Angular distribution - iteration %d" % iter)
-                
-                for r in range(1, nrefs+1):
-                    md2.importObjects(md, MDValueEQ(MDL_REF3D, r))  
-                    plot_title = 'ref %d' % r
-                    xplotter.plotAngularDistribution(plot_title, md2)
+                xplotter = self.plotIterAngularDistribution(iter, extraPath)
                 if xplotter is not None:
-                    return self._showOrReturn(xplotter)
+                    xplotter.show()
+                
+                
+    def plotIterAngularDistribution(self, iter, extraPath):
+        md = MetaData("classes@%s" % extraPath)
+        md2 = MetaData()
+        md2.aggregate(md, AGGR_SUM, MDL_REF3D, MDL_WEIGHT, MDL_WEIGHT)
+        nrefs = md2.size()
+        figsize = None
+        if nrefs == 1:
+            gridsize = [1, 1]
+            figsize = (4, 4)
+        elif nrefs == 2:
+            gridsize = [1, 2]
+            figsize = (8, 4)
+        else:
+            gridsize = [(nrefs+1)/2, 2]
+            figsize = (8, 12)
+
+        xplotter = XmippPlotter(*gridsize, figsize=figsize, 
+                                windowTitle="Angular distribution - iteration %d" % iter)
+        
+        for r in range(1, nrefs+1):
+            md2.importObjects(md, MDValueEQ(MDL_REF3D, r))  
+            plot_title = 'ref %d' % r
+            xplotter.plotAngularDistribution(plot_title, md2)
+        return xplotter
                     
 
     def _plotClassDistribution(self, e=None):
-        from numpy import arange
-        from matplotlib.ticker import FormatStrFormatter
         self.setVisualizeIterations()
         for iter in self.visualizeIters:
             extra = '%s2d' % self.protocol.getProgramId() + 'extra'
@@ -162,22 +165,28 @@ class XmippML3DViewer(ProtocolViewer):
             if not os.path.exists(extraPath):
                 self.formWindow.showError('Iteration %s does not exist.' % iter)        
             else:
-                xplotter = XmippPlotter(1, 1, figsize=(4,4),
-                                        windowTitle="Images distribution - iteration %d" % iter)
-                md = MetaData("classes@%s" % extraPath)
-                md2 = MetaData()    
-                md2.aggregate(md, AGGR_SUM, MDL_REF3D, MDL_WEIGHT, MDL_WEIGHT)
-                weights = [md2.getValue(MDL_WEIGHT, objId) for objId in md2]
-                nrefs = len(weights)
-                refs3d = arange(1, nrefs + 1)
-                width = 0.85
-                a = xplotter.createSubPlot('3D references weights on last iteration', 'references', 'weight')
-                a.set_xticks(refs3d + 0.45)
-                a.xaxis.set_major_formatter(FormatStrFormatter('%1.0f'))
-                a.set_xlim([0.8, nrefs + 1])
-                a.bar(refs3d, weights, width, color='b')
+                xplotter = self.plotIterClassDistribution(iter, extraPath)
                 if xplotter is not None:
-                    return self._showOrReturn(xplotter)
+                    xplotter.show()
+                
+    def plotIterClassDistribution(self, iter, extraPath):
+        from numpy import arange
+        from matplotlib.ticker import FormatStrFormatter
+        xplotter = XmippPlotter(1, 1, figsize=(4,4),
+                                windowTitle="Images distribution - iteration %d" % iter)
+        md = MetaData("classes@%s" % extraPath)
+        md2 = MetaData()    
+        md2.aggregate(md, AGGR_SUM, MDL_REF3D, MDL_WEIGHT, MDL_WEIGHT)
+        weights = [md2.getValue(MDL_WEIGHT, objId) for objId in md2]
+        nrefs = len(weights)
+        refs3d = arange(1, nrefs + 1)
+        width = 0.85
+        a = xplotter.createSubPlot('3D references weights on last iteration', 'references', 'weight')
+        a.set_xticks(refs3d + 0.45)
+        a.xaxis.set_major_formatter(FormatStrFormatter('%1.0f'))
+        a.set_xlim([0.8, nrefs + 1])
+        a.bar(refs3d, weights, width, color='b')
+        return xplotter
                     
     def _plotStatistics(self, e=None):
         from viewer_ml2d import createPlots
