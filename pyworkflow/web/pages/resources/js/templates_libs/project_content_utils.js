@@ -154,6 +154,9 @@ function launchViewer(id){
 				else if(key=="plot"){
 					customPopup(value,600,500);
 				}
+				else if(key=="error"){
+					launchMessiSimple("Error",messiError(value));
+				}
 			});
 		}
 	});	
