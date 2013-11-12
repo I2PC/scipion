@@ -28,6 +28,8 @@ class ProtCL2D(XmippProtocol):
         self.Db.insertStep("linkAcquisitionInfo",InputFile=self.InSelFile,dirDest=self.WorkingDir)
         self.insertCl2dStep()
         self.Db.insertStep('evaluateClasses',WorkingDir=self.WorkingDir,ExtraDir=self.ExtraDir,subset="")
+        self.Db.insertStep('sortClasses',ExtraDir=self.ExtraDir,Nproc=self.NumberOfMpi,suffix="")
+
         if self.NumberOfReferences > self.NumberOfInitialReferences:
             # core analysis
             params= "--dir %(ExtraDir)s --root level --computeCore %(thZscore)f %(thPCAZscore)f" % self.ParamsDict
@@ -35,14 +37,14 @@ class ProtCL2D(XmippProtocol):
                       [self.workingDirPath("extra/level_00/level_classes_core.xmd")])
             # evaluate classes 
             self.Db.insertStep('evaluateClasses',WorkingDir=self.WorkingDir,ExtraDir=self.ExtraDir,subset="_core")
+            self.Db.insertStep('sortClasses',ExtraDir=self.ExtraDir,Nproc=self.NumberOfMpi,suffix="_core")
             # stable core analysis
             params= "--dir %(ExtraDir)s --root level --computeStableCore %(Tolerance)d" % self.ParamsDict
             self.insertRunJobStep("xmipp_classify_CL2D_core_analysis", params)
             # evaluate classes again
             self.Db.insertStep('evaluateClasses',WorkingDir=self.WorkingDir,ExtraDir=self.ExtraDir,subset="_stable_core")
-        self.Db.insertStep('sortClasses',ExtraDir=self.ExtraDir,Nproc=self.NumberOfMpi,suffix="")
-        self.Db.insertStep('sortClasses',ExtraDir=self.ExtraDir,Nproc=self.NumberOfMpi,suffix="_core")
-        self.Db.insertStep('sortClasses',ExtraDir=self.ExtraDir,Nproc=self.NumberOfMpi,suffix="_stable_core")
+            self.Db.insertStep('sortClasses',ExtraDir=self.ExtraDir,Nproc=self.NumberOfMpi,suffix="_stable_core")
+
         self.Db.insertStep("postEvaluation",WorkingDir=self.WorkingDir)
     
     def summary(self):
