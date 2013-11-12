@@ -58,7 +58,8 @@ import pyworkflow.apps.config as config
 from config import *
 from pw_browser import BrowserWindow
 
-   
+from pyworkflow.gui.plotter import Plotter
+Plotter.setInteractive(True)   
     
 VIEW_PROTOCOLS = 'Protocols'
 VIEW_DATA = 'Data'

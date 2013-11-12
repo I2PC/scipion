@@ -36,9 +36,6 @@ from pyworkflow.em.packages.xmipp3.convert import writeSetOfParticles
 from pyworkflow.em.packages.xmipp3.plotter import XmippPlotter
 from pyworkflow.viewer import WEB_DJANGO
 
-import pyworkflow.em.packages.xmipp3.plotter as plotter
-plotter._interactive = False 
-
 from xmipp_viewer_ml2d import *
 from xmipp_viewer_cl2d import *
 from xmipp_viewer_ml3d import *
@@ -148,6 +145,10 @@ def viewerElement(request):
 
 ############## AUX METHODS ##############
 def view_plots(request):
+    from pyworkflow.em.packages.xmipp3.plotter import XmippPlotter
+    XmippPlotter.setInteractive(False)
+    print "plotter.interactive: ", XmippPlotter.interactive
+     
     projectName = request.session['projectName']
     project = loadProject(projectName)
     protId = request.GET.get('protId', None)
