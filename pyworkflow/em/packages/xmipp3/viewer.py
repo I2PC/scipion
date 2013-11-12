@@ -58,14 +58,14 @@ class XmippViewer(Viewer):
     _targets = [Image, SetOfImages, SetOfCoordinates, SetOfClasses2D, 
                 ProtImportMicrographs, XmippProtPreprocessMicrographs, ProtCTFMicrographs,
                 XmippProtParticlePicking, ProtImportParticles, XmippProtExtractParticles,
-                ProtAlign, SetOfClasses2D, SetOfCTF]
+                ProtAlign, XmippProtKerdensom, XmippProtRotSpectra, SetOfClasses2D, SetOfCTF]
     
     def __init__(self, **args):
         Viewer.__init__(self, **args)
 
     def visualize(self, obj, **args):
         cls = type(obj)
-        print "cls:", cls
+
         if issubclass(cls, Image):
             print "visualizing Image"
             fn = locationToXmipp(*obj.getLocation())
@@ -132,8 +132,7 @@ class XmippViewer(Viewer):
             else:
                 fn = self._getTmpPath(obj.getName() + '_classes.xmd')
                 writeSetOfClasses2D(obj, fn, self._getTmpPath())
-            #runShowJ(obj.getClassesMdFileName(), extraParams=args.get('extraParams', ''))
-            runShowJ(fn)  
+            runShowJ(fn, extraParams=args.get('extraParams', ''))  
         elif issubclass(cls, SetOfCTF):
             mdFn = getattr(obj, '_xmippMd', None)
             if mdFn:
