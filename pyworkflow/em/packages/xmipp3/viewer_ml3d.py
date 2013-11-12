@@ -110,19 +110,32 @@ class XmippML3DViewer(ProtocolViewer):
         runShowJ(self.protocol._getExtraPath("generated_volumes.stk"))
         
     def _view2DAvgs(self, e=None):
-        self._viewIterationFile("ml2dextra/iter%03d/iter_classes.xmd")
+        extra = '%s2d' % self.protocol.getProgramId() + 'extra'
+        self._viewIterationFile(extra + "/iter%03d/iter_classes.xmd")
         
     def _view3DRefsVolumes(self, e=None):
         self._viewIterationFile("extra/iter%03d/vol000001.vol")
     
     def _plotAngularDistribution(self, e=None):
+        self._showPlots(*self._createAngularDistributionPlots())
+            
+    def _createAngularDistributionPlots(self):
+        """ Plot the angular distributions for each reference and each iteration.
+        Returns:
+            plots: a list of all angular distribution plots.
+            errors: a list of errors (if some iteration does not exists.
+        """
+        plots = []
+        errors = []        
         self.setVisualizeIterations()
-        for iter in self.visualizeIters:
-            extraPath = self.protocol._getPath("ml2dextra/iter%03d/iter_classes.xmd" % iter)
-            print "extraPath=%s" % extraPath
+        
+        for iteration in self.visualizeIters:
+            extra = '%s2d' % self.protocol.getProgramId() + 'extra'
+            extraPath = self.protocol._getPath(extra + "/iter%03d/iter_classes.xmd" % iteration)
             if not os.path.exists(extraPath):
-                self.formWindow.showError('Iteration %s does not exist.' % iter)        
+                errors.append('Iteration %s does not exist.' % iteration)
             else:
+                # Create Angular plot for one iteration
                 md = MetaData("classes@%s" % extraPath)
                 md2 = MetaData()
                 md2.aggregate(md, AGGR_SUM, MDL_REF3D, MDL_WEIGHT, MDL_WEIGHT)
@@ -139,26 +152,40 @@ class XmippML3DViewer(ProtocolViewer):
                     figsize = (8, 12)
         
                 xplotter = XmippPlotter(*gridsize, figsize=figsize, 
-                                        windowTitle="Angular distribution - iteration %d" % iter)
+                                        windowTitle="Angular distribution - iteration %d" % iteration)
                 
                 for r in range(1, nrefs+1):
                     md2.importObjects(md, MDValueEQ(MDL_REF3D, r))  
                     plot_title = 'ref %d' % r
                     xplotter.plotAngularDistribution(plot_title, md2)
-                if xplotter is not None:
-                    return self._showOrReturn(xplotter)
-                    
+                
+                xplotter.draw()
+                plots.append(xplotter)
+
+        return plots, errors
 
     def _plotClassDistribution(self, e=None):
-        from numpy import arange
-        from matplotlib.ticker import FormatStrFormatter
+        self._showPlots(*self._createClassDistributionPlots())
+        
+    def _createClassDistributionPlots(self):
+        """ Plot the class distributions for each reference and each iteration.
+        Returns:
+            plots: a list of all angular distribution plots.
+            errors: a list of errors (if some iteration does not exists.
+        """
+        plots = []
+        errors = []        
         self.setVisualizeIterations()
+        
         for iter in self.visualizeIters:
-            extraPath = self.protocol._getPath("ml2dextra/iter%03d/iter_classes.xmd" % iter)
-            print "extraPath=%s" % extraPath
+            extra = '%s2d' % self.protocol.getProgramId() + 'extra'
+            extraPath = self.protocol._getPath(extra + "/iter%03d/iter_classes.xmd" % iter)
+
             if not os.path.exists(extraPath):
-                self.formWindow.showError('Iteration %s does not exist.' % iter)        
+                errors.append('Iteration %s does not exist.' % iter)        
             else:
+                from numpy import arange
+                from matplotlib.ticker import FormatStrFormatter
                 xplotter = XmippPlotter(1, 1, figsize=(4,4),
                                         windowTitle="Images distribution - iteration %d" % iter)
                 md = MetaData("classes@%s" % extraPath)
@@ -173,8 +200,13 @@ class XmippML3DViewer(ProtocolViewer):
                 a.xaxis.set_major_formatter(FormatStrFormatter('%1.0f'))
                 a.set_xlim([0.8, nrefs + 1])
                 a.bar(refs3d, weights, width, color='b')
-                if xplotter is not None:
-                    return self._showOrReturn(xplotter)
+                xplotter.draw()
+                plots.append(xplotter)
+        
+        return plots, errors
+                
+    def plotIterClassDistribution(self, iter, extraPath):
+        return xplotter
                     
     def _plotStatistics(self, e=None):
         from viewer_ml2d import createPlots
