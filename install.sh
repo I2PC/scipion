@@ -1007,8 +1007,6 @@ create_bashrc_file()
   echo "export XMIPP_HOME=$PWD" > $INC_FILE
   echo 'export PATH=$XMIPP_HOME/bin:$PATH' >> $INC_FILE
   echo 'export LD_LIBRARY_PATH=$XMIPP_HOME/lib:$LD_LIBRARY_PATH' >> $INC_FILE
-  echo 'export XMIPP_FONT_NAME=Verdana' >> $INC_FILE
-  echo 'export XMIPP_FONT_SIZE=10' >> $INC_FILE
   echo 'if [ "$BASH" != "" ]; then' >> $INC_FILE
   echo '# Load global autocomplete file ' >> $INC_FILE
   echo 'test -s $XMIPP_HOME/.xmipp.autocomplete && . $XMIPP_HOME/.xmipp.autocomplete || true' >> $INC_FILE
@@ -1071,6 +1069,11 @@ create_bashrc_file()
   echo "# This variable will point to your job submition template file               "    >> $INC_FILE
   echo "export XMIPP_PARALLEL_LAUNCH=config_launch.py                                "    >> $INC_FILE
   echo "                                                                             "    >> $INC_FILE
+  echo "#---------- Font ----------                                                  "    >> $INC_FILE
+  echo "# These variables set your personal font configuration                       "    >> $INC_FILE
+  echo 'export XMIPP_FONT_NAME=Verdana                                               '    >> $INC_FILE
+  echo 'export XMIPP_FONT_SIZE=10                                                    '    >> $INC_FILE
+  echo "                                                                             "    >> $INC_FILE
   echo "# If you have .xmipp.cfg in your home folder it will override                "    >> $INC_FILE
   echo "# this configurations                                                        "    >> $INC_FILE
   echo "                                                                             "    >> $INC_FILE
@@ -1090,8 +1093,6 @@ create_tcsh_file()
   echo 'else' >> $INC_FILE
   echo '  setenv LD_LIBRARY_PATH $XMIPP_HOME/lib' >> $INC_FILE
   echo 'endif' >> $INC_FILE
-  echo 'setenv XMIPP_FONT_NAME Verdana' >> $INC_FILE
-  echo 'setenv XMIPP_FONT_SIZE 10' >> $INC_FILE
   
   if [ $IS_MAC -eq 1 ]; then
     echo 'if($?DYLD_FALLBACK_LIBRARY_PATH) then' >> $INC_FILE
@@ -1152,6 +1153,11 @@ create_tcsh_file()
   echo "#---------- Parallel ----------                                              "    >> $INC_FILE
   echo "# This variable will point to your job submition template file               "    >> $INC_FILE
   echo "setenv XMIPP_PARALLEL_LAUNCH config_launch.py                                "    >> $INC_FILE
+  echo "                                                                             "    >> $INC_FILE
+  echo "#---------- Font ----------                                                  "    >> $INC_FILE
+  echo "# These variables set your personal font configuration                       "    >> $INC_FILE
+  echo 'setenv XMIPP_FONT_NAME Verdana                                               '    >> $INC_FILE
+  echo 'setenv XMIPP_FONT_SIZE 10                                                    '    >> $INC_FILE
   echo "                                                                             "    >> $INC_FILE
   echo "# If you have .xmipp.cfg in your home folder it will override                "    >> $INC_FILE
   echo "# this configurations                                                        "    >> $INC_FILE
