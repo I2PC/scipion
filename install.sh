@@ -1366,6 +1366,9 @@ decompressExternals()
         if ([ $DO_UNATTENDED -eq 0 ] && [ ${DELETE_ANSWER} != "Y" ] && [ ${DELETE_ANSWER} != "N" ]); then
           echo "${INTERELEMARRAY} folder exists, do you want to permanently remove it? (y)es/(n)o/(Y)es-to-all/(N)o-to-all"
           read DELETE_ANSWER
+        if [ -n ${DELETE_ANSWER} ]; then
+          DELETE_ANSWER="Y"
+        fi
         else
           DELETE_ANSWER="Y"
         fi
@@ -1395,6 +1398,10 @@ decompressPython()
       if ([ $DO_UNATTENDED -eq 0 ] && [ ${DELETE_ANSWER} != "Y" ] && [ ${DELETE_ANSWER} != "N" ]); then
         echo "${PYTHON_FOLDER} folder exists, do you want to permanently remove it? (y)es/(n)o/(Y)es-to-all/(N)o-to-all"
         read DELETE_ANSWER
+        if [ -n ${DELETE_ANSWER} ]; then
+          DELETE_ANSWER="Y"
+        fi
+
       else
         DELETE_ANSWER="Y"
       fi
@@ -1428,6 +1435,10 @@ decompressPythonModules()
           elemAt $lib "${PYTHON_MODULES}"
           echo "${INTERELEMARRAY} folder exists, do you want to permanently remove it? (y)es/(n)o/(Y)es-to-all/(N)o-to-all"
           read DELETE_ANSWER
+        if [ -n ${DELETE_ANSWER} ]; then
+          DELETE_ANSWER="Y"
+        fi
+
         else
           DELETE_ANSWER="Y"
         fi
