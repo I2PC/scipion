@@ -58,7 +58,7 @@ class XmippViewer(Viewer):
     _targets = [Image, SetOfImages, SetOfCoordinates, SetOfClasses2D, 
                 ProtImportMicrographs, XmippProtPreprocessMicrographs, ProtCTFMicrographs,
                 XmippProtParticlePicking, ProtImportParticles, XmippProtExtractParticles,
-                ProtAlign, SetOfClasses2D, SetOfCTF]
+                ProtAlign, XmippProtKerdensom, XmippProtRotSpectra, SetOfClasses2D, SetOfCTF]
     
     def __init__(self, **args):
         Viewer.__init__(self, **args)
