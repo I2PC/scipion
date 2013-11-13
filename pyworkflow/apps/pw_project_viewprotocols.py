@@ -53,6 +53,7 @@ from pyworkflow.gui.dialog import askYesNo
 from pyworkflow.gui.text import TaggedText
 from pyworkflow.gui import Canvas
 from pyworkflow.gui.graph import LevelTree
+from pyworkflow.gui.widgets import ComboBox
 
 from config import *
 from pw_browser import BrowserWindow
@@ -286,12 +287,12 @@ class ProtocolsView(tk.Frame):
         leftFrame.rowconfigure(1, weight=1)
 
         # Protocols Tree Pane        
-        protFrame = ttk.Labelframe(leftFrame, text=self.protCfg.text.get(), width=300, height=500)
+        protFrame = tk.Frame(leftFrame, width=300, height=500)
         protFrame.grid(row=1, column=0, sticky='news', padx=5, pady=5)
-        gui.configureWeigths(protFrame)
+        protFrame.columnconfigure(0, weight=1)
+        protFrame.rowconfigure(1, weight=1)
         self.protTree = self.createProtocolsTree(protFrame)
         self.updateProtocolsTree(self.protCfg)
-        
         # Create the right Pane that will be composed by:
         # a Action Buttons TOOLBAR in the top
         # and another vertical Pane with:
@@ -373,7 +374,7 @@ class ProtocolsView(tk.Frame):
     def refreshRuns(self, e=None):
         """ Refresh the status of diplayed runs. """
         self.runsTree.update()
-        self.updateRunsGraph()
+        self.updateRunsGraph(True)
         
     def createActionToolbar(self):
         """ Prepare the buttons that will be available for protocol actions. """
@@ -417,6 +418,15 @@ class ProtocolsView(tk.Frame):
         
     def createProtocolsTree(self, parent):
         """Create the protocols Tree displayed in left panel"""
+        comboFrame = tk.Frame(parent)
+        tk.Label(comboFrame, text='View').grid(row=0, column=0, padx=(0, 5), pady=5)
+        choices = [pm.text.get() for pm in self.settings.protMenuList]
+        initialChoice = choices[self.settings.protMenuList.getIndex()]
+        combo = ComboBox(comboFrame, choices=choices, initial=initialChoice)
+        combo.setChangeCallback(self._onSelectProtocols)
+        combo.grid(row=0, column=1)
+        comboFrame.grid(row=0, column=0, padx=5, pady=5, sticky='nw')
+        
         tree = Tree(parent, show='tree')
         tree.column('#0', minwidth=300)
         tree.tag_configure('protocol', image=self.getImage('python_file.gif'))
@@ -424,9 +434,17 @@ class ProtocolsView(tk.Frame):
         tree.tag_configure('protocol_base', image=self.getImage('class_obj.gif'))
         f = tkFont.Font(family='verdana', size='10', weight='bold')
         tree.tag_configure('section', font=f)
-        tree.grid(row=0, column=0, sticky='news')
+        tree.grid(row=1, column=0, sticky='news')
         return tree
-    
+
+    def _onSelectProtocols(self, combo):
+        """ This function will be called when a protocol menu
+        is selected. The index of the new menu is passed. 
+        """
+        protIndex = combo.getIndex()
+        self.protCfg = self.settings.setCurrentProtocolMenu(protIndex)
+        self.updateProtocolsTree(self.protCfg)
+                
     def updateProtocolsTree(self, protCfg):
         self.protCfg = protCfg
         self.protTree.clear()
@@ -593,23 +611,26 @@ class ProtocolsView(tk.Frame):
     def _runActionClicked(self, action):
         prot = self.selectedProtocol
         if prot:
-            if action == ACTION_DEFAULT:
-                pass
-            elif action == ACTION_EDIT:
-                self._openProtocolForm(prot)
-            elif action == ACTION_COPY:
-                newProt = self.project.copyProtocol(prot)
-                self._openProtocolForm(newProt)
-            elif action == ACTION_DELETE:
-                self._deleteProtocol(prot)
-            elif action == ACTION_STEPS:
-                self._browseRunData()
-            elif action == ACTION_STOP:
-                self._stopProtocol(prot)
-            elif action == ACTION_CONTINUE:
-                self._continueProtocol(prot)
-            elif action == ACTION_RESULTS:
-                self._analyzeResults(prot)
+            try:
+                if action == ACTION_DEFAULT:
+                    pass
+                elif action == ACTION_EDIT:
+                    self._openProtocolForm(prot)
+                elif action == ACTION_COPY:
+                    newProt = self.project.copyProtocol(prot)
+                    self._openProtocolForm(newProt)
+                elif action == ACTION_DELETE:
+                    self._deleteProtocol(prot)
+                elif action == ACTION_STEPS:
+                    self._browseRunData()
+                elif action == ACTION_STOP:
+                    self._stopProtocol(prot)
+                elif action == ACTION_CONTINUE:
+                    self._continueProtocol(prot)
+                elif action == ACTION_RESULTS:
+                    self._analyzeResults(prot)
+            except Exception, ex:
+                self.windows.showError(str(ex))
  
         # Following actions do not need a select run
         if action == ACTION_TREE:

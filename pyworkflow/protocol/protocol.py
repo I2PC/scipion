@@ -619,8 +619,14 @@ class Protocol(Step):
         makePath(*paths)
     
     def _run(self):
+        # Check that a proper Steps executor have been set
         if self._stepsExecutor is None:
             raise Exception('Protocol.run: Steps executor should be set before running protocol')
+        # Check the parameters are correct
+        errors = self.validate()
+        if len(errors):
+            raise Exception('Protocol.run: Validation errors:\n' + '\n'.join(errors))
+        
         self.runJob = self._stepsExecutor.runJob
         self.__backupSteps() # Prevent from overriden previous stored steps
         self._defineSteps() # Define steps for execute later
@@ -806,6 +812,9 @@ class Protocol(Step):
         """ Return a summary message to provide some information to users. """
         return self._summary() + ['', '<Comments:>', self.getObjComment()]
     
+    
+#---------- Helper functions related to Protocols --------------------
+
 def getProtocolFromDb(dbPath, protId, protDict):
     from pyworkflow.mapper import SqliteMapper
     mapper = SqliteMapper(dbPath, protDict)
@@ -842,11 +851,3 @@ def runProtocolFromDb(dbPath, protId, protDict, mpiComm=None):
     # Finally run the protocol
     protocol.run()        
 
-        
-    
-def runProtocol(dbPath, protId, mpiComm=None):
-    """ Given a project and a protocol run, execute.
-    This is a factory function to instantiate necessary classes.
-    The protocol run should be previously inserted in the database.
-    """
-    pass   

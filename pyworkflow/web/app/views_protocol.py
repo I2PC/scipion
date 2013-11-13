@@ -124,7 +124,10 @@ def protocol(request):
     if len(errors) == 0:
         # No errors 
         # Finally, launch the protocol
-        project.launchProtocol(protocol)
+        try:
+            project.launchProtocol(protocol)
+        except Exception, ex:
+            errors = [str(ex).replace('\n', '<br/>')]
     jsonStr = json.dumps({'errors' : errors}, ensure_ascii=False)
     
     return HttpResponse(jsonStr, mimetype='application/javascript')   
