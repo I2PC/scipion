@@ -251,9 +251,9 @@ def run(notebook):
     out = OUTPUT
     procs = options.getNumberOfCpu()
     if sys.platform  == 'win32':
-        scons = "external/scons/scons.py"
+        scons = "scons/scons.py"
     else:
-        scons = os.path.join("external", "scons", "scons.py")
+        scons = os.path.join("scons", "scons.py")
     os.environ['JAVA_HOME'] = notebook.getValue('Compilers', 'JAVA_HOME', 'Java')
     cmd = ''   
     if out != STDOUT and os.path.exists(out):
@@ -407,7 +407,7 @@ if options.hasOption('configure'):
             assign = '%s = "%s"' % (parts[0], parts[1])
             exec(assign) # Take options from command line, override options file, be carefull with exec
 
-    scons = os.path.join("external", "scons", "scons.py")
+    scons = os.path.join("scons", "scons.py")
     pid = os.fork()
     if not pid:
         print "*** CHECKING EXTERNAL DEPENDENCIES..."

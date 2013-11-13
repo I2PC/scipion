@@ -7,8 +7,8 @@ import sys
 import platform 
 
 # ADD PATH to Scons and other Tools
-sys.path.append(join('external', 'scons', 'ToolsFromWiki'))
-sys.path.append(join('external', 'scons', 'scons-local-2.3.0', 'engine'))
+#sys.path.append(join('scons', 'ToolsFromWiki'))
+#sys.path.append(join('scons', 'scons-local-2.3.0', 'engine'))
 
 import SCons.Script
 
@@ -19,8 +19,8 @@ if platform.system() == 'Windows':
     env.PrependENVPath('LIB', 'C:\\MinGW\\lib') 
 else:
     env = Environment(ENV=os.environ,
-          tools=['default', 'disttar', "URLDownload", "Unpack"],
-	  toolpath=['external/scons/ToolsFromWiki'])
+                      tools=['default', 'disttar', "URLDownload", "Unpack"],
+                      toolpath=['scons/Tools'])
     env.AppendUnique(LIBPATH=os.environ['LD_LIBRARY_PATH'])
     env.AppendUnique(LIBPATH=['/usr/lib64/openmpi/lib','/usr/lib64/mpi/gcc/openmpi/lib64','/usr/lib/openmpi'])
 
