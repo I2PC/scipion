@@ -374,7 +374,7 @@ class ProtocolsView(tk.Frame):
     def refreshRuns(self, e=None):
         """ Refresh the status of diplayed runs. """
         self.runsTree.update()
-        self.updateRunsGraph()
+        self.updateRunsGraph(True)
         
     def createActionToolbar(self):
         """ Prepare the buttons that will be available for protocol actions. """
@@ -611,23 +611,26 @@ class ProtocolsView(tk.Frame):
     def _runActionClicked(self, action):
         prot = self.selectedProtocol
         if prot:
-            if action == ACTION_DEFAULT:
-                pass
-            elif action == ACTION_EDIT:
-                self._openProtocolForm(prot)
-            elif action == ACTION_COPY:
-                newProt = self.project.copyProtocol(prot)
-                self._openProtocolForm(newProt)
-            elif action == ACTION_DELETE:
-                self._deleteProtocol(prot)
-            elif action == ACTION_STEPS:
-                self._browseRunData()
-            elif action == ACTION_STOP:
-                self._stopProtocol(prot)
-            elif action == ACTION_CONTINUE:
-                self._continueProtocol(prot)
-            elif action == ACTION_RESULTS:
-                self._analyzeResults(prot)
+            try:
+                if action == ACTION_DEFAULT:
+                    pass
+                elif action == ACTION_EDIT:
+                    self._openProtocolForm(prot)
+                elif action == ACTION_COPY:
+                    newProt = self.project.copyProtocol(prot)
+                    self._openProtocolForm(newProt)
+                elif action == ACTION_DELETE:
+                    self._deleteProtocol(prot)
+                elif action == ACTION_STEPS:
+                    self._browseRunData()
+                elif action == ACTION_STOP:
+                    self._stopProtocol(prot)
+                elif action == ACTION_CONTINUE:
+                    self._continueProtocol(prot)
+                elif action == ACTION_RESULTS:
+                    self._analyzeResults(prot)
+            except Exception, ex:
+                self.windows.showError(str(ex))
  
         # Following actions do not need a select run
         if action == ACTION_TREE:

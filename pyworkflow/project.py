@@ -44,6 +44,7 @@ PROJECT_RUNS = 'Runs'
 PROJECT_TMP = 'Tmp'
 PROJECT_SETTINGS = 'settings.sqlite'
 
+
 class Project(object):
     """This class will handle all information 
     related with a Project"""
@@ -58,6 +59,7 @@ class Project(object):
         self.tmpPath = self.addPath(PROJECT_TMP)
         self.settingsPath = self.addPath(PROJECT_SETTINGS)
         self.runs = None
+        self._runsGraph = None
         
     def getObjId(self):
         """ Return the unique id assigned to this project. """
@@ -135,6 +137,8 @@ class Project(object):
         3. Call the launch method in protocol.job to handle submition: mpi, thread, queue,
         and also take care if the execution is remotely."""
         #print ">>> PROJECT: launchProtocol"
+        self._checkProtocolDependencies(protocol, 'Cannot RE-LAUNCH protocol')
+        
         protocol.setStatus(STATUS_LAUNCHED)
         self._setupProtocol(protocol)
         
@@ -197,7 +201,22 @@ class Project(object):
                 break
         self.launchProtocol(protocol)
         
+    def _checkProtocolDependencies(self, protocol, msg):
+        """ Raise an exception if the protocol have dependencies.
+        The message will be prefixed to the exception error. 
+        """
+        # Check if the protocol have any dependencies
+        node = self.getRunsGraph().getNode(protocol.strId())
+        childs = node.getChilds()
+        if len(childs):
+            deps = [' ' + c.run.getRunName() for c in childs]
+            msg += ' <%s>\n' % protocol.getRunName()
+            msg += 'It is referenced from:\n'
+            raise Exception(msg + '\n'.join(deps))
+        
     def deleteProtocol(self, protocol):
+        self._checkProtocolDependencies(protocol, 'Cannot DELETE protocol')
+        
         self.mapper.delete(protocol) # Delete from database
         wd = protocol.workingDir.get()
         if wd.startswith(PROJECT_RUNS):
@@ -217,6 +236,8 @@ class Project(object):
         return newProt
     
     def saveProtocol(self, protocol):
+        self._checkProtocolDependencies(protocol, 'Cannot SAVE protocol')
+        
         protocol.setStatus(STATUS_SAVED)
         if protocol.hasObjId():
             self._storeProtocol(protocol)
@@ -267,45 +288,45 @@ class Project(object):
         """ Build a graph taking into account the dependencies between
         different runs, ie. which outputs serves as inputs of other protocols. 
         """
-        #import datetime as dt # TIME PROFILE
-        #t = dt.datetime.now()
-        outputDict = {} # Store the output dict
-        runs = self.getRuns(refresh=refresh)
-        from pyworkflow.utils.graph import Graph
-        g = Graph(rootName='PROJECT')
-        
-        for r in runs:
-            n = g.createNode(r.strId())
-            n.run = r
-            n.label = r.getRunName()
+        if refresh or self._runsGraph is None:
+            outputDict = {} # Store the output dict
+            runs = self.getRuns(refresh=True)
+            from pyworkflow.utils.graph import Graph
+            g = Graph(rootName='PROJECT')
             
-            for _, attr in r.iterOutputAttributes(EMObject):
-                outputDict[attr.getName()] = n # mark this output as produced by r
+            for r in runs:
+                n = g.createNode(r.strId())
+                n.run = r
+                n.label = r.getRunName()
+                
+                for _, attr in r.iterOutputAttributes(EMObject):
+                    outputDict[attr.getName()] = n # mark this output as produced by r
+                
+            def _checkInputAttr(node, pointed):
+                """ Check if an attr is registered as output"""
+                pointedName = pointed.getName()
+                if pointedName in outputDict:
+                    parentNode = outputDict[pointedName]
+                    parentNode.addChild(node)
+                    return True
+                return False
+                
+            for r in runs:
+                node = g.getNode(r.strId())
+                for _, attr in r.iterInputAttributes():
+                    if attr.hasValue():
+                        pointed = attr.get()
+                        # Only checking pointed object and its parent, if more levels
+                        # we need to go up to get the correct dependencies
+                        _checkInputAttr(node, pointed) or _checkInputAttr(node, self.mapper.getParent(pointed))
+            rootNode = g.getRoot()
+            rootNode.run = None
+            rootNode.label = "PROJECT"
             
-        def _checkInputAttr(node, pointed):
-            """ Check if an attr is registered as output"""
-            pointedName = pointed.getName()
-            if pointedName in outputDict:
-                parentNode = outputDict[pointedName]
-                parentNode.addChild(node)
-                return True
-            return False
+            for n in g.getNodes():
+                if n.isRoot() and not n is rootNode:
+                    rootNode.addChild(n)
+            self._runsGraph = g
             
-        for r in runs:
-            node = g.getNode(r.strId())
-            for _, attr in r.iterInputAttributes():
-                if attr.hasValue():
-                    pointed = attr.get()
-                    # Only checking pointed object and its parent, if more levels
-                    # we need to go up to get the correct dependencies
-                    _checkInputAttr(node, pointed) or _checkInputAttr(node, self.mapper.getParent(pointed))
-                    
-        rootNode = g.getRoot()
-        rootNode.run = None
-        rootNode.label = "PROJECT"
-        
-        for n in g.getNodes():
-            if n.isRoot() and not n is rootNode:
-                rootNode.addChild(n)
-        return g
+        return self._runsGraph
         

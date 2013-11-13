@@ -713,7 +713,10 @@ class FormWindow(Window):
                 if not onlySave:
                     self.close()
         except Exception, ex:
-            self.showError("Error during save: " + str(ex))
+            action = "EXECUTE"
+            if onlySave:
+                action = "SAVE"
+            self.showError("Error during %s: %s" % (action, ex))
            
     def _fillSection(self, sectionParam, sectionWidget):
         parent = sectionWidget.contentFrame
