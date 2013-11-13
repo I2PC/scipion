@@ -34,7 +34,13 @@ from protlib_utils import printLog
 from shutil import copyfile
 from config_protocols import PROJECT_DB
 from fnmatch import fnmatch
+
+##############################################################
+# NEVER IMPORT xmipp FROM HERE, BECAUSE IT IS USED AT
+# COMPILATION, WHERE xmipp DOES NOT EXIST YET
+#
 # from xmipp import *
+##############################################################
 
 # The following are Wrappers to be used from Protocols
 # providing filesystem utilities
@@ -219,6 +225,12 @@ def getXmippPath(*subpath):
         return join(os.environ['XMIPP_HOME'], *subpath)  
     else:
         raise Exception('XMIPP_HOME environment variable not set') 
+    
+def getXmippVersion():
+    versionFilePath = getXmippPath("VERSION")
+    f = open(versionFilePath)
+    version = f.readline()
+    return version
 
 def includeProtocolsDir():
     protDir = getXmippPath('protocols')
