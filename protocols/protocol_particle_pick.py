@@ -42,6 +42,11 @@ class ProtParticlePicking(XmippProtocol):
     
     def createFilenameTemplates(self):
         return {
+                 'training': join('%(ExtraDir)s', '%(model)s_training.txt'), 
+                 'pca': join('%(ExtraDir)s', '%(model)s_pca_model.stk'),
+                 'rotpca': join('%(ExtraDir)s', '%(model)s_rotpca_model.stk'),
+                 'svm': join('%(ExtraDir)s', '%(model)s_svm.txt'),
+                 'average': join('%(ExtraDir)s', '%(model)s_particle_avg.xmp'),
                  'pos': join('%(ExtraDir)s', '%(micrograph)s.pos'),
                  'templates': join('%(ExtraDir)s', 'templates.stk'),
                  'config': join('%(ExtraDir)s','config.xmd')
