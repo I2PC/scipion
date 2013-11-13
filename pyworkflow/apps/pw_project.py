@@ -97,41 +97,7 @@ class ProjectWindow(gui.Window):
         self.switchView(VIEW_PROTOCOLS)
 
     def createMainMenu(self):
-        menu = gui.Window.createMainMenu(self, self.menuCfg) 
-        self._createProtocolsMenu(menu)
-                
-    def _createProtocolsMenu(self, menu):
-        """ Add all possible configurations of protocols 
-        to be selected from the menu.
-        """
-        self.protMenu = tk.Menu(self.root, tearoff=0)
-        menu.add_cascade(label='Protocols', menu=self.protMenu)
-        protList = self.settings.protMenuList
-        for i, pm in enumerate(protList):
-            def addSubMenu(i, l):
-                self.protMenu.add_command(label=l, command=lambda: self._onSelectProtocols(i))
-                self._unmarkProtocolMenu(i)
-            addSubMenu(i, pm.text.get())
-        self._markProtocolMenu()
-        
-    def _markProtocolMenu(self):
-        self.protMenu.entryconfig(self.protIndex, image=self.getImage('button_ok.png'), compound=tk.LEFT)
-        
-    def _unmarkProtocolMenu(self, protIndex):
-        self.protMenu.entryconfig(protIndex, image=self.getImage('button_empty.png'), compound=tk.LEFT)
-                  
-    def _onSelectProtocols(self, protIndex):
-        """ This function will be called when a protocol menu
-        is selected. The index of the new menu is passed. 
-        """
-        self.protCfg = self.settings.setCurrentProtocolMenu(protIndex)
-        self.saveSettings()
-        if self.view == VIEW_PROTOCOLS: # Force to reload protocol view if selected
-            self.viewWidget.updateProtocolsTree(self.protCfg)
-        self._unmarkProtocolMenu(self.protIndex)
-        self.protIndex = protIndex
-        self._markProtocolMenu()
-            #self.switchView(self.view)
+        gui.Window.createMainMenu(self, self.menuCfg) 
         
     def createHeaderFrame(self, parent):
         """ Create the Header frame at the top of the windows.
@@ -226,13 +192,7 @@ class ProjectWindow(gui.Window):
         self.generalCfg = self.settings.getConfig()
         self.menuCfg = self.settings.getCurrentMenu()
         self.protCfg = self.settings.getCurrentProtocolMenu()
-        self.protIndex = self.settings.protMenuList.getIndex()
                 
-#    def loadProjectConfig(self):
-#        self.settings = config.loadSettings(self.project.getSettingsPath())
-#        self.configMapper = ConfigMapper(getConfigPath('configuration.xml'), globals())
-#        self.menuCfg = loadConfig(self.generalCfg, 'menu')
-#        self.protCfg = loadConfig(self.generalCfg, 'protocols')
 
 
 if __name__ == '__main__':
