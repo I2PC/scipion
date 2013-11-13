@@ -20,7 +20,7 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jose.gutierrez@cnb.csic.es'
+# *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
 
@@ -174,9 +174,9 @@ def save_protocol(request):
     project, protocol = loadProtocolProject(request)
     updateProtocolParams(request, protocol, project)
     project.saveProtocol(protocol)
+    protId = protocol.getObjId()
     
-    return HttpResponse(mimetype='application/javascript')
-
+    return HttpResponse(protId, mimetype='application/javascript')
 
 # Method to delete a protocol #
 def delete_protocol(request):

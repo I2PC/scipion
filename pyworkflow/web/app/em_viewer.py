@@ -20,7 +20,7 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jose.gutierrez@cnb.csic.es'
+# *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
 
@@ -81,6 +81,8 @@ def viewerXmipp(project, protocol, viewer):
         objId = protocol.outputParticles.getObjId()
         protId = protocol.getObjId()
         ioDict["plot"] = "/view_plot_xmipp/?protocolId="+ str(protId)
+        
+    print objId
         
     from views_showj import visualizeObject
     ioDict["url"] = "/visualize_object/?objectId="+str(objId)

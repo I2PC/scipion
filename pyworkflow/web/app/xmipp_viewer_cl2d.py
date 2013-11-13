@@ -20,7 +20,7 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jose.gutierrez@cnb.csic.es'
+# *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
 
@@ -70,6 +70,8 @@ def viewLevelFiles(request, protocolViewer):
                     files = files.split("-")
                     files.pop()
                     return "showjs", files
+    else:
+        return "error", "Files not found"
                     
 
 def viewClassHierarchy(request, protocolViewer):
@@ -77,4 +79,7 @@ def viewClassHierarchy(request, protocolViewer):
     fnHierarchy = protocolViewer.protocol._getExtraPath("classes%s_hierarchy.txt" % fnSubset)
     if os.path.exists(fnHierarchy):
         html = textfileViewer(fnHierarchy, [fnHierarchy])
-    return "html", html
+        return "html", html
+    else:
+        return "error", "File not found"
+        
