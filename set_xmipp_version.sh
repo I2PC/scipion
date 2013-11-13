@@ -1,7 +1,7 @@
 #!/bin/bash
 # Update Xmipp version number in the files that require it (see FILE variable below),
 # and cannot update themselves
-# To change the version number, simply update "VERSION" file
+# !!! To change the version number, run xmipp_python set_version
 
 FILE=Doxyfile
 if [ ! -f $FILE ]
