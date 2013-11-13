@@ -304,10 +304,12 @@ def animateModes(log,WorkingDir,LastMode,Amplitude,NFrames,Downsample,PseudoAtom
     changeDir(log,WorkingDir)
     if StructureType=="EM":
         fn="pseudoatoms.pdb"
+        runJob(log,"nma_animate_pseudoatoms.py","%s extra/vec_ani.pkl 7 %d %f extra/animations/animated_mode %d %d %f"%\
+                  (fn,LastMode,Amplitude,NFrames,Downsample,PseudoAtomThreshold))
     else:
         fn="atoms.pdb"
-    runJob(log,"nma_animate.py","%s extra/vec_ani.pkl 7 %d %f extra/animations/animated_mode %d %d %f"%\
-                  (fn,LastMode,Amplitude,NFrames,Downsample,PseudoAtomThreshold))
+    	runJob(log,"nma_animate_atoms.py","%s extra/vec_ani.pkl 7 %d %f extra/animations/animated_mode %d"%\
+                  (fn,LastMode,Amplitude,NFrames))
     
     for mode in range(7,LastMode+1):
         fnAnimation="extra/animations/animated_mode_%03d"%mode
