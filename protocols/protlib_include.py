@@ -282,6 +282,7 @@ def expandResize():
 DoResize = False
 
 #{condition}(DoResize) New image size
+""" New size in pixels of the images """
 NewSize = 0
 
 # Crop
