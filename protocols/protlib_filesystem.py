@@ -226,11 +226,34 @@ def getXmippPath(*subpath):
     else:
         raise Exception('XMIPP_HOME environment variable not set') 
     
+VERSION_PARAMETERS_VERSION = "version"
+VERSION_PARAMETERS_HASH = "git_hash"
+
 def getXmippVersion():
+    return getXmippVersionParameter(VERSION_PARAMETERS_VERSION)
+
+def getXmippHash():
+    return getXmippVersionParameter(VERSION_PARAMETERS_HASH)
+
+def getXmippVersionParameter(key):
+    param = ""
+    try:
+        param = getXmippVersionParameters()[key]
+    except KeyError, e:
+        print "Parameter '%s' not found" % (key)
+    return param
+
+
+def getXmippVersionParameters():
     versionFilePath = getXmippPath("VERSION")
-    f = open(versionFilePath)
-    version = f.readline()
-    return version
+    global_parameters = {}
+    local_parameters = {}
+    try:
+        execfile(versionFilePath, global_parameters, local_parameters)
+    except SyntaxError, e:
+        print "Error processing version file"
+        return {}
+    return local_parameters
 
 def includeProtocolsDir():
     protDir = getXmippPath('protocols')
