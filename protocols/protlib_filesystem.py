@@ -240,6 +240,9 @@ def getXmippVersion():
 def getXmippHash():
     return getXmippVersionParameter(versionParameters["HASH"])
 
+def getXmippDate():
+    return getXmippVersionParameter(versionParameters["DATE"])
+
 def getXmippVersionParameter(key):
     param = ""
     try:
