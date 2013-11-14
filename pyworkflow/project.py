@@ -207,6 +207,8 @@ class Project(object):
         """
         # Check if the protocol have any dependencies
         node = self.getRunsGraph().getNode(protocol.strId())
+        if node is None:
+            return
         childs = node.getChilds()
         if len(childs):
             deps = [' ' + c.run.getRunName() for c in childs]
