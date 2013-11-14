@@ -110,7 +110,7 @@ $(document).ready(function() {
 						if (val == 'Y') {
 							window.opener.location.reload(true);
 							window.close();
-							popup('/form/?protocolId='+protId);
+							window.opener.popup('/form/?protocolId='+protId);
 						}
 					}
 				});
