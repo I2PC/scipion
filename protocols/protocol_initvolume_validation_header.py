@@ -16,13 +16,13 @@
 """ 
 Provide a metadata or stack with the classes
 """
-Classes = ""
+fnClasses = ""
 
 # {file}(images*.xmd){validate}(PathExists) Set of projections:
 """ 
 Provide the experimental projections
 """
-Projections = ""
+fnProjections = ""
 
 # Symmetry group
 """ See [http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Symmetry]
@@ -39,7 +39,7 @@ AngularSampling = 5
 #{file}(*.vol) Initial Volume:
 """ Initial volume to be validated
 """
-InitialVolume = ''
+fnInitialVolume = ''
 
 
 
