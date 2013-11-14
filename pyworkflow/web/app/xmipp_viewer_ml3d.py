@@ -20,7 +20,7 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jose.gutierrez@cnb.csic.es'
+# *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
 
@@ -91,8 +91,10 @@ def doPlotAngularDistribution(request, protocolViewer):
 def plotAngularDistribution(request, protocolViewer):
     protocolViewer.iterToShow.set(request.GET.get('iterToShow', None))
     plots, errors = protocolViewer._createAngularDistributionPlots()
-    xplotter = plots[0]
-    return xplotter
+    if len(errors) != 0:
+        pass
+    else:
+        return plots
     
 def doPlotClassDistribution(request, protocolViewer):
     iterToShow = str(protocolViewer.iterToShow.get())
@@ -105,7 +107,10 @@ def plotClassDistribution(request, protocolViewer):
     protocolViewer.iterToShow.set(request.GET.get('iterToShow', None))
     plots, errors = protocolViewer._createClassDistributionPlots()
     xplotter = plots[0]
-    return xplotter
+    if len(errors) != 0:
+        pass
+    else:
+        return plots
 
 def doPlotStatistics(request, protocolViewer):
     protViewerClass = str(protocolViewer.getClassName())

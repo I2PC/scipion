@@ -20,7 +20,7 @@
  * 02111-1307  USA
  *
  *  All comments concerning this program package may be sent to the
- *  e-mail address 'jose.gutierrez@cnb.csic.es'
+ *  e-mail address 'jmdelarosa@cnb.csic.es'
  *
  **************************************************************************/
 
@@ -96,7 +96,7 @@ $(document).ready(function() {
 			
 			var msg = messiInfo("The protocol was saved successfuly");
 
-			$.post(action, $("#protocolForm").serialize(), function() {
+			$.post(action, $("#protocolForm").serialize(), function(protId) {
 				new Messi(msg, {
 					title : 'Success',
 					modal : true,
@@ -109,11 +109,12 @@ $(document).ready(function() {
 					callback : function(val) {
 						if (val == 'Y') {
 							window.opener.location.reload(true);
-							// window.close();
+							window.close();
+							popup('/form/?protocolId='+protId);
 						}
 					}
 				});
-			});
+			},"text");
 		} else if (mode == 'wiz') {
 			
 			new Messi("<img src='/resources/tools_wizard.png'/>  Loading Wizard...",{
