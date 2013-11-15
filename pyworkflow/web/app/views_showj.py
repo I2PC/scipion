@@ -73,7 +73,6 @@ def showj(request, inputParameters=None):
     request.session['blockComboBox'] = inputParameters['blockComboBox']
     request.session['imageDimensions'] = _imageDimensions
 
-    print "getNumberSlices",dataset.getNumberSlices()
     showjForm = ShowjForm(dataset,
                           inputParameters['tableLayoutConfiguration'],
                           #request.POST if request.method == 'POST' else inputParameters) # A form bound for the POST data and unbound for the GET
@@ -375,7 +374,9 @@ def visualizeObject(request):
                        'volumesToRenderComboBox': '',       # If 3D, Volume to be displayed in gallery, volume_astex and volume_chimera mode. If None the first one will be displayed
 #                       'dims': '2d',                        # Object Dimensions
                        'goto': 1,                           # Element selected (metadata record) by default. It can be a row in table mode or an image in gallery mode
-                       'colRowMode': 'Off',                 # In gallery mode 'On' means columns can be adjust manually by the user. When 'Off' columns are adjusted automatically to screen width. 
+                       'colRowMode': 'Off',                 # In gallery mode 'On' means columns can be adjust manually by the user. When 'Off' columns are adjusted automatically to screen width.
+                       'cols':  '',                         # In gallery mode (and colRowMode set to 'On') cols define number of columns to be displayed
+                       'rows': '',                          # In gallery mode (and colRowMode set to 'On') rows define number of columns to be displayed
                        'mirrorY': False,                    # When 'True' image are mirrored in Y Axis 
                        'applyTransformMatrix': False,       # When 'True' if there is transform matrix, it will be applied
                        'onlyShifts': False,                 # When 'True' if there is transform matrix, only shifts will be applied
