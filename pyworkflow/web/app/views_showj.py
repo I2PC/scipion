@@ -39,15 +39,18 @@ def showj(request, inputParameters=None):
     inputParameters['tableLayoutConfiguration']= TableLayoutConfiguration(dataset, tableDataset, inputParameters['allowRender'])
 
     #If no label is set to render, set the first one if exists
-    if inputParameters['labelsToRenderComboBox'] == '':
+    if 'labelsToRenderComboBox' not in inputParameters or inputParameters['labelsToRenderComboBox'] == '' or request.session['blockComboBox'] != inputParameters['blockComboBox']:
         labelsToRenderComboBoxValues = getLabelsToRenderComboBoxValues(inputParameters['tableLayoutConfiguration'].columnsLayout)
         inputParameters['labelsToRenderComboBox']=labelsToRenderComboBoxValues[0][0] if len(labelsToRenderComboBoxValues) > 0 else ''
 
     dataset.setLabelToRender(inputParameters['labelsToRenderComboBox']) 
+
+    print "labeltorender",inputParameters['labelsToRenderComboBox']
     
     if inputParameters['labelsToRenderComboBox'] == '':
         inputParameters['zoom']=0
         _imageDimensions = None
+        dataset.setNumberSlices(0)
     else:
         
         _imageVolName = inputParameters['volumesToRenderComboBox'] if ("volumesToRenderComboBox" in inputParameters and inputParameters['volumesToRenderComboBox'] != '') else tableDataset.getElementById(0,inputParameters['labelsToRenderComboBox'])
@@ -71,9 +74,11 @@ def showj(request, inputParameters=None):
 #        if (_imageDimensions != ''):
     request.session['imageDimensions'] = _imageDimensions
 
+    print "getNumberSlices",dataset.getNumberSlices()
     showjForm = ShowjForm(dataset,
                           inputParameters['tableLayoutConfiguration'],
-                          request.POST if request.method == 'POST' else inputParameters) # A form bound for the POST data and unbound for the GET
+                          #request.POST if request.method == 'POST' else inputParameters) # A form bound for the POST data and unbound for the GET
+                          inputParameters) # A form bound for the POST data and unbound for the GET
         
     if showjForm.is_valid() is False:
         print showjForm.errors

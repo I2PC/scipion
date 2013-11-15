@@ -27,10 +27,10 @@
 	$(document).ready(function(){ 
 		
 		
-		{% if form.mode.value != 'column'  %}
+		{% if form.mode.value != 'column' and dataset.getNumberSlices > 0 %}
 		setImageSize(true)
 		initializeZoomEvents();
-		{% if form.mode.value == 'gallery'  %}
+		{% if form.mode.value == 'gallery' %}
 		initializeColRowModeEvents()
 		initializeColsRowsEvents()
 		{% endif %}
@@ -225,6 +225,9 @@
 	function setImageSize(refreshElement){
 		/* Gets zoom and image width and height */
 		zoom_element=$('#id_zoom')
+		console.log("taka")
+		console.log({{imageDimensions.1}})
+		console.log({{imageDimensions.0}})
 		
 		imageHeight_val = parseInt({{imageDimensions.1}})
 		imageWidth_val = parseInt({{imageDimensions.0}})
@@ -260,6 +263,14 @@
 		
 		/*  CHECK ZOOM VALUE IS A NUMBER BETWEEN MAX AND MIN*/
 		tableImages_height=tableImages_width*ratio
+		
+		console.log(tableImages_width)
+		console.log(tableImages_height)
+		console.log({{form.imageMaxWidth.value}})
+		console.log({{form.imageMinWidth.value}})
+		console.log({{form.imageMaxHeight.value}})
+		console.log({{form.imageMinHeight.value}})
+		
 		if (isNaN(tableImages_width) || tableImages_width>{{form.imageMaxWidth.value}} || tableImages_width<{{form.imageMinWidth.value}} || tableImages_height>{{form.imageMaxHeight.value}} || tableImages_height<{{form.imageMinHeight.value}}){
 			alert('Incorrect table width or height: '+tableImages_width+'px x '+ tableImages_height +'px.')
 			zoom_element.val(previousZoom)
