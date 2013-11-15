@@ -33,8 +33,7 @@ import ttk
 
 from protlib_gui_ext import centerWindows, XmippButton, registerCommonFonts, showInfo, showError, OutputText,\
     getGeometry, Fonts, TaggedText
-from protlib_filesystem import getXmippPath
-import protlib_xmipp
+from protlib_filesystem import getXmippPath, getXmippVersion
         
 class AboutFrame(tk.Frame):
 
@@ -74,7 +73,7 @@ class AboutFrame(tk.Frame):
         imgPath = getXmippPath('resources', 'xmipp_logo.gif')
         self.img = tk.PhotoImage(file=imgPath)
         tk.Label(leftFrame, image=self.img, bg=bgColor).grid(column=0, row=0, sticky='we')
-        tk.Label(leftFrame, text='Xmipp '+ protlib_xmipp.getXmippVersion(),  font=Fonts['button'], bg=bgColor).grid(column=0, row=1, sticky='we')
+        tk.Label(leftFrame, text='Xmipp '+ getXmippVersion(),  font=Fonts['button'], bg=bgColor).grid(column=0, row=1, sticky='we')
 #       TODO: insert revision extracting it from git repository
 #        tk.Label(leftFrame, text='r12.4.3.11834', bg=bgColor).grid(column=0, row=2, sticky='we')
         leftFrame.grid(column=0, row=0, sticky='nsew', padx=5, pady=5, rowspan=2)

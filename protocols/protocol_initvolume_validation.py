@@ -38,12 +38,14 @@ class ProtInitVolValidate(XmippProtocol):
         
     def defineSteps(self):
         self.insertStep('createDir',path=self.ExtraDir)
-        self.insertStep("linkAcquisitionInfo",InputFile=self.Classes,dirDest=self.WorkingDir)
-   
+        self.insertStep("linkAcquisitionInfo",InputFile=self.fnClasses,dirDest=self.WorkingDir)
+        self.insertStep("createNoisyImages",WorkingDir=self.WorkingDir, fnClasses=self.fnClasses, 
+                        fnProjections=self.fnProjections,SymmetryGroup=self.SymmetryGroup)      
+  
     def summary(self):
         message = []
-        message.append("Set of classes: [%s] " % self.Classes)
-        message.append("Volume: [%s] " % self.InitialVolume)
+        message.append("Set of classes: [%s] " % self.fnClasses)
+        message.append("Volume: [%s] " % self.fnInitialVolume)
         message.append("Symmetry: %s " % self.SymmetryGroup)
         return message
     
@@ -54,6 +56,16 @@ class ProtInitVolValidate(XmippProtocol):
     def visualize(self):
         #fnAligned = 'classes_aligned@' + self.workingDirPath('classes.xmd')
         #runShowJ(fnAligned, extraParams="--mode metadata --render first")
-        os.system('xmipp_chimera_client -i '+self.InitialVolume+' --mode projector 256 &')
+        os.system('xmipp_chimera_client -i '+self.fnInitialVolume+' --mode projector 256 &')
+
+def createNoisyImages(log,WorkingDir,fnClasses,fnProjections,SymmetryGroup):
+
+    fnOut=os.path.join(WorkingDir,'extra/noisyImages')
+    runJob(log,'xmipp_image_operate','-i %s -o %s.stk --reset --save_metadata_stack'%(fnProjections,fnOut))
+    runJob(log,'xmipp_transform_add_noise','-i %s.stk --type gaussian 1'%fnOut)
+    runJob(log,'xmipp_reconstruct_fourier','-i %s.xmd -o %s.vol --sym %s --weight --max_resolution 0.25'%(fnOut,fnOut,SymmetryGroup))
+
+#def createNoisyVolume(log,WorkingDir,fnClasses,fnProjections,fnInitialVolume):
+
 
 

@@ -1069,6 +1069,11 @@ create_bashrc_file()
   echo "# This variable will point to your job submition template file               "    >> $INC_FILE
   echo "export XMIPP_PARALLEL_LAUNCH=config_launch.py                                "    >> $INC_FILE
   echo "                                                                             "    >> $INC_FILE
+  echo "#---------- Font ----------                                                  "    >> $INC_FILE
+  echo "# These variables set your personal font configuration                       "    >> $INC_FILE
+  echo 'export XMIPP_FONT_NAME=Verdana                                               '    >> $INC_FILE
+  echo 'export XMIPP_FONT_SIZE=10                                                    '    >> $INC_FILE
+  echo "                                                                             "    >> $INC_FILE
   echo "# If you have .xmipp.cfg in your home folder it will override                "    >> $INC_FILE
   echo "# this configurations                                                        "    >> $INC_FILE
   echo "                                                                             "    >> $INC_FILE
@@ -1148,6 +1153,11 @@ create_tcsh_file()
   echo "#---------- Parallel ----------                                              "    >> $INC_FILE
   echo "# This variable will point to your job submition template file               "    >> $INC_FILE
   echo "setenv XMIPP_PARALLEL_LAUNCH config_launch.py                                "    >> $INC_FILE
+  echo "                                                                             "    >> $INC_FILE
+  echo "#---------- Font ----------                                                  "    >> $INC_FILE
+  echo "# These variables set your personal font configuration                       "    >> $INC_FILE
+  echo 'setenv XMIPP_FONT_NAME Verdana                                               '    >> $INC_FILE
+  echo 'setenv XMIPP_FONT_SIZE 10                                                    '    >> $INC_FILE
   echo "                                                                             "    >> $INC_FILE
   echo "# If you have .xmipp.cfg in your home folder it will override                "    >> $INC_FILE
   echo "# this configurations                                                        "    >> $INC_FILE
@@ -1362,6 +1372,9 @@ decompressExternals()
         if ([ $DO_UNATTENDED -eq 0 ] && [ ${DELETE_ANSWER} != "Y" ] && [ ${DELETE_ANSWER} != "N" ]); then
           echo "${INTERELEMARRAY} folder exists, do you want to permanently remove it? (y)es/(n)o/(Y)es-to-all/(N)o-to-all"
           read DELETE_ANSWER
+        if [ -n ${DELETE_ANSWER} ]; then
+          DELETE_ANSWER="Y"
+        fi
         else
           DELETE_ANSWER="Y"
         fi
@@ -1391,6 +1404,10 @@ decompressPython()
       if ([ $DO_UNATTENDED -eq 0 ] && [ ${DELETE_ANSWER} != "Y" ] && [ ${DELETE_ANSWER} != "N" ]); then
         echo "${PYTHON_FOLDER} folder exists, do you want to permanently remove it? (y)es/(n)o/(Y)es-to-all/(N)o-to-all"
         read DELETE_ANSWER
+        if [ -n ${DELETE_ANSWER} ]; then
+          DELETE_ANSWER="Y"
+        fi
+
       else
         DELETE_ANSWER="Y"
       fi
@@ -1424,6 +1441,10 @@ decompressPythonModules()
           elemAt $lib "${PYTHON_MODULES}"
           echo "${INTERELEMARRAY} folder exists, do you want to permanently remove it? (y)es/(n)o/(Y)es-to-all/(N)o-to-all"
           read DELETE_ANSWER
+        if [ -n ${DELETE_ANSWER} ]; then
+          DELETE_ANSWER="Y"
+        fi
+
         else
           DELETE_ANSWER="Y"
         fi

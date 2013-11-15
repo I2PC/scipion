@@ -62,7 +62,7 @@ class ProtRCT(XmippProtocol):
     def summary(self):
         message = []
         classSelection = getListFromRangeString(self.SelectedClasses)
-        message.append("Random conical tilt reconstruction of %d classes of %s" % (len(classSelection), self.ClassifMd))
+        message.append("Random conical tilt reconstruction of %d classes of [%s]" % (len(classSelection), self.ClassifMd))
         import glob
         reconstructedFiles=glob.glob(self.WorkingDir+"/rct_??????.vol")
         if not reconstructedFiles:
@@ -87,11 +87,16 @@ class ProtRCT(XmippProtocol):
             errors.append("Low pass filter must be in the range 0-0.5")
         
         files = [getImagesFilename(self.ExtractDir, s) for s in ['', 'untilted', 'tilted']]
-        files.append(getProtocolFilename('tilted_pairs', WorkingDir=self.ExtractDir))
-        
+        fnMicrographs=getProtocolFilename('micrographs', WorkingDir=self.ExtractDir)
+        files.append(fnMicrographs)
         for f in files:
             if not exists(f):
                 errors.append("Cannot find file: %s" % f)
+
+        if exists(fnMicrographs):
+            blocks=getBlocksInMetaDataFile(fnMicrographs)
+            if not "micrographPairs" in blocks:
+                errors.append("Cannot find block micrographPairs@"+fnMicrographs)
         
         return errors    
 
@@ -105,7 +110,8 @@ class ProtRCT(XmippProtocol):
 def gatherPairs(log,WorkingDir,ExtraDir,ClassSelection,ClassFile,ExtractDir,PickingDir):
 
     mdImages = getImagesMd(ExtractDir)    
-    mdTiltAngles = MetaData(getProtocolFilename("tilted_pairs", WorkingDir=PickingDir))
+    fnMicrographs=getProtocolFilename('micrographs', WorkingDir=ExtractDir)
+    mdTiltAngles = MetaData("micrographPairs@"+fnMicrographs)
 
     mdU = getImagesMd(ExtractDir, "untilted")
     mdUAux = MetaData()

@@ -22,7 +22,7 @@ SRC = 2 # Sources
 DIR = 3 # base dir
 DEPS = 4
 
-BASIC_DEPS = ['fftw', 'tiff', 'jpeg', 'sqlite', 'hdf5','hdf5_cpp']
+BASIC_DEPS = ['fftw', 'tiff', 'jpeg', 'sqlite', 'hdf5','hdf5_cpp', 'rt']
 PYTHON_DIR = join("external","python","Python-2.7.2")
 CUDA_PATH = env['CUDA_SDK_PATH']
 
@@ -1258,6 +1258,7 @@ if int(env['gtest']):
      AddXmippCTest('test_transformation')
      AddXmippCTest('test_dimred')
      AddXmippCTest('test_wavelets')
+     AddXmippCTest('test_filename')
      #env.Depends('run_tests', [fftw, tiff, sqlite])
      #python tests
      test = AddXmippPythonTest('test_pythoninterface')

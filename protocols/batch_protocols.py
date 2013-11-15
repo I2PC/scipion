@@ -41,7 +41,7 @@ from protlib_base import XmippProject, getExtendedRunName, splitExtendedRunName,
     getScriptFromRunName, ProtocolExecutor
 from protlib_utils import ProcessManager,  getHostname, loadModule, datetime_fromdb, pretty_delta
 from protlib_sql import SqliteDb, ProgramDb
-from protlib_filesystem import getXmippPath, copyFile
+from protlib_filesystem import getXmippPath, copyFile, getXmippVersion, getXmippHash, getXmippDate
 from protlib_parser import ProtocolParser
 
 # Redefine BgColor
@@ -1027,6 +1027,8 @@ class ScriptProtocols(XmippScript):
         self.addParamsLine("[ --clean  ]                        : Clean ALL project data");
         self.addParamsLine("   alias -c;"); 
         self.addParamsLine("[ --update_project]                 : Update project db with new protocosl from 3.0 to 3.1")
+        self.addParamsLine("[ --version ]                       : show Xmipp version")
+        self.addParamsLine("[ --version_details ]               : show detailed Xmipp version")
         
     def confirm(self, msg, defaultYes=True):
         if defaultYes:
@@ -1127,6 +1129,12 @@ class ScriptProtocols(XmippScript):
         elif self.checkParam('--update_project'):
             self.loadProjectFromCli()
             self.project.updateProtocolTables()
+        elif self.checkParam('--version'):
+            print "Xmipp version %s" %(getXmippVersion())
+            self.launch = False
+        elif self.checkParam('--version_details'):
+            print "Xmipp version %s (%s, %s)" %(getXmippVersion(), getXmippHash(), getXmippDate())
+            self.launch = False
         else: #lauch project     
             if not self.project.exists():    
                 print 'You are in directory: %s' % greenStr(self.proj_dir)

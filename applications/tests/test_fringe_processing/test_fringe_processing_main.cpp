@@ -486,7 +486,7 @@ TEST_F( FringeProcessingTests, firsPSDZero)
 #endif
 }
 
-TEST_F( FringeProcessingTests, fitEllipse)
+/*TEST_F( FringeProcessingTests, fitEllipse)
 {
 
 #ifdef DEBUG
@@ -536,7 +536,7 @@ TEST_F( FringeProcessingTests, fitEllipse)
 
 #endif
 
-}
+}*/
 
 /*
 TEST_F( FringeProcessingTests, testVahid)
