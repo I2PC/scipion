@@ -226,26 +226,55 @@ def getXmippPath(*subpath):
     else:
         raise Exception('XMIPP_HOME environment variable not set') 
     
-VERSION_PARAMETERS_VERSION = "version"
-VERSION_PARAMETERS_HASH = "git_hash"
+# version-related functions moved here so importing xmipp module does not fail on initial installation
+
+versionParameters={}
+versionParameters["VERSION"] = "version"
+versionParameters["HASH"] = "git_hash"
+versionParameters["DATE"] = "git_date"
+VERSION_PARAMETERS_FILENAME = "VERSION"
 
 def getXmippVersion():
-    return getXmippVersionParameter(VERSION_PARAMETERS_VERSION)
+    return getXmippVersionParameter(versionParameters["VERSION"])
 
 def getXmippHash():
-    return getXmippVersionParameter(VERSION_PARAMETERS_HASH)
+    return getXmippVersionParameter(versionParameters["HASH"])
+
+def getXmippDate():
+    return getXmippVersionParameter(versionParameters["DATE"])
 
 def getXmippVersionParameter(key):
     param = ""
     try:
-        param = getXmippVersionParameters()[key]
+        param = loadXmippVersionParameters()[key]
     except KeyError, e:
         print "Parameter '%s' not found" % (key)
     return param
 
+def getHashOfLastCommit():
+    from subprocess import check_output
+    hash = ""
+    command='git rev-parse --short HEAD'.split()
+    try:
+        commandResult = check_output(command)
+        hash = commandResult[0:7]
+    except OSError, e:
+        print "git command failure %s, command: %s" % (e, command)
+    return hash
 
-def getXmippVersionParameters():
-    versionFilePath = getXmippPath("VERSION")
+def getDateOfLastCommit():
+    from subprocess import check_output
+    date = ""
+    command='git show -s --format="%ci"'.split()
+    try:
+        commandResult = check_output(command)
+        date = commandResult.strip('"\n')
+    except OSError, e:
+        print "git command failure %s, command: %s" % (e, command)
+    return date
+
+def loadXmippVersionParameters():
+    versionFilePath = getXmippPath(VERSION_PARAMETERS_FILENAME)
     global_parameters = {}
     local_parameters = {}
     try:
@@ -254,6 +283,31 @@ def getXmippVersionParameters():
         print "Error processing version file"
         return {}
     return local_parameters
+
+def saveXmippVersionParameters(parameterDictionary):
+    parametersToSave = loadXmippVersionParameters()
+    versionFilePath = getXmippPath(VERSION_PARAMETERS_FILENAME)
+    f = open(versionFilePath, "w")
+    for key in versionParameters.values():
+        if key in parametersToSave:
+            value = parametersToSave[key]
+        if key in parameterDictionary:
+            value = parameterDictionary[key]
+        f.write('%s="%s"\n' %(key,value))
+    f.close()
+
+def updateGitVersionParameters():
+    newParameters = {}
+    newParameters[versionParameters["HASH"]] = getHashOfLastCommit()
+    newParameters[versionParameters["DATE"]] = getDateOfLastCommit()
+    saveXmippVersionParameters(newParameters)
+
+def updateXmippVersion(version):
+    newParameters = {}
+    newParameters[versionParameters["VERSION"]] = version
+    saveXmippVersionParameters(newParameters)
+
+
 
 def includeProtocolsDir():
     protDir = getXmippPath('protocols')
