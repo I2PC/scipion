@@ -131,10 +131,6 @@ public class SingleParticlePicker extends ParticlePicker {
 	}
 
 	public synchronized void initTemplates(int num) {
-<<<<<<< HEAD
-//		System.out.println("initTemplates");
-=======
->>>>>>> eff60d4e2e35be4b4bad20a0cf2bd414af06d349
 		if (num == 0)
 			return;
 		try {
@@ -162,10 +158,6 @@ public class SingleParticlePicker extends ParticlePicker {
 	}
 
 	public synchronized void setTemplatesNumber(int num) {
-<<<<<<< HEAD
-//		System.out.println("setTemplatesNumber");
-=======
->>>>>>> eff60d4e2e35be4b4bad20a0cf2bd414af06d349
 		if (num <= 0)
 			throw new IllegalArgumentException(
 					XmippMessage.getIllegalValueMsgWithInfo("Templates Number",
@@ -182,18 +174,10 @@ public class SingleParticlePicker extends ParticlePicker {
 	}
 
 	public synchronized ImageGeneric getTemplates() {
-<<<<<<< HEAD
-//		System.out.println("getTemplates");
-=======
->>>>>>> eff60d4e2e35be4b4bad20a0cf2bd414af06d349
 		return templates;
 	}
 
 	public synchronized void setTemplate(ImageGeneric ig) {
-<<<<<<< HEAD
-//		System.out.println("setTemplate");
-=======
->>>>>>> eff60d4e2e35be4b4bad20a0cf2bd414af06d349
 		float[] matrix;
 		try {
 			// TODO getArrayFloat and setArrayFloat must be call from C both in
