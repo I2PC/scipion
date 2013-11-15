@@ -31,7 +31,7 @@
  
 def expandXrayImport():
     linesStr = '''
-# {list_combo}(Alba, Bessy, Diamond, ALS) Synchrotron
+# {list_combo}(Alba, Bessy, Diamond) Synchrotron
 """Tomo series from Mistral microscope (Alba synchrotron) are expected to be
  in nexus format in hdf5 files, while from U41-TXM line (Bessy) you only set 
  the data folder and the indexes for initial and final images for both tomogram 
@@ -89,14 +89,25 @@ DoCrop = False
 """ Amount of pixels you want to crop from borders """
 Crop = 10
 
-# Remove bad pixels from mask?
-""" Nonnegative pixel values in the mask will be substituted by the local median."""
-DoBadPixelsMask = False
+# {list_combo}(No,Auto mask, From file)Remove bad pixels?
+""" Nonnegative pixel values in the mask will be substituted by the local median.
+ Auto Mask generates a mask from the flatfields average image being the threshold 
+ mean - factor*std.
+ From file read a mask from an image file."""
+BadPixelMode = "Auto mask"
 
-# {condition}(DoBadPixelsMask){file} Mask file
+# {condition}(BadPixelMode=="Auto mask"){validate}(IsFloat) Factor threshold
+BadPixelFactor = "3."    
+
+
+# {condition}(BadPixelMode=="From file"){file} Mask file
 BadPixelsMask = ""    
     '''
     return linesStr % locals()
+ 
+ 
+ 
+ 
  
  
  
