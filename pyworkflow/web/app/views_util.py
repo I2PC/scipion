@@ -272,8 +272,6 @@ def get_slice(request):
         if imageNo:
             imagePath = '%s@%s' % (imageNo, imagePath)                 
 
-        print "slice", sliceNo, imagePath, parts
-
         imgXmipp = xmipp.Image()
         imgXmipp.readPreview(imagePath, int(imageDim), int(sliceNo))
                 
