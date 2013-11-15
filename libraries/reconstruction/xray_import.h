@@ -53,6 +53,8 @@ public:
     int cropSize;
     /// Number of threads
     int thrNum;
+    /// Bad pixel factor
+    double BPFactor;
     /// bad Pixel filter Mask
     FileName fnBPMask;
     /// Flag to apply flat field correction
