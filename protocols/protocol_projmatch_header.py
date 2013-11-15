@@ -113,18 +113,9 @@ DataArePhaseFlipped =True
 
 # Is the initial reference map CTF (amplitude) corrected?
 """
-    You may specify this option for each iteration. 
-    This can be done by a sequence of 0 or 1 numbers (for instance, "1 1 0 0" 
-    specifies 4 iterations, the first two applied align2d while the last 2
-    dont. an alternative compact notation is 
-    is ("2x1 2x0", i.e.,
-    2 iterations with value 1, and 2 with value 0).
-    <Note:> if there are less values than iterations the last value is reused
-    <Note:> if there are more values than iterations the extra value are ignored
-    <IMPORTANT:> if you set this variable to 0 the output  of the projection
-    matching step will be copied as output of align2d
+    Set to True if reference map has been amplitud corrected
 """
-ReferenceIsCtfCorrected = '1'
+ReferenceIsCtfCorrected =  True
 
 #-----------------------------------------------------------------------------
 # {section} {has_question} Mask
@@ -234,10 +225,10 @@ MaxChangeInAngles='1000 10 4 2'
 """
 PerturbProjectionDirections ='0'
 
-# {expert}{list}(fourier, realSpace) projection method
-"""select projection method, by default Fourier with padding 1 and interpolation bspline
+# {expert}{list}(fourier, real_space) projection method
+"""select projection method, by default real space interpolation is used
 """
-ProjectionMethod ='fourier'
+ProjectionMethod ='real_space'
 
 # {expert}{condition}(ProjectionMethod=="fourier") Padding factor for projection generation
 """Increase the padding factor will improve projection quality but 

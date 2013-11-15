@@ -103,6 +103,13 @@ def importImages(log, InputFile, WorkingDir, DoCopy, ImportAll, SubsetMode, Nsub
     imagesFn = getImagesFilename(WorkingDir)
     fnInput = FileName(InputFile)    
     md = MetaData(InputFile)
+    #check if micrographs or ctfparam exists
+    doMic=False
+    doCTFParam=False
+    if md.containsLabel(MDL_MICROGRAPH):
+        doMic = True
+    if md.containsLabel(MDL_CTF_MODEL):
+       doCTFParam = True
     
     if fnInput.isMetaData():        
         inputRelativePath = dirname(relpath(InputFile, '.'))
@@ -114,22 +121,19 @@ def importImages(log, InputFile, WorkingDir, DoCopy, ImportAll, SubsetMode, Nsub
             if imgNo != None:
                 imgFn = "%s@%s" % (imgNo, imgFn)
             md.setValue(MDL_IMAGE, imgFn, id)
-            
-        if md.containsLabel(MDL_MICROGRAPH):
-          for id in md:
-            imgFn = md.getValue(MDL_MICROGRAPH, id)
-            imgNo, imgFn = splitFilename(imgFn)
-            imgFn = xmippRelpath(fixPath(imgFn, projectPath, inputRelativePath, '.'))
-            if imgNo != None:
-                imgFn = "%s@%s" % (imgNo, imgFn)
-            md.setValue(MDL_MICROGRAPH, imgFn, id)
-
-        if md.containsLabel(MDL_CTF_MODEL):
-          for id in md:
-            imgFn = md.getValue(MDL_CTF_MODEL, id)
-            imgFn = xmippRelpath(fixPath(imgFn, projectPath, inputRelativePath, '.'))
-            md.setValue(MDL_CTF_MODEL, imgFn, id)
-            
+	    #micrograph
+	    if doMic:
+		imgFn = md.getValue(MDL_MICROGRAPH, id)
+		imgNo, imgFn = splitFilename(imgFn)
+		imgFn = xmippRelpath(fixPath(imgFn, projectPath, inputRelativePath, '.'))
+		if imgNo != None:
+		    imgFn = "%s@%s" % (imgNo, imgFn)
+		md.setValue(MDL_MICROGRAPH, imgFn, id)
+	    #ctf param
+	    if doCTFParam:
+	        ctfFn =  md.getValue(MDL_CTF_MODEL, id)
+		ctfFn = xmippRelpath(fixPath(ctfFn, projectPath, inputRelativePath, '.'))
+		md.setValue(MDL_CTF_MODEL, ctfFn, id)
         outExt = '.stk'
     else:
         outExt = '.%s' % fnInput.getExtension()
