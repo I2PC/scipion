@@ -225,28 +225,6 @@ $(document).ready(function() {
 	});
 });
 
-function showErrorValidation(json) {
-	var msg = JSON.stringify(json);
-	msg = msg.replace("<", "");
-	msg = msg.replace(">", "");
-	msg = msg.replace("[", "");
-	msg = msg.replace("]", "");
-
-	var msg = "<table><tr><td><img src='/resources/error.gif' width='45' height='45' />"
-			+ "</td><td class='content'>" + msg + "</td></tr></table>";
-
-	new Messi(msg, {
-		title : 'Errors found',
-		modal : true,
-		buttons : [ {
-			id : 0,
-			label : 'close',
-			val : 'Y',
-			btnClass : 'btn-close'
-		} ]
-	});
-}
-
 function evalElements() {
 	$("tr").each(function(index) {
 //		
@@ -390,7 +368,7 @@ function normalizeConditions(cond){
 
 
 function help(title, msg) {
-	new Messi(msg, {
+	new Messi(messiInfo(msg), {
 		title : 'Help' + ' ' + title,
 		modal : true,
 		buttons : [ {

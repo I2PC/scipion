@@ -127,7 +127,8 @@ def protocol(request):
         try:
             project.launchProtocol(protocol)
         except Exception, ex:
-            errors = [str(ex).replace('\n', '<br/>')]
+            errors = [convertTktoHtml(str(ex))]
+            
     jsonStr = json.dumps({'errors' : errors}, ensure_ascii=False)
     
     return HttpResponse(jsonStr, mimetype='application/javascript')   
@@ -190,9 +191,15 @@ def delete_protocol(request):
         protId = request.GET.get('protocolId', None)
         protocol = project.mapper.selectById(int(protId))
      
-        project.deleteProtocol(protocol)         
-        
-    return HttpResponse(mimetype='application/javascript') 
+        try:
+            project.deleteProtocol(protocol)         
+        except Exception, ex:
+            errors = [convertTktoHtml(str(ex))]
+            
+    jsonStr = json.dumps({'errors' : errors}, ensure_ascii=False)
+    
+    return HttpResponse(jsonStr, mimetype='application/javascript')   
+#    return HttpResponse(mimetype='application/javascript') 
 
 # Method to stop a protocol #
 def stop_protocol(request):
