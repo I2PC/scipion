@@ -31,7 +31,7 @@ public class SingleParticlePicker extends ParticlePicker {
 
 	protected List<SingleParticlePickerMicrograph> micrographs;
 	private SingleParticlePickerMicrograph micrograph;
-	public static final int defAutoPickPercent = 90;
+	public static final int defAutoPickPercent = 10;
 	private int autopickpercent = defAutoPickPercent;
 
 	public static final int mintraining = 15;
@@ -76,7 +76,7 @@ public class SingleParticlePicker extends ParticlePicker {
 			for (SingleParticlePickerMicrograph m : micrographs)
 				loadMicrographData(m);
 			classifier = new PickingClassifier(getSize(),
-					getOutputPath("model"));
+					getOutputPath("model"), selfile);
 		} catch (Exception e) {
 			e.printStackTrace();
 			throw new IllegalArgumentException();
