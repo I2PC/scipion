@@ -5,12 +5,8 @@ import os
 from os.path import join, abspath
 import sys
 import platform 
-
-# ADD PATH to Scons and other Tools
-#sys.path.append(join('scons', 'ToolsFromWiki'))
-#sys.path.append(join('scons', 'scons-local-2.3.0', 'engine'))
-
 import SCons.Script
+
 
 if platform.system() == 'Windows':
     env = Environment(tools = ['mingw'], ENV = os.environ)
