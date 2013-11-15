@@ -35,16 +35,6 @@ AngularSampling = 5
 """
 NRansac = 100
 
-# Number of Different Classes
-""" Number of different heterogeneous classes 
-"""
-NumHgClasses = 2
-
-#{expert} Number of iterations per RANSAC image group
-""" Number of iterations per smaller dataset group
-"""
-NumHg = 20
-
 #{expert} Number of random samples
 NumSamples = 8
 
@@ -83,7 +73,7 @@ Ts = '1'
 
 # Combine simulated annealing and RANSAC
 """This option produces better results at a higher computational cost"""
-UseSA=True
+UseSA=False
 
 #{expert}{condition}(UseSA) Number of simulated annealing iterations
 """ During the simulated annealing iterations, all those particles positively contributing to the improvement of the volume are considered.

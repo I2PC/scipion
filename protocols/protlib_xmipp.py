@@ -590,10 +590,4 @@ class RowMetaData():
         
     def __str__(self):
         return str(self._md)
-    
 
-def getXmippVersion():
-    versionFilePath=os.path.join(getXmippPath(),"VERSION")
-    f = open(versionFilePath)
-    version = f.read()
-    return version

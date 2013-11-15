@@ -190,13 +190,10 @@ class ProtExtractParticles(ProtParticlesBase):
         return message
 
     def getMicrographInfo(self, md, id):
-        def getValueWithDefault(label):
-            if md.containsLabel(label):
-                return md.getValue(label,id)
-            else:
-                return None
         micrograph=md.getValue(MDL_MICROGRAPH,id)
         micrographOriginal=md.getValue(MDL_MICROGRAPH_ORIGINAL,id)
+        if micrographOriginal is None:
+            micrographOriginal=micrograph
         ctf=md.getValue(MDL_CTF_MODEL,id)
         return [micrograph,micrographOriginal,ctf]
 
