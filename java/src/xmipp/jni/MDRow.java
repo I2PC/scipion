@@ -55,34 +55,34 @@ public class MDRow {
 	public native boolean removeLabel(int label);
 
 	// get values from metadata
-	public native int getValueInt(int label, long objId);
+	public native int getValueInt(int label);
 
-	public native long getValueLong(int label, long objId);
+	public native long getValueLong(int label);
 
-	public native double getValueDouble(int label, long objId);
+	public native double getValueDouble(int label);
 
 	/** Return the value of some label as String */
-	public native String getValueString(int label, long objId);
+	public native String getValueString(int label);
 	
 
 	// set functions conection with MDRow class in C++
-	public boolean setEnabled(boolean value, long objId) {
-		return setValueInt(MDLabel.MDL_ENABLED, value ? 1 : -1, objId);
+	public boolean setEnabled(boolean value) {
+		return setValueInt(MDLabel.MDL_ENABLED, value ? 1 : -1);
 	}
 
 	public boolean getEnabled(long objId) {
-		return getValueInt(MDLabel.MDL_ENABLED, objId) > 0;
+		return getValueInt(MDLabel.MDL_ENABLED) > 0;
 	}
 
-	public native boolean setValueInt(int label, int value, long objId);
+	public native boolean setValueInt(int label, int value);
 
-	public native boolean setValueLong(int label, long value, long objId);
+	public native boolean setValueLong(int label, long value);
 
-	public native boolean setValueDouble(int label, double value, long objId);
+	public native boolean setValueDouble(int label, double value);
 
-	public native boolean setValueString(int label, String value, long objId);
+	public native boolean setValueString(int label, String value);
 
-	public native boolean setValueBoolean(int label, boolean value, long objId);
+	public native boolean setValueBoolean(int label, boolean value);
 
 	public native void addLabel(int label);
 
