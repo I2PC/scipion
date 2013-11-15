@@ -34,8 +34,7 @@ class ProtEmxImportParticles(XmippProtocol):
         self.TiltPairs = False
         self.MicrographsMd = self.workingDirPath('micrographs.xmd')
         
-        self.propDict = {'SamplingRate': 'pixelSpacing__X',
-                         }
+        self.propDict = {'SamplingRate': 'pixelSpacing__X'}
             
     def createFilenameTemplates(self):
         return {
@@ -100,10 +99,10 @@ class ProtEmxImportParticles(XmippProtocol):
             self._loadInfo()   
             
             if self.object is None:
-                errors.append('Canot find any object in EMX file <%s>' % self.EmxFileName)
+                errors.append('Cannot find any object in EMX file <%s>' % self.EmxFileName)
             else:
                 if self.binaryFile is None:
-                    errors.append('Canot find binary data <%s> associated with EMX metadata file' % self.binaryFile)
+                    errors.append('Cannot find binary data <%s> associated with EMX metadata file' % self.binaryFile)
                 for k, v in self.propDict.iteritems():
                         if len(getattr(self, k)) == 0:
                             errors.append('<%s> was left empty and <%s> does not have this property' % (k, self.classElement))

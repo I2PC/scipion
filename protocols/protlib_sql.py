@@ -351,7 +351,8 @@ class XmippProjectDb(SqliteDb):
         steps_total = self.cur.execute(sqlCommand).fetchone()[0]
         steps_done = self.cur.execute(sqlCommand + ' AND finish IS NOT NULL').fetchone()[0]
         if steps_done > 0 and steps_done == steps_total:
-            self.updateRunState(SqliteDb.RUN_FINISHED, run['run_id'])
+            if run['run_state'] != SqliteDb.RUN_FINISHED:
+                self.updateRunState(SqliteDb.RUN_FINISHED, run['run_id'])
             #run['state'] = SqliteDb.RUN_FINISHED
         return (steps_done, steps_total)
 

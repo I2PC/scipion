@@ -60,7 +60,13 @@ class ProtMergeParticles(XmippProtocol):
             messages.append("Output images: [%s]" % self.getOutputImages())
             
         return messages
-
+    
+    def visualize(self):
+        fn = self.getFilename('images')        
+        if exists(fn):
+            from protlib_utils import runShowJ
+            runShowJ(fn)
+	    
 def createAcquisitionMd(log, samplingRate, fnOut):
     md = MetaData()
     md.setValue(MDL_SAMPLINGRATE, float(samplingRate), md.addObject())

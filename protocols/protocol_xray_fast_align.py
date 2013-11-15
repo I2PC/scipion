@@ -33,7 +33,7 @@ class ProtXrayFastAlign(XmippProtocol):
         for objId in md:
 #             md.read('%s@%s' % (tomoName, TomogramsMd))
 #             objId = md.firstObject()
-            fnRootIn = removeFilenameExt(md.getValue(xmipp.MDL_IMAGE, objId))
+            fnRootIn = removeFilenameExt(md.getValue(xmipp.MDL_TOMOGRAMMD, objId))
             fnBaseName = basename(fnRootIn)
             tomoDir = self.workingDirPath(fnBaseName)
             fnRootOut = join(tomoDir, fnBaseName)
@@ -114,9 +114,9 @@ class ProtXrayFastAlign(XmippProtocol):
             self.insertRunJobStep('newstack', params=params % locals(), verifyFiles=[fnOut])
             
             # Create metadata 
-            self.insertStep('createtMd', tomoOut=fnOut, tomoRoot=fnRootOut,fnTiltIn=fnRootIn+'.tlt', verifyfiles=[fnRootOut + '.xmd'])
+            self.insertStep('createtMd', tomoOut=fnOut, tomoRoot=fnRootOut,fnTiltIn=fnRootIn+'.tlt',fnTiltOut=fnRootOut+'.tlt', verifyfiles=[fnRootOut + '.xmd'])
             # Add aligned tomo to list
-            self.tomoAlignedList.append(fnOut)
+            self.tomoAlignedList.append(fnRootOut)
             
         self.insertStep('createResultMd', TomogramList=self.tomoAlignedList, resultMd=self.TomogramsMd, verifyfiles=[self.TomogramsMd])    
         
@@ -136,12 +136,13 @@ class ProtXrayFastAlign(XmippProtocol):
     def summary(self):
         md = self.getTomogramMd()
         size = md.size()
+        message = []
         if size > 1:
-            message = "Alignment of <%d> tomograms" % size
+            message.append("Alignment of <%d> tomograms" % size)
         elif size == 1:
-            message = "Alignment of <%s> tomogram" % removeBasenameExt(md.getValue(xmipp.MDL_IMAGE, md.firstObject()))
+            message.append("Alignment of <%s> tomogram" % removeBasenameExt(md.getValue(xmipp.MDL_TOMOGRAMMD, md.firstObject())))
 
-        return [message]
+        return message
     
     def visualize(self):
         resultMd = self.workingDirPath('tomograms.xmd')
@@ -217,22 +218,23 @@ class ProtXrayFastAlign(XmippProtocol):
 # #     os.system('tiltalign ' + params % locals())
     
     
-def createtMd(log, tomoOut, tomoRoot,fnTiltIn):
+def createtMd(log, tomoOut, tomoRoot, fnTiltIn, fnTiltOut):
     md = xmipp.MetaData()
     md.read(tomoOut)
-    md.addPlain(fnTiltIn, 'angleTilt')
+    md.addPlain(fnTiltOut, 'angleTilt')
+    md.addPlain(fnTiltIn, 'angleTilt2')
     md.write("tomo@%s.xmd" % tomoRoot)  
         
 
 def createResultMd(log, TomogramList, resultMd):
-    md = xmipp.MetaData()
+#     md = xmipp.MetaData()
     mdOut = xmipp.MetaData()
      
     for tomogram in TomogramList:
-        tomoRoot = removeFilenameExt(tomogram)
-        tomoBaseName = basename(tomoRoot)
-        mdOut.setValue(xmipp.MDL_IMAGE, tomogram, mdOut.addObject())
-        md.read(tomoRoot + ".xmd")
-        md.write('tomo_%s@%s' % (tomoBaseName, resultMd), xmipp.MD_APPEND)
+#         tomoRoot = removeFilenameExt(tomogram)
+#         tomoBaseName = basename(tomoRoot)
+#         md.read(tomoRoot + ".xmd")
+#         md.write('tomo_%s@%s' % (tomoBaseName, resultMd), xmipp.MD_APPEND)
+        mdOut.setValue(xmipp.MDL_TOMOGRAMMD, tomogram+'.xmd', mdOut.addObject())
      
     mdOut.write('tomograms@%s' % (resultMd), xmipp.MD_APPEND)

@@ -104,12 +104,7 @@ public class SingleParticlePicker extends ParticlePicker {
 
 	}
 
-	/* Save changes to the current micrograph. */
-	public void saveData() {
-		super.saveData();
-		saveData(micrograph);
-		setChanged(false);
-	}
+	
 
 	/* Save changes to ALL micrographs, mainly used when importing. */
 	public void saveAllData() {
@@ -136,7 +131,10 @@ public class SingleParticlePicker extends ParticlePicker {
 	}
 
 	public synchronized void initTemplates(int num) {
+<<<<<<< HEAD
 //		System.out.println("initTemplates");
+=======
+>>>>>>> eff60d4e2e35be4b4bad20a0cf2bd414af06d349
 		if (num == 0)
 			return;
 		try {
@@ -164,7 +162,10 @@ public class SingleParticlePicker extends ParticlePicker {
 	}
 
 	public synchronized void setTemplatesNumber(int num) {
+<<<<<<< HEAD
 //		System.out.println("setTemplatesNumber");
+=======
+>>>>>>> eff60d4e2e35be4b4bad20a0cf2bd414af06d349
 		if (num <= 0)
 			throw new IllegalArgumentException(
 					XmippMessage.getIllegalValueMsgWithInfo("Templates Number",
@@ -181,12 +182,18 @@ public class SingleParticlePicker extends ParticlePicker {
 	}
 
 	public synchronized ImageGeneric getTemplates() {
+<<<<<<< HEAD
 //		System.out.println("getTemplates");
+=======
+>>>>>>> eff60d4e2e35be4b4bad20a0cf2bd414af06d349
 		return templates;
 	}
 
 	public synchronized void setTemplate(ImageGeneric ig) {
+<<<<<<< HEAD
 //		System.out.println("setTemplate");
+=======
+>>>>>>> eff60d4e2e35be4b4bad20a0cf2bd414af06d349
 		float[] matrix;
 		try {
 			// TODO getArrayFloat and setArrayFloat must be call from C both in
@@ -563,7 +570,6 @@ public class SingleParticlePicker extends ParticlePicker {
 	public String importParticlesFromFolder(String path, Format f, float scale,
 			boolean invertx, boolean inverty) {
 
-		//System.err.format("JM_DEBUG:   >>>> importParticlesFromFolder   scale: %f\n", scale);
 		if (f == Format.Auto)
 			f = detectFormat(path);
 		if (f == Format.Unknown)
@@ -596,7 +602,6 @@ public class SingleParticlePicker extends ParticlePicker {
 		try {
 			MetaData md = new MetaData();
 			fillParticlesMdFromFile(path, f, m, md, scale, invertx, inverty);
-			System.err.format("After fillParticlesMdFromFile, size:\n", md.size());
 			if (md.size() > 0) {
 				//Be sure that width and height are loaded
 				result = importParticlesFromMd(m, md);
@@ -736,7 +741,6 @@ public class SingleParticlePicker extends ParticlePicker {
 	public synchronized void resetParticleImages()// to update templates with
 													// the right particles
 	{
-		System.out.println("resetParticleImages");
 		for (SingleParticlePickerMicrograph m : micrographs) {
 			for (ManualParticle p : m.getManualParticles())
 				p.resetImagePlus();
@@ -757,7 +761,6 @@ public class SingleParticlePicker extends ParticlePicker {
 	}
 
 	public synchronized void updateTemplates(int num) {
-		System.out.println("updateTemplates");
 		try {
 			if (getMode() != Mode.Manual)
 				return;
@@ -769,7 +772,6 @@ public class SingleParticlePicker extends ParticlePicker {
 			ManualParticle particle;
 			double[] align;
 
-			System.err.println("JM_DEBUG: ============= Updating TEMPLATES ============");
 			//FIXME: the template update needs to be done in a 
 			// more efficient way, now we are using this maxcount
 			// to limit the number of particles used in the update
@@ -784,7 +786,6 @@ public class SingleParticlePicker extends ParticlePicker {
 					break;
 				particles = m.getManualParticles();
 				size = particles.size();
-				//System.err.println("JM_DEBUG: Updating for Micrograph: "+ m.getFile());
 				for (int i = 0; i < size; i++) {
 					particle = particles.get(i);
 					igp = particle.getImageGeneric();
@@ -801,7 +802,6 @@ public class SingleParticlePicker extends ParticlePicker {
 			}
 			templates.getRadialAvg(radialtemplates);
 			saveTemplates();
-			// System.out.println("templates updated");
 		} catch (Exception e) {
 			throw new IllegalArgumentException(e.getMessage());
 		}

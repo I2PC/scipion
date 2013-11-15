@@ -39,7 +39,7 @@ QueryArgsTemplate = "%(jobid)d"
 # Mpi executable
 MpiProgram = "mpirun"
 # Mpi run arguments template
-MpiArgsTemplate = "-np %(nodes)d --bynode %(command)s"
+MpiArgsTemplate = "-np %(nodes)d %(command)s"
 
 # Other templates for other environments: 
 # Using nodefile setted as environment variable or at home

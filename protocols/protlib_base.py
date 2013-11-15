@@ -338,15 +338,28 @@ class XmippProject():
                 self._registerRunProtocol(prot.PrevRunName, prot.PrevRun, runsDict)
                 runsDict[prot.PrevRunName].addDep(extRunName)
            
-    def _printGraph(self, runsDict):
+    def _printGraph(self, runsDict, modeXmipp=True, dot=False):
+        """ Print the graph in DOT format. """
+        
         from protlib_xmipp import greenStr, redStr
-        for k, dd in runsDict.iteritems():
-            deps = [str(e) for e in dd.deps]
-            if dd.isRoot:
-                k = '>>> ' + greenStr(k)
-            else:
-                k = greenStr(k)
-            print '%s REFERENCED FROM: %s' % (k, redStr(', '.join(deps)))            
+        
+        if dot:
+            print "digraph project_graph {"
+            for k, dd in runsDict.iteritems():
+                k = k.replace(' ', '_')
+                deps = [str(e) for e in dd.deps]
+                for dep in deps:
+                    print "%s -> %s ;" % (k, dep)   
+            print "}"  
+        if modeXmipp:
+            for k, dd in runsDict.iteritems():
+                deps = [str(e) for e in dd.deps]
+                if dd.isRoot:
+                    k = '>>> ' + greenStr(k)
+                else:
+                    k = greenStr(k)
+                print '%s REFERENCED FROM: %s' % (k, redStr(', '.join(deps)))
+                print "  (level = %d)" % dd.level     
     
     def getRunsDependencies(self, printGraph=False):
         ''' Return a dictionary with run_name as key and value
@@ -373,25 +386,30 @@ class XmippProject():
                     if dd2 and dd.extRunName != dd2.extRunName and not dd2.hasDep(dd.extRunName):
                         for k, v in dd.prot.ParamsDict.iteritems():
                             if k != 'RunName' and type(v) == str and v.startswith(dd2.prot.WorkingDir + '/'):
+                                #print >>sys.stderr, "%s depends on %s, because param '%s' (value='%s') starts with '%s'" % (dd.extRunName, dd2.extRunName, k, v, dd2.prot.WorkingDir + '/')
                                 dd2.addDep(dd.extRunName)
         
         #Create special node ROOT
-        roots = [k for k, v in runsDict.iteritems() if v.isRoot]
+        #roots = [k for k, v in runsDict.iteritems() if v.isRoot]
         ddRoot = DepData(runsDict, self.getName(), None)
         ddRoot.state = 6
-        ddRoot.deps = roots        
+        #ddRoot.deps = roots
+        
+        for k, v in runsDict.iteritems():
+            if v.isRoot and v is not ddRoot:
+                ddRoot.addDep(k)   
 
-        if printGraph:
+        if printGraph:# or True:
             self._printGraph(runsDict)
                 
         return runsDict
 
 class DepData():
     '''Simple structure to hold runs dependencies data '''
-    def __init__(self, runsDict, extRunName, protocol):
+    def __init__(self, runsDict, extRunName, protocol, level=0):
         self.runsDict = runsDict
         self.extRunName = extRunName
-        
+        self.level = level
         if protocol is not None:
             self.protName = protocol.Name
             self.runName = protocol.RunName
@@ -401,8 +419,13 @@ class DepData():
         runsDict[extRunName] = self
         
     def addDep(self, extRunName):
-        self.deps.append(extRunName)
-        self.runsDict[extRunName].isRoot = False
+        if extRunName not in self.deps:
+            self.deps.append(extRunName)
+            ddChild = self.runsDict[extRunName]
+            ddChild.isRoot = False
+            if self.level + 1 > ddChild.level:
+                ddChild.level = self.level + 1
+                ddChild.parent = self
         
     def hasDep(self, extRunName):
         return extRunName in self.deps
@@ -511,18 +534,18 @@ class XmippProtocol(object):
             return self.FilenamesDict[key] % params
         raise Exception("XmippProtocol.getFilename: key '%s' not found" % key)
     
-    def getFilenameAlternative(self, key1, key2, **params):
-        """Has the same function as getFileName
-        but if the filename does not exists then
-        tries an alternative filename seed given by key2
-         """
-        params.update(self.ParamsDict)
-        if self.FilenamesDict.has_key(key1):
-            fileName = self.FilenamesDict[key1] % params
-            if not xmippExists(fileName):
-                fileName = self.FilenamesDict[key2] % params
-            return fileName
-        raise Exception("XmippProtocol.getFilename: key '%s' not found" % key)
+#    def getFilenameAlternative(self, key1, key2, **params):
+#        """Has the same function as getFileName
+#        but if the filename does not exists then
+#        tries an alternative filename seed given by key2
+#         """
+#        params.update(self.ParamsDict)
+#        if self.FilenamesDict.has_key(key1):
+#            fileName = self.FilenamesDict[key1] % params
+#            if not xmippExists(fileName):
+#                fileName = self.FilenamesDict[key2] % params
+#            return fileName
+#        raise Exception("XmippProtocol.getFilename: key '%s' not found" % key)
     
     def getFileList(self, *keyList):
         ''' Return a list of filename using the getFilename function '''
@@ -537,8 +560,9 @@ class XmippProtocol(object):
     def createFilenameDict(self):
         ''' This will create some common templates and update
         with each protocol particular dictionary'''
-        _baseProtocolNames.update(self.createFilenameTemplates())
-        return _baseProtocolNames
+        protocolNamesDict = dict(_baseProtocolNames)
+        protocolNamesDict.update(self.createFilenameTemplates())
+        return protocolNamesDict
         
     def inputProperty(self, *keys):
         ''' Take property Key from self.PrevRun and set to self.

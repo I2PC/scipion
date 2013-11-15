@@ -26,7 +26,7 @@
 from os.path import basename, splitext
 from protlib_xmipp import XmippScript
 from xmipp import MetaData, MDL_CTF_MODEL, MD_APPEND, MD_OVERWRITE, FileName,XmippError
-from emxLib.emxLib import ctfMicXmippToEmx
+from protlib_emx import ctfMicXmippToEmx
 from emx.emxmapper import *
 from emx.emx import *
 from protlib_emx import emxMicsToXmipp, emxCoordsToXmipp, alignEMXToXmipp

@@ -368,17 +368,24 @@ OUTPUT = "build/scons_output.log"
 
 if os.path.exists(OUTPUT):
     found = False
-    log_number = list(range(1,999))
+    log_number = list(range(1,1000))
     i = iter(log_number)
     item = i.next()
     while not found:
         if not os.path.exists("build/scons_output_%03i.log" % item):
             OUTPUT = "build/scons_output_%03i.log" % item
             found = True
-        item = i.next()
-    if item >= 999:
-        os.remove("build/scons_output*")
-	
+        else:
+            try:
+                item = i.next()
+            except:
+                import glob
+                delete = 'build/scons_output*'
+                r = glob.glob(delete)
+                for j in r:
+                    os.remove(j)
+                OUTPUT = "build/scons_output_001.log"
+		found = True
 
 if WINDOWS:
     STDOUT = 'build/scons_output_stdout.log'

@@ -39,6 +39,11 @@ from a stack <(Spider/MRC)> or metadata file that make up your data set.
 """
 ContinueFrom = ""
 
+# {hidden}Number of classes
+"""The number of classes (K) for a multi-reference refinement. These classes will be made in an unsupervised manner from a single reference by division of the data into random subsets during the first iteration.
+"""
+NumberOfClasses = 1
+
 # {file}(*.vol, *.mrc){validate}(PathExists) Initial 3D reference volume:
 """
 A 3D map in MRC/Spider format. Make sure this map has the same dimensions and 
@@ -72,7 +77,7 @@ Note that the average and stddev values for the background are
 """
 DoNormalizeInputImage = False
 
-# {expert} Padding factor:
+# {hidden}{expert} Padding factor:
 """
 The padding factor used for oversampling of the Fourier transform. The default is 3x padding, 
 which is combined with nearest-neighbour interpolation. However, for large 3D maps, storing the 
@@ -168,6 +173,12 @@ If set to 0, no low-pass filter will be applied to the initial reference(s).
 """
 InitialLowPassFilterA = 60
 
+# {hidden} Number of iterations:
+"""
+Number of iterations to be performed. Note that the current implementation does NOT comprise a convergence criterium. Therefore, the calculations will need to be stopped by the user if further iterations do not yield improvements in resolution or classes.
+"""
+NumberOfIterations = 1
+
 # Particles mask diameter (A):
 """
 The experimental images will be masked with a soft circular mask with this diameter. Make sure this radius is not set too small because that may mask away part of the signal! If set to a value larger than the image size no masking will be performed.
@@ -224,24 +235,11 @@ AdditionalArguments = ""
 # {eval} expandParallel()
 
 #------------------------------------------------------------------------------------------------
-# {section}{visualize} Preparation
-#------------------------------------------------------------------------------------------------
-
-# {view} Show the grey-scale corrected ref. map?
-VisualizeCRVolume = True
-
-# {view} Show the low-pass filtered ref. map?
-VisualizeFRVolume = True
-
-# {view} Show the generated seeds volumes?
-VisualizeGSVolume = True
-
-#------------------------------------------------------------------------------------------------
 # {section}{visualize} Results per Iteration and Ref3D
 #------------------------------------------------------------------------------------------------
-# {list_combo}( all, selection) Which ref3D you want to visualize?
+# {hidden}{list_combo}( all, selection) Which ref3D you want to visualize?
 """ 
-   If you want two see the reference volume 2 and 5 write
+   If you want to see the reference volume 2 and 5 write
    2 5. In relaion first reference is 1
 """
 DisplayRef3DNo='all'
@@ -261,7 +259,7 @@ If you want two see iterations 2 and 5 write
    2 5. In relion first iteration is 0"""
 SelectedIters = ''
 
-# {list_combo}(x, y, z, surface) Display volumes 
+# {list_combo}(x, y, z, surface) Display 3D maps along 
 """ x -> Visualize volumes in slices along x
     y -> Visualize volumes in slices along y
     z -> Visualize volumes in slices along z
@@ -269,23 +267,22 @@ SelectedIters = ''
 """
 DisplayVolumeSlicesAlong='z'
 
-# {view} Display reconstructed volume
-""" Volume as given by the reconstruction algorithm
-"""
-DisplayReconstruction=False
-
-
-
-
 #------------------------------------------------------------------------------------------------
 # {section}{visualize} Overall Results
 #------------------------------------------------------------------------------------------------
+# {view} Display reconstructed volume
+""" Volume as given by the reconstruction algorithm.
+    For each iteration two volumes are presented (each one reconstructed with
+    the 50% of the images) plus a single final colume reconstructed using 
+    all the data)
+"""
+DisplayReconstruction=False
 
 # {view} Display resolution plots (SSNR)
 DisplayResolutionPlotsSSNR=True
 
 ###############################
-# {hidden}{view} Display resolution plots (FSC)
+# {view} Display resolution plots (FSC)
 DisplayResolutionPlotsFSC=False
 
 # {expert} Display a threshold in resolution plots (FSC)
@@ -298,10 +295,15 @@ DisplayAngularDistribution=True
 """
 DisplayAngularDistributionWith='2D'
 
+# {expert} Scale RedSpheres
+""" when using chimera for displaying red angular
+distribution set radius of maximum sphere"""
+SpheresMaxradius=-1.
+
 # {hidden}{view} Display resolution plots (FSC)
 DisplayResolutionPlotsFSC=False
 
-# {view} No. Images assigned to class
+# {hidden} No. Images assigned to class
 """ Images assigned to each class per iteration"""
 TableImagesPerClass=True
 

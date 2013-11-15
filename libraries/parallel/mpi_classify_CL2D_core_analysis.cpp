@@ -196,8 +196,8 @@ void ProgClassifyCL2DCore::computeStableCores()
     MetaData thisClass, anotherClass, commonImages, thisClassCore;
     MDRow row;
     size_t first, last;
-    Matrix2D<int> coocurrence;
-    Matrix1D<int> maximalCoocurrence;
+    Matrix2D<unsigned char> coocurrence;
+    Matrix1D<unsigned char> maximalCoocurrence;
     int Nblocks=blocks.size();
     taskDistributor->reset();
     std::vector<size_t> commonIdx;
@@ -230,7 +230,15 @@ void ProgClassifyCL2DCore::computeStableCores()
                 size_t NthisClass=thisClass.size();
                 if (NthisClass>0)
                 {
-                    coocurrence.initZeros(NthisClass,NthisClass);
+                    try {
+                       coocurrence.initZeros(NthisClass,NthisClass);
+                    } catch (XmippError e)
+                    {
+                       std::cerr << e << std::endl;
+                       std::cerr << "There is a memory allocation error. Most likely there are too many images in this class ("
+                                 << NthisClass << " images). Consider increasing the number of initial and final classes\n";
+                       REPORT_ERROR(ERR_MEM_NOTENOUGH,"While computing stable class");
+                    }
                     for (int n=0; n<Nblocks; n++)
                     {
                         CL2DBlock &anotherBlock=blocks[n];

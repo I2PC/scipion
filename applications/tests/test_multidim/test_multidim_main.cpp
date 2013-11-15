@@ -170,7 +170,7 @@ TEST( MultidimTest, modulo)
 
     ASSERT_TRUE( (A2D_ELEM(mTarget,1,0) - 0)       < 1e-3);
     ASSERT_TRUE( (A2D_ELEM(mTarget,1,1) - 1.5708)  < 1e-3);
-    ASSERT_TRUE( (A2D_ELEM(mTarget,1,2) - 4.7124)  < 1e-3);
+    ASSERT_TRUE( (A2D_ELEM(mTarget,1,2) - 4.7124)  < 1e-2);
 
     ASSERT_TRUE( (A2D_ELEM(mTarget,2,0) - 3.1416)  < 1e-3);
     ASSERT_TRUE( (A2D_ELEM(mTarget,2,1) - 0)       < 1e-3);

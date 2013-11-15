@@ -202,37 +202,45 @@ public class TiltPairPicker extends ParticlePicker
 	public void saveData()
 	{
 		super.saveData();
-		long id;
-
+		saveMicrographAngles(micrograph);
+	}
+	
+	private void saveMicrographAngles(UntiltedMicrograph m)
+	{
 		try
 		{
 			MetaData anglesmd;
 			anglesmd = new MetaData(selfile);
-
-			Hashtable<String, Long> micrographsDict = new Hashtable<String, Long>();
-			for (long mid : anglesmd.findObjects())
-				micrographsDict.put(anglesmd.getValueString(MDLabel.MDL_MICROGRAPH, mid), mid);
-
-			for (UntiltedMicrograph m : micrographs)
+			
+			long micId = -1; //Current micrograph id
+			long [] ids = anglesmd.findObjects();
+			String micFile = micrograph.getFile();
+			
+			for (long mid: ids)
 			{
-				id = micrographsDict.get(m.getFile());
-				anglesmd.setValueDouble(MDLabel.MDL_ANGLE_Y, (double) m.getUntiltedAngle(), id);
-				anglesmd.setValueDouble(MDLabel.MDL_ANGLE_Y2, (double) m.getTiltedAngle(), id);
-				anglesmd.setValueDouble(MDLabel.MDL_ANGLE_TILT, (double) m.getTiltAngle(), id);
-
-				anglesmd.writeBlock(selfile);
-				saveData(m);
-
-			}
-			anglesmd.destroy();
-
+				if (micFile.equals(anglesmd.getValueString(MDLabel.MDL_MICROGRAPH, mid)))
+				{
+					micId = mid;
+					break;
+				}
+			}	
+			
+			if (micId == -1)
+				throw new Exception("Micrograph " + micrograph.getFile() + " was not found in metadata");
+			
+			anglesmd.setValueDouble(MDLabel.MDL_ANGLE_Y,  m.getUntiltedAngle(), micId);
+			anglesmd.setValueDouble(MDLabel.MDL_ANGLE_Y2, m.getTiltedAngle(), micId);
+			anglesmd.setValueDouble(MDLabel.MDL_ANGLE_TILT, m.getTiltAngle(), micId);
+			
+			anglesmd.writeBlock(selfile);
+			saveData(m);
 		}
 		catch (Exception e)
 		{
 			getLogger().log(Level.SEVERE, e.getMessage(), e);
 			throw new IllegalArgumentException(e.getMessage());
 		}
-
+		
 	}
 
 	@Override
@@ -244,38 +252,38 @@ public class TiltPairPicker extends ParticlePicker
 
 		try
 		{
-			MetaData md, md2;
-			TiltedParticle tp;
 
-			if (!m.hasData())
+			if (!m.hasData()){
 				new File(file).delete();
+			}
 			else
 			{
+				TiltedParticle tp;
 
-				md = new MetaData();
-				md2 = new MetaData();
+				MetaData mdU = new MetaData(); // untilted micrograph particles
+				MetaData mdT = new MetaData(); // tilted micrograph particles
 
 				for (UntiltedParticle p : um.getParticles())
 				{
 					tp = p.getTiltedParticle();
 					if (tp != null)
 					{
-						id = md.addObject();
-						md.setValueInt(MDLabel.MDL_XCOOR, p.getX(), id);
-						md.setValueInt(MDLabel.MDL_YCOOR, p.getY(), id);
+						id = mdU.addObject();
+						mdU.setValueInt(MDLabel.MDL_XCOOR, p.getX(), id);
+						mdU.setValueInt(MDLabel.MDL_YCOOR, p.getY(), id);
 
-						id = md2.addObject();
-						md2.setValueInt(MDLabel.MDL_XCOOR, tp.getX(), id);
-						md2.setValueInt(MDLabel.MDL_YCOOR, tp.getY(), id);
+						id = mdT.addObject();
+						mdT.setValueInt(MDLabel.MDL_XCOOR, tp.getX(), id);
+						mdT.setValueInt(MDLabel.MDL_YCOOR, tp.getY(), id);
 					}
 				}
 
-				md.write(getParticlesBlock(file));
+				mdU.write(getParticlesBlock(file));
 				file = getOutputPath(um.getTiltedMicrograph().getPosFile());
-				md2.write(getParticlesBlock(file));
+				mdT.write(getParticlesBlock(file));
 				
-				md.destroy();
-				md2.destroy();
+				mdU.destroy();
+				mdT.destroy();
 			}
 
 		}

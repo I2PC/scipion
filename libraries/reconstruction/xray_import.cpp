@@ -26,6 +26,7 @@
 
 #include <data/args.h>
 #include <data/filters.h>
+#include <data/xmipp_image_extension.h>
 #include "xray_import.h"
 
 // usage ===================================================================
@@ -98,7 +99,7 @@ void ProgXrayImport::defineParams()
     addParamsLine("  alias -f;");
     addParamsLine("  [--log]                            : Apply log to pixel values");
     addParamsLine("  [--correct]                        : Correct for the self-attenuation of X-ray projections applying ");
-    addParamsLine("           : a log10 and multiplying by -1");
+    addParamsLine("           : a log and multiplying by -1");
     addParamsLine("  alias -c;");
     addExampleLine("The most standard call is",false);
     addExampleLine("xmipp_xray_import --data 10s --flat flatfields --oroot ProcessedData/img --crop 7");
@@ -138,12 +139,13 @@ void ProgXrayImport::readParams()
     else
     {
         fnInput = getParam("--input");
-        if (checkParam("--flat"))
-        {
-            fnFlat = getParam("--flat");
-            flatFix = true;
-        }
         dSource = NONE;
+    }
+    // If --flat is passed it forces the use of this flatfield
+    if (checkParam("--flat"))
+    {
+        fnFlat = getParam("--flat");
+        flatFix = true;
     }
 
     fnRoot    = getParam("--oroot");
@@ -151,7 +153,7 @@ void ProgXrayImport::readParams()
     thrNum    = getIntParam("--thr");
     fnBPMask  = getParam("--bad_pixels_filter");
     selfAttFix   = checkParam("--correct");
-    log10Fix   = (selfAttFix)? true : checkParam("--log");
+    logFix   = (selfAttFix)? true : checkParam("--log");
 }
 
 // Show ====================================================================
@@ -306,116 +308,135 @@ void ProgXrayImport::getFlatfield(const FileName &fnFFinput,
 
     // Process the flatfield images
 
-    Matrix1D<double> expTimeArray, cBeamArray, slitWidthArray;
+    // Checking if fnFFinput is a single file to obtain the flatfield avg from
+    ImageInfo imInfo;
 
-    switch (dSource)
+    if (isImage(fnFFinput))
+        getImageInfo(fnFFinput, imInfo);
+
+
+    if (imInfo.adim.ndim == 1)
+        readAndCrop(fnFFinput, Iavg);
+    else
     {
-    case MISTRAL:
-        fMD.read(fnFFinput);
-        H5File.getDataset("NXtomo/instrument/bright_field/ExpTimes", expTimeArray, false);
-        H5File.getDataset("NXtomo/instrument/bright_field/current", cBeamArray, false);
 
-        // If expTime is empty or only one single value in nexus file then we fill with 1
-        if (expTimeArray.size() < 2)
+        Matrix1D<double> expTimeArray, cBeamArray, slitWidthArray;
+
+        switch (dSource)
         {
-            reportWarning("Input file does not contains flatfields' exposition time information.");
-            expTimeArray.initConstant(fMD.size(), 1.);
-        }
-        // If current is empty or only one single value in nexus file then we fill with 1
-        if (cBeamArray.size() < 2)
-        {
-            reportWarning("Input file does not contains flatfields' current beam information.");
-            cBeamArray.initConstant(fMD.size(), 1.);
-        }
+        case MISTRAL:
+            if (!H5File.checkDataset(fnFFinput.getBlockName().c_str()))
+                break;
+            fMD.read(fnFFinput);
+            H5File.getDataset("NXtomo/instrument/bright_field/ExpTimes", expTimeArray, false);
+            H5File.getDataset("NXtomo/instrument/bright_field/current", cBeamArray, false);
 
-        // Since Alba does not provide slit width, we set to ones
-        slitWidthArray.initConstant(fMD.size(), 1.);
-
-        break;
-    case BESSY:
-        {
-            size_t objId;
-
-            for (size_t i = fIni; i <= fEnd; ++i)
+            // If expTime is empty or only one single value in nexus file then we fill with 1
+            if (expTimeArray.size() < 2)
             {
-                objId = fMD.addObject();
-                fMD.setValue(MDL_IMAGE, fnFFinput + formatString("/img%d.spe", i), objId);
+                reportWarning("Input file does not contains flatfields' exposition time information.");
+                expTimeArray.initConstant(fMD.size(), 1.);
+            }
+            // If current is empty or only one single value in nexus file then we fill with 1
+            if (cBeamArray.size() < 2)
+            {
+                reportWarning("Input file does not contains flatfields' current beam information.");
+                cBeamArray.initConstant(fMD.size(), 1.);
+            }
+
+            // Since Alba does not provide slit width, we set to ones
+            slitWidthArray.initConstant(fMD.size(), 1.);
+
+            break;
+        case BESSY:
+            {
+                size_t objId;
+
+                for (size_t i = fIni; i <= fEnd; ++i)
+                {
+                    objId = fMD.addObject();
+                    fMD.setValue(MDL_IMAGE, fnFFinput + formatString("/img%d.spe", i), objId);
+                }
+                break;
+            }
+        case NONE:
+            {
+                // Get Darkfield
+                std::cout << "Getting darkfield from "+fnFFinput << " ..." << std::endl;
+                Image<double> IavgDark;
+                getDarkfield(fnFFinput, IavgDark);
+                if (darkFix)
+                    IavgDark.write(fnRoot+"_"+fnFFinput.removeDirectories()+"_darkfield.xmp");
+
+                std::vector<FileName> listDir;
+                fnFFinput.getFiles(listDir);
+                size_t objId;
+
+                for (size_t i = 0; i < listDir.size(); ++i)
+                {
+                    if (!listDir[i].hasImageExtension())
+                        continue;
+                    objId = fMD.addObject();
+                    fMD.setValue(MDL_IMAGE, fnFFinput+"/"+listDir[i], objId);
+                }
             }
             break;
         }
-    case NONE:
+
+        if ( fMD.size() == 0 )
         {
-            // Get Darkfield
-            std::cout << "Getting darkfield from "+fnFFinput << " ..." << std::endl;
-            Image<double> IavgDark;
-            getDarkfield(fnFFinput, IavgDark);
-            if (darkFix)
-                IavgDark.write(fnRoot+"_"+fnFFinput.removeDirectories()+"_darkfield.xmp");
+            reportWarning("XrayImport::getFlatfield: No images to process");
+            return;
+        }
 
-            std::vector<FileName> listDir;
-            fnFFinput.getFiles(listDir);
-            size_t objId;
+        int N  = 0;
+        Image<double> Iaux;
+        FileName fnImg;
 
-            for (size_t i = 0; i < listDir.size(); ++i)
+        FOR_ALL_OBJECTS_IN_METADATA(fMD)
+        {
+            fMD.getValue(MDL_IMAGE, fnImg, __iter.objId);
+
+            readAndCrop(fnImg, Iaux);
+
+            if ( darkFix )
             {
-                if (!listDir[i].hasImageExtension())
-                    continue;
-                objId = fMD.addObject();
-                fMD.setValue(MDL_IMAGE, fnFFinput+"/"+listDir[i], objId);
+                Iaux() -= IavgDark();
+                forcePositive(Iaux());
             }
+
+            double currentBeam = 1;
+            double expTime = 1;
+            double slitWidth = 1;
+
+            if ( dSource == MISTRAL )
+            {
+                size_t idx = fnImg.getPrefixNumber();
+                currentBeam = dMi(cBeamArray, idx-1);
+                expTime = dMi(expTimeArray, idx-1);
+                slitWidth = dMi(slitWidthArray, idx-1);
+            }
+            else
+                readCorrectionInfo(fnImg, currentBeam, expTime, slitWidth);
+
+            Iaux() *= 1.0/(currentBeam*expTime*slitWidth);
+
+            if ( N == 0 )
+                Iavg() = Iaux();
+            else
+                Iavg() += Iaux();
+            N++;
         }
-        break;
+
+        darkFix = false; // We reset just in case there is no dark field for tomo images
+
+        Iavg()*=1.0/N;
     }
-
-    int N  =0;
-    Image<double> Iaux;
-    FileName fnImg;
-
-    FOR_ALL_OBJECTS_IN_METADATA(fMD)
-    {
-        fMD.getValue(MDL_IMAGE, fnImg, __iter.objId);
-
-        readAndCrop(fnImg, Iaux);
-
-        if ( darkFix )
-        {
-            Iaux() -= IavgDark();
-            forcePositive(Iaux());
-        }
-
-        double currentBeam = 1;
-        double expTime = 1;
-        double slitWidth = 1;
-
-        if ( dSource == MISTRAL )
-        {
-            size_t idx = fnImg.getPrefixNumber();
-            currentBeam = dMi(cBeamArray, idx-1);
-            expTime = dMi(expTimeArray, idx-1);
-            slitWidth = dMi(slitWidthArray, idx-1);
-        }
-        else
-            readCorrectionInfo(fnImg, currentBeam, expTime, slitWidth);
-
-        Iaux() *= 1.0/(currentBeam*expTime*slitWidth);
-
-        if ( N == 0 )
-            Iavg() = Iaux();
-        else
-            Iavg() += Iaux();
-        N++;
-    }
-
-    darkFix = false; // We reset just in case there is no dark field for tomo images
-
-    if ( N==0 )
-        REPORT_ERROR(ERR_IO_NOTEXIST, "No images to process");
-    Iavg()*=1.0/N;
-
     /* Create a mask with zero valued pixels to apply boundaries median filter
      * to avoid dividing by zero when normalizing */
     MultidimArray<char> mask;
     Iavg().equal(0,mask);
+
     if (XSIZE(bpMask()) != 0)
         mask += bpMask();
     boundMedianFilter(Iavg(),mask);
@@ -474,9 +495,9 @@ void runThread(ThreadArgument &thArg)
                 mask += ptrProg->bpMask();
             boundMedianFilter(Iaux(), mask);
 
-            if (ptrProg->log10Fix)
+            if (ptrProg->logFix)
             {
-                Iaux().selfLog10();
+                Iaux().selfLog();
                 if (ptrProg->selfAttFix)
                     Iaux() *= -1.;
             }

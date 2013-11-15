@@ -282,6 +282,7 @@ def expandResize():
 DoResize = False
 
 #{condition}(DoResize) New image size
+""" New size in pixels of the images """
 NewSize = 0
 
 # Crop
@@ -300,3 +301,6 @@ CropSize = 0
 def expandPreprocessFilterMask(allowFlip):
     return expandParticlesPreprocess(allowFlip) + \
         expandFilter() + expandMask()
+        
+        
+from protlib_include_xray import *

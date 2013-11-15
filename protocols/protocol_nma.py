@@ -12,6 +12,7 @@ from protlib_utils import runJob, which, runShowJ, runChimera, runVMD
 from protlib_filesystem import changeDir, createLink, getExt, moveFile, createDir, deleteFile
 from xmipp import MetaData, MDL_X, MDL_COUNT, MDL_NMA_MODEFILE, MDL_ORDER, MDL_ENABLED, MDL_NMA_COLLECTIVITY, MDL_NMA_SCORE, \
     MDL_NMA_ATOMSHIFT, getImageSize
+from protlib_xmipp import redStr
 
 class ProtNMA(XmippProtocol):
     def __init__(self, scriptname, project):
@@ -88,6 +89,14 @@ class ProtNMA(XmippProtocol):
         message=[]
         message.append('NMA of [%s]'%self.InputStructure)
         message.append('%d flexible modes: [%s]'%(self.NumberOfModes,self.workingDirPath('modes.xmd')))
+
+        fnWarning = self.workingDirPath('warnings.xmd')
+        if os.path.exists(fnWarning):
+            fhWarning=open(fnWarning,'r')
+            lines=fhWarning.readlines();
+            fhWarning.close()
+            for line in lines:
+                message.append(line)
         return message
     
     def validate(self):
@@ -137,12 +146,12 @@ def countAtoms(fnPDB):
     fh = open(fnPDB, 'r')
     Natoms=0
     for line in fh:
-        if line.find('ATOM')!=-1:
+        if line.find('ATOM')!=-1 or line.find('HETATM')!=-1:
             Natoms+=1
     fh.close()
     return Natoms
 
-def computeCutoff(fnHist, RcPercentage):
+def computeCutoff(WorkingDir, fnHist, RcPercentage):
     MDhist=MetaData(fnHist)
     distances=MDhist.getColumnValues(MDL_X)
     distanceCount=MDhist.getColumnValues(MDL_COUNT)
@@ -160,28 +169,40 @@ def computeCutoff(fnHist, RcPercentage):
         if Ncounts>NcountThreshold:
             Rc=distances[i]
             break
-    print("Cut-off distance="+str(Rc))
+    print("Cut-off distance="+str(Rc)+" A")
+    fhWarning=open(os.path.join(WorkingDir,"warnings.xmd"),'w')
+    fhWarning.write("Cut-off distance="+str(Rc)+" A\n")
+    fhWarning.close()
     return Rc
 
 def computeModes(log, WorkingDir, NumberOfModes, CutoffMode, Rc, RcPercentage):
     if CutoffMode=="Relative":
-        Rc=computeCutoff(os.path.join(WorkingDir,"extra/pseudoatoms_distance.hist"),RcPercentage)
+        Rc=computeCutoff(WorkingDir,os.path.join(WorkingDir,"extra/pseudoatoms_distance.hist"),RcPercentage)
     currentDir=os.getcwd()
     changeDir(log,WorkingDir)
     runJob(log,"nma_record_info.py","%d pseudoatoms.pdb %d"%(NumberOfModes,int(Rc)))
     runJob(log,"nma_pdbmat.pl","pdbmat.dat")
     runJob(log,"nma_diag_arpack","")
+    if not os.path.exists("fort.11"):
+        fhWarning=open("warnings.xmd",'w')
+        fhWarning.write(redStr("Modes cannot be computed. Check the number of modes you asked to compute and/or consider increasing cut-off distance. The maximum number of modes allowed by the method for pseudoatomic normal mode analysis is 3 times the number of pseudoatoms but the protocol allows only up to 200 modes as 20-100 modes are usually enough.  If the number of modes is below the minimum between 200 and 3 times the number of pseudoatoms, consider increasing cut-off distance.")+"\n")
+        fhWarning.close()
+
     runJob(log,"rm","diag_arpack.in pdbmat.dat")
     changeDir(log,currentDir)
 
 def computeModesPDB(log, WorkingDir, NumberOfModes, CutoffMode, Rc, RcPercentage, RTBblockSize, RTBForceConstant):
     if CutoffMode=="Relative":
-        Rc=computeCutoff(os.path.join(WorkingDir,"extra/atoms_distance.hist"),RcPercentage)
+        Rc=computeCutoff(WorkingDir,os.path.join(WorkingDir,"extra/atoms_distance.hist"),RcPercentage)
     currentDir=os.getcwd()
     changeDir(log,WorkingDir)
     runJob(log,"nma_record_info_PDB.py","%d %d atoms.pdb %f %f"%(NumberOfModes,RTBblockSize,Rc,RTBForceConstant))
     runJob(log,"nma_elnemo_pdbmat","")
     runJob(log,"nma_diagrtb","")
+    if not os.path.exists("diagrtb.eigenfacs"):
+        fhWarning=open("warnings.xmd",'w')
+        fhWarning.write(redStr("Modes cannot be computed. Check the number of modes you asked to compute and/or consider increasing cut-off distance. The maximum number of modes allowed by the method for atomic normal mode analysis is 6 times the number of RTB blocks but the protocol allows only up to 200 modes as 20-100 modes are usually enough. If the number of modes is below the minimum between 200 and 6 times the number of RTB blocks, consider increasing cut-off distance.")+"\n")
+        fhWarning.close()
     runJob(log,"rm","*.dat_run diagrtb.dat pdbmat.xyzm pdbmat.sdijf pdbmat.dat")
     changeDir(log,currentDir)
 
@@ -230,6 +251,12 @@ def qualifyModes(log,WorkingDir,NumberOfModes,StructureType,CollectivityThreshol
     currentDir=os.getcwd()
     changeDir(log,WorkingDir)
     
+    fnVec=glob.glob("modes/vec.*")
+    if len(fnVec)<NumberOfModes:
+        fhWarning=open("warnings.xmd",'w')
+        fhWarning.write(redStr("There are only "+str(len(fnVec))+" modes instead of "+str(NumberOfModes)+". Check the number of modes you asked to compute and/or consider increasing cut-off distance. The maximum number of modes allowed by the method for atomic normal mode analysis is 6 times the number of RTB blocks and for pseudoatomic normal mode analysis 3 times the number of pseudoatoms. However, the protocol allows only up to 200 modes as 20-100 modes are usually enough. If the number of modes is below the minimum between these two numbers, consider increasing cut-off distance.")+"\n")
+        fhWarning.close()
+
     fnDiag="diagrtb.eigenfacs"
     if StructureType=="EM":
         runJob(log,"nma_reformatForElNemo.sh","%d"%NumberOfModes)
@@ -277,10 +304,12 @@ def animateModes(log,WorkingDir,LastMode,Amplitude,NFrames,Downsample,PseudoAtom
     changeDir(log,WorkingDir)
     if StructureType=="EM":
         fn="pseudoatoms.pdb"
+        runJob(log,"nma_animate_pseudoatoms.py","%s extra/vec_ani.pkl 7 %d %f extra/animations/animated_mode %d %d %f"%\
+                  (fn,LastMode,Amplitude,NFrames,Downsample,PseudoAtomThreshold))
     else:
         fn="atoms.pdb"
-    runJob(log,"nma_animate.py","%s extra/vec_ani.pkl 7 %d %f extra/animations/animated_mode %d %d %f"%\
-                  (fn,LastMode,Amplitude,NFrames,Downsample,PseudoAtomThreshold))
+    	runJob(log,"nma_animate_atoms.py","%s extra/vec_ani.pkl 7 %d %f extra/animations/animated_mode %d"%\
+                  (fn,LastMode,Amplitude,NFrames))
     
     for mode in range(7,LastMode+1):
         fnAnimation="extra/animations/animated_mode_%03d"%mode

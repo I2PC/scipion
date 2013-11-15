@@ -635,12 +635,15 @@ double errorBetween2CTFs( MetaData &MD1,
                          size_t dim,
                          double minFreq=0.05,
                          double maxFreq=0.25);
-/** Report at which resolution these two CTF are shifted by 90 degrees
- *retuen amsgtroms
+/** Report at which resolution an astigmatism  CTF is shifted in perpendicular directions
+ * by phaseRad degrees. Returns amsgtroms
  */
 double errorMaxFreqCTFs( MetaData &MD1,
-                         MetaData &MD2);
+                         double phaseRad=HALFPI);
 
+/** Report at which resolution these two CTF are shifted by phaseRad degrees
+ *returns amsgtroms
+ */
 double errorMaxFreqCTFs2D( MetaData &MD1,
                          MetaData &MD2,
                          size_t xDim=256,
