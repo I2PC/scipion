@@ -163,6 +163,10 @@ def textfileViewer(title, fileList):
     html = html + "</div>"
     return html
 
+def convertTktoHtml(text):
+    text = text.replace('\n', '<br/>')
+    return text
+
 def get_image(request):
 #    from django.http import HttpResponse
     from pyworkflow.gui import getImage, getPILImage
