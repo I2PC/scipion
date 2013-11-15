@@ -185,7 +185,7 @@ def computeModes(log, WorkingDir, NumberOfModes, CutoffMode, Rc, RcPercentage):
     runJob(log,"nma_diag_arpack","")
     if not os.path.exists("fort.11"):
         fhWarning=open("warnings.xmd",'w')
-        fhWarning.write(redStr("Modes cannot be computed. Consider increasing cut-off distance")+"\n")
+        fhWarning.write(redStr("Modes cannot be computed. Check the number of modes you asked to compute and/or consider increasing cut-off distance. The maximum number of modes allowed by the method for pseudoatomic normal mode analysis is 3 times the number of pseudoatoms but the protocol allows only up to 200 modes as 20-100 modes are usually enough.  If the number of modes is below the minimum between 200 and 3 times the number of pseudoatoms, consider increasing cut-off distance.")+"\n")
         fhWarning.close()
 
     runJob(log,"rm","diag_arpack.in pdbmat.dat")
@@ -201,7 +201,7 @@ def computeModesPDB(log, WorkingDir, NumberOfModes, CutoffMode, Rc, RcPercentage
     runJob(log,"nma_diagrtb","")
     if not os.path.exists("diagrtb.eigenfacs"):
         fhWarning=open("warnings.xmd",'w')
-        fhWarning.write(redStr("Modes cannot be computed. Consider increasing cut-off distance")+"\n")
+        fhWarning.write(redStr("Modes cannot be computed. Check the number of modes you asked to compute and/or consider increasing cut-off distance. The maximum number of modes allowed by the method for atomic normal mode analysis is 6 times the number of RTB blocks but the protocol allows only up to 200 modes as 20-100 modes are usually enough. If the number of modes is below the minimum between 200 and 6 times the number of RTB blocks, consider increasing cut-off distance.")+"\n")
         fhWarning.close()
     runJob(log,"rm","*.dat_run diagrtb.dat pdbmat.xyzm pdbmat.sdijf pdbmat.dat")
     changeDir(log,currentDir)
@@ -254,7 +254,7 @@ def qualifyModes(log,WorkingDir,NumberOfModes,StructureType,CollectivityThreshol
     fnVec=glob.glob("modes/vec.*")
     if len(fnVec)<NumberOfModes:
         fhWarning=open("warnings.xmd",'w')
-        fhWarning.write(redStr("There are only "+str(len(fnVec))+" modes instead of "+str(NumberOfModes)+". Consider increasing cut-off distance")+"\n")
+        fhWarning.write(redStr("There are only "+str(len(fnVec))+" modes instead of "+str(NumberOfModes)+". Check the number of modes you asked to compute and/or consider increasing cut-off distance. The maximum number of modes allowed by the method for atomic normal mode analysis is 6 times the number of RTB blocks and for pseudoatomic normal mode analysis 3 times the number of pseudoatoms. However, the protocol allows only up to 200 modes as 20-100 modes are usually enough. If the number of modes is below the minimum between these two numbers, consider increasing cut-off distance.")+"\n")
         fhWarning.close()
 
     fnDiag="diagrtb.eigenfacs"
@@ -304,10 +304,12 @@ def animateModes(log,WorkingDir,LastMode,Amplitude,NFrames,Downsample,PseudoAtom
     changeDir(log,WorkingDir)
     if StructureType=="EM":
         fn="pseudoatoms.pdb"
+        runJob(log,"nma_animate_pseudoatoms.py","%s extra/vec_ani.pkl 7 %d %f extra/animations/animated_mode %d %d %f"%\
+                  (fn,LastMode,Amplitude,NFrames,Downsample,PseudoAtomThreshold))
     else:
         fn="atoms.pdb"
-    runJob(log,"nma_animate.py","%s extra/vec_ani.pkl 7 %d %f extra/animations/animated_mode %d %d %f"%\
-                  (fn,LastMode,Amplitude,NFrames,Downsample,PseudoAtomThreshold))
+    	runJob(log,"nma_animate_atoms.py","%s extra/vec_ani.pkl 7 %d %f extra/animations/animated_mode %d"%\
+                  (fn,LastMode,Amplitude,NFrames))
     
     for mode in range(7,LastMode+1):
         fnAnimation="extra/animations/animated_mode_%03d"%mode

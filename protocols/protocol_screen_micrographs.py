@@ -59,7 +59,7 @@ class ProtScreenMicrographs(XmippProtocol):
         MD = xmipp.MetaData(self.MicrographsMd)
         #if removed in import do not process them
         MD.removeDisabled()
-        
+	
         # Now the estimation actions
         for objId in MD:
             inputFile = MD.getValue(xmipp.MDL_MICROGRAPH, objId)
