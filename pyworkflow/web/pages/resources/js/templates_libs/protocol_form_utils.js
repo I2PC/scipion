@@ -257,14 +257,14 @@ function evalElements() {
 		var type = jQuery(this).attr('data-type');
 		var param = jQuery(this).attr('id');
 
-//		 alert(value +" - "+type+" - "+param);
+//		alert(value +" - "+type+" - "+param);
 
 //		if (type == "BooleanParam" || type == "FloatParam" || type == "IntParam") {
 //			onChangeBooleanParam(value, param);
 //		} else 
 		if (type == "EnumParam") {
 			var typeEnum = jQuery(this).attr('data-enum');
-			if (typeEnum == '0') {TATOO
+			if (typeEnum == '0') {
 				onChangeEnumParamList(value, param);
 			} else if (typeEnum == '1') {
 				onChangeEnumParamCombo(param + "_select", param);
@@ -326,6 +326,8 @@ function evalDependencies(row, newLevel) {
 			var row2 = jQuery("tr#" + arrayDepends[cont]);
 			var res = evalCondition(row2);
 			var expLevel = row2.attr('data-expert');
+			
+//			alert("level:"+expLevel+", newlevel:"+newLevel)
 
 			if (res == false || expLevel > newLevel) {
 				row2.hide();
@@ -363,10 +365,10 @@ function evalCondition(row) {
 //		params += "param: " + param + " value: " + value + "\n";
 		cond_eval = cond_eval.replace(param, value);
 	}
-	// if (row.attr("name")=="comment") {
-	// alert("condition: " + cond + " \nparams:\n" + params + "\n eval: " +
-	// cond_eval);
-	// }
+	
+//	if (row.attr("name")=="comment") {
+//		alert("condition: " + cond + " \nparams:\n" + params + "\n eval: " + cond_eval);
+//	}
 	
 	cond_eval = normalizeConditions(cond_eval)
 
