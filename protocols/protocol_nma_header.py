@@ -42,14 +42,14 @@ PseudoAtomRadius=1
 
 # {expert} Volume approximation error (%):
 """This value is a percentage (between 0.001 and 100) specifying how fine you want to
-approximate the EM volume by the pseudoatomic structure. Lower values imply lower approximation error,
-and consequently, more atoms."""
+approximate the EM volume by the pseudoatomic structure. Lower values imply lower approximation error, and consequently, more pseudoatoms."""
 PseudoAtomTarget=5
 
 #------------------------------------------------------------------------------------------------
 # {section} Normal Mode Analysis
 #------------------------------------------------------------------------------------------------
 # Number of modes:
+"""The maximum number of modes allowed by the method for atomic normal mode analysis is 6 times the number of RTB blocks and for pseudoatomic normal mode analysis 3 times the number of pseudoatoms. However, the protocol allows only up to 200 modes as 20-100 modes are usually enough. The number of modes given here should be below the minimum between these two numbers."""
 NumberOfModes=20
 
 # {list}(Absolute,Relative) Cut-off mode:
@@ -60,7 +60,7 @@ CutoffMode="Relative"
 Rc=8
 
 # {condition}(CutoffMode=="Relative") Cut-off percentage:
-"""The interatomic distance is calculated and this percentage defines how many of the nearest neighbours are considered """
+"""The interaction cutoff distance is calculated as the distance below which is this percentage of interatomic or interpseudoatomic distances. Atoms or pseudoatoms beyond this distance will not interact. """
 RcPercentage=95
 
 # {expert}{condition}(StructureType=="PDB") Number of residues per RTB block:
@@ -74,7 +74,7 @@ If it increases, then the structure will be more rigid. """
 RTBForceConstant=10.0
 
 # {expert} Threshold on collectivity
-""" Modes below this collectivity are deselected. Set to 0 for no filtering based on collectivity.  """
+""" Collectivity degree is related to the number of atoms or pseudoatoms that are affected by the mode, and it is normalized between 0 and 1. Modes below this threshold are deselected in the modes metadata file. Set to 0 for no deselection. You can always modify the selection manually after the modes metadata file is created. The modes metadata file can be used with Flexible fitting protocol. Modes 1-6 are always deselected as they are related to rigid-body movements.  """
 CollectivityThreshold=0.15
 
 #------------------------------------------------------------------------------------------------
@@ -86,11 +86,11 @@ Amplitude=50
 #{expert} Number of frames:
 NFrames=10
 
-#{expert} Downsample pseudoatomic structure:
+#{expert}{condition}(StructureType=="EM") Downsample pseudoatomic structure:
 """ Downsample factor 2 means removing one half of the pseudoatoms """
 Downsample=1
 
-#{expert} Pseudoatom mass threshold:
+#{expert}{condition}(StructureType=="EM") Pseudoatom mass threshold:
 """ Remove pseudoatoms whose mass is below this threshold. This value should be between 0 and 1"""
 PseudoAtomThreshold=0
 
