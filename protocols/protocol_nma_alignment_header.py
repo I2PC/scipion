@@ -36,15 +36,15 @@ SamplingRate=2
 # {section}{expert} Angular assignment and mode detection
 #----------------------------------------------------------------------------------
 # Trust region scale
-"""This parameter scales the initial value of the trust region radius for optimization purposes.
-Use larger values for larger expected deformation amplitudes."""
+"""For elastic alignment, this parameter scales the initial value of the trust region radius for optimization purposes. Use larger values for larger expected deformation amplitudes."""
 TrustRegionScale=1
 
 # Use Projection Matching:
-"""Use Projection Matching instead of Wavelets and Splines"""
-ProjMatch=True
+"""For rigid-body alignment, use Projection Matching (faster) instead of Wavelets and Splines (more accurate). In the case of Wavelets and Splines, the size of images should be a power of 2."""
+ProjMatch=False
 
 # Discrete angular sampling rate
+"""This parameter is used in Projection Matching and Wavelets methods for a rough rigid-body alignment. It is the angular step (in degrees) with which the library of reference projections is computed. This alignment is refined with Splines method if Wavelets and Splines alignment is chosen."""
 DiscreteAngularSampling=10
 
 # {eval} expandParallel(threads=0,mpi=2)
