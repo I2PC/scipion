@@ -29,13 +29,12 @@ scale corrections in image groups.
 """
 ImgMd = ""
 
-# {run}(relion_classify) Continue from protocol:
-""" 
-Continue a relion classify protocol. Provide protocol name
-"""
-ImportRun = ""
+# {file}(*optimiser.star){validate}(PathExists) continue from path:
+"""Continue a relion classify protocol from this file """
+inputFileName = ''
 
-# Continue from iteration:
+
+# {hidden}Continue from iteration:
 """ 
 Continue a relion classify protocol. Provide iteration number
 """

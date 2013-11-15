@@ -10,7 +10,8 @@
 from glob import glob
 from protlib_base import *
 from xmipp import MetaData, MDL_MICROGRAPH, MDL_MICROGRAPH_TILTED, MDL_SAMPLINGRATE, MDL_CTF_VOLTAGE, \
-    MDL_CTF_CS, MDL_CTF_SAMPLING_RATE, MDL_MAGNIFICATION, checkImageFileSize, checkImageCorners
+    MDL_CTF_CS, MDL_CTF_SAMPLING_RATE, MDL_MAGNIFICATION, checkImageFileSize, checkImageCorners,\
+    MDL_CTF_Q0
 from protlib_filesystem import replaceBasenameExt, renameFile
 from protlib_utils import runJob
 from protlib_xmipp import redStr, RowMetaData
@@ -35,7 +36,8 @@ class ProtEmxImportMicrographs(XmippProtocol):
         
         self.propDict = {'SamplingRate': 'pixelSpacing__X',
                          'SphericalAberration': 'cs',
-                         'Voltage': 'acceleratingVoltage'}
+                         'Voltage': 'acceleratingVoltage',
+                         'AmplitudeContrast':'amplitudeContrast'}
             
     def createFilenameTemplates(self):
         return {
@@ -60,19 +62,17 @@ class ProtEmxImportMicrographs(XmippProtocol):
         #createMicroscope
         microscopeFn = self.getFilename('microscope')
         _verifyFiles.append(microscopeFn)
-        
         self.insertStep("createMicrographs", 
                         verifyfiles=_verifyFiles,
                         emxFileName=self.EmxFileName,
-                        binaryFilename=self.binaryFile,
                         micsFileName=micsFn,
-                        projectDir=self.projectDir,
-                        ctfDir=self.ExtraDir,
                         acqFn=acqFn, 
+                        ctfDir=self.ExtraDir,
                         SamplingRate=self.SamplingRate,
                         microscopeFn=microscopeFn, 
                         Voltage=self.Voltage, 
-                        SphericalAberration=self.SphericalAberration
+                        SphericalAberration=self.SphericalAberration,
+                        AmplitudeContrast=self.AmplitudeContrast
                         )
         
         if PARTICLE in self.objDict:
@@ -159,39 +159,43 @@ def validateSchema(log, emxFileName):
 
 def createMicrographs(log,
                       emxFileName, 
-                      binaryFilename, 
                       micsFileName, 
-                      projectDir, 
+                      acqFn,
                       ctfDir,
-                      acqFn, 
                       SamplingRate,
                       microscopeFn, 
                       Voltage, 
-                      SphericalAberration
+                      SphericalAberration,
+                      AmplitudeContrast
                       ):
+    
+    print "Creating metadata   file %s with micrographs"%micsFileName
     filesPrefix = dirname(emxFileName)
     emxData = loadEmxData(emxFileName)
-    _Voltage, _SphericalAberration, _SamplingRate = emxMicsToXmipp(emxData, micsFileName, filesPrefix, ctfDir)
+    _SamplingRate = emxMicsToXmipp(emxData, 
+                                   micsFileName, 
+                                   filesPrefix,
+                                   ctfDir)
+    
     if _SamplingRate > 0:
         SamplingRate = _SamplingRate
-    if _Voltage > 0:
-        Voltage = _Voltage
-    if _SphericalAberration > 0:
-        SphericalAberration = _SphericalAberration
+
     createAcquisition(log, acqFn, SamplingRate )
-    createMicroscope(log, microscopeFn, Voltage, SphericalAberration, SamplingRate)
+    emxCTFToXmipp(emxData, micsFileName, filesPrefix, ctfDir,Voltage, SphericalAberration, SamplingRate, AmplitudeContrast)
+    createMicroscope(log, microscopeFn, Voltage, SphericalAberration, SamplingRate, AmplitudeContrast)
     
-def createAcquisition(log, fnacq, SamplingRate):
+def createAcquisition(log, acqFn, SamplingRate):
         # Create the acquisition info file
     mdAcq = RowMetaData()
     mdAcq.setValue(MDL_SAMPLINGRATE, float(SamplingRate))
     mdAcq.write(acqFn)
     
-def createMicroscope(log, microscopeFn, Voltage, SphericalAberration, SamplingRate):
+def createMicroscope(log, microscopeFn, Voltage, SphericalAberration, SamplingRate, AmplitudeContrast):
     md = RowMetaData()
     md.setValue(MDL_CTF_VOLTAGE, float(Voltage))    
     md.setValue(MDL_CTF_CS, float(SphericalAberration))    
     md.setValue(MDL_CTF_SAMPLING_RATE, float(SamplingRate))
+    md.setValue(MDL_CTF_QO, float(AmplitudeContrast))
     #md.setValue(MDL_MAGNIFICATION, 60000.0)
     md.write(microscopeFn)
     

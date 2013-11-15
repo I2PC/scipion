@@ -28,7 +28,11 @@ SphericalAberration = ""
 """ If left blank, the value will be read from the EMX file. """
 SamplingRate = ""
 
-#------------------------------------------------------------------------------------------------
+# {validate}(IsFloatOrEmpty) Percentage of amplitude contrast
+""" If left blank, the value will be read from the EMX file. """
+AmplitudeContrast = ""
+
+    #------------------------------------------------------------------------------------------------
 #------------------------------------------------------------------------------------------------
 # {end_of_header} USUALLY YOU DO NOT NEED TO MODIFY ANYTHING BELOW THIS LINE ...
 #------------------------------------------------------------------------------------------------
