@@ -32,7 +32,7 @@ import java.util.logging.Level;
 //import xmipp.utils.DEBUG;
 
 /**
- * Protocol for integrating native C++ code - @see ImageDouble.java
+ * Binding class for accessing C++ MetaData implementation.
  */
 public class MetaData {
 	/** Enum values with Labels possible types */

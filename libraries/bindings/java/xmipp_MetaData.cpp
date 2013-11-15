@@ -2,13 +2,14 @@
 
 #include <jni.h>
 #include "xmipp_MetaData.h"
+#include "xmipp_InternalData.h"
 #include "xmipp_ExceptionsHandler.h"
+
 #include <data/metadata.h>
 #include <data/metadata_label.h>
 #include <data/metadata_extension.h>
 #include <data/xmipp_program_sql.h>
 #include <classification/analyze_cluster.h>
-#include "xmipp_InternalData.h"
 
 int debug = 0;
 /*
