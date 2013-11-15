@@ -41,7 +41,14 @@ def showj(request, inputParameters=None):
     #If no label is set to render, set the first one if exists
     if 'labelsToRenderComboBox' not in inputParameters or inputParameters['labelsToRenderComboBox'] == '' or request.session['blockComboBox'] != inputParameters['blockComboBox']:
         labelsToRenderComboBoxValues = getLabelsToRenderComboBoxValues(inputParameters['tableLayoutConfiguration'].columnsLayout)
-        inputParameters['labelsToRenderComboBox']=labelsToRenderComboBoxValues[0][0] if len(labelsToRenderComboBoxValues) > 0 else ''
+        if len(labelsToRenderComboBoxValues) > 0:
+            inputParameters['labelsToRenderComboBox'] = labelsToRenderComboBoxValues[0][0]
+        else:
+            # If there is no image to display and it is initial load, switch to table mode 
+            if request.method == 'GET' and inputParameters['mode']!='table':
+                inputParameters['mode']='table'
+                showj(request, inputParameters) 
+            inputParameters['labelsToRenderComboBox'] = ''
 
     dataset.setLabelToRender(inputParameters['labelsToRenderComboBox']) 
 
