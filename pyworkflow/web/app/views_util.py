@@ -233,6 +233,7 @@ def get_slice(request):
 #    from django.http import HttpResponse
     from pyworkflow.gui import getImage, getPILImage
     
+    imageNo = None
     sliceNo = None
     imagePath = request.GET.get('image')
     imageDim = request.GET.get('dim', 150)
@@ -248,14 +249,26 @@ def get_slice(request):
         if not '@' in imagePath:
             raise Exception('Slice number required.')
         
-        parts = imagePath.split('@')
+        parts = imagePath.split('@',1)
         sliceNo = parts[0]
         imagePath = parts[1]
+
+        if '@' in imagePath:
+                parts = imagePath.split('@')
+                imageNo = parts[0]
+                imagePath = parts[1]
+    
+        
     
         if 'projectPath' in request.session:
             imagePathTmp = os.path.join(request.session['projectPath'], imagePath)
             if not os.path.isfile(imagePathTmp):
                 imagePath = getInputPath('showj', imagePath)
+                
+        if imageNo:
+            imagePath = '%s@%s' % (imageNo, imagePath)                 
+
+        print "slice", sliceNo, imagePath, parts
 
         imgXmipp = xmipp.Image()
         imgXmipp.readPreview(imagePath, int(imageDim), int(sliceNo))

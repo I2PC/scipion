@@ -71,7 +71,6 @@ def showj(request, inputParameters=None):
     request.session['dataset'] = dataset
     request.session['labelsToRenderComboBox'] = inputParameters['labelsToRenderComboBox']
     request.session['blockComboBox'] = inputParameters['blockComboBox']
-#        if (_imageDimensions != ''):
     request.session['imageDimensions'] = _imageDimensions
 
     print "getNumberSlices",dataset.getNumberSlices()
