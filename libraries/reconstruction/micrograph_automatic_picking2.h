@@ -80,29 +80,35 @@ public:
     ProgImageRotationalPCA rotPcaAnalyzer;
     Point p1,p2;
     FeaturesThread * thread;
-    MetaData micList;
-    Micrograph m;
+//    MetaData micList;
+    Micrograph m, mPrev;;
 
-    Image<double> microImage, micrographStack;
+    Image<double> microImage, micrographStack, micrographStackPre, microImagePrev;
 
     std::vector<Particle2> auto_candidates;
     std::vector<Particle2> rejected_particles;
     std::vector<Particle2> accepted_particles;
+    std::vector<Particle2> negative_candidates;
+    std::vector<MDRow> micList;
 
     FileName fn_micrograph, fn_model, fnPCAModel, fnPCARotModel, fnAvgModel;
     FileName fnVector, fnSVMModel, fnSVMModel2, fnInvariant, fnParticles;
+
+
 
     double scaleRate;
     MultidimArray<double> convolveRes, filterBankStack, positiveParticleStack, negativeParticleStack;
     MultidimArray<double> positiveInvariatnStack, negativeInvariatnStack, autoFeatVec;
     MultidimArray<double> pcaModel, pcaRotModel, particleAvg, dataSet, dataSet1, classLabel;
-    MultidimArray<double> classLabel1, labelSet;
+    MultidimArray<double> classLabel1, labelSet, dataSetNormal;
 
 public:
 
     /// Constructor
+//    AutoParticlePicking2(int particle_size, int filter_num = 6, int corr_num = 2, int NPCA = 4,
+//                         const FileName &model_name=NULL, const FileName &micsFn=NULL);
     AutoParticlePicking2(int particle_size, int filter_num = 6, int corr_num = 2, int NPCA = 4,
-                         const FileName &model_name=NULL, const FileName &micsFn=NULL);
+                         const FileName &model_name=NULL, const std::vector<MDRow> &vMicList = std::vector<MDRow>());
 
     AutoParticlePicking2();
 
@@ -112,14 +118,16 @@ public:
     void setSize(int pSize);
 
     /// Read micrograph from the file
-    void readMic(FileName fn_micrograph);
+    void readMic(const FileName &fn_micrograph, int keepPrev);
 
     void filterBankGenerator();
 
-    void batchBuildInvariant(MetaData MD);
+//    void batchBuildInvariant(const MetaData &MD);
 
-    void buildInvariant(MetaData MD);
+    void batchBuildInvariant(const std::vector<MDRow> &MD);
 
+//    void buildInvariant(const MetaData &MD);
+    void buildInvariant(const std::vector<MDRow> &MD);
     void extractInvariant();
 
     void extractPositiveInvariant();
@@ -130,20 +138,26 @@ public:
 
     void add2Dataset(int flagNegPos);
 
-    void train(MetaData MD, bool corrFlag, int x, int y, int width, int height);
+//    void train(const MetaData &MD, bool corrFlag, int x, int y, int width, int height);
 
-    void correction(MetaData addedParticlesMD,MetaData removedParticlesMD);
+    void train(const std::vector<MDRow> &MD, bool corrFlag, int x, int y, int width, int height);
 
-    void add2Dataset(MetaData removedParticlesMD);
+//    void correction(const MetaData &addedParticlesMD,const MetaData &removedParticlesMD);
+    void correction(const std::vector<MDRow> &addedParticlesMD,const std::vector<MDRow> &removedParticlesMD);
+
+    void add2Dataset(const MetaData &removedParticlesMD);
 
     void saveTrainingSet();
 
-    int automaticallySelectParticles(FileName fnmicrograph, int proc_prec, MetaData &md);
+//    int automaticallySelectParticles(FileName fnmicrograph, int proc_prec, MetaData &md);
+
+    int automaticallySelectParticles(FileName fnmicrograph, int proc_prec, std::vector<MDRow> &md);
 
     int automaticWithouThread(FileName fnmicrograph, int proc_prec, const FileName &fn);
 
     void saveAutoParticles(MetaData &md);
 
+    void saveAutoParticles(std::vector<MDRow> &md);
     /// Define the parameters of the main program
     static void defineParams(XmippProgram * program);
 
@@ -234,7 +248,7 @@ public:
      *in polar form.
      */
     void buildInvariant(MultidimArray<double> &invariantChannel,
-                        int x,int y);
+                        int x,int y, int pre);
 
     /*
      * This method does a convolution in order to find an approximation

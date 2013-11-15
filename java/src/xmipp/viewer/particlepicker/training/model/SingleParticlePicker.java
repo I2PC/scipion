@@ -31,7 +31,7 @@ public class SingleParticlePicker extends ParticlePicker {
 
 	protected List<SingleParticlePickerMicrograph> micrographs;
 	private SingleParticlePickerMicrograph micrograph;
-	public static final int defAutoPickPercent = 90;
+	public static final int defAutoPickPercent = 10;
 	private int autopickpercent = defAutoPickPercent;
 
 	public static final int mintraining = 15;
@@ -136,7 +136,7 @@ public class SingleParticlePicker extends ParticlePicker {
 	}
 
 	public synchronized void initTemplates(int num) {
-		System.out.println("initTemplates");
+//		System.out.println("initTemplates");
 		if (num == 0)
 			return;
 		try {
@@ -164,7 +164,7 @@ public class SingleParticlePicker extends ParticlePicker {
 	}
 
 	public synchronized void setTemplatesNumber(int num) {
-		System.out.println("setTemplatesNumber");
+//		System.out.println("setTemplatesNumber");
 		if (num <= 0)
 			throw new IllegalArgumentException(
 					XmippMessage.getIllegalValueMsgWithInfo("Templates Number",
@@ -181,12 +181,12 @@ public class SingleParticlePicker extends ParticlePicker {
 	}
 
 	public synchronized ImageGeneric getTemplates() {
-		System.out.println("getTemplates");
+//		System.out.println("getTemplates");
 		return templates;
 	}
 
 	public synchronized void setTemplate(ImageGeneric ig) {
-		System.out.println("setTemplate");
+//		System.out.println("setTemplate");
 		float[] matrix;
 		try {
 			// TODO getArrayFloat and setArrayFloat must be call from C both in
