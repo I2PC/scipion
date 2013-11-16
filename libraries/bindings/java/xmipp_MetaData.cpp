@@ -977,4 +977,29 @@ JNIEXPORT jdouble JNICALL Java_xmipp_jni_MetaData_getColumnMin
     return 0.;
 }
 
+JNIEXPORT void JNICALL Java_xmipp_jni_MetaData_getRow
+(JNIEnv * env, jobject jobj, jobject jobjRow, jlong objId)
+{
+  XMIPP_JAVA_TRY
+  {
+      MetaData * md = GET_INTERNAL_METADATA(jobj);
+      MDRow * mdRow = GET_INTERNAL_MDROW(jobjRow);
+      md->getRow(*mdRow, (size_t)objId);
+  }
+  XMIPP_JAVA_CATCH;
+}
+
+
+JNIEXPORT void JNICALL Java_xmipp_jni_MetaData_setRow
+(JNIEnv * env, jobject jobj, jobject jobjRow, jlong objId)
+{
+  XMIPP_JAVA_TRY
+  {
+      MetaData * md = GET_INTERNAL_METADATA(jobj);
+      MDRow * mdRow = GET_INTERNAL_MDROW(jobjRow);
+      md->setRow(*mdRow, (size_t)objId);
+  }
+  XMIPP_JAVA_CATCH;
+}
+
 

@@ -470,6 +470,14 @@ JNIEXPORT jdouble JNICALL Java_xmipp_jni_MetaData_getColumnMax
 JNIEXPORT jdouble JNICALL Java_xmipp_jni_MetaData_getColumnMin
 (JNIEnv * , jobject , jint );
 
+JNIEXPORT void JNICALL Java_xmipp_jni_MetaData_getRow
+(JNIEnv * , jobject , jobject , jlong);
+
+
+JNIEXPORT void JNICALL Java_xmipp_jni_MetaData_setRow
+(JNIEnv * , jobject , jobject, jlong );
+
+
 #ifdef __cplusplus
 }
 #endif
