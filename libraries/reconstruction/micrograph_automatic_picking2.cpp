@@ -33,14 +33,15 @@
 #include <algorithm>
 #include <classification/uniform.h>
 
+int flagAbort=0;
+
 AutoParticlePicking2::AutoParticlePicking2()
-{
-}
+{}
 
-AutoParticlePicking2::AutoParticlePicking2(int pSize, int filterNum, int corrNum, int basisPCA, const FileName &model_name)
+AutoParticlePicking2::AutoParticlePicking2(int pSize, int filterNum, int corrNum, int basisPCA,
+        const FileName &model_name, const std::vector<MDRow> &vMicList)
 {
-
-	// Defining the paths for pca, svm, ... models.
+    // Defining the paths for pca, svm, ... models.
     fn_model=model_name;
     fnPCAModel=fn_model+"_pca_model.stk";
     fnPCARotModel=fn_model+"_rotpca_model.stk";
@@ -51,6 +52,11 @@ AutoParticlePicking2::AutoParticlePicking2(int pSize, int filterNum, int corrNum
     fnInvariant=fn_model+"_invariant";
     fnParticles=fn_model+"_particle";
 
+    // Reading the list of micrographs
+    //    if (strcmp(micsFn.c_str()," "))
+    //        micList.read(micsFn);
+
+    micList = vMicList;
     // Setting the values of the parameters
     corr_num=corrNum;
     filter_num=filterNum;
@@ -59,6 +65,10 @@ AutoParticlePicking2::AutoParticlePicking2(int pSize, int filterNum, int corrNum
     num_correlation=filterNum+((filterNum-corr_num)*corr_num);
     num_features=num_correlation*NPCA+NRPCA+12;
     setSize(pSize);
+
+    // Set the parameters for two SVM classifiers.
+    classifier.setParameters(8.0, 0.125);
+    classifier2.setParameters(1.0, 0.25);
 
     // If models were generated then load them to memory.
     if (fnPCAModel.exists())
@@ -74,11 +84,11 @@ AutoParticlePicking2::AutoParticlePicking2(int pSize, int filterNum, int corrNum
         // Read the average of the particles for convolution
         II.read(fnAvgModel);
         particleAvg=II();
+        classifier.LoadModel(fnSVMModel);
     }
 
-    // Set the parameters for two SVM classifiers.
-    classifier.setParameters(8.0, 0.125);
-    classifier2.setParameters(1.0, 0.25);
+    // Initalize the thread to one
+    thread = NULL;
 }
 
 // This method is required by the JAVA part.
@@ -92,42 +102,31 @@ void AutoParticlePicking2::setSize(int pSize)
 }
 
 // Read the micrograph and generate the filter bank for it.
-void AutoParticlePicking2::readMic(FileName fn_micrograph)
+void AutoParticlePicking2::readMic(const FileName &fn_micrograph, int keepPrev)
 {
+    if (keepPrev)
+    {
+        mPrev=m;
+        microImagePrev=microImage;
+        micrographStackPre=micrographStack;
+    }
     m.open_micrograph(fn_micrograph);
     microImage.read(fn_micrograph);
     // Resize the Micrograph
     selfScaleToSizeFourier((int)((m.Ydim)*scaleRate),
                            (int)((m.Xdim)*scaleRate),
                            microImage(),2);
+
     m.point1.x=-1;
     filterBankGenerator();
     micrographStack()=filterBankStack;
-}
+    filterBankStack.clear();
 
-// Generate filter bank from the micrograph image (this is for automatic mode)
-void filterBankGenerator(MultidimArray<double> &inputMicrograph,
-                         const FileName &fnFilterBankStack,
-                         int filter_num)
-{
-    fnFilterBankStack.deleteFile();
-    Image<double> Iaux;
-    Iaux()=inputMicrograph;
-    FourierFilter filter;
-    filter.raised_w=0.02;
-    filter.FilterShape=RAISED_COSINE;
-    filter.FilterBand=BANDPASS;
-    MultidimArray<std::complex<double> > micrographFourier;
-    FourierTransformer transformer;
-    transformer.FourierTransform(Iaux(),micrographFourier,true);
-    for (int i=0;i<filter_num;i++)
+    if (!keepPrev)
     {
-        filter.w1=0.025*i;
-        filter.w2=(filter.w1)+0.025;
-        transformer.setFourier(micrographFourier);
-        filter.applyMaskFourierSpace(inputMicrograph,transformer.fFourier);
-        transformer.inverseFourierTransform();
-        Iaux.write(fnFilterBankStack,i+1,true,WRITE_APPEND);
+        mPrev=m;
+        microImagePrev=microImage;
+        micrographStackPre=micrographStack;
     }
 }
 
@@ -160,47 +159,98 @@ void AutoParticlePicking2::filterBankGenerator()
     }
 }
 
-void AutoParticlePicking2::buildInvariant(MetaData MD)
+//void AutoParticlePicking2::buildInvariant(const MetaData &MD)
+//{
+//    int x, y;
+//    mPrev.point1.x=-1;
+//    FOR_ALL_OBJECTS_IN_METADATA(MD)
+//    {
+//        MD.getValue(MDL_XCOOR,x, __iter.objId);
+//        MD.getValue(MDL_YCOOR,y, __iter.objId);
+//        mPrev.add_coord(x,y,0,1);
+//    }
+//    extractPositiveInvariant(fnInvariant,fnParticles,true);
+//}
+
+void AutoParticlePicking2::buildInvariant(const std::vector<MDRow> &MD)
 {
     int x, y;
-    m.point1.x=-1;
-    FOR_ALL_OBJECTS_IN_METADATA(MD)
+    mPrev.point1.x=-1;
+    for (int i=0;i<MD.size();i++)
     {
-        MD.getValue(MDL_XCOOR,x, __iter.objId);
-        MD.getValue(MDL_YCOOR,y, __iter.objId);
-        m.add_coord(x,y,0,1);
+        MD[i].getValue(MDL_XCOOR,x);
+        MD[i].getValue(MDL_YCOOR,y);
+        mPrev.add_coord(x,y,0,1);
     }
     extractInvariant(fnInvariant,fnParticles,true);
 }
 
-void AutoParticlePicking2::batchBuildInvariant(MetaData MD)
-{
-    int x, y;
-    MetaData MD2;
-    FileName micFile;
-    FileName posFile;
+//void AutoParticlePicking2::batchBuildInvariant(const MetaData &MD)
+//{
+//    int x, y;
+//    std::cerr << "DEBUG: Before creating M2 in batchBuildInvariant" <<std::endl;
+//    MetaData MD2;
+//    FileName micFile;
+//    FileName posFile;
+//
+//    FOR_ALL_OBJECTS_IN_METADATA(MD)
+//    {
+//        MD.getValue(MDL_MICROGRAPH,micFile, __iter.objId);
+//        readMic(micFile,0);
+//        MD.getValue(MDL_MICROGRAPH_PARTICLES,posFile, __iter.objId);
+//        MD2.read("particles@"+posFile);
+//        if (MD.lastObject()==__iter.objId)
+//        {
+//            mPrev.point1=p1;
+//            mPrev.point2=p2;
+//        }
+//        else
+//            mPrev.point1.x=-1;
+//        FOR_ALL_OBJECTS_IN_METADATA(MD2)
+//        {
+//            MD2.getValue(MDL_XCOOR,x, __iter.objId);
+//            MD2.getValue(MDL_YCOOR,y, __iter.objId);
+//            mPrev.add_coord(x,y,0,1);
+//        }
+//        extractInvariant(fnInvariant,fnParticles,false);
+//    }
+//    Image<double> II;
+//    II()=particleAvg;
+//    II.write(fnAvgModel);
+//}
 
-    FOR_ALL_OBJECTS_IN_METADATA(MD)
+void AutoParticlePicking2::batchBuildInvariant(const std::vector<MDRow> &MD)
+{
+    int x, y, flag=0;
+    FileName micFile, posFile, preMicFile;
+
+    MD[0].getValue(MDL_MICROGRAPH,preMicFile);
+    readMic(preMicFile,0);
+    for (int i=0;i<MD.size();i++)
     {
-        MD.getValue(MDL_MICROGRAPH,micFile, __iter.objId);
-        readMic(micFile);
-        MD.getValue(MDL_MICROGRAPH_PARTICLES,posFile, __iter.objId);
-        MD2.read("particles@"+posFile);
-        if (MD.lastObject()==__iter.objId)
+        MD[i].getValue(MDL_MICROGRAPH,micFile);
+        if (strcmp(micFile.c_str(),preMicFile.c_str()))
         {
-            m.point1=p1;
-            m.point2=p2;
+            flag = 1;
+            readMic(micFile,0);
+            extractInvariant(fnInvariant,fnParticles,false);
+        }
+        preMicFile=micFile;
+        if (i==(MD.size()-1))
+        {
+            mPrev.point1=p1;
+            mPrev.point2=p2;
+            flag = 0;
         }
         else
-            m.point1.x=-1;
-        FOR_ALL_OBJECTS_IN_METADATA(MD2)
-        {
-            MD2.getValue(MDL_XCOOR,x, __iter.objId);
-            MD2.getValue(MDL_YCOOR,y, __iter.objId);
-            m.add_coord(x,y,0,1);
-        }
-        extractInvariant(fnInvariant,fnParticles,false);
+            mPrev.point1.x=-1;
+        MD[i].getValue(MDL_XCOOR,x);
+        MD[i].getValue(MDL_YCOOR,y);
+        mPrev.add_coord(x,y,0,1);
     }
+    if (!flag)
+        extractInvariant(fnInvariant,fnParticles,false);
+
     Image<double> II;
     II()=particleAvg;
     II.write(fnAvgModel);
@@ -246,7 +296,7 @@ void AutoParticlePicking2::extractPositiveInvariant()
         int x=(int)((m.coord(i).X)*scaleRate);
         int y=(int)((m.coord(i).Y)*scaleRate);
 
-        buildInvariant(IpolarCorr,x,y);
+        buildInvariant(IpolarCorr,x,y,1);
         // Keep the particles to train the classifiers
         extractParticle(x,y,microImage(),pieceImage,false);
         pieceImage.getImage(0,positiveParticleStack,numPosPart+i);
@@ -327,7 +377,7 @@ void AutoParticlePicking2::extractNegativeInvariant()
         int y=negativeSamples[DIRECT_A1D_ELEM(randomIndexes,i)-1].y;
         extractParticle(x,y,microImage(),pieceImage,false);
         pieceImage.getImage(0,negativeParticleStack,numNegPart+i);
-        buildInvariant(IpolarCorr,x,y);
+        buildInvariant(IpolarCorr,x,y,1);
         // Put the obtained invariants in the stack
         for (size_t j=0;j<NSIZE(IpolarCorr);j++)
             IpolarCorr.getImage(j,negativeInvariatnStack,numNegInv+i*num_correlation+j);
@@ -451,7 +501,73 @@ void AutoParticlePicking2::add2Dataset(int flagNegPos)
     }
 }
 
-void AutoParticlePicking2::train(MetaData MD, bool corrFlag, int x, int y, int width, int height)
+//void AutoParticlePicking2::train(const MetaData &MD, bool corrFlag, int x, int y, int width, int height)
+//{
+//    if (width!=0)
+//    {
+//        // Scale the specified region in the last micrograph to fit to the scaled one
+//        x*=scaleRate;
+//        y*=scaleRate;
+//        width*=scaleRate;
+//        height*=scaleRate;
+//        p1.x=x;
+//        p1.y=y;
+//        p2.x=x+width;
+//        p2.y=y+height;
+//    }
+//    //  Check if we are not in correcting mode
+//    if (!corrFlag)
+//    {
+//        if (fnPCAModel.exists())
+//        {
+//            // First delete are related files
+//            fnPCAModel.deleteFile();
+//            fnAvgModel.deleteFile();
+//            fnPCARotModel.deleteFile();
+//            fnVector.deleteFile();
+//
+//            //Second reset all the arrays
+//            pcaModel.clear();
+//            pcaRotModel.clear();
+//            particleAvg.clear();
+//            dataSet.clear();
+//            classLabel.clear();
+//        }
+//        // Read the data for PCA, Rot PCA, Average
+//        particleAvg.initZeros(particle_size+1,particle_size+1);
+//        particleAvg.setXmippOrigin();
+//        batchBuildInvariant(MD);
+//        trainPCA(fn_model);
+//        trainRotPCA(fnAvgModel,fnPCARotModel.removeAllExtensions());
+//        Image<double> II;
+//        II.read(fnPCAModel);
+//        pcaModel=II();
+//        // Read rotational PCA model
+//        II.read(fnPCARotModel);
+//        pcaRotModel=II();
+//        // Read the average of the particles for convolution
+//        II.read(fnAvgModel);
+//        particleAvg=II();
+//    }
+//    if (corrFlag)
+//    {
+//        buildInvariant(MD);
+//        dataSet.clear();
+//        classLabel.clear();
+//        loadTrainingSet(fnVector);
+//        add2Dataset(fnInvariant+"_Positive.stk",fnParticles+"_Positive.stk",1);
+//    }
+//    else
+//    {
+//        add2Dataset(fnInvariant+"_Positive.stk",fnParticles+"_Positive.stk",1);
+//        add2Dataset(fnInvariant+"_Negative.stk",fnParticles+"_Negative.stk",2);
+//        saveTrainingSet(fnVector);
+//        normalizeDataset(0,1);
+//        trainSVM(fnSVMModel,1);
+//    }
+//}
+
+void AutoParticlePicking2::train(const std::vector<MDRow> &MD, bool corrFlag, int x, int y, int width, int height)
 {
     if (width!=0)
     {
@@ -505,12 +621,14 @@ void AutoParticlePicking2::train(MetaData MD, bool corrFlag, int x, int y, int w
         dataSet.clear();
         classLabel.clear();
         loadTrainingSet(fnVector);
+        add2Dataset(fnInvariant+"_Positive.stk",fnParticles+"_Positive.stk",1);
+        add2Dataset(fnInvariant+"_Negative.stk",fnParticles+"_Negative.stk",2);
     }
-    add2Dataset(fnInvariant+"_Positive.stk",fnParticles+"_Positive.stk",1);
-    add2Dataset(fnInvariant+"_Negative.stk",fnParticles+"_Negative.stk",2);
-    saveTrainingSet(fnVector);
-    if (!corrFlag)
+    else
     {
+        add2Dataset(fnInvariant+"_Positive.stk",fnParticles+"_Positive.stk",1);
+        add2Dataset(fnInvariant+"_Negative.stk",fnParticles+"_Negative.stk",2);
+        saveTrainingSet(fnVector);
         normalizeDataset(0,1);
         trainSVM(fnSVMModel,1);
     }
@@ -531,83 +649,270 @@ void AutoParticlePicking2::saveTrainingSet()
     fhTrain.close();
 }
 
-int AutoParticlePicking2::automaticallySelectParticles(FileName fnmicrograph, int proc_prec, MetaData &md)
+//int AutoParticlePicking2::automaticallySelectParticles(FileName fnmicrograph, int proc_prec, MetaData &md)
+//{
+//    // bool error=MDSql::deactivateThreadMuting();
+// std::cerr << "Automatic picking of the partiacles has been started" <<std::endl;
+//    auto_candidates.clear();
+//    md.clear();
+//
+//    double label, score;
+//    Particle2 p;
+//    MultidimArray<double> featVec, featVecNN;
+//    std::vector<Particle2> positionArray;
+//
+//    if (thread == NULL)
+//    {
+//     std::cerr << "Thread is null" <<std::endl;
+//        thread = new FeaturesThread(this);
+//        thread->start();
+//        thread->workOnMicrograph(fnmicrograph, proc_prec);
+//    }
+//    if (strcmp(fnmicrograph.c_str(),thread->fnmicrograph.c_str()))
+//    {
+//     std::cerr << "micrographs are not the same" <<std::endl;
+//        flagAbort=1;
+//        thread->waitForResults();
+//        flagAbort=0;
+//        positionArray.clear();
+//        generateFeatVec(fnmicrograph,proc_prec,positionArray);
+//    }
+//    else
+//    {
+//        thread->waitForResults();
+//        std::cerr << "Wait for result has been ended" <<std::endl;
+//        positionArray = thread->positionArray;
+//    }
+//
+//    // Read the SVM model
+//    //generateFeatVec(fnmicrograph,proc_prec,positionArray);
+//    classifier.LoadModel(fnSVMModel);
+//    int num=(int)(positionArray.size()*(proc_prec/100.0));
+//    std::cerr << "The number of picked particles in autopick: " <<num<<std::endl;
+//    featVec.resize(num_features);
+//    //    negative_candidates.clear();
+//
+//    for (int k=0;k<num;k++)
+//    {
+//        FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY1D(featVec)
+//        DIRECT_A1D_ELEM(featVec,i)=DIRECT_A2D_ELEM(autoFeatVec,k,i);
+//        featVecNN=featVec;
+//        double max=featVec.computeMax();
+//        double min=featVec.computeMin();
+//        FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY1D(featVec)
+//        DIRECT_A1D_ELEM(featVec,i)=0+((1)*((DIRECT_A1D_ELEM(featVec,i)-min)/(max-min)));
+//        int j=positionArray[k].x;
+//        int i=positionArray[k].y;
+//        label= classifier.predict(featVec, score);
+//        if (label==1)
+//        {
+//            p.x=j;
+//            p.y=i;
+//            p.status=1;
+//            p.cost=score;
+//            p.vec=featVecNN;
+//            auto_candidates.push_back(p);
+//
+//        }
+//        //        else
+//        //        {
+//        //            p.x=j;
+//        //            p.y=i;
+//        //            p.status=1;
+//        //            p.cost=score;
+//        //            p.vec=featVecNN;
+//        //            negative_candidates.push_back(p);
+//        //        }
+//    }
+//    std::cerr << "Removing close particles" <<std::endl;
+//    if (auto_candidates.size() == 0)
+//        return 0;
+//    // Remove the occluded particles
+//    for (size_t i=0;i<auto_candidates.size();++i)
+//        for (size_t j=0;j<auto_candidates.size()-i-1;j++)
+//            if (auto_candidates[j].cost<auto_candidates[j+1].cost)
+//            {
+//                p=auto_candidates[j+1];
+//                auto_candidates[j+1]=auto_candidates[j];
+//                auto_candidates[j]=p;
+//            }
+//    for (size_t i=0;i<auto_candidates.size()-1;++i)
+//    {
+//        if (auto_candidates[i].status==-1)
+//            continue;
+//        p=auto_candidates[i];
+//        for (size_t j=i+1;j<auto_candidates.size();j++)
+//        {
+//            if (auto_candidates[j].x>p.x-particle_radius
+//                && auto_candidates[j].x<p.x+particle_radius
+//                && auto_candidates[j].y>p.y-particle_radius
+//                && auto_candidates[j].y<p.y+particle_radius)
+//            {
+//                if (p.cost<auto_candidates[j].cost)
+//                {
+//                    auto_candidates[i].status=-1;
+//                    p=auto_candidates[j];
+//                }
+//                else
+//                    auto_candidates[j].status=-1;
+//            }
+//        }
+//    }
+//    saveAutoParticles(md);
+//    if (readNextMic(fnmicrograph))
+//    {
+//        std::cerr << "We are initializing the next micrograph" <<std::endl;
+//        thread->positionArray.clear();
+//        thread->workOnMicrograph(fnmicrograph, proc_prec);
+//    }
+//    return auto_candidates.size();
+//}
+
+int AutoParticlePicking2::automaticallySelectParticles(FileName fnmicrograph, int proc_prec, std::vector<MDRow> &md)
 {
-    // Read the SVM model
-    classifier.LoadModel(fnSVMModel);
-    // If we have generated the second SVM model then we use
-    // two classifiers.
-    md.clear();
+    // bool error=MDSql::deactivateThreadMuting();
     auto_candidates.clear();
+    //    md.clear();
 
     double label, score;
     Particle2 p;
-    MultidimArray<double> IpolarCorr;
-    MultidimArray<double> featVec;
-    MultidimArray<double> featVecNN;
-    MultidimArray<double> pieceImage;
-    MultidimArray<double> staticVec, dilatedVec;
+    MultidimArray<double> featVec, featVecNN;
     std::vector<Particle2> positionArray;
 
-    readMic(fnmicrograph);
-    IpolarCorr.initZeros(num_correlation,1,NangSteps,NRsteps);
-    buildSearchSpace(positionArray,true);
-    //    pthread_t * th_ids = new pthread_t[Nthreads];
-    //    AutoPickThreadParams * th_args =
-    //        new AutoPickThreadParams[Nthreads];
-    //    for (int nt=0;nt<Nthreads;nt++)
-    //    {
-    //        th_args[nt].autoPicking=this;
-    //        th_args[nt].positionArray=positionArray;
-    //        th_args[nt].idThread=nt;
-    //        th_args[nt].use2Classifier=use2Classifier;
-    //        th_args[nt].Nthreads=Nthreads;
-    //        pthread_create(&th_ids[nt],NULL,autoPickThread,
-    //                       &th_args[nt]);
-    //    }
+    if (thread == NULL)
+    {
+        thread = new FeaturesThread(this);
+        thread->start();
+        thread->workOnMicrograph(fnmicrograph, proc_prec);
+    }
+    if (strcmp(fnmicrograph.c_str(),thread->fnmicrograph.c_str()))
+    {
+        flagAbort=1;
+        thread->waitForResults();
+        flagAbort=0;
+        positionArray.clear();
+        generateFeatVec(fnmicrograph,proc_prec,positionArray);
+    }
+    else
+    {
+        thread->waitForResults();
+        positionArray = thread->positionArray;
+    }
 
-    //    for (int nt=0;nt<Nthreads;nt++)
-    //        pthread_join(th_ids[nt],NULL);
+    // Read the SVM model
+    //    generateFeatVec(fnmicrograph,proc_prec,positionArray);
+    //    classifier.LoadModel(fnSVMModel);
     int num=(int)(positionArray.size()*(proc_prec/100.0));
+    featVec.resize(num_features);
+    //    negative_candidates.clear();
+
     for (int k=0;k<num;k++)
     {
-        int j=positionArray[k].x;
-        int i=positionArray[k].y;
-        buildInvariant(IpolarCorr,j,i);
-        extractParticle(j,i,microImage(),pieceImage,false);
-        pieceImage.resize(1,1,1,XSIZE(pieceImage)*YSIZE(pieceImage));
-        extractStatics(pieceImage,staticVec);
-        buildVector(IpolarCorr,staticVec,featVec,pieceImage);
+        FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY1D(featVec)
+        DIRECT_A1D_ELEM(featVec,i)=DIRECT_A2D_ELEM(autoFeatVec,k,i);
+        featVecNN=featVec;
         double max=featVec.computeMax();
         double min=featVec.computeMin();
-        featVecNN=featVec;
         FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY1D(featVec)
         DIRECT_A1D_ELEM(featVec,i)=0+((1)*((DIRECT_A1D_ELEM(featVec,i)-min)/(max-min)));
+        int j=positionArray[k].x;
+        int i=positionArray[k].y;
         label= classifier.predict(featVec, score);
         if (label==1)
         {
-            //            if (fnSVMModel2.exists())
-            //            {
-            //                label=classifier2.predict(featVec,score);
-            //                if (label==1)
-            //                {
-            //                    p.x=j;
-            //                    p.y=i;
-            //                    p.status=1;
-            //                    p.cost=score;
-            //                    p.vec=featVec;
-            //                    auto_candidates.push_back(p);
-            //                }
-            //            }
-            //            else
-            //            {
             p.x=j;
             p.y=i;
             p.status=1;
             p.cost=score;
             p.vec=featVecNN;
             auto_candidates.push_back(p);
-            //            }
+
+        }
+        //        else
+        //        {
+        //            p.x=j;
+        //            p.y=i;
+        //            p.status=1;
+        //            p.cost=score;
+        //            p.vec=featVecNN;
+        //            negative_candidates.push_back(p);
+        //        }
+    }
+    if (auto_candidates.size() == 0)
+        return 0;
+    // Remove the occluded particles
+    for (size_t i=0;i<auto_candidates.size();++i)
+        for (size_t j=0;j<auto_candidates.size()-i-1;j++)
+            if (auto_candidates[j].cost<auto_candidates[j+1].cost)
+            {
+                p=auto_candidates[j+1];
+                auto_candidates[j+1]=auto_candidates[j];
+                auto_candidates[j]=p;
+            }
+    for (size_t i=0;i<auto_candidates.size()-1;++i)
+    {
+        if (auto_candidates[i].status==-1)
+            continue;
+        p=auto_candidates[i];
+        for (size_t j=i+1;j<auto_candidates.size();j++)
+        {
+            if (auto_candidates[j].x>p.x-particle_radius
+                && auto_candidates[j].x<p.x+particle_radius
+                && auto_candidates[j].y>p.y-particle_radius
+                && auto_candidates[j].y<p.y+particle_radius)
+            {
+                if (p.cost<auto_candidates[j].cost)
+                {
+                    auto_candidates[i].status=-1;
+                    p=auto_candidates[j];
+                }
+                else
+                    auto_candidates[j].status=-1;
+            }
+        }
+    }
+    saveAutoParticles(md);
+    if (readNextMic(fnmicrograph))
+        thread->workOnMicrograph(fnmicrograph, proc_prec);
+    return auto_candidates.size();
+}
+
+int AutoParticlePicking2::automaticWithouThread(FileName fnmicrograph, int proc_prec, const FileName &fn)
+{
+    // Read the SVM model
+    //    classifier.LoadModel(fnSVMModel);
+
+    double label, score;
+    Particle2 p;
+    MultidimArray<double> featVec, featVecNN;
+    std::vector<Particle2> positionArray;
+    MetaData md;
+
+    generateFeatVec(fnmicrograph,proc_prec,positionArray);
+
+    int num=(int)(positionArray.size()*(proc_prec/100.0));
+    featVec.resize(num_features);
+    for (int k=0;k<num;k++)
+    {
+        FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY1D(featVec)
+        DIRECT_A1D_ELEM(featVec,i)=DIRECT_A2D_ELEM(autoFeatVec,k,i);
+        featVecNN=featVec;
+        double max=featVec.computeMax();
+        double min=featVec.computeMin();
+        FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY1D(featVec)
+        DIRECT_A1D_ELEM(featVec,i)=0+((1)*((DIRECT_A1D_ELEM(featVec,i)-min)/(max-min)));
+        int j=positionArray[k].x;
+        int i=positionArray[k].y;
+        label= classifier.predict(featVec, score);
+        if (label==1)
+        {
+            p.x=j;
+            p.y=i;
+            p.status=1;
+            p.cost=score;
+            p.vec=featVecNN;
+            auto_candidates.push_back(p);
+
         }
     }
 
@@ -645,66 +950,237 @@ int AutoParticlePicking2::automaticallySelectParticles(FileName fnmicrograph, in
         }
     }
     saveAutoParticles(md);
+    md.write(fn,MD_OVERWRITE);
     return auto_candidates.size();
 }
 
-void AutoParticlePicking2::saveAutoParticles(MetaData &md)
+
+void AutoParticlePicking2::generateFeatVec(const FileName &fnmicrograph, int proc_prec, std::vector<Particle2> &positionArray)
 {
-    size_t nmax=auto_candidates.size();
-    for (size_t n=0;n<nmax;++n)
+    Point p;
+    MultidimArray<double> IpolarCorr;
+    MultidimArray<double> featVec;
+    MultidimArray<double> pieceImage;
+    MultidimArray<double> staticVec;
+
+    readMic(fnmicrograph,1);
+    IpolarCorr.initZeros(num_correlation,1,NangSteps,NRsteps);
+    buildSearchSpace(positionArray,true);
+
+    int num=(int)(positionArray.size()*(proc_prec/100.0));
+    autoFeatVec.resize(num,num_features);
+    for (int k=0;k<num;k++)
     {
-        const Particle2 &p=auto_candidates[n];
-        if (p.cost>0 && p.status==1)
+        if (flagAbort)
+            return;
+        int j=positionArray[k].x;
+        int i=positionArray[k].y;
+        buildInvariant(IpolarCorr,j,i,0);
+        extractParticle(j,i,microImage(),pieceImage,false);
+        pieceImage.resize(1,1,1,XSIZE(pieceImage)*YSIZE(pieceImage));
+        extractStatics(pieceImage,staticVec);
+        buildVector(IpolarCorr,staticVec,featVec,pieceImage);
+        // Keep the features on memory to classify later on
+        FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY1D(featVec)
+        DIRECT_A2D_ELEM(autoFeatVec,k,i)=DIRECT_A1D_ELEM(featVec,i);
+    }
+}
+
+FeaturesThread::FeaturesThread(AutoParticlePicking2 * picker)
+{
+    this->picker = picker;
+    waitingForResults = false;
+    status = TH_WAITING;
+    fnmicrograph = "";
+    proc_prec = -1;
+}
+
+FeaturesThread::~FeaturesThread()
+{}
+
+void FeaturesThread::setMicrograph(const FileName &fnMic, int proc_prec)
+{
+    this->fnmicrograph = fnMic;
+    this->proc_prec = proc_prec;
+}
+
+void FeaturesThread::run()
+{
+
+    while (true)
+    {
+        //wait there is work to do
+        condIn.lock();
+        if (status == TH_WAITING)
+            condIn.wait();
+
+        condIn.unlock();
+
+        if (status == TH_ABORT)
+            return;
+
+        //Do the real work
+        positionArray.clear();
+        generateFeatures();
+        condOut.lock();
+        if (waitingForResults)
+            condOut.signal(); // Notify that we have done with the micrograph
+
+        status = TH_WAITING;
+        condOut.unlock();
+    }
+}
+
+void FeaturesThread::generateFeatures()
+{
+    this->picker->generateFeatVec(fnmicrograph, proc_prec, positionArray);
+}
+
+void FeaturesThread::workOnMicrograph(const FileName &fnMic, int proc_prec)
+{
+    condIn.lock();
+    status = TH_WORKING;
+    setMicrograph(fnMic, proc_prec);
+    condIn.signal(); //notify there is micrograph to work
+    condIn.unlock();
+}
+
+void FeaturesThread::waitForResults()
+{
+    condOut.lock();
+    if (status == TH_WORKING)
+    {
+        waitingForResults = true;
+        condOut.wait();
+    }
+    condOut.unlock();
+}
+
+//int AutoParticlePicking2::readNextMic(FileName &fnmicrograph)
+//{
+// std::cerr<<"Read next micrographs begins"<<std::endl;
+//    FileName currentMic;
+//    size_t lastObjId = micList.lastObject();
+//    FOR_ALL_OBJECTS_IN_METADATA(micList)
+//    {
+//        micList.getValue(MDL_MICROGRAPH,currentMic, __iter.objId);
+//        if (__iter.objId==lastObjId)
+//            return 0;
+//        if (!strcmp(currentMic.c_str(),fnmicrograph.c_str()))
+//        {
+//            __iter.moveNext();
+//            micList.getValue(MDL_MICROGRAPH,currentMic, __iter.objId);
+//            fnmicrograph=currentMic;
+//            return 1;
+//        }
+//    }
+//    std::cerr<<"Read next micrographs ends"<<std::endl;
+//}
+
+int AutoParticlePicking2::readNextMic(FileName &fnmicrograph)
+{
+    FileName currentMic;
+    size_t lastObjId = micList.size();
+    for (int i=0;i<micList.size();i++)
+    {
+        micList[i].getValue(MDL_MICROGRAPH,currentMic);
+        if (i==lastObjId-1)
+            return 0;
+        if (!strcmp(currentMic.c_str(),fnmicrograph.c_str()))
         {
-            size_t id=md.addObject();
-            md.setValue(MDL_XCOOR,int(p.x*(1.0/scaleRate)),id);
-            md.setValue(MDL_YCOOR,int(p.y*(1.0/scaleRate)),id);
-            md.setValue(MDL_COST, p.cost,id);
-            md.setValue(MDL_ENABLED,1,id);
+            micList[i+1].getValue(MDL_MICROGRAPH,currentMic);
+            fnmicrograph=currentMic;
+            return 1;
         }
     }
 }
 
-void AutoParticlePicking2::correction(MetaData addedParticlesMD,MetaData removedParticlesMD)
+//void AutoParticlePicking2::correction(const MetaData &addedParticlesMD,const MetaData &removedParticlesMD)
+//{
+//    dataSet.clear();
+//    classLabel.clear();
+//    loadTrainingSet(fnVector);
+// std::cerr << "Correction has been done" <<std::endl;
+//    int idx=0,enabled,x,y;
+//    double cost;
+//    Timer t;
+//    accepted_particles.clear();
+//    rejected_particles.clear();
+//
+//
+//    FOR_ALL_OBJECTS_IN_METADATA(removedParticlesMD)
+//    {
+//        removedParticlesMD.getValue(MDL_ENABLED,enabled, __iter.objId);
+//        removedParticlesMD.getValue(MDL_XCOOR, x, __iter.objId);
+//        removedParticlesMD.getValue(MDL_YCOOR, y, __iter.objId);
+//
+//        if (enabled == -1)
+//        {
+//            removedParticlesMD.getValue(MDL_COST,cost, __iter.objId);
+//            if (cost!=-1.0)
+//                rejected_particles.push_back(auto_candidates[idx]);
+//        }
+//        else
+//        {
+//            accepted_particles.push_back(auto_candidates[idx]);
+//            //            mPrev.add_coord(x,y,0,0);
+//        }
+//        ++idx;
+//    }
+//    if (!addedParticlesMD.isEmpty())
+//        train(addedParticlesMD,true,0,0,0,0);
+//    add2Dataset();
+//    std::cerr << "add to dataset has been done" <<std::endl;
+//    saveTrainingSet(fnVector);
+//    normalizeDataset(0,1);
+//    generateTrainSet();
+//    //classifier.SVMTrain(dataSet,classLabel);
+//    trainSVM(fnSVMModel,1);
+//}
+
+void AutoParticlePicking2::correction(const std::vector<MDRow> &addedParticlesMD,const std::vector<MDRow> &removedParticlesMD)
 {
-    dataSet.clear();
-    classLabel.clear();
-    loadTrainingSet(fnVector);
+    //    dataSet.clear();
+    dataSetNormal.clear();
+    //    classLabel.clear();
+    //    loadTrainingSet(fnVector);
     int idx=0,enabled,x,y;
     double cost;
+    Timer t;
     accepted_particles.clear();
     rejected_particles.clear();
-    FOR_ALL_OBJECTS_IN_METADATA(removedParticlesMD)
+
+
+    for (int i=0;i<removedParticlesMD.size();i++)
     {
-        removedParticlesMD.getValue(MDL_ENABLED,enabled, __iter.objId);
-        removedParticlesMD.getValue(MDL_XCOOR, x, __iter.objId);
-        removedParticlesMD.getValue(MDL_YCOOR, y, __iter.objId);
+        removedParticlesMD[i].getValue(MDL_ENABLED,enabled);
+        removedParticlesMD[i].getValue(MDL_XCOOR, x);
+        removedParticlesMD[i].getValue(MDL_YCOOR, y);
+
         if (enabled == -1)
         {
-            removedParticlesMD.getValue(MDL_COST,cost, __iter.objId);
+            removedParticlesMD[i].getValue(MDL_COST,cost);
             if (cost!=-1.0)
-            {
                 rejected_particles.push_back(auto_candidates[idx]);
-            }
         }
         else
         {
             accepted_particles.push_back(auto_candidates[idx]);
-            m.add_coord(x,y,0,0);
+            mPrev.add_coord(x,y,0,0);
         }
         ++idx;
     }
+    //    if (!addedParticlesMD.isEmpty())
     train(addedParticlesMD,true,0,0,0,0);
     add2Dataset();
     saveTrainingSet(fnVector);
-    normalizeDataset(0,1);
-    generateTrainSet();
-    classifier.SVMTrain(dataSet,classLabel);
+    //    normalizeDataset(0,1);
+    //    generateTrainSet();
+    //    classifier.SVMTrain(dataSetNormal,classLabel);
     trainSVM(fnSVMModel,1);
-    //    trainSVM(fnSVMModel2,2);
 }
 
-void AutoParticlePicking2::add2Dataset(MetaData removedParticlesMD)
+void AutoParticlePicking2::add2Dataset(const MetaData &removedParticlesMD)
 {
     int cntNeg=0;
     int enabled;
@@ -771,17 +1247,17 @@ double euclidean_distance(const Particle2 &p1, const Particle2 &p2)
 
 bool AutoParticlePicking2::checkDist(Particle2 &p)
 {
-    int num_part=m.ParticleNo();
+    int num_part=mPrev.ParticleNo();
     int dist=0,min;
     Particle2 posSample;
 
-    posSample.x=(int)((m.coord(0).X)*scaleRate);
-    posSample.y=(int)((m.coord(0).Y)*scaleRate);
+    posSample.x=(int)((mPrev.coord(0).X)*scaleRate);
+    posSample.y=(int)((mPrev.coord(0).Y)*scaleRate);
     min=(int)euclidean_distance(p,posSample);
     for (int i=1;i<num_part;i++)
     {
-        posSample.x=(int)((m.coord(i).X)*scaleRate);
-        posSample.y=(int)((m.coord(i).Y)*scaleRate);
+        posSample.x=(int)((mPrev.coord(i).X)*scaleRate);
+        posSample.y=(int)((mPrev.coord(i).Y)*scaleRate);
         dist=(int)euclidean_distance(p,posSample);
         if (dist<min)
             min=dist;
@@ -811,70 +1287,6 @@ bool isLocalMaxima(MultidimArray<double> &inputArray, int x, int y)
     else
         return false;
 }
-
-//void * autoPickThread(void * args)
-//{
-//    AutoPickThreadParams *prm=(AutoPickThreadParams *) args;
-//    double label, score;
-//    int idThread = prm->idThread;
-//    int Nthreads=prm->Nthreads;
-//    int num_correlation=prm->autoPicking->num_correlation;
-//    int NangSteps=prm->autoPicking->NangSteps;
-//    int NRsteps=prm->autoPicking->NRsteps;
-//    int procprec=prm->autoPicking->proc_prec;
-//    bool use2Classifier=prm->use2Classifier;
-//    Particle2 p;
-//    MultidimArray<double> IpolarCorr;
-//    MultidimArray<double> featVec;
-//    MultidimArray<double> pieceImage;
-//    MultidimArray<double> staticVec, dilatedVec;
-//    IpolarCorr.initZeros(num_correlation,1,NangSteps,NRsteps);
-//    int num=(int)(prm->positionArray.size()*(procprec/100.0));
-//    for (int k=0;k<num;k++)
-//    {
-//        if (k%Nthreads==idThread)
-//        {
-//            int j=prm->positionArray[k].x;
-//            int i=prm->positionArray[k].y;
-//            prm->autoPicking->buildInvariant(IpolarCorr,j,i);
-//            prm->autoPicking->extractParticle(j,i,prm->autoPicking->microImage(),pieceImage,false);
-//            pieceImage.resize(1,1,1,XSIZE(pieceImage)*YSIZE(pieceImage));
-//            prm->autoPicking->extractStatics(pieceImage,staticVec);
-//            prm->autoPicking->buildVector(IpolarCorr,staticVec,featVec,pieceImage);
-//            double max=featVec.computeMax();
-//            double min=featVec.computeMin();
-//            FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY1D(featVec)
-//                DIRECT_A1D_ELEM(featVec,i)=0+((1)*((DIRECT_A1D_ELEM(featVec,i)-min)/(max-min)));
-//            label= prm->autoPicking->classifier.predict(featVec, score);
-//            if (label==1)
-//            {
-//                if (use2Classifier==true)
-//                {
-//                    label=prm->autoPicking->classifier2.predict(featVec,score);
-//                    if (label==1)
-//                    {
-//                        p.x=j;
-//                        p.y=i;
-//                        p.status=1;
-//                        p.cost=score;
-//                        p.vec=featVec;
-//                        prm->autoPicking->auto_candidates.push_back(p);
-//                    }
-//                }
-//                else
-//                {
-//                    p.x=j;
-//                    p.y=i;
-//                    p.status=1;
-//                    p.cost=score;
-//                    p.vec=featVec;
-//                    prm->autoPicking->auto_candidates.push_back(p);
-//                }
-//            }
-//        }
-//    }
-//    return NULL;
-//}
 
 void AutoParticlePicking2::polarCorrelation(MultidimArray<double> &Ipolar,
         MultidimArray<double> &IpolarCorr)
@@ -947,7 +1359,7 @@ void AutoParticlePicking2::buildVector(MultidimArray<double> &inputVec,
     }
 }
 
-void AutoParticlePicking2::buildInvariant(MultidimArray<double> &invariantChannel,int x,int y)
+void AutoParticlePicking2::buildInvariant(MultidimArray<double> &invariantChannel,int x,int y,int pre)
 {
     MultidimArray<double> pieceImage;
     MultidimArray<double> Ipolar;
@@ -956,7 +1368,10 @@ void AutoParticlePicking2::buildInvariant(MultidimArray<double> &invariantChanne
     // First put the polar channels in a stack
     for (int j=0;j<filter_num;++j)
     {
-        filter.aliasImageInStack(micrographStack(),j);
+        if (pre)
+            filter.aliasImageInStack(micrographStackPre(),j);
+        else
+            filter.aliasImageInStack(micrographStack(),j);
         extractParticle(x,y,filter,pieceImage,true);
         mIpolar.aliasImageInStack(Ipolar,j);
         convert2Polar(pieceImage,mIpolar);
@@ -1033,7 +1448,7 @@ void AutoParticlePicking2::trainSVM(const FileName &fnModel,
 
     if (numClassifier==1)
     {
-        classifier.SVMTrain(dataSet,classLabel);
+        classifier.SVMTrain(dataSetNormal,classLabel);
         classifier.SaveModel(fnModel);
     }
     else
@@ -1043,111 +1458,6 @@ void AutoParticlePicking2::trainSVM(const FileName &fnModel,
     }
 }
 
-int AutoParticlePicking2::automaticallySelectParticles(bool use2Classifier)
-{
-    double label, score;
-    Particle2 p;
-    MultidimArray<double> IpolarCorr;
-    MultidimArray<double> featVec;
-    MultidimArray<double> pieceImage;
-    MultidimArray<double> staticVec, dilatedVec;
-    std::vector<Particle2> positionArray;
-
-    IpolarCorr.initZeros(num_correlation,1,NangSteps,NRsteps);
-    buildSearchSpace(positionArray,fast);
-    //    pthread_t * th_ids = new pthread_t[Nthreads];
-    //    AutoPickThreadParams * th_args =
-    //        new AutoPickThreadParams[Nthreads];
-    //    for (int nt=0;nt<Nthreads;nt++)
-    //    {
-    //        th_args[nt].autoPicking=this;
-    //        th_args[nt].positionArray=positionArray;
-    //        th_args[nt].idThread=nt;
-    //        th_args[nt].use2Classifier=use2Classifier;
-    //        th_args[nt].Nthreads=Nthreads;
-    //        pthread_create(&th_ids[nt],NULL,autoPickThread,
-    //                       &th_args[nt]);
-    //    }
-
-    //    for (int nt=0;nt<Nthreads;nt++)
-    //        pthread_join(th_ids[nt],NULL);
-    int num=(int)(positionArray.size()*(proc_prec/100.0));
-    for (int k=0;k<num;k++)
-    {
-        int j=positionArray[k].x;
-        int i=positionArray[k].y;
-        buildInvariant(IpolarCorr,j,i);
-        extractParticle(j,i,microImage(),pieceImage,false);
-        pieceImage.resize(1,1,1,XSIZE(pieceImage)*YSIZE(pieceImage));
-        extractStatics(pieceImage,staticVec);
-        buildVector(IpolarCorr,staticVec,featVec,pieceImage);
-        double max=featVec.computeMax();
-        double min=featVec.computeMin();
-        FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY1D(featVec)
-        DIRECT_A1D_ELEM(featVec,i)=0+((1)*((DIRECT_A1D_ELEM(featVec,i)-min)/(max-min)));
-        label= classifier.predict(featVec, score);
-        if (label==1)
-        {
-            if (use2Classifier==true)
-            {
-                label=classifier2.predict(featVec,score);
-                if (label==1)
-                {
-                    p.x=j;
-                    p.y=i;
-                    p.status=1;
-                    p.cost=score;
-                    p.vec=featVec;
-                    auto_candidates.push_back(p);
-                }
-            }
-            else
-            {
-                p.x=j;
-                p.y=i;
-                p.status=1;
-                p.cost=score;
-                p.vec=featVec;
-                auto_candidates.push_back(p);
-            }
-        }
-    }
-
-    if (auto_candidates.size() == 0)
-        return 0;
-    // Remove the occluded particles
-    for (size_t i=0;i<auto_candidates.size();++i)
-        for (size_t j=0;j<auto_candidates.size()-i-1;j++)
-            if (auto_candidates[j].cost<auto_candidates[j+1].cost)
-            {
-                p=auto_candidates[j+1];
-                auto_candidates[j+1]=auto_candidates[j];
-                auto_candidates[j]=p;
-            }
-    for (size_t i=0;i<auto_candidates.size()-1;++i)
-    {
-        if (auto_candidates[i].status==-1)
-            continue;
-        p=auto_candidates[i];
-        for (size_t j=i+1;j<auto_candidates.size();j++)
-        {
-            if (auto_candidates[j].x>p.x-particle_radius
-                && auto_candidates[j].x<p.x+particle_radius
-                && auto_candidates[j].y>p.y-particle_radius
-                && auto_candidates[j].y<p.y+particle_radius)
-            {
-                if (p.cost<auto_candidates[j].cost)
-                {
-                    auto_candidates[i].status=-1;
-                    p=auto_candidates[j];
-                }
-                else
-                    auto_candidates[j].status=-1;
-            }
-        }
-    }
-    return auto_candidates.size();
-}
 
 void AutoParticlePicking2::add2Dataset(const FileName &fn_Invariant,
                                        const FileName &fnParticles,
@@ -1220,29 +1530,44 @@ void AutoParticlePicking2::add2Dataset()
 {
     // Here we have the features and we just want to put them
     // in the dataset.
+    int limit=0, size=0, newSize=0;
     int yDataSet=YSIZE(dataSet);
-    int newSize=rejected_particles.size()+accepted_particles.size();
+    size_t n;
+
+    newSize=rejected_particles.size()+
+            accepted_particles.size();
     dataSet.resize(1,1,yDataSet+newSize,num_features);
     classLabel.resize(1,1,1,YSIZE(dataSet));
+    limit=yDataSet;
     if (rejected_particles.size() > 0)
     {
-        int limit = rejected_particles.size() + yDataSet;
-        for (int n=yDataSet;n<limit;n++)
-            classLabel(n)=3;
-        for (size_t i=0;i<rejected_particles.size();i++)
+        limit += rejected_particles.size();
+        //        for (int n=yDataSet;n<limit;n++)
+        //            classLabel(n)=2;
+        for (n=0;n<rejected_particles.size();n++)
+        {
+            classLabel(n+yDataSet)=2;
+            if (n<accepted_particles.size())
+                classLabel(n+limit)=1;
             for (size_t j=0;j<XSIZE(dataSet);j++)
-                DIRECT_A2D_ELEM(dataSet,i+yDataSet,j)=DIRECT_A1D_ELEM(rejected_particles[i].vec,j);
+            {
+                DIRECT_A2D_ELEM(dataSet,n+yDataSet,j)=DIRECT_A1D_ELEM(rejected_particles[n].vec,j);
+                if (n<accepted_particles.size())
+                    DIRECT_A2D_ELEM(dataSet,n+limit,j)=DIRECT_A1D_ELEM(accepted_particles[n].vec,j);
+            }
+        }
     }
-
-    if (accepted_particles.size() > 0)
+    if (accepted_particles.size()>n)
     {
-        int limit = yDataSet+newSize;
-        int size = yDataSet + rejected_particles.size();
-        for (int n=size;n<limit;n++)
-            classLabel(n)=1;
-        for (size_t i=0;i<accepted_particles.size();i++)
+        size = limit+n;
+        int cnt=0;
+        for (size_t i=n;i<accepted_particles.size();i++)
+        {
+            classLabel(size+cnt)=1;
             for (size_t j=0;j<XSIZE(dataSet);j++)
-                DIRECT_A2D_ELEM(dataSet,i+size,j)=DIRECT_A1D_ELEM(accepted_particles[i].vec,j);
+                DIRECT_A2D_ELEM(dataSet,size+cnt,j)=DIRECT_A1D_ELEM(accepted_particles[i].vec,j);
+            cnt++;
+        }
     }
 }
 
@@ -1258,7 +1583,9 @@ void AutoParticlePicking2::extractPositiveInvariant(const FileName &fnInvariantF
     CorrelationAux aux2;
     RotationalCorrelationAux aux3;
     Matrix2D<double> M;
-    int num_part =m.ParticleNo();
+    Point p;
+
+    int num_part =mPrev.ParticleNo();
     if (num_part==0)
         return;
     Image<double> II;
@@ -1268,13 +1595,13 @@ void AutoParticlePicking2::extractPositiveInvariant(const FileName &fnInvariantF
 
     for (int i=0;i<num_part;i++)
     {
-        double cost = m.coord(i).cost;
+        double cost = mPrev.coord(i).cost;
         if (cost == 0)
             continue;
-        int x=(int)((m.coord(i).X)*scaleRate);
-        int y=(int)((m.coord(i).Y)*scaleRate);
-        buildInvariant(IpolarCorr,x,y);
-        extractParticle(x,y,microImage(),pieceImage,false);
+        int x=(int)((mPrev.coord(i).X)*scaleRate);
+        int y=(int)((mPrev.coord(i).Y)*scaleRate);
+        buildInvariant(IpolarCorr,x,y,1);
+        extractParticle(x,y,microImagePrev(),pieceImage,false);
         II()=pieceImage;
         II.write(fnPositiveParticles,ALL_IMAGES,true,WRITE_APPEND);
         // Compute the average of the manually picked particles after doing aligning
@@ -1307,7 +1634,10 @@ void AutoParticlePicking2::extractNegativeInvariant(const FileName &fnInvariantF
     MultidimArray<double> pieceImage;
     MultidimArray<int> randomIndexes;
     std::vector<Particle2> negativeSamples;
-    int num_part=m.ParticleNo();
+    std::vector<Point> positionVec;
+    Point p;
+
+    int num_part=mPrev.ParticleNo();
     if (num_part==0)
         return;
     Image<double> II;
@@ -1332,15 +1662,15 @@ void AutoParticlePicking2::extractNegativeInvariant(const FileName &fnInvariantF
     if (num_part<15)
         numNegatives=15;
     else
-        numNegatives=num_part*2;
+        numNegatives=int(num_part/2);
     for (int i=0;i<numNegatives;i++)
     {
         int x=negativeSamples[DIRECT_A1D_ELEM(randomIndexes,i)-1].x;
         int y=negativeSamples[DIRECT_A1D_ELEM(randomIndexes,i)-1].y;
-        extractParticle(x,y,microImage(),pieceImage,false);
+        extractParticle(x,y,microImagePrev(),pieceImage,false);
         II()=pieceImage;
         II.write(fnNegativeParticles,ALL_IMAGES,true,WRITE_APPEND);
-        buildInvariant(IpolarCorr,x,y);
+        buildInvariant(IpolarCorr,x,y,1);
         II()=IpolarCorr;
         II.write(fnNegativeInvariatn,ALL_IMAGES,true,WRITE_APPEND);
     }
@@ -1350,6 +1680,7 @@ void AutoParticlePicking2::extractInvariant(const FileName &fnInvariantFeat,
         const FileName &fnParticles,
         bool avgFlag)
 {
+
     extractPositiveInvariant(fnInvariantFeat,fnParticles,avgFlag);
     extractNegativeInvariant(fnInvariantFeat,fnParticles);
 }
@@ -1375,12 +1706,12 @@ void AutoParticlePicking2::extractNonParticle(std::vector<Particle2> &negativePo
     int endX,endY,startX,startY;
     int gridStep=particle_radius/2;
     Particle2 negSample;
-    if (m.point1.x==-1)
+    if (mPrev.point1.x==-1)
     {
         startX = particle_radius*2;
         startY = particle_radius*2;
-        endX = XSIZE(microImage())-particle_radius*2;
-        endY = YSIZE(microImage())-particle_radius*2;
+        endX = XSIZE(microImagePrev())-particle_radius*2;
+        endY = YSIZE(microImagePrev())-particle_radius*2;
     }
     else
     {
@@ -1399,7 +1730,7 @@ void AutoParticlePicking2::extractNonParticle(std::vector<Particle2> &negativePo
             negSample.x=j;
             if (checkDist(negSample))
             {
-                extractParticle(j,i,microImage(),pieceImage,false);
+                extractParticle(j,i,microImagePrev(),pieceImage,false);
                 negativePosition.push_back(negSample);
             }
         }
@@ -1433,14 +1764,44 @@ void AutoParticlePicking2::loadTrainingSet(const FileName &fn)
 
 void AutoParticlePicking2::saveTrainingSet(const FileName &fn)
 {
+    double max,min;
+    int a=0,b=1;
+    MultidimArray<double> maxA,minA;
     std::ofstream fhTrain;
+
+    maxA.resize(1,1,1,YSIZE(dataSet));
+    minA.resize(1,1,1,YSIZE(dataSet));
+
+    dataSetNormal.resize(NSIZE(dataSet), ZSIZE(dataSet), YSIZE(dataSet), XSIZE(dataSet));
+
+    // Computing the maximum and minimum of each row
+    for (size_t i=0;i<YSIZE(dataSet);i++)
+    {
+        max=min=DIRECT_A2D_ELEM(dataSet,i,0);
+        for (size_t j=1;j<XSIZE(dataSet);j++)
+        {
+            if (max<DIRECT_A2D_ELEM(dataSet,i,j))
+                max=DIRECT_A2D_ELEM(dataSet,i,j);
+            if (min>DIRECT_A2D_ELEM(dataSet,i,j))
+                min=DIRECT_A2D_ELEM(dataSet,i,j);
+        }
+        DIRECT_A1D_ELEM(maxA,i)=max;
+        DIRECT_A1D_ELEM(minA,i)=min;
+    }
+
     fhTrain.open(fn.c_str());
     fhTrain<<YSIZE(dataSet)<< " "<< XSIZE(dataSet)<< std::endl;
+    // Normalizing the dataset according to the max and mean
     for (size_t i=0;i<YSIZE(dataSet);i++)
     {
         fhTrain<<classLabel(i)<< std::endl;
+        max=DIRECT_A1D_ELEM(maxA,i);
+        min=DIRECT_A1D_ELEM(minA,i);
         for (size_t j=0;j<XSIZE(dataSet);j++)
+        {
             fhTrain<<DIRECT_A2D_ELEM(dataSet,i,j)<<" ";
+            DIRECT_A2D_ELEM(dataSetNormal,i,j)=a+((b-a)*((DIRECT_A2D_ELEM(dataSet,i,j)-min)/(max-min)));
+        }
         fhTrain<<std::endl;
     }
     fhTrain.close();
@@ -1467,144 +1828,38 @@ void AutoParticlePicking2::savePCAModel(const FileName &fn_root)
 }
 
 /* Save particles ---------------------------------------------------------- */
-int AutoParticlePicking2::saveAutoParticles(const FileName &fn) const
+void AutoParticlePicking2::saveAutoParticles(MetaData &md)
 {
-    MetaData MD;
     size_t nmax=auto_candidates.size();
     for (size_t n=0;n<nmax;++n)
     {
         const Particle2 &p=auto_candidates[n];
         if (p.cost>0 && p.status==1)
         {
-            size_t id=MD.addObject();
-            MD.setValue(MDL_XCOOR,int(p.x*(1.0/scaleRate)),id);
-            MD.setValue(MDL_YCOOR,int(p.y*(1.0/scaleRate)),id);
-            MD.setValue(MDL_COST, p.cost,id);
-            MD.setValue(MDL_ENABLED,1,id);
+            size_t id=md.addObject();
+            md.setValue(MDL_XCOOR,int(p.x*(1.0/scaleRate)),id);
+            md.setValue(MDL_YCOOR,int(p.y*(1.0/scaleRate)),id);
+            md.setValue(MDL_COST, p.cost,id);
+            md.setValue(MDL_ENABLED,1,id);
         }
     }
-    MD.write(fn,MD_OVERWRITE);
-    return MD.size();
 }
 
-/* Save features of Autoparticles ---------------------------------------------------------- */
-void AutoParticlePicking2::saveAutoVectors(const FileName &fn)
+void AutoParticlePicking2::saveAutoParticles(std::vector<MDRow> &md)
 {
-    std::ofstream fhVectors;
-    fhVectors.open(fn.c_str());
-    int X=XSIZE(auto_candidates[0].vec);
-    fhVectors<<auto_candidates.size()<<" " <<X<<std::endl;
-    size_t nmax = auto_candidates.size();
-    for (size_t n=0; n<nmax;++n)
+    size_t nmax=auto_candidates.size();
+    MDRow row;
+    for (size_t n=0;n<nmax;++n)
     {
         const Particle2 &p=auto_candidates[n];
         if (p.cost>0 && p.status==1)
         {
-            for (int j=0;j<X;++j)
-                fhVectors<<DIRECT_A1D_ELEM(p.vec,j)<<" ";
-            fhVectors<<std::endl;
+            row.setValue(MDL_XCOOR,int(p.x*(1.0/scaleRate)));
+            row.setValue(MDL_YCOOR,int(p.y*(1.0/scaleRate)));
+            row.setValue(MDL_COST, p.cost);
+            row.setValue(MDL_ENABLED,1);
+            md.push_back(row);
         }
-    }
-    fhVectors.close();
-}
-
-/* Load features of Autoparticles ---------------------------------------------------------- */
-void AutoParticlePicking2::loadAutoVectors(const FileName &fn)
-{
-    int numVector;
-    int numFeature;
-    std::ifstream fhVectors;
-    fhVectors.open(fn.c_str());
-    fhVectors>>numVector>>numFeature;
-    for (int n=0; n<numVector;++n)
-    {
-        Particle2 p;
-        p.vec.resize(1,1,1,numFeature);
-        for (int j=0; j<numFeature;++j)
-            fhVectors >> DIRECT_A1D_ELEM(p.vec,j);
-        auto_candidates.push_back(p);
-    }
-    fhVectors.close();
-}
-
-/* Save features of rejected and kept particles ---------------------------------------------------------- */
-void AutoParticlePicking2::saveVectors(const FileName &fn)
-{
-    if (rejected_particles.size()>0)
-    {
-        std::ofstream fhRejected;
-        FileName fnRejectedVectors=fn+"_rejected_vector.txt";
-        fhRejected.open(fnRejectedVectors.c_str());
-        int rejSize=XSIZE(rejected_particles[0].vec);
-        fhRejected<<rejected_particles.size()<<" "<<rejSize<< std::endl;
-        size_t nmax=rejected_particles.size();
-        for (size_t n=0;n<nmax;++n)
-        {
-            const Particle2 &p=rejected_particles[n];
-            for (int j=0;j<rejSize;++j)
-                fhRejected<<DIRECT_A1D_ELEM(p.vec,j)<<" ";
-            fhRejected <<std::endl;
-        }
-        fhRejected.close();
-    }
-    if (accepted_particles.size()>0)
-    {
-        std::ofstream fhAccepted;
-        FileName fnAcceptedVectors=fn+"_accepted_vector.txt";
-        fhAccepted.open(fnAcceptedVectors.c_str());
-        int accSize=XSIZE(accepted_particles[0].vec);
-        fhAccepted<<accepted_particles.size()<<" "<<accSize<< std::endl;
-        size_t nmax=accepted_particles.size();
-        for (size_t n=0;n<nmax;++n)
-        {
-            const Particle2 &p=accepted_particles[n];
-            for (int j=0;j<accSize;++j)
-                fhAccepted<<DIRECT_A1D_ELEM(p.vec,j)<<" ";
-            fhAccepted <<std::endl;
-        }
-        fhAccepted.close();
-    }
-}
-
-/* Load features of rejected and kept particles ---------------------------------------------------------- */
-void AutoParticlePicking2::loadVectors(const FileName &fn)
-{
-    int numVector;
-    int numFeature;
-    FileName fnRejectedVectors=fn+"_rejected_vector.txt";
-    FileName fnAcceptedVectors=fn+"_accepted_vector.txt";
-
-    if (fnRejectedVectors.exists())
-    {
-        std::ifstream fhRejected;
-        fhRejected.open(fnRejectedVectors.c_str());
-        fhRejected>>numVector>>numFeature;
-        for (int n=0; n<numVector;++n)
-        {
-            Particle2 p;
-            p.vec.resize(1,1,1,numFeature);
-            for (int j=0; j<numFeature;++j)
-                fhRejected >> DIRECT_A1D_ELEM(p.vec,j);
-            rejected_particles.push_back(p);
-        }
-        fhRejected.close();
-        fnRejectedVectors.deleteFile();
-    }
-    if (fnAcceptedVectors.exists())
-    {
-        std::ifstream fhAccepted;
-        fhAccepted.open(fnAcceptedVectors.c_str());
-        fhAccepted>>numVector>>numFeature;
-        for (int n=0; n<numVector;++n)
-        {
-            Particle2 p;
-            p.vec.resize(1,1,1,numFeature);
-            for (int j=0; j<numFeature;++j)
-                fhAccepted >> DIRECT_A1D_ELEM(p.vec,j);
-            accepted_particles.push_back(p);
-        }
-        fhAccepted.close();
-        fnAcceptedVectors.deleteFile();
     }
 }
 
@@ -1835,94 +2090,15 @@ void ProgMicrographAutomaticPicking2::defineParams()
     AutoParticlePicking2::defineParams(this);
 }
 
-void AutoParticlePicking2::produceSideInfo(Micrograph *_m)
-{
-    __m=_m;
-    microImage.read(fn_micrograph);
-    double t=std::max(0.25,50.0/particle_size);
-    scaleRate=std::min(1.0,t);
-    particle_radius=(int)((particle_size*scaleRate)*0.5);
-    particle_size=particle_radius * 2;
-    NRsteps=particle_size/2-3;
-    NRPCA=20;
-    num_correlation=filter_num+((filter_num-corr_num)*corr_num);
-    num_features=num_correlation*NPCA+NRPCA+12;
-    classifier.setParameters(8.0, 0.125);
-    classifier2.setParameters(1.0, 0.25);
-}
-
 // This is just for calling automatic mode
 void ProgMicrographAutomaticPicking2::run()
 {
-    Micrograph m;
-    m.open_micrograph(fn_micrograph);
-
-    FileName fnFilterBank = fn_root + "_filterbank.stk";
+    int proc_prec;
+    MetaData MD;
     FileName fnAutoParticles = formatString("particles_auto@%s.pos", fn_root.c_str());
-    FileName fnInvariant = fn_model + "_invariant";
-    FileName fnParticles = fn_model + "_particle";
-    FileName fnPCAModel = fn_model + "_pca_model.stk";
-    FileName fnPCARotModel = fn_model + "_rotpca_model.stk";
-    FileName fnSVMModel = fn_model + "_svm.txt";
-    FileName fnSVMModel2 = fn_model + "_svm2.txt";
-    FileName fnVector = fn_model + "_training.txt";
-    FileName fnAutoVectors = fn_model + "_auto_vector.txt";
-    FileName fnRejectedVectors = fn_model + "_rejected_vector.txt";
-    FileName fnAvgModel = fn_model + "_particle_avg.xmp";
+    MD.read(fn_model.beforeLastOf("/")+"/config.xmd");
+    MD.getValue( MDL_PICKING_AUTOPICKPERCENT,proc_prec,MD.firstObject());
 
-    autoPicking->produceSideInfo(&m);
-
-    if (mode != "train")
-    {
-        // Resize the Micrograph
-        selfScaleToSizeFourier((int)((m.Ydim)*autoPicking->scaleRate),
-                               (int)((m.Xdim)*autoPicking->scaleRate),
-                               autoPicking->microImage(),2);
-        // Generating the filter bank
-        filterBankGenerator(autoPicking->microImage(),fnFilterBank,autoPicking->filter_num);
-        autoPicking->micrographStack.read(fnFilterBank,DATA);
-    }
-
-
-    if (mode=="try" || mode=="autoselect")
-    {
-        if (mode=="autoselect")
-        {
-            MetaData MD;
-            MD.read(fn_model.beforeLastOf("/")+"/config.xmd");
-            MD.getValue( MDL_PICKING_AUTOPICKPERCENT,autoPicking->proc_prec,MD.firstObject());
-        }
-        autoPicking->micrographStack.read(fnFilterBank, DATA);
-        //        autoPicking->filterBankStack=autoPicking->micrographStack();
-        // Read the PCA Model
-        Image<double> II;
-        II.read(fnPCAModel);
-        autoPicking->pcaModel=II();
-        // Read rotational PCA model
-        II.read(fnPCARotModel);
-        autoPicking->pcaRotModel=II();
-        // Read the average of the particles for convolution
-        II.read(fnAvgModel);
-        autoPicking->particleAvg=II();
-        // Read the SVM model
-        autoPicking->classifier.LoadModel(fnSVMModel);
-        // If we have generated the second SVM model then we use
-        // two classifiers.
-        if (fnSVMModel2.exists())
-        {
-            autoPicking->classifier2.LoadModel(fnSVMModel2);
-            autoPicking->automaticallySelectParticles(true);
-        }
-        else
-            int num=autoPicking->automaticallySelectParticles(false);
-        int num2=autoPicking->saveAutoParticles(fnAutoParticles);
-        if (mode=="try")
-            if (autoPicking->auto_candidates.size()!=0)
-                autoPicking->saveAutoVectors(fnAutoVectors);
-    }
-    if (mode!="train")
-        fnFilterBank.deleteFile();
-    delete autoPicking;
+    autoPicking = new AutoParticlePicking2(autoPicking->particle_size,autoPicking->filter_num,autoPicking->corr_num,autoPicking->NPCA,fn_model,std::vector<MDRow>());
+    int num = autoPicking->automaticWithouThread(fn_micrograph,proc_prec,fnAutoParticles);
 }
-
-

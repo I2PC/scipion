@@ -25,8 +25,10 @@
 
 #include <algorithm>
 #include <math.h>
+#include <stdlib.h>
 #include "metadata_sql.h"
 #include "xmipp_threads.h"
+#include <sys/time.h>
 //#define DEBUG
 
 //This is needed for static memory allocation
@@ -110,7 +112,7 @@ bool MDSql::createMd()
 bool MDSql::clearMd()
 {
     sqlMutex.lock();
-    // std::cerr << "clearing md" <<std::endl;
+    //std::cerr << "clearing md" <<std::endl;
     myCache->clear();
     bool result = dropTable();
     //std::cerr << "leave clearing md" <<std::endl;
@@ -157,6 +159,17 @@ bool  MDSql::activateMathExtensions(void)
     else
         return true;
 }
+
+bool  MDSql::deactivateThreadMuting(void)
+{
+    return ( sqlite3_config(SQLITE_CONFIG_MULTITHREAD) == SQLITE_OK);
+}
+bool  MDSql::activateThreadMuting(void)
+{
+    return ( sqlite3_config(SQLITE_CONFIG_SERIALIZED) == SQLITE_OK);
+}
+
+
 bool MDSql::renameColumn(const std::vector<MDLabel> oldLabel, const std::vector<MDLabel> newlabel)
 {
     //1 Create an new table that matches your original table,
@@ -949,14 +962,14 @@ void MDSql::copyTableFromFileDB(const FileName blockname,
 
     if (maxRows)
     {
-      std::stringstream ss;
-      ss << "SELECT COUNT(objId) FROM load." << _blockname;
-      myMd->_parsedLines = execSingleIntStmt(ss);
-      std::cerr << ss.str() << " = " << myMd->_parsedLines << std::endl;
+        std::stringstream ss;
+        ss << "SELECT COUNT(objId) FROM load." << _blockname;
+        myMd->_parsedLines = execSingleIntStmt(ss);
+        std::cerr << ss.str() << " = " << myMd->_parsedLines << std::endl;
 
-      sqlCommand += formatString(" LIMIT %lu", maxRows);
+        sqlCommand += formatString(" LIMIT %lu", maxRows);
 
-      std::cerr << sqlCommand << std::endl;
+        std::cerr << sqlCommand << std::endl;
     }
 
     if (sqlite3_exec(db, sqlCommand.c_str(),NULL,NULL,&errmsg) != SQLITE_OK)
@@ -1014,6 +1027,17 @@ bool MDSql::sqlBegin()
     sqlite3_exec(db, "PRAGMA page_size=4092",NULL, NULL, &errmsg);
 
     return sqlBeginTrans();
+}
+
+void MDSql::sqlTimeOut(int miliseconds)
+{
+    if (sqlite3_busy_timeout(db, miliseconds) != SQLITE_OK)
+    {
+        std::cerr << "Couldn't not set timeOut:  " << std::endl;
+        exit(0);
+
+    }
+
 }
 
 void MDSql::sqlEnd()
