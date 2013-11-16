@@ -458,8 +458,8 @@ public abstract class ParticlePicker
 	public void saveData()
 	{
 		saveConfig();
-		saveData(getMicrograph());
-		setChanged(false);
+		//saveData(getMicrograph());
+		//setChanged(false);
 	}// function saveData
 
 	public abstract void saveData(Micrograph m);

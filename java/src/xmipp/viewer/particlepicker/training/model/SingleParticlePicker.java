@@ -104,7 +104,12 @@ public class SingleParticlePicker extends ParticlePicker {
 
 	}
 
-	
+	/* Save changes to the current micrograph(To be removed). */
+	public void saveData() {
+		super.saveData();
+		saveData(micrograph);
+		setChanged(false);
+	}
 
 	/* Save changes to ALL micrographs, mainly used when importing. */
 	public void saveAllData() {
