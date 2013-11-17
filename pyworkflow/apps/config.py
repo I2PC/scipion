@@ -296,6 +296,8 @@ def addProtocols(settings):
                   tag = 'protocol_base')
     m1.addSubMenu('Classify', value='ProtClassify3D',
                   tag = 'protocol_base')
+    m1.addSubMenu('Validate', value='ProtValidate3D',
+                  tag = 'protocol_base')    
     
     settings.addProtocolMenu(menu)
     
