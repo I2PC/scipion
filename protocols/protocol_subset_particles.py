@@ -24,7 +24,7 @@ class ProtSubsetParticles(XmippProtocol):
 
     def defineSteps(self):
         self.Db.insertStep("linkAcquisitionInfo",InputFile=self.InputFile,dirDest=self.WorkingDir)
-        self.Db.insertStep('createSubset',inputFile=self.InputFile,subsetFile=self.subsetFile,outputFile=self.outputFile)
+        self.Db.insertStep('createSubset',inputFile=self.InputFile,subsetFile=self.SubsetFile,outputFile=self.outputFile)
                 
     def summary(self):
         message=[]
