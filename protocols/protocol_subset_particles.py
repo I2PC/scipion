@@ -14,7 +14,7 @@ import glob
 import os
 from protlib_utils import runJob, runShowJ
 from protlib_filesystem import createLink, linkAcquisitionInfo
-from xmipp import MetaData, MDL_ITEMID
+from xmipp import MetaData, MDL_ITEM_ID
 
 class ProtSubsetParticles(XmippProtocol):
     def __init__(self, scriptname, project):
