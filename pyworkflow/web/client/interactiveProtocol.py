@@ -71,11 +71,14 @@ def readParametersFromLocal():
     
 def callInteractiveProtocolScript(inputParameters):     
     print "Calling Interactive Protocol Script"
-    managePipe(inputParameters['pathAskpass'], inputParameters['password'])
+    filename = managePipe(inputParameters['pathAskpass'], inputParameters['password'])
+    
     
     shellCommand="bash " + join(path["scripts"],scripts["interactiveProtocol"]) + " " + \
         inputParameters['machine'] + " " + inputParameters['user'] + " " + \
-        " \"" + inputParameters['commands'] + "\" " + inputParameters['pathAskpass']
+        " \"" + (';').join(inputParameters['commands']) + "\" " + filename
     print "shellCommand ", shellCommand
-    subprocess.call(shellCommand, shell=True) 
+    subprocess.call(shellCommand, shell=True)
+    
+    #removePipe(filename) 
     

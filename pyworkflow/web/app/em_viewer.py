@@ -77,14 +77,13 @@ def viewerXmipp(project, protocol, viewer):
     
     if getattr(protocol, 'outputMicrographs', False):
         objId = protocol.outputMicrographs.getObjId()
+    elif getattr(protocol, 'outputClasses', False):
+        objId = protocol.outputClasses.getObjId()
     elif getattr(protocol, 'outputParticles', False):
         objId = protocol.outputParticles.getObjId()
         protId = protocol.getObjId()
         ioDict["plot"] = "/view_plot_xmipp/?protocolId="+ str(protId)
         
-    print objId
-        
-    from views_showj import visualizeObject
     ioDict["url"] = "/visualize_object/?objectId="+str(objId)
     
     return ioDict

@@ -361,9 +361,17 @@ function deleteProtocol(elm) {
 	var value = elm.attr('value').split("-");
 	var projName = value[0];
 	var protId = value[1];
+	
 	$.ajax({
 		type : "GET",
-		url : "/delete_protocol/?protocolId=" + protId
+		url : "/delete_protocol/?protocolId=" + protId,
+		datatype : "json",
+		success : function(json) {
+			if (json.errors.length > 0) {
+				// Show errors in the validation
+				showErrorValidation(json.errors);
+			}
+		}
 	});
 }
 

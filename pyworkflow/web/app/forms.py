@@ -326,8 +326,10 @@ class ShowjForm(forms.Form):
                 self.fields['labelsToRenderComboBox'].widget=forms.HiddenInput()
         else:
             self.fields['zoom'].widget.attrs['readonly'] = True
+            if self.data['mode'] == 'gallery':
+                self.fields['goto'].widget.attrs['readonly'] = True
             
-        if dataset.getNumberSlices()!=0:    
+        if dataset.getNumberSlices()>1:    
             volumesToRenderComboBoxValues = tuple(zip(dataset.getTable().getColumnValues(self.data['labelsToRenderComboBox']),dataset.getTable().getColumnValues(self.data['labelsToRenderComboBox'])))
             self.fields['volumesToRenderComboBox'] = forms.ChoiceField(label='Select Volume',
                                                             required=False,
@@ -337,7 +339,8 @@ class ShowjForm(forms.Form):
             if self.data['mode'] != 'gallery':                
                 self.fields['resliceComboBox'].widget=forms.HiddenInput()
         else:
-            self.fields['resliceComboBox'].widget=forms.HiddenInput()   
+            self.fields['resliceComboBox'].widget=forms.HiddenInput()
+               
         
         if self.data['mode'] != 'gallery': 
             self.fields['cols'].widget=forms.HiddenInput()
