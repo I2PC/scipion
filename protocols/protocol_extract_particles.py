@@ -253,6 +253,7 @@ def createImagesMd(log, ImagesFn, ExtraDir):
         fn = stack.replace(".stk",".xmd")
         md = MetaData(fn)
         imagesMd.unionAll(md)
+    imagesMd.addItemId()
     imagesMd.write(ImagesFn)
 
 def createTiltPairsImagesMd(log, WorkingDir, ExtraDir, fnMicrographs):
@@ -269,11 +270,14 @@ def createTiltPairsImagesMd(log, WorkingDir, ExtraDir, fnMicrographs):
             mdTilted.unionAll(MetaData(join(ExtraDir, tmicName + ".xmd")))
         
     fn = getImagesFilename(WorkingDir)    
+    mdUntilted.addItemId()
+    mdTilted.addItemId()
     mdUntilted.write(getProtocolFilename('images_untilted', WorkingDir=WorkingDir))
     mdTilted.write(getProtocolFilename('images_tilted', WorkingDir=WorkingDir))
     mdTiltedPairs = MetaData()
     mdTiltedPairs.setColumnValues(MDL_IMAGE, mdUntilted.getColumnValues(MDL_IMAGE))
     mdTiltedPairs.setColumnValues(MDL_IMAGE_TILTED, mdTilted.getColumnValues(MDL_IMAGE))
+    mdTiltedPairs.addItemId()
     mdTiltedPairs.write(fn)
  
 def avgZscore(log,WorkingDir,micrographSelfile):
