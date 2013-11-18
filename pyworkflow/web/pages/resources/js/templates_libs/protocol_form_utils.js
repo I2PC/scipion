@@ -30,6 +30,7 @@
  * Methods to manage the protocol form
  * 
  * showErrorValidation(json);
+ * 
  * evalElements();
  * onChangeParam(value, paramId);
  * onChangeEnumParamCombo(elemId, paramId);
@@ -53,8 +54,8 @@
 
 $(document).ready(function() {
 	/*	
-		 * Method to execute a protocol.
-		 * Overray the post simple method in the html. 
+	* Method to execute a protocol.
+	* Overray the post simple method in the html. 
 	*/
 	$("#protocolForm").submit(function() {
 		var mode = $("#protocolForm").attr('data-mode');
@@ -96,25 +97,32 @@ $(document).ready(function() {
 			
 			var msg = messiInfo("The protocol was saved successfuly");
 
-			$.post(action, $("#protocolForm").serialize(), function(protId) {
-				new Messi(msg, {
-					title : 'Success',
-					modal : true,
-					buttons : [ {
-						id : 0,
-						label : 'Ok',
-						val : 'Y',
-						btnClass : 'btn-select'
-					} ],
-					callback : function(val) {
-						if (val == 'Y') {
-							window.opener.location.reload(true);
-							window.close();
-							window.opener.popup('/form/?protocolId='+protId);
+			$.post(action, $("#protocolForm").serialize(), function(json) {
+				if (json.errors != undefined) {
+					// Show errors in the process to save
+					showErrorValidation(json.errors);
+				} else {
+					// No errors in the process to save
+					protId = json.success;
+					new Messi(msg, {
+						title : 'Success',
+						modal : true,
+						buttons : [ {
+							id : 0,
+							label : 'Ok',
+							val : 'Y',
+							btnClass : 'btn-select'
+						} ],
+						callback : function(val) {
+							if (val == 'Y') {
+								window.opener.location.reload(true);
+								window.close();
+								window.opener.popup('/form/?protocolId='+protId);
+							}
 						}
-					}
-				});
-			},"text");
+					});
+				}
+			},"json");
 		} else if (mode == 'wiz') {
 			
 			new Messi("<img src='/resources/tools_wizard.png'/>  Loading Wizard...",{
