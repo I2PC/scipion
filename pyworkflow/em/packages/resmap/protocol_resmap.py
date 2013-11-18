@@ -70,36 +70,45 @@ class ProtResMap(ProtValidate3D):
                      
     def _defineSteps(self):
         # Insert processing steps
-        self._params = {'input': self._getPath('volume.map')}
-        
-        self._insertFunctionStep('convertInput', self.inputVolume.get().getLocation())
+        inputs = [self.inputVolume.get().getLocation()]
+        if self.useSplitVolume:
+            inputs.append(self.splitVolume.get().getLocation())
+            
+        self._insertFunctionStep('convertInput', *inputs)
         self._insertFunctionStep('estimateResolution', self.pVal.get(), 
                                  self.minRes.get(), self.maxRes.get(), self.stepRes.get())
         self._insertFunctionStep('createOutput')
 
-    def convertInput(self, volLocation):
-        """ Convert input volume to .mrc as expected by ResMap. """
+    def convertInput(self, volLocation1, volLocation2=None):
+        """ Convert input volume to .mrc as expected by ResMap. 
+        Params:
+            volLocation1: a tuple containing index and filename of the input volume.
+            volLocation2: if not None, a tuple like volLocation1 for the split volume.
+        """
         ih = ImageHandler()
-        outputLocation = (NO_INDEX, self._params['input'])
-        ih.convert(volLocation, outputLocation)
+        outputLocation = (NO_INDEX, self._getPath('volume1.map'))
+        ih.convert(volLocation1, outputLocation)
+        if volLocation2 is not None:
+            outputLocation = (NO_INDEX, self._getPath('volume2.map'))
+            ih.convert(volLocation2, outputLocation) 
+            
 
     def estimateResolution(self, pVal, minRes, maxRes, stepRes):
         """ Call ResMap.py with the appropiate parameters. """
         self._enterWorkingDir()
-        print "pVal", pVal
-        print "minRes", minRes
-        print "maxRes", maxRes
-        print "stepRes", stepRes
         
-        inputVol = 'volume.map'
+        inputVol = 'volume1.map'
         vxSize = self.inputVolume.get().getSamplingRate()
-        print "vxSize", vxSize
         
         path = os.environ['RESMAP_HOME']
         os.environ['PATH'] = path + os.pathsep + os.environ['PATH']
         os.environ['PYTHONPATH'] = path + os.pathsep + os.environ['PYTHONPATH']
         args = join(path, 'ResMap.py')
-        args += ' --noguiSingle %(inputVol)s --vxSize=%(vxSize)f --pVal=%(pVal)f '
+        if self.useSplitVolume:
+            args += ' --noguiSplit volume1.map volume2.map '
+        else:
+            args += ' --noguiSingle volume1.map '
+        args += '--vxSize=%(vxSize)f --pVal=%(pVal)f '
         args += '--minRes=%(minRes)f --maxRes=%(maxRes)f --stepRes=%(stepRes)f '
         args += '--vis2D' # TODO: move this to viewer
         self.runJob(None, 'xmipp_python', args % locals())
