@@ -35,10 +35,10 @@ class ProtSubsetParticles(XmippProtocol):
     def validate(self):
         errors=[]
         mdIn=MetaData(self.InputFile)
-        if not mdIn.containsLabel(MDL_ITEMID):
+        if not mdIn.containsLabel(MDL_ITEM_ID):
             errors.append(self.InputFile+" does not contain an item_id column")
         mdSubset=MetaData(self.SubsetFile)
-        if not mdSubset.containsLabel(MDL_ITEMID):
+        if not mdSubset.containsLabel(MDL_ITEM_ID):
             errors.append(self.SubsetFile+" does not contain an item_id column")
         return errors
 
