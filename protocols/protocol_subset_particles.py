@@ -29,7 +29,7 @@ class ProtSubsetParticles(XmippProtocol):
     def summary(self):
         message=[]
         message.append("Input  file: [%s]" % self.InputFile)
-        message.append("Subset file: [%s]" % self.Subsetfile)
+        message.append("Subset file: [%s]" % self.SubsetFile)
         return message
     
     def validate(self):
@@ -50,4 +50,4 @@ class ProtSubsetParticles(XmippProtocol):
             runShowJ(self.outputFile)                                     
 
 def createSubset(log, inputFile, subsetFile, outputFile):
-    runJob(log,"xmipp_image_sort_by_statistics","-i "+inputFile+"--set join "+subsetFile+" itemId -o "+outputFile)
+    runJob(log,"xmipp_metadata_utilities","-i "+inputFile+" --set inner_join "+subsetFile+" itemId itemId -o "+outputFile)
