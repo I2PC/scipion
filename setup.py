@@ -37,7 +37,9 @@ import os, sys
 
 from subprocess import Popen
 import platform
-WINDOWS=platform.system()=="Windows"
+
+WINDOWS = platform.system() == "Windows"
+SCONS = 'scons/scons-local-2.3.0/script/scons' # NOT USING os.path.join because of MIGW
 
 ################ Classes for a Console based configuration ######################
 class ConsoleOptionsTab():
@@ -249,11 +251,8 @@ def addTabs(nb):
 def run(notebook):
     options = notebook.options
     out = OUTPUT
+    scons = SCONS
     procs = options.getNumberOfCpu()
-    if sys.platform  == 'win32':
-        scons = "scons/scons.py"
-    else:
-        scons = os.path.join("scons", "scons.py")
     os.environ['JAVA_HOME'] = notebook.getValue('Compilers', 'JAVA_HOME', 'Java')
     cmd = ''   
     if out != STDOUT and os.path.exists(out):

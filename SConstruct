@@ -2,9 +2,10 @@
 
 # basic setup, import all environment and custom tools
 import os
-from os.path import join, abspath
+from os.path import join, abspath, dirname
 import sys
-import platform 
+import platform
+
 import SCons.Script
 
 
