@@ -92,8 +92,8 @@ class ProtHG3D(ProtHG3DBase):
             WorkingDirStructure = os.path.join(self.WorkingDir,"Structure%05d"%(nI+1))
             self.SymmetryGroup ='c1'
             #self.NRansac=int(floor(self.NRansac/2))
-            print self.NRansac
-            #self.CorrThresh = (1-self.CorrThresh)/2+self.CorrThresh
+            if (nI==0):
+                self.CorrThresh = (1-self.CorrThresh)/2+self.CorrThresh
 
         
     def validate(self):
