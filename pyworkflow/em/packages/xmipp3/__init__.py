@@ -48,6 +48,7 @@ from protocol_projmatch import XmippProtProjMatch
 from protocol_filters import XmippProtFourierFilter
 from protocol_filters import XmippProtGaussianFilter
 from protocol_filters import XmippProtMask, XmippProtResize
+from protocol_create_mask import XmippProtCreateGeo3DMask
 
 # Wizards
 from wizard import *

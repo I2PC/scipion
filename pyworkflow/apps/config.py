@@ -293,11 +293,13 @@ def addProtocols(settings):
     m1.addSubMenu(' Import', value='ProtImportVolumes', 
                  tag='protocol', icon='bookmark.png')   
     m1.addSubMenu('Refine', value='ProtRefine3D',
-                  tag = 'protocol_base')
+                  tag='protocol_base')
     m1.addSubMenu('Classify', value='ProtClassify3D',
-                  tag = 'protocol_base')
+                  tag='protocol_base')
     m1.addSubMenu('Validate', value='ProtValidate3D',
-                  tag = 'protocol_base')    
+                  tag='protocol_base')
+    m1.addSubMenu('Mask', value='ProtCreateMask3D',
+                  tag='protocol_base')   
     
     settings.addProtocolMenu(menu)
     
