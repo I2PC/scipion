@@ -36,6 +36,7 @@ import org.junit.Test;
 import xmipp.jni.Filename;
 import xmipp.jni.ImageGeneric;
 import xmipp.jni.MDLabel;
+import xmipp.jni.MDRow;
 import xmipp.jni.MetaData;
 import xmipp.utils.DEBUG;
 import xmipp.utils.XmippWindowUtil;
@@ -88,6 +89,7 @@ public class MetadataTest
 	public void testRead() throws Exception
 	{
 		MetaData md = new MetaData(mdFn);
+		MDRow row = new MDRow();
 
 		long[] ids = md.findObjects();
 		long id;
@@ -97,6 +99,12 @@ public class MetadataTest
 			assertEquals(imageValues[i], md.getValueString(MDLabel.MDL_IMAGE, id));
 			assertEquals(shiftXValues[i], md.getValueDouble(MDLabel.MDL_SHIFT_X, id), XmippTest.EQUAL_ACCURACY);
 			assertEquals(refValues[i], md.getValueInt(MDLabel.MDL_REF, id));
+			
+			//Test MDRow
+			md.getRow(row, id);
+			assertEquals(imageValues[i], row.getValueString(MDLabel.MDL_IMAGE));
+			assertEquals(shiftXValues[i], row.getValueDouble(MDLabel.MDL_SHIFT_X), XmippTest.EQUAL_ACCURACY);
+			assertEquals(refValues[i], row.getValueInt(MDLabel.MDL_REF));
 		}
 		md.destroy();
 	}// function testRead
@@ -140,8 +148,8 @@ public class MetadataTest
 			path = md2.getValueString(MDLabel.MDL_IMAGE, ids2[i]);
 			assertEquals(Filename.getFilename(path), f.getAbsolutePath());
 		}
-		md.print();
-		md2.print();
+		//md.print();
+		//md2.print();
 
 		md.destroy();
 		md2.destroy();
@@ -360,22 +368,30 @@ public class MetadataTest
 			MetaData imagesmd = new MetaData();
 			String imagepath;
 			int idlabel = MDLabel.MDL_IMAGE;
-			MetaData mdRow = new MetaData();
+			MDRow mdRow = new MDRow();
+			long[] ids = md.findObjects();
 			
 			long id2;
-			for (long id : md.findObjects())
+			for (long id: ids)
 			{
 				imagepath = md.getValueString(idlabel, id, true);
 				if (imagepath != null && ImageGeneric.exists(imagepath))
 				{
 					id2 = imagesmd.addObject();
-					md.getRow(id, mdRow);
-					mdRow.setValueString(idlabel, imagepath, mdRow.firstObject());
+					md.getRow(mdRow, id);
+					mdRow.setValueString(idlabel, imagepath);
 					imagesmd.setRow(mdRow, id2);
 				}
 			}
 			
-			imagesmd.print();
+			long[] ids2 = imagesmd.findObjects();
+			for (int i=0; i < ids.length; i++)
+			{
+				assertEquals(md.getValueString(idlabel, ids[i]), 
+							 imagesmd.getValueString(idlabel, ids2[i]));
+			}
+			
+			//imagesmd.print();
 			
 			imagesmd.destroy();
 			md.destroy();

@@ -2,14 +2,15 @@
 
 #include <jni.h>
 #include "xmipp_MetaData.h"
+#include "xmipp_InternalData.h"
 #include "xmipp_ExceptionsHandler.h"
+
 #include <data/metadata.h>
 #include <data/metadata_label.h>
 #include <data/metadata_sql.h>
 #include <data/metadata_extension.h>
 #include <data/xmipp_program_sql.h>
 #include <classification/analyze_cluster.h>
-#include "xmipp_InternalData.h"
 
 int debug = 0;
 /*
@@ -989,6 +990,31 @@ JNIEXPORT jdouble JNICALL Java_xmipp_jni_MetaData_getColumnMin
     }
     XMIPP_JAVA_CATCH;
     return 0.;
+}
+
+JNIEXPORT void JNICALL Java_xmipp_jni_MetaData_getRow
+(JNIEnv * env, jobject jobj, jobject jobjRow, jlong objId)
+{
+  XMIPP_JAVA_TRY
+  {
+      MetaData * md = GET_INTERNAL_METADATA(jobj);
+      MDRow * mdRow = GET_INTERNAL_MDROW(jobjRow);
+      md->getRow(*mdRow, (size_t)objId);
+  }
+  XMIPP_JAVA_CATCH;
+}
+
+
+JNIEXPORT void JNICALL Java_xmipp_jni_MetaData_setRow
+(JNIEnv * env, jobject jobj, jobject jobjRow, jlong objId)
+{
+  XMIPP_JAVA_TRY
+  {
+      MetaData * md = GET_INTERNAL_METADATA(jobj);
+      MDRow * mdRow = GET_INTERNAL_MDROW(jobjRow);
+      md->setRow(*mdRow, (size_t)objId);
+  }
+  XMIPP_JAVA_CATCH;
 }
 
 
