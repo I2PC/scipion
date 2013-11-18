@@ -1,7 +1,7 @@
 /***************************************************************************
 *
 * Authors:    Carlos Oscar            coss@cnb.csic.es (2011)
-* 			  Vahid Abrishami		  vabrishami@cnb.csic (2012)
+*      Vahid Abrishami    vabrishami@cnb.csic (2012)
 *
 * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 *
@@ -43,6 +43,8 @@
 #include <data/basic_pca.h>
 #include <data/morphology.h>
 
+class FeaturesThread;
+
 /// @defgroup AutomaticPicking Image denoising
 /// @ingroup ReconsLibrary
 //@{
@@ -70,64 +72,43 @@ class AutoParticlePicking2
 public:
 
     static const int NangSteps=120;
+    int particle_size, particle_radius, filter_num, proc_prec, NPCA, NRPCA, corr_num;
+    int num_correlation, num_features, Nthreads, fast, NRsteps;
 
-    Micrograph                  *__m;
-    Micrograph                   m;
-    Image<double>                microImage;
-    PCAMahalanobisAnalyzer       pcaAnalyzer;
-    ProgImageRotationalPCA       rotPcaAnalyzer;
-    SVMClassifier                classifier;
-    SVMClassifier                classifier2;
-    FileName                     fn_micrograph;
-    int                          piece_xsize;
-    int                          particle_size;
-    int                          particle_radius;
-    int                          filter_num;
-    int                          proc_prec;
-    int                          NPCA;
-    int                          NRPCA;
-    int                          corr_num;
-    int                          num_correlation;
-    int                          num_features;
-    int 					     Nthreads;
-    int 						 fast;
-    double                       scaleRate;
-    int                          NRsteps;
-    Point                        p1,p2;
+    SVMClassifier classifier, classifier2;
+    PCAMahalanobisAnalyzer pcaAnalyzer;
+    ProgImageRotationalPCA rotPcaAnalyzer;
+    Point p1,p2;
+    FeaturesThread * thread;
+//    MetaData micList;
+    Micrograph m, mPrev;;
 
-    MultidimArray<double>        convolveRes;
-    MultidimArray<double>        filterBankStack;
-    MultidimArray<double>        positiveParticleStack;
-    MultidimArray<double>        negativeParticleStack;
-    MultidimArray<double>        positiveInvariatnStack;
-    MultidimArray<double>        negativeInvariatnStack;
-    MultidimArray<double>        pcaModel;
-    MultidimArray<double>        pcaRotModel;
-    MultidimArray<double>        particleAvg;
-    MultidimArray<double>        dataSet;
-    MultidimArray<double>        dataSet1;
-    MultidimArray<double>        classLabel;
-    MultidimArray<double>        classLabel1;
-    MultidimArray<double>        labelSet;
+    Image<double> microImage, micrographStack, micrographStackPre, microImagePrev;
 
-    std::vector<Particle2>       auto_candidates;
-    std::vector<Particle2>       rejected_particles;
-    std::vector<Particle2>       accepted_particles;
-    Image<double>                micrographStack;
+    std::vector<Particle2> auto_candidates;
+    std::vector<Particle2> rejected_particles;
+    std::vector<Particle2> accepted_particles;
+    std::vector<Particle2> negative_candidates;
+    std::vector<MDRow> micList;
 
-    FileName                     fn_model;
-    FileName                     fnPCAModel;
-    FileName                     fnPCARotModel;
-    FileName                     fnAvgModel;
-    FileName                     fnVector;
-    FileName                     fnSVMModel;
-    FileName                     fnSVMModel2;
-    FileName 				     fnInvariant;
-    FileName 					 fnParticles;
+    FileName fn_micrograph, fn_model, fnPCAModel, fnPCARotModel, fnAvgModel;
+    FileName fnVector, fnSVMModel, fnSVMModel2, fnInvariant, fnParticles;
+
+
+
+    double scaleRate;
+    MultidimArray<double> convolveRes, filterBankStack, positiveParticleStack, negativeParticleStack;
+    MultidimArray<double> positiveInvariatnStack, negativeInvariatnStack, autoFeatVec;
+    MultidimArray<double> pcaModel, pcaRotModel, particleAvg, dataSet, dataSet1, classLabel;
+    MultidimArray<double> classLabel1, labelSet, dataSetNormal;
+
 public:
 
     /// Constructor
-    AutoParticlePicking2(int particle_size, int filter_num = 6, int corr_num = 2, int NPCA = 4, const FileName &model_name=NULL);
+//    AutoParticlePicking2(int particle_size, int filter_num = 6, int corr_num = 2, int NPCA = 4,
+//                         const FileName &model_name=NULL, const FileName &micsFn=NULL);
+    AutoParticlePicking2(int particle_size, int filter_num = 6, int corr_num = 2, int NPCA = 4,
+                         const FileName &model_name=NULL, const std::vector<MDRow> &vMicList = std::vector<MDRow>());
 
     AutoParticlePicking2();
 
@@ -137,18 +118,16 @@ public:
     void setSize(int pSize);
 
     /// Read micrograph from the file
-    void readMic(FileName fn_micrograph);
+    void readMic(const FileName &fn_micrograph, int keepPrev);
 
     void filterBankGenerator();
 
-    void filterBankGenerator(MultidimArray<double> &inputMicrograph,
-                             const FileName &fnFilterBankStack,
-                             int filter_num);
+//    void batchBuildInvariant(const MetaData &MD);
 
-    void batchBuildInvariant(MetaData MD);
+    void batchBuildInvariant(const std::vector<MDRow> &MD);
 
-    void buildInvariant(MetaData MD);
-
+//    void buildInvariant(const MetaData &MD);
+    void buildInvariant(const std::vector<MDRow> &MD);
     void extractInvariant();
 
     void extractPositiveInvariant();
@@ -159,18 +138,26 @@ public:
 
     void add2Dataset(int flagNegPos);
 
-    void train(MetaData MD, bool corrFlag, int x, int y, int width, int height);
+//    void train(const MetaData &MD, bool corrFlag, int x, int y, int width, int height);
 
-    void correction(MetaData addedParticlesMD,MetaData removedParticlesMD);
+    void train(const std::vector<MDRow> &MD, bool corrFlag, int x, int y, int width, int height);
 
-    void add2Dataset(MetaData removedParticlesMD);
+//    void correction(const MetaData &addedParticlesMD,const MetaData &removedParticlesMD);
+    void correction(const std::vector<MDRow> &addedParticlesMD,const std::vector<MDRow> &removedParticlesMD);
+
+    void add2Dataset(const MetaData &removedParticlesMD);
 
     void saveTrainingSet();
 
-    int automaticallySelectParticles(FileName fnmicrograph, int proc_prec, MetaData &md);
+//    int automaticallySelectParticles(FileName fnmicrograph, int proc_prec, MetaData &md);
+
+    int automaticallySelectParticles(FileName fnmicrograph, int proc_prec, std::vector<MDRow> &md);
+
+    int automaticWithouThread(FileName fnmicrograph, int proc_prec, const FileName &fn);
 
     void saveAutoParticles(MetaData &md);
 
+    void saveAutoParticles(std::vector<MDRow> &md);
     /// Define the parameters of the main program
     static void defineParams(XmippProgram * program);
 
@@ -179,8 +166,6 @@ public:
 
     /// Read the micrograph in memory
     void readMicrograph();
-
-    void produceSideInfo(Micrograph *m);
 
     //Check the distance between a point and positive samples in micrograph
     bool checkDist(Particle2 &p);
@@ -263,7 +248,7 @@ public:
      *in polar form.
      */
     void buildInvariant(MultidimArray<double> &invariantChannel,
-                        int x,int y);
+                        int x,int y, int pre);
 
     /*
      * This method does a convolution in order to find an approximation
@@ -311,40 +296,15 @@ public:
      */
     void normalizeDataset(int a,int b);
 
-    /// Save automatically selected particles
-    int saveAutoParticles(const FileName &fn) const;
-
-    /*
-     * In Semi-Automatic step, we save all the feature
-     * vectors in order to have them to retrain the
-     * classifier.
-     */
-    void saveAutoVectors(const FileName &fn);
-
-    /// Save the extracted features for both rejected and found features
-    void saveVectors(const FileName &fn);
-
     /// Save the PCA basis and average for each channel
-    void savePCAModel(const FileName &fn_root);
+    void savePCAModel(const FileName &fn);
 
     /// Save training set into memory
     void saveTrainingSet(const FileName &fn_root);
 
-    /*
-     * In Semi-Automatic step, we save all the feature
-     * vectors in order to have them to retrain the
-     * classifier.
-     */
-    void loadAutoVectors(const FileName &fn);
 
     /// Load training set into the related array.
     void loadTrainingSet(const FileName &fn_root);
-
-    /// Load the features for particles and non-particles (from the supervised)
-    void loadVectors(const FileName &fn);
-
-    /// Select particles from the micrograph in an automatic way
-    int automaticallySelectParticles(bool use2Classifier);
 
     /*
      * This method generates two different datasets. One for the
@@ -352,16 +312,64 @@ public:
      * particles and the false positives.
      */
     void generateTrainSet();
+
+    /*
+     * This method generate feature vectors for the candidates
+     * of a micrographs which are obtained by a cross-correlation
+     */
+    void generateFeatVec(const FileName &fnmicrograph, int proc_prec,  std::vector<Particle2> &positionArray);
+
+    /*
+     * Read the next micrograph from the list of the micrographs
+     */
+    int readNextMic(FileName &fnmicrograph);
+
 };
 
-struct AutoPickThreadParams
+/**
+ *  Structure to define random generation mode
+ */
+enum FeatureStatus
 {
-	AutoParticlePicking2 *autoPicking;
-	std::vector<Particle2> positionArray;
-	bool use2Classifier;
-	int idThread;
-	int Nthreads;
-};
+    TH_WAITING, TH_WORKING, TH_FINISHED, TH_ABORT
+} ;
+
+/** This class will compute the features calculation
+ * in a separate thread.
+ */
+class FeaturesThread: public Thread
+{
+private:
+    /* Condtions to be used to notifiy the thread to work(condIn)
+     * and to know the thread has finished (condOut)
+     */
+    Condition condIn, condOut;
+    bool waitingForResults; // Flag to know if the main thread is waiting
+    FeatureStatus status;
+
+public:
+    AutoParticlePicking2 * picker;
+    std::vector<Particle2> positionArray;
+    FileName fnmicrograph;
+    int proc_prec;
+
+    FeaturesThread(AutoParticlePicking2 * picker);
+    ~FeaturesThread();
+
+    void setMicrograph(const FileName &fnMic, int proc_prec);
+    void run();
+    /* This function should be called from outside to wait for results. */
+    void waitForResults();
+    /* Notify the thread to start working another micrograph */
+    void workOnMicrograph(const FileName &fnMic, int proc_prec);
+    /* Stop the work because the micrograph that the thread is working is not
+     * the next one the user has clicked.
+     */
+    void cancelWork();
+    /* Call the picker generateFeatVec */
+    void generateFeatures();
+}
+; //class FeaturesThread
 
 class ProgMicrographAutomaticPicking2: public XmippProgram
 {
@@ -377,7 +385,7 @@ public:
     /// Number of threads
     /// Output rootname
     FileName fn_root;
-	AutoParticlePicking2 *autoPicking;
+    AutoParticlePicking2 *autoPicking;
 public:
     /// Read parameters
     void readParams();

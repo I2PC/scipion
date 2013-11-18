@@ -57,7 +57,7 @@ protected:
         addParamsLine(" -i <metadata>         : Input metadata file");
         addParamsLine("   [-o  <metadata>]    : Output metadata file, if not provided result will overwrite input file");
 
-        addParamsLine("  [--set <set_operation> <md2_file> <label=image> <lable2=image2>]   : Set operations");
+        addParamsLine("  [--set <set_operation> <md2_file> <label=image> <label2=image2>]   : Set operations");
         addParamsLine("         where <set_operation>");
         addParamsLine("   union               : Union with metadata md2, duplicated values only will appear once");
         addParamsLine("   union_all           : Union with metadata md2, will repeat duplicated values");
@@ -65,7 +65,7 @@ protected:
         addParamsLine("   subtraction         : Subtraction with metadata md2");
         addParamsLine("   join                : Inner join with md2 using label l1");
         addParamsLine("   natural_join        : Natural  join with md2 using all common labels");
-        addParamsLine("   inner_join          : Inner join with label=label2. No label may be repeteated");
+        addParamsLine("   inner_join          : Inner join with label=label2. No label may be repeated");
         addParamsLine("   merge               : Merge columns with md2, label is ignored");
         addParamsLine("                       : Both metadatas should have same size, and elements should be in same order,");
         addParamsLine("                       : if not, you should use 'join' instead, but this constrain having a common label");

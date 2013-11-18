@@ -133,7 +133,7 @@ int main(int argc, char **argv)
 
     ThreadManager * thMgr = NULL;//new  ThreadManager(numberOfThreads);
 
-    for (int i = 0; i < 10; ++i)
+    for (int i = 0; i < 1; ++i)
     {
         totalCounter = 0;
         //Create the job handler to distribute jobs

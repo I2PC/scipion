@@ -23,8 +23,8 @@ Different types of operations on metadata files
 """
 #  {list_combo} (set, operate, query, fill) Select an option
 OperationType = "set"
-# {list_combo}(union,union_all,intersection,subtraction,join,natural_join,merge){condition}(OperationType=="set") Set Operation
-OperationTypeSet = "union"
+# {list_combo}(union,union_all,intersection,subtraction,join,natural_join,inner_join,merge){condition}(OperationType=="set") Set Operation
+OperationSetType = "union"
 
 """ 
 Metadata to operate on the input metada file
@@ -34,6 +34,9 @@ md2 = ""
 
 # {condition}(OperationType =="set") Label
 Label = ""
+
+# {condition}(OperationType =="set" and OperationSetType=="inner_join") Label2
+Label2 = ""
 
 # {list_combo}(sort,random_subset,bootstrap,randomize,keep_column,drop_column,rename_column,modify_values){condition}(OperationType=="operate") Operation
 Operation_TypeOp = "sort"

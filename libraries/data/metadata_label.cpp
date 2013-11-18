@@ -757,6 +757,13 @@ void MDRow::setValue(const MDObject &object)
         objects[_label]->copy(object);
 }
 
+void MDRow::setValueFromStr(MDLabel label, const String &value)
+{
+    MDObject mdValue(label);
+    mdValue.fromString(value);
+    setValue(mdValue);
+}
+
 MDRow::~MDRow()
 {
     MDObject ** ptrObjectsLabel=&(objects[0]);

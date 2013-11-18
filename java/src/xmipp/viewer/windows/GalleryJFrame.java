@@ -98,6 +98,7 @@ import xmipp.jni.Filename;
 import xmipp.jni.ImageGeneric;
 import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
+import xmipp.jni.MDRow;
 import xmipp.utils.DEBUG;
 import xmipp.utils.Param;
 import xmipp.utils.QuickHelpJDialog;
@@ -1870,7 +1871,9 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 				else
 				{
 					MetaData mdRow = new MetaData(); 
-					data.md.getRow(data.ids[row], mdRow);
+					MDRow row2 = new MDRow();
+					data.md.getRow(row2, data.ids[row]);
+					mdRow.setRow(row2, mdRow.addObject());
 					String sortFn = psdFile.replace(".psd", ".tmpSort.xmd");
 					mdRow.write(sortFn);
 					mdRow.destroy();

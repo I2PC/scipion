@@ -24,7 +24,7 @@ class ProtMetadataUtils(XmippProtocol):
         self.insertStep('createDir',path=self.ExtraDir)
         
         if (self.OperationType == "set"):
-            self.insertStep("setOption",OperationTypeSet=self.OperationTypeSet,md=self.MetadataInput,md2=self.md2,Label=self.Label,fnOut=self.fnOut,ModeType=self.ModeType)
+            self.insertStep("setOption",OperationSetType=self.OperationSetType,md=self.MetadataInput,md2=self.md2,Label=self.Label,Label2=self.Label2,fnOut=self.fnOut,ModeType=self.ModeType)
         elif (self.OperationType == "operate"):
             self.insertStep("operateOption",Operation_TypeOp=self.Operation_TypeOp,md=self.MetadataInput,md2=self.md2,fnOut=self.fnOut, LabelOp=self.LabelOp, LabelSize=self.LabelSize,Label_KC=self.Label_KC,Label_DC=self.Label_DC,Label_RC=self.Label_RC,Expression=self.Expression,ModeType=self.ModeType)
         elif (self.OperationType == "query"):
@@ -45,9 +45,13 @@ class ProtMetadataUtils(XmippProtocol):
     def visualize(self):        
         runShowJ(self.fnOut)
         
-def setOption(log,OperationTypeSet, md, md2, Label,fnOut,ModeType):
-    runJob(log,'xmipp_metadata_utilities',"-i %s --set %s %s %s -o %s --mode %s"
-           %(md,OperationTypeSet,md2,Label,fnOut,ModeType))        
+def setOption(log,OperationSetType, md, md2, Label, Label2, fnOut,ModeType):
+    if OperationSetType=="inner_join":
+        runJob(log,'xmipp_metadata_utilities',"-i %s --set %s %s %s -o %s --mode %s"
+               %(md,OperationSetType,md2,Label,fnOut,ModeType))
+    else:
+        runJob(log,'xmipp_metadata_utilities',"-i %s --set %s %s %s %s -o %s --mode %s"
+               %(md,OperationSetType,md2,Label,Label2,fnOut,ModeType))
 
 def operateOption(log,Operation_TypeOp,md,md2,fnOut,LabelOp,LabelSize,Label_KC,Label_DC,Label_RC,Expression,ModeType):
     
