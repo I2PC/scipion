@@ -29,10 +29,12 @@ import java.io.File;
 import java.util.Arrays;
 import java.util.logging.Level;
 
+import xmipp.jni.MDRow;
+
 //import xmipp.utils.DEBUG;
 
 /**
- * Protocol for integrating native C++ code - @see ImageDouble.java
+ * Binding class for accessing C++ MetaData implementation.
  */
 public class MetaData {
 	/** Enum values with Labels possible types */
@@ -284,22 +286,24 @@ public class MetaData {
 		return values;
 	}
 	
-	/** Return a new metadata containing the values of one row */
-	public void getRow(long objId, MetaData mdRow){
-		mdRow.importObjects(this, new long[]{objId});
-	}
+//	/** Return a new metadata containing the values of one row */
+//	public void getRow(long objId, MetaData mdRow){
+//		mdRow.importObjects(this, new long[]{objId});
+//	}
+//	
+//	public void setRow(MetaData mdRow, long objId){
+//		int[] labels = mdRow.getActiveLabels();
+//		String value;
+//		long rowId = mdRow.firstObject();
+//		for (int l : labels){
+//			value = mdRow.getValueString(l, rowId);
+//			setValueString(l, value, objId);
+//		}
+//	}
 	
-	public void setRow(MetaData mdRow, long objId){
-		int[] labels = mdRow.getActiveLabels();
-		String value;
-		long rowId = mdRow.firstObject();
-		for (int l : labels){
-			value = mdRow.getValueString(l, rowId);
-			setValueString(l, value, objId);
-		}
-	}
+	public native void getRow(MDRow mdRow, long objId);
 	
-	
+	public native void setRow(MDRow mdRow, long objId);
 
 	/**
 	 * Create a metadata row from another metadata Adding the activeLabels and
