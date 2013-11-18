@@ -506,3 +506,6 @@ class ProtClassify3D(EMProtocol):
 
 class ProtValidate3D(EMProtocol):
     pass
+
+class ProtCreateMask3D(EMProtocol):
+    pass
