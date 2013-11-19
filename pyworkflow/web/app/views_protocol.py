@@ -179,9 +179,11 @@ def save_protocol(request):
     updateProtocolParams(request, protocol, project)
     protId = protocol.getObjId()
     try:
+        print 'success' 
         project.saveProtocol(protocol)
         res = {'success' : protId}
     except Exception, ex:
+        print 'errors'
         errors = [convertTktoHtml(str(ex))]
         res = {'errors' : errors}
     
@@ -198,7 +200,7 @@ def delete_protocol(request):
         protocol = project.mapper.selectById(int(protId))
         try:
             project.deleteProtocol(protocol)
-            res = {'success' : ''}
+            res = {'success' : 'Protocol deleted successful'}
         except Exception, ex:
             errors = [convertTktoHtml(str(ex))]
             res = {'errors' : errors}
