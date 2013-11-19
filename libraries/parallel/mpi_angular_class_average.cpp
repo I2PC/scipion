@@ -1134,6 +1134,7 @@ void MpiProgAngularClassAverage::filterInputMetadata()
         auxDF.operate(cmd);
     }
     std::cerr << "DEBUG_JM: Read inFile" <<std::endl;
+    auxDF.write("/tmp/inputfileBeforeRemove.xmd");
 
     MDMultiQuery multi;
     MDValueGE eq1(MDL::str2Label(col_select), limit0);
