@@ -84,20 +84,8 @@ function showErrorValidation(json) {
 	msg = msg.replace(">", "");
 	msg = msg.replace("[", "");
 	msg = msg.replace("]", "");
-
-	var msg = "<table><tr><td><img src='/resources/error.gif' width='45' height='45' />"
-			+ "</td><td class='content'>" + msg + "</td></tr></table>";
-
-	new Messi(msg, {
-		title : 'Errors found',
-		modal : true,
-		buttons : [ {
-			id : 0,
-			label : 'close',
-			val : 'Y',
-			btnClass : 'btn-close'
-		} ]
-	});
+	
+	launchMessiSimple('Errors found',messiError(msg));
 }
 
 function launchMessiSimple(title, msg){
