@@ -447,8 +447,8 @@ elif (ARGUMENTS['mode'] == 'pymodules'):
         setup = env.Command(name+'-setup', Dir(dir), buildPythonModule)
         env.Depends(setup, copy)
         env.Clean(setup, [join(SITE_PACKAGES, name)])
-        alias = env.Alias(name, setup)
-        env.Alias('pymodules', unpack)
+        env.Alias(name, setup)
+        env.Alias('pymodules', name)
         
         return alias        
         
@@ -468,18 +468,42 @@ elif (ARGUMENTS['mode'] == 'pymodules'):
                       }
         
     for name, modDict in PYTHON_MODULES.iteritems():
-       env.Alias('pymodules', addPythonModule(name, modDict))
-    env.Depends('paramiko', 'pycrypto')   
-# TODO: make specific modes for generation of dist
+       addPythonModule(name, modDict)
 
-# distribution
-""" FIXME Testing, not ready for production
-env['DISTTAR_FORMAT'] = 'bz2'
-env.Append(DISTTAR_EXCLUDEEXTS = ['.o', '.os', '.so', '.a', '.dll', '.cc',
-    '.cache', '.pyc', '.cvsignore', '.dblite', '.log', '.bz2'],
-DISTTAR_EXCLUDEDIRS = ['CVS', '.svn', '.sconf_temp', 'dist']
-)
-disttar = env.DistTar(os.path.join(base_dir, 'Xmipp-1.1'), [env.Dir('#')])
-env.Alias('dist', disttar)
-"""
+elif (ARGUMENTS['mode'] == 'install'):
+    if not 'dir' in ARGUMENTS:
+        raise Exception("dir=PATH should be passed when mode=install")
+    path = ARGUMENTS['dir']
+    
+    import shutil
+    if os.path.exists(path):
+        print "Removing dir: '%s'" % path
+        shutil.rmtree(path) # Remove install directory
+        
+    INSTALL_DIRS = ['lib', 'bin', 'resources', 'protocols', 'java/lib', 'external/python/Python-2.7.2/']
+    
+    for src in INSTALL_DIRS:
+        dest = os.path.join(path, src)
+        print "Coping directory from '%s' to '%s'" % (src, dest)
+        shutil.copytree(src, dest, ignore=shutil.ignore_patterns("*.o", "*.pyc"))
+        
+    #PYTHON_FILES = ['external/python/Python-2.7.2/' + f for f in ['libpython2.7.a', 'libpython2.7.so', 'libpython2.7.so.1.0', 'python']]
+    XMIPP_FILES = ['.xmipp' + s for s in ['.autocomplete', '.bashrc', '.csh', '_programs.autocomplete', '_programs.sqlite']]
+    TCLTK_FILES = ['external/python/%s8.5.10/unix/lib%s.so' % (s, s) for s in ['tcl', 'tk']]
+    INSTALL_FILES = XMIPP_FILES + TCLTK_FILES
+    
+    for src in INSTALL_FILES:
+        dest = os.path.join(path, src)
+        destDir = os.path.dirname(dest)
+        if not os.path.exists(destDir):
+            print "Creating dir '%s'" % destDir
+            os.makedirs(destDir)
+        print "Coping file from '%s' to '%s'" % (src, dest)
+        shutil.copy2(src, dest)
 
+    CLEAN_DIRS = ['lib/python2.7/site-packages/matplotlib/tests', 'resources/test']
+    
+    for src in CLEAN_DIRS:
+        dest = os.path.join(path, src)
+        print "Deleting directory '%s'" % dest
+        shutil.rmtree(dest)
