@@ -17,8 +17,9 @@ path_askpass=$4
 #export DISPLAY=:0
 #setsid ssh -X -o StrictHostKeyChecking=no aquintana@crunchy.cnb.csic.es "source /gpfs/fs1/apps/eman/EMAN2/eman2.bashrc&&xterm -e e2projectmanager.py"
 
+echo $path_askpass
 
-export SSH_ASKPASS=scipionPipe
+export SSH_ASKPASS=$path_askpass
 export DISPLAY=:0
 
 echo "Executing command:"

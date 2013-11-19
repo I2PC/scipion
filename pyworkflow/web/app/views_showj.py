@@ -448,6 +448,10 @@ def visualizeObject(request):
             fn = project.getTmpPath(obj.getName() + '_classes.xmd')
             writeSetOfClasses2D(obj, fn)
             inputParameters['path']= os.path.join(projectPath, fn)
+        elif isinstance(obj, SetOfCTF):
+            fn = project.getTmpPath(obj.getName() + '_ctfs.xmd')
+            writeSetOfCTFs(obj, fn)
+            inputParameters['path']= os.path.join(projectPath, fn)
         else:
             raise Exception('Showj Web visualizer: can not visualize class: %s' % obj.getClassName())
     
