@@ -311,7 +311,8 @@ function switchGraph() {
 
 function updateGraphView(status) {
 	$.ajax({
-		type : "GET", url : "/update_graph_view/?status=" + status
+		type : "GET", 
+		url : "/update_graph_view/?status=" + status
 	});
 }
 
@@ -347,8 +348,8 @@ function deleteProtocolForm(projName, protocolId) {
 		} ],
 		callback : function(val) {
 			if (val == 'Y') {
-				window.location.href = "/project_content/?projectName="
-						+ projName;
+//				window.location.href = "/project_content/?projectName="
+//						+ projName;
 			}
 		}
 	});
@@ -361,9 +362,23 @@ function deleteProtocol(elm) {
 	var value = elm.attr('value').split("-");
 	var projName = value[0];
 	var protId = value[1];
+	
 	$.ajax({
 		type : "GET",
-		url : "/delete_protocol/?protocolId=" + protId
+		url : "/delete_protocol/?protocolId=" + protId,
+		dataType : "json",
+		success : function(json) {
+			if(json.errors != undefined){
+				// Show errors in the validation
+				showErrorValidation(json.errors);
+			} else if(json.success!= undefined){
+//				launchMessiSimple("Successful", messiInfo(json.success));
+				window.location.reload()
+			}
+		},
+		error: function(){
+			alert("error")
+		}
 	});
 }
 

@@ -127,7 +127,8 @@ def protocol(request):
         try:
             project.launchProtocol(protocol)
         except Exception, ex:
-            errors = [str(ex).replace('\n', '<br/>')]
+            errors = [convertTktoHtml(str(ex))]
+            
     jsonStr = json.dumps({'errors' : errors}, ensure_ascii=False)
     
     return HttpResponse(jsonStr, mimetype='application/javascript')   
@@ -176,10 +177,18 @@ def updateParam(request, project, protocol, paramName):
 def save_protocol(request):
     project, protocol = loadProtocolProject(request)
     updateProtocolParams(request, protocol, project)
-    project.saveProtocol(protocol)
     protId = protocol.getObjId()
+    try:
+        print 'success' 
+        project.saveProtocol(protocol)
+        res = {'success' : protId}
+    except Exception, ex:
+        print 'errors'
+        errors = [convertTktoHtml(str(ex))]
+        res = {'errors' : errors}
     
-    return HttpResponse(protId, mimetype='application/javascript')
+    jsonStr = json.dumps(res, ensure_ascii=False)
+    return HttpResponse(jsonStr, mimetype='application/javascript')
 
 # Method to delete a protocol #
 def delete_protocol(request):
@@ -189,10 +198,15 @@ def delete_protocol(request):
         project = loadProject(projectName)
         protId = request.GET.get('protocolId', None)
         protocol = project.mapper.selectById(int(protId))
-     
-        project.deleteProtocol(protocol)         
-        
-    return HttpResponse(mimetype='application/javascript') 
+        try:
+            project.deleteProtocol(protocol)
+            res = {'success' : 'Protocol deleted successful'}
+        except Exception, ex:
+            errors = [convertTktoHtml(str(ex))]
+            res = {'errors' : errors}
+            
+    jsonStr = json.dumps(res, ensure_ascii=False)
+    return HttpResponse(jsonStr, mimetype='application/javascript')   
 
 # Method to stop a protocol #
 def stop_protocol(request):

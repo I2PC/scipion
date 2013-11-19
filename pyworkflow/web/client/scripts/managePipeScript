@@ -9,5 +9,5 @@ echo password
 
 mkfifo $pathAskpass
 chmod 700 $pathAskpass
-echo password > $pathAskpass
+echo password > $pathAskpass &
 echo "Pipe read"

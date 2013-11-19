@@ -24,31 +24,8 @@
 # *
 # **************************************************************************
 """
-This sub-package will contains Xmipp3.0 specific protocols
+This sub-package contains protocol for ResMap
 """
 
-from xmipp3 import *
-from convert import *
-from viewer import XmippViewer
-from viewer_ml2d import XmippML2DViewer
-from viewer_cl2d import XmippCL2DViewer
-from viewer_ml3d import XmippML3DViewer
-from plotter import XmippPlotter
-from protocol_preprocess_micrographs import XmippProtPreprocessMicrographs
-from protocol_ctf_micrographs import XmippProtCTFMicrographs
-from protocol_particle_pick import XmippProtParticlePicking 
-from protocol_extract_particles import XmippProtExtractParticles
-from protocol_ml2d import XmippProtML2D
-from protocol_cl2d import XmippProtCL2D
-from protocol_cl2d_align import XmippProtCL2DAlign
-from protocol_kerdensom import XmippProtKerdensom
-from protocol_rotational_spectra import XmippProtRotSpectra 
-from protocol_ml3d import XmippProtML3D
-from protocol_projmatch import XmippProtProjMatch
-from protocol_filters import XmippProtFourierFilter
-from protocol_filters import XmippProtGaussianFilter
-from protocol_filters import XmippProtMask, XmippProtResize
-from protocol_create_mask import XmippProtCreateGeo3DMask
+from protocol_resmap import ProtResMap
 
-# Wizards
-from wizard import *

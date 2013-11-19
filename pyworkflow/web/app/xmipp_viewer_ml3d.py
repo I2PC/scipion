@@ -73,7 +73,8 @@ def viewGeneratedVols(request, protocolViewer):
     return "showj", "/visualize_object/?path="+ path
 
 def view2DAvgs(request, protocolViewer):
-    file = "ml2dextra/iter%03d/iter_classes.xmd"
+    extra = '%s2d' % protocolViewer.protocol.getProgramId() + 'extra'
+    file = extra + "/iter%03d/iter_classes.xmd"
 #    viewIterationFile("ml2dextra/iter%03d/iter_classes.xmd")
     pass
 
@@ -81,6 +82,8 @@ def view3DRefsVolumes(request, protocolViewer):
     file = "extra/iter%03d/vol000001.vol"
 #    viewIterationFile("extra/iter%03d/vol000001.vol")
     pass
+
+
 
 def doPlotAngularDistribution(request, protocolViewer):
     iterToShow = str(protocolViewer.iterToShow.get())

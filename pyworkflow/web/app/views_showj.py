@@ -39,15 +39,25 @@ def showj(request, inputParameters=None):
     inputParameters['tableLayoutConfiguration']= TableLayoutConfiguration(dataset, tableDataset, inputParameters['allowRender'])
 
     #If no label is set to render, set the first one if exists
-    if inputParameters['labelsToRenderComboBox'] == '':
+    if 'labelsToRenderComboBox' not in inputParameters or inputParameters['labelsToRenderComboBox'] == '' or request.session['blockComboBox'] != inputParameters['blockComboBox']:
         labelsToRenderComboBoxValues = getLabelsToRenderComboBoxValues(inputParameters['tableLayoutConfiguration'].columnsLayout)
-        inputParameters['labelsToRenderComboBox']=labelsToRenderComboBoxValues[0][0] if len(labelsToRenderComboBoxValues) > 0 else ''
+        if len(labelsToRenderComboBoxValues) > 0:
+            inputParameters['labelsToRenderComboBox'] = labelsToRenderComboBoxValues[0][0]
+        else:
+            # If there is no image to display and it is initial load, switch to table mode 
+            if request.method == 'GET' and inputParameters['mode']!='table':
+                inputParameters['mode']='table'
+                showj(request, inputParameters) 
+            inputParameters['labelsToRenderComboBox'] = ''
 
     dataset.setLabelToRender(inputParameters['labelsToRenderComboBox']) 
+
+    print "labeltorender",inputParameters['labelsToRenderComboBox']
     
     if inputParameters['labelsToRenderComboBox'] == '':
         inputParameters['zoom']=0
         _imageDimensions = None
+        dataset.setNumberSlices(0)
     else:
         
         _imageVolName = inputParameters['volumesToRenderComboBox'] if ("volumesToRenderComboBox" in inputParameters and inputParameters['volumesToRenderComboBox'] != '') else tableDataset.getElementById(0,inputParameters['labelsToRenderComboBox'])
@@ -68,12 +78,12 @@ def showj(request, inputParameters=None):
     request.session['dataset'] = dataset
     request.session['labelsToRenderComboBox'] = inputParameters['labelsToRenderComboBox']
     request.session['blockComboBox'] = inputParameters['blockComboBox']
-#        if (_imageDimensions != ''):
     request.session['imageDimensions'] = _imageDimensions
 
     showjForm = ShowjForm(dataset,
                           inputParameters['tableLayoutConfiguration'],
-                          request.POST if request.method == 'POST' else inputParameters) # A form bound for the POST data and unbound for the GET
+                          #request.POST if request.method == 'POST' else inputParameters) # A form bound for the POST data and unbound for the GET
+                          inputParameters) # A form bound for the POST data and unbound for the GET
         
     if showjForm.is_valid() is False:
         print showjForm.errors
@@ -371,7 +381,9 @@ def visualizeObject(request):
                        'volumesToRenderComboBox': '',       # If 3D, Volume to be displayed in gallery, volume_astex and volume_chimera mode. If None the first one will be displayed
 #                       'dims': '2d',                        # Object Dimensions
                        'goto': 1,                           # Element selected (metadata record) by default. It can be a row in table mode or an image in gallery mode
-                       'colRowMode': 'Off',                 # In gallery mode 'On' means columns can be adjust manually by the user. When 'Off' columns are adjusted automatically to screen width. 
+                       'colRowMode': 'Off',                 # In gallery mode 'On' means columns can be adjust manually by the user. When 'Off' columns are adjusted automatically to screen width.
+                       'cols':  '',                         # In gallery mode (and colRowMode set to 'On') cols define number of columns to be displayed
+                       'rows': '',                          # In gallery mode (and colRowMode set to 'On') rows define number of columns to be displayed
                        'mirrorY': False,                    # When 'True' image are mirrored in Y Axis 
                        'applyTransformMatrix': False,       # When 'True' if there is transform matrix, it will be applied
                        'onlyShifts': False,                 # When 'True' if there is transform matrix, only shifts will be applied
@@ -435,6 +447,10 @@ def visualizeObject(request):
         elif isinstance(obj, SetOfClasses2D):
             fn = project.getTmpPath(obj.getName() + '_classes.xmd')
             writeSetOfClasses2D(obj, fn)
+            inputParameters['path']= os.path.join(projectPath, fn)
+        elif isinstance(obj, SetOfCTF):
+            fn = project.getTmpPath(obj.getName() + '_ctfs.xmd')
+            writeSetOfCTFs(obj, fn)
             inputParameters['path']= os.path.join(projectPath, fn)
         else:
             raise Exception('Showj Web visualizer: can not visualize class: %s' % obj.getClassName())
