@@ -1133,7 +1133,7 @@ void MpiProgAngularClassAverage::filterInputMetadata()
                                   MDL::label2Str(MDL_REF).c_str(), FIRST_IMAGE);
         auxDF.operate(cmd);
     }
-    //std::cerr << "DEBUG_JM: Read inFile" <<std::endl;
+    std::cerr << "DEBUG_JM: Read inFile" <<std::endl;
 
     MDMultiQuery multi;
     MDValueGE eq1(MDL::str2Label(col_select), limit0);
@@ -1148,7 +1148,7 @@ void MpiProgAngularClassAverage::filterInputMetadata()
         int limit = size - ROUND((limitRper/100.) * size);
         auxF1.sort(auxDF,codifyLabel,asc,limit,0);
     }
-    //remove inages bellow (above) these limits
+    //remove images bellow (above) these limits
     else if(do_limit0 || do_limitF)
     {
         if (do_limit0)
@@ -1234,7 +1234,7 @@ void MpiProgAngularClassAverage::filterInputMetadata()
     {
         auxF1 = auxDF;
     }
-
+    DF.write("/tmp/inputfileAfterREmove.xmd");
     DF.sort(auxF1, MDL_IMAGE);
 }
 
