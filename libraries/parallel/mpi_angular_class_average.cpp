@@ -1234,7 +1234,7 @@ void MpiProgAngularClassAverage::filterInputMetadata()
     {
         auxF1 = auxDF;
     }
-    DF.write("/tmp/inputfileAfterREmove.xmd");
+    auxF1.write("/tmp/inputfileAfterREmove.xmd");
     DF.sort(auxF1, MDL_IMAGE);
 }
 
