@@ -1,0 +1,15 @@
+#!/bin/bash
+
+pathAskpass=$0
+tmpDirectory=`dirname $0`
+
+echo $pathAskpass
+echo $tmpDirectory 
+
+
+cat ./scipionPipe
+
+
+#tmpDirectory=`dirname $0`
+#pipeName="pipe"
+#cat $tmpDirectory/$pipeName
