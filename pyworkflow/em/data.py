@@ -199,6 +199,10 @@ class Volume(Image):
     """ Represents an EM Volume object """
     def __init__(self, **args):
         Image.__init__(self, **args)
+        
+class VolumeMask(Volume):
+    """ A 3D mask to be used with volumes. """
+    pass
 
 
 class Set(EMObject):

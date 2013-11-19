@@ -104,6 +104,10 @@ class SqliteMapper(Mapper):
         print "obj.getObjValue()", obj.getObjValue()
     
     def updateTo(self, obj, level=1):
+        self.__initUpdateDict()
+        self.__updateTo(obj, level)
+        
+    def __updateTo(self, obj, level):
         self.db.updateObject(obj._objId, obj._objName, obj.getClassName(),
                              self.__getObjectValue(obj), obj._objParentId, 
                              obj._objLabel, obj._objComment)

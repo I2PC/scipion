@@ -233,32 +233,44 @@ class ProtImportVolumes(EMProtocol):
                    label='Sampling rate (A/px)')
         
          
+    def createVolume(self, volumePath):
+        """ Copy the volume to WorkingDir and create
+        the volumen object.
+        """
+        dst = self._getPath(basename(volumePath))            
+        shutil.copyfile(volumePath, dst)
+        vol = Volume()
+        vol.setFileName(dst)
+        vol.setSamplingRate(self.samplingRate.get())
+        return vol
+        
     def importVolumes(self, pattern, samplingRate):
         """ Copy volumes matching the filename pattern
         Register other parameters.
         """
         from glob import glob
         filePaths = glob(pattern)
-        if len(filePaths) == 0:
+        filePaths.sort()
+        n = len(filePaths)
+        
+        if n == 0:
             raise Exception('importVolumes:There is not filePaths matching pattern')
         
-        volSet = self._createSetOfVolumes()
+        if n == 1:
+            # Create a single volume
+            vol = self.createVolume(filePaths[0])
+            self._defineOutputs(outputVolume=vol)
+        else:
+            # Create a set of volumes
+            volSet = self._createSetOfVolumes()
+            
+            filePaths.sort()
+            for f in filePaths:
+                volSet.append(self.createVolume(f))
+            
+            volSet.write()
+            self._defineOutputs(outputVolumes=volSet)
         
-        outFiles = [volSet.getFileName()]
-        
-        filePaths.sort()
-        for f in filePaths:
-            dst = self._getPath(basename(f))            
-            shutil.copyfile(f, dst)
-            vol = Volume()
-            vol.setFileName(dst)
-            volSet.append(vol)
-            outFiles.append(dst)  
-        
-        volSet.write()
-        self._defineOutputs(outputVolumes=volSet)
-        
-        return outFiles
     
     def getFiles(self):
         return self.outputVolumes.getFiles()
@@ -490,4 +502,10 @@ class ProtRefine3D(EMProtocol):
     pass
 
 class ProtClassify3D(EMProtocol):
+    pass
+
+class ProtValidate3D(EMProtocol):
+    pass
+
+class ProtCreateMask3D(EMProtocol):
     pass

@@ -782,12 +782,14 @@ class Protocol(Step):
         for paramName, param in self.getDefinition().iterParams():
             attr = getattr(self, paramName) # Get all self attribute that are pointers
             paramErrors = []
+            condition = self.evalParamCondition(paramName)
             if attr.isPointer():
                 obj = attr.get()
-                if self.evalParamCondition(paramName) and obj is None and not param.allowNull:
+                if condition and obj is None and not param.allowNull:
                     paramErrors.append('cannot be EMPTY.')
             else:
-                paramErrors = param.validate(attr.get())
+                if condition:
+                    paramErrors = param.validate(attr.get())
             label = param.label.get()
             errors += ['<%s> %s' % (label, err) for err in paramErrors]                
         # Validate specific for the subclass
