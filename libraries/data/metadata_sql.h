@@ -72,6 +72,7 @@ class MDSql
 {
 public:
     static void dumpToFile(const FileName &fileName);
+    static void sqlTimeOut(int miliSeconds);
 
     /**This library will provide common mathematical and string functions in
 SQL queries using the operating system libraries or provided
@@ -90,6 +91,20 @@ upper_quartile.
      *
      */
     static bool activateMathExtensions(void);
+/** activate UNSAFED Multi-thread mode
+ * SQLite support three different threading modes:
+
+Single-thread. In this mode, all mutexes are disabled and SQLite is unsafe to use in more than a single thread at once.
+
+Multi-thread. In this mode, SQLite can be safely used by multiple threads provided that no single database connection is used simultaneously in two or more threads.
+
+Serialized. In serialized mode, SQLite can be safely used by multiple threads with no restriction.
+
+ */
+    static bool  deactivateThreadMuting(void);
+    /** activate SAFED serialized mode mode
+*/
+    static bool  activateThreadMuting(void);
 
 private:
     /** write metadata in sqlite table

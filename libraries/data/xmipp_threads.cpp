@@ -3,15 +3,12 @@
 #include <stdio.h>
 #include <iostream>
 
+
 // ================= MUTEX ==========================
+
 Mutex::Mutex()
 {
     pthread_mutex_init(&mutex, NULL);
-}
-
-void Mutex::lock()
-{
-    pthread_mutex_lock(&mutex);
 }
 
 Mutex::~Mutex()
@@ -19,40 +16,110 @@ Mutex::~Mutex()
     pthread_mutex_destroy(&mutex);
 }
 
+void Mutex::lock()
+{
+    pthread_mutex_lock(&mutex);
+}
+
 void Mutex::unlock()
 {
     pthread_mutex_unlock(&mutex);
 }
 
+// ================= CONDITION ==========================
+
+Condition::Condition()
+{
+    mutex = new Mutex();
+    pthread_cond_init(&cond, NULL);
+}
+
+Condition::~Condition()
+{
+    delete mutex;
+    pthread_cond_destroy(&cond);
+}
+
+void Condition::lock()
+{
+    mutex->lock();
+}
+
+void Condition::unlock()
+{
+    mutex->unlock();
+}
+
+void Condition::wait()
+{
+    pthread_cond_wait(&cond, &(mutex->mutex));
+}
+
+void Condition::signal()
+{
+    pthread_cond_signal(&cond);
+}
+
+void Condition::broadcast()
+{
+    pthread_cond_broadcast(&cond);
+}
+
 // ================= BARRIER ==========================
+
 Barrier::Barrier(int numberOfThreads)
 {
     needed = numberOfThreads;
     called = 0;
-    pthread_mutex_init(&mutex, NULL);
-    pthread_cond_init(&cond, NULL);
+    condition = new Condition();
 }
 
 Barrier::~Barrier()
 {
-    pthread_mutex_destroy(&mutex);
-    pthread_cond_destroy(&cond);
+    delete condition;
 }
 
 void Barrier::wait()
 {
-    pthread_mutex_lock(&mutex);
+    condition->lock();
     ++called;
     if (called == needed)
     {
         called = 0;
-        pthread_cond_broadcast(&cond);
+        condition->broadcast();
     }
     else
+        condition->wait();
+    condition->unlock();
+}
+
+
+// ================= THREAD =======================
+
+Thread::Thread()
+{
+}
+
+Thread::~Thread()
+{
+    pthread_join(thId, NULL);
+}
+
+void Thread::start()
+{
+    int result = pthread_create(&thId, NULL, _singleThreadMain, (void*)this);
+
+    if (result != 0)
     {
-        pthread_cond_wait(&cond, &mutex);
+        std::cerr << "Thread: can't start thread." << std::endl;
+        exit(1);
     }
-    pthread_mutex_unlock(&mutex);
+}
+
+void * _singleThreadMain(void * data){
+  Thread * thread = (Thread*) data;
+  thread->run();
+  return NULL;
 }
 
 // ================= THREAD MANAGER =======================
@@ -74,6 +141,7 @@ ThreadArgument::ThreadArgument(int id, ThreadManager * manager, void * data)
     this->data = data;
     this->workClass = NULL;
 }
+
 
 void * _threadMain(void * data)
 {

@@ -625,6 +625,8 @@ public:
 
     void setValue(const MDObject &object);
 
+    void setValueFromStr(MDLabel label, const String &value);
+
     /** Show */
     friend std::ostream& operator << (std::ostream &out, const MDRow &row);
 

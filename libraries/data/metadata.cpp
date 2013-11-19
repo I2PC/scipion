@@ -45,14 +45,14 @@ void getBlocksInMetaDataFile(const FileName &inFile, StringVector& blockList)
         REPORT_ERROR(ERR_NOT_IMPLEMENTED,"getBlocksInMetaDataFile");
     else if(extFile=="sqlite")
     {
-    	getBlocksInMetaDataFileDB(inFile,blockList);
+        getBlocksInMetaDataFileDB(inFile,blockList);
     }
     else
     {    //map file
         int fd;
-		MetaData mdAux;
-		mdAux.setMaxRows(1);
-		mdAux.read(inFile);
+        MetaData mdAux;
+        mdAux.setMaxRows(1);
+        mdAux.read(inFile);
         BUFFER_CREATE(bufferMap);
         mapFile(inFile, bufferMap.begin, bufferMap.size, fd);
         BUFFER_COPY(bufferMap, buffer);
@@ -545,13 +545,13 @@ void MetaData::removeIndex(const std::vector<MDLabel> desiredLabels)
 
 void MetaData::addItemId()
 {
-	addLabel(MDL_ITEM_ID);
-	fillLinear(MDL_ITEM_ID,1,1);
+    addLabel(MDL_ITEM_ID);
+    fillLinear(MDL_ITEM_ID,1,1);
 }
 
 void MetaData::removeItemId()
 {
-	removeLabel(MDL_ITEM_ID);
+    removeLabel(MDL_ITEM_ID);
 }
 
 //----------Iteration functions -------------------
@@ -1012,17 +1012,17 @@ void MetaData::_readRowsStar(mdBlock &block, std::vector<MDObject*> & columnValu
 
         if (!line.empty())
         {
-          //_maxRows would be > 0 if we only want to read some
-          // rows from the md for performance reasons...
-          // anyway the number of lines will be counted in _parsedLines
-          if (_maxRows == 0 || _parsedLines < _maxRows)
-          {
-            std::stringstream ss(line);
-            id = addObject();
-            for (size_t i = 0; i < nCol; ++i)
-                _parseObject(ss, *(columnValues[i]), id);
-          }
-          _parsedLines++;
+            //_maxRows would be > 0 if we only want to read some
+            // rows from the md for performance reasons...
+            // anyway the number of lines will be counted in _parsedLines
+            if (_maxRows == 0 || _parsedLines < _maxRows)
+            {
+                std::stringstream ss(line);
+                id = addObject();
+                for (size_t i = 0; i < nCol; ++i)
+                    _parseObject(ss, *(columnValues[i]), id);
+            }
+            _parsedLines++;
         }
         iter = newline + 1; //go to next line
     }
@@ -1899,6 +1899,24 @@ void MetaData::writeText(const FileName fn,  const std::vector<MDLabel>* desired
     else
         _writeRows(ofs);
     ofs.close();
+}
+
+void MetaData::metadataToVec(std::vector<MDRow> &vd)
+{
+    MDRow row;
+    FOR_ALL_OBJECTS_IN_METADATA(*this)
+    {
+        (*this).getRow(row,__iter.objId);
+        vd.push_back(row);
+    }
+}
+
+void MetaData::vecToMetadata(const std::vector<MDRow> &rowMetadata)
+{
+    const MDRow row;
+
+    for (int i=0;i<rowMetadata.size();i++)
+        this->addRow(rowMetadata[i]);
 }
 
 bool MetaData::operator==(const MetaData& op) const
