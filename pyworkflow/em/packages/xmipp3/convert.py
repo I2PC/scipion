@@ -131,7 +131,9 @@ def rowToImage(md, objId, imgLabel, imgClass, hasCtf):
     img.setLocation(index, filename)
     if hasCtf:
         ctFilename = md.getValue(xmipp.MDL_CTF_MODEL, objId)
-        img.setCTF(readCTFModel(ctFilename))
+        ctfModel = readCTFModel(ctFilename)
+        ctfModel.micFile.set(md.getValue(xmipp.MDL_MICROGRAPH, objId))
+        img.setCTF(ctfModel)
     rowToObject(md, objId, img, imgDict)
     
     return img
@@ -477,7 +479,7 @@ def writeSetOfCTFs(ctfSet, mdCTF):
         objId = md.addObject()
         ctfRow = XmippMdRow()
         ctfModelToRow(ctfModel, ctfRow)
-        ctfRow.setValue(xmipp.MDL_MICROGRAPH, str(ctfModel.micFile.get()))
+        ctfRow.setValue(xmipp.MDL_MICROGRAPH, ctfModel.micFile.get())
         ctfRow.writeToMd(md, objId)
         
     md.write(mdCTF)
