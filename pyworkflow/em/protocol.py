@@ -86,6 +86,7 @@ class ProtImportImages(EMProtocol):
     def _defineParams(self, form):
         form.addSection(label='Input')
         form.addParam('pattern', StringParam, label="Pattern")
+        form.addParam('checkStack', BooleanParam, label="Check stack files?", default=False)
         form.addParam('voltage', FloatParam, default=200,
                    label='Microscope voltage (in kV)')
         form.addParam('sphericalAberration', FloatParam, default=2.26,
@@ -94,7 +95,7 @@ class ProtImportImages(EMProtocol):
                       label='Amplitude Contrast',
                       help='It should be a positive number, typically between 0.05 and 0.3.')
         
-    def importImages(self, createSetFunction, pattern, voltage, sphericalAberration, amplitudeContrast):
+    def importImages(self, createSetFunction, pattern, checkStack, voltage, sphericalAberration, amplitudeContrast):
         """ Copy images matching the filename pattern
         Register other parameters.
         """
@@ -115,14 +116,25 @@ class ProtImportImages(EMProtocol):
         self._setOtherPars(imgSet)
         
         outFiles = [imgSet.getFileName()]
-       
+        imgh = ImageHandler()
+        n = 1
+        
         filePaths.sort()
         for f in filePaths:
             dst = self._getPath(basename(f))            
             shutil.copyfile(f, dst)
-            img = findClass(self._className)()
-            img.setFileName(dst)
-            imgSet.append(img)
+            if self.checkStack:
+                x, y, x, n = imgh.getDimensions(dst)
+            if n > 1:
+                for i in range(1, n+1):
+                    img = findClass(self._className)()
+                    img.setFileName(dst)
+                    img.setIndex(i)
+                    imgSet.append(img)
+            else:
+                img = findClass(self._className)()
+                img.setFileName(dst)
+                imgSet.append(img)
             outFiles.append(dst)
         
         imgSet.write()
@@ -180,7 +192,7 @@ class ProtImportMicrographs(ProtImportImages):
         
     def _defineSteps(self):
         self._insertFunctionStep('importImages', self._createSetOfMicrographs(), self.pattern.get(),
-                                self.voltage.get(), self.sphericalAberration.get(),
+                                self.checkStack.get(), self.voltage.get(), self.sphericalAberration.get(),
                                 self.ampContrast.get()) #, self.samplingRate.get(), 
                                 #self.scannedPixelSize.get(), self.magnification.get())
                                 
@@ -205,7 +217,7 @@ class ProtImportParticles(ProtImportImages):
         
     def _defineSteps(self):
         self._insertFunctionStep('importImages', self._createSetOfParticles(), self.pattern.get(),
-                                self.voltage.get(), self.sphericalAberration.get(),
+                                self.checkStack.get(), self.voltage.get(), self.sphericalAberration.get(),
                                 self.ampContrast.get())
         
     def _setOtherPars(self, imgSet):

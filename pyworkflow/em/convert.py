@@ -28,6 +28,7 @@ This module contains several conversion utilities
 """
 
 import os
+from constants import NO_INDEX
 
 
 class ImageHandler(object):
@@ -62,7 +63,9 @@ class ImageHandler(object):
         The tuple will contains:
             (x, y, z, n) where x, y, z are image dimensions (z=1 for 2D) and 
             n is the number of elements if stack.
-        """ 
+        """
+        if isinstance(location, str):
+            location = (NO_INDEX, location)
         img = self.read(location)
         return img.getDimensions()
     
