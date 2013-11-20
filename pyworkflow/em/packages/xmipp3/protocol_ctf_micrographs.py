@@ -109,6 +109,8 @@ class XmippProtCTFMicrographs(ProtCTFMicrographs):
             ctfModel = readCTFModel(ctfparam)
             mic.setCTF(ctfModel)
             micSet.append(mic)
+            #TODO: WE need to use 2 objects cause same object cannot be inserted on
+            #2 different mappers: change this
             ctfModel2 = readCTFModel(ctfparam)
             ctfModel2.micFile.set(mic.getFileName())
             ctfModel2.setId(mic.getId())
