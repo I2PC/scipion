@@ -15,7 +15,7 @@ from pyworkflow.em.packages.xmipp3.convert import *
 
 
 
-def showj(request, inputParameters=None):
+def showj(request, inputParameters=None, extraParameters=None):
     #############
     # WEB INPUT PARAMETERS
     _imageDimensions = ''
@@ -34,9 +34,26 @@ def showj(request, inputParameters=None):
     #Get table from block name
     dataset.setTableName(inputParameters['blockComboBox'])
     tableDataset=dataset.getTable()
+
+
+    if request.method == 'GET':
+        defaultColumnsLayoutProperties = None
+        if extraParameters != None and extraParameters != {}:
+            defaultColumnsLayoutProperties = {k.getName(): {} for k in tableDataset.iterColumns()}
+            for key, value in extraParameters.iteritems():
+    
+                try:
+                    label, attribute = key.rsplit('___')
+                except Exception, ex:
+                    raise Exception('Showj Web visualizer: Incorrect extra parameter')
+    
+                if tableDataset.hasColumn(label):
+                    defaultColumnsLayoutProperties[label].update({attribute:value})
+                    
+        request.session['defaultColumnsLayoutProperties'] = defaultColumnsLayoutProperties
     
     #Load table layout configuration. How to display columns and attributes (visible, render, editable)  
-    inputParameters['tableLayoutConfiguration']= TableLayoutConfiguration(dataset, tableDataset, inputParameters['allowRender'])
+    inputParameters['tableLayoutConfiguration']= TableLayoutConfiguration(dataset, tableDataset, inputParameters['allowRender'], request.session['defaultColumnsLayoutProperties'])
 
     #If no label is set to render, set the first one if exists
     if 'labelsToRenderComboBox' not in inputParameters or inputParameters['labelsToRenderComboBox'] == '' or request.session['blockComboBox'] != inputParameters['blockComboBox']:
@@ -52,8 +69,6 @@ def showj(request, inputParameters=None):
 
     dataset.setLabelToRender(inputParameters['labelsToRenderComboBox']) 
 
-    print "labeltorender",inputParameters['labelsToRenderComboBox']
-    
     if inputParameters['labelsToRenderComboBox'] == '':
         inputParameters['zoom']=0
         _imageDimensions = None
@@ -175,28 +190,32 @@ class ColumnLayoutConfigurationEncoder(json.JSONEncoder):
                  
             
 class TableLayoutConfiguration():
-    def __init__(self, ds, tableDataset, allowRender=True):
+    def __init__(self, ds, tableDataset, allowRender=True, defaultColumnsLayoutProperties=None):
         
         self.columnsLayout = OrderedDict() 
          
         for col in tableDataset.iterColumns():
-            self.columnsLayout[col.getName()]=ColumnLayoutConfiguration(col, ds.getTypeOfColumn(col.getName()), allowRender)
+            self.columnsLayout[col.getName()]=ColumnLayoutConfiguration(col, ds.getTypeOfColumn(col.getName()), allowRender, defaultColumnsLayoutProperties[col.getName()] if defaultColumnsLayoutProperties != None else {})
             
         self.colsOrder = defineColsLayout(self.columnsLayout.keys())
         
             
 class ColumnLayoutConfiguration():
-    def __init__(self, col, typeOfColumn, allowRender):
+    def __init__(self, col, typeOfColumn, allowRender, defaultColumnLayoutProperties):
         self.columns = col
         
         self.label = col.getName()
         self.typeOfColumn = typeOfColumn
         
         self.columnLayoutProperties = ColumnLayoutProperties(self.typeOfColumn, allowRender)
-
+        self.columnLayoutProperties.setValues(defaultColumnLayoutProperties)
+        #self.columnLayoutProperties = defaultColumnLayoutProperties.setValues(self.typeOfColumn, allowRender)
+        
+#NAPA DE LUXE: Y si lo pasamos a una namedtupple
 class ColumnLayoutProperties():
     def __init__(self, typeOfColumn, allowRender=True):
 #        self.layoutPropertiesDict = {}
+        #self.visible = defaultColumnLayoutProperties["visible"] if "visible" in defaultColumnLayoutProperties else not(typeOfColumn == 'id')
         self.visible = not(typeOfColumn == 'id')
         self.allowSetVisible = True 
         
@@ -204,9 +223,13 @@ class ColumnLayoutProperties():
         self.allowSetEditable = self.editable
         
         self.renderable = False
-        self.allowSetRenderable = True if (typeOfColumn == 'image' and allowRender) else False
+        self.allowSetRenderable = (typeOfColumn == 'image' and allowRender)
 
-        self.renderFunc = "taka"
+        self.renderFunc = ""
+        
+    def setValues(self, defaultColumnLayoutProperties):
+        for key in defaultColumnLayoutProperties:
+            setattr(self, key, defaultColumnLayoutProperties[key])
         
 def defineColsLayout(labels):
     colsOrder = range(len(labels))
@@ -373,7 +396,8 @@ def showVolVisualization(request):
 ###################################################################  
 def visualizeObject(request):
     #Initialize default values
-    inputParameters = {'allowRender': True,                 # Image can be displayed, depending on column layout 
+    inputParameters = {'objectId': '',
+                       'allowRender': True,                 # Image can be displayed, depending on column layout 
                        'mode': 'gallery',                   # Mode Options: gallery, table, column, volume_astex, volume_chimera
                        'zoom': '150px',                     # Zoom set by default
                        'blockComboBox': '',                 # Metadata Block to display. If None the first one will be displayed
@@ -394,6 +418,8 @@ def visualizeObject(request):
                        'imageMaxHeight': 512,               # Maximum image height (in pixels)
                        'imageMinHeight': 30}                # Minimum image height (in pixels)
 
+    extraParameters = {}
+    
 # NAPA DE LUXE: PARA probarlo sin sesion iniciada    
 #    request.session['projectPath'] = "/home/adrian/Scipion/projects/TestXmippWorkflow/"
 #    request.session['projectName'] = "Juanitpo"
@@ -403,19 +429,27 @@ def visualizeObject(request):
     else:         
         raise Exception('Showj Web visualizer: No project loaded')
     
+    for key, value in request.GET.iteritems():
+        if key in inputParameters:
+            inputParameters[key]=value
+        else:
+            extraParameters[key]=value
+    
+    
     if "objectId" in request.GET: 
-        objectId = request.GET.get("objectId")
-
         project = Project(projectPath)
         project.load()
         
-        obj = project.mapper.selectById(int(objectId))
+        obj = project.mapper.selectById(int(inputParameters["objectId"]))
         if obj.isPointer():
             obj = obj.get()
 
         if isinstance(obj, SetOfMicrographs):
             fn = project.getTmpPath(obj.getName() + '_micrographs.xmd')
             writeSetOfMicrographs(obj, fn)
+            #NAPA DE LUXE
+            #extraParameters["id___visible"]=True
+            
             inputParameters['path']= os.path.join(projectPath, fn)
         elif isinstance(obj, SetOfVolumes):
             fn = project.getTmpPath(obj.getName()+ '_volumes.xmd')
@@ -429,6 +463,8 @@ def visualizeObject(request):
     #        PAJM aqui falla para el cl2d align y se esta perdiendo la matrix de transformacion en la conversion
             fn = project.getTmpPath(obj.getName() + '_images.xmd')
             writeSetOfParticles(obj, fn)
+            #NAPA DE LUXE
+            #extraParameters["id___visible"]=True
             inputParameters['path']= os.path.join(projectPath, fn)
         elif isinstance(obj, Image):
             fn = project.getTmpPath(obj.getName() + '_image.xmd')
@@ -456,13 +492,13 @@ def visualizeObject(request):
             raise Exception('Showj Web visualizer: can not visualize class: %s' % obj.getClassName())
     
     elif "path" in request.GET:
-        inputParameters.update(request.GET.items())
+        #inputParameters.update(request.GET.items())
         inputParameters.update({'path':os.path.join(projectPath, request.GET.get("path"))})
     else:
         raise Exception('Showj Web visualizer: No object identifier or path found')         
 
     request.session['defaultZoom'] = inputParameters['zoom']
-    return showj(request, inputParameters)  
+    return showj(request, inputParameters, extraParameters)  
 
 
 def testingSSH(request):

@@ -53,6 +53,8 @@ def launch_viewer(request):
         
         viewers = findViewers(protocol.getClassName(), WEB_DJANGO)
         
+        print "viewer",viewers
+        
         if len(viewers) == 0:
             msg = "There is not viewer for protocol: <strong>" + protocol.getClassName() +"</strong>"
             ioDict = {'error': msg}
