@@ -35,6 +35,7 @@ import xmipp.jni.Filename;
 import xmipp.jni.ImageGeneric;
 import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
+import xmipp.jni.MDRow;
 import xmipp.utils.DEBUG;
 import xmipp.utils.Param;
 import xmipp.utils.XmippStringUtils;
@@ -533,7 +534,7 @@ public class GalleryData {
 	}
 
 	/** Set all values coming from a row md */
-	public void setRow(MetaData mdRow, long objId) {
+	public void setRow(MDRow mdRow, long objId) {
 		md.setRow(mdRow, objId);
 		setMdChanges(true);
 	}
@@ -936,7 +937,7 @@ public class GalleryData {
 		if (!md.containsLabel(idlabel))
 			return null;
 
-		MetaData mdRow = new MetaData();
+		MDRow mdRow = new MDRow();
 		MetaData imagesmd = new MetaData();
 		int index = 0;
 		String imagepath;
@@ -948,9 +949,8 @@ public class GalleryData {
 				if (imagepath != null && ImageGeneric.exists(imagepath)) {
 					id2 = imagesmd.addObject();
 					if (useGeo) {
-						md.getRow(id, mdRow);
-						mdRow.setValueString(idlabel, imagepath,
-								mdRow.firstObject());
+						md.getRow(mdRow, id);
+						mdRow.setValueString(idlabel, imagepath);
 						imagesmd.setRow(mdRow, id2);
 					} else
 						imagesmd.setValueString(idlabel, imagepath, id2);

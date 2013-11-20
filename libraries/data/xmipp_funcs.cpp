@@ -687,6 +687,29 @@ void print_elapsed_time(TimeStamp& time, bool _IN_SECS)
         std::cout << diff << " msecs." << std::endl;
 }
 
+size_t Timer::now()
+{
+  gettimeofday(&tv, NULL);
+  localtime_r(&tv.tv_sec,&tm);
+  return tm.tm_hour * 3600 * 1000 + tm.tm_min * 60 * 1000 + tm.tm_sec * 1000 +
+                  tv.tv_usec / 1000;
+}
+
+void Timer::tic()
+{
+  tic_time = now();
+}
+
+void Timer::toc(const char * msg)
+{
+  size_t diff = now() - tic_time;
+  if (msg != NULL)
+      std::cout << msg;
+  std::cout << "Elapsed time: ";
+  std::cout << diff/1000.0 << " secs." << std::endl;
+}
+
+
 // Calculate elapsed time since last annotation .............................
 double elapsed_time(ProcessorTimeStamp &time, bool _IN_SECS)
 {

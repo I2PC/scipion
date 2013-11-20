@@ -32,6 +32,7 @@
 
 class ThreadManager;
 class ThreadArgument;
+class Condition;
 
 /* Prototype of functions for threads works. */
 typedef void (*ThreadFunction) (ThreadArgument &arg);
@@ -75,8 +76,57 @@ public:
      * threads that are waiting for it.
      */
     virtual void unlock();
+
+    friend class Condition;
 }
 ;//end of class Mutex
+
+/** Class wrapping around the pthreads condition.
+ * This class will provide a more object oriented implementation
+ * of a condition variable to achieve syncronization between threads.
+ */
+class Condition
+{
+private:
+    Mutex *mutex; //our pthread mutex
+    pthread_cond_t cond; //our pthread cond
+
+public:
+    /** Default constructor.
+     * This constructor just initialize the pthread_mutex_t structure
+     * with its defaults values, just like static initialization with PTHREAD_MUTEX_INITIALIZER
+     */
+    Condition();
+
+    /** Destructor. */
+     ~Condition();
+
+    /** Function to get the access to the mutex.
+     */
+     void lock();
+
+    /** Function to release the mutex.
+     */
+     void unlock();
+
+    /** Function to be call from a thread to wait on
+     * the condition. This function should be called after
+     * acquiring the Condition lock...after that, will block
+     * the threads until the condition be signaled.
+     */
+     void wait();
+
+    /** Function to notify the condition was met.
+     * Thread that can be waiting in the condition
+     * will be awaked.
+     */
+     void signal();
+
+    /** Send the signal to all waiting threads. */
+     void broadcast();
+
+}
+;//end of class Condition
 
 /** Class to synchronize several threads in some point of execution.
  * Threads is a way of distributing workload across
@@ -102,8 +152,7 @@ class Barrier
 private:
     int needed; ///< How many threads should arraive to meet point
     int called; ///< How many threads already arrived
-    pthread_mutex_t mutex; ///< Mutex to update structure
-    pthread_cond_t cond; ///< Condition on which the threads are waiting
+    Condition * condition; ///< Condition on which the threads are waiting
 
 public:
     /** Constructor of the barrier to initialize the object.
@@ -136,6 +185,46 @@ public:
 }
 ;//end of class Barrier
 
+/** Class wrapping around the pthreads.
+ * This class will ease the way to launch threads with
+ * a more object oriented, approach.
+ */
+class Thread
+{
+private:
+    pthread_t thId; ///< pthreads id
+
+public:
+    /** Default constructor.
+     * This constructor just initialize the pthread_mutex_t structure
+     * with its defaults values, just like static initialization with PTHREAD_MUTEX_INITIALIZER
+     */
+    Thread();
+
+    /** Destructor. */
+     virtual ~Thread();
+
+    /** This function should be implemented in subclasses and
+     * will be the main threads working function.
+     */
+     virtual void run() = 0;
+
+    /** This function should not be re-implemented in sub-classes.
+     * This is the function to be called to start the run() in a separated thread.
+     */
+     void start();
+}
+;//end of class Condition
+
+/** This function is used from the Thread class to provide a wrapper over pthreads.
+ * This will be the real function called from pthread_create and from this
+ * the function thread.run() will be called.
+ */
+void * _singleThreadMain(void * data);
+
+/** This function is used in ThreadManager as the main threads function to
+ * live in.
+ */
 void * _threadMain(void * data);
 
 /** Class for manage a group of threads performing one or several tasks.

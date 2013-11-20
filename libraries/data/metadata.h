@@ -1059,6 +1059,10 @@ public:
     void renameColumn(std::vector<MDLabel> oldLabel,
                       std::vector<MDLabel> newLabel);
 
+    void metadataToVec(std::vector<MDRow> &vd);
+
+    void vecToMetadata(const std::vector<MDRow> &rowMetadata);
+
     /** 'is equal to' (equality).*/
     bool operator==(const MetaData& op) const;
 }
