@@ -262,8 +262,8 @@ function evalElements() {
 	});
 }
 
-/* Differents functions depends on the input type */
 function onChangeParam(value, paramId) {
+/* Differents functions depends on the input type */
 //	alert(paramId + "-"+value);
 	setParamValue(paramId, value);
 }
@@ -388,11 +388,11 @@ function help(title, msg) {
 	});
 }
 
+function browseObjects(param, projName, objClass) {
 /*
  * Browse object in the database. Params: objClass: the class to get instances
  * from (also subclasses)
  */
-function browseObjects(param, projName, objClass) {
 	$.ajax({
 		type : "GET",
 		url : "/browse_objects/?projectName=" + projName + "&objClass="
@@ -421,6 +421,31 @@ function browseProtClass(param, projName, protClassName) {
 function showSelectTable(param, objects, className){
 	var res = getTableFormatted(param, objects, className);
 	selectDialog(param, res, "processSelectionTable");
+}
+
+function formProtSimple(param, projName){
+	var protSimple = $("#"+param +"_input").val();
+	var dataProt = $("#"+param+"_input").attr("data-prot")
+	
+	if(dataProt != undefined){
+		// load the protocol params in the form
+		var url = '/form/?protocolClass='+protSimple+'&action=protSimple&paramProt='+param+'&'+dataProt
+	} else {
+		// load a blank form with a new protocol
+		var url = '/form/?protocolClass='+protSimple+'&action=protSimple&paramProt='+param
+	}
+	customPopup(url,500,350);
+}
+
+function returnProtocol(){
+	params = $("#protocolForm").serialize();
+	paramProt = $("#paramProt").val();
+	window.opener.setParamProt(paramProt, params);
+	launchMessiSimple("Successful", messiInfo("Protocol saved inside the workflow"), 1);
+}
+
+function setParamProt(paramProt, params){
+	$("#"+paramProt+"_input").attr("data-prot", params)
 }
 
 
@@ -495,11 +520,6 @@ function selectDialog(objClass, msg, funcName) {
 			val : 'C',
 			btnClass : 'btn-cancel'
 		} ]
-	// callback : function(val) {
-	// if (val == 'Y') {
-	// alert();
-	// }
-	// }
 	});
 }
 
@@ -519,11 +539,10 @@ function processSelectionTable(elm) {
 	jQuery('input#' + elm.attr('data-node') + '_input').val(value);
 }
 
+function selTableMessi(elm) {
 /*
  * Used to choose a element in the protocol form
  */
-function selTableMessi(elm) {
-
 	var row = $("table.content");
 	var id = elm.attr('id');
 

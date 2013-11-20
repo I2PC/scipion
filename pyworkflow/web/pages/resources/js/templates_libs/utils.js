@@ -88,19 +88,35 @@ function showErrorValidation(json) {
 	launchMessiSimple('Errors found',messiError(msg));
 }
 
-function launchMessiSimple(title, msg){
-	new Messi(msg, {
-		title : title,
-		modal : true,
-		buttons : [ {
-			id : 0,
-			label : 'Ok',
-			val : 'Y',
-			btnClass : 'btn-select'
-		}]
-	});
+function launchMessiSimple(title, msg, autoclose){
+	if(autoclose){
+		new Messi(msg, {
+			title : title,
+			modal : true,
+			buttons : [ {
+				id : 0,
+				label : 'Ok',
+				val : 'Y',
+				btnClass : 'btn-select'
+			}],
+			callback: function(){
+				window.close();
+			}
+		});
+	} else {
+		new Messi(msg, {
+			title : title,
+			modal : true,
+			buttons : [ {
+				id : 0,
+				label : 'Ok',
+				val : 'Y',
+				btnClass : 'btn-select'
+			}]
+		});
+	}
 }
-
+	
 function messiError(msg){
 	var res = "<table><tr><td><img src='/resources/error.gif' width='45' height='45' />"
 	+ "</td><td>"+ msg +"</td></tr></table>";

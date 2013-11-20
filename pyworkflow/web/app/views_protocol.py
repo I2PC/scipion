@@ -39,20 +39,22 @@ from django.http import HttpResponse
 def form(request):
     project, protocol = loadProtocolProject(request, requestType='GET')
     action = request.GET.get('action', None)
+    paramProt = request.GET.get('paramProt', None)
     protRunIdViewer = request.GET.get('protRunIdViewer', None)
     hosts = [host.getLabel() for host in project.getSettings().getHosts()]
     
-    visualize = 0 
+    visualize = 0
     
     if action == 'visualize':
         visualize = 1
         viewerDict = protocol.getVisualizeDictWeb()
+    elif action == 'protSimple':
+        visualize = 2
     elif action == 'copy':
         protocol = project.copyProtocol(protocol)
         
     wizards = findWizards(protocol, WEB_DJANGO)
     
-    # TODO: Add error page validation when protocol is None
     for section in protocol._definition.iterSections():
         for paramName, param in section.iterParams():
             protVar = getattr(protocol, paramName, None)
@@ -71,6 +73,7 @@ def form(request):
                         param.htmlValue = 'true'
                     else:
                         param.htmlValue = 'false'
+            
             if paramName in wizards:
                 param.hasWizard = True
                 param.wizardName = wizards[paramName].getView()
@@ -85,12 +88,19 @@ def form(request):
             param.htmlDepend = ','.join(param._dependants)
             param.htmlCondParams = ','.join(param._conditionParams)
 #            param.htmlExpertLevel = param.expertLevel.get()   
+
+            """Workflow Addon"""
+            valueURL = request.GET.get(paramName, None)            
+            if valueURL is not None:
+                if valueURL is not param.htmlValue:
+                    param.htmlValue = valueURL
     
     context = {'projectName':project.getName(),
                'protocol':protocol,
                'protRunIdViewer':protRunIdViewer,
                'definition':protocol._definition,
                'visualize':visualize,
+               'paramProt':paramProt,
                'favicon': getResourceIcon('favicon'),
                'help': getResourceIcon('help'),
                'comment':getResourceIcon('edit_toolbar'),
