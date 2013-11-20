@@ -171,6 +171,7 @@ class RelationsTreeProvider(SubclassesTreeProvider):
     """Will implement the methods to provide the object info
     of subclasses objects(of className) found by mapper"""
     def __init__(self, protocol, relationParam):
+        self.mapper = protocol.mapper
         parentObject = protocol.getAttributeValue(relationParam.relationParent.get())
         if parentObject is not None:
             queryFunc =  protocol.mapper.getRelationChilds      
