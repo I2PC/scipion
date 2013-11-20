@@ -177,13 +177,11 @@ def updateParam(request, project, protocol, paramName):
 def save_protocol(request):
     project, protocol = loadProtocolProject(request)
     updateProtocolParams(request, protocol, project)
-    protId = protocol.getObjId()
     try:
-        print 'success' 
         project.saveProtocol(protocol)
+        protId = protocol.getObjId()
         res = {'success' : protId}
     except Exception, ex:
-        print 'errors'
         errors = [convertTktoHtml(str(ex))]
         res = {'errors' : errors}
     
