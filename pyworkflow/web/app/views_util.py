@@ -167,6 +167,13 @@ def convertTktoHtml(text):
     text = text.replace('\n', '<br/>')
     return text
 
+def render_column(request):
+    renderFunction = request.GET.get("renderFunction")
+    #PAJM: No se puede llamar a una funcion con reflex sino pertenece auna clase
+    if renderFunction == "get_image":
+        return get_image(request)
+#    return getattr(self, renderFunction)
+
 def get_image(request):
 #    from django.http import HttpResponse
     from pyworkflow.gui import getImage, getPILImage
