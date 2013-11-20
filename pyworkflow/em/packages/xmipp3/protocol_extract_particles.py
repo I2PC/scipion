@@ -228,7 +228,8 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         
     def writePosFiles(self):
         """ Write the pos file for each micrograph on metadata format. """
-        self.posFiles = writeSetOfCoordinates(self._getExtraPath(), self.inputCoords)
+        #self.posFiles = writeSetOfCoordinates(self._getExtraPath(), self.inputCoords)
+        writeSetOfCoordinates(self._getExtraPath(), self.inputCoords)
 
     def flipMicrograph(self, micName, fnCTF, micrographToExtract):
         """ Flip micrograph. """           
@@ -297,8 +298,9 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
                   
         #Create images.xmd metadata
         fnImages = self._getPath('images.xmd')
-        imgsXmd = xmipp.MetaData()  
-        for posFn in self.posFiles:
+        imgsXmd = xmipp.MetaData() 
+        posFiles = glob(self._getExtraPath('*.pos')) 
+        for posFn in posFiles:
             xmdFn = self._getExtraPath(replaceBaseExt(posFn, "xmd"))
             md = xmipp.MetaData(xmdFn)
             mdPos = xmipp.MetaData('particles@%s' % posFn)
