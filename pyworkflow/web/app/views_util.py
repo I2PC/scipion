@@ -143,6 +143,15 @@ def browse_objects(request):
                              ensure_ascii=False)
         return HttpResponse(jsonStr, mimetype='application/javascript')
 
+def browse_protocol_class(request):
+    if request.is_ajax():
+        protClassName = request.GET.get('protClassName')
+        from pyworkflow.em import findSubClasses, emProtocolsDict
+        objs = findSubClasses(emProtocolsDict, protClassName).keys()
+        
+        jsonStr = json.dumps({'objects' : objs},ensure_ascii=False)
+        return HttpResponse(jsonStr, mimetype='application/javascript')
+
 def textfileViewer(title, fileList):
     f = open(fileList[0], 'r')
         
