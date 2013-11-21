@@ -184,7 +184,8 @@
 		{% for id,enable,data,transformationMatrix in dataset.getDataToRenderAndExtra %}
 			<div class="img_container" id="img_container___{{id}}">
 				<div class="img_inner_container">
-					<img class="tableImages" title="{{data}}" data-real_src="/get_image/?image={{data}}"/>
+					<!-- <img class="tableImages" title="{{data}}" data-real_src="/get_image/?image={{data}}"/> -->
+					<img class="tableImages" title="{{data}}" data-real_src="/render_column/?renderFunction=get_image&image={{data}}"/>
 					
 					{% if dataset.getTable.hasEnabledColumn %}
 					<img class="enabledGallery

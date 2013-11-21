@@ -19,6 +19,12 @@
   	});
 </script>
 {% endblock %} {% block sideLeft %}
+<div class="viewTree">
+	<label>Workflow View: </label>
+	<select id="viewsTree" name="viewsTree" onChange="javascript:changeTreeView();">
+		<!-- <option value=""></option> -->
+	</select>
+</div> 
 <div class="protFieldsetTree">
 	<ul id="browser" class="filetree">
 		{% for section in sections %}

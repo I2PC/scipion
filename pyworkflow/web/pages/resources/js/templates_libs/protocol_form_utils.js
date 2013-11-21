@@ -262,8 +262,8 @@ function evalElements() {
 	});
 }
 
-/* Differents functions depends on the input type */
 function onChangeParam(value, paramId) {
+/* Differents functions depends on the input type */
 //	alert(paramId + "-"+value);
 	setParamValue(paramId, value);
 }
@@ -388,11 +388,11 @@ function help(title, msg) {
 	});
 }
 
+function browseObjects(param, projName, objClass) {
 /*
  * Browse object in the database. Params: objClass: the class to get instances
  * from (also subclasses)
  */
-function browseObjects(node, projName, objClass) {
 	$.ajax({
 		type : "GET",
 		url : "/browse_objects/?projectName=" + projName + "&objClass="
@@ -401,14 +401,56 @@ function browseObjects(node, projName, objClass) {
 		success : function(json) {
 			// specifying a dataType of json makes jQuery pre-eval the response
 			// for us
-			// var res = getListFormatted(node, json.objects, objClass);
-			var res = getTableFormatted(node, json.objects, objClass);
-
-			// selectDialog(objClass, res, "processSelectionList");
-			selectDialog(objClass, res, "processSelectionTable");
-
+			showSelectTable(param, json.objects, objClass);
 		}
 	});
+}
+
+function browseProtClass(param, projName, protClassName) {
+	$.ajax({
+		type : "GET",
+		url : "/browse_protocol_class/?projectName=" + projName + "&protClassName="
+				+ protClassName,
+		dataType : "json",
+		success : function(json) {
+			showSelectTable(param, json.objects, protClassName);
+		}
+	});
+}
+
+function showSelectTable(param, objects, className){
+	var res = getTableFormatted(param, objects, className);
+	selectDialog(param, res, "processSelectionTable");
+}
+
+function formProtSimple(param, projName){
+	var protSimple = $("#"+param +"_input").val();
+	var dataProt = $("#"+param+"_input").attr("data-prot")
+	
+	if (protSimple.length > 0){
+		if(dataProt != undefined){
+			// load the protocol params in the form
+			var url = '/form/?protocolClass='+protSimple+'&action=protSimple&paramProt='+param+'&'+dataProt
+		} else {
+			// load a blank form with a new protocol
+			var url = '/form/?protocolClass='+protSimple+'&action=protSimple&paramProt='+param
+		}
+		customPopup(url,500,350);
+	}
+	else{
+		launchMessiSimple("Error", messiError("Protocol was not selected, please choose one."));
+	}
+}
+
+function returnProtocol(){
+	params = $("#protocolForm").serialize();
+	paramProt = $("#paramProt").val();
+	window.opener.setParamProt(paramProt, params);
+	launchMessiSimple("Successful", messiInfo("Protocol saved inside the workflow"), 1);
+}
+
+function setParamProt(paramProt, params){
+	$("#"+paramProt+"_input").attr("data-prot", params)
 }
 
 function showComment() {
@@ -482,11 +524,6 @@ function selectDialog(objClass, msg, funcName) {
 			val : 'C',
 			btnClass : 'btn-cancel'
 		} ]
-	// callback : function(val) {
-	// if (val == 'Y') {
-	// alert();
-	// }
-	// }
 	});
 }
 
@@ -506,11 +543,10 @@ function processSelectionTable(elm) {
 	jQuery('input#' + elm.attr('data-node') + '_input').val(value);
 }
 
+function selTableMessi(elm) {
 /*
  * Used to choose a element in the protocol form
  */
-function selTableMessi(elm) {
-
 	var row = $("table.content");
 	var id = elm.attr('id');
 
