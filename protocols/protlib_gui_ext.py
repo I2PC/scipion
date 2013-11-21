@@ -1889,7 +1889,6 @@ class XmippBrowserCTF(XmippBrowserPreview):
                              to=self.maxFreq, 
                              value=value, 
                              callback=lambda a, 
-                             step=0.01,
                              b, 
                              c:self.updateFreqRing())
         slider.pack(side=tk.LEFT, padx=3, pady=3)
