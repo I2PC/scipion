@@ -427,14 +427,19 @@ function formProtSimple(param, projName){
 	var protSimple = $("#"+param +"_input").val();
 	var dataProt = $("#"+param+"_input").attr("data-prot")
 	
-	if(dataProt != undefined){
-		// load the protocol params in the form
-		var url = '/form/?protocolClass='+protSimple+'&action=protSimple&paramProt='+param+'&'+dataProt
-	} else {
-		// load a blank form with a new protocol
-		var url = '/form/?protocolClass='+protSimple+'&action=protSimple&paramProt='+param
+	if (protSimple.length > 0){
+		if(dataProt != undefined){
+			// load the protocol params in the form
+			var url = '/form/?protocolClass='+protSimple+'&action=protSimple&paramProt='+param+'&'+dataProt
+		} else {
+			// load a blank form with a new protocol
+			var url = '/form/?protocolClass='+protSimple+'&action=protSimple&paramProt='+param
+		}
+		customPopup(url,500,350);
 	}
-	customPopup(url,500,350);
+	else{
+		launchMessiSimple("Error", messiError("Protocol was not chosen."));
+	}
 }
 
 function returnProtocol(){
@@ -447,7 +452,6 @@ function returnProtocol(){
 function setParamProt(paramProt, params){
 	$("#"+paramProt+"_input").attr("data-prot", params)
 }
-
 
 function showComment() {
 	var msg = $("input#comment").attr("value");
