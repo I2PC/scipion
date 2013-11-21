@@ -40,7 +40,7 @@ class ProtRelionBase(XmippProtocol):
         self.addParam('ORoot', self.WorkingDir + '/')        
         self.addParam('SamplingRate', getSampling(self.ImgMd))
 
-    def summary(self,totalNumberOfIter=0):
+    def summary(self):
         lines = ["Wrapper implemented for RELION **1.2**"]
         return lines 
 
