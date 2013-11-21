@@ -43,6 +43,8 @@ public:
 	double PSDcorrelation90;
 	double firstZeroRatio;
 	double firstZeroAvg;
+	double firstMinimumStddev_ZeroStddev; // sigma(firstMinimum)/sigma(firstZero)
+	double firstMinimumDiffStddev_ZeroStddev; // sigma(firstMinimum-firstZero)/sigma(firstZero)
 	double maxFreq;
 	double firstZeroDisagreement;
 	double beating;
@@ -76,6 +78,8 @@ public:
     /// Higher frequency for the mask (in Fourier space, max 0.5)
     double mask_w2;
 
+    /// Downsampling factor used for the PSDs
+    double downsampling;
 public:
     /** Empty constructor */
     ProgPSDSort();

@@ -285,7 +285,8 @@ def estimateCtfCtffind1(_log, micrograph,
 def gatherResults(log,TmpDir,WorkingDir,summaryFile, importMicrographs,Downsampling,NumberOfMpi):
     buildSummaryMetadata(WorkingDir, importMicrographs, summaryFile)
     dirSummary,fnSummary=os.path.split(summaryFile)
-    runJob(log,"xmipp_ctf_sort_psds","-i %s -o %s/aux_%s"%(summaryFile,dirSummary,fnSummary),NumberOfMpi=NumberOfMpi)
+    runJob(log,"xmipp_ctf_sort_psds","-i %s -o %s/aux_%s --downsampling %f"%(summaryFile,dirSummary,fnSummary,Downsampling),
+           NumberOfMpi=NumberOfMpi)
     runJob(log,"mv","-f %s/aux_%s %s"%(dirSummary,fnSummary,summaryFile))
     runJob(log,"touch",summaryFile)
     if Downsampling!=1:
