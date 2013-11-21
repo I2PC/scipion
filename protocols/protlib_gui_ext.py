@@ -1812,6 +1812,8 @@ class XmippBrowserCTF(XmippBrowserPreview):
             self.insertFiles =  self.insertFilesFromMd
         self.maxFreq = 0.5
         self.unitLabel = '1/px'
+        self.unit = getattr(self, 'unit', 'pixel')
+        
         if self.freqs and self.unit == 'angstrom':
             self.unitLabel = '1/A'
             self.freqs = [float(f) * self.sampling for f in self.freqs]
