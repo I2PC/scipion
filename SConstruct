@@ -447,7 +447,7 @@ elif (ARGUMENTS['mode'] == 'pymodules'):
         setup = env.Command(name+'-setup', Dir(dir), buildPythonModule)
         env.Depends(setup, copy)
         env.Clean(setup, [join(SITE_PACKAGES, name)])
-        env.Alias(name, setup)
+        alias = env.Alias(name, setup)
         env.Alias('pymodules', name)
         
         return alias        
