@@ -1888,7 +1888,7 @@ class XmippBrowserCTF(XmippBrowserPreview):
                              from_=0, 
                              to=self.maxFreq, 
                              value=value, 
-                             step=0.001,
+                             step=self.maxFreq/100.,
                              callback=lambda a, 
                              b, 
                              c:self.updateFreqRing())
