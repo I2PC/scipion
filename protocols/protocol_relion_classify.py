@@ -22,13 +22,30 @@ from protocol_ml2d import lastIteration
 from protlib_filesystem import createLink
 
 from protocol_relion_base import ProtRelionBase, runNormalizeRelion, convertImagesMd, renameOutput, \
-                                 convertRelionBinaryData, convertRelionMetadata
+                                 convertRelionBinaryData, convertRelionMetadata, getIteration
 
 class ProtRelionClassifier(ProtRelionBase):
     def __init__(self, scriptname, project):
         ProtRelionBase.__init__(self, protDict.relion_classify.name, scriptname, project)
         self.Import = 'from protocol_relion_classify import *'
         self.relionType='classify'
+        if self.DoContinue:
+            self.setPreviousRunFromFile(self.optimiserFileName)
+            #if optimizer has not been properly selected this will 
+            #fail, let us go ahead and handle the situation in verify
+            try:
+                self.inputProperty('NumberOfClasses')
+                ########################### self.inputProperty('SamplingRate')
+                self.inputProperty('MaskRadiusA')
+                self.inputProperty('RegularisationParamT')
+                #self.lastIterationPrecRun=self.PrevRun.lastIter()
+    
+                #self.NumberOfClasses      = self.PrevRun.NumberOfClasses
+                #self.SamplingRate         = self.PrevRun.SamplingRate
+                #self.MaskDiameterA        = self.PrevRun.MaskDiameterA
+                #self.RegularisationParamT = self.PrevRun.RegularisationParamT
+            except:
+                print "Can not access the parameters from the original relion run"
 
     def summary(self):
         lines = ProtRelionBase.summary(self, self.NumberOfIterations)
@@ -45,15 +62,18 @@ class ProtRelionClassifier(ProtRelionBase):
     def defineSteps(self): 
         ProtRelionBase.defineSteps(self)
         # launch relion program
-        self.insertRelionClassify()
-        #self.ImgStar = self.extraPath(replaceBasenameExt(tmpFileNameXMD, '.star'))
-        firstIteration = 1
-        lastIteration = self.NumberOfIterations
-        NumberOfClasses=self.NumberOfClasses
+        if self.DoContinue:
+            self.insertRelionClassifyContinue()
+            firstIteration = getIteration(self.optimiserFileName)
+        else:
+            self.insertRelionClassify()
+            firstIteration = 1
+
+        lastIteration   = self.NumberOfIterations
         ProtRelionBase.defineSteps2(self, firstIteration
                                         , lastIteration
-                                        , NumberOfClasses)
-
+                                        , self.NumberOfClasses)
+    ##########################TEST HERE
     def createFilenameTemplates(self):
         myDict=ProtRelionBase.createFilenameTemplates(self)        
         #myDict['volume']=self.extraIter + "class%(ref3d)03d.spi"
@@ -65,7 +85,7 @@ class ProtRelionClassifier(ProtRelionBase):
         for v in self.relionFiles:
             myDict[v+'Re']=self.extraIter + v +'.star'
             myDict[v+'Xm']=self.extraIter + v +'.xmd'
-        myDict['imagesAssignedToClass']='imagesAssignedToClass@'+self.ExtraDir+'/dataForVisualize.xmd'
+        #myDict['imagesAssignedToClass']='model_classes@'+myDict[v+'Xm']
         return myDict
 
     def insertRelionClassify(self):
@@ -81,7 +101,7 @@ class ProtRelionClassifier(ProtRelionBase):
             args['--solvent_mask'] = self.ReferenceMask
             
         args.update({'--i': self.ImgStar,
-                     '--particle_diameter': self.MaskDiameterA,
+                     '--particle_diameter': self.MaskRadiusA * 2.0,
                      '--angpix': self.SamplingRate,
                      '--ref': self.Ref3D,
                      '--oversampling': '1'
@@ -138,8 +158,43 @@ class ProtRelionClassifier(ProtRelionBase):
 #            f.write("%s\n" % item)
 #        f.close
         self.insertRunJobStep(self.program, params,verifyFiles)
-        ###################self.insertRunJobStep('echo shortcut', params,verifyFiles)
 
-    
+    def insertRelionClassifyContinue(self):
+        args = {
+                '--o': '%s/relion' % self.ExtraDir,
+                '--continue': self.optimiserFileName,
                 
+                '--iter': self.NumberOfIterations,
+                
+                '--tau2_fudge': self.RegularisationParamT,# should not be changed 
+                '--flatten_solvent': '',# use always
+                '--zero_mask': '',# use always. This is confussing since Sjors gui creates the command line
+                                  # with this option
+                                  # but then the program complains about it. 
+                '--oversampling': '1',
+                '--norm': '',
+                '--scale': '',
+                }
+        iover = 1 #TODO: check this DROP THIS
+        index = ['30','15','7.5','3.7','1.8',
+                 '0.9','0.5','0.2','0.1'].index(self.AngularSamplingDeg)
+        args['--healpix_order'] = float(index + 1 - iover)
+        
+        if self.PerformLocalAngularSearch:
+            args['--sigma_ang'] = self.LocalAngularSearchRange / 3.
+            
+        args['--offset_range'] = self.OffsetSearchRangePix
+        args['--offset_step']  = self.OffsetSearchStepPix * pow(2, iover)
+
+        args['--j'] = self.NumberOfThreads
+        
+        # Join in a single line all key, value pairs of the args dict    
+        params = ' '.join(['%s %s' % (k, str(v)) for k, v in args.iteritems()])
+        params += ' ' + self.AdditionalArguments
+        verifyFiles=[]
+        #relionFiles=['data','model','optimiser','sampling']
+        for v in self.relionFiles:
+             verifyFiles += [self.getFilename(v+'Re', iter=self.NumberOfIterations, workingDir=self.WorkingDir )]
+        self.insertRunJobStep(self.program, params,verifyFiles)
+        #############self.insertRunJobStep('echo shortcut', params,verifyFiles)
 
