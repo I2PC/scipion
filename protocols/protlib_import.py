@@ -50,6 +50,7 @@ XMIPP_RELION_LABELS = {
                        ,MDL_AVG_CHANGES_OFFSETS:     'rlnChangesOptimalOffsets'
                        ,MDL_AVG_CHANGES_CLASSES:     'rlnChangesOptimalClasses'
                        ,MDL_ANGLE_PSI:         'rlnAnglePsi'
+                       ,MDL_CLASS_PERCENTAGE:  'rlnClassDistribution'
                        ,MDL_CTF_DEFOCUSU:      'rlnDefocusU'
                        ,MDL_CTF_DEFOCUSV:      'rlnDefocusV'
                        ,MDL_CTF_DEFOCUS_ANGLE: 'rlnDefocusAngle'
@@ -57,6 +58,7 @@ XMIPP_RELION_LABELS = {
                        ,MDL_CTF_CS:            'rlnSphericalAberration'
                        ,MDL_CTF_Q0:            'rlnAmplitudeContrast'
                        ,MDL_IMAGE:             'rlnImageName'
+                       ,MDL_IMAGE_REF:         'rlnReferenceImage'
                        ,MDL_LL:                'rlnLogLikeliContribution'
                        ,MDL_MICROGRAPH:        'rlnMicrographName'
                        ,MDL_AVGPMAX:           'rlnAveragePmax'
@@ -70,7 +72,6 @@ XMIPP_RELION_LABELS = {
                        ,MDL_SHIFT_Y:            'rlnOriginY'
                        ,MDL_WEIGHT:             'rlnNrOfSignificantSamples'
                        }
-
 def convertCtfparam(oldCtf):
     '''Convert the old format (Xmipp2.4) of the CTF 
     and return a new MetaData'''

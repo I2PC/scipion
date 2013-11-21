@@ -16,9 +16,12 @@ by Sjors H.W. Scheres (DOI: 10.1016/j.jmb.2011.11.010)
 """
 
 #------------------------------------------------------------------------------------------
-# {section} Input
+# {section} Mode
 #------------------------------------------------------------------------------------------
-# {file}(images*.xmd){validate}(PathExists) Input images:
+# Continue from previous run
+DoContinue = False
+
+# {condition}(not DoContinue){file}(images*.xmd){validate}(PathExists) Input images:
 """ 
 Provide a list of images from a stack <(Spider/MRC)> or metadata file that make up your data set.
 The filenames should be relative to the <ProjectDir> where you are running the <Protocols>
@@ -29,7 +32,7 @@ scale corrections in image groups.
 """
 ImgMd = ""
 
-# {hidden}Continue from here:
+# {condition}(DoContinue){file}(*optimiser.star){validate}(PathExists) Optimiser file:
 """ 
 Select the *_optimiser.star file for the iteration from which you want to continue a previous run. 
 Note that the Output rootname of the continued run and the rootname of the previous run cannot be the same. 
@@ -37,9 +40,12 @@ If they are the same, the program will automatically add a '_ctX' to the output 
 with X being the iteration from which one continues the previous run.Provide a list of images 
 from a stack <(Spider/MRC)> or metadata file that make up your data set.
 """
-ContinueFrom = ""
+optimiserFileName= ""
 
-# Number of classes
+#------------------------------------------------------------------------------------------
+# {condition}(not DoContinue) {section} Input
+#------------------------------------------------------------------------------------------
+#  Number of classes
 """The number of classes (K) for a multi-reference refinement. These classes will be made in an unsupervised manner from a single reference by division of the data into random subsets during the first iteration.
 """
 NumberOfClasses = 1
@@ -51,7 +57,7 @@ the same pixel size as your input images.
 """
 Ref3D = ""
 
-# Ref. map is on absolute greyscale?
+# {condition}(not DoContinue) Ref. map is on absolute greyscale?
 """ The probabilities are based on squared differences, so that the absolute grey scale is important.
 Probabilities are calculated based on a Gaussian noise model, 
 which contains a squared difference term between the reference and the experimental image. 
@@ -66,7 +72,7 @@ This procedure is relatively quick and typically does not negatively affect the 
 subsequent MAP refinement. Therefore, if in doubt it is recommended to set this option to No."""
 IsMapAbsoluteGreyScale = True
 
-#normalize input images
+# Normalize input images?
 """ 
 Normalize input images ?
 average background value must be 0 and a stddev value must be 1. 
@@ -75,7 +81,7 @@ Note that the average and stddev values for the background are
 """
 DoNormalizeInputImage = False
 
-# {hidden}{expert} Padding factor:
+# {expert} Padding factor:
 """
 The padding factor used for oversampling of the Fourier transform. The default is 3x padding, 
 which is combined with nearest-neighbour interpolation. However, for large 3D maps, storing the 
@@ -101,10 +107,10 @@ If no symmetry is present, give c1
 SymmetryGroup = 'c1'
 
 #------------------------------------------------------------------------------------------------
-# {section}{has_question} CTF
+# {condition}(not DoContinue){section}{has_question} CTF
 #------------------------------------------------------------------------------------------------
 
-# Use CTF-amplitude correction?
+#  Use CTF-amplitude correction?
 """
 If set to Yes, CTFs will be corrected inside the MAP refinement. 
 The resulting algorithm intrinsically implements the optimal linear, 
@@ -160,10 +166,10 @@ DoIntensityCorrection = False
 
 
 #------------------------------------------------------------------------------------------------
-# {section} Optimisation
+# {condition}(not DoContinue) {section} Optimisation
 #------------------------------------------------------------------------------------------------
 
-# Initial low-pass filter (A): 
+# {wizard}(wizardChooseLowPassFilter) Initial low-pass filter (A): 
 """
 It is recommended to strongly low-pass filter your initial reference map. 
 If it has not yet been low-pass filtered, it may be done internally using this option. 
@@ -189,11 +195,11 @@ Bayes law strictly determines the relative weight between the contribution of th
 """
 RegularisationParamT = 1
 
-# Particles mask diameter (A):
+# {wizard}(wizardSetMaskRadiusRelion) Particles mask RADIUS (A):
 """
 The experimental images will be masked with a soft circular mask with this diameter. Make sure this radius is not set too small because that may mask away part of the signal! If set to a value larger than the image size no masking will be performed.
 """
-MaskDiameterA = 200
+MaskRadiusA = 200
 
 # Mask references structures?
 """
@@ -208,7 +214,6 @@ A Spider/mrc map containing a (soft) mask with the same dimensions as the refere
 In some cases, for example for non-empty icosahedral viruses, it is also useful to use a second mask. For all white (value 1) pixels in this second mask the corresponding pixels in the reconstructed map are set to the average value of these pixels. Thereby, for example, the higher density inside the virion may be set to a constant. Note that this second mask should have one-values inside the virion and zero-values in the capsid and the solvent areas. To use a second mask, use the additional option --solvent_mask2, which may given in the Additional arguments line (in the Sampling tab).
 """
 ReferenceMask = ""
-
 
 
 #-----------------------------------------------------------------------------
@@ -321,7 +326,7 @@ ResolutionThreshold=0.5
 
 # {view} Display angular distribution?
 DisplayAngularDistribution=False
-# {condition}(DisplayAngularDistribution) {list_combo} (2D, 3D) Display Angular distribution in
+# (DisplayAngularDistribution) {list_combo} (2D, 3D) Display Angular distribution in
 """ 2D option uses matplotlib while 3D uses chimera
 """
 DisplayAngularDistributionWith='2D'
