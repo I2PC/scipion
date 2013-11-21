@@ -8,10 +8,10 @@
 from protlib_base import *
 import os
 from protlib_utils import runJob, runShowJ, grepFirst
-from protlib_filesystem import findAcquisitionInfo
 import glob
 from xmipp import MetaData, MDL_SAMPLINGRATE, MDL_RESOLUTION_FREQREAL, MDL_RESOLUTION_FRC, MDL_RESOLUTION_SSNR
 from os.path import dirname, basename
+from protlib_xmipp import getSampling
 
 class ProtResolution3D(XmippProtocol):
     def __init__(self, scriptname, project):
@@ -109,14 +109,15 @@ class ProtResolution3D(XmippProtocol):
                 runShowJ(fnVSSNR)
 
 def getTs(InputVol):
-    fnAcquisition=findAcquisitionInfo(InputVol)
-    if os.path.exists(fnAcquisition):
-        md=MetaData(fnAcquisition)
-        Ts=md.getValue(MDL_SAMPLINGRATE,md.firstObject())
-    else:
-        print("Cannot find acquisition_info.xmd. Using sampling rate of 1 Angstrom/pixel")
-        Ts=1.0
-    return Ts
+    getSampling(InputVol,1.)
+#    fnAcquisition=findAcquisitionInfo(InputVol)
+#    if os.path.exists(fnAcquisition):
+#        md=MetaData(fnAcquisition)
+#        Ts=md.getValue(MDL_SAMPLINGRATE,md.firstObject())
+#    else:
+#        print("Cannot find acquisition_info.xmd. Using sampling rate of 1 Angstrom/pixel")
+#        Ts=1.0
+#    return Ts
 
 def fsc(log,ReferenceVol,InputVol,WorkingDir):
     Ts=getTs(InputVol)
