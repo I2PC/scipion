@@ -35,7 +35,7 @@ class ProtScreenMicrographs(XmippProtocol):
         self.inputFilename('microscope', 'micrographs', 'acquisition')
         self.inputProperty('TiltPairs', 'MicrographsMd')
         self.micrographs = self.getFilename('micrographs')
-	self.MicrographsMd = self.Input['micrographs']
+        self.MicrographsMd = self.Input['micrographs']
         if self.TiltPairs:
             self.MicrographsMd='micrographPairs@'+self.MicrographsMd
 
@@ -164,10 +164,11 @@ class ProtScreenMicrographs(XmippProtocol):
         regenerate=False
         for objId in md:
             fnCTF=md.getValue(xmipp.MDL_CTF_MODEL,objId)
-            ctfTime=time.ctime(os.path.getmtime(fnCTF))
-            if ctfTime>summaryTime:
-                regenerate=True
-                break
+            if fnCTF!="NA":
+                ctfTime=time.ctime(os.path.getmtime(fnCTF))
+                if ctfTime>summaryTime:
+                    regenerate=True
+                    break
         if regenerate:
             print("Regenerating "+summaryFile+" because there are newer CTFs")
             gatherResults(self.Log,TmpDir=self.TmpDir,
@@ -307,7 +308,7 @@ def buildSummaryMetadata(WorkingDir,importMicrographs,summaryFile):
             keys = ['psd', 'enhanced_psd', 'ctfparam', 'ctfmodel_quadrant', 'ctfmodel_halfplane']
             values = [_getFilename(key, micrographDir=micrographDir) for key in keys]
         else: # No files
-            values = ['NA' for i in range(len(labels))]
+            values = ['NA'] * len(labels)
 
         # Set values in metadata
         for label, value in zip(labels, values):

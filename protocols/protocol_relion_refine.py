@@ -74,7 +74,7 @@ class ProtRelionRefinner( ProtRelionBase):
             args['--solvent_mask'] = self.ReferenceMask
             
         args.update({'--i': self.ImgStar,
-                     '--particle_diameter': self.MaskDiameterA,
+                     '--particle_diameter': self.MaskRadiusA*2.,
                      '--angpix': self.SamplingRate,
                      '--ref': self.Ref3D,
                      '--oversampling': '1'

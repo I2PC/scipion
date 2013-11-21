@@ -16,7 +16,7 @@ from protlib_utils import runShowJ, getListFromVector, getListFromRangeString, \
 from protlib_parser import ProtocolParser
 from protlib_xmipp import redStr, cyanStr
 from protlib_gui_ext import showWarning, showTable, showError
-from protlib_filesystem import xmippExists, findAcquisitionInfo, moveFile, \
+from protlib_filesystem import xmippExists, moveFile, \
                                replaceBasenameExt
 from protlib_filesystem import createLink
 
@@ -26,7 +26,6 @@ from protocol_relion_base import ProtRelionBase, runNormalizeRelion, convertImag
 class ProtRelionClassifierContinue(ProtRelionBase):
     def __init__(self, scriptname, project):
         ProtRelionBase.__init__(self, protDict.relion_classify_continue.name, scriptname, project)
-        print "inputFileName",self.inputFileName
         self.PrevRun=self.project.getProtocolFromFile(self.inputFileName)
         #self.setPreviousRun(self.ImportRun)
         
@@ -37,7 +36,7 @@ class ProtRelionClassifierContinue(ProtRelionBase):
         try:
             self.inputProperty('NumberOfClasses')
             self.inputProperty('SamplingRate')
-            self.inputProperty('MaskDiameterA')
+            self.inputProperty('MaskRadiusA')
             self.inputProperty('RegularisationParamT')
             #self.lastIterationPrecRun=self.PrevRun.lastIter()
 

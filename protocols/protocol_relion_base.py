@@ -10,7 +10,8 @@ from xmipp import MetaData, MDL_SAMPLINGRATE, MDL_IMAGE, MDL_CTF_MODEL, FileName
                  MDL_AVGPMAX, activateMathExtensions, MDValueGT, MDL_RESOLUTION_SSNR, \
                  MDL_RESOLUTION_FREQ,MDL_RESOLUTION_FRC, MDL_ANGLE_ROT, MDL_ANGLE_TILT,\
                  MDL_WEIGHT, getImageSize, MDL_ANGLE_PSI,MDL_AVG_CHANGES_ORIENTATIONS,\
-                 MDL_AVG_CHANGES_OFFSETS, MDL_AVG_CHANGES_CLASSES, MDL_LL
+                 MDL_AVG_CHANGES_OFFSETS, MDL_AVG_CHANGES_CLASSES, MDL_LL, MDL_IMAGE_REF\
+                 , MDL_CLASS_PERCENTAGE
 import sys
 from os.path import join, exists
 from protlib_filesystem import xmippExists, findAcquisitionInfo, moveFile, \
@@ -21,6 +22,9 @@ from protlib_import import exportReliontoMetadataFile
 from glob import glob
 from protlib_gui_ext import showWarning, showTable, showError
 from protlib_gui_figure import XmippPlotter
+from protlib_xmipp import getSampling
+import re
+
 
 class ProtRelionBase(XmippProtocol):
     def __init__(self, protDictName, scriptname, project):
@@ -34,13 +38,9 @@ class ProtRelionBase(XmippProtocol):
         self.ParamsDict['program'] = self.program
         
         self.addParam('ORoot', self.WorkingDir + '/')        
-        acquisionInfo = self.findAcquisitionInfo(self.ImgMd)
+        self.addParam('SamplingRate', getSampling(self.ImgMd))
 
-        if not acquisionInfo is None: 
-            md = MetaData(acquisionInfo)
-            self.addParam('SamplingRate', md.getValue(MDL_SAMPLINGRATE, md.firstObject()))
-
-    def summary(self,totalNumberOfIter=0):
+    def summary(self):
         lines = ["Wrapper implemented for RELION **1.2**"]
         return lines 
 
@@ -50,7 +50,6 @@ class ProtRelionBase(XmippProtocol):
         a = sorted(glob(fileNameTemplate))
         if not a:
             return 0 
-        import re
         return int (re.findall(r'_it\d+_',a[-1])[0][3:6])
 
     def firstIter(self):
@@ -59,7 +58,6 @@ class ProtRelionBase(XmippProtocol):
         a = sorted(glob(fileNameTemplate))[0]
         if not a:
             return 1 
-        import re
         i = int (re.findall(r'_it\d+_',a)[0][3:6])
         if i == 0:
              i = 1
@@ -106,7 +104,7 @@ class ProtRelionBase(XmippProtocol):
                             inputMd  = self.ImgMd,
                             outputMd = tmpFileNameSTK,
                             normType = 'NewXmipp',
-                            bgRadius = int(self.MaskDiameterA/2.0/self.SamplingRate),
+                            bgRadius = int(self.MaskRadiusA/self.SamplingRate),
                             Nproc    = self.NumberOfMpi*self.NumberOfThreads
                             )
         else:
@@ -163,8 +161,8 @@ class ProtRelionBase(XmippProtocol):
                         standardOutputImageFn  = "images@" + self.workingDirPath("images.xmd"),
                         standardOutputVolumeFn = "volumes@" + self.workingDirPath("volumes.xmd"),
                         extraDir=extra,
-                        inputMetadatas=inputMetadatas,
-                        imagesAssignedToClassFn=self.getFilename('imagesAssignedToClass', workingDir=self.WorkingDir)
+                        inputMetadatas=inputMetadatas
+                        #,imagesAssignedToClassFn=self.getFilename('imagesAssignedToClass', workingDir=self.WorkingDir)
                         )
 #Do NOT change relion binary files, let us use MRC
 #                 for ref3d in range(1,NumberOfClasses+1):
@@ -264,27 +262,24 @@ class ProtRelionBase(XmippProtocol):
                     exportReliontoMetadataFile(self.getFilename(v+'Re', iter=i ),fileName)
         if doPlot('TableImagesPerClass'):
             mdOut = MetaData()
-            inMetadataFn = self.getFilename('imagesAssignedToClass', workingDir=self.WorkingDir)
-            if xmippExists(inMetadataFn):
-                mdOut.read(inMetadataFn)
-            else:
-                print "Computing table of images assigned to each clase (this may take some time"
-                mdOut = self.imagesAssignedToClass2(firstIter,lastIteration)
+            #mdOut = self.imagesAssignedToClass2(firstIter,lastIteration)
+            mdOut = self.imagesAssignedToClass2(iterations[0],iterations[-1])
+            print mdOut
             _r = []
             maxRef3D = 1
             _c = tuple(['Iter/Ref'] + ['Ref3D_%d' % ref3d for ref3d in ref3Ds])
 
-            oldIter = 1
-            tmp = ['---']*(self.NumberOfClasses+1)
+            oldIter = iterations[0]
+            tmp = ['---']*(len(ref3Ds)+1)
             for objId in mdOut:
                 _ref3D = mdOut.getValue(MDL_REF3D,objId)
-                _count = mdOut.getValue(MDL_COUNT,objId)
+                _count = mdOut.getValue(MDL_CLASS_PERCENTAGE,objId)
                 _iter  = mdOut.getValue(MDL_ITER,objId)
                 if oldIter != _iter:
-                    tmp[0]=('Iter_%d'%oldIter)
+                    tmp[0]=('Iter_%d'%(_iter-1))
                     _r.append(tuple(tmp))
                     oldIter = _iter
-                    tmp = ['---']*(lastIteration+1)
+                    tmp = ['---']*(len(ref3Ds)+1)
                 tmp [_ref3D] = str(_count)
             tmp[0]=('Iter_%d'%oldIter)
             _r.append(tuple(tmp))
@@ -498,7 +493,7 @@ class ProtRelionBase(XmippProtocol):
                         md.clear()
                         md.aggregateMdGroupBy(mdOut, AGGR_COUNT, [MDL_ANGLE_ROT, MDL_ANGLE_TILT], MDL_ANGLE_ROT, MDL_WEIGHT)
                         md.setValue(MDL_ANGLE_PSI,0.0, md.firstObject())
-                        _OuterRadius = int(float(self.MaskDiameterA)/2.0/self.SamplingRate)
+                        _OuterRadius = int(float(self.MaskRadiusA)/self.SamplingRate)
                         #do not delete file since chimera needs it
                         ntf = NamedTemporaryFile(dir=TmpDir, suffix='_it%03d_class%03d.xmd'%(it,ref3d),delete=False)
                         md.write("angularDist@"+ntf.name)
@@ -600,21 +595,38 @@ class ProtRelionBase(XmippProtocol):
     def imagesAssignedToClass2(self,firstIter, lastIteration):
             inputMetadatas = []
             for it in range (firstIter,lastIteration+1): #always list all iterations
-                inputMetadatas += ["images@"+self.getFilename('data'+'Xm', iter=it, workingDir=self.WorkingDir )]
+                inputMetadatas += ["model_classes@"+self.getFilename('model'+'Xm', iter=it, workingDir=self.WorkingDir )]
             return imagesAssignedToClass(inputMetadatas)
 
 def imagesAssignedToClass(inputMetadatas):
-        mdOut = MetaData()
-        mdAux = MetaData()
-        maxRef3D = 1
+#        mdOut = MetaData()
+#        mdAux = MetaData()
+#        maxRef3D = 1
+#        it=1
+#        for mdName in inputMetadatas:
+#            print "processing metadata", mdName
+#            md = MetaData(mdName)
+#            mdAux.aggregate(md, AGGR_COUNT, MDL_REF3D, MDL_REF3D, MDL_COUNT)
+#            mdAux.fillConstant(MDL_ITER,it)
+#            mdOut.unionAll(mdAux)
+#            it += 1
+#        return mdOut
+
         it=1
+        mdOut = MetaData()
+        # read percentages and store them in a single metadata table
+        # with columns MDL_ITER MDL_REF3D and MDL_CLASS_PERCENTAGE
         for mdName in inputMetadatas:
-            print "processing metadata", mdName
             md = MetaData(mdName)
-            mdAux.aggregate(md, AGGR_COUNT, MDL_REF3D, MDL_REF3D, MDL_COUNT)
-            mdAux.fillConstant(MDL_ITER,it)
-            mdOut.unionAll(mdAux)
-            it += 1
+            mdOut.unionAll(md)
+            md.clear()
+        # change MDL_IMAGE_REF by 3DREF
+        for id in mdOut:
+            fileName=mdOut.getValue(MDL_IMAGE_REF,id)
+            ref3d = getClass(fileName)
+            mdOut.setValue(MDL_REF3D,ref3d,id)
+            iter = getIteration(fileName)
+            mdOut.setValue(MDL_ITER,iter,id)
         return mdOut
 
 import os
@@ -627,8 +639,8 @@ def convertRelionMetadata(log, inputs,
                           standardOutputImageFn,
                           standardOutputVolumeFn,
                           extraDir,
-                          inputMetadatas,
-                          imagesAssignedToClassFn
+                          inputMetadatas
+                          #,imagesAssignedToClassFn
                           ):
     """ Convert the relion style MetaData to one ready for xmipp.
     Main differences are: STAR labels are named different and
@@ -677,10 +689,10 @@ def convertRelionMetadata(log, inputs,
         objId = mdOut.addObject()
         mdOut.setValue(MDL_IMAGE, lastIterationVolumeFn, objId)
     mdOut.write(standardOutputVolumeFn)
-    if NumberOfClasses >1:
-        mdOut.clear()
-        mdOut = imagesAssignedToClass(inputMetadatas)
-        mdOut.write(imagesAssignedToClassFn)
+#    if NumberOfClasses >1:
+#        mdOut.clear()
+#        mdOut = imagesAssignedToClass(inputMetadatas)
+#        mdOut.write(imagesAssignedToClassFn)
 
 def convertRelionBinaryData(log, inputs,outputs):
     """Make sure mrc files are volumes properlly defined"""
@@ -734,3 +746,9 @@ def convertImagesMd(log, inputMd, outputRelion):
     md.fillExpand(MDL_CTF_MODEL)
     # Create the mapping between relion labels and xmipp labels
     exportMdToRelion(md, outputRelion)
+
+def getIteration(fileName):
+   return int (re.findall(r'_it\d+_',fileName)[0][3:6])
+
+def getClass(fileName):
+   return int (re.findall(r'_class\d+',fileName)[0][6:9])
