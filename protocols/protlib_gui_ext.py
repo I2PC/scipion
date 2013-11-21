@@ -1879,7 +1879,17 @@ class XmippBrowserCTF(XmippBrowserPreview):
         self.hfSlider = self.addFreqSlider('High freq', self.hf)
         
     def addFreqSlider(self, label, value):
-        slider = XmippSlider(self.freqFrame, '%s (%s)' % (label, self.unitLabel), from_=0, to=self.maxFreq, value=value, callback=lambda a, b, c:self.updateFreqRing())
+            #def __init__(self, master, label, from_=0, to=100, value=50, callback=None, step=0.01):
+
+        slider = XmippSlider(self.freqFrame, 
+                             '%s (%s)' % (label, self.unitLabel), 
+                             from_=0, 
+                             to=self.maxFreq, 
+                             value=value, 
+                             callback=lambda a, 
+                             step=0.01,
+                             b, 
+                             c:self.updateFreqRing())
         slider.pack(side=tk.LEFT, padx=3, pady=3)
         return slider
         
