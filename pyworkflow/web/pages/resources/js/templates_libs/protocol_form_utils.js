@@ -438,7 +438,7 @@ function formProtSimple(param, projName){
 		customPopup(url,500,350);
 	}
 	else{
-		launchMessiSimple("Error", messiError("Protocol was not chosen."));
+		launchMessiSimple("Error", messiError("Protocol was not selected, please choose one."));
 	}
 }
 
