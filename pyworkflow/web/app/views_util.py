@@ -188,6 +188,8 @@ def render_column(request):
     elif renderFunction == "get_image_psd":
         from pyworkflow.web.app.em_wizard import get_image_psd
         return get_image_psd(request)
+    elif renderFunction == "getTestPlot":
+        return getTestPlot(request)
 #    return getattr(self, renderFunction)
 
 def get_image(request):
@@ -359,5 +361,18 @@ def readImageVolume(request, path, convert, dataType, reslice, axis, getStats):
         img.write(str(_newPath))
     
     return _newPath, _stats
+
+def getTestPlot(request):
+    """ Just a test of a custom render function. """
+    from pyworkflow.gui.plotter import Plotter
+    xplotter = Plotter()
+    xplotter.createSubPlot("Particle sorting", "Particle number", "Zscore")
+    x = range(100)
+    xplotter.plot(x)
+    
+    canvas = xplotter.getCanvas()
+    response = HttpResponse(content_type='image/png')
+    canvas.print_png(response)
+    return response   
     
     
