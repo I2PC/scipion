@@ -30,7 +30,7 @@ class ProtRelionClassifier(ProtRelionBase):
         self.Import = 'from protocol_relion_classify import *'
         self.relionType='classify'
         if self.DoContinue:
-            self.PrevRun=self.project.getProtocolFromFile(self.optimiserFileName)
+            self.setPreviousRunFromFile(self.optimiserFileName)
             #if optimizer has not been properly selected this will 
             #fail, let us go ahead and handle the situation in verify
             try:
