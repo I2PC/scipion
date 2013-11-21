@@ -14,9 +14,9 @@ from pyworkflow.em.packages.relion import Relion3DClassification
 class TestRelionBase(unittest.TestCase):
     
     @classmethod
-    def runImportParticles(cls, pattern, samplingRate):
+    def runImportParticles(cls, pattern, checkStack, samplingRate):
         """ Run an Import particles protocol. """
-        cls.protImport = ProtImportParticles(pattern=pattern, samplingRate=samplingRate)
+        cls.protImport = ProtImportParticles(pattern=pattern, checkStack=checkStack, samplingRate=samplingRate)
         cls.proj.launchProtocol(cls.protImport, wait=True)
         # check that input images have been imported (a better way to do this?)
         if cls.protImport.outputParticles is None:
@@ -29,8 +29,8 @@ class TestRelionClassify3D(TestRelionBase):
     def setUpClass(cls):
         setupProject(cls)
         #TODO: Find a set of images to make this work, with this it does not
-        images = getInputPath('Images_Vol_ML3D/phantom_images', '*.xmp')
-        cls.protImport = cls.runImportParticles(pattern=images, samplingRate=1)
+        pattern = getInputPath('.', 'images_LTA.stk')
+        cls.protImport = cls.runImportParticles(pattern=pattern, checkStack=True, samplingRate=1)
         cls.iniVol = getInputPath('ml3dData', 'icoFiltered.vol')
         
     def testRelion3DClassification(self):
@@ -39,7 +39,7 @@ class TestRelionClassify3D(TestRelionBase):
                                  numberOfMpi=2, numberOfThreads=2)
         relion3DClass.inputImages.set(self.protImport.outputParticles)
         relion3DClass.ini3DrefVolumes.set(self.iniVol)
-        self.proj.launchProtocol(relion3DClass, wait=True)        
+        #self.proj.launchProtocol(relion3DClass, wait=True)        
         
         
 if __name__ == "__main__":

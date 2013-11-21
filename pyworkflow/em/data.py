@@ -431,6 +431,13 @@ class SetOfParticles(SetOfImages):
         this set of particles.
          """
         self._coordsPointer.set(coordinates)    
+        
+    def copyInfo(self, other):
+        """ Copy basic information (voltage, spherical aberration and sampling rate)
+        from other set of micrographs to current one.
+        """
+        SetOfImages.copyInfo(self, other)
+        self.setHasCTF(other.hasCTF())    
 
 
 class SetOfVolumes(SetOfImages):
