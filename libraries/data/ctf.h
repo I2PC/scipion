@@ -579,9 +579,10 @@ public:
                gaussian_K2*exp(-sigma2*aux2*aux2);
     }
 
-    /** Returns the continuous frequency of the zero number n in the direction u.
-        u must be a unit vector, n=1,2,... Returns (-1,-1) if it is not found */
-    void zero(int n, const Matrix1D<double> &u, Matrix1D<double> &freq);
+    /** Returns the continuous frequency of the zero, maximum or minimum number n in the direction u.
+        u must be a unit vector, n=1,2,... Returns (-1,-1) if it is not found
+        'iwhat' can be 0 (zero), 1(max), or -1 (min) */
+    void lookFor(int n, const Matrix1D<double> &u, Matrix1D<double> &freq, int iwhat=0);
 
     /// Apply CTF to an image
     void applyCTF(MultidimArray < std::complex<double> > &FFTI);
