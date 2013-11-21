@@ -23,6 +23,9 @@
 	var forceRecallServer=false
 	/*  Last zoom set properly. In case the new value is too big or small it is set back to the previousZoom*/
 	var previousZoom='{{defaultZoom}}'
+	/* Initialize Table Layout Configuration from json variable*/
+	var jsonTableLayoutConfiguration = {{tableLayoutConfiguration|safe }}
+	console.log("json",jsonTableLayoutConfiguration)
 	
 	$(document).ready(function(){ 
 		

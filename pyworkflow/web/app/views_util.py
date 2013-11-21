@@ -1,6 +1,7 @@
 # **************************************************************************
 # *
 # * Authors:    Jose Gutierrez (jose.gutierrez@cnb.csic.es)
+# *             Adrian Quintana (aquintana@cnb.csic.es)   
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -177,10 +178,16 @@ def convertTktoHtml(text):
     return text
 
 def render_column(request):
-    renderFunction = request.GET.get("renderFunction")
+    renderFunction = request.GET.get("renderFunc")
+    
     #PAJM: No se puede llamar a una funcion con reflex sino pertenece auna clase
     if renderFunction == "get_image":
         return get_image(request)
+    elif renderFunction == "get_slice":
+        return get_slice(request)
+    elif renderFunction == "get_image_psd":
+        from pyworkflow.web.app.em_wizard import get_image_psd
+        return get_image_psd(request)
 #    return getattr(self, renderFunction)
 
 def get_image(request):

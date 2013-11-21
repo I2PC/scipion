@@ -73,9 +73,6 @@ $.fn.dataTableExt.oApi.fnDisplayRowWithIndex = function ( oSettings, iPos )
 <script type="text/javascript">
 /* Initialize datatable table */
 var oTable;
-/* Initialize Table Layout Configuration from json variable*/
-var jsonTableLayoutConfiguration = {{tableLayoutConfiguration|safe }}
-console.log("json",jsonTableLayoutConfiguration)
 
 $(document).ready(function() {
 
@@ -147,6 +144,8 @@ $(document).ready(function() {
 	
 } );
 
+
+
 /* Render elements on table (Image and checkbox) */
 function renderElements(nRow, aData){
 /* 	 console.log("row")  */
@@ -166,10 +165,13 @@ function renderElements(nRow, aData){
 	   		if (columnIdReal!=null){ 
 		   		if (columnLayoutConfiguration.typeOfColumn == 'image'){
 			   		 if (columnLayoutConfiguration.columnLayoutProperties.renderable){
-			   			$('td:eq('+columnIdReal+')', nRow).html( '<span style="display:none">'+aData[columnId]+'</span><img class=\"tableImages\" id=\"'+i+'___'+aData[0]+'\" src=\"/get_image/?image='+aData[columnId]+'\"/>' );
+			   			$('td:eq('+columnIdReal+')', nRow).html(
+			   					'<span style="display:none">'+aData[columnId]+'</span>'+
+			   					'<img class=\"tableImages\" id=\"'+i+'___'+aData[0]+'\" src=\"/render_column/?renderFunc='+columnLayoutConfiguration.columnLayoutProperties.renderFunc+'&'+columnLayoutConfiguration.columnLayoutProperties.extraRenderFunc+'&image='+aData[columnId]+'\"/>' );
 			   		 }
 			   		 else{
-			   			$('td:eq('+columnIdReal+')', nRow).html( '<span>'+aData[columnId]+'</span><img style="display:none" class=\"tableImages\" id=\"'+i+'___'+aData[0]+'\" data-real_src=\"/get_image/?image='+aData[columnId]+'\"/>' );
+			   			$('td:eq('+columnIdReal+')', nRow).html( '<span>'+aData[columnId]+'</span>'+
+			   					'<img style="display:none" class=\"tableImages\" id=\"'+i+'___'+aData[0]+'\" data-real_src=\"/render_column/?renderFunc='+columnLayoutConfiguration.columnLayoutProperties.renderFunc+'&'+columnLayoutConfiguration.columnLayoutProperties.extraRenderFunc+'&image='+aData[columnId]+'\"/>' );
 			   			/* $('td:eq('+columnIdReal+')', nRow).html( '<span>'+aData[columnId]+'</span>' ); */
 			   		 }
 		   		 }
@@ -252,7 +254,6 @@ function getColumnsDefinition(){
 	
 	return dataForTable;
 }
-
 
 /* 
  * Currently this is not been used as delete icon has been removed

@@ -5,11 +5,25 @@
 	var hoverElement;
 	
 	$(document).ready(function(){
+		initRenderFunction();
 		initializeImageLoad()
 		initializeImageEvents()
 		initializeWindowLoadEvents()
 		initializeGoToEvents()
 	});
+	
+	function initRenderFunction(){
+		renderFunc=jsonTableLayoutConfiguration.columnsLayout["{{form.labelsToRenderComboBox.value}}"].columnLayoutProperties.renderFunc
+		extraRenderFunc=jsonTableLayoutConfiguration.columnsLayout["{{form.labelsToRenderComboBox.value}}"].columnLayoutProperties.extraRenderFunc
+
+		if (renderFunc!=""){ 
+			$(".tableImages").each(function(){
+			   	var newSrc = $(this).data("real_src").replace(/(renderFunc=).*?(&)/,'$1' + renderFunc + '$2');
+			   	if (extraRenderFunc!=""){newSrc = newSrc.concat("&"+extraRenderFunc)}
+				$(this).data("real_src", newSrc);
+		   	})
+		}
+	}
 	
 	function initializeGoToEvents(){
 		$('#id_goto').click(function(){
@@ -185,7 +199,7 @@
 			<div class="img_container" id="img_container___{{id}}">
 				<div class="img_inner_container">
 					<!-- <img class="tableImages" title="{{data}}" data-real_src="/get_image/?image={{data}}"/> -->
-					<img class="tableImages" title="{{data}}" data-real_src="/render_column/?renderFunction=get_image&image={{data}}"/>
+					<img class="tableImages" title="{{data}}" data-real_src="/render_column/?renderFunc=get_image&image={{data}}"/>
 					
 					{% if dataset.getTable.hasEnabledColumn %}
 					<img class="enabledGallery
@@ -209,7 +223,7 @@
 		{% for i in dataset.getNumberSlicesForTemplate %}
 			<div class="img_container" id="img_container___{{i}}">
 				<div class="img_inner_container">
-					<img class="tableImages" title="Slice {{i|add:1}} from {{dataset.getVolumeName}}" data-real_src="/get_slice/?image={{i|add:1}}@{{dataset.getVolumeName}}"/>
+					<img class="tableImages" title="Slice {{i|add:1}} from {{dataset.getVolumeName}}" data-real_src="/render_column/?renderFunc=get_slice&image={{i|add:1}}@{{dataset.getVolumeName}}"/>
 				</div>
 				<div id="column_label">{{i|add:1}}</div> 
 			</div>

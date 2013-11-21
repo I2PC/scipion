@@ -37,6 +37,7 @@ def showj(request, inputParameters=None, extraParameters=None):
 
 
     if request.method == 'GET':
+        print "extraParameters",extraParameters 
         defaultColumnsLayoutProperties = None
         if extraParameters != None and extraParameters != {}:
             defaultColumnsLayoutProperties = {k.getName(): {} for k in tableDataset.iterColumns()}
@@ -88,6 +89,8 @@ def showj(request, inputParameters=None, extraParameters=None):
         
         if dataset.getNumberSlices()>1:
             dataset.setVolumeName(_imageVolName)
+            
+        print "dataset.getNumberSlices()",dataset.getNumberSlices()
 
     #Store dataset and labelsToRender in session 
     request.session['dataset'] = dataset
@@ -184,7 +187,9 @@ class ColumnLayoutConfigurationEncoder(json.JSONEncoder):
                                                                   "allowSetEditable":columnLayoutConfiguration.columnLayoutProperties.allowSetEditable,
                                                                   "renderable":columnLayoutConfiguration.columnLayoutProperties.renderable,
                                                                   "allowSetRenderable":columnLayoutConfiguration.columnLayoutProperties.allowSetRenderable,
-                                                                  "renderFunc":columnLayoutConfiguration.columnLayoutProperties.renderFunc}
+                                                                  "renderFunc":columnLayoutConfiguration.columnLayoutProperties.renderFunc,
+                                                                  "extraRenderFunc":columnLayoutConfiguration.columnLayoutProperties.extraRenderFunc
+                                                                  }
                                         }
         return columnLayoutConfigurationCoded                     
                  
@@ -195,17 +200,20 @@ class TableLayoutConfiguration():
         self.columnsLayout = OrderedDict() 
          
         for col in tableDataset.iterColumns():
-            self.columnsLayout[col.getName()]=ColumnLayoutConfiguration(col, ds.getTypeOfColumn(col.getName()), allowRender, defaultColumnsLayoutProperties[col.getName()] if defaultColumnsLayoutProperties != None else {})
+#            self.columnsLayout[col.getName()]=ColumnLayoutConfiguration(col, ds.getTypeOfColumn(col.getName()), allowRender, defaultColumnsLayoutProperties[col.getName()] if defaultColumnsLayoutProperties != None else {})
+            self.columnsLayout[col.getName()]=ColumnLayoutConfiguration(col, ds, allowRender, defaultColumnsLayoutProperties[col.getName()] if defaultColumnsLayoutProperties != None else {})
             
         self.colsOrder = defineColsLayout(self.columnsLayout.keys())
         
             
 class ColumnLayoutConfiguration():
-    def __init__(self, col, typeOfColumn, allowRender, defaultColumnLayoutProperties):
+    
+    #def __init__(self, col, typeOfColumn, allowRender, defaultColumnLayoutProperties):
+    def __init__(self, col, ds, allowRender, defaultColumnLayoutProperties):
         self.columns = col
         
         self.label = col.getName()
-        self.typeOfColumn = typeOfColumn
+        self.typeOfColumn = ds.getTypeOfColumn(col.getName())
         
         self.columnLayoutProperties = ColumnLayoutProperties(self.typeOfColumn, allowRender)
         self.columnLayoutProperties.setValues(defaultColumnLayoutProperties)
@@ -226,8 +234,10 @@ class ColumnLayoutProperties():
         self.allowSetRenderable = (typeOfColumn == 'image' and allowRender)
 
         self.renderFunc = ""
+        self.extraRenderFunc = ""
         
     def setValues(self, defaultColumnLayoutProperties):
+        print "defaultColumnLayoutProperties",defaultColumnLayoutProperties
         for key in defaultColumnLayoutProperties:
             setattr(self, key, defaultColumnLayoutProperties[key])
         
@@ -397,6 +407,7 @@ def showVolVisualization(request):
 def visualizeObject(request):
     #Initialize default values
     inputParameters = {'objectId': '',
+                       'path': '',
                        'allowRender': True,                 # Image can be displayed, depending on column layout 
                        'mode': 'gallery',                   # Mode Options: gallery, table, column, volume_astex, volume_chimera
                        'zoom': '150px',                     # Zoom set by default
@@ -449,6 +460,8 @@ def visualizeObject(request):
             writeSetOfMicrographs(obj, fn)
             #NAPA DE LUXE
             #extraParameters["id___visible"]=True
+            #extraParameters["micrograph___renderFunc"]="get_image_psd"
+            #extraParameters["micrograph___extraRenderFunc"]="downsample=2"
             
             inputParameters['path']= os.path.join(projectPath, fn)
         elif isinstance(obj, SetOfVolumes):
@@ -463,8 +476,6 @@ def visualizeObject(request):
     #        PAJM aqui falla para el cl2d align y se esta perdiendo la matrix de transformacion en la conversion
             fn = project.getTmpPath(obj.getName() + '_images.xmd')
             writeSetOfParticles(obj, fn)
-            #NAPA DE LUXE
-            #extraParameters["id___visible"]=True
             inputParameters['path']= os.path.join(projectPath, fn)
         elif isinstance(obj, Image):
             fn = project.getTmpPath(obj.getName() + '_image.xmd')
