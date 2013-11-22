@@ -65,7 +65,7 @@ def showj(request, inputParameters=None, extraParameters=None):
             # If there is no image to display and it is initial load, switch to table mode 
             if request.method == 'GET' and inputParameters['mode']!='table':
                 inputParameters['mode']='table'
-                showj(request, inputParameters) 
+                showj(request, inputParameters, extraParameters) 
             inputParameters['labelsToRenderComboBox'] = ''
 
     dataset.setLabelToRender(inputParameters['labelsToRenderComboBox']) 
@@ -207,8 +207,6 @@ class TableLayoutConfiguration():
         
             
 class ColumnLayoutConfiguration():
-    
-    #def __init__(self, col, typeOfColumn, allowRender, defaultColumnLayoutProperties):
     def __init__(self, col, ds, allowRender, defaultColumnLayoutProperties):
         self.columns = col
         
@@ -217,7 +215,9 @@ class ColumnLayoutConfiguration():
         
         self.columnLayoutProperties = ColumnLayoutProperties(self.typeOfColumn, allowRender)
         self.columnLayoutProperties.setValues(defaultColumnLayoutProperties)
-        #self.columnLayoutProperties = defaultColumnLayoutProperties.setValues(self.typeOfColumn, allowRender)
+        
+        print "columnLayoutProperties",self.columnLayoutProperties 
+        
         
 #NAPA DE LUXE: Y si lo pasamos a una namedtupple
 class ColumnLayoutProperties():
@@ -233,7 +233,7 @@ class ColumnLayoutProperties():
         self.renderable = False
         self.allowSetRenderable = (typeOfColumn == 'image' and allowRender)
 
-        self.renderFunc = ""
+        self.renderFunc = "get_image"
         self.extraRenderFunc = ""
         
     def setValues(self, defaultColumnLayoutProperties):
