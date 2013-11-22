@@ -500,26 +500,19 @@ function getTableFormatted(node, list, id, previsualize) {
 	var res = "<table class='content' style='overflow:auto' data-node='" + node
 			+ "'>";
 	
-	if(previsualize){
-		var first = "<a href='#' onclick='javascript:";
-		var second = "'><img src=/resources/visualize.gif/></a>";
-		
-		for(var x = 0; x < list.length; x++) {
+	var func = "";
+	var first = "<a href='#' onclick='javascript:";
+	var second = "'><img src=/resources/visualize.gif/></a>";
+
+	for(var x = 0; x < list.length; x++) {
+		if(previsualize){
 			var splited = list[x].split(".");
 			var objId = splited[2];
-			var func = 'customPopup("/visualize_object/?objectId="+'+ objId +',1024,600)';
-			
-			res += "<tr><td id='" + id + x + "' name='" + id + "' value='"
-					+ list[x] + "' onclick=javascript:selTableMessi($(this)); >" 
-					+ list[x] + "&nbsp&nbsp&nbsp" + first + func + second +"</td></tr>";
+			var func = "&nbsp&nbsp&nbsp" + first + 'customPopup("/visualize_object/?objectId="+'+ objId +',1024,600)' + second;
 		}
-	}
-	else{
-		for(var x = 0; x < list.length; x++) {		
-			res += "<tr><td id='" + id + x + "' name='" + id + "' value='"
-					+ list[x] + "' onclick=javascript:selTableMessi($(this)); >" 
-					+ list[x] + "</td></tr>";
-		}
+		res += "<tr><td id='" + id + x + "' name='" + id + "' value='"
+				+ list[x] + "' onclick=javascript:selTableMessi($(this)); >" 
+				+ list[x] + func +"</td></tr>";
 	}
 	res = res + "</table>";
 	return res;
