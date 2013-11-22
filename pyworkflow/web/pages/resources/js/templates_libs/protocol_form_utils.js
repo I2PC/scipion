@@ -401,7 +401,8 @@ function browseObjects(param, projName, objClass) {
 		success : function(json) {
 			// specifying a dataType of json makes jQuery pre-eval the response
 			// for us
-			showSelectTable(param, json.objects, objClass);
+			var res = getTableFormatted(param, json.objects, objClass, 1);
+			selectDialog(param, res, "processSelectionTable");
 		}
 	});
 }
@@ -413,14 +414,14 @@ function browseProtClass(param, projName, protClassName) {
 				+ protClassName,
 		dataType : "json",
 		success : function(json) {
-			showSelectTable(param, json.objects, protClassName);
+			var res = getTableFormatted(param, json.objects, protClassName, 0);
+			selectDialog(param, res, "processSelectionTable");
 		}
 	});
 }
 
 function showSelectTable(param, objects, className){
-	var res = getTableFormatted(param, objects, className);
-	selectDialog(param, res, "processSelectionTable");
+	
 }
 
 function formProtSimple(param, projName){
@@ -495,18 +496,39 @@ function getListFormatted(node, list, id) {
 	return res;
 }
 
-function getTableFormatted(node, list, id) {
-
+function getTableFormatted(node, list, id, previsualize) {
 	var res = "<table class='content' style='overflow:auto' data-node='" + node
 			+ "'>";
-	for ( var x = 0; x < list.length; x++) {
-		res += "<tr><td id='" + id + x + "' name='" + id + "' value='"
-				+ list[x] + "' onclick=javascript:selTableMessi($(this)); >"
-				+ list[x] + "</td></tr>";
+	
+	if(previsualize){
+		var first = "<a href='#' onclick='javascript:";
+		var second = "'><img src=/resources/visualize.gif/></a>";
+		
+		for(var x = 0; x < list.length; x++) {
+			var splited = list[x].split(".");
+			var objId = splited[2];
+			var func = 'customPopup("/visualize_object/?objectId="+'+ objId +',1024,600)';
+			
+			res += "<tr><td id='" + id + x + "' name='" + id + "' value='"
+					+ list[x] + "' onclick=javascript:selTableMessi($(this)); >" 
+					+ list[x] + "&nbsp&nbsp&nbsp" + first + func + second +"</td></tr>";
+		}
+	}
+	else{
+		for(var x = 0; x < list.length; x++) {		
+			res += "<tr><td id='" + id + x + "' name='" + id + "' value='"
+					+ list[x] + "' onclick=javascript:selTableMessi($(this)); >" 
+					+ list[x] + "</td></tr>";
+		}
 	}
 	res = res + "</table>";
 	return res;
 }
+
+function showImageForm(objId){
+	
+}
+
 
 function selectDialog(objClass, msg, funcName) {
 	new Messi(msg, {
