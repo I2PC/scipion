@@ -80,10 +80,12 @@ class ProtRelionClassifier(ProtRelionBase):
             return self.validateClassify()
 
     def validateClassify(self):
+        print "validateClassify"
         errors = ProtRelionBase.validate(self)
         return errors 
     
     def validateClassifyContinue(self):
+        print "validateClassifyContinue"
         lastIterationPrecRun=self.PrevRun.lastIter()
         errors=[]
         if '3D/RelionClass' not in self.optimiserFileName:
