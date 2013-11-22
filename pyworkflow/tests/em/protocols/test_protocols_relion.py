@@ -33,7 +33,7 @@ class TestRelionClassify3D(TestRelionBase):
         cls.protImport = cls.runImportParticles(pattern=pattern, checkStack=True, samplingRate=1)
         cls.iniVol = getInputPath('ml3dData', 'icoFiltered.vol')
         
-    def testRelion3DClassification(self):
+    def NOtestRelion3DClassification(self):
         print "Run Relion3DClassification"
         relion3DClass = Relion3DClassification(numberOfClasses=3, numberOfIterations=4, doCtf=False, runMode=1, 
                                  numberOfMpi=2, numberOfThreads=2)
