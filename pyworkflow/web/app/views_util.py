@@ -327,11 +327,13 @@ def getImageDim(request, imagePath):
     return img.getDimensions()
 
 
-def readDimensions(request, path):
-    img = xmipp.Image()
-    imgFn = os.path.join(request.session['projectPath'], path)
-    img.read(str(imgFn), xmipp.HEADER)
-    return img.getDimensions()
+def readDimensions(request, path, typeOfColumn):
+    if typeOfColumn=="image":
+        img = xmipp.Image()
+        imgFn = os.path.join(request.session['projectPath'], path)
+        img.read(str(imgFn), xmipp.HEADER)
+        return img.getDimensions()
+    return (300,300,1,1) 
 
 def readImageVolume(request, path, convert, dataType, reslice, axis, getStats):
     _newPath=path

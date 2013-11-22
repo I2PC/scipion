@@ -317,7 +317,7 @@ class ShowjForm(forms.Form):
                                                          required=False,
                                                          choices = tuple(zip(dataset.listTables(), dataset.listTables())))
         
-        labelsToRenderComboBoxValues = getLabelsToRenderComboBoxValues(tableLayoutConfiguration.columnsLayout)
+        labelsToRenderComboBoxValues = tableLayoutConfiguration.getLabelsToRenderComboBoxValues()
         if len(labelsToRenderComboBoxValues) > 0:
             self.fields['labelsToRenderComboBox'] = forms.ChoiceField(label='Select Label',
                                                             required=False,
@@ -354,19 +354,8 @@ class ShowjForm(forms.Form):
             self.fields['goto'].widget.attrs['readonly'] = True
         
             
-def hasEnableColumn(columnsLayout):
-    for columnLayout in columnsLayout.values():
-        if "enable" == columnLayout.label:
-            return True
-    return False;
+
                                   
-            
-def getLabelsToRenderComboBoxValues(columnsLayout):
-    labelsToRender = [columnLayout.label for columnLayout in columnsLayout.values() if (columnLayout.typeOfColumn == 'image')]
-    return tuple(zip(labelsToRender,labelsToRender))
-
-    
-
 class VolVisualizationForm(forms.Form):   
     volPath = forms.CharField(label='Volume path', 
                             required=True,
