@@ -1,6 +1,7 @@
 # **************************************************************************
 # *
 # * Authors:    Jose Gutierrez (jose.gutierrez@cnb.csic.es)
+# *             Adrian Quintana (aquintana@cnb.csic.es)   
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -177,10 +178,18 @@ def convertTktoHtml(text):
     return text
 
 def render_column(request):
-    renderFunction = request.GET.get("renderFunction")
+    renderFunction = request.GET.get("renderFunc")
+    
     #PAJM: No se puede llamar a una funcion con reflex sino pertenece auna clase
     if renderFunction == "get_image":
         return get_image(request)
+    elif renderFunction == "get_slice":
+        return get_slice(request)
+    elif renderFunction == "get_image_psd":
+        from pyworkflow.web.app.em_wizard import get_image_psd
+        return get_image_psd(request)
+    elif renderFunction == "getTestPlot":
+        return getTestPlot(request)
 #    return getattr(self, renderFunction)
 
 def get_image(request):
@@ -352,5 +361,18 @@ def readImageVolume(request, path, convert, dataType, reslice, axis, getStats):
         img.write(str(_newPath))
     
     return _newPath, _stats
+
+def getTestPlot(request):
+    """ Just a test of a custom render function. """
+    from pyworkflow.gui.plotter import Plotter
+    xplotter = Plotter()
+    xplotter.createSubPlot("Particle sorting", "Particle number", "Zscore")
+    x = range(100)
+    xplotter.plot(x)
+    
+    canvas = xplotter.getCanvas()
+    response = HttpResponse(content_type='image/png')
+    canvas.print_png(response)
+    return response   
     
     
