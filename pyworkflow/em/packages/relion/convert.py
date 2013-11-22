@@ -83,7 +83,6 @@ def objectToRow(obj, row, attrDict):
     
     for attr, label in attrDict.iteritems():
         if hasattr(obj, attr):
-            print attr
             valueType = getLabelPythonType(label)
             row.setValue(label, valueType(getattr(obj, attr).get()))
             
@@ -108,13 +107,9 @@ def rowToObject(md, objId, obj, attrDict):
     _rowToObject(row, obj, attrDict)
     
 def imageToRow(img, imgRow):
-    imgDict = { 
-               "_filename": xmipp.MDL_IMAGE,
-               }
     index, filename = img.getLocation()
     fn = locationToRelion(index, filename)
-    #TODO: que pasa con los pars relativos al acquisition?
-    objectToRow(img, imgRow, imgDict)
+    imgRow.setValue(xmipp.MDL_IMAGE, str(fn))
         
 def ctfToRow(ctf, imgRow):
     ctfDict = {
@@ -131,6 +126,8 @@ def locationToRelion(index, filename):
     #TODO: Maybe we need to add more logic dependent of the format
     if index != NO_INDEX:
         return "%d@%s" % (index, filename)
+    else:
+        return filename
 
 def writeSetOfImages(imgSet, filename):
     """ This function will write a SetOfImages as Relion metadata.
@@ -138,7 +135,6 @@ def writeSetOfImages(imgSet, filename):
         imgSet: the SetOfImages instance.
         filename: the filename where to write the metadata.
     """   
-    print "in writeSetOfImages"
     md = xmipp.MetaData()
     
     for img in imgSet:
@@ -146,10 +142,9 @@ def writeSetOfImages(imgSet, filename):
         imgRow = XmippMdRow()
         imageToRow(img, imgRow)
         if img.hasCTF():
-            imgRow.setValue(xmipp.MDL_MICROGRAPH, img.getCTF().micFile)
+            imgRow.setValue(xmipp.MDL_MICROGRAPH, img.getCTF().micFile.get())
             ctfToRow(img.getCTF(), imgRow)  
         imgRow.writeToMd(md, objId)
-    print "antes de escribir el star"
     tmpFile = filename + '.tmp'
     md.write(tmpFile)
     # Create a dict with the names

@@ -29,7 +29,7 @@ class TestRelionClassify3D(TestRelionBase):
     def setUpClass(cls):
         setupProject(cls)
         #TODO: Find a set of images to make this work, with this it does not
-        pattern = getInputPath('.', 'images_LTA.stk')
+        pattern = getInputPath('Images_Vol_ML3D/phantom_images', '*.xmp')
         cls.protImport = cls.runImportParticles(pattern=pattern, checkStack=True, samplingRate=1)
         cls.iniVol = getInputPath('ml3dData', 'icoFiltered.vol')
         
@@ -39,7 +39,7 @@ class TestRelionClassify3D(TestRelionBase):
                                  numberOfMpi=2, numberOfThreads=2)
         relion3DClass.inputImages.set(self.protImport.outputParticles)
         relion3DClass.ini3DrefVolumes.set(self.iniVol)
-        #self.proj.launchProtocol(relion3DClass, wait=True)        
+        self.proj.launchProtocol(relion3DClass, wait=True)        
         
         
 if __name__ == "__main__":
