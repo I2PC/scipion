@@ -38,6 +38,7 @@ class ProtRelionClassifier(ProtRelionBase):
                 ########################### self.inputProperty('SamplingRate')
                 self.inputProperty('MaskRadiusA')
                 self.inputProperty('RegularisationParamT')
+                self.inputProperty('Ref3D')
                 #self.lastIterationPrecRun=self.PrevRun.lastIter()
     
                 #self.NumberOfClasses      = self.PrevRun.NumberOfClasses
