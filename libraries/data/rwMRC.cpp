@@ -440,14 +440,20 @@ int ImageBase::writeMRC(size_t select_img, bool isStack, int mode, const String 
 
     /* header->a,b,c info is related to sampling rate, so it is
      * only written when writing header, so it is initialized to
-     * zero to avoid a mistaken value.*/
-    header->a = 0;
-    header->b = 0;
-    header->c = 0;
+     * zero to avoid a mistaken value.
+     * If sampling is provided a, b and c are overwritten bellow
+     *
+     * */
+    //a,b,c used to be zero till we decide if we want to update it
+    //but chimera crushed if this is set to zero so by default
+    //we assume sampling= 1A/px
+    //header->a = 0;
+    //header->b = 0;
+    //header->c = 0;
 
-    header->mx = header->nx = Xdim;
-    header->my = header->ny = Ydim;
-    header->mz = header->nz = Zdim;
+    header->a = header->mx = header->nx = Xdim;
+    header->b = header->my = header->ny = Ydim;
+    header->c = header->mz = header->nz = Zdim;
 
     if ( transform == CentHerm )
         header->nx = Xdim/2 + 1;        // If a transform, physical storage is nx/2 + 1
@@ -456,7 +462,6 @@ int ImageBase::writeMRC(size_t select_img, bool isStack, int mode, const String 
     header->beta  = 90.;
     header->gamma = 90.;
 
-    //Set this to zero till we decide if we want to update it
     //    header->mx = 0;//(int) (ua/ux + 0.5);
     //    header->my = 0;//(int) (ub/uy + 0.5);
     //    header->mz = 0;//(int) (uc/uz + 0.5);
