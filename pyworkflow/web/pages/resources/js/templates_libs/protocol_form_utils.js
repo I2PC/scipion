@@ -525,11 +525,6 @@ function getTableFormatted(node, list, id, previsualize) {
 	return res;
 }
 
-function showImageForm(objId){
-	
-}
-
-
 function selectDialog(objClass, msg, funcName) {
 	new Messi(msg, {
 		title : 'Select ' + objClass,
