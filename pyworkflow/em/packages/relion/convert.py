@@ -65,12 +65,6 @@ XMIPP_RELION_LABELS = {
                        ,xmipp.MDL_WEIGHT:             'rlnNrOfSignificantSamples'
                        }
 
-#def getLabelPythonType(label):
-#    """ From xmipp label to python variable type """
-#    for k,v in XMIPP_RELION_LABELS.iteritems():
-#        if v == label:
-#            labelType = xmipp.labelType(k)
-#            return LABEL_TYPES.get(labelType, str)
 
 def objectToRow(obj, row, attrDict):
     """ This function will convert an EMObject into a RelionMdRow.
