@@ -113,6 +113,7 @@ function fillTabsSummary(id) {
 			for ( var i = 0; i < json.length; i++) {
 				$("#tab-summary").append('<p>' + json[i] + '</p>');
 			}
+			
 		}
 	});
 }
