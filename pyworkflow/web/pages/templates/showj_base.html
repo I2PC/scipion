@@ -373,223 +373,234 @@
 	{% block head %}  {% endblock %}
 </head>
 <body>
-	<header>
-	<div style="width:50%">
-		<!-- <div style="float:left;" id="logoDiv"> -->
-		<a href="#" style="margin:2px 0px 0px 8px"><img class="logo" src="{{logo}}" alt="Scipion logo" style="max-height:60px; "></a>
-		<!-- </div> -->
-		
-		<div style="padding:16px 0px 0px 15px;text-align:center;display:inline;">
-		<span class="project_name" style="font-size:1.8em; ">Xmipp Showj Web</span>
+
+	<div id="mainContainer">
+		<header>
+		<div id="headerMainContainer">
+			<a href="/projects" id="headerLogoContainer"><img class="logo" src="{{logo}}" alt="Scipion logo"></a>
+			<span id="projectName">Xmipp Showj Web</span>
+			<a id="backToProject" href="/project_content/?projectName={{projectName}}">Back to project</a>
 		</div>
-
-	</div>
+		<div id="headerLine"></div>
+		</header>
+		<div id="mainSection">
+			<aside id="side_news"> <!-- Main Menu -->
 	
-	<div style="padding-top:60px;text-align:right;width:45%;display:inline;" >
-		<a href="/project_content/?projectName={{projectName}}">Back to project</a>
-	</div>
-	</header>
-	<div id="main_section">
-		<aside id="side_news"> <!-- Main Menu -->
-
-			<form id="showjForm" action="/showj/" method="post"> {% csrf_token %}
-				<div id="modeContainer" class="sectionMenu">
-					<!-- TABLE -->
-					<input type="submit" value="table" name="select_mode" onclick="document.forms['showjForm'].id_mode.value='table';" class="submitButton
-					 {% if form.mode.value != 'table' %}
-					  tableOff
-					 {% else %}
-					  tableOn
-					 {% endif %}	
-					  " 
-					  {% if form.mode.value == 'column' %}
-					  disabled
-					  {% endif %}
-					  />
-					
-					<!-- GALLERY -->
-					<input type="submit" value="gallery" name="select_mode" onclick="document.forms['showjForm'].id_mode.value='gallery';" class="submitButton
-					 {% if form.mode.value != 'gallery'  %}
-					  galleryOff
-					 {% else %}
-					  galleryOn
-					 {% endif %}
-					 
-					 "
-					 {% if form.mode.value == 'column' %}
-					  disabled
-					 {% endif %}
-					 />
-					 
-					<!-- VOLUME VISUALIZE WITH ASTEX -->
-					{% if dataset.getNumberSlices > 1 %} 
-					<input type="submit" value="volume_astex" name="select_mode" onclick="document.forms['showjForm'].id_mode.value='volume_astex';" class="submitButton
-					 {% if form.mode.value != 'volume_astex' %}
-					 visualizeVolOff
-					 {% else %}
-					  visualizeVolOn
-					 {% endif %}
-					 "
-					 />
-					 {% endif %}
-					 
-					 <!-- VOLUME VISUALIZE WITH CHIMERA -->
-					 {% if dataset.getNumberSlices > 1 %} 
-					<input type="submit" value="volume_chimera" name="select_mode" onclick="document.forms['showjForm'].id_mode.value='volume_chimera';" class="submitButton
-					 {% if form.mode.value != 'volume_chimera' %}
-					 visualizeVolOff
-					 {% else %}
-					  visualizeVolOn
-					 {% endif %}
-					 "
-					 
-					   
-					 />
-					 {% endif %}
-				</div>
-				
-				<div id="zoomContainer" class="sectionMenu">
-					<img src="/resources/showj/zoom.png" class="menuIcon">
-					{{ form.zoom }}
-					
-					<div id="arrowContainer" class="arrowSectionMenu">
-						<img src="/resources/showj/arrowUp.png" class="arrowImage">
-						<img src="/resources/showj/arrowDown.png" class="arrowImage">
+				<form id="showjForm" action="/showj/" method="post"> {% csrf_token %}
+					<div id="modeContainer" class="sectionMenu">
+						<!-- TABLE -->
+						<input type="submit" value="table" name="select_mode" onclick="document.forms['showjForm'].id_mode.value='table';" class="submitButton
+						 {% if form.mode.value != 'table' %}
+						  tableOff
+						 {% else %}
+						  tableOn
+						 {% endif %}	
+						  " 
+						  {% if form.mode.value == 'column' %}
+						  disabled
+						  {% endif %}
+						  />
+						
+						<!-- GALLERY -->
+						<input type="submit" value="gallery" name="select_mode" onclick="document.forms['showjForm'].id_mode.value='gallery';" class="submitButton
+						 {% if form.mode.value != 'gallery'  %}
+						  galleryOff
+						 {% else %}
+						  galleryOn
+						 {% endif %}
+						 
+						 "
+						 {% if form.mode.value == 'column' %}
+						  disabled
+						 {% endif %}
+						 />
+						 
+						<!-- VOLUME VISUALIZE WITH ASTEX -->
+						{% if dataset.getNumberSlices > 1 %} 
+						<input type="submit" value="volume_astex" name="select_mode" onclick="document.forms['showjForm'].id_mode.value='volume_astex';" class="submitButton
+						 {% if form.mode.value != 'volume_astex' %}
+						 visualizeVolOff
+						 {% else %}
+						  visualizeVolOn
+						 {% endif %}
+						 "
+						 />
+						 {% endif %}
+						 
+						 <!-- VOLUME VISUALIZE WITH CHIMERA -->
+						 {% if dataset.getNumberSlices > 1 %} 
+						<input type="submit" value="volume_chimera" name="select_mode" onclick="document.forms['showjForm'].id_mode.value='volume_chimera';" class="submitButton
+						 {% if form.mode.value != 'volume_chimera' %}
+						 visualizeVolOff
+						 {% else %}
+						  visualizeVolOn
+						 {% endif %}
+						 "
+						 
+						   
+						 />
+						 {% endif %}
 					</div>
-					<!-- <input type="number" class="menuInputNumber" id="zoom" value="150" min="10"> -->
-				</div>
-				
-				<div id="gotoContainer" class="sectionMenu">
-					<img src="/resources/showj/goto.png" class="menuIcon">
-					{{ form.goto }}
 					
-					<div id="arrowContainer" class="arrowSectionMenu">
-						<img src="/resources/showj/arrowUp.png" class="arrowImage">
-						<img src="/resources/showj/arrowDown.png" class="arrowImage">
-					</div>
-					<!-- <input type="number" class="menuInputNumber" id="goto" value="1" max="{{metadata.objects|length}}" min="1"> -->
-				</div>
-				
-				<div class="sectionMenu">
-					<img src="/resources/showj/separator.png" class="menuIcon">
-				</div>	
-				
-				{% if form.mode.value == 'gallery' %}
-				<div id="colRowContainer" class="sectionMenu">
-					<button id="colRowMode"> 
-						<img src="/resources/showj/colRowMode{{form.colRowMode.value}}.png" id="colRowModeImage" />
-					</button>
-					
-					<div class="subSectionMenu" id="colsSubSectionMenu">
-						<span class="textMenu">{{ form.cols.label_tag }}</span>
-						{{ form.cols }}
+					<div id="zoomContainer" class="sectionMenu">
+						<img src="/resources/showj/zoom.png" class="menuIcon">
+						{{ form.zoom }}
 						
 						<div id="arrowContainer" class="arrowSectionMenu">
 							<img src="/resources/showj/arrowUp.png" class="arrowImage">
 							<img src="/resources/showj/arrowDown.png" class="arrowImage">
 						</div>
-						<!-- <input type="number" class="menuInputNumber" id="cols" value="" min="1" max="{{metadata.objects|length}}" disabled> -->
+						<!-- <input type="number" class="menuInputNumber" id="zoom" value="150" min="10"> -->
 					</div>
-					<div class="subSectionMenu" id="rowsSubSectionMenu">
-						<span class="textMenu">{{ form.rows.label_tag }}</span>
-						{{ form.rows }}
+					
+					<div id="gotoContainer" class="sectionMenu">
+						<img src="/resources/showj/goto.png" class="menuIcon">
+						{{ form.goto }}
 						
 						<div id="arrowContainer" class="arrowSectionMenu">
 							<img src="/resources/showj/arrowUp.png" class="arrowImage">
 							<img src="/resources/showj/arrowDown.png" class="arrowImage">
 						</div>
-						<!-- <input type="number" class="menuInputNumber" id="rows" value="" min="1" max="{{metadata.objects|length}}" disabled> -->
+						<!-- <input type="number" class="menuInputNumber" id="goto" value="1" max="{{metadata.objects|length}}" min="1"> -->
 					</div>
-				</div>
-				{% endif %}
-				
-				<div class="sectionMenu">
-					<img src="/resources/showj/separator.png" class="menuIcon">
-				</div>
-		
-				<div id="blockSelectorContainer" class="sectionMenu">
-					<span class="textMenu"> {{ form.blockComboBox.label_tag }} </span>
-					{{ form.blockComboBox }} 
-				</div>
-				
-				<div id="metadataSelectorContainer" class="sectionMenu">
-					<span class="textMenu">
-					{% if not form.labelsToRenderComboBox.is_hidden %}
-					{{ form.labelsToRenderComboBox.label_tag }}
+					
+					<div class="sectionMenu">
+						<img src="/resources/showj/separator.png" class="menuIcon">
+					</div>	
+					
+					{% if form.mode.value == 'gallery' %}
+					<div id="colRowContainer" class="sectionMenu">
+						<button id="colRowMode"> 
+							<img src="/resources/showj/colRowMode{{form.colRowMode.value}}.png" id="colRowModeImage" />
+						</button>
+						
+						<div class="subSectionMenu" id="colsSubSectionMenu">
+							<span class="textMenu">{{ form.cols.label_tag }}</span>
+							{{ form.cols }}
+							
+							<div id="arrowContainer" class="arrowSectionMenu">
+								<img src="/resources/showj/arrowUp.png" class="arrowImage">
+								<img src="/resources/showj/arrowDown.png" class="arrowImage">
+							</div>
+							<!-- <input type="number" class="menuInputNumber" id="cols" value="" min="1" max="{{metadata.objects|length}}" disabled> -->
+						</div>
+						<div class="subSectionMenu" id="rowsSubSectionMenu">
+							<span class="textMenu">{{ form.rows.label_tag }}</span>
+							{{ form.rows }}
+							
+							<div id="arrowContainer" class="arrowSectionMenu">
+								<img src="/resources/showj/arrowUp.png" class="arrowImage">
+								<img src="/resources/showj/arrowDown.png" class="arrowImage">
+							</div>
+							<!-- <input type="number" class="menuInputNumber" id="rows" value="" min="1" max="{{metadata.objects|length}}" disabled> -->
+						</div>
+					</div>
 					{% endif %}
-					</span>
-					{{ form.labelsToRenderComboBox }}
-				</div>
-				
-				<div id="volumeSelectorContainer" class="sectionMenu">
-					<span class="textMenu">
-					{% if not form.volumesToRenderComboBox.is_hidden %}
-					{{ form.volumesToRenderComboBox.label_tag }}
-					{% endif %}
-					</span>
-					{{ form.volumesToRenderComboBox }}
-				</div>
-				
-				<div id="resliceSelectorContainer" class="sectionMenu">
-					<span class="textMenu">
-					{% if not form.resliceComboBox.is_hidden %}
-					{{ form.resliceComboBox.label_tag }}
-					{% endif %}
-					</span>
-					{{ form.resliceComboBox }}
-				</div>
-		
-				<div class="sectionMenu">
-					<img src="/resources/showj/separator.png" class="menuIcon">
-				</div>
-				
-				<div id="saveContainer" class="sectionMenu">
-					<button id="saveButton" onclick="saveShowjTable(); return false;" class="saveOff">
-					</button>
-				</div>
-				
-				
-				<div id="optionsContainer" class="sectionMenu">
-					<button id="optionsButton" class="optionsOff submitButton" onclick="showHideOptionMenu(); return false;">
-					</button>
-				
-					<ul id="optionsList">
-						<li>{{ form.mirrorY }} {{ form.mirrorY.label_tag }}</li>
-						<li>{{ form.applyTransformMatrix }} {{ form.applyTransformMatrix.label_tag }}</li>
-						<li>{{ form.onlyShifts }} {{ form.onlyShifts.label_tag }}</li>
-						<li>{{ form.wrap }} {{ form.wrap.label_tag }}</li>
-					</ul>
-				</div>  
-				{% block content_menu %}	{% endblock %}
-				 
-				{% for hidden in form.hidden_fields %}
-			    {{ hidden }}
-			    {% endfor %} 
-				 
-			</form>
-		</aside>
-		
-		<section> <!--  Es donde va la informacion princiapl -->
-		
-
-		
-		{% block content_view %}	{% endblock %}	
-		<!-- Hidden menu for multiple selection tool -->
-		<div class="multipleSelectionToolContainer" id="multipleSelectionTool">
-			{% if dataset.getTable.hasEnabledColumn %}
-			<div class="multipleSelectionToolItem" onclick="multipleEnableDisableImage('enable')">Enable</div>
-			<div class="multipleSelectionToolItem" onclick="multipleEnableDisableImage('disable')">Disable</div>
-			{% endif %}
-			<div class="multipleSelectionToolItem" onclick="multipleSelect('all')">Select All</div>
-			<div class="multipleSelectionToolItem" onclick="multipleSelect('from')">Select From Here</div>
-			<div class="multipleSelectionToolItem" onclick="multipleSelect('to')">Select To Here</div>
-		</div>	
-
+					
+					<div class="sectionMenu">
+						<img src="/resources/showj/separator.png" class="menuIcon">
+					</div>
 			
-		</section>
+					<div id="blockSelectorContainer" class="sectionMenu">
+						<span class="textMenu"> {{ form.blockComboBox.label_tag }} </span>
+						{{ form.blockComboBox }} 
+					</div>
+					
+					<div id="metadataSelectorContainer" class="sectionMenu">
+						<span class="textMenu">
+						{% if not form.labelsToRenderComboBox.is_hidden %}
+						{{ form.labelsToRenderComboBox.label_tag }}
+						{% endif %}
+						</span>
+						{{ form.labelsToRenderComboBox }}
+					</div>
+					
+					<div id="volumeSelectorContainer" class="sectionMenu">
+						<span class="textMenu">
+						{% if not form.volumesToRenderComboBox.is_hidden %}
+						{{ form.volumesToRenderComboBox.label_tag }}
+						{% endif %}
+						</span>
+						{{ form.volumesToRenderComboBox }}
+					</div>
+					
+					<div id="resliceSelectorContainer" class="sectionMenu">
+						<span class="textMenu">
+						{% if not form.resliceComboBox.is_hidden %}
+						{{ form.resliceComboBox.label_tag }}
+						{% endif %}
+						</span>
+						{{ form.resliceComboBox }}
+					</div>
+			
+					<div class="sectionMenu">
+						<img src="/resources/showj/separator.png" class="menuIcon">
+					</div>
+					
+					<div id="saveContainer" class="sectionMenu">
+						<button id="saveButton" onclick="saveShowjTable(); return false;" class="saveOff">
+						</button>
+					</div>
+					
+					
+					<div id="optionsContainer" class="sectionMenu">
+						<button id="optionsButton" class="optionsOff submitButton" onclick="showHideOptionMenu(); return false;">
+						</button>
+					
+						<ul id="optionsList">
+							<li>{{ form.mirrorY }} {{ form.mirrorY.label_tag }}</li>
+							<li>{{ form.applyTransformMatrix }} {{ form.applyTransformMatrix.label_tag }}</li>
+							<li>{{ form.onlyShifts }} {{ form.onlyShifts.label_tag }}</li>
+							<li>{{ form.wrap }} {{ form.wrap.label_tag }}</li>
+						</ul>
+					</div>  
+					{% block content_menu %}	{% endblock %}
+					 
+					{% for hidden in form.hidden_fields %}
+				    {{ hidden }}
+				    {% endfor %} 
+					 
+				</form>
+			</aside>
+			
+			<section> <!--  Es donde va la informacion princiapl -->
+			
+	
+			
+			{% block content_view %}	{% endblock %}	
+			<!-- Hidden menu for multiple selection tool -->
+			<div class="multipleSelectionToolContainer" id="multipleSelectionTool">
+				{% if dataset.getTable.hasEnabledColumn %}
+				<div class="multipleSelectionToolItem" onclick="multipleEnableDisableImage('enable')">Enable</div>
+				<div class="multipleSelectionToolItem" onclick="multipleEnableDisableImage('disable')">Disable</div>
+				{% endif %}
+				<div class="multipleSelectionToolItem" onclick="multipleSelect('all')">Select All</div>
+				<div class="multipleSelectionToolItem" onclick="multipleSelect('from')">Select From Here</div>
+				<div class="multipleSelectionToolItem" onclick="multipleSelect('to')">Select To Here</div>
+			</div>	
+	
+				
+			</section>
+		</div>
+		
+		{% block content_end_page %}	{% endblock %}
+	</div>
+	<footer>
+	<div id="footerLine"></div>
+	<div id="footerMainContainer">
+		<div id="footerLeftContainer">
+			<a href="/projects" id="footerLogoContainer"><img class="logo" src="{{logo_transparent}}" alt="Scipion logo"></a>
+			<span id="footerText">Neque porro quisquam est qui dolorem, adispici velit</span>
+		</div>
+		<div id="footerRightContainer">
+			<a href="/faq" id="footerLink">FAQ</a><span id="tube">|</span>
+			<a href="/wiki" id="footerLink">Wiki</a><span id="tube">|</span>
+			<a href="/license" id="footerLink">License</a><span id="tube">|</span>
+			<a href="/contact" id="footerLink">Contact</a>
+		</div>
 	</div>
 	
-	{% block content_end_page %}	{% endblock %}
+	</footer>
 
 </body>
 </html>

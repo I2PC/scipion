@@ -173,6 +173,7 @@ def createContext(dataset, tableDataset, tableLayoutConfiguration, request, show
                
                'favicon': getResourceIcon('favicon'),
                'logo': getResourceIcon('logo_scipion'),
+               'logo_transparent': getResourceIcon('logo_scipion_transparent'),
                
                'jquery': getResourceJs('jquery'), #Configuration variables
                'jquery_datatable': getResourceJs('jquery_datatables'),

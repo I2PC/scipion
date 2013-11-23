@@ -10,9 +10,13 @@ header,section,footer,aside,nav,article,hgroup {
 	display: block;
 } /* For html5 unsupported browsers */
 
+html, body, #mainContainer { height: 100%; }
+body > #mainContainer { height: auto; min-height: 100%; }
+
+
 /* HEADER */
 header {
-	height: 100px;
+	/* height: 100px; */
 	
 	display: -webkit-box;      /* OLD - iOS 6-, Safari 3.1-6 */
   	display: -moz-box;         /* OLD - Firefox 19- (buggy but mostly works) */
@@ -34,9 +38,47 @@ header {
 	-ms-flex-wrap: wrap;
 	-o-flex-wrap: wrap;
 	flex-wrap: wrap;
+	
+	margin-bottom: 2px;
 }
 
+header #headerMainContainer{
+	width:100%;
+	height:50px;
+	padding: 10px 0px 10px 0px;
+}
+header #headerLogoContainer{
+	float:left;
+}
 
+header #projectName{
+	font-size:1.7em;
+	float:left;
+	padding-top:10px;
+	color:#707070
+}
+header #backToProject{
+	float:right;
+	color:#6e6e6e;
+	text-decoration:none;
+	padding:25px 30px 0px 0px;
+}
+header #headerLine{
+	width:100%;
+	height:10px;
+	background: #d2a7a7; /* Old browsers */
+	background: -moz-linear-gradient(left, #d2a7a7 0%, #820808 50%, #d2a7a7 100%); /* FF3.6+ */
+	background: -webkit-gradient(linear, left top, right top, color-stop(0%,#d2a7a7), color-stop(50%,#820808), color-stop(100%,#d2a7a7)); /* Chrome,Safari4+ */
+	background: -webkit-linear-gradient(left, #d2a7a7 0%,#820808 50%,#d2a7a7 100%); /* Chrome10+,Safari5.1+ */
+	background: -o-linear-gradient(left, #d2a7a7 0%,#820808 50%,#d2a7a7 100%); /* Opera 11.10+ */
+	background: -ms-linear-gradient(left, #d2a7a7 0%,#820808 50%,#d2a7a7 100%); /* IE10+ */
+	background: linear-gradient(to right, #d2a7a7 0%,#820808 50%,#d2a7a7 100%); /* W3C */
+	filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#d2a7a7', endColorstr='#d2a7a7',GradientType=1 ); /* IE6-9 */
+}
+header .logo{
+	max-height:40px;
+	margin: 2px 10px 0px 20px;
+}
 /* NAV (TOP MENU) */
 nav {
 	height: 55px;
@@ -53,6 +95,59 @@ nav ul {
 nav ul li {
 	padding: 5px 10px 5px 0px;
 	display: inline;
+}
+
+/* FOOTER */
+footer{
+	clear: both;
+ 	position: relative;
+ 	z-index: 10;
+ 	height: 110px;
+ 	/* margin-top: -110px; */
+}
+footer #footerLine{
+	height:6px;
+	background-color: #cccccc;
+}
+footer #footerMainContainer{
+	width: 100%;
+	height: 100px;
+	background: #ffffff; /* Old browsers */
+	background: -moz-linear-gradient(top, #ffffff 0%, #cccccc 100%); /* FF3.6+ */
+	background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#ffffff), color-stop(100%,#cccccc)); /* Chrome,Safari4+ */
+	background: -webkit-linear-gradient(top, #ffffff 0%,#cccccc 100%); /* Chrome10+,Safari5.1+ */
+	background: -o-linear-gradient(top, #ffffff 0%,#cccccc 100%); /* Opera 11.10+ */
+	background: -ms-linear-gradient(top, #ffffff 0%,#cccccc 100%); /* IE10+ */
+	background: linear-gradient(to bottom, #ffffff 0%,#cccccc 100%); /* W3C */
+	filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ffffff', endColorstr='#cccccc',GradientType=0 ); /* IE6-9 */
+}
+footer #footerLeftContainer{
+	width: 50%;
+	float:left;
+	padding: 20px 0px 0px 20px;	
+}
+footer #footerLogoContainer{
+	
+	
+}
+footer #footerRightContainer{
+	float: right;
+	padding: 50px 20px 0px 0px;
+}
+footer #footerText{
+	display: block;
+	color: #4c4c4c;
+}
+footer #tube{
+	color: #9c9c9c
+}
+footer #footerLink{
+	text-decoration: none;
+	margin: 0px 15px;
+	color: #6F3232;
+}
+footer .logo{
+	max-height:40px;
 }
 
 /* ASIDE (BOTTOM MENU) */
@@ -284,6 +379,10 @@ aside li:last-child{
 }
 
 /* MAIN SECTION */
+#mainSection {
+	padding-bottom: 110px;
+}
+
 section {
 	padding: 20px;
 	
@@ -308,7 +407,6 @@ section {
 	-ms-flex-wrap: wrap;
 	flex-wrap: wrap;
 }
-
 
 section .img_container {
 	/* margin: 10px 2px 10px 2px; */
@@ -521,7 +619,3 @@ aside #saveButton{
 
 .DataTables_sort_icon{float: left;}
 
-
-​
-
-/* GENERAL */
