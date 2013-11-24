@@ -79,6 +79,7 @@ header .logo{
 	max-height:40px;
 	margin: 2px 10px 0px 20px;
 }
+
 /* NAV (TOP MENU) */
 nav {
 	height: 55px;
@@ -141,7 +142,7 @@ footer #footerText{
 footer #tube{
 	color: #9c9c9c
 }
-footer #footerLink{
+footer .footerLink{
 	text-decoration: none;
 	margin: 0px 15px;
 	color: #6F3232;

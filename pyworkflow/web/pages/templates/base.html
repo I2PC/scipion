@@ -3,10 +3,11 @@
 <head>
 <title>Scipion {% block title %} {% endblock %}</title>
 <meta charset='utf-8'>
-<link rel="icon" type="image/png" href="/resources/scipion_bn.png" />
-<link href="/static/css/general_style.css" rel="stylesheet"
-	type="text/css">
-<link type="text/css" href="/static/css/jquery-ui.css" rel="stylesheet" />
+<link rel="icon" type="image/png" href="{{favicon}}" />
+<!-- CSS -->
+<link href="/static/css/general_style.css" rel="stylesheet"	type="text/css">
+<link href="/static/css/jquery-ui.css" rel="stylesheet" type="text/css"/>
+<!-- JS -->
 <script type="text/javascript" src="/static/js/jquery/jquery.js"></script>
 <script type="text/javascript" src="/static/js/jsPlumb/jquery.jsPlumb.js"></script>
 <script type="text/javascript" src="/static/js/jquery/jquery-ui.js"></script>
@@ -46,7 +47,7 @@
 		});
 	});
 
-	function changeView(){
+/* 	function changeView(){
 		selection = document.getElementById("viewsCombo").value;
 		if (selection == "projects"){
 			window.location.href = "/projects"
@@ -57,51 +58,74 @@
 		} else if (selection == "hosts"){
 			window.location.href = "/view_hosts"
 		}
-	}
+	} */
 </script>
 {% block head %} {% endblock %}
 </head>
 
 <body>
-	<div id="wrapper">
-		<div id="frameTitle">
-			<a href="/projects"><img class="logo" src="/resources/scipion_logo.gif"
-				alt="Scipion logo" /></a>  
-			{% if projectName != None %}
-				<span class="project_name" style="font-size:1.7em;">Project {{projectName}}</span> 
-				<div class="view">
-					<label>View: </label>
-					<select id="viewsCombo" name="viewsCombo" onChange="javascript:changeView();">
-						<!-- <option value=""></option> -->
-						<option value="projects" {% if view == "projects" %} selected {% endif %}>Projects</option>							
-						<option value="protocols" {% if view == "protocols" %} selected {% endif %}>Protocols</option>
-						<option value="data" {% if view == "data" %} selected {% endif %}>Data</option>
-						<option value="hosts" {% if view == "hosts" %} selected {% endif %}>Hosts</option>
-					</select>
-				</div> 
-			{% endif %}	
-		</div>
-		<div data-layout='{"type": "border"}' class="layout-outer" id="wrapper">
-			<div data-layout='{"type": "border"}' class="center layout-inner" id="wrapperContent">
-			{% if contentConfig == 'divided' %}
-				<div class="north" id="frameTop">
-			{% elif contentConfig == 'full' %}
-				<div class="north" id="frameTopProj">
-			{% endif %}
-					{% block content %}
-					{%endblock %}
-				</div>	
-				{% if contentConfig == 'divided' %}
-				<div class="center" id="frameCenter">
-					{% block contentDown %}	
-					{%endblock %}
+
+	<div id="mainContainer">
+		<header>
+			<div id="headerMainContainer">
+				<a href="/projects" id="headerLogoContainer"><img class="logo" src="/resources/scipion_logo.gif" alt="Scipion logo"></a>
+				{% if projectName != None %}<span id="projectName">Project {{projectName}}</span>{% endif %}
+				
+				
+				<div id="headerRightContainer">
+					<a href="/projects" class="headerLink{% if view == 'projects' %} headerLinkSelected {% endif %}">Projects</a><span id="tube">|</span>
+					<a href="/project_content/?projectName={{projectName}}" class="headerLink{% if view == 'protocols' %} headerLinkSelected {% endif %}">Protocols</a><span id="tube">|</span>
+					<a href="#" onclick="javascript:alert('Not implemented yet')" class="headerLink{% if view == 'data' %} headerLinkSelected {% endif %}">Data</a><span id="tube">|</span>
+					<a href="/view_hosts" class="headerLink{% if view == 'hosts' %} headerLinkSelected {% endif %}">Hosts</a>
 				</div>
-				{% endif %}
+			
 			</div>
-			<div class="west" id="frameLeft">
-				{% block sideLeft %} {%endblock %}
+			<div id="headerLine"></div>
+		</header>
+
+		<!-- <div id="mainSection"> -->
+			<section>
+				<!-- <div id="wrapper"> -->
+					<div data-layout='{"type": "border"}' class="layout-outer" id="wrapper">
+						<div data-layout='{"type": "border"}' class="center layout-inner" id="wrapperContent">
+						{% if contentConfig == 'divided' %}
+							<div class="north" id="frameTop">
+						{% elif contentConfig == 'full' %}
+							<div class="north" id="frameTopProj">
+						{% endif %}
+								{% block content %}
+								{%endblock %}
+							</div>	
+							{% if contentConfig == 'divided' %}
+							<div class="center" id="frameCenter">
+								{% block contentDown %}	
+								{%endblock %}
+							</div>
+							{% endif %}
+						</div>
+						<div class="west" id="frameLeft">
+							{% block sideLeft %} {%endblock %}
+						</div>
+					</div>
+				<!-- </div>	 -->
+			</section>
+		<!-- </div>	 -->
+	</div>
+	<footer>
+		<div id="footerLine"></div>
+		<div id="footerMainContainer">
+			<div id="footerLeftContainer">
+				<a href="/projects" id="footerLogoContainer"><img class="logo" src="/resources/scipion_logo_transparent.png" alt="Scipion logo"></a>
+				<span id="footerText">Neque porro quisquam est qui dolorem, adispici velit</span>
+			</div>
+			<div id="footerRightContainer">
+				<a href="/faq" class="footerLink">FAQ</a><span id="tube">|</span>
+				<a href="/wiki" class="footerLink">Wiki</a><span id="tube">|</span>
+				<a href="/license" class="footerLink">License</a><span id="tube">|</span>
+				<a href="/contact" class="footerLink">Contact</a>
 			</div>
 		</div>
-	</div>
+	</footer>
+
 </body>
 </html>

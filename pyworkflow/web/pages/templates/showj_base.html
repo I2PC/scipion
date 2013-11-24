@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang='es'>
 <head>
-	<title>Showj</title>
+	<title>Scipion - Showj</title>
 	<meta charset='utf-8'>
 	<link rel="icon" type="image/png" href="{{favicon}}" />
 	<!-- CSS -->
@@ -376,12 +376,12 @@
 
 	<div id="mainContainer">
 		<header>
-		<div id="headerMainContainer">
-			<a href="/projects" id="headerLogoContainer"><img class="logo" src="{{logo}}" alt="Scipion logo"></a>
-			<span id="projectName">Xmipp Showj Web</span>
-			<a id="backToProject" href="/project_content/?projectName={{projectName}}">Back to project</a>
-		</div>
-		<div id="headerLine"></div>
+			<div id="headerMainContainer">
+				<a href="/projects" id="headerLogoContainer"><img class="logo" src="{{logo}}" alt="Scipion logo"></a>
+				<span id="projectName">Xmipp Showj Web</span>
+				<a id="backToProject" href="/project_content/?projectName={{projectName}}">Back to project</a>
+			</div>
+			<div id="headerLine"></div>
 		</header>
 		<div id="mainSection">
 			<aside id="side_news"> <!-- Main Menu -->
@@ -563,9 +563,7 @@
 				</form>
 			</aside>
 			
-			<section> <!--  Es donde va la informacion princiapl -->
-			
-	
+			<section> 
 			
 			{% block content_view %}	{% endblock %}	
 			<!-- Hidden menu for multiple selection tool -->
