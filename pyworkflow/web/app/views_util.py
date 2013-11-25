@@ -38,7 +38,8 @@ from django.http import HttpResponse
 
 
 iconDict = {
-            'logo_scipion': 'scipion_logo.png',
+            'logo_scipion': 'scipion_logo.gif',
+            'logo_scipion_transparent': 'scipion_logo_transparent.png',
             'favicon': 'scipion_bn.png',
             'help': 'system_help24.png',
             'browse': 'zoom.png',
@@ -327,11 +328,13 @@ def getImageDim(request, imagePath):
     return img.getDimensions()
 
 
-def readDimensions(request, path):
-    img = xmipp.Image()
-    imgFn = os.path.join(request.session['projectPath'], path)
-    img.read(str(imgFn), xmipp.HEADER)
-    return img.getDimensions()
+def readDimensions(request, path, typeOfColumn):
+    if typeOfColumn=="image":
+        img = xmipp.Image()
+        imgFn = os.path.join(request.session['projectPath'], path)
+        img.read(str(imgFn), xmipp.HEADER)
+        return img.getDimensions()
+    return (300,300,1,1) 
 
 def readImageVolume(request, path, convert, dataType, reslice, axis, getStats):
     _newPath=path

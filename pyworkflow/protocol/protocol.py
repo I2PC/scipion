@@ -812,7 +812,10 @@ class Protocol(Step):
     
     def summary(self):
         """ Return a summary message to provide some information to users. """
-        return self._summary() + ['', '<Comments:>', self.getObjComment()]
+        error = ''
+        if self.error.hasValue():
+            error = 'ERROR:\n' + self.error.get()
+        return self._summary() + ['', '<Comments:>', self.getObjComment(), error]
     
     def runProtocol(self, protocol):
         """ Setup another protocol to be run from a workflow. """

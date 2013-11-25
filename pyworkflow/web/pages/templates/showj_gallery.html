@@ -16,11 +16,14 @@
 		renderFunc=jsonTableLayoutConfiguration.columnsLayout["{{form.labelsToRenderComboBox.value}}"].columnLayoutProperties.renderFunc
 		extraRenderFunc=jsonTableLayoutConfiguration.columnsLayout["{{form.labelsToRenderComboBox.value}}"].columnLayoutProperties.extraRenderFunc
 
+		console.log(jsonTableLayoutConfiguration.columnsLayout) 
+		
 		if (renderFunc!=""){ 
 			$(".tableImages").each(function(){
 			   	var newSrc = $(this).data("real_src").replace(/(renderFunc=).*?(&)/,'$1' + renderFunc + '$2');
 			   	if (extraRenderFunc!=""){newSrc = newSrc.concat("&"+extraRenderFunc)}
 				$(this).data("real_src", newSrc);
+				console.log("newSrc",newSrc)
 		   	})
 		}
 	}
@@ -236,3 +239,4 @@
 		
 			
 {% endblock %}
+{% block content_end_page %}	{% endblock %}

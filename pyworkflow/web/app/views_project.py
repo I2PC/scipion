@@ -47,10 +47,12 @@ def projects(request):
     for p in projects:
         p.pTime = prettyDate(p.mTime)
 
-    context = {'projects': projects,
+    context = {'projectName': request.session['projectName'] if 'projectName' in request.session else '',
+               'projects': projects,
                'css': getResourceCss('projects'),
                'messi_css': getResourceCss('messi'),
                'project_utils': getResourceJs('project_utils'),
+               'view': 'projects',
                'contentConfig': 'full'}
     
     return render_to_response('projects.html', context)
@@ -102,7 +104,7 @@ def createEdge(srcItem, dstItem):
     
 
 def getNodeStateColor(node):
-    color = '#ADD8E6';  # Lightblue
+    color = '#ADD8E6'  # Lightblue
     status = ''
     if node.run:
         status = node.run.status.get(STATUS_FAILED)
@@ -276,6 +278,7 @@ def protocol_summary(request):
         protId = request.GET.get('protocolId', None)
         protocol = project.mapper.selectById(int(protId))
         summary = protocol.summary()
+        print summary
         jsonStr = json.dumps(summary, ensure_ascii=False)
         
 #        print "======================= in protocol_summary...."

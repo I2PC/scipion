@@ -1,17 +1,43 @@
+# **************************************************************************
+# *
+# * Authors:    Jose Gutierrez (jose.gutierrez@cnb.csic.es)
+# *             Adrian Quintana (aquintana@cnb.csic.es)   
+# *
+# * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
+# *
+# * This program is free software; you can redistribute it and/or modify
+# * it under the terms of the GNU General Public License as published by
+# * the Free Software Foundation; either version 2 of the License, or
+# * (at your option) any later version.
+# *
+# * This program is distributed in the hope that it will be useful,
+# * but WITHOUT ANY WARRANTY; without even the implied warranty of
+# * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# * GNU General Public License for more details.
+# *
+# * You should have received a copy of the GNU General Public License
+# * along with this program; if not, write to the Free Software
+# * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+# * 02111-1307  USA
+# *
+# *  All comments concerning this program package may be sent to the
+# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *
+# **************************************************************************
+
+
 import os
 import xmipp
 from django.http import HttpResponse
 from pyworkflow.web.pages import settings
 from django.shortcuts import render_to_response
 from pyworkflow.tests import getInputPath
-from pyworkflow.web.app.forms import ShowjForm, getLabelsToRenderComboBoxValues
 from django.template import RequestContext
-from collections import OrderedDict
-import json
 from pyworkflow.web.app.views_util import *
-from forms import VolVisualizationForm
+from forms import VolVisualizationForm, ShowjForm
 from pyworkflow.em import *
 from pyworkflow.em.packages.xmipp3.convert import *
+from layout_configuration import *
 
 
 
@@ -35,30 +61,15 @@ def showj(request, inputParameters=None, extraParameters=None):
     dataset.setTableName(inputParameters['blockComboBox'])
     tableDataset=dataset.getTable()
 
-
     if request.method == 'GET':
-        print "extraParameters",extraParameters 
-        defaultColumnsLayoutProperties = None
-        if extraParameters != None and extraParameters != {}:
-            defaultColumnsLayoutProperties = {k.getName(): {} for k in tableDataset.iterColumns()}
-            for key, value in extraParameters.iteritems():
-    
-                try:
-                    label, attribute = key.rsplit('___')
-                except Exception, ex:
-                    raise Exception('Showj Web visualizer: Incorrect extra parameter')
-    
-                if tableDataset.hasColumn(label):
-                    defaultColumnsLayoutProperties[label].update({attribute:value})
-                    
-        request.session['defaultColumnsLayoutProperties'] = defaultColumnsLayoutProperties
+        request.session['defaultColumnsLayoutProperties'] = getExtraParameters(extraParameters, tableDataset)
     
     #Load table layout configuration. How to display columns and attributes (visible, render, editable)  
     inputParameters['tableLayoutConfiguration']= TableLayoutConfiguration(dataset, tableDataset, inputParameters['allowRender'], request.session['defaultColumnsLayoutProperties'])
 
     #If no label is set to render, set the first one if exists
     if 'labelsToRenderComboBox' not in inputParameters or inputParameters['labelsToRenderComboBox'] == '' or request.session['blockComboBox'] != inputParameters['blockComboBox']:
-        labelsToRenderComboBoxValues = getLabelsToRenderComboBoxValues(inputParameters['tableLayoutConfiguration'].columnsLayout)
+        labelsToRenderComboBoxValues = inputParameters['tableLayoutConfiguration'].getLabelsToRenderComboBoxValues()
         if len(labelsToRenderComboBoxValues) > 0:
             inputParameters['labelsToRenderComboBox'] = labelsToRenderComboBoxValues[0][0]
         else:
@@ -77,20 +88,24 @@ def showj(request, inputParameters=None, extraParameters=None):
     else:
         
         _imageVolName = inputParameters['volumesToRenderComboBox'] if ("volumesToRenderComboBox" in inputParameters and inputParameters['volumesToRenderComboBox'] != '') else tableDataset.getElementById(0,inputParameters['labelsToRenderComboBox'])
-        _imageDimensions = readDimensions(request, _imageVolName)
+        _typeOfColumnToRender = inputParameters['tableLayoutConfiguration'].columnsLayout[inputParameters['labelsToRenderComboBox']].typeOfColumn
+        _imageDimensions = readDimensions(request,
+                                          _imageVolName,
+                                          _typeOfColumnToRender)
         dataset.setNumberSlices(_imageDimensions[2])
         
-        _convert = dataset.getNumberSlices()>1 and (inputParameters['mode']=='gallery' or inputParameters['mode']=='volume_astex' or inputParameters['mode']=='volume_chimera')
-        _reslice = dataset.getNumberSlices()>1 and inputParameters['mode']=='gallery'
-        _getStats = dataset.getNumberSlices()>1 and (inputParameters['mode']=='volume_astex' or inputParameters['mode']=='volume_chimera')
-        _dataType = xmipp.DT_FLOAT if dataset.getNumberSlices()>1 and inputParameters['mode']=='volume_astex' else xmipp.DT_UCHAR
+        if _typeOfColumnToRender == "image":
+            _convert = dataset.getNumberSlices()>1 and (inputParameters['mode']=='gallery' or inputParameters['mode']=='volume_astex' or inputParameters['mode']=='volume_chimera')
+            _reslice = dataset.getNumberSlices()>1 and inputParameters['mode']=='gallery'
+            _getStats = dataset.getNumberSlices()>1 and (inputParameters['mode']=='volume_astex' or inputParameters['mode']=='volume_chimera')
+            _dataType = xmipp.DT_FLOAT if dataset.getNumberSlices()>1 and inputParameters['mode']=='volume_astex' else xmipp.DT_UCHAR
+                
+            _imageVolName, _stats = readImageVolume(request, _imageVolName, _convert, _dataType, _reslice, int(inputParameters['resliceComboBox']), _getStats)
             
-        _imageVolName, _stats = readImageVolume(request, _imageVolName, _convert, _dataType, _reslice, int(inputParameters['resliceComboBox']), _getStats)
-        
-        if dataset.getNumberSlices()>1:
-            dataset.setVolumeName(_imageVolName)
-            
-        print "dataset.getNumberSlices()",dataset.getNumberSlices()
+            if dataset.getNumberSlices()>1:
+                inputParameters['tableLayoutConfiguration'].columnsLayout[inputParameters['labelsToRenderComboBox']].columnLayoutProperties.renderFunc = "get_slice"
+                dataset.setVolumeName(_imageVolName)
+                
 
     #Store dataset and labelsToRender in session 
     request.session['dataset'] = dataset
@@ -106,32 +121,8 @@ def showj(request, inputParameters=None, extraParameters=None):
     if showjForm.is_valid() is False:
         print showjForm.errors
 
-    #Create context to be send
-    context = {'css': getResourceCss('showj'),
-               'smoothness': getResourceCss('ui_smoothness'),
-               'demo_table_jui': getResourceCss('showj_demo_table_jui'),
-               
-               'favicon': getResourceIcon('favicon'),
-               'logo': getResourceIcon('logo_scipion'),
-               
-               'jquery': getResourceJs('jquery'), #Configuration variables
-               'jquery_datatable': getResourceJs('jquery_datatables'),
-               'jquerydataTables_colreorder': getResourceJs('jquery_colreorder'),
-               'jquerydataTables_colreorder_resize': getResourceJs('jquery_colreorder_resize'),
-               'jeditable': getResourceJs('jquery_editable'),
-               'jquery_waypoints':getResourceJs('jquery_waypoints'),
-               'jquery_hover_intent':getResourceJs('jquery_hover_intent'),
-               
-               'dataset': dataset,
-               'tableLayoutConfiguration': json.dumps({'columnsLayout': inputParameters['tableLayoutConfiguration'].columnsLayout, 'colsOrder': inputParameters['tableLayoutConfiguration'].colsOrder}, ensure_ascii=False, cls=ColumnLayoutConfigurationEncoder), #Data variables
-               'tableDataset': tableDataset,
-               
-               'imageDimensions': request.session['imageDimensions'],
-               'defaultZoom': request.session['defaultZoom'],
-               'projectName': request.session['projectName'],
-               
-               'form': showjForm}
-    
+    context = createContext(dataset, tableDataset, inputParameters['tableLayoutConfiguration'], request, showjForm)
+
     if inputParameters['mode']=='volume_astex' or inputParameters['mode']=='volume_chimera':
 
         threshold = (_stats[2] + _stats[3])/2 if _stats != None else 1
@@ -174,82 +165,56 @@ def showj(request, inputParameters=None, extraParameters=None):
     return_page = '%s%s%s' % ('showj_', showjForm.data['mode'], '.html')
     return render_to_response(return_page, RequestContext(request, context))
 
-###################################################################
-################################ BEGIN LAYOUT #####################  
-###################################################################
-class ColumnLayoutConfigurationEncoder(json.JSONEncoder):
-    def default(self, columnLayoutConfiguration):
-        columnLayoutConfigurationCoded={}
-        columnLayoutConfigurationCoded={"typeOfColumn":columnLayoutConfiguration.typeOfColumn,
-                                        "columnLayoutProperties":{"visible":columnLayoutConfiguration.columnLayoutProperties.visible,
-                                                                  "allowSetVisible":columnLayoutConfiguration.columnLayoutProperties.allowSetVisible,
-                                                                  "editable":columnLayoutConfiguration.columnLayoutProperties.editable,
-                                                                  "allowSetEditable":columnLayoutConfiguration.columnLayoutProperties.allowSetEditable,
-                                                                  "renderable":columnLayoutConfiguration.columnLayoutProperties.renderable,
-                                                                  "allowSetRenderable":columnLayoutConfiguration.columnLayoutProperties.allowSetRenderable,
-                                                                  "renderFunc":columnLayoutConfiguration.columnLayoutProperties.renderFunc,
-                                                                  "extraRenderFunc":columnLayoutConfiguration.columnLayoutProperties.extraRenderFunc
-                                                                  }
-                                        }
-        return columnLayoutConfigurationCoded                     
-                 
-            
-class TableLayoutConfiguration():
-    def __init__(self, ds, tableDataset, allowRender=True, defaultColumnsLayoutProperties=None):
-        
-        self.columnsLayout = OrderedDict() 
-         
-        for col in tableDataset.iterColumns():
-#            self.columnsLayout[col.getName()]=ColumnLayoutConfiguration(col, ds.getTypeOfColumn(col.getName()), allowRender, defaultColumnsLayoutProperties[col.getName()] if defaultColumnsLayoutProperties != None else {})
-            self.columnsLayout[col.getName()]=ColumnLayoutConfiguration(col, ds, allowRender, defaultColumnsLayoutProperties[col.getName()] if defaultColumnsLayoutProperties != None else {})
-            
-        self.colsOrder = defineColsLayout(self.columnsLayout.keys())
-        
-            
-class ColumnLayoutConfiguration():
-    def __init__(self, col, ds, allowRender, defaultColumnLayoutProperties):
-        self.columns = col
-        
-        self.label = col.getName()
-        self.typeOfColumn = ds.getTypeOfColumn(col.getName())
-        
-        self.columnLayoutProperties = ColumnLayoutProperties(self.typeOfColumn, allowRender)
-        self.columnLayoutProperties.setValues(defaultColumnLayoutProperties)
-        
-        print "columnLayoutProperties",self.columnLayoutProperties 
-        
-        
-#NAPA DE LUXE: Y si lo pasamos a una namedtupple
-class ColumnLayoutProperties():
-    def __init__(self, typeOfColumn, allowRender=True):
-#        self.layoutPropertiesDict = {}
-        #self.visible = defaultColumnLayoutProperties["visible"] if "visible" in defaultColumnLayoutProperties else not(typeOfColumn == 'id')
-        self.visible = not(typeOfColumn == 'id')
-        self.allowSetVisible = True 
-        
-        self.editable = (typeOfColumn == 'text')
-        self.allowSetEditable = self.editable
-        
-        self.renderable = False
-        self.allowSetRenderable = (typeOfColumn == 'image' and allowRender)
+def createContext(dataset, tableDataset, tableLayoutConfiguration, request, showjForm):
+    #Create context to be send
+    return {'css': getResourceCss('showj'),
+               'smoothness': getResourceCss('ui_smoothness'),
+               'demo_table_jui': getResourceCss('showj_demo_table_jui'),
+               
+               'favicon': getResourceIcon('favicon'),
+               'logo': getResourceIcon('logo_scipion'),
+               'logo_transparent': getResourceIcon('logo_scipion_transparent'),
+               
+               'jquery': getResourceJs('jquery'), #Configuration variables
+               'jquery_datatable': getResourceJs('jquery_datatables'),
+               'jquerydataTables_colreorder': getResourceJs('jquery_colreorder'),
+               'jquerydataTables_colreorder_resize': getResourceJs('jquery_colreorder_resize'),
+               'jeditable': getResourceJs('jquery_editable'),
+               'jquery_waypoints':getResourceJs('jquery_waypoints'),
+               'jquery_hover_intent':getResourceJs('jquery_hover_intent'),
+               
+               'dataset': dataset,
+               'tableLayoutConfiguration': json.dumps({'columnsLayout': tableLayoutConfiguration.columnsLayout,
+                                                       'colsOrder': tableLayoutConfiguration.colsOrder},
+                                                       ensure_ascii=False,
+                                                       cls=ColumnLayoutConfigurationEncoder), #Data variables
+               'tableDataset': tableDataset,
+               
+               'imageDimensions': request.session['imageDimensions'],
+               'defaultZoom': request.session['defaultZoom'],
+               'projectName': request.session['projectName'],
+               
+               'form': showjForm}
+    
+    
 
-        self.renderFunc = "get_image"
-        self.extraRenderFunc = ""
-        
-    def setValues(self, defaultColumnLayoutProperties):
-        print "defaultColumnLayoutProperties",defaultColumnLayoutProperties
-        for key in defaultColumnLayoutProperties:
-            setattr(self, key, defaultColumnLayoutProperties[key])
-        
-def defineColsLayout(labels):
-    colsOrder = range(len(labels))
-    if 'enabled' in labels:
-        colsOrder.insert(0, colsOrder.pop(labels.index('enabled')))
-    return colsOrder
 
-###################################################################
-################################ END LAYOUT #######################    
-###################################################################
+def getExtraParameters(extraParameters, tableDataset):
+    print "extraParameters",extraParameters 
+    defaultColumnsLayoutProperties = None
+    if extraParameters != None and extraParameters != {}:
+        defaultColumnsLayoutProperties = {k.getName(): {} for k in tableDataset.iterColumns()}
+        for key, value in extraParameters.iteritems():
+
+            try:
+                label, attribute = key.rsplit('___')
+            except Exception, ex:
+                raise Exception('Showj Web visualizer: Incorrect extra parameter')
+
+            if tableDataset.hasColumn(label):
+                defaultColumnsLayoutProperties[label].update({attribute:value})
+                
+    return defaultColumnsLayoutProperties
 
 ###################################################################
 ########################### BEGIN SAVE & LOAD #####################    
@@ -429,6 +394,20 @@ def visualizeObject(request):
                        'imageMaxHeight': 512,               # Maximum image height (in pixels)
                        'imageMinHeight': 30}                # Minimum image height (in pixels)
 
+
+    # Extra parameters can be used to configure table layout and set render function for a column
+    # Default layout configuration is set in ColumnLayoutProperties method in layout_configuration.py
+    # 
+    # Parameters are formed by: [label]___[property]: [value]. E.g.: id___visible:True or micrograph___renderFunc:"get_image_psd"
+    # Properties to be configured are:
+    #    visible: Defines if this column is displayed
+    #    allowSetVisible: Defines if user can change visible property (show/hide this column).
+    #    editable: Defines if this column is editable, ie user can change field value.
+    #    allowSetEditable: Defines if user can change editable property (allow editing this column).
+    #    renderable: Defines if this column is renderizable, ie it renders data column using renderFunc
+    #    allowSetRenderable: Defines if user can change renderable property.
+    #    renderFunc: Function to be used when this field is rendered. (it has to be inserted in render_column method)
+    #    extraRenderFunc: Any extra parameters needed for rendering. Parameters are passed like in a url ie downsample=2&lowPass=3.5
     extraParameters = {}
     
 # NAPA DE LUXE: PARA probarlo sin sesion iniciada    

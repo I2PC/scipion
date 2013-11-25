@@ -42,32 +42,25 @@ class ProtRelionBase(EMProtocol):
             self.program = 'relion_refine_mpi'
         else:
             self.program = 'relion_refine'
-        
-#        self.oRoot = self._getPath()     
-        
+
+    def loadEnvironment(self):
+        """ Load the environment variables needed for use RELION tools. """
+        RELION_DIR = os.environ['RELION_HOME']
+        os.environ['PATH'] = os.environ['PATH'] + os.pathsep + join(RELION_DIR, 'bin', '')
+        os.environ['LD_LIBRARY_PATH'] = os.environ['LD_LIBRARY_PATH'] + os.pathsep + join(RELION_DIR, 'lib64', '')
+        os.environ['RELION_QSUB_TEMPLATE'] = join(RELION_DIR, 'bin', 'qsub.csh')
+
+            
     def defineSteps(self): 
         
-        tmpFileNameSTK = self._getExtraPath('norRelion.stk')
-        tmpFileNameXMD = self._getExtraPath('norRelion.xmd')
+        self.loadEnvironment()
         
-        print "in ProtRelionBase.defineSteps"
-        
-#        #What is this????
-#        self.Db.insertStep('createLink',
-#                           verifyfiles=[tmpFileNameXMD],
-#                           source=tmpFileNameXMD,
-#                           dest=tmpFileNameXMD)
-
-        # convert input metadata to relion model
-        #self.imgStar = self._getExtraPath(replaceBaseExt(tmpFileNameXMD, '.star'))
         self.imgStar = createRelionInputImages(self, self.inputImages.get())
 
 
     def defineSteps2(self, firstIteration
                          , lastIteration
                          , NumberOfClasses):
-
-        print "in ProtRelionBase.defineSteps2"
         
         inputs=[]
 
@@ -260,7 +253,9 @@ class Relion3DClassification(ProtClassify3D, ProtRelionBase):
         # launch relion program
         self.insertRelionClassify()
         
-        ProtRelionBase.defineSteps2(self, 1,self.numberOfIterations.get(), self.numberOfClasses.get())        
+        ProtRelionBase.defineSteps2(self, 1,self.numberOfIterations.get(), self.numberOfClasses.get())       
+        
+        self._insertFunctionStep('createOutput') 
        
     def insertRelionClassify(self):
         args = {'--iter': self.numberOfIterations.get(),
@@ -329,12 +324,17 @@ class Relion3DClassification(ProtClassify3D, ProtRelionBase):
 
         self._insertRunJobStep(self.program, params)
 
+    #TODO
+    def createOutput(self):
+        pass
 
+    #TODO
     def _summary(self):
         summary = []
         summary.append("Input images:  %s" % self.inputImages.get().getNameId())
         return summary
 
+    #TODO
     def _validate(self):
         errors = []
         return errors

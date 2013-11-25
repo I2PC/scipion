@@ -105,7 +105,7 @@ def wiz_particle_mask(protocol, request):
         parts = getParticleSubset(particles,100)
         
         if len(parts) == 0:
-            return HttpResponse("errorIterate");
+            return HttpResponse("errorIterate")
         else:
             xdim = getImageXdim(request, parts[0].text)
     
@@ -134,7 +134,7 @@ def wiz_particle_mask_radii(protocol, request):
         parts = getParticleSubset(particles,100)
         
         if len(parts) == 0:
-            return HttpResponse("errorIterate");
+            return HttpResponse("errorIterate")
         else:
             xdim = getImageXdim(request, parts[0].text)
             inner_radius = protocol.innerRadius.get()
@@ -214,7 +214,7 @@ def wiz_filter_spider(protocol, request):
         parts = getParticleSubset(particles,100)
         
         if len(parts) == 0:
-            return HttpResponse("errorIterate");
+            return HttpResponse("errorIterate")
         else:
             context = {'objects': parts,
                        'raphael': getResourceJs('raphael'),
@@ -236,7 +236,7 @@ def wiz_bandpass(protocol, request):
         parts = getParticleSubset(particles,100)
         
         if len(parts) == 0:
-            return HttpResponse("errorIterate");
+            return HttpResponse("errorIterate")
         else:
             context = {'objects': parts,
                        'lowFreq': protocol.lowFreq.get(),
@@ -256,7 +256,7 @@ def wiz_gaussian(protocol, request):
         parts = getParticleSubset(particles,100)
         
         if len(parts) == 0:
-            return HttpResponse("errorIterate");
+            return HttpResponse("errorIterate")
         else:
             context = {'objects': parts,
                        'freqSigma': protocol.freqSigma.get()
