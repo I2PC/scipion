@@ -53,6 +53,7 @@ def projects(request):
                'messi_css': getResourceCss('messi'),
                'project_utils': getResourceJs('project_utils'),
                'view': 'projects',
+               'favicon': getResourceIcon('favicon'),
                'contentConfig': 'full'}
     
     return render_to_response('projects.html', context)
@@ -239,6 +240,7 @@ def project_content(request):
                'sections': root.childs,
                'provider':provider,
                'messi_css': getResourceCss('messi'),
+               'favicon': getResourceIcon('favicon'),
                'view': 'protocols',
                'graphView': graphView,
                'contentConfig': 'divided'}

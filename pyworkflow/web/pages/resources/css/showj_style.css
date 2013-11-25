@@ -1,84 +1,10 @@
 /* CSS Document */
 
-/* GENERAL */
-* {
-	margin: 0px;
-	padding: 0px;
-	font-family: Helvetica;
-} /* Reset default margin and padding for all element */
-header,section,footer,aside,nav,article,hgroup {
-	display: block;
-} /* For html5 unsupported browsers */
-
-html, body, #mainContainer { height: 100%; }
-body > #mainContainer { height: auto; min-height: 100%; }
-
+body > #mainContainer { height: auto; min-height: 100%; } 
 
 /* HEADER */
-header {
-	/* height: 100px; */
-	
-	display: -webkit-box;      /* OLD - iOS 6-, Safari 3.1-6 */
-  	display: -moz-box;         /* OLD - Firefox 19- (buggy but mostly works) */
-  	display: -ms-flexbox;      /* TWEENER - IE 10 */
-	display: -moz-flex;
-	display: -webkit-flex;
-	display: -ms-flex;
-	display: -o-flex;
-	display: flex;
-	
-	-webkit-flex-flow: row;
-	-moz-flex-flow: row;
-	-ms-flex-flow: row;
-	-o-flex-flow: row;
-	flex-flow: row;
-	
-	-webkit-flex-wrap: wrap;
-	-moz-flex-wrap: wrap;
-	-ms-flex-wrap: wrap;
-	-o-flex-wrap: wrap;
-	flex-wrap: wrap;
-	
-	margin-bottom: 2px;
-}
 
-header #headerMainContainer{
-	width:100%;
-	height:50px;
-	padding: 10px 0px 10px 0px;
-}
-header #headerLogoContainer{
-	float:left;
-}
 
-header #projectName{
-	font-size:1.7em;
-	float:left;
-	padding-top:10px;
-	color:#707070
-}
-header #backToProject{
-	float:right;
-	color:#6e6e6e;
-	text-decoration:none;
-	padding:25px 30px 0px 0px;
-}
-header #headerLine{
-	width:100%;
-	height:10px;
-	background: #d2a7a7; /* Old browsers */
-	background: -moz-linear-gradient(left, #d2a7a7 0%, #820808 50%, #d2a7a7 100%); /* FF3.6+ */
-	background: -webkit-gradient(linear, left top, right top, color-stop(0%,#d2a7a7), color-stop(50%,#820808), color-stop(100%,#d2a7a7)); /* Chrome,Safari4+ */
-	background: -webkit-linear-gradient(left, #d2a7a7 0%,#820808 50%,#d2a7a7 100%); /* Chrome10+,Safari5.1+ */
-	background: -o-linear-gradient(left, #d2a7a7 0%,#820808 50%,#d2a7a7 100%); /* Opera 11.10+ */
-	background: -ms-linear-gradient(left, #d2a7a7 0%,#820808 50%,#d2a7a7 100%); /* IE10+ */
-	background: linear-gradient(to right, #d2a7a7 0%,#820808 50%,#d2a7a7 100%); /* W3C */
-	filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#d2a7a7', endColorstr='#d2a7a7',GradientType=1 ); /* IE6-9 */
-}
-header .logo{
-	max-height:40px;
-	margin: 2px 10px 0px 20px;
-}
 
 /* NAV (TOP MENU) */
 nav {
@@ -99,57 +25,8 @@ nav ul li {
 }
 
 /* FOOTER */
-footer{
-	clear: both;
- 	position: relative;
- 	z-index: 10;
- 	height: 110px;
- 	/* margin-top: -110px; */
-}
-footer #footerLine{
-	height:6px;
-	background-color: #cccccc;
-}
-footer #footerMainContainer{
-	width: 100%;
-	height: 100px;
-	background: #ffffff; /* Old browsers */
-	background: -moz-linear-gradient(top, #ffffff 0%, #cccccc 100%); /* FF3.6+ */
-	background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#ffffff), color-stop(100%,#cccccc)); /* Chrome,Safari4+ */
-	background: -webkit-linear-gradient(top, #ffffff 0%,#cccccc 100%); /* Chrome10+,Safari5.1+ */
-	background: -o-linear-gradient(top, #ffffff 0%,#cccccc 100%); /* Opera 11.10+ */
-	background: -ms-linear-gradient(top, #ffffff 0%,#cccccc 100%); /* IE10+ */
-	background: linear-gradient(to bottom, #ffffff 0%,#cccccc 100%); /* W3C */
-	filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ffffff', endColorstr='#cccccc',GradientType=0 ); /* IE6-9 */
-}
-footer #footerLeftContainer{
-	width: 50%;
-	float:left;
-	padding: 20px 0px 0px 20px;	
-}
-footer #footerLogoContainer{
-	
-	
-}
-footer #footerRightContainer{
-	float: right;
-	padding: 50px 20px 0px 0px;
-}
-footer #footerText{
-	display: block;
-	color: #4c4c4c;
-}
-footer #tube{
-	color: #9c9c9c
-}
-footer .footerLink{
-	text-decoration: none;
-	margin: 0px 15px;
-	color: #6F3232;
-}
-footer .logo{
-	max-height:40px;
-}
+
+
 
 /* ASIDE (BOTTOM MENU) */
 aside {
@@ -387,14 +264,14 @@ aside li:last-child{
 section {
 	padding: 20px;
 	
-	display: -webkit-box;      /* OLD - iOS 6-, Safari 3.1-6 */
-  	display: -moz-box;         /* OLD - Firefox 19- (buggy but mostly works) */
-  	display: -ms-flexbox;      /* TWEENER - IE 10 */
-	display: -moz-flex;
-	display: -ms-flex;
-	display: -o-flex;
-	display: -webkit-flex;
-	display: flex;
+	display: -webkit-box !important;      /* OLD - iOS 6-, Safari 3.1-6 */
+  	display: -moz-box !important;         /* OLD - Firefox 19- (buggy but mostly works) */
+  	display: -ms-flexbox !important;      /* TWEENER - IE 10 */
+	display: -moz-flex !important;
+	display: -ms-flex !important;
+	display: -o-flex !important;
+	display: -webkit-flex !important;
+	display: flex !important;
 	
 	-webkit-flex-flow: row;
 	-moz-flex-flow: row;
@@ -407,6 +284,7 @@ section {
 	-o-flex-wrap: wrap;
 	-ms-flex-wrap: wrap;
 	flex-wrap: wrap;
+	
 }
 
 section .img_container {
