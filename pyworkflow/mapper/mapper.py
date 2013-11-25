@@ -33,7 +33,6 @@ class Mapper():
     The mapper should have access to class dictionary
     in order to build any give class by name"""
     def __init__(self, dictClasses=None):
-        #print '=========> Mapper:', dictClasses
         if dictClasses:
             self.dictClasses = dictClasses 
         else:
@@ -81,7 +80,6 @@ class Mapper():
         if obj._objId is None:
             self.insert(obj)
         else:
-            self.updateDict = {}
             self.updateTo(obj)
             
     def selectById(self, objId):

@@ -136,7 +136,6 @@ class Project(object):
         2. Create the working dir and also the protocol independent db
         3. Call the launch method in protocol.job to handle submition: mpi, thread, queue,
         and also take care if the execution is remotely."""
-        #print ">>> PROJECT: launchProtocol"
         self._checkProtocolDependencies(protocol, 'Cannot RE-LAUNCH protocol')
         
         protocol.setStatus(STATUS_LAUNCHED)
@@ -160,27 +159,25 @@ class Project(object):
         else:
             self.mapper.store(protocol)
         self.mapper.commit()
-        #print ">>> PROJECT: launchProtocol: DONE"
         
     def _updateProtocol(self, protocol):
         try:
             # FIXME: this will not work for a real remote host
             jobId = protocol.getJobId() # Preserve the jobId before copy
-            
             dbPath = self.getPath(protocol.getDbPath())
             #join(protocol.getHostConfig().getHostPath(), protocol.getDbPath())
             prot2 = getProtocolFromDb(dbPath, protocol.getObjId(), globals())
             # Copy is only working for db restored objects
             protocol.setMapper(self.mapper)
             protocol.copy(prot2)
-            #protocol.mapper.copyRelations(prot2.mapper.getRelations(prot2))
             # Restore jobId
             protocol.setJobId(jobId)
-            
             self.mapper.store(protocol)
         except Exception, ex:
-            print "Error trying to update protocol: %s\n %s" % (jobId, ex)
-            
+            print "Error trying to update protocol: %s(jobId=%s)\n ERROR: %s" % (protocol.getName(), jobId, ex)
+            import traceback
+            traceback.print_exc()
+            raise ex
         
     def stopProtocol(self, protocol):
         """ Stop a running protocol """
@@ -280,8 +277,10 @@ class Project(object):
         if self.runs is None or refresh:
             self.runs = self.mapper.selectByClass("Protocol", iterate=False)
             for r in self.runs:
+                # Update nodes that are running and are not invoked by other protocols
                 if r.isActive():
-                    self._updateProtocol(r)
+                    if not r.isChild():
+                        self._updateProtocol(r)
             self.mapper.commit()
         
         return self.runs
@@ -292,7 +291,7 @@ class Project(object):
         """
         if refresh or self._runsGraph is None:
             outputDict = {} # Store the output dict
-            runs = self.getRuns(refresh=True)
+            runs = [r for r in self.getRuns(refresh=True) if not r.isChild()]
             from pyworkflow.utils.graph import Graph
             g = Graph(rootName='PROJECT')
             
