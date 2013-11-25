@@ -19,6 +19,7 @@ html  {
 	margin: 10px auto;
 	overflow: hidden;
 	background-color: #F0F0F0; */
+	overflow: hidden;
 }
 
 body {	
@@ -32,6 +33,7 @@ body {
 	font-family: "Trebuchet MS", "Helvetica", "Arial", "Verdana",
 		"sans-serif";
 	font-size: 0.75em; */
+	overflow: hidden;
 	
 	
 	
@@ -58,7 +60,7 @@ header {
 	flex-flow: row;
 	
 	-webkit-flex-wrap: wrap;
-	-moz-flex-wrap: wrap;<!-- </div>	 -->
+	-moz-flex-wrap: wrap;
 	-ms-flex-wrap: wrap;
 	-o-flex-wrap: wrap;
 	flex-wrap: wrap;
@@ -179,7 +181,7 @@ footer .logo{
 } */
 
 section {
-	padding: 20px 20px 110px 20px;
+	/* padding: 20px 20px 110px 20px; */
 	
 	display: -webkit-box;      /* OLD - iOS 6-, Safari 3.1-6 */
   	display: -moz-box;         /* OLD - Firefox 19- (buggy but mostly works) */
@@ -203,6 +205,8 @@ section {
 	flex-wrap: wrap;
 	
 	font-size: 0.75em;
+	min-height: 100%;
+	height: auto;
 }
 
 /* END NAPA DE LUXE: TO BE ORDERED WHEN FINISHED REDESIGNED */
@@ -222,15 +226,19 @@ a:hover {
 #wrapper {
 /* 	position: absolute; */	
  	width:100%;
-	height:100%; 
+	height:auto; 
+	padding: 20px 20px 110px 20px;
+	min-height: 100%;
 }
 
 #wrapperContent {
 /* 	position: relative; */
-	width: 100%;
+	width: 90%;
 	height:50%;
 /* 	margin: 0 1em 1em 1em; */
 /* 	border: 1px solid blue; */
+	/* padding-right: 20px; */
+	
 }
 
 #frameTitle {
@@ -242,18 +250,20 @@ a:hover {
 	position: absolute;
 	top: 50px;
 	width: 15%;
-	overflow: hidden; 
+	overflow: hidden;
 	background-color: white;
 	padding: 10px;
 	min-width: 15%;
+	/* min-height: 100%;
+	height:auto; */
 
 }
 
 #frameTop{
 	width:100%;
-	height: 100%;
+	height: 85%;
 	overflow-y: hidden;
-	margin:1em;
+	margin:0.5em 1em 0em 1em;
 	min-height: 50%;
 }
 
@@ -267,7 +277,10 @@ a:hover {
 #frameCenter{
 	width:100%;
 	height: auto;
-	margin: 0 1em -50% 1em;
+	
+	/* QUITADO POR MI 
+	margin: 0 1em -50% 1em; */
+	margin: 10px;
 }
 
 /* #maincontent { */

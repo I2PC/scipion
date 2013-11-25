@@ -47,10 +47,12 @@ def projects(request):
     for p in projects:
         p.pTime = prettyDate(p.mTime)
 
-    context = {'projects': projects,
+    context = {'projectName': request.session['projectName'] if 'projectName' in request.session else '',
+               'projects': projects,
                'css': getResourceCss('projects'),
                'messi_css': getResourceCss('messi'),
                'project_utils': getResourceJs('project_utils'),
+               'view': 'projects',
                'contentConfig': 'full'}
     
     return render_to_response('projects.html', context)
