@@ -142,16 +142,18 @@ class SubclassesTreeProvider(TreeProvider):
         return result
         
     def getColumns(self):
-        return [('Object', 400), ('Class', 150)]
+        return [('Object', 400), ('Info', 250)]
     
     def getObjectInfo(self, obj):
-        parent = self.mapper.getParent(obj)
-        nameParts = [parent.getLastName(), obj.getLastName()]
-        if not isinstance(parent, Protocol):
-            parent2 = self.mapper.getParent(parent)
-            nameParts.insert(0, parent2.getLastName())
+        nameParts = []
+        parent = obj
+        
+        while parent:
+            nameParts.insert(0, parent.getLastName())
+            parent = self.mapper.getParent(parent)
+            
         objName = '.'.join(nameParts)
-        return {'key': objName, 'values': (obj.getClassName(),)}
+        return {'key': objName, 'values': (str(obj),)}
 
     def getObjectActions(self, obj):
         from pyworkflow.viewer import DESKTOP_TKINTER
@@ -449,8 +451,10 @@ class ParamWidget():
         className = self.get().strip()
         
         if len(className):
-            instanceName = self.param.protocolClassName.get() + "Instance"
+            instanceName = self.paramName + "Instance"
             protocol = self.window.protocol
+            #TODO check if is present and is selected a different
+            # class, so we need to delete that and create a new instance
             if not hasattr(protocol, instanceName):
                 from pyworkflow.em import findClass
                 cls = findClass(className)
@@ -459,7 +463,7 @@ class ParamWidget():
             prot = getattr(protocol, instanceName)
                 
             prot.allowHeader.set(False)
-            f = FormWindow("title", prot, self._protocolFormCallback, self.window, childMode=True)
+            f = FormWindow("Sub-Protocol: " + instanceName, prot, self._protocolFormCallback, self.window, childMode=True)
             f.show()
         else:
             self._showInfo("Select the protocol class first")
