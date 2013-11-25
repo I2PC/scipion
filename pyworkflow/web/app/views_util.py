@@ -38,7 +38,8 @@ from django.http import HttpResponse
 
 
 iconDict = {
-            'logo_scipion': 'scipion_logo.png',
+            'logo_scipion': 'scipion_logo.gif',
+            'logo_scipion_transparent': 'scipion_logo_transparent.png',
             'favicon': 'scipion_bn.png',
             'help': 'system_help24.png',
             'browse': 'zoom.png',

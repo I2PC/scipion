@@ -4,8 +4,8 @@ a {
 }
 
 body{
-	font-family: "Trebuchet MS", "Helvetica", "Arial", "Verdana","sans-serif";
-	font-size: 0.75em;
+/* 	font-family: "Trebuchet MS", "Helvetica", "Arial", "Verdana","sans-serif";
+	font-size: 0.75em; */
 }
 
 #toolbar,#treeTool,#listTool{
@@ -17,15 +17,18 @@ body{
 }
 
 .protFieldsetTree {
-	height: 95%;
+	/* height: 95%; */
+	/* height: auto; */
 	width: 90%;
-	overflow-y: scroll;
+	overflow-y: auto;
+	/* overflow-y: hidden; */
 	overflow-x: hidden;
 	/*margin: -0.5em -1em -0.6em 1em;*/
 	/*border: 1px solid #d0d0d0;*/
 	margin-left: -0.6em;
 	padding-right: 1.5em;
 	background: white;
+	/* min-height: 100%; */
 }
 
 /* CSS for the treeview */
@@ -154,13 +157,14 @@ body{
 
 #listEx ul {
 	position: inherit;
-	margin-left: -1.2em;
+	/* margin-left: -1.2em; */
+	margin: 10px 0px 0px 10px;
 	font-size: 0.9em;
 }
 
 #listEx li a {
 	background-color: #fbfbfb;
-	margin-left: -3em;
+	margin-left: 15px;
 }
 
 #listEx li a:hover {

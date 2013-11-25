@@ -1,14 +1,29 @@
 /* CSS Document */
+
+/* GENERAL */
+* {
+	margin: 0px;
+	padding: 0px;
+	font-family: Helvetica;
+} /* Reset default margin and padding for all element */
+header,section,footer,aside,nav,article,hgroup {
+	display: block;
+} /* For html5 unsupported browsers */
+
+html, body, #mainContainer { height: 100%; }
+body > #mainContainer { height: auto; min-height: 100%; }
+
 html  {	
-	width: 97%;
+/* 	width: 97%;
 	height: 97%;
 	margin: 10px auto;
 	overflow: hidden;
-	background-color: #F0F0F0;
+	background-color: #F0F0F0; */
+	overflow: hidden;
 }
 
 body {	
-	width: 97%;
+	/* width: 97%;
 	height: 97%;
 	margin: 10px auto;
 	overflow: hidden;
@@ -17,8 +32,184 @@ body {
 	border:2px solid black;
 	font-family: "Trebuchet MS", "Helvetica", "Arial", "Verdana",
 		"sans-serif";
-	font-size: 0.75em;
+	font-size: 0.75em; */
+	overflow: hidden;
+	
+	
+	
 }
+
+/* NAPA DE LUXE: TO BE ORDERED WHEN FINISHED REDESIGNED */
+/* HEADER */
+header {
+	/* height: 100px; */
+	
+	display: -webkit-box;      /* OLD - iOS 6-, Safari 3.1-6 */
+  	display: -moz-box;         /* OLD - Firefox 19- (buggy but mostly works) */
+  	display: -ms-flexbox;      /* TWEENER - IE 10 */
+	display: -moz-flex;
+	display: -webkit-flex;
+	display: -ms-flex;
+	display: -o-flex;
+	display: flex;
+	
+	-webkit-flex-flow: row;
+	-moz-flex-flow: row;
+	-ms-flex-flow: row;
+	-o-flex-flow: row;
+	flex-flow: row;
+	
+	-webkit-flex-wrap: wrap;
+	-moz-flex-wrap: wrap;
+	-ms-flex-wrap: wrap;
+	-o-flex-wrap: wrap;
+	flex-wrap: wrap;
+	
+	margin-bottom: 2px;
+}
+
+header #headerMainContainer{
+	width:100%;
+	height:50px;
+	padding: 10px 0px 10px 0px;
+}
+header #headerLogoContainer{
+	float:left;
+}
+
+header #projectName{
+	font-size:1.7em;
+	float:left;
+	padding-top:10px;
+	color:#707070
+}
+header #backToProject{
+	float:right;
+	color:#6e6e6e;
+	text-decoration:none;
+	padding:25px 30px 0px 0px;
+}
+header #headerLine{
+	width:100%;
+	height:10px;
+	background: #d2a7a7; /* Old browsers */
+	background: -moz-linear-gradient(left, #d2a7a7 0%, #820808 50%, #d2a7a7 100%); /* FF3.6+ */
+	background: -webkit-gradient(linear, left top, right top, color-stop(0%,#d2a7a7), color-stop(50%,#820808), color-stop(100%,#d2a7a7)); /* Chrome,Safari4+ */
+	background: -webkit-linear-gradient(left, #d2a7a7 0%,#820808 50%,#d2a7a7 100%); /* Chrome10+,Safari5.1+ */
+	background: -o-linear-gradient(left, #d2a7a7 0%,#820808 50%,#d2a7a7 100%); /* Opera 11.10+ */
+	background: -ms-linear-gradient(left, #d2a7a7 0%,#820808 50%,#d2a7a7 100%); /* IE10+ */
+	background: linear-gradient(to right, #d2a7a7 0%,#820808 50%,#d2a7a7 100%); /* W3C */
+	filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#d2a7a7', endColorstr='#d2a7a7',GradientType=1 ); /* IE6-9 */
+}
+header .logo{
+	max-height:40px;
+	margin: 2px 10px 0px 20px;
+}
+
+header #headerRightContainer{
+	float: right;
+	padding: 25px 30px 0px 0px;
+	color:#6e6e6e;
+	text-decoration:none;
+}
+header .headerLink{
+	text-decoration: none;
+	margin: 0px 15px;
+	color: #6F3232;
+}
+header .headerLinkSelected{
+	color: #000000;
+}
+
+/* FOOTER */
+footer{
+	clear: both;
+ 	position: relative;
+ 	z-index: 10;
+ 	height: 110px;
+ 	
+ 	/* margin-top: -110px; */
+}
+footer #footerLine{
+	height:6px;
+	background-color: #cccccc;
+}
+footer #footerMainContainer{
+	width: 100%;
+	height: 100px;
+	background: #ffffff; /* Old browsers */
+	background: -moz-linear-gradient(top, #ffffff 0%, #cccccc 100%); /* FF3.6+ */
+	background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#ffffff), color-stop(100%,#cccccc)); /* Chrome,Safari4+ */
+	background: -webkit-linear-gradient(top, #ffffff 0%,#cccccc 100%); /* Chrome10+,Safari5.1+ */
+	background: -o-linear-gradient(top, #ffffff 0%,#cccccc 100%); /* Opera 11.10+ */
+	background: -ms-linear-gradient(top, #ffffff 0%,#cccccc 100%); /* IE10+ */
+	background: linear-gradient(to bottom, #ffffff 0%,#cccccc 100%); /* W3C */
+	filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ffffff', endColorstr='#cccccc',GradientType=0 ); /* IE6-9 */
+}
+footer #footerLeftContainer{
+	width: 50%;
+	float:left;
+	padding: 20px 0px 0px 20px;	
+}
+footer #footerLogoContainer{
+	
+	
+}
+footer #footerRightContainer{
+	float: right;
+	padding: 50px 20px 0px 0px;
+}
+footer #footerText{
+	display: block;
+	color: #4c4c4c;
+}
+footer #tube{
+	color: #9c9c9c
+}
+footer .footerLink{
+	text-decoration: none;
+	margin: 0px 15px;
+	color: #6F3232;
+}
+footer .logo{
+	max-height:40px;
+}
+
+/* MAIN SECTION */
+/* #mainSection {
+	padding-bottom: 110px;
+} */
+
+section {
+	/* padding: 20px 20px 110px 20px; */
+	
+	display: -webkit-box;      /* OLD - iOS 6-, Safari 3.1-6 */
+  	display: -moz-box;         /* OLD - Firefox 19- (buggy but mostly works) */
+  	display: -ms-flexbox;      /* TWEENER - IE 10 */
+	display: -moz-flex;
+	display: -ms-flex;
+	display: -o-flex;
+	display: -webkit-flex;
+	display: flex;
+	
+	-webkit-flex-flow: row;
+	-moz-flex-flow: row;
+	-o-flex-flow: row;
+	-ms-flex-flow: row;
+	flex-flow: row;
+	
+	-webkit-flex-wrap: wrap;
+	-moz-flex-wrap: wrap;
+	-o-flex-wrap: wrap;
+	-ms-flex-wrap: wrap;
+	flex-wrap: wrap;
+	
+	font-size: 0.75em;
+	min-height: 100%;
+	height: auto;
+}
+
+/* END NAPA DE LUXE: TO BE ORDERED WHEN FINISHED REDESIGNED */
 
 img{
 	border: none;
@@ -34,16 +225,20 @@ a:hover {
 
 #wrapper {
 /* 	position: absolute; */	
-	width:99.7%;
-	height:98%;
+ 	width:100%;
+	height:auto; 
+	padding: 20px 20px 110px 20px;
+	min-height: 100%;
 }
 
 #wrapperContent {
 /* 	position: relative; */
-	width: 100%;
+	width: 90%;
 	height:50%;
 /* 	margin: 0 1em 1em 1em; */
 /* 	border: 1px solid blue; */
+	/* padding-right: 20px; */
+	
 }
 
 #frameTitle {
@@ -55,17 +250,20 @@ a:hover {
 	position: absolute;
 	top: 50px;
 	width: 15%;
-	overflow: hidden; 
+	overflow: hidden;
 	background-color: white;
 	padding: 10px;
 	min-width: 15%;
+	/* min-height: 100%;
+	height:auto; */
+
 }
 
 #frameTop{
 	width:100%;
-	height: 100%;
+	height: 85%;
 	overflow-y: hidden;
-	margin:1em;
+	margin:0.5em 1em 0em 1em;
 	min-height: 50%;
 }
 
@@ -79,7 +277,10 @@ a:hover {
 #frameCenter{
 	width:100%;
 	height: auto;
-	margin: 0 1em -50% 1em;
+	
+	/* QUITADO POR MI 
+	margin: 0 1em -50% 1em; */
+	margin: 10px;
 }
 
 /* #maincontent { */
@@ -96,13 +297,11 @@ a:hover {
 	/*Margins for inner DIV inside each DIV (to provide padding)*/
 }
 
-.logo {
+/* .logo {
 	max-height: 50px;
-	height: 50px;
-	width: 200px;
 	text-align: center;
 	float: left;
-}
+} */
 
 .view {
 /* 	position:static; */
