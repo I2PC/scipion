@@ -465,7 +465,7 @@ class ProtParticlePicking(EMProtocol):
             summary.append("Output coordinates not ready yet.") 
         else:
             summary.append("Input micrographs: " + self.inputMicrographs.get().getNameId())
-            summary.append("Number of particles manually picked: %d (from %d micrographs)" % (self.outputCoordinates.getSize(), self.inputMicrographs.get().getSize()))
+            summary.append("Number of particles picked: %d (from %d micrographs)" % (self.outputCoordinates.getSize(), self.inputMicrographs.get().getSize()))
         return summary
 
 

@@ -52,8 +52,7 @@ def launch_viewer(request):
         protocol = project.mapper.selectById(int(protId))
         
         viewers = findViewers(protocol.getClassName(), WEB_DJANGO)
-        
-        print "viewer",viewers
+#        print "viewer",viewers
         
         if len(viewers) == 0:
             msg = "There is not viewer for protocol: <strong>" + protocol.getClassName() +"</strong>"
@@ -97,7 +96,7 @@ def viewerXmipp(project, protocol, viewer):
 
 def viewerForm(project, protocol, viewer):
     protId = protocol.getObjId()
-    viewerClassName = viewer.getClassName();
+    viewerClassName = viewer.getClassName()
     
     ioDict = {"url_form": "/form/?protocolClass="+ viewerClassName +
               "&protRunIdViewer="+ str(protId) +

@@ -105,7 +105,7 @@ def createEdge(srcItem, dstItem):
     
 
 def getNodeStateColor(node):
-    color = '#ADD8E6';  # Lightblue
+    color = '#ADD8E6'  # Lightblue
     status = ''
     if node.run:
         status = node.run.status.get(STATUS_FAILED)

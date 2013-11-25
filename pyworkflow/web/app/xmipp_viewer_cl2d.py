@@ -59,7 +59,7 @@ def viewLevelFiles(request, protocolViewer):
                 except Exception:
                     return 'error','Invalid levels range.'
                     
-                files = "";
+                files = ""
                 for level in listOfLevels:
                     fn = protocolViewer.protocol._getExtraPath("level_%02d/level_classes%s.xmd"%(level,fnSubset))
                     if os.path.exists(fn):

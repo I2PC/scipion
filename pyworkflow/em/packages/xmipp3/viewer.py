@@ -30,7 +30,7 @@ visualization program.
 
 import os
 from pyworkflow.viewer import Viewer, Wizard, DESKTOP_TKINTER, WEB_DJANGO
-from pyworkflow.em import Image, SetOfImages, SetOfMicrographs, SetOfParticles, SetOfCoordinates, SetOfClasses2D, SetOfVolumes, SetOfCTF, ProtAlign
+from pyworkflow.em import Image, SetOfImages, SetOfMicrographs, SetOfParticles, SetOfCoordinates, SetOfClasses2D, SetOfVolumes, SetOfCTF, ProtAlign, ProtProcessParticles
 from pyworkflow.utils.process import runJob
 from xmipp3 import getXmippPath
 from pyworkflow.em.protocol import ProtImportMicrographs, ProtCTFMicrographs
@@ -58,7 +58,7 @@ class XmippViewer(Viewer):
     _targets = [Image, SetOfImages, SetOfCoordinates, SetOfClasses2D, 
                 ProtImportMicrographs, XmippProtPreprocessMicrographs, ProtCTFMicrographs,
                 XmippProtParticlePicking, ProtImportParticles, XmippProtExtractParticles,
-                ProtAlign, XmippProtKerdensom, XmippProtRotSpectra, SetOfClasses2D, SetOfCTF]
+                ProtAlign, ProtProcessParticles, XmippProtKerdensom, XmippProtRotSpectra, SetOfClasses2D, SetOfCTF]
     
     def __init__(self, **args):
         Viewer.__init__(self, **args)
@@ -162,6 +162,8 @@ class XmippViewer(Viewer):
             self.visualize(obj.outputClasses, extraParams='--columns %d' % obj.SomXdim.get())
         elif issubclass(cls, ProtCTFMicrographs):
             self.visualize(obj.outputCTF)
+        elif issubclass(cls, ProtProcessParticles):
+            self.visualize(obj.outputParticles)
         else:
             raise Exception('XmippViewer.visualize: can not visualize class: %s' % obj.getClassName())
         
