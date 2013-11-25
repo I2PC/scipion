@@ -69,14 +69,14 @@
 		<header>
 			<div id="headerMainContainer">
 				<a href="/projects" id="headerLogoContainer"><img class="logo" src="/resources/scipion_logo.gif" alt="Scipion logo"></a>
-				{% if projectName != None %}<span id="projectName">Project {{projectName}}</span>{% endif %}
+				{% if projectName != ''%}<span id="projectName">Project {{projectName}}</span>{% endif %}
 				
 				
 				<div id="headerRightContainer">
-					<a href="/projects" class="headerLink{% if view == 'projects' %} headerLinkSelected {% endif %}">Projects</a><span id="tube">|</span>
-					<a href="/project_content/?projectName={{projectName}}" class="headerLink{% if view == 'protocols' %} headerLinkSelected {% endif %}">Protocols</a><span id="tube">|</span>
-					<a href="#" onclick="javascript:alert('Not implemented yet')" class="headerLink{% if view == 'data' %} headerLinkSelected {% endif %}">Data</a><span id="tube">|</span>
-					<a href="/view_hosts" class="headerLink{% if view == 'hosts' %} headerLinkSelected {% endif %}">Hosts</a>
+					<a href="/projects" class="headerLink{% if view == 'projects' %} headerLinkSelected {% endif %}">Projects</a>
+					{% if projectName != ''%}<span id="tube">|</span><a href="/project_content/?projectName={{projectName}}" class="headerLink{% if view == 'protocols' %} headerLinkSelected {% endif %}">Protocols</a>{% endif %}
+					<span id="tube">|</span><a href="#" onclick="javascript:alert('Not implemented yet')" class="headerLink{% if view == 'data' %} headerLinkSelected {% endif %}">Data</a>
+					{% if projectName != ''%}<span id="tube">|</span><a href="/view_hosts" class="headerLink{% if view == 'hosts' %} headerLinkSelected {% endif %}">Hosts</a>{% endif %}
 				</div>
 			
 			</div>
