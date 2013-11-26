@@ -374,7 +374,8 @@ class Protocol(Step):
         The child will be set as self.key attribute
         """
         setattr(self, key, child)
-        self.mapper.insertChild(self, key, child)
+        if self.hasObjId():
+            self.mapper.insertChild(self, key, child)
         
     def _deleteChild(self, key, child):
         """ Delete a child from the mapper. """
@@ -549,6 +550,7 @@ class Protocol(Step):
         """ Run all steps defined in self._steps. """
         self._steps.setStore(True) # Set steps to be stored
         self.setRunning()
+        self._originalRunMode = self.runMode.get() # Keep the original value to set in sub-protocols
         self.runMode.set(MODE_RESUME) # Always set to resume, even if set to restart
         self._store()
         
@@ -578,10 +580,8 @@ class Protocol(Step):
         """ This will copy relations from protocol other to self """
     
     def copy(self, other):
-        copyDict = {}
-        self._copy(other, copyDict)
+        copyDict = Object.copy(self, other)
         self._store()
-        
         for r in other.getRelations():
             rName = r['name']
             rCreator = r['parent_id']
@@ -817,7 +817,24 @@ class Protocol(Step):
             error = 'ERROR:\n' + self.error.get()
         return self._summary() + ['', '<Comments:>', self.getObjComment(), error]
     
-    
+    def runProtocol(self, protocol):
+        """ Setup another protocol to be run from a workflow. """
+        name = protocol.getClassName() + protocol.strId()
+        #protocol.setName(name)
+        protocol.setWorkingDir(self._getPath(name))
+        protocol.setMapper(self.mapper)
+        self.hostConfig.setStore(False)
+        protocol.setHostConfig(self.getHostConfig())
+        protocol.runMode.set(self._originalRunMode)
+        protocol.makePathsAndClean()
+        protocol.setStepsExecutor(self._stepsExecutor)
+        protocol.run()
+        
+    def isChild(self):
+        """ Return true if this protocol was invoked from a workflow(another protocol)"""
+        return self.hasObjParentId()
+        
+                
 #---------- Helper functions related to Protocols --------------------
 
 def getProtocolFromDb(dbPath, protId, protDict):

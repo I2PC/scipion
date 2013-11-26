@@ -44,7 +44,11 @@ class SqliteMapper(Mapper):
         
     def __getObjectValue(self, obj):
         if obj.isPointer() and obj.hasValue():
-            return obj.get().strId() # For pointers store the id of referenced object
+            if obj.get().hasObjId(): # Check the object has been stored previously
+                return obj.get().strId() # For pointers store the id of referenced object
+            else:
+                self.updatePendingPointers.append(obj)
+                return "Pending update" 
         return obj.getObjValue()
         
     def __insert(self, obj, namePrefix=None):
@@ -106,6 +110,11 @@ class SqliteMapper(Mapper):
     def updateTo(self, obj, level=1):
         self.__initUpdateDict()
         self.__updateTo(obj, level)
+        # Update pending pointers to objects
+        for ptr in self.updatePendingPointers:
+            self.db.updateObject(ptr._objId, ptr._objName, ptr.getClassName(),
+                             self.__getObjectValue(obj), ptr._objParentId, 
+                             ptr._objLabel, ptr._objComment)
         
     def __updateTo(self, obj, level):
         self.db.updateObject(obj._objId, obj._objName, obj.getClassName(),
@@ -118,10 +127,6 @@ class SqliteMapper(Mapper):
         
         self.updateDict[obj._objId] = obj
         for key, attr in obj.getAttributesToStore():
-#            if isinstance(obj, self.dictClasses.get('Protocol')) and key == '_outputs':
-#                print "updateTo:    "
-#                self.__printObj(attr)
-                
             if attr._objId is None: # Insert new items from the previous state
                 attr._objParentId = obj._objId
                 #path = obj._objName[:obj._objName.rfind('.')] # remove from last .
@@ -129,7 +134,7 @@ class SqliteMapper(Mapper):
                 attr._objName = joinExt(namePrefix, key)
                 self.__insert(attr, namePrefix)
             else:  
-                self.updateTo(attr, level + 2)
+                self.__updateTo(attr, level + 2)
         
     def updateFrom(self, obj):
         objRow = self.db.selectObjectById(obj._objId)
@@ -187,7 +192,9 @@ class SqliteMapper(Mapper):
             parentId = int(childParts[-2])
             # Here we are assuming that always the parent have
             # been processed first, so it will be in the dictiorary
-            parentObj = self.objDict[parentId]
+            parentObj = self.objDict.get(parentId, None)
+            if parentObj is None: # Something went wrong
+                raise Exception("Parent object (id=%d) was not found, object: %s" % (parentId, childRow['name']))
             
             childObj = getattr(parentObj, childName, None)
             if childObj is None:
@@ -227,6 +234,8 @@ class SqliteMapper(Mapper):
     def __initUpdateDict(self):
         """ Clear the updateDict cache """        
         self.updateDict = {}
+        # This is used to store pointers that pointed object are not stored yet
+        self.updatePendingPointers = [] 
          
     def selectBy(self, iterate=False, objectFilter=None, **args):
         """Select object meetings some criterias"""
