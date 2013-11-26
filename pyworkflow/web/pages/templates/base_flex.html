@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang='es'>
+<head>
+<title>Scipion {% block title %} {% endblock %}</title>
+<meta charset='utf-8'>
+<link rel="icon" type="image/png" href="{{favicon}}" />
+<!-- CSS -->
+<link href="/static/css/general_style.css" rel="stylesheet"	type="text/css"> 
+<link href="/static/css/jquery-ui.css" rel="stylesheet" type="text/css"/>
+
+<!-- JS -->
+<script type="text/javascript" src="/static/js/jquery/jquery.js"></script>
+<script type="text/javascript" src="/static/js/jsPlumb/jquery.jsPlumb.js"></script>
+<script type="text/javascript" src="/static/js/jquery/jquery-ui.js"></script>
+<script type="text/javascript" src="/static/js/messi/messi.js"></script>
+<script type="text/javascript" src="/static/js/jquery/jquery.sizes.js"></script>
+<script type="text/javascript" src="/static/js/jquery/jlayout.border.js"></script>
+<script type="text/javascript" src="/static/js/jquery/jquery.jlayout.js"></script>
+
+{% block head %} {% endblock %}
+</head>
+
+<body>
+
+	<!-- <div id="mainContainer"> -->
+		<div data-layout='{"type": "border", "hgap": 1, "vgap": 1}' class="layout-outer">
+			{% include "header.html" %}
+	
+			{% if contentConfig == 'divided' %}
+				<section data-layout='{"type": "border", "hgap": 1, "vgap": 1}' class="center layout-inner">
+					<div class="north">
+				        {% block contentNorth %}{%endblock %}
+				    </div>
+				    <div class="center">
+				        {% block contentCenter %}{%endblock %}
+				    </div>
+				</section>
+				<aside class="west">
+					{% block sideLeft %} {%endblock %}
+				</aside>
+			{% elif contentConfig == 'full' %}
+				<aside class="center">
+					{% block menu %} {%endblock %}
+				</aside>
+				<section class="south">
+					{% block content %}{%endblock %}
+				</section>
+			{% endif %}
+				
+			
+		</div>
+	<!-- </div> -->
+	
+	
+	{% include "footer.html" %}
+
+</body>
+</html>

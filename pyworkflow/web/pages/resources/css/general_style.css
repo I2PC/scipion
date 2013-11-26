@@ -11,18 +11,11 @@ header,section,footer,aside,nav,article,hgroup {
 } /* For html5 unsupported browsers */
 
 html, body, #mainContainer { height: 100%; }
+#mainContainer{height: auto; min-height: 100%; }
+/* .layout-outer {padding-bottom: 110px;} */
+	
 /* body > #mainContainer { height: auto; min-height: 100%; } */
 /* section, aside { height: auto; min-height: 100%;} */
-
-
-
-html  {	
-	
-}
-
-body {	
-
-}
 a{
 	color:#000000;
 	text-decoration:none;
@@ -124,7 +117,7 @@ footer{
  	height: 110px;
  	
  	/* This shoulb be uncommented if we want the footer to be displayed initially*/ 
- 	/* margin-top: -110px; */
+ 	/* margin-top: -110px;  */
 }
 footer #footerLine{
 	height:6px;
@@ -171,10 +164,15 @@ footer .logo{
 	max-height:40px;
 }
 
-/* MAIN SECTION */
-/* #mainSection {
-	padding-bottom: 110px;
-} */
+
+
+
+
+
+
+
+
+
 
 .project_name {
 	/* 	font-size: 1.5em; */
@@ -305,105 +303,3 @@ table#data tr.selected:hover td {
 	cursor: pointer;
 }
 
-/*
- * Layout configurations
- */
-
-.layout-outer {
-/* 	height: 100%; */
-}
-
-.west, .east {
-/* 	width: 8%; */
-}
-
-.north, .south {
-/* 	height: 10%; */
-}
-
-/**
- * To get correct percentages widths and heights in the inner layout
- * you have to set the container to take up all space that's left after
- * the outer columns east, west, north and south components. In this case:
- *  width = 100% - 8% - 8% = 84%
- *  height = 100% - 10% - 10% = 80%
- */
- 
-/* .layout-inner {
-	width: 84%;
-	height: 80%;
-	background-color: white;
-	border: 0px;
-}
-
-.layout-inner .west, .layout-inner .east {
-	width: 25%;
-}
-
-.layout-inner .south, .layout-inner .north {
-	height: 20%;
-}
- */
-/*
- * These styles are to create custom resize handles.
- */
-.ui-resizable-handle {
-	/* 	background-color: rgb(220, 220, 220); */
-	text-align: center;
-}
-
-.ui-resizable-w,.ui-resizable-e {
-/* 	width: 8px; */
-	/* border-left: 2.5px solid black; */
-}
-
-.ui-resizable-w {
-/* 	left: -6px; */
-}
-
-.ui-resizable-e {
-/* 	right: -6px; */
-}
-
-.ui-resizable-n,.ui-resizable-s {
-	height: 0px;
-	/* border-top: 2.5px solid black; */
-}
-
-.ui-resizable-n {
-/* 	top: -6px; */
-}
-
-.ui-resizable-s {
-/* 	bottom: -6px; */
-}
-/* .layout-inner {
-	width: 84%;
-	height: 80%;
-	background-color: white;
-	border: 0px;
-}
-
-.layout-inner .west, .layout-inner .east {
-	width: 25%;
-}
-
-.layout-inner .south, .layout-inner .north {
-	height: 20%;
-}
- */
-.ui-resizable-helper-west {
-	border-right: 2px solid black;
-}
-
-.ui-resizable-helper-east {
-	border-left: 2px solid black;
-}
-
-.ui-resizable-helper-north {
-	border-bottom: 2px solid black;
-}
-
-.ui-resizable-helper-south {
-	border-top: 2px solid black;
-}

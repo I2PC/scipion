@@ -308,6 +308,7 @@ function switchGraph() {
 			}
 		}
 	}
+	
 }
 
 function updateGraphView(status) {
