@@ -13,19 +13,17 @@
 		height: 100%;
 		padding: 0;
 		margin: 0;
-		font-size: 0.75em;
+		/* font-size: 0.75em; */
 		/* overflow: hidden; */
 	}
 
-/* 	section { 
-		height: 100%;
-		font-size: 0.75em;
-		padding: 20px;*/
-		/* padding-bottom: 110px; */
-/*	}	 */
+	section, aside{
+		font-size: 0.75em !important;
+	}
 
 	.layout-outer {
 		height: 100%;
+		min-height: 100%;
 	}
 
 	.center, .west, .north, .south {
@@ -35,17 +33,21 @@
         display: inline-block;
 	}
 
-	.layout-outer .west {
+	.layout-outer > .west {
 		width: 25%;
-		margin-right:10px;
-		padding: 10px;
-		background-color: #cccccc;
+		/* margin-right:10px; */
+		padding: 20px;
+		
+	}
+	
+	.layout-outer > .center{
+		padding: 20px;
 	}
 
-	.layout-outer .north {
+	.layout-outer > .north {
 		/* height: 20%; */
 	}
-	.layout-outer .south {
+	.layout-outer > .south {
 		/* height: 20%; */
 	}
 	/**
@@ -63,8 +65,9 @@
 		border: 0px;
 	}
 	
-	.layout-inner .north {
-		height: 70%;
+	.layout-inner > .north {
+		height: 80%;
+		margin-bottom: 30px;
 	} 
 
 /* 	.layout-inner .west {
@@ -128,59 +131,58 @@
 		<header data-layout='{"type": "border", "hgap": 1, "vgap": 1}' class="north">
 			<div id="headerMainContainer">
 				<a href="/projects" id="headerLogoContainer"><img class="logo" src="/resources/scipion_logo.gif" alt="Scipion logo"></a>
-				{% if projectName != ''%}<span id="projectName">Project {{projectName}}</span>{% endif %}
+				{% if view != 'projects'%}<span id="projectName">Project {{projectName}}</span>{% endif %}
 				
 				
 				<div id="headerRightContainer">
 					<a href="/projects" class="headerLink{% if view == 'projects' %} headerLinkSelected {% endif %}">Projects</a>
-					{% if projectName != ''%}<span id="tube">|</span><a href="/project_content/?projectName={{projectName}}" class="headerLink{% if view == 'protocols' %} headerLinkSelected {% endif %}">Protocols</a>{% endif %}
+					{% if projectName != None and projectName != ''%}<span id="tube">|</span><a href="/project_content/?projectName={{projectName}}" class="headerLink{% if view == 'protocols' %} headerLinkSelected {% endif %}">Protocols</a>{% endif %}
 					<span id="tube">|</span><a href="#" onclick="javascript:alert('Not implemented yet')" class="headerLink{% if view == 'data' %} headerLinkSelected {% endif %}">Data</a>
-					{% if projectName != ''%}<span id="tube">|</span><a href="/view_hosts" class="headerLink{% if view == 'hosts' %} headerLinkSelected {% endif %}">Hosts</a>{% endif %}
+					{% if projectName != None and projectName != ''%}<span id="tube">|</span><a href="/view_hosts" class="headerLink{% if view == 'hosts' %} headerLinkSelected {% endif %}">Hosts</a>{% endif %}
 				</div>
 			
 			</div>
 			<div id="headerLine"></div>
 		</header>
 
-		<!-- <section data-layout='{"type": "border", "hgap": 1, "vgap": 1}' class="north"> -->
-				{% if contentConfig == 'divided' %}
-				<section data-layout='{"type": "border", "hgap": 1, "vgap": 1}' class="center layout-inner">
-					<div class="north">
-				        {% block contentNorth %}{%endblock %}
-				    </div>
-				    <div class="center">
-				        {% block contentCenter %}{%endblock %}
-				    </div>
-				</section>
-				{% elif contentConfig == 'full' %}
-					<section class="center layout-inner">
-						{% block content %}{%endblock %}
-					</section>
-				{% endif %}
-				
-				<aside class="west">
-					{% block sideLeft %} {%endblock %}
-				</aside>
-		<!-- </section> -->
-	
-	
-		<footer class="south" style="margin-bottom:-120px;">
-			<div id="footerLine"></div>
-			<div id="footerMainContainer">
-				<div id="footerLeftContainer">
-					<a href="/projects" id="footerLogoContainer"><img class="logo" src="/resources/scipion_logo_transparent.png" alt="Scipion logo"></a>
-					<span id="footerText">Neque porro quisquam est qui dolorem, adispici velit</span>
-				</div>
-				<div id="footerRightContainer">
-					<a href="/faq" class="footerLink">FAQ</a><span id="tube">|</span>
-					<a href="/wiki" class="footerLink">Wiki</a><span id="tube">|</span>
-					<a href="/license" class="footerLink">License</a><span id="tube">|</span>
-					<a href="/contact" class="footerLink">Contact</a>
-				</div>
-			</div>
-		</footer>
+		{% if contentConfig == 'divided' %}
+			<section data-layout='{"type": "border", "hgap": 1, "vgap": 1}' class="center layout-inner">
+				<div class="north">
+			        {% block contentNorth %}{%endblock %}
+			    </div>
+			    <div class="center">
+			        {% block contentCenter %}{%endblock %}
+			    </div>
+			</section>
+		{% elif contentConfig == 'full' %}
+			<section class="center layout-inner">
+				{% block content %}{%endblock %}
+			</section>
+		{% endif %}
+		
+		<aside class="west">
+			{% block sideLeft %} {%endblock %}
+		</aside>
 	
 	</div>
+	
+	<footer>
+		<div id="footerLine"></div>
+		<div id="footerMainContainer">
+			<div id="footerLeftContainer">
+				<a href="/projects" id="footerLogoContainer"><img class="logo" src="/resources/scipion_logo_transparent.png" alt="Scipion logo"></a>
+				<span id="footerText">Neque porro quisquam est qui dolorem, adispici velit</span>
+			</div>
+			<div id="footerRightContainer">
+				<a href="/faq" class="footerLink">FAQ</a><span id="tube">|</span>
+				<a href="/wiki" class="footerLink">Wiki</a><span id="tube">|</span>
+				<a href="/license" class="footerLink">License</a><span id="tube">|</span>
+				<a href="/contact" class="footerLink">Contact</a>
+			</div>
+		</div>
+	</footer>
+	
+	
 
 </body>
 </html>
