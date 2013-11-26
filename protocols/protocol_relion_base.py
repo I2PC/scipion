@@ -41,11 +41,6 @@ class ProtRelionBase(XmippProtocol):
             #if optimizer has not been properly selected this will 
             #fail, let us go ahead and handle the situation in verify
             try:
-                self.inputProperty('NumberOfClasses')
-                ########################### self.inputProperty('SamplingRate')
-                self.inputProperty('MaskRadiusA')
-                self.inputProperty('RegularisationParamT')
-                self.inputProperty('Ref3D')
                 self.inputProperty('ImgMd')  
             except:
                 print "Can not access the parameters from the original relion run"
