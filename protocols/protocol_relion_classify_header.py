@@ -241,7 +241,7 @@ OffsetSearchStepPix = 1
 """
 PerformLocalAngularSearch = False
 
-# {condition}(PerformLocalAngularSearch=='True')Local angular search range
+# {condition}(not PerformLocalAngularSearch)Local angular search range
 """
 """
 LocalAngularSearchRange = 5.0
@@ -311,8 +311,6 @@ DisplayReconstruction=False
 """
 DisplayImagesClassification=False
 
-
-
 # {view} Display signal to noise ratio plots (SSNR)
 DisplayResolutionPlotsSSNR=False
 
@@ -326,6 +324,7 @@ ResolutionThreshold=0.5
 
 # {view} Display angular distribution?
 DisplayAngularDistribution=False
+
 # (DisplayAngularDistribution) {list_combo} (2D, 3D) Display Angular distribution in
 """ 2D option uses matplotlib while 3D uses chimera
 """
