@@ -26,28 +26,9 @@ from protocol_relion_base import ProtRelionBase, runNormalizeRelion, convertImag
 
 class ProtRelionClassifier(ProtRelionBase):
     def __init__(self, scriptname, project):
+        ProtRelionBase.__init__(self, protDict.relion_classify.name, scriptname, project)
         self.Import = 'from protocol_relion_classify import *'
         self.relionType='classify'
-        if self.DoContinue:
-            self.setPreviousRunFromFile(self.optimiserFileName)
-            #if optimizer has not been properly selected this will 
-            #fail, let us go ahead and handle the situation in verify
-            try:
-                self.inputProperty('NumberOfClasses')
-                ########################### self.inputProperty('SamplingRate')
-                self.inputProperty('MaskRadiusA')
-                self.inputProperty('RegularisationParamT')
-                self.inputProperty('Ref3D')
-                self.inputProperty('ImgMd')  
-                #self.lastIterationPrecRun=self.PrevRun.lastIter()
-    
-                #self.NumberOfClasses      = self.PrevRun.NumberOfClasses
-                #self.SamplingRate         = self.PrevRun.SamplingRate
-                #self.MaskDiameterA        = self.PrevRun.MaskDiameterA
-                #self.RegularisationParamT = self.PrevRun.RegularisationParamT
-            except:
-                print "Can not access the parameters from the original relion run"
-        ProtRelionBase.__init__(self, protDict.relion_classify.name, scriptname, project)
 
     def summary(self):
         if self.DoContinue:
