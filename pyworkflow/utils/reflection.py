@@ -31,24 +31,44 @@ This module contains reflection utilities
 import os, sys
 from os.path import exists, join
 from inspect import isclass
-
     
-def getSubClassesFromPath(BaseClass, path):
+def getModules(path):
+    """ Try to find possible sub-modules under path.
+    A dictionary will be returned with modules names
+    as keys and the modules objects as values.
+    """
+    sys.path.append(path)
+    folders = os.listdir(path)
+    modules = {}
+    
+    for f in folders:
+        if exists(join(path, f, '__init__.py')):
+            try:
+                m = __import__(f)
+                modules[f] = m
+            except Exception:
+                print "Error loading module: '%s'" % f
+    
+    return modules
+    
+def getSubclassesFromModules(BaseClass, modules):
+    """ Find subclasses of BaseClass from a give dict of modules.
+    """
+    subclasses = {}
+    
+    for m in modules.values():
+        subDict = getSubclasses(BaseClass, m.__dict__)
+        subclasses.update(subDict)
+    
+    return subclasses
+
+def getSubclassesFromPath(BaseClass, path):
     """ Try to find possible sub-packages under path
     and find subclasses of BaseClass from them
     Return a dictionary containing the subclasses.
     """
-    sys.path.append(path)
-    folders = os.listdir(path)
-    subclasses = {}
-    
-    for f in folders:
-        if exists(join(path, f, '__init__.py')):
-            m = __import__(f)
-            subDict = getSubclasses(BaseClass, m.__dict__)
-            subclasses.update(subDict)
-    
-    return subclasses
+    modules = getModules(path)
+    return getSubclassesFromModules(BaseClass, modules)
     
 def getSubclasses(BaseClass, inputDict):
     """ Iterate over inputDict and find all subclasses
@@ -59,4 +79,6 @@ def getSubclasses(BaseClass, inputDict):
         if isclass(v) and issubclass(v, BaseClass):
             outputDict[k] = v
     return outputDict
+
+
     
