@@ -18,7 +18,9 @@
     	{% endif %}
   	});
 </script>
-{% endblock %} {% block sideLeft %}
+{% endblock %} 
+
+{% block sideLeft %}
 <div class="viewTree">
 	<label>Workflow View: </label>
 	<select id="viewsTree" name="viewsTree" onChange="javascript:changeTreeView();">
@@ -46,8 +48,9 @@
 		</li> {% endfor %}
 	</ul>
 </div>
-{% endblock %} {% block content %}
+{% endblock %} 
 
+{% block contentNorth %}
 <span style="float:right;">
 	<div id="treeTool">
 		<a href="javascript:switchGraph();">
@@ -94,7 +97,9 @@
 	data-time="first" data-project="{{projectName}}" data-option="">
 	<h3>History</h3>
 </div>
-{% endblock %} {% block contentDown %}
+{% endblock %}
+
+{% block contentCenter %}
 <div class="tabContaier" id="tabs">
 	<ul class="listTabs">
 		<li><a href="#tab-data">Data</a></li>

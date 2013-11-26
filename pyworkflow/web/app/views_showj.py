@@ -167,34 +167,35 @@ def showj(request, inputParameters=None, extraParameters=None):
 
 def createContext(dataset, tableDataset, tableLayoutConfiguration, request, showjForm):
     #Create context to be send
-    return {'css': getResourceCss('showj'),
-               'smoothness': getResourceCss('ui_smoothness'),
-               'demo_table_jui': getResourceCss('showj_demo_table_jui'),
-               
-               'favicon': getResourceIcon('favicon'),
-               'logo': getResourceIcon('logo_scipion'),
-               'logo_transparent': getResourceIcon('logo_scipion_transparent'),
-               
-               'jquery': getResourceJs('jquery'), #Configuration variables
-               'jquery_datatable': getResourceJs('jquery_datatables'),
-               'jquerydataTables_colreorder': getResourceJs('jquery_colreorder'),
-               'jquerydataTables_colreorder_resize': getResourceJs('jquery_colreorder_resize'),
-               'jeditable': getResourceJs('jquery_editable'),
-               'jquery_waypoints':getResourceJs('jquery_waypoints'),
-               'jquery_hover_intent':getResourceJs('jquery_hover_intent'),
-               
-               'dataset': dataset,
-               'tableLayoutConfiguration': json.dumps({'columnsLayout': tableLayoutConfiguration.columnsLayout,
-                                                       'colsOrder': tableLayoutConfiguration.colsOrder},
-                                                       ensure_ascii=False,
-                                                       cls=ColumnLayoutConfigurationEncoder), #Data variables
-               'tableDataset': tableDataset,
-               
-               'imageDimensions': request.session['imageDimensions'],
-               'defaultZoom': request.session['defaultZoom'],
-               'projectName': request.session['projectName'],
-               
-               'form': showjForm}
+    return {'showj_css': getResourceCss('showj'),
+            'general_css': getResourceCss('general'),
+           'smoothness': getResourceCss('ui_smoothness'),
+           'demo_table_jui': getResourceCss('showj_demo_table_jui'),
+           
+           'favicon': getResourceIcon('favicon'),
+           'logo': getResourceIcon('logo_scipion'),
+           'logo_transparent': getResourceIcon('logo_scipion_transparent'),
+           
+           'jquery': getResourceJs('jquery'), #Configuration variables
+           'jquery_datatable': getResourceJs('jquery_datatables'),
+           'jquerydataTables_colreorder': getResourceJs('jquery_colreorder'),
+           'jquerydataTables_colreorder_resize': getResourceJs('jquery_colreorder_resize'),
+           'jeditable': getResourceJs('jquery_editable'),
+           'jquery_waypoints':getResourceJs('jquery_waypoints'),
+           'jquery_hover_intent':getResourceJs('jquery_hover_intent'),
+           
+           'dataset': dataset,
+           'tableLayoutConfiguration': json.dumps({'columnsLayout': tableLayoutConfiguration.columnsLayout,
+                                                   'colsOrder': tableLayoutConfiguration.colsOrder},
+                                                   ensure_ascii=False,
+                                                   cls=ColumnLayoutConfigurationEncoder), #Data variables
+           'tableDataset': tableDataset,
+           
+           'imageDimensions': request.session['imageDimensions'],
+           'defaultZoom': request.session['defaultZoom'],
+           'projectName': request.session['projectName'],
+           
+           'form': showjForm}
     
     
 

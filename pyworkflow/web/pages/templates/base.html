@@ -5,8 +5,68 @@
 <meta charset='utf-8'>
 <link rel="icon" type="image/png" href="{{favicon}}" />
 <!-- CSS -->
-<link href="/static/css/general_style.css" rel="stylesheet"	type="text/css">
+<link href="/static/css/general_style.css" rel="stylesheet"	type="text/css"> 
 <link href="/static/css/jquery-ui.css" rel="stylesheet" type="text/css"/>
+<style>
+	html, body, #mainContainer {	
+		width: 100%;
+		height: 100%;
+		padding: 0;
+		margin: 0;
+		/* overflow: hidden; */
+	}
+
+	section { 
+		height: 100%;
+		font-size: 0.75em;
+		padding: 20px;
+		/* padding-bottom: 110px; */
+	}	
+
+	.layout-outer {
+		height: 100%;
+	}
+
+	.center, .west, .north {
+		/* background-color: rgb(220,220,220); */
+		/* border: 1px solid rgb(200,200,200); */
+		/* text-align: center; */
+        display: inline-block;
+	}
+
+	.west {
+		width: 25%;
+		margin-right:10px;
+		padding: 10px;
+		background-color: #cccccc;
+	}
+
+	.north {
+		height: 70%;
+	}
+
+	/**
+	 * To get correct percentages widths and heights in the inner layout
+	 * you have to set the container to take up all space that's left after
+	 * the outer columns east, west, north and south components. In this case:
+	 *  width = 100% - 8% - 8% = 84%
+	 *  height = 100% - 10% - 10% = 80%
+	 */
+	.layout-inner {
+		width: 75%;
+		height: 100%;
+		background-color: white;
+		border: 0px;
+	}
+
+/* 	.layout-inner .west {
+		width: 25%;
+	}
+
+	.layout-inner .south, .layout-inner .north {
+		height: 20%;
+	} */
+</style>
 <!-- JS -->
 <script type="text/javascript" src="/static/js/jquery/jquery.js"></script>
 <script type="text/javascript" src="/static/js/jsPlumb/jquery.jsPlumb.js"></script>
@@ -15,50 +75,41 @@
 <script type="text/javascript" src="/static/js/jquery/jquery.sizes.js"></script>
 <script type="text/javascript" src="/static/js/jquery/jlayout.border.js"></script>
 <script type="text/javascript" src="/static/js/jquery/jquery.jlayout.js"></script>
-<script>
+<script type="text/javascript">
 	jQuery(function($) {
+		// Just call the inner layout once to initialize it. This
+		// must happen before the outer layout is initialized. It
+		// will be automatically resized when the outer layout is
+		// resized.
 		$('.layout-inner').layout();
-	
+
 		var outerContainer = $('.layout-outer');
-	
+
 		function layout() {
 			outerContainer.layout({resize: false});
 		}
-		
 		layout();
-	
+
 		$(window).resize(layout);
+
 		
 		{% if contentConfig == 'divided' %}
-		$('.north').resizable({
-			handles: 's',
-			stop: layout
-		});
+			$('.north').resizable({
+				handles: 's',
+				stop: layout
+			});
+			$('.center').resizable({
+				handles: 's',
+				stop: layout
+			});
 		{% endif %}
-		
-		$('.south').resizable({
-			handles: 's',
-			stop: layout
-		});
-		
-		$('.west').resizable({
+		// This selector is changed to only select the west and east
+		// components of the outer layout.
+		$('.layout-outer > .west').resizable({
 			handles: 'e',
 			stop: layout
 		});
 	});
-
-/* 	function changeView(){
-		selection = document.getElementById("viewsCombo").value;
-		if (selection == "projects"){
-			window.location.href = "/projects"
-		} else if(selection == "protocols"){
-			window.location.href = "/project_content/?projectName={{projectName}}"
-		} else if (selection == "data"){
-			alert("Not implemented yet")
-		} else if (selection == "hosts"){
-			window.location.href = "/view_hosts"
-		}
-	} */
 </script>
 {% block head %} {% endblock %}
 </head>
@@ -83,34 +134,30 @@
 			<div id="headerLine"></div>
 		</header>
 
-		<!-- <div id="mainSection"> -->
-			<section>
-				<!-- <div id="wrapper"> -->
-					<div data-layout='{"type": "border"}' class="layout-outer" id="wrapper">
-						<div data-layout='{"type": "border"}' class="center layout-inner" id="wrapperContent">
-						{% if contentConfig == 'divided' %}
-							<div class="north" id="frameTop">
-						{% elif contentConfig == 'full' %}
-							<div class="north" id="frameTopProj">
-						{% endif %}
-								{% block content %}
-								{%endblock %}
-							</div>	
-							{% if contentConfig == 'divided' %}
-							<div class="center" id="frameCenter">
-								{% block contentDown %}	
-								{%endblock %}
-							</div>
-							{% endif %}
-						</div>
-						<div class="west" id="frameLeft">
-							{% block sideLeft %} {%endblock %}
-						</div>
+		<section>
+			<div data-layout='{"type": "border", "hgap": 1, "vgap": 1}' class="layout-outer" id="wrapper">
+				{% if contentConfig == 'divided' %}
+				<div data-layout='{"type": "border", "hgap": 1, "vgap": 1}' class="center layout-inner">
+					<div class="north">
+				        {% block contentNorth %}{%endblock %}
+				    </div>
+				    <div class="center">
+				        {% block contentCenter %}{%endblock %}
+				    </div>
+				</div>
+				{% elif contentConfig == 'full' %}
+					<div class="center layout-inner">
+						{% block content %}{%endblock %}
 					</div>
-				<!-- </div>	 -->
-			</section>
-		<!-- </div>	 -->
+				{% endif %}
+				
+				<div class="west">
+					{% block sideLeft %} {%endblock %}
+				</div>
+			</div>
+		</section>
 	</div>
+	
 	<footer>
 		<div id="footerLine"></div>
 		<div id="footerMainContainer">
