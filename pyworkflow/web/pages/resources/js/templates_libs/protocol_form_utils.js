@@ -155,37 +155,21 @@ $(document).ready(function() {
 					customPopupHTML(html,775,470);
 				}
 			});
-		} else if (mode == 'viewer') {
+		} else if (mode == 'viewer' || mode == 'viewerElement') {
 			
 			new Messi("<img src='/resources/visualize.gif'/>  Loading Viewer...",{
 				modal : true
 				});
 			
 			/* Launch the viewers with the options chosen */
-			var action = "/viewer/";
-			
+			var action = "/"+ mode +"/";
+
 			$.post(action, $("#protocolForm").serialize(), function(json) {
 				$('.messi').remove();
-				$('.messi-modal').remove();
-				
+				$('.messi-modal').remove();				
 				popUpJSON(json);
-			},"json");
-		} else if (mode == 'viewerElement') {
-			
-			new Messi("<img src='/resources/visualize.gif'/>  Loading Viewer...",{
-				modal : true
-				});
-			
-			/* Launch the viewers with the options chosen */
-			var action = "/viewerElement/";
-			
-			$.post(action, $("#protocolForm").serialize(), function(json) {
-				$('.messi').remove();
-				$('.messi-modal').remove();
-				
-				popUpJSON(json);
-			},"json");
-		}
+			},"json");			
+		} 
 		// Important. Stop the normal POST
 		return false;
 	});
