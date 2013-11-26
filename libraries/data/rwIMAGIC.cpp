@@ -246,7 +246,7 @@ int  ImageBase::readIMAGIC(size_t select_img)
 /** Imagic Writer
   * @ingroup Imagic
 */
-int  ImageBase::writeIMAGIC(size_t select_img, int mode, String bitDepth, bool adjust)
+int  ImageBase::writeIMAGIC(size_t select_img, int mode, const String &bitDepth, bool adjust)
 {
 #undef DEBUG
     //#define DEBUG
@@ -269,24 +269,24 @@ int  ImageBase::writeIMAGIC(size_t select_img, int mode, String bitDepth, bool a
         case DT_Int:
         case DT_UInt:
             wDType = DT_Float;
-            strcpy(header.type,"REAL");
+            strncpy(header.type,"REAL", sizeof(header.type));
             break;
         case DT_UShort:
             castMode = CW_CONVERT;
         case DT_Short:
             wDType = DT_Short;
-            strcpy(header.type,"INTG");
+            strncpy(header.type,"INTG", sizeof(header.type));
             break;
         case DT_SChar:
             castMode = CW_CONVERT;
         case DT_UChar:
             wDType = DT_UChar;
-            strcpy(header.type,"PACK");
+            strncpy(header.type,"PACK", sizeof(header.type));
             break;
         case DT_CFloat:
         case DT_CDouble:
             wDType = DT_CFloat;
-            strcpy(header.type,"COMP");
+            strncpy(header.type,"COMP", sizeof(header.type));
             break;
         default:
             wDType = DT_Unknown;
@@ -301,18 +301,18 @@ int  ImageBase::writeIMAGIC(size_t select_img, int mode, String bitDepth, bool a
         switch (wDType)
         {
         case DT_UChar:
-            strcpy(header.type,"PACK");
+            strncpy(header.type,"PACK", sizeof(header.type));
             castMode = (adjust)? CW_ADJUST : CW_CONVERT;
             break;
         case DT_Short:
-            strcpy(header.type,"INTG");
+            strncpy(header.type,"INTG", sizeof(header.type));
             castMode = (adjust)? CW_ADJUST : CW_CONVERT;
             break;
         case DT_Float:
-            strcpy(header.type,"REAL");
+            (strncpy)(header.type,"REAL", sizeof(header.type));
             break;
         case DT_CFloat:
-            strcpy(header.type,"COMP");
+            strncpy(header.type,"COMP", sizeof(header.type));
             break;
         default:
             REPORT_ERROR(ERR_TYPE_INCORRECT,"ERROR: incorrect IMAGIC bits depth value.");

@@ -60,6 +60,6 @@ int  readIMAGIC(size_t img_select);
 /** Imagic Writer
   * @ingroup Imagic
 */
-int  writeIMAGIC(size_t img_select = ALL_IMAGES, int mode=WRITE_OVERWRITE, String bitDepth="", bool adjust=false);
+int  writeIMAGIC(size_t img_select = ALL_IMAGES, int mode=WRITE_OVERWRITE, const String &bitDepth="", bool adjust=false);
 
 #endif /* RWIMAGIC_H_ */
