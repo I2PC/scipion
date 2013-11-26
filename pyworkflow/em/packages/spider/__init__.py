@@ -39,6 +39,6 @@ from protocol_align_pairwise import SpiderProtAlignPairwise
 
 from wizard import SpiderProtMaskWizard, SpiderProtMaskRadiiWizard, SpiderFilterWizard
 
-from viewer import SpiderViewerGeneric
+from viewer import SpiderViewer
 from viewer_capca import SpiderViewerCAPCA
 from viewer_ward import SpiderViewerWard
