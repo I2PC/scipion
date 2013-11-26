@@ -51,7 +51,6 @@ class ProtRelionBase(XmippProtocol):
                 print "Can not access the parameters from the original relion run"
 
         self.addParam('ORoot', self.WorkingDir + '/')
-        print ">>>>>>>>>>>>>>>>>>>>", self.ImgMd
         self.addParam('SamplingRate', getSampling(self.ImgMd))
 
     def summary(self):
