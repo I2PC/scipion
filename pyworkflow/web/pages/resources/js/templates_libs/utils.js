@@ -76,24 +76,16 @@ function popUpJSON(json){
 	$.each(json, function(key, value) {
 		if(key=="url_form"){
 			customPopup(value,500,350);
-		} else if(key=="showj"){
+		} else if(key=="showj" || key=="url"){
 			customPopup(value,1024,600);
-		} else if(key=="showjs"){
-			for(x=0;x<value.length;x++){
-				customPopup(value[x],1024,600);
-			}
-		}else if(key=="url"){
-			customPopup(value,1024,600);
-		} else if(key=="urls"){
-			for(x=0;x<value.length;x++){
-				customPopup(value[x],1024,600);
-			}
-		}else if(key=="html"){
+		} else if(key=="html" || key=="plot"){
 			customPopupHTML(value,600,500);
-		} else if(key=="plot"){
-			customPopup(value,600,500);
+		} else if(key=="showjs" || key=="urls"){
+			for(var x=0;x<value.length;x++){
+				customPopup(value[x],1024,600);
+			}
 		} else if(key=="plots"){
-			for(x=0;x<value.length;x++){
+			for(var x=0;x<value.length;x++){
 				customPopup(value[x],600,500)
 			}
 		} else if(key=="error"){
