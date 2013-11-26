@@ -137,6 +137,9 @@ class Object(object):
             
     def getObjParentId(self):
         return self._objParentId
+    
+    def hasObjParentId(self):
+        return self._objParentId is not None
             
     def getObjLabel(self):
         """ Return the label associated with this object"""
@@ -198,7 +201,7 @@ class Object(object):
     
     def equalAttributes(self, other):
         """Compare that all attributes are equal"""
-        for k, _ in self.getAttributesToStore():
+        for k, _ in self.getAttributes():
             v1 = getattr(self, k) # This is necessary because of FakedObject simulation of getattr
             v2 = getattr(other, k)
             if issubclass(type(v1), Object):
@@ -223,7 +226,7 @@ class Object(object):
                 value = self._objValue
                 
             print tab, '%s = %s' % (name, value), idStr
-        for k, v in self.getAttributesToStore():
+        for k, v in self.getAttributes():
             v.printAll(k, level + 1)
             
     def copyAttributes(self, other, *attrNames):
@@ -247,9 +250,22 @@ class Object(object):
         return resultDictionary
     
     def copy(self, other):
-        self._copy(other, {})
+        copyDict = {'internalPointers': []} 
+        self._copy(other, copyDict)
+        self._updatePointers(copyDict)
+        return copyDict
         
-    def _copy(self, other, copyDict):
+    def _updatePointers(self, copyDict):
+        """ Update the internal pointers after a copy. 
+        If there are pointers to other object in the copy 
+        the references should be updated.
+        """
+        for ptr in copyDict['internalPointers']:
+            pointedId = ptr.get().getObjId()
+            if  pointedId in copyDict:
+                ptr.set(copyDict[pointedId])
+        
+    def _copy(self, other, copyDict, level=1):
         """ This method will recursively clone all attributes
         from one object to the other.
         Attributes must be present in both.
@@ -260,25 +276,23 @@ class Object(object):
         # Copy basic object data
         #self._objName = other._objName
         self._objValue = other._objValue
-        
         # Copy attributes recursively
-        for name, attr in other.getAttributesToStore():
+        for name, attr in other.getAttributes():
             myAttr = getattr(self, name, None)
 
             if myAttr is None:
                 myAttr = attr.getClass()()
                 setattr(self, name, myAttr)
                 
-            myAttr._copy(attr, copyDict)
+            myAttr._copy(attr, copyDict, level+2)
             # Store the attr in the copyDict
             if attr.hasObjId():
+                #" storing in copyDict with id=", attr.getObjId()
                 copyDict[attr.getObjId()] = myAttr
             # Use the copyDict to fix the reference in the copying object
             # if the pointed one is inside the same object
             if myAttr.isPointer() and myAttr.hasValue():
-                pointedId = attr.get().getObjId()
-                if pointedId in copyDict:
-                    myAttr.set(copyDict[pointedId])
+                copyDict['internalPointers'].append(myAttr)
     
     def clone(self):
         clone = self.getClass()()

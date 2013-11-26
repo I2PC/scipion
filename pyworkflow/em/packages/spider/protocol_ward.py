@@ -109,6 +109,7 @@ class SpiderProtClassifyWard(ProtClassify, SpiderProtocol):
         rootNode = self.buildDendrogram(True)
         classes = self._createSetOfClasses2D()
         averages = self._createSetOfParticles()
+        averages.copyInfo(self.inputParticles.get())
         g = graph.Graph(root=rootNode)        
         self._fillClassesFromNodes(classes, averages, g.getNodes())
         

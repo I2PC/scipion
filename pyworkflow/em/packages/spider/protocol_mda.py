@@ -31,17 +31,18 @@ This sub-package contains Spider protocol for PCA.
 from pyworkflow.em import *  
 from pyworkflow.utils import removeExt, removeBaseExt, makePath, moveFile, copyFile, basename
 from constants import *
-from spider import SpiderShell, SpiderDocFile
+from spider import SpiderShell, SpiderDocFile, SpiderProtocol
 from convert import locationToSpider
 from glob import glob
 
       
-# TODO: Remove from ProtAlign, and put in other category     
-class SpiderWfMDA(ProtClassify):
+class SpiderWfMDA(ProtClassify, SpiderProtocol):
     """ Ward's method, using 'CL HC' 
     """
-    def __init__(self):
-        ProtClassify.__init__(self)
+    def __init__(self, **args):
+        ProtClassify.__init__(self, **args)
+        EMProtocol.__init__(self, **args)
+        
         self._params = {'ext': 'stk',
                         'particles': 'particles_input',
                         'dendroPs': 'dendrogram',
@@ -57,48 +58,66 @@ class SpiderWfMDA(ProtClassify):
         
         #form.addParam('maskType', )
         #form.addSection(label='1.Filter')      
-        form.addParam('filterProtocol', ProtocolClassParam, 
+        form.addParam('filter', ProtocolClassParam, 
                       protocolClassName='SpiderProtFilter',
                       label="1.Filter protocol", 
                       help='Select which Filter Protocol do you want to use')      
         
         #form.addSection(label='2.Align')      
-        form.addParam('alignProtocol', ProtocolClassParam, allowSubclasses=True,
+        form.addParam('align', ProtocolClassParam, allowSubclasses=True,
                       protocolClassName='ProtAlign',
                       label="2.Align protocol", 
                       help='Select which Filter Protocol do you want to use')  
            
         #form.addSection(label='3.Dimension reduction')      
-        form.addParam('dimredProtocol', ProtocolClassParam, 
+        form.addParam('dimred', ProtocolClassParam, 
                       protocolClassName='SpiderProtCAPCA',
                       label="3. Dimension reduction", 
                       help='Select which Filter Protocol do you want to use')      
         
         #form.addSection(label='4.Classification')      
-        form.addParam('classifyProtocol', ProtocolClassParam, 
+        form.addParam('classify', ProtocolClassParam, 
                       protocolClassName='SpiderProtClassifyWard',
                       label="4. Classification protocol", 
                       help='Select which Filter Protocol do you want to use')         
-        
-    def _getFileName(self, key):
-        #TODO: Move to a base Spider protocol
-        template = '%(' + key + ')s.%(ext)s'
-        return self._getPath(template % self._params)
+
     
     def _defineSteps(self):
-        self._insertFunctionStep('convertInput', self.inputParticles.get().getFileName())
-    
-    def convertInput(self, inputFilename):
-        """ Convert the input particles to a Spider stack. """
-        particles = self.inputParticles.get()
-        ih = ImageHandler()
-        particlesStk = self._getFileName('particles')
+        self._insertFunctionStep('workflowStep', self.inputParticles.get().getFileName())
+
+            
+    def workflowStep(self, inputFileName):
+        self.filterInstance.inputParticles.set(self.inputParticles.get())
+        self.runProtocol(self.filterInstance)
         
-        for i, p in enumerate(particles):
-            ih.convert(p.getLocation(), (i+1, particlesStk))
+        self.alignInstance.inputParticles.set(self.filterInstance.outputParticles)
+        self.runProtocol(self.alignInstance)
+         
+#        protMask = getattr(self, '')
+#        protMask.inputImage.set(protAPSR.outputAverage)
+#        self.runProtocol(protMask)       
+              
+#        protCAPCA = SpiderProtCAPCA()
+#        protCAPCA.maskType.set(1)
+#        protCAPCA.maskImage.set(protMask.outputMask)
+        self.dimredInstance.inputParticles.set(self.alignInstance.outputParticles)
+        self.runProtocol(self.dimredInstance)
+        
+        self.classifyInstance.inputParticles.set(self.alignInstance.outputParticles)
+        self.classifyInstance.pcaFilePointer.set(self.dimredInstance.imcFile)
+        self.runProtocol(self.classifyInstance)
+        
+        # TODO: Fix this, since is a deeper problem with pointers
+        #self.alignInstance.outputParticles.setStore(True)
+        #self.dimred.imcFile.setStore(True)
+        
+    
             
     def _summary(self):
         summary = []
         return summary
+    
+    def _validate(self):
+        return []
     
 

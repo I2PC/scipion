@@ -8,43 +8,48 @@
 <link href="/static/css/general_style.css" rel="stylesheet"	type="text/css"> 
 <link href="/static/css/jquery-ui.css" rel="stylesheet" type="text/css"/>
 <style>
-	html, body, #mainContainer {	
+	html, body {	
 		width: 100%;
 		height: 100%;
 		padding: 0;
 		margin: 0;
+		/* font-size: 0.75em; */
 		/* overflow: hidden; */
 	}
 
-	section { 
-		height: 100%;
-		font-size: 0.75em;
-		padding: 20px;
-		/* padding-bottom: 110px; */
-	}	
+	section, aside{
+		font-size: 0.75em !important;
+	}
 
 	.layout-outer {
 		height: 100%;
+		min-height: 100%;
 	}
 
-	.center, .west, .north {
+	.center, .west, .north, .south {
 		/* background-color: rgb(220,220,220); */
 		/* border: 1px solid rgb(200,200,200); */
 		/* text-align: center; */
         display: inline-block;
 	}
 
-	.west {
+	.layout-outer > .west {
 		width: 25%;
-		margin-right:10px;
-		padding: 10px;
-		background-color: #cccccc;
+		/* margin-right:10px; */
+		padding: 20px;
+		
+	}
+	
+	.layout-outer > .center{
+		padding: 20px;
 	}
 
-	.north {
-		height: 70%;
+	.layout-outer > .north {
+		/* height: 20%; */
 	}
-
+	.layout-outer > .south {
+		/* height: 20%; */
+	}
 	/**
 	 * To get correct percentages widths and heights in the inner layout
 	 * you have to set the container to take up all space that's left after
@@ -54,10 +59,16 @@
 	 */
 	.layout-inner {
 		width: 75%;
-		height: 100%;
+		/* height: 60%; */
+		height: 100%
 		background-color: white;
 		border: 0px;
 	}
+	
+	.layout-inner > .north {
+		height: 80%;
+		margin-bottom: 30px;
+	} 
 
 /* 	.layout-inner .west {
 		width: 25%;
@@ -94,11 +105,11 @@
 
 		
 		{% if contentConfig == 'divided' %}
-			$('.north').resizable({
+			$('.layout-inner > .north').resizable({
 				handles: 's',
 				stop: layout
 			});
-			$('.center').resizable({
+			$('.layout-inner > .center').resizable({
 				handles: 's',
 				stop: layout
 			});
@@ -116,46 +127,43 @@
 
 <body>
 
-	<div id="mainContainer">
-		<header>
+	<div data-layout='{"type": "border", "hgap": 1, "vgap": 1}' class="layout-outer">
+		<header data-layout='{"type": "border", "hgap": 1, "vgap": 1}' class="north">
 			<div id="headerMainContainer">
 				<a href="/projects" id="headerLogoContainer"><img class="logo" src="/resources/scipion_logo.gif" alt="Scipion logo"></a>
-				{% if projectName != ''%}<span id="projectName">Project {{projectName}}</span>{% endif %}
+				{% if view != 'projects'%}<span id="projectName">Project {{projectName}}</span>{% endif %}
 				
 				
 				<div id="headerRightContainer">
 					<a href="/projects" class="headerLink{% if view == 'projects' %} headerLinkSelected {% endif %}">Projects</a>
-					{% if projectName != ''%}<span id="tube">|</span><a href="/project_content/?projectName={{projectName}}" class="headerLink{% if view == 'protocols' %} headerLinkSelected {% endif %}">Protocols</a>{% endif %}
+					{% if projectName != None and projectName != ''%}<span id="tube">|</span><a href="/project_content/?projectName={{projectName}}" class="headerLink{% if view == 'protocols' %} headerLinkSelected {% endif %}">Protocols</a>{% endif %}
 					<span id="tube">|</span><a href="#" onclick="javascript:alert('Not implemented yet')" class="headerLink{% if view == 'data' %} headerLinkSelected {% endif %}">Data</a>
-					{% if projectName != ''%}<span id="tube">|</span><a href="/view_hosts" class="headerLink{% if view == 'hosts' %} headerLinkSelected {% endif %}">Hosts</a>{% endif %}
+					{% if projectName != None and projectName != ''%}<span id="tube">|</span><a href="/view_hosts" class="headerLink{% if view == 'hosts' %} headerLinkSelected {% endif %}">Hosts</a>{% endif %}
 				</div>
 			
 			</div>
 			<div id="headerLine"></div>
 		</header>
 
-		<section>
-			<div data-layout='{"type": "border", "hgap": 1, "vgap": 1}' class="layout-outer" id="wrapper">
-				{% if contentConfig == 'divided' %}
-				<div data-layout='{"type": "border", "hgap": 1, "vgap": 1}' class="center layout-inner">
-					<div class="north">
-				        {% block contentNorth %}{%endblock %}
-				    </div>
-				    <div class="center">
-				        {% block contentCenter %}{%endblock %}
-				    </div>
-				</div>
-				{% elif contentConfig == 'full' %}
-					<div class="center layout-inner">
-						{% block content %}{%endblock %}
-					</div>
-				{% endif %}
-				
-				<div class="west">
-					{% block sideLeft %} {%endblock %}
-				</div>
-			</div>
-		</section>
+		{% if contentConfig == 'divided' %}
+			<section data-layout='{"type": "border", "hgap": 1, "vgap": 1}' class="center layout-inner">
+				<div class="north">
+			        {% block contentNorth %}{%endblock %}
+			    </div>
+			    <div class="center">
+			        {% block contentCenter %}{%endblock %}
+			    </div>
+			</section>
+		{% elif contentConfig == 'full' %}
+			<section class="center layout-inner">
+				{% block content %}{%endblock %}
+			</section>
+		{% endif %}
+		
+		<aside class="west">
+			{% block sideLeft %} {%endblock %}
+		</aside>
+	
 	</div>
 	
 	<footer>
@@ -173,6 +181,8 @@
 			</div>
 		</div>
 	</footer>
+	
+	
 
 </body>
 </html>

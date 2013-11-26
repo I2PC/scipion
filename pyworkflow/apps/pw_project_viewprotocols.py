@@ -191,7 +191,7 @@ class RunIOTreeProvider(TreeProvider):
         self.viewer = XmippViewer()
 
     def getColumns(self):
-        return [('Attribute', 200), ('Class', 100)]
+        return [('Attribute', 200), ('Info', 100)]
     
     def getObjects(self):
         objs = []
@@ -242,7 +242,7 @@ class RunIOTreeProvider(TreeProvider):
                 parentObj = self.mapper.getParent(obj)
                 name += '   (from %s.%s)' % (parentObj.getLastName(), obj.getLastName())
             info = {'key': obj.getObjId(), 'parent': parent, 'image': image,
-                    'text': name, 'values': (obj.getClassName())}
+                    'text': name, 'values': (str(obj),)}
         return info     
     
    

@@ -44,7 +44,7 @@ class EMObject(OrderedObject):
         OrderedObject.__init__(self, **args)
         
     def __str__(self):
-        return str(self.get())
+        return self.getClassName()
     
     def getFiles(self):
         """ Get all filePaths """
@@ -382,6 +382,16 @@ class SetOfImages(Set):
         
     def getSamplingRate(self):
         return self._samplingRate.get()
+    
+    def __str__(self):
+        """ String representation of a set of images. """
+        try:
+            s = "%s (%d items, %0.2f A/px)" % (self.getClassName(), self.getSize(), 
+                                               self.getSamplingRate())
+        except Exception, ex:
+            print "Error on set: ", self.getName()
+            raise ex
+        return s
     
     
 class SetOfMicrographs(SetOfImages):

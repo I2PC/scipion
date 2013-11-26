@@ -11,6 +11,11 @@ body{
 /* 	margin-bottom: 1em;	 */
 }
 
+#westContainer{
+	padding: 10px;
+	background-color: #cccccc;
+}
+
 .protFieldsetTree {
 	/* height: 95%; */
 	/* height: auto; */

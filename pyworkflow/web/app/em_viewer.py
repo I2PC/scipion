@@ -87,7 +87,7 @@ def viewerXmipp(project, protocol, viewer):
     ioDict["url"] = "/visualize_object/?objectId="+str(objId)
     
     if isinstance(protocol, XmippProtKerdensom):
-        ioDict['url'] += '&colRowMode=On&cols=%d' % protocol.SomXdim.get()
+        ioDict['url'] += '&mode=gallery&colRowMode=On&cols=%d' % protocol.SomXdim.get()
     if isinstance(protocol, XmippProtRotSpectra):
         ioDict['url'] += '&classCount___renderable=True&classCount___renderFunc=getTestPlot'
     
