@@ -152,6 +152,11 @@ function launchViewer(id){
 				else if(key=="url"){
 					customPopup(value,1024,600);
 				}
+				else if(key=="urls"){
+						for(x=0;x<value.length;x++){
+							customPopup(value[x],1024,600);
+						}
+					}
 				else if(key=="plot"){
 					customPopup(value,600,500);
 				}
