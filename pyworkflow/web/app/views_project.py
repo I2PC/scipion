@@ -47,7 +47,10 @@ def projects(request):
     for p in projects:
         p.pTime = prettyDate(p.mTime)
 
-    context = {'projectName': request.session['projectName'] if 'projectName' in request.session else '',
+    if 'projectName' in request.session: request.session['projectName'] = ""
+    if 'projectPath' in request.session: request.session['projectPath'] = ""
+
+    context = {#'projectName': request.session['projectName'] if 'projectName' in request.session else '',
                'projects': projects,
                'css': getResourceCss('projects'),
                'messi_css': getResourceCss('messi'),

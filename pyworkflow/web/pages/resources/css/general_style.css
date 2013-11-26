@@ -12,6 +12,9 @@ header,section,footer,aside,nav,article,hgroup {
 
 html, body, #mainContainer { height: 100%; }
 /* body > #mainContainer { height: auto; min-height: 100%; } */
+/* section, aside { height: auto; min-height: 100%;} */
+
+
 
 html  {	
 	
@@ -99,21 +102,23 @@ header .logo{
 
 header #headerRightContainer{
 	float: right;
-	padding: 25px 30px 0px 0px;
+	padding: 25px 20px 0px 0px;
 	color:#6e6e6e;
 }
 header .headerLink{
 	text-decoration: none;
-	margin: 0px 15px;
 	color: #6F3232;
 }
 header .headerLinkSelected{
 	color: #000000;
 }
+header #tube{
+	margin: 0px 15px;
+}
 
 /* FOOTER */
 footer{
-	clear: both;
+ 	clear: both;
  	position: relative;
  	z-index: 10;
  	height: 110px;
