@@ -325,7 +325,7 @@ ResolutionThreshold=0.5
 # {view} Display angular distribution?
 DisplayAngularDistribution=False
 
-# (DisplayAngularDistribution) {list_combo} (2D, 3D) Display Angular distribution in
+# {list_combo} (2D, 3D) Display Angular distribution in
 """ 2D option uses matplotlib while 3D uses chimera
 """
 DisplayAngularDistributionWith='2D'
