@@ -32,7 +32,7 @@ class ProgAngularRotate: public XmippProgram
 {
 protected:
     FileName   fnIn, fnOut;
-    MetaData   mdIn;
+    MetaData   mdIn, mdOut;
     Matrix2D<double> R, T, B;
     bool       writeMatrix;
 
@@ -103,7 +103,7 @@ protected:
     void run()
     {
         MDRow input;
-
+        bool containsScale=mdIn.containsLabel(MDL_SCALE);
         FOR_ALL_OBJECTS_IN_METADATA(mdIn)
         {
             mdIn.getRow(input, __iter.objId);//Get geometric transformation for image
@@ -112,13 +112,15 @@ protected:
             T = R * B;
 
             transformationMatrix2Geo(T, input);
-            mdIn.setRow(input, __iter.objId);
+            if (!containsScale)
+            	input.setValue(MDL_SCALE,1.0);
+            mdOut.addRow(input);
 
             if (writeMatrix)
                 std::cout << T << std::endl;
         }
 
-        mdIn.write(fnOut);
+        mdOut.write(fnOut);
     }
 };
 

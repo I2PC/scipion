@@ -21,7 +21,7 @@ by Sjors H.W. Scheres (DOI: 10.1016/j.jmb.2011.11.010)
 # Continue from previous run
 DoContinue = False
 
-# {condition}(not DoContinue){file}(images*.xmd){validate}(PathExists) Input images:
+# {condition}(not DoContinue){file}(images*.xmd) Input images:
 """ 
 Provide a list of images from a stack <(Spider/MRC)> or metadata file that make up your data set.
 The filenames should be relative to the <ProjectDir> where you are running the <Protocols>
@@ -32,7 +32,7 @@ scale corrections in image groups.
 """
 ImgMd = ""
 
-# {condition}(DoContinue){file}(*optimiser.star){validate}(PathExists) Optimiser file:
+# {condition}(DoContinue){file}(*optimiser.star) Optimiser file:
 """ 
 Select the *_optimiser.star file for the iteration from which you want to continue a previous run. 
 Note that the Output rootname of the continued run and the rootname of the previous run cannot be the same. 
@@ -50,7 +50,7 @@ optimiserFileName= ""
 """
 NumberOfClasses = 1
 
-# {file}(*.vol, *.mrc){validate}(PathExists) Initial 3D reference volume:
+# {file}(*.vol, *.mrc) Initial 3D reference volume:
 """
 A 3D map in MRC/Spider format. Make sure this map has the same dimensions and 
 the same pixel size as your input images.
@@ -241,7 +241,7 @@ OffsetSearchStepPix = 1
 """
 PerformLocalAngularSearch = False
 
-# {condition}(PerformLocalAngularSearch=='True')Local angular search range
+# {condition}(not PerformLocalAngularSearch)Local angular search range
 """
 """
 LocalAngularSearchRange = 5.0
@@ -311,8 +311,6 @@ DisplayReconstruction=False
 """
 DisplayImagesClassification=False
 
-
-
 # {view} Display signal to noise ratio plots (SSNR)
 DisplayResolutionPlotsSSNR=False
 
@@ -326,7 +324,8 @@ ResolutionThreshold=0.5
 
 # {view} Display angular distribution?
 DisplayAngularDistribution=False
-# (DisplayAngularDistribution) {list_combo} (2D, 3D) Display Angular distribution in
+
+# {list_combo} (2D, 3D) Display Angular distribution in
 """ 2D option uses matplotlib while 3D uses chimera
 """
 DisplayAngularDistributionWith='2D'

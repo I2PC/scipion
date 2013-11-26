@@ -30,20 +30,13 @@ class ProtRelionClassifier(ProtRelionBase):
         self.Import = 'from protocol_relion_classify import *'
         self.relionType='classify'
         if self.DoContinue:
-            self.setPreviousRunFromFile(self.optimiserFileName)
             #if optimizer has not been properly selected this will 
             #fail, let us go ahead and handle the situation in verify
             try:
-                self.inputProperty('NumberOfClasses')
-                ########################### self.inputProperty('SamplingRate')
                 self.inputProperty('MaskRadiusA')
+                self.inputProperty('NumberOfClasses')
                 self.inputProperty('RegularisationParamT')
-                #self.lastIterationPrecRun=self.PrevRun.lastIter()
-    
-                #self.NumberOfClasses      = self.PrevRun.NumberOfClasses
-                #self.SamplingRate         = self.PrevRun.SamplingRate
-                #self.MaskDiameterA        = self.PrevRun.MaskDiameterA
-                #self.RegularisationParamT = self.PrevRun.RegularisationParamT
+                self.inputProperty('Ref3D')
             except:
                 print "Can not access the parameters from the original relion run"
 
@@ -59,7 +52,7 @@ class ProtRelionClassifier(ProtRelionBase):
         lines += ['Performed <%d/%d> iterations ' % (lastIteration,self.NumberOfIterations)]
         lines += ['Number of classes = <%d>' % self.NumberOfClasses]
         return lines
-    
+
     def summaryClassifyContinue(self):
         lines = ProtRelionBase.summary(self)
         lastIteration = self.lastIter()
@@ -74,16 +67,19 @@ class ProtRelionClassifier(ProtRelionBase):
         return lines
 
     def validate(self):
+        errors = ProtRelionBase.validate(self)
         if self.DoContinue:
-            return self.validateClassifyContinue()
+            return errors + self.validateClassifyContinue()
         else:
-            return self.validateClassify()
+            return errors + self.validateClassify()
 
     def validateClassify(self):
-        errors = ProtRelionBase.validate(self)
+        erors= []
+        print "validateClassify"
         return errors 
     
     def validateClassifyContinue(self):
+        print "validateClassifyContinue"
         lastIterationPrecRun=self.PrevRun.lastIter()
         errors=[]
         if '3D/RelionClass' not in self.optimiserFileName:
@@ -126,7 +122,7 @@ class ProtRelionClassifier(ProtRelionBase):
         args = {'--iter': self.NumberOfIterations,
                 '--tau2_fudge': self.RegularisationParamT,
                 '--flatten_solvent': '',
-                #'--zero_mask': '',# this is an option but is almost always true
+                #'--zero_mask': '',# set it to true using additional argument
                 '--norm': '',
                 '--scale': '',
                 '--o': '%s/relion' % self.ExtraDir
@@ -202,9 +198,9 @@ class ProtRelionClassifier(ProtRelionBase):
                 
                 '--tau2_fudge': self.RegularisationParamT,# should not be changed 
                 '--flatten_solvent': '',# use always
-                '--zero_mask': '',# use always. This is confussing since Sjors gui creates the command line
-                                  # with this option
-                                  # but then the program complains about it. 
+                #'--zero_mask': '',# use always. This is confussing since Sjors gui creates the command line
+                #                  # with this option
+                #                  # but then the program complains about it. 
                 '--oversampling': '1',
                 '--norm': '',
                 '--scale': '',
