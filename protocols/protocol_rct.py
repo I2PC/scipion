@@ -8,8 +8,8 @@
 # Author: Sjors Scheres, March 2007
 #
 from os.path import join, exists
-from xmipp import MetaData, getBlocksInMetaDataFile, MDL_IMAGE, MDL_IMAGE_TILTED, MDL_REF,\
-MDL_MICROGRAPH, MDL_MICROGRAPH_TILTED, LEFT_JOIN, MD_APPEND
+from xmipp import MetaData, getBlocksInMetaDataFile, MDL_IMAGE, MDL_IMAGE_TILTED, MDL_IMAGE_ORIGINAL, MDL_REF,\
+MDL_MICROGRAPH, MDL_MICROGRAPH_TILTED, LEFT_JOIN, INNER_JOIN, MD_APPEND
 
 from protlib_base import *
 from protlib_utils import getListFromRangeString, runJob, runShowJ
@@ -108,7 +108,6 @@ class ProtRCT(XmippProtocol):
                 runShowJ(fnVol)
 
 def gatherPairs(log,WorkingDir,ExtraDir,ClassSelection,ClassFile,ExtractDir,PickingDir):
-
     mdImages = getImagesMd(ExtractDir)    
     fnMicrographs=getProtocolFilename('micrographs', WorkingDir=ExtractDir)
     mdTiltAngles = MetaData("micrographPairs@"+fnMicrographs)
@@ -123,18 +122,27 @@ def gatherPairs(log,WorkingDir,ExtraDir,ClassSelection,ClassFile,ExtractDir,Pick
     mdTAux.setColumnValues(MDL_IMAGE_TILTED,mdT.getColumnValues(MDL_IMAGE))
     mdTAux.setColumnValues(MDL_MICROGRAPH_TILTED,mdT.getColumnValues(MDL_MICROGRAPH))
 
+    fnExtractImages=os.path.join(ExtractDir,'images.xmd')
+
     mdJoin1 = MetaData()
     mdJoin2 = MetaData()
     mdJoin3 = MetaData()
     mdJoin4 = MetaData()
+    fixedMdClass = MetaData()
     fnOut = join(ExtraDir,'rct_classes.xmd')
     for classNo in ClassSelection:
         MDclass = MetaData(getClassBlock(classNo, ClassFile))
-        mdJoin1.join(MDclass,mdImages,MDL_IMAGE,MDL_IMAGE,LEFT_JOIN)
+        if not MDclass.containsLabel(MDL_IMAGE_TILTED):
+            fixedMdClass.join(MDclass,mdImages,MDL_IMAGE_ORIGINAL,MDL_IMAGE,INNER_JOIN)
+        else:
+            fixedMdClass=MDclass
+        mdJoin1.join(fixedMdClass,mdImages,MDL_IMAGE,MDL_IMAGE,LEFT_JOIN)
         mdJoin2.join(mdJoin1,mdUAux, MDL_IMAGE,MDL_IMAGE,LEFT_JOIN)
         mdJoin3.join(mdJoin2,mdTAux, MDL_IMAGE_TILTED,MDL_IMAGE_TILTED,LEFT_JOIN)
         mdJoin4.join(mdJoin3,mdTiltAngles,MDL_MICROGRAPH,MDL_MICROGRAPH,LEFT_JOIN)
-        mdJoin4.write(getClassBlock(classNo, fnOut), MD_APPEND)
+        fnClassOut=getClassBlock(classNo, fnOut)
+        mdJoin4.write(fnClassOut, MD_APPEND)
+
 
 def reconstructClass(log,WorkingDir,ExtraDir,ClassNameIn,ClassNameOut,ClassImage,
                      CenterMaxShift,ThinObject,SkipTiltedTranslations,ClassVolumeOut,
@@ -163,7 +171,6 @@ def reconstructClass(log,WorkingDir,ExtraDir,ClassNameIn,ClassNameOut,ClassImage
     
     if exists(ClassVolumeOut):
         mdFn = join(WorkingDir, 'volumes.xmd')
-        print "mdFn", mdFn
         md = MetaData()
         
         if exists(mdFn):
@@ -177,7 +184,5 @@ def reconstructClass(log,WorkingDir,ExtraDir,ClassNameIn,ClassNameOut,ClassImage
             runJob(log,"xmipp_transform_filter", params)
             objId = md.addObject()
             md.setValue(MDL_IMAGE, filteredVolume, objId)
-            
-        print md
         md.write(mdFn)
             

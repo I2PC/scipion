@@ -3,6 +3,7 @@ package xmipp.viewer.models;
 import java.util.ArrayList;
 
 import xmipp.jni.MDLabel;
+import xmipp.jni.MDRow;
 import xmipp.jni.MetaData;
 import xmipp.utils.DEBUG;
 import xmipp.utils.XmippPopupMenuCreator;
@@ -42,7 +43,7 @@ public class MicrographsTableModel extends MetadataTableModel {
 			ci.labelName = ci.labelName.replace("ctfCrit", "");
 			
 			//Set invisible some colums by default
-			if (ci.labelName.startsWith("Psd") || ci.labelName.startsWith("Normality"))
+			if (ci.labelName.startsWith("Psd") || ci.labelName.startsWith("Normality") || ci.labelName.equals("FirstMinFirstZeroRatio"))
 				ci.visible = false;
 				
 		}
@@ -98,7 +99,9 @@ public class MicrographsTableModel extends MetadataTableModel {
 		String psdFile = data.md.getValueString(MDLabel.MDL_PSD, objId);
 		String sortFn = psdFile.replace(".psd", ".tmpSort.xmd");
 		MetaData mdRow = new MetaData(sortFn);
-		data.setRow(mdRow, objId);
+		MDRow row2 = new MDRow();
+		mdRow.getRow(row2, mdRow.firstObject());
+		data.setRow(row2, objId);
 		mdRow.destroy();
 		refreshRow(row);
 	}

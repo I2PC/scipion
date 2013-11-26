@@ -1180,6 +1180,14 @@ void fitEllipse(Matrix1D<double> & xPts, Matrix1D<double> & yPts, double & x0, d
     majorAxis = std::sqrt(-c_h / VEC_ELEM(w,0));
     minorAxis = std::sqrt(-c_h / VEC_ELEM(w,1));
     ellipseAngle = std::atan2(dMij(u,0,0),-dMij(u,1,0));
+
+    if ( (VEC_ELEM(w,0)==0) || (VEC_ELEM(w,1)==0) || (VEC_ELEM(w,0)*c_h>0) || ((VEC_ELEM(w,1)*c_h>0)) )
+    {
+    	majorAxis=0;
+    	minorAxis=0;
+    }
+
+
     double sEllipseAngle, cEllipseAngle;
     sincos(-ellipseAngle,&sEllipseAngle,&cEllipseAngle);
 

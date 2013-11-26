@@ -35,7 +35,7 @@ class ProtScreenMicrographs(XmippProtocol):
         self.inputFilename('microscope', 'micrographs', 'acquisition')
         self.inputProperty('TiltPairs', 'MicrographsMd')
         self.micrographs = self.getFilename('micrographs')
-	self.MicrographsMd = self.Input['micrographs']
+        self.MicrographsMd = self.Input['micrographs']
         if self.TiltPairs:
             self.MicrographsMd='micrographPairs@'+self.MicrographsMd
 
@@ -164,10 +164,11 @@ class ProtScreenMicrographs(XmippProtocol):
         regenerate=False
         for objId in md:
             fnCTF=md.getValue(xmipp.MDL_CTF_MODEL,objId)
-            ctfTime=time.ctime(os.path.getmtime(fnCTF))
-            if ctfTime>summaryTime:
-                regenerate=True
-                break
+            if fnCTF!="NA":
+                ctfTime=time.ctime(os.path.getmtime(fnCTF))
+                if ctfTime>summaryTime:
+                    regenerate=True
+                    break
         if regenerate:
             print("Regenerating "+summaryFile+" because there are newer CTFs")
             gatherResults(self.Log,TmpDir=self.TmpDir,
@@ -284,7 +285,8 @@ def estimateCtfCtffind1(_log, micrograph,
 def gatherResults(log,TmpDir,WorkingDir,summaryFile, importMicrographs,Downsampling,NumberOfMpi):
     buildSummaryMetadata(WorkingDir, importMicrographs, summaryFile)
     dirSummary,fnSummary=os.path.split(summaryFile)
-    runJob(log,"xmipp_ctf_sort_psds","-i %s -o %s/aux_%s"%(summaryFile,dirSummary,fnSummary),NumberOfMpi=NumberOfMpi)
+    runJob(log,"xmipp_ctf_sort_psds","-i %s -o %s/aux_%s --downsampling %f"%(summaryFile,dirSummary,fnSummary,Downsampling),
+           NumberOfMpi=NumberOfMpi)
     runJob(log,"mv","-f %s/aux_%s %s"%(dirSummary,fnSummary,summaryFile))
     runJob(log,"touch",summaryFile)
     if Downsampling!=1:
@@ -307,7 +309,7 @@ def buildSummaryMetadata(WorkingDir,importMicrographs,summaryFile):
             keys = ['psd', 'enhanced_psd', 'ctfparam', 'ctfmodel_quadrant', 'ctfmodel_halfplane']
             values = [_getFilename(key, micrographDir=micrographDir) for key in keys]
         else: # No files
-            values = ['NA' for i in range(len(labels))]
+            values = ['NA'] * len(labels)
 
         # Set values in metadata
         for label, value in zip(labels, values):
