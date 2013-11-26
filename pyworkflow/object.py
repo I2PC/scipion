@@ -84,8 +84,8 @@ class Object(object):
     def getAttributesToStore(self):
         """Return the list of attributes than are
         subclasses of Object and will be stored"""
-        for key, attr in self.__dict__.iteritems():
-            if issubclass(attr.__class__, Object) and attr._objDoStore:
+        for key, attr in self.getAttributes():
+            if attr._objDoStore:
                 yield (key, attr)
                 
     def isPointer(self):
@@ -335,13 +335,11 @@ class OrderedObject(Object):
             self._attributes.append(name)
         Object.__setattr__(self, name, value)
     
-    def getAttributesToStore(self):
+    def getAttributes(self):
         """Return the list of attributes than are
         subclasses of Object and will be stored"""
         for key in self._attributes:
-            attr = getattr(self, key)
-            if attr._objDoStore:
-                yield (key, attr)
+            yield (key, getattr(self, key))
                 
     def deleteAttribute(self, attrName):
         """ Delete an attribute. """
@@ -377,7 +375,7 @@ class FakedObject(Object):
                 return attr
         return None
     
-    def getAttributesToStore(self):
+    def getAttributes(self):
         """Return the list of attributes than are
         subclasses of Object and will be stored"""
         return self._attributes.iteritems()
@@ -503,9 +501,9 @@ class List(Object, list):
         else:
             object.__setattr__(self, name, value)
 
-    def getAttributesToStore(self):
+    def getAttributes(self):
         # First yield all attributes not contained in the list
-        for name, attr in Object.getAttributesToStore(self):
+        for name, attr in Object.getAttributes(self):
             yield (name, attr)
         # Now yield elements contained in the list
         for i, item in enumerate(self):
