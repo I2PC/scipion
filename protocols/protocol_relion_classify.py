@@ -74,9 +74,8 @@ class ProtRelionClassifier(ProtRelionBase):
             return errors + self.validateClassify()
 
     def validateClassify(self):
-        erors= []
         print "validateClassify"
-        return errors 
+        return [] 
     
     def validateClassifyContinue(self):
         print "validateClassifyContinue"
