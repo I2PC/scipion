@@ -142,28 +142,7 @@ function launchViewer(id){
 		url : "/launch_viewer/?protocolId=" + id,
 		dataType : "json",
 		success : function(json) {
-			$.each(json, function(key, value) {
-				if(key=="url_form"){
-					customPopup(value,500,350);
-				}
-				else if(key=="html"){
-					customPopupHTML(value,800,600);
-				}
-				else if(key=="url"){
-					customPopup(value,1024,600);
-				}
-				else if(key=="urls"){
-						for(x=0;x<value.length;x++){
-							customPopup(value[x],1024,600);
-						}
-					}
-				else if(key=="plot"){
-					customPopup(value,600,500);
-				}
-				else if(key=="error"){
-					launchMessiSimple("Error",messiError(value));
-				}
-			});
+			popUpJSON(json);
 		}
 	});	
 }
