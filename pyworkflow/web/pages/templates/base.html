@@ -8,43 +8,46 @@
 <link href="/static/css/general_style.css" rel="stylesheet"	type="text/css"> 
 <link href="/static/css/jquery-ui.css" rel="stylesheet" type="text/css"/>
 <style>
-	html, body, #mainContainer {	
+	html, body {	
 		width: 100%;
 		height: 100%;
 		padding: 0;
 		margin: 0;
+		font-size: 0.75em;
 		/* overflow: hidden; */
 	}
 
-	section { 
+/* 	section { 
 		height: 100%;
 		font-size: 0.75em;
-		padding: 20px;
+		padding: 20px;*/
 		/* padding-bottom: 110px; */
-	}	
+/*	}	 */
 
 	.layout-outer {
 		height: 100%;
 	}
 
-	.center, .west, .north {
+	.center, .west, .north, .south {
 		/* background-color: rgb(220,220,220); */
 		/* border: 1px solid rgb(200,200,200); */
 		/* text-align: center; */
         display: inline-block;
 	}
 
-	.west {
+	.layout-outer .west {
 		width: 25%;
 		margin-right:10px;
 		padding: 10px;
 		background-color: #cccccc;
 	}
 
-	.north {
-		height: 70%;
+	.layout-outer .north {
+		/* height: 20%; */
 	}
-
+	.layout-outer .south {
+		/* height: 20%; */
+	}
 	/**
 	 * To get correct percentages widths and heights in the inner layout
 	 * you have to set the container to take up all space that's left after
@@ -54,10 +57,15 @@
 	 */
 	.layout-inner {
 		width: 75%;
-		height: 100%;
+		/* height: 60%; */
+		height: 100%
 		background-color: white;
 		border: 0px;
 	}
+	
+	.layout-inner .north {
+		height: 70%;
+	} 
 
 /* 	.layout-inner .west {
 		width: 25%;
@@ -94,11 +102,11 @@
 
 		
 		{% if contentConfig == 'divided' %}
-			$('.north').resizable({
+			$('.layout-inner > .north').resizable({
 				handles: 's',
 				stop: layout
 			});
-			$('.center').resizable({
+			$('.layout-inner > .center').resizable({
 				handles: 's',
 				stop: layout
 			});
@@ -116,8 +124,8 @@
 
 <body>
 
-	<div id="mainContainer">
-		<header>
+	<div data-layout='{"type": "border", "hgap": 1, "vgap": 1}' class="layout-outer">
+		<header data-layout='{"type": "border", "hgap": 1, "vgap": 1}' class="north">
 			<div id="headerMainContainer">
 				<a href="/projects" id="headerLogoContainer"><img class="logo" src="/resources/scipion_logo.gif" alt="Scipion logo"></a>
 				{% if projectName != ''%}<span id="projectName">Project {{projectName}}</span>{% endif %}
@@ -134,45 +142,45 @@
 			<div id="headerLine"></div>
 		</header>
 
-		<section>
-			<div data-layout='{"type": "border", "hgap": 1, "vgap": 1}' class="layout-outer" id="wrapper">
+		<!-- <section data-layout='{"type": "border", "hgap": 1, "vgap": 1}' class="north"> -->
 				{% if contentConfig == 'divided' %}
-				<div data-layout='{"type": "border", "hgap": 1, "vgap": 1}' class="center layout-inner">
+				<section data-layout='{"type": "border", "hgap": 1, "vgap": 1}' class="center layout-inner">
 					<div class="north">
 				        {% block contentNorth %}{%endblock %}
 				    </div>
 				    <div class="center">
 				        {% block contentCenter %}{%endblock %}
 				    </div>
-				</div>
+				</section>
 				{% elif contentConfig == 'full' %}
-					<div class="center layout-inner">
+					<section class="center layout-inner">
 						{% block content %}{%endblock %}
-					</div>
+					</section>
 				{% endif %}
 				
-				<div class="west">
+				<aside class="west">
 					{% block sideLeft %} {%endblock %}
+				</aside>
+		<!-- </section> -->
+	
+	
+		<footer class="south" style="margin-bottom:-120px;">
+			<div id="footerLine"></div>
+			<div id="footerMainContainer">
+				<div id="footerLeftContainer">
+					<a href="/projects" id="footerLogoContainer"><img class="logo" src="/resources/scipion_logo_transparent.png" alt="Scipion logo"></a>
+					<span id="footerText">Neque porro quisquam est qui dolorem, adispici velit</span>
+				</div>
+				<div id="footerRightContainer">
+					<a href="/faq" class="footerLink">FAQ</a><span id="tube">|</span>
+					<a href="/wiki" class="footerLink">Wiki</a><span id="tube">|</span>
+					<a href="/license" class="footerLink">License</a><span id="tube">|</span>
+					<a href="/contact" class="footerLink">Contact</a>
 				</div>
 			</div>
-		</section>
-	</div>
+		</footer>
 	
-	<footer>
-		<div id="footerLine"></div>
-		<div id="footerMainContainer">
-			<div id="footerLeftContainer">
-				<a href="/projects" id="footerLogoContainer"><img class="logo" src="/resources/scipion_logo_transparent.png" alt="Scipion logo"></a>
-				<span id="footerText">Neque porro quisquam est qui dolorem, adispici velit</span>
-			</div>
-			<div id="footerRightContainer">
-				<a href="/faq" class="footerLink">FAQ</a><span id="tube">|</span>
-				<a href="/wiki" class="footerLink">Wiki</a><span id="tube">|</span>
-				<a href="/license" class="footerLink">License</a><span id="tube">|</span>
-				<a href="/contact" class="footerLink">Contact</a>
-			</div>
-		</div>
-	</footer>
+	</div>
 
 </body>
 </html>
