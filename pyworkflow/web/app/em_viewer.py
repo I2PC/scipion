@@ -52,7 +52,6 @@ def launch_viewer(request):
         protocol = project.mapper.selectById(int(protId))
         
         viewers = findViewers(protocol.getClassName(), WEB_DJANGO)
-#        print "viewer",viewers
         
         if len(viewers) == 0:
             msg = "There is not viewer for protocol: <strong>" + protocol.getClassName() +"</strong>"
@@ -94,6 +93,27 @@ def viewerXmipp(project, protocol, viewer):
     
     return ioDict
 
+def viewerSpider(project, protocol, viewer):
+    ioDict={}    
+        
+    if isinstance(protocol, PcaFile):
+        print "PcaFile"
+        html = textfileViewer("PCA files", [protocol.filename.get()])
+        ioDict["html"] = html
+        
+    elif isinstance(protocol, SpiderProtFilter):
+        particles = protocol.outputParticles
+        url = "/visualize_object/?objectId="+str(particles.getObjId())
+        ioDict["url"] = url
+        
+    elif isinstance(protocol, SpiderProtCustomMask):
+        mask = protocol.outputMask
+        url1 = "/visualize_object/?objectId="+str(mask.getObjId())
+        url2 = "/visualize_object/?path="+str(mask.getFileName())        
+        ioDict["urls"] = [url1, url2] 
+        
+    return ioDict
+
 def viewerForm(project, protocol, viewer):
     protId = protocol.getObjId()
     viewerClassName = viewer.getClassName()
@@ -102,8 +122,8 @@ def viewerForm(project, protocol, viewer):
               "&protRunIdViewer="+ str(protId) +
               "&action=visualize"}
     
-    return ioDict 
-
+    return ioDict
+ 
 ############## 2ND STEP: VIEWER FUNCTION METHODS ##############
 def viewer(request):
     project, protocolViewer = loadProtocolProject(request)

@@ -681,7 +681,10 @@ class Protocol(Step):
     
     def isActive(self):
         return self.getStatus() in ACTIVE_STATUS
-        
+    
+    def isFinished(self):
+        return self.getStatus() == STATUS_FINISHED
+            
     def setStepsExecutor(self, executor):
         self._stepsExecutor = executor
                 
