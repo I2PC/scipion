@@ -30,7 +30,7 @@ import os
 import xmipp
 from xmipp import Program, FileName
 from protlib_utils import runImageJPlugin, runJavaIJapp
-from protlib_filesystem import getXmippPath, xmippExists
+from protlib_filesystem import getXmippPath, xmippExists, findAcquisitionInfo
 
 
 class XmippScript():
@@ -591,3 +591,14 @@ class RowMetaData():
     def __str__(self):
         return str(self._md)
 
+def getSampling(InputFile, default=None):
+    fnAcquisition = findAcquisitionInfo(InputFile)
+    if fnAcquisition is not None and os.path.exists(fnAcquisition):
+        md = xmipp.MetaData(fnAcquisition)
+        sampling = md.getValue(xmipp.MDL_SAMPLINGRATE, md.firstObject())
+    else:
+        if default is None:
+            raise Exception('Cannot find acquisition_info.xmd from path %s.' % InputFile)
+        sampling = float(default)
+    return sampling
+ 

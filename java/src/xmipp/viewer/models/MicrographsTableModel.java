@@ -43,7 +43,7 @@ public class MicrographsTableModel extends MetadataTableModel {
 			ci.labelName = ci.labelName.replace("ctfCrit", "");
 			
 			//Set invisible some colums by default
-			if (ci.labelName.startsWith("Psd") || ci.labelName.startsWith("Normality"))
+			if (ci.labelName.startsWith("Psd") || ci.labelName.startsWith("Normality") || ci.labelName.equals("FirstMinFirstZeroRatio"))
 				ci.visible = false;
 				
 		}

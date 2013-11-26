@@ -368,28 +368,67 @@ void CTFDescription::precomputeValues(const MultidimArray<double> &cont_x_freq,
     }
 }
 
-/* Zero -------------------------------------------------------------------- */
+/* Look for zeroes, maxima or minima ------------------------------------------------------------ */
 //#define DEBUG
-void CTFDescription::zero(int n, const Matrix1D<double> &u, Matrix1D<double> &freq)
+void CTFDescription::lookFor(int n, const Matrix1D<double> &u, Matrix1D<double> &freq, int iwhat)
 {
     double wmax = 1 / (2 * Tm);
     double wstep = wmax / 300;
-    int sign_changes = 0;
-    double last_ctf = getValuePureNoPrecomputedAt(0,0), ctf;
+    int found = 0;
+    double last_ctf = getValuePureNoPrecomputedAt(0,0), ctf, state=1;
     double w;
     for (w = 0; w <= wmax; w += wstep)
     {
         V2_BY_CT(freq, u, w);
         ctf = getValuePureNoPrecomputedAt(XX(freq), YY(freq));
-        if (SGN(ctf) != SGN(last_ctf))
+        switch (iwhat)
         {
-            sign_changes++;
-            if (sign_changes == n)
-                break;
+        	case 0: // Looking for zeroes
+				if (SGN(ctf) != SGN(last_ctf))
+					found++;
+				break;
+        	case 1: // Looking for maxima
+        		if (w>0)
+        		{
+					if (state==1) // Going up
+					{
+						if (ctf<last_ctf)
+						{
+							found++;
+							state=-1;
+						}
+					}
+					else // Going down
+					{
+						if (ctf>last_ctf)
+							state=1;
+					}
+        		}
+        		break;
+        	case -1: // Looking for minima
+        		if (w>0)
+        		{
+					if (state==-1) // Going down
+					{
+						if (ctf>last_ctf)
+						{
+							found++;
+							state=1;
+						}
+					}
+					else // Going up
+					{
+						if (ctf<last_ctf)
+							state=-1;
+					}
+        		}
+        		break;
         }
+		if (found == n)
+			break;
         last_ctf = ctf;
     }
-    if (sign_changes != n)
+    if (found != n)
     {
         VECTOR_R2(freq, -1, -1);
     }
@@ -402,13 +441,19 @@ void CTFDescription::zero(int n, const Matrix1D<double> &u, Matrix1D<double> &fr
         << " last_ctf=" << last_ctf << " ctf=" << ctf << " ";
 #endif
 
-        w += ctf * wstep / (last_ctf - ctf);
+        switch (iwhat)
+        {
+        	case 0:
+                w += ctf * wstep / (last_ctf - ctf);
+                break;
+        	default:
+        		w-=wstep;
+        }
         V2_BY_CT(freq, u, w);
 #ifdef DEBUG
 
         std::cout << " final w= " << w << " final freq=" << freq.transpose() << std::endl;
 #endif
-
     }
 }
 #undef DEBUG

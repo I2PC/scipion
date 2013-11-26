@@ -41,7 +41,7 @@ from protlib_utils import loadModule, which, runShowJ,\
 from protlib_gui_ext import centerWindows, changeFontSize, askYesNo, Fonts, registerCommonFonts, \
     showError, showInfo, showBrowseDialog, showWarning, AutoScrollbar, FlashMessage,\
     TaggedText, openFile
-from protlib_filesystem import getXmippPath, xmippExists, xmippRelpath
+from protlib_filesystem import getXmippPath, xmippExists, xmippRelpath, findAcquisitionInfo
 from config_protocols import protDict
 from config_protocols import FontName, FontSize, MaxHeight, MaxWidth, WrapLenght
 from config_protocols import LabelTextColor, SectionTextColor, CitationTextColor
@@ -49,7 +49,7 @@ from config_protocols import BgColor, EntryBgColor, SectionBgColor, LabelBgColor
 from protlib_sql import SqliteDb
 from protlib_include import *
 from protlib_parser import ProtocolParser
-from protlib_xmipp import redStr, greenStr
+from protlib_xmipp import redStr, greenStr, getSampling
 
 
 # This group of function are called Wizards and should help
@@ -185,7 +185,8 @@ def wizardBrowseCTF2(gui, var):
 def wizardHelperFilter(gui, browser, title, **args):
     extra = {'previewLabel': 'Image', 'computingMessage': 'Applying filter...'}
     extra.update(args)
-    selfile = gui.getVarValue('InSelFile')
+    varName = args.get('varName', 'InSelFile')
+    selfile = gui.getVarValue(varName)
     path, filename = split(selfile)
     if not exists(selfile):
         showWarning("Warning", "The input selfile is not a valid file", parent=gui.master)
@@ -200,7 +201,17 @@ def wizardChooseBandPassFilter(gui, var):
     results = wizardHelperFilter(gui, XmippBrowserBandpassFilter, "Bandpass Filter", freqs=gui.getVarlistValue(vList))
     if results:
         gui.setVarlistValue(vList, results)
-        
+
+def wizardChooseLowPassFilter(gui, var):
+    '''Wizard dialog to help choosing Lowpass filter parameters (used in protocol_relion...) '''
+    vList = [0,var.getTkValue(),0.02]
+    sampling=getSampling(gui.getVarValue('ImgMd'))
+    from protlib_gui_ext import XmippBrowserBandpassFilter
+    results = wizardHelperFilter(gui, XmippBrowserBandpassFilter, "Bandpass Filter", freqs=vList, 
+                                 varName='Ref3D', showDecay=False, showLowFreq=False, unit='angstrom',
+                                 sampling=sampling )
+    if results:
+        var.setTkValue(1./results[1])
 #Choose Gaussian Filter
 def wizardChooseGaussianFilter(gui, var):
     '''Wizard dialog to help choosing Gaussian filter (in Fourier space) parameters (used in protocol_preprocess_particles) '''
@@ -349,7 +360,8 @@ def wizardCL2DNumberOfClasses(gui, var):
         gui.setVarValue("NumberOfReferences", int(round(md.size()/200.0)))
 
 #Select micrograph extension
-def wizardHelperSetRadii(gui, inputVarName, outerVarName, innerVarName=None, ):
+#return unit. pixel, angstrom
+def wizardHelperSetRadii(gui, inputVarName, outerVarName, innerVarName=None, unit='pixel', sampling=1.):
     fileList = gui.getVarValue(inputVarName).split()
     showInner = innerVarName is not None
     innerRadius = 0
@@ -388,6 +400,7 @@ def wizardHelperSetRadii(gui, inputVarName, outerVarName, innerVarName=None, ):
         if fn is None:
             return 
             
+    # if radius = -1 then we take half of the image dimension
     if outerRadius < 0:
         if fn.isImage():
             img = Image()
@@ -399,8 +412,11 @@ def wizardHelperSetRadii(gui, inputVarName, outerVarName, innerVarName=None, ):
     from protlib_gui_ext import XmippBrowserMask
     results = showBrowseDialog(parent=gui.master, browser=XmippBrowserMask, title="Select mask radius", allowFilter=False, 
                                     extra={'fileList': fileList, 'outerRadius': outerRadius, 
-                                           'innerRadius': innerRadius, 'showInner': showInner})
+                                           'innerRadius': innerRadius, 'showInner': showInner,
+                                           'unit':unit, 'sampling':sampling})
     if results:
+#        if (unit == 'angstrom'):
+#            results = [v*sampling for v in results]  
         gui.setVarValue(outerVarName, int(results[1]))
         if showInner:
             gui.setVarValue(innerVarName, int(results[0]))
@@ -411,6 +427,10 @@ def wizardSetMaskRadius(gui, var):
 def wizardSetMaskRadiusAlign(gui, var):
     wizardHelperSetRadii(gui, 'ReferenceVolume', 'MaskRadius')
     
+def wizardSetMaskRadiusRelion(gui, var):
+    fnSel = gui.getVarValue('ImgMd')
+    wizardHelperSetRadii(gui, 'ImgMd','MaskRadiusA',unit='angstrom', sampling=getSampling(fnSel))
+
 def wizardSetMaskRadiusPreprocess(gui, var):
     wizardHelperSetRadii(gui, 'InModel', 'MaskRadius')
     

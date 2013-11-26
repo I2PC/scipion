@@ -31,7 +31,7 @@ public class SingleParticlePicker extends ParticlePicker {
 
 	protected List<SingleParticlePickerMicrograph> micrographs;
 	private SingleParticlePickerMicrograph micrograph;
-	public static final int defAutoPickPercent = 10;
+	public static final int defAutoPickPercent = 50;
 	private int autopickpercent = defAutoPickPercent;
 
 	public static final int mintraining = 15;

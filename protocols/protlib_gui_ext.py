@@ -1810,7 +1810,15 @@ class XmippBrowserCTF(XmippBrowserPreview):
         self.allowFilter = False
         if hasattr(self, 'md') and self.md: 
             self.insertFiles =  self.insertFilesFromMd
-    
+        self.maxFreq = 0.5
+        self.unitLabel = '1/px'
+        self.unit = getattr(self, 'unit', 'pixel')
+        
+        if self.freqs and self.unit == 'angstrom':
+            self.unitLabel = '1/A'
+            self.freqs = [float(f) * self.sampling for f in self.freqs]
+            self.maxFreq /= self.sampling
+
     def insertFilesFromMd(self, path):
         from xmipp import MDL_MICROGRAPH
         files = [self.md.getValue(MDL_MICROGRAPH, objId) for objId in self.md]
@@ -1824,7 +1832,8 @@ class XmippBrowserCTF(XmippBrowserPreview):
         self.lf, self.hf = 0, 0
         if self.freqs:
             self.lf = self.freqs[0]
-            self.hf = self.freqs[1]           
+            self.hf = self.freqs[1]
+
         from protlib_gui_figure import PsdPreview
         return PsdPreview(self.detailstop, self.dim, self.lf, self.hf, dpi=64, col=1)
     
@@ -1872,7 +1881,17 @@ class XmippBrowserCTF(XmippBrowserPreview):
         self.hfSlider = self.addFreqSlider('High freq', self.hf)
         
     def addFreqSlider(self, label, value):
-        slider = XmippSlider(self.freqFrame, label, from_=0, to=0.5, value=value, callback=lambda a, b, c:self.updateFreqRing())
+            #def __init__(self, master, label, from_=0, to=100, value=50, callback=None, step=0.01):
+
+        slider = XmippSlider(self.freqFrame, 
+                             '%s (%s)' % (label, self.unitLabel), 
+                             from_=0, 
+                             to=self.maxFreq, 
+                             value=value, 
+                             step=self.maxFreq/100.,
+                             callback=lambda a, 
+                             b, 
+                             c:self.updateFreqRing())
         slider.pack(side=tk.LEFT, padx=3, pady=3)
         return slider
         
@@ -1890,8 +1909,10 @@ class XmippBrowserBandpassFilter(XmippBrowserCTF):
         that will not be passed to XmippBrowser constructor
     '''
     def __init__(self, **args):
-        XmippBrowserPreview.__init__(self, **args)
+        XmippBrowserCTF.__init__(self, **args)
         self.lf, self.hf, self.decay = self.freqs
+        for varName in ['showLowFreq', 'showHighFreq', 'showDecay']:
+            setattr(self, varName, getattr(self, varName, True))
     
     def createResultPreview(self):
         from protlib_xmipp import getFirstImage
@@ -1919,6 +1940,12 @@ class XmippBrowserBandpassFilter(XmippBrowserCTF):
     def addFrequenciesBox(self, parent):
         XmippBrowserCTF.addFrequenciesBox(self, parent)
         self.decaySlider = self.addFreqSlider('Decay', self.decay)
+        if not self.showDecay:
+            self.decaySlider.pack_forget()
+        if not self.showLowFreq:
+            self.lfSlider.pack_forget()
+        if not self.showHighFreq:
+            self.hfSlider.pack_forget()
         
     def onClick(self, e):
         pass
@@ -2026,11 +2053,23 @@ class XmippBrowserMask(XmippBrowser):
     def createDetailsBottom(self, parent):
         self.text = None
         frame = ttk.Frame(parent)
-        xdim = self.real_dim
-        self.innerRadiusSlider = XmippSlider(frame, "Inner radius", from_=0, to=xdim/2, value=self.innerRadius, step=1,
+        xdim = self.real_dim 
+        step = 1
+        if self.unit == 'angstrom':
+            xdim *= self.sampling
+            step *= self.sampling
+            self.innerRadius *= self.sampling
+            self.outerRadius *= self.sampling
+            self.rate /= self.sampling
+            
+        self.innerRadiusSlider = XmippSlider(frame, "Inner radius", from_=0, to=xdim/2, value=self.innerRadius, step=step,
                               callback=lambda a, b, c:self.updateMaskRadius())
-        self.outerRadiusSlider = XmippSlider(frame, "Outer radius", from_=1, to=xdim/2, value=self.outerRadius, step=1,
+        self.outerRadiusSlider = XmippSlider(frame, "Outer radius", from_=1, to=xdim/2, value=self.outerRadius, step=step,
                                   callback=lambda a, b, c:self.updateMaskRadius())
+#        if self.unit == 'angstrom':
+#            self.innerRadiusSlider /= self.sampling
+#            self.outerRadiusSlider /= self.sampling
+
         if self.showInner:
             self.innerRadiusSlider.grid(row=0, column=0)#, padx=3, pady=3)
         self.outerRadiusSlider.grid(row=1, column=0)#, padx=3, pady=3)

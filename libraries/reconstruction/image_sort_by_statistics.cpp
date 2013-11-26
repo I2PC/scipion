@@ -263,13 +263,14 @@ void ProgSortByStatistics::processInprocessInputPrepareSPTH(MetaData &SF)
             A1D_ELEM(v2,0)=majorAxis/((img().xdim) );
             A1D_ELEM(v2,1)=minorAxis/((img().xdim) );
             A1D_ELEM(v2,2)= (fabs((img().xdim)/2-x0)+fabs((img().ydim)/2-y0))/((img().xdim)/2);
-            A1D_ELEM(v2,3)=area/( ((img().xdim)/2)*((img().ydim)/2) );
+            A1D_ELEM(v2,3)=area/( (double)((img().xdim)/2)*((img().ydim)/2) );
 
             for (int n=0 ; n < numDescriptors2 ; n++)
             {
-                if ( std::isnan(A1D_ELEM(v2,n)) )
+                if ( std::isnan(std::abs(A1D_ELEM(v2,n))))
                     A1D_ELEM(v2,n)=0;
             }
+
             tempPcaAnalyzer2.addVector(v2);
 
             //mI.setXmippOrigin();
@@ -314,6 +315,7 @@ void ProgSortByStatistics::processInprocessInputPrepareSPTH(MetaData &SF)
         }
     }
 
+
     tempPcaAnalyzer0.evaluateZScore(2,20);
     tempPcaAnalyzer1.evaluateZScore(2,20);
     tempPcaAnalyzer2.evaluateZScore(2,20);
@@ -322,7 +324,7 @@ void ProgSortByStatistics::processInprocessInputPrepareSPTH(MetaData &SF)
 
     pcaAnalyzer.push_back(tempPcaAnalyzer0);
     pcaAnalyzer.push_back(tempPcaAnalyzer1);
-    pcaAnalyzer.push_back(tempPcaAnalyzer2);
+    pcaAnalyzer.push_back(tempPcaAnalyzer1);
     pcaAnalyzer.push_back(tempPcaAnalyzer3);
     pcaAnalyzer.push_back(tempPcaAnalyzer4);
 
@@ -434,6 +436,7 @@ void ProgSortByStatistics::run()
     MultidimArray<double> ZscoreSNR1(SF.size()), sortedZscoreSNR1;
     MultidimArray<double> ZscoreSNR2(SF.size()), sortedZscoreSNR2;
     MultidimArray<double> ZscoreHist(SF.size()), sortedZscoreHist;
+
 
     finalZscore.initConstant(0);
     ZscoreShape1.resizeNoCopy(finalZscore);
