@@ -37,7 +37,8 @@ class ProtRelionBase(XmippProtocol):
             self.program = 'relion_refine'
         self.ParamsDict['program'] = self.program
         
-        self.addParam('ORoot', self.WorkingDir + '/')        
+        self.addParam('ORoot', self.WorkingDir + '/')
+        print ">>>>>>>>>>>>>>>>>>>>", self.ImgMd
         self.addParam('SamplingRate', getSampling(self.ImgMd))
 
     def summary(self):
