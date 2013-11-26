@@ -49,9 +49,9 @@ class TestXmippBase(unittest.TestCase):
         return cls.protPP       
 
     @classmethod
-    def runImportParticles(cls, pattern, samplingRate):
+    def runImportParticles(cls, pattern, samplingRate, checkStack):
         """ Run an Import particles protocol. """
-        cls.protImport = ProtImportParticles(pattern=pattern, samplingRate=samplingRate)
+        cls.protImport = ProtImportParticles(pattern=pattern, samplingRate=samplingRate, checkStack=checkStack)
         cls.proj.launchProtocol(cls.protImport, wait=True)
         # check that input images have been imported (a better way to do this?)
         if cls.protImport.outputParticles is None:
@@ -146,7 +146,26 @@ class TestXmippCTFEstimation(TestXmippBase):
     def test_Micrographs_BPV3_Down3(self):
         self.doCTF(pattern = getInputPath('Micrographs_BPV3_Down3', '*.mrc')) 
     
+
+class TestXmippAutomaticPicking(TestXmippBase):
     
+    @classmethod
+    def setUpClass(cls):
+        setupProject(cls)    
+        pattern = getInputPath('Micrographs_BPV3_Down3', '*.mrc')
+        protImport = cls.runImportMicrograph(pattern, samplingRate=1.237, voltage=300, sphericalAberration=2, scannedPixelSize=None, magnification=56000)       
+        pattern = getInputPath('Micrographs_BPV3', '*.mrc')
+        cls.protImport_ori = cls.runImportMicrograph(pattern, samplingRate=1.237, voltage=300, sphericalAberration=2, scannedPixelSize=None, magnification=56000)        
+        cls.protPP = cls.runFakedPicking(protImport.outputMicrographs, 'Picking_XmippBPV3_Down3_Super')
+        
+    def testAutomaticPicking(self):
+        print "Run automatic particle picking"
+        protAutomaticPP = XmippParticlePickingAutomatic()
+        protAutomaticPP.xmippParticlePicking.set(self.protPP)
+        self.proj.launchProtocol(protAutomaticPP, wait=True)
+        
+        self.assertIsNotNone(protAutomaticPP.outputCoordinates, "There was a problem with the automatic particle picking")
+                    
 class TestXmippExtractParticles(TestXmippBase):
     
     SAME_AS_PICKING = 1
@@ -206,6 +225,24 @@ class TestXmippExtractParticles(TestXmippBase):
 #        self.assertIsNotNone(protExtract.outputParticles, "There was a problem with the extract particles") 
 
      
+class TestXmippScreenParticles(TestXmippBase):
+    
+    @classmethod
+    def setUpClass(cls):
+        setupProject(cls)
+        
+        #TODO: Find a set of images to make this work, with this it does not
+        pattern = getInputPath('Images_Vol_ML3D/phantom_images', '*.xmp')
+        cls.protImport = cls.runImportParticles(pattern=pattern, samplingRate=5.6, checkStack=True)        
+        
+    def atestScreenParticles(self):
+        print "Run Screen Particles"
+        protScreen = XmippProtScreenParticles()
+        protScreen.inputParticles.set(self.protImport.outputParticles)
+        self.proj.launchProtocol(protScreen, wait=True)        
+        
+        self.assertIsNotNone(protScreen.outputParticles, "There was a problem with Screen Particles")  
+    
 def setupClassification(cls):
     """ Method to setup classification Test Cases. """
     setupProject(cls)
