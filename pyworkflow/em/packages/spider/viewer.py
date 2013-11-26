@@ -42,7 +42,7 @@ from protocol_custommask import SpiderProtCustomMask
 from protocol_align_apsr import SpiderProtAlignAPSR
 
     
-class SpiderViewerGeneric(Viewer):
+class SpiderViewer(Viewer):
     """ Wrapper to visualize different type of objects
     with the Xmipp program xmipp_showj
     """
@@ -62,4 +62,8 @@ class SpiderViewerGeneric(Viewer):
             XmippViewer().visualize(mask)
             # Remove location to visualize the whole stack
             runShowJ(mask.getFileName())
+            
+    @classmethod
+    def getView(self):
+        return "viewerSpider"
             

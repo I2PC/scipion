@@ -29,7 +29,7 @@ This modules contains classes related with EM
 import os
 
 import pyworkflow as pw
-from pyworkflow.utils.reflection import getSubClassesFromPath, getSubclasses
+from pyworkflow.utils.reflection import getSubclassesFromModules, getSubclasses, getModules
 from data import *
 from protocol import *
 from constants import *
@@ -38,20 +38,21 @@ from pyworkflow.viewer import Viewer, Wizard
 #from packages import *
 
 PACKAGES_PATH = os.path.join(pw.HOME, 'em', 'packages')
+PACKAGES_DICT = getModules(PACKAGES_PATH)
 
 # Load all Protocol subclasses found in EM-packages
-emProtocolsDict = getSubClassesFromPath(Protocol, PACKAGES_PATH)
+emProtocolsDict = getSubclassesFromModules(Protocol, PACKAGES_DICT)
 emProtocolsDict.update(getSubclasses(Protocol, globals()))
 
 # Load all EMObject subclasses found in EM-packages
-emObjectsDict = getSubClassesFromPath(EMObject, PACKAGES_PATH)
+emObjectsDict = getSubclassesFromModules(EMObject, PACKAGES_DICT)
 emObjectsDict.update(getSubclasses(EMObject, globals()))
 
 # Load all subclasses of Viewer of different packages
-emViewersDict = getSubClassesFromPath(Viewer, PACKAGES_PATH)
+emViewersDict = getSubclassesFromModules(Viewer, PACKAGES_DICT)
 
 # Load all subclasses of Wizards
-emWizardsDict = getSubClassesFromPath(Wizard, PACKAGES_PATH)
+emWizardsDict = getSubclassesFromModules(Wizard, PACKAGES_DICT)
         
 def findClass(className):
     if className in emProtocolsDict:
@@ -67,8 +68,7 @@ def findSubClasses(classDict, className):
     
     for k, v in classDict.iteritems():
         if issubclass(v, cls):
-            subclasses[k] = v
-    
+            subclasses[k] = v    
     return subclasses
 
 
