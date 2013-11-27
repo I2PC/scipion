@@ -39,13 +39,26 @@ END_HEADER = 'END BATCH HEADER'
 
 
 def loadEnvironment():
-    """ Load the environment variables needed for use EMAN2 tools. """
-    SPIDER_DIR = os.environ['SPIDER_DIR']
+    """ Load the environment variables needed for Spider.
+    If SPIDER_DIR is defined, the bin, man and proc folders will be 
+    defined from it. If not, each of them should be defined separately. 
+    """
     
-    os.environ['SPBIN_DIR'] = join(SPIDER_DIR, 'bin', '')
-    os.environ['SPMAN_DIR'] = join(SPIDER_DIR, 'man', '')
-    os.environ['SPPROC_DIR'] = join(SPIDER_DIR, 'proc', '')
+    SPIDER_DIR = os.environ.get('SPIDER_DIR', None) # Scipion definition
     
+    if SPIDER_DIR is None:
+        errors = ''
+        for var in ['SPBIN_DIR', 'SPMAN_DIR', 'SPPROC_DIR']:
+            if not var in os.environ:
+                errors += "\n   Missing SPIDER variable: '%s'" % var
+        if len(errors):
+            print "ERRORS: " + errors
+    else: 
+        os.environ['SPBIN_DIR'] = join(SPIDER_DIR, 'bin', '')
+        os.environ['SPMAN_DIR'] = join(SPIDER_DIR, 'man', '')
+        os.environ['SPPROC_DIR'] = join(SPIDER_DIR, 'proc', '')
+    
+    #TODO: maybe validate that the 
     os.environ['PATH'] = os.environ['PATH'] + os.pathsep + os.environ['SPBIN_DIR']
     
     
