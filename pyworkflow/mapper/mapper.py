@@ -107,6 +107,23 @@ class Mapper():
         This behaviour can be changed by passing includeSubclass=False"""
         return self.selectBy(classname=className)
     
+    def getParent(self, obj):
+        """ Retrieve the parent object of another. """
+        pass
+
+    def getFullName(self, obj):
+        """ Return the full object name such as:
+        grandparent.parent.objName
+        """
+        nameParts = []
+        parent = obj
+        
+        while parent:
+            nameParts.insert(0, parent.getLastName())
+            parent = self.getParent(parent)
+            
+        return '.'.join(nameParts)
+            
     def insertRelation(self, relName, creatorObj, parentObj, childObj):
         """ This function will add a new relation between two objects.
         Params:

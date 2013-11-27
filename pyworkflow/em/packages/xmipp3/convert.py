@@ -379,8 +379,6 @@ def readSetOfCoordinates(posDir, micSet, coordSet):
             name should be the same of the micrographs.
         coordSet: the SetOfCoordinates that will be populated.
     """
-    from protlib_particles import readPosCoordinates
-    
     # Read the boxSize from the config.xmd metadata
     md = xmipp.MetaData('properties@' + join(posDir, 'config.xmd'))
     boxSize = md.getValue(xmipp.MDL_PICKING_PARTICLE_SIZE, md.firstObject())
@@ -397,6 +395,25 @@ def readSetOfCoordinates(posDir, micSet, coordSet):
     coordSet._xmippMd = String(posDir)
     coordSet.setBoxSize(boxSize)
 
+def readPosCoordinates(posFile):
+    """ Read the coordinates in .pos file and return corresponding metadata.
+    There are two possible blocks with particles:
+    particles: with manual/supervised particles
+    particles_auto: with automatically picked particles.
+    If posFile doesn't exist, the metadata will be empty 
+    """
+    md = xmipp.MetaData()
+    
+    if exists(posFile):
+        blocks = xmipp.getBlocksInMetaDataFile(posFile)
+        
+        for b in ['particles', 'particles_auto']:
+            if b in blocks:
+                mdAux = xmipp.MetaData('%(b)s@%(posFile)s' % locals())
+                md.unionAll(mdAux)
+        md.removeDisabled()
+    
+    return md
 
 def readSetOfImages(filename, imgSet, rowToFunc, hasCtf):
     """read from Xmipp image metadata.
@@ -567,3 +584,4 @@ def createXmippInputMicrographs(self, micSet, rowFunc=None):
     else:
         micsFn = micsMd.get()
     return micsFn
+

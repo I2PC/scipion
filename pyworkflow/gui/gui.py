@@ -129,11 +129,10 @@ def changeFontSize(font, event, minSize=-999, maxSize=999):
 IMAGE related variables and functions 
 """
 
-def getImage(imageName, imgDict=None, tk=True):
+def getImage(imageName, imgDict=None, tk=True, percent=100):
     """ Search for the image in the RESOURCES path list. """
     if imageName is None:
         return None
-    from pyworkflow.utils.path import findResource
     if imgDict is not None and imageName in imgDict:
         return imgDict[imageName]
     imagePath = findResource(imageName)
@@ -141,6 +140,11 @@ def getImage(imageName, imgDict=None, tk=True):
     if imagePath:
         from PIL import Image, ImageTk
         image = Image.open(imagePath)
+        if percent != 100: # Display image with other dimensions
+            (w, h) = image.size
+            fp = float(percent)/100.0
+            newSize = int(fp * w), int(fp * h)
+            image.thumbnail(newSize, Image.ANTIALIAS)
         if tk:
             image = ImageTk.PhotoImage(image)
         if imgDict is not None:
@@ -309,8 +313,8 @@ class Window():
             self.master.root.focus_set()
         self.close()
         
-    def getImage(self, imgName):
-        return getImage(imgName, self._images)
+    def getImage(self, imgName, percent=100):
+        return getImage(imgName, self._images, percent=percent)
     
     def createMainMenu(self, menuConfig):
         """Create Main menu from a given configuration"""

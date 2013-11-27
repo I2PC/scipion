@@ -27,12 +27,10 @@
 This sub-package contains protocol for particles filters operations
 """
 
-
 from pyworkflow.em import *  
-from pyworkflow.utils import removeExt, removeBaseExt
+from pyworkflow.utils import removeBaseExt
 from constants import *
 from spider import SpiderShell, SpiderProtocol
-from convert import locationToSpider
         
 
       
@@ -136,12 +134,11 @@ class SpiderProtFilter(ProtFilterParticles, SpiderProtocol):
         """
         particles = self.inputParticles.get()
         n = particles.getSize()
-        
         OP = self._op
+        args = []
+
         if not self.usePadding:
             OP += ' NP'
-        
-        args = []
         
         if filterType <= FILTER_GAUSSIAN:
             args.append(self.filterRadius.get())
@@ -153,10 +150,8 @@ class SpiderProtFilter(ProtFilterParticles, SpiderProtocol):
         
         # Map to spected filter number in Spider for operation FQ    
         filterNumber = filterType * 2 + 1
-        
         # Consider low-pass or high-pass
         filterNumber += self.filterMode.get()
-            
         
         imgSet = self._createSetOfParticles()
         imgSet.copyInfo(self.inputParticles.get())
@@ -165,16 +160,22 @@ class SpiderProtFilter(ProtFilterParticles, SpiderProtocol):
         self._enterWorkingDir() # Do operations inside the run working dir
         
         spi = SpiderShell(ext=self._params['ext']) # Create the Spider process to send commands        
-        #inputStk = removeBaseExt(self.inputStk)
         particlesStk = removeBaseExt(self.particlesStk)
         
-    
+        # Run a loop for filtering
+        locStr = particlesStk + '@******[part]'
+        cmds = ['do lb5 [part] = 1,%d' % n,
+                OP, locStr, locStr, filterNumber] + args + ['lb5']
+        
+        for c in cmds:
+            spi.runCmd(c)
+            
         for i in range(1, n+1):
-            locStr = locationToSpider(i, particlesStk)
-            spi.runFunction(OP, locStr, locStr, filterNumber, *args)
             img = Image()
             img.setLocation(i, self.particlesStk)
             imgSet.append(img)
+            
+        spi.close()
             
         self._leaveWorkingDir() # Go back to project dir
             
