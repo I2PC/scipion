@@ -145,14 +145,7 @@ class SubclassesTreeProvider(TreeProvider):
         return [('Object', 400), ('Info', 250)]
     
     def getObjectInfo(self, obj):
-        nameParts = []
-        parent = obj
-        
-        while parent:
-            nameParts.insert(0, parent.getLastName())
-            parent = self.mapper.getParent(parent)
-            
-        objName = '.'.join(nameParts)
+        objName = self.mapper.getFullName(obj)
         return {'key': objName, 'values': (str(obj),)}
 
     def getObjectActions(self, obj):
