@@ -157,8 +157,16 @@ class TestXmippAutomaticPicking(TestXmippBase):
         pattern = getInputPath('Micrographs_BPV2_Down3', '*.mrc')
         cls.protImport_other = cls.runImportMicrograph(pattern, samplingRate=1.237, voltage=300, sphericalAberration=2, scannedPixelSize=None, magnification=56000)        
         cls.protPP = cls.runFakedPicking(protImport.outputMicrographs, 'Picking_XmippBPV3_Down3_Super')
-        
+
     def testAutomaticPicking(self):
+        print "Run automatic particle picking"
+        protAutomaticPP = XmippParticlePickingAutomatic()
+        protAutomaticPP.xmippParticlePicking.set(self.protPP)
+        self.proj.launchProtocol(protAutomaticPP, wait=True)
+        
+        self.assertIsNotNone(protAutomaticPP.outputCoordinates, "There was a problem with the automatic particle picking")
+        
+    def testAutomaticPickingOther(self):
         print "Run automatic particle picking"
         protAutomaticPP = XmippParticlePickingAutomatic()
         protAutomaticPP.xmippParticlePicking.set(self.protPP)
