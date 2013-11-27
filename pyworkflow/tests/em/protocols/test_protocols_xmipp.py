@@ -166,7 +166,7 @@ class TestXmippAutomaticPicking(TestXmippBase):
         
         self.assertIsNotNone(protAutomaticPP.outputCoordinates, "There was a problem with the automatic particle picking")
         
-    def testAutomaticPickingOther(self):
+    def atestAutomaticPickingOther(self):
         print "Run automatic particle picking"
         protAutomaticPP = XmippParticlePickingAutomatic()
         protAutomaticPP.xmippParticlePicking.set(self.protPP)
