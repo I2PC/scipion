@@ -144,9 +144,9 @@ class ManagerWindow(gui.Window):
         f.columnconfigure(1, minsize=400)
         f.rowconfigure(1, minsize=250)
         # Add logo
-        logo = self.getImage('scipion_logo.gif')
+        logo = self.getImage('scipion_logo.gif', percent=50)
         label = tk.Label(f, image=logo, borderwidth=0)
-        label.grid(row=0, column=0, sticky='nw')
+        label.grid(row=0, column=0, sticky='nw', pady=5, padx=5)
         # Add create project button
         #font = tkFont.Font(size=12, family='verdana')#, weight='bold')
         btn = Button(f, text='Create Project', command=self.createNewProject)
