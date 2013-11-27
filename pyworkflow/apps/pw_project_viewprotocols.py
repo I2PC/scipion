@@ -239,8 +239,8 @@ class RunIOTreeProvider(TreeProvider):
                 obj = obj.get()
                 image = 'db_input.gif'
                 parent = self.inputStr
-                parentObj = self.mapper.getParent(obj)
-                name += '   (from %s.%s)' % (parentObj.getLastName(), obj.getLastName())
+                objName = self.mapper.getFullName(obj)
+                name += '   (from %s)' % objName
             info = {'key': obj.getObjId(), 'parent': parent, 'image': image,
                     'text': name, 'values': (str(obj),)}
         return info     
