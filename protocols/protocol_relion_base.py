@@ -43,7 +43,7 @@ class ProtRelionBase(XmippProtocol):
             try:
                 self.inputProperty('ImgMd')  
             except:
-                print "Can not access the parameters from the original relion run"
+                print "Cannot find the input file  with experimental images in protocol %s"%(self.PrevRunName)
 
         self.addParam('ORoot', self.WorkingDir + '/')
         self.addParam('SamplingRate', getSampling(self.ImgMd))
