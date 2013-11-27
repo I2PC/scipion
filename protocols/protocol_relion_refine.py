@@ -24,7 +24,7 @@ from protlib_gui_figure import XmippPlotter
 from protlib_gui_ext import showWarning, showTable, showError
 
 from protocol_relion_base import ProtRelionBase, runNormalizeRelion, convertImagesMd, renameOutput, \
-                                 convertRelionBinaryData, convertRelionMetadata
+                                 convertRelionBinaryData, convertRelionMetadata, getIteration
 
 class ProtRelionRefinner( ProtRelionBase):
     def __init__(self, scriptname, project):
@@ -40,7 +40,6 @@ class ProtRelionRefinner( ProtRelionBase):
             try:
                 self.inputProperty('MaskRadiusA')
                 self.inputProperty('NumberOfClasses')
-                self.inputProperty('RegularisationParamT')
                 self.inputProperty('Ref3D')
             except:
                 print "Can not access the parameters from the original relion run"
@@ -85,7 +84,7 @@ class ProtRelionRefinner( ProtRelionBase):
         return [] 
     
     def validateRefineContinue(self):
-        print "validateClassifyContinue"
+        print "validateRefineContinue"
         lastIterationPrecRun=self.PrevRun.lastIter()
         errors=[]
         if '3D/RelionRef' not in self.optimiserFileName:
