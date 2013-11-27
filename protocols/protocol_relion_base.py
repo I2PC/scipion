@@ -41,7 +41,7 @@ class ProtRelionBase(XmippProtocol):
             #if optimizer has not been properly selected this will 
             #fail, let us go ahead and handle the situation in verify
             try:
-                self.inputProperty('ImgMd')  
+                self.inputProperty('ImgMd')
             except:
                 print "Cannot find the input file  with experimental images in protocol %s"%(self.PrevRunName)
 
