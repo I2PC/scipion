@@ -35,6 +35,7 @@ from pyworkflow.apps.config import *
 from pyworkflow.protocol import *
 from pyworkflow.mapper import SqliteMapper
 from pyworkflow.utils import cleanPath, makePath, makeFilePath, join, exists, runJob, copyFile
+from pyworkflow.utils.graph import Graph
 from pyworkflow.hosts import HostMapper, HostConfig
 import pyworkflow.protocol.launch as jobs
 
@@ -292,7 +293,6 @@ class Project(object):
         if refresh or self._runsGraph is None:
             outputDict = {} # Store the output dict
             runs = [r for r in self.getRuns(refresh=True) if not r.isChild()]
-            from pyworkflow.utils.graph import Graph
             g = Graph(rootName='PROJECT')
             
             for r in runs:

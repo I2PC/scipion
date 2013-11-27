@@ -81,7 +81,10 @@ if __name__ == '__main__':
         elif mode == MODE_TESTS:
             if n > 2:
                 tests = sys.argv[2]
+                path = os.getcwd()
+                os.chdir(PW_HOME)
                 runCmd('python -m unittest pyworkflow.tests.%s' % tests)
+                os.chdir(path)
         
     # If reach this point, bad arguments passed
     print """
