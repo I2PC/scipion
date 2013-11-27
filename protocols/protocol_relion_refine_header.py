@@ -197,17 +197,17 @@ ReferenceMask = ""
 #-----------------------------------------------------------------------------
 
 # 
-# {list_combo}(30,15,7.5,3.7,1.8,0.9,0.5,0.2,0.1) Angular sampling interval (deg):
+# {condition}(not DoContinue){list_combo}(30,15,7.5,3.7,1.8,0.9,0.5,0.2,0.1) Angular sampling interval (deg):
 """There are only a few discrete angular samplings possible because we use the HealPix library to generate the sampling of the first two Euler angles on the sphere. The samplings are approximate numbers and vary slightly over the sphere.
 """
 AngularSamplingDeg = '7.5'
 
-# Offset search range (pix):
+# {condition}(not DoContinue)Offset search range (pix):
 """Probabilities will be calculated only for translations in a circle with this radius (in pixels). The center of this circle changes at every iteration and is placed at the optimal translation for each image in the previous iteration.
 """
 OffsetSearchRangePix = 5
 
-# Offset search step (pix):
+# {condition}(not DoContinue)Offset search step (pix):
 """Translations will be sampled with this step-size (in pixels).Translational sampling is also done using the adaptive approach. Therefore, if adaptive=1, the translations will first be evaluated on a 2x coarser grid.
 """
 OffsetSearchStepPix = 1
@@ -217,7 +217,7 @@ OffsetSearchStepPix = 1
 """
 PerformLocalAngularSearch = False
 
-# {condition}(not PerformLocalAngularSearch)Local angular search range
+# {condition}(PerformLocalAngularSearch)Local angular search range
 """
 """
 LocalAngularSearchRange = 5.0
