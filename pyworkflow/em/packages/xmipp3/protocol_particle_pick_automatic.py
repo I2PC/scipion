@@ -84,6 +84,8 @@ class XmippParticlePickingAutomatic(ProtParticlePicking, XmippProtocol):
         # Get micrographs to pick
         if self.micsToPick.get() == MICS_SAMEASPICKING:
             self.micrographs = self.particlePickingRun.inputMicrographs.get()
+            # Store in DB inputMicrographs pointer to be used on summary
+            self.inputMicrographs.set(self.particlePickingRun.inputMicrographs.get())
         else:
             self.micrographs = self.inputMicrographs.get()
             
@@ -106,13 +108,13 @@ class XmippParticlePickingAutomatic(ProtParticlePicking, XmippProtocol):
                         copyFile(fnPos, join(self._getExtraPath(), basename(fnPos)))
                         proceed = False            
     
-                if proceed:
-                    oroot = self._getExtraPath(micName)
-                    cmd = "-i %(micPath)s --particleSize %(boxSize)d --model %(modelRoot)s --outputRoot %(oroot)s --mode autoselect" % locals()
-                    #TODO: What is this?
-    #                if self.Fast:
-    #                    cmd += " --fast "
-                    self._insertRunJobStep("xmipp_micrograph_automatic_picking", cmd)
+            if proceed:
+                oroot = self._getExtraPath(micName)
+                cmd = "-i %(micPath)s --particleSize %(boxSize)d --model %(modelRoot)s --outputRoot %(oroot)s --mode autoselect" % locals()
+                #TODO: What is this?
+#                if self.Fast:
+#                    cmd += " --fast "
+                self._insertRunJobStep("xmipp_micrograph_automatic_picking", cmd)
                     
         # Insert step to create output objects       
         self._insertFunctionStep('createOutput')
@@ -133,4 +135,20 @@ class XmippParticlePickingAutomatic(ProtParticlePicking, XmippProtocol):
         # Check that all needed files exist
         if missingPaths(*srcPaths):
             validateMsgs.append('Input particle picking run is not valid.')
+            
+        # If other set of micrographs is provided they should have same sampling rate and acquisition
+        if self.micsToPick.get() == MICS_OTHER:
+            if self.inputMicrographs.get().getSamplingRate() != self.xmippParticlePicking.get().inputMicrographs.get().getSamplingRate():
+                validateMsgs.append('New micrographs should have same sampling rate as the ones already picked.')
+            if not self.inputMicrographs.get().getAcquisition().equalAttributes(self.xmippParticlePicking.get().inputMicrographs.get().getAcquisition()):
+                validateMsgs.append('New micrographs should have same acquisition parameters as the ones already picked.')
         return validateMsgs
+    
+    def _summary(self):
+        summary = []
+        if not hasattr(self, 'outputCoordinates'):
+            summary.append("Output coordinates not ready yet.") 
+        else:
+            summary.append("Previus run: " + self.xmippParticlePicking.get().getNameId())
+            summary.append("Number of particles picked: %d (from %d micrographs)" % (self.outputCoordinates.getSize(), self.inputMicrographs.get().getSize()))
+        return summary

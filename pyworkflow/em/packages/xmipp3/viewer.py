@@ -33,10 +33,9 @@ from pyworkflow.viewer import Viewer, Wizard, DESKTOP_TKINTER, WEB_DJANGO
 from pyworkflow.em import Image, SetOfImages, SetOfMicrographs, SetOfParticles, SetOfCoordinates, SetOfClasses2D, SetOfVolumes, SetOfCTF, ProtAlign, ProtProcessParticles
 from pyworkflow.utils.process import runJob
 from xmipp3 import getXmippPath
-from pyworkflow.em.protocol import ProtImportMicrographs, ProtCTFMicrographs
+from pyworkflow.em.protocol import ProtImportMicrographs, ProtCTFMicrographs, ProtParticlePicking
 from protocol_preprocess_micrographs import XmippProtPreprocessMicrographs
 from protocol_ctf_micrographs import XmippProtCTFMicrographs
-from protocol_particle_pick import XmippProtParticlePicking
 from protocol_extract_particles import XmippProtExtractParticles, ProtImportParticles
 from protocol_cl2d_align import XmippProtCL2DAlign
 from protocol_cl2d import XmippProtCL2D
@@ -57,7 +56,7 @@ class XmippViewer(Viewer):
     _environments = [DESKTOP_TKINTER, WEB_DJANGO]
     _targets = [Image, SetOfImages, SetOfCoordinates, SetOfClasses2D, 
                 ProtImportMicrographs, XmippProtPreprocessMicrographs, ProtCTFMicrographs,
-                XmippProtParticlePicking, ProtImportParticles, XmippProtExtractParticles,
+                ProtParticlePicking, ProtImportParticles, XmippProtExtractParticles,
                 ProtAlign, ProtProcessParticles, XmippProtKerdensom, XmippProtRotSpectra, SetOfClasses2D, SetOfCTF]
     
     def __init__(self, **args):
@@ -146,7 +145,7 @@ class XmippViewer(Viewer):
               issubclass(cls, XmippProtPreprocessMicrographs)):
             self.visualize(obj.outputMicrographs)
         
-        elif issubclass(cls, XmippProtParticlePicking):
+        elif issubclass(cls, ProtParticlePicking):
             self.visualize(obj.outputCoordinates)
         
         elif (issubclass(cls, ProtImportParticles) or

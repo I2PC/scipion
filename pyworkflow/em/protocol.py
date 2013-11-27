@@ -458,16 +458,15 @@ class ProtFilterParticles(ProtProcessParticles):
 
 
 class ProtParticlePicking(EMProtocol):
-    pass
-#    def _summary(self):
-#        summary = []
-#        if not hasattr(self, 'outputCoordinates'):
-#            summary.append("Output coordinates not ready yet.") 
-#        else:
-#            #TODO: MOVE following line to manual picking
-#            #summary.append("Input micrographs: " + self.inputMicrographs.get().getNameId())
-#            #summary.append("Number of particles picked: %d (from %d micrographs)" % (self.outputCoordinates.getSize(), self.inputMicrographs.get().getSize()))
-#        return summary
+    def _summary(self):
+        summary = []
+        if not hasattr(self, 'outputCoordinates'):
+            summary.append("Output coordinates not ready yet.") 
+        else:
+            #TODO: MOVE following line to manual picking
+            summary.append("Input micrographs: " + self.inputMicrographs.get().getNameId())
+            summary.append("Number of particles picked: %d (from %d micrographs)" % (self.outputCoordinates.getSize(), self.inputMicrographs.get().getSize()))
+        return summary
 
 
 class ProtCreateMask(EMProtocol):
