@@ -269,8 +269,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
             self.runJob(None,"xmipp_micrograph_scissor", args)
             # Normalize 
             if self.doNormalize:
-                from protlib_particles import runNormalize
-                runNormalize(None, outputRoot + '.stk',self.normType.get(), self.backRadius.get(), 1)          
+                self.runNormalize(outputRoot + '.stk', self.normType.get(), self.backRadius.get())          
                                
             if (self.downsampleType.get() == self.OTHER) or (fnCTF is not None):
                 selfile = outputRoot + ".xmd"
@@ -283,6 +282,22 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
                 if fnCTF is not None:
                     md.setValueCol(xmipp.MDL_CTF_MODEL, fnCTF)
                 md.write(selfile)
+                
+    def runNormalize(self, stack, normType, bgRadius):
+        program = "xmipp_transform_normalize"
+        args = "-i %(stack)s "
+        
+        if bgRadius <= 0:
+            particleSize = xmipp.MetaDataInfo(stack)[0]
+            bgRadius = int(particleSize/2)
+        
+        if normType=="OldXmipp":
+            args += "--method OldXmipp"
+        elif normType=="NewXmipp":
+            args += "--method NewXmipp --background circle %(bgRadius)d"
+        else:
+            args += "--method Ramp --background circle %(bgRadius)d"
+        self.runJob(None, program, args % locals())
                     
     def getImgIdFromCoord(self, coordId):
         """ Get the image id from the related coordinate id. """

@@ -299,17 +299,18 @@ class Project(object):
                 n = g.createNode(r.strId())
                 n.run = r
                 n.label = r.getRunName()
-                
+                outputDict[r.getName()] = n
                 for _, attr in r.iterOutputAttributes(EMObject):
                     outputDict[attr.getName()] = n # mark this output as produced by r
                 
             def _checkInputAttr(node, pointed):
                 """ Check if an attr is registered as output"""
-                pointedName = pointed.getName()
-                if pointedName in outputDict:
-                    parentNode = outputDict[pointedName]
-                    parentNode.addChild(node)
-                    return True
+                if pointed:
+                    pointedName = pointed.getName()
+                    if pointedName in outputDict:
+                        parentNode = outputDict[pointedName]
+                        parentNode.addChild(node)
+                        return True
                 return False
                 
             for r in runs:
@@ -319,7 +320,10 @@ class Project(object):
                         pointed = attr.get()
                         # Only checking pointed object and its parent, if more levels
                         # we need to go up to get the correct dependencies
-                        _checkInputAttr(node, pointed) or _checkInputAttr(node, self.mapper.getParent(pointed))
+                        (#_checkInputAttr(node, attr) or 
+                         _checkInputAttr(node, pointed) or 
+                         _checkInputAttr(node, self.mapper.getParent(pointed))
+                        )
             rootNode = g.getRoot()
             rootNode.run = None
             rootNode.label = "PROJECT"

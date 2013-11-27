@@ -178,9 +178,13 @@ class LevelTree(object):
         for each level of the tree'''
         node.hLimits = [[-node.half, node.half]]
         #print "getHLimits, parent: ", node.t.text
-        for child in node.getChilds():
+        childs = [c for c in node.getChilds() if c.parent is node]
+        for child in childs:
             count = 1
             #printHLimits(c, " child")
+            if not hasattr(child, 'hLimits'):
+                print "node %s has no hLimits" % child.label
+                raise Exception()
             
             for l, r in child.hLimits:
                 l += child.offset
