@@ -159,7 +159,7 @@ DoIntensityCorrection = False
 
 
 #------------------------------------------------------------------------------------------------
-# {section} Optimisation# {condition}(not DoContinue) {section} Optimisation
+# {condition}(not DoContinue){section} Optimisation
 #------------------------------------------------------------------------------------------------
 
 # {wizard}(wizardChooseLowPassFilter) Initial low-pass filter (A): 
