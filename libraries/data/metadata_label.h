@@ -146,6 +146,8 @@ enum MDLabel
     MDL_CTF_CRIT_NONASTIGMATICVALIDITY, ///< Maximum frequency (in Angstroms) at which non-astigmatic CTF correction is valid
     MDL_CTF_CRIT_PSDCORRELATION90, ///< PSD correlation at 90 degrees
     MDL_CTF_CRIT_FIRSTZERORATIO, ///< First zero ratio
+    MDL_CTF_CRIT_FIRSTMINIMUM_FIRSTZERO_RATIO, ///< Ratio sigma(firstMinimum)/sigma(firstZero)
+    MDL_CTF_CRIT_FIRSTMINIMUM_FIRSTZERO_DIFF_RATIO, ///< Ratio sigma(firstMinimum-firstZero)/sigma(firstZero)
     MDL_CTF_CRIT_FIRSTZEROAVG, ///< First zero average (in Angstroms)
     MDL_CTF_CRIT_FIRSTZERODISAGREEMENT, ///< First zero disagreement with second model (in Angstroms)
     MDL_CTF_CRIT_MAXFREQ, ///< Maximum frequency at which the envelope drops below 0.1 (in Angstroms)
@@ -837,6 +839,8 @@ private:
         MDL::addLabel(MDL_CTF_CRIT_FIRSTZERODISAGREEMENT, LABEL_DOUBLE, "ctfCritDisagree");
         MDL::addLabel(MDL_CTF_CRIT_MAXFREQ, LABEL_DOUBLE, "ctfCritMaxFreq");
         MDL::addLabel(MDL_CTF_CRIT_FIRSTZERORATIO, LABEL_DOUBLE, "ctfCritfirstZeroRatio");
+        MDL::addLabel(MDL_CTF_CRIT_FIRSTMINIMUM_FIRSTZERO_RATIO, LABEL_DOUBLE, "ctfCritFirstMinFirstZeroRatio");
+        MDL::addLabel(MDL_CTF_CRIT_FIRSTMINIMUM_FIRSTZERO_DIFF_RATIO, LABEL_DOUBLE, "ctfCritCtfMargin");
         MDL::addLabel(MDL_CTF_CRIT_FITTINGCORR13, LABEL_DOUBLE, "ctfCritCorr13");
         MDL::addLabel(MDL_CTF_CRIT_FITTINGSCORE, LABEL_DOUBLE, "ctfCritFitting");
         MDL::addLabel(MDL_CTF_CRIT_NORMALITY, LABEL_DOUBLE, "ctfCritNormality");

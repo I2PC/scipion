@@ -971,6 +971,12 @@ takeArguments()
     DO_CONFIGURE=1
     DO_COMPILE=1
   fi
+
+  # DO_TCLTK is an alias of DO_TCL and DO_TK
+  if [ ${DO_TCLTK} -eq 1 ]; then
+    doIt pymodule ${TCL_TAR} 1
+    doIt pymodule ${TK_TAR} 1
+  fi
 }
 
 takeDefaults()
@@ -1496,12 +1502,18 @@ preparePythonEnvironment()
     if [ $? -eq 1 ]; then
       echoExec "cd ${EXT_PYTHON}/${TK_FOLDER}/unix/" "/dev/null" 1
       echoExec "ln -sf libtk8.5.so  libtk.so" "/dev/null"
+      echoExec "ln -sf ${EXT_PYTHON}/${TK_FOLDER}/unix/libtk8.5.so ${XMIPP_HOME}/lib" "/dev/null"
+      echoExec "ln -sf ${EXT_PYTHON}/${TK_FOLDER}/unix/libtk.so ${XMIPP_HOME}/lib" "/dev/null"
+      echoExec "ln -sf ${EXT_PYTHON}/${TK_FOLDER}/unix/libtkstub8.5.a ${XMIPP_HOME}/lib" "/dev/null"
       echoExec "cd -" "/dev/null" 1
     fi
     shouldIDoIt pymodule ${TCL_TAR}
     if [ $? -eq 1 ]; then
       echoExec "cd ${EXT_PYTHON}/${TCL_FOLDER}/unix/" "/dev/null" 1
       echoExec "ln -sf libtcl8.5.so  libtcl.so" "/dev/null"
+      echoExec "ln -sf ${EXT_PYTHON}/${TCL_FOLDER}/unix/libtcl8.5.so ${XMIPP_HOME}/lib" "/dev/null"
+      echoExec "ln -sf ${EXT_PYTHON}/${TCL_FOLDER}/unix/libtcl.so ${XMIPP_HOME}/lib" "/dev/null"
+      echoExec "ln -sf ${EXT_PYTHON}/${TCL_FOLDER}/unix/libtclstub8.5.a ${XMIPP_HOME}/lib" "/dev/null"
       echoExec "cd -" "/dev/null" 1
     fi
   fi
@@ -1773,10 +1785,10 @@ if [ $DO_TCLTK -eq 1 ]; then
     shouldIDoIt pymodule ${TK_TAR}
     if [ $? -eq 1 ]; then
       if [ $DO_CONFIGURE  -eq 1 ]; then
-        configure_library ${TK_FOLDER} python macosx "--disable-xft"
+        configure_library ${TK_FOLDER} python macosx "--disable-xft --with-tcl=../../${TCL_FOLDER}/macosx"
       fi
       if [ $DO_COMPILE  -eq 1 ]; then
-        compile_library ${TK_FOLDER} python macosx "--disable-xft"
+        compile_library ${TK_FOLDER} python macosx "--disable-xft --with-tcl=../../${TCL_FOLDER}/macosx"
       fi
     fi
   elif [ $IS_MINGW -eq 1 ]; then
@@ -1811,10 +1823,10 @@ if [ $DO_TCLTK -eq 1 ]; then
     shouldIDoIt pymodule ${TK_TAR}
     if [ $? -eq 1 ]; then
       if [ $DO_CONFIGURE  -eq 1 ]; then
-        configure_library ${TK_FOLDER} python unix "--enable-threads"
+        configure_library ${TK_FOLDER} python unix "--enable-threads --with-tcl=${EXT_PATH}/python/${TCL_FOLDER}/unix"
       fi
       if [ $DO_COMPILE  -eq 1 ]; then
-        compile_library ${TK_FOLDER} python unix "--enable-threads"
+        compile_library ${TK_FOLDER} python unix "--enable-threads --with-tcl=${EXT_PATH}/python/${TCL_FOLDER}/unix"
       fi
     fi
   fi

@@ -53,6 +53,7 @@ void ProgPSDSort::readParams()
     decay_width = getDoubleParam("-decay");
     mask_w1 = getDoubleParam("-m1");
     mask_w2 = getDoubleParam("-m2");
+    downsampling = getDoubleParam("--downsampling");
 }
 
 /* Usage ------------------------------------------------------------------- */
@@ -78,6 +79,13 @@ void ProgPSDSort::defineParams()
     addUsageLine("+$ *First zero ratio*: this measures the astigmatism of the CTF by computing the ratio ");
     addUsageLine("+between the largest and smallest axes of the first zero ellipse. Ratios close to 1 ");
     addUsageLine("+indicate no astigmatism.");
+    addUsageLine("+ ");
+    addUsageLine("+$ *Ratio between the standard deviation at 1st zero and 1st minimum*: the variance in the experimental PSD along the");
+    addUsageLine("+first zero and the first CTF minimum should be approximately equal (ratio=1).");
+    addUsageLine("+ ");
+    addUsageLine("+$ *CTF margin*: ratio between the average difference in the experimental PSD between the 1st Thon");
+    addUsageLine("+ring and its previous zero, and the variance of the experimental PSD along the first zero");
+    addUsageLine("+first zero and the first CTF minimum should be approximately equal (ratio=1).");
     addUsageLine("+ ");
     addUsageLine("+$ *Fitting score*: the CTF is computed by fitting a theoretical model to the experimentally observed PSD. ");
     addUsageLine("+This criterion is the fitting score. Smaller scores correspond to better fits.");
@@ -122,6 +130,7 @@ void ProgPSDSort::defineParams()
     addParamsLine("  [-decay <freq_decay=0.02>] : Decay for the transition bands");
     addParamsLine("  [-m1 <mfreq_low=0.01>]     : Low freq. for mask, max 0.5");
     addParamsLine("  [-m2 <mfreq_high=0.45>]    : High freq. for mask, max 0.5");
+    addParamsLine("  [--downsampling <K=1>]     : Downsampling factor used");
 }
 
 /* Show -------------------------------------------------------------------- */
@@ -135,7 +144,8 @@ void ProgPSDSort::show()
     << "Filter w2:    " << filter_w2 << std::endl
     << "Filter decay: " << decay_width << std::endl
     << "Mask w1:      " << mask_w1 << std::endl
-    << "Mask w2:      " << mask_w2 << std::endl;
+    << "Mask w2:      " << mask_w2 << std::endl
+    << "Downsampling: " << downsampling << std::endl;
 }
 
 /* Compute Correlation ----------------------------------------------------- */
@@ -225,28 +235,50 @@ void ProgPSDSort::processImage(const FileName &fnImg, const FileName &fnImgOut, 
     MD.getValue(MDL_CTF_CRIT_PSDPCARUNSTEST,evaluation.PSDPCRunsTest,objId);
 
     // Explore the CTF
-    Matrix1D<double> u(2), freqZero1(2), freqZero2(2);
+    Matrix1D<double> u(2), freqZero1(2), freqZero2(2), freqMin1(2), pixelZero1(2), pixelMin1(2);
     double wmax=0.5/CTF1.Tm;
-    double maxModule=0, minModule=1e38;
+    double maxModuleZero=0, minModuleZero=1e38;
     double N=0;
     evaluation.maxDampingAtBorder=0;
     evaluation.firstZeroDisagreement=-1;
     evaluation.firstZeroAvg=0;
+    double firstZeroAvgPSD=0;
+    double firstZeroStddevPSD=0;
+    double firstMinAvgPSD=0;
+    double firstMinStddevPSD=0;
+    double firstZeroMinAvgPSD=0;
+    double firstZeroMinStddevPSD=0;
     evaluation.maxFreq=1000;
 
     CTF1.precomputeValues(0.0,0.0);
 	double idamping0=1.0/CTF1.getValueDampingAt();
-
+	double f2pixel=CTF1.Tm*downsampling*XSIZE(PSD());
     for (double alpha=0; alpha<=PI; alpha+=PI/180, N++)
     {
     	VECTOR_R2(u,cos(alpha),sin(alpha));
 
     	// Get the zero in the direction of u
-    	CTF1.zero(1, u, freqZero1);
-    	double module=1.0/freqZero1.module();
-    	maxModule=XMIPP_MAX(maxModule,module);
-    	minModule=XMIPP_MIN(minModule,module);
-    	evaluation.firstZeroAvg+=module;
+    	CTF1.lookFor(1, u, freqZero1, 0);
+    	double moduleZero=1.0/freqZero1.module();
+    	maxModuleZero=XMIPP_MAX(maxModuleZero,moduleZero);
+    	minModuleZero=XMIPP_MIN(minModuleZero,moduleZero);
+    	evaluation.firstZeroAvg+=moduleZero;
+
+    	// Get the first minimum (it is at higher frequency than the zero)
+    	pixelZero1=freqZero1*f2pixel;
+    	pixelMin1=freqMin1*f2pixel;
+    	CTF1.lookFor(1, u, freqMin1, -1);
+    	double psdZero=PSD().interpolatedElement2D(XX(pixelZero1),YY(pixelZero1),0.0);
+    	double psdMin=PSD().interpolatedElement2D(XX(pixelMin1),YY(pixelMin1),0.0);
+    	firstMinAvgPSD+=psdMin;
+    	firstMinStddevPSD+=psdMin*psdMin;
+    	firstZeroAvgPSD+=psdZero;
+    	firstZeroStddevPSD+=psdZero*psdZero;
+    	double zeroMinDiff=psdMin-psdZero;
+    	firstZeroMinAvgPSD+=zeroMinDiff;
+    	firstZeroMinStddevPSD+=zeroMinDiff*zeroMinDiff;
+
+    	// Evaluate damping
     	double wx=wmax*XX(u);
     	double wy=wmax*YY(u);
     	CTF1.precomputeValues(wx,wy);
@@ -264,14 +296,28 @@ void ProgPSDSort::processImage(const FileName &fnImg, const FileName &fnImgOut, 
         		evaluation.maxFreq=std::min(evaluation.maxFreq,1.0/w);
     	}
     	if (fnCTF2!="") {
-        	CTF2.zero(1, u, freqZero2);
+        	CTF2.lookFor(1, u, freqZero2, 0);
         	double module2=1.0/freqZero2.module();
-        	double diff=ABS(module-module2);
+        	double diff=ABS(moduleZero-module2);
         	evaluation.firstZeroDisagreement=XMIPP_MAX(evaluation.firstZeroDisagreement,diff);
     	}
     }
     evaluation.firstZeroAvg/=N;
-    evaluation.firstZeroRatio=maxModule/minModule;
+    evaluation.firstZeroRatio=maxModuleZero/minModuleZero;
+    firstZeroAvgPSD/=N;
+    firstZeroStddevPSD=sqrt(fabs(firstZeroStddevPSD/N-firstZeroAvgPSD*firstZeroAvgPSD));
+    firstMinAvgPSD/=N;
+    firstMinStddevPSD=sqrt(fabs(firstMinStddevPSD/N-firstMinAvgPSD*firstMinAvgPSD));
+    firstZeroMinAvgPSD/=N;
+    firstZeroMinStddevPSD=sqrt(fabs(firstZeroMinStddevPSD/N-firstZeroMinAvgPSD*firstZeroMinAvgPSD));
+
+    evaluation.firstMinimumStddev_ZeroStddev=1000;
+    evaluation.firstMinimumDiffStddev_ZeroStddev=1000;
+    if (firstZeroStddevPSD>1e-6)
+    {
+    	evaluation.firstMinimumStddev_ZeroStddev=firstMinStddevPSD/firstZeroStddevPSD;
+    	evaluation.firstMinimumDiffStddev_ZeroStddev=firstZeroMinAvgPSD/firstZeroStddevPSD;
+    }
 
     // Evaluate micrograph normality
 	ImageGeneric M;
@@ -306,6 +352,8 @@ void ProgPSDSort::processImage(const FileName &fnImg, const FileName &fnImgOut, 
     if (evaluation.firstZeroDisagreement>0)
     	rowOut.setValue(MDL_CTF_CRIT_FIRSTZERODISAGREEMENT,evaluation.firstZeroDisagreement);
     rowOut.setValue(MDL_CTF_CRIT_FIRSTZERORATIO,evaluation.firstZeroRatio);
+    rowOut.setValue(MDL_CTF_CRIT_FIRSTMINIMUM_FIRSTZERO_RATIO,evaluation.firstMinimumStddev_ZeroStddev);
+    rowOut.setValue(MDL_CTF_CRIT_FIRSTMINIMUM_FIRSTZERO_DIFF_RATIO,evaluation.firstMinimumDiffStddev_ZeroStddev);
     rowOut.setValue(MDL_CTF_CRIT_FITTINGSCORE,evaluation.fittingScore);
     rowOut.setValue(MDL_CTF_CRIT_FITTINGCORR13,evaluation.fittingCorr13);
     rowOut.setValue(MDL_CTF_CRIT_NONASTIGMATICVALIDITY,evaluation.beating);

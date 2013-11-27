@@ -71,6 +71,7 @@ public class XmippImageConverter {
 		imp = readToImagePlus(image, w, h, select_image);
 		// }
 
+		image.destroy();
 		return imp;
 	}
 
@@ -195,7 +196,10 @@ public class XmippImageConverter {
 			image.readApplyGeo(fn, md, objId, width, height, wrap);
 		else
 			image.read(fn, width, height);
-		return convertToImagePlus(image);
+		
+		ImagePlus ip = convertToImagePlus(image);
+		image.destroy();
+		return ip;
 	}
 
 	public static ImagePlus readMdRowToImagePlus(String fn, MetaData md,
@@ -205,7 +209,9 @@ public class XmippImageConverter {
 			image.readApplyGeo(fn, md, objId, wrap);
 		else
 			image.read(fn, true);
-		return convertToImagePlus(image);
+		ImagePlus ip = convertToImagePlus(image);
+		image.destroy();
+		return ip;
 	}
 
 	/** Read the entries on the metadata and create an ImagePlus */
@@ -341,6 +347,7 @@ public class XmippImageConverter {
 			}
 		}
 
+		image.destroy();
 		return true;
 	}
 

@@ -36,11 +36,19 @@ class ProtRelionBase(XmippProtocol):
         else:
             self.program = 'relion_refine'
         self.ParamsDict['program'] = self.program
-        
-        self.addParam('ORoot', self.WorkingDir + '/')        
+        if self.DoContinue:
+            self.setPreviousRunFromFile(self.optimiserFileName)
+            #if optimizer has not been properly selected this will 
+            #fail, let us go ahead and handle the situation in verify
+            try:
+                self.inputProperty('ImgMd')  
+            except:
+                print "Can not access the parameters from the original relion run"
+
+        self.addParam('ORoot', self.WorkingDir + '/')
         self.addParam('SamplingRate', getSampling(self.ImgMd))
 
-    def summary(self,totalNumberOfIter=0):
+    def summary(self):
         lines = ["Wrapper implemented for RELION **1.2**"]
         return lines 
 

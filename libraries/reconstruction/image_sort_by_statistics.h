@@ -31,6 +31,7 @@
 #include <data/histogram.h>
 #include <reconstruction/fringe_processing.h>
 #include <data/filters.h>
+#include <math.h>
 
 
 /**@defgroup ImageSort Image sort by statistics
