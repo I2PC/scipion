@@ -295,6 +295,7 @@ def gatherResults(log,TmpDir,WorkingDir,summaryFile, importMicrographs,Downsampl
 def buildSummaryMetadata(WorkingDir,importMicrographs,summaryFile):
     md = xmipp.MetaData()
     importMd = xmipp.MetaData(importMicrographs)
+    importMd.removeDisabled()
     for id in importMd:
         inputFile = importMd.getValue(xmipp.MDL_MICROGRAPH,id)
         micrographName = os.path.basename(inputFile)
