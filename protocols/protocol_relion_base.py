@@ -78,7 +78,7 @@ class ProtRelionBase(XmippProtocol):
             # Check that have same size as images:
             from protlib_xmipp import validateInputSize
             if not xmippExists(self.Ref3D):
-               errors.append("Reference: <%s> doesn't exists" % ref)
+               errors.append("Reference: <%s> doesn't exists" % self.Ref3D)
             if len(errors) == 0:
                 validateInputSize([self.Ref3D], self.ImgMd, md, errors)
         else:
