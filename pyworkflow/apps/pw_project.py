@@ -110,10 +110,10 @@ class ProjectWindow(gui.Window):
         header.columnconfigure(1, weight=1)
         header.columnconfigure(2, weight=1)
         # Create the SCIPION logo label
-        logoImg = self.getImage(self.generalCfg.logo.get())
+        logoImg = self.getImage(self.generalCfg.logo.get(), percent=50)
         logoLabel = tk.Label(header, image=logoImg, 
                              borderwidth=0, anchor='nw', bg='white')
-        logoLabel.grid(row=0, column=0, sticky='nw', padx=5)
+        logoLabel.grid(row=0, column=0, sticky='nw', padx=5, pady=5)
         # Create the Project Name label
         self.projNameFont = tkFont.Font(size=12, family='verdana', weight='bold')
         projLabel = tk.Label(header, text=self.projName, font=self.projNameFont,
