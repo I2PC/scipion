@@ -426,6 +426,9 @@ class ProtCTFMicrographs(EMProtocol):
 class ProtPreprocessMicrographs(EMProtocol):
     pass
 
+class ProtPreprocessVolumes(EMProtocol):
+    pass
+
 
 class ProtExtractParticles(EMProtocol):
     pass
