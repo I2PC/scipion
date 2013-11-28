@@ -1,65 +1,62 @@
-{% extends 'base_flex.html' %} 
-{% block title %}
- - Project {{project_name}} hosts configuration
-{% endblock %} 
-{% block head %}
-	<!-- CSS -->
-	<link href={{css}} rel="stylesheet" type="text/css">
-	<!-- JS -->
-	<script src={{jquery}} type="text/javascript"></script>
-	<script src={{utils}} type="text/javascript"></script>
-	<script src={{host_utils}} type="text/javascript"></script>
-{% endblock %}
-{% block sideLeft %}
-	<center>
-	<button id="newHostButton" onclick="newHost()" class="priorityButton" type="button">New host</button>
-	<br/>
-	<br/>		
-	</center>
+{% extends 'base.html' %}
+
+{% block title %} - Project {{project_name}} Hosts Configuration{% endblock %}
+
+{% block content_head %}
+<!-- CSS -->
+<link href={{css}} rel="stylesheet" type="text/css">
+<!-- JS -->
+<script src={{jquery}} type="text/javascript"></script>
+<script src={{utils}} type="text/javascript"></script>
+<script src={{host_utils}} type="text/javascript"></script>
 {% endblock %}
 
-{% block content %}
-	<div>
-		<div id="toolbarHost" style="display: none">
-			<span><a id="newTool" href="" style="text-decoration: none;color: black;"><img src="{{newTool}}" /> New</a></span> 
-			<span><a id="editTool" href="" style="text-decoration: none;color: black;"><img src="{{editTool}}" />Edit</a></span> 
-			<span><a id="deleteTool" href="" style="text-decoration: none;color: black;"><img src="{{deleteTool}}" /> Delete</a></span> 
-			<span><a id="browseTool" href="" style="text-decoration: none;color: black;"><img src="{{browseTool}}" /> Browse</a></span>
-		</div>
-		<table id="data" cellspacing="0">
-			<tr>
-				<th>Configuration</th> 
-				<th>Host name</th>
-				<th>User name</th>
-				<th>Host path</th>
-			</tr>
-			{% for host in hosts %}
-			<tr id="{{host.getObjId}}" class="" onclick="selectHost('{{host.getObjId}}');launchHostsToolbar('{{projectName}}','{{host.getObjId}}', ($(this)));"
-			style="background-color: #fafafa;">
-				<td>
-					{% if host.getLabel != None %}
-						{{host.getLabel}}
-					{% endif %}
-				</td>
-				<td>
-					{% if host.getHostName != None %}
-						{{host.getHostName}}
-					{% endif %}	
-				</td>	
-				<td>
-					{% if host.getUserName != None %}
-						{{host.getUserName}}
-					{% endif %}
-				</td>
-				<td>
-					{% if host.getHostPath != None %}
-						{{host.getHostPath}}
-					{% endif %}					
-				</td>
-			</tr>
-			{% endfor %}
-		</table>
-	</div>
+{% block content_header %}	{% include "header.html" %} {% endblock %}
+
+{% block content_aside %}
+<button id="newHostButton" onclick="newHost()" class="priorityButton" type="button">New host</button>
+{% endblock %}
+
+{% block content_section %}
+<div id="toolbar" style="display: none">
+	<span><a id="newTool" href="" style="text-decoration: none;color: black;"><img src="{{newTool}}" /> New</a></span> 
+
+	<span><a id="editTool" href="" class="iconEdit">Edit</a></span>
+	<span><a id="deleteTool" href="" class="iconDelete">Delete</a></span>
+	<span><a id="browseTool" href="" class="iconBrowse">Browse</a></span>
+</div>
+<table id="data" cellspacing="0">
+	<tr>
+		<th>Configuration</th> 
+		<th>Host name</th>
+		<th>User name</th>
+		<th>Host path</th>
+	</tr>
+	{% for host in hosts %}
+	<tr id="{{host.getObjId}}" class="" onclick="selectHost('{{host.getObjId}}');launchHostsToolbar('{{projectName}}','{{host.getObjId}}', ($(this)));">
+		<td>
+			{% if host.getLabel != None %}
+				{{host.getLabel}}
+			{% endif %}
+		</td>
+		<td>
+			{% if host.getHostName != None %}
+				{{host.getHostName}}
+			{% endif %}	
+		</td>	
+		<td>
+			{% if host.getUserName != None %}
+				{{host.getUserName}}
+			{% endif %}
+		</td>
+		<td>
+			{% if host.getHostPath != None %}
+				{{host.getHostPath}}
+			{% endif %}					
+		</td>
+	</tr>
+	{% endfor %}
+</table>
 {% endblock %}
 
 <!-- <!DOCTYPE html>

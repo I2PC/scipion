@@ -1,11 +1,75 @@
+/* CSS Document */
 
-
-#westContainer{
-	padding: 10px;
-	background-color: #cccccc;
+/* GENERAL */
+html, body {	
+	width: 100%;
+	height: 100%;
+	padding: 0;
+	margin: 0;
+	/* font-size: 0.75em; */
+	/* overflow: hidden; */
 }
 
-/* CSS for the treeview */
+/* FLEX DESIGN */
+.layout-outer {
+	height: 110%;
+	min-height: 110%;
+}
+.center, .west, .north, .south {
+	/* background-color: rgb(220,220,220); */
+	/* border: 1px solid rgb(200,200,200); */
+	/* text-align: center; */
+       display: inline-block;
+}
+
+
+.layout-outer > .west {
+	width: 25%;
+	/* margin-right:10px; */
+	padding: 20px 10px 20px 10px;
+	min-width: 200px;
+	overflow-y: auto;
+	overflow-x: hidden;
+}
+.layout-outer > .center{
+	padding: 20px 20px 20px 10px;
+}
+/**
+ * To get correct percentages widths and heights in the inner layout
+ * you have to set the container to take up all space that's left after
+ * the outer columns east, west, north and south components. In this case:
+ *  width = 100% - 8% - 8% = 84%
+ *  height = 100% - 10% - 10% = 80%
+ */
+.layout-inner {
+	width: 75%;
+	/* height: 60%; */
+	height: 100%
+	background-color: white;
+	border: 0px;
+}
+.layout-inner > .north {
+	height: 80%;
+	margin-bottom: 30px;
+	max-height: 70%;
+	overflow-y: auto;
+} 
+.layout-inner > .center {
+	/* z-index:20; */
+	/* min-height: 100px; */
+}
+/* SECTION */
+#westContainer{
+	padding: 15px 10px;
+	background-color: #eaebec;
+	font-size: 0.9em;
+}
+
+/* TREEVIEW */
+.viewTree{
+	margin-bottom: 10px;
+}
+
 .treeview,.treeview ul {
 	padding: 0;
 	list-style: none;
@@ -165,11 +229,9 @@
 	border: 3px solid #346789;
 }
 
-#toolbar{
-	font-size: 1.3em !important;
-	margin-bottom: 5px;
-}
 
-#toolbar a {
-	margin-right: 7px;
+/* FLEX TEMPLATE (These styles are to create custom resize handles.) */ 
+
+.ui-resizable-s {
+	bottom: 0px !important;
 }

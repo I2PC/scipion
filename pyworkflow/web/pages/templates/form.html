@@ -5,6 +5,7 @@
 	<meta charset='utf-8'>
 	<link rel="icon" type="image/png" href={{favicon}} />
 	<!-- CSS -->
+	<link href="/static/css/general_style.css" rel="stylesheet" type="text/css">
 	<link href={{css}} rel="stylesheet" type="text/css">
 	<link href={{messi_css}} rel="stylesheet" type="text/css">
 	<link href="{{jquery_ui_css}}" rel="stylesheet" type="text/css">
@@ -46,8 +47,8 @@
 			<input type="hidden" id="paramProt" name="paramProt" value="{{paramProt}}"/>
 			{% if visualize == 0 %}
 			<div id="main">
-				<div id="mainNode1">
-					<div class="titleMain1">
+				<div id="mainNode1" class="mainNode floatLeft">
+					<div class="title">
 						Run
 					</div>
 					<table>
@@ -90,8 +91,8 @@
 					</table>			
 				</div>
 								
-				<div id="mainNode2">
-					<div class="titleMain2">
+				<div id="mainNode2" class="mainNode floatRight">
+					<div class="title">
 						Execution
 					</div>
 					<table>
@@ -214,21 +215,21 @@
 				 {% endfor %}
 				 </div>		
 			<div class="boxBottom">
-				<table>
-					<tr>
-						<td>
-							<button class="buttonClose" type="button" onclick="window.close()">Close</button>
-							{% if visualize == 0 %}
-							<input type="submit" class="buttonSave" value="Save" onclick="javascript:putMode('save');">
-							<input type="submit" class="buttonExec" value="Execute" onclick="javascript:putMode('execute');">
-							{% elif visualize == 1 %}
-							<input type="submit" class="buttonExec" value="Visualize" onclick="javascript:putMode('viewer');">
-							{% elif visualize == 2 %}
-							<input type="button" class="buttonSave" value="Save" onclick="javascript:returnProtocol();">
-							{% endif %}							
-						</td>
-					</tr>
-				</table>
+				<!-- <button class="buttonClose" type="button" onclick="window.close()">Close</button> -->
+				<a href="javascript:window.close()" class="buttonGrey btnClose">Close</a>
+				{% if visualize == 0 %}
+				<a href="javascript:putMode('save');$('#protocolForm').submit();" class="buttonGrey btnSave">Save</a>
+				<a href="javascript:putMode('execute');$('#protocolForm').submit();" class="buttonRed">Execute</a>
+				
+				<!-- <input type="submit" class="buttonSave" value="Save" onclick="javascript:putMode('save');">
+				<input type="submit" class="buttonExec" value="Execute" onclick="javascript:putMode('execute');"> -->
+				{% elif visualize == 1 %}
+				<a href="javascript:putMode('viewer');$('#protocolForm').submit();" class="buttonRed">Execute</a>
+				<!-- <input type="submit" class="buttonExec" value="Visualize" onclick="javascript:putMode('viewer');"> -->
+				{% elif visualize == 2 %}
+				<a href="javascript:returnProtocol();" class="buttonGrey btnSave">Save</a>
+				<!-- <input type="button" class="buttonSave" value="Save" onclick="javascript:returnProtocol();"> -->
+				{% endif %}							
 			</div>
 		</form>
 	</body>
