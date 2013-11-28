@@ -585,3 +585,12 @@ def createXmippInputMicrographs(self, micSet, rowFunc=None):
         micsFn = micsMd.get()
     return micsFn
 
+def createXmippInputVolumes(self, volSet):    
+    volsMd = getattr(volSet, '_xmippMd', None)
+    if volsMd is None:
+        volsFn = self._getPath('input_volumes.xmd')
+        writeSetOfVolumes(volSet, volsFn)
+    else:
+        volsFn = volsMd.get()
+    return volsFn
+

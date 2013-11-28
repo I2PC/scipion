@@ -292,6 +292,8 @@ def addProtocols(settings):
     
     m1.addSubMenu(' Import', value='ProtImportVolumes', 
                  tag='protocol', icon='bookmark.png')   
+    m1.addSubMenu('Preprocess', value='ProtPreprocessVolumes',
+                  tag='protocol_base')
     m1.addSubMenu('Refine', value='ProtRefine3D',
                   tag='protocol_base')
     m1.addSubMenu('Classify', value='ProtClassify3D',
