@@ -15,10 +15,10 @@ CiteRelion3D = """
 by Sjors H.W. Scheres (DOI: 10.1016/j.jmb.2011.11.010)
 """
 
-#------------------------------------------------------------------------------------------
-# {section} Input
-#------------------------------------------------------------------------------------------
-# {file}(images*.xmd){validate}(PathExists) Input images:
+# Continue from previous run
+DoContinue = False
+
+# {condition}(not DoContinue){file}(images*.xmd) Input images:
 """ 
 Provide a list of images from a stack <(Spider/MRC)> or metadata file that make up your data set.
 The filenames should be relative to the <ProjectDir> where you are running the <Protocols>
@@ -29,7 +29,7 @@ scale corrections in image groups.
 """
 ImgMd = ""
 
-# {hidden}Continue from here:
+# {condition}(DoContinue){file}(*optimiser.star) Optimiser file:
 """ 
 Select the *_optimiser.star file for the iteration from which you want to continue a previous run. 
 Note that the Output rootname of the continued run and the rootname of the previous run cannot be the same. 
@@ -37,24 +37,21 @@ If they are the same, the program will automatically add a '_ctX' to the output 
 with X being the iteration from which one continues the previous run.Provide a list of images 
 from a stack <(Spider/MRC)> or metadata file that make up your data set.
 """
-ContinueFrom = ""
+optimiserFileName= ""
 
-# {hidden}Number of classes
-"""The number of classes (K) for a multi-reference refinement. These classes will be made in an unsupervised manner from a single reference by division of the data into random subsets during the first iteration.
-"""
-NumberOfClasses = 1
+#------------------------------------------------------------------------------------------
+# {condition}(not DoContinue) {section} Input
+#------------------------------------------------------------------------------------------
 
-# {file}(*.vol, *.mrc){validate}(PathExists) Initial 3D reference volume:
+# {file}(*.vol, *.mrc) Initial 3D reference volume:
 """
 A 3D map in MRC/Spider format. Make sure this map has the same dimensions and 
 the same pixel size as your input images.
 """
 Ref3D = ""
 
-# Ref. map is on absolute greyscale?
-""" {expert}
-Set this option to False unless you know what you are doing.
-The probabilities are based on squared differences, so that the absolute grey scale is important.
+# {condition}(not DoContinue) Ref. map is on absolute greyscale?
+""" The probabilities are based on squared differences, so that the absolute grey scale is important.
 Probabilities are calculated based on a Gaussian noise model, 
 which contains a squared difference term between the reference and the experimental image. 
 This has a consequence that the reference needs to be on the same absolute intensity 
@@ -66,7 +63,7 @@ will use a (grey-scale invariant) cross-correlation criterion in the first itera
 prior to the second iteration the map will be filtered again using the initial low-pass filter.
 This procedure is relatively quick and typically does not negatively affect the outcome of the
 subsequent MAP refinement. Therefore, if in doubt it is recommended to set this option to No."""
-IsMapAbsoluteGreyScale = False
+IsMapAbsoluteGreyScale = True
 
 #normalize input images
 """ 
@@ -103,7 +100,7 @@ If no symmetry is present, give c1
 SymmetryGroup = 'c1'
 
 #------------------------------------------------------------------------------------------------
-# {section}{has_question} CTF
+# {condition}(not DoContinue){section}{has_question} CTF
 #------------------------------------------------------------------------------------------------
 
 # Use CTF-amplitude correction?
@@ -162,10 +159,10 @@ DoIntensityCorrection = False
 
 
 #------------------------------------------------------------------------------------------------
-# {section} Optimisation
+# {condition}(not DoContinue){section} Optimisation
 #------------------------------------------------------------------------------------------------
 
-# Initial low-pass filter (A): 
+# {wizard}(wizardChooseLowPassFilter) Initial low-pass filter (A): 
 """
 It is recommended to strongly low-pass filter your initial reference map. 
 If it has not yet been low-pass filtered, it may be done internally using this option. 
@@ -173,17 +170,11 @@ If set to 0, no low-pass filter will be applied to the initial reference(s).
 """
 InitialLowPassFilterA = 60
 
-# {hidden} Number of iterations:
-"""
-Number of iterations to be performed. Note that the current implementation does NOT comprise a convergence criterium. Therefore, the calculations will need to be stopped by the user if further iterations do not yield improvements in resolution or classes.
-"""
-NumberOfIterations = 1
-
-# Particles mask diameter (A):
+# {wizard}(wizardSetMaskRadiusRelion) Particles mask RADIUS (A):
 """
 The experimental images will be masked with a soft circular mask with this diameter. Make sure this radius is not set too small because that may mask away part of the signal! If set to a value larger than the image size no masking will be performed.
 """
-MaskDiameterA = 200
+MaskRadiusA = 200
 
 # Mask references structures?
 """
@@ -206,22 +197,27 @@ ReferenceMask = ""
 #-----------------------------------------------------------------------------
 
 # 
-# {list_combo}(30,15,7.5,3.7,1.8,0.9,0.5,0.2,0.1) Angular sampling interval (deg):
+# {condition}(not DoContinue){list_combo}(30,15,7.5,3.7,1.8,0.9,0.5,0.2,0.1) Angular sampling interval (deg):
 """There are only a few discrete angular samplings possible because we use the HealPix library to generate the sampling of the first two Euler angles on the sphere. The samplings are approximate numbers and vary slightly over the sphere.
 """
 AngularSamplingDeg = '7.5'
 
-# Offset search range (pix):
+# {condition}(not DoContinue)Offset search range (pix):
 """Probabilities will be calculated only for translations in a circle with this radius (in pixels). The center of this circle changes at every iteration and is placed at the optimal translation for each image in the previous iteration.
 """
 OffsetSearchRangePix = 5
 
-# Offset search step (pix):
+# {condition}(not DoContinue)Offset search step (pix):
 """Translations will be sampled with this step-size (in pixels).Translational sampling is also done using the adaptive approach. Therefore, if adaptive=1, the translations will first be evaluated on a 2x coarser grid.
 """
 OffsetSearchStepPix = 1
 
-# {list_combo}(30,15,7.5,3.7,1.8,0.9,0.5,0.2,0.1)  Local angular search range
+# Perform local angular search? 
+"""If set to Yes, then rather than performing exhaustive angular searches, local searches within the range given below will be performed. A prior Gaussian distribution centered at the optimal orientation in the previous iteration and with a stddev of 1/3 of the range given below will be enforced.
+"""
+PerformLocalAngularSearch = False
+
+# {condition}(PerformLocalAngularSearch)Local angular search range
 """
 """
 LocalAngularSearchRange = 5.0
@@ -233,24 +229,34 @@ AdditionalArguments = ""
 
 
 # {eval} expandParallel()
-
 #------------------------------------------------------------------------------------------------
 # {section}{visualize} Results per Iteration and Ref3D
 #------------------------------------------------------------------------------------------------
-# {hidden}{list_combo}( all, selection) Which ref3D you want to visualize?
+# {list_combo}( all, selection) Which class you want to visualize?
 """ 
-   If you want to see the reference volume 2 and 5 write
-   2 5. In relaion first reference is 1
+   All is equal to number of classes
+   If you want two see  classes 2 and 5 
+   choose selection and write
+   2 5. In relion first reference is 1. 
 """
 DisplayRef3DNo='all'
 
 # {condition}(DisplayRef3DNo=='selection') Selected references 3D
-""" Which iteration do you want to visualize 
-If you want two see iterations 2 and 5 write
-   2 5. In relion first iteration is 0"""
+""" Which reference do you want to visualize 
+   All is equal to number of classes
+   If you want two see  classes 2 and 5 
+   choose selection and write
+   2 5. In relion first reference is 1. 
+"""
 SelectedRef3DNo = ''
 
 # {list_combo}(last, all, selection) Which iteration you want to visualize?
+""" Which iteration do you want to visualize 
+Set ot zero to see reference seed volumes
+If you want two see iterations 2 and 5 
+   choose selection and write
+   2 5. In relion first iteration is 1. All is equal to all iterations from  1 to 
+   number of iterations. Last is equal to number of iterations """
 VisualizeIter = 'last'
 
 # {condition}(VisualizeIter=='selection') Selected iterations
@@ -259,7 +265,7 @@ If you want two see iterations 2 and 5 write
    2 5. In relion first iteration is 0"""
 SelectedIters = ''
 
-# {list_combo}(x, y, z, surface) Display 3D maps along 
+# {list_combo}(x, y, z, surface) Display volumes 
 """ x -> Visualize volumes in slices along x
     y -> Visualize volumes in slices along y
     z -> Visualize volumes in slices along z
@@ -279,7 +285,7 @@ DisplayVolumeSlicesAlong='z'
 DisplayReconstruction=False
 
 # {view} Display resolution plots (SSNR)
-DisplayResolutionPlotsSSNR=True
+DisplayResolutionPlotsSSNR=False
 
 ###############################
 # {view} Display resolution plots (FSC)
@@ -290,7 +296,7 @@ ResolutionThreshold=0.5
 
 # {view} Display angular distribution?
 DisplayAngularDistribution=True
-# {condition}(DisplayAngularDistribution) {list} (2D, 3D) Display Angular distribution in
+# {list_combo} (2D, 3D) Display Angular distribution in
 """ 2D option uses matplotlib while 3D uses chimera
 """
 DisplayAngularDistributionWith='2D'
@@ -300,21 +306,18 @@ DisplayAngularDistributionWith='2D'
 distribution set radius of maximum sphere"""
 SpheresMaxradius=-1.
 
-# {hidden}{view} Display resolution plots (FSC)
-DisplayResolutionPlotsFSC=False
-
 # {hidden} No. Images assigned to class
 """ Images assigned to each class per iteration"""
-TableImagesPerClass=True
+TableImagesPerClass=False
 
 # {view} Changes Offset, Ang, No Part
 """ changes in orientation, offset. number images assigned to each class"""
-TableChange=True
+TableChange=False
 
 # {view} LikeliHood Per Image
 """ Max likelihood per image may be used to delete images with smaller value. 
 The higher, the better. Considere remove particles with low values"""
-Likelihood=True
+Likelihood=False
 
 # {view} AveragePmax
 """ Average (per class) of the maximum value of normalized probability function """

@@ -1254,7 +1254,7 @@ void compute_central_region(double &w1, double &w2, double ang)
     VECTOR_R2(dir, COSD(ang), SIND(ang));
 
     // Detect first zero
-    global_ctfmodel.zero(1, dir, freq);
+    global_ctfmodel.lookFor(1, dir, freq, 0);
     if (XX(freq) == -1 && YY(freq) == -1)
         w1 = global_min_freq;
     else
@@ -1269,7 +1269,7 @@ void compute_central_region(double &w1, double &w2, double ang)
     }
 
     // Detect fifth zero
-    global_ctfmodel.zero(5, dir, freq);
+    global_ctfmodel.lookFor(5, dir, freq, 0);
     if (XX(freq) == -1 && YY(freq) == -1)
         w2 = global_max_freq;
     else
@@ -1732,7 +1732,7 @@ void estimate_background_gauss_parameters2()
         Matrix1D<double> u(2), fzero(2);
         XX(u) = global_x_contfreq(i, j) / fmod;
         YY(u) = global_y_contfreq(i, j) / fmod;
-        global_ctfmodel.zero(1, u, fzero);
+        global_ctfmodel.lookFor(1, u, fzero, 0);
         if (fmod > fzero.module())
             continue;
 
@@ -2673,8 +2673,8 @@ double ROUT_Adjust_CTF(ProgCTFEstimateFromPSD &prm,
         {
             VECTOR_R2(u, global_x_digfreq(i, j), global_y_digfreq(i, j));
             u /= u.module();
-            global_ctfmodel.zero(1, u, z1);
-            global_ctfmodel.zero(3, u, z3);
+            global_ctfmodel.lookFor(1, u, z1, 0);
+            global_ctfmodel.lookFor(3, u, z3, 0);
             if (z1.module() < global_w_contfreq(i, j)
                 && global_w_contfreq(i, j) < z3.module())
                 global_mask_between_zeroes(i, j) = 1;

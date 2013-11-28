@@ -386,7 +386,7 @@ class XmippProject():
                     if dd2 and dd.extRunName != dd2.extRunName and not dd2.hasDep(dd.extRunName):
                         for k, v in dd.prot.ParamsDict.iteritems():
                             if k != 'RunName' and type(v) == str and v.startswith(dd2.prot.WorkingDir + '/'):
-                                #print >>sys.stderr, "%s depends on %s, because param '%s' (value='%s') starts with '%s'" % (dd.extRunName, dd2.extRunName, k, v, dd2.prot.WorkingDir + '/')
+                                #print >>sys.stderr, "    %s depends on %s, because param '%s' (value='%s') starts with '%s'" % (dd.extRunName, dd2.extRunName, k, v, dd2.prot.WorkingDir + '/')
                                 dd2.addDep(dd.extRunName)
         
         #Create special node ROOT
@@ -592,6 +592,12 @@ class XmippProtocol(object):
         and instanciate the previous protocol run '''
         self.PrevRunName = extRunName
         self.PrevRun = self.getProtocolFromRunName(extRunName)
+            
+    def setPreviousRunFromFile(self, fileName):
+        ''' Store the extended runName of the previous run
+        and instanciate the previous protocol run '''
+        self.PrevRun = self.project.getProtocolFromFile(fileName)
+        self.PrevRunName = self.PrevRun.getExtendedRunName()
             
     def workingDirPath(self, *paths):
         '''Return file path prefixing the working dir'''

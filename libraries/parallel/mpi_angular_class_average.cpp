@@ -364,7 +364,7 @@ void MpiProgAngularClassAverage::mpi_process_loop(double * Def_3Dref_2Dref_JobNo
 
 void MpiProgAngularClassAverage::mpi_process(double * Def_3Dref_2Dref_JobNo)
 {
-    //#define DEBUG
+#define DEBUG
 #ifdef DEBUG
     std::cerr<<"["<<node->rank<<"]"
     << " 3DRef:    "  << ROUND(Def_3Dref_2Dref_JobNo[index_3DRef])
@@ -402,6 +402,7 @@ void MpiProgAngularClassAverage::mpi_process(double * Def_3Dref_2Dref_JobNo)
     ref_number   = ROUND(Def_3Dref_2Dref_JobNo[index_2DRef]);
     defGroup     = ROUND(Def_3Dref_2Dref_JobNo[index_DefGroup]);
     ref3d        = ROUND(Def_3Dref_2Dref_JobNo[index_3DRef]);
+    std::cerr << "DEBUG_ROB: order_number: " << order_number << std::endl;
     lockIndex    = ROUND(Def_3Dref_2Dref_JobNo[index_jobId]);
 
     if (fn_wien != "" && defGroup_last != defGroup)
@@ -974,10 +975,11 @@ void MpiProgAngularClassAverage::mpi_writeFile(
         if (fileNameStk.exists())
         {
 
-            //std::cerr << "DEBUG_JM: Composing" <<std::endl;
-            //std::cerr << "DEBUG_JM: dirno: " << dirno << std::endl;
+            std::cerr << "DEBUG_JM: Composing"     << std::endl;
+            std::cerr << "DEBUG_JM: dirno: "       << dirno << std::endl;
+            std::cerr << "DEBUG_JM: fileNameStk: " << fileNameStk << std::endl;
             fn_tmp.compose(dirno, fileNameStk);
-            //std::cerr << "DEBUG_JM: fn_tmp: " << fn_tmp << std::endl;
+            std::cerr << "DEBUG_JM: fn_tmp: "      << fn_tmp << std::endl;
             old.read(fn_tmp);
 
             //w_old = old.weight();
@@ -1060,15 +1062,15 @@ void MpiProgAngularClassAverage::mpi_preprocess()
 
     if (node->rank==0)
     {
-        //std::cerr << "DEBUG_JM: saveDiscardedImages" <<std::endl;
+        std::cerr << "DEBUG_JM: saveDiscardedImages" <<std::endl;
         saveDiscardedImages();
-        //std::cerr << "DEBUG_JM: createJobList" <<std::endl;
+        std::cerr << "DEBUG_JM: createJobList" <<std::endl;
         createJobList();
-        //std::cerr << "DEBUG_JM: initDimentions" <<std::endl;
+        std::cerr << "DEBUG_JM: initDimentions" <<std::endl;
         initDimentions();
-        //std::cerr << "DEBUG_JM: initWeights" <<std::endl;
+        std::cerr << "DEBUG_JM: initWeights" <<std::endl;
         initWeights();
-        //std::cerr << "DEBUG_JM: initOutputFiles" <<std::endl;
+        std::cerr << "DEBUG_JM: initOutputFiles" <<std::endl;
         initOutputFiles();
     }
 
@@ -1131,7 +1133,8 @@ void MpiProgAngularClassAverage::filterInputMetadata()
                                   MDL::label2Str(MDL_REF).c_str(), FIRST_IMAGE);
         auxDF.operate(cmd);
     }
-    //std::cerr << "DEBUG_JM: Read inFile" <<std::endl;
+    std::cerr << "DEBUG_JM: Read inFile" <<std::endl;
+    auxDF.write("/tmp/inputfileBeforeRemove.xmd");
 
     MDMultiQuery multi;
     MDValueGE eq1(MDL::str2Label(col_select), limit0);
@@ -1146,7 +1149,7 @@ void MpiProgAngularClassAverage::filterInputMetadata()
         int limit = size - ROUND((limitRper/100.) * size);
         auxF1.sort(auxDF,codifyLabel,asc,limit,0);
     }
-    //remove inages bellow (above) these limits
+    //remove images bellow (above) these limits
     else if(do_limit0 || do_limitF)
     {
         if (do_limit0)
@@ -1232,7 +1235,7 @@ void MpiProgAngularClassAverage::filterInputMetadata()
     {
         auxF1 = auxDF;
     }
-
+    auxF1.write("/tmp/inputfileAfterREmove.xmd");
     DF.sort(auxF1, MDL_IMAGE);
 }
 
@@ -1490,8 +1493,13 @@ void MpiProgAngularClassAverage::createJobList()
         };
     std::vector<MDLabel> groupbyLabels(myGroupByLabels,myGroupByLabels+6);
     mdJobList.aggregateGroupBy(DF, AGGR_COUNT, groupbyLabels, MDL_ORDER, MDL_COUNT);
-    //DF.write("kk_DF.xmd");
-    //mdJobList.write("kk_mdJobList.xmd");
+#define DEBUG
+#ifdef DEBUG
+    DF.write("/tmp/kk_DF.xmd");
+    mdJobList.write("/tmp/kk_mdJobList.xmd");
+#endif
+#undef DEBUG
+
     numberOfJobs = mdJobList.size();
 }
 
