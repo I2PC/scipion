@@ -37,6 +37,7 @@ class ProtRelionClassifier(ProtRelionBase):
                 self.inputProperty('NumberOfClasses')
                 self.inputProperty('RegularisationParamT')
                 self.inputProperty('Ref3D')
+
             except:
                 print "Can not access the parameters from the original relion run"
 
@@ -74,9 +75,8 @@ class ProtRelionClassifier(ProtRelionBase):
             return errors + self.validateClassify()
 
     def validateClassify(self):
-        erors= []
         print "validateClassify"
-        return errors 
+        return [] 
     
     def validateClassifyContinue(self):
         print "validateClassifyContinue"
