@@ -166,7 +166,7 @@ class TestXmippAutomaticPicking(TestXmippBase):
         
         self.assertIsNotNone(protAutomaticPP.outputCoordinates, "There was a problem with the automatic particle picking")
         
-    def atestAutomaticPickingOther(self):
+    def testAutomaticPickingOther(self):
         print "Run automatic particle picking"
         protAutomaticPP = XmippParticlePickingAutomatic()
         protAutomaticPP.xmippParticlePicking.set(self.protPP)
@@ -242,8 +242,8 @@ class TestXmippScreenParticles(TestXmippBase):
         setupProject(cls)
         
         #TODO: Find a set of images to make this work, with this it does not
-        pattern = getInputPath('Images_Vol_ML3D/phantom_images', '*.xmp')
-        cls.protImport = cls.runImportParticles(pattern=pattern, samplingRate=5.6, checkStack=True)        
+        pattern = getInputPath('Images_aFewProjections', 'aFewProjections.stk')
+        cls.protImport = cls.runImportParticles(pattern=pattern, samplingRate=1, checkStack=True)        
         
     def atestScreenParticles(self):
         print "Run Screen Particles"
@@ -258,7 +258,7 @@ def setupClassification(cls):
     setupProject(cls)
     #TODO: Find a set of images to make this work, with this it does not
     pattern = getInputPath('images_LTA', '*.xmp')
-    cls.protImport = cls.runImportParticles(pattern=pattern, samplingRate=5.6)
+    cls.protImport = cls.runImportParticles(pattern=pattern, samplingRate=5.6, checkStack=False)
     
        
 class TestXmippML2D(TestXmippBase):
@@ -339,7 +339,7 @@ class TestXmippML3D(TestXmippBase):
         setupProject(cls)
         #TODO: Find a set of images to make this work, with this it does not
         images = getInputPath('Images_Vol_ML3D/phantom_images', '*.xmp')
-        cls.protImport = cls.runImportParticles(pattern=images, samplingRate=1)
+        cls.protImport = cls.runImportParticles(pattern=images, samplingRate=1, checkStack=False)
         cls.iniVol = getInputPath('ml3dData', 'icoFiltered.vol')
         
     def testML3D(self):
