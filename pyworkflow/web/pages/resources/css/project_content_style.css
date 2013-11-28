@@ -164,3 +164,12 @@
 .dragActive {
 	border: 3px solid #346789;
 }
+
+#toolbar{
+	font-size: 1.3em !important;
+	margin-bottom: 5px;
+}
+
+#toolbar a {
+	margin-right: 7px;
+}

@@ -3,6 +3,9 @@
 {% block title %} - Projects{% endblock %}
 
 {% block content_head %}
+<!-- CSS -->
+<link href="/static/css/projects_style.css" rel="stylesheet" type="text/css">
+
 <!-- JS -->
 <script src={{project_utils}} type="text/javascript"></script>
 {% endblock %}
@@ -14,15 +17,15 @@
 {% endblock %}
 
 {% block content_section %}
-<div class="projectsList">				
+<div class="projectsList">
+	<ul>				
 	{% for project in projects %}
-		<ul>
-			<li class="projList"><strong><a href="/project_content/?projectName={{project.projName}}"
-					class="projName">{{project.projName}}</a></strong> <br /> Modified
-				{{project.pTime}} <a href="javascript:deleteProjectForm('{{project.projName}}');" class="projRemove">Delete project</a>
-			</li>
-		</ul>
+		<li class="projList"><strong><a href="/project_content/?projectName={{project.projName}}"
+				class="projName">{{project.projName}}</a></strong> <br /> Modified
+			{{project.pTime}} <a href="javascript:deleteProjectForm('{{project.projName}}');" class="projRemove">Delete project</a>
+		</li>
 	{% endfor %}
+	</ul>
 </div>
 {% endblock %}
 

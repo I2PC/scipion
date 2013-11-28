@@ -38,6 +38,8 @@
 	/* margin-left: -0.5em; */
 }
 
+
+
 .projRemove {
 	margin-left: 1em;
 	font-size: 0.9em;
@@ -48,10 +50,21 @@
 }
 
 .projectsList {
-	border: 1px solid black;
-	background: Gainsboro;
+	/* border: 1px solid black; */
+/* 	background: Gainsboro; */
  	height: auto;
 	overflow-y: auto;
 	overflow-x: hidden;
-	/*width: 99%;*/
+	width: 100%;
 }
+li:nth-child(odd) {
+    background-color: #FFF;
+    padding: 0px 10px;
+}
+li:nth-child(even) {
+    background-color: #EAEBFF;
+    padding: 11px 10px;
+}
+
+
+

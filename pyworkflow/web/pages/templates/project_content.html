@@ -176,21 +176,19 @@
 {% block contentNorth %}
 <span style="float:right;">
 	<div id="treeTool">
-		<a href="javascript:switchGraph();">
-			<img src="{{treeTool}}" /> Tree</a>	
+		<a href="javascript:switchGraph();" class="iconTree">Tree</a>
 	</div>
 	<div id="listTool" style="display:none;">
-		<a  href="javascript:switchGraph();" >
-			<img src="{{listTool}}" /> List</a>
+		<a href="javascript:switchGraph();" class="iconList">List</a>
 	</div>
 </span>
 <div id="toolbar" style="display: none;">
-	<span><a id="editTool" href=""><img src="{{editTool}}" />Edit</a></span>
-	<span><a id="copyTool" href=""><img src="{{copyTool}}" />Copy</a></span>
-	<span><a id="deleteTool" href=""><img src="{{deleteTool}}" />Delete</a></span>
-	<span><a id="browseTool" href=""><img src="{{browseTool}}" />Browse</a></span>
-	<span id="stopTool"><a id="stopTool" href=""><img src="{{stopTool}}" />Stop</a></span>
-	<span id="analyzeTool"><a id="analyzeTool" href=""><img src="{{analyzeTool}}" />Analyze Results</a></span>
+	<span><a id="editTool" href="" class="iconEdit">Edit</a></span>
+	<span><a id="copyTool" href="" class="iconCopy">Copy</a></span>
+	<span><a id="deleteTool" href="" class="iconDelete">Delete</a></span>
+	<span><a id="browseTool" href="" class="iconBrowse">Browse</a></span>
+	<span id="stopTool"><a id="stopTool" href="" class="iconStop">Stop</a></span>
+	<span id="analyzeTool"><a id="analyzeTool" href="" class="iconEye">Analyze Results</a></span>
 </div>
 <div id="runTable">	
 	<table id="data" cellspacing="0">
