@@ -281,9 +281,22 @@ class XmippProtPreprocessVolumes(ProtPreprocessVolumes, XmippProtocol):
         pass
         
     def _validate(self):
-        return []
+        validateMsgs = []
+        
+        if not self.inputVolumes.hasValue():
+            validateMsgs.append('Please provide an initial volume(s).')
+        
+        return validateMsgs
     
     def _summary(self):
-        pass
-
+        summary = []
+        summary.append("Input volumes:  %s" % self.inputVolumes.get().getNameId())
+        
+        if not hasattr(self, 'outputVolumes'):
+            summary.append("Output volumes not ready yet.")
+        else:
+            summary.append("Output volumes: %s" % self.outputVolumes.get())
+        
+        return summary
+        
     
