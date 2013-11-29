@@ -49,7 +49,7 @@ class XmippProtPreprocessVolumes(ProtPreprocessVolumes, XmippProtocol):
     SEG_AMIN=1
     SEG_DALTON=2
     SEG_AUTO=3
-    
+
 
     def _defineParams(self, form):
         form.addSection(label='Input')
@@ -134,7 +134,7 @@ class XmippProtPreprocessVolumes(ProtPreprocessVolumes, XmippProtocol):
         
         form.addSection(label='Output')
         form.addParam('outputVoxel', FloatParam, default=1.0, label='Final voxel size (A/voxel):')
-        form.addParam('finalSize', FloatParam, default=1, label='Final box size (voxels):', help='Set to -1 for automatic estimation.')
+        form.addParam('finalSize', FloatParam, default=-1, label='Final box size (voxels):', help='Set to -1 for automatic estimation.')
 
 #        form.addParallelSection(threads=1, mpi=8)         
     
@@ -172,7 +172,7 @@ class XmippProtPreprocessVolumes(ProtPreprocessVolumes, XmippProtocol):
             self._insertFunctionStep("changeHand", self.outModel)
         
         if self.doRandomize:
-            self._insertFunctionStep("randomize", self.outModel, self.finalSize.get(), self.maxResolutionRandomize)
+            self._insertFunctionStep("randomize", self.outModel, self.finalSize.get(), self.maxResolutionRandomize.get())
         
         if self.doFilter:
             self._insertFunctionStep("filter", self.outModel, self.finalSize.get(), self.maxResFilt.get())
@@ -187,15 +187,14 @@ class XmippProtPreprocessVolumes(ProtPreprocessVolumes, XmippProtocol):
             self._insertFunctionStep("adjust", self.outModel, self.setOfProjections.get())
 
         if self.doNormalize:
-            self._insertFunctionStep("normalize", self.outModel, self.MaskRadiusNormalize.get())
+            self._insertFunctionStep("normalize", self.outModel, self.maskRadiusNormalize.get())
         
         if self.doThreshold:
-            self._insertFunctionStep("threshold", self.outModel, self.threshold.get())
+            self._insertFunctionStep("thresholdFunc", self.outModel, self.threshold.get())
         
         if self.doSegment:
             self._insertFunctionStep("segment", self.outModel, self.segmentationType.get(), self.segmentationMass.get(),
                             self.finalSize.get())
-         
          
     def window(self,input,outModel,singleVolume,size):
         if size>0:
@@ -254,7 +253,7 @@ class XmippProtPreprocessVolumes(ProtPreprocessVolumes, XmippProtocol):
             maskRadius=Xdim/2
         self._insertRunJobStep("xmipp_transform_normalize","-i %s --method NewXmipp --background circle %d"%(outModel, int(maskRadius)))
     
-    def threshold(self, outModel, threshold):
+    def thresholdFunc(self, outModel, threshold):
         self._insertRunJobStep("xmipp_transform_threshold","-i %s --select below %f --substitute value 0"%(outModel, float(threshold)))
     
     def changeHand(self, outModel):
