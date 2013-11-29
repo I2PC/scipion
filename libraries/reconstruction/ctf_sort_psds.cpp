@@ -71,6 +71,8 @@ void ProgPSDSort::defineParams()
     addUsageLine("+$ *First zero average*: this is average in Angstroms of the first zero. ");
     addUsageLine("+Normally, this value should be between 4x and 10x the sampling rate in Angstroms.");
     addUsageLine("+ ");
+    addUsageLine("+$ *Maximum frequency*: this is the resolution (in Angstroms) at which the envelope drops below 1% of the maximum envelope");
+    addUsageLine("+ ");
     addUsageLine("+$ *First zero disagreement*: if the CTF has been estimated by two different methods ");
     addUsageLine("+(normally Xmipp and Ctffind), then this criterion measures the average disagreement ");
     addUsageLine("+in Angstroms between the first zero in the two estimates. Low disagreements are ");
