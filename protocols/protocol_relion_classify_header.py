@@ -166,10 +166,10 @@ DoIntensityCorrection = False
 
 
 #------------------------------------------------------------------------------------------------
-# {condition}(not DoContinue) {section} Optimisation
+# {section} Optimisation
 #------------------------------------------------------------------------------------------------
 
-# {wizard}(wizardChooseLowPassFilter) Initial low-pass filter (A): 
+# {condition}(not DoContinue) {wizard}(wizardChooseLowPassFilter) Initial low-pass filter (A): 
 """
 It is recommended to strongly low-pass filter your initial reference map. 
 If it has not yet been low-pass filtered, it may be done internally using this option. 
@@ -195,19 +195,19 @@ Bayes law strictly determines the relative weight between the contribution of th
 """
 RegularisationParamT = 1
 
-# {wizard}(wizardSetMaskRadiusRelion) Particles mask RADIUS (A):
+# {condition}(not DoContinue) {wizard}(wizardSetMaskRadiusRelion) Particles mask RADIUS (A):
 """
 The experimental images will be masked with a soft circular mask with this diameter. Make sure this radius is not set too small because that may mask away part of the signal! If set to a value larger than the image size no masking will be performed.
 """
 MaskRadiusA = 200
 
-# Mask references structures?
+# {condition}(not DoContinue) Mask references structures?
 """
 If set to yes, a mask will also be applied to the reconstructed references. This is useful to set the solvent region of your reconstruction to 0. Either a soft spherical mask (based on the diameter of the experimental image mask given above) or a user-provided mask (next option) may be used. The user-provided mask should have values between 0 and 1 only. Solvent flattening is recommended, but make sure not to mask any signal away.
 """
 DoMaskParticles = True
 
-# {file} Reference mask
+# {condition}(not DoContinue) {file} Reference mask
 """
 A Spider/mrc map containing a (soft) mask with the same dimensions as the reference(s), and values between 0 and 1, with 1 being 100% protein and 0 being 100% solvent. The reconstructed reference map will be multiplied by this mask.If no mask is given, a soft spherical mask based on the diameter of the mask for the experimental images will be applied.  
  

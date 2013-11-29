@@ -1816,7 +1816,7 @@ class XmippBrowserCTF(XmippBrowserPreview):
         
         if self.freqs and self.unit == 'angstrom':
             self.unitLabel = '1/A'
-            self.freqs = [float(f) * self.sampling for f in self.freqs]
+#            self.freqs = [float(f) * self.sampling for f in self.freqs]
             self.maxFreq /= self.sampling
 
     def insertFilesFromMd(self, path):
@@ -1925,7 +1925,7 @@ class XmippBrowserBandpassFilter(XmippBrowserCTF):
     def getComputeFunction(self):
         from xmipp import bandPassFilter
         lf, hf, decay = self.getResults()
-        return lambda: bandPassFilter(self.image, self.lastitem, lf, hf, decay, self.dim)
+        return lambda: bandPassFilter(self.image, self.lastitem, lf*self.sampling, hf*self.sampling, decay, self.dim)
 
     def getResults(self):
         return [self.lfSlider.getValue(), self.hfSlider.getValue(), self.decaySlider.getValue()]
@@ -2062,10 +2062,16 @@ class XmippBrowserMask(XmippBrowser):
             self.outerRadius *= self.sampling
             self.rate /= self.sampling
             
-        self.innerRadiusSlider = XmippSlider(frame, "Inner radius", from_=0, to=xdim/2, value=self.innerRadius, step=step,
-                              callback=lambda a, b, c:self.updateMaskRadius())
-        self.outerRadiusSlider = XmippSlider(frame, "Outer radius", from_=1, to=xdim/2, value=self.outerRadius, step=step,
-                                  callback=lambda a, b, c:self.updateMaskRadius())
+        self.innerRadiusSlider = XmippSlider(frame, "Inner radius", 
+                                             from_=0, 
+                                             to=xdim/2, 
+                                             value=self.innerRadius, step=step,
+                                             callback=lambda a, b, c:self.updateMaskRadius())
+        self.outerRadiusSlider = XmippSlider(frame, "Outer radius", 
+                                             from_=1, 
+                                             to=xdim/2, 
+                                             value=self.outerRadius, step=step,
+                                             callback=lambda a, b, c:self.updateMaskRadius())
 #        if self.unit == 'angstrom':
 #            self.innerRadiusSlider /= self.sampling
 #            self.outerRadiusSlider /= self.sampling

@@ -204,8 +204,8 @@ def wizardChooseBandPassFilter(gui, var):
 
 def wizardChooseLowPassFilter(gui, var):
     '''Wizard dialog to help choosing Lowpass filter parameters (used in protocol_relion...) '''
-    vList = [0,var.getTkValue(),0.02]
     sampling=getSampling(gui.getVarValue('ImgMd'))
+    vList = [0,var.getTkValue(),0.02]#this 0.02 is a value in Fourier space in px ^-1
     from protlib_gui_ext import XmippBrowserBandpassFilter
     results = wizardHelperFilter(gui, XmippBrowserBandpassFilter, "Bandpass Filter", freqs=vList, 
                                  varName='Ref3D', showDecay=False, showLowFreq=False, unit='angstrom',
