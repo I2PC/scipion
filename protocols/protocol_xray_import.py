@@ -87,8 +87,13 @@ class ProtXrayImport(XmippProtocol):
             params += '--correct '
         if self.DoCrop:
             params += '--crop %(Crop)d '
-        if self.DoBadPixelsMask:
-            params += '--bad_pixels_filter "%(BadPixelsMask)s" '
+        
+        if self.BadPixelMode == "Auto mask":
+            params += '--bad_pixels factor "%(BadPixelFactor)s" '
+        elif self.BadPixelMode == "mask":
+            params += '--bad_pixels mask "%(BadPixelsMask)s" '
+        else:
+            params += '--bad_pixels none '
 
         # At this moment hdf5 library does not support parallel access
         if self.Synchrotron != "Alba":

@@ -127,7 +127,8 @@ DataType ImageBase::datatypeTIFF(TIFFDirHead dHead)
         else if (dHead.imageSampleFormat == SAMPLEFORMAT_IEEEFP )
             datatype = DT_Float;
         else
-            datatype = DT_Unknown;
+            //datatype = DT_Unknown;
+            datatype = DT_Float; // Eman2 does not write the datatype
         break;
     default:
         datatype = DT_Unknown;

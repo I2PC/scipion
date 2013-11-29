@@ -1323,6 +1323,8 @@ void forcePositive(MultidimArray<double> &V);
  *  * @ingroup Filters
  *
  *  A boundaries median filter is applied at those pixels given by the mask.
+ *  The mask is set to zeros in the process of the tiltering. Keep a copy in case
+ *  you further use it.
  */
 template <typename T>
 void boundMedianFilter(MultidimArray< T > &V, const MultidimArray<char> &mask, int n=0)

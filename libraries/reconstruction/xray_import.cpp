@@ -71,12 +71,12 @@ void ProgXrayImport::defineParams()
     addUsageLine("+is sr:current, and the slit width is xm:mono:slitwidth. The tilt angle");
     addUsageLine("+xm:sample:rx.");
 
-    addParamsLine("[--input <input_directory> ]         : Directory with tomograms, position files,");
-    addParamsLine("                                     : and optionally, darkfields (in a directory");
-    addParamsLine("                                     : called darkfields)");
-    addParamsLine("[--flat <inputFlatfieldDirectory=\"\">] : Directory with SPE images, position files,");
-    addParamsLine("                                     : and optionally, darkfields (in a directory");
-    addParamsLine("                                     : called darkfields)");
+    addParamsLine("[--input <input_directory> ]         : Directory with tomograms, position files and, optionally, ");
+    addParamsLine("                                     :  darkfields (in a directory called darkfields)");
+    addParamsLine("[--flat <ff_rootname=\"\">]         : Directory with SPE images, position files and, optionally, ");
+    addParamsLine("                                     : darkfields (in a directory called darkfields).");
+    addParamsLine("                                     : This param can also be used with specific microscopes params to ");
+    addParamsLine("                                     : use a stack of flatfields to average, or an averaged flatfield image");
     addParamsLine("[--oroot <output_rootname>]         :  Rootname for output files. If empty, input filename is taken.");
     addParamsLine("                                     :+ The following files are created:");
     addParamsLine("                                     :+ rootname.mrc: MRC stack with tilt series fully corrected as described above");
@@ -93,16 +93,24 @@ void ProgXrayImport::defineParams()
     addParamsLine("          : Bessy X-ray microscope:");
     addParamsLine("                                     : t_ini and t_end denotes the range of the tomogram images, and");
     addParamsLine("                                     : f_ini and f_end denotes the range of the flatfield images stored in the same directory");
-    addParamsLine("[--mistral <input_file>]    : hdf5 Nexus file acquired in Mistral microscope at Alba, which contains all data");
+    addParamsLine("[--mistral <input_file>]       : hdf5 Nexus file acquired in Mistral microscope at Alba, which contains all data");
     addParamsLine("   == Filters                                          ");
-    addParamsLine("  [--bad_pixels_filter  <mask_image_file=\"\">]   : Apply a boundaries median filter to bad pixels given in mask.");
-    addParamsLine("  alias -f;");
+    addParamsLine("  [--bad_pixels <type=factor>]    : Apply a boundaries median filter to bad pixels");
+    addParamsLine("       where <type>  ");
+    addParamsLine("           factor <k=3.>         : Applied at those pixels below [mean - k*std]");
+    addParamsLine("           mask <mask_file>        : Applied at those pixels given by mask");
+    addParamsLine("           none               : Do not apply the filter");
     addParamsLine("  [--log]                            : Apply log to pixel values");
+    addParamsLine("  alias -l;");
     addParamsLine("  [--correct]                        : Correct for the self-attenuation of X-ray projections applying ");
-    addParamsLine("           : a log and multiplying by -1");
+    addParamsLine("                  : log and multiplying by -1");
     addParamsLine("  alias -c;");
-    addExampleLine("The most standard call is",false);
+    addExampleLine("Standard call for spe files classified in folders is:",false);
     addExampleLine("xmipp_xray_import --data 10s --flat flatfields --oroot ProcessedData/img --crop 7");
+    addExampleLine("Importing data from Alba synchrotron:",false);
+    addExampleLine("xmipp_xray_import --mistral tomogram.hdf5 --oroot imported_tomogram");
+    addExampleLine("Correcting for self-áttenuation and cropping:",false);
+    addExampleLine("xmipp_xray_import --mistral tomogram.hdf5 --oroot imported_tomogram --correct --crop 10");
 }
 
 
@@ -111,7 +119,7 @@ void ProgXrayImport::init()
 {
     tIni = tEnd = fIni = fEnd = 0;
     flatFix = darkFix = false;
-
+    BPFactor = 0;
 }
 
 // Read arguments ==========================================================
@@ -151,7 +159,15 @@ void ProgXrayImport::readParams()
     fnRoot    = getParam("--oroot");
     cropSize  = getIntParam("--crop");
     thrNum    = getIntParam("--thr");
-    fnBPMask  = getParam("--bad_pixels_filter");
+
+    String tempString = getParam("--bad_pixels");
+    if (tempString == "factor")
+        BPFactor = getDoubleParam("--bad_pixels", 1);
+    else if (tempString == "mask")
+        fnBPMask  = getParam("--bad_pixels",1);
+    else
+        BPFactor = -1;
+
     selfAttFix   = checkParam("--correct");
     logFix   = (selfAttFix)? true : checkParam("--log");
 }
@@ -314,6 +330,7 @@ void ProgXrayImport::getFlatfield(const FileName &fnFFinput,
     if (isImage(fnFFinput))
         getImageInfo(fnFFinput, imInfo);
 
+    MultidimArray<double> &mdaIavg = Iavg();
 
     if (imInfo.adim.ndim == 1)
         readAndCrop(fnFFinput, Iavg);
@@ -422,24 +439,36 @@ void ProgXrayImport::getFlatfield(const FileName &fnFFinput,
             Iaux() *= 1.0/(currentBeam*expTime*slitWidth);
 
             if ( N == 0 )
-                Iavg() = Iaux();
+                mdaIavg = Iaux();
             else
-                Iavg() += Iaux();
+                mdaIavg += Iaux();
             N++;
         }
 
         darkFix = false; // We reset just in case there is no dark field for tomo images
 
-        Iavg()*=1.0/N;
+        mdaIavg*=1.0/N;
     }
     /* Create a mask with zero valued pixels to apply boundaries median filter
      * to avoid dividing by zero when normalizing */
-    MultidimArray<char> mask;
-    Iavg().equal(0,mask);
 
-    if (XSIZE(bpMask()) != 0)
-        mask += bpMask();
-    boundMedianFilter(Iavg(),mask);
+    MultidimArray<char> &mdaMask = MULTIDIM_ARRAY(bpMask);
+
+    if (BPFactor > 0)
+    {
+        double  avg, std;
+        mdaIavg.computeAvgStdev(avg, std);
+        mdaMask.resize(mdaIavg, false);
+
+        double th = avg - std*BPFactor;
+        FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(mdaMask)
+        dAi(mdaMask, n) = dAi(mdaIavg, n) < th;
+    }
+    else if (fnBPMask.empty())
+        mdaIavg.equal(0,mdaMask);
+
+    MultidimArray<char> mask = mdaMask;
+    boundMedianFilter(mdaIavg,mask);
 }
 
 void runThread(ThreadArgument &thArg)
@@ -491,8 +520,11 @@ void runThread(ThreadArgument &thArg)
 
             // Assign median filter to zero valued pixels to avoid -inf when applying log10
             Iaux().equal(0,mask);
+            mask.resizeNoCopy(Iaux());
+
             if (XSIZE(ptrProg->bpMask()) != 0)
                 mask += ptrProg->bpMask();
+
             boundMedianFilter(Iaux(), mask);
 
             if (ptrProg->logFix)
@@ -503,6 +535,7 @@ void runThread(ThreadArgument &thArg)
             }
 
             fnImgOut.compose(i+1, ptrProg->fnOut);
+
 
             size_t objId = localMD.addObject();
             localMD.setValue(MDL_IMAGE,fnImgOut,objId);
