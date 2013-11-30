@@ -109,7 +109,7 @@ class ProtResolution3D(XmippProtocol):
                 runShowJ(fnVSSNR)
 
 def getTs(InputVol):
-    getSampling(InputVol,1.)
+    return getSampling(InputVol,1.)
 #    fnAcquisition=findAcquisitionInfo(InputVol)
 #    if os.path.exists(fnAcquisition):
 #        md=MetaData(fnAcquisition)
