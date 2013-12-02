@@ -185,12 +185,14 @@ function updateTree(id, elm){
 function updateRow(id, elm, row){	
 	if (row.attr('value') != undefined && row.attr('value') != id) {
 		var rowOld = $("tr#" + row.attr('value'));
-		rowOld.attr('style', 'background-color: #fafafa;');
-		rowOld.attr('class', 'runtr');
+//		rowOld.attr('style', 'background-color: #fafafa;');
+//		rowOld.attr('class', 'runtr');
+		rowOld.removeClass('selected')
 	}
 	row.attr('value', id);
-	elm.attr('style', 'background-color: LightSteelBlue;');
-	elm.attr('class', 'selected');
+//	elm.attr('style', 'background-color: LightSteelBlue;');
+//	elm.attr('class', 'selected');
+	elm.addClass('selected')
 }
 
 function switchGraph() {
@@ -292,6 +294,7 @@ function switchGraph() {
 			}
 		}
 	}
+	
 }
 
 function updateGraphView(status) {

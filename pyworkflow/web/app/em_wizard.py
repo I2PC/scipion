@@ -71,6 +71,7 @@ def wiz_downsampling(protocol, request):
             
         context = {'objects': mics,
                    'downFactor': protocol.downFactor.get(),
+                   'projectName': request.session['projectName']
                    }
         
         return render_to_response('wiz_downsampling.html', context)
@@ -90,7 +91,8 @@ def wiz_ctf(protocol, request):
         context = {'objects': mics,
                    'raphael':getResourceJs('raphael'),
                    'high_res' : protocol.highRes.get(),
-                   'low_res': protocol.lowRes.get()
+                   'low_res': protocol.lowRes.get(),
+                   'projectName': request.session['projectName']
                    }
         
         return render_to_response('wiz_ctf.html', context)
@@ -119,7 +121,8 @@ def wiz_particle_mask(protocol, request):
             context = {'objects': parts,
                        'raphael': getResourceJs('raphael'),
                        'maskRadius': mask_radius,
-                       'xdim':xdim
+                       'xdim':xdim,
+                       'projectName': request.session['projectName']
                        }
             
             return render_to_response('wiz_particle_mask.html', context)
@@ -144,7 +147,8 @@ def wiz_particle_mask_radii(protocol, request):
                        'raphael': getResourceJs('raphael'),
                        'innerRadius': inner_radius,
                        'outerRadius': outer_radius,
-                       'xdim':xdim
+                       'xdim':xdim,
+                       'projectName': request.session['projectName']
                        }
             
             return render_to_response('wiz_particle_mask_radii.html', context)
@@ -173,7 +177,8 @@ def wiz_volume_mask(protocol, request):
         context = {'objects': vols,
                    'raphael': getResourceJs('raphael'),
                    'maskRadius': mask_radius,
-                   'xdim': xdim
+                   'xdim': xdim,
+                   'projectName': request.session['projectName']
                    }
         
         return render_to_response('wiz_volumeImageHandler_mask.html', context)
@@ -199,7 +204,8 @@ def wiz_volume_mask_radii(protocol, request):
                    'raphael': getResourceJs('raphael'),
                    'innerRadius': inner_radius,
                    'outerRadius': outer_radius,
-                   'xdim': xdim
+                   'xdim': xdim,
+                   'projectName': request.session['projectName']
                    }
         
         return render_to_response('wiz_volume_mask_radii.html', context)
@@ -221,7 +227,8 @@ def wiz_filter_spider(protocol, request):
                        'filterType': protocol.filterType.get(),
                        'filterMode': protocol.filterMode.get(),
                        'usePadding': protocol.usePadding.get(),
-                       'protocol': protocol
+                       'protocol': protocol,
+                       'projectName': request.session['projectName']
                        }
             
             return render_to_response('wiz_filter_spider.html', context)
@@ -241,7 +248,8 @@ def wiz_bandpass(protocol, request):
             context = {'objects': parts,
                        'lowFreq': protocol.lowFreq.get(),
                        'highFreq': protocol.highFreq.get(),
-                       'decayFreq': protocol.freqDecay.get()
+                       'decayFreq': protocol.freqDecay.get(),
+                       'projectName': request.session['projectName']
                        }
             
             return render_to_response('wiz_bandpass.html', context)
@@ -259,7 +267,8 @@ def wiz_gaussian(protocol, request):
             return HttpResponse("errorIterate")
         else:
             context = {'objects': parts,
-                       'freqSigma': protocol.freqSigma.get()
+                       'freqSigma': protocol.freqSigma.get(),
+                       'projectName': request.session['projectName']
                        }
             
             return render_to_response('wiz_gaussian.html', context)

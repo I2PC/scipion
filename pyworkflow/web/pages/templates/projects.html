@@ -1,26 +1,37 @@
-{% extends 'base.html' %} 
-{% block title %} - Projects {% endblock %}
-{% block head %}	
-	<!-- CSS -->
-	<link href={{css}} rel="stylesheet" type="text/css">
-	<link href={{messi_css}} rel="stylesheet" type="text/css">
-	<!-- JS -->
-	<script src={{project_utils}} type="text/javascript"></script>
-{% endblock %}	
-{% block sideLeft %}			
-	<center>		
-		<a href="javascript:createProjectForm();" ><button class="priorityButton" type="button">Create Project</button></a>
-	</center>
-{% endblock %}		
-{% block content %}
-	<div class="projectsList">				
-		{% for project in projects %}
-			<ul>
-				<li class="projList"><strong><a href="/project_content/?projectName={{project.projName}}"
-						class="projName">{{project.projName}}</a></strong> <br /> Modified
-					{{project.pTime}} <a href="javascript:deleteProjectForm('{{project.projName}}');" class="projRemove">Delete project</a>
-				</li>
-			</ul>
-		{% endfor %}
-	</div>
-{% endblock %}	
+{% extends 'base.html' %}
+
+{% block title %} - Projects{% endblock %}
+
+{% block content_head %}
+<!-- CSS -->
+<link href="/static/css/projects_style.css" rel="stylesheet" type="text/css">
+
+<!-- JS -->
+<script src={{project_utils}} type="text/javascript"></script>
+{% endblock %}
+
+{% block content_header %}	{% include "header.html" %} {% endblock %}
+
+{% block content_aside %}
+<a href="javascript:createProjectForm();" ><button class="priorityButton" type="button">Create Project</button></a>
+{% endblock %}
+
+{% block content_section %}
+<div class="projectsList">
+	<ul>				
+	{% for project in projects %}
+		<li class="projList"><strong><a href="/project_content/?projectName={{project.projName}}"
+				class="projName">{{project.projName}}</a></strong> <br /> Modified
+			{{project.pTime}} <a href="javascript:deleteProjectForm('{{project.projName}}');" class="projRemove">Delete project</a>
+		</li>
+	{% endfor %}
+	</ul>
+</div>
+{% endblock %}
+
+<!-- CSS -->
+<!-- <link href="/static/css/general_style.css" rel="stylesheet"	type="text/css">
+<link href="/static/css/jquery-ui.css" rel="stylesheet" type="text/css"/>
+<link href={{css}} rel="stylesheet" type="text/css">
+<link href={{messi_css}} rel="stylesheet" type="text/css"> -->
+

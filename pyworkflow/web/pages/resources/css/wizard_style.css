@@ -7,10 +7,11 @@ body {
 	font-family: "Trebuchet MS", "Helvetica", "Arial", "Verdana",
 		"sans-serif";
 	font-size: 0.84em;
+	padding: 15px;
 }
 
 #wizName {
-	margin: 0 0 0.3em 0;
+	margin: 0 0 10px 0;
 }
 
 .layout {
@@ -117,14 +118,22 @@ table#list th {
 }
 
 table#list th:first-child {
-	background: DarkRed;
+/* 	background: DarkRed;
 	color: white;
 	border-left: 2.5px solid FireBrick;
 	border-top: 2.5px solid FireBrick;
 	font-size: 0.9em;
 	font-weight: bold;
-	/* 	margin: -1em -0.7em 0.3em -0.65em; */
 	text-align: center;
+ */	
+	
+	background: DarkRed;
+	color: white;
+	font-size: 0.9em;
+	font-weight: bold;
+	text-align: center;
+	padding: 2px;
+	margin-bottom: 7px;
 }
 
 table#list tr {

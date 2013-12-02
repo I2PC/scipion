@@ -1,86 +1,26 @@
 /* CSS Document */
+
+/* GENERAL */
 html,body {
 	background-color: #F0F0F0;
 }
 
 body {
 	/* border: 1px solid black;*/
-	font-family: "Trebuchet MS", "Helvetica", "Arial", "Verdana",
-		"sans-serif";
-	font-size: 0.84em;
+/* 	font-family: "Trebuchet MS", "Helvetica", "Arial", "Verdana",
+		"sans-serif"; */
+	/* font-size: 0.84em; */
+	padding: 10px 15px;
 }
-
-img{
-	border: none;
-}
-
-a{
-	border: none;
-}
-
-#protName {
-	margin: 0 0 0.3em 0;
-}
-
-#tabs {
-	/* 	font-size: 80%; */
-	font-size: 0.84em;
-}
-
-#main {
-	width: 35em;
-}
-
-#mainNode1 {
-	width: 18.5em;
-	background-color: white;
-	border-radius: 4px;
-	border: 1px solid #aaaaaa;
-	font-size: 0.88em;
-	margin-bottom: 0.5em;
-	padding: 0.5em;
-	display: inline-block;
-	text-align: left;
-}
-
-#mainNode2 {
-	width: 18.5em;
-	background-color: white;
-	border-radius: 4px;
-	border: 1px solid #aaaaaa;
-	font-size: 0.88em;
-	margin-bottom: 0.5em;
-	padding: 0.5em;
-	display: inline-block;
-	text-align: left;
-}
-
-#mainNode1 input {
-	width: 8em;
-}
-
-table.section {
-	border-collapse: collapse;
-	border-right: 15px;
-	margin-left: 1em;
-	margin-top: 0.5em;
-}
-
-table.section td {
-	margin-right: 5em;
-}
-
 input {
 	background: LightGray;
 }
-
 input.hide2 {
 	position: relative;
 	filter: alpha(opacity :     0);
 	width: 9.7em;
 	cursor: pointer;
 }
-
 input.hide {
 	position: fixed;
 	-moz-opacity: 0;
@@ -92,7 +32,6 @@ input.hide {
 	cursor: pointer;
 	list-style:
 }
-
 textarea {
 	resize: vertical;
 	background: LightGray;
@@ -102,48 +41,62 @@ textarea {
 	font-size: 0.9em;
 }
 
+/* TITLE */
+#protName {
+	margin: 0 0 0.3em 0;
+}
+
+/* MAIN SECTION */
+#main {
+	width: 100%;
+	float: left;
+	margin-bottom: 10px;
+}
+
+.mainNode {
+	width: 45%;
+	background-color: white;
+	border-radius: 4px;
+	/* border: 1px solid #aaaaaa; */
+	border: 0px;
+	/* font-size: 0.88em; */
+	margin-bottom: 0.5em;
+	padding: 0.5em;
+	display: inline-block;
+	text-align: left;
+	
+}
+
+/* TABS */
+#tabs {
+	clear:both;
+	border: 0px;
+}
+
+#mainNode1 input {
+	width: 8em;
+}
+
 .box {
 	background: white;
 	/* 	margin: 0.3em; */
 	width: auto;
-	height: 20em;
-	overflow-y: scroll;
+	max-height: 20em;
+	overflow-y: auto;
 	overflow-x: hidden;
-	/* 	padding-right: 0.5em; */
-	/* 	margin-top: -1em */
+	padding:0.5em 0.5em 1.5em 0.5em;
 }
 
-.title {
+.title{
 	background: DarkRed;
 	color: white;
-	border-left: 2.5px solid FireBrick;
-	border-top: 2.5px solid FireBrick;
 	font-size: 0.9em;
 	font-weight: bold;
-	margin: 0.5em;
-}
-
-.titleMain1 {
-	background: DarkRed;
-	color: white;
-	border-left: 2.5px solid FireBrick;
-	border-top: 2.5px solid FireBrick;
-	font-size: 0.9em;
-	font-weight: bold;
-	margin: -1em -0.7em 0.3em -0.65em;
 	text-align: center;
+	padding: 2px;
+	margin-bottom: 7px;
 }
 
-.titleMain2 {
-	background: DarkRed;
-	color: white;
-	border-left: 2.5px solid FireBrick;
-	border-top: 2.5px solid FireBrick;
-	font-size: 0.9em;
-	font-weight: bold;
-	margin: -1em -0.6em 0.3em -0.6em;
-	text-align: center;
-}
 
 .elementHide {
 	display: none;
@@ -177,16 +130,16 @@ textarea {
 	width: 9em;
 }
 
-.ico {
-	
-}
-
-.ico:hover {
-	background-color: FireBrick;
+.iconEdit:before{
+	width: 16px;
+	height: 16px;
+	margin-left: 5px;
 }
 
 .boxBottom {
 	/* 	background-color: rgb(235, 235, 235); */
+	margin: 1.5em 0px;
+	float: right;
 	
 }
 
@@ -260,7 +213,7 @@ textarea {
 }
 
 .buttonWiz:hover {
-	background-color: FireBrick;
+	/* background-color: FireBrick; */
 }
 
 .buttonViewer {
@@ -276,7 +229,7 @@ textarea {
 	background-color: FireBrick;
 }
 
-/* CSS for messi selection table */
+/* TABLE */
 table.content {
 	width: 100%;
 	overflow-x: auto;
@@ -301,4 +254,23 @@ table.content tr td {
 table.content tr:hover td {
 	background-color: #f2f2f2;
 	/* 	color: white; */
+}
+table.section {
+	border-collapse: collapse;
+	border-right: 15px;
+	margin-left: 1em;
+	margin-top: 0.5em;
+}
+
+table.section td {
+	padding-right:10px;
+}
+table td{
+	padding: 4px 4px 6px 2px;
+}
+table td:nth-child(odd) {
+	padding: 4px 6px 6px 2px;
+}
+table td:nth-child(even){
+	padding: 4px 2px 6px 6px;
 }
