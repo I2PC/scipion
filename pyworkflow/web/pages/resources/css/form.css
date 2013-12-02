@@ -133,7 +133,7 @@ textarea {
 .iconEdit:before{
 	width: 16px;
 	height: 16px;
-	margin-left: 5px
+	margin-left: 5px;
 }
 
 .boxBottom {
@@ -266,6 +266,11 @@ table.section td {
 	padding-right:10px;
 }
 table td{
-	padding: 4px 4px 4px 2px
+	padding: 4px 4px 6px 2px;
 }
-
+table td:nth-child(odd) {
+	padding: 4px 6px 6px 2px;
+}
+table td:nth-child(even){
+	padding: 4px 2px 6px 6px;
+}

@@ -443,9 +443,10 @@ function getTableFormatted(node, list, id, previsualize) {
 			+ "'>";
 	
 	var func = "";
-	var first = "<a href='#' onclick='javascript:";
-	var second = "'><img src=/resources/visualize.gif/></a>";
-
+//	var first = "<a href='#' onclick='javascript:";
+//	var second = "'><img src=/resources/visualize.gif/></a>";
+	var first = "<a class='iconEye' href='javascript:";
+	var second = "'></a>";
 	for(var x = 0; x < list.length; x++) {
 		if(previsualize){
 			var splited = list[x].split(".");

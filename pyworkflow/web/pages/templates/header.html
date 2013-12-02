@@ -18,7 +18,10 @@
 				<a href="/projects" class="headerLink{% if view == 'projects' %} headerLinkSelected {% endif %}">Projects</a>
 				{% if projectName != None and projectName != ''%}<span id="tube">|</span><a href="/project_content/?projectName={{projectName}}" class="headerLink{% if view == 'protocols' %} headerLinkSelected {% endif %}">Protocols</a>{% endif %}
 				<span id="tube">|</span><a href="#" onclick="javascript:alert('Not implemented yet')" class="headerLink{% if view == 'data' %} headerLinkSelected {% endif %}">Data</a>
-				{% if projectName != None and projectName != ''%}<span id="tube">|</span><a href="/view_hosts" class="headerLink{% if view == 'hosts' %} headerLinkSelected {% endif %}">Hosts</a>{% endif %}
+				{% if projectName != None and projectName != ''%}
+					<span id="tube">|</span><a href="javascript:alert('Not implemented yet')" class="headerLink{% if view == 'hosts' %} headerLinkSelected {% endif %}">Hosts</a>
+					<!-- <span id="tube">|</span><a href="/view_hosts" class="headerLink{% if view == 'hosts' %} headerLinkSelected {% endif %}">Hosts</a> -->
+				{% endif %}
 			{% endif %}
 		</div>
 	

@@ -73,15 +73,15 @@ header #headerLogoContainer{
 }
 
 header #projectName{
-	font-size:1.7em;
+	font-size:1.6em;
 	float:left;
 	padding-top:10px;
 	color:#707070
 }
 header #backToProject{
-	float:right;
+	/* float:right; */
 	color:#6e6e6e;
-	padding:25px 30px 0px 0px;
+	/* padding:25px 30px 0px 0px; */
 }
 header #headerLine{
 	width:100%;
@@ -111,6 +111,7 @@ header .headerLink{
 }
 header .headerLinkSelected{
 	color: #000000;
+	font-weight: bold;
 }
 header #tube{
 	margin: 0px 15px;
@@ -241,7 +242,7 @@ footer .logo{
 }
 /**************** Table CSS *******************/
 table#data a:link {
-	font-weight: bold;
+	/* font-weight: bold; */
 	font-size: 0.85em;
 }
 
@@ -298,6 +299,7 @@ table#data tr:hover td {
 }
 table#data tr.selected td{
 	background-color: #F3CBCB;
+	font-weight: bold;
 }
 
 table#data tr.selected:hover td {
