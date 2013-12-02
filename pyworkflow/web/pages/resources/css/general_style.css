@@ -28,6 +28,13 @@ a:hover {
 	/* color: Firebrick; */
 }
 
+.floatRight{
+	float: right;
+}
+.floatLeft{
+	float: left;
+}
+
 /* HEADER */
 header {
 	/* height: 100px; */

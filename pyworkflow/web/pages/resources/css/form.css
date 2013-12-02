@@ -49,6 +49,8 @@ textarea {
 /* MAIN SECTION */
 #main {
 	width: 100%;
+	float: left;
+	margin-bottom: 10px;
 }
 
 .mainNode {
@@ -65,29 +67,15 @@ textarea {
 	
 }
 
-.floatRight{
-	float: right;
-}
-.floatLeft{
-	float: left;
-}
-
 /* TABS */
 #tabs {
-	/* 	font-size: 80%; */
-	/* font-size: 0.84em; */
 	clear:both;
 	border: 0px;
 }
 
-
-
 #mainNode1 input {
 	width: 8em;
 }
-
-
-
 
 .box {
 	background: white;
@@ -97,27 +85,13 @@ textarea {
 	overflow-y: auto;
 	overflow-x: hidden;
 	padding:0.5em 0.5em 1.5em 0.5em;
-	
-	/* 	padding-right: 0.5em; */
-	/* 	margin-top: -1em */
 }
 
-/* .title {
-	background: DarkRed;
-	color: white;
-	border-left: 2.5px solid FireBrick;
-	border-top: 2.5px solid FireBrick;
-	font-size: 0.9em;
-	font-weight: bold;
-	margin: 0.5em;
-} */
-
-.title {
+.title{
 	background: DarkRed;
 	color: white;
 	font-size: 0.9em;
 	font-weight: bold;
-	/* margin: -1em -0.7em 0.3em -0.65em; */
 	text-align: center;
 	padding: 2px;
 	margin-bottom: 7px;
@@ -156,12 +130,10 @@ textarea {
 	width: 9em;
 }
 
-.ico {
-	
-}
-
-.ico:hover {
-	/* background-color: FireBrick; */
+.iconEdit:before{
+	width: 16px;
+	height: 16px;
+	margin-left: 5px
 }
 
 .boxBottom {
@@ -296,3 +268,4 @@ table.section td {
 table td{
 	padding: 4px 4px 4px 2px
 }
+
