@@ -206,7 +206,6 @@ def update_prot_tree(request):
 
 def loadProtTree(project):
     protCfg = project.getSettings().getCurrentProtocolMenu()
-    print protCfg
     root = TreeItem('root', 'root')
     populateTree(root, protCfg)
     return root    
