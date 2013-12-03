@@ -495,7 +495,7 @@ class ProtocolsView(tk.Frame):
             
         if node.run:
             status = node.run.status.get(STATUS_FAILED)
-            nodeText = nodeText + '\n' + status
+            nodeText = nodeText + '\n' + node.run.getStatusMessage()
             color = STATUS_COLORS[status]
         
         return self.runsGraph.createTextbox(nodeText, 100, y, bgColor=color, textColor=textColor)
