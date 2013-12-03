@@ -38,7 +38,7 @@ XMIPP_HOME = os.environ['XMIPP_HOME']
 XMIPP_BIN = os.path.join(XMIPP_HOME, 'bin')
 XMIPP_LIB = os.path.join(XMIPP_HOME, 'lib')
 
-VARS = {'SCIPION_HOME': os.path.join(os.environ['HOME'], 'Scipion'),
+VARS = {'SCIPION_HOME': os.environ.get('SCIPION_HOME', os.path.join(os.environ['HOME'], 'Scipion')),
         'PYTHONPATH': os.pathsep.join([PW_HOME, XMIPP_LIB, os.environ.get('PYTHONPATH', '')]),
         'PATH': os.pathsep.join([PW_APPS, os.environ['PATH'], XMIPP_BIN]),
         'LD_LIBRARY_PATH': os.pathsep.join([XMIPP_LIB, os.environ.get('LD_LIBRARY_PATH', '')]),
@@ -64,6 +64,15 @@ if __name__ == '__main__':
     n = len(sys.argv)
     if n:
         mode = MODE_MANAGER
+        # Create SCIPION_HOME folder if not exists
+        if not os.path.exists(VARS['SCIPION_HOME']):
+            sys.path.append(PW_HOME)
+            from pyworkflow.utils.path import makePath
+            makePath(VARS['SCIPION_HOME'])
+            # Write default configurations
+            from pyworkflow.apps.config import writeDefaults
+            writeDefaults()
+            
         if n > 1:
             mode = sys.argv[1]
         
