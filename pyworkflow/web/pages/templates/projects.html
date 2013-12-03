@@ -4,10 +4,12 @@
 
 {% block content_head %}
 <!-- CSS -->
-<link href="/static/css/projects_style.css" rel="stylesheet" type="text/css">
+<link href="{{projects_css}}" rel="stylesheet" type="text/css">
+<link href={{messi_css}} rel="stylesheet" type="text/css">
 
 <!-- JS -->
-<script src={{project_utils}} type="text/javascript"></script>
+<script src="{{project_utils_js}}" type="text/javascript"></script>
+<script src="{{messi_js}}" type="text/javascript"></script>
 {% endblock %}
 
 {% block content_header %}	{% include "header.html" %} {% endblock %}
@@ -29,9 +31,5 @@
 </div>
 {% endblock %}
 
-<!-- CSS -->
-<!-- <link href="/static/css/general_style.css" rel="stylesheet"	type="text/css">
-<link href="/static/css/jquery-ui.css" rel="stylesheet" type="text/css"/>
-<link href={{css}} rel="stylesheet" type="text/css">
-<link href={{messi_css}} rel="stylesheet" type="text/css"> -->
+<!-- <link href="/static/css/jquery-ui.css" rel="stylesheet" type="text/css"/> -->
 

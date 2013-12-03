@@ -5,6 +5,7 @@
 <!-- CSS -->
 <link href={{css}} rel="stylesheet" type="text/css">
 <link href={{messi_css}} rel="stylesheet" type="text/css">
+<script src={{jquery_treeview}} type="text/javascript"></script>
 <link href="{{jquery_ui}}" rel="stylesheet" type="text/css">
 <style>
 /* 	section, aside{
@@ -14,7 +15,6 @@
 
 <!-- JS Libs -->
 <script src={{jquery_cookie}} type="text/javascript"></script>
-<script src={{jquery_treeview}} type="text/javascript"></script>
 <script src={{utils}} type="text/javascript"></script>
 <script src={{project_content_utils}} type="text/javascript"></script>
 <script src={{graph_utils}} type="text/javascript"></script>
@@ -57,7 +57,7 @@
 <script>	
 	$(function() {
     	$("#tabs").tabs();
-    	$("#browser").treeview();
+//     	$("#browser").treeview();
     	{% if graphView %}
     		switchGraph()
     	{% endif %}
@@ -70,29 +70,13 @@
 	<div class="viewTree">
 		<label>Workflow View: </label>
 		<select id="viewsTree" name="viewsTree" onChange="javascript:changeTreeView();">
-			<!-- <option value=""></option> -->
+			{% for choice in choices %}
+			 	<option value="{{forloop.counter0}}" {% if forloop.counter0 == choiceSelected %} selected {% endif %}>{{choice}}</option> 
+			{% endfor %}
 		</select>
 	</div> 
 	<div class="protFieldsetTree">
-		<ul id="browser" class="filetree">
-			{% for section in sections %}
-			<li><span class="section">{{section.name}}</span>
-				<ul>
-					{% for prot in section.childs %} {% if prot.tag == 'protocol'%}
-					<li><span class="protocol"><a
-							href="javascript:popup('/form/?protocolClass={{prot.protClass}}')">{{prot.name}}</a></span></li>
-					{% elif prot.tag == 'protocol_base' %}
-					<li class="closed"><span class="protocol_base">{{prot.name}}</span>
-						<ul>
-							{% for prot2 in prot.childs %}
-							<li><span class="protocol_class"> <a
-									href="javascript:popup('/form/?protocolClass={{prot2.name}}')">
-										{{prot2.name}} </a>
-							</span></li> {% endfor %}
-						</ul></li> {% else %} No athletes. {% endif %} {% endfor %}
-				</ul>
-			</li> {% endfor %}
-		</ul>
+	{% include "tree_prot_view.html" %}
 	</div>
 </div>
 {% endblock %} 

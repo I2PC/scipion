@@ -362,10 +362,6 @@ function browseProtClass(param, projName, protClassName) {
 	});
 }
 
-function showSelectTable(param, objects, className){
-	
-}
-
 function formProtSimple(param, projName){
 	var protSimple = $("#"+param +"_input").val();
 	var dataProt = $("#"+param+"_input").attr("data-prot")
