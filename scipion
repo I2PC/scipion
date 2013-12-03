@@ -58,6 +58,7 @@ MODE_MANAGER = 'manager'
 MODE_PROJECT = 'project'
 MODE_WEBSERVER = 'webserver'
 MODE_TESTS = 'tests'
+MODE_HELP = 'help'
 
 if __name__ == '__main__':
     n = len(sys.argv)
@@ -85,7 +86,7 @@ if __name__ == '__main__':
                 os.chdir(PW_HOME)
                 runCmd('python -m unittest pyworkflow.tests.%s' % tests)
                 os.chdir(path)
-        
+                
     # If reach this point, bad arguments passed
     print """
 Usage: 
@@ -95,4 +96,5 @@ Usage:
         project [PROJECT_NAME] : will open the specified project, special name 'last' can be used.  
         webserver : will launch django webserver
         tests :  will run the tests starting from pyworkflow.tests
+        help : print this help message
 """

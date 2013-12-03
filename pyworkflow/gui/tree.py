@@ -346,7 +346,7 @@ class ProjectRunsTreeProvider(TreeProvider):
         
         info = {'key': obj.getObjId(),
                 'text': obj.getRunName(),
-                'values': (obj.status.get(), obj.getElapsedTime())}
+                'values': (obj.getStatusMessage(), obj.getElapsedTime())}
         objPid = obj.getObjParentId()
         if objPid in self._objDict:
             info['parent'] = self._objDict[objPid]

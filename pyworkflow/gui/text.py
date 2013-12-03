@@ -187,7 +187,10 @@ def configureColorTags(text):
     """ Function to configure tag_colorX for all supported colors.
     It is applicable to an Text text """
     try:
-        from protlib_xmipp import colorMap
+        from xmipp import XMIPP_MAGENTA, XMIPP_BLUE, XMIPP_GREEN, XMIPP_RED, XMIPP_YELLOW, XMIPP_CYAN, colorStr
+        colorMap = {'red': XMIPP_RED, 'blue': XMIPP_BLUE,
+                        'green': XMIPP_GREEN, 'magenta': XMIPP_MAGENTA,
+                        'yellow': XMIPP_YELLOW, 'cyan': XMIPP_CYAN}
         for color in colorMap.keys():
             text.tag_config("tag_" + color, foreground=color)
         return True

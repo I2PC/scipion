@@ -207,6 +207,9 @@ if __name__ == '__main__':
     if len(sys.argv) > 1:
         manager = Manager()
         projName = os.path.basename(sys.argv[1])
+        if projName == 'last': # Get last project
+            projName = manager.listProjects()[0].projName
+            
         projPath = manager.getProjectPath(projName)
         projWindow = ProjectWindow(projPath)
         projWindow.show()

@@ -39,6 +39,7 @@ from django.contrib.gis.shortcuts import render_to_text
 from pyworkflow.em.packages.xmipp3.convert import writeSetOfParticles
 from pyworkflow.em.packages.xmipp3.plotter import XmippPlotter
 from pyworkflow.viewer import WEB_DJANGO
+from pyworkflow.web.app.views_util import loadProject
 
 def projects(request):
     manager = Manager()
@@ -135,9 +136,12 @@ def project_graph (request):
         for box in boxList.split(','):
             i, w, h = box.split('-')
             node = g.getNode(i)
+            if node is None:
+                print "Get NONE node: i=%s" % i
+            else:
 #            print node.getName()
-            node.w = float(w)
-            node.h = float(h)
+                node.w = float(w)
+                node.h = float(h)
             
         lt = gg.LevelTree(g)
         lt.paint(createNode, createEdge)
@@ -188,11 +192,24 @@ def populateTree(tree, obj):
                         item.childs.append(protItem)
         else:
             item.protClass = protClassName
-            populateTree(item, sub)                
+            populateTree(item, sub)
+
+def update_prot_tree(request):
+    projectName = request.session['projectName']
+    project = loadProject(projectName)
+    index = request.GET.get('index', None)
+
+    # set the new protocol tree chosen
+    project.getSettings().setCurrentProtocolMenu(index)
+    project.getSettings().write()
+#    root = loadProtTree(project)
+        
+    return HttpResponse(mimetype='application/javascript')
 
 
 def loadProtTree(project):
     protCfg = project.getSettings().getCurrentProtocolMenu()
+    print protCfg
     root = TreeItem('root', 'root')
     populateTree(root, protCfg)
     return root    
@@ -200,7 +217,7 @@ def loadProtTree(project):
 def update_graph_view(request):
     status = request.GET.get('status', None)
     projectName = request.session['projectName']
-    project = loadProject(projectName) 
+    project = loadProject(projectName)
 #    status = project.getSettings().graphView.get()
     if status == "True":
         project.getSettings().graphView.set(True)
@@ -208,6 +225,15 @@ def update_graph_view(request):
         project.getSettings().graphView.set(False)
     project.getSettings().write()
     return HttpResponse(mimetype='application/javascript')
+
+def tree_prot_view(request):
+    projectName = request.session['projectName'] 
+    project = loadProject(projectName)   
+     
+    # load the protocol tree current active
+    root = loadProtTree(project)
+    
+    return render_to_response('tree_prot_view.html', {'sections': root.childs})
     
 def project_content(request):        
     projectName = request.GET.get('projectName', None)
@@ -223,7 +249,14 @@ def project_content(request):
     provider = ProjectRunsTreeProvider(project)
     graphView = project.getSettings().graphView.get()
     
+    # load the protocol tree current active
     root = loadProtTree(project)
+    
+    # get the choices to load protocol trees
+    choices = [pm.text.get() for pm in project.getSettings().protMenuList]
+
+    # get the choice current 
+    choiceSelected =  project.getSettings().protMenuList.getIndex()
     
     context = {'projectName': projectName,
                'editTool': getResourceIcon('edit_toolbar'),
@@ -242,10 +275,12 @@ def project_content(request):
                'tabs_config': getResourceJs('tabs_config'),
                'css':getResourceCss('project_content'),
                'jquery_ui':getResourceCss('jquery_ui'),
-               'sections': root.childs,
-               'provider':provider,
                'messi_css': getResourceCss('messi'),
                'favicon': getResourceIcon('favicon'),
+               'sections': root.childs,
+               'choices':choices,
+               'choiceSelected': choiceSelected,
+               'provider':provider,
                'view': 'protocols',
                'graphView': graphView,
                'contentConfig': 'divided'}

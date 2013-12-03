@@ -28,11 +28,13 @@ urlpatterns = patterns('',
     url(r'^create_project/$', 'app.views_project.create_project'),
     url(r'^delete_project/$', 'app.views_project.delete_project'),
     url(r'^project_content/$', 'app.views_project.project_content'),
+    url(r'^tree_prot_view/$', 'app.views_project.tree_prot_view'),
     url(r'^protocol_io/$', 'app.views_project.protocol_io'),
     url(r'^protocol_summary/$', 'app.views_project.protocol_summary'),
     url(r'^protocol_status/$', 'app.views_project.protocol_status'),
     url(r'^project_graph/$', 'app.views_project.project_graph'),
     url(r'^update_graph_view/$', 'app.views_project.update_graph_view'),
+    url(r'^update_prot_tree/$', 'app.views_project.update_prot_tree'),
     
     #UTILS
     url(r'^render_column/', 'app.views_util.render_column'), # Load images dynamically

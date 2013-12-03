@@ -439,6 +439,7 @@ class ParamWidget():
         dlg = ListDialog(self.parent, "Select protocol", tp)
         if dlg.value is not None:
             self.set(dlg.value)
+            self._openProtocolForm()
             
     def _openProtocolForm(self, e=None):
         className = self.get().strip()
@@ -707,7 +708,8 @@ class FormWindow(Window):
         try:
             message = self.callback(self.protocol, onlySave)
             if not self.visualizeMode:
-                self.showInfo(message, "Protocol action")
+                if len(message):
+                    self.showInfo(message, "Protocol action")
                 if not onlySave:
                     self.close()
         except Exception, ex:

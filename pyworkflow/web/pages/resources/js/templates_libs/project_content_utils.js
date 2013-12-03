@@ -47,6 +47,26 @@
  * 
  **/
 
+function changeTreeView(){
+	protIndex = $('#viewsTree').val();
+	
+	$.ajax({
+		type : "GET",
+		url : '/update_prot_tree/?index='+ protIndex,
+		dataType:"text",
+		success : function() {
+			$.ajax({
+				url: '/tree_prot_view/',
+				success: function(data) {
+				$('div.protFieldsetTree').html(data);
+				}
+			});
+//			window.location.reload(true);			
+		}
+	});
+}
+	
+
 /*
  * Toolbar used in the project content template for list view
  */

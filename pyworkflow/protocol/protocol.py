@@ -23,6 +23,7 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
+from pyworkflow.protocol.constants import STATUS_RUNNING
 """
 This modules contains classes required for the workflow
 execution and tracking like: Step and Protocol
@@ -96,6 +97,15 @@ class Step(OrderedObject):
     
     def setStatus(self, value):
         return self.status.set(value)
+    
+    def isActive(self):
+        return self.getStatus() in ACTIVE_STATUS
+    
+    def isFinished(self):
+        return self.getStatus() == STATUS_FINISHED
+    
+    def isRunning(self):
+        return self.getStatus() == STATUS_RUNNING
     
     def run(self):
         """ Do the job of this step"""
@@ -678,12 +688,6 @@ class Protocol(Step):
         
     def getDbPath(self):
         return self._getLogsPath('run.db')
-    
-    def isActive(self):
-        return self.getStatus() in ACTIVE_STATUS
-    
-    def isFinished(self):
-        return self.getStatus() == STATUS_FINISHED
             
     def setStepsExecutor(self, executor):
         self._stepsExecutor = executor
@@ -768,6 +772,24 @@ class Protocol(Step):
             elapsed = t2 - t1
         
         return elapsed
+    
+    def getStepsDone(self):
+        """ Return the number of steps executed. """
+        done = 0
+        for s in self._steps:
+            if s.isFinished():
+                done += 1
+        return done
+            
+    def getStatusMessage(self):
+        """ Return the status string and if running the steps done. 
+        """
+        msg = self.getStatus()
+        if self.isRunning():
+            done = self.getStepsDone()
+            msg += " (done %d/%d)" % (done, len(self._steps))
+        
+        return msg
     
     # Methods that should be implemented in subclasses
     def _validate(self):
