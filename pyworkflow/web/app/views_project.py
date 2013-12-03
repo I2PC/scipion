@@ -230,18 +230,7 @@ def tree_prot_view(request):
     # load the protocol tree current active
     root = loadProtTree(project)
     
-    # get the choices to load protocol trees
-    choices = [pm.text.get() for pm in project.getSettings().protMenuList]
-
-    # get the choice current 
-    choiceSelected =  project.getSettings().protMenuList.getIndex()
-    
-    context = {'sections': root.childs,
-               'choices':choices,
-               'choiceSelected': choiceSelected,
-               'jquery_treeview': getResourceJs('jquery_treeview'),
-    }
-    return render_to_response('tree_prot_view.html', context)
+    return render_to_response('tree_prot_view.html', {'sections': root.childs})
     
 def project_content(request):        
     projectName = request.GET.get('projectName', None)
