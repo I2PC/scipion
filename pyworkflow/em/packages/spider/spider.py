@@ -37,13 +37,14 @@ import subprocess
 
 END_HEADER = 'END BATCH HEADER'
 
+SPIDER = 'spider'
 
 def loadEnvironment():
     """ Load the environment variables needed for Spider.
     If SPIDER_DIR is defined, the bin, man and proc folders will be 
     defined from it. If not, each of them should be defined separately. 
     """
-    
+    global SPIDER
     SPIDER_DIR = os.environ.get('SPIDER_DIR', None) # Scipion definition
     
     if SPIDER_DIR is None:
@@ -58,6 +59,19 @@ def loadEnvironment():
         os.environ['SPMAN_DIR'] = join(SPIDER_DIR, 'man', '')
         os.environ['SPPROC_DIR'] = join(SPIDER_DIR, 'proc', '')
     
+    # Get the executable or 'spider' by default
+    print "SPBIN_DIR", join(os.environ['SPBIN_DIR'], os.environ.get('SPIDER', 'spider'))
+    SPIDER = join(os.environ['SPBIN_DIR'], os.environ.get('SPIDER', 'spider'))
+    # expand ~ and vars
+    SPIDER = abspath(os.path.expanduser(os.path.expandvars(SPIDER)))
+    # Check that executable exists
+    if not os.path.exists(SPIDER):
+        msg = "SPIDER executable not found at:\n   '%s'" % SPIDER
+        msg += "\nPlease create a link inside the bin folder: \n   '%s'" % os.environ['SPBIN_DIR']
+        msg += "\n named 'spider' or define the SPIDER environment variable"
+        raise Exception(msg)
+        
+    #
     #TODO: maybe validate that the 
     os.environ['PATH'] = os.environ['PATH'] + os.pathsep + os.environ['SPBIN_DIR']
     
@@ -87,7 +101,6 @@ def runSpiderTemplate(templateName, ext, paramsDict):
     loadEnvironment()
     copyTemplate(templateName, '.')
     scriptName = replaceExt(templateName, ext)
-    print "scriptName:", scriptName
 
     fIn = open(templateName, 'r')
     fOut = open(scriptName, 'w')
@@ -107,7 +120,7 @@ def runSpiderTemplate(templateName, ext, paramsDict):
     fOut.close()    
 
     scriptName = removeExt(scriptName)  
-    runJob(None, "spider", "%(ext)s @%(scriptName)s" % locals())
+    runJob(None, SPIDER, "%(ext)s @%(scriptName)s" % locals())
 
 
 class SpiderShell(object):
@@ -120,7 +133,7 @@ class SpiderShell(object):
         
         loadEnvironment()
         FNULL = open(os.devnull, 'w')
-        self._proc = subprocess.Popen("spider", shell=True, 
+        self._proc = subprocess.Popen(SPIDER, shell=True, 
                                       stdin=subprocess.PIPE,
                                       stdout=FNULL, stderr=FNULL)
         if self._debug and self._log:
