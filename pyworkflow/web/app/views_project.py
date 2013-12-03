@@ -136,9 +136,12 @@ def project_graph (request):
         for box in boxList.split(','):
             i, w, h = box.split('-')
             node = g.getNode(i)
+            if node is None:
+                print "Get NONE node: i=%s" % i
+            else:
 #            print node.getName()
-            node.w = float(w)
-            node.h = float(h)
+                node.w = float(w)
+                node.h = float(h)
             
         lt = gg.LevelTree(g)
         lt.paint(createNode, createEdge)

@@ -183,24 +183,41 @@ class Text(tk.Text, Scrollable):
             self.mark_set("matchEnd", "%s+%sc" % (index,count.get()))
             self.tag_add(tag, "matchStart","matchEnd")
 
-def configureColorTags(text):
-    """ Function to configure tag_colorX for all supported colors.
-    It is applicable to an Text text """
-    try:
-        from protlib_xmipp import colorMap
-        for color in colorMap.keys():
-            text.tag_config("tag_" + color, foreground=color)
-        return True
-    except Exception, e:
-        print "Colors still not available"
-    return False
-        
-        
+#---------------------------------------------------------------------------
+# Colors from Xmipp binding
+#--------------------------------------------------------------------------- 
+from xmipp import XMIPP_MAGENTA, XMIPP_BLUE, XMIPP_GREEN, XMIPP_RED, XMIPP_YELLOW, XMIPP_CYAN, colorStr
+
+colorMap = {'red': XMIPP_RED, 'blue': XMIPP_BLUE,
+                'green': XMIPP_GREEN, 'magenta': XMIPP_MAGENTA,
+                'yellow': XMIPP_YELLOW, 'cyan': XMIPP_CYAN}
+
+
+blueStr = lambda s: colorStr(XMIPP_BLUE, s)
+greenStr = lambda s: colorStr(XMIPP_GREEN, s)
+greenLowStr = lambda s: colorStr(XMIPP_GREEN, s, 0)
+failStr = redStr = lambda s: colorStr(XMIPP_RED, s)
+headerStr = magentaStr = lambda s: colorStr(XMIPP_MAGENTA, s)
+yellowStr = lambda s: colorStr(XMIPP_YELLOW, s)
+cyanStr = warnStr = cyanStr = lambda s: colorStr(XMIPP_CYAN, s)
+
+
+def findColor(color):
+    '''This function will search if there are color characters present
+    on string and return the color and positions on string'''
+    for k, v in colorMap.iteritems():
+        x, y = colorStr(v, "_..._").split("_..._")
+        fx = color.find(x)
+        fy = color.find(y)
+        if fx != -1 and fy != -1:
+            color = color.replace(x, '').replace(y, '')
+            return (k, fx, fy, color)
+    return None
+
 def insertColoredLine(text, line, tag=""):
     """ Check if the color codes are present in a line
     and use the corresponding tags. The colors tags should 
     be already configured on text object"""
-    from protlib_xmipp import findColor
     ctuple = findColor(line)
     if ctuple is None:
         line = line[line.rfind("\r")+1:]
@@ -212,7 +229,17 @@ def insertColoredLine(text, line, tag=""):
         text.insert(tk.END, cleanText[idxInitColor:idxFinishColor-1], "tag_" + color)
         text.insert(tk.END, cleanText[idxFinishColor:])
         
-        
+def configureColorTags(text):
+    """ Function to configure tag_colorX for all supported colors.
+    It is applicable to an Text text """
+    try:
+        for color in colorMap.keys():
+            text.tag_config("tag_" + color, foreground=color)
+        return True
+    except Exception, e:
+        print "Colors still not available"
+    return False
+       
 class TaggedText(Text):  
     """
     Implement a Text that will recognized some basic tags
