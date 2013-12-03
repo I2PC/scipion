@@ -58,10 +58,9 @@ function changeTreeView(){
 			$.ajax({
 				url: '/tree_prot_view/',
 				success: function(data) {
-				$('div.protFieldsetTree').html(data);
+					$('div.protFieldsetTree').html(data);
 				}
 			});
-//			window.location.reload(true);			
 		}
 	});
 }
