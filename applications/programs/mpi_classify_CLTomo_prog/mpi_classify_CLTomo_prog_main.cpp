@@ -325,8 +325,9 @@ void CL3DClass::fitBasic(MultidimArray<double> &I, CL3DAssignment &result)
     double frmScore;
     constructFourierMask(I);
     constructFourierMaskFRM();
-    alignVolumesFRM(prm->frmFunc, P, I, pyIfourierMaskFRM, result.rot, result.tilt, result.psi, result.shiftx, result.shifty, result.shiftz,
-    		frmScore,A,prm->maxShift, prm->maxFreq);
+    if (!prm->dontAlign)
+		alignVolumesFRM(prm->frmFunc, P, I, pyIfourierMaskFRM, result.rot, result.tilt, result.psi, result.shiftx, result.shifty, result.shiftz,
+				frmScore,A,prm->maxShift, prm->maxFreq);
     if (fabs(result.shiftx)>prm->maxShiftX || fabs(result.shifty)>prm->maxShiftY || fabs(result.shiftz)>prm->maxShiftZ ||
     	fabs(result.rot)>prm->maxRot || fabs(result.tilt)>prm->maxTilt || fabs(result.psi)>prm->maxPsi)
     	result.score=-1e38;
@@ -962,7 +963,8 @@ int CL3D::cleanEmptyNodes()
 /* Split ------------------------------------------------------------------- */
 //#define DEBUG
 void CL3D::splitNode(CL3DClass *node, CL3DClass *&node1, CL3DClass *&node2,
-                     std::vector<size_t> &splitAssignment) const
+                     std::vector<size_t> &splitAssignment,
+                     bool iterate) const
 {
     LOG(formatString("Splitting node 0: listsize=%d (volsize=%d)",node->currentListImg.size(),XSIZE(node->P)));
     std::vector<CL3DClass *> toDelete;
@@ -1094,62 +1096,65 @@ void CL3D::splitNode(CL3DClass *node, CL3DClass *&node1, CL3DClass *&node2,
         LOG(formatString("Splitting node 1: listsize2=%d (volsize2=%d)",node2->currentListImg.size(),XSIZE(node2->P)));
 
         // Split iterations
-        for (int it = 0; it < prm->Niter; it++)
+        if (iterate)
         {
-            if (prm->node->rank == 0 && prm->verbose >= 2)
-            {
-                std::cerr << "Split iteration " << it << std::endl;
-                init_progress_bar(imax);
-            }
+			for (int it = 0; it < prm->Niter; it++)
+			{
+				if (prm->node->rank == 0 && prm->verbose >= 2)
+				{
+					std::cerr << "Split iteration " << it << std::endl;
+					init_progress_bar(imax);
+				}
 
-            oldAssignment = newAssignment;
-            newAssignment.initZeros();
-            for (size_t i = 0; i < imax; i++)
-            {
-                if ((i + 1) % (prm->node->size) == prm->node->rank)
-                {
-                    // Read image
-                    assignment1.objId = assignment2.objId = assignment.objId
-                                                            = node->currentListImg[i].objId;
-                    readImage(I, assignment.objId, false);
+				oldAssignment = newAssignment;
+				newAssignment.initZeros();
+				for (size_t i = 0; i < imax; i++)
+				{
+					if ((i + 1) % (prm->node->size) == prm->node->rank)
+					{
+						// Read image
+						assignment1.objId = assignment2.objId = assignment.objId
+																= node->currentListImg[i].objId;
+						readImage(I, assignment.objId, false);
 
-                    Iaux1 = I();
-                    node1->fitBasic(Iaux1, assignment1);
-                    Iaux2 = I();
-                    node2->fitBasic(Iaux2, assignment2);
+						Iaux1 = I();
+						node1->fitBasic(Iaux1, assignment1);
+						Iaux2 = I();
+						node2->fitBasic(Iaux2, assignment2);
 
-                    if (assignment1.score > assignment2.score && assignment1.score>0)
-                    {
-                        node1->updateProjection(Iaux1, assignment1);
-                        VEC_ELEM(newAssignment,i) = 1;
-                    }
-                    else if (assignment2.score > assignment1.score && assignment2.score>0)
-                    {
-                        node2->updateProjection(Iaux2, assignment2);
-                        VEC_ELEM(newAssignment,i) = 2;
-                    }
-                }
-                if (prm->node->rank == 0 && i % 25 == 0 && prm->verbose >= 2)
-                    progress_bar(i);
-            }
-            if (prm->node->rank == 0 && prm->verbose >= 2)
-                progress_bar(imax);
-            shareSplitAssignments(newAssignment, node1, node2);
+						if (assignment1.score > assignment2.score && assignment1.score>0)
+						{
+							node1->updateProjection(Iaux1, assignment1);
+							VEC_ELEM(newAssignment,i) = 1;
+						}
+						else if (assignment2.score > assignment1.score && assignment2.score>0)
+						{
+							node2->updateProjection(Iaux2, assignment2);
+							VEC_ELEM(newAssignment,i) = 2;
+						}
+					}
+					if (prm->node->rank == 0 && i % 25 == 0 && prm->verbose >= 2)
+						progress_bar(i);
+				}
+				if (prm->node->rank == 0 && prm->verbose >= 2)
+					progress_bar(imax);
+				shareSplitAssignments(newAssignment, node1, node2);
 
-            int Nchanges = 0;
-            FOR_ALL_ELEMENTS_IN_MATRIX1D(newAssignment)
-            if (newAssignment(i) != oldAssignment(i))
-                Nchanges++;
-            if (prm->node->rank == 0 && prm->verbose >= 2)
-                std::cout << "Number of assignment split changes=" << Nchanges
-                << std::endl;
+				int Nchanges = 0;
+				FOR_ALL_ELEMENTS_IN_MATRIX1D(newAssignment)
+				if (newAssignment(i) != oldAssignment(i))
+					Nchanges++;
+				if (prm->node->rank == 0 && prm->verbose >= 2)
+					std::cout << "Number of assignment split changes=" << Nchanges
+					<< std::endl;
 
-            // Check if one of the nodes is too small
-            LOG(formatString("Splitting node 1.5: list1.size=%d list2.size=%d",node1->currentListImg.size(),node2->currentListImg.size()));
-            if (node1->currentListImg.size() < minAllowedSize
-                || node2->currentListImg.size() < minAllowedSize
-                || Nchanges < 0.005 * imax)
-                break;
+				// Check if one of the nodes is too small
+				LOG(formatString("Splitting node 1.5: list1.size=%d list2.size=%d",node1->currentListImg.size(),node2->currentListImg.size()));
+				if (node1->currentListImg.size() < minAllowedSize
+					|| node2->currentListImg.size() < minAllowedSize
+					|| Nchanges < 0.005 * imax)
+					break;
+			}
         }
 
         if (node1->currentListImg.size() < minAllowedSize)
@@ -1221,7 +1226,7 @@ void CL3D::splitFirstNode()
     P.push_back(new CL3DClass());
     P.push_back(new CL3DClass());
     std::vector<size_t> splitAssignment;
-    splitNode(P[0], P[Q], P[Q + 1], splitAssignment);
+    splitNode(P[0], P[Q], P[Q + 1], splitAssignment, P.size()>1);
     delete P[0];
     P[0] = NULL;
     P.erase(P.begin());
@@ -1271,6 +1276,7 @@ void ProgClassifyCL3D::readParams()
     fnSym = getParam("--sym");
     if (checkParam("--mask"))
         mask.readParams(this);
+    dontAlign = checkParam("--dontAlign");
 }
 
 void ProgClassifyCL3D::show() const
@@ -1297,6 +1303,7 @@ void ProgClassifyCL3D::show() const
     << "Maximum psi:             " << maxPsi << std::endl
     << "Classify all images:     " << classifyAllImages << std::endl
     << "Symmetry:                " << fnSym << std::endl
+    << "Don't align:             " << dontAlign << std::endl
     ;
     mask.show();
 }
@@ -1333,6 +1340,7 @@ void ProgClassifyCL3D::defineParams()
     addParamsLine("   [--sym <s=c1>]            : Symmetry of the classes to be reconstructed");
     addParamsLine("   [--maxFreq <w=0.2>]       : Maximum frequency to be reconstructed");
     addParamsLine("   [--randomizeStartingOrientation] : Use this option to avoid aligning all missing wedges");
+    addParamsLine("   [--dontAlign]             : Do not align volumes, only classify");
     Mask::defineParams(this,INT_MASK,NULL,NULL,true);
     addExampleLine("mpirun -np 3 `which xmipp_mpi_classify_CL3D` -i images.stk --nref 256 --oroot class --iter 10");
 }

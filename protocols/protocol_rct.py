@@ -133,7 +133,10 @@ def gatherPairs(log,WorkingDir,ExtraDir,ClassSelection,ClassFile,ExtractDir,Pick
     for classNo in ClassSelection:
         MDclass = MetaData(getClassBlock(classNo, ClassFile))
         if not MDclass.containsLabel(MDL_IMAGE_TILTED):
-            fixedMdClass.join(MDclass,mdImages,MDL_IMAGE_ORIGINAL,MDL_IMAGE,INNER_JOIN)
+            if MDclass.containsLabel(MDL_IMAGE_ORIGINAL):
+                fixedMdClass.join(MDclass,mdImages,MDL_IMAGE_ORIGINAL,MDL_IMAGE,INNER_JOIN)
+            else:
+                fixedMdClass.join(MDclass,mdImages,MDL_IMAGE,MDL_IMAGE,INNER_JOIN)
         else:
             fixedMdClass=MDclass
         mdJoin1.join(fixedMdClass,mdImages,MDL_IMAGE,MDL_IMAGE,LEFT_JOIN)
