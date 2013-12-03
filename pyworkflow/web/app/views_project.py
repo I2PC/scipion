@@ -52,9 +52,11 @@ def projects(request):
 
     context = {#'projectName': request.session['projectName'] if 'projectName' in request.session else '',
                'projects': projects,
-               'css': getResourceCss('projects'),
+               'projects_css': getResourceCss('projects'),
                'messi_css': getResourceCss('messi'),
-               'project_utils': getResourceJs('project_utils'),
+               'messi_js': getResourceJs('messi'),
+               'project_utils_js': getResourceJs('project_utils'),
+               'jquery': getResourceJs('jquery'),
                'view': 'projects',
                'favicon': getResourceIcon('favicon'),
                'contentConfig': 'full'}
