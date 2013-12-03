@@ -88,7 +88,7 @@ if __name__ == '__main__':
                 runApp('pw_project.py', args=projectName)
         
         elif mode == MODE_WEBSERVER:
-            manage = os.path.join('pyworkflow', 'web', 'manage.py')
+            manage = os.path.join(PW_HOME, 'pyworkflow', 'web', 'manage.py')
             runCmd('python %s runserver 0.0.0.0:8000 ' % manage)
             
         elif mode == MODE_TESTS:
