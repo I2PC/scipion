@@ -199,7 +199,8 @@ public:
     /** Split node */
     void splitNode(CL3DClass *node,
         CL3DClass *&node1, CL3DClass *&node2,
-        std::vector<size_t> &finalAssignment) const;
+        std::vector<size_t> &finalAssignment,
+        bool iterate=true) const;
 
     /** Split the widest node */
     void splitFirstNode();
@@ -271,6 +272,9 @@ public:
 
     /// Mask
     Mask mask;
+
+    /// Don't align
+    bool dontAlign;
 
     // Symmetry List
     SymList SL;
