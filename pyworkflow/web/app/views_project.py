@@ -222,6 +222,26 @@ def update_graph_view(request):
         project.getSettings().graphView.set(False)
     project.getSettings().write()
     return HttpResponse(mimetype='application/javascript')
+
+def tree_prot_view(request):
+    projectName = request.session['projectName'] 
+    project = loadProject(projectName)   
+     
+    # load the protocol tree current active
+    root = loadProtTree(project)
+    
+    # get the choices to load protocol trees
+    choices = [pm.text.get() for pm in project.getSettings().protMenuList]
+
+    # get the choice current 
+    choiceSelected =  project.getSettings().protMenuList.getIndex()
+    
+    context = {'sections': root.childs,
+               'choices':choices,
+               'choiceSelected': choiceSelected,
+               'jquery_treeview': getResourceJs('jquery_treeview'),
+    }
+    return render_to_response('tree_prot_view.html', context)
     
 def project_content(request):        
     projectName = request.GET.get('projectName', None)
@@ -263,12 +283,12 @@ def project_content(request):
                'tabs_config': getResourceJs('tabs_config'),
                'css':getResourceCss('project_content'),
                'jquery_ui':getResourceCss('jquery_ui'),
+               'messi_css': getResourceCss('messi'),
+               'favicon': getResourceIcon('favicon'),
                'sections': root.childs,
                'choices':choices,
                'choiceSelected': choiceSelected,
                'provider':provider,
-               'messi_css': getResourceCss('messi'),
-               'favicon': getResourceIcon('favicon'),
                'view': 'protocols',
                'graphView': graphView,
                'contentConfig': 'divided'}

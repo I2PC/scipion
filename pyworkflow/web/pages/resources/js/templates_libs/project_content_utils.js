@@ -55,10 +55,17 @@ function changeTreeView(){
 		url : '/update_prot_tree/?index='+ protIndex,
 		dataType:"text",
 		success : function() {
-			window.location.reload(true);			
+			$.ajax({
+				url: '/tree_prot_view/',
+				success: function(data) {
+				$('div.protFieldsetTree').html(data);
+				}
+			});
+//			window.location.reload(true);			
 		}
 	});
 }
+	
 
 /*
  * Toolbar used in the project content template for list view
