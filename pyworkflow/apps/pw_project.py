@@ -110,14 +110,14 @@ class ProjectWindow(gui.Window):
         header.columnconfigure(1, weight=1)
         header.columnconfigure(2, weight=1)
         # Create the SCIPION logo label
-        logoImg = self.getImage(self.generalCfg.logo.get(), percent=50)
+        logoImg = self.getImage(self.generalCfg.logo.get())
         logoLabel = tk.Label(header, image=logoImg, 
                              borderwidth=0, anchor='nw', bg='white')
         logoLabel.grid(row=0, column=0, sticky='nw', padx=5, pady=5)
         # Create the Project Name label
-        self.projNameFont = tkFont.Font(size=12, family='verdana', weight='bold')
+        self.projNameFont = tkFont.Font(size=-28, family='helvetica')
         projLabel = tk.Label(header, text=self.projName, font=self.projNameFont,
-                             borderwidth=0, anchor='nw', bg='white')
+                             borderwidth=0, anchor='nw', bg='white', fg='#707070')
         projLabel.grid(row=0, column=1, sticky='sw', padx=(20, 5), pady=10)
         # Create view selection frame
         viewFrame = tk.Frame(header, bg='white')
@@ -126,10 +126,17 @@ class ProjectWindow(gui.Window):
         viewLabel.grid(row=0, column=0, padx=5)
         self.viewVar = tk.StringVar()
         self.viewVar.set(VIEW_PROTOCOLS)
+        
+        
         viewCombo = ttk.Combobox(viewFrame, textvariable=self.viewVar, state='readonly')
         viewCombo['values'] = [VIEW_PROTOCOLS, VIEW_DATA, VIEW_HOSTS]
         viewCombo.grid(row=0, column=1)
         viewCombo.bind('<<ComboboxSelected>>', self._viewComboSelected)
+        
+        # Create header line
+#        headerLine = tk.Frame(header,bg='red', height=10, width=100%)
+        headerLine = Canvas(header, height=-10, bg='red')
+        headerLine.grid(row=1, column=0, columnspan=3, sticky='nw')
         
         return header
     

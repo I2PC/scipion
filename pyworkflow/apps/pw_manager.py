@@ -130,9 +130,9 @@ class ManagerWindow(gui.Window):
         gui.Window.__init__(self, "Projects", minsize=(750, 500), icon='scipion_bn.xbm', **args)
         # Load global configuration
         settings = loadSettings(pw.SETTINGS)
-        self.projNameFont = tkFont.Font(size=12, family='verdana', weight='bold')
-        self.projDateFont = tkFont.Font(size=8, family='verdana')
-        self.projDelFont = tkFont.Font(size=8, family='verdana', weight='bold')
+        self.projNameFont = tkFont.Font(size=12, family='helvetica', weight='bold')
+        self.projDateFont = tkFont.Font(size=8, family='helvetica')
+        self.projDelFont = tkFont.Font(size=8, family='helvetica', weight='bold')
         self.manager = Manager()
         parent = self.root
 
