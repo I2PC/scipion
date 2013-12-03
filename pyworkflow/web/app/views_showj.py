@@ -494,4 +494,5 @@ def visualizeObject(request):
 
 def testingSSH(request):
     context = {}
-    return render_to_response("testing_ssh.html", RequestContext(request, context))
+#    return render_to_response("testing_ssh.html", RequestContext(request, context))
+    return render_to_response("scipion.html", RequestContext(request, context))

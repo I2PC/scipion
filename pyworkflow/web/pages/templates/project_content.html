@@ -1,14 +1,59 @@
-{% extends 'base.html' %} {% block title %} - Project {{project_name}}
-{% endblock %} {% block head %}
+{% extends 'base_flex.html' %}
+{% block title %} - Project {{projectName}}{% endblock %}
+
+{% block head %}
+<!-- CSS -->
 <link href={{css}} rel="stylesheet" type="text/css">
 <link href={{messi_css}} rel="stylesheet" type="text/css">
 <link href="{{jquery_ui}}" rel="stylesheet" type="text/css">
+<style>
+/* 	section, aside{
+		font-size: 0.75em !important;
+	} */
+</style>
+
 <!-- JS Libs -->
 <script src={{jquery_cookie}} type="text/javascript"></script>
 <script src={{jquery_treeview}} type="text/javascript"></script>
 <script src={{utils}} type="text/javascript"></script>
 <script src={{project_content_utils}} type="text/javascript"></script>
 <script src={{graph_utils}} type="text/javascript"></script>
+<script type="text/javascript">
+	jQuery(function($) {
+		// Just call the inner layout once to initialize it. This
+		// must happen before the outer layout is initialized. It
+		// will be automatically resized when the outer layout is
+		// resized.
+		$('.layout-inner').layout();
+
+		var outerContainer = $('.layout-outer');
+
+		function layout() {
+			outerContainer.layout({resize: false});
+		}
+		layout();
+
+		$(window).resize(layout);
+
+		
+		{% if contentConfig == 'divided' %}
+			$('.layout-inner > .north').resizable({
+				handles: 's',
+				stop: layout
+			});
+			$('.layout-inner > .center').resizable({
+				handles: 's',
+				stop: layout
+			});
+		{% endif %}
+		// This selector is changed to only select the west and east
+		// components of the outer layout.
+		$('.layout-outer > .west').resizable({
+			handles: 'e',
+			stop: layout
+		});
+	});
+</script>
 <script>	
 	$(function() {
     	$("#tabs").tabs();
@@ -86,21 +131,19 @@
 {% block contentNorth %}
 <span style="float:right;">
 	<div id="treeTool">
-		<a href="javascript:switchGraph();">
-			<img src="{{treeTool}}" /> Tree</a>	
+		<a href="javascript:switchGraph();" class="iconTree">Tree</a>
 	</div>
 	<div id="listTool" style="display:none;">
-		<a  href="javascript:switchGraph();" >
-			<img src="{{listTool}}" /> List</a>
+		<a href="javascript:switchGraph();" class="iconList">List</a>
 	</div>
 </span>
 <div id="toolbar" style="display: none;">
-	<span><a id="editTool" href=""><img src="{{editTool}}" />Edit</a></span>
-	<span><a id="copyTool" href=""><img src="{{copyTool}}" />Copy</a></span>
-	<span><a id="deleteTool" href=""><img src="{{deleteTool}}" />Delete</a></span>
-	<span><a id="browseTool" href=""><img src="{{browseTool}}" />Browse</a></span>
-	<span id="stopTool"><a id="stopTool" href=""><img src="{{stopTool}}" />Stop</a></span>
-	<span id="analyzeTool"><a id="analyzeTool" href=""><img src="{{analyzeTool}}" />Analyze Results</a></span>
+	<span><a id="editTool" href="" class="iconEdit">Edit</a></span>
+	<span><a id="copyTool" href="" class="iconCopy">Copy</a></span>
+	<span><a id="deleteTool" href="" class="iconDelete">Delete</a></span>
+	<span><a id="browseTool" href="" class="iconBrowse">Browse</a></span>
+	<span id="stopTool"><a id="stopTool" href="" class="iconStop">Stop</a></span>
+	<span id="analyzeTool"><a id="analyzeTool" href="" class="iconEye">Analyze Results</a></span>
 </div>
 <div id="runTable">	
 	<table id="data" cellspacing="0">
@@ -110,8 +153,7 @@
 		</tr>
 		{% for obj in provider.getObjects %}
 		<tr id="{{obj.getObjId}}" class="runtr" data-name="{{obj.getName}}"
-			onclick='javascript:launchToolbarList("{{projectName}}","{{obj.getObjId}}", ($(this)));'
-			style="background-color: #fafafa;">
+			onclick='javascript:launchToolbarList("{{projectName}}","{{obj.getObjId}}", ($(this)));'>
 			<td><a
 				href="javascript:popup('/form/?protocolId={{obj.getObjId}}')">
 					{% if obj.getObjLabel == '' %} 
