@@ -260,11 +260,11 @@ table.section {
 	border-right: 15px;
 	margin-left: 1em;
 	margin-top: 0.5em;
-	font-size: 0.9em;
 }
 
 table.section td {
 	padding-right:10px;
+	font-size: 0.9em;
 }
 table td{
 	padding: 4px 4px 6px 2px;
