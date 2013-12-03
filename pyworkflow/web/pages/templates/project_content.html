@@ -25,9 +25,12 @@
 	<div class="viewTree">
 		<label>Workflow View: </label>
 		<select id="viewsTree" name="viewsTree" onChange="javascript:changeTreeView();">
-			<!-- <option value=""></option> -->
+			{% for choice in choices %}
+			 	<option value="{{forloop.counter0}}" {% if forloop.counter0 == choiceSelected %} selected {% endif %}>{{choice}}</option> 
+			{% endfor %}
 		</select>
 	</div> 
+	
 	<div class="protFieldsetTree">
 		<ul id="browser" class="filetree">
 			{% for section in sections %}
@@ -42,13 +45,41 @@
 							{% for prot2 in prot.childs %}
 							<li><span class="protocol_class"> <a
 									href="javascript:popup('/form/?protocolClass={{prot2.name}}')">
-										{{prot2.name}} </a>
+ 										{{prot2.name}} </a>
 							</span></li> {% endfor %}
 						</ul></li> {% else %} No athletes. {% endif %} {% endfor %}
 				</ul>
 			</li> {% endfor %}
 		</ul>
 	</div>
+	
+<!-- 	<div class="protFieldsetTree"> -->
+<!-- 		<ul id="browser" class="filetree"> -->
+<!-- 			<li><span class="section">ABC</span> -->
+<!-- 				<ul> -->
+<!-- 					<li><span class="protocol"><a href="%">protocol</a></span></li> -->
+<!-- 					<li class="closed"><span class="protocol_base">protocol base</span> -->
+<!-- 						<ul> -->
+<!-- 							<li> -->
+<!-- 								<span class="protocol_class"> <a href="%">protocol 2</a></span> -->
+<!-- 								<ul> -->
+<!-- 									<li> -->
+<!-- 										<span class="protocol_class"> <a href="%">protocol 3</a></span> -->
+<!-- 										<ul> -->
+<!-- 											<li> -->
+<!-- 												<span class="protocol_class"> <a href="%">protocol 4</a></span> -->
+<!-- 											</li> -->
+<!-- 										</ul> -->
+<!-- 									</li> -->
+<!-- 								</ul> -->
+<!-- 							</li> -->
+<!-- 						</ul> -->
+<!-- 					</li>  -->
+<!-- 				</ul> -->
+<!-- 			</li> -->
+<!-- 		</ul> -->
+<!-- 	</div> -->
+	
 </div>
 {% endblock %} 
 
