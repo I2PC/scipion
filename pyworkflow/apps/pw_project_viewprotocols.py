@@ -375,6 +375,8 @@ class ProtocolsView(tk.Frame):
         """ Refresh the status of diplayed runs. """
         self.runsTree.update()
         self.updateRunsGraph(True)
+        # Schedule an automatic refresh after 1 sec
+        self.runsTree.after(1000, self.refreshRuns)
         
     def createActionToolbar(self):
         """ Prepare the buttons that will be available for protocol actions. """
@@ -573,7 +575,7 @@ class ProtocolsView(tk.Frame):
             msg = "Protocol sucessfully saved."
         else:
             self.project.launchProtocol(prot)
-            msg = "Protocol sucessfully launched."
+            msg = ""
             
         self._scheduleRunsUpdate()
         
