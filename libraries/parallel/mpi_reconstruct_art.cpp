@@ -60,13 +60,13 @@ void ProgMPIReconsArt::run()
     size_t  remaining;          // Number of projections still to compute
     int      Npart;              // Number of projection to process
     int      myFirst;     // Limits projections to process
-    double    comms_t, aux_comm_t; // Communications time
+    double    comms_t=0., aux_comm_t; // Communications time
     double    it_t;   // iteration time
     double     cav_t;  // time for CAV weights calculation
     double     cavk_it_t;          // BiCAV weights calculation time (1 iter.)
     double     cavk_total_t;       // Sum( cavk_it_t )
     USWtime_t  recons_t;  // Reconstruction time
-    double    total_t;  // Program execution time
+    double    total_t=0.;  // Program execution time
     double     comms_t_it, aux_t; // Communications time in one iteration
     GridVolumeT<int> GVNeq_aux;    // This is a buffer for the communication
     Matrix1D<int> Ordered_aux;

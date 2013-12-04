@@ -2450,7 +2450,7 @@ ProgMLTomo::maxConstrainedCorrSingleImage(MultidimArray<double> &Mimg,
     std::complex<double> complex_zero=0;
     bool is_a_neighbor;
     double img_stddev, ref_stddev, corr, maxcorr = -9999.;
-    int ioptx, iopty, ioptz;
+    int ioptx=0, iopty=0, ioptz=0;
     int my_nr_ang, old_optangno = opt_angno, old_optrefno = opt_refno;
     bool is_within_psirange = true;
 

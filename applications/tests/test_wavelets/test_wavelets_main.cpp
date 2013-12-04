@@ -38,9 +38,9 @@ protected:
     virtual void SetUp()
     {
 #define len 128
-
         //get example down1_42_Periodogramavg.psd
-        chdir(((String)(getXmippPath() + (String)"/resources/test/filters")).c_str());
+        if (!chdir(((String)(getXmippPath() + (String)"/resources/test/filters")).c_str()))
+        	REPORT_ERROR(ERR_UNCLASSIFIED,"Cannot change directory");
         Image<double> img;
         img.read("KLH.tif");
         im = img();

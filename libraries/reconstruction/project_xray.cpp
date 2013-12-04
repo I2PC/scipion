@@ -486,7 +486,7 @@ void threadXrayProject(ThreadArgument &thArg)
     imOut.setXmippOrigin();
     projNormTemp.setXmippOrigin();
 
-    MultidimArray<double> imTemp(psf.Noy, psf.Nox),intExp(psf.Noy, psf.Nox),imTempSc(imOut),*imTempP;
+    MultidimArray<double> imTemp(psf.Noy, psf.Nox),intExp(psf.Noy, psf.Nox),imTempSc(imOut),*imTempP=NULL;
     intExp.setXmippOrigin();
     imTemp.setXmippOrigin();
     imTempSc.setXmippOrigin();
@@ -807,7 +807,7 @@ void projectXraySimpleGrid(MultidimArray<double> *vol, const XRayPSF &psf,
     // onto the projection plane
     // directions respectively
     // inside the blobprint
-    double        vol_corr;                  // Correction for a volume element
+    double        vol_corr=0.;               // Correction for a volume element
     int           N_eq;                      // Number of equations in which
     // a blob is involved
     int           i, j, k;                   // volume element indexes

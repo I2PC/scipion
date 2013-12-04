@@ -73,7 +73,7 @@ void calculate_and_find_correlation_max_mat(MultidimArray<T> const &mat1,
 
     //search for the maximun inside selfWindow "selfWindow"
     int max_step_int = (int)ROUND(max_step);
-    int imax, jmax;
+    int imax=0, jmax=0;
 
     MultidimArray<int> window(2*max_step_int + 1, 2*max_step_int + 1);
     window.setXmippOrigin();

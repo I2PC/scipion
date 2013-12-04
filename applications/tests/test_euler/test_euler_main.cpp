@@ -11,7 +11,8 @@ protected:
     //init metadatas
     virtual void SetUp()
     {
-        chdir(((String)(getXmippPath() + (String)"/resources/test")).c_str());
+        if (!chdir(((String)(getXmippPath() + (String)"/resources/test")).c_str()))
+        	REPORT_ERROR(ERR_UNCLASSIFIED,"Could not change directory");
     }
 
     Matrix1D<double> origin,xaxis,yaxis,zaxis;

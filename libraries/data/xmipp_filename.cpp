@@ -408,7 +408,9 @@ size_t FileName::getFileSize() const
     if (stat(c_str(), &info))
     {
         char cCurrentPath[FILENAME_MAX];
-        getcwd(cCurrentPath, sizeof(cCurrentPath));
+        char *success=getcwd(cCurrentPath, sizeof(cCurrentPath));
+        if (success==NULL)
+        	cCurrentPath[0]='\0';
         REPORT_ERROR(ERR_UNCLASSIFIED,formatString("FileName::getFileSize: Cannot get size of file %s/%s",cCurrentPath,this->c_str()));
     }
     return info.st_size;

@@ -750,8 +750,6 @@ PyObject *
 Image_mirrorY(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
     ImageObject *self = (ImageObject*) obj;
-    double value = -1;
-
     try
     {
         self->image->mirrorY();
@@ -1228,7 +1226,6 @@ Image_applyTransforMatScipion(PyObject *obj, PyObject *args, PyObject *kwargs)
 
 	PyObject * list = NULL;
     PyObject * item = NULL;
-    double value;
     ImageObject *self = (ImageObject*) obj;
     ImageBase * img;
     PyObject *only_apply_shifts = Py_False;

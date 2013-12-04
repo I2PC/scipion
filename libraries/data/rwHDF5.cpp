@@ -144,12 +144,13 @@ int ImageBase::readHDF5(size_t select_img)
         {
         case EMAN: // Images in stack are stored in separated groups
             hid_t grpid;
-            herr_t err;
             grpid = H5Gopen(fhdf5,"/MDF/images/", H5P_DEFAULT);
-            err = H5Gget_num_objs(grpid, &nobjEman);
+            /*herr_t err = */ H5Gget_num_objs(grpid, &nobjEman);
 
             dsname = formatString(dsname.c_str(), IMG_INDEX(select_img));
             break;
+        default:
+        	break;
         }
     }
 
@@ -200,6 +201,8 @@ int ImageBase::readHDF5(size_t select_img)
         isStack = true;
         break;
         //    case EMAN: // Images in stack are stored in separated groups
+    default:
+    	break;
     }
 
 
@@ -273,8 +276,7 @@ int ImageBase::readHDF5(size_t select_img)
         aDim.xdim = dims[rank-1];
         aDim.ydim = (rank>1)?dims[rank-2]:1;
         aDim.zdim = (rank == 4)?dims[1]:1;
-        size_t nDimFile = (rank>2)?dims[0]:1 ;
-
+        // size_t nDimFile = (rank>2)?dims[0]:1 ;
 
         // Define the memory space to read a hyperslab.
         memspace = H5Screate_simple(rank,count,NULL);

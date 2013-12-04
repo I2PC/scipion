@@ -41,7 +41,8 @@
 void runSystem(const String &program, const String &arguments, bool useSystem) {
 	if (useSystem) {
 		String cmd = formatString("%s %s", program.c_str(), arguments.c_str());
-		system(cmd.c_str());
+		if (!system(cmd.c_str()))
+			REPORT_ERROR(ERR_UNCLASSIFIED,"Cannot open shell");
 	} else {
 		runProgram(program, arguments);
 	}

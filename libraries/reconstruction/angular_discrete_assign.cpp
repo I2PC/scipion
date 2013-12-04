@@ -604,7 +604,7 @@ int ProgAngularDiscreteAssign::pick_view(int method,
     {
         // This one returns the most scored image of the first group
         double best_rate = -1e38;
-        int    best_j, jmax = groups[0].size();
+        int    best_j=0, jmax = groups[0].size();
         for (int j = 0; j < jmax; j++)
             // Select the best with the scoreelation
             if (vscore[candidate_idx[groups[0][j]]] > best_rate)
@@ -619,7 +619,7 @@ int ProgAngularDiscreteAssign::pick_view(int method,
         // Sum the rates in all groups
         std::vector<double> group_rate;
         group_rate.reserve(groups.size());
-        int best_g;
+        int best_g=0;
         double best_group_rate = -1e38;
         for (size_t g = 0; g < groups.size(); g++)
         {
@@ -648,7 +648,7 @@ int ProgAngularDiscreteAssign::pick_view(int method,
 #endif
 
         // Take the best image within that group
-        int best_j;
+        int best_j=0;
         double best_rate = -1e38;
         for (size_t j = 0; j < groups[best_g].size(); j++)
         {

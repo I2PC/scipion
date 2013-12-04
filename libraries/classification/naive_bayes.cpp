@@ -148,10 +148,10 @@ LeafNode::LeafNode(const std::vector < MultidimArray<double> > &leafFeatures,
     else
     {
         // Compute the minimum and maximum of each class
-        double minval, maxval;
+        double minval=0., maxval=0.;
         for(int k=0; k<K; k++)
         {
-            double minvalk, maxvalk;
+            double minvalk=0., maxvalk=0.;
             leafFeatures[k].computeDoubleMinMax(minvalk, maxvalk);
             if (k==0)
             {
@@ -546,7 +546,7 @@ int EnsembleNaiveBayes::doInference(const Matrix1D<double> &newFeatures,
     maxCost.initZeros(K);
     maxCost.initConstant(1);
     double bestMinCost=0;
-    int bestClass;
+    int bestClass=0;
     MultidimArray<double> newFeaturesn;
     for (int n=0; n<nmax; n++)
     {

@@ -25,7 +25,7 @@
 
 #include "xmipp_image_base.h"
 
-#define PIFHEADERSIZE 512 // size of EM file header
+#define PIFHEADERSIZE sizeof(PIFDataHeader) // size of EM file header
 
 int  ImageBase::readPIF(size_t select_img)
 {

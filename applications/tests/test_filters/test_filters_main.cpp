@@ -10,7 +10,8 @@ protected:
     //init metadatas
     virtual void SetUp()
     {
-        chdir(((String)(getXmippPath() + (String)"/resources/test")).c_str());
+        if (!chdir(((String)(getXmippPath() + (String)"/resources/test")).c_str()))
+        	REPORT_ERROR(ERR_UNCLASSIFIED,"Could not change directory");
 
         mulDouble1.resize(3,3);
         DIRECT_A2D_ELEM(mulDouble1,0,0) = 1;

@@ -79,11 +79,11 @@ private:
 
         imgIn.read(fnImgIn);
 
-        size_t xDim, yDim, zDim, XdimOut, yDimOut, zDimOut;
+        size_t xDim, yDim, zDim, XdimOut=0, yDimOut=0, zDimOut=0;
         imgIn.getDimensions(xDim, yDim, zDim);
 
-        char axis;
-        bool reverse;
+        char axis='Z';
+        bool reverse=false;
 
         if (face == "top" || face == "bottom")
         {

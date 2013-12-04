@@ -154,7 +154,8 @@ void XmippProgram::createGUI()
     ProtPrinter pp(scriptStr, true);
     pp.printProgram(*progDef);
     chmod(scriptStr, S_IRWXU);
-    system(scriptStr);
+    if (system(scriptStr)==-1)
+    	REPORT_ERROR(ERR_UNCLASSIFIED,"Could not create shell");
 }
 
 void XmippProgram::createWiki()

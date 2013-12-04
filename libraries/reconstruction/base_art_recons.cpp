@@ -427,8 +427,10 @@ void ARTReconsBase::iterations(GridVolume &vol_basis, int rank)
 
                 if (!iv_launched)
                 {
-                    system("xmipp_show -img PPPdiff.xmp PPPtheo.xmp PPPread.xmp PPPcorr.xmp -dont_apply_geo -poll &");
-                    system("xmipp_show -vol PPPvol.vol -poll &");
+                    if (!system("xmipp_show -img PPPdiff.xmp PPPtheo.xmp PPPread.xmp PPPcorr.xmp -dont_apply_geo -poll &"))
+                    	REPORT_ERROR(ERR_UNCLASSIFIED,"Cannot open shell");
+                    if (!system("xmipp_show -vol PPPvol.vol -poll &"))
+                    	REPORT_ERROR(ERR_UNCLASSIFIED,"Cannot open shell");
                     iv_launched=true;
                 }
                 std::cout << "\nHit any key and enter\n";
@@ -456,7 +458,8 @@ void ARTReconsBase::iterations(GridVolume &vol_basis, int rank)
                 // Launch viewer
                 if (!iv_launched)
                 {
-                    system("xmipp_show -i PPPvol.vol --poll &");
+                    if (!system("xmipp_show -i PPPvol.vol --poll &"))
+                    	REPORT_ERROR(ERR_UNCLASSIFIED,"Cannot open shell");
                     iv_launched=true;
                 }
             }

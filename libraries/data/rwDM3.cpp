@@ -366,7 +366,7 @@ size_t gotoTagDM3(MetaData &MD, int &nodeId, const std::string &tagsList)
     std::string tag;
     std::vector<std::string> vTags;
     splitString(tagsList,",",vTags, false);
-    size_t id;
+    size_t id=0;
 
     MDValueEQ queryParentId(MDL_DM3_PARENTID,-1), queryTagname(MDL_DM3_TAGNAME,tag);
     MDMultiQuery queries;

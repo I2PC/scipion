@@ -176,7 +176,7 @@ void AutoParticlePicking2::buildInvariant(const std::vector<MDRow> &MD)
 {
     int x, y;
     mPrev.point1.x=-1;
-    for (int i=0;i<MD.size();i++)
+    for (size_t i=0;i<MD.size();i++)
     {
         MD[i].getValue(MDL_XCOOR,x);
         MD[i].getValue(MDL_YCOOR,y);
@@ -226,7 +226,7 @@ void AutoParticlePicking2::batchBuildInvariant(const std::vector<MDRow> &MD)
 
     MD[0].getValue(MDL_MICROGRAPH,preMicFile);
     readMic(preMicFile,0);
-    for (int i=0;i<MD.size();i++)
+    for (size_t i=0;i<MD.size();i++)
     {
         MD[i].getValue(MDL_MICROGRAPH,micFile);
         if (strcmp(micFile.c_str(),preMicFile.c_str()))
@@ -957,7 +957,6 @@ int AutoParticlePicking2::automaticWithouThread(FileName fnmicrograph, int proc_
 
 void AutoParticlePicking2::generateFeatVec(const FileName &fnmicrograph, int proc_prec, std::vector<Particle2> &positionArray)
 {
-    Point p;
     MultidimArray<double> IpolarCorr;
     MultidimArray<double> featVec;
     MultidimArray<double> pieceImage;
@@ -1081,7 +1080,7 @@ int AutoParticlePicking2::readNextMic(FileName &fnmicrograph)
 {
     FileName currentMic;
     size_t lastObjId = micList.size();
-    for (int i=0;i<micList.size();i++)
+    for (size_t i=0;i<micList.size();i++)
     {
         micList[i].getValue(MDL_MICROGRAPH,currentMic);
         if (i==lastObjId-1)
@@ -1093,6 +1092,7 @@ int AutoParticlePicking2::readNextMic(FileName &fnmicrograph)
             return 1;
         }
     }
+    return 1;
 }
 
 //void AutoParticlePicking2::correction(const MetaData &addedParticlesMD,const MetaData &removedParticlesMD)
@@ -1146,12 +1146,11 @@ void AutoParticlePicking2::correction(const std::vector<MDRow> &addedParticlesMD
     //    loadTrainingSet(fnVector);
     int idx=0,enabled,x,y;
     double cost;
-    Timer t;
     accepted_particles.clear();
     rejected_particles.clear();
 
 
-    for (int i=0;i<removedParticlesMD.size();i++)
+    for (size_t i=0;i<removedParticlesMD.size();i++)
     {
         removedParticlesMD[i].getValue(MDL_ENABLED,enabled);
         removedParticlesMD[i].getValue(MDL_XCOOR, x);
@@ -1532,7 +1531,7 @@ void AutoParticlePicking2::add2Dataset()
     // in the dataset.
     int limit=0, size=0, newSize=0;
     int yDataSet=YSIZE(dataSet);
-    size_t n;
+    size_t n=0;
 
     newSize=rejected_particles.size()+
             accepted_particles.size();
@@ -1583,7 +1582,6 @@ void AutoParticlePicking2::extractPositiveInvariant(const FileName &fnInvariantF
     CorrelationAux aux2;
     RotationalCorrelationAux aux3;
     Matrix2D<double> M;
-    Point p;
 
     int num_part =mPrev.ParticleNo();
     if (num_part==0)
@@ -1635,7 +1633,6 @@ void AutoParticlePicking2::extractNegativeInvariant(const FileName &fnInvariantF
     MultidimArray<int> randomIndexes;
     std::vector<Particle2> negativeSamples;
     std::vector<Point> positionVec;
-    Point p;
 
     int num_part=mPrev.ParticleNo();
     if (num_part==0)
@@ -2100,5 +2097,5 @@ void ProgMicrographAutomaticPicking2::run()
     MD.getValue( MDL_PICKING_AUTOPICKPERCENT,proc_prec,MD.firstObject());
 
     autoPicking = new AutoParticlePicking2(autoPicking->particle_size,autoPicking->filter_num,autoPicking->corr_num,autoPicking->NPCA,fn_model,std::vector<MDRow>());
-    int num = autoPicking->automaticWithouThread(fn_micrograph,proc_prec,fnAutoParticles);
+    autoPicking->automaticWithouThread(fn_micrograph,proc_prec,fnAutoParticles);
 }

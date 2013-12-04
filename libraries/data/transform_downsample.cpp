@@ -131,7 +131,7 @@ void downsampleKernel(const ImageGeneric &M, double step, ImageGeneric &Mp)
     if (Mp.getDatatype() != DT_Float)
     {
         double imin, imax;
-        double omin, omax;
+        double omin=0., omax=0.;
         imin=imax=M.getPixel(0,0);
         bool ofirst = true;
 
@@ -241,7 +241,7 @@ void downsampleFourier(const ImageGeneric &M, double step, ImageGeneric &Mp, int
     transformerMp.inverseFourierTransform();
 
     // Find minimun and range in output data
-    double omin,omax;
+    double omin=0.,omax=0.;
     Mpmem.computeDoubleMinMax(omin,omax);
     double orange = omax - omin;
     double a = (pow(2.0, Mp.getDatatypeDepth()) - 1.0) / orange;
