@@ -427,7 +427,7 @@ bool ProgCtfGroup::isIsotropic(CTFDescription &ctf)
 // Do the actual work
 void ProgCtfGroup::autoRun()
 {
-    double diff;
+    double diff=0.;
     long int ctfMdSize=sortedCtfMD.size();
     int c = XMIPP_MAX(1, ctfMdSize / 60);
     int counter=0;

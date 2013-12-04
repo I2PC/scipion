@@ -76,7 +76,7 @@ JNIEXPORT jdouble JNICALL Java_xmipp_jni_CTFDescription_getFMAX(JNIEnv *env,
     std::string msg = "";
     CTFDescription *ctfDescription = GET_INTERNAL_CTFDESCRIPTION(jobj);
 
-    double FMAX;
+    double FMAX=0.;
 
     if (ctfDescription != NULL)
     {

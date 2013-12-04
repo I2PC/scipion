@@ -1490,7 +1490,7 @@ std::cout << "1060 Parameters =" << Parameters << "*cost = "<< global_flexible_p
               int             DoDesProj, IteratingStop, FlagMaxIter;
               long            MaxIter, MaxIter1, iter;
               long            MaxNumberOfFailures, SatisfNumberOfSuccesses, nSuccess, nFailure;
-              double          *pntr_FailureIter;
+              double          *pntr_FailureIter=NULL;
               double          LambdaScale=2., OldCost, tol_angle, tol_shift,tol_defamp;
               double          OneIterInSeconds, *Gradient, *Hessian;
               time_t          time1, time2, *tp1 = NULL, *tp2 = NULL;

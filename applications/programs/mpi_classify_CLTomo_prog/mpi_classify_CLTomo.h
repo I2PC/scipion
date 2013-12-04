@@ -276,6 +276,9 @@ public:
     /// Don't align
     bool dontAlign;
 
+    /// Generate aligned subvolumes
+    bool generateAlignedVolumes;
+
     // Symmetry List
     SymList SL;
 

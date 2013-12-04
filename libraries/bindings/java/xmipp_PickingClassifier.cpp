@@ -54,7 +54,7 @@ JNIEXPORT void JNICALL Java_xmipp_jni_PickingClassifier_train
         FileName micFile,posFile;
         std::vector<MDRow> vd;
         MDRow row;
-        int cnt=0,x,y;
+        int x,y;
         FOR_ALL_OBJECTS_IN_METADATA((*md))
         {
             md->getValue(MDL_MICROGRAPH,micFile, __iter.objId);

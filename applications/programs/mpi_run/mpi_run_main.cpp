@@ -146,7 +146,10 @@ public:
                     if(strlen(szline)<1)
                         continue;
                     else
-                        system(szline);
+                    {
+                        if (!system(szline))
+                        	REPORT_ERROR(ERR_UNCLASSIFIED,"Cannot open shell");
+                    }
                 }
                 else
                     std::cerr << "WRONG TAG RECEIVED" << std::endl;

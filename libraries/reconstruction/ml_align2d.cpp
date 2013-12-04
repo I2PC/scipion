@@ -1061,7 +1061,7 @@ void ProgML2D::doThreadRotateReferenceRefno()
     std::cerr << "entering doThreadRotateReference " << std::endl;
 #endif
 
-    double AA, stdAA, psi, dum, avg;
+    double AA, stdAA=0., psi, dum, avg;
     MultidimArray<double> Maux(dim, dim);
     MultidimArray<std::complex<double> > Faux;
     FourierTransformer local_transformer;
@@ -1293,10 +1293,10 @@ void ProgML2D::doThreadExpectationSingleImageRefno()
     int irot, output_irefmir, refnoipsi, output_refnoipsi;
     //Some local variables to store partial sums of global sums variables
     double local_mindiff, local_wsum_corr, local_wsum_offset, maxw_ref;
-    double local_wsum_sc, local_wsum_sc2, local_maxweight, local_maxweight2;
+    double local_wsum_sc, local_wsum_sc2, local_maxweight, local_maxweight2=0.;
     double sigma_noise2 = model.sigma_noise * model.sigma_noise;
-    int local_iopty, local_ioptx, local_iopt_psi, local_iopt_flip,
-    local_opt_refno;
+    int local_iopty=0, local_ioptx=0, local_iopt_psi=0, local_iopt_flip=0,
+    local_opt_refno=0;
 
     MultidimArray<double> Maux, Mweight;
     MultidimArray<std::complex<double> > Faux, Fzero(dim, hdim + 1);

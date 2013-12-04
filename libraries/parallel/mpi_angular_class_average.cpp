@@ -150,9 +150,7 @@ void MpiProgAngularClassAverage::defineParams()
 
     addExampleLine("Sample at default values and calculating output averages of random halves of the data",false);
     addExampleLine("xmipp_angular_class_average -i proj_match.doc --lib ref_angles.doc -o out_dir --split");
-
 }
-
 
 /* Run --------------------------------------------------------------------- */
 void MpiProgAngularClassAverage::run()
@@ -1527,7 +1525,7 @@ void MpiProgAngularClassAverage::reAlignClass(Image<double> &avg1,
     MultidimArray<double> ang;
     MultidimArray<double> Mimg, Mref, Maux;
     double maxcorr, new_xoff=0., new_yoff=0.;
-    double w1, w2, opt_flip = 0., opt_psi = 0.;
+    double w1=0., w2=0., opt_flip = 0., opt_psi = 0.;
     bool do_discard;
 
     SFclass1.clear();

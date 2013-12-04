@@ -86,7 +86,7 @@ void ProgVolumeEnhanceContrast::show()
 void ProgVolumeEnhanceContrast::enhance(MultidimArray<double> &vol)
 {
     // 1.-Scale volume between 0 and 255----------------------------------
-    double minVal, maxVal;
+    double minVal=0., maxVal=0.;
     vol.computeDoubleMinMax(minVal,maxVal);
     vol.rangeAdjust(0,255);
 

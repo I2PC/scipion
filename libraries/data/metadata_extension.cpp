@@ -30,7 +30,7 @@ void getStatistics(MetaData MD, Image<double> & _ave, Image<double> & _sd, doubl
         REPORT_ERROR(ERR_MD_OBJECTNUMBER, "There is no selected images in Metadata.");
 
     Image<double> image, tmpImg;
-    double min, max, avg, stddev;
+    double min=0, max=0, avg, stddev;
     FileName fnImg;
     FOR_ALL_OBJECTS_IN_METADATA(MD)
     {

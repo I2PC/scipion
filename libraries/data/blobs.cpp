@@ -474,7 +474,7 @@ void * blobs2voxels_SimpleGrid( void * data )
     int           i, j, k;                   // Index within the blob volume
     int           process;                   // True if this blob has to be
     // processed
-    double         vol_correction;           // Correction to apply to the
+    double         vol_correction=0;         // Correction to apply to the
     // volume when "projecting" back
     SPEED_UP_temps012;
 

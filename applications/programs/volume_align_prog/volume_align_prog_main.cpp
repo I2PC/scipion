@@ -85,7 +85,7 @@ double fitness(double *p)
     applyTransformation(params.V2(),params.Vaux(),p);
 
     // Correlate
-    double fit;
+    double fit=0.;
     switch (params.alignment_method)
     {
     case (COVARIANCE):

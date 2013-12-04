@@ -332,7 +332,7 @@ protected:
             REPORT_ERROR(ERR_PARAM_INCORRECT, "You should provide at least one label to fill out");
 
         operation = getParam("--fill", 1);
-        MDValueGenerator * generator;
+        MDValueGenerator * generator=NULL;
 
         // Select wich generator to use
         if (operation == "constant")

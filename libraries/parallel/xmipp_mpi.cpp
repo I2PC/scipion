@@ -128,13 +128,15 @@ void MpiFileMutex::lock()
 {
     Mutex::lock();
     lseek(lockFile, 0, SEEK_SET);
-    lockf(lockFile, F_LOCK, 0);
+    if (!lockf(lockFile, F_LOCK, 0))
+    	REPORT_ERROR(ERR_IO_NOPERM,"Cannot lock file");
 }
 
 void MpiFileMutex::unlock()
 {
     lseek(lockFile, 0, SEEK_SET);
-    lockf(lockFile, F_ULOCK, 0);
+    if (!lockf(lockFile, F_ULOCK, 0))
+    	REPORT_ERROR(ERR_IO_NOPERM,"Cannot lock file");
     Mutex::unlock();
 }
 
@@ -206,17 +208,23 @@ void FileTaskDistributor::loadLockFile()
 void FileTaskDistributor::readVars()
 {
     lseek(lockFile, 0, SEEK_SET);
-    read(lockFile, &numberOfTasks, sizeof(size_t));
-    read(lockFile, &assignedTasks, sizeof(size_t));
-    read(lockFile, &blockSize, sizeof(size_t));
+    if (read(lockFile, &numberOfTasks, sizeof(size_t))==-1)
+    	REPORT_ERROR(ERR_IO_NOREAD,"Cannot read from lockfile");
+    if (read(lockFile, &assignedTasks, sizeof(size_t))==-1)
+    	REPORT_ERROR(ERR_IO_NOREAD,"Cannot read from lockfile");
+    if (read(lockFile, &blockSize, sizeof(size_t))==-1)
+    	REPORT_ERROR(ERR_IO_NOREAD,"Cannot read from lockfile");
 }
 
 void FileTaskDistributor::writeVars()
 {
     lseek(lockFile, 0, SEEK_SET);
-    write(lockFile, &numberOfTasks, sizeof(size_t));
-    write(lockFile, &assignedTasks, sizeof(size_t));
-    write(lockFile, &blockSize, sizeof(size_t));
+    if (write(lockFile, &numberOfTasks, sizeof(size_t))==-1)
+    	REPORT_ERROR(ERR_IO_NOWRITE,"Cannot write in lockfile");
+    if (write(lockFile, &assignedTasks, sizeof(size_t))==-1);
+		REPORT_ERROR(ERR_IO_NOWRITE,"Cannot write in lockfile");
+    if (write(lockFile, &blockSize, sizeof(size_t))==-1);
+		REPORT_ERROR(ERR_IO_NOWRITE,"Cannot write in lockfile");
 }
 
 void FileTaskDistributor::lock()

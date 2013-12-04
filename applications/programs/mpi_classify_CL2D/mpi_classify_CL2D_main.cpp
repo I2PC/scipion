@@ -1004,7 +1004,7 @@ void CL2D::run(const FileName &fnODir, const FileName &fnOut, int level)
         shareAssignments(true, true, true);
 
         // Some report
-        size_t idMdChanges;
+        size_t idMdChanges=0;
         if (prm->node->rank == 0)
         {
             progress_bar(Nimgs);

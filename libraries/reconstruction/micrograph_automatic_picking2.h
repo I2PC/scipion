@@ -81,7 +81,7 @@ public:
     Point p1,p2;
     FeaturesThread * thread;
 //    MetaData micList;
-    Micrograph m, mPrev;;
+    Micrograph m, mPrev;
 
     Image<double> microImage, micrographStack, micrographStackPre, microImagePrev;
 
@@ -94,8 +94,6 @@ public:
     FileName fn_micrograph, fn_model, fnPCAModel, fnPCARotModel, fnAvgModel;
     FileName fnVector, fnSVMModel, fnSVMModel2, fnInvariant, fnParticles;
 
-
-
     double scaleRate;
     MultidimArray<double> convolveRes, filterBankStack, positiveParticleStack, negativeParticleStack;
     MultidimArray<double> positiveInvariatnStack, negativeInvariatnStack, autoFeatVec;
@@ -103,7 +101,6 @@ public:
     MultidimArray<double> classLabel1, labelSet, dataSetNormal;
 
 public:
-
     /// Constructor
 //    AutoParticlePicking2(int particle_size, int filter_num = 6, int corr_num = 2, int NPCA = 4,
 //                         const FileName &model_name=NULL, const FileName &micsFn=NULL);

@@ -413,7 +413,7 @@ template<typename T>
 void compute_hist(const MultidimArray<T>& array, Histogram1D& hist,
                   int no_steps)
 {
-    double min, max;
+    double min=0, max=0;
     array.computeDoubleMinMax(min, max);
     compute_hist(array, hist, min, max, no_steps);
 }

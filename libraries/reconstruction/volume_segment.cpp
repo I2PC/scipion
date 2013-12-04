@@ -292,7 +292,7 @@ void probabilistic_solvent(Image<double> *V_in, Image<double> *V_out)
 // Really segment ==========================================================
 void ProgVolumeSegment::segment(Image<double> &mask)
 {
-    double th_min, th_max, val_min, val_max;
+    double th_min, th_max, val_min=0., val_max=0.;
     V().computeDoubleMinMax(val_min, val_max);
     th_min = val_min;
     th_max = val_max;

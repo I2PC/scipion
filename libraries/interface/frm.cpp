@@ -47,7 +47,7 @@ PyObject* convertToNumpy(const MultidimArray<double> &I)
 	dim[1]=YSIZE(I);
 	dim[2]=ZSIZE(I);
 	PyObject* pyI=PyArray_SimpleNewFromData(3, dim, NPY_DOUBLE, (void *)MULTIDIM_ARRAY(I));
-	npy_intp *afterSize=PyArray_DIMS(pyI);
+	//npy_intp *afterSize=PyArray_DIMS(pyI);
 	return pyI;
 }
 

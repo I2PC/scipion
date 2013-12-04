@@ -824,7 +824,7 @@ void CL3D::run(const FileName &fnOut, int level)
         shareAssignments(true, true);
 
         // Some report
-        size_t idMdChanges;
+        size_t idMdChanges=0;
         if (prm->node->rank == 0)
         {
             progress_bar(Nimgs);
@@ -1277,6 +1277,7 @@ void ProgClassifyCL3D::readParams()
     if (checkParam("--mask"))
         mask.readParams(this);
     dontAlign = checkParam("--dontAlign");
+    generateAlignedVolumes = checkParam("--generateAlignedVolumes");
 }
 
 void ProgClassifyCL3D::show() const
@@ -1304,6 +1305,7 @@ void ProgClassifyCL3D::show() const
     << "Classify all images:     " << classifyAllImages << std::endl
     << "Symmetry:                " << fnSym << std::endl
     << "Don't align:             " << dontAlign << std::endl
+    << "Generate aligned volumes:" << generateAlignedVolumes << std::endl
     ;
     mask.show();
 }
@@ -1341,6 +1343,7 @@ void ProgClassifyCL3D::defineParams()
     addParamsLine("   [--maxFreq <w=0.2>]       : Maximum frequency to be reconstructed");
     addParamsLine("   [--randomizeStartingOrientation] : Use this option to avoid aligning all missing wedges");
     addParamsLine("   [--dontAlign]             : Do not align volumes, only classify");
+    addParamsLine("   [--generateAlignedVolumes]: Generate aligned subvolumes at the end");
     Mask::defineParams(this,INT_MASK,NULL,NULL,true);
     addExampleLine("mpirun -np 3 `which xmipp_mpi_classify_CL3D` -i images.stk --nref 256 --oroot class --iter 10");
 }
@@ -1471,6 +1474,13 @@ void ProgClassifyCL3D::run()
         SFaux.clear();
         SFaux.sort(SFaux2, MDL_IMAGE);
         SFaux.write(fnOut + "_images.xmd");
+    }
+
+    // Produce aligned volumes
+    if (generateAlignedVolumes)
+    {
+    	node->barrierWait();
+
     }
     CLOSE_LOG();
 }

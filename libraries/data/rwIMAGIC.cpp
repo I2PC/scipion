@@ -133,7 +133,7 @@ int  ImageBase::readIMAGIC(size_t select_img)
     if ( (swap = (( abs(header->nyear) > SWAPTRIG ) || ( header->ixlp > SWAPTRIG ))) )
         swapPage((char *) header, IMAGICSIZE - 916, DT_Float); // IMAGICSIZE - 916 is to exclude labels from swapping
 
-    DataType datatype;
+    DataType datatype=DT_Float;
 
     if ( strstr(header->type,"PACK") )
         datatype = DT_UChar;

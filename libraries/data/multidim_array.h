@@ -753,7 +753,7 @@ public:
     virtual void selfReverseZ() = 0;
     virtual double computeAvg() const = 0;
     virtual void computeDoubleMinMaxRange(double& minval, double& maxval,size_t offset, size_t size) const = 0;
-    virtual void maxIndex(int &lmax, int& kmax, int& imax, int& jmax) const = 0;
+    virtual void maxIndex(size_t &lmax, int& kmax, int& imax, int& jmax) const = 0;
     virtual void coreAllocateReuse() = 0;
     virtual void coreDeallocate()= 0;
 
@@ -1111,7 +1111,7 @@ public:
 
     void maxIndex(ArrayCoord &pos) const
     {
-        maxIndex((int&)pos.n, pos.z, pos.y, pos.x);
+        maxIndex(pos.n, pos.z, pos.y, pos.x);
     }
 
     /** 3D Indices for the maximum element.
@@ -1120,7 +1120,7 @@ public:
       */
     void maxIndex(int& kmax, int& imax, int& jmax) const
     {
-        int dum;
+        size_t dum;
         maxIndex(dum, kmax, imax, jmax);
     }
 
@@ -1130,8 +1130,9 @@ public:
      */
     void maxIndex(int& imax, int& jmax) const
     {
-        int dum;
-        maxIndex(dum, dum, imax, jmax);
+        size_t dum;
+        int idum;
+        maxIndex(dum, idum, imax, jmax);
     }
 
     /** 1D Indices for the maximum element.
@@ -1140,8 +1141,9 @@ public:
      */
     void maxIndex(int& jmax) const
     {
-        int dum;
-        maxIndex(dum, dum, dum, jmax);
+        size_t dum;
+        int idum;
+        maxIndex(dum, idum, idum, jmax);
     }
 
     /** Print shape of multidimensional array.
@@ -2241,8 +2243,8 @@ public:
         ArrayDim aDim, aDimOut;
         getDimensions(aDim);
 
-        char axis;
-        bool reverse;
+        char axis='Z';
+        bool reverse=false;
 
         aDimOut = aDim;
 
@@ -2980,8 +2982,9 @@ public:
      */
     void maxIndex(int& jmax) const
     {
+    	size_t zeroLong=0;
         int zeroInt=0;
-        maxIndex(zeroInt,zeroInt,zeroInt,jmax);
+        maxIndex(zeroLong,zeroInt,zeroInt,jmax);
     }
 
     /** Minimum of the values in the array.
@@ -3074,7 +3077,7 @@ public:
      * This function returns the index of the maximum element of an array.
      * array(l,k,i,j). Returns -1 if the array is empty
      */
-    void maxIndex(int &lmax, int& kmax, int& imax, int& jmax) const
+    void maxIndex(size_t &lmax, int& kmax, int& imax, int& jmax) const
     {
         if (XSIZE(*this) == 0)
         {
@@ -3409,7 +3412,7 @@ public:
         if (NZYXSIZE(*this) <= 0)
             return;
 
-        double min0, max0;
+        double min0=0., max0=0.;
         computeDoubleMinMax(min0, max0);
 
         // If max0==min0, it means that the vector is a constant one, so the
@@ -3446,7 +3449,7 @@ public:
         if (MULTIDIM_SIZE(*this) <= 0)
             return;
 
-        double min0, max0;
+        double min0=0., max0=0.;
         bool first=true;
         T* ptr=NULL;
         size_t n;
@@ -3501,7 +3504,7 @@ public:
         if (NZYXSIZE(*this) <= 0)
             return;
 
-        double avgExample, stddevExample, avgThis, stddevThis;
+        double avgExample=0., stddevExample=0., avgThis, stddevThis;
         if (mask!=NULL)
         {
             example.computeAvgStdev_within_binary_mask(*mask,avgExample,stddevExample);
@@ -5402,7 +5405,7 @@ void MultidimArray< std::complex< double > >::rangeAdjust(std::complex< double >
 template<>
 double MultidimArray< std::complex< double > >::computeAvg() const;
 template<>
-void MultidimArray< std::complex< double > >::maxIndex(int &lmax, int& kmax, int& imax, int& jmax) const;
+void MultidimArray< std::complex< double > >::maxIndex(size_t &lmax, int& kmax, int& imax, int& jmax) const;
 template<>
 void MultidimArray<double>::computeAvgStdev(double& avg, double& stddev) const;
 template<>

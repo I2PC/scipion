@@ -111,8 +111,7 @@ public:
 
     void run()
     {
-
-        double avg, stddev, dummy;
+        double avg=0., stddev=0., dummy;
         MultidimArray<double> C;
         getColumnValues(col, C, automatic_range, m, M);
 

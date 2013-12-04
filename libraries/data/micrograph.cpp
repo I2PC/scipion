@@ -367,7 +367,7 @@ void Micrograph::produce_all_images(int label, double minCost,
 
     // Compute max and minimum if compute_transmitance
     // or compute_inverse flags are ON
-    double Dmax, Dmin;
+    double Dmax=0., Dmin=0.;
     if (compute_transmitance || compute_inverse)
     {
         (*this).computeDoubleMinMax(Dmin, Dmax);

@@ -238,8 +238,8 @@ void detectBackground(const MultidimArray<double> &vol,
     // We work until the list_for_compute is empty
     int n = 250; //each 250 pixels renew stats
     int cont = 250; //We start here for compute stat for first time
-    double A; // A and B are numbers such the interval of confidence is [A,B]
-    double B; //
+    double A=0; // A and B are numbers such the interval of confidence is [A,B]
+    double B=0; //
     float z = icdf_gauss(1 - alpha / 2);
     while (!list_for_compute.empty())
     {
@@ -248,7 +248,7 @@ void detectBackground(const MultidimArray<double> &vol,
         if (cont == n)
         {
             // Compute statistics
-            double avg, stddev;
+            double avg=0, stddev=0;
             computeAvgStddev(bg_values, avg, stddev);
             final_mean = avg;
             // Compute confidence interval

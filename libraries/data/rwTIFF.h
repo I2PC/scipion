@@ -43,6 +43,13 @@ struct TIFFDirHead
     float            xTiffRes,yTiffRes;
     unsigned int subFileType;
     uint16 pNumber, pTotal; // pagenumber and total number of pages of current directory
+    TIFFDirHead()
+    {
+        	bitsPerSample=samplesPerPixel=0;
+        	imageWidth=imageLength=subFileType=0;
+            imageSampleFormat=0;
+            xTiffRes=yTiffRes=0;
+    }
 };
 
 /** castTiffTile2T
