@@ -43,8 +43,8 @@ class XmippProtCL2DAlign(ProtAlign):
     def _defineAlignParams(self, form):
         form.addParam('useReferenceImage', BooleanParam, default=True,
                       label='Use a Reference Image ?', 
-                      help='If you set to <Yes>, you should provide a reference image'
-                           'If <No>, the default generation is done by averaging'
+                      help='If you set to *Yes*, you should provide a reference image'
+                           'If *No*, the default generation is done by averaging'
                            'subsets of the input images.')
         form.addParam('ReferenceImage', StringParam , condition='useReferenceImage',
                       label="Reference image(s)", 

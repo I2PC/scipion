@@ -92,9 +92,9 @@ class XmippProtFourierFilter(XmippProtFilter):
         form.addParam('filterType', EnumParam, choices=['low pass', 'high pass', 'band pass'],
                       label="Filter type", default=xmipp3.FILTER_BAND_PASS,
                       help='Select what type of Fourier filter do you want to apply.\n'
-                           '<low pass>: all frequency components below <High frequency> are preserved.\n'
-                           '<high pass>: all frequency components above <Low frequency> are preserved.\n'
-                           '<band pass>: all frequency components between <Low frequency> and <High frequency> are preserved.\n')
+                           '*low pass*: all frequency components below <High frequency> are preserved.\n'
+                           '*high pass*: all frequency components above <Low frequency> are preserved.\n'
+                           '*band pass*: all frequency components between <Low frequency> and <High frequency> are preserved.\n')
         form.addParam('lowFreq', DigFreqParam, default=0.02, 
                       condition='filterType != %d' % xmipp3.FILTER_LOW_PASS,
                       label='Low Frequency (0 < f < 0.5)',

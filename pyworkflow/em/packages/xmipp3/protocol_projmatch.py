@@ -56,11 +56,11 @@ class XmippProtProjMatch(xmipp3.XmippProtocol, ProtRefine3D, ProtClassify3D):
         form.addParam('inputParticles', PointerParam, label="Input particles", important=True, 
                       pointerClass='SetOfParticles', 
                       help='Select the input particles.\n'
-                           'If you want perform <CTF> correction the input particles\n'
+                           'If you want perform *CTF* correction the input particles\n'
                            'should have information about the CTF (hasCTF=True)')  
         form.addParam('useInitialAngles', BooleanParam, default=False,
                       label="Use initial angles/shifts ? ", 
-                      help='Set to <Yes> if you want to use the projection assignment (angles/shifts)\n'
+                      help='Set to *Yes* if you want to use the projection assignment (angles/shifts)\n'
                       'associated with the input particles (hasProjectionAssigment=True)')
         # ReferenceFileNames      
         form.addParam('input3DReferences', PointerParam,
@@ -109,7 +109,7 @@ class XmippProtProjMatch(xmipp3.XmippProtocol, ProtRefine3D, ProtClassify3D):
                       label='Set of defocus', default='', condition='doCTFCorrection and not doAutoCTFGroup',
                       help='Set with defocus values where to split into groups.\n'
                            'This field is compulsory if you do not want to make the CTF groups automatically.\n'
-                           'Note that the requested docfile can be made initially with the <xmipp_ctf_group> program,\n'
+                           'Note that the requested docfile can be made initially with the *xmipp_ctf_group* program,\n'
                            'and then it can be edited manually to suit your needs.')
         
         form.addParam('paddingFactor', FloatParam, default=2, condition='doCTFCorrection',
@@ -160,22 +160,22 @@ class XmippProtProjMatch(xmipp3.XmippProtocol, ProtRefine3D, ProtClassify3D):
     and the last two to 2. An alternative compact notation 
     is ("2x8 2x0", i.e.,
     2 iterations with value 8, and 2 with value 2).
-    <Note>: if there are less values than iterations the last value is reused
-    <Note>: if there are more values than iterations the extra value are ignored
+    *Note:* if there are less values than iterations the last value is reused
+    *Note:* if there are more values than iterations the extra value are ignored
 """)
               
         form.addParam('outerRadius', NumericListParam, default='64', 
                       label='Outer radius for rotational correlation', 
                       help=""" In pixels from the image center. Use a negative number to use the entire image.
-<WARNING>: this radius will be use for masking before computing resolution
+*WARNING*: this radius will be use for masking before computing resolution
 You may specify this option for each iteration. 
 This can be done by a sequence of numbers (for instance, "8 8 2 2 " 
 specifies 4 iterations, the first two set the value to 8 
 and the last two to 2. An alternative compact notation 
 is ("2x8 2x0", i.e.,
 2 iterations with value 8, and 2 with value 2).
-<Note>: if there are less values than iterations the last value is reused
-<Note>: if there are more values than iterations the extra value are ignored
+*Note:* if there are less values than iterations the last value is reused
+*Note:* if there are more values than iterations the extra value are ignored
 """)        
         
         form.addParam('availableMemory', IntParam, default=2, expertLevel=LEVEL_ADVANCED, 
@@ -196,8 +196,8 @@ specifies 4 iterations, the first two set the value to 8
 and the last two to 2. An alternative compact notation 
 is ("2x8 2x0", i.e.,
 2 iterations with value 8, and 2 with value 2).
-<Note:> if there are less values than iterations the last value is reused
-<Note:> if there are more values than iterations the extra value are ignored
+*Note:* if there are less values than iterations the last value is reused
+*Note:* if there are more values than iterations the extra value are ignored
 """)
         
 #        form.addParam('maxChangeInAngles', NumericListParam, default='1000 10 4 2', 
@@ -224,8 +224,8 @@ specifies 3 iterations, the first two set the value to 1
 and the last to 0. An alternative compact notation 
 is ("2x1 0", i.e.,
 2 iterations with value 1, and 1 with value 0).
-<Note:> if there are less values than iterations the last value is reused
-<Note:> if there are more values than iterations the extra value are ignored
+*Note:* if there are less values than iterations the last value is reused
+*Note:* if there are more values than iterations the extra value are ignored
 """)   
         
         # Changed from String to Int 
@@ -260,8 +260,8 @@ specifies 3 iterations, the first two set the value to 1
 and the last to 0. An alternative compact notation 
 is ("2x1 0", i.e.,
 2 iterations with value 1, and 1 with value 0).
-<Note:> if there are less values than iterations the last value is reused
-<Note:> if there are more values than iterations the extra value are ignored
+*Note:* if there are less values than iterations the last value is reused
+*Note:* if there are more values than iterations the extra value are ignored
 """)          
 
         form.addParam('search5DShift', NumericListParam, default='4x5 0', 
@@ -275,8 +275,8 @@ Provide a sequence of numbers (for instance, "5 5 3 0" specifies 4 iterations,
 the first two set the value to 5, then one with 3, resp 0 pixels.
 An alternative compact notation is ("3x5 2x3 0", i.e.,
 3 iterations with value 5, and 2 with value 3 and the rest with 0).
-<Note:> if there are less values than iterations the last value is reused
-<Note:> if there are more values than iterations the extra value are ignored
+*Note:* if there are less values than iterations the last value is reused
+*Note:* if there are more values than iterations the extra value are ignored
 
 """)  
         form.addParam('search5DStep', NumericListParam, default='2', 
@@ -285,8 +285,8 @@ An alternative compact notation is ("3x5 2x3 0", i.e.,
     the first two set the value to 2, then two with 1 pixel.
     An alternative compact notation is ("2x2 2x1", i.e.,
     2 iterations with value 2, and 2 with value 1).
-    <Note:> if there are less values than iterations the last value is reused
-    <Note:> if there are more values than iterations the extra value are ignored
+    *Note:* if there are less values than iterations the last value is reused
+    *Note:* if there are more values than iterations the extra value are ignored
 """)          
 
         form.addParam('doRestricSearchbyTiltAngle', BooleanParam, default=False, expertLevel=LEVEL_EXPERT,
@@ -302,7 +302,7 @@ An alternative compact notation is ("3x5 2x3 0", i.e.,
                       help ='Higher-value for restricted tilt angle search\n')             
         form.addParam('symmetry', TextParam, default='c1',
                       label='Point group symmetry',
-                      help=""" See [http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Symmetry]
+                      help=""" See [[http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Symmetry][Symmetry]]
 for a description of the symmetry groups format
 If no symmetry is present, give c1
 """)
@@ -311,7 +311,7 @@ If no symmetry is present, give c1
                       help=""" If you do not know what this is leave it blank.
 This symmetry will be using for compute neighboring points,
 but not for sampling or reconstruction
-See [http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Symmetry]
+See [[http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Symmetry][Symmetry]]
 for a description of the symmetry groups format
 If no symmetry is present, give c1
 """
@@ -327,8 +327,8 @@ specifies 3 iterations, the first two set the value to 1
 and the last to 0. An alternative compact notation 
 is ("2x1 0", i.e.,
 2 iterations with value 1, and 1 with value 0).
-<Note:> if there are less values than iterations the last value is reused
-<Note:> if there are more values than iterations the extra value are ignored
+*Note:* if there are less values than iterations the last value is reused
+*Note:* if there are more values than iterations the extra value are ignored
 """)     
 
         form.addParam('discardImages', EnumParam, 
@@ -350,8 +350,8 @@ Discard images with cross-correlation (CC) below this value.
 Provide a sequence of numbers (for instance, "0.3 0.3 0.5 0.5" specifies 4 iterations,
 the first two set the value to 0.3, then two with 0.5.
 An alternative compact notation would be ("2x0.3 2x0.5").
-<Note:> if there are less values than iterations the last value is reused
-<Note:> if there are more values than iterations the extra value are ignored
+*Note:* if there are less values than iterations the last value is reused
+*Note:* if there are more values than iterations the extra value are ignored
 """)
          
         form.addParam('discardPercentage', NumericListParam, default='10', 
@@ -362,8 +362,8 @@ Discard this percentage of images with less cross-correlation (CC)
 Provide a sequence of numbers (for instance, "20 20 10 10" specifies 4 iterations,
 the first two set the value to 20%, then two with 10%
 An alternative compact notation would be ("2x20 2x10").
-<Note:> if there are less values than iterations the last value is reused
-<Note:> if there are more values than iterations the extra value are ignored
+*Note:* if there are less values than iterations the last value is reused
+*Note:* if there are more values than iterations the extra value are ignored
 Set to zero to prevent discarding any images
 """)
          
@@ -376,8 +376,8 @@ with less cross-correlation (CC)
 Provide a sequence of numbers (for instance, "20 20 10 10" specifies 4 iterations,
 the first two set the value to 20%, then two with 10%
 An alternative compact notation would be ("2x20 2x10").
-<Note:> if there are less values than iterations the last value is reused
-<Note:> if there are more values than iterations the extra value are ignored
+*Note:* if there are less values than iterations the last value is reused
+*Note:* if there are more values than iterations the extra value are ignored
 Set to zero to prevent discarding any images
 """)
      
@@ -391,8 +391,8 @@ Set to zero to prevent discarding any images
 Provide a sequence of numbers (for instance, "1 1 .5 .5" specifies 4 iterations,
 the first two set the value to 1%, then two with .5%
 An alternative compact notation would be ("2x1 2x0.5").
-<Note:> if there are less values than iterations the last value is reused
-<Note:> if there are more values than iterations the extra value are ignored
+*Note:* if there are less values than iterations the last value is reused
+*Note:* if there are more values than iterations the extra value are ignored
 Set to zero to prevent discarding any images''')  
 
         form.addParam('ScaleNumberOfSteps', NumericListParam, default=3, condition='doScale',
@@ -409,8 +409,8 @@ your data is fairly well aligned.
         form.addParam('projMatchingExtra', StringParam, default='',
                       label='Additional options for Projection_Matching', expertLevel=LEVEL_EXPERT,
                       help=""" For details see:
-[http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Projection_matching] and
-[http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Mpi_projection_matching]
+[[http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Projection_matching][projection matching]] and
+[[http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Mpi_projection_matching][mpi projection matching]]
 try -Ri xx -Ro yy for restricting angular search (xx and yy are
 the particle inner and outter radius)
 """)
@@ -427,7 +427,7 @@ subsets of images assigned to one of the library projections is
 re-aligned using a 2D-alignment protocol.
 This may serve to remove model bias.
 For details see:
-[http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Align2d]
+[[http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Align2d][align 2d]]
 Note that you cannot combine this option with CTF-correction!
 You may specify this option for each iteration. 
 This can be done by a sequence of 0 or 1 numbers (for instance, "1 1 0 0" 
@@ -435,9 +435,9 @@ specifies 4 iterations, the first two applied alig2d while the last 2
 dont. an alternative compact notation is 
 is ("2x1 2x0", i.e.,
 2 iterations with value 1, and 2 with value 0).
-<Note:> if there are less values than iterations the last value is reused
-<Note:> if there are more values than iterations the extra value are ignored
-<IMPORTANT:> if you set this variable to 0 the output  of the projection
+*Note:*if there are less values than iterations the last value is reused
+*Note:* if there are more values than iterations the extra value are ignored
+*IMPORTANT:* if you set this variable to 0 the output  of the projection
 muching step will be copied as output of align2d
 """)
         
@@ -451,8 +451,8 @@ and  two 3 alig2d iteration in the last 2 projection matching iterations.
  An alternative compact notation 
 is ("2x4 2x3", i.e.,
 2 iterations with value 4, and 2 with value 3).
-<Note:> if there are less values than iterations the last value is reused
-<Note:> if there are more values than iterations the extra value are ignored
+*Note:* if there are less values than iterations the last value is reused
+*Note:* if there are more values than iterations the extra value are ignored
 """)        
   
   
@@ -466,8 +466,8 @@ specifies 4 iterations, the first two set the value to 1000 (no restriction)
 and the last two to 10degrees. An alternative compact notation 
 is ("2x1000 2x10", i.e.,
 2 iterations with value 1000, and 2 with value 10).
-<Note:> if there are less values than iterations the last value is reused
-<Note:> if there are more values than iterations the extra value are ignored
+*Note:* if there are less values than iterations the last value is reused
+*Note:* if there are more values than iterations the extra value are ignored
 """)    
   
         form.addParam('align2dMaxChangeRot', NumericListParam, default='2x1000 2x20', 
@@ -480,8 +480,8 @@ specifies 4 iterations, the first two set the value to 1000 (no restriction)
 and the last two to 10degrees. An alternative compact notation 
 is ("2x1000 2x10", i.e.,
 2 iterations with value 1000, and 2 with value 10).
-<Note:> if there are less values than iterations the last value is reused
-<Note:> if there are more values than iterations the extra value are ignored
+*Note:* if there are less values than iterations the last value is reused
+*Note:* if there are more values than iterations the extra value are ignored
 """)     
         
         
@@ -507,46 +507,46 @@ From then on, it will be set to resolution computed in the resolution section
                       condition='reconstructionMethod == %d' % xmipp3.RECONSTRUCT_FOURIER,
                       label='Additional parameters for fourier', expertLevel=LEVEL_EXPERT,
                       help=""" For details see:
-[http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Fourier]
+[[http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Fourier][fourier]]
 """)          
         
         form.addParam('artLambda', NumericListParam, default='0.2', 
                       condition='reconstructionMethod == %d' % xmipp3.RECONSTRUCT_ART,
                       label='Values of lambda for ART', expertLevel=LEVEL_EXPERT,
-                      help=""" <IMPORTANT>: ou must specify a value of lambda for each iteration even
+                      help=""" *IMPORTANT:* ou must specify a value of lambda for each iteration even
 if ART has not been selected.
-<IMPORTANT:> NOte that we are using the WLS version of ART that 
+*IMPORTANT:* NOte that we are using the WLS version of ART that 
 uses geater lambdas than the plain art.
 See for details:
-[http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Art]
+[[http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Art][xmipp art]]
 You must specify this option for each iteration. 
 This can be done by a sequence of numbers (for instance, ".1 .1 .3 .3" 
 specifies 4 iterations, the first two set the value to 0.1 
 (no restriction)
 and the last  two to .3. An alternative compact notation 
 is ("2x.1 2x.3").
-<Note:> if there are less values than iterations the last value is reused
-<Note:> if there are more values than iterations the extra value are ignored
+*Note:* if there are less values than iterations the last value is reused
+*Note:* if there are more values than iterations the extra value are ignored
 """)   
         
         form.addParam('artReconstructionExtraCommand', StringParam, default='-k 0.5 -n 10 ',
                       condition='reconstructionMethod == %d' % xmipp3.RECONSTRUCT_ART,
                       label='Additional parameters for ART', expertLevel=LEVEL_EXPERT,
                       help=""" For details see:
-[http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Art]
+[[http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Art][xmipp art]]
 """)          
         
         form.addParam('wbpReconstructionExtraCommand', StringParam, default='',
                       condition='reconstructionMethod == %d' % xmipp3.RECONSTRUCT_WBP,
                       label='Additional parameters for WBP', expertLevel=LEVEL_EXPERT,
                       help=""" For details see:
-[http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Wbp]
+[[http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Wbp][xmipp wbp]]
 """)                  
 
         form.addParam('doComputeResolution', NumericListParam, default='1',
                       label='Compute resolution?', expertLevel=LEVEL_EXPERT,
                       help=""" For details see:
-    [http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Resolution]
+    [[http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Resolution][xmipp resolution]]
     Set to 1 to compute resolution and to 0 if you do not want to compute it.
 """)
     
@@ -562,7 +562,7 @@ proyection directions in two but not the averages. We
 recomend the first approach for small volumes and the second for
 large volumes (especially when using small angular
 sampling rates.
-<IMPORTANT:> the second option has ONLY been implemented for FOURIER
+*IMPORTANT:* the second option has ONLY been implemented for FOURIER
 reconstruction method. Other reconstruction methods require this
 flag to be set to True
  You may specify this option for each iteration. 
@@ -571,8 +571,8 @@ flag to be set to True
  don't. an alternative compact notation is 
  is ("2x1 2x0", i.e.,
  2 iterations with value 1, and 2 with value 0).
- <Note:> if there are less values than iterations the last value is reused
- <Note:> if there are more vapplications/scripts/protocols/new_protocol_projmatch.pyalues than iterations the extra value are ignored
+ *Note:* if there are less values than iterations the last value is reused
+ *Note:* if there are more vapplications/scripts/protocols/new_protocol_projmatch.pyalues than iterations the extra value are ignored
 """)            
 
         form.addParam('doLowPassFilter', BooleanParam, default=True,
@@ -606,8 +606,8 @@ specifies 4 iterations, the first two set the constant to .15
 and the last two to 0.1. An alternative compact notation 
 is ("2x.15 2x0.1", i.e.,
 4 iterations with value 0.15, and three with value .1).
-<Note:> if there are less values than iterations the last value is reused
-<Note:> if there are more values than iterations the extra value are ignored
+*Note:* if there are less values than iterations the last value is reused
+*Note:* if there are more values than iterations the extra value are ignored
 """)
         form.addParam('ConstantToAddToMaxReconstructionFrequency', NumericListParam, default='0.1',
                       label='Constant to be added to the reconstruction maximum frequency', expertLevel=LEVEL_ADVANCED,
@@ -626,8 +626,8 @@ specifies 4 iterations, the first two set the constant to .15
 and the last two to 0.1. An alternative compact notation 
 is ("2x.15 2x0.1", i.e.,
 4 iterations with value 0.15, and three with value .1).
-<Note:> if there are less values than iterations the last value is reused
-<Note:> if there are more values than iterations the extra value are ignored
+*Note:* if there are less values than iterations the last value is reused
+*Note:* if there are more values than iterations the extra value are ignored
 """)
         
 #        
@@ -919,7 +919,7 @@ is ("2x.15 2x0.1", i.e.,
             suffix = "with CTF correction "
         else:
             suffix = "ignoring CTF effects "
-        summary.append("Using a ML in <Fourier-space> " + suffix)
+        summary.append("Using a ML in *Fourier-space* " + suffix)
          
         summary.append("Reference volumes(s): [%s]" % self.input3DReferences.get())
 

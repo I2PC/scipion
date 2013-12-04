@@ -178,7 +178,7 @@ class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
     def _summary(self):
         summary = []
         if not self.inputMicrographs.hasValue():
-            summary.append("No <Input Micrographs> selected.")
+            summary.append("No *Input Micrographs* selected.")
         else:
             summary.append("Input micrographs: " + self.inputMicrographs.get().getNameId())
             if self.doDownsample.get():

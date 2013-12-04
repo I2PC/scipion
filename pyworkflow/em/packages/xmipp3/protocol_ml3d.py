@@ -114,7 +114,7 @@ class XmippProtML3D(ProtRefine3D, ProtClassify3D):
                       label='Use MLF2D instead of ML2D')
         form.addParam('doCorrectAmplitudes', BooleanParam, default=True,
                       label='Use CTF-amplitude correction inside MLF?',
-                      help='If set to <Yes>, the input images file should contain '
+                      help='If set to *Yes*, the input images file should contain '
                            'the CTF information for each image.')
         form.addParam('highResLimit', IntParam, default=20,
                       label='High-resolution limit (in Angstroms)',
@@ -370,12 +370,12 @@ class XmippProtML3D(ProtRefine3D, ProtClassify3D):
                 suffix = "with CTF correction "
             else:
                 suffix = "ignoring CTF effects "
-            summary.append("Using a ML in <Fourier-space> " + suffix)
+            summary.append("Using a ML in *Fourier-space* " + suffix)
          
         summary.append("Reference volumes(s): [%s]" % self.ini3DrefVolumes.get())
 
         if self.numberOfSeedsPerRef.get() > 1:
-            summary.append("Number of references per volume: <%d>" % self.numberOfSeedsPerRef.get())
+            summary.append("Number of references per volume: *%d*" % self.numberOfSeedsPerRef.get())
            
         # TODO: Add information at info@iter_classes.xmd from last iteration
         
