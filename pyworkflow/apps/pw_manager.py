@@ -124,49 +124,91 @@ def populateTree(tree, prefix, obj, level=0):
 #    return menuConfig
 
 
-class ManagerWindow(gui.Window):
+class ManagerWindow(gui.WindowBase):
     """Windows to manage projects"""
     def __init__(self, **args):
-        gui.Window.__init__(self, "Projects", minsize=(750, 500), icon='scipion_bn.xbm', **args)
         # Load global configuration
         settings = loadSettings(pw.SETTINGS)
-        self.projNameFont = tkFont.Font(size=12, family='helvetica', weight='bold')
-        self.projDateFont = tkFont.Font(size=8, family='helvetica')
-        self.projDelFont = tkFont.Font(size=8, family='helvetica', weight='bold')
-        self.manager = Manager()
-        parent = self.root
-
-        menuConfig = settings.getCurrentMenu()
-        self.createMainMenu(menuConfig)
+        self.menuCfg = settings.getCurrentMenu()
+        self.generalCfg = settings.getConfig()
         
-        f = tk.Frame(parent, bg='white')
-        f.columnconfigure(0, minsize=200)
-        f.columnconfigure(1, minsize=400)
-        f.rowconfigure(1, minsize=250)
+        gui.WindowBase.__init__(self, "Projects", minsize=(750, 500), **args)
+        
+        
+        
+#        parent = self.root
+
+        
+#        self.createMainMenu(menuConfig)
+        
+#        f = tk.Frame(parent, bg='white')
+#        f.columnconfigure(0, minsize=200)
+#        f.columnconfigure(1, minsize=400)
+#        f.rowconfigure(1, minsize=250)
+        
+        
         # Add logo
-        logo = self.getImage('scipion_logo.gif', percent=50)
-        label = tk.Label(f, image=logo, borderwidth=0)
-        label.grid(row=0, column=0, sticky='nw', pady=5, padx=5)
+#        logo = self.getImage('scipion_logo.gif', percent=50)
+#        label = tk.Label(f, image=logo, borderwidth=0)
+#        label.grid(row=0, column=0, sticky='nw', pady=5, padx=5)
         # Add create project button
-        #font = tkFont.Font(size=12, family='verdana')#, weight='bold')
-        btn = Button(f, text='Create Project', command=self.createNewProject)
-        btn.grid(row=1, column=0, sticky='new', padx=10, pady=10)
+        #font = tkFont.Font(size=12, family='helvetica')#, weight='bold')
+       
         
-        lf = ttk.Labelframe(f, text='Current Projects')
-        lf.grid(row=0, column=1, sticky='news', padx=10, pady=10, rowspan=2)
-        text = TaggedText(lf, width=40, height=15, bd=0)
-        text.grid(row=0, column=0, sticky='news')
-        gui.configureWeigths(lf)
         
-        self.createProjectList(text)
-        text.setReadOnly(True)
-        self.text = text
-        f.rowconfigure(0, weight=1)
-        f.rowconfigure(1, weight=1)
-        f.columnconfigure(1, weight=1)
-        f.grid(row=0, column=0, sticky='news')  
+#        btn = Button(f, text='Create Project', command=self.createNewProject)
+#        btn.grid(row=1, column=0, sticky='new', padx=10, pady=10)
 
-    def createProjectList(self, text):
+#        lf = ttk.Labelframe(f, text='Current Projects')
+#        lf.grid(row=0, column=1, sticky='news', padx=10, pady=10, rowspan=2)
+#        text = TaggedText(lf, width=40, height=15, bd=0)
+#        text.grid(row=0, column=0, sticky='news')
+#        gui.configureWeigths(lf)
+#        
+#        self.createProjectList(text)
+#        text.setReadOnly(True)
+#        self.text = text
+#        f.rowconfigure(0, weight=1)
+#        f.rowconfigure(1, weight=1)
+#        f.columnconfigure(1, weight=1)
+#        f.grid(row=0, column=0, sticky='news')  
+
+    def createProjectsView(self, parent):
+        """ Create the Projects View.
+        It has one panel and a menu:
+            Top: menu
+            Bottom: panel containing the projects list
+        """
+        return ProjectsView(parent, self)
+        
+    def createNewProject(self):
+        projName =  askString("Enter the project name", "Project Name:", self.root, 30)
+        if not projName is None:
+            self.manager.createProject(projName)
+            self.createProjectList(self.text)
+    
+    
+            
+class ProjectsView(tk.Frame):
+      def __init__(self, parent, windows, **args): 
+          tk.Frame.__init__(self, parent, **args)
+          
+          tkFont.Font(size=12, family='verdana', weight='bold')
+          self.projNameFont = tkFont.Font(size=12, family='helvetica', weight='bold')
+          self.projDateFont = tkFont.Font(size=8, family='helvetica')
+          self.projDelFont = tkFont.Font(size=8, family='helvetica', weight='bold')
+          self.manager = Manager()
+          
+#          projectsFrame = tk.Frame(parent)
+          text = TaggedText(self, width=40, height=15, bd=0)
+          text.grid(row=0, column=0, sticky='news')
+#          gui.configureWeigths(lf)
+        
+          self.createProjectList(text)
+          text.setReadOnly(True)
+          self.text = text
+      
+      def createProjectList(self, text):
         """Load the list of projects"""
         r = 0
         text.clear()
@@ -180,7 +222,7 @@ class ManagerWindow(gui.Window):
         text.window_create(tk.INSERT, window=parent)
         text.bindWidget(parent)
         
-    def createProjectLabel(self, parent, projInfo):
+      def createProjectLabel(self, parent, projInfo):
         frame = tk.Frame(parent)
         label = tk.Label(frame, text=projInfo.projName, anchor='nw', 
                          justify=tk.LEFT, font=self.projNameFont, cursor='hand1')
@@ -192,25 +234,19 @@ class ManagerWindow(gui.Window):
         delLabel.grid(row=1, column=1, padx=10)
         delLabel.bind('<Button-1>', lambda e: self.deleteProject(projInfo.projName))
         return frame
-        
-    def createNewProject(self):
-        projName =  askString("Enter the project name", "Project Name:", self.root, 30)
-        if not projName is None:
-            self.manager.createProject(projName)
-            self.createProjectList(self.text)
     
-    def openProject(self, projName):
+      def openProject(self, projName):
         projPath = self.manager.getProjectPath(projName)
         from pw_project import ProjectWindow
         projWindow = ProjectWindow(projPath, self)
         projWindow.show()
             
-    def deleteProject(self, projName):
+      def deleteProject(self, projName):
         if askYesNo("Confirm Project deletion", 
                     "Are you sure to <DELETE> project <%s>\n and all its <DATA>?" % projName, self.root):
             self.manager.deleteProject(projName)
             self.createProjectList(self.text)
-
+          
 if __name__ == '__main__':
     ManagerWindow().show()
     

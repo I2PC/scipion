@@ -34,10 +34,12 @@ import tkFont
 from pyworkflow.object import OrderedObject
 from pyworkflow.utils.path import findResource
 
+from os.path import join, exists, basename
+
 """
 Some GUI CONFIGURATION parameters
 """
-cfgFontName = "Verdana"
+cfgFontName = "Helvetica"
 cfgFontSize = 10  
 
 #TextColor
@@ -216,7 +218,6 @@ def configureWeigths(widget):
     widget.columnconfigure(0, weight=1)
     widget.rowconfigure(0, weight=1)
     
-    
 class Window():
     """Class to manage a Tk windows.
     It will encapsulates some basic creation and 
@@ -326,6 +327,7 @@ class Window():
     def _addMenuChilds(self, menu, menuConfig):
         """Helper function for creating main menu"""
         for sub in menuConfig:
+            print "sub",sub
             if len(sub):
                 submenu = tk.Menu(self.root, tearoff=0)
                 menu.add_cascade(label=sub.text.get(), menu=submenu)
@@ -341,4 +343,158 @@ class Window():
     def showInfo(self, msg, header="Info"):
         from dialog import showInfo
         showInfo(header, msg, self.root)
+
+
+VIEW_PROJECTS = 'Projects'
+VIEW_PROTOCOLS = 'Protocols'
+VIEW_DATA = 'Data'
+VIEW_HOSTS = 'Hosts'
+VIEW_LIST = [VIEW_PROJECTS, VIEW_PROTOCOLS, VIEW_DATA, VIEW_HOSTS]        
+class WindowBase(Window):
+    """Base Template Window
+    It extends from Window and add some layout functions (header and footer)
+    """
+    def __init__(self, title, masterWindow=None, weight=True, minsize=(500, 300),
+                 icon="scipion_bn.xbm", **args):
+        Window.__init__(self, title, masterWindow, weight=weight, icon=icon, minsize=(900,500))
+        
+        content = tk.Frame(self.root)
+        content.columnconfigure(0, weight=1)
+        content.rowconfigure(1, weight=1)
+        content.grid(row=0, column=0, sticky='news')
+        self.content = content
+        
+        Window.createMainMenu(self, self.menuCfg)
+        
+        header = self.createHeaderFrame(content)
+        header.grid(row=0, column=0, sticky='new')
+        
+        self.view, self.viewWidget = None, None
+        
+        
+        from pyworkflow.apps.pw_manager import ProjectsView
+        from pyworkflow.apps.pw_project import DataView
+        from pyworkflow.apps.pw_project_viewprotocols import ProtocolsView
+        from pyworkflow.apps.pw_project_viewhosts import HostsView
+        
+#        self.viewFuncs = {VIEW_PROJECTS: createProjectsView,
+#                          VIEW_PROTOCOLS: createProtocolsView,
+#                          VIEW_DATA: createDataView,
+#                          VIEW_HOSTS: createHostsView
+#                          }
+        self.viewFuncs = {VIEW_PROJECTS: ProjectsView,
+                          VIEW_PROTOCOLS: ProtocolsView,
+                          VIEW_DATA: DataView,
+                          VIEW_HOSTS: HostsView
+                          }
+        self.switchView(VIEW_PROJECTS)
+        
+#    def __init__(self, path, master=None):   
+#        # Load global configuration
+#        self.projName = 'Project ' + basename(path)
+#        self.projPath = path
+#        self.loadProject()
+#        self.icon = self.generalCfg.icon.get()
+#        self.selectedProtocol = None
+#        self.showGraph = False
+#        
+#        Window.__init__(self, self.projName, master, icon=self.icon, minsize=(900,500))
+#        
+#        content = tk.Frame(self.root)
+#        content.columnconfigure(0, weight=1)
+#        content.rowconfigure(1, weight=1)
+#        content.grid(row=0, column=0, sticky='news')
+#        self.content = content
+#        
+#        self.createMainMenu()
+#        
+#        header = self.createHeaderFrame(content)
+#        header.grid(row=0, column=0, sticky='new')
+#        
+#        self.view, self.viewWidget = None, None
+#        self.viewFuncs = {VIEW_PROTOCOLS: self.createProtocolsView,
+#                          VIEW_DATA: self.createDataView,
+#                          VIEW_HOSTS: self.createHostsView
+#                          }
+#        self.switchView(VIEW_PROTOCOLS)
+        
+    def createHeaderFrame(self, parent):
+        
+        """ Create the Header frame at the top of the windows.
+        It has (from left to right):
+            - Main application Logo
+            - Project Name
+            - View selection combobox
+        """
+        header = tk.Frame(parent, bg='white')        
+        header.columnconfigure(1, weight=1)
+        header.columnconfigure(2, weight=1)
+        # Create the SCIPION logo label
+        logoImg = self.getImage(self.generalCfg.logo.get())
+        logoLabel = tk.Label(header, image=logoImg, 
+                             borderwidth=0, anchor='nw', bg='white')
+        logoLabel.grid(row=0, column=0, sticky='nw', padx=5, pady=5)
+        
+        # Create the Project Name label
+        self.projNameFont = tkFont.Font(size=-28, family='helvetica')
+        projLabel = tk.Label(header, text=self.projName if 'projName' in locals() else "", font=self.projNameFont,
+                             borderwidth=0, anchor='nw', bg='white', fg='#707070')
+        projLabel.grid(row=0, column=1, sticky='sw', padx=(20, 5), pady=10)
+        
+        # Create view selection frame
+        viewFrame = tk.Frame(header, bg='white')
+        viewFrame.grid(row=0, column=2, sticky='se', padx=5, pady=10)
+#        viewLabel = tk.Label(viewFrame, text='View:', bg='white')
+#        viewLabel.grid(row=0, column=0, padx=5)
+#        self.viewVar = tk.StringVar()
+#        self.viewVar.set(VIEW_PROTOCOLS)
+        
+#        viewCombo = ttk.Combobox(viewFrame, textvariable=self.viewVar, state='readonly')
+#        viewCombo['values'] = [VIEW_PROTOCOLS, VIEW_DATA, VIEW_HOSTS]
+#        viewCombo.grid(row=0, column=1)
+#        viewCombo.bind('<<ComboboxSelected>>', self._viewComboSelected)
+        
+        def addLink(elementText):
+            btn = tk.Label(viewFrame, text=elementText, cursor='hand2', fg="#6F3232", bg="white")
+            btn.bind('<Button-1>', lambda e:self._viewComboSelected(elementText))
+            return btn
+        
+        def addTube():        
+            tube = tk.Label(viewFrame, text="|", fg="#6F3232", bg="white", padx=5)
+            return tube
+        
+        for i, elementText in enumerate(VIEW_LIST):
+            btn = addLink(elementText)
+            btn.grid(row=0, column=i*2)
+            
+            if i < len(VIEW_LIST)-1:
+                tube = addTube()
+                tube.grid(row=0, column=(i*2)+1)
+        
+        # Create header line
+#        headerLine = tk.Frame(header,bg='red', height=10, width=100%)
+#        headerLine = Canvas(header, height=-1, bg='red')
+#        headerLine.grid(row=1, column=0, columnspan=3, sticky='nw')
+        
+        return header
+    
+    
+    def _viewComboSelected(self, elementText):
+        if elementText != self.view:
+            self.switchView(elementText)
+
+    def switchView(self, newView):
+        # Destroy the previous view if existing:
+        if self.viewWidget:
+            self.viewWidget.grid_forget()
+            self.viewWidget.destroy()
+        # Create the new view
+        self.viewWidget = self.viewFuncs[newView](self.content, self)
+        # Grid in the second row (1)
+        self.viewWidget.grid(row=1, column=0, sticky='news')
+        self.view = newView    
+#    def _viewComboSelected(self, e=None):
+#        if self.viewVar.get() != self.view:
+#            self.switchView(self.viewVar.get())
+
         

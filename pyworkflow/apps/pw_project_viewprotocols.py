@@ -434,7 +434,7 @@ class ProtocolsView(tk.Frame):
         tree.tag_configure('protocol', image=self.getImage('python_file.gif'))
         tree.tag_bind('protocol', '<Double-1>', self._protocolItemClick)
         tree.tag_configure('protocol_base', image=self.getImage('class_obj.gif'))
-        f = tkFont.Font(family='verdana', size='10', weight='bold')
+        f = tkFont.Font(family='helvetica', size='10', weight='bold')
         tree.tag_configure('section', font=f)
         tree.grid(row=1, column=0, sticky='news')
         return tree
