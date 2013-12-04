@@ -64,12 +64,13 @@ Plotter.setInteractive(True)
 VIEW_PROTOCOLS = 'Protocols'
 VIEW_DATA = 'Data'
 VIEW_HOSTS = 'Hosts'
+VIEW_LIST = [VIEW_PROTOCOLS, VIEW_DATA, VIEW_HOSTS]
    
    
 class ProjectWindow(gui.Window):
     def __init__(self, path, master=None):
         # Load global configuration
-        self.projName = 'Project: ' + basename(path)
+        self.projName = 'Project ' + basename(path)
         self.projPath = path
         self.loadProject()
         self.icon = self.generalCfg.icon.get()
@@ -122,21 +123,37 @@ class ProjectWindow(gui.Window):
         # Create view selection frame
         viewFrame = tk.Frame(header, bg='white')
         viewFrame.grid(row=0, column=2, sticky='se', padx=5, pady=10)
-        viewLabel = tk.Label(viewFrame, text='View:', bg='white')
-        viewLabel.grid(row=0, column=0, padx=5)
-        self.viewVar = tk.StringVar()
-        self.viewVar.set(VIEW_PROTOCOLS)
+#        viewLabel = tk.Label(viewFrame, text='View:', bg='white')
+#        viewLabel.grid(row=0, column=0, padx=5)
+#        self.viewVar = tk.StringVar()
+#        self.viewVar.set(VIEW_PROTOCOLS)
         
+#        viewCombo = ttk.Combobox(viewFrame, textvariable=self.viewVar, state='readonly')
+#        viewCombo['values'] = [VIEW_PROTOCOLS, VIEW_DATA, VIEW_HOSTS]
+#        viewCombo.grid(row=0, column=1)
+#        viewCombo.bind('<<ComboboxSelected>>', self._viewComboSelected)
         
-        viewCombo = ttk.Combobox(viewFrame, textvariable=self.viewVar, state='readonly')
-        viewCombo['values'] = [VIEW_PROTOCOLS, VIEW_DATA, VIEW_HOSTS]
-        viewCombo.grid(row=0, column=1)
-        viewCombo.bind('<<ComboboxSelected>>', self._viewComboSelected)
+        def addLink(elementText):
+            btn = tk.Label(viewFrame, text=elementText, cursor='hand2', fg="#6F3232", bg="white")
+            btn.bind('<Button-1>', lambda e:self._viewComboSelected(elementText))
+            return btn
+        
+        def addTube():        
+            tube = tk.Label(viewFrame, text="|", fg="#6F3232", bg="white", padx=5)
+            return tube
+        
+        for i, elementText in enumerate(VIEW_LIST):
+            btn = addLink(elementText)
+            btn.grid(row=0, column=i*2)
+            
+            if i < len(VIEW_LIST)-1:
+                tube = addTube()
+                tube.grid(row=0, column=(i*2)+1)
         
         # Create header line
 #        headerLine = tk.Frame(header,bg='red', height=10, width=100%)
-        headerLine = Canvas(header, height=-10, bg='red')
-        headerLine.grid(row=1, column=0, columnspan=3, sticky='nw')
+#        headerLine = Canvas(header, height=-1, bg='red')
+#        headerLine.grid(row=1, column=0, columnspan=3, sticky='nw')
         
         return header
     
@@ -150,9 +167,14 @@ class ProjectWindow(gui.Window):
         self.saveSettings() 
         gui.Window._onClosing(self)
     
-    def _viewComboSelected(self, e=None):
-        if self.viewVar.get() != self.view:
-            self.switchView(self.viewVar.get())
+    def _viewComboSelected(self, elementText):
+        if elementText != self.view:
+            self.switchView(elementText)
+
+        
+#    def _viewComboSelected(self, e=None):
+#        if self.viewVar.get() != self.view:
+#            self.switchView(self.viewVar.get())
         
     def switchView(self, newView):
         # Destroy the previous view if existing:
