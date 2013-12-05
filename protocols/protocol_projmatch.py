@@ -171,21 +171,18 @@ data_noname
         filenames=(' '.join(self.ReferenceFileNames)).replace("'","")
         summary.append("Initial volume(s): [%s]"%filenames)
         summary.append("Input images: [%s]"%self.SelFileName)
-        if (iteration > 1):
-            ResolutionXmdCurrIterMaxSummary = self.getFilename('ResolutionXmdMax', iter=iteration, ref=1)
-            ResolutionXmdCurrIterMaxSummary1 = self.getFilename('ResolutionXmdMax', iter=iteration-1, ref=1)
-            if xmippExists(ResolutionXmdCurrIterMaxSummary):
-                md = MetaData(ResolutionXmdCurrIterMaxSummary)
-                id = md.firstObject()
-                FourierMaxFrequencyOfInterestSummary = md.getValue(MDL_RESOLUTION_FREQREAL, id)
-                summary += ['Resolution for first reference is <%s> A' % FourierMaxFrequencyOfInterestSummary]
-            elif xmippExists(ResolutionXmdCurrIterMaxSummary1):
-                md = MetaData(ResolutionXmdCurrIterMaxSummary1)
-                id = md.firstObject()
-                FourierMaxFrequencyOfInterestSummary = md.getValue(MDL_RESOLUTION_FREQREAL, id)
-                summary += ['Resolution for first reference is <%s> A' % FourierMaxFrequencyOfInterestSummary]
-            else:
-                summary += ['REsolution not available.']            
+        ResolutionXmdCurrIterMaxSummary = self.getFilename('ResolutionXmdMax', iter=iteration, ref=1)
+        ResolutionXmdCurrIterMaxSummary1 = self.getFilename('ResolutionXmdMax', iter=iteration-1, ref=1)
+        if xmippExists(ResolutionXmdCurrIterMaxSummary):
+            md = MetaData(ResolutionXmdCurrIterMaxSummary)
+            id = md.firstObject()
+            FourierMaxFrequencyOfInterestSummary = md.getValue(MDL_RESOLUTION_FREQREAL, id)
+            summary += ['Resolution for first reference is <%s> A' % FourierMaxFrequencyOfInterestSummary]
+        elif xmippExists(ResolutionXmdCurrIterMaxSummary1):
+            md = MetaData(ResolutionXmdCurrIterMaxSummary1)
+            id = md.firstObject()
+            FourierMaxFrequencyOfInterestSummary = md.getValue(MDL_RESOLUTION_FREQREAL, id)
+            summary += ['Resolution for first reference is <%s> A' % FourierMaxFrequencyOfInterestSummary]
         else:
             summary += ['Resolution is <%s>' % 'not available']            
         
