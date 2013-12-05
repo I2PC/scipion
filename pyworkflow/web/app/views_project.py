@@ -168,9 +168,11 @@ def project_graph (request):
         return HttpResponse(jsonStr, mimetype='application/javascript')
 
 class TreeItem():
-    def __init__(self, name, tag, protClass=None):
+    def __init__(self, name, tag, icon, openItem, protClass):
         self.name = name
         self.tag = tag
+        self.icon = icon
+        self.openItem = openItem
         self.protClass = protClass
         self.childs = []
         
@@ -179,7 +181,10 @@ def populateTree(tree, obj):
         text = sub.text.get()
         value = sub.value.get(text)
         tag = sub.tag.get('')
-        item = TreeItem(text, tag)
+        icon = sub.icon.get('')
+        print str(text) + "/" + str(icon)
+        openItem = sub.openItem.get()
+        item = TreeItem(text, tag, icon, openItem, None)
         tree.childs.append(item)
         # If have tag 'protocol_base', fill dynamically with protocol sub-classes
         protClassName = value.split('.')[-1]  # Take last part
@@ -188,7 +193,7 @@ def populateTree(tree, obj):
             if prot is not None:
                 for k, v in emProtocolsDict.iteritems():
                     if not v is prot and issubclass(v, prot):
-                        protItem = TreeItem(k, 'protocol_class', protClassName)
+                        protItem = TreeItem(k, 'protocol_class', 'python_file.gif', None, protClassName)
                         item.childs.append(protItem)
         else:
             item.protClass = protClassName
@@ -202,14 +207,12 @@ def update_prot_tree(request):
     # set the new protocol tree chosen
     project.getSettings().setCurrentProtocolMenu(index)
     project.getSettings().write()
-#    root = loadProtTree(project)
         
     return HttpResponse(mimetype='application/javascript')
 
-
 def loadProtTree(project):
     protCfg = project.getSettings().getCurrentProtocolMenu()
-    root = TreeItem('root', 'root')
+    root = TreeItem('root', 'root', '', '', None)
     populateTree(root, protCfg)
     return root    
 
