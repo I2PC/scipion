@@ -91,18 +91,18 @@ class XmippProtFourierFilter(XmippProtFilter):
     def _defineProcessParams(self, form):
         form.addParam('filterType', EnumParam, choices=['low pass', 'high pass', 'band pass'],
                       label="Filter type", default=xmipp3.FILTER_BAND_PASS,
-                      help='Select what type of Fourier filter do you want to apply.\n'
-                           '*low pass*: all frequency components below <High frequency> are preserved.\n'
-                           '*high pass*: all frequency components above <Low frequency> are preserved.\n'
-                           '*band pass*: all frequency components between <Low frequency> and <High frequency> are preserved.\n')
+                      help='Select what type of Fourier filter do you want to apply. \n '
+                           '*low pass*: all frequency components below <High frequency> are preserved. \n '
+                           '*high pass*: all frequency components above <Low frequency> are preserved. \n '
+                           '*band pass*: all frequency components between <Low frequency> and <High frequency> are preserved. \n ')
         form.addParam('lowFreq', DigFreqParam, default=0.02, 
                       condition='filterType != %d' % xmipp3.FILTER_LOW_PASS,
                       label='Low Frequency (0 < f < 0.5)',
-                      help='Low frequency cuttoff to apply the filter.\n')          
+                      help='Low frequency cuttoff to apply the filter. \n ')          
         form.addParam('highFreq', DigFreqParam, default=0.35, 
                       label='High Frequency (0 < f < 0.5)', 
                       condition='filterType != %d' % xmipp3.FILTER_HIGH_PASS,
-                      help='High frequency cuttoff to apply the filter.\n'
+                      help='High frequency cuttoff to apply the filter. \n '
                            'Set to 0.5 for a <high pass> filter.')          
         form.addParam('freqDecay', FloatParam, default=0.02, 
                       label='Frequency decay',
@@ -160,7 +160,7 @@ class XmippProtMask(XmippProtFilter):
                       choices=['raised_cosine', 'circular', 'binary_file'], 
                       default=xmipp3.MASK_RAISED_COSINE, 
                       label="Mask type", display=EnumParam.DISPLAY_COMBO,
-                      help='Select which type of mask do you want to apply.\n')
+                      help='Select which type of mask do you want to apply. \n ')
         
         form.addParam('maskRadius', IntParam, default=-1, 
                       condition='maskType != %d' % xmipp3.MASK_FILE,
@@ -175,7 +175,7 @@ class XmippProtMask(XmippProtFilter):
         form.addParam('maskFile', StringParam, default='', 
                       label='Binary mask file', 
                       condition='maskType == %d' % xmipp3.MASK_FILE,
-                      help='The mask file should have the same dimensions as your input particles.\n'
+                      help='The mask file should have the same dimensions as your input particles. \n '
                            'The protein region should be 1 and the solvent should be 0.')  
         
         form.addParam('fillType', EnumParam, 
@@ -225,9 +225,9 @@ class XmippProtResize(XmippProtFilter):
                       choices=['resize', 'crop'], 
                       default=0,
                       label="Resize operation", display=EnumParam.DISPLAY_COMBO,
-                      help='Select how do you want to change the size of the particles.\n'
-                      '<resize>: you will provide the new size (in pixels) for your particles.\n'
-                      '<crop>: you choose how many pixels you want to crop from each border.\n')
+                      help='Select how do you want to change the size of the particles. \n '
+                      '<resize>: you will provide the new size (in pixels) for your particles. \n '
+                      '<crop>: you choose how many pixels you want to crop from each border. \n ')
         
         form.addParam('newSize', IntParam, default=0,
                       condition='resizeOperation == 0',

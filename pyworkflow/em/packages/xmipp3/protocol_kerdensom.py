@@ -73,7 +73,7 @@ class XmippProtKerdensom(ProtClassify):
                       help='Number of steps to lower the regularization factor')
         form.addParam('extraParams', StringParam, default='', expertLevel=LEVEL_ADVANCED,
                       label="Additional parameters:", 
-                      help='Additional parameters for kerdensom program.\nFor a complete description'
+                      help='Additional parameters for kerdensom program. \n For a complete description'
                       'See [[http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/KerDenSOM][KerDenSOM]]')
         
         

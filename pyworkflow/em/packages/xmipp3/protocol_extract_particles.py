@@ -73,7 +73,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
 
         form.addParam('ctfRelations', RelationParam, allowNull=True,
                       label='CTF relations', relationName=RELATION_CTF, relationParent='getInputMicrographs', 
-                      relationReverse=True, help='Choose the CTF.\n')     
+                      relationReverse=True, help='Choose the CTF.  \n  ')     
 
         form.addParam('boxSize', IntParam, default=0,
                       label='Particle box size', validators=[Positive],
@@ -122,9 +122,9 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         form.addParam('normType', EnumParam, choices=['OldXmipp','NewXmipp','Ramp'], 
                       default=2, condition='doNormalize', display=EnumParam.DISPLAY_COMBO,
                       label='Normalization type', 
-                      help='OldXmipp (mean(Image)=0, stddev(Image)=1).\n'
-                           'NewXmipp (mean(background)=0, stddev(background)=1)\n'
-                           'Ramp (subtract background+NewXmipp).\n',
+                      help='OldXmipp (mean(Image)=0, stddev(Image)=1).  \n  '
+                           'NewXmipp (mean(background)=0, stddev(background)=1)  \n  '
+                           'Ramp (subtract background+NewXmipp).  \n  ',
                       expertLevel=LEVEL_ADVANCED)
         form.addParam('backRadius', IntParam, default=-1, condition='doNormalize',
                       label='Background radius',

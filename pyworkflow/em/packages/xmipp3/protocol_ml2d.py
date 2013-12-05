@@ -90,15 +90,15 @@ class XmippProtML2D(ProtClassify):
                            )
         form.addParam('doFast', BooleanParam, default=True, condition='not doMlf',
                       label='Use the fast version of this algorithm?',
-                      help='For details see (and please cite):\n'
-                           '*Scheres et al., Bioinformatics, 21 (Suppl. 2), ii243-ii244*\n'
+                      help='For details see (and please cite): \n '
+                           '*Scheres et al., Bioinformatics, 21 (Suppl. 2), ii243-ii244* \n '
                            '[[http://dx.doi.org/10.1093/bioinformatics/bti1140][Info]]'
                            )        
         form.addParam('doNorm', BooleanParam, default=False,
                       label='Refine the normalization for each image?',
-                      help='This variant of the algorithm deals with normalization errors.\n'
-                           'For details see (and please cite):\n'
-                           '*Scheres et. al. (2009) J. Struc. Biol., Vol 166, Issue 2, May 2009*\n'
+                      help='This variant of the algorithm deals with normalization errors. \n '
+                           'For details see (and please cite): \n '
+                           '*Scheres et. al. (2009) J. Struc. Biol., Vol 166, Issue 2, May 2009* \n '
                            '[[http://dx.doi.org/10.1016/j.jsb.2009.02.007][Info]]'
                            )             
         # Advance or expert parameters
