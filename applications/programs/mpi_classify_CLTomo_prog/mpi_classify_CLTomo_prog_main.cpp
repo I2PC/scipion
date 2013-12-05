@@ -1382,7 +1382,7 @@ void ProgClassifyCL3D::produceSideInfo()
     // Prepare the Task distributor
     SF.findObjects(objId);
     size_t Nimgs = objId.size();
-    taskDistributor = new FileTaskDistributor(Nimgs,
+    taskDistributor = new MpiTaskDistributor(Nimgs,
                       XMIPP_MAX(1,Nimgs/(5*node->size)), node);
 
     // Prepare mask for evaluating the noise outside
@@ -1480,7 +1480,43 @@ void ProgClassifyCL3D::run()
     if (generateAlignedVolumes)
     {
     	node->barrierWait();
+    	MetaData MDimages;
+    	MDimages.read(fnOut+"_images.xmd");
+    	FileName fnAligned=fnOut+"_aligned.stk";
+    	if (node->rank==0)
+    		createEmptyFile(fnAligned,(int)Xdim,(int)Ydim,(int)Zdim,MDimages.size());
+    	node->barrierWait();
+    	size_t idx=1;
+    	Image<double> V, Valigned;
+    	FileName fnImg;
+    	Matrix2D<double> A,E,T;
+        Matrix1D<double> r(3);
+    	FOR_ALL_OBJECTS_IN_METADATA(MDimages)
+    	{
+    		if (idx%node->size==node->rank)
+    		{
+    			MDimages.getValue(MDL_IMAGE,fnImg,__iter.objId);
+    			V.read(fnImg);
+    			double x,y,z,rot,tilt,psi;
+    			MDimages.getValue(MDL_ANGLE_ROT,rot,__iter.objId);
+    			MDimages.getValue(MDL_ANGLE_TILT,tilt,__iter.objId);
+    			MDimages.getValue(MDL_ANGLE_PSI,psi,__iter.objId);
+    			MDimages.getValue(MDL_SHIFT_X,x,__iter.objId);
+    			MDimages.getValue(MDL_SHIFT_Y,y,__iter.objId);
+    			MDimages.getValue(MDL_SHIFT_Z,z,__iter.objId);
 
+    	        Euler_angles2matrix(rot, tilt, psi, E, true);
+    	        XX(r)=x;
+    	        YY(r)=y;
+    	        ZZ(r)=z;
+    	        translation3DMatrix(r,T);
+    	        A=E*T;
+
+    	        applyGeometry(BSPLINE3,Valigned(),V(),A,IS_NOT_INV,DONT_WRAP,0.);
+    	        Valigned.write(fnAligned,idx,true,WRITE_REPLACE);
+    		}
+    		++idx;
+    	}
     }
     CLOSE_LOG();
 }

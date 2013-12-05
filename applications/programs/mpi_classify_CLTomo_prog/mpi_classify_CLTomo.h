@@ -307,7 +307,7 @@ public:
     MetaData SF;
     
     // Task distributor
-    FileTaskDistributor *taskDistributor;
+    MpiTaskDistributor *taskDistributor;
 
     // Object Ids
     std::vector<size_t> objId;
