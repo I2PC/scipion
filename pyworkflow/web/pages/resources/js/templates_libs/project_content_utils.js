@@ -129,9 +129,10 @@ function fillTabsSummary(id) {
 		dataType : "json",
 		success : function(json) {
 			$("#tab-summary").empty();
-			for ( var i = 0; i < json.length; i++) {
-				$("#tab-summary").append('<p>' + json[i] + '</p>');
-			}
+			$("#tab-summary").append(json);
+//			for ( var i = 0; i < json.length; i++) {
+//				$("#tab-summary").append('<p>' + json[i] + '</p>');
+//			}
 			
 		}
 	});

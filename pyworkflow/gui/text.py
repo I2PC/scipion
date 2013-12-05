@@ -243,8 +243,9 @@ def configureColorTags(text):
 class TaggedText(Text):  
     """
     Implement a Text that will recognized some basic tags
-    {some_text} will display some_text in bold
-    [some_link] will display some_link as hiperlinnk
+    *some_text* will display some_text in bold
+    _some_text_ will display some_text in italic
+    some_link or [[some_link][some_label]] will display some_link as hiperlink or some_label as hiperlink to some_link
     also colors are recognized if set option colors=True
     """           
     def __init__(self, master, colors=True, **opts):  
@@ -268,12 +269,15 @@ class TaggedText(Text):
         """ Detect [] as links text and <> as bold text"""
         tagsDict = {'[': 'link', '<': 'bold'}
         tagged_parts = []
+        print "parts", parts
         for p in parts:
             if len(p) > 0:
                 if p[0] in tagsDict.keys():
                     tagged_parts.append((p[1:-1], tagsDict[p[0]]))
                 else:
                     tagged_parts.append((p, 'normal'))
+                    
+        print "tagged_parts",tagged_parts
         return tagged_parts
         
     def addLine(self, line):

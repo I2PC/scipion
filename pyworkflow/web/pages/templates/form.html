@@ -224,7 +224,7 @@
 									<td>
 									</td>
 								{% endif %}
-								{% if param.help.get != None %}
+								{% if param.help.hasValue %}
 									<td class="ico"><a href="javascript:help('{{paramName}}','{{param.help.get}}');"><img src={{help}} /></a></td>
 								{% endif %}
 								</tr>

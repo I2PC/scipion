@@ -29,6 +29,11 @@ This module contains utilities functions and classes.
 
 import os, sys
 
+PATTERNBOLD = r"[\s]+[*]([^\s][^*]+[^\s])[*][\s]+"
+PATTERNITALIC = r"[\s]+[_]([^\s][^_]+[^\s])[_][\s]+"
+PATTERNLINK = '(http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+)'
+PATTERNLINK2 = r"[\s]+[\[]{2}([^\s][^\]]+[^\s])[\]][\[]([^\s][^\]]+[^\s])[\]]{2}[\s]+"
+
 def prettyDate(time=False):
     """
     Get a datetime object or a int() Epoch timestamp and return a
@@ -230,3 +235,4 @@ def greenStr(text):
 
 def redStr(text):
     return getColorStr(text, color='red')
+    

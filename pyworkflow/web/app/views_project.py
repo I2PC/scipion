@@ -319,8 +319,9 @@ def protocol_summary(request):
         protId = request.GET.get('protocolId', None)
         protocol = project.mapper.selectById(int(protId))
         summary = protocol.summary()
-        print summary
-        jsonStr = json.dumps(summary, ensure_ascii=False)
+
+        from pyworkflow.web.app.views_util import parseText, replacePattern
+        jsonStr = json.dumps(parseText(summary), ensure_ascii=False)
         
 #        print "======================= in protocol_summary...."
 #        print jsonStr

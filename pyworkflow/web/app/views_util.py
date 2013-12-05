@@ -377,5 +377,49 @@ def getTestPlot(request):
     response = HttpResponse(content_type='image/png')
     canvas.print_png(response)
     return response   
+
+def replacePattern(m, mode):
+    if mode == "bold":
+        return " <b>%s</b> " % m.group(1)
+    elif mode == "italic":
+        return " <i>%s</i> " % m.group(1)
+    elif mode == "link":
+        if len(m.groups()) == 1:
+            return " <a href='%s'>%s</a> " % (m.group(1), m.group(1))
+        else:
+            return " <a href='%s'>%s</a> " % (m.group(1), m.group(2))
+    elif mode == "general":
+        if isinstance(m, list):
+            return '<br>'.join(m)
+        return str(m)
     
+    return m
+
     
+def parseText(text, func=replacePattern):
+    """ Parse the text adding some basic tags
+    \n will display as a carry return 
+    *some_text* will display some_text in bold
+    _some_text_ will display some_text in italic
+    some_link or [[some_link][some_label]] will display some_link as hiperlink or some_label as hiperlink to some_link
+    
+    mode can be html o desktop depending on where the text will be displayed
+    """
+    text = func(text, "general")
+
+    import re
+    from pyworkflow.utils.utils import PATTERNBOLD, PATTERNITALIC, PATTERNLINK, PATTERNLINK2
+    ptnBold = re.compile(PATTERNBOLD)
+    ptnItalic = re.compile(PATTERNITALIC)
+    ptnLink = re.compile(PATTERNLINK)
+    ptnLink2 = re.compile(PATTERNLINK2)
+
+#    parsedText = ptnBold.sub(lambda x: replaceBold(x, "bold"), text)
+#    parsedText = ptnBold.sub(lambda x: func["funcBold"](x), text)
+
+    parsedText = ptnBold.sub(lambda match: func(match, "bold"), text)
+    parsedText = ptnItalic.sub(lambda match: func(match, "italic"), parsedText)
+    parsedText = ptnLink.sub(lambda match: func(match, "link"), parsedText)
+    parsedText = ptnLink2.sub(lambda match: func(match, "link"), parsedText)
+    
+    return parsedText    

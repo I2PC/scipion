@@ -232,7 +232,9 @@ html, body {
 
 
 /* FLEX TEMPLATE (These styles are to create custom resize handles.) */ 
-
+#tab-summary a{
+	color: Firebrick !important;
+}
 .ui-resizable-s {
 	bottom: 0px !important;
 }
