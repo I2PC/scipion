@@ -115,11 +115,12 @@ $(document).ready(function() {
 	$("#displayTableContainer").html("<a href='#' onclick='showTableConfig()'>Display Table Configuration</a>")
 	
 	initializeMultipleSelectionTool()
-	setElementsEditable(null)
 	initializeColumnHeader()
 	
 	/*  Transpose data table after all events have been initialized*/
 	oTable.fnTranspose(true)
+
+	setElementsEditable(null)
 	
 	
 } );
@@ -185,14 +186,14 @@ function getHeaderWithIcon(text, columnLayoutProperties){
 	var iconElements = '' 
 	/* NAPA DE LUXE HABRIA QUE PONERLE UN MARGIN AL LABEL DEL HEADER */
 	/* var iconElements = '<span style=\"margin:8px\">'+text+'</span>' */
-	if (columnLayoutProperties.visible && columnLayoutProperties.allowSetVisible){
+/* 	if (columnLayoutProperties.visible && columnLayoutProperties.allowSetVisible){
 		iconElements+="<span class=\"css_right\"><img src=\"/resources/showj/delete.png\" class=\"arrowImage\" onclick=\"enableDisableColumn(event,this)\" ></span>"
-	}
+	} */
 	
 	if (columnLayoutProperties.allowSetEditable){
 		iconElements+="<span class=\"css_right\"><div class=\"iconHeader "
 		if (columnLayoutProperties.editable){iconElements+="editTableOn"}else{iconElements+="editTableOff"}
-		iconElements+="\" id=\""+text+"_editable_icon\" onclick=\"enableDisableEditableColumn(event,this)\"></div></span>"
+		iconElements+="\" id=\""+text+"_editable_icon\" onclick=\"enableDisableEditableRow(event,this)\"></div></span>"
 	}
 	
 	if (columnLayoutProperties.allowSetRenderable){
@@ -292,26 +293,30 @@ function enableDisableRenderColumn(event, element){
 /* Enable/disable editable to column
  * When column cell is text or a number, it will change from a text element to an input textfield and viceversa 
  */
-function enableDisableEditableColumn(event, element){
+function enableDisableEditableRow(event, element){
 	$(element).toggleClass("editTableOn").toggleClass("editTableOff")
 	
 	//From the image element we get the column header index
-	var thCell= $(element).closest('th')
-	var iCol = $('th').index(thCell)
+	var tdCell= $(element).closest('tr').find('td')
+	var thCell= $(element).closest('tr').find('th')
+	console.log(tdCell)
+	
+	console.log("taka")
+	console.log($("#ctfSamplingRate___column_header"))
+	console.log($("#ctfSamplingRate___column_header").val())
 	
 	//We enable/disable render event
-	var nTrs = oTable.fnGetNodes();
 	if ($(element).hasClass("editTableOn")){
-		$('td:nth-child('+(iCol+1)+')', nTrs).addClass('editable')
-		setElementsEditable('td:nth-child('+(iCol+1)+')')
+		tdCell.addClass('editable')
+		setElementsEditable(tdCell)
 	}
 	else{
-		$('td:nth-child('+(iCol+1)+')', nTrs).removeClass('editable')
-		$('td:nth-child('+(iCol+1)+')', nTrs).unbind('click');
+		tdCell.removeClass('editable')
+		tdCell.unbind('click');
 	}
-	$('td:nth-child('+(iCol+1)+')', nTrs).each(function(){
+	/* tdCell.each(function(){
 		$(this).toggleClass("editable")
-	})
+	}) */
 	
 	/*  Update table layout configuration model*/
 	var labelColumn = thCell.attr("id").split("___")[0]
@@ -328,33 +333,30 @@ function setElementsEditable(elements){
 	if (elements==null){
 		var nTrs = oTable.fnGetNodes();
 		for (var label in jsonTableLayoutConfiguration.columnsLayout){ 
-			columnId=oTable.fnGetColumnIndex(label)
-   			columnIdReal=oTable.fnColumnIndexToVisible(columnId)
-   			if (columnIdReal!=null){
-				if (jsonTableLayoutConfiguration.columnsLayout[label].columnLayoutProperties.editable){
-	   				setElementsEditable('td:nth-child('+(columnIdReal+1)+')')
-				}
-				else{
-	   				$('td:nth-child('+(columnIdReal+1)+')', nTrs).unbind('click');
-	   			}
-   			}	
+			if (jsonTableLayoutConfiguration.columnsLayout[label].columnLayoutProperties.editable){
+				setElementsEditable($("#data_table_transpose").find('#'+label+"___column_header").closest('tr').find('td'))
+			}
+			else{
+				$("#data_table_transpose").find('#'+label+"___column_header").closest('tr').find('td').unbind('click');
+			}
 		}
 	}
 	else{
-		$(elements, oTable.fnGetNodes()).editable(
+		elements.editable(
 			/* '../examples_support/editable_ajax.php', */
 			function(value, settings){ 
-				/*  Get position and real column*/
-				var aPos = oTable.fnGetPosition( this )
-				columnIdReal=oTable.fnVisibleToColumnIndex(aPos[1])
-				
 				/* Get label from column*/
-				var label = oTable.fnSettings().aoColumns[columnIdReal].sTitle
+				var label = $(this).closest('tr').find('th').attr("id").split("___")[0]
 				
 				/*NAPA DE LUX TENEMOS QUE PONERLE UN ID A LAS FILAS */
 				var aoData = oTable.fnSettings().aoData;
-				var nTd = aoData[ aPos[0] ]._anHidden[ oTable.fnGetColumnIndex("id") ];
+				var nTd = aoData[0]._anHidden[ oTable.fnGetColumnIndex("id") ];
 				var rowId =$(nTd).text()
+				
+				/*Keep changes in global variable */
+				if ($("#saveButton").hasClass("saveOff")){
+					$("#saveButton").toggleClass("saveOn").toggleClass("saveOff")
+				}
 				
 				/*Keep changes in global variable */
 				changes[label+"___"+rowId]=value
@@ -362,10 +364,12 @@ function setElementsEditable(elements){
 			  },
 			{
 			 "callback": function( sValue, y ) {
-				/* Update datatable model */
-				var aPos = oTable.fnGetPosition( this );
-				columnIdReal=oTable.fnVisibleToColumnIndex(aPos[1])
-				oTable.fnUpdate( sValue, aPos[0], columnIdReal );
+				 
+				 /* Get label from column*/
+				 var label = $(this).closest('tr').find('th').attr("id").split("___")[0]
+				 columnId=oTable.fnGetColumnIndex(label) 
+				
+				 oTable.fnUpdate( sValue, 0, columnId );
 			},
 			"height": "14px"
 		} );

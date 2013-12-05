@@ -36,28 +36,22 @@ from xmipp3 import XmippProtocol
 from convert import createXmippInputMicrographs, readSetOfCoordinates
 
 
-class XmippDefParticlePicking(Form):
-    """Create the definition of parameters for
-    the XmippParticlePicking protocol"""
-    def __init__(self):
-        Form.__init__(self)
-    
-        self.addSection(label='Input')
-        self.addParam('inputMicrographs', PointerParam, label="Micrographs",
-                      pointerClass='SetOfMicrographs',
-                      help='Select the SetOfMicrograph ')
-        self.addParam('memory', FloatParam, default=2,
-                   label='Memory to use (In Gb)', expertLevel=2)        
-
-
 class XmippProtParticlePicking(ProtParticlePicking, XmippProtocol):
     """Protocol to pick particles manually of a set of micrographs in the project"""
-    _definition = XmippDefParticlePicking()
     
     def __init__(self, **args):        
         ProtParticlePicking.__init__(self, **args)
         # The following attribute is only for testing
         self.importFolder = String(args.get('importFolder', None))
+        
+    def _defineParams(self, form):
+    
+        form.addSection(label='Input')
+        form.addParam('inputMicrographs', PointerParam, label="Micrographs",
+                      pointerClass='SetOfMicrographs',
+                      help='Select the SetOfMicrograph ')
+        form.addParam('memory', FloatParam, default=2,
+                   label='Memory to use (In Gb)', expertLevel=2)        
         
     def _defineSteps(self):
         """The Particle Picking proccess is realized for a set of micrographs"""
@@ -112,4 +106,4 @@ class XmippProtParticlePicking(ProtParticlePicking, XmippProtocol):
         readSetOfCoordinates(posDir, self.inputMics, coordSet)
         coordSet.write()
         self._defineOutputs(outputCoordinates=coordSet)
-
+        self._defineDataSource(self.inputMics, coordSet)

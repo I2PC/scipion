@@ -1,24 +1,9 @@
 /* CSS Document */
 
-/* GENERAL */
-* {
-	margin: 0px;
-	padding: 0px;
-	font-family: Helvetica;
-} /* Reset default margin and padding for all element */
-header,section,footer,aside,nav,article,hgroup {
-	display: block;
-} /* For html5 unsupported browsers */
+/* body > #mainContainer { height: auto; min-height: 100%; }  */
 
 /* HEADER */
-header {
-	height: 100px;
-	display: -moz-flex;
-	display: -webkit-flex;
-	display: flex;
-	-webkit-flex-flow: row;
-	-webkit-flex-wrap: wrap;
-}
+
 
 
 /* NAV (TOP MENU) */
@@ -39,26 +24,11 @@ nav ul li {
 	display: inline;
 }
 
-/* ASIDE (BOTTOM MENU) */
-aside {
-	height: 68px;
-	background: #e3e3e3; /* Old browsers */
-	background: -moz-linear-gradient(top, #e3e3e3 0%, #cccccc 100%); /* FF3.6+ */
-	background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#e3e3e3), color-stop(100%,#cccccc)); /* Chrome,Safari4+ */
-	background: -webkit-linear-gradient(top, #e3e3e3 0%,#cccccc 100%); /* Chrome10+,Safari5.1+ */
-	background: -o-linear-gradient(top, #e3e3e3 0%,#cccccc 100%); /* Opera 11.10+ */
-	background: -ms-linear-gradient(top, #e3e3e3 0%,#cccccc 100%); /* IE10+ */
-	background: linear-gradient(to bottom, #e3e3e3 0%,#cccccc 100%); /* W3C */
-	filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#e3e3e3', endColorstr='#cccccc',GradientType=0 ); /* IE6-9 */
-	
-	padding-left: 20px;
-	display: -moz-flex;
-	display: -webkit-flex;
-	display: flex;
-	-webkit-flex-flow: row;
-	-webkit-flex-wrap: wrap;
-}
+/* FOOTER */
 
+
+
+/* ASIDE (BOTTOM MENU) */
 aside button {
 	border: 0px;
 	cursor: pointer;
@@ -66,6 +36,12 @@ aside button {
 }
 
 aside form{
+	display: -webkit-box;      /* OLD - iOS 6-, Safari 3.1-6 */
+  	display: -moz-box;         /* OLD - Firefox 19- (buggy but mostly works) */
+  	display: -ms-flexbox;      /* TWEENER - IE 10 */
+	display: -moz-flex;
+	display: -ms-flex;
+	display: -o-flex;
 	display: -webkit-flex;
 	display: flex;
 }
@@ -73,14 +49,39 @@ aside form{
 aside .sectionMenu {
 	margin-right: 20px;
 	/* display: inline-block; */
+	display: -webkit-box;      /* OLD - iOS 6-, Safari 3.1-6 */
+  	display: -moz-box;         /* OLD - Firefox 19- (buggy but mostly works) */
+  	display: -ms-flexbox;      /* TWEENER - IE 10 */
+	display: -moz-flex;
+	display: -ms-flex;
+	display: -o-flex;
 	display: -webkit-flex;
+	display: flex;
+	
 	-webkit-align-items: center;
+	-moz-align-items: center;
+	-o-align-items: center;
+	-ms-align-items: center;
+	align-items: center;
 }
 
 aside .subSectionMenu {
 	margin-right: 10px;
+	
+	display: -webkit-box;      /* OLD - iOS 6-, Safari 3.1-6 */
+  	display: -moz-box;         /* OLD - Firefox 19- (buggy but mostly works) */
+  	display: -ms-flexbox;      /* TWEENER - IE 10 */
+	display: -moz-flex;
+	display: -ms-flex;
+	display: -o-flex;
 	display: -webkit-flex;
+	display: flex;
+	
 	-webkit-align-items: center;
+	-moz-align-items: center;
+	-o-align-items: center;
+	-ms-align-items: center;
+	align-items: center;
 }
 
 aside .textMenu {
@@ -95,6 +96,8 @@ aside #colRowMode {
 
 aside .menuIcon {
 	margin-right: 5px;
+/* 	width: 17px;
+    height: 17px; */
 }
 
 aside .menuInputNumber {
@@ -136,29 +139,89 @@ aside .galleryOff{
 	
 }
 
+aside .visualizeVolOn{
+	background-image: url(/resources/showj/volumeOn.png);
+	
+}
+
+aside .visualizeVolOff{
+	background-image: url(/resources/showj/volumeOff.png);
+	
+}
+
+aside .optionsOff{
+	background-image: url(/resources/showj/galleryViewOff.png);
+}
+aside .optionsOn{
+	background-image: url(/resources/showj/galleryViewOn.png);
+}
+
 aside .arrowSectionMenu{
+	display: -webkit-box;      /* OLD - iOS 6-, Safari 3.1-6 */
+  	display: -moz-box;         /* OLD - Firefox 19- (buggy but mostly works) */
+  	display: -ms-flexbox;      /* TWEENER - IE 10 */
+	display: -moz-flex;
+	display: -ms-flex;
+	display: -o-flex;
 	display: -webkit-flex;
+	display: flex;
+	
 	-webkit-align-items: center;
+	-moz-align-items: center;
+	-o-align-items: center;
+	-ms-align-items: center;
+	align-items: center;
+	
 	-webkit-flex-flow: column;
+	-moz-flex-flow: column;
+	-o-flex-flow: column;
+	-ms-flex-flow: column;
+	flex-flow: column;
 	margin: 4px;
 }
 
+
+/* aside #optionsSubSectionMenu{
+	z-index: 999;
+	display:none;
+} */
 aside .arrowImage{
 	margin: 1px;
 }
 
-
-/* MAIN SECTION */
-section {
-	padding: 20px;
-	display: -moz-flex;
-	display: -webkit-flex;
-	display: flex;
-	-webkit-flex-flow: row;
-	-webkit-flex-wrap: wrap;
+aside div>ul{
+	display: none;
+	list-style: none;
+ 	position: relative;
+	left: -200px;
+	float: left;
+	width: 230px;
+	top:20px;
 }
 
+aside .optionsListOn{
+	display: block;
+	z-index:1;
+} 
+aside li{
+	list-style: none;
+	float:left;
+	margin: 0 0.5em;
+	display: block;
+	width: 220px;
+	height: 20px;
+	background-color: #e3e3e3;
+	padding: 2px 10px;
+}
 
+aside li:first-child{
+	padding-top: 10px;
+}	
+aside li:last-child{
+	padding-bottom: 10px;
+}
+
+/* MAIN SECTION */
 section .img_container {
 	/* margin: 10px 2px 10px 2px; */
 	/* margin: 2px; */
@@ -205,9 +268,18 @@ section .imageTitle{
 	z-index:999;
 	background-color: #e6e6e6;
 	color: #555555;
-	/* display: -webkit-flex; */
+	
 	-webkit-align-items: center;
+	-moz-align-items: center;
+	-o-align-items: center;
+	-ms-align-items: center;
+	align-items: center;
+	
 	-webkit-flex-flow: column;
+	-moz-flex-flow: column;
+	-o-flex-flow: column;
+	-ms-flex-flow: column;
+	flex-flow: column;
 	position: absolute;
 	padding: 10px;
 }
@@ -337,6 +409,7 @@ aside #saveButton{
 	width: 60%;
 }
 
+
 #tableConfigurationContainer table{
 	
 }
@@ -360,4 +433,3 @@ aside #saveButton{
 
 .DataTables_sort_icon{float: left;}
 
-/* GENERAL */

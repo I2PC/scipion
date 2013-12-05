@@ -29,29 +29,30 @@ This modules contains classes related with EM
 import os
 
 import pyworkflow as pw
-from pyworkflow.utils.reflection import getSubClassesFromPath, getSubclasses
+from pyworkflow.utils.reflection import getSubclassesFromModules, getSubclasses, getModules
 from data import *
 from protocol import *
 from constants import *
+from convert import *
 from pyworkflow.viewer import Viewer, Wizard
 #from packages import *
 
 PACKAGES_PATH = os.path.join(pw.HOME, 'em', 'packages')
+PACKAGES_DICT = getModules(PACKAGES_PATH)
 
 # Load all Protocol subclasses found in EM-packages
-emProtocolsDict = getSubClassesFromPath(Protocol, PACKAGES_PATH)
+emProtocolsDict = getSubclassesFromModules(Protocol, PACKAGES_DICT)
 emProtocolsDict.update(getSubclasses(Protocol, globals()))
 
 # Load all EMObject subclasses found in EM-packages
-emObjectsDict = getSubClassesFromPath(EMObject, PACKAGES_PATH)
+emObjectsDict = getSubclassesFromModules(EMObject, PACKAGES_DICT)
 emObjectsDict.update(getSubclasses(EMObject, globals()))
 
 # Load all subclasses of Viewer of different packages
-emViewersDict = getSubClassesFromPath(Viewer, PACKAGES_PATH)
+emViewersDict = getSubclassesFromModules(Viewer, PACKAGES_DICT)
 
 # Load all subclasses of Wizards
-emWizardsDict = getSubClassesFromPath(Wizard, PACKAGES_PATH)
-        
+emWizardsDict = getSubclassesFromModules(Wizard, PACKAGES_DICT)
         
 def findClass(className):
     if className in emProtocolsDict:
@@ -59,30 +60,40 @@ def findClass(className):
     if className in emObjectsDict:
         return emObjectsDict[className]
     raise Exception("findClass: class '%s' not found." % className)
+
+def findSubClasses(classDict, className):
+    """ Find all subclasses of a give className. """
+    cls = classDict[className]
+    subclasses = {}
     
+    for k, v in classDict.iteritems():
+        if issubclass(v, cls):
+            subclasses[k] = v    
+    return subclasses
+
+
 def findViewers(className, environment):
     """ Find the available viewers for this class. """
     viewers = []
     cls = findClass(className)
     baseClasses = cls.mro()
     for viewer in emViewersDict.values():
-        if viewer._environment == environment:
+        if environment in viewer._environments:
             for t in viewer._targets:
                 if t in baseClasses:
                     viewers.append(viewer)
                     break
     return viewers
 
-def findWizards(definition, environment):
+def findWizards(protocol, environment):
     """ Find availables wizards for this class. 
     Returns:
         a dict with the paramName and wizards for this class."""
     wizards = {}
-    baseClasses = definition.getClass().mro()
+    baseClasses = protocol.getClass().mro()
     for wiz in emWizardsDict.values():
         if environment in wiz._environments:
-            for t in wiz._targets:
-                cls, params = t
+            for cls, params in wiz._targets:
                 if cls in baseClasses:
                     for p in params:
                         wizards[p] = wiz

@@ -1,36 +1,80 @@
-a {
-	text-decoration: none;
-	color: black;
+/* CSS Document */
+
+/* GENERAL */
+html, body {	
+	width: 100%;
+	height: 100%;
+	padding: 0;
+	margin: 0;
+	/* font-size: 0.75em; */
+	/* overflow: hidden; */
 }
 
-body{
-	font-family: "Trebuchet MS", "Helvetica", "Arial", "Verdana","sans-serif";
-	font-size: 0.75em;
+/* FLEX DESIGN */
+.layout-outer {
+	height: 110%;
+	min-height: 110%;
+}
+.center, .west, .north, .south {
+	/* background-color: rgb(220,220,220); */
+	/* border: 1px solid rgb(200,200,200); */
+	/* text-align: center; */
+       display: inline-block;
 }
 
-.protFieldsetTree {
-	height: 95%;
-	width: 90%;
-	overflow-y: scroll;
+
+.layout-outer > .west {
+	width: 25%;
+	/* margin-right:10px; */
+	padding: 20px 10px 20px 10px;
+	min-width: 200px;
+	overflow-y: auto;
 	overflow-x: hidden;
-	/*margin: -0.5em -1em -0.6em 1em;*/
-	/*border: 1px solid #d0d0d0;*/
-	margin-left: -0.6em;
-	padding-right: 1.5em;
-	background: white;
+}
+.layout-outer > .center{
+	padding: 20px 20px 20px 10px;
+}
+/**
+ * To get correct percentages widths and heights in the inner layout
+ * you have to set the container to take up all space that's left after
+ * the outer columns east, west, north and south components. In this case:
+ *  width = 100% - 8% - 8% = 84%
+ *  height = 100% - 10% - 10% = 80%
+ */
+.layout-inner {
+	width: 75%;
+	/* height: 60%; */
+	height: 100%
+	background-color: white;
+	border: 0px;
+}
+.layout-inner > .north {
+	height: 80%;
+	margin-bottom: 30px;
+	max-height: 70%;
+	overflow-y: auto;
+} 
+.layout-inner > .center {
+	/* z-index:20; */
+	/* min-height: 100px; */
+}
+/* SECTION */
+#westContainer{
+	padding: 15px 10px;
+	background-color: #eaebec;
+	font-size: 0.9em;
 }
 
-/* CSS for the treeview */
+/* TREEVIEW */
+.viewTree{
+	margin-bottom: 10px;
+}
+
 .treeview,.treeview ul {
 	padding: 0;
 	list-style: none;
-	background-color: white;
-	margin: -3px 0 0 -5px;
-}
-
-.treeview ul {
-	background-color: white;
-	margin-top: 4px;
+	/* background-color: white; */
+	/* margin: -3px 0 0 -5px; */
 }
 
 .treeview .hitarea {
@@ -109,7 +153,8 @@ body{
 }
 
 .filetree span.section {
-	font-size: 1.2em;
+	/* font-size: 1.2em; */
+	font-size: 1em;
 	font-weight: bold;
 }
 
@@ -146,13 +191,14 @@ body{
 
 #listEx ul {
 	position: inherit;
-	margin-left: -1.2em;
+	/* margin-left: -1.2em; */
+	margin: 10px 0px 0px 10px;
 	font-size: 0.9em;
 }
 
 #listEx li a {
 	background-color: #fbfbfb;
-	margin-left: -3em;
+	margin-left: 15px;
 }
 
 #listEx li a:hover {
@@ -183,3 +229,11 @@ body{
 .dragActive {
 	border: 3px solid #346789;
 }
+
+
+/* FLEX TEMPLATE (These styles are to create custom resize handles.) */ 
+
+.ui-resizable-s {
+	bottom: 0px !important;
+}
+

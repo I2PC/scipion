@@ -162,3 +162,13 @@ def getPngData(filename):
 
 def createBgImage(dim):
     return np.ones((dim, dim, 3))
+
+
+
+if __name__ == '__main__':
+    import matplotlib.pyplot as plt
+    import sys
+    
+    
+    
+    

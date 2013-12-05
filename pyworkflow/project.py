@@ -27,14 +27,15 @@
 This modules handles the Project management
 """
 
-import os, shutil
+import os
 from os.path import abspath, split
 
 from pyworkflow.em import *
 from pyworkflow.apps.config import *
 from pyworkflow.protocol import *
 from pyworkflow.mapper import SqliteMapper
-from pyworkflow.utils import cleanPath, makePath, makeFilePath, join, exists, runJob
+from pyworkflow.utils import cleanPath, makePath, makeFilePath, join, exists, runJob, copyFile
+from pyworkflow.utils.graph import Graph
 from pyworkflow.hosts import HostMapper, HostConfig
 import pyworkflow.protocol.launch as jobs
 
@@ -43,6 +44,7 @@ PROJECT_LOGS = 'Logs'
 PROJECT_RUNS = 'Runs'
 PROJECT_TMP = 'Tmp'
 PROJECT_SETTINGS = 'settings.sqlite'
+
 
 class Project(object):
     """This class will handle all information 
@@ -58,6 +60,7 @@ class Project(object):
         self.tmpPath = self.addPath(PROJECT_TMP)
         self.settingsPath = self.addPath(PROJECT_SETTINGS)
         self.runs = None
+        self._runsGraph = None
         
     def getObjId(self):
         """ Return the unique id assigned to this project. """
@@ -81,6 +84,9 @@ class Project(object):
     
     def getSettings(self):
         return self.settings
+    
+    def saveSettings(self):
+        self.settings.write()
     
     def load(self):
         """Load project data and settings
@@ -131,59 +137,53 @@ class Project(object):
         2. Create the working dir and also the protocol independent db
         3. Call the launch method in protocol.job to handle submition: mpi, thread, queue,
         and also take care if the execution is remotely."""
-        #print ">>> PROJECT: launchProtocol"
+        self._checkProtocolDependencies(protocol, 'Cannot RE-LAUNCH protocol')
+        
         protocol.setStatus(STATUS_LAUNCHED)
         self._setupProtocol(protocol)
-        #print "      after _setupProtocol, protId: ", protocol.getObjId()
-        protocol.setMapper(self.mapper) # mapper is used in makePathAndClean
+        
+        #protocol.setMapper(self.mapper) # mapper is used in makePathAndClean
         protocol.makePathsAndClean() # Create working dir if necessary
-        #self.mapper.commit()
+        self.mapper.commit()
         
         # Prepare a separate db for this run
         # NOTE: now we are simply copying the entire project db, this can be changed later
         # to only create a subset of the db need for the run
-        #protocol.setDbPath('run.db')
-        #print "      copy from '%s' to '%s'" % (self.dbPath, protocol.getDbPath())
-        shutil.copy(self.dbPath, protocol.getDbPath())
+        copyFile(self.dbPath, protocol.getDbPath())
         
         # Launch the protocol, the jobId should be set after this call
         jobs.launch(protocol, wait)
         
         # Commit changes
         if wait: # This is only useful for launching tests...
-            #print "      waiting...."
-            #protocol.printAll()
             self._updateProtocol(protocol)
         else:
             self.mapper.store(protocol)
         self.mapper.commit()
-        #print "      after _updateProtocol, protId:", protocol.getObjId()
-        #protocol.printAll() 
-        #print ">>> PROJECT: launchProtocol: DONE"
         
     def _updateProtocol(self, protocol):
         try:
             # FIXME: this will not work for a real remote host
             jobId = protocol.getJobId() # Preserve the jobId before copy
-            
             dbPath = self.getPath(protocol.getDbPath())
             #join(protocol.getHostConfig().getHostPath(), protocol.getDbPath())
             prot2 = getProtocolFromDb(dbPath, protocol.getObjId(), globals())
             # Copy is only working for db restored objects
+            protocol.setMapper(self.mapper)
             protocol.copy(prot2)
-            
             # Restore jobId
             protocol.setJobId(jobId)
-            
             self.mapper.store(protocol)
         except Exception, ex:
-            print "Error trying to update protocol: %s\n %s" % (jobId, ex)
-            
+            print "Error trying to update protocol: %s(jobId=%s)\n ERROR: %s" % (protocol.getName(), jobId, ex)
+            import traceback
+            traceback.print_exc()
+            raise ex
         
     def stopProtocol(self, protocol):
         """ Stop a running protocol """
         jobs.stop(protocol)
-        protocol.status.set(STATUS_ABORTED)
+        protocol.setAborted()
         self._storeProtocol(protocol)
         
     def continueProtocol(self, protocol):
@@ -193,15 +193,37 @@ class Project(object):
         """
         for step in protocol._steps:
             if step.status == STATUS_WAITING_APPROVAL:
-                step.status.set(STATUS_FINISHED)
+                step.setStatus(STATUS_FINISHED)
                 self.mapper.store(step)
                 self.mapper.commit()
                 break
         self.launchProtocol(protocol)
         
+    def _checkProtocolDependencies(self, protocol, msg):
+        """ Raise an exception if the protocol have dependencies.
+        The message will be prefixed to the exception error. 
+        """
+        # Check if the protocol have any dependencies
+        node = self.getRunsGraph().getNode(protocol.strId())
+        if node is None:
+            return
+        childs = node.getChilds()
+        if len(childs):
+            deps = [' ' + c.run.getRunName() for c in childs]
+            msg += ' <%s>\n' % protocol.getRunName()
+            msg += 'It is referenced from:\n'
+            raise Exception(msg + '\n'.join(deps))
+        
     def deleteProtocol(self, protocol):
+        self._checkProtocolDependencies(protocol, 'Cannot DELETE protocol')
+        
         self.mapper.delete(protocol) # Delete from database
-        cleanPath(protocol.workingDir.get())  
+        wd = protocol.workingDir.get()
+        if wd.startswith(PROJECT_RUNS):
+            cleanPath()
+        else:
+            print "Error path: ", wd 
+      
         self.mapper.commit()     
         
     def copyProtocol(self, protocol):
@@ -214,7 +236,9 @@ class Project(object):
         return newProt
     
     def saveProtocol(self, protocol):
-        protocol.status.set(STATUS_SAVED)
+        self._checkProtocolDependencies(protocol, 'Cannot SAVE protocol')
+        
+        protocol.setStatus(STATUS_SAVED)
         if protocol.hasObjId():
             self._storeProtocol(protocol)
         else:
@@ -243,6 +267,7 @@ class Project(object):
         name = protocol.getClassName() + protocol.strId()
         protocol.setName(name)
         protocol.setWorkingDir(self.getPath(PROJECT_RUNS, name))
+        protocol.setMapper(self.mapper)
         self._setHostConfig(protocol)
         # Update with changes
         self._storeProtocol(protocol)
@@ -253,8 +278,10 @@ class Project(object):
         if self.runs is None or refresh:
             self.runs = self.mapper.selectByClass("Protocol", iterate=False)
             for r in self.runs:
+                # Update nodes that are running and are not invoked by other protocols
                 if r.isActive():
-                    self._updateProtocol(r)
+                    if not r.isChild():
+                        self._updateProtocol(r)
             self.mapper.commit()
         
         return self.runs
@@ -263,36 +290,48 @@ class Project(object):
         """ Build a graph taking into account the dependencies between
         different runs, ie. which outputs serves as inputs of other protocols. 
         """
-        #import datetime as dt # TIME PROFILE
-        #t = dt.datetime.now()
-        outputDict = {} # Store the output dict
-        runs = self.getRuns(refresh=refresh)
-        from pyworkflow.utils.graph import Graph
-        g = Graph(rootName='PROJECT')
-        
-        for r in runs:
-            n = g.createNode(r.strId())
-            n.run = r
-            for key, attr in r.iterOutputAttributes(EMObject):
-                outputDict[attr.getName()] = n # mark this output as produced by r
-                #print "   %s: %s" % (key, attr.getName())
+        if refresh or self._runsGraph is None:
+            outputDict = {} # Store the output dict
+            runs = [r for r in self.getRuns(refresh=True) if not r.isChild()]
+            g = Graph(rootName='PROJECT')
             
-        for r in runs:
-            node = g.getNode(r.strId())
-            #print '\n=========================\n', r.getName()
-            #print "> Inputs:"
-            for key, attr in r.iterInputAttributes():
-                if attr.hasValue():
-                    attrName = attr.get().getName()
-                    if attrName in outputDict:
-                        parentNode = outputDict[attrName]
+            for r in runs:
+                n = g.createNode(r.strId())
+                n.run = r
+                n.label = r.getRunName()
+                outputDict[r.getName()] = n
+                for _, attr in r.iterOutputAttributes(EMObject):
+                    outputDict[attr.getName()] = n # mark this output as produced by r
+                
+            def _checkInputAttr(node, pointed):
+                """ Check if an attr is registered as output"""
+                if pointed:
+                    pointedName = pointed.getName()
+                    if pointedName in outputDict:
+                        parentNode = outputDict[pointedName]
                         parentNode.addChild(node)
-                    
-        rootNode = g.getRoot()
-        rootNode.run = None
-        for n in g.getNodes():
-            if n.isRoot() and not n is rootNode:
-                rootNode.addChild(n)
-        #print ">>>>>>> Graph building: ", dt.datetime.now() - t
-        return g
+                        return True
+                return False
+                
+            for r in runs:
+                node = g.getNode(r.strId())
+                for _, attr in r.iterInputAttributes():
+                    if attr.hasValue():
+                        pointed = attr.get()
+                        # Only checking pointed object and its parent, if more levels
+                        # we need to go up to get the correct dependencies
+                        (#_checkInputAttr(node, attr) or 
+                         _checkInputAttr(node, pointed) or 
+                         _checkInputAttr(node, self.mapper.getParent(pointed))
+                        )
+            rootNode = g.getRoot()
+            rootNode.run = None
+            rootNode.label = "PROJECT"
+            
+            for n in g.getNodes():
+                if n.isRoot() and not n is rootNode:
+                    rootNode.addChild(n)
+            self._runsGraph = g
+            
+        return self._runsGraph
         

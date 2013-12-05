@@ -253,7 +253,8 @@ class TestMixedWorkflow_2(TestWorkflow):
         #self.validateFiles('protCTF', protCTF) 
         print "Running Eman fake particle picking..."
         protPP = EmanProtBoxing(importFolder=self.importFolder, runMode=1)                
-        protPP.inputMicrographs.set(protCTF.outputMicrographs)        
+        protPP.inputMicrographs.set(protDownsampling.outputMicrographs)  
+        protPP.boxSize.set(110)      
 #        protPP.inputMicrographs.set(protImport.outputMicrographs)
         self.proj.launchProtocol(protPP, wait=True)
         self.assertIsNotNone(protPP.outputCoordinates, "There was a problem with the faked picking")
@@ -262,6 +263,7 @@ class TestMixedWorkflow_2(TestWorkflow):
         print "<Run extract particles with Same as picking>"
         protExtract = XmippProtExtractParticles(boxSize=110, downsampleType=1, doFlip=True, doInvert=True, runMode=1)
         protExtract.inputCoordinates.set(protPP.outputCoordinates)
+        protExtract.ctfRelations.set(protCTF.outputCTF)
         #protExtract.inputMicrographs.set(protDownsampling.outputMicrographs)
         self.proj.launchProtocol(protExtract, wait=True)
         
@@ -282,7 +284,7 @@ class TestMixedWorkflow_2(TestWorkflow):
         protML2D = XmippProtML2D(numberOfReferences=8, maxIters=2, 
                                  numberOfMpi=2, numberOfThreads=2)
 #        protML2D.inputImages.set(protExtract.outputParticles)
-        protML2D.inputImages.set(protExtract.outputParticles)
+        protML2D.inputParticles.set(protExtract.outputParticles)
         self.proj.launchProtocol(protML2D, wait=True)        
         
         self.assertIsNotNone(protML2D.outputClasses, "There was a problem with ML2D")  

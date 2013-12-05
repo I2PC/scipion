@@ -129,11 +129,10 @@ def changeFontSize(font, event, minSize=-999, maxSize=999):
 IMAGE related variables and functions 
 """
 
-def getImage(imageName, imgDict=None, tk=True):
+def getImage(imageName, imgDict=None, tk=True, percent=100):
     """ Search for the image in the RESOURCES path list. """
     if imageName is None:
         return None
-    from pyworkflow.utils.path import findResource
     if imgDict is not None and imageName in imgDict:
         return imgDict[imageName]
     imagePath = findResource(imageName)
@@ -141,29 +140,45 @@ def getImage(imageName, imgDict=None, tk=True):
     if imagePath:
         from PIL import Image, ImageTk
         image = Image.open(imagePath)
+        if percent != 100: # Display image with other dimensions
+            (w, h) = image.size
+            fp = float(percent)/100.0
+            newSize = int(fp * w), int(fp * h)
+            image.thumbnail(newSize, Image.ANTIALIAS)
         if tk:
             image = ImageTk.PhotoImage(image)
         if imgDict is not None:
             imgDict[imageName] = image
     return image
 
-def getPILImage(imageXmipp, dim=None):
+def getPILImage(imageXmipp, dim=None, normalize=True):
+    """ Given an image read by Xmipp, convert it to PIL. """
     from PIL import Image
-    imageData = imageXmipp.getData()
-
-    #Napa de Luxe
-
-    imageDataMax=imageData.max()
-    imageDataMin=imageData.min()
+    import xmipp
     
-    imageData = (imageData-imageDataMin)*(255.0/(imageDataMax-imageDataMin))
-
+    if normalize:
+        imageXmipp.convert2DataType(xmipp.DT_UCHAR, xmipp.CW_ADJUST)
+        
+    imageData = imageXmipp.getData()
     image = Image.fromarray(imageData)
-    img = image.convert('RGB')
     if dim:
         size = int(dim), int(dim)
-        img.thumbnail(size, Image.ANTIALIAS)
-    return img
+        image.thumbnail(size, Image.ANTIALIAS)
+    return image
+
+def getImageFromPath(imagePath):
+    """ Read an image using Xmipp, convert to PIL
+    and then return as expected by Tk.
+    """
+    import xmipp
+    img = xmipp.Image(imagePath)
+    imgPIL = getPILImage(img)
+    from PIL import ImageTk
+    imgTk = ImageTk.PhotoImage(imgPIL)
+    
+    return imgTk
+
+
 
 """
 Windows geometry utilities
@@ -208,7 +223,7 @@ class Window():
     setup functions. """
     
     def __init__(self, title, masterWindow=None, weight=True, minsize=(500, 300),
-                 icon=None):
+                 icon=None, **args):
         """Create a Tk window.
         title: string to use as title for the windows.
         master: if not provided, the windows create will be the principal one
@@ -237,6 +252,8 @@ class Window():
             self.root.iconbitmap("@" + abspath)
             
         self.root.protocol("WM_DELETE_WINDOW", self._onClosing)
+        self._w, self._h, self._x, self._y = 0, 0, 0, 0
+        self.root.bind("<Configure>", self._configure)
         self.master = masterWindow
         setCommonFonts()
         
@@ -244,6 +261,33 @@ class Window():
         """This method should be used by subclasses
         to calculate desired dimensions"""
         return None
+    
+    def _configure(self, e):
+        """ Filter event and call appropiate handler. """
+        if self.root != e.widget:
+            return
+        
+        _, _, x, y = getGeometry(self.root)
+        w, h = e.width, e.height
+        
+        if w != self._w or h != self._h:
+            self._w, self._h = w, h
+            self.handleResize() 
+        
+        if x != self._x or y != self._y:
+            self._x, self._y = x, y
+            self.handleMove()    
+            
+        
+    def handleResize(self):
+        """ This method should be overriden by subclasses
+        in order to response to resize event. """
+        pass
+        
+    def handleMove(self):
+        """ This method should be overriden by subclasses
+        in order to response to move envet. """
+        pass
     
     def show(self, center=True):
         """This function will enter in the Tk mainloop"""
@@ -269,15 +313,16 @@ class Window():
             self.master.root.focus_set()
         self.close()
         
-    def getImage(self, imgName):
-        return getImage(imgName, self._images)
+    def getImage(self, imgName, percent=100):
+        return getImage(imgName, self._images, percent=percent)
     
     def createMainMenu(self, menuConfig):
         """Create Main menu from a given configuration"""
         menu = tk.Menu(self.root)
         self._addMenuChilds(menu, menuConfig)
         self.root.config(menu=menu)
-            
+        return menu
+        
     def _addMenuChilds(self, menu, menuConfig):
         """Helper function for creating main menu"""
         for sub in menuConfig:
@@ -288,3 +333,12 @@ class Window():
             else:
                 menu.add_command(label=sub.text.get(), compound=tk.LEFT,
                                  image=self.getImage(sub.icon.get()))
+                
+    def showError(self, msg, header="Error"):
+        from dialog import showError
+        showError(header, msg, self.root)
+        
+    def showInfo(self, msg, header="Info"):
+        from dialog import showInfo
+        showInfo(header, msg, self.root)
+        

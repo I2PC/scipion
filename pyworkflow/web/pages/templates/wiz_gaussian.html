@@ -1,0 +1,57 @@
+{% extends 'wiz_base.html' %} 
+{% block title %} Gaussian Filter {% endblock %} 
+{% block name %} Gaussian Filter {% endblock %} 
+{% block head %}{% endblock %} 
+{% block list %}
+<tr>
+	<th>Object</th>
+</tr>
+{% for obj in objects %}
+{% if forloop.counter0 == 0 %} 
+<script>
+	firstElm  = {{obj.getObjId}};
+</script>
+{% endif %}
+<tr id="{{obj.getObjId}}" class="no-selected"
+	style="background-color: #fafafa;"
+	onclick="compositeGaussian(($(this)));" 
+	value="{{obj.text}}">
+	<td>{{obj.basename}}</td>
+</tr>
+{% endfor %} {% endblock %} {% block images %}
+<tr>
+	<td>
+		<div id="wrapper" class="image">
+			<img id="particle"/>
+		</div>Image
+	</td>
+	<td>
+		<div id="wrapper" class="image">
+			<img id="imgFiltered"/>
+		</div>Filtered
+	</td>
+</tr>
+{% endblock %} 
+{% block options %}
+<table>
+	<tr>
+		<td>
+			Sigma Freq	
+		</td>
+		<td>
+			<input id="sigma" type="text" value="{{freqSigma}}"/>
+		</td>
+		<td>
+			<a href="javascript:previewSigma();" class="buttonGrey">Preview</a>
+			<!-- <input type="button" id="buttonGen" onclick="previewSigma();" value="preview"/> -->
+		</td>
+	</tr>
+</table>
+<script>
+	//Load the First Element of the list
+	window.onload = compositeGaussian($("tr#"+firstElm));
+</script>
+{% endblock %}
+{% block function %}
+	onclick="putSelection('input#sigma', 'freqSigma_input')"
+{% endblock %}

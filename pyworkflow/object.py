@@ -39,6 +39,7 @@ class Object(object):
         self._objParentId =  args.get('objParentId', None) # identifier of the parent object
         self._objName =  args.get('objName', '') # The name of the object will contains the whole path of ancestors
         self._objLabel = args.get('objLabel', '') # This will serve to label the objects
+        self._objComment = args.get('objComment', '')
         self._objTag =  args.get('objTag', None) # This attribute serve to make some annotation on the object.
         self._objDoStore =  args.get('objDoStore', True) # True if this object will be stored from his parent
         self._objIsPointer =  args.get('objIsPointer', False) # True if will be treated as a reference for storage
@@ -83,8 +84,8 @@ class Object(object):
     def getAttributesToStore(self):
         """Return the list of attributes than are
         subclasses of Object and will be stored"""
-        for key, attr in self.__dict__.iteritems():
-            if issubclass(attr.__class__, Object) and attr._objDoStore:
+        for key, attr in self.getAttributes():
+            if attr._objDoStore:
                 yield (key, attr)
                 
     def isPointer(self):
@@ -133,6 +134,28 @@ class Object(object):
         self.setObjId(None)
         for _, attr in self.getAttributesToStore():
             attr.cleanObjId()
+            
+    def getObjParentId(self):
+        return self._objParentId
+    
+    def hasObjParentId(self):
+        return self._objParentId is not None
+            
+    def getObjLabel(self):
+        """ Return the label associated with this object"""
+        return self._objLabel
+    
+    def setObjLabel(self, label):
+        """ Set the label to better identify this object"""
+        self._objLabel = label
+             
+    def getObjComment(self):
+        """ Return the comment associated with this object"""
+        return self._objComment
+    
+    def setObjComment(self, comment):
+        """ Set the comment to better identify this object"""
+        self._objComment = comment       
     
     def strId(self):
         """String representation of id"""
@@ -178,7 +201,7 @@ class Object(object):
     
     def equalAttributes(self, other):
         """Compare that all attributes are equal"""
-        for k, _ in self.getAttributesToStore():
+        for k, _ in self.getAttributes():
             v1 = getattr(self, k) # This is necessary because of FakedObject simulation of getattr
             v2 = getattr(other, k)
             if issubclass(type(v1), Object):
@@ -203,7 +226,7 @@ class Object(object):
                 value = self._objValue
                 
             print tab, '%s = %s' % (name, value), idStr
-        for k, v in self.getAttributesToStore():
+        for k, v in self.getAttributes():
             v.printAll(k, level + 1)
             
     def copyAttributes(self, other, *attrNames):
@@ -227,9 +250,22 @@ class Object(object):
         return resultDictionary
     
     def copy(self, other):
-        self.copy2(other, {})
+        copyDict = {'internalPointers': []} 
+        self._copy(other, copyDict)
+        self._updatePointers(copyDict)
+        return copyDict
         
-    def copy2(self, other, copyDict):
+    def _updatePointers(self, copyDict):
+        """ Update the internal pointers after a copy. 
+        If there are pointers to other object in the copy 
+        the references should be updated.
+        """
+        for ptr in copyDict['internalPointers']:
+            pointedId = ptr.get().getObjId()
+            if  pointedId in copyDict:
+                ptr.set(copyDict[pointedId])
+        
+    def _copy(self, other, copyDict, level=1):
         """ This method will recursively clone all attributes
         from one object to the other.
         Attributes must be present in both.
@@ -240,24 +276,23 @@ class Object(object):
         # Copy basic object data
         #self._objName = other._objName
         self._objValue = other._objValue
-        
         # Copy attributes recursively
-        for name, attr in other.getAttributesToStore():
+        for name, attr in other.getAttributes():
             myAttr = getattr(self, name, None)
+
             if myAttr is None:
                 myAttr = attr.getClass()()
                 setattr(self, name, myAttr)
-            myAttr.copy2(attr, copyDict)
                 
+            myAttr._copy(attr, copyDict, level+2)
             # Store the attr in the copyDict
             if attr.hasObjId():
+                #" storing in copyDict with id=", attr.getObjId()
                 copyDict[attr.getObjId()] = myAttr
             # Use the copyDict to fix the reference in the copying object
             # if the pointed one is inside the same object
             if myAttr.isPointer() and myAttr.hasValue():
-                pointedId = attr.get().getObjId()
-                if pointedId in copyDict:
-                    myAttr.set(copyDict[pointedId])
+                copyDict['internalPointers'].append(myAttr)
     
     def clone(self):
         clone = self.getClass()()
@@ -300,13 +335,17 @@ class OrderedObject(Object):
             self._attributes.append(name)
         Object.__setattr__(self, name, value)
     
-    def getAttributesToStore(self):
+    def getAttributes(self):
         """Return the list of attributes than are
         subclasses of Object and will be stored"""
         for key in self._attributes:
-            attr = getattr(self, key)
-            if attr._objDoStore:
-                yield (key, attr)
+            yield (key, getattr(self, key))
+                
+    def deleteAttribute(self, attrName):
+        """ Delete an attribute. """
+        if attrName in self._attributes:
+            self._attributes.remove(attrName)
+            delattr(self, attrName)
             
 class FakedObject(Object):
     """This is based on Object, but will hide the set and get
@@ -336,7 +375,7 @@ class FakedObject(Object):
                 return attr
         return None
     
-    def getAttributesToStore(self):
+    def getAttributes(self):
         """Return the list of attributes than are
         subclasses of Object and will be stored"""
         return self._attributes.iteritems()
@@ -378,7 +417,7 @@ class Scalar(Object):
             return self._objValue
         return default
     
-    def copy(self, other):
+    def _copy(self, other, *args):
         self.set(other.get())
         
     
@@ -408,6 +447,7 @@ class Float(Scalar):
     
 class Boolean(Scalar):
     """Boolean object"""
+    
     def _convertValue(self, value):
         t = type(value)
         if t is bool:
@@ -461,9 +501,9 @@ class List(Object, list):
         else:
             object.__setattr__(self, name, value)
 
-    def getAttributesToStore(self):
+    def getAttributes(self):
         # First yield all attributes not contained in the list
-        for name, attr in Object.getAttributesToStore(self):
+        for name, attr in Object.getAttributes(self):
             yield (name, attr)
         # Now yield elements contained in the list
         for i, item in enumerate(self):
@@ -504,21 +544,28 @@ class CsvList(Scalar, list):
         
     def _convertValue(self, value):
         """Value should be a str with comman separated values"""
-
-        del self[:] # Clear the list before setting new value
-        for s in value.split(','):
-            self.append(self._pType(s))
+        self.clear()
+        
+        if value:
+            for s in value.split(','):
+                self.append(self._pType(s))
             
     def getObjValue(self):
         self._objValue = ','.join(map(str, self))
         return self._objValue
-#    
-#    def get(self):
-#        return self
+    
+    def get(self):
+        return self.getObjValue()
     
     def __str__(self):
         return list.__str__(self)
+     
+    def isEmpty(self):
+        return len(self) > 0
     
+    def clear(self):
+        del self[:]
+           
         
 class Array(Object):
     """Class for holding fixed len array"""

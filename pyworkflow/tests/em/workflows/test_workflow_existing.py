@@ -60,8 +60,30 @@ class TestXmippWorkflow(unittest.TestCase):
             print "coord: ", c.getPosition(), " from mic: ", c.getMicrograph().getFileName()        
             
         
+    def test_Sets(self):
+        projName = "TestXmippWorkflow"
+        project = Manager().loadProject(projName) # Now it will be loaded if exists
         
+        sets = project.mapper.selectByClass('Set')
         
+        for s in sets:
+            print s
+            
+        mics = sets[2]
+        
+        for m in mics:
+            print "mic: ", m
+            #m.printAll()
+            
+        m1 = mics[1]
+        m1.printAll()
+            
+        imgs = sets[5]
+        
+        for i, img in enumerate(imgs):
+            print "img: ", img
+            if i == 10:
+                break # Limit to 10 images
             
              
 class ConditionFilter():

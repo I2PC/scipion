@@ -1,0 +1,13 @@
+#!/bin/bash
+#bash sshServerScript machine user pw commands
+
+echo "Setting password in pipe"
+
+pathAskpass=$1
+password=$2
+echo password
+
+mkfifo $pathAskpass
+chmod 700 $pathAskpass
+echo password > $pathAskpass &
+echo "Pipe read"

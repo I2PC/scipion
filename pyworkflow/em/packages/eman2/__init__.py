@@ -31,3 +31,4 @@ from eman2 import *
 from data import *
 from protocol_boxing import EmanProtBoxing
 from protocol_initialmodel import EmanProtInitModel
+from viewer import EmanViewerGeneric

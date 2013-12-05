@@ -33,6 +33,18 @@ import xmipp
 from constants import *
 import pyworkflow.dataset as ds
 
+LABEL_TYPES = { 
+               xmipp.LABEL_SIZET: long,
+               xmipp.LABEL_DOUBLE: float,
+               xmipp.LABEL_INT: int,
+               xmipp.LABEL_BOOL: bool              
+               }
+
+def getLabelPythonType(label):
+    """ From xmipp label to python variable type """
+    labelType = xmipp.labelType(label)
+    return LABEL_TYPES.get(labelType, str)
+
 def getXmippPath(*paths):
     '''Return the path the the Xmipp installation folder
     if a subfolder is provided, will be concatenated to the path'''
@@ -242,21 +254,34 @@ class XmippDataSet(ds.DataSet):
     def __init__(self, filename):
         self._filename = filename
         blocks = xmipp.getBlocksInMetaDataFile(filename)
+        if len(blocks) == 0: # If there are no block, at an empty one
+            blocks = ['']
         ds.DataSet.__init__(self, blocks)
         
     def _loadTable(self, tableName):
-        md = xmipp.MetaData(tableName + "@" + self._filename)
+        if len(tableName):
+            mdFn = tableName + "@" + self._filename
+        else:
+            mdFn = self._filename
+        md = xmipp.MetaData(mdFn)
         return self._convertMdToTable(md)
+        
+    def _convertLabelToColumn(self, label):
+        """ From an Xmipp label, create the corresponding column. """
+        return ds.Column(xmipp.label2Str(label), 
+                         getLabelPythonType(label))
         
     def _convertMdToTable(self, md):
         """ Convert a metatada into a table. """
         labels = md.getActiveLabels()
         hasTransformation = self._hasTransformation(labels)  
-        labelsStr = [xmipp.label2Str(l) for l in labels]        
+        columns = [self._convertLabelToColumn(l) for l in labels]        
         #NAPA de LUXE (xmipp deberia saber a que campo va asignado el transformation matrix)             
         if hasTransformation:
-            labelsStr.append("image_transformationMatrix")   
-        columns = [ds.Column(l) for l in labelsStr]        
+            columns.append(ds.Column("image_transformationMatrix", str))
+            
+        labelsStr = [col.getName() for col in columns]        
+        
         table = ds.Table(*columns)
         
         for objId in md:
@@ -285,19 +310,20 @@ class XmippDataSet(ds.DataSet):
     def writeTable(self, tableName, table):
         """ Write changes made to a table. """
         md = self._convertTableToMd(table)
+        print "dondecarajo","%s@%s" % (tableName, self._filename)
         md.write("%s@%s" % (tableName, self._filename), xmipp.MD_APPEND)
 
         
     def _hasTransformation(self, labels):
-        for l in [xmipp.MDL_SHIFT_X, xmipp.MDL_SHIFT_Y, xmipp.MDL_SHIFT_Z]:
+        for l in [xmipp.MDL_SHIFT_X, xmipp.MDL_SHIFT_Y, xmipp.MDL_SHIFT_Z, xmipp.MDL_ANGLE_ROT, xmipp.MDL_ANGLE_TILT, xmipp.MDL_ANGLE_PSI]:
             if l in labels:
                 return True
         return False
         
     def _getTransformation(self, md, objId):
-        rot  = md.getValue(xmipp.MDL_ANGLE_ROT ,objId)
+        rot  = md.getValue(xmipp.MDL_ANGLE_ROT,objId)
         tilt = md.getValue(xmipp.MDL_ANGLE_TILT,objId)
-        psi  = md.getValue(xmipp.MDL_ANGLE_PSI ,objId)
+        psi  = md.getValue(xmipp.MDL_ANGLE_PSI,objId)
         if rot is  None:
             rot = 0
         if tilt is  None:
@@ -310,8 +336,22 @@ class XmippDataSet(ds.DataSet):
         y = md.getValue(xmipp.MDL_SHIFT_Y, objId)
         z = md.getValue(xmipp.MDL_SHIFT_Z, objId)
 
-        return [tMatrix[0][0], tMatrix[0][1], tMatrix[0][2], x,
-                tMatrix[1][0], tMatrix[1][1], tMatrix[1][2], y,
-                tMatrix[2][0], tMatrix[2][1], tMatrix[2][2], z]
+        matrix = [tMatrix[0][0], tMatrix[0][1], tMatrix[0][2], x if x!=None else 0,
+                tMatrix[1][0], tMatrix[1][1], tMatrix[1][2], y if y!=None else 0,
+                tMatrix[2][0], tMatrix[2][1], tMatrix[2][2], z if z!=None else 0]
+        
+        print matrix
+
+        return matrix
+        
+    def getTypeOfColumn(self, label):
+        if (label == "id"):
+            return "id"
+        elif (label!='image_transformationMatrix' and xmipp.labelIsImage(str(label))):
+            return "image"
+        elif (label == "enabled"):
+            return "checkbox"
+        else:
+            return "text"  
 
 

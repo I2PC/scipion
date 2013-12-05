@@ -49,9 +49,9 @@ class TestXmippBase(unittest.TestCase):
         return cls.protPP       
 
     @classmethod
-    def runImportParticles(cls, pattern, samplingRate):
+    def runImportParticles(cls, pattern, samplingRate, checkStack):
         """ Run an Import particles protocol. """
-        cls.protImport = ProtImportParticles(pattern=pattern, samplingRate=samplingRate)
+        cls.protImport = ProtImportParticles(pattern=pattern, samplingRate=samplingRate, checkStack=checkStack)
         cls.proj.launchProtocol(cls.protImport, wait=True)
         # check that input images have been imported (a better way to do this?)
         if cls.protImport.outputParticles is None:
@@ -73,7 +73,7 @@ class TestImportMicrographs(TestXmippBase):
         sphericalAberration=2
         
         protImport = self.runImportMicrograph(pattern, samplingRate=samplingRate, scannedPixelSize=scannedPixelSize, magnification=magnification, voltage=voltage, sphericalAberration=sphericalAberration)
-        m = protImport.outputMicrographs.getMicroscope()
+        m = protImport.outputMicrographs.getAcquisition()
         # Check that sampling rate on output micrographs is equal to 
         self.assertTrue(protImport.outputMicrographs.getScannedPixelSize() == scannedPixelSize, "Incorrect ScannedPixelSize on output micrographs.")
         self.assertTrue(m.magnification.get() == magnification, "Incorrect Magnification on output micrographs.")
@@ -89,7 +89,7 @@ class TestImportMicrographs(TestXmippBase):
         sphericalAberration=2.5
         
         protImport = self.runImportMicrograph(pattern, samplingRate=samplingRate, scannedPixelSize=scannedPixelSize, magnification=magnification, voltage=voltage, sphericalAberration=sphericalAberration)
-        m = protImport.outputMicrographs.getMicroscope()
+        m = protImport.outputMicrographs.getAcquisition()
         # Check that sampling rate on output micrographs is equal to 
         self.assertTrue(protImport.outputMicrographs.getSamplingRate() == samplingRate, "Incorrect SamplingRate on output micrographs.")
         self.assertTrue(m.voltage.get() == voltage, "Incorrect Voltage on output micrographs.")
@@ -136,7 +136,9 @@ class TestXmippCTFEstimation(TestXmippBase):
         protCTF.inputMicrographs.set(protImport.outputMicrographs)        
         self.proj.launchProtocol(protCTF, wait=True)
         
-        self.assertTrue(protCTF.outputMicrographs.hasCTF(), "CTF estimation has not been performed.")
+        #self.assertTrue(protCTF.outputMicrographs.hasCTF(), "CTF estimation has not been performed.")
+        #self.assertEqual(protCTF.outputMicrographs._xmippMd.get(),protCTF._getPath("micrographs.xmd"), "Xmipp md not set on output.")
+        self.assertIsNotNone(protCTF.outputCTF, "SetOfCTF has not been produced.") 
         
     def test_Micrographs_BPV1_Down3(self):
         self.doCTF(pattern = getInputPath('Micrographs_BPV1_Down3', '*.mrc'))
@@ -144,7 +146,36 @@ class TestXmippCTFEstimation(TestXmippBase):
     def test_Micrographs_BPV3_Down3(self):
         self.doCTF(pattern = getInputPath('Micrographs_BPV3_Down3', '*.mrc')) 
     
+
+class TestXmippAutomaticPicking(TestXmippBase):
     
+    @classmethod
+    def setUpClass(cls):
+        setupProject(cls)    
+        pattern = getInputPath('Micrographs_BPV3_Down3', '*.mrc')
+        protImport = cls.runImportMicrograph(pattern, samplingRate=1.237, voltage=300, sphericalAberration=2, scannedPixelSize=None, magnification=56000)       
+        pattern = getInputPath('Micrographs_BPV2_Down3', '*.mrc')
+        cls.protImport_other = cls.runImportMicrograph(pattern, samplingRate=1.237, voltage=300, sphericalAberration=2, scannedPixelSize=None, magnification=56000)        
+        cls.protPP = cls.runFakedPicking(protImport.outputMicrographs, 'Picking_XmippBPV3_Down3_Super')
+
+    def testAutomaticPicking(self):
+        print "Run automatic particle picking"
+        protAutomaticPP = XmippParticlePickingAutomatic()
+        protAutomaticPP.xmippParticlePicking.set(self.protPP)
+        self.proj.launchProtocol(protAutomaticPP, wait=True)
+        
+        self.assertIsNotNone(protAutomaticPP.outputCoordinates, "There was a problem with the automatic particle picking")
+        
+    def testAutomaticPickingOther(self):
+        print "Run automatic particle picking"
+        protAutomaticPP = XmippParticlePickingAutomatic()
+        protAutomaticPP.xmippParticlePicking.set(self.protPP)
+        protAutomaticPP.inputMicrographs.set(self.protImport_other.outputMicrographs)
+        protAutomaticPP.micsToPick.set(1)
+        self.proj.launchProtocol(protAutomaticPP, wait=True)
+        
+        self.assertIsNotNone(protAutomaticPP.outputCoordinates, "There was a problem with the automatic particle picking")
+                    
 class TestXmippExtractParticles(TestXmippBase):
     
     SAME_AS_PICKING = 1
@@ -154,11 +185,11 @@ class TestXmippExtractParticles(TestXmippBase):
     @classmethod
     def setUpClass(cls):
         setupProject(cls)    
-        pattern = getInputPath('Micrographs_BPV3', '*.mrc')
+        pattern = getInputPath('Micrographs_BPV3_Down3', '*.mrc')
         protImport = cls.runImportMicrograph(pattern, samplingRate=1.237, voltage=300, sphericalAberration=2, scannedPixelSize=None, magnification=56000)       
         pattern = getInputPath('Micrographs_BPV3', '*.mrc')
         cls.protImport_ori = cls.runImportMicrograph(pattern, samplingRate=1.237, voltage=300, sphericalAberration=2, scannedPixelSize=None, magnification=56000)        
-        cls.protPP = cls.runFakedPicking(protImport.outputMicrographs, 'Picking_XmippBPV3')
+        cls.protPP = cls.runFakedPicking(protImport.outputMicrographs, 'Picking_XmippBPV3_Down3')
 
     def testExtractSameAsPicking(self):
         print "Run extract particles with downsampling factor equal to the one at picking"
@@ -204,12 +235,30 @@ class TestXmippExtractParticles(TestXmippBase):
 #        self.assertIsNotNone(protExtract.outputParticles, "There was a problem with the extract particles") 
 
      
+class TestXmippScreenParticles(TestXmippBase):
+    
+    @classmethod
+    def setUpClass(cls):
+        setupProject(cls)
+        
+        #TODO: Find a set of images to make this work, with this it does not
+        pattern = getInputPath('Images_aFewProjections', 'aFewProjections.stk')
+        cls.protImport = cls.runImportParticles(pattern=pattern, samplingRate=1, checkStack=True)        
+        
+    def atestScreenParticles(self):
+        print "Run Screen Particles"
+        protScreen = XmippProtScreenParticles()
+        protScreen.inputParticles.set(self.protImport.outputParticles)
+        self.proj.launchProtocol(protScreen, wait=True)        
+        
+        self.assertIsNotNone(protScreen.outputParticles, "There was a problem with Screen Particles")  
+    
 def setupClassification(cls):
     """ Method to setup classification Test Cases. """
     setupProject(cls)
     #TODO: Find a set of images to make this work, with this it does not
     pattern = getInputPath('images_LTA', '*.xmp')
-    cls.protImport = cls.runImportParticles(pattern=pattern, samplingRate=5.6)
+    cls.protImport = cls.runImportParticles(pattern=pattern, samplingRate=5.6, checkStack=False)
     
        
 class TestXmippML2D(TestXmippBase):
@@ -221,7 +270,7 @@ class TestXmippML2D(TestXmippBase):
         print "Run ML2D"
         protML2D = XmippProtML2D(numberOfReferences=2, maxIters=3, 
                                  numberOfMpi=2, numberOfThreads=2)
-        protML2D.inputImages.set(self.protImport.outputParticles)
+        protML2D.inputParticles.set(self.protImport.outputParticles)
         self.proj.launchProtocol(protML2D, wait=True)        
         
         self.assertIsNotNone(protML2D.outputClasses, "There was a problem with ML2D")  
@@ -257,7 +306,7 @@ def launchXmippProtCL2DAlign(test):
     xmippProtCL2DAlign = XmippProtCL2DAlign(maximumShift=5, numberOfIterations=5, 
                              numberOfMpi=2, numberOfThreads=1, useReferenceImage=False)
     
-    xmippProtCL2DAlign.inputImages.set(test.protImport.outputParticles)
+    xmippProtCL2DAlign.inputParticles.set(test.protImport.outputParticles)
     test.proj.launchProtocol(xmippProtCL2DAlign, wait=True)
     return xmippProtCL2DAlign
 
@@ -284,25 +333,26 @@ class TestXmippRotSpectra(TestXmippBase):
         self.assertIsNotNone(xmippProtRotSpectra.outputClasses, "There was a problem with Rotational Spectra")  
 
     
-#class TestXmippML3D(TestXmippBase):
-#    @classmethod
-#    def setUpClass(cls):
-#        setupProject(cls)
-#        #TODO: Find a set of images to make this work, with this it does not
-#        images = getInputPath('Images_Vol_ML3D/phantom_images', '*.xmp')
-#        cls.protImport = cls.runImportParticles(pattern=images, samplingRate=1)
-#        cls.iniVol = getInputPath('ml3dData', 'icoFiltered.vol')
-#        
-#    def testML3D(self):
-#        print "Run ML3D"
-#        protML3D = XmippProtML3D(angularSampling=15, numberOfIterations=2, runMode=1, numberOfMpi=2, numberOfThreads=2)
-#        protML3D.inputImages.set(self.protImport.outputParticles)
-#        protML3D.ini3DrefVolumes.set(self.iniVol)
-#        protML3D.doCorrectGreyScale.set(True)
-#        protML3D.numberOfSeedsPerRef.set(2)
-#        self.proj.launchProtocol(protML3D, wait=True)        
-#        
-#        self.assertIsNotNone(protML3D.outputVolumes, "There was a problem with ML3D")          
+class TestXmippML3D(TestXmippBase):
+    @classmethod
+    def setUpClass(cls):
+        setupProject(cls)
+        #TODO: Find a set of images to make this work, with this it does not
+        images = getInputPath('Images_Vol_ML3D/phantom_images', '*.xmp')
+        cls.protImport = cls.runImportParticles(pattern=images, samplingRate=1, checkStack=False)
+        cls.iniVol = getInputPath('ml3dData', 'icoFiltered.vol')
+        
+    def testML3D(self):
+        print "Run ML3D"
+        protML3D = XmippProtML3D(angularSampling=15, numberOfIterations=2, runMode=1, 
+                                 numberOfMpi=2, numberOfThreads=2, extraParams='--random_seed 1971')
+        protML3D.inputImages.set(self.protImport.outputParticles)
+        protML3D.ini3DrefVolumes.set(self.iniVol)
+        protML3D.doCorrectGreyScale.set(True)
+        protML3D.numberOfSeedsPerRef.set(2)
+        self.proj.launchProtocol(protML3D, wait=True)        
+        
+        self.assertIsNotNone(protML3D.outputVolumes, "There was a problem with ML3D")          
 
 if __name__ == "__main__":
     if len(sys.argv) > 1:

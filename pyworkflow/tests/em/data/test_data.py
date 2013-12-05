@@ -86,38 +86,38 @@ class TestSetOfMicrographs(unittest.TestCase):
         micSet.setFileName(self.dbGold)
         self.checkSet(micSet)
         
-    def testXmippConvert(self):
-        """ Test the convertion of a SetOfMicrographs to Xmipp"""
-        micSet = SetOfMicrographs()
-        micSet.setFileName(self.dbGold)
-        mdFn = getOutputPath('test_data', 'micrographs.xmd')
-        
-        writeSetOfMicrographs(micSet, mdFn)
-        
-        # Test reading a set of coordinates
-        posDir = getInputPath('Picking_XmippBPV3_Down3')
-        print "reading pos from :", posDir
-        coordSet = SetOfCoordinates()
-        fn = getOutputPath('test_data', 'coordinates.sqlite')
-        coordSet.setFileName(fn)
-        
-        readSetOfCoordinates(posDir, micSet, coordSet)
-        coordSet.write()
-        
-        
-        cwd = os.getcwd()
-        # Change to test path
-        os.chdir(getPath())
-        
-        # Test writing micrgraphs to an hdf        
-        filename = getOutputPath('test_data', 'micrographs.hdf')
-        e2convert.writeSetOfParticles(micSet, filename)
-        
-        # Test writing a set of particles
-        #partSet = SetOfParticles()
-        #readSetOfParticles(fnImages, imgSet)
-        
-        os.chdir(cwd)
+#    def testXmippConvert(self):
+#        """ Test the convertion of a SetOfMicrographs to Xmipp"""
+#        micSet = SetOfMicrographs()
+#        micSet.setFileName(self.dbGold)
+#        mdFn = getOutputPath('test_data', 'micrographs.xmd')
+#        
+#        writeSetOfMicrographs(micSet, mdFn)
+#        
+#        # Test reading a set of coordinates
+#        posDir = getInputPath('Picking_XmippBPV3_Down3')
+#        print "reading pos from :", posDir
+#        coordSet = SetOfCoordinates()
+#        fn = getOutputPath('test_data', 'coordinates.sqlite')
+#        coordSet.setFileName(fn)
+#        
+#        readSetOfCoordinates(posDir, micSet, coordSet)
+#        coordSet.write()
+#        
+#        
+#        cwd = os.getcwd()
+#        # Change to test path
+#        os.chdir(getPath())
+#        
+#        # Test writing micrgraphs to an hdf        
+#        filename = getOutputPath('test_data', 'micrographs.hdf')
+#        e2convert.writeSetOfParticles(micSet, filename)
+#        
+#        # Test writing a set of particles
+#        #partSet = SetOfParticles()
+#        #readSetOfParticles(fnImages, imgSet)
+#        
+#        os.chdir(cwd)
     
        
 if __name__ == '__main__':

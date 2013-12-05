@@ -23,6 +23,7 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
+from pyworkflow.protocol.constants import STATUS_RUNNING
 """
 This modules contains classes required for the workflow
 execution and tracking like: Step and Protocol
@@ -33,11 +34,12 @@ import datetime as dt
 import pickle
 import time
 
-from pyworkflow.object import OrderedObject, String, List, Integer, Boolean, CsvList
+from pyworkflow.object import *
 from pyworkflow.utils.path import replaceExt, makeFilePath, join, missingPaths, cleanPath, getFiles
 from pyworkflow.utils.log import *
-from pyworkflow.protocol.executor import StepExecutor, ThreadStepExecutor, MPIStepExecutor
+from executor import StepExecutor, ThreadStepExecutor, MPIStepExecutor
 from constants import *
+from params import Form
 
 
 
@@ -49,32 +51,12 @@ class Step(OrderedObject):
     
     def __init__(self, **args):
         OrderedObject.__init__(self, **args)
-        self._inputs = []
-        self._outputs = []
         self._prerequisites = CsvList() # which steps needs to be done first
         self.status = String()
         self.initTime = String()
         self.endTime = String()
         self.error = String()
         self.isInteractive = Boolean(False)
-        
-    def _storeAttributes(self, attrList, attrDict):
-        """ Store all attributes in attrDict as 
-        attributes of self, also store the key in attrList.
-        """
-        for key, value in attrDict.iteritems():
-            attrList.append(key)
-            setattr(self, key, value)
-        
-    def _defineInputs(self, **args):
-        """ This function should be used to define
-        those attributes considered as Input""" 
-        self._storeAttributes(self._inputs, args)
-        
-    def _defineOutputs(self, **args):
-        """ This function should be used to specify
-        expected outputs""" 
-        self._storeAttributes(self._outputs, args)
            
     def _preconditions(self):
         """ Check if the necessary conditions to
@@ -101,9 +83,30 @@ class Step(OrderedObject):
         
     def setFailed(self, msg):
         """ Set the run failed and store an error message. """
-        self.status.set(STATUS_FAILED)
         self.error.set(msg)
+        self.status.set(STATUS_FAILED)
         
+    def setAborted(self):
+        """ Set the status to aborted and updated the endTime. """
+        self.endTime.set(dt.datetime.now())
+        self.error.set("Aborted by user.")
+        self.status.set(STATUS_ABORTED)
+
+    def getStatus(self):
+        return self.status.get()
+    
+    def setStatus(self, value):
+        return self.status.set(value)
+    
+    def isActive(self):
+        return self.getStatus() in ACTIVE_STATUS
+    
+    def isFinished(self):
+        return self.getStatus() == STATUS_FINISHED
+    
+    def isRunning(self):
+        return self.getStatus() == STATUS_RUNNING
+    
     def run(self):
         """ Do the job of this step"""
         self.setRunning() 
@@ -212,15 +215,23 @@ class Protocol(Step):
         self._steps = List() # List of steps that will be executed
         self.workingDir = String(args.get('workingDir', '.')) # All generated filePaths should be inside workingDir
         self.mapper = args.get('mapper', None)
+        self._inputs = []
+        self._outputs = CsvList()
+        self._definition = Form()
+        self._defineParams(self._definition)
         self._createVarsFromDefinition(**args)
+        
         # For non-parallel protocols mpi=1 and threads=1
         if not hasattr(self, 'numberOfMpi'):
             self.numberOfMpi = Integer(1)
+        
         if not hasattr(self, 'numberOfThreads'):
             self.numberOfThreads = Integer(1)
+        
         # Check if MPI or threads are passed in **args, mainly used in tests
         if 'numberOfMpi' in args:
             self.numberOfMpi.set(args.get('numberOfMpi'))
+        
         if 'numberOfThreads' in args:
             self.numberOfThreads.set(args.get('numberOfThreads'))            
         
@@ -241,6 +252,33 @@ class Protocol(Step):
         self._pid = Integer()
         self._stepsExecutor = None
         
+        # For visualization
+        self.allowHeader = Boolean(True)        
+        
+    def _storeAttributes(self, attrList, attrDict):
+        """ Store all attributes in attrDict as 
+        attributes of self, also store the key in attrList.
+        """
+        for key, value in attrDict.iteritems():
+            if key not in attrList:
+                attrList.append(key)
+            setattr(self, key, value)
+        
+    def _defineInputs(self, **args):
+        """ This function should be used to define
+        those attributes considered as Input""" 
+        self._storeAttributes(self._inputs, args)
+        
+    def _defineOutputs(self, **args):
+        """ This function should be used to specify
+        expected outputs""" 
+        for k, v in args.iteritems():
+            if hasattr(self, k):
+                self._deleteChild(k, v)
+            self._insertChild(k, v)
+        self._storeAttributes(self._outputs, args)
+        
+                
     @staticmethod
     def hasDefinition(cls):
         """ Check if the protocol has some definition.
@@ -295,10 +333,9 @@ class Protocol(Step):
         of this protocol. Now the input are assumed to be these attribute
         which are pointers and have no condition.
         """
-        for paramName, param in self._definition.iterParams():
-            attr = getattr(self, paramName)
-            if attr.isPointer() and not param.hasCondition():
-                yield paramName, attr
+        for key, attr in self.getAttributes():
+            if attr.isPointer() and attr.hasValue():
+                yield key, attr
                 
     def iterOutputAttributes(self, outputClass):
         """ Iterate over the outputs produced by this protocol. """
@@ -347,10 +384,22 @@ class Protocol(Step):
         The child will be set as self.key attribute
         """
         setattr(self, key, child)
-        self.mapper.insertChild(self, key, child)
+        if self.hasObjId():
+            self.mapper.insertChild(self, key, child)
+        
+    def _deleteChild(self, key, child):
+        """ Delete a child from the mapper. """
+        self.mapper.delete(child)
         
     def _defineSteps(self):
         """ Define all the steps that will be executed. """
+        pass
+    
+    def _defineParams(self, form):
+        """ Define the input parameters that will be used.
+        Params:
+            form: this is the form to be populated with sections and params.
+        """
         pass
     
     def __insertStep(self, step, **args):
@@ -423,6 +472,7 @@ class Protocol(Step):
         
     def _enterWorkingDir(self):
         """ Change to the protocol working dir. """
+        self._currentDir = os.getcwd()
         os.chdir(self.workingDir.get())
         
     def _leaveWorkingDir(self):
@@ -456,10 +506,10 @@ class Protocol(Step):
         for i in range(n):
             newStep = self._steps[i]
             oldStep = self._prevSteps[i]
-            print "i: ", i
-            print " oldStep.status: ", str(oldStep.status)
-            print " oldStep!=newStep", oldStep != newStep
-            print " not post: ", not oldStep._postconditions()
+#            print "i: ", i
+#            print " oldStep.status: ", str(oldStep.status)
+#            print " oldStep!=newStep", oldStep != newStep
+#            print " not post: ", not oldStep._postconditions()
             if (oldStep.status.get() != STATUS_FINISHED or
                 newStep != oldStep or 
                 not oldStep._postconditions()):
@@ -510,6 +560,8 @@ class Protocol(Step):
         """ Run all steps defined in self._steps. """
         self._steps.setStore(True) # Set steps to be stored
         self.setRunning()
+        self._originalRunMode = self.runMode.get() # Keep the original value to set in sub-protocols
+        self.runMode.set(MODE_RESUME) # Always set to resume, even if set to restart
         self._store()
         
         self.lastStatus = self.status.get()
@@ -520,22 +572,71 @@ class Protocol(Step):
         self.status.set(self.lastStatus)
         self._store(self.status)
         
+    def __deleteOutputs(self):
+        """ This function should only be used from RESTART.
+        It will remove output attributes from mapper and object.
+        """
+        for o in self._outputs:
+            if hasattr(self, o):
+                self.mapper.delete(getattr(self, o))
+                self.deleteAttribute(o)
+            else:
+                print "DEBUG: error, %s is not found in protocol" % o
+            
+        self._outputs.clear()
+        self.mapper.store(self._outputs)
+        
+    def __copyRelations(self, other):
+        """ This will copy relations from protocol other to self """
+    
+    def copy(self, other):
+        copyDict = Object.copy(self, other)
+        self._store()
+        for r in other.getRelations():
+            rName = r['name']
+            rCreator = r['parent_id']
+            rParent = r['object_parent_id']
+            rChild = r['object_child_id']
+            
+            if rParent in copyDict:
+                rParent = copyDict.get(rParent).getObjId()
+                            
+            if rChild in copyDict:
+                rChild = copyDict.get(rChild).getObjId()
+            
+            self.mapper.insertRelationData(rName, rCreator, rParent, rChild)
+        
+        
+    def getRelations(self):
+        """ Return the relations created by this protocol. """
+        return self.mapper.getRelations(self)  
+    
+    def _defineRelation(self, relName, parentObj, childObj):
+        """ Insert a new relation in the mapper using self as creator. """
+        self.mapper.insertRelation(relName, self, parentObj, childObj)
+        
     def makePathsAndClean(self):
         """ Create the necessary path or clean
         if in RESTART mode. 
         """
         # Clean working path if in RESTART mode
         paths = [self._getPath(), self._getExtraPath(), self._getTmpPath(), self._getLogsPath()]
+        
         if self.runMode == MODE_RESTART:
             cleanPath(*paths)
-            self.mapper.deleteChilds(self) # Clean old values
-            self.mapper.insertChilds(self)
+            self.__deleteOutputs()
         # Create workingDir, extra and tmp paths
-        makePath(*paths)        
+        makePath(*paths)
     
     def _run(self):
+        # Check that a proper Steps executor have been set
         if self._stepsExecutor is None:
             raise Exception('Protocol.run: Steps executor should be set before running protocol')
+        # Check the parameters are correct
+        errors = self.validate()
+        if len(errors):
+            raise Exception('Protocol.run: Validation errors:\n' + '\n'.join(errors))
+        
         self.runJob = self._stepsExecutor.runJob
         self.__backupSteps() # Prevent from overriden previous stored steps
         self._defineSteps() # Define steps for execute later
@@ -559,11 +660,10 @@ class Protocol(Step):
         self._log.info('   workingDir: ' + self.workingDir.get())
         self._log.info('      runMode: %d' % self.runMode.get())
         #self.namePrefix = replaceExt(self._steps.getName(), self._steps.strId()) #keep
-        self._currentDir = os.getcwd()
         #self._run()
         Step.run(self)
-        outputs = [getattr(self, o) for o in self._outputs]
-        #self._store(self.status, self.initTime, self.endTime, *outputs)
+        
+        #outputs = [getattr(self, o) for o in self._outputs]
         self._store()
         self._log.info('------------------- PROTOCOL FINISHED')
         self.__closeLogger()
@@ -588,16 +688,7 @@ class Protocol(Step):
         
     def getDbPath(self):
         return self._getLogsPath('run.db')
-    
-    def getStatus(self):
-        return self.status.get()
-    
-    def setStatus(self, value):
-        return self.status.set(value)
-    
-    def isActive(self):
-        return self.getStatus() in ACTIVE_STATUS
-        
+            
     def setStepsExecutor(self, executor):
         self._stepsExecutor = executor
                 
@@ -636,10 +727,11 @@ class Protocol(Step):
         return self._pid.get()
         
     def getRunName(self):
-        if self.runName.hasValue() and len(self.runName.get()):
-            return self.runName.get()
-        else:
-            return self.getDefaultRunName()
+        runName = self.getObjLabel().strip()
+        if not len(runName):
+            runName = self.getDefaultRunName()
+            
+        return runName
     
     def getDefaultRunName(self):
         return '%s.%s' % (self.getClassName(), self.strId())  
@@ -681,6 +773,24 @@ class Protocol(Step):
         
         return elapsed
     
+    def getStepsDone(self):
+        """ Return the number of steps executed. """
+        done = 0
+        for s in self._steps:
+            if s.isFinished():
+                done += 1
+        return done
+            
+    def getStatusMessage(self):
+        """ Return the status string and if running the steps done. 
+        """
+        msg = self.getStatus()
+        if self.isRunning():
+            done = self.getStepsDone()
+            msg += " (done %d/%d)" % (done, len(self._steps))
+        
+        return msg
+    
     # Methods that should be implemented in subclasses
     def _validate(self):
         """ This function can be overwritten by subclasses.
@@ -697,12 +807,14 @@ class Protocol(Step):
         for paramName, param in self.getDefinition().iterParams():
             attr = getattr(self, paramName) # Get all self attribute that are pointers
             paramErrors = []
+            condition = self.evalParamCondition(paramName)
             if attr.isPointer():
                 obj = attr.get()
-                if self.evalParamCondition(paramName) and obj is None:
+                if condition and obj is None and not param.allowNull:
                     paramErrors.append('cannot be EMPTY.')
             else:
-                paramErrors = param.validate(attr.get())
+                if condition:
+                    paramErrors = param.validate(attr.get())
             label = param.label.get()
             errors += ['<%s> %s' % (label, err) for err in paramErrors]                
         # Validate specific for the subclass
@@ -725,8 +837,31 @@ class Protocol(Step):
     
     def summary(self):
         """ Return a summary message to provide some information to users. """
-        return self._summary()
+        error = ''
+        if self.error.hasValue():
+            error = 'ERROR:\n' + self.error.get()
+        return self._summary() + ['', '<Comments:>', self.getObjComment(), error]
     
+    def runProtocol(self, protocol):
+        """ Setup another protocol to be run from a workflow. """
+        name = protocol.getClassName() + protocol.strId()
+        #protocol.setName(name)
+        protocol.setWorkingDir(self._getPath(name))
+        protocol.setMapper(self.mapper)
+        self.hostConfig.setStore(False)
+        protocol.setHostConfig(self.getHostConfig())
+        protocol.runMode.set(self._originalRunMode)
+        protocol.makePathsAndClean()
+        protocol.setStepsExecutor(self._stepsExecutor)
+        protocol.run()
+        
+    def isChild(self):
+        """ Return true if this protocol was invoked from a workflow(another protocol)"""
+        return self.hasObjParentId()
+        
+                
+#---------- Helper functions related to Protocols --------------------
+
 def getProtocolFromDb(dbPath, protId, protDict):
     from pyworkflow.mapper import SqliteMapper
     mapper = SqliteMapper(dbPath, protDict)
@@ -763,11 +898,3 @@ def runProtocolFromDb(dbPath, protId, protDict, mpiComm=None):
     # Finally run the protocol
     protocol.run()        
 
-        
-    
-def runProtocol(dbPath, protId, mpiComm=None):
-    """ Given a project and a protocol run, execute.
-    This is a factory function to instantiate necessary classes.
-    The protocol run should be previously inserted in the database.
-    """
-    pass   

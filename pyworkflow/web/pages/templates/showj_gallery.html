@@ -5,26 +5,29 @@
 	var hoverElement;
 	
 	$(document).ready(function(){
-		setImageSize(true)
+		initRenderFunction();
 		initializeImageLoad()
 		initializeImageEvents()
 		initializeWindowLoadEvents()
 		initializeGoToEvents()
 	});
 	
-	
-	function initializeImageLoad(){
-		$('.tableImages').waypoint(function(direction){
-			$(this).attr("src", $(this).data('real_src').concat($("#id_mirrorY").is(':checked')?"&mirrorY":""))
-		}, {
-			triggerOnce:true,
-			offset: '150%'
-/* 			offset: function() {
-		        return $.waypoints('viewportHeight');
-		    }
- */		});
-	}
+	function initRenderFunction(){
+		renderFunc=jsonTableLayoutConfiguration.columnsLayout["{{form.labelsToRenderComboBox.value}}"].columnLayoutProperties.renderFunc
+		extraRenderFunc=jsonTableLayoutConfiguration.columnsLayout["{{form.labelsToRenderComboBox.value}}"].columnLayoutProperties.extraRenderFunc
 
+		console.log(jsonTableLayoutConfiguration.columnsLayout) 
+		
+		if (renderFunc!=""){ 
+			$(".tableImages").each(function(){
+			   	var newSrc = $(this).data("real_src").replace(/(renderFunc=).*?(&)/,'$1' + renderFunc + '$2');
+			   	if (extraRenderFunc!=""){newSrc = newSrc.concat("&"+extraRenderFunc)}
+				$(this).data("real_src", newSrc);
+				console.log("newSrc",newSrc)
+		   	})
+		}
+	}
+	
 	function initializeGoToEvents(){
 		$('#id_goto').click(function(){
 			updateSelection();	
@@ -45,38 +48,56 @@
 	function updateSelection(){
 		$(".img_container").each(function(){
 			$(this).removeClass('image_selected')
-		});	
-		$("#img_container___"+$('#id_goto').val()).addClass("image_selected")
+		});
+		selectedElement=$("#img_container___"+$('#id_goto').val())
+		selectedElement.addClass("image_selected")
+		
+		$('html, body').animate({
+	        scrollTop: selectedElement.offset().top
+	    }, 2000);
 	}
 	
 	//Show enabled/disabled image and title on hover
 	function initializeImageEvents(){
+		//Enable/Disable image
 		$(".img_container").hover(
 			function(e){
-				if ($(this).hasClass("image_selected") && $("#multipleSelectionTool").css('display')!="block"){
-					hoverElement=$(this).attr("id")
-										
-					$("#multipleSelectionTool").css('left',e.pageX)
-					$("#multipleSelectionTool").css('top',e.pageY)
-					$("#multipleSelectionTool").data('img_container_id',$(this).attr("id"))
-					$("#multipleSelectionTool").fadeIn('slow')
-				}
-				else{
-					if (!$(this).find(".enabledGallery").hasClass("selected")){
-						$(this).find(".enabledGallery").fadeIn('slow')
-					}
+				if (!$(this).find(".enabledGallery").hasClass("selected")){
+					$(this).find(".enabledGallery").fadeIn('slow')
 				}
 			},
 			function(){
-				if ($(this).hasClass("image_selected") && hoverElement==$(this).attr("id")){
-					$("#multipleSelectionTool").delay(1000).fadeOut('slow')
-				}
-				
 				if (!$(this).find(".enabledGallery").hasClass("selected")){
-					$(this).find(".enabledGallery").fadeOut('slow')
+					$(this).find(".enabledGallery").fadeOut('fast')
 				}
-			})
-			
+			}) 
+		
+		{% if dataset.getTable.hasEnabledColumn %}			
+		//Hover on multiple selection tool	
+		hiConfig = {
+	        sensitivity: 3, // number = sensitivity threshold (must be 1 or higher)
+	        interval: 300, // number = milliseconds for onMouseOver polling interval
+	        timeout: 800, // number = milliseconds delay before onMouseOut
+	        over: function(e) {
+	        	if ($(this).hasClass("image_selected") && $("#multipleSelectionTool").css('display')!="block"){
+	        		hoverElement=$(this).attr("id")
+										
+					$("#multipleSelectionTool").css('left',e.pageX)
+					$("#multipleSelectionTool").css('top',e.pageY)
+					$("#multipleSelectionTool").data('img_container_id',hoverElement)
+					$("#multipleSelectionTool").fadeIn('slow')
+				}
+	        }, // function = onMouseOver callback (REQUIRED)
+	        out: function() { 
+	        	if ($(this).hasClass("image_selected") && hoverElement==$(this).attr("id")){
+					$("#multipleSelectionTool").fadeOut('slow')
+				}
+	        } // function = onMouseOut callback (REQUIRED)
+	    }	
+		$(".img_container").hoverIntent(hiConfig)
+		{% endif %}	
+		
+		//Selection tool
 		$(".img_container").click(
 			function(e){
 				element_id=parseInt($(this).attr("id").split("___")[1]);
@@ -175,44 +196,47 @@
 
 {% block content_view %}	
 
-	<!-- Napa de Luxe -->
- 	{% for columnLayout in tableLayoutConfiguration.columnsLayout %}
-		{% if columnLayout == form.labelsToRenderComboBox.value %}
-			{% for row in tableDataset.getRows %}
-				{% for cell in row %}
-					{% if forloop.counter0 == forloop.parentloop.parentloop.counter0 %} 
-						<div class="img_container" id="img_container___{{row.0}}">
-							<div class="img_inner_container">
-								<img class="tableImages" title="{{cell}}" data-real_src="/get_image/?image={{cell}}"/>
-								<img class="enabledGallery
-								{% if row.enabled == 0 %}
-								selected
-								{% endif %}
-								" src="/resources/showj/enabled_gallery.png" id="enabled___{{row.0}}" onclick="enableDisableImage(this);" 
-								{% if row.enabled == 0 %} 
-								style="display:block;"
-								{% endif %}	
-								/>
-							</div>
-							<div id="column_label">{{row.0}}</div> 
-						</div>
+
+	{% if dataset.getNumberSlices == 1 %}
+		{% for id,enable,data,transformationMatrix in dataset.getDataToRenderAndExtra %}
+			<div class="img_container" id="img_container___{{id}}">
+				<div class="img_inner_container">
+					<!-- <img class="tableImages" title="{{data}}" data-real_src="/get_image/?image={{data}}"/> -->
+					<img class="tableImages" title="{{data}}" data-real_src="/render_column/?renderFunc=get_image&image={{data}}"/>
 					
-					{% endif %}		
-				{% endfor %}
-			{% endfor %}
-		{% endif %}
-	{% endfor %}	
-	
-<!-- 	{% for row in tableDataset.getRows %}
- 	
-		<div class="img_container" id="img_container___{{row.0}}">
-			<div class="img_inner_container">
-				<img class="tableImages" title="{{cell}}" data-real_src="/get_image/?image={{cell}}"/>
-				<img class="enabledGallery" src="/resources/showj/enabled_gallery.png" id="{{form.labelsToRenderComboBox.value}}___{{forloop.parentloop.counter0}}" onclick="enableDisableImage(this);"/>
+					{% if dataset.getTable.hasEnabledColumn %}
+					<img class="enabledGallery
+					{% if enable == 0 %}
+					selected
+					{% endif %}
+					" src="/resources/showj/enabled_gallery.png" id="enabled___{{id}}" onclick="enableDisableImage(this);" 
+					{% if enable == 0 %} 
+					style="display:block;"
+					{% endif %}	
+					/>
+					{% endif %} 
+					
+				</div>
+				<div id="column_label">{{id}}</div> 
 			</div>
-			<div id="column_label">{{forloop.parentloop.counter}}</div> 
-		</div>
-	{% endfor %} -->		
+		{% endfor %}
+		
+	{% else %}	
+		
+		{% for i in dataset.getNumberSlicesForTemplate %}
+			<div class="img_container" id="img_container___{{i}}">
+				<div class="img_inner_container">
+					<img class="tableImages" title="Slice {{i|add:1}} from {{dataset.getVolumeName}}" data-real_src="/render_column/?renderFunc=get_slice&image={{i|add:1}}@{{dataset.getVolumeName}}"/>
+				</div>
+				<div id="column_label">{{i|add:1}}</div> 
+			</div>
+		{% endfor %}
+	
+	
+	
+	{% endif %}	 
+
 		
 			
 {% endblock %}
+{% block content_end_page %}	{% endblock %}

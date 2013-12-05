@@ -34,54 +34,49 @@ import xmipp
 import xmipp3
 from convert import createXmippInputImages, readSetOfClasses2D
 from glob import glob
+        
+        
+class XmippProtKerdensom(ProtClassify):
+    """ Protocol to align a set of particles. """
+    _label = 'Xmipp KerDenSom'
 
-class XmippDefKerdensom(Form):
-    """Create the definition of parameters for
-    the XmippProtAlign2d protocol"""
-    def __init__(self):
-        Form.__init__(self)
-
-        self.addSection(label='Input')
-        self.addParam('inputImages', PointerParam, label="Input images", important=True, 
+    def _defineParams(self, form):
+        form.addSection(label='Input')
+        form.addParam('inputImages', PointerParam, label="Input images", important=True, 
                       pointerClass='SetOfParticles', pointerCondition='hasAlignment',
                       help='Select the input images from the project.'
                            'It should be a SetOfParticles class')
-        self._addParams()
+        self._addParams(form)
         
-    def _addParams(self):
-        self.addParam('useMask', BooleanParam, default=False,
+    def _addParams(self, form):
+        form.addParam('useMask', BooleanParam, default=False,
                       label='Use a Mask ?', 
-                      help='If you set to <Yes>, you should provide a mask')
-        self.addParam('Mask', StringParam , condition='useMask',
+                      help='If you set to *Yes*, you should provide a mask')
+        form.addParam('Mask', StringParam , condition='useMask',
                       label="Mask", 
                       help='Mask image will serve to enhance the classification')
-        self.addParam('SomXdim', IntParam, default=7,
+        form.addParam('SomXdim', IntParam, default=7,
                       label='X-dimension of the map:')
-        self.addParam('SomYdim', IntParam, default=7,
+        form.addParam('SomYdim', IntParam, default=7,
                       label='Y-dimension of the map:')
-        self.addParam('SomReg0', IntParam, default=1000, expertLevel=LEVEL_ADVANCED,
+        form.addParam('SomReg0', IntParam, default=1000, expertLevel=LEVEL_ADVANCED,
                       label='Initial regularization factor', 
                       help='The kerdenSOM algorithm anneals from an initial high regularization factor'
                       'to a final lower one, in a user-defined number of steps.'
                       'If the output map is too smooth, lower the regularization factors'
                       'If the output map is not organized, higher the regularization factors'
-                      'See [http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/KerDenSOM]')
-        self.addParam('SomReg1', IntParam, default=200, expertLevel=LEVEL_ADVANCED,
+                      'See [[http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/KerDenSOM][KerDenSOM]]')
+        form.addParam('SomReg1', IntParam, default=200, expertLevel=LEVEL_ADVANCED,
                       label='Final regularization factor:')
-        self.addParam('SomSteps', IntParam, default=5, expertLevel=LEVEL_ADVANCED,
+        form.addParam('SomSteps', IntParam, default=5, expertLevel=LEVEL_ADVANCED,
                       label='Regularization steps:',
                       help='Number of steps to lower the regularization factor')
-        self.addParam('extraParams', StringParam, default='', expertLevel=LEVEL_ADVANCED,
+        form.addParam('extraParams', StringParam, default='', expertLevel=LEVEL_ADVANCED,
                       label="Additional parameters:", 
-                      help='Additional parameters for kerdensom program.\nFor a complete description'
-                      'See [http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/KerDenSOM]')
+                      help='Additional parameters for kerdensom program. \n For a complete description'
+                      'See [[http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/KerDenSOM][KerDenSOM]]')
         
         
-class XmippProtKerdensom(ProtClassify):
-    """ Protocol to align a set of particles. """
-    _definition = XmippDefKerdensom()
-    _label = 'Xmipp KerDenSom'
-
     def _defineSteps(self):
         self._prepareParams()       
         self._insertImgToVector()

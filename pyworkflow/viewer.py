@@ -29,9 +29,11 @@ serve as base for implementing visualization tools(Viewer sub-classes).
 """
 
 from os.path import join
+from protocol import Protocol
 
 DESKTOP_TKINTER = 'tkinter'
 WEB_DJANGO = 'django'
+
 
 class Viewer(object):
     """ All visualization wrappers should user the Viewer class
@@ -43,7 +45,7 @@ class Viewer(object):
     For example: _targets = ['Image', 'SetOfImages']
     """
     _targets = []
-    _environment = DESKTOP_TKINTER
+    _environments = [DESKTOP_TKINTER]
     
     def __init__(self, tmpPath='./Tmp', **args):
         self._tmpPath = tmpPath
@@ -57,6 +59,13 @@ class Viewer(object):
         particular object.
         """
         pass
+    
+    def getView(self):
+        """ This method should return the string value of the view in web
+        that will respond to this viewer. This method only should be implemented
+        in those viewers that have WEB_DJANGO environment defined. 
+        """
+        return None
 
 
 class Wizard(object):
@@ -84,3 +93,82 @@ class Wizard(object):
                 same form.
         """
         pass
+    
+    def getView(self):
+        """ This method should return the string value of the view in web
+        that will respond to this wizard. This method only should be implemented
+        in those wizards that have WEB_DJANGO environment defined. 
+        """
+        return None
+    
+    
+class ProtocolViewer(Protocol, Viewer):
+    """ This class will serve as base for viewers that will have form and parameters. """
+    def __init__(self, **args):
+        Protocol.__init__(self, **args)
+        Viewer.__init__(self, **args)
+        self.allowHeader.set(False)
+        self.showPlot = True # This flag will be used to display a plot or return the plotter
+        
+    def setProtocol(self, protocol):
+        self.protocol = protocol
+    
+    def visualize(self, obj, **args):
+        """Open the Protocol GUI Form given a Protocol instance"""
+        from gui.form import FormWindow
+        self.setProtocol(obj)
+        self.windows = args.get('windows', None)
+        self.formWindow = FormWindow("Protocol Viewer: " + self.getClassName(), self, 
+                       self._viewAll, self.windows,
+                       visualizeDict=self._getVisualizeDict(),
+                       visualizeMode=True)
+        self.formWindow.visualizeMode = True
+        self.showInfo = self.formWindow.showInfo
+        self.showError = self.formWindow.showError
+        self.formWindow.show(center=True)     
+
+    def _showPlots(self, plots, errors):
+        if len(errors):
+            self.showError('\n'.join(errors))
+        if len(plots):
+            plots[0].show() # Show from any plot, 0 or any other
+            
+    def _showOrReturn(self, xplotter):
+        if self.showPlot:
+            xplotter.show()
+        else:
+            return xplotter
+        
+    def _getVisualizeDict(self):
+        """ Create the visualization dict for view individual params. """
+        return {}
+    
+    def _viewAll(self, *args):
+        """ Visualize all data give the parameters. """
+        for k, v in self._getVisualizeDict().iteritems():
+            print "k: %s, v: %s" % (k, v)
+            if self.getAttributeValue(k, False):
+                print "   calling v..."
+                v(k)
+    
+    #TODO: This method should not be necessary, instead NumericListParam should return a list and not a String 
+    def _getListFromRangeString(self, rangeStr):
+        ''' Create a list of integer from a string with range definitions
+        Examples:
+        "1,5-8,10" -> [1,5,6,7,8,10]
+        "2,6,9-11" -> [2,6,9,10,11]
+        "2 5, 6-8" -> [2,5,6,7,8]
+        '''
+        elements = rangeStr.split(',')
+        values = []
+        for e in elements:
+            if '-' in e:
+                limits = e.split('-')
+                values += range(int(limits[0]), int(limits[1])+1)
+            else:
+                # If values are separated by comma also splitted 
+                values += map(int, e.split())
+        return values
+    
+    def getClassName(self):
+        return self.__class__.__name__

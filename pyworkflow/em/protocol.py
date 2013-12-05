@@ -35,8 +35,8 @@ from pyworkflow.object import String, Float
 from pyworkflow.protocol import *
 from pyworkflow.protocol.params import *
 from constants import *
-from data import Micrograph, SetOfMicrographs, SetOfImages, Image, SetOfParticles, SetOfVolumes, Volume, SetOfCoordinates, SetOfClasses2D
-from pyworkflow.utils.path import removeBaseExt, join, basename
+from data import * 
+from pyworkflow.utils.path import removeBaseExt, join, basename, cleanPath
 
 
 
@@ -47,208 +47,188 @@ class EMProtocol(Protocol):
     def __init__(self, **args):
         Protocol.__init__(self, **args)
         
+    def __createSet(self, SetClass, template, suffix):
+        """ Create a set and set the filename using the suffix. 
+        If the file exists, it will be delete. """
+        setObj = SetClass()
+        setFn = self._getPath(template % suffix)
+        cleanPath(setFn)
+        setObj.setFileName(setFn)
+        return setObj
+        
     def _createSetOfMicrographs(self, suffix=''):
-        micSet = SetOfMicrographs()
-        micSet.setFileName(self._getPath('micrographs%s.sqlite' % suffix)) 
-        return micSet
+        return self.__createSet(SetOfMicrographs, 'micrographs%s.sqlite', suffix)
 
     def _createSetOfCoordinates(self, suffix=''):
-        coordSet = SetOfCoordinates()
-        coordSet.setFileName(self._getPath('coordinates%s.sqlite' % suffix)) 
-        return coordSet
+        return self.__createSet(SetOfCoordinates, 'coordinates%s.sqlite', suffix)
     
     def _createSetOfParticles(self, suffix=''):
-        imgSet = SetOfParticles()
-        imgSet.setFileName(self._getPath('particles%s.sqlite' % suffix)) 
-        return imgSet
+        return self.__createSet(SetOfParticles, 'particles%s.sqlite', suffix)
 
     def _createSetOfClasses2D(self, suffix=''):
-        classes2DSet = SetOfClasses2D()
-        classes2DSet.setFileName(self._getPath('classes2D%s.sqlite' % suffix)) 
-        return classes2DSet
+        return self.__createSet(SetOfClasses2D, 'classes2D%s.sqlite', suffix)
 
     def _createSetOfVolumes(self, suffix=''):
-        volSet = SetOfVolumes()
-        volSet.setFileName(self._getPath('volumes%s.sqlite' % suffix)) 
-        return volSet
-
-
-class DefImportMicrographs(Form):
-    """Create the definition of parameters for
-    the ImportMicrographs protocol
-    """
-    def __init__(self):
-        Form.__init__(self)
+        return self.__createSet(SetOfVolumes, 'volumes%s.sqlite', suffix)
     
-        self.addSection(label='Input')
-        self.addParam('pattern', StringParam, label="Pattern")
-#         self.addParam('tiltPairs', BooleanParam, default=False, important=True,
-#                    label='Are micrographs tilt pairs?')
+    def _createSetOfCTF(self, suffix=''):
+        return self.__createSet(SetOfCTF, 'ctfs%s.sqlite', suffix)
+    
+    def _defineDataSource(self, srcObj, dstObj):
+        """ Add a DATASOURCE relation between srcObj and dstObj """
+        self.mapper.insertRelation(RELATION_DATASOURCE, self, srcObj, dstObj)
+        #self.mapper.commit()
         
- #       self.addSection(label='Microscope description')
-        self.addParam('voltage', FloatParam, default=200,
+class ProtImportImages(EMProtocol):
+    """Common protocol to import a set of images in the project"""
+
+        
+    def _defineParams(self, form):
+        form.addSection(label='Input')
+        form.addParam('pattern', StringParam, label="Pattern")
+        form.addParam('checkStack', BooleanParam, label="Check stack files?", default=False)
+        form.addParam('voltage', FloatParam, default=200,
                    label='Microscope voltage (in kV)')
-        self.addParam('sphericalAberration', FloatParam, default=2.26,
+        form.addParam('sphericalAberration', FloatParam, default=2.26,
                    label='Spherical aberration (in mm)')
-        self.addParam('samplingRateMode', EnumParam, default=SAMPLING_FROM_IMAGE,
-                   label='Sampling rate mode',
-                   choices=['From image', 'From scanner'])
-        self.addParam('samplingRate', FloatParam, default=1, 
-                   label='Sampling rate (A/px)', 
-                   condition='samplingRateMode==%d' % SAMPLING_FROM_IMAGE)
-        self.addParam('magnification', IntParam, default=60000,
-                   label='Magnification rate', 
-                   condition='samplingRateMode==%d' % SAMPLING_FROM_SCANNER)
-        self.addParam('scannedPixelSize', FloatParam, default=7.0,
-                   label='Scanned pixel size', 
-                   condition='samplingRateMode==%d' % SAMPLING_FROM_SCANNER)
+        form.addParam('ampContrast', FloatParam, default=0.1,
+                      label='Amplitude Contrast',
+                      help='It should be a positive number, typically between 0.05 and 0.3.')
         
-
-class ProtImportMicrographs(EMProtocol):
-    """Protocol to import a set of micrographs in the project"""
-    _definition = DefImportMicrographs()
-    _label = 'Import micrographs'
-    _path = join('Micrographs', 'Import')
-    
-    def __init__(self, **args):
-        EMProtocol.__init__(self, **args)         
-        
-    def _defineSteps(self):
-        self._insertFunctionStep('importMicrographs', self.pattern.get(),
-                                self.voltage.get(), self.sphericalAberration.get(),
-                                self.samplingRate.get(), self.scannedPixelSize.get(),
-                                self.magnification.get())
-        
-    def importMicrographs(self, pattern, voltage, sphericalAberration, 
-                          samplingRate, scannedPixelSize, magnification):
-        """ Copy micrographs matching the filename pattern
+    def importImages(self, createSetFunction, pattern, checkStack, voltage, sphericalAberration, amplitudeContrast):
+        """ Copy images matching the filename pattern
         Register other parameters.
         """
+        from pyworkflow.em import findClass
         from glob import glob
         filePaths = glob(pattern)
         
         if len(filePaths) == 0:
-            raise Exception('importMicrographs:There is not filePaths matching pattern')
+            raise Exception('importImages:There is not filePaths matching pattern')
         
-        micSet = self._createSetOfMicrographs() 
-        # Setting microscope properties
-        micSet._microscope.magnification.set(magnification)
-        micSet._microscope.voltage.set(voltage)
-        micSet._microscope.sphericalAberration.set(sphericalAberration)
+        imgSet = createSetFunction 
+        # Setting Acquisition properties
+        imgSet._acquisition.voltage.set(voltage)
+        imgSet._acquisition.sphericalAberration.set(sphericalAberration)
+        imgSet._acquisition.amplitudeContrast.set(amplitudeContrast)
         
-        if self.samplingRateMode == SAMPLING_FROM_IMAGE:
-            micSet.setSamplingRate(samplingRate)
-        else:
-            micSet.setScannedPixelSize(scannedPixelSize)
-        outFiles = [micSet.getFileName()]
-       
+        # Call a function that should be implemented by each subclass
+        self._setOtherPars(imgSet)
+        
+        outFiles = [imgSet.getFileName()]
+        imgh = ImageHandler()
+        n = 1
+        
         filePaths.sort()
         for f in filePaths:
             dst = self._getPath(basename(f))            
             shutil.copyfile(f, dst)
-            mic = Micrograph()
-            mic.setFileName(dst)
-            micSet.append(mic)
+            if self.checkStack:
+                x, y, x, n = imgh.getDimensions(dst)
+            if n > 1:
+                for i in range(1, n+1):
+                    img = findClass(self._className)()
+                    img.setFileName(dst)
+                    img.setIndex(i)
+                    imgSet.append(img)
+            else:
+                img = findClass(self._className)()
+                img.setFileName(dst)
+                imgSet.append(img)
             outFiles.append(dst)
         
-        micSet.write()
-        self._defineOutputs(outputMicrographs=micSet)
+        imgSet.write()
+        args = {}
+        outputSet = self._getOutputSet(self._className)
+        args[outputSet] = imgSet
+        self._defineOutputs(**args)
         
         return outFiles
-    
-    def getFiles(self):
-        return self.outputMicrographs.getFiles()
-
-    def _summary(self):
-        summary = []
-
-        if not hasattr(self, 'outputMicrographs'):
-            summary.append("Output micrographs not ready yet.") 
-        else:
-            summary.append("Import of %d micrographs from %s" % (self.outputMicrographs.getSize(), self.pattern.get()))
-            summary.append("Sampling rate : %f" % self.samplingRate.get())
-        
-        return summary
-    
+  
     def _validate(self):
         validateMsgs = []
         if self.pattern.get() == "":
             validateMsgs.append('Pattern cannot be EMPTY.')
         return validateMsgs
-
-
-class DefImportParticles(Form):
-    """Create the definition of parameters for
-    the ImportParticles protocol
-    """
-    def __init__(self):
-        Form.__init__(self)
     
-        self.addSection(label='Input')
-        self.addParam('pattern', StringParam, 
-                      label="Pattern")        
-        self.addParam('samplingRate', FloatParam,
-                   label='Sampling rate (A/px)')
-
-
-class ProtImportParticles(EMProtocol):
-    """Protocol to import a set of particles in the project"""
-    _definition = DefImportParticles()
-    _label = 'Import images'
-    _path = join('Images', 'Import')
+    def getFiles(self):
+        return getattr(self, self._getOutputSet(self._className)).getFiles()
     
-    def __init__(self, **args):
-        EMProtocol.__init__(self, **args)         
+    def _summary(self):
+        summary = []
+
+        outputSet = self._getOutputSet(self._className)
+        if not hasattr(self, outputSet):
+            summary.append("Output " + self._className + "s not ready yet.") 
+        else:
+            summary.append("Import of %d " % getattr(self, outputSet).getSize() + self._className + "s from %s" % self.pattern.get())
+            summary.append("Sampling rate : %f" % self.samplingRate.get())
+        
+        return summary
+    
+    def _getOutputSet(self, setName):
+        return "output" + setName + "s"
+        
+class ProtImportMicrographs(ProtImportImages):
+    """Protocol to import a set of micrographs in the project"""
+
+    _className = 'Micrograph'
+    
+    def _defineParams(self, form):
+        ProtImportImages._defineParams(self, form)
+        form.addParam('samplingRateMode', EnumParam, default=SAMPLING_FROM_IMAGE,
+                   label='Sampling rate mode',
+                   choices=['From image', 'From scanner'])
+        form.addParam('samplingRate', FloatParam, default=1, 
+                   label='Sampling rate (A/px)', 
+                   condition='samplingRateMode==%d' % SAMPLING_FROM_IMAGE)
+        form.addParam('magnification', IntParam, default=60000,
+                   label='Magnification rate', 
+                   condition='samplingRateMode==%d' % SAMPLING_FROM_SCANNER)
+        form.addParam('scannedPixelSize', FloatParam, default=7.0,
+                   label='Scanned pixel size', 
+                   condition='samplingRateMode==%d' % SAMPLING_FROM_SCANNER)
+        
         
     def _defineSteps(self):
-        self._insertFunctionStep('importParticles', self.pattern.get(), self.samplingRate.get())
-        
-    def importParticles(self, pattern, samplingRate):
-        """ Copy images matching the filename pattern
-        Register other parameters.
-        """
-        from glob import glob
-        filePaths = glob(pattern)
-        if len(filePaths) == 0:
-            raise Exception('importParticles:There are not filePaths matching pattern')
-        imgSet = self._createSetOfParticles()
-        imgSet.setSamplingRate(samplingRate)
+        self._insertFunctionStep('importImages', self._createSetOfMicrographs(), self.pattern.get(),
+                                self.checkStack.get(), self.voltage.get(), self.sphericalAberration.get(),
+                                self.ampContrast.get()) #, self.samplingRate.get(), 
+                                #self.scannedPixelSize.get(), self.magnification.get())
+                                
+    def _setOtherPars(self, micSet):
+        micSet._acquisition.magnification.set(self.magnification.get())
+        if self.samplingRateMode == SAMPLING_FROM_IMAGE:
+            micSet.setSamplingRate(self.samplingRate.get())
+        else:
+            micSet.setScannedPixelSize(self.scannedPixelSize.get())   
+      
 
-        outFiles = [imgSet.getFileName()]
+class ProtImportParticles(ProtImportImages):
+    """Protocol to import a set of particles in the project"""
+ 
+    _className = 'Particle'
         
-        for f in filePaths:
-            dst = self._getPath(basename(f))            
-            shutil.copyfile(f, dst)
-            img = Image()
-            img.setFileName(dst)
-            imgSet.append(img)
-            outFiles.append(dst)
-                       
-        imgSet.write()
-        self._defineOutputs(outputParticles=imgSet)
+    def _defineParams(self, form):
+        ProtImportImages._defineParams(self, form)
+        form.addParam('samplingRate', FloatParam,
+                   label='Sampling rate (A/px)')
         
-        return outFiles
+        
+    def _defineSteps(self):
+        self._insertFunctionStep('importImages', self._createSetOfParticles(), self.pattern.get(),
+                                self.checkStack.get(), self.voltage.get(), self.sphericalAberration.get(),
+                                self.ampContrast.get())
+        
+    def _setOtherPars(self, imgSet):
+        imgSet.setSamplingRate(self.samplingRate.get())
     
     def getFiles(self):
         return self.outputParticles.getFiles()
-
-
-class DefImportVolumes(Form):
-    """Create the definition of parameters for
-    the ImportVolumes protocol
-    """
-    def __init__(self):
-        Form.__init__(self)
-    
-        self.addSection(label='Input')
-        self.addParam('pattern', StringParam, label="Pattern")
-        self.addParam('samplingRate', FloatParam,
-                   label='Sampling rate (A/px)')
         
 
 class ProtImportVolumes(EMProtocol):
     """Protocol to import a set of volumes in the project"""
-    _definition = DefImportVolumes()
     _label = 'Import volumes'
     _path = join('Volumes', 'Import')
     
@@ -257,6 +237,24 @@ class ProtImportVolumes(EMProtocol):
         
     def _defineSteps(self):
         self._insertFunctionStep('importVolumes', self.pattern.get(), self.samplingRate.get())
+       
+    def _defineParams(self, form):
+        form.addSection(label='Input')
+        form.addParam('pattern', StringParam, label="Pattern")
+        form.addParam('samplingRate', FloatParam,
+                   label='Sampling rate (A/px)')
+        
+         
+    def createVolume(self, volumePath):
+        """ Copy the volume to WorkingDir and create
+        the volumen object.
+        """
+        dst = self._getPath(basename(volumePath))            
+        shutil.copyfile(volumePath, dst)
+        vol = Volume()
+        vol.setFileName(dst)
+        vol.setSamplingRate(self.samplingRate.get())
+        return vol
         
     def importVolumes(self, pattern, samplingRate):
         """ Copy volumes matching the filename pattern
@@ -264,25 +262,27 @@ class ProtImportVolumes(EMProtocol):
         """
         from glob import glob
         filePaths = glob(pattern)
-        if len(filePaths) == 0:
+        filePaths.sort()
+        n = len(filePaths)
+        
+        if n == 0:
             raise Exception('importVolumes:There is not filePaths matching pattern')
         
-        volSet = self._createSetOfVolumes()
+        if n == 1:
+            # Create a single volume
+            vol = self.createVolume(filePaths[0])
+            self._defineOutputs(outputVolume=vol)
+        else:
+            # Create a set of volumes
+            volSet = self._createSetOfVolumes()
+            
+            filePaths.sort()
+            for f in filePaths:
+                volSet.append(self.createVolume(f))
+            
+            volSet.write()
+            self._defineOutputs(outputVolumes=volSet)
         
-        outFiles = [volSet.getFileName()]
-        
-        filePaths.sort()
-        for f in filePaths:
-            dst = self._getPath(basename(f))            
-            shutil.copyfile(f, dst)
-            vol = Volume(dst)
-            volSet.append(vol)
-            outFiles.append(dst)  
-        
-        volSet.write()
-        self._defineOutputs(outputVolumes=volSet)
-        
-        return outFiles
     
     def getFiles(self):
         return self.outputVolumes.getFiles()
@@ -304,27 +304,28 @@ class ProtImportVolumes(EMProtocol):
             validateMsgs.append('Pattern cannot be EMPTY.')
         return validateMsgs
 
-class DefCTFMicrographs(Form):
-    """ Create the definition of parameters for
-    the XmippCtfMicrographs protocol.
-    """
-    def __init__(self):
-        Form.__init__(self)
-    
-        self.addSection(label='CTF Estimation')
+
+class ProtCTFMicrographs(EMProtocol):
+    """ Base class for all protocols that estimates the CTF"""
+    def __init__(self, **args):
+        EMProtocol.__init__(self, **args)
+        self.stepsExecutionMode = STEPS_PARALLEL
         
-        self.addParam('inputMicrographs', PointerParam, important=True,
+    def _defineParams(self, form):
+        form.addSection(label='CTF Estimation')
+        
+        form.addParam('inputMicrographs', PointerParam, important=True,
                       label="Input Micrographs", pointerClass='SetOfMicrographs')
-        self.addParam('ampContrast', FloatParam, default=0.1,
-                      label='Amplitude Contrast',
-                      help='It should be a positive number, typically between 0.05 and 0.3.')
-        self.addParam('lowRes', FloatParam, default=0.05,
+#        form.addParam('ampContrast', FloatParam, default=0.1,
+#                      label='Amplitude Contrast',
+#                      help='It should be a positive number, typically between 0.05 and 0.3.')
+        form.addParam('lowRes', FloatParam, default=0.05,
                       label='Lowest resolution',
                       help='Give a value in digital frequency (i.e. between 0.0 and 0.5). '
                            'This cut-off prevents the typically peak at the center of the PSD '
                            'to interfere with CTF estimation. The default value is 0.05, but for '
                            'micrographs with a very fine sampling this may be lowered towards 0.0')
-        self.addParam('highRes', FloatParam, default=0.35,
+        form.addParam('highRes', FloatParam, default=0.35,
                       label='Highest resolution', 
                       help='Give a value in digital frequency (i.e. between 0.0 and 0.5). '
                            'This cut-off prevents high-resolution terms where only noise exists '
@@ -332,33 +333,25 @@ class DefCTFMicrographs(Form):
                            'be increased for micrographs with signals extending beyond this value. '
                            'However, if your micrographs extend further than 0.35, you should consider '
                            'sampling them at a finer rate.')
-        self.addParam('minDefocus', FloatParam, default=0.5,
+        form.addParam('minDefocus', FloatParam, default=0.5,
                       label='Minimum defocus to search (in microns)',
                       help=' Minimum defocus value (in microns) to include in defocus search. ' 
                       'Underfocus is represented by a positive number.',
                       expertLevel=LEVEL_ADVANCED)
-        self.addParam('maxDefocus', FloatParam, default=10.,
+        form.addParam('maxDefocus', FloatParam, default=10.,
                       label='Maximum defocus to search (in microns)',
                       help='Maximum defocus value (in microns) to include in defocus search. '
                            'Underfocus is represented by a positive number.',
                       expertLevel=LEVEL_ADVANCED)
-        self.addParam('windowSize', IntParam, default=256,
+        form.addParam('windowSize', IntParam, default=256,
                       label='Window size',
                       help='The PSD is estimated from small patches of this size. Bigger patches '
                            'allow identifying more details. However, since there are fewer windows, '
                            'estimations are noisier',
                       expertLevel=LEVEL_ADVANCED)
         
-        self.addParallelSection(threads=2, mpi=1)       
-
-
-class ProtCTFMicrographs(EMProtocol):
-    """ Base class for all protocols that estimates the CTF"""
-    _definition = DefCTFMicrographs()
-
-    def __init__(self, **args):
-        EMProtocol.__init__(self, **args)
-        self.stepsExecutionMode = STEPS_PARALLEL 
+        form.addParallelSection(threads=2, mpi=1)       
+         
     
     def _getMicrographDir(self, mic):
         """ Return an unique dir name for results of the micrograph. """
@@ -379,13 +372,13 @@ class ProtCTFMicrographs(EMProtocol):
         # Get pointer to input micrographs 
         self.inputMics = self.inputMicrographs.get() 
                                 
-        self._params = {'voltage': self.inputMics._microscope.voltage.get(),
-                        'sphericalAberration': self.inputMics._microscope.sphericalAberration.get(),
-                        'magnification': self.inputMics._microscope.magnification.get(),
+        self._params = {'voltage': self.inputMics._acquisition.voltage.get(),
+                        'sphericalAberration': self.inputMics._acquisition.sphericalAberration.get(),
+                        'magnification': self.inputMics._acquisition.magnification.get(),
                         'samplingRate': self.inputMics.getSamplingRate(),
                         'scannedPixelSize': self.inputMics.getScannedPixelSize(),
                         'windowSize': self.windowSize.get(),
-                        'ampContrast': self.ampContrast.get(),
+                        'ampContrast': self.inputMics._acquisition.amplitudeContrast.get(),
                         'lowRes': self.lowRes.get(),
                         'highRes': self.highRes.get(),
                         # Convert from microns to Amstrongs
@@ -433,39 +426,32 @@ class ProtCTFMicrographs(EMProtocol):
 class ProtPreprocessMicrographs(EMProtocol):
     pass
 
+class ProtPreprocessVolumes(EMProtocol):
+    pass
+
 
 class ProtExtractParticles(EMProtocol):
     pass
 
 
-class DefProcessParticles(Form):
-    """ Create the definition of parameters for
-    the ProtProcessParticles protocol.
-    """
-    def __init__(self):
-        Form.__init__(self)
-    
-        self.addSection(label='Input')
-        
-        self.addParam('inputParticles', PointerParam, important=True,
-                      label="Input Particles", pointerClass='SetOfParticles')
-        
-        self._addProcessParam()
-        
-        self.addParallelSection(threads=2, mpi=1)
-        
-    def _addProcessParam(self):
-        """ This method should be implemented by subclasses
-        to add other parameter relatives to the specific operation."""
-        pass  
-        
-        
 class ProtProcessParticles(EMProtocol):
     """ This class will serve as a base for all protocol
     that performs some operation on Partices (i.e. filters, mask, resize, etc)
     It is mainly defined by an inputParticles and outputParticles.
     """
-    pass
+    def _defineParams(self, form):
+        form.addSection(label='Input')
+        
+        form.addParam('inputParticles', PointerParam, important=True,
+                      label="Input Particles", pointerClass='SetOfParticles')
+        # Hook that should be implemented in subclasses
+        self._defineProcessParams(form)
+        form.addParallelSection(threads=2, mpi=1)
+        
+    def _defineProcessParams(self, form):
+        """ This method should be implemented by subclasses
+        to add other parameter relatives to the specific operation."""
+        pass  
 
 
 class ProtFilterParticles(ProtProcessParticles):
@@ -475,22 +461,49 @@ class ProtFilterParticles(ProtProcessParticles):
 
 
 class ProtParticlePicking(EMProtocol):
-
     def _summary(self):
         summary = []
         if not hasattr(self, 'outputCoordinates'):
             summary.append("Output coordinates not ready yet.") 
         else:
+            #TODO: MOVE following line to manual picking
             summary.append("Input micrographs: " + self.inputMicrographs.get().getNameId())
-            summary.append("Number of particles manually picked: %d (from %d micrographs)" % (self.outputCoordinates.getSize(), self.inputMicrographs.get().getSize()))
+            summary.append("Number of particles picked: %d (from %d micrographs)" % (self.outputCoordinates.getSize(), self.inputMicrographs.get().getSize()))
         return summary
 
 
-class ProtAlign(EMProtocol):
+class ProtCreateMask(EMProtocol):
+    """ For those protocols who create mask as output. """
     pass
+
+class ProtAlign(EMProtocol):
+    """ This class will serve as a base for all protocols that align a set of 2D images.
+    All Align protocols receive as input:
+        A set of partices
+    and will allow the option to generate the aligned particles.
+    """
+    def _defineParams(self, form):
+        form.addSection(label='Input')
+        
+        form.addParam('inputParticles', PointerParam, important=True,
+                      label="Input Particles", pointerClass='SetOfParticles')
+        form.addParam('writeAlignedParticles', BooleanParam, default=True,
+                      label="Write aligned particles?", 
+                      help="If set to <Yes>, the aligment will be applied to \n"
+                           "input particles and a new aligned set will be created.")
+        # Hook that should be implemented in subclasses
+        self._defineAlignParams(form)
+        
+    def _defineAlignParams(self, form):
+        """ This method should be implemented by subclasses
+        to add other parameter relatives to the specific align protocol."""
+        pass  
 
 
 class ProtClassify(EMProtocol):
+    pass
+
+class ProtUserSelection(EMProtocol):
     pass
 
 
@@ -504,4 +517,10 @@ class ProtRefine3D(EMProtocol):
     pass
 
 class ProtClassify3D(EMProtocol):
+    pass
+
+class ProtValidate3D(EMProtocol):
+    pass
+
+class ProtCreateMask3D(EMProtocol):
     pass

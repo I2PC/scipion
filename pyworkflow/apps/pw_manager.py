@@ -144,9 +144,9 @@ class ManagerWindow(gui.Window):
         f.columnconfigure(1, minsize=400)
         f.rowconfigure(1, minsize=250)
         # Add logo
-        logo = self.getImage('scipion_logo.gif')
+        logo = self.getImage('scipion_logo.gif', percent=50)
         label = tk.Label(f, image=logo, borderwidth=0)
-        label.grid(row=0, column=0, sticky='nw')
+        label.grid(row=0, column=0, sticky='nw', pady=5, padx=5)
         # Add create project button
         #font = tkFont.Font(size=12, family='verdana')#, weight='bold')
         btn = Button(f, text='Create Project', command=self.createNewProject)
@@ -156,10 +156,10 @@ class ManagerWindow(gui.Window):
         lf.grid(row=0, column=1, sticky='news', padx=10, pady=10, rowspan=2)
         text = TaggedText(lf, width=40, height=15, bd=0)
         text.grid(row=0, column=0, sticky='news')
-        text.config(state=tk.DISABLED)
         gui.configureWeigths(lf)
         
         self.createProjectList(text)
+        text.setReadOnly(True)
         self.text = text
         f.rowconfigure(0, weight=1)
         f.rowconfigure(1, weight=1)
@@ -178,6 +178,7 @@ class ManagerWindow(gui.Window):
             frame.grid(row=r, column=0, padx=10, pady=5, sticky='new')
             r += 1
         text.window_create(tk.INSERT, window=parent)
+        text.bindWidget(parent)
         
     def createProjectLabel(self, parent, projInfo):
         frame = tk.Frame(parent)

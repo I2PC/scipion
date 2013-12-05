@@ -3,20 +3,25 @@
 <head>
 <title>Wizard - {% block title %}{% endblock %}</title>
 <meta charset='utf-8'>
-<link href="/static/css/wizard_style.css" rel="stylesheet"
-	type="text/css">
+<link href="/static/css/general_style.css" rel="stylesheet" type="text/css">
+<link href="/static/css/wizard_style.css" rel="stylesheet" type="text/css">
 <link type="text/css" href="/static/css/jquery-ui.css" rel="stylesheet" />
 <script type="text/javascript" src="/static/js/jquery/jquery.js"></script>
 <script type="text/javascript" src="/static/js/jquery/jquery-ui.js"></script>
 <script type="text/javascript" src="/static/js/templates_libs/wizard_utils.js"></script>
 <script>
+	var firstElm;
 	
+	function putSelection(input_ori, input_des){
+		var value = $(input_ori).val();
+		window.opener.document.getElementById(input_des).value = value;
+		window.close();
+	}
 </script>
 {% block head %} {% endblock %}
 </head>
-
 <body>
-<h3 id="wizName">Wizard: {% block name %}{% endblock %}</h3>
+<h3 id="wizName">Project {{projectName}} > Wizard: {% block name %}{% endblock %}</h3>
 	<div class="layout">
 		<div class="elm1">
 			<table id="list" cellspacing="0">
@@ -27,13 +32,13 @@
 			<table class="images" cellspacing="0">
 				{% block images %}{% endblock %}
 			</table>
+			<div class="options">
+				{% block options %}{% endblock %}
+			</div>
 		</div>
-	</div>
-	<div class="options">
-		{% block options %}{% endblock %}
-		<br />
-		<br />
-		<input type="button" id="buttonGen" class="buttonSelect" value="Select"/>
+	</div>	
+	<div class="buttons">
+		<input type="button" id="buttonGen" class="buttonSelect" value="Select" {% block function %}{% endblock %}/>
 		<input type="button" id="buttonGen" class="buttonCancel" onclick="window.close()" value="Cancel"/>
 	</div>
 </body>

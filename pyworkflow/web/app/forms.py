@@ -7,6 +7,8 @@ from django import forms
 from pyworkflow.hosts import HostConfig, QueueSystemConfig, QueueConfig
 from django.forms.forms import BoundField
 from pyworkflow.object import List
+import json
+import xmipp
 #from pyworkflow.web.app.views_showj import get_image_dimensions 
 
 class HostForm(forms.Form):
@@ -275,31 +277,47 @@ class ShowjForm(forms.Form):
                               localize=False,
                               widget=forms.TextInput(attrs={'class' : 'menuInputNumber'}))
     
-    
+    resliceComboBox = forms.ChoiceField(label='Reslice',
+                                required=False,
+                                choices = ((xmipp.VIEW_Z_NEG,'Z Negative (Front)'),(xmipp.VIEW_Y_NEG,'Y Negative (Top)'),(xmipp.VIEW_X_NEG,'X Negative (Left)'),
+                                           (xmipp.VIEW_Y_POS,'Y Positive (Bottom)'),(xmipp.VIEW_X_POS,'X Positive (Right)'))
+                                )
+
     # Init hidden fields
     path = forms.CharField(widget=forms.HiddenInput())
-    allowRender = forms.BooleanField(widget=forms.HiddenInput())
+    allowRender = forms.BooleanField(widget=forms.HiddenInput(), required=False)
     mode = forms.CharField(widget=forms.HiddenInput())
     colRowMode = forms.CharField(widget=forms.HiddenInput())
+#    dims = forms.CharField(widget=forms.HiddenInput())
     
-    mirrorY = forms.BooleanField(label='Invert Y axis')
+    imageMaxWidth = forms.CharField(widget=forms.HiddenInput())
+    imageMinWidth = forms.CharField(widget=forms.HiddenInput())
+    imageMaxHeight = forms.CharField(widget=forms.HiddenInput())
+    imageMinHeight = forms.CharField(widget=forms.HiddenInput())
+    
+    mirrorY = forms.BooleanField(label='Invert Y Axis', required=False)
+    
+    
+#    applyTransformation = forms.BooleanField(label='Apply Transform', required=False)
+    
+#    CHOICES = (('transformMatrix', 'Apply Transform Matrix',), ('onlyShifts', 'Only Shifts',), ('wrap', 'Wrap',))
+#    transformationChoice = forms.ChoiceField(widget=forms.RadioSelect, choices=(('transformMatrix', 'Apply Transform Matrix',), ('onlyShifts', 'Only Shifts',), ('wrap', 'Wrap',))
+#                                             )
+    
+    
+    applyTransformMatrix = forms.BooleanField(label='Apply Transform Matrix', required=False)
+    onlyShifts = forms.BooleanField(label='Only Shifts', required=False)
+    wrap = forms.BooleanField(label='Wrap', required=False)
 
-#    imageWidth = forms.IntegerField(widget=forms.HiddenInput(), initial=0)
-#    imageHeight = forms.IntegerField(widget=forms.HiddenInput(), initial=0)
     
-     
-    
-    
-    def __init__(self, dataset, tableLayoutConfiguration, *args, **kwargs):
+    def __init__(self, dataset, tableLayoutConfiguration=None, *args, **kwargs):
         super(ShowjForm, self).__init__(*args, **kwargs)
         
-        blockComboBoxValues = tuple(zip(dataset.listTables(), dataset.listTables()))
         self.fields['blockComboBox'] = forms.ChoiceField(label='Select Block',
                                                          required=False,
-                                                         choices = blockComboBoxValues)
-
+                                                         choices = tuple(zip(dataset.listTables(), dataset.listTables())))
         
-        labelsToRenderComboBoxValues = getLabelsToRenderComboBoxValues(tableLayoutConfiguration.columnsLayout)
+        labelsToRenderComboBoxValues = tableLayoutConfiguration.getLabelsToRenderComboBoxValues()
         if len(labelsToRenderComboBoxValues) > 0:
             self.fields['labelsToRenderComboBox'] = forms.ChoiceField(label='Select Label',
                                                             required=False,
@@ -308,7 +326,21 @@ class ShowjForm(forms.Form):
                 self.fields['labelsToRenderComboBox'].widget=forms.HiddenInput()
         else:
             self.fields['zoom'].widget.attrs['readonly'] = True
+            if self.data['mode'] == 'gallery':
+                self.fields['goto'].widget.attrs['readonly'] = True
             
+        if dataset.getNumberSlices()>1:    
+            volumesToRenderComboBoxValues = tuple(zip(dataset.getTable().getColumnValues(self.data['labelsToRenderComboBox']),dataset.getTable().getColumnValues(self.data['labelsToRenderComboBox'])))
+            self.fields['volumesToRenderComboBox'] = forms.ChoiceField(label='Select Volume',
+                                                            required=False,
+                                                            choices = volumesToRenderComboBoxValues)
+            if self.data['mode'] == 'table':
+                self.fields['volumesToRenderComboBox'].widget=forms.HiddenInput()
+            if self.data['mode'] != 'gallery':                
+                self.fields['resliceComboBox'].widget=forms.HiddenInput()
+        else:
+            self.fields['resliceComboBox'].widget=forms.HiddenInput()
+               
         
         if self.data['mode'] != 'gallery': 
             self.fields['cols'].widget=forms.HiddenInput()
@@ -317,13 +349,13 @@ class ShowjForm(forms.Form):
         if self.data['colRowMode'] == 'Off':
             self.fields['cols'].widget.attrs['readonly'] = True
             self.fields['rows'].widget.attrs['readonly'] = True
-                    
-def getLabelsToRenderComboBoxValues(columnsLayout):
-    labelsToRender = [columnLayout.label for columnLayout in columnsLayout.values() if (columnLayout.typeOfColumn == 'image')]
-    return tuple(zip(labelsToRender,labelsToRender))
+            
+        if self.data['mode'] == 'column':    
+            self.fields['goto'].widget.attrs['readonly'] = True
+        
+            
 
-    
-
+                                  
 class VolVisualizationForm(forms.Form):   
     volPath = forms.CharField(label='Volume path', 
                             required=True,

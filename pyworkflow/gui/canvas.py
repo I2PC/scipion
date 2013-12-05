@@ -29,30 +29,22 @@ The new Canvas class allows to easily display Texboxes and Edges
 that can be interactively dragged and clicked.
 """
 
-import Tkinter as tk
 import math
 import operator
+import Tkinter as tk
+from widgets import Scrollable
 
 
-DEFAULT_CONNECTOR_FILL="blue"
-DEFAULT_CONNECTOR_OUTLINE="black"
 
-class Canvas(tk.Frame):
+DEFAULT_CONNECTOR_FILL = "blue"
+DEFAULT_CONNECTOR_OUTLINE = "black"
+
+
+class Canvas(tk.Canvas, Scrollable):
     """Canvas to draw some objects.
     It will really contains a Frame, a Canvas and scrollbars"""
     def __init__(self, parent, **args):
-        tk.Frame.__init__(self, parent)        
-        h = tk.Scrollbar(self, orient=tk.HORIZONTAL)
-        v = tk.Scrollbar(self, orient=tk.VERTICAL)
-        self.canvas = tk.Canvas(self, scrollregion=(0, 0, 1000, 1000), bg='white',
-                                yscrollcommand=v.set, xscrollcommand=h.set)
-        h['command'] = self.canvas.xview
-        v['command'] = self.canvas.yview
-        self.canvas.grid(column=0, row=0, sticky='nsew')
-        h.grid(column=0, row=1, sticky='we')
-        v.grid(column=1, row=0, sticky='ns')
-        self.grid_columnconfigure(0, weight=1)
-        self.grid_rowconfigure(0, weight=1)
+        Scrollable.__init__(self, parent, tk.Canvas, bg='white')
         
         self.lastItem = None # Track last item selected
         self.lastPos = (0, 0) # Track last clicked position
@@ -62,22 +54,22 @@ class Canvas(tk.Frame):
         self.onRightClickCallback = None
         
         # Add bindings
-        self.canvas.bind("<Button-1>", self.onClick)
-        self.canvas.bind("<Button-3>", self.onRightClick)
-        self.canvas.bind("<Double-Button-1>", self.onDoubleClick)
-        self.canvas.bind("<B1-Motion>", self.onDrag)
-        #self.canvas.bind("<MouseWheel>", self.onScroll)
+        self.bind("<Button-1>", self.onClick)
+        self.bind("<Button-3>", self.onRightClick)
+        self.bind("<Double-Button-1>", self.onDoubleClick)
+        self.bind("<B1-Motion>", self.onDrag)
+        #self.bind("<MouseWheel>", self.onScroll)
     
     def getCoordinates(self, event):
         """Converts the events coordinates to canvas coordinates"""
         # Convert screen coordinates to canvas coordinates
-        xc = self.canvas.canvasx(event.x)
-        yc = self.canvas.canvasy(event.y)
+        xc = self.canvasx(event.x)
+        yc = self.canvasy(event.y)
         return (xc, yc)
     
     def _handleMouseEvent(self, event, callback):
         xc, yc = self.getCoordinates(event)
-        items = self.canvas.find_overlapping(xc-1, yc-1,  xc+1, yc+1)
+        items = self.find_overlapping(xc-1, yc-1,  xc+1, yc+1)
         if self.lastItem:
             self.lastItem.setSelected(False)
             self.lastItem = None
@@ -101,17 +93,6 @@ class Canvas(tk.Frame):
     
     def onDoubleClick(self, event):
         self._handleMouseEvent(event, self.onDoubleClickCallback)
-#        xc, yc = self.getCoordinates(event)
-#        items = self.canvas.find_overlapping(xc - 1, yc - 1,  xc + 1, yc + 1)
-#        self.lastItem = None
-#        self.lastPos = (0, 0)
-#        for i in items:
-#            if i in self.items:
-#                self.lastItem = self.items[i]
-#                if self.onDoubleClickCallback:
-#                    self.onDoubleClickCallback(self.lastItem)
-#                self.lastPos = (xc, yc)
-#                break
 
     def onDrag(self, event):
         if self.lastItem:
@@ -119,46 +100,42 @@ class Canvas(tk.Frame):
             self.lastItem.move(xc-self.lastPos[0], yc-self.lastPos[1])
             self.lastPos = (xc, yc)  
             
-    def onScroll(self, event):
-        print "scrolling"
-        if event.num == 5 or event.delta < 0:
-            count = 1
-        if event.num == 4 or event.delta > 0:
-            count = -1
-        self.canvas.yview("scroll", count, "units")          
-        
     def createTextbox(self, text, x, y, bgColor="#99DAE8", textColor='black'):
-        tb = TextBox(self.canvas, text, x, y, bgColor, textColor)
+        tb = TextBox(self, text, x, y, bgColor, textColor)
         self.items[tb.id] = tb
         return tb
 
     def createTextCircle(self, text, x, y, bgColor="#99DAE8", textColor='black'):
-        tb = TextCircle(self.canvas, text, x, y, bgColor, textColor)
+        tb = TextCircle(self, text, x, y, bgColor, textColor)
         self.items[tb.id] = tb
         return tb
 
     def createRoundedTextbox(self, text, x, y, bgColor="#99DAE8", textColor='black'):
-        tb = RoundedTextBox(self.canvas, text, x, y, bgColor, textColor)
+        tb = RoundedTextBox(self, text, x, y, bgColor, textColor)
         self.items[tb.id] = tb
         return tb
-
+    
+    def addItem(self, item):
+        self.items[item.id] = item
     
     def createEdge(self, srcItem, dstItem):
-        edge = Edge(self.canvas, srcItem, dstItem)
+        edge = Edge(self, srcItem, dstItem)
         #self.items[edge.id] = edge
         return edge
     
     def createCable(self,src,srcSocket,dst,dstSocket):
-        cable= Cable(self.canvas,src,srcSocket,dst,dstSocket)
-        # self.items[cable.id]=cable
-
+        return Cable(self,src,srcSocket,dst,dstSocket)
 
     def clear(self):
         """Clear all items from the canvas"""
-        self.canvas.delete(tk.ALL)
-       
+        self.delete(tk.ALL)
 
-def findClosestPoints(list1,list2):
+    def updateScrollRegion(self):
+        self.update_idletasks()
+        self.config(scrollregion=self.bbox("all")) 
+        
+
+def findClosestPoints(list1, list2):
     candidates=[]
     for c1 in list1:
         for c2 in list2:
@@ -167,18 +144,18 @@ def findClosestPoints(list1,list2):
     return closestTuple[0],closestTuple[1]
 
 
-def findClosestConnectors(item1,item2):
+def findClosestConnectors(item1, item2):
     return findUpDownClosestConnectors(item1,item2)
 
 
-def findUpDownClosestConnectors(item1,item2):
+def findUpDownClosestConnectors(item1, item2):
     srcConnectors=item1.getUpDownConnectorsCoordinates()
     dstConnectors=item2.getUpDownConnectorsCoordinates()
     c1Coords,c2Coords=findClosestPoints(srcConnectors,dstConnectors)
     return c1Coords,c2Coords
 
 
-def findStrictClosestConnectors(item1,item2):
+def findStrictClosestConnectors(item1, item2):
     srcConnectors=item1.getConnectorsCoordinates()
     dstConnectors=item2.getConnectorsCoordinates()
     c1Coords,c2Coords=findClosestPoints(srcConnectors,dstConnectors)
@@ -212,14 +189,11 @@ class Item(object):
         xc,yc=self.getCenter(x1,y1,x2,y2)
         return [(xc,y1), (xc,y2)]
 
-
     def getCorners(self):
         return self.canvas.bbox(self.id)
 
-
     def countSockets(self,verticalLocation):
         return len(self.getSocketsAt(verticalLocation))
-
 
     def addSocket(self,name,socketClass,verticalLocation,fillColor=DEFAULT_CONNECTOR_FILL,outline=DEFAULT_CONNECTOR_OUTLINE,position=None):
         count=self.countSockets(verticalLocation) + 1
@@ -392,8 +366,34 @@ class TextCircle(TextItem):
         super(TextCircle,self).__init__(canvas, text, x, y, bgColor, textColor)
 
     def _paintBounds(self, x, y, w, h, fillColor):
-        return self.canvas.create_oval(x, y, w, h, fill=fillColor) 
+        return self.canvas.create_oval(x, y, w, h, fill=fillColor)
+    
+    
+class ImageBox(Item):
+    def __init__(self, canvas, imgPath, x=0, y=0, text=None):
+        Item.__init__(self, canvas, x, y)
+        # Create the image
+        from pyworkflow.gui import getImage, getImageFromPath
         
+        if imgPath is None:
+            self.image = getImage('no-image.png')
+        else:
+            self.image = getImageFromPath(imgPath)
+
+        if text is not None:
+            self.label = tk.Label(canvas, image=self.image, text=text, 
+                                  compound=tk.TOP, bg='gray')
+            self.id = self.canvas.create_window(x, y, window=self.label)
+            self.label.bind('<Button-1>', self._onClick)
+        else:
+            self.id = self.canvas.create_image(x, y, image=self.image)
+         
+        
+    def setSelected(self, value): #Ignore selection highlight
+        pass
+    
+    def _onClick(self, e=None):
+        pass
 
 class Connector(Item):
     """ Default connector has no graphical representation (hence, it'ss invisible). Subclasses offer different looks"""
@@ -523,24 +523,28 @@ class Cable():
 if __name__ == '__main__':
     root = tk.Tk()
     canvas = Canvas(root, width=800, height=600)
-    canvas.grid(row=0, column=0, sticky='nsew')
+    canvas.frame.grid(row=0, column=0, sticky='nsew')
     root.grid_columnconfigure(0, weight=1)
     root.grid_rowconfigure(0, weight=1)
     
-    tb1 = canvas.createTextCircle("Project", 100, 100, "blue")
-    tb2 = canvas.createTextbox("This is an intentionally quite big, big box,\nas you may appreciate looking carefully\nat it,\nas many times\nas you might need", 300, 200)
-    tb2.addSocket("output1",RoundConnector, "bottom",fillColor="green")
-    tb2.addSocket("output2",SquareConnector, "bottom",fillColor="yellow")
-    tb2.addSocket("output3",SquareConnector, "bottom",fillColor="blue")
-    tb3 = canvas.createRoundedTextbox("otro mas\n", 100, 200, "red")
-    tb4 = canvas.createRoundedTextbox("tb4", 300, 300, "yellow")
-    tb4.addSocket("input1",SquareConnector, "top",outline="red")
-    tb5 = canvas.createTextCircle("tb5", 400, 300, "grey")
-    tb5.addSocket("input1",SquareConnector, "top")
-    e1 = canvas.createEdge(tb1, tb2)
-    e2 = canvas.createEdge(tb1, tb3)
-    c1= canvas.createCable(tb2,"output2",tb4,"input1")
-    c2= canvas.createCable(tb2,"output3",tb5,"input1")
-    tb3.moveTo(100, 300)
+    def canvasExample1():    
+        tb1 = canvas.createTextCircle("Project", 100, 100, "blue")
+        tb2 = canvas.createTextbox("This is an intentionally quite big, big box,\nas you may appreciate looking carefully\nat it,\nas many times\nas you might need", 300, 200)
+        tb2.addSocket("output1",RoundConnector, "bottom",fillColor="green")
+        tb2.addSocket("output2",SquareConnector, "bottom",fillColor="yellow")
+        tb2.addSocket("output3",SquareConnector, "bottom",fillColor="blue")
+        tb3 = canvas.createRoundedTextbox("otro mas\n", 100, 200, "red")
+        tb4 = canvas.createRoundedTextbox("tb4", 300, 300, "yellow")
+        tb4.addSocket("input1",SquareConnector, "top",outline="red")
+        tb5 = canvas.createTextCircle("tb5", 400, 300, "grey")
+        tb5.addSocket("input1",SquareConnector, "top")
+        e1 = canvas.createEdge(tb1, tb2)
+        e2 = canvas.createEdge(tb1, tb3)
+        c1= canvas.createCable(tb2,"output2",tb4,"input1")
+        c2= canvas.createCable(tb2,"output3",tb5,"input1")
+        tb3.moveTo(100, 300)
+        
+       
+    canvasExample1()
 
     root.mainloop()

@@ -63,10 +63,20 @@ class Graph(object):
     Implemented using adjacency lists.
     """
     
-    def __init__(self, rootName='ROOT'):
+    def __init__(self, rootName='ROOT', root=None):
         self._nodes = []
         self._nodesDict = {} # To retrieve nodes from name
-        self._root = self.createNode(rootName)
+        if root is None:
+            self._root = self.createNode(rootName)
+        else:
+            self._root = root
+            self._registerNode(root)
+            
+    def _registerNode(self, node):
+        self._nodes.append(node)
+        self._nodesDict[node.getName()] = node
+        for child in node.getChilds():
+            self._registerNode(child)
         
     def getRoot(self):
         return self._root
@@ -74,8 +84,7 @@ class Graph(object):
     def createNode(self, nodeName):
         """ Add a node to the graph """
         node = Node(nodeName)
-        self._nodes.append(node)
-        self._nodesDict[nodeName] = node
+        self._registerNode(node)
         
         return node
     
@@ -89,4 +98,14 @@ class Graph(object):
         for node in self.getNodes():
             print "Node: ", node
             print " Childs: ", ','.join([str(c) for c in node.getChilds()])
+            
+    def _escape(self, label):
+        return label.replace('.', '_').replace(' ', '_')
+    
+    def printDot(self):
+        print "\ndigraph {"
+        for node in self.getNodes():
+            for child in node.getChilds():
+                print "   %s -> %s; " % (self._escape(node.label), self._escape(child.label))
+        print "}"
         

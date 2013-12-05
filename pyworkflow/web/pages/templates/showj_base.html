@@ -1,26 +1,43 @@
-<!DOCTYPE html>
-<html lang='es'>
-<head>
-	<title>Showj</title>
-	<meta charset='utf-8'>
-	<link rel="icon" type="image/png" href="{{favicon}}" />
-	<!-- CSS -->
-	<link href="{{css}}" rel="stylesheet" type="text/css">
-	<!-- JS -->
-	<script src="{{jquery}}" type="text/javascript"></script>
-	<script src="{{jquery_waypoints}}" type="text/javascript"></script>
-	
-	<script type="text/javascript">
+{% extends 'base.html' %}
+
+{% block title %} - Showj{% endblock %}
+
+{% block content_head %}
+<!-- CSS -->
+<link href="{{showj_css}}" rel="stylesheet" type="text/css">
+<!-- JS -->
+<script src="{{jquery_waypoints}}" type="text/javascript"></script>
+<script src="{{jquery_hover_intent}}" type="text/javascript"></script>
+
+<script type="text/javascript">
 	/*  Initialize variable to keep changes*/
 	var changes={}
+	/*  Dimension of the last image sent by the server*/
+	var currentImageDim=parseInt('{{defaultZoom}}')
+	/*  If true images are regenerated in the server*/
+	var recallServer=false
+	/* Force regenerate even when src and data_real-src have the same value */
+	var forceRecallServer=false
+	/*  Last zoom set properly. In case the new value is too big or small it is set back to the previousZoom*/
+	var previousZoom='{{defaultZoom}}'
+	/* Initialize Table Layout Configuration from json variable*/
+	var jsonTableLayoutConfiguration = {{tableLayoutConfiguration|safe }}
+	console.log("json",jsonTableLayoutConfiguration)
 	
-	$(document).ready(function(){
+	$(document).ready(function(){ 
+		
+		
+		{% if form.mode.value != 'column' and dataset.getNumberSlices > 0 %}
+		setImageSize(true)
 		initializeZoomEvents();
+		{% if form.mode.value == 'gallery' %}
 		initializeColRowModeEvents()
+		initializeColsRowsEvents()
+		{% endif %}
+		{% endif %}
 		initializeComboBoxEvents()
 		initializeArrowEvents()
-		initializeColsRowsEvents()
-		initializeMirrorY()
+		initializeCheckboxEvents()
 		
 		/* Avoid enter key submit form */
 		$('.menuInputNumber').keypress(function(e) {
@@ -31,9 +48,14 @@
 		  }
 		});
 		
-	});
+	}); 
 	</script>
-	
+	<script type="text/javascript">
+	function reloadImages(forceRecallServer){
+		$.waypoints('destroy')
+		initializeImageLoad(forceRecallServer)
+	}
+	</script>
 	<script type="text/javascript">
 	function initializeArrowEvents(){
 		$(".arrowImage").click(function(){
@@ -50,25 +72,25 @@
 	}
 	</script>
 	<script type="text/javascript">
-	function initializeMirrorY(){
-		$("#id_mirrorY").click(function(){
-			$('form#showjForm').submit();
+	function initializeCheckboxEvents(){
+		$("#id_mirrorY, #id_applyTransformMatrix, #id_onlyShifts, #id_wrap").click(function(){
+			reloadImages(true)
 		})
 	}
 	</script>
+	<!-- Initialize block, metadata, volume and axis to reslice combobox to reload the web when changing -->
 	<script type="text/javascript">
-	//Initialize block and metadata combobox to reload the web when changing
 	function initializeComboBoxEvents(){
-		$("#id_blockComboBox , #id_labelsToRenderComboBox").change(function(){
+		$("#id_blockComboBox, #id_labelsToRenderComboBox, #id_volumesToRenderComboBox, #id_resliceComboBox").change(function(){
 			$('#id_zoom').val('{{defaultZoom}}')
 			$('form#showjForm').submit();
 		})
 	}
 	</script>
+	<!--Initialize events for columns and row mode. 
+	Automatic mode => disable cols & rows textfields
+	Manual mode => enable cols & rows textfields and initialize value  -->
 	<script type="text/javascript">
-	//Initialize events for columns and row mode. 
-	//Automatic mode => disable cols & rows textfields
-	//Manual mode => enable cols & rows textfields and initialize value
 	function initializeColRowModeEvents(){
 		$("#colRowMode").click(function(e){
 			if ($("#colRowModeImage").attr("src").indexOf("On") != -1){
@@ -85,6 +107,9 @@
 				/* Allow section div to adjust automatically*/
 				$("section").css("width", "");
 
+				/* Display rows & cols menu */
+				$("#colsSubSectionMenu, #rowsSubSectionMenu").hide()
+				
 				e.preventDefault();
 			}
 			else{
@@ -98,6 +123,7 @@
 				/* Update hidden variable  */
 				$("#id_colRowMode").val("On");
 				
+				
 				if ($("#id_cols").val()==""){
 					initializeColsRows()
 				}
@@ -105,43 +131,61 @@
 					/* Set section div width automatically */
 					updateMainContainerDim($("#id_cols").val())
 				}
+				
+				/* Display rows & cols menu */
+				$("#colsSubSectionMenu, #rowsSubSectionMenu").show()
+				
 				e.preventDefault();
 			}
 		});
+		
+		{% if form.mode.value == 'gallery' %}
+		hideShowColsRowsSubSectionMenu()
+		{% endif %}
+	}
+	function hideShowColsRowsSubSectionMenu(){
+		if ($("#colRowModeImage").attr("src").indexOf("On") != -1){
+			$("#colsSubSectionMenu, #rowsSubSectionMenu").show()
+		}
+		else{
+			$("#colsSubSectionMenu, #rowsSubSectionMenu").hide()
+		}
 	}
 	
 	//Initialize Columns and Rows textfields. Execute when changing to manual mode
 	function initializeColsRows(){
-		imgContainerWidth =$(".img_container").width() + (parseInt($(".img_container").css("margin-right")) * 2)
-		colVal = Math.floor($("section").width() / (imgContainerWidth + 5))
-		$("#id_cols").val(colVal)
-		updateGalleryLayout(colVal,0,"id_cols")
+		colVal = $("#id_cols").val()
+		rowVal = $("#id_rows").val()
+		if (colVal == "" && rowVal == ""){
+			imgContainerWidth =$(".img_container").width() + (parseInt($(".img_container").css("margin-right")) * 2)
+			colVal = Math.floor($("section").width() / (imgContainerWidth + 5))
+			$("#id_cols").val(colVal)
+			rowVal = 0
+		}
+		
+		
+		updateGalleryLayout(colVal,rowVal,(colVal != "")?"id_cols":"id_rows")
 	}
 	</script>
 	<script type="text/javascript">
+	function isNaturalNumber(n) {
+	    n = n.toString(); // force the value incase it is not
+	    var n1 = Math.abs(n),
+	        n2 = parseInt(n, 10);
+	    
+	    return !isNaN(n1) && n2 === n1 && n1.toString() === n && n2>0;
+	}
 	//Change gallery layout when cols and rows textfield change
 	function initializeColsRowsEvents(){
-		$("#id_cols, #id_rows").click(function(){
-			updateGalleryLayout($("#id_cols").val(),$("#id_rows").val(), $(this).attr("id"))
-		});
-		
-		$("#id_cols, #id_rows").change(function(){
-			alert("por change")
-			updateGalleryLayout($("#id_cols").val(),$("#id_rows").val(), $(this).attr("id"))
-		});
-		$("#id_cols, #id_rows").keyup(function(){
-			alert("por keypress")
+		$("#id_cols, #id_rows").on('click change keyup',function(){
+			if (!isNaturalNumber($("#id_cols").val())){$("#id_cols").val(1)}
+			if (!isNaturalNumber($("#id_rows").val())){$("#id_rows").val(1)}
 			updateGalleryLayout($("#id_cols").val(),$("#id_rows").val(), $(this).attr("id"))
 		});
 	}
 	
 	function updateGalleryLayout(cols, rows, setElement){
-		alert("cols"+cols)
-		alert("rows"+rows)
 		recalculateColsRows(cols,rows, setElement)
-		alert("cols"+cols)
-		alert("rows"+rows)
-		alert("$(#id_cols).val()"+$("#id_cols").val())
 		updateMainContainerDim($("#id_cols").val())
 	}
 	
@@ -155,105 +199,143 @@
 	}
 	function updateMainContainerDim(colVal){
 		imgContainerWidth =$(".img_container").width() + (parseInt($(".img_container").css("padding-right")) * 2)
-		alert("imgContainerWidth"+imgContainerWidth)
 		sectionWidth = colVal * imgContainerWidth
 		$("section").width(sectionWidth)
+		
+		reloadImages(false)
+		
 	}
 	</script>
-	<script type="text/javascript">
-		//Initialize events for zoom change
-		function initializeZoomEvents(){
-			$('#id_zoom').click(function(){
-				/* updateImageDimByUrl(); */
-				setImageSize(false)
-			});
-			
-			$('#id_zoom').change(function(){
-				/* updateImageDimByUrl(); */
-				setImageSize(false)
-			});
-				
-	 		$('#id_zoom').keyup(function(e){
-	 			var code = e.keyCode || e.which; 
- 			  	if (code  == 13) {               
- 					 /* updateImageDimByUrl(); */
- 					 setImageSize(false)
- 			  	}
-			});	 
-		}
-		
-		
-		function setImageSize(refreshElement){
-			/* Gets zoom and image width and height */
-			zoom_element=$('#id_zoom')
-			
-			imageHeight_val = parseInt({{imageDimensions.1}})
-			imageWidth_val = parseInt({{imageDimensions.0}})
-			
-			/* Check if zoom in pixel */
-			if (zoom_element.val().indexOf('px')!=-1){
-				/*  Get zoom value*/			
-				zoom_val=parseInt(zoom_element.val().split('px')[0])
-				
-				/* Check is image bigger than zoom */
-				/* if (zoom_val <  imageWidth_val && zoom_val < imageHeight_val){ */
-					/* Calculate zoom in percentage */
-					if (imageHeight_val<imageWidth_val){
-						tableImages_width=zoom_val
-						zoom_val_perc=Math.round((zoom_val/imageWidth_val)*100)
-					} 
-					else{
-						tableImages_width=Math.round(zoom_val*(imageWidth_val/imageHeight_val))
-						zoom_val_perc=Math.round((zoom_val/imageHeight_val)*100)
-					}
-					
-				/* } */
-				
-			}
-			else{
-				zoom_val_perc=zoom_element.val()
-				if (imageHeight_val<imageWidth_val){
-					zoom_val_pixel=Math.round((zoom_val_perc*imageWidth_val)/100)
-					tableImages_width=zoom_val_pixel
-				} 
-				else{
-					zoom_val_pixel=Math.round((zoom_val_perc*imageHeight_val)/100)
-					tableImages_width=zoom_val_pixel
-				}
-				
-				
-			}
-			
-			if (refreshElement==true){
-				zoom_element.val(zoom_val_perc)
-			}
-			
-			d = new Date();
-			$(".tableImages").each(function(){
-			   	var newSrc = "";
-			   	if ($(this).data("real_src").indexOf("&dim") != -1){
-			   		newSrc = $(this).data("real_src").substring(0,$(this).data("real_src").indexOf("&dim"));
-			   	}
-			   	else{
-					newSrc = $(this).data("real_src");   
-			   	}
-			   	$(this).attr("height",tableImages_width)
-			   	$(this).attr("width",tableImages_width)
-		   	
-		   		realSrc = newSrc.concat("&dim="+tableImages_width).concat("&"+d.getTime())
-		   		
-				$(this).data("real_src", realSrc);
-		   })
-		   
-			{% if form.mode.value == 'gallery' %}
-			$.waypoints('refresh')
-			{% endif %}
-		   
-		}
 
-	</script>
+	<!-- Initialize events on zoom change (calculate dim (perc & pixel) & recall the server) -->
 	<script type="text/javascript">
-	//Save table change in metadata
+	function initializeZoomEvents(){
+		$('#id_zoom').click(function(){
+			/* updateImageDimByUrl(); */
+			setImageSize(false)
+		});
+		
+		$('#id_zoom').change(function(){
+			/* updateImageDimByUrl(); */
+			setImageSize(false)
+		});
+			
+ 		$('#id_zoom').keyup(function(e){
+ 			var code = e.keyCode || e.which; 
+			  	if (code  == 13) {               
+					 /* updateImageDimByUrl(); */
+					 setImageSize(false)
+			  	}
+		});	 
+	}
+	
+	
+	function setImageSize(refreshElement){
+		/* Gets zoom and image width and height */
+		zoom_element=$('#id_zoom')
+		
+		imageHeight_val = parseInt({{imageDimensions.1}})
+		imageWidth_val = parseInt({{imageDimensions.0}})
+		ratio = imageHeight_val/imageWidth_val 
+		
+		/* Check if zoom in pixel */
+		if (zoom_element.val().indexOf('px')!=-1){
+			/*  Get zoom value*/			
+			zoom_val=parseInt(zoom_element.val().split('px')[0])
+			
+			/* Calculate zoom in percentage */
+			if (imageHeight_val<imageWidth_val){
+				tableImages_width=zoom_val
+				zoom_val_perc=Math.round((zoom_val/imageWidth_val)*100)
+			} 
+			else{
+				tableImages_width=Math.round(zoom_val*(imageWidth_val/imageHeight_val))+1
+				zoom_val_perc=Math.round((zoom_val/imageHeight_val)*100)
+			}
+			
+		}
+		else{
+			zoom_val_perc=zoom_element.val()
+			if (imageHeight_val<imageWidth_val){
+				zoom_val_pixel=Math.round((zoom_val_perc*imageWidth_val)/100)
+				tableImages_width=zoom_val_pixel
+			} 
+			else{
+				zoom_val_pixel=Math.round((zoom_val_perc*imageHeight_val)/100)
+				tableImages_width=zoom_val_pixel
+			}
+		}
+		
+		/*  CHECK ZOOM VALUE IS A NUMBER BETWEEN MAX AND MIN*/
+		tableImages_height=tableImages_width*ratio
+			
+		if (isNaN(tableImages_width) || tableImages_width>{{form.imageMaxWidth.value}} || tableImages_width<{{form.imageMinWidth.value}} || tableImages_height>{{form.imageMaxHeight.value}} || tableImages_height<{{form.imageMinHeight.value}}){
+			alert('Incorrect table width or height: '+tableImages_width+'px x '+ tableImages_height +'px.')
+			zoom_element.val(previousZoom)
+			setImageSize(true)
+			return;
+		}
+		else{
+			previousZoom=tableImages_width+"px"
+		}
+		
+		if (refreshElement==true){
+			zoom_element.val(zoom_val_perc)
+		}
+		
+		if (tableImages_width>currentImageDim*1.2 || tableImages_width<currentImageDim*0.8){
+			recallServer=true
+			currentImageDim=tableImages_width
+		}	
+		else{
+			recallServer=false
+		}
+		
+		d = new Date();
+		$(".tableImages").each(function(){
+		   	var newSrc = "";
+		   	if ($(this).data("real_src").indexOf("&dim") != -1){
+		   		newSrc = $(this).data("real_src").substring(0,$(this).data("real_src").indexOf("&dim"));
+		   	}
+		   	else{
+				newSrc = $(this).data("real_src");   
+		   	}
+		   	$(this).attr("height",tableImages_width)
+		   	$(this).attr("width",tableImages_width)
+	   	
+	   		realSrc = newSrc.concat("&dim="+tableImages_width).concat("&"+d.getTime())
+			$(this).data("real_src", realSrc);
+		   	
+		   		 	
+
+	   })
+	   
+	   /* If images with new dimensions need to be generated in the server, waypoints jquery script manages it */
+	   if (recallServer){reloadImages(false)}
+		
+		if ($("#colRowModeImage").length >0 && $("#colRowModeImage").attr("src").indexOf("On")!=-1){initializeColsRows()}
+	}
+
+	function initializeImageLoad(forceRecall){
+		forceRecallServer = forceRecall
+		$('.tableImages').waypoint(function(direction){
+			element=$(this)
+			if (element.data('real_src') != element.attr("src") || forceRecallServer){ 
+				element.attr(
+					"src",
+					element.data('real_src').concat($("#id_mirrorY").is(':checked')?"&mirrorY":"").
+					concat($("#id_applyTransformMatrix").is(':checked')?"&applyTransformMatrix":"").
+					concat($("#id_onlyShifts").is(':checked')?"&onlyShifts":"").
+					concat($("#id_wrap").is(':checked')?"&wrap":"")
+					)
+			}
+		}, {
+			offset: '150%'
+		});
+	}
+	</script>
+	<!-- Save table change in metadata -->
+	<script type="text/javascript">
 	function saveShowjTable(){
 		if ($("#saveButton").hasClass("saveOn")){
 			$.ajax({
@@ -267,6 +349,7 @@
 				success : function(json) {
 					message = json.message;
 					if (message == 'Ok'){
+						changes={}
 						$("#saveButton").toggleClass("saveOn").toggleClass("saveOff")
 					}
 					else{
@@ -277,177 +360,209 @@
 		}
 	}
 	</script>
+	<script type="text/javascript">	
+	function showHideOptionMenu(){
+		$("#optionsButton").toggleClass("optionsOff")
+		$("#optionsButton").toggleClass("optionsOn")
+		$("#optionsList").toggleClass("optionsListOn")
+	}
+	</script>
 	{% block head %}  {% endblock %}
-</head>
-<body>
-	<header>
-	<div style="width:50%">
-		<!-- <div style="float:left;" id="logoDiv"> -->
-		<a href="#" style="margin:2px 0px 0px 8px"><img class="logo" src="{{logo}}" alt="Scipion logo" style="max-height:60px; "></a>
-		<!-- </div> -->
+{% endblock %}
+
+{% block content_header %}	{% include "header.html" with page_mode="showj"%} {% endblock %}
+
+{% block content_aside %}
+<form id="showjForm" action="/showj/" method="post"> {% csrf_token %}
+	<div id="modeContainer" class="sectionMenu">
+		<!-- TABLE -->
+		<input type="submit" value="table" name="select_mode" onclick="document.forms['showjForm'].id_mode.value='table';" class="submitButton
+		 {% if form.mode.value != 'table' %}
+		  tableOff
+		 {% else %}
+		  tableOn
+		 {% endif %}	
+		  " 
+		  {% if form.mode.value == 'column' %}
+		  disabled
+		  {% endif %}
+		  />
 		
-		<div style="padding:16px 0px 0px 15px;text-align:center;display:inline;">
-		<span class="project_name" style="font-size:1.8em; ">Xmipp Showj Web</span>
+		<!-- GALLERY -->
+		<input type="submit" value="gallery" name="select_mode" onclick="document.forms['showjForm'].id_mode.value='gallery';" class="submitButton
+		 {% if form.mode.value != 'gallery'  %}
+		  galleryOff
+		 {% else %}
+		  galleryOn
+		 {% endif %}
+		 
+		 "
+		 {% if form.mode.value == 'column' %}
+		  disabled
+		 {% endif %}
+		 />
+		 
+		<!-- VOLUME VISUALIZE WITH ASTEX -->
+		{% if dataset.getNumberSlices > 1 %} 
+		<input type="submit" value="volume_astex" name="select_mode" onclick="document.forms['showjForm'].id_mode.value='volume_astex';" class="submitButton
+		 {% if form.mode.value != 'volume_astex' %}
+		 visualizeVolOff
+		 {% else %}
+		  visualizeVolOn
+		 {% endif %}
+		 "
+		 />
+		 {% endif %}
+		 
+		 <!-- VOLUME VISUALIZE WITH CHIMERA -->
+		 {% if dataset.getNumberSlices > 1 %} 
+		<input type="submit" value="volume_chimera" name="select_mode" onclick="document.forms['showjForm'].id_mode.value='volume_chimera';" class="submitButton
+		 {% if form.mode.value != 'volume_chimera' %}
+		 visualizeVolOff
+		 {% else %}
+		  visualizeVolOn
+		 {% endif %}
+		 "
+		 
+		   
+		 />
+		 {% endif %}
+	</div>
+	
+	<div id="zoomContainer" class="sectionMenu">
+		<img src="/resources/showj/zoom.png" class="menuIcon">
+		{{ form.zoom }}
+		
+		<div id="arrowContainer" class="arrowSectionMenu">
+			<img src="/resources/showj/arrowUp.png" class="arrowImage">
+			<img src="/resources/showj/arrowDown.png" class="arrowImage">
+		</div>
+		<!-- <input type="number" class="menuInputNumber" id="zoom" value="150" min="10"> -->
+	</div>
+	
+	<div id="gotoContainer" class="sectionMenu">
+		<img src="/resources/showj/goto.png" class="menuIcon">
+		{{ form.goto }}
+		
+		<div id="arrowContainer" class="arrowSectionMenu">
+			<img src="/resources/showj/arrowUp.png" class="arrowImage">
+			<img src="/resources/showj/arrowDown.png" class="arrowImage">
+		</div>
+		<!-- <input type="number" class="menuInputNumber" id="goto" value="1" max="{{metadata.objects|length}}" min="1"> -->
+	</div>
+	
+	<div class="sectionMenu">
+		<img src="/resources/showj/separator.png" class="menuIcon">
+	</div>	
+	
+	{% if form.mode.value == 'gallery' %}
+	<div id="colRowContainer" class="sectionMenu">
+		<button id="colRowMode"> 
+			<img src="/resources/showj/colRowMode{{form.colRowMode.value}}.png" id="colRowModeImage" />
+		</button>
+		
+		<div class="subSectionMenu" id="colsSubSectionMenu">
+			<span class="textMenu">{{ form.cols.label_tag }}</span>
+			{{ form.cols }}
+			
+			<div id="arrowContainer" class="arrowSectionMenu">
+				<img src="/resources/showj/arrowUp.png" class="arrowImage">
+				<img src="/resources/showj/arrowDown.png" class="arrowImage">
+			</div>
+			<!-- <input type="number" class="menuInputNumber" id="cols" value="" min="1" max="{{metadata.objects|length}}" disabled> -->
+		</div>
+		<div class="subSectionMenu" id="rowsSubSectionMenu">
+			<span class="textMenu">{{ form.rows.label_tag }}</span>
+			{{ form.rows }}
+			
+			<div id="arrowContainer" class="arrowSectionMenu">
+				<img src="/resources/showj/arrowUp.png" class="arrowImage">
+				<img src="/resources/showj/arrowDown.png" class="arrowImage">
+			</div>
+			<!-- <input type="number" class="menuInputNumber" id="rows" value="" min="1" max="{{metadata.objects|length}}" disabled> -->
 		</div>
 	</div>
+	{% endif %}
 	
-	<div style="padding-top:60px;text-align:right;width:45%;display:inline;" >
-		<a href="/project_content/?projectName={{projectName}}">Back to project</a>
+	<div class="sectionMenu">
+		<img src="/resources/showj/separator.png" class="menuIcon">
 	</div>
-	</header>
-<!-- 	<nav>  Top Menu
-		<ul>
-			<li>File</li>
-			<li>Display</li>
-			<li>Help</li>
+
+	<div id="blockSelectorContainer" class="sectionMenu">
+		<span class="textMenu"> {{ form.blockComboBox.label_tag }} </span>
+		{{ form.blockComboBox }} 
+	</div>
+	
+	<div id="metadataSelectorContainer" class="sectionMenu">
+		<span class="textMenu">
+		{% if not form.labelsToRenderComboBox.is_hidden %}
+		{{ form.labelsToRenderComboBox.label_tag }}
+		{% endif %}
+		</span>
+		{{ form.labelsToRenderComboBox }}
+	</div>
+	
+	<div id="volumeSelectorContainer" class="sectionMenu">
+		<span class="textMenu">
+		{% if not form.volumesToRenderComboBox.is_hidden %}
+		{{ form.volumesToRenderComboBox.label_tag }}
+		{% endif %}
+		</span>
+		{{ form.volumesToRenderComboBox }}
+	</div>
+	
+	<div id="resliceSelectorContainer" class="sectionMenu">
+		<span class="textMenu">
+		{% if not form.resliceComboBox.is_hidden %}
+		{{ form.resliceComboBox.label_tag }}
+		{% endif %}
+		</span>
+		{{ form.resliceComboBox }}
+	</div>
+
+	<div class="sectionMenu">
+		<img src="/resources/showj/separator.png" class="menuIcon">
+	</div>
+	
+	<div id="saveContainer" class="sectionMenu">
+		<button id="saveButton" onclick="saveShowjTable(); return false;" class="saveOff">
+		</button>
+	</div>
+	
+	
+	<div id="optionsContainer" class="sectionMenu">
+		<button id="optionsButton" class="optionsOff submitButton" onclick="showHideOptionMenu(); return false;">
+		</button>
+	
+		<ul id="optionsList">
+			<li>{{ form.mirrorY }} {{ form.mirrorY.label_tag }}</li>
+			<li>{{ form.applyTransformMatrix }} {{ form.applyTransformMatrix.label_tag }}</li>
+			<li>{{ form.onlyShifts }} {{ form.onlyShifts.label_tag }}</li>
+			<li>{{ form.wrap }} {{ form.wrap.label_tag }}</li>
 		</ul>
-	</nav> -->
-	<div id="main_section">
-		<aside id="side_news"> <!-- Main Menu -->
+	</div>  
+	{% block content_menu %}	{% endblock %}
+	 
+	{% for hidden in form.hidden_fields %}
+    {{ hidden }}
+    {% endfor %} 
+	 
+</form>
+{% endblock %}
 
-			<form id="showjForm" action="/showj/" method="post"> {% csrf_token %}
-				<div id="modeContainer" class="sectionMenu">
-					<input type="submit" value="table" name="select_mode" onclick="document.forms['showjForm'].id_mode.value='table';" class="submitButton
-					 {% if form.mode.value == 'gallery' or form.mode.value == 'column' %}
-					  tableOff
-					 {% endif %}
-					 {% if form.mode.value == 'table' %}
-					 tableOn
-					 {% endif %}	
-					  " 
-					  {% if form.mode.value == 'column' %}
-					  disabled
-					  {% endif %}
-					  />
-					<input type="submit" value="gallery" name="select_mode" onclick="document.forms['showjForm'].id_mode.value='gallery';" class="submitButton
-					{% if form.mode.value == 'gallery' %}
-					  galleryOn
-					 {% endif %}
-					 {% if form.mode.value == 'table' or form.mode.value == 'column'  %}
-					 galleryOff
-					 {% endif %}
-					 "
-					 {% if form.mode.value == 'column' %}
-					  disabled
-					 {% endif %}
-					 />
-				</div>
-				
-				<div id="zoomContainer" class="sectionMenu">
-					<img src="/resources/showj/zoom.png" class="menuIcon">
-					{{ form.zoom }}
-					
-					<div id="arrowContainer" class="arrowSectionMenu">
-						<img src="/resources/showj/arrowUp.png" class="arrowImage">
-						<img src="/resources/showj/arrowDown.png" class="arrowImage">
-					</div>
-					<!-- <input type="number" class="menuInputNumber" id="zoom" value="150" min="10"> -->
-				</div>
-				
-				<div id="gotoContainer" class="sectionMenu">
-					<img src="/resources/showj/goto.png" class="menuIcon">
-					{{ form.goto }}
-					
-					<div id="arrowContainer" class="arrowSectionMenu">
-						<img src="/resources/showj/arrowUp.png" class="arrowImage">
-						<img src="/resources/showj/arrowDown.png" class="arrowImage">
-					</div>
-					<!-- <input type="number" class="menuInputNumber" id="goto" value="1" max="{{metadata.objects|length}}" min="1"> -->
-				</div>
-				
-				<div class="sectionMenu">
-					<img src="/resources/showj/separator.png" class="menuIcon">
-				</div>	
-				
-				{% if form.mode.value == 'gallery' %}
-				<div id="colRowContainer" class="sectionMenu">
-					<button id="colRowMode"> 
-						<img src="/resources/showj/colRowMode{{form.colRowMode.value}}.png" id="colRowModeImage" />
-					</button>
-					
-					<div class="subSectionMenu">
-						<span class="textMenu">{{ form.cols.label_tag }}</span>
-						{{ form.cols }}
-						
-						<div id="arrowContainer" class="arrowSectionMenu">
-							<img src="/resources/showj/arrowUp.png" class="arrowImage">
-							<img src="/resources/showj/arrowDown.png" class="arrowImage">
-						</div>
-						<!-- <input type="number" class="menuInputNumber" id="cols" value="" min="1" max="{{metadata.objects|length}}" disabled> -->
-					</div>
-					<div class="subSectionMenu">
-						<span class="textMenu">{{ form.rows.label_tag }}</span>
-						{{ form.rows }}
-						
-						<div id="arrowContainer" class="arrowSectionMenu">
-							<img src="/resources/showj/arrowUp.png" class="arrowImage">
-							<img src="/resources/showj/arrowDown.png" class="arrowImage">
-						</div>
-						<!-- <input type="number" class="menuInputNumber" id="rows" value="" min="1" max="{{metadata.objects|length}}" disabled> -->
-					</div>
-				</div>
+{% block content_section %}	
+{% block content_view %}	{% endblock %}	
+			<!-- Hidden menu for multiple selection tool -->
+			<div class="multipleSelectionToolContainer" id="multipleSelectionTool">
+				{% if dataset.getTable.hasEnabledColumn %}
+				<div class="multipleSelectionToolItem" onclick="multipleEnableDisableImage('enable')">Enable</div>
+				<div class="multipleSelectionToolItem" onclick="multipleEnableDisableImage('disable')">Disable</div>
 				{% endif %}
-				
-				<div class="sectionMenu">
-					<img src="/resources/showj/separator.png" class="menuIcon">
-				</div>
-		
-				<div id="blockSelectorContainer" class="sectionMenu">
-					<span class="textMenu"> {{ form.blockComboBox.label_tag }} </span>
-					{{ form.blockComboBox }} 
-				</div>
-				
-				<div id="metadataSelectorContainer" class="sectionMenu">
-					<span class="textMenu">
-					{% if not form.labelsToRenderComboBox.is_hidden %}
-					{{ form.labelsToRenderComboBox.label_tag }}
-					{% endif %}
-					</span>
-					{{ form.labelsToRenderComboBox }}
-				</div>
-				
-				<div id="mirrorContainer" class="sectionMenu">
-					<span class="textMenu"> {{ form.mirrorY.label_tag }} </span>
-					{{ form.mirrorY }} 
-				</div>
-		
-				<div class="sectionMenu">
-					<img src="/resources/showj/separator.png" class="menuIcon">
-				</div>
-				
-				<div id="saveContainer" class="sectionMenu">
-					<button id="saveButton" onclick="saveShowjTable(); return false;" class="saveOff">
-						<!-- <img src="/resources/showj/saveOff.png" id="saveButtonImage" /> -->
-					</button>
-				</div> 
-				 
-				{% block content_menu %}	{% endblock %}
-				 
-				{% for hidden in form.hidden_fields %}
-			    {{ hidden }}
-			    {% endfor %} 
-				 
-			</form>
-		</aside>
-		
-		<section> <!--  Es donde va la informacion princiapl -->
-		
+				<div class="multipleSelectionToolItem" onclick="multipleSelect('all')">Select All</div>
+				<div class="multipleSelectionToolItem" onclick="multipleSelect('from')">Select From Here</div>
+				<div class="multipleSelectionToolItem" onclick="multipleSelect('to')">Select To Here</div>
+			</div>	
 
-		
-		{% block content_view %}	{% endblock %}	
-		<!-- Hidden menu for multiple selection tool -->
-		<div class="multipleSelectionToolContainer" id="multipleSelectionTool">
-			<div class="multipleSelectionToolItem" onclick="multipleEnableDisableImage('enable')">Enable</div>
-			<div class="multipleSelectionToolItem" onclick="multipleEnableDisableImage('disable')">Disable</div>
-			<div class="multipleSelectionToolItem" onclick="multipleSelect('all')">Select All</div>
-			<div class="multipleSelectionToolItem" onclick="multipleSelect('from')">Select From Here</div>
-			<div class="multipleSelectionToolItem" onclick="multipleSelect('to')">Select To Here</div>
-		</div>	
+{% endblock %}	
 
-			
-		</section>
-	</div>
-	
 
-</body>
-</html>

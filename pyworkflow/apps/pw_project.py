@@ -58,39 +58,8 @@ import pyworkflow.apps.config as config
 from config import *
 from pw_browser import BrowserWindow
 
-
-def populateTree(self, tree, prefix, obj, level=0):
-    text = obj.text.get()
-    if text:
-        value = obj.value.get(text)
-        key = '%s.%s' % (prefix, value)
-        img = obj.icon.get('')
-        tag = obj.tag.get('')
-            
-        if len(img):
-            img = self.getImage(img)
-        item = tree.insert(prefix, 'end', key, text=text, image=img, tags=(tag))
-        
-        if level < 2:
-            tree.item(item, open=True)
-        if obj.value.hasValue() and tag == 'protocol_base':
-            protClassName = value.split('.')[-1] # Take last part
-            prot = emProtocolsDict.get(protClassName, None)
-            if prot is not None:
-                tree.item(item, image=self.getImage('class_obj.gif'))
-                for k, v in emProtocolsDict.iteritems():
-                    if not v is prot and issubclass(v, prot):
-                        key = '%s.%s' % (item, k)
-                        tree.insert(item, 'end', key, text=k, tags=('protocol'))
-                        
-            else:
-                raise Exception("Class '%s' not found" % obj.value.get())
-    else:
-        key = prefix
-    
-    for sub in obj:
-        populateTree(self, tree, key, sub, level+1)
-    
+from pyworkflow.gui.plotter import Plotter
+Plotter.setInteractive(True)   
     
 VIEW_PROTOCOLS = 'Protocols'
 VIEW_DATA = 'Data'
@@ -115,7 +84,7 @@ class ProjectWindow(gui.Window):
         content.grid(row=0, column=0, sticky='news')
         self.content = content
         
-        self.createMainMenu(self.menuCfg)
+        self.createMainMenu()
         
         header = self.createHeaderFrame(content)
         header.grid(row=0, column=0, sticky='new')
@@ -127,6 +96,9 @@ class ProjectWindow(gui.Window):
                           }
         self.switchView(VIEW_PROTOCOLS)
 
+    def createMainMenu(self):
+        gui.Window.createMainMenu(self, self.menuCfg) 
+        
     def createHeaderFrame(self, parent):
         """ Create the Header frame at the top of the windows.
         It has (from left to right):
@@ -138,10 +110,10 @@ class ProjectWindow(gui.Window):
         header.columnconfigure(1, weight=1)
         header.columnconfigure(2, weight=1)
         # Create the SCIPION logo label
-        logoImg = self.getImage(self.generalCfg.logo.get())
+        logoImg = self.getImage(self.generalCfg.logo.get(), percent=50)
         logoLabel = tk.Label(header, image=logoImg, 
                              borderwidth=0, anchor='nw', bg='white')
-        logoLabel.grid(row=0, column=0, sticky='nw', padx=5)
+        logoLabel.grid(row=0, column=0, sticky='nw', padx=5, pady=5)
         # Create the Project Name label
         self.projNameFont = tkFont.Font(size=12, family='verdana', weight='bold')
         projLabel = tk.Label(header, text=self.projName, font=self.projNameFont,
@@ -162,7 +134,14 @@ class ProjectWindow(gui.Window):
         return header
     
     def getSettings(self):
-        return self.project.getSettings()
+        return self.settings
+    
+    def saveSettings(self):
+        self.settings.write()
+        
+    def _onClosing(self):
+        self.saveSettings() 
+        gui.Window._onClosing(self)
     
     def _viewComboSelected(self, e=None):
         if self.viewVar.get() != self.view:
@@ -178,6 +157,12 @@ class ProjectWindow(gui.Window):
         # Grid in the second row (1)
         self.viewWidget.grid(row=1, column=0, sticky='news')
         self.view = newView
+        
+#    def handleResize(self):
+#        print self._w, self._h
+#        
+#    def handleMove(self):
+#        print self._x, self._y
         
     def createProtocolsView(self, parent):
         """ Create the Protocols View for the Project.
@@ -203,16 +188,11 @@ class ProjectWindow(gui.Window):
     def loadProject(self):
         self.project = Project(self.projPath)
         self.project.load()
-        settings = self.project.getSettings()
-        self.generalCfg = settings.getConfig()
-        self.menuCfg = settings.getCurrentMenu()
-        self.protCfg = settings.getCurrentProtocolMenu()
+        self.settings = self.project.getSettings()
+        self.generalCfg = self.settings.getConfig()
+        self.menuCfg = self.settings.getCurrentMenu()
+        self.protCfg = self.settings.getCurrentProtocolMenu()
                 
-#    def loadProjectConfig(self):
-#        self.settings = config.loadSettings(self.project.getSettingsPath())
-#        self.configMapper = ConfigMapper(getConfigPath('configuration.xml'), globals())
-#        self.menuCfg = loadConfig(self.generalCfg, 'menu')
-#        self.protCfg = loadConfig(self.generalCfg, 'protocols')
 
 
 if __name__ == '__main__':
@@ -220,6 +200,9 @@ if __name__ == '__main__':
     if len(sys.argv) > 1:
         manager = Manager()
         projName = os.path.basename(sys.argv[1])
+        if projName == 'last': # Get last project
+            projName = manager.listProjects()[0].projName
+            
         projPath = manager.getProjectPath(projName)
         projWindow = ProjectWindow(projPath)
         projWindow.show()

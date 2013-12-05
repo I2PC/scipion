@@ -31,100 +31,15 @@ This sub-package contains the XmippProtExtractParticles protocol
 
 from pyworkflow.em import * 
 
-from convert import writeCTFModel, writePosCoordinates, readSetOfParticles
+from convert import writeCTFModel, writeSetOfCoordinates, readSetOfParticles
 from pyworkflow.utils.path import makePath, removeBaseExt, join, exists
 from xmipp3 import XmippProtocol
 from glob import glob
 import xmipp
-
-
-class XmippDefExtractParticles(Form):
-    """Create the definition of parameters for
-    the XmippProtExtractParticles protocol"""
-    def __init__(self):
-        Form.__init__(self)
-    
-        self.addSection(label='Input')
-        self.addParam('inputCoordinates', PointerParam, label="Coordinates", 
-                      pointerClass='SetOfCoordinates',
-                      help='Select the SetOfCoordinates ')
-        self.addParam('downsampleType', EnumParam, choices=['original', 'same as picking', 'other'], 
-                      default=1, important=True, label='Downsampling type', display=EnumParam.DISPLAY_COMBO, 
-                      help='Select the downsampling type.')
-        self.addParam('downFactor', FloatParam, default=2, condition='downsampleType==2',
-                      label='Downsampling factor',
-                      help='This factor is always referred to the original sampling rate. '
-                      'You may use independent downsampling factors for extracting the '
-                      'particles, picking them and estimating the CTF. All downsampling '
-                      'factors are always referred to the original sampling rate, and '
-                      'the differences are correctly handled by Xmipp.')        
-        self.addParam('inputMicrographs', PointerParam, label="Micrographs", 
-                      condition='downsampleType != 1',
-                      pointerClass='SetOfMicrographs',
-                      help='Select the original SetOfMicrographs')
-
-        self.addParam('boxSize', IntParam, default=0,
-                      label='Particle box size',
-                      help='In pixels. The box size is the size of the boxed particles, ' 
-                      'actual particles may be smaller than this.')
-        
-        self.addParam('rejectionMethod', EnumParam, choices=['None','MaxZscore', 'Percentage'], 
-                      default=0, display=EnumParam.DISPLAY_COMBO,
-                      label='Automatic particle rejection',
-                      help='How to automatically reject particles. It can be none (no rejection),'
-                      ' maxZscore (reject a particle if its Zscore is larger than this value), '
-                      'Percentage (reject a given percentage in each one of the screening criteria).', 
-                      expertLevel=LEVEL_ADVANCED)
-        
-        self.addParam('maxZscore', IntParam, default=3, condition='rejectionMethod==1',
-                      label='Maximum Zscore',
-                      help='Maximum Zscore above which particles are rejected.', 
-                      expertLevel=LEVEL_ADVANCED)
-        
-        self.addParam('percentage', IntParam, default=5, condition='rejectionMethod==2',
-                      label='Percentage (%)',
-                      help='Percentage of particles to reject', expertLevel=LEVEL_ADVANCED)
-        
-        self.addSection(label='Preprocess')
-        self.addParam('doRemoveDust', BooleanParam, default=True, important=True,
-                      label='Dust removal (Recommended)', 
-                      help='Sets pixels with unusually large values to random values from a Gaussian '
-                      'with zero-mean and unity-standard deviation.')
-        self.addParam('thresholdDust', FloatParam, default=3.5, condition='doRemoveDust',
-                      label='Threshold for dust removal',
-                      help='Pixels with a signal higher or lower than this value times the standard '
-                      'deviation of the image will be affected. For cryo, 3.5 is a good value.'
-                      'For high-contrast negative stain, the signal itself may be affected so '
-                      'that a higher value may be preferable.',
-                      expertLevel=LEVEL_ADVANCED)
-        self.addParam('doFlip', BooleanParam, default=True, important=True,
-                      label='Phase flipping (Recommended)', 
-                      help='Use the information from the CTF to compensate for phase reversals.')
-        self.addParam('doInvert', BooleanParam, default=False, important=True,
-                      label='Invert contrast', 
-                      help='Invert the contrast if your particles are black over a white background.')
-        self.addParam('doNormalize', BooleanParam, default=True, important=True,
-                      label='Normalize (Recommended)', 
-                      help='It subtract a ramp in the gray values and normalizes so that in the '
-                      'background there is 0 mean and standard deviation 1.')
-        self.addParam('normType', EnumParam, choices=['OldXmipp','NewXmipp','Ramp'], 
-                      default=2, condition='doNormalize', display=EnumParam.DISPLAY_COMBO,
-                      label='Normalization type', 
-                      help='OldXmipp (mean(Image)=0, stddev(Image)=1).\n'
-                           'NewXmipp (mean(background)=0, stddev(background)=1)\n'
-                           'Ramp (subtract background+NewXmipp).\n',
-                      expertLevel=LEVEL_ADVANCED)
-        self.addParam('backRadius', IntParam, default=-1, condition='doNormalize',
-                      label='Background radius',
-                      help='Pixels outside this circle are assumed to be noise and their stddev '
-                      'is set to 1. Radius for background circle definition (in pix.). '
-                      'If this value is 0, then half the box size is used.', 
-                      expertLevel=LEVEL_ADVANCED)
+   
                 
 class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
     """Protocol to extract particles from a set of coordinates in the project"""
-    
-    _definition = XmippDefExtractParticles()
     
     # Normalization type constants
     ORIGINAL = 0
@@ -135,6 +50,94 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
     NONE = 0
     MAXZSCORE = 1
     PERCENTAGE = 2
+        
+    def _defineParams(self, form):
+        form.addSection(label='Input')
+        form.addParam('inputCoordinates', PointerParam, label="Coordinates", 
+                      pointerClass='SetOfCoordinates',
+                      help='Select the SetOfCoordinates ')
+        form.addParam('downsampleType', EnumParam, choices=['original', 'same as picking', 'other'], 
+                      default=1, important=True, label='Downsampling type', display=EnumParam.DISPLAY_COMBO, 
+                      help='Select the downsampling type.')
+        form.addParam('downFactor', FloatParam, default=2, condition='downsampleType==2',
+                      label='Downsampling factor',
+                      help='This factor is always referred to the original sampling rate. '
+                      'You may use independent downsampling factors for extracting the '
+                      'particles, picking them and estimating the CTF. All downsampling '
+                      'factors are always referred to the original sampling rate, and '
+                      'the differences are correctly handled by Xmipp.')        
+        form.addParam('inputMicrographs', PointerParam, label="Micrographs", 
+                      condition='downsampleType != 1',
+                      pointerClass='SetOfMicrographs',
+                      help='Select the original SetOfMicrographs')
+
+        form.addParam('ctfRelations', RelationParam, allowNull=True,
+                      label='CTF relations', relationName=RELATION_CTF, relationParent='getInputMicrographs', 
+                      relationReverse=True, help='Choose the CTF.  \n  ')     
+
+        form.addParam('boxSize', IntParam, default=0,
+                      label='Particle box size', validators=[Positive],
+                      help='In pixels. The box size is the size of the boxed particles, ' 
+                      'actual particles may be smaller than this.')
+        
+        form.addParam('rejectionMethod', EnumParam, choices=['None','MaxZscore', 'Percentage'], 
+                      default=0, display=EnumParam.DISPLAY_COMBO,
+                      label='Automatic particle rejection',
+                      help='How to automatically reject particles. It can be none (no rejection),'
+                      ' maxZscore (reject a particle if its Zscore is larger than this value), '
+                      'Percentage (reject a given percentage in each one of the screening criteria).', 
+                      expertLevel=LEVEL_ADVANCED)
+        
+        form.addParam('maxZscore', IntParam, default=3, condition='rejectionMethod==1',
+                      label='Maximum Zscore',
+                      help='Maximum Zscore above which particles are rejected.', 
+                      expertLevel=LEVEL_ADVANCED)
+        
+        form.addParam('percentage', IntParam, default=5, condition='rejectionMethod==2',
+                      label='Percentage (%)',
+                      help='Percentage of particles to reject', expertLevel=LEVEL_ADVANCED)
+        
+        form.addSection(label='Preprocess')
+        form.addParam('doRemoveDust', BooleanParam, default=True, important=True,
+                      label='Dust removal (Recommended)', 
+                      help='Sets pixels with unusually large values to random values from a Gaussian '
+                      'with zero-mean and unity-standard deviation.')
+        form.addParam('thresholdDust', FloatParam, default=3.5, condition='doRemoveDust',
+                      label='Threshold for dust removal',
+                      help='Pixels with a signal higher or lower than this value times the standard '
+                      'deviation of the image will be affected. For cryo, 3.5 is a good value.'
+                      'For high-contrast negative stain, the signal itself may be affected so '
+                      'that a higher value may be preferable.',
+                      expertLevel=LEVEL_ADVANCED)
+        form.addParam('doFlip', BooleanParam, default=True, important=True,
+                      label='Phase flipping (Recommended)', 
+                      help='Use the information from the CTF to compensate for phase reversals.')
+        form.addParam('doInvert', BooleanParam, default=False, important=True,
+                      label='Invert contrast', 
+                      help='Invert the contrast if your particles are black over a white background.')
+        form.addParam('doNormalize', BooleanParam, default=True, important=True,
+                      label='Normalize (Recommended)', 
+                      help='It subtract a ramp in the gray values and normalizes so that in the '
+                      'background there is 0 mean and standard deviation 1.')
+        form.addParam('normType', EnumParam, choices=['OldXmipp','NewXmipp','Ramp'], 
+                      default=2, condition='doNormalize', display=EnumParam.DISPLAY_COMBO,
+                      label='Normalization type', 
+                      help='OldXmipp (mean(Image)=0, stddev(Image)=1).  \n  '
+                           'NewXmipp (mean(background)=0, stddev(background)=1)  \n  '
+                           'Ramp (subtract background+NewXmipp).  \n  ',
+                      expertLevel=LEVEL_ADVANCED)
+        form.addParam('backRadius', IntParam, default=-1, condition='doNormalize',
+                      label='Background radius',
+                      help='Pixels outside this circle are assumed to be noise and their stddev '
+                      'is set to 1. Radius for background circle definition (in pix.). '
+                      'If this value is 0, then half the box size is used.', 
+                      expertLevel=LEVEL_ADVANCED)
+        
+    def getInputMicrographs(self):
+        """ Return the micrographs associated to the SetOfCoordinates. """
+        if self.inputCoordinates.get() is None:
+            return None
+        return self.inputCoordinates.get().getMicrographs()
         
     def _defineSteps(self):
         """for each micrograph insert the steps to preprocess it
@@ -164,13 +167,16 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
                 
         # Write pos files for each micrograph
         self._insertFunctionStep('writePosFiles')
+                
+        #if self.doFlip.get():
+        ctfSet = self.ctfRelations.get()
            
         # For each micrograph insert the steps
         for mic in self.inputMics:
             micrographToExtract = mic.getFileName()
             micName = removeBaseExt(mic.getFileName())
             micId = mic.getId()
-                                
+                                            
             # If downsample type is 'other' perform a downsample
             if self.downsampleType == self.OTHER:
                 fnDownsampled = self._getTmpPath(micName+"_downsampled.xmp")
@@ -187,11 +193,32 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
                 self._insertRunJobStep("xmipp_transform_filter", args % locals())
                 micrographToExtract = fnNoDust
                 
+            #if self.doFlip.get():
+            if self.ctfRelations.hasValue():
+                mic.ctfModel = ctfSet[micId]       
                         
-            self._insertFunctionStep('getCTF', micId, micName, micrographToExtract)
+            #self._insertFunctionStep('getCTF', micId, micName, micrographToExtract)
+            micName = removeBaseExt(mic.getFileName())
+            fnCTF = None
+            #FIXME: Check only if mic has CTF when implemented ok
+            #if self.doFlip or mic.hasCTF():
+            if self.ctfRelations.hasValue():
+                # Write CTF metadata if it does not exist
+                mdFn = getattr(mic, '_xmippMd', None)
+                if mdFn:
+                    fnCTF = mdFn.get()
+                else:
+                    fnCTF = self._getTmpPath("%s.ctfParam" % micName)
+                mic.ctfModel.sphericalAberration = Float(self.inputMics.getAcquisition().sphericalAberration.get())
+                writeCTFModel(mic.ctfModel, fnCTF)  
+                 
+                # Insert step to flip micrograph
+                if self.doFlip:
+                    self._insertFunctionStep('flipMicrograph', micName, fnCTF, micrographToExtract)
+                    micrographToExtract = self._getTmpPath(micName +"_flipped.xmp")
                            
             # Actually extract
-            self._insertFunctionStep('extractParticles', micId, micName, micrographToExtract)
+            self._insertFunctionStep('extractParticles', micId, micName, fnCTF, micrographToExtract)
                 
         # TODO: Delete temporary files
                         
@@ -201,51 +228,26 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         
     def writePosFiles(self):
         """ Write the pos file for each micrograph on metadata format. """
-        self.posFiles = writePosCoordinates(self._getExtraPath(), self.inputCoords)
-        
-        
-    def getCTF(self, micId, micName, micrographToExtract):
-        """ Get CTFModel and flip if selected """
-        fnCTF = self._getCTFModel(micId)
-             
-        if fnCTF is not None:               
-            if self.doFlip:
-                fnFlipped = self._getTmpPath(micName +"_flipped.xmp")
+        #self.posFiles = writeSetOfCoordinates(self._getExtraPath(), self.inputCoords)
+        writeSetOfCoordinates(self._getExtraPath(), self.inputCoords)
 
-                args = " -i %(micrographToExtract)s --ctf %(fnCTF)s -o %(fnFlipped)s"
-                # If some downsampling has been performed (either before picking or now) pass the downsampling factor 
-                if self.downsampleType != self.ORIGINAL:
-                    downFactor = self.samplingFinal/self.samplingInput
-                    args += " --downsampling %(downFactor)f"
-                    self.runJob(None, "xmipp_ctf_phase_flip", args % locals())
-                
-        self.fnCTF = fnCTF
+    def flipMicrograph(self, micName, fnCTF, micrographToExtract):
+        """ Flip micrograph. """           
+        fnFlipped = self._getTmpPath(micName +"_flipped.xmp")
 
- 
-    def _getCTFModel(self, micId):
-        """ 
-        Check if micrograph associated to coordinate has CTF and 
-        if so return the model 
-        """
-        # Find the associated micrograph from the set of coordinates
-        mics = self.inputCoords.getMicrographs()  
-        micInput = mics[micId]        
-        fnCTF = None
+        args = " -i %(micrographToExtract)s --ctf %(fnCTF)s -o %(fnFlipped)s"
+        # If some downsampling has been performed (either before picking or now) pass the downsampling factor 
+        if self.downsampleType != self.ORIGINAL:
+            downFactor = self.samplingFinal/self.samplingInput
+            args += " --downsampling %(downFactor)f"
+            self.runJob(None, "xmipp_ctf_phase_flip", args % locals())
         
-        if micInput.hasCTF():
-            micCTF = micInput.getCTF()
-            #xmippCTF = XmippCTFModel.convert(micCTF, self._getTmpPath("tmp.ctfParam"))
-            #fnCTF = xmippCTF.getFileName()
-            fnCTF = self._getTmpPath("%s.ctfParam" % removeBaseExt(micInput.getFileName()))
-            writeCTFModel(micCTF, fnCTF)
-
-        return fnCTF
         
-    def extractParticles(self, micId, micName, micrographToExtract):
+    def extractParticles(self, micId, micName, fnCTF, micrographToExtract):
         """ Extract particles from one micrograph """
         #If flip selected and exists CTF model use the flip output
-        if self.doFlip and self.fnCTF:
-            micrographToExtract = self._getTmpPath(micName +"_flipped.xmp")
+#        if self.doFlip and self.fnCTF:
+#            micrographToExtract = self._getTmpPath(micName +"_flipped.xmp")
                 
         outputRoot = str(self._getExtraPath(micName))
 
@@ -256,9 +258,9 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         particlesMd = 'particles@%s' % fnPosFile
 
         #if fnPosFile is not None and xmipp.existsBlockInMetaDataFile(particlesMd):
-        if fnPosFile is not None:
+        if exists(fnPosFile):
             boxSize = self.boxSize.get()
-            args = "-i %(micrographToExtract)s --pos %(fnPosFile)s -o %(outputRoot)s --Xdim %(boxSize)d" % locals()
+            args = "-i %(micrographToExtract)s --pos %(particlesMd)s -o %(outputRoot)s --Xdim %(boxSize)d" % locals()
             if self.downsampleType.get() != self.SAME_AS_PICKING:
                 args += " --downsampling " + str(self.samplingFinal/self.samplingInput)
             if self.doInvert:
@@ -267,10 +269,9 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
             self.runJob(None,"xmipp_micrograph_scissor", args)
             # Normalize 
             if self.doNormalize:
-                from protlib_particles import runNormalize
-                runNormalize(None, outputRoot + '.stk',self.normType.get(), self.backRadius.get(), 1)          
+                self.runNormalize(outputRoot + '.stk', self.normType.get(), self.backRadius.get())          
                                
-            if (self.downsampleType.get() == self.OTHER) or (self.fnCTF is not None):
+            if (self.downsampleType.get() == self.OTHER) or (fnCTF is not None):
                 selfile = outputRoot + ".xmd"
                 md = xmipp.MetaData(selfile)
                 if self.downsampleType.get() == self.OTHER:
@@ -278,9 +279,25 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
                     md.operate("Xcoor=Xcoor*%f" % downsamplingFactor)
                     md.operate("Ycoor=Ycoor*%f" % downsamplingFactor)
                 # If micrograph has CTF info copy it
-                if self.fnCTF is not None:
-                    md.setValueCol(xmipp.MDL_CTF_MODEL, self.fnCTF)
+                if fnCTF is not None:
+                    md.setValueCol(xmipp.MDL_CTF_MODEL, fnCTF)
                 md.write(selfile)
+                
+    def runNormalize(self, stack, normType, bgRadius):
+        program = "xmipp_transform_normalize"
+        args = "-i %(stack)s "
+        
+        if bgRadius <= 0:
+            particleSize = xmipp.MetaDataInfo(stack)[0]
+            bgRadius = int(particleSize/2)
+        
+        if normType=="OldXmipp":
+            args += "--method OldXmipp"
+        elif normType=="NewXmipp":
+            args += "--method NewXmipp --background circle %(bgRadius)d"
+        else:
+            args += "--method Ramp --background circle %(bgRadius)d"
+        self.runJob(None, program, args % locals())
                     
     def getImgIdFromCoord(self, coordId):
         """ Get the image id from the related coordinate id. """
@@ -296,13 +313,12 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
                   
         #Create images.xmd metadata
         fnImages = self._getPath('images.xmd')
-        imgsXmd = xmipp.MetaData()  
-        for posFn in self.posFiles:
-        #for posFn in self.getConvertedInput('inputCoords').iterCoordinatesFile():    
-#            xmdFn = posFn.replace(".pos",".xmd")
+        imgsXmd = xmipp.MetaData() 
+        posFiles = glob(self._getExtraPath('*.pos')) 
+        for posFn in posFiles:
             xmdFn = self._getExtraPath(replaceBaseExt(posFn, "xmd"))
             md = xmipp.MetaData(xmdFn)
-            mdPos = xmipp.MetaData(posFn)
+            mdPos = xmipp.MetaData('particles@%s' % posFn)
             mdPos.merge(md) 
             #imgSet.appendFromMd(mdPos)
             imgsXmd.unionAll(mdPos)
@@ -311,8 +327,6 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         imgsXmd.write(fnImages)
         #imgSet.sort() # We need sort?
         #imgSet.write()
-        
-        #fnImages = imgSet._getListBlock()
 
         # Run xmipp_image_sort_by_statistics to add zscore info to images.xmd
         args="-i %(fnImages)s --addToInput"
@@ -334,16 +348,28 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         
         # Create output SetOfParticles
         imgSet = self._createSetOfParticles()
+        imgSet.load()
         imgSet.copyInfo(self.inputMics)
-        imgSet.setHasCTF(self.fnCTF is not None)       
+        #imgSet.setHasCTF(self.fnCTF is not None)       
+        imgSet.setHasCTF(self.ctfRelations.get() is not None)
                  
         if self.downsampleType == self.OTHER:
             imgSet.setSamplingRate(self.inputMics.getSamplingRate()*self.downFactor.get())
         imgSet.setCoordinates(self.inputCoords)
         readSetOfParticles(fnImages, imgSet, imgSet.hasCTF())
+        # For each particle retrieve micId from SetOFCoordinates and set it on the CTFModel
+        for img in imgSet:
+            coord = self.inputCoords[img.getId()]
+            ctfModel = img.getCTF()
+            if ctfModel is not None:
+                ctfModel.setId(coord.getMicId())
+                img.setCTF(ctfModel)
+                imgSet.update(img)
         imgSet.write()
         
         self._defineOutputs(outputParticles=imgSet)
+        self._defineDataSource(self.inputCoords, imgSet)
+        #TODO: pass CTF relation from input micrographs to imgSet
     
     def _summary(self):
         downsampleTypeText = {
@@ -365,7 +391,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
     def _validate(self):
         validateMsgs = []
         # doFlip can only be True if CTF information is available on picked micrographs
-        if self.doFlip.get() and not self.inputCoordinates.get().getMicrographs().hasCTF():
+        if self.doFlip.get() and not self.ctfRelations.hasValue():
             validateMsgs.append('Phase flipping cannot be performed unless CTF information is provided.')
         return validateMsgs
             

@@ -35,6 +35,35 @@ $.fn.dataTableExt.oApi.fnGetColumnIndex = function ( oSettings, sCol )
     }
     return -1;
 };
+$.fn.dataTableExt.oApi.fnDisplayRowWithIndex = function ( oSettings, iPos )
+{
+    // Account for the "display" all case - row is already displayed
+    if ( oSettings._iDisplayLength == -1 )
+    {
+        return;
+    }
+  
+    // Find the node in the table
+/*     var iPos = -1;
+    for( var i=0, iLen=oSettings.aiDisplay.length ; i<iLen ; i++ )
+    {
+        if( oSettings.aoData[ oSettings.aiDisplay[i] ].nTr == nRow )
+        {
+            iPos = i;
+            break;
+        }
+    }
+ */      
+ 
+    // Alter the start point of the paging display
+    if( iPos >= 0 )
+    {
+        oSettings._iDisplayStart = ( Math.floor(iPos / oSettings._iDisplayLength) ) * oSettings._iDisplayLength;
+        this.oApi._fnCalculateEnd( oSettings );
+    }
+      
+    this.oApi._fnDraw( oSettings );
+};
 </script>
 
 <script type="text/javascript" src="{{jquerydataTables_colreorder}}"></script>
@@ -44,12 +73,10 @@ $.fn.dataTableExt.oApi.fnGetColumnIndex = function ( oSettings, sCol )
 <script type="text/javascript">
 /* Initialize datatable table */
 var oTable;
-/* Initialize Table Layout Configuration from json variable*/
-var jsonTableLayoutConfiguration = {{tableLayoutConfiguration|safe }}
-console.log("json",jsonTableLayoutConfiguration)
 
 $(document).ready(function() {
-	initializeSelectionRowEvent() 
+
+	initializeSelectionRowEvent()
 	initializeGoToEvent()
 	initializeTableWidth()
 	
@@ -63,7 +90,15 @@ $(document).ready(function() {
 			        "bInfo": true,
 			        "bAutoWidth": true,
 			        "sDom": 'Rl<"#displayTableContainer">frtip', 
-			        /* "sDom": 'T<"clear">lfrtip', */
+			        "iDisplayLength": 50,
+			        "oLanguage": {
+			            "sLengthMenu": 'Display <select>'+
+			                '<option value="25">25</option>'+
+			                '<option value="50">50</option>'+
+			                '<option value="100">100</option>'+
+			                '<option value="-1">All</option>'+
+			                '</select> records'
+			        }, 
  			        "oColReorder": {
 		    			"aiOrder": jsonTableLayoutConfiguration.colsOrder
 		    		},  
@@ -99,12 +134,17 @@ $(document).ready(function() {
 	
 	$("#displayTableContainer").html("<a href='#' onclick='showTableConfig()'>Display Table Configuration</a>")
 	
+	{% if dataset.getTable.hasEnabledColumn %}
 	initializeMultipleSelectionTool()
+	{% endif %}
 	setElementsEditable(null)
 	initializeColumnHeader()
 	
 	
+	
 } );
+
+
 
 /* Render elements on table (Image and checkbox) */
 function renderElements(nRow, aData){
@@ -113,6 +153,9 @@ function renderElements(nRow, aData){
 	 invisibleColumns = 0 
 	 for (var i in jsonTableLayoutConfiguration.columnsLayout){ 
 		 var columnLayoutConfiguration = jsonTableLayoutConfiguration.columnsLayout[i]
+		 
+		 console.log(columnLayoutConfiguration.columnLayoutProperties)
+		 
 		 if (columnLayoutConfiguration.columnLayoutProperties.visible){
 	   		 if (typeof oTable!= 'undefined'){
 	   			 columnId=oTable.fnGetColumnIndex(i)
@@ -123,19 +166,22 @@ function renderElements(nRow, aData){
 	   		 }
 	   		 
 	   		if (columnIdReal!=null){ 
-		   		if (columnLayoutConfiguration.typeOfColumn == 'image'){
-			   		 if (columnLayoutConfiguration.columnLayoutProperties.renderable){
-			   			 $('td:eq('+columnIdReal+')', nRow).html( '<span style="display:none">'+aData[columnId]+'</span><img class=\"tableImages\" id=\"'+i+'___'+aData[0]+'\" src=\"/get_image/?image='+aData[columnId]+'\"/>' );
-			   		 }
-			   		 else{
-			   			$('td:eq('+columnIdReal+')', nRow).html( '<span>'+aData[columnId]+'</span><img style="display:none" class=\"tableImages\" id=\"'+i+'___'+aData[0]+'\" src=\"/get_image/?image='+aData[columnId]+'\"/>' );
-			   		 }
-		   		 }
-		   		 else if (columnLayoutConfiguration.typeOfColumn == 'checkbox'){
+	   			if (columnLayoutConfiguration.typeOfColumn == 'checkbox'){
 		   			 checkbox_element = '<input type=\"checkbox\" onclick=\"valueChange(this);\" id=\"'+i+'___'+aData[0]+'\" '
 		    			 if (aData[columnId] == 1){checkbox_element += 'checked>'}
 		    			 else{checkbox_element += '>'}
 		   			 $('td:eq('+columnIdReal+')', nRow).html(checkbox_element);
+		   		}
+	   			else if (columnLayoutConfiguration.columnLayoutProperties.renderable){
+		   			$('td:eq('+columnIdReal+')', nRow).html(
+		   					'<span style="display:none">'+aData[columnId]+'</span>'+
+		   					'<img class=\"tableImages\" id=\"'+i+'___'+aData[0]+'\" src=\"/render_column/?renderFunc='+columnLayoutConfiguration.columnLayoutProperties.renderFunc+'&'+columnLayoutConfiguration.columnLayoutProperties.extraRenderFunc+'&image='+aData[columnId]+'\"/>' );
+		   		 
+	   			}
+	   			else if (columnLayoutConfiguration.typeOfColumn == 'image'){
+			   			$('td:eq('+columnIdReal+')', nRow).html( '<span>'+aData[columnId]+'</span>'+
+			   					'<img style="display:none" class=\"tableImages\" id=\"'+i+'___'+aData[0]+'\" data-real_src=\"/render_column/?renderFunc='+columnLayoutConfiguration.columnLayoutProperties.renderFunc+'&'+columnLayoutConfiguration.columnLayoutProperties.extraRenderFunc+'&image='+aData[columnId]+'\"/>' );
+			   			/* $('td:eq('+columnIdReal+')', nRow).html( '<span>'+aData[columnId]+'</span>' ); */
 		   		 }
 	   		}	
 		 }
@@ -167,9 +213,9 @@ function getHeaderWithIcon(text, columnLayoutProperties){
 	var iconElements = '' 
 	/* NAPA DE LUXE HABRIA QUE PONERLE UN MARGIN AL LABEL DEL HEADER */
 	/* var iconElements = '<span style=\"margin:8px\">'+text+'</span>' */
-	if (columnLayoutProperties.visible && columnLayoutProperties.allowSetVisible){
+/* 	if (columnLayoutProperties.visible && columnLayoutProperties.allowSetVisible){
 		iconElements+="<span class=\"css_right\"><img src=\"/resources/showj/delete.png\" class=\"arrowImage\" onclick=\"enableDisableColumn(event,this)\" ></span>"
-	}
+	} */
 	
 	if (columnLayoutProperties.allowSetEditable){
 		iconElements+="<span class=\"css_right\"><div class=\"iconHeader "
@@ -211,8 +257,9 @@ function getColumnsDefinition(){
 	return dataForTable;
 }
 
-
-/* Enable/disable column 
+/* 
+ * Currently this is not been used as delete icon has been removed
+ * Enable/disable column 
  * Disable datatable column when event triggered from icon disable column header 
  */
 function enableDisableColumn(event, element){
@@ -246,6 +293,11 @@ function enableDisableRenderColumn(event, element){
 	//We enable/disable render event
 	var nTrs = oTable.fnGetNodes();
 	$('td:nth-child('+(iCol+1)+')', nTrs).each(function(){
+		if ($(element).hasClass("renderTableOn") && $(this).find("img").attr('src')== undefined){
+			/* $(this).find("img").attr("src",$(this).find("img").data('real_src')) */
+			setImageSize(false)
+			initializeImageLoad(false)
+		}
 		$(this).find("img").toggle()
 		$(this).find("span").toggle()
 	})
@@ -391,14 +443,19 @@ function initializeGoToEvent(){
 	});
 }
 function updateRowSelection(){
+	oTable.fnDisplayRowWithIndex($("#id_goto").val()-1)
 	var nodes = oTable.fnGetNodes();
-	nodes[$("#id_goto").val()-1].click();
+	selectedElement=nodes[$("#id_goto").val()-1]
+	selectedElement.click();
+	
+	$('html, body').animate({
+        scrollTop: $(selectedElement).offset().top
+    }, 2000);
 }
 
 /* Control row event selection allowing shift, ctrol and single click */
 var lastChecked;
 function initializeSelectionRowEvent(){
-	/* $('#data_table').on("click","tr", function(event) { */
 	$('#data_table').on("click","tr", function(event) {
 
 		var start = $('#data_table tbody tr').index(this);
@@ -439,29 +496,36 @@ function initializeSelectionRowEvent(){
 		     
 		    lastChecked = this;
 		    
-		    $("#id_goto").val($(this).index()+1)
+		    $("#id_goto").val(oTable.fnSettings()._iDisplayStart + $(this).index()+1)
 		}	    
 	});
 }
 
 function initializeMultipleSelectionTool(){
-	$('tr').hover(function(e) {
-		if ($(this).hasClass("row_selected")){
-			$("#multipleSelectionTool").css('left',e.pageX)
-			$("#multipleSelectionTool").css('top',e.pageY)
-			
-			var iRow = $(this).index()
-			$("#multipleSelectionTool").data('row_id', iRow)
-			
-			$("#multipleSelectionTool").fadeIn('slow')
-		}	
-		
-	},function(event) {
-		if ($(this).hasClass("row_selected")){
-			$("#multipleSelectionTool").delay(2000).fadeOut('slow')
-		}
-		
-	}); 
+	//Hover on multiple selection tool	
+	hiConfig = {
+        sensitivity: 3, // number = sensitivity threshold (must be 1 or higher)
+        interval: 300, // number = milliseconds for onMouseOver polling interval
+        timeout: 800, // number = milliseconds delay before onMouseOut
+        over: function(e) {
+        	if ($(this).hasClass("row_selected")){
+    			$("#multipleSelectionTool").css('left',e.pageX)
+    			$("#multipleSelectionTool").css('top',e.pageY)
+    			
+    			var iRow = $(this).index()
+    			$("#multipleSelectionTool").data('row_id', iRow)
+    			
+    			$("#multipleSelectionTool").fadeIn('slow')
+    		}
+        }, // function = onMouseOver callback (REQUIRED)
+        out: function() { 
+        	if ($(this).hasClass("row_selected")){
+    			$("#multipleSelectionTool").fadeOut('slow')
+    		}
+        } // function = onMouseOut callback (REQUIRED)
+    }	
+	$("tr").hoverIntent(hiConfig)
+	
 }
 
 /*Display and initialize div for configuring table layout*/

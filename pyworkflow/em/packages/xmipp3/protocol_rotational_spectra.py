@@ -4,58 +4,32 @@ import xmipp
 import xmipp, xmipp3
 from protocol_kerdensom import *
 
-
-
-class XmippDefRotSpectra(XmippDefKerdensom):
-    """Create the definition of parameters for
-    the Rotational Spectra protocol"""
-    def _addParams(self):
-        self.addParam('howCenter', EnumParam, choices=['Middle of the image', 'Minimize first harmonic'], 
-                      default=xmipp3.ROTSPECTRA_CENTER_MIDDLE, important=True, 
-                      label='How to find the center of rotation', display=EnumParam.DISPLAY_COMBO, 
-                      help='Select how to find the center of rotation.')  
-        self.addParam('spectraInnerRadius', IntParam, default=15,
-                      label='Inner radius for rotational harmonics (%)',
-                      help='A percentage of the image radius', expertLevel=LEVEL_ADVANCED)
-        self.addParam('spectraOuterRadius', IntParam, default=80,
-                      label='Outer radius for rotational harmonics (%)',
-                      help='A percentage of the image radius', expertLevel=LEVEL_ADVANCED)
-        self.addParam('spectraLowHarmonic', IntParam, default=1,
-                      label='Lowest harmonic to calculate',
-                      expertLevel=LEVEL_ADVANCED)
-        self.addParam('spectraHighHarmonic', IntParam, default=15,
-                      label='Highest harmonic to calculate',
-                      expertLevel=LEVEL_ADVANCED) 
-        self.addSection(label='Kerdensom')
-        XmippDefKerdensom._addParams(self)
-          
-#         self.addSection(label='Classification: classify kerdensom')
-#         self.addParam('xDimension', IntParam, default=7,
-#                       label='X-dimension of the self-organizing map')
-#         self.addParam('yDimension', IntParam, default=7,
-#                       label='Y-dimension of the self-organizing map')   
-#         self.addParam('initialRegFactor', FloatParam, default=1000,
-#                       label='Initial regularization factor',
-#                       help='The kerdenSOM algorithm anneals from an initial high regularization factor \n' +
-#                             'to a final lower one, in a user-defined number of steps. \n' +
-#                             'If the output map is too smooth, lower the regularization factors \n' +
-#                             'If the output map is not organized, higher the regularization factors \n' +
-#                             'See http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/KerDenSOM', expertLevel=LEVEL_ADVANCED)
-#         self.addParam('finalRegFactor', FloatParam, default=200,
-#                       label='Final regularization factor',
-#                       expertLevel=LEVEL_ADVANCED)   
-#         self.addParam('lowerRegFactorSteps', FloatParam, default=5,
-#                       label='Steps to lower the regularization facor',
-#                       expertLevel=LEVEL_ADVANCED) 
-#         self.addParam('kerdenSOMParamters', IntParam,
-#                       label='Additional kerdenSOM parameters',
-#                       help='For a complete description. \n' +
-#                       'See http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/KerDenSOM', expertLevel=LEVEL_ADVANCED)
         
 class XmippProtRotSpectra(XmippProtKerdensom):
     """Protocol to compute the rotational spectrum of the given particles"""
-    
-    _definition = XmippDefRotSpectra()
+
+    def _defineParams(self, form):
+        XmippProtKerdensom._defineParams(self, form)
+        
+    def _addParams(self, form):
+        form.addParam('howCenter', EnumParam, choices=['Middle of the image', 'Minimize first harmonic'], 
+                      default=xmipp3.ROTSPECTRA_CENTER_MIDDLE, important=True, 
+                      label='How to find the center of rotation', display=EnumParam.DISPLAY_COMBO, 
+                      help='Select how to find the center of rotation.')  
+        form.addParam('spectraInnerRadius', IntParam, default=15,
+                      label='Inner radius for rotational harmonics (%)',
+                      help='A percentage of the image radius', expertLevel=LEVEL_ADVANCED)
+        form.addParam('spectraOuterRadius', IntParam, default=80,
+                      label='Outer radius for rotational harmonics (%)',
+                      help='A percentage of the image radius', expertLevel=LEVEL_ADVANCED)
+        form.addParam('spectraLowHarmonic', IntParam, default=1,
+                      label='Lowest harmonic to calculate',
+                      expertLevel=LEVEL_ADVANCED)
+        form.addParam('spectraHighHarmonic', IntParam, default=15,
+                      label='Highest harmonic to calculate',
+                      expertLevel=LEVEL_ADVANCED) 
+        form.addSection(label='Kerdensom')
+        XmippProtKerdensom._addParams(self, form)
         
     def _prepareParams(self):
         XmippProtKerdensom._prepareParams(self)

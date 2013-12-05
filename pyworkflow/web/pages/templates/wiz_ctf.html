@@ -1,17 +1,28 @@
 {% extends 'wiz_base.html' %} 
-{% block title %} Frequencies {% endblock %} 
-{% block name %} Frequencies {% endblock %} 
+{% block title %} CTF {% endblock %} 
+{% block name %} CTF {% endblock %} 
 {% block head %}
 	<script type="text/javascript" src="{{raphael}}"></script>
+	<script>
+		function returnParams(){
+			putSelection('input#high_val', 'highRes_input');
+			putSelection('input#low_val', 'lowRes_input');
+		}
+	</script>
 {% endblock %} 
 {% block list %}
 <tr>
 	<th>Object</th>
 </tr>
 {% for obj in objects %}
+{% if forloop.counter0 == 0 %} 
+<script>
+	firstElm  = {{obj.getObjId}};
+</script>
+{% endif %}
 <tr id="{{obj.getObjId}}" class="no-selected"
 	style="background-color: #fafafa;"
-	onclick="compositePreview(($(this)));" value="{{obj.getFileName}}">
+	onclick="compositeCTF(($(this)));" value="{{obj.getFileName}}">
 	<td>{{obj.basename}}</td>
 </tr>
 {% endfor %} {% endblock %} {% block images %}
@@ -32,21 +43,21 @@
 		</div>PSD
 	</td>
 </tr>
-{% endblock %} {% block options %}
-
-<fieldset id="freqOptions">
+{% endblock %} 
+{% block options %}
+<fieldset id="sliderOptions">
 	<legend>Frequencies</legend>
 	<div id="lowFreq">
 		<span id="title_freq">Low freq<span>
 		<div id="slider" class="slider_low"></div>
-		<div id="slider_low_result">0.25</div>
-		<input id="low_val" type="hidden"/>
+		<div id="slider_low_result">{{low_res}}</div>
+		<input id="low_val" type="hidden" value="{{low_res}}"/>
 	</div>
 	<div id="highFreq">
 		<span id="title_freq">High freq<span>
 		<div id="slider" class="slider_high"></div>
-		<div id="slider_high_result">0.25</div>
-		<input id="high_val" type="hidden"/>
+		<div id="slider_high_result">{{high_res}}</div>
+		<input id="high_val" type="hidden" value="{{high_res}}"/>
 	</div>
 </fieldset>
 
@@ -54,7 +65,7 @@
 $(".slider_low").slider({
 	animate : true,
 	range : "min",
-	value : 0.25,
+	value : "{{low_res}}",
 	min : 0.00,
 	max : 0.50,
 	step : 0.01,
@@ -70,11 +81,10 @@ $(".slider_low").slider({
 		$('#low_val').attr('value', ui.value);
 	}
 });
-
 $(".slider_high").slider({
 	animate : true,
 	range : "min",
-	value : 0.25,
+	value : "{{high_res}}",
 	min : 0.00,
 	max : 0.50,
 	step : 0.01,
@@ -90,5 +100,10 @@ $(".slider_high").slider({
 		$('#high_val').attr('value', ui.value);
 	}
 });
+//Load the First Element of the list
+window.onload = compositeCTF($("tr#"+firstElm));
 </script>
+{% endblock %}
+{% block function %}
+	onclick="returnParams()"
 {% endblock %}

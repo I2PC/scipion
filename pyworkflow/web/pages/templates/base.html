@@ -1,83 +1,42 @@
 <!DOCTYPE html>
 <html lang='es'>
 <head>
-<title>Scipion {% block title %} {% endblock %}</title>
-<meta charset='utf-8'>
-<link rel="icon" type="image/png" href="/resources/scipion_bn.png" />
-<link href="/static/css/general_style.css" rel="stylesheet"
-	type="text/css">
-<link type="text/css" href="/static/css/jquery-ui.css" rel="stylesheet" />
-<script type="text/javascript" src="/static/js/jquery/jquery.js"></script>
-<script type="text/javascript" src="/static/js/jsPlumb/jquery.jsPlumb.js"></script>
-<script type="text/javascript" src="/static/js/jquery/jquery-ui.js"></script>
-<script type="text/javascript" src="/static/js/layouts.js"></script>
-<script type="text/javascript" src="/static/js/messi/messi.js"></script>
-<script>
-	function changeView(){
-		selection = document.getElementById("viewsCombo").value;
-		if (selection == "projects"){
-			window.location.href = "/projects"
-		} else if(selection == "protocols"){
-			window.location.href = "/project_content/?projectName={{projectName}}"
-		} else if (selection == "data"){
-			alert("Not implemented yet")
-		} else if (selection == "hosts"){
-			window.location.href = "/view_hosts"
-		}
-	}
-</script>
-{% block head %} {% endblock %}
+	<title>Scipion {% block title %} {% endblock %}</title>
+	<meta charset='utf-8'>
+	<link rel="icon" type="image/png" href="{{favicon}}" />
+	<!-- CSS -->
+	<link href="/static/css/general_style.css" rel="stylesheet" type="text/css">
+	<link href="/static/css/general_style_base.css" rel="stylesheet" type="text/css">
+	<!-- JS -->
+	<script src="{{jquery}}" type="text/javascript"></script>
+	
+	{% block content_head %}  {% endblock %}
 </head>
-
 <body>
-	<div class="layout" id="wrapper">
-		{% if contentConfig == 'divided' %}
-			<div class="center" id="maincontent">
-					<div id="north" style="overflow:auto;height:60%;">
-				
-		{% endif %}
-		{% if contentConfig == 'full' %}
-			<div class="center" id="maincontent">
-		{% endif %}
+
+	<div id="mainContainer">
+		{% block content_header %}	{% endblock %}
 		
-				{% block content %}
-				{%endblock %}
+		<div id="mainSection">
+			<aside id="side_news"> <!-- Main Menu -->
+	
+			{% block content_aside %}	{% endblock %}	
+			
+			</aside>
+			
+			<section> 
+			
+			{% block content_section %}	{% endblock %}	
 				
-		{% if contentConfig == 'divided' %}		
-			</div>
-			<div style="overflow:auto;">
-				{% block contentDown %}	
-				{%endblock %}
-			</div>
+	
+				
+			</section>
+		</div>
 		
-		{% endif %}	
-		</div>
-		<!-- #middle-->
-
-		<div class="north" id="framecontentTop">
-			<a href="/projects"><img class="logo" src="/resources/scipion_logo.png"
-				alt="Scipion logo" /></a>  
-				{% if projectName != None %}
-					<span class="project_name" style="font-size:1.7em;">Project {{projectName}}</span> 
-					<div class="view">
-						<label>View: </label>
-						<select id="viewsCombo" name="viewsCombo" onChange="javascript:changeView();">
-							<!-- <option value=""></option> -->
-							<option value="projects" {% if view == "projects" %} selected {% endif %}>Projects</option>							
-							<option value="protocols" {% if view == "protocols" %} selected {% endif %}>Protocols</option>
-							<option value="data" {% if view == "data" %} selected {% endif %}>Data</option>
-							<option value="hosts" {% if view == "hosts" %} selected {% endif %}>Hosts</option>
-						</select>
-					</div> 
-				{% endif %}	
-		</div>
-		<!-- #header-->
-
-		<div class="west" id="framecontentLeft">{% block sideLeft %} {%endblock %}</div>
-		<!-- sidebar#sideLeft -->
-
-		<div class="south" id="framecontentBottom">{% block footer %} {%endblock %}</div>
-		<!-- #footer -->
+		{% block content_end_page %}	{% endblock %}
 	</div>
+	
+	{% include "footer.html" %}
+
 </body>
 </html>

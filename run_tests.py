@@ -35,7 +35,8 @@ PATTERN = 'pattern'
 
 CASE_DICT = {'classes': {PATH:'classes em/data', PATTERN: 'test*.py'},
              'xmipp': {PATH:'em/workflows', PATTERN: 'test*xmipp*.py'},
-             'mixed': {PATH:'em/workflows', PATTERN: 'test*mixed*.py'}}
+             'mixed': {PATH:'em/workflows', PATTERN: 'test*mixed*.py'},
+             'protocols': {PATH:'em/protocols', PATTERN: 'test_protocols*.py'}}
   
 def parseArgs(args):
     """ Parse arguments in the form of:

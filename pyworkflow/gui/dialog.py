@@ -33,7 +33,7 @@ import Tkinter as tk
 import gui
 from widgets import Button
 from tree import BoundTree, TreeProvider
-from text import TaggedText
+from text import Text, TaggedText
 
 
 # Possible result values for a Dialog
@@ -294,7 +294,43 @@ class EntryDialog(Dialog):
             showError("Validation error", "Value is empty", self)
             return False
         return True
+    
+    
+class TextDialog(Dialog):
+    """Dialog to edit some text"""
+    def __init__(self, parent, title, initValue='', 
+                 textLabel='Comment', textWidth=50, textHeight=15):
+        self.textLabel = textLabel
+        self.textWidth = textWidth
+        self.textHeight = textHeight
+        self.value = initValue
+        Dialog.__init__(self, parent, title)
         
+    def body(self, bodyFrame):
+        bodyFrame.config(bg='white')
+        frame = tk.Frame(bodyFrame, bg='white')
+        frame.grid(row=0, column=0, padx=20, pady=20)
+        label = tk.Label(bodyFrame, text=self.textLabel, bg='white', bd=0)
+        label.grid(row=0, column=0, sticky='nw', padx=(15, 10), pady=15)
+        self.text = Text(bodyFrame, height=self.textHeight, width=self.textWidth)
+        self.text.addText(self.value)
+        self.text.setReadOnly(False)
+        self.text.grid(row=1, column=0, sticky='news', padx=5, pady=5)
+        self.initial_focus = self.text
+        
+    def apply(self):
+        self.value = self.text.getText()
+        
+    def buttonbox(self, btnFrame):
+        # Cancel the binding of <Return> key
+        Dialog.buttonbox(self, btnFrame)
+        #self.bind("<Return>", self._noReturn)
+        self.unbind("<Return>")
+        
+    def _noReturn(self, e):
+        pass
+        
+
 """ Functions to display dialogs """
 def askYesNo(title, msg, parent):
     d = YesNoDialog(parent, title, msg)
@@ -314,34 +350,14 @@ def askString(title, label, parent, entryWidth=20):
     return d.value
     
 
-class SubclassesTreeProvider(TreeProvider):
-    """Will implement the methods to provide the object info
-    of subclasses objects(of className) found by mapper"""
-    def __init__(self, mapper, pointerParam):
-        className = pointerParam.pointerClass.get()
-        self.condition = pointerParam.pointerCondition.get()
-        self.getObjects = lambda: mapper.selectByClass(className, objectFilter=self.objFilter)
-        
-    def objFilter(self, obj):
-        result = True
-        if self.condition:
-            result = obj.evalCondition(self.condition)
-        return result
-        
-    def getColumns(self):
-        return [('Object', 250), ('Id', 50), ('Class', 200)]
-    
-    def getObjectInfo(self, obj):
-        return {'key': '%s.%s' % (obj.getName(), obj.strId()),
-                'values': (obj.strId(), obj.getClassName())}
-        
-        
+                
 class ListDialog(Dialog):
     """Dialog to select an element from a list.
     It is implemented using a Tree widget"""
-    def __init__(self, parent, title, provider):
+    def __init__(self, parent, title, provider, message=None):
         self.value = None
         self.provider = provider
+        self.message = message
         Dialog.__init__(self, parent, title,
                         buttons=[('Select', RESULT_YES), ('Cancel', RESULT_CANCEL)])
         
@@ -349,6 +365,10 @@ class ListDialog(Dialog):
         bodyFrame.config(bg='white')
         gui.configureWeigths(bodyFrame)
         self._createTree(bodyFrame)
+        if self.message:
+            label = tk.Label(bodyFrame, text=self.message, bg='white',
+                     image=self.getImage('help_hint.png'), compound=tk.LEFT)
+            label.grid(row=1, column=0, sticky='nw', padx=5, pady=5)
         self.initial_focus = self.tree
         
     def _createTree(self, parent):

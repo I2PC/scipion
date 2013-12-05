@@ -27,11 +27,13 @@
 from pyworkflow.utils.path import replaceExt, joinExt
 from mapper import Mapper
 
+
 class SqliteMapper(Mapper):
     """Specific Mapper implementation using Sqlite database"""
     def __init__(self, dbName, dictClasses=None):
         Mapper.__init__(self, dictClasses)
         self.__initObjDict()
+        self.__initUpdateDict()
         try:
             self.db = SqliteDb(dbName)
         except Exception, ex:
@@ -42,12 +44,17 @@ class SqliteMapper(Mapper):
         
     def __getObjectValue(self, obj):
         if obj.isPointer() and obj.hasValue():
-            return obj.get().strId() # For pointers store the id of referenced object
+            if obj.get().hasObjId(): # Check the object has been stored previously
+                return obj.get().strId() # For pointers store the id of referenced object
+            else:
+                self.updatePendingPointers.append(obj)
+                return "Pending update" 
         return obj.getObjValue()
         
     def __insert(self, obj, namePrefix=None):
         obj._objId = self.db.insertObject(obj._objName, obj.getClassName(),
-                                          self.__getObjectValue(obj), obj._objParentId)
+                                          self.__getObjectValue(obj), obj._objParentId,
+                                          obj._objLabel, obj._objComment)
         sid = obj.strId()
         if namePrefix is None:
             namePrefix = sid
@@ -94,9 +101,25 @@ class SqliteMapper(Mapper):
             return replaceExt(obj._objName, obj.strId())
         return obj.strId()
     
+    def __printObj(self, obj):
+        print "obj._objId", obj._objId
+        print "obj._objParentId", obj._objParentId
+        print "obj._objName", obj._objName
+        print "obj.getObjValue()", obj.getObjValue()
+    
     def updateTo(self, obj, level=1):
+        self.__initUpdateDict()
+        self.__updateTo(obj, level)
+        # Update pending pointers to objects
+        for ptr in self.updatePendingPointers:
+            self.db.updateObject(ptr._objId, ptr._objName, ptr.getClassName(),
+                             self.__getObjectValue(obj), ptr._objParentId, 
+                             ptr._objLabel, ptr._objComment)
+        
+    def __updateTo(self, obj, level):
         self.db.updateObject(obj._objId, obj._objName, obj.getClassName(),
-                             self.__getObjectValue(obj), obj._objParentId)
+                             self.__getObjectValue(obj), obj._objParentId, 
+                             obj._objLabel, obj._objComment)
         if obj.getObjId() in self.updateDict:
             for k, v in self.updateDict.iteritems():
                 print "%d -> %s" % (k, v.getName())
@@ -111,7 +134,7 @@ class SqliteMapper(Mapper):
                 attr._objName = joinExt(namePrefix, key)
                 self.__insert(attr, namePrefix)
             else:  
-                self.updateTo(attr, level + 2)
+                self.__updateTo(attr, level + 2)
         
     def updateFrom(self, obj):
         objRow = self.db.selectObjectById(obj._objId)
@@ -134,17 +157,22 @@ class SqliteMapper(Mapper):
         """ Retrieve the parent object of another. """
         return self.selectById(obj._objParentId)
     
+    def _getStrValue(self, value):
+        """ Return empty string if value is None or empty. """
+        if value is None or len(value) <= 0:
+            return ''
+        return value
+        
     def fillObjectWithRow(self, obj, objRow):
         """Fill the object with row data"""
         obj._objId = objRow['id']
         self.objDict[obj._objId] = obj
-        name = objRow['name']
-        if name is None or len(name) <= 0:
-            obj._objName = ''#obj.strId()
-        else:
-            obj._objName = name
+        obj._objName = self._getStrValue(objRow['name'])
+        obj._objLabel = self._getStrValue(objRow['label'])
+        obj._objComment = self._getStrValue(objRow['comment'])
         objValue = objRow['value']
         obj._objParentId = objRow['parent_id']
+        
         if obj.isPointer():
             if objValue is not None:
                 objValue = self.selectById(int(objValue))
@@ -164,7 +192,9 @@ class SqliteMapper(Mapper):
             parentId = int(childParts[-2])
             # Here we are assuming that always the parent have
             # been processed first, so it will be in the dictiorary
-            parentObj = self.objDict[parentId]
+            parentObj = self.objDict.get(parentId, None)
+            if parentObj is None: # Something went wrong
+                raise Exception("Parent object (id=%d) was not found, object: %s" % (parentId, childRow['name']))
             
             childObj = getattr(parentObj, childName, None)
             if childObj is None:
@@ -200,6 +230,12 @@ class SqliteMapper(Mapper):
     def __initObjDict(self):
         """ Clear the objDict cache """        
         self.objDict = {}
+        
+    def __initUpdateDict(self):
+        """ Clear the updateDict cache """        
+        self.updateDict = {}
+        # This is used to store pointers that pointed object are not stored yet
+        self.updatePendingPointers = [] 
          
     def selectBy(self, iterate=False, objectFilter=None, **args):
         """Select object meetings some criterias"""
@@ -225,15 +261,71 @@ class SqliteMapper(Mapper):
     def selectAll(self, iterate=False, objectFilter=None):
         self.__initObjDict()
         objRows = self.db.selectObjectsByParent(parent_id=None)
-        return self.__objectsFromRows(objRows, iterate, objectFilter)
+        return self.__objectsFromRows(objRows, iterate, objectFilter)    
+    
+    def insertRelation(self, relName, creatorObj, parentObj, childObj):
+        """ This function will add a new relation between two objects.
+        Params:
+            relName: the name of the relation to be added.
+            creatorObj: this object will be the one who register the relation.
+            parentObj: this is "parent" in the relation
+            childObj: this is "child" in the relation
+        """
+        for o in [creatorObj, parentObj, childObj]:
+            if not o.hasObjId():
+                raise Exception("Before adding a relation, the object should be stored in mapper")
+        self.db.insertRelation(relName, creatorObj.getObjId(), parentObj.getObjId(), childObj.getObjId())
+    
+    def __objectsFromIds(self, objIds):
+        """Return a list of objects, given a list of id's
+        """
+        return [self.selectById(rowId['id']) for rowId in objIds]
+        
+    def getRelationChilds(self, relName, parentObj):
+        """ Return all "child" objects for a given relation.
+        Params:
+            relName: the name of the relation.
+            parentObj: this is "parent" in the relation
+        Returns: 
+            a list of "child" objects.
+        """
+        childIds = self.db.selectRelationChilds(relName, parentObj.getObjId())
+        
+        return self.__objectsFromIds(childIds)  
+            
+    def getRelationParents(self, relName, childObj):
+        """ Return all "parent" objects for a given relation.
+        Params:
+            relName: the name of the relation.
+            childObj: this is "child" in the relation
+        Returns: 
+            a list of "parent" objects.
+        """
+        parentIds = self.db.selectRelationParents(relName, childObj.getObjId())
+        
+        return self.__objectsFromIds(parentIds)  
 
-
+    def getRelations(self, creatorObj):
+        """ Return all relations created by creatorObj. """
+        return self.db.selectRelationsByCreator(creatorObj.getObjId())
+    
+    def deleteRelations(self, creatorObj):
+        """ Delete all relations created by object creatorObj """
+        pass
+    
+    def insertRelationData(self, relName, creatorId, parentId, childId):
+        self.db.insertRelation(relName, creatorId, parentId, childId)
+    
+    
 class SqliteDb():
     """Class to handle a Sqlite database.
     It will create connection, execute queries and commands"""
     
-    SELECT = "SELECT id, parent_id, name, classname, value FROM Objects WHERE "
+    SELECT = "SELECT id, parent_id, name, classname, value, label, comment FROM Objects WHERE "
     DELETE = "DELETE FROM Objects WHERE "
+    
+    SELECT_RELATION = "SELECT object_%s_id AS id FROM Relations WHERE name=? AND object_%s_id=?"
+    SELECT_RELATIONS = "SELECT * FROM Relations WHERE parent_id=?"
     
     def selectCmd(self, whereStr, orderByStr=' ORDER BY id'):
         return self.SELECT + whereStr + orderByStr
@@ -250,32 +342,67 @@ class SqliteDb():
         self.cursor = self.connection.cursor()
         # Define some shortcuts functions
         self.executeCommand = self.cursor.execute
+        #self.executeCommand = self.__debugExecute
         self.commit = self.connection.commit
+        
+    def __debugExecute(self, *args):
+        print args
+        self.cursor.execute(*args)
         
     def __createTables(self):
         """Create requiered tables if don't exists"""
         # Enable foreings keys
         self.executeCommand("PRAGMA foreign_keys=ON")
-    
+        # Create the Objects table
         self.executeCommand("""CREATE TABLE IF NOT EXISTS Objects
                      (id        INTEGER PRIMARY KEY AUTOINCREMENT,
                       parent_id INTEGER REFERENCES Objects(id),
-                      name      TEXT,               -- object name 
-                      classname TEXT,               -- object's class name
-                      value     TEXT DEFAULT NULL   -- object value, used for Scalars
+                      name      TEXT,                -- object name 
+                      classname TEXT,                -- object's class name
+                      value     TEXT DEFAULT NULL,   -- object value, used for Scalars
+                      label     TEXT DEFAULT NULL,   -- object label, text used for display
+                      comment   TEXT DEFAULT NULL    -- object comment, text used for annotations
+                      )""")
+        # Create the Relations table
+        self.executeCommand("""CREATE TABLE IF NOT EXISTS Relations
+                     (id        INTEGER PRIMARY KEY AUTOINCREMENT,
+                      parent_id INTEGER REFERENCES Objects(id), -- object that created the relation
+                      name      TEXT,               -- relation name 
+                      classname TEXT DEFAULT NULL,  -- relation's class name
+                      value     TEXT DEFAULT NULL,  -- relation value
+                      label     TEXT DEFAULT NULL,  -- relation label, text used for display
+                      comment   TEXT DEFAULT NULL,  -- relation comment, text used for annotations
+                      object_parent_id  INTEGER REFERENCES Objects(id) ON DELETE CASCADE,
+                      object_child_id  INTEGER REFERENCES Objects(id) ON DELETE CASCADE 
                       )""")
         self.commit()
         
-    def insertObject(self, name, classname, value, parent_id):
+    def insertObject(self, name, classname, value, parent_id, label, comment):
         """Execute command to insert a new object. Return the inserted object id"""
-        self.executeCommand("INSERT INTO Objects (parent_id, name, classname, value) VALUES (?, ?, ?, ?)", \
-                            (parent_id, name, classname, value))
+        try:
+            self.executeCommand("INSERT INTO Objects (parent_id, name, classname, value, label, comment) VALUES (?, ?, ?, ?, ?, ?)",
+                                (parent_id, name, classname, value, label, comment))
+            return self.cursor.lastrowid
+        except Exception, ex:
+            print "insertObject: ERROR "
+            print "INSERT INTO Objects (parent_id, name, classname, value, label, comment) VALUES (?, ?, ?, ?, ?, ?)", (parent_id, name, classname, value, label, comment)
+            raise ex
+        
+    def insertRelation(self, relName, parent_id, object_parent_id, object_child_id, **args):
+        """Execute command to insert a new object. Return the inserted object id"""
+        self.executeCommand("INSERT INTO Relations (parent_id, name, object_parent_id, object_child_id) VALUES (?, ?, ?, ?)",
+                            (parent_id, relName, object_parent_id, object_child_id))
         return self.cursor.lastrowid
     
-    def updateObject(self, objId, name, classname, value, parent_id):
+    def insertRelationRow(self, row):
+        """Execute command to insert a new object. Return the inserted object id"""
+        return self.insertRelation(row['name'], row['parent_id'], 
+                                   row['object_parent_id'], row['object_child_id'])
+    
+    def updateObject(self, objId, name, classname, value, parent_id, label, comment):
         """Update object data """
-        self.executeCommand("UPDATE Objects SET parent_id=?, name=?,classname=?, value=? WHERE id=?", \
-                            (parent_id, name, classname, value, objId))
+        self.executeCommand("UPDATE Objects SET parent_id=?, name=?,classname=?, value=?, label=?, comment=? WHERE id=?",
+                            (parent_id, name, classname, value, label, comment, objId))
         
     def selectObjectById(self, objId):
         """Select an object give its id"""
@@ -337,6 +464,23 @@ class SqliteDb():
         """ Delete all objects from the db. """
         self.executeCommand(self.DELETE + "1")
         
+    def selectRelationChilds(self, relName, object_parent_id):
+        self.executeCommand(self.SELECT_RELATION % ('child', 'parent'), 
+                            (relName, object_parent_id))
+        return self._results()
+        
+    def selectRelationParents(self, relName, object_child_id):
+        self.executeCommand(self.SELECT_RELATION % ('parent', 'child'), 
+                            (relName, object_child_id))
+        return self._results()
+    
+    def selectRelationsByCreator(self, parent_id):
+        self.executeCommand(self.SELECT_RELATIONS, (parent_id,))
+        return self._results()
+    
+    def deleteRelationsByCreator(self, parent_id):
+        self.executeCommand("DELETE FROM Relations where parent_id=?", (parent_id,))
+
 
 
         

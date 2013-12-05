@@ -30,8 +30,12 @@ This sub-package will contains Xmipp3.0 specific protocols
 from xmipp3 import *
 from convert import *
 from viewer import XmippViewer
+from viewer_ml2d import XmippML2DViewer
+from viewer_cl2d import XmippCL2DViewer
+from viewer_ml3d import XmippML3DViewer
 from plotter import XmippPlotter
 from protocol_preprocess_micrographs import XmippProtPreprocessMicrographs
+from protocol_preprocess_volumes import XmippProtPreprocessVolumes
 from protocol_ctf_micrographs import XmippProtCTFMicrographs
 from protocol_particle_pick import XmippProtParticlePicking 
 from protocol_extract_particles import XmippProtExtractParticles
@@ -45,6 +49,9 @@ from protocol_projmatch import XmippProtProjMatch
 from protocol_filters import XmippProtFourierFilter
 from protocol_filters import XmippProtGaussianFilter
 from protocol_filters import XmippProtMask, XmippProtResize
+from protocol_create_mask import XmippProtCreateGeo3DMask
+from protocol_particle_pick_automatic import XmippParticlePickingAutomatic
+from protocol_screen_particles import XmippProtScreenParticles
 
 # Wizards
 from wizard import *

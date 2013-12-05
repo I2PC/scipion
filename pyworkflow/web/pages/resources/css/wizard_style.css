@@ -7,20 +7,24 @@ body {
 	font-family: "Trebuchet MS", "Helvetica", "Arial", "Verdana",
 		"sans-serif";
 	font-size: 0.84em;
+	padding: 15px;
 }
 
 #wizName {
-	margin: 0 0 0.3em 0;
+	margin: 0 0 10px 0;
 }
 
 .layout {
-	width: 33em;
-/* 	padding: 10px; */
+	width: 30em;
+	/* 	padding: 10px; */
 }
 
 .elm1 {
-	width: 12em;
+	width: 16em;
 	float: left;
+	height: 27em;
+	overflow-y: auto;
+	
 }
 
 .elm2 {
@@ -38,7 +42,7 @@ body {
 	/* 	background-color: #F0F0F0; */
 	/* 	border: 2px solid white; */
 	background-color: white;
-/* 	border: 3.5px solid Firebrick; */
+	/* 	border: 3.5px solid Firebrick; */
 	width: 250px;
 	height: 250px;
 	margin: 0 7px 7px 0;
@@ -46,7 +50,13 @@ body {
 }
 
 .options {
-	text-align:center;
+	text-align: center;
+	padding: 5px 0 5px 0;
+	width: auto;
+}
+
+.buttons {
+	text-align: center;
 	padding: 5px;
 	clear: both;
 }
@@ -56,7 +66,7 @@ body {
 	/* 	margin: 1em 0.5em 0 0; */
 	/* 	font-size: 0.8em; */
 	color: black;
-	width: 6.3em;
+/* 	width: 6.3em; */
 	height: 2em;
 	background-color: LightGray;
 	/* 	border: 1px solid #000066; */
@@ -71,12 +81,12 @@ body {
 	background-color: white;
 }
 
-.buttonCancel{
+.buttonCancel {
 	background: url(../../../resources/dialog_cancel.png) 0.5em no-repeat;
 	padding-left: 1.8em;
 }
 
-.buttonSelect{
+.buttonSelect {
 	background: url(../../../resources/dialog_ok.png) 0.5em no-repeat;
 	padding-left: 1.7em;
 }
@@ -96,7 +106,6 @@ table#list {
 	font-size: 0.9em;
 	background-color: #eaebec;
 	border-spacing: 0;
-	overflow-x: auto;
 	border: 1px solid black
 }
 
@@ -109,14 +118,22 @@ table#list th {
 }
 
 table#list th:first-child {
-	background: DarkRed;
+/* 	background: DarkRed;
 	color: white;
 	border-left: 2.5px solid FireBrick;
 	border-top: 2.5px solid FireBrick;
 	font-size: 0.9em;
 	font-weight: bold;
-/* 	margin: -1em -0.7em 0.3em -0.65em; */
 	text-align: center;
+ */	
+	
+	background: DarkRed;
+	color: white;
+	font-size: 0.9em;
+	font-weight: bold;
+	text-align: center;
+	padding: 2px;
+	margin-bottom: 7px;
 }
 
 table#list tr {
@@ -149,57 +166,91 @@ table#list tr.selected:hover td {
 	background-color: LightSteelBlue;
 }
 
-/**************** Frequencies CSS *******************/
-#slider{
-	width:15em;
+/**************** CTF CSS *******************/
+#slider {
+	width: 15em;
 	margin: 5px 0 5px 0;
 }
 
-#lowFreq{
-	width:15m;
-	float:left;
+#lowFreq {
+	width: 15m;
+	float: left;
 }
 
-#highFreq{
-	width:17em;
-	float:right;
+#highFreq {
+	width: 17em;
+	float: right;
 }
 
-#freqOptions{
-	width:36em;
+#sliderOptions {
+	width: 36em;
 	background: #fafafa;
-	float:right;
+/* 	float: right; */
 }
 
 #wrapper {
-    position: relative;
-/*     padding: 0; */
-/*     outline: 1px solid #999; */
+	position: relative;
+	/*     padding: 0; */
+	/*     outline: 1px solid #999; */
 }
+
 #wrapper img {
-    position: absolute;
-    top: 0;
-    left: 0;
+	position: absolute;
+	top: 0;
+	left: 0;
 }
+
 #canvas_low {
-    position: absolute;
-    top: 0;
-    left: 0;
+	position: absolute;
+	top: 0;
+	left: 0;
 }
 
 #canvas_high {
-    position: absolute;
-    top: 0;
-    left: 0;
+	position: absolute;
+	top: 0;
+	left: 0;
 }
 
 #psd_freq {
-    position: absolute;
-    top: 0;
-    left: 0;
+	position: absolute;
+	top: 0;
+	left: 0;
 }
 
-svg{
-	width:250px;
-	height:250px;
+svg {
+	width: 250px;
+	height: 250px;
 }
+
+/**************** Mask Radius CSS *******************/
+
+#canvas {
+	position: absolute;
+	top: 0;
+	left: 0;
+}
+
+#particle {
+	position: absolute;
+	top: 0;
+	left: 0;
+}
+
+#sliderOptionsLite {
+	width: 9em;
+	background: #fafafa;
+}
+
+#sliderUni {
+	width: 15m;
+}
+
+/**************** Fourier Filter CSS *******************/
+
+
+#sliderLite {
+	width: 9em;
+	margin: 5px 7px 5px 7px ;
+}
+

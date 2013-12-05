@@ -5,9 +5,27 @@
 	<meta charset='utf-8'>
 	<link rel="icon" type="image/png" href={{favicon}} />
 	<!-- CSS -->
+	<link href="/static/css/general_style.css" rel="stylesheet" type="text/css">
 	<link href={{css}} rel="stylesheet" type="text/css">
 	<link href={{messi_css}} rel="stylesheet" type="text/css">
 	<link href="{{jquery_ui_css}}" rel="stylesheet" type="text/css">
+	<style type="text/css">
+	.ui-state-active {
+		background: DarkRed !important;
+		font-size: 0.9em !important;
+		font-weight: bold !important;
+		text-align: center !important;
+		padding: 2px !important;
+	}
+	.ui-tabs-anchor{
+		color: #000 !important;
+		padding: .3em 1em !important;
+	}
+	.ui-state-active .ui-tabs-anchor{
+		color: white !important;
+	} 
+	
+	</style>
 	<!-- JS -->
 	<script src={{jquery}} type="text/javascript"></script>
 	<script src={{messi}} type="text/javascript"></script>
@@ -17,6 +35,14 @@
 	<script>
 	function putMode(mode){
 		$("#protocolForm").attr('data-mode', mode);
+	}
+	function putModeWiz(functionName){
+		$("input#wizName").attr("value", functionName);
+		putMode("wiz");
+	}
+	function putModeViewElm(param, func){
+		$("input#viewerParam").attr("value", param);
+		putMode("viewerElement");
 	}
 	</script>
 	 <script>
@@ -28,12 +54,18 @@
 	<body onload="evalElements();">
 		<h3 id="protName">Protocol: {{protocol.getClassName}}</h3>
 		<form id="protocolForm" action="/protocol/" method="POST" data-mode="">{% csrf_token %}
+			<input type="hidden" id="windowName" name="windowName" value=""/>
 			<input type="hidden" name="protocolClass" value="{{protocol.getClassName}}"/>
 			<input type="hidden" name="protocolId" value="{{protocol.getObjId}}"/>
-			
+			<input type="hidden" name="protRunIdViewer" value="{{protRunIdViewer}}"/>
+			<input type="hidden" id="wizName" name="wizName" value=""/>
+			<input type="hidden" id="viewerParam" name="viewerParam" value="None"/>
+			<input type="hidden" id="comment" name="comment" value="{{protocol.getObjComment}}"/>
+			<input type="hidden" id="paramProt" name="paramProt" value="{{paramProt}}"/>
+			{% if visualize == 0 %}
 			<div id="main">
-				<div id="mainNode1">
-					<div class="titleMain1">
+				<div id="mainNode1" class="mainNode floatLeft">
+					<div class="title">
 						Run
 					</div>
 					<table>
@@ -42,11 +74,12 @@
 								Run name
 							</td>
 							<td>
-								<input type="text" id="runName_input" name="runName"
-								value="{{runName}}">
+								<input type="text" id="runName" name="runName"
+								value="{{protocol.getObjLabel}}">
 							</td>
 							<td class="ico">
-								<a href="javascript:alert('Not Implemented yet');"><img src={{comment}}/></a>
+								<!--  <a href="javascript:showComment();"><img src={{comment}}/></a> --> 
+								<a id="editTool" href="javascript:showComment();" class="iconEdit"></a>
 							</td>
 						</tr>
 						<tr>
@@ -76,8 +109,8 @@
 					</table>			
 				</div>
 								
-				<div id="mainNode2">
-					<div class="titleMain2">
+				<div id="mainNode2" class="mainNode floatRight">
+					<div class="title">
 						Execution
 					</div>
 					<table>
@@ -118,12 +151,13 @@
 					</table>
 				</div>
 			</div>
+			{% endif %}
  
 			<div id="tabs">
 				<ul>
 				 {% for section in definition.iterSections %}
-				 	{% if section.label.get != "General" and section.label.get != "Parallelization" %}
-				 		<li><a href="#tabs-{{forloop.counter0}}">{{section.label.get}}</a></li>
+				 	{% if section.label.get != "General" and section.label.get != "Parallelization" %}	
+				 		<li ><a href="#tabs-{{forloop.counter0}}">{{section.label.get}}</a></li>
 				 	{% endif %}
 				 {% endfor %}
 				 </ul>
@@ -132,9 +166,9 @@
 					 {% if section.label.get != "General" and section.label.get != "Parallelization" %}
 				 	 <div id="tabs-{{forloop.counter0}}">
 			 			<div class="box">
-			 				<div class="title">
+			 				<!-- <div class="title">
 									<td colspan="4">{{section.label.get}}</td>
-							</div>
+							</div> -->
 							<table class="section">				
 								{% for paramName, param in section.iterParams %}
 								<tr {% if param.expertLevel.get > 0 %} class="advance" {% else %} class="element" {% endif %} id="{{paramName}}" name="{{paramName}}" data-type="{{param.getClassName}}" data-cond="{{param.condition.get}}" data-params="{{param.htmlCondParams}}" 
@@ -164,38 +198,35 @@
 											<input type="text" id="{{paramName}}_input" name={{paramName}} value="{{param.htmlValue}}">
 									{% endif %}
 									</td>
-									
 								{% if param.getClassName == "PointerParam" %}
 									<td class="ico">
-										<a href="javascript:browseObjects('{{paramName}}','{{projectName}}','{{param.pointerClass.get}}');"><img src={{browse}}/></a>
+										<!-- <a href="javascript:browseObjects('{{paramName}}','{{projectName}}','{{param.pointerClass.get}}');"><img src="/resources/showj/zoom.png" class="menuIcon"></a> -->
+										<a href="javascript:browseObjects('{{paramName}}','{{projectName}}','{{param.pointerClass.get}}');"><img src={{browse}}/></a> 
 									</td>
-								{% elif protocol.getClassName == "XmippProtCTFMicrographs" or protocol.getClassName == "ProtCTFFind" %}
-									{% if paramName == "lowRes" %}
+								{% elif param.getClassName == "ProtocolClassParam" %}
 									<td class="ico">
-										<a href="javascript:customPopup('/wizard/?function=wiz_frequencies&protocolId={{protocol.getObjId}}',825,470)"><img src={{wizard}}/></a>
+										<a href="javascript:browseProtClass('{{paramName}}','{{projectName}}','{{param.protocolClassName.get}}');"><img src={{browse}}/></a>
 									</td>
-									{% elif paramName == "highRes" %}
 									<td class="ico">
-										<a href="javascript:customPopup('/wizard/?function=wiz_frequencies&protocolId={{protocol.getObjId}}',825,470)"><img src={{wizard}}/></a>
+										<a href="javascript:formProtSimple('{{paramName}}','{{projectName}}');" class="iconEdit"></a>										
+										<!-- <a href="javascript:formProtSimple('{{paramName}}','{{projectName}}');"><img src={{comment}}/></a> -->
 									</td>
-									{% else %}
-									<td>
-									</td>
-									{% endif %}
-								{% elif protocol.getClassName == "XmippProtPreprocessMicrographs" %}
-									{% if paramName == "downFactor" %}
+								{% elif param.hasWizard %}
 									<td class="ico">
-										<a href="javascript:customPopup('/wizard/?function=wiz_downsampling&protocolId={{protocol.getObjId}}',825,470)"><img src={{wizard}}/></a>
+										<input type="submit" class="buttonWiz" value="" onclick="javascript:putModeWiz('{{param.wizardName}}');"/>
 									</td>
-									{% else %}
-									<td>
+								{% elif param.hasViewer %}
+									<td class="ico">
+										<a id="analyzeTool" href="javascript:putModeViewElm('{{paramName}}');$('#protocolForm').submit();" class="iconEye"></a>
+										<!-- <input type="submit" class="buttonViewer" value="" onclick="javascript:putModeViewElm('{{paramName}}');"/> -->
 									</td>
-									{% endif %}
 								{% else %}
 									<td>
 									</td>
 								{% endif %}
+								{% if param.help.get != None %}
 									<td class="ico"><a href="javascript:help('{{paramName}}','{{param.help.get}}');"><img src={{help}} /></a></td>
+								{% endif %}
 								</tr>
 								{% endfor %}
 								</table>
@@ -205,15 +236,21 @@
 				 {% endfor %}
 				 </div>		
 			<div class="boxBottom">
-				<table>
-					<tr>
-						<td>
-							<button class="buttonClose" type="button" onclick="window.close()">Close</button>
-							<input type="submit" class="buttonSave" value="Save" onclick="javascript:putMode('save');">
-							<input type="submit" class="buttonExec" value="Execute" onclick="javascript:putMode('execute');">
-						</td>
-					</tr>
-				</table>
+				<!-- <button class="buttonClose" type="button" onclick="window.close()">Close</button> -->
+				<a href="javascript:window.close()" class="buttonGrey btnClose">Close</a>
+				{% if visualize == 0 %}
+				<a href="javascript:putMode('save');$('#protocolForm').submit();" class="buttonGrey btnSave">Save</a>
+				<a href="javascript:putMode('execute');$('#protocolForm').submit();" class="buttonRed">Execute</a>
+				
+				<!-- <input type="submit" class="buttonSave" value="Save" onclick="javascript:putMode('save');">
+				<input type="submit" class="buttonExec" value="Execute" onclick="javascript:putMode('execute');"> -->
+				{% elif visualize == 1 %}
+				<a href="javascript:putMode('viewer');$('#protocolForm').submit();" class="buttonRed">Execute</a>
+				<!-- <input type="submit" class="buttonExec" value="Visualize" onclick="javascript:putMode('viewer');"> -->
+				{% elif visualize == 2 %}
+				<a href="javascript:returnProtocol();" class="buttonGrey btnSave">Save</a>
+				<!-- <input type="button" class="buttonSave" value="Save" onclick="javascript:returnProtocol();"> -->
+				{% endif %}							
 			</div>
 		</form>
 	</body>

@@ -30,7 +30,7 @@ mainly for project GUI
 
 import os
 from os.path import join, exists
-from pyworkflow.utils.path import getHomePath, makeFilePath
+from pyworkflow.utils.path import getHomePath, makeFilePath, cleanPath
 import pyworkflow as pw
 from pyworkflow.object import *
 from pyworkflow.hosts import *
@@ -82,10 +82,11 @@ class ProjectSettings(OrderedObject):
     def __init__(self, **args):
         OrderedObject.__init__(self, **args)
         self.config = ProjectConfig()
-        self.hostList = SettingList() # List to store different protocol configurations
+        self.hostList = SettingList() # List to store different hosts configurations
         self.menuList = SettingList() # Store different menus
         self.protMenuList = SettingList() # Store different protocol configurations
         self.mapper = None # This should be set when load, or write 
+        self.graphView = Boolean(False)
         
     def commit(self):
         """ Commit changes made. """
@@ -148,6 +149,13 @@ class ProjectSettings(OrderedObject):
     def getCurrentProtocolMenu(self):
         return self.protMenuList.getItem()
     
+    def setCurrentProtocolMenu(self, index):
+        """ Set the new protocol Menu given its index.
+        The new ProtocolMenu will be returned.
+        """
+        self.protMenuList.setIndex(index)
+        return self.getCurrentProtocolMenu()
+    
     def write(self, dbPath=None):
         self.setName('ProjectSettings')
         if dbPath is not None:
@@ -191,6 +199,7 @@ class MenuConfig(OrderedObject):
         self.icon = String(icon)
         self.tag = String(tag)
         self.childs = List()
+        self.openItem = Boolean(args.get('openItem', False))
         
     def addSubMenu(self, text, value=None, **args):
         subMenu = type(self)(text, value, **args)
@@ -210,8 +219,11 @@ class MenuConfig(OrderedObject):
     
 class ProtocolConfig(MenuConfig):
     """Store protocols configuration """
-    pass    
-    
+    def __init__(self, text=None, value=None, **args):
+        MenuConfig.__init__(self, text, value, **args)
+        if 'openItem' not in args:
+            self.openItem.set(self.tag.get() != 'protocol_base')
+            
     
 def addMenus(settings):
     """Write default configuration files"""
@@ -241,7 +253,7 @@ def addMenus(settings):
     
 def addProtocols(settings):
     """ Write protocols configuration. """
-    menu = ProtocolConfig()
+    menu = ProtocolConfig("Protocols SPA")
     
     # ------------------- Micrographs ----------------------------
     m1 = menu.addSubMenu('Micrographs', tag='section')
@@ -280,12 +292,47 @@ def addProtocols(settings):
     
     m1.addSubMenu(' Import', value='ProtImportVolumes', 
                  tag='protocol', icon='bookmark.png')   
+    m1.addSubMenu('Preprocess', value='ProtPreprocessVolumes',
+                  tag='protocol_base')
     m1.addSubMenu('Refine', value='ProtRefine3D',
-                  tag = 'protocol_base')
+                  tag='protocol_base')
     m1.addSubMenu('Classify', value='ProtClassify3D',
-                  tag = 'protocol_base')
+                  tag='protocol_base')
+    m1.addSubMenu('Validate', value='ProtValidate3D',
+                  tag='protocol_base')
+    m1.addSubMenu('Mask', value='ProtCreateMask3D',
+                  tag='protocol_base')   
     
     settings.addProtocolMenu(menu)
+    
+    addSpiderMDAProtocols(settings)
+    
+    
+def addSpiderMDAProtocols(settings):
+    """ Write protocols related to Spider MDA workflow. """
+    menu = ProtocolConfig("MDA workflow")
+    
+    # ------------------- Particles ----------------------------
+    m1 = menu.addSubMenu('MDA workflow', tag='section')
+    
+    m1.addSubMenu(' Import particles', tag='protocol', icon='bookmark.png',
+                  value='ProtImportParticles')
+    m1.addSubMenu(' Filter (optional)', tag='protocol',
+                  value='SpiderProtFilter')
+    m1.addSubMenu(' Align', tag='protocol_base', openItem=True, 
+                  value='ProtAlign')
+    m1.addSubMenu(' Create mask (optional)', tag='protocol',
+                  value='SpiderProtCustomMask')
+    m1.addSubMenu(' Dimension reduction', tag='protocol',  
+                  value='SpiderProtCAPCA')
+    m1.addSubMenu(' Classification', tag='protocol',
+                  value='SpiderProtClassifyWard')
+    
+    m2 = menu.addSubMenu('Protocol MDA', tag='protocol',
+                         value='SpiderWfMDA')
+            
+    settings.addProtocolMenu(menu)
+       
     
 def getScipionHome(userHome):
     """ Returns default SCIPION_HOME from HOME. """
@@ -394,6 +441,9 @@ def writeDefaults():
     #writeConfig(config, 'configuration.xml')
     dbPath = pw.SETTINGS
     print "Writing default settings to: ", dbPath
+    if exists(dbPath):
+        print "File exist, deleting..."
+        cleanPath(dbPath)
     settings.write(dbPath)
     
     

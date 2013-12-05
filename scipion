@@ -1,0 +1,112 @@
+#!/usr/bin/env python
+# **************************************************************************
+# *
+# * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
+# *
+# * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
+# *
+# * This program is free software; you can redistribute it and/or modify
+# * it under the terms of the GNU General Public License as published by
+# * the Free Software Foundation; either version 2 of the License, or
+# * (at your option) any later version.
+# *
+# * This program is distributed in the hope that it will be useful,
+# * but WITHOUT ANY WARRANTY; without even the implied warranty of
+# * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# * GNU General Public License for more details.
+# *
+# * You should have received a copy of the GNU General Public License
+# * along with this program; if not, write to the Free Software
+# * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+# * 02111-1307  USA
+# *
+# *  All comments concerning this program package may be sent to the
+# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *
+# **************************************************************************
+"""
+This module is responsible for launching protocol executions.
+"""
+import sys
+import os
+
+PW_HOME = os.path.abspath(os.path.dirname(__file__))
+PW_APPS = os.path.join(PW_HOME, 'pyworkflow', 'apps')
+PW_APPS_TEMP = "python " + os.path.join(PW_APPS, '%s')
+
+XMIPP_HOME = os.environ['XMIPP_HOME']
+XMIPP_BIN = os.path.join(XMIPP_HOME, 'bin')
+XMIPP_LIB = os.path.join(XMIPP_HOME, 'lib')
+
+SCIPION_HOME = os.environ.get('SCIPION_HOME', os.path.join(os.environ['HOME'], 'Scipion'))
+os.environ['SCIPION_HOME'] = SCIPION_HOME
+
+VARS = {
+        'PYTHONPATH': os.pathsep.join([PW_HOME, XMIPP_LIB, os.environ.get('PYTHONPATH', '')]),
+        'PATH': os.pathsep.join([PW_APPS, os.environ['PATH'], XMIPP_BIN]),
+        'LD_LIBRARY_PATH': os.pathsep.join([XMIPP_LIB, os.environ.get('LD_LIBRARY_PATH', '')]),
+        }
+
+def runApp(app, args=''):
+    cmd = PW_APPS_TEMP % app + ' ' + args
+    runCmd(cmd)
+    
+def runCmd(cmd):
+    os.environ.update(VARS)
+    print ">>>>>", cmd
+    result = os.system(cmd)
+    sys.exit(result)
+
+MODE_MANAGER = 'manager'
+MODE_PROJECT = 'project'
+MODE_WEBSERVER = 'webserver'
+MODE_TESTS = 'tests'
+MODE_HELP = 'help'
+
+if __name__ == '__main__':
+    n = len(sys.argv)
+    if n:
+        mode = MODE_MANAGER
+        # Create SCIPION_HOME folder if not exists
+        if not os.path.exists(SCIPION_HOME):
+            sys.path.append(PW_HOME)
+            from pyworkflow.utils.path import makePath
+            makePath(SCIPION_HOME)
+            # Write default configurations
+            from pyworkflow.apps.config import writeDefaults
+            writeDefaults()
+            
+        if n > 1:
+            mode = sys.argv[1]
+        
+        if mode == MODE_MANAGER:
+            runApp('pw_manager.py')
+        
+        elif mode == MODE_PROJECT:
+            if n > 2:
+                projectName = sys.argv[2]
+                runApp('pw_project.py', args=projectName)
+        
+        elif mode == MODE_WEBSERVER:
+            manage = os.path.join(PW_HOME, 'pyworkflow', 'web', 'manage.py')
+            runCmd('python %s runserver 0.0.0.0:8000 ' % manage)
+            
+        elif mode == MODE_TESTS:
+            if n > 2:
+                tests = sys.argv[2]
+                path = os.getcwd()
+                os.chdir(PW_HOME)
+                runCmd('python -m unittest pyworkflow.tests.%s' % tests)
+                os.chdir(path)
+                
+    # If reach this point, bad arguments passed
+    print """
+Usage: 
+    scipion [MODE] [ARGUMENTS]
+    where MODE can be:
+        manager : open the manager with list of all projects
+        project [PROJECT_NAME] : will open the specified project, special name 'last' can be used.  
+        webserver : will launch django webserver
+        tests :  will run the tests starting from pyworkflow.tests
+        help : print this help message
+"""

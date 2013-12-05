@@ -34,19 +34,67 @@ class DataSet(object):
     All tables should have an unique tableName. 
     """
     
-    def __init__(self, tables):
+    def __init__(self, tables, tableName=None, volumeName=None, numberSlices=0, labelToRender=None):
         self._tables = list(tables)
+        self._tableName = tableName
+        #NAPA de LUXE: Hay que ver si el volumen name se usa en algun lado        
+        self._volumeName = volumeName 
+        self._numberSlices = numberSlices 
+        self._labelToRender = labelToRender
+        
+    def setTableName(self, tableName):    
+        self._tableName = tableName
+        
+    def setVolumeName(self, volumeName):    
+        self._volumeName = volumeName
+        
+    def getVolumeName(self):
+        return self._volumeName
     
+    def setLabelToRender(self, labelToRender):
+        self._labelToRender = labelToRender
+        
+    def getDataToRender(self):
+        return self.getTable().getColumnValues(self._labelToRender)
+    
+    def getDataToRenderAndExtra(self):
+        return zip(self.getIdColumn(),
+                   self.getTable().getColumnValues("enabled"),
+                   self.getDataToRender(),
+                   self.getTransformationMatrix())
+    
+    def getIdColumn(self):
+        return self.getTable().getColumnValues("id")
+    
+    def setNumberSlices(self, numberSlices):
+        self._numberSlices = numberSlices
+        
+    def getNumberSlices(self):
+        return self._numberSlices    
+    
+    def getNumberSlicesForTemplate(self):
+        return range(self._numberSlices)
+        
+    def getTransformationMatrix(self):    
+        return self.getTable().getColumnValues(self._labelToRender+"_transformationMatrix")
+        
     def listTables(self):
         """ List the actual table names on the DataSet. """
         return self._tables
     
-    def getTable(self, tableName):
+    def getTable(self, tableName=None):
+        if tableName == None:
+            tableName = self._tableName
+            
         if not tableName in self._tables:
             raise Exception("DataSet: table '%s' not found.\n   Current tables: %s" % 
                             (tableName, self._tables))
         table = self._loadTable(tableName)
         return table
+    
+    def getTypeOfColumn(self, label):
+        """ this method should be implemented by subclasses. """
+        pass
     
     def _loadTable(self, tableName):
         """ this method should be implemented by subclasses. """
@@ -71,8 +119,25 @@ class Table(object):
     def _addColumn(self, col):
         self._columns[col.getName()] = col
         
+    def getColumnValues(self, columnName):
+        if (self.hasColumn(columnName)):
+            return [getattr(row, columnName) for row in self.iterRows()] 
+        else:
+            return [None] * self.getSize()
+        
     def iterColumns(self):
         return self._columns.itervalues()
+    
+    def hasColumn(self, columnName):
+        """ Return true if column exists """
+        return columnName in self._columns
+    
+    def getColumn(self, columnName):
+        return self._columns[columnName] 
+    
+    def hasEnabledColumn(self):
+        """ Return true if enabled column exists """
+        return self.hasColumn('enabled')
         
     def getColumns(self):
         """ Return all columns. """
@@ -95,6 +160,17 @@ class Table(object):
     def _setRow(self, rowId, row):
         self._rowDict[rowId] = row
     
+    def _convertValues(self, values):
+        """ Convert the input values to the actual
+        expected type of each column. 
+        """
+        cValues = {}
+        for k, v in values.iteritems():
+            col = self.getColumn(k)
+            cValues[k] = col.convert(v)
+        
+        return cValues
+        
     def addRow(self, rowId, **values):
         """ With this implementation the rowId should be provided.
         We need to work around to also allow automatic generation of id's
@@ -108,13 +184,13 @@ class Table(object):
                 else:
                     raise Exception('Table: value for column "%s" not provided.' % col.getName())
                 
-        row = self.Row(**values)
+        row = self.Row(**self._convertValues(values))
         self._setRow(rowId, row)
         
     def updateRow(self, rowId, **values):
         """ Update a row given its rowId and some values to update. """
         row = self.getRow(rowId)
-        self._setRow(rowId, row._replace(**values))
+        self._setRow(rowId, row._replace(**self._convertValues(values)))
     
     def iterRows(self):
         """ Iterate over the rows. """
@@ -136,6 +212,13 @@ class Column(object):
         
     def getName(self):
         return self._name
+    
+    def getType(self):
+        return self._type
+    
+    def convert(self, value):
+        """ Try to convert the value to the column type. """
+        return self._type(value)
     
     def hasDefault(self):
         return self._default is not None

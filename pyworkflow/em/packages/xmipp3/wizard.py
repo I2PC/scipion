@@ -31,18 +31,19 @@ import os
 import Tkinter as tk
 import ttk
 from pyworkflow.viewer import Viewer, Wizard, DESKTOP_TKINTER, WEB_DJANGO
-from pyworkflow.em import SetOfImages, SetOfMicrographs, Volume, DefCTFMicrographs
-from protocol_projmatch import XmippDefProjMatch, XmippProtProjMatch 
-from protocol_preprocess_micrographs import XmippDefPreprocessMicrograph
-from protocol_filters import XmippDefMask, XmippProtMask
+from pyworkflow.em import SetOfImages, SetOfMicrographs, Volume, ProtCTFMicrographs
+from protocol_projmatch import XmippProtProjMatch 
+from protocol_preprocess_micrographs import XmippProtPreprocessMicrographs
+from protocol_filters import *
 import pyworkflow.gui.dialog as dialog
 from pyworkflow.gui.widgets import LabelSlider
 from pyworkflow.gui.tree import BoundTree, TreeProvider
 import xmipp
+from pyworkflow import findResource
 
 
 class XmippDownsampleWizard(Wizard):
-    _targets = [(XmippDefPreprocessMicrograph, ['downFactor'])]
+    _targets = [(XmippProtPreprocessMicrographs, ['downFactor'])]
     _environments = [DESKTOP_TKINTER, WEB_DJANGO]
         
     def show(self, form):
@@ -55,6 +56,10 @@ class XmippDownsampleWizard(Wizard):
         else:
             dialog.showWarning("Input micrographs", "Select micrographs first", form.root)
     
+    @classmethod
+    def getView(self):
+        return "wiz_downsampling"
+        
     
 class ListTreeProvider(TreeProvider):
     """ Simple list tree provider. """
@@ -77,7 +82,7 @@ class XmippCTFWizard(Wizard):
     """ Wrapper to visualize different type of objects
     with the Xmipp program xmipp_showj
     """
-    _targets = [(DefCTFMicrographs, ['lowRes', 'highRes'])]
+    _targets = [(ProtCTFMicrographs, ['lowRes', 'highRes'])]
     _environments = [DESKTOP_TKINTER, WEB_DJANGO]
         
     def show(self, form):
@@ -96,9 +101,14 @@ class XmippCTFWizard(Wizard):
             #dialog.showWarning("Input micrographs", "Select some micrographs first", form.root)
         else:
             dialog.showWarning("Input micrographs", "Select micrographs first", form.root)
-            
+    
+    @classmethod    
+    def getView(self):
+        return "wiz_ctf"            
             
 class XmippMaskRadiusWizard(Wizard):
+    
+    _environments = [DESKTOP_TKINTER, WEB_DJANGO]
         
     def _getProvider(self, protocol):
         """ This should be implemented to return the list
@@ -120,7 +130,7 @@ class XmippMaskRadiusWizard(Wizard):
                 
 class XmippParticleMaskRadiusWizard(XmippMaskRadiusWizard):
 
-    _targets = [(XmippDefMask, ['maskRadius'])]
+    _targets = [(XmippProtMask, ['maskRadius'])]
         
     def _getText(self, obj):
         index = obj.getIndex()
@@ -145,9 +155,13 @@ class XmippParticleMaskRadiusWizard(XmippMaskRadiusWizard):
             
         return provider
     
+    @classmethod    
+    def getView(self):
+        return "wiz_particle_mask"       
+    
 class XmippVolumeMaskRadiusWizard(XmippMaskRadiusWizard):
 
-    _targets = [(XmippDefProjMatch, ['maskRadius'])]
+    _targets = [(XmippProtProjMatch, ['maskRadius'])]
         
     def _getProvider(self, protocol):
         """ This should be implemented to return the list
@@ -157,17 +171,101 @@ class XmippVolumeMaskRadiusWizard(XmippMaskRadiusWizard):
             vols = [vol for vol in protocol.input3DReferences.get()]
             return ListTreeProvider(vols)
         return None
-        
-        
-class XmippRadiiWizard(Wizard):
     
-    _targets = [(XmippDefProjMatch, ['innerRadius', 'outerRadius'])]
+    @classmethod    
+    def getView(self):
+        return "wiz_volume_mask"       
+        
+        
+class XmippRadiiWizard(XmippVolumeMaskRadiusWizard):
+    
+    _targets = [(XmippProtProjMatch, ['innerRadius', 'outerRadius'])]
+    _environments = [DESKTOP_TKINTER, WEB_DJANGO]
+    
+    def show(self, form):
+       
+        protocol = form.protocol
+        provider = self._getProvider(protocol)
+
+        if provider is not None:
+            d = XmippMaskRadiiPreviewDialog(form.root, provider, innerRadius=protocol.innerRadius.get(), outerRadius=protocol.outerRadius.get())
+            if d.resultYes():
+                form.setVar('innerRadius', d.getRadius(d.radiusSliderIn))
+                form.setVar('outerRadius', d.getRadius(d.radiusSliderOut))
+        else:
+            dialog.showWarning("Empty input", "Select elements first", form.root)    
+    
+    @classmethod    
+    def getView(self):
+        return "wiz_volume_mask_radii"   
+
+class XmippFilterParticlesWizard(Wizard):
+    
+    def _getText(self, obj):
+        index = obj.getIndex()
+        text = os.path.basename(obj.getFileName())
+        if index:
+            return "%03d@%s" % (index, text)
+        return text
+    
+    def _getProvider(self, protocol):
+        """ This should be implemented to return the list
+        of object to be displayed in the tree.
+        """
+        provider = None
+        if protocol.inputParticles.hasValue():
+            particles = [] 
+            for i, par in enumerate(protocol.inputParticles.get()):
+                particles.append(par)
+                if i == 100: # Limit the maximum number of particles to display
+                    break
+            provider = ListTreeProvider(particles)
+            provider.getText = self._getText
+            
+        return provider
+
+class XmippBandpassWizard(XmippFilterParticlesWizard):
+    
+    _targets = [(XmippProtFourierFilter, ['lowFreq', 'highFreq', 'freqDecay'])]
+    _environments = [DESKTOP_TKINTER, WEB_DJANGO]
     
     def show(self, form):
         protocol = form.protocol
-        dialog.showWarning("Correlation radii", "Not yet implemented the wizard to select radii", form.root)    
+        provider = self._getProvider(protocol)
+
+        if provider is not None:
+            d = XmippBandPassFilterDialog(form.root, provider, 
+                                          lowFreq=protocol.lowFreq.get(), highFreq=protocol.highFreq.get(), freqDecay=protocol.freqDecay.get())
+            if d.resultYes():
+                form.setVar('lowFreq', d.getLowFreq())
+                form.setVar('highFreq', d.getHighFreq())
+                form.setVar('freqDecay', d.getFreqDecay())
+        else:
+            dialog.showWarning("Input particles", "Select particles first", form.root)  
     
+    @classmethod    
+    def getView(self):
+        return "wiz_bandpass"   
     
+class XmippGaussianWizard(XmippFilterParticlesWizard):
+    
+    _targets = [(XmippProtGaussianFilter, ['freqSigma'])]
+    _environments = [DESKTOP_TKINTER, WEB_DJANGO]
+    
+    def show(self, form):
+        protocol = form.protocol
+        provider = self._getProvider(protocol)
+
+        if provider is not None:
+            d = XmippGaussianFilterDialog(form.root, provider, freqSigma=protocol.freqSigma.get())
+            if d.resultYes():
+                form.setVar('freqSigma', d.getFreqSigma())
+        else:
+            dialog.showWarning("Input particles", "Select particles first", form.root)  
+    
+    @classmethod    
+    def getView(self):
+        return "wiz_gaussian"   
 
 #--------------- Dialogs used by Wizards --------------------------
     
@@ -189,6 +287,7 @@ class XmippPreviewDialog(dialog.Dialog):
             setattr(self, k, v)
             
         self.provider = provider
+        self.firstItem = provider.getObjects()[0]
         buttons = [('Select', dialog.RESULT_YES), ('Cancel', dialog.RESULT_CANCEL)]
         dialog.Dialog.__init__(self, parent, "Wizard", buttons=buttons, default='Select', **args)
 
@@ -216,6 +315,8 @@ class XmippPreviewDialog(dialog.Dialog):
         controlsFrame = tk.Frame(bodyFrame)
         controlsFrame.grid(row=1, column=1, padx=5, pady=5, sticky='news')
         self._createControls(controlsFrame)
+        self._itemSelected(self.firstItem)
+        itemsTree.selectItem(0) # Select the first item
     
     def _beforePreview(self):
         """ Called just before setting the preview.
@@ -249,17 +350,27 @@ class XmippImagePreviewDialog(XmippPreviewDialog):
         """ Should be implemented by subclasses to 
         create the items preview. 
         """
-        from pyworkflow.gui.matplotlib_image import ImagePreview 
+        from pyworkflow.gui.matplotlib_image import ImagePreview
         self.preview = ImagePreview(frame, self.dim, label=self.previewLabel)
         self.preview.grid(row=0, column=0) 
         
     def _itemSelected(self, obj):
+        
+        index = obj.getIndex()
         filename = obj.getFileName()
+        if index:
+            filename = "%03d@%s" % (index, filename)
+        
         self.image = xmipp.Image()
-        self.image.readPreview(filename, self.dim)
-        if filename.endswith('.psd'):
-            self.image.convertPSD()
-        self.Z = self.image.getData()
+        try:
+            self.image.readPreview(filename, self.dim)
+            if filename.endswith('.psd'):
+                self.image.convertPSD()
+            self.Z = self.image.getData()
+        except Exception, e:
+            from pyworkflow.gui.matplotlib_image import getPngData
+            self.Z = getPngData(findResource('no-image.png'))
+            dialog.showError("Input particles", "Error reading image <%s>" % filename, self) 
         self.preview.updateData(self.Z)
        
         
@@ -355,10 +466,75 @@ class XmippCTFDialog(XmippDownsampleDialog):
     def getHighFreq(self):
         return self.hfSlider.get()
 
+class XmippBandPassFilterDialog(XmippDownsampleDialog):
+    
+    def _beforePreview(self):
+        XmippImagePreviewDialog._beforePreview(self)
+        self.lastObj = None
+        self.rightPreviewLabel = "Filtered"
+        self.message = "Computing filtered image..."
+        self.previewLabel = "Image"
+        self.rightImage = xmipp.Image()
+        
+
+    def _createControls(self, frame):
+
+        self.freqFrame = ttk.LabelFrame(frame, text="Frequencies", padding="5 5 5 5")
+        self.freqFrame.grid(row=0, column=0)
+        self.lfSlider = self.addFreqSlider('Low freq', self.lowFreq, col=0)
+        self.hfSlider = self.addFreqSlider('High freq', self.highFreq, col=1)
+        self.freqDecaySlider = self.addFreqSlider('Decay', self.freqDecay, col=2)
+        
+    def addFreqSlider(self, label, value, col):
+        slider = LabelSlider(self.freqFrame, label, from_=0, to=0.5, value=value, callback=lambda a, b, c:self.updateFilteredImage())
+        slider.grid(row=0, column=col, padx=5, pady=5)
+        return slider
+
+    def updateFilteredImage(self):
+        self.rightPreview.updateData(self.rightImage.getData())
+        
+    def _computeRightPreview(self):
+        """ This function should compute the right preview
+        using the self.lastObj that was selected
+        """
+        xmipp.bandPassFilter(self.rightImage, "%03d@%s" % (self.lastObj.getIndex(), self.lastObj.getFileName()), self.getLowFreq(), self.getHighFreq(), self.getFreqDecay(), self.dim)
+
+    def getLowFreq(self):
+        return self.lfSlider.get()
+        
+    def getHighFreq(self):
+        return self.hfSlider.get()
+    
+    def getFreqDecay(self):
+        return self.freqDecaySlider.get()    
+    
+class XmippGaussianFilterDialog(XmippBandPassFilterDialog):
+    
+    def _createControls(self, frame):
+        self.freqVar = tk.StringVar()
+        self.freqVar.set(getattr(self, 'freqSigma', 1))
+        freqFrame = tk.Frame(frame)
+        freqFrame.grid(row=0, column=0, sticky='nw')
+        downEntry = tk.Entry(freqFrame, width=10, textvariable=self.freqVar)
+        downEntry.grid(row=0, column=1, padx=5, pady=5)
+        downButton = tk.Button(freqFrame, text='Preview', command=self._doPreview)
+        downButton.grid(row=0, column=2, padx=5, pady=5)    
+        
+    def getFreqSigma(self):
+        return float(self.freqVar.get())
+
+    def _computeRightPreview(self):
+        """ This function should compute the right preview
+        using the self.lastObj that was selected
+        """
+        xmipp.gaussianFilter(self.rightImage, "%03d@%s" % (self.lastObj.getIndex(), self.lastObj.getFileName()), self.getFreqSigma(), self.dim)
+
 class XmippMaskPreviewDialog(XmippImagePreviewDialog):
     
     def _beforePreview(self):
-        self.dim = 256
+        self.dim = 256           
+        self.dim_par = self.firstItem.getDim()[0]
+        self.ratio = self.dim / float(self.dim_par)
         self.previewLabel = 'Central slice'
     
     def _createPreview(self, frame):
@@ -366,19 +542,46 @@ class XmippMaskPreviewDialog(XmippImagePreviewDialog):
         create the items preview. 
         """
         from pyworkflow.gui.matplotlib_image import MaskPreview    
-        self.preview = MaskPreview(frame, self.dim, label=self.previewLabel, outerRadius=self.maskRadius)
+        if self.maskRadius == -1:
+            self.iniRadius = self.dim_par/2
+        else:
+            self.iniRadius = self.maskRadius
+        self.preview = MaskPreview(frame, self.dim, label=self.previewLabel, outerRadius=self.iniRadius*self.ratio)
         self.preview.grid(row=0, column=0) 
     
     def _createControls(self, frame):
         self.addRadiusBox(frame) 
         
     def addRadiusBox(self, parent):
-        print "maskRadius: %s" % self.maskRadius
-        self.radiusSlider = LabelSlider(parent, 'Outer radius', from_=0, to=int(self.dim/2), value=self.maskRadius, step=1, callback=lambda a, b, c:self.updateRadius())
+        self.radiusSlider = LabelSlider(parent, 'Outer radius', from_=0, to=int(self.dim_par/2), value=self.iniRadius, step=1, callback=lambda a, b, c:self.updateRadius())
         self.radiusSlider.grid(row=0, column=0, padx=5, pady=5) 
     
     def updateRadius(self):
-        self.preview.updateMask(self.radiusSlider.get())     
+        self.preview.updateMask(self.radiusSlider.get() * self.ratio)     
         
     def getRadius(self):
         return int(self.radiusSlider.get())
+
+class XmippMaskRadiiPreviewDialog(XmippMaskPreviewDialog):
+
+    def _createPreview(self, frame):
+        """ Should be implemented by subclasses to 
+        create the items preview. 
+        """
+        from pyworkflow.gui.matplotlib_image import MaskPreview    
+        self.preview = MaskPreview(frame, self.dim, label=self.previewLabel, outerRadius=int(self.outerRadius)*self.ratio, innerRadius=0)
+        self.preview.grid(row=0, column=0) 
+    
+    def _createControls(self, frame):
+        self.radiusSliderOut = LabelSlider(frame, 'Outer radius', from_=0, to=int(self.dim_par/2), value=self.outerRadius, step=1, callback=lambda a, b, c:self.updateRadius(self.radiusSliderOut, self.radiusSliderIn))
+        self.radiusSliderOut.grid(row=0, column=0, padx=5, pady=5) 
+
+        self.radiusSliderIn = LabelSlider(frame, 'Inner radius', from_=0, to=int(self.dim_par/2), value=self.innerRadius, step=1, callback=lambda a, b, c:self.updateRadius(self.radiusSliderOut, self.radiusSliderIn))
+        self.radiusSliderIn.grid(row=1, column=0, padx=5, pady=5) 
+    
+    def updateRadius(self, radiusSliderOut, radiusSliderIn):
+        self.preview.updateMask(outerRadius = radiusSliderOut.get() * self.ratio, innerRadius = radiusSliderIn.get() * self.ratio)     
+        
+    def getRadius(self, radiusSlider):
+        return int(radiusSlider.get())
+    

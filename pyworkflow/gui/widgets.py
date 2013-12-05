@@ -102,19 +102,25 @@ class Scrollable(object):
         else:
             WidgetClass.__init__(self, master, **opts)
 
-        # with Windows OS
-#        self.bind("<MouseWheel>", self.scroll)
-#        # with Linux OS
-#        self.bind("<Button-4>", self.scroll)
-#        self.bind("<Button-5>", self.scroll) 
+        # Bind ourselves
+        self.bindWidget(self)
         
     def scroll(self, event):
-        #print "scrolling", event.num, event.delta
         if event.num == 5 or event.delta < 0:
             count = 1
         if event.num == 4 or event.delta > 0:
             count = -1
-        self.yview("scroll", count, "units")  
+        self.yview("scroll", count, "units")
+        
+    def bindWidget(self, widget):
+        """ Make the scroll in the widget, respond to this.
+        Useful for child widgets.
+        """
+        # with Windows OS
+        widget.bind("<MouseWheel>", self.scroll)
+        # with Linux OS
+        widget.bind("<Button-4>", self.scroll)
+        widget.bind("<Button-5>", self.scroll) 
         
             
 class LabelSlider(ttk.Frame):
@@ -134,3 +140,60 @@ class LabelSlider(ttk.Frame):
         
     def get(self):
         return self.var.get()
+    
+    
+class ComboBox(ttk.Combobox):
+    """ Extension of ttk.ComboBox to allow having diferent display text and values.
+    Also adding some utils to getSelected index and value (same for set)
+    """
+    def __init__(self, parent, choices, values=None, initial=None, **args):
+        """ Create a combobox from a list of choices.
+        Params:
+            parent: the parent widget (required by Tkinter)
+            choices: a list with the options to be shown.
+            values: if None, will enumerate from 0 to len(choices)-1
+                if a list is provided, should have the same lenght than choices.
+            initial: if None, take the first choice
+            **args: extra arguments passed to ttk.Combobox contructor.
+        """
+        indexes = range(len(choices))
+        if values is None:
+            values = indexes
+        choices = [str(c) for c in choices] # Convert to a list of strings
+        if initial is None:
+            initial = choices[0]
+        self._valuesDict = dict(zip(choices, values))
+        self._indexDict = dict(zip(choices, indexes))
+        
+        self._var = tk.StringVar()
+        self._var.set(initial)
+        self._changeCallback = None
+        self._var.trace('w', self._onChanged)
+        ttk.Combobox.__init__(self, parent, textvariable=self._var, state='readonly', **args)
+        self['values'] = choices
+        
+    def getValue(self):
+        """ Return the selected value. """
+        return self._valuesDict[self._var.get()]
+    
+    def getIndex(self):
+        """ Return the selected value. """
+        return self._indexDict[self._var.get()]
+    
+    def getText(self):
+        """ Return the selected option text. """
+        return self._var.get()
+    
+    def setChangeCallback(self, callback):
+        self._changeCallback = callback
+        
+    def _onChanged(self, *args):
+        if self._changeCallback:
+            self._changeCallback(self)
+        
+    
+        
+        
+            
+        
+                
