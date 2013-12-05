@@ -83,7 +83,7 @@ $(document).ready(function() {
 						} ],
 						callback : function(val) {
 							if (val == 'Y') {
-								window.opener.location.reload(true);
+//								window.opener.location.reload(true);
 								window.close();
 							}
 						}
@@ -115,7 +115,7 @@ $(document).ready(function() {
 						} ],
 						callback : function(val) {
 							if (val == 'Y') {
-								window.opener.location.reload(true);
+//								window.opener.location.reload(true);
 								window.close();
 								window.opener.popup('/form/?protocolId='+protId);
 							}

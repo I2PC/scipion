@@ -182,7 +182,6 @@ def populateTree(tree, obj):
         value = sub.value.get(text)
         tag = sub.tag.get('')
         icon = sub.icon.get('')
-        print str(text) + "/" + str(icon)
         openItem = sub.openItem.get()
         item = TreeItem(text, tag, icon, openItem, None)
         tree.childs.append(item)
@@ -237,6 +236,43 @@ def tree_prot_view(request):
     
     return render_to_response('tree_prot_view.html', {'sections': root.childs})
     
+def run_table_graph(request):
+    projectName = request.session['projectName'] 
+    project = loadProject(projectName)
+    provider = ProjectRunsTreeProvider(project)
+    
+    runs = request.session['runs']
+    runsNew = formatProvider(provider)
+    
+    refresh = False
+   
+    for x, y in zip(runs.iteritems(), runsNew.iteritems()):
+        if x != y:
+            print 'Change detected', x, y
+            refresh = True
+    
+    if refresh:
+        request.session['runs'] = runsNew
+        graphView = project.getSettings().graphView.get()
+    
+        context = {'provider': provider,
+                   'graphView': graphView }
+        
+        return render_to_response('run_table_graph.html', context)
+    else:
+        return HttpResponse("ok")
+    
+
+def formatProvider(provider):
+    runs = {}
+    for obj in provider.getObjects():
+        id = obj.getObjId()
+        name = obj.getName()
+        status = obj.status.get()
+#        time = obj.getElapsedTime()
+        runs[id] = [name, status]
+    return runs
+
 def project_content(request):        
     projectName = request.GET.get('projectName', None)
     
@@ -248,7 +284,10 @@ def project_content(request):
     request.session['projectPath'] = manager.getProjectPath(projectName)
    
     project = loadProject(projectName)    
+    
     provider = ProjectRunsTreeProvider(project)
+    request.session['runs'] = formatProvider(provider)
+    
     graphView = project.getSettings().graphView.get()
     
     # load the protocol tree current active
