@@ -168,9 +168,11 @@ def project_graph (request):
         return HttpResponse(jsonStr, mimetype='application/javascript')
 
 class TreeItem():
-    def __init__(self, name, tag, protClass=None):
+    def __init__(self, name, tag, icon, openItem, protClass):
         self.name = name
         self.tag = tag
+        self.icon = icon
+        self.openItem = openItem
         self.protClass = protClass
         self.childs = []
         
@@ -179,7 +181,9 @@ def populateTree(tree, obj):
         text = sub.text.get()
         value = sub.value.get(text)
         tag = sub.tag.get('')
-        item = TreeItem(text, tag)
+        icon = sub.icon.get('')
+        openItem = sub.openItem.get()
+        item = TreeItem(text, tag, icon, openItem, None)
         tree.childs.append(item)
         # If have tag 'protocol_base', fill dynamically with protocol sub-classes
         protClassName = value.split('.')[-1]  # Take last part
@@ -188,7 +192,7 @@ def populateTree(tree, obj):
             if prot is not None:
                 for k, v in emProtocolsDict.iteritems():
                     if not v is prot and issubclass(v, prot):
-                        protItem = TreeItem(k, 'protocol_class', protClassName)
+                        protItem = TreeItem(k, 'protocol_class', 'python_file.gif', None, protClassName)
                         item.childs.append(protItem)
         else:
             item.protClass = protClassName
@@ -202,14 +206,12 @@ def update_prot_tree(request):
     # set the new protocol tree chosen
     project.getSettings().setCurrentProtocolMenu(index)
     project.getSettings().write()
-#    root = loadProtTree(project)
         
     return HttpResponse(mimetype='application/javascript')
 
-
 def loadProtTree(project):
     protCfg = project.getSettings().getCurrentProtocolMenu()
-    root = TreeItem('root', 'root')
+    root = TreeItem('root', 'root', '', '', None)
     populateTree(root, protCfg)
     return root    
 
@@ -234,6 +236,43 @@ def tree_prot_view(request):
     
     return render_to_response('tree_prot_view.html', {'sections': root.childs})
     
+def run_table_graph(request):
+    projectName = request.session['projectName'] 
+    project = loadProject(projectName)
+    provider = ProjectRunsTreeProvider(project)
+    
+    runs = request.session['runs']
+    runsNew = formatProvider(provider)
+    
+    refresh = False
+   
+    for x, y in zip(runs.iteritems(), runsNew.iteritems()):
+        if x != y:
+            print 'Change detected', x, y
+            refresh = True
+    
+    if refresh:
+        request.session['runs'] = runsNew
+        graphView = project.getSettings().graphView.get()
+    
+        context = {'provider': provider,
+                   'graphView': graphView }
+        
+        return render_to_response('run_table_graph.html', context)
+    else:
+        return HttpResponse("ok")
+    
+
+def formatProvider(provider):
+    runs = {}
+    for obj in provider.getObjects():
+        id = obj.getObjId()
+        name = obj.getName()
+        status = obj.status.get()
+#        time = obj.getElapsedTime()
+        runs[id] = [name, status]
+    return runs
+
 def project_content(request):        
     projectName = request.GET.get('projectName', None)
     
@@ -245,7 +284,10 @@ def project_content(request):
     request.session['projectPath'] = manager.getProjectPath(projectName)
    
     project = loadProject(projectName)    
+    
     provider = ProjectRunsTreeProvider(project)
+    request.session['runs'] = formatProvider(provider)
+    
     graphView = project.getSettings().graphView.get()
     
     # load the protocol tree current active

@@ -223,7 +223,15 @@ class ProtocolConfig(MenuConfig):
         MenuConfig.__init__(self, text, value, **args)
         if 'openItem' not in args:
             self.openItem.set(self.tag.get() != 'protocol_base')
-            
+    
+    def addSubMenu(self, text, value=None, **args):
+        if 'icon' not in args:
+            tag = args.get('tag', None)
+            if tag == 'protocol':
+                args['icon'] = 'python_file.gif'
+            elif tag == 'protocol_base':
+                args['icon'] = 'class_obj.gif'
+        return MenuConfig.addSubMenu(self, text, value, **args)
     
 def addMenus(settings):
     """Write default configuration files"""
@@ -281,11 +289,11 @@ def addProtocols(settings):
     m1 = menu.addSubMenu('2D', tag='section')
     
     m1.addSubMenu('Align', value='ProtAlign',
-                  tag = 'protocol_base')
+                  tag = 'protocol_base', icon='class_obj.gif')
     m1.addSubMenu('Classify', value='ProtClassify',
-                  tag = 'protocol_base')
+                  tag = 'protocol_base', icon='class_obj.gif')
     m1.addSubMenu('Align+Classify', value='ProtAlignClassify',
-                  tag = 'protocol_base')
+                  tag = 'protocol_base', icon='class_obj.gif')
     
     # ------------------- 3D ----------------------------
     m1 = menu.addSubMenu('3D', tag='section')
@@ -301,7 +309,7 @@ def addProtocols(settings):
     m1.addSubMenu('Validate', value='ProtValidate3D',
                   tag='protocol_base')
     m1.addSubMenu('Mask', value='ProtCreateMask3D',
-                  tag='protocol_base')   
+                  tag='protocol_base')
     
     settings.addProtocolMenu(menu)
     

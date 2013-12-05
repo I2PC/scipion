@@ -7,18 +7,41 @@
 	{% for section in sections %}
 	<li><span class="section">{{section.name}}</span>
 		<ul>
-			{% for prot in section.childs %} {% if prot.tag == 'protocol'%}
-			<li><span class="protocol"><a
-					href="javascript:popup('/form/?protocolClass={{prot.protClass}}')">{{prot.name}}</a></span></li>
-			{% elif prot.tag == 'protocol_base' %}
-			<li class="closed"><span class="protocol_base">{{prot.name}}</span>
-				<ul>
-					{% for prot2 in prot.childs %}
-					<li><span class="protocol_class"> <a
-							href="javascript:popup('/form/?protocolClass={{prot2.name}}')">
-									{{prot2.name}} </a>
-					</span></li> {% endfor %}
-				</ul></li> {% else %} No athletes. {% endif %} {% endfor %}
+			{% for prot in section.childs %} 
+				{% if prot.tag == 'protocol'%}
+				<li>
+					<span class="protocol">
+						{% if prot.icon != None %}
+						<img src='/resources/{{prot.icon}}'>
+						{% endif %} 
+						<a href="javascript:popup('/form/?protocolClass={{prot.protClass}}')">{{prot.name}}</a>
+					</span>
+				</li>
+				{% elif prot.tag == 'protocol_base' %}
+				<li class="{% if prot.openItem != True %}closed{% endif %}">
+					<span class="protocol_base">
+						{% if prot.icon != None %}
+						<img src='/resources/{{prot.icon}}'>
+						{% endif %} 
+						{{prot.name}}
+					</span>
+					<ul>
+						{% for prot2 in prot.childs %}
+						<li>
+							<span class="protocol_class">
+							{% if prot2.icon != None %}
+							<img src='/resources/{{prot2.icon}}'>
+							{% endif %} 
+								<a href="javascript:popup('/form/?protocolClass={{prot2.name}}')">{{prot2.name}}</a>
+							</span>
+						</li>
+						{% endfor %}
+					</ul>
+				</li> 
+				{% else %} 
+					No athletes. 
+				{% endif %} 
+			{% endfor %}
 		</ul>
 	</li> {% endfor %}
 </ul>

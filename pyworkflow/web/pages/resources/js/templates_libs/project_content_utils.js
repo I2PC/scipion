@@ -47,25 +47,6 @@
  * 
  **/
 
-function changeTreeView(){
-	protIndex = $('#viewsTree').val();
-	
-	$.ajax({
-		type : "GET",
-		url : '/update_prot_tree/?index='+ protIndex,
-		dataType:"text",
-		success : function() {
-			$.ajax({
-				url: '/tree_prot_view/',
-				success: function(data) {
-					$('div.protFieldsetTree').html(data);
-				}
-			});
-		}
-	});
-}
-	
-
 /*
  * Toolbar used in the project content template for list view
  */
@@ -380,7 +361,7 @@ function deleteProtocol(elm) {
 				showErrorValidation(json.errors);
 			} else if(json.success!= undefined){
 //				launchMessiSimple("Successful", messiInfo(json.success));
-				window.location.reload()
+//				window.location.reload()
 			}
 		},
 		error: function(){
@@ -438,4 +419,44 @@ function stopProtocol(elm) {
 		type : "GET",
 		url : "/stop_protocol/?protocolId=" + protId
 	});
+}
+
+/*
+ * Method to update the protocol tree
+ */
+function changeTreeView(){
+	protIndex = $('#viewsTree').val();
+	
+	$.ajax({
+		type : "GET",
+		url : '/update_prot_tree/?index='+ protIndex,
+		dataType:"text",
+		success : function() {
+			$.ajax({
+				url: '/tree_prot_view/',
+				success: function(data) {
+					$('div.protFieldsetTree').html(data);
+				}
+			});
+		}
+	});
+}
+
+/*
+ * Method to update the run list/graph
+ */
+function refreshRuns(){
+	$(function() {
+		$.ajax({
+			url : '/run_table_graph/',
+			success : function(data) {
+				if(data != 'ok'){
+					$('div#runsInfo').html(data);
+				}
+			}
+		});
+  	});
+	setTimeout(function(){ 
+		refreshRuns();
+  	}, 5000);
 }
