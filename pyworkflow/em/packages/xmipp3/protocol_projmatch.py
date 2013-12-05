@@ -55,75 +55,75 @@ class XmippProtProjMatch(xmipp3.XmippProtocol, ProtRefine3D, ProtClassify3D):
         #SelFileName
         form.addParam('inputParticles', PointerParam, label="Input particles", important=True, 
                       pointerClass='SetOfParticles', 
-                      help='Select the input particles.\n'
-                           'If you want perform *CTF* correction the input particles\n'
+                      help='Select the input particles. \n '
+                           'If you want perform *CTF* correction the input particles \n '
                            'should have information about the CTF (hasCTF=True)')  
         form.addParam('useInitialAngles', BooleanParam, default=False,
                       label="Use initial angles/shifts ? ", 
-                      help='Set to *Yes* if you want to use the projection assignment (angles/shifts)\n'
+                      help='Set to *Yes* if you want to use the projection assignment (angles/shifts) \n '
                       'associated with the input particles (hasProjectionAssigment=True)')
         # ReferenceFileNames      
         form.addParam('input3DReferences', PointerParam,
                       pointerClass='SetOfVolumes',
                       label='Initial 3D reference volumes', 
-                      help='Initial 3D density maps with the same dimensions as your particles.\n'
-                           'For example: reference1.vol reference2.vol\n'
+                      help='Initial 3D density maps with the same dimensions as your particles. \n '
+                           'For example: reference1.vol reference2.vol \n '
                            'specifies two references.')
         form.addParam('numberOfIterations', IntParam, default=4,
                       label='Number of iterations',
                       help='Number of iterations to perform.')
         form.addParam('cleanUpFiles', BooleanParam, default=False,
                       label="Clean up intermediate files?",  expertLevel=LEVEL_EXPERT,
-                      help='Save disc space by cleaning up intermediate files.\n'
-                           'Be careful, many options of the visualization protocol will not work anymore,\n'
+                      help='Save disc space by cleaning up intermediate files. \n '
+                           'Be careful, many options of the visualization protocol will not work anymore, \n '
                            'since all class averages, selfiles etc will be deleted. ')
         
         form.addSection(label='CTF correction')
         
         form.addParam('doCTFCorrection', BooleanParam, default=True,
                       label="Perform CTF correction?", 
-                      help='If set to true, a CTF (amplitude and phase) corrected map will be refined,\n'
-                           'and the data will be processed in CTF groups.\n'
-                           'Note that you cannot combine CTF-correction with re-alignment of the classes.\n'
-                           'Remember that CTF information should be provided in the images input file.\n')    
+                      help='If set to true, a CTF (amplitude and phase) corrected map will be refined, \n '
+                           'and the data will be processed in CTF groups. \n '
+                           'Note that you cannot combine CTF-correction with re-alignment of the classes. \n '
+                           'Remember that CTF information should be provided in the images input file. \n ')    
               
         form.addParam('doAutoCTFGroup', BooleanParam, default=True, condition='doCTFCorrection',
                       label="Make CTF groups automatically?", 
-                      help='Make CTF groups based on a maximum differences at a given resolution limit.\n'
-                           'If this option is set to false, a docfile with the defocus values where to \n'
-                           'split the images in distinct defocus group has to be provided (see expert option below)\n')             
+                      help='Make CTF groups based on a maximum differences at a given resolution limit. \n '
+                           'If this option is set to false, a docfile with the defocus values where to  \n '
+                           'split the images in distinct defocus group has to be provided (see expert option below) \n ')             
               
         form.addParam('ctfGroupMaxDiff', FloatParam, default=0.1, condition='doCTFCorrection and doAutoCTFGroup',
                       label='Maximum difference for grouping', validators=[Positive],
-                      help='If the difference between the CTF-values up to the resolution limit specified\n'
-                      'below is larger than the value given here, two images will be placed in\n'
+                      help='If the difference between the CTF-values up to the resolution limit specified \n '
+                      'below is larger than the value given here, two images will be placed in \n '
                       'distinct CTF groups.')          
         
         form.addParam('ctfGroupMaxResol', FloatParam, default=5.6, condition='doCTFCorrection and doAutoCTFGroup',
                       label='Resolution limit (Ang) for grouping', validators=[Positive],
-                      help='Maximum resolution where to consider CTF-differences among different groups.\n'
+                      help='Maximum resolution where to consider CTF-differences among different groups. \n '
                             'One should use somewhat higher resolutions than those aimed for in the refinement.')       
         
         # SplitDefocusDocFile
         form.addParam('setOfDefocus', StringParam,
                       label='Set of defocus', default='', condition='doCTFCorrection and not doAutoCTFGroup',
-                      help='Set with defocus values where to split into groups.\n'
-                           'This field is compulsory if you do not want to make the CTF groups automatically.\n'
-                           'Note that the requested docfile can be made initially with the *xmipp_ctf_group* program,\n'
+                      help='Set with defocus values where to split into groups. \n '
+                           'This field is compulsory if you do not want to make the CTF groups automatically. \n '
+                           'Note that the requested docfile can be made initially with the *xmipp_ctf_group* program, \n '
                            'and then it can be edited manually to suit your needs.')
         
         form.addParam('paddingFactor', FloatParam, default=2, condition='doCTFCorrection',
                       label='Padding factor', validators=[GE(1)],
-                      help='Application of CTFs to reference projections and of Wiener filter\n'
-                            'to class averages will be done using padded images.\n'
+                      help='Application of CTFs to reference projections and of Wiener filter \n '
+                            'to class averages will be done using padded images. \n '
                             'Use values larger than one to pad the images.')        
         
         form.addParam('wienerConstant', FloatParam, default=-1, condition='doCTFCorrection',
                       label='Wiener constant',  expertLevel=LEVEL_EXPERT,
-                      help='Term that will be added to the denominator of the Wiener filter.\n'
-                            'In theory, this value is the inverse of the signal-to-noise ratio\n'
-                            'If a negative value is taken, the program will use a default value as in FREALIGN\n'
-                            '(i.e. 10% of average sum terms over entire space) \n'
+                      help='Term that will be added to the denominator of the Wiener filter. \n '
+                            'In theory, this value is the inverse of the signal-to-noise ratio \n '
+                            'If a negative value is taken, the program will use a default value as in FREALIGN \n '
+                            '(i.e. 10% of average sum terms over entire space)  \n '
                             'see Grigorieff JSB 157 (2006) pp117-125')   
         
         #TODO: Use common mask parameters
@@ -134,8 +134,8 @@ class XmippProtProjMatch(xmipp3.XmippProtocol, ProtRefine3D, ProtClassify3D):
         
         form.addParam('maskType', EnumParam, choices=['None', 'circular', 'binary file'], default=xmipp3.MASK_CIRCULAR, 
                       label="Mask reference volumes", display=EnumParam.DISPLAY_COMBO,
-                      help='Masking the reference volume will increase the signal to noise ratio.\n'
-                           'Do not provide a very tight mask.\n')
+                      help='Masking the reference volume will increase the signal to noise ratio. \n '
+                           'Do not provide a very tight mask. \n ')
         
         form.addParam('maskRadius', IntParam, default=-1, condition='maskType == 1',
                       label='Radius of spherical mask (pix)',
@@ -143,7 +143,7 @@ class XmippProtProjMatch(xmipp3.XmippProtocol, ProtRefine3D, ProtClassify3D):
         
         form.addParam('maskFile', StringParam, default='maks.vol', 
                       label='Binary mask file', condition='maskType == 2',
-                      help='The mask file should have the same dimensions as your input particles.\n'
+                      help='The mask file should have the same dimensions as your input particles. \n '
                            'The protein region should be 1 and the solvent should be 0.')  
         
         # DataArePhaseFlipped , now taken from inputParticles.isPhaseFlipped()
@@ -291,15 +291,15 @@ An alternative compact notation is ("3x5 2x3 0", i.e.,
 
         form.addParam('doRestricSearchbyTiltAngle', BooleanParam, default=False, expertLevel=LEVEL_EXPERT,
                       label="Restrict tilt angle search?", 
-                      help ='Restrict tilt angle search\n')             
+                      help ='Restrict tilt angle search \n ')             
 
         form.addParam('tilt0', FloatParam, default=-91., condition='doRestricSearchbyTiltAngle',
                       label="Lower-value for restricted tilt angle search", 
-                      help ='Lower-value for restricted tilt angle search\n')             
+                      help ='Lower-value for restricted tilt angle search \n ')             
 
         form.addParam('tiltF', FloatParam, default=-91., condition='doRestricSearchbyTiltAngle',
                       label="Higher-value for restricted tilt angle search", 
-                      help ='Higher-value for restricted tilt angle search\n')             
+                      help ='Higher-value for restricted tilt angle search \n ')             
         form.addParam('symmetry', TextParam, default='c1',
                       label='Point group symmetry',
                       help=""" See [[http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Symmetry][Symmetry]]
@@ -383,7 +383,7 @@ Set to zero to prevent discarding any images
      
         form.addParam('doScale', BooleanParam, default=False,
                       label="Perform scale search?",  expertLevel=LEVEL_EXPERT,
-                      help=' If true perform scale refinement. (UNDER DEVELOPMENT!!!!)\n ')
+                      help=' If true perform scale refinement. (UNDER DEVELOPMENT!!!!) \n  ')
 
         form.addParam('scaleStep', NumericListParam, default=1, condition='doScale',
                       label='Step scale factors size',
