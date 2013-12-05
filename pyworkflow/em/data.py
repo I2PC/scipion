@@ -95,8 +95,16 @@ class CTFModel(Item):
         self.defocusV = Float()
         self.defocusAngle = Float()
         self.psdFile = String()
-        self.micFile = String()
-        
+    
+    def getDefocusU(self):
+        return self.defocusU.get()
+    
+    def getDefocusV(self):
+        return self.defocusV.get()
+
+    def getDefocusAngle(self):
+        return self.defocusAngle.get()
+
     def copyInfo(self, other):
         self.copyAttributes(other, 'defocusU', 'defocusV',
                             'defocusAngle', 'psdFile')
