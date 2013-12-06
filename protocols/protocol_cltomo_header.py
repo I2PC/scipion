@@ -21,6 +21,13 @@ NumberOfReferences = 3
 # {expert} Number of CL iterations to perform:
 NumberOfIterations=15
 
+# Generate aligned volumes
+GenerateAligned=True
+
+# Don't align
+"""Volumes are already aligned, only classify"""
+DontAlign=False
+
 #-----------------------------------------------------------------------------
 # {section}{has_question} Initial classes
 #-----------------------------------------------------------------------------
