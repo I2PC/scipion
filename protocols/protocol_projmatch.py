@@ -191,6 +191,16 @@ data_noname
 
         return summary
     
+    def papers(self):
+        papers=[]
+        papers.append('Scheres, Nat.Prot. (2008) [http://www.ncbi.nlm.nih.gov/pubmed/18536645]')
+        papers.append('Devaux, Meth.Cell.Biol. (2012) [http://www.sciencedirect.com/science/article/pii/B9780124059146000160]')
+        papers.append('Sorzano, Meth.Mol.Biol. (2013) [http://www.ncbi.nlm.nih.gov/pubmed/23086876]')
+        if self.ReconstructionMethod=="ART":
+            papers.append("Marabini, Ultramic (1998) [http://www.ncbi.nlm.nih.gov/pubmed/9561797]")
+            papers.append("Bilbao-Castro, JSB (2009) [http://www.ncbi.nlm.nih.gov/pubmed/18940260]")
+        return papers
+
     def visualize(self):
         
         plots = [k for k in ['DisplayReference'

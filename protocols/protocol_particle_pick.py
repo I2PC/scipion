@@ -73,6 +73,12 @@ class ProtParticlePicking(XmippProtocol):
         
         return summary
     
+    def papers(self):
+        papers=[]
+        if os.path.exists(self.extraPath('model_svm.txt')):
+            papers.append('Abrishami, Bioinformatics (2013) [http://www.ncbi.nlm.nih.gov/pubmed/23958728]')
+        return papers
+
     def validate(self):
         errors = []
         if not exists(self.Input['micrographs']):

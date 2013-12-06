@@ -707,6 +707,12 @@ class XmippProjectGUI():
                               '\n<Created>: ' + run['init'] + '   <Modified>: ' + run['last_modified'] + \
                               '\n<Script>: ' + run['script'] + '\n<Directory>: ' + wd + \
                               '\n<Comment>: ' + comment + '\n\n<Summary>:\n' + summary
+                    
+                    papers = prot.papers()
+                    if papers:
+                        labels+='\n\n<Cite>:\n' + '\n'.join(papers)
+                    labels+='\n\n<General Xmipp citations>:\n' + '\n'.join(prot.xmippPapers())
+                    
                     f = open(run_summary_cache, 'w')
                     f.write(labels)
                 else:

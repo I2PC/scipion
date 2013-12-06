@@ -50,6 +50,11 @@ class ProtDownsampleMicrographs(XmippProtocol):
         message.append("Downsampling of micrographs from [%s] by a factor <%3.2f>" % (self.importDir,self.DownsampleFactor))
         return message
 
+    def papers(self):
+        papers=[]
+        papers.append('Sorzano, IEEE WISP (2009) [http://ieeexplore.ieee.org/xpl/login.jsp?arnumber=5286563]')
+        return papers
+
     def visualize(self):
         summaryFile = self.getFilename('micrographs')
         if os.path.exists(summaryFile):

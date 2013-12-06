@@ -41,6 +41,12 @@ class ProtKerdensom(XmippProtocol):
             message.append("Currently at iteration "+str(len(lines))+" out of "+str(self.SomSteps))
         return message
     
+    def papers(self):
+        papers=[]
+        papers.append('Pascual-Montano, JSB (2001) [http://www.ncbi.nlm.nih.gov/pubmed/11472094]')
+        papers.append('Pascual-Montano, JSB (2002) [http://www.ncbi.nlm.nih.gov/pubmed/12160707]')
+        return papers
+
     def validate(self):
         errors = []
         if self.SomReg0 < self.SomReg1:

@@ -123,6 +123,11 @@ class ProtPreprocessParticles(ProtParticlesBase):
         
         return messages
 
+    def papers(self):
+        papers=[]
+        if self.DoResize:
+            papers.append('Sorzano, IEEE WISP (2009) [http://ieeexplore.ieee.org/xpl/login.jsp?arnumber=5286563]')
+        return papers
 
 def createAcquisition(log,InputFile,WorkingDir,DoResize,NewSize):
     fnAcqIn = findAcquisitionInfo(InputFile)
