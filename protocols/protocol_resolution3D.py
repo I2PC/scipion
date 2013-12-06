@@ -83,6 +83,12 @@ class ProtResolution3D(XmippProtocol):
                         break
         return messages
 
+    def papers(self):
+        papers=[]
+        if self.DoSSNR or self.DoVSSNR:
+            papers.append('Unser, JSB (2005) [http://www.ncbi.nlm.nih.gov/pubmed/15721578]')
+        return papers
+
     def visualize(self):
         fnFSC=self.workingDirPath("fsc.xmd")
         if os.path.exists(fnFSC):

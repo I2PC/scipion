@@ -44,6 +44,11 @@ class ProtScreenParticles(XmippProtocol):
             message.append('Rejecting: '+str(self.Percentage)+"%")
         return message
     
+    def papers(self):
+        papers=[]
+        papers.append('Vargas, JSB (2013) [http://www.ncbi.nlm.nih.gov/pubmed/23933392]')
+        return papers
+
     def validate(self):
         errors=[]
         ext=os.path.splitext(self.InputFile)[1]

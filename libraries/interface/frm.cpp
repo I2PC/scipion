@@ -83,7 +83,7 @@ PyObject * getPointerToPythonGeneralWedgeClass()
 	return pWedgeClass;
 }
 
-//#define DEBUG
+#define DEBUG
 #ifdef DEBUG
 #include <data/xmipp_image.h>
 #endif
@@ -161,11 +161,24 @@ void alignVolumesFRM(PyObject *pFunc, const MultidimArray<double> &Iref, Multidi
         ZZ(r)=z;
         translation3DMatrix(r,Aaux);
         A=A*Aaux;
+#ifdef DEBUG
+		std::cout << "Result: " << rot << " " << tilt << " " << psi << " " << x << " " << y << " " << z << " -> " << score << std::endl;
+#endif
 	}
 	else
 	{
 		x=y=z=rot=tilt=psi=score=0;
 		A.initIdentity(4);
+
+		std::cout << "No result\n";
+		PyObject *ptype, *pvalue, *ptraceback;
+		PyErr_Fetch(&ptype, &pvalue, &ptraceback);
+		//pvalue contains error message
+		//ptraceback contains stack snapshot and many other information
+		//(see python traceback structure)
+
+		//Get error message
+		std::cout << PyString_AsString(pvalue) << std::endl;
 	}
 }
 #undef DEBUG

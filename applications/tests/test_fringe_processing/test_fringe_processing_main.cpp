@@ -39,7 +39,7 @@ protected:
 #define len 128
 
         //get example down1_42_Periodogramavg.psd
-        if (!chdir(((String)(getXmippPath() + (String)"/resources/test/fringe")).c_str()))
+        if (chdir(((String)(getXmippPath() + (String)"/resources/test/fringe")).c_str())==-1)
         	REPORT_ERROR(ERR_UNCLASSIFIED,"Could not change directory");
     }
 

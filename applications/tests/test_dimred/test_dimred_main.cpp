@@ -19,7 +19,7 @@ class DimRedTest : public ::testing::Test
 protected:
     virtual void SetUp()
     {
-        if (!chdir(((String)(getXmippPath() + (String)"/resources/test")).c_str()))
+        if (chdir(((String)(getXmippPath() + (String)"/resources/test")).c_str())==-1)
         	REPORT_ERROR(ERR_UNCLASSIFIED,"Cannot change directory");
     }
 };

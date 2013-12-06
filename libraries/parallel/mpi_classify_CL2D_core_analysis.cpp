@@ -137,7 +137,7 @@ void ProgClassifyCL2DCore::produceSideInfo()
 
     // Create a task file distributor for all blocks
     size_t Nblocks=blocks.size();
-    taskDistributor=new FileTaskDistributor(Nblocks,1,node);
+    taskDistributor=new MpiTaskDistributor(Nblocks,1,node);
 
     // Get image dimensions
     if (Nblocks>0)

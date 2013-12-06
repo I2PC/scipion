@@ -97,6 +97,11 @@ class ProtParticlePickingAuto(XmippProtocol):
         summary.append("Number of particles picked: <%(particles)d> (from <%(micrographs)d> micrographs)" % locals())
         return summary
     
+    def papers(self):
+        papers=[]
+        papers.append('Abrishami, Bioinformatics (2013) [http://www.ncbi.nlm.nih.gov/pubmed/23958728]')
+        return papers
+
     def validate(self):
         errors = []
         if self.MicrographSource == "Other":

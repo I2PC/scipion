@@ -1584,7 +1584,7 @@ void ProgClassifyCL2D::produceSideInfo()
     // Prepare the Task distributor
     SF.findObjects(objId);
     size_t Nimgs = objId.size();
-    taskDistributor = new FileTaskDistributor(Nimgs,
+    taskDistributor = new MpiTaskDistributor(Nimgs,
                       XMIPP_MAX(1,Nimgs/(5*node->size)), node);
 
     // Prepare mask for evaluating the noise outside

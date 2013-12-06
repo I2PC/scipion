@@ -331,26 +331,26 @@ void ProgVolumeInitialSimulatedAnnealing::reconstructCurrent()
 {
 	String args=formatString("-i %s -o %s --sym %s --weight --thr %d -v 0",fnAngles.c_str(),fnVolume.c_str(),fnSym.c_str(),Nthr);
 	String cmd=(String)"xmipp_reconstruct_fourier "+args;
-	if (!system(cmd.c_str()))
+	if (system(cmd.c_str())==-1)
 		REPORT_ERROR(ERR_UNCLASSIFIED,"Cannot open shell");
 
 	args=formatString("-i %s --mask circular %d -v 0",fnVolume.c_str(),-XSIZE(inputImages())/2);
 	cmd=(String)"xmipp_transform_mask "+args;
-	if (!system(cmd.c_str()))
+	if (system(cmd.c_str())==-1)
 		REPORT_ERROR(ERR_UNCLASSIFIED,"Cannot open shell");
 
 	if (iter<=NiterRandom && positiveConstraint)
 	{
 		args=formatString("-i %s --select below 0 --substitute value 0 -v 0",fnVolume.c_str());
 		cmd=(String)"xmipp_transform_threshold "+args;
-		if (!system(cmd.c_str()))
+		if (system(cmd.c_str())==-1)
 			REPORT_ERROR(ERR_UNCLASSIFIED,"Cannot open shell");
 	}
 
 	if (keepIntermediateVolumes)
 	{
 		cmd=formatString("cp %s %s_iter%02d.vol",fnVolume.c_str(),fnRoot.c_str(),iter);
-		if (!system(cmd.c_str()))
+		if (system(cmd.c_str())==-1)
 			REPORT_ERROR(ERR_UNCLASSIFIED,"Cannot open shell");
 	}
 }
@@ -360,7 +360,7 @@ void ProgVolumeInitialSimulatedAnnealing::generateProjections()
 	String args=formatString("-i %s -o %s --sampling_rate 5 --sym %s --compute_neighbors --angular_distance -1 --experimental_images %s -v 0",
 			fnVolume.c_str(),fnGallery.c_str(),fnSym.c_str(),fnAngles.c_str());
 	String cmd=(String)"xmipp_angular_project_library "+args;
-	if (!system(cmd.c_str()))
+	if (system(cmd.c_str())==-1)
 		REPORT_ERROR(ERR_UNCLASSIFIED,"Cannot open shell");
 	MetaData mdAux(fnGalleryMetaData);
 	mdGallery.clear();
@@ -417,7 +417,7 @@ void ProgVolumeInitialSimulatedAnnealing::produceSideinfo()
 		reconstructCurrent();
 	else
 	{
-		if (!system(formatString("cp %s %s",fnInit.c_str(),fnVolume.c_str()).c_str()))
+		if (system(formatString("cp %s %s",fnInit.c_str(),fnVolume.c_str()).c_str())==-1)
 			REPORT_ERROR(ERR_UNCLASSIFIED,"Cannot open shell");
 	}
 

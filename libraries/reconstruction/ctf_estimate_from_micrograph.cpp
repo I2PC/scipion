@@ -651,17 +651,17 @@ void ProgCTFEstimateFromMicrograph::run()
                     std::string command = (std::string) "mv -i " + fnBase
                                           + ".ctfparam " + fnBase + "_bootstrap_"
                                           + integerToString(n, 4) + ".ctfparam";
-                    if (!system(command.c_str()))
+                    if (system(command.c_str())==-1)
                     	REPORT_ERROR(ERR_UNCLASSIFIED,"Cannot open shell");
                     command = (std::string) "mv -i " + fnBase
                               + ".ctfmodel_quadrant " + fnBase + "_bootstrap_"
                               + integerToString(n, 4) + ".ctfmodel_quadrant";
-                    if (!system(command.c_str()))
+                    if (system(command.c_str())==-1)
                     	REPORT_ERROR(ERR_UNCLASSIFIED,"Cannot open shell");
                     command = (std::string) "mv -i " + fnBase
                               + ".ctfmodel_halfplane " + fnBase + "_bootstrap_"
                               + integerToString(n, 4) + ".ctfmodel_halfplane";
-                    if (!system(command.c_str()))
+                    if (system(command.c_str())==-1)
                     	REPORT_ERROR(ERR_UNCLASSIFIED,"Cannot open shell");
 
                     progress_bar(n);
