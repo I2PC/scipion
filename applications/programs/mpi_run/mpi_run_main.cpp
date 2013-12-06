@@ -147,7 +147,7 @@ public:
                         continue;
                     else
                     {
-                        if (!system(szline))
+                        if (system(szline)==-1)
                         	REPORT_ERROR(ERR_UNCLASSIFIED,"Cannot open shell");
                     }
                 }

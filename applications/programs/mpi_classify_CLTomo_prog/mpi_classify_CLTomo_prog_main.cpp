@@ -639,6 +639,7 @@ void CL3D::initialize(MetaData &_SF,
     }
     if (prm->node->rank == 0)
         progress_bar(Nimgs);
+    std::cout << "Rank " << prm->node->rank << " finished" << std::endl;
 
     // Share all assignments
     shareAssignments(true, true);
@@ -804,6 +805,7 @@ void CL3D::run(const FileName &fnOut, int level)
         size_t first, last;
         while (prm->taskDistributor->getTasks(first, last))
         {
+        	std::cout << "Rank " << prm->node->rank << " [" << first << "," << last << "]" << std::endl;
             for (size_t idx = first; idx <= last; ++idx)
             {
                 size_t objId = prm->objId[idx];
@@ -819,6 +821,7 @@ void CL3D::run(const FileName &fnOut, int level)
                     progress_bar(idx);
             }
         }
+    	std::cout << "Rank " << prm->node->rank << " finished iteration" << std::endl;
         FileName fnAux;
         for (int q=0; q<Q; q++)
         {
@@ -830,6 +833,7 @@ void CL3D::run(const FileName &fnOut, int level)
         }
 
         // Gather all pieces computed by nodes
+        std::cout << "Reducing ..." << std::endl;
         MPI_Allreduce(MPI_IN_PLACE, &corrSum, 1, MPI_DOUBLE, MPI_SUM,
                       MPI_COMM_WORLD);
         shareAssignments(true, true);

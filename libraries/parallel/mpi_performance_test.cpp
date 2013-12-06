@@ -82,7 +82,7 @@ void ProgPerformanceTest::produceSideInfo()
 void ProgPerformanceTest::run()
 {
     show();
-    if (!system("hostname"))
+    if (system("hostname")==-1)
     	REPORT_ERROR(ERR_UNCLASSIFIED,"Cannot open shell");
     produceSideInfo();
 }

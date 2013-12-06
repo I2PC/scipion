@@ -16,7 +16,7 @@ protected:
         try
         {
             //get example images/staks
-            if (!chdir(((String)(getXmippPath() + (String)"/resources/test")).c_str()))
+            if (chdir(((String)(getXmippPath() + (String)"/resources/test")).c_str())==-1)
             	REPORT_ERROR(ERR_UNCLASSIFIED,"Could not change directory");
             // testBaseName = xmippPath + "/resources/test";
             imageName = "image/singleImage.spi";

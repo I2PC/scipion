@@ -56,6 +56,7 @@ MpiTaskDistributor::MpiTaskDistributor(size_t nTasks, size_t bSize,
                                        MpiNode *node) :
         ThreadTaskDistributor(nTasks, bSize)
 {
+	std::cout << "MpiTask " << nTasks << " " << bSize << std::endl;
     this->node = node;
     //if master create distribution thread
     if (node->isMaster())

@@ -75,7 +75,7 @@ void ProgVolumeValidationPCA::modifyAngles()
     //String args=formatString("-i %s -o %s --operate random_subset %d --mode overwrite",fnClasses.c_str(),fnAngles.c_str(),NClasses);
     String args=formatString("-i %s -o %s --operate bootstrap --mode overwrite",fnClasses.c_str(),fnAngles.c_str());
     String cmd=(String)"xmipp_metadata_utilities "+args;
-    if (!system(cmd.c_str()))
+	if (system(cmd.c_str())==-1)
     	REPORT_ERROR(ERR_UNCLASSIFIED,"Cannot open shell");
 
     //Metadata with the well sampled projection and random projections assigned
@@ -117,12 +117,12 @@ void ProgVolumeValidationPCA::reconstruct()
 
     String args=formatString("-i %s -o %s --sym %s --weight --thr %d -v 0",fnAngles.c_str(),fnVol.c_str(),fnSym.c_str(),Nthr);
     String cmd=(String)"xmipp_reconstruct_fourier "+args;
-    if (!system(cmd.c_str()))
+	if (system(cmd.c_str())==-1)
     	REPORT_ERROR(ERR_UNCLASSIFIED,"Cannot open shell");
 
     args=formatString("-i %s -o %s --mask circular %d -v 0",fnVol.c_str(),fnVol.c_str(),-xdim/2);
     cmd=(String)"xmipp_transform_mask "+args;
-    if (!system(cmd.c_str()))
+	if (system(cmd.c_str())==-1)
     	REPORT_ERROR(ERR_UNCLASSIFIED,"Cannot open shell");
 
     if (doProjMatch)
@@ -133,39 +133,39 @@ void ProgVolumeValidationPCA::reconstruct()
 
             args=formatString("-i %s -o %s --sampling_rate %f --sym %s --method fourier 1 0.25 bspline --compute_neighbors --angular_distance -1 --experimental_images %s",fnVol.c_str(),fnGallery.c_str(),AngularSampling,fnSym.c_str(),fnAngles.c_str());
             cmd=(String)"xmipp_angular_project_library "+args;
-            if (!system(cmd.c_str()))
+        	if (system(cmd.c_str())==-1)
             	REPORT_ERROR(ERR_UNCLASSIFIED,"Cannot open shell");
 
             args=formatString("-i %s -o %s --ref %s --Ri 0 --Ro %f --max_shift %f --append",fnAngles.c_str(),fnAngles.c_str(),fnGallery.c_str(),xdim/2,xdim/20);
             cmd=(String)"xmipp_angular_projection_matching "+args;
-            if (!system(cmd.c_str()))
+        	if (system(cmd.c_str())==-1)
             	REPORT_ERROR(ERR_UNCLASSIFIED,"Cannot open shell");
 
             args=formatString("-i %s -o %s --sym %s --weight --thr %d -v 0",fnAngles.c_str(),fnVol.c_str(),fnSym.c_str(),Nthr);
             cmd=(String)"xmipp_reconstruct_fourier "+args;
-            if (!system(cmd.c_str()))
+        	if (system(cmd.c_str())==-1)
             	REPORT_ERROR(ERR_UNCLASSIFIED,"Cannot open shell");
 
             args=formatString("-i %s -o %s --mask circular %d -v 0",fnVol.c_str(),fnVol.c_str(),-xdim/2);
             cmd=(String)"xmipp_transform_mask "+args;
-            if (!system(cmd.c_str()))
+        	if (system(cmd.c_str())==-1)
             	REPORT_ERROR(ERR_UNCLASSIFIED,"Cannot open shell");
         }
     }
 
     args=formatString("-i %s -o %s --sym %s --weight --thr %d -v 0",fnAngles.c_str(),fnVol.c_str(),fnSym.c_str(),Nthr);
     cmd=(String)"xmipp_reconstruct_fourier "+args;
-    if (!system(cmd.c_str()))
+	if (system(cmd.c_str())==-1)
     	REPORT_ERROR(ERR_UNCLASSIFIED,"Cannot open shell");
 
     args=formatString("-i %s -o %s --mask circular %d -v 0",fnVol.c_str(),fnVol.c_str(),-xdim/2);
     cmd=(String)"xmipp_transform_mask "+args;
-    if (!system(cmd.c_str()))
+	if (system(cmd.c_str())==-1)
     	REPORT_ERROR(ERR_UNCLASSIFIED,"Cannot open shell");
 
     args=formatString("-i %s -o %s --select below 0 --substitute value 0 -v 0",fnVol.c_str(),fnVol.c_str());
     cmd=(String)"xmipp_transform_threshold "+args;
-    if (!system(cmd.c_str()))
+	if (system(cmd.c_str())==-1)
     	REPORT_ERROR(ERR_UNCLASSIFIED,"Cannot open shell");
 }
 

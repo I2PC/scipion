@@ -15,7 +15,7 @@ protected:
 
     virtual void SetUp()
     {
-        if (!chdir(((String)(getXmippPath() + (String)"/resources/test")).c_str()))
+        if (chdir(((String)(getXmippPath() + (String)"/resources/test")).c_str())==-1)
         	REPORT_ERROR(ERR_UNCLASSIFIED,"Could not change directory");
         //Md1
         id = mDsource.addObject();
@@ -593,7 +593,7 @@ TEST_F( MetadataTest, compareTwoMetadataFiles)
     auxMd.write((String)"block_000001@"+sfn2,MD_APPEND);
 
     String command=(String)"sed 's/SPACE/ /g' " + sfn2 + (String) ">" + sfn3;
-    if (!system (command.c_str()))
+    if (system (command.c_str())==-1)
     	REPORT_ERROR(ERR_UNCLASSIFIED,"Could not open shell");
 
     EXPECT_TRUE(compareTwoMetadataFiles(sfn, sfn3));
