@@ -26,6 +26,7 @@
 #include "mpi_classify_CLTomo.h"
 #include <data/mask.h>
 #include <data/polar.h>
+#include <data/filters.h>
 #include <data/xmipp_image_generic.h>
 #include <reconstruction/symmetrize.h>
 
@@ -324,29 +325,39 @@ void CL3DClass::fitBasic(MultidimArray<double> &I, CL3DAssignment &result)
     Matrix2D<double> A;
     double frmScore;
     constructFourierMask(I);
-    constructFourierMaskFRM();
     if (!prm->dontAlign)
+    {
+        constructFourierMaskFRM();
 		alignVolumesFRM(prm->frmFunc, P, I, pyIfourierMaskFRM, result.rot, result.tilt, result.psi, result.shiftx, result.shifty, result.shiftz,
 				frmScore,A,prm->maxShift, prm->maxFreq);
+    }
+    else
+    {
+    	A.initIdentity(4);
+    	result.rot=result.tilt=result.psi=result.shiftx=result.shifty=result.shiftz=0.;
+    	frmScore=correlationIndex(P,I,&(prm->mask.get_binary_mask()));
+    }
     if (fabs(result.shiftx)>prm->maxShiftX || fabs(result.shifty)>prm->maxShiftY || fabs(result.shiftz)>prm->maxShiftZ ||
     	fabs(result.rot)>prm->maxRot || fabs(result.tilt)>prm->maxTilt || fabs(result.psi)>prm->maxPsi)
     	result.score=-1e38;
     else
     {
-		applyGeometry(LINEAR, Iaux, I, A, IS_NOT_INV, DONT_WRAP);
+    	if (prm->dontAlign)
+    		Iaux=I;
+    	else
+    		applyGeometry(LINEAR, Iaux, I, A, IS_NOT_INV, DONT_WRAP);
 		apply_binary_mask(prm->mask.get_binary_mask(),Iaux,I,0.0);
-
 		constructFourierMask(I);
 		result.score=frmScore;
     }
 
 #ifdef DEBUG
-
     Image<double> save;
     save()=I;
     save.write("PPPfitBasicI2.xmp");
     save()=P-I;
     save.write("PPPfitBasicdiff.xmp");
+    std::cout << result.rot << " " << result.tilt << " " << result.psi << " " << result.shiftx << " " << result.shifty << " " << result.shiftz << std::endl;
     std::cout << "final score=" << result.score << ". Press" << std::endl;
     char c;
     std::cin >> c;
@@ -1057,7 +1068,7 @@ void CL3D::splitNode(CL3DClass *node, CL3DClass *&node1, CL3DClass *&node2,
 
         // Split according to score
         if (prm->node->rank == 0 && prm->verbose >= 2)
-            std::cerr << "Splitting by score threshold ..." << std::endl;
+            std::cerr << "Splitting by score threshold ... " << corrThreshold << std::endl;
         LOG(((String)"Splitting by threshold"));
         for (size_t i = 0; i < imax; i++)
         {
@@ -1226,7 +1237,7 @@ void CL3D::splitFirstNode()
     P.push_back(new CL3DClass());
     P.push_back(new CL3DClass());
     std::vector<size_t> splitAssignment;
-    splitNode(P[0], P[Q], P[Q + 1], splitAssignment, P.size()>1);
+    splitNode(P[0], P[Q], P[Q + 1], splitAssignment, Q>1);
     delete P[0];
     P[0] = NULL;
     P.erase(P.begin());
@@ -1497,6 +1508,7 @@ void ProgClassifyCL3D::run()
     		{
     			MDimages.getValue(MDL_IMAGE,fnImg,__iter.objId);
     			V.read(fnImg);
+    			V().setXmippOrigin();
     			double x,y,z,rot,tilt,psi;
     			MDimages.getValue(MDL_ANGLE_ROT,rot,__iter.objId);
     			MDimages.getValue(MDL_ANGLE_TILT,tilt,__iter.objId);
@@ -1512,7 +1524,7 @@ void ProgClassifyCL3D::run()
     	        translation3DMatrix(r,T);
     	        A=E*T;
 
-    	        applyGeometry(BSPLINE3,Valigned(),V(),A,IS_NOT_INV,DONT_WRAP,0.);
+    			applyGeometry(BSPLINE3,Valigned(),V(),A,IS_NOT_INV,DONT_WRAP,0.);
     	        Valigned.write(fnAligned,idx,true,WRITE_REPLACE);
     		}
     		++idx;
