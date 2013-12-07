@@ -524,6 +524,13 @@ class ProtocolsView(tk.Frame):
         prot.mapper = self.project.mapper
         self._openProtocolForm(prot)
         
+    def _selectProtocol(self, prot):
+        prot.mapper = self.project.mapper
+        self.selectedProtocol = prot
+        self.updateActionToolbar()
+        self._fillData()
+        self._fillSummary()
+        
     def _runItemClick(self, e=None):
         # Get last selected item for tree or graph
         if self.showGraph:
@@ -532,11 +539,7 @@ class ProtocolsView(tk.Frame):
             prot = self.project.mapper.selectById(int(self.runsTree.getFirst()))
         
         if prot is not None:
-            prot.mapper = self.project.mapper
-            self.selectedProtocol = prot
-            self.updateActionToolbar()
-            self._fillData()
-            self._fillSummary()
+            self._selectProtocol(prot)
         else:
             pass #TODO: implement what to do
         

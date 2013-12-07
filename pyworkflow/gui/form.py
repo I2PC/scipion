@@ -536,7 +536,9 @@ class FormWindow(Window):
         
         headerFrame = tk.Frame(self.root)
         headerFrame.grid(row=0, column=0, sticky='new')
-        headerLabel = tk.Label(headerFrame, text='Protocol: ' + protocol.getClassName(), font=self.fontBig)
+        package = protocol._empackage
+        t = 'Package: %s, Protocol: %s' % ('package', protocol.getClassName())
+        headerLabel = tk.Label(headerFrame, text=t, font=self.fontBig)
         headerLabel.grid(row=0, column=0, padx=5, pady=5)
         
         if protocol.allowHeader:

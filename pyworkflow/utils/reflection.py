@@ -58,6 +58,8 @@ def getSubclassesFromModules(BaseClass, modules):
     
     for m in modules.values():
         subDict = getSubclasses(BaseClass, m.__dict__)
+        for subclass in subDict.values():
+            subclass._empackage = m
         subclasses.update(subDict)
     
     return subclasses

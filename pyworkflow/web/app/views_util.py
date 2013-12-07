@@ -408,11 +408,11 @@ def parseText(text, func=replacePattern):
     text = func(text, "general")
 
     import re
-    from pyworkflow.utils.utils import PATTERNBOLD, PATTERNITALIC, PATTERNLINK, PATTERNLINK2
-    ptnBold = re.compile(PATTERNBOLD)
-    ptnItalic = re.compile(PATTERNITALIC)
-    ptnLink = re.compile(PATTERNLINK)
-    ptnLink2 = re.compile(PATTERNLINK2)
+    from pyworkflow.utils.utils import PATTERN_BOLD, PATTERN_ITALIC, PATTERN_LINK, PATTERN_LINK2
+    ptnBold = re.compile(PATTERN_BOLD)
+    ptnItalic = re.compile(PATTERN_ITALIC)
+    ptnLink = re.compile(PATTERN_LINK)
+    ptnLink2 = re.compile(PATTERN_LINK2)
 
 #    parsedText = ptnBold.sub(lambda x: replaceBold(x, "bold"), text)
 #    parsedText = ptnBold.sub(lambda x: func["funcBold"](x), text)

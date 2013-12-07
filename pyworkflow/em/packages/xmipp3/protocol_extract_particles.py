@@ -380,8 +380,8 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         if not hasattr(self, 'outputParticles'):
             summary.append("Output images not ready yet.") 
         else:
-            summary.append("Input coordinates: %s" % self.inputCoordinates.get().getName())
-            summary.append("Downsample type: %s" % downsampleTypeText.get(self.downsampleType.get()))
+            summary.append("*Input coordinates* http://www.google.com : %s" % self.inputCoordinates.get().getName())
+            summary.append("_Downsample type_: %s" % downsampleTypeText.get(self.downsampleType.get()))
             if self.downsampleType.get() == self.OTHER:
                 summary.append("Downsampling factor: %d" % self.downFactor.get())
             summary.append("Particle size %d" % self.boxSize.get())

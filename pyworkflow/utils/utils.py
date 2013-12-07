@@ -27,12 +27,8 @@
 This module contains utilities functions and classes.
 """
 
-import os, sys
+import os, sys, re
 
-PATTERNBOLD = r"[\s]+[*]([^\s][^*]+[^\s])[*][\s]+"
-PATTERNITALIC = r"[\s]+[_]([^\s][^_]+[^\s])[_][\s]+"
-PATTERNLINK = '(http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+)'
-PATTERNLINK2 = r"[\s]+[\[]{2}([^\s][^\]]+[^\s])[\]][\[]([^\s][^\]]+[^\s])[\]]{2}[\s]+"
 
 def prettyDate(time=False):
     """
@@ -213,6 +209,7 @@ def getLineInFile(text, fileName):
     f.close()
     return None
 
+#------------- Colored message strings -------------------------------
 def getColorStr(text, color, bold=False):
     """ Add ANSI color codes to the string if there is a terminal sys.stdout.
     Params:
@@ -235,4 +232,68 @@ def greenStr(text):
 
 def redStr(text):
     return getColorStr(text, color='red')
-    
+
+#-------------- Hyper text highlighting ----------------------------
+"""
+We use a subset of TWiki hyper text convetions.
+In particular:
+    *some_text* will display some_text in bold
+    _some_text_ will display some_text in italic
+    Links:
+        http://www.link-page.com  -> hyperlink using the url as label
+        [[http://www.link-page.com][Link page]] -> hyperlink using "Link page" as label
+"""
+# Types of recognized styles
+HYPER_BOLD = 'bold'
+HYPER_ITALIC = 'italic'
+HYPER_LINK1 = 'link1'
+HYPER_LINK2 = 'link2'
+HYPER_ALL = 'all'
+
+# Associated regular expressions
+PATTERN_BOLD = "[*](?P<bold>[^\s][^*]+[^\s])[*]"
+#PATTERN_BOLD = r"[\s]+[*]([^\s][^*]+[^\s])[*][\s]+"
+PATTERN_ITALIC = "[_](?P<italic>[^\s][^_]+[^\s])[_]"
+#PATTERN_ITALIC = r"[\s]+[_]([^\s][^_]+[^\s])[_][\s]+"
+PATTERN_LINK1 = '(?P<link1>http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+)'
+PATTERN_LINK2 = r"[\s]+[\[]{2}([^\s][^\]]+[^\s])[\]][\[]([^\s][^\]]+[^\s])[\]]{2}[\s]+"
+# __PATTERN_LINK2 should be first since could contains __PATTERN_LINK1
+PATTERN_ALL = '|'.join([PATTERN_BOLD, PATTERN_ITALIC, PATTERN_LINK2, PATTERN_LINK1])
+
+# Compiled regex
+HYPER_REGEX = {
+               HYPER_BOLD: re.compile(PATTERN_BOLD),
+               HYPER_ITALIC: re.compile(PATTERN_ITALIC),
+               HYPER_LINK1: re.compile(PATTERN_LINK1),
+               HYPER_LINK2: re.compile(PATTERN_LINK1),
+               HYPER_ALL: re.compile(PATTERN_ALL),
+               }
+
+def parseHyperText(text, matchCallback):
+    """ Parse the text recognizing Hyper definitions below.
+    Params:
+        matchCallback: a callback function to processing each matching,
+                       it should accept the type of match (HYPER_BOLD, ITALIC or LINK)
+    Return:
+        The input text with the replacements made by matchCallback
+    """
+    def _match(match):
+        """ Call the proper matchCallback with some extra info. """
+        m = match.group()
+        if m.startswith('*'):
+            tag = HYPER_BOLD
+        elif m.startswith('_'):
+            tag = HYPER_ITALIC
+        elif m.startswith('http'):
+            tag = HYPER_LINK1
+        elif m.startswith('[['):
+            tag = HYPER_LINK2
+        else:
+            raise Exception("Bad prefix for HyperText match")
+        matchCallback(match, tag)
+        
+    return HYPER_REGEX[HYPER_ALL].sub(_match, text)
+#    for hyperMode, hyperRegex in HYPER_REGEX.iteritems():
+#        text = hyperRegex.sub(lambda match: matchCallback(match, hyperMode), text)
+#
+#    return text
