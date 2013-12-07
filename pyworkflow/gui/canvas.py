@@ -67,6 +67,12 @@ class Canvas(tk.Canvas, Scrollable):
         yc = self.canvasy(event.y)
         return (xc, yc)
     
+    def selectItem(self, item):
+        if self.lastItem:
+            self.lastItem.setSelected(False)
+        self.lastItem = item
+        item.setSelected(True)
+                    
     def _handleMouseEvent(self, event, callback):
         xc, yc = self.getCoordinates(event)
         items = self.find_overlapping(xc-1, yc-1,  xc+1, yc+1)
@@ -274,6 +280,7 @@ class Item(object):
         bw = 1
         if value:
             bw = 2
+        print "id=%d, width=%d, run=%s" % (self.id, bw, self.run.getRunName())
         self.canvas.itemconfig(self.id, width=bw)
 
 
