@@ -80,6 +80,7 @@ class Step(OrderedObject):
         self.initTime.set(dt.datetime.now())
         self.endTime.set(None)
         self.status.set(STATUS_RUNNING)
+        self.error.set(None) # Clean previous error message
         
     def setFailed(self, msg):
         """ Set the run failed and store an error message. """
