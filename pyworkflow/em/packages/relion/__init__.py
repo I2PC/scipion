@@ -27,4 +27,6 @@
 This sub-package will contains Relion protocols
 """
 
+_logo = "relion_logo.png"
+
 from protocol_classify3d import Relion3DClassification

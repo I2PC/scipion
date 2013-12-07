@@ -280,7 +280,7 @@ class Item(object):
         bw = 1
         if value:
             bw = 2
-        print "id=%d, width=%d, run=%s" % (self.id, bw, self.run.getRunName())
+        #print "id=%d, width=%d, run=%s" % (self.id, bw, self.run.getRunName())
         self.canvas.itemconfig(self.id, width=bw)
 
 

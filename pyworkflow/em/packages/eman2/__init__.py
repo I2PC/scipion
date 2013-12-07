@@ -24,8 +24,11 @@
 # *
 # **************************************************************************
 """
-This sub-package will contains Xmipp3.0 specific protocols
+This package contains the protocols and data for EMAN2
 """
+
+_logo = "eman2_logo.png"
+
 
 from eman2 import *
 from data import *

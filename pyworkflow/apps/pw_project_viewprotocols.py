@@ -513,7 +513,6 @@ class ProtocolsView(tk.Frame):
                     #item.setSelected(True)
                     run = item.run
                     if run and self.selectedProtocol.getObjId() == run.getObjId():
-                        print "run.getObjId() = ", run.getObjId()
                         self.runsGraph.selectItem(item)
                         break
                             
@@ -560,7 +559,11 @@ class ProtocolsView(tk.Frame):
         
     def _selectProtocol(self, prot):
         if prot is not None:
-            self._selectProtocol(prot)
+            prot.mapper = self.project.mapper
+            self.selectedProtocol = prot
+            self.updateActionToolbar()
+            self._fillData()
+            self._fillSummary()
         else:
             pass #TODO: implement what to do
                     
