@@ -35,6 +35,11 @@ class ProtCL2DAlignment(XmippProtocol):
             message.append("Iteration %d at %s" % (size, date))
         return message
     
+    def papers(self):
+        papers=[]
+        papers.append('Sorzano, JSB (2010) [http://www.ncbi.nlm.nih.gov/pubmed/20362059]')
+        return papers
+
     def validate(self):
         errors = []
         if self.ReferenceImage != "":

@@ -188,7 +188,7 @@ void ProgAdjustVolume::apply(MultidimArray<float> &out)
         projYdim = YSIZE(I());
 
         // Compute the image statistics
-        double avg, stddev, min, max;
+        double avg=0., stddev=0., min, max;
         I().computeStats(avg, stddev, min, max);
         double Ni = projXdim * projYdim;
         sum += avg;
@@ -204,7 +204,7 @@ void ProgAdjustVolume::apply(MultidimArray<float> &out)
     std::cout << std::endl;
 
     // Statistics of the volume
-    double avg0, stddev0, min0, max0;
+    double avg0=0., stddev0=0., min0, max0;
     V.computeStats(avg0, stddev0, min0, max0);
 
     // First guess of the transformation parameters a*(x-vm)+b

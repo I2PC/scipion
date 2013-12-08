@@ -375,7 +375,7 @@ void CTFDescription::lookFor(int n, const Matrix1D<double> &u, Matrix1D<double> 
     double wmax = 1 / (2 * Tm);
     double wstep = wmax / 300;
     int found = 0;
-    double last_ctf = getValuePureNoPrecomputedAt(0,0), ctf, state=1;
+    double last_ctf = getValuePureNoPrecomputedAt(0,0), ctf=0.0, state=1;
     double w;
     for (w = 0; w <= wmax; w += wstep)
     {
@@ -1046,7 +1046,6 @@ double errorMaxFreqCTFs2D( MetaData &MD1,
 #endif
 
     int counter = 0 ;
-    double _freq=0.;
     for (int i=0; i<(int)yDim; ++i)
     {
         FFT_IDX2DIGFREQ(i, yDim, YY(freq));
@@ -1055,8 +1054,6 @@ double errorMaxFreqCTFs2D( MetaData &MD1,
         {
             FFT_IDX2DIGFREQ(j, xDim, XX(freq));
             XX(freq) *= iTm;
-            _freq = freq.module();
-            //freq *= CTF1.Tm;
             CTF1.precomputeValues(XX(freq),YY(freq));
             CTF2.precomputeValues(XX(freq),YY(freq));
             double a = CTF1.getValueArgument();

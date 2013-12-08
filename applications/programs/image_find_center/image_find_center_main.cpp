@@ -400,7 +400,7 @@ void busca()
 {
     static float f[22][22];
     float pi = 3.141592653;
-    short in1, mu5, i, mu3, ind, ind1, indice, iflag, j, ix, iy, k;
+    short in1, mu5, i, mu3, ind, ind1, indice, iflag, j, ix=0, iy=0, k;
     float h, th, costh, sinth, fi, anc, xk0, yk0, hpi, x, y, z, xx, yy;
     float b, g, d1, e1, ext;
     int count = 0;

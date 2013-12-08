@@ -132,6 +132,16 @@ class ProtPreprocessVolumes(XmippProtocol):
                 messages.append(m)
         return messages
 
+    def papers(self):
+        papers=[]
+        if self.DoNormalize:
+            papers.append('Sorzano, Ultramic (2004) [http://www.ncbi.nlm.nih.gov/pubmed/15450658]')
+        if self.InitialTs!=self.FinalTs:
+            papers.append('Sorzano, IEEE WISP (2009) [http://ieeexplore.ieee.org/xpl/login.jsp?arnumber=5286563]')
+        if self.DoRandomize:
+            papers.append('Chen, Ultramic (2013) [http://www.ncbi.nlm.nih.gov/pubmed/23872039]')
+        return papers
+
     def visualize(self):
         from protlib_utils import runShowJ
         if os.path.exists(self.OutModel):

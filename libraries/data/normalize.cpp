@@ -44,7 +44,7 @@ void normalize_OldXmipp(MultidimArray<double> &I)
 
 void normalize_Near_OldXmipp(MultidimArray<double> &I, const MultidimArray<int> &bg_mask)
 {
-    double avg, stddev, min, max;
+    double avg=0., stddev, min, max;
     double avgbg, stddevbg, minbg, maxbg;
     I.computeStats(avg, stddev, min, max);
     computeStats_within_binary_mask(bg_mask, I, minbg, maxbg, avgbg,
@@ -216,7 +216,7 @@ void normalize_tomography(MultidimArray<double> &I, double tilt, double &mui,
 
 void normalize_Michael(MultidimArray<double> &I, const MultidimArray<int> &bg_mask)
 {
-    double avg, stddev, min, max;
+    double avg, stddev, min=0., max;
     double avgbg, stddevbg, minbg, maxbg;
     I.computeStats(avg, stddev, min, max);
     computeStats_within_binary_mask(bg_mask, I, minbg, maxbg, avgbg,
@@ -244,12 +244,12 @@ void normalize_NewXmipp(MultidimArray<double> &I, const MultidimArray<int> &bg_m
 
 void normalize_NewXmipp2(MultidimArray<double> &I, const MultidimArray<int> &bg_mask)
 {
-    double avg, stddev, min, max;
-    double avgbg, stddevbg, minbg, maxbg;
+    double avg=0, stddev, min, max;
+    double avgbg=0, stddevbg, minbg, maxbg;
     I.computeStats(avg, stddev, min, max);
     computeStats_within_binary_mask(bg_mask, I, minbg, maxbg, avgbg,
                                     stddevbg);
-    double K=1.0/ABS(avg - avgbg);
+    double K=1.0/fabs(avg - avgbg);
     FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(I)
     DIRECT_MULTIDIM_ELEM(I,n)=(DIRECT_MULTIDIM_ELEM(I,n)-avgbg)*K;
 }
@@ -732,7 +732,7 @@ void ProgNormalize::processImage(const FileName &fnImg, const FileName &fnImgOut
 
     if (remove_black_dust || remove_white_dust)
     {
-        double avg, stddev, min, max, zz;
+        double avg=0., stddev=0., min=0., max=0., zz;
         img.computeStats(avg, stddev, min, max);
 
         if ((min - avg) / stddev < thresh_black_dust && remove_black_dust)

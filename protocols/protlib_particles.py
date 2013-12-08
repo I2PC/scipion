@@ -105,7 +105,13 @@ def runCrop(log, stack, cropSize, tmpStack):
     moveFile(log, tmpStack, stack)
 
 def runResize(log,stack,new_size,Nproc):
-    runJob(log,"xmipp_image_resize","-i %(stack)s --fourier %(new_size)d" % locals(),Nproc)
+    size = MetaDataInfo(stack)[0]
+    args="-i %(stack)s" % locals()
+    if new_size<size:
+        args+=" --fourier %(new_size)d" % locals()
+    else:
+        args+=" --dim %(new_size)d" % locals()
+    runJob(log,"xmipp_image_resize",args,Nproc)
 
 def invert(log,ImagesMd,Nproc):
     runJob(log,'xmipp_image_operate','-i %(ImagesMd)s --mult -1' % locals(),Nproc)

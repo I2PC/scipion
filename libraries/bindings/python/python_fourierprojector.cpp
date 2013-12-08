@@ -124,12 +124,10 @@
 
 /* projectVolume */
 
-  PyObject * FourierProjector_projectVolume(PyObject * obj, PyObject *args, PyObject *kwargs)
+PyObject * FourierProjector_projectVolume(PyObject * obj, PyObject *args, PyObject *kwargs)
 {
-
       FourierProjectorObject *self = (FourierProjectorObject*) obj;
       double rot, tilt, psi;
-      int i;
       PyObject *projection_image = NULL;
       if (self != NULL && PyArg_ParseTuple(args, "O|ddd", &projection_image, &rot, &tilt, &psi))
       {
@@ -145,8 +143,6 @@
           }
           Py_RETURN_NONE;
       }
-
-
 }
 
 

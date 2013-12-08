@@ -128,34 +128,6 @@ public:
     char lockFilename[L_tmpnam];
 }
 ;//end of class MpiFileMutex
-/** Another implementation of ParallelTaskDistributor using a file as lock mechanism.
- * It will extends from ThreadTaskDistributor for also be compatible with several
- * threads running in the same process and also syncronization between different
- * process since only one will get the lock on the file.
- */
-class FileTaskDistributor: public ThreadTaskDistributor
-{
-private:
-    void createLockFile();
-    void loadLockFile();
-    void readVars();
-    void writeVars();
-
-protected:
-    MpiFileMutex *fileMutex;
-    int           lockFile;
-    MpiNode      *node;
-
-    virtual void lock();
-    virtual void unlock();
-
-public:
-    FileTaskDistributor(size_t nTasks, size_t bSize, MpiNode * node  = NULL);
-    virtual ~FileTaskDistributor();
-    /** Restart the file distributor so that all tasks can be reassigned */
-    void reset();
-}
-;//end of class FileTaskDistributor
 
 /** This class represent an Xmipp MPI Program.
  *  It includes the basic MPI functionalities to the programs,
@@ -202,7 +174,7 @@ class MpiMetadataProgram: public XmippMpiProgram
 protected:
     /** Divide the job in this number block with this number of images */
     int blockSize;
-    FileTaskDistributor *distributor;
+    MpiTaskDistributor *distributor;
     std::vector<size_t> imgsId;
     MpiFileMutex *fileMutex;
     size_t first, last;

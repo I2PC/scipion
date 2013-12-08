@@ -259,8 +259,8 @@ void ProgVolumeToPseudoatoms::placeSeeds(int Nseeds)
     {
         // Look for the maximum error
         bool first=true;
-        int kmax, imax, jmax;
-        double maxVal;
+        int kmax=0, imax=0, jmax=0;
+        double maxVal=0.;
         FOR_ALL_ELEMENTS_IN_ARRAY3D(Vdiff)
         {
             if (useMask && A3D_ELEM(iMask3D,k,i,j)==0)
@@ -343,7 +343,7 @@ void ProgVolumeToPseudoatoms::removeSeeds(int Nseeds)
 
                 // Search for a point within a negative region
                 bool found=false;
-                int kneg, ineg, jneg;
+                int kneg=0, ineg=0, jneg=0;
                 const MultidimArray<int> &iMask3D=mask_prm.get_binary_mask();
                 for (int k=STARTINGZ(Vdiff); k<=FINISHINGZ(Vdiff) && !found; k++)
                     for (int i=STARTINGY(Vdiff); i<=FINISHINGY(Vdiff) && !found; i++)
@@ -880,7 +880,7 @@ void ProgVolumeToPseudoatoms::run()
     int iter=0;
     double previousNAtoms=0;
     percentageDiff=1;
-    double actualGrowSeeds;
+    double actualGrowSeeds=0.;
     do
     {
         // Place seeds

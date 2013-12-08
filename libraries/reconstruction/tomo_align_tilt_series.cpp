@@ -2612,7 +2612,7 @@ void ProgTomographAlignment::run()
 //#define DEBUG
 double Alignment::optimizeGivenAxisDirection()
 {
-    double bestError;
+    double bestError=1e38;
     bool firstIteration=true, finish=false;
     int Niterations=0;
     computeGeometryDependentOfAxis();

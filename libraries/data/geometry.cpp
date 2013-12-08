@@ -216,7 +216,7 @@ void Bspline_model_fitting(const std::vector<FitPoint> &IN_points,
         for (int m = m0; m <= mF; ++m)
             for (int l = l0; l <= lF; ++l)
             {
-                double coeff;
+                double coeff=0.;
                 switch (SplineDegree)
                 {
                 case 2:
@@ -1034,7 +1034,7 @@ double intersection_unit_cube(
     const Matrix1D<double> &u,     // direction
     const Matrix1D<double> &r)     // passing point
 {
-    double t1, t2, t;
+    double t1=0., t2=0., t;
     int found_t = 0;
 
 #define ASSIGN_IF_GOOD_ONE \

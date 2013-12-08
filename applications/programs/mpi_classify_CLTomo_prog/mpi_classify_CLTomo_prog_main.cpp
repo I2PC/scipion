@@ -26,6 +26,7 @@
 #include "mpi_classify_CLTomo.h"
 #include <data/mask.h>
 #include <data/polar.h>
+#include <data/filters.h>
 #include <data/xmipp_image_generic.h>
 #include <reconstruction/symmetrize.h>
 
@@ -324,28 +325,39 @@ void CL3DClass::fitBasic(MultidimArray<double> &I, CL3DAssignment &result)
     Matrix2D<double> A;
     double frmScore;
     constructFourierMask(I);
-    constructFourierMaskFRM();
-    alignVolumesFRM(prm->frmFunc, P, I, pyIfourierMaskFRM, result.rot, result.tilt, result.psi, result.shiftx, result.shifty, result.shiftz,
-    		frmScore,A,prm->maxShift, prm->maxFreq);
+    if (!prm->dontAlign)
+    {
+        constructFourierMaskFRM();
+		alignVolumesFRM(prm->frmFunc, P, I, pyIfourierMaskFRM, result.rot, result.tilt, result.psi, result.shiftx, result.shifty, result.shiftz,
+				frmScore,A,prm->maxShift, prm->maxFreq);
+    }
+    else
+    {
+    	A.initIdentity(4);
+    	result.rot=result.tilt=result.psi=result.shiftx=result.shifty=result.shiftz=0.;
+    	frmScore=correlationIndex(P,I,&(prm->mask.get_binary_mask()));
+    }
     if (fabs(result.shiftx)>prm->maxShiftX || fabs(result.shifty)>prm->maxShiftY || fabs(result.shiftz)>prm->maxShiftZ ||
     	fabs(result.rot)>prm->maxRot || fabs(result.tilt)>prm->maxTilt || fabs(result.psi)>prm->maxPsi)
     	result.score=-1e38;
     else
     {
-		applyGeometry(LINEAR, Iaux, I, A, IS_NOT_INV, DONT_WRAP);
+    	if (prm->dontAlign)
+    		Iaux=I;
+    	else
+    		applyGeometry(LINEAR, Iaux, I, A, IS_NOT_INV, DONT_WRAP);
 		apply_binary_mask(prm->mask.get_binary_mask(),Iaux,I,0.0);
-
 		constructFourierMask(I);
 		result.score=frmScore;
     }
 
 #ifdef DEBUG
-
     Image<double> save;
     save()=I;
     save.write("PPPfitBasicI2.xmp");
     save()=P-I;
     save.write("PPPfitBasicdiff.xmp");
+    std::cout << result.rot << " " << result.tilt << " " << result.psi << " " << result.shiftx << " " << result.shifty << " " << result.shiftz << std::endl;
     std::cout << "final score=" << result.score << ". Press" << std::endl;
     char c;
     std::cin >> c;
@@ -627,6 +639,7 @@ void CL3D::initialize(MetaData &_SF,
     }
     if (prm->node->rank == 0)
         progress_bar(Nimgs);
+    std::cout << "Rank " << prm->node->rank << " finished" << std::endl;
 
     // Share all assignments
     shareAssignments(true, true);
@@ -792,6 +805,7 @@ void CL3D::run(const FileName &fnOut, int level)
         size_t first, last;
         while (prm->taskDistributor->getTasks(first, last))
         {
+        	std::cout << "Rank " << prm->node->rank << " [" << first << "," << last << "]" << std::endl;
             for (size_t idx = first; idx <= last; ++idx)
             {
                 size_t objId = prm->objId[idx];
@@ -807,6 +821,7 @@ void CL3D::run(const FileName &fnOut, int level)
                     progress_bar(idx);
             }
         }
+    	std::cout << "Rank " << prm->node->rank << " finished iteration" << std::endl;
         FileName fnAux;
         for (int q=0; q<Q; q++)
         {
@@ -818,12 +833,13 @@ void CL3D::run(const FileName &fnOut, int level)
         }
 
         // Gather all pieces computed by nodes
+        std::cout << "Reducing ..." << std::endl;
         MPI_Allreduce(MPI_IN_PLACE, &corrSum, 1, MPI_DOUBLE, MPI_SUM,
                       MPI_COMM_WORLD);
         shareAssignments(true, true);
 
         // Some report
-        size_t idMdChanges;
+        size_t idMdChanges=0;
         if (prm->node->rank == 0)
         {
             progress_bar(Nimgs);
@@ -962,7 +978,8 @@ int CL3D::cleanEmptyNodes()
 /* Split ------------------------------------------------------------------- */
 //#define DEBUG
 void CL3D::splitNode(CL3DClass *node, CL3DClass *&node1, CL3DClass *&node2,
-                     std::vector<size_t> &splitAssignment) const
+                     std::vector<size_t> &splitAssignment,
+                     bool iterate) const
 {
     LOG(formatString("Splitting node 0: listsize=%d (volsize=%d)",node->currentListImg.size(),XSIZE(node->P)));
     std::vector<CL3DClass *> toDelete;
@@ -1055,7 +1072,7 @@ void CL3D::splitNode(CL3DClass *node, CL3DClass *&node1, CL3DClass *&node2,
 
         // Split according to score
         if (prm->node->rank == 0 && prm->verbose >= 2)
-            std::cerr << "Splitting by score threshold ..." << std::endl;
+            std::cerr << "Splitting by score threshold ... " << corrThreshold << std::endl;
         LOG(((String)"Splitting by threshold"));
         for (size_t i = 0; i < imax; i++)
         {
@@ -1094,62 +1111,65 @@ void CL3D::splitNode(CL3DClass *node, CL3DClass *&node1, CL3DClass *&node2,
         LOG(formatString("Splitting node 1: listsize2=%d (volsize2=%d)",node2->currentListImg.size(),XSIZE(node2->P)));
 
         // Split iterations
-        for (int it = 0; it < prm->Niter; it++)
+        if (iterate)
         {
-            if (prm->node->rank == 0 && prm->verbose >= 2)
-            {
-                std::cerr << "Split iteration " << it << std::endl;
-                init_progress_bar(imax);
-            }
+			for (int it = 0; it < prm->Niter; it++)
+			{
+				if (prm->node->rank == 0 && prm->verbose >= 2)
+				{
+					std::cerr << "Split iteration " << it << std::endl;
+					init_progress_bar(imax);
+				}
 
-            oldAssignment = newAssignment;
-            newAssignment.initZeros();
-            for (size_t i = 0; i < imax; i++)
-            {
-                if ((i + 1) % (prm->node->size) == prm->node->rank)
-                {
-                    // Read image
-                    assignment1.objId = assignment2.objId = assignment.objId
-                                                            = node->currentListImg[i].objId;
-                    readImage(I, assignment.objId, false);
+				oldAssignment = newAssignment;
+				newAssignment.initZeros();
+				for (size_t i = 0; i < imax; i++)
+				{
+					if ((i + 1) % (prm->node->size) == prm->node->rank)
+					{
+						// Read image
+						assignment1.objId = assignment2.objId = assignment.objId
+																= node->currentListImg[i].objId;
+						readImage(I, assignment.objId, false);
 
-                    Iaux1 = I();
-                    node1->fitBasic(Iaux1, assignment1);
-                    Iaux2 = I();
-                    node2->fitBasic(Iaux2, assignment2);
+						Iaux1 = I();
+						node1->fitBasic(Iaux1, assignment1);
+						Iaux2 = I();
+						node2->fitBasic(Iaux2, assignment2);
 
-                    if (assignment1.score > assignment2.score && assignment1.score>0)
-                    {
-                        node1->updateProjection(Iaux1, assignment1);
-                        VEC_ELEM(newAssignment,i) = 1;
-                    }
-                    else if (assignment2.score > assignment1.score && assignment2.score>0)
-                    {
-                        node2->updateProjection(Iaux2, assignment2);
-                        VEC_ELEM(newAssignment,i) = 2;
-                    }
-                }
-                if (prm->node->rank == 0 && i % 25 == 0 && prm->verbose >= 2)
-                    progress_bar(i);
-            }
-            if (prm->node->rank == 0 && prm->verbose >= 2)
-                progress_bar(imax);
-            shareSplitAssignments(newAssignment, node1, node2);
+						if (assignment1.score > assignment2.score && assignment1.score>0)
+						{
+							node1->updateProjection(Iaux1, assignment1);
+							VEC_ELEM(newAssignment,i) = 1;
+						}
+						else if (assignment2.score > assignment1.score && assignment2.score>0)
+						{
+							node2->updateProjection(Iaux2, assignment2);
+							VEC_ELEM(newAssignment,i) = 2;
+						}
+					}
+					if (prm->node->rank == 0 && i % 25 == 0 && prm->verbose >= 2)
+						progress_bar(i);
+				}
+				if (prm->node->rank == 0 && prm->verbose >= 2)
+					progress_bar(imax);
+				shareSplitAssignments(newAssignment, node1, node2);
 
-            int Nchanges = 0;
-            FOR_ALL_ELEMENTS_IN_MATRIX1D(newAssignment)
-            if (newAssignment(i) != oldAssignment(i))
-                Nchanges++;
-            if (prm->node->rank == 0 && prm->verbose >= 2)
-                std::cout << "Number of assignment split changes=" << Nchanges
-                << std::endl;
+				int Nchanges = 0;
+				FOR_ALL_ELEMENTS_IN_MATRIX1D(newAssignment)
+				if (newAssignment(i) != oldAssignment(i))
+					Nchanges++;
+				if (prm->node->rank == 0 && prm->verbose >= 2)
+					std::cout << "Number of assignment split changes=" << Nchanges
+					<< std::endl;
 
-            // Check if one of the nodes is too small
-            LOG(formatString("Splitting node 1.5: list1.size=%d list2.size=%d",node1->currentListImg.size(),node2->currentListImg.size()));
-            if (node1->currentListImg.size() < minAllowedSize
-                || node2->currentListImg.size() < minAllowedSize
-                || Nchanges < 0.005 * imax)
-                break;
+				// Check if one of the nodes is too small
+				LOG(formatString("Splitting node 1.5: list1.size=%d list2.size=%d",node1->currentListImg.size(),node2->currentListImg.size()));
+				if (node1->currentListImg.size() < minAllowedSize
+					|| node2->currentListImg.size() < minAllowedSize
+					|| Nchanges < 0.005 * imax)
+					break;
+			}
         }
 
         if (node1->currentListImg.size() < minAllowedSize)
@@ -1221,7 +1241,7 @@ void CL3D::splitFirstNode()
     P.push_back(new CL3DClass());
     P.push_back(new CL3DClass());
     std::vector<size_t> splitAssignment;
-    splitNode(P[0], P[Q], P[Q + 1], splitAssignment);
+    splitNode(P[0], P[Q], P[Q + 1], splitAssignment, Q>1);
     delete P[0];
     P[0] = NULL;
     P.erase(P.begin());
@@ -1271,6 +1291,8 @@ void ProgClassifyCL3D::readParams()
     fnSym = getParam("--sym");
     if (checkParam("--mask"))
         mask.readParams(this);
+    dontAlign = checkParam("--dontAlign");
+    generateAlignedVolumes = checkParam("--generateAlignedVolumes");
 }
 
 void ProgClassifyCL3D::show() const
@@ -1297,6 +1319,8 @@ void ProgClassifyCL3D::show() const
     << "Maximum psi:             " << maxPsi << std::endl
     << "Classify all images:     " << classifyAllImages << std::endl
     << "Symmetry:                " << fnSym << std::endl
+    << "Don't align:             " << dontAlign << std::endl
+    << "Generate aligned volumes:" << generateAlignedVolumes << std::endl
     ;
     mask.show();
 }
@@ -1333,6 +1357,8 @@ void ProgClassifyCL3D::defineParams()
     addParamsLine("   [--sym <s=c1>]            : Symmetry of the classes to be reconstructed");
     addParamsLine("   [--maxFreq <w=0.2>]       : Maximum frequency to be reconstructed");
     addParamsLine("   [--randomizeStartingOrientation] : Use this option to avoid aligning all missing wedges");
+    addParamsLine("   [--dontAlign]             : Do not align volumes, only classify");
+    addParamsLine("   [--generateAlignedVolumes]: Generate aligned subvolumes at the end");
     Mask::defineParams(this,INT_MASK,NULL,NULL,true);
     addExampleLine("mpirun -np 3 `which xmipp_mpi_classify_CL3D` -i images.stk --nref 256 --oroot class --iter 10");
 }
@@ -1371,7 +1397,7 @@ void ProgClassifyCL3D::produceSideInfo()
     // Prepare the Task distributor
     SF.findObjects(objId);
     size_t Nimgs = objId.size();
-    taskDistributor = new FileTaskDistributor(Nimgs,
+    taskDistributor = new MpiTaskDistributor(Nimgs,
                       XMIPP_MAX(1,Nimgs/(5*node->size)), node);
 
     // Prepare mask for evaluating the noise outside
@@ -1463,6 +1489,50 @@ void ProgClassifyCL3D::run()
         SFaux.clear();
         SFaux.sort(SFaux2, MDL_IMAGE);
         SFaux.write(fnOut + "_images.xmd");
+    }
+
+    // Produce aligned volumes
+    if (generateAlignedVolumes)
+    {
+    	node->barrierWait();
+    	MetaData MDimages;
+    	MDimages.read(fnOut+"_images.xmd");
+    	FileName fnAligned=fnOut+"_aligned.stk";
+    	if (node->rank==0)
+    		createEmptyFile(fnAligned,(int)Xdim,(int)Ydim,(int)Zdim,MDimages.size());
+    	node->barrierWait();
+    	size_t idx=1;
+    	Image<double> V, Valigned;
+    	FileName fnImg;
+    	Matrix2D<double> A,E,T;
+        Matrix1D<double> r(3);
+    	FOR_ALL_OBJECTS_IN_METADATA(MDimages)
+    	{
+    		if (idx%node->size==node->rank)
+    		{
+    			MDimages.getValue(MDL_IMAGE,fnImg,__iter.objId);
+    			V.read(fnImg);
+    			V().setXmippOrigin();
+    			double x,y,z,rot,tilt,psi;
+    			MDimages.getValue(MDL_ANGLE_ROT,rot,__iter.objId);
+    			MDimages.getValue(MDL_ANGLE_TILT,tilt,__iter.objId);
+    			MDimages.getValue(MDL_ANGLE_PSI,psi,__iter.objId);
+    			MDimages.getValue(MDL_SHIFT_X,x,__iter.objId);
+    			MDimages.getValue(MDL_SHIFT_Y,y,__iter.objId);
+    			MDimages.getValue(MDL_SHIFT_Z,z,__iter.objId);
+
+    	        Euler_angles2matrix(rot, tilt, psi, E, true);
+    	        XX(r)=x;
+    	        YY(r)=y;
+    	        ZZ(r)=z;
+    	        translation3DMatrix(r,T);
+    	        A=E*T;
+
+    			applyGeometry(BSPLINE3,Valigned(),V(),A,IS_NOT_INV,DONT_WRAP,0.);
+    	        Valigned.write(fnAligned,idx,true,WRITE_REPLACE);
+    		}
+    		++idx;
+    	}
     }
     CLOSE_LOG();
 }

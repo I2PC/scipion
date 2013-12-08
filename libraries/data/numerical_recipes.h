@@ -174,7 +174,7 @@ void pwt(double a[], unsigned long n, int isign);
 template <class T>
 void ludcmp(T *a, int n, int *indx, T *d)
 {
-    int i, imax, j, k;
+    int i, imax=0, j, k;
     T big, dum, sum, temp;
     T *vv;
 
@@ -273,7 +273,7 @@ void gaussj(T *a, int n, T *b, int m)
 {
     T temp;
     int *indxc, *indxr, *ipiv;
-    int i, icol, irow, j, k, l, ll;
+    int i, icol=0, irow=0, j, k, l, ll;
     T big, dum;
     double pivinv;
 

@@ -4812,9 +4812,9 @@ void    *cd;
 ***********************************************************************
 */
 {
-    int i, ipp, j, ncnstr, nclin, nctotl, nob, nobL, modem, nn,
+    int i, ipp, j, ncnstr, nclin, nctotl, nob, nobL, modem=0, nn,
     nppram, nrowa, ncsipl1, ncsipn1, nfsip1;
-    int  feasbl, feasb, prnt, Linfty;
+    int  feasbl, feasb, prnt, Linfty=0;
     int *indxob, *indxcn, *mesh_pts1;
     double *signeq;
     double xi, gi, gmax, dummy, epskt;
@@ -6396,9 +6396,9 @@ void(* obj)(), (* constr)();
 #endif
 {
     int  i, j, k, kk, ncg, ncf, nqprm0, nclin0, nctot0, infoqp, nqprm1, ncl,
-    nclin1, ncc, nff, nrowa0, nrowa1, ninq, nobb, nobbL,
+    nclin1=0, ncc, nff, nrowa0, nrowa1, ninq, nobb, nobbL,
     nncn, ltem1, ltem2, display, need_d1;
-    double fmxl, vv, dx, dmx, dnm1, dnm, v0, v1, vk, temp1, temp2, theta,
+    double fmxl, vv, dx, dmx, dnm1, dnm, v0, v1, vk=0., temp1, temp2, theta,
     rhol, rhog, rho, grdfd0, grdfd1, dummy, grdgd0, grdgd1, thrshd,
     sign, *adummy, dnmtil, *tempv;
 
@@ -7029,9 +7029,9 @@ struct  _parameter  *param;
 #endif
 {
     int i, ii, j, jj, ij, k, iout, mnn, nqnp, zero, temp1, temp2, ncnstr_used,
-    numf_used;
+    numf_used=0;
     int *iw_hold;
-    double x0i, xdi, *bj, *htemp, *atemp;
+    double x0i, xdi=0., *bj, *htemp, *atemp;
 
     iout = 6;
     bj = make_dv(nrowa);
@@ -7223,7 +7223,7 @@ struct _objective  *ob;
 struct _parameter  *param;
 #endif
 {
-    int i, k, ii, jj, iout, j, mnn, zero, temp1, temp3, ncnstr_used, numf_used;
+    int i, k, ii, jj, iout, j, mnn, zero, temp1, temp3, ncnstr_used, numf_used=0;
     int *iw_hold;
     double x0i, eta, *atemp, *htemp, **a, *bj;
 
@@ -7381,7 +7381,7 @@ void    *cd;
 {
     int i, ii, ij, jj, itry, ikeep, j, job, nlin, mnm, ltem1, ltem2, reform,
     fbind, cdone, fdone, eqdone, display, sipldone;
-    double prod1, prod, dummy, fmax1, tolfe, ostep, temp, **adummy, fii;
+    double prod1, prod, dummy, fmax1=0., tolfe, ostep, temp, **adummy, fii;
 
     nlin = glob_info.nnineq - nineqn;
     itry = ii = jj = 1;
@@ -7791,7 +7791,7 @@ void(* obj)(), (* constr)(), (* gradob)(), (* gradcn)();
 #endif
 {
     int    i, j, k, ifail, np, mnm, done, display;
-    double dhd, gammd, etad, dummy, theta, signgj, psfnew, delta_s;
+    double dhd, gammd, etad, dummy, theta, signgj=1., psfnew, delta_s;
     double *tempv;
 
     /* Check to see whether user-accessible stopping criterion

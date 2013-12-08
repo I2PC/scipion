@@ -34,7 +34,7 @@ class MpiProgNMA: public ProgNmaAlignment
 {
 private:
     MpiNode *node;
-    FileTaskDistributor *distributor;
+    MpiTaskDistributor *distributor;
     std::vector<size_t> imgsId;
     MpiFileMutex *fileMutex;
 
@@ -79,7 +79,7 @@ public:
         mdIn.read(fnOutDir + "/nmaTodo.xmd");
         mdIn.findObjects(imgsId);//get objects ids
         rangen = node->rank;
-        distributor = new FileTaskDistributor(mdIn.size(), 1, node);
+        distributor = new MpiTaskDistributor(mdIn.size(), 1, node);
     }
     //Only master do starting progress bar stuff
     void startProcessing()

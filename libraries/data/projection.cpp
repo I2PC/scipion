@@ -848,7 +848,7 @@ void project_Crystal_SimpleGrid(Image<double> &vol, const SimpleGrid &grid,
     // corresponding to the blobprint
     // point which matches with this
     // pixel position
-    double        vol_corr;                  // Correction for a volume element
+    double        vol_corr=0.;               // Correction for a volume element
     int           N_eq;                      // Number of equations in which
     // a blob is involved
     int           i, j, k;                   // volume element indexes

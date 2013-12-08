@@ -1021,8 +1021,8 @@ double CTF_fitness(double *p, void *)
             // Compute each component
             global_ctfmodel.precomputeValues(i, j);
             double bg = global_ctfmodel.getValueNoiseAt();
-            double envelope, ctf_without_damping, ctf_with_damping;
-            double ctf2_th;
+            double envelope=0, ctf_without_damping, ctf_with_damping=0;
+            double ctf2_th=0;
             switch (global_action)
             {
             case 0:
@@ -1495,7 +1495,7 @@ void estimate_background_gauss_parameters()
 
     // Compute the minimum radial error
     bool first = true, OK_to_proceed = false;
-    double error2_min = 0, wmin;
+    double error2_min = 0, wmin=0;
     FOR_ALL_ELEMENTS_IN_ARRAY1D(radial_CTFmodel_avg)
     {
         if (radial_N(i) == 0)
@@ -1544,7 +1544,7 @@ void estimate_background_gauss_parameters()
 
     // Compute the maximum radial error
     first = true;
-    double error2_max = 0, wmax, fmax;
+    double error2_max = 0, wmax=0, fmax;
     FOR_ALL_ELEMENTS_IN_ARRAY1D(radial_CTFmodel_avg)
     {
         if (radial_N(i) == 0)
@@ -1694,7 +1694,7 @@ void estimate_background_gauss_parameters2()
     double wmin = 0.15;
 
     // Compute the maximum (negative) radial error
-    double error_max = 0, wmax, fmax;
+    double error_max = 0, wmax=0, fmax;
     FOR_ALL_ELEMENTS_IN_ARRAY1D(radial_CTFmodel_avg)
     {
         if (radial_N(i) == 0)
@@ -1947,7 +1947,7 @@ void estimate_defoci()
 {
     if (global_prm->show_optimization)
         std::cout << "Looking for first defoci ...\n";
-    double best_defocusU, best_defocusV, best_angle, best_K;
+    double best_defocusU=0, best_defocusV=0, best_angle=0, best_K=1;
     double best_error = global_heavy_penalization * 1.1;
     bool first = true;
     int i, j;
@@ -2231,7 +2231,7 @@ void estimate_defoci_Zernike(MultidimArray<double> &psdToModelFullSize, double m
     double Z3;
     double Z4;
     double Z5;
-    double eAngle;
+    double eAngle=0.;
     double deFocusAvg;
     double deFocusDiff;
 
@@ -2405,9 +2405,7 @@ void estimate_defoci_Zernike(MultidimArray<double> &psdToModelFullSize, double m
         (*global_adjust)(2) = eAngle;
         (*global_adjust)(4) = K_so_far;
         (*global_adjust)(6) = 2;
-
     }
-
 
     if (VEC_ELEM(arrayError2,maxInd) <= 0)
     {

@@ -99,6 +99,11 @@ class ProtNMA(XmippProtocol):
                 message.append(line)
         return message
     
+    def papers(self):
+        papers=[]
+        papers.append("Nogales-Cadenas, NAR (2013) [http://www.ncbi.nlm.nih.gov/pubmed/23671335]")
+        return papers
+
     def validate(self):
         errors = []
         if self.MaskMode=="Binary mask" and not os.path.exists(self.MaskFile):

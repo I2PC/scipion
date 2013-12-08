@@ -55,6 +55,12 @@ class ProtEmxExportParticles(XmippProtocol):
                    ]
         return summary
     
+    def papers(self):
+        papers=[]
+        papers.append('Marabini, Acta Crys D (2013) [http://www.ncbi.nlm.nih.gov/pubmed/23633578]')
+        papers.append('Sorzano, Cap. 1 (2014) [http://www.springer.com/book/978-1-4614-9520-8]')
+        return papers
+
     def visualize(self):
         pass
 

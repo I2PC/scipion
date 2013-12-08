@@ -73,6 +73,16 @@ class ProtImportParticles(ProtParticlesBase):
        
         return messages
 
+    def papers(self):
+        papers=[]
+        if self.DoNorm:
+            papers.append('Sorzano, Ultramic (2004) [http://www.ncbi.nlm.nih.gov/pubmed/15450658]')
+        if self.DoRemoveDust or self.DoFlip:
+            papers.append('Sorzano, Meth.Mol.Biol. (2013) [http://www.ncbi.nlm.nih.gov/pubmed/23086876]')
+        if self.DoSort:
+            papers.append('Vargas, JSB (2013) [http://www.ncbi.nlm.nih.gov/pubmed/23933392]')
+        return papers
+
 def createAcquisitionMd(log, samplingRate, fnOut):
     md = MetaData()
     md.setValue(MDL_SAMPLINGRATE, float(samplingRate), md.addObject())

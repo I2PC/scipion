@@ -39,7 +39,7 @@ herr_t showObjectInfo(hid_t objId, const char *name, void *op_data)
     std::ostream &out = *(h5Info.out);
 
     hsize_t nobj;
-    herr_t err;
+    herr_t err=0;
     hid_t grpid, dsid;
 
     H5G_stat_t statbuf;

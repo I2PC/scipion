@@ -144,6 +144,16 @@ class ProtScreenMicrographs(XmippProtocol):
         message.append("Input directory: [%s]" % self.PrevRun.WorkingDir)
         return message
     
+    def papers(self):
+        papers=[]
+        papers.append('Jonic, JSB (2007) [http://www.ncbi.nlm.nih.gov/pubmed/16987671]')
+        papers.append('Sorzano, JSB (2007) [http://www.ncbi.nlm.nih.gov/pubmed/17911028]')
+        papers.append('Sorzano, BMC SB (2009) [http://www.ncbi.nlm.nih.gov/pubmed/19321015]')
+        papers.append('Sorzano, Meth.Mol.Biol. (2013) [http://www.ncbi.nlm.nih.gov/pubmed/23086876]')
+        if self.FastDefocus:
+            papers.append('Vargas, JSB (2013) [http://www.ncbi.nlm.nih.gov/pubmed/23261401]')
+        return papers
+    
     def visualize(self):
         summaryFile = self.getFilename('micrographs')
         

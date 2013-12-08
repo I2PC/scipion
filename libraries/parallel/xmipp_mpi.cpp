@@ -56,6 +56,7 @@ MpiTaskDistributor::MpiTaskDistributor(size_t nTasks, size_t bSize,
                                        MpiNode *node) :
         ThreadTaskDistributor(nTasks, bSize)
 {
+	std::cout << "MpiTask " << nTasks << " " << bSize << std::endl;
     this->node = node;
     //if master create distribution thread
     if (node->isMaster())
@@ -128,13 +129,15 @@ void MpiFileMutex::lock()
 {
     Mutex::lock();
     lseek(lockFile, 0, SEEK_SET);
-    lockf(lockFile, F_LOCK, 0);
+    if (!lockf(lockFile, F_LOCK, 0))
+    	REPORT_ERROR(ERR_IO_NOPERM,"Cannot lock file");
 }
 
 void MpiFileMutex::unlock()
 {
     lseek(lockFile, 0, SEEK_SET);
-    lockf(lockFile, F_ULOCK, 0);
+    if (!lockf(lockFile, F_ULOCK, 0))
+    	REPORT_ERROR(ERR_IO_NOPERM,"Cannot unlock file");
     Mutex::unlock();
 }
 
@@ -146,89 +149,6 @@ MpiFileMutex::~MpiFileMutex()
         perror("~MpiFileMutex: error deleting lock file");
         exit(1);
     }
-}
-
-FileTaskDistributor::FileTaskDistributor(size_t nTasks, size_t bSize,
-        MpiNode * node) :
-        ThreadTaskDistributor(nTasks, bSize)
-{
-    fileMutex = new MpiFileMutex(node);
-    if (node == NULL || node->isMaster())
-        createLockFile();
-    loadLockFile();
-    this->node=node;
-}
-
-FileTaskDistributor::~FileTaskDistributor()
-{
-    delete fileMutex;
-}
-
-void FileTaskDistributor::reset()
-{
-    if (node == NULL || node->isMaster())
-        setAssignedTasks(0);
-    if (node != NULL)
-        node->barrierWait();
-}
-
-void FileTaskDistributor::createLockFile()
-{
-    int buffer[] = { numberOfTasks, assignedTasks, blockSize };
-
-    if ((lockFile = open(fileMutex->lockFilename, O_CREAT | O_RDWR | O_TRUNC
-                         , S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH)) == -1)
-    {
-        perror("FileTaskDistributor::createLockFile: Error opening lock file");
-        exit(1);
-    }
-
-    if (write(lockFile, buffer, 3 * sizeof(int)) == -1)
-    {
-        perror(
-            "FileTaskDistributor::createLockFile: Error writing to lock file");
-        exit(1);
-    }
-
-    writeVars();
-} //function createLockFile
-
-void FileTaskDistributor::loadLockFile()
-{
-    if ((lockFile = open(fileMutex->lockFilename, O_RDWR)) == -1)
-    {
-        perror("FileTaskDistributor::loadLockFile: Error opening lock file");
-        exit(1);
-    }
-    readVars();
-}
-
-void FileTaskDistributor::readVars()
-{
-    lseek(lockFile, 0, SEEK_SET);
-    read(lockFile, &numberOfTasks, sizeof(size_t));
-    read(lockFile, &assignedTasks, sizeof(size_t));
-    read(lockFile, &blockSize, sizeof(size_t));
-}
-
-void FileTaskDistributor::writeVars()
-{
-    lseek(lockFile, 0, SEEK_SET);
-    write(lockFile, &numberOfTasks, sizeof(size_t));
-    write(lockFile, &assignedTasks, sizeof(size_t));
-    write(lockFile, &blockSize, sizeof(size_t));
-}
-
-void FileTaskDistributor::lock()
-{
-    fileMutex->lock();
-    readVars();
-}
-
-void FileTaskDistributor::unlock()
-{
-    writeVars();
-    fileMutex->unlock();
 }
 
 //------------ MPI ---------------------------
@@ -418,7 +338,7 @@ void MpiMetadataProgram::createTaskDistributor(MetaData &mdIn,
         blockSize = size;
 
     mdIn.findObjects(imgsId);
-    distributor = new FileTaskDistributor(size, blockSize, node);
+    distributor = new MpiTaskDistributor(size, blockSize, node);
 }
 
 //Now use the distributor to grasp images

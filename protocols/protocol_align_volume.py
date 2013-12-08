@@ -53,6 +53,12 @@ class ProtAlignVolume(XmippProtocol):
         message.append("Alignment method: %s"%self.AlignmentMethod)
         return message
     
+    def papers(self):
+        papers=[]
+        if self.AlignmentMethod=="Fast Fourier":
+            papers.append('Chen, JSB (2013) [http://www.ncbi.nlm.nih.gov/pubmed/23523719]')
+        return papers
+
     def validate(self):
         errors = []
         fnShAlignment=getXmippPath('lib/python2.7/site-packages/sh_alignment')

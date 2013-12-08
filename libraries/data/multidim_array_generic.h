@@ -368,8 +368,8 @@ public:
          */
     void computeStats(double& avg, double& stddev, double& minval, double& maxval) const
     {
-#define COMPUTESTATS(type) type Tminval; \
-                           type Tmaxval; \
+#define COMPUTESTATS(type) type Tminval=0; \
+                           type Tmaxval=0; \
                            ((MultidimArray<type>*)(im))->computeStats(avg, stddev, Tminval, Tmaxval);\
                            minval = Tminval;\
                            maxval = Tmaxval;

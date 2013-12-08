@@ -2156,7 +2156,7 @@ void Phantom::read(const FileName &fn_phantom, bool apply_scale)
 {
 
     FILE *fh_phantom;
-    char line[201];
+    char line[256];
     int Global_Feature_Read = 0; // Indicates if the line with volume dimensions
     // has been already read
     int        stat;

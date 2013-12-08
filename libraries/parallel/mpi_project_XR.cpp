@@ -122,9 +122,9 @@ void ProgMPIXrayProject::run()
 
     // Creation of MPI Job Handler file
 
-    FileTaskDistributor *jobHandler;
+    MpiTaskDistributor *jobHandler;
     long long int nodeBlockSize = 1;
-    jobHandler = new FileTaskDistributor(mpiData.size(), nodeBlockSize, node);
+    jobHandler = new MpiTaskDistributor(mpiData.size(), nodeBlockSize, node);
 
     size_t first = 0, last = 0;
 
