@@ -182,10 +182,11 @@ public class GalleryData {
 					filename = Filename.getFilename(file);
 				}
 			}
-			mdBlocks = MetaData.getBlocksInMetaDataFile(filename);
-
-			if (mdBlocks.length >= 1 && selectedBlock.isEmpty())
-				selectedBlock = mdBlocks[0];
+			if (Filename.exists(filename)){
+				mdBlocks = MetaData.getBlocksInMetaDataFile(filename);
+				if (mdBlocks.length >= 1 && selectedBlock.isEmpty())
+					selectedBlock = mdBlocks[0];
+			}
 		}
 
 	}
