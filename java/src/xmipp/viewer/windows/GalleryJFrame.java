@@ -578,7 +578,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 				{
 					int newRow = table.getSelectedRow() + vdir;
 					int col = table.getSelectedColumn() + hdir;
-
+					//System.err.format("newRow: %d, col: %d\n", newRow, col);
 					selectItem(newRow, col);
 
 				}
@@ -1356,7 +1356,9 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 	{
 		if (row < 0 || row > table.getRowCount() - 1 || col < 0 || col > table.getColumnCount() - 1)
 			return;
-		if (row * table.getColumnCount() + col + 1 > gallery.getSize())
+		
+		if (gallery.data.isGalleryMode() && 
+			row * table.getColumnCount() + col + 1 > gallery.getSize())
 		{
 			int[] coords = gallery.getCoords(gallery.getSize() - 1);
 			row = coords[0];
@@ -2089,6 +2091,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			to = blockto;
 			blockto = getBlock() + "@" + blockto;
 		}
+		
 		if (from != null)
 		{
 			MetaData md;
@@ -2109,6 +2112,9 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 					md.writeBlock(blockit + "@" + to);
 				md.destroy();
 			}
+		}
+		else {
+			saveMd(blockto, true);
 		}
 
 		data.setMdChanges(false);

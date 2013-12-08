@@ -32,7 +32,7 @@ from subprocess import Popen
 from os.path import join, exists, splitext, split
 import Tkinter as tk
 import tkFont
-from xmipp import MetaData
+from xmipp import MetaData, MDL_IMAGE
 from protlib_base import getWorkingDirFromRunName, getExtendedRunName,\
     XmippProject
 from protlib_utils import loadModule, which, runShowJ,\
@@ -189,25 +189,35 @@ def wizardHelperFilter(gui, browser, title, **args):
     selfile = gui.getVarValue(varName)
     path, filename = split(selfile)
     if not exists(selfile):
-        showWarning("Warning", "The input selfile is not a valid file", parent=gui.master)
+        showWarning("Warning", "The input metadata is not a valid file", parent=gui.master)
         return
+    # Select the first 10 particles to display the filter
+    md = MetaData(selfile)
+    fileList = []
+    for i, objId in enumerate(md):
+        if i == 10:
+            break  
+        fileList.append(md.getValue(MDL_IMAGE, objId))
+    extra['fileList'] = fileList
     return showBrowseDialog(path=path, parent=gui.master, browser=browser,title=title, 
                             seltype="file", selmode="browse", filter=filename, previewDim=256, extra=extra)        
     
 def wizardChooseBandPassFilter(gui, var):
     '''Wizard dialog to help choosing Bandpass filter parameters (used in protocol_preprocess_particles) '''
+    sampling = getSampling(gui.getVarValue('InSelFile'))
     vList = ['Freq_low','Freq_high','Freq_decay']
     from protlib_gui_ext import XmippBrowserBandpassFilter
-    results = wizardHelperFilter(gui, XmippBrowserBandpassFilter, "Bandpass Filter", freqs=gui.getVarlistValue(vList))
+    results = wizardHelperFilter(gui, XmippBrowserBandpassFilter, "Bandpass Filter", 
+                                 freqs=gui.getVarlistValue(vList), sampling=sampling)
     if results:
         gui.setVarlistValue(vList, results)
 
 def wizardChooseLowPassFilter(gui, var):
     '''Wizard dialog to help choosing Lowpass filter parameters (used in protocol_relion...) '''
-    sampling=getSampling(gui.getVarValue('ImgMd'))
+    sampling = getSampling(gui.getVarValue('ImgMd'))
     vList = [0,var.getTkValue(),0.02]#this 0.02 is a value in Fourier space in px ^-1
     from protlib_gui_ext import XmippBrowserBandpassFilter
-    results = wizardHelperFilter(gui, XmippBrowserBandpassFilter, "Bandpass Filter", freqs=vList, 
+    results = wizardHelperFilter(gui, XmippBrowserBandpassFilter, "Lowpass Filter", freqs=vList, 
                                  varName='Ref3D', showDecay=False, showLowFreq=False, unit='angstrom',
                                  sampling=sampling )
     if results:
