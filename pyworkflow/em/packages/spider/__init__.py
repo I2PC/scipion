@@ -27,6 +27,9 @@
 This sub-package will contains Spider protocols
 """
 
+
+_logo = "spider_logo.png"
+
 from spider import *
 
 from protocol_filters import SpiderProtFilter
