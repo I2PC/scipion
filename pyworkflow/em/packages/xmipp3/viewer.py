@@ -139,7 +139,7 @@ class XmippViewer(Viewer):
             else:
                 fn = self._getTmpPath(obj.getName() + '_ctfs.xmd')
                 writeSetOfCTFs(obj, fn)
-            runShowJ(fn)  
+            runShowJ(fn, extraParams=' --mode metadata --render first')  
         
         elif (issubclass(cls, ProtImportMicrographs) or
               issubclass(cls, XmippProtPreprocessMicrographs)):

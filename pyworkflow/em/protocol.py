@@ -31,6 +31,7 @@ each EM-software packages.
 
 import os
 import shutil
+from glob import glob
 from pyworkflow.object import String, Float
 from pyworkflow.protocol import *
 from pyworkflow.protocol.params import *
@@ -85,7 +86,9 @@ class ProtImportImages(EMProtocol):
         
     def _defineParams(self, form):
         form.addSection(label='Input')
-        form.addParam('pattern', StringParam, label="Pattern")
+        form.addParam('pattern', StringParam, label="Pattern",
+                      help="The pattern (with wildcard expansion) of the files to import\n"
+                            "For example: \n<data/particles/*.spi> \n or \n<~/Micrographs/mic*mrc>")
         form.addParam('checkStack', BooleanParam, label="Check stack files?", default=False)
         form.addParam('voltage', FloatParam, default=200,
                    label='Microscope voltage (in kV)')
@@ -100,11 +103,7 @@ class ProtImportImages(EMProtocol):
         Register other parameters.
         """
         from pyworkflow.em import findClass
-        from glob import glob
         filePaths = glob(pattern)
-        
-        if len(filePaths) == 0:
-            raise Exception('importImages:There is not filePaths matching pattern')
         
         imgSet = createSetFunction 
         # Setting Acquisition properties
@@ -146,10 +145,16 @@ class ProtImportImages(EMProtocol):
         return outFiles
   
     def _validate(self):
-        validateMsgs = []
+        errors = []
         if self.pattern.get() == "":
-            validateMsgs.append('Pattern cannot be EMPTY.')
-        return validateMsgs
+            errors.append('The <pattern> cannot be empty.')
+        else:
+            filePaths = glob(self.pattern.get())
+        
+            if len(filePaths) == 0:
+                errors.append('There are no files matching the <pattern>')
+
+        return errors
     
     def getFiles(self):
         return getattr(self, self._getOutputSet(self._className)).getFiles()
@@ -168,6 +173,7 @@ class ProtImportImages(EMProtocol):
     
     def _getOutputSet(self, setName):
         return "output" + setName + "s"
+        
         
 class ProtImportMicrographs(ProtImportImages):
     """Protocol to import a set of micrographs in the project"""
@@ -299,10 +305,10 @@ class ProtImportVolumes(EMProtocol):
         return summary
     
     def _validate(self):
-        validateMsgs = []
+        errors = []
         if self.pattern.get() == "":
-            validateMsgs.append('Pattern cannot be EMPTY.')
-        return validateMsgs
+            errors.append('Pattern cannot be EMPTY.')
+        return errors
 
 
 class ProtCTFMicrographs(EMProtocol):

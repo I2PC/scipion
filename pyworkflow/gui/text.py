@@ -29,8 +29,8 @@ Text based widgets.
         
 import Tkinter as tk
 import ttk, os, gui
+from pyworkflow.utils import *
 from widgets import Scrollable, Button
-from pyworkflow.utils.path import exists
 
 
 class HyperlinkManager:
@@ -261,7 +261,8 @@ class TaggedText(Text):
     
     def configureTags(self):
         self.tag_config('normal', justify=tk.LEFT)
-        self.tag_config('bold', justify=tk.LEFT, font=gui.fontBold)
+        self.tag_config(HYPER_BOLD, justify=tk.LEFT, font=gui.fontBold)
+        self.tag_config(HYPER_ITALIC, justify=tk.LEFT, font=gui.fontItalic)
         if self.colors:            
             self.colors = configureColorTags(self) # Color can be unavailable, so disable use of colors    
         
@@ -269,7 +270,6 @@ class TaggedText(Text):
         """ Detect [] as links text and <> as bold text"""
         tagsDict = {'[': 'link', '<': 'bold'}
         tagged_parts = []
-        print "parts", parts
         for p in parts:
             if len(p) > 0:
                 if p[0] in tagsDict.keys():
@@ -277,22 +277,33 @@ class TaggedText(Text):
                 else:
                     tagged_parts.append((p, 'normal'))
                     
-        print "tagged_parts",tagged_parts
         return tagged_parts
         
+    def openLink(self, link):
+        from  webbrowser import open
+        open(link, new=0) # Open in the same browner, new tab
+        
+    def matchHyperText(self, match, tag):
+        """ Process when a match a found and store indexes inside string."""
+        #print "match found at: ", match.start(), match.end(), "mode: ", mode
+        self.insert(tk.END, self.line[self.lastIndex:match.start()])
+        g1 = match.group(tag)
+
+        if tag == HYPER_BOLD or tag == HYPER_ITALIC:
+            #self.matchIndexes.append((match.start(), match.end()))
+            self.insert(tk.END, g1, tag)
+        elif tag == HYPER_LINK1:
+            self.insert(tk.END, g1, self.hm.add(lambda: self.openLink(g1)))
+        
+        self.lastIndex = match.end()
+        
+        return g1
+
     def addLine(self, line):
-        parts = self.getTaggedParts(self.regex.split(line))
-        for p, t in parts:
-            if t == 'link':
-                def insertLink(link):
-                    self.insert(tk.INSERT, link, self.hm.add(lambda: openLink(link)))
-                insertLink(p)
-            else:
-                if self.colors:
-                    insertColoredLine(self, p, t)
-                else:
-                    self.insert(tk.END, p, t)
-        self.addNewline()       
+        self.line = line
+        self.lastIndex = 0
+        parseHyperText(line, self.matchHyperText)
+        Text.addLine(self, line[self.lastIndex:])
 
 
 class OutputText(Text):

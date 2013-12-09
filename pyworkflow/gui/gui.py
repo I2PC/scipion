@@ -111,6 +111,7 @@ def setCommonFonts():
     setFont('fontNormal', family=cfgFontName, size=cfgFontSize)
     aliasFont('fontButton', 'fontNormal')
     setFont('fontBold', family=cfgFontName, size=cfgFontSize, weight='bold')
+    setFont('fontItalic', family=cfgFontName, size=cfgFontSize, slant='italic')
     setFont('fontLabel', family=cfgFontName, size=cfgFontSize+1, weight='bold')
 
 def changeFontSizeByDeltha(font, deltha, minSize=-999, maxSize=999):

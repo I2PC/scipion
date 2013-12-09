@@ -373,11 +373,14 @@ class ProtocolsView(tk.Frame):
         
     def refreshRuns(self, e=None):
         """ Refresh the status of diplayed runs. """
-        self.runsTree.update()
+        self.updateRunsTree()
         self.updateRunsGraph(True)
-        # Schedule an automatic refresh after 1 sec
-        self.runsTree.after(1000, self.refreshRuns)
         
+    def _automaticRefreshRuns(self, e=None):
+        # Schedule an automatic refresh after 1 sec
+        self.refreshRuns()
+        self.runsTree.after(3000, self._automaticRefreshRuns)
+                
     def createActionToolbar(self):
         """ Prepare the buttons that will be available for protocol actions. """
        
@@ -437,6 +440,8 @@ class ProtocolsView(tk.Frame):
         f = tkFont.Font(family='verdana', size='10', weight='bold')
         tree.tag_configure('section', font=f)
         tree.grid(row=1, column=0, sticky='news')
+        # Program automatic refresh
+        tree.after(3000, self._automaticRefreshRuns)
         return tree
 
     def _onSelectProtocols(self, combo):
@@ -467,7 +472,20 @@ class ProtocolsView(tk.Frame):
         tree = BoundTree(parent, self.provider)        
         tree.itemDoubleClick = self._runItemDoubleClick
         tree.itemClick = self._runItemClick
+            
         return tree
+   
+    def updateRunsTree(self):
+        self.runsTree.update()
+        self.updateRunsTreeSelection()
+
+    def updateRunsTreeSelection(self):
+        if not self.showGraph:
+            if self.selectedProtocol is not None:
+                for i, obj in enumerate(self.runsTree._objects):
+                    if self.selectedProtocol.getObjId() == obj.getObjId():
+                        self.runsTree.selectItem(i)
+                        break
     
     def createRunsGraph(self, parent):
         self.runsGraph = Canvas(parent, width=400, height=400)
@@ -485,8 +503,19 @@ class ProtocolsView(tk.Frame):
         self.runsGraph.clear()
         lt.setCanvas(self.runsGraph)
         lt.paint(self.createRunItem)
+        self.updateRunsGraphSelection()
         self.runsGraph.updateScrollRegion()
-        
+
+    def updateRunsGraphSelection(self):
+        if self.showGraph:
+            if self.selectedProtocol is not None:
+                for item in self.runsGraph.items.values():
+                    #item.setSelected(True)
+                    run = item.run
+                    if run and self.selectedProtocol.getObjId() == run.getObjId():
+                        self.runsGraph.selectItem(item)
+                        break
+                            
     def createRunItem(self, canvas, node, y):
         """ If not nodeBuildFunc is specified, this one will be used by default."""
         nodeText = node.label
@@ -498,7 +527,9 @@ class ProtocolsView(tk.Frame):
             nodeText = nodeText + '\n' + node.run.getStatusMessage()
             color = STATUS_COLORS[status]
         
-        return self.runsGraph.createTextbox(nodeText, 100, y, bgColor=color, textColor=textColor)
+        item = self.runsGraph.createTextbox(nodeText, 100, y, bgColor=color, textColor=textColor)
+        item.run = node.run
+        return item
         
     
     def switchRunsView(self):
@@ -507,14 +538,16 @@ class ProtocolsView(tk.Frame):
         if self.showGraph:
             show = self.runsGraph.frame
             hide = self.runsTree
+            self.updateRunsGraphSelection()
         else:
             show = self.runsTree
             hide = self.runsGraph.frame
+            self.updateRunsTreeSelection()
             
         hide.grid_remove()
         show.grid(row=0, column=0, sticky='news')
         self.settings.graphView.set(self.showGraph)
-        self.settings.write()
+        #self.settings.write()
         
     
     def _protocolItemClick(self, e=None):
@@ -524,21 +557,24 @@ class ProtocolsView(tk.Frame):
         prot.mapper = self.project.mapper
         self._openProtocolForm(prot)
         
+    def _selectProtocol(self, prot):
+        if prot is not None:
+            prot.mapper = self.project.mapper
+            self.selectedProtocol = prot
+            # TODO self.settings.selectedProtocol.set(prot)
+            self.updateActionToolbar()
+            self._fillData()
+            self._fillSummary()
+        else:
+            pass #TODO: implement what to do
+                    
     def _runItemClick(self, e=None):
         # Get last selected item for tree or graph
         if self.showGraph:
             prot = e.node.run
         else:
             prot = self.project.mapper.selectById(int(self.runsTree.getFirst()))
-        
-        if prot is not None:
-            prot.mapper = self.project.mapper
-            self.selectedProtocol = prot
-            self.updateActionToolbar()
-            self._fillData()
-            self._fillSummary()
-        else:
-            pass #TODO: implement what to do
+        self._selectProtocol(prot)
         
     def _runItemDoubleClick(self, e=None):
         self._runActionClicked(ACTION_EDIT)
@@ -566,8 +602,8 @@ class ProtocolsView(tk.Frame):
         self.summaryText.clear()
         self.summaryText.addText(self.selectedProtocol.summary())
         
-    def _scheduleRunsUpdate(self, ms=1000):
-        self.runsTree.after(ms, self.refreshRuns)
+    def _scheduleRunsUpdate(self, secs=1):
+        self.runsTree.after(secs*1000, self.refreshRuns)
         
     def _executeSaveProtocol(self, prot, onlySave=False):
         if onlySave:
