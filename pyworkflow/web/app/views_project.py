@@ -237,31 +237,34 @@ def tree_prot_view(request):
     return render_to_response('tree_prot_view.html', {'sections': root.childs})
     
 def run_table_graph(request):
-    projectName = request.session['projectName'] 
-    project = loadProject(projectName)
-    provider = ProjectRunsTreeProvider(project)
-    
-    runs = request.session['runs']
-    runsNew = formatProvider(provider)
-    
-    refresh = False
-   
-    for x, y in zip(runs.iteritems(), runsNew.iteritems()):
-        if x != y:
-            print 'Change detected', x, y
-            refresh = True
-    
-    if refresh:
-        request.session['runs'] = runsNew
-        graphView = project.getSettings().graphView.get()
-    
-        context = {'provider': provider,
-                   'graphView': graphView }
+    try:
+        projectName = request.session['projectName']
+        project = loadProject(projectName)
+        provider = ProjectRunsTreeProvider(project)
         
-        return render_to_response('run_table_graph.html', context)
-    else:
-        return HttpResponse("ok")
-    
+        runs = request.session['runs']
+        runsNew = formatProvider(provider)
+        
+        refresh = False
+       
+        for x, y in zip(runs.iteritems(), runsNew.iteritems()):
+            if x != y:
+                print 'Change detected', x, y
+                refresh = True
+        
+        if refresh:
+            request.session['runs'] = runsNew
+            graphView = project.getSettings().graphView.get()
+        
+            context = {'provider': provider,
+                       'graphView': graphView }
+            
+            return render_to_response('run_table_graph.html', context)
+        else:
+            return HttpResponse("ok")
+        
+    except Exception:
+        return HttpResponse("stop")
 
 def formatProvider(provider):
     runs = {}
