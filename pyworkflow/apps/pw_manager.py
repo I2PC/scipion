@@ -189,62 +189,71 @@ class ManagerWindow(gui.WindowBase):
             self.manager.createProject(projName)
             self.createProjectList(self.text)
     
-    
             
-class ProjectsView(tk.Frame):
-      def __init__(self, parent, windows, **args): 
-          tk.Frame.__init__(self, parent, **args)
-          self.windows = windows
-          
-          tkFont.Font(size=12, family='verdana', weight='bold')
-          self.projNameFont = tkFont.Font(size=12, family='helvetica', weight='bold')
-          self.projDateFont = tkFont.Font(size=8, family='helvetica')
-          self.projDelFont = tkFont.Font(size=8, family='helvetica', weight='bold')
-          self.manager = Manager()
-          
-#          projectsFrame = tk.Frame(parent)
-          text = TaggedText(self, width=40, height=15, bd=0)
-          text.grid(row=0, column=0, sticky='news')
-#          gui.configureWeigths(lf)
+class ProjectsView(tk.Frame):    
+    def __init__(self, parent, windows, **args): 
+        tk.Frame.__init__(self, parent, bg='white', **args)
+        self.windows = windows
         
-          self.createProjectList(text)
-          text.setReadOnly(True)
-          self.text = text
+        #tkFont.Font(size=12, family='verdana', weight='bold')
+        self.projNameFont = tkFont.Font(size=12, family='helvetica', weight='bold')
+        self.projDateFont = tkFont.Font(size=8, family='helvetica')
+        self.projDelFont = tkFont.Font(size=8, family='helvetica', weight='bold')
+        self.manager = Manager()
+        btn = Button(self, text='Create Project', font=self.projNameFont, 
+                     command=self.createNewProject)
+        btn.grid(row=0, column=0, sticky='nw', padx=10, pady=10)
+        
+        self.columnconfigure(0, weight=1)
+        self.rowconfigure(1, weight=1)
+    #          projectsFrame = tk.Frame(parent)
+        text = TaggedText(self, width=40, height=15, bd=0, bg='white')
+        text.grid(row=1, column=0, sticky='news')
+    #          gui.configureWeigths(lf)
       
-      def createProjectList(self, text):
+        self.createProjectList(text)
+        text.setReadOnly(True)
+        self.text = text
+    
+    def createProjectList(self, text):
         """Load the list of projects"""
         r = 0
         text.clear()
-        parent = tk.Frame(text)    
+        parent = tk.Frame(text, bg='white')    
         parent.columnconfigure(0, weight=1)
-        
-        for p in self.manager.listProjects():
-            frame = self.createProjectLabel(parent, p)
+        colors = ['white', '#EAEBFF']
+        for i, p in enumerate(self.manager.listProjects()):
+            frame = self.createProjectLabel(parent, p, color=colors[i%2])
             frame.grid(row=r, column=0, padx=10, pady=5, sticky='new')
             r += 1
         text.window_create(tk.INSERT, window=parent)
         text.bindWidget(parent)
-        
-      def createProjectLabel(self, parent, projInfo):
-        frame = tk.Frame(parent)
-        label = tk.Label(frame, text=projInfo.projName, anchor='nw', 
+      
+    def createProjectLabel(self, parent, projInfo, color):
+        frame = tk.Frame(parent, bg=color)
+        label = tk.Label(frame, text=projInfo.projName, anchor='nw', bg=color, 
                          justify=tk.LEFT, font=self.projNameFont, cursor='hand1')
         label.grid(row=0, column=0, padx=2, pady=2, sticky='nw')
         label.bind('<Button-1>', lambda e: self.openProject(projInfo.projName))
-        dateLabel = tk.Label(frame, text='   Modified: ' + prettyDate(projInfo.mTime), font=self.projDateFont)
+        dateLabel = tk.Label(frame, text='   Modified: ' + prettyDate(projInfo.mTime), 
+                             font=self.projDateFont, bg=color)
         dateLabel.grid(row=1, column=0)
-        delLabel = tk.Label(frame, text='Delete project', font=self.projDelFont, cursor='hand1')
+        delLabel = tk.Label(frame, text='Delete project', font=self.projDelFont, bg=color, cursor='hand1')
         delLabel.grid(row=1, column=1, padx=10)
         delLabel.bind('<Button-1>', lambda e: self.deleteProject(projInfo.projName))
+        
         return frame
     
-      def openProject(self, projName):
+    def createNewProject(self, e=None):
+        pass
+    
+    def openProject(self, projName):
         projPath = self.manager.getProjectPath(projName)
         from pw_project import ProjectWindow
         projWindow = ProjectWindow(projPath, self.windows)
         projWindow.show()
-            
-      def deleteProject(self, projName):
+          
+    def deleteProject(self, projName):
         if askYesNo("Confirm Project deletion", 
                     "Are you sure to <DELETE> project <%s>\n and all its <DATA>?" % projName, self.root):
             self.manager.deleteProject(projName)

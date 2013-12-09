@@ -369,8 +369,11 @@ class WindowBase(Window):
         
         Window.createMainMenu(self, self.menuCfg)
         
-        header = self.createHeaderFrame(content)
-        header.grid(row=0, column=0, sticky='new')
+        self.header = self.createHeaderFrame(content)
+        self.header.grid(row=0, column=0, sticky='new')
+        
+        self.footer = tk.Frame(content, bg='white')
+        self.footer.grid(row=1, column=0, sticky='news') 
         
         self.view, self.viewWidget = None, None
         
@@ -433,7 +436,7 @@ class WindowBase(Window):
         header.columnconfigure(1, weight=1)
         header.columnconfigure(2, weight=1)
         # Create the SCIPION logo label
-        logoImg = self.getImage(self.generalCfg.logo.get())
+        logoImg = self.getImage(self.generalCfg.logo.get(), percent=50)
         logoLabel = tk.Label(header, image=logoImg, 
                              borderwidth=0, anchor='nw', bg='white')
         logoLabel.grid(row=0, column=0, sticky='nw', padx=5, pady=5)
@@ -447,6 +450,10 @@ class WindowBase(Window):
         # Create view selection frame
         viewFrame = tk.Frame(header, bg='white')
         viewFrame.grid(row=0, column=2, sticky='se', padx=5, pady=10)
+        
+        # Create gradient
+        from widgets import GradientFrame
+        GradientFrame(header, height=8, borderwidth=0).grid(row=1, column=0, columnspan=3, sticky='new')
 #        viewLabel = tk.Label(viewFrame, text='View:', bg='white')
 #        viewLabel.grid(row=0, column=0, padx=5)
 #        self.viewVar = tk.StringVar()
@@ -492,9 +499,12 @@ class WindowBase(Window):
             self.viewWidget.grid_forget()
             self.viewWidget.destroy()
         # Create the new view
-        self.viewWidget = self.viewFuncs[newView](self.content, self)
+        self.viewWidget = self.viewFuncs[newView](self.footer, self)
         # Grid in the second row (1)
-        self.viewWidget.grid(row=1, column=0, sticky='news')
+        self.viewWidget.grid(row=0, column=0, columnspan=10, sticky='news')
+        self.footer.rowconfigure(0, weight=1)
+        self.footer.columnconfigure(0, weight=1)
+        #header.columnconfigure(2, weight=1)
         self.view = newView    
 #    def _viewComboSelected(self, e=None):
 #        if self.viewVar.get() != self.view:
