@@ -637,6 +637,8 @@ void CL3D::initialize(MetaData &_SF,
                 progress_bar(idx);
         }
     }
+    std::cout << "Rank " << prm->node->rank << " at barrier" << std::endl;
+    prm->taskDistributor->wait();
     if (prm->node->rank == 0)
         progress_bar(Nimgs);
     std::cout << "Rank " << prm->node->rank << " finished" << std::endl;
@@ -803,7 +805,9 @@ void CL3D::run(const FileName &fnOut, int level)
         SF->fillConstant(MDL_REF, "-1");
         prm->taskDistributor->reset();
         size_t first, last;
-        while (prm->taskDistributor->getTasks(first, last))
+        MpiTaskDistributor taskDistributor2(Nimgs,1,prm->node);
+        //while (prm->taskDistributor->getTasks(first, last))
+        while (taskDistributor2.getTasks(first, last))
         {
         	std::cout << "Rank " << prm->node->rank << " [" << first << "," << last << "]" << std::endl;
             for (size_t idx = first; idx <= last; ++idx)
@@ -821,6 +825,9 @@ void CL3D::run(const FileName &fnOut, int level)
                     progress_bar(idx);
             }
         }
+        std::cout << "Rank " << prm->node->rank << " at barrier" << std::endl;
+        taskDistributor2.wait();
+
     	std::cout << "Rank " << prm->node->rank << " finished iteration" << std::endl;
         FileName fnAux;
         for (int q=0; q<Q; q++)
