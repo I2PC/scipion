@@ -251,9 +251,6 @@ class TaggedText(Text):
     def __init__(self, master, colors=True, **opts):  
         self.colors = colors
         Text.__init__(self, master, **opts)
-        # Create regex for tags parsing
-        import re
-        self.regex = re.compile('((?:\[[^]]+\])|(?:<[^>]+>))')
         self.hm = HyperlinkManager(self)
 
     def getDefaults(self):
@@ -266,19 +263,6 @@ class TaggedText(Text):
         if self.colors:            
             self.colors = configureColorTags(self) # Color can be unavailable, so disable use of colors    
         
-    def getTaggedParts(self, parts):
-        """ Detect [] as links text and <> as bold text"""
-        tagsDict = {'[': 'link', '<': 'bold'}
-        tagged_parts = []
-        for p in parts:
-            if len(p) > 0:
-                if p[0] in tagsDict.keys():
-                    tagged_parts.append((p[1:-1], tagsDict[p[0]]))
-                else:
-                    tagged_parts.append((p, 'normal'))
-                    
-        return tagged_parts
-        
     def openLink(self, link):
         from  webbrowser import open
         open(link, new=0) # Open in the same browner, new tab
@@ -290,11 +274,11 @@ class TaggedText(Text):
         g1 = match.group(tag)
 
         if tag == HYPER_BOLD or tag == HYPER_ITALIC:
-            #self.matchIndexes.append((match.start(), match.end()))
             self.insert(tk.END, g1, tag)
         elif tag == HYPER_LINK1:
             self.insert(tk.END, g1, self.hm.add(lambda: self.openLink(g1)))
-        
+        elif tag == HYPER_LINK2:            
+            self.insert(tk.END, match.group('link2_label'), self.hm.add(lambda: self.openLink(g1)))
         self.lastIndex = match.end()
         
         return g1
