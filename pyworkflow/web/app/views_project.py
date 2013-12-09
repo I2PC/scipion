@@ -246,11 +246,15 @@ def run_table_graph(request):
         runsNew = formatProvider(provider)
         
         refresh = False
-       
-        for x, y in zip(runs.iteritems(), runsNew.iteritems()):
-            if x != y:
-                print 'Change detected', x, y
-                refresh = True
+        
+        if len(runs) != len(runsNew):
+            print 'Change detected, different size'
+            refresh = True
+        else:
+            for x, y in zip(runs.iteritems(), runsNew.iteritems()):
+                if x != y:
+                    print 'Change detected', x, y
+                    refresh = True
         
         if refresh:
             request.session['runs'] = runsNew
@@ -261,18 +265,21 @@ def run_table_graph(request):
             
             return render_to_response('run_table_graph.html', context)
         else:
+            print "No changes detected"
             return HttpResponse("ok")
         
     except Exception:
+        print "Stopped script"
         return HttpResponse("stop")
 
 def formatProvider(provider):
     runs = {}
     for obj in provider.getObjects():
+        # First policy used to compare runs
         id = obj.getObjId()
         name = obj.getName()
         status = obj.status.get()
-#        time = obj.getElapsedTime()
+        time = obj.getElapsedTime()
         runs[id] = [name, status]
     return runs
 
@@ -286,7 +293,7 @@ def project_content(request):
     manager = Manager()
     request.session['projectPath'] = manager.getProjectPath(projectName)
    
-    project = loadProject(projectName)    
+    project = loadProject(projectName)
     
     provider = ProjectRunsTreeProvider(project)
     request.session['runs'] = formatProvider(provider)
