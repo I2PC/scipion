@@ -35,6 +35,7 @@ from pyworkflow.manager import Manager
 from pyworkflow.project import Project
 from django.shortcuts import render_to_response
 from django.http import HttpResponse
+from pyworkflow.utils import *
 
 
 iconDict = {
@@ -349,7 +350,7 @@ def readImageVolume(request, path, convert, dataType, reslice, axis, getStats):
         img.read(str(imgFn))
         
     if convert:
-         img.convert2DataType(dataType, xmipp.CW_ADJUST)
+        img.convert2DataType(dataType, xmipp.CW_ADJUST)
          
     if reslice:
         if axis !=xmipp.VIEW_Z_NEG:
@@ -359,7 +360,7 @@ def readImageVolume(request, path, convert, dataType, reslice, axis, getStats):
         _stats=img.computeStats()
     
     if convert or reslice:
-        fileName, fileExtension = os.path.splitext(path)
+        fileName, _ = os.path.splitext(path)
         _newPath = '%s_tmp%s' % (fileName, '.mrc')
         img.write(str(_newPath))
     
@@ -379,47 +380,27 @@ def getTestPlot(request):
     return response   
 
 def replacePattern(m, mode):
-    if mode == "bold":
-        return " <b>%s</b> " % m.group(1)
-    elif mode == "italic":
-        return " <i>%s</i> " % m.group(1)
-    elif mode == "link":
-        if len(m.groups()) == 1:
-            return " <a href='%s'>%s</a> " % (m.group(1), m.group(1))
-        else:
-            return " <a href='%s'>%s</a> " % (m.group(1), m.group(2))
-    elif mode == "general":
-        if isinstance(m, list):
-            return '<br>'.join(m)
-        return str(m)
+    g1 = m.group(mode)
+    if mode == HYPER_BOLD:
+        text = " <b>%s</b> " % g1
+    elif mode == HYPER_ITALIC:
+        text = " <i>%s</i> " % g1
+    elif mode == HYPER_LINK1:
+        text = " <a href='%s'>%s</a> " % (g1, g1)
+    elif mode == HYPER_LINK2:
+        text = " <a href='%s'>%s</a> " % (g1, m.group('link2_label'))
+    else:
+        raise Exception("Unrecognized pattern mode: " + mode)
     
-    return m
+    return text
 
-    
 def parseText(text, func=replacePattern):
-    """ Parse the text adding some basic tags
-    \n will display as a carry return 
-    *some_text* will display some_text in bold
-    _some_text_ will display some_text in italic
-    some_link or [[some_link][some_label]] will display some_link as hiperlink or some_label as hiperlink to some_link
-    
-    mode can be html o desktop depending on where the text will be displayed
+    """ Parse the text adding some basic tags for html.
+    Params:
+        text: can be string or list, if it is a list, a <br> tag will be generated.
     """
-    text = func(text, "general")
-
-    import re
-    from pyworkflow.utils.utils import PATTERN_BOLD, PATTERN_ITALIC, PATTERN_LINK, PATTERN_LINK2
-    ptnBold = re.compile(PATTERN_BOLD)
-    ptnItalic = re.compile(PATTERN_ITALIC)
-    ptnLink = re.compile(PATTERN_LINK)
-    ptnLink2 = re.compile(PATTERN_LINK2)
-
-#    parsedText = ptnBold.sub(lambda x: replaceBold(x, "bold"), text)
-#    parsedText = ptnBold.sub(lambda x: func["funcBold"](x), text)
-
-    parsedText = ptnBold.sub(lambda match: func(match, "bold"), text)
-    parsedText = ptnItalic.sub(lambda match: func(match, "italic"), parsedText)
-    parsedText = ptnLink.sub(lambda match: func(match, "link"), parsedText)
-    parsedText = ptnLink2.sub(lambda match: func(match, "link"), parsedText)
+    if isinstance(text, list):
+        text = '<br>'.join(text)
+    parsedText = parseHyperText(text, func)
     
     return parsedText    

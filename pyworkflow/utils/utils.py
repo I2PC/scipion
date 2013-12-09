@@ -233,6 +233,7 @@ def greenStr(text):
 def redStr(text):
     return getColorStr(text, color='red')
 
+
 #-------------- Hyper text highlighting ----------------------------
 """
 We use a subset of TWiki hyper text convetions.
@@ -256,18 +257,19 @@ PATTERN_BOLD = "[*](?P<bold>[^\s][^*]+[^\s])[*]"
 PATTERN_ITALIC = "[_](?P<italic>[^\s][^_]+[^\s])[_]"
 #PATTERN_ITALIC = r"[\s]+[_]([^\s][^_]+[^\s])[_][\s]+"
 PATTERN_LINK1 = '(?P<link1>http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+)'
-PATTERN_LINK2 = r"[\s]+[\[]{2}([^\s][^\]]+[^\s])[\]][\[]([^\s][^\]]+[^\s])[\]]{2}[\s]+"
+PATTERN_LINK2 = "[\[]{2}(?P<link2>[^\s][^\]]+[^\s])[\]][\[](?P<link2_label>[^\s][^\]]+[^\s])[\]]{2}"
 # __PATTERN_LINK2 should be first since could contains __PATTERN_LINK1
 PATTERN_ALL = '|'.join([PATTERN_BOLD, PATTERN_ITALIC, PATTERN_LINK2, PATTERN_LINK1])
 
 # Compiled regex
-HYPER_REGEX = {
-               HYPER_BOLD: re.compile(PATTERN_BOLD),
-               HYPER_ITALIC: re.compile(PATTERN_ITALIC),
-               HYPER_LINK1: re.compile(PATTERN_LINK1),
-               HYPER_LINK2: re.compile(PATTERN_LINK1),
-               HYPER_ALL: re.compile(PATTERN_ALL),
-               }
+# Not need now, each pattern compiled separately
+#HYPER_REGEX = {
+#               HYPER_BOLD: re.compile(PATTERN_BOLD),
+#               HYPER_ITALIC: re.compile(PATTERN_ITALIC),
+#               HYPER_LINK1: re.compile(PATTERN_LINK1),
+#               HYPER_LINK2: re.compile(PATTERN_LINK1),
+#               }
+HYPER_ALL_RE = re.compile(PATTERN_ALL)
 
 def parseHyperText(text, matchCallback):
     """ Parse the text recognizing Hyper definitions below.
@@ -290,9 +292,9 @@ def parseHyperText(text, matchCallback):
             tag = HYPER_LINK2
         else:
             raise Exception("Bad prefix for HyperText match")
-        matchCallback(match, tag)
+        return matchCallback(match, tag)
         
-    return HYPER_REGEX[HYPER_ALL].sub(_match, text)
+    return HYPER_ALL_RE.sub(_match, text)
 #    for hyperMode, hyperRegex in HYPER_REGEX.iteritems():
 #        text = hyperRegex.sub(lambda match: matchCallback(match, hyperMode), text)
 #

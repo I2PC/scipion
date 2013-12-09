@@ -296,36 +296,14 @@ class TaggedText(Text):
             self.insert(tk.END, g1, self.hm.add(lambda: self.openLink(g1)))
         
         self.lastIndex = match.end()
+        
         return g1
 
     def addLine(self, line):
         self.line = line
         self.lastIndex = 0
-        #self.matchIndexes = []
         parseHyperText(line, self.matchHyperText)
         Text.addLine(self, line[self.lastIndex:])
-        #self.mark_set("matchStart", end1)
-        #self.mark_set("matchEnd", end2)
-        #self.tag_add(tag, "matchStart","matchEnd")
-#        self.tag_add('bold', end1, end2)
-#        print "len: ", len(self.matchIndexes)
-#        if len(self.matchIndexes):
-#            print " added 'bold' tag    "
-            
-#  print "currEnd: ", end1, end2
-        
-#        parts = self.getTaggedParts(self.regex.split(line))
-#        for p, t in parts:
-#            if t == 'link':
-#                def insertLink(link):
-#                    self.insert(tk.INSERT, link, self.hm.add(lambda: openLink(link)))
-#                insertLink(p)
-#            else:
-#                if self.colors:
-#                    insertColoredLine(self, p, t)
-#                else:
-#                    self.insert(tk.END, p, t)
-#        self.addNewline()       
 
 
 class OutputText(Text):
