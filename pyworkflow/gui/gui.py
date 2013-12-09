@@ -350,7 +350,9 @@ VIEW_PROJECTS = 'Projects'
 VIEW_PROTOCOLS = 'Protocols'
 VIEW_DATA = 'Data'
 VIEW_HOSTS = 'Hosts'
-VIEW_LIST = [VIEW_PROJECTS, VIEW_PROTOCOLS, VIEW_DATA, VIEW_HOSTS]        
+VIEW_LIST = [VIEW_PROJECTS, VIEW_PROTOCOLS, VIEW_DATA, VIEW_HOSTS]   
+
+     
 class WindowBase(Window):
     """Base Template Window
     It extends from Window and add some layout functions (header and footer)
@@ -388,7 +390,7 @@ class WindowBase(Window):
                           VIEW_DATA: DataView,
                           VIEW_HOSTS: HostsView
                           }
-        self.switchView(VIEW_PROJECTS)
+#        self.switchView(VIEW_PROJECTS)
         
 #    def __init__(self, path, master=None):   
 #        # Load global configuration

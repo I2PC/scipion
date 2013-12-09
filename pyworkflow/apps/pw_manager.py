@@ -135,6 +135,8 @@ class ManagerWindow(gui.WindowBase):
         gui.WindowBase.__init__(self, "Projects", minsize=(750, 500), **args)
         
         
+        self.switchView(gui.VIEW_PROJECTS)
+        
         
 #        parent = self.root
 
@@ -192,6 +194,7 @@ class ManagerWindow(gui.WindowBase):
 class ProjectsView(tk.Frame):
       def __init__(self, parent, windows, **args): 
           tk.Frame.__init__(self, parent, **args)
+          self.windows = windows
           
           tkFont.Font(size=12, family='verdana', weight='bold')
           self.projNameFont = tkFont.Font(size=12, family='helvetica', weight='bold')
@@ -238,7 +241,7 @@ class ProjectsView(tk.Frame):
       def openProject(self, projName):
         projPath = self.manager.getProjectPath(projName)
         from pw_project import ProjectWindow
-        projWindow = ProjectWindow(projPath, self)
+        projWindow = ProjectWindow(projPath, self.windows)
         projWindow.show()
             
       def deleteProject(self, projName):

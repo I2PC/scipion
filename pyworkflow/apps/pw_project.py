@@ -74,6 +74,7 @@ class ProjectWindow(gui.WindowBase):
         
         gui.WindowBase.__init__(self, self.projName, master, icon=self.icon, minsize=(900,500))
         
+        self.switchView(gui.VIEW_PROTOCOLS)
 #        content = tk.Frame(self.root)
 #        content.columnconfigure(0, weight=1)
 #        content.rowconfigure(1, weight=1)
