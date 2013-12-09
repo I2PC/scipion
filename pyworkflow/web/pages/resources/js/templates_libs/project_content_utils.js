@@ -451,13 +451,28 @@ function refreshRuns(){
 		$.ajax({
 			url : '/run_table_graph/',
 			success : function(data) {
-				if(data != 'ok'){
+				if (data=='stop'){
+					window.clearTimeout(updatetimer);
+					// stop the script
+				}
+				else if(data == 'ok'){
+					// no changes
+				}
+				else {
 					$('div#runsInfo').html(data);
+					// refresh the data
+					var row = $("div#toolbar");
+					
+//					updateRow(id, elm, row);
+//					updateTree(id,elm);
+//					updateButtons(projName, id, elm);
 				}
 			}
 		});
   	});
-	setTimeout(function(){ 
+	
+	var updatetimer = setTimeout(function(){ 
 		refreshRuns();
-  	}, 5000);
+  	}, 3000);
 }
+
