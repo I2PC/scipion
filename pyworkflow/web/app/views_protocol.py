@@ -87,6 +87,9 @@ def form(request):
             param.htmlCond = param.condition.get()
             param.htmlDepend = ','.join(param._dependants)
             param.htmlCondParams = ','.join(param._conditionParams)
+            
+            if not param.help.empty():
+                param.htmlHelp = parseText(param.help.get())
 #            param.htmlExpertLevel = param.expertLevel.get()   
 
             """Workflow Addon"""
