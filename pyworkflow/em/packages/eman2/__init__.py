@@ -28,6 +28,8 @@ This package contains the protocols and data for EMAN2
 """
 
 _logo = "eman2_logo.png"
+_references = ['Tang G, Peng L, Baldwin PR, Mann DS, Jiang W, Rees I, Ludtke SJ. EMAN2: an extensible image processing suite for electron microscopy. J Struct Biol. 2007 Jan;157(1):38-46. Epub 2006 Jun 8.',
+               ]
 
 
 from eman2 import *
