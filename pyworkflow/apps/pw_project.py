@@ -104,7 +104,10 @@ class ProjectWindow(gui.WindowBase):
         self.settings.write()
         
     def _onClosing(self):
-        self.saveSettings() 
+        try:
+            self.saveSettings()
+        except Exception, ex:
+            print "Error try to save settings. " + str(ex) 
         gui.Window._onClosing(self)
     
         

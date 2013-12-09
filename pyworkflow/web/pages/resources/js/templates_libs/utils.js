@@ -104,7 +104,7 @@ function popUpJSON(json){
 function closePopup() {
 	// opener.location.reload(true);
 	// self.close();
-	window.opener.location.reload(true);
+	//	window.opener.location.reload(true);
 	window.close();
 }
 

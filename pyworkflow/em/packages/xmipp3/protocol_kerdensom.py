@@ -51,7 +51,7 @@ class XmippProtKerdensom(ProtClassify):
     def _addParams(self, form):
         form.addParam('useMask', BooleanParam, default=False,
                       label='Use a Mask ?', 
-                      help='If you set to <Yes>, you should provide a mask')
+                      help='If you set to *Yes*, you should provide a mask')
         form.addParam('Mask', StringParam , condition='useMask',
                       label="Mask", 
                       help='Mask image will serve to enhance the classification')
@@ -65,7 +65,7 @@ class XmippProtKerdensom(ProtClassify):
                       'to a final lower one, in a user-defined number of steps.'
                       'If the output map is too smooth, lower the regularization factors'
                       'If the output map is not organized, higher the regularization factors'
-                      'See [http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/KerDenSOM]')
+                      'See [[http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/KerDenSOM][KerDenSOM]]')
         form.addParam('SomReg1', IntParam, default=200, expertLevel=LEVEL_ADVANCED,
                       label='Final regularization factor:')
         form.addParam('SomSteps', IntParam, default=5, expertLevel=LEVEL_ADVANCED,
@@ -73,8 +73,8 @@ class XmippProtKerdensom(ProtClassify):
                       help='Number of steps to lower the regularization factor')
         form.addParam('extraParams', StringParam, default='', expertLevel=LEVEL_ADVANCED,
                       label="Additional parameters:", 
-                      help='Additional parameters for kerdensom program.\nFor a complete description'
-                      'See [http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/KerDenSOM]')
+                      help='Additional parameters for kerdensom program. \n For a complete description'
+                      'See [[http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/KerDenSOM][KerDenSOM]]')
         
         
     def _defineSteps(self):

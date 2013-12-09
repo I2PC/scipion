@@ -79,7 +79,7 @@ class XmippProtCL2D(ProtClassify):
                       help='Use the classical clustering criterion or the robust')
         form.addParam('extraParams', StringParam, expertLevel=LEVEL_EXPERT,
               label='Additional parameters',
-              help='Additional parameters for classify_CL2D:\n  --verbose, --corrSplit, ...')   
+              help='Additional parameters for classify_CL2D: \n  --verbose, --corrSplit, ...')   
         
         form.addSection(label='Core analysis')        
         form.addParam('thZscore', FloatParam, default=3,

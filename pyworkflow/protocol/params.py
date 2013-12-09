@@ -69,7 +69,10 @@ class Param(FormElement):
         FormElement.__init__(self, **args)
         self.paramClass = args.get('paramClass', None) # This should be defined in subclasses
         self.default = String(args.get('default', None))
+        #from pyworkflow.web.app.views_util import parseText
+        #self.help = parseText(String(args.get('help', None)))
         self.help = String(args.get('help', None))
+
         self.isImportant = Boolean(args.get('important', False))
         self.validators = args.get('validators', [])
         

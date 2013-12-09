@@ -54,8 +54,8 @@ class XmippProtML2D(ProtClassify):
                            'It should be a SetOfImages class')        
         form.addParam('doGenerateReferences', BooleanParam, default=True,
                       label='Generate references?', 
-                      help='If you set to <No>, you should provide references images'
-                           'If <Yes>, the default generation is done by averaging'
+                      help='If you set to *No*, you should provide references images'
+                           'If *Yes*, the default generation is done by averaging'
                            'subsets of the input images.')
         form.addParam('numberOfReferences', IntParam, default=3, condition='doGenerateReferences',
                       label='Number of references:',
@@ -70,9 +70,8 @@ class XmippProtML2D(ProtClassify):
                       label='Use MLF2D instead of ML2D?')
         form.addParam('doCorrectAmplitudes', BooleanParam, default=True, condition='doMlf',
                       label='Use CTF-amplitude correction?',
-                      help='If set to <Yes>, the input images file should contains'
-                           'the CTF information for each image.'
-                           'If set to <No>, provide the images pixel size in Angstrom.')
+                      help='If set to *Yes*, the input images file should contains'
+                           'If set to *No*, provide the images pixel size in Angstrom.')
         form.addParam('areImagesPhaseFlipped', BooleanParam, default=True, condition='doMlf',
                       label='Are the images CTF phase flipped?',
                       help='You can run MLF with or without having phase flipped the images.')        
@@ -91,16 +90,16 @@ class XmippProtML2D(ProtClassify):
                            )
         form.addParam('doFast', BooleanParam, default=True, condition='not doMlf',
                       label='Use the fast version of this algorithm?',
-                      help='For details see (and please cite):\n'
-                           '<Scheres et al., Bioinformatics, 21 (Suppl. 2), ii243-ii244>\n'
-                           '[http://dx.doi.org/10.1093/bioinformatics/bti1140]'
+                      help='For details see (and please cite): \n '
+                           '*Scheres et al., Bioinformatics, 21 (Suppl. 2), ii243-ii244* \n '
+                           '[[http://dx.doi.org/10.1093/bioinformatics/bti1140][Info]]'
                            )        
         form.addParam('doNorm', BooleanParam, default=False,
                       label='Refine the normalization for each image?',
-                      help='This variant of the algorithm deals with normalization errors.\n'
-                           'For details see (and please cite):\n'
-                           '<Scheres et. al. (2009) J. Struc. Biol., Vol 166, Issue 2, May 2009>\n'
-                           '[http://dx.doi.org/10.1016/j.jsb.2009.02.007]'
+                      help='This variant of the algorithm deals with normalization errors. \n '
+                           'For details see (and please cite): \n '
+                           '*Scheres et. al. (2009) J. Struc. Biol., Vol 166, Issue 2, May 2009* \n '
+                           '[[http://dx.doi.org/10.1016/j.jsb.2009.02.007][Info]]'
                            )             
         # Advance or expert parameters
         form.addParam('maxIters', IntParam, default=100,# expertLevel=LEVEL_ADVANCED,

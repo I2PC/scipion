@@ -73,7 +73,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
 
         form.addParam('ctfRelations', RelationParam, allowNull=True,
                       label='CTF relations', relationName=RELATION_CTF, relationParent='getInputMicrographs', 
-                      relationReverse=True, help='Choose the CTF.\n')     
+                      relationReverse=True, help='Choose the CTF.  \n  ')     
 
         form.addParam('boxSize', IntParam, default=0,
                       label='Particle box size', validators=[Positive],
@@ -122,9 +122,9 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         form.addParam('normType', EnumParam, choices=['OldXmipp','NewXmipp','Ramp'], 
                       default=2, condition='doNormalize', display=EnumParam.DISPLAY_COMBO,
                       label='Normalization type', 
-                      help='OldXmipp (mean(Image)=0, stddev(Image)=1).\n'
-                           'NewXmipp (mean(background)=0, stddev(background)=1)\n'
-                           'Ramp (subtract background+NewXmipp).\n',
+                      help='OldXmipp (mean(Image)=0, stddev(Image)=1).  \n  '
+                           'NewXmipp (mean(background)=0, stddev(background)=1)  \n  '
+                           'Ramp (subtract background+NewXmipp).  \n  ',
                       expertLevel=LEVEL_ADVANCED)
         form.addParam('backRadius', IntParam, default=-1, condition='doNormalize',
                       label='Background radius',
@@ -380,8 +380,8 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         if not hasattr(self, 'outputParticles'):
             summary.append("Output images not ready yet.") 
         else:
-            summary.append("Input coordinates: %s" % self.inputCoordinates.get().getName())
-            summary.append("Downsample type: %s" % downsampleTypeText.get(self.downsampleType.get()))
+            summary.append("*Input coordinates* http://www.google.com : %s" % self.inputCoordinates.get().getName())
+            summary.append("_Downsample type_: %s" % downsampleTypeText.get(self.downsampleType.get()))
             if self.downsampleType.get() == self.OTHER:
                 summary.append("Downsampling factor: %d" % self.downFactor.get())
             summary.append("Particle size %d" % self.boxSize.get())

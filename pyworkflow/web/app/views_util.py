@@ -35,6 +35,7 @@ from pyworkflow.manager import Manager
 from pyworkflow.project import Project
 from django.shortcuts import render_to_response
 from django.http import HttpResponse
+from pyworkflow.utils import *
 
 
 iconDict = {
@@ -349,7 +350,7 @@ def readImageVolume(request, path, convert, dataType, reslice, axis, getStats):
         img.read(str(imgFn))
         
     if convert:
-         img.convert2DataType(dataType, xmipp.CW_ADJUST)
+        img.convert2DataType(dataType, xmipp.CW_ADJUST)
          
     if reslice:
         if axis !=xmipp.VIEW_Z_NEG:
@@ -359,7 +360,7 @@ def readImageVolume(request, path, convert, dataType, reslice, axis, getStats):
         _stats=img.computeStats()
     
     if convert or reslice:
-        fileName, fileExtension = os.path.splitext(path)
+        fileName, _ = os.path.splitext(path)
         _newPath = '%s_tmp%s' % (fileName, '.mrc')
         img.write(str(_newPath))
     
@@ -377,5 +378,29 @@ def getTestPlot(request):
     response = HttpResponse(content_type='image/png')
     canvas.print_png(response)
     return response   
+
+def replacePattern(m, mode):
+    g1 = m.group(mode)
+    if mode == HYPER_BOLD:
+        text = " <b>%s</b> " % g1
+    elif mode == HYPER_ITALIC:
+        text = " <i>%s</i> " % g1
+    elif mode == HYPER_LINK1:
+        text = " <a href='%s'>%s</a> " % (g1, g1)
+    elif mode == HYPER_LINK2:
+        text = " <a href='%s'>%s</a> " % (g1, m.group('link2_label'))
+    else:
+        raise Exception("Unrecognized pattern mode: " + mode)
     
+    return text
+
+def parseText(text, func=replacePattern):
+    """ Parse the text adding some basic tags for html.
+    Params:
+        text: can be string or list, if it is a list, a <br> tag will be generated.
+    """
+    if isinstance(text, list):
+        text = '<br>'.join(text)
+    parsedText = parseHyperText(text, func)
     
+    return parsedText    

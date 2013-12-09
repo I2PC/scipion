@@ -27,6 +27,8 @@
 This sub-package will contains Xmipp3.0 specific protocols
 """
 
+_logo = "xmipp_logo.png"
+
 from xmipp3 import *
 from convert import *
 from viewer import XmippViewer

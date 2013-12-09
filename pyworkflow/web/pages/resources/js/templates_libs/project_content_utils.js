@@ -47,25 +47,6 @@
  * 
  **/
 
-function changeTreeView(){
-	protIndex = $('#viewsTree').val();
-	
-	$.ajax({
-		type : "GET",
-		url : '/update_prot_tree/?index='+ protIndex,
-		dataType:"text",
-		success : function() {
-			$.ajax({
-				url: '/tree_prot_view/',
-				success: function(data) {
-					$('div.protFieldsetTree').html(data);
-				}
-			});
-		}
-	});
-}
-	
-
 /*
  * Toolbar used in the project content template for list view
  */
@@ -129,9 +110,10 @@ function fillTabsSummary(id) {
 		dataType : "json",
 		success : function(json) {
 			$("#tab-summary").empty();
-			for ( var i = 0; i < json.length; i++) {
-				$("#tab-summary").append('<p>' + json[i] + '</p>');
-			}
+			$("#tab-summary").append(json);
+//			for ( var i = 0; i < json.length; i++) {
+//				$("#tab-summary").append('<p>' + json[i] + '</p>');
+//			}
 			
 		}
 	});
@@ -380,7 +362,7 @@ function deleteProtocol(elm) {
 				showErrorValidation(json.errors);
 			} else if(json.success!= undefined){
 //				launchMessiSimple("Successful", messiInfo(json.success));
-				window.location.reload()
+//				window.location.reload()
 			}
 		},
 		error: function(){
@@ -439,3 +421,58 @@ function stopProtocol(elm) {
 		url : "/stop_protocol/?protocolId=" + protId
 	});
 }
+
+/*
+ * Method to update the protocol tree
+ */
+function changeTreeView(){
+	protIndex = $('#viewsTree').val();
+	
+	$.ajax({
+		type : "GET",
+		url : '/update_prot_tree/?index='+ protIndex,
+		dataType:"text",
+		success : function() {
+			$.ajax({
+				url: '/tree_prot_view/',
+				success: function(data) {
+					$('div.protFieldsetTree').html(data);
+				}
+			});
+		}
+	});
+}
+
+/*
+ * Method to update the run list/graph
+ */
+function refreshRuns(){
+	$(function() {
+		$.ajax({
+			url : '/run_table_graph/',
+			success : function(data) {
+				if (data=='stop'){
+					window.clearTimeout(updatetimer);
+					// stop the script
+				}
+				else if(data == 'ok'){
+					// no changes
+				}
+				else {
+					$('div#runsInfo').html(data);
+					// refresh the data
+					var row = $("div#toolbar");
+					
+//					updateRow(id, elm, row);
+//					updateTree(id,elm);
+//					updateButtons(projName, id, elm);
+				}
+			}
+		});
+  	});
+	
+	var updatetimer = setTimeout(function(){ 
+		refreshRuns();
+  	}, 3000);
+}
+

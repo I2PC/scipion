@@ -80,6 +80,7 @@ class Step(OrderedObject):
         self.initTime.set(dt.datetime.now())
         self.endTime.set(None)
         self.status.set(STATUS_RUNNING)
+        self.error.set(None) # Clean previous error message
         
     def setFailed(self, msg):
         """ Set the run failed and store an error message. """
@@ -840,7 +841,7 @@ class Protocol(Step):
         error = ''
         if self.error.hasValue():
             error = 'ERROR:\n' + self.error.get()
-        return self._summary() + ['', '<Comments:>', self.getObjComment(), error]
+        return self._summary() + ['', ' *Comments:* ', self.getObjComment(), error]
     
     def runProtocol(self, protocol):
         """ Setup another protocol to be run from a workflow. """

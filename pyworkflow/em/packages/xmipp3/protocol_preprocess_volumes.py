@@ -85,7 +85,7 @@ class XmippProtPreprocessVolumes(ProtPreprocessVolumes, XmippProtocol):
                       help='Symmetrize the input model.')
         form.addParam('symmetryGroup', TextParam, default='c1',
                       label="Symmetry group", condition='doSymmetrize',
-                      help='See [http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Symmetry]'
+                      help='See [[http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Symmetry][Symmetry]]'
                       'for a description of the symmetry groups format, If no symmetry is present, give c1.')  
         form.addParam('aggregation', EnumParam, choices=['Average', 'Sum'], 
                       display=EnumParam.DISPLAY_COMBO,

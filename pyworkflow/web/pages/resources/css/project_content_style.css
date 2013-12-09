@@ -163,25 +163,25 @@ html, body {
 	font-weight: bold;
 }
 
-.filetree span.protocol_base {
-	background: url(../../../../resources/class_obj.gif) 0 0 no-repeat;
-	padding-left: 20px;
-}
+/* .filetree span.protocol_base { */
+/* 	background: url(../../../../resources/class_obj.gif) 0 0 no-repeat; */
+/* 	padding-left: 20px; */
+/* } */
 
-.filetree li.expandable span.protocol_base {
-	background: url(../../../../resources/class_obj.gif) 0 0 no-repeat;
-	padding-left: 20px;
-}
+/* .filetree li.expandable span.protocol_base { */
+/* 	background: url(../../../../resources/class_obj.gif) 0 0 no-repeat; */
+/* 	padding-left: 20px; */
+/* } */
 
-.filetree span.protocol {
-	background: url(../../../../resources/bookmark.gif) 0 0 no-repeat;
-	padding-left: 20px;
-}
+/* .filetree span.protocol { */
+/* 	background: url(../../../../resources/bookmark.gif) 0 0 no-repeat; */
+/* 	padding-left: 20px; */
+/* } */
 
-.filetree span.protocol_class {
-	background: url(../../../../resources/python_file.gif) 0 0 no-repeat;
-	padding-left: 20px;
-}
+/* .filetree span.protocol_class { */
+/* 	background: url(../../../../resources/python_file.gif) 0 0 no-repeat; */
+/* 	padding-left: 20px; */
+/* } */
 
 /*	List inside the tab container	*/
 #listEx li {
@@ -232,7 +232,9 @@ html, body {
 
 
 /* FLEX TEMPLATE (These styles are to create custom resize handles.) */ 
-
+#tab-summary a{
+	color: Firebrick !important;
+}
 .ui-resizable-s {
 	bottom: 0px !important;
 }
