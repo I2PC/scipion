@@ -178,7 +178,12 @@ class Project(object):
             print "Error trying to update protocol: %s(jobId=%s)\n ERROR: %s" % (protocol.getName(), jobId, ex)
             import traceback
             traceback.print_exc()
-            raise ex
+            
+            # If any problem happens, the protocol will be marked wih a status fail
+            protocol.setFailed(str(ex))
+            self.mapper.store(protocol)
+            
+#            raise ex
         
     def stopProtocol(self, protocol):
         """ Stop a running protocol """
