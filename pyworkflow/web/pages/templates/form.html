@@ -9,6 +9,7 @@
 	<link href={{css}} rel="stylesheet" type="text/css">
 	<link href={{messi_css}} rel="stylesheet" type="text/css">
 	<link href="{{jquery_ui_css}}" rel="stylesheet" type="text/css">
+	<link href="/static/css/font-awesome/css/font-awesome.min.css" rel="stylesheet" type="text/css">
 	<style type="text/css">
 	.ui-state-active {
 		background: DarkRed !important;
@@ -79,7 +80,7 @@
 							</td>
 							<td class="ico">
 								<!--  <a href="javascript:showComment();"><img src={{comment}}/></a> --> 
-								<a id="editTool" href="javascript:showComment();" class="iconEdit"></a>
+								<a id="editTool" href="javascript:showComment();"><i class="fa fa-pencil"></i></a>
 							</td>
 						</tr>
 						<tr>
@@ -201,7 +202,8 @@
 								{% if param.getClassName == "PointerParam" %}
 									<td class="ico">
 										<!-- <a href="javascript:browseObjects('{{paramName}}','{{projectName}}','{{param.pointerClass.get}}');"><img src="/resources/showj/zoom.png" class="menuIcon"></a> -->
-										<a href="javascript:browseObjects('{{paramName}}','{{projectName}}','{{param.pointerClass.get}}');"><img src={{browse}}/></a> 
+										<!-- <a href="javascript:browseObjects('{{paramName}}','{{projectName}}','{{param.pointerClass.get}}');"><img src={{browse}}/></a> -->
+										<a href="javascript:browseObjects('{{paramName}}','{{projectName}}','{{param.pointerClass.get}}');"><i class="fa fa-search" style="font-size:1.1em;"></i></a> 
 									</td>
 								{% elif param.getClassName == "ProtocolClassParam" %}
 									<td class="ico">
@@ -213,11 +215,12 @@
 									</td>
 								{% elif param.hasWizard %}
 									<td class="ico">
-										<input type="submit" class="buttonWiz" value="" onclick="javascript:putModeWiz('{{param.wizardName}}');"/>
+										<!-- <input type="submit" class="buttonWiz" value="" onclick="javascript:putModeWiz('{{param.wizardName}}');"/> -->
+										<a href="javascript:putModeWiz('{{param.wizardName}}');$('#protocolForm').submit();"><i class="fa fa-magic" style="font-size:1.2em;"></i></a>
 									</td>
 								{% elif param.hasViewer %}
 									<td class="ico">
-										<a id="analyzeTool" href="javascript:putModeViewElm('{{paramName}}');$('#protocolForm').submit();" class="iconEye"></a>
+										<a id="analyzeTool" href="javascript:putModeViewElm('{{paramName}}');$('#protocolForm').submit();" class="fa fa-eye"></a>
 										<!-- <input type="submit" class="buttonViewer" value="" onclick="javascript:putModeViewElm('{{paramName}}');"/> -->
 									</td>
 								{% else %}
@@ -225,7 +228,8 @@
 									</td>
 								{% endif %}
 								{% if param.htmlHelp %}
-									<td class="ico"><a href="javascript:help('{{paramName}}','{{param.htmlHelp}}');"><img src={{help}} /></a></td>
+									<!-- <td class="ico"><a href="javascript:help('{{paramName}}','{{param.htmlHelp}}');"><img src={{help}} /></a></td> -->
+									<td class="ico"><a href="javascript:help('{{paramName}}','{{param.htmlHelp}}');"><i class="fa fa-question-circle" style="font-size:1.3em;"></i></a></td>
 								{% endif %}
 								</tr>
 								{% endfor %}
@@ -237,18 +241,18 @@
 				 </div>		
 			<div class="boxBottom">
 				<!-- <button class="buttonClose" type="button" onclick="window.close()">Close</button> -->
-				<a href="javascript:window.close()" class="buttonGrey btnClose">Close</a>
+				<a href="javascript:window.close()" class="btn buttonGrey"><i class="fa fa-times"></i>Close</a>
 				{% if visualize == 0 %}
-				<a href="javascript:putMode('save');$('#protocolForm').submit();" class="buttonGrey btnSave">Save</a>
-				<a href="javascript:putMode('execute');$('#protocolForm').submit();" class="buttonRed">Execute</a>
+				<a href="javascript:putMode('save');$('#protocolForm').submit();" class="btn buttonGrey"><i class="fa fa-save"></i>Save</a>
+				<a href="javascript:putMode('execute');$('#protocolForm').submit();" class="btn buttonRed"><i class="fa fa-cogs"></i>Execute</a>
 				
 				<!-- <input type="submit" class="buttonSave" value="Save" onclick="javascript:putMode('save');">
 				<input type="submit" class="buttonExec" value="Execute" onclick="javascript:putMode('execute');"> -->
 				{% elif visualize == 1 %}
-				<a href="javascript:putMode('viewer');$('#protocolForm').submit();" class="buttonRed">Execute</a>
+				<a href="javascript:putMode('viewer');$('#protocolForm').submit();" class="btn buttonRed"><i class="fa fa-cogs"></i>Execute</a>
 				<!-- <input type="submit" class="buttonExec" value="Visualize" onclick="javascript:putMode('viewer');"> -->
 				{% elif visualize == 2 %}
-				<a href="javascript:returnProtocol();" class="buttonGrey btnSave">Save</a>
+				<a href="javascript:returnProtocol();" class="btn buttonGrey"><i class="fa fa-save"></i>Save</a>
 				<!-- <input type="button" class="buttonSave" value="Save" onclick="javascript:returnProtocol();"> -->
 				{% endif %}							
 			</div>

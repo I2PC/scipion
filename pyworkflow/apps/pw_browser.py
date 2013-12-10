@@ -56,13 +56,6 @@ class EMTreeProvider(DbTreeProvider):
         
         return (None, desc)
     
-    def getObjectActions(self, obj):
-        cls = type(obj)
-            
-        if issubclass(cls, XmippSetOfMicrographs):
-            return [('Open', lambda: self.viewer.visualize(obj))]
-        
-        return []
     
     
 class BrowserWindow(gui.Window):

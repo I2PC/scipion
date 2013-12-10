@@ -1,8 +1,13 @@
 
 <script type="text/javascript">
-	{% if graphView %}
-		switchGraph()
-	{% endif %}
+	$(function() {
+		{% if graphView %}
+			switchGraph()
+			
+
+			
+		{% endif %}
+	});
 </script>
 
 <!-- Run Table ---------------------->
@@ -11,19 +16,23 @@
 	<table id="data" cellspacing="0">
 		<tr>
 			{% for colName, colWidth in provider.getColumns %}
-			<th>{{colName}}</th> {% endfor %}
+			<th>
+				{{colName}}
+			</th>
+			{% endfor %}
 		</tr>
 		{% for obj in provider.getObjects %}
 		<tr id="{{obj.getObjId}}" class="runtr" data-name="{{obj.getName}}"
-			onclick='javascript:launchToolbarList("{{projectName}}","{{obj.getObjId}}", ($(this)));'>
-			<td><a
-				href="javascript:popup('/form/?protocolId={{obj.getObjId}}')">
+			onclick='javascript:launchToolbarList("{{obj.getObjId}}", ($(this)));'>
+			<td>
+				<a href="javascript:popup('/form/?protocolId={{obj.getObjId}}')">
 					{% if obj.getObjLabel == '' %} 
 						{{obj.getName}}
 					{% else %} 
 						{{obj.getObjLabel}} 
 					{% endif %}
-						</a></td>
+				</a>
+			</td>
 			<td>{{obj.status.get}}</td>
 			<td>{{obj.getElapsedTime}}</td>
 		</tr>
