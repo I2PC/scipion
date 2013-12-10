@@ -204,6 +204,7 @@ function updateRow(id, elm, row){
 
 function switchGraph() {
 	var status = $("div#graphActiv").attr("data-mode");
+
 	// Graph will be painted once
 	if ($("div#graphActiv").attr("data-time") == 'first') {
 		if (status == 'inactive') {
@@ -246,23 +247,20 @@ function switchGraph() {
 			var s = $("tr.selected").attr("id");
 			s = "graph_" + s;
 
-			if (s != "") {
+			if (s != "" || s != undefined) {
 				var nodeClear = $("div#graphActiv").attr("data-option");
-				if (nodeClear != "") {
-					if (nodeClear != s) {
-						// Clear the node selected
-						var elmClear = $("div#" + nodeClear + ".window");
-						elmClear.css("border", "");
+				
+				if (nodeClear.length>0 && nodeClear != undefined) {
+					// Clear the node
+					var elmClear = $("div#" + nodeClear);
+					elmClear.css("border", "");
+				} 
+				// setElement in graph
+				$("div#graphActiv").attr("data-option", s);
 
-						// setElement in graph
-						$("div#graphActiv").attr("data-option", s);
-
-						// Highlight the node
-						var elm = $("div#" + s + ".window");
-						elm.css("border", "2.5px solid Firebrick");
-
-					}
-				}
+				// Highlight the node
+				var elm = $("div#" + s);
+				elm.css("border", "2.5px solid Firebrick");
 			}
 
 		} else if (status == 'active') {
@@ -286,7 +284,8 @@ function switchGraph() {
 					if (rowClear != s) {
 						// Clear the row selected
 						var elmClear = $("tr.selected");
-						elmClear.attr("style", "background-color: #fafafa;");
+//						elmClear.attr("style", "background-color: #fafafa;");
+						elmClear.attr("style", "");
 						elmClear.attr("class", "runtr");
 
 						// setElement in table
