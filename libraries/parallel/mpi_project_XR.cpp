@@ -180,6 +180,7 @@ void ProgMPIXrayProject::run()
                 progress_bar(k+1);
         }
     }
+    jobHandler->wait();
 
     delete jobHandler;
     postRun();
