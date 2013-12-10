@@ -70,15 +70,15 @@ ACTION_CONTINUE = 'Continue'
 ACTION_RESULTS = 'Analyze results'
 
 ActionIcons = {
-    ACTION_EDIT:  'edit.gif',
-    ACTION_COPY:  'copy.gif',
-    ACTION_DELETE:  'delete.gif',
-    ACTION_REFRESH:  'refresh.gif',
+    ACTION_EDIT: 'fa-pencil.gif',# 'edit.gif',
+    ACTION_COPY:  'fa-files-o.gif',
+    ACTION_DELETE:  'fa-trash-o.gif',
+    ACTION_REFRESH:  'fa-refresh.gif',
     ACTION_STEPS:  'run_steps.gif',
-    ACTION_TREE:  'tree2.gif',
-    ACTION_STOP: 'stop.gif',
+    ACTION_TREE:  'fa-sitemap.gif',
+    ACTION_STOP: 'iconStop.png',
     ACTION_CONTINUE: 'play.png',
-    ACTION_RESULTS: 'visualize.gif'
+    ACTION_RESULTS: 'fa-eye.gif'
                }
 
 STATUS_COLORS = {
@@ -260,6 +260,7 @@ class ProtocolsView(tk.Frame):
         self.settings = windows.getSettings()
         self.showGraph = self.settings.graphView.get()
         
+        self.style = ttk.Style()
         self.root.bind("<F5>", self.refreshRuns)
         # Hide the right-click menu
         #self.root.bind('<FocusOut>', self._unpostMenu)
@@ -279,48 +280,51 @@ class ProtocolsView(tk.Frame):
             Left: containing the Protocol classes tree
             Right: containing the Runs list
         """
-        p = tk.PanedWindow(self, orient=tk.HORIZONTAL)
+        p = tk.PanedWindow(self, orient=tk.HORIZONTAL, bg='white')
         
         # Left pane, contains Protocols Pane
-        leftFrame = tk.Frame(p)
+        leftFrame = tk.Frame(p, bg='white')
         leftFrame.columnconfigure(0, weight=1)
         leftFrame.rowconfigure(1, weight=1)
 
+        
         # Protocols Tree Pane        
-        protFrame = tk.Frame(leftFrame, width=300, height=500)
+        bgColor = '#eaebec'
+        protFrame = tk.Frame(leftFrame, width=300, height=500, bg=bgColor)
         protFrame.grid(row=1, column=0, sticky='news', padx=5, pady=5)
         protFrame.columnconfigure(0, weight=1)
         protFrame.rowconfigure(1, weight=1)
-        self.protTree = self.createProtocolsTree(protFrame)
+        self.protTree = self.createProtocolsTree(protFrame, bgColor)
         self.updateProtocolsTree(self.protCfg)
         # Create the right Pane that will be composed by:
         # a Action Buttons TOOLBAR in the top
         # and another vertical Pane with:
         # Runs History (at Top)
         # Sectected run info (at Bottom)
-        rightFrame = tk.Frame(p)
+        rightFrame = tk.Frame(p, bg='white')
         rightFrame.columnconfigure(0, weight=1)
         rightFrame.rowconfigure(1, weight=1)
         #rightFrame.rowconfigure(0, minsize=label.winfo_reqheight())
         
         # Create the Action Buttons TOOLBAR
-        toolbar = tk.Frame(rightFrame)
+        toolbar = tk.Frame(rightFrame, bg='white')
         toolbar.grid(row=0, column=0, sticky='news')
         gui.configureWeigths(toolbar)
         #toolbar.columnconfigure(0, weight=1)
         toolbar.columnconfigure(1, weight=1)
         
-        self.runsToolbar = tk.Frame(toolbar)
+        self.runsToolbar = tk.Frame(toolbar, bg='white')
         self.runsToolbar.grid(row=0, column=0, sticky='sw')
         # On the left of the toolbar will be other
         # actions that can be applied to all runs (refresh, graph view...)
-        self.allToolbar = tk.Frame(toolbar)
+        self.allToolbar = tk.Frame(toolbar, bg='white')
         self.allToolbar.grid(row=0, column=10, sticky='se')
         self.createActionToolbar()
 
         # Create the Run History tree
         v = ttk.PanedWindow(rightFrame, orient=tk.VERTICAL)
-        runsFrame = ttk.Labelframe(v, text=' History ', width=500, height=500)
+        #runsFrame = ttk.Labelframe(v, text=' History ', width=500, height=500)
+        runsFrame = tk.Frame(v, bg='white')
         #runsFrame.grid(row=1, column=0, sticky='news', pady=5)
         self.runsTree = self.createRunsTree(runsFrame)        
         gui.configureWeigths(runsFrame)
@@ -338,8 +342,8 @@ class ProtocolsView(tk.Frame):
         infoFrame = tk.Frame(v)
         #infoFrame.columnconfigure(0, weight=1)
         gui.configureWeigths(infoFrame)
-        
-        tab = ttk.Notebook(infoFrame)
+        self.style.configure("W.TNotebook", background='white')
+        tab = ttk.Notebook(infoFrame, style='W.TNotebook')
         # Data tab
         dframe = tk.Frame(tab)
         gui.configureWeigths(dframe)
@@ -390,7 +394,7 @@ class ProtocolsView(tk.Frame):
         
         def addButton(action, text, toolbar):
             btn = tk.Label(toolbar, text=text, image=self.getImage(ActionIcons[action]), 
-                       compound=tk.LEFT, cursor='hand2')
+                       compound=tk.LEFT, cursor='hand2', bg='white')
             btn.bind('<Button-1>', lambda e: self._runActionClicked(action))
             return btn
         
@@ -421,10 +425,10 @@ class ProtocolsView(tk.Frame):
         displayAction(ACTION_CONTINUE, 5, status == STATUS_WAITING_APPROVAL)
         displayAction(ACTION_RESULTS, 6, status != STATUS_RUNNING)
         
-    def createProtocolsTree(self, parent):
+    def createProtocolsTree(self, parent, bgColor):
         """Create the protocols Tree displayed in left panel"""
-        comboFrame = tk.Frame(parent)
-        tk.Label(comboFrame, text='View').grid(row=0, column=0, padx=(0, 5), pady=5)
+        comboFrame = tk.Frame(parent, bg=bgColor)
+        tk.Label(comboFrame, text='View', bg=bgColor).grid(row=0, column=0, padx=(0, 5), pady=5)
         choices = [pm.text.get() for pm in self.settings.protMenuList]
         initialChoice = choices[self.settings.protMenuList.getIndex()]
         combo = ComboBox(comboFrame, choices=choices, initial=initialChoice)
@@ -432,7 +436,8 @@ class ProtocolsView(tk.Frame):
         combo.grid(row=0, column=1)
         comboFrame.grid(row=0, column=0, padx=5, pady=5, sticky='nw')
         
-        tree = Tree(parent, show='tree')
+        self.style.configure("W.Treeview", background='#eaebec', borderwidth=0)
+        tree = Tree(parent, show='tree', style='W.Treeview')
         tree.column('#0', minwidth=300)
         tree.tag_configure('protocol', image=self.getImage('python_file.gif'))
         tree.tag_bind('protocol', '<Double-1>', self._protocolItemClick)

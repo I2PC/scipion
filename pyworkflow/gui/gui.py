@@ -132,7 +132,7 @@ def changeFontSize(font, event, minSize=-999, maxSize=999):
 IMAGE related variables and functions 
 """
 
-def getImage(imageName, imgDict=None, tk=True, percent=100):
+def getImage(imageName, imgDict=None, tkImage=True, percent=100):
     """ Search for the image in the RESOURCES path list. """
     if imageName is None:
         return None
@@ -148,7 +148,7 @@ def getImage(imageName, imgDict=None, tk=True, percent=100):
             fp = float(percent)/100.0
             newSize = int(fp * w), int(fp * h)
             image.thumbnail(newSize, Image.ANTIALIAS)
-        if tk:
+        if tkImage:
             image = ImageTk.PhotoImage(image)
         if imgDict is not None:
             imgDict[imageName] = image
@@ -181,7 +181,34 @@ def getImageFromPath(imagePath):
     
     return imgTk
 
+# Standard icons
 
+ICONS = {
+         'select': 'fa-check.gif',
+         'cancel': 'fa-ban.gif',
+#fa-check  -> Select
+#fa-ban -> Cancel
+#fa-times -> Close
+#fa-floppy-o (fa-save) -> Save
+#fa-eye -> Visualize
+#fa-pencil -> Edit
+#fa-cogs -> Execute
+#fa-question -> Help
+#fa-search -> Zoom
+#fa-sign-in , fa-sign-out -> Input & Output Parameters
+#fa-magic -> Wizard
+#fa-file-o -> New
+#fa-files-o (fa-copy) -> Copy
+#fa-trash-o -> Delete
+#fa-folder-open -> Browse
+#fa-sitemap -> Tree
+#fa-bars -> List
+#fa-refresh -> Refresh
+         }
+
+def getIcon(iconName, imgDict=None):
+    """ Search for standard icons. """
+    return getImage(ICONS[iconName], imgDict)
 
 """
 Windows geometry utilities
@@ -328,7 +355,6 @@ class Window():
     def _addMenuChilds(self, menu, menuConfig):
         """Helper function for creating main menu"""
         for sub in menuConfig:
-            print "sub",sub
             if len(sub):
                 submenu = tk.Menu(self.root, tearoff=0)
                 menu.add_cascade(label=sub.text.get(), menu=submenu)
@@ -346,11 +372,14 @@ class Window():
         showInfo(header, msg, self.root)
 
 
+#TODO Move this to a less basic module such as: scipion-gui or similar
+# Here in gui should be more basic stuff
+
 VIEW_PROJECTS = 'Projects'
 VIEW_PROTOCOLS = 'Protocols'
 VIEW_DATA = 'Data'
 VIEW_HOSTS = 'Hosts'
-VIEW_LIST = [VIEW_PROJECTS, VIEW_PROTOCOLS, VIEW_DATA, VIEW_HOSTS]   
+VIEW_LIST = [VIEW_PROTOCOLS, VIEW_DATA, VIEW_HOSTS]   
 
      
 class WindowBase(Window):
@@ -383,46 +412,11 @@ class WindowBase(Window):
         from pyworkflow.apps.pw_project_viewprotocols import ProtocolsView
         from pyworkflow.apps.pw_project_viewhosts import HostsView
         
-#        self.viewFuncs = {VIEW_PROJECTS: createProjectsView,
-#                          VIEW_PROTOCOLS: createProtocolsView,
-#                          VIEW_DATA: createDataView,
-#                          VIEW_HOSTS: createHostsView
-#                          }
         self.viewFuncs = {VIEW_PROJECTS: ProjectsView,
                           VIEW_PROTOCOLS: ProtocolsView,
                           VIEW_DATA: DataView,
                           VIEW_HOSTS: HostsView
                           }
-#        self.switchView(VIEW_PROJECTS)
-        
-#    def __init__(self, path, master=None):   
-#        # Load global configuration
-#        self.projName = 'Project ' + basename(path)
-#        self.projPath = path
-#        self.loadProject()
-#        self.icon = self.generalCfg.icon.get()
-#        self.selectedProtocol = None
-#        self.showGraph = False
-#        
-#        Window.__init__(self, self.projName, master, icon=self.icon, minsize=(900,500))
-#        
-#        content = tk.Frame(self.root)
-#        content.columnconfigure(0, weight=1)
-#        content.rowconfigure(1, weight=1)
-#        content.grid(row=0, column=0, sticky='news')
-#        self.content = content
-#        
-#        self.createMainMenu()
-#        
-#        header = self.createHeaderFrame(content)
-#        header.grid(row=0, column=0, sticky='new')
-#        
-#        self.view, self.viewWidget = None, None
-#        self.viewFuncs = {VIEW_PROTOCOLS: self.createProtocolsView,
-#                          VIEW_DATA: self.createDataView,
-#                          VIEW_HOSTS: self.createHostsView
-#                          }
-#        self.switchView(VIEW_PROTOCOLS)
         
     def createHeaderFrame(self, parent):
         
@@ -454,15 +448,6 @@ class WindowBase(Window):
         # Create gradient
         from widgets import GradientFrame
         GradientFrame(header, height=8, borderwidth=0).grid(row=1, column=0, columnspan=3, sticky='new')
-#        viewLabel = tk.Label(viewFrame, text='View:', bg='white')
-#        viewLabel.grid(row=0, column=0, padx=5)
-#        self.viewVar = tk.StringVar()
-#        self.viewVar.set(VIEW_PROTOCOLS)
-        
-#        viewCombo = ttk.Combobox(viewFrame, textvariable=self.viewVar, state='readonly')
-#        viewCombo['values'] = [VIEW_PROTOCOLS, VIEW_DATA, VIEW_HOSTS]
-#        viewCombo.grid(row=0, column=1)
-#        viewCombo.bind('<<ComboboxSelected>>', self._viewComboSelected)
         
         def addLink(elementText):
             btn = tk.Label(viewFrame, text=elementText, cursor='hand2', fg="#6F3232", bg="white")
@@ -481,13 +466,7 @@ class WindowBase(Window):
                 tube = addTube()
                 tube.grid(row=0, column=(i*2)+1)
         
-        # Create header line
-#        headerLine = tk.Frame(header,bg='red', height=10, width=100%)
-#        headerLine = Canvas(header, height=-1, bg='red')
-#        headerLine.grid(row=1, column=0, columnspan=3, sticky='nw')
-        
         return header
-    
     
     def _viewComboSelected(self, elementText):
         if elementText != self.view:
@@ -506,8 +485,5 @@ class WindowBase(Window):
         self.footer.columnconfigure(0, weight=1)
         #header.columnconfigure(2, weight=1)
         self.view = newView    
-#    def _viewComboSelected(self, e=None):
-#        if self.viewVar.get() != self.view:
-#            self.switchView(self.viewVar.get())
 
         
