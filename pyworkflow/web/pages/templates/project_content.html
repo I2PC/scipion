@@ -45,7 +45,7 @@
 
 		
 		{% if contentConfig == 'divided' %}
-			$('.layout-inner > .north').resizable({
+ 			$('.layout-inner > .north').resizable({
 				handles: 's',
 				stop: layout
 			});
@@ -53,6 +53,10 @@
 				handles: 's',
 				stop: layout
 			});
+/*  			$('.layout-inner > .center').resizable({
+				handles: 'n',
+				stop: layout
+			});  */
 		{% endif %}
 		// This selector is changed to only select the west and east
 		// components of the outer layout.
@@ -118,7 +122,7 @@
 			<ul>
 				<li><strong>Input</strong>
 					<ul id='protocol_input'></ul>
-				</li><br />
+				</li><br/>
 				<li><strong>Output</strong>
 					<ul id='protocol_output'></ul>
 				

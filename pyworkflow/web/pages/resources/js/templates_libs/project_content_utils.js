@@ -99,8 +99,10 @@ function fillTabsSummary(id) {
 		url : '/protocol_io/?protocolId=' + id,
 		dataType : "json",
 		success : function(json) {
-			fillUL(json.inputs, "protocol_input", "db_input.gif");
-			fillUL(json.outputs, "protocol_output", "db_output.gif");
+//			fillUL(json.inputs, "protocol_input", "db_input.gif");
+			fillUL(json.inputs, "protocol_input", "fa-sign-in");
+//			fillUL(json.outputs, "protocol_output", "db_output.gif");
+			fillUL(json.outputs, "protocol_output", "fa-sign-out");
 		}
 	});
 
@@ -127,9 +129,13 @@ function fillUL(list, ulId, icon) {
 	ul = $("#" + ulId);
 	ul.empty();
 	for ( var i = 0; i < list.length; i++) {
+//		ul.append('<li><a href="/visualize_object/?objectId=' + list[i].id
+//				+ '"target="_blank"><img src="../../../../resources/' + icon + '" /> '
+//				+ list[i].name + '</a></li>');
 		ul.append('<li><a href="/visualize_object/?objectId=' + list[i].id
-				+ '"target="_blank"><img src="../../../../resources/' + icon + '" /> '
+				+ '"target="_blank"><i class="fa ' + icon + '"></i>'
 				+ list[i].name + '</a></li>');
+		
 	}
 }
 
