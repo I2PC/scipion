@@ -61,16 +61,11 @@ body {
 	clear: both;
 }
 
-#buttonGen {
+/* #buttonGen {
 	background-size: 20%;
-	/* 	margin: 1em 0.5em 0 0; */
-	/* 	font-size: 0.8em; */
 	color: black;
-/* 	width: 6.3em; */
 	height: 2em;
 	background-color: LightGray;
-	/* 	border: 1px solid #000066; */
-	/* 	padding: 1px; */
 	font-weight: bold;
 	letter-spacing: 0.2em;
 	text-align: center;
@@ -79,9 +74,9 @@ body {
 
 #buttonGen:hover {
 	background-color: white;
-}
+} */
 
-.buttonCancel {
+/* .buttonCancel {
 	background: url(../../../resources/dialog_cancel.png) 0.5em no-repeat;
 	padding-left: 1.8em;
 }
@@ -89,7 +84,7 @@ body {
 .buttonSelect {
 	background: url(../../../resources/dialog_ok.png) 0.5em no-repeat;
 	padding-left: 1.7em;
-}
+} */
 
 /**************** List CSS *******************/
 table#list a:link {

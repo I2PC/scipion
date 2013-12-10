@@ -6,6 +6,7 @@
 <link href="/static/css/general_style.css" rel="stylesheet" type="text/css">
 <link href="/static/css/wizard_style.css" rel="stylesheet" type="text/css">
 <link type="text/css" href="/static/css/jquery-ui.css" rel="stylesheet" />
+<link href="/static/css/font-awesome/css/font-awesome.min.css" rel="stylesheet" type="text/css">
 <script type="text/javascript" src="/static/js/jquery/jquery.js"></script>
 <script type="text/javascript" src="/static/js/jquery/jquery-ui.js"></script>
 <script type="text/javascript" src="/static/js/templates_libs/wizard_utils.js"></script>
@@ -38,8 +39,8 @@
 		</div>
 	</div>	
 	<div class="buttons">
-		<input type="button" id="buttonGen" class="buttonSelect" value="Select" {% block function %}{% endblock %}/>
-		<input type="button" id="buttonGen" class="buttonCancel" onclick="window.close()" value="Cancel"/>
+		<a href="#" {% block function %}{% endblock %} class="btn buttonGrey"><i class="fa fa-check"></i>Select</a>
+		<a href="javascript:window.close()" class="btn buttonGrey"><i class="fa fa-ban"></i>Close</a>
 	</div>
 </body>
 </html>

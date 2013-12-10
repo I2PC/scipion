@@ -79,7 +79,7 @@ $(document).ready(function() {
 							id : 0,
 							label : 'Ok',
 							val : 'Y',
-							btnClass : 'btn-select'
+							btnClass : 'fa-check'
 						} ],
 						callback : function(val) {
 							if (val == 'Y') {
@@ -111,7 +111,7 @@ $(document).ready(function() {
 							id : 0,
 							label : 'Ok',
 							val : 'Y',
-							btnClass : 'btn-select'
+							btnClass : 'fa-check'
 						} ],
 						callback : function(val) {
 							if (val == 'Y') {
@@ -325,7 +325,7 @@ function help(title, msg) {
 			id : 0,
 			label : 'Close',
 			val : 'X',
-			btnClass : 'btn-close'
+			btnClass : 'fa-times'
 		} ]
 	});
 }
@@ -408,13 +408,13 @@ function showComment() {
 			id : 0,
 			label : 'Select',
 			val : 'Y',
-			btnClass : 'btn-select',
+			btnClass : 'fa-check',
 			btnFunc : 'putComment'
 			}, {
 			id : 1,
 			label : 'Cancel',
 			val : 'C',
-			btnClass : 'btn-cancel'
+			btnClass : 'fa-ban'
 		}]
 	});
 }
@@ -465,13 +465,15 @@ function selectDialog(objClass, msg, funcName) {
 			id : 0,
 			label : 'Select',
 			val : 'Y',
-			btnClass : 'btn-select',
+			btnClass : 'fa-check',
+//			extraBtnClass: 'icon-check',
+//			btnClass : 'btn-select buttonGrey',
 			btnFunc : funcName
 		}, {
 			id : 1,
 			label : 'Cancel',
 			val : 'C',
-			btnClass : 'btn-cancel'
+			btnClass : 'fa-ban'
 		} ]
 	});
 }
