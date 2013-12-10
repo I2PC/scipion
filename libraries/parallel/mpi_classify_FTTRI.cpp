@@ -244,6 +244,7 @@ void ProgClassifyFTTRI::produceFTTRI()
             centralMagFTpolarFilteredMagFTI().selfLog10();
             centralMagFTpolarFilteredMagFTI.write(fnFTTRI,idx+1,true,WRITE_REPLACE);
         }
+    taskDistributor->wait();
     if (verbose && node->rank==0)
         progress_bar(Nimgs);
 }

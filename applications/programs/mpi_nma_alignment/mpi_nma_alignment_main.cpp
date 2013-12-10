@@ -114,6 +114,8 @@ public:
 
     void finishProcessing()
     {
+    	distributor->wait();
+
         //All nodes wait for each other
         node->barrierWait();
         if (node->isMaster())

@@ -36,13 +36,13 @@ void __threadMpiMasterDistributor(ThreadArgument &arg)
     MPI_Status status;
     int finalizedWorkers = 0;
 
-    while (finalizedWorkers < size - 1)
+    while (finalizedWorkers < size-1)
     {
         //wait for request form workers
         MPI_Recv(0, 0, MPI_INT, MPI_ANY_SOURCE, 0, MPI_COMM_WORLD, &status);
 
         workBuffer[0] =
-            distributor->ThreadTaskDistributor::distribute(workBuffer[1],
+            distributor->ThreadTaskDistributor::getTasks(workBuffer[1],
                     workBuffer[2]) ? 1 : 0;
         if (workBuffer[0] == 0) //no more jobs
             finalizedWorkers++;
@@ -56,7 +56,6 @@ MpiTaskDistributor::MpiTaskDistributor(size_t nTasks, size_t bSize,
                                        MpiNode *node) :
         ThreadTaskDistributor(nTasks, bSize)
 {
-	std::cout << "MpiTask " << nTasks << " " << bSize << std::endl;
     this->node = node;
     //if master create distribution thread
     if (node->isMaster())
@@ -96,6 +95,20 @@ bool MpiTaskDistributor::distribute(size_t &first, size_t &last)
     last = workBuffer[2];
 
     return (workBuffer[0] == 1);
+}
+
+void MpiTaskDistributor::reset()
+{
+	ThreadTaskDistributor::reset();
+    if (node->isMaster())
+        manager->runAsync(__threadMpiMasterDistributor);
+}
+
+void MpiTaskDistributor::wait()
+{
+	if (node->isMaster())
+		manager->wait();
+	node->barrierWait();
 }
 
 // ================= FILE MUTEX ==========================

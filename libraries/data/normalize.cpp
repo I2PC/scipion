@@ -442,7 +442,9 @@ void ProgNormalize::defineParams()
     addExampleLine("Normalize 64x64 images using NewXmipp method and a crown mask",false);
     addExampleLine("xmipp_transform_normalize -i images.sel --method NewXmipp --mask crown 29 32",true);
     addExampleLine("Normalize a volume to have zero mean and unit variance",false);
-    addExampleLine("xmipp_transform_normalize -i volume.vol",true);
+    addExampleLine("xmipp_transform_normalize -i volume.vol --method OldXmipp",true);
+    addExampleLine("Normalize a volume so that the noise outside a sphere of radius 29 has zero mean and unit variance",false);
+    addExampleLine("xmipp_transform_normalize -i volume.vol --background circle 29",true);
 }
 
 void ProgNormalize::readParams()

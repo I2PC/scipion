@@ -93,6 +93,11 @@ public:
     virtual ~MpiTaskDistributor();
 
     friend void __threadMpiMasterDistributor(ThreadArgument &arg);
+    void reset();
+    /** All nodes wait until distribution is done.
+     * In particular, the master node should wait for the distribution thread.
+     */
+    void wait();
 }
 ;//end of class MpiTaskDistributor
 

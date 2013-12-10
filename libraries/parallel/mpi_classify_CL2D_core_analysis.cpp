@@ -181,6 +181,7 @@ void ProgClassifyCL2DCore::computeCores()
             if (verbose && node->rank==0)
                 progress_bar(idx);
         }
+    taskDistributor->wait();
     if (verbose && node->rank==0)
         progress_bar(Nblocks);
 
@@ -290,6 +291,7 @@ void ProgClassifyCL2DCore::computeStableCores()
             }
             thisClassCore.write(thisBlock.fnLevel.insertBeforeExtension((String)"_stable_core_"+thisBlock.block),MD_APPEND);
         }
+    taskDistributor->wait();
 
     // Gather all results
     gatherResults(tolerance+1,"stable_core");
