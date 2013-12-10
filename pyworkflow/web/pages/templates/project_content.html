@@ -22,9 +22,6 @@
 	$(function() {
 		$("#tabs").tabs();
 	// 	$("#browser").treeview();
-		{% if graphView %}
-			switchGraph()
-		{% endif %}
 	});
 	
 	jQuery(function($) {
@@ -42,7 +39,6 @@
 		layout();
 
 		$(window).resize(layout);
-
 		
 		{% if contentConfig == 'divided' %}
  			$('.layout-inner > .north').resizable({

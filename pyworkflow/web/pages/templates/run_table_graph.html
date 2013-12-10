@@ -1,8 +1,10 @@
 
 <script type="text/javascript">
-	{% if graphView %}
-		switchGraph()
-	{% endif %}
+	$(function() {
+		{% if graphView %}
+			switchGraph()
+		{% endif %}
+	});
 </script>
 
 <!-- Run Table ---------------------->

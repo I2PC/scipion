@@ -251,17 +251,18 @@ def run_table_graph(request):
             print 'Change detected, different size'
             refresh = True
         else:
-            for x, y in zip(runs.iteritems(), runsNew.iteritems()):
-                if x != y:
-                    print 'Change detected', x, y
-                    refresh = True
-        
+            for x in runs.iteritems():
+                for y in runsNew.iteritems():
+                    if x[0]==y[0]:
+                        if x != y:
+                            print 'Change detected', x, y
+                            refresh = True
         if refresh:
             request.session['runs'] = runsNew
             graphView = project.getSettings().graphView.get()
         
             context = {'provider': provider,
-                       'graphView': graphView }
+                       'graphView': graphView}
             
             return render_to_response('run_table_graph.html', context)
         else:
@@ -279,7 +280,7 @@ def formatProvider(provider):
         id = obj.getObjId()
         name = obj.getName()
         status = obj.status.get()
-        time = obj.getElapsedTime()
+#        time = obj.getElapsedTime()
         runs[id] = [name, status]
     return runs
 
