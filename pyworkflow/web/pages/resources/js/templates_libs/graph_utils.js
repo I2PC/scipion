@@ -135,8 +135,7 @@ function callPaintGraph() {
 								+ json[i].color + ";");
 			}
 			// After all nodes are positioned, then create the edges
-			// between
-			// them
+			// between them
 
 			for ( var i = 0; i < json.length; i++) {
 				for ( var j = 0; j < json[i].childs.length; j++) {

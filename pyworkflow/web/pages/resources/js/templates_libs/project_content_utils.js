@@ -116,7 +116,6 @@ function fillTabsSummary(id) {
 //			for ( var i = 0; i < json.length; i++) {
 //				$("#tab-summary").append('<p>' + json[i] + '</p>');
 //			}
-			
 		}
 	});
 }
@@ -126,7 +125,7 @@ function fillTabsSummary(id) {
  * properties
  */
 function fillUL(list, ulId, icon) {
-	ul = $("#" + ulId);
+	var ul = $("#" + ulId);
 	ul.empty();
 	for ( var i = 0; i < list.length; i++) {
 //		ul.append('<li><a href="/visualize_object/?objectId=' + list[i].id
@@ -135,7 +134,6 @@ function fillUL(list, ulId, icon) {
 		ul.append('<li><a href="/visualize_object/?objectId=' + list[i].id
 				+ '"target="_blank"><i class="fa ' + icon + '"></i>'
 				+ list[i].name + '</a></li>');
-		
 	}
 }
 
@@ -193,16 +191,12 @@ function updateTree(id, elm, row){
 function updateRow(id, elm, row){	
 	if (row.attr('value') != undefined && row.attr('value') != id) {
 		var rowOld = $("tr#" + row.attr('value'));
-//		rowOld.attr('style', 'background-color: #fafafa;');
-//		rowOld.attr('class', 'runtr');
 		rowOld.removeClass('selected')
 	}
+	elm.addClass('selected')
+
 	// add id value into the toolbar
 	row.attr('value', id);
-	
-//	elm.attr('style', 'background-color: LightSteelBlue;');
-//	elm.attr('class', 'selected');
-	elm.addClass('selected')
 }
 
 function graphON(graph, graphTool, list, listTool){
@@ -244,43 +238,40 @@ function changeStatusGraph(status, graph, graphTool, list, listTool){
 	}
 }
 
-function loadMarkedElement(status, id, graph){
-	if (status == 'inactive') {
-		var s = "graph_" + id;
+function markElmGraph(id, graph){
+	var s = "graph_" + id;
 
-		if (s != "" || s != undefined) {
-			var nodeClear = graph.attr("data-option");
-			
-			if (nodeClear.length>0 && nodeClear != undefined) {
-				// Clear the node
-				var elmClear = $("div#" + nodeClear);
-				elmClear.css("border", "");
-			} 
-			// setElement in graph
-			graph.attr("data-option", s);
+	if (s != "" || s != undefined) {
+		var nodeClear = graph.attr("data-option");
+		
+		if (nodeClear.length>0 && nodeClear != undefined) {
+			// Clear the node
+			var elmClear = $("div#" + nodeClear);
+			elmClear.css("border", "");
+		} 
+		// setElement in graph
+		graph.attr("data-option", s);
+	
+		// Highlight the node
+		var elm = $("div#" + s);
+		elm.css("border", "2.5px solid Firebrick");
+	}
+}
+	
+function markElmList(id, graph){
+	
+	var rowClear = $("tr.selected").attr("id");
+	if (rowClear != "") {
+		if (rowClear != id) {
+			// Clear the row selected
+			var elmClear = $("tr.selected");
+			elmClear.attr("style", "");
+			elmClear.attr("class", "runtr");
 
-			// Highlight the node
-			var elm = $("div#" + s);
-			elm.css("border", "2.5px solid Firebrick");
-		}
-
-	} else if (status == 'active') {
-		if (id != "") {
-			var rowClear = $("tr.selected").attr("id");
-			if (rowClear != "") {
-				if (rowClear != id) {
-					// Clear the row selected
-					var elmClear = $("tr.selected");
-					elmClear.attr("style", "");
-					elmClear.attr("class", "runtr");
-
-					// setElement in table
-					var elm = $("tr#" + id + ".runtr");
-					var projName = graph.attr("data-project");
-					// elm.attr("class","selected");
-					launchToolbarList(id, elm);
-				}
-			}
+			// setElement in table
+			var elm = $("tr#" + id + ".runtr");
+			var projName = graph.attr("data-project");
+			launchToolbarList(id, elm);
 		}
 	}
 }
@@ -294,10 +285,10 @@ function switchGraph() {
 	var id = $("div#toolbar").attr("value");
 	
 	//get row elements 
-	graph = $("div#graphActiv");
-	graphTool = $("div#treeTool");
-	list = $("div#runTable");
-	listTool = $("div#listTool");
+	var graph = $("div#graphActiv");
+	var graphTool = $("div#treeTool");
+	var list = $("div#runTable");
+	var listTool = $("div#listTool");
 	
 	changeStatusGraph(status, graph, graphTool, list, listTool)
 		
@@ -306,7 +297,10 @@ function switchGraph() {
 		callPaintGraph();
 		graph.attr("data-time", "not");
 	} 
-	loadMarkedElement(status, id, graph)
+	
+	markElmGraph(id, graph)
+	markElmList(id, graph)
+	
 }
 
 
@@ -343,13 +337,13 @@ function deleteProtocolForm(protocolId) {
 			label : 'No',
 			val : 'C',
 			btnClass : 'btn-cancel'
-		} ],
-		callback : function(val) {
-			if (val == 'Y') {
+		} ]
+//		callback : function(val) {
+//			if (val == 'Y') {
 //				window.location.href = "/project_content/?projectName="
 //						+ projName;
-			}
-		}
+//			}
+//		}
 	});
 }
 
@@ -357,10 +351,6 @@ function deleteProtocolForm(protocolId) {
  * Method to execute a delete by a protocol
  */
 function deleteProtocol(elm) {
-//	var value = elm.attr('value').split("-");
-//	var projName = value[0];
-//	var protId = value[1];
-	
 	var protId = elm.attr('value');
 	
 	$.ajax({
@@ -408,13 +398,13 @@ function stopProtocolForm(protocolId) {
 			label : 'No',
 			val : 'C',
 			btnClass : 'btn-cancel'
-		} ],
-		callback : function(val) {
-			if (val == 'Y') {
+		} ]
+//		callback : function(val) {
+//			if (val == 'Y') {
 //				window.location.href = "/project_content/?projectName="
 //						+ projName;
-			}
-		}
+//			}
+//		}
 	});
 }
 
@@ -422,10 +412,6 @@ function stopProtocolForm(protocolId) {
  * Method to stop the run for a protocol
  */
 function stopProtocol(elm) {
-//	var value = elm.attr('value').split("-");
-//	var projName = value[0];
-//	var protId = value[1];
-	
 	var protId = elm.attr('value');
 	
 	$.ajax({
