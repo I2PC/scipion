@@ -172,8 +172,7 @@ function paintBox(nodeSource, id, msg) {
 		var projName = $("div#graphActiv").attr("data-project");
 //		var onclick = "updateTabs('" + projName + "', '" + objId
 //				+ "',($(this)))";
-		var onclick = "launchToolbarTree('" + projName + "', '" + objId
-		+ "',($(this)))";
+		var onclick = "launchToolbarTree('" + objId	+ "',($(this)))";
 		var aux = '<div class="window" style="" onclick="' + onclick + '" id="'
 				+ id + '"><a href="' + href + '"><strong>' + msg
 				+ '</strong></a><br /></div>';

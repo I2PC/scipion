@@ -20,7 +20,7 @@
 		</tr>
 		{% for obj in provider.getObjects %}
 		<tr id="{{obj.getObjId}}" class="runtr" data-name="{{obj.getName}}"
-			onclick='javascript:launchToolbarList("{{projectName}}","{{obj.getObjId}}", ($(this)));'>
+			onclick='javascript:launchToolbarList("{{obj.getObjId}}", ($(this)));'>
 			<td>
 				<a href="javascript:popup('/form/?protocolId={{obj.getObjId}}')">
 					{% if obj.getObjLabel == '' %} 

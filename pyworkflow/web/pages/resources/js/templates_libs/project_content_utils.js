@@ -50,24 +50,24 @@
 /*
  * Toolbar used in the project content template for list view
  */
-function launchToolbarList(projName, id, elm) {
+function launchToolbarList(id, elm) {
 	var row = $("div#toolbar");
 	updateRow(id, elm, row);
-	updateButtons(projName, id, elm);
+	updateButtons(id, elm);
 	row.show(); // Show toolbar
 }
 
 /*
  * Toolbar used in the project content template for list view
  */
-function launchToolbarTree(projName, id, elm) {
+function launchToolbarTree(id, elm) {
 	var row = $("div#toolbar");
 	updateTree(id, elm, row);
-	updateButtons(projName, id, elm);
+	updateButtons(id, elm);
 	row.show(); // Show toolbar
 }
 
-function checkRunStatus(projName, id) {
+function checkRunStatus(id) {
 	$.ajax({
 		type : "GET",
 		url : '/protocol_status/?protocolId=' + id,
@@ -78,7 +78,7 @@ function checkRunStatus(projName, id) {
 				$("span#analyzeTool").hide();
 				$("span#stopTool").show();
 				$("a#stopTool").attr('href',
-				'javascript:stopProtocolForm("' + projName + '","' + id + '")');
+				'javascript:stopProtocolForm("' + id + '")');
 			}
 			else{
 				// Action Analyze Result Button
@@ -154,7 +154,7 @@ function launchViewer(id){
 	});	
 }
 
-function updateButtons(projName, id, elm){
+function updateButtons(id, elm){
 	// Action Edit Button
 	$("a#editTool").attr('href',
 	'javascript:popup("/form/?protocolId=' + id + '")');
@@ -165,13 +165,13 @@ function updateButtons(projName, id, elm){
 
 	// Action Delete Button
 	$("a#deleteTool").attr('href',
-			'javascript:deleteProtocolForm("' + projName + '","' + id + '")');
+			'javascript:deleteProtocolForm("' + id + '")');
 
 	// Action Browse Button
 	var aux = "javascript:alert('Not implemented yet')";
 	$("a#browseTool").attr('href', aux);
 	
-	checkRunStatus(projName, id);
+	checkRunStatus(id);
 	fillTabsSummary(id);
 }
 
@@ -205,114 +205,108 @@ function updateRow(id, elm, row){
 	elm.addClass('selected')
 }
 
-function switchGraph() {
-	var status = $("div#graphActiv").attr("data-mode");
-
-	// modification, element obtained from value in the toolbar
-	var id = $("div#toolbar").attr("value");
+function graphON(graph, graphTool, list, listTool){
+	// Graph ON
+	graph.attr("data-mode", "active");
+	graph.attr("style", "");
+	graphTool.hide();
 	
-	// Graph will be painted once
-	if ($("div#graphActiv").attr("data-time") == 'first') {
-		if (status == 'inactive') {
-			// Graph ON
-			$("div#graphActiv").attr("data-mode", "active");
-			$("div#graphActiv").attr("style", "");
-			$("div#treeTool").hide();
-			updateGraphView("True");
-			// Table OFF
-			$("div#runTable").attr("data-mode", "inactive");
-			$("div#runTable").attr("style", "display:none;");
-			$("div#listTool").show();
-		} else if (status == 'active') {
-			// Table ON	
-			$("div#runTable").attr("data-mode", "active");
-			$("div#runTable").attr("style", "");
-			$("div#listTool").hide();
-			// Graph OFF
-			$("div#graphActiv").attr("data-mode", "inactive");
-			$("div#graphActiv").attr("style", "display:none;");
-			$("div#treeTool").show();
-			updateGraphView("False")
+	// Table OFF
+	list.attr("data-mode", "inactive");
+	list.attr("style", "display:none;");
+	listTool.show();
+
+	// Update Graph View
+	updateGraphView("True");
+}
+
+function graphOFF(graph, graphTool, list, listTool){
+	// Table ON	
+	list.attr("data-mode", "active");
+	list.attr("style", "");
+	listTool.hide();
+	// Graph OFF
+	graph.attr("data-mode", "inactive");
+	graph.attr("style", "display:none;");
+	graphTool.show();
+	
+	// Update Graph View
+	updateGraphView("False")
+}
+
+function changeStatusGraph(status, graph, graphTool, list, listTool){
+	if (status == 'inactive') {
+		// Graph ON & Table OFF
+		graphON(graph, graphTool, list, listTool);
+	} else if (status == 'active') {
+		// Table ON	& Graph OFF
+		graphOFF(graph, graphTool, list, listTool);
+	}
+}
+
+function loadMarkedElement(status, id, graph){
+	if (status == 'inactive') {
+		var s = "graph_" + id;
+
+		if (s != "" || s != undefined) {
+			var nodeClear = graph.attr("data-option");
+			
+			if (nodeClear.length>0 && nodeClear != undefined) {
+				// Clear the node
+				var elmClear = $("div#" + nodeClear);
+				elmClear.css("border", "");
+			} 
+			// setElement in graph
+			graph.attr("data-option", s);
+
+			// Highlight the node
+			var elm = $("div#" + s);
+			elm.css("border", "2.5px solid Firebrick");
 		}
-		callPaintGraph();
-		$("div#graphActiv").attr("data-time", "not");
-		
-	} else {
-		if (status == 'inactive') {
-			// Graph ON
-			$("div#graphActiv").attr("data-mode", "active");
-			$("div#graphActiv").attr("style", "");
-			$("div#treeTool").hide();
-			updateGraphView("True");
-			// Table OFF
-			$("div#runTable").attr("data-mode", "inactive");
-			$("div#runTable").attr("style", "display:none;");
-			$("div#listTool").show();
-			
-			// DEPRECATED
-			// getElement in table 
-			// var s = $("tr.selected").attr("id");
-			// s = "graph_" + s;
-			
-			// melement marked obtained from value in the toolbar
-			s = "graph_" + id;
 
-			if (s != "" || s != undefined) {
-				var nodeClear = $("div#graphActiv").attr("data-option");
-				
-				if (nodeClear.length>0 && nodeClear != undefined) {
-					// Clear the node
-					var elmClear = $("div#" + nodeClear);
-					elmClear.css("border", "");
-				} 
-				// setElement in graph
-				$("div#graphActiv").attr("data-option", s);
+	} else if (status == 'active') {
+		if (id != "") {
+			var rowClear = $("tr.selected").attr("id");
+			if (rowClear != "") {
+				if (rowClear != id) {
+					// Clear the row selected
+					var elmClear = $("tr.selected");
+					elmClear.attr("style", "");
+					elmClear.attr("class", "runtr");
 
-				// Highlight the node
-				var elm = $("div#" + s);
-				elm.css("border", "2.5px solid Firebrick");
-			}
-
-		} else if (status == 'active') {
-			// Table ON
-			$("div#runTable").attr("data-mode", "active");
-			$("div#runTable").attr("style", "");
-			$("div#listTool").hide();
-			// Graph OFF
-			$("div#graphActiv").attr("data-mode", "inactive");
-			$("div#graphActiv").attr("style", "display:none;");
-			$("div#treeTool").show();
-			updateGraphView("False");
-			
-			// DEPRECATED getElement in graph
-			// var s = $("div#graphActiv").attr("data-option");
-			// var s = s.replace("graph_", "");
-			
-			// element marked obtained from value in the toolbar
-			var s = id
-
-			if (s != "") {
-				var rowClear = $("tr.selected").attr("id");
-				if (rowClear != "") {
-					if (rowClear != s) {
-						// Clear the row selected
-						var elmClear = $("tr.selected");
-//						elmClear.attr("style", "background-color: #fafafa;");
-						elmClear.attr("style", "");
-						elmClear.attr("class", "runtr");
-
-						// setElement in table
-						var elm = $("tr#" + s + ".runtr");
-						var projName = $("div#graphActiv").attr("data-project");
-						// elm.attr("style", "background-color:
-						// LightSteelBlue;");
-						// elm.attr("class","selected");
-						launchToolbarList(projName, s, elm);
-					}
+					// setElement in table
+					var elm = $("tr#" + id + ".runtr");
+					var projName = graph.attr("data-project");
+					// elm.attr("class","selected");
+					launchToolbarList(id, elm);
 				}
 			}
 		}
 	}
+}
+
+
+function switchGraph() {
+	// graph status (active or inactive) 
+	var status = $("div#graphActiv").attr("data-mode");
+
+	// element marked obtained from value in the toolbar
+	var id = $("div#toolbar").attr("value");
+	
+	//get row elements 
+	graph = $("div#graphActiv");
+	graphTool = $("div#treeTool");
+	list = $("div#runTable");
+	listTool = $("div#listTool");
+	
+	changeStatusGraph(status, graph, graphTool, list, listTool)
+		
+	// Graph will be painted once
+	if (graph.attr("data-time") == 'first') {
+		callPaintGraph();
+		graph.attr("data-time", "not");
+	} 
+	loadMarkedElement(status, id, graph)
 }
 
 
@@ -326,11 +320,9 @@ function updateGraphView(status) {
 /*
  * Dialog form to verify the right option to delete
  */
-function deleteProtocolForm(projName, protocolId) {
+function deleteProtocolForm(protocolId) {
 
 	var msg = "</td><td class='content' value='"
-			+ projName
-			+ "-"
 			+ protocolId
 			+ "'><strong>ALL DATA</strong> related to this <strong>protocol run</strong>"
 			+ " will be <strong>DELETED</strong>. Do you really want to continue?</td></tr></table>";
@@ -365,9 +357,11 @@ function deleteProtocolForm(projName, protocolId) {
  * Method to execute a delete by a protocol
  */
 function deleteProtocol(elm) {
-	var value = elm.attr('value').split("-");
-	var projName = value[0];
-	var protId = value[1];
+//	var value = elm.attr('value').split("-");
+//	var projName = value[0];
+//	var protId = value[1];
+	
+	var protId = elm.attr('value');
 	
 	$.ajax({
 		type : "GET",
@@ -391,11 +385,9 @@ function deleteProtocol(elm) {
 /*
  * Dialog form to verify the right option to stop a protocol
  */
-function stopProtocolForm(projName, protocolId) {
+function stopProtocolForm(protocolId) {
 		
 	var msg = "<td class='content' value='"
-			+ projName
-			+ "-"
 			+ protocolId
 			+ "'>This <strong>protocol run</strong>"
 			+ " will be <strong>STOPPED</strong>. Do you really want to continue?</td>";
@@ -419,8 +411,8 @@ function stopProtocolForm(projName, protocolId) {
 		} ],
 		callback : function(val) {
 			if (val == 'Y') {
-				window.location.href = "/project_content/?projectName="
-						+ projName;
+//				window.location.href = "/project_content/?projectName="
+//						+ projName;
 			}
 		}
 	});
@@ -430,9 +422,12 @@ function stopProtocolForm(projName, protocolId) {
  * Method to stop the run for a protocol
  */
 function stopProtocol(elm) {
-	var value = elm.attr('value').split("-");
-	var projName = value[0];
-	var protId = value[1];
+//	var value = elm.attr('value').split("-");
+//	var projName = value[0];
+//	var protId = value[1];
+	
+	var protId = elm.attr('value');
+	
 	$.ajax({
 		type : "GET",
 		url : "/stop_protocol/?protocolId=" + protId
