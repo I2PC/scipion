@@ -466,12 +466,7 @@ function refreshRuns(){
 				}
 				else {
 					$('div#runsInfo').html(data);
-					// refresh the data
-					var row = $("div#toolbar");
-					
-//					updateRow(id, elm, row);
-//					updateTree(id,elm);
-//					updateButtons(projName, id, elm);
+					// refresh the data keeping the element marked
 				}
 			}
 		});
