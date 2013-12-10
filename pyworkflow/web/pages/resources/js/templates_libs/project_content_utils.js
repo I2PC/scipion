@@ -62,7 +62,7 @@ function launchToolbarList(projName, id, elm) {
  */
 function launchToolbarTree(projName, id, elm) {
 	var row = $("div#toolbar");
-	updateTree(id,elm);
+	updateTree(id, elm, row);
 	updateButtons(projName, id, elm);
 	row.show(); // Show toolbar
 }
@@ -175,7 +175,7 @@ function updateButtons(projName, id, elm){
 	fillTabsSummary(id);
 }
 
-function updateTree(id, elm){
+function updateTree(id, elm, row){
 	var oldSelect = $("div#graphActiv").attr("data-option");
 	var selected = "graph_" + id;
 
@@ -184,6 +184,7 @@ function updateTree(id, elm){
 			var aux = "div#" + oldSelect + ".window";
 			$(aux).css("border", "");
 		}
+		row.attr('value', id);
 		$("div#graphActiv").attr("data-option", selected);
 		elm.css("border", "2.5px solid Firebrick");
 	}
@@ -196,7 +197,9 @@ function updateRow(id, elm, row){
 //		rowOld.attr('class', 'runtr');
 		rowOld.removeClass('selected')
 	}
+	// add id value into the toolbar
 	row.attr('value', id);
+	
 //	elm.attr('style', 'background-color: LightSteelBlue;');
 //	elm.attr('class', 'selected');
 	elm.addClass('selected')
@@ -205,6 +208,9 @@ function updateRow(id, elm, row){
 function switchGraph() {
 	var status = $("div#graphActiv").attr("data-mode");
 
+	// modification, element obtained from value in the toolbar
+	var id = $("div#toolbar").attr("value");
+	
 	// Graph will be painted once
 	if ($("div#graphActiv").attr("data-time") == 'first') {
 		if (status == 'inactive') {
@@ -243,9 +249,13 @@ function switchGraph() {
 			$("div#runTable").attr("style", "display:none;");
 			$("div#listTool").show();
 			
-			// getElement in table
-			var s = $("tr.selected").attr("id");
-			s = "graph_" + s;
+			// DEPRECATED
+			// getElement in table 
+			// var s = $("tr.selected").attr("id");
+			// s = "graph_" + s;
+			
+			// melement marked obtained from value in the toolbar
+			s = "graph_" + id;
 
 			if (s != "" || s != undefined) {
 				var nodeClear = $("div#graphActiv").attr("data-option");
@@ -274,9 +284,12 @@ function switchGraph() {
 			$("div#treeTool").show();
 			updateGraphView("False");
 			
-			// getElement in graph
-			var s = $("div#graphActiv").attr("data-option");
-			var s = s.replace("graph_", "");
+			// DEPRECATED getElement in graph
+			// var s = $("div#graphActiv").attr("data-option");
+			// var s = s.replace("graph_", "");
+			
+			// element marked obtained from value in the toolbar
+			var s = id
 
 			if (s != "") {
 				var rowClear = $("tr.selected").attr("id");
@@ -300,8 +313,8 @@ function switchGraph() {
 			}
 		}
 	}
-	
 }
+
 
 function updateGraphView(status) {
 	$.ajax({
@@ -309,7 +322,6 @@ function updateGraphView(status) {
 		url : "/update_graph_view/?status=" + status
 	});
 }
-
 
 /*
  * Dialog form to verify the right option to delete
