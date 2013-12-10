@@ -133,7 +133,7 @@ function fillUL(list, ulId, icon) {
 //				+ '"target="_blank"><img src="../../../../resources/' + icon + '" /> '
 //				+ list[i].name + '</a></li>');
 		ul.append('<li><a href="/visualize_object/?objectId=' + list[i].id
-				+ '"target="_blank"><i class="fa ' + icon + '"></i>'
+				+ '"target="_blank"><i class="fa ' + icon + '" style="margin-right:10px;"></i>'
 				+ list[i].name + '</a></li>');
 		
 	}
@@ -333,13 +333,13 @@ function deleteProtocolForm(projName, protocolId) {
 			id : 0,
 			label : 'Yes',
 			val : 'Y',
-			btnClass : 'btn-select',
+			btnClass : 'fa-check',
 			btnFunc : 'deleteProtocol'
 		}, {
 			id : 1,
 			label : 'No',
 			val : 'C',
-			btnClass : 'btn-cancel'
+			btnClass : 'fa-ban'
 		} ],
 		callback : function(val) {
 			if (val == 'Y') {
@@ -398,13 +398,13 @@ function stopProtocolForm(projName, protocolId) {
 			id : 0,
 			label : 'Yes',
 			val : 'Y',
-			btnClass : 'btn-select',
+			btnClass : 'fa-check',
 			btnFunc : 'stopProtocol'
 		}, {
 			id : 1,
 			label : 'No',
 			val : 'C',
-			btnClass : 'btn-cancel'
+			btnClass : 'fa-ban'
 		} ],
 		callback : function(val) {
 			if (val == 'Y') {

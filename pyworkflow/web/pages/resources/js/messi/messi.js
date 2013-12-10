@@ -51,11 +51,18 @@ function Messi(data, options) {
       var funcName = (_this.options.buttons[i]["btnFunc"]) ? _this.options.buttons[i]["btnFunc"] : '';
 // href="javascript:getList(document.getElementsById(""))"
       var addon="href='#'";
-      if(cls=="btn-select"){
+//      if(cls=="btn-select"){
+      if(cls=="fa-check"){
 // var addon = "onClick=javascript:processSelection(jQuery('div#content'));";
-    	  var addon = "onClick=javascript:"+ funcName + "(jQuery('.content'));";
+//    	  var addon = "onClick=javascript:"+ funcName + "(jQuery('.content'));";
+    	  var addon = "javascript:"+ funcName + "(jQuery('.content'));";
     	  }
-      var btn = jQuery('<span class="btnbox"><button class="btn ' + cls + '"'+ addon +' >' + _this.options.buttons[i].label + '</button></span>').data('value', _this.options.buttons[i].val);
+      else{
+    	  var addon = "#"
+      }
+//      var btn = jQuery('<span class="btnbox"><button class="btn ' + cls + '"'+ addon +' >' + _this.options.buttons[i].label + '</button></span>').data('value', _this.options.buttons[i].val);
+      
+      var btn = jQuery('<span class="btnbox"><a class="btn buttonGrey " href="'+ addon +'"><i class="fa ' + cls + '"></i>'+_this.options.buttons[i].label + '</a></span>').data('value', _this.options.buttons[i].val);
       btn.bind('click', function() {
         var value = jQuery.data(this, 'value');
         var after = (_this.options.callback != null) ? function() { _this.options.callback(value); } : null;

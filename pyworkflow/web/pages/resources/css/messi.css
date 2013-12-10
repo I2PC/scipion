@@ -72,7 +72,7 @@
 	background-image: none
 }
 
-.btn-close {
+/* .btn-close {
 	background: url(../../../resources/dialog_close.png) 0.5em no-repeat;
 	background-size: 20%;
 	font-size: 0.8em;
@@ -91,54 +91,45 @@
 
 .btn-close:hover {
 	background-color: white;
-}
+} */
 
-.btn-cancel {
+/* .btn-cancel {
 	background: url(../../../resources/dialog_cancel.png) 0.5em no-repeat;
 	background-size: 20%;
 	font-size: 0.8em;
-/* 	color: white; */
 	width: 7.2em;
 	height: 2em;
-/* 	background-color: FireBrick; */
 	padding: 1px;
 	padding-left: 1.7em;
 	font-weight: bold;
 	letter-spacing: 0.2em;
 	text-align: center;
 	font-weight: bold;
-	/* 	margin-bottom: 0.5em; */
 	margin: 0 0.5em 0.5em 0.5em;
 }
 
 .btn-cancel:hover {
 	background-color: white;
-/* 	color: black; */
-}
+} */
 
-.btn-select {
+/* .btn-select {
 	background: url(../../../resources/dialog_ok.png) 0.5em no-repeat;
 	background-size: 20%;
 	font-size: 0.8em;
-/* 	color: white; */
 	width: 7.2em;
 	height: 2em;
-/* 	background-color: LimeGreen; */
 	padding: 1px;
 	padding-left: 1.7em;
 	font-weight: bold;
 	letter-spacing: 0.2em;
 	text-align: center;
 	font-weight: bold;
-	/* 	margin-bottom: 0.5em; */
 	margin: 0 0.5em 0.5em 0.5em;
-}
+} */
 
-.btn-select:hover {
+/* .btn-select:hover {
 	background-color: white;
-/* 	color: black; */
-}
-
+} */
 .messi .btn-success:hover,.messi .btn-success:active,.messi .btn-success.active,.messi .btn-success.disabled,.messi .btn-success[disabled]
 	{
 	background-color: #51a351;
@@ -153,8 +144,7 @@
 	overflow: hidden;
 }
 
-.messi-content p {
-	/* 	margin: 0 0 1.3em; */
+.messi-content p { /* 	margin: 0 0 1.3em; */
 	/* 	line-height: 1.3em */
 	
 }
@@ -182,10 +172,15 @@
 }
 
 .messi-actions {
-	padding-top: 8px;
-	margin: 0 10px;
-	border-top: 1px solid #eee;
+	margin: 10px;
 	-webkit-box-orient: horizontal;
 	-moz-box-orient: horizontal;
 	text-align: center;
+}
+
+.btnbox{
+	margin: 10px;
+}
+.btn i{
+	margin-right: 5px;
 }
