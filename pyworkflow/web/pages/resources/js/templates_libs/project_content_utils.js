@@ -286,9 +286,9 @@ function switchGraph() {
 	
 	//get row elements 
 	var graph = $("div#graphActiv");
-	var graphTool = $("div#treeTool");
+	var graphTool = $("span#treeTool");
 	var list = $("div#runTable");
-	var listTool = $("div#listTool");
+	var listTool = $("span#listTool");
 	
 	changeStatusGraph(status, graph, graphTool, list, listTool)
 		
@@ -298,9 +298,8 @@ function switchGraph() {
 		graph.attr("data-time", "not");
 	} 
 	
-	markElmGraph(id, graph)
-	markElmList(id, graph)
-	
+	markElmGraph(id, graph);
+	markElmList(id, graph);
 }
 
 
@@ -444,7 +443,7 @@ function changeTreeView(){
 /*
  * Method to update the run list/graph
  */
-function refreshRuns(){
+function refreshRuns(mode){
 	$(function() {
 		$.ajax({
 			url : '/run_table_graph/',
@@ -464,8 +463,12 @@ function refreshRuns(){
 		});
   	});
 	
-	var updatetimer = setTimeout(function(){ 
-		refreshRuns();
-  	}, 3000);
+	if(mode=true){
+		var updatetimer = setTimeout(function(){ 
+			refreshRuns();
+	  	}, 3000);
+	}
 }
+
+
 

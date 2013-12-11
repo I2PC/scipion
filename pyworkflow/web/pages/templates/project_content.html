@@ -62,7 +62,7 @@
 	});
 	
 	$(document).ready(function() {
- 		refreshRuns();
+  		refreshRuns(true);
 	});	
 	
 </script>
@@ -86,12 +86,15 @@
 
 {% block contentNorth %}
 <span style="float:right;">
-	<div id="treeTool">
+	<span id="treeTool">
 		<a href="javascript:switchGraph();"><i class="fa fa-sitemap" style="margin-right:5px"></i>Tree</a>
-	</div>
-	<div id="listTool" style="display:none;">
+	</span>
+	<span id="listTool" style="display:none;">
 		<a href="javascript:switchGraph();"><i class="fa fa-bars" style="margin-right:5px"></i>List</a>
-	</div>
+	</span>
+	<span id="refreshTool" style="display:both;">
+		<a href="javascript:refreshRuns(false);"><i class="fa fa-refresh" style="margin-right:5px"></i>Refresh</a>
+	</span>
 </span>
 <div id="toolbar" style="display: none;">
 	<span><a id="editTool" href=""><i class="fa fa-pencil" style="margin-right:5px"></i>Edit</a></span>
