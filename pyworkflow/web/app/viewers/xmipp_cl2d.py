@@ -25,7 +25,7 @@
 # **************************************************************************
 
 import os
-from views_util import *
+from pyworkflow.web.app.views_util import *
 
 def viewerCL2D(request, protocolViewer):
     ioDict = {}

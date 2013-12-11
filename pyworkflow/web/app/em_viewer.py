@@ -36,12 +36,13 @@ from pyworkflow.em.packages.xmipp3.convert import writeSetOfParticles
 from pyworkflow.em.packages.xmipp3.plotter import XmippPlotter
 from pyworkflow.viewer import WEB_DJANGO
 
-from xmipp_viewer_ml2d import *
-from xmipp_viewer_cl2d import *
-from xmipp_viewer_ml3d import *
-
-from spider_viewer_capca import *
-from spider_viewer_ward import *
+# XMIPP
+from viewers.xmipp_ml2d import *
+from viewers.xmipp_cl2d import *
+from viewers.xmipp_ml3d import *
+# SPIDER
+from viewers.spider_capca import *
+from viewers.spider_ward import *
 
 ############## 1ST STEP: LAUNCH VIEWER METHODS ##############
 def launch_viewer(request):

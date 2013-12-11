@@ -24,7 +24,7 @@
 # *
 # **************************************************************************
 
-from views_util import *
+from pyworkflow.web.app.views_util import *
 
 def viewerCAPCA(request, protocolViewer):
     ioDict = {}
