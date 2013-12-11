@@ -82,9 +82,9 @@ class ProtCreateVolumeMask(XmippProtocol):
                     messages.append("   Automatically segmented")
                 else:
                     m="   Segmented to a mass of "
-                    if self.SegmentationType=="Voxel mass":
+                    if self.SegmentationType=="Number of voxels":
                         m+="%d voxels"%(int(self.SegmentationMass))
-                    elif self.SegmentationType=="Aminoacid mass":
+                    elif self.SegmentationType=="Number of aminoacids":
                         m+="%d aminoacids"%(int(self.SegmentationMass))
                     elif self.SegmentationType=="Dalton mass":
                         m+="%d daltons"%(int(self.SegmentationMass))
@@ -133,9 +133,9 @@ def threshold(log,WorkingDir,InModel,Threshold):
 def segment(log,WorkingDir,InModel,SegmentationType,SegmentationMass,Ts):
     fnMask="%s/mask.vol"%WorkingDir
     args="-i %s -o %s --method "%(InModel,fnMask)
-    if SegmentationType=="Voxel mass":
+    if SegmentationType=="Number of voxels":
         args+="voxel_mass %d"%(int(SegmentationMass))
-    elif SegmentationType=="Aminoacid mass":
+    elif SegmentationType=="Number of aminoacids":
         args+="aa_mass %d %f"%(int(SegmentationMass),float(Ts))
     elif SegmentationType=="Dalton mass":
         args+="dalton_mass %d %f"%(int(SegmentationMass),float(Ts))
