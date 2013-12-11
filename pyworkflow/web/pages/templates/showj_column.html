@@ -354,8 +354,8 @@ function setElementsEditable(elements){
 				var rowId =$(nTd).text()
 				
 				/*Keep changes in global variable */
-				if ($("#saveButton").hasClass("saveOff")){
-					$("#saveButton").toggleClass("saveOn").toggleClass("saveOff")
+				if (!$("#saveButton").hasClass("buttonGreyHovered")){
+					$("#saveButton").toggleClass("buttonGreyHovered")
 				}
 				
 				/*Keep changes in global variable */
