@@ -142,14 +142,14 @@ void MpiFileMutex::lock()
 {
     Mutex::lock();
     lseek(lockFile, 0, SEEK_SET);
-    if (!lockf(lockFile, F_LOCK, 0))
+    if (lockf(lockFile, F_LOCK, 0)==-1)
     	REPORT_ERROR(ERR_IO_NOPERM,"Cannot lock file");
 }
 
 void MpiFileMutex::unlock()
 {
     lseek(lockFile, 0, SEEK_SET);
-    if (!lockf(lockFile, F_ULOCK, 0))
+    if (lockf(lockFile, F_ULOCK, 0)==-1)
     	REPORT_ERROR(ERR_IO_NOPERM,"Cannot unlock file");
     Mutex::unlock();
 }
