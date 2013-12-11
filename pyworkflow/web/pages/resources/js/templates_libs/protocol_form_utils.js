@@ -165,8 +165,8 @@ $(document).ready(function() {
 			var action = "/"+ mode +"/";
 
 			$.post(action, $("#protocolForm").serialize(), function(json) {
-//				$('.messi').remove();
-//				$('.messi-modal').remove();				
+				$('.messi').remove();
+				$('.messi-modal').remove();				
 				popUpJSON(json);
 			},"json");			
 		} 

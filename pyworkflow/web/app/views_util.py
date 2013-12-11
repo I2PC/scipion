@@ -65,7 +65,9 @@ cssDict = {'project_content': 'project_content_style.css',
            'form': 'form.css',
            'ui_smoothness': 'jquery-ui_smoothness.css',
            'jquery_ui': 'jquery-ui.css',
-           'showj_demo_table_jui': 'demo_table_jui.css'
+           'showj_demo_table_jui': 'demo_table_jui.css',
+           'wizard': 'wizard_style.css',
+           'font_awesome': 'font-awesome/css/font-awesome.min.css'
            }
 
 jsDict = {'jquery': 'jquery/jquery.js',
