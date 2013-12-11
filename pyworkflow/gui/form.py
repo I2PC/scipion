@@ -530,9 +530,9 @@ class FormWindow(Window):
         from pyworkflow.em import findWizards
         self.wizards = findWizards(protocol, DESKTOP_TKINTER)
         
-        self.fontBig = tkFont.Font(size=12, family='verdana', weight='bold')
-        self.font = tkFont.Font(size=10, family='verdana')#, weight='bold')
-        self.fontBold = tkFont.Font(size=10, family='verdana', weight='bold')        
+        self.fontBig = tkFont.Font(size=12, family='helvetica', weight='bold')
+        self.font = tkFont.Font(size=10, family='helvetica')#, weight='bold')
+        self.fontBold = tkFont.Font(size=10, family='helvetica', weight='bold')        
         
         headerFrame = tk.Frame(self.root)
         headerFrame.grid(row=0, column=0, sticky='new')

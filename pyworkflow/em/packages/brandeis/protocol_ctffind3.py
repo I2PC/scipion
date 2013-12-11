@@ -36,6 +36,7 @@ from pyworkflow.utils.path import makePath, replaceBaseExt, join, basename
 class ProtCTFFind(ProtCTFMicrographs):
     """Protocol to perform CTF estimation on a set of micrographs
     using the ctffind3 program"""
+    _label = 'ctffind3'
 
     def _prepareCommand(self):
         self._params['step_focus'] = 1000.0

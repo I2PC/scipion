@@ -14,7 +14,9 @@
 						{% if prot.icon != None %}
 						<img src='/resources/{{prot.icon}}'>
 						{% endif %} 
-						<a href="javascript:popup('/form/?protocolClass={{prot.protClass}}')">{{prot.name}}</a>
+						<a href="javascript:popup('/form/?protocolClass={{prot.protClass}}')">
+							{{prot.name}}
+						</a>
 					</span>
 				</li>
 				{% elif prot.tag == 'protocol_base' %}
@@ -32,7 +34,9 @@
 							{% if prot2.icon != None %}
 							<img src='/resources/{{prot2.icon}}'>
 							{% endif %} 
-								<a href="javascript:popup('/form/?protocolClass={{prot2.name}}')">{{prot2.name}}</a>
+								<a href="javascript:popup('/form/?protocolClass={{prot2.name}}')">
+									{{prot2.name}}
+								</a>
 							</span>
 						</li>
 						{% endfor %}

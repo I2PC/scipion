@@ -41,7 +41,7 @@ REJ_PERCENTAGE =2
         
 class XmippProtScreenParticles(ProtProcessParticles):
     """ Protocol to screen a set of particles in the project. """
-         
+    _label = 'screen particles'
 
     def _defineProcessParams(self, form):
         

@@ -175,7 +175,7 @@ class ProjectConfig(OrderedObject):
     def __init__(self, **args):
         OrderedObject.__init__(self, **args)
         self.icon = String('scipion_bn.xbm')
-        self.logo = String('scipion_logo.gif')
+        self.logo = String('scipion_logo_small.gif')
 
 
 class MenuConfig(OrderedObject):

@@ -34,17 +34,10 @@ from data import *
 from constants import *
 
 
-class BrandeisDefFrealign(Form):
-    """Create the definition of parameters for the Frealign protocol"""
-    def __init__(self):
-        Form.__init__(self)
-        
-        self.addSection(label='Input')
-
 class ProtFrealign(ProtRefine3D):
     """Protocol to perform a volume from a SetOfParticles
     using the frealign program"""
-    _label = 'Frealign Protocol'
+    _label = 'frealign'
 
     def _defineParams(self, form):
         form.addSection(label='Input')

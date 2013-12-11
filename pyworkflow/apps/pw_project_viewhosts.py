@@ -193,7 +193,7 @@ class HostWindow(gui.Window):
         
         gui.Window.__init__(self, "host window", master, icon=master.icon, minsize=(700,500))
         self.host = host
-        self.font = tkFont.Font(size=10, family='verdana')#, weight='bold')
+        self.font = tkFont.Font(size=10, family='helvetica')#, weight='bold')
         self.varsDict = []
         self.saveCallback = saveCallback
         

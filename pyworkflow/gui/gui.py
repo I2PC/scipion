@@ -34,10 +34,12 @@ import tkFont
 from pyworkflow.object import OrderedObject
 from pyworkflow.utils.path import findResource
 
+from os.path import join, exists, basename
+
 """
 Some GUI CONFIGURATION parameters
 """
-cfgFontName = "Verdana"
+cfgFontName = "Helvetica"
 cfgFontSize = 10  
 
 #TextColor
@@ -130,7 +132,7 @@ def changeFontSize(font, event, minSize=-999, maxSize=999):
 IMAGE related variables and functions 
 """
 
-def getImage(imageName, imgDict=None, tk=True, percent=100):
+def getImage(imageName, imgDict=None, tkImage=True, percent=100):
     """ Search for the image in the RESOURCES path list. """
     if imageName is None:
         return None
@@ -146,7 +148,7 @@ def getImage(imageName, imgDict=None, tk=True, percent=100):
             fp = float(percent)/100.0
             newSize = int(fp * w), int(fp * h)
             image.thumbnail(newSize, Image.ANTIALIAS)
-        if tk:
+        if tkImage:
             image = ImageTk.PhotoImage(image)
         if imgDict is not None:
             imgDict[imageName] = image
@@ -179,7 +181,34 @@ def getImageFromPath(imagePath):
     
     return imgTk
 
+# Standard icons
 
+ICONS = {
+         'select': 'fa-check.gif',
+         'cancel': 'fa-ban.gif',
+#fa-check  -> Select
+#fa-ban -> Cancel
+#fa-times -> Close
+#fa-floppy-o (fa-save) -> Save
+#fa-eye -> Visualize
+#fa-pencil -> Edit
+#fa-cogs -> Execute
+#fa-question -> Help
+#fa-search -> Zoom
+#fa-sign-in , fa-sign-out -> Input & Output Parameters
+#fa-magic -> Wizard
+#fa-file-o -> New
+#fa-files-o (fa-copy) -> Copy
+#fa-trash-o -> Delete
+#fa-folder-open -> Browse
+#fa-sitemap -> Tree
+#fa-bars -> List
+#fa-refresh -> Refresh
+         }
+
+def getIcon(iconName, imgDict=None):
+    """ Search for standard icons. """
+    return getImage(ICONS[iconName], imgDict)
 
 """
 Windows geometry utilities
@@ -216,7 +245,6 @@ def configureWeigths(widget):
     for making childs widgets take the space available"""
     widget.columnconfigure(0, weight=1)
     widget.rowconfigure(0, weight=1)
-    
     
 class Window():
     """Class to manage a Tk windows.
@@ -342,4 +370,120 @@ class Window():
     def showInfo(self, msg, header="Info"):
         from dialog import showInfo
         showInfo(header, msg, self.root)
+
+
+#TODO Move this to a less basic module such as: scipion-gui or similar
+# Here in gui should be more basic stuff
+
+VIEW_PROJECTS = 'Projects'
+VIEW_PROTOCOLS = 'Protocols'
+VIEW_DATA = 'Data'
+VIEW_HOSTS = 'Hosts'
+VIEW_LIST = [VIEW_PROTOCOLS, VIEW_DATA, VIEW_HOSTS]   
+
+     
+class WindowBase(Window):
+    """Base Template Window
+    It extends from Window and add some layout functions (header and footer)
+    """
+    def __init__(self, title, masterWindow=None, weight=True, minsize=(500, 300),
+                 icon="scipion_bn.xbm", **args):
+        Window.__init__(self, title, masterWindow, weight=weight, icon=icon, minsize=(900,500))
+        
+        content = tk.Frame(self.root)
+        content.columnconfigure(0, weight=1)
+        content.rowconfigure(1, weight=1)
+        content.grid(row=0, column=0, sticky='news')
+        self.content = content
+        
+        Window.createMainMenu(self, self.menuCfg)
+        
+        self.header = self.createHeaderFrame(content)
+        self.header.grid(row=0, column=0, sticky='new')
+        
+        self.footer = tk.Frame(content, bg='white')
+        self.footer.grid(row=1, column=0, sticky='news') 
+        
+        self.view, self.viewWidget = None, None
+        
+        
+        from pyworkflow.apps.pw_manager import ProjectsView
+        from pyworkflow.apps.pw_project import DataView
+        from pyworkflow.apps.pw_project_viewprotocols import ProtocolsView
+        from pyworkflow.apps.pw_project_viewhosts import HostsView
+        
+        self.viewFuncs = {VIEW_PROJECTS: ProjectsView,
+                          VIEW_PROTOCOLS: ProtocolsView,
+                          VIEW_DATA: DataView,
+                          VIEW_HOSTS: HostsView
+                          }
+        
+    def createHeaderFrame(self, parent):
+        
+        """ Create the Header frame at the top of the windows.
+        It has (from left to right):
+            - Main application Logo
+            - Project Name
+            - View selection combobox
+        """
+        header = tk.Frame(parent, bg='white')        
+        header.columnconfigure(1, weight=1)
+        header.columnconfigure(2, weight=1)
+        # Create the SCIPION logo label
+        logoImg = self.getImage(self.generalCfg.logo.get(), percent=50)
+        logoLabel = tk.Label(header, image=logoImg, 
+                             borderwidth=0, anchor='nw', bg='white')
+        logoLabel.grid(row=0, column=0, sticky='nw', padx=5, pady=5)
+        
+        # Create the Project Name label
+        self.projNameFont = tkFont.Font(size=-28, family='helvetica')
+        projLabel = tk.Label(header, text=self.projName if 'projName' in locals() else "", font=self.projNameFont,
+                             borderwidth=0, anchor='nw', bg='white', fg='#707070')
+        projLabel.grid(row=0, column=1, sticky='sw', padx=(20, 5), pady=10)
+        
+        # Create view selection frame
+        viewFrame = tk.Frame(header, bg='white')
+        viewFrame.grid(row=0, column=2, sticky='se', padx=5, pady=10)
+        
+        # Create gradient
+        from widgets import GradientFrame
+        GradientFrame(header, height=8, borderwidth=0).grid(row=1, column=0, columnspan=3, sticky='new')
+        
+        def addLink(elementText):
+            btn = tk.Label(viewFrame, text=elementText, cursor='hand2', fg="#6F3232", bg="white")
+            btn.bind('<Button-1>', lambda e:self._viewComboSelected(elementText))
+            return btn
+        
+        def addTube():        
+            tube = tk.Label(viewFrame, text="|", fg="#6F3232", bg="white", padx=5)
+            return tube
+        
+        for i, elementText in enumerate(VIEW_LIST):
+            btn = addLink(elementText)
+            btn.grid(row=0, column=i*2)
+            
+            if i < len(VIEW_LIST)-1:
+                tube = addTube()
+                tube.grid(row=0, column=(i*2)+1)
+        
+        return header
+    
+    def _viewComboSelected(self, elementText):
+        if elementText != self.view:
+            self.switchView(elementText)
+
+    def switchView(self, newView):
+        # Destroy the previous view if existing:
+        if self.viewWidget:
+            self.viewWidget.grid_forget()
+            self.viewWidget.destroy()
+        # Create the new view
+        self.viewWidget = self.viewFuncs[newView](self.footer, self)
+        # Grid in the second row (1)
+        self.viewWidget.grid(row=0, column=0, columnspan=10, sticky='news')
+        self.footer.rowconfigure(0, weight=1)
+        self.footer.columnconfigure(0, weight=1)
+        #header.columnconfigure(2, weight=1)
+        self.view = newView    
+
         

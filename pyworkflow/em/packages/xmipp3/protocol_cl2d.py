@@ -47,7 +47,7 @@ CL_ROBUST = 1
         
 class XmippProtCL2D(ProtClassify):
     """ Protocol to preprocess a set of micrographs in the project. """
-    _label = 'Xmipp CL2D'
+    _label = 'cl2d'
     
     def __init__(self, **args):
         if 'numberOfMpi' not in args:

@@ -135,8 +135,7 @@ function callPaintGraph() {
 								+ json[i].color + ";");
 			}
 			// After all nodes are positioned, then create the edges
-			// between
-			// them
+			// between them
 
 			for ( var i = 0; i < json.length; i++) {
 				for ( var j = 0; j < json[i].childs.length; j++) {
@@ -172,8 +171,7 @@ function paintBox(nodeSource, id, msg) {
 		var projName = $("div#graphActiv").attr("data-project");
 //		var onclick = "updateTabs('" + projName + "', '" + objId
 //				+ "',($(this)))";
-		var onclick = "launchToolbarTree('" + projName + "', '" + objId
-		+ "',($(this)))";
+		var onclick = "launchToolbarTree('" + objId	+ "',($(this)))";
 		var aux = '<div class="window" style="" onclick="' + onclick + '" id="'
 				+ id + '"><a href="' + href + '"><strong>' + msg
 				+ '</strong></a><br /></div>';

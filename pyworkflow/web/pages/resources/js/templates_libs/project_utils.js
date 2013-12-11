@@ -47,13 +47,13 @@ function createProjectForm() {
 			id : 0,
 			label : 'Ok',
 			val : 'Y',
-			btnClass : 'btn-select',
+			btnClass : 'fa-check',
 			btnFunc : 'createProject'
 		}, {
 			id : 1,
 			label : 'Cancel',
 			val : 'C',
-			btnClass : 'btn-cancel'
+			btnClass : 'fa-ban'
 		} ]
 	});
 }
@@ -85,13 +85,13 @@ function deleteProjectForm(projName) {
 			id : 0,
 			label : 'Yes',
 			val : 'Y',
-			btnClass : 'btn-select',
+			btnClass : 'fa-check',
 			btnFunc : 'deleteProject'
 		}, {
 			id : 1,
 			label : 'No',
 			val : 'C',
-			btnClass : 'btn-cancel'
+			btnClass : 'fa-ban'
 		} ]
 	});
 }

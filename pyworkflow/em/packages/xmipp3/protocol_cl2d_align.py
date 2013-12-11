@@ -38,7 +38,7 @@ from glob import glob
         
 class XmippProtCL2DAlign(ProtAlign):
     """ Protocol to align a set of particles. """
-    _label = 'Xmipp CL2D Align'
+    _label = 'cl2d align'
 
     def _defineAlignParams(self, form):
         form.addParam('useReferenceImage', BooleanParam, default=True,

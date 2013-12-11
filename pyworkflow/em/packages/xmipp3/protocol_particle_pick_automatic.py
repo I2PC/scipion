@@ -40,6 +40,7 @@ MICS_OTHER = 1
 
 class XmippParticlePickingAutomatic(ProtParticlePicking, XmippProtocol):
     """Protocol to pick particles automatically in the project"""
+    _label = 'automatic picking'
     
     filesToCopy = ['model_training.txt', 'model_svm.txt', 'model_pca_model.stk', 'model_rotpca_model.stk', 
                'model_particle_avg.xmp', 'config.xmd', 'templates.stk']

@@ -60,78 +60,43 @@ from pw_browser import BrowserWindow
 
 from pyworkflow.gui.plotter import Plotter
 Plotter.setInteractive(True)   
-    
-VIEW_PROTOCOLS = 'Protocols'
-VIEW_DATA = 'Data'
-VIEW_HOSTS = 'Hosts'
    
    
-class ProjectWindow(gui.Window):
+class ProjectWindow(gui.WindowBase):
     def __init__(self, path, master=None):
         # Load global configuration
-        self.projName = 'Project: ' + basename(path)
+        self.projName = 'Project ' + basename(path)
         self.projPath = path
         self.loadProject()
         self.icon = self.generalCfg.icon.get()
         self.selectedProtocol = None
         self.showGraph = False
         
-        gui.Window.__init__(self, self.projName, master, icon=self.icon, minsize=(900,500))
+        gui.WindowBase.__init__(self, self.projName, master, icon=self.icon, minsize=(900,500))
         
-        content = tk.Frame(self.root)
-        content.columnconfigure(0, weight=1)
-        content.rowconfigure(1, weight=1)
-        content.grid(row=0, column=0, sticky='news')
-        self.content = content
+        self.switchView(gui.VIEW_PROTOCOLS)
+#        content = tk.Frame(self.root)
+#        content.columnconfigure(0, weight=1)
+#        content.rowconfigure(1, weight=1)
+#        content.grid(row=0, column=0, sticky='news')
+#        self.content = content
+#        
+#        self.createMainMenu()
         
-        self.createMainMenu()
+#        header = self.createHeaderFrame(content)
+#        header.grid(row=0, column=0, sticky='new')
         
-        header = self.createHeaderFrame(content)
-        header.grid(row=0, column=0, sticky='new')
-        
-        self.view, self.viewWidget = None, None
-        self.viewFuncs = {VIEW_PROTOCOLS: self.createProtocolsView,
-                          VIEW_DATA: self.createDataView,
-                          VIEW_HOSTS: self.createHostsView
-                          }
-        self.switchView(VIEW_PROTOCOLS)
+#        self.view, self.viewWidget = None, None
+#        self.viewFuncs = {VIEW_PROTOCOLS: self.createProtocolsView,
+#                          VIEW_DATA: self.createDataView,
+#                          VIEW_HOSTS: self.createHostsView
+#                          }
+#        self.switchView(VIEW_PROTOCOLS)
 
-    def createMainMenu(self):
-        gui.Window.createMainMenu(self, self.menuCfg) 
-        
-    def createHeaderFrame(self, parent):
-        """ Create the Header frame at the top of the windows.
-        It has (from left to right):
-            - Main application Logo
-            - Project Name
-            - View selection combobox
-        """
-        header = tk.Frame(parent, bg='white')        
-        header.columnconfigure(1, weight=1)
-        header.columnconfigure(2, weight=1)
-        # Create the SCIPION logo label
-        logoImg = self.getImage(self.generalCfg.logo.get(), percent=50)
-        logoLabel = tk.Label(header, image=logoImg, 
-                             borderwidth=0, anchor='nw', bg='white')
-        logoLabel.grid(row=0, column=0, sticky='nw', padx=5, pady=5)
-        # Create the Project Name label
-        self.projNameFont = tkFont.Font(size=12, family='verdana', weight='bold')
-        projLabel = tk.Label(header, text=self.projName, font=self.projNameFont,
-                             borderwidth=0, anchor='nw', bg='white')
-        projLabel.grid(row=0, column=1, sticky='sw', padx=(20, 5), pady=10)
-        # Create view selection frame
-        viewFrame = tk.Frame(header, bg='white')
-        viewFrame.grid(row=0, column=2, sticky='se', padx=5, pady=10)
-        viewLabel = tk.Label(viewFrame, text='View:', bg='white')
-        viewLabel.grid(row=0, column=0, padx=5)
-        self.viewVar = tk.StringVar()
-        self.viewVar.set(VIEW_PROTOCOLS)
-        viewCombo = ttk.Combobox(viewFrame, textvariable=self.viewVar, state='readonly')
-        viewCombo['values'] = [VIEW_PROTOCOLS, VIEW_DATA, VIEW_HOSTS]
-        viewCombo.grid(row=0, column=1)
-        viewCombo.bind('<<ComboboxSelected>>', self._viewComboSelected)
-        
-        return header
+#        gui.WindowBase.__init__(self, path, master)
+
+#    def createMainMenu(self):
+#        gui.Window.createMainMenu(self, self.menuCfg) 
     
     def getSettings(self):
         return self.settings
@@ -146,20 +111,6 @@ class ProjectWindow(gui.Window):
             print "Error try to save settings. " + str(ex) 
         gui.Window._onClosing(self)
     
-    def _viewComboSelected(self, e=None):
-        if self.viewVar.get() != self.view:
-            self.switchView(self.viewVar.get())
-        
-    def switchView(self, newView):
-        # Destroy the previous view if existing:
-        if self.viewWidget:
-            self.viewWidget.grid_forget()
-            self.viewWidget.destroy()
-        # Create the new view
-        self.viewWidget = self.viewFuncs[newView](self.content)
-        # Grid in the second row (1)
-        self.viewWidget.grid(row=1, column=0, sticky='news')
-        self.view = newView
         
 #    def handleResize(self):
 #        print self._w, self._h
@@ -196,7 +147,12 @@ class ProjectWindow(gui.Window):
         self.menuCfg = self.settings.getCurrentMenu()
         self.protCfg = self.settings.getCurrentProtocolMenu()
                 
-
+class DataView(tk.Frame):
+    def __init__(self, parent, windows, **args):
+        tk.Frame.__init__(self, parent, **args)
+        dataLabel = tk.Label(self, text='DATA VIEW not implemented.',
+                             font=self.projNameFont)
+        dataLabel.grid(row=0, column=0, padx=50, pady=50)
 
 if __name__ == '__main__':
     from pyworkflow.manager import Manager
