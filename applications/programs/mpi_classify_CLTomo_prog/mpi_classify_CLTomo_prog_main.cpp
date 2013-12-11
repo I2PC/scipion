@@ -258,6 +258,7 @@ void CL3DClass::transferUpdate()
         P.initZeros();
     }
 #ifdef DEBUG
+        P.printShape();
         std::cout << "Transfer finished. Press any key\n";
         char c;
         std::cin >> c;
@@ -637,11 +638,9 @@ void CL3D::initialize(MetaData &_SF,
                 progress_bar(idx);
         }
     }
-    std::cout << "Rank " << prm->node->rank << " at barrier" << std::endl;
     prm->taskDistributor->wait();
     if (prm->node->rank == 0)
         progress_bar(Nimgs);
-    std::cout << "Rank " << prm->node->rank << " finished" << std::endl;
 
     // Share all assignments
     shareAssignments(true, true);
@@ -695,6 +694,7 @@ void CL3D::write(const FileName &fnRoot, int level) const
     }
 }
 
+//#define DEBUG
 void CL3D::lookNode(MultidimArray<double> &I, int oldnode, int &newnode,
                     CL3DAssignment &bestAssignment)
 {
@@ -706,6 +706,9 @@ void CL3D::lookNode(MultidimArray<double> &I, int oldnode, int &newnode,
     CL3DAssignment assignment;
     bestAssignment.score = -1e38;
     size_t objId = bestAssignment.objId;
+#ifdef DEBUG
+    std::cout << "Looking for node ..." << std::endl;
+#endif
     for (int q = 0; q < Q; q++)
     {
         // Check if q is neighbour of the oldnode
@@ -737,6 +740,9 @@ void CL3D::lookNode(MultidimArray<double> &I, int oldnode, int &newnode,
             P[q]->fitBasic(Iaux, assignment);
 
             VEC_ELEM(corrList,q) = assignment.score;
+#ifdef DEBUG
+            std::cout << "   Trying node " << q << " score=" << assignment.score << " best=" << bestAssignment.score << std::endl;
+#endif
             if (assignment.score > bestAssignment.score ||
                 prm->classifyAllImages)
             {
@@ -750,11 +756,15 @@ void CL3D::lookNode(MultidimArray<double> &I, int oldnode, int &newnode,
     I = bestImg;
     newnode = bestq;
     bestAssignment.objId = objId;
+#ifdef DEBUG
+            std::cout << "   New node " << bestq << std::endl;
+#endif
 
     // Assign it to the new node
     if (newnode != -1)
     	P[newnode]->updateProjection(I, bestAssignment);
 }
+#undef DEBUG
 
 void CL3D::transferUpdates()
 {
@@ -805,11 +815,8 @@ void CL3D::run(const FileName &fnOut, int level)
         SF->fillConstant(MDL_REF, "-1");
         prm->taskDistributor->reset();
         size_t first, last;
-        MpiTaskDistributor taskDistributor2(Nimgs,1,prm->node);
-        //while (prm->taskDistributor->getTasks(first, last))
-        while (taskDistributor2.getTasks(first, last))
+        while (prm->taskDistributor->getTasks(first, last))
         {
-        	std::cout << "Rank " << prm->node->rank << " [" << first << "," << last << "]" << std::endl;
             for (size_t idx = first; idx <= last; ++idx)
             {
                 size_t objId = prm->objId[idx];
@@ -825,10 +832,8 @@ void CL3D::run(const FileName &fnOut, int level)
                     progress_bar(idx);
             }
         }
-        std::cout << "Rank " << prm->node->rank << " at barrier" << std::endl;
-        taskDistributor2.wait();
+        prm->taskDistributor->wait();
 
-    	std::cout << "Rank " << prm->node->rank << " finished iteration" << std::endl;
         FileName fnAux;
         for (int q=0; q<Q; q++)
         {
@@ -840,7 +845,6 @@ void CL3D::run(const FileName &fnOut, int level)
         }
 
         // Gather all pieces computed by nodes
-        std::cout << "Reducing ..." << std::endl;
         MPI_Allreduce(MPI_IN_PLACE, &corrSum, 1, MPI_DOUBLE, MPI_SUM,
                       MPI_COMM_WORLD);
         shareAssignments(true, true);

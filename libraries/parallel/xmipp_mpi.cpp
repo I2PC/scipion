@@ -30,41 +30,32 @@
  */
 void __threadMpiMasterDistributor(ThreadArgument &arg)
 {
-    std::cout << "Hello thread" << std::endl;
     MpiTaskDistributor * distributor = (MpiTaskDistributor*) arg.workClass;
     int size = distributor->node->size;
     size_t workBuffer[3];
     MPI_Status status;
     int finalizedWorkers = 0;
 
-    while (finalizedWorkers < size - 1)
+    while (finalizedWorkers < size-1)
     {
-    	std::cout << "wait for request form workers" << std::endl;
         //wait for request form workers
         MPI_Recv(0, 0, MPI_INT, MPI_ANY_SOURCE, 0, MPI_COMM_WORLD, &status);
-        std::cout << "Received worker request" << std::endl;
 
         workBuffer[0] =
             distributor->ThreadTaskDistributor::getTasks(workBuffer[1],
                     workBuffer[2]) ? 1 : 0;
         if (workBuffer[0] == 0) //no more jobs
-        {
             finalizedWorkers++;
-            std::cout << "One worker finished " << finalizedWorkers << std::endl;
-        }
         //send work
-        std::cout << "Sending work: " << workBuffer[0] << " " << workBuffer[1] << " " << workBuffer[2] << std::endl;
         MPI_Send(workBuffer, 3, MPI_LONG_LONG_INT, status.MPI_SOURCE, TAG_WORK,
                  MPI_COMM_WORLD);
     }
-    std::cout << "Bye thread" << std::endl;
 }
 
 MpiTaskDistributor::MpiTaskDistributor(size_t nTasks, size_t bSize,
                                        MpiNode *node) :
         ThreadTaskDistributor(nTasks, bSize)
 {
-	std::cout << "MpiTask " << nTasks << " " << bSize << std::endl;
     this->node = node;
     //if master create distribution thread
     if (node->isMaster())
@@ -96,11 +87,9 @@ bool MpiTaskDistributor::distribute(size_t &first, size_t &last)
     size_t workBuffer[3];
     MPI_Status status;
     //any message from the master, is tag is TAG_STOP then stop
-    std::cout << "Rank " << node->rank << " asking for work" << std::endl;
     MPI_Send(0, 0, MPI_INT, 0, 0, MPI_COMM_WORLD);
     MPI_Recv(workBuffer, 3, MPI_LONG_LONG_INT, 0, TAG_WORK, MPI_COMM_WORLD,
              &status);
-    std::cout << "Rank " << node->rank << " received " << workBuffer[0] << " " << workBuffer[1] << " " << workBuffer[2] << std::endl;
 
     first = workBuffer[1];
     last = workBuffer[2];
@@ -112,10 +101,7 @@ void MpiTaskDistributor::reset()
 {
 	ThreadTaskDistributor::reset();
     if (node->isMaster())
-    {
-    	std::cout << "Relaunching thread" << std::endl;
         manager->runAsync(__threadMpiMasterDistributor);
-    }
 }
 
 void MpiTaskDistributor::wait()
@@ -156,14 +142,14 @@ void MpiFileMutex::lock()
 {
     Mutex::lock();
     lseek(lockFile, 0, SEEK_SET);
-    if (!lockf(lockFile, F_LOCK, 0))
+    if (lockf(lockFile, F_LOCK, 0)==-1)
     	REPORT_ERROR(ERR_IO_NOPERM,"Cannot lock file");
 }
 
 void MpiFileMutex::unlock()
 {
     lseek(lockFile, 0, SEEK_SET);
-    if (!lockf(lockFile, F_ULOCK, 0))
+    if (lockf(lockFile, F_ULOCK, 0)==-1)
     	REPORT_ERROR(ERR_IO_NOPERM,"Cannot unlock file");
     Mutex::unlock();
 }

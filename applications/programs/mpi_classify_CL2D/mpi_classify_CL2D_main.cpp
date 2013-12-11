@@ -753,6 +753,7 @@ void CL2D::initialize(MetaData &_SF,
                 progress_bar(idx);
         }
     }
+    prm->taskDistributor->wait();
     if (prm->node->rank == 0)
         progress_bar(Nimgs);
     prm->useCorrelation = oldUseCorrelation;
@@ -809,6 +810,7 @@ void CL2D::initialize(MetaData &_SF,
                     progress_bar(idx);
             }
         }
+        prm->taskDistributor->wait();
         if (prm->node->rank == 0)
             progress_bar(Nimgs);
 
@@ -997,6 +999,7 @@ void CL2D::run(const FileName &fnODir, const FileName &fnOut, int level)
                     progress_bar(idx);
             }
         }
+        prm->taskDistributor->wait();
 
         // Gather all pieces computed by nodes
         MPI_Allreduce(MPI_IN_PLACE, &corrSum, 1, MPI_DOUBLE, MPI_SUM,
