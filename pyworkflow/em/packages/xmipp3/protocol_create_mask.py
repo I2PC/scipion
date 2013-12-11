@@ -34,7 +34,8 @@ from constants import *
       
 class XmippProtCreateGeo3DMask(ProtCreateMask3D):
     """ Create a 3D mask from a geometrical description (Sphere, Box, Cylinder...) """
-
+    _label = 'create mask'
+    
     def _defineParams(self, form):
         form.addSection(label='Input')
         form.addParam('size', IntParam, label="Mask size", 

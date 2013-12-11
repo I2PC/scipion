@@ -44,6 +44,8 @@ class SpiderProtAlignPairwise(ProtAlign, SpiderProtocol):
     "A variant to the Random Approximation of the reference-free algorithm."
     Ultramicroscopy. Vol 66: pg. 5-10.
     """
+    _label = 'align pairwise'
+    
     def __init__(self, **args):
         ProtAlign.__init__(self, **args)
         SpiderProtocol.__init__(self, **args)

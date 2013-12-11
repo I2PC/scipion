@@ -117,7 +117,8 @@ def populateTree(self, tree, treeItems, prefix, obj, level=0):
                 for k, v in emProtocolsDict.iteritems():
                     if not v is prot and issubclass(v, prot):# and Protocol.hasDefinition(v):
                         key = '%s.%s' % (item, k)
-                        tree.insert(item, 'end', key, text=k, tags=('protocol'))
+                        t = v.getClassLabel()
+                        tree.insert(item, 'end', key, text=t, tags=('protocol'))
                         
             else:
                 raise Exception("Class '%s' not found" % obj.value.get())

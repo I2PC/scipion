@@ -43,7 +43,7 @@ import xmipp, xmipp3
         
 class XmippProtProjMatch(xmipp3.XmippProtocol, ProtRefine3D, ProtClassify3D):
     """ Protocol for Xmipp-based ProjMatch/MLF3D classification. """
-    _label = 'Xmipp ProjMatch'
+    _label = 'projection matching'
     
     # Reconstruction method constants
     FOURIER = 0

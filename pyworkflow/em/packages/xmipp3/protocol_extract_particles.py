@@ -40,6 +40,7 @@ import xmipp
                 
 class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
     """Protocol to extract particles from a set of coordinates in the project"""
+    _label = 'extract particles'
     
     # Normalization type constants
     ORIGINAL = 0

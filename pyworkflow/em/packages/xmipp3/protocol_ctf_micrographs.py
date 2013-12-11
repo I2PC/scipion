@@ -38,6 +38,7 @@ from convert import *
 
 class XmippProtCTFMicrographs(ProtCTFMicrographs):
     """Protocol to perform CTF estimation on a set of micrographs in the project"""
+    _label = 'ctf estimation'
     
     __prefix = join('%(micDir)s','xmipp_ctf')
     _templateDict = {

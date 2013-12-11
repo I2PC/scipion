@@ -33,10 +33,6 @@ from pyworkflow.em import ProtPreprocessMicrographs
 
 
 
-class EmanProtPreprocessMicrographs(ProtPreprocessMicrographs):
-    pass
-
-
 def loadEnvironment():
     """ Load the environment variables needed for use EMAN2 tools. """
     # TODO: Read EMAN2DIR from the host config.

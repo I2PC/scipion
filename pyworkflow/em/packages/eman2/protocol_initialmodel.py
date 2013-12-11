@@ -39,7 +39,7 @@ import eman2
 
 
 class EmanProtInitModel(ProtInitialVolume):
-    _label = 'Eman Initial Model'
+    _label = 'initial model'
     
     def _defineParams(self, form):
         form.addSection(label='Input')
