@@ -167,13 +167,13 @@ protected:
     void processImage(const FileName &fnImg, const FileName &fnImgOut, const MDRow &rowIn, MDRow &rowOut)
     {
 
-        Image<char> img;
+        ImageGeneric img;
 
         switch (operation)
         {
         case HEADER_PRINT:
             img.read(fnImg, _HEADER_ALL);
-            std::cout << img <<std::endl;
+            img.print();
             break;
         case HEADER_EXTRACT:
             img.read(fnImg, _HEADER_ALL);
@@ -196,20 +196,22 @@ protected:
             img.write(fnImg, ALL_IMAGES, fnImg.isInStack(), WRITE_REPLACE);
             break;
         case HEADER_SAMPLINGRATE:
-            img.read(fnImg, _HEADER_ALL);
-            if (sampling < 0)
             {
-                double samplingRead;
-                img.MDMainHeader.getValue(MDL_SAMPLINGRATE_X, samplingRead);
-                std::cout << samplingRead << std::endl;
-            }
-            else
-            {
-                img.MDMainHeader.setValue(MDL_SAMPLINGRATE_X, sampling);
-                img.MDMainHeader.setValue(MDL_SAMPLINGRATE_Y, sampling);
-                img.MDMainHeader.setValue(MDL_SAMPLINGRATE_Z, sampling);
-                img.write(fnImg, ALL_IMAGES, fnImg.isInStack(), WRITE_REPLACE);
-                std::cout << "New sampling rate (Angstrom) = " << sampling << std::endl;
+                img.read(fnImg, _HEADER_ALL);
+                if (sampling < 0)
+                {
+                    double samplingRead;
+                    img.image->MDMainHeader.getValue(MDL_SAMPLINGRATE_X, samplingRead);
+                    std::cout << samplingRead << std::endl;
+                }
+                else
+                {
+                    img.image->MDMainHeader.setValue(MDL_SAMPLINGRATE_X, sampling);
+                    img.image->MDMainHeader.setValue(MDL_SAMPLINGRATE_Y, sampling);
+                    img.image->MDMainHeader.setValue(MDL_SAMPLINGRATE_Z, sampling);
+                    img.write(fnImg, ALL_IMAGES, fnImg.isInStack(), WRITE_REPLACE);
+                    std::cout << "New sampling rate (Angstrom) = " << sampling << std::endl;
+                }
             }
             break;
         case HEADER_TREE:
