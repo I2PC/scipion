@@ -83,11 +83,11 @@ class ProtCreateVolumeMask(XmippProtocol):
                 else:
                     m="   Segmented to a mass of "
                     if self.SegmentationType=="Voxel mass":
-                        m+="%d voxels"%(int(SegmentationMass))
+                        m+="%d voxels"%(int(self.SegmentationMass))
                     elif self.SegmentationType=="Aminoacid mass":
-                        m+="%d aminoacids"%(int(SegmentationMass))
+                        m+="%d aminoacids"%(int(self.SegmentationMass))
                     elif self.SegmentationType=="Dalton mass":
-                        m+="%d daltons"%(int(SegmentationMass))
+                        m+="%d daltons"%(int(self.SegmentationMass))
                     messages.append(m)
         elif self.MaskSource=="Geometry":
             if self.SimpleOperation=="Sphere":
