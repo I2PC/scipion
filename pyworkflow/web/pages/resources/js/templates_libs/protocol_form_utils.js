@@ -125,7 +125,7 @@ $(document).ready(function() {
 			},"json");
 		} else if (mode == 'wiz') {
 			
-			new Messi("<img src='/resources/tools_wizard.png'/>  Loading Wizard...",{
+			new Messi("<i class='fa fa-magic'/>  Loading Wizard...",{
 				modal : true
 				});
 			
@@ -157,7 +157,7 @@ $(document).ready(function() {
 			});
 		} else if (mode == 'viewer' || mode == 'viewerElement') {
 			
-			new Messi("<img src='/resources/visualize.gif'/>  Loading Viewer...",{
+			new Messi("<i class='fa fa-eye'/> Loading Viewer...",{
 				modal : true
 				});
 			
@@ -165,8 +165,8 @@ $(document).ready(function() {
 			var action = "/"+ mode +"/";
 
 			$.post(action, $("#protocolForm").serialize(), function(json) {
-				$('.messi').remove();
-				$('.messi-modal').remove();				
+//				$('.messi').remove();
+//				$('.messi-modal').remove();				
 				popUpJSON(json);
 			},"json");			
 		} 
