@@ -138,9 +138,6 @@ class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
         self.lastStepId = None
         self.prerequisites = [] # First operation should not depend on nothing before
         
-        # Downsample
-        self.__insertOneStep(self.doDownsample, "xmipp_transform_downsample",
-                            "-i %(inputMic)s --step %(downFactor)f --method fourier")
         # Crop
         self.__insertOneStep(self.doCrop, "xmipp_transform_window",
                             " -i %(inputMic)s --crop %(cropPixels)d -v 0")
@@ -150,6 +147,9 @@ class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
         # Remove bad pixels
         self.__insertOneStep(self.doRemoveBadPix, "xmipp_transform_filter",
                             " -i %(inputMic)s --bad_pixels outliers %(stddev)f -v 0")
+        # Downsample
+        self.__insertOneStep(self.doDownsample, "xmipp_transform_downsample",
+                            "-i %(inputMic)s --step %(downFactor)f --method fourier")
                 
         return self.lastStepId
     
