@@ -3,13 +3,16 @@
 <head>
 <title>Wizard - {% block title %}{% endblock %}</title>
 <meta charset='utf-8'>
-<link href="/static/css/general_style.css" rel="stylesheet" type="text/css">
-<link href="/static/css/wizard_style.css" rel="stylesheet" type="text/css">
-<link type="text/css" href="/static/css/jquery-ui.css" rel="stylesheet" />
-<link href="/static/css/font-awesome/css/font-awesome.min.css" rel="stylesheet" type="text/css">
-<script type="text/javascript" src="/static/js/jquery/jquery.js"></script>
-<script type="text/javascript" src="/static/js/jquery/jquery-ui.js"></script>
-<script type="text/javascript" src="/static/js/templates_libs/wizard_utils.js"></script>
+<!-- CSS -->
+<link href="{{general_style}}" rel="stylesheet" type="text/css">
+<link href="{{wizard_style}}" rel="stylesheet" type="text/css">
+<link href="{{jquery_ui_style}}" rel="stylesheet" type="text/css"/>
+<link href="{{font_awesome}}" rel="stylesheet" type="text/css">
+<!-- JS -->
+<script type="text/javascript" src="{{jquery}}"></script>
+<script type="text/javascript" src="{{jquery_ui}}"></script>
+<script type="text/javascript" src="{{wizard_utils}}"></script>
+<script type="text/javascript" src="{{raphael}}"></script>
 <script>
 	var firstElm;
 	

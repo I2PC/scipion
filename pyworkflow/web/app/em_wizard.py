@@ -57,6 +57,23 @@ def wizard(request):
         pass  # redirect to error: name is not a function
     else:
         return function(protocol, request)
+    
+def wiz_base(request, context):
+    context_base = {'general_style': getResourceCss('general'),
+               'wizard_style': getResourceCss('wizard'),
+               'jquery_ui_style': getResourceCss('jquery_ui'),
+               'font_awesome': getResourceCss('font_awesome'),
+               'jquery': getResourceJs('jquery'),
+               'jquery_ui': getResourceJs('jquery_ui'),
+               'wizard_utils': getResourceJs('wizard_utils'),
+               'raphael':getResourceJs('raphael'),
+               'projectName': request.session['projectName']
+               }
+    
+    context.update(context_base)
+    
+    return context
+
 
 def wiz_downsampling(protocol, request):
     micrographs = protocol.inputMicrographs.get()
@@ -68,13 +85,14 @@ def wiz_downsampling(protocol, request):
         mics = [mic for mic in micrographs]
         for m in mics:
             m.basename = basename(m.getFileName())
-            
+             
         context = {'objects': mics,
-                   'downFactor': protocol.downFactor.get(),
-                   'projectName': request.session['projectName']
+                   'downFactor': protocol.downFactor.get()
                    }
+
+        context = wiz_base(request, context)
         
-        return render_to_response('wiz_downsampling.html', context)
+        return render_to_response('wizards/wiz_downsampling.html', context)
 
 def wiz_ctf(protocol, request):
     micrographs = protocol.inputMicrographs.get()
@@ -89,13 +107,13 @@ def wiz_ctf(protocol, request):
             m.basename = basename(m.getFileName())    
         
         context = {'objects': mics,
-                   'raphael':getResourceJs('raphael'),
                    'high_res' : protocol.highRes.get(),
                    'low_res': protocol.lowRes.get(),
-                   'projectName': request.session['projectName']
                    }
         
-        return render_to_response('wiz_ctf.html', context)
+        context = wiz_base(request, context)
+        
+        return render_to_response('wizards/wiz_ctf.html', context)
 
 def wiz_particle_mask(protocol, request):
     particles = protocol.inputParticles.get()
@@ -119,13 +137,13 @@ def wiz_particle_mask(protocol, request):
                 mask_radius = xdim/2
                 
             context = {'objects': parts,
-                       'raphael': getResourceJs('raphael'),
                        'maskRadius': mask_radius,
                        'xdim':xdim,
-                       'projectName': request.session['projectName']
                        }
+
+            context = wiz_base(request, context)
             
-            return render_to_response('wiz_particle_mask.html', context)
+            return render_to_response('wizards/wiz_particle_mask.html', context)
 
 def wiz_particle_mask_radii(protocol, request):
     particles = protocol.inputParticles.get()
@@ -144,14 +162,14 @@ def wiz_particle_mask_radii(protocol, request):
             outer_radius = protocol.outerRadius.get()
                 
             context = {'objects': parts,
-                       'raphael': getResourceJs('raphael'),
                        'innerRadius': inner_radius,
                        'outerRadius': outer_radius,
                        'xdim':xdim,
-                       'projectName': request.session['projectName']
                        }
             
-            return render_to_response('wiz_particle_mask_radii.html', context)
+            context = wiz_base(request, context)
+            
+            return render_to_response('wizards/wiz_particle_mask_radii.html', context)
 
 def wiz_volume_mask(protocol, request):
     volumes = protocol.input3DReferences.get()
@@ -175,13 +193,13 @@ def wiz_volume_mask(protocol, request):
             mask_radius = xdim/2
             
         context = {'objects': vols,
-                   'raphael': getResourceJs('raphael'),
                    'maskRadius': mask_radius,
                    'xdim': xdim,
-                   'projectName': request.session['projectName']
                    }
         
-        return render_to_response('wiz_volumeImageHandler_mask.html', context)
+        context = wiz_base(request, context)
+        
+        return render_to_response('wizards/wiz_volume_mask.html', context)
 
 def wiz_volume_mask_radii(protocol, request):
     volumes = protocol.input3DReferences.get()
@@ -201,14 +219,14 @@ def wiz_volume_mask_radii(protocol, request):
         outer_radius = protocol.outerRadius.get()
             
         context = {'objects': vols,
-                   'raphael': getResourceJs('raphael'),
                    'innerRadius': inner_radius,
                    'outerRadius': outer_radius,
                    'xdim': xdim,
-                   'projectName': request.session['projectName']
                    }
         
-        return render_to_response('wiz_volume_mask_radii.html', context)
+        context = wiz_base(request, context)
+        
+        return render_to_response('wizards/wiz_volume_mask_radii.html', context)
 
 def wiz_filter_spider(protocol, request):
     particles = protocol.inputParticles.get()
@@ -223,15 +241,15 @@ def wiz_filter_spider(protocol, request):
             return HttpResponse("errorIterate")
         else:
             context = {'objects': parts,
-                       'raphael': getResourceJs('raphael'),
                        'filterType': protocol.filterType.get(),
                        'filterMode': protocol.filterMode.get(),
                        'usePadding': protocol.usePadding.get(),
                        'protocol': protocol,
-                       'projectName': request.session['projectName']
                        }
             
-            return render_to_response('wiz_filter_spider.html', context)
+            context = wiz_base(request, context)
+            
+            return render_to_response('wizards/wiz_filter_spider.html', context)
 
 def wiz_bandpass(protocol, request):
     particles = protocol.inputParticles.get()
@@ -249,10 +267,11 @@ def wiz_bandpass(protocol, request):
                        'lowFreq': protocol.lowFreq.get(),
                        'highFreq': protocol.highFreq.get(),
                        'decayFreq': protocol.freqDecay.get(),
-                       'projectName': request.session['projectName']
                        }
             
-            return render_to_response('wiz_bandpass.html', context)
+            context = wiz_base(request, context)
+            
+            return render_to_response('wizards/wiz_bandpass.html', context)
 
 def wiz_gaussian(protocol, request):
     particles = protocol.inputParticles.get()
@@ -268,10 +287,11 @@ def wiz_gaussian(protocol, request):
         else:
             context = {'objects': parts,
                        'freqSigma': protocol.freqSigma.get(),
-                       'projectName': request.session['projectName']
                        }
             
-            return render_to_response('wiz_gaussian.html', context)
+            context = wiz_base(request, context)
+            
+            return render_to_response('wizards/wiz_gaussian.html', context)
 
 def getParticleSubset(particles, num):
     """
