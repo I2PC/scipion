@@ -40,6 +40,8 @@ from glob import glob
 
 class SpiderProtCAPCA(SpiderProtocol):
     """ Correspondence Analysis or Principal Component Analysis. """
+    _label = 'CAPCA'
+    
     def __init__(self):
         SpiderProtocol.__init__(self)
         self._params = {'ext': 'stk',

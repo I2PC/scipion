@@ -38,7 +38,7 @@ from convert import createXmippInputVolumes, readSetOfVolumes
 
 class XmippProtPreprocessVolumes(ProtPreprocessVolumes, XmippProtocol):
     """ Protocol for Xmipp-based preprocess for volumes """
-    _label = 'Xmipp Preprocess Volumes'
+    _label = 'preprocess volumes'
       
     # Aggregation constants
     AGG_AVERAGE=0

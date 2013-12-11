@@ -37,7 +37,7 @@ import xmipp
 
 class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
     """Protocol to preprocess a set of micrographs in the project"""
-    _label = 'Xmipp Micrographs Preprocessing'
+    _label = 'preprocess micrographs'
 
     def __init__(self, **args):        
         ProtPreprocessMicrographs.__init__(self, **args)

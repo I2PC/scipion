@@ -38,7 +38,7 @@ from convert import createXmippInputImages, readSetOfVolumes
         
 class XmippProtML3D(ProtRefine3D, ProtClassify3D):
     """ Protocol for Xmipp-based ML3D/MLF3D classification. """
-    _label = 'Xmipp ML3D'
+    _label = 'ml3d'
     
     # Reconstruction method constants
     FOURIER = 0

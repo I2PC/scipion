@@ -101,6 +101,7 @@ class ProtRelionBase(EMProtocol):
 class Relion3DClassification(ProtClassify3D, ProtRelionBase):
     """Protocol to perform CTF estimation on a set of micrographs
     using the ctffind3 program"""
+    _label = '3D classify'
     
     def __init__(self, **args):
         ProtRelionBase.__init__(self, **args)

@@ -41,6 +41,8 @@ class SpiderProtAlignAPSR(ProtAlign, SpiderProtocol):
     """ Reference-free alignment shift and rotational alignment of an image series. 
     Uses Spider AP SR command.
     """
+    _label = 'align APSR'
+    
     def __init__(self, **args):
         ProtAlign.__init__(self, **args)
         SpiderProtocol.__init__(self, **args)

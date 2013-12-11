@@ -735,7 +735,13 @@ class Protocol(Step):
         return runName
     
     def getDefaultRunName(self):
-        return '%s.%s' % (self.getClassName(), self.strId())  
+        return '%s.%s' % (self.getClassName(), self.strId())
+    
+    @classmethod
+    def getClassLabel(cls):
+        """ Return a more readable string representing the protocol class """
+        label = getattr(cls, '_label', cls.__name__)
+        return "%s - %s" % (cls._package.__name__, label)
         
     def getSubmitDict(self):
         """ Return a dictionary with the necessary keys to

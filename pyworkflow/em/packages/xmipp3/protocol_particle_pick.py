@@ -38,6 +38,7 @@ from convert import createXmippInputMicrographs, readSetOfCoordinates
 
 class XmippProtParticlePicking(ProtParticlePicking, XmippProtocol):
     """Protocol to pick particles manually of a set of micrographs in the project"""
+    _label = 'manual picking'
     
     def __init__(self, **args):        
         ProtParticlePicking.__init__(self, **args)
