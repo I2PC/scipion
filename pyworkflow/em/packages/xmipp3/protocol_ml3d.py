@@ -57,9 +57,8 @@ class XmippProtML3D(ProtRefine3D, ProtClassify3D):
                       help='Select the input images from the project.'
                            'It should be a SetOfImages class')  
         #TODO: the following parameter should be a Pointer to a Volume and not a string containing the path      
-        form.addParam('ini3DrefVolumes', TextParam,
-                      label='Initial 3D reference volumes', 
-                      help='Initial 3D density maps with the same dimensions as your particles.')
+        form.addParam('ini3DrefVolumes', PointerParam, label='Initial 3D reference volumes',
+                      pointerClass='SetOfVolumes', help='Initial 3D density maps with the same dimensions as your particles.')
         form.addParam('numberOfSeedsPerRef', IntParam, default=1,
                       label='Number of seeds per reference',
                       help='The total number of seeds generated will be the number of provided '

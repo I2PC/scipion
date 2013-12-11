@@ -154,7 +154,7 @@ function renderElements(nRow, aData){
 	 for (var i in jsonTableLayoutConfiguration.columnsLayout){ 
 		 var columnLayoutConfiguration = jsonTableLayoutConfiguration.columnsLayout[i]
 		 
-		 console.log(columnLayoutConfiguration.columnLayoutProperties)
+		 /* console.log(columnLayoutConfiguration.columnLayoutProperties) */
 		 
 		 if (columnLayoutConfiguration.columnLayoutProperties.visible){
 	   		 if (typeof oTable!= 'undefined'){
@@ -218,15 +218,27 @@ function getHeaderWithIcon(text, columnLayoutProperties){
 	} */
 	
 	if (columnLayoutProperties.allowSetEditable){
-		iconElements+="<span class=\"css_right\"><div class=\"iconHeader "
+/* 		iconElements+="<span class=\"css_right\"><div class=\"iconHeader "
 		if (columnLayoutProperties.editable){iconElements+="editTableOn"}else{iconElements+="editTableOff"}
-		iconElements+="\" id=\""+text+"_editable_icon\" onclick=\"enableDisableEditableColumn(event,this)\"></div></span>"
+		iconElements+="\" id=\""+text+"_editable_icon\" onclick=\"enableDisableEditableColumn(event,this)\"></div></span>" */
+		
+		iconElements+="<span class=\"css_right fa-stack\"><a id=\""+ text+"_editable_icon\" href='#' onclick=\"enableDisableEditableColumn(event,this);\"><i class=\"fa fa-pencil fa-stack-1x"
+		/* if (columnLayoutProperties.renderable){iconElements+="fa-pencil"}else{iconElements+="fa-eye-slash"} */
+		iconElements+="\"></i><i id=\"banElement\" class=\"fa fa-stack-1x "
+		if (columnLayoutProperties.renderable){iconElements+="fa-times"}
+		iconElements+="\"></i></a></span>"
+		
 	}
 	
 	if (columnLayoutProperties.allowSetRenderable){
-		iconElements+="<span class=\"css_right\"><div class=\"iconHeader "
+		
+		/* iconElements+="<span class=\"css_right\"><div class=\"iconHeader "
 			if (columnLayoutProperties.renderable){iconElements+="renderTableOn"}else{iconElements+="renderTableOff"}
-		iconElements+="\" id=\""+text+"_renderable_icon\" onclick=\"enableDisableRenderColumn(event,this)\"></div></span>"
+		iconElements+="\" id=\""+text+"_renderable_icon\" onclick=\"enableDisableRenderColumn(event,this)\"></div></span>" */
+		
+		iconElements+="<span class=\"css_right\"><a id=\""+ text+"_renderable_icon\" href='#' onclick=\"javascript:enableDisableRenderColumn(event,this);\"><i class=\"fa "
+		if (columnLayoutProperties.renderable){iconElements+="fa-eye"}else{iconElements+="fa-eye-slash"}
+		iconElements+="\"></i></a></span>"
 	}
 	
 	return iconElements; 
@@ -283,8 +295,11 @@ function enableDisableColumn(event, element){
  * When column cell is image, it will change from img element to path text and viceversa 
  */
 function enableDisableRenderColumn(event, element){
+	console.log("taka")
+	console.log(element)
+	
 	/*  Switch button from on to off or viceversa*/
-	$(element).toggleClass("renderTableOn").toggleClass("renderTableOff")
+	$(element).find("i").toggleClass("fa-eye").toggleClass("fa-eye-slash")
 	
 	//From the image element we get the column header index
 	var thCell= $(element).closest('th')
@@ -293,7 +308,7 @@ function enableDisableRenderColumn(event, element){
 	//We enable/disable render event
 	var nTrs = oTable.fnGetNodes();
 	$('td:nth-child('+(iCol+1)+')', nTrs).each(function(){
-		if ($(element).hasClass("renderTableOn") && $(this).find("img").attr('src')== undefined){
+		if ($(element).find("i").hasClass("fa-eye") && $(this).find("img").attr('src')== undefined){
 			/* $(this).find("img").attr("src",$(this).find("img").data('real_src')) */
 			setImageSize(false)
 			initializeImageLoad(false)
@@ -304,7 +319,7 @@ function enableDisableRenderColumn(event, element){
 
 	/*  Update table layout configuration model*/
 	var labelColumn = thCell.attr("id").split("___")[0]
-	jsonTableLayoutConfiguration.columnsLayout[labelColumn].columnLayoutProperties.renderable=$(element).hasClass("renderTableOn")
+	jsonTableLayoutConfiguration.columnsLayout[labelColumn].columnLayoutProperties.renderable=$(element).find("i").hasClass("fa-eye")
 	
 	//This will avoid column sorting
 	event.stopPropagation() 
@@ -314,7 +329,7 @@ function enableDisableRenderColumn(event, element){
  * When column cell is text or a number, it will change from a text element to an input textfield and viceversa 
  */
 function enableDisableEditableColumn(event, element){
-	$(element).toggleClass("editTableOn").toggleClass("editTableOff")
+	$(element).find("#banElement").toggleClass("fa-times")
 	
 	//From the image element we get the column header index
 	var thCell= $(element).closest('th')
@@ -322,7 +337,7 @@ function enableDisableEditableColumn(event, element){
 	
 	//We enable/disable render event
 	var nTrs = oTable.fnGetNodes();
-	if ($(element).hasClass("editTableOn")){
+	if (!$(element).find("#banElement").hasClass("fa-times")){
 		$('td:nth-child('+(iCol+1)+')', nTrs).addClass('editable')
 		setElementsEditable('td:nth-child('+(iCol+1)+')')
 	}
@@ -336,7 +351,7 @@ function enableDisableEditableColumn(event, element){
 	
 	/*  Update table layout configuration model*/
 	var labelColumn = thCell.attr("id").split("___")[0]
-	jsonTableLayoutConfiguration.columnsLayout[labelColumn].columnLayoutProperties.editable=$(element).hasClass("editTableOn")
+	jsonTableLayoutConfiguration.columnsLayout[labelColumn].columnLayoutProperties.editable=!$(element).find("#banElement").hasClass("fa-times")
 	
 	//This will avoid column sorting
 	event.stopPropagation()
@@ -378,8 +393,8 @@ function setElementsEditable(elements){
 				var rowId =$(nTd).text()
 				
 				/*Keep changes in global variable */
-				if ($("#saveButton").hasClass("saveOff")){
-					$("#saveButton").toggleClass("saveOn").toggleClass("saveOff")
+				if (!$("#saveButton").hasClass("buttonGreyHovered")){
+					$("#saveButton").toggleClass("buttonGreyHovered")
 				}
 					
 				changes[label+"___"+rowId]=value
@@ -570,13 +585,13 @@ function saveTableConfiguration(){
 		newValue=$("#"+label+"_renderable").prop('checked')
 		if (newValue != columnLayoutProperties.renderable){
 			columnLayoutProperties.renderable=newValue
-			$("#"+label+"_renderable_icon").toggleClass("renderTableOn").toggleClass("renderTableOff")
+			$("#"+label+"_renderable_icon").find("i").toggleClass("fa-eye").toggleClass("fa-eye-slash")
 		}
 		
 		newValue=$("#"+label+"_editable").prop('checked')
 		if (newValue != columnLayoutProperties.editable){
 			columnLayoutProperties.editable=newValue
-			$("#"+label+"_editable_icon").toggleClass("editTableOn").toggleClass("editTableOff")
+			$("#"+label+"_editable_icon").find("#banElement").toggleClass("fa-times")
 		}
 		
 	}
@@ -600,8 +615,8 @@ function multipleEnableDisableImage(mode){
 		changes[checkbox_element.attr("id")]=integerValue
 	})
 
-	if ($("#saveButton").hasClass("saveOff")){
-		$("#saveButton").toggleClass("saveOn").toggleClass("saveOff")
+	if (!$("#saveButton").hasClass("buttonGreyHovered")){
+		$("#saveButton").toggleClass("buttonGreyHovered")
 	}
 	console.log(changes)
 }

@@ -36,10 +36,9 @@ from data import *
 from glob import glob
 import eman2
 
-
-
-class EmanProtInitModel(ProtInitialVolume):
-    _label = 'initial model'
+#TODO: Change the hierarchy (ProtInitialVolume for ProtPreprocessVolumes) when "Initial Volume" menu is created
+class EmanProtInitModel(ProtPreprocessVolumes):
+    _label = 'Eman Initial Model'
     
     def _defineParams(self, form):
         form.addSection(label='Input')

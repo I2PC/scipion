@@ -136,24 +136,14 @@ aside .galleryOn{
 
 aside .galleryOff{
 	background-image: url(/resources/showj/galleryViewOff.png);
-	
 }
 
 aside .visualizeVolOn{
 	background-image: url(/resources/showj/volumeOn.png);
-	
 }
 
 aside .visualizeVolOff{
 	background-image: url(/resources/showj/volumeOff.png);
-	
-}
-
-aside .optionsOff{
-	background-image: url(/resources/showj/galleryViewOff.png);
-}
-aside .optionsOn{
-	background-image: url(/resources/showj/galleryViewOn.png);
 }
 
 aside .arrowSectionMenu{
@@ -332,30 +322,19 @@ section .imageTitle{
 	width:20px;
 	height:20px;
 }
-.renderTableOn{
+/* .renderTableOn{
 	background-image: url(/resources/showj/renderTableOn.png);	
 }
 .renderTableOff{
 	background-image: url(/resources/showj/renderTableOff.png);	
-}
+} */
 
-.editTableOn{
+/* .editTableOn{
 	background-image: url(/resources/showj/editTableOn.png);	
 }
 .editTableOff{
 	background-image: url(/resources/showj/editTableOff.png);	
-}
-
-aside #saveButton{
-	width:27px;
-	height:27px;
-}
-.saveOn{
-	background-image: url(/resources/showj/saveOn.png);	
-}
-.saveOff{
-	background-image: url(/resources/showj/saveOff.png);
-}
+} */
 
 #table_container tbody tr.odd{
 	background-color: #FFF;

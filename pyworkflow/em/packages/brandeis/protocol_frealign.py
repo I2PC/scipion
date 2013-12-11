@@ -51,11 +51,6 @@ class ProtFrealign(ProtRefine3D):
                       label='Initial 3D reference volume:', 
                       help='Input 3D reference reconstruction.\n')
 
-#         self.addParam('input3DReference', PointerParam,
-#                       pointerClass='Volume',
-#                       label='Initial 3D reference volume:', 
-#                       help='Input 3D reference reconstruction.\n')
-        
         form.addParam('Firstmode', EnumParam, choices=['Simple search & Refine', 'Search, Refine, Randomise'],
                       label="Operation mode for iteration 1:", default=brandeis.MOD2_SIMPLE_SEARCH_REFINEMENT,
                       display=EnumParam.DISPLAY_COMBO,
