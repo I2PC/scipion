@@ -70,15 +70,15 @@ ACTION_CONTINUE = 'Continue'
 ACTION_RESULTS = 'Analyze results'
 
 ActionIcons = {
-    ACTION_EDIT: 'fa-pencil.gif',# 'edit.gif',
-    ACTION_COPY:  'fa-files-o.gif',
-    ACTION_DELETE:  'fa-trash-o.gif',
-    ACTION_REFRESH:  'fa-refresh.gif',
-    ACTION_STEPS:  'fa-folder-open.gif',
-    ACTION_TREE:  'fa-sitemap.gif',
-    ACTION_STOP: 'iconStop.png',
-    ACTION_CONTINUE: 'play.png',
-    ACTION_RESULTS: 'fa-eye.gif'
+    ACTION_EDIT: 'fa-pencil.png',# 'edit.gif',
+    ACTION_COPY:  'fa-files-o.png',
+    ACTION_DELETE:  'fa-trash-o.png',
+    ACTION_REFRESH:  'fa-refresh.png',
+    ACTION_STEPS:  'fa-folder-open.png',
+    ACTION_TREE:  'fa-sitemap.png',
+    ACTION_STOP: 'fa-stop.png', #'iconStop.png',
+    ACTION_CONTINUE: 'fa-play-circle-o.png', #'play.png',
+    ACTION_RESULTS: 'fa-eye.png'
                }
 
 STATUS_COLORS = {
@@ -232,13 +232,13 @@ class RunIOTreeProvider(TreeProvider):
             value = obj.get()
             info = {'key': value, 'text': value, 'values': (''), 'open': True}
         else:
-            image = 'fa-sign-out.gif'
+            image = 'fa-sign-out.png'
             parent = self.outputStr
             name = obj.getLastName()
             
             if isinstance(obj, Pointer):
                 obj = obj.get()
-                image = 'fa-sign-in.gif'
+                image = 'fa-sign-in.png'
                 parent = self.inputStr
                 objName = self.mapper.getFullName(obj)
                 name += '   (from %s)' % objName
