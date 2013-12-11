@@ -156,8 +156,8 @@
 		else{element_value = 1}
 		
 		/*Keep changes in global variable */
-		if ($("#saveButton").hasClass("saveOff")){
-			$("#saveButton").toggleClass("saveOn").toggleClass("saveOff")
+		if (!$("#saveButton").hasClass("buttonGreyHovered")){
+			$("#saveButton").toggleClass("buttonGreyHovered")
 		}
 			
 		changes[$(element).attr("id")]=element_value

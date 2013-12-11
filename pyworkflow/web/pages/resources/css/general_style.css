@@ -444,7 +444,7 @@ content:  "\0000a0";
     text-decoration: none;
 }
 .buttonGrey:hover,
-.buttonGrey:focus {
+.buttonGrey:focus, .buttonGreyHovered {
     border: 0px solid #a3a3a3;
     background: #992828;
     background: -webkit-gradient(linear, left top, left bottom, from(#ffffff), to(#e9e9e9));

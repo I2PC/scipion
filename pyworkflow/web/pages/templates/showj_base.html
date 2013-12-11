@@ -337,7 +337,8 @@
 	<!-- Save table change in metadata -->
 	<script type="text/javascript">
 	function saveShowjTable(){
-		if ($("#saveButton").hasClass("saveOn")){
+		if ($("#saveButton").hasClass("buttonGreyHovered")){
+			alert("witol")
 			$.ajax({
 				type : "POST",
 				url : "/save_showj_table/",
@@ -350,7 +351,8 @@
 					message = json.message;
 					if (message == 'Ok'){
 						changes={}
-						$("#saveButton").toggleClass("saveOn").toggleClass("saveOff")
+						/* $("#saveButton").toggleClass("saveOn").toggleClass("saveOff") */
+						$("#saveButton").toggleClass("buttonGreyHovered")
 					}
 					else{
 						alert(message)
@@ -362,8 +364,7 @@
 	</script>
 	<script type="text/javascript">	
 	function showHideOptionMenu(){
-		$("#optionsButton").toggleClass("optionsOff")
-		$("#optionsButton").toggleClass("optionsOn")
+		$("#optionsButton").toggleClass("buttonGreyHovered")
 		$("#optionsList").toggleClass("optionsListOn")
 	}
 	</script>
@@ -526,14 +527,16 @@
 	</div>
 	
 	<div id="saveContainer" class="sectionMenu">
-		<button id="saveButton" onclick="saveShowjTable(); return false;" class="saveOff">
-		</button>
+		<a id="saveButton" href="javascript:saveShowjTable();" class="btn buttonGrey" style="padding: 5px 10px;"><i class="fa fa-save"></i></a>
 	</div>
 	
 	
 	<div id="optionsContainer" class="sectionMenu">
-		<button id="optionsButton" class="optionsOff submitButton" onclick="showHideOptionMenu(); return false;">
-		</button>
+		<a id="optionsButton" href="javascript:showHideOptionMenu();" class="btn buttonGrey" style="padding: 5px 10px;"><i class="fa fa-wrench"></i></a>
+		
+		
+		<!-- <button id="optionsButton" class="optionsOff submitButton" onclick="showHideOptionMenu(); return false;">
+		</button> -->
 	
 		<ul id="optionsList">
 			<li>{{ form.mirrorY }} {{ form.mirrorY.label_tag }}</li>
