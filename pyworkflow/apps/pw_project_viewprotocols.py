@@ -74,7 +74,7 @@ ActionIcons = {
     ACTION_COPY:  'fa-files-o.gif',
     ACTION_DELETE:  'fa-trash-o.gif',
     ACTION_REFRESH:  'fa-refresh.gif',
-    ACTION_STEPS:  'run_steps.gif',
+    ACTION_STEPS:  'fa-folder-open.gif',
     ACTION_TREE:  'fa-sitemap.gif',
     ACTION_STOP: 'iconStop.png',
     ACTION_CONTINUE: 'play.png',
@@ -232,13 +232,13 @@ class RunIOTreeProvider(TreeProvider):
             value = obj.get()
             info = {'key': value, 'text': value, 'values': (''), 'open': True}
         else:
-            image = 'db_output.gif'
+            image = 'fa-sign-out.gif'
             parent = self.outputStr
             name = obj.getLastName()
             
             if isinstance(obj, Pointer):
                 obj = obj.get()
-                image = 'db_input.gif'
+                image = 'fa-sign-in.gif'
                 parent = self.inputStr
                 objName = self.mapper.getFullName(obj)
                 name += '   (from %s)' % objName
