@@ -258,6 +258,7 @@ void CL3DClass::transferUpdate()
         P.initZeros();
     }
 #ifdef DEBUG
+        P.printShape();
         std::cout << "Transfer finished. Press any key\n";
         char c;
         std::cin >> c;
@@ -693,6 +694,7 @@ void CL3D::write(const FileName &fnRoot, int level) const
     }
 }
 
+//#define DEBUG
 void CL3D::lookNode(MultidimArray<double> &I, int oldnode, int &newnode,
                     CL3DAssignment &bestAssignment)
 {
@@ -704,6 +706,9 @@ void CL3D::lookNode(MultidimArray<double> &I, int oldnode, int &newnode,
     CL3DAssignment assignment;
     bestAssignment.score = -1e38;
     size_t objId = bestAssignment.objId;
+#ifdef DEBUG
+    std::cout << "Looking for node ..." << std::endl;
+#endif
     for (int q = 0; q < Q; q++)
     {
         // Check if q is neighbour of the oldnode
@@ -735,6 +740,9 @@ void CL3D::lookNode(MultidimArray<double> &I, int oldnode, int &newnode,
             P[q]->fitBasic(Iaux, assignment);
 
             VEC_ELEM(corrList,q) = assignment.score;
+#ifdef DEBUG
+            std::cout << "   Trying node " << q << " score=" << assignment.score << " best=" << bestAssignment.score << std::endl;
+#endif
             if (assignment.score > bestAssignment.score ||
                 prm->classifyAllImages)
             {
@@ -748,11 +756,15 @@ void CL3D::lookNode(MultidimArray<double> &I, int oldnode, int &newnode,
     I = bestImg;
     newnode = bestq;
     bestAssignment.objId = objId;
+#ifdef DEBUG
+            std::cout << "   New node " << bestq << std::endl;
+#endif
 
     // Assign it to the new node
     if (newnode != -1)
     	P[newnode]->updateProjection(I, bestAssignment);
 }
+#undef DEBUG
 
 void CL3D::transferUpdates()
 {
