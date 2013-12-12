@@ -61,8 +61,7 @@
 	color: Firebrick !important;
 }
 .north .ui-resizable-s {
-	/* bottom: 0px !important; */
-	/* position: fixed; */
+	bottom: 0px !important;
 	background: url("/resources/handle_hor.gif") no-repeat center center transparent;
 }
 
