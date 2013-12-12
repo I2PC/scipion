@@ -1,4 +1,4 @@
-{% extends 'base_flex.html'%}
+{% extends 'base_grid.html'%}
 
 {% block title %} - Projects{% endblock %}
 
@@ -18,14 +18,16 @@
 		// must happen before the outer layout is initialized. It
 		// will be automatically resized when the outer layout is
 		// resized.
-		var outerContainer = $('.layout-outer');
+	/* 	var outerContainer = $('.layout-outer');
 
 		function layout() {
 			outerContainer.layout({resize: false});
 		}
 		layout();
 
-		$(window).resize(layout);
+		$(window).resize(layout); */
+		
+		$('.layout-outer').layout();
 	});
 	
 
