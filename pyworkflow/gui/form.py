@@ -410,7 +410,7 @@ class ParamWidget():
         if self.paramName in self.window.wizards:
             self._addButton('Wizard', 'fa-magic.png', self._showWizard)
         if param.help.hasValue():
-            self._addButton('Help', 'fa-question.png', self._showHelpMessage)
+            self._addButton('Help', 'fa-question-circle.png', self._showHelpMessage)
         self.var = var
         
     def _visualizeVar(self, e=None):

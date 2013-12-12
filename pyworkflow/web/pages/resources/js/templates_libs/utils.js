@@ -42,7 +42,7 @@
 
 function popup(URL) {
 	var popup_width = 600;
-	var popup_height = 490;
+	var popup_height = 500;
 	day = new Date();
 	id = day.getTime();
 	eval("page"

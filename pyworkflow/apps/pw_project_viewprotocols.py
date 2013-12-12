@@ -64,18 +64,23 @@ ACTION_DELETE = 'Delete'
 ACTION_REFRESH = 'Refresh'
 ACTION_STEPS = 'Browse'
 ACTION_TREE = 'Tree'
+ACTION_LIST = 'List'
 ACTION_STOP = 'Stop'
 ACTION_DEFAULT = 'Default'
 ACTION_CONTINUE = 'Continue'
 ACTION_RESULTS = 'Analyze results'
 
+RUNS_TREE = 'fa-sitemap.png'
+RUNS_LIST = 'fa-bars.png'
+ 
 ActionIcons = {
     ACTION_EDIT: 'fa-pencil.png',# 'edit.gif',
     ACTION_COPY:  'fa-files-o.png',
     ACTION_DELETE:  'fa-trash-o.png',
     ACTION_REFRESH:  'fa-refresh.png',
     ACTION_STEPS:  'fa-folder-open.png',
-    ACTION_TREE:  'fa-sitemap.png',
+    ACTION_TREE:  None, # should be set
+    ACTION_LIST:  'fa-bars.png',
     ACTION_STOP: 'fa-stop.png', #'iconStop.png',
     ACTION_CONTINUE: 'fa-play-circle-o.png', #'play.png',
     ACTION_RESULTS: 'fa-eye.png'
@@ -402,9 +407,17 @@ class ProtocolsView(tk.Frame):
         for action in self.actionList:
             self.actionButtons[action] = addButton(action, action, self.runsToolbar)
             
+        if self.showGraph:
+            ActionIcons[ACTION_TREE] = RUNS_LIST
+        else:
+            ActionIcons[ACTION_TREE] = RUNS_TREE
+            
+        self.viewButtons = {}
+        
         for i, action in enumerate([ACTION_TREE, ACTION_REFRESH]):
             btn = addButton(action, action, self.allToolbar)
             btn.grid(row=0, column=i)
+            self.viewButtons[action] = btn
         
             
     def updateActionToolbar(self):
@@ -542,14 +555,17 @@ class ProtocolsView(tk.Frame):
         self.showGraph = not self.showGraph
         
         if self.showGraph:
+            ActionIcons[ACTION_TREE] = RUNS_LIST
             show = self.runsGraph.frame
             hide = self.runsTree
             self.updateRunsGraphSelection()
         else:
+            ActionIcons[ACTION_TREE] = RUNS_TREE
             show = self.runsTree
             hide = self.runsGraph.frame
             self.updateRunsTreeSelection()
             
+        self.viewButtons[ACTION_TREE].config(image=self.getImage(ActionIcons[ACTION_TREE]))
         hide.grid_remove()
         show.grid(row=0, column=0, sticky='news')
         self.settings.graphView.set(self.showGraph)
@@ -628,7 +644,7 @@ class ProtocolsView(tk.Frame):
         self._scheduleRunsUpdate()
         
     def _deleteProtocol(self, prot):
-        if askYesNo("Confirm DELETE", "<ALL DATA> related to this <protocol run> will be <DELETED>. \n"
+        if askYesNo("Confirm DELETE", "*ALL DATA* related to this _protocol run_ will be *DELETED*. \n"
                     "Do you really want to continue?", self.root):
             self.project.deleteProtocol(prot)
             self._scheduleRunsUpdate()

@@ -823,7 +823,7 @@ class Protocol(Step):
                 if condition:
                     paramErrors = param.validate(attr.get())
             label = param.label.get()
-            errors += ['<%s> %s' % (label, err) for err in paramErrors]                
+            errors += ['*%s* %s' % (label, err) for err in paramErrors]                
         # Validate specific for the subclass
         errors += self._validate()
         
@@ -846,8 +846,8 @@ class Protocol(Step):
         """ Return a summary message to provide some information to users. """
         error = ''
         if self.error.hasValue():
-            error = 'ERROR:\n' + self.error.get()
-        return self._summary() + ['', ' *Comments:* ', self.getObjComment(), error]
+            error = '*ERROR:*\n' + self.error.get()
+        return self._summary() + ['', '*Comments:* ', self.getObjComment(), error]
     
     def runProtocol(self, protocol):
         """ Setup another protocol to be run from a workflow. """

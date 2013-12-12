@@ -53,6 +53,12 @@ def form(request):
     elif action == 'copy':
         protocol = project.copyProtocol(protocol)
         
+    package = protocol._package
+    logoPath = ''
+    path = getattr(package, '_logo', '')
+    if path != '': 
+        logoPath = getResourceLogo(path)
+            
     wizards = findWizards(protocol, WEB_DJANGO)
     
     for section in protocol._definition.iterSections():
@@ -99,6 +105,7 @@ def form(request):
                     param.htmlValue = valueURL
     
     context = {'projectName':project.getName(),
+               'package_logo': logoPath,
                'protocol':protocol,
                'protRunIdViewer':protRunIdViewer,
                'definition':protocol._definition,
