@@ -99,9 +99,7 @@ function fillTabsSummary(id) {
 		url : '/protocol_io/?protocolId=' + id,
 		dataType : "json",
 		success : function(json) {
-//			fillUL(json.inputs, "protocol_input", "db_input.gif");
 			fillUL(json.inputs, "protocol_input", "fa-sign-in");
-//			fillUL(json.outputs, "protocol_output", "db_output.gif");
 			fillUL(json.outputs, "protocol_output", "fa-sign-out");
 		}
 	});

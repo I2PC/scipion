@@ -1,8 +1,8 @@
-{% extends 'base.html' %}
+{% extends 'base_flex.html'%}
 
 {% block title %} - Projects{% endblock %}
 
-{% block content_head %}
+{% block head %}
 <!-- CSS -->
 <link href="{{projects_css}}" rel="stylesheet" type="text/css">
 <link href={{messi_css}} rel="stylesheet" type="text/css">
@@ -10,15 +10,35 @@
 <!-- JS -->
 <script src="{{project_utils_js}}" type="text/javascript"></script>
 <script src="{{messi_js}}" type="text/javascript"></script>
+
+<script type="text/javascript">
+
+	jQuery(function($) {
+		// Just call the inner layout once to initialize it. This
+		// must happen before the outer layout is initialized. It
+		// will be automatically resized when the outer layout is
+		// resized.
+		var outerContainer = $('.layout-outer');
+
+		function layout() {
+			outerContainer.layout({resize: false});
+		}
+		layout();
+
+		$(window).resize(layout);
+	});
+	
+
+	
+</script>
 {% endblock %}
 
-{% block content_header %}	{% include "header.html" %} {% endblock %}
 
-{% block content_aside %}
+{% block menu %}
 <a href="javascript:createProjectForm();" ><button class="priorityButton" type="button">Create Project</button></a>
 {% endblock %}
 
-{% block content_section %}
+{% block content %}
 <div class="projectsList">
 	<ul>				
 	{% for project in projects %}
@@ -31,5 +51,5 @@
 </div>
 {% endblock %}
 
-<!-- <link href="/static/css/jquery-ui.css" rel="stylesheet" type="text/css"/> -->
+
 
