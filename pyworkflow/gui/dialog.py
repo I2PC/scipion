@@ -264,7 +264,7 @@ class MessageDialog(Dialog):
 class YesNoDialog(MessageDialog):
     """Ask a question with YES/NO answer"""
     def __init__(self, master, title, msg):
-        MessageDialog.__init__(self, master, title, msg, 'warning.gif', default='No',
+        MessageDialog.__init__(self, master, title, msg, 'fa-exclamation-triangle_alert.png', default='No',
                                buttons=[('Yes', RESULT_YES), ('No', RESULT_NO)])        
 
 
@@ -337,13 +337,13 @@ def askYesNo(title, msg, parent):
     return d.resultYes()
 
 def showInfo(title, msg, parent):
-    MessageDialog(parent, title, msg, 'info.gif')
+    MessageDialog(parent, title, msg, 'fa-info-circle_alert.png')
 
 def showWarning(title, msg, parent):
-    MessageDialog(parent, title, msg, 'warning.gif')
+    MessageDialog(parent, title, msg, 'fa-exclamation-triangle_alert.png')
     
 def showError(title, msg, parent):
-    MessageDialog(parent, title, msg, 'error.gif')
+    MessageDialog(parent, title, msg, 'fa-times-circle_alert.png')
     
 def askString(title, label, parent, entryWidth=20):
     d = EntryDialog(parent, title, label, entryWidth)
@@ -367,7 +367,7 @@ class ListDialog(Dialog):
         self._createTree(bodyFrame)
         if self.message:
             label = tk.Label(bodyFrame, text=self.message, bg='white',
-                     image=self.getImage('help_hint.png'), compound=tk.LEFT)
+                     image=self.getImage('fa-lightbulb-o.png'), compound=tk.LEFT)
             label.grid(row=1, column=0, sticky='nw', padx=5, pady=5)
         self.initial_focus = self.tree
         
