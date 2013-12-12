@@ -73,6 +73,7 @@ html, body {
 
 .ui-resizable-e {
 	background: url("/resources/handle_ver.gif") no-repeat center center transparent;
+	margin-right: 5px;
 }	
 
 /* SECTION */

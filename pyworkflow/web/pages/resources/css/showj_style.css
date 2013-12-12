@@ -306,7 +306,6 @@ section .imageTitle{
 }
 
 #table_container th{
-	/* font-weight: bold; */
 	font-family: Helvetica;
 	white-space: nowrap;
 	padding: 8px;
@@ -314,27 +313,12 @@ section .imageTitle{
 }
 
 #table_container tbody td{
-	/* font-weight: bold; */
 	font-family: Helvetica;
-	
 }
 .iconHeader{
 	width:20px;
 	height:20px;
 }
-/* .renderTableOn{
-	background-image: url(/resources/showj/renderTableOn.png);	
-}
-.renderTableOff{
-	background-image: url(/resources/showj/renderTableOff.png);	
-} */
-
-/* .editTableOn{
-	background-image: url(/resources/showj/editTableOn.png);	
-}
-.editTableOff{
-	background-image: url(/resources/showj/editTableOff.png);	
-} */
 
 #table_container tbody tr.odd{
 	background-color: #FFF;

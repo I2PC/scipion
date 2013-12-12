@@ -299,12 +299,7 @@ function enableDisableEditableRow(event, element){
 	//From the image element we get the column header index
 	var tdCell= $(element).closest('tr').find('td')
 	var thCell= $(element).closest('tr').find('th')
-	console.log(tdCell)
-	
-	console.log("taka")
-	console.log($("#ctfSamplingRate___column_header"))
-	console.log($("#ctfSamplingRate___column_header").val())
-	
+		
 	//We enable/disable render event
 	if ($(element).hasClass("editTableOn")){
 		tdCell.addClass('editable')
