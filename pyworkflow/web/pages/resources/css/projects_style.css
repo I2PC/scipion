@@ -10,6 +10,12 @@
 	max-height: 68px;
 }
 
+.layout-outer > header{
+	width: 100%;
+}
+.layout-outer > aside{
+	width: 100%;
+}
 
 .button {
 	font-size: 0.8em;
