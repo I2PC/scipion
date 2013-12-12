@@ -148,21 +148,21 @@ function launchMessiSimple(title, msg, autoclose){
 }
 	
 function messiError(msg){
-	var res = "<table><tr><td><img src='/resources/error.gif' width='45' height='45' />"
+	var res = "<table><tr><td><i class=\"fa fa-times-circle fa-4x\" style=\"color:firebrick;\"></i>"
 	+ "</td><td>"+ msg +"</td></tr></table>";
 
 	return res;
 }
 
 function messiWarning(msg){
-	var res = "<table><tr><td><img src='/resources/warning.gif' width='45' height='45' />"
+	var res = "<table><tr><td><i class=\"fa fa-warning fa-4x\" style=\"color:#fad003;\"></i>"
 	+ "</td><td>"+ msg +"</td></tr></table>";
 
 	return res;
 }
 
 function messiInfo(msg){
-	var res = "<table><tr><td><img src='/resources/info.gif' width='45' height='45' />"
+	var res = "<table><tr><td><i class=\"fa fa-info-circle fa-4x\" style=\"color:#6fabb5;\"></i>"
 	+ "</td><td>"+ msg +"</td></tr></table>";
 
 	return res;

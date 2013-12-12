@@ -1,4 +1,15 @@
 /* CSS Document */
+.layout-outer > .south {
+	/* overflow-y: auto; */
+	/* max-height: 75%; */
+	top: 148px !important;
+}
+.layout-outer > .center{
+	height: 68px;
+	min-height: 68px;
+	max-height: 68px;
+}
+
 
 .button {
 	font-size: 0.8em;
@@ -35,10 +46,7 @@
 	font-weight: bold;
 	color: black;
 	text-decoration: none;
-	/* margin-left: -0.5em; */
 }
-
-
 
 .projRemove {
 	margin-left: 1em;
@@ -50,8 +58,6 @@
 }
 
 .projectsList {
-	/* border: 1px solid black; */
-/* 	background: Gainsboro; */
  	height: auto;
 	overflow-y: auto;
 	overflow-x: hidden;
