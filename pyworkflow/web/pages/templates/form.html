@@ -53,7 +53,15 @@
   	</script>
 	</head>
 	<body onload="evalElements();">
-		<h3 id="protName">Protocol: {{protocol.getClassName}}</h3>
+
+		<h3 id="protName">
+			{% if package_logo != ''%}
+				<img src='{{package_logo}}'/>
+				&nbsp;
+			{% endif %}
+			Protocol: {{protocol.getClassName}}
+		</h3>
+		
 		<form id="protocolForm" action="/protocol/" method="POST" data-mode="">{% csrf_token %}
 			<input type="hidden" id="windowName" name="windowName" value=""/>
 			<input type="hidden" name="protocolClass" value="{{protocol.getClassName}}"/>
