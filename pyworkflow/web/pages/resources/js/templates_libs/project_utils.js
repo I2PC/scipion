@@ -71,7 +71,7 @@ function createProject(elm) {
 
 function deleteProjectForm(projName) {
 
-	var msg = "<table><tr><td><img src='/resources/warning.gif' width='45' height='45' />"
+	var msg = "<table><tr><td><i class=\"fa fa-warning fa-4x\" style=\"color:#fad003;\"></i>"
 			+ "</td><td class='content' value='"
 			+ projName
 			+ "'>Are you sure to <strong>DELETE</strong> project <strong>"
