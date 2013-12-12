@@ -29,7 +29,14 @@
 	<div class="layout">
 		<div class="elm1">
 			<table id="list" cellspacing="0">
-				{% block list %}{% endblock %}
+				<thead>
+					<tr>
+						<th>Object</th>
+					</tr>
+				</thead>
+				<tbody>
+					{% block list %}{% endblock %}
+				</tbody>
 			</table>
 		</div>
 		<div class="elm2">
