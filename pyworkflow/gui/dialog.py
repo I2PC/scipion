@@ -81,9 +81,9 @@ class Dialog(tk.Toplevel):
         bodyFrame.grid(row=0, column=0, sticky='news',
                        padx=5, pady=5)
 
-        self.icons = {RESULT_YES: 'dialog_ok.png', 
-                      RESULT_NO: 'dialog_close.png',
-                      RESULT_CANCEL: 'dialog_cancel.png'}
+        self.icons = {RESULT_YES: 'fa-check.png', 
+                      RESULT_NO: 'fa-times.png',
+                      RESULT_CANCEL: 'fa-ban.png'}
         
         self.buttons = args.get('buttons', [('OK', RESULT_YES),
                                             ('Cancel', RESULT_CANCEL)])

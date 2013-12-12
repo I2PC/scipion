@@ -273,8 +273,8 @@ class ParamWidget():
         self.parent = parent
         self.visualizeCallback = visualizeCallback
         
-        self.parent.columnconfigure(0, minsize=200)
-        self.parent.columnconfigure(1, minsize=200)
+        self.parent.columnconfigure(0, minsize=250)
+        self.parent.columnconfigure(1, minsize=250)
         self._createLabel() # self.label should be set after this 
         self._btnCol = 0
         self._createButtonsFrame() # self.btnFrame should be set after this
@@ -297,7 +297,7 @@ class ParamWidget():
             bgColor = 'grey'
         
         self.label = tk.Label(self.parent, text=self.param.label.get(), 
-                              bg=bgColor, font=f, wraplength=250)
+                              bg=bgColor, font=f, wraplength=300)
                
     def _createContent(self):
         self.content = tk.Frame(self.parent, bg='white')
@@ -342,6 +342,7 @@ class ParamWidget():
         """Create the specific widgets inside the content frame"""
         # Create widgets for each type of param
         t = type(param)
+        entryWidth = 30
         #TODO: Move this to a Renderer class to be more flexible
         if t is BooleanParam:
             var, frame = ParamWidget.createBoolWidget(content, bg='white')
@@ -368,16 +369,16 @@ class ParamWidget():
         
         elif t is PointerParam or t is RelationParam:
             var = PointerVar()
-            entry = tk.Entry(content, width=25, textvariable=var.tkVar, state="readonly")
+            entry = tk.Entry(content, width=entryWidth, textvariable=var.tkVar, state="readonly")
             entry.grid(row=0, column=0, sticky='w')
             btnFunc = self._browseObject
             if t is RelationParam:
                 btnFunc = self._browseRelation
-            self._addButton("Select", 'zoom.png', btnFunc)
+            self._addButton("Select", 'fa-search.png', btnFunc)
         
         elif t is ProtocolClassParam:
             var = tk.StringVar()
-            entry = tk.Entry(content, width=25, textvariable=var, state="readonly")
+            entry = tk.Entry(content, width=entryWidth, textvariable=var, state="readonly")
             entry.grid(row=0, column=0, sticky='w')
 
             protClassName = self.param.protocolClassName.get()
@@ -389,28 +390,27 @@ class ParamWidget():
                 classes = [protClassName]
             
             if len(classes) > 1:
-                self._addButton("Select", 'zoom.png', self._browseProtocolClass)
+                self._addButton("Select", 'fa-search.png', self._browseProtocolClass)
             else:
                 var.set(classes[0])
             
-            self._addButton("Edit", "edit.gif", self._openProtocolForm)
+            self._addButton("Edit", "fa-pencil.png", self._openProtocolForm)
             #btn = Button(content, "Edit", command=self._openProtocolForm)
             #btn.grid(row=1, column=0)          
         else:
             #v = self.setVarValue(paramName)
             var = tk.StringVar()
-            entryWidth = 25
             if t is FloatParam or t is IntParam:
                 entryWidth = 10 # Reduce the entry width for numbers entries
             entry = tk.Entry(content, width=entryWidth, textvariable=var)
             entry.grid(row=0, column=0, sticky='w')
         
         if self.visualizeCallback is not None:
-            self._addButton('Visualize', 'visualize.gif', self._visualizeVar)    
+            self._addButton('Visualize', 'fa-eye.png', self._visualizeVar)    
         if self.paramName in self.window.wizards:
-            self._addButton('Wizard', 'tools_wizard.png', self._showWizard)
+            self._addButton('Wizard', 'fa-magic.png', self._showWizard)
         if param.help.hasValue():
-            self._addButton('Help', 'system_help24.png', self._showHelpMessage)
+            self._addButton('Help', 'fa-question.png', self._showHelpMessage)
         self.var = var
         
     def _visualizeVar(self, e=None):
@@ -556,30 +556,14 @@ class FormWindow(Window):
         contentFrame = self.createSections(text)
         
         bottomFrame = tk.Frame(self.root)
-        bottomFrame.columnconfigure(0, weight=1)
         bottomFrame.grid(row=2, column=0, sticky='sew')
-        
-
+        bottomFrame.columnconfigure(0, weight=1)
         
         btnFrame = tk.Frame(bottomFrame)
-        btnFrame.columnconfigure(2, weight=1)
-        btnFrame.grid(row=1, column=0, sticky='sew')
+        #btnFrame.columnconfigure(2, weight=1)
+        self._createButtons(btnFrame)
+        btnFrame.grid(row=1, column=0, sticky='se')
         
-        btnClose = tk.Button(btnFrame, text="Close", image=self.getImage('dialog_close.png'), compound=tk.LEFT, font=self.font,
-                          command=self.close)
-        btnClose.grid(row=0, column=0, padx=5, pady=5, sticky='sw')
-        t = '  Visualize  '
-        # Save button is not added in VISUALIZE or CHID modes
-        if not self.visualizeMode and not self.childMode:
-            btnSave = tk.Button(btnFrame, text="Save", image=self.getImage('filesave.png'), compound=tk.LEFT, font=self.font, 
-                              command=self.save)
-            btnSave.grid(row=0, column=1, padx=5, pady=5, sticky='sw')
-            t = '   Execute   '
-        # Add Execute/Visualize button
-        if not self.childMode:
-            btnExecute = Button(btnFrame, text=t, fg='white', bg='#7D0709', font=self.font, 
-                            activeforeground='white', activebackground='#A60C0C', command=self.execute)
-            btnExecute.grid(row=0, column=2, padx=(15, 50), pady=5, sticky='se')
         
         self.root.columnconfigure(0, weight=1)
         self.root.rowconfigure(1, weight=1)
@@ -587,6 +571,25 @@ class FormWindow(Window):
         # Resize windows to use more space if needed
         self.desiredDimensions = lambda: self.resize(contentFrame)
         #self.resize(contentFrame)
+        
+    def _createButtons(self, btnFrame):
+        """ Create the bottom buttons: Close, Save and Execute. """
+        btnClose = tk.Button(btnFrame, text="Close", image=self.getImage('fa-times.png'), 
+                             compound=tk.LEFT, font=self.font, command=self.close)
+        btnClose.grid(row=0, column=0, padx=5, pady=5, sticky='se')
+        t = '  Visualize  '
+        # Save button is not added in VISUALIZE or CHILD modes
+        if not self.visualizeMode and not self.childMode:
+            btnSave = tk.Button(btnFrame, text="Save", image=self.getImage('fa-save.png'), 
+                                compound=tk.LEFT, font=self.font, command=self.save)
+            btnSave.grid(row=0, column=1, padx=5, pady=5, sticky='se')
+            t = '   Execute   '
+        # Add Execute/Visualize button
+        if not self.childMode:
+            btnExecute = Button(btnFrame, text=t, fg='white', bg='#7D0709', font=self.font, 
+                                image=self.getImage("fa-cogs.png"), compound=tk.LEFT, 
+                            activeforeground='white', activebackground='#A60C0C', command=self.execute)
+            btnExecute.grid(row=0, column=2, padx=(5, 28), pady=5, sticky='se')
         
     def _addVarBinding(self, paramName, var, func=None, *callbacks):
         if func is None:
@@ -635,7 +638,7 @@ class FormWindow(Window):
         entry = self._createBoundEntry(runFrame, 'runName', width=15, 
                                        func=self.setProtocolLabel, value=self.protocol.getObjLabel())
         entry.grid(row=0, column=1, padx=(0, 5), pady=5, sticky='nw')
-        btnComment = Button(runFrame, 'Edit comment', 'edit.gif', bg='white', command=self._editComment)
+        btnComment = Button(runFrame, 'Edit comment', 'fa-pencil.png', bg='white', command=self._editComment)
         btnComment.grid(row=0, column=2, padx=(0, 5), pady=5, sticky='nw')
         # Run mode
         self.protocol.getDefinitionParam('')
