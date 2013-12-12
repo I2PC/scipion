@@ -148,11 +148,11 @@ $(document).ready(function() {
 					var msg = messiError("Error iterating over the set of particles");
 					launchMessiSimple("Error",msg);
 				} else if(type_wiz=='wiz_particle_mask' || type_wiz=='wiz_volume_mask'){
-					customPopupHTML(html,520,460);
+					customPopupHTML(html,540,490);
 				} else if(type_wiz=='wiz_volume_mask_radii' || type_wiz=='wiz_particle_mask_radii'){
-					customPopupHTML(html,530,520);
+					customPopupHTML(html,550,540);
 				} else{
-					customPopupHTML(html,775,470);
+					customPopupHTML(html,790,480);
 				}
 			});
 		} else if (mode == 'viewer' || mode == 'viewerElement') {
