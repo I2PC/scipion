@@ -130,7 +130,7 @@ function launchMessiSimple(title, msg, autoclose){
 				btnClass : 'btn-select'
 			}],
 			callback: function(){
-				window.close();
+				closePopup();
 			}
 		});
 	} else {

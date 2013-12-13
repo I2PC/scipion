@@ -79,12 +79,11 @@ $(document).ready(function() {
 							id : 0,
 							label : 'Ok',
 							val : 'Y',
-							btnClass : 'btn-select'
+							btnClass : 'fa fa-check'
 						} ],
 						callback : function(val) {
 							if (val == 'Y') {
-//								window.opener.location.reload(true);
-								window.close();
+								closePopup();
 							}
 						}
 					});
@@ -111,12 +110,11 @@ $(document).ready(function() {
 							id : 0,
 							label : 'Ok',
 							val : 'Y',
-							btnClass : 'btn-select'
+							btnClass : 'fa fa-check'
 						} ],
 						callback : function(val) {
 							if (val == 'Y') {
-//								window.opener.location.reload(true);
-								window.close();
+								closePopup();
 								window.opener.popup('/form/?protocolId='+protId);
 							}
 						}
