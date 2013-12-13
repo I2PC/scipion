@@ -752,7 +752,12 @@ void XmippMetadataProgram::setupRowOut(const FileName &fnImgIn, const MDRow &row
         rowOut.setValue(MDL_IMAGE_ORIGINAL, fnImgIn);
 }
 
-void XmippMetadataProgram::run1()
+void XmippMetadataProgram::wait()
+{
+	// In the serial implementation, we don't have to wait. This will be useful for MPI programs
+}
+
+void XmippMetadataProgram::run()
 {
     FileName fnImg, fnImgOut, fullBaseName;
     size_t objId;
@@ -829,10 +834,8 @@ void XmippMetadataProgram::run1()
 
         showProgress();
     }
-}
+    wait();
 
-void XmippMetadataProgram::run2()
-{
     //free iterator memory
     delete iter;
 
@@ -860,12 +863,6 @@ void XmippMetadataProgram::run2()
     /* Reset the default values of the program in case
      * to be reused.*/
     init();
-}
-
-void XmippMetadataProgram::run()
-{
-	run1();
-	run2();
 }
 
 XmippProgramGeneric::XmippProgramGeneric()
