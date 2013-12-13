@@ -752,9 +752,9 @@ void XmippMetadataProgram::setupRowOut(const FileName &fnImgIn, const MDRow &row
         rowOut.setValue(MDL_IMAGE_ORIGINAL, fnImgIn);
 }
 
-void XmippMetadataProgram::run()
+void XmippMetadataProgram::run1()
 {
-    FileName fnImg, fnImgOut, baseName, pathBaseName, fullBaseName, oextBaseName;
+    FileName fnImg, fnImgOut, fullBaseName;
     size_t objId;
     MDRow rowIn, rowOut;
     mdOut.clear(); //this allows multiple runs of the same Program object
@@ -829,7 +829,10 @@ void XmippMetadataProgram::run()
 
         showProgress();
     }
+}
 
+void XmippMetadataProgram::run2()
+{
     //free iterator memory
     delete iter;
 
@@ -857,6 +860,12 @@ void XmippMetadataProgram::run()
     /* Reset the default values of the program in case
      * to be reused.*/
     init();
+}
+
+void XmippMetadataProgram::run()
+{
+	run1();
+	run2();
 }
 
 XmippProgramGeneric::XmippProgramGeneric()
