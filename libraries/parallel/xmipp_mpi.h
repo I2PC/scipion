@@ -171,7 +171,7 @@ public:
     /** Call the run function inside a try/catch block
     * sending an abort signal to the rest of mpi nodes.
     * */
-    int tryRun();
+    virtual int tryRun();
 };
 
 class MpiMetadataProgram: public XmippMpiProgram
@@ -259,6 +259,25 @@ public:\
         *getOutputMd()=MDaux; \
         if (node->isMaster())\
             baseClassName::finishProcessing();\
+    }\
+    int tryRun()\
+    {\
+        try\
+        {\
+            if (doRun)\
+            {\
+                run1();\
+                distributor->wait();\
+                run2();\
+            }\
+        }\
+        catch (XmippError &xe)\
+        {\
+            std::cerr << xe;\
+            errorCode = xe.__errno;\
+            MPI::COMM_WORLD.Abort(xe.__errno);\
+        }\
+        return errorCode;\
     }\
 };\
 

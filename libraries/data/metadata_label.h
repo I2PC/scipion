@@ -95,6 +95,7 @@ enum MDLabel
     MDL_CRYSTAL_SHIFTX, ///< Shift for the image in the X axis (double) for crystals
     MDL_CRYSTAL_SHIFTY, ///< Shift for the image in the Y axis (double) for crystals
     MDL_CRYSTAL_SHIFTZ, ///< Shift for the image in the Z axis (double) for crystals
+    MDL_CRYSTAL_NOISE_SHIFT , ///< noise if center of unit cell (vector double)
 
     MDL_CTF_INPUTPARAMS, ///< Parameters file for the CTF Model (std::string)
     MDL_CTF_MODEL, ///< Name for the CTF Model (std::string)
@@ -780,7 +781,7 @@ private:
         MDL::addLabel(MDL_CRYSTAL_SHIFTX, LABEL_DOUBLE, "crystalShiftX");
         MDL::addLabel(MDL_CRYSTAL_SHIFTY, LABEL_DOUBLE, "crystalShiftY");
         MDL::addLabel(MDL_CRYSTAL_SHIFTZ, LABEL_DOUBLE, "crystalShiftZ");
-
+        MDL::addLabel(MDL_CRYSTAL_NOISE_SHIFT,LABEL_VECTOR_DOUBLE, "crystalNoiseShift");
         MDL::addLabel(MDL_CTF_BG_BASELINE, LABEL_DOUBLE, "ctfBgBaseline");
         MDL::addLabelAlias(MDL_CTF_BG_BASELINE, "CTFBG_Baseline");//3.0
         MDL::addLabel(MDL_CTF_BG_GAUSSIAN2_ANGLE, LABEL_DOUBLE, "ctfBgGaussian2Angle");

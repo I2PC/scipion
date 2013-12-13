@@ -69,7 +69,7 @@ MpiTaskDistributor::~MpiTaskDistributor()
 {
     if (node->isMaster())
     {
-        manager->wait();
+//        manager->wait();
         delete manager;
     }
 }
@@ -99,16 +99,16 @@ bool MpiTaskDistributor::distribute(size_t &first, size_t &last)
 
 void MpiTaskDistributor::reset()
 {
-	ThreadTaskDistributor::reset();
+    ThreadTaskDistributor::reset();
     if (node->isMaster())
         manager->runAsync(__threadMpiMasterDistributor);
 }
 
 void MpiTaskDistributor::wait()
 {
-	if (node->isMaster())
-		manager->wait();
-	node->barrierWait();
+    if (node->isMaster())
+        manager->wait();
+    node->barrierWait();
 }
 
 // ================= FILE MUTEX ==========================
@@ -143,14 +143,14 @@ void MpiFileMutex::lock()
     Mutex::lock();
     lseek(lockFile, 0, SEEK_SET);
     if (lockf(lockFile, F_LOCK, 0)==-1)
-    	REPORT_ERROR(ERR_IO_NOPERM,"Cannot lock file");
+        REPORT_ERROR(ERR_IO_NOPERM,"Cannot lock file");
 }
 
 void MpiFileMutex::unlock()
 {
     lseek(lockFile, 0, SEEK_SET);
     if (lockf(lockFile, F_ULOCK, 0)==-1)
-    	REPORT_ERROR(ERR_IO_NOPERM,"Cannot unlock file");
+        REPORT_ERROR(ERR_IO_NOPERM,"Cannot unlock file");
     Mutex::unlock();
 }
 
@@ -183,7 +183,7 @@ MpiNode::~MpiNode()
 {
     //active = 0;
     //updateComm();
-    //std::cerr << "Send Finalize to: " << rank;
+    //std::cerr << "Send Finalize to: " << rank << std::endl;
     MPI::Finalize();
 }
 
@@ -342,7 +342,7 @@ void MpiMetadataProgram::readParams()
 }
 
 void MpiMetadataProgram::createTaskDistributor(MetaData &mdIn,
-		size_t blockSize)
+        size_t blockSize)
 {
     size_t size = mdIn.size();
     if (blockSize < 1)
@@ -369,4 +369,5 @@ bool MpiMetadataProgram::getTaskToProcess(size_t &objId, size_t &objIndex)
     first = distributor->numberOfTasks - 1;
     return false;
 }
+
 
