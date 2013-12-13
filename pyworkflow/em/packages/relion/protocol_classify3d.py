@@ -230,11 +230,11 @@ class Relion3DClassification(ProtClassify3D, ProtRelionBase):
                       'to generate the sampling of the first two Euler angles on the sphere. '
                       'The samplings are approximate numbers and vary slightly over the sphere.')
         form.addParam('offsetSearchRange', IntParam, default=5,
-                      label='Offset search range (pix)',
+                      label='Offset search range (px)',
                       help='Probabilities will be calculated only for translations in a circle with this radius (in pixels). '
                       'The center of this circle changes at every iteration and is placed at the optimal translation for each image in the previous iteration.')
         form.addParam('offsetSearchStep', IntParam, default=1,
-                      label='Offset search step (pix)',
+                      label='Offset search step (px)',
                       help='Translations will be sampled with this step-size (in pixels).Translational sampling is also done using the adaptive approach.' 
                       'Therefore, if adaptive=1, the translations will first be evaluated on a 2x coarser grid.')
         form.addParam('doLocalAngSearch', BooleanParam, default=False,

@@ -88,7 +88,7 @@ class ProtImportImages(EMProtocol):
         form.addSection(label='Input')
         form.addParam('pattern', StringParam, label="Pattern",
                       help="The pattern (with wildcard expansion) of the files to import\n"
-                            "For example: \n<data/particles/*.spi> \n or \n<~/Micrographs/mic*mrc>")
+                            "For example: \n*data/particles/***.spi* \n or \n*~/Micrographs/mic/***.mrc*")
         form.addParam('checkStack', BooleanParam, label="Check stack files?", default=False)
         form.addParam('voltage', FloatParam, default=200,
                    label='Microscope voltage (in kV)')
@@ -147,12 +147,12 @@ class ProtImportImages(EMProtocol):
     def _validate(self):
         errors = []
         if self.pattern.get() == "":
-            errors.append('The <pattern> cannot be empty.')
+            errors.append('The *pattern* cannot be empty.')
         else:
             filePaths = glob(self.pattern.get())
         
             if len(filePaths) == 0:
-                errors.append('There are no files matching the <pattern>')
+                errors.append('There are no files matching the *pattern*')
 
         return errors
     
@@ -406,7 +406,7 @@ class ProtCTFMicrographs(EMProtocol):
     def _summary(self):
         summary = []
         if not self.inputMicrographs.hasValue():
-            summary.append("No <Input Micrographs> selected.")
+            summary.append("No *Input Micrographs* selected.")
         else:
             summary.append("CTF estimation of %d micrographs." % self.inputMicrographs.get().getSize())
             summary.append("Input micrographs: " + self.inputMicrographs.get().getNameId())
@@ -495,7 +495,7 @@ class ProtAlign(EMProtocol):
                       label="Input Particles", pointerClass='SetOfParticles')
         form.addParam('writeAlignedParticles', BooleanParam, default=True,
                       label="Write aligned particles?", 
-                      help="If set to <Yes>, the aligment will be applied to \n"
+                      help="If set to *Yes*, the aligment will be applied to \n"
                            "input particles and a new aligned set will be created.")
         # Hook that should be implemented in subclasses
         self._defineAlignParams(form)

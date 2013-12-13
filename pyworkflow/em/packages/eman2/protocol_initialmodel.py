@@ -38,7 +38,7 @@ import eman2
 
 #TODO: Change the hierarchy (ProtInitialVolume for ProtPreprocessVolumes) when "Initial Volume" menu is created
 class EmanProtInitModel(ProtPreprocessVolumes):
-    _label = 'Eman Initial Model'
+    _label = 'initial model'
     
     def _defineParams(self, form):
         form.addSection(label='Input')

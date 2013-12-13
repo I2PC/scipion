@@ -57,7 +57,7 @@ class XmippProtPreprocessVolumes(ProtPreprocessVolumes, XmippProtocol):
         form.addParam('inputVolumes', PointerParam, label="Volumes to process", important=True, 
                       pointerClass='SetOfVolumes',
                       help='Can be a density volume or a PDB file.')  
-        form.addParam('inputVoxel', FloatParam, label='Input voxel size (A/voxel)')
+#        form.addParam('inputVoxel', FloatParam, label='Input voxel size (A/voxel)')
         
         form.addSection(label='Preprocess steps')
         # Change hand
@@ -142,7 +142,9 @@ class XmippProtPreprocessVolumes(ProtPreprocessVolumes, XmippProtocol):
         """The preprocess is realized for a set of volumes"""
         
         # Convert SetOfVolumes to Xmipp Metadata
-        self.volsFn = createXmippInputVolumes(self, self.inputVolumes.get())
+        volSet = self.inputVolumes.get()
+        self.volsFn = createXmippInputVolumes(self, volSet)
+        samplingRate = volSet.getSamplingRate()
         self.volsMd = xmipp.MetaData(self.volsFn)
         
         # Check volsMd is a volume or a stack
@@ -153,14 +155,14 @@ class XmippProtPreprocessVolumes(ProtPreprocessVolumes, XmippProtocol):
             self.outModel=self._getPath("volumes.stk")
             self.singleVolume=False
         
-        if self.inputVoxel.get() != self.outputVoxel.get() or self.finalSize.get()!=-1:
-            if self.inputVoxel.get() != self.outputVoxel.get() and self.finalSize.get()==-1:
-                x, _, _, _, _ = self.inputVolumes.get().getDimensions()
-                fnSize = floor(x/(self.outputVoxel.get()/self.inputVoxel.get()))
+        if samplingRate != self.outputVoxel.get() or self.finalSize.get()!=-1:
+            if samplingRate != self.outputVoxel.get() and self.finalSize.get()==-1:
+                x, _, _, _ = volSet.getDimensions()
+                fnSize = floor(x/(self.outputVoxel.get()/samplingRate))
                 self.finalSize.set(fnSize)
             
             self._insertFunctionStep("changeSamplingRateAndOrBox",self.volsMd, self.outModel,
-                            self.singleVolume, self.inputVoxel.get(),self.outputVoxel.get(),
+                            self.singleVolume, samplingRate,self.outputVoxel.get(),
                             self.finalSize.get())
         else:
             if self.singleVolume:
@@ -278,6 +280,17 @@ class XmippProtPreprocessVolumes(ProtPreprocessVolumes, XmippProtocol):
             self._insertRunJobStep("xmipp_transform_mask","-i %s --mask binary_file %s"%(outModel, fnMask))
             
     def createOutput(self):
+#         volumes = self._createSetOfVolumes()
+#         volumes.setSamplingRate(samplingRate)
+#         
+#         for k in range(1, self.numberOfModels.get() + 1):
+#             volFn = self._getPath('initial_models/model_00_%02d.hdf' % k)
+#             vol = Volume()
+#             vol.setFileName(volFn)
+#             volumes.append(vol)
+# 
+#         volumes.write()
+#         self._defineOutputs(outputVolumes=volumes)
         pass
         
     def _validate(self):

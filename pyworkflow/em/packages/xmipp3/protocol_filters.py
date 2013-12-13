@@ -164,12 +164,12 @@ class XmippProtMask(XmippProtFilter):
         
         form.addParam('maskRadius', IntParam, default=-1, 
                       condition='maskType != %d' % xmipp3.MASK_FILE,
-                      label='Mask radius (pix)',
+                      label='Mask radius (px)',
                       help='This is the radius (in pixels) of the spherical mask ')       
     
         form.addParam('maskOuterRadius', IntParam, default=2, 
                       condition='maskType == %d' % xmipp3.MASK_RAISED_COSINE,
-                      label='Mask outer radius (pix)',
+                      label='Mask outer radius (px)',
                       help='Outer radius in pixels for the raised cosine mask ')
             
         form.addParam('maskFile', StringParam, default='', 
@@ -231,12 +231,12 @@ class XmippProtResize(XmippProtFilter):
         
         form.addParam('newSize', IntParam, default=0,
                       condition='resizeOperation == 0',
-                      label='New image size (pix)',
+                      label='New image size (px)',
                       help='This is the size in pixels of the particle images.')       
     
         form.addParam('cropSize', IntParam, default=0,
                       condition='resizeOperation == 1',
-                      label='Crop size (pix)',
+                      label='Crop size (px)',
                       help='This is the desired output size(in pixels) after cropping.') 
 
     def _insertFilterStep(self, inputFn, outputFn, outputMd):

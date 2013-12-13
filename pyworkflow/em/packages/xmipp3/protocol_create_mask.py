@@ -51,16 +51,16 @@ class XmippProtCreateGeo3DMask(ProtCreateMask3D):
         radiusCondition = 'geo==%d or geo==%d or geo==%d' % (MASK3D_CROWN, MASK3D_RAISED_COSINE, MASK3D_RAISED_CROWN)
         form.addParam('innerRadius', IntParam, default=0, 
                       condition=radiusCondition,
-                      label="Inner radius (pix)", help="Inner radius in pixels")
+                      label="Inner radius (px)", help="Inner radius in pixels")
         form.addParam('outerRadius', IntParam, default=-1, 
                       condition=radiusCondition,
-                      label="Outer radius (pix)", help="Outer radius in pixels")
+                      label="Outer radius (px)", help="Outer radius in pixels")
         form.addParam('height', IntParam, condition='geo==%d' % MASK3D_CYLINDER,
-                      label="Height (pix)", help="Cylinder height in pixels")
+                      label="Height (px)", help="Cylinder height in pixels")
         form.addParam('sigma', IntParam, condition='geo==%d' % MASK3D_GAUSSIAN,
-                      label="Sigma (pix)", help="Cylinder height in pixels")                
+                      label="Sigma (px)", help="Cylinder height in pixels")                
         form.addParam('pixelWidth', IntParam, condition='geo==%d' % MASK3D_RAISED_CROWN,
-                      label="Pixel width (pix)", help="in pixels")        
+                      label="Pixel width (px)", help="in pixels")        
         
     def _defineSteps(self):
         self.maskFile = self._getPath('mask.vol')

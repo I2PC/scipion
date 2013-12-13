@@ -138,7 +138,7 @@ class XmippProtProjMatch(xmipp3.XmippProtocol, ProtRefine3D, ProtClassify3D):
                            'Do not provide a very tight mask. \n ')
         
         form.addParam('maskRadius', IntParam, default=-1, condition='maskType == 1',
-                      label='Radius of spherical mask (pix)',
+                      label='Radius of spherical mask (px)',
                       help='This is the radius (in pixels) of the spherical mask ')       
         
         form.addParam('maskFile', StringParam, default='maks.vol', 
