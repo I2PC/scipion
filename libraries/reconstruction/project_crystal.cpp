@@ -72,7 +72,7 @@ void Crystal_Projection_Parameters::read(const FileName &fn, double scale)
     XX(b) = scale * ParamVec[0];
     YY(b) = scale * ParamVec[1];
     ZZ(b) = 0;
-    MD.getValue(MDL_NOISE_PIXEL_LEVEL,ParamVec, objId);
+    MD.getValue(MDL_CRYSTAL_NOISE_SHIFT,ParamVec, objId);
     Nshift_dev = scale *  ParamVec[0];
     if (ParamVec.size() < 2)
         Nshift_avg = 0;
@@ -82,7 +82,6 @@ void Crystal_Projection_Parameters::read(const FileName &fn, double scale)
     MD.getValue(MDL_CRYSTAL_ORTHO_PRJ,orthogonal, objId);
     if (MD.getValue(MDL_CRYSTAL_SHFILE, fn_shift, objId))
         DF_shift_bool = true;
-
     //#define DEBUG
 #ifdef DEBUG
 
@@ -90,6 +89,8 @@ void Crystal_Projection_Parameters::read(const FileName &fn, double scale)
     std::cerr << "crystal_Ydim"   << crystal_Ydim<<std::endl;
     std::cerr << "a vector"  << a <<std::endl;
     std::cerr << "b vector"  << b <<std::endl;
+    std::cerr << "Nshift_devr"  << Nshift_dev <<std::endl;
+    std::cerr << "Nshift_avg"  << Nshift_avg <<std::endl;
 #endif
 #undef DEBUG
 }
@@ -322,6 +323,17 @@ void project_crystal(Phantom &phantom, Projection &P,
                       exp_normal_shifts_matrix_Z,
                       phantom.phantom_scale);
 
+    //std::cout << "prm_crystal : " << prm_crystal. << std::endl;
+    //#define DEBUG
+#ifdef DEBUG
+    std::cout << "prm_crystal ";
+    std::cout << std::endl;
+    std::cout << "prm_crystal" << prm_crystal.DF_shift << std::endl;
+    std::cout << "prm_crystal" << prm_crystal.DF_shift_bool << std::endl;
+
+#endif
+#undef DEBUG
+
     // Prepare matrices to go from uncompressed space to deformed projection
     Matrix2D<double> AE = A * P.euler;   // From uncompressed to deformed
     Matrix2D<double> AEinv = AE.inv(); // From deformed to uncompressed
@@ -349,8 +361,7 @@ void project_crystal(Phantom &phantom, Projection &P,
 #endif
 #undef DEBUG5
 
-        // Add experimental shifts
-        //so far temp_vect(i,j) = exp_shifts_matrix_Z(i,j);
+        // Add experimental shiftsy
         cell_shiftX(i, j) += XX(temp_vect);
         cell_shiftY(i, j) += YY(temp_vect);
         //entiendo que x e y deban estar en el plano de la proyeccion
@@ -367,7 +378,7 @@ void project_crystal(Phantom &phantom, Projection &P,
     std::cout << "Cell shiftY\n" << cell_shiftY << std::endl;
     std::cout << "Cell shiftZ\n" << cell_shiftZ << std::endl;
 #endif
-    //#undef DEBUG
+    #undef DEBUG
 
     double density_factor = 1.0;
     if (prm_crystal.orthogonal)
