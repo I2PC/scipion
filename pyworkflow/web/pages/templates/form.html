@@ -36,6 +36,7 @@
 	<script>
 	function putMode(mode){
 		$("#protocolForm").attr('data-mode', mode);
+		$('#protocolForm').submit();
 	}
 	function putModeWiz(functionName){
 		$("input#wizName").attr("value", functionName);
@@ -225,11 +226,11 @@
 								{% elif param.hasWizard %}
 									<td class="ico">
 										<!-- <input type="submit" class="buttonWiz" value="" onclick="javascript:putModeWiz('{{param.wizardName}}');"/> -->
-										<a href="javascript:putModeWiz('{{param.wizardName}}');$('#protocolForm').submit();"><i class="fa fa-magic" style="font-size:1.2em;"></i></a>
+										<a href="javascript:putModeWiz('{{param.wizardName}}');"><i class="fa fa-magic" style="font-size:1.2em;"></i></a>
 									</td>
 								{% elif param.hasViewer %}
 									<td class="ico">
-										<a id="analyzeTool" href="javascript:putModeViewElm('{{paramName}}');$('#protocolForm').submit();" class="fa fa-eye"></a>
+										<a id="analyzeTool" href="javascript:putModeViewElm('{{paramName}}');" class="fa fa-eye"></a>
 										<!-- <input type="submit" class="buttonViewer" value="" onclick="javascript:putModeViewElm('{{paramName}}');"/> -->
 									</td>
 								{% else %}
@@ -252,13 +253,13 @@
 				<!-- <button class="buttonClose" type="button" onclick="window.close()">Close</button> -->
 				<a href="javascript:window.close()" class="btn buttonGrey"><i class="fa fa-times"></i>Close</a>
 				{% if visualize == 0 %}
-				<a href="javascript:putMode('save');$('#protocolForm').submit();" class="btn buttonGrey"><i class="fa fa-save"></i>Save</a>
-				<a href="javascript:putMode('execute');$('#protocolForm').submit();" class="btn buttonRed"><i class="fa fa-cogs"></i>Execute</a>
+				<a href="javascript:putMode('save');" class="btn buttonGrey"><i class="fa fa-save"></i>Save</a>
+				<a href="javascript:putMode('execute');" class="btn buttonRed"><i class="fa fa-cogs"></i>Execute</a>
 				
 				<!-- <input type="submit" class="buttonSave" value="Save" onclick="javascript:putMode('save');">
 				<input type="submit" class="buttonExec" value="Execute" onclick="javascript:putMode('execute');"> -->
 				{% elif visualize == 1 %}
-				<a href="javascript:putMode('viewer');$('#protocolForm').submit();" class="btn buttonRed"><i class="fa fa-cogs"></i>Execute</a>
+				<a href="javascript:putMode('viewer');" class="btn buttonRed"><i class="fa fa-cogs"></i>Execute</a>
 				<!-- <input type="submit" class="buttonExec" value="Visualize" onclick="javascript:putMode('viewer');"> -->
 				{% elif visualize == 2 %}
 				<a href="javascript:returnProtocol();" class="btn buttonGrey"><i class="fa fa-save"></i>Save</a>
