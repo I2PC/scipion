@@ -309,6 +309,11 @@ class ProtImportVolumes(EMProtocol):
         if self.pattern.get() == "":
             errors.append('Pattern cannot be EMPTY.')
         return errors
+        
+
+class ProtInitialVolume(EMProtocol):
+    """Protocol base for Initial volumes protocols"""
+    pass
 
 
 class ProtCTFMicrographs(EMProtocol):
