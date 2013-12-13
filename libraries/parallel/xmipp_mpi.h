@@ -260,24 +260,9 @@ public:\
         if (node->isMaster())\
             baseClassName::finishProcessing();\
     }\
-    int tryRun()\
+    void wait()\
     {\
-        try\
-        {\
-            if (doRun)\
-            {\
-                run1();\
-                distributor->wait();\
-                run2();\
-            }\
-        }\
-        catch (XmippError &xe)\
-        {\
-            std::cerr << xe;\
-            errorCode = xe.__errno;\
-            MPI::COMM_WORLD.Abort(xe.__errno);\
-        }\
-        return errorCode;\
+		distributor->wait();\
     }\
 };\
 
