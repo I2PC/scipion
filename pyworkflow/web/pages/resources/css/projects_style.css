@@ -1,26 +1,4 @@
 /* CSS Document */
-.layout-outer > .center{
-	height: 68px;
-	min-height: 68px;
-	max-height: 68px;
-}
-
-.layout-outer > header{
-	width: 100%;
-}
-.layout-outer > aside{
-	width: 100%;
-	padding-left:0px;
-}
-
-#asideMainContainer{
-	padding-left:20px;
-}
-
-.layout-outer > section{
-	min-height: 75%;
-}	
-
 .button {
 	font-size: 0.8em;
 	color: white;
