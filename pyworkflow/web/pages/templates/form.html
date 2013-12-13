@@ -213,14 +213,21 @@
 									<td class="ico">
 										<!-- <a href="javascript:browseObjects('{{paramName}}','{{projectName}}','{{param.pointerClass.get}}');"><img src="/resources/showj/zoom.png" class="menuIcon"></a> -->
 										<!-- <a href="javascript:browseObjects('{{paramName}}','{{projectName}}','{{param.pointerClass.get}}');"><img src={{browse}}/></a> -->
-										<a href="javascript:browseObjects('{{paramName}}','{{projectName}}','{{param.pointerClass.get}}');"><i class="fa fa-search" style="font-size:1.1em;"></i></a> 
+										<a href="javascript:browseObjects('{{paramName}}','{{projectName}}','{{param.pointerClass.get}}');">
+											<i class="fa fa-search" style="font-size:1.1em;"></i>
+										</a> 
 									</td>
 								{% elif param.getClassName == "ProtocolClassParam" %}
 									<td class="ico">
-										<a href="javascript:browseProtClass('{{paramName}}','{{projectName}}','{{param.protocolClassName.get}}');"><img src={{browse}}/></a>
+										<a href="javascript:browseProtClass('{{paramName}}','{{projectName}}','{{param.protocolClassName.get}}');">
+											<i class="fa fa-search" style="font-size:1.1em;"></i>
+<!-- 											<img src={{browse}}/> -->
+										</a>
 									</td>
 									<td class="ico">
-										<a href="javascript:formProtSimple('{{paramName}}','{{projectName}}');" class="iconEdit"></a>										
+										<a href="javascript:formProtSimple('{{paramName}}','{{projectName}}');" class="iconEdit">
+											<i class="fa fa-pencil" style="font-size:1.1em;"></i>
+										</a>										
 										<!-- <a href="javascript:formProtSimple('{{paramName}}','{{projectName}}');"><img src={{comment}}/></a> -->
 									</td>
 								{% elif param.hasWizard %}
