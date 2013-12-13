@@ -79,12 +79,11 @@ $(document).ready(function() {
 							id : 0,
 							label : 'Ok',
 							val : 'Y',
-							btnClass : 'fa-check'
+							btnClass : 'fa fa-check'
 						} ],
 						callback : function(val) {
 							if (val == 'Y') {
-//								window.opener.location.reload(true);
-								window.close();
+								closePopup();
 							}
 						}
 					});
@@ -111,12 +110,11 @@ $(document).ready(function() {
 							id : 0,
 							label : 'Ok',
 							val : 'Y',
-							btnClass : 'fa-check'
+							btnClass : 'fa fa-check'
 						} ],
 						callback : function(val) {
 							if (val == 'Y') {
-//								window.opener.location.reload(true);
-								window.close();
+								closePopup();
 								window.opener.popup('/form/?protocolId='+protId);
 							}
 						}
@@ -374,7 +372,7 @@ function formProtSimple(param, projName){
 			// load a blank form with a new protocol
 			var url = '/form/?protocolClass='+protSimple+'&action=protSimple&paramProt='+param
 		}
-		customPopup(url,500,350);
+		customPopup(url,500,450);
 	}
 	else{
 		launchMessiSimple("Error", messiError("Protocol was not selected, please choose one."));

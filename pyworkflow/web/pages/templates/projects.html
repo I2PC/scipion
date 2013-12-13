@@ -2,7 +2,7 @@
 
 {% block title %} - Projects{% endblock %}
 
-{% block head %}
+{% block content_head %}
 <!-- CSS -->
 <link href="{{projects_css}}" rel="stylesheet" type="text/css">
 <link href={{messi_css}} rel="stylesheet" type="text/css">
@@ -27,7 +27,15 @@
 
 		$(window).resize(layout); */
 		
-		$('.layout-outer').layout();
+		var outerContainer = $('.layout-outer');
+
+		function layout() {
+			outerContainer.layout({resize: false});
+		}
+		layout();
+
+		$(window).resize(layout);
+
 	});
 	
 
@@ -35,9 +43,12 @@
 </script>
 {% endblock %}
 
+{% block content_header %}	{% include "header.html"%} {% endblock %}
 
 {% block menu %}
+<div id="asideMainContainer">
 <a href="javascript:createProjectForm();" ><button class="priorityButton" type="button">Create Project</button></a>
+</div>
 {% endblock %}
 
 {% block content %}

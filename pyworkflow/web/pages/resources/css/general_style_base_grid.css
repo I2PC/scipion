@@ -1,0 +1,41 @@
+/* CSS Document */
+
+/* GENERAL */
+html, body {	
+	width: 100%;
+	height: 100%;
+	padding: 0;
+	margin: 0;
+}
+
+
+/* FLEX DESIGN */
+.layout-outer {
+ 	height: 110%;
+	min-height: 110%; 
+}
+.center, .west, .north, .south {
+    display: inline-block;
+}
+
+.layout-outer > .center{
+	height: 68px;
+	min-height: 68px;
+	max-height: 68px;
+}
+
+.layout-outer > header{
+	width: 100%;
+}
+.layout-outer > aside{
+	width: 100%;
+	padding-left:0px;
+}
+
+#asideMainContainer{
+	padding: 8px 20px;
+}
+
+.layout-outer > section{
+	min-height: 75%;
+}

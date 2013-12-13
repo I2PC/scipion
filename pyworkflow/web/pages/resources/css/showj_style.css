@@ -63,6 +63,9 @@ aside .sectionMenu {
 	-o-align-items: center;
 	-ms-align-items: center;
 	align-items: center;
+	
+	max-height: 27px;
+	padding: 10px 0px;
 }
 
 aside .subSectionMenu {
@@ -212,6 +215,32 @@ aside li:last-child{
 }
 
 /* MAIN SECTION */
+section {
+	padding: 20px;
+	
+	display: -webkit-box !important;      /* OLD - iOS 6-, Safari 3.1-6 */
+  	display: -moz-box !important;         /* OLD - Firefox 19- (buggy but mostly works) */
+  	display: -ms-flexbox !important;      /* TWEENER - IE 10 */
+	display: -moz-flex !important;
+	display: -ms-flex !important;
+	display: -o-flex !important;
+	display: -webkit-flex !important;
+	display: flex !important;
+	
+	-webkit-flex-flow: row;
+	-moz-flex-flow: row;
+	-o-flex-flow: row;
+	-ms-flex-flow: row;
+	flex-flow: row;
+	
+	-webkit-flex-wrap: wrap;
+	-moz-flex-wrap: wrap;
+	-o-flex-wrap: wrap;
+	-ms-flex-wrap: wrap;
+	flex-wrap: wrap;
+	
+}
+
 section .img_container {
 	/* margin: 10px 2px 10px 2px; */
 	/* margin: 2px; */
