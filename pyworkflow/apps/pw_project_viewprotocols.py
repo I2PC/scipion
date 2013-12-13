@@ -582,6 +582,7 @@ class ProtocolsView(tk.Frame):
     def _selectProtocol(self, prot):
         if prot is not None:
             prot.mapper = self.project.mapper
+            del self.selectedProtocol
             self.selectedProtocol = prot
             # TODO self.settings.selectedProtocol.set(prot)
             self.updateActionToolbar()
