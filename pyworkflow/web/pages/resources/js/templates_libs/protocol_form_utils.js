@@ -79,7 +79,7 @@ $(document).ready(function() {
 							id : 0,
 							label : 'Ok',
 							val : 'Y',
-							btnClass : 'fa-check'
+							btnClass : 'btn-select'
 						} ],
 						callback : function(val) {
 							if (val == 'Y') {
@@ -111,7 +111,7 @@ $(document).ready(function() {
 							id : 0,
 							label : 'Ok',
 							val : 'Y',
-							btnClass : 'fa-check'
+							btnClass : 'btn-select'
 						} ],
 						callback : function(val) {
 							if (val == 'Y') {
