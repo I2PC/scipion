@@ -199,6 +199,7 @@ class XmippRadiiWizard(XmippVolumeMaskRadiusWizard):
     def getView(self):
         return "wiz_volume_mask_radii"   
 
+
 class XmippFilterParticlesWizard(Wizard):
     
     def _getText(self, obj):
@@ -224,9 +225,10 @@ class XmippFilterParticlesWizard(Wizard):
             
         return provider
 
+
 class XmippBandpassWizard(XmippFilterParticlesWizard):
     
-    _targets = [(XmippProtFourierFilter, ['lowFreq', 'highFreq', 'freqDecay'])]
+    _targets = [(XmippProtFilter, ['lowFreq', 'highFreq', 'freqDecay'])]
     _environments = [DESKTOP_TKINTER, WEB_DJANGO]
     
     def show(self, form):
@@ -247,9 +249,10 @@ class XmippBandpassWizard(XmippFilterParticlesWizard):
     def getView(self):
         return "wiz_bandpass"   
     
+    
 class XmippGaussianWizard(XmippFilterParticlesWizard):
     
-    _targets = [(XmippProtGaussianFilter, ['freqSigma'])]
+    _targets = [(XmippProtFilter, ['freqSigma'])]
     _environments = [DESKTOP_TKINTER, WEB_DJANGO]
     
     def show(self, form):

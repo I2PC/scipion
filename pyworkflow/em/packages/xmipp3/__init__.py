@@ -48,8 +48,7 @@ from protocol_kerdensom import XmippProtKerdensom
 from protocol_rotational_spectra import XmippProtRotSpectra 
 from protocol_ml3d import XmippProtML3D
 from protocol_projmatch import XmippProtProjMatch
-from protocol_filters import XmippProtFourierFilter
-from protocol_filters import XmippProtGaussianFilter
+from protocol_filters import XmippProtFilter
 from protocol_filters import XmippProtMask, XmippProtResize
 from protocol_create_mask import XmippProtCreateGeo3DMask
 from protocol_particle_pick_automatic import XmippParticlePickingAutomatic
