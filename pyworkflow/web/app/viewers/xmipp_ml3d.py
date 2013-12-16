@@ -25,6 +25,7 @@
 # **************************************************************************
 
 import os
+from pyworkflow.web.app.views_util import *
 
 LAST_ITER = 0
 ALL_ITER = 1
@@ -89,7 +90,8 @@ def doPlotAngularDistribution(request, protocolViewer):
     iterToShow = str(protocolViewer.iterToShow.get())
     protViewerClass = str(protocolViewer.getClassName())
     protId = str(protocolViewer.protocol.getObjId())
-    return "plot","/view_plots/?function=plotAngularDistribution&protViewerClass="+ protViewerClass + "&protId="+ protId +"&iterToShow="+ iterToShow
+    width, height = getSizePlotter(1)
+    return "plot","/view_plots/?function=plotAngularDistribution&protViewerClass="+ protViewerClass + "&protId="+ protId +"&iterToShow="+ iterToShow + "&width=" + str(width) + "&height="+ str(height)
 
 def plotAngularDistribution(request, protocolViewer):
     protocolViewer.iterToShow.set(request.GET.get('iterToShow', None))
@@ -104,7 +106,8 @@ def doPlotClassDistribution(request, protocolViewer):
     protocolViewer.iterToShow.set(request.GET.get('iterToShow', None))
     protViewerClass = str(protocolViewer.getClassName())
     protId = str(protocolViewer.protocol.getObjId())
-    return "plot","/view_plots/?function=plotClassDistribution&protViewerClass="+ protViewerClass + "&protId="+ protId +"&iterToShow="+ iterToShow
+    width, height = getSizePlotter(1)
+    return "plot","/view_plots/?function=plotClassDistribution&protViewerClass="+ protViewerClass + "&protId="+ protId +"&iterToShow="+ iterToShow + "&width=" + str(width) + "&height="+ str(height)
 
 def plotClassDistribution(request, protocolViewer):
     protocolViewer.iterToShow.set(request.GET.get('iterToShow', None))
@@ -118,7 +121,8 @@ def plotClassDistribution(request, protocolViewer):
 def doPlotStatistics(request, protocolViewer):
     protViewerClass = str(protocolViewer.getClassName())
     protId = str(protocolViewer.protocol.getObjId())
-    return "plot","/view_plots/?function=plotStatistics&protViewerClass="+ protViewerClass + "&protId="+ protId
+    width, height = getSizePlotter(1)
+    return "plot","/view_plots/?function=plotStatistics&protViewerClass="+ protViewerClass + "&protId="+ protId + "&width=" + str(width) + "&height="+ str(height)
 
 def plotStatistics(request, protocolViewer):
     xplotter = protocolViewer._plotStatistics()

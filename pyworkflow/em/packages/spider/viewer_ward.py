@@ -44,10 +44,11 @@ from protocol_ward import SpiderProtClassifyWard
 
 
 class SpiderViewerWard(ProtocolViewer):
-    """ Visualization of Classify Ward.
-    """       
+    """ Visualization of Classify Ward. """
+           
     _environments = [DESKTOP_TKINTER, WEB_DJANGO]
     _targets = [SpiderProtClassifyWard]
+    _label = "viewer ward"
     
     def _defineParams(self, form):
         form.addSection(label='Visualization')

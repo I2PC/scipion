@@ -274,14 +274,10 @@ class ProtImportVolumes(EMProtocol):
         if n == 0:
             raise Exception('importVolumes:There is not filePaths matching pattern')
         
-        if n == 1:
-            # Create a single volume
-            vol = self.createVolume(filePaths[0])
-            self._defineOutputs(outputVolume=vol)
         else:
             # Create a set of volumes
             volSet = self._createSetOfVolumes()
-            
+            volSet.setSamplingRate(self.samplingRate.get())
             filePaths.sort()
             for f in filePaths:
                 volSet.append(self.createVolume(f))

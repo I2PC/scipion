@@ -33,6 +33,7 @@ input.hide {
 	list-style:
 }
 textarea {
+	padding: 4px;
 	resize: vertical;
 	background: LightGray;
 	max-height: 30em;

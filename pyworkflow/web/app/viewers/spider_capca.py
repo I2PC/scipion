@@ -78,7 +78,8 @@ def doPlotsCAPCA(request, protocolViewer):
 def doPlotHistogram(request, protocolViewer):
     protViewerClass = str(protocolViewer.getClassName())
     protId = str(protocolViewer.protocol.getObjId())
-    return "plot","/view_plots/?function=plotHistogram&protViewerClass="+ protViewerClass + "&protId="+ protId
+    width, height = getSizePlotter(1)
+    return "plot","/view_plots/?function=plotHistogram&protViewerClass="+ protViewerClass + "&protId="+ protId + "&width=" + str(width) + "&height="+ str(height)
 
 def plotHistogram(request, protocolViewer):
     xplotter = protocolViewer._plotHistogram()
@@ -89,7 +90,8 @@ def doPlotFactorMaps(request, protocolViewer):
     second = str(protocolViewer.secondFactor.get())
     protViewerClass = str(protocolViewer.getClassName())
     protId = str(protocolViewer.protocol.getObjId())
-    return "plot","/view_plots/?function=plotFactorMaps&protViewerClass="+ protViewerClass + "&protId="+ protId +"&first="+ first +"&second="+second 
+    width, height = getSizePlotter(1)
+    return "plot","/view_plots/?function=plotFactorMaps&protViewerClass="+ protViewerClass + "&protId="+ protId +"&first="+ first +"&second="+second + "&width=" + str(width) + "&height="+ str(height)
 
 def plotFactorMaps(request, protocolViewer):
     protocolViewer.firstFactor.set(request.GET.get('first', None))

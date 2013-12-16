@@ -41,6 +41,8 @@ class SpiderProtCustomMask(ProtCreateMask, SpiderProtocol):
     """ Reference-free alignment shift and rotational alignment of an image series. 
     Uses Spider AP SR command.
     """
+    _label = 'custom mask'
+    
     def __init__(self):
         ProtCreateMask.__init__(self)
         SpiderProtocol.__init__(self)

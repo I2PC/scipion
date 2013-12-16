@@ -88,6 +88,9 @@ class Plotter(object):
     def getCanvas(self):
         return self.figure.canvas
     
+    def getFigure(self):
+        return self.figure
+    
     def showLegend(self, labels, loc='best'):
         leg = self.last_subplot.legend(tuple(labels), loc=loc)
         for t in leg.get_texts():

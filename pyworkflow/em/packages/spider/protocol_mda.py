@@ -39,6 +39,8 @@ from glob import glob
 class SpiderWfMDA(ProtClassify, SpiderProtocol):
     """ Ward's method, using 'CL HC' 
     """
+    _label = 'workflow mda'
+    
     def __init__(self, **args):
         ProtClassify.__init__(self, **args)
         EMProtocol.__init__(self, **args)

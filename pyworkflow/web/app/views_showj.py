@@ -409,6 +409,12 @@ def visualizeObject(request):
     #    allowSetRenderable: Defines if user can change renderable property.
     #    renderFunc: Function to be used when this field is rendered. (it has to be inserted in render_column method)
     #    extraRenderFunc: Any extra parameters needed for rendering. Parameters are passed like in a url ie downsample=2&lowPass=3.5
+    #
+    # Example:
+    # extraParameters["id___visible"]=True
+    # extraParameters["micrograph___renderFunc"]="get_image_psd"
+    # extraParameters["micrograph___extraRenderFunc"]="downsample=2"
+            
     extraParameters = {}
     
 # NAPA DE LUXE: PARA probarlo sin sesion iniciada    
@@ -437,26 +443,22 @@ def visualizeObject(request):
 
         if isinstance(obj, SetOfMicrographs):
             fn = project.getTmpPath(obj.getName() + '_micrographs.xmd')
-            writeSetOfMicrographs(obj, fn)
-            #NAPA DE LUXE
-            #extraParameters["id___visible"]=True
-            #extraParameters["micrograph___renderFunc"]="get_image_psd"
-            #extraParameters["micrograph___extraRenderFunc"]="downsample=2"
-            
-            inputParameters['path']= os.path.join(projectPath, fn)
+            inputParameters['path'] = os.path.join(projectPath, createXmippInputMicrographs(None, obj, micsFn=os.path.join(projectPath, fn)))
+#            writeSetOfMicrographs(obj, fn)
+#            inputParameters['path']= os.path.join(projectPath, fn)
         elif isinstance(obj, SetOfVolumes):
             fn = project.getTmpPath(obj.getName()+ '_volumes.xmd')
-            writeSetOfVolumes(obj, fn)
-            inputParameters['path']= os.path.join(projectPath, fn)
-#            inputParameters['setOfVolumes']= obj
-#            inputParameters['setOfVolumesId']= obj.getObjId()
-#            inputParameters['dims']= '3d'
+            inputParameters['path'] = os.path.join(projectPath, createXmippInputVolumes(None, obj, volsFn=os.path.join(projectPath, fn))) 
             inputParameters['mode']= 'table'
+            
+#            writeSetOfVolumes(obj, fn)
+#            inputParameters['path']= os.path.join(projectPath, fn)
         elif isinstance(obj, SetOfImages):
-    #        PAJM aqui falla para el cl2d align y se esta perdiendo la matrix de transformacion en la conversion
             fn = project.getTmpPath(obj.getName() + '_images.xmd')
-            writeSetOfParticles(obj, fn)
-            inputParameters['path']= os.path.join(projectPath, fn)
+            inputParameters['path'] = os.path.join(projectPath, createXmippInputImages(None, obj, imagesFn=os.path.join(projectPath, fn)))
+            
+#            writeSetOfParticles(obj, fn)
+#            inputParameters['path']= os.path.join(projectPath, fn)
         elif isinstance(obj, Image):
             fn = project.getTmpPath(obj.getName() + '_image.xmd')
             fnSet = fn.replace('.xmd', '.sqlite')
@@ -468,22 +470,24 @@ def visualizeObject(request):
             #img.copyInfo(obj)
             img.copyLocation(obj)
             imgSet.append(img)
-            writeSetOfParticles(imgSet, fn)
-            inputParameters['path']= os.path.join(projectPath, fn)
+            inputParameters['path'] = os.path.join(projectPath, createXmippInputImages(None, imgSet, imagesFn=os.path.join(projectPath, fn)))
+#            writeSetOfParticles(imgSet, fn)
+#            inputParameters['path']= os.path.join(projectPath, fn)
             
         elif isinstance(obj, SetOfClasses2D):
             fn = project.getTmpPath(obj.getName() + '_classes.xmd')
-            writeSetOfClasses2D(obj, fn)
-            inputParameters['path']= os.path.join(projectPath, fn)
+#            writeSetOfClasses2D(obj, fn)
+#            inputParameters['path']= os.path.join(projectPath, fn)
+            inputParameters['path'] = os.path.join(projectPath, createXmippInputClasses2D(None, obj, classFn=os.path.join(projectPath, fn)))
         elif isinstance(obj, SetOfCTF):
             fn = project.getTmpPath(obj.getName() + '_ctfs.xmd')
-            writeSetOfCTFs(obj, fn)
-            inputParameters['path']= os.path.join(projectPath, fn)
+            inputParameters['path'] = os.path.join(projectPath, createXmippInputCTF(None, obj, ctfFn=os.path.join(projectPath, fn)))
+#            writeSetOfCTFs(obj, fn)
+#            inputParameters['path']= os.path.join(projectPath, fn)
         else:
             raise Exception('Showj Web visualizer: can not visualize class: %s' % obj.getClassName())
     
     elif "path" in request.GET:
-        #inputParameters.update(request.GET.items())
         inputParameters.update({'path':os.path.join(projectPath, request.GET.get("path"))})
     else:
         raise Exception('Showj Web visualizer: No object identifier or path found')         

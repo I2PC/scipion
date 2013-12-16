@@ -31,7 +31,7 @@ This sub-package contains wrapper around ML3D Xmipp program
 from pyworkflow.em import *  
 from pyworkflow.utils import *  
 import xmipp
-from convert import createXmippInputImages, readSetOfVolumes
+from convert import createXmippInputImages, readSetOfVolumes, createXmippInputVolumes
 
 #from xmipp3 import XmippProtocol
         
@@ -159,8 +159,9 @@ class XmippProtML3D(ProtRefine3D, ProtClassify3D):
         self.ParamsDict = {}
         self.ParamsDict['ProgId'] = self.getProgramId()
         
-        #TODO: Retrieve initial volume path from object (now is a text) and convert if needed
-        refMd = self.ini3DrefVolumes.get()
+        volSet = self.ini3DrefVolumes.get()
+        refMd = createXmippInputVolumes(self, volSet)
+        
         initVols = self.ParamsDict['InitialVols'] = self._getExtraPath('initial_volumes.stk')
         self.mdVols = xmipp.MetaData(refMd)
         
