@@ -264,14 +264,17 @@ void ProgConvImg::preProcess()
                 md->setValue(MDL_ENABLED, 1, id);
             }
             imIn.read(fn_in, DATA, ALL_IMAGES, true);
-            imOut = new ImageGeneric(imIn.getDatatype());
+            imOut = new ImageGeneric(datatypeOut);
             k = 0; // Reset to zero to select the slices when working with volumes
             createEmptyFile(fn_out+depth, xdimOut, ydimOut, 1, zdimOut, true, WRITE_OVERWRITE, swap);
         }
     }
     else if (create_empty_stackfile)
+    {
+        if (depth.empty())
+            depth = "%"+datatype2Str(datatypeOut);
         createEmptyFile(fn_out+depth, xdimOut, ydimOut, zdimOut, mdInSize, true, WRITE_OVERWRITE, swap);
-
+    }
     create_empty_stackfile = false;
 }//function preprocess
 
@@ -325,7 +328,7 @@ void ProgConvImg::finishProcessing()
         progress_bar(time_bar_size);
         break;
     default:
-    	break;
+        break;
     }
 
     XmippMetadataProgram::finishProcessing();

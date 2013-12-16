@@ -43,6 +43,13 @@ class ProtNMAAlignment(XmippProtocol):
         message.append("Normal modes: ["+self.Modesfile+"]")
         return message
     
+    def papers(self):
+        papers=[]
+        if not self.ProjMatch:
+            papers.append("Sorzano, JSB (2004) [http://www.ncbi.nlm.nih.gov/pubmed/15099579]")
+            papers.append("Jonic, Ultramic (2005) [http://www.ncbi.nlm.nih.gov/pubmed/15885434]")
+        return papers
+
     def validate(self):
         errors = []
         return errors

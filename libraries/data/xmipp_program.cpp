@@ -154,7 +154,8 @@ void XmippProgram::createGUI()
     ProtPrinter pp(scriptStr, true);
     pp.printProgram(*progDef);
     chmod(scriptStr, S_IRWXU);
-    system(scriptStr);
+    if (system(scriptStr)==-1)
+    	REPORT_ERROR(ERR_UNCLASSIFIED,"Could not create shell");
 }
 
 void XmippProgram::createWiki()
@@ -751,9 +752,14 @@ void XmippMetadataProgram::setupRowOut(const FileName &fnImgIn, const MDRow &row
         rowOut.setValue(MDL_IMAGE_ORIGINAL, fnImgIn);
 }
 
+void XmippMetadataProgram::wait()
+{
+	// In the serial implementation, we don't have to wait. This will be useful for MPI programs
+}
+
 void XmippMetadataProgram::run()
 {
-    FileName fnImg, fnImgOut, baseName, pathBaseName, fullBaseName, oextBaseName;
+    FileName fnImg, fnImgOut, fullBaseName;
     size_t objId;
     MDRow rowIn, rowOut;
     mdOut.clear(); //this allows multiple runs of the same Program object
@@ -828,6 +834,7 @@ void XmippMetadataProgram::run()
 
         showProgress();
     }
+    wait();
 
     //free iterator memory
     delete iter;

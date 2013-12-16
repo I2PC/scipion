@@ -70,7 +70,7 @@ void MpiProgImageRotationalPCA::createMutexes(size_t Nimgs)
 {
   fileMutex = new MpiFileMutex(node);
   threadMutex = new Mutex();
-  taskDistributor = new FileTaskDistributor(Nimgs, XMIPP_MAX(1,Nimgs/(5*node->size)), node);
+  taskDistributor = new MpiTaskDistributor(Nimgs, XMIPP_MAX(1,Nimgs/(5*node->size)), node);
 }
 
 /** Last part of function applyT */

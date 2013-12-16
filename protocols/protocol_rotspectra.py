@@ -62,6 +62,13 @@ class ProtRotSpectra(XmippProtocol):
             message.append("Currently at iteration <%d> out of <%d>" % (len(lines), self.SomSteps))
         return message
     
+    def papers(self):
+        papers=[]
+        papers.append('Pascual-Montano, Ultramic (2000) [http://www.ncbi.nlm.nih.gov/pubmed/10896143]')
+        papers.append('Pascual-Montano, JSB (2001) [http://www.ncbi.nlm.nih.gov/pubmed/11472094]')
+        papers.append('Pascual-Montano, JSB (2002) [http://www.ncbi.nlm.nih.gov/pubmed/12160707]')
+        return papers
+
     def visualize(self):
         runShowJ("classes@%s" % self.extraPath("kerdensom_classes.xmd"), extraParams="--mode rotspectra --columns %d" % self.SomXdim)
   

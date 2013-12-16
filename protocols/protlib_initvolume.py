@@ -61,7 +61,7 @@ class ProtInitVolumeBase(XmippProtocol):
 
         self.insertRunJobStep("xmipp_transform_filter","-i %s -o %s --fourier low_pass %f --oroot %s"
                                                 %(self.Classes,fnOutputReducedClass,freq,fnOutputReducedClassNoExt))
-        self.insertRunJobStep("xmipp_image_resize","-i %s --dim %d %d -o %s" %(fnOutputReducedClass,self.Xdim2,self.Xdim2,fnOutputReducedClassNoExt))
+        self.insertRunJobStep("xmipp_image_resize","-i %s --fourier %d -o %s" %(fnOutputReducedClass,self.Xdim2,fnOutputReducedClassNoExt))
 
         #self.insertRunJobStep("xmipp_transform_filter","-i %s -o %s.stk --save_metadata_stack %s.xmd --fourier low_pass %f"
         #                                        %(self.Classes,fnOutputReducedClassNoExt,fnOutputReducedClassNoExt,freq))

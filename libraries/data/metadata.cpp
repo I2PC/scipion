@@ -642,10 +642,10 @@ void MetaData::writeStar(const FileName &outFile,const String &blockName, WriteM
 
     struct stat file_status;
     int fd;
-    char *map;
+    char *map=NULL;
     char * tailMetadataFile = NULL;//auxiliary variable to keep metadata file tail in memory
     size_t size=-1;
-    char * target, * target2;
+    char * target, * target2=NULL;
 
     //check if file exists or not block name has been given
     //in our format no two identical data_xxx strings may exists
@@ -700,7 +700,8 @@ void MetaData::writeStar(const FileName &outFile,const String &blockName, WriteM
                         tailMetadataFile = (char *) malloc( ((map + size) - target2));
                         memmove(tailMetadataFile,target2, (map + size) - target2);
                     }
-                    ftruncate(fd, target - map+1); //truncate rest of the file
+                    if (ftruncate(fd, target - map+1)==-1)  //truncate rest of the file
+                    	REPORT_ERROR(ERR_UNCLASSIFIED,"Cannot truncate file");
                 }
             }
             close(fd);
@@ -1822,7 +1823,8 @@ void MetaData::makeAbsPath(const MDLabel label)
     String aux_string_path;
     char buffer[1024];
 
-    getcwd(buffer, 1023);
+    if (!getcwd(buffer, 1023))
+    	REPORT_ERROR(ERR_UNCLASSIFIED,"Cannot get the current directory");
     String path_str(buffer);
     path_str += "/";
     getValue(label, aux_string, firstObject());
@@ -1915,7 +1917,7 @@ void MetaData::vecToMetadata(const std::vector<MDRow> &rowMetadata)
 {
     const MDRow row;
 
-    for (int i=0;i<rowMetadata.size();i++)
+    for (size_t i=0;i<rowMetadata.size();i++)
         this->addRow(rowMetadata[i]);
 }
 

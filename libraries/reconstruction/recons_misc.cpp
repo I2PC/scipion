@@ -142,7 +142,7 @@ void sortPerpendicular(int numIMG, ReconsInfo *IMG_Inf,
     MultidimArray<short> chosen(numIMG);     // 1 if that image has been already
     // chosen
     double min_prod;
-    int   min_prod_proj;
+    int   min_prod_proj=0;
     Matrix2D<double> v(numIMG, 3);
     Matrix2D<double> euler;
     MultidimArray<double> product(numIMG);
@@ -550,7 +550,8 @@ void VariabilityClass::finishAnalysis()
         fh_dat.close();
 
         // Classify
-        system("xmipp_fcmeans -din PPP.dat -std::cout PPP -c 2 -saveclusters > /dev/null");
+        if (system("xmipp_fcmeans -din PPP.dat -std::cout PPP -c 2 -saveclusters > /dev/null")==-1)
+        	REPORT_ERROR(ERR_UNCLASSIFIED,"Cannot open shell");
 
         // Pick up results
         Matrix2D<double> aux;
@@ -675,7 +676,8 @@ void VariabilityClass::finishAnalysis()
     SignificantT2.write(prm->fn_root + "_variability.vol");
     SignificantMinRatio.write(prm->fn_root + "_minratio.vol");
     SignificantMaxRatio.write(prm->fn_root + "_maxratio.vol");
-    system("rm PPP.dat PPP.cod PPP.vs PPP.err PPP.his PPP.inf PPP.0 PPP.1");
+    if (system("rm PPP.dat PPP.cod PPP.vs PPP.err PPP.his PPP.inf PPP.0 PPP.1")==-1)
+    	REPORT_ERROR(ERR_UNCLASSIFIED,"Cannot open shell");
 
     for (int n = 0; n < nmax; n++)
         for (int np = n + 1; np < nmax; np++)

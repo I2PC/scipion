@@ -121,5 +121,10 @@ class ProtMLTomo(XmippProtocol):
 
         return message
 
+    def papers(self):
+        papers=[]
+        papers.append('Scheres, Structure (2009) [http://www.ncbi.nlm.nih.gov/pubmed/20004160]')
+        return papers
+
     def visualize(self):
         pass

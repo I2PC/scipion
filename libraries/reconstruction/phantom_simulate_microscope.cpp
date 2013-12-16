@@ -141,7 +141,7 @@ void ProgSimulateMicroscope::estimateSigma()
 
     MultidimArray<double> proj_power(N_stats);
     MultidimArray<double> proj_area(N_stats);
-    double power_avg, power_stddev, area_avg, area_stddev, avg, dummy;
+    double power_avg=0., power_stddev, area_avg=0., area_stddev, avg, dummy;
     if (verbose!=0)
     {
         std::cerr << "Estimating noise power for target SNR=" << targetSNR << std::endl;

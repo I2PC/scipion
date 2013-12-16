@@ -36,13 +36,13 @@ void __threadMpiMasterDistributor(ThreadArgument &arg)
     MPI_Status status;
     int finalizedWorkers = 0;
 
-    while (finalizedWorkers < size - 1)
+    while (finalizedWorkers < size-1)
     {
         //wait for request form workers
         MPI_Recv(0, 0, MPI_INT, MPI_ANY_SOURCE, 0, MPI_COMM_WORLD, &status);
 
         workBuffer[0] =
-            distributor->ThreadTaskDistributor::distribute(workBuffer[1],
+            distributor->ThreadTaskDistributor::getTasks(workBuffer[1],
                     workBuffer[2]) ? 1 : 0;
         if (workBuffer[0] == 0) //no more jobs
             finalizedWorkers++;
@@ -69,7 +69,7 @@ MpiTaskDistributor::~MpiTaskDistributor()
 {
     if (node->isMaster())
     {
-        manager->wait();
+//        manager->wait();
         delete manager;
     }
 }
@@ -95,6 +95,20 @@ bool MpiTaskDistributor::distribute(size_t &first, size_t &last)
     last = workBuffer[2];
 
     return (workBuffer[0] == 1);
+}
+
+void MpiTaskDistributor::reset()
+{
+    ThreadTaskDistributor::reset();
+    if (node->isMaster())
+        manager->runAsync(__threadMpiMasterDistributor);
+}
+
+void MpiTaskDistributor::wait()
+{
+    if (node->isMaster())
+        manager->wait();
+    node->barrierWait();
 }
 
 // ================= FILE MUTEX ==========================
@@ -128,13 +142,15 @@ void MpiFileMutex::lock()
 {
     Mutex::lock();
     lseek(lockFile, 0, SEEK_SET);
-    lockf(lockFile, F_LOCK, 0);
+    if (lockf(lockFile, F_LOCK, 0)==-1)
+        REPORT_ERROR(ERR_IO_NOPERM,"Cannot lock file");
 }
 
 void MpiFileMutex::unlock()
 {
     lseek(lockFile, 0, SEEK_SET);
-    lockf(lockFile, F_ULOCK, 0);
+    if (lockf(lockFile, F_ULOCK, 0)==-1)
+        REPORT_ERROR(ERR_IO_NOPERM,"Cannot unlock file");
     Mutex::unlock();
 }
 
@@ -146,89 +162,6 @@ MpiFileMutex::~MpiFileMutex()
         perror("~MpiFileMutex: error deleting lock file");
         exit(1);
     }
-}
-
-FileTaskDistributor::FileTaskDistributor(size_t nTasks, size_t bSize,
-        MpiNode * node) :
-        ThreadTaskDistributor(nTasks, bSize)
-{
-    fileMutex = new MpiFileMutex(node);
-    if (node == NULL || node->isMaster())
-        createLockFile();
-    loadLockFile();
-    this->node=node;
-}
-
-FileTaskDistributor::~FileTaskDistributor()
-{
-    delete fileMutex;
-}
-
-void FileTaskDistributor::reset()
-{
-    if (node == NULL || node->isMaster())
-        setAssignedTasks(0);
-    if (node != NULL)
-        node->barrierWait();
-}
-
-void FileTaskDistributor::createLockFile()
-{
-    int buffer[] = { numberOfTasks, assignedTasks, blockSize };
-
-    if ((lockFile = open(fileMutex->lockFilename, O_CREAT | O_RDWR | O_TRUNC
-                         , S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH)) == -1)
-    {
-        perror("FileTaskDistributor::createLockFile: Error opening lock file");
-        exit(1);
-    }
-
-    if (write(lockFile, buffer, 3 * sizeof(int)) == -1)
-    {
-        perror(
-            "FileTaskDistributor::createLockFile: Error writing to lock file");
-        exit(1);
-    }
-
-    writeVars();
-} //function createLockFile
-
-void FileTaskDistributor::loadLockFile()
-{
-    if ((lockFile = open(fileMutex->lockFilename, O_RDWR)) == -1)
-    {
-        perror("FileTaskDistributor::loadLockFile: Error opening lock file");
-        exit(1);
-    }
-    readVars();
-}
-
-void FileTaskDistributor::readVars()
-{
-    lseek(lockFile, 0, SEEK_SET);
-    read(lockFile, &numberOfTasks, sizeof(size_t));
-    read(lockFile, &assignedTasks, sizeof(size_t));
-    read(lockFile, &blockSize, sizeof(size_t));
-}
-
-void FileTaskDistributor::writeVars()
-{
-    lseek(lockFile, 0, SEEK_SET);
-    write(lockFile, &numberOfTasks, sizeof(size_t));
-    write(lockFile, &assignedTasks, sizeof(size_t));
-    write(lockFile, &blockSize, sizeof(size_t));
-}
-
-void FileTaskDistributor::lock()
-{
-    fileMutex->lock();
-    readVars();
-}
-
-void FileTaskDistributor::unlock()
-{
-    writeVars();
-    fileMutex->unlock();
 }
 
 //------------ MPI ---------------------------
@@ -250,7 +183,7 @@ MpiNode::~MpiNode()
 {
     //active = 0;
     //updateComm();
-    //std::cerr << "Send Finalize to: " << rank;
+    //std::cerr << "Send Finalize to: " << rank << std::endl;
     MPI::Finalize();
 }
 
@@ -409,7 +342,7 @@ void MpiMetadataProgram::readParams()
 }
 
 void MpiMetadataProgram::createTaskDistributor(MetaData &mdIn,
-		size_t blockSize)
+        size_t blockSize)
 {
     size_t size = mdIn.size();
     if (blockSize < 1)
@@ -418,7 +351,7 @@ void MpiMetadataProgram::createTaskDistributor(MetaData &mdIn,
         blockSize = size;
 
     mdIn.findObjects(imgsId);
-    distributor = new FileTaskDistributor(size, blockSize, node);
+    distributor = new MpiTaskDistributor(size, blockSize, node);
 }
 
 //Now use the distributor to grasp images
@@ -436,4 +369,5 @@ bool MpiMetadataProgram::getTaskToProcess(size_t &objId, size_t &objIndex)
     first = distributor->numberOfTasks - 1;
     return false;
 }
+
 

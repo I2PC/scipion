@@ -1,7 +1,7 @@
 /***************************************************************************
  *
  * Authors:     Carlos Oscar S. Sorzano (coss@cnb.csic.es)
- *              Pedro A. de Alarc�n     (pedro@cnb.csic.es)
+ *              Pedro A. de Alarc���n     (pedro@cnb.csic.es)
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
@@ -530,7 +530,7 @@ void sharpening(const MultidimArray<double> &in, double width, double strength,
     kernel.setXmippOrigin();
     
     double width2=width*width;
-    double minval, maxval;
+    double minval=0., maxval=0.;
     in.computeDoubleMinMax(minval,maxval);
     double c=minval+(maxval-minval)*strength/100;
     double a=(minval-c)/width2;

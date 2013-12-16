@@ -286,7 +286,7 @@ public:
 public:
     //Image<double>   img;
     /// Filenames of input and output Metadata
-    FileName fn_in, fn_out;
+    FileName fn_in, fn_out, baseName, pathBaseName, oextBaseName;
     /// Apply geo
     bool apply_geo;
     /// Output dimensions
@@ -415,6 +415,10 @@ public:
     /// Prepare rowout
     void setupRowOut(const FileName &fnImgIn, const MDRow &rowIn, const FileName &fnImgOut, MDRow &rowOut) const;
 
+    /// Wait for the distributor to finish
+    virtual void wait();
+
+    /// Run over all images
     virtual void run();
 }
 ;// end of class XmippMetadataProgram

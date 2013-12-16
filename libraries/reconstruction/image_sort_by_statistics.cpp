@@ -250,7 +250,8 @@ void ProgSortByStatistics::processInprocessInputPrepareSPTH(MetaData &SF)
             nI.binarize(0);
             int im = labelImage2D(nI,nI,8);
             compute_hist(nI, hist, 0, im, im+1);
-            int l,k,i,j;
+            size_t l;
+            int k,i,j;
             hist.maxIndex(l,k,i,j);
             A1D_ELEM(hist,j)=0;
             hist.maxIndex(l,k,i,j);
@@ -286,8 +287,8 @@ void ProgSortByStatistics::processInprocessInputPrepareSPTH(MetaData &SF)
             tempPcaAnalyzer3.addVector(v3);
 
 
-            double minVal;
-            double maxVal;
+            double minVal=0.;
+            double maxVal=0.;
             mI.computeDoubleMinMax(minVal,maxVal);
             compute_hist(mI, hist, minVal, maxVal, 100);
 

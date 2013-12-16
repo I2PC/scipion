@@ -30,7 +30,7 @@ VolumeOperation="Threshold"
 """ Grey value below which all voxels should be set to 0 """
 Threshold=0
 
-# {condition}(MaskSource=="Volume" and VolumeOperation=="Segment") {list_combo}(Voxel mass, Aminoacid mass, Dalton mass, Automatic) Segmentation type
+# {condition}(MaskSource=="Volume" and VolumeOperation=="Segment") {list_combo}(Number of voxels, Number of aminoacids, Dalton mass, Automatic) Segmentation type
 """ Type of segmentation """
 SegmentationType='Automatic'
 

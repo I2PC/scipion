@@ -284,7 +284,7 @@ void ProgCTFEstimateFromMicrograph::run()
 
     // Compute the number of divisions --------------------------------------
     int div_Number = 0;
-    int div_NumberX, div_NumberY;
+    int div_NumberX=1, div_NumberY=1;
     if (psd_mode == OnePerParticle)
         div_Number = posFile.size();
     else if (psd_mode == OnePerMicrograph)
@@ -350,7 +350,7 @@ void ProgCTFEstimateFromMicrograph::run()
     while (N <= div_Number)
     {
         bool skip = false;
-        int blocki, blockj;
+        int blocki=0, blockj=0;
         // Compute the top-left corner of the piece ..........................
         if (psd_mode == OnePerParticle)
         {
@@ -651,15 +651,18 @@ void ProgCTFEstimateFromMicrograph::run()
                     std::string command = (std::string) "mv -i " + fnBase
                                           + ".ctfparam " + fnBase + "_bootstrap_"
                                           + integerToString(n, 4) + ".ctfparam";
-                    system(command.c_str());
+                    if (system(command.c_str())==-1)
+                    	REPORT_ERROR(ERR_UNCLASSIFIED,"Cannot open shell");
                     command = (std::string) "mv -i " + fnBase
                               + ".ctfmodel_quadrant " + fnBase + "_bootstrap_"
                               + integerToString(n, 4) + ".ctfmodel_quadrant";
-                    system(command.c_str());
+                    if (system(command.c_str())==-1)
+                    	REPORT_ERROR(ERR_UNCLASSIFIED,"Cannot open shell");
                     command = (std::string) "mv -i " + fnBase
                               + ".ctfmodel_halfplane " + fnBase + "_bootstrap_"
                               + integerToString(n, 4) + ".ctfmodel_halfplane";
-                    system(command.c_str());
+                    if (system(command.c_str())==-1)
+                    	REPORT_ERROR(ERR_UNCLASSIFIED,"Cannot open shell");
 
                     progress_bar(n);
                 }

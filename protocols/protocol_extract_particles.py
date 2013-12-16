@@ -189,6 +189,17 @@ class ProtExtractParticles(ProtParticlesBase):
             message.append("%s extracted: <%d>" % (part2, size))
         return message
 
+    def papers(self):
+        papers=[]
+        if self.DoNorm:
+            papers.append('Sorzano, Ultramic (2004) [http://www.ncbi.nlm.nih.gov/pubmed/15450658]')
+        if self.TsFinal!=self.TsInput:
+            papers.append('Sorzano, IEEE WISP (2009) [http://ieeexplore.ieee.org/xpl/login.jsp?arnumber=5286563]')
+        if self.DoRemoveDust or self.DoFlip:
+            papers.append('Sorzano, Meth.Mol.Biol. (2013) [http://www.ncbi.nlm.nih.gov/pubmed/23086876]')
+        papers.append('Vargas, JSB (2013) [http://www.ncbi.nlm.nih.gov/pubmed/23933392]')
+        return papers
+
     def getMicrographInfo(self, md, id):
         micrograph=md.getValue(MDL_MICROGRAPH,id)
         micrographOriginal=md.getValue(MDL_MICROGRAPH_ORIGINAL,id)

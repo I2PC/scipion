@@ -664,6 +664,21 @@ class XmippProtocol(object):
         '''Produces a summary with the most relevant information of the protocol run'''
         return []
     
+    def xmippPapers(self):
+        '''General papers to cite in Xmipp'''
+        papers=[]
+        papers.append('Xmipp: Marabini, JSB (1996) [http://www.ncbi.nlm.nih.gov/pubmed/8812978]')
+        papers.append('Xmipp: Sorzano, JSB (2004) [http://www.ncbi.nlm.nih.gov/pubmed/15477099]')
+        papers.append('Xmipp: de la Rosa-Trevin, JSB (2013) [http://www.ncbi.nlm.nih.gov/pubmed/24075951]')
+        papers.append('Protocols: Scheres, Nat.Prot. (2008) [http://www.ncbi.nlm.nih.gov/pubmed/18536645]')
+        papers.append('Protocols: Devaux, Meth.Cell.Biol. (2012) [http://www.sciencedirect.com/science/article/pii/B9780124059146000160]')
+        papers.append('Protocols: Sorzano, Meth.Mol.Biol. (2013) [http://www.ncbi.nlm.nih.gov/pubmed/23086876]')
+        return papers
+    
+    def papers(self):
+        '''Produces the set of papers to cite in this protocol '''
+        return []
+    
     def visualize(self):
         '''Visualizes the results of this run'''
         pass

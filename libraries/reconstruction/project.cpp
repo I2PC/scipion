@@ -540,10 +540,10 @@ void generate_angles(int ExtProjs, const Angle_range &range,
                      MetaData &DF, char ang_name, const ParametersProjection &prm)
 {
     double ang;
-    int   N1, N2;
+    int   N1=0, N2=0;
     int   i, j, k;
-    size_t iproj, idx;
-    int   limit;
+    size_t iproj, idx=0;
+    int   limit=0;
     MetaData DFaux=DF;
 
     // Select loop limit ....................................................
@@ -779,7 +779,7 @@ int Assign_angles(MetaData &DF, const ParametersProjection &prm,
                   const FileName &fn_sym)
 {
     int ExtProjs = 0, IntProjs = 0;    // External and internal projections
-    int Nrottilt;                      // Number of evenly distributed
+    int Nrottilt=0;                    // Number of evenly distributed
 
     // External generation mode
     if (prm.fn_angle != "NULL")

@@ -87,6 +87,17 @@ class ProtML3D(XmippProtocol):
         
         return lines
     
+    def papers(self):
+        papers=[]
+        if self.DoFast:
+            papers.append('Scheres, Bioinformatics (2005) [http://www.ncbi.nlm.nih.gov/pubmed/16204112]')
+        papers.append('Scheres, Nat.Meth (2007) [http://www.ncbi.nlm.nih.gov/pubmed/17179934]')
+        if self.DoMlf:
+            papers.append('Scheres, Structure (2007) [http://www.ncbi.nlm.nih.gov/pubmed/17937907]')
+        if self.DoNorm:
+            papers.append('Scheres, JSB (2009) [http://www.ncbi.nlm.nih.gov/pubmed/19236920]')
+        return papers
+
     def validate(self):
         errors = []
         

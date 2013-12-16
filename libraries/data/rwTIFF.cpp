@@ -25,22 +25,6 @@
 
 #include "xmipp_image_base.h"
 
-
-/** TIFF Data Header
-*/
-struct TIFFDirHead
-{                                   // Header for each Directory in TIFF
-    unsigned short  bitsPerSample;
-    unsigned short  samplesPerPixel;
-    unsigned int   imageWidth;
-    unsigned int   imageLength;
-    uint16           imageSampleFormat;
-    unsigned short  resUnit;
-    float            xTiffRes,yTiffRes;
-    unsigned int subFileType;
-    uint16 pNumber, pTotal; // pagenumber and total number of pages of current directory
-};
-
 /**
  * castTiffTile2T
  *

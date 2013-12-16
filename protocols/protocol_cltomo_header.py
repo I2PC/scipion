@@ -21,6 +21,13 @@ NumberOfReferences = 3
 # {expert} Number of CL iterations to perform:
 NumberOfIterations=15
 
+# Generate aligned volumes
+GenerateAligned=True
+
+# Don't align
+"""Volumes are already aligned, only classify"""
+DontAlign=False
+
 #-----------------------------------------------------------------------------
 # {section}{has_question} Initial classes
 #-----------------------------------------------------------------------------
@@ -78,7 +85,7 @@ SeeConstraints = False
     If no symmetry is present, give c1 """
 Symmetry = "c1"
 
-# Mask:
+# {file}(mask*.vol){validate}(PathExists) Mask:
 """ Provide any mask parameters valid after --mask see [http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Transform_mask_v3]"""
 Mask = ""
 

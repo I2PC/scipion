@@ -70,7 +70,7 @@ public:
     // Mpi node
     MpiNode *node;
     // FileTaskDistributor
-    FileTaskDistributor *taskDistributor;
+    MpiTaskDistributor *taskDistributor;
 	// CL2D blocks
 	std::vector<CL2DBlock> blocks;
     // MaxLevel

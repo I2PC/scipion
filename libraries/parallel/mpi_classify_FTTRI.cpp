@@ -131,7 +131,7 @@ void ProgClassifyFTTRI::produceSideInfo()
     if (blockSize==0)
         blockSize=1;
     mdIn.findObjects(imgsId);
-    taskDistributor = new FileTaskDistributor(mdIn.size(), blockSize, node);
+    taskDistributor = new MpiTaskDistributor(mdIn.size(), blockSize, node);
     fnFTTRI=fnRoot+"_FTTRI.mrcs";
     FTTRIXdim=(int)((Rmax+1)*0.35);
     FTTRIYdim=(int)((Rmax+1)*0.55);
@@ -244,6 +244,7 @@ void ProgClassifyFTTRI::produceFTTRI()
             centralMagFTpolarFilteredMagFTI().selfLog10();
             centralMagFTpolarFilteredMagFTI.write(fnFTTRI,idx+1,true,WRITE_REPLACE);
         }
+    taskDistributor->wait();
     if (verbose && node->rank==0)
         progress_bar(Nimgs);
 }

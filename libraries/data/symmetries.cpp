@@ -2115,7 +2115,7 @@ void symmetry_P6(Image<double> &vol, const SimpleGrid &grid,
 
 bool SymList::isSymmetryGroup(FileName fn_sym, int &pgGroup, int &pgOrder)
 {
-    char G1,G2,G3,G4;
+    char G1,G2,G3='\0',G4;
     char auxChar[3];
     //each case check lenght, check first letter, second, is number
     //Non a point group
@@ -2713,7 +2713,7 @@ double SymList::computeDistance(double rot1, double tilt1, double psi1,
     int imax = symsNo() + 1;
     Matrix2D<double>  L(3, 3), R(3, 3);  // A matrix from the list
     double best_ang_dist = 3600;
-    double best_rot2, best_tilt2, best_psi2;
+    double best_rot2=0, best_tilt2=0, best_psi2=0;
 
     for (int i = 0; i < imax; i++)
     {

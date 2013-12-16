@@ -52,6 +52,11 @@ class ProtRelionBase(XmippProtocol):
         lines = ["Wrapper implemented for RELION **1.2**"]
         return lines 
 
+    def papers(self):
+        papers=[]
+        papers.append('Scheres, JSB (2012) [http://www.ncbi.nlm.nih.gov/pubmed/23000701]')
+        return papers
+
     def lastIter(self):
         fileNameTemplate = self.getFilename('dataRe', iter=0)
         fileNameTemplate = fileNameTemplate.replace('000','???')

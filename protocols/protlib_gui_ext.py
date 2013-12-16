@@ -1814,7 +1814,7 @@ class XmippBrowserCTF(XmippBrowserPreview):
         self.unitLabel = '1/px'
         self.unit = getattr(self, 'unit', 'pixel')
         
-        if self.freqs and self.unit == 'angstrom':
+        if hasattr(self, 'freqs') and self.unit == 'angstrom':
             self.unitLabel = '1/A'
 #            self.freqs = [float(f) * self.sampling for f in self.freqs]
             self.maxFreq /= self.sampling
@@ -1910,15 +1910,26 @@ class XmippBrowserBandpassFilter(XmippBrowserCTF):
     '''
     def __init__(self, **args):
         XmippBrowserCTF.__init__(self, **args)
-        self.lf, self.hf, self.decay = self.freqs
+        # This is need because of bad inheritance of Non-Frequency filters
+        if hasattr(self, 'freqs'):
+            self.lf, self.hf, self.decay = self.freqs
         for varName in ['showLowFreq', 'showHighFreq', 'showDecay']:
             setattr(self, varName, getattr(self, varName, True))
+            
+    def insertFiles(self, path):
+        self.commonRoot = dirname(self.fileList[0])
+        for f in self.fileList:
+            if '@' in f:
+                self.insertElement('', f)
+                self.commonRoot = ""
+            else:
+                self.insertElement('', basename(f))
     
     def createResultPreview(self):
         from protlib_xmipp import getFirstImage
         from protlib_gui_figure import ImagePreview
-        mdFn = join(self.dir, self.pattern)
-        self.lastitem = getFirstImage(mdFn)
+        #mdFn = join(self.dir, self.pattern)
+        self.lastitem = getFirstImage(self.fileList[0])
         self.updatePreview(self.lastitem)
         return ImagePreview(self.detailstop, self.dim, dpi=64, label='Filtered', col=1)
     
@@ -1948,7 +1959,9 @@ class XmippBrowserBandpassFilter(XmippBrowserCTF):
             self.hfSlider.pack_forget()
         
     def onClick(self, e):
-        pass
+        XmippBrowserCTF.onClick(self, e)
+        self.updateFreqRing()
+        
 
 class XmippBrowserGaussianFilter(XmippBrowserBandpassFilter):
     ''' This subclass is specific preview some operations
@@ -1956,7 +1969,7 @@ class XmippBrowserGaussianFilter(XmippBrowserBandpassFilter):
         that will not be passed to XmippBrowser constructor
     '''
     def __init__(self, **args):
-        XmippBrowserPreview.__init__(self, **args)
+        XmippBrowserBandpassFilter.__init__(self, **args)
         self.label = 'Frequency Sigma'
         self.key = 'freqSigma'
     
@@ -2009,7 +2022,7 @@ class XmippBrowserBadpixelFilter(XmippBrowserGaussianFilter):
         that will not be passed to XmippBrowser constructor
     '''
     def __init__(self, **args):
-        XmippBrowserPreview.__init__(self, **args)
+        XmippBrowserGaussianFilter.__init__(self, **args)
         self.label = 'DustRemovalThreshold'
         self.key = 'dustRemovalThreshold'
     

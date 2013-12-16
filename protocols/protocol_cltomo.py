@@ -38,7 +38,11 @@ class ProtCLTomo(XmippProtocol):
         else:
             params+=' --ref0 '+self.RefMd
         if self.Mask!="":
-            params+=' --mask '+self.Mask
+            params+=' --mask binary_file '+self.Mask
+        if self.GenerateAligned:
+            params+=" --generateAlignedVolumes"
+        if self.DontAlign:
+            params+=" --dontAlign"
         self.insertStep("runCLTomo", WorkingDir=self.WorkingDir, params=params, nproc=self.NumberOfMpi)
                 
     def validate(self):

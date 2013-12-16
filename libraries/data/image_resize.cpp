@@ -82,7 +82,7 @@ void ProgImageResize::readParams()
 
 void ProgImageResize::preProcess()
 {
-    double factor;
+    double factor=1.0;
     double oxdim = xdimOut, oydim = ydimOut, ozdim = zdimOut;
 
     //If zdimOut greater than 1, is a volume and should apply transform

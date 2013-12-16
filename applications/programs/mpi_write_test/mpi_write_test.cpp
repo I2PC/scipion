@@ -100,7 +100,7 @@ int main(int argc, char **argv)
             double value = (double) (var%size);
             String ss = formatString("%03d@%s", var,fnIN.c_str());
             Iaux.read(ss.c_str());
-            double min,max,std, avg;
+            double min,max,std, avg=0.;
             Iaux().computeStats(avg,std,min,max);
             if (
                 ABS(avg-value)> 0.00001 ||

@@ -8,7 +8,8 @@ protected:
     //init metadatas
     virtual void SetUp()
     {
-        chdir(((String)(getXmippPath() + (String)"/resources/test")).c_str());
+        if (chdir(((String)(getXmippPath() + (String)"/resources/test")).c_str())==-1)
+        	REPORT_ERROR(ERR_UNCLASSIFIED,"Could not change directory");
     	A.resize(3,3);
         A(0,0) =-0.9234482 ;
         A(0,1) =  -0.38372311   ;

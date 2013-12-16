@@ -310,7 +310,7 @@ void ProgMLF2D::produceSideInfo()
     MultidimArray<int>        radial_count; //1D
     Matrix1D<int>               center(2);
     std::vector<int>            tmppointp, tmppointp_nolow, tmppointi, tmppointj;
-    double                      Q0;
+    double                      Q0=0.;
 
     // Read selfile with experimental images
     MDimg.read(fn_img);
@@ -1606,14 +1606,14 @@ void ProgMLF2D::processOneImage(const MultidimArray<double> &Mimg,
 
     std::vector<double> refw(model.n_ref), refw2(model.n_ref), refw_mirror(model.n_ref), Pmax_refmir(2*model.n_ref);
 
-    double aux, fracpdf, pdf, weight, weight2;
+    double aux, fracpdf, pdf, weight, weight2=0.;
     double tmpr, tmpi, sum_refw = 0.;
     double diff, maxweight = -99.e99, mindiff2 = 99.e99;
     double logsigma2, ldim, ref_scale = 1.;
     double scale_denom, scale_numer, wsum_sc = 0., wsum_sc2 = 0.;
-    int    irot, irefmir, opt_irefmir, ix, iy;
-    size_t point_trans;
-    int    opt_itrans, iflip_start, iflip_stop, nr_mir;
+    int    irot, irefmir, opt_irefmir=0, ix, iy;
+    size_t point_trans=0;
+    int    opt_itrans=0, iflip_start, iflip_stop, nr_mir;
     int    img_start, ref_start, wsum_start;
 
     if (!do_norm)

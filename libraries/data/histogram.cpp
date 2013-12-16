@@ -509,7 +509,7 @@ void Histogram2D::write(const FileName &fn)
 void compute_hist(const MultidimArrayGeneric& array, Histogram1D& hist,
                   int no_steps)
 {
-    double min, max;
+    double min=0., max=0.;
     array.computeDoubleMinMax(min, max);
     compute_hist(array, hist, min, max, no_steps);
 }

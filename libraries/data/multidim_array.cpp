@@ -283,7 +283,6 @@ void MultidimArrayBase::printShape(std::ostream& out) const
     if (NSIZE(*this) > 1)
         out << " Number of images = "<<NSIZE(*this);
 
-    int dim = getDim();
     if (ZSIZE(*this)>1)
         out<< " Size(Z,Y,X): " << ZSIZE(*this) << "x" << YSIZE(*this) << "x" << XSIZE(*this)
         << " k=[" << STARTINGZ(*this) << ".." << FINISHINGZ(*this) << "]"
@@ -354,7 +353,7 @@ double MultidimArray< std::complex< double > >::computeAvg() const
 }
 
 template<>
-void MultidimArray< std::complex< double > >::maxIndex(int &lmax, int& kmax, int& imax, int& jmax) const
+void MultidimArray< std::complex< double > >::maxIndex(size_t &lmax, int& kmax, int& imax, int& jmax) const
 {
     REPORT_ERROR(ERR_NOT_IMPLEMENTED,"MultidimArray::maxIndex not implemented for complex.");
 }

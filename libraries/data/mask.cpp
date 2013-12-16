@@ -1916,7 +1916,7 @@ void ProgMask::processImage(const FileName &fnImg, const FileName &fnImgOut, con
     {
         if (mask.datatype() == INT_MASK)
         {
-            int count;
+            int count=0;
             std::string elem_type="pixels";
             if (ZSIZE(image())>1)
                 elem_type="voxels";

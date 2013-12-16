@@ -91,7 +91,7 @@ public:
     // Mpi node
     MpiNode *node;
     // FileTaskDistributor
-    FileTaskDistributor *taskDistributor;
+    MpiTaskDistributor *taskDistributor;
     // MetaData In
     MetaData mdIn;
     // Object Ids

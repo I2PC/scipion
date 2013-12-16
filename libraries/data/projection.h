@@ -499,9 +499,9 @@ void project_SimpleGrid(Image<T> *vol, const SimpleGrid *grid,
     Matrix1D<double> beginY(3);       // Coord: Plane coordinates of the
     // projection of the 3D point
     // (z0,y0,XX(lowest))
-    double XX_footprint_size;                // The footprint is supposed
-    double YY_footprint_size;                // to be defined between
-    double ZZ_footprint_size;
+    double XX_footprint_size=0.;                // The footprint is supposed
+    double YY_footprint_size=0.;                // to be defined between
+    double ZZ_footprint_size=0.;
     // (-vmax,+vmax) in the Y axis,
     // and (-umax,+umax) in the X axis
     // This footprint size is the
@@ -510,7 +510,7 @@ void project_SimpleGrid(Image<T> *vol, const SimpleGrid *grid,
     int XX_corner2, XX_corner1;              // Coord: Corners of the
     int YY_corner2, YY_corner1;              // footprint when it is projected
     // onto the projection plane
-    int           foot_V1, foot_U1;          // Img Coord: coordinate (in
+    int           foot_V1=0, foot_U1=0;      // Img Coord: coordinate (in
     // an image fashion, not in an
     // oversampled image fashion)
     // inside the blobprint of the
@@ -520,10 +520,10 @@ void project_SimpleGrid(Image<T> *vol, const SimpleGrid *grid,
     // corresponding to the blobprint
     // point which matches with this
     // pixel position
-    int           Vsampling, Usampling;      // Sampling rate in Y and X
+    int           Vsampling=0, Usampling=0;  // Sampling rate in Y and X
     // directions respectively
     // inside the blobprint
-    double        vol_corr;                  // Correction for a volume element
+    double        vol_corr=0.;               // Correction for a volume element
     int           N_eq;                      // Number of equations in which
     // a blob is involved
     int           i, j, k;                   // volume element indexes
