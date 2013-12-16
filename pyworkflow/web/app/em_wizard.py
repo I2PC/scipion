@@ -347,13 +347,13 @@ def get_image_psd(request):
     
     # create a xmipp image empty
     imgXmipp = xmipp.Image()
-    
-    # compImageHandlerute the PSD image
+
+    # compute the PSD image
     xmipp.fastEstimateEnhancedPSD(imgXmipp, str(imagePath), float(downsample), int(dim), 2)
-        
+    
     # from PIL import Image
     img = getPILImage(imgXmipp, dim)
-        
+       
     response = HttpResponse(mimetype="image/png")
     img.save(response, "PNG")
     return response
