@@ -47,7 +47,7 @@ class XmippCL2DViewer(ProtocolViewer):
     _targets = [XmippProtCL2D]
     _environments = [DESKTOP_TKINTER, WEB_DJANGO]
     
-    _label = 'Xmipp Viewer CL2D'
+    _label = 'viewer cl2d'
    
 
     def _defineParams(self, form):

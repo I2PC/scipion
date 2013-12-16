@@ -41,6 +41,8 @@ from glob import glob
 class SpiderProtClassifyWard(ProtClassify, SpiderProtocol):
     """ Ward's method, using 'CL HC' 
     """
+    _label = 'ward'
+    
     def __init__(self):
         ProtClassify.__init__(self)
         SpiderProtocol.__init__(self)

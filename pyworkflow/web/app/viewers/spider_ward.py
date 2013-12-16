@@ -25,6 +25,7 @@
 # **************************************************************************
 
 from pyworkflow.web.app.views_util import *
+from pyworkflow.web.app.views_util import *
 
 def viewerWARD(request, protocolViewer):
     ioDict = {}
@@ -39,13 +40,14 @@ def viewerWARD(request, protocolViewer):
     return ioDict
 
 def doVisualizeClasses(request, protocolViewer):
-    pass
+    return "error","Not Implemented yet"
 
 def doVisualizeDendrogram(request, protocolViewer):
     minHeight = str(protocolViewer.minHeight.get())
     protViewerClass = str(protocolViewer.getClassName())
     protId = str(protocolViewer.protocol.getObjId())
-    return "plot","/view_plots/?function=visualizeDendrogram&protViewerClass="+ protViewerClass + "&protId="+ protId + "&minHeight="+ minHeight
+    width, height = getSizePlotter(1)
+    return "plot","/view_plots/?function=visualizeDendrogram&protViewerClass="+ protViewerClass + "&protId="+ protId + "&minHeight="+ minHeight + "&width=" + str(width) + "&height="+ str(height)
 
 def visualizeDendrogram(request, protocolViewer):
     protocolViewer.minHeight.set(request.GET.get('minHeight', None))

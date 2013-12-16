@@ -68,7 +68,6 @@ function customPopupHTML(html, widthValue, heightValue) {
 	var popup = window.open('', id, 'height='+heightValue+',width='+widthValue);
 	popup.document.write(html);
 	popup.document.close();
-	
 }
 
 function popUpJSON(json){
@@ -82,22 +81,46 @@ function popUpJSON(json){
 			for(var x=0;x<value.length;x++){
 				customPopup(value[x],1024,600);
 			}
-		}else if(key=="url"){
+		} else if(key=="url"){
 			customPopup(value,1024,600);
 		} else if(key=="html"){
 			customPopupHTML(value,600,500);
-		} else if(key=="plot"){
-			customPopup(value,600,500);
 		} else if(key=="plots"){
 			for(var x=0;x<value.length;x++){
-				customPopup(value[x],600,500)
+				showPlot(value[x]);
 			}
+		} else if(key=="plotsComposite" || key=="plot"){
+			showPlot(value);
 		} else if(key=="error"){
 			launchMessiSimple("Error",messiError(value));
 		} else {
 			customPopup(value,800,600);
 		}
 	});
+}
+
+function showPlot(url){
+	width = getUrlParameters("width", url, true)
+	height = getUrlParameters("height", url, true)
+//	alert(width +"x" + height)
+	customPopup(url,width,height);
+}
+
+function getUrlParameters(parameter, staticURL, decode){
+   var currLocation = (staticURL.length)? staticURL : window.location.search,
+       parArr = currLocation.split("?")[1].split("&"),
+       returnBool = true;
+   
+   for(var i = 0; i < parArr.length; i++){
+        parr = parArr[i].split("=");
+        if(parr[0] == parameter){
+            return (decode) ? decodeURIComponent(parr[1]) : parr[1];
+            returnBool = true;
+        }else{
+            returnBool = false;            
+        }
+   }
+   if(!returnBool) return false;  
 }
 
 
