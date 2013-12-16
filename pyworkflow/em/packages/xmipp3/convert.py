@@ -567,30 +567,59 @@ def readSetOfClasses2D(classes2DSet, filename, classesBlock='classes', **args):
 def createXmippInputImages(self, imgSet, rowFunc=None, imagesFn=None):  
     imgsMd = getattr(imgSet, '_xmippMd', None)
     if imgsMd is None:
-        imgsFn = self._getPath(imagesFn or 'input_images.xmd')
-        ctfDir = self._getExtraPath()
+        imgsFn = imagesFn    
+        ctfDir = None
+        if self is not None:
+            imgsFn = self._getPath(imagesFn or 'input_images.xmd')
+            ctfDir = self._getExtraPath()
+
         writeSetOfParticles(imgSet, imgsFn, ctfDir, rowFunc)
     else:
         imgsFn = imgsMd.get()
     return imgsFn
 
 
-def createXmippInputMicrographs(self, micSet, rowFunc=None):    
+def createXmippInputMicrographs(self, micSet, rowFunc=None, micsFn=None):    
     micsMd = getattr(micSet, '_xmippMd', None)
     if micsMd is None:
-        micsFn = self._getPath('input_micrographs.xmd')
-        ctfDir = self._getExtraPath()
+        ctfDir = None
+        if self is not None:
+            micsFn = self._getPath('input_micrographs.xmd')
+            ctfDir = self._getExtraPath()
         writeSetOfMicrographs(micSet, micsFn, ctfDir, rowFunc)
     else:
         micsFn = micsMd.get()
     return micsFn
 
-def createXmippInputVolumes(self, volSet):    
+def createXmippInputVolumes(self, volSet, volsFn=None):    
     volsMd = getattr(volSet, '_xmippMd', None)
     if volsMd is None:
-        volsFn = self._getPath('input_volumes.xmd')
+        if self is not None:
+            volsFn = self._getPath('input_volumes.xmd')
+        
         writeSetOfVolumes(volSet, volsFn)
     else:
         volsFn = volsMd.get()
     return volsFn
 
+def createXmippInputClasses2D(self, classSet, classFn=None):
+    classMd = getattr(classSet, '_xmippMd', None)
+    if classMd is None:
+        if self is not None:
+            classFn = self._getPath('input_classes.xmd')
+        
+        writeSetOfClasses2D(classSet, classFn)
+    else:
+        classFn = classMd.get()
+    return classFn
+    
+def createXmippInputCTF(self, ctfSet, ctfFn=None):
+    ctfMd = getattr(ctfSet, '_xmippMd', None)
+    if ctfMd is None:
+        if self is not None:
+            ctfFn = self._getPath('input_ctfs.xmd')
+        
+        writeSetOfCTFs(ctfSet, ctfFn)
+    else:
+        ctfFn = ctfMd.get()
+    return ctfFn
