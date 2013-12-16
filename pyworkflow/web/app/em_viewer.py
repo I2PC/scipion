@@ -239,15 +239,5 @@ def view_plot_xmipp(request):
         response= HttpResponse(content_type='image/png')
         canvas.print_png(response)
         return response
-    
-def getSizePlotter(plots):
-    figsize = (800, 600)
-    
-    if plots == 1 or plots == 2:
-        figsize = (600, 450)
-    elif plots == 3 or plots == 4 :
-        figsize = (800, 600)
-    
-    return figsize
 
 

@@ -102,6 +102,7 @@ function popUpJSON(json){
 function showPlot(url){
 	width = getUrlParameters("width", url, true)
 	height = getUrlParameters("height", url, true)
+//	alert(width +"x" + height)
 	customPopup(url,width,height);
 }
 

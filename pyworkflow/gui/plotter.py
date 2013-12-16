@@ -55,13 +55,13 @@ class Plotter(object):
            
         if figsize is None: # Set some defaults values
             if x == 1 and y == 1:
-                self.figsize = (6, 5)
+                figsize = (6, 5)
             elif x == 1 and y == 2:
-                self.figsize = (4, 6)
+                figsize = (4, 6)
             elif x == 2 and y == 1:
-                self.figsize = (6, 4)
+                figsize = (6, 4)
             else:
-                self.figsize = (8, 6)
+                figsize = (8, 6)
         
         # Create grid
         import matplotlib.gridspec as gridspec
@@ -90,9 +90,6 @@ class Plotter(object):
     
     def getFigure(self):
         return self.figure
-    
-    def getFigSize(self):
-        return self.figsize
     
     def showLegend(self, labels, loc='best'):
         leg = self.last_subplot.legend(tuple(labels), loc=loc)
