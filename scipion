@@ -61,6 +61,7 @@ MODE_MANAGER = 'manager'
 MODE_PROJECT = 'project'
 MODE_WEBSERVER = 'webserver'
 MODE_TESTS = 'tests'
+MODE_TESTS_DATA = 'testdata'
 MODE_HELP = 'help'
 
 if __name__ == '__main__':
@@ -98,6 +99,8 @@ if __name__ == '__main__':
                 os.chdir(PW_HOME)
                 runCmd('python -m unittest pyworkflow.tests.%s' % tests)
                 os.chdir(path)
+        elif mode == MODE_TESTS_DATA:
+            runCmd('python sync_data.py')
                 
     # If reach this point, bad arguments passed
     print """
