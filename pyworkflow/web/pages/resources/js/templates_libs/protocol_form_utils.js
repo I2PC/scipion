@@ -79,12 +79,11 @@ $(document).ready(function() {
 							id : 0,
 							label : 'Ok',
 							val : 'Y',
-							btnClass : 'fa-check'
+							btnClass : 'fa fa-check'
 						} ],
 						callback : function(val) {
 							if (val == 'Y') {
-//								window.opener.location.reload(true);
-								window.close();
+								closePopup();
 							}
 						}
 					});
@@ -111,12 +110,11 @@ $(document).ready(function() {
 							id : 0,
 							label : 'Ok',
 							val : 'Y',
-							btnClass : 'fa-check'
+							btnClass : 'fa fa-check'
 						} ],
 						callback : function(val) {
 							if (val == 'Y') {
-//								window.opener.location.reload(true);
-								window.close();
+								closePopup();
 								window.opener.popup('/form/?protocolId='+protId);
 							}
 						}
@@ -148,11 +146,11 @@ $(document).ready(function() {
 					var msg = messiError("Error iterating over the set of particles");
 					launchMessiSimple("Error",msg);
 				} else if(type_wiz=='wiz_particle_mask' || type_wiz=='wiz_volume_mask'){
-					customPopupHTML(html,520,460);
+					customPopupHTML(html,540,490);
 				} else if(type_wiz=='wiz_volume_mask_radii' || type_wiz=='wiz_particle_mask_radii'){
-					customPopupHTML(html,530,520);
+					customPopupHTML(html,550,540);
 				} else{
-					customPopupHTML(html,775,470);
+					customPopupHTML(html,790,480);
 				}
 			});
 		} else if (mode == 'viewer' || mode == 'viewerElement') {
@@ -374,7 +372,7 @@ function formProtSimple(param, projName){
 			// load a blank form with a new protocol
 			var url = '/form/?protocolClass='+protSimple+'&action=protSimple&paramProt='+param
 		}
-		customPopup(url,500,350);
+		customPopup(url,500,450);
 	}
 	else{
 		launchMessiSimple("Error", messiError("Protocol was not selected, please choose one."));

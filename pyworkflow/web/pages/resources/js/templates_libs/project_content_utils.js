@@ -99,9 +99,7 @@ function fillTabsSummary(id) {
 		url : '/protocol_io/?protocolId=' + id,
 		dataType : "json",
 		success : function(json) {
-//			fillUL(json.inputs, "protocol_input", "db_input.gif");
 			fillUL(json.inputs, "protocol_input", "fa-sign-in");
-//			fillUL(json.outputs, "protocol_output", "db_output.gif");
 			fillUL(json.outputs, "protocol_output", "fa-sign-out");
 		}
 	});
@@ -444,6 +442,7 @@ function changeTreeView(){
  * Method to update the run list/graph
  */
 function refreshRuns(mode){
+	
 	$(function() {
 		$.ajax({
 			url : '/run_table_graph/',
@@ -463,9 +462,9 @@ function refreshRuns(mode){
 		});
   	});
 	
-	if(mode=true){
+	if(mode){
 		var updatetimer = setTimeout(function(){ 
-			refreshRuns();
+			refreshRuns(1);
 	  	}, 3000);
 	}
 }

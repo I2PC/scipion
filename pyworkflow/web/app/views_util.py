@@ -98,6 +98,9 @@ jsDict = {'jquery': 'jquery/jquery.js',
 def getResourceIcon(icon):
     return os.path.join(settings.MEDIA_URL, iconDict[icon])
 
+def getResourceLogo(logo):
+    return os.path.join(settings.MEDIA_URL, logo)
+
 def getResourceCss(css):
     return os.path.join(settings.STATIC_URL, "css/", cssDict[css])
 

@@ -117,6 +117,42 @@ header #tube{
 	margin: 0px 15px;
 }
 
+/* ASIDE (BOTTOM MENU) */
+aside {
+	height: 68px;
+	background: #e3e3e3; /* Old browsers */
+	background: -moz-linear-gradient(top, #e3e3e3 0%, #cccccc 100%); /* FF3.6+ */
+	background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#e3e3e3), color-stop(100%,#cccccc)); /* Chrome,Safari4+ */
+	background: -webkit-linear-gradient(top, #e3e3e3 0%,#cccccc 100%); /* Chrome10+,Safari5.1+ */
+	background: -o-linear-gradient(top, #e3e3e3 0%,#cccccc 100%); /* Opera 11.10+ */
+	background: -ms-linear-gradient(top, #e3e3e3 0%,#cccccc 100%); /* IE10+ */
+	background: linear-gradient(to bottom, #e3e3e3 0%,#cccccc 100%); /* W3C */
+	filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#e3e3e3', endColorstr='#cccccc',GradientType=0 ); /* IE6-9 */
+	
+	padding-left: 20px;
+	
+	display: -webkit-box;      /* OLD - iOS 6-, Safari 3.1-6 */
+  	display: -moz-box;         /* OLD - Firefox 19- (buggy but mostly works) */
+  	display: -ms-flexbox;      /* TWEENER - IE 10 */
+	display: -moz-flex;
+	display: -ms-flex;
+	display: -o-flex;
+	display: -webkit-flex;
+	display: flex;
+	
+	-webkit-flex-flow: row;
+	-moz-flex-flow: row;
+	-ms-flex-flow: row;
+	-o-flex-flow: row;
+	flex-flow: row;
+	
+	-webkit-flex-wrap: wrap;
+	-moz-flex-wrap: wrap;
+	-o-flex-wrap: wrap;
+	-ms-flex-wrap: wrap;
+	flex-wrap: wrap;
+}
+
 /* FOOTER */
 footer{
  	clear: both;

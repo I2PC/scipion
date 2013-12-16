@@ -97,7 +97,7 @@ STATUS_COLORS = {
                #STATUS_SAVED: '#124EB0',
                }
 
-def populateTree(self, tree, treeItems, prefix, obj, level=0):
+def populateTree(self, tree, treeItems, prefix, obj, subclassedDict, level=0):
     text = obj.text.get()
     if text:
         value = obj.value.get(text)
@@ -119,8 +119,9 @@ def populateTree(self, tree, treeItems, prefix, obj, level=0):
             prot = emProtocolsDict.get(protClassName, None)
             if prot is not None:
                 tree.item(item, image=self.getImage('class_obj.gif'))
+                
                 for k, v in emProtocolsDict.iteritems():
-                    if not v is prot and issubclass(v, prot):# and Protocol.hasDefinition(v):
+                    if not k in subclassedDict and not v is prot and issubclass(v, prot):# and Protocol.hasDefinition(v):
                         key = '%s.%s' % (item, k)
                         t = v.getClassLabel()
                         tree.insert(item, 'end', key, text=t, tags=('protocol'))
@@ -131,7 +132,7 @@ def populateTree(self, tree, treeItems, prefix, obj, level=0):
         key = prefix
     
     for sub in obj:
-        populateTree(self, tree, treeItems, key, sub, level+1)
+        populateTree(self, tree, treeItems, key, sub, subclassedDict, level+1)
     
 
 class RunsTreeProvider(ProjectRunsTreeProvider):
@@ -477,7 +478,12 @@ class ProtocolsView(tk.Frame):
         self.protTree.unbind('<<TreeviewOpen>>')
         self.protTree.unbind('<<TreeviewClose>>')
         self.protTreeItems = {}
-        populateTree(self, self.protTree, self.protTreeItems, '', self.protCfg)
+        subclassedDict = {} # Check which classes serve as base to not show them
+        for k1, v1 in emProtocolsDict.iteritems():
+            for k2, v2 in emProtocolsDict.iteritems():
+                if v1 is not v2 and issubclass(v1, v2):
+                    subclassedDict[k2] = True
+        populateTree(self, self.protTree, self.protTreeItems, '', self.protCfg, subclassedDict)
         self.protTree.bind('<<TreeviewOpen>>', lambda e: self._treeViewItemChange(True))
         self.protTree.bind('<<TreeviewClose>>', lambda e: self._treeViewItemChange(False))
         
@@ -582,6 +588,7 @@ class ProtocolsView(tk.Frame):
     def _selectProtocol(self, prot):
         if prot is not None:
             prot.mapper = self.project.mapper
+            del self.selectedProtocol
             self.selectedProtocol = prot
             # TODO self.settings.selectedProtocol.set(prot)
             self.updateActionToolbar()

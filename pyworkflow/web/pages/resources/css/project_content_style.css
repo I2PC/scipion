@@ -1,26 +1,21 @@
 /* CSS Document */
 
 /* GENERAL */
-html, body {	
+/* html, body {	
 	width: 100%;
 	height: 100%;
 	padding: 0;
 	margin: 0;
-	/* font-size: 0.75em; */
-	/* overflow: hidden; */
-}
+} */
 
 /* FLEX DESIGN */
-.layout-outer {
+/* .layout-outer {
 	height: 110%;
 	min-height: 110%;
 }
 .center, .west, .north, .south {
-	/* background-color: rgb(220,220,220); */
-	/* border: 1px solid rgb(200,200,200); */
-	/* text-align: center; */
        display: inline-block;
-}
+} */
 
 
 .layout-outer > .west {
@@ -66,8 +61,7 @@ html, body {
 	color: Firebrick !important;
 }
 .north .ui-resizable-s {
-	/* bottom: 0px !important; */
-	/* position: fixed; */
+	bottom: 0px !important;
 	background: url("/resources/handle_hor.gif") no-repeat center center transparent;
 }
 

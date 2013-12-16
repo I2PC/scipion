@@ -1,5 +1,4 @@
 /* CSS Document */
-
 .button {
 	font-size: 0.8em;
 	color: white;
@@ -35,10 +34,7 @@
 	font-weight: bold;
 	color: black;
 	text-decoration: none;
-	/* margin-left: -0.5em; */
 }
-
-
 
 .projRemove {
 	margin-left: 1em;
@@ -50,8 +46,6 @@
 }
 
 .projectsList {
-	/* border: 1px solid black; */
-/* 	background: Gainsboro; */
  	height: auto;
 	overflow-y: auto;
 	overflow-x: hidden;
