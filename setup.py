@@ -406,7 +406,7 @@ if options.hasOption('configure'):
             assign = '%s = "%s"' % (parts[0], parts[1])
             exec(assign) # Take options from command line, override options file, be carefull with exec
 
-    scons = os.path.join("scons", "scons.py")
+    scons = SCONS
     pid = os.fork()
     if not pid:
         print "*** CHECKING EXTERNAL DEPENDENCIES..."

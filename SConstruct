@@ -408,7 +408,7 @@ elif (ARGUMENTS['mode'] == 'docs'):
     action = env.Action("doxygen")
     env.Execute(action)
     
-elif (ARGUMENTS['mode'] == 'pymodules'):
+elif (ARGUMENTS['mode'] == 'scipion'):
     EXT_PYTHON = join('external', 'python')
     XMIPP_HOME = abspath('.')
     SITE_PACKAGES = join('lib', 'python2.7', 'site-packages')
