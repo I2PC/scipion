@@ -85,15 +85,15 @@ class ProtHG3D(ProtHG3DBase):
             self.insertStep("scoreFinalVolumes",WorkingDir=self.WorkingDir,WorkingDirStructure=WorkingDirStructure,NumVolumes=self.NumVolumes)
     
             self.insertStep("coocurenceMatrix",WorkingDirStructure=WorkingDirStructure,
-                                NumVolumes=self.NumVolumes)
+                                NumVolumes=self.NumVolumes,nI=nI)
             
             WorkingDirStructure = os.path.join(self.WorkingDir,"Structure%05d"%self.nHg)
             self.InitialVolume=os.path.join(WorkingDirStructure,'proposedVolume%05d'%nI)+'.vol'
             WorkingDirStructure = os.path.join(self.WorkingDir,"Structure%05d"%(nI+1))
             self.SymmetryGroup ='c1'
             #self.NRansac=int(floor(self.NRansac/2))
-            print self.NRansac
-            #self.CorrThresh = (1-self.CorrThresh)/2+self.CorrThresh
+            if (nI==0):
+                self.CorrThresh = (1-self.CorrThresh)/2+self.CorrThresh
 
         
     def validate(self):
@@ -347,12 +347,15 @@ def scoreFinalVolumes(log,WorkingDir,WorkingDirStructure,NumVolumes):
             mdOut.setValue(MDL_VOLUME_SCORE_MEAN,float(avg),id)
             mdOut.setValue(MDL_VOLUME_SCORE_MIN,float(minCC),id)
     mdOut.write(os.path.join(WorkingDirStructure,"proposedVolumes.xmd"))
-        
-def coocurenceMatrix(log,WorkingDirStructure,NumVolumes):
-    
+
+#http://jivp.eurasipjournals.com/content/2013/1/17        
+def coocurenceMatrix(log,WorkingDirStructure,NumVolumes,nI):
+     
     matrix=numpy.loadtxt('cooMatrix.txt')
     
     for n in range(NumVolumes):
+        
+        fnMatrix = 'cooMatrix%05d_%05d.txt'%(nI,n)
         fnBase='proposedVolume%05d'%n
         fnRoot=os.path.join(WorkingDirStructure+'/'+fnBase)
         
@@ -371,11 +374,18 @@ def coocurenceMatrix(log,WorkingDirStructure,NumVolumes):
                         
             name[idx] = md.getValue(MDL_IMAGE, objId)
             num[idx] = int(name[idx].rsplit('@',1)[0])-1
-            corr[idx] = md.getValue(MDL_MAXCC, objId)           
+            corr[idx] = md.getValue(MDL_MAXCC, objId)          
             idx+=1
         
         for i in xrange(1,len(num)):
             for j in xrange(1,len(num)):
-                matrix[num[i],num[j]]=corr[i]+corr[j]
+                matrix[num[i],num[j]]=((corr[i]+corr[j])/2)> 0.8
         
-    numpy.savetxt('cooMatrix.txt', matrix)
+        numpy.savetxt(fnMatrix, matrix)
+        
+def procCoocurenceMatrix(log,WorkingDirStructure,NumVolumes,nI):
+    
+    for n in range(NumVolumes):
+        
+        fnMatrix = 'cooMatrix%05d_%05d.txt'%(nI,n)        
+        numpy.loadtxt(fnMatrix, matrix)
