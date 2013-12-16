@@ -296,17 +296,25 @@ class TestXmippWorkflow(TestWorkflow):
         setupProject(cls)
         cls.pattern = getInputPath('Micrographs_BPV3', '*.mrc')        
         cls.importFolder = getInputPath('Picking_XmippBPV3_Down3')
-            
+
+        
     def testXmippWorkflow(self):
         #First, import a set of micrographs
         protImport = ProtImportMicrographs(pattern=self.pattern, samplingRate=1.237, voltage=300)
         self.proj.launchProtocol(protImport, wait=True)
         
         self.assertIsNotNone(protImport.outputMicrographs.getFileName(), "There was a problem with the import")
-        self.validateFiles('protImport', protImport)        
-        
-        # Perform a downsampling on the micrographs
+        self.validateFiles('protImport', protImport)      
 
+        #Import a set of volumes        
+        print "Import Volume"
+        protImportVol = ProtImportVolumes(pattern=getInputPath('Volumes_BPV', 'BPV_scale_filtered_windowed_64.vol'), samplingRate=9.896)
+        self.proj.launchProtocol(protImportVol, wait=True)
+        
+        self.assertIsNotNone(protImportVol.getFiles(), "There was a problem with the import")
+#        self.validateFiles('protImportVol', protImportVol)        
+
+        # Perform a downsampling on the micrographs
         print "Downsampling..."
         protDownsampling = XmippProtPreprocessMicrographs(doDownsample=True, downFactor=3, doCrop=False, runMode=1)
         protDownsampling.inputMicrographs.set(protImport.outputMicrographs)
@@ -351,7 +359,6 @@ class TestXmippWorkflow(TestWorkflow):
                                  numberOfMpi=2, numberOfThreads=1)
         protML2D.inputParticles.set(protExtract.outputParticles)
         self.proj.launchProtocol(protML2D, wait=True)        
-        
         self.assertIsNotNone(protML2D.outputClasses, "There was a problem with ML2D") 
         # Check that images related to each class have ctf model
 #        for class2D in protML2D.outputClasses:
@@ -409,7 +416,7 @@ class TestXmippWorkflow(TestWorkflow):
         print "ML3D"
         protML3D = XmippProtML3D(angularSampling=15, numberOfIterations=2, runMode=1, numberOfMpi=2, numberOfThreads=2)
         protML3D.inputImages.set(protExtract.outputParticles)
-        protML3D.ini3DrefVolumes.set(getInputPath('Volumes_BPV', 'BPV_scale_filtered_windowed_64.vol'))
+        protML3D.ini3DrefVolumes.set(protImportVol.outputVolumes)
         protML3D.doCorrectGreyScale.set(True)
         protML3D.doMlf.set(True)
         protML3D.numberOfSeedsPerRef.set(2)

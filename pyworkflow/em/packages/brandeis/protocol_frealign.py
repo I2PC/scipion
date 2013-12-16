@@ -209,7 +209,7 @@ class ProtFrealign(ProtRefine3D):
                            'Automatic weighting is applied to each particle: a pseudo-temperature (B)\n'
                            'factor is applied to each particle according to its relative phase\n'
                            'residual against the reference. The weight is calculated as\n'
-                           '          *W = exp (-DELTAP/PBC * R^2)*\n'
+                           '          *W = exp (-DELTAP/PBC *** R^2)*\n'
                            'with DELTAP = relative phase residual (actual phase residual minus BOFF),\n'
                            'PBC = conversion constant (5.0 in the example),\n'
                            'and R^2 the squared resolution in Fourier units (R = 0.0 ... 0.5).\n'
