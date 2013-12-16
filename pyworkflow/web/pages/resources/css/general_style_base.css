@@ -11,9 +11,9 @@ body > #mainContainer { height: auto; min-height: 100%; }
 section {
 	padding: 20px;
 	
-	display: -webkit-box !important;      /* OLD - iOS 6-, Safari 3.1-6 */
-  	display: -moz-box !important;         /* OLD - Firefox 19- (buggy but mostly works) */
-  	display: -ms-flexbox !important;      /* TWEENER - IE 10 */
+	/* display: -webkit-box !important;      OLD - iOS 6-, Safari 3.1-6
+  	display: -moz-box !important;         OLD - Firefox 19- (buggy but mostly works)
+  	display: -ms-flexbox !important;      TWEENER - IE 10
 	display: -moz-flex !important;
 	display: -ms-flex !important;
 	display: -o-flex !important;
@@ -30,6 +30,6 @@ section {
 	-moz-flex-wrap: wrap;
 	-o-flex-wrap: wrap;
 	-ms-flex-wrap: wrap;
-	flex-wrap: wrap;
+	flex-wrap: wrap; */
 	
 }
