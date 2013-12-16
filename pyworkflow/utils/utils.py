@@ -252,9 +252,9 @@ HYPER_LINK2 = 'link2'
 HYPER_ALL = 'all'
 
 # Associated regular expressions
-PATTERN_BOLD = "[*](?P<bold>[^\s*][^*]*[^\s*]|[^\s*])[*]"
+PATTERN_BOLD = "(^|[\s])[*](?P<bold>[^\s*][^*]*[^\s*]|[^\s*])[*]"
 #PATTERN_BOLD = r"[\s]+[*]([^\s][^*]+[^\s])[*][\s]+"
-PATTERN_ITALIC = "[_](?P<italic>[^\s_][^_]*[^\s_]|[^\s_])[_]"
+PATTERN_ITALIC = "(^|[\s])[_](?P<italic>[^\s_][^_]*[^\s_]|[^\s_])[_]"
 #PATTERN_ITALIC = r"[\s]+[_]([^\s][^_]+[^\s])[_][\s]+"
 PATTERN_LINK1 = '(?P<link1>http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+)'
 PATTERN_LINK2 = "[\[]{2}(?P<link2>[^\s][^\]]+[^\s])[\]][\[](?P<link2_label>[^\s][^\]]+[^\s])[\]]{2}"
@@ -281,7 +281,8 @@ def parseHyperText(text, matchCallback):
     """
     def _match(match):
         """ Call the proper matchCallback with some extra info. """
-        m = match.group()
+        m = match.group().strip()
+        
         if m.startswith('*'):
             tag = HYPER_BOLD
         elif m.startswith('_'):
