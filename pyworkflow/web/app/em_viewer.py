@@ -176,8 +176,8 @@ def viewerElement(request):
 def view_plots(request):
     from pyworkflow.em.packages.xmipp3.plotter import XmippPlotter
     XmippPlotter.setInteractive(False)
-    print "plotter.interactive: ", XmippPlotter.interactive
-     
+#    print "plotter.interactive: ", XmippPlotter.interactive
+    
     projectName = request.session['projectName']
     project = loadProject(projectName)
     protId = request.GET.get('protId', None)
