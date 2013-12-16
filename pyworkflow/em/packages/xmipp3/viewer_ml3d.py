@@ -48,7 +48,7 @@ class XmippML3DViewer(ProtocolViewer):
     _targets = [XmippProtML3D]
     _environments = [DESKTOP_TKINTER, WEB_DJANGO]
     
-    _label = 'Xmipp Viewer ML3D'
+    _label = 'viewer ml3d'
 
     
     def _defineParams(self, form):

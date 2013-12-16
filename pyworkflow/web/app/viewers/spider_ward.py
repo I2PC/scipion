@@ -40,7 +40,7 @@ def viewerWARD(request, protocolViewer):
     return ioDict
 
 def doVisualizeClasses(request, protocolViewer):
-    pass
+    return "error","Not Implemented yet"
 
 def doVisualizeDendrogram(request, protocolViewer):
     minHeight = str(protocolViewer.minHeight.get())

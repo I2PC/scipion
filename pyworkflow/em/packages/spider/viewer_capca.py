@@ -42,10 +42,11 @@ from protocol_ca_pca import SpiderProtCAPCA
 
 
 class SpiderViewerCAPCA(ProtocolViewer):
-    """ Visualization of CA PCA Protocol.
-    """       
+    """ Visualization of CA PCA Protocol. """
+           
     _environments = [DESKTOP_TKINTER, WEB_DJANGO]
     _targets = [SpiderProtCAPCA]
+    _label = 'viewer CAPCA'
     
     def _defineParams(self, form):
         form.addSection(label='Visualization')

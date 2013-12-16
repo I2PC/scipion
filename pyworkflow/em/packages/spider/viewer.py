@@ -44,10 +44,11 @@ from protocol_align_apsr import SpiderProtAlignAPSR
     
 class SpiderViewer(Viewer):
     """ Wrapper to visualize different type of objects
-    with the Xmipp program xmipp_showj
-    """
+    with the Xmipp program xmipp_showj. """
+    
     _environments = [DESKTOP_TKINTER, WEB_DJANGO]
     _targets = [PcaFile, SpiderProtCustomMask, SpiderProtFilter]
+    _label = 'viewer'
 
     def visualize(self, obj, **args):
         

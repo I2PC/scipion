@@ -36,6 +36,8 @@ from spider import SpiderShell, SpiderProtocol
       
 class SpiderProtFilter(ProtFilterParticles, SpiderProtocol):
     """ Protocol for Spider filters. """
+    _label = 'filters'
+    
     def __init__(self):
         ProtFilterParticles.__init__(self)
         SpiderProtocol.__init__(self)

@@ -44,7 +44,7 @@ class XmippML2DViewer(ProtocolViewer):
     _targets = [XmippProtML2D]
     _environments = [DESKTOP_TKINTER, WEB_DJANGO]
     
-    _label = 'Xmipp Viewer ML2D'
+    _label = 'viewer ml2d'
     _plotVars = ['doShowLL', 'doShowPmax', 'doShowSignalChange', 'doShowMirror'] 
     
     def _defineParams(self, form):
