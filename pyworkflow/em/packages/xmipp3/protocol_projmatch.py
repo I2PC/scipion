@@ -66,8 +66,9 @@ class XmippProtProjMatch(xmipp3.XmippProtocol, ProtRefine3D, ProtClassify3D):
         form.addParam('input3DReferences', PointerParam,
                       pointerClass='SetOfVolumes',
                       label='Initial 3D reference volumes', 
-                      help='Initial 3D density maps with the same dimensions as your particles. \n '
-                           'For example: reference1.vol reference2.vol \n '
+                      help='Input 3D reference reconstruction. You can select \n '
+                           'more than one 3D input reference. \n'
+                           '_For example_: reference1.vol reference2.vol \n '
                            'specifies two references.')
         form.addParam('numberOfIterations', IntParam, default=4,
                       label='Number of iterations',
@@ -83,33 +84,33 @@ class XmippProtProjMatch(xmipp3.XmippProtocol, ProtRefine3D, ProtClassify3D):
         form.addParam('doCTFCorrection', BooleanParam, default=True,
                       label="Perform CTF correction?", 
                       help='If set to true, a CTF (amplitude and phase) corrected map will be refined, \n '
-                           'and the data will be processed in CTF groups. \n '
-                           'Note that you cannot combine CTF-correction with re-alignment of the classes. \n '
+                           'and the data will be processed in CTF groups. \n\n '
+                           '_NOTE_: You cannot combine CTF-correction with re-alignment of the classes. \n '
                            'Remember that CTF information should be provided in the images input file. \n ')    
               
         form.addParam('doAutoCTFGroup', BooleanParam, default=True, condition='doCTFCorrection',
                       label="Make CTF groups automatically?", 
                       help='Make CTF groups based on a maximum differences at a given resolution limit. \n '
-                           'If this option is set to false, a docfile with the defocus values where to  \n '
+                           '_NOTE_: If this option is set to false, a docfile with the defocus values where to  \n\n '
                            'split the images in distinct defocus group has to be provided (see expert option below) \n ')             
               
         form.addParam('ctfGroupMaxDiff', FloatParam, default=0.1, condition='doCTFCorrection and doAutoCTFGroup',
                       label='Maximum difference for grouping', validators=[Positive],
                       help='If the difference between the CTF-values up to the resolution limit specified \n '
-                      'below is larger than the value given here, two images will be placed in \n '
-                      'distinct CTF groups.')          
+                           'below is larger than the value given here, two images will be placed in \n '
+                           'distinct CTF groups.')          
         
         form.addParam('ctfGroupMaxResol', FloatParam, default=5.6, condition='doCTFCorrection and doAutoCTFGroup',
-                      label='Resolution limit (Ang) for grouping', validators=[Positive],
+                      label='Resolution limit (A) for grouping', validators=[Positive],
                       help='Maximum resolution where to consider CTF-differences among different groups. \n '
-                            'One should use somewhat higher resolutions than those aimed for in the refinement.')       
+                           'One should use somewhat higher resolutions than those aimed for in the refinement.')       
         
         # SplitDefocusDocFile
         form.addParam('setOfDefocus', StringParam,
                       label='Set of defocus', default='', condition='doCTFCorrection and not doAutoCTFGroup',
                       help='Set with defocus values where to split into groups. \n '
-                           'This field is compulsory if you do not want to make the CTF groups automatically. \n '
-                           'Note that the requested docfile can be made initially with the *xmipp_ctf_group* program, \n '
+                           'This field is compulsory if you do not want to make the CTF groups automatically. \n\n '
+                           '_NOTE_: The requested docfile can be made initially with the *xmipp_ctf_group* program, \n '
                            'and then it can be edited manually to suit your needs.')
         
         form.addParam('paddingFactor', FloatParam, default=2, condition='doCTFCorrection',
