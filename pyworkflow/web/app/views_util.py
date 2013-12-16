@@ -160,6 +160,16 @@ def browse_protocol_class(request):
         jsonStr = json.dumps({'objects' : objs},ensure_ascii=False)
         return HttpResponse(jsonStr, mimetype='application/javascript')
 
+def getSizePlotter(plots):
+    figsize = (800, 600)
+    
+    if plots == 1 or plots == 2:
+        figsize = (600, 450)
+    elif plots == 3 or plots == 4 :
+        figsize = (800, 600)
+    
+    return figsize
+
 def textfileViewer(title, fileList):
     f = open(fileList[0], 'r')
         

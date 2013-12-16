@@ -110,7 +110,8 @@ def viewerSpider(project, protocol, viewer):
     elif isinstance(protocol, SpiderProtCustomMask):
         mask = protocol.outputMask
         url1 = "/visualize_object/?objectId="+str(mask.getObjId())
-        url2 = "/visualize_object/?path="+str(mask.getFileName())        
+        url2 = "/visualize_object/?path="+str(mask.getFileName())    
+            
         ioDict["urls"] = [url1, url2] 
         
     return ioDict
@@ -195,9 +196,21 @@ def view_plots(request):
     
     xplotter = function(request, protocolViewer)
     
+#    figure = xplotter.getFigure()
+#    print "width:", figure.get_figwidth()*100
+#    print "height:", figure.get_figheight()*100
+    
     canvas = xplotter.getCanvas()
+    
+    # Adding this line the space between plots is fixed
+    try:
+        xplotter.show()
+    except:
+        pass
+    
     response = HttpResponse(content_type='image/png')
     canvas.print_png(response)
+    
     return response
     
 def view_plot_xmipp(request):
@@ -226,3 +239,15 @@ def view_plot_xmipp(request):
         response= HttpResponse(content_type='image/png')
         canvas.print_png(response)
         return response
+    
+def getSizePlotter(plots):
+    figsize = (800, 600)
+    
+    if plots == 1 or plots == 2:
+        figsize = (600, 450)
+    elif plots == 3 or plots == 4 :
+        figsize = (800, 600)
+    
+    return figsize
+
+

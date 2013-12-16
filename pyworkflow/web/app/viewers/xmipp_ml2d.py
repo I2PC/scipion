@@ -25,6 +25,7 @@
 # **************************************************************************
 
 from pyworkflow.em.packages.xmipp3.viewer_ml2d import createPlots
+from pyworkflow.web.app.views_util import *
 
 def viewerML2D(request, protocolViewer):
     ioDict = {}
@@ -49,7 +50,9 @@ def doShowClasses(request, protocolViewer):
 def doAllPlotsML2D(request, protocolViewer):
     protViewerClass = str(protocolViewer.getClassName())
     protId = str(protocolViewer.protocol.getObjId())
-    return "plotsComposite","/view_plots/?function=allPlotsML2D&protViewerClass="+ protViewerClass + "&protId="+ protId
+    width, height = getSizePlotter(4)
+    
+    return "plotsComposite","/view_plots/?function=allPlotsML2D&protViewerClass="+ protViewerClass + "&protId="+ protId + "&width=" + str(width) + "&height="+ str(height)
 
 def doSomePlotsML2D(protocolViewer):
     plots=""
@@ -58,29 +61,36 @@ def doSomePlotsML2D(protocolViewer):
             plots = plots + p + "-"
     
     if plots != "":
-        return "plotsComposite","/view_plots/?function=somePlotsML2D&plots="+str(plots)+"&protViewerClass="+ str(protocolViewer.getClassName())+ "&protId="+ str(protocolViewer.protocol.getObjId())
+        aux = plots.split("-")
+        width, height = getSizePlotter(len(aux)-1)
+        
+        return "plotsComposite","/view_plots/?function=somePlotsML2D&plots="+str(plots)+"&protViewerClass="+ str(protocolViewer.getClassName())+ "&protId="+ str(protocolViewer.protocol.getObjId()) + "&width=" + str(width) + "&height="+ str(height)
     else:
         return "", None
 
 def doShowLL(request, protocolViewer):
     protViewerClass = str(protocolViewer.getClassName())
     protId = str(protocolViewer.protocol.getObjId())
-    return "plot","/view_plots/?function=somePlotsML2D&plots=doShowLL&protViewerClass="+ protViewerClass + "&protId="+ protId
+    width, height = getSizePlotter(1)
+    return "plot","/view_plots/?function=somePlotsML2D&plots=doShowLL&protViewerClass="+ protViewerClass + "&protId="+ protId + "&width=" + str(width) + "&height="+ str(height)
 
 def doShowPmax(request, protocolViewer):
     protViewerClass = str(protocolViewer.getClassName())
     protId = str(protocolViewer.protocol.getObjId())
-    return "plot","/view_plots/?function=somePlotsML2D&plots=doShowPmax&protViewerClass="+ protViewerClass + "&protId="+ protId
+    width, height = getSizePlotter(1)
+    return "plot","/view_plots/?function=somePlotsML2D&plots=doShowPmax&protViewerClass="+ protViewerClass + "&protId="+ protId + "&width=" + str(width) + "&height="+ str(height)
 
 def doShowSignalChange(request, protocolViewer):
     protViewerClass = str(protocolViewer.getClassName())
     protId = str(protocolViewer.protocol.getObjId())
-    return "plot","/view_plots/?function=somePlotsML2D&plots=doShowSignalChange&protViewerClass="+ protViewerClass + "&protId="+ protId
+    width, height = getSizePlotter(1)
+    return "plot","/view_plots/?function=somePlotsML2D&plots=doShowSignalChange&protViewerClass="+ protViewerClass + "&protId="+ protId + "&width=" + str(width) + "&height="+ str(height)
     
 def doShowMirror(request, protocolViewer):
     protViewerClass = str(protocolViewer.getClassName())
     protId = str(protocolViewer.protocol.getObjId())
-    return "plot","/view_plots/?function=somePlotsML2D&plots=doShowMirror&protViewerClass="+ protViewerClass + "&protId="+ protId
+    width, height = getSizePlotter(1)
+    return "plot","/view_plots/?function=somePlotsML2D&plots=doShowMirror&protViewerClass="+ protViewerClass + "&protId="+ protId + "&width=" + str(width) + "&height="+ str(height)
 
 def allPlotsML2D(request, protocolViewer):
     xplotter = createPlots(protocolViewer.protocol, protocolViewer._plotVars)
