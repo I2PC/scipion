@@ -163,6 +163,8 @@ def browse_protocol_class(request):
 def getSizePlotter(plots):
     figsize = (800, 600)
     
+    if plots == -1:
+        figsize = (800, 400)
     if plots == 1:
         figsize = (600, 500)
     elif plots == 2:
