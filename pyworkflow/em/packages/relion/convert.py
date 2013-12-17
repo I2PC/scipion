@@ -158,6 +158,17 @@ def createRelionInputImages(self, imgSet, imagesFn=None):
         imgsFn = imgsStar.get()
     return imgsFn
 
+def createRelionInputVolume(self, volSet, imagesFn=None):
+    volName = volSet.getFirstItem().getFileName()
+    #convert to mrc/spider if needed
+    #volName.getFormat()
+    import os, sys
+    fileName, fileExtension = os.path.splitext(volName)
+    if fileExtension != '.mrc' and fileExtension != '.vol':
+         print "FILETYPE CONVERSION NOT IMPPLEMENTED", volName
+         sys.exit()
+    return volName
+
 def renameMdLabels(inputMd, outputMd, labelsDict):
     '''Change the labels' name on inputMd and write as outputMd
     The change will be made using the labelsDict, changing
