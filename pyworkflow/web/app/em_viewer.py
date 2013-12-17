@@ -199,7 +199,7 @@ def view_plots(request):
 #    figure = xplotter.getFigure()
 #    print "width:", figure.get_figwidth()*100
 #    print "height:", figure.get_figheight()*100
-    
+        
     canvas = xplotter.getCanvas()
     
     # Adding this line the space between plots is fixed
@@ -210,8 +210,8 @@ def view_plots(request):
     
     response = HttpResponse(content_type='image/png')
     canvas.print_png(response)
-    
     return response
+
     
 def view_plot_xmipp(request):
     projectName = request.session['projectName']

@@ -242,45 +242,41 @@ def tree_prot_view(request):
     
 def run_table_graph(request):
     try:
-        mode = request.GET.get('mode', None)
-        print mode
-        if mode:
-            projectName = request.session['projectName']
-            project = loadProject(projectName)
-            provider = ProjectRunsTreeProvider(project)
-            
-            runs = request.session['runs']
-            runsNew = formatProvider(provider)
-            
-            refresh = False
-            
-            if len(runs) != len(runsNew):
-                print 'Change detected, different size'
-                refresh = True
-            else:
-                for x in runs.iteritems():
-                    for y in runsNew.iteritems():
-                        if x[0]==y[0]:
-                            if x != y:
-                                print 'Change detected', x, y
-                                refresh = True
-            if refresh:
-                request.session['runs'] = runsNew
-                graphView = project.getSettings().graphView.get()
-            
-                context = {'provider': provider,
-                           'graphView': graphView}
-                
-                return render_to_response('run_table_graph.html', context)
-            else:
-                print "No changes detected"
-                return HttpResponse("ok")
+        projectName = request.session['projectName']
+        project = loadProject(projectName)
+        provider = ProjectRunsTreeProvider(project)
+        
+        runs = request.session['runs']
+        runsNew = formatProvider(provider)
+        
+        refresh = False
+        
+        if len(runs) != len(runsNew):
+            print 'Change detected, different size'
+            refresh = True
         else:
-            print "Stopped script"
-            return HttpResponse("stop")
+            for x in runs.iteritems():
+                for y in runsNew.iteritems():
+                    if x[0]==y[0]:
+                        if x != y:
+                            print 'Change detected', x, y
+                            refresh = True
+        if refresh:
+            request.session['runs'] = runsNew
+            graphView = project.getSettings().graphView.get()
+        
+            context = {'provider': provider,
+                       'graphView': graphView}
+            
+            return render_to_response('run_table_graph.html', context)
+        else:
+            print "No changes detected"
+            return HttpResponse("ok")
+        
     except Exception:
         print "Stopped script"
         return HttpResponse("stop")
+
 
 def formatProvider(provider):
     runs = {}
