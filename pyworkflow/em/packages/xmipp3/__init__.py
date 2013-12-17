@@ -54,6 +54,7 @@ from protocol_create_mask import XmippProtCreateGeo3DMask
 from protocol_particle_pick_automatic import XmippParticlePickingAutomatic
 from protocol_screen_particles import XmippProtScreenParticles
 from protocol_ransac import XmippProtRansac
+from protocol_convert_pdb import XmippProtConvertPdb
 
 # Wizards
 from wizard import *
