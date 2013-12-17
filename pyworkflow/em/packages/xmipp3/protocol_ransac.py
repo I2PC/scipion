@@ -35,7 +35,7 @@ from math import floor
 from xmipp import MetaData, MD_APPEND, MDL_MAXCC, MDL_WEIGHT, MDL_IMAGE, \
     MDL_VOLUME_SCORE_SUM, MDL_VOLUME_SCORE_SUM_TH, MDL_VOLUME_SCORE_MEAN, MDL_VOLUME_SCORE_MIN
     
-from pyworkflow.path import moveFile, cleanPath, copyFile    
+from pyworkflow.utils.path import moveFile, cleanPath, copyFile    
 
 
 #from xmipp3 import XmippProtocol
