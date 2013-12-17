@@ -756,6 +756,12 @@ class SetOfClasses2D(Set):
     
     def setImages(self, images):
         self._imagesPointer.set(images)
+        
+    def getDimensions(self):
+        """Return first image dimensions as a tuple: (xdim, ydim, zdim, n)"""
+        print "avr",self.hasAverages()
+        if self.hasAverages():
+            return self.getAverages().getDimensions()
 
      
      
