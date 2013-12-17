@@ -163,7 +163,9 @@ class XmippProtRansac(ProtInitialVolume):
         # Refine the best volumes
         for n in range(self.numVolumes):
             fnBase='proposedVolume%05d'%n
-            fnRoot=self.workingDirPath(fnBase)
+            fnRoot=self._getPath(fnBase)
+            
+            
             parent_id=XmippProjectDb.FIRST_STEP
 
             # Simulated annealing
