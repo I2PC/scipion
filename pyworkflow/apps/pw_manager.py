@@ -133,10 +133,9 @@ class ManagerWindow(gui.WindowBase):
         self.generalCfg = settings.getConfig()
         
         gui.WindowBase.__init__(self, "Projects", minsize=(750, 500), **args)
-        
+        self.manager = Manager()
         
         self.switchView(gui.VIEW_PROJECTS)
-        
         
 #        parent = self.root
 
@@ -183,17 +182,15 @@ class ManagerWindow(gui.WindowBase):
         """
         return ProjectsView(parent, self)
         
-    def createNewProject(self):
-        projName =  askString("Enter the project name", "Project Name:", self.root, 30)
-        if not projName is None:
-            self.manager.createProject(projName)
-            self.createProjectList(self.text)
+
     
             
 class ProjectsView(tk.Frame):    
     def __init__(self, parent, windows, **args): 
         tk.Frame.__init__(self, parent, bg='white', **args)
         self.windows = windows
+        self.manager = windows.manager
+        self.root = windows.root
         
         #tkFont.Font(size=12, family='verdana', weight='bold')
         self.projNameFont = tkFont.Font(size=12, family='helvetica', weight='bold')
@@ -206,10 +203,8 @@ class ProjectsView(tk.Frame):
         
         self.columnconfigure(0, weight=1)
         self.rowconfigure(1, weight=1)
-    #          projectsFrame = tk.Frame(parent)
         text = TaggedText(self, width=40, height=15, bd=0, bg='white')
         text.grid(row=1, column=0, sticky='news')
-    #          gui.configureWeigths(lf)
       
         self.createProjectList(text)
         text.setReadOnly(True)
@@ -245,7 +240,10 @@ class ProjectsView(tk.Frame):
         return frame
     
     def createNewProject(self, e=None):
-        pass
+        projName =  askString("Enter the project name", "Project Name:", self.root, 30)
+        if not projName is None:
+            self.manager.createProject(projName)
+            self.createProjectList(self.text)
     
     def openProject(self, projName):
         projPath = self.manager.getProjectPath(projName)
