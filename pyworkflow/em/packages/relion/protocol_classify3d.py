@@ -56,7 +56,7 @@ class ProtRelionBase(EMProtocol):
         self.loadEnvironment()
         
         self.imgStar    = createRelionInputImages(self, self.inputImages.get())        
-        self.volumeName = createRelionInputVolume(self, self.ini3DrefVolumes.get())
+        self.volumeName = createRelionInputVolume(self, self.input3DReferences.get())
 
 
     def defineSteps2(self, firstIteration
@@ -123,7 +123,7 @@ class Relion3DClassification(ProtClassify3D, ProtRelionBase):
                       'These classes will be made in an unsupervised manner from a single reference '
                       'by division of the data into random subsets during the first iteration.')
         #TODO: the following parameter should be a Pointer to a Volume and not a string containing the path      
-        form.addParam('ini3DrefVolumes', PointerParam,label='Initial 3D reference volume',important=True, 
+        form.addParam('input3DReferences', PointerParam,label='Initial 3D reference volume',important=True, 
                       pointerClass='SetOfVolumes',
                       help='Initial 3D density map with the same dimensions as your particles.')
         form.addParam('isRefMapGreyScale', BooleanParam, default=True,
@@ -202,7 +202,7 @@ class Relion3DClassification(ProtClassify3D, ProtRelionBase):
                       '(T in the JMB2011 paper) put more weight on the experimental data. Values around 2-4 '
                       'have been observed to be useful for 3D refinements, values of 1-2 for 2D refinements. '
                       'Too small values yield too-low resolution structures; too high values result in over-estimated resolutions and overfitting.')
-        form.addParam('parMaskRadius', IntParam, default=200,
+        form.addParam('maskRadius', IntParam, default=200,
                       label='Particles mask diameter (in Angstroms)',
                       help='The experimental images will be masked with a soft circular mask with this diameter. '
                       'Make sure this radius is not set too small because that may mask away part of the signal! '
@@ -272,7 +272,7 @@ class Relion3DClassification(ProtClassify3D, ProtRelionBase):
             args['--solvent_mask'] = self.maskFile.get()
 
         args.update({'--i': self.imgStar,
-                     '--particle_diameter': self.parMaskRadius.get() * 2.0 ,
+                     '--particle_diameter': self.maskRadius.get() * 2.0 ,
                      '--angpix': self.inputImages.get().getSamplingRate(),
                      '--ref': self.volumeName,
                      '--oversampling': '1'

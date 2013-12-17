@@ -1,6 +1,6 @@
 # **************************************************************************
 # *
-# * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
+# * Authors:     Jose Gutierrez (jose.gutierrez@cnb.csic.es)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -24,15 +24,40 @@
 # *
 # **************************************************************************
 """
-This sub-package will contains Relion protocols
+This module implement some wizards
 """
 
-_logo = "relion_logo.png"
-_references = [
-               'Sjors H.W. Scheres, A Bayesian View on Cryo-EM Structure Determination, Journal of Molecular Biology, Volume 415, Issue 2, 13 January 2012, Pages 406-418, ISSN 0022-2836, http://dx.doi.org/10.1016/j.jmb.2011.11.010.',
-               'Sjors H.W. Scheres, RELION: Implementation of a Bayesian approach to cryo-EM structure determination, Journal of Structural Biology, Volume 180, Issue 3, December 2012, Pages 519-530, ISSN 1047-8477, http://dx.doi.org/10.1016/j.jsb.2012.09.006.'
-               ]
-# Wizards
-from wizard import *
+import os
+import Tkinter as tk
+import ttk
 
+from pyworkflow.viewer import Viewer, Wizard, DESKTOP_TKINTER, WEB_DJANGO
+
+from pyworkflow.em.packages.xmipp3.wizard import XmippVolumeMaskRadiusWizard
+from pyworkflow.em.packages.xmipp3.wizard import ListTreeProvider
 from protocol_classify3d import Relion3DClassification
+
+from pyworkflow import findResource
+
+class RelionVolMaskRadiusWizard(XmippVolumeMaskRadiusWizard):
+    
+    _targets = [(Relion3DClassification, ['maskRadius'])]    
+
+    def _getProvider(self, protocol):
+        """ This should be implemented to return the list
+        of object to be displayed in the tree.
+        """
+        if protocol.input3DReferences.hasValue():
+            vols = [vol for vol in protocol.input3DReferences.get()]
+            return ListTreeProvider(vols)
+        return None
+    
+    @classmethod    
+    def getView(self):
+        return "wiz_volume_mask"
+    
+    
+    
+    
+    
+    
