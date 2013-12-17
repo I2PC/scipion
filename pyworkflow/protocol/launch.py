@@ -39,6 +39,7 @@ B. Remote execution:
 3- Run a local proccess (for local execution, see case A) in the remote host
 4- Get the result back after launching remotely
 """
+import os
 import re
 from subprocess import Popen, PIPE
 import pyworkflow as pw
@@ -90,7 +91,7 @@ def _getAppsProgram(prog):
     """ Get a command to launch a program under the apps folder.
     And also using a different python if configured in SCIPION_PYTHON var.
     """
-    return pw.join('apps', prog)
+    return os.environ.get('SCIPION_PYTHON', 'python') + ' ' + pw.join('apps', prog)
     
 def _launchLocal(protocol, wait):
     # Check first if we need to launch with MPI or not

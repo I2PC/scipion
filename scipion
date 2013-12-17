@@ -32,14 +32,16 @@ import os
 
 PW_HOME = os.path.abspath(os.path.dirname(__file__))
 PW_APPS = os.path.join(PW_HOME, 'pyworkflow', 'apps')
-PW_APPS_TEMP = "python " + os.path.join(PW_APPS, '%s')
+PW_APPS_TEMP = os.path.join(PW_APPS, '%s')
 
 XMIPP_HOME = os.environ['XMIPP_HOME']
 XMIPP_BIN = os.path.join(XMIPP_HOME, 'bin')
 XMIPP_LIB = os.path.join(XMIPP_HOME, 'lib')
 
 SCIPION_HOME = os.environ.get('SCIPION_HOME', os.path.join(os.environ['HOME'], 'Scipion'))
+SCIPION_PYTHON = os.path.join(XMIPP_BIN, 'xmipp_python')
 os.environ['SCIPION_HOME'] = SCIPION_HOME
+os.environ['SCIPION_PYTHON'] = SCIPION_PYTHON
 
 VARS = {
         'PYTHONPATH': os.pathsep.join([PW_HOME, XMIPP_LIB, os.environ.get('PYTHONPATH', '')]),
@@ -53,6 +55,7 @@ def runApp(app, args=''):
     
 def runCmd(cmd):
     os.environ.update(VARS)
+    cmd = '%s %s' % (SCIPION_PYTHON, cmd)
     print ">>>>>", cmd
     result = os.system(cmd)
     sys.exit(result)
@@ -90,17 +93,17 @@ if __name__ == '__main__':
         
         elif mode == MODE_WEBSERVER:
             manage = os.path.join(PW_HOME, 'pyworkflow', 'web', 'manage.py')
-            runCmd('python %s runserver 0.0.0.0:8000 ' % manage)
+            runCmd('%s runserver 0.0.0.0:8000 ' % manage)
             
         elif mode == MODE_TESTS:
             if n > 2:
                 tests = sys.argv[2]
                 path = os.getcwd()
                 os.chdir(PW_HOME)
-                runCmd('python -m unittest pyworkflow.tests.%s' % tests)
+                runCmd('-m unittest pyworkflow.tests.%s' % tests)
                 os.chdir(path)
         elif mode == MODE_TESTS_DATA:
-            runCmd('python sync_data.py')
+            runCmd('sync_data.py')
                 
     # If reach this point, bad arguments passed
     print """
