@@ -257,11 +257,20 @@ def wiz_bandpass(protocol, request):
     mode = protocol.fourierMode.get()
     
     if mode == 0:
-        
+        # low pass
+        lowFreq = 0.
+        highFreq = protocol.highFreq.get()
+        decay = protocol.freqDecay.get()
     elif mode == 1:
-        
+        # high pass
+        lowFreq = protocol.lowFreq.get()
+        highFreq = 1.0
+        decay = protocol.freqDecay.get()
     elif mode== 2:
-        
+        #band pass
+        highFreq = protocol.highFreq.get()
+        lowFreq = protocol.lowFreq.get()
+        decay = protocol.freqDecay.get()
     
     res = validateParticles(particles)
     
@@ -275,9 +284,9 @@ def wiz_bandpass(protocol, request):
         else:
             context = {'objects': parts,
                        'mode': mode,
-                       'lowFreq': protocol.lowFreq.get(),
-                       'highFreq': protocol.highFreq.get(),
-                       'decayFreq': protocol.freqDecay.get(),
+                       'lowFreq': lowFreq,
+                       'highFreq': highFreq,
+                       'decayFreq': decay,
                        }
             
             context = wiz_base(request, context)
