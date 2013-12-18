@@ -136,7 +136,7 @@ class Image(Item):
         pass
     
     def getDim(self):
-        """Return image dimensions as tuple: (Ydim, Xdim)"""
+        """Return image dimensions as tuple: (Ydim, Ydim, Zdim, N)"""
         return ImageHandler().getDimensions(self.getLocation())
     
     def getIndex(self):

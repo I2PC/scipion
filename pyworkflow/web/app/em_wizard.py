@@ -38,6 +38,7 @@ from pyworkflow.em.convert import ImageHandler
 from pyworkflow.em.packages.xmipp3.convert import xmippToLocation, locationToXmipp
 from pyworkflow.em.packages.spider.convert import locationToSpider
 from pyworkflow.em.packages.spider.wizard import filter_spider
+from pyworkflow.em.packages.xmipp3.constants import *
 
 def wizard(request):
     # Get the Wizard Name
@@ -253,7 +254,16 @@ def wiz_filter_spider(protocol, request):
 
 def wiz_bandpass(protocol, request):
     particles = protocol.inputParticles.get()
-    res = validateParticles(particles) 
+    mode = protocol.fourierMode.get()
+    
+    if mode == 0:
+        
+    elif mode == 1:
+        
+    elif mode== 2:
+        
+    
+    res = validateParticles(particles)
     
     if res is not 1:
         return HttpResponse(res)
@@ -264,6 +274,7 @@ def wiz_bandpass(protocol, request):
             return HttpResponse("errorIterate")
         else:
             context = {'objects': parts,
+                       'mode': mode,
                        'lowFreq': protocol.lowFreq.get(),
                        'highFreq': protocol.highFreq.get(),
                        'decayFreq': protocol.freqDecay.get(),
@@ -363,9 +374,9 @@ def get_image_bandpass(request):
     Function to get the computing image with a fourier filter applied
     """
     imagePath = request.GET.get('image', None)
-    lowFreq = request.GET.get('lowFreq', None)
-    highFreq = request.GET.get('highFreq', None)
-    decay = request.GET.get('decayFreq', None)
+    lowFreq = request.GET.get('lowFreq', 0.)
+    highFreq = request.GET.get('highFreq', 1.0)
+    decay = request.GET.get('decayFreq', 0.)
     dim = request.GET.get('dim', None)
     
     # create a xmipp image empty
