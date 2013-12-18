@@ -418,7 +418,8 @@ class XmippProtRansac(ProtInitialVolume):
         fn = self._getPath('proposedVolumes.xmd')
         volumesSet = self._createSetOfVolumes()
         volumesSet._xmippMd = String(fn)
-        volumesSet.setSamplingRate(self.inputClasses.get().getSamplingRate())
+        #TODO WHEN HASAVERAGE IS FIXED
+        #volumesSet.setSamplingRate(self.inputClasses.get().getAverage().getSamplingRate())
         readSetOfVolumes(fn, volumesSet)
         volumesSet.write()
         
