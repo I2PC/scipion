@@ -111,7 +111,7 @@ class XmippProtCreateGeo3DMask(ProtCreateMask3D):
         form.addParam('doBig',BooleanParam,default=False,label='Keep largest component',help="The input mask has to be binary")
         form.addParam('doSymmetrize',BooleanParam,default=False,label='Symmetrize mask')
         form.addParam('symmetry',StringParam,default='c1',label='Symmetry group',condition="doSymmetrize",
-                      help="See [http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Symmetry] for a description of the symmetry groups format."
+                      help="See http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Symmetry for a description of the symmetry groups format."
                            "If no symmetry is present, give c1")
         form.addParam('doMorphological',BooleanParam,default=False,label='Apply morphological operation',
                       help="Dilation (dilate white region)."
@@ -131,10 +131,14 @@ class XmippProtCreateGeo3DMask(ProtCreateMask3D):
     def _defineSteps(self):
         self.maskFile = self._getPath('mask.vol')
         if self.source==SOURCE_VOLUME:
+            self.inputMask.set(None)
             self._insertFunctionStep('createMaskFromVolume')
         elif self.source==SOURCE_GEOMETRY:
+            self.inputMask.set(None)
+            self.volume.set(None)
             self._insertFunctionStep('createMaskFromGeometry')
         else:
+            self.volume.set(None)
             self._insertFunctionStep('createMaskFromAnotherMask')
         self._insertFunctionStep('postProcessMask')
         self._insertFunctionStep('createOutput')
@@ -221,7 +225,7 @@ class XmippProtCreateGeo3DMask(ProtCreateMask3D):
                 self.runJob(None,"xmipp_transform_symmetrize","-i %s --sym %s --dont_wrap"%(self.maskFile,self.symmetry.get()))
         if self.doMorphological.get():
             self.runJob(None,"xmipp_transform_morphology","-i %s --binaryOperation %s --size %d"
-                        %(self.maskFile,self.morphologicalOperation.get(),self.elementSize.get())) # COSS: *** Get operation
+                        %(self.maskFile,self.getEnumText('morphologicalOperation'),self.elementSize.get()))
         if self.doInvert.get():
             self.runJob(None,"xmipp_image_operate","-i %s --mult -1"%self.maskFile)
             self.runJob(None,"xmipp_image_operate","-i %s --plus  1"%self.maskFile)
@@ -232,16 +236,16 @@ class XmippProtCreateGeo3DMask(ProtCreateMask3D):
         volMask = VolumeMask()
         volMask.setFileName(self.maskFile)
         if self.source==SOURCE_VOLUME:
-            volMask.setSamplingRate(self.volume.getSamplingRate())
+            volMask.setSamplingRate(self.volume.get().getSamplingRate())
         if self.source==SOURCE_MASK:
-            volMask.setSamplingRate(self.inputMask.getSamplingRate())
+            volMask.setSamplingRate(self.inputMask.get().getSamplingRate())
         self._defineOutputs(outputMask=volMask)
         
     def _summary(self):
         messages = []      
-        messages.append("<Mask creation>")
+        messages.append("*Mask creation*")
         if self.source==SOURCE_MASK:
-            messages.append("   From another mask") # COSS: Como apuntar a la otra mascara
+            messages.append("   From another mask")
         if self.source==SOURCE_VOLUME:
             if self.volumeOperation==OPERATION_THRESHOLD:
                 messages.append("   Thresholding %f"%self.threshold.get())
@@ -276,7 +280,7 @@ class XmippProtCreateGeo3DMask(ProtCreateMask3D):
             elif geo==MASK3D_RAISED_CROWN:
                 messages.append("   Raised crown between %f and %f (decay=%f)"%(self.innerRadius.get(),self.outerRadius.get(),
                                                                                 self.borderDecay.get()))
-        messages.append("<Mask processing>")
+        messages.append("*Mask processing*")
         if self.doSmall.get():
             messages.append("   Removing components smaller than %d"%(self.smallSize.get()))
         if self.doBig.get():
@@ -284,7 +288,7 @@ class XmippProtCreateGeo3DMask(ProtCreateMask3D):
         if self.doSymmetrize.get():
             messages.append("   Symmetrized %s"%self.symmetry.get())
         if self.doMorphological.get():
-            messages.append("   Morphological operation: %s"%self.morphologicalOperation.get()) # COSS: get string
+            messages.append("   Morphological operation: %s"%self.getEnumText('morphologicalOperation'))
         if self.doInvert.get():
             messages.append("   Inverted")
         if self.doSmooth.get():
