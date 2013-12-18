@@ -470,8 +470,10 @@ class Pointer(Scalar):
         Object.__init__(self, value, objIsPointer=True, **args)   
        
     def __str__(self):
-        """String representation of the scalar value"""
-        return '-> %s (%s)' % (self.get().getClassName(), self.get().strId())
+        """String representation of a pointer"""
+        if self.hasValue():
+            return '-> %s (%s)' % (self.get().getClassName(), self.get().strId())
+        return '-> None'
     
     def _convertValue(self, value):
         """Avoid storing _objValue and future objects
