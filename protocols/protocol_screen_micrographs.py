@@ -300,7 +300,7 @@ def gatherResults(log,TmpDir,WorkingDir,summaryFile, importMicrographs,Downsampl
     runJob(log,"mv","-f %s/aux_%s %s"%(dirSummary,fnSummary,summaryFile))
     runJob(log,"touch",summaryFile)
     if Downsampling!=1:
-        runJob(log,"rm","-f "+TmpDir+"/*")
+        runJob(log,"find",TmpDir+" -type f -exec rm {} \;")
 
 def buildSummaryMetadata(WorkingDir,importMicrographs,summaryFile):
     md = xmipp.MetaData()
