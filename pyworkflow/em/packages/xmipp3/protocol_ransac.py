@@ -93,7 +93,7 @@ class XmippProtRansac(ProtInitialVolume):
                       label='Number of iterations to refine the volumes',
                       help='Number of iterations to refine the best volumes using projection matching approach and the input classes')
         form.addParam('initialVolume', PointerParam, label="Initial volume",  
-                      pointerClass='SetOfVolumes',
+                      pointerClass='SetOfVolumes', allowNull=True,
                       help='You may provide a very rough initial volume as a way to constraint the angular search.'
                             'For instance, when reconstructing a fiber, you may provide a cylinder so that side views'
                             'are assigned to the correct tilt angle, although the rotational angle may be completely wrong')           
@@ -138,7 +138,7 @@ class XmippProtRansac(ProtInitialVolume):
         self.imgsFn = createXmippInputClasses2D(self, self.inputClasses.get())
         
         """ Filter the """
-        self.initialize()
+        initialStepId = self.initialize()
         
         #TODO: Initial volume can be empty
         # Generate projection gallery from the initial volume
@@ -151,24 +151,27 @@ class XmippProtRansac(ProtInitialVolume):
         for n in range(self.nRansac.get()):
             # CTF estimation with Xmipp
             stepId = self._insertFunctionStep('ransacIteration', n,
-                                    prerequisites=[]) # Make estimation steps indepent between them
+                                    prerequisites=[initialStepId]) # Make estimation steps indepent between them
             deps.append(stepId)
             
         
         # Look for threshold, evaluate volumes and get the best
 #        if (self.InitialVolume != ''):
 #            self._insertFunctionStep("runJob",programname="rm", params=self.tmpPath("gallery_InitialVolume*"), NumberOfMpi=1)
-        self._insertFunctionStep("getCorrThresh")
+        self._insertFunctionStep("getCorrThresh",
+                                 prerequisites=deps) # Make estimation steps indepent between them)
         self._insertFunctionStep("evaluateVolumes")
-        self._insertFunctionStep("getBestVolumes")        
+        bestVolumesStepId = self._insertFunctionStep("getBestVolumes")        
         
+        deps = [] # Store all steps ids, final step createOutput depends on all of them
         # Refine the best volumes
         for n in range(self.numVolumes.get()):
             fnBase='proposedVolume%05d'%n
             fnRoot=self._getPath(fnBase)
                     
             # Simulated annealing
-            stepId =  self._insertFunctionStep('reconstruct',fnRoot)
+            self._insertFunctionStep('reconstruct',fnRoot,
+                                               prerequisites=[bestVolumesStepId]) # Make estimation steps indepent between them)
             if self.useSA.get():
                 self._insertRunJobStep("xmipp_volume_initial_simulated_annealing","-i %s.xmd --initial %s.vol --oroot %s_sa --sym %s --randomIter %d --rejection %f --dontApplyPositive"\
                           %(fnRoot,fnRoot,fnRoot,self.symmetryGroup.get(),self.nIterRandom.get(),self.rejection.get()))
@@ -176,13 +179,17 @@ class XmippProtRansac(ProtInitialVolume):
                 self._insertRunJobStep('deleteFile', filename=fnRoot+"_sa.xmd")
         
             for it in range(self.numIter.get()):    
-                stepId =  self._insertFunctionStep('reconstruct',fnRoot)
-                stepId =  self._insertFunctionStep('projMatch',fnBase)
+                self._insertFunctionStep('reconstruct',fnRoot) # Make estimation steps indepent between them
+                self._insertFunctionStep('projMatch',fnBase)
+            
             stepId =  self._insertRunJobStep("xmipp_image_resize","-i %s.vol -o %s.vol --dim %d %d" 
                                           %(fnRoot,fnRoot,self.Xdim,self.Xdim))
+            
+            deps.append(stepId)
         
         # Score each of the final volumes
-        self._insertFunctionStep("scoreFinalVolumes")
+        self._insertFunctionStep("scoreFinalVolumes",
+                                 prerequisites=deps) # Make estimation steps indepent between them
         
         
     def initialize(self):
@@ -210,27 +217,30 @@ class XmippProtRansac(ProtInitialVolume):
 
         self._insertRunJobStep("xmipp_transform_filter","-i %s -o %s --fourier low_pass %f --oroot %s"
                                                 %(self.imgsFn,fnOutputReducedClass,freq,fnOutputReducedClassNoExt))
-        self._insertRunJobStep("xmipp_image_resize","-i %s --fourier %d -o %s" %(fnOutputReducedClass,self.Xdim2,fnOutputReducedClassNoExt))
+        return self._insertRunJobStep("xmipp_image_resize","-i %s --fourier %d -o %s" %(fnOutputReducedClass,self.Xdim2,fnOutputReducedClassNoExt))
+        
 
     
     
     def ransacIteration(self, n):
     
-        TmpDir = self._getTmpPath()
         fnOutputReducedClass = self._getExtraPath("reducedClasses.xmd")  
         fnBase="ransac%05d"%n
-        fnRoot=os.path.join(TmpDir,fnBase)
+        fnRoot=self._getTmpPath(fnBase)
         
     #    fnOutputReducedClass = os.path.join(WorkingDir,"extra/reducedClasses.xmd")
     
-        if (self.dimRed.get()=='Yes'):
+        if self.dimRed:
             # Get a random sample of images
-            self._insertRunJobStep("xmipp_transform_dimred","-i %s --randomSample %s.xmd  %d -m LTSA "%(fnOutputReducedClass,fnRoot,self.numGrids.get()))
+            self.runJob(None,"xmipp_transform_dimred","-i %s --randomSample %s.xmd  %d -m LTSA "%(fnOutputReducedClass,fnRoot,self.numGrids.get()))
         else:        
-            self._insertRunJobStep("xmipp_metadata_utilities","-i %s -o %s.xmd  --operate random_subset %d --mode overwrite "%(fnOutputReducedClass,fnRoot,self.numSamples.get()))
-            self._insertRunJobStep("xmipp_metadata_utilities","-i %s.xmd --fill angleRot rand_uniform -180 180 "%(fnRoot))
-            self._insertRunJobStep("xmipp_metadata_utilities","-i %s.xmd --fill angleTilt rand_uniform 0 180 "%(fnRoot))
-            self._insertRunJobStep("xmipp_metadata_utilities","-i %s.xmd --fill anglePsi  rand_uniform 0 360 "%(fnRoot)) 
+            print "-i %s -o %s.xmd  --operate random_subset %d --mode overwrite "%(fnOutputReducedClass,fnRoot,self.numSamples.get())
+            self.runJob(None,"xmipp_metadata_utilities","-i %s -o %s.xmd  --operate random_subset %d --mode overwrite "%(fnOutputReducedClass,fnRoot,self.numSamples.get()))
+            self.runJob(None,"xmipp_metadata_utilities","-i %s.xmd --fill angleRot rand_uniform -180 180 "%(fnRoot))
+            self.runJob(None,"xmipp_metadata_utilities","-i %s.xmd --fill angleTilt rand_uniform 0 180 "%(fnRoot))
+            self.runJob(None,"xmipp_metadata_utilities","-i %s.xmd --fill anglePsi  rand_uniform 0 360 "%(fnRoot)) 
+        print "fnOutputReducedClass",fnOutputReducedClass
+        print "fnRoot",fnRoot
     
         # If there is an initial volume, assign angles        
 #        if (InitialVolume != ''):
@@ -246,32 +256,31 @@ class XmippProtRansac(ProtInitialVolume):
         # Simulated annealing
         if self.useSA.get():
             smallIter=int(min(floor(self.nIterRandom.get()/5.0),0));
-            self._insertRunJobStep("xmipp_volume_initial_simulated_annealing","-i %s --initial %s --oroot %s_sa --sym %s --randomIter %d --rejection %f --dontApplyPositive"
+            self.runJob(None,"xmipp_volume_initial_simulated_annealing","-i %s --initial %s --oroot %s_sa --sym %s --randomIter %d --rejection %f --dontApplyPositive"
                       %(fnRoot+".xmd",fnVol,fnRoot,self.symmetryGroup.get(),smallIter,self.rejection.get()))
             moveFile(fnRoot+"_sa.vol", fnVol)
             cleanPath(fnRoot+"_sa.xmd")
     
         # Generate projections from this reconstruction
         fnGallery=self._getTmpPath('gallery_'+fnBase+'.stk')
-                    
-        self._insertRunJobStep("xmipp_angular_project_library", "-i %s -o %s --sampling_rate %f --sym %s --method fourier 1 0.25 bspline --compute_neighbors --angular_distance -1 --experimental_images %s"\
+        self.runJob(None,"xmipp_angular_project_library", "-i %s -o %s --sampling_rate %f --sym %s --method fourier 1 0.25 bspline --compute_neighbors --angular_distance -1 --experimental_images %s"\
                     %(fnVol,fnGallery,self.angularSampling.get(),self.symmetryGroup.get(),fnOutputReducedClass))
             
         # Assign angles to the rest of images
         fnAngles=self._getTmpPath('angles_'+fnBase+'.xmd')
-        self._insertRunJobStep("xmipp_angular_projection_matching", "-i %s -o %s --ref %s --Ri 0 --Ro %s --max_shift %s --append"\
+        self.runJob(None,"xmipp_angular_projection_matching", "-i %s -o %s --ref %s --Ri 0 --Ro %s --max_shift %s --append"\
                               %(fnOutputReducedClass,fnAngles,fnGallery,str(self.Xdim/2),str(self.Xdim/20)))
        
         # Delete intermediate files 
-        cleanPath(fnGallery)
-        cleanPath(self._getTmpPath('gallery_'+fnBase+'_sampling.xmd'))
-        cleanPath(self._getTmpPath('gallery_'+fnBase+'.doc'))
-        cleanPath(fnVol)
-        cleanPath(self._getTmpPath(fnBase+'.xmd'))
+#        cleanPath(fnGallery)
+#        cleanPath(self._getTmpPath('gallery_'+fnBase+'_sampling.xmd'))
+#        cleanPath(self._getTmpPath('gallery_'+fnBase+'.doc'))
+#        cleanPath(fnVol)
+#        cleanPath(self._getTmpPath(fnBase+'.xmd'))
     
     def reconstruct(self, fnRoot):
-        self._insertRunJobStep("xmipp_reconstruct_fourier","-i %s.xmd -o %s.vol --sym %s " %(fnRoot,fnRoot,self.symmetryGroup.get()))
-        self._insertRunJobStep("xmipp_transform_mask","-i %s.vol --mask circular -%d "%(fnRoot,self.Xdim2/2))
+        self.runJob(None,"xmipp_reconstruct_fourier","-i %s.xmd -o %s.vol --sym %s " %(fnRoot,fnRoot,self.symmetryGroup.get()))
+        self.runJob(None,"xmipp_transform_mask","-i %s.vol --mask circular -%d "%(fnRoot,self.Xdim2/2))
      
     def getCorrThresh(self):
         corrVector = []
@@ -279,7 +288,7 @@ class XmippProtRansac(ProtInitialVolume):
         mdCorr= MetaData()
     
         for n in range(self.nRansac.get()):
-            fnRoot=os.path.join("ransac%05d"%n)
+            fnRoot="ransac%05d"%n
             fnAngles=self._getTmpPath("angles_"+fnRoot+".xmd")
             md=MetaData(fnAngles)
             
@@ -309,7 +318,7 @@ class XmippProtRansac(ProtInitialVolume):
         objId = mdCorr.firstObject()    
         CorrThresh = mdCorr.getValue(MDL_WEIGHT,objId)
         for n in range(self.nRansac.get()):        
-            fnRoot=os.path.join("ransac%05d"%n)              
+            fnRoot="ransac%05d"%n              
             fnAngles=self._getTmpPath("angles_"+fnRoot+".xmd")    
             md=MetaData(fnAngles)
             numInliers=0
@@ -347,7 +356,7 @@ class XmippProtRansac(ProtInitialVolume):
             copyFile(fnBestAngles,fnBestAnglesOut)
             print("Best volume "+str(indx)+" = "+fnBestAngles)
             if not self.useAll.get():
-                self._insertRunJobStep("xmipp_metadata_utilities","-i %s -o %s --query select \"maxCC>%f \" --mode append" %(fnBestAnglesOut,fnBestAnglesOut,threshold))
+                self.runJob(None,"xmipp_metadata_utilities","-i %s -o %s --query select \"maxCC>%f \" --mode append" %(fnBestAnglesOut,fnBestAnglesOut,threshold))
                 if getMdSize(fnBestAnglesOut) > 0:
                     indx += 1
             else:
@@ -366,10 +375,10 @@ class XmippProtRansac(ProtInitialVolume):
         fnOutputReducedClass = self._getExtraPath("reducedClasses.xmd") 
         
         AngularSampling=int(max(floor(self.angularSampling.get()/2.0),2));
-        self._insertRunJobStep("xmipp_angular_project_library", "-i %s.vol -o %s --sampling_rate %f --sym %s --method fourier 1 0.25 bspline --compute_neighbors --angular_distance -1 --experimental_images %s"\
+        self.runJob(None,"xmipp_angular_project_library", "-i %s.vol -o %s --sampling_rate %f --sym %s --method fourier 1 0.25 bspline --compute_neighbors --angular_distance -1 --experimental_images %s"\
                               %(fnRoot,fnGallery,float(AngularSampling),self.symmetryGroup.get(),fnOutputReducedClass))
     
-        self._insertRunJobStep("xmipp_angular_projection_matching", "-i %s.xmd -o %s.xmd --ref %s --Ri 0 --Ro %s --max_shift %s --append"\
+        self.runJob(None,"xmipp_angular_projection_matching", "-i %s.xmd -o %s.xmd --ref %s --Ri 0 --Ro %s --max_shift %s --append"\
                %(fnRoot,fnRoot,fnGallery,str(self.Xdim/2),str(self.Xdim/20)))
                 
         cleanPath(self._getTmpPath('gallery_'+fnBase+'_sampling.xmd'))
@@ -388,7 +397,7 @@ class XmippProtRansac(ProtInitialVolume):
             fnRoot=self._getPath('proposedVolume%05d'%n)
             fnAssignment=fnRoot+".xmd"
             if exists(fnAssignment):
-                self._insertRunJobStep("xmipp_metadata_utilities","-i %s --fill weight constant 1"%fnAssignment)
+                self.runJob(None,"xmipp_metadata_utilities","-i %s --fill weight constant 1"%fnAssignment)
                 MDassignment=MetaData(fnAssignment)
                 sum=0
                 thresholdedSum=0
