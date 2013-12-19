@@ -506,7 +506,7 @@ class XmippBandPassFilterDialog(XmippDownsampleDialog):
         self.showLowFreq = getattr(self, 'showLowFreq', True)
         self.showHighFreq = getattr(self, 'showHighFreq', True)
         self.showDecay = getattr(self, 'showDecay', True)
-        
+            
         if (not self.showLowFreq) or (not self.showHighFreq):
             label_high = 'Freq'
             label_low = 'Freq'
@@ -521,9 +521,12 @@ class XmippBandPassFilterDialog(XmippDownsampleDialog):
             self.samplingRate = self.firstItem.getSamplingRate()
             self.itemDim,_,_,_ = self.firstItem.getDim()
             self.sliFrom = 2.*self.samplingRate
+#            print "Sampling rate !!", self.samplingRate
+#            print "from !!", self.sliFrom
             self.sliTo = 2.*self.itemDim*self.samplingRate
+#            print " to !!", self.sliTo
             
-        self.step = self.sliTo/100
+        self.step = self.sliTo/1000
         
         if self.showLowFreq:
             self.lfSlider = self.addFreqSlider(label_low, self.lowFreq, col=0)

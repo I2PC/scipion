@@ -184,7 +184,7 @@ class Relion3DClassification(ProtClassify3D, ProtRelionBase):
                       'Because one typically normalises the noise, this leads to distinct signal intensities in the data,'
                       'and this procedure corrects for this. It is quite robust and therefore recommended for the general case.')   
         form.addSection(label='Optimisation')
-        form.addParam('iniLowPassFilter', IntParam, default=60,
+        form.addParam('iniLowPassFilter', FloatParam, default=60.0,
                       label='Initial low-pass filter (in Angstroms)',
                       help='It is recommended to strongly low-pass filter your initial reference map.'
                       'If it has not yet been low-pass filtered, it may be done internally using this option.'
@@ -206,14 +206,14 @@ class Relion3DClassification(ProtClassify3D, ProtRelionBase):
                       help='The experimental images will be masked with a soft circular mask with this diameter. '
                       'Make sure this radius is not set too small because that may mask away part of the signal! '
                       'If set to a value larger than the image size no masking will be performed.')    
-        form.addParam('doMaskReferences', BooleanParam, default=True,
+        form.addParam('doMaskReferences', BooleanParam, default=True, 
                       label='Mask references structures?',
                       help='If set to yes, a mask will also be applied to the reconstructed references. '
                       'This is useful to set the solvent region of your reconstruction to 0. Either a soft spherical mask '
                       '(based on the diameter of the experimental image mask given above) or a user-provided mask (next option) may be used. '
                       'The user-provided mask should have values between 0 and 1 only. Solvent flattening is recommended, but make sure not to mask any signal away.')
         #TODO: the following parameter should be a Pointer to an Image and not a string containing the path  
-        form.addParam('maskFile', StringParam, default='', 
+        form.addParam('maskFile', StringParam, default='', condition='doMaskReferences',
                       label='Reference mask file', 
                       help='A Spider/mrc map containing a (soft) mask with the same dimensions as the reference(s), and values between 0 and 1, '
                       'with 1 being 100% protein and 0 being 100% solvent. The reconstructed reference map will be multiplied by this mask.'
