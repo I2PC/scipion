@@ -90,12 +90,15 @@ def doPlotAngularDistribution(request, protocolViewer):
     iterToShow = str(protocolViewer.iterToShow.get())
     protViewerClass = str(protocolViewer.getClassName())
     protId = str(protocolViewer.protocol.getObjId())
-    width, height = getSizePlotter(1)
+    width, height = getSizePlotter(-1)
     return "plot","/view_plots/?function=plotAngularDistribution&protViewerClass="+ protViewerClass + "&protId="+ protId +"&iterToShow="+ iterToShow + "&width=" + str(width) + "&height="+ str(height)
 
 def plotAngularDistribution(request, protocolViewer):
     protocolViewer.iterToShow.set(request.GET.get('iterToShow', None))
     plots, errors = protocolViewer._createAngularDistributionPlots()
+    
+#    xplotter = plots[0]
+
     if len(errors) != 0:
         pass
     else:
@@ -112,7 +115,8 @@ def doPlotClassDistribution(request, protocolViewer):
 def plotClassDistribution(request, protocolViewer):
     protocolViewer.iterToShow.set(request.GET.get('iterToShow', None))
     plots, errors = protocolViewer._createClassDistributionPlots()
-    xplotter = plots[0]
+    
+#    xplotter = plots[0]
     if len(errors) != 0:
         pass
     else:
@@ -121,7 +125,7 @@ def plotClassDistribution(request, protocolViewer):
 def doPlotStatistics(request, protocolViewer):
     protViewerClass = str(protocolViewer.getClassName())
     protId = str(protocolViewer.protocol.getObjId())
-    width, height = getSizePlotter(1)
+    width, height = getSizePlotter(2)
     return "plot","/view_plots/?function=plotStatistics&protViewerClass="+ protViewerClass + "&protId="+ protId + "&width=" + str(width) + "&height="+ str(height)
 
 def plotStatistics(request, protocolViewer):

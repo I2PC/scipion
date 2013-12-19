@@ -30,6 +30,7 @@ This module implement some wizards
 import os
 import Tkinter as tk
 import ttk
+from pyworkflow.em.packages.xmipp3.constants import *
 from pyworkflow.viewer import Viewer, Wizard, DESKTOP_TKINTER, WEB_DJANGO
 from pyworkflow.em import SetOfImages, SetOfMicrographs, Volume, ProtCTFMicrographs
 from protocol_projmatch import XmippProtProjMatch 
@@ -109,10 +110,9 @@ class XmippCTFWizard(Wizard):
 class XmippMaskRadiusWizard(Wizard):
     
     _environments = [DESKTOP_TKINTER, WEB_DJANGO]
-        
+    
     def _getProvider(self, protocol):
         """ This should be implemented to return the list
-        of object to be displayed in the tree.
         """
         pass
         
@@ -236,8 +236,27 @@ class XmippBandpassWizard(XmippFilterParticlesWizard):
         provider = self._getProvider(protocol)
 
         if provider is not None:
-            d = XmippBandPassFilterDialog(form.root, provider, 
-                                          lowFreq=protocol.lowFreq.get(), highFreq=protocol.highFreq.get(), freqDecay=protocol.freqDecay.get())
+            self.mode = protocol.fourierMode.get()
+            args = {'mode':  self.mode,                   
+                    'lowFreq': protocol.lowFreq.get(),
+                    'highFreq': protocol.highFreq.get(),
+                    'freqDecay': protocol.freqDecay.get(),
+                    'unit': UNIT_PIXEL_FOURIER
+                    }
+            if self.mode == FILTER_LOW_PASS:
+                args['showLowFreq'] = False
+            elif self.mode == FILTER_HIGH_PASS:
+                args['showHighFreq'] = False
+            elif self.mode == FILTER_LOW_PASS_NO_DECAY:
+                args['showLowFreq'] = False
+                args['showDecay'] = False
+            elif self.mode == FILTER_BAND_PASS:
+                pass
+            else:
+                print "Not Mode"
+                
+            d = XmippBandPassFilterDialog(form.root, provider, **args)
+            
             if d.resultYes():
                 form.setVar('lowFreq', d.getLowFreq())
                 form.setVar('highFreq', d.getHighFreq())
@@ -423,6 +442,7 @@ class XmippDownsampleDialog(XmippImagePreviewDialog):
     def _itemSelected(self, obj):
         self.lastObj = obj
         XmippImagePreviewDialog._itemSelected(self, obj)
+        
         dialog.FlashMessage(self, self.message, func=self._computeRightPreview)
         #self._computeRightPreview(obj)
         self.rightPreview.updateData(self.rightImage.getData())
@@ -478,38 +498,83 @@ class XmippBandPassFilterDialog(XmippDownsampleDialog):
         self.message = "Computing filtered image..."
         self.previewLabel = "Image"
         self.rightImage = xmipp.Image()
-        
 
     def _createControls(self, frame):
-
-        self.freqFrame = ttk.LabelFrame(frame, text="Frequencies", padding="5 5 5 5")
+        self.freqFrame = ttk.LabelFrame(frame, text="Frequencies ("+self.unit+")", padding="5 5 5 5")
         self.freqFrame.grid(row=0, column=0)
-        self.lfSlider = self.addFreqSlider('Low freq', self.lowFreq, col=0)
-        self.hfSlider = self.addFreqSlider('High freq', self.highFreq, col=1)
-        self.freqDecaySlider = self.addFreqSlider('Decay', self.freqDecay, col=2)
         
+        self.showLowFreq = getattr(self, 'showLowFreq', True)
+        self.showHighFreq = getattr(self, 'showHighFreq', True)
+        self.showDecay = getattr(self, 'showDecay', True)
+        
+        if (not self.showLowFreq) or (not self.showHighFreq):
+            label_high = 'Freq'
+            label_low = 'Freq'
+        else:
+            label_high = 'High freq'
+            label_low = 'Low freq'
+        
+        self.samplingRate = 1.0
+        self.sliTo = 0.5
+        self.sliFrom = 0.
+        if self.unit == UNIT_ANGSTROM:
+            self.samplingRate = self.firstItem.getSamplingRate()
+            self.itemDim,_,_,_ = self.firstItem.getDim()
+            self.sliFrom = 2.*self.samplingRate
+            self.sliTo = 2.*self.itemDim*self.samplingRate
+            
+        self.step = self.sliTo/100
+        
+        if self.showLowFreq:
+            self.lfSlider = self.addFreqSlider(label_low, self.lowFreq, col=0)
+        if self.showHighFreq:
+            self.hfSlider = self.addFreqSlider(label_high, self.highFreq, col=1)
+        if self.showDecay:
+            self.freqDecaySlider = self.addFreqSlider('Decay', self.freqDecay, col=2)
+                                   
     def addFreqSlider(self, label, value, col):
-        slider = LabelSlider(self.freqFrame, label, from_=0, to=0.5, value=value, callback=lambda a, b, c:self.updateFilteredImage())
+        slider = LabelSlider(self.freqFrame, label, from_=self.sliFrom, to=self.sliTo, step=self.step , value=value, callback=lambda a, b, c:self.updateFilteredImage())
         slider.grid(row=0, column=col, padx=5, pady=5)
         return slider
 
     def updateFilteredImage(self):
+        self._computeRightPreview()
         self.rightPreview.updateData(self.rightImage.getData())
         
     def _computeRightPreview(self):
         """ This function should compute the right preview
         using the self.lastObj that was selected
         """
+        
+#        print "LOW", self.getLowFreq()
+#        print "HIGH", self.getHighFreq()
+#        print "DECAY", self.getFreqDecay()
+        
         xmipp.bandPassFilter(self.rightImage, "%03d@%s" % (self.lastObj.getIndex(), self.lastObj.getFileName()), self.getLowFreq(), self.getHighFreq(), self.getFreqDecay(), self.dim)
 
     def getLowFreq(self):
-        return self.lfSlider.get()
+        if self.showLowFreq:
+            if self.unit == UNIT_ANGSTROM:
+                return 1/self.lfSlider.get()*self.itemDim
+            else:    
+                return self.lfSlider.get()
+        return 0.
         
     def getHighFreq(self):
-        return self.hfSlider.get()
-    
+        if self.showHighFreq:
+            if self.unit == UNIT_ANGSTROM:
+                return 1/self.hfSlider.get()*self.itemDim
+            else:    
+                return self.hfSlider.get()
+        return 1.0
+        
     def getFreqDecay(self):
-        return self.freqDecaySlider.get()    
+        if self.showDecay:
+            if self.unit == UNIT_ANGSTROM:
+                return 1/self.freqDecaySlider.get()*self.itemDim
+            else:  
+                return self.freqDecaySlider.get()
+        return 0.    
     
 class XmippGaussianFilterDialog(XmippBandPassFilterDialog):
     
@@ -532,12 +597,20 @@ class XmippGaussianFilterDialog(XmippBandPassFilterDialog):
         """
         xmipp.gaussianFilter(self.rightImage, "%03d@%s" % (self.lastObj.getIndex(), self.lastObj.getFileName()), self.getFreqSigma(), self.dim)
 
+
 class XmippMaskPreviewDialog(XmippImagePreviewDialog):
     
     def _beforePreview(self):
-        self.dim = 256           
-        self.dim_par = self.firstItem.getDim()[0]
+        self.dim = 256
+        self.samplingRate = 1
+        self.unit = getattr(self, 'unit', UNIT_PIXEL)
+        if self.unit != UNIT_PIXEL:
+            self.samplingRate = self.firstItem.getSamplingRate()
+            
+        self.dim_par = self.firstItem.getDim()[0] * self.samplingRate
+        
         self.ratio = self.dim / float(self.dim_par)
+        
         self.previewLabel = 'Central slice'
     
     def _createPreview(self, frame):
@@ -546,7 +619,7 @@ class XmippMaskPreviewDialog(XmippImagePreviewDialog):
         """
         from pyworkflow.gui.matplotlib_image import MaskPreview    
         if self.maskRadius == -1:
-            self.iniRadius = self.dim_par/2
+            self.iniRadius = self.dim_par/2 
         else:
             self.iniRadius = self.maskRadius
         self.preview = MaskPreview(frame, self.dim, label=self.previewLabel, outerRadius=self.iniRadius*self.ratio)
@@ -556,7 +629,7 @@ class XmippMaskPreviewDialog(XmippImagePreviewDialog):
         self.addRadiusBox(frame) 
         
     def addRadiusBox(self, parent):
-        self.radiusSlider = LabelSlider(parent, 'Outer radius', from_=0, to=int(self.dim_par/2), value=self.iniRadius, step=1, callback=lambda a, b, c:self.updateRadius())
+        self.radiusSlider = LabelSlider(parent, 'Outer radius ('+ self.unit +')', from_=0, to=int(self.dim_par/2), value=self.iniRadius, step=self.samplingRate, callback=lambda a, b, c:self.updateRadius())
         self.radiusSlider.grid(row=0, column=0, padx=5, pady=5) 
     
     def updateRadius(self):
@@ -564,6 +637,7 @@ class XmippMaskPreviewDialog(XmippImagePreviewDialog):
         
     def getRadius(self):
         return int(self.radiusSlider.get())
+    
 
 class XmippMaskRadiiPreviewDialog(XmippMaskPreviewDialog):
 

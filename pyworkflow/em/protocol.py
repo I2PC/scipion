@@ -517,8 +517,8 @@ class ProtUserSelection(EMProtocol):
 class ProtAlignClassify(EMProtocol):
     pass
 
-class ProtInitialVolume(EMProtocol):
-    pass
+#class ProtInitialVolume(EMProtocol):
+#    pass
 
 class ProtRefine3D(EMProtocol):
     pass

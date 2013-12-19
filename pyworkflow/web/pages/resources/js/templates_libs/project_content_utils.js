@@ -257,7 +257,6 @@ function markElmGraph(id, graph){
 }
 	
 function markElmList(id, graph){
-	
 	var rowClear = $("tr.selected").attr("id");
 	if (rowClear != "") {
 		if (rowClear != id) {
