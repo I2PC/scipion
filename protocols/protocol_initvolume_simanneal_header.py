@@ -55,6 +55,10 @@ NIterGreedy = 2
 next iteration""" 
 Rejection = 50
 
+#{expert} Angular sampling:
+"""Angular sampling in degrees for generating the projection gallery""" 
+AngularSampling = 5.0
+
 # {eval} expandParallel(threads=0,mpi=0,hours=12)
 
 #------------------------------------------------------------------------------------------------
