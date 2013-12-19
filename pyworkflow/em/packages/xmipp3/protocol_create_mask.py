@@ -48,7 +48,7 @@ MORPHOLOGY_EROSION=1
 MORPHOLOGY_CLOSING=2
 MORPHOLOGY_OPENING=3
 
-class XmippProtCreateGeo3DMask(ProtCreateMask3D):
+class XmippProtCreateMask3D(ProtCreateMask3D):
     """ Create a 3D mask from a geometrical description (Sphere, Box, Cylinder...), from a volume or from another class """
     _label = 'create mask'
     
