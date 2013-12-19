@@ -33,9 +33,6 @@ from pyworkflow.em import *
 from pyworkflow.utils import *  
 import xmipp
 from convert import createXmippInputClasses2D, readSetOfVolumes, createXmippInputVolumes, writeSetOfVolumes
-
-
-#from xmipp3 import XmippProtocol
         
         
 class XmippProtInitVolSimAnneal(ProtInitialVolume):
