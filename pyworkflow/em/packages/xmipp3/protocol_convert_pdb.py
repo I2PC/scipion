@@ -42,12 +42,12 @@ class XmippProtConvertPdb(ProtInitialVolume):
         if self._inputPdbData == self.PDB_ID:
 		import urllib
 		src = "http://www.rcsb.org/pdb/downloadFile.do?fileFormat=pdb&compression=NO&structureId=%s"
-		urllib.urlretrieve(src % self._pdb_file,'%s.pdb'%self._pdb_file)
-		_inFile = '%s.pdb' % self._pdb_file
-		_outFile= '%s' % self._pdb_file
+		_inFile=self._getTmpPath('%s.pdb'%self._pdb_file)
+		urllib.urlretrieve(src % self._pdb_file,_inFile)
+		_outFile= self._getPath('%s' % self._pdb_file)
 	else:
 		_inFile = self._pdb_file
-		_outFile = _inFile.rsplit( ".", 1 )[ 0 ]+".vol"
+		_outFile = self._getPath(_inFile.rsplit( ".", 1 )[ 0 ])
 
         program = "xmipp_volume_from_pdb"
         args = '-i %s --sampling %f -o %s ' % (_inFile, self._sampling_rate,_outFile)
@@ -57,10 +57,12 @@ class XmippProtConvertPdb(ProtInitialVolume):
         """ Although is not mandatory, usually is used by the protocol to
         register the resulting outputs in the database.
         """
-        from pyworkflow.utils import *
         volume = Volume()
-        self._output_file = replaceExt(self._pdb_file,'vol') 
-        volume.setFileName(self._output_file)
+        if self._inputPdbData == self.PDB_ID:
+            _outFile= self._getPath('%s' % self._pdb_file)
+        else:
+	    _outFile = self._getPath(self._pdb_file.rsplit( ".", 1 )[ 0 ])
+        volume.setFileName(_outFile+'.vol')
         self._defineOutputs(volume=volume)
       
     def _summary(self):
