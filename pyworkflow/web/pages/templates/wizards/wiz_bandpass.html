@@ -43,19 +43,27 @@
 	<table id="fourierTable">
 		<tr>
 			<td>
-				<div id="lowFou">
-					<span id="title_freq">Low freq<span>
-					<div id="sliderLite" class="slider_low"></div>
-					<div id="slider_low_result">{{lowFreq}}</div>
-					<input id="low_val" type="hidden" value="{{lowFreq}}"/>
-				</div>
-			</td>
-			<td>
 				<div id="highFou">
+					{% if mode == 0  or mode == 2 %}
 					<span id="title_freq">High freq<span>
 					<div id="sliderLite" class="slider_high"></div>
 					<div id="slider_high_result">{{highFreq}}</div>
+					{% else %}
+					<div id="slider_high_result" style="display:none;">{{highFreq}}</div>
+					{% endif %}
 					<input id="high_val" type="hidden" value="{{highFreq}}"/>
+				</div>
+			</td>
+			<td>
+				<div id="lowFou">
+					{% if mode == 1 or mode == 2 %}
+					<span id="title_freq">Low freq<span>
+					<div id="sliderLite" class="slider_low"></div>
+					<div id="slider_low_result">{{lowFreq}}</div>
+					{% else %}
+					<div id="slider_low_result" style="display:none;">{{lowFreq}}</div>
+					{% endif %}
+					<input id="low_val" type="hidden" value="{{lowFreq}}"/>
 				</div>
 			</td>
 			<td>

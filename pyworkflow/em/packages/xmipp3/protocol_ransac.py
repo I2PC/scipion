@@ -23,26 +23,18 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
-#from pyworkflow.tests import getPath
 """
 This sub-package contains wrapper around ML2D Xmipp program
 """
-
-
 from pyworkflow.em import *  
-#from pyworkflow.utils import *  
-from convert import readSetOfClasses2D, createXmippInputClasses2D
+from convert import readSetOfClasses2D, createXmippInputClasses2D, createXmippInputVolumes, readSetOfVolumes
 from math import floor
 from xmipp import MetaData, MD_APPEND, MDL_MAXCC, MDL_WEIGHT, MDL_IMAGE, \
     MDL_VOLUME_SCORE_SUM, MDL_VOLUME_SCORE_SUM_TH, MDL_VOLUME_SCORE_MEAN, MDL_VOLUME_SCORE_MIN
-    
-from pyworkflow.utils.path import moveFile, cleanPath, copyFile
+#    removeFilenamePrefix
+from pyworkflow.utils.path import moveFile, cleanPath, copyFile, removeExt
 from protlib_xmipp import getMdSize
 
-
-#from xmipp3 import XmippProtocol
-        
-        
 class XmippProtRansac(ProtInitialVolume):
     """ Protocol to obtain a set of initial volumes. """
     _label = 'ransac'
@@ -50,8 +42,8 @@ class XmippProtRansac(ProtInitialVolume):
     def __init__(self, **args):
         ProtInitialVolume.__init__(self, **args)
         
-        self.progId = "ransac"
-        self.oroot = ""
+#        self.progId = "ransac"
+#        self.oroot = ""
         
     def _defineParams(self, form):
         form.addSection(label='Input')
@@ -140,12 +132,9 @@ class XmippProtRansac(ProtInitialVolume):
         """ Filter the """
         initialStepId = self.initialize()
         
-        #TODO: Initial volume can be empty
         # Generate projection gallery from the initial volume
-#        if (self.InitialVolume != ''):
-#            self.insertStep("projectInitialVolume",WorkingDir=self.WorkingDir,InitialVolume=self.InitialVolume,Xdim2=self.Xdim2,
-#                            AngularSampling=self.AngularSampling,SymmetryGroup=self.SymmetryGroup)
-
+        if self.initialVolume.hasValue():
+            self._insertFunctionStep("projectInitialVolume",self)
         
         deps = [] # Store all steps ids, final step createOutput depends on all of them    
         for n in range(self.nRansac.get()):
@@ -153,11 +142,11 @@ class XmippProtRansac(ProtInitialVolume):
             stepId = self._insertFunctionStep('ransacIteration', n,
                                     prerequisites=[initialStepId]) # Make estimation steps indepent between them
             deps.append(stepId)
-            
         
         # Look for threshold, evaluate volumes and get the best
-#        if (self.InitialVolume != ''):
-#            self._insertFunctionStep("runJob",programname="rm", params=self.tmpPath("gallery_InitialVolume*"), NumberOfMpi=1)
+        if self.initialVolume.hasValue():
+            self._insertFunctionStep("runJob",programname="rm", params=self._getTmpPath("gallery_InitialVolume*"), NumberOfMpi=1)
+            
         self._insertFunctionStep("getCorrThresh",
                                  prerequisites=deps) # Make estimation steps indepent between them)
         self._insertFunctionStep("evaluateVolumes")
@@ -191,12 +180,11 @@ class XmippProtRansac(ProtInitialVolume):
         self._insertFunctionStep("scoreFinalVolumes",
                                  prerequisites=deps) # Make estimation steps indepent between them
         
+        self._insertFunctionStep('createOutput')
         
     def initialize(self):
-        print "dim",self.inputClasses.get().getDimensions()
 #        self.Xdim=self.inputClasses.get().getDimensions()[0]
         self.Xdim=64
-        print "self.Xdim",self.Xdim 
         
         fnOutputReducedClass = self._getExtraPath("reducedClasses.xmd")
         fnOutputReducedClassNoExt = os.path.splitext(fnOutputReducedClass)[0]
@@ -228,25 +216,21 @@ class XmippProtRansac(ProtInitialVolume):
         fnBase="ransac%05d"%n
         fnRoot=self._getTmpPath(fnBase)
         
-    #    fnOutputReducedClass = os.path.join(WorkingDir,"extra/reducedClasses.xmd")
     
         if self.dimRed:
             # Get a random sample of images
             self.runJob(None,"xmipp_transform_dimred","-i %s --randomSample %s.xmd  %d -m LTSA "%(fnOutputReducedClass,fnRoot,self.numGrids.get()))
         else:        
-            print "-i %s -o %s.xmd  --operate random_subset %d --mode overwrite "%(fnOutputReducedClass,fnRoot,self.numSamples.get())
             self.runJob(None,"xmipp_metadata_utilities","-i %s -o %s.xmd  --operate random_subset %d --mode overwrite "%(fnOutputReducedClass,fnRoot,self.numSamples.get()))
             self.runJob(None,"xmipp_metadata_utilities","-i %s.xmd --fill angleRot rand_uniform -180 180 "%(fnRoot))
             self.runJob(None,"xmipp_metadata_utilities","-i %s.xmd --fill angleTilt rand_uniform 0 180 "%(fnRoot))
             self.runJob(None,"xmipp_metadata_utilities","-i %s.xmd --fill anglePsi  rand_uniform 0 360 "%(fnRoot)) 
-        print "fnOutputReducedClass",fnOutputReducedClass
-        print "fnRoot",fnRoot
     
         # If there is an initial volume, assign angles        
-#        if (InitialVolume != ''):
-#            fnGallery=self._getTmpPath('gallery_InitialVolume.stk')
-#            self._insertRunJobStep("xmipp_angular_projection_matching", "-i %s.xmd -o %s.xmd --ref %s --Ri 0 --Ro %s --max_shift %s --append"\
-#                   %(fnRoot,fnRoot,fnGallery,str(self.Xdim/2),str(self.Xdim/20)))
+        if self.initialVolume.hasValue():
+            fnGallery=self._getTmpPath('gallery_InitialVolume.stk')
+            self.runJob(None,"xmipp_angular_projection_matching", "-i %s.xmd -o %s.xmd --ref %s --Ri 0 --Ro %s --max_shift %s --append"\
+                   %(fnRoot,fnRoot,fnGallery,str(self.Xdim/2),str(self.Xdim/20)))
     
         # Reconstruct with the small sample
         self.reconstruct(fnRoot)
@@ -272,11 +256,11 @@ class XmippProtRansac(ProtInitialVolume):
                               %(fnOutputReducedClass,fnAngles,fnGallery,str(self.Xdim/2),str(self.Xdim/20)))
        
         # Delete intermediate files 
-#        cleanPath(fnGallery)
-#        cleanPath(self._getTmpPath('gallery_'+fnBase+'_sampling.xmd'))
-#        cleanPath(self._getTmpPath('gallery_'+fnBase+'.doc'))
-#        cleanPath(fnVol)
-#        cleanPath(self._getTmpPath(fnBase+'.xmd'))
+        cleanPath(fnGallery)
+        cleanPath(self._getTmpPath('gallery_'+fnBase+'_sampling.xmd'))
+        cleanPath(self._getTmpPath('gallery_'+fnBase+'.doc'))
+        cleanPath(fnVol)
+        cleanPath(self._getTmpPath(fnBase+'.xmd'))
     
     def reconstruct(self, fnRoot):
         self.runJob(None,"xmipp_reconstruct_fourier","-i %s.xmd -o %s.vol --sym %s " %(fnRoot,fnRoot,self.symmetryGroup.get()))
@@ -419,23 +403,59 @@ class XmippProtRansac(ProtInitialVolume):
                 mdOut.setValue(MDL_VOLUME_SCORE_MIN,float(minCC),id)
         mdOut.write(self._getPath("proposedVolumes.xmd"))
 
-         
+    def projectInitialVolume(self):
+        self.volFn = createXmippInputVolumes(self, self.initialVolume.get())
         
+        fnOutputInitVolume=self._getTmpPath("initialVolume.vol")
+        self.runJob(None,'xmipp_image_convert',"-i %s -o %s"%(removeExt(self.volFn),fnOutputInitVolume))
+        self.runJob(None,"xmipp_image_resize","-i %s --dim %d %d"%(fnOutputInitVolume,self.Xdim2,self.Xdim2))
+        fnGallery=self._getTmpPath('gallery_InitialVolume.stk')
+        fnOutputReducedClass = self._getExtraPath("reducedClasses.xmd") 
+        self.runJob(None,"xmipp_angular_project_library", "-i %s -o %s --sampling_rate %f --sym %s --method fourier 1 0.25 bspline --compute_neighbors --angular_distance -1 --experimental_images %s"\
+                              %(fnOutputInitVolume,fnGallery,self.angularSampling.get(),self.symmetryGroup.get(),fnOutputReducedClass))
+            
     def createOutput(self):
-        classes2DSet = self._createSetOfClasses2D()
-        classes2DSet.setImages(self.inputParticles.get())
-        readSetOfClasses2D(classes2DSet, self.oroot + 'classes.xmd')
-        classes2DSet.write()
-        self._defineOutputs(outputClasses=classes2DSet)
+        fn = self._getPath('proposedVolumes.xmd')
+        volumesSet = self._createSetOfVolumes()
+        volumesSet._xmippMd = String(fn)
+        #TODO WHEN HASAVERAGE IS FIXED
+        #volumesSet.setSamplingRate(self.inputClasses.get().getAverage().getSamplingRate())
+        readSetOfVolumes(fn, volumesSet)
+        volumesSet.write()
+        
+        self._defineOutputs(outputVolumes=volumesSet)
 
     def _summary(self):
         summary = []
-#        if not hasattr(self, 'outputClasses'):
-#            summary.append("Output classes not ready yet.")
-#        else:
-#            summary.append("Input Images: %s" % self.inputParticles.get().getNameId())
-#            summary.append("Number of references: %d" % self.numberOfReferences.get())
-#            summary.append("Output classes: %s" % self.outputClasses.get())
-        return summary
+        if not hasattr(self, 'outputVolumes'):
+            summary.append("Output volumes not ready yet.")
+        else:
+            summary.append("RANSAC iterations: %d"%self.nRansac.get())
+        
+            for n in range(self.numVolumes.get()):
+    
+                fnBase='proposedVolume%05d'%n
+                fnRoot=self._getPath(fnBase+".xmd")
+                               
+                if os.path.isfile(fnRoot):
+                    md=MetaData(fnRoot)
+                    if (md.size()< 5) :
+                        summary.append("Num of inliers for %s too small and equal to %d"%(fnRoot,md.size()))
+                        summary.append("Decrease the value of Inlier Threshold parameter and run again")
+                                    
+            fnRoot=self._getTmpPath("ransac00000.xmd")    
+            
+            if os.path.isfile(fnRoot):
+                md=MetaData(fnRoot)
+            
+                if (md.size()< 5) :
+                    summary.append("Num of random samples too small and equal to %d"%(md.size()))
+                    summary.append("If the option Dimensionality reduction is on, increase the number of grids per dimension")
+                    summary.append("If the option Dimensionality reduction is off, increase the number of random samples")
+                
+            if self.useSA:
+                summary.append("Simulated annealing used")
+            return summary
+            
     
     

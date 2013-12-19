@@ -30,10 +30,11 @@ This module implement some wizards
 import os
 import Tkinter as tk
 import ttk
-
+from pyworkflow.em.packages.xmipp3.constants import *
+from pyworkflow.em.constants import *
 from pyworkflow.viewer import Viewer, Wizard, DESKTOP_TKINTER, WEB_DJANGO
-
-from pyworkflow.em.packages.xmipp3.wizard import XmippVolumeMaskRadiusWizard
+import pyworkflow.gui.dialog as dialog
+from pyworkflow.em.packages.xmipp3.wizard import XmippVolumeMaskRadiusWizard, XmippMaskPreviewDialog, XmippFilterParticlesWizard, XmippBandPassFilterDialog
 from pyworkflow.em.packages.xmipp3.wizard import ListTreeProvider
 from protocol_classify3d import Relion3DClassification
 
@@ -52,12 +53,56 @@ class RelionVolMaskRadiusWizard(XmippVolumeMaskRadiusWizard):
             return ListTreeProvider(vols)
         return None
     
+    def show(self, form):
+        protocol = form.protocol
+        provider = self._getProvider(protocol)
+
+        if provider is not None:
+            d = XmippMaskPreviewDialog(form.root, provider, maskRadius=protocol.maskRadius.get(), unit=UNIT_ANGSTROM)
+            if d.resultYes():
+                form.setVar('maskRadius', d.getRadius())
+        else:
+            dialog.showWarning("Empty input", "Select elements first", form.root)  
+              
     @classmethod    
     def getView(self):
         return "wiz_volume_mask"
     
     
+class RelionBandpassWizard(XmippFilterParticlesWizard):
     
+    _targets = [(Relion3DClassification, ['iniLowPassFilter'])]
+    _environments = [DESKTOP_TKINTER, WEB_DJANGO]    
+
+    def show(self, form):
+        protocol = form.protocol
+        provider = self._getProvider(protocol)
+
+        if provider is not None:
+            self.mode = FILTER_LOW_PASS_NO_DECAY
+            
+            args = {'mode':  self.mode,                   
+                    'highFreq': protocol.iniLowPassFilter.get(),
+                    'unit': UNIT_ANGSTROM
+                    }
+            
+            args['showLowFreq'] = False
+            args['showDecay'] = False
+
+            d = XmippBandPassFilterDialog(form.root, provider, **args)
+            
+            if d.resultYes():
+                print "SAMPLING RATE !!", d.samplingRate
+                print "ITEM DIM !!", d.itemDim
+               
+#                1/self.hfSlider.get()*self.itemDim 
+                
+                form.setVar('iniLowPassFilter', 1/d.getHighFreq()*d.itemDim)
+                
+        else:
+            dialog.showWarning("Input particles", "Select particles first", form.root)  
     
-    
-    
+    @classmethod    
+    def getView(self):
+        return "wiz_relion_bandpass"   
+

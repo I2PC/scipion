@@ -136,7 +136,7 @@ class Image(Item):
         pass
     
     def getDim(self):
-        """Return image dimensions as tuple: (Ydim, Xdim)"""
+        """Return image dimensions as tuple: (Ydim, Ydim, Zdim, N)"""
         return ImageHandler().getDimensions(self.getLocation())
     
     def getIndex(self):
@@ -759,7 +759,6 @@ class SetOfClasses2D(Set):
         
     def getDimensions(self):
         """Return first image dimensions as a tuple: (xdim, ydim, zdim, n)"""
-        print "avr",self.hasAverages()
         if self.hasAverages():
             return self.getAverages().getDimensions()
 

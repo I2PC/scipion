@@ -54,6 +54,7 @@ from protocol_create_mask import XmippProtCreateMask3D
 from protocol_apply_mask import XmippProtApplyMask3D
 from protocol_particle_pick_automatic import XmippParticlePickingAutomatic
 from protocol_screen_particles import XmippProtScreenParticles
+from protocol_simulated_annealing import XmippProtInitVolSimAnneal
 from protocol_ransac import XmippProtRansac
 from protocol_convert_pdb import XmippProtConvertPdb
 

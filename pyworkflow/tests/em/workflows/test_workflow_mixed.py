@@ -217,6 +217,137 @@ class TestMixedWorkflow_2(TestWorkflow):
                     'protIniModel/tasks_name2did.json',
                     'protIniModel/precache_files.json',
                     'protIniModel/scipion_volumes.json'],
+                'protML3D': ['protML3D/GeneratedReferences/vol001mlf2dextra/iter001/iter_classes.stk',
+                    'protML3D/extra/generated_volumes.stk',
+                    'protML3D/extra/iter000/vol000002.vol',
+                    'protML3D/CorrectGreyscale/vol001/proj_match_weight.doc',
+                    'protML3D/CorrectGreyscale/vol001/projections.doc',
+                    'protML3D/mlf2dextra/iter002/iter_classes.xmd',
+                    'protML3D/GeneratedReferences/vol002mlf2dclasses.xmd',
+                    'protML3D/GeneratedReferences/vol002extra/projections.xmd',
+                    'protML3D/GeneratedReferences/vol002extra/iter000/vol000001.vol',
+                    'protML3D/CorrectGreyscale/vol001/projections.stk',
+                    'protML3D/mlf2dextra/iter001/iter_classes.stk',
+                    'protML3D/mlf2dextra/iter001/iter_classes.xmd',
+                    'protCTF/extra/BPV_1386/xmipp_ctf.ctfparam',
+                    'protML3D/mlf2dextra/iter001/iter_images.xmd',
+                    'protML3D/classes.xmd',
+                    'protML3D/extra/initial_volumes.stk',
+                    'protML3D/GeneratedReferences/vol002mlf2dimages.xmd',
+                    'protML3D/extra/projections.stk',
+                    'protExtract/extra/BPV_1386.stk',
+                    'protML3D/extra/iter001/iter_volumes.xmd',
+                    'protML3D/GeneratedReferences/vol001extra/projections.xmd',
+                    'protML3D/extra/iter002/vol000001.vol',
+                    'protML3D/GeneratedReferences/vol001extra/iter001/vol000001.vol',
+                    'protML3D/GeneratedReferences/vol002extra/iter001/vol000001.vol',
+                    'protML3D/extra/iter002/vol000001.projections.xmd',
+                    'protCTF/extra/BPV_1388/xmipp_ctf.ctfparam',
+                    'protML3D/CorrectGreyscale/vol001/projections_angles.doc',
+                    'protML3D/GeneratedReferences/vol001extra/iter001/vol000001.projections.xmd',
+                    'protML3D/extra/iter002/vol000002.projections.xmd',
+                    'protML3D/logs/run.log',
+                    'protML3D/GeneratedReferences/vol002extra/projections.stk',
+                    'protML3D/GeneratedReferences/vol001extra/iter001/vol',
+                    'protML3D/GeneratedReferences/vol002mlf2dclasses.stk',
+                    'protML3D/GeneratedReferences/vol002extra/iter001/vol000001.projections.xmd',
+                    'protML3D/extra/filtered_volumes.stk',
+                    'protML3D/extra/iter001/vol000002.vol',
+                    'protML3D/GeneratedReferences/vol002mlf2dextra/iter001/iter_images.xmd',
+                    'protML3D/extra/iter002/vol',
+                    'protML3D/GeneratedReferences/images000002.xmd',
+                    'protML3D/GeneratedReferences/vol002extra/iter001/iter_volumes.xmd',
+                    'protExtract/extra/BPV_1388.stk',
+                    'protML3D/extra/iter001/vol000002.projections.xmd',
+                    'protML3D/extra/iter002/iter_volumes.xmd',
+                    'protML3D/GeneratedReferences/vol002mlf2dextra/iter001/iter_classes.stk',
+                    'protML3D/CorrectGreyscale/vol001/corrected_refs_Ref3D_001.xmd',
+                    'protML3D/GeneratedReferences/vol001mlf2dimages.xmd',
+                    'protCTF/extra/BPV_1387/xmipp_ctf.ctfparam',
+                    'protML3D/CorrectGreyscale/vol001/corrected_refs_Ref3D_001.stk',
+                    'protML3D/GeneratedReferences/vol001mlf2dextra/iter001/iter_images.xmd',
+                    'protML3D/logs/run.db',
+                    'protML3D/classes.stk',
+                    'protML3D/GeneratedReferences/vol001extra/projections.stk',
+                    'protML3D/GeneratedReferences/vol001extra/iter000/vol000001.vol',
+                    'protExtract/images.xmd',
+                    'protML3D/GeneratedReferences/vol001mlf2dextra/iter001/iter_classes.xmd',
+                    'protML3D/CorrectGreyscale/vol001/projections_sampling.xmd',
+                    'protML3D/CorrectGreyscale/vol001/corrected_refs_discarded.xmd',
+                    'protML3D/extra/corrected_volumes.stk',
+                    'protML3D/mlf2dextra/iter002/iter_classes.stk',
+                    'protML3D/extra/iter002/vol000002.vol',
+                    'protML3D/GeneratedReferences/images000001.xmd',
+                    'protML3D/GeneratedReferences/vol001mlf2dclasses.xmd',
+                    'protML3D/GeneratedReferences/vol001extra/iter001/iter_volumes.xmd',
+                    'protML3D/extra/projections.xmd',
+                    'protExtract/extra/BPV_1387.stk',
+                    'protML3D/GeneratedReferences/vol002extra/iter001/vol',
+                    'protML3D/GeneratedReferences/vol002mlf2dextra/iter001/iter_classes.xmd',
+                    'protML3D/mlf2dextra/iter002/iter_images.xmd',
+                    'protML3D/GeneratedReferences/vol002extra/noise_images.xmd',
+                    'protML3D/GeneratedReferences/vol001extra/noise_vol000001.vol',
+                    'protML3D/GeneratedReferences/vol002extra/noise_vol000001.projections.xmd',
+                    'protML3D/GeneratedReferences/vol001extra/cref_vol',
+                    'protML3D/GeneratedReferences/vol002extra/noise_vol',
+                    'protML3D/GeneratedReferences/vol002extra/cref_vol',
+                    'protML3D/extra/iter002/iter_3dssnr.log',
+                    'protML3D/extra/iter001/vol',
+                    'protML3D/extra/iter001/vol000001.vol',
+                    'protML3D/extra/iter000/vol000001.vol',
+                    'protML3D/extra/iter001/vol000001.projections.xmd',
+                    'protML3D/GeneratedReferences/vol001mlf2dclasses.stk',
+                    'protML3D/CorrectGreyscale/vol001/proj_match.doc',
+                    'protML3D/GeneratedReferences/vol002mlf2dextra/iter000/iter_noise.xmd',
+                    'protML3D/mlf2dextra/cref_classes.xmd',
+                    'protML3D/mlf2dextra/iter002/iter_noise.xmd',
+                    'protML3D/GeneratedReferences/vol001extra/noise_vol000001.projections.xmd',
+                    'protML3D/mlf2dextra/iter000/iter_ssnr.xmd',
+                    'protML3D/GeneratedReferences/vol001mlf2dextra/cref_classes.xmd',
+                    'protML3D/extra/cref_vol000001.projections.xmd',
+                    'protML3D/mlf2dextra/cref_classes.stk',
+                    'protML3D/GeneratedReferences/vol002extra/noise_images.stk',
+                    'protML3D/extra/cref_vol000002.projections.xmd',
+                    'protML3D/GeneratedReferences/vol001mlf2dextra/iter001/iter_noise.xmd',
+                    'protML3D/mlf2dextra/iter001/iter_noise.xmd',
+                    'protML3D/images.xmd',
+                    'protML3D/GeneratedReferences/vol001extra/noise_images.xmd',
+                    'protML3D/extra/noise_vol000002.vol',
+                    'protML3D/GeneratedReferences/vol001mlf2dextra/iter001/iter_ssnr.xmd',
+                    'protML3D/extra/noise_images.xmd',
+                    'protML3D/mlf2dextra/iter001/iter_ssnr.xmd',
+                    'protML3D/GeneratedReferences/vol001mlf2dnoise.xmd',
+                    'protML3D/GeneratedReferences/vol002extra/cref_vol000001.vol',
+                    'protML3D/GeneratedReferences/vol002mlf2dextra/cref_classes.stk',
+                    'protML3D/extra/noise_vol000001.vol',
+                    'protML3D/GeneratedReferences/vol002mlf2dnoise.xmd',
+                    'protML3D/extra/cref_vol000002.vol',
+                    'protML3D/GeneratedReferences/vol002extra/cref_vol000001.projections.xmd',
+                    'protML3D/GeneratedReferences/vol002extra/iter001/iter_3dssnr.log',
+                    'protML3D/GeneratedReferences/vol001extra/cref_vol000001.projections.xmd',
+                    'protML3D/GeneratedReferences/vol002mlf2dextra/iter000/iter_ssnr.xmd',
+                    'protML3D/extra/noise_vol000001.projections.xmd',
+                    'protML3D/extra/noise_vol',
+                    'protML3D/GeneratedReferences/vol002extra/noise_vol000001.vol',
+                    'protML3D/GeneratedReferences/vol001extra/noise_vol',
+                    'protML3D/GeneratedReferences/vol002mlf2dextra/iter001/iter_ssnr.xmd',
+                    'protML3D/mlf2dnoise.xmd',
+                    'protML3D/GeneratedReferences/vol001mlf2dextra/cref_classes.stk',
+                    'protML3D/GeneratedReferences/vol002mlf2dextra/cref_classes.xmd',
+                    'protML3D/GeneratedReferences/vol001extra/iter001/iter_3dssnr.log',
+                    'protML3D/extra/iter001/iter_3dssnr.log',
+                    'protML3D/mlf2dextra/iter002/iter_ssnr.xmd',
+                    'protML3D/mlf2dextra/iter000/iter_noise.xmd',
+                    'protML3D/GeneratedReferences/vol001mlf2dextra/iter000/iter_noise.xmd',
+                    'protML3D/extra/cref_vol',
+                    'protML3D/GeneratedReferences/vol001extra/noise_images.stk',
+                    'protML3D/GeneratedReferences/vol001mlf2dextra/iter000/iter_ssnr.xmd',
+                    'protML3D/GeneratedReferences/vol002mlf2dextra/iter001/iter_noise.xmd',
+                    'protML3D/extra/cref_vol000001.vol',
+                    'protML3D/extra/noise_images.stk',
+                    'protML3D/GeneratedReferences/vol001extra/cref_vol000001.vol',
+                    'protML3D/extra/noise_vol000002.projections.xmd'],         
+
                 }
         
     @classmethod
@@ -291,7 +422,7 @@ class TestMixedWorkflow_2(TestWorkflow):
         #self.validateFiles('protML2D', protML2D)
 
         print "Run Initial Model"
-        protIniModel = EmanProtInitModel(numberOfIterations=1, numberOfModels=4,
+        protIniModel = EmanProtInitModel(numberOfIterations=1, numberOfModels=2,
                                  shrink=1, symmetry='icos', numberOfThreads=3)
 #        protML2D.inputImages.set(protExtract.outputParticles)
         protIniModel.inputClasses.set(protML2D.outputClasses)
@@ -299,11 +430,19 @@ class TestMixedWorkflow_2(TestWorkflow):
         
         self.assertIsNotNone(protIniModel.outputVolumes, "There was a problem with Initial Model")  
         #self.validateFiles('protIniModel', protIniModel)
-        
- 
-        
 
-    
+        print "ML3D"
+        protML3D = XmippProtML3D(angularSampling=15, numberOfIterations=2, runMode=1, numberOfMpi=2, numberOfThreads=2)
+        protML3D.inputImages.set(protExtract.outputParticles)
+        protML3D.ini3DrefVolumes.set(protIniModel.outputVolumes)
+        protML3D.doCorrectGreyScale.set(True)
+        protML3D.doMlf.set(True)
+        protML3D.numberOfSeedsPerRef.set(2)
+
+        self.proj.launchProtocol(protML3D, wait=True)        
+        
+        self.assertIsNotNone(protML3D.outputVolumes, "There was a problem with ML3D")
+        self.validateFiles('protML3D', protML3D)
         
 if __name__ == "__main__":
     unittest.main()

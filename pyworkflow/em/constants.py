@@ -40,4 +40,9 @@ SAMPLING_FROM_SCANNER = 1
 RELATION_DATASOURCE = 'relation_datasource'
 RELATION_CTF = 'relation_ctf'
 
+UNIT_PIXEL = 'px'
+UNIT_PIXEL_FOURIER = '1/px'
+UNIT_ANGSTROM = 'A'
+UNIT_ANGSTROM_FOURIER = '1/A'
+
     

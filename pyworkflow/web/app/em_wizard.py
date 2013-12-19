@@ -38,6 +38,7 @@ from pyworkflow.em.convert import ImageHandler
 from pyworkflow.em.packages.xmipp3.convert import xmippToLocation, locationToXmipp
 from pyworkflow.em.packages.spider.convert import locationToSpider
 from pyworkflow.em.packages.spider.wizard import filter_spider
+from pyworkflow.em.packages.xmipp3.constants import *
 
 def wizard(request):
     # Get the Wizard Name
@@ -253,7 +254,25 @@ def wiz_filter_spider(protocol, request):
 
 def wiz_bandpass(protocol, request):
     particles = protocol.inputParticles.get()
-    res = validateParticles(particles) 
+    mode = protocol.fourierMode.get()
+    
+    if mode == 0:
+        # low pass
+        lowFreq = 0.
+        highFreq = protocol.highFreq.get()
+        decay = protocol.freqDecay.get()
+    elif mode == 1:
+        # high pass
+        lowFreq = protocol.lowFreq.get()
+        highFreq = 1.0
+        decay = protocol.freqDecay.get()
+    elif mode== 2:
+        #band pass
+        highFreq = protocol.highFreq.get()
+        lowFreq = protocol.lowFreq.get()
+        decay = protocol.freqDecay.get()
+    
+    res = validateParticles(particles)
     
     if res is not 1:
         return HttpResponse(res)
@@ -264,9 +283,10 @@ def wiz_bandpass(protocol, request):
             return HttpResponse("errorIterate")
         else:
             context = {'objects': parts,
-                       'lowFreq': protocol.lowFreq.get(),
-                       'highFreq': protocol.highFreq.get(),
-                       'decayFreq': protocol.freqDecay.get(),
+                       'mode': mode,
+                       'lowFreq': lowFreq,
+                       'highFreq': highFreq,
+                       'decayFreq': decay,
                        }
             
             context = wiz_base(request, context)
@@ -363,9 +383,9 @@ def get_image_bandpass(request):
     Function to get the computing image with a fourier filter applied
     """
     imagePath = request.GET.get('image', None)
-    lowFreq = request.GET.get('lowFreq', None)
-    highFreq = request.GET.get('highFreq', None)
-    decay = request.GET.get('decayFreq', None)
+    lowFreq = request.GET.get('lowFreq', 0.)
+    highFreq = request.GET.get('highFreq', 1.0)
+    decay = request.GET.get('decayFreq', 0.)
     dim = request.GET.get('dim', None)
     
     # create a xmipp image empty

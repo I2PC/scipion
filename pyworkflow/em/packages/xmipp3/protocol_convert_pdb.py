@@ -6,14 +6,19 @@ class XmippProtConvertPdb(ProtInitialVolume):
     _pdb_file = ''
     _sampling_rate = 0.0
     _output_file = ''
-    
+    PDB_ID=1
+
     def _defineParams(self, form):
         """ Define the parameters that will be input for the Protocol.
         This definition is also used to generate automatically the GUI.
         """
         form.addSection(label='Input')
-        form.addParam('pdb_file', StringParam, label="Input PDB",
-                       help='File to process')
+	form.addParam('inputPdbData', EnumParam, choices=['local_file', 'PDB_ID'],
+                      label="Retrieve data from", default=self.PDB_ID,
+                      display=EnumParam.DISPLAY_COMBO,
+                      help='Retrieve PDB data from server or use local file')
+        form.addParam('pdb_file', StringParam, label="FileName or PDB ID",
+                       help='type local PDB File Name or PDB ID')
         form.addParam('sampling', FloatParam, label="Sampling rate",
                       help='Sampling rate (Angstroms/pixel) ')
 
@@ -23,6 +28,7 @@ class XmippProtConvertPdb(ProtInitialVolume):
         """
         self._pdb_file = self.pdb_file.get()
         self._sampling_rate = self.sampling.get()
+        self._inputPdbData = self.inputPdbData.get()
         self._insertFunctionStep('convertPdb')
         self._insertFunctionStep('createOutput')
 
@@ -31,18 +37,32 @@ class XmippProtConvertPdb(ProtInitialVolume):
         register the resulting outputs in the database.
         """
         import xmipp
+        from tempfile import NamedTemporaryFile
+
+        if self._inputPdbData == self.PDB_ID:
+		import urllib
+		src = "http://www.rcsb.org/pdb/downloadFile.do?fileFormat=pdb&compression=NO&structureId=%s"
+		_inFile=self._getTmpPath('%s.pdb'%self._pdb_file)
+		urllib.urlretrieve(src % self._pdb_file,_inFile)
+		_outFile= self._getPath('%s' % self._pdb_file)
+	else:
+		_inFile = self._pdb_file
+		_outFile = self._getPath(_inFile.rsplit( ".", 1 )[ 0 ])
+
         program = "xmipp_volume_from_pdb"
-        args = '-i %s --sampling %f' % (self._pdb_file, self._sampling_rate)
+        args = '-i %s --sampling %f -o %s ' % (_inFile, self._sampling_rate,_outFile)
         self.runJob(None, program, args)
 
     def createOutput(self):
         """ Although is not mandatory, usually is used by the protocol to
         register the resulting outputs in the database.
         """
-        from pyworkflow.utils import *
         volume = Volume()
-        self._output_file = replaceExt(self._pdb_file,'vol') 
-        volume.setFileName(self._output_file)
+        if self._inputPdbData == self.PDB_ID:
+            _outFile= self._getPath('%s' % self._pdb_file)
+        else:
+	    _outFile = self._getPath(self._pdb_file.rsplit( ".", 1 )[ 0 ])
+        volume.setFileName(_outFile+'.vol')
         self._defineOutputs(volume=volume)
       
     def _summary(self):
@@ -54,8 +74,14 @@ class XmippProtConvertPdb(ProtInitialVolume):
         if not hasattr(self, 'pdb_file'):
             summary.append("PDB file not ready yet.")
         else:
-            summary.append("Input PDB: %s" % self.pdb_file.get())
-            summary.append("Output volume: %s" % self._output_file)
+            _inFile = self.pdb_file.get()
+            
+            if self.inputPdbData.get() == self.PDB_ID:
+            	summary.append("Input PDB ID: %s"   % _inFile)
+	    else:
+            	summary.append("Input PDB File: %s" % _inFile)
+            
+            #summary.append("Output volume: %s" % _inFile.rsplit( ".", 1 )[ 0 ]+".vol")
         return summary
       
     def _validate(self):

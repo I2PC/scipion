@@ -1,4 +1,4 @@
- /**************************************************************************
+ /*****************************************************************************
  *
  * Authors:    Jose Gutierrez (jose.gutierrez@cnb.csic.es)
  *
@@ -22,21 +22,37 @@
  *  All comments concerning this program package may be sent to the
  *  e-mail address 'jmdelarosa@cnb.csic.es'
  *
- **************************************************************************/
-
-
-
-/**
+ ******************************************************************************/
+/******************************************************************************
+ * DESCRIPTION:
+ * 
  * Methods used in the project template
  * 
- * createProjectForm();
- * createProject(elm);
- * deleteProjectForm(projName);
- * deleteProject(elm);
+ * ATTRIBUTES LIST:
  * 
- **/
+ * METHODS LIST:
+ * 
+ * function createProjectForm()
+ * 	->	Dialog web form based in messi.js to verify the option to create a project.
+ * 		A name for the project is asked. 
+ * 
+ * function createProject(elm)
+ *  ->	Method to execute the creation for a project.
+ *  
+ * function deleteProjectForm(projName)
+ *  ->	Dialog web form based in messi.js to verify the option to delete a project.
+ *  
+ * function deleteProject(elm)
+ *  ->	Method to execute a delete for a project.
+ * 
+ ******************************************************************************/
+
+ /** METHODS ******************************************************************/
 
 function createProjectForm() {
+	/*
+	 * 
+	 */
 
 	var html = "Project Name: <input type='text' id='newProjName' class='content'/>";
 
