@@ -1,4 +1,4 @@
- /**************************************************************************
+ /*****************************************************************************
  *
  * Authors:    Jose Gutierrez (jose.gutierrez@cnb.csic.es)
  *
@@ -22,40 +22,99 @@
  *  All comments concerning this program package may be sent to the
  *  e-mail address 'jmdelarosa@cnb.csic.es'
  *
- **************************************************************************/
-
-
-
-/**
- * Methods to manage the protocol form
+ ******************************************************************************/
+/******************************************************************************
+ * DESCRIPTION:
  * 
- * showErrorValidation(json);
+ * Methods to manage the protocol form.
  * 
- * evalElements();
- * onChangeParam(value, paramId);
- * onChangeEnumParamCombo(elemId, paramId);
- * onChangeEnumParamList(index, paramId);
- * setParamValue(paramId, value);
- * evalDependencies(row, newLevel);
- * evalCondition(row);
- * normalizeConditions(cond);
- * help(title, msg);
- * browseObjects(node, projName, objClass);
- * showComment();
- * putComment();
- * getListFormatted(node, list, id);
- * getTableFormatted(node, list, id);
- * selectDialog(objClass, msg, funcName);
- * processSelectionList(elm);
- * processSelectionTable(elm);
- * selTableMessi(elm);
+ * ATTRIBUTES LIST:
  * 
- **/
+ * METHODS LIST:
+ * 
+ * jQuery(document).ready(function())
+ * 	->	Overray the post simple method in the protocol form template. 
+ * 		Depend a variable of the protocol form, can be:
+ * 		* Execute protocol: This mode execute the protocol with the parameters of
+ * 			the form.
+ * 		* Save protocol: This method save the protocol with the parameters filled.
+ * 		* Wizard: This mode launch a wizard for a specific parameter.   
+ * 		* Viewer: This mode launch a viewer to analyze the results for the parameters
+ * 			chosen in the form. 
+ * 
+ * function evalElements()
+ * 	->	Function to evaluate the elements in a form, depending the type of the
+ * 		param 
+ * 
+ * function onChangeParam(value, paramId)
+ * 	->	
+ * 
+ * function onChangeEnumParamCombo(elemId, paramId)
+ * 	->	
+ * 
+ * function onChangeEnumParamList(index, paramId)
+ * 	->
+ * 
+ * function setParamValue(paramId, value)
+ * 	->	
+ * 
+ * function evalDependencies(row, newLevel)
+ * 	->	
+ * 
+ * function evalCondition(row)
+ * 	->	
+ * 
+ * function normalizeConditions(cond)
+ * 	->
+ * 
+ * function help(title, msg) 
+ * 	->	
+ * 
+ * function browseObjects(param, projName, objClass)
+ * 	->	Browse object in the database. Params: objClass: the class to get instances
+ * 		from (also subclasses)
+ * 
+ * function browseProtClass(param, projName, protClassName)
+ * 	->	
+ * 
+ * function formProtSimple(param, projName)
+ * 	->
+ * 
+ * function returnProtocol()
+ * 	->	
+ * 
+ * function setParamProt(paramProt, params)
+ * 	->	
+ * 
+ * function showComment()
+ * 	->
+ * 
+ * function putComment()
+ * 	->
+ * 
+ * function getTableFormatted(node, list, id, previsualize)
+ * 	->
+ * 
+ * function selectDialog(objClass, msg, funcName)
+ * 	->
+ * 
+ * function processSelectionList(elm)
+ * 	->
+ * 
+ * function processSelectionTable(elm)
+ * 	->	
+ * 
+ * function selTableMessi(elm)
+ * 	->	
+ * 
+ ******************************************************************************/
+
+/** METHODS ******************************************************************/
 
 $(document).ready(function() {
 	/*	
-	* Method to execute a protocol.
-	* Overray the post simple method in the html. 
+	* Overray the post simple method in the protocol form template. 
+	* Depend a variable of the protocol form 
 	*/
 	$("#protocolForm").submit(function() {
 		var mode = $("#protocolForm").attr('data-mode');
@@ -174,6 +233,10 @@ $(document).ready(function() {
 });
 
 function evalElements() {
+	/*
+	 * Function to evaluate the elements in a form checking the conditions. 
+	 */
+	
 	$("tr").each(function(index) {
 //		
 		var value = jQuery(this).val();
