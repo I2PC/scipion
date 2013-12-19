@@ -72,8 +72,14 @@ class XmippProtConvertPdb(ProtInitialVolume):
         if not hasattr(self, 'pdb_file'):
             summary.append("PDB file not ready yet.")
         else:
-            summary.append("Input PDB: %s" % self.pdb_file.get())
-            summary.append("Output volume: %s" % self._output_file)
+            _inFile = self.pdb_file.get()
+            
+            if self.inputPdbData.get() == self.PDB_ID:
+            	summary.append("Input PDB ID: %s"   % _inFile)
+	    else:
+            	summary.append("Input PDB File: %s" % _inFile)
+            
+            #summary.append("Output volume: %s" % _inFile.rsplit( ".", 1 )[ 0 ]+".vol")
         return summary
       
     def _validate(self):
