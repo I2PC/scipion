@@ -26,111 +26,62 @@
 #include "xmipp_mpi.h"
 #include "data/xmipp_log.h"
 
-/** Function for a thread waiting on master MPI node distributing tasks.
- * This function will be called for one thread from the constructor
- * of the MpiTaskDistributor in the master.
- */
-void __threadMpiMasterDistributor(ThreadArgument &arg)
-{
-    MpiTaskDistributor * distributor = (MpiTaskDistributor*) arg.workClass;
-    distributor->distributeToNodes();
-}
 
 MpiTaskDistributor::MpiTaskDistributor(size_t nTasks, size_t bSize,
                                        MpiNode *node) :
         ThreadTaskDistributor(nTasks, bSize)
 {
-    CREATE_LOG(formatString("logNode%02.txt", node->rank));
-
     this->node = node;
-    //if master create distribution thread
-//    if (node->isMaster())
-//    {
-//        manager = new ThreadManager(1, (void*) this);
-//        manager->runAsync(__threadMpiMasterDistributor);
-//    }
-}
-
-MpiTaskDistributor::~MpiTaskDistributor()
-{
-//    if (node->isMaster())
-//    {
-////        manager->wait();
-//        delete manager;
-//    }
-//    CLOSE_LOG();
 }
 
 bool MpiTaskDistributor::distribute(size_t &first, size_t &last)
 {
-    if (node->isMaster())
-    {
-        //return ThreadTaskDistributor::distribute(first, last);
-      distributeToNodes();
-      return false;
-    }
-
-    //If not master comunicate with master thread
-    //to get tasks
-    //workBuffer[0] = 0 if no more jobs, 1 otherwise
-    //workBuffer[1] = first
-    //workBuffer[2] = last
-    size_t workBuffer[3];
-    MPI_Status status;
-    int dummy = 0;
-    //any message from the master, is tag is TAG_STOP then stop
-    std::cerr << "DEBUG_JM: Node " << node->rank << ":       requesting job " <<std::endl;
-    int result = MPI_Send(&dummy, 1, MPI_INT, 0, TAG_WORK_REQUEST, MPI_COMM_WORLD);
-    std::cerr << "DEBUG_JM: Node " << node->rank << ":       waiting for response: (MPI_Send=" << result << std::endl;
-    MPI_Recv(workBuffer, 3, MPI_LONG_LONG_INT, 0, TAG_WORK_RESPONSE, MPI_COMM_WORLD,
-             &status);
-    std::cerr << "DEBUG_JM: Node " << node->rank << ":       received: " << workBuffer[0] << std::endl;
-
-    first = workBuffer[1];
-    last = workBuffer[2];
-
-    return (workBuffer[0] == 1);
+    return node->isMaster() ? distributeMaster() : distributeSlaves(first, last);
 }
 
-void MpiTaskDistributor::distributeToNodes()
+bool MpiTaskDistributor::distributeMaster()
 {
     int size = node->size;
     size_t workBuffer[3];
     MPI_Status status;
     int finalizedWorkers = 0;
-    int dummy = 0;
 
     while (finalizedWorkers < size - 1)
     {
-        std::cerr << "DEBUG_JM: Master: waiting for requests..." <<std::endl;
         //wait for request form workers
-        MPI_Recv(&dummy, 1, MPI_INT, MPI_ANY_SOURCE, TAG_WORK_REQUEST, MPI_COMM_WORLD, &status);
-        std::cerr << "DEBUG_JM: Master:       received request from node: " << status.MPI_SOURCE <<std::endl;
+        MPI_Recv(0, 0, MPI_INT, MPI_ANY_SOURCE, TAG_WORK_REQUEST, MPI_COMM_WORLD, &status);
 
         workBuffer[0] = ThreadTaskDistributor::distribute(workBuffer[1], workBuffer[2]) ? 1 : 0;
-        std::cerr << "DEBUG_JM: Master:       distribute: " << workBuffer[0] << " "
-            << workBuffer[1] << " " << workBuffer[2] << std::endl;
 
         if (workBuffer[0] == 0) //no more jobs, count finalized workers
             finalizedWorkers++;
         //send response (either task or finish answer)
         MPI_Send(workBuffer, 3, MPI_LONG_LONG_INT, status.MPI_SOURCE, TAG_WORK_RESPONSE, MPI_COMM_WORLD);
-        std::cerr << "DEBUG_JM: Master:       response sent to node: "<< status.MPI_SOURCE <<std::endl;
     }
-    std::cerr << "DEBUG_JM: Master:       BYE BYE " << std::endl;
+    return false;
 }
 
-void MpiTaskDistributor::reset()
+bool MpiTaskDistributor::distributeSlaves(size_t &first, size_t &last)
 {
-    ThreadTaskDistributor::reset();
-//    if (node->isMaster())
-//        manager->runAsync(__threadMpiMasterDistributor);
+  // Worker nodes should ask for task to master
+  // Result of workBuffer:
+  //   workBuffer[0] = 0 if no more jobs, 1 otherwise
+  //   workBuffer[1] = first
+  //   workBuffer[2] = last
+  size_t workBuffer[3];
+  MPI_Status status;
+  //any message from the master, is tag is TAG_STOP then stop
+  MPI_Send(0, 0, MPI_INT, 0, TAG_WORK_REQUEST, MPI_COMM_WORLD);
+  MPI_Recv(workBuffer, 3, MPI_LONG_LONG_INT, 0, TAG_WORK_RESPONSE, MPI_COMM_WORLD, &status);
+
+  first = workBuffer[1];
+  last = workBuffer[2];
+
+  return (workBuffer[0] == 1);
 }
 
 void MpiTaskDistributor::wait()
 {
-//    if (node->isMaster())
-//        manager->wait();
     node->barrierWait();
 }
 

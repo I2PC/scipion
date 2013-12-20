@@ -35,7 +35,6 @@
 
 #include "data/xmipp_threads.h"
 #include "data/xmipp_program.h"
-#include "data/xmipp_log.h"
 
 #define XMIPP_MPI_SIZE_T MPI_UNSIGNED_LONG
 
@@ -91,26 +90,24 @@ class MpiTaskDistributor: public ThreadTaskDistributor
 {
 protected:
     MpiNode * node;
-    ThreadManager * manager;
 
     virtual bool distribute(size_t &first, size_t &last);
 
 public:
     MpiTaskDistributor(size_t nTasks, size_t bSize, MpiNode *node);
-    virtual ~MpiTaskDistributor();
-
-    friend void __threadMpiMasterDistributor(ThreadArgument &arg);
-    void reset();
     /** All nodes wait until distribution is done.
      * In particular, the master node should wait for the distribution thread.
      */
     void wait();
+
 private:
     /** Method that should be called in the master only.
      * It will listen for job requests from nodes, assign tasks and
      * sent the response back
      */
-    void distributeToNodes();
+    bool distributeMaster();
+    /** Workers should ask for jobs from master. */
+    bool distributeSlaves(size_t &first, size_t &last);
 }
 ;//end of class MpiTaskDistributor
 
