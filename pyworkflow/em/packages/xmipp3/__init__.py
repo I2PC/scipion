@@ -51,7 +51,7 @@ from protocol_projmatch import XmippProtProjMatch
 from protocol_filters import XmippProtFilter
 from protocol_filters import XmippProtMask, XmippProtResize
 from protocol_create_mask import XmippProtCreateMask3D
-from protocol_apply_mask import XmippProtApplyMask3D
+#from protocol_apply_mask import XmippProtApplyMask3D
 from protocol_particle_pick_automatic import XmippParticlePickingAutomatic
 from protocol_screen_particles import XmippProtScreenParticles
 from protocol_simulated_annealing import XmippProtInitVolSimAnneal
