@@ -75,7 +75,7 @@ class XmippProtCreateMask3D(ProtCreateMask3D,XmippGeometricalMask):
                       condition='%s and segmentationType==%d'%(isSegmentation,SEGMENTATION_DALTON))
         
         # For geometrical sources
-        XmippGeometricalMask.defineParams(self, form, 'source==%d'%SOURCE_GEOMETRY)
+        XmippGeometricalMask.defineParams(self, form, isGeometry='source==%d'%SOURCE_GEOMETRY, addSize=True)
 
         # For another mask
         form.addParam('inputMask', PointerParam, pointerClass="VolumeMask", label="Input mask",condition='source==%d'%SOURCE_MASK)
@@ -147,7 +147,7 @@ class XmippProtCreateMask3D(ProtCreateMask3D,XmippGeometricalMask):
         
         # Create the mask
         args = '-i %s ' % self.maskFile
-        args+=XmippGeometricalMask.argsForTransformMask(self)
+        args+=XmippGeometricalMask.argsForTransformMask(self,size)
         args += ' --create_mask %s' % self.maskFile
         self.runJob(None, "xmipp_transform_mask", args)
         return [self.maskFile]
