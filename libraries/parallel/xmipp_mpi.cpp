@@ -22,7 +22,9 @@
  *  All comments concerning this program package may be sent to the
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
+
 #include "xmipp_mpi.h"
+#include "data/xmipp_log.h"
 
 /** Function for a thread waiting on master MPI node distributing tasks.
  * This function will be called for one thread from the constructor
@@ -31,53 +33,42 @@
 void __threadMpiMasterDistributor(ThreadArgument &arg)
 {
     MpiTaskDistributor * distributor = (MpiTaskDistributor*) arg.workClass;
-    int size = distributor->node->size;
-    size_t workBuffer[3];
-    MPI_Status status;
-    int finalizedWorkers = 0;
-
-    while (finalizedWorkers < size-1)
-    {
-        //wait for request form workers
-        MPI_Recv(0, 0, MPI_INT, MPI_ANY_SOURCE, 0, MPI_COMM_WORLD, &status);
-
-        workBuffer[0] =
-            distributor->ThreadTaskDistributor::getTasks(workBuffer[1],
-                    workBuffer[2]) ? 1 : 0;
-        if (workBuffer[0] == 0) //no more jobs
-            finalizedWorkers++;
-        //send work
-        MPI_Send(workBuffer, 3, MPI_LONG_LONG_INT, status.MPI_SOURCE, TAG_WORK,
-                 MPI_COMM_WORLD);
-    }
+    distributor->distributeToNodes();
 }
 
 MpiTaskDistributor::MpiTaskDistributor(size_t nTasks, size_t bSize,
                                        MpiNode *node) :
         ThreadTaskDistributor(nTasks, bSize)
 {
+    CREATE_LOG(formatString("logNode%02.txt", node->rank));
+
     this->node = node;
     //if master create distribution thread
-    if (node->isMaster())
-    {
-        manager = new ThreadManager(1, (void*) this);
-        manager->runAsync(__threadMpiMasterDistributor);
-    }
+//    if (node->isMaster())
+//    {
+//        manager = new ThreadManager(1, (void*) this);
+//        manager->runAsync(__threadMpiMasterDistributor);
+//    }
 }
 
 MpiTaskDistributor::~MpiTaskDistributor()
 {
-    if (node->isMaster())
-    {
-//        manager->wait();
-        delete manager;
-    }
+//    if (node->isMaster())
+//    {
+////        manager->wait();
+//        delete manager;
+//    }
+//    CLOSE_LOG();
 }
 
 bool MpiTaskDistributor::distribute(size_t &first, size_t &last)
 {
     if (node->isMaster())
-        return ThreadTaskDistributor::distribute(first, last);
+    {
+        //return ThreadTaskDistributor::distribute(first, last);
+      distributeToNodes();
+      return false;
+    }
 
     //If not master comunicate with master thread
     //to get tasks
@@ -86,10 +77,14 @@ bool MpiTaskDistributor::distribute(size_t &first, size_t &last)
     //workBuffer[2] = last
     size_t workBuffer[3];
     MPI_Status status;
+    int dummy = 0;
     //any message from the master, is tag is TAG_STOP then stop
-    MPI_Send(0, 0, MPI_INT, 0, 0, MPI_COMM_WORLD);
-    MPI_Recv(workBuffer, 3, MPI_LONG_LONG_INT, 0, TAG_WORK, MPI_COMM_WORLD,
+    std::cerr << "DEBUG_JM: Node " << node->rank << ":       requesting job " <<std::endl;
+    int result = MPI_Send(&dummy, 1, MPI_INT, 0, TAG_WORK_REQUEST, MPI_COMM_WORLD);
+    std::cerr << "DEBUG_JM: Node " << node->rank << ":       waiting for response: (MPI_Send=" << result << std::endl;
+    MPI_Recv(workBuffer, 3, MPI_LONG_LONG_INT, 0, TAG_WORK_RESPONSE, MPI_COMM_WORLD,
              &status);
+    std::cerr << "DEBUG_JM: Node " << node->rank << ":       received: " << workBuffer[0] << std::endl;
 
     first = workBuffer[1];
     last = workBuffer[2];
@@ -97,17 +92,45 @@ bool MpiTaskDistributor::distribute(size_t &first, size_t &last)
     return (workBuffer[0] == 1);
 }
 
+void MpiTaskDistributor::distributeToNodes()
+{
+    int size = node->size;
+    size_t workBuffer[3];
+    MPI_Status status;
+    int finalizedWorkers = 0;
+    int dummy = 0;
+
+    while (finalizedWorkers < size - 1)
+    {
+        std::cerr << "DEBUG_JM: Master: waiting for requests..." <<std::endl;
+        //wait for request form workers
+        MPI_Recv(&dummy, 1, MPI_INT, MPI_ANY_SOURCE, TAG_WORK_REQUEST, MPI_COMM_WORLD, &status);
+        std::cerr << "DEBUG_JM: Master:       received request from node: " << status.MPI_SOURCE <<std::endl;
+
+        workBuffer[0] = ThreadTaskDistributor::distribute(workBuffer[1], workBuffer[2]) ? 1 : 0;
+        std::cerr << "DEBUG_JM: Master:       distribute: " << workBuffer[0] << " "
+            << workBuffer[1] << " " << workBuffer[2] << std::endl;
+
+        if (workBuffer[0] == 0) //no more jobs, count finalized workers
+            finalizedWorkers++;
+        //send response (either task or finish answer)
+        MPI_Send(workBuffer, 3, MPI_LONG_LONG_INT, status.MPI_SOURCE, TAG_WORK_RESPONSE, MPI_COMM_WORLD);
+        std::cerr << "DEBUG_JM: Master:       response sent to node: "<< status.MPI_SOURCE <<std::endl;
+    }
+    std::cerr << "DEBUG_JM: Master:       BYE BYE " << std::endl;
+}
+
 void MpiTaskDistributor::reset()
 {
     ThreadTaskDistributor::reset();
-    if (node->isMaster())
-        manager->runAsync(__threadMpiMasterDistributor);
+//    if (node->isMaster())
+//        manager->runAsync(__threadMpiMasterDistributor);
 }
 
 void MpiTaskDistributor::wait()
 {
-    if (node->isMaster())
-        manager->wait();
+//    if (node->isMaster())
+//        manager->wait();
     node->barrierWait();
 }
 
@@ -255,7 +278,7 @@ void MpiNode::gatherMetadatas(MetaData &MD, const FileName &rootname)
     }
 }
 
-/* -------------------- XmippMPIPRogram ---------------------- */
+/* -------------------- XmippMPIProgram ---------------------- */
 
 XmippMpiProgram::XmippMpiProgram()
 {
@@ -312,20 +335,17 @@ int XmippMpiProgram::tryRun()
 MpiMetadataProgram::MpiMetadataProgram()
 {
     node = NULL;
-    fileMutex = NULL;
     distributor = NULL;
 }
 
 MpiMetadataProgram::~MpiMetadataProgram()
 {
-    delete fileMutex;
     delete distributor;
 }
 
 void MpiMetadataProgram::read(int argc, char **argv)
 {
     XmippMpiProgram::read(argc, argv);
-    fileMutex = new MpiFileMutex(node);
     last = 0;
     first = 1;
 }

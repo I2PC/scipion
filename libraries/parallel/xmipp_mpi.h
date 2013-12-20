@@ -32,9 +32,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <iostream>
-#include <data/xmipp_threads.h>
-#include <data/xmipp_program.h>
+
+#include "data/xmipp_threads.h"
+#include "data/xmipp_program.h"
+#include "data/xmipp_log.h"
+
 #define XMIPP_MPI_SIZE_T MPI_UNSIGNED_LONG
+
 /** @defgroup MPI MPI
  *  @ingroup ParallelLibrary
  * @{
@@ -75,6 +79,9 @@ protected:
 #define TAG_STOP   1
 #define TAG_WAIT   2
 
+#define TAG_WORK_REQUEST 100
+#define TAG_WORK_RESPONSE 101
+
 /** This class is another implementation of ParallelTaskDistributor with MPI workers.
  * It extends from ThreadTaskDistributor and adds the MPI call
  * for making the distribution and extra locking mechanisms among
@@ -98,6 +105,12 @@ public:
      * In particular, the master node should wait for the distribution thread.
      */
     void wait();
+private:
+    /** Method that should be called in the master only.
+     * It will listen for job requests from nodes, assign tasks and
+     * sent the response back
+     */
+    void distributeToNodes();
 }
 ;//end of class MpiTaskDistributor
 
@@ -181,7 +194,6 @@ protected:
     int blockSize;
     MpiTaskDistributor *distributor;
     std::vector<size_t> imgsId;
-    MpiFileMutex *fileMutex;
     size_t first, last;
 
 public:
