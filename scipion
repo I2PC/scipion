@@ -30,7 +30,18 @@ This module is responsible for launching protocol executions.
 import sys
 import os
 
-PW_HOME = os.path.abspath(os.path.dirname(__file__))
+def findHome():
+    """ Find Scipion home from the __file__ location. """
+    absPath = os.path.abspath(__file__)
+    if os.path.islink(absPath):
+        r = os.readlink(absPath)
+        if not os.path.isabs(absPath):
+            absPath = os.path.join(os.path.dirname(absPath), r)
+        else:
+            absPath = r   
+    return os.path.dirname(absPath)
+
+PW_HOME = findHome()
 PW_APPS = os.path.join(PW_HOME, 'pyworkflow', 'apps')
 PW_APPS_TEMP = os.path.join(PW_APPS, '%s')
 
