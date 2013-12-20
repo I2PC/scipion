@@ -26,7 +26,7 @@
 /******************************************************************************
  * DESCRIPTION:
  * 
- * Generic lib with commons methods.
+ * Generic library with commons methods.
  * 
  * ATTRIBUTES LIST:
  * 
