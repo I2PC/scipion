@@ -34,22 +34,26 @@ from constants import *
 class XmippGeometricalMask:
     """ Basic class for protocols using geometrical masks """
     
-    def defineParams(self, form, isGeometry):
+    def defineParams(self, form, isGeometry, addSize):
         # For geometrical sources
-        form.addParam('size', IntParam, condition=isGeometry, label="Mask size (px)", 
-                      help='Select the mask dimensions in voxels. The mask will be size x size x size voxels')
+        if addSize:
+            form.addParam('size', IntParam, condition=isGeometry, label="Mask size (px)", 
+                          help='Select the mask dimensions in voxels. The mask will be size x size x size voxels')
         form.addParam('geo', EnumParam, label='Mask type', default=MASK3D_SPHERE, condition=isGeometry, 
                       choices = ['Sphere', 'Box', 'Crown', 'Cylinder', 
                                  'Gaussian', 'Raised cosine', 'Raised crown'])
+        # TODO add wizard
         form.addParam('radius', IntParam, default=-1, 
                       condition='(geo==%d or geo==%d) and %s' % (MASK3D_SPHERE, MASK3D_CYLINDER, isGeometry),
                       label="Radius (px)", help="Mask radius, if -1, the radius will be MaskSize/2")
         form.addParam('boxSize', IntParam, default=-1, condition='geo==%d and %s' % (MASK3D_BOX,isGeometry),
                       label="Box size", help="Mask box size, if -1, the box size will be MaskSize/2")
         radiusCondition = '(geo==%d or geo==%d or geo==%d) and %s' % (MASK3D_CROWN, MASK3D_RAISED_COSINE, MASK3D_RAISED_CROWN, isGeometry)
+        # TODO add wizard
         form.addParam('innerRadius', IntParam, default=0, 
                       condition=radiusCondition,
                       label="Inner radius (px)", help="Inner radius in pixels")
+        # TODO add wizard
         form.addParam('outerRadius', IntParam, default=-1, 
                       condition=radiusCondition,
                       label="Outer radius (px)", help="Outer radius in pixels, if -1, the outer radius will be MaskSize/2")
@@ -60,9 +64,8 @@ class XmippGeometricalMask:
         form.addParam('borderDecay', IntParam, default=0, condition='geo==%d and %s' % (MASK3D_RAISED_CROWN,isGeometry),
                       label="Border decay (px)", help="This is the fall-off of the two borders of the crown")        
 
-    def argsForTransformMask(self):
+    def argsForTransformMask(self,size):
         # Create empty volume file with desired dimensions
-        size=self.size.get()
         geo=self.geo.get()
         
         # Create the mask
