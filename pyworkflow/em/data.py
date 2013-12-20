@@ -136,7 +136,7 @@ class Image(Item):
         pass
     
     def getDim(self):
-        """Return image dimensions as tuple: (Ydim, Ydim, Zdim, N)"""
+        """Return image dimensions as tuple: (Xdim, Ydim, Zdim, N)"""
         return ImageHandler().getDimensions(self.getLocation())
     
     def getIndex(self):
@@ -391,6 +391,18 @@ class SetOfImages(Set):
         
     def getSamplingRate(self):
         return self._samplingRate.get()
+    
+    def writeStack(self, fnStack):
+        # TODO creaty empty file to improve efficiency
+        for i, img in enumerate(self):
+            ImageHandler().convert(img.getLocation(), (i, fnStack))
+    
+# TODO: Create this general purpose function. See example in protocol_apply_mask
+#    def readFromStack(self, fnStack):
+#        """ Populate the set with the images in the stack """
+#        (_,_,_,ndim)=ImageHandler().getDimensions(fnStack)
+#        for i in range(1,ndim+1):
+#            image=ImageHandler().convert(img.getLocation(), (i, fnStack))
     
     def __str__(self):
         """ String representation of a set of images. """
