@@ -12,7 +12,7 @@
 	{% endif %}
 	<tr id="{{obj.getObjId}}" class="no-selected" 
 	style="background-color: #fafafa;" 
-	onclick="compositeDownSampling(($(this)));" 
+	onclick="previewDownSampling(($(this)));" 
 	value="{{obj.getFileName}}">
 		<td>{{obj.basename}}</td>
 	</tr>
@@ -50,7 +50,7 @@
 </table>
 <script>
 	//Load the First Element of the list
-	window.onload = compositeDownSampling($("tr#"+firstElm));
+	window.onload = previewDownSampling($("tr#"+firstElm));
 </script>
 {% endblock %}
 {% block function %}

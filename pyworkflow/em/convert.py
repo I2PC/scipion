@@ -51,6 +51,10 @@ class ImageHandler(object):
             inputLoc: input location (index and filename)
             outputLoc: output location (index and filename)
         """
+        if isinstance(inputLoc, str):
+            inputLoc = (NO_INDEX, inputLoc)
+        if isinstance(outputLoc, str):
+            outputLoc = (NO_INDEX, outputLoc)
         # Read from input
         inputStr = self._locationToStr(*inputLoc)
         self._img.read(inputStr)

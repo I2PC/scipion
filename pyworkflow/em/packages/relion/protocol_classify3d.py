@@ -55,7 +55,7 @@ class ProtRelionBase(EMProtocol):
         
         self.loadEnvironment()
         
-        self.imgStar    = createRelionInputImages(self, self.inputImages.get())        
+        self.imgStar    = createRelionInputImages(self, self.inputParticles.get())        
         self.volumeName = createRelionInputVolume(self, self.input3DReferences.get())
 
 
@@ -111,7 +111,7 @@ class Relion3DClassification(ProtClassify3D, ProtRelionBase):
             
     def _defineParams(self, form):
         form.addSection(label='Input')
-        form.addParam('inputImages', PointerParam, label="Input images", important=True, 
+        form.addParam('inputParticles', PointerParam, label="Input images", important=True, 
                       pointerClass='SetOfParticles',
                       help='Provide a set of images from a stack (Spider/MRC) or metadata file that make up your data set.'
                       'Note that in the case of a stack, no metadata can be included and thus no CTF correction '
@@ -122,7 +122,6 @@ class Relion3DClassification(ProtClassify3D, ProtRelionBase):
                       help='The number of classes (K) for a multi-reference refinement. '
                       'These classes will be made in an unsupervised manner from a single reference '
                       'by division of the data into random subsets during the first iteration.')
-        #TODO: the following parameter should be a Pointer to a Volume and not a string containing the path      
         form.addParam('input3DReferences', PointerParam,label='Initial 3D reference volume',important=True, 
                       pointerClass='SetOfVolumes',
                       help='Initial 3D density map with the same dimensions as your particles.')
@@ -185,7 +184,7 @@ class Relion3DClassification(ProtClassify3D, ProtRelionBase):
                       'Because one typically normalises the noise, this leads to distinct signal intensities in the data,'
                       'and this procedure corrects for this. It is quite robust and therefore recommended for the general case.')   
         form.addSection(label='Optimisation')
-        form.addParam('iniLowPassFilter', IntParam, default=60,
+        form.addParam('iniLowPassFilter', FloatParam, default=60.0,
                       label='Initial low-pass filter (in Angstroms)',
                       help='It is recommended to strongly low-pass filter your initial reference map.'
                       'If it has not yet been low-pass filtered, it may be done internally using this option.'
@@ -203,18 +202,18 @@ class Relion3DClassification(ProtClassify3D, ProtRelionBase):
                       'have been observed to be useful for 3D refinements, values of 1-2 for 2D refinements. '
                       'Too small values yield too-low resolution structures; too high values result in over-estimated resolutions and overfitting.')
         form.addParam('maskRadius', IntParam, default=200,
-                      label='Particles mask diameter (in Angstroms)',
+                      label='Particles mask RADIUS (in Angstroms)',
                       help='The experimental images will be masked with a soft circular mask with this diameter. '
                       'Make sure this radius is not set too small because that may mask away part of the signal! '
                       'If set to a value larger than the image size no masking will be performed.')    
-        form.addParam('doMaskReferences', BooleanParam, default=True,
+        form.addParam('doMaskReferences', BooleanParam, default=True, 
                       label='Mask references structures?',
                       help='If set to yes, a mask will also be applied to the reconstructed references. '
                       'This is useful to set the solvent region of your reconstruction to 0. Either a soft spherical mask '
                       '(based on the diameter of the experimental image mask given above) or a user-provided mask (next option) may be used. '
                       'The user-provided mask should have values between 0 and 1 only. Solvent flattening is recommended, but make sure not to mask any signal away.')
         #TODO: the following parameter should be a Pointer to an Image and not a string containing the path  
-        form.addParam('maskFile', StringParam, default='', 
+        form.addParam('maskFile', StringParam, default='', condition='doMaskReferences',
                       label='Reference mask file', 
                       help='A Spider/mrc map containing a (soft) mask with the same dimensions as the reference(s), and values between 0 and 1, '
                       'with 1 being 100% protein and 0 being 100% solvent. The reconstructed reference map will be multiplied by this mask.'
@@ -273,7 +272,7 @@ class Relion3DClassification(ProtClassify3D, ProtRelionBase):
 
         args.update({'--i': self.imgStar,
                      '--particle_diameter': self.maskRadius.get() * 2.0 ,
-                     '--angpix': self.inputImages.get().getSamplingRate(),
+                     '--angpix': self.inputParticles.get().getSamplingRate(),
                      '--ref': self.volumeName,
                      '--oversampling': '1'
                      })
@@ -333,7 +332,7 @@ class Relion3DClassification(ProtClassify3D, ProtRelionBase):
     #TODO
     def _summary(self):
         summary = []
-        summary.append("Input images:  %s" % self.inputImages.get().getNameId())
+        summary.append("Input images:  %s" % self.inputParticles.get().getNameId())
         return summary
 
     #TODO

@@ -20,7 +20,7 @@
 {% endif %}
 <tr id="{{obj.getObjId}}" class="no-selected"
 	style="background-color: #fafafa;"
-	onclick="compositeCTF(($(this)));" value="{{obj.getFileName}}">
+	onclick="previewCTF(($(this)));" value="{{obj.getFileName}}">
 	<td>{{obj.basename}}</td>
 </tr>
 {% endfor %} {% endblock %} {% block images %}
@@ -99,7 +99,7 @@ $(".slider_high").slider({
 	}
 });
 //Load the First Element of the list
-window.onload = compositeCTF($("tr#"+firstElm));
+window.onload = previewCTF($("tr#"+firstElm));
 </script>
 {% endblock %}
 {% block function %}

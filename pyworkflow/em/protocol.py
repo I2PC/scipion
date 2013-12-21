@@ -40,7 +40,6 @@ from data import *
 from pyworkflow.utils.path import removeBaseExt, join, basename, cleanPath
 
 
-
 class EMProtocol(Protocol):
     """ Base class to all EM protocols.
     It will contains some common functionalities. 
@@ -79,6 +78,10 @@ class EMProtocol(Protocol):
         """ Add a DATASOURCE relation between srcObj and dstObj """
         self.mapper.insertRelation(RELATION_DATASOURCE, self, srcObj, dstObj)
         #self.mapper.commit()
+
+    def _insertChild(self, key, child):
+        if isinstance(child,Set):
+            child.write()
         
 class ProtImportImages(EMProtocol):
     """Common protocol to import a set of images in the project"""

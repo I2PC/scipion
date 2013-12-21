@@ -1,4 +1,4 @@
- /**************************************************************************
+ /*****************************************************************************
  *
  * Authors:    Jose Gutierrez (jose.gutierrez@cnb.csic.es)
  *
@@ -22,25 +22,66 @@
  *  All comments concerning this program package may be sent to the
  *  e-mail address 'jmdelarosa@cnb.csic.es'
  *
- **************************************************************************/
-
-
-
-/**
- * Generic lib with commons methods
+ ******************************************************************************/
+/******************************************************************************
+ * DESCRIPTION:
  * 
- * popup(URL); 
- * customPopup(URL, widthValue, heightValue);
- * customPopupHTML(html);  
- * closePopup();
- * launchMessiSimple(title, msg);
- * messiError(msg);
- * messiWarning(msg);
- * messiInfo(msg);
+ * Generic library with commons methods.
  * 
- */
+ * ATTRIBUTES LIST:
+ * 
+ * METHODS LIST:
+ * 
+ * function popup(URL)
+ * 	-> Launch a basic popup (600x500) opening the URL passed by argument.
+ * 
+ * function customPopup(URL, widthValue, heightValue)
+ * 	->	Launch a popup opening the URL passed by argument. 
+ * 		The size of the popup is customized with the width and height chosen.
+ * 
+ * function customPopupHTML(html, widthValue, heightValue)
+ * 	->	Launch a popup with the HTML code passed by argument.
+ *  	The size of the popup is customized with the width and height chosen.
+ *  
+ * function popUpJSON(json)
+ * 	->	This method recive a JSON, and depending of the key content, open a 
+ * 		diferent popups with diferent settings.
+ * 		This function in the analyze results of the protocols runs.
+ * 
+ * function showPlot(url)
+ * 	->	Function to show a xplotter(PNG) in a adjusted popup.
+ * 
+ * function getUrlParameters(parameter, staticURL, decode)
+ * 	->	Auxiliar function to obtain individual parameters from a URL.
+ * 
+ * function closePopup()
+ * 	->	Function to close the popup what call this method.
+ * 
+ * function showErrorValidation(json)
+ * 	->	Function to normalize the errors launched in the protocol form when a 
+ * 		protocol cannot be launched.
+ * 
+ * function launchMessiSimple(title, msg, autoclose)
+ * 	->	Function to launch a basic simple window with a title and message passed
+ * 		by argument. The autoclose can be chose with a boolean.
+ * 
+ * function messiError(msg)
+ * 	->	This function return the HTML to be used in an error popup with messi.js
+ * 
+ * function messiWarning(msg)
+ *  ->	This function return the HTML to be used in an warning popup with messi.js
+ * 
+ * function messiInfo(msg)
+ *  ->	This function return the HTML to be used in an information popup with messi.js
+ * 
+ ******************************************************************************/
+
+/** METHODS ******************************************************************/
 
 function popup(URL) {
+	/*
+	 * Launch a basic popup (600x500) opening the URL passed by argument.
+	 */
 	var popup_width = 600;
 	var popup_height = 500;
 	day = new Date();
@@ -53,6 +94,10 @@ function popup(URL) {
 }
 
 function customPopup(URL, widthValue, heightValue) {
+	/*
+	 * Launch a popup opening the URL passed by argument. 
+	 * The size of the popup is customized with the width and height chosen.
+	 */
 	day = new Date();
 	id = day.getTime();
 	eval("page"
@@ -63,6 +108,10 @@ function customPopup(URL, widthValue, heightValue) {
 }
 
 function customPopupHTML(html, widthValue, heightValue) {
+	/*
+	 * Launch a popup with the HTML code passed by argument.
+	 * The size of the popup is customized with the width and height chosen.
+	 */
 	day = new Date();
 	id = day.getTime();
 	var popup = window.open('', id, 'height='+heightValue+',width='+widthValue);
@@ -71,6 +120,11 @@ function customPopupHTML(html, widthValue, heightValue) {
 }
 
 function popUpJSON(json){
+	/*
+	 * This method recive a JSON, and depending of the key content, open a 
+	 * diferent popups with diferent settings.
+	 * This function in the analyze results of the protocols runs.
+	 */
 	// Open pop-ups depending of JSON parameters
 	$.each(json, function(key, value) {
 		if(key=="url_form"){
@@ -91,8 +145,8 @@ function popUpJSON(json){
 			}
 		} else if(key=="plotsComposite" || key=="plot"){
 			showPlot(value);
-		} else if(key=="error"){
-			launchMessiSimple("Error",messiError(value));
+		} else if(key=="error"){(
+			launchMessiSimple("Error",messiError(value)));
 		} else {
 			customPopup(value,800,600);
 		}
@@ -100,6 +154,9 @@ function popUpJSON(json){
 }
 
 function showPlot(url){
+	/*
+	 * Function to show a xplotter(PNG) in a adjusted popup.
+	 */
 	width = getUrlParameters("width", url, true)
 	height = getUrlParameters("height", url, true)
 //	alert(width +"x" + height)
@@ -107,6 +164,9 @@ function showPlot(url){
 }
 
 function getUrlParameters(parameter, staticURL, decode){
+	/*
+	 * Auxiliar function to obtain individual parameters from a URL.
+	 */
    var currLocation = (staticURL.length)? staticURL : window.location.search,
        parArr = currLocation.split("?")[1].split("&"),
        returnBool = true;
@@ -125,6 +185,9 @@ function getUrlParameters(parameter, staticURL, decode){
 
 
 function closePopup() {
+	/*
+	 * Function to close the popup what call this method.
+	 */
 	// opener.location.reload(true);
 	// self.close();
 	//	window.opener.location.reload(true);
@@ -132,6 +195,10 @@ function closePopup() {
 }
 
 function showErrorValidation(json) {
+	/*
+	 * Function to normalize the errors launched in the protocol form when a 
+	 * protocol cannot be launched.
+	 */
 	var msg = JSON.stringify(json);
 	msg = msg.replace("<", "");
 	msg = msg.replace(">", "");
@@ -142,6 +209,10 @@ function showErrorValidation(json) {
 }
 
 function launchMessiSimple(title, msg, autoclose){
+	/*
+	 * Function to launch a basic simple window with a title and message passed
+	 * by argument. The autoclose can be chose with a boolean.
+	 */
 	if(autoclose){
 		new Messi(msg, {
 			title : title,
@@ -171,6 +242,9 @@ function launchMessiSimple(title, msg, autoclose){
 }
 	
 function messiError(msg){
+	/*
+	 * This function return the HTML to be used in an error popup with messi.js
+	 */
 	var res = "<table><tr><td><i class=\"fa fa-times-circle fa-4x\" style=\"color:firebrick;\"></i>"
 	+ "</td><td>"+ msg +"</td></tr></table>";
 
@@ -178,6 +252,9 @@ function messiError(msg){
 }
 
 function messiWarning(msg){
+	/*
+	 * This function return the HTML to be used in an warning popup with messi.js
+	 */
 	var res = "<table><tr><td><i class=\"fa fa-warning fa-4x\" style=\"color:#fad003;\"></i>"
 	+ "</td><td>"+ msg +"</td></tr></table>";
 
@@ -185,6 +262,9 @@ function messiWarning(msg){
 }
 
 function messiInfo(msg){
+	/*
+	 * This function return the HTML to be used in an information popup with messi.js
+	 */
 	var res = "<table><tr><td><i class=\"fa fa-info-circle fa-4x\" style=\"color:#6fabb5;\"></i>"
 	+ "</td><td>"+ msg +"</td></tr></table>";
 

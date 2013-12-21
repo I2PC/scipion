@@ -1,4 +1,4 @@
- /**************************************************************************
+ /*****************************************************************************
  *
  * Authors:    Jose Gutierrez (jose.gutierrez@cnb.csic.es)
  *
@@ -22,11 +22,98 @@
  *  All comments concerning this program package may be sent to the
  *  e-mail address 'jmdelarosa@cnb.csic.es'
  *
- **************************************************************************/
+ ******************************************************************************/
+/******************************************************************************
+ * DESCRIPTION:
+ * 
+ * Methods to manage wizards.
+ * 
+ * ATTRIBUTES LIST:
+ * 
+ * METHODS LIST:
+ * 
+ * // *** Common Methods *** //
+ * function selectList(elm, mode)
+ * 	->	Function to select an image from a list and be loaded with a 
+ * 		specific mode (Normal or using the library Raphael.js).
+ * 
+ * function selectParticle(elm, mode)
+ * 	->	Function to select a particle from a set and be loaded with a 
+ * 		specific mode (Normal or using the library Raphael.js).
+ * 
+ * function putImage(url, canvas, width, height)
+ * 	->	Overwrite a canvas space with a new image using the library Raphael.js
+ * 
+ * function putCircle(radio, canvas, color)
+ * 	->	Draw a circle over a canvas using the library Raphael.js
+ * 
+ * function previewPsd()
+ * 	->	This function obtain an PSD image from another image. The downsampling
+ * 		factor is used here to compute the new image.
+ *
+ * // *** Methods Wizard Downsampling *** //
+ * function previewDownSampling(elm)
+ * 	->	Function composite structured in two steps:
+ * 			1. Select an image from a list.
+ * 			2. To obtain the downsampled image from the image selected.
+ * 
+ * // *** Methods Wizard CTF *** //
+ * function previewCTF(elm)
+ * 	->	Function composite structured in two steps:
+ * 			1. Select an image from a list.
+ * 			2. To obtain a preview image using the method previewPSD() to 
+ * 			visualize the CTF.
+
+ * // *** Methods Wizard Particle Mask *** //
+ * function compositeParticle(elm)
+ * 	->	Function to select a particle from a set and be loaded using the 
+ * 		library Raphael.js. Method specific for particles.
+ * 
+ * // *** Methods Wizard Volume Mask *** //
+ * function compositeVol(elm)
+ * 	->	Function to select an image from a list and be loaded using the library
+ * 		Raphael.js. Method specific for volumes.
+ * 
+ * // *** Methods Wizard Bandpass filter *** //
+ * function compositeBandpass(elm, low, high, decay)
+ * 	->	Function composite structured in two steps:
+ * 			1. Select a particle from a list.
+ * 			2. Apply a bandpass filter to the image based in three parameters and
+ * 			show the preview.
+ * 
+ * function previewBandpassFilter(low, high, decay)
+ * 	->	This function get a image using a bandpass filter based in the three 
+ * 		parameters: low frequency, high frequency and decay.
+ * 
+ * // *** Methods Wizard Gaussian filter *** //
+ * function compositeGaussian(elm)
+ * 	->	Function composite structured in two steps:
+ * 			1. Select a particle from a list.
+ * 			2. Apply a gaussian filter to the image based in the sigma parameter.
+ * 
+ * function previewSigma()
+ * 	->	This function get a image using a gaussian filter based in the sigma
+ * 		parameter.
+ * 
+ * // *** Methods Wizard Spider Particle filter *** //
+ * function compositeSpiderFilter(elm, filterType, filterMode, usePadding)
+ * 	->	Function composite structured in two steps:
+ * 			1. Select a particle from a list.
+ * 			2. Apply a spider filter to the image based.
+ * 
+ * function previewSpiderFilter(filterType, filterMode, usePadding)
+ * 	->	This function get a image using a spider filter with some parameters.
+ * 
+ ******************************************************************************/
+
+/** METHODS ******************************************************************/
 
 // *** Common Methods *** //
-
 function selectList(elm, mode) {
+	/*
+	 * Function to select an image from a list and be loaded with a 
+	 * specific mode (Normal or using the library Raphael.js) 
+	 */
 	var row = $("table#list");
 	var oldValue = elm.attr('id');
 
@@ -82,6 +169,10 @@ function selectList(elm, mode) {
 }
 
 function selectParticle(elm, mode) {
+	/*
+	 * Function to select a particle from a set and be loaded with a 
+	 * specific mode (Normal or using the library Raphael.js)
+	 */
 	var row = $("table#list");
 	var oldValue = elm.attr('id');
 
@@ -115,6 +206,9 @@ function selectParticle(elm, mode) {
 }
 
 function putImage(url, canvas, width, height) {
+	/*
+	 * Overwrite a canvas space with a new image using the library Raphael.js 
+	 */
 	$("div#" + canvas).empty();
 	var paper = Raphael(document.getElementById(canvas));
 	var img = paper.image(url, 0, 0, width, height);
@@ -128,17 +222,11 @@ function putCircle(radio, canvas, color) {
 	circle.attr("opacity", 0.3);
 }
 
-// *** Methods Wizard Downsampling *** //
-
-function compositeDownSampling(elm) {
-	$.when(selectList(elm,"normal")).then(previewPsd());
-}
-
-function previewPsd() {
-	var img = $("img#psd");
-
-	img.hide();
-
+function previewPsd(){
+	/*
+	 * This function obtain an PSD image from another image. The downsampling
+	 * factor is used here to compute the new image.
+	 */
 	// check downsampling is a number
 	var downsampling = $("input#downsampling").val();
 	if (downsampling == undefined) {
@@ -148,70 +236,85 @@ function previewPsd() {
 	// get the img path
 	var path_img = $("tr#" + $("table#list").attr("value")).attr("value");
 
-	var load = $("img#loadingPsd");
-
 	// set loading img
+	var load = $("img#loadingPsd");
 	load.show();
 
 	// load and set the image
 	var uri = "/get_image_psd/?image=" + path_img + "&downsample="
 			+ downsampling + "&dim=250";
+	
+	return uri, load
+}
 
-	img.load(img.attr("src", uri), function() {
-		// hide the load img
-		load.hide();
-		// show the new micrograph
-		img.show();
-	});
+// *** Methods Wizard Downsampling *** //
+function previewDownSampling(elm) {
+	/*
+	 * Function composite structured in two steps:
+	 *	1. Select an image from a list.
+	 * 	2. To obtain the downsampled image from the image selected.
+	 */
+	$.when(selectList(elm,"normal")).then(
+		function(){
+			var img = $("img#psd");
+			img.hide();
+			var uri, load = previewPsd()
+			img.load(img.attr("src", uri), function() {
+				// hide the load img
+				load.hide();
+				// show the new micrograph
+				img.show();
+			});
+		}
+	);
 }
 
 // *** Methods Wizard CTF *** //
-
-function compositeCTF(elm) {
-	$.when(selectList(elm,"normal")).then(previewPsdFreq());
-}
-
-function previewPsdFreq() {
-	// check downsampling is a number
-	var downsampling = $("input#downsampling").val();
-	if (downsampling == undefined) {
-		downsampling = 1.0;
-	}
-
-	// get the img path
-	var path_img = $("tr#" + $("table#list").attr("value")).attr("value");
-
-	var load = $("img#loadingPsd");
-
-	// set loading img
-	load.show();
-
-	// load and set the image
-	var uri = "/get_image_psd/?image=" + path_img + "&downsample="
-			+ downsampling + "&dim=250";
-
-	// show the new micrograph
-	load.load(putImage(uri, "psd_freq", 250, 250), function() {
-		// hide the load img
-		load.hide();
-	});
+function previewCTF(elm) {
+	/*
+	 * Function composite structured in two steps:
+	 * 	1. Select an image from a list.
+	 * 	2. To obtain a preview image using the method previewPSD() to 
+	 * 	visualize the CTF.
+	 */
+	$.when(selectList(elm,"normal")).then(
+		function(){
+			var uri, load = previewPsd()
+			// show the new micrograph
+			load.load(putImage(uri, "psd_freq", 250, 250), function() {
+				// hide the load img
+				load.hide();
+			});
+		}
+	);
 }
 
 // *** Methods Wizard Particle Mask *** //
-
 function compositeParticle(elm){
+	/*
+	 * Function to select a particle from a set and be loaded using the 
+	 * library Raphael.js. Method specific for particles.
+	 */
 	selectParticle(elm,"raphael");
 }
 
 // *** Methods Wizard Volume Mask *** //
-
 function compositeVol(elm){
+	/*
+	 * Function to select an image from a list and be loaded using the library
+	 * Raphael.js. Method specific for volumes.
+	 */
 	selectList(elm,"raphael");
 }
 
 // *** Methods Wizard Bandpass filter *** //
-
 function compositeBandpass(elm, low, high, decay) {
+	/*
+	 * Function composite structured in two steps:
+	 * 	1. Select a particle from a list.
+	 * 	2. Apply a bandpass filter to the image based in three parameters and
+	 * 	show the preview.
+	 */
 	$.when(selectParticle(elm, "normal")).then(previewBandpassFilter(low, high, decay));
 }
 
@@ -229,10 +332,19 @@ function previewBandpassFilter(low, high, decay) {
 // *** Methods Wizard Gaussian filter *** //
 
 function compositeGaussian(elm) {
+	/*
+	 * Function composite structured in two steps:
+	 * 	1. Select a particle from a list.
+	 * 	2. Apply a gaussian filter to the image based in the sigma parameter.
+	 */
 	$.when(selectParticle(elm,"normal").then(previewSigma()));
 }
 
 function previewSigma() {
+	/*
+	 * This function get a image using a gaussian filter based in the sigma
+	 * parameter.
+	 */
 	// check values
 	var sigma = $("#sigma").val();
 
@@ -246,13 +358,21 @@ function previewSigma() {
 }
 
 // *** Methods Wizard Spider Particle filter *** //
-
 function compositeSpiderFilter(elm, filterType, filterMode, usePadding){
+	/*
+	 * Function composite structured in two steps:
+	 * 	1. Select a particle from a list.
+	 * 	2. Apply a spider filter to the image based.
+	 * 
+	 */
 	selectParticle(elm,"raphael");
 	previewSpiderFilter(filterType, filterMode, usePadding);
 }
 
 function previewSpiderFilter(filterType, filterMode, usePadding) {
+	/*
+	 * This function get a image using a spider filter with some parameters.
+	 */
 	// get the img path
 	var path_img = $("tr#" + $("table#list").attr("value")).attr("value");
 
