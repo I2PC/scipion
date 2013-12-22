@@ -1,10 +1,10 @@
-#   Ignacio Foche and Jesus Cuenca
+#   I. Foche & J. Cuenca
 #   PDB downloading added by R. Marabini 
 #   using code from Michael J. Harms (pdb_download.py)
 
 from pyworkflow.em import *
 from os.path import isfile
-import os, sys, ftplib, shutil, gzip
+import os, ftplib, gzip
 
 class XmippProtConvertPdb(ProtInitialVolume):
     """ Covert a PDB file to a volume.  """
