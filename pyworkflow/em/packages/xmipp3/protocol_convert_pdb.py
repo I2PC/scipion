@@ -14,14 +14,15 @@ class XmippProtConvertPdb(ProtInitialVolume):
     _output_file = ''
     PDB_ID=1
 
-    HOSTNAME="ftp.wwpdb.org"
-    DIRECTORY="/pub/pdb/data/structures/all/pdb/"
-    PREFIX="pdb"
-    SUFFIX=".ent.gz"
+    HOSTNAME  = "ftp.wwpdb.org"
+    DIRECTORY = "/pub/pdb/data/structures/all/pdb/"
+    PREFIX    = "pdb"
+    SUFFIX    = ".ent.gz"
     #TODO unzip may go to utilities
     def unZip(self, some_file,some_output):
         """
         Unzip some_file using the gzip library and write to some_output.
+        CAUTION: deletes some_file.
         """
 
         f = gzip.open(some_file,'r')
@@ -44,12 +45,12 @@ class XmippProtConvertPdb(ProtInitialVolume):
         ftp.connect(self.HOSTNAME)
         ftp.login()
 
-        # Download all files in file_list
+        # Download  file
         _fileIn  = "%s/%s%s%s" % (self.DIRECTORY,self.PREFIX,pdbId,self.SUFFIX) 
-        _fileOut = fileOut[:fileOut.index(".pdb")]
+        _fileOut = fileOut+".gz"
         try:
             ftp.retrbinary("RETR %s" % _fileIn,open(_fileOut,"wb").write)
-            final_name = "%s.pdb" % fileOut[:fileOut.index(".")]
+            print "Unzip file %s"%_fileOut
             self.unZip(_fileOut,fileOut) 
             print "%s retrieved successfully." % fileOut
         except ftplib.error_perm:
