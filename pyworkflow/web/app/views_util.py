@@ -418,8 +418,16 @@ def parseText(text, func=replacePattern):
     Params:
         text: can be string or list, if it is a list, a <br> tag will be generated.
     """
+    parsedText = ""
     if isinstance(text, list):
-        text = '<br>'.join(text)
-    parsedText = parseHyperText(text, func)
+        for itemText in text:
+            splitLines=itemText.splitlines(True)
+            if len(splitLines) == 0:
+                parsedText += '<br>'
+            else:    
+                for lineText in splitLines:
+                    parsedText += parseHyperText(lineText, func)+'<br>'
+    else:
+        parsedText = parseHyperText(text, func)
     
     return parsedText    

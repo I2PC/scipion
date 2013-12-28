@@ -1,4 +1,10 @@
+#   I. Foche & J. Cuenca
+#   PDB downloading added by R. Marabini 
+#   using code from Michael J. Harms (pdb_download.py)
+
 from pyworkflow.em import *
+from os.path import isfile
+import os, ftplib, gzip
 
 class XmippProtConvertPdb(ProtInitialVolume):
     """ Covert a PDB file to a volume.  """
@@ -7,6 +13,59 @@ class XmippProtConvertPdb(ProtInitialVolume):
     _sampling_rate = 0.0
     _output_file = ''
     PDB_ID=1
+
+    HOSTNAME  = "ftp.wwpdb.org"
+    DIRECTORY = "/pub/pdb/data/structures/all/pdb/"
+    PREFIX    = "pdb"
+    SUFFIX    = ".ent.gz"
+    #TODO unzip may go to utilities
+    def unZip(self, some_file,some_output):
+        """
+        Unzip some_file using the gzip library and write to some_output.
+        CAUTION: deletes some_file.
+        """
+
+        f = gzip.open(some_file,'r')
+        g = open(some_output,'w')
+        g.writelines(f.readlines())
+        f.close()
+        g.close()
+
+        os.remove(some_file)
+
+    def pdbDownload(self, pdbId, fileOut):
+        """
+        Download all pdb files in file_list and unzip them.
+        """
+        success = True
+
+        # Log into server
+        print "Connecting..."
+        ftp = ftplib.FTP()
+        ftp.connect(self.HOSTNAME)
+        ftp.login()
+
+        # Download  file
+        _fileIn  = "%s/%s%s%s" % (self.DIRECTORY,self.PREFIX,pdbId,self.SUFFIX) 
+        _fileOut = fileOut+".gz"
+        try:
+            ftp.retrbinary("RETR %s" % _fileIn,open(_fileOut,"wb").write)
+            print "Unzip file %s"%_fileOut
+            self.unZip(_fileOut,fileOut) 
+            print "%s retrieved successfully." % fileOut
+        except ftplib.error_perm:
+            os.remove(_fileOut)
+            print "ERROR!  %s could not be retrieved!" % _fileIn
+            success = False
+
+        # Log out
+        ftp.quit()
+
+        if success:
+            return True
+        else: 
+            return False
+
 
     def _defineParams(self, form):
         """ Define the parameters that will be input for the Protocol.
@@ -26,9 +85,9 @@ class XmippProtConvertPdb(ProtInitialVolume):
         """ In this function the steps that are going to be executed should
         be defined. Two of the most used functions are: _insertFunctionStep or _insertRunJobStep
         """
-        self._pdb_file = self.pdb_file.get()
+        self._pdb_file      = self.pdb_file.get()
         self._sampling_rate = self.sampling.get()
-        self._inputPdbData = self.inputPdbData.get()
+        self._inputPdbData  = self.inputPdbData.get()
         self._insertFunctionStep('convertPdb')
         self._insertFunctionStep('createOutput')
 
@@ -40,13 +99,13 @@ class XmippProtConvertPdb(ProtInitialVolume):
         from tempfile import NamedTemporaryFile
 
         if self._inputPdbData == self.PDB_ID:
-		import urllib
-		src = "http://www.rcsb.org/pdb/downloadFile.do?fileFormat=pdb&compression=NO&structureId=%s"
-		_inFile=self._getTmpPath('%s.pdb'%self._pdb_file)
-		urllib.urlretrieve(src % self._pdb_file,_inFile)
-		_outFile= self._getPath('%s' % self._pdb_file)
+		_inFile  = self._getTmpPath('%s.pdb'%self._pdb_file)
+		_outFile = self._getPath('%s' % self._pdb_file)
+		if not self.pdbDownload(self._pdb_file,_inFile):
+                      return -1
+
 	else:
-		_inFile = self._pdb_file
+		_inFile  = self._pdb_file
 		_outFile = self._getPath(_inFile.rsplit( ".", 1 )[ 0 ])
 
         program = "xmipp_volume_from_pdb"
@@ -89,7 +148,11 @@ class XmippProtConvertPdb(ProtInitialVolume):
         is launched to be executed. It should return a list of errors. If the list is
         empty the protocol can be executed.
         """
-        errors = [ ] 
+        errors = []
+        if not (self.inputPdbData.get() == self.PDB_ID):
+            if not isfile(self.pdb_file.get()):
+	        errors=["File %s does not exists"% self.pdb_file.get()]
+
         # Add some errors if input is not valid
         return errors
     
