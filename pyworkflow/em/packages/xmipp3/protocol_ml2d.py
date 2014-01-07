@@ -31,7 +31,7 @@ This sub-package contains wrapper around ML2D Xmipp program
 from pyworkflow.em import *  
 from pyworkflow.utils import *  
 import xmipp
-from convert import createXmippInputImages, readSetOfClasses2D
+from convert import createXmippInputImages, readSetOfClasses2D, readSetOfParticles
 
 #from xmipp3 import XmippProtocol
         
@@ -194,12 +194,13 @@ class XmippProtML2D(ProtClassify):
         self._insertFunctionStep('createOutput')
         
     def createOutput(self):
+        
         classes2DSet = self._createSetOfClasses2D()
         classes2DSet.setImages(self.inputParticles.get())
-        readSetOfClasses2D(classes2DSet, self.oroot + 'classes.xmd')
+        readSetOfClasses2D(self, classes2DSet, self.oroot + 'classes.xmd')
         classes2DSet.write()
         self._defineOutputs(outputClasses=classes2DSet)
-
+    
     def _summary(self):
         summary = []
         if not hasattr(self, 'outputClasses'):

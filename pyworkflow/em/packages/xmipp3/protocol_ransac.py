@@ -48,7 +48,7 @@ class XmippProtRansac(ProtInitialVolume):
     def _defineParams(self, form):
         form.addSection(label='Input')
         form.addParam('inputClasses', PointerParam, label="Input classes", important=True, 
-                      pointerClass='SetOfClasses2D',
+                      pointerClass='SetOfClasses2D', pointerCondition='hasAverages',
                       help='Select the input classes from the project.'
                            'It should be a SetOfClasses2D class')        
         form.addParam('symmetryGroup', StringParam, default="c1",

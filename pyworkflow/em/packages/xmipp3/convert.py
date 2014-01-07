@@ -216,7 +216,7 @@ def rowToImageClassAssignment(md, objId):
                }
     
     imageCA = ImageClassAssignment()
-    rowToObject(md, objId, imageCA, imgCADict) 
+    rowToObject(md, objId, imageCA, imgCADict)
     return imageCA
     
 def class2DToRow(class2D, classRow):
@@ -536,7 +536,7 @@ def writeSetOfClasses2D(classes2DSet, filename, ctfDir=None, classesBlock='class
     classes2DSet._xmippMd = String(filename)
 
 
-def readSetOfClasses2D(classes2DSet, filename, classesBlock='classes', **args):
+def readSetOfClasses2D(self, classes2DSet, filename, classesBlock='classes', **args):
     """read from Xmipp image metadata.
         fnImages: The metadata filename where the particles properties are.
         imgSet: the SetOfParticles that will be populated.
@@ -547,7 +547,7 @@ def readSetOfClasses2D(classes2DSet, filename, classesBlock='classes', **args):
     
     samplingRate = classes2DSet.getImages().getSamplingRate()
     
-    for objId in classesMd:           
+    for objId in classesMd:
         class2D = rowToClass2D(classesMd, objId, samplingRate)
         ref = classesMd.getValue(xmipp.MDL_REF, objId)
         b = 'class%06d_images' % ref
@@ -559,8 +559,23 @@ def readSetOfClasses2D(classes2DSet, filename, classesBlock='classes', **args):
                 imgCA = ImageClassAssignment()
                 imgCA = rowToImageClassAssignment(imgAssignmentMd, objCAId)
                 class2D.addImageClassAssignment(imgCA)
+                
         classes2DSet.append(class2D)
+    
+    if classesMd.containsLabel(xmipp.MDL_IMAGE):
+        averages = self._createSetOfParticles()
         
+        for objId in classesMd:
+            index, filename = xmippToLocation(classesMd.getValue(xmipp.MDL_IMAGE, objId))
+            avg = Particle()
+            avg.setLocation(index, filename)
+            avg.setSamplingRate(samplingRate)
+            averages.append(avg)
+            
+        averages.copyInfo(classes2DSet.getImages())
+        classes2DSet.setAverages(averages)
+        averages.write()
+    
     classes2DSet._xmippMd = String(filename)
          
 
