@@ -6,7 +6,7 @@
 from glob import glob
 from protlib_base import *
 from xmipp import MetaData, MDL_MICROGRAPH, MDL_MICROGRAPH_TILTED, MDL_SAMPLINGRATE, MDL_CTF_VOLTAGE, \
-    MDL_CTF_CS, MDL_CTF_SAMPLING_RATE, MDL_MAGNIFICATION, checkImageFileSize, checkImageCorners, MD_APPEND
+    MDL_CTF_CS, MDL_CTF_SAMPLING_RATE, MDL_MAGNIFICATION, MDL_ENABLED, checkImageFileSize, checkImageCorners, MD_APPEND
 from protlib_filesystem import replaceBasenameExt, renameFile
 from protlib_utils import runJob
 from protlib_xmipp import redStr, RowMetaData
@@ -239,9 +239,15 @@ def checkBorders(log,MicrographFn,WarningFn):
     md.read("micrographs@"+MicrographFn)
     
     mdOut = MetaData()
+    warnings=0
     for objId in md:
         micrograph=md.getValue(MDL_MICROGRAPH,objId)
+        idOut=mdOut.addObject()
+        mdOut.setValue(MDL_MICROGRAPH,micrograph,idOut)
         if not checkImageCorners(micrograph):
-            mdOut.setValue(MDL_MICROGRAPH,micrograph, mdOut.addObject())
-    if mdOut.size() > 0:
+            mdOut.setValue(MDL_ENABLED,-1,idOut)
+            warnings+=1
+        else:
+            mdOut.setValue(MDL_ENABLED, 1,idOut)
+    if warnings > 0:
         mdOut.write(WarningFn)

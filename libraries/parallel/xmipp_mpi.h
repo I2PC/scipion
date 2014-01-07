@@ -32,9 +32,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <iostream>
-#include <data/xmipp_threads.h>
-#include <data/xmipp_program.h>
+
+#include "data/xmipp_threads.h"
+#include "data/xmipp_program.h"
+
 #define XMIPP_MPI_SIZE_T MPI_UNSIGNED_LONG
+
 /** @defgroup MPI MPI
  *  @ingroup ParallelLibrary
  * @{
@@ -75,6 +78,9 @@ protected:
 #define TAG_STOP   1
 #define TAG_WAIT   2
 
+#define TAG_WORK_REQUEST 100
+#define TAG_WORK_RESPONSE 101
+
 /** This class is another implementation of ParallelTaskDistributor with MPI workers.
  * It extends from ThreadTaskDistributor and adds the MPI call
  * for making the distribution and extra locking mechanisms among
@@ -84,20 +90,24 @@ class MpiTaskDistributor: public ThreadTaskDistributor
 {
 protected:
     MpiNode * node;
-    ThreadManager * manager;
 
     virtual bool distribute(size_t &first, size_t &last);
 
 public:
     MpiTaskDistributor(size_t nTasks, size_t bSize, MpiNode *node);
-    virtual ~MpiTaskDistributor();
-
-    friend void __threadMpiMasterDistributor(ThreadArgument &arg);
-    void reset();
     /** All nodes wait until distribution is done.
      * In particular, the master node should wait for the distribution thread.
      */
     void wait();
+
+private:
+    /** Method that should be called in the master only.
+     * It will listen for job requests from nodes, assign tasks and
+     * sent the response back
+     */
+    bool distributeMaster();
+    /** Workers should ask for jobs from master. */
+    bool distributeSlaves(size_t &first, size_t &last);
 }
 ;//end of class MpiTaskDistributor
 
@@ -181,7 +191,6 @@ protected:
     int blockSize;
     MpiTaskDistributor *distributor;
     std::vector<size_t> imgsId;
-    MpiFileMutex *fileMutex;
     size_t first, last;
 
 public:
@@ -260,24 +269,9 @@ public:\
         if (node->isMaster())\
             baseClassName::finishProcessing();\
     }\
-    int tryRun()\
+    void wait()\
     {\
-        try\
-        {\
-            if (doRun)\
-            {\
-                run1();\
-                distributor->wait();\
-                run2();\
-            }\
-        }\
-        catch (XmippError &xe)\
-        {\
-            std::cerr << xe;\
-            errorCode = xe.__errno;\
-            MPI::COMM_WORLD.Abort(xe.__errno);\
-        }\
-        return errorCode;\
+		distributor->wait();\
     }\
 };\
 

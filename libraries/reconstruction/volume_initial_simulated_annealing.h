@@ -82,6 +82,9 @@ public:
     /** Keep intermediate volumes */
     bool keepIntermediateVolumes;
 
+    /** Angular sampling */
+    double angularSampling;
+
 public: // Internal members
     MetaData mdIn, mdReconstruction;
 

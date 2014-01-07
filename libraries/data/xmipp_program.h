@@ -415,8 +415,10 @@ public:
     /// Prepare rowout
     void setupRowOut(const FileName &fnImgIn, const MDRow &rowIn, const FileName &fnImgOut, MDRow &rowOut) const;
 
-    void run1();
-    void run2();
+    /// Wait for the distributor to finish
+    virtual void wait();
+
+    /// Run over all images
     virtual void run();
 }
 ;// end of class XmippMetadataProgram

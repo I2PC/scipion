@@ -106,6 +106,8 @@ class ProtScreenMicrographs(XmippProtocol):
                            NumberOfMpi=self.NumberOfMpi)
         if self.AutomaticRejection!="":
             self.insertStep("automaticRejection",WorkingDir=self.WorkingDir,condition=self.AutomaticRejection)
+        if self.TiltPairs:
+            self.insertStep("copyTiltPairs",WorkingDir=self.WorkingDir,inputMicrographs=self.MicrographsMd)
     
     def createFilenameTemplates(self):
         return _templateDict
@@ -300,7 +302,7 @@ def gatherResults(log,TmpDir,WorkingDir,summaryFile, importMicrographs,Downsampl
     runJob(log,"mv","-f %s/aux_%s %s"%(dirSummary,fnSummary,summaryFile))
     runJob(log,"touch",summaryFile)
     if Downsampling!=1:
-        runJob(log,"rm","-f "+TmpDir+"/*")
+        runJob(log,"find",TmpDir+" -type f -exec rm {} \;")
 
 def buildSummaryMetadata(WorkingDir,importMicrographs,summaryFile):
     md = xmipp.MetaData()
@@ -343,3 +345,8 @@ def automaticRejection(log,WorkingDir,condition):
             md.setValue(xmipp.MDL_ENABLED,-1,id)
     md.write(fnMic)
     deleteFile(log,fnRejected)
+
+def copyTiltPairs(log,WorkingDir,inputMicrographs):
+    md=xmipp.MetaData(inputMicrographs)
+    md.write("micrographPairs@"+os.path.join(WorkingDir,"micrographs.xmd"),xmipp.MD_APPEND)
+
