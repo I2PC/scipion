@@ -31,6 +31,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Date;
 
+import xmipp.ij.commons.XmippApplication;
 import xmipp.jni.Filename;
 import xmipp.jni.ImageGeneric;
 import xmipp.jni.MDLabel;
@@ -395,6 +396,10 @@ public class GalleryData {
 		readMd();
 	}
 
+	/**
+	 * defines how each row is rendered on ImageGalleryTableModel
+	 * @return
+	 */
 	public ImageGalleryTableModel createModel() {
 		try {
 			switch (mode) {

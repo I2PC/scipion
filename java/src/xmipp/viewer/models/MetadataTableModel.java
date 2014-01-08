@@ -71,7 +71,7 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 		if (ci.render)
 			return ImageItem.class;
 		else if (ci.getLabel() == MDLabel.MDL_ENABLED)
-			return Boolean.class;
+			return Boolean.class;//This way a JCheckBox is rendered
 		try {
 			return MetaData.getLabelClass(ci.getLabel());
 		} catch (Exception e) {
@@ -93,6 +93,9 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 		return coords;
 	}
 
+	/**
+	 * Returns metadata value with java type
+	 */
 	@Override
 	public Object getValueAt(int row, int column) {
 		// DEBUG.printMessage(String.format("MetadataTable.getValueAt(%d, %d)",

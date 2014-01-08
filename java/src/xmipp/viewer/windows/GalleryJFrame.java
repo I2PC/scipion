@@ -554,6 +554,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			@Override
 			public void keyPressed(KeyEvent arg0)
 			{
+				
 				int vdir = 0, hdir = 0;
 
 				switch (arg0.getKeyCode())
@@ -576,8 +577,9 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 				}
 				if (vdir != 0 || hdir != 0)
 				{
+					
 					int newRow = table.getSelectedRow() + vdir;
-					int col = table.getSelectedColumn() + hdir;
+					int col = (table.getSelectedColumn() == -1)? 0 : table.getSelectedColumn() + hdir;//col is -1 in metadata mode
 					//System.err.format("newRow: %d, col: %d\n", newRow, col);
 					selectItem(newRow, col);
 
@@ -1354,7 +1356,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 
 	public void selectItem(int row, int col)
 	{
-		if (row < 0 || row > table.getRowCount() - 1 || col < 0 || col > table.getColumnCount() - 1)
+		if (row < 0 || row > table.getRowCount() - 1 || col < 0 || col > table.getColumnCount())
 			return;
 		
 		if (gallery.data.isGalleryMode() && 
