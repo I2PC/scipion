@@ -882,22 +882,30 @@ void CL2D::lookNode(MultidimArray<double> &I, int oldnode, int &newnode,
         bool proceed = false;
         if (oldnode >= 0)
         {
-            int imax = P[oldnode]->neighboursIdx.size();
-            for (int i = 0; i < imax; i++)
-            {
-                if (P[oldnode]->neighboursIdx[i] == q)
-                {
-                    proceed = true;
-                    break;
-                }
-            }
-            if (!proceed)
-            {
-                double threshold = 3.0 * P[oldnode]->currentListImg.size();
-                threshold = XMIPP_MAX(threshold,1000);
-                threshold = (double) (XMIPP_MIN(threshold,Nimgs)) / Nimgs;
-                proceed = (rnd_unif(0, 1) < threshold);
-            }
+        	if (oldnode<P.size())
+        	{
+				int imax = P[oldnode]->neighboursIdx.size();
+				for (int i = 0; i < imax; i++)
+				{
+					if (P[oldnode]->neighboursIdx[i] == q)
+					{
+						proceed = true;
+						break;
+					}
+				}
+				if (!proceed)
+				{
+					double threshold = 3.0 * P[oldnode]->currentListImg.size();
+					threshold = XMIPP_MAX(threshold,1000);
+					threshold = (double) (XMIPP_MIN(threshold,Nimgs)) / Nimgs;
+					proceed = (rnd_unif(0, 1) < threshold);
+				}
+        	}
+        	else
+        	{
+        		// In some strange conditions we may loose the reference to its neighbours
+        		proceed = true;
+        	}
         }
         else
             proceed = true;
