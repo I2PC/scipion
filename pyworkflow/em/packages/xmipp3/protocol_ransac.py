@@ -94,12 +94,6 @@ class XmippProtRansac(ProtInitialVolume):
                       label='Max frequency of the initial volume',
                       help=' Max frequency of the initial volume in Angstroms')
         
-        form.addParam('ts', FloatParam, default=1,
-                      label='Sampling rate',
-                      help='Sampling rate in (A/px).')
-        
-        
-                
         form.addParam('useSA', BooleanParam, default=False,
                       label='Combine simulated annealing and RANSAC', 
                       help='This option produces better results at a higher computational cost')
@@ -183,15 +177,14 @@ class XmippProtRansac(ProtInitialVolume):
         self._insertFunctionStep('createOutput')
         
     def initialize(self):
-#        self.Xdim=self.inputClasses.get().getDimensions()[0]
-        self.Xdim=64
+        self.Xdim=self.inputClasses.get().getDimensions()[0]
         
         fnOutputReducedClass = self._getExtraPath("reducedClasses.xmd")
         fnOutputReducedClassNoExt = os.path.splitext(fnOutputReducedClass)[0]
     
         # Low pass filter and resize        
         maxFreq = self.maxFreq.get()
-        ts = self.ts.get()
+        ts = self.inputClasses.get().getAverages().getSamplingRate()
         K = 0.25*(maxFreq/ts)
         if K<1:
             K=1
@@ -417,10 +410,8 @@ class XmippProtRansac(ProtInitialVolume):
     def createOutput(self):
         fn = self._getPath('proposedVolumes.xmd')
         volumesSet = self._createSetOfVolumes()
-        volumesSet._xmippMd = String(fn)
-        #TODO WHEN HASAVERAGE IS FIXED
-        #volumesSet.setSamplingRate(self.inputClasses.get().getAverage().getSamplingRate())
         readSetOfVolumes(fn, volumesSet)
+        volumesSet.setSamplingRate(self.inputClasses.get().getAverages().getSamplingRate())
         volumesSet.write()
         
         self._defineOutputs(outputVolumes=volumesSet)

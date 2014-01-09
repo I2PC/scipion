@@ -394,8 +394,9 @@ class SetOfImages(Set):
     
     def writeStack(self, fnStack):
         # TODO creaty empty file to improve efficiency
+        ih = ImageHandler()
         for i, img in enumerate(self):
-            ImageHandler().convert(img.getLocation(), (i, fnStack))
+            ih.convert(img.getLocation(), (i, fnStack))
     
 # TODO: Create this general purpose function. See example in protocol_apply_mask
 #    def readFromStack(self, fnStack):

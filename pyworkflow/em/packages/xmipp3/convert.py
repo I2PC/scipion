@@ -151,7 +151,7 @@ def volumeToRow(vol, volRow, ctfFn):
     imageToRow(vol, volRow, ctfFn=None, imgLabel=xmipp.MDL_IMAGE)
     
 def rowToVolume(md, objId, hasCtf):
-    """ Create a Micrograph object from a row of Xmipp metadata. """
+    """ Create a Volume object from a row of Xmipp metadata. """
     return rowToImage(md, objId, xmipp.MDL_IMAGE, Volume, False)
 
 def coordinateToRow(coord, coordRow):
