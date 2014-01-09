@@ -39,9 +39,9 @@ from pyworkflow.utils import *
 
 
 iconDict = {
-            'logo_scipion': 'scipion_logo.gif',
+            'logo_scipion': 'scipion_logo_small.gif',
             'logo_scipion_transparent': 'scipion_logo_transparent.png',
-            'favicon': 'scipion_bn.png',
+            'favicon': 'favicon.png',
             'help': 'system_help24.png',
             'browse': 'zoom.png',
             'wizard': 'tools_wizard.png',
