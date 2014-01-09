@@ -470,17 +470,30 @@ class Protocol(Step):
             step.threads = args.get('numberOfThreads', self.numberOfThreads.get())
             
         return self.__insertStep(step, **args)
+
+    def _enterDir(self, path):
+        """ Enter into a new directory path and store the current path.
+        The current path will be used in _leaveDir, but nested _enterDir
+        are not allowed since self._currentDir is overriden.
+        """
+        self._currentDir = os.getcwd()
+        os.chdir(path)
         
+    def _leaveDir(self): 
+        """ This method should be called after a call to _enterDir
+        to return to the previous location. 
+        """
+        os.chdir(self._currentDir)        
+                      
     def _enterWorkingDir(self):
         """ Change to the protocol working dir. """
-        self._currentDir = os.getcwd()
-        os.chdir(self.workingDir.get())
+        self._enterDir(self.workingDir.get())
         
     def _leaveWorkingDir(self):
         """ This funcion make sense to use in conjunction 
         with _enterWorkingDir to go back to execution path.
         """
-        os.chdir(self._currentDir)
+        self._leaveDir()
         
     def __backupSteps(self):
         """ Store the Steps list in another variable to prevent

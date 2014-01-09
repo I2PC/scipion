@@ -2,18 +2,14 @@
 
 /* GENERAL */
 html,body {
-	background-color: #F0F0F0;
+	background-color: #eaebec;
 }
 
 body {
-	/* border: 1px solid black;*/
-/* 	font-family: "Trebuchet MS", "Helvetica", "Arial", "Verdana",
-		"sans-serif"; */
-	/* font-size: 0.84em; */
 	padding: 10px 15px;
 }
 input {
-	background: LightGray;
+	background: #F2F2F2;
 }
 input.hide2 {
 	position: relative;
@@ -35,7 +31,7 @@ input.hide {
 textarea {
 	padding: 4px;
 	resize: vertical;
-	background: LightGray;
+	background: #F2F2F2;
 	max-height: 30em;
 	width: 26em;
 	height: 20em;
@@ -58,9 +54,7 @@ textarea {
 	width: 45%;
 	background-color: white;
 	border-radius: 4px;
-	/* border: 1px solid #aaaaaa; */
 	border: 0px;
-	/* font-size: 0.88em; */
 	margin-bottom: 0.5em;
 	padding: 0.5em;
 	display: inline-block;
@@ -80,7 +74,6 @@ textarea {
 
 .box {
 	background: white;
-	/* 	margin: 0.3em; */
 	width: auto;
 	max-height: 20em;
 	overflow-y: auto;
@@ -89,7 +82,8 @@ textarea {
 }
 
 .title{
-	background: DarkRed;
+	/* background: DarkRed; */
+	background: Firebrick;
 	color: white;
 	font-size: 0.9em;
 	font-weight: bold;
@@ -104,7 +98,7 @@ textarea {
 }
 
 .advance {
-	background-color: #eaebec;
+	background-color: #eaebff;
 }
 
 #inputName {
@@ -127,7 +121,6 @@ textarea {
 	margin-top: -1em;
 	text-decoration: none;
 	list-style: none;
-	/* 	background: LightGray; */
 	width: 9em;
 }
 
@@ -138,22 +131,18 @@ textarea {
 }
 
 .boxBottom {
-	/* 	background-color: rgb(235, 235, 235); */
 	margin: 1.5em 0px;
 	float: right;
 	
 }
-
+/* 
 .buttonClose {
 	background: url(../../../resources/dialog_close.png) 0.5em no-repeat;
 	background-size: 20%;
-	/* 	margin: 1em 0.5em 0 0; */
-	/* 	font-size: 0.8em; */
 	color: black;
 	width: 6.3em;
 	height: 2em;
 	background-color: LightGray;
-	/* 	border: 1px solid #000066; */
 	padding: 1px;
 	padding-left: 1.7em;
 	font-weight: bold;
@@ -169,13 +158,10 @@ textarea {
 .buttonSave {
 	background: url(../../../resources/document_save24.png) 0.5em no-repeat;
 	background-size: 20%;
-	/* 	margin: 1em 0.5em 0 0; */
-	/* 	font-size: 0.8em; */
 	color: black;
 	width: 6.3em;
 	height: 2em;
 	background-color: LightGray;
-	/* 	border: 1px solid #000066; */
 	padding: 1px;
 	padding-left: 2em;
 	font-weight: bold;
@@ -188,13 +174,10 @@ textarea {
 }
 
 .buttonExec {
-	/* 	font-size: 0.8em; */
 	color: white;
 	width: 8em;
 	height: 2em;
-	background-color: DarkRed;
-	/* 	border: 1px solid #000066; */
-	/* 	padding: 1px; */
+	background-color: Firebrick;
 	font-weight: bold;
 	letter-spacing: 0.2em;
 	text-align: center;
@@ -214,7 +197,6 @@ textarea {
 }
 
 .buttonWiz:hover {
-	/* background-color: FireBrick; */
 }
 
 .buttonViewer {
@@ -228,16 +210,13 @@ textarea {
 
 .buttonViewer:hover {
 	background-color: FireBrick;
-}
+} */
 
 /* TABLE */
 table.content {
 	width: 100%;
 	overflow-x: auto;
 	font-size: 0.9em;
-	/* 	text-shadow: 1px 1px 0px #fff; */
-	/* 	background: #eaebec; */
-	/* 	box-shadow: 0 1px 2px #d1d1d1; */
 }
 
 table.content tr {
@@ -247,14 +226,10 @@ table.content tr {
 table.content tr td {
 	padding: 0.4em;
 	padding-left: 0.5em;
-	/* 	border-top: 1px solid #ffffff; */
-	/* 	border-bottom: 1px solid #e0e0e0; */
-	/* 	border-left: 1px solid #e0e0e0; */
 }
 
 table.content tr:hover td {
 	background-color: #f2f2f2;
-	/* 	color: white; */
 }
 table.section {
 	border-collapse: collapse;

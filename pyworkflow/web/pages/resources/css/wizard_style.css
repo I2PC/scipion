@@ -1,6 +1,6 @@
 /* CSS Document */
 html,body {
-	background-color: #F0F0F0;
+	background-color: #eaebec;
 }
 
 body {
@@ -60,33 +60,13 @@ body {
 	clear: both;
 }
 
-/* #buttonGen {
-	background-size: 20%;
-	color: black;
-	height: 2em;
-	background-color: LightGray;
-	font-weight: bold;
-	letter-spacing: 0.2em;
-	text-align: center;
-	font-weight: bold;
-}
-
-#buttonGen:hover {
-	background-color: white;
-} */
-
-/* .buttonCancel {
-	background: url(../../../resources/dialog_cancel.png) 0.5em no-repeat;
-	padding-left: 1.8em;
-}
-
-.buttonSelect {
-	background: url(../../../resources/dialog_ok.png) 0.5em no-repeat;
-	padding-left: 1.7em;
-} */
 
 /**************** List CSS *******************/
-table#list a:link {
+table#data th {
+	background-color: Firebrick;
+	color: white;
+}
+/* table#list a:link {
 	font-weight: bold;
 }
 
@@ -105,23 +85,14 @@ table#list {
 
 table#list th {
 	height: 0.2em;
-	/* 	border-top: 1px solid #fafafa; */
+		border-top: 1px solid #fafafa;
 	border-bottom: 1px solid #e0e0e0;
 	background-color: Firebrick;
 	color: white;
 }
 
 table#list th:first-child {
-/* 	background: DarkRed;
-	color: white;
-	border-left: 2.5px solid FireBrick;
-	border-top: 2.5px solid FireBrick;
-	font-size: 0.9em;
-	font-weight: bold;
-	text-align: center;
- */	
-	
-	background: DarkRed;
+	background: Firebrick;
 	color: white;
 	font-size: 0.9em;
 	font-weight: bold;
@@ -158,7 +129,7 @@ table#list tr:hover td {
 
 table#list tr.selected:hover td {
 	background-color: LightSteelBlue;
-}
+} */
 
 /**************** CTF CSS *******************/
 #slider {
@@ -178,7 +149,7 @@ table#list tr.selected:hover td {
 
 #sliderOptions {
 	width: 36em;
-	background: #fafafa;
+	background: #f2f2f2;
 /* 	float: right; */
 }
 
@@ -233,7 +204,7 @@ svg {
 
 #sliderOptionsLite {
 	width: 9em;
-	background: #fafafa;
+	background: #f2f2f2;
 }
 
 #sliderUni {

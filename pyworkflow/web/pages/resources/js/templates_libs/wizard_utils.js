@@ -114,7 +114,7 @@ function selectList(elm, mode) {
 	 * Function to select an image from a list and be loaded with a 
 	 * specific mode (Normal or using the library Raphael.js) 
 	 */
-	var row = $("table#list");
+	var row = $("table#data");
 	var oldValue = elm.attr('id');
 
 	var img = $("img#mic");
@@ -125,7 +125,7 @@ function selectList(elm, mode) {
 	if (row.attr('value') != undefined && row.attr('value') != oldValue) {
 		// unmark the last option
 		var rowOld = $("tr#" + row.attr('value'));
-		rowOld.attr('style', 'background-color: #fafafa;');
+		rowOld.attr('style', '');
 		rowOld.attr('class', 'no-selected');
 	}
 
@@ -135,7 +135,7 @@ function selectList(elm, mode) {
 
 	// mark the new option
 	row.attr('value', oldValue);
-	elm.attr('style', 'background-color: LightSteelBlue;');
+	elm.attr('style', 'background-color: #F3CBCB;');
 	elm.attr('class', 'selected');
 
 	// set loading img
@@ -173,19 +173,19 @@ function selectParticle(elm, mode) {
 	 * Function to select a particle from a set and be loaded with a 
 	 * specific mode (Normal or using the library Raphael.js)
 	 */
-	var row = $("table#list");
+	var row = $("table#data");
 	var oldValue = elm.attr('id');
 
 	if (row.attr('value') != undefined && row.attr('value') != oldValue) {
 		// unmark the last option
 		var rowOld = $("tr#" + row.attr('value'));
-		rowOld.attr('style', 'background-color: #fafafa;');
+		rowOld.attr('style', '');
 		rowOld.attr('class', 'no-selected');
 	}
 
 	// mark the new option
 	row.attr('value', oldValue);
-	elm.attr('style', 'background-color: LightSteelBlue;');
+	elm.attr('style', 'background-color: #F3CBCB;');
 	elm.attr('class', 'selected');
 
 	// get the img path
@@ -234,7 +234,7 @@ function previewPsd(){
 	}
 
 	// get the img path
-	var path_img = $("tr#" + $("table#list").attr("value")).attr("value");
+	var path_img = $("tr#" + $("table#data").attr("value")).attr("value");
 
 	// set loading img
 	var load = $("img#loadingPsd");
@@ -320,7 +320,7 @@ function compositeBandpass(elm, low, high, decay) {
 
 function previewBandpassFilter(low, high, decay) {
 	// get the img path
-	var path_img = $("tr#" + $("table#list").attr("value")).attr("value");
+	var path_img = $("tr#" + $("table#data").attr("value")).attr("value");
 
 	// load and set the image
 	var uri = "/get_image_bandpass/?image=" + path_img + "&lowFreq=" + low
@@ -349,7 +349,7 @@ function previewSigma() {
 	var sigma = $("#sigma").val();
 
 	// get the img path
-	var path_img = $("tr#" + $("table#list").attr("value")).attr("value");
+	var path_img = $("tr#" + $("table#data").attr("value")).attr("value");
 
 	// load and set the image
 	var uri = "/get_image_gaussian/?image=" + path_img + "&sigmaFreq=" + sigma + "&dim=250";
@@ -374,7 +374,7 @@ function previewSpiderFilter(filterType, filterMode, usePadding) {
 	 * This function get a image using a spider filter with some parameters.
 	 */
 	// get the img path
-	var path_img = $("tr#" + $("table#list").attr("value")).attr("value");
+	var path_img = $("tr#" + $("table#data").attr("value")).attr("value");
 
 	// load and set the image
 	var uri = "/get_image_filter_spider/?image=" + path_img + "&filterType=" + filterType + "&dim=250"+ "&filterMode="+filterMode+"&usePadding="+usePadding;

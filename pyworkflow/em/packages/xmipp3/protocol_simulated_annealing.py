@@ -136,7 +136,7 @@ in the next iteration""")
     def createOutput(self):
         # create an output SetOfVolumes
         volumes = self._createSetOfVolumes()
-        volumes.setSamplingRate(self.inputClasses.get().getImages().getSamplingRate())
+        volumes.setSamplingRate(self.inputClasses.get().getAverages().getSamplingRate())
         volumes._xmippMd = String(self._getExtraPath('output_volumes.xmd'))
         # rename the projection file to reconstruct the last Volume.
         moveFile(self._getExtraPath('output_volume.xmd'), self._getExtraPath('volume_projections.xmd'))

@@ -4,6 +4,6 @@
     <menu>menu_default.xml</menu>
     <protocols>protocols_default.xml</protocols>
     <icon>scipion_bn.xbm</icon>
-    <logo>scipion_logo.gif</logo>
+    <logo>scipion_logo_small.gif</logo>
   </ProjectConfig>
 </ALL>

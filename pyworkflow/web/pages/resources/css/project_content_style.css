@@ -111,7 +111,7 @@
 }
 
 .treeview a.selected {
-	background-color: #eee;
+	background-color: #eaebec;
 }
 
 .treeview .hover {
@@ -209,7 +209,7 @@
 }
 
 #listEx li a {
-	background-color: #fbfbfb;
+	background-color: #f2f2f2;
 	margin-left: 15px;
 }
 
