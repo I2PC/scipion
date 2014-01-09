@@ -43,14 +43,14 @@
 /* 	-moz-border-radius-bottomright: 0; */
 /* 	-moz-border-radius-bottomleft: 0; */
 /* 	-moz-border-radius-topleft: 5px; */
-	background: DarkRed;
 	color: white;
 /* 	border-left: 2.5px solid FireBrick; */
 /* 	border-top: 2.5px solid FireBrick; */
 	font-size: 0.9em;
 	font-weight: bold;
 	text-align: center;
-	background: DarkRed;
+	/* background: DarkRed; */
+	background: Firebrick;
 }
 
 .messi-titlebox.info {
@@ -167,9 +167,8 @@
 
 .messi-footbox {
 	width: auto;
-	/* 	height: 55px; */
 	overflow: hidden;
-	background: #F0F0F0;
+	background: #eaebec;
 }
 
 .messi-actions {

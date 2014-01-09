@@ -609,6 +609,6 @@ function selTableMessi(elm) {
 		rowOld.attr('style', '');
 	}
 	row.attr('value', id);
-	elm.attr('style', 'background-color: LightSteelBlue;');
+	elm.attr('style', 'background-color: #eaebff;');
 }
 

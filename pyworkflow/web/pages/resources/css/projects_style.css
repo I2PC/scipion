@@ -4,7 +4,8 @@
 	color: white;
 	width: 13em;
 	height: 25px;
-	background-color: DarkRed;
+	/* background-color: DarkRed; */
+	background-color: Firebrick;
 	border: 1px solid #000066;
 	padding: 1px;
 	font-weight: bold;
