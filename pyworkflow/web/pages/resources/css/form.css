@@ -251,3 +251,6 @@ table td:nth-child(odd) {
 table td:nth-child(even){
 	padding: 4px 2px 6px 6px;
 }
+table a{
+	color: firebrick;
+}

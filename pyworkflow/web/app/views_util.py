@@ -406,9 +406,9 @@ def replacePattern(m, mode):
     elif mode == HYPER_ITALIC:
         text = " <i>%s</i> " % g1
     elif mode == HYPER_LINK1:
-        text = " <a href='%s'>%s</a> " % (g1, g1)
+        text = " <a href='%s' target='_blank'>%s</a> " % (g1, g1)
     elif mode == HYPER_LINK2:
-        text = " <a href='%s'>%s</a> " % (g1, m.group('link2_label'))
+        text = " <a href='%s' target='_blank'>%s</a> " % (g1, m.group('link2_label'))
     else:
         raise Exception("Unrecognized pattern mode: " + mode)
     

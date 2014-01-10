@@ -59,11 +59,7 @@
 		{% if package_logo != ''%}
 			<img src='{{package_logo}}' style="float:right;"/>
 		{% endif %}
-		<h3 id="protName">
-<!-- 			Protocol: {{protocol.getClassName}} -->
-			{{protocol.getClassLabel}}
-		</h3>
-			&nbsp;
+		<h3 id="protName">{{protocol.getClassLabel}}</h3>&nbsp;
 		
 		<form id="protocolForm" action="/protocol/" method="POST" data-mode="">{% csrf_token %}
 			<input type="hidden" id="windowName" name="windowName" value=""/>
@@ -86,11 +82,9 @@
 								Run name
 							</td>
 							<td>
-								<input type="text" id="runName" name="runName"
-								value="{{protocol.getObjLabel}}">
+								<input type="text" id="runName" name="runName" value="{{protocol.getObjLabel}}">
 							</td>
 							<td class="ico">
-								<!--  <a href="javascript:showComment();"><img src={{comment}}/></a> --> 
 								<a id="editTool" href="javascript:showComment();"><i class="fa fa-pencil"></i></a>
 							</td>
 						</tr>
@@ -131,8 +125,7 @@
 								Execution host
 							</td>
 							<td>
-								<select name="hostName" size=1
-								onChange="">
+								<select name="hostName" size=1 onChange="">
 								{% for h in hosts %}
 									<option value="{{h}}" {% if h == hostName %} selected="selected" {% endif %}>{{h}}</option>
 								{% endfor %}
@@ -142,13 +135,11 @@
 						<tr>
 							<td>
 								Threads&nbsp;		
-								<input type="text" id="numberOfThreads_input"
-								name="numberOfThreads" value="{{numberOfThreads}}" style="width:3em;">
+								<input type="text" id="numberOfThreads_input" name="numberOfThreads" value="{{numberOfThreads}}" style="width:3em;">
 							</td>
 							<td >
 								MPI&nbsp;		
-								<input type="text" id="numberOfMpi_input"
-							name="numberOfMpi" value="{{numberOfMpi}}" style="width:3em;">
+								<input type="text" id="numberOfMpi_input" name="numberOfMpi" value="{{numberOfMpi}}" style="width:3em;">
 							</td>
 						</tr>
 						<tr>
@@ -178,9 +169,6 @@
 					 {% if section.label.get != "General" and section.label.get != "Parallelization" %}
 				 	 <div id="tabs-{{forloop.counter0}}">
 			 			<div class="box">
-			 				<!-- <div class="title">
-									<td colspan="4">{{section.label.get}}</td>
-							</div> -->
 							<table class="section">				
 								{% for paramName, param in section.iterParams %}
 								<tr {% if param.expertLevel.get > 0 %} class="advance" {% else %} class="element" {% endif %} id="{{paramName}}" name="{{paramName}}" data-type="{{param.getClassName}}" data-cond="{{param.condition.get}}" data-params="{{param.htmlCondParams}}" 
@@ -212,8 +200,6 @@
 									</td>
 								{% if param.getClassName == "PointerParam" %}
 									<td class="ico">
-										<!-- <a href="javascript:browseObjects('{{paramName}}','{{projectName}}','{{param.pointerClass.get}}');"><img src="/resources/showj/zoom.png" class="menuIcon"></a> -->
-										<!-- <a href="javascript:browseObjects('{{paramName}}','{{projectName}}','{{param.pointerClass.get}}');"><img src={{browse}}/></a> -->
 										<a href="javascript:browseObjects('{{paramName}}','{{projectName}}','objClass','{{param.pointerClass.get}}');">
 											<i class="fa fa-search" style="font-size:1.1em;"></i>
 										</a> 
@@ -242,7 +228,7 @@
 									</td>
 								{% endif %}
 								{% if param.htmlHelp %}
-									<td class="ico"><a href="javascript:infoPopup('{{paramName}}','{{param.htmlHelp}}');"><i class="fa fa-question-circle" style="font-size:1.3em;"></i></a></td>
+									<td class="ico"><a href="javascript:infoPopup('{{paramName}}','{{param.htmlHelp|escapejs}}');"><i class="fa fa-question-circle" style="font-size:1.3em;"></i></a></td>
 								{% endif %}
 								</tr>
 								{% endfor %}
@@ -257,13 +243,10 @@
 				{% if visualize == 0 %}
 				<a href="javascript:putMode('save');" class="btn buttonGrey"><i class="fa fa-save"></i>Save</a>
 				<a href="javascript:putMode('execute');" class="btn buttonRed"><i class="fa fa-cogs"></i>Execute</a>
-				
 				{% elif visualize == 1 %}
 				<a href="javascript:putMode('viewer');" class="btn buttonRed"><i class="fa fa-cogs"></i>Visualize</a>
-				<!-- <input type="submit" class="buttonExec" value="Visualize" onclick="javascript:putMode('viewer');"> -->
 				{% elif visualize == 2 %}
 				<a href="javascript:returnProtocol();" class="btn buttonGrey"><i class="fa fa-save"></i>Save</a>
-				<!-- <input type="button" class="buttonSave" value="Save" onclick="javascript:returnProtocol();"> -->
 				{% endif %}							
 			</div>
 		</form>
