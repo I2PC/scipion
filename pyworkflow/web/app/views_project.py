@@ -51,15 +51,10 @@ def projects(request):
     if 'projectName' in request.session: request.session['projectName'] = ""
     if 'projectPath' in request.session: request.session['projectPath'] = ""
 
-    context = {#'projectName': request.session['projectName'] if 'projectName' in request.session else '',
-               'projects': projects,
+    context = {'projects': projects,
                'projects_css': getResourceCss('projects'),
-               'messi_css': getResourceCss('messi'),
-               'messi_js': getResourceJs('messi'),
                'project_utils_js': getResourceJs('project_utils'),
-               'jquery': getResourceJs('jquery'),
                'view': 'projects',
-               'favicon': getResourceIcon('favicon'),
                'contentConfig': 'full'}
     
     return render_to_response('projects.html', context)
@@ -329,11 +324,8 @@ def project_content(request):
                'project_content_utils': getResourceJs('project_content_utils'),
                'jquery_cookie': getResourceJs('jquery_cookie'),
                'jquery_treeview': getResourceJs('jquery_treeview'),
-#               'tabs_config': getResourceJs('tabs_config'),
                'css':getResourceCss('project_content'),
                'jquery_ui':getResourceCss('jquery_ui'),
-               'messi_css': getResourceCss('messi'),
-               'favicon': getResourceIcon('favicon'),
                'sections': root.childs,
                'choices':choices,
                'choiceSelected': choiceSelected,

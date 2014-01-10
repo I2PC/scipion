@@ -124,6 +124,8 @@ def form(request):
                'css':getResourceCss('form'),
                'messi': getResourceJs('messi'),
                'messi_css': getResourceCss('messi'),
+               'font_awesome': getResourceCss('font_awesome'),
+               'general': getResourceCss('general'),
                'hosts':hosts
                }
     # Update the context dictionary with the special params
