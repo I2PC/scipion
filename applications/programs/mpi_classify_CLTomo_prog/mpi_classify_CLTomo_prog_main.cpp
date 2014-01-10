@@ -698,7 +698,7 @@ void CL3D::write(const FileName &fnRoot, int level) const
 void CL3D::lookNode(MultidimArray<double> &I, int oldnode, int &newnode,
                     CL3DAssignment &bestAssignment)
 {
-    int Q = P.size();
+	int Q = P.size();
     int bestq = -1;
     MultidimArray<double> bestImg, Iaux;
     Matrix1D<double> corrList;
@@ -709,26 +709,35 @@ void CL3D::lookNode(MultidimArray<double> &I, int oldnode, int &newnode,
 #ifdef DEBUG
     std::cout << "Looking for node ..." << std::endl;
 #endif
+
     for (int q = 0; q < Q; q++)
     {
         // Check if q is neighbour of the oldnode
         bool proceed = false;
         if (oldnode >= 0)
         {
-            int imax = P[oldnode]->neighboursIdx.size();
-            for (int i = 0; i < imax; i++)
-                if (P[oldnode]->neighboursIdx[i] == q)
-                {
-                    proceed = true;
-                    break;
-                }
-            if (!proceed)
-            {
-                double threshold = 3.0 * P[oldnode]->currentListImg.size();
-                threshold = XMIPP_MAX(threshold,1000);
-                threshold = (double) (XMIPP_MIN(threshold,Nimgs)) / Nimgs;
-                proceed = (rnd_unif(0, 1) < threshold);
-            }
+        	if (oldnode<P.size())
+        	{
+				int imax = P[oldnode]->neighboursIdx.size();
+				for (int i = 0; i < imax; i++)
+					if (P[oldnode]->neighboursIdx[i] == q)
+					{
+						proceed = true;
+						break;
+					}
+				if (!proceed)
+				{
+					double threshold = 3.0 * P[oldnode]->currentListImg.size();
+					threshold = XMIPP_MAX(threshold,1000);
+					threshold = (double) (XMIPP_MIN(threshold,Nimgs)) / Nimgs;
+					proceed = (rnd_unif(0, 1) < threshold);
+				}
+        	}
+        	else
+        	{
+        		// In some strange conditions we may loose the reference to its neighbours
+        		proceed = true;
+        	}
         }
         else
             proceed = true;
@@ -762,7 +771,9 @@ void CL3D::lookNode(MultidimArray<double> &I, int oldnode, int &newnode,
 
     // Assign it to the new node
     if (newnode != -1)
+    {
     	P[newnode]->updateProjection(I, bestAssignment);
+    }
 }
 #undef DEBUG
 

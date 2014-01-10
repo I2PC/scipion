@@ -42,6 +42,7 @@ void ProgVolumeInitialSimulatedAnnealing::defineParams()
     addParamsLine("  [--dontApplyPositive]        : Do not apply positive constraint in the random iterations");
     addParamsLine("  [--T0 <T=0.1>]               : Initial temperature for simulated annealing");
     addParamsLine("  [--thr <n=1>]                : Number of threads");
+    addParamsLine("  [--angularSampling <a=5>]    : Angular sampling in degrees for generating the projection gallery");
 }
 
 // Read arguments ==========================================================
@@ -58,6 +59,7 @@ void ProgVolumeInitialSimulatedAnnealing::readParams()
     Nthr = getIntParam("--thr");
     positiveConstraint = !checkParam("--dontApplyPositive");
     keepIntermediateVolumes = checkParam("--keepIntermediateVolumes");
+    angularSampling=getDoubleParam("--angularSampling");
 }
 
 // Show ====================================================================
@@ -74,6 +76,7 @@ void ProgVolumeInitialSimulatedAnnealing::show()
         std::cout << "Number of threads           : "  << Nthr        << std::endl;
         std::cout << "Apply positive constraint   : "  << positiveConstraint << std::endl;
         std::cout << "Keep intermediate volumes   : "  << keepIntermediateVolumes << std::endl;
+        std::cout << "Angular sampling            : "  << angularSampling << std::endl;
         if (fnSym != "")
             std::cout << "Symmetry for projections    : "  << fnSym << std::endl;
         if (fnInit !="")
@@ -357,8 +360,8 @@ void ProgVolumeInitialSimulatedAnnealing::reconstructCurrent()
 
 void ProgVolumeInitialSimulatedAnnealing::generateProjections()
 {
-	String args=formatString("-i %s -o %s --sampling_rate 5 --sym %s --compute_neighbors --angular_distance -1 --experimental_images %s -v 0",
-			fnVolume.c_str(),fnGallery.c_str(),fnSym.c_str(),fnAngles.c_str());
+	String args=formatString("-i %s -o %s --sampling_rate %f --sym %s --compute_neighbors --angular_distance -1 --experimental_images %s -v 0",
+			fnVolume.c_str(),fnGallery.c_str(),angularSampling,fnSym.c_str(),fnAngles.c_str());
 	String cmd=(String)"xmipp_angular_project_library "+args;
 	if (system(cmd.c_str())==-1)
 		REPORT_ERROR(ERR_UNCLASSIFIED,"Cannot open shell");

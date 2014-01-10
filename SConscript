@@ -1199,6 +1199,7 @@ SymLink('bin/xmipp_imagej', 'external/runImageJ')
 # MPI
 AddXmippMPIProgram('mpi_angular_class_average', ['XmippRecons'])
 AddXmippMPIProgram('mpi_angular_continuous_assign', ['XmippRecons'])
+AddXmippMPIProgram('mpi_angular_discrete_assign', ['XmippRecons'])
 AddXmippMPIProgram('mpi_angular_projection_matching', ['XmippRecons'])
 AddXmippMPIProgram('mpi_angular_project_library', ['XmippRecons'])
 AddXmippMPIProgram('mpi_classify_CL2D', ['XmippRecons'])

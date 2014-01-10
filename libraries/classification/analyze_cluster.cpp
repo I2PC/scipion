@@ -28,6 +28,9 @@
 #include <data/filters.h>
 #include <data/mask.h>
 
+// Minimum number of images to perform a PCA
+const size_t Nmin=10;
+
 // Read arguments ==========================================================
 void ProgAnalyzeCluster::readParams()
 {
@@ -80,7 +83,7 @@ void ProgAnalyzeCluster::defineParams()
 //#define DEBUG
 void ProgAnalyzeCluster::produceSideInfo(MDLabel image_label)
 {
-    basis = fnOutBasis!="";
+	basis = fnOutBasis!="";
 
     // Read input selfile and reference
     if (SFin.size()==0)
@@ -196,24 +199,27 @@ void ProgAnalyzeCluster::run()
 {
 	show();
     produceSideInfo();
-
-    pcaAnalyzer.evaluateZScore(NPCA, Niter);
+    size_t N=SFin.size();
 
     // Output
-    size_t N=SFin.size();
     SFout=SFin;
-    for (size_t n=0; n<N; n++)
+    if (N>Nmin)
     {
-        int trueIdx=pcaAnalyzer.getSorted(n);
-        double zscore=pcaAnalyzer.getSortedZscore(n);
-        SFout.setValue(MDL_ZSCORE, zscore, trueIdx+1);
-        if (zscore<distThreshold || distThreshold<0)
-            SFout.setValue(MDL_ENABLED,1, trueIdx+1);
-        else
-            SFout.setValue(MDL_ENABLED,-1, trueIdx+1);
+        pcaAnalyzer.evaluateZScore(NPCA, Niter);
+
+		for (size_t n=0; n<N; n++)
+		{
+			int trueIdx=pcaAnalyzer.getSorted(n);
+			double zscore=pcaAnalyzer.getSortedZscore(n);
+			SFout.setValue(MDL_ZSCORE, zscore, trueIdx+1);
+			if (zscore<distThreshold || distThreshold<0)
+				SFout.setValue(MDL_ENABLED,1, trueIdx+1);
+			else
+				SFout.setValue(MDL_ENABLED,-1, trueIdx+1);
+		}
     }
     SFout.write(fnOut,MD_APPEND);
-    if (basis)
+    if (basis && N>Nmin)
     {
         fnOutBasis.deleteFile();
         Image<double> basis;

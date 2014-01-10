@@ -13,8 +13,9 @@ class ProtInitVolSimAnneal(XmippProtocol):
         
     def defineSteps(self):
         self.insertStep('createDir',path=self.ExtraDir)
-        args="-i %s --oroot %s --sym %s --randomIter %d --greedyIter %d --rejection %f --keepIntermediateVolumes --T0 %f"\
-            %(self.Classes,self.extraPath("proposedVolume"),self.SymmetryGroup,self.NIterRandom,self.NIterGreedy,self.Rejection,self.T0)
+        args="-i %s --oroot %s --sym %s --randomIter %d --greedyIter %d --rejection %f --keepIntermediateVolumes --T0 %f --angularSampling %f"\
+            %(self.Classes,self.extraPath("proposedVolume"),self.SymmetryGroup,self.NIterRandom,self.NIterGreedy,self.Rejection,self.T0,
+              self.AngularSampling)
         if self.DontApplyPositiveConstraint:
             args+=" --dontApplyPositive"
         if self.InitialVolume!="":
