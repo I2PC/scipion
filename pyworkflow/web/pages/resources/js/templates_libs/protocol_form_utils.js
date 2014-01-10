@@ -1,6 +1,7 @@
  /*****************************************************************************
  *
  * Authors:    Jose Gutierrez (jose.gutierrez@cnb.csic.es)
+ * 			   Adrian Quintana (aquintana@cnb.csic.es)
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
@@ -64,10 +65,6 @@
  * function normalizeConditions(cond)
  * 	->	For some conditions not normalized, it is replaced to be evaluated right.
  * 
- * function help(title, msg) 
- * 	->	This method create a messi popup with a title and message passed by arguments.
- * 		It is used to show the help content in the protocol form.
- * 
  * function browseObjects(param, projName, type_param, param)
  * 	->	Browse object in the database depending of a type_param. 
  * 		Params: 
@@ -126,29 +123,14 @@ $(document).ready(function() {
 			/* Execute the protocol */
 			var action = $("#protocolForm").attr("action");
 			
-			var msg = messiInfo("The protocol was launched successfuly");
+			
 
 			$.post(action, $("#protocolForm").serialize(), function(json) {
 				if (json.errors.length > 0) {
 					// Show errors in the validation
 					showErrorValidation(json.errors);
 				} else {
-					// No errors in the validation
-					new Messi(msg, {
-						title : 'Success',
-						modal : true,
-						buttons : [ {
-							id : 0,
-							label : 'Ok',
-							val : 'Y',
-							btnClass : 'fa fa-check'
-						} ],
-						callback : function(val) {
-							if (val == 'Y') {
-								closePopup();
-							}
-						}
-					});
+					infoPopup('Success', "The protocol was launched successfuly",1);
 				}
 			}, "json");
 
@@ -156,7 +138,7 @@ $(document).ready(function() {
 			/* Save the protocol */
 			var action = "/save_protocol/";
 			
-			var msg = messiInfo("The protocol was saved successfuly");
+			
 
 			$.post(action, $("#protocolForm").serialize(), function(json) {
 				if (json.errors != undefined) {
@@ -165,22 +147,9 @@ $(document).ready(function() {
 				} else {
 					// No errors in the process to save
 					protId = json.success;
-					new Messi(msg, {
-						title : 'Success',
-						modal : true,
-						buttons : [ {
-							id : 0,
-							label : 'Ok',
-							val : 'Y',
-							btnClass : 'fa fa-check'
-						} ],
-						callback : function(val) {
-							if (val == 'Y') {
-								closePopup();
-								window.opener.popup('/form/?protocolId='+protId);
-							}
-						}
-					});
+					
+					infoPopup('Success', "The protocol was saved successfuly",1,'window.opener.popup(\'/form/?protocolId='+protId+'\')');
+					
 				}
 			},"json");
 		} else if (mode == 'wiz') {
@@ -199,14 +168,11 @@ $(document).ready(function() {
 				$('.messi-modal').remove();
 				
 				if(html=="errorInput"){
-					var msg = messiError("Input was not selected, please choose one.");
-					launchMessiSimple("Error",msg);
+					errorPopup("Error", "Input was not selected, please choose one.");
 				} else if (html=="errorEmpty"){
-					var msg = messiError("Input particles selected are None");
-					launchMessiSimple("Error",msg);
+					errorPopup("Error", "Input particles selected are None");
 				} else if (html=="errorIterate"){
-					var msg = messiError("Error iterating over the set of particles");
-					launchMessiSimple("Error",msg);
+					errorPopup("Error", "Error iterating over the set of particles");
 				} else if(type_wiz=='wiz_particle_mask' || type_wiz=='wiz_volume_mask'){
 					customPopupHTML(html,540,490);
 				} else if(type_wiz=='wiz_volume_mask_radii' || type_wiz=='wiz_particle_mask_radii'){
@@ -393,23 +359,6 @@ function normalizeConditions(cond){
 	return cond;
 }
 
-function help(title, msg) {
-	/*
-	 * This method create a messi popup with a title and message passed by arguments.
-	 * It is used to show the help content in the protocol form.
-	 */
-	new Messi(messiInfo(msg), {
-		title : 'Help' + ' ' + title,
-		modal : true,
-		buttons : [ {
-			id : 0,
-			label : 'Close',
-			val : 'X',
-			btnClass : 'fa-times'
-		} ]
-	});
-}
-
 function browseObjects(param, projName, type_param, value_param) {
 	/*
 	 * Browse object in the database. 
@@ -454,7 +403,7 @@ function formProtSimple(param, projName){
 		customPopup(url,500,450);
 	}
 	else{
-		launchMessiSimple("Error", messiError("Protocol was not selected, please choose one."));
+		errorPopup("Error", "Protocol was not selected, please choose one.")
 	}
 }
 
@@ -466,7 +415,7 @@ function returnProtocol(){
 	params = $("#protocolForm").serialize();
 	paramProt = $("#paramProt").val();
 	window.opener.setParamProt(paramProt, params);
-	launchMessiSimple("Successful", messiInfo("Protocol saved inside the workflow"), 1);
+	infoPopup("Successful", "Protocol saved inside the workflow", 1);
 }
 
 function setParamProt(paramProt, params){
@@ -535,8 +484,6 @@ function getTableFormatted(node, list, id, previsualize) {
 			+ "'>";
 	
 	var func = "";
-//	var first = "<a href='#' onclick='javascript:";
-//	var second = "'><img src=/resources/visualize.gif/></a>";
 	var first = "<a class='iconEye' href='javascript:";
 	var second = "'></a>";
 	for(var x = 0; x < list.length; x++) {
@@ -565,8 +512,6 @@ function selectDialog(objClass, msg, funcName) {
 			label : 'Select',
 			val : 'Y',
 			btnClass : 'fa-check',
-//			extraBtnClass: 'icon-check',
-//			btnClass : 'btn-select buttonGrey',
 			btnFunc : funcName
 		}, {
 			id : 1,

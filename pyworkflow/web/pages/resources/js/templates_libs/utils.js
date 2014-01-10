@@ -1,6 +1,7 @@
  /*****************************************************************************
  *
  * Authors:    Jose Gutierrez (jose.gutierrez@cnb.csic.es)
+ * 			   Adrian Quintana (aquintana@cnb.csic.es)
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
@@ -54,26 +55,25 @@
  * function getUrlParameters(parameter, staticURL, decode)
  * 	->	Auxiliar function to obtain individual parameters from a URL.
  * 
- * function closePopup()
- * 	->	Function to close the popup what call this method.
- * 
  * function showErrorValidation(json)
  * 	->	Function to normalize the errors launched in the protocol form when a 
  * 		protocol cannot be launched.
  * 
- * function launchMessiSimple(title, msg, autoclose)
- * 	->	Function to launch a basic simple window with a title and message passed
- * 		by argument. The autoclose can be chose with a boolean.
+ * function infoPopup(title, msgText, autoclose, closeFunc) 
+ * 	->	Creates a messi popup with a title and message passed by arguments.
+ * 		If autoclose then the opener window will be closed when confirm button is pressed and closeFunc if provided will be executed.
+ * 		It is used to show the help content in the protocol form and info message anywhere.
  * 
- * function messiError(msg)
- * 	->	This function return the HTML to be used in an error popup with messi.js
+ * function warningPopup(title, msgText, funcName) 
+ * 	->	Creates a messi popup with a title and message passed by arguments.
+ * 		funcName is the function that will be executed if 'Yes' option is selected
+ * 		It is used to show any warning message
  * 
- * function messiWarning(msg)
- *  ->	This function return the HTML to be used in an warning popup with messi.js
- * 
- * function messiInfo(msg)
- *  ->	This function return the HTML to be used in an information popup with messi.js
- * 
+ * function errorPopup(title, msgText) 
+ * 	->	Creates a messi popup with a title and message passed by arguments.
+ * 		It is used to show any error message
+
+
  ******************************************************************************/
 
 /** METHODS ******************************************************************/
@@ -145,8 +145,8 @@ function popUpJSON(json){
 			}
 		} else if(key=="plotsComposite" || key=="plot"){
 			showPlot(value);
-		} else if(key=="error"){(
-			launchMessiSimple("Error",messiError(value)));
+		} else if(key=="error"){
+				errorPopup("Error",value);
 		} else {
 			customPopup(value,800,600);
 		}
@@ -183,17 +183,6 @@ function getUrlParameters(parameter, staticURL, decode){
    if(!returnBool) return false;  
 }
 
-
-function closePopup() {
-	/*
-	 * Function to close the popup what call this method.
-	 */
-	// opener.location.reload(true);
-	// self.close();
-	//	window.opener.location.reload(true);
-	window.close();
-}
-
 function showErrorValidation(json) {
 	/*
 	 * Function to normalize the errors launched in the protocol form when a 
@@ -205,68 +194,99 @@ function showErrorValidation(json) {
 	msg = msg.replace("[", "");
 	msg = msg.replace("]", "");
 	
-	launchMessiSimple('Errors found',messiError(msg));
+	errorPopup('Errors found',msg);
 }
 
-function launchMessiSimple(title, msg, autoclose){
+function infoPopup(title, msgText, autoclose, closeFunc) {
 	/*
-	 * Function to launch a basic simple window with a title and message passed
-	 * by argument. The autoclose can be chose with a boolean.
+	 * Creates a messi popup with a title and message passed by arguments.
+	 * If autoclose then the opener window will be closed when confirm button is pressed and closeFunc if provided will be executed.
+	 * It is used to show the help content in the protocol form and info message anywhere.
 	 */
+	
+	//HTML to be used in the information popup
+	msg="<table><tr><td><i class=\"fa fa-info-circle fa-4x\" style=\"color:#6fabb5;\"></i>"
+		+ "</td><td>"+ msgText +"</td></tr></table>";
+	
 	if(autoclose){
 		new Messi(msg, {
-			title : title,
+			title : 'Help' + ' ' + title,
 			modal : true,
 			buttons : [ {
 				id : 0,
-				label : 'Ok',
-				val : 'Y',
-				btnClass : 'btn-select'
-			}],
+				label : 'Close',
+				val : 'X',
+				btnClass : 'fa-times'
+			} ],
 			callback: function(){
-				closePopup();
+				window.close();
+				if (closeFunc){
+					eval(closeFunc)
+				}
 			}
 		});
-	} else {
+	}
+	else{
 		new Messi(msg, {
-			title : title,
+			title : 'Help' + ' ' + title,
 			modal : true,
 			buttons : [ {
 				id : 0,
-				label : 'Ok',
-				val : 'Y',
-				btnClass : 'btn-select'
-			}]
+				label : 'Close',
+				val : 'X',
+				btnClass : 'fa-times'
+			} ]
 		});
-	}
+	}	
 }
+
+function warningPopup(title, msgText, funcName){
+	/*
+	 * Creates a messi popup with a title and message passed by arguments.
+	 * funcName is the function that will be executed if 'Yes' option is selected
+	 * It is used to show any warning message
+	 */
 	
-function messiError(msg){
-	/*
-	 * This function return the HTML to be used in an error popup with messi.js
-	 */
-	var res = "<table><tr><td><i class=\"fa fa-times-circle fa-4x\" style=\"color:firebrick;\"></i>"
-	+ "</td><td>"+ msg +"</td></tr></table>";
+	//HTML to be used in the warning popup
+	msg = "<table><tr><td><i class=\"fa fa-warning fa-4x\" style=\"color:#fad003;\"></i>"
+		+ "</td><td>"+ msgText +"</td></tr></table>"
 
-	return res;
+	new Messi(msg, {
+		title : title,
+		// modal : true,
+		buttons : [ {
+			id : 0,
+			label : 'Yes',
+			val : 'Y',
+			btnClass : 'fa-check',
+			btnFunc : funcName
+		}, {
+			id : 1,
+			label : 'No',
+			val : 'C',
+			btnClass : 'fa-ban'
+		} ]
+	});
 }
 
-function messiWarning(msg){
+function errorPopup(title, msgText){
 	/*
-	 * This function return the HTML to be used in an warning popup with messi.js
+	 * Creates a messi popup with a title and message passed by arguments.
+	 * It is used to show any error message
 	 */
-	var res = "<table><tr><td><i class=\"fa fa-warning fa-4x\" style=\"color:#fad003;\"></i>"
-	+ "</td><td>"+ msg +"</td></tr></table>";
-
-	return res;
-}
-
-function messiInfo(msg){
-	/*
-	 * This function return the HTML to be used in an information popup with messi.js
-	 */
-	var res = "<table><tr><td><i class=\"fa fa-info-circle fa-4x\" style=\"color:#6fabb5;\"></i>"
-	+ "</td><td>"+ msg +"</td></tr></table>";
-
-	return res;
+	
+	//HTML to be used in the error popup
+	msg = "<table><tr><td><i class=\"fa fa-times-circle fa-4x\" style=\"color:firebrick;\"></i>"
+	+ "</td><td>"+ msgText +"</td></tr></table>"
+	
+	new Messi(msg, {
+		title : title,
+		modal : true,
+		buttons : [ {
+			id : 0,
+			label : 'Close',
+			val : 'X',
+			btnClass : 'fa-times'
+		} ]
+	});
 }

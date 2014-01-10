@@ -20,7 +20,7 @@
 	{% if message != None and message != '' %}
 	window.onload = function() {
 		alert("{{message}}")
-		closePopup()
+		window.close();
 	}
 	{% endif %}
 	
@@ -187,7 +187,7 @@
 			{% endfor %}
 			<br/>
 			<input type="submit" value="Accept" class="priorityButton"/>
-			<button type="button" id="cancelButton"  onclick="closePopup()" class="generalButton">Cancel</button>
+			<button type="button" id="cancelButton"  onclick="window.close();" class="generalButton">Cancel</button>
 		</form>	
 	</div>
 </body>

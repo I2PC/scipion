@@ -1,6 +1,7 @@
  /*****************************************************************************
  *
  * Authors:    Jose Gutierrez (jose.gutierrez@cnb.csic.es)
+ * 			   Adrian Quintana (aquintana@cnb.csic.es)
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
@@ -426,30 +427,8 @@ function deleteProtocolForm(protocolId) {
 			+ "'><strong>ALL DATA</strong> related to this <strong>protocol run</strong>"
 			+ " will be <strong>DELETED</strong>. Do you really want to continue?</td></tr></table>";
 	
-	msg = messiWarning(msg);
-
-	new Messi(msg, {
-		title : 'Confirm DELETE',
-		// modal : true,
-		buttons : [ {
-			id : 0,
-			label : 'Yes',
-			val : 'Y',
-			btnClass : 'fa-check',
-			btnFunc : 'deleteProtocol'
-		}, {
-			id : 1,
-			label : 'No',
-			val : 'C',
-			btnClass : 'fa-ban'
-		} ]
-//		callback : function(val) {
-//			if (val == 'Y') {
-//				window.location.href = "/project_content/?projectName="
-//						+ projName;
-//			}
-//		}
-	});
+	warningPopup('Confirm DELETE',msg, 'deleteProtocol')
+	
 }
 
 function deleteProtocol(elm) {
@@ -487,30 +466,7 @@ function stopProtocolForm(protocolId) {
 			+ "'>This <strong>protocol run</strong>"
 			+ " will be <strong>STOPPED</strong>. Do you really want to continue?</td>";
 			
-	msg = messiWarning(msg);
-
-	new Messi(msg, {
-		title : 'Confirm STOP',
-		// modal : true,
-		buttons : [ {
-			id : 0,
-			label : 'Yes',
-			val : 'Y',
-			btnClass : 'fa-check',
-			btnFunc : 'stopProtocol'
-		}, {
-			id : 1,
-			label : 'No',
-			val : 'C',
-			btnClass : 'fa-ban'
-		} ]
-//		callback : function(val) {
-//			if (val == 'Y') {
-//				window.location.href = "/project_content/?projectName="
-//						+ projName;
-//			}
-//		}
-	});
+	warningPopup('Confirm STOP',msg, 'stopProtocol');
 }
 
 function stopProtocol(elm) {

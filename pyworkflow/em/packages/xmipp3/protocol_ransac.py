@@ -409,6 +409,10 @@ class XmippProtRansac(ProtInitialVolume):
             
     def createOutput(self):
         fn = self._getPath('proposedVolumes.xmd')
+        md = xmipp.MetaData(fn)
+        md.addItemId()
+        md.write(fn)
+        
         volumesSet = self._createSetOfVolumes()
         readSetOfVolumes(fn, volumesSet)
         volumesSet.setSamplingRate(self.inputClasses.get().getAverages().getSamplingRate())
