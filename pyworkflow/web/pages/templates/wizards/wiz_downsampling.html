@@ -11,7 +11,7 @@
 	</script>
 	{% endif %}
 	<tr id="{{obj.getObjId}}" class="no-selected" 
-	onclick="previewDownSampling(($(this)));" 
+	onclick="previewDownsampling(($(this)));" 
 	value="{{obj.getFileName}}">
 		<td>{{obj.basename}}</td>
 	</tr>
@@ -49,7 +49,7 @@
 </table>
 <script>
 	//Load the First Element of the list
-	window.onload = previewDownSampling($("tr#"+firstElm));
+	window.onload = previewDownsampling($("tr#"+firstElm));
 </script>
 {% endblock %}
 {% block function %}
