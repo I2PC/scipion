@@ -329,7 +329,7 @@ def project_content(request):
                'project_content_utils': getResourceJs('project_content_utils'),
                'jquery_cookie': getResourceJs('jquery_cookie'),
                'jquery_treeview': getResourceJs('jquery_treeview'),
-               'tabs_config': getResourceJs('tabs_config'),
+#               'tabs_config': getResourceJs('tabs_config'),
                'css':getResourceCss('project_content'),
                'jquery_ui':getResourceCss('jquery_ui'),
                'messi_css': getResourceCss('messi'),
