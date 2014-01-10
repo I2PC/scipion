@@ -76,12 +76,12 @@ class EMProtocol(Protocol):
     
     def _defineDataSource(self, srcObj, dstObj):
         """ Add a DATASOURCE relation between srcObj and dstObj """
-        self.mapper.insertRelation(RELATION_DATASOURCE, self, srcObj, dstObj)
-        #self.mapper.commit()
+        self._defineRelation(RELATION_DATASOURCE, srcObj, dstObj)
 
     def _insertChild(self, key, child):
-        if isinstance(child,Set):
+        if isinstance(child, Set):
             child.write()
+        Protocol._insertChild(self, key, child)
         
 class ProtImportImages(EMProtocol):
     """Common protocol to import a set of images in the project"""
