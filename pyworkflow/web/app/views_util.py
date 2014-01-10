@@ -86,10 +86,11 @@ jsDict = {'jquery': 'jquery/jquery.js',
           'protocol_form_utils': 'templates_libs/protocol_form_utils.js',
           'wizard_utils': 'templates_libs/wizard_utils.js',
 
-          'tabs_config': 'tabs_config.js',
-          'jquery_colreorder': 'ColReorder.js',
-          'jquery_colreorder_resize': 'ColReorderWithResize.js',
-          'jquery_waypoints': 'waypoints.min.js',
+#          'tabs_config': 'tabs_config.js',
+          'jquery_colreorder': 'showj_libs/colReorder.js',
+          'jquery_colreorder_resize': 'showj_libs/colReorderWithResize.js',
+          'jquery_waypoints': 'showj_libs/waypoints.min.js',
+          'transpose': 'showj_libs/transpose.js',
           'messi': 'messi/messi.js',
           'raphael': 'raphael/raphael.js'
           

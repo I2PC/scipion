@@ -602,6 +602,7 @@ class Protocol(Step):
         
     def __copyRelations(self, other):
         """ This will copy relations from protocol other to self """
+        pass
     
     def copy(self, other):
         copyDict = Object.copy(self, other)

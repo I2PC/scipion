@@ -169,35 +169,36 @@ def createContext(dataset, tableDataset, tableLayoutConfiguration, request, show
     #Create context to be send
     return {'showj_css': getResourceCss('showj'),
             'general_css': getResourceCss('general'),
-           'smoothness': getResourceCss('ui_smoothness'),
-           'demo_table_jui': getResourceCss('showj_demo_table_jui'),
+            'smoothness': getResourceCss('ui_smoothness'),
+            'demo_table_jui': getResourceCss('showj_demo_table_jui'),
            
-           'favicon': getResourceIcon('favicon'),
-           'logo': getResourceIcon('logo_scipion'),
-           'logo_transparent': getResourceIcon('logo_scipion_transparent'),
+            'favicon': getResourceIcon('favicon'),
+            'logo': getResourceIcon('logo_scipion'),
+            'logo_transparent': getResourceIcon('logo_scipion_transparent'),
            
-           'jquery': getResourceJs('jquery'), #Configuration variables
-           'jquery_datatable': getResourceJs('jquery_datatables'),
-           'jquerydataTables_colreorder': getResourceJs('jquery_colreorder'),
-           'jquerydataTables_colreorder_resize': getResourceJs('jquery_colreorder_resize'),
-           'jeditable': getResourceJs('jquery_editable'),
-           'jquery_waypoints':getResourceJs('jquery_waypoints'),
-           'jquery_hover_intent':getResourceJs('jquery_hover_intent'),
+            'jquery': getResourceJs('jquery'), #Configuration variables
+            'jquery_datatable': getResourceJs('jquery_datatables'),
+            'jquerydataTables_colreorder': getResourceJs('jquery_colreorder'),
+            'jquerydataTables_colreorder_resize': getResourceJs('jquery_colreorder_resize'),
+            'jeditable': getResourceJs('jquery_editable'),
+            'jquery_waypoints':getResourceJs('jquery_waypoints'),
+            'jquery_hover_intent':getResourceJs('jquery_hover_intent'),
+            
+            'transpose_lib':getResourceJs('transpose'),
            
-           'dataset': dataset,
-           'tableLayoutConfiguration': json.dumps({'columnsLayout': tableLayoutConfiguration.columnsLayout,
+            'dataset': dataset,
+            'tableLayoutConfiguration': json.dumps({'columnsLayout': tableLayoutConfiguration.columnsLayout,
                                                    'colsOrder': tableLayoutConfiguration.colsOrder},
                                                    ensure_ascii=False,
                                                    cls=ColumnLayoutConfigurationEncoder), #Data variables
-           'tableDataset': tableDataset,
+            'tableDataset': tableDataset,
            
-           'imageDimensions': request.session['imageDimensions'],
-           'defaultZoom': request.session['defaultZoom'],
-           'projectName': request.session['projectName'],
+            'imageDimensions': request.session['imageDimensions'],
+            'defaultZoom': request.session['defaultZoom'],
+            'projectName': request.session['projectName'],
            
-           'form': showjForm}
-    
-    
+            'form': showjForm
+            }
 
 
 def getExtraParameters(extraParameters, tableDataset):

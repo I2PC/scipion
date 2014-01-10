@@ -266,12 +266,11 @@ class Object(object):
                 ptr.set(copyDict[pointedId])
         
     def _copy(self, other, copyDict, level=1):
-        """ This method will recursively clone all attributes
-        from one object to the other.
-        Attributes must be present in both.
-        NOTE: This implementation can be extended to add or remove mismatching attributes.
-        copyDict: this dict is used to store ids of attr to pointers inside the object
-        this will only work if the id has been properly set
+        """ This method will recursively clone all attributes from one object to the other.
+        NOTE: Currently, we are not deleting attributes missing in the 'other' object.
+        copyDict: this dict is used to store the ids map between 'other' and 'self' attributes
+            This copyDict is used for update pointers and relations later on.
+            This will only work if the ids of 'other' attributes has been properly set.
         """
         # Copy basic object data
         #self._objName = other._objName
@@ -296,8 +295,7 @@ class Object(object):
     
     def clone(self):
         clone = self.getClass()()
-        clone.copy(self)
-        
+        clone.copy(self)        
         return clone    
     
     def evalCondition(self, condition):

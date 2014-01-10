@@ -227,6 +227,7 @@ function previewPsd(){
 	 * This function obtain an PSD image from another image. The downsampling
 	 * factor is used here to compute the new image.
 	 */
+	
 	// check downsampling is a number
 	var downsampling = $("input#downsampling").val();
 	if (downsampling == undefined) {
@@ -237,18 +238,18 @@ function previewPsd(){
 	var path_img = $("tr#" + $("table#data").attr("value")).attr("value");
 
 	// set loading img
-	var load = $("img#loadingPsd");
-	load.show();
+	var img_load = $("img#loadingPsd");
+	img_load.show();
 
 	// load and set the image
 	var uri = "/get_image_psd/?image=" + path_img + "&downsample="
-			+ downsampling + "&dim=250";
-	
-	return uri, load
+			+ downsampling + "&dim=250"
+			
+	return [uri, img_load];
 }
 
 // *** Methods Wizard Downsampling *** //
-function previewDownSampling(elm) {
+function previewDownsampling(elm) {
 	/*
 	 * Function composite structured in two steps:
 	 *	1. Select an image from a list.
@@ -258,10 +259,14 @@ function previewDownSampling(elm) {
 		function(){
 			var img = $("img#psd");
 			img.hide();
-			var uri, load = previewPsd()
+			
+			var res = previewPsd();
+			var uri = res[0];
+			var img_load = res[1];
+			
 			img.load(img.attr("src", uri), function() {
 				// hide the load img
-				load.hide();
+				img_load.hide();
 				// show the new micrograph
 				img.show();
 			});
@@ -279,11 +284,18 @@ function previewCTF(elm) {
 	 */
 	$.when(selectList(elm,"normal")).then(
 		function(){
-			var uri, load = previewPsd()
+			var img = $("img#psd");
+			img.hide();
+			
+//			var uri, img_load = previewPsd()
+			var res = previewPsd();
+			var uri = res[0];
+			var img_load = res[1];
+			
 			// show the new micrograph
-			load.load(putImage(uri, "psd_freq", 250, 250), function() {
+			img.load(putImage(uri, "psd_freq", 250, 250), function() {
 				// hide the load img
-				load.hide();
+				img_load.hide();
 			});
 		}
 	);
