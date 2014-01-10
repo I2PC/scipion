@@ -55,10 +55,6 @@
  * function getUrlParameters(parameter, staticURL, decode)
  * 	->	Auxiliar function to obtain individual parameters from a URL.
  * 
- * function showErrorValidation(json)
- * 	->	Function to normalize the errors launched in the protocol form when a 
- * 		protocol cannot be launched.
- * 
  * function infoPopup(title, msgText, autoclose, closeFunc) 
  * 	->	Creates a messi popup with a title and message passed by arguments.
  * 		If autoclose then the opener window will be closed when confirm button is pressed and closeFunc if provided will be executed.
@@ -121,7 +117,7 @@ function customPopupHTML(html, widthValue, heightValue) {
 
 function popUpJSON(json){
 	/*
-	 * This method recive a JSON, and depending of the key content, open a 
+	 * This method receive a JSON, and depending of the key content, open a 
 	 * diferent popups with diferent settings.
 	 * This function in the analyze results of the protocols runs.
 	 */
@@ -146,7 +142,7 @@ function popUpJSON(json){
 		} else if(key=="plotsComposite" || key=="plot"){
 			showPlot(value);
 		} else if(key=="error"){
-				errorPopup("Error",value);
+			errorPopup("Error",value);
 		} else {
 			customPopup(value,800,600);
 		}
@@ -181,20 +177,6 @@ function getUrlParameters(parameter, staticURL, decode){
         }
    }
    if(!returnBool) return false;  
-}
-
-function showErrorValidation(json) {
-	/*
-	 * Function to normalize the errors launched in the protocol form when a 
-	 * protocol cannot be launched.
-	 */
-	var msg = JSON.stringify(json);
-	msg = msg.replace("<", "");
-	msg = msg.replace(">", "");
-	msg = msg.replace("[", "");
-	msg = msg.replace("]", "");
-	
-	errorPopup('Errors found',msg);
 }
 
 function infoPopup(title, msgText, autoclose, closeFunc) {

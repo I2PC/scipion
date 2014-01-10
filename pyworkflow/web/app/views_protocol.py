@@ -151,7 +151,7 @@ def protocol(request):
         except Exception, ex:
             errors = [convertTktoHtml(str(ex))]
             
-    jsonStr = json.dumps({'errors' : errors}, ensure_ascii=False)
+    jsonStr = json.dumps({'errors' : parseText(errors)}, ensure_ascii=False)
     
     return HttpResponse(jsonStr, mimetype='application/javascript')   
 

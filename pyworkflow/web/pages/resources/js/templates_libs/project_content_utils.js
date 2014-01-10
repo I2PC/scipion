@@ -444,7 +444,7 @@ function deleteProtocol(elm) {
 		success : function(json) {
 			if(json.errors != undefined){
 				// Show errors in the validation
-				showErrorValidation(json.errors);
+				errorPopup('Errors found',json.errors);
 			} else if(json.success!= undefined){
 //				launchMessiSimple("Successful", messiInfo(json.success));
 //				window.location.reload()

@@ -122,13 +122,11 @@ $(document).ready(function() {
 		if (mode == 'execute') {
 			/* Execute the protocol */
 			var action = $("#protocolForm").attr("action");
-			
-			
 
 			$.post(action, $("#protocolForm").serialize(), function(json) {
 				if (json.errors.length > 0) {
 					// Show errors in the validation
-					showErrorValidation(json.errors);
+					errorPopup('Errors found',json.errors);
 				} else {
 					infoPopup('Success', "The protocol was launched successfuly",1);
 				}
@@ -143,11 +141,10 @@ $(document).ready(function() {
 			$.post(action, $("#protocolForm").serialize(), function(json) {
 				if (json.errors != undefined) {
 					// Show errors in the process to save
-					showErrorValidation(json.errors);
+					errorPopup('Errors found',json.errors);
 				} else {
 					// No errors in the process to save
 					protId = json.success;
-					
 					infoPopup('Success', "The protocol was saved successfuly",1,'window.opener.popup(\'/form/?protocolId='+protId+'\')');
 					
 				}
