@@ -756,7 +756,8 @@ def convertImagesMd(log, inputMd, outputRelion):
     md = MetaData(inputMd)
     # Get the values (defocus, magnification, etc) from each 
     # ctfparam files and put values in the row
-    md.fillExpand(MDL_CTF_MODEL)
+    if md.containsLabel(MDL_CTF_MODEL):
+        md.fillExpand(MDL_CTF_MODEL)
     # Create the mapping between relion labels and xmipp labels
     exportMdToRelion(md, outputRelion)
 
