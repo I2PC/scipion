@@ -86,7 +86,7 @@ def writeSetOfMicrographs(micSet, filename, rowFunc=None):
 def readPosCoordinates(posFile):
     pass
             
-def readSetOfCoordinates(workDir, micSet, coordSet):
+def readSetOfCoordinates(workDir, nameDir, micSet, coordSet):
     """ Read from Eman .json files.
     It is expected a file named: base.json under the workDir.
     Params:
@@ -99,9 +99,10 @@ def readSetOfCoordinates(workDir, micSet, coordSet):
     jsonFnbase = join(workDir, 'e2boxercache', 'base.json')
     jsonBoxDict = loadJson(jsonFnbase)
     size = int(jsonBoxDict["box_size"])
+    dirName = nameDir[1:2]
     
     for mic in micSet:
-        micFnroot = removeBaseExt(mic.getFileName()) + '_info.json'
+        micFnroot = dirName + '-' +removeBaseExt(mic.getFileName()) + '_info.json'
         micPosRelFn = join("info", micFnroot)
         micPosFn = join(workDir, micPosRelFn)
         

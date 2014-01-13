@@ -62,6 +62,9 @@ class EmanProtBoxing(ProtParticlePicking):
     def _defineSteps(self):
         self.inputMics = self.inputMicrographs.get()
         micList = [os.path.relpath(mic.getFileName(), self.workingDir.get()) for mic in self.inputMics]
+
+        dirName = str(micList[0:1])
+        splitDir = [s.strip() for s in dirName.split("/")]
         self._params = {'inputMics': ' '.join(micList), 
                         'boxSize': self.boxSize.get()}      
         # Launch Boxing GUI
@@ -70,7 +73,7 @@ class EmanProtBoxing(ProtParticlePicking):
         else: # This is only used for test purposes
             self._insertFunctionStep('_importFromFolder')  
         # Insert step to create output objects       
-        self._insertFunctionStep('createOutput')
+        self._insertFunctionStep('createOutput', splitDir)
     
     def launchBoxingGUI(self):
         # First we go to runs directory (we create if it does not exist)
@@ -82,13 +85,14 @@ class EmanProtBoxing(ProtParticlePicking):
         self._log.info('Launching: ' + program + ' ' + arguments % self._params)
         self.runJob(None, program, arguments % self._params)
         
-    def createOutput(self):
+    def createOutput(self, nameDir):
         workDir = self.workingDir.get()
+        
         # As we move to workingDir we must leave it. 
         self._leaveWorkingDir()
         coordSet = self._createSetOfCoordinates()
         coordSet.setMicrographs(self.inputMics)
-        readSetOfCoordinates(workDir, self.inputMics, coordSet)
+        readSetOfCoordinates(workDir, nameDir, self.inputMics, coordSet)
         coordSet.write()
         self._defineOutputs(outputCoordinates=coordSet)
         
