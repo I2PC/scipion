@@ -174,6 +174,11 @@ class ProtXrayFastAlign(XmippProtocol):
             runShowJ(resultMd, extraParams='--mode gallery')
         pass
     
+    def papers(self):
+        papers = []
+        papers.append('IMOD: Kremer, JSB (1997) [http://http://www.sciencedirect.com/science/article/pii/S1047847796900131]')
+        return papers
+    
 
 def createtMd(log, tomoOut, tomoRoot, fnTiltIn, fnTiltOut):
     md = xmipp.MetaData()
