@@ -1,24 +1,23 @@
 ########### Basic tests (no data requirement) ###############
 
-python -m unittest pyworkflow.tests.classes.test_object
-python -m unittest pyworkflow.tests.classes.test_process
+scipion tests classes.test_object
+scipion tests classes.test_process
 
 ########### Protocols and Workflow tests (require Test Dataset) ###############
 
 # For Xmipp protocols execution
-python -m unittest -v pyworkflow.tests.em.protocols.test_protocols_xmipp
+scipion tests em.protocols.test_protocols_xmipp
 
 # For a specific protocol 
-python -m unittest -v pyworkflow.tests.em.protocols.test_protocols_xmipp.TestXmippCTFEstimation 
+scipion tests em.protocols.test_protocols_xmipp.TestXmippCTFEstimation 
 # or
-python -m unittest pyworkflow.tests.em.protocols.test_protocols_xmipp.TestXmippCTFEstimation.test_Micrographs_BPV1_Down3 
-python -m unittest pyworkflow.tests.em.protocols.test_protocols_xmipp.TestXmippPreprocessMicrographs
+scipion tests em.protocols.test_protocols_xmipp.TestXmippCTFEstimation.test_Micrographs_BPV1_Down3 
+scipion tests em.protocols.test_protocols_xmipp.TestXmippPreprocessMicrographs
 
 # For workflows, the same way
-python -m unittest pyworkflow.tests.em.workflows.test_workflow_xmipp
+scipion tests em.workflows.test_workflow_xmipp
+scipion tests em.workflows.test_workflow_spiderMDA
+scipion tests em.workflows.test_workflow_mixed
 
 # For data:
-python -m unittest pyworkflow.tests.em.data.test_data
-
-# For Spider MDA workflow:
-python -m unittest pyworkflow.tests.em.workflows.test_workflow_spiderMDA
+scipion tests em.data.test_data
