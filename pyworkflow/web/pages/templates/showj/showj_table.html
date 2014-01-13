@@ -1,0 +1,227 @@
+{% extends 'showj/showj_base.html' %} 
+{% block head %}
+<!-- CSS -->
+<link type="text/css" href="{{smoothness}}" rel="stylesheet" /> 
+<link type="text/css" href="{{demo_table_jui}}" rel="stylesheet" />
+
+<!-- TABLE STYLES 
+Overwrite general section property for table view -->
+<style type="text/css">
+section {display:block;}
+</style>
+
+<!-- JS -->
+<script type="text/javascript" src="{{jquery_datatable}}"></script>
+<script src="/static/js/showj_libs/showj_table_utils.js" type="text/javascript"></script>
+
+
+<!-- Datatable extra api -->
+<script type="text/javascript">
+$.fn.dataTableExt.oApi.fnVisibleToColumnIndex = function ( oSettings, iMatch )
+{
+    return oSettings.oApi._fnVisibleToColumnIndex( oSettings, iMatch );
+};
+$.fn.dataTableExt.oApi.fnColumnIndexToVisible = function ( oSettings, iMatch )
+{
+  return oSettings.oApi._fnColumnIndexToVisible( oSettings, iMatch );
+};
+$.fn.dataTableExt.oApi.fnGetColumnIndex = function ( oSettings, sCol )
+{
+    var cols = oSettings.aoColumns;
+    for ( var x=0, xLen=cols.length ; x<xLen ; x++ )
+    {
+        if ( cols[x].sTitle.toLowerCase() == sCol.toLowerCase() )
+        {
+            return x;
+        };
+    }
+    return -1;
+};
+$.fn.dataTableExt.oApi.fnDisplayRowWithIndex = function ( oSettings, iPos )
+{
+    // Account for the "display" all case - row is already displayed
+    if ( oSettings._iDisplayLength == -1 )
+    {
+        return;
+    }
+  
+    // Find the node in the table
+/*     var iPos = -1;
+    for( var i=0, iLen=oSettings.aiDisplay.length ; i<iLen ; i++ )
+    {
+        if( oSettings.aoData[ oSettings.aiDisplay[i] ].nTr == nRow )
+        {
+            iPos = i;
+            break;
+        }
+    }
+ */      
+ 
+    // Alter the start point of the paging display
+    if( iPos >= 0 )
+    {
+        oSettings._iDisplayStart = ( Math.floor(iPos / oSettings._iDisplayLength) ) * oSettings._iDisplayLength;
+        this.oApi._fnCalculateEnd( oSettings );
+    }
+      
+    this.oApi._fnDraw( oSettings );
+};
+</script>
+
+<script type="text/javascript" src="{{jquerydataTables_colreorder}}"></script>
+<script type="text/javascript" src="{{jquerydataTables_colreorder_resize}}"></script>
+<script type="text/javascript" src="{{jeditable}}"></script>
+
+<script type="text/javascript">
+/* Initialize datatable table */
+var oTable;
+
+$(document).ready(function() {
+
+	initializeSelectionRowEvent()
+	initializeGoToEvent()
+	initializeTableWidth()
+	
+	/* Init the table */
+	oTable = $('#data_table').dataTable(
+				{
+			        "bPaginate": true,
+			        "bLengthChange": true,
+			        "bFilter": true,
+			        "bSort": true,
+			        "bInfo": true,
+			        "bAutoWidth": true,
+			        "sDom": 'Rl<"#displayTableContainer">frtip', 
+			        "iDisplayLength": 50,
+			        "oLanguage": {
+			            "sLengthMenu": 'Display <select>'+
+			                '<option value="25">25</option>'+
+			                '<option value="50">50</option>'+
+			                '<option value="100">100</option>'+
+			                '<option value="-1">All</option>'+
+			                '</select> records'
+			        }, 
+ 			        "oColReorder": {
+		    			"aiOrder": jsonTableLayoutConfiguration.colsOrder
+		    		},  
+		    		
+		    		"bProcessing": true,
+/* 		            "bServerSide": true, */
+/* 		            "sAjaxSource": "/get_table/", */
+		            
+		            "fnServerParams": function ( aoData ) {
+		                aoData.push( {
+		                	"path": "{{inputParameters.path}}",
+		                	"block": "{{inputParameters.block}}",
+		                	"allowRender": "{{inputParameters.allowRender}}",
+		                	"imageDim": "{{inputParameters.imageDim}}"
+		                		} );
+		            },
+		            "fnDrawCallback": function( oSettings ) {
+		            	if ( typeof oTable != 'undefined' ) {
+		            		setElementsEditable(null)
+		            	}
+		              },
+		             "fnRowCallback": function( nRow, aData, iDisplayIndex, iDisplayIndexFull ) {
+		            	 renderElements(nRow, aData)
+		             },
+		            "bDeferRender": true,
+		    		/* "bRetrieve": true */
+		    		"aaData": generateDataForTable(),	
+		    		"aoColumnDefs": getColumnsDefinition(), 
+		            "bJQueryUI": true,
+		    		"sPaginationType": "full_numbers"
+			    }		
+			);
+	
+	$("#displayTableContainer").html("<a href='#' onclick='showTableConfig()'>Display Table Configuration</a>")
+	
+	{% if dataset.getTable.hasEnabledColumn %}
+	initializeMultipleSelectionTool()
+	{% endif %}
+	setElementsEditable(null)
+	initializeColumnHeader()
+	
+	
+	
+} );
+
+/* Generate data for datatable from table dataset model */
+function generateDataForTable(){
+	dataForTable = new Array();
+	{% for row in tableDataset.getRows %}
+		dataRowForTable = new Array()
+		/* var row_id */
+		{% for cell in row %}
+			dataRowForTable.push("{{cell}}")
+			{% if forloop.first	%}
+				row_id = "{{cell}}"
+			{% endif %}
+
+		{% endfor %}
+		/* dataRowForTable.push("DT_RowId\": \""+row_id+"\"") */
+		/* dataRowForTable.push("DT_RowId: "+row_id) */
+		dataForTable.push(dataRowForTable)
+	{% endfor %}
+	return dataForTable;
+}
+</script>
+
+{% endblock %}
+
+{% block content_menu %}{% endblock %}
+			
+{% block content_view %}
+<div id="configurationContainer">
+	<div id="tableConfigurationContainer">
+		<table id="firstTableConfiguration">
+			<tr>
+				<td>Label</td><td>Visible</td><td>Render</td><td>Edit</td>
+			</tr>
+			{% for column in tableDataset.getColumns %}
+				{% if tableDataset.getNumberOfColumns < 6 or forloop.counter0|divisibleby:2 %}
+			 		 <tr>
+			 		 	<td>{{column.getName}}</td>
+			 		 	<td><input type="checkbox" id="{{column.getName}}_visible"></td>
+			 		 	<td><input type="checkbox" id="{{column.getName}}_renderable"></td>
+			 		 	<td><input type="checkbox" id="{{column.getName}}_editable"></td>
+			 		 </tr>
+	 			{% endif %} 
+			{% endfor %}
+		</table>
+		
+		{% if tableDataset.getNumberOfColumns > 5 %}
+		<table id="secondTableConfiguration">
+			<tr>
+				<td>Label</td><td>Visible</td><td>Render</td><td>Edit</td>
+			</tr>
+			{% for column in tableDataset.getColumns %}
+				 {% if forloop.counter0|divisibleby:2 == False %}
+			 		 <tr>
+			 		 	<td>{{column.getName}}</td>
+			 		 	<td><input type="checkbox" id="{{column.getName}}_visible"></td>
+			 		 	<td><input type="checkbox" id="{{column.getName}}_renderable"></td>
+			 		 	<td><input type="checkbox" id="{{column.getName}}_editable"></td>
+			 		 </tr>
+	 			{% endif %} 
+			{% endfor %}
+		</table>
+		{% endif %} 
+	</div>
+	<div id="tableConfigurationButtonBar">
+		<button id="acceptTableConfigurationButton" onclick="saveTableConfiguration()">
+			Ok
+		</button>
+		<button id="cancelTableConfigurationButton" onclick="$('#configurationContainer').slideUp('slow')">
+			Cancel
+		</button>
+	</div>
+</div>
+
+	
+<div id="table_container" style="overflow-x:auto">
+		<table cellspacing="0" id="data_table" width="100%">
+		</table>
+</div>
+			
+{% endblock %}

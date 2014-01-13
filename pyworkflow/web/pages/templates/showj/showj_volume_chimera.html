@@ -1,0 +1,64 @@
+{% extends 'showj/showj_base.html' %} 
+{% block head %}
+<!-- CSS -->
+<!-- <link rel="stylesheet" href="http://code.jquery.com/ui/1.10.3/themes/smoothness/jquery-ui.css" /> -->
+
+<!-- TABLE STYLES 
+Overwrite general section property for volume view with Chimera-->
+<style type="text/css">
+section {
+  display: -webkit-box;
+  -webkit-box-orient: horizontal;
+  -webkit-box-pack: center;
+  -webkit-box-align: center;
+ 
+  display: -moz-box;
+  -moz-box-orient: horizontal;
+  -moz-box-pack: center;
+  -moz-box-align: center;
+  
+  display: box;
+  box-orient: horizontal;
+  box-pack: center;
+  box-align: center;
+}
+</style>
+
+<!-- JS -->
+<script type="text/javascript" src="http://www.cgl.ucsf.edu/chimera/webgl/PhiloGL-1.3.0.js"></script>
+<script src="http://code.jquery.com/ui/1.10.3/jquery-ui.js"></script>
+
+<!-- Init webgl -->
+<script type="text/javascript">
+$(document).ready(function(){
+	webGLStart();
+})
+</script>
+
+{% endblock %}
+
+{% block content_menu %}{% endblock %}
+			
+{% block content_view %}{% endblock %}
+
+{% block content_end_page %}	
+<!-- CHIMERA -->
+<div id="fallback" class="fallback"></div>
+<canvas id="molview" width="512" height="334"></canvas>
+
+<script>
+if (!PhiloGL.hasWebGL()) {
+	document.body.className = 'no-webgl';
+	document.getElementById('fallback').innerHTML = ''
+	+ '<div style="margin:10px;">'
+	+ 'Your web browser does not support or is not configured for WebGL.'
+	+ '  See <a href="http://get.webgl.org/">WebGL Support</a>'
+	+ ' for more information.'
+	+ '</div>';
+}
+</script>
+{% autoescape off %}
+	{{chimeraHtml}}
+{% endautoescape %}	
+
+{% endblock %}
