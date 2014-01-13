@@ -110,10 +110,15 @@ if __name__ == '__main__':
         elif mode == MODE_TESTS:
             if n > 2:
                 tests = sys.argv[2]
-                path = os.getcwd()
-                os.chdir(PW_HOME)
-                runCmd('-m unittest pyworkflow.tests.%s' % tests)
-                os.chdir(path)
+                if tests == "show": # only show available tests
+                    f = open(os.path.join(PW_HOME, 'batch_tests'))
+                    for l in f:
+                        print l.strip()
+                else: # run the desired test
+                    path = os.getcwd()
+                    os.chdir(PW_HOME)
+                    runCmd('-m unittest pyworkflow.tests.%s' % tests)
+                    os.chdir(path)
         elif mode == MODE_TESTS_DATA:
             runCmd('sync_data.py')
             
@@ -131,5 +136,6 @@ Usage:
         project [PROJECT_NAME] : will open the specified project, special name 'last' can be used.  
         webserver : will launch django webserver
         tests :  will run the tests starting from pyworkflow.tests
+            special case "show" will list all possible tests.
         help : print this help message
 """
