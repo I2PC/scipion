@@ -48,14 +48,14 @@ class ProtRelionBase(EMProtocol):
         RELION_DIR = os.environ['RELION_HOME']
         os.environ['PATH'] = os.environ['PATH'] + os.pathsep + join(RELION_DIR, 'bin', '')
         os.environ['LD_LIBRARY_PATH'] = os.environ['LD_LIBRARY_PATH'] + os.pathsep + join(RELION_DIR, 'lib64', '')
-        os.environ['RELION_QSUB_TEMPLATE'] = join(RELION_DIR, 'bin', 'qsub.csh')
+        #os.environ['RELION_QSUB_TEMPLATE'] = join(RELION_DIR, 'bin', 'qsub.csh')
 
             
     def defineSteps(self): 
         
         self.loadEnvironment()
-        
-        self.imgStar    = createRelionInputImages(self, self.inputParticles.get())        
+        print "doCTF: ", self.doCtf.get()
+        self.imgStar    = createRelionInputImages(self, self.inputParticles.get(), doCTF=self.doCtf.get())        
         self.volumeName = createRelionInputVolume(self, self.input3DReferences.get())
 
 
@@ -327,7 +327,18 @@ class Relion3DClassification(ProtClassify3D, ProtRelionBase):
 
     #TODO
     def createOutput(self):
-        pass
+        volumes = self._createSetOfVolumes()
+        volumes.setSamplingRate(self.input3DReferences.get().getSamplingRate())
+                
+        for k in range(1, self.numberOfClasses.get()):
+            for iter in range(0, self.numberOfIterations.get()):
+                volFn = self._getExtraPath('relion_it%03d' % iter +'_class%03d.mrc' % k)
+                vol = Volume()
+                vol.setFileName(volFn)
+                volumes.append(vol)
+        
+        volumes.write()
+        self._defineOutputs(outputVolumes=volumes)
 
     #TODO
     def _summary(self):
