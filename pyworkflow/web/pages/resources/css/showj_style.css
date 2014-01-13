@@ -7,7 +7,7 @@
 
 
 /* NAV (TOP MENU) */
-nav {
+/* nav {
 	height: 55px;
 	width: 100%;
 	background-color: #7a0000;
@@ -22,7 +22,7 @@ nav ul {
 nav ul li {
 	padding: 5px 10px 5px 0px;
 	display: inline;
-}
+} */
 
 /* FOOTER */
 
@@ -238,7 +238,7 @@ aside li{
 	display: block;
 	width: 220px;
 	height: 20px;
-	background-color: #e3e3e3;
+	background-color: #EAEBEC;
 	padding: 2px 10px;
 }
 
@@ -277,8 +277,6 @@ section {
 }
 
 section .img_container {
-	/* margin: 10px 2px 10px 2px; */
-	/* margin: 2px; */
 	padding: 2px;
 	display: inline-block;
 }
@@ -303,7 +301,7 @@ section .imageTitle{
 	z-index: 998;
 	display:none; 
 	width: 100%;*/
-	background-color: rgb(50, 1, 1);
+	/* background-color: rgb(50, 1, 1); */
 	height: 20px;
 	color: #FFF;
 }
@@ -321,8 +319,8 @@ section .imageTitle{
 .multipleSelectionToolContainer{
 	display:none;
 	z-index:999;
-	background-color: #e6e6e6;
-	color: #555555;
+	background-color: #eaebec;
+	color: #6e6e6e;
 	
 	-webkit-align-items: center;
 	-moz-align-items: center;
@@ -349,7 +347,7 @@ section .imageTitle{
 
 /* GALLERY VIEW */
 #column_label {
-	background-color: #dddddd;
+	background-color: #eaebec;
 	font: 12px Helvetica;
 	text-align: center;
 }
@@ -437,11 +435,6 @@ section .imageTitle{
 	width: 60%;
 }
 
-
-#tableConfigurationContainer table{
-	
-}
-
 #tableConfigurationButtonBar{
 	text-align: center;
 }
@@ -454,10 +447,8 @@ section .imageTitle{
 	float:right;
 }
 
-
 /* FIX FOR DATABLE ARROW BUTTON FIT IN ONE LINE */
-.css_left { float: left; }
-.css_right {float: right; }
+.css_left {float: left;}
+.css_right {float: right;}
 
 .DataTables_sort_icon{float: left;}
-

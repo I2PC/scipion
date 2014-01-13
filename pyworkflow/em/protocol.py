@@ -83,9 +83,9 @@ class EMProtocol(Protocol):
             child.write()
         Protocol._insertChild(self, key, child)
         
+        
 class ProtImportImages(EMProtocol):
     """Common protocol to import a set of images in the project"""
-
         
     def _defineParams(self, form):
         form.addSection(label='Input')
@@ -106,7 +106,7 @@ class ProtImportImages(EMProtocol):
         Register other parameters.
         """
         from pyworkflow.em import findClass
-        filePaths = glob(pattern)
+        filePaths = glob(expandPattern(pattern))
         
         imgSet = createSetFunction 
         # Setting Acquisition properties
@@ -149,10 +149,10 @@ class ProtImportImages(EMProtocol):
   
     def _validate(self):
         errors = []
-        if self.pattern.get() == "":
+        if not self.pattern.get():
             errors.append('The *pattern* cannot be empty.')
         else:
-            filePaths = glob(self.pattern.get())
+            filePaths = glob(expandPattern(self.pattern.get()))
         
             if len(filePaths) == 0:
                 errors.append('There are no files matching the *pattern*')
