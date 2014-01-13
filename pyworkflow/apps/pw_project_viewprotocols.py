@@ -269,6 +269,7 @@ class ProtocolsView(tk.Frame):
         
         self.style = ttk.Style()
         self.root.bind("<F5>", self.refreshRuns)
+        self.__autoRefreshCounter = 3 # start by 3 secs  
         # Hide the right-click menu
         #self.root.bind('<FocusOut>', self._unpostMenu)
         #self.root.bind("<Key>", self._unpostMenu)
@@ -382,15 +383,23 @@ class ProtocolsView(tk.Frame):
         return p
         
         
-    def refreshRuns(self, e=None):
+    def refreshRuns(self, e=None, autoRefresh=False):
         """ Refresh the status of diplayed runs. """
         self.updateRunsTree()
         self.updateRunsGraph(True)
+        if not autoRefresh:
+            self.__autoRefreshCounter = 3 # start by 3 secs  
+            if self.__autoRefresh:
+                self.runsTree.after_cancel(self.__autoRefresh)
+                self.__autoRefresh = self.runsTree.after(self.__autoRefreshCounter*1000, self._automaticRefreshRuns)
         
     def _automaticRefreshRuns(self, e=None):
         # Schedule an automatic refresh after 1 sec
-        self.refreshRuns()
-        self.runsTree.after(3000, self._automaticRefreshRuns)
+        self.refreshRuns(autoRefresh=True)
+        secs = self.__autoRefreshCounter
+        # double the number of seconds up to 30 min
+        self.__autoRefreshCounter = min(2*secs, 1800)
+        self.__autoRefresh = self.runsTree.after(secs*1000, self._automaticRefreshRuns)
                 
     def createActionToolbar(self):
         """ Prepare the buttons that will be available for protocol actions. """
