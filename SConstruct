@@ -2,8 +2,13 @@
 
 # basic setup, import all environment and custom tools
 import os
-import platform 
+from os.path import join, abspath, dirname
+import sys
+import platform
+
 import SCons.Script
+
+
 if platform.system() == 'Windows':
     env = Environment(tools = ['mingw'], ENV = os.environ)
     env['ENV']['JAVA_HOME'] = "/c/Java/jdk1.6.0_34"
@@ -11,8 +16,8 @@ if platform.system() == 'Windows':
     env.PrependENVPath('LIB', 'C:\\MinGW\\lib') 
 else:
     env = Environment(ENV=os.environ,
-          tools=['default', 'disttar'],
-	  toolpath=['external/scons/ToolsFromWiki'])
+                      tools=['default', 'disttar', "URLDownload", "Unpack"],
+                      toolpath=['scons/Tools'])
     env.AppendUnique(LIBPATH=os.environ['LD_LIBRARY_PATH'])
     env.AppendUnique(LIBPATH=['/usr/lib64/openmpi/lib','/usr/lib64/mpi/gcc/openmpi/lib64','/usr/lib/openmpi'])
 
@@ -254,8 +259,6 @@ if (ARGUMENTS['mode'] == 'configure'):
         os._exit(os.EX_OSERR)
 
     # Java
-    import sys
-    sys.path.append("external/scons/ToolsFromWiki")
     import ConfigureJNI
     if not ConfigureJNI.ConfigureJNI(env):
         import os
@@ -404,17 +407,103 @@ elif (ARGUMENTS['mode'] == 'compile'):
 elif (ARGUMENTS['mode'] == 'docs'):
     action = env.Action("doxygen")
     env.Execute(action)
+    
+elif (ARGUMENTS['mode'] == 'scipion'):
+    EXT_PYTHON = join('external', 'python')
+    XMIPP_HOME = abspath('.')
+    SITE_PACKAGES = join('lib', 'python2.7', 'site-packages')
+    #env['URLDOWNLOAD_USEURLFILENAME'] = False
+    env['URLDOWNLOAD_DIRECTORY'] = EXT_PYTHON
+    env['UNPACK']['EXTRACTDIR'] = EXT_PYTHON
+    
+    def buildPythonModule(target, source, env):
+        moduleDir = str(source[0])
+        currentDir = os.getcwd()
+        os.chdir(moduleDir)
+        logFile = join(XMIPP_HOME, 'build', str(target[0]) + '.log')
+        #TODO: Improve the os.system and the stdout and stderr redirects with 
+        # the use of Popen
+        cmd = 'xmipp_python setup.py install --prefix %s > %s 2>&1' % (XMIPP_HOME, logFile)
+        print "cmd: ", cmd
+        os.system(cmd)
+        os.chdir(currentDir)
+     
+    def addPythonModule(name, modDict):
+        tar = join(EXT_PYTHON, modDict['FILE'])
+        # Download the library compressed file
+        # The Download filename will be taken from URL
+        download = env.URLDownload(name+'-download', modDict['URL'])
+        dir = join(EXT_PYTHON, modDict['DIR'])
+        # Unpack the python module
+        unpack = env.Unpack(name+'-unpack', download, UNPACKLIST=dir)
+        env.Clean(unpack, dir)
+        # Copy setup files
+        if 'COPY' in modDict:
+            src, dst = modDict['COPY']
+            copy = env.Command(name+'copy', None, Copy(join(dir, dst), join(EXT_PYTHON, src)))
+        else:
+            copy = unpack
+        # Build the module 
+        setup = env.Command(name+'-setup', Dir(dir), buildPythonModule)
+        env.Depends(setup, copy)
+        env.Clean(setup, [join(SITE_PACKAGES, name)])
+        alias = env.Alias(name, setup)
+        env.Alias('pymodules', name)
+        
+        return alias        
+        
+    PYTHON_MODULES = {'django': {'URL': "http://sourceforge.net/projects/pyworkflow/files/external/Django-1.5.5.tar.gz/download",
+                                 'FILE': 'Django-1.5.5.tgz',
+                                 'DIR': 'Django-1.5.5'},
+#                      'pycrypto': {'URL': "https://pypi.python.org/packages/source/p/pycrypto/pycrypto-2.0.1.tar.gz",
+#                                   'FILE': 'pycrypto-2.0.1.tar.gz',
+#                                   'DIR': 'pycrypto-2.0.1'},                      
+#                      'paramiko': {'URL': "http://sourceforge.net/projects/pyworkflow/files/external/paramiko-1.10.tgz/download",
+#                                   'FILE': 'paramiko-1.10.tgz',
+#                                   'DIR': 'paramiko-1.10'},
+                      'PIL': {'URL': "http://sourceforge.net/projects/pyworkflow/files/external/Imaging-1.1.7.tar.gz/download",
+                              'FILE': 'Imaging-1.1.7.tar.gz',
+                              'DIR': 'Imaging-1.1.7',
+                              'COPY': ['PIL_setup.py', 'setup.py']},                      
+                      }
+        
+    for name, modDict in PYTHON_MODULES.iteritems():
+       addPythonModule(name, modDict)
 
-# TODO: make specific modes for generation of dist
+elif (ARGUMENTS['mode'] == 'install'):
+    if not 'dir' in ARGUMENTS:
+        raise Exception("dir=PATH should be passed when mode=install")
+    path = ARGUMENTS['dir']
+    
+    import shutil
+    if os.path.exists(path):
+        print "Removing dir: '%s'" % path
+        shutil.rmtree(path) # Remove install directory
+        
+    INSTALL_DIRS = ['lib', 'bin', 'resources', 'protocols', 'java/lib', 'external/python/Python-2.7.2/']
+    
+    for src in INSTALL_DIRS:
+        dest = os.path.join(path, src)
+        print "Coping directory from '%s' to '%s'" % (src, dest)
+        shutil.copytree(src, dest, ignore=shutil.ignore_patterns("*.o", "*.pyc"))
+        
+    #PYTHON_FILES = ['external/python/Python-2.7.2/' + f for f in ['libpython2.7.a', 'libpython2.7.so', 'libpython2.7.so.1.0', 'python']]
+    XMIPP_FILES = ['.xmipp' + s for s in ['.autocomplete', '.bashrc', '.csh', '_programs.autocomplete', '_programs.sqlite']]
+    TCLTK_FILES = ['external/python/%s8.5.10/unix/lib%s.so' % (s, s) for s in ['tcl', 'tk']]
+    INSTALL_FILES = XMIPP_FILES + TCLTK_FILES
+    
+    for src in INSTALL_FILES:
+        dest = os.path.join(path, src)
+        destDir = os.path.dirname(dest)
+        if not os.path.exists(destDir):
+            print "Creating dir '%s'" % destDir
+            os.makedirs(destDir)
+        print "Coping file from '%s' to '%s'" % (src, dest)
+        shutil.copy2(src, dest)
 
-# distribution
-""" FIXME Testing, not ready for production
-env['DISTTAR_FORMAT'] = 'bz2'
-env.Append(DISTTAR_EXCLUDEEXTS = ['.o', '.os', '.so', '.a', '.dll', '.cc',
-    '.cache', '.pyc', '.cvsignore', '.dblite', '.log', '.bz2'],
-DISTTAR_EXCLUDEDIRS = ['CVS', '.svn', '.sconf_temp', 'dist']
-)
-disttar = env.DistTar(os.path.join(base_dir, 'Xmipp-1.1'), [env.Dir('#')])
-env.Alias('dist', disttar)
-"""
-
+    CLEAN_DIRS = ['lib/python2.7/site-packages/matplotlib/tests', 'resources/test']
+    
+    for src in CLEAN_DIRS:
+        dest = os.path.join(path, src)
+        print "Deleting directory '%s'" % dest
+        shutil.rmtree(dest)

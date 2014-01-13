@@ -998,6 +998,7 @@ double errorMaxFreqCTFs( MetaData &MD1,
 #endif
 #undef DEBUG
     //Armstrong ^-1
+    //K1 = PI / 2 * 2 * lambda;
     return 1.0/sqrt(phaseRad/(CTF1.K1*abs(CTF1.DeltafU - CTF1.DeltafV)));
 }
 
@@ -1046,6 +1047,7 @@ double errorMaxFreqCTFs2D( MetaData &MD1,
 #endif
 
     int counter = 0 ;
+    double _freq=0.;
     for (int i=0; i<(int)yDim; ++i)
     {
         FFT_IDX2DIGFREQ(i, yDim, YY(freq));
@@ -1054,6 +1056,8 @@ double errorMaxFreqCTFs2D( MetaData &MD1,
         {
             FFT_IDX2DIGFREQ(j, xDim, XX(freq));
             XX(freq) *= iTm;
+            _freq = freq.module();
+            //freq *= CTF1.Tm;
             CTF1.precomputeValues(XX(freq),YY(freq));
             CTF2.precomputeValues(XX(freq),YY(freq));
             double a = CTF1.getValueArgument();
@@ -1061,7 +1065,6 @@ double errorMaxFreqCTFs2D( MetaData &MD1,
             if (fabs(b-a) < phaseRad)
                 counter++;
 #ifdef DEBUG
-
             counterAux++;
             DIRECT_A2D_ELEM(argDiffMul,i,j)=fabs(b-a);
             DIRECT_A2D_ELEM(arg1Mul,i,j)=a;
@@ -1078,7 +1081,11 @@ double errorMaxFreqCTFs2D( MetaData &MD1,
     double areaLessHalfPIPixels = counter;
     double totalArePixels       = PI*Xdim*Xdim/4.0;
     double maxFreqA             = 1./(2.*CTF1.Tm);
-    double resolutionA_1        = areaLessHalfPIPixels * maxFreqA / totalArePixels;
+    double resolutionA_1        = 0;
+    if (areaLessHalfPIPixels > totalArePixels)
+    	resolutionA_1 = maxFreqA;
+    else
+    	resolutionA_1 = areaLessHalfPIPixels * maxFreqA / totalArePixels;
     double resolutionA          = 1./ resolutionA_1;
 #ifdef DEBUG
     Matrix2D<double>  R;

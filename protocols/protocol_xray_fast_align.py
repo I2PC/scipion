@@ -42,8 +42,20 @@ class ProtXrayFastAlign(XmippProtocol):
             
             self.insertStep('createDir', verifyfiles=[tomoDir], path=tomoDir)
             
-            params = '-input %(fnRootIn)s.mrc -output %(fnRootTmp)s.prexf  -tiltfile %(fnRootIn)s.tlt '\
-                     '-rotation 0.0 -sigma1 0.03 -radius2 0.25 -sigma2 0.05'
+            tiltXcorrParams = {}
+            tiltXcorrParams['-input'] = '%(fnRootIn)s.mrc'
+            tiltXcorrParams['-output'] = '%(fnRootTmp)s.prexf'
+            tiltXcorrParams['-tiltfile'] = '%(fnRootIn)s.tlt'
+            tiltXcorrParams['-rotation'] = self.rotation
+            tiltXcorrParams['-sigma1'] = self.sigma1
+            tiltXcorrParams['-radius2'] = self.radius2 
+            tiltXcorrParams['-sigma2'] = self.sigma2
+            params = ''
+            for k, v in tiltXcorrParams.iteritems():
+                params += " %s %s " % (k, str(v))
+            
+#             params = '-input %(fnRootIn)s.mrc -output %(fnRootTmp)s.prexf  -tiltfile %(fnRootIn)s.tlt '\
+#                      '-rotation 0.0 -sigma1 0.03 -radius2 0.25 -sigma2 0.05'
             self.insertRunJobStep('tiltxcorr', params=params % locals(), verifyFiles=[fnRootTmp + '.prexf'])
 
             
@@ -53,9 +65,21 @@ class ProtXrayFastAlign(XmippProtocol):
             params = '-input %(fnRootIn)s.mrc -output %(fnRootTmp)s.preali -mode 0 -xform %(fnRootTmp)s.prexg -float 2' 
             self.insertRunJobStep('newstack', params=params % locals(), verifyFiles=[fnRootTmp + '.preali'])
             
-            params = '-input %(fnRootTmp)s.preali -output %(fnRootTmp)s.fid -tiltfile %(fnRootIn)s.tlt '\
-            '-prexf %(fnRootTmp)s.prexg -rotation 0.0 -sigma1 0.03 -radius2 0.25 -sigma2 0.05 -border 49,49 '\
-            '-size 300,300 -overlap 0.33,0.33'
+            
+            tiltXcorrParams['-input'] = '%(fnRootTmp)s.preali'
+            tiltXcorrParams['-output'] = '%(fnRootTmp)s.fid '
+            tiltXcorrParams['-tiltfile'] = '%(fnRootIn)s.tlt'
+            tiltXcorrParams['-prexf'] = '%(fnRootTmp)s.prexg'
+            tiltXcorrParams['-border'] = self.border
+            tiltXcorrParams['-size'] = self.size
+            tiltXcorrParams['-overlap'] = self.overlap
+            params = ''
+            for k, v in tiltXcorrParams.iteritems():
+                params += " %s %s " % (k, str(v))
+            
+#             params = '-input %(fnRootTmp)s.preali -output %(fnRootTmp)s.fid -tiltfile %(fnRootIn)s.tlt '\
+#             '-prexf %(fnRootTmp)s.prexg -rotation 0.0 -sigma1 0.03 -radius2 0.25 -sigma2 0.05 -border 49,49 '\
+#             '-size 300,300 -overlap 0.33,0.33'
             self.insertRunJobStep('tiltxcorr', params=params % locals(), verifyFiles=[fnRootTmp + '.fid'])
    
    
@@ -66,39 +90,38 @@ class ProtXrayFastAlign(XmippProtocol):
             tiltAlignParams['-OutputTransformFile'] = '%(fnRootTmp)s.tltxf' 
             tiltAlignParams['-OutputLocalFile'] = '%(fnRootTmp)s_local.xf'
             tiltAlignParams['-OutputTiltFile'] = '%(fnRootOut)s.tlt' 
-            tiltAlignParams['-RotationAngle'] = 0.0 
-            tiltAlignParams['-AngleOffset'] = 0.0 
-            tiltAlignParams['-RotOption'] = -1
-            tiltAlignParams['-RotDefaultGrouping'] = 5 
-            tiltAlignParams['-TiltOption'] = 0 
-            tiltAlignParams['-MagReferenceView'] = 1 
-            tiltAlignParams['-MagOption'] = 0 
-            tiltAlignParams['-MagDefaultGrouping'] = 4 
-            tiltAlignParams['-XStretchOption'] = 0 
-            tiltAlignParams['-XStretchDefaultGrouping'] = 7 
-            tiltAlignParams['-SkewOption'] = 0 
-            tiltAlignParams['-SkewDefaultGrouping'] = 11 
-            tiltAlignParams['-ResidualReportCriterion'] = 3.0  
-            tiltAlignParams['-SurfacesToAnalyze'] = 1 
-            tiltAlignParams['-MetroFactor'] = 0.25 
-            tiltAlignParams['-MaximumCycles'] = 1000 
-            tiltAlignParams['-AxisZShift'] = 0.0 
-            tiltAlignParams['-LocalAlignments'] = 0 
-            tiltAlignParams['-MinFidsTotalAndEachSurface'] = '8,3' 
-            tiltAlignParams['-LocalOutputOptions'] = '0,0,0' 
-            tiltAlignParams['-LocalRotOption'] = 3 
-            tiltAlignParams['-LocalRotDefaultGrouping'] = 6 
-            tiltAlignParams['-LocalTiltOption'] = 5 
-            tiltAlignParams['-LocalTiltDefaultGrouping'] = 6 
-            tiltAlignParams['-LocalMagReferenceView'] = 1 
-            tiltAlignParams['-LocalMagOption'] = 3 
-            tiltAlignParams['-LocalMagDefaultGrouping'] = 7 
-            tiltAlignParams['-LocalXStretchOption'] = 0 
-            tiltAlignParams['-LocalXStretchDefaultGrouping'] = 7 
-            tiltAlignParams['-LocalSkewOption'] = 0
-            tiltAlignParams['-LocalSkewDefaultGrouping'] = 11 
-            tiltAlignParams['-BeamTiltOption'] = 0 
-   
+            tiltAlignParams['-RotationAngle'] = self.RotationAngle 
+            tiltAlignParams['-AngleOffset'] = self.AngleOffset
+            tiltAlignParams['-RotOption'] = self.RotOption
+            tiltAlignParams['-RotDefaultGrouping'] = self.RotDefaultGrouping
+            tiltAlignParams['-TiltOption'] = self.TiltOption
+            tiltAlignParams['-MagReferenceView'] = self.MagReferenceView
+            tiltAlignParams['-MagOption'] = self.MagOption
+            tiltAlignParams['-MagDefaultGrouping'] = self.MagDefaultGrouping
+            tiltAlignParams['-XStretchOption'] = self.XStretchOption
+            tiltAlignParams['-XStretchDefaultGrouping'] = self.XStretchDefaultGrouping
+            tiltAlignParams['-SkewOption'] = self.SkewOption
+            tiltAlignParams['-SkewDefaultGrouping'] = self.SkewDefaultGrouping
+            tiltAlignParams['-ResidualReportCriterion'] = self.ResidualReportCriterion
+            tiltAlignParams['-SurfacesToAnalyze'] = self.SurfacesToAnalyze
+            tiltAlignParams['-MetroFactor'] = self.MetroFactor
+            tiltAlignParams['-MaximumCycles'] = self.MaximumCycles
+            tiltAlignParams['-AxisZShift'] = self.AxisZShift
+            tiltAlignParams['-LocalAlignments'] = self.LocalAlignments
+            tiltAlignParams['-MinFidsTotalAndEachSurface'] = self.MinFidsTotalAndEachSurface
+            tiltAlignParams['-LocalOutputOptions'] = self.LocalOutputOptions
+            tiltAlignParams['-LocalRotOption'] = self.LocalRotOption
+            tiltAlignParams['-LocalRotDefaultGrouping'] = self.LocalRotDefaultGrouping
+            tiltAlignParams['-LocalTiltOption'] = self.LocalTiltOption
+            tiltAlignParams['-LocalTiltDefaultGrouping'] = self.LocalTiltDefaultGrouping
+            tiltAlignParams['-LocalMagReferenceView'] = self.LocalMagReferenceView
+            tiltAlignParams['-LocalMagOption'] = self.LocalMagOption
+            tiltAlignParams['-LocalMagDefaultGrouping'] = self.LocalMagDefaultGrouping
+            tiltAlignParams['-LocalXStretchOption'] = self.LocalXStretchOption
+            tiltAlignParams['-LocalXStretchDefaultGrouping'] = self.LocalXStretchDefaultGrouping
+            tiltAlignParams['-LocalSkewOption'] = self.LocalSkewOption
+            tiltAlignParams['-LocalSkewDefaultGrouping'] = self.LocalSkewDefaultGrouping
+            tiltAlignParams['-BeamTiltOption'] = self.BeamTiltOption
             params = ''
             for k, v in tiltAlignParams.iteritems():
                 params += " %s %s " % (k, str(v))
@@ -114,7 +137,7 @@ class ProtXrayFastAlign(XmippProtocol):
             self.insertRunJobStep('newstack', params=params % locals(), verifyFiles=[fnOut])
             
             # Create metadata 
-            self.insertStep('createtMd', tomoOut=fnOut, tomoRoot=fnRootOut,fnTiltIn=fnRootIn+'.tlt',fnTiltOut=fnRootOut+'.tlt', verifyfiles=[fnRootOut + '.xmd'])
+            self.insertStep('createtMd', tomoOut=fnOut, tomoRoot=fnRootOut, fnTiltIn=fnRootIn + '.tlt', fnTiltOut=fnRootOut + '.tlt', verifyfiles=[fnRootOut + '.xmd'])
             # Add aligned tomo to list
             self.tomoAlignedList.append(fnRootOut)
             
@@ -151,73 +174,12 @@ class ProtXrayFastAlign(XmippProtocol):
             runShowJ(resultMd, extraParams='--mode gallery')
         pass
     
+    def papers(self):
+        papers = []
+        papers.append('IMOD: Kremer, JSB (1997) [http://http://www.sciencedirect.com/science/article/pii/S1047847796900131]')
+        return papers
     
-# def tiltAlign(log, fnRootIn, fnRootOut, fnRootTmp):
-#              
-#     tiltAlignParams = {}
-#     tiltAlignParams['-tiltfile'] = '%(fnRootIn)s.tlt' 
-#     tiltAlignParams['-ModelFile'] = '%(fnRootTmp)s.fid'
-#     tiltAlignParams['-ImageFile'] = '%(fnRootTmp)s.preali'
-#     tiltAlignParams['-OutputTransformFile'] = '%(fnRootTmp)s.tltxf' 
-#     tiltAlignParams['-OutputLocalFile'] = '%(fnRootTmp)s_local.xf'
-#     tiltAlignParams['-OutputTiltFile'] = '%(fnRootOut)s.tlt' 
-#     tiltAlignParams['-RotationAngle'] = 0.0 
-#     tiltAlignParams['-AngleOffset'] = 0.0 
-#     tiltAlignParams['-RotOption'] = -1
-#     tiltAlignParams['-RotDefaultGrouping'] = 5 
-#     tiltAlignParams['-TiltOption'] = 0 
-#     tiltAlignParams['-MagReferenceView'] = 1 
-#     tiltAlignParams['-MagOption'] = 0 
-#     tiltAlignParams['-MagDefaultGrouping'] = 4 
-#     tiltAlignParams['-XStretchOption'] = 0 
-#     tiltAlignParams['-XStretchDefaultGrouping'] = 7 
-#     tiltAlignParams['-SkewOption'] = 0 
-#     tiltAlignParams['-SkewDefaultGrouping'] = 11 
-#     tiltAlignParams['-ResidualReportCriterion'] = 3.0  
-#     tiltAlignParams['-SurfacesToAnalyze'] = 1 
-#     tiltAlignParams['-MetroFactor'] = 0.25 
-#     tiltAlignParams['-MaximumCycles'] = 1000 
-#     tiltAlignParams['-AxisZShift'] = 0.0 
-#     tiltAlignParams['-LocalAlignments'] = 0 
-#     tiltAlignParams['-MinFidsTotalAndEachSurface'] = '8,3' 
-#     tiltAlignParams['-LocalOutputOptions'] = '0,0,0' 
-#     tiltAlignParams['-LocalRotOption'] = 3 
-#     tiltAlignParams['-LocalRotDefaultGrouping'] = 6 
-#     tiltAlignParams['-LocalTiltOption'] = 5 
-#     tiltAlignParams['-LocalTiltDefaultGrouping'] = 6 
-#     tiltAlignParams['-LocalMagReferenceView'] = 1 
-#     tiltAlignParams['-LocalMagOption'] = 3 
-#     tiltAlignParams['-LocalMagDefaultGrouping'] = 7 
-#     tiltAlignParams['-LocalXStretchOption'] = 0 
-#     tiltAlignParams['-LocalXStretchDefaultGrouping'] = 7 
-#     tiltAlignParams['-LocalSkewOption'] = 0
-#     tiltAlignParams['-LocalSkewDefaultGrouping'] = 11 
-#     tiltAlignParams['-BeamTiltOption'] = 0 
-#      
-#      
-#     params = ''
-#     for k, v in tiltAlignParams.iteritems():
-#         params += " %s %s " % (k, str(v))
-#      
-#     command = 'tiltalign ' + params % locals()
-#     
-#     from protlib_xmipp import greenStr
-#     
-#     printLog("Running command: %s" % greenStr(command),log)
-#     
-#     try:
-#         retcode = call(command, shell=True, stdout=sys.stdout, stderr=sys.stderr)
-#         if log:
-#             printLog("Process returned with code %d" % retcode,log)
-#             if retcode != 0:
-#                 raise Exception("Process returned with code %d, command: %s" % (retcode,command))
-#     except OSError, e:
-#         raise Exception("Execution failed %s, command: %s" % (e, command))
-# 
-# 
-# #     os.system('tiltalign ' + params % locals())
-    
-    
+
 def createtMd(log, tomoOut, tomoRoot, fnTiltIn, fnTiltOut):
     md = xmipp.MetaData()
     md.read(tomoOut)
@@ -235,6 +197,6 @@ def createResultMd(log, TomogramList, resultMd):
 #         tomoBaseName = basename(tomoRoot)
 #         md.read(tomoRoot + ".xmd")
 #         md.write('tomo_%s@%s' % (tomoBaseName, resultMd), xmipp.MD_APPEND)
-        mdOut.setValue(xmipp.MDL_TOMOGRAMMD, tomogram+'.xmd', mdOut.addObject())
+        mdOut.setValue(xmipp.MDL_TOMOGRAMMD, tomogram + '.xmd', mdOut.addObject())
      
     mdOut.write('tomograms@%s' % (resultMd), xmipp.MD_APPEND)
