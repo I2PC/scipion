@@ -24,7 +24,7 @@
 	background-color: black;
 /* 	border-radius: 6px; */
 	opacity: 1;
-	box-shadow: 0 0 1em #444
+	box-shadow: 0 0 1em #6e6e6e;
 }
 
 .messi-wrapper {
@@ -44,16 +44,13 @@
 /* 	-moz-border-radius-bottomleft: 0; */
 /* 	-moz-border-radius-topleft: 5px; */
 	color: white;
-/* 	border-left: 2.5px solid FireBrick; */
-/* 	border-top: 2.5px solid FireBrick; */
 	font-size: 0.9em;
 	font-weight: bold;
 	text-align: center;
-	/* background: DarkRed; */
 	background: Firebrick;
 }
 
-.messi-titlebox.info {
+/* .messi-titlebox.info {
 	background-color: #4ea5cd;
 	background-image: none
 }
@@ -66,71 +63,13 @@
 .messi-titlebox.warning {
 	background-color: #eaaf51;
 	background-image: none
-}
+} 
 
 .messi-titlebox.success {
 	background-color: #61b832;
 	background-image: none
-}
-
-/* .btn-close {
-	background: url(../../../resources/dialog_close.png) 0.5em no-repeat;
-	background-size: 20%;
-	font-size: 0.8em;
-	color: black;
-	width: 6.3em;
-	height: 2em;
-	background-color: LightGray;
-	padding: 1px;
-	padding-left: 1.7em;
-	font-weight: bold;
-	letter-spacing: 0.2em;
-	text-align: center;
-	font-weight: bold;
-	margin-bottom: 0.5em;
-}
-
-.btn-close:hover {
-	background-color: white;
-} */
-
-/* .btn-cancel {
-	background: url(../../../resources/dialog_cancel.png) 0.5em no-repeat;
-	background-size: 20%;
-	font-size: 0.8em;
-	width: 7.2em;
-	height: 2em;
-	padding: 1px;
-	padding-left: 1.7em;
-	font-weight: bold;
-	letter-spacing: 0.2em;
-	text-align: center;
-	font-weight: bold;
-	margin: 0 0.5em 0.5em 0.5em;
-}
-
-.btn-cancel:hover {
-	background-color: white;
-} */
-
-/* .btn-select {
-	background: url(../../../resources/dialog_ok.png) 0.5em no-repeat;
-	background-size: 20%;
-	font-size: 0.8em;
-	width: 7.2em;
-	height: 2em;
-	padding: 1px;
-	padding-left: 1.7em;
-	font-weight: bold;
-	letter-spacing: 0.2em;
-	text-align: center;
-	font-weight: bold;
-	margin: 0 0.5em 0.5em 0.5em;
-} */
-
-/* .btn-select:hover {
-	background-color: white;
-} */
+}*/
+/* 
 .messi .btn-success:hover,.messi .btn-success:active,.messi .btn-success.active,.messi .btn-success.disabled,.messi .btn-success[disabled]
 	{
 	background-color: #51a351;
@@ -139,7 +78,7 @@
 
 .messi .btn-success:active,.messi .btn-success.active {
 	background-color: #408140 \9;
-}
+} */
 
 .messi-content {
 	overflow: hidden;
@@ -161,9 +100,9 @@
 	transition: opacity .25s linear, visibility .1s linear .5s
 }
 
-.messi-content:hover .messi-closebtn {
+/* .messi-content:hover .messi-closebtn {
 	opacity: 1
-}
+} */
 
 .messi-footbox {
 	width: auto;
