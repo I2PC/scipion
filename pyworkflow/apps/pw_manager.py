@@ -253,7 +253,7 @@ class ProjectsView(tk.Frame):
           
     def deleteProject(self, projName):
         if askYesNo("Confirm Project deletion", 
-                    "Are you sure to <DELETE> project <%s>\n and all its <DATA>?" % projName, self.root):
+                    "Are you sure to _DELETE_ project *%s*\n and all its _DATA_?" % projName, self.root):
             self.manager.deleteProject(projName)
             self.createProjectList(self.text)
           

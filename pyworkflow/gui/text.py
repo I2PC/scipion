@@ -274,7 +274,7 @@ class TaggedText(Text):
         g1 = match.group(tag)
 
         if tag == HYPER_BOLD or tag == HYPER_ITALIC:
-            self.insert(tk.END, g1, tag)
+            self.insert(tk.END, ' ' + g1, tag)
         elif tag == HYPER_LINK1:
             self.insert(tk.END, g1, self.hm.add(lambda: self.openLink(g1)))
         elif tag == HYPER_LINK2:            

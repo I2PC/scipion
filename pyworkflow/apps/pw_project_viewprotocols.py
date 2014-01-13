@@ -657,7 +657,7 @@ class ProtocolsView(tk.Frame):
             self._scheduleRunsUpdate()
             
     def _stopProtocol(self, prot):
-        if askYesNo("Confirm STOP", "Do you really want to <STOP> this run?", self.root):
+        if askYesNo("Confirm STOP", "Do you really want to *STOP* this run?", self.root):
             self.project.stopProtocol(prot)
             self._scheduleRunsUpdate()
 
@@ -672,7 +672,7 @@ class ProtocolsView(tk.Frame):
             firstViewer.project = self.project
             firstViewer.visualize(prot, windows=self.windows)
         else:
-            self.windows.showError("There is not viewer for protocol: <%s>" % prot.getClassName())
+            self.windows.showError("There is not viewer for protocol: *%s*" % prot.getClassName())
         
                 
     def _runActionClicked(self, action):
