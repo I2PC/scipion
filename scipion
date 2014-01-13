@@ -114,6 +114,8 @@ if __name__ == '__main__':
                     f = open(os.path.join(PW_HOME, 'batch_tests'))
                     for l in f:
                         print l.strip()
+                    f.close()
+                    sys.exit(0)
                 else: # run the desired test
                     path = os.getcwd()
                     os.chdir(PW_HOME)
