@@ -99,9 +99,6 @@ class ProtCTFFind(ProtCTFMicrographs):
         return ctf
         
     def createOutput(self):
-        
-        #micSet = self._createSetOfMicrographs()
-        #micSet.copyInfo(self.inputMics)
         ctfSet = self._createSetOfCTF()
         
         for fn, micDir, mic in self._iterMicrographs():
@@ -128,8 +125,6 @@ class ProtCTFFind(ProtCTFMicrographs):
         self._defineOutputs(outputCTF=ctfSet)
         #self._defineDataSource(self.inputMics, micSet)
         self._defineRelation(RELATION_CTF, ctfSet, self.inputMics)
-        #TODO: Remove when output setOfmics disappear
-        #self._defineRelation(RELATION_CTF, ctfSet, micSet)
 
     def _validate(self):
         errors = []

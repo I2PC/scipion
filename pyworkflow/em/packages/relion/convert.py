@@ -123,7 +123,7 @@ def locationToRelion(index, filename):
     else:
         return filename
 
-def writeSetOfImages(imgSet, filename):
+def writeSetOfImages(imgSet, filename, doCTF=True):
     """ This function will write a SetOfImages as Relion metadata.
     Params:
         imgSet: the SetOfImages instance.
@@ -135,7 +135,7 @@ def writeSetOfImages(imgSet, filename):
         objId = md.addObject()
         imgRow = XmippMdRow()
         imageToRow(img, imgRow)
-        if img.hasCTF():
+        if img.hasCTF() and doCTF:
             imgRow.setValue(xmipp.MDL_MICROGRAPH, img.getCTF().micFile.get())
             ctfToRow(img.getCTF(), imgRow)  
         imgRow.writeToMd(md, objId)
@@ -149,11 +149,11 @@ def writeSetOfImages(imgSet, filename):
     renameMdLabels(tmpFile, filename, d)
     imgSet._relionStar = String(filename)
     
-def createRelionInputImages(self, imgSet, imagesFn=None): 
+def createRelionInputImages(self, imgSet, imagesFn=None, doCTF=True): 
     imgsStar = getattr(imgSet, '_relionStar', None)
     if imgsStar is None:
         imgsFn = self._getPath(imagesFn or 'input_images.star')
-        writeSetOfImages(imgSet, imgsFn)
+        writeSetOfImages(imgSet, imgsFn, doCTF)
     else:
         imgsFn = imgsStar.get()
     return imgsFn
