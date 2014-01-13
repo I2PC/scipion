@@ -1,160 +1,9 @@
-{% extends 'showj_base.html' %} 
-{% block head %}
-<!-- CSS -->
-<link type="text/css" href="{{smoothness}}" rel="stylesheet" /> 
-<link type="text/css" href="{{demo_table_jui}}" rel="stylesheet" />
-
-<!-- TABLE STYLES 
-Overwrite general section property for table view -->
-<style type="text/css">
-section {display:block;}
-</style>
-
-<!-- JS -->
-<script type="text/javascript" src="{{jquery_datatable}}"></script>
-
-<!-- Datatable extra api -->
-<script type="text/javascript">
-$.fn.dataTableExt.oApi.fnVisibleToColumnIndex = function ( oSettings, iMatch )
-{
-    return oSettings.oApi._fnVisibleToColumnIndex( oSettings, iMatch );
-};
-$.fn.dataTableExt.oApi.fnColumnIndexToVisible = function ( oSettings, iMatch )
-{
-  return oSettings.oApi._fnColumnIndexToVisible( oSettings, iMatch );
-};
-$.fn.dataTableExt.oApi.fnGetColumnIndex = function ( oSettings, sCol )
-{
-    var cols = oSettings.aoColumns;
-    for ( var x=0, xLen=cols.length ; x<xLen ; x++ )
-    {
-        if ( cols[x].sTitle.toLowerCase() == sCol.toLowerCase() )
-        {
-            return x;
-        };
-    }
-    return -1;
-};
-$.fn.dataTableExt.oApi.fnDisplayRowWithIndex = function ( oSettings, iPos )
-{
-    // Account for the "display" all case - row is already displayed
-    if ( oSettings._iDisplayLength == -1 )
-    {
-        return;
-    }
-  
-    // Find the node in the table
-/*     var iPos = -1;
-    for( var i=0, iLen=oSettings.aiDisplay.length ; i<iLen ; i++ )
-    {
-        if( oSettings.aoData[ oSettings.aiDisplay[i] ].nTr == nRow )
-        {
-            iPos = i;
-            break;
-        }
-    }
- */      
- 
-    // Alter the start point of the paging display
-    if( iPos >= 0 )
-    {
-        oSettings._iDisplayStart = ( Math.floor(iPos / oSettings._iDisplayLength) ) * oSettings._iDisplayLength;
-        this.oApi._fnCalculateEnd( oSettings );
-    }
-      
-    this.oApi._fnDraw( oSettings );
-};
-</script>
-
-<script type="text/javascript" src="{{jquerydataTables_colreorder}}"></script>
-<script type="text/javascript" src="{{jquerydataTables_colreorder_resize}}"></script>
-<script type="text/javascript" src="{{jeditable}}"></script>
-
-<script type="text/javascript">
-/* Initialize datatable table */
-var oTable;
-
-$(document).ready(function() {
-
-	initializeSelectionRowEvent()
-	initializeGoToEvent()
-	initializeTableWidth()
-	
-	/* Init the table */
-	oTable = $('#data_table').dataTable(
-				{
-			        "bPaginate": true,
-			        "bLengthChange": true,
-			        "bFilter": true,
-			        "bSort": true,
-			        "bInfo": true,
-			        "bAutoWidth": true,
-			        "sDom": 'Rl<"#displayTableContainer">frtip', 
-			        "iDisplayLength": 50,
-			        "oLanguage": {
-			            "sLengthMenu": 'Display <select>'+
-			                '<option value="25">25</option>'+
-			                '<option value="50">50</option>'+
-			                '<option value="100">100</option>'+
-			                '<option value="-1">All</option>'+
-			                '</select> records'
-			        }, 
- 			        "oColReorder": {
-		    			"aiOrder": jsonTableLayoutConfiguration.colsOrder
-		    		},  
-		    		
-		    		"bProcessing": true,
-/* 		            "bServerSide": true, */
-/* 		            "sAjaxSource": "/get_table/", */
-		            
-		            "fnServerParams": function ( aoData ) {
-		                aoData.push( {
-		                	"path": "{{inputParameters.path}}",
-		                	"block": "{{inputParameters.block}}",
-		                	"allowRender": "{{inputParameters.allowRender}}",
-		                	"imageDim": "{{inputParameters.imageDim}}"
-		                		} );
-		            },
-		            "fnDrawCallback": function( oSettings ) {
-		            	if ( typeof oTable != 'undefined' ) {
-		            		setElementsEditable(null)
-		            	}
-		              },
-		             "fnRowCallback": function( nRow, aData, iDisplayIndex, iDisplayIndexFull ) {
-		            	 renderElements(nRow, aData)
-		             },
-		            "bDeferRender": true,
-		    		/* "bRetrieve": true */
-		    		"aaData": generateDataForTable(),	
-		    		"aoColumnDefs": getColumnsDefinition(), 
-		            "bJQueryUI": true,
-		    		"sPaginationType": "full_numbers"
-			    }		
-			);
-	
-	$("#displayTableContainer").html("<a href='#' onclick='showTableConfig()'>Display Table Configuration</a>")
-	
-	{% if dataset.getTable.hasEnabledColumn %}
-	initializeMultipleSelectionTool()
-	{% endif %}
-	setElementsEditable(null)
-	initializeColumnHeader()
-	
-	
-	
-} );
-
-
-
-/* Render elements on table (Image and checkbox) */
+//Render elements on table (Image and checkbox)
 function renderElements(nRow, aData){
-/* 	 console.log("row")  */
 	 columnId = 0
 	 invisibleColumns = 0 
 	 for (var i in jsonTableLayoutConfiguration.columnsLayout){ 
 		 var columnLayoutConfiguration = jsonTableLayoutConfiguration.columnsLayout[i]
-		 
-		 /* console.log(columnLayoutConfiguration.columnLayoutProperties) */
 		 
 		 if (columnLayoutConfiguration.columnLayoutProperties.visible){
 	   		 if (typeof oTable!= 'undefined'){
@@ -192,7 +41,7 @@ function renderElements(nRow, aData){
 	 }
 }
 
-/* Initialize icons in column header (render image, disable column and make column editable) */
+//Initialize icons in column header (render image, disable column and make column editable)
 function initializeColumnHeader(){
 	headerRow=$("#data_table thead tr")
 	var cols = oTable.fnSettings().aoColumns;
@@ -207,35 +56,24 @@ function initializeColumnHeader(){
 	
 } 
 
-/* Add renderable, editable and disable icon to each column */
+//Add renderable, editable and disable icon to each column
 function getHeaderWithIcon(text, columnLayoutProperties){
 	
 	var iconElements = '' 
-	/* NAPA DE LUXE HABRIA QUE PONERLE UN MARGIN AL LABEL DEL HEADER */
-	/* var iconElements = '<span style=\"margin:8px\">'+text+'</span>' */
-/* 	if (columnLayoutProperties.visible && columnLayoutProperties.allowSetVisible){
-		iconElements+="<span class=\"css_right\"><img src=\"/resources/showj/delete.png\" class=\"arrowImage\" onclick=\"enableDisableColumn(event,this)\" ></span>"
-	} */
+//	 NAPA DE LUXE HABRIA QUE PONERLE UN MARGIN AL LABEL DEL HEADER
+//	var iconElements = '<span style=\"margin:8px\">'+text+'</span>'
+// 	if (columnLayoutProperties.visible && columnLayoutProperties.allowSetVisible){
+//		iconElements+="<span class=\"css_right\"><img src=\"/resources/showj/delete.png\" class=\"arrowImage\" onclick=\"enableDisableColumn(event,this)\" ></span>"
+//	} 
 	
 	if (columnLayoutProperties.allowSetEditable){
-/* 		iconElements+="<span class=\"css_right\"><div class=\"iconHeader "
-		if (columnLayoutProperties.editable){iconElements+="editTableOn"}else{iconElements+="editTableOff"}
-		iconElements+="\" id=\""+text+"_editable_icon\" onclick=\"enableDisableEditableColumn(event,this)\"></div></span>" */
-		
 		iconElements+="<span class=\"css_right fa-stack\"><a id=\""+ text+"_editable_icon\" href='#' onclick=\"enableDisableEditableColumn(event,this);\"><i class=\"fa fa-pencil fa-stack-1x"
-		/* if (columnLayoutProperties.renderable){iconElements+="fa-pencil"}else{iconElements+="fa-eye-slash"} */
 		iconElements+="\"></i><i id=\"banElement\" class=\"fa fa-stack-1x "
 		if (columnLayoutProperties.renderable){iconElements+="fa-times"}
 		iconElements+="\"></i></a></span>"
-		
 	}
 	
 	if (columnLayoutProperties.allowSetRenderable){
-		
-		/* iconElements+="<span class=\"css_right\"><div class=\"iconHeader "
-			if (columnLayoutProperties.renderable){iconElements+="renderTableOn"}else{iconElements+="renderTableOff"}
-		iconElements+="\" id=\""+text+"_renderable_icon\" onclick=\"enableDisableRenderColumn(event,this)\"></div></span>" */
-		
 		iconElements+="<span class=\"css_right\"><a id=\""+ text+"_renderable_icon\" href='#' onclick=\"javascript:enableDisableRenderColumn(event,this);\"><i class=\"fa "
 		if (columnLayoutProperties.renderable){iconElements+="fa-eye"}else{iconElements+="fa-eye-slash"}
 		iconElements+="\"></i></a></span>"
@@ -244,36 +82,29 @@ function getHeaderWithIcon(text, columnLayoutProperties){
 	return iconElements; 
 }
 
-/* Create column definition (class, title, visible) from table layout configuration*/
+//Create column definition (class, title, visible) from table layout configuration
 function getColumnsDefinition(){
 	jsonColumnsLayout=jsonTableLayoutConfiguration.columnsLayout
 	columnId=0;
 	var dataForTable = []
 	for (var i in jsonColumnsLayout){ 
-		
 		var dataRowForTable = []
-		
  		var columnLayoutConfiguration = jsonColumnsLayout[i]
-		
  		if(!columnLayoutConfiguration.columnLayoutProperties.visible){
 			dataRowForTable["bVisible"] = false
 		} 
-		
 		dataRowForTable["sTitle"]= i
 		dataRowForTable["aTargets"]=[columnId]
 		dataForTable.push(dataRowForTable)
 		columnId++;
-		
 	}
 	
 	return dataForTable;
 }
 
-/* 
- * Currently this is not been used as delete icon has been removed
- * Enable/disable column 
- * Disable datatable column when event triggered from icon disable column header 
- */
+//Currently this is not been used as delete icon has been removed
+//Enable/disable column 
+//Disable datatable column when event triggered from icon disable column header 
 function enableDisableColumn(event, element){
 	//From the image element we get the column header index
 	var thCell= $(element).closest('th')
@@ -283,7 +114,7 @@ function enableDisableColumn(event, element){
 	var bVis = oTable.fnSettings().aoColumns[iCol2].bVisible;
 	oTable.fnSetColumnVis( iCol2, bVis ? false : true );
 
-	/*  Update table layout configuration model*/
+//	Update table layout configuration model
 	var labelColumn = thCell.attr("id").split("___")[0]
 	jsonTableLayoutConfiguration.columnsLayout[labelColumn].columnLayoutProperties.visible=!bVis
 	
@@ -291,14 +122,13 @@ function enableDisableColumn(event, element){
 	event.stopPropagation() 
 }
 
-/* Enable/disable render to column
- * When column cell is image, it will change from img element to path text and viceversa 
- */
+//Enable/disable render to column
+//When column cell is image, it will change from img element to path text and viceversa 
 function enableDisableRenderColumn(event, element){
 	console.log("taka")
 	console.log(element)
 	
-	/*  Switch button from on to off or viceversa*/
+//	Switch button from on to off or viceversa
 	$(element).find("i").toggleClass("fa-eye").toggleClass("fa-eye-slash")
 	
 	//From the image element we get the column header index
@@ -317,7 +147,7 @@ function enableDisableRenderColumn(event, element){
 		$(this).find("span").toggle()
 	})
 
-	/*  Update table layout configuration model*/
+//	Update table layout configuration model
 	var labelColumn = thCell.attr("id").split("___")[0]
 	jsonTableLayoutConfiguration.columnsLayout[labelColumn].columnLayoutProperties.renderable=$(element).find("i").hasClass("fa-eye")
 	
@@ -325,9 +155,8 @@ function enableDisableRenderColumn(event, element){
 	event.stopPropagation() 
 }
 
-/* Enable/disable editable to column
- * When column cell is text or a number, it will change from a text element to an input textfield and viceversa 
- */
+//Enable/disable editable to column
+//When column cell is text or a number, it will change from a text element to an input textfield and viceversa 
 function enableDisableEditableColumn(event, element){
 	$(element).find("#banElement").toggleClass("fa-times")
 	
@@ -349,7 +178,7 @@ function enableDisableEditableColumn(event, element){
 		$(this).toggleClass("editable")
 	})
 	
-	/*  Update table layout configuration model*/
+//	Update table layout configuration model
 	var labelColumn = thCell.attr("id").split("___")[0]
 	jsonTableLayoutConfiguration.columnsLayout[labelColumn].columnLayoutProperties.editable=!$(element).find("#banElement").hasClass("fa-times")
 	
@@ -358,9 +187,9 @@ function enableDisableEditableColumn(event, element){
 	
 }
 
-/*  Make all the elements editable. Onclick elements will change into textfield (Plugin jeditable)*/
+//Make all the elements editable. Onclick elements will change into textfield (Plugin jeditable)
 function setElementsEditable(elements){
-	/* If no elements are given, all dataset is configured */
+//	If no elements are given, all dataset is configured
 	if (elements==null){
 		var nTrs = oTable.fnGetNodes();
 		for (var label in jsonTableLayoutConfiguration.columnsLayout){ 
@@ -378,21 +207,20 @@ function setElementsEditable(elements){
 	}
 	else{
 		$(elements, oTable.fnGetNodes()).editable(
-			/* '../examples_support/editable_ajax.php', */
 			function(value, settings){ 
-				/*  Get position and real column*/
+//				Get position and real column
 				var aPos = oTable.fnGetPosition( this )
 				columnIdReal=oTable.fnVisibleToColumnIndex(aPos[1])
 				
-				/* Get label from column*/
+//				Get label from column
 				var label = oTable.fnSettings().aoColumns[columnIdReal].sTitle
 				
-				/*NAPA DE LUX TENEMOS QUE PONERLE UN ID A LAS FILAS */
+//				NAPA DE LUX TENEMOS QUE PONERLE UN ID A LAS FILAS
 				var aoData = oTable.fnSettings().aoData;
 				var nTd = aoData[ aPos[0] ]._anHidden[ oTable.fnGetColumnIndex("id") ];
 				var rowId =$(nTd).text()
 				
-				/*Keep changes in global variable */
+//				Keep changes in global variable 
 				if (!$("#saveButton").hasClass("buttonGreyHovered")){
 					$("#saveButton").toggleClass("buttonGreyHovered")
 				}
@@ -402,7 +230,7 @@ function setElementsEditable(elements){
 			  },
 			{
 			 "callback": function( sValue, y ) {
-				/* Update datatable model */
+//				Update datatable model
 				var aPos = oTable.fnGetPosition( this );
 				columnIdReal=oTable.fnVisibleToColumnIndex(aPos[1])
 				oTable.fnUpdate( sValue, aPos[0], columnIdReal );
@@ -412,32 +240,12 @@ function setElementsEditable(elements){
 	}	
 }
 
-/* Generate data for datatable from table dataset model */
-function generateDataForTable(){
-	dataForTable = new Array();
-	{% for row in tableDataset.getRows %}
-		dataRowForTable = new Array()
-		/* var row_id */
-		{% for cell in row %}
-			dataRowForTable.push("{{cell}}")
-			{% if forloop.first	%}
-				row_id = "{{cell}}"
-			{% endif %}
-
-		{% endfor %}
-		/* dataRowForTable.push("DT_RowId\": \""+row_id+"\"") */
-		/* dataRowForTable.push("DT_RowId: "+row_id) */
-		dataForTable.push(dataRowForTable)
-	{% endfor %}
-	return dataForTable;
-}
-
 function valueChange(element){
 	element_value = ""
 	if ($(element).is("input:checkbox")){element_value = $(element).is(":checked")}
 	else{element_value = $(element).val()}
 	
-	/*Keep changes in global variable */
+//	Keep changes in global variable
 	changes[$(element).attr("id")]=element_value
 }
 
@@ -468,7 +276,7 @@ function updateRowSelection(){
     }, 2000);
 }
 
-/* Control row event selection allowing shift, ctrol and single click */
+//Control row event selection allowing shift, ctrol and single click
 var lastChecked;
 function initializeSelectionRowEvent(){
 	$('#data_table').on("click","tr", function(event) {
@@ -499,7 +307,7 @@ function initializeSelectionRowEvent(){
 		            document.selection.empty();
 		        }
 		    } else {
-		    	/* $(lastChecked).removeClass('row_selected'); */
+//		    	$(lastChecked).removeClass('row_selected');
 		    	if (!event.metaKey && !event.ctrlKey){
 		    		$('tr').each(function (){
 						$(this).removeClass('row_selected');
@@ -543,28 +351,28 @@ function initializeMultipleSelectionTool(){
 	
 }
 
-/*Display and initialize div for configuring table layout*/
+//Display and initialize div for configuring table layout
 function showTableConfig(){
-	/* Display Div */
+//	Display Div 
 	$("#configurationContainer").slideDown('slow')
 
-	/*  Initialize checkbox in table confirguration container (checked and disable attributes)*/
+//	Initialize checkbox in table confirguration container (checked and disable attributes)
 	for (var label in jsonTableLayoutConfiguration.columnsLayout){ 
 		columnLayoutProperties=jsonTableLayoutConfiguration.columnsLayout[label].columnLayoutProperties
 		
-		/* VISIBLE */
+//		VISIBLE 
 		if (columnLayoutProperties.visible){$("#"+label+"_visible").prop('checked', true)}
 		else{$("#"+label+"_visible").prop('checked', false)}
 		if (columnLayoutProperties.allowSetVisible){$("#"+label+"_visible").removeProp('disabled')}
 		else{$("#"+label+"_visible").prop('disabled', 'disabled')}
 		
-		/* RENDERABLE */
+//		RENDERABLE
 		if (columnLayoutProperties.renderable){$("#"+label+"_renderable").prop('checked', true)}
 		else{$("#"+label+"_renderable").prop('checked', false)}
 		if (columnLayoutProperties.allowSetRenderable){$("#"+label+"_renderable").removeProp('disabled')}
 		else{$("#"+label+"_renderable").prop('disabled', 'disabled')}
 		
-		/* EDITABLE */
+//		EDITABLE
 		if (columnLayoutProperties.editable){$("#"+label+"_editable").prop('checked', true)}
 		else{$("#"+label+"_editable").prop('checked', false)}
 		if (columnLayoutProperties.allowSetEditable){$("#"+label+"_editable").removeProp('disabled')}
@@ -573,7 +381,7 @@ function showTableConfig(){
  
 }	
 
-/* Save new table configuration and redraw data table */
+//Save new table configuration and redraw data table
 function saveTableConfiguration(){
 	for (var label in jsonTableLayoutConfiguration.columnsLayout){ 
 		columnLayoutProperties=jsonTableLayoutConfiguration.columnsLayout[label].columnLayoutProperties
@@ -600,8 +408,7 @@ function saveTableConfiguration(){
 	
 	$("#configurationContainer").hide()
 }
-</script>
-<script type="text/javascript">
+
 function multipleEnableDisableImage(mode){
 	columnId=oTable.fnGetColumnIndex("enabled")
 	columnIdReal=oTable.fnColumnIndexToVisible(columnId)
@@ -620,8 +427,7 @@ function multipleEnableDisableImage(mode){
 	}
 	console.log(changes)
 }
-</script>
-<script type="text/javascript">
+
 function multipleSelect(mode){
 	row_id=parseInt($("#multipleSelectionTool").data('row_id'));
 	
@@ -631,62 +437,3 @@ function multipleSelect(mode){
 		}	
 	})
 }
-</script>
-{% endblock %}
-
-{% block content_menu %}{% endblock %}
-			
-{% block content_view %}
-<div id="configurationContainer">
-	<div id="tableConfigurationContainer">
-		<table id="firstTableConfiguration">
-			<tr>
-				<td>Label</td><td>Visible</td><td>Render</td><td>Edit</td>
-			</tr>
-			{% for column in tableDataset.getColumns %}
-				{% if tableDataset.getNumberOfColumns < 6 or forloop.counter0|divisibleby:2 %}
-			 		 <tr>
-			 		 	<td>{{column.getName}}</td>
-			 		 	<td><input type="checkbox" id="{{column.getName}}_visible"></td>
-			 		 	<td><input type="checkbox" id="{{column.getName}}_renderable"></td>
-			 		 	<td><input type="checkbox" id="{{column.getName}}_editable"></td>
-			 		 </tr>
-	 			{% endif %} 
-			{% endfor %}
-		</table>
-		
-		{% if tableDataset.getNumberOfColumns > 5 %}
-		<table id="secondTableConfiguration">
-			<tr>
-				<td>Label</td><td>Visible</td><td>Render</td><td>Edit</td>
-			</tr>
-			{% for column in tableDataset.getColumns %}
-				 {% if forloop.counter0|divisibleby:2 == False %}
-			 		 <tr>
-			 		 	<td>{{column.getName}}</td>
-			 		 	<td><input type="checkbox" id="{{column.getName}}_visible"></td>
-			 		 	<td><input type="checkbox" id="{{column.getName}}_renderable"></td>
-			 		 	<td><input type="checkbox" id="{{column.getName}}_editable"></td>
-			 		 </tr>
-	 			{% endif %} 
-			{% endfor %}
-		</table>
-		{% endif %} 
-	</div>
-	<div id="tableConfigurationButtonBar">
-		<button id="acceptTableConfigurationButton" onclick="saveTableConfiguration()">
-			Ok
-		</button>
-		<button id="cancelTableConfigurationButton" onclick="$('#configurationContainer').slideUp('slow')">
-			Cancel
-		</button>
-	</div>
-</div>
-
-	
-<div id="table_container" style="overflow-x:auto">
-		<table cellspacing="0" id="data_table" width="100%">
-		</table>
-</div>
-			
-{% endblock %}

@@ -162,7 +162,7 @@ def showj(request, inputParameters=None, extraParameters=None):
                
 #               'volType': 2, #0->byte, 1 ->Integer, 2-> Float
     
-    return_page = '%s%s%s' % ('showj_', showjForm.data['mode'], '.html')
+    return_page = 'showj/%s%s%s' % ('showj_', showjForm.data['mode'], '.html')
     return render_to_response(return_page, RequestContext(request, context))
 
 def createContext(dataset, tableDataset, tableLayoutConfiguration, request, showjForm):
@@ -183,6 +183,7 @@ def createContext(dataset, tableDataset, tableLayoutConfiguration, request, show
             'jeditable': getResourceJs('jquery_editable'),
             'jquery_waypoints':getResourceJs('jquery_waypoints'),
             'jquery_hover_intent':getResourceJs('jquery_hover_intent'),
+            'showj_js':getResourceJs('showj_utils'),
             
             'transpose_lib':getResourceJs('transpose'),
            

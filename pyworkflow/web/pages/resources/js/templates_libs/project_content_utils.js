@@ -199,11 +199,8 @@ function fillUL(list, ulId, icon) {
 	var ul = $("#" + ulId);
 	ul.empty();
 	for ( var i = 0; i < list.length; i++) {
-//		ul.append('<li><a href="/visualize_object/?objectId=' + list[i].id
-//				+ '"target="_blank"><img src="../../../../resources/' + icon + '" /> '
-//				+ list[i].name + '</a></li>');
-		ul.append('<li><a href="/visualize_object/?objectId=' + list[i].id
-				+ '"target="_blank"><i class="fa ' + icon + '" style="margin-right:10px;"></i>'
+		ul.append('<li><a href="javascript:popup(\'/visualize_object/?objectId=' + list[i].id
+				+ '\');"><i class="fa ' + icon + '" style="margin-right:10px;"></i>'
 				+ list[i].name + '</a></li>');
 	}
 }
