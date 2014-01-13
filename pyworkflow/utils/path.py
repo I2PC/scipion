@@ -30,7 +30,7 @@ inside the utils module
 
 import os
 import shutil
-from os.path import exists, join, splitext, isdir, isfile, expanduser, basename, dirname, split, relpath
+from os.path import exists, join, splitext, isdir, isfile, expanduser, expandvars, basename, dirname, split, relpath
 import pyworkflow as pw
 from glob import glob
 
@@ -109,6 +109,14 @@ def missingPaths(*paths):
 def getHomePath(user=''):
     """Return the home path of a give user."""
     return expanduser("~" + user)
+
+def expandPattern(pattern, vars=True, user=True):
+    """ Expand environment vars and user from a given pattern. """
+    if vars:
+        pattern = expandvars(pattern)
+    if user:
+        pattern = expanduser(pattern)
+    return pattern
 
 def getFiles(folderPath):
     """
