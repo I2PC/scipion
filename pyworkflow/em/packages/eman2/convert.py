@@ -102,7 +102,7 @@ def readSetOfCoordinates(workDir, micSet, coordSet):
     
     for mic in micSet:
         micFnroot = glob.glob('*' + removeBaseExt(mic.getFileName()) + '_info.json')
-        micPosRelFn = join("info", micFnroot)
+        micPosRelFn = join("info", micFnroot[0:1])
         micPosFn = join(workDir, micPosRelFn)
         
         if exists(micPosFn):
