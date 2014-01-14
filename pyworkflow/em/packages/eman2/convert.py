@@ -34,7 +34,7 @@ This module contains converter functions that will serve to:
 import subprocess
 from data import *
 from eman2 import *
-import glob
+
 from pyworkflow.em.constants import NO_INDEX
 from os.path import abspath
 
@@ -86,7 +86,7 @@ def writeSetOfMicrographs(micSet, filename, rowFunc=None):
 def readPosCoordinates(posFile):
     pass
             
-def readSetOfCoordinates(workDir, micSet, coordSet):
+def readSetOfCoordinates(workDir, nameDir, micSet, coordSet):
     """ Read from Eman .json files.
     It is expected a file named: base.json under the workDir.
     Params:
@@ -99,10 +99,11 @@ def readSetOfCoordinates(workDir, micSet, coordSet):
     jsonFnbase = join(workDir, 'e2boxercache', 'base.json')
     jsonBoxDict = loadJson(jsonFnbase)
     size = int(jsonBoxDict["box_size"])
+    dirName = ''.join(nameDir[1:2])
     
     for mic in micSet:
-        micFnroot = glob.glob('*' + removeBaseExt(mic.getFileName()) + '_info.json')
-        micPosRelFn = join("info", micFnroot[0:1])
+        micFnroot = dirName + '-' +removeBaseExt(mic.getFileName()) + '_info.json'
+        micPosRelFn = join("info", micFnroot)
         micPosFn = join(workDir, micPosRelFn)
         
         if exists(micPosFn):
