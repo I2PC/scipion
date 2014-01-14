@@ -1,4 +1,119 @@
-//Render elements on table (Image and checkbox)
+ /*****************************************************************************
+ *
+ * Authors:    Adrian Quintana (aquintana@cnb.csic.es)
+ * 			   
+ *
+ * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'jmdelarosa@cnb.csic.es'
+ *
+ ******************************************************************************/
+/******************************************************************************
+ * DESCRIPTION:
+ * 
+ * Methods used in the showj_table template 
+ * 
+ * 
+ * ATTRIBUTES LIST:
+ * 
+ * METHODS LIST:
+ * 
+ * function renderElements(nRow, aData)
+ * -> Render elements on table (Image and checkbox). This method is called from datatable script
+ * 	  nRow is the row to be displayed
+ *    aData the row content
+ *     
+ * function initializeColumnHeader()
+ * -> Initialize icons in column header (render image, disable column and set column editable)
+ * 
+ * function getHeaderWithIcon(text, columnLayoutProperties) 
+ * -> Generate html for renderable, editable and disable icon for each column header
+ *    text is the text to be displayed in the header
+ *    columnLayoutProperties defines the icons for column header
+ *    
+ * function getColumnsDefinition()  
+ * -> Set the columns property for datatable script (visible, title, target...)
+ * 
+ * function enableDisableColumn(event, element)
+ * -> Enable/disable column 
+ *    Disable datatable column when event triggered from icon disable column header
+ *    event is used to stop propagation
+ *    element is used to get the column number 
+ * ATTENTION:Currently this is not being used as delete icon has been removed
+ * 
+ * function enableDisableRenderColumn(event, element)
+ * -> Enable/disable render property to column
+ *    When column cell is image, it toggles between img element and path text
+ *    event is used to stop propagation
+ *    element is used to get the column number
+ *    
+ * function enableDisableEditableColumn(event, element)  
+ * -> Enable/disable editable property to column
+ *    When column cell is text or a number, it toggles between text element and input textfield
+ *    event is used to stop propagation
+ *    element is used to get the column number
+ * 
+ * function setElementsEditable(elements)
+ * -> Make all the elements editable. Onclick elements will change into textfield (jeditable)
+ *    If no elements are given, all dataset is configured
+ *    
+ * function valueChange(element)
+ * -> Keep changed element in a global variable   
+ * 
+ * function initializeTableWidth()
+ * -> If table content is wider than web width, set table content to page width.
+ * 	  Executed on load in order to make scroll bars visible
+ * 
+ * function initializeGoToEvent()
+ * -> Initialize events for Goto textfield
+ * 	  Goto textfield allows to select a row in the table
+ * 
+ * function updateRowSelection()
+ * -> Select the row set in the Goto textfield and scroll to the row
+ * 
+ * function initializeSelectionRowEvent()
+ * -> Initialize onclick events for row.
+ *    Single selection and special key controls (ctrl, shift, single click)
+ * 
+ * function initializeMultipleSelectionTool()
+ * -> Initialize hover events for row selection.
+ *    It will display the Multiple selection tool
+ *    
+ * function showTableConfig()
+ * -> Display and initialize div for configuring table layout
+ * 
+ * function saveTableConfiguration()
+ * -> Save new table configuration and redraw data table
+ * 
+ * function multipleEnableDisableImage(mode)
+ * -> Enables/disable a set of rows.
+ *    Mode can be enable or disable
+ *    
+ * function multipleSelect(mode)
+ * -> Select a set of images
+ *    Mode can be all, from (i.e. from the image that triggered the event until the end)
+ *    or to (i.e. from the beginning until the image that triggered the event)
+ *       
+ ******************************************************************************/
+
+ /** METHODS ******************************************************************/
+
 function renderElements(nRow, aData){
 	 columnId = 0
 	 invisibleColumns = 0 
@@ -41,7 +156,6 @@ function renderElements(nRow, aData){
 	 }
 }
 
-//Initialize icons in column header (render image, disable column and make column editable)
 function initializeColumnHeader(){
 	headerRow=$("#data_table thead tr")
 	var cols = oTable.fnSettings().aoColumns;
@@ -56,9 +170,7 @@ function initializeColumnHeader(){
 	
 } 
 
-//Add renderable, editable and disable icon to each column
 function getHeaderWithIcon(text, columnLayoutProperties){
-	
 	var iconElements = '' 
 //	 NAPA DE LUXE HABRIA QUE PONERLE UN MARGIN AL LABEL DEL HEADER
 //	var iconElements = '<span style=\"margin:8px\">'+text+'</span>'
@@ -78,11 +190,9 @@ function getHeaderWithIcon(text, columnLayoutProperties){
 		if (columnLayoutProperties.renderable){iconElements+="fa-eye"}else{iconElements+="fa-eye-slash"}
 		iconElements+="\"></i></a></span>"
 	}
-	
 	return iconElements; 
 }
 
-//Create column definition (class, title, visible) from table layout configuration
 function getColumnsDefinition(){
 	jsonColumnsLayout=jsonTableLayoutConfiguration.columnsLayout
 	columnId=0;
@@ -101,10 +211,7 @@ function getColumnsDefinition(){
 	
 	return dataForTable;
 }
-
-//Currently this is not been used as delete icon has been removed
-//Enable/disable column 
-//Disable datatable column when event triggered from icon disable column header 
+ 
 function enableDisableColumn(event, element){
 	//From the image element we get the column header index
 	var thCell= $(element).closest('th')
@@ -121,13 +228,8 @@ function enableDisableColumn(event, element){
 	//This will avoid column sorting
 	event.stopPropagation() 
 }
-
-//Enable/disable render to column
-//When column cell is image, it will change from img element to path text and viceversa 
+ 
 function enableDisableRenderColumn(event, element){
-	console.log("taka")
-	console.log(element)
-	
 //	Switch button from on to off or viceversa
 	$(element).find("i").toggleClass("fa-eye").toggleClass("fa-eye-slash")
 	
@@ -154,9 +256,7 @@ function enableDisableRenderColumn(event, element){
 	//This will avoid column sorting
 	event.stopPropagation() 
 }
-
-//Enable/disable editable to column
-//When column cell is text or a number, it will change from a text element to an input textfield and viceversa 
+ 
 function enableDisableEditableColumn(event, element){
 	$(element).find("#banElement").toggleClass("fa-times")
 	
@@ -187,9 +287,7 @@ function enableDisableEditableColumn(event, element){
 	
 }
 
-//Make all the elements editable. Onclick elements will change into textfield (Plugin jeditable)
 function setElementsEditable(elements){
-//	If no elements are given, all dataset is configured
 	if (elements==null){
 		var nTrs = oTable.fnGetNodes();
 		for (var label in jsonTableLayoutConfiguration.columnsLayout){ 
@@ -244,7 +342,6 @@ function valueChange(element){
 	element_value = ""
 	if ($(element).is("input:checkbox")){element_value = $(element).is(":checked")}
 	else{element_value = $(element).val()}
-	
 //	Keep changes in global variable
 	changes[$(element).attr("id")]=element_value
 }
@@ -276,7 +373,6 @@ function updateRowSelection(){
     }, 2000);
 }
 
-//Control row event selection allowing shift, ctrol and single click
 var lastChecked;
 function initializeSelectionRowEvent(){
 	$('#data_table').on("click","tr", function(event) {
@@ -351,7 +447,6 @@ function initializeMultipleSelectionTool(){
 	
 }
 
-//Display and initialize div for configuring table layout
 function showTableConfig(){
 //	Display Div 
 	$("#configurationContainer").slideDown('slow')
@@ -381,7 +476,6 @@ function showTableConfig(){
  
 }	
 
-//Save new table configuration and redraw data table
 function saveTableConfiguration(){
 	for (var label in jsonTableLayoutConfiguration.columnsLayout){ 
 		columnLayoutProperties=jsonTableLayoutConfiguration.columnsLayout[label].columnLayoutProperties

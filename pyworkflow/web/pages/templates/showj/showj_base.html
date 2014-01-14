@@ -6,9 +6,10 @@
 <!-- CSS -->
 <link href="{{showj_css}}" rel="stylesheet" type="text/css">
 <!-- JS -->
-<script src="{{jquery_waypoints}}" type="text/javascript"></script>
-<script src="{{jquery_hover_intent}}" type="text/javascript"></script>
-<script src="{{showj_js}}" type="text/javascript"></script>
+<script type="text/javascript" src="{{jquery_waypoints}}"></script>
+<script type="text/javascript" src="{{jquery_hover_intent}}"></script>
+<script type="text/javascript" src="{{showj_js}}"></script>
+<script type="text/javascript" src="{{utils}}"></script>
 
 <script type="text/javascript">
 jQuery(function($) {
@@ -165,8 +166,7 @@ function setImageSize(refreshElement){
 	if ($("#colRowModeImage").length >0 && $("#colRowModeImage").attr("src").indexOf("On")!=-1){initializeColsRows()}
 }
 </script>
-
-	{% block head %}  {% endblock %}
+{% block head %}  {% endblock %}
 {% endblock %}
 
 {% block content_header %}	{% include "header.html" with page_mode="showj"%} {% endblock %}

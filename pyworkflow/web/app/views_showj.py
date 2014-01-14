@@ -115,7 +115,6 @@ def showj(request, inputParameters=None, extraParameters=None):
 
     showjForm = ShowjForm(dataset,
                           inputParameters['tableLayoutConfiguration'],
-                          #request.POST if request.method == 'POST' else inputParameters) # A form bound for the POST data and unbound for the GET
                           inputParameters) # A form bound for the POST data and unbound for the GET
         
     if showjForm.is_valid() is False:
@@ -161,6 +160,8 @@ def showj(request, inputParameters=None, extraParameters=None):
             context.update({"chimeraHtml":chimeraHtml})
                
 #               'volType': 2, #0->byte, 1 ->Integer, 2-> Float
+    elif inputParameters['mode']=='gallery' or inputParameters['mode']=='table' or inputParameters['mode']=='column':
+            context.update({"showj_alt_js": os.path.join(settings.STATIC_URL, "js/showj_libs/", 'showj_' + inputParameters['mode'] + '_utils.js')})
     
     return_page = 'showj/%s%s%s' % ('showj_', showjForm.data['mode'], '.html')
     return render_to_response(return_page, RequestContext(request, context))
@@ -184,6 +185,8 @@ def createContext(dataset, tableDataset, tableLayoutConfiguration, request, show
             'jquery_waypoints':getResourceJs('jquery_waypoints'),
             'jquery_hover_intent':getResourceJs('jquery_hover_intent'),
             'showj_js':getResourceJs('showj_utils'),
+            'utils':getResourceJs('utils'),
+            'jquery_ui':getResourceJs('jquery_ui'),
             
             'transpose_lib':getResourceJs('transpose'),
            
@@ -458,7 +461,6 @@ def visualizeObject(request):
         elif isinstance(obj, SetOfImages):
             fn = project.getTmpPath(obj.getName() + '_images.xmd')
             inputParameters['path'] = os.path.join(projectPath, createXmippInputImages(None, obj, imagesFn=os.path.join(projectPath, fn)))
-            
 #            writeSetOfParticles(obj, fn)
 #            inputParameters['path']= os.path.join(projectPath, fn)
         elif isinstance(obj, Image):

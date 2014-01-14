@@ -1,15 +1,86 @@
+ /*****************************************************************************
+ *
+ * Authors:    Adrian Quintana (aquintana@cnb.csic.es)
+ * 			   
+ *
+ * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'jmdelarosa@cnb.csic.es'
+ *
+ ******************************************************************************/
+/******************************************************************************
+ * DESCRIPTION:
+ * 
+ * Methods used in the showj_gallery template 
+ * 
+ * 
+ * ATTRIBUTES LIST:
+ * 
+ * METHODS LIST:
+ * 
+ * function initRenderFunction(labelToRender)
+ * -> Initialize render funtion on all images. 
+ * 	  Add renderFunction parameter and any other extra parameter to src attribute in image
+ * 
+ * function initializeGoToEvents()
+ * -> Initialize events for Goto textfield
+ * 	  Goto textfield allows to select any image in the gallery
+ * 
+ * function updateSelection()
+ * -> Select image set in the Goto textfield and scroll to the image
+ * 
+ * function initializeImageEvents(hasEnabledColumn)
+ * -> Initialize following hover and click events for images:
+ *  	On hover Single enabled/disabled tool (red cross). Show enabled/disabled image and title on hover
+ *  	On hover Multiple selection tool
+ *  	On click Single selection and scpecial key controls (ctrl, shift, single click)
+ *    
+ * function initializeWindowLoadEvents()
+ * -> Initialize events on window load.
+ * 	  If manual col & row mode is set it updates main container dimensions
+ * 
+ * function multipleEnableDisableImage(mode)
+ * -> Enables/disable a set of image. (actually the metadata row)
+ *    Mode can be enable or disable
+ * 
+ * function enableDisableImage(element, enableDisable)
+ * -> Enables/disable a single image.
+ *    Mode can be enable or disable
+ *    
+ * function multipleSelect(mode)
+ * -> Select a set of images
+ *    Mode can be all, from (i.e. from the image that triggered the event until the end)
+ *    or to (i.e. from the beginning until the image that triggered the event)     
+ ******************************************************************************/
+
+ /** METHODS ******************************************************************/
 function initRenderFunction(labelToRender){
 	renderFunc=jsonTableLayoutConfiguration.columnsLayout[labelToRender].columnLayoutProperties.renderFunc
 	extraRenderFunc=jsonTableLayoutConfiguration.columnsLayout[labelToRender].columnLayoutProperties.extraRenderFunc
-
-	console.log(jsonTableLayoutConfiguration.columnsLayout) 
+//	console.log(jsonTableLayoutConfiguration.columnsLayout) 
 	
 	if (renderFunc!=""){ 
 		$(".tableImages").each(function(){
 		   	var newSrc = $(this).data("real_src").replace(/(renderFunc=).*?(&)/,'$1' + renderFunc + '$2');
 		   	if (extraRenderFunc!=""){newSrc = newSrc.concat("&"+extraRenderFunc)}
 			$(this).data("real_src", newSrc);
-			console.log("newSrc",newSrc)
+//			console.log("newSrc",newSrc)
 	   	})
 	}
 }
@@ -43,7 +114,6 @@ function updateSelection(){
     }, 2000);
 }
 
-//Show enabled/disabled image and title on hover
 function initializeImageEvents(hasEnabledColumn){
 	//Enable/Disable image
 	$(".img_container").hover(
@@ -119,36 +189,13 @@ function initializeImageEvents(hasEnabledColumn){
 }
 
 function initializeWindowLoadEvents(){
-	$(window).load(
-	function(){
+	$(window).load(function(){
 		if ($("#id_colRowMode").val() == 'On' && $("#id_mode").val() == 'gallery'){
 			updateMainContainerDim($("#id_cols").val())
 		}
 	})
 }
 
-function enableDisableImage(element, enableDisable){
-	if (enableDisable=='enable'){
-		$(element).removeClass("selected")
-	}
-	else if (enableDisable=='disable'){
-		$(element).addClass("selected")
-	}
-	else{
-		$(element).toggleClass("selected")
-	}
-	
-	
-	if ($(element).hasClass("selected")){element_value = 0}
-	else{element_value = 1}
-	
-//		Keep changes in global variable
-	if (!$("#saveButton").hasClass("buttonGreyHovered")){
-		$("#saveButton").toggleClass("buttonGreyHovered")
-	}
-		
-	changes[$(element).attr("id")]=element_value
-}
 function multipleEnableDisableImage(mode){
 	if (mode=='enable'){
 		$(".image_selected").each(function(){
@@ -162,6 +209,27 @@ function multipleEnableDisableImage(mode){
 			$(this).find(".enabledGallery").fadeIn('fast')
 		})
 	}
+}
+
+function enableDisableImage(element, enableDisable){
+	if (enableDisable=='enable'){
+		$(element).removeClass("selected")
+	}
+	else if (enableDisable=='disable'){
+		$(element).addClass("selected")
+	}
+	else{
+		$(element).toggleClass("selected")
+	}
+	
+	if ($(element).hasClass("selected")){element_value = 0}
+	else{element_value = 1}
+	
+//		Keep changes in global variable
+	if (!$("#saveButton").hasClass("buttonGreyHovered")){
+		$("#saveButton").toggleClass("buttonGreyHovered")
+	}
+	changes[$(element).attr("id")]=element_value
 }
 function multipleSelect(mode){
 	element_id=parseInt($("#multipleSelectionTool").data('img_container_id').split("___")[1]);

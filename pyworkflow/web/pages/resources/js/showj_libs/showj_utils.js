@@ -1,3 +1,95 @@
+ /*****************************************************************************
+ *
+ * Authors:    Adrian Quintana (aquintana@cnb.csic.es)
+ * 			   
+ *
+ * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'jmdelarosa@cnb.csic.es'
+ *
+ ******************************************************************************/
+/******************************************************************************
+ * DESCRIPTION:
+ * 
+ * Methods used in the showj_base template and all the showj pages which extends from it. 
+ * 
+ * 
+ * ATTRIBUTES LIST:
+ * 
+ * METHODS LIST:
+ * function reloadImages(forceRecallServer)
+ * -> Function to reloadImages from the server while reloading waypoints script
+ * 	  If forceRecallServer images are requested even when it was same image (src) 
+ * 		
+ * function initializeArrowEvents()
+ * -> Function to initialize arrow events for all arrowImage class element.
+ *    Initialize up and down arrow to the closest input text element (class -> menuInputNumber)
+ *    
+ * function initializeCheckboxEvents()
+ * -> Function to initialize checkbox events so it will reload images on change
+ * 
+ * function initializeComboBoxEvents(defaultZoom)
+ * -> Function to initialize combobox events (block, metadata, volume and axis to reslice) to reload the web on change
+ * 
+ * function initializeColRowModeEvents(mode)
+ * -> Function to initialize events for columns and row mode. 
+ * 	  It toggles between: 
+ * 		Automatic mode => disable cols & rows textfields
+ * 		Manual mode => enable cols & rows textfields and initialize value
+ * 	 If mode gallery it hides/shows cols & rows subsection 
+ * 
+ * function hideShowColsRowsSubSectionMenu()
+ * -> Function to hide/show col & rows subsection
+ * TODO: This can be done with toggle property
+ * 
+ * function initializeColsRows()
+ * -> Function to initialize Columns and Rows textfields value.
+ *    Execute when changing to manual mode
+ *    
+ * function initializeColsRowsEvents()
+ * -> Function to initialize Columns and Rows Events  
+ * 
+ * function updateGalleryLayout(cols, rows, setElement)
+ * -> Calculate real cols & rows depending on cols & rows set by the user
+ *    and update gallery layout depending on cols & rows.
+ *    setElement is the element that triggered the event and it is mandatory
+ *    
+ * function updateMainContainerDim(colVal)
+ * -> Update main container dimension.
+ *    colVal is the number of columns in which images are displayed
+ *    
+ * function initializeZoomEvents()
+ * -> Initialize events on zoom change
+ *    Calculate dimension (can be set on perc & pixel) & recall the server	
+ * 
+ * function initializeImageLoad(forceRecall)
+ * -> Function to reloadImages from the server
+ * 	  If forceRecallServer images are requested even when it was same image (src)
+ * 
+ * function saveShowjTable(csrf_token)
+ * -> Save table change in metadata
+ * 
+ * function showHideOptionMenu(){
+ * -> Show/Hide option menu
+ ******************************************************************************/
+
+ /** METHODS ******************************************************************/
 function reloadImages(forceRecallServer){
 	$.waypoints('destroy')
 	initializeImageLoad(forceRecallServer)
@@ -23,7 +115,6 @@ function initializeCheckboxEvents(){
 	})
 }
 
-//Initialize block, metadata, volume and axis to reslice combobox to reload the web when changing
 function initializeComboBoxEvents(defaultZoom){
 	$("#id_blockComboBox, #id_labelsToRenderComboBox, #id_volumesToRenderComboBox, #id_resliceComboBox").change(function(){
 		$('#id_zoom').val(defaultZoom)
@@ -31,9 +122,6 @@ function initializeComboBoxEvents(defaultZoom){
 	})
 }
 
-//Initialize events for columns and row mode. 
-//Automatic mode => disable cols & rows textfields
-//Manual mode => enable cols & rows textfields and initialize value
 function initializeColRowModeEvents(mode){
 	$("#colRowMode").click(function(e){
 		if ($("#colRowModeImage").attr("src").indexOf("On") != -1){
@@ -96,7 +184,6 @@ function hideShowColsRowsSubSectionMenu(){
 	}
 }
 
-//Initialize Columns and Rows textfields. Execute when changing to manual mode
 function initializeColsRows(){
 	colVal = $("#id_cols").val()
 	rowVal = $("#id_rows").val()
@@ -111,15 +198,6 @@ function initializeColsRows(){
 	updateGalleryLayout(colVal,rowVal,(colVal != "")?"id_cols":"id_rows")
 }
 
-function isNaturalNumber(n) {
-    n = n.toString(); // force the value incase it is not
-    var n1 = Math.abs(n),
-        n2 = parseInt(n, 10);
-    
-    return !isNaN(n1) && n2 === n1 && n1.toString() === n && n2>0;
-}
-
-//Change gallery layout when cols and rows textfield change
 function initializeColsRowsEvents(){
 	$("#id_cols, #id_rows").on('click change keyup',function(){
 		if (!isNaturalNumber($("#id_cols").val())){$("#id_cols").val(1)}
@@ -129,17 +207,13 @@ function initializeColsRowsEvents(){
 }
 
 function updateGalleryLayout(cols, rows, setElement){
-	recalculateColsRows(cols,rows, setElement)
-	updateMainContainerDim($("#id_cols").val())
-}
-
-function recalculateColsRows(cols, rows, setElement){
 	if (setElement == "id_cols"){
 		$("#id_rows").val(Math.ceil($(".img_container").length/cols))
 	}
 	else{
 		$("#id_cols").val(Math.ceil($(".img_container").length/rows))
 	}
+	updateMainContainerDim($("#id_cols").val())
 }
 
 function updateMainContainerDim(colVal){
@@ -151,7 +225,6 @@ function updateMainContainerDim(colVal){
 	
 }
 
-//Initialize events on zoom change (calculate dim (perc & pixel) & recall the server)
 function initializeZoomEvents(){
 	$('#id_zoom').click(function(){
 		/* updateImageDimByUrl(); */
@@ -190,7 +263,6 @@ function initializeImageLoad(forceRecall){
 	});
 }
 
-//Save table change in metadata
 function saveShowjTable(csrf_token){
 	if ($("#saveButton").hasClass("buttonGreyHovered")){
 		alert("witol")
@@ -206,7 +278,6 @@ function saveShowjTable(csrf_token){
 				message = json.message;
 				if (message == 'Ok'){
 					changes={}
-					/* $("#saveButton").toggleClass("saveOn").toggleClass("saveOff") */
 					$("#saveButton").toggleClass("buttonGreyHovered")
 				}
 				else{

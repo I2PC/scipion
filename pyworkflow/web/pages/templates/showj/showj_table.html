@@ -11,9 +11,8 @@ section {display:block;}
 </style>
 
 <!-- JS -->
-<script type="text/javascript" src="{{jquery_datatable}}"></script>
-<script src="/static/js/showj_libs/showj_table_utils.js" type="text/javascript"></script>
-
+<script type="text/javascript" src="{{jquery_datatable}}" ></script>
+<script type="text/javascript" src="{{showj_alt_js}}"></script>
 
 <!-- Datatable extra api -->
 <script type="text/javascript">
@@ -68,9 +67,11 @@ $.fn.dataTableExt.oApi.fnDisplayRowWithIndex = function ( oSettings, iPos )
 };
 </script>
 
+<!-- JS -->
 <script type="text/javascript" src="{{jquerydataTables_colreorder}}"></script>
 <script type="text/javascript" src="{{jquerydataTables_colreorder_resize}}"></script>
 <script type="text/javascript" src="{{jeditable}}"></script>
+
 
 <script type="text/javascript">
 /* Initialize datatable table */
@@ -141,9 +142,6 @@ $(document).ready(function() {
 	{% endif %}
 	setElementsEditable(null)
 	initializeColumnHeader()
-	
-	
-	
 } );
 
 /* Generate data for datatable from table dataset model */
@@ -166,7 +164,6 @@ function generateDataForTable(){
 	return dataForTable;
 }
 </script>
-
 {% endblock %}
 
 {% block content_menu %}{% endblock %}
