@@ -1,6 +1,6 @@
 # **************************************************************************
 # *
-# * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
+# * Authors:     Jose Gutierrez (jose.gutierrez@cnb.csic.es)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -24,17 +24,35 @@
 # *
 # **************************************************************************
 """
-This sub-package will contains Relion protocols
+This module implement the wrappers around xmipp_showj
+visualization program.
 """
-
-_logo = "relion_logo.png"
-_references = [
-               'Sjors H.W. Scheres, A Bayesian View on Cryo-EM Structure Determination, Journal of Molecular Biology, Volume 415, Issue 2, 13 January 2012, Pages 406-418, ISSN 0022-2836, http://dx.doi.org/10.1016/j.jmb.2011.11.010.',
-               'Sjors H.W. Scheres, RELION: Implementation of a Bayesian approach to cryo-EM structure determination, Journal of Structural Biology, Volume 180, Issue 3, December 2012, Pages 519-530, ISSN 1047-8477, http://dx.doi.org/10.1016/j.jsb.2012.09.006.'
-               ]
-# Wizards
-from wizard import *
+import Tkinter as tk
+from pyworkflow.protocol.params import *
+from pyworkflow.viewer import Viewer, ProtocolViewer, DESKTOP_TKINTER, WEB_DJANGO
+from pyworkflow.utils.graph import Graph
+from pyworkflow.gui.graph import LevelTree
+from pyworkflow.gui.canvas import Canvas, ImageBox
+from pyworkflow.em.packages.xmipp3.viewer import XmippViewer, runShowJ
+from pyworkflow.gui.text import showTextfileViewer
 
 from protocol_classify3d import Relion3DClassification
 
-from viewer import RelionViewer
+    
+class RelionViewer(Viewer):
+    """ Wrapper to visualize different type of objects
+    with the Xmipp program xmipp_showj. """
+    
+    _environments = [DESKTOP_TKINTER, WEB_DJANGO]
+    _targets = [Relion3DClassification]
+    _label = 'viewer'
+
+    def visualize(self, obj, **args):
+                
+        if isinstance(obj, Relion3DClassification):
+            XmippViewer().visualize(obj.outputVolumes)
+            
+    @classmethod
+    def getView(self):
+        return "viewerRelion"
+            

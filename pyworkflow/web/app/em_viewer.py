@@ -54,6 +54,8 @@ def launch_viewer(request):
         
         viewers = findViewers(protocol.getClassName(), WEB_DJANGO)
         
+        print len(viewers)
+        
         if len(viewers) == 0:
             msg = "There is not viewer for protocol: <strong>" + protocol.getClassName() +"</strong>"
             ioDict = {'error': msg}
@@ -115,6 +117,19 @@ def viewerSpider(project, protocol, viewer):
         ioDict["urls"] = [url1, url2] 
         
     return ioDict
+
+def viewerRelion(project, protocol, viewer):
+    ioDict={}    
+        
+    if isinstance(protocol, Relion3DClassification):
+        
+        volumes = protocol.outputVolumes
+        url1 = "/visualize_object/?objectId="+str(volumes.getObjId())
+            
+        ioDict["urls"] = [url1] 
+        
+    return ioDict
+
 
 def viewerForm(project, protocol, viewer):
     protId = protocol.getObjId()
