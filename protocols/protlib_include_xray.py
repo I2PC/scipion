@@ -107,6 +107,99 @@ BadPixelsMask = ""
  
  
  
+def expandXrayFastAlign():
+    linesStr = '''
+#-----------------------------------------------------------------
+# {expert}{condition}{has_question}{section} tiltxcorr
+#-----------------------------------------------------------------
+# Params
+DoTiltXcorr = True
+# rotation
+rotation = 0.0
+# sigma1
+sigma1 = 0.03
+# radius2
+radius2 = 0.25
+# sigma2
+sigma2 = 0.05
+# border
+border = '49,49'
+# size
+size = '300,300'
+# overlap
+overlap = '0.33,0.33'
+
+#-----------------------------------------------------------------
+# {expert}{condition}{has_question}{section} tiltalign
+#-----------------------------------------------------------------
+# Params
+DoTiltAlign = True
+# RotationAngle
+RotationAngle = 0.0
+# AngleOffset
+AngleOffset = 0.0 
+# RotOption
+RotOption = -1
+# RotDefaultGrouping
+RotDefaultGrouping = 5 
+#TiltOption
+TiltOption = 0 
+# MagReferenceView
+MagReferenceView = 1 
+# MagOption
+MagOption = 0 
+# MagDefaultGrouping
+MagDefaultGrouping = 4 
+# XStretchOption
+XStretchOption = 0 
+# XStretchDefaultGrouping
+XStretchDefaultGrouping = 7 
+# SkewOption
+SkewOption = 0 
+# SkewDefaultGrouping
+SkewDefaultGrouping = 11 
+# ResidualReportCriterion
+ResidualReportCriterion = 3.0  
+# SurfacesToAnalyze
+SurfacesToAnalyze = 1 
+# MetroFactor
+MetroFactor = 0.25 
+# MaximumCycles
+MaximumCycles = 1000 
+# AxisZShift
+AxisZShift = 0.0 
+# LocalAlignments
+LocalAlignments = 0 
+# MinFidsTotalAndEachSurface
+MinFidsTotalAndEachSurface = '8,3' 
+# LocalOutputOptions
+LocalOutputOptions = '0,0,0' 
+# LocalRotOption
+LocalRotOption = 3 
+# LocalRotDefaultGrouping
+LocalRotDefaultGrouping = 6 
+# LocalTiltOption
+LocalTiltOption = 5 
+# LocalTiltDefaultGrouping
+LocalTiltDefaultGrouping = 6 
+# LocalMagReferenceView
+LocalMagReferenceView = 1 
+# LocalMagOption
+LocalMagOption = 3 
+# LocalMagDefaultGrouping
+LocalMagDefaultGrouping = 7 
+# LocalXStretchOption
+LocalXStretchOption = 0 
+# LocalXStretchDefaultGrouping
+LocalXStretchDefaultGrouping = 7 
+# LocalSkewOption
+LocalSkewOption = 0
+# LocalSkewDefaultGrouping
+LocalSkewDefaultGrouping = 11 
+# BeamTiltOption
+BeamTiltOption = 0    
+'''
+    return linesStr % locals()   
  
  
  
