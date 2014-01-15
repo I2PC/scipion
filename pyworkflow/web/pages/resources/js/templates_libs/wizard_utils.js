@@ -387,7 +387,7 @@ function previewSpiderFilter(filterType, filterMode, usePadding) {
 	 */
 	// get the img path
 	var path_img = $("tr#" + $("table#data").attr("value")).attr("value");
-
+	
 	// load and set the image
 	var uri = "/get_image_filter_spider/?image=" + path_img + "&filterType=" + filterType + "&dim=250"+ "&filterMode="+filterMode+"&usePadding="+usePadding;
 

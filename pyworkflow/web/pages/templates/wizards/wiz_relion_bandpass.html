@@ -1,0 +1,79 @@
+{% extends 'wizards/wiz_base.html' %} 
+{% block title %} Relion Bandpass Filter {% endblock %} 
+{% block name %} Relion Bandpass Filter {% endblock %} 
+{% block head %}
+	<script>
+		function returnParams(){
+			putSelection('input#iniLowPassFilter', 'highFreq_input');
+		}		
+	</script>
+{% endblock %} 
+{% block list %}
+
+{% for obj in objects %}
+{% if forloop.counter0 == 0 %} 
+<script>
+	firstElm  = {{obj.getObjId}};
+</script>
+{% endif %}
+<tr id="{{obj.getObjId}}" class="no-selected"
+	onclick="compositeBandpass(($(this)),{{lowFreq}},$('#high_val').attr('value'),{{decayFreq}});" value="{{obj.text}}">
+	<td>{{obj.basename}}</td>
+</tr>
+{% endfor %} {% endblock %} {% block images %}
+<tr>
+	<td>
+		<div id="wrapper" class="image">
+			<img id="particle"/>
+		</div>Image
+	</td>
+	<td>
+		<div id="wrapper" class="image">
+			<img id="imgFiltered"/>
+		</div>Filtered
+	</td>
+</tr>
+{% endblock %} 
+{% block options %}
+<fieldset id="sliderOptions">
+	<legend>Frequencies({{unit}})</legend>
+	<table id="fourierTable">
+		<tr>
+			<td>
+				<div id="highFou">
+					<span id="title_freq">Freq<span>
+					<div id="sliderLite" class="slider_high"></div>
+					<div id="slider_high_result">{{highFreq}}</div>
+					<div id="slider_high_result" style="display:none;">{{highFreq}}</div>
+					<input id="high_val" type="hidden" value="{{highFreq}}"/>
+				</div>
+			</td>
+		</tr>
+	</table>
+</fieldset>
+<script>
+$(".slider_high").slider({
+	animate : true,
+	range : "min",
+	value : "{{highFreq}}",
+	min : 0.00,
+	max : 0.50,
+	step : 0.01,
+	//this gets a live reading of the value and prints it on the page
+	slide : function(event, ui) {
+		$("#slider_high_result").html(ui.value);
+	},
+	//this updates the hidden form field so we can submit the data using a form
+	change : function(event, ui) {
+		$('#high_val').attr('value', ui.value);
+		//update the image filtered
+		previewBandpassFilter({{lowFreq}},ui.value,{{decayFreq}});	
+	}
+});
+//Load the First Element of the list
+window.onload = compositeBandpass($("tr#"+firstElm),{{lowFreq}},$('#high_val').attr('value'),{{decayFreq}});
+</script>
+{% endblock %}
+{% block function %}
+	onclick="returnParams()"
+{% endblock %}

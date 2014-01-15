@@ -351,3 +351,5 @@ class Relion3DClassification(ProtClassify3D, ProtRelionBase):
         errors = []
         return errors
             
+            
+   

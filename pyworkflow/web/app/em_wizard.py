@@ -35,6 +35,8 @@ from django.shortcuts import render_to_response
 from pyworkflow.gui import getImage, getPILImage
 from django.http import HttpResponse
 from pyworkflow.em.convert import ImageHandler
+from pyworkflow.em.constants import *
+
 from pyworkflow.em.packages.xmipp3.convert import xmippToLocation, locationToXmipp
 from pyworkflow.em.packages.spider.convert import locationToSpider
 from pyworkflow.em.packages.spider.wizard import filter_spider
@@ -312,6 +314,33 @@ def wiz_gaussian(protocol, request):
             context = wiz_base(request, context)
             
             return render_to_response('wizards/wiz_gaussian.html', context)
+        
+def wiz_relion_bandpass(protocol, request):
+    particles = protocol.inputParticles.get()
+    
+    highFreq = protocol.iniLowPassFilter.get()
+    
+    res = validateParticles(particles)
+    
+    if res is not 1:
+        return HttpResponse(res)
+    else:
+        parts = getParticleSubset(particles,100)
+        
+        if len(parts) == 0:
+            return HttpResponse("errorIterate")
+        else:
+            context = {'objects': parts,
+                       'lowFreq': 0,
+                       'highFreq': highFreq,
+                       'decayFreq': 0,
+                       'unit': UNIT_PIXEL
+                       }
+            
+            context = wiz_base(request, context)
+            
+            return render_to_response('wizards/wiz_relion_bandpass.html', context)
+        
 
 def getParticleSubset(particles, num):
     """
@@ -456,7 +485,7 @@ def get_image_filter_spider(request):
 
     filter_spider(outputLocSpiStr, outputLocSpiStr, **pars)
     
-     # Get output image and update filtered image
+    # Get output image and update filtered image
     img = xmipp.Image()
     locXmippStr = locationToXmipp(1, outputPath)
     img.read(locXmippStr)
@@ -467,6 +496,4 @@ def get_image_filter_spider(request):
     response = HttpResponse(mimetype="image/png")
     img.save(response, "PNG")
     return response
-    
-    
     
