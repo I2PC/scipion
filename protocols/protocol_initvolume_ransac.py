@@ -50,7 +50,7 @@ class ProtInitVolRANSAC(ProtInitVolumeBase):
         
         # Refine the best volumes
         for n in range(self.NumVolumes):
-            fnBase='proposedVolume%05d'%n
+            fnBase='volumeProposed%05d'%n
             fnRoot=self.workingDirPath(fnBase)
             parent_id=XmippProjectDb.FIRST_STEP
 
@@ -86,7 +86,7 @@ class ProtInitVolRANSAC(ProtInitVolumeBase):
         
         for n in range(self.NumVolumes):
 
-            fnBase='proposedVolume%05d'%n
+            fnBase='volumeProposed%05d'%n
             fnRoot=self.workingDirPath(fnBase+".xmd")
                            
             if os.path.isfile(fnRoot):
@@ -112,12 +112,12 @@ class ProtInitVolRANSAC(ProtInitVolumeBase):
     
     def visualize(self):
         if self.DoShowList:
-            fnVolumes = self.workingDirPath('proposedVolumes.xmd')
+            fnVolumes = self.workingDirPath('volumesProposed.xmd')
             runShowJ(fnVolumes)
         if self.VolumesToShow!="":
             listOfVolumes = getListFromRangeString(self.VolumesToShow)
             for volume in listOfVolumes:
-                fnRoot=self.workingDirPath('proposedVolume%05d'%int(volume))
+                fnRoot=self.workingDirPath('volumeProposed%05d'%int(volume))
                 os.system("xmipp_chimera_client -i %s.vol --mode projector 256 --angulardist %s.xmd"%(fnRoot,fnRoot))
 
 def evaluateVolumes(log,WorkingDir,NRansac):
@@ -195,7 +195,7 @@ def getBestVolumes(log,WorkingDir,NRansac,NumVolumes,UseAll):
     indx = 0
     while i>=0 and indx<NumVolumes:
         fnBestAngles = volumes[index[i]]
-        fnBestAnglesOut=os.path.join(WorkingDir,"proposedVolume%05d"%indx+".xmd")
+        fnBestAnglesOut=os.path.join(WorkingDir,"volumeProposed%05d"%indx+".xmd")
         copyFile(log,fnBestAngles,fnBestAnglesOut)
         print("Best volume "+str(indx)+" = "+fnBestAngles)
         if not UseAll:
@@ -295,7 +295,7 @@ def scoreFinalVolumes(log,WorkingDir,NumVolumes):
     threshold=getCCThreshold(WorkingDir)
     mdOut=MetaData()
     for n in range(NumVolumes):
-        fnRoot=os.path.join(WorkingDir,'proposedVolume%05d'%n)
+        fnRoot=os.path.join(WorkingDir,'volumeProposed%05d'%n)
         fnAssignment=fnRoot+".xmd"
         if exists(fnAssignment):
             runJob(log,"xmipp_metadata_utilities","-i %s --fill weight constant 1"%fnAssignment)
@@ -318,13 +318,13 @@ def scoreFinalVolumes(log,WorkingDir,NumVolumes):
             mdOut.setValue(MDL_VOLUME_SCORE_SUM_TH,float(thresholdedSum),id)
             mdOut.setValue(MDL_VOLUME_SCORE_MEAN,float(avg),id)
             mdOut.setValue(MDL_VOLUME_SCORE_MIN,float(minCC),id)
-    mdOut.write(os.path.join(WorkingDir,"proposedVolumes.xmd"))
+    mdOut.write(os.path.join(WorkingDir,"volumesProposed.xmd"))
     
     
 def integrateVolumes(log,WorkingDir,NumVolumes,NumIter):
     
-    fnOut = 'proposedVolume.xmd'
+    fnOut = 'volumesProposed.xmd'
     for n in range(NumVolumes-1):
-        fnRoot=os.path.join(WorkingDir,'proposedVolume%05d'%n)
-        fnRoot2=os.path.join(WorkingDir,'proposedVolume%05d'%n+1)
+        fnRoot=os.path.join(WorkingDir,'volumeProposed%05d'%n)
+        fnRoot2=os.path.join(WorkingDir,'volumeProposed%05d'%n+1)
         runJob(log,"xmipp_metadata_utilities","-i %s --set union_all %s -o %s"%(fnRoot,fnRoot2,fnOut))
