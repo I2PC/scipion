@@ -49,29 +49,13 @@
 
  /** METHODS ******************************************************************/
 
-function createProjectForm() {
-	/*
-	 * 
-	 */
+function createProjectForm(title) {
 
-	var html = "Project Name: <input type='text' id='newProjName' class='content'/>";
-
-	new Messi(html, {
-		title : 'Enter the project name',
-		// modal : true,
-		buttons : [ {
-			id : 0,
-			label : 'Ok',
-			val : 'Y',
-			btnClass : 'fa-check',
-			btnFunc : 'createProject'
-		}, {
-			id : 1,
-			label : 'Cancel',
-			val : 'C',
-			btnClass : 'fa-ban'
-		} ]
-	});
+	var title = 'Enter the project name';
+	var msg = "Project Name: <input type='text' id='newProjName' class='content'/>";
+	var funcName = 'createProject';
+	
+	warningPopup(title, msg, funcName);
 }
 
 function createProject(elm) {
@@ -85,31 +69,16 @@ function createProject(elm) {
 	});
 }
 
-function deleteProjectForm(projName) {
+function deleteProjectForm(projName, title) {
 
-	var msg = "<table><tr><td><i class=\"fa fa-warning fa-4x\" style=\"color:#fad003;\"></i>"
-			+ "</td><td class='content' value='"
-			+ projName
+	var title = 'Confirm project deletion'
+	var msg = "<td class='content' value='"	+ projName
 			+ "'>Are you sure to <strong>DELETE</strong> project <strong>"
 			+ projName
-			+ "</strong> and all its <strong>DATA</strong></td></tr></table>";
-
-	new Messi(msg, {
-		title : 'Confirm project deletion',
-		// modal : true,
-		buttons : [ {
-			id : 0,
-			label : 'Yes',
-			val : 'Y',
-			btnClass : 'fa-check',
-			btnFunc : 'deleteProject'
-		}, {
-			id : 1,
-			label : 'No',
-			val : 'C',
-			btnClass : 'fa-ban'
-		} ]
-	});
+			+ "</strong> and all its <strong>DATA</strong></td>";
+	var funcName = 'deleteProject';
+	
+	warningPopup(title, msg, funcName);
 }
 
 function deleteProject(elm) {
