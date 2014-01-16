@@ -1126,7 +1126,7 @@ data_noname
 
             for refN in range(1, self.numberOfReferences + 1):
                 def insertReconstructStep(verifyFilesKey, inputMdKey, outputVolKey,doVerify=False):
-                    _VerifyFiles=None
+                    _VerifyFiles=[]
                     if doVerify:
                         _VerifyFiles = [self.getFilename(verifyFilesKey, iter=iterN, ref=refN)]
                     self.insertStep('reconstruction', verifyfiles=_VerifyFiles
