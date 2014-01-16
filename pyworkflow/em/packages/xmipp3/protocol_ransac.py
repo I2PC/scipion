@@ -154,15 +154,12 @@ class XmippProtRansac(ProtInitialVolume):
                     
             # Simulated annealing
             self._insertFunctionStep('reconstruct',fnRoot,
-                                               prerequisites=[bestVolumesStepId]) # Make estimation steps indepent between them)
+                                               prerequisites=[bestVolumesStepId]) # Make estimation steps indepent between them
             if self.useSA.get():
-                self._insertRunJobStep("xmipp_volume_initial_simulated_annealing","-i %s.xmd --initial %s.vol --oroot %s_sa --sym %s --randomIter %d --rejection %f --dontApplyPositive"\
-                          %(fnRoot,fnRoot,fnRoot,self.symmetryGroup.get(),self.nIterRandom.get(),self.rejection.get()))
-                self._insertRunJobStep('moveFile', source=fnRoot+"_sa.vol", dest=fnRoot+".vol")
-                self._insertRunJobStep('deleteFile', filename=fnRoot+"_sa.xmd")
+                self._insertFunctionStep('simulatedAnnealing',fnRoot)
         
             for it in range(self.numIter.get()):    
-                self._insertFunctionStep('reconstruct',fnRoot) # Make estimation steps indepent between them
+                self._insertFunctionStep('reconstruct',fnRoot) 
                 self._insertFunctionStep('projMatch',fnBase)
             
             stepId =  self._insertRunJobStep("xmipp_image_resize","-i %s.vol -o %s.vol --dim %d %d" 
@@ -199,9 +196,6 @@ class XmippProtRansac(ProtInitialVolume):
         self._insertRunJobStep("xmipp_transform_filter","-i %s -o %s --fourier low_pass %f --oroot %s"
                                                 %(self.imgsFn,fnOutputReducedClass,freq,fnOutputReducedClassNoExt))
         return self._insertRunJobStep("xmipp_image_resize","-i %s --fourier %d -o %s" %(fnOutputReducedClass,self.Xdim2,fnOutputReducedClassNoExt))
-        
-
-    
     
     def ransacIteration(self, n):
     
@@ -254,6 +248,13 @@ class XmippProtRansac(ProtInitialVolume):
         cleanPath(self._getTmpPath('gallery_'+fnBase+'.doc'))
         cleanPath(fnVol)
         cleanPath(self._getTmpPath(fnBase+'.xmd'))
+    
+    
+    def simulatedAnnealing(self, fnRoot):
+        self._insertRunJobStep("xmipp_volume_initial_simulated_annealing","-i %s.xmd --initial %s.vol --oroot %s_sa --sym %s --randomIter %d --rejection %f --dontApplyPositive"\
+                         %(fnRoot,fnRoot,fnRoot,self.symmetryGroup.get(),self.nIterRandom.get(),self.rejection.get()))
+        self._insertRunJobStep('moveFile', source=fnRoot+"_sa.vol", dest=fnRoot+".vol")
+        self._insertRunJobStep('deleteFile', filename=fnRoot+"_sa.xmd") 
     
     def reconstruct(self, fnRoot):
         self.runJob(None,"xmipp_reconstruct_fourier","-i %s.xmd -o %s.vol --sym %s " %(fnRoot,fnRoot,self.symmetryGroup.get()))
@@ -452,5 +453,3 @@ class XmippProtRansac(ProtInitialVolume):
                 summary.append("Simulated annealing used")
             return summary
             
-    
-    
