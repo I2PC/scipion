@@ -805,6 +805,31 @@ void fast_correlation_vector(const MultidimArray< std::complex<double> > & FFT1,
     R.setXmippOrigin();
 }
 
+/** Fast autocorrelation matrix */
+void auto_correlation_matrix(const MultidimArray<double> & Img, MultidimArray< double >& R, CorrelationAux &aux)
+{
+    // Compute the Fourier Transform
+    R=Img;
+    aux.transformer1.FourierTransform(R, aux.FFT1, false);
+
+    // Multiply FFT1 * FFT1'
+    double dSize=MULTIDIM_SIZE(Img);
+    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(aux.FFT1)
+    {
+        double *ptr=(double*)&DIRECT_MULTIDIM_ELEM(aux.FFT1,n);
+        double &realPart=*ptr;
+        double &imagPart=*(ptr+1);
+        realPart=dSize*(realPart*realPart+imagPart*imagPart);
+        imagPart=0;
+    }
+
+    // Invert the product, in order to obtain the correlation image
+    aux.transformer1.inverseFourierTransform();
+
+    // Center the resulting image to obtain a centered autocorrelation
+    CenterFFT(R, true);
+}
+
 void randomizePhases(MultidimArray<double> &Min, double wRandom)
 {
 	FourierTransformer transformer;
