@@ -27,6 +27,7 @@
 import json
 import pyworkflow.gui.graph as gg
 from pyworkflow.em import *
+from views_base import * 
 from views_util import * 
 from views_protocol import updateParam 
 from pyworkflow.utils.utils import prettyDate
@@ -43,53 +44,6 @@ from pyworkflow.web.app.views_util import loadProject
 
 from pyworkflow.utils.messages_properties import Message
 
-def base(request, context):
-    
-    # Messages properties class
-    messages = Message()
-    
-    context_base = {
-                # IMG
-                'favicon': getResourceIcon('favicon'),
-                # CSS
-                'general_css': getResourceCss('general'),
-                'messi_css': getResourceCss('messi'),
-                'font_awesome': getResourceCss('font_awesome'),
-                # JS 
-                'jquery': getResourceJs('jquery'),
-                'messi_js': getResourceJs('messi'),
-                'jquery_sizes': getResourceJs('jquery_sizes'),
-                'jlayout_border': getResourceJs('jlayout_border'),
-                'jquery_layout': getResourceJs('jquery_layout'),
-                'utils': getResourceJs('utils'),
-                'messages': messages
-               }
-    
-    context.update(context_base)
-    return context
-
-def base_grid(request, context):
-    
-    context_base = {
-                    'general_grid': getResourceCss('general_grid')
-                    }
-    
-    context = base(request, context)
-    context.update(context_base)
-    return context
-
-def base_flex(request, context):
-    
-    context_base = {
-                    'general_flex': getResourceCss('general_flex'),
-                    'jquery_ui': getResourceJs('jquery_ui'),
-                    'jquery_ui_css': getResourceCss('jquery_ui'),
-                    'jsplumb': getResourceJs('jsplumb'),
-                    }
-    
-    context = base(request, context)
-    context.update(context_base)
-    return context
 
 def projects(request):
     manager = Manager()

@@ -29,6 +29,7 @@ import xmipp
 import json
 from pyworkflow.viewer import WEB_DJANGO
 from pyworkflow.em import *
+from views_base import * 
 from views_util import * 
 from pyworkflow.manager import Manager
 from pyworkflow.project import Project
@@ -113,17 +114,9 @@ def form(request):
                'paramProt':paramProt,
                'favicon': getResourceIcon('favicon'),
                'comment':getResourceIcon('edit_toolbar'),
-               'jquery': getResourceJs('jquery'),
-               'jquery_ui': getResourceJs('jquery_ui'),
                'jquery_ui_css': getResourceCss('jquery_ui'),
                'wizard': getResourceIcon('wizard'),
-               'utils': getResourceJs('utils'),
                'protocol_form_utils': getResourceJs('protocol_form_utils'),
-               'css':getResourceCss('form'),
-               'messi': getResourceJs('messi'),
-               'messi_css': getResourceCss('messi'),
-               'font_awesome': getResourceCss('font_awesome'),
-               'general': getResourceCss('general'),
                'hosts':hosts
                }
     # Update the context dictionary with the special params
@@ -132,6 +125,8 @@ def form(request):
     
     # Cross Site Request Forgery protection is need it
     context.update(csrf(request))
+    
+    context = base_form(request, context)
     
     return render_to_response('form.html', context)
     
