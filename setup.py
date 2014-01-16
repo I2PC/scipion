@@ -39,7 +39,7 @@ from subprocess import Popen
 import platform
 
 WINDOWS = platform.system() == "Windows"
-SCONS = 'scons/scons-local-2.3.0/script/scons' # NOT USING os.path.join because of MIGW
+SCONS = 'external/scons/scons.py' # NOT USING os.path.join because of MIGW
 
 ################ Classes for a Console based configuration ######################
 class ConsoleOptionsTab():
