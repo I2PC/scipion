@@ -29,16 +29,16 @@ This module define the text used in the application.
 
 class Message():
     
-    
-    
     # Projects Template
     label_create_project='Create Project'
     title_create_project='Enter the project name'
     label_delete_project='Delete Project'
     delete_project_title='Confirm project deletion'
     
-    
     # Project Content Template
     summary_information = 'No summary information.'
     
     
+    # Example Usage: 
+        #       MyMessage = Message()
+        #       print MyMessage.label

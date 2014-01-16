@@ -41,6 +41,56 @@ from pyworkflow.em.packages.xmipp3.plotter import XmippPlotter
 from pyworkflow.viewer import WEB_DJANGO
 from pyworkflow.web.app.views_util import loadProject
 
+from pyworkflow.utils.messages_properties import Message
+
+def base(request, context):
+    
+    # Messages properties class
+    messages = Message()
+    
+    context_base = {
+                # IMG
+                'favicon': getResourceIcon('favicon'),
+                # CSS
+                'general_css': getResourceCss('general'),
+                'messi_css': getResourceCss('messi'),
+                'font_awesome': getResourceCss('font_awesome'),
+                # JS 
+                'jquery': getResourceJs('jquery'),
+                'messi_js': getResourceJs('messi'),
+                'jquery_sizes': getResourceJs('jquery_sizes'),
+                'jlayout_border': getResourceJs('jlayout_border'),
+                'jquery_layout': getResourceJs('jquery_layout'),
+                'utils': getResourceJs('utils'),
+                'messages': messages
+               }
+    
+    context.update(context_base)
+    return context
+
+def base_grid(request, context):
+    
+    context_base = {
+                    'general_grid': getResourceCss('general_grid')
+                    }
+    
+    context = base(request, context)
+    context.update(context_base)
+    return context
+
+def base_flex(request, context):
+    
+    context_base = {
+                    'general_flex': getResourceCss('general_flex'),
+                    'jquery_ui': getResourceJs('jquery_ui'),
+                    'jquery_ui_css': getResourceCss('jquery_ui'),
+                    'jsplumb': getResourceJs('jsplumb'),
+                    }
+    
+    context = base(request, context)
+    context.update(context_base)
+    return context
+
 def projects(request):
     manager = Manager()
     
@@ -55,7 +105,9 @@ def projects(request):
                'projects_css': getResourceCss('projects'),
                'project_utils_js': getResourceJs('project_utils'),
                'view': 'projects',
-               'contentConfig': 'full'}
+               }
+    
+    context = base_grid(request, context)
     
     return render_to_response('projects.html', context)
 
@@ -319,20 +371,19 @@ def project_content(request):
                'analyzeTool': getResourceIcon('analyze_toolbar'),
                'treeTool': getResourceIcon('tree_toolbar'),
                'listTool': getResourceIcon('list_toolbar'),
-               'utils': getResourceJs('utils'),
                'graph_utils': getResourceJs('graph_utils'),
                'project_content_utils': getResourceJs('project_content_utils'),
                'jquery_cookie': getResourceJs('jquery_cookie'),
                'jquery_treeview': getResourceJs('jquery_treeview'),
-               'css':getResourceCss('project_content'),
-               'jquery_ui':getResourceCss('jquery_ui'),
+               'project_content_css':getResourceCss('project_content'),
                'sections': root.childs,
                'choices':choices,
                'choiceSelected': choiceSelected,
                'provider':provider,
                'view': 'protocols',
-               'graphView': graphView,
-               'contentConfig': 'divided'}
+               'graphView': graphView}
+    
+    context = base_flex(request, context)
     
     return render_to_response('project_content.html', context)
 
