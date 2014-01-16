@@ -29,16 +29,65 @@ This module define the text used in the application.
 
 class Message():
     
+    # Example Usage: 
+        #       MyMessage = Message()
+        #       print MyMessage.label
+
     # Projects Template
     label_create_project='Create Project'
     title_create_project='Enter the project name'
     label_delete_project='Delete Project'
-    delete_project_title='Confirm project deletion'
+    title_delete_project='Confirm project deletion'
+    label_modified='Modified: '
     
     # Project Content Template
-    summary_information = 'No summary information.'
+    #-- Protocol Treeview --
+    label_workflow='Workflow View: '
+    label_protTree_None='No athletes.'
+    #-- Toolbar --
+    label_edit='Edit'
+    label_copy='Copy'
+    label_delete='Delete'
+    label_browse='Browse'
+    label_stop='Stop'
+    label_analyze='Analyze Results'
+    label_tree='Tree'
+    label_list='List'
+    label_refresh='Refresh'
+    #-- Tabs --
+    label_data='Data'
+    label_summary='Summary'
+    label_input='Inputs'
+    label_output='Outputs'
+    no_info_summary = 'No summary information.'
+    
+    # Protocol Form Template
+    title_name_run=' Protocol Run: '
+    title_run='Run'
+    title_run_name='Run name'
+    label_comment='Describe your run here...'
+    title_run_mode='Run mode'
+    label_run_mode_resume='resume'
+    label_run_mode_restart='restart'
+    title_expert='Expert Level'
+    label_expert_normal='Normal'
+    label_expert_advance='Advanced'
+    label_expert_expert='Expert'
+    title_exec='Execution'
+    title_exec_host='Execution host'
+    title_threads='Threads'
+    title_mpi='MPI'
+    title_queue='Launch to queue?'
+    label_queue_yes='Yes'
+    label_queue_no='No'
+    label_param_yes='Yes'
+    label_param_no='No'
+    label_button_close='Close'
+    label_button_save='Save'
+    label_button_exec='Execute'
+    label_button_vis='Visualize'
+    label_button_return='Save'
     
     
-    # Example Usage: 
-        #       MyMessage = Message()
-        #       print MyMessage.label
+    
+    

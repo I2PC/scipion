@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang='es'>
 	<head>
-	<title>{{projectName}} Protocol Run: {{protocol}}</title>
+	<title>{{projectName}}{{messages.title_name_run}}{{protocol}}</title>
 	<meta charset='utf-8'>
 	<link rel="icon" type="image/png" href={{favicon}} />
 	<!-- CSS -->
@@ -74,41 +74,41 @@
 			<div id="main">
 				<div id="mainNode1" class="mainNode floatLeft">
 					<div class="title">
-						Run
+						{{messages.title_run}}
 					</div>
 					<table>
 						<tr>
 							<td>
-								Run name
+								{{messages.title_run_name}}
 							</td>
 							<td>
 								<input type="text" id="runName" name="runName" value="{{protocol.getObjLabel}}">
 							</td>
 							<td class="ico">
-								<a id="editTool" href="javascript:showComment();"><i class="fa fa-pencil"></i></a>
+								<a id="editTool" href="javascript:showComment('{{messages.label_comment}}');"><i class="fa fa-pencil"></i></a>
 							</td>
 						</tr>
 						<tr>
 							<td>
-								Run mode
+								{{messages.title_run_mode}}
 							</td>
 							<td>
 								<select id="runMode_select" name="runMode" size="1" onchange="javascript:onChangeEnumParamCombo('runMode_select', 'runMode');">
-									<option value="0">resume</option>
-									<option value="1" selected="selected">restart</option>
+									<option value="0">{{messages.label_run_mode_resume}}</option>
+									<option value="1" selected="selected">{{messages.label_run_mode_restart}}</option>
 								</select>		
 							</td>
 						</tr>
 						<tr>
 							<td>
-								Expert Level
+								{{messages.title_expert}}
 							</td>
 							<td>
 								<select name="expertLevel" size=1
 								onChange="javascript:evalElements();">
-									<option value="0" {% if expertLevel == 0 %} selected="selected" {% endif %}>Normal</option>
-									<option value="1" {% if expertLevel == 1 %} selected="selected" {% endif %}>Advanced</option>
-									<option value="2" {% if expertLevel == 2 %} selected="selected" {% endif %}>Expert</option>
+									<option value="0" {% if expertLevel == 0 %} selected="selected" {% endif %}>{{messages.label_expert_normal}}</option>
+									<option value="1" {% if expertLevel == 1 %} selected="selected" {% endif %}>{{messages.label_expert_advance}}</option>
+									<option value="2" {% if expertLevel == 2 %} selected="selected" {% endif %}>{{messages.label_expert_expert}}</option>
 								</select>
 							</td>
 						</tr>					
@@ -117,12 +117,12 @@
 								
 				<div id="mainNode2" class="mainNode floatRight">
 					<div class="title">
-						Execution
+						{{messages.title_exec}}
 					</div>
 					<table>
 						<tr>
 							<td>
-								Execution host
+								{{messages.title_exec_host}}
 							</td>
 							<td>
 								<select name="hostName" size=1 onChange="">
@@ -134,21 +134,21 @@
 						</tr>
 						<tr>
 							<td>
-								Threads&nbsp;		
+								{{messages.title_threads}}&nbsp;		
 								<input type="text" id="numberOfThreads_input" name="numberOfThreads" value="{{numberOfThreads}}" style="width:3em;">
 							</td>
 							<td >
-								MPI&nbsp;		
+								{{messages.title_mpi}}&nbsp;		
 								<input type="text" id="numberOfMpi_input" name="numberOfMpi" value="{{numberOfMpi}}" style="width:3em;">
 							</td>
 						</tr>
 						<tr>
 							<td>
-								Launch to queue?
+								{{messages.title_queue}}
 							</td>
 							<td>
-							  <input type="radio" id="queue_yes" name="_useQueue" value="yes"/>Yes
-							  <input type="radio" id="queue_no" name="_useQueue" value="no"/>No
+							  <input type="radio" id="queue_yes" name="_useQueue" value="yes"/>{{messages.label_queue_yes}}
+							  <input type="radio" id="queue_no" name="_useQueue" value="no"/>{{messages.label_queue_no}}
 							</td>
 						</tr>
 					</table>
@@ -178,9 +178,9 @@
 									<td>
 										{% if param.getClassName == "BooleanParam" %}
 										  <input type="radio" id="{{paramName}}_yes" name={{paramName}} onChange="javascript:onChangeParam('true','{{paramName}}');" value="true" 
-										  {% if param.htmlValue == 'true' %} checked {% endif %}/>Yes 
+										  {% if param.htmlValue == 'true' %} checked {% endif %}/>{{messages.label_param_yes}}
 										  <input type="radio" id="{{paramName}}_no" name={{paramName}} onChange="javascript:onChangeParam('false','{{paramName}}');" value="false"  
-										  {% if param.htmlValue == 'false' %} checked {% endif %} />No
+										  {% if param.htmlValue == 'false' %} checked {% endif %} />{{messages.label_param_no}}
 										{% elif param.getClassName == "EnumParam" %}
 											{% if param.display == 0 %}
 												{% for choice in param.choices %}
@@ -239,14 +239,14 @@
 				 {% endfor %}
 				 </div>		
 			<div class="boxBottom">
-				<a href="javascript:window.close()" class="btn buttonGrey"><i class="fa fa-times"></i>Close</a>
+				<a href="javascript:window.close()" class="btn buttonGrey"><i class="fa fa-times"></i>{{messages.label_button_close}}</a>
 				{% if visualize == 0 %}
-				<a href="javascript:putMode('save');" class="btn buttonGrey"><i class="fa fa-save"></i>Save</a>
-				<a href="javascript:putMode('execute');" class="btn buttonRed"><i class="fa fa-cogs"></i>Execute</a>
+				<a href="javascript:putMode('save');" class="btn buttonGrey"><i class="fa fa-save"></i>{{messages.label_button_save}}</a>
+				<a href="javascript:putMode('execute');" class="btn buttonRed"><i class="fa fa-cogs"></i>{{messages.label_button_exec}}</a>
 				{% elif visualize == 1 %}
-				<a href="javascript:putMode('viewer');" class="btn buttonRed"><i class="fa fa-cogs"></i>Visualize</a>
+				<a href="javascript:putMode('viewer');" class="btn buttonRed"><i class="fa fa-cogs"></i>{{messages.label_button_vis}}</a>
 				{% elif visualize == 2 %}
-				<a href="javascript:returnProtocol();" class="btn buttonGrey"><i class="fa fa-save"></i>Save</a>
+				<a href="javascript:returnProtocol();" class="btn buttonGrey"><i class="fa fa-save"></i>{{messages.label_button_return}}</a>
 				{% endif %}							
 			</div>
 		</form>

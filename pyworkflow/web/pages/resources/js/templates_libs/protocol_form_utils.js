@@ -83,7 +83,7 @@
  * 	->	Function to update a protocol serialize param inside the workflow.
  * 		The serializes values are storaged inside the input respectively.
  * 
- * function showComment()
+ * function showComment(txt)
  * 	->	Launch a messi popup with a text area used in the protocol forms when the 
  * 		user want to describe the specific run with more details.
  * 
@@ -423,7 +423,7 @@ function setParamProt(paramProt, params){
 	$("#"+paramProt+"_input").attr("data-prot", params)
 }
 
-function showComment() {
+function showComment(txt) {
 	/*
 	 * Launch a messi popup with a text area used in the protocol forms when the 
 	 * user want to describe the specific run with more details.
@@ -431,7 +431,7 @@ function showComment() {
 	var msg = $("input#comment").attr("value");
 	
 	if(msg == ""){
-		msg = "Describe your run here...";
+		msg = txt;
 	}
 	
 	var msg ="<textarea id='description'>"+ msg +"</textarea>";
