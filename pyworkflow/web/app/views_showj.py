@@ -39,6 +39,7 @@ from pyworkflow.em import *
 from pyworkflow.em.packages.xmipp3.convert import *
 from layout_configuration import *
 
+from views_base import * 
 
 
 def showj(request, inputParameters=None, extraParameters=None):
@@ -168,16 +169,14 @@ def showj(request, inputParameters=None, extraParameters=None):
 
 def createContext(dataset, tableDataset, tableLayoutConfiguration, request, showjForm):
     #Create context to be send
-    return {'showj_css': getResourceCss('showj'),
-            'general_css': getResourceCss('general'),
+    
+    context = {'showj_css': getResourceCss('showj'),
             'smoothness': getResourceCss('ui_smoothness'),
             'demo_table_jui': getResourceCss('showj_demo_table_jui'),
            
-            'favicon': getResourceIcon('favicon'),
             'logo': getResourceIcon('logo_scipion'),
             'logo_transparent': getResourceIcon('logo_scipion_transparent'),
            
-            'jquery': getResourceJs('jquery'), #Configuration variables
             'jquery_datatable': getResourceJs('jquery_datatables'),
             'jquerydataTables_colreorder': getResourceJs('jquery_colreorder'),
             'jquerydataTables_colreorder_resize': getResourceJs('jquery_colreorder_resize'),
@@ -185,7 +184,6 @@ def createContext(dataset, tableDataset, tableLayoutConfiguration, request, show
             'jquery_waypoints':getResourceJs('jquery_waypoints'),
             'jquery_hover_intent':getResourceJs('jquery_hover_intent'),
             'showj_js':getResourceJs('showj_utils'),
-            'utils':getResourceJs('utils'),
             'jquery_ui':getResourceJs('jquery_ui'),
             
             'transpose_lib':getResourceJs('transpose'),
@@ -204,6 +202,9 @@ def createContext(dataset, tableDataset, tableLayoutConfiguration, request, show
             'form': showjForm
             }
 
+    context = base_grid(request, context)
+    
+    return context
 
 def getExtraParameters(extraParameters, tableDataset):
     print "extraParameters",extraParameters 
