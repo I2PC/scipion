@@ -48,7 +48,8 @@ class ProtScreenClasses(XmippProtocol):
 
         # Reorganize output and produce difference images 
         self.insertStep("runJob",programname="xmipp_metadata_utilities", params="-i classes@%s --set join %s --mode append"%(fnOutputClass,fnAngles),NumberOfMpi=1)  
-        self.insertStep("produceAlignedImages",fnIn='classes@'+fnOutputClass, fnOut='classes_aligned@'+fnOutputClass, fnDiff=self.extraPath("diff.stk"))
+        self.insertStep("produceAlignedImages",fnIn='classes@'+fnOutputClass, fnOut='classes_aligned@'+fnOutputClass, fnDiff=self.extraPath("diff.stk"),
+                        volumeIsCTFCorrected=False)
         self.insertStep("runJob",programname="xmipp_metadata_utilities", params="-i classes_aligned@%s --operate sort maxCC desc --mode append"%(fnOutputClass),NumberOfMpi=1)  
    
     def summary(self):

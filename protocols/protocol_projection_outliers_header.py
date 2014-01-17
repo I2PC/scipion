@@ -24,6 +24,9 @@ Provide a volume against which images will be compared
 """
 Volume = ""
 
+# Volume has been corrected by CTF:
+VolumeIsCTFCorrected = False
+
 # Symmetry group
 """ See [http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Symmetry]
     for a description of the symmetry groups format

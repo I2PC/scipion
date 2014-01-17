@@ -38,7 +38,8 @@ class ProtProjectionOutliers(XmippProtocol):
         # Produce difference images
         fnDiff=self.extraPath("diff.stk")
         fnAligned=self.extraPath("images_aligned.xmd")
-        self.insertStep("produceAlignedImages",fnIn=fnOutputImages, fnOut=fnAligned, fnDiff=self.extraPath("diff.stk"))
+        self.insertStep("produceAlignedImages",fnIn=fnOutputImages, fnOut=fnAligned, fnDiff=self.extraPath("diff.stk"),
+                        volumeIsCTFCorrected=self.VolumeIsCTFCorrected)
         
         # Evaluate each image
         fnAutoCorrelations=self.extraPath("autocorrelations.xmd")
