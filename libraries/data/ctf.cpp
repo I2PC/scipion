@@ -25,6 +25,7 @@
 
 #include "ctf.h"
 #include "xmipp_fft.h"
+#include "xmipp_fftw.h"
 #include <math.h>
 
 /* Read -------------------------------------------------------------------- */
@@ -473,8 +474,18 @@ void CTFDescription::applyCTF(MultidimArray < std::complex<double> > &FFTI)
         FFT_idx2digfreq(FFTI, idx, freq);
         precomputeValues(XX(freq), YY(freq));
         double ctf = getValueAt();
-        FFTI(i, j) *= ctf;
+        A2D_ELEM(FFTI, i, j) *= ctf;
     }
+}
+
+void CTFDescription::applyCTF(MultidimArray <double> &I)
+{
+	FourierTransformer transformer;
+	MultidimArray<double> FFTI;
+	transformer.setReal(I);
+	transformer.FourierTransform();
+	applyCTF(FFTI);
+	transformer.inverseFourierTransform();
 }
 
 /* Get profiles ------------------------------------------------------------ */

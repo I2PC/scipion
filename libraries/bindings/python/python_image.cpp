@@ -24,6 +24,7 @@
  ***************************************************************************/
 
 #include "xmippmodule.h"
+#include <data/ctf.h>
 
 /***************************************************************/
 /*                            Image                         */
@@ -1284,6 +1285,40 @@ Image_applyTransforMatScipion(PyObject *obj, PyObject *args, PyObject *kwargs)
     }
     return NULL;
 }//operator +=
+
+PyObject *
+Image_applyCTF(PyObject *obj, PyObject *args, PyObject *kwargs)
+{
+    PyObject *input = NULL;
+    double Ts=1.0;
+    try
+    {
+        PyArg_ParseTuple(args, "Od", &input,&Ts);
+        if (input != NULL)
+        {
+			PyObject *pyStr;
+			if ((pyStr = PyObject_Str(input)) != NULL)
+			{
+				FileName fnCTF=PyString_AsString(pyStr);
+			    ImageObject *self = (ImageObject*) obj;
+			    ImageBase * img = self->image->image;
+
+		        CTFDescription ctf;
+		        ctf.enable_CTF=true;
+		        ctf.enable_CTFnoise=false;
+		        ctf.read("ctf_crio.param");
+		        ctf.Tm=Ts;
+		        ctf.produceSideInfo();
+//		        ctf.apply(img->)
+			}
+        }
+    }
+    catch (XmippError &xe)
+    {
+        PyErr_SetString(PyXmippError, xe.msg.c_str());
+    }
+    return NULL;
+}
 
 PyObject *
 Image_readApplyGeo(PyObject *obj, PyObject *args, PyObject *kwargs)

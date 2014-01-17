@@ -309,6 +309,8 @@ public class TiltPairPicker extends ParticlePicker
 		{
 			uFn = getImportMicrographName(path, um.getFile(), f);
 			tFn = getImportMicrographName(path, um.getTiltedMicrograph().getFile(), f);
+			System.out.println("uFn="+uFn);
+			System.out.println("tFn="+tFn);
 			if (Filename.exists(uFn) && Filename.exists(tFn))
 				result += importParticlesFromFiles(uFn, tFn, f, um, scale, invertx, inverty);
 		}
@@ -336,6 +338,12 @@ public class TiltPairPicker extends ParticlePicker
 		{
 		case Xmipp24:
 			return Filename.join(path, base, base + ".raw.Common.pos");
+		case Xmipp24a:
+			return Filename.join(path, base + ".raw.Common.pos");
+		case Xmipp24b:
+			return Filename.join(path, base.replaceAll("down[0-9]_", ""), base + ".raw.Common.pos");
+		case Xmipp24c:
+			return Filename.join(path, base + ".raw.pos");
 		case Xmipp30:
 			return Filename.join(path, base + ".pos");
 		case Xmipp301:

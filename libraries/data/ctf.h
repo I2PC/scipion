@@ -587,6 +587,9 @@ public:
     /// Apply CTF to an image
     void applyCTF(MultidimArray < std::complex<double> > &FFTI);
 
+    /// Apply CTF to an image
+    void applyCTF(MultidimArray <double> &I);
+
     /** Generate CTF image.
         The sample image is used only to take its dimensions. */
     template <class T>
