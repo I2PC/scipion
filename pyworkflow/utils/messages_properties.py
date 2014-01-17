@@ -34,6 +34,7 @@ class Message():
         #       print MyMessage.label
 
     # Projects Template
+    label_projects='Projects'
     label_create_project='Create Project'
     title_create_project='Enter the project name'
     label_delete_project='Delete Project'
@@ -41,6 +42,7 @@ class Message():
     label_modified='Modified: '
     
     # Project Content Template
+    label_project='Project '
     #-- Protocol Treeview --
     label_workflow='Workflow View: '
     label_protTree_None='No athletes.'
@@ -87,6 +89,12 @@ class Message():
     label_button_exec='Execute'
     label_button_vis='Visualize'
     label_button_return='Save'
+    
+    title_launched='Success'
+    label_launched='The protocol was launched successfuly'
+    label_found_error='Errors found'
+    title_saved='Success'
+    label_saved='The protocol was saved successfuly'
     
     
     
