@@ -68,11 +68,14 @@ function createProject(elm) {
 	});
 }
 
-function deleteProjectForm(projName, title, dialog1, dialog2) {
+function deleteProjectForm(projName, title, dialog) {
 
 //	var title = 'Confirm project deletion'
 	var msg = "<td class='content' value='"	+ projName +"'>"
-			+ dialog1 + projName + dialog2 + "</td>";
+			+ "Project " + projName
+			+ ", "
+			+ dialog 
+			+ "</td>";
 			
 	var funcName = 'deleteProject';
 	
