@@ -59,7 +59,7 @@
 		{% if package_logo != ''%}
 			<img src='{{package_logo}}' style="float:right;"/>
 		{% endif %}
-		<h3 id="protName">{{protocol.GETCLASSLABEL}}</h3>&nbsp;
+		<h3 id="protName">{{protocol.getClassLabel}}</h3>&nbsp;
 		
 		<form id="protocolForm" action="/protocol/" method="POST" data-mode="">{% csrf_token %}
 			<input type="hidden" id="windowName" name="windowName" value=""/>
