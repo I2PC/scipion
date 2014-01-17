@@ -28,6 +28,7 @@
 from inspect import isclass
 from pyworkflow.utils.utils import prettyDate
 from pyworkflow.apps.config import loadSettings
+from pyworkflow.utils.messages_properties import Message
 """
 Main project window application
 """
@@ -132,7 +133,7 @@ class ManagerWindow(gui.WindowBase):
         self.menuCfg = settings.getCurrentMenu()
         self.generalCfg = settings.getConfig()
         
-        gui.WindowBase.__init__(self, "Projects", minsize=(750, 500), **args)
+        gui.WindowBase.__init__(self, Message.LABEL_PROJECTS, minsize=(750, 500), **args)
         self.manager = Manager()
         
         self.switchView(gui.VIEW_PROJECTS)
@@ -181,9 +182,7 @@ class ManagerWindow(gui.WindowBase):
             Bottom: panel containing the projects list
         """
         return ProjectsView(parent, self)
-        
 
-    
             
 class ProjectsView(tk.Frame):    
     def __init__(self, parent, windows, **args): 
@@ -197,7 +196,7 @@ class ProjectsView(tk.Frame):
         self.projDateFont = tkFont.Font(size=8, family='helvetica')
         self.projDelFont = tkFont.Font(size=8, family='helvetica', weight='bold')
         self.manager = Manager()
-        btn = Button(self, text='Create Project', font=self.projNameFont, 
+        btn = Button(self, text=Message.LABEL_CREATE_PROJECT, font=self.projNameFont, 
                      command=self.createNewProject)
         btn.grid(row=0, column=0, sticky='nw', padx=10, pady=10)
         
@@ -230,17 +229,17 @@ class ProjectsView(tk.Frame):
                          justify=tk.LEFT, font=self.projNameFont, cursor='hand1')
         label.grid(row=0, column=0, padx=2, pady=2, sticky='nw')
         label.bind('<Button-1>', lambda e: self.openProject(projInfo.projName))
-        dateLabel = tk.Label(frame, text='   Modified: ' + prettyDate(projInfo.mTime), 
+        dateLabel = tk.Label(frame, text='   ' + Message.LABEL_MODIFIED + ' ' + prettyDate(projInfo.mTime), 
                              font=self.projDateFont, bg=color)
         dateLabel.grid(row=1, column=0)
-        delLabel = tk.Label(frame, text='Delete project', font=self.projDelFont, bg=color, cursor='hand1')
+        delLabel = tk.Label(frame, text=Message.LABEL_DELETE_PROJECT, font=self.projDelFont, bg=color, cursor='hand1')
         delLabel.grid(row=1, column=1, padx=10)
         delLabel.bind('<Button-1>', lambda e: self.deleteProject(projInfo.projName))
         
         return frame
     
     def createNewProject(self, e=None):
-        projName =  askString("Enter the project name", "Project Name:", self.root, 30)
+        projName =  askString(Message.LABEL_CREATE_PROJECT, Message.TITLE_CREATE_PROJECT_NAME, self.root, 30)
         if not projName is None:
             self.manager.createProject(projName)
             self.createProjectList(self.text)
@@ -252,8 +251,8 @@ class ProjectsView(tk.Frame):
         projWindow.show()
           
     def deleteProject(self, projName):
-        if askYesNo("Confirm Project deletion", 
-                    "Are you sure to _DELETE_ project *%s*\n and all its _DATA_?" % projName, self.root):
+        if askYesNo(Message.TITLE_DELETE_PROJECT, 
+                     Message.MESSAGE_CREATE_PROJECT_1 + "*%s*" % projName + Message.MESSAGE_CREATE_PROJECT_2 , self.root):
             self.manager.deleteProject(projName)
             self.createProjectList(self.text)
           

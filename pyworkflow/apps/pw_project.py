@@ -44,6 +44,7 @@ from pyworkflow.protocol import *
 from pyworkflow.protocol.params import *
 from pyworkflow.mapper import SqliteMapper, XmlMapper
 from pyworkflow.project import Project
+from pyworkflow.utils.messages_properties import Message
 
 import pyworkflow.gui as gui
 from pyworkflow.gui import getImage
@@ -65,7 +66,7 @@ Plotter.setInteractive(True)
 class ProjectWindow(gui.WindowBase):
     def __init__(self, path, master=None):
         # Load global configuration
-        self.projName = 'Project ' + basename(path)
+        self.projName = Message.LABEL_PROJECT + basename(path)
         self.projPath = path
         self.loadProject()
         self.icon = self.generalCfg.icon.get()
@@ -108,7 +109,7 @@ class ProjectWindow(gui.WindowBase):
         try:
             self.saveSettings()
         except Exception, ex:
-            print "Error try to save settings. " + str(ex) 
+            print Message.NO_SAVE_SETTINGS + str(ex) 
         gui.Window._onClosing(self)
     
         

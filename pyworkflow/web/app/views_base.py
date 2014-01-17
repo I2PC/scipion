@@ -27,12 +27,12 @@
 from pyworkflow.em import *
 from views_util import * 
 
-from pyworkflow.utils.messages_properties import Message
+from pyworkflow.web.app.messages_properties import MessageWeb
 
 def base(request, context):
     
     # Messages properties class
-    messages = Message()
+    messages = MessageWeb()
     
     context_base = {
                 'favicon': getResourceIcon('favicon'),

@@ -33,6 +33,7 @@ import tkFont
 
 from pyworkflow.object import OrderedObject
 from pyworkflow.utils.path import findResource
+from pyworkflow.utils.messages_properties import Message
 
 from os.path import join, exists, basename
 
@@ -375,10 +376,10 @@ class Window():
 #TODO Move this to a less basic module such as: scipion-gui or similar
 # Here in gui should be more basic stuff
 
-VIEW_PROJECTS = 'Projects'
-VIEW_PROTOCOLS = 'Protocols'
-VIEW_DATA = 'Data'
-VIEW_HOSTS = 'Hosts'
+VIEW_PROJECTS = Message.VIEW_PROJECTS
+VIEW_PROTOCOLS = Message.VIEW_PROTOCOLS
+VIEW_DATA = Message.VIEW_DATA
+VIEW_HOSTS = Message.VIEW_HOSTS
 VIEW_LIST = [VIEW_PROTOCOLS, VIEW_DATA, VIEW_HOSTS]   
 
      

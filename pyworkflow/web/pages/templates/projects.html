@@ -1,6 +1,6 @@
 {% extends 'base_grid.html'%}
 
-{% block title %} - {{message.LABEL_PROJECTS}}{% endblock %}
+{% block title %}{{message.LABEL_PROJECTS}}{% endblock %}
 
 {% block content_head %}
 <!-- CSS -->
@@ -44,7 +44,7 @@
 
 {% block menu %}
 <div id="asideMainContainer">
-<a href="javascript:createProjectForm('{{messages.title_create_project}}');" ><button class="priorityButton" type="button">{{messages.LABEL_CREATE_PROJECT}}</button></a>
+<a href="javascript:createProjectForm('{{messages.TITLE_CREATE_PROJECT}}', '{{messages.TITLE_CREATE_PROJECT_NAME}}');" ><button class="priorityButton" type="button">{{messages.LABEL_CREATE_PROJECT}}</button></a>
 </div>
 {% endblock %}
 
@@ -60,7 +60,11 @@
 			</strong>
 			<br /> 
 			{{messages.LABEL_MODIFIED}}{{project.pTime}} 
-			<a href="javascript:deleteProjectForm('{{project.projName}}', '{{messages.TITLE_DELETE_PROJECT}}');" class="projRemove">
+			<a href="javascript:deleteProjectForm('{{project.projName}}', 
+			'{{messages.TITLE_DELETE_PROJECT}}', 
+			'{{messages.MESSAGE_CREATE_PROJECT_1}}',
+			'{{messages.MESSAGE_CREATE_PROJECT_2}}');" 
+			class="projRemove">
 				{{messages.LABEL_DELETE_PROJECT}}
 			</a>
 		</li>

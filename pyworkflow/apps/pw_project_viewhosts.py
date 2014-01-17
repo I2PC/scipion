@@ -45,6 +45,7 @@ from pyworkflow.protocol import *
 from pyworkflow.protocol.params import *
 from pyworkflow.mapper import SqliteMapper, XmlMapper
 from pyworkflow.project import Project
+from pyworkflow.utils.messages_properties import Message, Icon
 
 import pyworkflow.gui as gui
 from pyworkflow.gui import getImage
@@ -58,16 +59,16 @@ from pyworkflow.gui.graph import LevelTree
 from config import *
 from pw_browser import BrowserWindow
 
-ACTION_NEW = 'New'
-ACTION_EDIT = 'Edit'
-ACTION_COPY = 'Copy'
-ACTION_DELETE = 'Delete'
+ACTION_NEW = Message.LABEL_NEW
+ACTION_EDIT = Message.LABEL_EDIT
+ACTION_COPY = Message.LABEL_COPY
+ACTION_DELETE = Message.LABEL_DELETE
 
 ActionIcons = {
-    ACTION_NEW: 'new_object.gif',
-    ACTION_EDIT:  'edit.gif',
-    ACTION_COPY:  'copy.gif',
-    ACTION_DELETE:  'delete.gif',
+    ACTION_NEW: Icon.ACTION_NEW,
+    ACTION_EDIT:  Icon.ACTION_EDIT,
+    ACTION_COPY:  Icon.ACTION_COPY,
+    ACTION_DELETE:  Icon.ACTION_DELETE,
                }
 
 
@@ -115,7 +116,7 @@ class HostsView(tk.Frame):
         self.createActionToolbar(toolbar)
 
         # Create the Run History tree
-        hostsFrame = ttk.Labelframe(self, text=' Hosts ', width=500, height=500)
+        hostsFrame = ttk.Labelframe(self, text=Message.LABEL_HOSTS_ACTION, width=500, height=500)
         hostsFrame.grid(row=1, column=0, sticky='news', pady=5)
         self.hostsTree = self.createHostsTree(hostsFrame)        
         gui.configureWeigths(hostsFrame)
@@ -166,8 +167,8 @@ class HostsView(tk.Frame):
         self.hostsTree.after(1000, self.refresh)
         
     def _deleteHost(self, host):
-        if askYesNo("Confirm DELETE", "<ALL CONFIGURATION> related to host <%s> will be <DELETED>. \n" % host.getLabel() + \
-                    "Do you really want to continue?", self.windows.root):
+        if askYesNo(Message.TITLE_HOST_DELETE, Message.LABEL_HOST_DELETE + "(%s)" % host.getLabel()
+                    , self.windows.root):
             self.setting.delete(host, commit=True)
             self.refresh()
         
@@ -247,10 +248,10 @@ class HostWindow(gui.Window):
         self.buttonsFrame.columnconfigure(2, weight=1)
         #self.buttonsFrame.columnconfigure(1, weight=4)
         
-        btnClose = tk.Button(self.buttonsFrame, text="Close", image=self.getImage('dialog_close.png'), compound=tk.LEFT, font=self.font,
+        btnClose = tk.Button(self.buttonsFrame, text=Message.LABEL_BUTTON_CLOSE, image=self.getImage(Icon.BUTTON_CLOSE), compound=tk.LEFT, font=self.font,
                           command=self.close)
         btnClose.grid(row=0, column=0, padx=5, sticky='sw')
-        btnSave = tk.Button(self.buttonsFrame, text="Save", image=self.getImage('filesave.png'), compound=tk.LEFT, font=self.font, 
+        btnSave = tk.Button(self.buttonsFrame, text=Message.LABEL_BUTTON_SAVE, image=self.getImage(Icon.BUTTON_SAVE), compound=tk.LEFT, font=self.font, 
                           command=self._save)
         btnSave.grid(row=0, column=1, padx=5, sticky='sw')
         
@@ -290,15 +291,15 @@ class HostWindow(gui.Window):
         if self.saveCallback:
             try:
                 self.saveCallback(self.host)                
-                showInfo("Action DELETE", "Host sucessfully saved. \n", self.root)
+                showInfo(Message. TITLE_HOST_SAVE_FORM, Message.LABEL_HOST_SAVE_FORM_SUCESS , self.root)
             except Exception, ex:
-                showError("Action DELETE", "Error saving host: <%s>. \n" % str(ex), self.root)
+                showError(Message. TITLE_HOST_SAVE_FORM, Message.LABEL_HOST_SAVE_FORM_FAIL + "(%s)" % str(ex), self.root)
 
     def _testConfig(self, e=None):
         from pyworkflow.utils.remote import testHostConfig
         if testHostConfig(self.host):
-            msg = "Connection SUCCEEDED to host <%s>"
+            msg = Message.LABEL_HOST_CONECTION_SUCESS +"<%s>"
         else:
-            msg = "Connection to host <%s> FAILED"
-        showInfo("Connection TEST", msg % self.host.getLabel(), self.root) 
+            msg = Message.LABEL_HOST_CONECTION_FAIL + "<%s>"
+        showInfo(Message.LABEL_HOST_CONECTION_TEST, msg % self.host.getLabel(), self.root) 
         

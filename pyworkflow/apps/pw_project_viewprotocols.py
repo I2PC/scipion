@@ -44,6 +44,7 @@ from pyworkflow.protocol import *
 from pyworkflow.protocol.params import *
 from pyworkflow.mapper import SqliteMapper, XmlMapper
 from pyworkflow.project import Project
+from pyworkflow.utils.messages_properties import Message, Icon
 
 import pyworkflow.gui as gui
 from pyworkflow.gui import getImage
@@ -58,32 +59,31 @@ from pyworkflow.gui.widgets import ComboBox
 from config import *
 from pw_browser import BrowserWindow
 
-ACTION_EDIT = 'Edit'
-ACTION_COPY = 'Copy'
-ACTION_DELETE = 'Delete'
-ACTION_REFRESH = 'Refresh'
-ACTION_STEPS = 'Browse'
-ACTION_TREE = 'Tree'
-ACTION_LIST = 'List'
-ACTION_STOP = 'Stop'
-ACTION_DEFAULT = 'Default'
-ACTION_CONTINUE = 'Continue'
-ACTION_RESULTS = 'Analyze results'
+ACTION_EDIT = Message.LABEL_EDIT
+ACTION_COPY = Message.LABEL_COPY
+ACTION_DELETE = Message.LABEL_DELETE
+ACTION_REFRESH = Message.LABEL_REFRESH
+ACTION_STEPS = Message.LABEL_BROWSE
+ACTION_TREE = Message.LABEL_TREE
+ACTION_LIST = Message.LABEL_LIST
+ACTION_STOP = Message.LABEL_STOP
+ACTION_DEFAULT = Message.LABEL_DEFAULT
+ACTION_CONTINUE = Message.LABEL_CONTINUE
+ACTION_RESULTS = Message.LABEL_ANALYZE
 
-RUNS_TREE = 'fa-sitemap.png'
-RUNS_LIST = 'fa-bars.png'
+RUNS_TREE = Icon.RUNS_TREE
+RUNS_LIST = Icon.RUNS_LIST
  
-ActionIcons = {
-    ACTION_EDIT: 'fa-pencil.png',# 'edit.gif',
-    ACTION_COPY:  'fa-files-o.png',
-    ACTION_DELETE:  'fa-trash-o.png',
-    ACTION_REFRESH:  'fa-refresh.png',
-    ACTION_STEPS:  'fa-folder-open.png',
+ActionIcons = {ACTION_EDIT: Icon.ACTION_EDIT , 
+    ACTION_COPY: Icon.ACTION_COPY ,
+    ACTION_DELETE:  Icon.ACTION_DELETE,
+    ACTION_REFRESH:  Icon.ACTION_REFRESH,
+    ACTION_STEPS:  Icon.ACTION_STEPS,
     ACTION_TREE:  None, # should be set
-    ACTION_LIST:  'fa-bars.png',
-    ACTION_STOP: 'fa-stop.png', #'iconStop.png',
-    ACTION_CONTINUE: 'fa-play-circle-o.png', #'play.png',
-    ACTION_RESULTS: 'fa-eye.png'
+    ACTION_LIST:  Icon.ACTION_LIST,
+    ACTION_STOP: Icon.ACTION_STOP,
+    ACTION_CONTINUE: Icon.ACTION_CONTINUE,
+    ACTION_RESULTS: Icon.ACTION_RESULTS
                }
 
 STATUS_COLORS = {
@@ -143,19 +143,19 @@ class RunsTreeProvider(ProjectRunsTreeProvider):
     
     def getObjectActions(self, obj):
         prot = obj # Object should be a protocol
-        actionsList = [(ACTION_EDIT, 'Edit     '),
-                       (ACTION_COPY, 'Copy   '),
-                       (ACTION_DELETE, 'Delete    '),
+        actionsList = [(ACTION_EDIT, Message.LABEL_EDIT_ACTION),
+                       (ACTION_COPY, Message.LABEL_COPY_ACTION),
+                       (ACTION_DELETE, Message.LABEL_DELETE_ACTION),
                        #(None, None),
                        #(ACTION_STOP, 'Stop'),
-                       (ACTION_STEPS, 'Browse ')
+                       (ACTION_STEPS, Message.LABEL_BROWSE_ACTION)
                        ]
         status = prot.status.get()
         if status == STATUS_RUNNING:
-            actionsList.insert(0, (ACTION_STOP, 'Stop execution'))
+            actionsList.insert(0, (ACTION_STOP, Message.LABEL_STOP_ACTION))
             actionsList.insert(1, None)
         elif status == STATUS_WAITING_APPROVAL:
-            actionsList.insert(0, (ACTION_CONTINUE, 'Approve continue'))
+            actionsList.insert(0, (ACTION_CONTINUE, Message.LABEL_CONTINUE_ACTION))
             actionsList.insert(1, None)
         
         actions = []
@@ -205,8 +205,8 @@ class RunIOTreeProvider(TreeProvider):
         if self.protocol:
             inputs = [attr for n, attr in self.protocol.iterInputAttributes()]
             outputs = [attr for n, attr in self.protocol.iterOutputAttributes(EMObject)]
-            self.inputStr = String('Input')
-            self.outputStr = String('Output')
+            self.inputStr = String(Message.LABEL_INPUT)
+            self.outputStr = String(Message.LABEL_OUTPUT)
             objs = [self.inputStr, self.outputStr] + inputs + outputs                
         return objs
     
@@ -366,8 +366,8 @@ class ProtocolsView(tk.Frame):
         self.summaryText.grid(row=0, column=0, sticky='news')        
         #self.summaryText.addText("\nSummary should go <HERE!!!>\n More info here.")
         
-        tab.add(dframe, text="Data")
-        tab.add(sframe, text="Summary")     
+        tab.add(dframe, text=Message.LABEL_DATA)
+        tab.add(sframe, text=Message.LABEL_SUMMARY)     
         tab.grid(row=0, column=0, sticky='news')
         
         v.add(runsFrame, weight=3)
@@ -620,14 +620,14 @@ class ProtocolsView(tk.Frame):
     def _openProtocolForm(self, prot):
         """Open the Protocol GUI Form given a Protocol instance"""
         hosts = [host.getLabel() for host in self.settings.getHosts()]
-        w = FormWindow("Protocol Run: " + prot.getClassName(), prot, 
+        w = FormWindow(Message.TITLE_NAME_RUN + prot.getClassName(), prot, 
                        self._executeSaveProtocol, self.windows,
                        hostList=hosts)
         w.show(center=True)
         
     def _browseRunData(self):
         provider = ProtocolTreeProvider(self.selectedProtocol)
-        window = BrowserWindow("Protocol data", provider, self.windows, icon=self.icon)
+        window = BrowserWindow(Message.TITLE_BROWSE_DATA, provider, self.windows, icon=self.icon)
         window.itemConfig(self.selectedProtocol, open=True)  
         window.show()
         
@@ -646,7 +646,8 @@ class ProtocolsView(tk.Frame):
     def _executeSaveProtocol(self, prot, onlySave=False):
         if onlySave:
             self.project.saveProtocol(prot)
-            msg = "Protocol sucessfully saved."
+            msg = Message.LABEL_SAVED_FORM
+#            msg = "Protocol sucessfully saved."
         else:
             self.project.launchProtocol(prot)
             msg = ""
@@ -660,13 +661,12 @@ class ProtocolsView(tk.Frame):
         self._scheduleRunsUpdate()
         
     def _deleteProtocol(self, prot):
-        if askYesNo("Confirm DELETE", "*ALL DATA* related to this _protocol run_ will be *DELETED*. \n"
-                    "Do you really want to continue?", self.root):
+        if askYesNo(Message.TITLE_DELETE_FORM, Message.LABEL_DELETE_FORM, self.root):
             self.project.deleteProtocol(prot)
             self._scheduleRunsUpdate()
             
     def _stopProtocol(self, prot):
-        if askYesNo("Confirm STOP", "Do you really want to *STOP* this run?", self.root):
+        if askYesNo(Message.TITLE_STOP_FORM, Message.LABEL_STOP_FORM, self.root):
             self.project.stopProtocol(prot)
             self._scheduleRunsUpdate()
 
@@ -681,7 +681,7 @@ class ProtocolsView(tk.Frame):
             firstViewer.project = self.project
             firstViewer.visualize(prot, windows=self.windows)
         else:
-            self.windows.showError("There is not viewer for protocol: *%s*" % prot.getClassName())
+            self.windows.showError(Message.NO_VIEWER_FOUND +"*%s*" % prot.getClassName())
         
                 
     def _runActionClicked(self, action):

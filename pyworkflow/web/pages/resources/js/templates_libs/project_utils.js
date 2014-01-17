@@ -49,10 +49,9 @@
 
  /** METHODS ******************************************************************/
 
-function createProjectForm(title) {
+function createProjectForm(title, msg) {
 
-//	var title = 'Enter the project name';
-	var msg = "Project Name: <input type='text' id='newProjName' class='content'/>";
+	var msg = msg +"<input type='text' id='newProjName' class='content'/>";
 	var funcName = 'createProject';
 	
 	warningPopup(title, msg, funcName);
@@ -69,13 +68,12 @@ function createProject(elm) {
 	});
 }
 
-function deleteProjectForm(projName, title) {
+function deleteProjectForm(projName, title, dialog1, dialog2) {
 
 //	var title = 'Confirm project deletion'
-	var msg = "<td class='content' value='"	+ projName
-			+ "'>Are you sure to <strong>DELETE</strong> project <strong>"
-			+ projName
-			+ "</strong> and all its <strong>DATA</strong></td>";
+	var msg = "<td class='content' value='"	+ projName +"'>"
+			+ dialog1 + projName + dialog2 + "</td>";
+			
 	var funcName = 'deleteProject';
 	
 	warningPopup(title, msg, funcName);
