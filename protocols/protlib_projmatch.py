@@ -1,5 +1,5 @@
 from xmipp import MetaData, MetaDataInfo, MDL_IMAGE, MDL_IMAGE1, MDL_IMAGE_REF, MDL_ANGLE_ROT, MDL_ANGLE_TILT, MDL_ANGLE_PSI, MDL_REF, \
-        MDL_SHIFT_X, MDL_SHIFT_Y, MDL_FLIP, MD_APPEND, MDL_MAXCC, MDL_ENABLED, MDL_CTF_MODEL, MDL_SAMPLINGRATE, \
+        MDL_SHIFT_X, MDL_SHIFT_Y, MDL_FLIP, MD_APPEND, MDL_MAXCC, MDL_ENABLED, MDL_CTF_MODEL, MDL_SAMPLINGRATE, DT_DOUBLE, \
         Euler_angles2matrix, Image, FileName, getBlocksInMetaDataFile
 from protlib_utils import runJob
 from protlib_filesystem import deleteFile, findAcquisitionInfo
@@ -27,7 +27,7 @@ def projMatch(log,Volume,AngularSampling,SymmetryGroup,Images,ExtraDir,fnAngles,
         MD.setValue(MDL_IMAGE_REF,"%05d@%s"%(galleryReference+1,fnGallery),id)
     MD.write(fnAngles)
 
-def produceAlignedImages(log,fnIn,fnOut,fnDiff):
+def produceAlignedImages(log,fnIn,fnOut,fnDiff,volumeIsCTFCorrected):
     from numpy import array, dot
     MDin=MetaData(fnIn)
     MDout=MetaData()
@@ -72,19 +72,21 @@ def produceAlignedImages(log,fnIn,fnOut,fnDiff):
     # Actually create the differences
     img=Image()
     imgRef=Image()
-    if hasCTF:
+    if hasCTF and volumeIsCTFCorrected:
         fnAcquisition=findAcquisitionInfo(fnOut)
         if not fnAcquisition:
             hasCTF=False
         else:
             mdAcquisition=MetaData(fnAcquisition)
             Ts=mdAcquisition.getValue(MDL_SAMPLINGRATE,mdAcquisition.firstObject())
-            print "Ts=",Ts
+
     for i in MDout:
         img.readApplyGeo(MDout,i)
         imgRef.read(MDout.getValue(MDL_IMAGE_REF,i))
-        if hasCTF:
+        if hasCTF and volumeIsCTFCorrected:
             fnCTF=MDout.getValue(MDL_CTF_MODEL,i)
-            print fnCTF
+            imgRef.applyCTF(fnCTF,Ts)
+            imgRef.write("PPPF.xmp")
+            img.convert2DataType(DT_DOUBLE)
         imgDiff=img-imgRef
         imgDiff.write(MDout.getValue(MDL_IMAGE1,i))
