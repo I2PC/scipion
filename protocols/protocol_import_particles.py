@@ -101,6 +101,7 @@ def writeImagesMd(log, md, ImportAll, SubsetMode, Nsubset, imagesFn, imagesStk, 
         else:
             mdaux=MetaData(md)
         md.selectPart(mdaux, 0, Nsubset)
+    md.addItemId()
     md.write(imagesFn)
     if DoCopy:
         runJob(log,"xmipp_image_convert","-i %(imagesFn)s -o %(imagesStk)s" % locals())

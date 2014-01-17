@@ -57,7 +57,7 @@ public abstract class ParticlePicker
 
 	public static final int sizemax = 1048;
 	protected String block;
-	Format[] formats = new Format[] { Format.Xmipp24, Format.Xmipp30, Format.Xmipp301, Format.Eman };
+	Format[] formats = new Format[] { Format.Xmipp24, Format.Xmipp24a, Format.Xmipp24b, Format.Xmipp24c, Format.Xmipp30, Format.Xmipp301, Format.Eman };
 
 	private static Color[] colors = new Color[] { Color.BLUE, Color.CYAN, Color.GREEN, Color.MAGENTA, Color.ORANGE, Color.PINK, Color.YELLOW };
 
@@ -515,6 +515,9 @@ public abstract class ParticlePicker
 		switch (f)
 		{
 		case Xmipp24:
+		case Xmipp24a:
+		case Xmipp24b:
+		case Xmipp24c:
 			md.readPlain(path, "xcoor ycoor");
 			break;
 		case Xmipp30:
