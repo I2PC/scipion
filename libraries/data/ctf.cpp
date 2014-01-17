@@ -484,7 +484,7 @@ void CTFDescription::applyCTF(MultidimArray <double> &I)
 	MultidimArray<double> FFTI;
 	transformer.setReal(I);
 	transformer.FourierTransform();
-	applyCTF(FFTI);
+	applyCTF(transformer.fFourier);
 	transformer.inverseFourierTransform();
 }
 
