@@ -511,6 +511,7 @@ def  compute_resolution(_log
                          , ReconstructedVolumeSplit2
                          , ReconstructionMethod
                          , ResolSam
+                         , CleanUpFiles
                          ):
 
         # Prevent high-resolution correlation because of discrete mask from wbp
@@ -582,7 +583,12 @@ def  compute_resolution(_log
         md.setValue(MDL_RESOLUTION_FRC, frc, id)
         md.setValue(MDL_SAMPLINGRATE, ResolSam, id)
         md.write(ResolutionXmdCurrIterMax, MD_APPEND)
-        
+        #if cleanup=true delete split volumes 
+        if CleanUpFiles:
+            if os.path.exists(ReconstructedVolumeSplit1):
+                os.remove(ReconstructedVolumeSplit1)
+            if os.path.exists(ReconstructedVolumeSplit2):
+                os.remove(ReconstructedVolumeSplit2)
 
 def  filter_volume(_log
                    , FourierMaxFrequencyOfInterest

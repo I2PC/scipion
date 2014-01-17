@@ -3,8 +3,8 @@ from types              import StringTypes
 import os
 from xmipp import *
 from protlib_utils import printLog
-from protlib_filesystem import uniqueFilename
-from os.path import join
+from protlib_filesystem import uniqueFilename, createLink
+from os.path import join, basename
 
 #------------------------------------------------------------------------
 #make ctf groups
@@ -122,6 +122,7 @@ def createResults(log
                  , resultsClasses3DRef
                  , resultsClasses3DRefDefGroup
                  , resultsVolumes
+                 , workingDir
                   ):
     ''' Create standard output results_images, result_classes'''
     from os import remove
@@ -131,6 +132,8 @@ def createResults(log
     for resultVolume in listWithResultVolume:
         objId = mdVolume.addObject()
         mdVolume.setValue(MDL_IMAGE,resultVolume,objId)
+        #link also last iteration volumes
+        createLink(log,resultVolume,join(workingDir, basename(resultVolume)))
     mdVolume.write(resultsVolumes)
     #read file with results
     allExpImagesinDocfile = FileName()
