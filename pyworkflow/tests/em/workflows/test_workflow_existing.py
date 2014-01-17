@@ -85,6 +85,24 @@ class TestXmippWorkflow(unittest.TestCase):
             if i == 10:
                 break # Limit to 10 images
             
+    def testXmippWriteImages(self):
+        projName = "relion_ribo"
+        project = Manager().loadProject(projName) # Now it will be loaded if exists
+        
+        sets = project.mapper.selectByClass('SetOfParticles')
+        
+        print sets[0]
+#        print "writing set to .xmd"
+#        from pyworkflow.em.packages.xmipp3 import writeSetOfParticles
+#        
+#        writeSetOfParticles(sets[0], "images.xmd")
+        print "iterating set:"
+        s = sets[0]
+#        for img in s:
+#            i = 1
+            
+        print s.getDictionary()
+            
              
 class ConditionFilter():
     def __init__(self, condition):
