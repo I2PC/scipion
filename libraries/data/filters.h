@@ -388,6 +388,9 @@ double correlationIndex(const MultidimArray< T >& x,
         return 0;
 }
 
+/** Covariance matrix of an image */
+void covarianceMatrix(const MultidimArray<double> &I, Matrix2D<double> &C);
+
 /** Fast Correntropy 1D
  * @ingroup Filters
  */
