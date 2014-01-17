@@ -69,8 +69,8 @@ class Object(object):
         return value
     
     def setAttributeValue(self, attrName, value):
-        """ Get the attribute value given its name.
-        Equivalent to getattr(self, name).get() 
+        """ Set the attribute value given its name.
+        Equivalent to setattr(self, name).get() 
         """
         getattr(self, attrName).set(value)
         
