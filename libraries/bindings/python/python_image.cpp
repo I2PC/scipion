@@ -106,6 +106,8 @@ PyMethodDef Image_methods[] =
           "Convert to PSD: center FFT and use logarithm" },
         { "readApplyGeo", (PyCFunction) Image_readApplyGeo, METH_VARARGS,
           "Read image from disk applying geometry in refering metadata" },
+        { "applyCTF", (PyCFunction) Image_applyCTF, METH_VARARGS,
+		  "Apply CTF to this image. Ts is the sampling rate of the image." },
         { "write", (PyCFunction) Image_write, METH_VARARGS,
           "Write image to disk" },
         { "getData", (PyCFunction) Image_getData, METH_VARARGS,
@@ -1157,6 +1159,7 @@ Image_add(PyObject *obj1, PyObject *obj2)
         }
         catch (XmippError &xe)
         {
+        	result=NULL;
             PyErr_SetString(PyXmippError, xe.msg.c_str());
         }
     }
@@ -1177,6 +1180,7 @@ Image_iadd(PyObject *obj1, PyObject *obj2)
     }
     catch (XmippError &xe)
     {
+    	result=NULL;
         PyErr_SetString(PyXmippError, xe.msg.c_str());
     }
     return (PyObject *)result;
@@ -1196,6 +1200,7 @@ Image_subtract(PyObject *obj1, PyObject *obj2)
         }
         catch (XmippError &xe)
         {
+        	result=NULL;
             PyErr_SetString(PyXmippError, xe.msg.c_str());
         }
     }
@@ -1215,6 +1220,7 @@ Image_isubtract(PyObject *obj1, PyObject *obj2)
     }
     catch (XmippError &xe)
     {
+    	result=NULL;
         PyErr_SetString(PyXmippError, xe.msg.c_str());
     }
     return (PyObject *)result;
@@ -1301,15 +1307,21 @@ Image_applyCTF(PyObject *obj, PyObject *args, PyObject *kwargs)
 			{
 				FileName fnCTF=PyString_AsString(pyStr);
 			    ImageObject *self = (ImageObject*) obj;
-			    ImageBase * img = self->image->image;
+	            ImageGeneric *image = self->image;
+	            image->convert2Datatype(DT_Double);
+	            MultidimArray<double> * pImage=NULL;
+	            MULTIDIM_ARRAY_GENERIC(*image).getMultidimArrayPointer(pImage);
+
+			    self->image->data->getMultidimArrayPointer(pImage);
 
 		        CTFDescription ctf;
 		        ctf.enable_CTF=true;
 		        ctf.enable_CTFnoise=false;
-		        ctf.read("ctf_crio.param");
+		        ctf.read(fnCTF);
 		        ctf.Tm=Ts;
 		        ctf.produceSideInfo();
-//		        ctf.apply(img->)
+		        ctf.applyCTF(*pImage);
+		        Py_RETURN_NONE;
 			}
         }
     }
