@@ -135,8 +135,6 @@ $(document).ready(function() {
 		} else if (mode == 'save') {
 			/* Save the protocol */
 			var action = "/save_protocol/";
-			
-			
 
 			$.post(action, $("#protocolForm").serialize(), function(json) {
 				if (json.errors != undefined) {
@@ -499,7 +497,8 @@ function getTableFormatted(node, list, id, previsualize) {
 
 function selectDialog(objClass, msg, funcName) {
 	/*
-	 * 
+	 * This function create a popup with messi.js to choose the elements showed
+	 * with the method getTableFormatted. 
 	 */
 	new Messi(msg, {
 		title : 'Select ' + objClass,

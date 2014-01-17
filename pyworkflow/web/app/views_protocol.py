@@ -37,6 +37,9 @@ from django.core.context_processors import csrf
 from django.shortcuts import render_to_response
 from django.http import HttpResponse
 
+SPECIAL_PARAMS = ['numberOfMpi', 'numberOfThreads', 'hostName', 'expertLevel', '_useQueue']
+OBJ_PARAMS =['runName', 'comment']
+
 def form(request):
     project, protocol = loadProtocolProject(request, requestType='GET')
     action = request.GET.get('action', None)
@@ -99,7 +102,7 @@ def form(request):
                 param.htmlHelp = parseText(param.help.get())
 #            param.htmlExpertLevel = param.expertLevel.get()   
 
-            """Workflow Addon"""
+            """ Workflow Addon """
             valueURL = request.GET.get(paramName, None)            
             if valueURL is not None:
                 if valueURL is not param.htmlValue:
@@ -137,8 +140,7 @@ def protocol(request):
     errors = protocol.validate()
 
     if len(errors) == 0:
-        # No errors 
-        # Finally, launch the protocol
+        # No errors, launch the protocol
         try:
             project.launchProtocol(protocol)
         except Exception, ex:
@@ -147,9 +149,6 @@ def protocol(request):
     jsonStr = json.dumps({'errors' : parseText(errors)}, ensure_ascii=False)
     
     return HttpResponse(jsonStr, mimetype='application/javascript')   
-
-SPECIAL_PARAMS = ['numberOfMpi', 'numberOfThreads', 'hostName', 'expertLevel', '_useQueue']
-OBJ_PARAMS =['runName', 'comment']
 
 def updateProtocolParams(request, protocol, project):
     """ Update the protocol values from the Web-form.
