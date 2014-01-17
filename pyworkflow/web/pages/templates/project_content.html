@@ -81,7 +81,7 @@
 {% block sideLeft %}
 <div id="westContainer">
 	<div class="viewTree">
-		<label>Workflow View: </label>
+		<label>{{messages.label_workflow}}</label>
 		<select id="viewsTree" name="viewsTree" onChange="javascript:changeTreeView();">
 			{% for choice in choices %}
 			 	<option value="{{forloop.counter0}}" {% if forloop.counter0 == choiceSelected %} selected {% endif %}>{{choice}}</option> 
@@ -97,22 +97,22 @@
 {% block contentNorth %}
 <span id="toolbar" style="float:right;">
 	<span id="treeTool">
-		<a href="javascript:switchGraph();"><i class="fa fa-sitemap" style="margin-right:5px"></i>Tree</a>
+		<a href="javascript:switchGraph();"><i class="fa fa-sitemap" style="margin-right:5px"></i>{{messages.label_tree}}</a>
 	</span>
 	<span id="listTool" style="display:none;">
-		<a href="javascript:switchGraph();"><i class="fa fa-bars" style="margin-right:5px"></i>List</a>
+		<a href="javascript:switchGraph();"><i class="fa fa-bars" style="margin-right:5px"></i>{{messages.label_list}}</a>
 	</span>
 	<span id="refreshTool" style="display:both;">
-		<a href="javascript:refreshRuns(0);"><i class="fa fa-refresh fa-spin" style="margin-right:5px"></i>Refresh</a>
+		<a href="javascript:refreshRuns(0);"><i class="fa fa-refresh fa-spin" style="margin-right:5px"></i>{{messages.label_refresh}}</a>
 	</span>
 </span>
 <div id="toolbar" style="display: none;">
-	<span><a id="editTool" href=""><i class="fa fa-pencil" style="margin-right:5px"></i>Edit</a></span>
-	<span><a id="copyTool" href=""><i class="fa fa-copy" style="margin-right:5px"></i>Copy</a></span>
-	<span><a id="deleteTool" href=""><i class="fa fa-trash-o" style="margin-right:5px"></i>Delete</a></span>
-	<span><a id="browseTool" href=""><i class="fa fa-folder-open" style="margin-right:5px"></i>Browse</a></span>
-	<span id="stopTool"><a id="stopTool" href=""><i class="fa fa-stop" style="margin-right:5px"></i>Stop</a></span>
-	<span id="analyzeTool"><a id="analyzeTool" href=""><i class="fa fa-eye" style="margin-right:5px"></i>Analyze Results</a></span>
+	<span><a id="editTool" href=""><i class="fa fa-pencil" style="margin-right:5px"></i>{{messages.label_edit}}</a></span>
+	<span><a id="copyTool" href=""><i class="fa fa-copy" style="margin-right:5px"></i>{{messages.label_copy}}</a></span>
+	<span><a id="deleteTool" href=""><i class="fa fa-trash-o" style="margin-right:5px"></i>{{messages.label_delete}}</a></span>
+	<span><a id="browseTool" href=""><i class="fa fa-folder-open" style="margin-right:5px"></i>{{messages.label_browse}}</a></span>
+	<span id="stopTool"><a id="stopTool" href=""><i class="fa fa-stop" style="margin-right:5px"></i>{{messages.label_stop}}</a></span>
+	<span id="analyzeTool"><a id="analyzeTool" href=""><i class="fa fa-eye" style="margin-right:5px"></i>{{messages.label_analyze}}</a></span>
 </div>
 <div id="runsInfo">
 	{% include "run_table_graph.html" %}
@@ -122,26 +122,26 @@
 {% block contentCenter %}
 <div class="tabContaier" id="tabs">
 	<ul class="listTabs">
-		<li><a href="#tab-data">Data</a></li>
-		<li><a href="#tab-summary">Summary</a></li>
+		<li><a href="#tab-data">{{messages.label_data}}</a></li>
+		<li><a href="#tab-summary">{{messages.label_summary}}</a></li>
 	</ul>
 	<div id="tab-data" class="tabContents">
 		<div id="listEx">
 			<ul>
 				<li>
-					<strong>Input</strong>
+					<strong>{{messages.label_input}}</strong>
 					<ul id='protocol_input'></ul>
 				</li>
 				<br/>
 				<li>
-					<strong>Output</strong>
+					<strong>{{messages.label_output}}</strong>
 					<ul id='protocol_output'></ul>
 				</li>
 			</ul>
 		</div>
 	</div>
 	<div id="tab-summary" class="tabContents">
-			<p>No summary information.</p>
+			<p>{{messages.no_info_summary}}</p>
 	</div>
 </div>
 {% endblock %}

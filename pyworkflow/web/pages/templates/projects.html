@@ -44,7 +44,7 @@
 
 {% block menu %}
 <div id="asideMainContainer">
-<a href="javascript:createProjectForm();" ><button class="priorityButton" type="button">Create Project</button></a>
+<a href="javascript:createProjectForm('{{messages.title_create_project}}');" ><button class="priorityButton" type="button">{{messages.label_create_project}}</button></a>
 </div>
 {% endblock %}
 
@@ -52,9 +52,17 @@
 <div class="projectsList">
 	<ul>				
 	{% for project in projects %}
-		<li class="projList"><strong><a href="/project_content/?projectName={{project.projName}}"
-				class="projName">{{project.projName}}</a></strong> <br /> Modified
-			{{project.pTime}} <a href="javascript:deleteProjectForm('{{project.projName}}');" class="projRemove">Delete project</a>
+		<li class="projList">
+			<strong>
+			<a href="/project_content/?projectName={{project.projName}}" class="projName">
+				{{project.projName}}
+			</a>
+			</strong>
+			<br /> 
+			{{messages.label_modified}}{{project.pTime}} 
+			<a href="javascript:deleteProjectForm('{{project.projName}}', '{{messages.title_delete_project}}');" class="projRemove">
+				{{messages.label_delete_project}}
+			</a>
 		</li>
 	{% endfor %}
 	</ul>

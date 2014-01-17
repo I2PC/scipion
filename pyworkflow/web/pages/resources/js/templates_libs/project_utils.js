@@ -51,7 +51,7 @@
 
 function createProjectForm(title) {
 
-	var title = 'Enter the project name';
+//	var title = 'Enter the project name';
 	var msg = "Project Name: <input type='text' id='newProjName' class='content'/>";
 	var funcName = 'createProject';
 	
@@ -71,7 +71,7 @@ function createProject(elm) {
 
 function deleteProjectForm(projName, title) {
 
-	var title = 'Confirm project deletion'
+//	var title = 'Confirm project deletion'
 	var msg = "<td class='content' value='"	+ projName
 			+ "'>Are you sure to <strong>DELETE</strong> project <strong>"
 			+ projName
