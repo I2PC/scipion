@@ -309,10 +309,11 @@ public class TiltPairPicker extends ParticlePicker
 		{
 			uFn = getImportMicrographName(path, um.getFile(), f);
 			tFn = getImportMicrographName(path, um.getTiltedMicrograph().getFile(), f);
-			System.out.println("uFn="+uFn);
-			System.out.println("tFn="+tFn);
 			if (Filename.exists(uFn) && Filename.exists(tFn))
+			{
 				result += importParticlesFromFiles(uFn, tFn, f, um, scale, invertx, inverty);
+				saveData(um);
+			}
 		}
 
 		return result;
