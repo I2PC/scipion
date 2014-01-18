@@ -6,6 +6,7 @@ from pyworkflow.em import *
 from pyworkflow.tests import *
 from pyworkflow.utils.graph import Graph, Node
 import pyworkflow.em.packages.eman2 as eman2
+from pyworkflow.mapper.sqlite import SqliteFlatMapper
     
     
 class TestXmippWorkflow(unittest.TestCase):
@@ -102,6 +103,46 @@ class TestXmippWorkflow(unittest.TestCase):
 #            i = 1
             
         print s.getDictionary()
+        
+    def testFlatDb(self):
+        projName = "relion_ribo"
+        self.proj = Manager().loadProject(projName) # Now it will be loaded if exists
+        
+#        protImport = ProtImportParticles(pattern=getInputPath('Images_Vol_ML3D/phantom_images', '*.xmp'), checkStack=True, samplingRate=1.237)
+#        self.proj.launchProtocol(protImport, wait=True)
+#        
+        setOfPart = self.proj.mapper.selectByClass('SetOfParticles')[0]
+        
+        setOfPart2 = SetOfParticles()
+        setOfPart2._mapper = SqliteFlatMapper("partFlat.sqlite", globals())
+        for p in setOfPart:
+            print "takarras"
+            setOfPart2.append(p.clone())
+        setOfPart2.write()
+        
+        
+    def selectingFlatDb(self):
+        projName = "relion_ribo"
+        self.proj = Manager().loadProject(projName) # Now it will be loaded if exists
+        
+        mapper = SqliteFlatMapper("partFlat.sqlite", globals())
+        sets = mapper.selectByClass('SetOfParticles')
+        print sets[0]
+        for img in sets[0]:
+            i = 1
+            
+        print sets[0].getDictionary()
+
+        
+#        protId = requestDict.get('protocolId', None)
+#        protocol = project.mapper.selectById(int(protId))
+        
+        
+#        self.mapper = SqliteFlatMapper(self.dbPath, globals())
+#        self.mapper.commit()
+        
+        
+        
             
              
 class ConditionFilter():

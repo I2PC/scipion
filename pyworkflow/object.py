@@ -90,7 +90,7 @@ class Object(object):
                 
     def isPointer(self):
         """If this is true, the value field is a pointer 
-        to anothor object"""
+        to another object"""
         return self._objIsPointer
     
     def _convertValue(self, value):
