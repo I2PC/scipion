@@ -70,9 +70,15 @@ class Object(object):
     
     def setAttributeValue(self, attrName, value):
         """ Set the attribute value given its name.
-        Equivalent to setattr(self, name).get() 
+        Equivalent to setattr(self, name).set(value) 
+        If the attrName contains dot: x.y
+        it will be equivalent to getattr(getattr(self, 'x'), 'y').set(value)
         """
-        getattr(self, attrName).set(value)
+        attrList = attrName.split('.')
+        obj = self
+        for attrName in attrList:
+            obj = getattr(obj, attrName)
+        obj.set(value)
         
     def getAttributes(self):
         """Return the list of attributes than are
@@ -237,17 +243,26 @@ class Object(object):
         for name in attrNames:
             getattr(self, name).set(getattr(other, name).get())
             
-    def getDictionary(self, name=None):
-        """ Get an attributes dictionary from an Object instance
-        Params:
-            name: Attribute name.
-        """
-        resultDictionary = {}        
-        if name is not None:
-            resultDictionary[name] = self._objValue
+    def __getObjDict(self, prefix, objDict, includeClass):
+        if prefix:
+            prefix += '.'
         for k, v in self.getAttributesToStore():
-            resultDictionary.update(v.getDictionary(k)) 
-        return resultDictionary
+            kPrefix = prefix + k
+            if isinstance(v, Scalar):
+                if includeClass:
+                    objDict[kPrefix] = (v.getClassName(), v.getObjValue())
+                else:
+                    objDict[kPrefix] = v.getObjValue()
+            else:
+                v.__getObjDict(kPrefix, objDict, includeClass)
+            
+    def getObjDict(self, includeClass=False):
+        """ Return all attributes and values in a dictionary.
+        Nested attributes will be separated with a dot in the dict key.
+        """
+        d = {}
+        self.__getObjDict('', d, includeClass)
+        return d
     
     def copy(self, other):
         copyDict = {'internalPointers': []} 
