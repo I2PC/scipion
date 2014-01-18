@@ -98,11 +98,49 @@ class TestXmippWorkflow(unittest.TestCase):
 #        writeSetOfParticles(sets[0], "images.xmd")
         print "iterating set:"
         s = sets[0]
-#        for img in s:
-#            i = 1
+        dbFn = s.getFileName()
+        print "FileName: ", dbFn
+        from sqlite3 import dbapi2 as sqlite
+        conn = sqlite.Connection(dbFn, check_same_thread = False)
+        conn.row_factory = sqlite.Row
+        cur = conn.cursor()
+        cur.execute('select * from Objects;')
+        #conn2 = sqlite.Connection(':memory:')
+        #cur2 = conn2.cursor()
+        i = 0
+#        for line in conn.iterdump():
+        row = cur.fetchone()
+        while row is not None:
+            #yield row
+            row = cur.fetchone()
+            #cur2.executescript(line)
+            i += 1
+                
+        print "Total lines: ", i
             
-        print s.getDictionary()
-            
+    def testObjDict(self):
+        img = Image()
+        img.setLocation(1, 'image.spi')
+        img.setSamplingRate(3.5)
+        ctf = CTFModel()
+        ctf.defocusU.set(1000)
+        ctf.defocusAngle.set(90)
+        img.setCTF(ctf)
+        img.setAttributeValue('_ctfModel.defocusV', 1000)
+        
+        objDict = img.getObjDict()
+        
+        import pprint
+        pp = pprint.PrettyPrinter(indent=4)
+        pp.pprint(objDict)
+        
+        objDict['_ctfModel.defocusAngle'] = '10'
+        objDict['_samplingRate'] = '1.0'
+        for k, v in objDict.iteritems():
+            img.setAttributeValue(k, v)
+        img.printAll()
+        
+   
              
 class ConditionFilter():
     def __init__(self, condition):
