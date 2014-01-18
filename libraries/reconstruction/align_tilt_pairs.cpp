@@ -176,6 +176,8 @@ void ProgAlignTiltPairs::run()
     MetaData mdIn, mdOut;
     mdIn.read(fnIn);
     mdIn.removeDisabled();
+    if (!mdIn.containsLabel(MDL_ANGLE_TILT))
+    	REPORT_ERROR(ERR_ARG_INCORRECT,"Input metadata does not have tilt information");
 
     initProgress(mdIn.size());
 
