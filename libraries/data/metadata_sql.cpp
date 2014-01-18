@@ -761,7 +761,7 @@ void MDSql::setOperate(const MetaData *mdInLeft,
         join_type = " OUTER ";
         break;
     case NATURAL_JOIN:
-        /* WE do not want natural join but natural join except for the obj-ID column */
+        /* We do not want natural join but natural join except for the obj-ID column */
         join_type = " INNER ";
         columnLeft = columnRight = MDL_UNDEFINED;
         break;
