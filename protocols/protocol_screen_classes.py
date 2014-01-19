@@ -10,7 +10,8 @@
 
 from os.path import join, exists
 from xmipp import MetaData, MetaDataInfo, MDL_IMAGE, MDL_IMAGE1, MDL_IMAGE_REF, MDL_ANGLE_ROT, MDL_ANGLE_TILT, MDL_ANGLE_PSI, MDL_REF, \
-        MDL_SHIFT_X, MDL_SHIFT_Y, MDL_FLIP, MD_APPEND, MDL_MAXCC, MDL_ENABLED, Euler_angles2matrix, Image, FileName, getBlocksInMetaDataFile
+        MDL_SHIFT_X, MDL_SHIFT_Y, MDL_FLIP, MD_APPEND, MDL_MAXCC, MDL_ENABLED, Euler_angles2matrix, Image, FileName, getBlocksInMetaDataFile, \
+        getImageSize
 from protlib_base import *
 from protlib_utils import getListFromRangeString, runJob, runShowJ
 from protlib_filesystem import copyFile, deleteFile, removeFilenamePrefix
@@ -61,6 +62,9 @@ class ProtScreenClasses(XmippProtocol):
     
     def validate(self):
         errors = []
+        (Xdim,Ydim,Zdim,Ndim)=getImageSize(self.Volume)
+        if Xdim!=self.Xdim:
+            errors.append("Make sure that the volume and the classes have the same size")
         return errors    
 
     def visualize(self):

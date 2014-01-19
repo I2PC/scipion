@@ -77,7 +77,7 @@ class ProtImportParticles(ProtParticlesBase):
         papers=[]
         if self.DoNorm:
             papers.append('Sorzano, Ultramic (2004) [http://www.ncbi.nlm.nih.gov/pubmed/15450658]')
-        if self.DoRemoveDust or self.DoFlip:
+        if self.DoRemoveDust:
             papers.append('Sorzano, Meth.Mol.Biol. (2013) [http://www.ncbi.nlm.nih.gov/pubmed/23086876]')
         if self.DoSort:
             papers.append('Vargas, JSB (2013) [http://www.ncbi.nlm.nih.gov/pubmed/23933392]')
@@ -101,6 +101,7 @@ def writeImagesMd(log, md, ImportAll, SubsetMode, Nsubset, imagesFn, imagesStk, 
         else:
             mdaux=MetaData(md)
         md.selectPart(mdaux, 0, Nsubset)
+    md.addItemId()
     md.write(imagesFn)
     if DoCopy:
         runJob(log,"xmipp_image_convert","-i %(imagesFn)s -o %(imagesStk)s" % locals())
