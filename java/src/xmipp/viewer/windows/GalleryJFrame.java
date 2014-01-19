@@ -316,7 +316,10 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 	{
 		// Create file chooser and set current dir
 		setIconImage(XmippResource.getIcon("xmipp_logo.png").getImage());
-		fc = new XmippFileChooser();
+		if (data.getFileName() != null)
+			fc = new XmippFileChooser(new File(data.getFileName()));
+		else
+			fc = new XmippFileChooser();
 		ctfTasks = new TasksEngine(GalleryJFrame.this);
 
 		isUpdating = true; // avoid handling some changes events
