@@ -1222,6 +1222,7 @@ data_noname
                             , resultsClasses3DRef          = resultsClasses3DRef
                             , resultsClasses3DRefDefGroup  = resultsClasses3DRefDefGroup
                             , resultsVolumes = resultsVolumes
+                            , selFileName = self.SelFileName
                             , workingDir     = self.WorkingDir
                             )
         _dataBase.connection.commit()
