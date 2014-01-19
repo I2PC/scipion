@@ -1061,7 +1061,6 @@ void MetaData::read(const FileName &_filename,
 {
     String blockName;
     FileName inFile;
-    FileName extFile;
 
     blockName=_filename.getBlockName();
     //    if (blockName.empty())
@@ -1253,7 +1252,8 @@ void MetaData::readStar(const FileName &filename,
 
     is.seekg(0, std::ios::beg);//reset the stream position to the beginning to start parsing
 
-    if (line.find(FileNameVersion) != String::npos)
+    if (line.find(FileNameVersion) != String::npos ||
+        extFile == "xmd" || extFile == "star")
     {
         oldFormat=false;
 

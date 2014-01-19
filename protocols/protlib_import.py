@@ -50,16 +50,34 @@ XMIPP_RELION_LABELS = {
                        ,MDL_AVG_CHANGES_OFFSETS:     'rlnChangesOptimalOffsets'
                        ,MDL_AVG_CHANGES_CLASSES:     'rlnChangesOptimalClasses'
                        ,MDL_ANGLE_PSI:         'rlnAnglePsi'
+                       ,MDL_BLOCK_NUMBER:       'rlnGroupNumber' # just one
                        ,MDL_CLASS_PERCENTAGE:  'rlnClassDistribution'
+                       ,MDL_COUNT:             'rlnGroupNrParticles' # just one
+                       ,MDL_CTF_CA:            'rlnChromaticAberration'
+                       ,MDL_CTF_CONVERGENCE_CONE: 'rlnConvergenceCone'
+                       ,MDL_CTF_CRIT_FITTINGSCORE:   'rlnCtfFigureOfMerit' #just one
+                       ,MDL_CTF_CRIT_NORMALITY:   'rlnNormCorrection' #just one
+                       ,MDL_CTF_CRIT_PSDVARIANCE: 'rlnCtfValue'         #just one
+                       ,MDL_CTF_CRIT_PSDCORRELATION90: 'rlnCtfBfactor'  #just one
+                       ,MDL_CTF_CS:            'rlnSphericalAberration'
                        ,MDL_CTF_DEFOCUSU:      'rlnDefocusU'
                        ,MDL_CTF_DEFOCUSV:      'rlnDefocusV'
                        ,MDL_CTF_DEFOCUS_ANGLE: 'rlnDefocusAngle'
-                       ,MDL_CTF_VOLTAGE:       'rlnVoltage'
-                       ,MDL_CTF_CS:            'rlnSphericalAberration'
+                       ,MDL_CTF_ENERGY_LOSS:   'rlnEnergyLoss'
+                       ,MDL_CTF_LENS_STABILITY:'rlnLensStability'
+                       ,MDL_CTF_LONGITUDINAL_DISPLACEMENT:'rlnLongitudinalDisplacement'
+                       ,MDL_CTF_TRANSVERSAL_DISPLACEMENT: 'rlnTransversalDisplacement'                       
                        ,MDL_CTF_Q0:            'rlnAmplitudeContrast'
+                       ,MDL_CTF_SAMPLING_RATE: 'rlnDetectorPixelSize'
+                       ,MDL_CTF_VOLTAGE:       'rlnVoltage'
+                       ,MDL_DATATYPE:          'rlnDataType'
+                       ,MDL_DEFGROUP:          'rlnGroupNumber'
+                       ,MDL_ENABLED:           'rlnEnabled'
                        ,MDL_IMAGE:             'rlnImageName'
                        ,MDL_IMAGE_REF:         'rlnReferenceImage'
+                       ,MDL_ITEM_ID:           'rlnImageId'
                        ,MDL_LL:                'rlnLogLikeliContribution'
+                       ,MDL_MAGNIFICATION:     'rlnMagnification'
                        ,MDL_MICROGRAPH:        'rlnMicrographName'
                        ,MDL_AVGPMAX:           'rlnAveragePmax'
                        ,MDL_REF3D:             'rlnClassNumber'
@@ -67,11 +85,27 @@ XMIPP_RELION_LABELS = {
                        ,MDL_RESOLUTION_FRC:     'rlnGoldStandardFsc'
                        ,MDL_RESOLUTION_FREQ:    'rlnResolution'
                        ,MDL_RESOLUTION_SSNR:    'rlnSsnrMap'
+                       ,MDL_SAMPLINGRATE:       'rlnPixelSize'
+                       #,MDL_SAMPLINGRATE_ORIGINAL: 'rlnPixelSize'
                        ,MDL_SCALE:              'rlnMagnificationCorrection'
-                       ,MDL_SHIFT_X:            'rlnOriginX'
-                       ,MDL_SHIFT_Y:            'rlnOriginY'
+                       ,MDL_ORIGIN_X:           'rlnOriginX'
+                       ,MDL_ORIGIN_Y:           'rlnOriginY'
+                       ,MDL_ORIGIN_Z:           'rlnOriginZ'
+                       ,MDL_PMAX:               'rlnMaxValueProbDistribution'
+                       ,MDL_SAMPLINGRATE_X:           'rlnSamplingRateX'
+                       ,MDL_SAMPLINGRATE_Y:           'rlnSamplingRateY'
+                       ,MDL_SAMPLINGRATE_Z:           'rlnSamplingRateZ'
+                       ,MDL_XCOOR:              'rlnCoordinateX'
+                       ,MDL_XSIZE:              'rlnImageSizeX'
+                       ,MDL_YCOOR:              'rlnCoordinateY'
+                       ,MDL_YSIZE:              'rlnImageSizeY'
                        ,MDL_WEIGHT:             'rlnNrOfSignificantSamples'
+                       ,MDL_ZSIZE:              'rlnImageSizeZ'
+
                        }
+# from data.star
+#WARNING: Ignoring unknown column: rlnMaxValueProbDistribution
+
 def convertCtfparam(oldCtf):
     '''Convert the old format (Xmipp2.4) of the CTF 
     and return a new MetaData'''
@@ -242,6 +276,16 @@ def addRelionLabels():
     from xmipp import addLabelAlias
     for k, v in XMIPP_RELION_LABELS.iteritems():
         addLabelAlias(k,v)
+        
+def relionLabelString():
+    """ create an string that can be used for XMIPP_EXTRA_ALIASES
+    for adding the labels of Relion.
+    """
+    from xmipp import label2Str
+    pairs = []
+    for k, v in XMIPP_RELION_LABELS.iteritems():
+        pairs.append('%s=%s' % (label2Str(k), v))
+    return ';'.join(pairs)
         
 def exportReliontoMetadataFile(inputRelion,outputXmipp):
     """ This function will receive a relion file and will

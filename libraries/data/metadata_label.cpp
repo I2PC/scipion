@@ -37,14 +37,60 @@ MDLabelStaticInit MDL::initialization; //Just for initialization
 
 void MDL::addLabel(const MDLabel label, const MDLabelType type, const String &name, int tags)
 {
-    int index = (int)label;
-    data[index] = new MDLabelData(type, name, tags);
+    data[(int)label] = new MDLabelData(type, name, tags);
     names[name] = label;
 }//close function addLabel
 
-void MDL::addLabelAlias(const MDLabel label, const String &alias)
+/**
+ * Extra alias can be defined through the environment var XMIPP_EXTRA_ALIASES
+ * the syntax is the following
+ * XMIPP_EXTRA_ALIASES='anglePsi=otherAnglePsi;shiftX=otherShiftX;shiftY:otherShift'
+ * The = sign will add a label, and the alias name will replace the current one (replace=True)
+ * if the : sign is used, only a normal alias will added
+ */
+void MDL::addExtraAliases()
+{
+  const char * extra_aliases = getenv("XMIPP_EXTRA_ALIASES");
+
+  if (extra_aliases)
+  {
+      StringVector sv, pair;
+      String eq = "=", co = ":";
+      tokenize(extra_aliases, sv, ";");
+      MDLabel label;
+      bool replace;
+
+      for (std::vector<String>::iterator it = sv.begin(); it != sv.end(); ++it)
+      {
+          if (it->find(eq) != it->npos)
+          {
+              tokenize(*it, pair, "=");
+              replace = true;
+          }
+          else if (it->find(co) != it->npos)
+          {
+              tokenize(*it, pair, co);
+              replace = false;
+          }
+          else
+              REPORT_ERROR(ERR_ARG_INCORRECT, "Invalid pair separator, use = or :");
+          label = MDL::str2Label(pair[0]);
+          // Add the label alias
+          if (label != MDL_UNDEFINED)
+              addLabelAlias(label, pair[1], replace);
+          else
+              REPORT_ERROR(ERR_ARG_INCORRECT, formatString("Invalid label name: %s found in enviroment var XMIPP_EXTRA_ALIASES", pair[0].c_str()));
+      }
+  }
+}//close function addLabel
+
+void MDL::addLabelAlias(const MDLabel label, const String &alias, bool replace)
 {
     names[alias] = label;
+    if (replace)
+    {
+      data[(int)label]->str = alias;
+    }
 }//close function addLabel
 
 void MDL::str2LabelVector(const String &labelsStr, std::vector<MDLabel> &labels)
