@@ -230,5 +230,6 @@ public abstract class XmippMenuCreator implements ActionListener {
 	public final static String SELECT_FROMHERE = "Select.FromHere_mi";
 	public final static String SET_CLASS = "SetClass_mi";
 	public final static String OPEN_IMAGES = "OpenImages_mi";
+	public final static String SAVE_IMAGES = "SaveImages_mi";
 
 }

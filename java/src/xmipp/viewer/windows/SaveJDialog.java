@@ -79,7 +79,6 @@ public class SaveJDialog extends XmippDialog
 
 	public SaveJDialog(GalleryJFrame parent, String file, boolean isselection)
 	{
-
 		super(parent, "Save", true);
 		this.isselection = isselection;
 		initComponents();
