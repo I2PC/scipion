@@ -50,15 +50,9 @@ XMIPP_RELION_LABELS = {
                        ,MDL_AVG_CHANGES_OFFSETS:     'rlnChangesOptimalOffsets'
                        ,MDL_AVG_CHANGES_CLASSES:     'rlnChangesOptimalClasses'
                        ,MDL_ANGLE_PSI:         'rlnAnglePsi'
-                       ,MDL_BLOCK_NUMBER:       'rlnGroupNumber' # just one
                        ,MDL_CLASS_PERCENTAGE:  'rlnClassDistribution'
-                       ,MDL_COUNT:             'rlnGroupNrParticles' # just one
                        ,MDL_CTF_CA:            'rlnChromaticAberration'
                        ,MDL_CTF_CONVERGENCE_CONE: 'rlnConvergenceCone'
-                       ,MDL_CTF_CRIT_FITTINGSCORE:   'rlnCtfFigureOfMerit' #just one
-                       ,MDL_CTF_CRIT_NORMALITY:   'rlnNormCorrection' #just one
-                       ,MDL_CTF_CRIT_PSDVARIANCE: 'rlnCtfValue'         #just one
-                       ,MDL_CTF_CRIT_PSDCORRELATION90: 'rlnCtfBfactor'  #just one
                        ,MDL_CTF_CS:            'rlnSphericalAberration'
                        ,MDL_CTF_DEFOCUSU:      'rlnDefocusU'
                        ,MDL_CTF_DEFOCUSV:      'rlnDefocusV'
@@ -76,7 +70,8 @@ XMIPP_RELION_LABELS = {
                        ,MDL_IMAGE:             'rlnImageName'
                        ,MDL_IMAGE_REF:         'rlnReferenceImage'
                        ,MDL_ITEM_ID:           'rlnImageId'
-                       ,MDL_LL:                'rlnLogLikeliContribution'
+                       ,MDL_LL:                'rlnLogLikelihood'
+                       ,MDL_MAXCC:              'rlnLogLikeliContribution'
                        ,MDL_MAGNIFICATION:     'rlnMagnification'
                        ,MDL_MICROGRAPH:        'rlnMicrographName'
                        ,MDL_AVGPMAX:           'rlnAveragePmax'
@@ -101,6 +96,44 @@ XMIPP_RELION_LABELS = {
                        ,MDL_YSIZE:              'rlnImageSizeY'
                        ,MDL_WEIGHT:             'rlnNrOfSignificantSamples'
                        ,MDL_ZSIZE:              'rlnImageSizeZ'
+                       
+                       # Following labels have no correct matching, just to 
+                       # pick one with the same datatype
+                       ,MDL_BLOCK_NUMBER:       'rlnGroupNumber' # just one
+                       ,MDL_COUNT:             'rlnGroupNrParticles' # just one
+                       ,MDL_CTF_CRIT_FITTINGSCORE:   'rlnCtfFigureOfMerit' #just one
+                       ,MDL_CTF_CRIT_NORMALITY:   'rlnNormCorrection' #just one
+                       ,MDL_CTF_CRIT_PSDVARIANCE: 'rlnCtfValue'         #just one
+                       ,MDL_CTF_CRIT_PSDCORRELATION90: 'rlnCtfBfactor'  #just one
+                       ,MDL_CRYSTAL_CELLX : 'rlnReferenceDimensionality'
+                       ,MDL_CRYSTAL_CELLY : 'rlnOriginalImageSize'
+                       ,MDL_CRYSTAL_DISAPPEAR_THRE : 'rlnCurrentResolution'
+                       ,MDL_PICKING_PARTICLE_SIZE : 'rlnCurrentImageSize' #int
+                       ,MDL_PICKING_AUTOPICKPERCENT : 'rlnPaddingFactor' #int
+                       ,MDL_PICKING_TEMPLATES : 'rlnFourierSpaceInterpolator' #int
+                       ,MDL_COLOR : 'rlnMinRadiusNnInterpolation' #int
+                       ,MDL_DM3_NUMBER_TYPE : 'rlnNrClasses' #int
+                       ,MDL_DM3_SIZE : 'rlnNrGroups' #int
+                       ,MDL_NMA_COLLECTIVITY : 'rlnTau2FudgeFactor' #double
+                       ,MDL_NMA_SCORE : 'rlnNormCorrectionAverage' #double
+                       ,MDL_SIGMAOFFSET : 'rlnSigmaOffsets' #double
+                       ,MDL_ANGLE_Y2 : 'rlnOrientationalPriorMode' #int
+                       ,MDL_ANGLE_ROT2 : 'rlnSigmaPriorRotAngle' #double
+                       ,MDL_ANGLE_TILT2 : 'rlnSigmaPriorTiltAngle' #double
+                       ,MDL_ANGLE_PSI2 : 'rlnSigmaPriorPsiAngle' #double
+
+                       ,MDL_MLF_WIENER: 'rlnOrientationDistribution' #double
+                       ,MDL_IDX: 'rlnSpectralIndex' #int
+                       ,MDL_MLF_NOISE: 'rlnSigma2Noise' #double
+                       ,MDL_DM3_TAGNAME: 'rlnGroupName'  #string
+                       ,MDL_MLF_SIGNAL: 'rlnGroupScaleCorrection' #double
+                       
+                       ,MDL_ZSCORE_SHAPE1: 'rlnAccuracyRotations'
+                       ,MDL_ZSCORE_SHAPE2: 'rlnAccuracyTranslations'
+                       ,MDL_ZSCORE_SNR1: 'rlnReferenceSigma2'
+                       ,MDL_ZSCORE_SNR2: 'rlnReferenceTau2'
+                       ,MDL_ZSCORE_RESCOV: 'rlnSpectralOrientabilityContribution'
+
 
                        }
 # from data.star
