@@ -96,7 +96,7 @@ class Object(object):
                 
     def isPointer(self):
         """If this is true, the value field is a pointer 
-        to anothor object"""
+        to another object"""
         return self._objIsPointer
     
     def _convertValue(self, value):
@@ -217,23 +217,6 @@ class Object(object):
             if not comp:
                 return False
         return True
-    
-    def printAll(self, name=None, level=0):
-        """Print object and all its attributes.
-        Main for debugging"""
-        tab = ' ' * (level*3)
-        idStr = ' (id = %s, pid = %s)' % (self.getObjId(), self._objParentId)
-        if name is None:
-            print tab, self.getClassName(), idStr
-        else:
-            if name == 'submitTemplate': # Skip this because very large value
-                value = '...'
-            else:
-                value = self._objValue
-                
-            print tab, '%s = %s' % (name, value), idStr
-        for k, v in self.getAttributes():
-            v.printAll(k, level + 1)
             
     def copyAttributes(self, other, *attrNames):
         """ Copy attributes in attrNames from other to self. 
@@ -333,7 +316,30 @@ class Object(object):
             if self.hasAttribute(t):
                 condStr = condStr.replace(t, str(self.getAttributeValue(t)))
         return eval(condStr)
-        
+    
+    def printAll(self, name=None, level=0):
+        """Print object and all its attributes.
+        Mainly for debugging"""
+        tab = ' ' * (level*3)
+        idStr = ' (id = %s, pid = %s)' % (self.getObjId(), self._objParentId)
+        if name is None:
+            print tab, self.getClassName(), idStr
+        else:
+            if name == 'submitTemplate': # Skip this because very large value
+                value = '...'
+            else:
+                value = self._objValue
+                
+            print tab, '%s = %s' % (name, value), idStr
+        for k, v in self.getAttributes():
+            v.printAll(k, level + 1)
+            
+    
+    def printObjDict(self):
+        """Print object dictionary. Main for debugging"""
+        import pprint
+        pp = pprint.PrettyPrinter(indent=4)
+        pp.pprint(self.getObjDict())        
 
 class OrderedObject(Object):
     """This is based on Object, but keep the list
