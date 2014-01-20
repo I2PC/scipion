@@ -15,11 +15,11 @@
 			{% if page_mode == 'showj'%}
 				<a id="backToProject" href="/project_content/?projectName={{projectName}}">Back to project</a>
 			{% else %}
-				<a href="/projects" class="headerLink{% if view == 'projects' %} headerLinkSelected {% endif %}">{{messages.VIEW_PROJECTS}}</a>
-				{% if projectName != None and projectName != ''%}<span id="tube">|</span><a href="/project_content/?projectName={{projectName}}" class="headerLink{% if view == 'protocols' %} headerLinkSelected {% endif %}">{{messages.VIEW_PROTOCOLS}}</a>{% endif %}
-				<span id="tube">|</span><a href="#" onclick="javascript:alert('Not implemented yet')" class="headerLink{% if view == 'data' %} headerLinkSelected {% endif %}">{{messages.VIEW_DATA}}</a>
+				<a href="/projects" class="headerLink{% if view == 'projects' %} headerLinkSelected {% endif %}">{{messages_properties.VIEW_PROJECTS}}</a>
+				{% if projectName != None and projectName != ''%}<span id="tube">|</span><a href="/project_content/?projectName={{projectName}}" class="headerLink{% if view == 'protocols' %} headerLinkSelected {% endif %}">{{messages_properties.VIEW_PROTOCOLS}}</a>{% endif %}
+				<span id="tube">|</span><a href="#" onclick="javascript:alert('Not implemented yet')" class="headerLink{% if view == 'data' %} headerLinkSelected {% endif %}">{{messages_properties.VIEW_DATA}}</a>
 				{% if projectName != None and projectName != ''%}
-					<span id="tube">|</span><a href="javascript:alert('Not implemented yet')" class="headerLink{% if view == 'hosts' %} headerLinkSelected {% endif %}">{{messages.VIEW_HOSTS}}</a>
+					<span id="tube">|</span><a href="javascript:alert('Not implemented yet')" class="headerLink{% if view == 'hosts' %} headerLinkSelected {% endif %}">{{messages_properties.VIEW_HOSTS}}</a>
 					<!-- <span id="tube">|</span><a href="/view_hosts" class="headerLink{% if view == 'hosts' %} headerLinkSelected {% endif %}">Hosts</a> -->
 				{% endif %}
 			{% endif %}

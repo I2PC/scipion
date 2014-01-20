@@ -1,6 +1,7 @@
 # **************************************************************************
 # *
 # * Authors:     Jose Gutierrez (jose.gutierrez@cnb.csic.es)
+# *              Adrian Quintana (aquintana@cnb.csic.es)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -24,13 +25,13 @@
 # *
 # **************************************************************************
 """
-This module define the text used in the application.
+This module defines the text used in the application.
 """
 
 class Message():
     # Example Usage: 
-        #       MyMessage = Message()
-        #       print MyMessage.label
+    # MyMessage = Message()
+    # print MyMessage.label
 
     # Header List
     VIEW_PROJECTS = 'Projects'
@@ -139,8 +140,47 @@ class Message():
     LABEL_HOST_CONECTION_SUCESS='Connection SUCCEEDED to host'
     LABEL_HOST_CONECTION_FAIL='Connection FAILED to host'
     LABEL_HOST_CONECTION_TEST='Connection TEST'
-
     
+    #SHOWJ_WEB
+    ERROR_DIMENSIONS='Incorrect table width or height: '
+    
+    LABEL_RESLICE='Reslice'
+    RESLICE_Z_NEGATIVE='Z Negative (Front)'
+    RESLICE_Y_NEGATIVE='Y Negative (Top)'
+    RESLICE_Y_POSITIVE='Y Positive (Bottom)'
+    RESLICE_X_NEGATIVE='X Negative (Left)'
+    RESLICE_X_POSITIVE='X Positive (Right)'
+    
+    LABEL_COLS='Cols'
+    LABEL_ROWS='Rows'
+    
+    LABEL_MIRRORY='Invert Y Axis'
+    LABEL_APPLY_TRANSFORM='Apply Transform Matrix'
+    LABEL_ONLY_SHIFTS='Only Shifts'
+    LABEL_WRAP='Wrap'
+    
+    LABEL_BLOCK_SELECTION='Select Block'
+    LABEL_LABEL_SELECTION='Select Label'
+    LABEL_VOLUME_SELECTION='Select Volume'
+    
+    LABEL_ENABLE='Enable'
+    LABEL_DISABLE='Disable'
+    LABEL_SELECT_ALL='Select All'
+    LABEL_SELECT_FROM='Select From Here'
+    LABEL_SELECT_TO='Select To Here'
+    
+    LABEL_DISPLAY_TABLE_CONFIG='Display Table Configuration'
+    
+    LABEL_LABEL='Label'
+    LABEL_VISIBLE='Visible'
+    LABEL_RENDER='Render'
+    
+    LABEL_BUTTON_OK='Ok'
+    LABEL_BUTTON_CANCEL='Cancel'
+    
+    LABEL_THRESHOLD='Threshold:'
+    
+    ERROR_WEBGL='Your web browser does not support or is not configured for WebGL. See [[http://get.webgl.org/][WebGL Support]] for more information.'
     
 class Icon():
     # Project Content Template
@@ -168,4 +208,3 @@ class Icon():
     #Host template
     BUTTON_CLOSE='dialog_close.png'
     BUTTON_SAVE='filesave.png'
-    

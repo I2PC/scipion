@@ -120,7 +120,7 @@ function setImageSize(refreshElement){
 	tableImages_height=tableImages_width*ratio
 		
 	if (isNaN(tableImages_width) || tableImages_width>{{form.imageMaxWidth.value}} || tableImages_width<{{form.imageMinWidth.value}} || tableImages_height>{{form.imageMaxHeight.value}} || tableImages_height<{{form.imageMinHeight.value}}){
-		alert('Incorrect table width or height: '+tableImages_width+'px x '+ tableImages_height +'px.')
+		alert('{{messages_properties.ERROR_DIMENSIONS}}' + tableImages_width + 'px x ' + tableImages_height +'px.')
 		zoom_element.val(previousZoom)
 		setImageSize(true)
 		return;
@@ -230,7 +230,6 @@ function setImageSize(refreshElement){
 		</div>
 		
 		<div id="zoomContainer" class="sectionMenu">
-			<!-- <img src="/resources/showj/zoom.png" class="menuIcon"> -->
 			<i class="fa fa-search" style="margin-right:5px"></i>
 			{{ form.zoom }}
 			
@@ -238,7 +237,6 @@ function setImageSize(refreshElement){
 				<img src="/resources/showj/arrowUp.png" class="arrowImage">
 				<img src="/resources/showj/arrowDown.png" class="arrowImage">
 			</div>
-			<!-- <input type="number" class="menuInputNumber" id="zoom" value="150" min="10"> -->
 		</div>
 		
 		<div id="gotoContainer" class="sectionMenu">
@@ -249,7 +247,6 @@ function setImageSize(refreshElement){
 				<img src="/resources/showj/arrowUp.png" class="arrowImage">
 				<img src="/resources/showj/arrowDown.png" class="arrowImage">
 			</div>
-			<!-- <input type="number" class="menuInputNumber" id="goto" value="1" max="{{metadata.objects|length}}" min="1"> -->
 		</div>
 		
 		<div class="sectionMenu">
@@ -270,7 +267,6 @@ function setImageSize(refreshElement){
 					<img src="/resources/showj/arrowUp.png" class="arrowImage">
 					<img src="/resources/showj/arrowDown.png" class="arrowImage">
 				</div>
-				<!-- <input type="number" class="menuInputNumber" id="cols" value="" min="1" max="{{metadata.objects|length}}" disabled> -->
 			</div>
 			<div class="subSectionMenu" id="rowsSubSectionMenu">
 				<span class="textMenu">{{ form.rows.label_tag }}</span>
@@ -280,7 +276,6 @@ function setImageSize(refreshElement){
 					<img src="/resources/showj/arrowUp.png" class="arrowImage">
 					<img src="/resources/showj/arrowDown.png" class="arrowImage">
 				</div>
-				<!-- <input type="number" class="menuInputNumber" id="rows" value="" min="1" max="{{metadata.objects|length}}" disabled> -->
 			</div>
 		</div>
 		{% endif %}
@@ -332,11 +327,6 @@ function setImageSize(refreshElement){
 		
 		<div id="optionsContainer" class="sectionMenu">
 			<a id="optionsButton" href="javascript:showHideOptionMenu();" class="btn buttonGrey" style="padding: 5px 10px;"><i class="fa fa-wrench"></i></a>
-			
-			
-			<!-- <button id="optionsButton" class="optionsOff submitButton" onclick="showHideOptionMenu(); return false;">
-			</button> -->
-		
 			<ul id="optionsList">
 				<li>{{ form.mirrorY }} {{ form.mirrorY.label_tag }}</li>
 				<li>{{ form.applyTransformMatrix }} {{ form.applyTransformMatrix.label_tag }}</li>
@@ -356,17 +346,16 @@ function setImageSize(refreshElement){
 
 {% block content %}	
 {% block content_view %}	{% endblock %}	
-			<!-- Hidden menu for multiple selection tool -->
-			<div class="multipleSelectionToolContainer" id="multipleSelectionTool">
-				{% if dataset.getTable.hasEnabledColumn %}
-				<div class="multipleSelectionToolItem" onclick="multipleEnableDisableImage('enable')">Enable</div>
-				<div class="multipleSelectionToolItem" onclick="multipleEnableDisableImage('disable')">Disable</div>
-				{% endif %}
-				<div class="multipleSelectionToolItem" onclick="multipleSelect('all')">Select All</div>
-				<div class="multipleSelectionToolItem" onclick="multipleSelect('from')">Select From Here</div>
-				<div class="multipleSelectionToolItem" onclick="multipleSelect('to')">Select To Here</div>
-			</div>	
-
+<!-- Hidden menu for multiple selection tool -->
+<div class="multipleSelectionToolContainer" id="multipleSelectionTool">
+	{% if dataset.getTable.hasEnabledColumn %}
+	<div class="multipleSelectionToolItem" onclick="multipleEnableDisableImage('enable')">{{messages_properties.LABEL_ENABLE}}</div>
+	<div class="multipleSelectionToolItem" onclick="multipleEnableDisableImage('disable')">{{messages_properties.LABEL_DISABLE}}</div>
+	{% endif %}
+	<div class="multipleSelectionToolItem" onclick="multipleSelect('all')">{{messages_properties.LABEL_SELECT_ALL}}</div>
+	<div class="multipleSelectionToolItem" onclick="multipleSelect('from')">{{messages_properties.LABEL_SELECT_FROM}}</div>
+	<div class="multipleSelectionToolItem" onclick="multipleSelect('to')">{{messages_properties.LABEL_SELECT_TO}}</div>
+</div>	
 {% endblock %}	
 
 

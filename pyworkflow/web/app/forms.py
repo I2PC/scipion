@@ -1,14 +1,38 @@
-'''
-Created on Jun 7, 2013
+# **************************************************************************
+# *
+# * Authors:    Adrian Quintana (aquintana@cnb.csic.es)
+# *                
+# *
+# * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
+# *
+# * This program is free software; you can redistribute it and/or modify
+# * it under the terms of the GNU General Public License as published by
+# * the Free Software Foundation; either version 2 of the License, or
+# * (at your option) any later version.
+# *
+# * This program is distributed in the hope that it will be useful,
+# * but WITHOUT ANY WARRANTY; without even the implied warranty of
+# * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# * GNU General Public License for more details.
+# *
+# * You should have received a copy of the GNU General Public License
+# * along with this program; if not, write to the Free Software
+# * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+# * 02111-1307  USA
+# *
+# *  All comments concerning this program package may be sent to the
+# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *
+# **************************************************************************
 
-@author: antonio
-'''
 from django import forms
 from pyworkflow.hosts import HostConfig, QueueSystemConfig, QueueConfig
 from django.forms.forms import BoundField
 from pyworkflow.object import List
 import json
 import xmipp
+from pyworkflow.utils.messages_properties import Message
+
 #from pyworkflow.web.app.views_showj import get_image_dimensions 
 
 class HostForm(forms.Form):
@@ -16,19 +40,19 @@ class HostForm(forms.Form):
 #     scpnHosts.widget.attrs.update({'onchange' : 'changeScpnHostSelection()'})
     host = None
     
-    objId = forms.CharField(widget=forms.HiddenInput(), required = False)
-    label = forms.CharField(label='Label', 
+    objId = forms.CharField(widget=forms.HiddenInput(), required=False)
+    label = forms.CharField(label='Label',
                             required=True,
                             error_messages={'required': 'Please, enter label for the configuration'},
                             widget=forms.TextInput(attrs={'class' : 'generalInput', 'size' : 20}))
     hostName = forms.CharField(label='Host name',
-                               required=True, 
+                               required=True,
                                error_messages={'required': 'Please, enter host name'},
                                widget=forms.TextInput(attrs={'class' : 'generalInput', 'size' : 30}))
     userName = forms.CharField(label='User name', required=False,
                                 widget=forms.TextInput(attrs={'class' : 'generalInput', 'size' : 20}))
     password = forms.CharField(label='Password', required=False,
-                                widget=forms.PasswordInput(render_value = True))
+                                widget=forms.PasswordInput(render_value=True))
     password.widget.attrs.update({'class' : 'generalInput', 'size' : 20})
     hostPath = forms.CharField(label='Host path', required=True, error_messages={'required': 'Please, enter your host path'},
                                 widget=forms.TextInput(attrs={'class' : 'generalInput', 'size' : 30}))
@@ -47,12 +71,12 @@ class HostForm(forms.Form):
         self.fields['queueSystemConfigCount'].initial = extra_queueSystemConfigCount
         self.fields['queueConfigCount'].initial = extra_queueConfigCount
         indexes = None
-        if args is not None and len(args)>0:
+        if args is not None and len(args) > 0:
             indexes = self.getQueueConfigIndexes(args[0], extra_queueConfigCount)
         self.createDynamicFields(extra_queueSystemConfigCount, extra_queueConfigCount, queueConfigIndexes=indexes)
         
                 
-    def createDynamicFields(self, extra_queueSystemConfigCount, extra_queueConfigCount, queueConfigIndexes = None):
+    def createDynamicFields(self, extra_queueSystemConfigCount, extra_queueConfigCount, queueConfigIndexes=None):
         if extra_queueSystemConfigCount > 0:
             self.createQueueSystemConfigFields()            
             if queueConfigIndexes is None:
@@ -63,26 +87,26 @@ class HostForm(forms.Form):
                     self.createQueueConfigFields(index)   
                     
     def createQueueSystemConfigFields(self):
-        self.fields['name'] = forms.CharField(label='Name', 
+        self.fields['name'] = forms.CharField(label='Name',
                                               required=True,
                                               error_messages={'required': 'Please, enter name for the queue system'},
                                               widget=forms.TextInput(attrs={'class' : 'generalInput', 'size' : 20}))
         self.fields['mandatory'] = forms.BooleanField(label='Mandatory',
                                                       required=True,
                                                       error_messages={'required': 'Please, select if queue is mandatory'})
-        self.fields['submitTemplate'] = forms.CharField(label='Submit template', 
+        self.fields['submitTemplate'] = forms.CharField(label='Submit template',
                                                         required=True,
                                                         error_messages={'required': 'Please, insert submit template'},
                                                         widget=forms.Textarea(attrs={'cols': 35, 'rows': 5}))
-        self.fields['submitCommand'] = forms.CharField(label='Submit command', 
+        self.fields['submitCommand'] = forms.CharField(label='Submit command',
                                                        required=True,
                                                        error_messages={'required': 'Please, insert submit command'},
                                                        widget=forms.TextInput(attrs={'class' : 'generalInput', 'size' : 20}))
-        self.fields['checkCommand'] = forms.CharField(label='Check command', 
+        self.fields['checkCommand'] = forms.CharField(label='Check command',
                                                       required=True,
                                                       error_messages={'required': 'Please, insert check command'},
                                                       widget=forms.TextInput(attrs={'class' : 'generalInput', 'size' : 20}))
-        self.fields['cancelCommand'] = forms.CharField(label='Cancel command', 
+        self.fields['cancelCommand'] = forms.CharField(label='Cancel command',
                                                        required=True,
                                                        error_messages={'required': 'Please, insert cancel command'},
                                                        widget=forms.TextInput(attrs={'class' : 'generalInput', 'size' : 20}))   
@@ -104,7 +128,7 @@ class HostForm(forms.Form):
                                                                                  required=True,
                                                                                  error_messages={'required': 'Please, enter the maximum hours number'},
                                                                                  widget=forms.TextInput(attrs={'class' : 'generalInput', 'size' : 20}))                
-        self.fields['queueConfigId_{index}'.format(index=index)] = forms.CharField(widget=forms.HiddenInput(), required = False)
+        self.fields['queueConfigId_{index}'.format(index=index)] = forms.CharField(widget=forms.HiddenInput(), required=False)
     
     def getFormHost(self):
         if self.host is None:
@@ -214,12 +238,12 @@ class HostForm(forms.Form):
         if 'queueSystemConfigCount' in self.fields and self.fields['queueSystemConfigCount'].initial != '':
             queueSystemConfigCount = int(self.fields['queueSystemConfigCount'].initial)
             if queueSystemConfigCount > 0:
-                list.append(BoundField(self,self.fields['name'], 'name'))
-                list.append(BoundField(self,self.fields['mandatory'], 'mandatory'))
-                list.append(BoundField(self,self.fields['submitTemplate'], 'submitTemplate'))
-                list.append(BoundField(self,self.fields['submitCommand'], 'submitCommand'))
-                list.append(BoundField(self,self.fields['checkCommand'], 'checkCommand'))
-                list.append(BoundField(self,self.fields['cancelCommand'], 'cancelCommand'))
+                list.append(BoundField(self, self.fields['name'], 'name'))
+                list.append(BoundField(self, self.fields['mandatory'], 'mandatory'))
+                list.append(BoundField(self, self.fields['submitTemplate'], 'submitTemplate'))
+                list.append(BoundField(self, self.fields['submitCommand'], 'submitCommand'))
+                list.append(BoundField(self, self.fields['checkCommand'], 'checkCommand'))
+                list.append(BoundField(self, self.fields['cancelCommand'], 'cancelCommand'))
         return list
     
     def getQueueConfigFields(self):
@@ -227,13 +251,13 @@ class HostForm(forms.Form):
         if 'queueConfigCount' in self.fields and self.fields['queueConfigCount'].initial != '':
             queueConfigCount = int(self.fields['queueConfigCount'].initial)
             if queueConfigCount > 0:
-                for index in range(1, queueConfigCount+1):
+                for index in range(1, queueConfigCount + 1):
                     list = []
-                    list.append(BoundField(self,self.fields['name_{index}'.format(index=index)], 'name_{index}'.format(index=index)))
-                    list.append(BoundField(self,self.fields['maxCores_{index}'.format(index=index)], 'maxCores_{index}'.format(index=index)))
-                    list.append(BoundField(self,self.fields['allowMPI_{index}'.format(index=index)], 'allowMPI_{index}'.format(index=index)))
-                    list.append(BoundField(self,self.fields['allowThreads_{index}'.format(index=index)], 'allowThreads_{index}'.format(index=index)))
-                    list.append(BoundField(self,self.fields['maxHours_{index}'.format(index=index)], 'maxHours_{index}'.format(index=index)))
+                    list.append(BoundField(self, self.fields['name_{index}'.format(index=index)], 'name_{index}'.format(index=index)))
+                    list.append(BoundField(self, self.fields['maxCores_{index}'.format(index=index)], 'maxCores_{index}'.format(index=index)))
+                    list.append(BoundField(self, self.fields['allowMPI_{index}'.format(index=index)], 'allowMPI_{index}'.format(index=index)))
+                    list.append(BoundField(self, self.fields['allowThreads_{index}'.format(index=index)], 'allowThreads_{index}'.format(index=index)))
+                    list.append(BoundField(self, self.fields['maxHours_{index}'.format(index=index)], 'maxHours_{index}'.format(index=index)))
                     resultList.append(list)
         return resultList
     
@@ -246,12 +270,15 @@ class HostForm(forms.Form):
             if field is not None:
                 indexes.append(index)
                 cont += 1
-            index +=1
+            index += 1
         return indexes
         
         
 ######################### Initialize Showj Form (Button toolbar) #####################        
 class ShowjForm(forms.Form):
+    #Init message properties file
+    messagesForm = Message()
+    
     # Init graphical components
     zoom = forms.CharField(required=True,
                             widget=forms.TextInput(attrs={'class' : 'menuInputNumber'}))
@@ -263,24 +290,27 @@ class ShowjForm(forms.Form):
                               widget=forms.TextInput(attrs={'class' : 'menuInputNumber'}))
     
     
-    cols = forms.IntegerField(label='Cols',
+    cols = forms.IntegerField(label=messagesForm.LABEL_COLS,
                               required=False,
                               max_value=100,
                               min_value=1,
                               localize=False,
                               widget=forms.TextInput(attrs={'class' : 'menuInputNumber'}))
 
-    rows = forms.IntegerField(label='Rows',
+    rows = forms.IntegerField(label=messagesForm.LABEL_ROWS,
                               required=False,
                               max_value=100,
                               min_value=1,
                               localize=False,
                               widget=forms.TextInput(attrs={'class' : 'menuInputNumber'}))
     
-    resliceComboBox = forms.ChoiceField(label='Reslice',
+    resliceComboBox = forms.ChoiceField(label=messagesForm.LABEL_RESLICE,
                                 required=False,
-                                choices = ((xmipp.VIEW_Z_NEG,'Z Negative (Front)'),(xmipp.VIEW_Y_NEG,'Y Negative (Top)'),(xmipp.VIEW_X_NEG,'X Negative (Left)'),
-                                           (xmipp.VIEW_Y_POS,'Y Positive (Bottom)'),(xmipp.VIEW_X_POS,'X Positive (Right)'))
+                                choices=((xmipp.VIEW_Z_NEG, messagesForm.RESLICE_Z_NEGATIVE),
+                                           (xmipp.VIEW_Y_NEG, messagesForm.RESLICE_Y_NEGATIVE),
+                                           (xmipp.VIEW_X_NEG, messagesForm.RESLICE_X_NEGATIVE),
+                                           (xmipp.VIEW_Y_POS, messagesForm.RESLICE_Y_POSITIVE),
+                                           (xmipp.VIEW_X_POS, messagesForm.RESLICE_X_POSITIVE))
                                 )
 
     # Init hidden fields
@@ -295,56 +325,55 @@ class ShowjForm(forms.Form):
     imageMaxHeight = forms.CharField(widget=forms.HiddenInput())
     imageMinHeight = forms.CharField(widget=forms.HiddenInput())
     
-    mirrorY = forms.BooleanField(label='Invert Y Axis', required=False)
-    
-    
+    mirrorY = forms.BooleanField(label=messagesForm.LABEL_MIRRORY, required=False)
 #    applyTransformation = forms.BooleanField(label='Apply Transform', required=False)
     
 #    CHOICES = (('transformMatrix', 'Apply Transform Matrix',), ('onlyShifts', 'Only Shifts',), ('wrap', 'Wrap',))
 #    transformationChoice = forms.ChoiceField(widget=forms.RadioSelect, choices=(('transformMatrix', 'Apply Transform Matrix',), ('onlyShifts', 'Only Shifts',), ('wrap', 'Wrap',))
 #                                             )
-    
-    
-    applyTransformMatrix = forms.BooleanField(label='Apply Transform Matrix', required=False)
-    onlyShifts = forms.BooleanField(label='Only Shifts', required=False)
-    wrap = forms.BooleanField(label='Wrap', required=False)
+    applyTransformMatrix = forms.BooleanField(label=messagesForm.LABEL_APPLY_TRANSFORM, required=False)
+    onlyShifts = forms.BooleanField(label=messagesForm.LABEL_ONLY_SHIFTS, required=False)
+    wrap = forms.BooleanField(label=messagesForm.LABEL_WRAP, required=False)
 
     
     def __init__(self, dataset, tableLayoutConfiguration=None, *args, **kwargs):
+        #Init message properties file
+        messagesForm = Message()
+        
         super(ShowjForm, self).__init__(*args, **kwargs)
         
-        self.fields['blockComboBox'] = forms.ChoiceField(label='Select Block',
+        self.fields['blockComboBox'] = forms.ChoiceField(label=messagesForm.LABEL_BLOCK_SELECTION,
                                                          required=False,
-                                                         choices = tuple(zip(dataset.listTables(), dataset.listTables())))
+                                                         choices=tuple(zip(dataset.listTables(), dataset.listTables())))
         
         labelsToRenderComboBoxValues = tableLayoutConfiguration.getLabelsToRenderComboBoxValues()
         if len(labelsToRenderComboBoxValues) > 0:
-            self.fields['labelsToRenderComboBox'] = forms.ChoiceField(label='Select Label',
+            self.fields['labelsToRenderComboBox'] = forms.ChoiceField(label=messagesForm.LABEL_LABEL_SELECTION,
                                                             required=False,
-                                                            choices = labelsToRenderComboBoxValues)
+                                                            choices=labelsToRenderComboBoxValues)
             if self.data['mode'] != 'gallery':
-                self.fields['labelsToRenderComboBox'].widget=forms.HiddenInput()
+                self.fields['labelsToRenderComboBox'].widget = forms.HiddenInput()
         else:
             self.fields['zoom'].widget.attrs['readonly'] = True
             if self.data['mode'] == 'gallery':
                 self.fields['goto'].widget.attrs['readonly'] = True
             
-        if dataset.getNumberSlices()>1:    
-            volumesToRenderComboBoxValues = tuple(zip(dataset.getTable().getColumnValues(self.data['labelsToRenderComboBox']),dataset.getTable().getColumnValues(self.data['labelsToRenderComboBox'])))
-            self.fields['volumesToRenderComboBox'] = forms.ChoiceField(label='Select Volume',
+        if dataset.getNumberSlices() > 1:    
+            volumesToRenderComboBoxValues = tuple(zip(dataset.getTable().getColumnValues(self.data['labelsToRenderComboBox']), dataset.getTable().getColumnValues(self.data['labelsToRenderComboBox'])))
+            self.fields['volumesToRenderComboBox'] = forms.ChoiceField(label=messagesForm.LABEL_VOLUME_SELECTION,
                                                             required=False,
-                                                            choices = volumesToRenderComboBoxValues)
+                                                            choices=volumesToRenderComboBoxValues)
             if self.data['mode'] == 'table':
-                self.fields['volumesToRenderComboBox'].widget=forms.HiddenInput()
+                self.fields['volumesToRenderComboBox'].widget = forms.HiddenInput()
             if self.data['mode'] != 'gallery':                
-                self.fields['resliceComboBox'].widget=forms.HiddenInput()
+                self.fields['resliceComboBox'].widget = forms.HiddenInput()
         else:
-            self.fields['resliceComboBox'].widget=forms.HiddenInput()
+            self.fields['resliceComboBox'].widget = forms.HiddenInput()
                
         
         if self.data['mode'] != 'gallery': 
-            self.fields['cols'].widget=forms.HiddenInput()
-            self.fields['rows'].widget=forms.HiddenInput()
+            self.fields['cols'].widget = forms.HiddenInput()
+            self.fields['rows'].widget = forms.HiddenInput()
         
         if self.data['colRowMode'] == 'Off':
             self.fields['cols'].widget.attrs['readonly'] = True
@@ -357,12 +386,12 @@ class ShowjForm(forms.Form):
 
                                   
 class VolVisualizationForm(forms.Form):   
-    volPath = forms.CharField(label='Volume path', 
+    volPath = forms.CharField(label='Volume path',
                             required=True,
                             error_messages={'required': 'Please, enter a volume path'})
-    volumeTypes = ((0, "Byte"),(1, "Integer"),(2, "Float"))
+    volumeTypes = ((0, "Byte"), (1, "Integer"), (2, "Float"))
     volType = forms.ChoiceField(label='Volume data type',
                              required=True,
-                             choices = volumeTypes)
+                             choices=volumeTypes)
     threshold = forms.DecimalField(label='Threshold', required=True,
                                 widget=forms.TextInput(attrs={'size' : 10})) 
