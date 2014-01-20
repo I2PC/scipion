@@ -30,12 +30,13 @@ import xmipp.viewer.particlepicker.training.gui.SingleParticlePickerJFrame;
 public class SingleParticlePicker extends ParticlePicker
 {
 
+
+
 	protected List<SingleParticlePickerMicrograph> micrographs;
 	private SingleParticlePickerMicrograph micrograph;
 	public static final int defAutoPickPercent = 50;
 	private int autopickpercent = defAutoPickPercent;
 
-	public static final int mintraining = 15;
 
 	private int threads = 1;
 	private boolean fastmode = true;
@@ -453,8 +454,8 @@ public class SingleParticlePicker extends ParticlePicker
 
 	public void setMode(Mode mode)
 	{
-		if (mode == Mode.Supervised && getManualParticlesNumber() < mintraining)
-			throw new IllegalArgumentException(String.format("You should have at least %s particles to go to %s mode", mintraining, Mode.Supervised));
+		if (mode == Mode.Supervised && getManualParticlesNumber() < classifier.getParticlesThreshold())
+			throw new IllegalArgumentException(String.format("You should have at least %s particles to go to %s mode", classifier.getParticlesThreshold(), Mode.Supervised));
 		this.mode = mode;
 		if (mode == Mode.Manual)
 			convertAutomaticToManual();
@@ -577,11 +578,7 @@ public class SingleParticlePicker extends ParticlePicker
 
 	public void loadAutomaticParticles(SingleParticlePickerMicrograph m, String file)
 	{
-		if (new File(file).exists() && MetaData.containsBlock(file, particlesAutoBlock))// todo:
-																						// check the
-																						// auto
-																						// block
-																						// exists
+		if (new File(file).exists() && MetaData.containsBlock(file, particlesAutoBlock))// todo:																						// exists
 		{
 			MetaData md = new MetaData(getParticlesAutoBlock(file));
 			loadAutomaticParticles(m, md);
@@ -1098,7 +1095,6 @@ public class SingleParticlePicker extends ParticlePicker
 																																					// files
 				micrograph.setAutopickpercent(autopickpercent);
 				classifier.autopick(micrograph.getFile(), outputmd, micrograph.getAutopickpercent());
-
 				addParticles();
 
 				XmippWindowUtil.releaseGUI(frame.getRootPane());
@@ -1281,5 +1277,9 @@ public class SingleParticlePicker extends ParticlePicker
 		addedmd.destroy();
 		automd.destroy();
 	}
+        
+    public int getParticlesThreshold() {
+        return classifier.getParticlesThreshold();
+    }
 
 }

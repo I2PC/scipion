@@ -28,6 +28,8 @@ public class PickingClassifier
 	public synchronized native void train(MetaData micrographs, int x, int y, int width, int height);
 	
 	public synchronized native void setSize(int psize);
+        
+        public native int getParticlesThreshold();
 	
 	
 	
