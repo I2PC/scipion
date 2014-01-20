@@ -23,11 +23,15 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
+
 """
 This modules implements the automatic
 creation of protocol form GUI from its
 params definition.
 """
+
+from pyworkflow.mapper.mapper import Mapper
+from pyworkflow.mapper import mapper
 
 import Tkinter as tk
 import ttk
@@ -73,8 +77,14 @@ class PointerVar():
     def set(self, value):
         self.value = value
         v = ''
-        if value:
+
+        label = value.getObjLabel()
+
+        if len(label) > 0:
+            v = label
+        else:
             v = '%s.%s' % (value.getName(), value.strId())
+            
         self.tkVar.set(v)   
             
     def get(self):
@@ -639,7 +649,9 @@ class FormWindow(Window):
         entry = self._createBoundEntry(runFrame, 'runName', width=15, 
                                        func=self.setProtocolLabel, value=self.protocol.getObjLabel())
         entry.grid(row=0, column=1, padx=(0, 5), pady=5, sticky='nw')
-        btnComment = Button(runFrame, Message.TITLE_COMMENT, Icon.ACTION_EDIT, bg='white', command=self._editComment)
+        # Run Name not editable
+        entry.configure(state='readonly')
+        btnComment = Button(runFrame, Message.TITLE_COMMENT, Icon.ACTION_EDIT, bg='white', command=self._editObjParams)
         btnComment.grid(row=0, column=2, padx=(0, 5), pady=5, sticky='nw')
         # Run mode
         self.protocol.getDefinitionParam('')
@@ -681,13 +693,20 @@ class FormWindow(Window):
         
         return commonFrame
     
-    def _editComment(self, e=None):
-        """ Show a Text area to edit the protocol comment. """
-        d = TextDialog(self.root, Message.TITLE_COMMENT, self.protocol.getObjComment(),
-                       textLabel=Message.LABEL_COMMENT)
-        if d.resultYes():
-            self.protocol.setObjComment(d.value)
+    def _editObjParams(self, e=None):
+        """ Show a Text area to edit the protocol label and comment. """
         
+        self.mapper = self.protocol.mapper
+        
+        d = TextDialog(self.root, "Edit", self.protocol, self.mapper)
+        
+        if d.resultYes():
+            label = d.valueLabel
+            self.runNameVar.set(label)
+            self.protocol.setObjLabel(label)
+            self.protocol.setObjComment(d.valueComment)
+
+            
     def resize(self, frame):
         self.root.update_idletasks()
         MaxHeight = 600
@@ -854,7 +873,16 @@ class FormWindow(Window):
         text.window_create(tk.INSERT, window=parent)
         
         return parent
-  
+
+def editObject(self, obj):
+    """ Show a Text area to edit the protocol label and comment. """    
+    root = tk.Frame()
+    
+    print obj.getClassName()
+    
+    TextDialog(root, "Edit", obj, self.mapper)
+
+
 if __name__ == '__main__':
     # Just for testing
     from pyworkflow.em import ProtImportMicrographs

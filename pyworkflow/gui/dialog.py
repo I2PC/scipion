@@ -34,6 +34,7 @@ import gui
 from widgets import Button
 from tree import BoundTree, TreeProvider
 from text import Text, TaggedText
+from pyworkflow.utils.messages_properties import Message
 
 
 # Possible result values for a Dialog
@@ -298,28 +299,56 @@ class EntryDialog(Dialog):
     
 class TextDialog(Dialog):
     """Dialog to edit some text"""
-    def __init__(self, parent, title, initValue='', 
-                 textLabel='Comment', textWidth=50, textHeight=15):
-        self.textLabel = textLabel
-        self.textWidth = textWidth
-        self.textHeight = textHeight
-        self.value = initValue
+    def __init__(self, parent, title, obj, mapper):
+        
+        self.obj = obj
+        self.mapper = mapper
+        
+        self.textLabel = Message.TITLE_LABEL
+        self.textWidth = 5
+        self.textHeight = 2
+        self.valueText= self.obj.getObjLabel()
+        
+        self.commentLabel = Message.TITLE_COMMENT
+        self.commentWidth = 50
+        self.commentHeight = 15
+        self.valueComment = self.obj.getObjComment()
+        
         Dialog.__init__(self, parent, title)
         
     def body(self, bodyFrame):
         bodyFrame.config(bg='white')
         frame = tk.Frame(bodyFrame, bg='white')
         frame.grid(row=0, column=0, padx=20, pady=20)
-        label = tk.Label(bodyFrame, text=self.textLabel, bg='white', bd=0)
-        label.grid(row=0, column=0, sticky='nw', padx=(15, 10), pady=15)
-        self.text = Text(bodyFrame, height=self.textHeight, width=self.textWidth)
-        self.text.addText(self.value)
-        self.text.setReadOnly(False)
-        self.text.grid(row=1, column=0, sticky='news', padx=5, pady=5)
-        self.initial_focus = self.text
+        
+        # Label
+        label_text = tk.Label(bodyFrame, text=self.textLabel, bg='white', bd=0)
+        label_text.grid(row=0, column=0, sticky='nw', padx=(15, 10), pady=15)
+        # Label box
+        var = tk.StringVar()
+        var.set(self.valueText)
+        self.textLabel = tk.Entry(bodyFrame, width=self.textWidth, textvariable=var)
+        self.textLabel.grid(row=1, column=0, sticky='news', padx=5, pady=5)
+        
+        # Comment
+        label_comment = tk.Label(bodyFrame, text=self.commentLabel, bg='white', bd=0)
+        label_comment.grid(row=2, column=0, sticky='nw', padx=(15, 10), pady=15)
+        # Comment box
+        self.textComment = Text(bodyFrame, height=self.commentHeight, 
+                         width=self.commentWidth)
+        self.textComment.addText(self.valueComment)
+        self.textComment.setReadOnly(False)
+        self.textComment.grid(row=3, column=0, sticky='news', padx=5, pady=5)
+        self.initial_focus = self.textComment
         
     def apply(self):
-        self.value = self.text.getText()
+        self.valueLabel = self.textLabel.get()
+        self.valueComment = self.textComment.getText()
+        
+        self.obj.setObjLabel(self.valueLabel)
+        self.obj.setObjComment(self.valueComment)
+        self.mapper.store(self.obj)
+        
         
     def buttonbox(self, btnFrame):
         # Cancel the binding of <Return> key
