@@ -72,7 +72,7 @@ public class SingleParticlePickerJFrame extends ParticlePickerJFrame
 	private JCheckBox autopickchb;
 	private JPanel sppickerpn;
 	private JLabel autopicklb;
-	private Rectangle autopickout;
+	private Rectangle rectangle;
 	private JMenuItem templatesmi;
 	TemplatesJDialog templatesdialog;
 
@@ -379,7 +379,7 @@ public class SingleParticlePickerJFrame extends ParticlePickerJFrame
 					{
 
 						ppicker.setMode(Mode.Supervised);
-						ppicker.trainAndAutopick(SingleParticlePickerJFrame.this, autopickout);
+						ppicker.trainAndAutopick(SingleParticlePickerJFrame.this, rectangle);
 
 					}
 					else if (autopickchb.isSelected())
@@ -387,14 +387,14 @@ public class SingleParticlePickerJFrame extends ParticlePickerJFrame
 					else
 					{
 						boolean ismanual = XmippDialog
-								.showQuestion(SingleParticlePickerJFrame.this, "After this operation automatic particles will be converted to manual and classfier training lost. Are you sure you want to continue? ");
+								.showQuestion(SingleParticlePickerJFrame.this, "After this operation automatic particles will be converted to manual and classifier training lost. Are you sure you want to continue? ");
 						if (ismanual)
 						{
 							ppicker.setMode(Mode.Manual);
 							resetbt.setEnabled(true);
 							ppicker.saveAllData();
 							updateMicrographsModel();
-							autopickout = null;
+							rectangle = null;
 							if (autopickchb.isSelected())
 								autopickchb.setSelected(false);
 							canvas.refreshActive(null);
@@ -710,7 +710,7 @@ public class SingleParticlePickerJFrame extends ParticlePickerJFrame
 
 		if (particlesdialog != null)
 			loadParticles();
-		autopickout = null;
+		rectangle = null;
 
 	}
 
@@ -724,7 +724,7 @@ public class SingleParticlePickerJFrame extends ParticlePickerJFrame
 			boolean iscorrect = XmippDialog.showQuestion(this, "Would you like to correct training with added and deleted particles?");
 			if (iscorrect)
 			{
-				ppicker.correctAndAutopick(this, current, next, autopickout);
+				ppicker.correctAndAutopick(this, current, next, rectangle);
 				isautopick = false;
 			}
 
@@ -735,7 +735,7 @@ public class SingleParticlePickerJFrame extends ParticlePickerJFrame
 
 	protected void resetMicrograph()
 	{
-		autopickout = null;
+		rectangle = null;
 		ppicker.resetMicrograph(getMicrograph());
 		canvas.refreshActive(null);
 		updateMicrographsModel();
@@ -763,23 +763,23 @@ public class SingleParticlePickerJFrame extends ParticlePickerJFrame
 		if (!getMicrograph().hasManualParticles())
 		{
 			int index = micrographstb.getSelectedRow() - 1;
+			
 			while (index >= 0)
-			{
 				if (ppicker.getMicrographs().get(index).hasManualParticles())
 				{
-					micrographstb.getSelectionModel().setSelectionInterval(index, index);
+					rectangle = ppicker.getMicrographs().get(index).getParticlesRectangle(ppicker);
 					break;
 				}
-			}
 		}
-		autopickout = getMicrograph().getParticlesRectangle(ppicker);
+		else
+			rectangle = getMicrograph().getParticlesRectangle(ppicker);
 		canvas.repaint();
 		boolean train = XmippDialog
 				.showQuestion(this, "Classifier training for autopick requires that the previous micrographs and the particle's region detected to be fully picked. "
 						+ "Are you sure you want to continue?");
 		if (!train)
 		{
-			autopickout = null;
+			rectangle = null;
 			canvas.repaint();
 		}
 		return train;
@@ -787,7 +787,7 @@ public class SingleParticlePickerJFrame extends ParticlePickerJFrame
 
 	public Rectangle getParticlesRectangle()
 	{
-		return autopickout;
+		return rectangle;
 	}
 
 	public void close()
@@ -796,7 +796,7 @@ public class SingleParticlePickerJFrame extends ParticlePickerJFrame
 		{
 			boolean iscorrect = XmippDialog.showQuestion(this, "Would you like to correct training with added and deleted particles?");
 			if (iscorrect)
-				ppicker.correct(autopickout);
+				ppicker.correct(rectangle);
 		}
 		super.close();
 	}

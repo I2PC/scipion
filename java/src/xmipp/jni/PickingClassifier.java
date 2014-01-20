@@ -29,6 +29,8 @@ public class PickingClassifier
 	
 	public synchronized native void setSize(int psize);
 	
+	
+	
     // Should be called by GarbageCollector before destroying
     @Override
     @SuppressWarnings("FinalizeDeclaration")
