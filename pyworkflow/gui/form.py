@@ -41,6 +41,7 @@ from pyworkflow.protocol.params import *
 from pyworkflow.protocol import Protocol
 from dialog import showInfo, TextDialog, ListDialog
 from tree import TreeProvider
+from pyworkflow.utils.messages_properties import Message, Icon
 
 
 #-------------------- Variables wrappers around more complex objects -----------------------------
@@ -404,13 +405,13 @@ class ParamWidget():
                 entryWidth = 10 # Reduce the entry width for numbers entries
             entry = tk.Entry(content, width=entryWidth, textvariable=var)
             entry.grid(row=0, column=0, sticky='w')
-        
+        'fa-times.png'
         if self.visualizeCallback is not None:
-            self._addButton('Visualize', 'fa-eye.png', self._visualizeVar)    
+            self._addButton(Message.LABEL_BUTTON_VIS, Icon.ACTION_VISUZALIZE, self._visualizeVar)    
         if self.paramName in self.window.wizards:
-            self._addButton('Wizard', 'fa-magic.png', self._showWizard)
+            self._addButton(Message.LABEL_BUTTON_WIZ, Icon.ACTION_WIZ, self._showWizard)
         if param.help.hasValue():
-            self._addButton('Help', 'fa-question-circle.png', self._showHelpMessage)
+            self._addButton(Message.LABEL_BUTTON_HELP, Icon.ACTION_HELP, self._showHelpMessage)
         self.var = var
         
     def _visualizeVar(self, e=None):
@@ -574,16 +575,16 @@ class FormWindow(Window):
         
     def _createButtons(self, btnFrame):
         """ Create the bottom buttons: Close, Save and Execute. """
-        btnClose = tk.Button(btnFrame, text="Close", image=self.getImage('fa-times.png'), 
+        btnClose = tk.Button(btnFrame, text=Message.LABEL_BUTTON_CLOSE, image=self.getImage(Icon.ACTION_CLOSE), 
                              compound=tk.LEFT, font=self.font, command=self.close)
         btnClose.grid(row=0, column=0, padx=5, pady=5, sticky='se')
-        t = '  Visualize  '
+        t = Message.LABEL_BUTTON_VIS
         # Save button is not added in VISUALIZE or CHILD modes
         if not self.visualizeMode and not self.childMode:
-            btnSave = tk.Button(btnFrame, text="Save", image=self.getImage('fa-save.png'), 
+            btnSave = tk.Button(btnFrame, text=Message.LABEL_BUTTON_RETURN, image=self.getImage(Icon.ACTION_SAVE), 
                                 compound=tk.LEFT, font=self.font, command=self.save)
             btnSave.grid(row=0, column=1, padx=5, pady=5, sticky='se')
-            t = '   Execute   '
+            t = Message.LABEL_BUTTON_EXEC
         # Add Execute/Visualize button
         if not self.childMode:
             btnExecute = Button(btnFrame, text=t, fg='white', bg='#7D0709', font=self.font, 
@@ -632,21 +633,21 @@ class FormWindow(Window):
         ############# Create the run part ###############
         # Run name
         #runFrame = ttk.Labelframe(commonFrame, text='Run')
-        runSection = SectionFrame(commonFrame, label='Run')
+        runSection = SectionFrame(commonFrame, label=Message.TITLE_RUN)
         runFrame = runSection.contentFrame
-        self._createHeaderLabel(runFrame, "Run label").grid(row=0, column=0, padx=5, pady=5, sticky='ne')
+        self._createHeaderLabel(runFrame, Message.TITLE_RUN_NAME).grid(row=0, column=0, padx=5, pady=5, sticky='ne')
         entry = self._createBoundEntry(runFrame, 'runName', width=15, 
                                        func=self.setProtocolLabel, value=self.protocol.getObjLabel())
         entry.grid(row=0, column=1, padx=(0, 5), pady=5, sticky='nw')
-        btnComment = Button(runFrame, 'Edit comment', 'fa-pencil.png', bg='white', command=self._editComment)
+        btnComment = Button(runFrame, Message.TITLE_COMMENT, Icon.ACTION_EDIT, bg='white', command=self._editComment)
         btnComment.grid(row=0, column=2, padx=(0, 5), pady=5, sticky='nw')
         # Run mode
         self.protocol.getDefinitionParam('')
-        self._createHeaderLabel(runFrame, "Run mode").grid(row=1, column=0, sticky='ne', padx=5, pady=5)
+        self._createHeaderLabel(runFrame, Message.TITLE_RUN_MODE).grid(row=1, column=0, sticky='ne', padx=5, pady=5)
         modeCombo = self._createBoundCombo(runFrame, 'runMode', MODE_CHOICES, self._onRunModeChanged)   
         modeCombo.grid(row=1, column=1, sticky='nw', padx=(0, 5), pady=5)        
         # Expert level
-        self._createHeaderLabel(runFrame, "Expert level").grid(row=2, column=0, sticky='ne', padx=5, pady=5)
+        self._createHeaderLabel(runFrame, Message.TITLE_EXPERT).grid(row=2, column=0, sticky='ne', padx=5, pady=5)
         expCombo = self._createBoundCombo(runFrame, 'expertLevel', LEVEL_CHOICES, self._onExpertLevelChanged)   
         expCombo.grid(row=2, column=1, sticky='nw', padx=(0, 5), pady=5)
         
@@ -655,9 +656,9 @@ class FormWindow(Window):
         ############## Create the execution part ############
         # Host name
         #execFrame = ttk.Labelframe(commonFrame, text='Execution')
-        execSection = SectionFrame(commonFrame, label='Execution')
+        execSection = SectionFrame(commonFrame, label=Message.TITLE_EXEC)
         execFrame = execSection.contentFrame        
-        self._createHeaderLabel(execFrame, "Host").grid(row=0, column=0, padx=5, pady=5, sticky='ne')
+        self._createHeaderLabel(execFrame, Message.TITLE_EXEC_HOST).grid(row=0, column=0, padx=5, pady=5, sticky='ne')
         param = EnumParam(choices=self.hostList)
         self.hostVar = tk.StringVar()
         self._addVarBinding('hostName', self.hostVar)
@@ -666,12 +667,12 @@ class FormWindow(Window):
         expCombo['values'] = param.choices        
         expCombo.grid(row=0, column=1, columnspan=3, padx=(0, 5), pady=5, sticky='nw')
         # Threads and MPI
-        self._createHeaderLabel(execFrame, "Threads").grid(row=1, column=0, padx=5, pady=5, sticky='ne')
+        self._createHeaderLabel(execFrame, Message.TITLE_THREADS).grid(row=1, column=0, padx=5, pady=5, sticky='ne')
         self._createBoundEntry(execFrame, 'numberOfThreads').grid(row=1, column=1, padx=(0, 5))
-        self._createHeaderLabel(execFrame, "MPI").grid(row=1, column=2, padx=(0, 5))
+        self._createHeaderLabel(execFrame, Message.TITLE_MPI).grid(row=1, column=2, padx=(0, 5))
         self._createBoundEntry(execFrame, 'numberOfMpi').grid(row=1, column=3, padx=(0, 5), pady=5, sticky='nw')
         # Queue
-        self._createHeaderLabel(execFrame, "Launch to queue?").grid(row=2, column=0, padx=5, pady=5, sticky='ne', columnspan=3)
+        self._createHeaderLabel(execFrame, Message.TITLE_QUEUE).grid(row=2, column=0, padx=5, pady=5, sticky='ne', columnspan=3)
         var, frame = ParamWidget.createBoolWidget(execFrame, bg='white')
         self._addVarBinding('_useQueue', var)
         frame.grid(row=2, column=3, padx=5, pady=5, sticky='nw')
@@ -682,8 +683,8 @@ class FormWindow(Window):
     
     def _editComment(self, e=None):
         """ Show a Text area to edit the protocol comment. """
-        d = TextDialog(self.root, "Edit comment", self.protocol.getObjComment(),
-                       textLabel="Describe your run here:")
+        d = TextDialog(self.root, Message.TITLE_COMMENT, self.protocol.getObjComment(),
+                       textLabel=Message.LABEL_COMMENT)
         if d.resultYes():
             self.protocol.setObjComment(d.value)
         

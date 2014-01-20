@@ -86,7 +86,9 @@ class Message():
     TITLE_NAME_RUN=' Protocol Run: '
     TITLE_RUN='Run'
     TITLE_RUN_NAME='Run name'
+    TITLE_LABEL='Label'
     LABEL_COMMENT='Describe your run here...'
+    TITLE_COMMENT='Edit comment'
     TITLE_RUN_MODE='Run mode'
     LABEL_RUN_MODE_RESUME='resume'
     LABEL_RUN_MODE_RESTART='restart'
@@ -108,6 +110,9 @@ class Message():
     LABEL_BUTTON_SAVE='Save'
     LABEL_BUTTON_EXEC='Execute'
     LABEL_BUTTON_VIS='Visualize'
+    LABEL_BUTTON_WIZ='Wizard'
+    LABEL_BUTTON_HELP='Help'
+#    LABEL_BUTTON_VIS_ACTION='  Visualize  '
     LABEL_BUTTON_RETURN='Save'
     
     TITLE_LAUNCHED='Success'
@@ -192,6 +197,12 @@ class Icon():
     ACTION_STOP= 'fa-stop.png'
     ACTION_CONTINUE= 'fa-play-circle-o.png'
     ACTION_RESULTS= 'fa-eye.png'
+    ACTION_CLOSE='fa-times.png'
+    ACTION_SAVE='fa-save.png'
+    ACTION_VISUZALIZE='fa-eye.png'
+    ACTION_WIZ='fa-magic.png'
+    ACTION_HELP='fa-question-circle.png'
+    
     
     
     #Host template
