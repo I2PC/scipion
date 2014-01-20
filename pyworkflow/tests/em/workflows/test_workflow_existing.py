@@ -138,20 +138,28 @@ class TestXmippWorkflow(unittest.TestCase):
         setOfPart2.write()
         
         
-    def selectingFlatDb(self):
-        projName = "relion_ribo"
-        self.proj = Manager().loadProject(projName) # Now it will be loaded if exists
+    def creatingFlatDb(self):
+        n = 100000
+        imgSet = SetOfParticles(filename='particles_flat.sqlite', mapperClass=SqliteFlatMapper)
         
-        mapper = SqliteFlatMapper("partFlat.sqlite", globals())
-        sets = mapper.selectByClass('SetOfParticles')
-        print sets[0]
-        for img in sets[0]:
-            i = 1
+        for i in range(n):
+            img = self._createImage()
+            img.setIndex(i+1)
+            imgSet.append(img)
+            a = 1
             
-        print sets[0].getDictionary()
+        imgSet.write()
+        
+    def selectingFlatDb(self):
+        imgSet = SetOfParticles(mapperClass=SqliteFlatMapper)
+        imgSet._filename.set('particles_flat.sqlite')
+        
+        for img in imgSet:
+            #img.printAll()
+            #img = self._createImage()
+            a = img.getSamplingRate()
 
-            
-    def testObjDict(self):
+    def _createImage(self):
         img = Image()
         img.setLocation(1, 'image.spi')
         img.setSamplingRate(3.5)
@@ -160,16 +168,28 @@ class TestXmippWorkflow(unittest.TestCase):
         ctf.defocusAngle.set(90)
         img.setCTF(ctf)
         img.setAttributeValue('_ctfModel.defocusV', 1000)
-        
+        return img
+              
+    def testObjDict(self):
+        img = self._createImage()
         img.printObjDict()
         
         objDict = img.getObjDict()
         objDict['_ctfModel.defocusAngle'] = '10'
+        
+        def printTrace():
+            print "sampling changed to: ", img.getSamplingRate()
+            
+        img._samplingRate.trace(printTrace)
+        
         objDict['_samplingRate'] = '1.0'
         for k, v in objDict.iteritems():
             img.setAttributeValue(k, v)
         img.printAll()
         
+        img.setSamplingRate(5.0)
+        
+    
    
              
 class ConditionFilter():

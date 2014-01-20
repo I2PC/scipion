@@ -34,7 +34,7 @@ from pyworkflow.object import *
 from pyworkflow.mapper.sqlite import SqliteMapper
 from posixpath import join
 from pyworkflow.utils.utils import getUniqueItems
-from pyworkflow.utils.path import exists
+from pyworkflow.utils.path import cleanPath
 import xmipp
 
 
@@ -67,30 +67,10 @@ class Acquisition(EMObject):
         self.amplitudeContrast.set(other.amplitudeContrast.get())
     
 
-# TODO: Move this class and Set to a separated base module
-class Item(EMObject):
-    """ This class should be subclasses to be used as elements of Set.
-    """
-    def __init__(self, **args):
-        EMObject.__init__(self, **args)
-        self._id =  Integer()
-        
-    #TODO: replace this id with objId
-    def getId(self):
-        return self._id.get()
-        
-    def setId(self, imgId):
-        """ This id identifies the element inside a set """
-        self._id.set(imgId)
-        
-    def hasId(self):
-        return self._id.hasValue()
-        
-
-class CTFModel(Item):
+class CTFModel(EMObject):
     """ Represents a generic CTF model. """
     def __init__(self, **args):
-        Item.__init__(self, **args)
+        EMObject.__init__(self, **args)
         self.defocusU = Float()
         self.defocusV = Float()
         self.defocusAngle = Float()
@@ -111,10 +91,10 @@ class CTFModel(Item):
                             'defocusAngle', 'psdFile')
 
 
-class Image(Item):
+class Image(EMObject):
     """Represents an EM Image object"""
     def __init__(self, **args):
-        Item.__init__(self, **args)
+        EMObject.__init__(self, **args)
         #TODO: replace this id with objId
         # Image location is composed by an index and a filename
         self._index = Integer(0)
@@ -219,33 +199,42 @@ class Set(EMObject):
     It will use an extra sqlite file to store the elements.
     All items will have an unique id that identifies each element in the set.
     """
-    def __init__(self, **args):
+    def __init__(self, filename=None, mapperClass=None, **args):
         # Use the object value to store the filename
         EMObject.__init__(self, **args)
-        self._filename = String() # sqlite filename
         self._mapper = None
         self._idCount = 0
         self._size = Integer(0) # cached value of the number of images  
-        self._idMap = {}#FIXME, remove this after id is the one in mapper
+        #self._idMap = {}#FIXME, remove this after id is the one in mapper
+        self.setMapperClass(mapperClass)
+        self._filename = String() # sqlite filename
+        self._filename.trace(self.load) # Load the mapper whenever the filename is changed
+        # If filename is passed in the constructor, it means that
+        # we want to create a new object, so we need to delete it if
+        # the file exists
+        if filename:
+            cleanPath(filename)
+            self._filename.set(filename) # This will cause the creation of the mapper
         
-    def __getitem__(self, imgId):
-        """ Get the image with the given id. """
-        self.loadIfEmpty() 
             
-        return self._idMap.get(imgId, None)
+        
+    def setMapperClass(self, MapperClass):
+        """ Set the mapper to be used for storage. """
+        Object.__setattr__(self, '_MapperClass', MapperClass)
+        
+    def __getitem__(self, itemId):
+        """ Get the image with the given id. """
+        return self._mapper.selectById(itemId)
 
     def __iterItems(self):
         return self._mapper.selectAll(iterate=True)
     
     def getFirstItem(self):
         """ Return the first item in the Set. """
-        self.loadIfEmpty()
         return self._mapper.selectFirst()
     
     def __iter__(self):
         """ Iterate over the set of images. """
-        self.loadIfEmpty()
-        
         return self.__iterItems()
        
     def getSize(self):
@@ -254,9 +243,6 @@ class Set(EMObject):
     
     def getFileName(self):
         return self._filename.get()
-    
-    def setFileName(self, filename):
-        self._filename.set(filename)
     
     def write(self):
         """This method will be used to persist in a file the
@@ -270,37 +256,37 @@ class Set(EMObject):
     def load(self):
         """ Load extra data from files. """
         if self.getFileName() is None:
-            raise Exception("Set filename before calling load()")
-        self._mapper = SqliteMapper(self.getFileName(), globals())
-        count = 0
-        self._idMap = {}#FIXME, remove this after id is the one in mapper 
+            raise Exception("Set.load:  _filename is None.")
+        self._mapper = self._MapperClass(self.getFileName(), globals())
+#        count = 0
+#        self._idMap = {}#FIXME, remove this after id is the one in mapper 
         
-        for item in self.__iterItems():
-            self._idMap[item.getId()] = item
-            count += 1
-        self._size.set(count)
-        
-    def loadIfEmpty(self):
-        """ Load data only if the main set is empty. """
-        if self._mapper is None:
-            self.load()
+#        for item in self.__iterItems():
+#            self._idMap[item.getObjId()] = item
+#            count += 1
+#        self._size.set(count)
+#        
+#    def loadIfEmpty(self):
+#        """ Load data only if the main set is empty. """
+#        if self._mapper is None:
+#            self.load()
             
     def append(self, item):
         """ Add a image to the set. """
-        if not item.hasId():
+        if not item.hasObjId():
             self._idCount += 1
-            item.setId(self._idCount)
-        self.loadIfEmpty()
+            item.setObjId(self._idCount)
+#        self.loadIfEmpty()
         self._mapper.insert(item)
         self._size.set(self._size.get() + 1)
-        self._idMap[item.getId()] = item
+#        self._idMap[item.getObjId()] = item
         
     def update(self, item):
         """ Update an existing item. """
         self._mapper.update(item)
                 
     def __str__(self):
-        self.loadIfEmpty()
+#        self.loadIfEmpty()
         return "%-20s (%d items)" % (self.getClassName(), self.getSize())
     
     def getDimensions(self):
@@ -482,38 +468,13 @@ class SetOfCTF(Set):
     """ Contains a set of CTF models estimated for a set of images."""
     def __init__(self, **args):
         Set.__init__(self, **args)    
-        self._idMap = {}#FIXME, remove this after id is the one in mapper  
-
-    def load(self):
-        """ Load data only if the main set is empty. """
-        Set.load(self)
-        self._idMap = {} #FIXME, remove this after id is the one in mapper
-        for ctfModel in self._mapper.selectByClass("CTFModel", iterate=True):
-            self._idMap[ctfModel.getId()] = ctfModel
-            
-    def __getitem__(self, ctfId):
-        """ Get the ctfModel with the given id. """
-        self.loadIfEmpty() 
-            
-        return self._idMap.get(ctfId, None)
-            
-    def __iter__(self):
-        """ Iterate over the set of ctfs. """
-        self.loadIfEmpty()
-        for ctfModel in self._mapper.selectByClass("CTFModel", iterate=True):
-            yield ctfModel  
-            
-    def append(self, ctfModel):
-        """ Add a ctfModel to the set. """
-        Set.append(self, ctfModel)
-        self._idMap[ctfModel.getId()] = ctfModel 
         
 
-class Coordinate(Item):
+class Coordinate(EMObject):
     """This class holds the (x,y) position and other information
     associated with a coordinate"""
     def __init__(self, **args):
-        Item.__init__(self, **args)
+        EMObject.__init__(self, **args)
         self._micrographPointer = Pointer(objDoStore=False)
         self._x = Integer()
         self._y = Integer()
@@ -551,12 +512,12 @@ class Coordinate(Item):
     def setMicrograph(self, micrograph):
         """ Set the micrograph to which this coordinate belongs. """
         self._micrographPointer.set(micrograph)
-        self._micId.set(micrograph.getId())
+        self._micId.set(micrograph.getObjId())
     
     def copyInfo(self, coord):
         """ Copy information from other coordinate. """
         self.setPosition(*coord.getPosition())
-        self.setId(coord.getId())
+        self.setId(coord.getObjId())
         self.setBoxSize(coord.getBoxSize())
         
     def getMicId(self):
@@ -603,7 +564,7 @@ class SetOfCoordinates(Set):
             if micrograph is None:
                 yield coord 
             else:
-                if coord.getMicId() == micrograph.getId():
+                if coord.getMicId() == micrograph.getObjId():
                     yield coord
     
     def getMicrographs(self):
@@ -705,12 +666,12 @@ class ImageClassAssignment(EMObject):
 #         return self.flip.get()       
      
     
-class Class2D(Item):
+class Class2D(EMObject):
     """ Represent a Class that group some elements 
     from a classification. 
     """
     def __init__(self, **args):
-        Item.__init__(self, **args)
+        EMObject.__init__(self, **args)
         self._average = None
         self._imageAssignments = List()
     

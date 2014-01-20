@@ -46,6 +46,12 @@ class Mapper():
             return self.dictClasses[className](**args)
         raise Exception('Mapper._buildObject: Unknown class: %s' % className)
     
+    def _getStrValue(self, value):
+        """ Return empty string if value is None or empty. """
+        if not value:
+            return ''
+        return value
+    
     def commit(self):
         """Commit changes made to the storage"""
         pass
