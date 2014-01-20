@@ -31,7 +31,7 @@ for EM data objects like: Image, SetOfImage and others
 from constants import *
 from convert import ImageHandler
 from pyworkflow.object import *
-from pyworkflow.mapper.sqlite import SqliteMapper
+from pyworkflow.mapper.sqlite import SqliteMapper, SqliteFlatMapper
 from posixpath import join
 from pyworkflow.utils.utils import getUniqueItems
 from pyworkflow.utils.path import cleanPath
@@ -199,7 +199,7 @@ class Set(EMObject):
     It will use an extra sqlite file to store the elements.
     All items will have an unique id that identifies each element in the set.
     """
-    def __init__(self, filename=None, mapperClass=None, **args):
+    def __init__(self, filename=None, mapperClass=SqliteFlatMapper, **args):
         # Use the object value to store the filename
         EMObject.__init__(self, **args)
         self._mapper = None
@@ -215,8 +215,6 @@ class Set(EMObject):
         if filename:
             cleanPath(filename)
             self._filename.set(filename) # This will cause the creation of the mapper
-        
-            
         
     def setMapperClass(self, MapperClass):
         """ Set the mapper to be used for storage. """

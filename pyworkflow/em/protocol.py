@@ -50,10 +50,8 @@ class EMProtocol(Protocol):
     def __createSet(self, SetClass, template, suffix):
         """ Create a set and set the filename using the suffix. 
         If the file exists, it will be delete. """
-        setObj = SetClass()
         setFn = self._getPath(template % suffix)
-        cleanPath(setFn)
-        setObj.setFileName(setFn)
+        setObj = SetClass(filename=setFn)
         return setObj
         
     def _createSetOfMicrographs(self, suffix=''):
@@ -101,14 +99,14 @@ class ProtImportImages(EMProtocol):
                       label='Amplitude Contrast',
                       help='It should be a positive number, typically between 0.05 and 0.3.')
         
-    def importImages(self, createSetFunction, pattern, checkStack, voltage, sphericalAberration, amplitudeContrast):
+    def importImages(self, pattern, checkStack, voltage, sphericalAberration, amplitudeContrast):
         """ Copy images matching the filename pattern
         Register other parameters.
         """
         from pyworkflow.em import findClass
         filePaths = glob(expandPattern(pattern))
         
-        imgSet = createSetFunction 
+        imgSet = self._createSet() 
         # Setting Acquisition properties
         imgSet._acquisition.voltage.set(voltage)
         imgSet._acquisition.sphericalAberration.set(sphericalAberration)
@@ -200,10 +198,9 @@ class ProtImportMicrographs(ProtImportImages):
         
         
     def _defineSteps(self):
-        self._insertFunctionStep('importImages', self._createSetOfMicrographs(), self.pattern.get(),
-                                self.checkStack.get(), self.voltage.get(), self.sphericalAberration.get(),
-                                self.ampContrast.get()) #, self.samplingRate.get(), 
-                                #self.scannedPixelSize.get(), self.magnification.get())
+        self._createSet = self._createSetOfMicrographs
+        self._insertFunctionStep('importImages', self.pattern.get(), self.checkStack.get(), 
+                                 self.voltage.get(), self.sphericalAberration.get(), self.ampContrast.get()) #, self.samplingRate.get(), 
                                 
     def _setOtherPars(self, micSet):
         micSet._acquisition.magnification.set(self.magnification.get())
@@ -225,7 +222,8 @@ class ProtImportParticles(ProtImportImages):
         
         
     def _defineSteps(self):
-        self._insertFunctionStep('importImages', self._createSetOfParticles(), self.pattern.get(),
+        self._createSet = self._createSetOfParticles
+        self._insertFunctionStep('importImages', self.pattern.get(),
                                 self.checkStack.get(), self.voltage.get(), self.sphericalAberration.get(),
                                 self.ampContrast.get())
         
