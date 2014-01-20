@@ -85,6 +85,7 @@ class Message():
     TITLE_NAME_RUN=' Protocol Run: '
     TITLE_RUN='Run'
     TITLE_RUN_NAME='Run name'
+    TITLE_LABEL='Label'
     LABEL_COMMENT='Describe your run here...'
     TITLE_COMMENT='Edit comment'
     TITLE_RUN_MODE='Run mode'
