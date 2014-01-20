@@ -42,7 +42,7 @@ def base(request, context):
                 'jquery': getResourceJs('jquery'),
                 'messi_js': getResourceJs('messi'),
                 'utils': getResourceJs('utils'),
-                'messages': messages
+                'messages_properties': messages
                }
     
     context.update(context_base)
