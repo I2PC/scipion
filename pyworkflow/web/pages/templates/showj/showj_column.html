@@ -113,7 +113,7 @@ $(document).ready(function() {
 			    }		
 			);
 	
-	$("#displayTableContainer").html("<a href='#' onclick='showTableConfig()'>Display Table Configuration</a>")
+	$("#displayTableContainer").html("<a href='#' onclick='showTableConfig()'>{{messages_properties.LABEL_DISPLAY_TABLE_CONFIG}}</a>")
 	
 	initializeMultipleSelectionTool()
 	initializeColumnHeader()
@@ -155,7 +155,10 @@ function generateDataForTable(){
 	<div id="tableConfigurationContainer">
 		<table id="firstTableConfiguration">
 			<tr>
-				<td>Label</td><td>Visible</td><td>Render</td><td>Edit</td>
+				<td>{{messages_properties.LABEL_LABEL}}</td>
+				<td>{{messages_properties.LABEL_VISIBLE}}</td>
+				<td>{{messages_properties.LABEL_RENDER}}</td>
+				<td>{{messages_properties.LABEL_EDIT}}</td>
 			</tr>
 			{% for column in tableDataset.getColumns %}
 				{% if tableDataset.getNumberOfColumns < 6 or forloop.counter0|divisibleby:2 %}
@@ -172,7 +175,10 @@ function generateDataForTable(){
 		{% if tableDataset.getNumberOfColumns > 5 %}
 		<table id="secondTableConfiguration">
 			<tr>
-				<td>Label</td><td>Visible</td><td>Render</td><td>Edit</td>
+				<td>{{messages_properties.LABEL_LABEL}}</td>
+				<td>{{messages_properties.LABEL_VISIBLE}}</td>
+				<td>{{messages_properties.LABEL_RENDER}}</td>
+				<td>{{messages_properties.LABEL_EDIT}}</td>
 			</tr>
 			{% for column in tableDataset.getColumns %}
 				 {% if forloop.counter0|divisibleby:2 == False %}
@@ -188,12 +194,8 @@ function generateDataForTable(){
 		{% endif %} 
 	</div>
 	<div id="tableConfigurationButtonBar">
-		<button id="acceptTableConfigurationButton" onclick="saveTableConfiguration()">
-			Ok
-		</button>
-		<button id="cancelTableConfigurationButton" onclick="$('#configurationContainer').hide()">
-			Cancel
-		</button>
+		<a href="javascript:saveTableConfiguration();" class="btn buttonGrey">{{messages_properties.LABEL_BUTTON_OK}}</a>
+		<a href="javascript:$('#configurationContainer').slideUp('slow');" class="btn buttonGrey">{{messages_properties.LABEL_BUTTON_CANCEL}}</a>
 	</div>
 </div>
 

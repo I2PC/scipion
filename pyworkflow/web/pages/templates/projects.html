@@ -44,7 +44,7 @@
 
 {% block menu %}
 <div id="asideMainContainer">
-<a href="javascript:createProjectForm('{{messages.TITLE_CREATE_PROJECT}}', '{{messages.TITLE_CREATE_PROJECT_NAME}}');" ><button class="priorityButton" type="button">{{messages.LABEL_CREATE_PROJECT}}</button></a>
+<a href="javascript:createProjectForm('{{messages_properties.TITLE_CREATE_PROJECT}}', '{{messages_properties.TITLE_CREATE_PROJECT_NAME}}');" ><button class="priorityButton" type="button">{{messages_properties.LABEL_CREATE_PROJECT}}</button></a>
 </div>
 {% endblock %}
 
@@ -59,12 +59,12 @@
 			</a>
 			</strong>
 			<br /> 
-			{{messages.LABEL_MODIFIED}}{{project.pTime}} 
+			{{messages_properties.LABEL_MODIFIED}}{{project.pTime}} 
 			<a href="javascript:deleteProjectForm('{{project.projName}}', 
-			'{{messages.TITLE_DELETE_PROJECT}}', 
-			'{{messages.MESSAGE_CREATE_PROJECT}}');" 
+			'{{messages_properties.TITLE_DELETE_PROJECT}}', 
+			'{{messages_properties.MESSAGE_CREATE_PROJECT}}');" 
 			class="projRemove">
-				{{messages.LABEL_DELETE_PROJECT}}
+				{{messages_properties.LABEL_DELETE_PROJECT}}
 			</a>
 		</li>
 	{% endfor %}

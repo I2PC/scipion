@@ -94,7 +94,10 @@ class Step(OrderedObject):
         self.status.set(STATUS_ABORTED)
 
     def getStatus(self):
-        return self.status.get()
+        status = self.status.get()
+        if status == None:
+            status= "new"
+        return status
     
     def setStatus(self, value):
         return self.status.set(value)
@@ -745,7 +748,6 @@ class Protocol(Step):
         runName = self.getObjLabel().strip()
         if not len(runName):
             runName = self.getDefaultRunName()
-            
         return runName
     
     def getDefaultRunName(self):
@@ -755,7 +757,8 @@ class Protocol(Step):
     def getClassLabel(cls):
         """ Return a more readable string representing the protocol class """
         label = getattr(cls, '_label', cls.__name__)
-        return "%s - %s" % (cls._package.__name__, label)
+        label = "%s - %s" % (cls._package.__name__, label)
+        return label
         
     def getSubmitDict(self):
         """ Return a dictionary with the necessary keys to
