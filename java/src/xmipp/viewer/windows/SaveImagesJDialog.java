@@ -90,6 +90,12 @@ public class SaveImagesJDialog extends SaveJDialog {
 		//textField = new JTextField("images_selection.xmd", 25);
 		//panel.add(textField, XmippWindowUtil.getConstraints(gbc, 0, 1, 2));
 	}// function initComponents
+	
+	@Override
+	protected void fillMdOptions(){
+		// Just to avoid adding some metadata options.
+		// this dialog will override the existing file
+	}
 
 	@Override
 	public void handleOk() {
