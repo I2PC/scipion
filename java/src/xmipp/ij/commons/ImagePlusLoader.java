@@ -68,6 +68,8 @@ public class ImagePlusLoader
 
 	public ImagePlusLoader(String fileName)
 	{
+                if(fileName == null)
+                    throw new IllegalArgumentException("File not found");
 		this.fileName = fileName;
 		allowsPoll = existsFile();
 		this.modified = new File(fileName).lastModified();
