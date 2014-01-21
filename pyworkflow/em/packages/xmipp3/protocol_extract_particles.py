@@ -176,7 +176,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         for mic in self.inputMics:
             micrographToExtract = mic.getFileName()
             micName = removeBaseExt(mic.getFileName())
-            micId = mic.getId()
+            micId = mic.getObjId()
                                             
             # If downsample type is 'other' perform a downsample
             if self.downsampleType == self.OTHER:
@@ -349,7 +349,6 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         
         # Create output SetOfParticles
         imgSet = self._createSetOfParticles()
-        imgSet.load()
         imgSet.copyInfo(self.inputMics)
         #imgSet.setHasCTF(self.fnCTF is not None)       
         imgSet.setHasCTF(self.ctfRelations.get() is not None)
@@ -360,12 +359,12 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         readSetOfParticles(fnImages, imgSet, imgSet.hasCTF())
         # For each particle retrieve micId from SetOFCoordinates and set it on the CTFModel
         for img in imgSet:
-            coord = self.inputCoords[img.getId()]
+            coord = self.inputCoords[img.getObjId()]
             ctfModel = img.getCTF()
             if ctfModel is not None:
-                ctfModel.setId(coord.getMicId())
+                ctfModel.setObjId(coord.getMicId())
                 img.setCTF(ctfModel)
-                imgSet.update(img)
+                #FIXME: imgSet.update(img)
         imgSet.write()
         
         self._defineOutputs(outputParticles=imgSet)

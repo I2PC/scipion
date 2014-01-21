@@ -102,7 +102,7 @@ def xmippToLocation(xmippFilename):
 #    index, filename = img.getLocation()
 #    fn = locationToXmipp(index, filename)
 #    if hasCtf:
-#        rootFn = "%06d_%s" % (img.getId(), replaceBaseExt(img.getFileName(), "ctfparam"))
+#        rootFn = "%06d_%s" % (img.getObjId(), replaceBaseExt(img.getFileName(), "ctfparam"))
 #        ctfFn = join(ctfDir, rootFn)
 #        writeCTFModel(img.getCTF(), ctfFn)
 #        imgRow.setValue(xmipp.MDL_CTF_MODEL, ctfFn)
@@ -249,7 +249,7 @@ def imageClassAssignmentToRow(imgCA, imgCARow, img, ctfDir, ref):
     imgCARow.setValue(xmipp.MDL_REF, ref)
     
     if img.hasCTF():
-        rootFn = "%06d_%s" % (img.getId(), replaceBaseExt(img.getFileName(), "ctfparam"))
+        rootFn = "%06d_%s" % (img.getObjId(), replaceBaseExt(img.getFileName(), "ctfparam"))
         ctfFn = join(ctfDir, rootFn)
         writeCTFModel(img.getCTF(), ctfFn)
         imgCARow.setValue(xmipp.MDL_CTF_MODEL, ctfFn)
@@ -453,11 +453,11 @@ def writeSetOfImages(imgSet, filename, imgToFunc, ctfDir, rowFunc):
         if img.hasCTF():
             ctfModel = img.getCTF()
             rootFn = replaceBaseExt(img.getFileName(), "ctfparam")
-            #rootFn = "%06d_%s" % (img.getId(), replaceBaseExt(img.getFileName(), "ctfparam"))
+            #rootFn = "%06d_%s" % (img.getObjId(), replaceBaseExt(img.getFileName(), "ctfparam"))
             ctfFn = join(ctfDir, rootFn)
             ctfModel.sphericalAberration = Float(imgSet.getAcquisition().sphericalAberration.get())
-            if ctfModel.getId() not in particlesCtfFn:
-                particlesCtfFn.append(ctfModel.getId())
+            if ctfModel.getObjId() not in particlesCtfFn:
+                particlesCtfFn.append(ctfModel.getObjId())
                 writeCTFModel(ctfModel, ctfFn)
         imgToFunc(img, imgRow, ctfFn)
         
@@ -521,7 +521,7 @@ def writeSetOfClasses2D(classes2DSet, filename, ctfDir=None, classesBlock='class
         classRow = XmippMdRow()
         class2DToRow(class2D, classRow)
         classRow.writeToMd(classMd, classMd.addObject())
-        ref = class2D.getId()
+        ref = class2D.getObjId()
         imagesFn = 'class%06d_images@%s' % (ref, filename)
         imagesMd = xmipp.MetaData()
         

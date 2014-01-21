@@ -143,8 +143,8 @@ def writeSetOfParticles(partSet, filename):
     for part in partSet:
         index, fn = part.getLocation()
         # Write the e2converter.py process from where to read the image
-        print "sending: ", part.getId(), index, fn
-        print >> proc.stdin, part.getId(), index, join(cwd, fn)
+        print "sending: ", part.getObjId(), index, fn
+        print >> proc.stdin, part.getObjId(), index, join(cwd, fn)
         proc.stdin.flush()
         response = proc.stdout.readline()
         print "response: ", response

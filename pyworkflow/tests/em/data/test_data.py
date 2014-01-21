@@ -60,11 +60,11 @@ class TestSetOfMicrographs(unittest.TestCase):
             self.assertEqual(fn, micFn, 
                              "micrograph NAME in the set is wrong, \n   expected: '%s'\n        got: '%s'" 
                              % (fn, micFn))
-            self.assertEqual(idCount, mic.getId(), 
+            self.assertEqual(idCount, mic.getObjId(), 
                              "micrograph ID in the set is wrong, \n   expected: '%s'\n        got: '%s'" 
-                             % (idCount, mic.getId()))
+                             % (idCount, mic.getObjId()))
             mic2 = micSet[idCount] # Test getitem
-            self.assertEqual(mic.getId(), mic2.getId(), "micrograph got from ID is wrong")
+            self.assertEqual(mic.getObjId(), mic2.getObjId(), "micrograph got from ID is wrong")
             idCount += 1            
         
     def testCreate(self):

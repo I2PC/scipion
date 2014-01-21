@@ -481,8 +481,7 @@ class SqliteFlatMapper(Mapper):
     """Specific Flat Mapper implementation using Sqlite database"""
     def __init__(self, dbName, dictClasses=None):
         Mapper.__init__(self, dictClasses)
-        self.__initObjDict()
-        self.__initUpdateDict()
+        self._objTemplate = None
         try:
             self.doCreateTables = not exists(dbName) #self.db.hasTablesCreated()
             self.db = SqliteFlatDb(dbName)
@@ -515,15 +514,11 @@ class SqliteFlatMapper(Mapper):
             
     def selectById(self, objId):
         """Build the object which id is objId"""
-        if objId in self.objDict:
-            obj = self.objDict[objId]
+        objRow = self.db.selectObjectById(objId)
+        if objRow is None:
+            obj = None
         else:
-            objRow = self.db.selectObjectById(objId)
-            if objRow is None:
-                obj = None
-            else:
-                obj = self._buildObject(objRow['classname'])
-                self.fillObject(obj, objRow)
+            obj = self.__objFromRow(objRow)
         return obj
 
 
@@ -578,7 +573,6 @@ class SqliteFlatMapper(Mapper):
         obj.setObjId(objRow['id'])
         obj.setObjLabel(self._getStrValue(objRow['label']))
         obj.setObjComment(self._getStrValue(objRow['comment']))
-        self.objDict[obj._objId] = obj
         
         for c, attrName in self._objColumns:
             obj.setAttributeValue(attrName, objRow[c])
@@ -602,25 +596,16 @@ class SqliteFlatMapper(Mapper):
             return [obj for obj in self.__iterObjectsFromRows(objRows, objectFilter)]
         else:
             return self.__iterObjectsFromRows(objRows, objectFilter)
-               
-    def __initObjDict(self):
-        """ Clear the objDict cache """        
-        self.objDict = {}
-        
-    def __initUpdateDict(self):
-        """ Clear the updateDict cache """        
-        self.updateDict = {}
-        # This is used to store pointers that pointed object are not stored yet
-        self.updatePendingPointers = [] 
          
     def selectBy(self, iterate=False, objectFilter=None, **args):
         """Select object meetings some criterias"""
-        self.__initObjDict()
         objRows = self.db.selectObjectsBy(**args)
         return self.__objectsFromRows(objRows, iterate, objectFilter)
     
     def selectAll(self, iterate=True, objectFilter=None):
-        self.__initObjDict()
+        if self._objTemplate is None:
+            self.__loadObjDict()
+            
         objRows = self.db.selectAll()
         return self.__objectsFromRows(objRows, iterate, objectFilter)    
     

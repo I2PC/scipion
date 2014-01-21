@@ -153,26 +153,21 @@ class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
                 
         return self.lastStepId
     
-    def createOutput(self, IOTable):
-        
+    def createOutput(self, IOTable):        
         inputMics = self.inputMicrographs.get()
-        micSet = self._createSetOfMicrographs()
-        micSet.copyInfo(inputMics)
+        outputMics = self._createSetOfMicrographs()
+        outputMics.copyInfo(inputMics)
         
         if self.doDownsample.get():
-            micSet.setDownsample(self.downFactor.get())
+            outputMics.setDownsample(self.downFactor.get())
 
         for mic in inputMics:
-            outMicFn = Micrograph()
-            outMicFn.setFileName(IOTable[mic.getFileName()])
-            # Updating micrograph name
-            outMicFn.setId(mic.getId())
-            micSet.append(outMicFn)
-            #mapsId[mic.getId()] = xmicFn.getId()
+            # Update micrograph name and append to the new Set
+            mic.setFileName(IOTable[mic.getFileName()])
+            outputMics.append(mic)
 
-        micSet.write()
-        self._defineOutputs(outputMicrographs=micSet)
-        self._defineDataSource(inputMics, micSet)
+        self._defineOutputs(outputMicrographs=outputMics)
+        self._defineDataSource(inputMics, outputMics)
         
 
     def _summary(self):

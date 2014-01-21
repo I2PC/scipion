@@ -130,7 +130,7 @@ class SpiderProtClassifyWard(ProtClassify, SpiderProtocol):
                     imgCA.setImageId(i) # FIXME: this is wrong if the id is different from index
                     cls.addImageClassAssignment(imgCA)
                 classes.append(cls)
-                avg.setId(cls.getId())
+                avg.setObjId(cls.getObjId())
                 averages.append(avg)
                 
         classes.setImages(self.inputParticles.get())

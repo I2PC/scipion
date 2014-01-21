@@ -256,25 +256,12 @@ class Set(EMObject):
         if self.getFileName() is None:
             raise Exception("Set.load:  _filename is None.")
         self._mapper = self._MapperClass(self.getFileName(), globals())
-#        count = 0
-#        self._idMap = {}#FIXME, remove this after id is the one in mapper 
-        
-#        for item in self.__iterItems():
-#            self._idMap[item.getObjId()] = item
-#            count += 1
-#        self._size.set(count)
-#        
-#    def loadIfEmpty(self):
-#        """ Load data only if the main set is empty. """
-#        if self._mapper is None:
-#            self.load()
             
     def append(self, item):
         """ Add a image to the set. """
         if not item.hasObjId():
             self._idCount += 1
             item.setObjId(self._idCount)
-#        self.loadIfEmpty()
         self._mapper.insert(item)
         self._size.set(self._size.get() + 1)
 #        self._idMap[item.getObjId()] = item
@@ -284,7 +271,6 @@ class Set(EMObject):
         self._mapper.update(item)
                 
     def __str__(self):
-#        self.loadIfEmpty()
         return "%-20s (%d items)" % (self.getClassName(), self.getSize())
     
     def getDimensions(self):
@@ -515,7 +501,7 @@ class Coordinate(EMObject):
     def copyInfo(self, coord):
         """ Copy information from other coordinate. """
         self.setPosition(*coord.getPosition())
-        self.setId(coord.getObjId())
+        self.setObjId(coord.getObjId())
         self.setBoxSize(coord.getBoxSize())
         
     def getMicId(self):
@@ -557,7 +543,6 @@ class SetOfCoordinates(Set):
         """ Iterate over the coordinates associated with a micrograph.
         If micrograph=None, the iteration is performed over the whole set of coordinates.
         """
-        self.loadIfEmpty()
         for coord in self:
             if micrograph is None:
                 yield coord 
