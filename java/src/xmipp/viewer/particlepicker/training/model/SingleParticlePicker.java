@@ -1091,9 +1091,7 @@ public class SingleParticlePicker extends ParticlePicker
 		{
 			try
 			{
-                                
 				classifier.train(trainmd, (int) rectangle.getX(), (int) rectangle.getY(), (int) rectangle.getWidth(), (int) rectangle.getHeight());// should remove training
-																																					// files
 				micrograph.setAutopickpercent(autopickpercent);
 				classifier.autopick(micrograph.getFile(), outputmd, micrograph.getAutopickpercent());
 				addParticles();
