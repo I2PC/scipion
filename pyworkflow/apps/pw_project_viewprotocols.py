@@ -49,7 +49,7 @@ from pyworkflow.utils.messages_properties import Message, Icon
 import pyworkflow.gui as gui
 from pyworkflow.gui import getImage
 from pyworkflow.gui.tree import Tree, ObjectTreeProvider, DbTreeProvider, ProjectRunsTreeProvider
-from pyworkflow.gui.form import FormWindow
+from pyworkflow.gui.form import FormWindow, editObject
 from pyworkflow.gui.dialog import askYesNo
 from pyworkflow.gui.text import TaggedText
 from pyworkflow.gui import Canvas
@@ -74,7 +74,8 @@ ACTION_RESULTS = Message.LABEL_ANALYZE
 RUNS_TREE = Icon.RUNS_TREE
 RUNS_LIST = Icon.RUNS_LIST
  
-ActionIcons = {ACTION_EDIT: Icon.ACTION_EDIT , 
+ActionIcons = {
+    ACTION_EDIT: Icon.ACTION_EDIT , 
     ACTION_COPY: Icon.ACTION_COPY ,
     ACTION_DELETE:  Icon.ACTION_DELETE,
     ACTION_REFRESH:  Icon.ACTION_REFRESH,
@@ -83,7 +84,7 @@ ActionIcons = {ACTION_EDIT: Icon.ACTION_EDIT ,
     ACTION_LIST:  Icon.ACTION_LIST,
     ACTION_STOP: Icon.ACTION_STOP,
     ACTION_CONTINUE: Icon.ACTION_CONTINUE,
-    ACTION_RESULTS: Icon.ACTION_RESULTS
+    ACTION_RESULTS: Icon.ACTION_RESULTS,
                }
 
 STATUS_COLORS = {
@@ -213,6 +214,10 @@ class RunIOTreeProvider(TreeProvider):
     def visualize(self, Viewer, obj):
         Viewer().visualize(obj)
         
+    def edit(self, obj):
+        """Open the Edit GUI Form given an instance"""
+        editObject(self, obj)
+        
     def getObjectPreview(self, obj):
         desc = "<name>: " + obj.getName()
         
@@ -224,9 +229,14 @@ class RunIOTreeProvider(TreeProvider):
         if isinstance(obj, Pointer):
             obj = obj.get()
         actions = []    
+        
+        # EDIT 
+        actions.append((Message.LABEL_EDIT, lambda : self.edit(obj)))
+        
         viewers = findViewers(obj.getClassName(), DESKTOP_TKINTER)
         for v in viewers:
             actions.append(('Open with %s' % v.__name__, lambda : self.visualize(v, obj)))
+            
             
         return actions
     

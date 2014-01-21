@@ -48,9 +48,7 @@ if (!PhiloGL.hasWebGL()) {
 	document.body.className = 'no-webgl';
 	document.getElementById('fallback').innerHTML = ''
 	+ '<div style="margin:10px;">'
-	+ 'Your web browser does not support or is not configured for WebGL.'
-	+ '  See <a href="http://get.webgl.org/">WebGL Support</a>'
-	+ ' for more information.'
+	+ {{messages_properties.ERROR_WEBGL}}
 	+ '</div>';
 }
 </script>

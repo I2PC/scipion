@@ -42,7 +42,7 @@ def base(request, context):
                 'jquery': getResourceJs('jquery'),
                 'messi_js': getResourceJs('messi'),
                 'utils': getResourceJs('utils'),
-                'messages': messages
+                'messages_properties': messages
                }
     
     context.update(context_base)
@@ -81,7 +81,8 @@ def base_flex(request, context):
                     'jsplumb': getResourceJs('jsplumb'),
                     'jquery_sizes': getResourceJs('jquery_sizes'),
                     'jlayout_border': getResourceJs('jlayout_border'),
-                    'jquery_layout': getResourceJs('jquery_layout')
+                    'jquery_layout': getResourceJs('jquery_layout'),
+                    'contentConfig': 'divided'
                     }
     
     context = base(request, context)

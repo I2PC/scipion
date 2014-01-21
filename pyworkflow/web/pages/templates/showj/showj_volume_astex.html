@@ -1,8 +1,5 @@
 {% extends 'showj/showj_base.html' %} 
 {% block head %}
-<!-- CSS -->
-<!-- <link rel="stylesheet" href="http://code.jquery.com/ui/1.10.3/themes/smoothness/jquery-ui.css" /> -->
-
 <!-- JS -->
 <script type="text/javascript" src="{{jquery_ui}}"></script>
 
@@ -89,7 +86,7 @@ function av_map_level(l){
 
  	<div>
 		<p>
-			<label for="amount">Threshold:</label>
+			<label for="amount">{{messages_properties.LABEL_THRESHOLD}}</label>
 			<input type="text" id="amount" style="border: 0; color: #f6931f; font-weight: bold;" />
 		</p>
 		<div id="slider"></div>

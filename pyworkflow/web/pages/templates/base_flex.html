@@ -29,25 +29,28 @@
 	<!-- <div id="mainContainer"> -->
 		<div data-layout='{"type": "border", "hgap": 1, "vgap": 1}' class="layout-outer">
 			{% include "header.html" %}
-
-			<section data-layout='{"type": "border", "hgap": 1, "vgap": 1}' class="center layout-inner">
-				<div class="north">
-			        {% block contentNorth %}{%endblock %}
-			    </div>
-			    <div class="center">
-			        {% block contentCenter %}{%endblock %}
-			    </div>
-			</section>
-			<aside class="west">
-				{% block sideLeft %} {%endblock %}
-			</aside>
-
-			<aside class="center">
-				{% block menu %} {%endblock %}
-			</aside>
-			<section class="south">
-				{% block content %}{%endblock %}
-			</section>
+	
+			{% if contentConfig == 'divided' %}
+				<section data-layout='{"type": "border", "hgap": 1, "vgap": 1}' class="center layout-inner">
+					<div class="north">
+				        {% block contentNorth %}{%endblock %}
+				    </div>
+				    <div class="center">
+				        {% block contentCenter %}{%endblock %}
+				    </div>
+				</section>
+				<aside class="west">
+					{% block sideLeft %} {%endblock %}
+				</aside>
+			{% elif contentConfig == 'full' %}
+				<aside class="center">
+					{% block menu %} {%endblock %}
+				</aside>
+				<section class="south">
+					{% block content %}{%endblock %}
+				</section>
+			{% endif %}
+				
 			
 		</div>
 	<!-- </div> -->
