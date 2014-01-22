@@ -99,14 +99,10 @@ def readSetOfCoordinates(workDir, micSet, coordSet):
     jsonFnbase = join(workDir, 'e2boxercache', 'base.json')
     jsonBoxDict = loadJson(jsonFnbase)
     size = int(jsonBoxDict["box_size"])
-    #dirName = ''.join(nameDir[1:2])
     jsonFninfo = join(workDir, 'info/')
     
     
     for mic in micSet:
-        #micFnroot = dirName + '-' +removeBaseExt(mic.getFileName()) + '_info.json'
-        #micPosRelFn = join("info", micFnroot)
-        #micPosFn = join(workDir, micPosRelFn)
         micPosFn = ''.join(glob.glob(jsonFninfo + '*' + removeBaseExt(mic.getFileName()) + '_info.json'))
         if exists(micPosFn):
             jsonPosDict = loadJson(micPosFn)

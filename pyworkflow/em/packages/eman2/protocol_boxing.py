@@ -63,8 +63,6 @@ class EmanProtBoxing(ProtParticlePicking):
         self.inputMics = self.inputMicrographs.get()
         micList = [os.path.relpath(mic.getFileName(), self.workingDir.get()) for mic in self.inputMics]
 
-        #dirName = str(micList[0:1])
-        #splitDir = [s.strip() for s in dirName.split("/")]
         self._params = {'inputMics': ' '.join(micList), 
                         'boxSize': self.boxSize.get()}      
         # Launch Boxing GUI
