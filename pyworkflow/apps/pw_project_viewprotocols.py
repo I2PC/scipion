@@ -103,6 +103,7 @@ def populateTree(self, tree, treeItems, prefix, obj, subclassedDict, level=0):
     if text:
         value = obj.value.get(text)
         key = '%s.%s' % (prefix, value)
+        
         img = obj.icon.get('')
         tag = obj.tag.get('')
             
@@ -216,7 +217,12 @@ class RunIOTreeProvider(TreeProvider):
         
     def edit(self, obj):
         """Open the Edit GUI Form given an instance"""
-        editObject(self, obj)
+        root = tk.Frame()
+        d = editObject(self, "Object Editor", root, obj, self.mapper)
+        
+        if d.resultYes():
+            pass
+#            print "Object edited"
         
     def getObjectPreview(self, obj):
         desc = "<name>: " + obj.getName()
@@ -230,13 +236,13 @@ class RunIOTreeProvider(TreeProvider):
             obj = obj.get()
         actions = []    
         
-        # EDIT 
-        actions.append((Message.LABEL_EDIT, lambda : self.edit(obj)))
         
         viewers = findViewers(obj.getClassName(), DESKTOP_TKINTER)
         for v in viewers:
             actions.append(('Open with %s' % v.__name__, lambda : self.visualize(v, obj)))
             
+        # EDIT 
+        actions.append((Message.LABEL_EDIT, lambda : self.edit(obj)))
             
         return actions
     
