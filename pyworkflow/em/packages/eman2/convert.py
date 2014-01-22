@@ -107,8 +107,7 @@ def readSetOfCoordinates(workDir, micSet, coordSet):
         #micFnroot = dirName + '-' +removeBaseExt(mic.getFileName()) + '_info.json'
         #micPosRelFn = join("info", micFnroot)
         #micPosFn = join(workDir, micPosRelFn)
-        micPosFn = str(glob.glob(jsonFninfo + '*' + removeBaseExt(mic.getFileName()) + '_info.json'))
-        
+        micPosFn = ''.join(glob.glob(jsonFninfo + '*' + removeBaseExt(mic.getFileName()) + '_info.json'))
         if exists(micPosFn):
             jsonPosDict = loadJson(micPosFn)
             boxes = jsonPosDict["boxes"]
