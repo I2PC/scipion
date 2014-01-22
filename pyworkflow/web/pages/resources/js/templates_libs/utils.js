@@ -152,7 +152,9 @@ function popUpJSON(json){
 
 function showPlot(url){
 	/*
-	 * Function to show a xplotter(PNG) in a adjusted popup.
+	 * Function to show a xplotter(PNG) in a function br2nl(str) {
+    return str.replace(/<br\s*\/?>/mg,"\n");
+}adjusted popup.
 	 */
 	width = getUrlParameters("width", url, true)
 	height = getUrlParameters("height", url, true)
@@ -280,4 +282,83 @@ function isNaturalNumber(n) {
         n2 = parseInt(n, 10);
     
     return !isNaN(n1) && n2 === n1 && n1.toString() === n && n2>0;
+}
+
+function br2nl(str) {
+    return str.replace(/<br\s*\/?>/mg,"\n");
+}
+
+function editObjParam(id, title_label, value_label, 
+                      title_comment, value_comment,
+                      msg_comment) {
+	/*
+	 * Launch a messi popup with an input and textarea to edit the label and comment
+	 * for an object.
+	 */
+	
+	if(value_comment == ""){
+		value_comment = msg_comment;
+	}
+	
+	var html = "<table id='id' value='"+ id +"'>" + 
+		 	"<tr>" +
+		 	"<td>" +"<h3>"+ title_label +"</h3>" +"</td>" +
+		 	"<td>" + "<input id='label_new' value='"+ value_label+"'>" + "</td>" +
+			"</tr>"+
+			"<tr>" +
+		 	"<td>" +"<h3>" + title_comment +"</h3>" +"</td>" +
+		 	"<td>" + "</h3><textarea id='comment_new'>"+ br2nl(value_comment) + "</textarea>" + "</td>" +
+			"</tr>"+
+			"</table>"
+	
+	// &#013;&#010;
+	
+	new Messi(html, {
+		title : 'Object Editor',
+		modal : true,
+		buttons : [ {
+			id : 0,
+			label : 'Select',
+			val : 'Y',
+			btnClass : 'fa-check',
+			btnFunc : "updateLabelComment"
+			}, {
+			id : 1,
+			label : 'Cancel',
+			val : 'C',
+			btnClass : 'fa-ban'
+		}]
+	});
+}
+
+function updateLabelComment(){
+	/*
+	 * Method to store the label and comment for an object.
+	 */
+	
+	id = $("table#id").attr('value')
+	value_label = $("input#label_new").val()
+	value_comment = $("textarea#comment_new").val()
+	
+	alert(value_label)
+	alert(value_comment)
+
+	url_param = "/update_obj_params/?" +
+		"id=" + id + 
+		"&label=" + value_label + 
+		"&comment=" + value_comment
+		
+	$.ajax({
+		type : "GET",
+		url : url_param,
+		dataType: "text",
+		success : function() {
+			window.location.reload()
+		},
+		error: function(){
+			alert("Fallo")
+		}
+		
+	});
+	
 }

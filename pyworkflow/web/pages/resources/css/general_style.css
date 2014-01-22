@@ -35,6 +35,16 @@ a:hover {
 	float: left;
 }
 
+textarea {
+	padding: 4px;
+	resize: vertical;
+	background: #F2F2F2;
+	max-height: 30em;
+	width: 26em;
+	height: 20em;
+	font-size: 0.9em;
+}
+
 /* HEADER */
 header {
 	/* height: 100px; */
@@ -209,6 +219,8 @@ footer .footerLink{
 footer .logo{
 	max-height:40px;
 }
+
+
 
 .project_name {
 	/* 	font-size: 1.5em; */

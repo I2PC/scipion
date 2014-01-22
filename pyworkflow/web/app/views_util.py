@@ -150,7 +150,7 @@ def browse_objects(request):
     if request.is_ajax():
         objClass = request.GET.get('objClass')
         projectName = request.GET.get('projectName')
-        project = loadProject(projectName)    
+        project = loadProject(projectName)
         
         objs = []
         for obj in project.mapper.selectByClass(objClass, iterate=True):
@@ -167,6 +167,47 @@ def browse_protocol_class(request):
         
         jsonStr = json.dumps({'objects' : objs},ensure_ascii=False)
         return HttpResponse(jsonStr, mimetype='application/javascript')
+
+def get_attributes(request):
+    if request.is_ajax():
+        projectName = request.session['projectName']
+        project = loadProject(projectName)
+        objId = request.GET.get('objId', None)
+        obj = project.mapper.selectById(int(objId)).get()
+        res = obj.getObjLabel() + "_-_" + obj.getObjComment()
+        
+        return HttpResponse(res, mimetype='application/javascript')
+    
+def update_obj_params(request):
+    if request.is_ajax():
+        id = request.GET.get('id', None)
+        label = request.GET.get('label', None)
+        comment = request.GET.get('comment', None)
+
+        projectName = request.session['projectName']
+        project = loadProject(projectName)
+        protocol = project.mapper.selectById(int(id)).get
+        
+#        print protocol.printAll()
+        
+        print protocol.getObjLabel()
+        print protocol.getObjComment()
+        print "-----------------------------"
+        
+        protocol.setObjLabel(label)
+        protocol.setObjComment(comment)
+        
+        
+#        project.saveProtocol(protocol)
+        project._storeProtocol(protocol)
+        
+        project.mapper.store(protocol)
+        
+        protocol2 = project.mapper.selectById(int(id)).get
+        print protocol.getObjLabel()
+        print protocol2.getObjComment()
+     
+    return HttpResponse(mimetype='application/javascript')
 
 def getSizePlotter(plots):
     figsize = (800, 600)
@@ -431,11 +472,13 @@ def parseText(text, func=replacePattern):
         for itemText in text:
             splitLines=itemText.splitlines(True)
             if len(splitLines) == 0:
-                parsedText += '<br>'
+                parsedText += '<br />'
             else:    
                 for lineText in splitLines:
-                    parsedText += parseHyperText(lineText, func)+'<br>'
+                    parsedText += parseHyperText(lineText, func)+'<br />'
     else:
-        parsedText = parseHyperText(text, func)
-    
-    return parsedText    
+        splitLines=text.splitlines(True)
+        for lineText in splitLines:
+            parsedText += parseHyperText(lineText, func)+'<br />'
+#        parsedText = parseHyperText(text, func)
+    return parsedText[:-6]    

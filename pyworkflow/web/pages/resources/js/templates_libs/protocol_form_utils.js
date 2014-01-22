@@ -83,13 +83,6 @@
  * 	->	Function to update a protocol serialize param inside the workflow.
  * 		The serializes values are storaged inside the input respectively.
  * 
- * function showComment(txt)
- * 	->	Launch a messi popup with a text area used in the protocol forms when the 
- * 		user want to describe the specific run with more details.
- * 
- * function putComment()
- * 	->	Method to store the comment for the protocol run.
- * 
  * function getTableFormatted(node, list, id, previsualize)
  * 	->	This function return an html table with the elements available after use, 
  * 		the function browse_object.
@@ -421,43 +414,7 @@ function setParamProt(paramProt, params){
 	$("#"+paramProt+"_input").attr("data-prot", params)
 }
 
-function showComment(txt) {
-	/*
-	 * Launch a messi popup with a text area used in the protocol forms when the 
-	 * user want to describe the specific run with more details.
-	 */
-	var msg = $("input#comment").attr("value");
-	
-	if(msg == ""){
-		msg = txt;
-	}
-	
-	var msg ="<textarea id='description'>"+ msg +"</textarea>";
-	
-	new Messi(msg, {
-		title : 'Comment',
-		modal : true,
-		buttons : [ {
-			id : 0,
-			label : 'Select',
-			val : 'Y',
-			btnClass : 'fa-check',
-			btnFunc : 'putComment'
-			}, {
-			id : 1,
-			label : 'Cancel',
-			val : 'C',
-			btnClass : 'fa-ban'
-		}]
-	});
-}
 
-function putComment(){
-	/*
-	 * Method to store the comment for the protocol run.
-	 */
-	$("input#comment").attr("value",$("textarea#description").val());
-}
 
 //function getListFormatted(node, list, id) {
 //	var res = "<div class='content' style='overflow:auto' data-node='" + node
