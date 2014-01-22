@@ -199,9 +199,17 @@ function fillUL(list, ulId, icon) {
 	var ul = $("#" + ulId);
 	ul.empty();
 	for ( var i = 0; i < list.length; i++) {
-		ul.append('<li><a href="javascript:popup(\'/visualize_object/?objectId=' + list[i].id
-				+ '\');"><i class="fa ' + icon + '" style="margin-right:10px;"></i>'
-				+ list[i].name + '</a></li>');
+		
+		// Visualize Object
+		var visualize_html = '<a href="javascript:popup(\'/visualize_object/?objectId=' + list[i].id
+		+ '\');"><i class="fa ' + icon + '" style="margin-right:10px;"></i>'
+		+ list[i].name + '</a>'
+		
+		// Edit Object
+		var edit_html = '<a href="javascript:editObject('+ list[i].id + ');"> '+
+		'<i class="fa fa-pencil" style="margin-left:10px;"></i></a>'
+		
+		ul.append('<li>' + visualize_html + edit_html + '</li>');
 	}
 }
 
@@ -412,6 +420,21 @@ function updateGraphView(status) {
 	$.ajax({
 		type : "GET", 
 		url : "/update_graph_view/?status=" + status
+	});
+}
+
+function editObject(objId){
+	
+	$.ajax({
+		type : "GET",
+		url : '/get_attributes/?objId='+ objId,
+		dataType: "text",
+		success : function(text) {
+			var res = text.split("_-_")
+			label = res[0]
+			comment = res[1]
+			editObjParam(objId, "Label", label, "Comment", comment, "Describe your run here...","object")
+		}
 	});
 }
 

@@ -1,6 +1,7 @@
 # **************************************************************************
 # *
 # * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
+# *              Jose Gutierrez (jose.gutierrez@cnb.csic.es)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -306,7 +307,7 @@ class TextDialog(Dialog):
         
         self.textLabel = Message.TITLE_LABEL
         self.textWidth = 5
-        self.textHeight = 2
+        self.textHeight = 1
         self.valueText= self.obj.getObjLabel()
         
         self.commentLabel = Message.TITLE_COMMENT
@@ -328,17 +329,17 @@ class TextDialog(Dialog):
         var = tk.StringVar()
         var.set(self.valueText)
         self.textLabel = tk.Entry(bodyFrame, width=self.textWidth, textvariable=var)
-        self.textLabel.grid(row=1, column=0, sticky='news', padx=5, pady=5)
+        self.textLabel.grid(row=0, column=1, sticky='news', padx=5, pady=5)
         
         # Comment
         label_comment = tk.Label(bodyFrame, text=self.commentLabel, bg='white', bd=0)
-        label_comment.grid(row=2, column=0, sticky='nw', padx=(15, 10), pady=15)
+        label_comment.grid(row=1, column=0, sticky='nw', padx=(15, 10), pady=15)
         # Comment box
         self.textComment = Text(bodyFrame, height=self.commentHeight, 
                          width=self.commentWidth)
         self.textComment.addText(self.valueComment)
         self.textComment.setReadOnly(False)
-        self.textComment.grid(row=3, column=0, sticky='news', padx=5, pady=5)
+        self.textComment.grid(row=1, column=1, sticky='news', padx=5, pady=5)
         self.initial_focus = self.textComment
         
     def apply(self):

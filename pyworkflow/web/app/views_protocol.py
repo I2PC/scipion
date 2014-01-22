@@ -120,7 +120,8 @@ def form(request):
                'jquery_ui_css': getResourceCss('jquery_ui'),
                'wizard': getResourceIcon('wizard'),
                'protocol_form_utils': getResourceJs('protocol_form_utils'),
-               'hosts':hosts
+               'hosts':hosts,
+               'comment': parseText(protocol.getObjComment())
                }
     # Update the context dictionary with the special params
     for paramName in SPECIAL_PARAMS:

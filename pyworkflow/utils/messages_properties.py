@@ -44,7 +44,7 @@ class Message():
     LABEL_CREATE_PROJECT='Create Project'
     TITLE_CREATE_PROJECT='Enter the project name'
     TITLE_CREATE_PROJECT_NAME='Project Name: '
-    MESSAGE_CREATE_PROJECT='Are you sure to *DELETE* the project and all its *DATA*?'
+    MESSAGE_CREATE_PROJECT=', Are you sure to *DELETE* the project and all its *DATA*?'
     LABEL_DELETE_PROJECT='Delete Project'
     TITLE_DELETE_PROJECT='Confirm project deletion'
     LABEL_MODIFIED='Modified: '
@@ -86,21 +86,28 @@ class Message():
     TITLE_NAME_RUN=' Protocol Run: '
     TITLE_RUN='Run'
     TITLE_RUN_NAME='Run name'
+    VAR_RUN_NAME='runName'
     TITLE_LABEL='Label'
     LABEL_COMMENT='Describe your run here...'
-    TITLE_COMMENT='Edit comment'
+    TITLE_COMMENT='Comment'
     TITLE_RUN_MODE='Run mode'
+    VAR_RUN_MODE='runMode'
     LABEL_RUN_MODE_RESUME='resume'
     LABEL_RUN_MODE_RESTART='restart'
     TITLE_EXPERT='Expert Level'
+    VAR_EXPERT='expertLevel'
     LABEL_EXPERT_NORMAL='Normal'
     LABEL_EXPERT_ADVANCE='Advanced'
     LABEL_EXPERT_EXPERT='Expert'
     TITLE_EXEC='Execution'
     TITLE_EXEC_HOST='Execution host'
+    VAR_EXEC_HOST='hostName'
     TITLE_THREADS='Threads'
+    VAR_THREADS='numberOfThreads'
     TITLE_MPI='MPI'
+    VAR_MPI='numberOfMpi'
     TITLE_QUEUE='Launch to queue?'
+    VAR_QUEUE='_useQueue'
     TITLE_BROWSE_DATA='Protocol data'
     LABEL_QUEUE_YES='Yes'
     LABEL_QUEUE_NO='No'
@@ -142,7 +149,7 @@ class Message():
     LABEL_HOST_CONECTION_TEST='Connection TEST'
     
     #SHOWJ_WEB
-    ERROR_DIMENSIONS='Incorrect table width or height: '
+    SHOWJ_TITLE='Showj'
     
     LABEL_RESLICE='Reslice'
     RESLICE_Z_NEGATIVE='Z Negative (Front)'
@@ -180,6 +187,7 @@ class Message():
     
     LABEL_THRESHOLD='Threshold:'
     
+    ERROR_DIMENSIONS='Incorrect table width or height: '
     ERROR_WEBGL='Your web browser does not support or is not configured for WebGL. See [[http://get.webgl.org/][WebGL Support]] for more information.'
     
 class Icon():

@@ -54,7 +54,7 @@ def launch_viewer(request):
         
         viewers = findViewers(protocol.getClassName(), WEB_DJANGO)
         
-        print len(viewers)
+#        print len(viewers)
         
         if len(viewers) == 0:
             msg = "There is not viewer for protocol: <strong>" + protocol.getClassName() +"</strong>"

@@ -183,7 +183,6 @@ class Object(object):
     def getNameId(self):
         """ Return an unique and readable id that identifies this object. """
         label = self.getObjLabel()
-        print label
         if len(label) > 0:
             return label
         elif self.hasObjId():

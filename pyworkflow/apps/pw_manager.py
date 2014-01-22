@@ -252,7 +252,7 @@ class ProjectsView(tk.Frame):
           
     def deleteProject(self, projName):
         if askYesNo(Message.TITLE_DELETE_PROJECT, 
-                     Message.MESSAGE_CREATE_PROJECT_1 + "*%s*" % projName + Message.MESSAGE_CREATE_PROJECT_2 , self.root):
+                     "Project *%s*" % projName + Message.MESSAGE_CREATE_PROJECT , self.root):
             self.manager.deleteProject(projName)
             self.createProjectList(self.text)
           
