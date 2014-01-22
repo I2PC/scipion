@@ -144,7 +144,12 @@ class SubclassesTreeProvider(TreeProvider):
         self.mapper = mapper
         
     def getObjects(self):
-        return self.mapper.selectByClass(self.className, objectFilter=self.objFilter)
+        objs = []
+        for objClass in self.className.split(","):
+            for obj in self.mapper.selectByClass(objClass, objectFilter=self.objFilter):
+                objs.append(obj)
+        return objs        
+#        return self.mapper.selectByClass(self.className, objectFilter=self.objFilter)
             
     def objFilter(self, obj):
         result = True

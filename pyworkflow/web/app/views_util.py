@@ -148,16 +148,30 @@ def loadProtocolProject(request, requestType='POST'):
 def browse_objects(request):
     """ Browse objects from the database. """
     if request.is_ajax():
-        objClass = request.GET.get('objClass')
+        objClassList = request.GET.get('objClass')
         projectName = request.GET.get('projectName')
+        
+        objFilterParam = request.GET.get('objFilter',None)
+        filterObject = FilterObject(objFilterParam)
+        
         project = loadProject(projectName)    
         
         objs = []
-        for obj in project.mapper.selectByClass(objClass, iterate=True):
-            objs.append(obj.getNameId())
+        for objClass in objClassList.split(","):
+            for obj in project.mapper.selectByClass(objClass, objectFilter=filterObject.objFilter, iterate=True):
+                objs.append(obj.getNameId())
         jsonStr = json.dumps({'objects' : objs},
                              ensure_ascii=False)
         return HttpResponse(jsonStr, mimetype='application/javascript')
+
+class FilterObject():
+    def __init__(self, condition):
+        self.condition = None if condition == 'None' else condition
+    def objFilter(self, obj):
+        result = True
+        if self.condition:
+            result = obj.evalCondition(self.condition)
+        return result     
 
 def browse_protocol_class(request):
     if request.is_ajax():
