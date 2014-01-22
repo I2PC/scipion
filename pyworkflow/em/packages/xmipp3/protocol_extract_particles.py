@@ -340,7 +340,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
 
         self.runJob(None, "xmipp_image_sort_by_statistics", args % locals())
         md = xmipp.MetaData(fnImages) # Should have ZScore label after runJob
-        md.addItemId()
+#         md.addItemId()
         md.sort(xmipp.MDL_ZSCORE)
         md.write(fnImages) 
         

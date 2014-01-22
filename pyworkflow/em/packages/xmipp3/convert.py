@@ -156,7 +156,7 @@ def coordinateToRow(coord, coordRow):
 def rowToCoordinate(md, objId):
     """ Create a Coordinate from a row of a metadata. """
     coord = Coordinate()
-    setObjId(coord, rowFromMd(md, objId))
+    #setObjId(coord, rowFromMd(md, objId))
     rowToObject(md, objId, coord, {"_x": xmipp.MDL_XCOOR, "_y": xmipp.MDL_YCOOR })
     
     return coord
@@ -349,8 +349,12 @@ def readSetOfCoordinates(posDir, micSet, coordSet):
         for objId in posMd:
             coord = rowToCoordinate(posMd, objId)
             coord.setMicrograph(mic)
-            coordSet.append(coord)
-
+            coordSet.append(coord)      
+            # Add an unique ID that will be propagated to particles
+            print objId, mic.getFileName()
+            posMd.setValue(xmipp.MDL_ITEM_ID, long(coord.getObjId()), objId)
+        if not posMd.isEmpty():
+            posMd.write(posFile)
     coordSet._xmippMd = String(posDir)
     coordSet.setBoxSize(boxSize)
 
