@@ -84,6 +84,7 @@ public class CTFAnalyzerJFrame extends JFrame implements ActionListener
     private final static Color COLOR_PSD = Color.BLUE;
     private final static Color COLOR_CTF = Color.MAGENTA;
     private final static Color COLOR_DIFFERENCE = Color.orange;
+    private ImagePlus profileimp;
 	
 
 	public CTFAnalyzerJFrame(ImagePlus imp, String ctffile, String psdfile)
@@ -94,6 +95,7 @@ public class CTFAnalyzerJFrame extends JFrame implements ActionListener
 			this.imp = imp;
 			this.ctffile = ctffile;
 			this.psdfile = psdfile;
+                        this.profileimp = new ImagePlus(psdfile);
 
 			ctfmodel = new CTFDescription(ctffile);
 
@@ -227,6 +229,7 @@ public class CTFAnalyzerJFrame extends JFrame implements ActionListener
 			double[] avgprofileplot = new double[samples];
 			double angle;
 			int x1, y1;
+                        
 			for (int i = 0; i < 360; i++)
 			{
 				angle = Math.toRadians(-i);
@@ -237,9 +240,10 @@ public class CTFAnalyzerJFrame extends JFrame implements ActionListener
 
 				line = new Line(x0, y0, x1, y1);
 				imp.setRoi(line);
-
+                                profileimp.setRoi(line);
 				// Get profile.
-				ProfilePlot profilePlot = new ProfilePlot(imp);
+                               
+				ProfilePlot profilePlot = new ProfilePlot(profileimp);
 				psdprofile_avgplot = profilePlot.getProfile();
 
 				// Total summatory.
@@ -287,7 +291,8 @@ public class CTFAnalyzerJFrame extends JFrame implements ActionListener
 
 		line = new Line(x0, y0, imageprofilepn.getX1(), imageprofilepn.getY1());
 		imp.setRoi(line);
-		psdprofileplot = new ProfilePlot(imp).getProfile();
+                profileimp.setRoi(line);
+		psdprofileplot = new ProfilePlot(profileimp).getProfile();
 
 		ctfmodel.CTFProfile(imageprofilepn.getProfileangle(), samples);
 		bgnoiseplot = ctfmodel.profiles[CTFDescription.BACKGROUND_NOISE];
