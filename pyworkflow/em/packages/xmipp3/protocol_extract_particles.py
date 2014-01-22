@@ -331,15 +331,16 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
 
         # Run xmipp_image_sort_by_statistics to add zscore info to images.xmd
         args="-i %(fnImages)s --addToInput"
-        if self.rejectionMethod==self.MAXZSCORE:
+        if self.rejectionMethod == self.MAXZSCORE:
             maxZscore = self.maxZscore.get()
-            args+=" --zcut "+str(maxZscore)
-        elif self.rejectionMethod==self.PERCENTAGE:
+            args += " --zcut " + str(maxZscore)
+        elif self.rejectionMethod == self.PERCENTAGE:
             percentage = self.percentage.get()
-            args+=" --percent "+str(percentage)
+            args += " --percent " + str(percentage)
 
         self.runJob(None, "xmipp_image_sort_by_statistics", args % locals())
         md = xmipp.MetaData(fnImages) # Should have ZScore label after runJob
+        md.addItemId()
         md.sort(xmipp.MDL_ZSCORE)
         md.write(fnImages) 
         

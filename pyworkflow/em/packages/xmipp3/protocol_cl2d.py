@@ -171,6 +171,7 @@ class XmippProtCL2D(ProtClassify):
             self.runJob(None, "xmipp_image_sort", params, nproc)
             mdFnOut = fnRoot + ".xmd"
             md = xmipp.MetaData(mdFnOut)
+            md.addItemId()
             md.write("classes_sorted@" + mdFn, xmipp.MD_APPEND)
             #deleteFile(log,fnRoot+".xmd")
         

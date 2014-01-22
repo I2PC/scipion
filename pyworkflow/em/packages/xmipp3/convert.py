@@ -70,11 +70,16 @@ def _rowToObject(row, obj, attrDict):
             
         getattr(obj, attr).set(row.getValue(label))
     
-def rowToObject(md, objId, obj, attrDict):
-    """ Same as rowToObject, but creating the row from md and objId. """
+def rowFromMd(md, objId):
     row = XmippMdRow()
     row.readFromMd(md, objId)
-    _rowToObject(row, obj, attrDict)
+    return row
+    
+def rowToObject(md, objId, obj, attrDict):
+    """ Same as rowToObject, but creating the row from md and objId. """
+    _rowToObject(rowFromMd(md, objId), obj, attrDict)
+    
+    
     
     
 def locationToXmipp(index, filename):
@@ -95,36 +100,22 @@ def xmippToLocation(xmippFilename):
     else:
         return NO_INDEX, str(xmippFilename)
 
-#def imageToRow(img, imgRow, ctfDir, hasCtf, imgLabel):
-#    imgDict = { 
-#               "_id": xmipp.MDL_ITEM_ID,
-#               }
-#    index, filename = img.getLocation()
-#    fn = locationToXmipp(index, filename)
-#    if hasCtf:
-#        rootFn = "%06d_%s" % (img.getObjId(), replaceBaseExt(img.getFileName(), "ctfparam"))
-#        ctfFn = join(ctfDir, rootFn)
-#        writeCTFModel(img.getCTF(), ctfFn)
-#        imgRow.setValue(xmipp.MDL_CTF_MODEL, ctfFn)
-#    imgRow.setValue(imgLabel, fn)
-#    objectToRow(img, imgRow, imgDict)
+def setObjId(obj, mdRow, label=xmipp.MDL_ITEM_ID):
+    obj.setObjId(mdRow.getValue(label))
+    
+def setRowId(mdRow, obj, label=xmipp.MDL_ITEM_ID):
+    mdRow.setValue(label, long(obj.getObjId()))
 
 def imageToRow(img, imgRow, ctfFn, imgLabel):
-    imgDict = { 
-               "_id": xmipp.MDL_ITEM_ID,
-               }
     index, filename = img.getLocation()
     fn = locationToXmipp(index, filename)
     if ctfFn is not None:
         imgRow.setValue(xmipp.MDL_CTF_MODEL, ctfFn)
     imgRow.setValue(imgLabel, fn)
-    objectToRow(img, imgRow, imgDict)
+    setRowId(imgRow, img)
         
 def rowToImage(md, objId, imgLabel, imgClass, hasCtf):
     """ Create a Particle from a row of a metadata. """
-    imgDict = { 
-               "_id": xmipp.MDL_ITEM_ID,
-               }
     img = imgClass()
     # Decompose Xmipp filename
     index, filename = xmippToLocation(md.getValue(imgLabel, objId))
@@ -134,7 +125,7 @@ def rowToImage(md, objId, imgLabel, imgClass, hasCtf):
         ctfModel = readCTFModel(ctFilename)
         ctfModel.micFile.set(md.getValue(xmipp.MDL_MICROGRAPH, objId))
         img.setCTF(ctfModel)
-    rowToObject(md, objId, img, imgDict)
+    setObjId(img, rowFromMd(md, objId))
     
     return img
     
@@ -156,26 +147,17 @@ def rowToVolume(md, objId, hasCtf):
 
 def coordinateToRow(coord, coordRow):
     """ Set labels values from Coordinate coord to md row. """
-    coordDict = { 
-               "_id": xmipp.MDL_ITEM_ID,
-               "_x": xmipp.MDL_XCOOR,
-               "_y": xmipp.MDL_YCOOR
-               }
 #    x, y = coord.getPosition()
 #    coordRow.setValue(xmipp.MDL_XCOOR, x)
 #    coordRow.setValue(xmipp.MDL_YCOOR, y)
-      
-    objectToRow(coord, coordRow, coordDict)
+    setRowId(coordRow, coord)
+    objectToRow(coord, coordRow, {"_x": xmipp.MDL_XCOOR, "_y": xmipp.MDL_YCOOR })
 
 def rowToCoordinate(md, objId):
     """ Create a Coordinate from a row of a metadata. """
-    coordDict = { 
-#               "_id": xmipp.MDL_ITEM_ID,
-               "_x": xmipp.MDL_XCOOR,
-               "_y": xmipp.MDL_YCOOR,
-               }
     coord = Coordinate()
-    rowToObject(md, objId, coord, coordDict)
+    setObjId(coord, rowFromMd(md, objId))
+    rowToObject(md, objId, coord, {"_x": xmipp.MDL_XCOOR, "_y": xmipp.MDL_YCOOR })
     
     return coord
 
@@ -189,64 +171,43 @@ def particleToRow(part, partRow, ctfFn):
 
 def rowToClass2D(md, objId, samplingRate):
     """ Create a Class2D from a row of a metadata. """
-    classDict = { 
-               "_id": xmipp.MDL_REF,
-               }
     class2D = Class2D()
+    setObjId(class2D, rowFromMd(md, objId), label=xmipp.MDL_REF)
 
     if md.containsLabel(xmipp.MDL_IMAGE):
         index, filename = xmippToLocation(md.getValue(xmipp.MDL_IMAGE, objId))
         img = Image()
+        img.setObjId(class2D.getObjId())
         img.setLocation(index, filename)
         img.setSamplingRate(samplingRate)
         class2D.setAverage(img)
-    
-    rowToObject(md, objId, class2D, classDict) 
     
     return class2D
     
 def rowToImageClassAssignment(md, objId):
     """ Create a ImageClassAssignment from a row of a metadata. """
-    imgCADict = { 
-               "_imgId": xmipp.MDL_ITEM_ID,
-#               "_anglePsi": xmipp.MDL_ANGLE_PSI,
-#               "_shiftX": xmipp.MDL_SHIFT_X,
-#               "_shiftY": xmipp.MDL_SHIFT_Y,
-#               "_flip": xmipp.MDL_FLIP
-               }
-    
     imageCA = ImageClassAssignment()
-    rowToObject(md, objId, imageCA, imgCADict)
+    setObjId(imageCA, rowFromMd(md, objId))
     return imageCA
     
 def class2DToRow(class2D, classRow):
     """ Set labels values from Class2D to md row. """
-    classDict = { 
-               "_id": xmipp.MDL_REF,
-               }
+
     if class2D.hasAverage():
         index, filename = class2D.getAverage().getLocation()
         fn = locationToXmipp(index, filename)
         classRow.setValue(xmipp.MDL_IMAGE, fn)
     n = long(len(class2D.getImageAssignments()))
     classRow.setValue(xmipp.MDL_CLASS_COUNT, n)
-    objectToRow(class2D, classRow, classDict)
+    setRowId(classRow, class2D, label=xmipp.MDL_REF)
     
 def imageClassAssignmentToRow(imgCA, imgCARow, img, ctfDir, ref):
     """ Set label values from ImageClassAssignment to md row. """
-    imgCADict = { 
-               "_imgId": xmipp.MDL_ITEM_ID,
-               #"_ref": xmipp.MDL_REF,
-#               "_anglePsi": xmipp.MDL_ANGLE_PSI,
-#               "_shiftX": xmipp.MDL_SHIFT_X,
-#               "_shiftY": xmipp.MDL_SHIFT_Y,
-#               "_flip": xmipp.MDL_FLIP
-               }
-    
     index, filename = img.getLocation()
     fn = locationToXmipp(index, filename)
     imgCARow.setValue(xmipp.MDL_IMAGE, fn)
     imgCARow.setValue(xmipp.MDL_REF, ref)
+    imgCARow.setValue(xmipp.MDL_ITEM_ID, imgCA.getImageId())
     
     if img.hasCTF():
         rootFn = "%06d_%s" % (img.getObjId(), replaceBaseExt(img.getFileName(), "ctfparam"))
@@ -254,8 +215,6 @@ def imageClassAssignmentToRow(imgCA, imgCARow, img, ctfDir, ref):
         writeCTFModel(img.getCTF(), ctfFn)
         imgCARow.setValue(xmipp.MDL_CTF_MODEL, ctfFn)
         
-    objectToRow(imgCA, imgCARow, imgCADict)
-    
 def ctfModelToRow(ctfModel, ctfRow):
     """ Set labels values from ctfModel to md row. """    
     ctfDict = { 
@@ -543,7 +502,7 @@ def readSetOfClasses2D(self, classes2DSet, filename, classesBlock='classes', **a
         hasCtf: is True if the ctf information exists.
     """
     blocks = xmipp.getBlocksInMetaDataFile(filename)
-    classesMd = xmipp.MetaData('%s@%s' %(classesBlock, filename))
+    classesMd = xmipp.MetaData('%s@%s' % (classesBlock, filename))
     
     samplingRate = classes2DSet.getImages().getSamplingRate()
     

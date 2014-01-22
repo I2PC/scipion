@@ -32,9 +32,7 @@ from constants import *
 from convert import ImageHandler
 from pyworkflow.object import *
 from pyworkflow.mapper.sqlite import SqliteMapper, SqliteFlatMapper
-from posixpath import join
-from pyworkflow.utils.utils import getUniqueItems
-from pyworkflow.utils.path import cleanPath
+from pyworkflow.utils.path import cleanPath, dirname, join
 import xmipp
 
 
@@ -592,40 +590,40 @@ class TransformParams(object):
             setattr(self, k, v)  
 
         
-class ImageClassAssignment(EMObject):
-    """ This class represents the relation of
-    an image assigned to a class. It serve to
-    store additional information like weight, transformation
-    or others. 
-    """
-    def __init__(self, **args):
-        EMObject.__init__(self, **args)
-        #self._imagePointer = Pointer() # Pointer to image
-        # This parameters will dissappear when transformation matrix is used
-#         self._anglePsi = Float()
-#         self._shiftX = Float()
-#         self._shiftY = Float()
-#         self._flip = Boolean()
-        self._imgId = Integer()
-        
-#    def setImage(self, image):
-#        """ Set associated image. """
-#        self._imagePointer.set(image)
+#class ImageClassAssignment(EMObject):
+#    """ This class represents the relation of
+#    an image assigned to a class. It serve to
+#    store additional information like weight, transformation
+#    or others. 
+#    """
+#    def __init__(self, **args):
+#        EMObject.__init__(self, **args)
+#        #self._imagePointer = Pointer() # Pointer to image
+#        # This parameters will dissappear when transformation matrix is used
+##         self._anglePsi = Float()
+##         self._shiftX = Float()
+##         self._shiftY = Float()
+##         self._flip = Boolean()
+#        self._imgId = Integer()
 #        
-#    def getImage(self):
-#        """ Get associated image. """
-#        return self._imagePointer.get()
-
-    def setImageId(self, imgId):
-        """ Set associated image Id. """
-        self._imgId.set(imgId)
-        
-    def getImageId(self):
-        """ Get associated image Id. """
-        return self._imgId.get()
-    
-    def setAnglePsi(self, anglePsi):
-        self._anglePsi.set(anglePsi)
+##    def setImage(self, image):
+##        """ Set associated image. """
+##        self._imagePointer.set(image)
+##        
+##    def getImage(self):
+##        """ Get associated image. """
+##        return self._imagePointer.get()
+#
+#    def setImageId(self, imgId):
+#        """ Set associated image Id. """
+#        self._imgId.set(imgId)
+#        
+#    def getImageId(self):
+#        """ Get associated image Id. """
+#        return self._imgId.get()
+#    
+#    def setAnglePsi(self, anglePsi):
+#        self._anglePsi.set(anglePsi)
         
 #     def getAnglePsi(self):
 #         return self._anglePsi.get()
@@ -655,8 +653,9 @@ class Class2D(EMObject):
     """
     def __init__(self, **args):
         EMObject.__init__(self, **args)
+        # This properties should be set when retrieving from the SetOfClasses2D
         self._average = None
-        self._imageAssignments = List()
+        self._images = None
     
     def __iter__(self):
         """ Iterate over the assigments of images
@@ -665,14 +664,14 @@ class Class2D(EMObject):
         for imgCA in self._imageAssignments:
             yield imgCA
             
-    def getImageAssignments(self):
+    def getImages(self):
         return self._imageAssignments
     
-    def addImageClassAssignment(self, imgCA):
+    def addImage(self, imgCA):
         self._imageAssignments.append(imgCA)
     
-    def setAverage(self, representativeImage):
-        self._average = representativeImage
+    def setAverage(self, avgImage):
+        self._average = avgImage
     
     def getAverage(self):
         """ Usually the representative is an average of 
@@ -718,6 +717,13 @@ class SetOfClasses2D(Set):
         """Return first image dimensions as a tuple: (xdim, ydim, zdim, n)"""
         if self.hasAverages():
             return self.getAverages().getDimensions()
-
+        
+    def setClassSetOfImages(self, class2d):
+        """ Create the SetOfImages assigned to a class.
+        If the file exists, it will load the Set.
+        """
+        fn = join(dirname(self.getFileName()), 
+                  'particles_class%03.sqlite' % class2d.getObjId())
+        class2d._images = SetOfParticles(filename=fn)
      
      
