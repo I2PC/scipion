@@ -513,9 +513,9 @@ void CTFDescription::getProfile(double angle, double fmax, int nsamples,
         double ctf = getValuePureAt();
         double E = getValueDampingAt();
 
-        A2D_ELEM(profiles, i, 0) = bgNoise;
-        A2D_ELEM(profiles, i, 1) = bgNoise + E * E;
-        A2D_ELEM(profiles, i, 2) = bgNoise + ctf * ctf;
+        A2D_ELEM(profiles, i, 0) = 10*log10(bgNoise);
+        A2D_ELEM(profiles, i, 1) = 10*log10(bgNoise + E * E);
+        A2D_ELEM(profiles, i, 2) = 10*log10(bgNoise + ctf * ctf);
         A2D_ELEM(profiles, i, 3) = ctf;
     }
 }
@@ -546,9 +546,9 @@ void CTFDescription::getAverageProfile(double fmax, int nsamples,
             double ctf = getValuePureAt();
             double E = getValueDampingAt();
 
-            A2D_ELEM(profiles, i, 0) += bgNoise;
-            A2D_ELEM(profiles, i, 1) += bgNoise + E * E;
-            A2D_ELEM(profiles, i, 2) += bgNoise + ctf * ctf;
+            A2D_ELEM(profiles, i, 0) += 10*log10(bgNoise);
+            A2D_ELEM(profiles, i, 1) += 10*log10(bgNoise + E * E);
+            A2D_ELEM(profiles, i, 2) += 10*log10(bgNoise + ctf * ctf);
             A2D_ELEM(profiles, i, 3) += ctf;
         }
     }
