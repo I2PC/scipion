@@ -313,9 +313,10 @@ public class TiltPairPicker extends ParticlePicker
 			{
 				result += importParticlesFromFiles(uFn, tFn, f, um, scale, invertx, inverty);
 				saveData(um);
+                                saveMicrographAngles(um);
 			}
 		}
-
+                super.saveData();
 		return result;
 	}// function importParticlesFromFolder
 
