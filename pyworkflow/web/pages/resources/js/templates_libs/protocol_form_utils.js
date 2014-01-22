@@ -218,11 +218,20 @@ function evalElements() {
 			}
 		} else {
 //			alert("before:"+value);
-//			onChangeParam(value, param);
-			setParamValue(param, value);
+			onChangeParam(value, param);
 		}
 	});
 }
+
+function onChangeParam(value, paramId) {
+	/* 
+	 * Differents functions depends on the input type 
+	 */
+	
+//	alert(paramId + "-"+value);
+	setParamValue(paramId, value);
+}
+	
 
 function onChangeEnumParamCombo(elemId, paramId) {
 	/*

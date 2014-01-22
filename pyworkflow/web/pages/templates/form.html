@@ -189,9 +189,9 @@
 									<td>
 										{% if param.getClassName == "BooleanParam" %}
 										  <input type="radio" id="{{paramName}}_yes" name={{paramName}} onChange="javascript:onChangeParam('true','{{paramName}}');" value="true" 
-										  {% if param.htmlValue == 'true' %} checked {% endif %}/>{{messages_properties.label_param_yes}}
+										  {% if param.htmlValue == 'true' %} checked {% endif %}/>{{messages_properties.LABEL_PARAM_YES}}
 										  <input type="radio" id="{{paramName}}_no" name={{paramName}} onChange="javascript:onChangeParam('false','{{paramName}}');" value="false"  
-										  {% if param.htmlValue == 'false' %} checked {% endif %} />{{messages_properties.label_param_no}}
+										  {% if param.htmlValue == 'false' %} checked {% endif %} />{{messages_properties.LABEL_PARAM_NO}}
 										{% elif param.getClassName == "EnumParam" %}
 											{% if param.display == 0 %}
 												{% for choice in param.choices %}

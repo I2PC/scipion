@@ -207,12 +207,14 @@ def set_attributes(request):
         elif typeObj=='protocol':
             obj = project.mapper.selectById(int(id))
         
-#        print obj.printAll()
-        
         obj.setObjLabel(label)
         obj.setObjComment(comment)
-        project._storeProtocol(obj)
-#        project.mapper.store(protocol)
+        
+        if typeObj=='object':
+            project._storeProtocol(obj)
+        elif typeObj=='protocol':
+            project.saveProtocol(obj)
+#            project.mapper.store(protocol)
         
     return HttpResponse(mimetype='application/javascript')
 

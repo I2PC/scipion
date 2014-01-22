@@ -357,7 +357,5 @@ function updateLabelComment(){
 		error: function(){
 			alert("Fallo")
 		}
-		
 	});
-	
 }
