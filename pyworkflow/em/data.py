@@ -661,14 +661,14 @@ class Class2D(EMObject):
         """ Iterate over the assigments of images
         to this particular class.
         """
-        for imgCA in self._imageAssignments:
-            yield imgCA
+        for img in self._images:
+            yield img
             
     def getImages(self):
-        return self._imageAssignments
+        return self._images
     
     def addImage(self, imgCA):
-        self._imageAssignments.append(imgCA)
+        self._images.append(imgCA)
     
     def setAverage(self, avgImage):
         self._average = avgImage
@@ -682,6 +682,10 @@ class Class2D(EMObject):
     def hasAverage(self):
         """ Return true if have an average image. """
         return self._average is not None
+    
+    def writeImages(self):
+        """ Write the assigned SetOfImages to disk. """
+        self._images.write()
     
 
 class SetOfClasses2D(Set):

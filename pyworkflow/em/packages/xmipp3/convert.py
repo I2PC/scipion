@@ -184,11 +184,6 @@ def rowToClass2D(md, objId, samplingRate):
     
     return class2D
     
-def rowToImageClassAssignment(md, objId):
-    """ Create a ImageClassAssignment from a row of a metadata. """
-    imageCA = ImageClassAssignment()
-    setObjId(imageCA, rowFromMd(md, objId))
-    return imageCA
     
 def class2DToRow(class2D, classRow):
     """ Set labels values from Class2D to md row. """
@@ -201,19 +196,19 @@ def class2DToRow(class2D, classRow):
     classRow.setValue(xmipp.MDL_CLASS_COUNT, n)
     setRowId(classRow, class2D, label=xmipp.MDL_REF)
     
-def imageClassAssignmentToRow(imgCA, imgCARow, img, ctfDir, ref):
-    """ Set label values from ImageClassAssignment to md row. """
-    index, filename = img.getLocation()
-    fn = locationToXmipp(index, filename)
-    imgCARow.setValue(xmipp.MDL_IMAGE, fn)
-    imgCARow.setValue(xmipp.MDL_REF, ref)
-    imgCARow.setValue(xmipp.MDL_ITEM_ID, imgCA.getImageId())
-    
-    if img.hasCTF():
-        rootFn = "%06d_%s" % (img.getObjId(), replaceBaseExt(img.getFileName(), "ctfparam"))
-        ctfFn = join(ctfDir, rootFn)
-        writeCTFModel(img.getCTF(), ctfFn)
-        imgCARow.setValue(xmipp.MDL_CTF_MODEL, ctfFn)
+#def imageClassAssignmentToRow(imgCA, imgCARow, img, ctfDir, ref):
+#    """ Set label values from ImageClassAssignment to md row. """
+#    index, filename = img.getLocation()
+#    fn = locationToXmipp(index, filename)
+#    imgCARow.setValue(xmipp.MDL_IMAGE, fn)
+#    imgCARow.setValue(xmipp.MDL_REF, ref)
+#    imgCARow.setValue(xmipp.MDL_ITEM_ID, imgCA.getImageId())
+#    
+#    if img.hasCTF():
+#        rootFn = "%06d_%s" % (img.getObjId(), replaceBaseExt(img.getFileName(), "ctfparam"))
+#        ctfFn = join(ctfDir, rootFn)
+#        writeCTFModel(img.getCTF(), ctfFn)
+#        imgCARow.setValue(xmipp.MDL_CTF_MODEL, ctfFn)
         
 def ctfModelToRow(ctfModel, ctfRow):
     """ Set labels values from ctfModel to md row. """    
@@ -512,17 +507,19 @@ def readSetOfClasses2D(self, classes2DSet, filename, classesBlock='classes', **a
     
     for objId in classesMd:
         class2D = rowToClass2D(classesMd, objId, samplingRate)
+        classes2DSet.setClassSetOfImages(class2D)
+        
         ref = classesMd.getValue(xmipp.MDL_REF, objId)
         b = 'class%06d_images' % ref
         
         if b in blocks:
-            imgAssignmentMd = xmipp.MetaData('%s@%s' % (b, filename))
+            classImagesMd = xmipp.MetaData('%s@%s' % (b, filename))
             
-            for objCAId in imgAssignmentMd:
-                imgCA = ImageClassAssignment()
-                imgCA = rowToImageClassAssignment(imgAssignmentMd, objCAId)
-                class2D.addImageClassAssignment(imgCA)
+            for imgId in classImagesMd:
+                img = rowToParticle(classImagesMd, imgId, hasCtf=False)
+                class2D.addImage(img)
                 
+        class2D.writeImages()
         classes2DSet.append(class2D)
     
     if classesMd.containsLabel(xmipp.MDL_IMAGE):
