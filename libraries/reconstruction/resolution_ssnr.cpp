@@ -45,6 +45,8 @@ void ProgSSNR::defineParams()
     addUsageLine("+++* Before applying this measure make sure that the noise images and the background in the experimental" \
                  " images have zero average. It is also assumed that the projection of the reconstructed volumes matches the" \
                  " experimental or the noisy projections (i.e., check that both projections are within the same range");
+    addUsageLine("+++* The VSSNR is stored in the file as 10*log10(1+VSSNR). Thus, if you want a threshold of VSSNR=1, the" \
+                 " threshold in the visualizer must be set to =10*log10(1+1)=3=");
     addUsageLine("+++* If the reconstruction algorithm linearly scales the reconstructed volume so that the reprojected" \
                  " images do not match the gray values of the experimental images, use adjust_volume to correct for the linear" \
                  " transformation before computing the SSNR images");
@@ -76,6 +78,10 @@ void ProgSSNR::defineParams()
     addParamsLine("                             :+++ %BR%");
     addParamsLine("                             : Generate the individual estimations of the SSNR for each particle and build an ");
     addParamsLine("                             : interpolation volume (VSSNR) that is compatible with the individual SSNRs.");
+    addParamsLine("                             :+ In fact, the VSSNR is stored as 10*log10(1+SSNR). Thus, after interpolating the threshold");
+    addParamsLine("                             :+ at SSNR = 1 must be shown as the threshold of the output interpolated volume at 3.01 ");
+    addParamsLine("                             :+ (10*log10(1+1)). The threshold at SSNR = 4 must be shown as the threshold of the output");
+    addParamsLine("                             :+ interpolated volume at 6.99 (10*log10(1+4)). The 1D SSNR is also generated as a side-product");
     addParamsLine("   requires --signal,--noise,--VSSNR;");
     addParamsLine("   [--sym <sym=c1>]          : Symmetry for constructing the VSSNR");
     addParamsLine("   [--thr <n=1>]             : Number of threads to construct the VSSNR");
@@ -346,7 +352,7 @@ void ProgSSNR::estimateSSNR(int dim, Matrix2D<double> &output)
                     SSNR = XMIPP_MAX(aux, 0.0);
                 }
                 if (SSNR    > min_power)
-                    DIRECT_MULTIDIM_ELEM(SSNR2Dmatrix,n) = SSNR;
+                    DIRECT_MULTIDIM_ELEM(SSNR2Dmatrix,n) = 10.0 * log10(SSNR + 1.0);
             }
             CenterFFT(SSNR2D(), true);
 #ifdef DEBUG
@@ -443,9 +449,9 @@ void ProgSSNR::estimateSSNR(int dim, Matrix2D<double> &output)
         output(i, 1) = w * 1 / Tm;
         double SSNR = S_SSNR1D(i) / N_SSNR1D(i);
         if (SSNR > 1)
-            output(i, 2) = SSNR - 1; // Corrected SSNR
+            output(i, 2) = 10 * log10(SSNR - 1); // Corrected SSNR
         else
-            output(i, 2) = 0;
+            output(i, 2) = -1000;         // In fact it should be -inf
         output(i, 3) = S_SSNR1D(i);
         output(i, 4) = 10 * log10(S_S21D(i) / imgno);
         output(i, 5) = 10 * log10(S_N21D(i) / imgno);
@@ -495,7 +501,8 @@ void ProgSSNR::radialAverage(Matrix2D<double> &output)
         int l0 = XMIPP_MAX(0, CEIL(widx - ring_width));
         int lF = FLOOR(widx);
 
-        double VSSNRkij = VSSNR(k, i, j);
+        double VSSNRkij = pow(10, VSSNR(k, i, j) / 10) - 1;
+
         for (int l = l0; l <= lF; l++)
         {
             VSSNR_avg(l) += VSSNRkij;
@@ -517,8 +524,8 @@ void ProgSSNR::radialAverage(Matrix2D<double> &output)
         output(i, 1) = w * 1 / Tm;
         double SSNR = VSSNR_avg(i);
         if (SSNR > 1)
-            output(i, 2) = SSNR; // Corrected SSNR
+            output(i, 2) = 10 * log10(SSNR - 1); // Corrected SSNR
         else
-            output(i, 2) = 0;
+            output(i, 2) = -1000;         // In fact it should be -inf
     }
 }
