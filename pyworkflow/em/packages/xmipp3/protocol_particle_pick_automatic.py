@@ -94,8 +94,8 @@ class XmippParticlePickingAutomatic(ProtParticlePicking, XmippProtocol):
             micPath = mic.getFileName()
             micName = removeBaseExt(micPath)
             proceed = True
-            if self.micsToPick.get() == MICS_SAMEASPICKING:
-                fnPos = join(self.particlePickingRun._getExtraPath(), replaceBaseExt(micPath, "pos"))
+            if self.micsToPick == MICS_SAMEASPICKING:
+                fnPos = self.particlePickingRun._getExtraPath(replaceBaseExt(micPath, "pos"))
                 if exists(fnPos):
                     blocks = xmipp.getBlocksInMetaDataFile(fnPos)
                     copy = True
@@ -106,7 +106,7 @@ class XmippParticlePickingAutomatic(ProtParticlePicking, XmippProtocol):
                             copy = False
                     if copy:
                         # Copy manual .pos file of this micrograph
-                        copyFile(fnPos, join(self._getExtraPath(), basename(fnPos)))
+                        copyFile(fnPos, self._getExtraPath(basename(fnPos)))
                         proceed = False            
     
             if proceed:

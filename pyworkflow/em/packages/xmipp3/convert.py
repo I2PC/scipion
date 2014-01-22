@@ -339,6 +339,7 @@ def readSetOfCoordinates(posDir, micSet, coordSet):
     
     for mic in micSet:
         posFile = join(posDir, replaceBaseExt(mic.getFileName(), 'pos'))
+        scipionPosFile = join(posDir, "scipion_" + replaceBaseExt(mic.getFileName(), 'pos'))
         posMd = readPosCoordinates(posFile)
         
         for objId in posMd:
@@ -346,11 +347,10 @@ def readSetOfCoordinates(posDir, micSet, coordSet):
             coord.setMicrograph(mic)
             coordSet.append(coord)      
             # Add an unique ID that will be propagated to particles
-            print objId, mic.getFileName()
             posMd.setValue(xmipp.MDL_ITEM_ID, long(coord.getObjId()), objId)
         if not posMd.isEmpty():
-            posMd.write(posFile)
-    coordSet._xmippMd = String(posDir)
+            posMd.write("particles@%s"  % scipionPosFile)
+    coordSet._xmippMd = String(scipionPosFile)
     coordSet.setBoxSize(boxSize)
 
 def readPosCoordinates(posFile):
