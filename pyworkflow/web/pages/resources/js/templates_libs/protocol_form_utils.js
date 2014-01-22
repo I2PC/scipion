@@ -47,6 +47,9 @@
  * 	->	Function to evaluate the elements in a form, depending the type of the
  * 		param, it is evaluated in a diferent way.
  * 
+ * function onChangeParam(value, paramId)
+ * 	->	Update the parameter for an element.
+ * 
  * function onChangeEnumParamCombo(elemId, paramId)
  * 	->	Update the parameter for an element type ENUM_PARAM_COMBO.
  * 
@@ -225,7 +228,7 @@ function evalElements() {
 
 function onChangeParam(value, paramId) {
 	/* 
-	 * Differents functions depends on the input type 
+	 * Update the parameter for an element.
 	 */
 	
 //	alert(paramId + "-"+value);
