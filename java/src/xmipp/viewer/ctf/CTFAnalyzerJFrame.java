@@ -594,18 +594,18 @@ public class CTFAnalyzerJFrame extends JFrame implements ActionListener
     
     public String getDifferenceLabel()
     {
-    	return XmippLabel.CB_PLOT_BGNOISE + " Corrected " + XmippLabel.LABEL_PSD + " Profile";
+    	return XmippLabel.CB_PLOT_BGNOISE + " Corrected " + XmippLabel.LABEL_PSD;
     }
     
     private String getTheorethicalPSDLabel()
 	{
 		// TODO Auto-generated method stub
-		return "Theorethical " + XmippLabel.LABEL_PSD;
+		return "Theoretical " + XmippLabel.LABEL_PSD;
 	}
     
     public String getPSDProfileLabel()
     {
-    	return XmippLabel.LABEL_PSD + " Profile";
+    	return XmippLabel.LABEL_PSD;
     }
     
     public String getEnvelopeLabel()
