@@ -204,6 +204,8 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 	private JMenuItem rendercolumnmi;
 
 	private Hashtable<String, ColumnInfo> imagecolumns;
+
+	protected JPanel buttonspn;
 	/** Some static initialization for fancy default dimensions */
 	static
 	{
@@ -312,7 +314,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 	 * Function to create general GUI base on a TableModel. It will use helper
 	 * functions to create different components of the GUI
 	 */
-	private void createGUI()
+	protected void createGUI()
 	{
 		// Create file chooser and set current dir
 		setIconImage(XmippResource.getIcon("xmipp_logo.png").getImage());
@@ -342,29 +344,27 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 
 		// Create toolbar buttons
 		createToolbar();
-		c.fill = GridBagConstraints.HORIZONTAL;
-		c.gridx = 0;
-		c.gridy = 0;
-		container.add(toolBar, c);
+		container.add(toolBar, XmippWindowUtil.getConstraints(c, 0, 0, 1, 1, GridBagConstraints.HORIZONTAL));
 		setInitialValues();
 
 		// Create combos for selection of blocks and/or volumes
 		createCombos();
-		c.fill = GridBagConstraints.HORIZONTAL;
-		c.gridx = 0;
-		c.gridy = 1;
-		container.add(cbPanel, c);
+		container.add(cbPanel, XmippWindowUtil.getConstraints(c, 0, 1, 1, 1, GridBagConstraints.HORIZONTAL));
 		updateVisibleCombos();
 
 		jspContent = new GalleryScroll();
 		// Create table
 		createTable();
-		c.fill = GridBagConstraints.BOTH;
-		c.gridx = 0;
-		c.gridy = 2;
+		
 		c.weightx = 1.0;
 		c.weighty = 1.0;
-		container.add(jspContent, c);
+		container.add(jspContent, XmippWindowUtil.getConstraints(c, 0, 2, 1, 1, GridBagConstraints.BOTH));
+		
+		c.weightx = 0;
+		c.weighty = 0;
+		buttonspn = new JPanel(new FlowLayout(FlowLayout.TRAILING));
+		
+		container.add(buttonspn, XmippWindowUtil.getConstraints(c, 0, 3, 1, 1, GridBagConstraints.HORIZONTAL));
 		
 				
 		// Create the menu for table
@@ -1833,8 +1833,9 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			addItem(CTF_PROFILE, "Show CTF profile");
 			addItem(CTF_RECALCULATE, "Recalculate CTF");
 			addSeparator();
-			addItem(SET_CLASS, "Set class");
 			addItem(OPEN_IMAGES, "Open images");
+			addItem(SAVE_IMAGES, "Save images", "save.gif");
+			addItem(SET_CLASS, "Set class");
 			addItem(SELECT, "Select");
 			addItem(SELECT_ALL, "All", null, "control released A");
 			addItem(SELECT_TOHERE, "To here");
@@ -1846,7 +1847,9 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		{
 			setItemVisible(SET_CLASS, data.is2DClassificationMd());
 			// This item visibility depends on current selection
+			setItemVisible(SAVE_IMAGES, data.is2DClassificationMd() && gallery.getSelectionCount() > 0);
 			setItemVisible(OPEN_IMAGES, data.is2DClassificationMd() && gallery.getSelectionCount() == 1);
+					
 			// Update menu items status depending on item.
 			row = table.rowAtPoint(location);
 			col = table.columnAtPoint(location);
@@ -1981,6 +1984,12 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 					openMetadata(md);
 				else
 					XmippDialog.showWarning(GalleryJFrame.this, "This class has no images");
+			}
+			else if (cmd.equals(SAVE_IMAGES))
+			{
+				File f = new File(data.getFileName());
+				SaveImagesJDialog dialog = new SaveImagesJDialog(GalleryJFrame.this, f.getParent() + "/images_selection.xmd");
+				dialog.showDialog();					
 			}
 			initItems();
 

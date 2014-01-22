@@ -1675,7 +1675,7 @@ public:
     }
 
     /** Perform SVD decomposition and add an index vector
-     * with the descending order of eigenvalues
+     * with the descending order of singular values
      */
     void eigs(Matrix2D<double> &U, Matrix1D<double> &W, Matrix2D<double> &V, Matrix1D<int> &indexes) const
     {
@@ -1833,7 +1833,7 @@ void generalizedEigs(const Matrix2D<double> &A, const Matrix2D<double> &B, Matri
  * Solves the problem Av=dv.
  * Only the eigenvectors of the largest M eigenvalues are returned as columns of P
  */
-void firstEigs(const Matrix2D<double> &A, size_t M, Matrix1D<double> &D, Matrix2D<double> &P);
+void firstEigs(const Matrix2D<double> &A, size_t M, Matrix1D<double> &D, Matrix2D<double> &P, bool Pneeded=true);
 
 /** Last eigenvectors of a real, symmetric matrix.
  * Solves the problem Av=dv.

@@ -900,6 +900,16 @@ double fastCorrentropy(const MultidimArray<double> &x,
     return (retvalxy / maskSum);
 }
 
+/* Covariance matrix ------------------------------------------------------ */
+void covarianceMatrix(const MultidimArray<double> &I, Matrix2D<double> &C)
+{
+	Matrix2D<double> mI;
+	I.copy(mI);
+	subtractColumnMeans(mI);
+	matrixOperation_AtA(mI,C);
+	C*=1.0/(YSIZE(I)-1.0);
+}
+
 /* Best shift -------------------------------------------------------------- */
 double bestShift(const MultidimArray<double> &I1, const MultidimArray<double> &I2,
                double &shiftX, double &shiftY, CorrelationAux &aux,

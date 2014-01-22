@@ -107,7 +107,6 @@ Image_getData(PyObject *obj, PyObject *args, PyObject *kwargs);
 PyObject *
 Image_projectVolumeDouble(PyObject *obj, PyObject *args, PyObject *kwargs);
 
-
 /* setData */
 PyObject *
 Image_setData(PyObject *obj, PyObject *args, PyObject *kwargs);
@@ -132,6 +131,9 @@ Image_mirrorY(PyObject *obj, PyObject *args, PyObject *kwargs);
 PyObject *
 Image_applyTransforMatScipion(PyObject *obj, PyObject *args, PyObject *kwargs);
 
+/* applyTransforMatScipion */
+PyObject *
+Image_applyCTF(PyObject *obj, PyObject *args, PyObject *kwargs);
 
 /* initRandom */
 PyObject *

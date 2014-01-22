@@ -1555,6 +1555,8 @@ void ProgML2D::doThreadExpectationSingleImageRefno()
 
             if (model.do_student)
                 maxweight2 = local_maxweight2;
+            else
+            	maxweight2=0.;
             iopty = local_iopty;
             ioptx = local_ioptx;
             iopt_psi = local_iopt_psi;

@@ -1125,8 +1125,10 @@ data_noname
             
 
             for refN in range(1, self.numberOfReferences + 1):
-                def insertReconstructStep(verifyFilesKey, inputMdKey, outputVolKey):
-                    _VerifyFiles = [self.getFilename(verifyFilesKey, iter=iterN, ref=refN)]
+                def insertReconstructStep(verifyFilesKey, inputMdKey, outputVolKey,doVerify=False):
+                    _VerifyFiles=[]
+                    if doVerify:
+                        _VerifyFiles = [self.getFilename(verifyFilesKey, iter=iterN, ref=refN)]
                     self.insertStep('reconstruction', verifyfiles=_VerifyFiles
                                           , ARTReconstructionExtraCommand = self.ARTReconstructionExtraCommand
                                           , WBPReconstructionExtraCommand = self.WBPReconstructionExtraCommand
@@ -1153,13 +1155,13 @@ data_noname
                 #self._ARTLambda=arg.getComponentFromVector(_ARTLambda, iterN-1)
 
                 #if (DoReconstruction):
-                insertReconstructStep('ReconstructedFileNamesIters', 'ReconstructionXmd', 'ReconstructedFileNamesIters')                
+                insertReconstructStep('ReconstructedFileNamesIters', 'ReconstructionXmd', 'ReconstructedFileNamesIters',True)                
                     
                 if(self.DoSplitReferenceImages[iterN]):
                     if (self.DoComputeResolution[iterN]):
-                        insertReconstructStep('ReconstructedFileNamesItersSplit1', 'ReconstructionXmdSplit1', 'ReconstructedFileNamesItersSplit1')      
-                        insertReconstructStep('ReconstructedFileNamesItersSplit2', 'ReconstructionXmdSplit2', 'ReconstructedFileNamesItersSplit2')
-                        
+                        insertReconstructStep('ReconstructedFileNamesItersSplit1', 'ReconstructionXmdSplit1', 'ReconstructedFileNamesItersSplit1',self.CleanUpFiles)
+                        insertReconstructStep('ReconstructedFileNamesItersSplit2', 'ReconstructionXmdSplit2', 'ReconstructedFileNamesItersSplit2',self.CleanUpFiles)
+
                         _VerifyFiles = [self.getFilename('ResolutionXmdFile', iter=iterN, ref=refN)]
                         id = _dataBase.insertStep('compute_resolution', verifyfiles=_VerifyFiles
                                                      , ConstantToAddToFiltration = self.ConstantToAddToMaxReconstructionFrequency[iterN]
@@ -1172,6 +1174,7 @@ data_noname
                                                      , ReconstructedVolumeSplit1 = self.getFilename('ReconstructedFileNamesItersSplit1', iter=iterN, ref=refN)
                                                      , ReconstructedVolumeSplit2 = self.getFilename('ReconstructedFileNamesItersSplit2', iter=iterN, ref=refN)
                                                      , ResolSam = self.ResolSam
+                                                     , CleanUpFiles = self.CleanUpFiles
                                                       )
 
                     id = _dataBase.insertStep('filter_volume', verifyfiles=_VerifyFiles
@@ -1215,10 +1218,12 @@ data_noname
                             , DoCtfCorrection = self.DoCtfCorrection
                             , inDocfile       = inDocfile
                             , listWithResultVolume = listWithResultVolume
-                            , resultsImages   = resultsImages
+                            , resultsImages        = resultsImages
                             , resultsClasses3DRef          = resultsClasses3DRef
                             , resultsClasses3DRefDefGroup  = resultsClasses3DRefDefGroup
                             , resultsVolumes = resultsVolumes
+                            , selFileName = self.SelFileName
+                            , workingDir     = self.WorkingDir
                             )
         _dataBase.connection.commit()
         

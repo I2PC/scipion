@@ -25,6 +25,7 @@
 
 #include "ctf.h"
 #include "xmipp_fft.h"
+#include "xmipp_fftw.h"
 #include <math.h>
 
 /* Read -------------------------------------------------------------------- */
@@ -473,8 +474,18 @@ void CTFDescription::applyCTF(MultidimArray < std::complex<double> > &FFTI)
         FFT_idx2digfreq(FFTI, idx, freq);
         precomputeValues(XX(freq), YY(freq));
         double ctf = getValueAt();
-        FFTI(i, j) *= ctf;
+        A2D_ELEM(FFTI, i, j) *= ctf;
     }
+}
+
+void CTFDescription::applyCTF(MultidimArray <double> &I)
+{
+	FourierTransformer transformer;
+	MultidimArray<double> FFTI;
+	transformer.setReal(I);
+	transformer.FourierTransform();
+	applyCTF(transformer.fFourier);
+	transformer.inverseFourierTransform();
 }
 
 /* Get profiles ------------------------------------------------------------ */
@@ -1047,7 +1058,7 @@ double errorMaxFreqCTFs2D( MetaData &MD1,
 #endif
 
     int counter = 0 ;
-    double _freq=0.;
+    //double _freq=0.;
     for (int i=0; i<(int)yDim; ++i)
     {
         FFT_IDX2DIGFREQ(i, yDim, YY(freq));
@@ -1056,7 +1067,7 @@ double errorMaxFreqCTFs2D( MetaData &MD1,
         {
             FFT_IDX2DIGFREQ(j, xDim, XX(freq));
             XX(freq) *= iTm;
-            _freq = freq.module();
+            //_freq = freq.module();
             //freq *= CTF1.Tm;
             CTF1.precomputeValues(XX(freq),YY(freq));
             CTF2.precomputeValues(XX(freq),YY(freq));

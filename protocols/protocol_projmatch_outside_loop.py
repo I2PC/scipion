@@ -3,8 +3,9 @@ from types              import StringTypes
 import os
 from xmipp import *
 from protlib_utils import printLog
-from protlib_filesystem import uniqueFilename
-from os.path import join
+from protlib_filesystem import uniqueFilename, createLink
+from os.path import join, basename
+#from IPython.parallel.client.client import Metadata
 
 #------------------------------------------------------------------------
 #make ctf groups
@@ -122,6 +123,8 @@ def createResults(log
                  , resultsClasses3DRef
                  , resultsClasses3DRefDefGroup
                  , resultsVolumes
+                 , selFileName
+                 , workingDir
                   ):
     ''' Create standard output results_images, result_classes'''
     from os import remove
@@ -131,6 +134,8 @@ def createResults(log
     for resultVolume in listWithResultVolume:
         objId = mdVolume.addObject()
         mdVolume.setValue(MDL_IMAGE,resultVolume,objId)
+        #link also last iteration volumes
+        createLink(log,resultVolume,join(workingDir, basename(resultVolume)))
     mdVolume.write(resultsVolumes)
     #read file with results
     allExpImagesinDocfile = FileName()
@@ -166,8 +171,14 @@ def createResults(log
     comment  = " numberImages=%d..................................................... "%numberImages
     comment += " numberDefocusGroups=%d................................................."%numberDefocusGroups
     comment += " numberRef3D=%d........................................................."%numberRef3D
-    mdOut.setComment(comment)
-    mdOut.write(fnResultImages)
+    #
+    mdAux1 = MetaData()
+    mdAux2 = MetaData()
+    mdAux1.read(selFileName,[MDL_IMAGE,MDL_ITEM_ID])
+    mdAux2.join(mdOut, mdAux1, MDL_IMAGE, MDL_IMAGE, LEFT_JOIN)
+    mdAux2.setComment(comment)
+    mdAux2.write(fnResultImages)
+    #
     #make query and store ref3d with all
     for id in mdref3D:
         ref3D = mdref3D.getValue(MDL_REF3D, id)

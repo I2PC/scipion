@@ -576,6 +576,8 @@ void auto_correlation_matrix(const MultidimArray< T > & Img, MultidimArray< doub
     CenterFFT(R, true);
 }
 
+/** Fast autocorrelation matrix */
+void auto_correlation_matrix(const MultidimArray<double> & Img, MultidimArray< double >& R, CorrelationAux &aux);
 
 void convolutionFFT(const MultidimArray<double> &img,
                     const MultidimArray<double> &kernel,

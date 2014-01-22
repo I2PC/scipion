@@ -411,22 +411,25 @@ void generalizedEigs(const Matrix2D<double> &A, const Matrix2D<double> &B, Matri
 		MAT_ELEM(P,i,j)=z(i,j);
 }
 
-void firstEigs(const Matrix2D<double> &A, size_t M, Matrix1D<double> &D, Matrix2D<double> &P)
+void firstEigs(const Matrix2D<double> &A, size_t M, Matrix1D<double> &D, Matrix2D<double> &P, bool Pneeded)
 {
 	int N=(int)MAT_YSIZE(A);
 	alglib::real_2d_array a, z;
 	a.setcontent(N,N,MATRIX2D_ARRAY(A));
 	alglib::real_1d_array d;
-	bool ok=smatrixevdi(a, N, true, false, N-M, N-1, d, z);
+	bool ok=smatrixevdi(a, N, Pneeded, false, N-M, N-1, d, z);
 	if (!ok)
 		REPORT_ERROR(ERR_NUMERICAL,"Could not perform eigenvector decomposition");
 
 	D.resizeNoCopy(M);
 	FOR_ALL_ELEMENTS_IN_MATRIX1D(D)
 		VEC_ELEM(D,i)=d(M-1-i);
-	P.resizeNoCopy(N,M);
-	FOR_ALL_ELEMENTS_IN_MATRIX2D(P)
-		MAT_ELEM(P,i,j)=z(i,M-1-j);
+	if (Pneeded)
+	{
+		P.resizeNoCopy(N,M);
+		FOR_ALL_ELEMENTS_IN_MATRIX2D(P)
+			MAT_ELEM(P,i,j)=z(i,M-1-j);
+	}
 }
 
 void lastEigs(const Matrix2D<double> &A, size_t M, Matrix1D<double> &D, Matrix2D<double> &P)
