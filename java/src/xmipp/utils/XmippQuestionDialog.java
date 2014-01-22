@@ -41,6 +41,11 @@ public class XmippQuestionDialog extends XmippMessageDialog {
 	protected boolean canceled = false;
 	private static final String TITLE = "QUESTION";
 	private static final String ICON = "question.gif";
+        
+        public static int YES_OPTION = 0;
+        public static int NO_OPTION = 1;
+        public static int CANCEL_OPTION = 2;
+        protected int option;
 	
 	public XmippQuestionDialog(JFrame parent, String message) {
 		super(parent, TITLE);
@@ -66,10 +71,12 @@ public class XmippQuestionDialog extends XmippMessageDialog {
 	
 	@Override
 	public void handleActionPerformed(ActionEvent evt) {
-		if (btnQuestionCancel == (JButton)evt.getSource()){
-			canceled = true;
-			close(false);
+            JButton button = (JButton)evt.getSource();
+		if (btnQuestionCancel == button){
+                    canceled = true;
+                    close(false);
 		}
+                
 	}
 	
 	@Override
@@ -80,10 +87,19 @@ public class XmippQuestionDialog extends XmippMessageDialog {
 		if (btnQuestionCancelDisplay) {
 			btnQuestionCancel = XmippWindowUtil.getTextButton(btnQuestionCancelText, this);
 			panelBtn.add(btnQuestionCancel);
+                        btnQuestionCancel.addActionListener(this);
 		}
 	}
 	
 	public boolean isCanceled(){
 		return canceled;
 	}
+        
+        public int getOption(){
+            if (result)
+                return YES_OPTION;
+            if (isCanceled())
+                return CANCEL_OPTION;
+            return NO_OPTION;
+        }
 }//class XmippQuestionDialog

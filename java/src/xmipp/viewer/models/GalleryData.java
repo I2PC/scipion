@@ -802,9 +802,12 @@ public class GalleryData {
 	/** Get all the images assigned to all selected classes */
 	public MetaData getImagesFromClassSelection(){
 		MetaData mdImages = new MetaData();
+		MetaData md;
 		for (int i = 0; i < ids.length; ++i){
 			if (selection[i]){
-				mdImages.unionAll(getClassImages(i));
+				md = getClassImages(i);
+				mdImages.unionAll(md);
+				md.destroy();
 			}
 		}
 		return mdImages;

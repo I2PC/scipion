@@ -127,3 +127,15 @@ JNIEXPORT void JNICALL Java_xmipp_jni_PickingClassifier_setSize
     XMIPP_JAVA_CATCH;
 }
 
+
+JNIEXPORT jint JNICALL Java_xmipp_jni_PickingClassifier_getParticlesThreshold
+(JNIEnv *env, jobject jobj)
+{
+    XMIPP_JAVA_TRY
+    {
+        AutoParticlePicking2 *picker = GET_INTERNAL_AUTOPARTICLEPICKING2(jobj);
+        return picker->getParticlesThreshold();
+
+    }
+    XMIPP_JAVA_CATCH;
+}

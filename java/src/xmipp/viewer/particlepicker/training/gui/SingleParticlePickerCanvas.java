@@ -218,7 +218,7 @@ public class SingleParticlePickerCanvas extends ParticlePickerCanvas
 			drawShape(g2, active, true, activest);
 		}
 		Rectangle autopickout = frame.getParticlesRectangle();
-		if (autopickout != null)
+		if (autopickout != null && micrograph.hasManualParticles())
 		{
 			g2.setColor(Color.yellow);
 			g2.setStroke(continuousst);
