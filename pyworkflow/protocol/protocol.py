@@ -752,6 +752,7 @@ class Protocol(Step):
     
     def getDefaultRunName(self):
         return '%s.%s' % (self.getClassName(), self.strId())
+        
     
     @classmethod
     def getClassLabel(cls):
@@ -883,7 +884,7 @@ class Protocol(Step):
         protocol.run()
         
     def isChild(self):
-        """ Return true if this protocol was invoked from a workflow(another protocol)"""
+        """ Return true if this protocol was invoked from a workflow (another protocol)"""
         return self.hasObjParentId()
         
                 

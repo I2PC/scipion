@@ -28,15 +28,16 @@ input.hide {
 	cursor: pointer;
 	list-style:
 }
-textarea {
-	padding: 4px;
-	resize: vertical;
-	background: #F2F2F2;
-	max-height: 30em;
-	width: 26em;
-	height: 20em;
-	font-size: 0.9em;
-}
+
+/* textarea { */
+/* 	padding: 4px; */
+/* 	resize: vertical; */
+/* 	background: #F2F2F2; */
+/* 	max-height: 30em; */
+/* 	width: 26em; */
+/* 	height: 20em; */
+/* 	font-size: 0.9em; */
+/* } */
 
 /* TITLE */
 #protName {
