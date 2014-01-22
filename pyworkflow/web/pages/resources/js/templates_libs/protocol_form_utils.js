@@ -347,14 +347,14 @@ function normalizeConditions(cond){
 	return cond;
 }
 
-function browseObjects(param, projName, type_param, value_param) {
+function browseObjects(param, projName, type_param, value_param, pointerCondition) {
 	/*
 	 * Browse object in the database. 
 	 * Params: objClass: the class to get instances from (also subclasses)
 	 * protClassName: class refered to a protocol
 	 */
 	
-	url_param = "/browse_objects/?projectName=" + projName + "&objClass=" + value_param
+	url_param = "/browse_objects/?projectName=" + projName + "&objClass=" + value_param + "&objFilter=" + pointerCondition
 	if (type_param == 'protClassName'){
 		url_param = "/browse_protocol_class/?projectName=" + projName + "&protClassName=" + value_param
 	}

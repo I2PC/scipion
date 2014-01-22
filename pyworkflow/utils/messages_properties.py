@@ -149,7 +149,7 @@ class Message():
     LABEL_HOST_CONECTION_TEST='Connection TEST'
     
     #SHOWJ_WEB
-    ERROR_DIMENSIONS='Incorrect table width or height: '
+    SHOWJ_TITLE='Showj'
     
     LABEL_RESLICE='Reslice'
     RESLICE_Z_NEGATIVE='Z Negative (Front)'
@@ -187,6 +187,7 @@ class Message():
     
     LABEL_THRESHOLD='Threshold:'
     
+    ERROR_DIMENSIONS='Incorrect table width or height: '
     ERROR_WEBGL='Your web browser does not support or is not configured for WebGL. See [[http://get.webgl.org/][WebGL Support]] for more information.'
     
 class Icon():

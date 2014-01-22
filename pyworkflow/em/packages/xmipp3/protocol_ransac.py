@@ -47,6 +47,9 @@ class XmippProtRansac(ProtInitialVolume):
         
     def _defineParams(self, form):
         form.addSection(label='Input')
+        # JUST for testing purpose        
+#        pointerClassList='SetOfClasses2D,SetOfVolumes'
+        
         form.addParam('inputClasses', PointerParam, label="Input classes", important=True, 
                       pointerClass='SetOfClasses2D', pointerCondition='hasAverages',
                       help='Select the input classes from the project.'

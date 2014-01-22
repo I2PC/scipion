@@ -336,7 +336,14 @@ class PointerParam(Param):
     def __init__(self, **args):
         Param.__init__(self, paramClass=Pointer, **args)
         # This will be the class to be pointed
-        self.pointerClass = String(args.get('pointerClass'))
+        pointerClass=args.get('pointerClass')
+        if ',' in pointerClass:
+            self.pointerClass = CsvList()
+            self.pointerClass.set(pointerClass)
+        else:
+            self.pointerClass = String(pointerClass)
+            
+#        self.pointerClass = String(args.get('pointerClass'))
         # Some conditions on the pointed candidates
         self.pointerCondition = String(args.get('pointerCondition', None))
         self.allowNull = Boolean(args.get('allowNull', False))
