@@ -433,7 +433,7 @@ function editObject(objId){
 			var res = text.split("_-_")
 			label = res[0]
 			comment = res[1]
-			editObjParam(objId, "Label", label, "Comment", comment, "Describe your run here...")
+			editObjParam(objId, "Label", label, "Comment", comment, "Describe your run here...","object")
 		}
 	});
 }

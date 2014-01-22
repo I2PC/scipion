@@ -44,6 +44,8 @@ urlpatterns = patterns('',
     url(r'^browse_objects/$', 'app.views_util.browse_objects'), # Browse objects from the database
     url(r'^browse_protocol_class/$', 'app.views_util.browse_protocol_class'), # Browse objects from the database
     url(r'^get_attributes/$', 'app.views_util.get_attributes'), # Get Label and Comment for an Object
+    url(r'^set_attributes/$', 'app.views_util.set_attributes'), # Set Label and Comment for an Object
+
 
     #PROTOCOL (INCLUDE FORM)
     url(r'^save_protocol/$', 'app.views_protocol.save_protocol'),
@@ -51,7 +53,6 @@ urlpatterns = patterns('',
     url(r'^stop_protocol/$', 'app.views_protocol.stop_protocol'),
     url(r'^delete_protocol/$', 'app.views_protocol.delete_protocol'),
     url(r'^form/$', 'app.views_protocol.form'),
-    url(r'^update_obj_params/$', 'app.views_protocol.update_obj_params'),
     
 
     #WIZARDS

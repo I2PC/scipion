@@ -290,7 +290,7 @@ function br2nl(str) {
 
 function editObjParam(id, title_label, value_label, 
                       title_comment, value_comment,
-                      msg_comment) {
+                      msg_comment, typeObj) {
 	/*
 	 * Launch a messi popup with an input and textarea to edit the label and comment
 	 * for an object.
@@ -300,7 +300,7 @@ function editObjParam(id, title_label, value_label,
 		value_comment = msg_comment;
 	}
 	
-	var html = "<table id='id' value='"+ id +"'>" + 
+	var html = "<table id='params' data-type='"+ typeObj +"'value='"+ id +"'>" + 
 		 	"<tr>" +
 		 	"<td>" +"<h3>"+ title_label +"</h3>" +"</td>" +
 		 	"<td>" + "<input id='label_new' value='"+ value_label+"'>" + "</td>" +
@@ -335,18 +335,17 @@ function updateLabelComment(){
 	/*
 	 * Method to store the label and comment for an object.
 	 */
-	
-	id = $("table#id").attr('value')
+	elm_table = $("table#params")
+	id = elm_table.attr('value')
+	typeObj = elm_table.attr('data-type')
 	value_label = $("input#label_new").val()
 	value_comment = $("textarea#comment_new").val()
 	
-	alert(value_label)
-	alert(value_comment)
-
-	url_param = "/update_obj_params/?" +
+	url_param = "/set_attributes/?" +
 		"id=" + id + 
 		"&label=" + value_label + 
-		"&comment=" + value_comment
+		"&comment=" + value_comment +
+		"&typeObj=" + typeObj
 		
 	$.ajax({
 		type : "GET",

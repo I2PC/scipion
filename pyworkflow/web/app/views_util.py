@@ -189,38 +189,31 @@ def get_attributes(request):
         objId = request.GET.get('objId', None)
         obj = project.mapper.selectById(int(objId)).get()
         res = obj.getObjLabel() + "_-_" + obj.getObjComment()
-        
         return HttpResponse(res, mimetype='application/javascript')
     
-def update_obj_params(request):
+def set_attributes(request):
     if request.is_ajax():
         id = request.GET.get('id', None)
         label = request.GET.get('label', None)
         comment = request.GET.get('comment', None)
+        
+        typeObj = request.GET.get('typeObj', None)
 
         projectName = request.session['projectName']
         project = loadProject(projectName)
-        protocol = project.mapper.selectById(int(id)).get
         
-#        print protocol.printAll()
+        if typeObj=='object':
+            obj = project.mapper.selectById(int(id)).get()
+        elif typeObj=='protocol':
+            obj = project.mapper.selectById(int(id))
         
-        print protocol.getObjLabel()
-        print protocol.getObjComment()
-        print "-----------------------------"
+#        print obj.printAll()
         
-        protocol.setObjLabel(label)
-        protocol.setObjComment(comment)
+        obj.setObjLabel(label)
+        obj.setObjComment(comment)
+        project._storeProtocol(obj)
+#        project.mapper.store(protocol)
         
-        
-#        project.saveProtocol(protocol)
-        project._storeProtocol(protocol)
-        
-        project.mapper.store(protocol)
-        
-        protocol2 = project.mapper.selectById(int(id)).get
-        print protocol.getObjLabel()
-        print protocol2.getObjComment()
-     
     return HttpResponse(mimetype='application/javascript')
 
 def getSizePlotter(plots):
