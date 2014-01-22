@@ -264,7 +264,7 @@ class Project(object):
     def _storeProtocol(self, protocol):
         self.mapper.store(protocol)
         self.mapper.commit()
-                
+    
     def _setupProtocol(self, protocol):
         """Insert a new protocol instance in the database"""
         self._storeProtocol(protocol) # Store first to get a proper id

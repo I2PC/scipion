@@ -196,16 +196,19 @@ def set_attributes(request):
         id = request.GET.get('id', None)
         label = request.GET.get('label', None)
         comment = request.GET.get('comment', None)
-        
         typeObj = request.GET.get('typeObj', None)
 
         projectName = request.session['projectName']
         project = loadProject(projectName)
         
-        if typeObj=='object':
-            obj = project.mapper.selectById(int(id)).get()
-        elif typeObj=='protocol':
-            obj = project.mapper.selectById(int(id))
+        if id=='new':
+            className = request.GET.get('className', None)
+            obj = emProtocolsDict.get(className, None)()
+        else:
+            if typeObj=='object':
+                obj = project.mapper.selectById(int(id)).get()
+            elif typeObj=='protocol':
+                obj = project.mapper.selectById(int(id))
         
         obj.setObjLabel(label)
         obj.setObjComment(comment)
@@ -214,9 +217,12 @@ def set_attributes(request):
             project._storeProtocol(obj)
         elif typeObj=='protocol':
             project.saveProtocol(obj)
-#            project.mapper.store(protocol)
+
+    return_id = "reload"
+    if typeObj=='protocol':
+        return_id = obj.getObjId()
         
-    return HttpResponse(mimetype='application/javascript')
+    return HttpResponse(return_id, mimetype='application/javascript')
 
 def getSizePlotter(plots):
     figsize = (800, 600)

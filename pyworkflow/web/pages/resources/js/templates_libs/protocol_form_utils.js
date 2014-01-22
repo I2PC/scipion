@@ -426,8 +426,6 @@ function setParamProt(paramProt, params){
 	$("#"+paramProt+"_input").attr("data-prot", params)
 }
 
-
-
 //function getListFormatted(node, list, id) {
 //	var res = "<div class='content' style='overflow:auto' data-node='" + node
 //			+ "'>";

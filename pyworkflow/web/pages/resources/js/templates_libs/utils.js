@@ -295,7 +295,7 @@ function editObjParam(id, title_label, value_label,
 	 * Launch a messi popup with an input and textarea to edit the label and comment
 	 * for an object.
 	 */
-	
+
 	if(value_comment == ""){
 		value_comment = msg_comment;
 	}
@@ -335,11 +335,11 @@ function updateLabelComment(){
 	/*
 	 * Method to store the label and comment for an object.
 	 */
-	elm_table = $("table#params")
-	id = elm_table.attr('value')
-	typeObj = elm_table.attr('data-type')
-	value_label = $("input#label_new").val()
-	value_comment = $("textarea#comment_new").val()
+	var elm_table = $("table#params")
+	var id = elm_table.attr('value')
+	var typeObj = elm_table.attr('data-type')
+	var value_label = $("input#label_new").val()
+	var value_comment = $("textarea#comment_new").val()
 	
 	url_param = "/set_attributes/?" +
 		"id=" + id + 
@@ -347,12 +347,24 @@ function updateLabelComment(){
 		"&comment=" + value_comment +
 		"&typeObj=" + typeObj
 		
+	if (id == 'new'){
+		var className = $("input#protocolClass").val()
+		url_param += "&className=" + className
+	}
+		
 	$.ajax({
 		type : "GET",
 		url : url_param,
 		dataType: "text",
-		success : function() {
-			window.location.reload()
+		success : function(txt) {
+			if(txt=='reload'){
+				window.location.reload()
+			} else {
+				infoPopup('Success', 
+					"The protocol was saved successfuly",
+					1,
+					'window.opener.popup(\'/form/?protocolId='+txt+'\')');
+			}
 		},
 		error: function(){
 			alert("Fallo")
