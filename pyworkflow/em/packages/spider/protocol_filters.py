@@ -157,7 +157,6 @@ class SpiderProtFilter(ProtFilterParticles, SpiderProtocol):
         
         imgSet = self._createSetOfParticles()
         imgSet.copyInfo(self.inputParticles.get())
-        imgSet.load() # Force to create mapper before entering working dir
 
         self._enterWorkingDir() # Do operations inside the run working dir
         
@@ -181,7 +180,6 @@ class SpiderProtFilter(ProtFilterParticles, SpiderProtocol):
             
         self._leaveWorkingDir() # Go back to project dir
             
-        imgSet.write()
         self._defineOutputs(outputParticles=imgSet)
         
     def _summary(self):

@@ -467,7 +467,7 @@ def writeSetOfClasses2D(classes2DSet, filename, ctfDir=None, classesBlock='class
         filename: the filename where to write the metadata.
     """
     imgSet = classes2DSet.getImages()
-    imgSet.loadIfEmpty()
+    #imgSet.loadIfEmpty()
     
     classFn = '%s@%s' % (classesBlock, filename)
     classMd = xmipp.MetaData()
