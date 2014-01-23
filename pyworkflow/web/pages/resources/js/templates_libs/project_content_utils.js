@@ -37,7 +37,7 @@
  * function launchToolbarList(id, elm)
  * 	->	Toolbar used in the project content template for the run list view.
  * 
- * function launchToolbarList(id, elm)
+ * function launchToolbarTree(id, elm)
  * 	->	Toolbar used in the project content template for the runs tree view.
  * 
  * function checkRunStatus(id)

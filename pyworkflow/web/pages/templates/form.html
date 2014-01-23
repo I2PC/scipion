@@ -64,7 +64,7 @@
 		
 		<form id="protocolForm" action="/protocol/" method="POST" data-mode="">{% csrf_token %}
 			<input type="hidden" id="windowName" name="windowName" value=""/>
-			<input type="hidden" name="protocolClass" value="{{protocol.getClassName}}"/>
+			<input type="hidden" id="protocolClass" name="protocolClass" value="{{protocol.getClassName}}"/>
 			<input type="hidden" name="protocolId" value="{{protocol.getObjId}}"/>
 			<input type="hidden" name="protRunIdViewer" value="{{protRunIdViewer}}"/>
 			<input type="hidden" id="wizName" name="wizName" value=""/>
@@ -90,13 +90,18 @@
 							</td>
 							<td class="ico">
 								<a id="editTool" 
-								href="javascript:editObjParam({{protocol.getObjId}},
-															'{{messages_properties.TITLE_LABEL}}',
-															'{{protocol.getObjLabel}}',
-															'{{messages_properties.TITLE_COMMENT}}',
-															'{{comment}}',
-															'{{messages_properties.LABEL_COMMENT}}',
-															'protocol');">
+								href="javascript:editObjParam(
+										{% if protocol.getObjId == None %}
+														'new',
+										{% else %}
+														{{protocol.getObjId}},
+										{% endif %}		
+														'{{messages_properties.TITLE_LABEL}}',
+														'{{protocol.getObjLabel}}',
+														'{{messages_properties.TITLE_COMMENT}}',
+														'{{comment}}',
+														'{{messages_properties.LABEL_COMMENT}}',
+														'protocol');">				
 								<i class="fa fa-pencil"></i></a>
 							</td>
 						</tr>
