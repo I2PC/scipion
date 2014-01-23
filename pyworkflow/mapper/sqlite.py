@@ -410,10 +410,10 @@ class SqliteDb():
         return self.cursor.fetchone()
     
     def _iterResults(self):
-        row = self.cursor.fetch()
+        row = self.cursor.fetchone()
         while row is not None:
             yield row
-            row = self.cursor.fetch()
+            row = self.cursor.fetchone()
         
     def _results(self, iterate=False):
         """ Return the results to which cursor, point to. 
