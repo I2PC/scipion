@@ -99,10 +99,27 @@ class TestXmippWorkflow(unittest.TestCase):
 #        writeSetOfParticles(sets[0], "images.xmd")
         print "iterating set:"
         s = sets[0]
-#        for img in s:
-#            i = 1
+        dbFn = s.getFileName()
+        print "FileName: ", dbFn
+        from sqlite3 import dbapi2 as sqlite
+        conn = sqlite.Connection(dbFn, check_same_thread = False)
+        conn.row_factory = sqlite.Row
+        cur = conn.cursor()
+        cur.execute('select * from Objects;')
+        #conn2 = sqlite.Connection(':memory:')
+        #cur2 = conn2.cursor()
+        i = 0
+#        for line in conn.iterdump():
+        row = cur.fetchone()
+        while row is not None:
+            #yield row
+            row = cur.fetchone()
+            #cur2.executescript(line)
+            i += 1
+                
+        print "Total lines: ", i
             
-        print s.getDictionary()
+        print s.getObjDict()
         
     def testFlatDb(self):
         projName = "relion_ribo"
@@ -133,17 +150,27 @@ class TestXmippWorkflow(unittest.TestCase):
             
         print sets[0].getDictionary()
 
-        
-#        protId = requestDict.get('protocolId', None)
-#        protocol = project.mapper.selectById(int(protId))
-        
-        
-#        self.mapper = SqliteFlatMapper(self.dbPath, globals())
-#        self.mapper.commit()
-        
-        
-        
             
+    def testObjDict(self):
+        img = Image()
+        img.setLocation(1, 'image.spi')
+        img.setSamplingRate(3.5)
+        ctf = CTFModel()
+        ctf.defocusU.set(1000)
+        ctf.defocusAngle.set(90)
+        img.setCTF(ctf)
+        img.setAttributeValue('_ctfModel.defocusV', 1000)
+        
+        img.printObjDict()
+        
+        objDict = img.getObjDict()
+        objDict['_ctfModel.defocusAngle'] = '10'
+        objDict['_samplingRate'] = '1.0'
+        for k, v in objDict.iteritems():
+            img.setAttributeValue(k, v)
+        img.printAll()
+        
+   
              
 class ConditionFilter():
     def __init__(self, condition):

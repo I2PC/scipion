@@ -155,7 +155,7 @@ def browse_objects(request):
         filterObject = FilterObject(objFilterParam)
         
         project = loadProject(projectName)    
-        
+
         objs = []
         for objClass in objClassList.split(","):
             for obj in project.mapper.selectByClass(objClass, objectFilter=filterObject.objFilter, iterate=True):
@@ -182,6 +182,42 @@ def browse_protocol_class(request):
         
         jsonStr = json.dumps({'objects' : objs},ensure_ascii=False)
         return HttpResponse(jsonStr, mimetype='application/javascript')
+
+def get_attributes(request):
+    if request.is_ajax():
+        projectName = request.session['projectName']
+        project = loadProject(projectName)
+        objId = request.GET.get('objId', None)
+        obj = project.mapper.selectById(int(objId)).get()
+        res = obj.getObjLabel() + "_-_" + obj.getObjComment()
+        return HttpResponse(res, mimetype='application/javascript')
+    
+def set_attributes(request):
+    if request.is_ajax():
+        id = request.GET.get('id', None)
+        label = request.GET.get('label', None)
+        comment = request.GET.get('comment', None)
+        
+        typeObj = request.GET.get('typeObj', None)
+
+        projectName = request.session['projectName']
+        project = loadProject(projectName)
+        
+        if typeObj=='object':
+            obj = project.mapper.selectById(int(id)).get()
+        elif typeObj=='protocol':
+            obj = project.mapper.selectById(int(id))
+        
+        obj.setObjLabel(label)
+        obj.setObjComment(comment)
+        
+        if typeObj=='object':
+            project._storeProtocol(obj)
+        elif typeObj=='protocol':
+            project.saveProtocol(obj)
+#            project.mapper.store(protocol)
+        
+    return HttpResponse(mimetype='application/javascript')
 
 def getSizePlotter(plots):
     figsize = (800, 600)
@@ -446,11 +482,13 @@ def parseText(text, func=replacePattern):
         for itemText in text:
             splitLines=itemText.splitlines(True)
             if len(splitLines) == 0:
-                parsedText += '<br>'
+                parsedText += '<br />'
             else:    
                 for lineText in splitLines:
-                    parsedText += parseHyperText(lineText, func)+'<br>'
+                    parsedText += parseHyperText(lineText, func)+'<br />'
     else:
-        parsedText = parseHyperText(text, func)
-    
-    return parsedText    
+        splitLines=text.splitlines(True)
+        for lineText in splitLines:
+            parsedText += parseHyperText(lineText, func)+'<br />'
+#        parsedText = parseHyperText(text, func)
+    return parsedText[:-6]    

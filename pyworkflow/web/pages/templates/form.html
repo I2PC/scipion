@@ -69,8 +69,11 @@
 			<input type="hidden" name="protRunIdViewer" value="{{protRunIdViewer}}"/>
 			<input type="hidden" id="wizName" name="wizName" value=""/>
 			<input type="hidden" id="viewerParam" name="viewerParam" value="None"/>
-			<input type="hidden" id="comment" name="comment" value="{{protocol.getObjComment}}"/>
+			<input type="hidden" id="label" name="label" value="{{protocol.getObjLabel}}"/>
+			<input type="hidden" id="comment" name="comment" value="{{comment}}"/>
+<!-- 			<input type="hidden" id="comment" name="comment" value="{{protocol.getObjComment}}"/> -->
 			<input type="hidden" id="paramProt" name="paramProt" value="{{paramProt}}"/>
+			
 			{% if visualize == 0 %}
 			<div id="main">
 				<div id="mainNode1" class="mainNode floatLeft">
@@ -83,10 +86,18 @@
 								{{messages_properties.TITLE_RUN_NAME}}
 							</td>
 							<td>
-								<input type="text" id="runName" name="runName" value="{{protocol.getObjLabel}}">
+								<input type="text" id="{{messages_properties.VAR_RUN_NAME}}" name="{{messages_properties.VAR_RUN_NAME}}" value="{{protocol.getObjLabel}}">
 							</td>
 							<td class="ico">
-								<a id="editTool" href="javascript:showComment('{{messages_properties.LABEL_COMMENT}}');"><i class="fa fa-pencil"></i></a>
+								<a id="editTool" 
+								href="javascript:editObjParam({{protocol.getObjId}},
+															'{{messages_properties.TITLE_LABEL}}',
+															'{{protocol.getObjLabel}}',
+															'{{messages_properties.TITLE_COMMENT}}',
+															'{{comment}}',
+															'{{messages_properties.LABEL_COMMENT}}',
+															'protocol');">
+								<i class="fa fa-pencil"></i></a>
 							</td>
 						</tr>
 						<tr>
@@ -94,7 +105,7 @@
 								{{messages_properties.TITLE_RUN_MODE}}
 							</td>
 							<td>
-								<select id="runMode_select" name="runMode" size="1" onchange="javascript:onChangeEnumParamCombo('runMode_select', 'runMode');">
+								<select id="{{messages_properties.VAR_RUN_MODE}}_select" name="{{messages_properties.VAR_RUN_MODE}}" size="1" onchange="javascript:onChangeEnumParamCombo('runMode_select', '{{messages_properties.VAR_RUN_MODE}}');">
 									<option value="0">{{messages_properties.LABEL_RUN_MODE_RESUME}}</option>
 									<option value="1" selected="selected">{{messages_properties.LABEL_RUN_MODE_RESTART}}</option>
 								</select>		
@@ -105,7 +116,7 @@
 								{{messages_properties.TITLE_EXPERT}}
 							</td>
 							<td>
-								<select name="expertLevel" size=1
+								<select name="{{messages_properties.VAR_EXPERT}}" size=1
 								onChange="javascript:evalElements();">
 									<option value="0" {% if expertLevel == 0 %} selected="selected" {% endif %}>{{messages_properties.LABEL_EXPERT_NORMAL}}</option>
 									<option value="1" {% if expertLevel == 1 %} selected="selected" {% endif %}>{{messages_properties.LABEL_EXPERT_ADVANCE}}</option>
@@ -126,7 +137,7 @@
 								{{messages_properties.TITLE_EXEC_HOST}}
 							</td>
 							<td>
-								<select name="hostName" size=1 onChange="">
+								<select name="{{messages_properties.VAR_EXEC_HOST}}" size=1 onChange="">
 								{% for h in hosts %}
 									<option value="{{h}}" {% if h == hostName %} selected="selected" {% endif %}>{{h}}</option>
 								{% endfor %}
@@ -136,11 +147,11 @@
 						<tr>
 							<td>
 								{{messages_properties.TITLE_THREADS}}&nbsp;		
-								<input type="text" id="numberOfThreads_input" name="numberOfThreads" value="{{numberOfThreads}}" style="width:3em;">
+								<input type="text" id="{{messages_properties.VAR_THREADS}}_input" name="{{messages_properties.VAR_THREADS}}" value="{{numberOfThreads}}" style="width:3em;">
 							</td>
 							<td >
 								{{messages_properties.TITLE_MPI}}&nbsp;		
-								<input type="text" id="numberOfMpi_input" name="numberOfMpi" value="{{numberOfMpi}}" style="width:3em;">
+								<input type="text" id="{{messages_properties.VAR_MPI}}_input" name="{{messages_properties.VAR_MPI}}" value="{{numberOfMpi}}" style="width:3em;">
 							</td>
 						</tr>
 						<tr>
@@ -148,8 +159,8 @@
 								{{messages_properties.TITLE_QUEUE}}
 							</td>
 							<td>
-							  <input type="radio" id="queue_yes" name="_useQueue" value="yes"/>{{messages_properties.LABEL_QUEUE_YES}}
-							  <input type="radio" id="queue_no" name="_useQueue" value="no"/>{{messages_properties.LABEL_QUEUE_NO}}
+							  <input type="radio" id="queue_yes" name="{{messages_properties.VAR_QUEUE}}" value="yes"/>{{messages_properties.LABEL_QUEUE_YES}}
+							  <input type="radio" id="queue_no" name="{{messages_properties.VAR_QUEUE}}" value="no"/>{{messages_properties.LABEL_QUEUE_NO}}
 							</td>
 						</tr>
 					</table>
@@ -179,9 +190,9 @@
 									<td>
 										{% if param.getClassName == "BooleanParam" %}
 										  <input type="radio" id="{{paramName}}_yes" name={{paramName}} onChange="javascript:onChangeParam('true','{{paramName}}');" value="true" 
-										  {% if param.htmlValue == 'true' %} checked {% endif %}/>{{messages_properties.label_param_yes}}
+										  {% if param.htmlValue == 'true' %} checked {% endif %}/>{{messages_properties.LABEL_PARAM_YES}}
 										  <input type="radio" id="{{paramName}}_no" name={{paramName}} onChange="javascript:onChangeParam('false','{{paramName}}');" value="false"  
-										  {% if param.htmlValue == 'false' %} checked {% endif %} />{{messages_properties.label_param_no}}
+										  {% if param.htmlValue == 'false' %} checked {% endif %} />{{messages_properties.LABEL_PARAM_NO}}
 										{% elif param.getClassName == "EnumParam" %}
 											{% if param.display == 0 %}
 												{% for choice in param.choices %}
