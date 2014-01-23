@@ -98,9 +98,8 @@ class Mapper():
     
     def selectFirst(self):
         """Return only the first element"""
-        allObj = self.selectAll()
-        if len(allObj):
-            return allObj[0]
+        for obj in self.selectAll(iterate=True):
+            return obj
         return None
     
     def selectBy(self, **args):
