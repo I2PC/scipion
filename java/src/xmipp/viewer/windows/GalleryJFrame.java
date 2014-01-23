@@ -193,6 +193,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 	protected static int MAX_WIDTH;
 	protected static Dimension screenSize;
 	private Integer rows, columns;
+        protected JPanel commandspn;
 
 	/** Store data about visualization */
 	GalleryData data;
@@ -215,6 +216,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		aux = (float) MAX_HEIGHT * DIM_RATE;
 		MAX_WIDTH = Math.round(aux);
 	}
+    
 
 	/** Initialization function after GalleryData structure is created */
 	private void init(GalleryData data)
@@ -368,7 +370,15 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		c.weightx = 1.0;
 		c.weighty = 1.0;
 		container.add(jspContent, c);
-		
+                
+                commandspn = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+               
+                c.fill = GridBagConstraints.HORIZONTAL;
+		c.gridx = 0;
+		c.gridy = 3;
+		c.weightx = 0;
+		c.weighty = 0;
+		container.add(commandspn, c);
 				
 		// Create the menu for table
 		menu = new GalleryMenu();
