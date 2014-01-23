@@ -69,6 +69,14 @@
  * 	->	Creates a messi popup with a title and message passed by arguments.
  * 		It is used to show any error message
  * 
+ * function editObjParam(id, title_label, value_label, title_comment, 
+ * 			value_comment, msg_comment, typeObj)
+ *  ->	Launch a messi popup with an input and textarea to edit the label and comment
+ * 		for an object.
+ * 
+ * function updateLabelComment()
+ * 	->	Method to store the label and comment for an object.
+ * 
  * function isNaturalNumber(n)
  *  ->  Check if n is natural and returns true or false
  ******************************************************************************/
