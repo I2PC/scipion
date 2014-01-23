@@ -36,6 +36,7 @@
 	<script src="{{jquery_ui}} "type="text/javascript"></script>
 	<script>
 	function putMode(mode){
+		$(".multipleSelect option").prop('selected',true);
 		$("#protocolForm").attr('data-mode', mode);
 		$('#protocolForm').submit();
 	}
@@ -195,12 +196,23 @@
 											</select>
 										{% endif %}				
 									{% else %}
-											<input type="text" id="{{paramName}}_input" name={{paramName}} value="{{param.htmlValue}}">
+										{% if param.getClassName == "MultiPointerParam" %}
+											<select multiple id="{{paramName}}_input" name={{paramName}} size="3" class="multipleSelect" style="height:100%;">
+											</select>
+										{% else %}			
+											<input type="text" id="{{paramName}}_input" name={{paramName}} value="{{param.htmlValue}}">	
+										{% endif %}	
 									{% endif %}
 									</td>
-								{% if param.getClassName == "PointerParam" %}
+								{% if param.getClassName == "PointerParam"%}
 									<td class="ico">
 										<a href="javascript:browseObjects('{{paramName}}','{{projectName}}','objClass','{{param.pointerClass.get}}','{{param.pointerCondition.get}}');">
+											<i class="fa fa-search" style="font-size:1.1em;"></i>
+										</a> 
+									</td>
+								{% elif param.getClassName == "MultiPointerParam" %}
+									<td class="ico">
+										<a href="javascript:browseObjects('{{paramName}}','{{projectName}}','objClass','{{param.pointerClass.get}}','{{param.pointerCondition.get}}','{{param.maxNumObjects}}');">
 											<i class="fa fa-search" style="font-size:1.1em;"></i>
 										</a> 
 									</td>

@@ -167,6 +167,7 @@ def browse_objects(request):
 class FilterObject():
     def __init__(self, condition):
         self.condition = None if condition == 'None' else condition
+        
     def objFilter(self, obj):
         result = True
         if self.condition:

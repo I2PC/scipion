@@ -71,11 +71,19 @@ def form(request):
             if protVar is None:
                 raise Exception("_fillSection: param '%s' not found in protocol" % paramName)
                 # Create the label
-            if protVar.isPointer():
+            
+            print "paramNameJar",paramName
+            if protVar.isPointer() or protVar.isMultiPointer():
+                print "hasValue",protVar.hasValue()
+                print "value", protVar.get()
                 if protVar.hasValue():
                     param.htmlValue = protVar.get().getNameId()
                 else:
                     param.htmlValue = ""
+#            elif protVar.isMultiPointer():  
+#                print "hasValue",protVar.hasValue()
+#                print "value", protVar.get()
+#                param.htmlValue = ""      
             else:
                 param.htmlValue = protVar.get(param.default.get(""))
                 if isinstance(protVar, Boolean):
@@ -155,6 +163,7 @@ def updateProtocolParams(request, protocol, project):
     This function will be used from save_protocol and execute_protocol.
     """
     # PARAMS
+    print request.POST
     for paramName, _ in protocol.iterDefinitionAttributes():
         updateParam(request, project, protocol, paramName)
     
@@ -177,6 +186,11 @@ def updateParam(request, project, protocol, paramName):
     """
     attr = getattr(protocol, paramName)
     value = request.POST.get(paramName)
+    
+    print "paramName",paramName
+    print "value",value
+    print "value2",request.POST.getall(paramName)
+        
     if attr.isPointer():
         if len(value.strip()) > 0:
             objId = int(value.split('.')[-1])  # Get the id string for last part after .
@@ -185,6 +199,17 @@ def updateParam(request, project, protocol, paramName):
                 raise Exception("Param: %s is autoreferencing with id: %d" % (paramName, objId))
         else:
             value = None
+
+    elif attr.isMultiPointer():
+        print "valuepeludoncio",value
+        if len(value.strip()) > 0:
+            objId = int(value.split('.')[-1])  # Get the id string for last part after .
+            value = project.mapper.selectById(objId)  # Get the object from its id
+            if attr.getObjId() == value.getObjId():
+                raise Exception("Param: %s is autoreferencing with id: %d" % (paramName, objId))
+        else:
+            value = None
+
     attr.set(value)
 #    print "setting attr %s with value:" % paramName, value 
         
