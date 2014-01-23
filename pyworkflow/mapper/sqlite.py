@@ -43,12 +43,25 @@ class SqliteMapper(Mapper):
         self.db.commit()
         
     def __getObjectValue(self, obj):
+#        print "Inserting db", obj._objName, obj.getClassName(), obj.getObjValue()
         if obj.isPointer() and obj.hasValue():
             if obj.get().hasObjId(): # Check the object has been stored previously
                 return obj.get().strId() # For pointers store the id of referenced object
             else:
                 self.updatePendingPointers.append(obj)
                 return "Pending update" 
+#        elif obj.isMultiPointer() and obj.hasValue():
+#            idList=[]
+#            print "objget", obj.get()
+#            for item in obj.get():
+#                print "type", type(item)
+#                print "item",item
+#                print "get",item.get()
+#                print "id", item.get().strId()
+#                idList.append(item.get().strId())
+#                
+#            return ";".join(idList)    
+            
         return obj.getObjValue()
         
     def __insert(self, obj, namePrefix=None):

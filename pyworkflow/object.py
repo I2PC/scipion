@@ -43,7 +43,6 @@ class Object(object):
         self._objTag =  args.get('objTag', None) # This attribute serve to make some annotation on the object.
         self._objDoStore =  args.get('objDoStore', True) # True if this object will be stored from his parent
         self._objIsPointer =  args.get('objIsPointer', False) # True if will be treated as a reference for storage
-        self._objIsMultiPointer =  args.get('objIsMultiPointer', False) # True if will be treated as a reference for storage
         self._objCreationTime = None
         self._objParent = None # Reference to parent object
         
@@ -99,12 +98,7 @@ class Object(object):
         """If this is true, the value field is a pointer 
         to another object"""
         return self._objIsPointer
-    
-    def isMultiPointer(self):
-        """If this is true, the value field is a List of pointers (2-n) 
-        to another object"""
-        return self._objIsMultiPointer
-    
+        
     def _convertValue(self, value):
         """Convert a value to desired scalar type"""
         return value
@@ -513,8 +507,8 @@ class List(Object, list):
     ITEM_PREFIX = '__item__'
     
     """Class to store a list of objects"""
-    def __init__(self, value=None, **args):
-        Object.__init__(self, value, **args)
+    def __init__(self, **args):
+        Object.__init__(self, **args)
         list.__init__(self)
         
     def __getattr__(self, name):
@@ -560,13 +554,10 @@ class List(Object, list):
     
     def clear(self):
         del self[:]
-
-class PointerList(List):
-    def __init__(self, value=None, **args):
-        List.__init__(self, value, objIsMultiPointer=True, **args) 
         
-    def hasValue(self):        
-        return self._objValue is not None
+class PointerList(List):
+    def __init__(self, **args):
+        List.__init__(self, **args)
             
 class CsvList(Scalar, list):
     """This class will store a list of objects

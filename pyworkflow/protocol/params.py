@@ -353,7 +353,8 @@ class MultiPointerParam(PointerParam):
     """
     def __init__(self, **args):
         PointerParam.__init__(self, paramClass=PointerList, **args)
-        self.maxNumObjects = Integer(args.get('maxNumObjects',1))    
+        self.maxNumObjects = Integer(args.get('maxNumObjects',1))
+        self.minNumObjects = Integer(args.get('minNumObjects',1))    
 
         
 class RelationParam(Param):

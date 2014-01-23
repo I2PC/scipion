@@ -338,7 +338,10 @@ class Protocol(Step):
         which are pointers and have no condition.
         """
         for key, attr in self.getAttributes():
-            if attr.isPointer() and attr.hasValue():
+            if isinstance(attr, PointerList) and attr.hasValue():
+                for item in attr:
+                    yield key, item
+            elif attr.isPointer() and attr.hasValue():
                 yield key, attr
                 
     def iterOutputAttributes(self, outputClass):
@@ -361,7 +364,7 @@ class Protocol(Step):
             for paramName, param in self._definition.iterParams():
                 # Create the var with value comming from args or from 
                 # the default param definition
-                var = param.paramClass(args.get(paramName, param.default.get()))
+                var = param.paramClass(value=args.get(paramName, param.default.get()))
                 setattr(self, paramName, var)
         else:
             print "FIXME: Protocol '%s' has not DEFINITION" % self.getClassName()

@@ -91,7 +91,6 @@ class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
     def _defineSteps(self):
         '''for each micrograph insert the steps to preprocess it
         '''
-        print "En defineSteps"
         # Get pointer to input micrographs 
         inputMics = self.inputMicrographs.get() 
         

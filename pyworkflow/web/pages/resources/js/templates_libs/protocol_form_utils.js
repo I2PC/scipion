@@ -383,7 +383,6 @@ function browseObjects(param, projName, type_param, value_param, pointerConditio
 			if (maxNumObjects == 0 || maxNumObjects >1){
 				selectionFunc = "processMultipleSelectionTable"
 			}
-			console.log("selectionFunc",selectionFunc)
 			selectDialog(param, res, selectionFunc);
 		}
 	});
