@@ -125,13 +125,15 @@ class SpiderProtClassifyWard(ProtClassify, SpiderProtocol):
                 avg.setLocation(node.avgCount, self.dendroAverages)
                 cls = Class2D()
                 cls.setAverage(avg.clone())
-                for i in node.imageList:
-                    imgCA = ImageClassAssignment()
-                    imgCA.setImageId(i) # FIXME: this is wrong if the id is different from index
-                    cls.addImageClassAssignment(imgCA)
-                classes.append(cls)
                 avg.setObjId(cls.getObjId())
+                classes.append(cls)
+                classes.setClassSetOfImages(cls)
+                for i in node.imageList:
+                    img = Particle()
+                    img.setObjId(i) # FIXME: this is wrong if the id is different from index
+                    cls.addImage(img)
                 averages.append(avg)
+                cls.writeImages()
                 
         classes.setImages(self.inputParticles.get())
         classes.setAverages(averages)
