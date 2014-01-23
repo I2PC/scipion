@@ -192,7 +192,7 @@ def class2DToRow(class2D, classRow):
         index, filename = class2D.getAverage().getLocation()
         fn = locationToXmipp(index, filename)
         classRow.setValue(xmipp.MDL_IMAGE, fn)
-    n = long(len(class2D.getImageAssignments()))
+    n = long(len(class2D.getImages()))
     classRow.setValue(xmipp.MDL_CLASS_COUNT, n)
     setRowId(classRow, class2D, label=xmipp.MDL_REF)
     
@@ -483,13 +483,13 @@ def writeSetOfClasses2D(classes2DSet, filename, ctfDir=None, classesBlock='class
         imagesFn = 'class%06d_images@%s' % (ref, filename)
         imagesMd = xmipp.MetaData()
         
-        for imgCA in class2D.getImageAssignments():
-            imgCARow = XmippMdRow()
-            img = imgSet[imgCA.getImageId()]
-            imageClassAssignmentToRow(imgCA, imgCARow, img, ctfDir, ref)
-            imgCARow.writeToMd(imagesMd, imagesMd.addObject())
+        for img in class2D.getImages():
+            imgRow = XmippMdRow()
+            img = imgSet[img.getImageId()]
+            imageToRow(img, imgRow, ctfDir, ref)
+            imgRow.writeToMd(imagesMd, imagesMd.addObject())
         imagesMd.write(imagesFn, xmipp.MD_APPEND)
-     
+    
     classMd.write(classFn, xmipp.MD_APPEND) # Empty write to ensure the classes is the first block
     classes2DSet._xmippMd = String(filename)
 
