@@ -68,7 +68,7 @@ sections = [
 ('2D',
    [['Align+Classify', 'cl2d', 'ml2d', ['Other', 'cl2d_align', 'kerdensom', 'rotspectra', 'screen_classes','denoise_particles']]]),
 ('3D',
-   [['Initial Model', 'rct', 'initvolume_ransac', 'initvolume_simanneal', 'convert_pdb'],
+   [['Initial Model', 'rct', 'initvolume_ransac', 'initvolume_simanneal', 'convert_pdb','hg3d'],
     ['Model Refinement', 'projmatch', 'ml3d', ['relion', 'relion_classify', 'relion_refine'], 'projection_outliers'],
     ['Volumes', 'create_volume_mask', 'preprocess_volume', 'resolution3D', 'align_volume', 'helical_params']]),
 ('Other',
