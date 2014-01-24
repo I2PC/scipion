@@ -181,7 +181,7 @@ def class2DToRow(class2D, classRow):
         index, filename = class2D.getAverage().getLocation()
         fn = locationToXmipp(index, filename)
         classRow.setValue(xmipp.MDL_IMAGE, fn)
-    n = long(len(class2D.getImageAssignments()))
+    n = long(len(class2D.getImages()))
     classRow.setValue(xmipp.MDL_CLASS_COUNT, n)
     setRowId(classRow, class2D, label=xmipp.MDL_REF)
         
@@ -454,7 +454,7 @@ def writeSetOfClasses2D(classes2DSet, filename, ctfDir=None, classesBlock='class
             particleToRow(img, imgRow)
             imgRow.writeToMd(imagesMd, imagesMd.addObject())
         imagesMd.write(imagesFn, xmipp.MD_APPEND)
-     
+    
     classMd.write(classFn, xmipp.MD_APPEND) # Empty write to ensure the classes is the first block
     classes2DSet._xmippMd = String(filename)
 
@@ -467,14 +467,11 @@ def readSetOfClasses2D(classes2DSet, filename, classesBlock='classes', **args):
     """
     blocks = xmipp.getBlocksInMetaDataFile(filename)
     classesMd = xmipp.MetaData('%s@%s' % (classesBlock, filename))
-    print "reading md: ", '%s@%s' % (classesBlock, filename)
     samplingRate = classes2DSet.getImages().getSamplingRate()
     averages = None
     
     if classesMd.containsLabel(xmipp.MDL_IMAGE):
-        print "creating averages..."
         averages = classes2DSet.createAverages()
-        
     
     for objId in classesMd:
         class2D = Class2D()
