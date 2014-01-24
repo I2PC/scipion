@@ -171,6 +171,7 @@ class XmippProtCL2D(ProtClassify):
             self.runJob(None, "xmipp_image_sort", params, nproc)
             mdFnOut = fnRoot + ".xmd"
             md = xmipp.MetaData(mdFnOut)
+            md.addItemId()
             md.write("classes_sorted@" + mdFn, xmipp.MD_APPEND)
             #deleteFile(log,fnRoot+".xmd")
         
@@ -198,7 +199,7 @@ class XmippProtCL2D(ProtClassify):
         lastMdFn = levelMdFiles[-1]
         classes2DSet = self._createSetOfClasses2D(subset)
         classes2DSet.setImages(self.inputImages.get())
-        readSetOfClasses2D(self, classes2DSet, lastMdFn, 'classes_sorted')
+        readSetOfClasses2D(classes2DSet, lastMdFn, 'classes_sorted')
         classes2DSet.write()
         result = {'outputClasses' + subset: classes2DSet}
         self._defineOutputs(**result)

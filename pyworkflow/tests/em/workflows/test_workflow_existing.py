@@ -4,6 +4,7 @@ import subprocess
 import pyworkflow as pw
 from pyworkflow.em import *
 from pyworkflow.tests import *
+from pyworkflow.utils import cleanPath
 from pyworkflow.utils.graph import Graph, Node
 import pyworkflow.em.packages.eman2 as eman2
 from pyworkflow.mapper.sqlite import SqliteFlatMapper
@@ -138,20 +139,59 @@ class TestXmippWorkflow(unittest.TestCase):
         setOfPart2.write()
         
         
-    def selectingFlatDb(self):
-        projName = "relion_ribo"
-        self.proj = Manager().loadProject(projName) # Now it will be loaded if exists
+    def creatingFlatDb(self):
+        n = 1000
+        imgSet = SetOfParticles(filename='particles_flat.sqlite', mapperClass=SqliteFlatMapper)
         
-        mapper = SqliteFlatMapper("partFlat.sqlite", globals())
-        sets = mapper.selectByClass('SetOfParticles')
-        print sets[0]
-        for img in sets[0]:
-            i = 1
+        for i in range(n):
+            img = self._createImage()
+            img.setIndex(i+1)
+            imgSet.append(img)
+            a = 1
             
-        print sets[0].getDictionary()
+        imgSet.write()
 
-            
-    def testObjDict(self):
+    def nestedFlatDb(self): 
+        fn = 'classes_flat.sqlite'
+        cleanPath(fn)
+        
+        images = SetOfImages()
+        images.setSamplingRate(1.2)
+        classes2DSet = SetOfClasses2D(filename=fn)
+        classes2DSet.setImages(images)
+        averages = classes2DSet.createAverages()
+    
+        for ref in range(1, 11):
+            print "class: ", ref
+            class2D = Class2D()
+            class2D.setObjId(ref)
+            print "append class to set, ref=", ref
+            classes2DSet.append(class2D)
+            avg = Particle()
+            avg.setLocation(ref, 'averages.stk')
+            print "   populating class "
+            for i in range(1, 101):         
+                img = Particle()
+                img.setSamplingRate(5.3)
+                class2D.append(img)
+                    
+            print "   writing class "
+            class2D.write()
+            print "   append avg"
+            averages.append(avg)
+        
+        classes2DSet.write()
+        
+    def selectingFlatDb(self):
+        imgSet = SetOfParticles(mapperClass=SqliteFlatMapper)
+        imgSet._filename.set('particles_flat.sqlite')
+        
+        for img in imgSet:
+            #img.printAll()
+            #img = self._createImage()
+            a = img.getSamplingRate()
+
+    def _createImage(self):
         img = Image()
         img.setLocation(1, 'image.spi')
         img.setSamplingRate(3.5)
@@ -160,16 +200,28 @@ class TestXmippWorkflow(unittest.TestCase):
         ctf.defocusAngle.set(90)
         img.setCTF(ctf)
         img.setAttributeValue('_ctfModel.defocusV', 1000)
-        
+        return img
+              
+    def testObjDict(self):
+        img = self._createImage()
         img.printObjDict()
         
         objDict = img.getObjDict()
         objDict['_ctfModel.defocusAngle'] = '10'
+        
+        def printTrace():
+            print "sampling changed to: ", img.getSamplingRate()
+            
+        img._samplingRate.trace(printTrace)
+        
         objDict['_samplingRate'] = '1.0'
         for k, v in objDict.iteritems():
             img.setAttributeValue(k, v)
         img.printAll()
         
+        img.setSamplingRate(5.0)
+        
+    
    
              
 class ConditionFilter():

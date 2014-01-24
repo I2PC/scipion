@@ -110,8 +110,7 @@ class SpiderProtClassifyWard(ProtClassify, SpiderProtocol):
     def createOutput(self):
         rootNode = self.buildDendrogram(True)
         classes = self._createSetOfClasses2D()
-        averages = self._createSetOfParticles()
-        averages.copyInfo(self.inputParticles.get())
+        averages = classes.createAverages()
         g = graph.Graph(root=rootNode)        
         self._fillClassesFromNodes(classes, averages, g.getNodes())
         
@@ -119,23 +118,26 @@ class SpiderProtClassifyWard(ProtClassify, SpiderProtocol):
          
     
     def _fillClassesFromNodes(self, classes, averages, nodeList):
+        """ Create the SetOfClasses2D from the images of each node
+        in the dendogram. 
+        """
+        classes.setImages(self.inputParticles.get())
+        class2D = Class2D()
+        avg = Particle()
+        img = Particle()
+        
         for node in nodeList:
             if node.path:
-                avg = Particle()
+                classes.append(class2D)
+                avg.copyObjId(class2D)
                 avg.setLocation(node.avgCount, self.dendroAverages)
-                cls = Class2D()
-                cls.setAverage(avg.clone())
-                for i in node.imageList:
-                    imgCA = ImageClassAssignment()
-                    imgCA.setImageId(i) # FIXME: this is wrong if the id is different from index
-                    cls.addImageClassAssignment(imgCA)
-                classes.append(cls)
-                avg.setId(cls.getId())
                 averages.append(avg)
+                for i in node.imageList:
+                    img.setObjId(i) # FIXME: this is wrong if the id is different from index
+                    class2D.append(img)
+                class2D.write() # Write images set
+                class2D.cleanObjId() # This is needed to reuse the same Class2D() object
                 
-        classes.setImages(self.inputParticles.get())
-        classes.setAverages(averages)
-        averages.write()
         classes.write()
           
         

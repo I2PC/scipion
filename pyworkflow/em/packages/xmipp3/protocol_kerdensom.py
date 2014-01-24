@@ -145,8 +145,7 @@ class XmippProtKerdensom(ProtClassify):
         """
         classes2DSet = self._createSetOfClasses2D()
         classes2DSet.setImages(self.inputImages.get())
-        readSetOfClasses2D(self, classes2DSet, self._params['kclasses'])
-        classes2DSet.write()
+        readSetOfClasses2D(classes2DSet, self._params['kclasses'])
         self._defineOutputs(outputClasses=classes2DSet)
 
     def _validate(self):

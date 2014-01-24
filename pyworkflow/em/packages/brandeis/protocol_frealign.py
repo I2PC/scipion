@@ -667,7 +667,7 @@ eot
             
             partCounter += 1
 #TODO: change the definition of film when Image class has micId.
-            film = '%05d' % img.getId()
+            film = '%05d' % img.getObjId()
             ctf = img.getCTF()
             defocusU, defocusV, astig = ctf.getDefocusU(), ctf.getDefocusV(), ctf.getDefocusAngle()
 

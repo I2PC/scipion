@@ -34,7 +34,7 @@ This module contains converter functions that will serve to:
 import subprocess
 from data import *
 from eman2 import *
-
+import glob
 from pyworkflow.em.constants import NO_INDEX
 from os.path import abspath
 
@@ -86,7 +86,7 @@ def writeSetOfMicrographs(micSet, filename, rowFunc=None):
 def readPosCoordinates(posFile):
     pass
             
-def readSetOfCoordinates(workDir, nameDir, micSet, coordSet):
+def readSetOfCoordinates(workDir, micSet, coordSet):
     """ Read from Eman .json files.
     It is expected a file named: base.json under the workDir.
     Params:
@@ -99,13 +99,11 @@ def readSetOfCoordinates(workDir, nameDir, micSet, coordSet):
     jsonFnbase = join(workDir, 'e2boxercache', 'base.json')
     jsonBoxDict = loadJson(jsonFnbase)
     size = int(jsonBoxDict["box_size"])
-    dirName = ''.join(nameDir[1:2])
+    jsonFninfo = join(workDir, 'info/')
+    
     
     for mic in micSet:
-        micFnroot = dirName + '-' +removeBaseExt(mic.getFileName()) + '_info.json'
-        micPosRelFn = join("info", micFnroot)
-        micPosFn = join(workDir, micPosRelFn)
-        
+        micPosFn = ''.join(glob.glob(jsonFninfo + '*' + removeBaseExt(mic.getFileName()) + '_info.json'))
         if exists(micPosFn):
             jsonPosDict = loadJson(micPosFn)
             boxes = jsonPosDict["boxes"]
@@ -143,8 +141,8 @@ def writeSetOfParticles(partSet, filename):
     for part in partSet:
         index, fn = part.getLocation()
         # Write the e2converter.py process from where to read the image
-        print "sending: ", part.getId(), index, fn
-        print >> proc.stdin, part.getId(), index, join(cwd, fn)
+        print "sending: ", part.getObjId(), index, fn
+        print >> proc.stdin, part.getObjId(), index, join(cwd, fn)
         proc.stdin.flush()
         response = proc.stdout.readline()
         print "response: ", response
