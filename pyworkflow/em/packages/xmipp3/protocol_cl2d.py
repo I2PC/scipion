@@ -48,6 +48,7 @@ CL_ROBUST = 1
 class XmippProtCL2D(ProtClassify):
     """ Protocol to preprocess a set of micrographs in the project. """
     _label = 'cl2d'
+    _references=['probando','probando']
     
     def __init__(self, **args):
         if 'numberOfMpi' not in args:
@@ -220,3 +221,12 @@ class XmippProtCL2D(ProtClassify):
         if self.numberOfMpi <= 1:
             validateMsgs.append('Mpi needs to be greater than 1.')
         return validateMsgs
+    
+    def _methods(self):
+        methods = []
+        if not hasattr(self, 'outputClasses'):
+            methods.append("Protocol has not finished yet.")
+        else:
+            methods.append("Ese material and methods de moda")
+        
+        return methods

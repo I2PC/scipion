@@ -48,8 +48,6 @@ class XmippProtJoinSets(ProtPreprocessMicrographs):
                       help='Select the input set of micrographs from the project.'
                            'They should 2 or more SetOfMicrographs classes')
         
-#        form.addParallelSection(mpi=2)
-         
         
     def _defineSteps(self):
         

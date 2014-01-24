@@ -881,15 +881,15 @@ class Protocol(Step):
         """ Return a citation message to provide some information to users. """
         citations = self._citations()
         if not citations:
-            citations = []
+            citationsFinal = []
         else:
-            citations.insert(0, '*References:*')
+            citationsFinal = ['*References:* '] + citations
 
         packageCitations = getattr(self._package, "_references", [])
         if packageCitations:
-            citations = citations +['*Package References:*'] + packageCitations   
+            citationsFinal = citationsFinal +['*Package References:*'] + packageCitations   
             
-        return citations    
+        return citationsFinal    
 
     def _methods(self):
         """ Should be implemented in subclasses. See methods. """
