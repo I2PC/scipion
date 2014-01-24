@@ -198,9 +198,7 @@ class XmippProtML2D(ProtClassify):
         classes2DSet = self._createSetOfClasses2D()
         classes2DSet.setImages(self.inputParticles.get())
         readSetOfClasses2D(classes2DSet, self.oroot + 'classes.xmd')
-        print "after read"
         self._defineOutputs(outputClasses=classes2DSet)
-        print "after define"
     
     def _summary(self):
         summary = []

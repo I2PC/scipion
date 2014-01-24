@@ -496,10 +496,7 @@ def readSetOfClasses2D(classes2DSet, filename, classesBlock='classes', **args):
             avg.setLocation(index, avgFn)
             avg.copyObjId(class2D)
             averages.append(avg)
-            
     classes2DSet._xmippMd = String(filename)
-    print "end of readSetOfClasses2D"
-         
 
 def createXmippInputImages(self, imgSet, rowFunc=None, imagesFn=None):  
     imgsMd = getattr(imgSet, '_xmippMd', None)
