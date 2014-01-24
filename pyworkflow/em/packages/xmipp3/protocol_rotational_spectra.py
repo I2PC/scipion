@@ -8,6 +8,7 @@ from protocol_kerdensom import *
 class XmippProtRotSpectra(XmippProtKerdensom):
     """Protocol to compute the rotational spectrum of the given particles"""
     _label = 'rotational spectra'
+    _reference = ['[[http://www.ncbi.nlm.nih.gov/pubmed/10896143][Pascual-Montano, et.al,  Ultramic (2000)]]']
     
     def _defineParams(self, form):
         XmippProtKerdensom._defineParams(self, form)

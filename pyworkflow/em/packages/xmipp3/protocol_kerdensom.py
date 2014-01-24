@@ -39,6 +39,9 @@ from glob import glob
 class XmippProtKerdensom(ProtClassify):
     """ Protocol to align a set of particles. """
     _label = 'kerdensom'
+    _references = ['[[http://www.ncbi.nlm.nih.gov/pubmed/11472094][Pascual-Montano, et.al,  JSB (2001)]]',
+                   '[[http://www.ncbi.nlm.nih.gov/pubmed/12160707][Pascual-Montano, et.al,  JSB (2002)]]'
+                   ]
 
     def _defineParams(self, form):
         form.addSection(label='Input')

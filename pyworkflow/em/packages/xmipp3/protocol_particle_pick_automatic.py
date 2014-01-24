@@ -41,6 +41,7 @@ MICS_OTHER = 1
 class XmippParticlePickingAutomatic(ProtParticlePicking, XmippProtocol):
     """Protocol to pick particles automatically in the project"""
     _label = 'automatic picking'
+    _references = ['[[http://www.ncbi.nlm.nih.gov/pubmed/23958728][Abrishami, et.al,  Bioinformatics (2013)]]']
     
     filesToCopy = ['model_training.txt', 'model_svm.txt', 'model_pca_model.stk', 'model_rotpca_model.stk', 
                'model_particle_avg.xmp', 'config.xmd', 'templates.stk']
