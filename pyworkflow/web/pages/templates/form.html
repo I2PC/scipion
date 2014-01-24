@@ -57,10 +57,14 @@
 	</head>
 	<body onload="evalElements();">
 
-		{% if package_logo != ''%}
-			<img src='{{package_logo}}' style="float:right;"/>
-		{% endif %}
-		<h3 id="protName">{{protocol.getClassLabel}}</h3>&nbsp;
+		<div style="min-width:80%;">
+			{% if package_logo != ''%}
+				<img src='{{package_logo}}' style="float:left;"/>
+			{% endif %}
+			<h3 id="protName">{{protocol.getClassLabel}}</h3>&nbsp;
+			
+			<!-- fa-external-link -->
+		</div>
 		
 		<form id="protocolForm" action="/protocol/" method="POST" data-mode="">{% csrf_token %}
 			<input type="hidden" id="windowName" name="windowName" value=""/>
