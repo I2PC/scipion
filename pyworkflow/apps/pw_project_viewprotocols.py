@@ -380,10 +380,15 @@ class ProtocolsView(tk.Frame):
         gui.configureWeigths(sframe)
         self.summaryText = TaggedText(sframe, width=40, height=15, bg='white')
         self.summaryText.grid(row=0, column=0, sticky='news')        
-        #self.summaryText.addText("\nSummary should go <HERE!!!>\n More info here.")
+        # Method tab
+        mframe = tk.Frame(tab)
+        gui.configureWeigths(mframe)
+        self.methodText = TaggedText(mframe, width=40, height=15, bg='white')
+        self.methodText.grid(row=0, column=0, sticky='news')    
         
         tab.add(dframe, text=Message.LABEL_DATA)
-        tab.add(sframe, text=Message.LABEL_SUMMARY)     
+        tab.add(sframe, text=Message.LABEL_SUMMARY)   
+        tab.add(mframe, text=Message.LABEL_METHODS)
         tab.grid(row=0, column=0, sticky='news')
         
         v.add(runsFrame, weight=3)
@@ -619,6 +624,7 @@ class ProtocolsView(tk.Frame):
             self.updateActionToolbar()
             self._fillData()
             self._fillSummary()
+            self._fillMethod()
         else:
             pass #TODO: implement what to do
                     
@@ -655,6 +661,10 @@ class ProtocolsView(tk.Frame):
     def _fillSummary(self):
         self.summaryText.clear()
         self.summaryText.addText(self.selectedProtocol.summary())
+        
+    def _fillMethod(self):
+        self.methodText.clear()
+        self.methodText.addText(self.selectedProtocol.methods())
         
     def _scheduleRunsUpdate(self, secs=1):
         self.runsTree.after(secs*1000, self.refreshRuns)

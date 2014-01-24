@@ -114,6 +114,16 @@ class Object(object):
         """Return internal value"""
         return self._objValue
     
+    def trace(self, callback):
+        """ Add an observer when the set method is called. """
+        self.__set = self.set 
+        self.__setCallback = callback 
+        self.set = self.__setTrace
+        
+    def __setTrace(self, value):
+        self.__set(value)
+        self.__setCallback()
+    
     def getObjValue(self):
         """Return the internal value for storage.
         This is a good place to do some update of the
@@ -127,6 +137,10 @@ class Object(object):
     def setObjId(self, newId):
         """Set the object id"""
         self._objId = newId
+        
+    def copyObjId(self, other):
+        """ Copy the object id form other to self. """
+        self.setObjId(other.getObjId())
         
     def hasObjId(self):
         return not self._objId is None
@@ -234,19 +248,21 @@ class Object(object):
             prefix += '.'
         for k, v in self.getAttributesToStore():
             kPrefix = prefix + k
-            if isinstance(v, Scalar):
-                if includeClass:
-                    objDict[kPrefix] = (v.getClassName(), v.getObjValue())
-                else:
-                    objDict[kPrefix] = v.getObjValue()
+            if includeClass:
+                objDict[kPrefix] = (v.getClassName(), v.getObjValue())
             else:
+                objDict[kPrefix] = v.getObjValue()
+            if not isinstance(v, Scalar):
                 v.__getObjDict(kPrefix, objDict, includeClass)
             
     def getObjDict(self, includeClass=False):
         """ Return all attributes and values in a dictionary.
         Nested attributes will be separated with a dot in the dict key.
         """
-        d = {}
+        from collections import OrderedDict
+        d = OrderedDict()
+        if includeClass:
+            d['self'] = (self.getClassName(),)
         self.__getObjDict('', d, includeClass)
         return d
     
@@ -448,6 +464,10 @@ class Integer(Scalar):
     def _convertValue(self, value):
         return int(value)
     
+    def increment(self):
+        """ Add 1 to the current value. """
+        self._objValue += 1
+    
         
 class String(Scalar):
     """String object"""
@@ -587,7 +607,7 @@ class CsvList(Scalar, list):
         return list.__str__(self)
      
     def isEmpty(self):
-        return len(self) > 0
+        return len(self) == 0
     
     def clear(self):
         del self[:]

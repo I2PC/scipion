@@ -34,9 +34,11 @@ import xmipp
 class XmippProtJoinSets(ProtPreprocessMicrographs):
     """ Protocol to obtain a set of initial volumes. """
     _label = 'join sets'
+    _references=['Mierdita mia','peromierditawena']
     
     def __init__(self, **args):
         ProtPreprocessMicrographs.__init__(self, **args)
+
         
     def _defineParams(self, form):
         form.addSection(label='Input')
@@ -46,8 +48,6 @@ class XmippProtJoinSets(ProtPreprocessMicrographs):
                       help='Select the input set of micrographs from the project.'
                            'They should 2 or more SetOfMicrographs classes')
         
-#        form.addParallelSection(mpi=2)
-         
         
     def _defineSteps(self):
         
@@ -74,5 +74,14 @@ class XmippProtJoinSets(ProtPreprocessMicrographs):
         else:
             summary.append("RANSAC iterations: ")
 
-            return summary
+        return summary
+        
+    def _methods(self):
+        methods = []
+        if not hasattr(self, 'outputMicrographs'):
+            methods.append("Protocol has not finished yet.")
+        else:
+            methods.append("Ese material and methods de moda")
+        
+        return methods
             

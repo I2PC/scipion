@@ -136,7 +136,6 @@ class SpiderProtAlignAPSR(ProtAlign, SpiderProtocol):
             img = Image()
             img.setLocation(i, outputStk)
             imgSet.append(img)
-        imgSet.write()
         self._defineOutputs(outputParticles=imgSet)
         
     def _summary(self):

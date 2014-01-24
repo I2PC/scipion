@@ -189,6 +189,17 @@ function fillTabsSummary(id) {
 //			}
 		}
 	});
+	
+	$.ajax({
+		type : "GET",
+		url : '/protocol_methods/?protocolId='+ id,
+		dataType : "json",
+		success : function(json) {
+			$("#tab-methods").empty();
+			$("#tab-methods").append(json);
+		}
+	});
+	
 }
 
 function fillUL(list, ulId, icon) {

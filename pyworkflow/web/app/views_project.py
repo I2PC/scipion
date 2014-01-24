@@ -390,10 +390,25 @@ def protocol_summary(request):
         protocol = project.mapper.selectById(int(protId))
         summary = protocol.summary()
 
-        from pyworkflow.web.app.views_util import parseText, replacePattern
+        from pyworkflow.web.app.views_util import parseText
         jsonStr = json.dumps(parseText(summary), ensure_ascii=False)
+
+    return HttpResponse(jsonStr, mimetype='application/javascript')    
+  
+def protocol_methods(request):  
+    if request.is_ajax():
+        projectName = request.session['projectName']
+        project = loadProject(projectName)
+        protId = request.GET.get('protocolId', None)
+        protocol = project.mapper.selectById(int(protId))
+        methods = protocol.methods()
+        
+        print "methods",methods
+
+        from pyworkflow.web.app.views_util import parseText
+        jsonStr = json.dumps(parseText(methods), ensure_ascii=False)
         
 #        print "======================= in protocol_summary...."
 #        print jsonStr
-    return HttpResponse(jsonStr, mimetype='application/javascript')    
+    return HttpResponse(jsonStr, mimetype='application/javascript')  
     

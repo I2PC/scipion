@@ -79,7 +79,9 @@ class Message():
     LABEL_SUMMARY='Summary'
     LABEL_INPUT='Input'
     LABEL_OUTPUT='Output'
+    LABEL_METHODS='Methods'
     NO_INFO_SUMMARY='No summary information.'
+    NO_INFO_METHODS='No methods information.'
     NO_SAVE_SETTINGS='Error try to save settings. '
     
     # Protocol Form Template
