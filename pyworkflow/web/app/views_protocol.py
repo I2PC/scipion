@@ -41,7 +41,6 @@ SPECIAL_PARAMS = ['numberOfMpi', 'numberOfThreads', 'hostName', 'expertLevel', '
 OBJ_PARAMS =['runName', 'comment']
 
 def getPointerHtml(protVar):
-    protVar.printAll()
     if protVar.hasValue():
         return protVar.get().getNameId()
     return ""

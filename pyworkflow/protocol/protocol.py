@@ -862,7 +862,7 @@ class Protocol(Step):
     def _summary(self):
         """ Should be implemented in subclasses. See summary. """
         return ["No summary information."]
-    
+        
     def summary(self):
         """ Return a summary message to provide some information to users. """
         error = ''
@@ -873,6 +873,36 @@ class Protocol(Step):
             baseSummary = []
         return baseSummary + ['', '*Comments:* ', self.getObjComment(), error]
     
+    def _citations(self):
+        """ Should be implemented in subclasses. See citations. """
+        return getattr(self, "_references", [])
+    
+    def citations(self):
+        """ Return a citation message to provide some information to users. """
+        citations = self._citations()
+        if not citations:
+            citations = []
+        else:
+            citations.insert(0, '*References:*')
+
+        packageCitations = getattr(self._package, "_references", [])
+        if packageCitations:
+            citations = citations +['*Package References:*'] + packageCitations   
+            
+        return citations    
+
+    def _methods(self):
+        """ Should be implemented in subclasses. See methods. """
+        return ["No methods information."]
+        
+    def methods(self):
+        """ Return a description about methods about current protocol execution. """
+        baseMethods = self._methods()
+        if not baseMethods:
+            baseMethods = []
+            
+        return baseMethods + [''] + self.citations()
+        
     def runProtocol(self, protocol):
         """ Setup another protocol to be run from a workflow. """
         name = protocol.getClassName() + protocol.strId()

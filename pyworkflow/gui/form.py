@@ -753,6 +753,16 @@ class FormWindow(Window):
             if onlySave:
                 action = "SAVE"
             self.showError("Error during %s: %s" % (action, ex))
+    
+    
+    def getWidgetValue(self, protVar, param):
+        widgetValue = ""                
+        if isinstance(param, MultiPointerParam):
+            for pointer in protVar:
+                widgetValue += pointer.get(param.default.get()) + ";"
+        else:
+            widgetValue = protVar.get(param.default.get())  
+        return widgetValue
            
     def _fillSection(self, sectionParam, sectionWidget):
         parent = sectionWidget.contentFrame
@@ -770,8 +780,9 @@ class FormWindow(Window):
             else:
                 # Create the label
                 visualizeCallback = self.visualizeDict.get(paramName, None)
+                
                 widget = ParamWidget(r, paramName, param, self, parent, 
-                                                         value=protVar.get(param.default.get()),
+                                                         value=self.getWidgetValue(protVar, param),
                                                          callback=self._checkChanges,
                                                          visualizeCallback=visualizeCallback)
                 widget.show() # Show always, conditions will be checked later
