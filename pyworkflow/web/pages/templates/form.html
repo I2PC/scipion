@@ -63,7 +63,7 @@
 		<h3 id="protName">{{protocol.getClassLabel}}</h3>&nbsp;
 		
 		<form id="protocolForm" action="/protocol/" method="POST" data-mode="">{% csrf_token %}
-			<input type="hidden" id="windowName" name="windowName" value=""/>
+<!-- 			<input type="hidden" id="windowName" name="windowName" value=""/> -->
 			<input type="hidden" id="protocolClass" name="protocolClass" value="{{protocol.getClassName}}"/>
 			<input type="hidden" name="protocolId" value="{{protocol.getObjId}}"/>
 			<input type="hidden" name="protRunIdViewer" value="{{protRunIdViewer}}"/>
@@ -216,7 +216,7 @@
 											<select multiple id="{{paramName}}_input" name={{paramName}} size="3" class="multipleSelect" style="height:100%;">
 											</select>
 										{% else %}			
-											<input type="text" id="{{paramName}}_input" name={{paramName}} value="{{param.htmlValue}}">	
+											<input type="text" id="{{paramName}}_input" data-objId="{{param.htmlIdValue}}" name="{{paramName}}" value="{{param.htmlValue}}" >	
 										{% endif %}	
 									{% endif %}
 									</td>
