@@ -39,7 +39,7 @@ from convert import *
 class XmippProtCTFMicrographs(ProtCTFMicrographs):
     """Protocol to perform CTF estimation on a set of micrographs in the project"""
     _label = 'ctf estimation'
-    
+    _references = ['[[http://www.ncbi.nlm.nih.gov/pubmed/23261401][FASTDEF: Vargas.J. JSB (2013)]]']    
     __prefix = join('%(micDir)s','xmipp_ctf')
     _templateDict = {
         # This templates are relative to a micDir

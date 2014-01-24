@@ -83,6 +83,10 @@
 
 /** METHODS ******************************************************************/
 
+function startsWith(str, pattern){
+	return str.lastIndexOf(pattern, 0) === 0
+}
+
 function popup(URL) {
 	/*
 	 * Launch a basic popup (600x500) opening the URL passed by argument.
@@ -292,6 +296,15 @@ function isNaturalNumber(n) {
     return !isNaN(n1) && n2 === n1 && n1.toString() === n && n2>0;
 }
 
+function blnkspcs(str){
+	return str.replace(/\s/gi, "X")
+}
+
+function breakLine(str){
+	return str.replace(/\\n/g, "Y");
+}
+
+
 function br2nl(str) {
     return str.replace(/<br\s*\/?>/mg,"\n");
 }
@@ -308,6 +321,8 @@ function editObjParam(id, title_label, value_label,
 		value_comment = msg_comment;
 	}
 	
+//	alert(value_comment)
+
 	var html = "<table id='params' data-type='"+ typeObj +"'value='"+ id +"'>" + 
 		 	"<tr>" +
 		 	"<td>" +"<h3>"+ title_label +"</h3>" +"</td>" +
@@ -315,7 +330,7 @@ function editObjParam(id, title_label, value_label,
 			"</tr>"+
 			"<tr>" +
 		 	"<td>" +"<h3>" + title_comment +"</h3>" +"</td>" +
-		 	"<td>" + "</h3><textarea id='comment_new'>"+ br2nl(value_comment) + "</textarea>" + "</td>" +
+		 	"<td>" + "</h3><textarea id='comment_new'>"+ value_comment + "</textarea>" + "</td>" +
 			"</tr>"+
 			"</table>"
 	
@@ -347,7 +362,10 @@ function updateLabelComment(){
 	var id = elm_table.attr('value')
 	var typeObj = elm_table.attr('data-type')
 	var value_label = $("input#label_new").val()
-	var value_comment = $("textarea#comment_new").val()
+	
+	var comment= $("textarea#comment_new").val()
+	
+	var value_comment = blnkspcs(comment)
 	
 	url_param = "/set_attributes/?" +
 		"id=" + id + 
