@@ -479,16 +479,17 @@ class SqliteDb():
 
 class SqliteFlatMapper(Mapper):
     """Specific Flat Mapper implementation using Sqlite database"""
-    def __init__(self, dbName, dictClasses=None):
+    def __init__(self, dbName, dictClasses=None, tablePrefix=''):
         Mapper.__init__(self, dictClasses)
         self._objTemplate = None
         try:
-            self.doCreateTables = not exists(dbName) #self.db.hasTablesCreated()
-            self.db = SqliteFlatDb(dbName)
+            self.db = SqliteFlatDb(dbName, tablePrefix)
+            self.doCreateTables = self.db.missingTables()
+            
             if not self.doCreateTables:
                 self.__loadObjDict()
         except Exception, ex:
-            raise Exception('Error creating SqliteMapper, dbName: %s\n error: %s' % (dbName, ex))
+            raise Exception('Error creating SqliteFlatMapper, dbName: %s, tablePrefix: %s\n error: %s' % (dbName, tablePrefix, ex))
     
     def commit(self):
         self.db.commit()
@@ -619,31 +620,41 @@ class SqliteFlatDb():
     """Class to handle a Sqlite database.
     It will create connection, execute queries and commands"""
     
-    CHECK_TABLES = "SELECT name FROM sqlite_master WHERE type='table' AND name='Objects';"
-    SELECT = "SELECT * FROM Objects WHERE "
-    DELETE = "DELETE FROM Objects WHERE "
-    INSERT_CLASS = "INSERT INTO Classes (label_property, column_name, class_name) VALUES (?, ?, ?)"
-    SELECT_CLASS = "SELECT * FROM Classes;"
     CLASS_MAP = {'Integer': 'INTEGER',
                  'Float': 'REAL',
                  'Boolean': 'INTEGER'
                  }
+    OPEN_CONNECTIONS = {}
+    
+    def __init__(self, dbName, tablePrefix, timeout=1000):
+        tablePrefix = tablePrefix.strip()
+        if tablePrefix: # Avoid having _ for empty prefix
+            tablePrefix += '_' 
+        self.CHECK_TABLES = "SELECT name FROM sqlite_master WHERE type='table' AND name='%sObjects';" % tablePrefix
+        self.SELECT = "SELECT * FROM %sObjects WHERE " % tablePrefix
+        self.DELETE = "DELETE FROM %sObjects WHERE " % tablePrefix
+        self.INSERT_CLASS = "INSERT INTO %sClasses (label_property, column_name, class_name) VALUES (?, ?, ?)" % tablePrefix
+        self.SELECT_CLASS = "SELECT * FROM %sClasses;" % tablePrefix
+        self.tablePrefix = tablePrefix
+        self.__createConnection(dbName, timeout)
     
     def selectCmd(self, whereStr, orderByStr=' ORDER BY id'):
         return self.SELECT + whereStr + orderByStr
-    
-    def __init__(self, dbName, timeout=1000):
-        self.__createConnection(dbName, timeout)
         
-    def hasTablesCreated(self):
+    def missingTables(self):
+        """ Return True is the needed Objects and Classes table are not created yet. """
         self.executeCommand(self.CHECK_TABLES)
-        self.tableCreated = self.cursor.fetchone() is not None
+        return self.cursor.fetchone() is None
         
     def __createConnection(self, dbName, timeout):
         """Establish db connection"""
         from sqlite3 import dbapi2 as sqlite
-        self.connection = sqlite.Connection(dbName, timeout, check_same_thread = False)
-        self.connection.row_factory = sqlite.Row
+        if dbName in self.OPEN_CONNECTIONS:
+            self.connection = self.OPEN_CONNECTIONS[dbName]
+        else:
+            self.connection = sqlite.Connection(dbName, timeout, check_same_thread=False)
+            self.connection.row_factory = sqlite.Row
+            self.OPEN_CONNECTIONS[dbName] = self.connection
         self.cursor = self.connection.cursor()
         # Define some shortcuts functions
         self.executeCommand = self.cursor.execute
@@ -661,18 +672,18 @@ class SqliteFlatDb():
         Each nested property of the object will be stored as a column value.
         """
         # Create the Classes table to store each column name and type
-        self.executeCommand("""CREATE TABLE IF NOT EXISTS Classes
+        self.executeCommand("""CREATE TABLE IF NOT EXISTS %sClasses
                      (id        INTEGER PRIMARY KEY AUTOINCREMENT,
                       label_property      TEXT UNIQUE, --object label                 
                       column_name TEXT UNIQUE,
                       class_name TEXT DEFAULT NULL  -- relation's class name
-                      )""")
-        CREATE_OBJECT_TABLE = """CREATE TABLE IF NOT EXISTS Objects
+                      )""" % self.tablePrefix)
+        CREATE_OBJECT_TABLE = """CREATE TABLE IF NOT EXISTS %sObjects
                      (id        INTEGER PRIMARY KEY,
                       label     TEXT DEFAULT NULL,   -- object label, text used for display
                       comment   TEXT DEFAULT NULL   -- object comment, text used for annotations
-                      """
-        self.INSERT_OBJECT = "INSERT INTO Objects (id, label, comment"
+                      """ % self.tablePrefix
+        self.INSERT_OBJECT = "INSERT INTO %sObjects (id, label, comment" % self.tablePrefix
         c = 0
         for k, v in objDict.iteritems():
             colName = 'c%02d' % c

@@ -32,7 +32,7 @@ from constants import *
 from convert import ImageHandler
 from pyworkflow.object import *
 from pyworkflow.mapper.sqlite import SqliteMapper, SqliteFlatMapper
-from pyworkflow.utils.path import cleanPath, dirname, join
+from pyworkflow.utils.path import cleanPath, dirname, join, replaceExt
 import xmipp
 
 
@@ -197,7 +197,7 @@ class Set(EMObject):
     It will use an extra sqlite file to store the elements.
     All items will have an unique id that identifies each element in the set.
     """
-    def __init__(self, filename=None, mapperClass=SqliteFlatMapper, **args):
+    def __init__(self, filename=None, prefix='', mapperClass=SqliteFlatMapper, **args):
         # Use the object value to store the filename
         EMObject.__init__(self, **args)
         self._mapper = None
@@ -205,14 +205,13 @@ class Set(EMObject):
         self._size = Integer(0) # cached value of the number of images  
         #self._idMap = {}#FIXME, remove this after id is the one in mapper
         self.setMapperClass(mapperClass)
-        self._filename = String() # sqlite filename
-        self._filename.trace(self.load) # Load the mapper whenever the filename is changed
+        self._mapperPath = CsvList() # sqlite filename
+        self._mapperPath.trace(self.load) # Load the mapper whenever the filename is changed
         # If filename is passed in the constructor, it means that
         # we want to create a new object, so we need to delete it if
         # the file exists
         if filename:
-            cleanPath(filename)
-            self._filename.set(filename) # This will cause the creation of the mapper
+            self._mapperPath.set('%s, %s' % (filename, prefix)) # This will cause the creation of the mapper           
         
     def setMapperClass(self, MapperClass):
         """ Set the mapper to be used for storage. """
@@ -233,12 +232,22 @@ class Set(EMObject):
         """ Iterate over the set of images. """
         return self.__iterItems()
        
+    def __len__(self):
+        return self._size.get()
+    
     def getSize(self):
         """Return the number of images"""
         return self._size.get()
     
     def getFileName(self):
-        return self._filename.get()
+        if len(self._mapperPath):
+            return self._mapperPath[0]
+        return None
+    
+    def getPrefix(self):
+        if len(self._mapperPath) > 1:
+            return self._mapperPath[1]
+        return None
     
     def write(self):
         """This method will be used to persist in a file the
@@ -251,18 +260,22 @@ class Set(EMObject):
     
     def load(self):
         """ Load extra data from files. """
-        if self.getFileName() is None:
-            raise Exception("Set.load:  _filename is None.")
-        self._mapper = self._MapperClass(self.getFileName(), globals())
+        if self._mapperPath.isEmpty():
+            raise Exception("Set.load:  mapper path and prefix not set.")
+        fn, prefix = self._mapperPath
+        self._mapper = self._MapperClass(fn, globals(), prefix)
             
     def append(self, item):
         """ Add a image to the set. """
         if not item.hasObjId():
             self._idCount += 1
             item.setObjId(self._idCount)
-        self._mapper.insert(item)
-        self._size.set(self._size.get() + 1)
+        self._insertItem(item)
+        self._size.increment()
 #        self._idMap[item.getObjId()] = item
+        
+    def _insertItem(self, item):
+        self._mapper.insert(item)
         
     def update(self, item):
         """ Update an existing item. """
@@ -647,28 +660,14 @@ class TransformParams(object):
 #         return self.flip.get()       
      
     
-class Class2D(EMObject):
+class Class2D(SetOfParticles):
     """ Represent a Class that group some elements 
     from a classification. 
     """
     def __init__(self, **args):
-        EMObject.__init__(self, **args)
+        Set.__init__(self, **args)
         # This properties should be set when retrieving from the SetOfClasses2D
         self._average = None
-        self._images = None
-    
-    def __iter__(self):
-        """ Iterate over the assigments of images
-        to this particular class.
-        """
-        for img in self._images:
-            yield img
-            
-    def getImages(self):
-        return self._images
-    
-    def addImage(self, imgCA):
-        self._images.append(imgCA)
     
     def setAverage(self, avgImage):
         self._average = avgImage
@@ -682,11 +681,7 @@ class Class2D(EMObject):
     def hasAverage(self):
         """ Return true if have an average image. """
         return self._average is not None
-    
-    def writeImages(self):
-        """ Write the assigned SetOfImages to disk. """
-        self._images.write()
-    
+
 
 class SetOfClasses2D(Set):
     """ Store results from a 2D classification. """
@@ -694,7 +689,7 @@ class SetOfClasses2D(Set):
         Set.__init__(self, **args)
         self._averages = None # Store the averages images of each class(SetOfParticles)
         self._imagesPointer = Pointer()
-        
+
     def iterClassImages(self):
         """ Iterate over the images of a class. """
         pass
@@ -707,8 +702,10 @@ class SetOfClasses2D(Set):
         of the 2D classes. """
         return self._averages
     
-    def setAverages(self, averages):
-        self._averages = averages
+    def createAverages(self):
+        self._averages = SetOfParticles(filename=self.getFileName(), prefix='Averages')
+        self._averages.copyInfo(self.getImages())
+        return self._averages
     
     def getImages(self):
         """ Return the SetOFImages used to create the SetOfClasses2D. """
@@ -722,12 +719,19 @@ class SetOfClasses2D(Set):
         if self.hasAverages():
             return self.getAverages().getDimensions()
         
-    def setClassSetOfImages(self, class2d):
+    def _insertItem(self, class2D):
         """ Create the SetOfImages assigned to a class.
         If the file exists, it will load the Set.
         """
-        fn = join(dirname(self.getFileName()), 
-                  'particles_class%03.sqlite' % class2d.getObjId())
-        class2d._images = SetOfParticles(filename=fn)
-     
-     
+        if class2D.getFileName() is None:
+            classPrefix = 'Class%03d' % class2D.getObjId()
+            class2D._mapperPath.set('%s,%s' % (self.getFileName(), classPrefix))
+        Set._insertItem(self, class2D)
+        class2D.write()#Set.write(self)
+        
+    def write(self):
+        """ Override super method to also write the averages. """
+        Set.write(self)
+        if self._averages: # Write if not None
+            self._averages.write()
+            

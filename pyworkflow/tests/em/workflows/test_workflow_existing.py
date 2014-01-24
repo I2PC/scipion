@@ -4,6 +4,7 @@ import subprocess
 import pyworkflow as pw
 from pyworkflow.em import *
 from pyworkflow.tests import *
+from pyworkflow.utils import cleanPath
 from pyworkflow.utils.graph import Graph, Node
 import pyworkflow.em.packages.eman2 as eman2
 from pyworkflow.mapper.sqlite import SqliteFlatMapper
@@ -139,7 +140,7 @@ class TestXmippWorkflow(unittest.TestCase):
         
         
     def creatingFlatDb(self):
-        n = 100000
+        n = 1000
         imgSet = SetOfParticles(filename='particles_flat.sqlite', mapperClass=SqliteFlatMapper)
         
         for i in range(n):
@@ -149,6 +150,37 @@ class TestXmippWorkflow(unittest.TestCase):
             a = 1
             
         imgSet.write()
+
+    def nestedFlatDb(self): 
+        fn = 'classes_flat.sqlite'
+        cleanPath(fn)
+        
+        images = SetOfImages()
+        images.setSamplingRate(1.2)
+        classes2DSet = SetOfClasses2D(filename=fn)
+        classes2DSet.setImages(images)
+        averages = classes2DSet.createAverages()
+    
+        for ref in range(1, 11):
+            print "class: ", ref
+            class2D = Class2D()
+            class2D.setObjId(ref)
+            print "append class to set, ref=", ref
+            classes2DSet.append(class2D)
+            avg = Particle()
+            avg.setLocation(ref, 'averages.stk')
+            print "   populating class "
+            for i in range(1, 101):         
+                img = Particle()
+                img.setSamplingRate(5.3)
+                class2D.append(img)
+                    
+            print "   writing class "
+            class2D.write()
+            print "   append avg"
+            averages.append(avg)
+        
+        classes2DSet.write()
         
     def selectingFlatDb(self):
         imgSet = SetOfParticles(mapperClass=SqliteFlatMapper)

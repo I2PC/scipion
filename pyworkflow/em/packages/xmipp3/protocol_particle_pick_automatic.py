@@ -127,7 +127,7 @@ class XmippParticlePickingAutomatic(ProtParticlePicking, XmippProtocol):
         readSetOfCoordinates(posDir, self.micrographs, coordSet)
         coordSet.write()
         self._defineOutputs(outputCoordinates=coordSet)
-        self._defineDataSource(self.micrographs, coordSet)
+        self._defineSourceRelation(self.micrographs, coordSet)
         
     def _validate(self):
         validateMsgs = []

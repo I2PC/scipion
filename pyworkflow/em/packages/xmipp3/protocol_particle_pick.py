@@ -107,4 +107,4 @@ class XmippProtParticlePicking(ProtParticlePicking, XmippProtocol):
         readSetOfCoordinates(posDir, self.inputMics, coordSet)
         coordSet.write()
         self._defineOutputs(outputCoordinates=coordSet)
-        self._defineDataSource(self.inputMics, coordSet)
+        self._defineSourceRelation(self.inputMics, coordSet)

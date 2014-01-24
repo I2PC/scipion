@@ -138,6 +138,10 @@ class Object(object):
         """Set the object id"""
         self._objId = newId
         
+    def copyObjId(self, other):
+        """ Copy the object id form other to self. """
+        self.setObjId(other.getObjId())
+        
     def hasObjId(self):
         return not self._objId is None
     
@@ -460,6 +464,10 @@ class Integer(Scalar):
     def _convertValue(self, value):
         return int(value)
     
+    def increment(self):
+        """ Add 1 to the current value. """
+        self._objValue += 1
+    
         
 class String(Scalar):
     """String object"""
@@ -597,7 +605,7 @@ class CsvList(Scalar, list):
         return list.__str__(self)
      
     def isEmpty(self):
-        return len(self) > 0
+        return len(self) == 0
     
     def clear(self):
         del self[:]

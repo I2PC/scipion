@@ -51,6 +51,7 @@ class EMProtocol(Protocol):
         """ Create a set and set the filename using the suffix. 
         If the file exists, it will be delete. """
         setFn = self._getPath(template % suffix)
+        cleanPath(setFn)
         setObj = SetClass(filename=setFn)
         return setObj
         
@@ -72,9 +73,12 @@ class EMProtocol(Protocol):
     def _createSetOfCTF(self, suffix=''):
         return self.__createSet(SetOfCTF, 'ctfs%s.sqlite', suffix)
     
-    def _defineDataSource(self, srcObj, dstObj):
+    def _defineSourceRelation(self, srcObj, dstObj):
         """ Add a DATASOURCE relation between srcObj and dstObj """
-        self._defineRelation(RELATION_DATASOURCE, srcObj, dstObj)
+        self._defineRelation(RELATION_SOURCE, srcObj, dstObj)
+        
+    def _defineTransformRelation(self, srcObj, dstObj):
+        self._defineRelation(RELATION_TRANSFORM, srcObj, dstObj)
 
     def _insertChild(self, key, child):
         if isinstance(child, Set):

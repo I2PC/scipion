@@ -141,7 +141,7 @@ class XmippProtCTFMicrographs(ProtCTFMicrographs):
 
         #self._defineOutputs(outputMicrographs=micSet)
         self._defineOutputs(outputCTF=ctfSet)
-        #self._defineDataSource(self.inputMics, micSet)
+        #self._defineSourceRelation(self.inputMics, micSet)
         self._defineRelation(RELATION_CTF, ctfSet, self.inputMics)
         #TODO: Remove when output setOfmics dissapear
         #self._defineRelation(RELATION_CTF, ctfSet, micSet)

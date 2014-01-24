@@ -369,7 +369,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         imgSet.write()
         
         self._defineOutputs(outputParticles=imgSet)
-        self._defineDataSource(self.inputCoords, imgSet)
+        self._defineSourceRelation(self.inputCoords, imgSet)
         #TODO: pass CTF relation from input micrographs to imgSet
     
     def _summary(self):
