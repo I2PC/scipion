@@ -57,6 +57,7 @@ from protocol_screen_particles import XmippProtScreenParticles
 from protocol_simulated_annealing import XmippProtInitVolSimAnneal
 from protocol_ransac import XmippProtRansac
 from protocol_convert_pdb import XmippProtConvertPdb
+from protocol_join_sets import XmippProtJoinSets
 
 # Wizards
 from wizard import *

@@ -98,7 +98,7 @@ class Object(object):
         """If this is true, the value field is a pointer 
         to another object"""
         return self._objIsPointer
-    
+        
     def _convertValue(self, value):
         """Convert a value to desired scalar type"""
         return value
@@ -522,8 +522,7 @@ class Pointer(Scalar):
         obtained from .get()"""
         value.setStore(False)
         return value
-    
-    
+
 class List(Object, list):
     ITEM_PREFIX = '__item__'
     
@@ -575,7 +574,10 @@ class List(Object, list):
     
     def clear(self):
         del self[:]
-    
+        
+class PointerList(List):
+    def __init__(self, **args):
+        List.__init__(self, **args)
             
 class CsvList(Scalar, list):
     """This class will store a list of objects

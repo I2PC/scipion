@@ -359,8 +359,23 @@ def protocol_io(request):
         project = loadProject(projectName)
         protId = request.GET.get('protocolId', None)
         protocol = project.mapper.selectById(int(protId))
-        ioDict = {'inputs': [{'name':n, 'id': attr.getObjId()} for n, attr in protocol.iterInputAttributes()],
-                  'outputs': [{'name':n, 'id': attr.getObjId()} for n, attr in protocol.iterOutputAttributes(EMObject)]}
+        
+#        info = getObjectInfo(protocol)
+        
+        input_obj={}
+        for name, attr in protocol.iterInputAttributes():
+            input_obj.update({'name': name, 
+                              'id': attr.getObjId()})
+        
+        output_obj={}
+        for name, attr in protocol.iterOutputAttributes(EMObject):
+            name = attr.getLastName()
+            output_obj.update({'name': name, 
+                               'id': attr.getObjId()})
+        
+        ioDict = {'inputs': [input_obj],
+                  'outputs': [output_obj]}
+        
         jsonStr = json.dumps(ioDict, ensure_ascii=False)
 
 #        print "======================= in protocol_io...."

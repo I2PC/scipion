@@ -24,7 +24,7 @@
 # *
 # **************************************************************************
 """
-This sub-package contains wrapper around ML2D Xmipp program
+This sub-package contains the XmippRansac protocol
 """
 from pyworkflow.em import *  
 from convert import readSetOfClasses2D, createXmippInputClasses2D, createXmippInputVolumes, readSetOfVolumes
@@ -53,7 +53,8 @@ class XmippProtRansac(ProtInitialVolume):
         form.addParam('inputClasses', PointerParam, label="Input classes", important=True, 
                       pointerClass='SetOfClasses2D', pointerCondition='hasAverages',
                       help='Select the input classes from the project.'
-                           'It should be a SetOfClasses2D class')        
+                           'It should be a SetOfClasses2D class')    
+        
         form.addParam('symmetryGroup', StringParam, default="c1",
                       label='Symmetry group', 
                       help='See http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Symmetry for a description of the symmetry groups format'
