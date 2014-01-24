@@ -130,6 +130,7 @@ def loadProtocolProject(request, requestType='POST'):
     requestDict = getattr(request, requestType)
     projectName = request.session['projectName']
     protId = requestDict.get("protocolId")
+    print protId
     protClass = requestDict.get("protocolClass")
     
     # Load the project
@@ -156,12 +157,15 @@ def browse_objects(request):
         
         project = loadProject(projectName)    
 
-        objs = []
+        objs = {}
         for objClass in objClassList.split(","):
-            for obj in project.mapper.selectByClass(objClass, objectFilter=filterObject.objFilter, iterate=True):
-                objs.append(obj.getNameId())
-        jsonStr = json.dumps({'objects' : objs},
-                             ensure_ascii=False)
+            for obj in project.mapper.selectByClass(objClass, 
+                                                    objectFilter=filterObject.objFilter, 
+                                                    iterate=True):
+                objs[obj.getObjId()]=obj.getNameId()
+#                objs.append(obj.getNameId())
+                
+        jsonStr = json.dumps(objs, ensure_ascii=False)
         return HttpResponse(jsonStr, mimetype='application/javascript')
 
 class FilterObject():
@@ -172,7 +176,7 @@ class FilterObject():
         result = True
         if self.condition:
             result = obj.evalCondition(self.condition)
-        return result     
+        return result
 
 def browse_protocol_class(request):
     if request.is_ajax():

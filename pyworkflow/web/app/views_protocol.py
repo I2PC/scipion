@@ -41,11 +41,10 @@ SPECIAL_PARAMS = ['numberOfMpi', 'numberOfThreads', 'hostName', 'expertLevel', '
 OBJ_PARAMS =['runName', 'comment']
 
 def getPointerHtml(protVar):
-    protVar.printAll()
     if protVar.hasValue():
-        return protVar.get().getNameId()
-    return ""
-
+        return protVar.get().getNameId(), protVar.get().getObjId()
+    return '',''
+            
 def form(request):
     project, protocol = loadProtocolProject(request, requestType='GET')
     action = request.GET.get('action', None)
@@ -80,9 +79,12 @@ def form(request):
             
             if isinstance(param, MultiPointerParam):
                 for pointer in protVar:
-                    param.htmlValue += getPointerHtml(pointer) + ";"
+                    htmlValue, _ = getPointerHtml(pointer)
+                    param.htmlValue += htmlValue + ";"
+#                    param.htmlIdValue += protVar.get().getObjId() +";"
             elif isinstance(param, PointerParam):
-                param.htmlValue = getPointerHtml(protVar)
+                param.htmlValue, param.htmlIdValue = getPointerHtml(protVar)
+                print "param.htmlValue",param.htmlValue 
             else:
                 param.htmlValue = protVar.get(param.default.get(""))
                 if isinstance(protVar, Boolean):
@@ -177,14 +179,20 @@ def updateProtocolParams(request, protocol, project):
 
 def getPointerValue(project, attr, value, paramName):
     if len(value.strip()) > 0:
-        objId = int(value.split('.')[-1])  # Get the id string for last part after
-        value = project.mapper.selectById(objId)  # Get the object from its id
-        if attr.getObjId() == value.getObjId():
-            raise Exception("Param: %s is autoreferencing with id: %d" % (paramName, objId))
-    else:
-        value = None    
+
+#        objId = int(value.split('.')[-1])  # Get the id string for last part after
+#        objId = attr.get().strId()
         
-    return value
+        obj = project.mapper.selectById(value)  # Get the object from its id
+        id1 = attr.getObjId()
+        id2 = obj.getObjId()
+        
+        if id1 == id2 :
+            raise Exception("Param: %s is autoreferencing with id: %d" % (paramName, value))
+    else:
+        obj = None
+        
+    return obj
  
 def updateParam(request, project, protocol, paramName):
     """
@@ -196,19 +204,22 @@ def updateParam(request, project, protocol, paramName):
             from the web form
     """
     attr = getattr(protocol, paramName)
-    
+        
     if isinstance(attr, PointerList):
         valueList = request.POST.getlist(paramName)
         for v in valueList:
             attr.append(Pointer(value=getPointerValue(project, attr, v, paramName)))
-        value = None    
+        value = None
             
     else:
-        value = request.POST.get(paramName)    
+        value = request.POST.get(paramName)
+        print paramName
+        print value
         if isinstance(attr, Pointer):
             value = getPointerValue(project, attr, value, paramName)
+            
+    print "setting attr %s with value:" % paramName, value 
     attr.set(value)
-#    print "setting attr %s with value:" % paramName, value 
         
 def save_protocol(request):
     project, protocol = loadProtocolProject(request)
