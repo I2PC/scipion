@@ -25,6 +25,7 @@ from protocol_relion_base import ProtRelionBase, runNormalizeRelion, convertImag
                                  convertRelionBinaryData, convertRelionMetadata, getIteration
 
 class ProtRelionClassifier(ProtRelionBase):
+    
     def __init__(self, scriptname, project):
         ProtRelionBase.__init__(self, protDict.relion_classify.name, scriptname, project)
         self.Import = 'from protocol_relion_classify import *'
@@ -127,8 +128,11 @@ class ProtRelionClassifier(ProtRelionBase):
                 '--scale': '',
                 '--o': '%s/relion' % self.ExtraDir
                 }
-        if len(self.ReferenceMask):
-            args['--solvent_mask'] = self.ReferenceMask
+        if getattr(self, 'ReferenceMask', '').strip():
+            args['--solvent_mask'] = self.ReferenceMask.strip()
+            
+        if getattr(self, 'SolventMask', '').strip():
+            args['--solvent_mask2'] = self.SolventMask.strip()
             
         args.update({'--i': self.ImgStar,
                      '--particle_diameter': self.MaskRadiusA * 2.0,
@@ -155,6 +159,9 @@ class ProtRelionClassifier(ProtRelionBase):
             
         if self.IgnoreCTFUntilFirstPeak:
             args['--ctf_intact_first_peak'] = ''
+            
+        if getattr(self, 'MaskZero', True):
+            args['--zero_mask'] = ''
             
         args['--sym'] = self.SymmetryGroup.upper()
         

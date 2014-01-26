@@ -46,14 +46,17 @@ optimiserFileName= ""
 # {condition}(not DoContinue) {section} Input
 #------------------------------------------------------------------------------------------
 #  Number of classes
-"""The number of classes (K) for a multi-reference refinement. These classes will be made in an unsupervised manner from a single reference by division of the data into random subsets during the first iteration.
+"""The number of classes (K) for a multi-reference refinement. 
+These classes will be made in an unsupervised manner from a single 
+reference by division of the data into random subsets during the 
+first iteration.
 """
 NumberOfClasses = 1
 
 # {file}(*.vol, *.mrc) Initial 3D reference volume:
 """
-A 3D map in MRC/Spider format. Make sure this map has the same dimensions and 
-the same pixel size as your input images.
+A 3D map in MRC/Spider format. Make sure this map has the same dimensions
+and the same pixel size as your input images.
 """
 Ref3D = ""
 
@@ -197,23 +200,42 @@ RegularisationParamT = 1
 
 # {condition}(not DoContinue) {wizard}(wizardSetMaskRadiusRelion) Particles mask RADIUS (A):
 """
-The experimental images will be masked with a soft circular mask with this diameter. Make sure this radius is not set too small because that may mask away part of the signal! If set to a value larger than the image size no masking will be performed.
+The experimental images will be masked with a soft circular mask
+with this <radius> (Note that in Relion GUI the diameter is used).
+Make sure this radius is not set too small because that may mask
+away part of the signal! If set to a value larger than the image
+size no masking will be performed.
+
+The same radius will also be used for a spherical mask of the
+reference structures if no user-provided mask is specified.
 """
 MaskRadiusA = 200
 
-# {condition}(not DoContinue) Mask references structures?
-"""
-If set to yes, a mask will also be applied to the reconstructed references. This is useful to set the solvent region of your reconstruction to 0. Either a soft spherical mask (based on the diameter of the experimental image mask given above) or a user-provided mask (next option) may be used. The user-provided mask should have values between 0 and 1 only. Solvent flattening is recommended, but make sure not to mask any signal away.
-"""
-DoMaskParticles = True
+#{condition}(not DoContinue) Mask individual particles with zero?
+MaskZero = True
 
-# {condition}(not DoContinue) {file} Reference mask
+# {condition}(not DoContinue) {file} Reference mask (optional)
 """
-A Spider/mrc map containing a (soft) mask with the same dimensions as the reference(s), and values between 0 and 1, with 1 being 100% protein and 0 being 100% solvent. The reconstructed reference map will be multiplied by this mask.If no mask is given, a soft spherical mask based on the diameter of the mask for the experimental images will be applied.  
+A Spider/mrc map containing a (soft) mask with the same dimensions 
+as the reference(s), and values between 0 and 1, with 1 being 100% protein
+and 0 being 100% solvent. The reconstructed reference map will be multiplied
+by this mask. If no mask is given, a soft spherical mask based on the <radius>
+of the mask for the experimental images will be applied.  
  
-In some cases, for example for non-empty icosahedral viruses, it is also useful to use a second mask. For all white (value 1) pixels in this second mask the corresponding pixels in the reconstructed map are set to the average value of these pixels. Thereby, for example, the higher density inside the virion may be set to a constant. Note that this second mask should have one-values inside the virion and zero-values in the capsid and the solvent areas. To use a second mask, use the additional option --solvent_mask2, which may given in the Additional arguments line (in the Sampling tab).
+In some cases, for example for non-empty icosahedral viruses, it is also useful 
+to use a second mask. Use <More options> and check <Solvent mask> parameter.
 """
 ReferenceMask = ""
+
+# {expert}{condition}(not DoContinue) {file} Solvent mask (optional)
+"""
+For all white (value 1) pixels in this second mask the 
+corresponding pixels in the reconstructed map are set to the average value of 
+these pixels. Thereby, for example, the higher density inside the virion may be 
+set to a constant. Note that this second mask should have one-values inside the 
+virion and zero-values in the capsid and the solvent areas.
+"""
+SolventMask = ""
 
 
 #-----------------------------------------------------------------------------
@@ -241,7 +263,7 @@ OffsetSearchStepPix = 1
 """
 PerformLocalAngularSearch = False
 
-# {condition}(not PerformLocalAngularSearch)Local angular search range
+# {condition}(PerformLocalAngularSearch)Local angular search range
 """
 """
 LocalAngularSearchRange = 5.0
