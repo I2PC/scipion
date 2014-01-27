@@ -604,7 +604,7 @@ class ProtFrealign(ProtRefine3D):
         """
 
         imgSet = self.inputParticles.get()
-        paramsParFn = self._mergeAllParFiles(iter, numberOfBlocks)  # merge all parameter files generated in a refineIterStep method.
+        paramsParFn = self._mergeAllParFiles(iter, numberOfBlocks)  # merge all parameter files generated in a refineIterStep function.
         
         initParticle = 1
         finalParticle = imgSet.getSize()
