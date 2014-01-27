@@ -84,7 +84,7 @@ def form(request):
 #                    param.htmlIdValue += protVar.get().getObjId() +";"
             elif isinstance(param, PointerParam):
                 param.htmlValue, param.htmlIdValue = getPointerHtml(protVar)
-                print "param.htmlValue",param.htmlValue 
+#                print "param.htmlValue",param.htmlValue 
             else:
                 param.htmlValue = protVar.get(param.default.get(""))
                 if isinstance(protVar, Boolean):
@@ -213,12 +213,12 @@ def updateParam(request, project, protocol, paramName):
             
     else:
         value = request.POST.get(paramName)
-        print paramName
-        print value
+#        print paramName
+#        print value
         if isinstance(attr, Pointer):
             value = getPointerValue(project, attr, value, paramName)
             
-    print "setting attr %s with value:" % paramName, value 
+#    print "setting attr %s with value:" % paramName, value 
     attr.set(value)
         
 def save_protocol(request):
