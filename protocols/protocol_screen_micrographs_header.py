@@ -32,6 +32,12 @@ entail aliasing).
 """
 DownsampleFactor = 1
 
+# Automatic downsampling detection
+""" If this option is chosen, the algorithm automatically tries by default the 
+suggested Downsample factor; and if it fails, +1; and if it fails, -1.
+"""
+AutomaticDownsampling = True
+
 # Amplitude Contrast
 """ It should be a positive number, typically between 0.05 and 0.3."""
 AmplitudeContrast = 0.1
@@ -86,7 +92,7 @@ any of the following variables ctfDefocusU, ctfDefocusV, ctfCritFirstZero, ctfCr
 ctfCritFitting, ctfCritCorr13, ctfCritPsdCorr90, ctfCritPsdInt, ctfCritPsdStdQ, ctfCritPsdPCA1, ctfCritPsdPCARuns, ctfCritNormality,
 ctfCritFirstMinFirstZeroRatio, ctfCritCtfMargin, ctfCritNonAstigmaticValidty
 """
-AutomaticRejection = "ctfCritFirstZero<5 OR ctfCritMaxFreq>20 OR ctfCritfirstZeroRatio<0.9 OR ctfCritfirstZeroRatio>1.1 OR ctfCritFirstMinFirstZeroRatio>10 OR ctfCritCorr13<0 OR ctfCritCtfMargin<0 OR ctfCritNonAstigmaticValidty<0.3"
+AutomaticRejection = "ctfCritFirstZero<5 OR ctfCritMaxFreq>20 OR ctfCritfirstZeroRatio<0.9 OR ctfCritfirstZeroRatio>1.1 OR ctfCritFirstMinFirstZeroRatio>10 OR ctfCritCorr13<0 OR ctfCritCtfMargin<2.5 OR ctfCritNonAstigmaticValidty<0.3"
 
 # {eval} expandParallel(threads=0,hours=12)
 
