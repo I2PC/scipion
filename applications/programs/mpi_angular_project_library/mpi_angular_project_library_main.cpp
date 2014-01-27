@@ -298,7 +298,7 @@ public:
             numberProjections *= mysampling.no_redundant_sampling_points_angles.size();
             std::cerr   << "creating Blank file: "
             << output_file << " for "
-            << numberProjections << "  projections."
+            << numberProjections << "  projections of size: " << Xdim << " " << Ydim
             << std::endl;
             createEmptyFile(output_file,Xdim,Ydim,1,numberProjections,true,WRITE_REPLACE);
         }

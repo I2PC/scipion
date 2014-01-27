@@ -281,7 +281,7 @@ bool FileName::hasMetadataExtension() const
     String ext = getFileFormat();
     return (ext == "sel"    || ext == "xmd" || ext == "doc" ||
             ext == "ctfdat" || ext == "ctfparam" || ext == "pos" ||
-            ext == "sqlite" || ext == "xml");
+            ext == "sqlite" || ext == "xml" || ext == "star");
 }
 
 // Init random .............................................................

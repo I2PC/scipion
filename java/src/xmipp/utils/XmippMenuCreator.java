@@ -11,9 +11,7 @@ import javax.swing.ButtonGroup;
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JComponent;
 import javax.swing.JMenu;
-import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
-import javax.swing.JPopupMenu;
 import javax.swing.JRadioButtonMenuItem;
 import javax.swing.KeyStroke;
 
@@ -230,5 +228,6 @@ public abstract class XmippMenuCreator implements ActionListener {
 	public final static String SELECT_FROMHERE = "Select.FromHere_mi";
 	public final static String SET_CLASS = "SetClass_mi";
 	public final static String OPEN_IMAGES = "OpenImages_mi";
+	public final static String SAVE_IMAGES = "SaveImages_mi";
 
 }

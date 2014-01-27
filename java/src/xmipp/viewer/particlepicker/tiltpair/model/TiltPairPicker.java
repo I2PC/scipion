@@ -214,7 +214,7 @@ public class TiltPairPicker extends ParticlePicker
 			
 			long micId = -1; //Current micrograph id
 			long [] ids = anglesmd.findObjects();
-			String micFile = micrograph.getFile();
+			String micFile = m.getFile();
 			
 			for (long mid: ids)
 			{
@@ -313,9 +313,10 @@ public class TiltPairPicker extends ParticlePicker
 			{
 				result += importParticlesFromFiles(uFn, tFn, f, um, scale, invertx, inverty);
 				saveData(um);
+                                saveMicrographAngles(um);
 			}
 		}
-
+                super.saveData();
 		return result;
 	}// function importParticlesFromFolder
 

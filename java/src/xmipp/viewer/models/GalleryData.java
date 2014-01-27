@@ -793,6 +793,20 @@ public class GalleryData {
 		}
 		return null;
 	}
+	
+	/** Get all the images assigned to all selected classes */
+	public MetaData getImagesFromClassSelection(){
+		MetaData mdImages = new MetaData();
+		MetaData md;
+		for (int i = 0; i < ids.length; ++i){
+			if (selection[i]){
+				md = getClassImages(i);
+				mdImages.unionAll(md);
+				md.destroy();
+			}
+		}
+		return mdImages;
+	}
 
 	/** Return true if current metadata is a rotspectra classes */
 	public boolean isRotSpectraMd() {

@@ -222,10 +222,13 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 		try {
 			ColumnInfo ci = visibleLabels.get(col);
 			if (ci.allowRender && data.isImageFile(ci)) {
+                            
 				// new XmippImageWindow(data.window, new MdRowImageLoader(row,
 				// ci.getLabel()));
+                            
 				ImagePlusLoader loader = new MdRowImageLoader(row,
 						ci.getLabel());
+                                
 				if (getNormalized())
 					loader.setNormalize(normalize_min, normalize_max);
 				ImagesWindowFactory.openXmippImageWindow(data.window, loader,
@@ -233,7 +236,8 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 				return true;
 			}
 		} catch (Exception e) {
-			e.printStackTrace();
+                        XmippDialog.showError(null, e.getMessage());
+			//e.printStackTrace();
 		}
 		return false;
 	}// function handleDoubleClick

@@ -5,13 +5,7 @@
 #   Author: Roberto Marabini ()
 #
 from protlib_base import XmippProtocol, protocolMain
-from xmipp import MetaData, MDL_SAMPLINGRATE, MDL_IMAGE, MDL_CTF_MODEL, FileName,\
-                 MDValueEQ, MDL_REF3D, MD_APPEND, AGGR_COUNT, MDL_COUNT, MDL_ITER, \
-                 MDL_AVGPMAX, activateMathExtensions, MDValueGT, MDL_RESOLUTION_SSNR, \
-                 MDL_RESOLUTION_FREQ,MDL_RESOLUTION_FRC, MDL_ANGLE_ROT, MDL_ANGLE_TILT,\
-                 MDL_WEIGHT, getImageSize, MDL_ANGLE_PSI,MDL_AVG_CHANGES_ORIENTATIONS,\
-                 MDL_AVG_CHANGES_OFFSETS, MDL_AVG_CHANGES_CLASSES, MDL_LL, MDL_IMAGE_REF\
-                 , MDL_CLASS_PERCENTAGE
+from xmipp import *
 import sys
 from os.path import join, exists
 from protlib_filesystem import xmippExists, findAcquisitionInfo, moveFile, \
@@ -76,6 +70,15 @@ class ProtRelionBase(XmippProtocol):
              i = 1
         return i
 
+    def _containsCTF(self, md):
+        """ Validate where the metadata contains information of the CTF. """
+        def containsCTFLabels():
+            for l in [MDL_CTF_CS, MDL_CTF_DEFOCUS_ANGLE, MDL_CTF_DEFOCUSU, MDL_CTF_DEFOCUSV, MDL_CTF_Q0, MDL_CTF_VOLTAGE]:
+                if not md.containsLabel(l):
+                    return False
+            return True                
+        return (md.containsLabel(MDL_CTF_MODEL) or containsCTFLabels())
+        
     def validate(self):
         errors = []
         md     = MetaData(self.ImgMd)
@@ -89,7 +92,7 @@ class ProtRelionBase(XmippProtocol):
         else:
             errors.append("Input metadata <%s> doesn't contains image label" % self.ImgMd)
             
-        if self.DoCTFCorrection and not md.containsLabel(MDL_CTF_MODEL):
+        if self.DoCTFCorrection and not self._containsCTF(md):
             errors.append("CTF correction selected and input metadata <%s> doesn't contains CTF information" % self.ImgMd)
             
         # Check relion is installed

@@ -41,6 +41,7 @@ import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JTextField;
 
+import xmipp.jni.Filename;
 import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
 import xmipp.utils.XmippDialog;
@@ -76,12 +77,13 @@ public class SaveJDialog extends XmippDialog
 	private String block;
 	private JCheckBox chbDiscard;
 	private boolean isselection;
+	private String filename;
 
 	public SaveJDialog(GalleryJFrame parent, String file, boolean isselection)
 	{
-
 		super(parent, "Save", true);
 		this.isselection = isselection;
+		this.filename = file;
 		initComponents();
 		setMdFilename(file);
 	}// constructor SaveJDialog
@@ -107,8 +109,12 @@ public class SaveJDialog extends XmippDialog
 		// gbc.weightx = 1.0;
 		// gbc.weighty = 1.0;
 		gbc.anchor = GridBagConstraints.NORTHWEST;
-		fc = new XmippFileChooser();
-		fc.setCurrentDirectory(new File(System.getProperty("user.dir")));
+		File initial;
+		if (filename != null)
+			initial = new File(Filename.getFilename(filename));
+		else 
+			initial = new File(System.getProperty("user.dir"));
+		fc = new XmippFileChooser(initial);
 
 		group = new JPanel(new GridBagLayout());
 		group.setBorder(BorderFactory.createTitledBorder("Save options"));
@@ -155,6 +161,10 @@ public class SaveJDialog extends XmippDialog
 		browseMd = new BrowseField();
 		JPanel panelBrowse = createBrowse(browseMd);
 		panelMd.add(panelBrowse, XmippWindowUtil.getConstraints(gbc, 0, 0, 3));
+		fillMdOptions();
+	}
+	
+	protected void fillMdOptions(){
 		chbDiscard = new JCheckBox("Save Active Metadata Only", false);
 		if(!isselection)
 			panelMd.add(chbDiscard, XmippWindowUtil.getConstraints(gbc, 0, 1, 2));
@@ -166,7 +176,6 @@ public class SaveJDialog extends XmippDialog
 		ButtonGroup group = new ButtonGroup();
 		group.add(rbMdOverride);
 		group.add(rbMdAppend);
-
 	}
 
 	public boolean isOverwrite()

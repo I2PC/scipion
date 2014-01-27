@@ -506,6 +506,7 @@ public:
      *
      */
     FileName eFilename;
+    String extFile; //Filename extension
     bool isMetadataFile;
 
     //public:

@@ -380,7 +380,6 @@ void ProgXrayImport::getFlatfield(const FileName &fnFFinput,
             {
                 // Get Darkfield
                 std::cout << "Getting darkfield from "+fnFFinput << " ..." << std::endl;
-                Image<double> IavgDark;
                 getDarkfield(fnFFinput, IavgDark);
                 if (darkFix)
                     IavgDark.write(fnRoot+"_"+fnFFinput.removeDirectories()+"_darkfield.xmp");
