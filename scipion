@@ -78,6 +78,7 @@ MODE_TESTS = 'tests'
 MODE_TESTS_DATA = 'testdata'
 MODE_HELP = 'help'
 MODE_DBBROWSE = 'browser'
+MODE_INSTALL = 'install'
 
 if __name__ == '__main__':
     n = len(sys.argv)
@@ -128,6 +129,10 @@ if __name__ == '__main__':
             if n > 2:
                 dbPath = sys.argv[2]
                 runApp('pw_browser.py', args=dbPath)
+                
+        elif mode == MODE_INSTALL:
+            runCmd('install.py')
+            
                 
     # If reach this point, bad arguments passed
     print """

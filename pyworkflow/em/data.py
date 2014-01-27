@@ -93,7 +93,6 @@ class Image(EMObject):
     """Represents an EM Image object"""
     def __init__(self, **args):
         EMObject.__init__(self, **args)
-        #TODO: replace this id with objId
         # Image location is composed by an index and a filename
         self._index = Integer(0)
         self._filename = String()
@@ -178,20 +177,38 @@ class Particle(Image):
     def __init__(self, **args):
         Image.__init__(self, **args)
 
+
 class Mask(Particle):
     """ Represent a mask. """
     pass
+
 
 class Volume(Image):
     """ Represents an EM Volume object """
     def __init__(self, **args):
         Image.__init__(self, **args)
+
         
 class VolumeMask(Volume):
     """ A 3D mask to be used with volumes. """
     pass
 
 
+class PdbFile(EMObject):
+    """Represents an EM Image object"""
+    def __init__(self, **args):
+        EMObject.__init__(self, **args)
+        self._filename = String()
+        
+    def getFileName(self):
+        """ Use the _objValue attribute to store filename. """
+        return self._filename.get()
+    
+    def setFileName(self, filename):
+        """ Use the _objValue attribute to store filename. """
+        self._filename.set(filename)
+        
+        
 class Set(EMObject):
     """ This class will be a container implementation for elements.
     It will use an extra sqlite file to store the elements.

@@ -421,7 +421,7 @@ class ParamWidget():
                 entryWidth = 10 # Reduce the entry width for numbers entries
             entry = tk.Entry(content, width=entryWidth, textvariable=var)
             entry.grid(row=0, column=0, sticky='w')
-        'fa-times.png'
+
         if self.visualizeCallback is not None:
             self._addButton(Message.LABEL_BUTTON_VIS, Icon.ACTION_VISUZALIZE, self._visualizeVar)    
         if self.paramName in self.window.wizards:

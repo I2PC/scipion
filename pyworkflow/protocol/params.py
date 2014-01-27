@@ -348,8 +348,8 @@ class PointerParam(Param):
         self.allowNull = Boolean(args.get('allowNull', False))
 
 class MultiPointerParam(PointerParam):
-    """ This type of Param will serve to select MULTIPLE existing objects
-    in the database that will be input for some protocol.
+    """ This type of Param will serve to select objects
+    with DIFFERENT types from the database to be input for some protocol.
     """
     def __init__(self, **args):
         PointerParam.__init__(self, paramClass=PointerList, **args)
