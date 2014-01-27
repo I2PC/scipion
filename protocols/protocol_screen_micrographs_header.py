@@ -92,7 +92,7 @@ any of the following variables ctfDefocusU, ctfDefocusV, ctfCritFirstZero, ctfCr
 ctfCritFitting, ctfCritCorr13, ctfCritPsdCorr90, ctfCritPsdInt, ctfCritPsdStdQ, ctfCritPsdPCA1, ctfCritPsdPCARuns, ctfCritNormality,
 ctfCritFirstMinFirstZeroRatio, ctfCritCtfMargin, ctfCritNonAstigmaticValidty
 """
-AutomaticRejection = "ctfCritFirstZero<5 OR ctfCritMaxFreq>20 OR ctfCritfirstZeroRatio<0.9 OR ctfCritfirstZeroRatio>1.1 OR ctfCritFirstMinFirstZeroRatio>10 OR ctfCritCorr13<0 OR ctfCritCtfMargin<2.5 OR ctfCritNonAstigmaticValidty<0.3"
+AutomaticRejection = "ctfCritFirstZero<5 OR ctfCritMaxFreq>20 OR ctfCritfirstZeroRatio<0.9 OR ctfCritfirstZeroRatio>1.1 OR ctfCritFirstMinFirstZeroRatio>10 OR ctfCritCorr13<0 OR ctfCritCtfMargin<2.5 OR ctfCritNonAstigmaticValidty<0.3 OR ctfCritNonAstigmaticValidty>25"
 
 # {eval} expandParallel(threads=0,hours=12)
 

@@ -229,7 +229,8 @@ def estimateSingleCTF(log, WorkingDir, inputFile, DownsampleFactor, AutomaticDow
         fnEval=os.path.join(tmpDir,shortname+".xmd")
         md.write(fnEval)
         criterion="ctfCritFirstZero<5 OR ctfCritMaxFreq>20 OR ctfCritfirstZeroRatio<0.9 OR ctfCritfirstZeroRatio>1.1 OR "\
-                  "ctfCritFirstMinFirstZeroRatio>10 OR ctfCritCorr13<0 OR ctfCritCtfMargin<0 OR ctfCritNonAstigmaticValidty<0.3"
+                  "ctfCritFirstMinFirstZeroRatio>10 OR ctfCritCorr13<0 OR ctfCritCtfMargin<0 OR ctfCritNonAstigmaticValidty<0.3 OR " \
+                  "ctfCritNonAstigmaticValidty>25"
         runJob(log,"xmipp_ctf_sort_psds","-i %s --downsampling %f"%(fnEval,DownsampleFactor))
         fnRejected=os.path.join(tmpDir,shortname+"_rejected.xmd")
         runJob(log,"xmipp_metadata_utilities","-i %s --query select %s -o %s"%(fnEval,criterion,fnRejected))
