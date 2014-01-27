@@ -53,7 +53,7 @@ class ProtFrealign(ProtRefine3D):
                       pointerClass='SetOfParticles',pointerCondition='hasCTF',
                       help='Select the input particles.\n')  
 
-        form.addParam('input3DReference', PointerParam,
+        form.addParam('input3DReferences', PointerParam,
                       pointerClass='SetOfVolumes',
                       label='Initial 3D reference volume:', 
                       help='Input 3D reference reconstruction.\n')
@@ -382,7 +382,7 @@ class ProtFrealign(ProtRefine3D):
         
         imgSet = self.inputParticles.get()
         imgFn = self._getTmpPath('particles.mrc')
-        vol = self.input3DReference.get()
+        vol = self.input3DReferences.get()
         volFn = self._getTmpPath('volume.mrc')
         refVol = join(iterDir, 'reference_volume_iter_%03d.mrc' % iter) # reference volume of the step.
         iterVol = join(iterDir, 'volume_iter_%03d.mrc' % iter) # refined volume of the step
@@ -846,7 +846,7 @@ eot
     def _summary(self):
         summary = []
         summary.append("Input particles:  %s" % self.inputParticles.get().getNameId())
-        summary.append("Input volumes:  %s" % self.input3DReference.get().getNameId())
+        summary.append("Input volumes:  %s" % self.input3DReferences.get().getNameId())
         
         if not hasattr(self, 'outputVolumes'):
             summary.append("Output volumes not ready yet.")

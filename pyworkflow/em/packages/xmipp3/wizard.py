@@ -121,7 +121,10 @@ class XmippMaskRadiusWizard(Wizard):
         provider = self._getProvider(protocol)
 
         if provider is not None:
-            d = XmippMaskPreviewDialog(form.root, provider, maskRadius=protocol.maskRadius.get())
+            d = XmippMaskPreviewDialog(form.root, 
+                                       provider, 
+                                       maskRadius=protocol.maskRadius.get(), 
+                                       unit=UNIT_ANGSTROM)
             if d.resultYes():
                 form.setVar('maskRadius', d.getRadius())
         else:
@@ -188,7 +191,11 @@ class XmippRadiiWizard(XmippVolumeMaskRadiusWizard):
         provider = self._getProvider(protocol)
 
         if provider is not None:
-            d = XmippMaskRadiiPreviewDialog(form.root, provider, innerRadius=protocol.innerRadius.get(), outerRadius=protocol.outerRadius.get())
+            d = XmippMaskRadiiPreviewDialog(form.root, 
+                                            provider, 
+                                            innerRadius=protocol.innerRadius.get(), 
+                                            outerRadius=protocol.outerRadius.get(),
+                                            unit=UNIT_ANGSTROM)
             if d.resultYes():
                 form.setVar('innerRadius', d.getRadius(d.radiusSliderIn))
                 form.setVar('outerRadius', d.getRadius(d.radiusSliderOut))
