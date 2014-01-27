@@ -96,10 +96,11 @@ XMIPP_RELION_LABELS = {
                        ,MDL_YSIZE:              'rlnImageSizeY'
                        ,MDL_WEIGHT:             'rlnNrOfSignificantSamples'
                        ,MDL_ZSIZE:              'rlnImageSizeZ'
-                       
+                       }
+XMIPP_RELION_LABELS_EXTRA = {
                        # Following labels have no correct matching, just to 
                        # pick one with the same datatype
-                       ,MDL_BLOCK_NUMBER:       'rlnGroupNumber' # just one
+                       MDL_BLOCK_NUMBER:       'rlnGroupNumber' # just one
                        ,MDL_COUNT:             'rlnGroupNrParticles' # just one
                        ,MDL_CTF_CRIT_FITTINGSCORE:   'rlnCtfFigureOfMerit' #just one
                        ,MDL_CTF_CRIT_NORMALITY:   'rlnNormCorrection' #just one
@@ -303,12 +304,15 @@ def exportMdToRelion(md, outputRelion):
     from protlib_filesystem import deleteFile
     deleteFile(None, tmpFile)
     
-def addRelionLabels():
+def addRelionLabels(replace=False, extended=False):
     '''Add relion labels as aliases
     '''
     from xmipp import addLabelAlias
     for k, v in XMIPP_RELION_LABELS.iteritems():
-        addLabelAlias(k,v)
+        addLabelAlias(k, v, replace)
+    if extended:
+        for k, v in XMIPP_RELION_LABELS_EXTRA.iteritems():    
+            addLabelAlias(k, v, replace)        
         
 def relionLabelString():
     """ create an string that can be used for XMIPP_EXTRA_ALIASES
@@ -318,6 +322,8 @@ def relionLabelString():
     pairs = []
     for k, v in XMIPP_RELION_LABELS.iteritems():
         pairs.append('%s=%s' % (label2Str(k), v))
+    for k, v in XMIPP_RELION_LABELS_EXTRA.iteritems():
+        pairs.append('%s=%s' % (label2Str(k), v))        
     return ';'.join(pairs)
         
 def exportReliontoMetadataFile(inputRelion,outputXmipp):
