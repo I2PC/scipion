@@ -23,7 +23,7 @@ from protlib_filesystem import createLink
 from protlib_gui_figure import XmippPlotter
 from protlib_gui_ext import showWarning, showTable, showError
 
-from protocol_relion_base import ProtRelionBase, runNormalizeRelion, convertImagesMd, renameOutput, \
+from protlib_relion import ProtRelionBase, runNormalizeRelion, convertImagesMd, renameOutput, \
                                  convertRelionBinaryData, convertRelionMetadata, getIteration
 
 class ProtRelionRefinner( ProtRelionBase):
@@ -252,5 +252,8 @@ class ProtRelionRefinner( ProtRelionBase):
         myDict['imagesAssignedToClass']=''
 
         return myDict
-
+        
+    def _getVolumeKeys(self):
+        """ Return the volumes key names. """
+        return ['volume']
                

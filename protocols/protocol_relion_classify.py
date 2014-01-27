@@ -21,7 +21,7 @@ from protlib_filesystem import xmippExists, findAcquisitionInfo, moveFile, \
 from protocol_ml2d import lastIteration
 from protlib_filesystem import createLink
 
-from protocol_relion_base import ProtRelionBase, runNormalizeRelion, convertImagesMd, renameOutput, \
+from protlib_relion import ProtRelionBase, runNormalizeRelion, convertImagesMd, renameOutput, \
                                  convertRelionBinaryData, convertRelionMetadata, getIteration
 
 class ProtRelionClassifier(ProtRelionBase):
@@ -234,4 +234,8 @@ class ProtRelionClassifier(ProtRelionBase):
              verifyFiles += [self.getFilename(v+'Re', iter=self.NumberOfIterations, workingDir=self.WorkingDir )]
         self.insertRunJobStep(self.program, params,verifyFiles)
         #############self.insertRunJobStep('echo shortcut', params,verifyFiles)
+        
+    def _getVolumeKeys(self):
+        """ Return the volumes key names. """
+        return ['volume']
 
