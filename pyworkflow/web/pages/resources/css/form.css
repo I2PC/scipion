@@ -29,16 +29,6 @@ input.hide {
 	list-style:
 }
 
-/* textarea { */
-/* 	padding: 4px; */
-/* 	resize: vertical; */
-/* 	background: #F2F2F2; */
-/* 	max-height: 30em; */
-/* 	width: 26em; */
-/* 	height: 20em; */
-/* 	font-size: 0.9em; */
-/* } */
-
 /* TITLE */
 #protName {
 	margin: 0.5em 0 0.3em 0;
@@ -136,82 +126,24 @@ input.hide {
 	float: right;
 	
 }
-/* 
-.buttonClose {
-	background: url(../../../resources/dialog_close.png) 0.5em no-repeat;
-	background-size: 20%;
-	color: black;
-	width: 6.3em;
-	height: 2em;
-	background-color: LightGray;
-	padding: 1px;
-	padding-left: 1.7em;
-	font-weight: bold;
-	letter-spacing: 0.2em;
-	text-align: center;
-	font-weight: bold;
+
+#citations{
+	clear: both;
+	margin: 20px 0px;
+	float: left;
+	text-align: left;
+	background-color: #FFFFFF;
+	width: 100%;
+	padding: 10px;
+	display: none;
+	box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
 }
 
-.buttonClose:hover {
-	background-color: white;
+#citations a:hover {
+	color:Firebrick;
 }
-
-.buttonSave {
-	background: url(../../../resources/document_save24.png) 0.5em no-repeat;
-	background-size: 20%;
-	color: black;
-	width: 6.3em;
-	height: 2em;
-	background-color: LightGray;
-	padding: 1px;
-	padding-left: 2em;
-	font-weight: bold;
-	letter-spacing: 0.2em;
-	text-align: center;
-}
-
-.buttonSave:hover {
-	background-color: white;
-}
-
-.buttonExec {
-	color: white;
-	width: 8em;
-	height: 2em;
-	background-color: Firebrick;
-	font-weight: bold;
-	letter-spacing: 0.2em;
-	text-align: center;
-}
-
-.buttonExec:hover {
-	background-color: FireBrick;
-}
-
-.buttonWiz {
-	background: url(../../../resources/tools_wizard.png) 1px no-repeat;
-	color: white;
-	width: 2em;
-	height: 2em;
-	border: 0px;
-	text-align: center;
-}
-
-.buttonWiz:hover {
-}
-
-.buttonViewer {
-	background: url(../../../resources/visualize.gif) 1px no-repeat;
-	color: white;
-	width: 2em;
-	height: 2em;
-	border: 0px;
-	text-align: center;
-}
-
-.buttonViewer:hover {
-	background-color: FireBrick;
-} */
 
 /* TABLE */
 table.content {

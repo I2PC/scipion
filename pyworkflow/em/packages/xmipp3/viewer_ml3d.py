@@ -155,9 +155,9 @@ class XmippML3DViewer(ProtocolViewer):
                                             windowTitle="Angular distribution - iteration %d" % iteration)
                     
                     for r in range(1, nrefs+1):
-                        md2.importObjects(md, MDValueEQ(MDL_REF3D, r))  
+                        md2.importObjects(md, MDValueEQ(MDL_REF3D, r))
                         plot_title = 'ref %d' % r
-                        xplotter.plotAngularDistribution(plot_title, md2)
+                        xplotter.plotMdAngularDistribution(plot_title, md2)
                     
                     xplotter.draw()
                     plots.append(xplotter)

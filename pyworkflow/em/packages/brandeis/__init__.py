@@ -32,3 +32,8 @@ from brandeis import *
 
 from protocol_ctffind3 import ProtCTFFind
 from protocol_frealign import ProtFrealign
+
+# Wizards
+from wizard import *
+
+from protocol_frealign import ProtFrealign

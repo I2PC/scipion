@@ -57,10 +57,17 @@
 	</head>
 	<body onload="evalElements();">
 
-		{% if package_logo != ''%}
-			<img src='{{package_logo}}' style="float:right;"/>
-		{% endif %}
-		<h3 id="protName">{{protocol.getClassLabel}}</h3>&nbsp;
+		<div style="text-align:center;margin-bottom:30px;">
+			{% if package_logo != ''%}
+				<img src='{{package_logo}}' style="float:left;"/>
+			{% endif %}
+			<h3 id="protName" style="padding-top:25px;">Protocol: {{protocol.getClassLabel}} <a id="referenceLink" href="javascript:$('#citations').toggle();" style="float:right"><i class="fa fa-external-link"></i></a></h3>
+		
+			<div id="citations">
+				{{protocol.htmlCitations|safe}}
+			</div>
+		
+		</div>
 		
 		<form id="protocolForm" action="/protocol/" method="POST" data-mode="">{% csrf_token %}
 <!-- 			<input type="hidden" id="windowName" name="windowName" value=""/> -->

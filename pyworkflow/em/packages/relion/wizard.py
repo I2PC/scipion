@@ -44,29 +44,29 @@ class RelionVolMaskRadiusWizard(XmippVolumeMaskRadiusWizard):
     
     _targets = [(Relion3DClassification, ['maskRadius'])]    
 
-    def _getProvider(self, protocol):
-        """ This should be implemented to return the list
-        of object to be displayed in the tree.
-        """
-        if protocol.input3DReferences.hasValue():
-            vols = [vol for vol in protocol.input3DReferences.get()]
-            return ListTreeProvider(vols)
-        return None
-    
-    def show(self, form):
-        protocol = form.protocol
-        provider = self._getProvider(protocol)
-
-        if provider is not None:
-            d = XmippMaskPreviewDialog(form.root, provider, maskRadius=protocol.maskRadius.get(), unit=UNIT_ANGSTROM)
-            if d.resultYes():
-                form.setVar('maskRadius', d.getRadius())
-        else:
-            dialog.showWarning("Empty input", "Select elements first", form.root)  
+#    def _getProvider(self, protocol):
+#        """ This should be implemented to return the list
+#        of object to be displayed in the tree.
+#        """
+#        if protocol.input3DReferences.hasValue():
+#            vols = [vol for vol in protocol.input3DReferences.get()]
+#            return ListTreeProvider(vols)
+#        return None
+#    
+#    def show(self, form):
+#        protocol = form.protocol
+#        provider = self._getProvider(protocol)
+#
+#        if provider is not None:
+#            d = XmippMaskPreviewDialog(form.root, provider, maskRadius=protocol.maskRadius.get(), unit=UNIT_ANGSTROM)
+#            if d.resultYes():
+#                form.setVar('maskRadius', d.getRadius())
+#        else:
+#            dialog.showWarning("Empty input", "Select elements first", form.root)  
               
-    @classmethod    
-    def getView(self):
-        return "wiz_volume_mask"
+#    @classmethod    
+#    def getView(self):
+#        return "wiz_volume_mask"
     
     
 class RelionBandpassWizard(XmippFilterParticlesWizard):

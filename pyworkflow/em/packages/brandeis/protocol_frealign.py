@@ -24,14 +24,17 @@
 # *
 # **************************************************************************
 """
-This module contains the protocol for obtain a refined 3D recontruction from a set of particles
+This module contains the protocol to obtain a refined 3D recontruction from a set of particles using Frealign
 """
 
 from pyworkflow.em import *
 from pyworkflow.utils import *
+from pyworkflow.utils.which import which
 import brandeis
 from data import *
 from constants import *
+import os
+import time
 
 
 class ProtFrealign(ProtRefine3D):
@@ -39,19 +42,34 @@ class ProtFrealign(ProtRefine3D):
     using the frealign program"""
     _label = 'frealign'
 
+    def __init__(self, **args):
+        ProtRefine3D.__init__(self, **args)
+        self.stepsExecutionMode = STEPS_PARALLEL
+
     def _defineParams(self, form):
         form.addSection(label='Input')
 
         form.addParam('inputParticles', PointerParam, label="Input particles", important=True,
-                      pointerClass='SetOfParticles',
+                      pointerClass='SetOfParticles',pointerCondition='hasCTF',
                       help='Select the input particles.\n')  
 
-        form.addParam('input3DReference', PointerParam,
-                      pointerClass='Volume',
+        form.addParam('input3DReferences', PointerParam,
+                      pointerClass='SetOfVolumes',
                       label='Initial 3D reference volume:', 
                       help='Input 3D reference reconstruction.\n')
 
-        form.addParam('Firstmode', EnumParam, choices=['Simple search & Refine', 'Search, Refine, Randomise'],
+        form.addParam('numberOfIterations', IntParam, default=10,
+                      label='Number of iterations:',
+                      help='Number of iterations to perform.')
+
+        form.addParam('useInitialAngles', BooleanParam, default=False,
+                      label="Use initial angles/shifts ? ", 
+                      help='Set to *Yes* if you want to use the projection assignment (angles/shifts) \n '
+                      'associated with the input particles (hasProjectionAssigment=True)')
+
+        form.addSection(label='Flow Control')
+
+        form.addParam('Firstmode', EnumParam, condition='not useInitialAngles', choices=['Simple search & Refine', 'Search, Refine, Randomise'],
                       label="Operation mode for iteration 1:", default=brandeis.MOD2_SIMPLE_SEARCH_REFINEMENT,
                       display=EnumParam.DISPLAY_COMBO,
                       help='Parameter *IFLAG* in FREALIGN\n\n'
@@ -68,16 +86,7 @@ class ProtFrealign(ProtRefine3D):
                            '_Mode 1_: Refinement & Reconstruction\n'
                            '_Mode 2_: Random Search & Refinement\n'
                            '_Mode 3_: Simple search & Refine\n'
-                           '_Mode 4_: Search, Refine, Randomize & extend to *RREC*\n')
-
-        form.addParam('useInitialAngles', BooleanParam, default=False,
-                      label="Use initial angles/shifts?", 
-                      help='Set to *Yes* if you want to use the projection assignment (angles/shifts)\n'
-                      'associated with the input particles (hasProjectionAssigment=True)')
-
-        form.addParam('numberOfIterations', IntParam, default=4,
-                      label='Number of iterations',
-                      help='Number of iterations to perform.')
+                           '_Mode 4_: Search, Refine, Randomise & extend to *RREC*\n')
 
         form.addParam('doMagRefinement', BooleanParam, default=False,
                       label="Refine magnification?", expertLevel=LEVEL_EXPERT,
@@ -168,7 +177,7 @@ class ProtFrealign(ProtRefine3D):
                            'Padding factor 4 requires the most memory but results\n'
                            'in the fastest search & refinement.\n')
 
-        form.addSection(label='Projection Matching')
+        form.addSection(label='General Parameters')
         
         form.addParam('innerRadius', FloatParam, default='0.0', 
                       label='Inner radius of reconstruction (A):', 
@@ -203,26 +212,26 @@ class ProtFrealign(ProtRefine3D):
                            '  radius RI.\n'
                            'If set 0, disables this function.')
         
-        form.addParam('pseudoBFactor', FloatParam, default='5.0', 
+        form.addParam('pseudoBFactor', FloatParam, default='100.0', 
                       label='Resol-Dependent weighting of particles for 3D reconstruction:',
                       help='Parameter *PBC* in FREALIGN\n\n'
                            'Automatic weighting is applied to each particle: a pseudo-temperature (B)\n'
                            'factor is applied to each particle according to its relative phase\n'
                            'residual against the reference. The weight is calculated as\n'
-                           '          *W = exp (-DELTAP/PBC *** R^2)*\n'
+                           '          W = exp (-DELTAP/PBC * R^2)\n'
                            'with DELTAP = relative phase residual (actual phase residual minus BOFF),\n'
                            'PBC = conversion constant (5.0 in the example),\n'
                            'and R^2 the squared resolution in Fourier units (R = 0.0 ... 0.5).\n'
                            'A large value for PBC (e.g. 100.0) gives equal weighting to each particle.')
 
-        form.addParam('avePhaseResidual', FloatParam, default='60.0', 
+        form.addParam('avePhaseResidual', FloatParam, default='35.0', 
                       label='Average phase residual:',
                       help='Parameter *BOFF* in FREALIGN\n\n'
                            'Approximate average phase residual of all particles,\n'
                            ' used in calculating weights for contributions of different\n'
                            'particles to 3D map (see Grigorieff, 1998).')
 
-        form.addParam('angStepSize', FloatParam, default='10.0', 
+        form.addParam('angStepSize', FloatParam, default='50.0', 
                       label='Angular step size for the angular search:',
                       help='Parameter *DANG* in FREALIGN\n\n'
                            'Angular step size for the angular search used in modes *IFLAG*=3,4.\n'
@@ -261,6 +270,8 @@ class ProtFrealign(ProtRefine3D):
                            'I1 = also in setting 1 (X) - as used by Imagic\n'
                            'I2 = in setting 2 (Y) - as used by Crowther et. al')        
 
+        form.addSection(label='3D Reconstruction')
+        
         form.addParam('relMagnification', FloatParam, default='1.0', 
                       label='Relative magnification:',
                       help='Parameter *RELMAG* in FREALIGN\n\n'
@@ -346,44 +357,67 @@ class ProtFrealign(ProtRefine3D):
                            'automatic weighting scheme and RBFACT should normally be set to 0.0.')
 
         form.addParallelSection(threads=1, mpi=1)        
-                
+    
     def _defineSteps(self):
         """Insert the steps to refine orientations and shifts of the SetOfParticles
-        """       
-        # for entire set of particles
-        maxIter = self.numberOfIterations.get()
-        initVol = self.input3DReference.get()
-        imgSet = self.inputParticles.get()
-        numberOfBlocks =  int('%s' %self.numberOfThreads)
-
-        #coordSet = imgSet.getCoordinates()
-        #micSet = coordSet.getMicrographs()
-        # TODO: Implement how we know the current iteration
-        iter = 1
-        self._defCurrentIteration(imgSet)
-        self._insertFunctionStep('constructParamFile', numberOfBlocks, imgSet, iter)
-#         while iter <= maxIter:
-#             iter = iter + 1
-#             self._insertIterationSteps(imgSet, iter)
-        
-    def _insertIterationSteps(self, imgSet, iter):
-        """Define the steps for each iteration
         """
-        prevIter = iter - 1
-        self._createWorkingDir(iter)
-        self._params['iter_vol'] = 'volume_iter_%03d.mrc' % iter
-
-        self._params['stringConstructor'] = '../iter_%03d/particles_%06d_%06d_iter_%03d.par' % prevIter, iniParticle, finalParticle, prevIter
-        self._refineParticles()
+       
+        numberOfBlocks = self.numberOfThreads.get()
+        depsRecons = []
         
-        #--------------------------------------
-        # for entire set of particles
-        if self._param['mode'] != 0:
-            self._params['stringConstructor'] = '../iter_%03d/particles_%06d_%06d_iter_%03d.par' % prevIter, iniParticle, finalParticle, prevIter
-            self._generate3DR()
-        self._leaveWorkingDir()
-
-
+        for iter in range(1, self.numberOfIterations.get() + 1):
+            initId = self._insertFunctionStep('initIterStep', iter, prerequisites=depsRecons)
+            depsRefine = self._insertRefineIterStep(numberOfBlocks, iter, [initId])
+            reconsId = self._insertFunctionStep("reconstructVolumeStep", iter, numberOfBlocks, prerequisites=depsRefine)
+            depsRecons = [reconsId]
+        self._insertFunctionStep("createOutput", prerequisites=depsRecons)
+    
+    def initIterStep(self, iter):
+        """ Prepare files and directories for the current iteration """
+        
+        self._createIterWorkingDir(iter) # create the working directory for the current iteration.
+        iterDir = self._iterWorkingDir(iter)
+        prevIter = iter - 1 
+        prevIterDir = self._iterWorkingDir(prevIter)
+        
+        imgSet = self.inputParticles.get()
+        imgFn = self._getTmpPath('particles.mrc')
+        vol = self.input3DReferences.get()
+        volFn = self._getTmpPath('volume.mrc')
+        refVol = join(iterDir, 'reference_volume_iter_%03d.mrc' % iter) # reference volume of the step.
+        iterVol = join(iterDir, 'volume_iter_%03d.mrc' % iter) # refined volume of the step
+        prevIterVol = join(prevIterDir, 'volume_iter_%03d.mrc' % prevIter) # volume of the previous iteration
+        
+        if iter==1:
+            imgSet.writeStack(imgFn) # convert the SetOfParticles into a mrc stack.
+            vol.writeStack(volFn) # convert the reference volume into a mrc volume
+            copyFile(volFn, refVol)  #Copy the initial volume in the current directory.
+        else:
+            copyFile(prevIterVol, refVol)   #Copy the reference volume as refined volume.
+        copyFile(refVol, iterVol)   #Copy the reference volume as refined volume.
+        
+    def _insertRefineIterStep(self, numberOfBlocks, iter, depsInitId):
+        """ execute the refinement for the current iteration """
+        
+        depsRefine = []
+        iterDir = self._iterWorkingDir(iter)
+        
+        if iter == 1:
+            if not self.useInitialAngles.get():
+                stepConstructId = self._insertFunctionStep("constructParamFilesStep", numberOfBlocks, iterDir, iter, prerequisites=depsInitId)
+                depsConstruct = [stepConstructId]
+                for block in range(1, numberOfBlocks + 1):
+                    refineId = self._insertFunctionStep("refineBlockStep", iterDir, block, prerequisites=depsConstruct)
+                    depsRefine.append(refineId)
+            else:
+                # ToDo: Construct the function to extract the coordinates and euler angles for each particle from SetOfParticles.
+                pass
+        else:
+            for block in range(1, numberOfBlocks + 1):
+                refineId = self._insertFunctionStep("refineParticlesStep", iter, block, numberOfBlocks, prerequisites=depsInitId)
+                depsRefine.append(refineId)
+        return depsRefine
+    
     def _particlesPerBlock(self, numberOfBlocks, numberOfParticles):
         """ Return a list with numberOfBlocks values, each value will be
         the number of particles assigned to each block. The number of particles
@@ -401,16 +435,15 @@ class ProtFrealign(ProtRefine3D):
                 
         return blockParticles
         
-    def _defCurrentIteration(self, imgSet):
+    def _getParamsIteration(self, imgSet, iter):
         """ Defining the current iteration
         """
-        #TODO: change this line when writeSetOfParticles is written for brandeis programs.
-        imgsFn = imgSet.getFiles()
-        #samplingRate3DR = self.input3DReference.get().getSamplingRate()
-        samplingRate3DR = 1.4
+        
+        iterDir = self._iterWorkingDir(iter)
+        samplingRate3DR = imgSet.getSamplingRate()
+        paramDic = {}
         #Prepare arguments to call program fralign_v8.exe
-        self._params = {'imgsFn': imgsFn,
-                        'mode': self.mode.get(),
+        paramsDic = {'mode': self.mode.get(),
                         'useInitialAngles': self.useInitialAngles.get(),
                         'innerRadius': self.innerRadius.get(),
                         'outerRadius': self.outerRadius.get(),
@@ -433,193 +466,244 @@ class ProtFrealign(ProtRefine3D):
                         'Bfactor': self.Bfactor.get(),
                         'sampling3DR': samplingRate3DR
                        }
-
-        # Get reference map for the iteration.
-        self._params['initVol'] = self.input3DReference.get()
         
+        # Get the particles stack
+        imgsFn = os.path.relpath(self._getTmpPath('particles.mrc'), iterDir)
+        paramsDic['imageFn'] = imgsFn
         # Get the amplitude Contrast of the micrographs
-        
-        #TODO: Add the amplitude Contrast to the SetOfParticles
-#        self._params['ampContrast'] = imgSet.ampContrast.get()
-        self._params['ampContrast'] = 0.07
+        paramsDic['ampContrast'] = imgSet._acquisition.amplitudeContrast.get()
+        # Get the scanned pixel size of the micrographs
+        paramsDic['scannedPixelSize'] = imgSet._acquisition.magnification.get() * imgSet.getSamplingRate() / 10000
+        # Get the voltage and spherical aberration of the microscope
+        paramsDic['voltage'] = imgSet._acquisition.voltage.get()
+        paramsDic['sphericalAberration'] = imgSet._acquisition.sphericalAberration.get()
 
         # Defining the operation mode
         if self.mode == MOD_RECONSTRUCTION:
-            self._params['mode'] = 0
+            paramsDic['mode'] = 0
         elif self.mode == MOD_REFINEMENT:
-            self._params['mode'] = 1
+            paramsDic['mode'] = 1
         elif self.mode == MOD_RANDOM_SEARCH_REFINEMENT:
-            self._params['mode'] = 2
+            paramsDic['mode'] = 2
         elif self.mode == MOD_SIMPLE_SEARCH_REFINEMENT:
-            self._params['mode'] = 3
+            paramsDic['mode'] = 3
         else:
-            self._params['mode'] = 4
+            paramsDic['mode'] = 4
         
         # Defining the operation mode for iteration 1.
         if self.Firstmode == MOD2_SIMPLE_SEARCH_REFINEMENT:
-            self._params['mode2'] = -3
+            paramsDic['mode2'] = -3
         else:
-            self._params['mode2'] = -4
+            paramsDic['mode2'] = -4
 
         # Defining if magnification refinement is going to do
         if self.doMagRefinement:
-            self._params['doMagRefinement'] = 'T'
+            paramsDic['doMagRefinement'] = 'T'
         else:
-            self._params['doMagRefinement'] = 'F'
+            paramsDic['doMagRefinement'] = 'F'
             
         # Defining if defocus refinement is going to do
         if self.doDefRefinement:
-            self._params['doDefocusRef'] = 'T'
+            paramsDic['doDefocusRef'] = 'T'
         else:
-            self._params['doDefocusRef'] = 'F'
+            paramsDic['doDefocusRef'] = 'F'
 
         # Defining if astigmatism refinement is going to do
         if self.doAstigRefinement:
-            self._params['doAstigRef'] = 'T'
+            paramsDic['doAstigRef'] = 'T'
         else:
-            self._params['doAstigRef'] = 'F'
+            paramsDic['doAstigRef'] = 'F'
         
         # Defining if defocus refinement for individual particles is going to do
         if self.doDefPartRefinement:
-            self._params['doDefocusPartRef'] = 'T'
+            paramsDic['doDefocusPartRef'] = 'T'
         else:
-            self._params['doDefocusPartRef'] = 'F'
+            paramsDic['doDefocusPartRef'] = 'F'
         
         if self.methodEwaldSphere == EWA_DISABLE:
-            self._params['metEwaldSphere'] = 0
+            paramsDic['metEwaldSphere'] = 0
         elif self.methodEwaldSphere == EWA_SIMPLE:
-            self._params['metEwaldSphere'] = 1
+            paramsDic['metEwaldSphere'] = 1
         elif self.methodEwaldSphere == EWA_REFERENCE:
-            self._params['metEwaldSphere'] = 2
+            paramsDic['metEwaldSphere'] = 2
         elif self.methodEwaldSphere == EWA_SIMPLE_HAND:
-            self._params['metEwaldSphere'] = -1
+            paramsDic['metEwaldSphere'] = -1
         else:
-            self._params['metEwaldSphere'] = -2
+            paramsDic['metEwaldSphere'] = -2
         
         # Defining if apply extra real space symmetry
         if self.doExtraRealSpaceSym:
-            self._params['doExtraRealSpaceSym'] = 'T'
+            paramsDic['doExtraRealSpaceSym'] = 'T'
         else:
-            self._params['doExtraRealSpaceSym'] = 'F'
+            paramsDic['doExtraRealSpaceSym'] = 'F'
         
         # Defining if wiener filter is going to apply
         if self.doWienerFilter:
-            self._params['doWienerFilter'] = 'T'
+            paramsDic['doWienerFilter'] = 'T'
         else:
-            self._params['doWienerFilter'] = 'F'
+            paramsDic['doWienerFilter'] = 'F'
         
         # Defining if wiener filter is going to calculate and apply
         if self.doBfactor:
-            self._params['doBfactor'] = 'T'
+            paramsDic['doBfactor'] = 'T'
         else:
-            self._params['doBfactor'] = 'F'
+            paramsDic['doBfactor'] = 'F'
         
         # Defining if matching projections is going to write
         if self.writeMatchProjections:
-            self._params['writeMatchProj'] = 'T'
+            paramsDic['writeMatchProj'] = 'T'
         else:
-            self._params['writeMatchProj'] = 'F'
+            paramsDic['writeMatchProj'] = 'F'
         
         # Defining the method to FSC calcutalion
         if self.methodCalcFsc == FSC_CALC:
-            self._params['metFsc'] = 0
+            paramsDic['metFsc'] = 0
         elif self.methodCalcFsc == FSC_3DR_ODD:
-            self._params['metFsc'] = 1
+            paramsDic['metFsc'] = 1
         elif self.methodCalcFsc == FSC_3DR_EVEN:
-            self._params['metFsc'] = 2
+            paramsDic['metFsc'] = 2
         elif self.methodCalcFsc == FSC_3DR_ALL:
-            self._params['metFsc'] = 3
+            paramsDic['metFsc'] = 3
         
         
         if self.doAditionalStatisFSC:
-            self._params['doAditionalStatisFSC'] = 'T'
+            paramsDic['doAditionalStatisFSC'] = 'T'
         else:
-            self._params['doAditionalStatisFSC'] = 'F'
+            paramsDic['doAditionalStatisFSC'] = 'F'
             
         if self.paddingFactor == PAD_1:
-            self._params['padFactor'] = 1
+            paramsDic['padFactor'] = 1
         elif self.paddingFactor == PAD_2:
-            self._params['padFactor'] = 2
+            paramsDic['padFactor'] = 2
         else:
-            self._params['padFactor'] = 4
+            paramsDic['padFactor'] = 4
             
         if self.paramRefine == REF_ALL:
-            self._params['paramRefine'] = '1, 1, 1, 1, 1'
+            paramsDic['paramRefine'] = '1, 1, 1, 1, 1'
         elif self.paramRefine == REF_ANGLES:
-            self._params['paramRefine'] = '1, 1, 1, 0, 0'
+            paramsDic['paramRefine'] = '1, 1, 1, 0, 0'
         else:
-            self._params['paramRefine'] = '0, 0, 0, 1, 1'
-
-        #TODO: Chnge this when this properties belongs to the SetOfParticles
-        #self._params['scannedPixelSize'] = micSet.scannedPixelSize.get()
-        #self._params['voltage'] = micSet.voltage.get()
-        #self._params['sphericalAberration'] = micSet.sphericalAberration.get()
-        self._params['scannedPixelSize'] = 7
-        self._params['voltage'] = 200
-        self._params['sphericalAberration'] = 2.26
-
-    def _createWorkingDir(self, iter):
+            paramsDic['paramRefine'] = '0, 0, 0, 1, 1'
+        
+        return paramsDic
+    
+    def _createIterWorkingDir(self, iter):
         """create a new directory for the iterarion and change to this directory.
         """
-        iterDir = 'iter_%03d' % iter
-        workDir = self._getPath(iterDir)
+        workDir = self._iterWorkingDir(iter)
         makePath(workDir)   # Create a directory for a current iteration
-        os.chdir(workDir)   # move to directory for a current iteration
-
-    def _generate3DR(self):        
-        """Reconstruct a volume from a whole SetOfParticles with its current parameters refined
-        """
-        mode = self._params['mode']
-        self._params['mode'] = 0
-        self._params['stopParam'] = 0   #The stopParam must be 0 if you want obtain a 3D reconstruction.
-        
-        self._prepareCommand(iniParticle, finalParticle)
-        self._params['mode'] = mode
     
-    def _refineParticles(self):
+    def _iterWorkingDir(self, iter):
+        """ Define which is the directory for the current iteration"""
+        iterDir = 'iter_%03d' % iter
+        workDir = self._getExtraPath(iterDir)
+        return workDir
+
+    def reconstructVolumeStep(self, iter, numberOfBlocks):
+        """Reconstruct a volume from a SetOfParticles with its current parameters refined
+        """
+
+        imgSet = self.inputParticles.get()
+        paramsParFn = self._mergeAllParFiles(iter, numberOfBlocks)  # merge all parameter files generated in a refineIterStep function.
+        
+        initParticle = 1
+        finalParticle = imgSet.getSize()
+        params = self._getParamsIteration(imgSet, iter)
+        
+        params['outputParFn'] = 'output_param_file_%06d' % initParticle + '_%06d_' % finalParticle + 'iter_%03d.par' % iter
+        params['initParticle'] = initParticle
+        params['finalParticle'] = finalParticle
+
+        params2 = self._setParams3DR(iter)
+        
+        params3DR = dict(params.items() + paramsParFn.items() + params2.items())
+        
+        args = self._prepareCommand()
+        self.runJob(None, self._program, args % params3DR)
+        self._leaveDir()
+    
+    def refineParticlesStep(self, iter, block):
         """Only refine the parameters of the SetOfParticles
         """
-        self._params['stopParam'] = -100
-        self._prepareCommand(iniParticle, finalParticle)
-       
-    def __setParams(self, iter):
-        self._params['imgFnMatch'] = 'particles_match_iter_%03d.mrc' % iter
-        self._params['outputShiftFn'] = 'particles_shifts_iter_%03d.shft' % iter
-        self._params['3Dweigh'] = 'volume_weights_iter_%03d' % iter
-        self._params['FSC3DR1'] = 'volume_1_iter_%03d' % iter
-        self._params['FSC3DR2'] = 'volume_2_iter_%03d' % iter
-        self._params['VolPhResidual'] = 'volume_phasediffs_iter_%03d' % iter
-        self._params['VolpointSpread'] = 'volume_pointspread_iter_%03d' % iter    
-     
-    def __openParamFile(self, blockNumber):
-        """ Open the file and write the first part of the block param file. """
-        self._program = which('frealign_v8.exe')
-        args = """   << eot > %(frealignOut)s
-M,%(mode)i,%(doMagRefinement)s,%(doDefocusRef)s,%(doAstigRef)s,%(doDefocusPartRef)s,%(metEwaldSphere)d,%(doExtraRealSpaceSym)s,%(doWienerFilter)s,%(doBfactor)s,%(writeMatchProj)s,%(metFsc)d,%(doAditionalStatisFSC)s,%(padFactor)d
-%(outerRadius)f,%(innerRadius)f,%(sampling3DR)f,%(ampContrast)f,%(ThresholdMask)f,%(pseudoBFactor)f,%(avePhaseResidual)f,%(angStepSize)f,%(numberRandomSearch)f,%(numberPotentialMatches)f
-%(paramRefine)s
-%(initParticle)d,%(finalParticle)d
-%(sym)s
-%(relMagnification)f,%(scannedPixelSize)f,%(targetPhaseResidual)f,%(PhaseResidual)f,%(sphericalAberration)f,%(voltage)f,%(beamTiltX)f,%(beamTiltY)f
-%(resol)f,%(lowRes)f,%(highRes)f,%(defocusUncertainty)f,%(Bfactor)f
-%(imgsFn)s
-"""
-        paramFile = self._getPath('block%03d.sh')
-        f = open(paramFile, 'w+')
-        f.write(args % self._params)
         
+        param = {}
+        imgSet = self.inputParticles.get()
+        
+        iterDir = self._iterWorkingDir(iter)
+        self._enterDir(iterDir) # enter to the working directory for the current iteration.
+        
+        preIter = iter - 1
+        prevIterDir = self._iterWorkingDir(prevIter)
+        inputParFn = join(prevIterDir, 'particles_%02d_' % block + 'iter_%03d.par' % iter)
+        param['inputParFn'] = os.path.relpath(inputParFn, iterDir) 
+        paramDic = self._setParamsRefineParticles(iter, block)
+        initParamsDict = self._getParamsIteration(imgSet, iter)
+        
+        paramsRefine = dict(initParamsDict.items() + paramDic.items() + param.items())
+        args = self._prepareCommand(iniParticle, finalParticle)
+        
+        self.runJob(None, self._program, args % paramsRefine)
+        
+    def _setParamsRefineParticles(self, iter, block):
+        paramDics = {}
+        paramDics['stopParam'] = -100
+        paramDics['volume'] = 'reference_volume_iter_%03d.mrc' % iter
+        paramDics['outputParFn'] = 'particles_%02d_' % block + 'iter_%03d.par' % iter
+        paramDics['inputParFn'] = paramDics['outputParFn']
+        paramDics['imgFnMatch'] = 'particles_match_%02d_' % block + 'iter_%03d.mrc' % iter
+        paramDics['outputShiftFn'] = 'particles_shifts_%02d_' % block + 'iter_%03d.shft' % iter
+        paramDics['3Dweigh'] = 'volume_weights_iter_%02d_' % block + 'iter_%03d' % iter
+        paramDics['FSC3DR1'] = 'volume_1_%02d_' % block + 'iter_%03d' % iter
+        paramDics['FSC3DR2'] = 'volume_2_%02d_' % block + 'iter_%03d' % iter
+        paramDics['VolPhResidual'] = 'volume_phasediffs_%02d_' % block + 'iter_%03d' % iter
+        paramDics['VolpointSpread'] = 'volume_pointspread_%02d_' % block + 'iter_%03d' % iter
+        return paramDics
+        
+    def _setParams3DR(self, iter):
+        """ Setting the parameters to reconstruct a new 3DR"""
+        paramDic = {}
+        paramDic['mode'] = 0
+        paramDic['stopParam'] = 0   #The stopParam must be 0 if you want obtain a 3D reconstruction.
+        paramDic['volume'] = 'volume_iter_%03d.mrc' % iter
+        paramDic['imgFnMatch'] = 'particles_match_iter_%03d.mrc' % iter
+        paramDic['outputShiftFn'] = 'particles_shifts_iter_%03d.shft' % iter
+        paramDic['3Dweigh'] = 'volume_weights_iter_%03d' % iter
+        paramDic['FSC3DR1'] = 'volume_1_iter_%03d' % iter
+        paramDic['FSC3DR2'] = 'volume_2_iter_%03d' % iter
+        paramDic['VolPhResidual'] = 'volume_phasediffs_iter_%03d' % iter
+        paramDic['VolpointSpread'] = 'volume_pointspread_iter_%03d' % iter
+        paramDic['frealignOut'] = 'fralign_volume_reconstruct_iter_%03d' % iter
+        return paramDic
+        
+    def __openParamFile(self, blockNumber, paramsDict):
+        """ Open the file and write the first part of the block param file. """
+        if which('frealign_v9.exe') is '':
+            raise Exception('Missing frealign_v9.exe')
+        initaLines = """frealign_v9.exe << eot > %(frealignOut)s
+M,%(mode2)s,%(doMagRefinement)s,%(doDefocusRef)s,%(doAstigRef)s,%(doDefocusPartRef)s,%(metEwaldSphere)s,%(doExtraRealSpaceSym)s,%(doWienerFilter)s,%(doBfactor)s,%(writeMatchProj)s,%(metFsc)s,%(doAditionalStatisFSC)s,%(padFactor)s
+%(outerRadius)s,%(innerRadius)s,%(sampling3DR)s,%(ampContrast)s,%(ThresholdMask)s,%(pseudoBFactor)s,%(avePhaseResidual)s,%(angStepSize)s,%(numberRandomSearch)s,%(numberPotentialMatches)s
+%(paramRefine)s
+%(initParticle)s,%(finalParticle)s
+%(sym)s
+%(relMagnification)s,%(scannedPixelSize)s,%(targetPhaseResidual)s,%(PhaseResidual)s,%(sphericalAberration)s,%(voltage)s,%(beamTiltX)s,%(beamTiltY)s
+%(resol)s,%(lowRes)s,%(highRes)s,%(defocusUncertainty)s,%(Bfactor)s
+%(imageFn)s
+%(imgFnMatch)s
+"""
+        paramFile = 'block%03d.sh' % blockNumber
+        f = open(paramFile, 'w+')
+        f.write(initaLines % paramsDict)
         return f
     
     def __writeParamParticle(self, f, particleLine):
         """ Write a particle line to the param file """
         f.write(particleLine)
-        
-    def __closeParamFile(self, f):
+    
+    def __closeParamFile(self, f, paramsDict):
         """ Close the param file for a block. """
-        args = """%(inputParFn)s
-%(outputParFn)s
+        finaLines = """%(outputParFn)s
 %(outputShiftFn)s
-%(stopParam)i, 0., 0., 0., 0., 0., 0., 0.
+%(stopParam)s, 0., 0., 0., 0., 0., 0., 0.
 %(volume)s
 %(3Dweigh)s
 %(FSC3DR1)s
@@ -628,160 +712,145 @@ M,%(mode)i,%(doMagRefinement)s,%(doDefocusRef)s,%(doAstigRef)s,%(doDefocusPartRe
 %(VolpointSpread)s
 eot
 """
-        f.write(args % self._params)
+        f.write(finaLines % paramsDict)
         f.close()
         
-    def constructParamFile(self, numberOfBlocks, imgSet, iter):
-        """ This function construct a unique parameter file (.par) with the information of the SetOfParticle.
-        This function will execute it only in iteration 1.
+    def constructParamFilesStep(self, numberOfBlocks, iterDir, iter):
+        """ This function construct a parameter file (.par) with the information of the SetOfParticle.
+        This function will execute only in iteration 1.
         """
-        self._createWorkingDir(iter)
         
-#         initVol = self.input3DReference.get()
-#         vol = 'volume_iter_%03d.mrc' % iter
-#         shutil.copyfile(initVol, vol)   #Copy the initial volume in the current directory.
+        self._enterDir(iterDir)
         
-        self._params['volume'] = 'volume_iter_%03d.mrc' % iter
-        mode = self._params['mode']
-        self._params['mode'] = self._params['Firstmode']
-        self._params['stopParam'] = -100
-        
-        if exists(imgSet.getCoordinates()):
-            microscope = imgSet.getCoordinates().getMicrographs().getMicroscope()
-            magnification = microscope.magnification.get()
-#Uncomment this lines when the SetOfParticles has the microscope properties.
-#             else:
-#                 magnification = imgSet.microscope.magnification.get()
-        block = 0
-        partCounter = 0  # Counter the number of particle in each block
+        imgSet = self.inputParticles.get()
+        magnification = imgSet._acquisition.magnification.get()
         blockParticles = self._particlesPerBlock(numberOfBlocks, imgSet.getSize())
-        self.__setParams(iter)
+        initParamsDict = self._getParamsIteration(imgSet, iter)
+        params = {}
+        lastPart = 0
+        for block in range(numberOfBlocks):
+            more = 1
+            params['initParticle'] = 1 + lastPart
+            lastPart = lastPart + blockParticles[block]
+            params['finalParticle'] = lastPart
+            numberOfBlock = block + 1
+            params['frealignOut'] = 'frealign_Output_%02d.log' % numberOfBlock
+            paramDic = self._setParamsRefineParticles(iter, numberOfBlock)
+            paramsRefine = dict(initParamsDict.items() + params.items() + paramDic.items())
+            f = self.__openParamFile(block + 1, paramsRefine)
+            
+            # ToDo: Implement a better method to get the info particles. Now, you iterate several times over the SetOfParticles (as many threads as you have)
+            for i, img in enumerate(imgSet):
+                film = img.getId()
+                ctf = img.getCTF()
+                defocusU, defocusV, astig = ctf.getDefocusU(), ctf.getDefocusV(), ctf.getDefocusAngle()
+                partCounter = i + 1
+                
+                if partCounter == lastPart: # The last particle in the block
+                    more = 0
+                particleLine = '1, %05d,' % magnification + ' %05d,'% film + ' %05f,'% defocusU + ' %05f,'% defocusV + ' %02f,'% astig + ' %01d\n' % more
+                self.__writeParamParticle(f, particleLine)
+                
+                if more == 0: # close the block.
+                    self.__closeParamFile(f, paramsRefine)
+                    break
+        self._leaveDir()
+                
+    def refineBlockStep(self, iterDir, block):
+        """ This function execute the bash script for refine a subset(block) of images.
+        It will enter in the iteration dir and execute the script there. 
+        """
+        if block == 1:
+            self._enterDir(iterDir)
+            
+        # time.sleep(block)
+        program = "block%03d.sh" % block
+        os.chmod(program, 0775)
+        self.runJob(None, program, "")
         
-        for i, img in enumerate(imgSet):
-            if partCounter == 0: # This means a new block
-                more = 1
-                self._params['initParticle'] = i + 1
-                self._params['finalParticle'] = i + blockParticles[block]
-                self._params['outputParFn'] = 'particles_%06d_%06d_iter_%03d.par' % iniParticle, finalParticle, iter
-                f = self.__openParamFile(block + 1)
+        
+        #self._leaveDir()
+        
+    def _prepareCommand(self):
+        """ prepare the command to execute"""
+
+        if which('frealign_v9.exe') is '':
+            raise Exception('Missing frealign_v8.exe')
+        self._program = which('frealign_v9.exe')
+        args = """  << eot >> %(frealignOut)s
+M,%(mode)s,%(doMagRefinement)s,%(doDefocusRef)s,%(doAstigRef)s,%(doDefocusPartRef)s,%(metEwaldSphere)s,%(doExtraRealSpaceSym)s,%(doWienerFilter)s,%(doBfactor)s,%(writeMatchProj)s,%(metFsc)s,%(doAditionalStatisFSC)s,%(padFactor)s
+%(outerRadius)s,%(innerRadius)s,%(sampling3DR)s,%(ampContrast)s,%(ThresholdMask)s,%(pseudoBFactor)s,%(avePhaseResidual)s,%(angStepSize)s,%(numberRandomSearch)s,%(numberPotentialMatches)s
+%(paramRefine)s
+%(initParticle)s,%(finalParticle)s
+%(sym)s
+%(relMagnification)s,%(scannedPixelSize)s,%(targetPhaseResidual)s,%(PhaseResidual)s,%(sphericalAberration)s,%(voltage)s,%(beamTiltX)s,%(beamTiltY)s
+%(resol)s,%(lowRes)s,%(highRes)s,%(defocusUncertainty)s,%(Bfactor)s
+%(imageFn)s
+%(imgFnMatch)s
+%(inputParFn)s
+%(outputParFn)s
+%(outputShiftFn)s
+%(stopParam)s, 0., 0., 0., 0., 0., 0., 0.
+%(volume)s
+%(3Dweigh)s
+%(FSC3DR1)s
+%(FSC3DR2)s
+%(VolPhResidual)s
+%(VolpointSpread)s
+eot
+"""
+        return args
+    
+    def _mergeAllParFiles(self, iter, numberOfBlocks):
+        """ This method merge all parameters files that has been created in a refineIterStep """
+        paramDict = {}
+        
+        if numberOfBlocks != 1:
+            #iterDir = self._iterWorkingDir(iter)
+            file2 = 'particles_iter_%03d.par' % iter
+            f2 = open(file2, 'w+')
             
-            partCounter += 1
-#TODO: change the definition of film when Image class has micId.
-            film = '%05d' % img.getObjId()
-            ctf = img.getCTF()
-            defocusU, defocusV, astig = ctf.getDefocusU(), ctf.getDefocusV(), ctf.getDefocusAngle()
-
-            if partCounter == blockParticles[block]: # The last particle in the block
-                more = 0
-
-            particleLine = '1, %05d, %05d, %05f, %05f, %02f, %01d\n' % magnification, film, defocusU, defocusV, astig, more
-            self.__writeParamParticle(f, particleLine)
+            for block in range(1, numberOfBlocks + 1):
+                file1 = 'particles_%02d_' % block + 'iter_%03d.par' % iter
+                f1 = open(file1)
+                
+                if block == 1:
+                    lines = f1.readlines()
+                    f2.writelines(lines[:-1])
+                else:
+                    for l in f1:
+                        if not l.startswith('C'):
+                            f2.write(l)
+                f1.close()
+            f2.close()
+            paramDict['inputParFn'] = file2
             
-            if more == 0: # close block script file
-                partCounter = 0
-                block += 1
-                self.__closeParamFile(f)
-        self._params['mode'] = mode
-
-#     def _prepareCommand(self, iniParticle, finalParticle):
-# #        TODO: change this for writeSetOfParticles and writeVolume functions.
-# #        TODO: Uncomment the following line when writeSetOfParticles function is implemented
-# #        imgsFn = writeSetOfParticles(self.inputParticles.get())
-# 
-#         self._params['initParticle'] = iniParticle
-#         self._params['finalParticle'] = finalParticle
-# 
-#         if which('frealign_v8.exe') is '':
-#             raise Exception('Missing frealign_v8.exe')
-#         self._program = which('frealign_v8.exe')
-#         self._args = """   << eot > %(frealignOut)s
-# M,%(mode)i,%(doMagRefinement)s,%(doDefocusRef)s,%(doAstigRef)s,%(doDefocusPartRef)s,%(metEwaldSphere)d,%(doExtraRealSpaceSym)s,%(doWienerFilter)s,%(doBfactor)s,%(writeMatchProj)s,%(metFsc)d,%(doAditionalStatisFSC)s,%(padFactor)d
-# %(outerRadius)f,%(innerRadius)f,%(sampling3DR)f,%(ampContrast)f,%(ThresholdMask)f,%(pseudoBFactor)f,%(avePhaseResidual)f,%(angStepSize)f,%(numberRandomSearch)f,%(numberPotentialMatches)f
-# %(paramRefine)s
-# %(initParticle)d,%(finalParticle)d
-# %(sym)s
-# %(relMagnification)f,%(scannedPixelSize)f,%(targetPhaseResidual)f,%(PhaseResidual)f,%(sphericalAberration)f,%(voltage)f,%(beamTiltX)f,%(beamTiltY)f
-# %(resol)f,%(lowRes)f,%(highRes)f,%(defocusUncertainty)f,%(Bfactor)f
-# %(imgsFn)s
-# %(stringConstructor)s
-# %(inputParFn)s
-# %(outputParFn)s
-# %(outputShiftFn)s
-# %(stopParam)i, 0., 0., 0., 0., 0., 0., 0.
-# %(volume)s
-# %(3Dweigh)s
-# %(FSC3DR1)s
-# %(FSC3DR2)s
-# %(VolPhResidual)s
-# %(VolpointSpread)s
-# eot
-# """
-# 
-#     def _getPsdPath(self, micDir):
-#         return join(micDir, 'ctffind_psd.mrc')
-#     
-#     def _estimateCTF(self, micFn, micDir):
-#         """ Run ctffind3 with required parameters """
-#         # Create micrograph dir 
-#         makePath(micDir)
-#         # Update _params dictionary
-#         self._params['micFn'] = micFn
-#         self._params['micDir'] = micDir
-#         self._params['frealignOut'] = join(micDir, 'frealign_protocol.log')
-#         self._params['ctffindPSD'] = self._getPsdPath(micDir)
-#                 
-#         self.runJob(None, self._program, self._args % self._params)
-#         # print "command: ", self._program, self._args % self._params    
-# 
-#     def _parseOutput(self, filename):
-#         """ Try to find the output estimation parameters
-#         from filename. It search for a line containing: Final Values.
-#         """
-#         f = open(filename)
-#         result = None
-#         for line in f:
-#             if 'Final Values' in line:
-#                 # Take DefocusU, DefocusV and Angle as a tuple
-#                 # that are the first three values in the line
-#                 result = tuple(map(float, line.split()[:3]))
-#                 break
-#         f.close()
-#         return result
-#             
-#     def _getCTFModel(self, defocusU, defocusV, defocusAngle, psdFile):
-#         ctf = CTFModel()
-#         ctf.copyAttributes(self.inputMics, 'samplingRate')
-#         ctf.copyAttributes(self.inputMics.microscope, 'voltage', 'sphericalAberration')
-#         
-#         ctf.defocusU.set(defocusU)
-#         ctf.defocusV.set(defocusV)
-#         ctf.defocusAngle.set(defocusAngle)
-#         ctf.psdFile.set(psdFile)
-#         
-#         return ctf
-#         
-#     def createOutput(self):
-#         path = self._getPath('micrographs.sqlite')
-#         micSet = SetOfMicrographs(path)
-#         micSet.copyInfo(self.inputMics)
-#         
-#         for fn, micDir, mic in self._iterMicrographs():
-#             out = join(micDir, 'ctffind.out')
-#             result = self._parseOutput(out)
-#             defocusU, defocusV, defocusAngle = result
-#             micOut = Micrograph(fn)
-#             micOut.setCTF(self._getCTFModel(defocusU, defocusV, defocusAngle,
-#                                                 self._getPsdPath(micDir)))
-#             micSet.append(micOut)
-#             
-#         micSet.write()
-#         # This property should only be set by CTF estimation protocols
-#         micSet.setCTF(True)     
-#         self._defineOutputs(outputMicrographs=micSet)
-# 	
-#     def _validate(self):
-#         errors = []
-#         if which('ctffind3.exe') is '':
-#             errors.append('Missing ctffind3.exe')
-# 	return errors
-#             
+        return paramDict
+         
+    def createOutput(self):
+        
+        lastIter = self.numberOfIterations.get()
+        lastIterDir = self._iterWorkingDir(lastIter)
+        volFn = join(lastIterDir, 'volume_iter_%03d.mrc' % lastIter)
+        vol = Volume()
+        vol.setSamplingRate(self.inputClasses.get().getImages().getSamplingRate())
+        vol.setFileName(volFn)
+        self._defineOutputs(outputVolume=vol)
+        
+    def _validate(self):
+        errors = []
+        if which('frealign_v9.exe') is '':
+            errors.append('Missing frealign_v9.exe')
+        return errors
+    
+    def _summary(self):
+        summary = []
+        summary.append("Input particles:  %s" % self.inputParticles.get().getNameId())
+        summary.append("Input volumes:  %s" % self.input3DReferences.get().getNameId())
+        
+        if not hasattr(self, 'outputVolumes'):
+            summary.append("Output volumes not ready yet.")
+        else:
+            summary.append("Output volumes: %s" % self.outputVolume.get())
+        
+        return summary

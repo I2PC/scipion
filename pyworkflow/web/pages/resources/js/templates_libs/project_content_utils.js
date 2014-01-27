@@ -44,9 +44,9 @@
  * 	->	Function to check a protocol run, depend on the status two button will be
  * 		switching in the toolbar (Stop / Analyze Results).
  * 
- * function fillTabsSummary(id)
- * 	->	Fill the content of the summary tab for a protocol run selected 
- * 		(Data and Summary)
+ * function fillTabs(id)
+ * 	->	Fill the content of the tabs for a protocol run selected 
+ * 		(Data / Summary / Methods / Status)
  * 
  * function fillUL(list, ul_id, icon)
  * 	->	Fill an UL element with items from a list items, should contains id and 
@@ -162,44 +162,44 @@ function checkRunStatus(id) {
 	});
 }
 
-function fillTabsSummary(id) {
+function fillTabs(id) {
 	/*
 	 * Fill the content of the summary tab for a protocol run selected 
-	 * (Data and Summary)
+	 * (Data / Summary / Methods / Status)
 	 */
 	$.ajax({
 		type : "GET",
-		url : '/protocol_io/?protocolId=' + id,
+		url : '/protocol_info/?protocolId=' + id,
 		dataType : "json",
 		success : function(json) {
+			// DATA
 			fillUL(json.inputs, "protocol_input", "fa-sign-in");
 			fillUL(json.outputs, "protocol_output", "fa-sign-out");
-		}
-	});
-
-	$.ajax({
-		type : "GET",
-		url : '/protocol_summary/?protocolId='+ id,
-		dataType : "json",
-		success : function(json) {
+			// SUMMARY
 			$("#tab-summary").empty();
-			$("#tab-summary").append(json);
+			$("#tab-summary").append(json.summary);
 //			for ( var i = 0; i < json.length; i++) {
 //				$("#tab-summary").append('<p>' + json[i] + '</p>');
 //			}
-		}
-	});
-	
-	$.ajax({
-		type : "GET",
-		url : '/protocol_methods/?protocolId='+ id,
-		dataType : "json",
-		success : function(json) {
+			// METHODS
 			$("#tab-methods").empty();
-			$("#tab-methods").append(json);
+			$("#tab-methods").append(json.methods);
+			
+			// STATUS
+			if(json.status=="running"){
+				// Action Stop Button
+				$("span#analyzeTool").hide();
+				$("span#stopTool").show();
+				$("a#stopTool").attr('href',
+				'javascript:stopProtocolForm("' + id + '")');
+			} else {
+				// Action Analyze Result Button
+				$("span#stopTool").hide();
+				$("span#analyzeTool").show();
+				$("a#analyzeTool").attr('href', 'javascript:launchViewer("'+id +'")');
+			}
 		}
 	});
-	
 }
 
 function fillUL(list, ulId, icon) {
@@ -259,8 +259,7 @@ function updateButtons(id, elm){
 	var aux = "javascript:alert('Not implemented yet')";
 	$("a#browseTool").attr('href', aux);
 	
-	checkRunStatus(id);
-	fillTabsSummary(id);
+	fillTabs(id);
 }
 
 function updateRow(id, elm, row){	

@@ -224,6 +224,16 @@ class Set(EMObject):
         self.setMapperClass(mapperClass)
         self._mapperPath = CsvList() # sqlite filename
         self._mapperPath.trace(self.load) # Load the mapper whenever the filename is changed
+
+#TODO
+#        self.itemType
+# ESta propierdad indicara que tipo de objeto guarda el set. Tiene que ser inicializada cuando el primer objeto es insertado/cargado.
+# Esta variable sera guardada en la DB y la utilizaremos para preguntar. ie si preguntamos por volume tb buscaremos todos los set que tenga
+# esta propiedad inicialida a volume
+# En caso de que el usuario seleccione uno de los volume del set hay que ver como guardarmos ese value. ie. si el set tiene id = 3 y el volumen 
+# que cogemos tiene id=100, se podria guardar como 3, 100
+
+
         # If filename is passed in the constructor, it means that
         # we want to create a new object, so we need to delete it if
         # the file exists
