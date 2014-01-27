@@ -48,7 +48,7 @@ class ScriptShowJ(ScriptAppIJ):
         if self.checkParam('--label_alias'):
             os.environ['XMIPP_EXTRA_ALIASES'] = self.getParam('--label_alias')
 
-        if self.checkParam('--label_relion'):
+        if self.checkParam('--label_relion') or self.getParam('-i').endswith('.star'):
             from protlib_import import relionLabelString
             os.environ['XMIPP_EXTRA_ALIASES'] = relionLabelString()
         
