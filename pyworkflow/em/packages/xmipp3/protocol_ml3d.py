@@ -39,6 +39,9 @@ from convert import createXmippInputImages, readSetOfVolumes, createXmippInputVo
 class XmippProtML3D(ProtRefine3D, ProtClassify3D):
     """ Protocol for Xmipp-based ML3D/MLF3D classification. """
     _label = 'ml3d'
+    _reference = ['[[http://www.ncbi.nlm.nih.gov/pubmed/17179934][ML3D: Scheres, et.al,  Nat.Meth (2007)]]',
+                  '[[http://www.ncbi.nlm.nih.gov/pubmed/17937907][MLF3D: Scheres, et.al,  Structure (2007)]]'
+                  ]
     
     # Reconstruction method constants
     FOURIER = 0

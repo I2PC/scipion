@@ -38,6 +38,7 @@ import xmipp
 class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
     """Protocol to preprocess a set of micrographs in the project"""
     _label = 'preprocess micrographs'
+    _references = ['[[http://ieeexplore.ieee.org/xpl/login.jsp?arnumber=5286563][Sorzano, et.al,  IEEE WISP (2009)]]']
 
     def __init__(self, **args):        
         ProtPreprocessMicrographs.__init__(self, **args)

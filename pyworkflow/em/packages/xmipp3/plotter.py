@@ -26,39 +26,24 @@
 """
 This module implement the classes to create plots on xmipp.
 """
-from pyworkflow.gui.plotter import Plotter
+#from pyworkflow.gui.plotter import Plotter
+from pyworkflow.em.plotter import EmPlotter
 
-class XmippPlotter(Plotter):
+class XmippPlotter(EmPlotter):
     ''' Class to create several plots with Xmipp utilities'''
     
-    def plotAngularDistribution(self, title, md, color='blue'):
+    def plotMdAngularDistribution(self, title, md, color='blue'):
         '''Create an special type of subplot, representing the angular
         distribution of weight projections. A metadata should be provided containing
         labels: MDL_ANGLE_ROT, MDL_ANGLE_TILT, MDL_WEIGHT '''
         from math import radians
         from xmipp import MDL_ANGLE_ROT, MDL_ANGLE_TILT, MDL_WEIGHT
         
-        max_p = 40
-        min_p = 5
-        max_w = 2
-        min_w = 1
         rot = [radians(md.getValue(MDL_ANGLE_ROT, objId)) for objId in md]
         tilt = [md.getValue(MDL_ANGLE_TILT, objId) for objId in md]
         weight = [md.getValue(MDL_WEIGHT, objId) for objId in md]
         
-        if (len(weight) > 0):
-            max_w = max(weight)
-            min_w = min(weight)
-            a = self.createSubPlot(title, 'Min weight=%(min_w)f, Max weight=%(max_w)f' % locals(), '', projection='polar')
-        else:
-            a = self.createSubPlot(title, 'Empty plot', '', projection='polar')
-      
-        for i, objId in enumerate(md):
-            if (len(weight) > 0):
-                pointsize = int((weight[i] - min_w)/(max_w - min_w + 0.001) * (max_p - min_p) + min_p)
-            else:
-                pointsize = 1
-            a.plot(rot[i], tilt[i], markerfacecolor=color, marker='.', markersize=pointsize)
+        self.plotAngularDistribution(title, rot, tilt, weight)
     
     def plotMd(self, md, mdLabelX, mdLabelY, color='g',**args):
         """ plot metadata columns mdLabelX and mdLabelY
@@ -74,17 +59,7 @@ class XmippPlotter(Plotter):
                 xx.append(md.getValue(mdLabelX, objId))
             yy.append(md.getValue(mdLabelY, objId))
         
-        nbins = args.pop('nbins', None)
-        marker = args.pop('marker', None)
-        linestyle = args.pop('linestyle', None)
-        if nbins is None:
-            if not marker is None:
-                args['marker'] = marker     
-            if not linestyle is None:
-                args['linestyle'] = linestyle
-            self.plot(xx, yy, color, **args) #no histogram
-        else:
-            self.hist(yy,nbins, facecolor=color, **args)
+        self.plotHist(xx, yy, color, **args)
         
     def plotMdFile(self, mdFilename, mdLabelX, mdLabelY, color='g', **args):
         """ plot metadataFile columns mdLabelX and mdLabelY

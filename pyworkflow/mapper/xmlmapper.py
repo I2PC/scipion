@@ -121,7 +121,7 @@ class XmlMapper(Mapper):
             key = '%s_%06d' % (obj.getClassName(), self.objCount)
         objDict[key] = obj
         
-    def selectAll(self):
+    def selectAll(self, iterate=False):
         """Select object from storage"""
         for child in self.root:
             obj = self._buildObject(child.tag)
