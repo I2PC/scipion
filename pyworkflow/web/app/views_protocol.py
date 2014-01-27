@@ -70,6 +70,8 @@ def form(request):
             
     wizards = findWizards(protocol, WEB_DJANGO)
     
+    protocol.htmlCitations = parseText(protocol.citations())
+    
     for section in protocol._definition.iterSections():
         for paramName, param in section.iterParams():
             protVar = getattr(protocol, paramName, None)
@@ -85,6 +87,7 @@ def form(request):
             elif isinstance(param, PointerParam):
                 param.htmlValue, param.htmlIdValue = getPointerHtml(protVar)
 #                print "param.htmlValue",param.htmlValue 
+
             else:
                 param.htmlValue = protVar.get(param.default.get(""))
                 if isinstance(protVar, Boolean):
