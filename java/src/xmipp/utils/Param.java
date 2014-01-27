@@ -2,6 +2,7 @@ package xmipp.utils;
 
 import org.apache.commons.cli.BasicParser;
 import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 
 import xmipp.jni.ImageGeneric;
@@ -50,6 +51,8 @@ public class Param {
     public final static String NO_GEO = "dont_apply_geo";
     public final static String NO_WRAP = "dont_wrap";
     
+    public final static String COMMAND = "command";
+    
     public String directory;
     public String files[];
     public int port;
@@ -76,6 +79,9 @@ public class Param {
     public int resliceView = ImageGeneric.Z_NEG; 
     public boolean useGeo = true;
     public boolean wrap = true;
+
+    public String cmdname;
+    public String cmdscript;
 
     public Param() {
     }
@@ -124,7 +130,10 @@ public class Param {
         options.addOption(NO_GEO, false, "");
         options.addOption(NO_WRAP, false, "");
 
-
+        Option cmdoption = new Option(COMMAND, "");
+        cmdoption.setArgs(2);
+        options.addOption(cmdoption);
+        
         try {
             BasicParser parser = new BasicParser();
             CommandLine cmdLine = parser.parse(options, args);
@@ -224,6 +233,7 @@ public class Param {
                 dataFilename = cmdLine.getOptionValue(INPUT_DATAFILE);
             }
             
+            
             useGeo = !cmdLine.hasOption(NO_GEO);
             wrap = !cmdLine.hasOption(NO_WRAP);
             
@@ -241,6 +251,12 @@ public class Param {
             		resliceView = ImageGeneric.Y_POS;
             	else if (view.equals("x_pos"))
             		resliceView = ImageGeneric.X_POS;
+            }
+            
+            if (cmdLine.hasOption(COMMAND)) {
+                String[] cmdargs = cmdLine.getOptionValues(COMMAND);
+                cmdname = cmdargs[0];
+                cmdscript = cmdargs[1];
             }
         } catch (Exception ex) {
         	ex.printStackTrace();

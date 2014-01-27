@@ -603,8 +603,8 @@ def getSampling(InputFile, default=None):
     return sampling
 
 class ScriptShowJ(ScriptAppIJ):
-    def __init__(self):
-        ScriptAppIJ.__init__(self, 'xmipp.viewer.Viewer')
+    def __init__(self, viewer='xmipp.viewer.Viewer'):
+        ScriptAppIJ.__init__(self, viewer)
         
     def defineOtherParams(self):
         self.addParamsLine('  [--mode <mode_value=image>]           : List of params ')

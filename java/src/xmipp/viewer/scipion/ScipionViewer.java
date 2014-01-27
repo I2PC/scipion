@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package scipion.viewer;
+package xmipp.viewer.scipion;
 
 import javax.swing.SwingUtilities;
 import xmipp.jni.Filename;
