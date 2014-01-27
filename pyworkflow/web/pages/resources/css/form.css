@@ -29,16 +29,6 @@ input.hide {
 	list-style:
 }
 
-/* textarea { */
-/* 	padding: 4px; */
-/* 	resize: vertical; */
-/* 	background: #F2F2F2; */
-/* 	max-height: 30em; */
-/* 	width: 26em; */
-/* 	height: 20em; */
-/* 	font-size: 0.9em; */
-/* } */
-
 /* TITLE */
 #protName {
 	margin: 0.5em 0 0.3em 0;
@@ -149,6 +139,10 @@ input.hide {
 	box-sizing: border-box;
     -webkit-box-sizing: border-box;
     -moz-box-sizing: border-box;
+}
+
+#citations a:hover {
+	color:Firebrick;
 }
 
 /* TABLE */
