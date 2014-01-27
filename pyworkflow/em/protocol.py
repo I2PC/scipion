@@ -38,6 +38,7 @@ from pyworkflow.protocol.params import *
 from constants import *
 from data import * 
 from pyworkflow.utils.path import removeBaseExt, join, basename, cleanPath
+from pyworkflow.utils.messages_properties import Message, Icon 
 
 
 class EMProtocol(Protocol):
@@ -91,17 +92,16 @@ class ProtImportImages(EMProtocol):
         
     def _defineParams(self, form):
         form.addSection(label='Input')
-        form.addParam('pattern', StringParam, label="Pattern",
-                      help="The pattern (with wildcard expansion) of the files to import\n"
-                            "For example: \n*data/particles/***.spi* \n or \n*~/Micrographs/mic/***.mrc*")
-        form.addParam('checkStack', BooleanParam, label="Check stack files?", default=False)
+        form.addParam('pattern', StringParam, label=Message.LABEL_PATTERN,
+                      help=Message.TEXT_PATTERN)
+        form.addParam('checkStack', BooleanParam, label=Message.LABEL_CHECKSTACK, default=False)
         form.addParam('voltage', FloatParam, default=200,
-                   label='Microscope voltage (in kV)')
+                   label=Message.LABEL_VOLTAGE)
         form.addParam('sphericalAberration', FloatParam, default=2.26,
-                   label='Spherical aberration (in mm)')
+                   label=Message.LABEL_SPH_ABERRATION)
         form.addParam('ampContrast', FloatParam, default=0.1,
-                      label='Amplitude Contrast',
-                      help='It should be a positive number, typically between 0.05 and 0.3.')
+                      label=Message.LABEL_AMPLITUDE,
+                      help=Message.TEXT_AMPLITUDE)
         
     def importImages(self, pattern, checkStack, voltage, sphericalAberration, amplitudeContrast):
         """ Copy images matching the filename pattern
@@ -152,12 +152,12 @@ class ProtImportImages(EMProtocol):
     def _validate(self):
         errors = []
         if not self.pattern.get():
-            errors.append('The *pattern* cannot be empty.')
+            errors.append(Message.ERROR_PATTERN_EMPTY)
         else:
             filePaths = glob(expandPattern(self.pattern.get()))
         
             if len(filePaths) == 0:
-                errors.append('There are no files matching the *pattern*')
+                errors.append(Message.ERROR_PATTERN_FILES)
 
         return errors
     
@@ -188,16 +188,16 @@ class ProtImportMicrographs(ProtImportImages):
     def _defineParams(self, form):
         ProtImportImages._defineParams(self, form)
         form.addParam('samplingRateMode', EnumParam, default=SAMPLING_FROM_IMAGE,
-                   label='Sampling rate mode',
-                   choices=['From image', 'From scanner'])
+                   label=Message.LABEL_SAMP_MODE,
+                   choices=[Message.LABEL_SAMP_MODE_1, Message.LABEL_SAMP_MODE_2])
         form.addParam('samplingRate', FloatParam, default=1, 
-                   label='Sampling rate (A/px)', 
+                   label=Message.LABEL_SAMP_RATE, 
                    condition='samplingRateMode==%d' % SAMPLING_FROM_IMAGE)
         form.addParam('magnification', IntParam, default=60000,
-                   label='Magnification rate', 
+                   label=Message.LABEL_MAGNI_RATE, 
                    condition='samplingRateMode==%d' % SAMPLING_FROM_SCANNER)
         form.addParam('scannedPixelSize', FloatParam, default=7.0,
-                   label='Scanned pixel size', 
+                   label=Message.LABEL_SCANNED, 
                    condition='samplingRateMode==%d' % SAMPLING_FROM_SCANNER)
         
         
@@ -222,7 +222,7 @@ class ProtImportParticles(ProtImportImages):
     def _defineParams(self, form):
         ProtImportImages._defineParams(self, form)
         form.addParam('samplingRate', FloatParam,
-                   label='Sampling rate (A/px)')
+                   label=Message.LABEL_SAMP_RATE)
         
         
     def _defineSteps(self):
@@ -240,7 +240,7 @@ class ProtImportParticles(ProtImportImages):
 
 class ProtImportVolumes(EMProtocol):
     """Protocol to import a set of volumes in the project"""
-    _label = 'Import volumes'
+    _label = Message.LABEL_IMPORT_VOL
     _path = join('Volumes', 'Import')
     
     def __init__(self, **args):
@@ -251,9 +251,9 @@ class ProtImportVolumes(EMProtocol):
        
     def _defineParams(self, form):
         form.addSection(label='Input')
-        form.addParam('pattern', StringParam, label="Pattern")
+        form.addParam('pattern', StringParam, label=Message.LABEL_PATTERN)
         form.addParam('samplingRate', FloatParam,
-                   label='Sampling rate (A/px)')
+                   label=Message.LABEL_SAMP_RATE)
         
          
     def createVolume(self, volumePath):
@@ -277,7 +277,7 @@ class ProtImportVolumes(EMProtocol):
         n = len(filePaths)
         
         if n == 0:
-            raise Exception('importVolumes:There is not filePaths matching pattern')
+            raise Exception(Message.ERROR_IMPORT_VOL)
         
         else:
             # Create a set of volumes
@@ -308,7 +308,7 @@ class ProtImportVolumes(EMProtocol):
     def _validate(self):
         errors = []
         if self.pattern.get() == "":
-            errors.append('Pattern cannot be EMPTY.')
+            errors.append(Message.ERROR_PATTERN_EMPTY)
         return errors
         
 
@@ -324,42 +324,30 @@ class ProtCTFMicrographs(EMProtocol):
         self.stepsExecutionMode = STEPS_PARALLEL
         
     def _defineParams(self, form):
-        form.addSection(label='CTF Estimation')
+        form.addSection(label=Message.LABEL_CTF_ESTI)
         
         form.addParam('inputMicrographs', PointerParam, important=True,
-                      label="Input Micrographs", pointerClass='SetOfMicrographs')
+                      label=Message.LABEL_INPUT_MIC, pointerClass='SetOfMicrographs')
 #        form.addParam('ampContrast', FloatParam, default=0.1,
 #                      label='Amplitude Contrast',
 #                      help='It should be a positive number, typically between 0.05 and 0.3.')
         form.addParam('lowRes', FloatParam, default=0.05,
-                      label='Lowest resolution',
-                      help='Give a value in digital frequency (i.e. between 0.0 and 0.5). '
-                           'This cut-off prevents the typically peak at the center of the PSD '
-                           'to interfere with CTF estimation. The default value is 0.05, but for '
-                           'micrographs with a very fine sampling this may be lowered towards 0.0')
+                      label=Message.LABEL_LOW_RES,
+                      help=Message.TEXT_LOW_RES)
         form.addParam('highRes', FloatParam, default=0.35,
-                      label='Highest resolution', 
-                      help='Give a value in digital frequency (i.e. between 0.0 and 0.5). '
-                           'This cut-off prevents high-resolution terms where only noise exists '
-                           'to interfere with CTF estimation. The default value is 0.35, but it should '
-                           'be increased for micrographs with signals extending beyond this value. '
-                           'However, if your micrographs extend further than 0.35, you should consider '
-                           'sampling them at a finer rate.')
+                      label=Message.LABEL_HIGH_RES, 
+                      help=Message.TEXT_HIGH_RES)
         form.addParam('minDefocus', FloatParam, default=0.5,
-                      label='Minimum defocus to search (in microns)',
-                      help=' Minimum defocus value (in microns) to include in defocus search. ' 
-                      'Underfocus is represented by a positive number.',
+                      label=Message.LABEL_MIN_FOCUS,
+                      help=Message.TEXT_MIN_FOCUS,
                       expertLevel=LEVEL_ADVANCED)
         form.addParam('maxDefocus', FloatParam, default=10.,
-                      label='Maximum defocus to search (in microns)',
-                      help='Maximum defocus value (in microns) to include in defocus search. '
-                           'Underfocus is represented by a positive number.',
+                      label=Message.LABEL_MAX_FOCUS,
+                      help=Message.TEXT_MAX_FOCUS,
                       expertLevel=LEVEL_ADVANCED)
         form.addParam('windowSize', IntParam, default=256,
-                      label='Window size',
-                      help='The PSD is estimated from small patches of this size. Bigger patches '
-                           'allow identifying more details. However, since there are fewer windows, '
-                           'estimations are noisier',
+                      label=Message.LABEL_WINDOW_SIZE,
+                      help=Message.TEXT_WINDOW_SIZE,
                       expertLevel=LEVEL_ADVANCED)
         
         form.addParallelSection(threads=2, mpi=1)       
@@ -412,7 +400,7 @@ class ProtCTFMicrographs(EMProtocol):
     def _summary(self):
         summary = []
         if not self.inputMicrographs.hasValue():
-            summary.append("No *Input Micrographs* selected.")
+            summary.append(Message.TEXT_NO_INPUT_MIC)
         else:
             summary.append("CTF estimation of %d micrographs." % self.inputMicrographs.get().getSize())
             summary.append("Input micrographs: " + self.inputMicrographs.get().getNameId())
@@ -432,7 +420,7 @@ class ProtCTFMicrographs(EMProtocol):
          micFn: micrograph filename
          micDir: micrograph directory
         """
-        raise Exception("_estimateCTF should be implemented")
+        raise Exception(Message.ERROR_NO_EST_CTF)
 
 
 class ProtPreprocessMicrographs(EMProtocol):
@@ -452,10 +440,10 @@ class ProtProcessParticles(EMProtocol):
     It is mainly defined by an inputParticles and outputParticles.
     """
     def _defineParams(self, form):
-        form.addSection(label='Input')
+        form.addSection(label=Message.LABEL_INPUT)
         
         form.addParam('inputParticles', PointerParam, important=True,
-                      label="Input Particles", pointerClass='SetOfParticles')
+                      label=Message.LABEL_INPUT_PART, pointerClass='SetOfParticles')
         # Hook that should be implemented in subclasses
         self._defineProcessParams(form)
         form.addParallelSection(threads=2, mpi=1)
@@ -476,7 +464,7 @@ class ProtParticlePicking(EMProtocol):
     def _summary(self):
         summary = []
         if not hasattr(self, 'outputCoordinates'):
-            summary.append("Output coordinates not ready yet.") 
+            summary.append(Message.TEXT_NO_OUTPUT_CO) 
         else:
             #TODO: MOVE following line to manual picking
             summary.append("Input micrographs: " + self.inputMicrographs.get().getNameId())
@@ -498,11 +486,10 @@ class ProtAlign(EMProtocol):
         form.addSection(label='Input')
         
         form.addParam('inputParticles', PointerParam, important=True,
-                      label="Input Particles", pointerClass='SetOfParticles')
+                      label=Message.LABEL_INPUT_PART, pointerClass='SetOfParticles')
         form.addParam('writeAlignedParticles', BooleanParam, default=True,
-                      label="Write aligned particles?", 
-                      help="If set to *Yes*, the aligment will be applied to \n"
-                           "input particles and a new aligned set will be created.")
+                      label=Message.LABEL_ALIG_PART, 
+                      help=Message.TEXT_ALIG_PART)
         # Hook that should be implemented in subclasses
         self._defineAlignParams(form)
         
