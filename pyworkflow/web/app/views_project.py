@@ -347,7 +347,7 @@ def protocol_info(request):
         project = loadProject(projectName)
         protId = request.GET.get('protocolId', None)
         protocol = project.mapper.selectById(int(protId))
-                
+        
         # PROTOCOL IO
         input_obj={}
         for name, attr in protocol.iterInputAttributes():
@@ -366,24 +366,18 @@ def protocol_info(request):
         
         # PROTOCOL METHODS
         methods = protocol.methods()
-        print "methods",methods
+#        print "methods",methods
+
+        # STATUS
+        status = protocol.status.get()
 
         ioDict = {'inputs': [input_obj],
                   'outputs': [output_obj],
                   'summary': parseText(summary),
-                  'methods': parseText(methods)}
+                  'methods': parseText(methods), 
+                  'status': status
+                  }
         
         jsonStr = json.dumps(ioDict, ensure_ascii=False)
     return HttpResponse(jsonStr, mimetype='application/javascript')
 
-def protocol_status(request):
-    if request.is_ajax():
-        projectName = request.session['projectName']
-        project = loadProject(projectName)
-        protId = request.GET.get('protocolId', None)
-        protocol = project.mapper.selectById(int(protId))
-        status = protocol.status.get()
-
-#        print "======================= in protocol_status...."
-#        print jsonStr        
-    return HttpResponse(status, mimetype='application/javascript')

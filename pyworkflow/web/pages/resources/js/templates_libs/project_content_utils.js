@@ -44,9 +44,9 @@
  * 	->	Function to check a protocol run, depend on the status two button will be
  * 		switching in the toolbar (Stop / Analyze Results).
  * 
- * function fillTabsSummary(id)
- * 	->	Fill the content of the summary tab for a protocol run selected 
- * 		(Data and Summary)
+ * function fillTabs(id)
+ * 	->	Fill the content of the tabs for a protocol run selected 
+ * 		(Data / Summary / Methods / Status)
  * 
  * function fillUL(list, ul_id, icon)
  * 	->	Fill an UL element with items from a list items, should contains id and 
@@ -162,10 +162,10 @@ function checkRunStatus(id) {
 	});
 }
 
-function fillTabsSummary(id) {
+function fillTabs(id) {
 	/*
 	 * Fill the content of the summary tab for a protocol run selected 
-	 * (Data and Summary)
+	 * (Data / Summary / Methods / Status)
 	 */
 	$.ajax({
 		type : "GET",
@@ -184,6 +184,20 @@ function fillTabsSummary(id) {
 			// METHODS
 			$("#tab-methods").empty();
 			$("#tab-methods").append(json.methods);
+			
+			// STATUS
+			if(json.status=="running"){
+				// Action Stop Button
+				$("span#analyzeTool").hide();
+				$("span#stopTool").show();
+				$("a#stopTool").attr('href',
+				'javascript:stopProtocolForm("' + id + '")');
+			} else {
+				// Action Analyze Result Button
+				$("span#stopTool").hide();
+				$("span#analyzeTool").show();
+				$("a#analyzeTool").attr('href', 'javascript:launchViewer("'+id +'")');
+			}
 		}
 	});
 }
@@ -245,8 +259,7 @@ function updateButtons(id, elm){
 	var aux = "javascript:alert('Not implemented yet')";
 	$("a#browseTool").attr('href', aux);
 	
-	checkRunStatus(id);
-	fillTabsSummary(id);
+	fillTabs(id);
 }
 
 function updateRow(id, elm, row){	
