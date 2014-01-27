@@ -169,37 +169,23 @@ function fillTabsSummary(id) {
 	 */
 	$.ajax({
 		type : "GET",
-		url : '/protocol_io/?protocolId=' + id,
+		url : '/protocol_info/?protocolId=' + id,
 		dataType : "json",
 		success : function(json) {
+			// DATA
 			fillUL(json.inputs, "protocol_input", "fa-sign-in");
 			fillUL(json.outputs, "protocol_output", "fa-sign-out");
-		}
-	});
-
-	$.ajax({
-		type : "GET",
-		url : '/protocol_summary/?protocolId='+ id,
-		dataType : "json",
-		success : function(json) {
+			// SUMMARY
 			$("#tab-summary").empty();
-			$("#tab-summary").append(json);
+			$("#tab-summary").append(json.summary);
 //			for ( var i = 0; i < json.length; i++) {
 //				$("#tab-summary").append('<p>' + json[i] + '</p>');
 //			}
-		}
-	});
-	
-	$.ajax({
-		type : "GET",
-		url : '/protocol_methods/?protocolId='+ id,
-		dataType : "json",
-		success : function(json) {
+			// METHODS
 			$("#tab-methods").empty();
-			$("#tab-methods").append(json);
+			$("#tab-methods").append(json.methods);
 		}
 	});
-	
 }
 
 function fillUL(list, ulId, icon) {
