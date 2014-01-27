@@ -212,6 +212,7 @@ class Icon():
     ACTION_VISUZALIZE='fa-eye.png'
     ACTION_WIZ='fa-magic.png'
     ACTION_HELP='fa-question-circle.png'
+    ACTION_REFERENCES='fa-external-link.png'
     
     
     
