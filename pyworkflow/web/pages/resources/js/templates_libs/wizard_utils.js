@@ -230,13 +230,14 @@ function previewPsd(){
 	
 	// check downsampling is a number
 	var downsampling = $("input#downsampling").val();
+	
 	if (downsampling == undefined) {
 		downsampling = 1.0;
 	}
 
 	// get the img path
 	var path_img = $("tr#" + $("table#data").attr("value")).attr("value");
-
+	
 	// set loading img
 	var img_load = $("img#loadingPsd");
 	img_load.show();
@@ -255,9 +256,15 @@ function previewDownsampling(elm) {
 	 *	1. Select an image from a list.
 	 * 	2. To obtain the downsampled image from the image selected.
 	 */
-	$.when(selectList(elm,"normal")).then(
-		function(){
-			var img = $("img#psd");
+	
+	if (elm == undefined){
+		elm = $("tr.selected")
+	}
+	else{
+		selectList(elm,"normal")
+	}
+	
+	var img = $("img#psd");
 			img.hide();
 			
 			var res = previewPsd();
@@ -270,8 +277,27 @@ function previewDownsampling(elm) {
 				// show the new micrograph
 				img.show();
 			});
-		}
-	);
+	
+	
+//	$.when(selectList(elm,"normal")).then(
+//		function(){
+//			var img = $("img#psd");
+//			img.hide();
+//			
+//			var res = previewPsd();
+//			var uri = res[0];
+//			var img_load = res[1];
+//			
+//			img.load(img.attr("src", uri), function() {
+//				// hide the load img
+//				img_load.hide();
+//				// show the new micrograph
+//				img.show();
+//			});
+//		}
+//	);
+		
+	 
 }
 
 // *** Methods Wizard CTF *** //

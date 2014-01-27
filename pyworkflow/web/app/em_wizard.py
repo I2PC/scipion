@@ -85,16 +85,19 @@ def wiz_downsampling(protocol, request):
     if res is not 1:
         return HttpResponse(res)
     else:
-        mics = [mic for mic in micrographs]
-        for m in mics:
+        for m in micrographs:
             m.basename = basename(m.getFileName())
-             
-        context = {'objects': mics,
+        
+#        mics = [mic for mic in micrographs]
+#        for m in mics:
+#            m.basename = basename(m.getFileName())
+            
+        context = {'objects': micrographs,
                    'downFactor': protocol.downFactor.get()
                    }
-
-        context = wiz_base(request, context)
         
+        context = wiz_base(request, context)
+
         return render_to_response('wizards/wiz_downsampling.html', context)
 
 def wiz_ctf(protocol, request):
