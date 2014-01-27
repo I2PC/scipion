@@ -83,9 +83,10 @@ WinSize = 256
 """ 
 Reject micrographs meeting the following condition, e.g., ctfCritCorr13<0.4 OR ctfCritNormality<11. You may use
 any of the following variables ctfDefocusU, ctfDefocusV, ctfCritFirstZero, ctfCritMaxFreq, ctfCritDamping, ctfCritfirstZeroRatio
-ctfCritFitting, ctfCritCorr13, ctfCritPsdCorr90, ctfCritPsdInt, ctfCritPsdStdQ, ctfCritPsdPCA1, ctfCritPsdPCARuns, ctfCritNormality
+ctfCritFitting, ctfCritCorr13, ctfCritPsdCorr90, ctfCritPsdInt, ctfCritPsdStdQ, ctfCritPsdPCA1, ctfCritPsdPCARuns, ctfCritNormality,
+ctfCritFirstMinFirstZeroRatio, ctfCritCtfMargin, ctfCritNonAstigmaticValidty
 """
-AutomaticRejection = ""
+AutomaticRejection = "ctfCritFirstZero<5 OR ctfCritMaxFreq>20 OR ctfCritfirstZeroRatio<0.9 OR ctfCritfirstZeroRatio>1.1 OR ctfCritFirstMinFirstZeroRatio>10 OR ctfCritCorr13<0 OR ctfCritCtfMargin<0 OR ctfCritNonAstigmaticValidty<0.3"
 
 # {eval} expandParallel(threads=0,hours=12)
 
