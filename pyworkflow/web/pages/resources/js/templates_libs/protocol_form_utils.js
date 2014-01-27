@@ -157,7 +157,9 @@ $(document).ready(function() {
 			var action = "/wizard/";
 			var type_wiz = $("#wizName").attr("value");
 			
-			$.post(action, $("#protocolForm").serialize(), function(html) {
+			var serialize_form = fixInput($("#protocolForm").serialize());
+			
+			$.post(action, serialize_form, function(html) {
 				
 				$('.messi').remove();
 				$('.messi-modal').remove();
@@ -185,7 +187,9 @@ $(document).ready(function() {
 			/* Launch the viewers with the options chosen */
 			var action = "/"+ mode +"/";
 
-			$.post(action, $("#protocolForm").serialize(), function(json) {
+			var serialize_form = fixInput($("#protocolForm").serialize());
+
+			$.post(action, serialize_form, function(json) {
 				$('.messi').remove();
 				$('.messi-modal').remove();				
 				popUpJSON(json);
