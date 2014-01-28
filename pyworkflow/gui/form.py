@@ -91,7 +91,7 @@ class PointerVar():
     def get(self):
         return self.value
     
-    
+   
 class ComboVar():
     """ Create a variable that display strings (for combobox)
     but the values are integers (for the underlying EnumParam).
@@ -383,6 +383,10 @@ class ParamWidget():
                     rb.grid(row=i, column=0, sticky='w')
             else:
                 raise Exception("Invalid display value '%s' for EnumParam" % str(param.display))
+        
+        elif t is MultiPointerParam:
+#            listBox = Listbox(content)
+            print "poraki"
         
         elif t is PointerParam or t is RelationParam:
             var = PointerVar()
