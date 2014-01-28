@@ -34,7 +34,7 @@ from viewer import runShowJ
 from pyworkflow.gui.text import *
 from pyworkflow.gui.dialog import showError, showWarning
 # FIXME: REMOVE DEPENDENCIES FROM XMIPP
-from pyworkflow.gui.file_manager import chimera, showj
+from protlib_gui_ext import chimera, showj
 import glob
 
 CLASSES = 0
