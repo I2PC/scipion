@@ -80,14 +80,17 @@ def form(request):
                 # Create the label
             
             if isinstance(param, MultiPointerParam):
+                htmlValueList = []
+                htmlIdValueList = []
                 for pointer in protVar:
-                    htmlValue, _ = getPointerHtml(pointer)
-                    param.htmlValue += htmlValue + ";"
-#                    param.htmlIdValue += protVar.get().getObjId() +";"
+                    htmlValue, htmlIdValue = getPointerHtml(pointer)
+                    htmlValueList.append(htmlValue)
+                    htmlIdValueList.append(htmlIdValue)
+                    
+                param.htmlValueIdZip = zip(htmlValueList,htmlIdValueList)    
+                print "esemultipointer",param.htmlValueIdZip    
             elif isinstance(param, PointerParam):
                 param.htmlValue, param.htmlIdValue = getPointerHtml(protVar)
-#                print "param.htmlValue",param.htmlValue 
-
             else:
                 param.htmlValue = protVar.get(param.default.get(""))
                 if isinstance(protVar, Boolean):
@@ -182,10 +185,7 @@ def updateProtocolParams(request, protocol, project):
 
 def getPointerValue(project, attr, value, paramName):
     if len(value.strip()) > 0:
-
-#        objId = int(value.split('.')[-1])  # Get the id string for last part after
-#        objId = attr.get().strId()
-        
+      
         obj = project.mapper.selectById(value)  # Get the object from its id
         id1 = attr.getObjId()
         id2 = obj.getObjId()
@@ -209,6 +209,7 @@ def updateParam(request, project, protocol, paramName):
     attr = getattr(protocol, paramName)
         
     if isinstance(attr, PointerList):
+        attr.clear()
         valueList = request.POST.getlist(paramName)
         for v in valueList:
             attr.append(Pointer(value=getPointerValue(project, attr, v, paramName)))
@@ -216,8 +217,6 @@ def updateParam(request, project, protocol, paramName):
             
     else:
         value = request.POST.get(paramName)
-#        print paramName
-#        print value
         if isinstance(attr, Pointer):
             value = getPointerValue(project, attr, value, paramName)
             

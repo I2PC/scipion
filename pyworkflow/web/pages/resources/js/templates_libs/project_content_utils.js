@@ -135,32 +135,32 @@ function launchToolbarTree(id, elm) {
 	row.show(); // Show toolbar
 }
 
-function checkRunStatus(id) {
-	/*
-	 * Function to check a protocol run, depend on the status two button will be
-	 * switching in the toolbar (Stop / Analyze Results).
-	 */
-	$.ajax({
-		type : "GET",
-		url : '/protocol_status/?protocolId=' + id,
-		dataType:"text",
-		success : function(status) {
-			if(status=="running"){
-				// Action Stop Button
-				$("span#analyzeTool").hide();
-				$("span#stopTool").show();
-				$("a#stopTool").attr('href',
-				'javascript:stopProtocolForm("' + id + '")');
-			}
-			else{
-				// Action Analyze Result Button
-				$("span#stopTool").hide();
-				$("span#analyzeTool").show();
-				$("a#analyzeTool").attr('href', 'javascript:launchViewer("'+id +'")');
-			}
-		}
-	});
-}
+//function checkRunStatus(id) {
+//	/*
+//	 * Function to check a protocol run, depend on the status two button will be
+//	 * switching in the toolbar (Stop / Analyze Results).
+//	 */
+//	$.ajax({
+//		type : "GET",
+//		url : '/protocol_status/?protocolId=' + id,
+//		dataType:"text",
+//		success : function(status) {
+//			if(status=="running"){
+//				// Action Stop Button
+//				$("span#analyzeTool").hide();
+//				$("span#stopTool").show();
+//				$("a#stopTool").attr('href',
+//				'javascript:stopProtocolForm("' + id + '")');
+//			}
+//			else{
+//				// Action Analyze Result Button
+//				$("span#stopTool").hide();
+//				$("span#analyzeTool").show();
+//				$("a#analyzeTool").attr('href', 'javascript:launchViewer("'+id +'")');
+//			}
+//		}
+//	});
+//}
 
 function fillTabs(id) {
 	/*
@@ -172,15 +172,15 @@ function fillTabs(id) {
 		url : '/protocol_info/?protocolId=' + id,
 		dataType : "json",
 		success : function(json) {
+			
 			// DATA
 			fillUL(json.inputs, "protocol_input", "fa-sign-in");
 			fillUL(json.outputs, "protocol_output", "fa-sign-out");
+			
 			// SUMMARY
 			$("#tab-summary").empty();
 			$("#tab-summary").append(json.summary);
-//			for ( var i = 0; i < json.length; i++) {
-//				$("#tab-summary").append('<p>' + json[i] + '</p>');
-//			}
+
 			// METHODS
 			$("#tab-methods").empty();
 			$("#tab-methods").append(json.methods);
@@ -434,7 +434,6 @@ function updateGraphView(status) {
 }
 
 function editObject(objId){
-	
 	$.ajax({
 		type : "GET",
 		url : '/get_attributes/?objId='+ objId,
