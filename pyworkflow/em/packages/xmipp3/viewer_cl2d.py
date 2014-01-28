@@ -44,11 +44,9 @@ class XmippCL2DViewer(ProtocolViewer):
     """ Wrapper to visualize different type of data objects
     with the Xmipp program xmipp_showj
     """
+    _label = 'viewer cl2d'
     _targets = [XmippProtCL2D]
     _environments = [DESKTOP_TKINTER, WEB_DJANGO]
-    
-    _label = 'viewer cl2d'
-   
 
     def _defineParams(self, form):
         form.addSection(label='Visualization')

@@ -414,7 +414,7 @@ class ProtFrealign(ProtRefine3D):
                 pass
         else:
             for block in range(1, numberOfBlocks + 1):
-                refineId = self._insertFunctionStep("refineParticlesStep", iter, block, numberOfBlocks, prerequisites=depsInitId)
+                refineId = self._insertFunctionStep("refineParticlesStep", iter, block, prerequisites=depsInitId)
                 depsRefine.append(refineId)
         return depsRefine
     
@@ -604,7 +604,7 @@ class ProtFrealign(ProtRefine3D):
         """
 
         imgSet = self.inputParticles.get()
-        paramsParFn = self._mergeAllParFiles(iter, numberOfBlocks)  # merge all parameter files generated in a refineIterStep function.
+        self._mergeAllParFiles(iter, numberOfBlocks)  # merge all parameter files generated in a refineIterStep function.
         
         initParticle = 1
         finalParticle = imgSet.getSize()
@@ -616,7 +616,7 @@ class ProtFrealign(ProtRefine3D):
 
         params2 = self._setParams3DR(iter)
         
-        params3DR = dict(params.items() + paramsParFn.items() + params2.items())
+        params3DR = dict(params.items() + params2.items())
         
         args = self._prepareCommand()
         self.runJob(None, self._program, args % params3DR)
@@ -632,7 +632,7 @@ class ProtFrealign(ProtRefine3D):
         iterDir = self._iterWorkingDir(iter)
         self._enterDir(iterDir) # enter to the working directory for the current iteration.
         
-        preIter = iter - 1
+        prevIter = iter - 1
         prevIterDir = self._iterWorkingDir(prevIter)
         inputParFn = join(prevIterDir, 'particles_%02d_' % block + 'iter_%03d.par' % iter)
         param['inputParFn'] = os.path.relpath(inputParFn, iterDir) 
@@ -665,6 +665,7 @@ class ProtFrealign(ProtRefine3D):
         paramDic['mode'] = 0
         paramDic['stopParam'] = 0   #The stopParam must be 0 if you want obtain a 3D reconstruction.
         paramDic['volume'] = 'volume_iter_%03d.mrc' % iter
+        paramDic['inputParFn'] = 'particles_iter_%03d.par' % iter
         paramDic['imgFnMatch'] = 'particles_match_iter_%03d.mrc' % iter
         paramDic['outputShiftFn'] = 'particles_shifts_iter_%03d.shft' % iter
         paramDic['3Dweigh'] = 'volume_weights_iter_%03d' % iter
@@ -677,9 +678,9 @@ class ProtFrealign(ProtRefine3D):
         
     def __openParamFile(self, blockNumber, paramsDict):
         """ Open the file and write the first part of the block param file. """
-        if which('frealign_v9.exe') is '':
-            raise Exception('Missing frealign_v9.exe')
-        initaLines = """frealign_v9.exe << eot > %(frealignOut)s
+        if which('frealign_v8.exe') is '':
+            raise Exception('Missing frealign_v8.exe')
+        initaLines = """frealign_v8.exe << eot > %(frealignOut)s
 M,%(mode2)s,%(doMagRefinement)s,%(doDefocusRef)s,%(doAstigRef)s,%(doDefocusPartRef)s,%(metEwaldSphere)s,%(doExtraRealSpaceSym)s,%(doWienerFilter)s,%(doBfactor)s,%(writeMatchProj)s,%(metFsc)s,%(doAditionalStatisFSC)s,%(padFactor)s
 %(outerRadius)s,%(innerRadius)s,%(sampling3DR)s,%(ampContrast)s,%(ThresholdMask)s,%(pseudoBFactor)s,%(avePhaseResidual)s,%(angStepSize)s,%(numberRandomSearch)s,%(numberPotentialMatches)s
 %(paramRefine)s
@@ -741,7 +742,7 @@ eot
             
             # ToDo: Implement a better method to get the info particles. Now, you iterate several times over the SetOfParticles (as many threads as you have)
             for i, img in enumerate(imgSet):
-                film = img.getId()
+                film = img.getObjId()
                 ctf = img.getCTF()
                 defocusU, defocusV, astig = ctf.getDefocusU(), ctf.getDefocusV(), ctf.getDefocusAngle()
                 partCounter = i + 1
@@ -774,9 +775,9 @@ eot
     def _prepareCommand(self):
         """ prepare the command to execute"""
 
-        if which('frealign_v9.exe') is '':
+        if which('frealign_v8.exe') is '':
             raise Exception('Missing frealign_v8.exe')
-        self._program = which('frealign_v9.exe')
+        self._program = which('frealign_v8.exe')
         args = """  << eot >> %(frealignOut)s
 M,%(mode)s,%(doMagRefinement)s,%(doDefocusRef)s,%(doAstigRef)s,%(doDefocusPartRef)s,%(metEwaldSphere)s,%(doExtraRealSpaceSym)s,%(doWienerFilter)s,%(doBfactor)s,%(writeMatchProj)s,%(metFsc)s,%(doAditionalStatisFSC)s,%(padFactor)s
 %(outerRadius)s,%(innerRadius)s,%(sampling3DR)s,%(ampContrast)s,%(ThresholdMask)s,%(pseudoBFactor)s,%(avePhaseResidual)s,%(angStepSize)s,%(numberRandomSearch)s,%(numberPotentialMatches)s
@@ -823,24 +824,21 @@ eot
                             f2.write(l)
                 f1.close()
             f2.close()
-            paramDict['inputParFn'] = file2
-            
-        return paramDict
-         
+                     
     def createOutput(self):
         
         lastIter = self.numberOfIterations.get()
         lastIterDir = self._iterWorkingDir(lastIter)
         volFn = join(lastIterDir, 'volume_iter_%03d.mrc' % lastIter)
         vol = Volume()
-        vol.setSamplingRate(self.inputClasses.get().getImages().getSamplingRate())
+        vol.setSamplingRate(self.inputParticles.get().getSamplingRate())
         vol.setFileName(volFn)
         self._defineOutputs(outputVolume=vol)
         
     def _validate(self):
         errors = []
-        if which('frealign_v9.exe') is '':
-            errors.append('Missing frealign_v9.exe')
+        if which('frealign_v8.exe') is '':
+            errors.append('Missing frealign_v8.exe')
         return errors
     
     def _summary(self):
@@ -851,6 +849,6 @@ eot
         if not hasattr(self, 'outputVolumes'):
             summary.append("Output volumes not ready yet.")
         else:
-            summary.append("Output volumes: %s" % self.outputVolume.get())
+            summary.append("Output volumes: %s" % self.vol.get())
         
         return summary

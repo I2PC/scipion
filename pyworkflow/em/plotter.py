@@ -47,7 +47,7 @@ class EmPlotter(Plotter):
             if (len(weight) > 0):
                 pointsize = int((weight[i] - min_w)/(max_w - min_w + 0.001) * (max_p - min_p) + min_p)
             else:
-                pointsize = 1
+                pointsize = 10
             a.plot(rot[i], tilt[i], markerfacecolor=color, marker='.', markersize=pointsize)
     
     def plotHist(self, xCol, yCol, color, **args):

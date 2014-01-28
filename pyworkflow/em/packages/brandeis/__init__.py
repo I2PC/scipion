@@ -30,10 +30,9 @@ wrapping Grigrorieff Lab programs at Brandeis
 
 from brandeis import *
 
+from viewer_frealign import FrealignViewer
 from protocol_ctffind3 import ProtCTFFind
 from protocol_frealign import ProtFrealign
 
 # Wizards
 from wizard import *
-
-from protocol_frealign import ProtFrealign
