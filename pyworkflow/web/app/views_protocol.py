@@ -88,7 +88,6 @@ def form(request):
                     htmlIdValueList.append(htmlIdValue)
                     
                 param.htmlValueIdZip = zip(htmlValueList,htmlIdValueList)    
-                print "esemultipointer",param.htmlValueIdZip    
             elif isinstance(param, PointerParam):
                 param.htmlValue, param.htmlIdValue = getPointerHtml(protVar)
             else:

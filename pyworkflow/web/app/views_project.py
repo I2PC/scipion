@@ -349,17 +349,9 @@ def protocol_info(request):
         protocol = project.mapper.selectById(int(protId))
         
         # PROTOCOL IO
-        input_obj={}
-        for name, attr in protocol.iterInputAttributes():
-            input_obj.update({'name': name, 
-                              'id': attr.getObjId()})
-        
-        output_obj={}
-        for name, attr in protocol.iterOutputAttributes(EMObject):
-            name = attr.getLastName()
-            output_obj.update({'name': name, 
-                               'id': attr.getObjId()})
-            
+        input_obj = [{'name': name, 'id': attr.getObjId()} for name, attr in protocol.iterInputAttributes()]
+        output_obj = [{'name': name, 'id': attr.getObjId()} for name, attr in protocol.iterOutputAttributes(EMObject)]
+
         # PROTOCOL SUMMARY
         summary = protocol.summary()
         from pyworkflow.web.app.views_util import parseText
@@ -371,8 +363,8 @@ def protocol_info(request):
         # STATUS
         status = protocol.status.get()
 
-        ioDict = {'inputs': [input_obj],
-                  'outputs': [output_obj],
+        ioDict = {'inputs': input_obj,
+                  'outputs': output_obj,
                   'summary': parseText(summary),
                   'methods': parseText(methods), 
                   'status': status
