@@ -296,13 +296,6 @@ function isNaturalNumber(n) {
     return !isNaN(n1) && n2 === n1 && n1.toString() === n && n2>0;
 }
 
-function blnkspcs(str){
-	return str.replace(/\s/gi, "X")
-}
-
-function breakLine(str){
-	return str.replace(/\\n/g, "Y");
-}
 
 function br2nl(str) {
     return str.replace(/<br\s*\/?>/mg,"\n");
@@ -361,11 +354,7 @@ function updateLabelComment(){
 	var id = elm_table.attr('value')
 	var typeObj = elm_table.attr('data-type')
 	var value_label = $("input#label_new").val()
-	
-	var comment= $("textarea#comment_new").val()
-	
-	var value_comment = blnkspcs(comment)
-	
+	var value_comment= $("textarea#comment_new").val()
 	
 	url_param = "/set_attributes/?" +
 		"id=" + id + 
@@ -380,7 +369,7 @@ function updateLabelComment(){
 		
 	$.ajax({
 		type : "GET",
-		url : url_param,
+		url : encodeURI(url_param),
 		dataType: "text",
 		success : function(txt) {
 			if(txt=='reload'){
