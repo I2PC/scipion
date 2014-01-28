@@ -50,11 +50,8 @@ class XmippProtNMA(EMProtocol):
     
     def _defineParams(self, form):
         form.addSection(label='Input')
-        #form.addParam('inputStructure', MultiPointerParam, label="Input structure", important=True, 
-        #              pointerClass='PdbFile, SetOfVolumes',
-        #              help='You can choose either a PDB atomic structure or EM volume')
         form.addParam('inputStructure', PointerParam, label="Input structure", important=True, 
-                      pointerClass='PdbFile,SetOfVolumes',
+                      pointerClass='PdbFile, SetOfVolumes',
                       help='You can choose either a PDB atomic structure or EM volume')  
         form.addParam('maskMode', EnumParam, choices=['none', 'threshold', 'file'], 
                       default=NMA_MASK_NONE, 
