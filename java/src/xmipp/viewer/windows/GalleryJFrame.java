@@ -1011,22 +1011,30 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		boolean save = dlg.showDialog();
 		if (save)
 		{
-			boolean overwrite;
+			boolean overwrite= dlg.isOverwrite();
 			String path = dlg.getMdFilename();
-			String file = path.substring(path.lastIndexOf("@") + 1, path.length());
-			if (!new File(file).exists())// overwrite or append, save selection
-				md.write(path);
-			else
-			{
-				overwrite = dlg.isOverwrite();
-				if (overwrite)
-					md.write(path);// overwrite with active block only, other
-									// blocks were dismissed
-				else
-					md.writeBlock(path);// append selection
-
-			}
+			saveSelection(path, overwrite);
 		}
+		md.destroy();
+	}
+        
+        	/** Save selected items as a metadata */
+	public void saveSelection(String path, boolean overwrite) throws Exception
+	{
+		MetaData md = data.getSelectionMd();
+                String file = path.substring(path.lastIndexOf("@") + 1, path.length());
+                if (!new File(file).exists())// overwrite or append, save selection
+                        md.write(path);
+                else
+                {
+                        if (overwrite)
+                                md.write(path);// overwrite with active block only, other
+                                                                // blocks were dismissed
+                        else
+                                md.writeBlock(path);// append selection
+
+                }
+		
 		md.destroy();
 	}
 
@@ -2034,11 +2042,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 
 	}
 
-	@Override
-	public String getFilename()
-	{
-		return data.getMdFilename();
-	}
+	
 
 	@Override
 	public void done()
@@ -2101,6 +2105,13 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		}
 	}// function saveMd
 
+        
+	public String getFilename()
+	{
+		return data.getFileName();
+	}
+        
+        
 	private void saveAll() throws Exception
 	{
 		String from = data.getFileName();
