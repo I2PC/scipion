@@ -503,7 +503,7 @@ class FileBrowser():
         self.selectedFiles = self.tree.selection()
         self.root.destroy()
 
-"""#############################################################################"""
+""" UTILS #####################################################################"""
 
 class FileManager():
     ''' Class to handle different types of files '''
@@ -622,6 +622,7 @@ def getImageData(img):
     Z = img.getData()
     return Z
 
+"""############################################################################"""
 
 """Show File Browser and return selected files"""
 def showBrowseDialog(path='.', title='', parent=None, main=False, browser=FileBrowser, **args):
