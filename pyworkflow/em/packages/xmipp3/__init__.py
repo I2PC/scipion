@@ -66,6 +66,7 @@ from protocol_simulated_annealing import XmippProtInitVolSimAnneal
 from protocol_ransac import XmippProtRansac
 from protocol_convert_pdb import XmippProtConvertPdb
 from protocol_join_sets import XmippProtJoinSets
+from protocol_nma import XmippProtNMA
 
 # Wizards
 from wizard import *

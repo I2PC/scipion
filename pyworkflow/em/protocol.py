@@ -255,7 +255,6 @@ class ProtImportVolumes(EMProtocol):
         form.addParam('samplingRate', FloatParam,
                    label=Message.LABEL_SAMP_RATE)
         
-         
     def createVolume(self, volumePath):
         """ Copy the volume to WorkingDir and create
         the volumen object.
@@ -278,7 +277,6 @@ class ProtImportVolumes(EMProtocol):
         
         if n == 0:
             raise Exception(Message.ERROR_IMPORT_VOL)
-        
         else:
             # Create a set of volumes
             volSet = self._createSetOfVolumes()
@@ -289,7 +287,6 @@ class ProtImportVolumes(EMProtocol):
             
             volSet.write()
             self._defineOutputs(outputVolumes=volSet)
-        
     
     def getFiles(self):
         return self.outputVolumes.getFiles()
@@ -310,7 +307,46 @@ class ProtImportVolumes(EMProtocol):
         if self.pattern.get() == "":
             errors.append(Message.ERROR_PATTERN_EMPTY)
         return errors
+         
+
+class ProtImportPdb(EMProtocol):
+    """Protocol to import a set of volumes in the project"""
+    _label = 'Import volumes'
+    _path = join('Volumes', 'Import')
+    
+    def __init__(self, **args):
+        EMProtocol.__init__(self, **args)         
+       
+    def _defineParams(self, form):
+        form.addSection(label='Input')
+        form.addParam('path', StringParam, 
+                      label="Pattern",
+                      help='Specify a path or an url to desired PDB structure.')
+         
+    def _defineSteps(self):
+        self._insertFunctionStep('importPdbStep', self.path.get())
         
+    def importPdbStep(self, path):
+        """ Copy volumes matching the filename pattern
+        Register other parameters.
+        """
+        if not exists(path):
+            raise Exception("PDB not found at *%s*" % path)
+        pdb = PdbFile()
+        pdb.setFileName(path)
+        self._defineOutputs(outputPdb=pdb)
+
+    def _summary(self):
+        summary = ['PDB file imported from *%s*' % self.path.get()]
+
+        return summary
+    
+    def _validate(self):
+        errors = []
+        if not exists(self.path.get()):
+            errors.append("PDB not found at *%s*" % self.path.get())
+        return errors       
+
 
 class ProtInitialVolume(EMProtocol):
     """Protocol base for Initial volumes protocols"""

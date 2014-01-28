@@ -85,6 +85,11 @@ def cleanPath(*paths):
                 shutil.rmtree(p)
             else:
                 os.remove(p)
+                
+def cleanPattern(pattern):
+    """ Remove all files that match the pattern. """
+    files = glob(pattern)
+    cleanPath(*files)
             
 def makePath(*paths):
     """ Create a list of paths if they don't exists.

@@ -238,26 +238,26 @@ class Icon():
     # Project Content Template
     RUNS_TREE = 'fa-sitemap.png'
     RUNS_LIST = 'fa-bars.png'
-    ACTION_NEW= 'new_object.gif',
-    ACTION_EDIT= 'fa-pencil.png'
-    ACTION_COPY=  'fa-files-o.png'
-    ACTION_DELETE=  'fa-trash-o.png'
-    ACTION_REFRESH=  'fa-refresh.png'
-    ACTION_STEPS=  'fa-folder-open.png'
-    ACTION_TREE=  None
-    ACTION_LIST=  'fa-bars.png'
-    ACTION_STOP= 'fa-stop.png'
-    ACTION_CONTINUE= 'fa-play-circle-o.png'
-    ACTION_RESULTS= 'fa-eye.png'
-    ACTION_CLOSE='fa-times.png'
-    ACTION_SAVE='fa-save.png'
-    ACTION_VISUZALIZE='fa-eye.png'
-    ACTION_WIZ='fa-magic.png'
-    ACTION_HELP='fa-question-circle.png'
-    ACTION_REFERENCES='fa-external-link.png'
+    ACTION_NEW = 'new_object.gif',
+    ACTION_EDIT = 'fa-pencil.png'
+    ACTION_COPY = 'fa-files-o.png'
+    ACTION_DELETE = 'fa-trash-o.png'
+    ACTION_REFRESH = 'fa-refresh.png'
+    ACTION_STEPS = 'fa-folder-open.png'
+    ACTION_TREE = None
+    ACTION_LIST = 'fa-bars.png'
+    ACTION_STOP = 'fa-stop.png'
+    ACTION_CONTINUE = 'fa-play-circle-o.png'
+    ACTION_RESULTS = 'fa-eye.png'
+    ACTION_CLOSE = 'fa-times.png'
+    ACTION_SAVE = 'fa-save.png'
+    ACTION_VISUZALIZE = 'fa-eye.png'
+    ACTION_WIZ = 'fa-magic.png'
+    ACTION_HELP = 'fa-question-circle.png'
+    ACTION_REFERENCES = 'fa-external-link.png'
     
-    
+    ACTION_SEARCH = 'fa-search.png'
     
     #Host template
-    BUTTON_CLOSE='dialog_close.png'
-    BUTTON_SAVE='filesave.png'
+    BUTTON_CLOSE = 'dialog_close.png'
+    BUTTON_SAVE = 'filesave.png'
