@@ -317,6 +317,8 @@ def addProtocols(settings):
     
     addSpiderMDAProtocols(settings)
     
+    addNMAProtocols(settings)
+    
     
 def addSpiderMDAProtocols(settings):
     """ Write protocols related to Spider MDA workflow. """
@@ -343,7 +345,27 @@ def addSpiderMDAProtocols(settings):
             
     settings.addProtocolMenu(menu)
        
+def addNMAProtocols(settings):
+    """ Write protocols related to Flexible Analysis (NMA) workflow. """
+    m1 = ProtocolConfig("Flexible analysis")
     
+    # ------------------- Particles ----------------------------
+    m2 = m1.addSubMenu('Import 3D structure', tag='section')
+    m2.addSubMenu(' Import PDB', tag='protocol', icon='bookmark.png',
+                  value='ProtImportPdb')
+    m2.addSubMenu(' Import volume', tag='protocol', icon='bookmark.png',
+                  value='ProtImportVolumes')
+       
+    m1.addSubMenu(' NMA analysis', tag='protocol',
+                  value='XmippProtNMA')            
+    
+    m1.addSubMenu(' Import particles', tag='protocol', icon='bookmark.png',
+                  value='ProtImportParticles')
+    m1.addSubMenu(' Filter (optional)', tag='protocol',
+                  value='SpiderProtFilter')
+    settings.addProtocolMenu(m1)
+    
+        
 def getScipionHome(userHome):
     """ Returns default SCIPION_HOME from HOME. """
     return join(userHome, 'Scipion')

@@ -341,27 +341,14 @@ def project_content(request):
     
     return render_to_response('project_content.html', context)
 
-def protocol_status(request):
-    if request.is_ajax():
-        projectName = request.session['projectName']
-        project = loadProject(projectName)
-        protId = request.GET.get('protocolId', None)
-        protocol = project.mapper.selectById(int(protId))
-        status = protocol.status.get()
-
-#        print "======================= in protocol_status...."
-#        print jsonStr        
-    return HttpResponse(status, mimetype='application/javascript')
-
-def protocol_io(request):
+def protocol_info(request):
     if request.is_ajax():
         projectName = request.session['projectName']
         project = loadProject(projectName)
         protId = request.GET.get('protocolId', None)
         protocol = project.mapper.selectById(int(protId))
         
-#        info = getObjectInfo(protocol)
-        
+        # PROTOCOL IO
         input_obj={}
         for name, attr in protocol.iterInputAttributes():
             input_obj.update({'name': name, 
@@ -372,43 +359,25 @@ def protocol_io(request):
             name = attr.getLastName()
             output_obj.update({'name': name, 
                                'id': attr.getObjId()})
+            
+        # PROTOCOL SUMMARY
+        summary = protocol.summary()
+        from pyworkflow.web.app.views_util import parseText
         
+        # PROTOCOL METHODS
+        methods = protocol.methods()
+#        print "methods",methods
+
+        # STATUS
+        status = protocol.status.get()
+
         ioDict = {'inputs': [input_obj],
-                  'outputs': [output_obj]}
+                  'outputs': [output_obj],
+                  'summary': parseText(summary),
+                  'methods': parseText(methods), 
+                  'status': status
+                  }
         
         jsonStr = json.dumps(ioDict, ensure_ascii=False)
-
-#        print "======================= in protocol_io...."
-#        print jsonStr        
     return HttpResponse(jsonStr, mimetype='application/javascript')
 
-def protocol_summary(request):
-    if request.is_ajax():
-        projectName = request.session['projectName']
-        project = loadProject(projectName)
-        protId = request.GET.get('protocolId', None)
-        protocol = project.mapper.selectById(int(protId))
-        summary = protocol.summary()
-
-        from pyworkflow.web.app.views_util import parseText
-        jsonStr = json.dumps(parseText(summary), ensure_ascii=False)
-
-    return HttpResponse(jsonStr, mimetype='application/javascript')    
-  
-def protocol_methods(request):  
-    if request.is_ajax():
-        projectName = request.session['projectName']
-        project = loadProject(projectName)
-        protId = request.GET.get('protocolId', None)
-        protocol = project.mapper.selectById(int(protId))
-        methods = protocol.methods()
-        
-        print "methods",methods
-
-        from pyworkflow.web.app.views_util import parseText
-        jsonStr = json.dumps(parseText(methods), ensure_ascii=False)
-        
-#        print "======================= in protocol_summary...."
-#        print jsonStr
-    return HttpResponse(jsonStr, mimetype='application/javascript')  
-    

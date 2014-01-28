@@ -167,9 +167,8 @@ class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
             outputMics.append(mic)
 
         self._defineOutputs(outputMicrographs=outputMics)
-        self._defineSourceRelation(inputMics, outputMics)
+        self._defineTransformRelation(inputMics, outputMics)
         
-
     def _summary(self):
         summary = []
         if not self.inputMicrographs.hasValue():

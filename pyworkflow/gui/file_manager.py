@@ -1,33 +1,34 @@
-'''
-/***************************************************************************
- * Authors:     J.M. de la Rosa Trevin (jmdelarosa@cnb.csic.es)
- *              Jose Gutierrez (jose.gutierrez@cnb.csic.es)
- *
- * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
- * 02111-1307  USA
- *
- *  All comments concerning this program package may be sent to the
- *  e-mail address 'jmdelarosa@cnb.csic.es'
- ***************************************************************************/
- '''
+# **************************************************************************
+# *
+# * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
+# *              Jose Gutierrez (jose.gutierrez@cnb.csic.es)
+# *
+# * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
+# *
+# * This program is free software; you can redistribute it and/or modify
+# * it under the terms of the GNU General Public License as published by
+# * the Free Software Foundation; either version 2 of the License, or
+# * (at your option) any later version.
+# *
+# * This program is distributed in the hope that it will be useful,
+# * but WITHOUT ANY WARRANTY; without even the implied warranty of
+# * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# * GNU General Public License for more details.
+# *
+# * You should have received a copy of the GNU General Public License
+# * along with this program; if not, write to the Free Software
+# * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+# * 02111-1307  USA
+# *
+# *  All comments concerning this program package may be sent to the
+# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *
+# **************************************************************************
 
 import os
 from os.path import join, exists, basename, dirname, commonprefix, relpath, abspath
 import Tkinter as tk
+import xmipp
 
 from tkSimpleDialog import Dialog
 import ttk
@@ -36,7 +37,6 @@ from protlib_filesystem import getXmippPath, xmippExists, removeFilenamePrefix, 
 from Tkinter import TclError
 from protlib_gui_ext import *
 
-      
 
 '''**************  Implementation of Xmipp Browser *************'''
 # Some helper functions for the browser
@@ -82,15 +82,15 @@ def defaultFillMenu(filename, browser):
 def defaultOnDoubleClick(filename, browser):
     pass
 
-def isChimeraSession(filename):
-    ''' check if the file is a chimera .py session '''
-    # Check if it is a chimera .py session
-    if filename.endswith('.py'):
-        f = open(filename)
-        for l in f:
-            if 'chimera' in l and 'import' in l:
-                return True            
-    return False
+#def isChimeraSession(filename):
+#    ''' check if the file is a chimera .py session '''
+#    # Check if it is a chimera .py session
+#    if filename.endswith('.py'):
+#        f = open(filename)
+#        for l in f:
+#            if 'chimera' in l and 'import' in l:
+#                return True            
+#    return False
     
 def textFillMenu(filename, browser):
     menu = browser.menu
@@ -107,48 +107,47 @@ def textOnDoubleClick(filename, browser):
         filelist = [prefix + ext for ext in loglist if os.path.exists(prefix + ext)]
     showTextfileViewer(filename, filelist, browser.parent)
 
-def getMdString(filename, browser):
-    from xmipp import MetaData, MDL_IMAGE, label2Str, labelIsImage
-    md = MetaData()
-    md.read(filename, 1)
-    labels = md.getActiveLabels()
-    msg =  "  <%d items>\n" % md.getParsedLines()
-    msg += "  <labels:>" + ''.join(["\n   - %s" % label2Str(l) for l in labels])
+#def getMdString(filename, browser):
+#    from xmipp import MetaData, MDL_IMAGE, label2Str, labelIsImage
+#    md = MetaData()
+#    md.read(filename, 1)
+#    labels = md.getActiveLabels()
+#    msg =  "  <%d items>\n" % md.getParsedLines()
+#    msg += "  <labels:>" + ''.join(["\n   - %s" % label2Str(l) for l in labels])
+#    
+#    img = 'no-image.png'
+#    for label in labels:
+#        if labelIsImage(label):
+#            img = md.getValue(label, md.firstObject())
+#            break
+#    browser.updatePreview(img)
+#    return msg
     
-    img = 'no-image.png'
-    for label in labels:
-        if labelIsImage(label):
-            img = md.getValue(label, md.firstObject())
-            break
-    browser.updatePreview(img)
-    return msg
-    
-def mdOnClick(filename, browser):
-    if '@' not in filename:
-        import xmipp
-        msg = "<Metadata File>\n"
-        blocks = xmipp.getBlocksInMetaDataFile(filename)
-        nblocks = len(blocks)
-        if nblocks <= 1:
-            msg += "  <single block>\n" + getMdString(filename, browser)
-        else:
-            msg += "  <%d blocks:>" % nblocks + ''.join(["\n  - %s" % b for b in blocks])
-            # Insert blocks in metadata as independent items
-            if len(browser.tree.get_children(filename)) == 0:
-                fm = browser.managers['md']
-                
-                #bnameSuffix = "@" + relpath(filename, browser.dir)
-                bnameSuffix = "@" + filename
-                btextSuffix = "@" + basename(filename)
-                for b in blocks:
-                    bname = b + bnameSuffix                    
-                    btext = b + btextSuffix
-                    browser.tree.insert(filename, 'end', bname, text=btext, image=fm.image)
-    else:
-        block, filename = splitFilename(filename)
-        filename = join(browser.dir, filename)
-        msg = "<Metadata Block>\n" + getMdString("%s@%s" % (block, filename), browser)
-    return msg
+#def mdOnClick(filename, browser):
+#    if '@' not in filename:
+#        msg = "<Metadata File>\n"
+#        blocks = xmipp.getBlocksInMetaDataFile(filename)
+#        nblocks = len(blocks)
+#        if nblocks <= 1:
+#            msg += "  <single block>\n" + getMdString(filename, browser)
+#        else:
+#            msg += "  <%d blocks:>" % nblocks + ''.join(["\n  - %s" % b for b in blocks])
+#            # Insert blocks in metadata as independent items
+#            if len(browser.tree.get_children(filename)) == 0:
+#                fm = browser.managers['md']
+#                
+#                #bnameSuffix = "@" + relpath(filename, browser.dir)
+#                bnameSuffix = "@" + filename
+#                btextSuffix = "@" + basename(filename)
+#                for b in blocks:
+#                    bname = b + bnameSuffix                    
+#                    btext = b + btextSuffix
+#                    browser.tree.insert(filename, 'end', bname, text=btext, image=fm.image)
+#    else:
+#        block, filename = splitFilename(filename)
+#        filename = join(browser.dir, filename)
+#        msg = "<Metadata Block>\n" + getMdString("%s@%s" % (block, filename), browser)
+#    return msg
         
 def mdFillMenu(filename, browser):
     menu = browser.menu
@@ -156,13 +155,13 @@ def mdFillMenu(filename, browser):
     menu.add_command(label="Open as Images table", command=lambda:showj(filename, 'gallery'))
     menu.add_command(label="Open as ImageJ gallery", command=lambda: showj(filename, 'image'))
     menu.add_command(label="Open as Text", command=lambda: showTextfileViewer(filename, [filename], browser.parent))
-    try:
-        from xmipp import MetaData, MDL_MICROGRAPH
-        md = MetaData(filename)
-        if md.containsLabel(MDL_MICROGRAPH):
-            menu.add_command(label="PSD preview", command=lambda: showCTFPreview(filename, parent=browser.parent, md=md))
-    except Exception, e:
-        print e
+#    try:
+#        from xmipp import MetaData, MDL_MICROGRAPH
+#        md = MetaData(filename)
+#        if md.containsLabel(MDL_MICROGRAPH):
+#            menu.add_command(label="PSD preview", command=lambda: showCTFPreview(filename, parent=browser.parent, md=md))
+#    except Exception, e:
+#        print e
         
     return True
 
@@ -173,19 +172,19 @@ def mdOnDoubleClick(filename, browser):
         filename = '%(block)s@%(filename)s' % locals()
     showj(filename, 'metadata')
 
-def imgOnClick(filename, browser):
-    import xmipp
-    x, y, z, n = xmipp.getImageSize(filename)
-    dimMsg = "<Image>\n  <dimensions:> %(x)d x %(y)d" 
-    expMsg = "Columns x Rows "
-    if z > 1: 
-        dimMsg += " x %(z)d"
-        expMsg += " x Slices"
-    if n > 1:
-        dimMsg += " x %(n)d" 
-        expMsg += " x Objects"
-    browser.updatePreview(filename)
-    return (dimMsg + "\n" + expMsg) % locals()
+#def imgOnClick(filename, browser):
+#    import xmipp
+#    x, y, z, n = xmipp.getImageSize(filename)
+#    dimMsg = "<Image>\n  <dimensions:> %(x)d x %(y)d" 
+#    expMsg = "Columns x Rows "
+#    if z > 1: 
+#        dimMsg += " x %(z)d"
+#        expMsg += " x Slices"
+#    if n > 1:
+#        dimMsg += " x %(n)d" 
+#        expMsg += " x Objects"
+#    browser.updatePreview(filename)
+#    return (dimMsg + "\n" + expMsg) % locals()
         
 def imgFillMenu( filename, browser):
     menu = browser.menu
@@ -210,8 +209,8 @@ def volFillMenu( filename, browser):
     menu.add_command(label="Open", command=lambda: showj(filename, 'gallery'))
     menu.add_command(label="Open as ImageJ gallery", command=lambda:showj(filename, 'image'))
     menu.add_command(label="Open with Chimera", command=lambda:chimera(filename))
-    menu.add_command(label="Open mask wizard", command=lambda:showBrowseDialog(parent=browser.parent, browser=XmippBrowserMask, 
-                                                                               allowFilter=False, extra={'fileList': [filename]}))
+#    menu.add_command(label="Open mask wizard", command=lambda:showBrowseDialog(parent=browser.parent, browser=XmippBrowserMask, 
+#                                                                               allowFilter=False, extra={'fileList': [filename]}))
     return True
 
 def volOnDoubleClick(filename, browser):
@@ -325,7 +324,7 @@ class XmippBrowser():
             self.filterVar.set(self.pattern)
         filterEntry = ttk.Entry(filterFrame, width=25, textvariable=self.filterVar)
         filterEntry.pack(side=tk.LEFT,padx=2)
-        self.btnFilter = XmippButton(filterFrame, "Search", 'search.gif', command=self.filterResults)
+#        self.btnFilter = XmippButton(filterFrame, "Search", 'search.gif', command=self.filterResults)
         filterEntry.bind('<Return>', self.filterResults)
         self.btnFilter.pack(side=tk.LEFT, padx=2)
         
@@ -335,10 +334,9 @@ class XmippBrowser():
         else:
             self.root = tk.Tk()
         #Create xmipp image to show preview
-        import xmipp
-        self.preview = None
-        self.image = xmipp.Image()
-        self.lastitem = None
+#        self.preview = None
+#        self.image = xmipp.Image()
+#        self.lastitem = None
         
         self.parent = parent   
         self.createFileManagers()
@@ -346,7 +344,7 @@ class XmippBrowser():
         self.root.columnconfigure(0, weight=4, minsize=120)        
         self.root.columnconfigure(1, weight=1, minsize=30)
         self.root.minsize(600, 400)
-        titleStr = "Xmipp Browser"
+        titleStr = "Scipion Browser"
         if len(title):
             titleStr += " - %s" % title
         elif self.seltype != 'none':
@@ -369,21 +367,30 @@ class XmippBrowser():
         frame = ttk.Frame(self.root, padding="3 3 12 12")
         frame.grid(row=contentRow, column=0, sticky="nwes")
         treeRow = 0
-        if self.allowRefresh:
-            btn = XmippButton(frame, "Refresh", 'refresh.gif', command=self.refresh, tooltip='Refresh   F5')
-            btn.grid(row=0, column=0, padx=(0, 5), sticky='nw')
-            self.root.bind("<F5>", self.refresh)
-            treeRow = 1
+
+#        TODO: Adapt button
+#        -----------------------------------------------
+#        if self.allowRefresh:
+#            btn = XmippButton(frame, "Refresh", 'refresh.gif', command=self.refresh, tooltip='Refresh   F5')
+#            btn.grid(row=0, column=0, padx=(0, 5), sticky='nw')
+#            self.root.bind("<F5>", self.refresh)
+#            treeRow = 1
+            
         frame.columnconfigure(0, weight=1)
         frame.rowconfigure(treeRow, weight=1)
-        tree = XmippTree(frame, selectmode=self.selmode)#, columns=('items'))
-        tree.grid(column=0, row=treeRow, sticky="nwes")
-        self.tree = tree
-        # Put scroll
-        vscroll = AutoScrollbar(frame)
-        vscroll.grid(column=1, row=treeRow, sticky='nes')
-        vscroll.config(command=tree.yview)
-        tree.config(yscrollcommand=vscroll.set)
+        
+#       TODO: Adapt Tree
+#       -------------------------------------------------
+#        tree = XmippTree(frame, selectmode=self.selmode)#, columns=('items'))
+#        tree.grid(column=0, row=treeRow, sticky="nwes")
+#        self.tree = tree
+#        # Put scroll
+#        vscroll = AutoScrollbar(frame)
+#        vscroll.grid(column=1, row=treeRow, sticky='nes')
+#        vscroll.config(command=tree.yview)
+#        tree.config(yscrollcommand=vscroll.set)
+
+
         # List for hidden tree items, (parent, item)
         self.hidden = []
         #tree.column('items', width=60, anchor='e')

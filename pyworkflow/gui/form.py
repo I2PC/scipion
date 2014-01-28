@@ -147,7 +147,7 @@ class SubclassesTreeProvider(TreeProvider):
     def getObjects(self):
         objs = []
         for objClass in self.className.split(","):
-            for obj in self.mapper.selectByClass(objClass, objectFilter=self.objFilter):
+            for obj in self.mapper.selectByClass(objClass.strip(), objectFilter=self.objFilter):
                 objs.append(obj)
         return objs        
 #        return self.mapper.selectByClass(self.className, objectFilter=self.objFilter)
@@ -391,7 +391,7 @@ class ParamWidget():
             btnFunc = self._browseObject
             if t is RelationParam:
                 btnFunc = self._browseRelation
-            self._addButton("Select", 'fa-search.png', btnFunc)
+            self._addButton("Select", Icon.ACTION_SEARCH, btnFunc)
         
         elif t is ProtocolClassParam:
             var = tk.StringVar()
@@ -407,11 +407,11 @@ class ParamWidget():
                 classes = [protClassName]
             
             if len(classes) > 1:
-                self._addButton("Select", 'fa-search.png', self._browseProtocolClass)
+                self._addButton("Select", Icon.ACTION_SEARCH, self._browseProtocolClass)
             else:
                 var.set(classes[0])
             
-            self._addButton("Edit", "fa-pencil.png", self._openProtocolForm)
+            self._addButton("Edit", Icon.ACTION_EDIT, self._openProtocolForm)
             #btn = Button(content, "Edit", command=self._openProtocolForm)
             #btn.grid(row=1, column=0)          
         else:
@@ -421,7 +421,7 @@ class ParamWidget():
                 entryWidth = 10 # Reduce the entry width for numbers entries
             entry = tk.Entry(content, width=entryWidth, textvariable=var)
             entry.grid(row=0, column=0, sticky='w')
-        'fa-times.png'
+
         if self.visualizeCallback is not None:
             self._addButton(Message.LABEL_BUTTON_VIS, Icon.ACTION_VISUZALIZE, self._visualizeVar)    
         if self.paramName in self.window.wizards:
@@ -553,6 +553,7 @@ class FormWindow(Window):
         
         headerFrame = tk.Frame(self.root)
         headerFrame.grid(row=0, column=0, sticky='new')
+        headerFrame.columnconfigure(0, weight=1)
         package = protocol._package
         t = '  Protocol: %s' % (protocol.getClassLabel())
         logoPath = getattr(package, '_logo', None)
@@ -560,12 +561,21 @@ class FormWindow(Window):
             headerLabel = tk.Label(headerFrame, text=t, font=self.fontBig, image=self.getImage(logoPath), compound=tk.LEFT)
         else:
             headerLabel = tk.Label(headerFrame, text=t, font=self.fontBig)
-        headerLabel.grid(row=0, column=0, padx=5, pady=5)
+        headerLabel.grid(row=0, column=0, padx=5, pady=(5,0), columnspan=5)
+        
+        def _addButton(text, icon, command, col):
+            btn = tk.Label(headerFrame, text=text, image=self.getImage(icon), 
+                       compound=tk.LEFT, cursor='hand2')
+            btn.bind('<Button-1>', command)
+            btn.grid(row=1, column=col, padx=5, sticky='se')
+        
+        _addButton('Cite', Icon.ACTION_REFERENCES, self._showReferences, 0)
+        _addButton('Help', Icon.ACTION_HELP, self._showHelp, 1)
         
         if protocol.allowHeader:
             commonFrame = self._createHeaderCommons(headerFrame)
-            commonFrame.grid(row=1, column=0, padx=5, pady=5, sticky='news')
-            headerFrame.columnconfigure(0, weight=1)
+            commonFrame.grid(row=2, column=0, padx=5, pady=(0,5), 
+                             sticky='news', columnspan=5)
         
         text = TaggedText(self.root, width=40, height=15, bd=0, cursor='arrow')
         text.grid(row=1, column=0, sticky='news')
@@ -588,6 +598,14 @@ class FormWindow(Window):
         # Resize windows to use more space if needed
         self.desiredDimensions = lambda: self.resize(contentFrame)
         #self.resize(contentFrame)
+        
+    def _showReferences(self, e=None):
+        """ Show the list of references of the protocol. """
+        self.showInfo('\n'.join(self.protocol.citations()), "References")
+        
+    def _showHelp(self, e=None):
+        """ Show the list of references of the protocol. """
+        self.showInfo(self.protocol.getDoc(), "Help")        
         
     def _createButtons(self, btnFrame):
         """ Create the bottom buttons: Close, Save and Execute. """
