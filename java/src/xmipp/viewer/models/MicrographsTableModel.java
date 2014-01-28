@@ -97,7 +97,7 @@ public class MicrographsTableModel extends MetadataTableModel {
 		busyRows.remove(new Integer(row));	
 		long objId = data.ids[row];
 		String psdFile = data.md.getValueString(MDLabel.MDL_PSD, objId);
-		String sortFn = psdFile.replace(".psd", ".tmpSort.xmd");
+		String sortFn = psdFile.replace(".psd", ".xmd");
 		MetaData mdRow = new MetaData(sortFn);
 		MDRow row2 = new MDRow();
 		mdRow.getRow(row2, mdRow.firstObject());
