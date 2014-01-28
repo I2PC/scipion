@@ -83,8 +83,11 @@ class ProtScreenMicrographs(XmippProtocol):
                            importMicrographs=self.MicrographsMd,
                            Downsampling=self.DownsampleFactor,
                            NumberOfMpi=self.NumberOfMpi)
-        if self.AutomaticRejection!="":
-            self.insertStep("automaticRejection",WorkingDir=self.WorkingDir,condition=self.AutomaticRejection)
+        if self.AutomaticQuality:
+            condition="ctfCritFirstZero<5 OR ctfCritMaxFreq>20 OR ctfCritfirstZeroRatio<0.9 OR ctfCritfirstZeroRatio>1.1 OR "\
+                      "ctfCritFirstMinFirstZeroRatio>10 OR ctfCritCorr13<0 OR ctfCritCtfMargin<2.5 OR ctfCritNonAstigmaticValidty<0.3 OR "\
+                      "ctfCritNonAstigmaticValidty>25"
+            self.insertStep("automaticRejection",WorkingDir=self.WorkingDir,condition=condition)
         if self.TiltPairs:
             self.insertStep("copyTiltPairs",WorkingDir=self.WorkingDir,inputMicrographs=self.MicrographsMd)
     
@@ -224,27 +227,39 @@ def estimateSingleCTF(log, WorkingDir, inputFile, DownsampleFactor, AutomaticDow
         md = xmipp.MetaData()
         id = md.addObject()
         md.setValue(xmipp.MDL_MICROGRAPH,inputFile,id)
-        md.setValue(xmipp.MDL_CTF_MODEL,oroot+".ctfparam",id)
         md.setValue(xmipp.MDL_PSD,oroot+".psd",id)
-        fnEval=os.path.join(tmpDir,shortname+".xmd")
+        md.setValue(xmipp.MDL_PSD_ENHANCED,oroot+"_enhanced_psd.xmp",id)
+        md.setValue(xmipp.MDL_CTF_MODEL,oroot+".ctfparam",id)
+        md.setValue(xmipp.MDL_IMAGE1,oroot+"_ctfmodel_quadrant.xmp",id)
+        md.setValue(xmipp.MDL_IMAGE2,oroot+"_ctfmodel_halfplane.xmp",id)
+        md.setValue(xmipp.MDL_CTF_DOWNSAMPLE_PERFORMED,float(DownsampleFactor),id)
+        fnEval=os.path.join(micrographDir,"xmipp_ctf.xmd")
         md.write(fnEval)
         criterion="ctfCritFirstZero<5 OR ctfCritMaxFreq>20 OR ctfCritfirstZeroRatio<0.9 OR ctfCritfirstZeroRatio>1.1 OR "\
                   "ctfCritFirstMinFirstZeroRatio>10 OR ctfCritCorr13<0 OR ctfCritCtfMargin<0 OR ctfCritNonAstigmaticValidty<0.3 OR " \
                   "ctfCritNonAstigmaticValidty>25"
         runJob(log,"xmipp_ctf_sort_psds","-i %s --downsampling %f"%(fnEval,DownsampleFactor))
         fnRejected=os.path.join(tmpDir,shortname+"_rejected.xmd")
-        runJob(log,"xmipp_metadata_utilities","-i %s --query select %s -o %s"%(fnEval,criterion,fnRejected))
+        runJob(log,"xmipp_metadata_utilities",'-i %s --query select "%s" -o %s'%(fnEval,criterion,fnRejected))
         md.read(fnRejected)
         if md.size()==0:
             break
 
 def gatherResults(log,TmpDir,WorkingDir,summaryFile, importMicrographs,Downsampling,NumberOfMpi):
-    buildSummaryMetadata(WorkingDir, importMicrographs, summaryFile)
-    dirSummary,fnSummary=os.path.split(summaryFile)
-    runJob(log,"xmipp_ctf_sort_psds","-i %s -o %s/aux_%s --downsampling %f"%(summaryFile,dirSummary,fnSummary,Downsampling),
-           NumberOfMpi=NumberOfMpi)
-    runJob(log,"mv","-f %s/aux_%s %s"%(dirSummary,fnSummary,summaryFile))
-    runJob(log,"touch",summaryFile)
+    # This is the old gather Results, just in case
+    #    buildSummaryMetadata(WorkingDir, importMicrographs, summaryFile)
+    #    dirSummary,fnSummary=os.path.split(summaryFile)
+    #    runJob(log,"xmipp_ctf_sort_psds","-i %s -o %s/aux_%s --downsampling %f"%(summaryFile,dirSummary,fnSummary,Downsampling),
+    #           NumberOfMpi=NumberOfMpi)
+    #    runJob(log,"mv","-f %s/aux_%s %s"%(dirSummary,fnSummary,summaryFile))
+    import glob
+    fnList=glob.glob(os.path.join(WorkingDir,'extra/*/xmipp_ctf.xmd'))
+    md=xmipp.MetaData()
+    for file in fnList:
+        mdMic=xmipp.MetaData(file)
+        md.unionAll(mdMic)
+    md.sort(xmipp.MDL_MICROGRAPH)
+    md.write(summaryFile)
     if Downsampling!=1:
         runJob(log,"find",TmpDir+" -type f -exec rm {} \;")
 
