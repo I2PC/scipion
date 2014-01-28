@@ -32,6 +32,12 @@ entail aliasing).
 """
 DownsampleFactor = 1
 
+# Automatic downsampling detection
+""" If this option is chosen, the algorithm automatically tries by default the 
+suggested Downsample factor; and if it fails, +1; and if it fails, -1.
+"""
+AutomaticDownsampling = True
+
 # Amplitude Contrast
 """ It should be a positive number, typically between 0.05 and 0.3."""
 AmplitudeContrast = 0.1
@@ -83,9 +89,10 @@ WinSize = 256
 """ 
 Reject micrographs meeting the following condition, e.g., ctfCritCorr13<0.4 OR ctfCritNormality<11. You may use
 any of the following variables ctfDefocusU, ctfDefocusV, ctfCritFirstZero, ctfCritMaxFreq, ctfCritDamping, ctfCritfirstZeroRatio
-ctfCritFitting, ctfCritCorr13, ctfCritPsdCorr90, ctfCritPsdInt, ctfCritPsdStdQ, ctfCritPsdPCA1, ctfCritPsdPCARuns, ctfCritNormality
+ctfCritFitting, ctfCritCorr13, ctfCritPsdCorr90, ctfCritPsdInt, ctfCritPsdStdQ, ctfCritPsdPCA1, ctfCritPsdPCARuns, ctfCritNormality,
+ctfCritFirstMinFirstZeroRatio, ctfCritCtfMargin, ctfCritNonAstigmaticValidty
 """
-AutomaticRejection = ""
+AutomaticRejection = "ctfCritFirstZero<5 OR ctfCritMaxFreq>20 OR ctfCritfirstZeroRatio<0.9 OR ctfCritfirstZeroRatio>1.1 OR ctfCritFirstMinFirstZeroRatio>10 OR ctfCritCorr13<0 OR ctfCritCtfMargin<2.5 OR ctfCritNonAstigmaticValidty<0.3 OR ctfCritNonAstigmaticValidty>25"
 
 # {eval} expandParallel(threads=0,hours=12)
 

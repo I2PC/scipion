@@ -474,7 +474,7 @@ public abstract class ParticlePicker {
         if (f == Format.Auto) {
             f = detectFileFormat(path);
         }
-
+        String blockname;
         switch (f) {
             case Xmipp24:
             case Xmipp24a:
@@ -483,14 +483,20 @@ public abstract class ParticlePicker {
                 md.readPlain(path, "xcoor ycoor");
                 break;
             case Xmipp30:
-                String blockname = getParticlesBlockName(f); //only used with Xmipp
+                blockname = getParticlesBlockName(f); //only used with Xmipp
                 if (MetaData.containsBlock(path, blockname)) {
                     md.read(getParticlesBlock(f, path));
                 }
+                break;
             case Xmipp301:
+                 blockname = getParticlesBlockName(f); //only used with Xmipp
+                if (MetaData.containsBlock(path, blockname)) {
+                    md.read(getParticlesBlock(f, path));
+                }
                 if (MetaData.containsBlock(path, particlesAutoBlock)) {
                     MetaData mdAuto = new MetaData();
                     mdAuto.read(getParticlesAutoBlock(path));
+                    mdAuto.removeDisabled();
                     md.unionAll(mdAuto);
                     mdAuto.destroy();
                 }
