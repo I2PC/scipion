@@ -304,7 +304,6 @@ function breakLine(str){
 	return str.replace(/\\n/g, "Y");
 }
 
-
 function br2nl(str) {
     return str.replace(/<br\s*\/?>/mg,"\n");
 }
@@ -366,6 +365,7 @@ function updateLabelComment(){
 	var comment= $("textarea#comment_new").val()
 	
 	var value_comment = blnkspcs(comment)
+	
 	
 	url_param = "/set_attributes/?" +
 		"id=" + id + 

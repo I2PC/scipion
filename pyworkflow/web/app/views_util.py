@@ -223,7 +223,7 @@ def set_attributes(request):
 #            elif typeObj=='protocol':
         
         obj.setObjLabel(label)
-        obj.setObjComment(comment)
+        obj.setObjComment(convertXtoSpaces(comment))
         
 #        if typeObj=='object':
 #            project._storeProtocol(obj)
@@ -511,3 +511,6 @@ def parseText(text, func=replacePattern):
             parsedText += parseHyperText(lineText, func)+'<br />'
 #        parsedText = parseHyperText(text, func)
     return parsedText[:-6]    
+
+def convertXtoSpaces(text):
+    return text.replace("X", " ")
