@@ -43,6 +43,10 @@
  * 		* Viewer: This mode launch a viewer to analyze the results for the parameters
  * 			chosen in the form.
  * 
+ * function fixInput(serialize_form)
+ * 	->	Function to replace the label for a input object by his objId in the 
+ * 		serialized form with his parameters.
+ * 
  * function evalElements()
  * 	->	Function to evaluate the elements in a form, depending the type of the
  * 		param, it is evaluated in a diferent way.

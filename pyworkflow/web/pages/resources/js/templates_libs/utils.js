@@ -69,6 +69,9 @@
  * 	->	Creates a messi popup with a title and message passed by arguments.
  * 		It is used to show any error message
  * 
+ * function isNaturalNumber(n)
+ *  ->  Check if n is natural and returns true or false
+ *
  * function editObjParam(id, title_label, value_label, title_comment, 
  * 			value_comment, msg_comment, typeObj)
  *  ->	Launch a messi popup with an input and textarea to edit the label and comment
@@ -77,8 +80,6 @@
  * function updateLabelComment()
  * 	->	Method to store the label and comment for an object.
  * 
- * function isNaturalNumber(n)
- *  ->  Check if n is natural and returns true or false
  ******************************************************************************/
 
 /** METHODS ******************************************************************/
@@ -294,11 +295,6 @@ function isNaturalNumber(n) {
         n2 = parseInt(n, 10);
     
     return !isNaN(n1) && n2 === n1 && n1.toString() === n && n2>0;
-}
-
-
-function br2nl(str) {
-    return str.replace(/<br\s*\/?>/mg,"\n");
 }
 
 function editObjParam(id, title_label, value_label, 
