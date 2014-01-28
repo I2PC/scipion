@@ -176,7 +176,7 @@ class Form(object):
             return True
         condStr = param.condition.get()
         for t in param._conditionParams:
-            if self.hasParam(t):
+            if self.hasParam(t) or protocol.hasAttribute(t):
                 condStr = condStr.replace(t, self.escapeLiteral(protocol.getAttributeValue(t)))
         return eval(condStr)
     

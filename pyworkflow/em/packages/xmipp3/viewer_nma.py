@@ -1,6 +1,6 @@
 # **************************************************************************
 # *
-# * Authors:     L. del Cano (ldelcano@cnb.csic.es)
+# * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -45,15 +45,25 @@ CLASS_STABLE_CORES = 2
 class XmippNMAViewer(ProtocolViewer):
     """ Visualization of results from the NMA protocol
     """
-    _label = 'viewer cl2d'
+    _label = 'viewer nma'
     _targets = [XmippProtNMA]
     _environments = [DESKTOP_TKINTER, WEB_DJANGO]
 
+    def setProtocol(self, protocol):
+        ProtocolViewer.setProtocol(self, protocol)
+        isEm = not isinstance(protocol.inputStructure.get(), PdbFile)
+        self.isEm.set(isEm)
+        
     def _defineParams(self, form):
         form.addSection(label='Visualization')
+        #TODO: Just trying a trick to have hidden params
+        form.addParam('isEm', BooleanParam, default=False, 
+                      condition='False')
         form.addParam('displayPseudoAtom', BooleanParam, default=False, 
+                      condition='isEm',
                       label="Display pseudoatoms representation?")
         form.addParam('displayPseudoAtomAproximation', BooleanParam, default=False,
+                      condition='isEm',
                       label="Display pseudoatoms aproximation?")     
         form.addParam('displayModes', BooleanParam, default=False, 
                       label="Open list of modes?")
