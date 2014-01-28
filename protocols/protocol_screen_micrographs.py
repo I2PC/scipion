@@ -5,7 +5,7 @@
 #from config_protocols import protDict
 from protlib_base import *
 from protlib_utils import which, runJob, runShowJ,printLog
-from protlib_filesystem import deleteFile, createLink2, exists, replaceFilenameExt
+from protlib_filesystem import deleteFile, createLink2, exists, replaceFilenameExt, createDir
 import xmipp
 from protlib_gui_ext import showWarning
 
@@ -66,35 +66,14 @@ class ProtScreenMicrographs(XmippProtocol):
             micrographName = os.path.basename(inputFile)
             shortname = os.path.splitext(micrographName)[0]
             micrographDir = os.path.join(extraDir,shortname)                    
-            parent_id = self.insertParallelStep('createDir',verifyfiles=[micrographDir],path=micrographDir,parent_step_id=XmippProjectDb.FIRST_STEP)
 
-            # Downsample if necessary
-            if self.DownsampleFactor != 1:
-                finalname = self.tmpPath(shortname + "_tmp.mrc")
-                parent_id = self.insertParallelRunJobStep("xmipp_transform_downsample",
-                                                   "-i %s -o %s --step %f --method fourier" % (inputFile,finalname,self.DownsampleFactor),
-                                                   [finalname],parent_step_id=parent_id)
-            else:
-                finalname = inputFile
-                
-            # CTF estimation with Xmipp
-            args="--micrograph "+finalname+\
-                 " --oroot " + _getFilename('prefix', micrographDir=micrographDir)+\
-                 " --kV "+str(Voltage)+\
-                 " --Cs "+str(SphericalAberration)+\
-                 " --sampling_rate "+str(AngPix*self.DownsampleFactor)+\
-                 " --downSamplingPerformed "+str(self.DownsampleFactor)+\
-                 " --ctfmodelSize 256"+\
-                 " --Q0 "+str(self.AmplitudeContrast)+\
-                 " --min_freq "+str(self.LowResolCutoff)+\
-                 " --max_freq "+str(self.HighResolCutoff)+\
-                 " --pieceDim "+str(self.WinSize)+\
-                 " --defocus_range "+str((self.MaxFocus-self.MinFocus)*10000/2)+\
-                 " --defocusU "+str((self.MaxFocus+self.MinFocus)*10000/2)
-            if (self.FastDefocus):
-                args+=" --fastDefocus"
-            self.insertParallelRunJobStep('xmipp_ctf_estimate_from_micrograph', args,
-                                     verifyfiles=[_getFilename('ctfparam', micrographDir=micrographDir)],parent_step_id=parent_id)
+            self.insertParallelStep('estimateSingleCTF',verifyfiles=[_getFilename('ctfparam', micrographDir=micrographDir)],
+                                    WorkingDir=self.WorkingDir, inputFile=inputFile, DownsampleFactor=self.DownsampleFactor,
+                                    AutomaticDownsampling=self.AutomaticDownsampling, Voltage=Voltage,
+                                    SphericalAberration=SphericalAberration, AngPix=AngPix, AmplitudeContrast=self.AmplitudeContrast,
+                                    LowResolCutoff=self.LowResolCutoff, HighResolCutoff=self.HighResolCutoff,WinSize=self.WinSize,
+                                    MaxFocus=self.MaxFocus,MinFocus=self.MinFocus,FastDefocus=self.FastDefocus,
+                                    parent_step_id=XmippProjectDb.FIRST_STEP)
         
         # Gather results after external actions
         self.insertStep('gatherResults',verifyfiles=[self.micrographs],
@@ -104,8 +83,11 @@ class ProtScreenMicrographs(XmippProtocol):
                            importMicrographs=self.MicrographsMd,
                            Downsampling=self.DownsampleFactor,
                            NumberOfMpi=self.NumberOfMpi)
-        if self.AutomaticRejection!="":
-            self.insertStep("automaticRejection",WorkingDir=self.WorkingDir,condition=self.AutomaticRejection)
+        if self.AutomaticQuality:
+            condition="ctfCritFirstZero<5 OR ctfCritMaxFreq>20 OR ctfCritfirstZeroRatio<0.9 OR ctfCritfirstZeroRatio>1.1 OR "\
+                      "ctfCritFirstMinFirstZeroRatio>10 OR ctfCritCorr13<0 OR ctfCritCtfMargin<2.5 OR ctfCritNonAstigmaticValidty<0.3 OR "\
+                      "ctfCritNonAstigmaticValidty>25"
+            self.insertStep("automaticRejection",WorkingDir=self.WorkingDir,condition=condition)
         if self.TiltPairs:
             self.insertStep("copyTiltPairs",WorkingDir=self.WorkingDir,inputMicrographs=self.MicrographsMd)
     
@@ -189,118 +171,95 @@ class ProtScreenMicrographs(XmippProtocol):
                           importMicrographs=self.MicrographsMd,
                           Downsampling=self.DownsampleFactor,
                           NumberOfMpi=self.NumberOfMpi)
-    
-def estimateCtfCtffind1(_log, micrograph,
-                          micrographDir,
-                          oroot,
-                          kV,
-                          Cs,
-                          sampling_rate,
-                          downSamplingPerformed,
-                          ctfmodelSize,
-                          Q0,
-                          min_freq,
-                          max_freq,
-                          pieceDim,
-                          MinFocus,
-                          MaxFocus,
-                          StepFocus
-                          ):
-        #def estimateCtfCtffind(log,CtffindExec,micrograph,micrographDir,tmpDir,Voltage,SphericalAberration,AngPix,Magnification,
-        #                       DownsampleFactor,AmplitudeContrast,LowResolCutoff,HighResolCutoff,MinFocus,MaxFocus,StepFocus,WinSize):
-        # Convert image to MRC
-        printLog(_log)
-        if not micrograph.endswith('.mrc'):
-            from protlib_filesystem import uniqueRandomFilename
-            deleteTempMicrograph = True
-            fnMicrograph=os.path.split(micrograph)[1]
-            mrcMicrograph =  join(tmpDir,uniqueRandomFilename(os.path.splitext(fnMicrograph)[0]+'.mrc'))
-            runJob(log,'xmipp_image_convert','-i ' + micrograph + ' -o ' + mrcMicrograph + ' -v 0')
+
+def estimateSingleCTF(log, WorkingDir, inputFile, DownsampleFactor, AutomaticDownsampling,
+                      Voltage, SphericalAberration, AngPix, AmplitudeContrast, LowResolCutoff, 
+                      HighResolCutoff,WinSize,MaxFocus,MinFocus,FastDefocus):
+    extraDir=os.path.join(WorkingDir,'extra')
+    tmpDir=os.path.join(WorkingDir,'tmp')
+    micrographName = os.path.basename(inputFile)
+    shortname = os.path.splitext(micrographName)[0]
+    micrographDir = os.path.join(extraDir,shortname)
+    oroot="%s/xmipp_ctf"%micrographDir           
+
+    if not os.path.exists(micrographDir):
+        createDir(log,micrographDir)
+
+    downsampleList=[DownsampleFactor]
+    if AutomaticDownsampling:
+        downsampleList.append(DownsampleFactor+1)
+        if DownsampleFactor>=2:
+            downsampleList.append(DownsampleFactor-1)
         else:
-            deleteTempMicrograph = False
-            mrcMicrograph = micrograph;
-
-        #ctffind3.exe << eof
-        #$1.mrc
-        #test.mrc
-        #2.26,200.0,0.10,60000.0,14.4
-        #256,96,0.8,5000.0,100000,1000.0
-        #eof
-
-        # Prepare parameters for CTFTILT
-        # multiply Q0 by -1?
-        
-        #since we only have sampling rate set magnification to a suitable constant
-        Magnification=60000
-        params = '  << eof > ' + micrographDir + '/ctffind.log\n'
-        params += mrcMicrograph + "\n"
-        params += micrographDir + '/ctffind_spectrum.mrc\n'
-        params += str(Cs) + ',' + \
-                  str(kV) + ',' + \
-                  str(Q0 ) + ',' + \
-                  str(Magnification/downSamplingPerformed) + ',' + \
-                  str(Magnification/downSamplingPerformed*sampling_rate*1e-4) + "\n"
-        params += str(pieceDim) + ',' + \
-                  str(sampling_rate*downSamplingPerformed / min_freq) + ',' + \
-                  str(sampling_rate*downSamplingPerformed / max_freq) + ',' + \
-                  str(MinFocus*10000) + ',' + \
-                  str(MaxFocus*10000) + ',' + \
-                  str(StepFocus*10000) + "\n"
-
-        CtffindExec =  which('ctffind3.exe')
-        runJob(_log, "export NATIVEMTZ=kk ; "+CtffindExec,params)
+            downsampleList.append(DownsampleFactor/2)
     
-        fnOut = _getFilename('ctffind_ctfparam', micrographDir=micrographDir)
-    
-        # Remove temporary files
-        if deleteTempMicrograph:
-            deleteFile(log, mrcMicrograph)
-    
-        # Pick values from ctffind
-        ctffindLog = join(micrographDir,'ctffind.log')
-        if not exists(ctffindLog):
-            raise xmipp.XmippError("Cannot find "+ctffindLog)
+    for DownsampleFactor in downsampleList:
+        # Downsample if necessary
+        deleteTmp=False
+        if DownsampleFactor != 1:
+            finalname = os.path.join(tmpDir,shortname + "_tmp.mrc")
+            runJob(log,"xmipp_transform_downsample","-i %s -o %s --step %f --method fourier" % (inputFile,finalname,DownsampleFactor))
+            deleteTmp=True
+        else:
+            finalname = inputFile
+            
+        # CTF estimation with Xmipp
+        args="--micrograph "+finalname+\
+             " --oroot "+oroot+\
+             " --kV "+str(Voltage)+\
+             " --Cs "+str(SphericalAberration)+\
+             " --sampling_rate "+str(AngPix*DownsampleFactor)+\
+             " --downSamplingPerformed "+str(DownsampleFactor)+\
+             " --ctfmodelSize 256"+\
+             " --Q0 "+str(AmplitudeContrast)+\
+             " --min_freq "+str(LowResolCutoff)+\
+             " --max_freq "+str(HighResolCutoff)+\
+             " --pieceDim "+str(WinSize)+\
+             " --defocus_range "+str((MaxFocus-MinFocus)*10000/2)+\
+             " --defocusU "+str((MaxFocus+MinFocus)*10000/2)
+        if (FastDefocus):
+            args+=" --fastDefocus"
+        runJob(log,'xmipp_ctf_estimate_from_micrograph', args)
         
-        # Effectively pickup results
-        fh = open(ctffindLog, 'r')
-        lines = fh.readlines()
-        fh.close()
-        DF1 = 0.
-        DF2 = 0.
-        Angle = 0.
-        found = False
-        for i in range(len(lines)):
-            if not (lines[i].find('Final Values') == -1):
-                words = lines[i].split()
-                DF1 = float(words[0])
-                DF2 = float(words[1])
-                Angle = float(words[2])
-                found = True
-                break
-        if not found:
-            raise xmipp.XmippError("Cannot find defocus values in "+ctffindLog)
+        if deleteTmp:
+            deleteFile(log, finalname)
         
-        # Generate Xmipp .ctfparam file:
-        MD = xmipp.MetaData()
-        MD.setColumnFormat(False)
-        objId = MD.addObject()
-        MD.setValue(xmipp.MDL_CTF_SAMPLING_RATE, float(sampling_rate), objId)
-        MD.setValue(xmipp.MDL_CTF_VOLTAGE,       float(kV), objId)
-        MD.setValue(xmipp.MDL_CTF_DEFOCUSU,      float(DF2), objId)
-        MD.setValue(xmipp.MDL_CTF_DEFOCUSV,      float(DF1), objId)
-        MD.setValue(xmipp.MDL_CTF_DEFOCUS_ANGLE, float(Angle), objId)
-        MD.setValue(xmipp.MDL_CTF_CS,            float(Cs), objId)
-        MD.setValue(xmipp.MDL_CTF_Q0,            float(Q0), objId)
-        MD.setValue(xmipp.MDL_CTF_K,             1.0, objId)
-        MD.write(fnOut)
+        md = xmipp.MetaData()
+        id = md.addObject()
+        md.setValue(xmipp.MDL_MICROGRAPH,inputFile,id)
+        md.setValue(xmipp.MDL_PSD,oroot+".psd",id)
+        md.setValue(xmipp.MDL_PSD_ENHANCED,oroot+"_enhanced_psd.xmp",id)
+        md.setValue(xmipp.MDL_CTF_MODEL,oroot+".ctfparam",id)
+        md.setValue(xmipp.MDL_IMAGE1,oroot+"_ctfmodel_quadrant.xmp",id)
+        md.setValue(xmipp.MDL_IMAGE2,oroot+"_ctfmodel_halfplane.xmp",id)
+        md.setValue(xmipp.MDL_CTF_DOWNSAMPLE_PERFORMED,float(DownsampleFactor),id)
+        fnEval=os.path.join(micrographDir,"xmipp_ctf.xmd")
+        md.write(fnEval)
+        criterion="ctfCritFirstZero<5 OR ctfCritMaxFreq>20 OR ctfCritfirstZeroRatio<0.9 OR ctfCritfirstZeroRatio>1.1 OR "\
+                  "ctfCritFirstMinFirstZeroRatio>10 OR ctfCritCorr13<0 OR ctfCritCtfMargin<0 OR ctfCritNonAstigmaticValidty<0.3 OR " \
+                  "ctfCritNonAstigmaticValidty>25"
+        runJob(log,"xmipp_ctf_sort_psds","-i %s --downsampling %f"%(fnEval,DownsampleFactor))
+        fnRejected=os.path.join(tmpDir,shortname+"_rejected.xmd")
+        runJob(log,"xmipp_metadata_utilities",'-i %s --query select "%s" -o %s'%(fnEval,criterion,fnRejected))
+        md.read(fnRejected)
+        if md.size()==0:
+            break
 
 def gatherResults(log,TmpDir,WorkingDir,summaryFile, importMicrographs,Downsampling,NumberOfMpi):
-    buildSummaryMetadata(WorkingDir, importMicrographs, summaryFile)
-    dirSummary,fnSummary=os.path.split(summaryFile)
-    runJob(log,"xmipp_ctf_sort_psds","-i %s -o %s/aux_%s --downsampling %f"%(summaryFile,dirSummary,fnSummary,Downsampling),
-           NumberOfMpi=NumberOfMpi)
-    runJob(log,"mv","-f %s/aux_%s %s"%(dirSummary,fnSummary,summaryFile))
-    runJob(log,"touch",summaryFile)
+    # This is the old gather Results, just in case
+    #    buildSummaryMetadata(WorkingDir, importMicrographs, summaryFile)
+    #    dirSummary,fnSummary=os.path.split(summaryFile)
+    #    runJob(log,"xmipp_ctf_sort_psds","-i %s -o %s/aux_%s --downsampling %f"%(summaryFile,dirSummary,fnSummary,Downsampling),
+    #           NumberOfMpi=NumberOfMpi)
+    #    runJob(log,"mv","-f %s/aux_%s %s"%(dirSummary,fnSummary,summaryFile))
+    import glob
+    fnList=glob.glob(os.path.join(WorkingDir,'extra/*/xmipp_ctf.xmd'))
+    md=xmipp.MetaData()
+    for file in fnList:
+        mdMic=xmipp.MetaData(file)
+        md.unionAll(mdMic)
+    md.sort(xmipp.MDL_MICROGRAPH)
+    md.write(summaryFile)
     if Downsampling!=1:
         runJob(log,"find",TmpDir+" -type f -exec rm {} \;")
 
