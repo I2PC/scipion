@@ -192,7 +192,11 @@ def get_attributes(request):
         projectName = request.session['projectName']
         project = loadProject(projectName)
         objId = request.GET.get('objId', None)
-        obj = project.mapper.selectById(int(objId)).get()
+        
+        obj = project.mapper.selectById(int(objId))
+        if obj is None:
+            obj = project.mapper.selectById(int(objId)).get()
+            
         res = obj.getObjLabel() + "_-_" + obj.getObjComment()
         return HttpResponse(res, mimetype='application/javascript')
     
@@ -210,18 +214,23 @@ def set_attributes(request):
             className = request.GET.get('className', None)
             obj = emProtocolsDict.get(className, None)()
         else:
-            if typeObj=='object':
+            obj = project.mapper.selectById(int(id))
+            if obj is None:
                 obj = project.mapper.selectById(int(id)).get()
-            elif typeObj=='protocol':
-                obj = project.mapper.selectById(int(id))
+                
+#            if typeObj=='object':
+#                print obj
+#            elif typeObj=='protocol':
         
         obj.setObjLabel(label)
         obj.setObjComment(comment)
         
-        if typeObj=='object':
-            project._storeProtocol(obj)
-        elif typeObj=='protocol':
-            project.saveProtocol(obj)
+#        if typeObj=='object':
+#            project._storeProtocol(obj)
+#        elif typeObj=='protocol':
+#            project.saveProtocol(obj)
+
+        project._storeProtocol(obj)
 
     return_id = "reload"
     if typeObj=='protocol':
