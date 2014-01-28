@@ -93,6 +93,10 @@
  * 		If the graph view was active when you closed the project last time will
  * 		be available directly, in the another case, will be inactive.
  * 
+ * function editObject(objId)
+ * 	->	Method to edit an object given his objId, calling an ajax to get the 
+ * 		attributes from the object.
+ * 
  * function deleteProtocolForm(protocolId)
  * 	->	Dialog web form based in messi.js to verify the option to delete a protocol. 
  * 
