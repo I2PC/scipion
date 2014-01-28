@@ -61,12 +61,7 @@
 			{% if package_logo != ''%}
 				<img src='{{package_logo}}' style="float:left;"/>
 			{% endif %}
-			<h3 id="protName" style="padding-top:25px;">Protocol: {{protocol.getClassLabel}} <a id="referenceLink" href="javascript:$('#citations').toggle();" style="float:right"><i class="fa fa-external-link"></i></a></h3>
-		
-			<div id="citations">
-				{{protocol.htmlCitations|safe}}
-			</div>
-		
+			<h3 id="protName" style="padding-top:25px;">Protocol: {{protocol.getClassLabel}} <a id="referenceLink" href="javascript:infoPopup('Cite','{{protocol.htmlCitations|escapejs}}');" style="float:right"><i class="fa fa-external-link"></i></a></h3>
 		</div>
 		
 		<form id="protocolForm" action="/protocol/" method="POST" data-mode="">{% csrf_token %}
@@ -220,7 +215,10 @@
 										{% endif %}				
 									{% else %}
 										{% if param.getClassName == "MultiPointerParam" %}
-											<select multiple id="{{paramName}}_input" name={{paramName}} size="3" class="multipleSelect" style="height:100%;">
+											<select multiple id="{{paramName}}_input" name={{paramName}} class="multipleSelect" style="height:25px;min-width:230px;width:100%;">
+											{% for htmlValue, htmlIdValue in param.htmlValueIdZip %} 
+												<option value="{{htmlIdValue}}">{{htmlValue}}</option>
+											{% endfor %}
 											</select>
 										{% else %}			
 											<input type="text" id="{{paramName}}_input" data-objId="{{param.htmlIdValue}}" name="{{paramName}}" value="{{param.htmlValue}}" >	
@@ -237,7 +235,10 @@
 									<td class="ico">
 										<a href="javascript:browseObjects('{{paramName}}','{{projectName}}','objClass','{{param.pointerClass.get}}','{{param.pointerCondition.get}}','{{param.maxNumObjects}}');">
 											<i class="fa fa-search" style="font-size:1.1em;"></i>
-										</a> 
+										</a>
+										<a href="javascript:removeObjects('{{paramName}}');">
+											<i class="fa fa-trash-o" style="font-size:1.1em;"></i>
+										</a>  
 									</td>
 								{% elif param.getClassName == "ProtocolClassParam" %}
 									<td class="ico">

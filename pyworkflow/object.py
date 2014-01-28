@@ -244,7 +244,11 @@ class Object(object):
         self.X.set(other.X.get())
         """
         for name in attrNames:
-            getattr(self, name).set(getattr(other, name).get())
+            if isinstance(getattr(other, name), PointerList):
+                for pointer in getattr(other, name):
+                    getattr(self, name).append(pointer)
+            else:
+                getattr(self, name).set(getattr(other, name).get())
             
     def __getObjDict(self, prefix, objDict, includeClass):
         if prefix:

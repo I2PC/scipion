@@ -56,11 +56,12 @@ class XmippProtJoinSets(ProtPreprocessMicrographs):
     def createOutput(self):
        
         micsSet = self._createSetOfMicrographs()
+        micsSet.copyInfo(self.inputMicrographs[0].get())
         
         # Get pointer to input micrographs 
         for setOfMicrograph in self.inputMicrographs:
-            setOfMicrograph.printAll()
             for mic in setOfMicrograph.get():
+                mic.cleanObjId()
                 micsSet.append(mic)
                 
         micsSet.write()
