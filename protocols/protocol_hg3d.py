@@ -31,11 +31,12 @@ class ProtHG3D(ProtHG3DBase):
         ProtHG3DBase.defineSteps(self)
         
 #JV        
-        self.nHg = 0
+        self.nHg = 1
 #JV     
         WorkingDirStructure = os.path.join(self.WorkingDir,"Structure%05d"%self.nHg)
         
-        for nI in range (self.NumVolumes):          
+        #for nI in range (self.NumVolumes):
+        for nI in range (1):          
             # Generate projection gallery from the initial volume
             if (self.InitialVolume != ''):
                 self.insertStep("projectInitialVolume",WorkingDir=self.WorkingDir,InitialVolume=self.InitialVolume,Xdim2=self.Xdim2,
@@ -92,8 +93,8 @@ class ProtHG3D(ProtHG3DBase):
             WorkingDirStructure = os.path.join(self.WorkingDir,"Structure%05d"%(nI+1))
             self.SymmetryGroup ='c1'
             #self.NRansac=int(floor(self.NRansac/2))
-            if (nI==0):
-                self.CorrThresh = (1-self.CorrThresh)/2+self.CorrThresh
+            #if (nI==0):
+            #    self.CorrThresh = (1-self.CorrThresh)/2+self.CorrThresh
 
         
     def validate(self):
@@ -379,7 +380,7 @@ def coocurenceMatrix(log,WorkingDirStructure,NumVolumes,nI):
         
         for i in xrange(1,len(num)):
             for j in xrange(1,len(num)):
-                matrix[num[i],num[j]]=((corr[i]+corr[j])/2)> 0.8
+                matrix[num[i],num[j]]=((corr[i]+corr[j])/2)
         
         numpy.savetxt(fnMatrix, matrix)
         
