@@ -7,7 +7,8 @@ package xmipp.viewer.scipion;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.IOException;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JButton;
@@ -38,7 +39,14 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
 
                 @Override
                 public void actionPerformed(ActionEvent ae) {
-                    runScipionScriptOnSelection();
+                    try {
+                        String selectionmd = "selection.xmd";
+                        saveSelection(selectionmd, true);
+                        String command = String.format("%s %s", cmdscript, selectionmd);
+                        executeCommand(command);
+                    } catch (Exception ex) {
+                        Logger.getLogger(ScipionGalleryJFrame.class.getName()).log(Level.SEVERE, null, ex);
+                    }
                 }
             });
 
@@ -46,20 +54,26 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
         }
     }
 
-    public void runScipionScriptOnSelection() {
-        try {
 
-            String selectionmd = "selection.xmd";
-            saveSelection(selectionmd, true);
-            String pwhome = System.getenv("PW_HOME");
-            String command = String.format("%s/pw.bashrc\n %s/apps/%s %s", pwhome, pwhome, cmdscript, selectionmd);
-            System.out.println(command);
-            Process exec = Runtime.getRuntime().exec(command);
-            exec.getou
-        } catch (Exception ex) {
 
-            Logger.getLogger(ScipionGalleryJFrame.class.getName()).log(Level.SEVERE, null, ex);
+    private void executeCommand(String command) throws Exception {
+
+        System.out.println(command);
+        StringBuffer output = new StringBuffer();
+
+        Process p;
+
+        p = Runtime.getRuntime().exec(command);
+        p.waitFor();
+        BufferedReader reader
+                = new BufferedReader(new InputStreamReader(p.getInputStream()));
+
+        String line = "";
+        while ((line = reader.readLine()) != null) {
+            output.append(line + "\n");
         }
+        
+        System.out.println(output.toString());
 
     }
 }
