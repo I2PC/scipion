@@ -134,6 +134,8 @@ in the next iteration""")
         self._insertRunJobStep("xmipp_volume_initial_simulated_annealing", args % self._params)
         
     def createOutput(self):
+        
+        classes2DSet = self.inputClasses.get()
         # create an output SetOfVolumes
         volumes = self._createSetOfVolumes()
         volumes.setSamplingRate(self.inputClasses.get().getAverages().getSamplingRate())
@@ -151,6 +153,7 @@ in the next iteration""")
         self._createLocalXmippInputVolumes(volumes)
         
         self._defineOutputs(outputVolumes=volumes)
+        self._defineSourceRelation(classes2DSet, volumes)
 
     def _createLocalXmippInputVolumes(self, volSet):    
         volsFn = self._getExtraPath('output_volumes.xmd')
