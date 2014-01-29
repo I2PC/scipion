@@ -31,7 +31,7 @@ class ProtHG3D(ProtHG3DBase):
         ProtHG3DBase.defineSteps(self)
         
 #JV        
-        self.nHg = 1
+        self.nHg = 0
 #JV     
         WorkingDirStructure = os.path.join(self.WorkingDir,"Structure%05d"%self.nHg)
         
