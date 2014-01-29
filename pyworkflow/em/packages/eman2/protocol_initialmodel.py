@@ -101,6 +101,7 @@ class EmanProtInitModel(ProtInitialVolume):
                 
     def createOutput(self):
         self._leaveWorkingDir()
+        classes2DSet = self.inputClasses.get()
         #volumes = EmanSetOfVolumes(self._getPath('scipion_volumes.json'))
         volumes = self._createSetOfVolumes()
         volumes.setSamplingRate(self.inputClasses.get().getImages().getSamplingRate())
@@ -113,6 +114,7 @@ class EmanProtInitModel(ProtInitialVolume):
 
         volumes.write()
         self._defineOutputs(outputVolumes=volumes)
+        self._defineSourceRelation(classes2DSet, volumes)
         
     def _summary(self):
         summary = []
