@@ -26,6 +26,7 @@
 
 import os
 from pyworkflow.web.app.views_util import *
+from pyworkflow.em.packages.brandeis.viewer_frealign import setVisualizeIterations
 
 LAST_ITER = 0
 ALL_ITER = 1
@@ -46,33 +47,15 @@ def viewerFrealign(request, protocolViewer):
         
     return ioDict
 
-def viewCorrectedVols(request, protocolViewer):
-    path = str(protocolViewer.protocol._getExtraPath("corrected_volumes.stk"))
-    return "showj", "/visualize_object/?path="+ path
+def doShow3DRefsVolumes(request, protocolViewer):
+    path = str("reference_volume_iter_%03d.mrc")
+    sourcePath = self._viewIterationFile(path)
+    return "showj", "/visualize_object/?path="+ sourcePath
 
-def viewFilteredVolsProtocol(request, protocolViewer):
-    path = str(protocolViewer.protocol._getExtraPath("filtered_volumes.stk"))
-    return "showj", "/visualize_object/?path="+ path
-
-def viewGeneratedVols(request, protocolViewer):
-    path = str(protocolViewer.protocol._getExtraPath("generated_volumes.stk"))
-    return "showj", "/visualize_object/?path="+ path
-
-def view2DAvgs(request, protocolViewer):
-    extra = '%s2d' % protocolViewer.protocol.getProgramId() + 'extra'
-    file = extra + "/iter%03d/iter_classes.xmd"
-#    viewIterationFile("ml2dextra/iter%03d/iter_classes.xmd")
-    pass
-
-def view3DRefsVolumes(request, protocolViewer):
-    file = "extra/iter%03d/vol000001.vol"
-#    viewIterationFile("extra/iter%03d/vol000001.vol")
-    pass
-
-def view3DRefsVolumes(request, protocolViewer):
-    file = "extra/iter%03d/vol000001.vol"
-#    viewIterationFile("extra/iter%03d/vol000001.vol")
-    pass
+def doShow3DReconVolumes(request, protocolViewer):
+    path = str("volume_iter_%03d.mrc")
+    sourcePath = self._viewIterationFile(path)
+    return "showj", "/visualize_object/?path="+ sourcePath
 
 def doPlotAngularDistribution(request, protocolViewer):
     iterToShow = str(protocolViewer.iterToShow.get())
@@ -91,4 +74,14 @@ def plotAngularDistribution(request, protocolViewer):
         pass
     else:
         return plots
-            
+
+def _viewIterationFile(self, filePath):
+    self.setVisualizeIterations()
+    for iter in self.visualizeIters:
+        pathDir = self.protocol._getExtraPath("iter_%03d" % iter)
+        path = join(pathDir, filePath % iter)
+        if os.path.exists(path):
+            return path       
+
+
+
