@@ -135,8 +135,10 @@ class SqliteMapper(Mapper):
                              self.__getObjectValue(obj), obj._objParentId, 
                              obj._objLabel, obj._objComment)
         if obj.getObjId() in self.updateDict:
-            for k, v in self.updateDict.iteritems():
-                print "%d -> %s" % (k, v.getName())
+            print "id: %d found already in dict. " % obj.getObjId()
+            print "FULL DICT:"
+#            for k, v in self.updateDict.iteritems():
+#                print "%d -> %s" % (k, v.getName())
             raise Exception('Circular reference, object: %s found twice' % obj.getName())
         
         self.updateDict[obj._objId] = obj

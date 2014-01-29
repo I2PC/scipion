@@ -31,7 +31,7 @@ from pyworkflow.viewer import ProtocolViewer, DESKTOP_TKINTER, WEB_DJANGO
 from pyworkflow.em import *
 from pyworkflow.gui.form import FormWindow
 from protocol_frealign import ProtFrealign
-from pyworkflow.em.xmipp3.viewer import runShowJ
+from pyworkflow.em.packages.xmipp3.viewer import runShowJ
 from pyworkflow.em.plotter import EmPlotter
 
 import numpy as np
@@ -40,15 +40,14 @@ LAST_ITER = 0
 ALL_ITER = 1
 SELECTED_ITERS = 2
 
-class FrealignViewer(ProtFrealign):
+class FrealignViewer(ProtocolViewer):
     """ Visualization of Frealign.
     """
     
-    _targets = [FormWindow]
+    _targets = [ProtFrealign]
     _environments = [DESKTOP_TKINTER, WEB_DJANGO]
     
     _label = 'viewer Frealign'
-
     
     def _defineParams(self, form):
         form.addSection(label='Results per Iteration')
@@ -67,7 +66,7 @@ class FrealignViewer(ProtFrealign):
     
     def _getVisualizeDict(self):
         return {'doShow3DRefsVolumes': self._view3DRefsVolumes,
-                'doShow3DReconsVolumes': self._view3DReconsVolumes,
+                'doShow3DReconsVolumes': self._view3DReconVolumes,
                 'doShowAngDist': self._plotAngularDistribution
                 }
     
@@ -80,10 +79,10 @@ class FrealignViewer(ProtFrealign):
             self._plotAngularDistribution()
     
     def _view3DRefsVolumes(self, e=None):
-        self._viewIterationFile("extra/iter%03d/reference_volume_iter_%03d.mrc")
+        self._viewIterationFile("reference_volume_iter_%03d.mrc")
         
     def _view3DReconVolumes(self, e=None):
-        self._viewIterationFile("extra/iter%03d/volume_iter_%03d.mrc")
+        self._viewIterationFile("volume_iter_%03d.mrc")
         
     def _plotAngularDistribution(self, e=None):
         self._showPlots(*self._createAngularDistributionPlots())
@@ -99,8 +98,8 @@ class FrealignViewer(ProtFrealign):
         
         if len(errors) == 0:
             for iteration in self.visualizeIters:
-                extra = '%s2d' % self.protocol.getProgramId() + 'extra'
-                parFn = self.protocol._getPath(extra + "/iter%03d/particles_iter_%03d.par" % iteration)
+                parFn = self.protocol._getExtraPath("iter_%03d" % iteration, "particles_iter_%03d.par" % iteration)
+                print parFn
                 if not os.path.exists(parFn):
                     errors.append('Iteration %s does not exist.' % iteration)
                 else:
@@ -112,14 +111,14 @@ class FrealignViewer(ProtFrealign):
                     for line in file:
                         if not line.startswith('C'):
                             lineList = line.split()
-                            phi.append(lineList[1])
-                            theta.append(linelist[2])
+                            phi.append(float(lineList[3]))
+                            theta.append(float(lineList[2]))
                     gridsize = [1, 1]
                     figsize = (4, 4)
                     xplotter = EmPlotter(*gridsize, figsize=figsize, 
                                             windowTitle="Angular distribution - iteration %d" % iteration)
                     plot_title = 'iter %d' % iteration
-                    xplotter.plotAngularDistribution(plot_title, rot, tilt)
+                    xplotter.plotAngularDistribution(plot_title, phi, theta)
                     xplotter.draw()
                     plots.append(xplotter)
 
@@ -135,17 +134,18 @@ class FrealignViewer(ProtFrealign):
     def _viewIterationFile(self, filePath):
         self.setVisualizeIterations()
         for iter in self.visualizeIters:
-            extraPath = self.protocol._getPath(filePath % iter)
-            print "extraPath=%s" % extraPath
-            if os.path.exists(extraPath):
-                runShowJ(extraPath)        
+            pathDir = self.protocol._getExtraPath("iter_%03d" % iter)
+            path = join(pathDir, filePath % iter)
+            print "path=%s" % path
+            if os.path.exists(path):
+                runShowJ(path)       
             else:
                 self.formWindow.showError('Iteration %s does not exist.' % iter)        
         
     def setVisualizeIterations(self):
         '''Validate and set the set of iterations to visualize.
         If not set is selected, only use the last iteration'''
-        self.lastIter = self.protocol._lastIteration()
+        self.lastIter = self.protocol.numberOfIterations.get()
         self.visualizeIters = []
         
         if self.iterToShow.get() == LAST_ITER:
@@ -165,7 +165,7 @@ class FrealignViewer(ProtFrealign):
 
     def getVisualizeDictWeb(self):
         return {'doShow3DRefsVolumes': 'view3DRefsVolumes',
-                'doShow3DReconsVolumes': 'view3DReconVolumes',
+                'doShow3DReconVolumes': 'view3DReconVolumes',
                 'doShowAngDist': 'doPlotAngularDistribution',
                 }
 

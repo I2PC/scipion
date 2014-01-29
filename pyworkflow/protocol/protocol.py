@@ -353,6 +353,9 @@ class Protocol(Step):
     def copyDefinitionAttributes(self, other):
         """ Copy definition attributes to other protocol. """
         for paramName, _ in self.iterDefinitionAttributes():
+            print "copying param", paramName
+            print "other",other
+            
             self.copyAttributes(other, paramName)
         
     def _createVarsFromDefinition(self, **args):

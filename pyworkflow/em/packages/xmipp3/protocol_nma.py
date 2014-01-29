@@ -27,12 +27,14 @@
 # *
 # **************************************************************************
 
+import math
+from glob import glob
 
 from pyworkflow.em import *  
-from pyworkflow.utils import *  
-import xmipp
+from pyworkflow.utils import * 
 from convert import createXmippInputImages, readSetOfVolumes, createXmippInputVolumes
 from pyworkflow.protocol.constants import LEVEL_EXPERT, LEVEL_ADVANCED
+import xmipp
 
 #from xmipp3 import XmippProtocol
 NMA_MASK_NONE = 0
@@ -41,10 +43,11 @@ NMA_MASK_FILE = 2
 
 NMA_CUTOFF_ABS = 0
 NMA_CUTOFF_REL = 1    
+
         
 class XmippProtNMA(EMProtocol):
     """ Protocol for flexible analysis using NMA. """
-    _label = 'ml3d'
+    _label = 'nma analysis'
     _reference = ['[[http://www.ncbi.nlm.nih.gov/pubmed/23671335][Nogales-Cadenas, et.al, NAR (2013)]]'
                   ]
     
@@ -92,10 +95,10 @@ class XmippProtNMA(EMProtocol):
                       label='Cut-off mode',
                       help='TODO: More help.')
         form.addParam('rc', FloatParam, default=8,
-                      label="Cut-off distance", condition='cutoffMode==%d' % NMA_CUTOFF_ABS,
+                      label="Cut-off distance (A)", condition='cutoffMode==%d' % NMA_CUTOFF_ABS,
                       help='Atoms or pseudoatoms beyond this distance will not interact.')
         form.addParam('rcPercentage', FloatParam, default=95,
-                      label="Cut-off distance", condition='cutoffMode==%d' % NMA_CUTOFF_ABS,
+                      label="Cut-off percentage", condition='cutoffMode==%d' % NMA_CUTOFF_REL,
                       help='The interaction cutoff distance is calculated as the distance\n'
                            'below which is this percentage of interatomic or interpseudoatomic\n'
                            'distances. \n'
@@ -138,7 +141,7 @@ class XmippProtNMA(EMProtocol):
                            'When calculating the normal modes, aminoacids are grouped\n'
                            'into blocks of this size that are moved translationally  \n'
                            'and rotationally together.')
-        form.addParam('PseudoAtomThreshold', FloatParam, default=0,
+        form.addParam('pseudoAtomThreshold', FloatParam, default=0,
                       expertLevel=LEVEL_ADVANCED,
                       label='Threshold on collectivity',
                       help='Remove pseudoatoms whose mass is below this threshold. \n'
@@ -148,24 +151,46 @@ class XmippProtNMA(EMProtocol):
         form.addParallelSection(threads=1, mpi=8)    
              
     def _printWarnings(self, *lines):
-        """ Print some warning lines to 'warnings.xmd' """
-        fWarn = open(self._getPath("warnings.xmd"),'w')
+        """ Print some warning lines to 'warnings.xmd', 
+        the function should be called inside the working dir."""
+        fWarn = open("warnings.xmd",'w')
         for l in lines:
             print >> fWarn, l
         fWarn.close()
         
     def _defineSteps(self):
         # Some steps will differ if the input is a volume or a pdb file
-        inputStructure = self.inputStructure.get()
-        if isinstance(inputStructure, Volume):
+        self.structureEM = not isinstance(self.inputStructure.get(), PdbFile)
+        n = self.numberOfModes.get()
+        
+        if self.structureEM:
+            inputStructure = self.inputStructure.get().getFirstItem()
             fnMask = self._insertMaskStep()
+            self.sampling = inputStructure.getSamplingRate()
             self._insertFunctionStep('convertToPseudoAtomsStep', 
                                      inputStructure.getFileName(), fnMask)
-            self._insertFunctionStep('computeModesStep')
+            self._insertFunctionStep('computeModesStep', n)
             self._insertFunctionStep('reformatOutputStep')
             self._insertFunctionStep('createChimeraScriptStep')
         else:
-            pass
+            # Link the input
+            inputFn = self.inputStructure.get().getFileName()
+            localFn = self._getPath(basename(inputFn))
+            self._insertFunctionStep('copyPdbStep', inputFn, localFn)
+            
+            # Compute modes
+            if self.cutoffMode == NMA_CUTOFF_REL:
+                params = '-i %s --operation distance_histogram %s' % (localFn, self._getExtraPath('atoms_distance.hist'))
+                self._insertRunJobStep("xmipp_pdb_analysis", params)
+            self._insertFunctionStep('computePdbModesStep', n, self.rtbBlockSize.get(), self.rtbForceConstant.get())
+            self._insertFunctionStep('reformatPdbOutputStep', n)
+            self.PseudoAtomThreshold=0.0
+        
+        self._insertFunctionStep('qualifyModesStep', n, self.collectivityThreshold.get())
+        self._insertFunctionStep('animateModesStep', n,
+                                 self.amplitud.get(), self.nframes.get(), self.downsample.get(), 
+                                 self.pseudoAtomThreshold.get(), self.pseudoAtomRadius.get())
+        self._insertFunctionStep('computeAtomShiftsStep', n)
         
     def _insertMaskStep(self):
         """ Check the mask selected and insert the necessary steps.
@@ -174,7 +199,7 @@ class XmippProtNMA(EMProtocol):
         fnMask = ''
         if self.maskMode == NMA_MASK_THRE:
             fnMask = self._getExtraPath('mask.vol')
-            maskParams = '-i %s -o %s --select below %f --substitute binarize' % (inputStructure.getFileName(), fnMask, self.maskThreshold.get())
+            maskParams = '-i %s -o %s --select below %f --substitute binarize' % (self.inputStructure.get().getFirstItem().getFileName(), fnMask, self.maskThreshold.get())
             self._insertRunJobStep('xmipp_transform_threshold', maskParams)
         elif self.maskMode == NMA_MASK_FILE:
             fnMask = self.volumeMask.get().getFileName()
@@ -183,30 +208,35 @@ class XmippProtNMA(EMProtocol):
     def convertToPseudoAtomsStep(self, inputFn, fnMask):
         prefix = 'pseudoatoms'
         outputFn = self._getPath(prefix)
-        sampling = self.inputStructure.getSamplingRate()
+        sampling = self.sampling
         sigma = sampling * self.pseudoAtomRadius.get() 
         targetErr = self.pseudoAtomTarget.get()
         params = "-i %(inputFn)s -o %(outputFn)s --sigma %(sigma)f "
         params += "--targetError %(targetErr)f --sampling_rate %(sampling)f -v 2 --intensityColumn Bfactor"
         if fnMask:
             params += " --mask binary_file %(fnMask)s"
-        self.insertRunJobStep("xmipp_volume_to_pseudoatoms", params=params % locals())
+        self.runJob(None, "xmipp_volume_to_pseudoatoms", params=params % locals())
         for suffix in ["_approximation.vol", "_distance.hist"]:
             moveFile(self._getPath(prefix+suffix), self._getExtraPath(prefix+suffix))
         cleanPattern(self._getPath(prefix+'_*'))
      
-    def computeModesStep(self):
-        if self.cutoffMode == NMA_CUTOFF_REL:
-            rc = self._computeCutoff(self._getExtraPath('pseudoatoms_distance.hist'), self.rcPercentage.get())
-            
+    def computeModesStep(self, numberOfModes):
+        rc = self._getRc('pseudoatoms')
         self._enterWorkingDir()
-        runJob(None, "nma_record_info.py","%d pseudoatoms.pdb %d" % (self.numberOfModes.get(), rc))
-        runJob(None, "nma_pdbmat.pl","pdbmat.dat")
-        runJob(None, "nma_diag_arpack","")
-        if not os.path.exists("fort.11"):
+        self.runJob(None, "nma_record_info.py","%d pseudoatoms.pdb %d" % (numberOfModes, rc))
+        self.runJob(None, "nma_pdbmat.pl","pdbmat.dat")
+        self.runJob(None, "nma_diag_arpack","")
+        if not exists("fort.11"):
             self._printWarnings(redStr("Modes cannot be computed. Check the number of modes you asked to compute and/or consider increasing cut-off distance. The maximum number of modes allowed by the method for pseudoatomic normal mode analysis is 3 times the number of pseudoatoms but the protocol allows only up to 200 modes as 20-100 modes are usually enough.  If the number of modes is below the minimum between 200 and 3 times the number of pseudoatoms, consider increasing cut-off distance."))
         cleanPath("diag_arpack.in", "pdbmat.dat")
         self._leaveWorkingDir()
+        
+    def _getRc(self, prefix):
+        if self.cutoffMode == NMA_CUTOFF_REL:
+            rc = self._computeCutoff(self._getExtraPath('%s_distance.hist' % prefix), self.rcPercentage.get())
+        else:
+            rc = self.rc.get()
+        return rc
         
     def _computeCutoff(self, fnHist, rcPercentage):
         mdHist = xmipp.MetaData(fnHist)
@@ -226,22 +256,24 @@ class XmippProtNMA(EMProtocol):
                 break
         msg = "Cut-off distance = %s A" % rc
         print msg
+        self._enterWorkingDir()
         self._printWarnings(msg)
+        self._leaveWorkingDir()
 
         return rc    
     
     def reformatOutputStep(self):
         self._enterWorkingDir()
         n = self._countAtoms("pseudoatoms.pdb")
-        runJob(log,"nma_reformat_vector_foranimate.pl","%d fort.11" % n)
-        runJob(log,"cat","vec.1* > vec_ani.txt")
-        runJob(log,"rm","-f vec.1*")
-        runJob(log,"nma_reformat_vector.pl","%d fort.11" % n)
+        self.runJob(None,"nma_reformat_vector_foranimate.pl","%d fort.11" % n)
+        self.runJob(None,"cat","vec.1* > vec_ani.txt")
+        self.runJob(None,"rm","-f vec.1*")
+        self.runJob(None,"nma_reformat_vector.pl","%d fort.11" % n)
         makePath("modes")
-        runJob(log,"mv","-f vec.* modes")
-        runJob(log,"nma_prepare_for_animate.py","")
-        runJob(log,"rm","vec_ani.txt fort.11 matrice.sdijf")
-        moveFile(log,'vec_ani.pkl','extra/vec_ani.pkl')
+        self.runJob(None,"mv","-f vec.* modes")
+        self.runJob(None,"nma_prepare_for_animate.py","")
+        self.runJob(None,"rm","-f vec_ani.txt fort.11 matrice.sdijf")
+        moveFile('vec_ani.pkl','extra/vec_ani.pkl')
         self._leaveWorkingDir()
         
     def _countAtoms(self, fnPDB):
@@ -254,9 +286,9 @@ class XmippProtNMA(EMProtocol):
         return n
     
     def createChimeraScriptStep(self):
-        sampling = self.inputStructure.getSamplingRate()
-        radius = sampling * self.pseudoAtomRadius.get() 
-        inputFn = self.inputStructure.getFileName()
+        radius = self.sampling * self.pseudoAtomRadius.get() 
+        input = self.inputStructure.get().getFirstItem()
+        inputFn = input.getFileName()
         fhCmd = open(self._getPath("chimera.cmd"),'w')
         fhCmd.write("open pseudoatoms.pdb\n")
         fhCmd.write("rangecol bfactor,a 0 white 1 red\n")
@@ -267,23 +299,188 @@ class XmippProtNMA(EMProtocol):
         threshold = 0.01
         if self.maskMode == NMA_MASK_THRE:
             self.maskThreshold.get()
-        xdim, _, _, _ = self.inputStructure.getDim()
+        xdim, _, _, _ = input.getDim()
         origin = xdim / 2
-        fhCmd.write("volume #1 level %f transparency 0.5 voxelSize %f originIndex %d\n" % (threshold, sampling, origin))
+        fhCmd.write("volume #1 level %f transparency 0.5 voxelSize %f originIndex %d\n" % (threshold, self.sampling, origin))
         fhCmd.close()
-                                                    
+        
+    def copyPdbStep(self, inputFn, localFn):
+        """ Copy the input pdb file and also create a link 'atoms.pdb' """
+        copyFile(inputFn, localFn)
+        createLink(localFn, self._getPath('atoms.pdb'))
+        
+    def computePdbModesStep(self, numberOfModes, RTBblockSize, RTBForceConstant):
+        rc = self._getRc('atoms')
+                
+        self._enterWorkingDir()
+        
+        self.runJob(None,"nma_record_info_PDB.py","%d %d atoms.pdb %f %f" % (numberOfModes,RTBblockSize,rc,RTBForceConstant))
+        self.runJob(None,"nma_elnemo_pdbmat","")
+        self.runJob(None,"nma_diagrtb","")
+
+        if not exists("diagrtb.eigenfacs"):
+            msg = "Modes cannot be computed. Check the number of modes you asked to compute and/or consider "
+            msg += "increasing cut-off distance. The maximum number of modes allowed by the method for atomic "
+            msg += "normal mode analysis is 6 times the number of RTB blocks but the protocol allows only up "
+            msg += "to 200 modes as 20-100 modes are usually enough. If the number of modes is below the minimum "
+            msg += "between 200 and 6 times the number of RTB blocks, consider increasing cut-off distance."
+            self._printWarnings(redStr(msg) + '\n')
+        self.runJob(None,"rm","-f *.dat_run diagrtb.dat pdbmat.xyzm pdbmat.sdijf pdbmat.dat")
+        
+        self._leaveWorkingDir()
+        
+    def reformatPdbOutputStep(self, numberOfModes):
+        self._enterWorkingDir()
+        
+        makePath('modes')
+        Natoms = self._countAtoms("atoms.pdb")
+        fhIn = open('diagrtb.eigenfacs')
+        fhAni = open('vec_ani.txt','w')
+        
+        for n in range(numberOfModes):
+            # Skip two lines
+            fhIn.readline()
+            fhIn.readline()
+            fhOut=open('modes/vec.%d'%(n+1),'w')
+            for i in range(Natoms):
+                line=fhIn.readline()
+                fhOut.write(line)
+                fhAni.write(line.rstrip().lstrip()+" ")
+            fhOut.close()
+            if n!=(numberOfModes-1):
+                fhAni.write("\n")
+        fhIn.close()
+        fhAni.close()
+        runJob(log,"nma_prepare_for_animate.py","")
+        cleanPath("vec_ani.txt")
+        moveFile('vec_ani.pkl', 'extra/vec_ani.pkl')
+
+        self._leaveWorkingDir()
+        
+    def qualifyModesStep(self, numberOfModes, collectivityThreshold):
+        self._enterWorkingDir()
+        
+        fnVec = glob("modes/vec.*")
+        
+        if len(fnVec) < numberOfModes:
+            msg = "There are only %d modes instead of %d. "
+            msg += "Check the number of modes you asked to compute and/or consider increasing cut-off distance."
+            msg += "The maximum number of modes allowed by the method for atomic normal mode analysis is 6 times"
+            msg += "the number of RTB blocks and for pseudoatomic normal mode analysis 3 times the number of pseudoatoms. "
+            msg += "However, the protocol allows only up to 200 modes as 20-100 modes are usually enough. If the number of"
+            msg += "modes is below the minimum between these two numbers, consider increasing cut-off distance." 
+            self._printWarnings(redStr(msg % (len(fnVec), numberOfModes)))
+    
+        fnDiag = "diagrtb.eigenfacs"
+        
+        if self.structureEM:
+            self.runJob(None,"nma_reformatForElNemo.sh","%d" % numberOfModes)
+            fnDiag = "diag_arpack.eigenfacs"
+            
+        self.runJob(None,"echo","%s | nma_check_modes" % fnDiag)
+        cleanPath(fnDiag)
+        
+        fh = open("Chkmod.res")
+        MDout = xmipp.MetaData()
+        collectivityList = []
+        
+        for n in range(numberOfModes):
+            line = fh.readline()
+            collectivity = float(line.split()[1])
+            collectivityList.append(collectivity)
+    
+            id = MDout.addObject()
+            modefile = self._getPath("modes", "vec.%d" % (n+1))
+            MDout.setValue(xmipp.MDL_NMA_MODEFILE, modefile, id)
+            MDout.setValue(xmipp.MDL_ORDER, long(n+1), id)
+            
+            if n >= 6:
+                MDout.setValue(xmipp.MDL_ENABLED, 1, id)
+            else:
+                MDout.setValue(xmipp.MDL_ENABLED, -1, id)
+            MDout.setValue(xmipp.MDL_NMA_COLLECTIVITY, collectivity, id)
+            
+            if collectivity < collectivityThreshold:
+                MDout.setValue(xmipp.MDL_ENABLED,-1,id)
+        fh.close()
+        idxSorted = [i[0] for i in sorted(enumerate(collectivityList), key=lambda x:x[1])]
+        score = [0]*numberOfModes
+        for i in range(numberOfModes):
+            score[i] += i+1
+            score[idxSorted[i]] += numberOfModes - i
+        i = 0
+        for id in MDout:
+            score_i = float(score[i])/(2.0*numberOfModes)
+            MDout.setValue(xmipp.MDL_NMA_SCORE,score_i,id)
+            i+=1
+        MDout.write("modes.xmd")
+        cleanPath("Chkmod.res")
+        self._leaveWorkingDir()
+
+    def animateModesStep(self, numberOfModes,amplitude,nFrames,downsample,pseudoAtomThreshold,pseudoAtomRadius):
+        makePath(self._getExtraPath('animations'))
+        self._enterWorkingDir()
+        
+        if self.structureEM:
+            fn = "pseudoatoms.pdb"
+            self.runJob(None,"nma_animate_pseudoatoms.py","%s extra/vec_ani.pkl 7 %d %f extra/animations/animated_mode %d %d %f"%\
+                      (fn,numberOfModes,amplitude,nFrames,downsample,pseudoAtomThreshold))
+        else:
+            fn="atoms.pdb"
+            runJob(log,"nma_animate_atoms.py","%s extra/vec_ani.pkl 7 %d %f extra/animations/animated_mode %d"%\
+                      (fn,numberOfModes,amplitude,nFrames))
+        
+        for mode in range(7,numberOfModes+1):
+            fnAnimation = join("extra", "animations", "animated_mode_%03d" % mode)
+            fhCmd=open(fnAnimation+".vmd",'w')
+            fhCmd.write("mol new %s.pdb\n" % self._getPath(fnAnimation))
+            fhCmd.write("animate style Loop\n")
+            fhCmd.write("display projection Orthographic\n")
+            if self.structureEM:
+                fhCmd.write("mol modcolor 0 0 Beta\n")
+                fhCmd.write("mol modstyle 0 0 Beads %f 8.000000\n"%(pseudoAtomRadius*self.sampling))
+            else:
+                fhCmd.write("mol modcolor 0 0 Index\n")
+                fhCmd.write("mol modstyle 0 0 Beads 1.000000 8.000000\n")
+            fhCmd.write("animate speed 0.5\n")
+            fhCmd.write("animate forward\n")
+            fhCmd.close();
+        
+        self._leaveWorkingDir()
+  
+    def computeAtomShiftsStep(self, numberOfModes):
+        fnOutDir = self._getExtraPath("distanceProfiles")
+        makePath(fnOutDir)
+        maxShift=[]
+        maxShiftMode=[]
+        
+        for n in range(7, numberOfModes+1):
+            fhIn = open(self._getPath("modes", "vec.%d" % n))
+            md = xmipp.MetaData()
+            atomCounter = 0
+            for line in fhIn:
+                x, y, z = map(float, line.split())
+                d = math.sqrt(x*x+y*y+z*z)
+                if n==7:
+                    maxShift.append(d)
+                    maxShiftMode.append(7)
+                else:
+                    if d>maxShift[atomCounter]:
+                        maxShift[atomCounter]=d
+                        maxShiftMode[atomCounter]=n
+                atomCounter+=1
+                md.setValue(xmipp.MDL_NMA_ATOMSHIFT,d,md.addObject())
+            md.write(join(fnOutDir,"vec%d.xmd" % n))
+            fhIn.close()
+        md = xmipp.MetaData()
+        for i, _ in enumerate(maxShift):
+            id = md.addObject()
+            md.setValue(xmipp.MDL_NMA_ATOMSHIFT, maxShift[i],id)
+            md.setValue(xmipp.MDL_NMA_MODEFILE, self._getPath("modes", "vec.%d" % (maxShiftMode[i]+1)), id)
+        md.write(self._getExtraPath('maxAtomShifts.xmd'))
+                                                      
     def createOutput(self):
-        #lastIter = self._lastIteration()
-        lastIter = 'iter%03d' % self._lastIteration()
-        md = xmipp.MetaData(self._getExtraPath(lastIter, 'iter_volumes.xmd'))
-        md.addItemId()
-        fn = self._getPath('output_volumes.xmd')
-        md.write('Volumes@%s' % fn)
-        volumes = self._createSetOfVolumes()
-        volumes.setSamplingRate(self.inputImages.get().getSamplingRate())
-        readSetOfVolumes(fn, volumes)
-        volumes.write()
-        self._defineOutputs(outputVolumes=volumes)
+        pass
 
     def _summary(self):
         summary = []
