@@ -1010,6 +1010,7 @@ double CTF_fitness(double *p, void *)
     global_psd_exp_radial.initZeros();
     int XdimW=XSIZE(global_w_digfreq);
     int YdimW=YSIZE(global_w_digfreq);
+    global_corr13=0;
     for (int i = 0; i < YdimW; i +=
              global_evaluation_reduction)
         for (int j = 0; j < XdimW; j +=
