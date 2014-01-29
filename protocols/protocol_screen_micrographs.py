@@ -158,7 +158,7 @@ class ProtScreenMicrographs(XmippProtocol):
         regenerate=False
         for objId in md:
             fnCTF=md.getValue(xmipp.MDL_CTF_MODEL,objId)
-            if fnCTF!="NA":
+            if fnCTF!="NA" and os.path.exists(fnCTF):
                 ctfTime=time.ctime(os.path.getmtime(fnCTF))
                 if ctfTime>summaryTime:
                     regenerate=True
