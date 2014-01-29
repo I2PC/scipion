@@ -335,40 +335,54 @@ class ShowjForm(forms.Form):
     onlyShifts = forms.BooleanField(label=messagesForm.LABEL_ONLY_SHIFTS, required=False)
     wrap = forms.BooleanField(label=messagesForm.LABEL_WRAP, required=False)
 
+    typeVolume = forms.CharField(widget=forms.HiddenInput())
+
     
-    def __init__(self, dataset, tableLayoutConfiguration=None, *args, **kwargs):
+    def __init__(self, dataset=None, tableLayoutConfiguration=None, *args, **kwargs):
         #Init message properties file
         messagesForm = Message()
         
         super(ShowjForm, self).__init__(*args, **kwargs)
         
-        self.fields['blockComboBox'] = forms.ChoiceField(label=messagesForm.LABEL_BLOCK_SELECTION,
-                                                         required=False,
-                                                         choices=tuple(zip(dataset.listTables(), dataset.listTables())))
-        
-        labelsToRenderComboBoxValues = tableLayoutConfiguration.getLabelsToRenderComboBoxValues()
-        if len(labelsToRenderComboBoxValues) > 0:
-            self.fields['labelsToRenderComboBox'] = forms.ChoiceField(label=messagesForm.LABEL_LABEL_SELECTION,
-                                                            required=False,
-                                                            choices=labelsToRenderComboBoxValues)
-            if self.data['mode'] != 'gallery':
-                self.fields['labelsToRenderComboBox'].widget = forms.HiddenInput()
-        else:
-            self.fields['zoom'].widget.attrs['readonly'] = True
-            if self.data['mode'] == 'gallery':
-                self.fields['goto'].widget.attrs['readonly'] = True
+        if dataset is not None:
+            self.fields['blockComboBox'] = forms.ChoiceField(label=messagesForm.LABEL_BLOCK_SELECTION,
+                                                             required=False,
+                                                             choices=tuple(zip(dataset.listTables(), dataset.listTables())))
             
-        if dataset.getNumberSlices() > 1:    
-            volumesToRenderComboBoxValues = tuple(zip(dataset.getTable().getColumnValues(self.data['labelsToRenderComboBox']), dataset.getTable().getColumnValues(self.data['labelsToRenderComboBox'])))
-            self.fields['volumesToRenderComboBox'] = forms.ChoiceField(label=messagesForm.LABEL_VOLUME_SELECTION,
-                                                            required=False,
-                                                            choices=volumesToRenderComboBoxValues)
-            if self.data['mode'] == 'table':
-                self.fields['volumesToRenderComboBox'].widget = forms.HiddenInput()
-            if self.data['mode'] != 'gallery':                
+            labelsToRenderComboBoxValues = tableLayoutConfiguration.getLabelsToRenderComboBoxValues()
+            if len(labelsToRenderComboBoxValues) > 0:
+                self.fields['labelsToRenderComboBox'] = forms.ChoiceField(label=messagesForm.LABEL_LABEL_SELECTION,
+                                                                required=False,
+                                                                choices=labelsToRenderComboBoxValues)
+                if self.data['mode'] != 'gallery':
+                    self.fields['labelsToRenderComboBox'].widget = forms.HiddenInput()
+            else:
+                self.fields['zoom'].widget.attrs['readonly'] = True
+                if self.data['mode'] == 'gallery':
+                    self.fields['goto'].widget.attrs['readonly'] = True
+                
+            if dataset.getNumberSlices() > 1:    
+                volumesToRenderComboBoxValues = tuple(zip(dataset.getTable().getColumnValues(self.data['labelsToRenderComboBox']), dataset.getTable().getColumnValues(self.data['labelsToRenderComboBox'])))
+                self.fields['volumesToRenderComboBox'] = forms.ChoiceField(label=messagesForm.LABEL_VOLUME_SELECTION,
+                                                                required=False,
+                                                                choices=volumesToRenderComboBoxValues)
+                if self.data['mode'] == 'table':
+                    self.fields['volumesToRenderComboBox'].widget = forms.HiddenInput()
+                if self.data['mode'] != 'gallery':                
+                    self.fields['resliceComboBox'].widget = forms.HiddenInput()
+            else:
                 self.fields['resliceComboBox'].widget = forms.HiddenInput()
+                
         else:
+            self.fields['zoom'].widget = forms.HiddenInput()
+            self.fields['goto'].widget = forms.HiddenInput()
+            
             self.fields['resliceComboBox'].widget = forms.HiddenInput()
+
+            self.fields['mirrorY'].widget = forms.HiddenInput()
+            self.fields['applyTransformMatrix'].widget = forms.HiddenInput()
+            self.fields['onlyShifts'].widget = forms.HiddenInput()
+            self.fields['wrap'].widget = forms.HiddenInput()
                
         
         if self.data['mode'] != 'gallery': 

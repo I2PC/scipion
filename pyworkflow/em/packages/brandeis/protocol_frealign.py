@@ -366,13 +366,13 @@ class ProtFrealign(ProtRefine3D):
         depsRecons = []
         
         for iter in range(1, self.numberOfIterations.get() + 1):
-            initId = self._insertFunctionStep('initIterStep', iter, prerequisites=depsRecons)
+            initId = self._insertFunctionStep('initIterStep', iter, numberOfBlocks, prerequisites=depsRecons)
             depsRefine = self._insertRefineIterStep(numberOfBlocks, iter, [initId])
             reconsId = self._insertFunctionStep("reconstructVolumeStep", iter, numberOfBlocks, prerequisites=depsRefine)
             depsRecons = [reconsId]
         self._insertFunctionStep("createOutput", prerequisites=depsRecons)
     
-    def initIterStep(self, iter):
+    def initIterStep(self, iter, numberOfBlocks):
         """ Prepare files and directories for the current iteration """
         
         self._createIterWorkingDir(iter) # create the working directory for the current iteration.
@@ -393,6 +393,7 @@ class ProtFrealign(ProtRefine3D):
             vol.writeStack(volFn) # convert the reference volume into a mrc volume
             copyFile(volFn, refVol)  #Copy the initial volume in the current directory.
         else:
+            self._splitParFile(iter, numberOfBlocks)
             copyFile(prevIterVol, refVol)   #Copy the reference volume as refined volume.
         copyFile(refVol, iterVol)   #Copy the reference volume as refined volume.
         
@@ -435,6 +436,21 @@ class ProtFrealign(ProtRefine3D):
                 
         return blockParticles
         
+    def _particlesInBlock(self, block):
+        """calculate the initial and final particles that belongs to this block"""
+        
+        imgSet = self.inputParticles.get()
+        numberOfBlocks = self.numberOfThreads.get()
+        
+        blockParticles = self._particlesPerBlock(numberOfBlocks, imgSet.getSize())
+        initPart = 0
+        lastPart = 0
+        for i in range(block):
+            initPart = lastPart + 1
+            lastPart = lastPart + blockParticles[i]
+        particlesInilast = [initPart, lastPart]
+        return particlesInilast
+    
     def _getParamsIteration(self, imgSet, iter):
         """ Defining the current iteration
         """
@@ -630,17 +646,21 @@ class ProtFrealign(ProtRefine3D):
         imgSet = self.inputParticles.get()
         
         iterDir = self._iterWorkingDir(iter)
-        self._enterDir(iterDir) # enter to the working directory for the current iteration.
+        if block==1:
+            self._enterDir(iterDir) # enter to the working directory for the current iteration.
         
+        iniPart, lastPart = self._particlesInBlock(block)
         prevIter = iter - 1
-        prevIterDir = self._iterWorkingDir(prevIter)
-        inputParFn = join(prevIterDir, 'particles_%02d_' % block + 'iter_%03d.par' % iter)
-        param['inputParFn'] = os.path.relpath(inputParFn, iterDir) 
+        param['inputParFn'] = 'particles_%02d_' % block + 'iter_%03d.par' % prevIter
+        param['initParticle'] = iniPart
+        param['finalParticle'] = lastPart
+        param['frealignOut'] = 'frealign_Output_%02d.log' % block
+
         paramDic = self._setParamsRefineParticles(iter, block)
         initParamsDict = self._getParamsIteration(imgSet, iter)
         
         paramsRefine = dict(initParamsDict.items() + paramDic.items() + param.items())
-        args = self._prepareCommand(iniParticle, finalParticle)
+        args = self._prepareCommand()
         
         self.runJob(None, self._program, args % paramsRefine)
         
@@ -669,8 +689,8 @@ class ProtFrealign(ProtRefine3D):
         paramDic['imgFnMatch'] = 'particles_match_iter_%03d.mrc' % iter
         paramDic['outputShiftFn'] = 'particles_shifts_iter_%03d.shft' % iter
         paramDic['3Dweigh'] = 'volume_weights_iter_%03d' % iter
-        paramDic['FSC3DR1'] = 'volume_1_iter_%03d' % iter
-        paramDic['FSC3DR2'] = 'volume_2_iter_%03d' % iter
+        paramDic['FSC3DR1'] = 'volume_1_iter_%03d.mrc' % iter
+        paramDic['FSC3DR2'] = 'volume_2_iter_%03d.mrc' % iter
         paramDic['VolPhResidual'] = 'volume_phasediffs_iter_%03d' % iter
         paramDic['VolpointSpread'] = 'volume_pointspread_iter_%03d' % iter
         paramDic['frealignOut'] = 'fralign_volume_reconstruct_iter_%03d' % iter
@@ -804,7 +824,6 @@ eot
     
     def _mergeAllParFiles(self, iter, numberOfBlocks):
         """ This method merge all parameters files that has been created in a refineIterStep """
-        paramDict = {}
         
         if numberOfBlocks != 1:
             #iterDir = self._iterWorkingDir(iter)
@@ -824,7 +843,38 @@ eot
                             f2.write(l)
                 f1.close()
             f2.close()
-                     
+    
+    def _splitParFile(self, iter, numberOfBlocks):
+        """ This method split the parameter files that has been previosuly merged """
+        
+        if numberOfBlocks != 1:
+            prevIter = iter -1
+            prevIterDir = self._iterWorkingDir(prevIter)
+            iterDir = self._iterWorkingDir(iter)
+            file1 = join(prevIterDir, 'particles_iter_%03d.par' % prevIter)
+            
+            for block in range(1, numberOfBlocks + 1):
+                f1 = open(file1)
+                file2 = join(iterDir, 'particles_%02d_' % block + 'iter_%03d.par' % prevIter)
+                f2 = open(file2, 'w+')
+                initpart, finalPart = self._particlesInBlock(block)
+                
+                for l in f1:
+                    
+                    if l.startswith('C'):
+                        f2.write(l)
+                    else:
+                        split = l.split()
+                        numPart = int(''.join(split[:1]))
+                        
+                        if numPart <= finalPart:
+                            f2.write(l)
+                        else:
+                            break
+                f2.close()
+                f1.close()
+
+    
     def createOutput(self):
         
         lastIter = self.numberOfIterations.get()
