@@ -52,6 +52,13 @@ class ProtProjMatch(XmippProtocol):
         self.CTFDatName = self.DocFileName = ''
         
         #FIXME ROB
+        #create a new self file without disabled images
+        #this is easiest than make sure that all the programs 
+        #support the disabled label
+        #linkAcquisitionInfo(log, InputFile, self.TmpDir)
+        self.tmpSelfFileName = join(self.TmpDir,'inMetadataFile.xmd')
+        self.SelFileNameInitial = self.SelFileName
+        self.SelFileName        = self.tmpSelfFileName
         if self.DoCtfCorrection:
             if self.SplitDefocusDocFile:
                 self.CTFDatName = self.SplitDefocusDocFile
@@ -404,25 +411,18 @@ data_noname
                     for id in mdReferences:
                         convert_refno_to_stack_position[mdReferences.getValue(MDL_NEIGHBOR,id)]=id
                     file_nameAverages   = self.getFilename('OutClassesXmd', iter=it, ref=ref3d)
+                    file_references = self.getFilename('ProjectLibraryStk', iter=it, ref=ref3d)
                     if xmippExists(file_nameAverages):
                         #print "OutClassesXmd", OutClassesXmd
                         MDin.read(file_nameAverages)
                         MDout.clear()
                         for i in MDin:
-                            id1=MDout.addObject()
-                            MDout.setValue(MDL_IMAGE,     MDin.getValue(MDL_IMAGE,i),id1)
-                            #MDout.setValue(MDL_SHIFT_X, MDin.getValue(MDL_SHIFT_X,i),id1)
-                            #MDout.setValue(MDL_SHIFT_Y, MDin.getValue(MDL_SHIFT_Y,i),id1)
-                            #MDout.setValue(MDL_SHIFT_Z, MDin.getValue(MDL_SHIFT_Z,i),id1)
                             ref2D = MDin.getValue(MDL_REF,i)
-                            file_references = self.getFilename('ProjectLibraryStk', iter=it, ref=ref3d)
                             file_reference=FileName()
                             file_reference.compose(convert_refno_to_stack_position[ref2D],file_references)
-                            id2=MDout.addObject()
-                            MDout.setValue(MDL_IMAGE,file_reference,id2)
-                            #MDout.setValue(MDL_SHIFT_X,   0.,id1)
-                            #MDout.setValue(MDL_SHIFT_Y,   0.,id1)
-                            #MDout.setValue(MDL_SHIFT_Z,   0.,id1)
+                            id1=MDout.addObject()
+                            MDout.setValue(MDL_IMAGE,     MDin.getValue(MDL_IMAGE,i),id1)
+                            MDout.setValue(MDL_IMAGE2,file_reference,id1)
                         if MDout.size()==0:
                             print "Empty metadata: ", file_name
                         else:
@@ -430,7 +430,9 @@ data_noname
                                 file_nameReferences = self.getFilename('ProjectLibrarySampling', iter=it, ref=ref3d)
                                 sfn   = createUniqueFileName(file_nameReferences)
                                 file_nameReferences = 'projectionDirections@'+sfn
+                                MDout.merge(MDin)
                                 MDout.write( sfn )
+                                runShowJExtraParameters = ' --dont_wrap --mode metadata --render first'
                                 runShowJ(sfn, extraParams = runShowJExtraParameters)
                             except Exception, e:
                                 showError("Error launching java app", str(e), self.master)
@@ -851,10 +853,14 @@ data_noname
 #        _dataBase.insertStep('createAcquisitionData',verifyfiles=[fnOut],samplingRate=self.AngSamplingRateDeg, fnOut=fnOut)
 #        print "createAcquisitionData|| fnOut=",fnOut, " samplingRate=", self.AngSamplingRateDeg
 
+        _dataBase.insertStep('removeDisabled',
+                             verifyfiles = [self.SelFileName],
+                             SelFileNameInitial = self.SelFileNameInitial,
+                             SelFileName =self.SelFileName
+                             )
         _dataBase.insertStep("linkAcquisitionInfo",
-                        InputFile=self.SelFileName,
-                        dirDest=self.WorkingDir)
-        
+                        InputFile=self.SelFileNameInitial,
+                        dirDest=self.TmpDir)
         # Construct special filename list with zero special case
         self.DocFileInputAngles = [self.DocFileWithOriginalAngles] + [self.getFilename('DocfileInputAnglesIters', iter=i) for i in range(1, self.NumberOfIterations + 1)]
         #print 'self.DocFileInputAngles: ', self.DocFileInputAngles
@@ -937,7 +943,7 @@ data_noname
                                       'StackCTFs',
                                       'StackWienerFilters',
                                       'SplitAtDefocus']]
-
+        print 'executeCtfGroups', self.SelFileName
         _dataBase.insertStep('executeCtfGroups', verifyfiles=verifyFiles
                                                , CTFDatName=self.CTFDatName
                                                , CtfGroupDirectory=self.CtfGroupDirectory

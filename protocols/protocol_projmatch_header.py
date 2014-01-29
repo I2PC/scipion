@@ -46,10 +46,10 @@ ReferenceFileNames = ''
 # Number of iterations to perform
 NumberOfIterations = 4
 
-# {expert} Save disc space by cleaning up intermediate files?
+# {expert} Clean intermediate files?
 """ 
-Be careful, many options of the visualization protocol will not work anymore, 
-since all class averages, selfiles etc will be deleted.
+Save disk space by cleaning up intermediate files
+mainly volumes
 """
 CleanUpFiles = True
 
@@ -80,7 +80,7 @@ DoAutoCtfGroup = True
 """
 CtfGroupMaxDiff = 0.1
 
-# Resolution limit (Ang) for CTF-differences in one group
+# Resolution limit (A) for CTF-differences
 """ Maximum resolution where to consider CTF-differences among different groups.
     One should use somewhat higher resolutions than those aimed for in the refinement.
 """
@@ -611,7 +611,7 @@ UseFscForFilter = True
     <Note:> if there are less values than iterations the last value is reused
     <Note:> if there are more values than iterations the extra value are ignored
 """
-ConstantToAddToFiltration ='0.1'
+ConstantToAddToFiltration ='0.05'
 
 # Constant to be added to the reconstruction maximum frequency
 """ The meaning of this field depends on the UseFscForFilter flag.
