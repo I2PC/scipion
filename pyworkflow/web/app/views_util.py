@@ -130,6 +130,7 @@ def loadProtocolProject(request, requestType='POST'):
     requestDict = getattr(request, requestType)
     projectName = request.session['projectName']
     protId = requestDict.get("protocolId")
+    print protId
     protClass = requestDict.get("protocolClass")
     
     # Load the project
@@ -155,23 +156,27 @@ def browse_objects(request):
         filterObject = FilterObject(objFilterParam)
         
         project = loadProject(projectName)    
-        
-        objs = []
+
+        objs = {}
         for objClass in objClassList.split(","):
-            for obj in project.mapper.selectByClass(objClass, objectFilter=filterObject.objFilter, iterate=True):
-                objs.append(obj.getNameId())
-        jsonStr = json.dumps({'objects' : objs},
-                             ensure_ascii=False)
+            for obj in project.mapper.selectByClass(objClass, 
+                                                    objectFilter=filterObject.objFilter, 
+                                                    iterate=True):
+                objs[obj.getObjId()]=obj.getNameId()
+#                objs.append(obj.getNameId())
+                
+        jsonStr = json.dumps(objs, ensure_ascii=False)
         return HttpResponse(jsonStr, mimetype='application/javascript')
 
 class FilterObject():
     def __init__(self, condition):
         self.condition = None if condition == 'None' else condition
+        
     def objFilter(self, obj):
         result = True
         if self.condition:
             result = obj.evalCondition(self.condition)
-        return result     
+        return result
 
 def browse_protocol_class(request):
     if request.is_ajax():
@@ -181,6 +186,48 @@ def browse_protocol_class(request):
         
         jsonStr = json.dumps({'objects' : objs},ensure_ascii=False)
         return HttpResponse(jsonStr, mimetype='application/javascript')
+
+def get_attributes(request):
+    if request.is_ajax():
+        projectName = request.session['projectName']
+        project = loadProject(projectName)
+        objId = request.GET.get('objId', None)
+        obj = project.mapper.selectById(int(objId)).get()
+        res = obj.getObjLabel() + "_-_" + obj.getObjComment()
+        return HttpResponse(res, mimetype='application/javascript')
+    
+def set_attributes(request):
+    if request.is_ajax():
+        id = request.GET.get('id', None)
+        label = request.GET.get('label', None)
+        comment = request.GET.get('comment', None)
+        typeObj = request.GET.get('typeObj', None)
+
+        projectName = request.session['projectName']
+        project = loadProject(projectName)
+        
+        if id=='new':
+            className = request.GET.get('className', None)
+            obj = emProtocolsDict.get(className, None)()
+        else:
+            if typeObj=='object':
+                obj = project.mapper.selectById(int(id)).get()
+            elif typeObj=='protocol':
+                obj = project.mapper.selectById(int(id))
+        
+        obj.setObjLabel(label)
+        obj.setObjComment(comment)
+        
+        if typeObj=='object':
+            project._storeProtocol(obj)
+        elif typeObj=='protocol':
+            project.saveProtocol(obj)
+
+    return_id = "reload"
+    if typeObj=='protocol':
+        return_id = obj.getObjId()
+        
+    return HttpResponse(return_id, mimetype='application/javascript')
 
 def getSizePlotter(plots):
     figsize = (800, 600)
@@ -445,11 +492,13 @@ def parseText(text, func=replacePattern):
         for itemText in text:
             splitLines=itemText.splitlines(True)
             if len(splitLines) == 0:
-                parsedText += '<br>'
+                parsedText += '<br />'
             else:    
                 for lineText in splitLines:
-                    parsedText += parseHyperText(lineText, func)+'<br>'
+                    parsedText += parseHyperText(lineText, func)+'<br />'
     else:
-        parsedText = parseHyperText(text, func)
-    
-    return parsedText    
+        splitLines=text.splitlines(True)
+        for lineText in splitLines:
+            parsedText += parseHyperText(lineText, func)+'<br />'
+#        parsedText = parseHyperText(text, func)
+    return parsedText[:-6]    

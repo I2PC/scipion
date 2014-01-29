@@ -69,11 +69,23 @@
  * 	->	Creates a messi popup with a title and message passed by arguments.
  * 		It is used to show any error message
  * 
+ * function editObjParam(id, title_label, value_label, title_comment, 
+ * 			value_comment, msg_comment, typeObj)
+ *  ->	Launch a messi popup with an input and textarea to edit the label and comment
+ * 		for an object.
+ * 
+ * function updateLabelComment()
+ * 	->	Method to store the label and comment for an object.
+ * 
  * function isNaturalNumber(n)
  *  ->  Check if n is natural and returns true or false
  ******************************************************************************/
 
 /** METHODS ******************************************************************/
+
+function startsWith(str, pattern){
+	return str.lastIndexOf(pattern, 0) === 0
+}
 
 function popup(URL) {
 	/*
@@ -152,7 +164,9 @@ function popUpJSON(json){
 
 function showPlot(url){
 	/*
-	 * Function to show a xplotter(PNG) in a adjusted popup.
+	 * Function to show a xplotter(PNG) in a function br2nl(str) {
+    return str.replace(/<br\s*\/?>/mg,"\n");
+}adjusted popup.
 	 */
 	width = getUrlParameters("width", url, true)
 	height = getUrlParameters("height", url, true)
@@ -280,4 +294,106 @@ function isNaturalNumber(n) {
         n2 = parseInt(n, 10);
     
     return !isNaN(n1) && n2 === n1 && n1.toString() === n && n2>0;
+}
+
+function blnkspcs(str){
+	return str.replace(/\s/gi, "X")
+}
+
+function breakLine(str){
+	return str.replace(/\\n/g, "Y");
+}
+
+
+function br2nl(str) {
+    return str.replace(/<br\s*\/?>/mg,"\n");
+}
+
+function editObjParam(id, title_label, value_label, 
+                      title_comment, value_comment,
+                      msg_comment, typeObj) {
+	/*
+	 * Launch a messi popup with an input and textarea to edit the label and comment
+	 * for an object.
+	 */
+
+	if(value_comment == ""){
+		value_comment = msg_comment;
+	}
+	
+//	alert(value_comment)
+
+	var html = "<table id='params' data-type='"+ typeObj +"'value='"+ id +"'>" + 
+		 	"<tr>" +
+		 	"<td>" +"<h3>"+ title_label +"</h3>" +"</td>" +
+		 	"<td>" + "<input id='label_new' value='"+ value_label+"'>" + "</td>" +
+			"</tr>"+
+			"<tr>" +
+		 	"<td>" +"<h3>" + title_comment +"</h3>" +"</td>" +
+		 	"<td>" + "</h3><textarea id='comment_new'>"+ value_comment + "</textarea>" + "</td>" +
+			"</tr>"+
+			"</table>"
+	
+	// &#013;&#010;
+	
+	new Messi(html, {
+		title : 'Object Editor',
+		modal : true,
+		buttons : [ {
+			id : 0,
+			label : 'Select',
+			val : 'Y',
+			btnClass : 'fa-check',
+			btnFunc : "updateLabelComment"
+			}, {
+			id : 1,
+			label : 'Cancel',
+			val : 'C',
+			btnClass : 'fa-ban'
+		}]
+	});
+}
+
+function updateLabelComment(){
+	/*
+	 * Method to store the label and comment for an object.
+	 */
+	var elm_table = $("table#params")
+	var id = elm_table.attr('value')
+	var typeObj = elm_table.attr('data-type')
+	var value_label = $("input#label_new").val()
+	
+	var comment= $("textarea#comment_new").val()
+	
+	var value_comment = blnkspcs(comment)
+	
+	url_param = "/set_attributes/?" +
+		"id=" + id + 
+		"&label=" + value_label + 
+		"&comment=" + value_comment +
+		"&typeObj=" + typeObj
+		
+	if (id == 'new'){
+		var className = $("input#protocolClass").val()
+		url_param += "&className=" + className
+	}
+		
+	$.ajax({
+		type : "GET",
+		url : url_param,
+		dataType: "text",
+		success : function(txt) {
+			if(txt=='reload'){
+				window.location.reload()
+			} else {
+				infoPopup('Success', 
+					"The protocol was saved successfuly",
+					1,
+					'window.opener.popup(\'/form/?protocolId='+txt+'\')');
+			}
+		},
+		error: function(){
+			alert("Fallo")
+		}
+	});
 }

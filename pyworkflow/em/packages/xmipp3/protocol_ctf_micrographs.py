@@ -39,7 +39,7 @@ from convert import *
 class XmippProtCTFMicrographs(ProtCTFMicrographs):
     """Protocol to perform CTF estimation on a set of micrographs in the project"""
     _label = 'ctf estimation'
-    
+    _references = ['[[http://www.ncbi.nlm.nih.gov/pubmed/23261401][FASTDEF: Vargas.J. JSB (2013)]]']    
     __prefix = join('%(micDir)s','xmipp_ctf')
     _templateDict = {
         # This templates are relative to a micDir
@@ -114,7 +114,7 @@ class XmippProtCTFMicrographs(ProtCTFMicrographs):
             #2 different mappers: change this
             ctfModel2 = readCTFModel(ctfparam)
             ctfModel2.micFile.set(mic.getFileName())
-            ctfModel2.setId(mic.getId())
+            ctfModel2.setObjId(mic.getObjId())
             ctfSet.append(ctfModel2)
  
         #Copy attributes from input to output micrographs
@@ -141,7 +141,7 @@ class XmippProtCTFMicrographs(ProtCTFMicrographs):
 
         #self._defineOutputs(outputMicrographs=micSet)
         self._defineOutputs(outputCTF=ctfSet)
-        #self._defineDataSource(self.inputMics, micSet)
+        #self._defineSourceRelation(self.inputMics, micSet)
         self._defineRelation(RELATION_CTF, ctfSet, self.inputMics)
         #TODO: Remove when output setOfmics dissapear
         #self._defineRelation(RELATION_CTF, ctfSet, micSet)

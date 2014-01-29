@@ -40,6 +40,11 @@ from django.http import HttpResponse
 SPECIAL_PARAMS = ['numberOfMpi', 'numberOfThreads', 'hostName', 'expertLevel', '_useQueue']
 OBJ_PARAMS =['runName', 'comment']
 
+def getPointerHtml(protVar):
+    if protVar.hasValue():
+        return protVar.get().getNameId(), protVar.get().getObjId()
+    return '',''
+            
 def form(request):
     project, protocol = loadProtocolProject(request, requestType='GET')
     action = request.GET.get('action', None)
@@ -65,17 +70,24 @@ def form(request):
             
     wizards = findWizards(protocol, WEB_DJANGO)
     
+    protocol.htmlCitations = parseText(protocol.citations())
+    
     for section in protocol._definition.iterSections():
         for paramName, param in section.iterParams():
             protVar = getattr(protocol, paramName, None)
             if protVar is None:
                 raise Exception("_fillSection: param '%s' not found in protocol" % paramName)
                 # Create the label
-            if protVar.isPointer():
-                if protVar.hasValue():
-                    param.htmlValue = protVar.get().getNameId()
-                else:
-                    param.htmlValue = ""
+            
+            if isinstance(param, MultiPointerParam):
+                for pointer in protVar:
+                    htmlValue, _ = getPointerHtml(pointer)
+                    param.htmlValue += htmlValue + ";"
+#                    param.htmlIdValue += protVar.get().getObjId() +";"
+            elif isinstance(param, PointerParam):
+                param.htmlValue, param.htmlIdValue = getPointerHtml(protVar)
+#                print "param.htmlValue",param.htmlValue 
+
             else:
                 param.htmlValue = protVar.get(param.default.get(""))
                 if isinstance(protVar, Boolean):
@@ -120,7 +132,8 @@ def form(request):
                'jquery_ui_css': getResourceCss('jquery_ui'),
                'wizard': getResourceIcon('wizard'),
                'protocol_form_utils': getResourceJs('protocol_form_utils'),
-               'hosts':hosts
+               'hosts':hosts,
+               'comment': parseText(protocol.getObjComment())
                }
     # Update the context dictionary with the special params
     for paramName in SPECIAL_PARAMS:
@@ -143,6 +156,7 @@ def protocol(request):
         # No errors, launch the protocol
         try:
             project.launchProtocol(protocol)
+            
         except Exception, ex:
             errors = [convertTktoHtml(str(ex))]
             
@@ -166,6 +180,23 @@ def updateProtocolParams(request, protocol, project):
     protocol.setObjLabel(request.POST.get('runName'))
     protocol.setObjComment(request.POST.get('comment'))
 
+def getPointerValue(project, attr, value, paramName):
+    if len(value.strip()) > 0:
+
+#        objId = int(value.split('.')[-1])  # Get the id string for last part after
+#        objId = attr.get().strId()
+        
+        obj = project.mapper.selectById(value)  # Get the object from its id
+        id1 = attr.getObjId()
+        id2 = obj.getObjId()
+        
+        if id1 == id2 :
+            raise Exception("Param: %s is autoreferencing with id: %d" % (paramName, value))
+    else:
+        obj = None
+        
+    return obj
+ 
 def updateParam(request, project, protocol, paramName):
     """
     Params:
@@ -176,17 +207,22 @@ def updateParam(request, project, protocol, paramName):
             from the web form
     """
     attr = getattr(protocol, paramName)
-    value = request.POST.get(paramName)
-    if attr.isPointer():
-        if len(value.strip()) > 0:
-            objId = int(value.split('.')[-1])  # Get the id string for last part after .
-            value = project.mapper.selectById(objId)  # Get the object from its id
-            if attr.getObjId() == value.getObjId():
-                raise Exception("Param: %s is autoreferencing with id: %d" % (paramName, objId))
-        else:
-            value = None
-    attr.set(value)
+        
+    if isinstance(attr, PointerList):
+        valueList = request.POST.getlist(paramName)
+        for v in valueList:
+            attr.append(Pointer(value=getPointerValue(project, attr, v, paramName)))
+        value = None
+            
+    else:
+        value = request.POST.get(paramName)
+#        print paramName
+#        print value
+        if isinstance(attr, Pointer):
+            value = getPointerValue(project, attr, value, paramName)
+            
 #    print "setting attr %s with value:" % paramName, value 
+    attr.set(value)
         
 def save_protocol(request):
     project, protocol = loadProtocolProject(request)

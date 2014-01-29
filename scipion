@@ -29,6 +29,7 @@ This module is responsible for launching protocol executions.
 """
 import sys
 import os
+import __builtin__
 
 def findHome():
     """ Find Scipion home from the __file__ location. """
@@ -51,6 +52,7 @@ XMIPP_LIB = os.path.join(XMIPP_HOME, 'lib')
 
 SCIPION_HOME = os.environ.get('SCIPION_HOME', os.path.join(os.environ['HOME'], 'Scipion'))
 SCIPION_PYTHON = os.path.join(XMIPP_BIN, 'xmipp_python')
+
 os.environ['SCIPION_HOME'] = SCIPION_HOME
 os.environ['SCIPION_PYTHON'] = SCIPION_PYTHON
 
@@ -59,6 +61,9 @@ VARS = {
         'PATH': os.pathsep.join([PW_APPS, os.environ['PATH'], XMIPP_BIN]),
         'LD_LIBRARY_PATH': os.pathsep.join([XMIPP_LIB, os.environ.get('LD_LIBRARY_PATH', '')]),
         }
+
+
+
 
 def runApp(app, args=''):
     cmd = PW_APPS_TEMP % app + ' ' + args
@@ -71,6 +76,8 @@ def runCmd(cmd):
     result = os.system(cmd)
     sys.exit(result)
 
+
+
 MODE_MANAGER = 'manager'
 MODE_PROJECT = 'project'
 MODE_WEBSERVER = 'webserver'
@@ -79,6 +86,7 @@ MODE_TESTS_DATA = 'testdata'
 MODE_HELP = 'help'
 MODE_DBBROWSE = 'browser'
 MODE_VIEWER = 'viewer'
+MODE_INSTALL = 'install'
 
 
 if __name__ == '__main__':
@@ -136,6 +144,10 @@ if __name__ == '__main__':
                 viewerArgs = ' '.join(sys.argv[2:])
                 runApp('pw_viewer.py', args=viewerArgs)  
              
+                
+        elif mode == MODE_INSTALL:
+            runCmd('install.py')
+            
                 
     # If reach this point, bad arguments passed
     print """

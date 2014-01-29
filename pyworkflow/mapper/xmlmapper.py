@@ -121,7 +121,7 @@ class XmlMapper(Mapper):
             key = '%s_%06d' % (obj.getClassName(), self.objCount)
         objDict[key] = obj
         
-    def selectAll(self):
+    def selectAll(self, iterate=False):
         """Select object from storage"""
         for child in self.root:
             obj = self._buildObject(child.tag)
@@ -163,6 +163,7 @@ class XmlMapper(Mapper):
                 childClass = child.tag
             else:
                 tagKey = '%s.%s' % (obj.getClassName(), child.tag)
+                
                 tag = self.classTags.get(tagKey, None)
                 if tag == 'name_only' or not child.tag in self.dictClasses:
                     childName = child.tag

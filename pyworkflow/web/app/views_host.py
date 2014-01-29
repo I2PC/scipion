@@ -46,7 +46,7 @@ def viewHosts(request):
 #         project = loadProject(projectName)
 #         hostsMapper = HostMapper(project.settingsPath)
 #         HostConfig = hostsMapper.selectByLabel(hostLabel)
-#         jsonStr = json.dumps({'host':HostConfig.getDictionary()})
+#         jsonStr = json.dumps({'host':HostConfig.getObjDict()})
 #         return HttpResponse(jsonStr, mimetype='application/javascript')
 
 

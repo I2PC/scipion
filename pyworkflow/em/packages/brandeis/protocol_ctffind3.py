@@ -37,6 +37,7 @@ class ProtCTFFind(ProtCTFMicrographs):
     """Protocol to perform CTF estimation on a set of micrographs
     using the ctffind3 program"""
     _label = 'ctffind3'
+    _references = ['[[http://www.ncbi.nlm.nih.gov/pubmed/12781660][Mindell JA & Grigorieff N., J Struct Biol. (2003)]]']
 
     def _prepareCommand(self):
         self._params['step_focus'] = 1000.0
@@ -123,7 +124,7 @@ class ProtCTFFind(ProtCTFMicrographs):
         
         #self._defineOutputs(outputMicrographs=micSet)
         self._defineOutputs(outputCTF=ctfSet)
-        #self._defineDataSource(self.inputMics, micSet)
+        #self._defineSourceRelation(self.inputMics, micSet)
         self._defineRelation(RELATION_CTF, ctfSet, self.inputMics)
 
     def _validate(self):

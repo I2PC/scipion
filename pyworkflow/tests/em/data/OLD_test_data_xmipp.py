@@ -96,7 +96,7 @@ class TestXmippSetOfMicrographs(unittest.TestCase):
         for mic in setMics:
             xmic = XmippMicrograph(mic.getFileName())
             xmippSet.append(xmic)
-            mapsId[mic.getId()] = xmic.getId()
+            mapsId[mic.getObjId()] = xmic.getObjId()
             
         xmippSet.copyInfo(setMics)
         
@@ -113,9 +113,9 @@ class TestXmippSetOfMicrographs(unittest.TestCase):
         
         for fn, mic in zip(self.mics, setMics):            
             self.assertEqual(fn, mic.getFileName(), "micrograph name in the set is wrong")
-            self.assertEqual(idCount, mic.getId(), "micrograph id in the set is wrong")
+            self.assertEqual(idCount, mic.getObjId(), "micrograph id in the set is wrong")
             mic2 = setMics[idCount] # Test getitem
-            self.assertTrue(((mic.getFileName() == mic2.getFileName()) and (mic.getId() == mic2.getId())), "micrograph got from id is wrong")
+            self.assertTrue(((mic.getFileName() == mic2.getFileName()) and (mic.getObjId() == mic2.getObjId())), "micrograph got from id is wrong")
             idCount += 1     
         
         

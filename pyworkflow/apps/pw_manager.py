@@ -137,43 +137,7 @@ class ManagerWindow(gui.WindowBase):
         self.manager = Manager()
         
         self.switchView(gui.VIEW_PROJECTS)
-        
-#        parent = self.root
-
-        
-#        self.createMainMenu(menuConfig)
-        
-#        f = tk.Frame(parent, bg='white')
-#        f.columnconfigure(0, minsize=200)
-#        f.columnconfigure(1, minsize=400)
-#        f.rowconfigure(1, minsize=250)
-        
-        
-        # Add logo
-#        logo = self.getImage('scipion_logo.gif', percent=50)
-#        label = tk.Label(f, image=logo, borderwidth=0)
-#        label.grid(row=0, column=0, sticky='nw', pady=5, padx=5)
-        # Add create project button
-        #font = tkFont.Font(size=12, family='helvetica')#, weight='bold')
-       
-        
-        
-#        btn = Button(f, text='Create Project', command=self.createNewProject)
-#        btn.grid(row=1, column=0, sticky='new', padx=10, pady=10)
-
-#        lf = ttk.Labelframe(f, text='Current Projects')
-#        lf.grid(row=0, column=1, sticky='news', padx=10, pady=10, rowspan=2)
-#        text = TaggedText(lf, width=40, height=15, bd=0)
-#        text.grid(row=0, column=0, sticky='news')
-#        gui.configureWeigths(lf)
-#        
-#        self.createProjectList(text)
-#        text.setReadOnly(True)
-#        self.text = text
-#        f.rowconfigure(0, weight=1)
-#        f.rowconfigure(1, weight=1)
-#        f.columnconfigure(1, weight=1)
-#        f.grid(row=0, column=0, sticky='news')  
+         
 
     def createProjectsView(self, parent):
         """ Create the Projects View.
@@ -252,7 +216,7 @@ class ProjectsView(tk.Frame):
           
     def deleteProject(self, projName):
         if askYesNo(Message.TITLE_DELETE_PROJECT, 
-                     Message.MESSAGE_CREATE_PROJECT_1 + "*%s*" % projName + Message.MESSAGE_CREATE_PROJECT_2 , self.root):
+                     "Project *%s*" % projName + Message.MESSAGE_CREATE_PROJECT , self.root):
             self.manager.deleteProject(projName)
             self.createProjectList(self.text)
           

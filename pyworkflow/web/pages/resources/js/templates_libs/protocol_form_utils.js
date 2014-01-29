@@ -47,6 +47,9 @@
  * 	->	Function to evaluate the elements in a form, depending the type of the
  * 		param, it is evaluated in a diferent way.
  * 
+ * function onChangeParam(value, paramId)
+ * 	->	Update the parameter for an element.
+ * 
  * function onChangeEnumParamCombo(elemId, paramId)
  * 	->	Update the parameter for an element type ENUM_PARAM_COMBO.
  * 
@@ -83,13 +86,6 @@
  * 	->	Function to update a protocol serialize param inside the workflow.
  * 		The serializes values are storaged inside the input respectively.
  * 
- * function showComment(txt)
- * 	->	Launch a messi popup with a text area used in the protocol forms when the 
- * 		user want to describe the specific run with more details.
- * 
- * function putComment()
- * 	->	Method to store the comment for the protocol run.
- * 
  * function getTableFormatted(node, list, id, previsualize)
  * 	->	This function return an html table with the elements available after use, 
  * 		the function browse_object.
@@ -122,8 +118,10 @@ $(document).ready(function() {
 		if (mode == 'execute') {
 			/* Execute the protocol */
 			var action = $("#protocolForm").attr("action");
+			
+			var serialize_form = fixInput($("#protocolForm").serialize());
 
-			$.post(action, $("#protocolForm").serialize(), function(json) {
+			$.post(action, serialize_form, function(json) {
 				if (json.errors.length > 0) {
 					// Show errors in the validation
 					errorPopup('Errors found',json.errors);
@@ -135,8 +133,10 @@ $(document).ready(function() {
 		} else if (mode == 'save') {
 			/* Save the protocol */
 			var action = "/save_protocol/";
-
-			$.post(action, $("#protocolForm").serialize(), function(json) {
+			
+			var serialize_form = fixInput($("#protocolForm").serialize());
+			
+			$.post(action, serialize_form, function(json) {
 				if (json.errors != undefined) {
 					// Show errors in the process to save
 					errorPopup('Errors found',json.errors);
@@ -157,7 +157,9 @@ $(document).ready(function() {
 			var action = "/wizard/";
 			var type_wiz = $("#wizName").attr("value");
 			
-			$.post(action, $("#protocolForm").serialize(), function(html) {
+			var serialize_form = fixInput($("#protocolForm").serialize());
+			
+			$.post(action, serialize_form, function(html) {
 				
 				$('.messi').remove();
 				$('.messi-modal').remove();
@@ -185,7 +187,9 @@ $(document).ready(function() {
 			/* Launch the viewers with the options chosen */
 			var action = "/"+ mode +"/";
 
-			$.post(action, $("#protocolForm").serialize(), function(json) {
+			var serialize_form = fixInput($("#protocolForm").serialize());
+
+			$.post(action, serialize_form, function(json) {
 				$('.messi').remove();
 				$('.messi-modal').remove();				
 				popUpJSON(json);
@@ -195,6 +199,20 @@ $(document).ready(function() {
 		return false;
 	});
 });
+
+function fixInput(serialize_form){
+	var attrs = serialize_form.split("&");
+
+	$.each(attrs, function(param, paramName) {
+		if(startsWith(paramName,"input")){
+			var aux = paramName.split("=");
+			var objId = $("#"+aux[0]+"_input").attr("data-objId");
+			serialize_form = serialize_form.replace(paramName , aux[0]+"="+objId)
+		}
+	});
+	return serialize_form
+}
+
 
 function evalElements() {
 	/*
@@ -225,11 +243,20 @@ function evalElements() {
 			}
 		} else {
 //			alert("before:"+value);
-//			onChangeParam(value, param);
-			setParamValue(param, value);
+			onChangeParam(value, param);
 		}
 	});
 }
+
+function onChangeParam(value, paramId) {
+	/* 
+	 * Update the parameter for an element.
+	 */
+	
+//	alert(paramId + "-"+value);
+	setParamValue(paramId, value);
+}
+	
 
 function onChangeEnumParamCombo(elemId, paramId) {
 	/*
@@ -354,14 +381,14 @@ function normalizeConditions(cond){
 	return cond;
 }
 
-function browseObjects(param, projName, type_param, value_param, pointerCondition) {
+function browseObjects(param, projName, type_param, value_param, pointerCondition, maxNumObjects) {
 	/*
 	 * Browse object in the database. 
 	 * Params: objClass: the class to get instances from (also subclasses)
 	 * protClassName: class refered to a protocol
 	 */
 	
-	url_param = "/browse_objects/?projectName=" + projName + "&objClass=" + value_param + "&objFilter=" + pointerCondition
+	var url_param = "/browse_objects/?projectName=" + projName + "&objClass=" + value_param + "&objFilter=" + pointerCondition
 	if (type_param == 'protClassName'){
 		url_param = "/browse_protocol_class/?projectName=" + projName + "&protClassName=" + value_param
 	}
@@ -373,8 +400,12 @@ function browseObjects(param, projName, type_param, value_param, pointerConditio
 		success : function(json) {
 			// specifying a dataType of json makes jQuery pre-eval the response
 			// for us
-			var res = getTableFormatted(param, json.objects, value_param, 1);
-			selectDialog(param, res, "processSelectionTable");
+			var res = getTableFormatted(param, json, value_param, 1);
+			var selectionFunc = "processSelectionTable"
+			if (maxNumObjects == 0 || maxNumObjects >1){
+				selectionFunc = "processMultipleSelectionTable"
+			}
+			selectDialog(param, res, selectionFunc);
 		}
 	});
 }
@@ -421,44 +452,6 @@ function setParamProt(paramProt, params){
 	$("#"+paramProt+"_input").attr("data-prot", params)
 }
 
-function showComment(txt) {
-	/*
-	 * Launch a messi popup with a text area used in the protocol forms when the 
-	 * user want to describe the specific run with more details.
-	 */
-	var msg = $("input#comment").attr("value");
-	
-	if(msg == ""){
-		msg = txt;
-	}
-	
-	var msg ="<textarea id='description'>"+ msg +"</textarea>";
-	
-	new Messi(msg, {
-		title : 'Comment',
-		modal : true,
-		buttons : [ {
-			id : 0,
-			label : 'Select',
-			val : 'Y',
-			btnClass : 'fa-check',
-			btnFunc : 'putComment'
-			}, {
-			id : 1,
-			label : 'Cancel',
-			val : 'C',
-			btnClass : 'fa-ban'
-		}]
-	});
-}
-
-function putComment(){
-	/*
-	 * Method to store the comment for the protocol run.
-	 */
-	$("input#comment").attr("value",$("textarea#description").val());
-}
-
 //function getListFormatted(node, list, id) {
 //	var res = "<div class='content' style='overflow:auto' data-node='" + node
 //			+ "'>";
@@ -470,7 +463,7 @@ function putComment(){
 //	return res;
 //}
 
-function getTableFormatted(node, list, id, previsualize) {
+function getTableFormatted(node, json, id, previsualize) {
 	/*
 	 * This function return an html table with the elements available after use, 
 	 * the function browse_object.
@@ -479,18 +472,23 @@ function getTableFormatted(node, list, id, previsualize) {
 			+ "'>";
 	
 	var func = "";
-	var first = "<a class='iconEye' href='javascript:";
+	var first = "<a class='fa fa-eye' href='javascript:";
 	var second = "'></a>";
-	for(var x = 0; x < list.length; x++) {
+	
+	var x = 0;
+	$.each(json, function(key, value) {
+		// key is the param ObjId for the object
+		// value is the name of the object
 		if(previsualize){
-			var splited = list[x].split(".");
-			var objId = splited[2];
-			var func = "&nbsp&nbsp&nbsp" + first + 'customPopup("/visualize_object/?objectId="+'+ objId +',1024,600)' + second;
+			var func = "&nbsp&nbsp&nbsp" + first + 'customPopup("/visualize_object/?objectId='+ key +'",1024,600)' + second;
 		}
-		res += "<tr><td id='" + id + x + "' name='" + id + "' value='"
-				+ list[x] + "' onclick=javascript:selTableMessi($(this)); >" 
-				+ list[x] + func +"</td></tr>";
-	}
+				
+		res += "<tr><td id='" + id + x + "' class='" + key + "' value='"
+				+ value + "' onclick=javascript:selTableMessi($(this)); >" 
+				+ value + func +"</td></tr>";
+		x++;
+	});
+	
 	res = res + "</table>";
 	return res;
 }
@@ -527,15 +525,50 @@ function selectDialog(objClass, msg, funcName) {
 //	jQuery('input#' + elm.attr('data-node') + '_input').val(elm.attr('value'));
 //}
 
+function getSelectedValue(elm){
+	var res = []
+	           
+	var selected = $("td#" + elm.attr('value'));
+	res[0] = selected.attr('value')
+	res[1] = selected.attr('class');
+	
+	return res;
+}
+
 function processSelectionTable(elm) {
 	/*
 	 * After select an element showed with the function selectDialog with the 
 	 * table generated by the function getTableFormatted, this selection is 
 	 * storaged with this method.
 	 */
-	var selected = elm.attr('value');
-	var value = $("td#" + selected).attr('value');
-	jQuery('input#' + elm.attr('data-node') + '_input').val(value);
+	var value = getSelectedValue(elm);
+//	$('input#' + elm.attr('data-node') + '_input').val(value[0]);
+	$('input#' + elm.attr('data-node') + '_input').attr('value', value[0]); 
+	$('input#' + elm.attr('data-node') + '_input').attr('data-objId', value[1]); 
+}
+
+function processMultipleSelectionTable(elm) {
+	/*
+	 * After select an element showed with the function selectDialog with the 
+	 * table generated by the function getTableFormatted, this selection is 
+	 * storaged with this method.
+	 */
+	var value = getSelectedValue(elm)[0];
+	var exists = false;
+	$('#'+elm.attr('data-node') + '_input option').each(function(){
+		if (this.value == value){
+			exists = true;
+			return false;
+		}
+	});
+	
+	if (exists){
+		window.alert("chiquillo eso esta insertado")
+	}
+	else{
+		$('#'+elm.attr('data-node') + '_input').append('<option value='+value+'>'+value+'</option>')
+	}	
+	
 }
 
 function selTableMessi(elm) {

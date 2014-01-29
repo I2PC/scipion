@@ -73,7 +73,6 @@ function deleteProjectForm(projName, title, dialog) {
 //	var title = 'Confirm project deletion'
 	var msg = "<td class='content' value='"	+ projName +"'>"
 			+ "Project " + projName
-			+ ", "
 			+ dialog 
 			+ "</td>";
 			

@@ -52,6 +52,9 @@ class Object(object):
     def getClass(self):
         return type(self)
     
+    def getDoc(self):
+        return self.__doc__
+    
     def hasAttribute(self, attrName):
         return hasattr(self, attrName)
     
@@ -70,9 +73,15 @@ class Object(object):
     
     def setAttributeValue(self, attrName, value):
         """ Set the attribute value given its name.
-        Equivalent to setattr(self, name).get() 
+        Equivalent to setattr(self, name).set(value) 
+        If the attrName contains dot: x.y
+        it will be equivalent to getattr(getattr(self, 'x'), 'y').set(value)
         """
-        getattr(self, attrName).set(value)
+        attrList = attrName.split('.')
+        obj = self
+        for attrName in attrList:
+            obj = getattr(obj, attrName)
+        obj.set(value)
         
     def getAttributes(self):
         """Return the list of attributes than are
@@ -92,7 +101,7 @@ class Object(object):
         """If this is true, the value field is a pointer 
         to another object"""
         return self._objIsPointer
-    
+        
     def _convertValue(self, value):
         """Convert a value to desired scalar type"""
         return value
@@ -108,6 +117,16 @@ class Object(object):
         """Return internal value"""
         return self._objValue
     
+    def trace(self, callback):
+        """ Add an observer when the set method is called. """
+        self.__set = self.set 
+        self.__setCallback = callback 
+        self.set = self.__setTrace
+        
+    def __setTrace(self, value):
+        self.__set(value)
+        self.__setCallback()
+    
     def getObjValue(self):
         """Return the internal value for storage.
         This is a good place to do some update of the
@@ -121,6 +140,10 @@ class Object(object):
     def setObjId(self, newId):
         """Set the object id"""
         self._objId = newId
+        
+    def copyObjId(self, other):
+        """ Copy the object id form other to self. """
+        self.setObjId(other.getObjId())
         
     def hasObjId(self):
         return not self._objId is None
@@ -167,7 +190,6 @@ class Object(object):
     def getNameId(self):
         """ Return an unique and readable id that identifies this object. """
         label = self.getObjLabel()
-        print label
         if len(label) > 0:
             return label
         elif self.hasObjId():
@@ -215,23 +237,6 @@ class Object(object):
             if not comp:
                 return False
         return True
-    
-    def printAll(self, name=None, level=0):
-        """Print object and all its attributes.
-        Main for debugging"""
-        tab = ' ' * (level*3)
-        idStr = ' (id = %s, pid = %s)' % (self.getObjId(), self._objParentId)
-        if name is None:
-            print tab, self.getClassName(), idStr
-        else:
-            if name == 'submitTemplate': # Skip this because very large value
-                value = '...'
-            else:
-                value = self._objValue
-                
-            print tab, '%s = %s' % (name, value), idStr
-        for k, v in self.getAttributes():
-            v.printAll(k, level + 1)
             
     def copyAttributes(self, other, *attrNames):
         """ Copy attributes in attrNames from other to self. 
@@ -241,17 +246,28 @@ class Object(object):
         for name in attrNames:
             getattr(self, name).set(getattr(other, name).get())
             
-    def getDictionary(self, name=None):
-        """ Get an attributes dictionary from an Object instance
-        Params:
-            name: Attribute name.
-        """
-        resultDictionary = {}        
-        if name is not None:
-            resultDictionary[name] = self._objValue
+    def __getObjDict(self, prefix, objDict, includeClass):
+        if prefix:
+            prefix += '.'
         for k, v in self.getAttributesToStore():
-            resultDictionary.update(v.getDictionary(k)) 
-        return resultDictionary
+            kPrefix = prefix + k
+            if includeClass:
+                objDict[kPrefix] = (v.getClassName(), v.getObjValue())
+            else:
+                objDict[kPrefix] = v.getObjValue()
+            if not isinstance(v, Scalar):
+                v.__getObjDict(kPrefix, objDict, includeClass)
+            
+    def getObjDict(self, includeClass=False):
+        """ Return all attributes and values in a dictionary.
+        Nested attributes will be separated with a dot in the dict key.
+        """
+        from collections import OrderedDict
+        d = OrderedDict()
+        if includeClass:
+            d['self'] = (self.getClassName(),)
+        self.__getObjDict('', d, includeClass)
+        return d
     
     def copy(self, other):
         copyDict = {'internalPointers': []} 
@@ -322,7 +338,30 @@ class Object(object):
             if self.hasAttribute(t):
                 condStr = condStr.replace(t, str(self.getAttributeValue(t)))
         return eval(condStr)
-        
+    
+    def printAll(self, name=None, level=0):
+        """Print object and all its attributes.
+        Mainly for debugging"""
+        tab = ' ' * (level*3)
+        idStr = ' (id = %s, pid = %s)' % (self.getObjId(), self._objParentId)
+        if name is None:
+            print tab, self.getClassName(), idStr
+        else:
+            if name == 'submitTemplate': # Skip this because very large value
+                value = '...'
+            else:
+                value = self._objValue
+                
+            print tab, '%s = %s' % (name, value), idStr
+        for k, v in self.getAttributes():
+            v.printAll(k, level + 1)
+            
+    
+    def printObjDict(self):
+        """Print object dictionary. Main for debugging"""
+        import pprint
+        pp = pprint.PrettyPrinter(indent=4)
+        pp.pprint(self.getObjDict())        
 
 class OrderedObject(Object):
     """This is based on Object, but keep the list
@@ -428,6 +467,10 @@ class Integer(Scalar):
     def _convertValue(self, value):
         return int(value)
     
+    def increment(self):
+        """ Add 1 to the current value. """
+        self._objValue += 1
+    
         
 class String(Scalar):
     """String object"""
@@ -482,8 +525,7 @@ class Pointer(Scalar):
         obtained from .get()"""
         value.setStore(False)
         return value
-    
-    
+
 class List(Object, list):
     ITEM_PREFIX = '__item__'
     
@@ -535,7 +577,10 @@ class List(Object, list):
     
     def clear(self):
         del self[:]
-    
+        
+class PointerList(List):
+    def __init__(self, **args):
+        List.__init__(self, **args)
             
 class CsvList(Scalar, list):
     """This class will store a list of objects
@@ -565,7 +610,7 @@ class CsvList(Scalar, list):
         return list.__str__(self)
      
     def isEmpty(self):
-        return len(self) > 0
+        return len(self) == 0
     
     def clear(self):
         del self[:]

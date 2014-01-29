@@ -1,6 +1,7 @@
 # **************************************************************************
 # *
 # * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
+# *              Jose Gutierrez (jose.gutierrez@cnb.csic.es)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -146,7 +147,7 @@ class SubclassesTreeProvider(TreeProvider):
     def getObjects(self):
         objs = []
         for objClass in self.className.split(","):
-            for obj in self.mapper.selectByClass(objClass, objectFilter=self.objFilter):
+            for obj in self.mapper.selectByClass(objClass.strip(), objectFilter=self.objFilter):
                 objs.append(obj)
         return objs        
 #        return self.mapper.selectByClass(self.className, objectFilter=self.objFilter)
@@ -390,7 +391,7 @@ class ParamWidget():
             btnFunc = self._browseObject
             if t is RelationParam:
                 btnFunc = self._browseRelation
-            self._addButton("Select", 'fa-search.png', btnFunc)
+            self._addButton("Select", Icon.ACTION_SEARCH, btnFunc)
         
         elif t is ProtocolClassParam:
             var = tk.StringVar()
@@ -406,11 +407,11 @@ class ParamWidget():
                 classes = [protClassName]
             
             if len(classes) > 1:
-                self._addButton("Select", 'fa-search.png', self._browseProtocolClass)
+                self._addButton("Select", Icon.ACTION_SEARCH, self._browseProtocolClass)
             else:
                 var.set(classes[0])
             
-            self._addButton("Edit", "fa-pencil.png", self._openProtocolForm)
+            self._addButton("Edit", Icon.ACTION_EDIT, self._openProtocolForm)
             #btn = Button(content, "Edit", command=self._openProtocolForm)
             #btn.grid(row=1, column=0)          
         else:
@@ -420,7 +421,7 @@ class ParamWidget():
                 entryWidth = 10 # Reduce the entry width for numbers entries
             entry = tk.Entry(content, width=entryWidth, textvariable=var)
             entry.grid(row=0, column=0, sticky='w')
-        'fa-times.png'
+
         if self.visualizeCallback is not None:
             self._addButton(Message.LABEL_BUTTON_VIS, Icon.ACTION_VISUZALIZE, self._visualizeVar)    
         if self.paramName in self.window.wizards:
@@ -552,19 +553,29 @@ class FormWindow(Window):
         
         headerFrame = tk.Frame(self.root)
         headerFrame.grid(row=0, column=0, sticky='new')
+        headerFrame.columnconfigure(0, weight=1)
         package = protocol._package
-        t = '  Protocol: %s' % (protocol.getClassName())
+        t = '  Protocol: %s' % (protocol.getClassLabel())
         logoPath = getattr(package, '_logo', None)
         if logoPath:
             headerLabel = tk.Label(headerFrame, text=t, font=self.fontBig, image=self.getImage(logoPath), compound=tk.LEFT)
         else:
             headerLabel = tk.Label(headerFrame, text=t, font=self.fontBig)
-        headerLabel.grid(row=0, column=0, padx=5, pady=5)
+        headerLabel.grid(row=0, column=0, padx=5, pady=(5,0), columnspan=5)
+        
+        def _addButton(text, icon, command, col):
+            btn = tk.Label(headerFrame, text=text, image=self.getImage(icon), 
+                       compound=tk.LEFT, cursor='hand2')
+            btn.bind('<Button-1>', command)
+            btn.grid(row=1, column=col, padx=5, sticky='se')
+        
+        _addButton('Cite', Icon.ACTION_REFERENCES, self._showReferences, 0)
+        _addButton('Help', Icon.ACTION_HELP, self._showHelp, 1)
         
         if protocol.allowHeader:
             commonFrame = self._createHeaderCommons(headerFrame)
-            commonFrame.grid(row=1, column=0, padx=5, pady=5, sticky='news')
-            headerFrame.columnconfigure(0, weight=1)
+            commonFrame.grid(row=2, column=0, padx=5, pady=(0,5), 
+                             sticky='news', columnspan=5)
         
         text = TaggedText(self.root, width=40, height=15, bd=0, cursor='arrow')
         text.grid(row=1, column=0, sticky='news')
@@ -587,6 +598,14 @@ class FormWindow(Window):
         # Resize windows to use more space if needed
         self.desiredDimensions = lambda: self.resize(contentFrame)
         #self.resize(contentFrame)
+        
+    def _showReferences(self, e=None):
+        """ Show the list of references of the protocol. """
+        self.showInfo('\n'.join(self.protocol.citations()), "References")
+        
+    def _showHelp(self, e=None):
+        """ Show the list of references of the protocol. """
+        self.showInfo(self.protocol.getDoc(), "Help")        
         
     def _createButtons(self, btnFrame):
         """ Create the bottom buttons: Close, Save and Execute. """
@@ -651,7 +670,7 @@ class FormWindow(Window):
         runSection = SectionFrame(commonFrame, label=Message.TITLE_RUN)
         runFrame = runSection.contentFrame
         self._createHeaderLabel(runFrame, Message.TITLE_RUN_NAME).grid(row=0, column=0, padx=5, pady=5, sticky='ne')
-        entry = self._createBoundEntry(runFrame, 'runName', width=15, 
+        entry = self._createBoundEntry(runFrame, Message.VAR_RUN_NAME, width=15, 
                                        func=self.setProtocolLabel, value=self.protocol.getObjLabel())
         entry.grid(row=0, column=1, padx=(0, 5), pady=5, sticky='nw')
         # Run Name not editable
@@ -661,11 +680,11 @@ class FormWindow(Window):
         # Run mode
         self.protocol.getDefinitionParam('')
         self._createHeaderLabel(runFrame, Message.TITLE_RUN_MODE).grid(row=1, column=0, sticky='ne', padx=5, pady=5)
-        modeCombo = self._createBoundCombo(runFrame, 'runMode', MODE_CHOICES, self._onRunModeChanged)   
+        modeCombo = self._createBoundCombo(runFrame, Message.VAR_RUN_MODE, MODE_CHOICES, self._onRunModeChanged)   
         modeCombo.grid(row=1, column=1, sticky='nw', padx=(0, 5), pady=5)        
         # Expert level
         self._createHeaderLabel(runFrame, Message.TITLE_EXPERT).grid(row=2, column=0, sticky='ne', padx=5, pady=5)
-        expCombo = self._createBoundCombo(runFrame, 'expertLevel', LEVEL_CHOICES, self._onExpertLevelChanged)   
+        expCombo = self._createBoundCombo(runFrame, Message.VAR_EXPERT, LEVEL_CHOICES, self._onExpertLevelChanged)   
         expCombo.grid(row=2, column=1, sticky='nw', padx=(0, 5), pady=5)
         
         runSection.grid(row=0, column=0, sticky='news', padx=5, pady=5)
@@ -678,20 +697,20 @@ class FormWindow(Window):
         self._createHeaderLabel(execFrame, Message.TITLE_EXEC_HOST).grid(row=0, column=0, padx=5, pady=5, sticky='ne')
         param = EnumParam(choices=self.hostList)
         self.hostVar = tk.StringVar()
-        self._addVarBinding('hostName', self.hostVar)
+        self._addVarBinding(Message.VAR_EXEC_HOST, self.hostVar)
         #self.hostVar.set(self.protocol.getHostName())
         expCombo = ttk.Combobox(execFrame, textvariable=self.hostVar, state='readonly', width=15)
         expCombo['values'] = param.choices        
         expCombo.grid(row=0, column=1, columnspan=3, padx=(0, 5), pady=5, sticky='nw')
         # Threads and MPI
         self._createHeaderLabel(execFrame, Message.TITLE_THREADS).grid(row=1, column=0, padx=5, pady=5, sticky='ne')
-        self._createBoundEntry(execFrame, 'numberOfThreads').grid(row=1, column=1, padx=(0, 5))
+        self._createBoundEntry(execFrame, Message.VAR_THREADS).grid(row=1, column=1, padx=(0, 5))
         self._createHeaderLabel(execFrame, Message.TITLE_MPI).grid(row=1, column=2, padx=(0, 5))
-        self._createBoundEntry(execFrame, 'numberOfMpi').grid(row=1, column=3, padx=(0, 5), pady=5, sticky='nw')
+        self._createBoundEntry(execFrame, Message.VAR_MPI).grid(row=1, column=3, padx=(0, 5), pady=5, sticky='nw')
         # Queue
         self._createHeaderLabel(execFrame, Message.TITLE_QUEUE).grid(row=2, column=0, padx=5, pady=5, sticky='ne', columnspan=3)
         var, frame = ParamWidget.createBoolWidget(execFrame, bg='white')
-        self._addVarBinding('_useQueue', var)
+        self._addVarBinding(Message.VAR_QUEUE, var)
         frame.grid(row=2, column=3, padx=5, pady=5, sticky='nw')
         
         execSection.grid(row=0, column=1, sticky='news', padx=5, pady=5)
@@ -701,9 +720,10 @@ class FormWindow(Window):
     def _editObjParams(self, e=None):
         """ Show a Text area to edit the protocol label and comment. """
         
-        self.mapper = self.protocol.mapper
+        d = editObject(self, "Edit", self.root, self.protocol, self.protocol.mapper)
         
-        d = TextDialog(self.root, "Edit", self.protocol, self.mapper)
+#        self.mapper = self.protocol.mapper
+#        d = TextDialog(self.root, "Edit", self.protocol, self.mapper)
         
         if d.resultYes():
             label = d.valueLabel
@@ -751,6 +771,16 @@ class FormWindow(Window):
             if onlySave:
                 action = "SAVE"
             self.showError("Error during %s: %s" % (action, ex))
+    
+    
+    def getWidgetValue(self, protVar, param):
+        widgetValue = ""                
+        if isinstance(param, MultiPointerParam):
+            for pointer in protVar:
+                widgetValue += pointer.get(param.default.get()) + ";"
+        else:
+            widgetValue = protVar.get(param.default.get())  
+        return widgetValue
            
     def _fillSection(self, sectionParam, sectionWidget):
         parent = sectionWidget.contentFrame
@@ -768,8 +798,9 @@ class FormWindow(Window):
             else:
                 # Create the label
                 visualizeCallback = self.visualizeDict.get(paramName, None)
+                
                 widget = ParamWidget(r, paramName, param, self, parent, 
-                                                         value=protVar.get(param.default.get()),
+                                                         value=self.getWidgetValue(protVar, param),
                                                          callback=self._checkChanges,
                                                          visualizeCallback=visualizeCallback)
                 widget.show() # Show always, conditions will be checked later
@@ -879,14 +910,10 @@ class FormWindow(Window):
         
         return parent
 
-def editObject(self, obj):
+def editObject(self, title, root, obj, mapper):
     """ Show a Text area to edit the protocol label and comment. """    
-    root = tk.Frame()
+    return TextDialog(root, title, obj, mapper)
     
-    print obj.getClassName()
-    
-    TextDialog(root, "Edit", obj, self.mapper)
-
 
 if __name__ == '__main__':
     # Just for testing

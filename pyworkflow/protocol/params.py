@@ -333,21 +333,30 @@ class PointerParam(Param):
     """ This type of Param will serve to select existing objects
     in the database that will be input for some protocol.
     """
-    def __init__(self, **args):
-        Param.__init__(self, paramClass=Pointer, **args)
+    def __init__(self,  paramClass=Pointer, **args):
+        Param.__init__(self, paramClass=paramClass, **args)
         # This will be the class to be pointed
-        pointerClass=args.get('pointerClass')
+        pointerClass = args.get('pointerClass')
         if ',' in pointerClass:
             self.pointerClass = CsvList()
             self.pointerClass.set(pointerClass)
         else:
-            self.pointerClass = String(pointerClass)
-            
-#        self.pointerClass = String(args.get('pointerClass'))
+            self.pointerClass = String(pointerClass) 
+
         # Some conditions on the pointed candidates
         self.pointerCondition = String(args.get('pointerCondition', None))
         self.allowNull = Boolean(args.get('allowNull', False))
-     
+
+
+class MultiPointerParam(PointerParam):
+    """ This type of Param will serve to select objects
+    with DIFFERENT types from the database to be input for some protocol.
+    """
+    def __init__(self, **args):
+        PointerParam.__init__(self, paramClass=PointerList, **args)
+        self.maxNumObjects = Integer(args.get('maxNumObjects',1))
+        self.minNumObjects = Integer(args.get('minNumObjects',1))    
+
         
 class RelationParam(Param):
     def __init__(self, **args):

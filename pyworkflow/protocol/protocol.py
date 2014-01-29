@@ -338,7 +338,10 @@ class Protocol(Step):
         which are pointers and have no condition.
         """
         for key, attr in self.getAttributes():
-            if attr.isPointer() and attr.hasValue():
+            if isinstance(attr, PointerList) and attr.hasValue():
+                for item in attr:
+                    yield key, item
+            elif attr.isPointer() and attr.hasValue():
                 yield key, attr
                 
     def iterOutputAttributes(self, outputClass):
@@ -361,7 +364,7 @@ class Protocol(Step):
             for paramName, param in self._definition.iterParams():
                 # Create the var with value comming from args or from 
                 # the default param definition
-                var = param.paramClass(args.get(paramName, param.default.get()))
+                var = param.paramClass(value=args.get(paramName, param.default.get()))
                 setattr(self, paramName, var)
         else:
             print "FIXME: Protocol '%s' has not DEFINITION" % self.getClassName()
@@ -752,6 +755,7 @@ class Protocol(Step):
     
     def getDefaultRunName(self):
         return '%s.%s' % (self.getClassName(), self.strId())
+        
     
     @classmethod
     def getClassLabel(cls):
@@ -858,7 +862,7 @@ class Protocol(Step):
     def _summary(self):
         """ Should be implemented in subclasses. See summary. """
         return ["No summary information."]
-    
+        
     def summary(self):
         """ Return a summary message to provide some information to users. """
         error = ''
@@ -869,6 +873,36 @@ class Protocol(Step):
             baseSummary = []
         return baseSummary + ['', '*Comments:* ', self.getObjComment(), error]
     
+    def _citations(self):
+        """ Should be implemented in subclasses. See citations. """
+        return getattr(self, "_references", [])
+    
+    def citations(self):
+        """ Return a citation message to provide some information to users. """
+        citations = self._citations()
+        if not citations:
+            citationsFinal = []
+        else:
+            citationsFinal = ['*References:* '] + citations
+
+        packageCitations = getattr(self._package, "_references", [])
+        if packageCitations:
+            citationsFinal = citationsFinal +['*Package References:*'] + packageCitations   
+            
+        return citationsFinal    
+
+    def _methods(self):
+        """ Should be implemented in subclasses. See methods. """
+        return ["No methods information."]
+        
+    def methods(self):
+        """ Return a description about methods about current protocol execution. """
+        baseMethods = self._methods()
+        if not baseMethods:
+            baseMethods = []
+            
+        return baseMethods + [''] + self.citations()
+        
     def runProtocol(self, protocol):
         """ Setup another protocol to be run from a workflow. """
         name = protocol.getClassName() + protocol.strId()
@@ -883,7 +917,7 @@ class Protocol(Step):
         protocol.run()
         
     def isChild(self):
-        """ Return true if this protocol was invoked from a workflow(another protocol)"""
+        """ Return true if this protocol was invoked from a workflow (another protocol)"""
         return self.hasObjParentId()
         
                 

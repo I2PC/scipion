@@ -48,6 +48,7 @@ CL_ROBUST = 1
 class XmippProtCL2D(ProtClassify):
     """ Protocol to preprocess a set of micrographs in the project. """
     _label = 'cl2d'
+    _references=['[[http://www.ncbi.nlm.nih.gov/pubmed/20362059][Sorzano, et.al,  JSB (2010)]]']
     
     def __init__(self, **args):
         if 'numberOfMpi' not in args:
@@ -171,6 +172,7 @@ class XmippProtCL2D(ProtClassify):
             self.runJob(None, "xmipp_image_sort", params, nproc)
             mdFnOut = fnRoot + ".xmd"
             md = xmipp.MetaData(mdFnOut)
+            md.addItemId()
             md.write("classes_sorted@" + mdFn, xmipp.MD_APPEND)
             #deleteFile(log,fnRoot+".xmd")
         
@@ -198,7 +200,7 @@ class XmippProtCL2D(ProtClassify):
         lastMdFn = levelMdFiles[-1]
         classes2DSet = self._createSetOfClasses2D(subset)
         classes2DSet.setImages(self.inputImages.get())
-        readSetOfClasses2D(self, classes2DSet, lastMdFn, 'classes_sorted')
+        readSetOfClasses2D(classes2DSet, lastMdFn, 'classes_sorted')
         classes2DSet.write()
         result = {'outputClasses' + subset: classes2DSet}
         self._defineOutputs(**result)
@@ -219,3 +221,12 @@ class XmippProtCL2D(ProtClassify):
         if self.numberOfMpi <= 1:
             validateMsgs.append('Mpi needs to be greater than 1.')
         return validateMsgs
+    
+    def _methods(self):
+        methods = []
+        if not hasattr(self, 'outputClasses'):
+            methods.append("Protocol has not finished yet.")
+        else:
+            methods.append("Ese material and methods de moda")
+        
+        return methods

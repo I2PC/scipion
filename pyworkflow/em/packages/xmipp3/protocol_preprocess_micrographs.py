@@ -38,6 +38,7 @@ import xmipp
 class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
     """Protocol to preprocess a set of micrographs in the project"""
     _label = 'preprocess micrographs'
+    _references = ['[[http://ieeexplore.ieee.org/xpl/login.jsp?arnumber=5286563][Sorzano, et.al,  IEEE WISP (2009)]]']
 
     def __init__(self, **args):        
         ProtPreprocessMicrographs.__init__(self, **args)
@@ -91,7 +92,6 @@ class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
     def _defineSteps(self):
         '''for each micrograph insert the steps to preprocess it
         '''
-        print "En defineSteps"
         # Get pointer to input micrographs 
         inputMics = self.inputMicrographs.get() 
         
@@ -153,28 +153,22 @@ class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
                 
         return self.lastStepId
     
-    def createOutput(self, IOTable):
-        
+    def createOutput(self, IOTable):        
         inputMics = self.inputMicrographs.get()
-        micSet = self._createSetOfMicrographs()
-        micSet.copyInfo(inputMics)
+        outputMics = self._createSetOfMicrographs()
+        outputMics.copyInfo(inputMics)
         
         if self.doDownsample.get():
-            micSet.setDownsample(self.downFactor.get())
+            outputMics.setDownsample(self.downFactor.get())
 
         for mic in inputMics:
-            outMicFn = Micrograph()
-            outMicFn.setFileName(IOTable[mic.getFileName()])
-            # Updating micrograph name
-            outMicFn.setId(mic.getId())
-            micSet.append(outMicFn)
-            #mapsId[mic.getId()] = xmicFn.getId()
+            # Update micrograph name and append to the new Set
+            mic.setFileName(IOTable[mic.getFileName()])
+            outputMics.append(mic)
 
-        micSet.write()
-        self._defineOutputs(outputMicrographs=micSet)
-        self._defineDataSource(inputMics, micSet)
+        self._defineOutputs(outputMicrographs=outputMics)
+        self._defineTransformRelation(inputMics, outputMics)
         
-
     def _summary(self):
         summary = []
         if not self.inputMicrographs.hasValue():

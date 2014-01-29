@@ -10,11 +10,14 @@ from pyworkflow.em.packages.xmipp3 import *
 from xmipp import *
 
 
+
 if __name__ == '__main__':
     mdfile = sys.argv[1]
+    md = MetaData(mdfile)
+    
+    print md
     prot = ProtUserSelection()
     imgSet = prot._createSetOfParticles()
-    md = MetaData(mdfile)
-    md.save("test.xmd")
-    print md
+   
     readSetOfParticles(mdfile, imgSet)
+    print 'done'

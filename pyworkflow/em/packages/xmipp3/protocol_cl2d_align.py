@@ -39,6 +39,7 @@ from glob import glob
 class XmippProtCL2DAlign(ProtAlign):
     """ Protocol to align a set of particles. """
     _label = 'cl2d align'
+    _references = ['[[http://www.ncbi.nlm.nih.gov/pubmed/20362059][Sorzano, et.al,  JSB (2010)]]']
 
     def _defineAlignParams(self, form):
         form.addParam('useReferenceImage', BooleanParam, default=True,
@@ -116,8 +117,9 @@ class XmippProtCL2DAlign(ProtAlign):
             imgSet.copyInfo(particles)
             imgSet.setHasAlignment(True)
             readSetOfParticles(alignedMd, imgSet, imgSet.hasCTF())
-            imgSet.write()            
+            imgSet.write()
             self._defineOutputs(outputParticles=imgSet)
+            self._defineTransformRelation(particles, imgSet)
 
     def validate(self):
         errors = []

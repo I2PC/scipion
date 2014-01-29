@@ -46,6 +46,7 @@ from os.path import dirname, join
 from pyworkflow.utils.path import makePath
 
 
+
 import xmipp
 
 
@@ -111,7 +112,8 @@ class XmippViewer(Viewer):
                 fn = self._getTmpPath(obj.getName() + '_images.xmd')
                 #Set hasCTF to False to avoid problems
                 writeSetOfParticles(obj, fn, self._getTmpPath())
-            runShowJ(fn)  
+            cmdscript = "pw_md_reader.py"
+            runShowJWithCommand(fn, "create subset of particles", cmdscript)  
             md = xmipp.MetaData(fn) 
             #print "MD=%s" % obj.outputParticles.getFileName()
             if md.containsLabel(xmipp.MDL_ZSCORE):
@@ -205,6 +207,12 @@ def runJavaIJapp(memory, appName, args, batchMode=True):
     
 def runShowJ(inputFiles, memory="1g", extraParams=""):
     runJavaIJapp(memory, "'xmipp.viewer.Viewer'", "-i %s %s" % (inputFiles, extraParams), True)
+    
+def runShowJWithCommand(inputFiles, cmdname, cmdscript, memory="1g", extraParams=""):
+    SCIPION_PYTHON = os.environ["SCIPION_PYTHON"]
+    PW_HOME = os.environ["PW_HOME"]
+    cmdscript = "%s %s/pyworkflow/apps/%s" % (SCIPION_PYTHON, PW_HOME, cmdscript) 
+    runJavaIJapp(memory, "'xmipp.viewer.scipion.ScipionViewer'", "-i %s %s --command \"%s\" \"%s\"" % (inputFiles, extraParams, cmdname, cmdscript), True)
 
 def runParticlePicker(inputMics, inputCoords, memory="1g", extraParams=""):
     runJavaIJapp(memory, "xmipp.viewer.particlepicker.training.Main", "%s %s %s" % (inputMics, inputCoords, extraParams), True)

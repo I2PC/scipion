@@ -103,6 +103,7 @@ def populateTree(self, tree, treeItems, prefix, obj, subclassedDict, level=0):
     if text:
         value = obj.value.get(text)
         key = '%s.%s' % (prefix, value)
+        
         img = obj.icon.get('')
         tag = obj.tag.get('')
             
@@ -216,7 +217,12 @@ class RunIOTreeProvider(TreeProvider):
         
     def edit(self, obj):
         """Open the Edit GUI Form given an instance"""
-        editObject(self, obj)
+        root = tk.Frame()
+        d = editObject(self, "Object Editor", root, obj, self.mapper)
+        
+        if d.resultYes():
+            pass
+#            print "Object edited"
         
     def getObjectPreview(self, obj):
         desc = "<name>: " + obj.getName()
@@ -230,13 +236,13 @@ class RunIOTreeProvider(TreeProvider):
             obj = obj.get()
         actions = []    
         
-        # EDIT 
-        actions.append((Message.LABEL_EDIT, lambda : self.edit(obj)))
         
         viewers = findViewers(obj.getClassName(), DESKTOP_TKINTER)
         for v in viewers:
             actions.append(('Open with %s' % v.__name__, lambda : self.visualize(v, obj)))
             
+        # EDIT 
+        actions.append((Message.LABEL_EDIT, lambda : self.edit(obj)))
             
         return actions
     
@@ -374,10 +380,15 @@ class ProtocolsView(tk.Frame):
         gui.configureWeigths(sframe)
         self.summaryText = TaggedText(sframe, width=40, height=15, bg='white')
         self.summaryText.grid(row=0, column=0, sticky='news')        
-        #self.summaryText.addText("\nSummary should go <HERE!!!>\n More info here.")
+        # Method tab
+        mframe = tk.Frame(tab)
+        gui.configureWeigths(mframe)
+        self.methodText = TaggedText(mframe, width=40, height=15, bg='white')
+        self.methodText.grid(row=0, column=0, sticky='news')    
         
         tab.add(dframe, text=Message.LABEL_DATA)
-        tab.add(sframe, text=Message.LABEL_SUMMARY)     
+        tab.add(sframe, text=Message.LABEL_SUMMARY)   
+        tab.add(mframe, text=Message.LABEL_METHODS)
         tab.grid(row=0, column=0, sticky='news')
         
         v.add(runsFrame, weight=3)
@@ -613,6 +624,7 @@ class ProtocolsView(tk.Frame):
             self.updateActionToolbar()
             self._fillData()
             self._fillSummary()
+            self._fillMethod()
         else:
             pass #TODO: implement what to do
                     
@@ -649,6 +661,10 @@ class ProtocolsView(tk.Frame):
     def _fillSummary(self):
         self.summaryText.clear()
         self.summaryText.addText(self.selectedProtocol.summary())
+        
+    def _fillMethod(self):
+        self.methodText.clear()
+        self.methodText.addText(self.selectedProtocol.methods())
         
     def _scheduleRunsUpdate(self, secs=1):
         self.runsTree.after(secs*1000, self.refreshRuns)

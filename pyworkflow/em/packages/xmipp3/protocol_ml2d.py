@@ -39,6 +39,10 @@ from convert import createXmippInputImages, readSetOfClasses2D, readSetOfParticl
 class XmippProtML2D(ProtClassify):
     """ Protocol to preprocess a set of micrographs in the project. """
     _label = 'ml2d'
+    _references = ['[[http://www.ncbi.nlm.nih.gov/pubmed/15808859][Scheres, et.al,  JMB (2005)]]',
+                   '[[http://www.ncbi.nlm.nih.gov/pubmed/16204112][Scheres, et.al,  Bioinformatics (2005)]]',
+                   '[[http://www.ncbi.nlm.nih.gov/pubmed/17937907][Scheres, et.al,  Structure (2007)]]'
+                   ]
     
     def __init__(self, **args):
         ProtClassify.__init__(self, **args)
@@ -197,8 +201,7 @@ class XmippProtML2D(ProtClassify):
         
         classes2DSet = self._createSetOfClasses2D()
         classes2DSet.setImages(self.inputParticles.get())
-        readSetOfClasses2D(self, classes2DSet, self.oroot + 'classes.xmd')
-        classes2DSet.write()
+        readSetOfClasses2D(classes2DSet, self.oroot + 'classes.xmd')
         self._defineOutputs(outputClasses=classes2DSet)
     
     def _summary(self):

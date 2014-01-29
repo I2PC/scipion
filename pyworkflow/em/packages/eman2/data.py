@@ -67,10 +67,10 @@ class EmanCoordinate(Coordinate):
         tilted one and viceversa"""
         pass 
     
-    def setId(self, coordId):
+    def setObjId(self, coordId):
         self.coordId = long(coordId)
         
-    def getId(self):
+    def getObjId(self):
         return self.coordId
     
     
@@ -124,7 +124,7 @@ class EmanSetOfCoordinates(SetOfCoordinates):
     def iterMicrographCoordinates(self, micrograph):
         """ Iterates over the set of coordinates belonging to that micrograph. """
         self.loadIfEmpty()
-        pathJsonPos = self.getMicrographCoordFile(micrograph.getId())
+        pathJsonPos = self.getMicrographCoordFile(micrograph.getObjId())
         if pathJsonPos is not None:
             if exists(pathJsonPos):
                 coordJson = loadJson(pathJsonPos)
@@ -137,7 +137,7 @@ class EmanSetOfCoordinates(SetOfCoordinates):
                     coordinate.setPosition(x, y)
                     coordinate.setMicrograph(micrograph)
                     coordinate.setBoxSize(self.boxSize.get())
-                    coordinate.setId(coorIdList[i])        
+                    coordinate.setObjId(coorIdList[i])        
                     yield coordinate
         
 #        pathBox = join(path, replaceBaseExt(micrograph.getFileName(), 'box'))
@@ -275,13 +275,13 @@ class EmanSetOfVolumes(EmanSetOfImages, SetOfVolumes):
         self.loadIfEmpty()
         for volId, volFn in self._jsonDict.iteritems():
             vol = EmanVolume(volFn)
-            vol.setId(volId)
+            vol.setObjId(volId)
             vol.setSamplingRate(self.samplingRate.get())
             yield vol
             
     def append(self, vol):
         if vol.hasId():
-            volId = vol.getId()
+            volId = vol.getObjId()
         else:
             self._idCount += 1
             volId = self._idCount 

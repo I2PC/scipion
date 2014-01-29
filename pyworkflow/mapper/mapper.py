@@ -46,6 +46,12 @@ class Mapper():
             return self.dictClasses[className](**args)
         raise Exception('Mapper._buildObject: Unknown class: %s' % className)
     
+    def _getStrValue(self, value):
+        """ Return empty string if value is None or empty. """
+        if not value:
+            return ''
+        return value
+    
     def commit(self):
         """Commit changes made to the storage"""
         pass
@@ -92,9 +98,8 @@ class Mapper():
     
     def selectFirst(self):
         """Return only the first element"""
-        allObj = self.selectAll()
-        if len(allObj):
-            return allObj[0]
+        for obj in self.selectAll(iterate=True):
+            return obj
         return None
     
     def selectBy(self, **args):

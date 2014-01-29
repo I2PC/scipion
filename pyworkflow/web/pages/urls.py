@@ -30,8 +30,7 @@ urlpatterns = patterns('',
     url(r'^project_content/$', 'app.views_project.project_content'),
     url(r'^tree_prot_view/$', 'app.views_project.tree_prot_view'),
     url(r'^run_table_graph/$', 'app.views_project.run_table_graph'),
-    url(r'^protocol_io/$', 'app.views_project.protocol_io'),
-    url(r'^protocol_summary/$', 'app.views_project.protocol_summary'),
+    url(r'^protocol_info/$', 'app.views_project.protocol_info'),
     url(r'^protocol_status/$', 'app.views_project.protocol_status'),
     url(r'^project_graph/$', 'app.views_project.project_graph'),
     url(r'^update_graph_view/$', 'app.views_project.update_graph_view'),
@@ -43,6 +42,9 @@ urlpatterns = patterns('',
     url(r'^get_slice/', 'app.views_util.get_slice'), # Load slices dynamically
     url(r'^browse_objects/$', 'app.views_util.browse_objects'), # Browse objects from the database
     url(r'^browse_protocol_class/$', 'app.views_util.browse_protocol_class'), # Browse objects from the database
+    url(r'^get_attributes/$', 'app.views_util.get_attributes'), # Get Label and Comment for an Object
+    url(r'^set_attributes/$', 'app.views_util.set_attributes'), # Set Label and Comment for an Object
+
 
     #PROTOCOL (INCLUDE FORM)
     url(r'^save_protocol/$', 'app.views_protocol.save_protocol'),
@@ -50,6 +52,7 @@ urlpatterns = patterns('',
     url(r'^stop_protocol/$', 'app.views_protocol.stop_protocol'),
     url(r'^delete_protocol/$', 'app.views_protocol.delete_protocol'),
     url(r'^form/$', 'app.views_protocol.form'),
+    
 
     #WIZARDS
     url(r'^wizard/$', 'app.em_wizard.wizard'),

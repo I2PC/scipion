@@ -41,6 +41,7 @@ MICS_OTHER = 1
 class XmippParticlePickingAutomatic(ProtParticlePicking, XmippProtocol):
     """Protocol to pick particles automatically in the project"""
     _label = 'automatic picking'
+    _references = ['[[http://www.ncbi.nlm.nih.gov/pubmed/23958728][Abrishami, et.al,  Bioinformatics (2013)]]']
     
     filesToCopy = ['model_training.txt', 'model_svm.txt', 'model_pca_model.stk', 'model_rotpca_model.stk', 
                'model_particle_avg.xmp', 'config.xmd', 'templates.stk']
@@ -94,8 +95,8 @@ class XmippParticlePickingAutomatic(ProtParticlePicking, XmippProtocol):
             micPath = mic.getFileName()
             micName = removeBaseExt(micPath)
             proceed = True
-            if self.micsToPick.get() == MICS_SAMEASPICKING:
-                fnPos = join(self.particlePickingRun._getExtraPath(), replaceBaseExt(micPath, "pos"))
+            if self.micsToPick == MICS_SAMEASPICKING:
+                fnPos = self.particlePickingRun._getExtraPath(replaceBaseExt(micPath, "pos"))
                 if exists(fnPos):
                     blocks = xmipp.getBlocksInMetaDataFile(fnPos)
                     copy = True
@@ -106,7 +107,7 @@ class XmippParticlePickingAutomatic(ProtParticlePicking, XmippProtocol):
                             copy = False
                     if copy:
                         # Copy manual .pos file of this micrograph
-                        copyFile(fnPos, join(self._getExtraPath(), basename(fnPos)))
+                        copyFile(fnPos, self._getExtraPath(basename(fnPos)))
                         proceed = False            
     
             if proceed:
@@ -127,7 +128,7 @@ class XmippParticlePickingAutomatic(ProtParticlePicking, XmippProtocol):
         readSetOfCoordinates(posDir, self.micrographs, coordSet)
         coordSet.write()
         self._defineOutputs(outputCoordinates=coordSet)
-        self._defineDataSource(self.micrographs, coordSet)
+        self._defineSourceRelation(self.micrographs, coordSet)
         
     def _validate(self):
         validateMsgs = []
