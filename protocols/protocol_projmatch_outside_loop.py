@@ -10,6 +10,14 @@ from os.path import join, basename
 #------------------------------------------------------------------------
 #make ctf groups
 #------------------------------------------------------------------------
+def removeDisabled(log,
+                   SelFileNameInitial ,
+                   SelFileName 
+                   ):
+        md = MetaData(SelFileNameInitial)
+        md.removeDisabled()
+        md.write(SelFileName)
+
 def executeCtfGroups (_log,
                                  CTFDatName,
                                  CtfGroupDirectory,
@@ -29,7 +37,7 @@ def executeCtfGroups (_log,
     from protlib_utils import runJob
     if not os.path.exists(CtfGroupDirectory):
         os.makedirs(CtfGroupDirectory)
-    printLog("executeCtfGroups01", _log)
+    printLog("executeCtfGroups01"+ CTFDatName, _log)
 
     if(not DoCtfCorrection):
         MD = MetaData(SelFileName)

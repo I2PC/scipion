@@ -225,6 +225,7 @@ void ProgAngularProjectionMatching::produceSideInfo()
     }
     else
         DFexp.read(fn_exp);
+	//DFexp.removeDisabled();
 
 
     ////////DFexp.write("kk.xmd");
