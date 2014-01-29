@@ -146,10 +146,12 @@ class XmippProtKerdensom(ProtClassify):
         """ Store the kenserdom object 
         as result of the protocol. 
         """
+        imgSet = self.inputImages.get()
         classes2DSet = self._createSetOfClasses2D()
         classes2DSet.setImages(self.inputImages.get())
         readSetOfClasses2D(classes2DSet, self._params['kclasses'])
         self._defineOutputs(outputClasses=classes2DSet)
+        self._defineSourceRelation(imgSet, classes2DSet)
 
     def _validate(self):
         errors = []

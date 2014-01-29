@@ -72,6 +72,7 @@ class XmippProtApplyMask3D(ProtPreprocessVolumes,XmippGeometricalMask):
             vol.setLocation(i,self.maskedVolumes)
             maskedVolumes.append(vol)
         self._defineOutputs(maskedVolumes=maskedVolumes)
+        self._defineTransformRelation(self.volume.get(), maskedVolumes)
         
     def _summary(self):
         messages = []      

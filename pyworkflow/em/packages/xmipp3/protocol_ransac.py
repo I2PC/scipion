@@ -413,6 +413,7 @@ class XmippProtRansac(ProtInitialVolume):
                               %(fnOutputInitVolume,fnGallery,self.angularSampling.get(),self.symmetryGroup.get(),fnOutputReducedClass))
             
     def createOutput(self):
+        classes2DSet = self.inputClasses.get()
         fn = self._getPath('proposedVolumes.xmd')
         md = xmipp.MetaData(fn)
         md.addItemId()
@@ -424,6 +425,7 @@ class XmippProtRansac(ProtInitialVolume):
         volumesSet.write()
         
         self._defineOutputs(outputVolumes=volumesSet)
+        self._defineSourceRelation(classes2DSet, volumesSet)
 
     def _summary(self):
         summary = []
