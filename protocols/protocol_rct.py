@@ -170,7 +170,7 @@ def reconstructClass(log,WorkingDir,ExtraDir,ClassNameIn,ClassNameOut,ClassImage
     runJob(log, "xmipp_image_align_tilt_pairs", params)
     
     params = "-i %(ClassNameOut)s -o %(ClassVolumeOut)s %(ReconstructAdditionalParams)s" % locals()
-    runJob(log, "xmipp_reconstruct_fourier", params)
+    runJob(log, "xmipp_reconstruct_art", params)
     
     if exists(ClassVolumeOut):
         mdFn = join(WorkingDir, 'volumes.xmd')
