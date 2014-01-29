@@ -350,19 +350,20 @@ def addNMAProtocols(settings):
     m1 = ProtocolConfig("Flexible analysis")
     
     # ------------------- Particles ----------------------------
-    m2 = m1.addSubMenu('Import 3D structure', tag='section')
+    m2 = m1.addSubMenu('NMA analysis', tag='section')
     m2.addSubMenu(' Import PDB', tag='protocol', icon='bookmark.png',
                   value='ProtImportPdb')
     m2.addSubMenu(' Import volume', tag='protocol', icon='bookmark.png',
                   value='ProtImportVolumes')
-       
-    m1.addSubMenu(' NMA analysis', tag='protocol',
-                  value='XmippProtNMA')            
+    m2.addSubMenu(' Normal modes', tag='protocol', value='XmippProtNMA')            
     
-    m1.addSubMenu(' Import particles', tag='protocol', icon='bookmark.png',
+    m3 = m1.addSubMenu('NMA aligment', tag='section')
+    m3.addSubMenu(' Import particles', tag='protocol', icon='bookmark.png',
                   value='ProtImportParticles')
-    m1.addSubMenu(' Filter (optional)', tag='protocol',
-                  value='SpiderProtFilter')
+    m3.addSubMenu(' Resize particles', tag='protocol', 
+                  value='XmippProtResize')
+    m3.addSubMenu('NMA alignment', tag='protocol', value='XmippProtAlignmentNMA') 
+
     settings.addProtocolMenu(m1)
     
         

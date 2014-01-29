@@ -30,10 +30,10 @@ visualization program.
 
 import os
 from pyworkflow.viewer import Viewer, Wizard, DESKTOP_TKINTER, WEB_DJANGO
-from pyworkflow.em import Image, SetOfImages, SetOfMicrographs, SetOfParticles, SetOfCoordinates, SetOfClasses2D, SetOfVolumes, SetOfCTF, ProtAlign, ProtProcessParticles
+from pyworkflow.em.data import *
+from pyworkflow.em.protocol import *
 from pyworkflow.utils.process import runJob
 from xmipp3 import getXmippPath
-from pyworkflow.em.protocol import ProtImportMicrographs, ProtCTFMicrographs, ProtParticlePicking
 from protocol_preprocess_micrographs import XmippProtPreprocessMicrographs
 from protocol_ctf_micrographs import XmippProtCTFMicrographs
 from protocol_extract_particles import XmippProtExtractParticles, ProtImportParticles
@@ -54,10 +54,11 @@ class XmippViewer(Viewer):
     with the Xmipp program xmipp_showj
     """
     _environments = [DESKTOP_TKINTER, WEB_DJANGO]
-    _targets = [Image, SetOfImages, SetOfCoordinates, SetOfClasses2D, 
+    _targets = [Image, PdbFile, SetOfImages, SetOfCoordinates, SetOfClasses2D, 
                 ProtImportMicrographs, XmippProtPreprocessMicrographs, ProtCTFMicrographs,
                 ProtParticlePicking, ProtImportParticles, XmippProtExtractParticles,
-                ProtAlign, ProtProcessParticles, XmippProtKerdensom, XmippProtRotSpectra, SetOfClasses2D, SetOfCTF]
+                ProtAlign, ProtProcessParticles, XmippProtKerdensom, XmippProtRotSpectra, 
+                SetOfClasses2D, SetOfCTF, NormalModes]
     
     def __init__(self, **args):
         Viewer.__init__(self, **args)
@@ -70,7 +71,15 @@ class XmippViewer(Viewer):
             fn = locationToXmipp(*obj.getLocation())
             runShowJ(fn)
             
+        elif issubclass(cls, PdbFile):
+            from protlib_gui_ext import chimera
+            chimera(obj.getFileName())
+             
+        elif issubclass(cls, NormalModes):
+            runShowJ(obj.getFileName())         
+              
         elif issubclass(cls, SetOfMicrographs):
+            
             mdFn = getattr(obj, '_xmippMd', None)
             if mdFn:
                 fn = mdFn.get()

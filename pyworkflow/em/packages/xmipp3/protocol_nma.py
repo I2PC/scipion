@@ -32,7 +32,6 @@ from glob import glob
 
 from pyworkflow.em import *  
 from pyworkflow.utils import * 
-from convert import createXmippInputImages, readSetOfVolumes, createXmippInputVolumes
 from pyworkflow.protocol.constants import LEVEL_EXPERT, LEVEL_ADVANCED
 import xmipp
 
@@ -48,8 +47,7 @@ NMA_CUTOFF_REL = 1
 class XmippProtNMA(EMProtocol):
     """ Protocol for flexible analysis using NMA. """
     _label = 'nma analysis'
-    _reference = ['[[http://www.ncbi.nlm.nih.gov/pubmed/23671335][Nogales-Cadenas, et.al, NAR (2013)]]'
-                  ]
+    _references = ['[[http://www.ncbi.nlm.nih.gov/pubmed/23671335][Nogales-Cadenas, et.al, NAR (2013)]]']
     
     def _defineParams(self, form):
         form.addSection(label='Input')
@@ -191,6 +189,7 @@ class XmippProtNMA(EMProtocol):
                                  self.amplitud.get(), self.nframes.get(), self.downsample.get(), 
                                  self.pseudoAtomThreshold.get(), self.pseudoAtomRadius.get())
         self._insertFunctionStep('computeAtomShiftsStep', n)
+        self._insertFunctionStep('createOutputStep')
         
     def _insertMaskStep(self):
         """ Check the mask selected and insert the necessary steps.
@@ -479,8 +478,12 @@ class XmippProtNMA(EMProtocol):
             md.setValue(xmipp.MDL_NMA_MODEFILE, self._getPath("modes", "vec.%d" % (maxShiftMode[i]+1)), id)
         md.write(self._getExtraPath('maxAtomShifts.xmd'))
                                                       
-    def createOutput(self):
-        pass
+    def createOutputStep(self):
+        if self.structureEM:
+            pdb = PdbFile(self._getPath('pseudoatoms.pdb'), pseudoatoms=True)
+            self._defineOutputs(outputPdb=pdb)
+        modes = NormalModes(filename=self._getPath('modes.xmd'))
+        self._defineOutputs(outputModes=modes)
 
     def _summary(self):
         summary = []
