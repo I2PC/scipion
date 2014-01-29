@@ -235,7 +235,7 @@ def addTabs(nb):
     addTabOption(tab,'warn', 'Show warnings?', 'no')
     addTabOption(tab,'fast', 'Fast?', 'yes')
     addTabOption(tab,'static', 'Prevent dynamic linking?', 'no')
-    addTabOption(tab, 'gtest', 'Build tests?', 'no')
+    addTabOption(tab, 'gtest', 'Build tests?', 'yes')
     addTabOption(tab, 'cuda', 'Build CUDA support?', 'no')
     addTabOption(tab, 'matlab', 'Build Matlab support', 'no')
     addTabOption(tab,'MATLAB_DIR', 'Matlab dir ', '/usr/local/MATLAB/R2011a', None, 'matlab', wizardMatlab, True)
