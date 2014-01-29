@@ -70,6 +70,7 @@ urlpatterns = patterns('',
     
     #SHOWJ
     url(r'^showj/', 'app.views_showj.showj'), #Load web
+    url(r'^showj_pdb/', 'app.views_showj.showj_pdb'), #Load web
     url(r'^save_showj_table/', 'app.views_showj.save_showj_table'), # Save table to session variable dynamically
     url(r'^showVolVisualization/', 'app.views_showj.showVolVisualization'),
     url(r'^visualize_object/$', 'app.views_showj.visualizeObject'),

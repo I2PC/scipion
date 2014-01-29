@@ -25,6 +25,7 @@ section {
 </style>
 
 <!-- JS TO CONTROL THRESHOLD SLIDER -->
+{% if form.typeVolume.value != 'pdb' %}
 <script type="text/javascript">
 $(function() {
 	$( "#slider" ).slider({
@@ -51,7 +52,7 @@ function av_map_level(l){
   av_execute("map volMap -level " + l + ";map volMap -reread true;");
 }
 </script>
-
+{% endif %}
 {% endblock %}
 
 {% block content_menu %}{% endblock %}
@@ -62,12 +63,13 @@ function av_map_level(l){
 
 	<!-- ASTEX VIEWER -->
 	{% load static %}
+	
 	<applet
 		width="600px" height="600px" name="av"
 		archive="{% static "astex/OpenAstexViewer.jar" %}"
 		codebase=".."
 		code="MoleculeViewerApplet.class">
-		<!-- <param name="scriptFile" value=""> -->
+		
 	<!-- 			<param name="script" value="map load volMap /static/astex/tmp/emd_1042.map.gz 1 0.285;
 				map volMap contour 0 solid on;
 				radius 50;
@@ -75,22 +77,35 @@ function av_map_level(l){
 				view -background lightgrey;
 				map volMap -reread true;"> -->
 				
+		{% if form.typeVolume.value == 'pdb' %}		
+			
+			<!-- <param name="molecule1" value="/static/astex/tmp/2DYS.pdb"> -->
+			<param name="molecule1" value="{{volLink}}">
+			
 				
-		<param name="script" value="map load volMap {{volLink}} 2 {{threshold}};
-		map volMap contour 0 solid on;
-		radius 50;
-		center map volMap;
-		view -background lightgrey;
-		map volMap -reread true;">  
+		{% else %}
+						
+			<param name="script" value="map load volMap {{volLink}} 2 {{threshold}};
+				map volMap contour 0 solid on;
+				radius 50;
+				center map volMap;
+				view -background lightgrey;
+				map volMap -reread true;">
+			
+		{% endif %}
+		
+		   
 	</applet>
 
- 	<div>
-		<p>
-			<label for="amount">{{messages_properties.LABEL_THRESHOLD}}</label>
-			<input type="text" id="amount" style="border: 0; color: #f6931f; font-weight: bold;" />
-		</p>
-		<div id="slider"></div>
-	</div>
+	{% if form.typeVolume.value != 'pdb' %}
+	 	<div>
+			<p>
+				<label for="amount">{{messages_properties.LABEL_THRESHOLD}}</label>
+				<input type="text" id="amount" style="border: 0; color: #f6931f; font-weight: bold;" />
+			</p>
+			<div id="slider"></div>
+		</div>
+	{% endif %}	
 	
 </div>
 			

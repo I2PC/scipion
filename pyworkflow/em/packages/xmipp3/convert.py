@@ -369,7 +369,7 @@ def writeSetOfImages(imgSet, filename, imgToFunc, ctfDir, rowFunc):
     """
     particlesCtfFn = []
     md = xmipp.MetaData()
-    hasCtf = imgSet.hasCTF()
+#    hasCtf = imgSet.hasCTF()
     if ctfDir is None:
         ctfDir = dirname(filename)
     
