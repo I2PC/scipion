@@ -143,7 +143,10 @@ public class UntiltedMicrograph extends Micrograph
 
 	public void setAlignerTiltedParticle(UntiltedParticle up)
 	{
+                tiltedmicrograph.removeParticle(up.getTiltedParticle());
 		Particle p = getAlignerTiltedParticle(up.getX(), up.getY());
+                if(!tiltedmicrograph.fits(p.getX(), p.getY(), up.getParticlePicker().getSize()))
+                        p = null;
 		if (p != null)
 		{
 			TiltedParticle tp = new TiltedParticle(p.getX(), p.getY(), up);

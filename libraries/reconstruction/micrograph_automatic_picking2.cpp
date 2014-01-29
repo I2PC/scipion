@@ -1095,6 +1095,12 @@ int AutoParticlePicking2::readNextMic(FileName &fnmicrograph)
     return 1;
 }
 
+int AutoParticlePicking2::getParticlesThreshold()
+{
+
+    return 30;
+}
+
 //void AutoParticlePicking2::correction(const MetaData &addedParticlesMD,const MetaData &removedParticlesMD)
 //{
 //    dataSet.clear();

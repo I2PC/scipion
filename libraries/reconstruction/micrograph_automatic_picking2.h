@@ -321,6 +321,8 @@ public:
      */
     int readNextMic(FileName &fnmicrograph);
 
+    int getParticlesThreshold();
+
 };
 
 /**

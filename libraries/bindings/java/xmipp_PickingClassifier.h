@@ -32,6 +32,11 @@ JNIEXPORT void JNICALL Java_xmipp_jni_PickingClassifier_train
 JNIEXPORT void JNICALL Java_xmipp_jni_PickingClassifier_setSize
 (JNIEnv *env, jobject jobj, jint psize);
 
+
+JNIEXPORT jint JNICALL Java_xmipp_jni_PickingClassifier_getParticlesThreshold
+(JNIEnv *env, jobject jobj);
+
+
 #ifdef __cplusplus
 }
 #endif

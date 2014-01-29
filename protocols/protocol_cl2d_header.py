@@ -82,7 +82,7 @@ Tolerance=1
 WhatToShow="Class Cores"
 
 # Visualize class hierarchy
-DoShowHierarchy=True
+DoShowHierarchy=False
 
 # Visualize last level
 DoShowLast=True

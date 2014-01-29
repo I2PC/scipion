@@ -36,6 +36,7 @@ import java.awt.event.ActionListener;
 import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 
 /**
@@ -56,6 +57,8 @@ public class XmippDialog extends JDialog implements ActionListener {
 	protected JPanel panelBtn;
 	protected boolean disposeOnClose = true;
 	protected boolean closeOnAction = true;
+        
+        
 
 	public XmippDialog(JFrame parent, String title, boolean modal) {
 		super(parent, title, modal);
@@ -130,6 +133,8 @@ public class XmippDialog extends JDialog implements ActionListener {
 	 */
 	public void handleCancel() {
 	}
+        
+        
 
 	@Override
 	public void actionPerformed(ActionEvent evt) {
@@ -231,6 +236,12 @@ public class XmippDialog extends JDialog implements ActionListener {
 		XmippMessageDialog dlg = new XmippQuestionDialog(parent, message);
 		return dlg.showDialog();
 	}
+        
+        public static int showQuestionYesNoCancel(JFrame parent, String message) {
+		XmippQuestionDialog dlg = new XmippQuestionDialog(parent, message);
+		dlg.setVisible(true);
+                return dlg.getOption();
+	}
 
 	public static String removeColors(String message) {
 		if (message == null)
@@ -239,6 +250,8 @@ public class XmippDialog extends JDialog implements ActionListener {
 		String redSuffix = String.format("%c[0m", 0x1B);
 		return message.replace(redPrefix, "").replace(redSuffix, "");
 	}
+        
+        
 
 }// class XmippDialog
 

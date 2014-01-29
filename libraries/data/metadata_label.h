@@ -130,7 +130,7 @@ enum MDLabel
     MDL_CTF_BG_GAUSSIAN_K, ///< CTF Background parameter
     MDL_CTF_BG_GAUSSIAN_SIGMAU, ///< CTF Background parameter
     MDL_CTF_BG_GAUSSIAN_SIGMAV, ///< CTF Background parameter
-    MDL_CTF_BG_GAUSSIAN_CU, ///< CTF Background parameter
+    MDL_CTF_BG_GAUSSIAN_CU, ///<CTF_ CTF Background parameter
     MDL_CTF_BG_GAUSSIAN_CV, ///< CTF Background parameter
     MDL_CTF_BG_GAUSSIAN_ANGLE, ///< CTF Background parameter
     MDL_CTF_BG_SQRT_K, ///< CTF Background parameter
@@ -698,11 +698,14 @@ private:
 
     /** Add predefined labels to be used in metadata */
     static void addLabel(MDLabel label, MDLabelType type, const String &name, int tags=TAGLABEL_NOTAG);
-
+    /** This function will read extra label alias from XMIPP_LABEL_ALIASES var environment */
+    static void addExtraAliases();
     friend class MDLabelStaticInit;
 public:
-    /** Add an alias for an existing label */
-    static void addLabelAlias(MDLabel label, const String &alias);
+    /** Add an alias for an existing label,
+     * If replace=true, then new alias name will be used
+     * as the label string for writing back to file */
+    static void addLabelAlias(MDLabel label, const String &alias, bool replace=false);
 }
 ;//close class MLD definition
 
@@ -1183,6 +1186,10 @@ private:
         MDL::emptyHeader.resetGeo();
         MDL::emptyHeader.setValue(MDL_ANGLE_ROT, 0.);
         MDL::emptyHeader.setValue(MDL_ANGLE_TILT,0.);
+
+        // Add user-defined label aliases for allow use Xmipp-MetaData
+        // with other labels
+        MDL::addExtraAliases();
 
     }
 

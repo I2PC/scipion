@@ -106,6 +106,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 	protected JButton saveandexitbt;
 
 	protected JToolBar tb;
+        
 
 	public ParticlePickerJFrame(ParticlePicker picker)
 	{
@@ -134,10 +135,12 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 
 		resetbt = XmippWindowUtil.getTextButton("Reset", new ActionListener()
 		{
+                    
 			@Override
 			public void actionPerformed(ActionEvent e)
 			{
-				XmippQuestionDialog qd = new XmippQuestionDialog(ParticlePickerJFrame.this, "Are you sure to remove all particles from micrograph\n",
+                                String resetmsg = getResetMsg();
+				XmippQuestionDialog qd = new XmippQuestionDialog(ParticlePickerJFrame.this, resetmsg,
 						false);
 				if (qd.showDialog())
 					resetMicrograph();
@@ -179,6 +182,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 			{
 				if (e.getValueIsAdjusting())
 					return;
+                                
 				if (micrographstb.getSelectedRow() == -1)
 					return;// Probably from fireTableDataChanged raised
 				loadMicrograph();
@@ -226,6 +230,11 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 	}
 
 	protected abstract void loadMicrograph();
+        
+        public String getResetMsg()
+        {
+            return "Are you sure you want to remove all particles from micrograph?";
+        }
 
 	private void initMenuBar(ParticlePicker picker)
 	{

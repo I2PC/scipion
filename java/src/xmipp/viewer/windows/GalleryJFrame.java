@@ -316,7 +316,10 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 	{
 		// Create file chooser and set current dir
 		setIconImage(XmippResource.getIcon("xmipp_logo.png").getImage());
-		fc = new XmippFileChooser();
+		if (data.getFileName() != null)
+			fc = new XmippFileChooser(new File(data.getFileName()));
+		else
+			fc = new XmippFileChooser();
 		ctfTasks = new TasksEngine(GalleryJFrame.this);
 
 		isUpdating = true; // avoid handling some changes events
@@ -1831,8 +1834,9 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			addItem(CTF_PROFILE, "Show CTF profile");
 			addItem(CTF_RECALCULATE, "Recalculate CTF");
 			addSeparator();
-			addItem(SET_CLASS, "Set class");
 			addItem(OPEN_IMAGES, "Open images");
+			addItem(SAVE_IMAGES, "Save images", "save.gif");
+			addItem(SET_CLASS, "Set class");
 			addItem(SELECT, "Select");
 			addItem(SELECT_ALL, "All", null, "control released A");
 			addItem(SELECT_TOHERE, "To here");
@@ -1844,7 +1848,9 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		{
 			setItemVisible(SET_CLASS, data.is2DClassificationMd());
 			// This item visibility depends on current selection
+			setItemVisible(SAVE_IMAGES, data.is2DClassificationMd() && gallery.getSelectionCount() > 0);
 			setItemVisible(OPEN_IMAGES, data.is2DClassificationMd() && gallery.getSelectionCount() == 1);
+					
 			// Update menu items status depending on item.
 			row = table.rowAtPoint(location);
 			col = table.columnAtPoint(location);
@@ -1876,7 +1882,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 					MDRow row2 = new MDRow();
 					data.md.getRow(row2, data.ids[row]);
 					mdRow.setRow(row2, mdRow.addObject());
-					String sortFn = psdFile.replace(".psd", ".tmpSort.xmd");
+					String sortFn = psdFile.replace(".psd", ".xmd");
 					mdRow.write(sortFn);
 					mdRow.destroy();
 					ImagesWindowFactory.openCTFImage(imp, ctfModel, psdFile, ctfTasks, data.md.getFilename(), row, sortFn);
@@ -1979,6 +1985,12 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 					openMetadata(md);
 				else
 					XmippDialog.showWarning(GalleryJFrame.this, "This class has no images");
+			}
+			else if (cmd.equals(SAVE_IMAGES))
+			{
+				File f = new File(data.getFileName());
+				SaveImagesJDialog dialog = new SaveImagesJDialog(GalleryJFrame.this, f.getParent() + "/images_selection.xmd");
+				dialog.showDialog();					
 			}
 			initItems();
 
