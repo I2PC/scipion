@@ -52,6 +52,13 @@ class ProtProjMatch(XmippProtocol):
         self.CTFDatName = self.DocFileName = ''
         
         #FIXME ROB
+        #create a new self file without disabled images
+        #this is easiest than make sure that all the programs 
+        #support the disabled label
+        #linkAcquisitionInfo(log, InputFile, self.TmpDir)
+        self.tmpSelfFileName = join(self.TmpDir,'inMetadataFile.xmd')
+        self.SelFileNameInitial = self.SelFileName
+        self.SelFileName        = self.tmpSelfFileName
         if self.DoCtfCorrection:
             if self.SplitDefocusDocFile:
                 self.CTFDatName = self.SplitDefocusDocFile
@@ -851,10 +858,14 @@ data_noname
 #        _dataBase.insertStep('createAcquisitionData',verifyfiles=[fnOut],samplingRate=self.AngSamplingRateDeg, fnOut=fnOut)
 #        print "createAcquisitionData|| fnOut=",fnOut, " samplingRate=", self.AngSamplingRateDeg
 
+        _dataBase.insertStep('removeDisabled',
+                             verifyfiles = [self.SelFileName],
+                             SelFileNameInitial = self.SelFileNameInitial,
+                             SelFileName =self.SelFileName
+                             )
         _dataBase.insertStep("linkAcquisitionInfo",
-                        InputFile=self.SelFileName,
-                        dirDest=self.WorkingDir)
-        
+                        InputFile=self.SelFileNameInitial,
+                        dirDest=self.TmpDir)
         # Construct special filename list with zero special case
         self.DocFileInputAngles = [self.DocFileWithOriginalAngles] + [self.getFilename('DocfileInputAnglesIters', iter=i) for i in range(1, self.NumberOfIterations + 1)]
         #print 'self.DocFileInputAngles: ', self.DocFileInputAngles
@@ -937,7 +948,7 @@ data_noname
                                       'StackCTFs',
                                       'StackWienerFilters',
                                       'SplitAtDefocus']]
-
+        print 'executeCtfGroups', self.SelFileName
         _dataBase.insertStep('executeCtfGroups', verifyfiles=verifyFiles
                                                , CTFDatName=self.CTFDatName
                                                , CtfGroupDirectory=self.CtfGroupDirectory
