@@ -119,7 +119,7 @@ class XmippNMAViewer(ProtocolViewer):
                 'displayModes': 'doDisplayModes',
                 'displayMaxDistanceProfile': 'doDisplayMaxDistanceProfile',
                 'displayDistanceProfile': 'doDisplayDistanceProfile',
-                'singleMode': self._viewParam,
+                'singleMode': 'doSingleMode',
                 } 
         
     @classmethod

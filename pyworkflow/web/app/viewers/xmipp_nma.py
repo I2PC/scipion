@@ -60,9 +60,13 @@ def doDisplayPseudoAtom(request, protocolViewer):
     pass
 
 def doDisplayPseudoAtomAproximation(request, protocolViewer):
-    files = protocolViewer.protocol.inputStructure.get().getFirstItem().getFileName()
-    files += " " + protocolViewer._getExtraPath('pseudoatoms_approximation.vol')
-    return "showj","/visualize_object/?path="+ str(files)
+    file = protocolViewer.protocol.inputStructure.get().getFirstItem().getFileName()
+    extra = protocolViewer.protocol._getExtraPath('pseudoatoms_approximation.vol')
+
+    url1 = "/visualize_object/?path="+ file
+    url2 = "/visualize_object/?path="+ extra
+    
+    return "showjs", [str(url1) , str(url2)]
 
 def doDisplayModes(request, protocolViewer):
     path = str(protocolViewer.protocol._getPath('modes.xmd'))
@@ -75,7 +79,7 @@ def doDisplayMaxDistanceProfile(request, protocolViewer):
     return "plot","/view_plots/?function=plotMaxDistanceProfile&protViewerClass="+ protViewerClass + "&protId="+ protId + "&width=" + str(width) + "&height="+ str(height)
 
 def plotMaxDistanceProfile(request, protocolViewer):
-    fn = str(protocolViewer._getExtraPath("maxAtomShifts.xmd"))
+    fn = str(protocolViewer.protocol._getExtraPath("maxAtomShifts.xmd"))
     xplotter = protocolViewer._createShiftPlot(fn, "Maximum atom shifts", "maximum shift")
     return xplotter
 
@@ -87,7 +91,7 @@ def doDisplayDistanceProfile(request, protocolViewer):
 
 def plotDistanceProfile(request, protocolViewer):
     mode = protocolViewer.singleMode.get()
-    fn = str(protocolViewer._getExtraPath("distanceProfiles","vec%d.xmd" % mode))
+    fn = str(protocolViewer.protocol._getExtraPath("distanceProfiles","vec%d.xmd" % mode))
     xplotter = protocolViewer._createShiftPlot(fn, "Atom shifts for mode %d" % mode, "shift")
     return xplotter
 
