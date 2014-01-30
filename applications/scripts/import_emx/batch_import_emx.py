@@ -30,6 +30,7 @@ from protlib_emx import ctfMicXmippToEmx
 from emx.emxmapper import *
 from emx.emx import *
 from protlib_emx import emxMicsToXmipp, emxCoordsToXmipp, alignEMXToXmipp
+import sys
 
 class ScriptImportEMX(XmippScript):
     def __init__(self):
@@ -42,7 +43,7 @@ class ScriptImportEMX(XmippScript):
         self.addParamsLine("         where <mode>")
         self.addParamsLine("             alignment           : export particle shift and rotations")
         self.addParamsLine("             coordinates         : import particle coordinates (so far only works for a single micrograph)")
-        self.addParamsLine("             micCTF              : import micrograph ctf")
+        self.addParamsLine("             mic                 : import list of micrographs")
         self.addParamsLine("     alias -m;")
         self.addParamsLine(' [--notValidate]                 : do not validate xml against schema');
         self.addParamsLine('                                 : validation may require net connection');
@@ -91,21 +92,20 @@ class ScriptImportEMX(XmippScript):
         emxData = EmxData()
         #object to read/write emxData
         mapper = XmlMapper(emxData)
-	try:
-		#read file
-		mapper.readEMXFile(emxFileName)
-	#        xmlMapperW.writeEMXFile(fileName)
-		#create xmd files with mic CTF information and auxiliary files
-		if mode == 'micCTF':
-		    emxMicsToXmipp(emxData)
-		elif mode == 'coordinates':
-		    emxCoordsToXmipp(emxData, '.')
-		elif mode == 'alignment':
-		    xmdFileName = emxFileName.replace(".emx",".xmd")
-		    alignEMXToXmipp(emxData,PARTICLE,xmdFileName)
-	except Exception, e:
-                print >> sys.stderr, "XMIPP_ERROR -1:", str(e)
-                exit(-1)
+        try:
+            #read file
+            mapper.readEMXFile(emxFileName)
+            #create xmd files with mic CTF information and auxiliary files
+            if mode == 'mic':
+                emxMicsToXmipp(emxData)
+            elif mode == 'coordinates':
+                emxCoordsToXmipp(emxData, '.')
+            elif mode == 'alignment':
+                xmdFileName = emxFileName.replace(".emx",".xmd")
+                alignEMXToXmipp(emxData,PARTICLE,xmdFileName)
+        except Exception, e:
+                    print >> sys.stderr, "XMIPP_ERROR -1:", str(e)
+                    exit(-1)
 
 if __name__ == '__main__':
     ScriptImportEMX().tryRun()
