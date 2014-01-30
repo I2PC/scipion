@@ -1056,8 +1056,8 @@ public:
             for (size_t j = 0; j < mdimx; j++)
                 if (fabs( MAT_ELEM(*this,i,j) - MAT_ELEM(op,i,j) ) > accuracy)
                 {
-                	std::cerr << "DEBUG_ROB: MAT_ELEM(*this,i,j): " << MAT_ELEM(*this,i,j) << std::endl;
-                	std::cerr << "DEBUG_ROB: MAT_ELEM(op,i,j): " << MAT_ELEM(op,i,j) << std::endl;
+                	//std::cerr << "DEBUG_ROB: MAT_ELEM(*this,i,j): " << MAT_ELEM(*this,i,j) << std::endl;
+                	//std::cerr << "DEBUG_ROB: MAT_ELEM(op,i,j): " << MAT_ELEM(op,i,j) << std::endl;
                 	return false;
                 }
         return true;
@@ -1076,8 +1076,8 @@ public:
             for (size_t j = 0; j < mdimx; j++)
                 if ( (fabs( MAT_ELEM(*this,i,j)) - fabs(MAT_ELEM(op,i,j)) )> accuracy)
                 {
-                	std::cerr << "DEBUG_ROB: MAT_ELEM(*this,i,j): " << MAT_ELEM(*this,i,j) << std::endl;
-                	std::cerr << "DEBUG_ROB: MAT_ELEM(op,i,j): " << MAT_ELEM(op,i,j) << std::endl;
+                	//std::cerr << "DEBUG_ROB: MAT_ELEM(*this,i,j): " << MAT_ELEM(*this,i,j) << std::endl;
+                	//std::cerr << "DEBUG_ROB: MAT_ELEM(op,i,j): " << MAT_ELEM(op,i,j) << std::endl;
                 	return false;
                 }
         return true;
