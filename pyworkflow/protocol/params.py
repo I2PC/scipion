@@ -392,9 +392,21 @@ class NumericListParam(StringParam):
     """
     def __init__(self, **args):
         StringParam.__init__(self, **args)
-        self.addValidator(NumericListValidator())   
+        self.addValidator(NumericListValidator())
         
-     
+        
+class NumericRangeParam(StringParam):
+    """ This class will serve to specify range of numbers with a string representation.
+     Possible notation are:
+        "1,5-8,10" -> [1,5,6,7,8,10]
+        "2,6,9-11" -> [2,6,9,10,11]
+        "2 5, 6-8" -> [2,5,6,7,8]
+    """
+    def __init__(self, **args):
+        StringParam.__init__(self, **args)
+        # TODO: ADD a syntax validator
+        
+        
 class TupleParam(Param):
     """ This class will condense a tuple of several
     other params of the same type and related concenpt.

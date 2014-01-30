@@ -305,3 +305,48 @@ def isPower2(num):
     """ Return True if 'num' is a power of 2. """
     return num != 0 and ((num & (num - 1)) == 0)
 
+#---------------------------------------------------------------------------
+# Parsing of arguments
+#---------------------------------------------------------------------------
+def getListFromRangeString(rangeStr):
+    ''' Create a list of integer from a string with range definitions.
+    Used from 
+    Examples:
+    "1,5-8,10" -> [1,5,6,7,8,10]
+    "2,6,9-11" -> [2,6,9,10,11]
+    "2 5, 6-8" -> [2,5,6,7,8]
+    '''
+    elements = rangeStr.split(',')
+    values = []
+    for e in elements:
+        if '-' in e:
+            limits = e.split('-')
+            values += range(int(limits[0]), int(limits[1])+1)
+        else:
+            # If values are separated by comma also splitted 
+            values += map(int, e.split())
+    return values
+
+def getRangeStringFromList(list):
+    left = None
+    right = None
+    ranges = []
+
+    def addRange():
+        if left == right: # Single element
+            ranges.append("%d" % right)
+        else:
+            ranges.append("%(left)d-%(right)d" % locals())
+    
+    for item in list:
+        if right is None:
+            left = right = item
+        else:
+            if item == right + 1:
+                right += 1
+            else:
+                addRange()
+                left = right = item
+    addRange()
+    return ','.join(ranges)
+
