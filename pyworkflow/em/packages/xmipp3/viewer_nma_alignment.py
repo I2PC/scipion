@@ -69,7 +69,9 @@ class XmippAlignmentNMAViewer(ProtocolViewer):
                 } 
                         
     def _viewWithMatlab(self, paramName):
-        os.system("matlab -r \"xmipp_nma_selection_tool(\'"+self._getPath()+"\')\"")
+        xmippLib = join(os.environ['XMIPP_HOME'], 'bin')
+        command = "path(path, '%s');xmipp_nma_selection_tool('%s')" % (xmippLib, self._getPath())
+        os.system('matlab -r "%s"' % command)
         
     def _viewRawDeformation(self, paramName):
         components = map(int, self.displayRawDeformation.get().split())
