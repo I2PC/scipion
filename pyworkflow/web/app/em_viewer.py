@@ -41,7 +41,7 @@ from viewers.xmipp_ml2d import *
 from viewers.xmipp_cl2d import *
 from viewers.xmipp_ml3d import *
 from viewers.xmipp_nma import *
-#from viewers.xmipp_nma_align import *
+from viewers.xmipp_nma_align import *
 # SPIDER
 from viewers.spider_capca import *
 from viewers.spider_ward import *
