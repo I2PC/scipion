@@ -29,10 +29,10 @@ This sub-package will contains Xmipp3.0 specific protocols
 
 _logo = "xmipp_logo.png"
 _references = [
-                '[[http://www.ncbi.nlm.nih.gov/pubmed/24075951][Xmipp: de la Rosa-Trevin, JSB (2013)]]',
+                '[[http://www.ncbi.nlm.nih.gov/pubmed/24075951][Xmipp: De la Rosa-Trevin, et.al, JSB (2013)]]',
                 #'[[http://www.ncbi.nlm.nih.gov/pubmed/15477099][Xmipp: Sorzano, JSB (2004)]]',
                 #'[[http://www.ncbi.nlm.nih.gov/pubmed/8812978][Xmipp: Marabini, JSB (1996)]]',
-                '[[http://www.ncbi.nlm.nih.gov/pubmed/23086876][Protocols: Sorzano, Meth.Mol.Biol. (2013)]]',
+                '[[http://www.ncbi.nlm.nih.gov/pubmed/23086876][Protocols: Sorzano, et.al, Meth.Mol.Biol. (2013)]]',
                 #'[[http://www.sciencedirect.com/science/article/pii/B9780124059146000160][Protocols: Devaux, Meth.Cell.Biol. (2012)]]',
                 #'[[http://www.ncbi.nlm.nih.gov/pubmed/18536645][Protocols: Scheres, Nat.Prot. (2008)]]',
                ]
@@ -44,6 +44,7 @@ from viewer_ml2d import XmippML2DViewer
 from viewer_cl2d import XmippCL2DViewer
 from viewer_ml3d import XmippML3DViewer
 from viewer_nma import XmippNMAViewer
+from viewer_nma_alignment import XmippAlignmentNMAViewer
 
 from plotter import XmippPlotter
 from protocol_preprocess_micrographs import XmippProtPreprocessMicrographs
@@ -69,6 +70,7 @@ from protocol_ransac import XmippProtRansac
 from protocol_convert_pdb import XmippProtConvertPdb
 from protocol_join_sets import XmippProtJoinSets
 from protocol_nma import XmippProtNMA
+from protocol_nma_alignment import XmippProtAlignmentNMA
 
 # Wizards
 from wizard import *

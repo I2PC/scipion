@@ -358,9 +358,6 @@ class Protocol(Step):
     def copyDefinitionAttributes(self, other):
         """ Copy definition attributes to other protocol. """
         for paramName, _ in self.iterDefinitionAttributes():
-            print "copying param", paramName
-            print "other",other
-            
             self.copyAttributes(other, paramName)
         
     def _createVarsFromDefinition(self, **args):
@@ -453,7 +450,13 @@ class Protocol(Step):
     
     def _getRelPath(self, *path):
         """ Return a relative path from the workingDir. """
-        return os.path.relpath(self._getPath(*path), self.workingDir.get()) 
+        return os.path.relpath(self._getPath(*path), self.workingDir.get())
+    
+    def _getBasePath(self, path):
+        """ Take the basename of the path and get the path
+        relative to working dir of the protocol. 
+        """
+        return self._getPath(os.path.basename(path))
         
     def _insertFunctionStep(self, funcName, *funcArgs, **args):
         """ 
@@ -680,10 +683,9 @@ class Protocol(Step):
         to run should exists. 
         """
         self._log = self.__getLogger()
-        self._stdErr = self.__getStdErr()
-        self._stdOut = self.__getStdOut()
-        self.fOut = open(self.stdOut, 'a')
-        self.fErr = open(self.stdErr, 'a')
+
+        self.__initLogs('a')
+        
         self.stderr = sys.stderr
         sys.stdout = self.fOut
         sys.stderr = self.fErr
@@ -703,6 +705,20 @@ class Protocol(Step):
         self._store()
         self._log.info('------------------- PROTOCOL FINISHED')
         self.__closeLogger()
+        
+    def __initLogs(self, mode):
+        self._stdErr = self.__getStdErr()
+        self._stdOut = self.__getStdOut()
+        self.fOut = open(self.stdOut, mode)
+        self.fErr = open(self.stdErr, mode)
+        
+    def getLogsAsStrings(self):
+        self.__initLogs('r')
+        fOutString = self.fOut.read()
+        fErrString = self.fErr.read()
+        self.fOut.close()
+        self.fErr.close()
+        return fOutString, fErrString
         
     def __getLogger(self):
         #Initialize log

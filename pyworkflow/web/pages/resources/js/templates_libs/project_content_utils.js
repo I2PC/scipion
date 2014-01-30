@@ -202,6 +202,13 @@ function fillTabs(id) {
 				$("span#analyzeTool").show();
 				$("a#analyzeTool").attr('href', 'javascript:launchViewer("'+id +'")');
 			}
+			
+			//LOGS
+			$("#tab-logs-output").empty();
+			$("#tab-logs-output").append(json.logs_out);
+			
+			$("#tab-logs-error").empty();
+			$("#tab-logs-error").append(json.logs_error);
 		}
 	});
 }

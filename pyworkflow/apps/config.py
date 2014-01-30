@@ -347,23 +347,33 @@ def addSpiderMDAProtocols(settings):
        
 def addNMAProtocols(settings):
     """ Write protocols related to Flexible Analysis (NMA) workflow. """
-    m1 = ProtocolConfig("Flexible analysis")
+    m = ProtocolConfig("HEMNMA")
     
     # ------------------- Particles ----------------------------
-    m2 = m1.addSubMenu('Import 3D structure', tag='section')
-    m2.addSubMenu(' Import PDB', tag='protocol', icon='bookmark.png',
+    m1 = m.addSubMenu('1. Import PDB or Volume', tag='section')
+    m1.addSubMenu(' Import PDB', tag='protocol', icon='bookmark.png',
                   value='ProtImportPdb')
-    m2.addSubMenu(' Import volume', tag='protocol', icon='bookmark.png',
+    m1.addSubMenu(' Import volume', tag='protocol', icon='bookmark.png',
                   value='ProtImportVolumes')
-       
-    m1.addSubMenu(' NMA analysis', tag='protocol',
-                  value='XmippProtNMA')            
     
-    m1.addSubMenu(' Import particles', tag='protocol', icon='bookmark.png',
-                  value='ProtImportParticles')
-    m1.addSubMenu(' Filter (optional)', tag='protocol',
-                  value='SpiderProtFilter')
-    settings.addProtocolMenu(m1)
+    m2 = m.addSubMenu('2. Compute Normal Modes', tag='section') 
+    m2.addSubMenu('NMA', tag='protocol', value='XmippProtNMA')  
+    
+    m3 = m.addSubMenu('3. Analyze results (select modes)', tag='section')   
+     
+    m4 = m.addSubMenu('4. Stop here or continue', tag='section') 
+    m4.addSubMenu(' Import particles', tag='protocol', icon='bookmark.png',
+                  value='ProtImportParticles')  
+    
+    m5 = m.addSubMenu('5. Optional', tag='section')
+    m5.addSubMenu(' Resize particles', tag='protocol', value='XmippProtResize')
+    
+    m6 = m.addSubMenu('6. Analyze images', tag='section')       
+    m6.addSubMenu('Flexibility analysis', tag='protocol', value='XmippProtAlignmentNMA') 
+    
+    m7 = m.addSubMenu('7. Analyze results (plot deformations)', tag='section')  
+    
+    settings.addProtocolMenu(m)
     
         
 def getScipionHome(userHome):

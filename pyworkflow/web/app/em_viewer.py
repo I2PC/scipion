@@ -40,6 +40,8 @@ from pyworkflow.viewer import WEB_DJANGO
 from viewers.xmipp_ml2d import *
 from viewers.xmipp_cl2d import *
 from viewers.xmipp_ml3d import *
+from viewers.xmipp_nma import *
+#from viewers.xmipp_nma_align import *
 # SPIDER
 from viewers.spider_capca import *
 from viewers.spider_ward import *
@@ -53,8 +55,6 @@ def launch_viewer(request):
         protocol = project.mapper.selectById(int(protId))
         
         viewers = findViewers(protocol.getClassName(), WEB_DJANGO)
-        
-#        print len(viewers)
         
         if len(viewers) == 0:
             msg = "There is not viewer for protocol: <strong>" + protocol.getClassName() +"</strong>"
@@ -218,10 +218,10 @@ def view_plots(request):
     canvas = xplotter.getCanvas()
     
     # Adding this line the space between plots is fixed
-    try:
-        xplotter.show()
-    except:
-        pass
+#    try:
+#        xplotter.show()
+#    except:
+#        pass
     
     response = HttpResponse(content_type='image/png')
     canvas.print_png(response)

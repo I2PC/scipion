@@ -39,6 +39,15 @@ class Plotter(object):
         cls.interactive = value
         
     def __init__(self, x=1, y=1, mainTitle="", figsize=None, dpi=100, windowTitle=""):
+        """ This Plotter class has some utilities to create a Matplotlib figure
+        and add some plots to it.
+        Params:
+            x, y: number of rows and colums of the grid for plots.
+            mainTitle: figure main title.
+            figsize: the size of the figure, if None, it will be guessed from x and y
+            dpi: resolution, 100 by default.
+            windowTitle: title for the whole windows.
+        """
         
         if self.plt is None:
             import matplotlib

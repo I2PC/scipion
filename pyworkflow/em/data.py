@@ -196,9 +196,10 @@ class VolumeMask(Volume):
 
 class PdbFile(EMObject):
     """Represents an EM Image object"""
-    def __init__(self, **args):
+    def __init__(self, filename=None, pseudoatoms=False, **args):
         EMObject.__init__(self, **args)
-        self._filename = String()
+        self._filename = String(filename)
+        self._pseudoatoms = Boolean(pseudoatoms)
         
     def getFileName(self):
         """ Use the _objValue attribute to store filename. """
@@ -207,6 +208,15 @@ class PdbFile(EMObject):
     def setFileName(self, filename):
         """ Use the _objValue attribute to store filename. """
         self._filename.set(filename)
+        
+    def getPseudoAtoms(self):
+        return self._pseudoatoms.get()
+    
+    def setPseudoAtoms(self, value):
+        self._pseudoatoms.set(value)
+        
+    def __str__(self):
+        return "%s (pseudoatoms=%s)" % (self.getClassName(), self.getPseudoAtoms())
         
         
 class Set(EMObject):
@@ -328,7 +338,6 @@ class SetOfImages(Set):
         self._isAmplitudeCorrected = Boolean(False)
         self._acquisition = Acquisition()
            
-        
     def getAcquisition(self, index=0):
         return self._acquisition
         
@@ -551,7 +560,6 @@ class SetOfCoordinates(Set):
     Each coordinate has a (x,y) position and is related to a Micrograph
     The SetOfCoordinates can also have information about TiltPairs.
     """
-    
     def __init__(self, **args):
         Set.__init__(self, **args)
         self._micrographsPointer = Pointer()
@@ -765,3 +773,13 @@ class SetOfClasses2D(Set):
         if self._averages: # Write if not None
             self._averages.write()
             
+
+class NormalModes(EMObject):
+    """ Store results from a 2D classification. """
+    def __init__(self, filename=None, **args):
+        EMObject.__init__(self, **args)
+        self._filename = String(filename)
+        
+    def getFileName(self):
+        return self._filename.get()
+    
