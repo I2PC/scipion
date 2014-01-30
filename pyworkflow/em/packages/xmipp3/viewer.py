@@ -55,7 +55,7 @@ class XmippViewer(Viewer):
     with the Xmipp program xmipp_showj
     """
     _environments = [DESKTOP_TKINTER, WEB_DJANGO]
-    _targets = [Image, PdbFile, SetOfImages, SetOfCoordinates, SetOfClasses2D, 
+    _targets = [Image, SetOfImages, SetOfCoordinates, SetOfClasses2D, 
                 ProtImportMicrographs, XmippProtPreprocessMicrographs, ProtCTFMicrographs,
                 ProtParticlePicking, ProtImportParticles, XmippProtExtractParticles,
                 ProtAlign, ProtProcessParticles, XmippProtKerdensom, XmippProtRotSpectra, 
@@ -65,10 +65,6 @@ class XmippViewer(Viewer):
         Viewer.__init__(self, **args)
 
     def visualize(self, obj, **args):
-        
-        
-        
-        
         cls = type(obj)
         
         if issubclass(cls, Image):
@@ -76,14 +72,6 @@ class XmippViewer(Viewer):
             fn = locationToXmipp(*obj.getLocation())
             runShowJ(fn)
             
-        elif issubclass(cls, PdbFile):
-            fn = obj.getFileName()
-            if obj.getPseudoAtoms():
-                os.system("vmd %s" % fn)
-            else:
-                from protlib_gui_ext import chimera
-                chimera(fn)
-             
         elif issubclass(cls, NormalModes):
             runShowJ(obj.getFileName())         
               
@@ -235,5 +223,6 @@ def runScipionShowJ(inputFiles, cmdname, script, project, protid, memory="1g", e
 
 def runParticlePicker(inputMics, inputCoords, memory="1g", extraParams=""):
     runJavaIJapp(memory, "xmipp.viewer.particlepicker.training.Main", "%s %s %s" % (inputMics, inputCoords, extraParams), True)
+
 
 

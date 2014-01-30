@@ -35,6 +35,7 @@ from protocol import *
 from constants import *
 from convert import *
 from pyworkflow.viewer import Viewer, Wizard
+from viewer import *
 #from packages import *
 
 PACKAGES_PATH = os.path.join(pw.HOME, 'em', 'packages')

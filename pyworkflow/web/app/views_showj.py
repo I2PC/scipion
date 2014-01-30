@@ -484,8 +484,6 @@ def visualizeObject(request):
             inputParameters['path'] = obj.getFileName()
             inputParameters['mode'] = 'volume_astex'
             inputParameters['typeVolume'] = 'pdb'
-            return showj(request, inputParameters, extraParameters)
-
 
         elif isinstance(obj, SetOfImages):
             fn = project.getTmpPath(obj.getName() + '_images.xmd')
@@ -516,6 +514,8 @@ def visualizeObject(request):
             inputParameters['path'] = os.path.join(projectPath, createXmippInputCTF(None, obj, ctfFn=os.path.join(projectPath, fn)))
 #            writeSetOfCTFs(obj, fn)
 #            inputParameters['path']= os.path.join(projectPath, fn)
+        elif isinstance(obj, NormalModes):
+            inputParameters['path'] = os.path.join(projectPath, obj.getFileName())
         else:
             raise Exception('Showj Web visualizer: can not visualize class: %s' % obj.getClassName())
     
