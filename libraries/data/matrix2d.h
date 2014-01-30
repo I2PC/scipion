@@ -1055,7 +1055,31 @@ public:
         for (size_t i = 0; i < mdimy; i++)
             for (size_t j = 0; j < mdimx; j++)
                 if (fabs( MAT_ELEM(*this,i,j) - MAT_ELEM(op,i,j) ) > accuracy)
-                    return false;
+                {
+                	std::cerr << "DEBUG_ROB: MAT_ELEM(*this,i,j): " << MAT_ELEM(*this,i,j) << std::endl;
+                	std::cerr << "DEBUG_ROB: MAT_ELEM(op,i,j): " << MAT_ELEM(op,i,j) << std::endl;
+                	return false;
+                }
+        return true;
+    }
+    /** Equality.
+     *
+     * Returns true if this object has got the same shape (origin and size)
+     * than the argument and the same values (within accuracy and without SIGN).
+     */
+    bool equalAbs(const Matrix2D<T>& op,
+               double accuracy = XMIPP_EQUAL_ACCURACY) const
+    {
+        if (!sameShape(op))
+            return false;
+        for (size_t i = 0; i < mdimy; i++)
+            for (size_t j = 0; j < mdimx; j++)
+                if ( (fabs( MAT_ELEM(*this,i,j)) - fabs(MAT_ELEM(op,i,j)) )> accuracy)
+                {
+                	std::cerr << "DEBUG_ROB: MAT_ELEM(*this,i,j): " << MAT_ELEM(*this,i,j) << std::endl;
+                	std::cerr << "DEBUG_ROB: MAT_ELEM(op,i,j): " << MAT_ELEM(op,i,j) << std::endl;
+                	return false;
+                }
         return true;
     }
     //@}

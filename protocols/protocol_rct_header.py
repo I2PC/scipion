@@ -77,9 +77,9 @@ SkipTiltedTranslations=False
 #------------------------------------------------------------------------------------------------
 # {expert} Additional reconstruction parameters
 """
-See: [http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Fourier]
+See: [http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Reconstruct_art_v31]
 """
-ReconstructAdditionalParams = ""
+ReconstructAdditionalParams = "-n 5 -l 0.01"
 
 # Filter reconstructed volumes?
 """ 
