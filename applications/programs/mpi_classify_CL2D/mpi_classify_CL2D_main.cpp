@@ -719,11 +719,11 @@ void CL2D::initialize(MetaData &_SF,
     bool oldUseCorrelation = prm->useCorrelation;
     prm->useCorrelation = true; // Since we cannot make the assignment before calculating sigma
     CL2DAssignment bestAssignment;
-    size_t first, last;
+    size_t idx=0;
     SF->fillConstant(MDL_REF,"-1");
-    while (prm->taskDistributor->getTasks(first, last))
+    FOR_ALL_OBJECTS_IN_METADATA(prm->SF)
     {
-        for (size_t idx = first; idx <= last; ++idx)
+        if ((idx+1)%prm->node->size==prm->node->rank)
         {
             int q = -1;
             if (!initialCodesGiven)
@@ -765,8 +765,9 @@ void CL2D::initialize(MetaData &_SF,
             if (idx % 100 == 0 && prm->node->rank == 0)
                 progress_bar(idx);
         }
+        idx++;
     }
-    prm->taskDistributor->wait();
+    prm->node->barrierWait();
     if (prm->node->rank == 0)
         progress_bar(Nimgs);
     prm->useCorrelation = oldUseCorrelation;
@@ -789,10 +790,10 @@ void CL2D::initialize(MetaData &_SF,
         }
 
         CL2DAssignment inClass, outClass;
-        prm->taskDistributor->reset();
-        while (prm->taskDistributor->getTasks(first, last))
+        size_t idx=0;
+        FOR_ALL_OBJECTS_IN_METADATA(prm->SF)
         {
-            for (size_t idx = first; idx <= last; ++idx)
+            if ((idx+1)%prm->node->size==prm->node->rank)
             {
                 size_t objId = prm->objId[idx];
                 readImage(I, objId, false);
@@ -822,8 +823,9 @@ void CL2D::initialize(MetaData &_SF,
                 if (prm->node->rank == 0 && idx % 100 == 0)
                     progress_bar(idx);
             }
+            idx++;
         }
-        prm->taskDistributor->wait();
+        prm->node->barrierWait();
         if (prm->node->rank == 0)
             progress_bar(Nimgs);
 
@@ -1013,11 +1015,10 @@ void CL2D::run(const FileName &fnODir, const FileName &fnOut, int level)
         for (size_t n = 0; n < Nimgs; ++n, ++ptrOld)
             *ptrOld -= 1;
         SF->fillConstant(MDL_REF, "-1");
-        prm->taskDistributor->reset();
-        size_t first, last;
-        while (prm->taskDistributor->getTasks(first, last))
+        size_t idx=0;
+        FOR_ALL_OBJECTS_IN_METADATA(prm->SF)
         {
-            for (size_t idx = first; idx <= last; ++idx)
+            if ((idx+1)%prm->node->size==prm->node->rank)
             {
                 size_t objId = prm->objId[idx];
                 readImage(I, objId, false);
@@ -1030,8 +1031,9 @@ void CL2D::run(const FileName &fnODir, const FileName &fnOut, int level)
                 if (prm->node->rank == 0 && idx % progressStep == 0)
                     progress_bar(idx);
             }
+            idx++;
         }
-        prm->taskDistributor->wait();
+        prm->node->barrierWait();
 
         // Gather all pieces computed by nodes
         MPI_Allreduce(MPI_IN_PLACE, &corrSum, 1, MPI_DOUBLE, MPI_SUM,
@@ -1511,14 +1513,12 @@ ProgClassifyCL2D::ProgClassifyCL2D(int argc, char** argv)
     node = new MpiNode(argc, argv);
     if (!node->isMaster())
         verbose = 0;
-    taskDistributor = NULL;
 }
 
 /* Destructor -------------------------------------------------------------- */
 ProgClassifyCL2D::~ProgClassifyCL2D()
 {
     delete node;
-    delete taskDistributor;
 }
 
 /* VQPrm I/O --------------------------------------------------------------- */
@@ -1628,8 +1628,6 @@ void ProgClassifyCL2D::produceSideInfo()
     // Prepare the Task distributor
     SF.findObjects(objId);
     size_t Nimgs = objId.size();
-    taskDistributor = new MpiTaskDistributor(Nimgs,
-                      XMIPP_MAX(1,Nimgs/(5*node->size)), node);
 
     // Prepare mask for evaluating the noise outside
     mask.resize(prm->Ydim, prm->Xdim);
