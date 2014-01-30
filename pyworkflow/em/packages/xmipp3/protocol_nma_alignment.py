@@ -50,6 +50,14 @@ class XmippProtAlignmentNMA(EMProtocol):
     
     def _defineParams(self, form):
         form.addSection(label='Input')
+        form.addParam('modeList', NumericRangeParam, label="Modes selection",
+                      help='Select which modes do you want to use from all of them.\n'
+                           'If you leave the field empty, all modes will be used.\n'
+                           'You have several ways to specify selected modes.\n'
+                           '   Examples:\n'
+                           ' "1,5-8,10" -> [1,5,6,7,8,10]\n'
+                           ' "2,6,9-11" -> [2,6,9,10,11]\n'
+                           ' "2 5, 6-8" -> [2,5,6,7,8])\n')
         form.addParam('inputParticles', PointerParam, label="Input particles", 
                       pointerClass='SetOfParticles',
                       help='Select the set of particles that you want to use for flexible analysis.')  
@@ -95,23 +103,50 @@ class XmippProtAlignmentNMA(EMProtocol):
             print >> fWarn, l
         fWarn.close()
         
+    def _getLocalModesFn(self):
+        modesFn = self.inputModes.get().getFileName()
+        return self._getBasePath(modesFn)
+    
     def _defineSteps(self):
         atomsFn = self.inputPdb.get().getFileName()
         modesFn = self.inputModes.get().getFileName()
         # Convert input images if necessary
         imgFn = createXmippInputImages(self, self.inputParticles.get())
+        localModesFn = self._getBasePath(modesFn)
+        
         self._insertFunctionStep('copyFilesStep', atomsFn, modesFn)
+        self._insertFunctionStep('selectModesStep', localModesFn)
+        
         if self.copyDeformations.empty(): #ONLY FOR DEBUGGING
             self._insertFunctionStep("performNmaStep", imgFn,
-                                     self._getBasePath(atomsFn), self._getBasePath(modesFn))
+                                     self._getBasePath(atomsFn), localModesFn)
             self._insertFunctionStep("extractDeformationsStep", imgFn)
         else:            
             self._insertFunctionStep('copyDeformationsStep', self.copyDeformations.get())
+            
+        self._insertFunctionStep('createOutputStep')
         
     def copyFilesStep(self, atomsFn, modesFn):
         """ Copy the input files to the local working dir. """
         for fn in [modesFn, atomsFn]:
             copyFile(fn, self._getBasePath(fn))
+            
+    def selectModesStep(self, modesFn):
+        """ Read the modes metadata and keep only those modes selected
+        by the user in the protocol. 
+        """
+        modeList = getListFromRangeString(self.modeList.get())
+        md = xmipp.MetaData(modesFn)
+        
+        for objId in md:
+            order = md.getValue(xmipp.MDL_ORDER, objId)
+            if order in modeList:
+                enable = 1
+            else:
+                enable = 0
+            md.setValue(xmipp.MDL_ENABLED, enable, objId)
+        
+        md.write(modesFn)
             
     def copyDeformationsStep(self, defFn):
         copyFile(defFn, self._getExtraPath(basename(defFn)))
@@ -149,11 +184,8 @@ class XmippProtAlignmentNMA(EMProtocol):
         return defFn
     
     def createOutputStep(self):
-        if self.structureEM:
-            pdb = PdbFile(self._getPath('pseudoatoms.pdb'))
-            self._defineOutputs(outputPdb=pdb)
-        modes = NormalModes()
-        self._defineOutputs(outputModes=modes)
+        modes = NormalModes(filename=self._getLocalModesFn())
+        self._defineOutputs(selectedModes=modes)
 
     def _summary(self):
         summary = []
