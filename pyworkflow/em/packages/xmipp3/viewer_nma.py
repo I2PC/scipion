@@ -48,6 +48,7 @@ class XmippNMAViewer(ProtocolViewer):
     """ Visualization of results from the NMA protocol
     """
     _label = 'viewer nma'
+    _references = ['[[http://www.ncbi.nlm.nih.gov/pubmed/23671335][Nogales-Cadenas, et.al, NAR (2013)]]']
     _targets = [XmippProtNMA]
     _environments = [DESKTOP_TKINTER, WEB_DJANGO]
 

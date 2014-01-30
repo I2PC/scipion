@@ -47,6 +47,9 @@ class XmippAlignmentNMAViewer(ProtocolViewer):
     """ Visualization of results from the NMA protocol
     """
     _label = 'viewer nma alignment'
+    _references = ["[[http://www.ncbi.nlm.nih.gov/pubmed/15885434][Jonic, et.al, Ultramic (2005)]]",
+                   "[[http://www.ncbi.nlm.nih.gov/pubmed/15099579][Sorzano, et.al, JSB (2004)]]"
+                   ]
     _targets = [XmippProtAlignmentNMA]
     _environments = [DESKTOP_TKINTER, WEB_DJANGO]
         
@@ -69,7 +72,7 @@ class XmippAlignmentNMAViewer(ProtocolViewer):
                 } 
                         
     def _viewWithMatlab(self, paramName):
-        xmippLib = join(os.environ['XMIPP_HOME'], 'bin')
+        xmippLib = join(os.environ['XMIPP_HOME'], 'libraries', 'bindings', 'matlab')
         command = "path(path, '%s');xmipp_nma_selection_tool('%s')" % (xmippLib, self._getPath())
         os.system('matlab -r "%s"' % command)
         

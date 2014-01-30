@@ -51,6 +51,9 @@ class XmippProtNMA(EMProtocol):
     
     def _defineParams(self, form):
         form.addSection(label='Input')
+        #TODO: Just trying a trick to have hidden params
+        form.addParam('isEm', BooleanParam, default=False, 
+                      condition='False')
         form.addParam('inputStructure', PointerParam, label="Input structure", important=True, 
                       pointerClass='PdbFile, SetOfVolumes',
                       help='You can choose either a PDB atomic structure or EM volume')  
@@ -71,7 +74,7 @@ class XmippProtNMA(EMProtocol):
                            'standard deviation is this value in voxels') 
         form.addParam('pseudoAtomTarget', FloatParam, default=5, 
                       condition='maskMode==%d' % NMA_MASK_THRE,
-                      label='Threshold value',
+                      label='Volume approximation error(%)',
                       help='This value is a percentage (between 0.001 and 100) \n'
                            'specifying how fine you want to approximate the EM \n'
                            'volume by the pseudoatomic structure. Lower values \n'
@@ -126,7 +129,7 @@ class XmippProtNMA(EMProtocol):
                            'Flexible fitting protocol. Modes 1-6 are always deselected as  \n'
                            'they are related to rigid-body movements.')
               
-        form.addSection(label='Normal Mode Analysis')        
+        form.addSection(label='Animation')        
         form.addParam('amplitud', FloatParam, default=50,
                       label="Amplitud") 
         form.addParam('nframes', IntParam, default=10,
@@ -134,16 +137,14 @@ class XmippProtNMA(EMProtocol):
                       label='Number of frames')
         form.addParam('downsample', FloatParam, default=1,
                       expertLevel=LEVEL_ADVANCED,
-                      label='Interaction force constant',
-                      help='This is the RTB block size for the RTB NMA method. \n'
-                           'When calculating the normal modes, aminoacids are grouped\n'
-                           'into blocks of this size that are moved translationally  \n'
-                           'and rotationally together.')
+                      # condition=isEm
+                      label='Downsample pseudoatomic structure',
+                      help='Downsample factor 2 means removing one half of the pseudoatoms.')
         form.addParam('pseudoAtomThreshold', FloatParam, default=0,
                       expertLevel=LEVEL_ADVANCED,
-                      label='Threshold on collectivity',
-                      help='Remove pseudoatoms whose mass is below this threshold. \n'
-                           'This value should be between 0 and 1.')
+                      # cond
+                      label='Pseudoatom mass thresold',
+                      help='Remove pseudoatoms whose mass is below this threshold. This value should be between 0 and 1.')
         
                       
         form.addParallelSection(threads=1, mpi=8)    

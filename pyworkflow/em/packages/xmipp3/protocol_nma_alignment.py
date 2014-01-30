@@ -135,18 +135,19 @@ class XmippProtAlignmentNMA(EMProtocol):
         """ Read the modes metadata and keep only those modes selected
         by the user in the protocol. 
         """
-        modeList = getListFromRangeString(self.modeList.get())
-        md = xmipp.MetaData(modesFn)
-        
-        for objId in md:
-            order = md.getValue(xmipp.MDL_ORDER, objId)
-            if order in modeList:
-                enable = 1
-            else:
-                enable = 0
-            md.setValue(xmipp.MDL_ENABLED, enable, objId)
-        
-        md.write(modesFn)
+        if not self.modelList.isEmpty():
+            modeList = getListFromRangeString(self.modeList.get())
+            md = xmipp.MetaData(modesFn)
+            
+            for objId in md:
+                order = md.getValue(xmipp.MDL_ORDER, objId)
+                if order in modeList:
+                    enable = 1
+                else:
+                    enable = 0
+                md.setValue(xmipp.MDL_ENABLED, enable, objId)
+            
+            md.write(modesFn)
             
     def copyDeformationsStep(self, defFn):
         copyFile(defFn, self._getExtraPath(basename(defFn)))
