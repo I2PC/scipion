@@ -60,6 +60,10 @@ class XmippProtAlignmentNMA(EMProtocol):
                       pointerClass='NormalModes',
                       help='Set of normal modes to explore.')
         
+        form.addParam('copyDeformations', StringParam,
+                      expertLevel=LEVEL_EXPERT,
+                      label='Copy deformations(only for debug)')
+        
         form.addSection(label='Angular assignment and mode detection')
         form.addParam('trustRegionScale', IntParam, default=1,
                       expertLevel=LEVEL_ADVANCED,
@@ -97,14 +101,20 @@ class XmippProtAlignmentNMA(EMProtocol):
         # Convert input images if necessary
         imgFn = createXmippInputImages(self, self.inputParticles.get())
         self._insertFunctionStep('copyFilesStep', atomsFn, modesFn)
-        self._insertFunctionStep("performNmaStep", imgFn,
-                        self._getBasePath(atomsFn), self._getBasePath(modesFn))
-        self._insertFunctionStep("extractDeformationsStep")
+        if self.copyDeformations.empty(): #ONLY FOR DEBUGGING
+            self._insertFunctionStep("performNmaStep", imgFn,
+                                     self._getBasePath(atomsFn), self._getBasePath(modesFn))
+            self._insertFunctionStep("extractDeformationsStep", imgFn)
+        else:            
+            self._insertFunctionStep('copyDeformationsStep', self.copyDeformations.get())
         
     def copyFilesStep(self, atomsFn, modesFn):
         """ Copy the input files to the local working dir. """
         for fn in [modesFn, atomsFn]:
             copyFile(fn, self._getBasePath(fn))
+            
+    def copyDeformationsStep(self, defFn):
+        copyFile(defFn, self._getExtraPath(basename(defFn)))
         
     def performNmaStep(self, imgFn, atomsFn, modesFn):
         sampling = self.inputParticles.get().getSamplingRate()
@@ -122,15 +132,16 @@ class XmippProtAlignmentNMA(EMProtocol):
         if self.alignmentMethod == NMA_ALIGNMENT_PROJ:
             args += "--projMatch "
     
-        self.runJob(None, "xmipp_nma_alignment", args % locals())
+        print "self.numberOfMpi", self.numberOfMpi
+        self.runJob(None, "xmipp_nma_alignment", args % locals(), self.numberOfMpi.get())
         cleanPath(self._getPath('nmaTodo.xmd'))
     
     def extractDeformationsStep(self, imgFn):
         md = xmipp.MetaData(imgFn)
+        deformations = md.getColumnValues(xmipp.MDL_NMA)
         defFn = self._getExtraPath("deformations.txt")
         fhDef = open(defFn, 'w')
-        for objId in md:
-            deformation = md.getValue(xmipp.MDL_NMA, objId)
+        for deformation in deformations:
             for coef in deformation:
                 fhDef.write("%f " % coef)
             fhDef.write("\n")
