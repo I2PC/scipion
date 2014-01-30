@@ -1,6 +1,7 @@
 # **************************************************************************
 # *
 # * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
+# *              Jose Gutierrez (jose.gutierrez@cnb.csic.es)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -31,10 +32,12 @@ elements to inspect and preview are files.
 """
 
 import os
-        
+import os.path
+
 import Tkinter as tk
 import ttk
 
+from tree import Tree
 import gui
 import tooltip
 import widgets
@@ -42,6 +45,18 @@ import matplotlib_image
 from pyworkflow.utils.path import findResource
 from tree import BoundTree
 from text import TaggedText
+from pyworkflow.utils.messages_properties import Message, Icon
+
+from pyworkflow.em.data import Image    
+import pyworkflow.utils.which 
+import pyworkflow.gui.text
+from pyworkflow.gui.gui import *
+
+
+from xmipp import getImageSize
+
+RESOURCES = 'resources'
+
 
 class ObjectBrowser(tk.Frame):
     """ This class will implement a simple object browser.
@@ -113,11 +128,10 @@ class ObjectBrowser(tk.Frame):
         img = self.getImage(img)
         if img is None:
             img = self.noImage
-        self.label.config(image=img)        
+        self.label.config(image=img)
         if desc is not None:
             self.text.addText(desc)
                         
-"""#############################################################################"""
 
 class FileBrowser():
     def __init__(self, initialDir='.', parent=None, root=None, seltype="both", selmode="browse", allowFilter=True, filter=None, previewDim=144):
@@ -132,47 +146,53 @@ class FileBrowser():
         '''
         self.seltype = seltype
         self.selmode = selmode
-        self.dir = abspath(initialDir)
+#        self.dir = abspath(initialDir)
+        self.dir = initialDir
         self.pattern = filter
         self.allowFilter = allowFilter
-        self.allowRefresh = True
+        self.allowRefresh = True        
         self.selectedFiles = None
         self.showPath = True
         self.dim = previewDim
         self.commonRoot = "" # this will be used to avoid display of long path names
         from protlib_filesystem import findProjectPath
         self.projectDir = findProjectPath('.')
-        # Check if matplotlib is available
         
+        # Check if matplotlib is available
 #        try: 
 #            import protlib_gui_figure
 #            self.matplotlibEnabled = True            
 #        except ImportError:
 #            self.matplotlibEnabled = False
         
-#    def addFileManager(self, key, icon, extensions, 
-#                       fillMenu=False, 
-#                       onClick=defaultOnClick,
-#                       onDoubleClick=defaultOnDoubleClick):
+    def addFileManager(self, key, icon, extensions, 
+                       fillMenu=False, 
+                       onClick='defaultOnClick',
+                       onDoubleClick='defaultOnDoubleClick'):
+        
 #        img = tk.PhotoImage(file=join(RESOURCES, icon))
-#        fm = FileManager(key=key, icon=icon, image=img, 
-#                         fillMenu=fillMenu,
-#                         onClick=onClick,
-#                         onDoubleClick=onDoubleClick)
-#        self.managers[key] = fm
-#        for ext in extensions:
-#            self.extSet[ext] = fm
-#        
-#    def createFileManagers(self):
-#        self.managers = {}
-#        self.extSet = {}
-#        addFm = self.addFileManager
+        img = ''
+        
+        fm = FileManager(key=key, icon=icon, image=img, 
+                         fillMenu=fillMenu,
+                         onClick=onClick,
+                         onDoubleClick=onDoubleClick)
+        
+        self.managers[key] = fm
+        for ext in extensions:
+            self.extSet[ext] = fm
+        
+    def createFileManagers(self):
+        self.managers = {}
+        self.extSet = {}
+        addFm = self.addFileManager
+        
 #        addFm('md', 'md.gif', ['.xmd', '.sel', '.doc', '.ctfparam', '.ctfdat', '.pos', '.descr', '.param', '.hist'], 
 #                            mdFillMenu, mdOnClick, mdOnDoubleClick)
 #        addFm('stk', 'stack.gif', ['.stk', '.mrcs', '.st', '.pif'],
 #                            stackFillMenu, imgOnClick, stackOnDoubleClick)
-#        addFm('img', 'image.gif', ['.xmp', '.tif', '.tiff', '.spi', '.mrc', '.map', '.raw', '.inf', '.dm3', '.em', '.pif', '.psd', '.spe', '.ser', '.img', '.hed', '.jpeg', '.jpg', '.hdf', '.hdf5', '.h5'],
-#                            imgFillMenu, imgOnClick, imgOnDoubleClick)
+        addFm('img', 'image.gif', ['.xmp', '.tif', '.tiff', '.spi', '.mrc', '.map', '.raw', '.inf', '.dm3', '.em', '.pif', '.psd', '.spe', '.ser', '.img', '.hed', '.jpeg', '.jpg', '.hdf', '.hdf5', '.h5'],
+                            imgFillMenu, imgOnClick, imgOnDoubleClick)
 #        addFm('vol', 'vol.gif', ['.vol', '.mrc', '.map', '.em', '.pif'], 
 #                            volFillMenu, imgOnClick, volOnDoubleClick)
 #        addFm('text', 'fileopen.gif', TEXT_EXTENSIONS,
@@ -181,10 +201,11 @@ class FileBrowser():
 #        addFm('out', 'out.gif', ['.out'],textFillMenu, defaultOnClick, textOnDoubleClick)
 #        addFm('err', 'err.gif', ['.err'],textFillMenu, defaultOnClick, textOnDoubleClick)
 #        addFm('log', 'log.gif', ['.log'],textFillMenu, defaultOnClick, textOnDoubleClick)
-#        addFm('folder', 'folderopen.gif', [])
-#        addFm('default', 'generic_file.gif', [])
-#        addFm('up', 'up.gif', [])
+        addFm('folder', 'folderopen.gif', [])
+        addFm('default', 'generic_file.gif', [])
+        addFm('up', 'up.gif', [])
 #        addFm('pdb', 'pdbSmall.gif', CHIMERA_EXTENSIONS, pdbFillMenu, defaultOnClick, pdbOnDoubleClick)
+#        
         
     def createDetailsTop(self, parent):
         self.detailstop = tk.Frame(parent)
@@ -334,6 +355,7 @@ class FileBrowser():
             self.root.mainloop()
 
     def insertElement(self, root, elem, isFolder=False):
+        pass
         if root == self.dir: 
             parent = ''
         else: 
@@ -359,7 +381,8 @@ class FileBrowser():
         self.filterResults()
         
     def changeDir(self, newDir):
-        self.pathVar.set(abspath(newDir))
+#        self.pathVar.set(abspath(newDir))
+        self.pathVar.set(newDir)
         self.dir = newDir
         self.tree.clear()
         self.insertElement(newDir, '..', False)
@@ -505,38 +528,29 @@ class FileBrowser():
 
 """ UTILS #####################################################################"""
 
-class FileManager():
-    ''' Class to handle different types of files '''
-    def __init__(self, **attributes):
-        for k, v in attributes.iteritems():
-            setattr(self, k, v)
-            
 class ScipionButton(tk.Button):
     def __init__(self, master, text, imagePath=None, tooltip=None, **opts):
         defaults = {'activebackground': "LightSkyBlue", 'bg':"LightBlue"}
         defaults.update(opts)
-        btnImage = getImage(imagePath)
+#        btnImage = Image(imagePath)
+        btnImage = Image()
         
         if btnImage:
             #height=28, width=28,
             if not opts.has_key('bg'):
                 del defaults['bg']
-            tk.Button.__init__(self, master, image=btnImage, bd=0,  **defaults)
+            tk.Button.__init__(self, master, image=getImage(Icon.ACTION_STEPS), bd=0,  **defaults)
             self.image = btnImage
         else:
             tk.Button.__init__(self, master, text=text, font="Verdana", **defaults)
             
-        if tooltip:
-            ToolTip(self, tooltip, 500)
+#        if tooltip:
+#            ToolTip(self, tooltip, 500)
             
     def setImage(self, imagePath):
         self.image = getImage(imagePath)
         self.config(image=self.image)
 
-def fileInfo(browser):
-    msg =  "<size:> %s\n" % pretty_size(browser.stat.st_size)
-    msg += "<modified:> %s\n" % pretty_date(int(browser.stat.st_mtime))
-    return msg
 
 def pretty_date(time=False):
     """
@@ -621,6 +635,238 @@ def getImageData(img):
     ''' Function to get a matrix from an Image'''
     Z = img.getData()
     return Z
+
+
+class AutoScrollbar(tk.Scrollbar):
+    '''A scrollbar that hides itself if it's not needed.'''
+    def set(self, lo, hi):
+        if float(lo) <= 0.0 and float(hi) >= 1.0:
+            self.tk.call("grid", "remove", self)
+        else:
+            self.grid()
+        tk.Scrollbar.set(self, lo, hi)
+        
+def dirname(p):
+    """Returns the directory component of a pathname"""
+    i = p.rfind('/') + 1
+    head = p[:i]
+    if head and head != '/'*len(head):
+        head = head.rstrip('/')
+    return head
+
+'''**************  Implementation of Xmipp Browser *************'''
+# Some helper functions for the browser
+def showj(filename, mode="default"):
+    from protlib_utils import runShowJ
+    runShowJ(filename, extraParams="--mode %s" % mode)
+    
+def chimera(filename):
+    runChimera(filename)
+    
+def runChimera(inputFile,extraParams=""):
+    if which("chimera") and os.path.exists(inputFile):
+        from protlib_filesystem import hasSpiderExt
+        if hasSpiderExt(inputFile):
+            inputFile = 'spider:%s' % inputFile
+        os.system("chimera %s %s &" % (inputFile,extraParams))
+    else:
+        print "Error Chimera not available or inputFile %s does not exits."%inputFile
+    
+#def vmd(filename):
+#    runVMD(filename)
+    
+def fileInfo(browser):
+    from protlib_utils import pretty_date, pretty_size
+    msg =  "<size:> %s\n" % pretty_size(browser.stat.st_size)
+    msg += "<modified:> %s\n" % pretty_date(int(browser.stat.st_mtime))
+    return msg
+    
+# Event handlers for each action and each type of file
+def defaultOnClick(filename, browser):
+    pass
+    import stat
+    mode = browser.stat.st_mode
+    if stat.S_ISDIR(mode):
+        img = 'folder.png'
+        files = os.listdir(filename)
+        total = 0
+        for f in files:
+            st = os.stat(join(filename, f))
+            total += st.st_size
+        msg = "<%d> items: %s\n" % (len(files), pretty_size(total)) 
+    else:
+        img = 'file.png'
+        msg = ''
+    fn = join(RESOURCES, img)
+    browser.updatePreview(fn)
+    return msg
+        
+def defaultFillMenu(filename, browser):
+    return False
+
+def defaultOnDoubleClick(filename, browser):
+    pass
+
+def isChimeraSession(filename):
+    ''' check if the file is a chimera .py session '''
+    # Check if it is a chimera .py session
+    if filename.endswith('.py'):
+        f = open(filename)
+        for l in f:
+            if 'chimera' in l and 'import' in l:
+                return True            
+    return False
+    
+def textFillMenu(filename, browser):
+    menu = browser.menu
+    menu.add_command(label="Open as Text", command=lambda: showTextfileViewer(filename, [filename], browser.parent))
+    if isChimeraSession(filename):
+        menu.add_command(label="Open with Chimera", command=lambda:chimera(filename))
+    return True
+
+def textOnDoubleClick(filename, browser):
+    filelist = [filename]
+    loglist = ['.log', '.out', '.err']
+    prefix, ext = os.path.splitext(filename)
+    if ext in loglist:
+        filelist = [prefix + ext for ext in loglist if os.path.exists(prefix + ext)]
+    showTextfileViewer(filename, filelist, browser.parent)
+    
+def showTextfileViewer(title, filelist, parent=None, main=False):
+    if main:
+        root = tk.Tk()
+    else:
+        root = tk.Toplevel()
+    root.withdraw()
+    root.title(title)
+    from xmipp import FileName
+    files = [FileName(f).removeBlockName() for f in filelist]
+    l = TextfileViewer(root, files)
+    root.columnconfigure(0, weight=1)
+    root.rowconfigure(0, weight=1)
+    l.grid(column=0, row=0, sticky='nsew')
+    centerWindows(root, refWindows=parent)
+    root.deiconify()
+    root.mainloop()
+
+def getMdString(filename, browser):
+    from xmipp import MetaData, MDL_IMAGE, label2Str, labelIsImage
+    md = MetaData()
+    md.read(filename, 1)
+    labels = md.getActiveLabels()
+    msg =  "  <%d items>\n" % md.getParsedLines()
+    msg += "  <labels:>" + ''.join(["\n   - %s" % label2Str(l) for l in labels])
+    
+    img = 'no-image.png'
+    for label in labels:
+        if labelIsImage(label):
+            img = md.getValue(label, md.firstObject())
+            break
+    browser.updatePreview(img)
+    return msg
+    
+def mdOnClick(filename, browser):
+    if '@' not in filename:
+        import xmipp
+        msg = "<Metadata File>\n"
+        blocks = xmipp.getBlocksInMetaDataFile(filename)
+        nblocks = len(blocks)
+        if nblocks <= 1:
+            msg += "  <single block>\n" + getMdString(filename, browser)
+        else:
+            msg += "  <%d blocks:>" % nblocks + ''.join(["\n  - %s" % b for b in blocks])
+            # Insert blocks in metadata as independent items
+            if len(browser.tree.get_children(filename)) == 0:
+                fm = browser.managers['md']
+                
+                #bnameSuffix = "@" + relpath(filename, browser.dir)
+                bnameSuffix = "@" + filename
+                btextSuffix = "@" + basename(filename)
+                for b in blocks:
+                    bname = b + bnameSuffix                    
+                    btext = b + btextSuffix
+                    browser.tree.insert(filename, 'end', bname, text=btext, image=fm.image)
+    else:
+        block, filename = splitFilename(filename)
+        filename = join(browser.dir, filename)
+        msg = "<Metadata Block>\n" + getMdString("%s@%s" % (block, filename), browser)
+    return msg
+        
+def mdFillMenu(filename, browser):
+    return True
+
+def mdOnDoubleClick(filename, browser):
+    if '@' in filename:
+        block, filename = splitFilename(filename)
+        filename = join(browser.dir, filename)
+        filename = '%(block)s@%(filename)s' % locals()
+    showj(filename, 'metadata')
+
+def imgOnClick(filename, browser):
+    import xmipp
+    x, y, z, n = getImageSize(filename)
+    dimMsg = "<Image>\n  <dimensions:> %(x)d x %(y)d" 
+    expMsg = "Columns x Rows "
+    if z > 1: 
+        dimMsg += " x %(z)d"
+        expMsg += " x Slices"
+    if n > 1:
+        dimMsg += " x %(n)d" 
+        expMsg += " x Objects"
+    browser.updatePreview(filename)
+    return (dimMsg + "\n" + expMsg) % locals()
+        
+def imgFillMenu( filename, browser):
+    menu = browser.menu
+    menu.add_command(label="Open", command=lambda: showj(filename, 'image'))
+    return True
+
+def imgOnDoubleClick(filename, browser):
+    showj(filename, 'image')
+
+def stackFillMenu( filename, browser):
+    menu = browser.menu
+    menu.add_command(label="Open", command=lambda: showj(filename, 'gallery'))
+    menu.add_command(label="Open in ImageJ", command=lambda:showj(filename, 'image'))
+    menu.add_command(label="Open as MetaData", command=lambda: showj(filename, 'metadata'))
+    return True
+
+def stackOnDoubleClick(filename, browser):
+    showj(filename, 'gallery')
+        
+def volFillMenu( filename, browser):
+    menu = browser.menu
+    menu.add_command(label="Open", command=lambda: showj(filename, 'gallery'))
+    menu.add_command(label="Open as ImageJ gallery", command=lambda:showj(filename, 'image'))
+    menu.add_command(label="Open with Chimera", command=lambda:chimera(filename))
+    menu.add_command(label="Open mask wizard", command=lambda:showBrowseDialog(parent=browser.parent, browser=XmippBrowserMask, 
+                                                                               allowFilter=False, extra={'fileList': [filename]}))
+    return True
+
+def volOnDoubleClick(filename, browser):
+    showj(filename, 'gallery')
+    
+def pdbFillMenu( filename, browser):
+    menu = browser.menu
+    menu.add_command(label="Open as text", command=lambda: showTextfileViewer(filename, [filename], browser.parent))
+    menu.add_command(label="Open with Chimera", command=lambda:chimera(filename))
+    menu.add_command(label="Open with VMD", command=lambda:vmd(filename))
+    return True
+        
+def pdbOnDoubleClick(filename, browser):
+    chimera(filename)
+    
+class FileManager():
+    ''' Class to handle different types of files '''
+    def __init__(self, **attributes):
+        for k, v in attributes.iteritems():
+            setattr(self, k, v)
+
+
+TEXT_EXTENSIONS = ['.txt', '.c', '.h', '.cpp', '.java', '.sh', '.star', '.emx']
+CHIMERA_EXTENSIONS = ['.pdb']
+
+
 
 """############################################################################"""
 
