@@ -700,7 +700,7 @@ class Class2D(SetOfParticles):
     from a classification. 
     """
     def __init__(self, **args):
-        Set.__init__(self, **args)
+        SetOfParticles.__init__(self, **args)
         # This properties should be set when retrieving from the SetOfClasses2D
         self._average = None
     
@@ -739,6 +739,9 @@ class SetOfClasses2D(Set):
     
     def createAverages(self):
         self._averages = SetOfParticles(filename=self.getFileName(), prefix='Averages')
+        images = SetOfImages()
+        self.setImages(images)
+        
         self._averages.copyInfo(self.getImages())
         return self._averages
     

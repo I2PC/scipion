@@ -87,10 +87,11 @@ def doDisplayDistanceProfile(request, protocolViewer):
     protViewerClass = str(protocolViewer.getClassName())
     protId = str(protocolViewer.protocol.getObjId())
     width, height = getSizePlotter(1)
-    return "plot","/view_plots/?function=plotMaxDistanceProfile&protViewerClass="+ protViewerClass + "&protId="+ protId + "&width=" + str(width) + "&height="+ str(height)
+    mode = str(protocolViewer.singleMode.get())
+    return "plot","/view_plots/?function=plotDistanceProfile&protViewerClass="+ protViewerClass + "&mode="+ mode + "&protId="+ protId + "&width=" + str(width) + "&height="+ str(height)
 
 def plotDistanceProfile(request, protocolViewer):
-    mode = protocolViewer.singleMode.get()
+    mode = int(request.GET.get('mode', None))
     fn = str(protocolViewer.protocol._getExtraPath("distanceProfiles","vec%d.xmd" % mode))
     xplotter = protocolViewer._createShiftPlot(fn, "Atom shifts for mode %d" % mode, "shift")
     return xplotter

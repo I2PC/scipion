@@ -111,7 +111,8 @@ class SpiderProtClassifyWard(ProtClassify, SpiderProtocol):
         rootNode = self.buildDendrogram(True)
         classes = self._createSetOfClasses2D()
         averages = classes.createAverages()
-        g = graph.Graph(root=rootNode)        
+        g = graph.Graph(root=rootNode)  
+            
         self._fillClassesFromNodes(classes, averages, g.getNodes())
         
         self._defineOutputs(outputClasses=classes)
@@ -133,7 +134,8 @@ class SpiderProtClassifyWard(ProtClassify, SpiderProtocol):
                 avg.setLocation(node.avgCount, self.dendroAverages)
                 averages.append(avg)
                 for i in node.imageList:
-                    img.setObjId(i) # FIXME: this is wrong if the id is different from index
+                    #img.setObjId(i) # FIXME: this is wrong if the id is different from index
+                    img.cleanObjId()
                     class2D.append(img)
                 class2D.write() # Write images set
                 class2D.cleanObjId() # This is needed to reuse the same Class2D() object
