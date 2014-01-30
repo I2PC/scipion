@@ -64,7 +64,6 @@ def getFileLogger(filePath):
     """ Method that creates and returns a log for the given file """
     # Create the folders path if it does not exist 
     makeFilePath(filePath)
-    print "getFileLogger: ", filePath
     
     if filePath not in config['loggers']:
         config['handlers'][filePath] = {'level': 'INFO',    
