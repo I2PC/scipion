@@ -356,9 +356,6 @@ class Protocol(Step):
     def copyDefinitionAttributes(self, other):
         """ Copy definition attributes to other protocol. """
         for paramName, _ in self.iterDefinitionAttributes():
-            print "copying param", paramName
-            print "other",other
-            
             self.copyAttributes(other, paramName)
         
     def _createVarsFromDefinition(self, **args):
@@ -451,7 +448,13 @@ class Protocol(Step):
     
     def _getRelPath(self, *path):
         """ Return a relative path from the workingDir. """
-        return os.path.relpath(self._getPath(*path), self.workingDir.get()) 
+        return os.path.relpath(self._getPath(*path), self.workingDir.get())
+    
+    def _getBasePath(self, path):
+        """ Take the basename of the path and get the path
+        relative to working dir of the protocol. 
+        """
+        return self._getPath(os.path.basename(path))
         
     def _insertFunctionStep(self, funcName, *funcArgs, **args):
         """ 

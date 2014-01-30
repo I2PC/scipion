@@ -28,8 +28,10 @@ This module implement the wrappers aroung Xmipp CL2D protocol
 visualization program.
 """
 from pyworkflow.viewer import ProtocolViewer, DESKTOP_TKINTER, WEB_DJANGO
+from plotter import XmippPlotter
 from pyworkflow.em import *
 from protocol_nma import XmippProtNMA
+from protocol_nma_alignment import XmippProtAlignmentNMA
 from viewer import runShowJ
 from pyworkflow.gui.text import *
 from pyworkflow.gui.dialog import showError, showWarning
@@ -71,9 +73,8 @@ class XmippNMAViewer(ProtocolViewer):
                       label="Plot max distance profile?")     
         form.addParam('displayDistanceProfile', BooleanParam, default=False, 
                       label="Plot distance profile?")
-                         
         form.addParam('singleMode', IntParam, default=7,
-              label='Open specific mode', condition='True')    
+              label='Open specific mode', condition='True')   
     
     def _getVisualizeDict(self):
         return {'displayPseudoAtom': self._viewParam,
@@ -95,17 +96,21 @@ class XmippNMAViewer(ProtocolViewer):
             showj(self.protocol._getPath('modes.xmd'))
         elif paramName == 'displayMaxDistanceProfile':
             fn = self.protocol._getExtraPath("maxAtomShifts.xmd")
-            #TODO: Change this to real plot
-            os.system('xmipp_metadata_plot -i %s -y nmaAtomShift --title "Maximum atom shifts" &' % fn)
+            self._createShiftPlot(fn, "Maximum atom shifts", "maximum shift").show()
         elif paramName == 'displayDistanceProfile':
             mode = self.singleMode.get()
             fn = self.protocol._getExtraPath("distanceProfiles","vec%d.xmd" % mode)
-            #TODO: Change this to real plot
-            os.system('xmipp_metadata_plot -i %s -y nmaAtomShift --title "Atom shifts for mode %d" &' % (fn, mode))
+            self._createShiftPlot(fn, "Atom shifts for mode %d" % mode, "shift").show()
         elif paramName == 'singleMode':
             if self.singleMode.hasValue():
                 vmdFile = self.protocol._getExtraPath("animations", "animated_mode_%03d.vmd" % self.singleMode.get())
                 os.system("vmd -e %s" % vmdFile)
+    
+    def _createShiftPlot(self, mdFn, title, ylabel):
+        plotter = XmippPlotter()
+        plotter.createSubPlot(title, 'atom index', ylabel)
+        plotter.plotMdFile(mdFn, None, xmipp.MDL_NMA_ATOMSHIFT)
+        return plotter
         
     def getVisualizeDictWeb(self):
         return {}

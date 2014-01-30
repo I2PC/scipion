@@ -45,8 +45,9 @@ class Node(object):
     
     def addChild(self, *nodes):
         for n in nodes:
-            self._childs.append(n)
-            n._parents.append(self)
+            if not n in self._childs:
+                self._childs.append(n)
+                n._parents.append(self)
             
     def isRoot(self):
         return len(self._parents) == 0
