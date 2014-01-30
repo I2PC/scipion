@@ -72,12 +72,16 @@ class XmippAlignmentNMAViewer(ProtocolViewer):
         os.system("matlab -r \"xmipp_nma_selection_tool(\'"+self._getPath()+"\')\"")
         
     def _viewRawDeformation(self, paramName):
-        plotter = self._doViewRawDeformation(paramName)
+        components = self.displayRawDeformation.get()
+        plotter = self._doViewRawDeformation(components)
         plotter.show()
         
-    def _doViewRawDeformation(self, paramName):
-        components = map(int, self.displayRawDeformation.get().split())
+    def _doViewRawDeformation(self, components):
+#        components = map(int, self.displayRawDeformation.get().split())
+        components = map(int, components.split())
         dim = len(components)
+        print components
+        print dim
         if dim > 0:
             modeList = []
             modeNameList = []
@@ -87,7 +91,6 @@ class XmippAlignmentNMAViewer(ProtocolViewer):
             
             for mode in components:
                 if mode > md.size():
-                    from protlib_gui_ext import showWarning
                     showWarning('Warning', "You don't have so many modes",parent=self.master)
                 else:
                     mode -= 1
@@ -96,11 +99,14 @@ class XmippAlignmentNMAViewer(ProtocolViewer):
                         modeName = md.getValue(xmipp.MDL_NMA_MODEFILE, objId)
                         if i == mode:
                             break
+                    print modeName
                     modeNameList.append(modeName)
                     modeList.append(mode)
             
             defFn = self.protocol._getExtraPath('deformations.txt')
             # Actually plot
+            
+            print modeNameList
             
             plotter = XmippNmaPlotter(defFn, dirname(modeNameList[0])) 
             baseList = [basename(n) for n in modeNameList]

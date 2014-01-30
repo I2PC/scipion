@@ -39,16 +39,31 @@ def viewerNMAAlign(request, protocolViewer):
     return ioDict
 
 def doDisplayRawDeformation(request, protocolViewer):
+    
+    components = protocolViewer.displayRawDeformation.get().split()
+    
+    mode = ''
+    for c in components:
+        mode += str(c)+'-'
+    mode = mode[:-1]
+    
     protViewerClass = str(protocolViewer.getClassName())
     protId = str(protocolViewer.protocol.getObjId())
     width, height = getSizePlotter(1)
-    return "plot","/view_plots/?function=plotMaxDistanceProfile&protViewerClass="+ protViewerClass + "&protId="+ protId + "&width=" + str(width) + "&height="+ str(height)
+    return "plot","/view_plots/?function=plotDisplayRawDeformation&protViewerClass="+ protViewerClass + "&mode="+ str(mode) + "&protId="+ protId + "&width=" + str(width) + "&height="+ str(height)
 
 def plotDisplayRawDeformation(request, protocolViewer):
-    fn = str(protocolViewer.protocol._getExtraPath("maxAtomShifts.xmd"))
-    xplotter = protocolViewer._createShiftPlot(fn, "Maximum atom shifts", "maximum shift")
+    mode = request.GET.get('mode', None)
+    components = mode.split('-')
+    
+    mode = ''
+    for c in components:
+        mode += str(c)+' '
+    mode = mode[:-1]
+    
+    xplotter = protocolViewer._doViewRawDeformation(mode)
     return xplotter
-
-
+    
 def doAnalyzeMatlab(request, protocolViewer):
+    #os.system("matlab -r \"xmipp_nma_selection_tool(\'"+self._getPath()+"\')\"")
     pass
