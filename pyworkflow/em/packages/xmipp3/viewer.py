@@ -72,8 +72,12 @@ class XmippViewer(Viewer):
             runShowJ(fn)
             
         elif issubclass(cls, PdbFile):
-            from protlib_gui_ext import chimera
-            chimera(obj.getFileName())
+            fn = obj.getFileName()
+            if obj.getPseudoAtoms():
+                os.system("vmd %s" % fn)
+            else:
+                from protlib_gui_ext import chimera
+                chimera(fn)
              
         elif issubclass(cls, NormalModes):
             runShowJ(obj.getFileName())         
