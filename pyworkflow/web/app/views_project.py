@@ -344,8 +344,9 @@ def project_content(request):
 def protocol_info(request):
     if request.is_ajax():
         projectName = request.session['projectName']
-        project = loadProject(projectName)
         protId = request.GET.get('protocolId', None)
+
+        project = loadProject(projectName)
         protocol = project.mapper.selectById(int(protId))
         
         # PROTOCOL IO
@@ -354,20 +355,24 @@ def protocol_info(request):
 
         # PROTOCOL SUMMARY
         summary = protocol.summary()
-        from pyworkflow.web.app.views_util import parseText
         
         # PROTOCOL METHODS
         methods = protocol.methods()
-#        print "methods",methods
 
         # STATUS
         status = protocol.status.get()
+        
+        # LOGS (ERROR & OUTPUT)
+        fOutString, fErrString = protocol.getLogsAsStrings()
 
+        from pyworkflow.web.app.views_util import parseText
         ioDict = {'inputs': input_obj,
                   'outputs': output_obj,
                   'summary': parseText(summary),
                   'methods': parseText(methods), 
-                  'status': status
+                  'status': status,
+                  'logs_out': parseText(fOutString),
+                  'logs_error': parseText(fErrString)
                   }
         
         jsonStr = json.dumps(ioDict, ensure_ascii=False)
