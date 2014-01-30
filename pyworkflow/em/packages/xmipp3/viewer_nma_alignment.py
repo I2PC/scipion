@@ -82,8 +82,6 @@ class XmippAlignmentNMAViewer(ProtocolViewer):
 #        components = map(int, self.displayRawDeformation.get().split())
         components = map(int, components.split())
         dim = len(components)
-        print components
-        print dim
         if dim > 0:
             modeList = []
             modeNameList = []
@@ -106,10 +104,8 @@ class XmippAlignmentNMAViewer(ProtocolViewer):
                     modeList.append(mode)
             
             defFn = self.protocol._getExtraPath('deformations.txt')
+            
             # Actually plot
-            
-            print modeNameList
-            
             plotter = XmippNmaPlotter(defFn, dirname(modeNameList[0])) 
             baseList = [basename(n) for n in modeNameList]
             
