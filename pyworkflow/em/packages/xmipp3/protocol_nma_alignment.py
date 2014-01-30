@@ -160,6 +160,9 @@ class XmippProtAlignmentNMA(EMProtocol):
         return summary
     
     def _validate(self):
-        validateMsgs = []
-        return validateMsgs
+        errors = []
+        xdim, _, _, _ = self.inputParticles.get().getDimensions()
+        if not isPower2(xdim):
+            errors.append("Image dimension (%s) is not a power of two, consider resize them" % xdim)
+        return errors
     

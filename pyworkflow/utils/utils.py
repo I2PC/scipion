@@ -300,3 +300,8 @@ def parseHyperText(text, matchCallback):
 #        text = hyperRegex.sub(lambda match: matchCallback(match, hyperMode), text)
 #
 #    return text
+
+def isPower2(num):
+    """ Return True if 'num' is a power of 2. """
+    return num != 0 and ((num & (num - 1)) == 0)
+
