@@ -79,21 +79,25 @@ public class Param {
     public int resliceView = ImageGeneric.Z_NEG; 
     public boolean useGeo = true;
     public boolean wrap = true;
+    protected Options options;
+    protected CommandLine cmdLine;
 
-    public String cmdname;
-    public String cmdscript;
+    
+    
+    
 
     public Param() {
     }
 
     public Param(String args[]) {
+        options = new Options();
+        defineArgs();
         processArgs(args);
     }
 
-    void processArgs(String args[]) {
-        Options options = new Options();
-
-        options.addOption(FILE, true, "");
+    public void defineArgs()
+    {
+         options.addOption(FILE, true, "");
         // It should be able to handle multiple files.
         options.getOption(FILE).setOptionalArg(true);
         options.getOption(FILE).setArgs(Integer.MAX_VALUE);
@@ -130,13 +134,18 @@ public class Param {
         options.addOption(NO_GEO, false, "");
         options.addOption(NO_WRAP, false, "");
 
-        Option cmdoption = new Option(COMMAND, "");
-        cmdoption.setArgs(2);
-        options.addOption(cmdoption);
+    }
+    
+    
+    public void processArgs(String args[]) {
+
+
+       
+       
         
         try {
             BasicParser parser = new BasicParser();
-            CommandLine cmdLine = parser.parse(options, args);
+            cmdLine = parser.parse(options, args);
 
             if (cmdLine.hasOption(FILE)) {
                 files = cmdLine.getOptionValues(FILE);
@@ -253,11 +262,7 @@ public class Param {
             		resliceView = ImageGeneric.X_POS;
             }
             
-            if (cmdLine.hasOption(COMMAND)) {
-                String[] cmdargs = cmdLine.getOptionValues(COMMAND);
-                cmdname = cmdargs[0];
-                cmdscript = cmdargs[1];
-            }
+           
         } catch (Exception ex) {
         	ex.printStackTrace();
         }

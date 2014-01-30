@@ -25,11 +25,17 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
 
     private final String cmdname;
     private final String cmdscript;
+    private final String projectid;
+    private final String protid;
+    private final String dbpath;
 
-    public ScipionGalleryJFrame(String filename, MetaData md, Param parameters) {
+    public ScipionGalleryJFrame(String filename, MetaData md, ScipionParams parameters) {
         super(filename, md, parameters);
         cmdname = parameters.cmdname;
         cmdscript = parameters.cmdscript;
+        projectid = parameters.projectid;
+        protid = parameters.protid;
+        dbpath = parameters.dbpath;
         initComponents();
     }
 
@@ -42,7 +48,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
                     try {
                         String selectionmd = "selection.xmd";
                         saveSelection(selectionmd, true);
-                        String command = String.format("%s %s", cmdscript, selectionmd);
+                        String command = String.format("%s %s %s %s %s", cmdscript, selectionmd, projectid, protid, dbpath);
                         executeCommand(command);
                     } catch (Exception ex) {
                         Logger.getLogger(ScipionGalleryJFrame.class.getName()).log(Level.SEVERE, null, ex);

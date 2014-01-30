@@ -29,7 +29,7 @@ public class ScipionViewer extends Viewer {
         // creating and showing this application's GUI.
         final String[] myargs = args;
 
-        Param parameters = new Param(myargs);
+        ScipionParams parameters = new ScipionParams(myargs);
         try {
             if (parameters.debug) {
                 DEBUG.enableDebug(true);
@@ -50,7 +50,7 @@ public class ScipionViewer extends Viewer {
 
     }
 
-    public static void openFile(String filename, Param parameters) {
+    public static void openFile(String filename, ScipionParams parameters) {
         try {
             if (Filename.isMetadata(filename)) {
                 if (parameters.mode.equalsIgnoreCase(Param.OPENING_MODE_IMAGE)) {
@@ -82,7 +82,7 @@ public class ScipionViewer extends Viewer {
         }
     }
 
-    public static void openScipionGalleryJFrame(final String filename, final Param parameters) throws Exception {
+    public static void openScipionGalleryJFrame(final String filename, final ScipionParams parameters) throws Exception {
         SwingUtilities.invokeLater(new Runnable() {
             public void run() {
 
