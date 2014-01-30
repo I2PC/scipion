@@ -135,7 +135,7 @@ class XmippProtAlignmentNMA(EMProtocol):
         """ Read the modes metadata and keep only those modes selected
         by the user in the protocol. 
         """
-        if not self.modelList.isEmpty():
+        if not self.modeList.isEmpty():
             modeList = getListFromRangeString(self.modeList.get())
             md = xmipp.MetaData(modesFn)
             
