@@ -384,11 +384,22 @@ class ProtocolsView(tk.Frame):
         mframe = tk.Frame(tab)
         gui.configureWeigths(mframe)
         self.methodText = TaggedText(mframe, width=40, height=15, bg='white')
-        self.methodText.grid(row=0, column=0, sticky='news')    
+        self.methodText.grid(row=0, column=0, sticky='news')   
+        #Logs 
+        ologframe = tk.Frame(tab)
+        gui.configureWeigths(ologframe)
+        self.outputLogText = TaggedText(ologframe, width=40, height=15, bg='white')
+        self.outputLogText.grid(row=0, column=0, sticky='news')
+        elogframe = tk.Frame(tab)
+        gui.configureWeigths(elogframe)
+        self.errorLogText = TaggedText(elogframe, width=40, height=15, bg='white')
+        self.errorLogText.grid(row=0, column=0, sticky='news')  
         
         tab.add(dframe, text=Message.LABEL_DATA)
         tab.add(sframe, text=Message.LABEL_SUMMARY)   
         tab.add(mframe, text=Message.LABEL_METHODS)
+        tab.add(ologframe, text=Message.LABEL_LOGS_OUTPUT)
+        tab.add(elogframe, text=Message.LABEL_LOGS_ERROR)
         tab.grid(row=0, column=0, sticky='news')
         
         v.add(runsFrame, weight=3)
@@ -625,6 +636,7 @@ class ProtocolsView(tk.Frame):
             self._fillData()
             self._fillSummary()
             self._fillMethod()
+            self._fillLogs()
         else:
             pass #TODO: implement what to do
                     
@@ -665,6 +677,15 @@ class ProtocolsView(tk.Frame):
     def _fillMethod(self):
         self.methodText.clear()
         self.methodText.addText(self.selectedProtocol.methods())
+        
+    def _fillLogs(self):
+        fOutString, fErrString = self.selectedProtocol.getLogsAsStrings()
+        
+        self.outputLogText.clear()
+        self.outputLogText.addText(fOutString)
+        
+        self.errorLogText.clear()
+        self.errorLogText.addText(fErrString)
         
     def _scheduleRunsUpdate(self, secs=1):
         self.runsTree.after(secs*1000, self.refreshRuns)
