@@ -73,7 +73,6 @@ class XmippProtNMA(EMProtocol):
                       help='Pseudoatoms are defined as Gaussians whose \n'
                            'standard deviation is this value in voxels') 
         form.addParam('pseudoAtomTarget', FloatParam, default=5, 
-                      condition='maskMode==%d' % NMA_MASK_THRE,
                       label='Volume approximation error(%)',
                       help='This value is a percentage (between 0.001 and 100) \n'
                            'specifying how fine you want to approximate the EM \n'
