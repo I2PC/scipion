@@ -216,10 +216,7 @@ class PdbFile(EMObject):
         self._pseudoatoms.set(value)
         
     def __str__(self):
-        s = self.getClassName()
-        if self.getPseudoAtoms():
-            s += " (pseudoatoms=True)"
-        return s
+        return "%s (pseudoatoms=%s)" % (self.getClassName(), self.getPseudoAtoms())
         
         
 class Set(EMObject):
