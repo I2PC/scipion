@@ -218,10 +218,10 @@ def view_plots(request):
     canvas = xplotter.getCanvas()
     
     # Adding this line the space between plots is fixed
-    try:
-        xplotter.show()
-    except:
-        pass
+#    try:
+#        xplotter.show()
+#    except:
+#        pass
     
     response = HttpResponse(content_type='image/png')
     canvas.print_png(response)

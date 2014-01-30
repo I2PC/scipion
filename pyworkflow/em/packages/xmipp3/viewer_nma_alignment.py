@@ -46,7 +46,7 @@ CLASS_STABLE_CORES = 2
 class XmippAlignmentNMAViewer(ProtocolViewer):
     """ Visualization of results from the NMA protocol
     """
-    _label = 'viewer nma'
+    _label = 'viewer nma alignment'
     _targets = [XmippProtAlignmentNMA]
     _environments = [DESKTOP_TKINTER, WEB_DJANGO]
         
@@ -74,6 +74,10 @@ class XmippAlignmentNMAViewer(ProtocolViewer):
         os.system('matlab -r "%s"' % command)
         
     def _viewRawDeformation(self, paramName):
+        plotter = self._doViewRawDeformation(paramName)
+        plotter.show()
+        
+    def _doViewRawDeformation(self, paramName):
         components = map(int, self.displayRawDeformation.get().split())
         dim = len(components)
         if dim > 0:
@@ -112,11 +116,13 @@ class XmippAlignmentNMAViewer(ProtocolViewer):
             elif dim == 3:
                 plotter.plotArray3D("Modes %s %s %s" % tuple(baseList), 
                                     modeList[0], modeList[1], modeList[2], *baseList)
-            plotter.show()
-  
+            return plotter
+
     
     def getVisualizeDictWeb(self):
-        return {}
+        return {'displayRawDeformation': 'doDisplayRawDeformation',
+                'analyzeMatlab': 'doAnalyzeMatlab'
+                } 
         
     @classmethod
     def getView(cls):
@@ -127,7 +133,7 @@ class XmippAlignmentNMAViewer(ProtocolViewer):
     def getViewFunction(cls):
         """ This will return the name of the function to view
         in web one (or all) params of the protocol"""
-        return "viewerNMA"
+        return "viewerNMAAlign"
         
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
