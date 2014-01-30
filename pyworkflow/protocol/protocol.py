@@ -681,10 +681,9 @@ class Protocol(Step):
         to run should exists. 
         """
         self._log = self.__getLogger()
-        self._stdErr = self.__getStdErr()
-        self._stdOut = self.__getStdOut()
-        self.fOut = open(self.stdOut, 'a')
-        self.fErr = open(self.stdErr, 'a')
+
+        self.__initLogs('a')
+        
         self.stderr = sys.stderr
         sys.stdout = self.fOut
         sys.stderr = self.fErr
@@ -704,6 +703,20 @@ class Protocol(Step):
         self._store()
         self._log.info('------------------- PROTOCOL FINISHED')
         self.__closeLogger()
+        
+    def __initLogs(self, mode):
+        self._stdErr = self.__getStdErr()
+        self._stdOut = self.__getStdOut()
+        self.fOut = open(self.stdOut, mode)
+        self.fErr = open(self.stdErr, mode)
+        
+    def getLogsAsStrings(self):
+        self.__initLogs('r')
+        fOutString = self.fOut.read()
+        fErrString = self.fErr.read()
+        self.fOut.close()
+        self.fErr.close()
+        return fOutString, fErrString
         
     def __getLogger(self):
         #Initialize log

@@ -80,9 +80,12 @@ class Message():
     LABEL_INPUT='Input'
     LABEL_OUTPUT='Output'
     LABEL_METHODS='Methods'
+    LABEL_LOGS_OUTPUT='Output Log'
+    LABEL_LOGS_ERROR='Error Log'
     NO_INFO_SUMMARY='No summary information.'
     NO_INFO_METHODS='No methods information.'
-    NO_SAVE_SETTINGS='Error try to save settings. '
+    NO_INFO_LOGS='No logs information'
+    NO_SAVE_SETTINGS='Error try to save settings.'
     
     # Protocol Form Template
     TITLE_NAME_RUN=' Protocol Run: '

@@ -498,7 +498,6 @@ def visualizeObject(request):
             cleanPath(fn, fnSet)
             
             imgSet = SetOfImages(filename=fnSet)
-#            imgSet.setFileName(fnSet)
             img = Image()
             #img.copyInfo(obj)
             img.copyLocation(obj)
