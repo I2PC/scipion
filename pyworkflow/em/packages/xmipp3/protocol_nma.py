@@ -288,12 +288,14 @@ class XmippProtNMA(EMProtocol):
         radius = self.sampling * self.pseudoAtomRadius.get() 
         input = self.inputStructure.get().getFirstItem()
         inputFn = input.getFileName()
+        localInputFn = self._getBasePath(inputFn)
+        createLink(inputFn, localInputFn)
         fhCmd = open(self._getPath("chimera.cmd"),'w')
         fhCmd.write("open pseudoatoms.pdb\n")
         fhCmd.write("rangecol bfactor,a 0 white 1 red\n")
         fhCmd.write("setattr a radius %f\n" % radius)
         fhCmd.write("represent sphere\n")
-        fhCmd.write("open %s\n" % inputFn)
+        fhCmd.write("open %s\n" % basename(localInputFn))
         
         threshold = 0.01
         if self.maskMode == NMA_MASK_THRE:
