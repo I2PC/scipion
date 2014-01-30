@@ -42,7 +42,7 @@ import glob
 CLASSES = 0
 CLASS_CORES = 1
 CLASS_STABLE_CORES = 2
-   
+
         
 class XmippNMAViewer(ProtocolViewer):
     """ Visualization of results from the NMA protocol
@@ -76,14 +76,6 @@ class XmippNMAViewer(ProtocolViewer):
         form.addParam('singleMode', IntParam, default=7,
               label='Open specific mode', condition='True')   
     
-    def _getVisualizeDict(self):
-        return {'displayPseudoAtom': self._viewParam,
-                'displayPseudoAtomAproximation': self._viewParam,
-                'displayModes': self._viewParam,
-                'displayMaxDistanceProfile': self._viewParam,
-                'displayDistanceProfile': self._viewParam,
-                'singleMode': self._viewParam,
-                } 
                         
     def _viewParam(self, paramName):
         if paramName == 'displayPseudoAtom':
@@ -112,8 +104,23 @@ class XmippNMAViewer(ProtocolViewer):
         plotter.plotMdFile(mdFn, None, xmipp.MDL_NMA_ATOMSHIFT)
         return plotter
         
+    def _getVisualizeDict(self):
+        return {'displayPseudoAtom': self._viewParam,
+                'displayPseudoAtomAproximation': self._viewParam,
+                'displayModes': self._viewParam,
+                'displayMaxDistanceProfile': self._viewParam,
+                'displayDistanceProfile': self._viewParam,
+                'singleMode': self._viewParam,
+                } 
+    
     def getVisualizeDictWeb(self):
-        return {}
+        return {'displayPseudoAtom': 'doDisplayPseudoAtom',
+                'displayPseudoAtomAproximation': 'doDisplayPseudoAtomAproximation',
+                'displayModes': 'doDisplayModes',
+                'displayMaxDistanceProfile': 'doDisplayMaxDistanceProfile',
+                'displayDistanceProfile': 'doDisplayDistanceProfile',
+                'singleMode': 'doSingleMode',
+                } 
         
     @classmethod
     def getView(cls):
