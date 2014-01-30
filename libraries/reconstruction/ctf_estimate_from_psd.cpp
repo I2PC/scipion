@@ -786,6 +786,7 @@ void ProgCTFEstimateFromPSD::generate_model_quadrant(int Ydim, int Xdim,
 
     // Write the two model quadrants
     MultidimArray<int> mask;
+    STARTINGX(enhancedPSD)=STARTINGY(enhancedPSD)=0;
     mask.initZeros(enhancedPSD);
     model.resizeNoCopy(enhancedPSD);
     FOR_ALL_ELEMENTS_IN_ARRAY2D(model)
@@ -838,6 +839,7 @@ void ProgCTFEstimateFromPSD::generate_model_halfplane(int Ydim, int Xdim,
     global_ctfmodel.produceSideInfo();
 
     MultidimArray<int> mask;
+    STARTINGX(enhancedPSD)=STARTINGY(enhancedPSD)=0;
     mask.initZeros(enhancedPSD);
     model.resizeNoCopy(enhancedPSD);
     FOR_ALL_ELEMENTS_IN_ARRAY2D(model)
