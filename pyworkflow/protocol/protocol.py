@@ -30,6 +30,7 @@ execution and tracking like: Step and Protocol
 """
 
 import os
+import sys
 import datetime as dt
 import pickle
 import time
@@ -224,6 +225,8 @@ class Protocol(Step):
         self._definition = Form()
         self._defineParams(self._definition)
         self._createVarsFromDefinition(**args)
+        self.stdOut = ""
+        self.stdErr = ""
         
         # For non-parallel protocols mpi=1 and threads=1
         if not hasattr(self, 'numberOfMpi'):
@@ -678,6 +681,13 @@ class Protocol(Step):
         to run should exists. 
         """
         self._log = self.__getLogger()
+        self._stdErr = self.__getStdErr()
+        self._stdOut = self.__getStdOut()
+        self.fOut = open(self.stdOut, 'a')
+        self.fErr = open(self.stdErr, 'a')
+        self.stderr = sys.stderr
+        sys.stdout = self.fOut
+        sys.stderr = self.fErr
         self._log.info('RUNNING PROTOCOL -----------------')
 #        self._log.info('        jobId: %s' % self.getJobId())
 #        self._log.info('          pid: %s' % os.getpid())
@@ -702,6 +712,22 @@ class Protocol(Step):
     
     def __closeLogger(self):
         closeFileLogger(self.logFile)
+        
+    def __getStdErr(self):
+        #Initialize stderr log
+        self.stdErr = self._getLogsPath('run.stderr')
+        return getFileLogger(self.stdErr)
+        
+    def __closeStdErr(self):
+        closeFileLogger(self.stdErr)
+
+    def __getStdOut(self):
+        #Initialize stderr log
+        self.stdOut = self._getLogsPath('run.stdout')
+        return getFileLogger(self.stdOut)
+        
+    def __closeStdOut(self):
+        closeFileLogger(self.stdOut)
 
     def getWorkingDir(self):
         return self.workingDir.get()
