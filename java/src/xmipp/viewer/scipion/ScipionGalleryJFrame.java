@@ -8,6 +8,7 @@ package xmipp.viewer.scipion;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.InputStreamReader;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -47,6 +48,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
                 public void actionPerformed(ActionEvent ae) {
                     try {
                         String selectionmd = "selection.xmd";
+                        selectionmd = new File(selectionmd).getAbsolutePath();
                         saveSelection(selectionmd, true);
                         String command = String.format("%s %s %s %s %s", cmdscript, selectionmd, projectid, protid, dbpath);
                         executeCommand(command);
