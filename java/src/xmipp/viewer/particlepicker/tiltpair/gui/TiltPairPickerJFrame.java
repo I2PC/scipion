@@ -109,7 +109,7 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame {
 		filemn.add(importmi);
 		if (tppicker.getMode() != Mode.Manual)
 			importmi.setEnabled(false);
-		importffilesmi = new JMenuItem("Import Micrograph Coordinates");
+		importffilesmi = new JMenuItem("import coordinates from files");
 		importffilesmi.addActionListener(new ActionListener() {
 
 			@Override
