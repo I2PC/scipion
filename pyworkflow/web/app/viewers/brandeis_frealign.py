@@ -26,63 +26,73 @@
 
 import os
 from pyworkflow.web.app.views_util import *
-from pyworkflow.em.packages.brandeis.viewer_frealign import setVisualizeIterations
+from pyworkflow.em.packages.brandeis.viewer_frealign import *
 
-LAST_ITER = 0
-ALL_ITER = 1
-SELECTED_ITERS = 2
 
 def viewerFrealign(request, protocolViewer):
     ioDict = {}
     
+    if protocolViewer.iterToShow:
+        pass
+    if protocolViewer.selectedIters:
+        pass
     if protocolViewer.doShow3DRefsVolumes:
-        typeUrl, url = view3DRefsVolumes(request, protocolViewer)
+        typeUrl, url = doShow3DRefsVolumes(request, protocolViewer)
         ioDict[typeUrl]= url
-    if protocolViewer.doShow3DReconVolumes:
-        typeUrl, url = view3DReconVolumes(request, protocolViewer)
+    if protocolViewer.doShow3DReconsVolumes:
+        typeUrl, url = doShow3DReconsVolumes(request, protocolViewer)
+        ioDict[typeUrl]= url
+    if protocolViewer.doShow3DMatchProj:
+        typeUrl, url = doShow3DMatchProj(request, protocolViewer)
         ioDict[typeUrl]= url
     if protocolViewer.doShowAngDist:
-        typeUrl, url = doPlotAngularDistribution(request, protocolViewer)
+        typeUrl, url = doShowAngDist(request, protocolViewer)
         ioDict[typeUrl]= url
-        
+    if protocolViewer.doShowDataDist:
+        pass
+    
     return ioDict
 
 def doShow3DRefsVolumes(request, protocolViewer):
-    path = str("reference_volume_iter_%03d.mrc")
-    sourcePath = self._viewIterationFile(path)
-    print path
-    return "showj", "/visualize_object/?path="+ sourcePath
+    files = protocolViewer._getIterationFile("reference_volume_iter_%03d.mrc")
+    urls = buildPath(files)
+    return "showjs", urls
 
-def doShow3DReconVolumes(request, protocolViewer):
-    path = str("volume_iter_%03d.mrc")
-    sourcePath = self._viewIterationFile(path)
-    return "showj", "/visualize_object/?path="+ sourcePath
 
-def doPlotAngularDistribution(request, protocolViewer):
-    iterToShow = str(protocolViewer.iterToShow.get())
+def doShow3DReconsVolumes(request, protocolViewer):
+    files = protocolViewer._getIterationFile("volume_iter_%03d.mrc")
+    urls = buildPath(files)
+    return "showjs", urls
+
+
+def doShow3DMatchProj(request, protocolViewer):
+    files = protocolViewer._getIterationFile("particles_match_iter_%03d.mrc")
+    urls = buildPath(files)
+    return "showjs", urls
+
+def doShowAngDist(request, protocolViewer):
     protViewerClass = str(protocolViewer.getClassName())
     protId = str(protocolViewer.protocol.getObjId())
-    width, height = getSizePlotter(-1)
-    return "plot","/view_plots/?function=plotAngularDistribution&protViewerClass="+ protViewerClass + "&protId="+ protId +"&iterToShow="+ iterToShow + "&width=" + str(width) + "&height="+ str(height)
+    width, height = getSizePlotter(1)
+    iter = str(protocolViewer.iterToShow.get())
+    return "plot","/view_plots/?function=plotShowAngDist&protViewerClass="+ protViewerClass + "&iter="+ iter + "&protId="+ protId + "&width=" + str(width) + "&height="+ str(height)
 
-def plotAngularDistribution(request, protocolViewer):
-    protocolViewer.iterToShow.set(request.GET.get('iterToShow', None))
-    plots, errors = protocolViewer._createAngularDistributionPlots()
+#    return "showj","/visualize_object/?path="+ path
+
+def plotShowAngDist(request, protocolViewer):
+    iter = request.GET.get('iter', None)
+    protocolViewer.iterToShow.set(iter)
+    xplotter, errors = protocolViewer._createAngularDistributionPlots()
+    print xplotter
     
-#    xplotter = plots[0]
+    return xplotter
 
-    if len(errors) != 0:
-        pass
-    else:
-        return plots
-
-def _viewIterationFile(self, filePath):
-    self.setVisualizeIterations()
-    for iter in self.visualizeIters:
-        pathDir = self.protocol._getExtraPath("iter_%03d" % iter)
-        path = join(pathDir, filePath % iter)
-        if os.path.exists(path):
-            return path       
-
+def buildPath(files):
+    urls = []
+    for f in files:
+        url = "/visualize_object/?path="+ f
+        urls.append(url)
+        
+    return urls
 
 

@@ -45,6 +45,8 @@ from viewers.xmipp_nma_align import *
 # SPIDER
 from viewers.spider_capca import *
 from viewers.spider_ward import *
+# BRANDEIS
+from viewers.brandeis_frealign import *
 
 ############## 1ST STEP: LAUNCH VIEWER METHODS ##############
 def launch_viewer(request):
@@ -225,6 +227,7 @@ def view_plots(request):
     
     response = HttpResponse(content_type='image/png')
     canvas.print_png(response)
+    
     return response
 
     

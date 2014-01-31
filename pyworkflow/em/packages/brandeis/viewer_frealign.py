@@ -69,7 +69,8 @@ class FrealignViewer(ProtocolViewer):
         return {'doShow3DRefsVolumes': self._view3DRefsVolumes,
                 'doShow3DReconsVolumes': self._view3DReconVolumes,
                 'doShow3DMatchProj': self._viewMatchProj,
-                'doShowAngDist': self._plotAngularDistribution
+                'doShowAngDist': self._plotAngularDistribution,
+#                'doShowDataDist': self_showDataDist
                 }
     
     def _viewAll(self, *args):
@@ -83,6 +84,10 @@ class FrealignViewer(ProtocolViewer):
             self._plotAngularDistribution()
     
     def _view3DRefsVolumes(self, e=None):
+        files = self._getIterationFile("reference_volume_iter_%03d.mrc")
+        # Devolver una lista de ficheros
+        
+        
         self._viewIterationFile("reference_volume_iter_%03d.mrc")
         
     def _view3DReconVolumes(self, e=None):
@@ -92,7 +97,9 @@ class FrealignViewer(ProtocolViewer):
         self._viewIterationFile("particles_match_iter_%03d.mrc")
         
     def _plotAngularDistribution(self, e=None):
-        self._showPlots(*self._createAngularDistributionPlots())
+        plots, errors = self._createAngularDistributionPlots()
+        self._showPlots(plots, errors)
+        
             
     def _createAngularDistributionPlots(self):
         """ Plot the angular distributions for each reference and each iteration.
@@ -136,9 +143,27 @@ class FrealignViewer(ProtocolViewer):
         xplotter = createPlots(self.protocol, ['doShowLL', 'doShowPmax'])
         if xplotter is not None:
             return self._showOrReturn(xplotter)
-                
+
+    def _getIterationFile(self, filePath):
+        self.setVisualizeIterations()
+        
+        path = ""
+        for iter in self.visualizeIters:
+            pathDir = self.protocol._getExtraPath("iter_%03d" % iter)
+            pathNew = join(pathDir, filePath % iter)
+            print "path=%s" % pathNew
+            
+            if os.path.exists(path):
+                path += pathNew
+#                runShowJ(path)
+            else:
+                self.formWindow.showError('Iteration %s does not exist.' % iter) 
+        print path
+        return path
+        
     def _viewIterationFile(self, filePath):
         self.setVisualizeIterations()
+        
         for iter in self.visualizeIters:
             pathDir = self.protocol._getExtraPath("iter_%03d" % iter)
             path = join(pathDir, filePath % iter)
@@ -170,10 +195,10 @@ class FrealignViewer(ProtocolViewer):
         return [] # No errors resulted
 
     def getVisualizeDictWeb(self):
-        return {'doShow3DRefsVolumes': 'view3DRefsVolumes',
+        return {'doShow3DRefsVolumes': 'doShow3DRefsVolumes',
                 'doShow3DReconVolumes': 'view3DReconVolumes',
-                '_doShow3DMatchProj': 'viewMatchProj',
-                'doShowAngDist': 'doPlotAngularDistribution'
+                'doShow3DMatchProj': 'doShow3DMatchProj',
+                'doShowAngDist': 'doShowAngDist'
                 }
 
     @classmethod
