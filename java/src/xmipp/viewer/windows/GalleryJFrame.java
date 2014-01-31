@@ -1884,7 +1884,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 					MDRow row2 = new MDRow();
 					data.md.getRow(row2, data.ids[row]);
 					mdRow.setRow(row2, mdRow.addObject());
-					String sortFn = psdFile.replace(".psd", ".tmpSort.xmd");
+					String sortFn = psdFile.replace(".psd", ".xmd");
 					mdRow.write(sortFn);
 					mdRow.destroy();
 					ImagesWindowFactory.openCTFImage(imp, ctfModel, psdFile, ctfTasks, data.md.getFilename(), row, sortFn);

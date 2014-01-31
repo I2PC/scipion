@@ -627,7 +627,7 @@ function generateAnimation_Callback(hObject, eventdata, handles)
         saveTrajectory_Callback([], [], handles);
         handles=guidata(gcbo);
     end
-    fnOut={}
+    fnOut={};
     for i=1:size(handles.NMAdisplacementsTrajectory,1)
         fnOut{i}=[handles.rundir '/tmp/atomsDeformed' num2str(i) '.pdb'];
         cmd=['xmipp_pdb_nma_deform --pdb ' fnPDB ' -o ' fnOut{i} ' --nma ' fnModes ' --deformations ' ...
@@ -674,6 +674,8 @@ function generateAnimation_Callback(hObject, eventdata, handles)
     
     % Invoke VMD
     cmd=['vmd -e ' fnTrajectoryVMD];
+    disp('If the VMD does not appear, run the following command in the shell')
+    disp(cmd)
     system(cmd);
 
 % --- Executes on button press in loadTrajectory.

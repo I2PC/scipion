@@ -587,15 +587,15 @@ void CL3D::initialize(MetaData &_SF,
     Image<double> I;
     MultidimArray<double> Iaux, Ibest;
     CL3DAssignment bestAssignment;
-    size_t first, last;
-    while (prm->taskDistributor->getTasks(first, last))
+    size_t imgCounter=0, localCounter=0;
+    FOR_ALL_OBJECTS_IN_METADATA(prm->SF)
     {
-        for (size_t idx = first; idx <= last; ++idx)
+        if ((imgCounter+1)%prm->node->size==prm->node->rank)
         {
             int q = -1;
             if (!initialCodesGiven)
-                q = idx % (prm->Ncodes0);
-            size_t objId = prm->objId[idx];
+                q = (localCounter+1) % (prm->Ncodes0);
+            size_t objId = prm->objId[imgCounter];
             readImage(I, objId, true);
 
             // Put it randomly in one of the classes
@@ -634,11 +634,14 @@ void CL3D::initialize(MetaData &_SF,
                     P[q]->updateProjection(Ibest, bestAssignment);
             }
             SF->setValue(MDL_REF, q + 1, objId);
-            if (idx % 100 == 0 && prm->node->rank == 0)
-                progress_bar(idx);
+            if (imgCounter % 100 == 0 && prm->node->rank == 0)
+                progress_bar(imgCounter);
+            localCounter++;
         }
+        imgCounter++;
     }
-    prm->taskDistributor->wait();
+
+    prm->node->barrierWait();
     if (prm->node->rank == 0)
         progress_bar(Nimgs);
 
@@ -824,26 +827,26 @@ void CL3D::run(const FileName &fnOut, int level)
         for (size_t n = 0; n < Nimgs; ++n, ++ptrOld)
             *ptrOld -= 1;
         SF->fillConstant(MDL_REF, "-1");
-        prm->taskDistributor->reset();
-        size_t first, last;
-        while (prm->taskDistributor->getTasks(first, last))
+        size_t imgCounter=0;
+        FOR_ALL_OBJECTS_IN_METADATA(prm->SF)
         {
-            for (size_t idx = first; idx <= last; ++idx)
+            if ((imgCounter+1)%prm->node->size==prm->node->rank)
             {
-                size_t objId = prm->objId[idx];
+                size_t objId = prm->objId[imgCounter];
                 readImage(I, objId, false);
 
                 assignment.objId = objId;
-                lookNode(I(), oldAssignment[idx], node, assignment);
-                LOG(formatString("Analyzing %s oldAssignment=%d newAssignment=%d",I.name().c_str(),oldAssignment[idx], node));
+                lookNode(I(), oldAssignment[imgCounter], node, assignment);
+                LOG(formatString("Analyzing %s oldAssignment=%d newAssignment=%d",I.name().c_str(),oldAssignment[imgCounter], node));
                 SF->setValue(MDL_REF, node + 1, objId);
                 if (assignment.score>0)
                     corrSum += assignment.score;
-                if (prm->node->rank == 0 && idx % progressStep == 0)
-                    progress_bar(idx);
+                if (prm->node->rank == 0 && imgCounter % progressStep == 0)
+                    progress_bar(imgCounter);
             }
+            imgCounter++;
         }
-        prm->taskDistributor->wait();
+        prm->node->barrierWait();
 
         FileName fnAux;
         for (int q=0; q<Q; q++)
@@ -1275,7 +1278,6 @@ ProgClassifyCL3D::ProgClassifyCL3D(int argc, char** argv)
     node = new MpiNode(argc, argv);
     if (!node->isMaster())
         verbose = 0;
-    taskDistributor = NULL;
     mask.allowed_data_types=INT_MASK;
 }
 
@@ -1283,7 +1285,6 @@ ProgClassifyCL3D::ProgClassifyCL3D(int argc, char** argv)
 ProgClassifyCL3D::~ProgClassifyCL3D()
 {
     delete node;
-    delete taskDistributor;
 }
 
 /* VQPrm I/O --------------------------------------------------------------- */
@@ -1418,9 +1419,6 @@ void ProgClassifyCL3D::produceSideInfo()
 
     // Prepare the Task distributor
     SF.findObjects(objId);
-    size_t Nimgs = objId.size();
-    taskDistributor = new MpiTaskDistributor(Nimgs,
-                      XMIPP_MAX(1,Nimgs/(5*node->size)), node);
 
     // Prepare mask for evaluating the noise outside
     MultidimArray<int> sphericalMask;

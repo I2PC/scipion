@@ -21,6 +21,16 @@
 # {run}(import_micrographs,downsample_micrographs,emx_import_micrographs) Import Micrographs Run
 ImportRun = ''
 
+# Automatic quality assessment
+""" 
+Reject micrographs meeting the following conditionctfCritFirstZero<5 OR ctfCritMaxFreq>20 OR
+ctfCritfirstZeroRatio<0.9 OR ctfCritfirstZeroRatio>1.1 OR ctfCritFirstMinFirstZeroRatio>10 OR
+ctfCritCorr13<0 OR ctfCritCtfMargin<2.5 OR ctfCritNonAstigmaticValidty<0.3 OR ctfCritNonAstigmaticValidty>25
+
+See [[http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Ctf_sort_psds_v31]]
+"""
+AutomaticQuality = True
+
 # {wizard}(wizardBrowseCTF2) CTF Downsampling factor 
 """ 
 Set to 1 for no downsampling. Non-integer downsample factors are possible.
@@ -31,6 +41,12 @@ and not occupying the whole power spectrum (since this downsampling might
 entail aliasing).
 """
 DownsampleFactor = 1
+
+# Automatic downsampling detection
+""" If this option is chosen, the algorithm automatically tries by default the 
+suggested Downsample factor; and if it fails, +1; and if it fails, -1.
+"""
+AutomaticDownsampling = True
 
 # Amplitude Contrast
 """ It should be a positive number, typically between 0.05 and 0.3."""
@@ -78,14 +94,6 @@ allow identifying more details. However, since there are fewer windows,
 estimations are noisier.
 """
 WinSize = 256
-
-# {expert} Automatic rejection
-""" 
-Reject micrographs meeting the following condition, e.g., ctfCritCorr13<0.4 OR ctfCritNormality<11. You may use
-any of the following variables ctfDefocusU, ctfDefocusV, ctfCritFirstZero, ctfCritMaxFreq, ctfCritDamping, ctfCritfirstZeroRatio
-ctfCritFitting, ctfCritCorr13, ctfCritPsdCorr90, ctfCritPsdInt, ctfCritPsdStdQ, ctfCritPsdPCA1, ctfCritPsdPCARuns, ctfCritNormality
-"""
-AutomaticRejection = ""
 
 # {eval} expandParallel(threads=0,hours=12)
 

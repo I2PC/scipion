@@ -254,6 +254,15 @@ public:
     /// Mirror
     bool mirrorImages;
 
+    /// Use threshold mask
+    bool useThresholdMask;
+
+    /// Threshold to use
+    double threshold;
+
+    /// Don't align images
+    bool alignImages;
+
     /// MPI constructor
     ProgClassifyCL2D(int argc, char** argv);
 
@@ -278,9 +287,6 @@ public:
     // Selfile with all the input images
     MetaData SF;
     
-    // Task distributor
-    MpiTaskDistributor *taskDistributor;
-
     // Object Ids
     std::vector<size_t> objId;
 

@@ -217,65 +217,78 @@ void CL2DClass::fitBasic(MultidimArray<double> &I, CL2DAssignment &result,
 #endif
 
 	// Align the image with the node
-	for (int i = 0; i < 3; i++) {
-		double shiftX, shiftY, bestRot;
+    if (prm->alignImages)
+    {
+		for (int i = 0; i < 3; i++) {
+			double shiftX, shiftY, bestRot;
 
-        // Shift then rotate
-        bestShift(P, IauxSR, shiftX, shiftY, corrAux);
-        MAT_ELEM(ASR,0,2) += shiftX;
-        MAT_ELEM(ASR,1,2) += shiftY;
-        applyGeometry(LINEAR, IauxSR, I, ASR, IS_NOT_INV, WRAP);
-#ifdef DEBUG_MORE
-        save2()=IauxSR;
-        save2.write("PPPIauxSR_afterShift.xmp");
-        std::cout << "ASR\n" << ASR << std::endl;
-#endif
+			// Shift then rotate
+			bestShift(P, IauxSR, shiftX, shiftY, corrAux);
+			MAT_ELEM(ASR,0,2) += shiftX;
+			MAT_ELEM(ASR,1,2) += shiftY;
+			applyGeometry(LINEAR, IauxSR, I, ASR, IS_NOT_INV, WRAP);
+	#ifdef DEBUG_MORE
+			save2()=IauxSR;
+			save2.write("PPPIauxSR_afterShift.xmp");
+			std::cout << "ASR\n" << ASR << std::endl;
+	#endif
 
-        normalizedPolarFourierTransform(IauxSR, polarFourierI, true,
-                                        XSIZE(P) / 5, XSIZE(P) / 2-2, plans, 1);
+			normalizedPolarFourierTransform(IauxSR, polarFourierI, true,
+											XSIZE(P) / 5, XSIZE(P) / 2-2, plans, 1);
 
-        bestRot = best_rotation(polarFourierP, polarFourierI, rotAux);
-        rotation2DMatrix(bestRot, R);
-        SPEED_UP_tempsDouble;
-        M3x3_BY_M3x3(ASR,R,ASR);
-        applyGeometry(LINEAR, IauxSR, I, ASR, IS_NOT_INV, WRAP);
-#ifdef DEBUG_MORE
-        save2()=IauxSR;
-        save2.write("PPPIauxSR_afterShiftAndRotation.xmp");
-        std::cout << "ASR\n" << ASR << std::endl;
-#endif
+			bestRot = best_rotation(polarFourierP, polarFourierI, rotAux);
+			rotation2DMatrix(bestRot, R);
+			SPEED_UP_tempsDouble;
+			M3x3_BY_M3x3(ASR,R,ASR);
+			applyGeometry(LINEAR, IauxSR, I, ASR, IS_NOT_INV, WRAP);
+	#ifdef DEBUG_MORE
+			save2()=IauxSR;
+			save2.write("PPPIauxSR_afterShiftAndRotation.xmp");
+			std::cout << "ASR\n" << ASR << std::endl;
+	#endif
 
-        // Rotate then shift
-        normalizedPolarFourierTransform(IauxRS, polarFourierI, true,
-                                        XSIZE(P) / 5, XSIZE(P) / 2-2, plans, 1);
-        bestRot = best_rotation(polarFourierP, polarFourierI, rotAux);
-        rotation2DMatrix(bestRot, R);
-        M3x3_BY_M3x3(ARS,R,ARS);
-        applyGeometry(LINEAR, IauxRS, I, ARS, IS_NOT_INV, WRAP);
-#ifdef DEBUG_MORE
-        save2()=IauxRS;
-        save2.write("PPPIauxRS_afterRotation.xmp");
-        std::cout << "ARS\n" << ARS << std::endl;
-#endif
+			// Rotate then shift
+			normalizedPolarFourierTransform(IauxRS, polarFourierI, true,
+											XSIZE(P) / 5, XSIZE(P) / 2-2, plans, 1);
+			bestRot = best_rotation(polarFourierP, polarFourierI, rotAux);
+			rotation2DMatrix(bestRot, R);
+			M3x3_BY_M3x3(ARS,R,ARS);
+			applyGeometry(LINEAR, IauxRS, I, ARS, IS_NOT_INV, WRAP);
+	#ifdef DEBUG_MORE
+			save2()=IauxRS;
+			save2.write("PPPIauxRS_afterRotation.xmp");
+			std::cout << "ARS\n" << ARS << std::endl;
+	#endif
 
-        bestShift(P, IauxRS, shiftX, shiftY, corrAux);
-        MAT_ELEM(ARS,0,2) += shiftX;
-        MAT_ELEM(ARS,1,2) += shiftY;
-        applyGeometry(LINEAR, IauxRS, I, ARS, IS_NOT_INV, WRAP);
-#ifdef DEBUG_MORE
-        save2()=IauxRS;
-        save2.write("PPPIauxRS_afterRotationAndShift.xmp");
-        std::cout << "ARS\n" << ARS << std::endl;
+			bestShift(P, IauxRS, shiftX, shiftY, corrAux);
+			MAT_ELEM(ARS,0,2) += shiftX;
+			MAT_ELEM(ARS,1,2) += shiftY;
+			applyGeometry(LINEAR, IauxRS, I, ARS, IS_NOT_INV, WRAP);
+	#ifdef DEBUG_MORE
+			save2()=IauxRS;
+			save2.write("PPPIauxRS_afterRotationAndShift.xmp");
+			std::cout << "ARS\n" << ARS << std::endl;
 
-        char c;
-        std::cout << "Press any key\n";
-        std::cin >> c;
-#endif
+			char c;
+			std::cout << "Press any key\n";
+			std::cin >> c;
+	#endif
+		}
     }
 
     // Compute the correntropy
     double corrRS=0.0, corrSR=0.0;
-    const MultidimArray<int> &imask = prm->mask;
+    MultidimArray<int> &imask = prm->mask;
+    if (prm->useThresholdMask)
+    {
+    	imask.initZeros(IauxRS);
+    	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(IauxRS)
+    	if (DIRECT_MULTIDIM_ELEM(IauxRS,n)>prm->threshold)
+    		DIRECT_MULTIDIM_ELEM(imask,n)=1;
+    	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(IauxSR)
+    	if (DIRECT_MULTIDIM_ELEM(IauxSR,n)>prm->threshold)
+    		DIRECT_MULTIDIM_ELEM(imask,n)=1;
+    }
     if (prm->useCorrelation)
     {
         corrRS = corrSR = 0;
@@ -706,11 +719,11 @@ void CL2D::initialize(MetaData &_SF,
     bool oldUseCorrelation = prm->useCorrelation;
     prm->useCorrelation = true; // Since we cannot make the assignment before calculating sigma
     CL2DAssignment bestAssignment;
-    size_t first, last;
+    size_t idx=0;
     SF->fillConstant(MDL_REF,"-1");
-    while (prm->taskDistributor->getTasks(first, last))
+    FOR_ALL_OBJECTS_IN_METADATA(prm->SF)
     {
-        for (size_t idx = first; idx <= last; ++idx)
+        if ((idx+1)%prm->node->size==prm->node->rank)
         {
             int q = -1;
             if (!initialCodesGiven)
@@ -752,8 +765,9 @@ void CL2D::initialize(MetaData &_SF,
             if (idx % 100 == 0 && prm->node->rank == 0)
                 progress_bar(idx);
         }
+        idx++;
     }
-    prm->taskDistributor->wait();
+    prm->node->barrierWait();
     if (prm->node->rank == 0)
         progress_bar(Nimgs);
     prm->useCorrelation = oldUseCorrelation;
@@ -776,10 +790,10 @@ void CL2D::initialize(MetaData &_SF,
         }
 
         CL2DAssignment inClass, outClass;
-        prm->taskDistributor->reset();
-        while (prm->taskDistributor->getTasks(first, last))
+        size_t idx=0;
+        FOR_ALL_OBJECTS_IN_METADATA(prm->SF)
         {
-            for (size_t idx = first; idx <= last; ++idx)
+            if ((idx+1)%prm->node->size==prm->node->rank)
             {
                 size_t objId = prm->objId[idx];
                 readImage(I, objId, false);
@@ -809,8 +823,9 @@ void CL2D::initialize(MetaData &_SF,
                 if (prm->node->rank == 0 && idx % 100 == 0)
                     progress_bar(idx);
             }
+            idx++;
         }
-        prm->taskDistributor->wait();
+        prm->node->barrierWait();
         if (prm->node->rank == 0)
             progress_bar(Nimgs);
 
@@ -865,10 +880,14 @@ void CL2D::write(const FileName &fnODir, const FileName &fnRoot, int level) cons
     }
 }
 
+//#define DEBUG
 void CL2D::lookNode(MultidimArray<double> &I, int oldnode, int &newnode,
                     CL2DAssignment &bestAssignment)
 {
-    int Q = P.size();
+#ifdef DEBUG
+	std::cout << "Looking for node. Oldnode=" << oldnode << std::endl;
+#endif
+	int Q = P.size();
     int bestq = -1;
     MultidimArray<double> bestImg, Iaux;
     Matrix1D<double> corrList;
@@ -882,7 +901,7 @@ void CL2D::lookNode(MultidimArray<double> &I, int oldnode, int &newnode,
         bool proceed = false;
         if (oldnode >= 0)
         {
-        	if (oldnode<P.size())
+        	if (oldnode<Q)
         	{
 				int imax = P[oldnode]->neighboursIdx.size();
 				for (int i = 0; i < imax; i++)
@@ -915,6 +934,9 @@ void CL2D::lookNode(MultidimArray<double> &I, int oldnode, int &newnode,
 			Iaux = I;
 			P[q]->fit(Iaux, assignment);
 			VEC_ELEM(corrList,q) = assignment.corr;
+#ifdef DEBUG
+	std::cout << "   Proceeding with node " << q << " corr=" << assignment.corr << std::endl;
+#endif
 			if ((!prm->classicalMultiref && assignment.likelihood > bestAssignment.likelihood) ||
 				(prm->classicalMultiref && assignment.corr > bestAssignment.corr) ||
 				 prm->classifyAllImages) {
@@ -931,6 +953,9 @@ void CL2D::lookNode(MultidimArray<double> &I, int oldnode, int &newnode,
 
     // Assign it to the new node and remove it from the rest
     // of nodes if it was among the best
+#ifdef DEBUG
+	std::cout << "   New node=" << newnode << std::endl;
+#endif
     if (newnode != -1)
     {
         P[newnode]->updateProjection(I, bestAssignment);
@@ -940,6 +965,7 @@ void CL2D::lookNode(MultidimArray<double> &I, int oldnode, int &newnode,
                     P[q]->updateNonProjection(corrList(q));
     }
 }
+#undef DEBUG
 
 void CL2D::transferUpdates()
 {
@@ -989,11 +1015,10 @@ void CL2D::run(const FileName &fnODir, const FileName &fnOut, int level)
         for (size_t n = 0; n < Nimgs; ++n, ++ptrOld)
             *ptrOld -= 1;
         SF->fillConstant(MDL_REF, "-1");
-        prm->taskDistributor->reset();
-        size_t first, last;
-        while (prm->taskDistributor->getTasks(first, last))
+        size_t idx=0;
+        FOR_ALL_OBJECTS_IN_METADATA(prm->SF)
         {
-            for (size_t idx = first; idx <= last; ++idx)
+            if ((idx+1)%prm->node->size==prm->node->rank)
             {
                 size_t objId = prm->objId[idx];
                 readImage(I, objId, false);
@@ -1006,8 +1031,9 @@ void CL2D::run(const FileName &fnODir, const FileName &fnOut, int level)
                 if (prm->node->rank == 0 && idx % progressStep == 0)
                     progress_bar(idx);
             }
+            idx++;
         }
-        prm->taskDistributor->wait();
+        prm->node->barrierWait();
 
         // Gather all pieces computed by nodes
         MPI_Allreduce(MPI_IN_PLACE, &corrSum, 1, MPI_DOUBLE, MPI_SUM,
@@ -1487,14 +1513,12 @@ ProgClassifyCL2D::ProgClassifyCL2D(int argc, char** argv)
     node = new MpiNode(argc, argv);
     if (!node->isMaster())
         verbose = 0;
-    taskDistributor = NULL;
 }
 
 /* Destructor -------------------------------------------------------------- */
 ProgClassifyCL2D::~ProgClassifyCL2D()
 {
     delete node;
-    delete taskDistributor;
 }
 
 /* VQPrm I/O --------------------------------------------------------------- */
@@ -1517,6 +1541,10 @@ void ProgClassifyCL2D::readParams()
 	classifyAllImages = checkParam("--classifyAllImages");
 	normalizeImages = !checkParam("--dontNormalizeImages");
 	mirrorImages = !checkParam("--dontMirrorImages");
+	useThresholdMask = checkParam("--useThresholdMask");
+	if (useThresholdMask)
+		threshold=getDoubleParam("--useThresholdMask");
+	alignImages = !checkParam("--dontAlign");
 }
 
 void ProgClassifyCL2D::show() const {
@@ -1537,7 +1565,10 @@ void ProgClassifyCL2D::show() const {
 			<< "Classify all images:     " << classifyAllImages << std::endl
 			<< "Normalize images:        " << normalizeImages << std::endl
 			<< "Mirror images:           " << mirrorImages << std::endl
+			<< "Align images:            " << alignImages << std::endl
 	;
+	if (useThresholdMask)
+		std::cout << "Threshold mask:          " << threshold << std::endl;
 }
 
 void ProgClassifyCL2D::defineParams()
@@ -1576,6 +1607,8 @@ void ProgClassifyCL2D::defineParams()
 	addParamsLine("   [--classifyAllImages]     : By default, some images may not be classified. Use this option to classify them all.");
 	addParamsLine("   [--dontNormalizeImages]   : By default, input images are normalized to have 0 mean and standard deviation 1");
 	addParamsLine("   [--dontMirrorImages]      : By default, input images are studied unmirrored and mirrored");
+	addParamsLine("   [--useThresholdMask <t>]  : Use a mask to compare images. Remove pixels whose value is smaller or equal t");
+	addParamsLine("   [--dontAlign]             : Do not align images");
     addExampleLine("mpirun -np 3 `which xmipp_mpi_classify_CL2D` -i images.stk --nref 256 --oroot class --odir CL2Dresults --iter 10");
 }
 
@@ -1595,8 +1628,6 @@ void ProgClassifyCL2D::produceSideInfo()
     // Prepare the Task distributor
     SF.findObjects(objId);
     size_t Nimgs = objId.size();
-    taskDistributor = new MpiTaskDistributor(Nimgs,
-                      XMIPP_MAX(1,Nimgs/(5*node->size)), node);
 
     // Prepare mask for evaluating the noise outside
     mask.resize(prm->Ydim, prm->Xdim);

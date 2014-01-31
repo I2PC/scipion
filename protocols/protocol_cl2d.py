@@ -76,10 +76,12 @@ class ProtCL2D(XmippProtocol):
         errors = []
         if self.NumberOfInitialReferences>self.NumberOfReferences:
             errors.append("The number of initial classes cannot be larger than the number of final classes")
-        mD=MetaData(self.InSelFile)
+        mD = MetaData()
+        mD.read(self.InSelFile, 1)
+        
         if not mD.containsLabel(MDL_IMAGE):
-            errors.append("%s does not contain a column of images"%self.InSelFile)
-        if self.Tolerance<0:
+            errors.append("%s does not contain a column of images" % self.InSelFile)
+        if self.Tolerance < 0:
             errors.append("Tolerance must be larger than 0")
         return errors
     
