@@ -281,11 +281,13 @@ class Protocol(Step):
         expected outputs""" 
         
         for k, v in args.iteritems():
+            
             if hasattr(self, k):
                 self._deleteChild(k, v)
             self._insertChild(k, v)
             
         self._storeAttributes(self._outputs, args)
+        
         
                 
     @staticmethod

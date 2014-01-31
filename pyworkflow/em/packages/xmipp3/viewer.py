@@ -57,7 +57,7 @@ class XmippViewer(Viewer):
     _environments = [DESKTOP_TKINTER, WEB_DJANGO]
     _targets = [Image, SetOfImages, SetOfCoordinates, SetOfClasses2D, 
                 ProtImportMicrographs, XmippProtPreprocessMicrographs, ProtCTFMicrographs,
-                ProtParticlePicking, ProtImportParticles, XmippProtExtractParticles,
+                ProtParticlePicking, ProtImportParticles, XmippProtExtractParticles, ProtParticlesSubset,
                 ProtAlign, ProtProcessParticles, XmippProtKerdensom, XmippProtRotSpectra, 
                 SetOfClasses2D, SetOfCTF, NormalModes]
     
@@ -117,8 +117,10 @@ class XmippViewer(Viewer):
                 fn = self._getTmpPath(obj.getName() + '_images.xmd')
                 #Set hasCTF to False to avoid problems
                 writeSetOfParticles(obj, fn, self._getTmpPath())
-            
-            runScipionShowJ(fn, "create subset of particles", "pw_md_reader.py", self.project, obj.strId())  
+            if issubclass(cls, SetOfParticles):
+                runScipionShowJ(fn, "create subset", "pw_md_reader.py", obj)  
+            else:
+                runShowJ(fn)
             md = xmipp.MetaData(fn) 
             #print "MD=%s" % obj.outputParticles.getFileName()
             if md.containsLabel(xmipp.MDL_ZSCORE):
@@ -156,7 +158,8 @@ class XmippViewer(Viewer):
             self.visualize(obj.outputCoordinates)
         
         elif (issubclass(cls, ProtImportParticles) or
-              issubclass(cls, XmippProtExtractParticles)):
+              issubclass(cls, XmippProtExtractParticles) or
+              issubclass(cls, ProtParticlesSubset)):
             self.visualize(obj.outputParticles)
             # If Zscore on output images plot Zscore particle sorting            
         elif issubclass(cls, ProtAlign):
@@ -213,13 +216,13 @@ def runJavaIJapp(memory, appName, args, batchMode=True):
 def runShowJ(inputFiles, memory="1g", extraParams=""):
     runJavaIJapp(memory, "'xmipp.viewer.Viewer'", "-i %s %s" % (inputFiles, extraParams), True)
     
-def runScipionShowJ(inputFiles, cmdname, script, project, protid, memory="1g", extraParams=""):
+def runScipionShowJ(inputFiles, cmdname, script, obj, memory="1g", extraParams=""):
     SCIPION_PYTHON = os.environ["SCIPION_PYTHON"]
     PW_HOME = os.environ["PW_HOME"]
     
     script = "%s %s/pyworkflow/apps/%s" % (SCIPION_PYTHON, PW_HOME, script) 
-    
-    runJavaIJapp(memory, "'xmipp.viewer.scipion.ScipionViewer'", "-i %s %s --command \"%s\" \"%s\" %s %s %s" % (inputFiles, extraParams, cmdname, script, project.getName(), protid, project.dbPath), True)
+
+    runJavaIJapp(memory, "'xmipp.viewer.scipion.ScipionViewer'", "-i %s %s --command \"%s\" \"%s\" %s" % (inputFiles, extraParams, cmdname, script, obj.strId()), True)
 
 def runParticlePicker(inputMics, inputCoords, memory="1g", extraParams=""):
     runJavaIJapp(memory, "xmipp.viewer.particlepicker.training.Main", "%s %s %s" % (inputMics, inputCoords, extraParams), True)

@@ -541,6 +541,10 @@ class ProtClassify(EMProtocol):
 class ProtUserSelection(EMProtocol):
     pass
 
+class ProtParticlesSubset(EMProtocol):
+    pass
+   
+
 
 class ProtAlignClassify(EMProtocol):
     pass
