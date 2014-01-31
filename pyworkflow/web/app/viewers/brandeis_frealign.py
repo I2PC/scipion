@@ -49,12 +49,14 @@ def viewerFrealign(request, protocolViewer):
         typeUrl, url = doShowAngDist(request, protocolViewer)
         ioDict[typeUrl]= url
     if protocolViewer.doShowDataDist:
-        pass
+        typeUrl, url = doShowDataDist(request, protocolViewer)
+        ioDict[typeUrl]= url
     
     return ioDict
 
 def doShow3DRefsVolumes(request, protocolViewer):
     files = protocolViewer._getIterationFile("reference_volume_iter_%03d.mrc")
+    print files
     urls = buildPath(files)
     return "showjs", urls
 
@@ -74,18 +76,24 @@ def doShowAngDist(request, protocolViewer):
     protViewerClass = str(protocolViewer.getClassName())
     protId = str(protocolViewer.protocol.getObjId())
     width, height = getSizePlotter(1)
-    iter = str(protocolViewer.iterToShow.get())
-    return "plot","/view_plots/?function=plotShowAngDist&protViewerClass="+ protViewerClass + "&iter="+ iter + "&protId="+ protId + "&width=" + str(width) + "&height="+ str(height)
-
-#    return "showj","/visualize_object/?path="+ path
+#    iter = str(protocolViewer.iterToShow.get())
+    protocolViewer.setVisualizeIterations()
+    plots = []
+    for iter in protocolViewer.visualizeIters:
+        path = protocolViewer.protocol._getExtraPath("iter_%03d" % iter, "particles_iter_%03d.par" % iter)
+        url = "/view_plots/?function=plotShowAngDist&protViewerClass="+ protViewerClass + "&path="+ path + "&iter="+ str(iter) + "&protId="+ protId + "&width=" + str(width) + "&height="+ str(height)
+        plots.append(str(url))
+    return "plots", plots
 
 def plotShowAngDist(request, protocolViewer):
     iter = request.GET.get('iter', None)
-    protocolViewer.iterToShow.set(iter)
-    xplotter, errors = protocolViewer._createAngularDistributionPlots()
-    print xplotter
-    
+    path = request.GET.get('path', None)
+    xplotter = protocolViewer._createIterAngularDistributionPlot(int(iter), path)
     return xplotter
+
+def doShowDataDist(request, protocolViewer):
+    pass
+
 
 def buildPath(files):
     urls = []

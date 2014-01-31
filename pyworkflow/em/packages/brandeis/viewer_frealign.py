@@ -113,37 +113,39 @@ class FrealignViewer(ProtocolViewer):
         
         if len(errors) == 0:
             for iteration in self.visualizeIters:
-                parFn = self.protocol._getExtraPath("iter_%03d" % iteration, "particles_iter_%03d.par" % iteration)
-                print parFn
-                if not os.path.exists(parFn):
+                pathFile = self.protocol._getExtraPath("iter_%03d" % iteration, "particles_iter_%03d.par" % iteration)
+                print pathFile
+                
+                if not os.path.exists(pathFile):
                     errors.append('Iteration %s does not exist.' % iteration)
                 else:
-                    # Create Angular plot for one iteration
-                    file = open(parFn)
-                    phi = []
-                    theta = []
-                    
-                    for line in file:
-                        if not line.startswith('C'):
-                            lineList = line.split()
-                            phi.append(float(lineList[3]))
-                            theta.append(float(lineList[2]))
-                    gridsize = [1, 1]
-                    figsize = (4, 4)
-                    xplotter = EmPlotter(*gridsize, figsize=figsize, 
-                                            windowTitle="Angular distribution - iteration %d" % iteration)
-                    plot_title = 'iter %d' % iteration
-                    xplotter.plotAngularDistribution(plot_title, phi, theta)
+                    xplotter = self._createIterAngularDistributionPlot(iteration, pathFile)
                     xplotter.draw()
                     plots.append(xplotter)
 
         return plots, errors
     
-    def _plotStatistics(self, e=None):
-        from viewer_ml2d import createPlots
-        xplotter = createPlots(self.protocol, ['doShowLL', 'doShowPmax'])
-        if xplotter is not None:
-            return self._showOrReturn(xplotter)
+    def _createIterAngularDistributionPlot(self, iteration, pathFile):
+        # Create Angular plot for one iteration
+        file = open(pathFile)
+        phi = []
+        theta = []
+        
+        for line in file:
+            if not line.startswith('C'):
+                lineList = line.split()
+                phi.append(float(lineList[3]))
+                theta.append(float(lineList[2]))
+        gridsize = [1, 1]
+        figsize = (4, 4)
+        xplotter = EmPlotter(*gridsize, figsize=figsize, 
+                                windowTitle="Angular distribution - iteration %d" % iteration)
+        plot_title = 'iter %d' % iteration
+        
+        xplotter.plotAngularDistribution(plot_title, phi, theta)
+        
+        return xplotter
+    
     
     def _doShowJ(self, files):
         
@@ -192,9 +194,10 @@ class FrealignViewer(ProtocolViewer):
 
     def getVisualizeDictWeb(self):
         return {'doShow3DRefsVolumes': 'doShow3DRefsVolumes',
-                'doShow3DReconVolumes': 'view3DReconVolumes',
+                'doShow3DReconsVolumes': 'doShow3DReconsVolumes',
                 'doShow3DMatchProj': 'doShow3DMatchProj',
-                'doShowAngDist': 'doShowAngDist'
+                'doShowAngDist': 'doShowAngDist',
+                'doShowDataDist': 'doShowDataDist'
                 }
 
     @classmethod
