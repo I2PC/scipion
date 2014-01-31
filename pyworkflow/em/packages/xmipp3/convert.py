@@ -181,7 +181,7 @@ def class2DToRow(class2D, classRow):
         index, filename = class2D.getAverage().getLocation()
         fn = locationToXmipp(index, filename)
         classRow.setValue(xmipp.MDL_IMAGE, fn)
-    n = long(len(class2D.getImages()))
+    n = long(len(class2D))
     classRow.setValue(xmipp.MDL_CLASS_COUNT, n)
     setRowId(classRow, class2D, label=xmipp.MDL_REF)
         
