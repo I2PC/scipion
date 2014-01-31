@@ -285,7 +285,7 @@ public class TiltPairPicker extends ParticlePicker
 				mdU.destroy();
 				mdT.destroy();
 			}
-
+                        saveMicrographAngles(um);
 		}
 		catch (Exception e)
 		{
@@ -313,7 +313,7 @@ public class TiltPairPicker extends ParticlePicker
 			{
 				result += importParticlesFromFiles(uFn, tFn, f, um, scale, invertx, inverty);
 				saveData(um);
-                                saveMicrographAngles(um);
+                                
 			}
 		}
                 super.saveData();
