@@ -18,8 +18,6 @@ public class ScipionParams extends Param {
 
     public String cmdname;
     public String cmdscript;
-    public String dbpath;
-    public String projectid;
     public String imagesid;
 
     public ScipionParams(String args[]) {
@@ -29,7 +27,7 @@ public class ScipionParams extends Param {
     public void defineArgs() {
         super.defineArgs();
         Option cmdoption = new Option(COMMAND, "");
-        cmdoption.setArgs(5);
+        cmdoption.setArgs(3);
         options.addOption(cmdoption);
     }
 
@@ -41,9 +39,7 @@ public class ScipionParams extends Param {
             String[] cmdargs = cmdLine.getOptionValues(COMMAND);
             cmdname = cmdargs[0];
             cmdscript = cmdargs[1]; 
-            projectid = cmdargs[2];
-            imagesid = cmdargs[3];
-            dbpath = cmdargs[4];
+            imagesid = cmdargs[2];
         }
     }
 }

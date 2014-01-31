@@ -26,17 +26,13 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
 
     private final String cmdname;
     private final String cmdscript;
-    private final String projectid;
     private final String imagesid;
-    private final String dbpath;
 
     public ScipionGalleryJFrame(String filename, MetaData md, ScipionParams parameters) {
         super(filename, md, parameters);
         cmdname = parameters.cmdname;
         cmdscript = parameters.cmdscript;
-        projectid = parameters.projectid;
         imagesid = parameters.imagesid;
-        dbpath = parameters.dbpath;
         initComponents();
     }
 
@@ -50,7 +46,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
                         String selectionmd = "selection.xmd";
                         selectionmd = new File(selectionmd).getAbsolutePath();
                         saveSelection(selectionmd, true);
-                        String command = String.format("%s %s %s %s %s", cmdscript, selectionmd, projectid, imagesid, dbpath);
+                        String command = String.format("%s %s %s", cmdscript, selectionmd, imagesid);
                         executeCommand(command);
                     } catch (Exception ex) {
                         Logger.getLogger(ScipionGalleryJFrame.class.getName()).log(Level.SEVERE, null, ex);
@@ -74,13 +70,18 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
         p = Runtime.getRuntime().exec(command);
         p.waitFor();
         BufferedReader reader
-                = new BufferedReader(new InputStreamReader(p.getErrorStream()));
+                = new BufferedReader(new InputStreamReader(p.getInputStream()));
 
+        output.append("Output\n");
         String line = "";
         while ((line = reader.readLine()) != null) {
             output.append(line + "\n");
         }
-        
+        reader = new BufferedReader(new InputStreamReader(p.getErrorStream()));
+        output.append("Error\n");
+        while ((line = reader.readLine()) != null) {
+            output.append(line + "\n");
+        }
         System.out.println(output.toString());
 
     }
