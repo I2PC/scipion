@@ -10,16 +10,14 @@
 
 from protlib_base import *
 from os.path import join, exists, split, basename
-from xmipp import MetaData, MetaDataInfo, MD_APPEND, MDL_MAXCC, MDL_WEIGHT, \
-    MDL_IMAGE, \
-    MDL_VOLUME_SCORE_SUM, MDL_VOLUME_SCORE_SUM_TH, MDL_VOLUME_SCORE_MEAN, MDL_VOLUME_SCORE_MIN
-
+from xmipp import MetaData, MetaDataInfo, MD_APPEND, MDL_MAXCC, MDL_WEIGHT, MDL_IMAGE, MDL_VOLUME_SCORE_SUM, MDL_VOLUME_SCORE_SUM_TH, MDL_VOLUME_SCORE_MEAN, MDL_VOLUME_SCORE_MIN
 from math import floor
-from numpy import array, savetxt, sum, zeros
+from numpy import array, savetxt, sum, zeros,  empty, loadtxt, ones, empty
 from protlib_xmipp import getMdSize
 from protlib_utils import getListFromRangeString, runJob, runShowJ
 from protlib_filesystem import copyFile, deleteFile, moveFile, removeFilenamePrefix, createDir
 from protlib_hg3d import *
+import Queue as q
 
 
 class ProtHG3D(ProtHG3DBase):
@@ -95,6 +93,10 @@ class ProtHG3D(ProtHG3DBase):
             #self.NRansac=int(floor(self.NRansac/2))
             #if (nI==0):
             #    self.CorrThresh = (1-self.CorrThresh)/2+self.CorrThresh
+        
+
+        fnOutputReducedClass = self.extraPath("reducedClasses.xmd")     
+        self.insertStep("procCoocurenceMatrix",fnClasses=fnOutputReducedClass,NumVolumes=self.NumVolumes,nI=nI)
 
         
     def validate(self):
@@ -382,11 +384,69 @@ def coocurenceMatrix(log,WorkingDirStructure,NumVolumes,nI):
             for j in xrange(1,len(num)):
                 matrix[num[i],num[j]]=((corr[i]+corr[j])/2)
         
-        numpy.savetxt(fnMatrix, matrix)
-        
-def procCoocurenceMatrix(log,WorkingDirStructure,NumVolumes,nI):
-    
-    for n in range(NumVolumes):
-        
+        numpy.savetxt(fnMatrix, matrix) 
+
+#http://wiki.scipy.org/NumPy_for_Matlab_Users        
+def procCoocurenceMatrix(log,fnClasses,NumVolumes,nI):
+    digitaliceValue = 10
+    sumMatrix = numpy.loadtxt('cooMatrix.txt')
+    for n in range(NumVolumes):        
         fnMatrix = 'cooMatrix%05d_%05d.txt'%(nI,n)        
-        numpy.loadtxt(fnMatrix, matrix)
+        matrix=numpy.loadtxt(fnMatrix)
+        sumMatrix += matrix
+        
+    maxMatrix = sumMatrix.max()
+    intSumMatrix = (sumMatrix/maxMatrix)*digitaliceValue
+    intSumMatrix.astype(int)
+    intSumMatrix = intSumMatrix>(digitaliceValue-1)
+    
+    num = intSumMatrix.shape[0]
+    
+    for idx in range(num):
+        for idy in range(num):
+            if(idy>idx):
+                intSumMatrix[idy,idx]=0
+    #We define the dictionary between the coocurence matrix indexes and the class images
+    mdClasses = MetaData(fnClasses)
+    objId = mdClasses.firstObject()
+    n = 0;
+    dictM = numpy.empty(num,dtype='object')                
+    for objId in mdClasses:
+        name = mdClasses.getValue(MDL_IMAGE, objId)
+        dictM[n] = str(name)
+        n+=1        
+    print dictM    
+    #Get the largest component
+    remaining = ones(num)
+    queue = q.Queue()
+    components = empty((num,num))
+    components[:] = -1
+    nComp = -1
+    idxComp = 0
+    
+    while (sum(remaining) != 0):
+        if (queue.empty()):
+            var = 0
+            while ((remaining[var])==0):
+                var += 1
+            idx=int(var)
+            remaining[idx] = 0
+            nComp += 1
+            idxComp = 0
+        else:
+            idx=int(queue.get())    
+            remaining[idx] = 0
+        for idy in range(int(idx),num):
+            if (intSumMatrix[idy,idx]!=0):
+                queue.put(idy)
+                intSumMatrix[idy,idx] = 0
+                components[nComp,idxComp]=idy
+                idxComp += 1
+    for idx in range(num):
+        md = MetaData()
+        for idy in range(num):
+            if ((components[idy,idx])!=-1.0):
+                id=md.addObject()
+                print int(components[idy,idx])
+                md.setValue(MDL_IMAGE,dictM[int(components[idy,idx])],id)
+        md.write("class%02d_images@javi.xmd"%idx,MD_APPEND)
