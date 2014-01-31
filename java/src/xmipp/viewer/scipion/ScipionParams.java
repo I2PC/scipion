@@ -20,7 +20,7 @@ public class ScipionParams extends Param {
     public String cmdscript;
     public String dbpath;
     public String projectid;
-    public String protid;
+    public String imagesid;
 
     public ScipionParams(String args[]) {
         super(args);
@@ -42,7 +42,7 @@ public class ScipionParams extends Param {
             cmdname = cmdargs[0];
             cmdscript = cmdargs[1]; 
             projectid = cmdargs[2];
-            protid = cmdargs[3];
+            imagesid = cmdargs[3];
             dbpath = cmdargs[4];
         }
     }

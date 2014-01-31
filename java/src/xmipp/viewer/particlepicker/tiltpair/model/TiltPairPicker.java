@@ -199,11 +199,7 @@ public class TiltPairPicker extends ParticlePicker
 		return count;
 	}
 
-	public void saveData()
-	{
-		super.saveData();
-		saveMicrographAngles(micrograph);
-	}
+
 	
 	public void saveMicrographAngles(UntiltedMicrograph m)
 	{
@@ -233,7 +229,7 @@ public class TiltPairPicker extends ParticlePicker
 			anglesmd.setValueDouble(MDLabel.MDL_ANGLE_TILT, m.getTiltAngle(), micId);
 			
 			anglesmd.writeBlock(selfile);
-			saveData(m);
+			
 		}
 		catch (Exception e)
 		{
