@@ -85,17 +85,18 @@ class FrealignViewer(ProtocolViewer):
     
     def _view3DRefsVolumes(self, e=None):
         files = self._getIterationFile("reference_volume_iter_%03d.mrc")
-        # Devolver una lista de ficheros
+        self._doShowJ(files)
         
-        
-        self._viewIterationFile("reference_volume_iter_%03d.mrc")
+        #self._viewIterationFile("reference_volume_iter_%03d.mrc")
         
     def _view3DReconVolumes(self, e=None):
-        self._viewIterationFile("volume_iter_%03d.mrc")
-
+        files = self._getIterationFile("volume_iter_%03d.mrc")
+        self._doShowJ(files)
+    
     def _viewMatchProj(self, e=None):
-        self._viewIterationFile("particles_match_iter_%03d.mrc")
-        
+        files = self._getIterationFile("particles_match_iter_%03d.mrc")
+        self._doShowJ(files)
+    
     def _plotAngularDistribution(self, e=None):
         plots, errors = self._createAngularDistributionPlots()
         self._showPlots(plots, errors)
@@ -143,35 +144,30 @@ class FrealignViewer(ProtocolViewer):
         xplotter = createPlots(self.protocol, ['doShowLL', 'doShowPmax'])
         if xplotter is not None:
             return self._showOrReturn(xplotter)
-
+    
+    def _doShowJ(self, files):
+        
+        if len(files) != 0:
+            for f in files:
+                runShowJ(f)
+    
     def _getIterationFile(self, filePath):
         self.setVisualizeIterations()
         
-        path = ""
-        for iter in self.visualizeIters:
+        path = []
+        for i, iter in enumerate(self.visualizeIters):
             pathDir = self.protocol._getExtraPath("iter_%03d" % iter)
             pathNew = join(pathDir, filePath % iter)
-            print "path=%s" % pathNew
+#             print "path=%s" % pathNew
             
-            if os.path.exists(path):
-                path += pathNew
+            if os.path.exists(pathNew):
+                path.append(pathNew)
 #                runShowJ(path)
             else:
-                self.formWindow.showError('Iteration %s does not exist.' % iter) 
-        print path
+                self.formWindow.showError('Iteration %s does not exist.' % iter)
+        
         return path
         
-    def _viewIterationFile(self, filePath):
-        self.setVisualizeIterations()
-        
-        for iter in self.visualizeIters:
-            pathDir = self.protocol._getExtraPath("iter_%03d" % iter)
-            path = join(pathDir, filePath % iter)
-            print "path=%s" % path
-            if os.path.exists(path):
-                runShowJ(path)       
-            else:
-                self.formWindow.showError('Iteration %s does not exist.' % iter)        
         
     def setVisualizeIterations(self):
         '''Validate and set the set of iterations to visualize.
