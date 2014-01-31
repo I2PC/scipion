@@ -11,6 +11,7 @@
 #include <dimred/probabilisticPCA.h>
 #include <dimred/laplacianEigenmaps.h>
 #include <iostream>
+#include <stdlib.h>     /* getenv */
 #include "../../../external/gtest-1.6.0/fused-src/gtest/gtest.h"
 // MORE INFO HERE: http://code.google.com/p/googletest/wiki/AdvancedGuide
 
@@ -102,9 +103,16 @@ TEST_F( DimRedTest, intrinsic_dimensionality)
 	Y.write(file); \
 }
 
-#define COMPLETE_TEST(method,DimredClass,dataset,Npoints,file) \
+#define COMPLETE_TEST(method,DimredClass,dataset,Npoints,file,doTestAlways) \
 	TEST_F( DimRedTest, method) \
 { \
+	const char * doTest = getenv ("XMIPP_FULLTEST");\
+	if (doTest!=NULL && !doTestAlways)\
+	{\
+       std::cout << "Skiping test: DimRedTest using file " << file << ".\n Define environmental variable FULLTEST to activate test"<< std::endl;\
+       ASSERT_TRUE(true);\
+       return;\
+    }\
 	GenerateData generator; \
 	generator.generateNewDataset(dataset,Npoints,0); \
 	DimredClass dimred; \
@@ -117,19 +125,19 @@ TEST_F( DimRedTest, intrinsic_dimensionality)
 	Matrix2D<double> expectedY; \
 	expectedY.resizeNoCopy(Y); \
 	expectedY.read(file); \
-	ASSERT_TRUE(expectedY.equal(Y,1e-5)); \
+	ASSERT_TRUE(expectedY.equalAbs(Y,1e-4));\
 }
 
-COMPLETE_TEST(ltsa,               LTSA,             "helix",1000,"dimred/ltsa.txt")
-COMPLETE_TEST(diffusionMaps,      DiffusionMaps,    "helix",1000,"dimred/diffusionMaps.txt")
-COMPLETE_TEST(lltsa,              LLTSA,            "helix",1000,"dimred/lltsa.txt")
-COMPLETE_TEST(lpp,                LPP,              "helix",1000,"dimred/lpp.txt")
-COMPLETE_TEST(kernelPCA,          KernelPCA,        "helix",1000,"dimred/kernelPCA.txt")
-COMPLETE_TEST(probabilisticPCA,   ProbabilisticPCA, "helix",1000,"dimred/probabilisticPCA.txt")
-COMPLETE_TEST(laplacianEigenmap,LaplacianEigenmap,  "helix",1000,"dimred/laplacianEigenmap.txt")
-COMPLETE_TEST(hessianlle,         HessianLLE,       "helix",1000,"dimred/hessianlle.txt")
-COMPLETE_TEST(spe,                SPE,              "helix",1000,"dimred/spe.txt")
-COMPLETE_TEST(npe,                NPE,              "helix",1000,"dimred/npe.txt")
+COMPLETE_TEST(ltsa,               LTSA,             "helix",1000,"dimred/ltsa.txt",true)
+COMPLETE_TEST(diffusionMaps,      DiffusionMaps,    "helix",1000,"dimred/diffusionMaps.txt",true)
+COMPLETE_TEST(lltsa,              LLTSA,            "helix",1000,"dimred/lltsa.txt",false)
+COMPLETE_TEST(lpp,                LPP,              "helix",1000,"dimred/lpp.txt",true)
+COMPLETE_TEST(kernelPCA,          KernelPCA,        "helix",1000,"dimred/kernelPCA.txt",false)
+COMPLETE_TEST(probabilisticPCA,   ProbabilisticPCA, "helix",1000,"dimred/probabilisticPCA.txt",true)
+COMPLETE_TEST(laplacianEigenmap,LaplacianEigenmap,  "helix",1000,"dimred/laplacianEigenmap.txt",true)
+COMPLETE_TEST(hessianlle,         HessianLLE,       "helix",1000,"dimred/hessianlle.txt",true)
+COMPLETE_TEST(spe,                SPE,              "helix",1000,"dimred/spe.txt",true)
+COMPLETE_TEST(npe,                NPE,              "helix",1000,"dimred/npe.txt",false)
 
 TEST_F( DimRedTest, nca)
 {

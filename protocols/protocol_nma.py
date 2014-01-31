@@ -41,7 +41,7 @@ class ProtNMA(XmippProtocol):
                 fnMask=self.extraPath('mask.vol')
                 self.insertRunJobStep("xmipp_transform_threshold", params="-i %s -o %s --select below %f --substitute binarize"%\
                                       (self.InputStructure,fnMask,self.Threshold),verifyFiles=[fnMask])
-            else:
+            elif self.MaskMode=="Binary file":
                 fnMask=self.MaskFile
             
             # Convert to pseudoatoms
