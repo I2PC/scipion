@@ -50,6 +50,7 @@ def viewerFrealign(request, protocolViewer):
 def doShow3DRefsVolumes(request, protocolViewer):
     path = str("reference_volume_iter_%03d.mrc")
     sourcePath = self._viewIterationFile(path)
+    print path
     return "showj", "/visualize_object/?path="+ sourcePath
 
 def doShow3DReconVolumes(request, protocolViewer):

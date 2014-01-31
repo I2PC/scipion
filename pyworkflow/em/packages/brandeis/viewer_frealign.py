@@ -58,15 +58,17 @@ class FrealignViewer(ProtocolViewer):
               help='Which iteration do you want to visualize.')     
         form.addParam('doShow3DRefsVolumes', BooleanParam, label="Visualize the 3D-references volumes?", default=True)
         form.addParam('doShow3DReconsVolumes', BooleanParam, label="Visualize the 3D-reconstructed volumes?", default=True)
+        form.addParam('doShow3DMatchProj', BooleanParam, label="Visualize the matching projections of refinement?", default=True)
         form.addParam('doShowAngDist', BooleanParam, label="Plot angular distribution?", default=True)
         form.addParam('doShowDataDist', BooleanParam, label="Plot data distribution over 3d-references?", default=True)     
         
-        form.addSection(label='Overall Results')
-        form.addParam('doShowStatistics', BooleanParam, label="Plot overall convergence statistics?", default=True)
+#         form.addSection(label='Overall Results')
+#         form.addParam('doShowStatistics', BooleanParam, label="Plot overall convergence statistics?", default=True)
     
     def _getVisualizeDict(self):
         return {'doShow3DRefsVolumes': self._view3DRefsVolumes,
                 'doShow3DReconsVolumes': self._view3DReconVolumes,
+                'doShow3DMatchProj': self._viewMatchProj,
                 'doShowAngDist': self._plotAngularDistribution
                 }
     
@@ -75,6 +77,8 @@ class FrealignViewer(ProtocolViewer):
             self._view3DRefsVolumes()
         if self.doShow3DReconsVolumes:
             self._view3DReconVolumes()
+        if self._doShow3DMatchProj:
+            self._viewMatchProj()
         if self.doShowAngDist:
             self._plotAngularDistribution()
     
@@ -83,6 +87,9 @@ class FrealignViewer(ProtocolViewer):
         
     def _view3DReconVolumes(self, e=None):
         self._viewIterationFile("volume_iter_%03d.mrc")
+
+    def _viewMatchProj(self, e=None):
+        self._viewIterationFile("particles_match_iter_%03d.mrc")
         
     def _plotAngularDistribution(self, e=None):
         self._showPlots(*self._createAngularDistributionPlots())
@@ -123,8 +130,7 @@ class FrealignViewer(ProtocolViewer):
                     plots.append(xplotter)
 
         return plots, errors
-
-                    
+    
     def _plotStatistics(self, e=None):
         from viewer_ml2d import createPlots
         xplotter = createPlots(self.protocol, ['doShowLL', 'doShowPmax'])
@@ -166,7 +172,8 @@ class FrealignViewer(ProtocolViewer):
     def getVisualizeDictWeb(self):
         return {'doShow3DRefsVolumes': 'view3DRefsVolumes',
                 'doShow3DReconVolumes': 'view3DReconVolumes',
-                'doShowAngDist': 'doPlotAngularDistribution',
+                '_doShow3DMatchProj': 'viewMatchProj',
+                'doShowAngDist': 'doPlotAngularDistribution'
                 }
 
     @classmethod
