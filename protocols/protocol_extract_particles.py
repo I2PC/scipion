@@ -220,8 +220,23 @@ def updateSampling(log, SamplingMd, TsOriginal, Ts, TsMode):
     md.setValue(MDL_SAMPLINGRATE, Ts, objId)
     md.write(SamplingMd)
 
-def extractParticles(log,ExtraDir,micrographName, micrographPos, ctf, fullMicrographName, micrographOriginal, micrographToExtract,
-                     TsFinal, TsInput, downsamplingMode, particleSize, doFlip, doInvert, doNorm, normType, bgRadius):
+def extractParticles(log,
+                     ExtraDir,
+                     micrographName, 
+                     micrographPos, 
+                     ctf, 
+                     fullMicrographName, 
+                     micrographOriginal, 
+                     micrographToExtract,
+                     TsFinal, 
+                     TsInput, 
+                     downsamplingMode, 
+                     particleSize, 
+                     doFlip, 
+                     doInvert, 
+                     doNorm, 
+                     normType, 
+                     bgRadius):
     md=readPosCoordinates(micrographPos)
     fnTmpPos=os.path.join(ExtraDir,"tmp_%s.pos"%micrographName)
     md.write(fnTmpPos)
