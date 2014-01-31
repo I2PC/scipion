@@ -785,7 +785,7 @@ eot
             self._enterDir(iterDir)
             
         # time.sleep(block)
-        program = "block%03d.sh" % block
+        program = "./block%03d.sh" % block
         os.chmod(program, 0775)
         self.runJob(None, program, "")
         
