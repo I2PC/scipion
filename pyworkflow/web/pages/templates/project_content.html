@@ -111,7 +111,7 @@
 	<span><a id="deleteTool" href=""><i class="fa fa-trash-o" style="margin-right:5px"></i>{{messages_properties.LABEL_DELETE}}</a></span>
 	<span><a id="browseTool" href=""><i class="fa fa-folder-open" style="margin-right:5px"></i>{{messages_properties.LABEL_BROWSE}}</a></span>
 	<span id="stopTool"><a id="stopTool" href=""><i class="fa fa-stop" style="margin-right:5px"></i>{{messages_properties.LABEL_STOP}}</a></span>
-	<span id="analyzeTool"><a id="analyzeTool" href=""><i class="fa fa-eye" style="margin-right:5px"></i>{{messages_properties.LABEL_ANALYZE}}</a></span>
+<!-- 	<span id="analyzeTool"><a id="analyzeTool" href=""><i class="fa fa-eye" style="margin-right:5px"></i>{{messages_properties.LABEL_ANALYZE}}</a></span> -->
 </div>
 <div id="runsInfo">
 	{% include "run_table_graph.html" %}
@@ -120,6 +120,7 @@
 
 {% block contentCenter %}
 <div class="tabContaier" id="tabs">
+	<span id="analyzeTool"><a id="analyzeTool" href=""><i class="fa fa-eye" style="margin-right:5px"></i>{{messages_properties.LABEL_ANALYZE}}</a></span>
 	<ul class="listTabs">
 		<li><a href="#tab-data">{{messages_properties.LABEL_DATA}}</a></li>
 		<li><a href="#tab-summary">{{messages_properties.LABEL_SUMMARY}}</a></li>
