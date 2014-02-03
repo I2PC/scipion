@@ -2,7 +2,6 @@ package xmipp.utils;
 
 import org.apache.commons.cli.BasicParser;
 import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 
 import xmipp.jni.ImageGeneric;
@@ -51,8 +50,6 @@ public class Param {
     public final static String NO_GEO = "dont_apply_geo";
     public final static String NO_WRAP = "dont_wrap";
     
-    public final static String COMMAND = "command";
-    
     public String directory;
     public String files[];
     public int port;
@@ -79,25 +76,18 @@ public class Param {
     public int resliceView = ImageGeneric.Z_NEG; 
     public boolean useGeo = true;
     public boolean wrap = true;
-    protected Options options;
-    protected CommandLine cmdLine;
-
-    
-    
-    
 
     public Param() {
     }
 
     public Param(String args[]) {
-        options = new Options();
-        defineArgs();
         processArgs(args);
     }
 
-    public void defineArgs()
-    {
-         options.addOption(FILE, true, "");
+    void processArgs(String args[]) {
+        Options options = new Options();
+
+        options.addOption(FILE, true, "");
         // It should be able to handle multiple files.
         options.getOption(FILE).setOptionalArg(true);
         options.getOption(FILE).setArgs(Integer.MAX_VALUE);
@@ -134,18 +124,10 @@ public class Param {
         options.addOption(NO_GEO, false, "");
         options.addOption(NO_WRAP, false, "");
 
-    }
-    
-    
-    public void processArgs(String args[]) {
 
-
-       
-       
-        
         try {
             BasicParser parser = new BasicParser();
-            cmdLine = parser.parse(options, args);
+            CommandLine cmdLine = parser.parse(options, args);
 
             if (cmdLine.hasOption(FILE)) {
                 files = cmdLine.getOptionValues(FILE);
@@ -242,7 +224,6 @@ public class Param {
                 dataFilename = cmdLine.getOptionValue(INPUT_DATAFILE);
             }
             
-            
             useGeo = !cmdLine.hasOption(NO_GEO);
             wrap = !cmdLine.hasOption(NO_WRAP);
             
@@ -261,8 +242,6 @@ public class Param {
             	else if (view.equals("x_pos"))
             		resliceView = ImageGeneric.X_POS;
             }
-            
-           
         } catch (Exception ex) {
         	ex.printStackTrace();
         }
