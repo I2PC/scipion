@@ -26,10 +26,8 @@
 
 import os
 from pyworkflow.web.app.views_util import *
+from pyworkflow.em.packages.xmipp3.protocol_ml3d import *
 
-LAST_ITER = 0
-ALL_ITER = 1
-SELECTED_ITERS = 2
 
 def viewerML3D(request, protocolViewer):
     ioDict = {}
@@ -74,53 +72,52 @@ def viewGeneratedVols(request, protocolViewer):
     return "showj", "/visualize_object/?path="+ path
 
 def view2DAvgs(request, protocolViewer):
-    extra = '%s2d' % protocolViewer.protocol.getProgramId() + 'extra'
-    file = extra + "/iter%03d/iter_classes.xmd"
-#    viewIterationFile("ml2dextra/iter%03d/iter_classes.xmd")
-    pass
+    files = protocolViewer._getIterationFile("iter_classes.xmd", extra="mlf2dextra")
+    urls = buildShowjPath(files)
+    return "showjs", urls
 
 def view3DRefsVolumes(request, protocolViewer):
-    file = "extra/iter%03d/vol000001.vol"
-#    viewIterationFile("extra/iter%03d/vol000001.vol")
-    pass
-
-
+    files = protocolViewer._getIterationFile("vol000001.vol", extra="extra")
+    urls = buildShowjPath(files)
+    return "showjs", urls
 
 def doPlotAngularDistribution(request, protocolViewer):
-    iterToShow = str(protocolViewer.iterToShow.get())
-    protViewerClass = str(protocolViewer.getClassName())
-    protId = str(protocolViewer.protocol.getObjId())
-    width, height = getSizePlotter(-1)
-    return "plot","/view_plots/?function=plotAngularDistribution&protViewerClass="+ protViewerClass + "&protId="+ protId +"&iterToShow="+ iterToShow + "&width=" + str(width) + "&height="+ str(height)
-
-def plotAngularDistribution(request, protocolViewer):
-    protocolViewer.iterToShow.set(request.GET.get('iterToShow', None))
-    plots, errors = protocolViewer._createAngularDistributionPlots()
-    
-#    xplotter = plots[0]
-
-    if len(errors) != 0:
-        pass
-    else:
-        return plots
-    
-def doPlotClassDistribution(request, protocolViewer):
-    iterToShow = str(protocolViewer.iterToShow.get())
-    protocolViewer.iterToShow.set(request.GET.get('iterToShow', None))
     protViewerClass = str(protocolViewer.getClassName())
     protId = str(protocolViewer.protocol.getObjId())
     width, height = getSizePlotter(1)
-    return "plot","/view_plots/?function=plotClassDistribution&protViewerClass="+ protViewerClass + "&protId="+ protId +"&iterToShow="+ iterToShow + "&width=" + str(width) + "&height="+ str(height)
+    protocolViewer.setVisualizeIterations()
+    plots = []
+    for iter in protocolViewer.visualizeIters:
+        extra = '%s2d' % protocolViewer.protocol.getProgramId() + 'extra'
+        path = protocolViewer.protocol._getPath(extra + "/iter%03d/iter_classes.xmd" % iter)
+        url = "/view_plots/?function=plotAngularDistribution&protViewerClass="+ protViewerClass + "&path="+ path + "&iter="+ str(iter) + "&protId="+ protId + "&width=" + str(width) + "&height="+ str(height)
+        plots.append(str(url))
+    return "plots", plots
+
+def plotAngularDistribution(request, protocolViewer):
+    iter = request.GET.get('iter', None)
+    path = request.GET.get('path', None)
+    xplotter = protocolViewer._createIterAngularDistributionPlot(int(iter), path)
+    return xplotter
+    
+def doPlotClassDistribution(request, protocolViewer):
+    protViewerClass = str(protocolViewer.getClassName())
+    protId = str(protocolViewer.protocol.getObjId())
+    width, height = getSizePlotter(1)
+    protocolViewer.setVisualizeIterations()
+    plots = []
+    for iter in protocolViewer.visualizeIters:
+        extra = '%s2d' % protocolViewer.protocol.getProgramId() + 'extra'
+        path = protocolViewer.protocol._getPath(extra + "/iter%03d/iter_classes.xmd" % iter)
+        url = "/view_plots/?function=plotClassDistribution&protViewerClass="+ protViewerClass + "&path="+ path + "&iter="+ str(iter) + "&protId="+ protId + "&width=" + str(width) + "&height="+ str(height)
+        plots.append(str(url))
+    return "plots", plots
 
 def plotClassDistribution(request, protocolViewer):
-    protocolViewer.iterToShow.set(request.GET.get('iterToShow', None))
-    plots, errors = protocolViewer._createClassDistributionPlots()
-    
-#    xplotter = plots[0]
-    if len(errors) != 0:
-        pass
-    else:
-        return plots
+    iter = request.GET.get('iter', None)
+    path = request.GET.get('path', None)
+    xplotter = protocolViewer._createIterClassDistributionPlots(int(iter), path)
+    return xplotter
 
 def doPlotStatistics(request, protocolViewer):
     protViewerClass = str(protocolViewer.getClassName())

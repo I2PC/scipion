@@ -511,3 +511,11 @@ def parseText(text, func=replacePattern):
 #        parsedText = parseHyperText(text, func)
     return parsedText[:-6]    
 
+
+def buildShowjPath(files):
+    urls = []
+    for f in files:
+        url = "/visualize_object/?path="+ f
+        urls.append(url)
+    return urls
+
