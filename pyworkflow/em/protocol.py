@@ -352,6 +352,10 @@ class ProtInitialVolume(EMProtocol):
     """Protocol base for Initial volumes protocols"""
     pass
 
+class ProtAlignVolume(EMProtocol):
+    """Protocol base for Align volumes protocols"""
+    pass
+
 
 class ProtCTFMicrographs(EMProtocol):
     """ Base class for all protocols that estimates the CTF"""

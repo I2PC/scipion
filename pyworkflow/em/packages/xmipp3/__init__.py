@@ -71,6 +71,7 @@ from protocol_convert_pdb import XmippProtConvertPdb
 from protocol_join_sets import XmippProtJoinSets
 from protocol_nma import XmippProtNMA
 from protocol_nma_alignment import XmippProtAlignmentNMA
+from protocol_align_volume import XmippProtAlignVolume
 
 # Wizards
 from wizard import *

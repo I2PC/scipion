@@ -7,6 +7,7 @@ import logging
 import logging.config
 import os
 from pyworkflow.utils.path import *
+import sys
 
 SCIPION_PATH = 'Scipion'
 LOG_PATH = 'logs'
@@ -60,29 +61,52 @@ def getGeneralLogger(classPath):
     return logging.getLogger(classPath)
     
 
-def getFileLogger(filePath):
-    """ Method that creates and returns a log for the given file """
-    # Create the folders path if it does not exist 
-    makeFilePath(filePath)
+class ScipionLogger():
+    def __init__(self, filePath):
+        makeFilePath(filePath)
+        self._filePath = filePath
+
+        if filePath not in config['loggers']:
+            config['handlers'][filePath] = {'level': 'INFO',    
+                                            'class': 'logging.handlers.RotatingFileHandler',
+                                            'formatter': 'fileFormat',
+                                            'filename': filePath,
+                                            'maxBytes': 100000,}
+            config['loggers'][filePath] = {'handlers': ['consoleHandler', filePath],        
+                                           'level': 'INFO',  
+                                           'propagate': False,}
+            logging.config.dictConfig(config)
+            
+        self._log = logging.getLogger(filePath) 
+        
+    def getLog(self):
+        return self._log    
+        
+    def info(self, message, redirectStandard = False, *args, **kwargs):
+        if redirectStandard:
+            print message
+        self._log.info(message, *args, **kwargs)
     
-    if filePath not in config['loggers']:
-        config['handlers'][filePath] = {'level': 'INFO',    
-                                        'class': 'logging.handlers.RotatingFileHandler',
-                                        'formatter': 'fileFormat',
-                                        'filename': filePath,
-                                        'maxBytes': 100000,}
-        config['loggers'][filePath] = {'handlers': ['consoleHandler', filePath],        
-                                       'level': 'INFO',  
-                                       'propagate': False,}
-        logging.config.dictConfig(config)
-    return logging.getLogger(filePath)
+    def warning(self, message, redirectStandard = False, *args, **kwargs):
+        if redirectStandard:
+            print message
+        self._log.warning(message, *args, **kwargs)
+        
+    def error(self, message, redirectStandard = False, *args, **kwargs):
+        if redirectStandard:
+            print >> sys.stderr, message
+        self._log.error(message, *args, **kwargs)    
+        
+    def close(self):
+        if self._filePath in config['loggers']:
+            del config['handlers'][self._filePath]
+            del config['loggers'][self._filePath]   
 
-
-def closeFileLogger(filePath):
-    """ This method should be called to un-register a previous acquired
-    file logger with the method getFileLogger, the same filePath should
-    be used.
-    """
-    if filePath in config['loggers']:
-        del config['handlers'][filePath]
-        del config['loggers'][filePath]
+#def closeFileLogger(filePath):
+#    """ This method should be called to un-register a previous acquired
+#    file logger with the method getFileLogger, the same filePath should
+#    be used.
+#    """
+#    if filePath in config['loggers']:
+#        del config['handlers'][filePath]
+#        del config['loggers'][filePath]
