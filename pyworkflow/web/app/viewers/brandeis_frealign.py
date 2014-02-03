@@ -27,7 +27,7 @@
 import os
 from pyworkflow.web.app.views_util import *
 from pyworkflow.em.packages.brandeis.viewer_frealign import *
-
+from pyworkflow.web.app.em_viewer import buildShowjPath
 
 def viewerFrealign(request, protocolViewer):
     ioDict = {}
@@ -56,20 +56,19 @@ def viewerFrealign(request, protocolViewer):
 
 def doShow3DRefsVolumes(request, protocolViewer):
     files = protocolViewer._getIterationFile("reference_volume_iter_%03d.mrc")
-    print files
-    urls = buildPath(files)
+    urls = buildShowjPath(files)
     return "showjs", urls
 
 
 def doShow3DReconsVolumes(request, protocolViewer):
     files = protocolViewer._getIterationFile("volume_iter_%03d.mrc")
-    urls = buildPath(files)
+    urls = buildShowjPath(files)
     return "showjs", urls
 
 
 def doShow3DMatchProj(request, protocolViewer):
     files = protocolViewer._getIterationFile("particles_match_iter_%03d.mrc")
-    urls = buildPath(files)
+    urls = buildShowjPath(files)
     return "showjs", urls
 
 def doShowAngDist(request, protocolViewer):
@@ -95,12 +94,6 @@ def doShowDataDist(request, protocolViewer):
     pass
 
 
-def buildPath(files):
-    urls = []
-    for f in files:
-        url = "/visualize_object/?path="+ f
-        urls.append(url)
-        
-    return urls
+
 
 

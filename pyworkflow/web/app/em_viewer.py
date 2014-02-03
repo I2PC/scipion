@@ -257,5 +257,12 @@ def view_plot_xmipp(request):
         response= HttpResponse(content_type='image/png')
         canvas.print_png(response)
         return response
+    
+def buildShowjPath(files):
+    urls = []
+    for f in files:
+        url = "/visualize_object/?path="+ f
+        urls.append(url)
+    return urls
 
 
