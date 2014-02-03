@@ -696,12 +696,13 @@ class Protocol(Step):
         self.stderr = sys.stderr
         sys.stdout = self.fOut
         sys.stderr = self.fErr
-        self._log.info('RUNNING PROTOCOL info -----------------')
-        self._log.warning('RUNNING PROTOCOL warning-----------------')
-        self._log.error('RUNNING PROTOCOL error-----------------')
-        self._log.info('RUNNING PROTOCOL info red-----------------', True)
-        self._log.warning('RUNNING PROTOCOL warning red-----------------', True)
-        self._log.error('RUNNING PROTOCOL error red-----------------', True)
+        self._log.info('RUNNING PROTOCOL -----------------')
+#        self._log.info('RUNNING PROTOCOL info -----------------')
+#        self._log.warning('RUNNING PROTOCOL warning-----------------')
+#        self._log.error('RUNNING PROTOCOL error-----------------')
+#        self._log.info('RUNNING PROTOCOL info red-----------------', True)
+#        self._log.warning('RUNNING PROTOCOL warning red-----------------', True)
+#        self._log.error('RUNNING PROTOCOL error red-----------------', True)
 #        self._log.info('        jobId: %s' % self.getJobId())
 #        self._log.info('          pid: %s' % os.getpid())
 #        self._log.info('         ppid: %s' % os.getppid())
@@ -731,8 +732,6 @@ class Protocol(Step):
         self.fOut.close()
         self.fErr.close()
         return fOutString, fErrString
-        
-
         
     def __getStdErr(self):
         #Initialize stderr log
