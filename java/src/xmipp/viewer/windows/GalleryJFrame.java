@@ -193,6 +193,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 	protected static int MAX_WIDTH;
 	protected static Dimension screenSize;
 	private Integer rows, columns;
+        protected JPanel commandspn;
 
 	/** Store data about visualization */
 	GalleryData data;
@@ -215,6 +216,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		aux = (float) MAX_HEIGHT * DIM_RATE;
 		MAX_WIDTH = Math.round(aux);
 	}
+    
 
 	/** Initialization function after GalleryData structure is created */
 	private void init(GalleryData data)
@@ -368,7 +370,15 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		c.weightx = 1.0;
 		c.weighty = 1.0;
 		container.add(jspContent, c);
-		
+                
+                commandspn = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+               
+                c.fill = GridBagConstraints.HORIZONTAL;
+		c.gridx = 0;
+		c.gridy = 3;
+		c.weightx = 0;
+		c.weighty = 0;
+		container.add(commandspn, c);
 				
 		// Create the menu for table
 		menu = new GalleryMenu();
@@ -1001,22 +1011,30 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		boolean save = dlg.showDialog();
 		if (save)
 		{
-			boolean overwrite;
+			boolean overwrite= dlg.isOverwrite();
 			String path = dlg.getMdFilename();
-			String file = path.substring(path.lastIndexOf("@") + 1, path.length());
-			if (!new File(file).exists())// overwrite or append, save selection
-				md.write(path);
-			else
-			{
-				overwrite = dlg.isOverwrite();
-				if (overwrite)
-					md.write(path);// overwrite with active block only, other
-									// blocks were dismissed
-				else
-					md.writeBlock(path);// append selection
-
-			}
+			saveSelection(path, overwrite);
 		}
+		md.destroy();
+	}
+        
+        	/** Save selected items as a metadata */
+	public void saveSelection(String path, boolean overwrite) throws Exception
+	{
+		MetaData md = data.getSelectionMd();
+                String file = path.substring(path.lastIndexOf("@") + 1, path.length());
+                if (!new File(file).exists())// overwrite or append, save selection
+                        md.write(path);
+                else
+                {
+                        if (overwrite)
+                                md.write(path);// overwrite with active block only, other
+                                                                // blocks were dismissed
+                        else
+                                md.writeBlock(path);// append selection
+
+                }
+		
 		md.destroy();
 	}
 
@@ -2024,11 +2042,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 
 	}
 
-	@Override
-	public String getFilename()
-	{
-		return data.getMdFilename();
-	}
+	
 
 	@Override
 	public void done()
@@ -2091,6 +2105,13 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		}
 	}// function saveMd
 
+        
+	public String getFilename()
+	{
+		return data.getFileName();
+	}
+        
+        
 	private void saveAll() throws Exception
 	{
 		String from = data.getFileName();

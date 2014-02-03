@@ -1046,7 +1046,6 @@ void ProgAngularDiscreteAssign::processImage(const FileName &fnImg, const FileNa
             VECTOR_R2(shift, Xoff, Yoff);
             translate(LINEAR,Ip(),img(),shift,WRAP);
         }
-        Ip().setXmippOrigin();
 
         double shiftX, shiftY;
         CorrelationAux aux;

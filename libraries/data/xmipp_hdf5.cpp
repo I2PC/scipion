@@ -103,7 +103,6 @@ std::map<String, H5infoProvider > createProviderMap()
 {
     std::map<String, H5infoProvider > m;
     m["NXtomo"] = std::make_pair(MISTRAL, "/NXtomo/instrument/sample/data");
-    m["TomoNormalized"] = std::make_pair(MISTRAL, "/TomoNormalized/TomoNormalized");
     m["MDF"]  = std::make_pair(EMAN,    "/MDF/images/%i/image");
     return m;
 }
@@ -219,8 +218,6 @@ H5infoProvider getProvider(hid_t fhdf5)
 
     len = H5Gget_objname_by_idx(gid, 0, memName, maxSize);
 
-    H5Gclose(gid);
-
     typedef std::map<String, H5infoProvider >::const_iterator it_type;
 
     for ( it_type it = H5ProviderMap.begin(); it != H5ProviderMap.end(); it++)
@@ -231,6 +228,6 @@ H5infoProvider getProvider(hid_t fhdf5)
 
     return std::make_pair(NONE , "");
 
-    //    REPORT_ERROR(ERR_IO, "rwHDF5: Unknown file provider. Default dataset unknown.");
+//    REPORT_ERROR(ERR_IO, "rwHDF5: Unknown file provider. Default dataset unknown.");
 
 }
