@@ -28,14 +28,16 @@ This sub-package will contains Xmipp3.0 specific protocols
 """
 
 _logo = "xmipp_logo.png"
-_references = [
-                '[[http://www.ncbi.nlm.nih.gov/pubmed/24075951][Xmipp: De la Rosa-Trevin, et.al, JSB (2013)]]',
+_referencesDict = {
+                   'DelaRosa2013_Xmipp':'[[http://www.ncbi.nlm.nih.gov/pubmed/24075951][De la Rosa-Trevin, et.al, JSB (2013)]]',
+                   'Sorzano2013_Protocols':'[[http://www.ncbi.nlm.nih.gov/pubmed/23086876][Sorzano, et.al, Meth.Mol.Biol. (2013)]]',
+                   'Otsu1979_Segmentation':'[[http://ieeexplore.ieee.org/xpl/articleDetails.jsp?arnumber=4310076][Otsu, IEEE. Trans. SCM. (1979)]]'
+                   }
                 #'[[http://www.ncbi.nlm.nih.gov/pubmed/15477099][Xmipp: Sorzano, JSB (2004)]]',
                 #'[[http://www.ncbi.nlm.nih.gov/pubmed/8812978][Xmipp: Marabini, JSB (1996)]]',
-                '[[http://www.ncbi.nlm.nih.gov/pubmed/23086876][Protocols: Sorzano, et.al, Meth.Mol.Biol. (2013)]]',
                 #'[[http://www.sciencedirect.com/science/article/pii/B9780124059146000160][Protocols: Devaux, Meth.Cell.Biol. (2012)]]',
                 #'[[http://www.ncbi.nlm.nih.gov/pubmed/18536645][Protocols: Scheres, Nat.Prot. (2008)]]',
-               ]
+_references = [_referencesDict['DelaRosa2013_Xmipp'], _referencesDict['Sorzano2013_Protocols']]
 
 from xmipp3 import *
 from convert import *
@@ -71,6 +73,7 @@ from protocol_convert_pdb import XmippProtConvertPdb
 from protocol_join_sets import XmippProtJoinSets
 from protocol_nma import XmippProtNMA
 from protocol_nma_alignment import XmippProtAlignmentNMA
+from protocol_create_mask import XmippProtCreateMask3D
 
 # Wizards
 from wizard import *
