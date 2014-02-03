@@ -72,7 +72,7 @@ class XmippProtConvertPdb(ProtInitialVolume):
         This definition is also used to generate automatically the GUI.
         """
         form.addSection(label='Input')
-	form.addParam('inputPdbData', EnumParam, choices=['local_file', 'PDB_ID'],
+        form.addParam('inputPdbData', EnumParam, choices=['local_file', 'PDB_ID'],
                       label="Retrieve data from", default=self.PDB_ID,
                       display=EnumParam.DISPLAY_COMBO,
                       help='Retrieve PDB data from server or use local file')
@@ -135,9 +135,9 @@ class XmippProtConvertPdb(ProtInitialVolume):
             _inFile = self.pdb_file.get()
             
             if self.inputPdbData.get() == self.PDB_ID:
-            	summary.append("Input PDB ID: %s" % _inFile)
-	    else:
-            	summary.append("Input PDB File: %s" % _inFile)
+                summary.append("Input PDB ID: %s" % _inFile)
+            else:
+                summary.append("Input PDB File: %s" % _inFile)
             
             # summary.append("Output volume: %s" % _inFile.rsplit( ".", 1 )[ 0 ]+".vol")
         return summary
@@ -150,7 +150,7 @@ class XmippProtConvertPdb(ProtInitialVolume):
         errors = []
         if not (self.inputPdbData.get() == self.PDB_ID):
             if not isfile(self.pdb_file.get()):
-	        errors = ["File %s does not exists" % self.pdb_file.get()]
+                errors = ["File %s does not exists" % self.pdb_file.get()]
 
         # Add some errors if input is not valid
         return errors
