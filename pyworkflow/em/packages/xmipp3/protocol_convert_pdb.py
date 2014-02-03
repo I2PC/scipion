@@ -85,7 +85,7 @@ class XmippProtConvertPdb(ProtInitialVolume):
         """ In this function the steps that are going to be executed should
         be defined. Two of the most used functions are: _insertFunctionStep or _insertRunJobStep
         """
-        self._pdb_file = self.pdb_file.get()
+        self._pdb_file = self.pdb_file.get().lower()
         self._sampling_rate = self.sampling.get()
         self._inputPdbData = self.inputPdbData.get()
         self._insertFunctionStep('convertPdb')
@@ -106,7 +106,7 @@ class XmippProtConvertPdb(ProtInitialVolume):
         else:
             _inFile = self._pdb_file
             _outFile = self._getPath(_inFile.rsplit(".", 1)[ 0 ])
-
+        print "infile: " + _inFile + " outfile: " + _outFile
         program = "xmipp_volume_from_pdb"
         args = '-i %s --sampling %f -o %s ' % (_inFile, self._sampling_rate, _outFile)
         self.runJob(None, program, args)
