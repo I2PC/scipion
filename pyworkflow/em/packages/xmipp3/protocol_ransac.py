@@ -123,7 +123,7 @@ class XmippProtRansac(ProtInitialVolume):
             
          
         
-    def _defineSteps(self):
+    def _insertAllSteps(self):
         # Convert input images if necessary
         self.imgsFn = createXmippInputClasses2D(self, self.inputClasses.get())
         

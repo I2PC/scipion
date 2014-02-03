@@ -49,7 +49,7 @@ class XmippProtJoinSets(ProtPreprocessMicrographs):
                            'They should 2 or more SetOfMicrographs classes')
         
         
-    def _defineSteps(self):
+    def _insertAllSteps(self):
         
         self._insertFunctionStep('createOutput')
   

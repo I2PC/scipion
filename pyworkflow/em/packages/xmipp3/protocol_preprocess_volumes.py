@@ -138,7 +138,7 @@ class XmippProtPreprocessVolumes(ProtPreprocessVolumes, XmippProtocol):
 
 #        form.addParallelSection(threads=1, mpi=8)         
     
-    def _defineSteps(self):
+    def _insertAllSteps(self):
         """The preprocess is realized for a set of volumes"""
         
         # Convert SetOfVolumes to Xmipp Metadata

@@ -80,7 +80,7 @@ class XmippProtKerdensom(ProtClassify):
                       'See [[http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/KerDenSOM][KerDenSOM]]')
         
         
-    def _defineSteps(self):
+    def _insertAllSteps(self):
         self._prepareParams()       
         self._insertImgToVector()
         self._insertKerdensom()

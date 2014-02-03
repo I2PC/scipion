@@ -71,7 +71,7 @@ class SpiderProtCustomMask(ProtCreateMask, SpiderProtocol):
                       label='Mask threshold',
                       help='Threshold for filtered mask.')
         
-    def _defineSteps(self):
+    def _insertAllSteps(self):
         # Define some names
         # Insert processing steps
         self.outFn = self._getPath('%(inputImage)s.%(ext)s' % self._params)

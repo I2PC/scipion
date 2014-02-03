@@ -712,7 +712,7 @@ is ("2x.15 2x0.1", i.e.,
             progId += "f" 
         return progId   
          
-    def _defineSteps(self):
+    def _insertAllSteps(self):
 
         self.ParamsDict = {}
         self.ParamsDict['ProgId'] = self.getProgramId()

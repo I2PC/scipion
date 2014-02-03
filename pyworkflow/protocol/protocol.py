@@ -405,7 +405,7 @@ class Protocol(Step):
         """ Delete a child from the mapper. """
         self.mapper.delete(child)
         
-    def _defineSteps(self):
+    def _insertAllSteps(self):
         """ Define all the steps that will be executed. """
         pass
     
@@ -516,7 +516,7 @@ class Protocol(Step):
         
     def __backupSteps(self):
         """ Store the Steps list in another variable to prevent
-        overriden of stored steps when calling _defineSteps function.
+        overriden of stored steps when calling _insertAllSteps function.
         This is need to later find in which Step will start the run
         if the RESUME mode is used.
         """
@@ -673,7 +673,7 @@ class Protocol(Step):
         
         self.runJob = self._stepsExecutor.runJob
         self.__backupSteps() # Prevent from overriden previous stored steps
-        self._defineSteps() # Define steps for execute later
+        self._insertAllSteps() # Define steps for execute later
         #self._makePathsAndClean() This is done now in project
         startIndex = self.__findStartingStep() # Find at which step we need to start
         self._log.info(" Starting at index: %d" % startIndex)

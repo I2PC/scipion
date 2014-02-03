@@ -89,7 +89,7 @@ class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
     
         form.addParallelSection(threads=2, mpi=1)
         
-    def _defineSteps(self):
+    def _insertAllSteps(self):
         '''for each micrograph insert the steps to preprocess it
         '''
         # Get pointer to input micrographs 

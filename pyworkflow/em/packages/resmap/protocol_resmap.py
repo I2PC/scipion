@@ -68,7 +68,7 @@ class ProtResMap(ProtValidate3D):
                       label='Confidence level:',
                       help='usually between [0.01, 0.05]')   
                      
-    def _defineSteps(self):
+    def _insertAllSteps(self):
         # Insert processing steps
         inputs = [self.inputVolume.get().getLocation()]
         if self.useSplitVolume:

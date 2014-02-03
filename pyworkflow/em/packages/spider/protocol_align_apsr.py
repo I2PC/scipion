@@ -62,7 +62,7 @@ class SpiderProtAlignAPSR(ProtAlign, SpiderProtocol):
                       help='In the rotational alignment, only rings between\n'
                            '<innerRadius> and <outerRadius> (in pixel units) will be analyzed.')
         
-    def _defineSteps(self):
+    def _insertAllSteps(self):
         # Insert processing steps
         self._insertFunctionStep('convertInput', 'inputParticles', 
                                  self._getFileName('particles'), self._getFileName('particlesSel'))

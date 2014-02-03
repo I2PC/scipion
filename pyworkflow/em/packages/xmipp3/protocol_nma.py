@@ -157,7 +157,7 @@ class XmippProtNMA(EMProtocol):
             print >> fWarn, l
         fWarn.close()
         
-    def _defineSteps(self):
+    def _insertAllSteps(self):
         # Some steps will differ if the input is a volume or a pdb file
         self.structureEM = not isinstance(self.inputStructure.get(), PdbFile)
         n = self.numberOfModes.get()

@@ -55,7 +55,7 @@ class XmippProtParticlePicking(ProtParticlePicking, XmippProtocol):
         form.addParam('memory', FloatParam, default=2,
                    label='Memory to use (In Gb)', expertLevel=2)        
         
-    def _defineSteps(self):
+    def _insertAllSteps(self):
         """The Particle Picking proccess is realized for a set of micrographs"""
         
         # Get pointer to input micrographs 

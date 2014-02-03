@@ -60,7 +60,7 @@ class XmippProtCL2DAlign(ProtAlign):
         form.addParallelSection(threads=1, mpi=3)
         
         
-    def _defineSteps(self):
+    def _insertAllSteps(self):
         """ Mainly prepare the command line for call cl2d align program"""
         
         # Convert input images if necessary

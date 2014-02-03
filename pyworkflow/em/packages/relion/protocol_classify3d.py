@@ -248,7 +248,7 @@ class Relion3DClassification(ProtClassify3D, ProtRelionBase):
                       'This may be useful for testing developmental options and/or expert use of the program. '
                       'The command \'relion_refine\' will print a list of possible options.')  
         
-    def _defineSteps(self):
+    def _insertAllSteps(self):
         
         ProtRelionBase.defineSteps(self)
         # launch relion program

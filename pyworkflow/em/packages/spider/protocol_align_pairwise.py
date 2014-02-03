@@ -74,7 +74,7 @@ class SpiderProtAlignPairwise(ProtAlign, SpiderProtocol):
                       label='Step size(px):',
                       help='In the translational alignment, shifts will be analyzed\n'
                            'in units of <stepSize> (in pixel units).')        
-    def _defineSteps(self):
+    def _insertAllSteps(self):
         # Insert processing steps
         self._insertFunctionStep('convertInput', 'inputParticles', 
                                  self._getFileName('particles'), self._getFileName('particlesSel'))

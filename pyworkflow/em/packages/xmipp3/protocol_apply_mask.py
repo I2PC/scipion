@@ -45,7 +45,7 @@ class XmippProtApplyMask3D(ProtPreprocessVolumes,XmippGeometricalMask):
         XmippGeometricalMask.defineParams(self, form, isGeometry='source==%d'%SOURCE_GEOMETRY, addSize=False)
         form.addParam('inputMask', PointerParam, pointerClass="VolumeMask", label="Input mask",condition='source==%d'%SOURCE_MASK)
 
-    def _defineSteps(self):
+    def _insertAllSteps(self):
         self.maskedVolumes = self._getPath('volumes.stk')
         self._insertFunctionStep('copyVolumes')
         self._insertFunctionStep('applyMask')

@@ -42,7 +42,7 @@ class XmippProtRotSpectra(XmippProtKerdensom):
         self._params['spectraHighHarmonic'] = self.spectraHighHarmonic.get()
         self._params['vectors'] = self._getExtraPath("rotSpectra.xmd")
     
-    def _defineSteps(self):
+    def _insertAllSteps(self):
         self._prepareParams()  
         imagesFn = self._params['imgsFn']
         centerFn = self._getExtraPath("center2d_center.xmd")

@@ -59,7 +59,7 @@ class EmanProtBoxing(ProtParticlePicking):
         eman2.loadEnvironment()
         Protocol._runSteps(self, startIndex)
         
-    def _defineSteps(self):
+    def _insertAllSteps(self):
         self.inputMics = self.inputMicrographs.get()
         micList = [os.path.relpath(mic.getFileName(), self.workingDir.get()) for mic in self.inputMics]
 

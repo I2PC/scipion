@@ -59,7 +59,7 @@ class XmippProtScreenParticles(ProtProcessParticles):
                       help='Percentage.', validators=[Range(0, 100, error="Percentage must be between 0 and 100.")])        
         
                 
-    def _defineSteps(self):
+    def _insertAllSteps(self):
         """ Mainly prepare the command line for call cl2d program"""
         
         # Convert input images if necessary

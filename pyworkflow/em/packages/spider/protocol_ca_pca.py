@@ -80,7 +80,7 @@ class SpiderProtCAPCA(SpiderProtocol):
         form.addParam('maskImage', PointerParam, label="Mask image", condition='maskType==1',
                       pointerClass='Mask', help="Select a mask file")       
         
-    def _defineSteps(self):
+    def _insertAllSteps(self):
         # Insert processing steps
         self._insertFunctionStep('convertInput', 'inputParticles',
                                  self._getFileName('spiderParticles'), self._getFileName('spiderSel'))

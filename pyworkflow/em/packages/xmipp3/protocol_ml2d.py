@@ -152,7 +152,7 @@ class XmippProtML2D(ProtClassify):
             self.progId += "f"
         return self._getPath('%s2d_' % self.progId)       
         
-    def _defineSteps(self):
+    def _insertAllSteps(self):
         """ Mainly prepare the command line for call ml(f)2d program"""
         
         self.oroot = self._getOroot()

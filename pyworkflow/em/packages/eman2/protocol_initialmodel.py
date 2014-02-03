@@ -60,7 +60,7 @@ class EmanProtInitModel(ProtInitialVolume):
                       help='Specify the symmetry.Choices are: c(n), d(n), h(n), tet, oct, icos')        
         form.addParallelSection(threads=3, mpi=0)
         
-    def _defineSteps(self):        
+    def _insertAllSteps(self):        
         eman2.loadEnvironment()
         self._prepareDefinition()
         self._insertSteps()

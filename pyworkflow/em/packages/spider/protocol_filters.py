@@ -122,7 +122,7 @@ class SpiderProtFilter(ProtFilterParticles, SpiderProtocol):
                       help='Enter a temperature parameter T The filter falls off roughly within \n'
                            'this reciprocal distance (in terms of frequency units).')     
         
-    def _defineSteps(self):
+    def _insertAllSteps(self):
         # Define some names
         self.particlesStk = self._getPath('%(particles)s.%(ext)s' % self._params)
         # Insert processing steps

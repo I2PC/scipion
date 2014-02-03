@@ -141,7 +141,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
             return None
         return self.inputCoordinates.get().getMicrographs()
         
-    def _defineSteps(self):
+    def _insertAllSteps(self):
         """for each micrograph insert the steps to preprocess it
         """       
         # Set sampling rate and inputMics according to downsample type
