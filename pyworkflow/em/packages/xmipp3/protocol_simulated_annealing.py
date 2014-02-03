@@ -93,7 +93,7 @@ in the next iteration""")
         
         form.addParallelSection(threads=2, mpi=1)    
              
-    def _defineSteps(self):
+    def _insertAllSteps(self):
         self._prepareDefinition()
         self._insertSteps()
         

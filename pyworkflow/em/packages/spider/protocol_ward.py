@@ -77,7 +77,7 @@ class SpiderProtClassifyWard(ProtClassify, SpiderProtocol):
         template = '%(' + key + ')s.%(ext)s'
         return self._getPath(template % self._params)
     
-    def _defineSteps(self):
+    def _insertAllSteps(self):
         pcaFile = self.pcaFilePointer.get().filename.get()
         
         self._insertFunctionStep('convertInput', 'inputParticles',

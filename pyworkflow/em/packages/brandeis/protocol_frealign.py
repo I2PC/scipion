@@ -366,7 +366,7 @@ class ProtFrealign(ProtRefine3D):
 
         form.addParallelSection(threads=1, mpi=1)        
     
-    def _defineSteps(self):
+    def _insertAllSteps(self):
         """Insert the steps to refine orientations and shifts of the SetOfParticles
         """
        

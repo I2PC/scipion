@@ -157,7 +157,7 @@ class XmippProtML3D(ProtRefine3D, ProtClassify3D):
         
         form.addParallelSection(threads=1, mpi=8)    
              
-    def _defineSteps(self):
+    def _insertAllSteps(self):
 
         self.ParamsDict = {}
         self.ParamsDict['ProgId'] = self.getProgramId()

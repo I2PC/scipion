@@ -81,7 +81,7 @@ class XmippProtConvertPdb(ProtInitialVolume):
         form.addParam('sampling', FloatParam, label="Sampling rate",
                       help='Sampling rate (Angstroms/pixel) ')
 
-    def _defineSteps(self):
+    def _insertAllSteps(self):
         """ In this function the steps that are going to be executed should
         be defined. Two of the most used functions are: _insertFunctionStep or _insertRunJobStep
         """

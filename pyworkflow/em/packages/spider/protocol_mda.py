@@ -84,7 +84,7 @@ class SpiderWfMDA(ProtClassify, SpiderProtocol):
                       help='Select which Filter Protocol do you want to use')         
 
     
-    def _defineSteps(self):
+    def _insertAllSteps(self):
         self._insertFunctionStep('workflowStep', self.inputParticles.get().getFileName())
 
             

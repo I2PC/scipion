@@ -107,7 +107,7 @@ class XmippProtAlignmentNMA(EMProtocol):
         modesFn = self.inputModes.get().getFileName()
         return self._getBasePath(modesFn)
     
-    def _defineSteps(self):
+    def _insertAllSteps(self):
         atomsFn = self.inputPdb.get().getFileName()
         modesFn = self.inputModes.get().getFileName()
         # Convert input images if necessary

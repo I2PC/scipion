@@ -46,7 +46,7 @@ class XmippProcess(ProtProcessParticles):
         self.outputMd = self._getPath('output_images.xmd')
         self.outputStk = self._getPath('output_images.stk')
         
-    def _defineSteps(self):
+    def _insertAllSteps(self):
         self._defineFilenames()
         self._insertProcessStep(self.inputFn, self.outputStk, self.outputMd)        
         self._insertFunctionStep('createOutput')

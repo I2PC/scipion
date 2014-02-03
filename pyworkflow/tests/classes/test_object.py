@@ -49,7 +49,7 @@ class MyProtocol(Protocol):
         f.close()
         return [log]
         
-    def _defineSteps(self):
+    def _insertAllSteps(self):
         for i in range(self.numberOfSleeps.get()):
             self._insertFunctionStep('sleep', i+1, 'sleeping %d'%i)
     

@@ -105,7 +105,7 @@ class XmippProtCreateMask3D(ProtCreateMask3D,XmippGeometricalMask):
         form.addParam('sigmaConvolution',FloatParam,default=2,label='Gaussian sigma (px)',condition="doSmooth",
                       help="The larger this value, the more the effect will be noticed")
 
-    def _defineSteps(self):
+    def _insertAllSteps(self):
         self.maskFile = self._getPath('mask.vol')
         if self.source==SOURCE_VOLUME:
             self.inputMask.set(None)

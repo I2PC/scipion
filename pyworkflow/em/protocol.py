@@ -201,7 +201,7 @@ class ProtImportMicrographs(ProtImportImages):
                    condition='samplingRateMode==%d' % SAMPLING_FROM_SCANNER)
         
         
-    def _defineSteps(self):
+    def _insertAllSteps(self):
         self._createSet = self._createSetOfMicrographs
         self._insertFunctionStep('importImages', self.pattern.get(), self.checkStack.get(), 
                                  self.voltage.get(), self.sphericalAberration.get(), self.ampContrast.get()) #, self.samplingRate.get(), 
@@ -225,7 +225,7 @@ class ProtImportParticles(ProtImportImages):
                    label=Message.LABEL_SAMP_RATE)
         
         
-    def _defineSteps(self):
+    def _insertAllSteps(self):
         self._createSet = self._createSetOfParticles
         self._insertFunctionStep('importImages', self.pattern.get(),
                                 self.checkStack.get(), self.voltage.get(), self.sphericalAberration.get(),
@@ -246,7 +246,7 @@ class ProtImportVolumes(EMProtocol):
     def __init__(self, **args):
         EMProtocol.__init__(self, **args)         
         
-    def _defineSteps(self):
+    def _insertAllSteps(self):
         self._insertFunctionStep('importVolumes', self.pattern.get(), self.samplingRate.get())
        
     def _defineParams(self, form):
@@ -323,7 +323,7 @@ class ProtImportPdb(EMProtocol):
                       label="Pattern",
                       help='Specify a path or an url to desired PDB structure.')
          
-    def _defineSteps(self):
+    def _insertAllSteps(self):
         self._insertFunctionStep('importPdbStep', self.path.get())
         
     def importPdbStep(self, path):
@@ -402,7 +402,7 @@ class ProtCTFMicrographs(EMProtocol):
             micDir = self._getExtraPath(removeBaseExt(micFn)) 
             yield (micFn, micDir, mic)  
         
-    def _defineSteps(self):
+    def _insertAllSteps(self):
         """ Insert the steps to perform ctf estimation on a set of micrographs.
         """
         # Get pointer to input micrographs 
