@@ -11,6 +11,7 @@ import ij3d.Content;
 import ij3d.Image3DUniverse;
 
 import java.awt.CheckboxMenuItem;
+import java.awt.Frame;
 import java.awt.Menu;
 import java.awt.MenuBar;
 import java.awt.MenuItem;
@@ -209,7 +210,7 @@ public class XmippMenuBar extends MenuBar
 			
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				System.exit(0);
+				close();
 				
 			}
 		});
@@ -364,6 +365,15 @@ public class XmippMenuBar extends MenuBar
 		});
 
 	}
+        
+         protected void close()
+        {
+            Frame w = (Frame)xw;
+            w.setVisible(false);
+            w.dispose();
+            XmippApplication.removeInstance();
+        }
+	
 	
 	protected void useGeometry(boolean ug)
 	{
