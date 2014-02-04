@@ -41,7 +41,7 @@ import xmipp
 class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
     """Protocol to extract particles from a set of coordinates in the project"""
     _label = 'extract particles'
-    _reference = ['[[http://www.ncbi.nlm.nih.gov/pubmed/23933392][Vargas, et.al,  JSB (2013)]]']
+    _references = ['[[http://www.ncbi.nlm.nih.gov/pubmed/23933392][Vargas, et.al,  JSB (2013)]]']
     
     # Normalization type constants
     ORIGINAL = 0
