@@ -232,14 +232,14 @@ class ProtFrealign(ProtRefine3D):
                            'and R^2 the squared resolution in Fourier units (R = 0.0 ... 0.5).\n'
                            'A large value for PBC (e.g. 100.0) gives equal weighting to each particle.')
 
-        form.addParam('avePhaseResidual', FloatParam, default='35.0', 
+        form.addParam('avePhaseResidual', FloatParam, default='65.0', 
                       label='Average phase residual:',
                       help='Parameter *BOFF* in FREALIGN\n\n'
                            'Approximate average phase residual of all particles,\n'
                            ' used in calculating weights for contributions of different\n'
                            'particles to 3D map (see Grigorieff, 1998).')
 
-        form.addParam('angStepSize', FloatParam, default='50.0', 
+        form.addParam('angStepSize', FloatParam, default='15.0', 
                       label='Angular step size for the angular search:',
                       help='Parameter *DANG* in FREALIGN\n\n'
                            'Angular step size for the angular search used in modes *IFLAG*=3,4.\n'

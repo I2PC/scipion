@@ -31,14 +31,14 @@ config = {  'version': 1,
             },
             'handlers': {
                 'fileHandler': {
-                    'level': 'INFO',    
+                    'level': 'NOTSET',    
                     'class': 'logging.handlers.RotatingFileHandler',
                     'formatter': 'standard',
                     'filename': logPath,
                     'maxBytes': 100000,
                 },
                 'consoleHandler': {
-                    'level': 'INFO',    
+                    'level': 'NOTSET',    
                     'class': 'logging.StreamHandler',
                     'formatter': 'standard',
                 },
@@ -63,36 +63,37 @@ def getGeneralLogger(classPath):
 
 class ScipionLogger():
     def __init__(self, filePath):
-        makeFilePath(filePath)
         self._filePath = filePath
+        self._fileOut = join(filePath,'run.log')
+        makeFilePath(self._fileOut)
 
         if filePath not in config['loggers']:
-            config['handlers'][filePath] = {'level': 'INFO',    
+            config['handlers'][self._fileOut] = {'level': 'NOTSET',    
                                             'class': 'logging.handlers.RotatingFileHandler',
                                             'formatter': 'fileFormat',
-                                            'filename': filePath,
+                                            'filename': self._fileOut,
                                             'maxBytes': 100000,}
-            config['loggers'][filePath] = {'handlers': ['consoleHandler', filePath],        
-                                           'level': 'INFO',  
+            config['loggers'][self._fileOut] = {'handlers': ['consoleHandler', self._fileOut],        
+                                           'level': 'NOTSET',  
                                            'propagate': False,}
             logging.config.dictConfig(config)
             
-        self._log = logging.getLogger(filePath) 
+        self._log = logging.getLogger(self._fileOut) 
         
     def getLog(self):
         return self._log    
         
-    def info(self, message, redirectStandard = False, *args, **kwargs):
+    def info(self, message, redirectStandard=False, *args, **kwargs):
         if redirectStandard:
             print message
         self._log.info(message, *args, **kwargs)
     
-    def warning(self, message, redirectStandard = False, *args, **kwargs):
+    def warning(self, message, redirectStandard=False, *args, **kwargs):
         if redirectStandard:
             print message
         self._log.warning(message, *args, **kwargs)
         
-    def error(self, message, redirectStandard = False, *args, **kwargs):
+    def error(self, message, redirectStandard=False, *args, **kwargs):
         if redirectStandard:
             print >> sys.stderr, message
         self._log.error(message, *args, **kwargs)    

@@ -370,7 +370,6 @@ class TestXmippWorkflow(TestWorkflow):
         self.assertIsNotNone(protPP.outputCoordinates, "There was a problem with the faked picking")
             
         print "Run extract particles with other downsampling factor"
-        #TODO: Remove doFlip=True when CTF information is propagated to all SetOFMicrographs
         protExtract = XmippProtExtractParticles(boxSize=64, downsampleType=2, doFlip=True, downFactor=8, runMode=1, doInvert=True)
         protExtract.inputCoordinates.set(protPP.outputCoordinates)
         protExtract.ctfRelations.set(protCTF.outputCTF)
