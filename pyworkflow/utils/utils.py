@@ -236,7 +236,7 @@ def redStr(text):
 
 #-------------- Hyper text highlighting ----------------------------
 """
-We use a subset of TWiki hyper text convetions.
+We use a subset of TWiki hyper text conventions.
 In particular:
     *some_text* will display some_text in bold
     _some_text_ will display some_text in italic

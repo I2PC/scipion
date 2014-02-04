@@ -203,7 +203,7 @@ class XmippProtCreateMask3D(ProtCreateMask3D,XmippGeometricalMask):
                     messages.append(m)
         elif self.source==SOURCE_GEOMETRY:
             size=self.size.get()
-            messages.append("Mask of size: %d x %d x %d"%(size,size,size))
+            messages.append("   Mask of size: %d x %d x %d"%(size,size,size))
             messages+=XmippGeometricalMask.summary(self)
 
         messages.append("*Mask processing*")
@@ -219,5 +219,51 @@ class XmippProtCreateMask3D(ProtCreateMask3D,XmippGeometricalMask):
             messages.append("   Inverted")
         if self.doSmooth.get():
             messages.append("   Smoothed (sigma=%f)"%self.sigmaConvolution.get())
+        return messages
+
+    def _citations(self):
+        papers=[]
+        if self.source==SOURCE_VOLUME and self.volumeOperation==OPERATION_SEGMENT and self.segmentationType==SEGMENTATION_AUTOMATIC:
+            papers.append('[%s] %s'%('Otsu1979_Segmentation',self._package._referencesDict['Otsu1979_Segmentation']))
+        return papers
+
+    def _methods(self):
+        messages = []      
+        messages.append("*Mask creation*")
+        if self.source == SOURCE_MASK:
+            messages.append('We processed the mask %s.'%self.inputMask.get().getNameId())
+        if self.source == SOURCE_VOLUME:
+            messages.append('We processed the volume %s.'%self.volume.get().getNameId())
+            if self.volumeOperation == OPERATION_THRESHOLD:
+                messages.append("We thresholded it to a gray value of %f. "%self.threshold.get())
+            elif self.volumeOperation == OPERATION_SEGMENT:
+                if self.segmentationType == SEGMENTATION_AUTOMATIC:
+                    messages.append("We automatically segmented it using Otsu's method [Otsu1979_Segmentation]")
+                else:
+                    m="We segmented it to a mass of "
+                    if self.segmentationType == SEGMENTATION_VOXELS:
+                        m+="%d voxels"%(int(self.nvoxels.get()))
+                    elif self.segmentationType == SEGMENTATION_AMINOACIDS:
+                        m+="%d aminoacids"%(int(self.naminoacids.get()))
+                    elif self.segmentationType == SEGMENTATION_DALTON:
+                        m+="%d daltons"%(int(self.dalton.get()))
+                    messages.append(m)
+        elif self.source == SOURCE_GEOMETRY:
+            size=self.size.get()
+            messages.append("We created a mask of size: %d x %d x %d voxels. "%(size,size,size))
+            messages+=XmippGeometricalMask.methods(self)
+
+        if self.doSmall.get():
+            messages.append("We removed components smaller than %d voxels."%(self.smallSize.get()))
+        if self.doBig.get():
+            messages.append("We kept the largest component. ")
+        if self.doSymmetrize.get():
+            messages.append("We symmetrized it as %s. "%self.symmetry.get())
+        if self.doMorphological.get():
+            messages.append("Then, we applied a morphological operation, concisely, a %s. "%self.getEnumText('morphologicalOperation'))
+        if self.doInvert.get():
+            messages.append("We inverted the mask. ")
+        if self.doSmooth.get():
+            messages.append("And, we smoothed it (sigma=%f voxels)"%self.sigmaConvolution.get())
         return messages
     

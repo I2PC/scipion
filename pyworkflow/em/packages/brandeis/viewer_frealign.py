@@ -148,7 +148,6 @@ class FrealignViewer(ProtocolViewer):
     
     
     def _doShowJ(self, files):
-        
         if len(files) != 0:
             for f in files:
                 runShowJ(f)

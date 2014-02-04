@@ -12,21 +12,21 @@ class XmippProtConvertPdb(ProtInitialVolume):
     _pdb_file = ''
     _sampling_rate = 0.0
     _output_file = ''
-    PDB_ID=1
+    PDB_ID = 1
 
-    HOSTNAME  = "ftp.wwpdb.org"
+    HOSTNAME = "ftp.wwpdb.org"
     DIRECTORY = "/pub/pdb/data/structures/all/pdb/"
-    PREFIX    = "pdb"
-    SUFFIX    = ".ent.gz"
-    #TODO unzip may go to utilities
-    def unZip(self, some_file,some_output):
+    PREFIX = "pdb"
+    SUFFIX = ".ent.gz"
+    # TODO unzip may go to utilities
+    def unZip(self, some_file, some_output):
         """
         Unzip some_file using the gzip library and write to some_output.
         CAUTION: deletes some_file.
         """
 
-        f = gzip.open(some_file,'r')
-        g = open(some_output,'w')
+        f = gzip.open(some_file, 'r')
+        g = open(some_output, 'w')
         g.writelines(f.readlines())
         f.close()
         g.close()
@@ -46,12 +46,12 @@ class XmippProtConvertPdb(ProtInitialVolume):
         ftp.login()
 
         # Download  file
-        _fileIn  = "%s/%s%s%s" % (self.DIRECTORY,self.PREFIX,pdbId,self.SUFFIX) 
-        _fileOut = fileOut+".gz"
+        _fileIn = "%s/%s%s%s" % (self.DIRECTORY, self.PREFIX, pdbId, self.SUFFIX) 
+        _fileOut = fileOut + ".gz"
         try:
-            ftp.retrbinary("RETR %s" % _fileIn,open(_fileOut,"wb").write)
-            print "Unzip file %s"%_fileOut
-            self.unZip(_fileOut,fileOut) 
+            ftp.retrbinary("RETR %s" % _fileIn, open(_fileOut, "wb").write)
+            print "Unzip file %s" % _fileOut
+            self.unZip(_fileOut, fileOut) 
             print "%s retrieved successfully." % fileOut
         except ftplib.error_perm:
             os.remove(_fileOut)
@@ -72,7 +72,7 @@ class XmippProtConvertPdb(ProtInitialVolume):
         This definition is also used to generate automatically the GUI.
         """
         form.addSection(label='Input')
-	form.addParam('inputPdbData', EnumParam, choices=['local_file', 'PDB_ID'],
+        form.addParam('inputPdbData', EnumParam, choices=['local_file', 'PDB_ID'],
                       label="Retrieve data from", default=self.PDB_ID,
                       display=EnumParam.DISPLAY_COMBO,
                       help='Retrieve PDB data from server or use local file')
@@ -85,9 +85,9 @@ class XmippProtConvertPdb(ProtInitialVolume):
         """ In this function the steps that are going to be executed should
         be defined. Two of the most used functions are: _insertFunctionStep or _insertRunJobStep
         """
-        self._pdb_file      = self.pdb_file.get()
+        self._pdb_file = self.pdb_file.get().lower()
         self._sampling_rate = self.sampling.get()
-        self._inputPdbData  = self.inputPdbData.get()
+        self._inputPdbData = self.inputPdbData.get()
         self._insertFunctionStep('convertPdb')
         self._insertFunctionStep('createOutput')
 
@@ -99,17 +99,16 @@ class XmippProtConvertPdb(ProtInitialVolume):
         from tempfile import NamedTemporaryFile
 
         if self._inputPdbData == self.PDB_ID:
-		_inFile  = self._getTmpPath('%s.pdb'%self._pdb_file)
-		_outFile = self._getPath('%s' % self._pdb_file)
-		if not self.pdbDownload(self._pdb_file,_inFile):
-                      return -1
-
-	else:
-		_inFile  = self._pdb_file
-		_outFile = self._getPath(_inFile.rsplit( ".", 1 )[ 0 ])
-
+            _inFile = self._getTmpPath('%s.pdb' % self._pdb_file)
+            _outFile = self._getPath('%s' % self._pdb_file)
+            if not self.pdbDownload(self._pdb_file, _inFile):
+                return -1
+        else:
+            _inFile = self._pdb_file
+            _outFile = self._getPath(_inFile.rsplit(".", 1)[ 0 ])
+        print "infile: " + _inFile + " outfile: " + _outFile
         program = "xmipp_volume_from_pdb"
-        args = '-i %s --sampling %f -o %s ' % (_inFile, self._sampling_rate,_outFile)
+        args = '-i %s --sampling %f -o %s ' % (_inFile, self._sampling_rate, _outFile)
         self.runJob(None, program, args)
 
     def createOutput(self):
@@ -118,10 +117,10 @@ class XmippProtConvertPdb(ProtInitialVolume):
         """
         volume = Volume()
         if self._inputPdbData == self.PDB_ID:
-            _outFile= self._getPath('%s' % self._pdb_file)
+            _outFile = self._getPath('%s' % self._pdb_file)
         else:
-	    _outFile = self._getPath(self._pdb_file.rsplit( ".", 1 )[ 0 ])
-        volume.setFileName(_outFile+'.vol')
+	    _outFile = self._getPath(self._pdb_file.rsplit(".", 1)[ 0 ])
+        volume.setFileName(_outFile + '.vol')
         self._defineOutputs(volume=volume)
       
     def _summary(self):
@@ -136,11 +135,11 @@ class XmippProtConvertPdb(ProtInitialVolume):
             _inFile = self.pdb_file.get()
             
             if self.inputPdbData.get() == self.PDB_ID:
-            	summary.append("Input PDB ID: %s"   % _inFile)
-	    else:
-            	summary.append("Input PDB File: %s" % _inFile)
+                summary.append("Input PDB ID: %s" % _inFile)
+            else:
+                summary.append("Input PDB File: %s" % _inFile)
             
-            #summary.append("Output volume: %s" % _inFile.rsplit( ".", 1 )[ 0 ]+".vol")
+            # summary.append("Output volume: %s" % _inFile.rsplit( ".", 1 )[ 0 ]+".vol")
         return summary
       
     def _validate(self):
@@ -151,7 +150,7 @@ class XmippProtConvertPdb(ProtInitialVolume):
         errors = []
         if not (self.inputPdbData.get() == self.PDB_ID):
             if not isfile(self.pdb_file.get()):
-	        errors=["File %s does not exists"% self.pdb_file.get()]
+                errors = ["File %s does not exists" % self.pdb_file.get()]
 
         # Add some errors if input is not valid
         return errors
