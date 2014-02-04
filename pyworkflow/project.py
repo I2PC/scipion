@@ -224,8 +224,9 @@ class Project(object):
         
         self.mapper.delete(protocol) # Delete from database
         wd = protocol.workingDir.get()
+        
         if wd.startswith(PROJECT_RUNS):
-            cleanPath()
+            cleanPath(wd)
         else:
             print "Error path: ", wd 
       

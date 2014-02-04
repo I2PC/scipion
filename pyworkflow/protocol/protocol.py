@@ -397,6 +397,7 @@ class Protocol(Step):
         If stored previously, _store should be used.
         The child will be set as self.key attribute
         """
+       
         setattr(self, key, child)
         if self.hasObjId():
             self.mapper.insertChild(self, key, child)
