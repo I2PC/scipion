@@ -97,8 +97,10 @@ class ProtProjMatch(XmippProtocol):
         #getListFromVector(self.ReferenceFileNames,processX=False)
         #listOfReferences=self.ReferenceFileNames.split()
         md = MetaData()
-        md.read(self.SelFileName, 1)
-        validateInputSize(self.ReferenceFileNames, self.SelFileName, md, errors)
+        if not xmippExists(self.SelFileNameInitial):
+            errors.append("Can not find input file: %s"% self.SelFileNameInitial)
+        md.read(self.SelFileNameInitial, 1)
+        validateInputSize(self.ReferenceFileNames, self.SelFileNameInitial, md, errors)
         
         # Check there are enough images to avoid overfitting through the FSC
         if md.getParsedLines() < 100 and self.ConstantToAddToFiltration < 0:
@@ -136,7 +138,7 @@ EXAMPLE:
 # change XXXXX by the sampling rate
 data_noname
  _sampling_rate XXXXX
-""" %(self.SelFileName,self.SelFileName))
+""" %(self.SelFileNameInitial,self.SelFileNameInitial))
             
         #FIXME ROB
         if self.DoCtfCorrection:
@@ -144,9 +146,16 @@ data_noname
             if self.SplitDefocusDocFile:
                 tmpCTFDatName = self.SplitDefocusDocFile
             else:
-                tmpCTFDatName = self.SelFileName
+                tmpCTFDatName = self.SelFileNameInitial
             tmpMd=MetaData(tmpCTFDatName)
-            if not tmpMd.containsLabel(MDL_CTF_MODEL):
+            if not (tmpMd.containsLabel(MDL_CTF_MODEL) or \
+               (\
+                tmpMd.containsLabel(MDL_CTF_DEFOCUSU) and\
+                tmpMd.containsLabel(MDL_CTF_DEFOCUSV) and\
+                tmpMd.containsLabel(MDL_CTF_DEFOCUS_ANGLE)\
+                )
+               ):
+                print "has no CTF information available"
                 errors.append("input file: " + tmpCTFDatName + " has no CTF information available")
 
             
