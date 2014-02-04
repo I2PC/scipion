@@ -16,8 +16,8 @@ import static xmipp.utils.Param.COMMAND;
  */
 public class ScipionParams extends Param {
 
-    public String cmdname;
-    public String cmdscript;
+    public String set;
+    public String script;
     public String imagesid;
 
     public ScipionParams(String args[]) {
@@ -37,8 +37,8 @@ public class ScipionParams extends Param {
 
         if (cmdLine.hasOption(COMMAND)) {
             String[] cmdargs = cmdLine.getOptionValues(COMMAND);
-            cmdname = cmdargs[0];
-            cmdscript = cmdargs[1]; 
+            set = cmdargs[0];
+            script = cmdargs[1]; 
             imagesid = cmdargs[2];
         }
     }

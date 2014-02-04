@@ -24,21 +24,21 @@ import xmipp.viewer.windows.GalleryJFrame;
  */
 public class ScipionGalleryJFrame extends GalleryJFrame {
 
-    private final String cmdname;
-    private final String cmdscript;
+    private final String set;
+    private final String script;
     private final String imagesid;
 
     public ScipionGalleryJFrame(String filename, MetaData md, ScipionParams parameters) {
         super(filename, md, parameters);
-        cmdname = parameters.cmdname;
-        cmdscript = parameters.cmdscript;
+        set = parameters.set;
+        script = parameters.script;
         imagesid = parameters.imagesid;
         initComponents();
     }
 
     private void initComponents() {
-        if (cmdname != null) {
-            JButton cmdbutton = XmippWindowUtil.getTextButton(cmdname, new ActionListener() {
+        if (set != null) {
+            JButton cmdbutton = XmippWindowUtil.getTextButton("Create New " + set, new ActionListener() {
 
                 @Override
                 public void actionPerformed(ActionEvent ae) {
@@ -46,7 +46,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
                         String selectionmd = "selection.xmd";
                         selectionmd = new File(selectionmd).getAbsolutePath();
                         saveSelection(selectionmd, true);
-                        String command = String.format("%s %s %s", cmdscript, selectionmd, imagesid);
+                        String command = String.format("%s %s %s %s", script, selectionmd, set.replaceAll("\\s",""), imagesid);
                         executeCommand(command);
                     } catch (Exception ex) {
                         Logger.getLogger(ScipionGalleryJFrame.class.getName()).log(Level.SEVERE, null, ex);
