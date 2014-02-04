@@ -21,7 +21,7 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'xmipp@cnb.csic.es'
+# *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
 """
@@ -109,18 +109,18 @@ class XmippProtCreateMask3D(ProtCreateMask3D,XmippGeometricalMask):
         self.maskFile = self._getPath('mask.vol')
         if self.source==SOURCE_VOLUME:
             self.inputMask.set(None)
-            self._insertFunctionStep('createMaskFromVolume')
+            self._insertFunctionStep('createMaskFromVolumeStep')
         elif self.source==SOURCE_GEOMETRY:
             self.inputMask.set(None)
             self.volume.set(None)
-            self._insertFunctionStep('createMaskFromGeometry')
+            self._insertFunctionStep('createMaskFromGeometryStep')
         else:
             self.volume.set(None)
-            self._insertFunctionStep('createMaskFromAnotherMask')
-        self._insertFunctionStep('postProcessMask')
+            self._insertFunctionStep('createMaskFromAnotherMaskStep')
+        self._insertFunctionStep('postProcessMaskStep')
         self._insertFunctionStep('createOutput')
     
-    def createMaskFromVolume(self):
+    def createMaskFromVolumeStep(self):
         volume=self.volume.get().getFirstItem()
         if self.volumeOperation==OPERATION_THRESHOLD:
             self.runJob(None,"xmipp_transform_threshold",
@@ -140,7 +140,7 @@ class XmippProtCreateMask3D(ProtCreateMask3D,XmippGeometricalMask):
             self.runJob(None,"xmipp_volume_segment",args)
         return [self.maskFile]
         
-    def createMaskFromGeometry(self):
+    def createMaskFromGeometryStep(self):
         # Create empty volume file with desired dimensions
         size=self.size.get()
         xmipp.createEmptyFile(self.maskFile, size, size, size)
@@ -152,10 +152,10 @@ class XmippProtCreateMask3D(ProtCreateMask3D,XmippGeometricalMask):
         self.runJob(None, "xmipp_transform_mask", args)
         return [self.maskFile]
     
-    def createMaskFromAnotherMask(self):
+    def createMaskFromAnotherMaskStep(self):
         ImageHandler().convert(self.inputMask.get().getLocation(), (0, self.maskFile))
 
-    def postProcessMask(self):
+    def postProcessMaskStep(self):
         if self.doSmall.get():
             self.runJob(None,"xmipp_transform_morphology","-i %s --binaryOperation removeSmall %d"%(self.maskFile,self.smallSize.get()))
         if self.doBig.get():
