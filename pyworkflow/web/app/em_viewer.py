@@ -257,5 +257,7 @@ def view_plot_xmipp(request):
         response= HttpResponse(content_type='image/png')
         canvas.print_png(response)
         return response
+    
+
 
 

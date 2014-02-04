@@ -397,6 +397,7 @@ class Protocol(Step):
         If stored previously, _store should be used.
         The child will be set as self.key attribute
         """
+       
         setattr(self, key, child)
         if self.hasObjId():
             self.mapper.insertChild(self, key, child)
@@ -684,14 +685,25 @@ class Protocol(Step):
         """ Before calling this method, the working dir for the protocol
         to run should exists. 
         """
-        self._log = self.__getLogger()
+        self._log = ScipionLogger(self._getLogsPath('run.log'))
 
-        self.__initLogs('a')
+        if self.runMode.get() == MODE_RESTART:
+            mode = 'w+'
+        else:     
+            mode = 'a'
+        
+        self.__initLogs(mode)
         
         self.stderr = sys.stderr
         sys.stdout = self.fOut
         sys.stderr = self.fErr
         self._log.info('RUNNING PROTOCOL -----------------')
+#        self._log.info('RUNNING PROTOCOL info -----------------')
+#        self._log.warning('RUNNING PROTOCOL warning-----------------')
+#        self._log.error('RUNNING PROTOCOL error-----------------')
+#        self._log.info('RUNNING PROTOCOL info red-----------------', True)
+#        self._log.warning('RUNNING PROTOCOL warning red-----------------', True)
+#        self._log.error('RUNNING PROTOCOL error red-----------------', True)
 #        self._log.info('        jobId: %s' % self.getJobId())
 #        self._log.info('          pid: %s' % os.getpid())
 #        self._log.info('         ppid: %s' % os.getppid())
@@ -706,11 +718,11 @@ class Protocol(Step):
         #outputs = [getattr(self, o) for o in self._outputs]
         self._store()
         self._log.info('------------------- PROTOCOL FINISHED')
-        self.__closeLogger()
+        self._log.close()
         
     def __initLogs(self, mode):
-        self._stdErr = self.__getStdErr()
-        self._stdOut = self.__getStdOut()
+        self.__getStdErr()
+        self.__getStdOut()
         self.fOut = open(self.stdOut, mode)
         self.fErr = open(self.stdErr, mode)
         
@@ -722,18 +734,9 @@ class Protocol(Step):
         self.fErr.close()
         return fOutString, fErrString
         
-    def __getLogger(self):
-        #Initialize log
-        self.logFile = self._getLogsPath('run.log')
-        return getFileLogger(self.logFile)
-    
-    def __closeLogger(self):
-        closeFileLogger(self.logFile)
-        
     def __getStdErr(self):
         #Initialize stderr log
         self.stdErr = self._getLogsPath('run.stderr')
-        return getFileLogger(self.stdErr)
         
     def __closeStdErr(self):
         closeFileLogger(self.stdErr)
@@ -741,7 +744,6 @@ class Protocol(Step):
     def __getStdOut(self):
         #Initialize stderr log
         self.stdOut = self._getLogsPath('run.stdout')
-        return getFileLogger(self.stdOut)
         
     def __closeStdOut(self):
         closeFileLogger(self.stdOut)
