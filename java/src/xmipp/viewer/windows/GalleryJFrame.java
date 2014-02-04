@@ -1393,7 +1393,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 
 	}
 
-	private void tableMouseClicked(MouseEvent evt)
+	protected void tableMouseClicked(MouseEvent evt)
 	{
 		final Point p = evt.getPoint();
 		int row = table.rowAtPoint(p);
@@ -2320,5 +2320,13 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 
 		return map;
 	}
+        
+       public boolean isImageSelected()
+       {
+           if(!data.allowGallery())
+               return false;
+           //what if there are no images on metadata??
+           return gallery.getSelectionCount() > 0;
+       }
 
 }// class JFrameGallery

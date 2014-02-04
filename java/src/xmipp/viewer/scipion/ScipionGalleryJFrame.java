@@ -7,6 +7,7 @@ package xmipp.viewer.scipion;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseEvent;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.InputStreamReader;
@@ -27,6 +28,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
     private final String set;
     private final String script;
     private final String imagesid;
+    private JButton cmdbutton;
 
     public ScipionGalleryJFrame(String filename, MetaData md, ScipionParams parameters) {
         super(filename, md, parameters);
@@ -38,7 +40,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
 
     private void initComponents() {
         if (set != null) {
-            JButton cmdbutton = XmippWindowUtil.getTextButton("Create New " + set, new ActionListener() {
+            cmdbutton = XmippWindowUtil.getTextButton("Create New " + set, new ActionListener() {
 
                 @Override
                 public void actionPerformed(ActionEvent ae) {
@@ -55,10 +57,22 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
             });
 
             commandspn.add(cmdbutton);
+            cmdbutton.setEnabled(false);
         }
+       
     }
 
+    public void selectItem(int row, int col)
+    {
+        super.selectItem(row, col);
+        cmdbutton.setEnabled(isImageSelected());
+    }
 
+    protected void tableMouseClicked(MouseEvent evt)
+    {
+        super.tableMouseClicked(evt);
+        cmdbutton.setEnabled(isImageSelected());
+    }
 
     private void executeCommand(String command) throws Exception {
 
