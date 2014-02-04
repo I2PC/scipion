@@ -28,12 +28,14 @@ if __name__ == '__main__':
     prot.inputParticles = Pointer()
     prot.inputParticles.set(particles)
     
-    prot.outputParticles = prot._createSetOfParticles() 
-    readSetOfParticles(mdfile, prot.outputParticles)
-    
-    
+    outputParticles = prot._createSetOfParticles() 
+    readSetOfParticles(mdfile, outputParticles)
+    #this value is not always read it on readSetOfParticles
+    outputParticles.setSamplingRate(particles.getSamplingRate())
     project._setupProtocol(prot)
     prot.makePathsAndClean()
+
+    prot._defineOutputs(outputParticles=outputParticles)
     prot.setStatus(STATUS_FINISHED)
     project._storeProtocol(prot)
     
