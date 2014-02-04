@@ -287,9 +287,6 @@ public:
     // Selfile with all the input images
     MetaData SF;
     
-    // Task distributor
-    MpiTaskDistributor *taskDistributor;
-
     // Object Ids
     std::vector<size_t> objId;
 

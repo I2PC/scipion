@@ -195,7 +195,7 @@ def createMicroscope(log, microscopeFn, Voltage, SphericalAberration, SamplingRa
     md.setValue(MDL_CTF_VOLTAGE, float(Voltage))    
     md.setValue(MDL_CTF_CS, float(SphericalAberration))    
     md.setValue(MDL_CTF_SAMPLING_RATE, float(SamplingRate))
-    md.setValue(MDL_CTF_QO, float(AmplitudeContrast))
+    md.setValue(MDL_CTF_Q0, float(AmplitudeContrast))
     #md.setValue(MDL_MAGNIFICATION, 60000.0)
     md.write(microscopeFn)
     
