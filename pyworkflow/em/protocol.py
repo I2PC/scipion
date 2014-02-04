@@ -545,7 +545,7 @@ class ProtClassify(EMProtocol):
 class ProtUserSelection(EMProtocol):
     pass
 
-class ProtParticlesSubset(EMProtocol):
+class ProtUserSubSet(EMProtocol):
     pass
    
 

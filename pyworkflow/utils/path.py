@@ -80,7 +80,6 @@ def joinExt(*extensions):
 def cleanPath(*paths):
     """ Remove a list of paths, either folders or files"""
     for p in paths:
-        print 'cleaning path'
         if exists(p):
             if isdir(p):
                 shutil.rmtree(p)
