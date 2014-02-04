@@ -160,10 +160,12 @@ class XmippViewer(Viewer):
             self.visualize(obj.outputCoordinates)
         
         elif (issubclass(cls, ProtImportParticles) or
-              issubclass(cls, XmippProtExtractParticles) or
-              issubclass(cls, ProtUserSubSet)):
+              issubclass(cls, XmippProtExtractParticles)):
+            self.visualize(obj.outputParticles)
+            # If Zscore on output images plot Zscore particle sorting
+        elif (issubclass(cls, ProtUserSubSet)):
             self.visualize(obj.outputset)
-            # If Zscore on output images plot Zscore particle sorting            
+                          
         elif issubclass(cls, ProtAlign):
             self.visualize(obj.outputAverage)
             self.visualize(obj.outputParticles) 
