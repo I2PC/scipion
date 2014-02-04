@@ -28,6 +28,13 @@
 #include "xmipp_fftw.h"
 #include <math.h>
 
+bool containsCTFBasicLabels(const MetaData & md)
+{
+	for(int i=0; i < CTF_BASIC_LABELS_SIZE; i++)
+		if (!md.containsLabel(CTF_BASIC_LABELS[i]))
+			return false;
+	return true;
+}
 /* Read -------------------------------------------------------------------- */
 void CTFDescription::readFromMdRow(const MDRow &row, bool disable_if_not_K)
 {

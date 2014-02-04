@@ -30,6 +30,17 @@
 #include "xmipp_filename.h"
 #include "metadata.h"
 
+
+const int CTF_BASIC_LABELS_SIZE = 5;
+const MDLabel CTF_BASIC_LABELS[] =
+	{
+		MDL_CTF_DEFOCUSU, MDL_CTF_DEFOCUSV, MDL_CTF_DEFOCUS_ANGLE, MDL_CTF_CS, MDL_CTF_Q0
+	};
+/**Check that metadata contains ALL CTF_BASIC_LABELS labels
+ *
+ */
+bool containsCTFBasicLabels(const MetaData &md);
+
 /**@defgroup CTFSupport CTF support classes
    @ingroup DataLibrary */
 //@{
