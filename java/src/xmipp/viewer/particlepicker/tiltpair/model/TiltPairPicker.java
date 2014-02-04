@@ -199,13 +199,9 @@ public class TiltPairPicker extends ParticlePicker
 		return count;
 	}
 
-	public void saveData()
-	{
-		super.saveData();
-		saveMicrographAngles(micrograph);
-	}
+
 	
-	private void saveMicrographAngles(UntiltedMicrograph m)
+	public void saveMicrographAngles(UntiltedMicrograph m)
 	{
 		try
 		{
@@ -233,7 +229,7 @@ public class TiltPairPicker extends ParticlePicker
 			anglesmd.setValueDouble(MDLabel.MDL_ANGLE_TILT, m.getTiltAngle(), micId);
 			
 			anglesmd.writeBlock(selfile);
-			saveData(m);
+			
 		}
 		catch (Exception e)
 		{
@@ -285,7 +281,7 @@ public class TiltPairPicker extends ParticlePicker
 				mdU.destroy();
 				mdT.destroy();
 			}
-
+                        saveMicrographAngles(um);
 		}
 		catch (Exception e)
 		{
@@ -313,7 +309,6 @@ public class TiltPairPicker extends ParticlePicker
 			{
 				result += importParticlesFromFiles(uFn, tFn, f, um, scale, invertx, inverty);
 				saveData(um);
-                                saveMicrographAngles(um);
 			}
 		}
                 super.saveData();
