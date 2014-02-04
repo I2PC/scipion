@@ -41,6 +41,7 @@ from protocol_cl2d_align import XmippProtCL2DAlign
 from protocol_cl2d import XmippProtCL2D
 from protocol_kerdensom import XmippProtKerdensom
 from protocol_rotational_spectra import XmippProtRotSpectra
+from protocol_create_mask import XmippProtCreateMask3D
 from convert import writeSetOfMicrographs, writeSetOfParticles, writeSetOfClasses2D, writeSetOfCoordinates, writeSetOfCTFs, locationToXmipp
 from os.path import dirname, join
 from pyworkflow.utils.path import makePath
@@ -58,7 +59,7 @@ class XmippViewer(Viewer):
     _targets = [Image, SetOfImages, SetOfCoordinates, SetOfClasses2D, 
                 ProtImportMicrographs, XmippProtPreprocessMicrographs, ProtCTFMicrographs,
                 ProtParticlePicking, ProtImportParticles, XmippProtExtractParticles, 
-                ProtAlign, ProtProcessParticles, XmippProtKerdensom, XmippProtRotSpectra, 
+                ProtAlign, ProtProcessParticles, XmippProtKerdensom, XmippProtRotSpectra, XmippProtCreateMask3D,
                 SetOfClasses2D, SetOfCTF, NormalModes]
     
     def __init__(self, **args):
@@ -162,6 +163,8 @@ class XmippViewer(Viewer):
             self.visualize(obj.outputParticles) 
         elif issubclass(cls, XmippProtRotSpectra):
             self.visualize(obj.outputClasses, extraParams='--mode rotspectra --columns %d' % obj.SomXdim.get())
+        elif issubclass(cls, XmippProtCreateMask3D):
+            self.visualize(obj.outputMask)
         elif issubclass(cls, XmippProtKerdensom):
             self.visualize(obj.outputClasses, extraParams='--columns %d' % obj.SomXdim.get())
         elif issubclass(cls, ProtCTFMicrographs):
