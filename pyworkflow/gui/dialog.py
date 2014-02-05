@@ -35,7 +35,7 @@ import gui
 from widgets import Button
 from tree import BoundTree, TreeProvider
 from text import Text, TaggedText
-from pyworkflow.utils.messages_properties import Message
+from pyworkflow.utils.properties import Message
 
 
 # Possible result values for a Dialog

@@ -88,6 +88,8 @@ class Message():
     NO_SAVE_SETTINGS = 'Error try to save settings.'
     
     # Protocol Form Template
+    TITLE_CITE = 'Cite'
+    TITLE_DOC = 'Help'
     TITLE_NAME_RUN = ' Protocol Run: '
     TITLE_RUN = 'Run'
     TITLE_RUN_NAME = 'Run name'
@@ -236,6 +238,7 @@ class Message():
     
     ERROR_DIMENSIONS = 'Incorrect table width or height: '
     ERROR_WEBGL = 'Your web browser does not support or is not configured for WebGL. See [[http://get.webgl.org/][WebGL Support]] for more information.'
+    
     
 class Icon():
     # Project Content Template
