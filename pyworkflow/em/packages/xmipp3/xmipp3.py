@@ -130,6 +130,14 @@ class XmippMdRow():
                 value = str(value)
             md.setValue(label, value, objId)
             
+    def readFromFile(self, fn):
+        md = xmipp.MetaData(fn)
+        self.readFromMd(md, md.firstObject())
+        
+    def copyFromRow(self, other):
+        for label, value in other._labelDict.iteritems():
+            self.setValue(label, value)
+            
     def __str__(self):
         s = '{'
         for k, v in self._labelDict.iteritems():

@@ -32,6 +32,7 @@ This sub-package contains the XmippCtfMicrographs protocol
 from pyworkflow.em import *  
 
 from convert import *
+from xmipp3 import XmippMdRow
 #from pyworkflow.utils.path import makePath, basename, join, exists
 #import xmipp
 
@@ -92,15 +93,19 @@ class XmippProtCTFMicrographs(ProtCTFMicrographs):
         in the base class. 
         """
         micDir = self._getMicrographDir(mic)
-        labels = [xmipp.MDL_PSD, xmipp.MDL_PSD_ENHANCED, xmipp.MDL_CTF_MODEL, xmipp.MDL_IMAGE1, xmipp.MDL_IMAGE2]
+        labels = [xmipp.MDL_PSD, xmipp.MDL_PSD_ENHANCED, xmipp.MDL_IMAGE1, xmipp.MDL_IMAGE2]
         # Filenames key related to ctf estimation
+        ctfParam = self._getFilename('ctfparam', micDir=micDir)
+        ctfRow = XmippMdRow()
+        ctfRow.readFromFile(ctfParam)
         keys = ['psd', 'enhanced_psd', 'ctfparam', 'ctfmodel_quadrant', 'ctfmodel_halfplane']
         values = [self._getFilename(key, micDir=micDir) for key in keys]
         for l, v in zip(labels, values):
-            micRow.setValue(l, v)        
+            micRow.setValue(l, v)
+            
+        micRow.copyFromRow(ctfRow)  
         
     def createOutput(self):
-        
         # Create the SetOfMicrographs 
         micSet = self._createSetOfMicrographs()
         ctfSet = self._createSetOfCTF()
@@ -113,7 +118,7 @@ class XmippProtCTFMicrographs(ProtCTFMicrographs):
             #TODO: WE need to use 2 objects cause same object cannot be inserted on
             #2 different mappers: change this
             ctfModel2 = readCTFModel(ctfparam)
-            ctfModel2.micFile.set(mic.getFileName())
+            ctfModel2.setMicFile(mic.getFileName())
             ctfModel2.setObjId(mic.getObjId())
             ctfSet.append(ctfModel2)
  
@@ -122,15 +127,15 @@ class XmippProtCTFMicrographs(ProtCTFMicrographs):
         
 
         # Write as a Xmipp metadata
-        ctfDir = self._getTmpPath()
         mdFn = self._getPath('micrographs_ctf.xmd')
-        writeSetOfMicrographs(micSet, mdFn, ctfDir, self.setupMicRow)
+        writeSetOfMicrographs(micSet, mdFn, self.setupMicRow)
                  
+        tmpFn = self._getPath('micrographs_backup.xmd')
+        writeSetOfMicrographs(micSet, tmpFn, self.setupMicRow)
         # Mark flag of CTF as True
         #micSet.setHasCTF(True)      
         #micSet.write()         
         ctfSet._xmippMd = String(mdFn)
-        ctfSet.write()   
 
         # Evaluate the PSD and add some criterias
         auxMdFn = self._getTmpPath('micrographs.xmd')
@@ -138,10 +143,10 @@ class XmippProtCTFMicrographs(ProtCTFMicrographs):
         # Copy result to output metadata
         moveFile(auxMdFn, mdFn)        
         #micSet._xmippMd.set(mdFn)
-
         #self._defineOutputs(outputMicrographs=micSet)
         self._defineOutputs(outputCTF=ctfSet)
         #self._defineSourceRelation(self.inputMics, micSet)
         self._defineRelation(RELATION_CTF, ctfSet, self.inputMics)
+        
         #TODO: Remove when output setOfmics dissapear
         #self._defineRelation(RELATION_CTF, ctfSet, micSet)

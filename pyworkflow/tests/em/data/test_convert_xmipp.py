@@ -5,6 +5,7 @@ Created on 5th Feb, 2014
          J.M. de la Rosa Trevin
 '''
 
+import os
 import unittest
 
 import xmipp
@@ -22,20 +23,59 @@ class TestConversions(unittest.TestCase):
         cleanPath(self.outputPath)
         makePath(self.outputPath)
         
-    def getOutputFn(self, fn):
+    def getPath(self, fn):
         return os.path.join(self.outputPath, fn)
         
-    def test_particlesToMd(self):
-        """ Test the convertion of a SetOfParticles to Xmipp metadata. """
-        imgFn = self.getOutputFn("particles.sqlite")
-        imgSet = SetOfParticles(filename=imgFn)
+    def test_micrographsToMd(self):
+        """ Test the convertion of a SetOfMicrographs to Xmipp metadata. """
+        micSet = SetOfMicrographs(filename=self.getPath("micrographs.sqlite"))
         n = 10
         fn = "images.stk"
         ctfs = [CTFModel(defocusU=10000, defocusV=15000, defocusAngle=15),
                 CTFModel(defocusU=20000, defocusV=25000, defocusAngle=25)
                ]
-        acq = Acquisition(magnification=60000, voltage=300,
-                          sphericalAberration=2.,amplitudeContrast=0.07)
+        acquisition = Acquisition(magnification=60000, voltage=300,
+                                  sphericalAberration=2., amplitudeContrast=0.07)
+        mdXmipp = xmipp.MetaData()
+
+        for i in range(n):
+            p = Micrograph()
+            p.setLocation(i+1, fn)
+            ctf = ctfs[i%2]
+            p.setCTF(ctf)
+            p.setAcquisition(acquisition)
+            micSet.append(p)
+            id = mdXmipp.addObject()
+            mdXmipp.setValue(xmipp.MDL_ITEM_ID, long(i+1), id)
+            mdXmipp.setValue(xmipp.MDL_MICROGRAPH, locationToXmipp(i+1, fn), id)
+            # set CTFModel params
+            mdXmipp.setValue(xmipp.MDL_CTF_DEFOCUSU, ctf.getDefocusU(), id)
+            mdXmipp.setValue(xmipp.MDL_CTF_DEFOCUSV, ctf.getDefocusV(), id)
+            mdXmipp.setValue(xmipp.MDL_CTF_DEFOCUS_ANGLE, ctf.getDefocusAngle(), id)
+            # set Acquisition params
+            mdXmipp.setValue(xmipp.MDL_CTF_Q0, acquisition.getAmplitudeContrast(), id)
+            mdXmipp.setValue(xmipp.MDL_CTF_CS, acquisition.getSphericalAberration(), id)
+            mdXmipp.setValue(xmipp.MDL_CTF_VOLTAGE, acquisition.getVoltage(), id)
+            
+        mdScipion = xmipp.MetaData()
+        #setOfMicrographsToMd(micSet, mdScipion)
+        writeSetOfMicrographs(micSet, self.getPath("micrographs.xmd"))
+        print os.path.join(self.outputPath, "micrographs.xmd")
+        #print "mdScipion", mdScipion
+        #print "mdXmipp", mdXmipp
+        #self.assertEqual(mdScipion, mdXmipp, "metadata are not the same")
+        
+        
+    def test_particlesToMd(self):
+        """ Test the convertion of a SetOfParticles to Xmipp metadata. """
+        imgSet = SetOfParticles(filename=self.getPath("particles.sqlite"))
+        n = 10
+        fn = "images.stk"
+        ctfs = [CTFModel(defocusU=10000, defocusV=15000, defocusAngle=15),
+                CTFModel(defocusU=20000, defocusV=25000, defocusAngle=25)
+               ]
+        acquisition = Acquisition(magnification=60000, voltage=300,
+                                  sphericalAberration=2., amplitudeContrast=0.07)
         mdXmipp = xmipp.MetaData()
 
         for i in range(n):
@@ -43,18 +83,24 @@ class TestConversions(unittest.TestCase):
             p.setLocation(i+1, fn)
             ctf = ctfs[i%2]
             p.setCTF(ctf)
-            p.setAcquisition(acq)
+            p.setAcquisition(acquisition)
             imgSet.append(p)
             id = mdXmipp.addObject()
             mdXmipp.setValue(xmipp.MDL_ITEM_ID, long(i+1), id)
-            mdXmipp.setValue(xmipp.MDL_IMAGE,locationToXmipp(i+1, fn), id)
-            mdXmipp.setValue(xmipp.MDL_CTF_DEFOCUSU,ctf.getDefocusU(), id)
-            mdXmipp.setValue(xmipp.MDL_CTF_DEFOCUSV,ctf.getDefocusV(), id)
-            mdXmipp.setValue(xmipp.MDL_CTF_DEFOCUS_ANGLE,ctf.getDefocusAngle(), id)
-            mdXmipp.setValue(xmipp.MDL_CTF_DEFOCUSU,acq.getA, id)
-
+            mdXmipp.setValue(xmipp.MDL_IMAGE, locationToXmipp(i+1, fn), id)
+            # set CTFModel params
+            mdXmipp.setValue(xmipp.MDL_CTF_DEFOCUSU, ctf.getDefocusU(), id)
+            mdXmipp.setValue(xmipp.MDL_CTF_DEFOCUSV, ctf.getDefocusV(), id)
+            mdXmipp.setValue(xmipp.MDL_CTF_DEFOCUS_ANGLE, ctf.getDefocusAngle(), id)
+            # set Acquisition params
+            mdXmipp.setValue(xmipp.MDL_CTF_Q0, acquisition.getAmplitudeContrast(), id)
+            mdXmipp.setValue(xmipp.MDL_CTF_CS, acquisition.getSphericalAberration(), id)
+            mdXmipp.setValue(xmipp.MDL_CTF_VOLTAGE, acquisition.getVoltage(), id)
+            
         mdScipion = xmipp.MetaData()
         setOfParticlesToMd(imgSet, mdScipion)
+        #print "mdScipion", mdScipion
+        #print "mdXmipp", mdXmipp
         self.assertEqual(mdScipion, mdXmipp, "metadata are not the same")
         
 if __name__ == '__main__':

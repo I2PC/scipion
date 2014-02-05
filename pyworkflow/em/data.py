@@ -36,6 +36,7 @@ from pyworkflow.utils.path import cleanPath, dirname, join, replaceExt
 import xmipp
 
 
+
 class EMObject(OrderedObject):
     """Base object for all EM classes"""
     def __init__(self, **args):
@@ -58,11 +59,11 @@ class Acquisition(EMObject):
         self._voltage = Float(args.get('voltage', None))
         # Spherical aberration in mm
         self._sphericalAberration = Float(args.get('sphericalAberration', None)) 
-        self._amplitudeContrast = Float(args.get('amplitudeConstrast', None))
+        self._amplitudeContrast = Float(args.get('amplitudeContrast', None))
         
     def copyInfo(self, other):
-        self.copyAttributes('_magnification', '_voltage', 
-                            '_sphericalAberration', '_amplitudConstrast')
+        self.copyAttributes(other, '_magnification', '_voltage', 
+                            '_sphericalAberration', '_amplitudeContrast')
         
     def getMagnification(self):
         return self._magnification.get()
@@ -93,33 +94,45 @@ class CTFModel(EMObject):
     """ Represents a generic CTF model. """
     def __init__(self, **args):
         EMObject.__init__(self, **args)
-        self.defocusU = Float(args.get('defocusU', None))
-        self.defocusV = Float(args.get('defocusV', None))
-        self.defocusAngle = Float(args.get('defocusAngle', None))
-        self.psdFile = String()
-        self.micFile = String()
+        self._defocusU = Float(args.get('defocusU', None))
+        self._defocusV = Float(args.get('defocusV', None))
+        self._defocusAngle = Float(args.get('defocusAngle', None))
+        self._psdFile = String()
+        self._micFile = String()
         
     def getDefocusU(self):
-        return self.defocusU.get()
+        return self._defocusU.get()
         
     def setDefocusU(self, value):
-        self.defocusU.set(value)
+        self._defocusU.set(value)
         
     def getDefocusV(self):
-        return self.defocusV.get()
+        return self._defocusV.get()
         
     def setDefocusV(self, value):
-        self.defocusV.set(value)
+        self._defocusV.set(value)
         
     def getDefocusAngle(self):
-        return self.defocusAngle.get()
+        return self._defocusAngle.get()
         
     def setDefocusAngle(self, value):
-        self.defocusAngle.set(value)
+        self._defocusAngle.set(value)
         
     def copyInfo(self, other):
-        self.copyAttributes(other, 'defocusU', 'defocusV',
-                            'defocusAngle', 'psdFile')
+        self.copyAttributes(other, '_defocusU', '_defocusV',
+                            '_defocusAngle', '_psdFile', '_micFile')
+        
+    def getPsdFile(self):
+        return self._psdFile.get()
+    
+    def setPsdFile(self, value):
+        self._psdFile.set(value)
+        
+    def getMicFile(self):
+        return self._micFile.get()
+    
+    def setMicFile(self, value):
+        self._micFile.set(value)
 
 
 class Image(EMObject):

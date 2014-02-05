@@ -42,9 +42,9 @@ from protlib_xmipp import RowMetaData
 # This dictionary will be used to map
 # between CTFModel properties and Xmipp labels
 ACQUISITION_DICT = { 
-       "amplitudeContrast": xmipp.MDL_CTF_Q0,
-       "sphericalAberration": xmipp.MDL_CTF_CS,
-       "voltage": xmipp.MDL_CTF_VOLTAGE,
+       "_amplitudeContrast": xmipp.MDL_CTF_Q0,
+       "_sphericalAberration": xmipp.MDL_CTF_CS,
+       "_voltage": xmipp.MDL_CTF_VOLTAGE,
        }
 
 COOR_DICT = {"_x": xmipp.MDL_XCOOR, 
@@ -52,9 +52,9 @@ COOR_DICT = {"_x": xmipp.MDL_XCOOR,
              }
 
 CTF_DICT = { 
-       "defocusAngle": xmipp.MDL_CTF_DEFOCUS_ANGLE,
-       "defocusU": xmipp.MDL_CTF_DEFOCUSU,
-       "defocusV": xmipp.MDL_CTF_DEFOCUSV,
+       "_defocusAngle": xmipp.MDL_CTF_DEFOCUS_ANGLE,
+       "_defocusU": xmipp.MDL_CTF_DEFOCUSU,
+       "_defocusV": xmipp.MDL_CTF_DEFOCUSV,
        }
 
 def objectToRow(obj, row, attrDict):
@@ -132,7 +132,7 @@ def imageToRow(img, imgRow, imgLabel):
        
     if img.hasCTF():
         ctfModelToRow(img.getCTF(), imgRow)
-        acquisitionToRow(img.getAcquisition(), imgRow)
+    acquisitionToRow(img.getAcquisition(), imgRow)
         
         
 def rowToImage(md, objId, imgLabel, imgClass, hasCtf):
@@ -145,7 +145,7 @@ def rowToImage(md, objId, imgLabel, imgClass, hasCtf):
         ctfModel = CTFModel()
         rowToCtfModel(md, objId)
         #TODO: CHECK NEXT LINE
-        #ctfModel.micFile.set(md.getValue(xmipp.MDL_MICROGRAPH, objId))
+        #ctfModel.setMicFile(md.getValue(xmipp.MDL_MICROGRAPH, objId))
         img.setCTF(ctfModel)
     setObjId(img, rowFromMd(md, objId))
     
@@ -445,6 +445,9 @@ def readSetOfParticles(filename, partSet, hasCtf=False):
 def setOfParticlesToMd(imgSet, md, rowFunc=None):
     setOfImagesToMd(imgSet, md, particleToRow, rowFunc)
       
+def setOfMicrographsToMd(imgSet, md, rowFunc=None):
+    setOfImagesToMd(imgSet, md, micrographToRow, rowFunc)
+      
 def writeSetOfParticles(imgSet, filename, rowFunc=None):
     writeSetOfImages(imgSet, filename, particleToRow, rowFunc)
 
@@ -460,7 +463,7 @@ def writeSetOfCTFs(ctfSet, mdCTF):
         objId = md.addObject()
         ctfRow = XmippMdRow()
         ctfModelToRow(ctfModel, ctfRow)
-        ctfRow.setValue(xmipp.MDL_MICROGRAPH, ctfModel.micFile.get())
+        ctfRow.setValue(xmipp.MDL_MICROGRAPH, ctfModel.getMicFile())
         ctfRow.writeToMd(md, objId)
         
     md.write(mdCTF)
