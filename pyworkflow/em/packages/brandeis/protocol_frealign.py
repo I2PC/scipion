@@ -494,13 +494,14 @@ class ProtFrealign(ProtRefine3D):
         # Get the particles stack
         imgsFn = os.path.relpath(self._getTmpPath('particles.mrc'), iterDir)
         paramsDic['imageFn'] = imgsFn
+        acquisition = imgSet.getAcquisition()
         # Get the amplitude Contrast of the micrographs
-        paramsDic['ampContrast'] = imgSet._acquisition.amplitudeContrast.get()
+        paramsDic['ampContrast'] = acquisition.getAmplitudeContrast()
         # Get the scanned pixel size of the micrographs
-        paramsDic['scannedPixelSize'] = imgSet._acquisition.magnification.get() * imgSet.getSamplingRate() / 10000
+        paramsDic['scannedPixelSize'] = acquisition.getMagnification() * imgSet.getSamplingRate() / 10000
         # Get the voltage and spherical aberration of the microscope
-        paramsDic['voltage'] = imgSet._acquisition.voltage.get()
-        paramsDic['sphericalAberration'] = imgSet._acquisition.sphericalAberration.get()
+        paramsDic['voltage'] = acquisition.getVoltage()
+        paramsDic['sphericalAberration'] = acquisition.getSphericalAberration()
 
         # Defining the operation mode
         if self.mode == MOD_RECONSTRUCTION:

@@ -88,34 +88,43 @@ class TestImportMicrographs(TestXmippBase):
     
     def testImport_1(self):
         pattern = getInputPath('Micrographs_BPV1', '*.mrc')
-        samplingRate=None
-        scannedPixelSize=7
-        magnification=56000
-        voltage=300
-        sphericalAberration=2
+        samplingRate = None
+        scannedPixelSize = 7
+        magnification = 56000
+        voltage = 300
+        sphericalAberration = 2
         
-        protImport = self.runImportMicrograph(pattern, samplingRate=samplingRate, scannedPixelSize=scannedPixelSize, magnification=magnification, voltage=voltage, sphericalAberration=sphericalAberration)
+        protImport = self.runImportMicrograph(pattern, samplingRate=samplingRate, 
+                                              scannedPixelSize=scannedPixelSize, 
+                                              magnification=magnification, voltage=voltage, 
+                                              sphericalAberration=sphericalAberration)
+        if protImport.isFailed():
+            raise Exception(protImport.getError())
+        
         m = protImport.outputMicrographs.getAcquisition()
         # Check that sampling rate on output micrographs is equal to 
-        self.assertTrue(protImport.outputMicrographs.getScannedPixelSize() == scannedPixelSize, "Incorrect ScannedPixelSize on output micrographs.")
-        self.assertTrue(m.magnification.get() == magnification, "Incorrect Magnification on output micrographs.")
-        self.assertTrue(m.voltage.get() == voltage, "Incorrect Voltage on output micrographs.")
-        self.assertTrue(m.sphericalAberration.get() == sphericalAberration, "Incorrect SphericalAberration on output micrographs.")
+        self.assertEquals(protImport.outputMicrographs.getScannedPixelSize(), scannedPixelSize, "Incorrect ScannedPixelSize on output micrographs.")
+        self.assertEquals(m.getMagnification(), magnification, "Incorrect Magnification on output micrographs.")
+        self.assertEquals(m.getVoltage(), voltage, "Incorrect Voltage on output micrographs.")
+        self.assertEquals(m.getSphericalAberration(), sphericalAberration, "Incorrect SphericalAberration on output micrographs.")
 
     def testImport_2(self):
         pattern = getInputPath('Micrographs_BPV3', '*.mrc')
-        samplingRate=2.56
-        scannedPixelSize=7
-        magnification=56000
-        voltage=400
-        sphericalAberration=2.5
+        samplingRate = 2.56
+        scannedPixelSize = 7
+        magnification = 56000
+        voltage = 400
+        sphericalAberration = 2.5
         
-        protImport = self.runImportMicrograph(pattern, samplingRate=samplingRate, scannedPixelSize=scannedPixelSize, magnification=magnification, voltage=voltage, sphericalAberration=sphericalAberration)
+        protImport = self.runImportMicrograph(pattern, samplingRate=samplingRate, 
+                                              scannedPixelSize=scannedPixelSize, 
+                                              magnification=magnification, voltage=voltage, 
+                                              sphericalAberration=sphericalAberration)
         m = protImport.outputMicrographs.getAcquisition()
         # Check that sampling rate on output micrographs is equal to 
-        self.assertTrue(protImport.outputMicrographs.getSamplingRate() == samplingRate, "Incorrect SamplingRate on output micrographs.")
-        self.assertTrue(m.voltage.get() == voltage, "Incorrect Voltage on output micrographs.")
-        self.assertTrue(m.sphericalAberration.get() == sphericalAberration, "Incorrect Spherical aberration on output micrographs.")
+        self.assertEquals(protImport.outputMicrographs.getSamplingRate(), samplingRate, "Incorrect SamplingRate on output micrographs.")
+        self.assertEquals(m.getVoltage(), voltage, "Incorrect Voltage on output micrographs.")
+        self.assertEquals(m.getSphericalAberration(), sphericalAberration, "Incorrect Spherical aberration on output micrographs.")
 
     
 class TestXmippPreprocessMicrographs(TestXmippBase):
@@ -133,7 +142,7 @@ class TestXmippPreprocessMicrographs(TestXmippBase):
         self.proj.launchProtocol(protDown, wait=True)
         
         # check that output micrographs have double sampling rate than input micrographs
-        self.assertTrue(protDown.outputMicrographs.getSamplingRate() == self.protImport.outputMicrographs.getSamplingRate()*downFactor, "Micrographs uncorrectly downsampled")
+        self.assertEquals(protDown.outputMicrographs.getSamplingRate(), self.protImport.outputMicrographs.getSamplingRate()*downFactor, "Micrographs uncorrectly downsampled")
         
     def testCrop(self):
         # test crop on a set of micrographs

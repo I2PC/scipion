@@ -23,7 +23,7 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
-from pyworkflow.protocol.constants import STATUS_RUNNING
+from pyworkflow.protocol.constants import STATUS_RUNNING, STATUS_FAILED
 """
 This modules contains classes required for the workflow
 execution and tracking like: Step and Protocol
@@ -88,6 +88,9 @@ class Step(OrderedObject):
         self.error.set(msg)
         self.status.set(STATUS_FAILED)
         
+    def getError(self):
+        return self.error.get()
+        
     def setAborted(self):
         """ Set the status to aborted and updated the endTime. """
         self.endTime.set(dt.datetime.now())
@@ -111,6 +114,9 @@ class Step(OrderedObject):
     
     def isRunning(self):
         return self.getStatus() == STATUS_RUNNING
+    
+    def isFailed(self):
+        return self.getStatus() == STATUS_FAILED
     
     def run(self):
         """ Do the job of this step"""

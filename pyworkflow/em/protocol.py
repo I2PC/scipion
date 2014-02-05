@@ -111,10 +111,11 @@ class ProtImportImages(EMProtocol):
         filePaths = glob(expandPattern(pattern))
         
         imgSet = self._createSet() 
+        acquisition = imgSet.getAcquisition()
         # Setting Acquisition properties
-        imgSet._acquisition.voltage.set(voltage)
-        imgSet._acquisition.sphericalAberration.set(sphericalAberration)
-        imgSet._acquisition.amplitudeContrast.set(amplitudeContrast)
+        acquisition.setVoltage(voltage)
+        acquisition.setSphericalAberration(sphericalAberration)
+        acquisition.setAmplitudeContrast(amplitudeContrast)
         
         # Call a function that should be implemented by each subclass
         self._setOtherPars(imgSet)
@@ -128,7 +129,7 @@ class ProtImportImages(EMProtocol):
             dst = self._getPath(basename(f))            
             shutil.copyfile(f, dst)
             if self.checkStack:
-                x, y, x, n = imgh.getDimensions(dst)
+                _, _, _, n = imgh.getDimensions(dst)
             if n > 1:
                 for i in range(1, n+1):
                     img = findClass(self._className)()
@@ -207,7 +208,8 @@ class ProtImportMicrographs(ProtImportImages):
                                  self.voltage.get(), self.sphericalAberration.get(), self.ampContrast.get()) #, self.samplingRate.get(), 
                                 
     def _setOtherPars(self, micSet):
-        micSet._acquisition.magnification.set(self.magnification.get())
+        micSet.getAcquisition().setMagnification(self.magnification.get())
+        
         if self.samplingRateMode == SAMPLING_FROM_IMAGE:
             micSet.setSamplingRate(self.samplingRate.get())
         else:
@@ -411,14 +413,15 @@ class ProtCTFMicrographs(EMProtocol):
         """
         # Get pointer to input micrographs 
         self.inputMics = self.inputMicrographs.get() 
-                                
-        self._params = {'voltage': self.inputMics._acquisition.voltage.get(),
-                        'sphericalAberration': self.inputMics._acquisition.sphericalAberration.get(),
-                        'magnification': self.inputMics._acquisition.magnification.get(),
+        acquisition = self.inputMics.getAcquisition()
+         
+        self._params = {'voltage': acquisition.getVoltage(),
+                        'sphericalAberration': acquisition.getSphericalAberration(),
+                        'magnification': acquisition.getMagnification(),
+                        'ampContrast': acquisition.getAmplitudeContrast(),
                         'samplingRate': self.inputMics.getSamplingRate(),
                         'scannedPixelSize': self.inputMics.getScannedPixelSize(),
                         'windowSize': self.windowSize.get(),
-                        'ampContrast': self.inputMics._acquisition.amplitudeContrast.get(),
                         'lowRes': self.lowRes.get(),
                         'highRes': self.highRes.get(),
                         # Convert from microns to Amstrongs

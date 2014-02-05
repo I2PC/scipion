@@ -53,20 +53,42 @@ class Acquisition(EMObject):
     """Acquisition information"""
     def __init__(self, **args):
         EMObject.__init__(self, **args)
-        self.magnification = Float(args.get('magnification', None)) 
+        self._magnification = Float(args.get('magnification', None)) 
         # Microscope voltage in kV
-        self.voltage = Float(args.get('voltage', None))
+        self._voltage = Float(args.get('voltage', None))
         # Spherical aberration in mm
-        self.sphericalAberration = Float(args.get('sphericalAberration', None)) 
-        self.amplitudeContrast = Float(args.get('amplitudeConstrast', None))
+        self._sphericalAberration = Float(args.get('sphericalAberration', None)) 
+        self._amplitudeContrast = Float(args.get('amplitudeConstrast', None))
         
     def copyInfo(self, other):
-        self.magnification.set(other.magnification.get())
-        self.voltage.set(other.voltage.get())
-        self.sphericalAberration.set(other.sphericalAberration.get())
-        self.amplitudeContrast.set(other.amplitudeContrast.get())
+        self.copyAttributes('_magnification', '_voltage', 
+                            '_sphericalAberration', '_amplitudConstrast')
+        
+    def getMagnification(self):
+        return self._magnification.get()
+        
+    def setMagnification(self, value):
+        self._magnification.set(value)
+        
+    def getVoltage(self):
+        return self._voltage.get()
+        
+    def setVoltage(self, value):
+        self._voltage.set(value)
+        
+    def getSphericalAberration(self):
+        return self._sphericalAberration.get()
     
-
+    def setSphericalAberration(self, value):
+        self._sphericalAberration.set(value)
+        
+    def getAmplitudeContrast(self):
+        return self._amplitudeContrast.get()
+    
+    def setAmplitudeContrast(self, value):
+        self._amplitudeContrast.set(value)        
+       
+    
 class CTFModel(EMObject):
     """ Represents a generic CTF model. """
     def __init__(self, **args):
@@ -467,7 +489,7 @@ class SetOfMicrographs(SetOfImages):
     def setSamplingRate(self, samplingRate):
         """ Set the sampling rate and adjust the scannedPixelSize. """
         self._samplingRate.set(samplingRate)
-        self._scannedPixelSize.set(1e-4 * samplingRate * self._acquisition.magnification.get())
+        self._scannedPixelSize.set(1e-4 * samplingRate * self._acquisition.getMagnification())
                
     def getScannedPixelSize(self):
         return self._scannedPixelSize.get()
@@ -475,7 +497,7 @@ class SetOfMicrographs(SetOfImages):
     def setScannedPixelSize(self, scannedPixelSize):
         """ Set scannedPixelSize and update samplingRate. """
         self._scannedPixelSize.set(scannedPixelSize)
-        self._samplingRate.set((1e+4 * scannedPixelSize) / self._acquisition.magnification.get())
+        self._samplingRate.set((1e+4 * scannedPixelSize) / self._acquisition.getMagnification())
 
 
 class SetOfParticles(SetOfImages):
