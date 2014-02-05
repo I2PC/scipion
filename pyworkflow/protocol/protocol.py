@@ -685,8 +685,10 @@ class Protocol(Step):
         """ Before calling this method, the working dir for the protocol
         to run should exists. 
         """
-        self._log = ScipionLogger(self._getLogsPath('run.log'))
+        self._log = ScipionLogger(self._getLogsPath(''))        
 
+        # Open the log file overwriting its content if the protocol is going to be execute from zero. 
+        # Otherwise append the new content to the old one
         if self.runMode.get() == MODE_RESTART:
             mode = 'w+'
         else:     
@@ -735,18 +737,10 @@ class Protocol(Step):
         return fOutString, fErrString
         
     def __getStdErr(self):
-        #Initialize stderr log
         self.stdErr = self._getLogsPath('run.stderr')
-        
-    def __closeStdErr(self):
-        closeFileLogger(self.stdErr)
 
     def __getStdOut(self):
-        #Initialize stderr log
         self.stdOut = self._getLogsPath('run.stdout')
-        
-    def __closeStdOut(self):
-        closeFileLogger(self.stdOut)
 
     def getWorkingDir(self):
         return self.workingDir.get()

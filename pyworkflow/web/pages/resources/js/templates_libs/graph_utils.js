@@ -135,7 +135,11 @@ function callPaintGraph() {
 		var id = jQuery(this).attr('id');
 		var idNew = "graph_" + id;
 
-		var name = jQuery(this).attr('data-name');
+//		var name = jQuery(this).attr('data-name');
+		var name = jQuery(this).attr('data-label');
+		if (name==""){
+			name = jQuery(this).attr('data-name');
+		}
 
 		paintBox(nodeSource, idNew, name);
 		var width = $("div#" + idNew + ".window").width();

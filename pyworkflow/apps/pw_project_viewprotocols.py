@@ -364,10 +364,15 @@ class ProtocolsView(tk.Frame):
         
         # Create the Selected Run Info
         infoFrame = tk.Frame(v)
-        #infoFrame.columnconfigure(0, weight=1)
-        gui.configureWeigths(infoFrame)
-        self.style.configure("W.TNotebook", background='white')
-        tab = ttk.Notebook(infoFrame, style='W.TNotebook')
+        infoFrame.columnconfigure(0, weight=1)
+        infoFrame.rowconfigure(1, weight=1)
+        # Create the Analyze results button
+        btnAnalyze = gui.Button(infoFrame, text=Message.LABEL_ANALYZE, fg='white', bg='#7D0709',# font=self.font, 
+                          image=self.getImage(Icon.ACTION_VISUALIZE), compound=tk.LEFT, 
+                        activeforeground='white', activebackground='#A60C0C', command=self._analyzeResultsClicked)
+        btnAnalyze.grid(row=0, column=0, sticky='ne', padx=15)
+        #self.style.configure("W.TNotebook")#, background='white')
+        tab = ttk.Notebook(infoFrame)#, style='W.TNotebook')
         # Data tab
         dframe = tk.Frame(tab)
         gui.configureWeigths(dframe)
@@ -400,7 +405,7 @@ class ProtocolsView(tk.Frame):
         tab.add(mframe, text=Message.LABEL_METHODS)
         tab.add(ologframe, text=Message.LABEL_LOGS_OUTPUT)
         tab.add(elogframe, text=Message.LABEL_LOGS_ERROR)
-        tab.grid(row=0, column=0, sticky='news')
+        tab.grid(row=1, column=0, sticky='news')
         
         v.add(runsFrame, weight=3)
         v.add(infoFrame, weight=1)
@@ -730,6 +735,9 @@ class ProtocolsView(tk.Frame):
         else:
             self.windows.showError(Message.NO_VIEWER_FOUND +"*%s*" % prot.getClassName())
         
+    def _analyzeResultsClicked(self, e=None):
+        """ this method should be called when button "Analyze results" is called. """
+        self._analyzeResults(self.selectedProtocol)
                 
     def _runActionClicked(self, action):
         prot = self.selectedProtocol
