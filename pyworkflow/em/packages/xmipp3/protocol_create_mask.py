@@ -264,6 +264,7 @@ class XmippProtCreateMask3D(ProtCreateMask3D,XmippGeometricalMask):
         if self.doInvert.get():
             messages.append("We inverted the mask. ")
         if self.doSmooth.get():
-            messages.append("And, we smoothed it (sigma=%f voxels)"%self.sigmaConvolution.get())
+            messages.append("And, we smoothed it (sigma=%f voxels)." % self.sigmaConvolution.get())
+        messages.append('We refer to the output mask as %s.' % self.outputMask.getNameId())
         return messages
     
