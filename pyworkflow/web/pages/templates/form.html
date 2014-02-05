@@ -61,7 +61,16 @@
 			{% if package_logo != ''%}
 				<img src='{{package_logo}}' style="float:left;"/>
 			{% endif %}
-			<h3 id="protName" style="padding-top:25px;">Protocol: {{protocol.getClassLabel}} <a id="referenceLink" href="javascript:infoPopup('Cite','{{protocol.htmlCitations|escapejs}}');" style="float:right"><i class="fa fa-external-link"></i></a></h3>
+			<h3 id="protName" style="padding-top:25px;">
+				Protocol: {{protocol.getClassLabel}} 
+				<br />
+				<a id="referenceLink" href="javascript:infoPopup('Documentation','{{protocol.htmlDoc|escapejs}}');" style="float:right">
+					<i class="fa fa-question-circle"></i> Help &nbsp;	
+				</a>
+				<a id="referenceLink" href="javascript:infoPopup('Cite','{{protocol.htmlCitations|escapejs}}');" style="float:right">
+					<i class="fa fa-external-link"></i> Cite &nbsp;
+				</a>
+			</h3>
 		</div>
 		
 		<form id="protocolForm" action="/protocol/" method="POST" data-mode="">{% csrf_token %}
@@ -163,7 +172,7 @@
 						</tr>
 						<tr>
 							<td>
-								{{messages_properties.TITLE_QUEUE}}
+								Citations{{messages_properties.TITLE_QUEUE}}
 							</td>
 							<td>
 							  <input type="radio" id="queue_yes" name="{{messages_properties.VAR_QUEUE}}" value="yes"/>{{messages_properties.LABEL_QUEUE_YES}}
