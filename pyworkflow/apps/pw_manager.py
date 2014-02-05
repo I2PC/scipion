@@ -28,7 +28,7 @@
 from inspect import isclass
 from pyworkflow.utils.utils import prettyDate
 from pyworkflow.apps.config import loadSettings
-from pyworkflow.utils.messages_properties import Message
+from pyworkflow.utils.properties import Message
 """
 Main project window application
 """

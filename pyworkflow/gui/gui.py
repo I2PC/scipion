@@ -33,7 +33,7 @@ import tkFont
 
 from pyworkflow.object import OrderedObject
 from pyworkflow.utils.path import findResource
-from pyworkflow.utils.messages_properties import Message
+from pyworkflow.utils.properties import Message
 
 from os.path import join, exists, basename
 

@@ -27,7 +27,7 @@
 from pyworkflow.em import *
 from views_util import * 
 
-from pyworkflow.web.app.messages_properties import MessageWeb
+from pyworkflow.web.app.properties import MessageWeb
 
 def base(request, context):
     
@@ -42,7 +42,7 @@ def base(request, context):
                 'jquery': getResourceJs('jquery'),
                 'messi_js': getResourceJs('messi'),
                 'utils': getResourceJs('utils'),
-                'messages_properties': messages
+                'msg': messages
                }
     
     context.update(context_base)
