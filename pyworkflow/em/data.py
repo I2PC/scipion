@@ -53,12 +53,12 @@ class Acquisition(EMObject):
     """Acquisition information"""
     def __init__(self, **args):
         EMObject.__init__(self, **args)
-        self.magnification = Float(args.get('magnification', None)) 
+        self._magnification = Float(args.get('magnification', None)) 
         # Microscope voltage in kV
-        self.voltage = Float(args.get('voltage', None))
+        self._voltage = Float(args.get('voltage', None))
         # Spherical aberration in mm
-        self.sphericalAberration = Float(args.get('sphericalAberration', None)) 
-        self.amplitudeContrast = Float(args.get('amplitudeConstrast', None))
+        self._sphericalAberration = Float(args.get('sphericalAberration', None)) 
+        self._amplitudeContrast = Float(args.get('amplitudeConstrast', None))
         
     def copyInfo(self, other):
         self.magnification.set(other.magnification.get())
