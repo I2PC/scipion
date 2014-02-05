@@ -39,6 +39,7 @@ This sub-package implement projection matching using xmipp 3.1
 from pyworkflow.em import *  
 from pyworkflow.utils import *  
 import xmipp, xmipp3
+from convert import createXmippInputImages, readSetOfVolumes, createXmippInputVolumes
 
         
 class XmippProtProjMatch(xmipp3.XmippProtocol, ProtRefine3D, ProtClassify3D):
@@ -706,207 +707,51 @@ is ("2x.15 2x0.1", i.e.,
         
         form.addParallelSection(threads=1, mpi=8)
         
-    def getProgramId(self):
-        progId = "ml"
-        if self.doMlf:
-            progId += "f" 
-        return progId   
+    def _ctfBlockName(self, blockName='ctfGroup', i=1):
+        return "%(blockName)s%06(i)d@" % locals()
          
     def _insertAllSteps(self):
+        self._insertInitSteps()
+        self._insertIterationSteps()
+        self._insertEndSteps()
+        
 
-        self.ParamsDict = {}
-        self.ParamsDict['ProgId'] = self.getProgramId()
-        
-        #TODO: Retrieve initial volume path from object (now is a text) and convert if needed
-        refMd = self.ini3DrefVolumes.get()
-        initVols = self.ParamsDict['InitialVols'] = self._getExtraPath('initial_volumes.stk')
-        self.mdVols = xmipp.MetaData(refMd)
-        
+    def _insertInitSteps(self):
+        #define variables
+        self.ctfGroupDirectory = 'CtfGroups'
+        self.FILENAMENUMBERLENGTH = 6
+        self.ctfGroupSuffix = '_images.xmd'
+        self.ctfGroupPreffix = 'ctf'
         # Convert input images if necessary
-        self.inputImgs = self.inputImages.get()        
-        imgsFn = self._insertConvertStep('inputImgs', XmippSetOfImages,
-                                         self._getPath('input_images.xmd'))
-        self.imgMd = self.ParamsDict['ImgMd'] = imgsFn
-        
-        #Get sampling rate from input images
-        self.samplingRate = self.inputImages.get().getSamplingRate()
-        
-        self._insertFunctionStep('copyVolumes', refMd, initVols)
-        
-        if self.doCorrectGreyScale.get():
-            self.insertCorrectGreyScaleSteps()
-                    
-        if self.doLowPassFilter.get():
-            self.insertFilterStep()
-            
-        if self.numberOfSeedsPerRef.get() > 1:
-            self.insertGenerateRefSteps()
-            
-        self.insertProjMatchStep(self.imgMd, self.workingDir.get() + '/', self.ParamsDict['InitialVols'], 
-                            self.numberOfIterations.get(), self.seedsAreAmplitudeCorrected.get())
-        
-        self._insertFunctionStep('renameOutput', self.workingDir.get(), self.getProgramId())
-                
-        self._insertFunctionStep('createOutput')
-
-    def copyVolumes(self, inputMd, outputStack):
-        ''' This function will copy input references into a stack in working directory'''
-        if exists(outputStack):
-            os.remove(outputStack)
-        md = xmipp.MetaData(inputMd)
-        img = xmipp.Image()
-        for i, idx in enumerate(md):
-            img.read(md.getValue(xmipp.MDL_IMAGE, idx))
-            img.write('%d@%s' % (i + 1, outputStack))
-
-        
-    def insertCorrectGreyScaleSteps(self):
-        ''' Correct the initial reference greyscale '''
-        cgsDir = self._getPath('CorrectGreyscale')
-        makePath(cgsDir)
-        volStack = self.ParamsDict['InitialVols'] = self._getExtraPath('corrected_volumes.stk')
-        # Grey-scale correction always leads to an amplitude uncorrected map
-        self.initialMapIsAmplitudeCorrected.set(False)
-        index = 1
-        outputVol = ''
-        for idx in self.mdVols:
-            volDir = join(cgsDir, 'vol%03d' % index)
-            projs = join(volDir, 'projections')
-            makePath(volDir)
-            outputVol = "%(index)d@%(volStack)s" % locals()
-            corrRefsRoot = join(volDir, 'corrected_refs')
-            self.ParamsDict.update({
-                'inputVol': self.mdVols.getValue(xmipp.MDL_IMAGE, idx),
-                'outputVol': outputVol,
-                'projRefs': projs + ".stk",
-                'docRefs': projs + ".doc",
-                'corrRefsRoot':corrRefsRoot ,
-                'corrRefs': corrRefsRoot + '_Ref3D_001.stk',
-                'projMatch': join(volDir, "proj_match.doc"),
-                'projMatchSampling': self.projMatchSampling.get(),
-                'symmetry': self.symmetry.get(),
-                'numberOfThreads': self.numberOfThreads.get()
-                })
-            self.mdVols.setValue(xmipp.MDL_IMAGE, outputVol, idx)
-            self.ParamsStr = ' -i %(inputVol)s --experimental_images %(ImgMd)s -o %(projRefs)s' + \
-                    ' --sampling_rate %(projMatchSampling)f --sym %(symmetry)s' + \
-                    'h --compute_neighbors --angular_distance -1' 
-                       
-            self._insertRunJobStep('xmipp_angular_project_library', self.ParamsStr % self.ParamsDict)
-
-            self.ParamsStr = '-i %(ImgMd)s -o %(projMatch)s --ref %(projRefs)s' 
-            self._insertRunJobStep('xmipp_angular_projection_matching', self.ParamsStr % self.ParamsDict)
- 
-            self.ParamsStr = '-i %(projMatch)s --lib %(docRefs)s -o %(corrRefsRoot)s'
-            self._insertRunJobStep('xmipp_angular_class_average', self.ParamsStr % self.ParamsDict)
-
-            self.ParamsStr = '-i %(projMatch)s -o %(outputVol)s --sym %(symmetry)s --weight --thr %(numberOfThreads)d'
-            self._insertRunJobStep('xmipp_reconstruct_fourier', self.ParamsStr % self.ParamsDict)
-            index += 1
-
-    def insertFilterStep(self):
-        volStack = self.ParamsDict['FilteredVols'] = self._getExtraPath('filtered_volumes.stk')
-        index = 1
-        outputVol = ''
-        for idx in self.mdVols:
-            outputVol = "%(index)d@%(volStack)s" % locals()
-            self.mdVols.setValue(xmipp.MDL_IMAGE, outputVol, idx)
-            index += 1
-        self.ParamsStr = '-i %(InitialVols)s -o %(FilteredVols)s --fourier low_pass %(lowPassFilter)f --sampling %(samplingRate)f'
-        self.ParamsDict.update({
-                                'lowPassFilter':self.lowPassFilter.get(),
-                                'samplingRate':self.samplingRate
-                                })
-        self._insertRunJobStep('xmipp_transform_filter', self.ParamsStr % self.ParamsDict)
-        self.ParamsDict['InitialVols'] = self.ParamsDict['FilteredVols']
-
-    def insertGenerateRefSteps(self):
-        ''' Generate more reference volumes than provided in input reference '''
-        grDir = self._getPath('GeneratedReferences')
-        # Create dir for seeds generation
-        makePath(grDir)
-        # Split images metadata
-        nvols = self.ParamsDict['NumberOfVols'] = self.mdVols.size() * self.numberOfSeedsPerRef.get()
-        sroot = self.ParamsDict['SplitRoot'] = join(grDir, 'images')
-        self.ParamsStr = '-i %(ImgMd)s -n %(NumberOfVols)d --oroot %(SplitRoot)s'
-        files = ['%s%06d.xmd' % (sroot, i) for i in range(1, nvols+1)]        
-        self._insertRunJobStep('xmipp_metadata_split', self.ParamsStr % self.ParamsDict, numberOfMpi=1)
-        
-        volStack = self.ParamsDict['InitialVols'] = self._getExtraPath('generated_volumes.stk') 
-        index = 1
-        copyVols = []
-        for idx in self.mdVols:
-            for i in range(self.numberOfSeedsPerRef.get()):
-                outputVol = "%d@%s" % (index, volStack)
-                generatedVol = join(grDir, "vol%03dextra/iter%03d/vol%06d.vol" % (index, 1, 1))
-                copyVols.append((outputVol, generatedVol))
-                self.insertProjMatchStep(files[index-1], join(grDir, 'vol%03d' % index), self.mdVols.getValue(xmipp.MDL_IMAGE, idx), 1, 
-                                    self.initialMapIsAmplitudeCorrected)
-                #self.mdVols.setValue(MDL_IMAGE, outputVol, idx)
-                index += 1
-                
-        for outVol, genVol in copyVols:
-            self.ParamsDict.update({'outVol': outVol, 'genVol':genVol})
-            self.ParamsStr = '-i %(genVol)s -o %(outVol)s'
-            self._insertRunJobStep('xmipp_image_convert', self.ParamsStr % self.ParamsDict, numberOfMpi=1)
-            
-        # Seed generation with MLF always does amplitude correction
-        self.seedsAreAmplitudeCorrected.set(True)
-
-    def insertProjMatchStep(self, inputImg, oRoot, initialVols, numberOfIters, amplitudCorrected):
-        self.ParamsDict.update({
-                         '_ImgMd': inputImg,
-                         '_ORoot': oRoot,
-                         '_InitialVols': initialVols,
-                         '_NumberOfIterations': numberOfIters,
-                         'symmetry':self.symmetry.get(),
-                         'angularSampling': self.angularSampling.get(),
-                         'extraParams': self.extraParams.get(),
-                         'numberOfThreads': self.numberOfThreads.get(),
-                         'highResLimit': self.highResLimit.get(),
-                         'samplingRate': self.samplingRate,
-                         'reconstructionMethod': self.getEnumText('reconstructionMethod'),
-                         'aRTExtraParams': self.aRTExtraParams.get(),
-                         'fourierExtraParams': self.fourierExtraParams.get()
-                        })
-        self.ParamsStr = "-i %(_ImgMd)s --oroot %(_ORoot)s --ref %(_InitialVols)s --iter %(_NumberOfIterations)d " + \
-                         "--sym %(symmetry)s --ang %(angularSampling)s"
-        if self.aRTExtraParams.hasValue(): self.ParamsStr += " %(extraParams)s"
-#        if self.NumberOfReferences > 1:
-#            self.ParamsStr += " --nref %(NumberOfReferences)s"
-        if self.numberOfThreads.get() > 1:
-            self.ParamsStr += " --thr %(numberOfThreads)d"
-        if self.doNorm.get():
-            self.ParamsStr += " --norm"
-        
-        if self.doMlf.get():
-            if not self.doCorrectAmplitudes.get():
-                self.ParamsStr += " --no_ctf"
-            if not self.areImagesPhaseFlipped.get():
-                self.ParamsStr += " --not_phase_flipped"
-            if not amplitudCorrected:
-                self.ParamsStr += " --ctf_affected_refs"
-            if self.highResLimit > 0:
-                self.ParamsStr += " --limit_resolution 0 %(highResLimit)f"
-            self.ParamsStr += ' --sampling_rate %(samplingRate)f'
-
-        self.ParamsStr += " --recons %(reconstructionMethod)s "
-        
-        if self.reconstructionMethod.get() == self.WLSART:
-            if self.aRTExtraParams.hasValue(): self.ParamsStr += " %(aRTExtraParams)s"
-        else:
-            if self.fourierExtraParams.hasValue(): self.ParamsStr += " %(fourierExtraParams)s" 
-            
-        self._insertRunJobStep('xmipp_%s_refine3d' % self.getProgramId(), self.ParamsStr % self.ParamsDict)
-        
-    def renameOutput(self, WorkingDir, ProgId):
-        ''' Remove ml2d prefix from:
-            ml2dclasses.stk, ml2dclasses.xmd and ml2dimages.xmd'''
-        prefix = '%s2d' % ProgId
-        for f in ['%sclasses.stk', '%sclasses.xmd', '%simages.xmd']:
-            f = join(WorkingDir, f % prefix)
-            nf = f.replace(prefix, '')
-            shutil.move(f, nf)
+        self.inputParticlesFn = createXmippInputImages(self, self.inputParticles.get())
+        #create CTF groups
+        if self.doCTFCorrection:
+            # create ctf model files 
+            verifyFiles += [self.getFilename(k) \
+                            for k in ['CTFGroupSummary',
+                                      'StackCTFs',
+                                      'StackWienerFilters',
+                                      'SplitAtDefocus']]
+        _dataBase.insertStep('executeCtfGroupsStep', verifyfiles=verifyFiles
+                                               , CTFDatName=self.CTFDatName#
+                                               , CtfGroupDirectory=self.CtfGroupDirectory
+                                               , CtfGroupMaxDiff=self.CtfGroupMaxDiff
+                                               , CtfGroupMaxResol=self.CtfGroupMaxResol
+                                               , CtfGroupRootName=self.CtfGroupRootName
+                                               , DataArePhaseFlipped=self.DataArePhaseFlipped
+                                               , DoAutoCtfGroup=self.DoAutoCtfGroup
+                                               , DoCtfCorrection=self.DoCtfCorrection
+                                               , PaddingFactor=self.PaddingFactor
+                                               , SamplingRate=self.ResolSam
+                                               , SelFileName=self.SelFileName
+                                               , SplitDefocusDocFile=self.SplitDefocusDocFile
+                                               , WienerConstant=self.WienerConstant)
+                                                    
+    def _insertIterationSteps(self):
+        pass
+                                                    
+    def _insertEndSteps(self):
+        pass
                                                     
     def createOutput(self):
         lastIter = 'iter%03d' % self.numberOfIterations.get()
@@ -946,3 +791,64 @@ is ("2x.15 2x0.1", i.e.,
             
         #TODO: Check images dimension when it is implemented on SetOFImages class
         return validateMsgs
+
+    def executeCtfGroupsStep (self,
+                         CTFDatName,# Fn with CTF info ctf_model
+                         CtfGroupDirectory,# o of this program goes to this directory
+                         CtfGroupMaxDiff,
+                         CtfGroupMaxResol,
+                         CtfGroupRootName,#NO
+                         DataArePhaseFlipped,
+                         DoAutoCtfGroup,
+                         doCtfCorrection,#
+                         PaddingFactor,
+                         SamplingRate ,
+                         inputParticlesFn,#metadata with particles
+                         SplitDefocusDocFile,
+                         WienerConstant,
+                         ):
+        
+        makePath(CtfGroupDirectory)
+    
+        if not doCtfCorrection:
+            md = xmipp.MetaData(inputParticlesFn)
+            outFn = self._ctfBlockName('ctfGroup', 1) +\
+                    join(CtfGroupDirectory, self.ctfGroupPreffix) +\
+                     self.ctfGroupSuffix
+            md.write(outFn)
+        else:
+            MDctfdata = xmipp.MetaData();
+            MDctfdata.read(CTFDatName)
+        
+            MDsel = xmipp.MetaData();
+            MDsel.read(inputParticlesFn)
+            MDctfdata.intersection(MDsel, xmipp.MDL_IMAGE)
+            tmpCtfdat = uniqueFilename(CTFDatName)
+            MDctfdata.write(tmpCtfdat)
+            command = \
+                      ' --ctfdat ' + tmpCtfdat + \
+                      ' -o ' + CtfGroupDirectory + '/' + CtfGroupRootName + ':stk'\
+                      ' --wiener --wc ' + str(WienerConstant) + \
+                      ' --pad ' + str(PaddingFactor) + \
+                      ' --sampling_rate ' + str (SamplingRate)
+        
+            if (DataArePhaseFlipped):
+                command += ' --phase_flipped '
+        
+            if (DoAutoCtfGroup):
+                command += ' --error ' + str(CtfGroupMaxDiff) + \
+                           ' --resol ' + str(CtfGroupMaxResol)
+            else:
+                if (len(SplitDefocusDocFile) > 0):
+                    command += ' --split ' + SplitDefocusDocFile
+                else:
+                    message = "Error: for non-automated ctf grouping, please provide a docfile!"
+                    print '* ', message
+                    _log.info(message)
+                    sys.exit()
+            
+            runJob(_log, "xmipp_ctf_group", command)
+    #    fn = CtfGroupDirectory + '/'+\
+    #                  CtfGroupRootName+\
+    #                 'Info.xmd'
+    #    MD = MetaData(fn)

@@ -29,7 +29,6 @@ from pyworkflow.em import *
 from pyworkflow.tests import *
 from pyworkflow.em.packages.xmipp3 import *
 
-
 # Some utility functions to import micrographs that are used
 # in several tests.
 class TestXmippBase(unittest.TestCase):
@@ -78,7 +77,9 @@ class TestXmippBase(unittest.TestCase):
         if cls.protImport.outputParticles is None:
             raise Exception('Import of images: %s, failed. outputParticles is None.' % pattern)
         return cls.protImport        
- 
+
+
+
 class TestImportMicrographs(TestXmippBase):
     
     @classmethod

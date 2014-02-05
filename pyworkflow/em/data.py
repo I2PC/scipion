@@ -53,6 +53,7 @@ class Acquisition(EMObject):
     """Acquisition information"""
     def __init__(self, **args):
         EMObject.__init__(self, **args)
+        #TODO I (ROB) think this values should not have default
         self.magnification = Float(60000)
         self.voltage = Float(300)
         self.sphericalAberration = Float(2.0)
@@ -69,21 +70,30 @@ class CTFModel(EMObject):
     """ Represents a generic CTF model. """
     def __init__(self, **args):
         EMObject.__init__(self, **args)
-        self.defocusU = Float()
-        self.defocusV = Float()
-        self.defocusAngle = Float()
+        self.defocusU = Float(args.get('defocusU', None))
+        self.defocusV = Float(args.get('defocusV', None))
+        self.defocusAngle = Float(args.get('defocusAngle', None))
         self.psdFile = String()
         self.micFile = String()
         
     def getDefocusU(self):
         return self.defocusU.get()
-    
+        
+    def setDefocusU(self, value):
+        self.defocusU.set(value)
+        
     def getDefocusV(self):
         return self.defocusV.get()
-
+        
+    def setDefocusV(self, value):
+        self.defocusV.set(value)
+        
     def getDefocusAngle(self):
         return self.defocusAngle.get()
-
+        
+    def setDefocusAngle(self, value):
+        self.defocusAngle.set(value)
+        
     def copyInfo(self, other):
         self.copyAttributes(other, 'defocusU', 'defocusV',
                             'defocusAngle', 'psdFile')
@@ -98,6 +108,7 @@ class Image(EMObject):
         self._filename = String()
         self._samplingRate = Float()
         self._ctfModel = None
+        self._acquisition = None
         
     def getSamplingRate(self):
         """ Return image sampling rate. (A/pix) """
@@ -160,6 +171,12 @@ class Image(EMObject):
     
     def setCTF(self, newCTF):
         self._ctfModel = newCTF
+        
+    def getAcquisicion(self):
+        return self._acquisition
+    
+    def setAcquisicion(self, acquisition):
+        self._acquisition = acquisition
         
     def __str__(self):
         """ String representation of an Image. """
