@@ -174,9 +174,18 @@ class XmippProtAlignVolume(ProtAlignVolume):
                       label='Initial scale', condition='alignmentAlgorithm==%d' % ALIGN_ALGORITHM_LOCAL,
                       help='')  
         
+        form.addParallelSection()
+        
         
     def _insertAllSteps(self):
-        # Convert input vols if necessary
+        initialStepId = self._insertFunctionStep('initialize')
+        
+        self._insertFunctionStep('prepareExecution', initialStepId) 
+        
+        self._insertFunctionStep('createOutput')
+        
+    def initialize(self):
+         # Convert input vols if necessary
         self.volsFn = createXmippInputVolumes(self, self.inputVolumes.get())
         self.volsMd = xmipp.MetaData(self.volsFn)
         
@@ -185,20 +194,20 @@ class XmippProtAlignVolume(ProtAlignVolume):
         self.volRef = self.volRefMd.getValue(xmipp.MDL_IMAGE, 1)
         
         if self.applyMask.get() and self.maskType.get() == ALIGN_MASK_BINARY_FILE:
-            self.volMask = createXmippInputVolumes(self, self.maskFile.get())
-        
+            self.volMask = createXmippInputVolumes(self, self.maskFile.get())   
+
+    def prepareExecution(self, initialStepId):
         # Check volsMd is a volume or a stack
         if self.volsMd.size()==1:
-            self.prepareCommand(self.volsFn)
+            self._insertFunctionStep('executeCommand', self.volsFn) 
+#            self.prepareCommand(self.volsFn)
         else:
             for i, idx in enumerate(self.volsMd):
                 path = self.volsMd.getValue(xmipp.MDL_IMAGE, idx)
-                self.prepareCommand(path)
-        
-        self._insertFunctionStep('createOutput')
-
+                self._insertFunctionStep('executeCommand', path,
+                                    prerequisites=[initialStepId])
     
-    def prepareCommand(self, path):
+    def executeCommand(self, path):
         args="--i1 %s --i2 %s --apply" % (self.volRef, path)
         
         if self.applyMask.get():
@@ -238,7 +247,7 @@ class XmippProtAlignVolume(ProtAlignVolume):
       
     def createOutput(self):
         classes2DSet = self.inputClasses.get()
-        fn = self._getPath('proposedVolumes.xmd')
+        fn = self._getPath('volume_aligned.vol')
         md = xmipp.MetaData(fn)
         md.addItemId()
         md.write(fn)
@@ -256,30 +265,15 @@ class XmippProtAlignVolume(ProtAlignVolume):
         if not hasattr(self, 'outputVolumes'):
             summary.append("Output volumes not ready yet.")
         else:
-            summary.append("RANSAC iterations: %d"%self.nRansac.get())
-        
-            for n in range(self.numVolumes.get()):
-    
-                fnBase='proposedVolume%05d'%n
-                fnRoot=self._getPath(fnBase+".xmd")
-                               
-                if os.path.isfile(fnRoot):
-                    md=MetaData(fnRoot)
-                    if (md.size()< 5) :
-                        summary.append("Num of inliers for %s too small and equal to %d"%(fnRoot,md.size()))
-                        summary.append("Decrease the value of Inlier Threshold parameter and run again")
-                                    
-            fnRoot=self._getTmpPath("ransac00000.xmd")    
-            
-            if os.path.isfile(fnRoot):
-                md=MetaData(fnRoot)
-            
-                if (md.size()< 5) :
-                    summary.append("Num of random samples too small and equal to %d"%(md.size()))
-                    summary.append("If the option Dimensionality reduction is on, increase the number of grids per dimension")
-                    summary.append("If the option Dimensionality reduction is off, increase the number of random samples")
+            summary.append("Reference volume: [%s] "%self.ReferenceVolume)
+            summary.append("Input volume: [%s] "%self.InputVolume)
+            summary.append("Alignment method: %s"%self.AlignmentMethod)
                 
-            if self.useSA:
-                summary.append("Simulated annealing used")
             return summary
+        
+    def _citations(self):
+        papers=[]
+        if self.alignmentAlgorithm.get() == ALIGN_ALGORITHM_FAST_FOURIER:
+            papers.append('Chen, JSB (2013) [http://www.ncbi.nlm.nih.gov/pubmed/23523719]')
+        return papers
             
