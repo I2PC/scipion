@@ -191,9 +191,12 @@
 }
 
 #tabs a:hover {
-	color:Firebrick;
+/* 	color:Firebrick; */
 }
 
+.tabContents a:hover {
+	color:Firebrick;
+}
 
 
 /* jsPlumb */

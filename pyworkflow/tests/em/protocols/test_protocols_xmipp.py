@@ -211,49 +211,58 @@ class TestXmippExtractParticles(TestXmippBase):
         pattern = getInputPath('Micrographs_BPV3', '*.mrc')
         cls.protImport_ori = cls.runImportMicrograph(pattern, samplingRate=1.237, voltage=300, sphericalAberration=2, scannedPixelSize=None, magnification=56000)        
         cls.protPP = cls.runFakedPicking(protImport.outputMicrographs, 'Picking_XmippBPV3_Down3')
+        downFactor = 2
+        cls.protDown = XmippProtPreprocessMicrographs(doDownsample=True, downFactor=downFactor)
+        cls.protDown.inputMicrographs.set(cls.protImport.outputMicrographs)
+        cls.proj.launchProtocol(cls.protDown, wait=True)
+        cls.protCTF = XmippProtCTFMicrographs()                
+        cls.protCTF.inputMicrographs.set(cls.protDown.outputMicrographs)     
+        cls.proj.launchProtocol(cls.protCTF, wait=True)   
 
-    def testExtractSameAsPicking(self):
-        print "Run extract particles with downsampling factor equal to the one at picking"
-        protExtract = XmippProtExtractParticles(boxSize=171, downsampleType=self.SAME_AS_PICKING, 
-                                                doFlip=False)
-        protExtract.inputCoordinates.set(self.protPP.outputCoordinates)
-        self.proj.launchProtocol(protExtract, wait=True)
-        
-        self.assertIsNotNone(protExtract.outputParticles, "There was a problem with the extract particles")
-        
-    def testExtractOriginal(self):
-        print "Run extract particles with downsampling factor equal to the original micrographs"
-        protExtract = XmippProtExtractParticles(boxSize=512, downsampleType=self.ORIGINAL, doFlip=False)
-        protExtract.inputCoordinates.set(self.protPP.outputCoordinates)
-        protExtract.inputMicrographs.set(self.protImport_ori.outputMicrographs)
-        self.proj.launchProtocol(protExtract, wait=True)
-        
-        self.assertIsNotNone(protExtract.outputParticles, "There was a problem with the extract particles")
-
-    def testExtractOther(self):
-        print "Run extract particles with downsampling factor equal to other"
-        protExtract = XmippProtExtractParticles(boxSize=256, downsampleType=self.OTHER, downFactor=2,doFlip=False)
-        protExtract.inputCoordinates.set(self.protPP.outputCoordinates)
-        protExtract.inputMicrographs.set(self.protImport_ori.outputMicrographs)
-        self.proj.launchProtocol(protExtract, wait=True)
-        
-        self.assertIsNotNone(protExtract.outputParticles, "There was a problem with the extract particles")
-        
-#    def testExtractCTF(self):
-#        print "Run extract particles with CTF"
+#    def testExtractSameAsPicking(self):
+#        print "Run extract particles with downsampling factor equal to the one at picking"
+#        protExtract = XmippProtExtractParticles(boxSize=171, downsampleType=self.SAME_AS_PICKING, 
+#                                                doFlip=False)
 #        
-#        protExtract = XmippProtExtractParticles(boxSize=256, downsampleType=self.OTHER, downFactor=2)
-#        # Update the setofmicrographs associated to the coordinates to set the CTF model
-#        micsXmd = getInputPath('Micrographs_BPV3_Down3', 'micrographs.xmd')
-#        mics = XmippSetOfMicrographs(micsXmd)
-#        mics.setSamplingRate(3.711)
-#        mics.setCTF(True)
-#        self.protPP.outputCoordinates.setMicrographs(mics)
+#        protExtract.inputMicrographs.set(self.protImport.outputMicrographs)
+#        protExtract.inputCoordinates.set(self.protPP.outputCoordinates)
+#        self.proj.launchProtocol(protExtract, wait=True)
+#
+#        self.assertIsNotNone(protExtract.outputParticles, "There was a problem with the extract particles")
+#        
+#    def testExtractOriginal(self):
+#        print "Run extract particles with downsampling factor equal to the original micrographs"
+#        protExtract = XmippProtExtractParticles(boxSize=512, downsampleType=self.ORIGINAL, doFlip=False)
 #        protExtract.inputCoordinates.set(self.protPP.outputCoordinates)
 #        protExtract.inputMicrographs.set(self.protImport_ori.outputMicrographs)
 #        self.proj.launchProtocol(protExtract, wait=True)
 #        
-#        self.assertIsNotNone(protExtract.outputParticles, "There was a problem with the extract particles") 
+#        self.assertIsNotNone(protExtract.outputParticles, "There was a problem with the extract particles")
+#
+#    def testExtractOther(self):
+#        print "Run extract particles with downsampling factor equal to other"
+#        protExtract = XmippProtExtractParticles(boxSize=256, downsampleType=self.OTHER, downFactor=2,doFlip=False)
+#        protExtract.inputCoordinates.set(self.protPP.outputCoordinates)
+#        protExtract.inputMicrographs.set(self.protImport_ori.outputMicrographs)
+#        self.proj.launchProtocol(protExtract, wait=True)
+#        
+#        self.assertIsNotNone(protExtract.outputParticles, "There was a problem with the extract particles")
+        
+    def testExtractCTF(self):
+        print "Run extract particles with CTF"#        
+        protExtract = XmippProtExtractParticles(boxSize=256, downsampleType=self.OTHER, downFactor=2)
+        # Update the setofmicrographs associated to the coordinates to set the CTF model
+        #micsXmd = getInputPath('Micrographs_BPV3_Down3', 'micrographs.xmd')
+        #mics = XmippSetOfMicrographs(micsXmd)
+        #mics.setSamplingRate(3.711)
+        #mics.setCTF(True)
+        #self.protPP.outputCoordinates.setMicrographs(mics)
+        protExtract.inputCoordinates.set(self.protPP.outputCoordinates)
+        protExtract.inputMicrographs.set(self.protImport_ori.outputMicrographs)
+        protExtract.ctfRelations.set(self.protCTF.get())
+        self.proj.launchProtocol(protExtract, wait=True)
+        
+        self.assertIsNotNone(protExtract.outputParticles, "There was a problem with the extract particles") 
 
      
 class TestXmippScreenParticles(TestXmippBase):

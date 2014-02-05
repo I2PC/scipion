@@ -45,7 +45,7 @@ import matplotlib_image
 from pyworkflow.utils.path import findResource
 from tree import BoundTree
 from text import TaggedText
-from pyworkflow.utils.messages_properties import Message, Icon
+from pyworkflow.utils.properties import Message, Icon
 
 from pyworkflow.em.data import Image    
 import pyworkflow.utils.which 
@@ -201,8 +201,8 @@ class FileBrowser():
 #        addFm('out', 'out.gif', ['.out'],textFillMenu, defaultOnClick, textOnDoubleClick)
 #        addFm('err', 'err.gif', ['.err'],textFillMenu, defaultOnClick, textOnDoubleClick)
 #        addFm('log', 'log.gif', ['.log'],textFillMenu, defaultOnClick, textOnDoubleClick)
-        addFm('folder', 'folderopen.gif', [])
-        addFm('default', 'generic_file.gif', [])
+        addFm('folder', 'fa-folder-open.png', [])
+        addFm('default', 'fa-file-o.png', [])
         addFm('up', 'up.gif', [])
 #        addFm('pdb', 'pdbSmall.gif', CHIMERA_EXTENSIONS, pdbFillMenu, defaultOnClick, pdbOnDoubleClick)
 #        

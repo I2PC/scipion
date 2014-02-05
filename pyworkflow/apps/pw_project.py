@@ -44,7 +44,7 @@ from pyworkflow.protocol import *
 from pyworkflow.protocol.params import *
 from pyworkflow.mapper import SqliteMapper, XmlMapper
 from pyworkflow.project import Project
-from pyworkflow.utils.messages_properties import Message
+from pyworkflow.utils.properties import Message
 
 import pyworkflow.gui as gui
 from pyworkflow.gui import getImage

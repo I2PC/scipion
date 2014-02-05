@@ -1,6 +1,6 @@
 {% extends 'base_grid.html' %}
 
-{% block title %} - {{messages_properties.SHOWJ_TITLE}}{% endblock %}
+{% block title %} - {{msg.SHOWJ_TITLE}}{% endblock %}
 
 {% block content_head %}
 <!-- CSS -->
@@ -121,7 +121,7 @@ function setImageSize(refreshElement){
 	tableImages_height=tableImages_width*ratio
 		
 	if (isNaN(tableImages_width) || tableImages_width>{{form.imageMaxWidth.value}} || tableImages_width<{{form.imageMinWidth.value}} || tableImages_height>{{form.imageMaxHeight.value}} || tableImages_height<{{form.imageMinHeight.value}}){
-		alert('{{messages_properties.ERROR_DIMENSIONS}}' + tableImages_width + 'px x ' + tableImages_height +'px.')
+		alert('{{msg.ERROR_DIMENSIONS}}' + tableImages_width + 'px x ' + tableImages_height +'px.')
 		zoom_element.val(previousZoom)
 		setImageSize(true)
 		return;
@@ -369,12 +369,12 @@ function setImageSize(refreshElement){
 <!-- Hidden menu for multiple selection tool -->
 <div class="multipleSelectionToolContainer" id="multipleSelectionTool">
 	{% if dataset.getTable.hasEnabledColumn %}
-	<div class="multipleSelectionToolItem" onclick="multipleEnableDisableImage('enable')">{{messages_properties.LABEL_ENABLE}}</div>
-	<div class="multipleSelectionToolItem" onclick="multipleEnableDisableImage('disable')">{{messages_properties.LABEL_DISABLE}}</div>
+	<div class="multipleSelectionToolItem" onclick="multipleEnableDisableImage('enable')">{{msg.LABEL_ENABLE}}</div>
+	<div class="multipleSelectionToolItem" onclick="multipleEnableDisableImage('disable')">{{msg.LABEL_DISABLE}}</div>
 	{% endif %}
-	<div class="multipleSelectionToolItem" onclick="multipleSelect('all')">{{messages_properties.LABEL_SELECT_ALL}}</div>
-	<div class="multipleSelectionToolItem" onclick="multipleSelect('from')">{{messages_properties.LABEL_SELECT_FROM}}</div>
-	<div class="multipleSelectionToolItem" onclick="multipleSelect('to')">{{messages_properties.LABEL_SELECT_TO}}</div>
+	<div class="multipleSelectionToolItem" onclick="multipleSelect('all')">{{msg.LABEL_SELECT_ALL}}</div>
+	<div class="multipleSelectionToolItem" onclick="multipleSelect('from')">{{msg.LABEL_SELECT_FROM}}</div>
+	<div class="multipleSelectionToolItem" onclick="multipleSelect('to')">{{msg.LABEL_SELECT_TO}}</div>
 </div>	
 {% endblock %}	
 

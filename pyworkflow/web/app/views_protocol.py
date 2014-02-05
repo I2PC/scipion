@@ -71,6 +71,7 @@ def form(request):
     wizards = findWizards(protocol, WEB_DJANGO)
     
     protocol.htmlCitations = parseText(protocol.citations())
+    protocol.htmlDoc = parseText(protocol.getDoc())
     
     for section in protocol._definition.iterSections():
         for paramName, param in section.iterParams():

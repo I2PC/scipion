@@ -8,6 +8,10 @@ scipion tests classes.test_process
 # For Xmipp protocols execution
 scipion tests em.protocols.test_protocols_xmipp
 
+For Xmipp protocol create Mask 3D
+scipion tests em.protocols.test_protocol_xmipp_masks3D
+
+
 # For a specific protocol 
 scipion tests em.protocols.test_protocols_xmipp.TestXmippCTFEstimation 
 # or

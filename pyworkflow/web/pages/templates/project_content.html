@@ -1,5 +1,5 @@
 {% extends 'base_flex.html' %}
-{% block title %} - {{messages_properties.LABEL_PROJECT}}{{projectName}}{% endblock %}
+{% block title %} - {{msg.LABEL_PROJECT}}{{projectName}}{% endblock %}
 
 {% block head %}
 <!-- CSS -->
@@ -80,7 +80,7 @@
 {% block sideLeft %}
 <div id="westContainer">
 	<div class="viewTree">
-		<label>{{messages_properties.LABEL_WORKFLOW}}</label>
+		<label>{{msg.LABEL_WORKFLOW}}</label>
 		<select id="viewsTree" name="viewsTree" onChange="javascript:changeTreeView();">
 			{% for choice in choices %}
 			 	<option value="{{forloop.counter0}}" {% if forloop.counter0 == choiceSelected %} selected {% endif %}>{{choice}}</option> 
@@ -96,22 +96,22 @@
 {% block contentNorth %}
 <span id="toolbar" style="float:right;">
 	<span id="treeTool">
-		<a href="javascript:switchGraph();"><i class="fa fa-sitemap" style="margin-right:5px"></i>{{messages_properties.LABEL_TREE}}</a>
+		<a href="javascript:switchGraph();"><i class="fa fa-sitemap" style="margin-right:5px"></i>{{msg.LABEL_TREE}}</a>
 	</span>
 	<span id="listTool" style="display:none;">
-		<a href="javascript:switchGraph();"><i class="fa fa-bars" style="margin-right:5px"></i>{{messages_properties.LABEL_LIST}}</a>
+		<a href="javascript:switchGraph();"><i class="fa fa-bars" style="margin-right:5px"></i>{{msg.LABEL_LIST}}</a>
 	</span>
 	<span id="refreshTool" style="display:both;">
-		<a href="javascript:refreshRuns(0);"><i class="fa fa-refresh fa-spin" style="margin-right:5px"></i>{{messages_properties.LABEL_REFRESH}}</a>
+		<a href="javascript:refreshRuns(0);"><i class="fa fa-refresh fa-spin" style="margin-right:5px"></i>{{msg.LABEL_REFRESH}}</a>
 	</span>
 </span>
 <div id="toolbar" style="display: none;">
-	<span><a id="editTool" href=""><i class="fa fa-pencil" style="margin-right:5px"></i>{{messages_properties.LABEL_EDIT}}</a></span>
-	<span><a id="copyTool" href=""><i class="fa fa-copy" style="margin-right:5px"></i>{{messages_properties.LABEL_COPY}}</a></span>
-	<span><a id="deleteTool" href=""><i class="fa fa-trash-o" style="margin-right:5px"></i>{{messages_properties.LABEL_DELETE}}</a></span>
-	<span><a id="browseTool" href=""><i class="fa fa-folder-open" style="margin-right:5px"></i>{{messages_properties.LABEL_BROWSE}}</a></span>
-	<span id="stopTool"><a id="stopTool" href=""><i class="fa fa-stop" style="margin-right:5px"></i>{{messages_properties.LABEL_STOP}}</a></span>
-<!-- 	<span id="analyzeTool"><a id="analyzeTool" href=""><i class="fa fa-eye" style="margin-right:5px"></i>{{messages_properties.LABEL_ANALYZE}}</a></span> -->
+	<span><a id="editTool" href=""><i class="fa fa-pencil" style="margin-right:5px"></i>{{msg.LABEL_EDIT}}</a></span>
+	<span><a id="copyTool" href=""><i class="fa fa-copy" style="margin-right:5px"></i>{{msg.LABEL_COPY}}</a></span>
+	<span><a id="deleteTool" href=""><i class="fa fa-trash-o" style="margin-right:5px"></i>{{msg.LABEL_DELETE}}</a></span>
+	<span><a id="browseTool" href=""><i class="fa fa-folder-open" style="margin-right:5px"></i>{{msg.LABEL_BROWSE}}</a></span>
+	<span id="stopTool"><a id="stopTool" href=""><i class="fa fa-stop" style="margin-right:5px"></i>{{msg.LABEL_STOP}}</a></span>
+<!-- 	<span id="analyzeTool"><a id="analyzeTool" href=""><i class="fa fa-eye" style="margin-right:5px"></i>{{msg.LABEL_ANALYZE}}</a></span> -->
 </div>
 <div id="runsInfo">
 	{% include "run_table_graph.html" %}
@@ -120,40 +120,40 @@
 
 {% block contentCenter %}
 <div class="tabContaier" id="tabs">
-	<span id="analyzeTool"><a id="analyzeTool" href=""><i class="fa fa-eye" style="margin-right:5px"></i>{{messages_properties.LABEL_ANALYZE}}</a></span>
-	<ul class="listTabs">
-		<li><a href="#tab-data">{{messages_properties.LABEL_DATA}}</a></li>
-		<li><a href="#tab-summary">{{messages_properties.LABEL_SUMMARY}}</a></li>
-		<li><a href="#tab-methods">{{messages_properties.LABEL_METHODS}}</a></li>
-		<li><a href="#tab-logs-output">{{messages_properties.LABEL_LOGS_OUTPUT}}</a></li>
-		<li><a href="#tab-logs-error">{{messages_properties.LABEL_LOGS_ERROR}}</a></li>
+	<span><a id="analyzeTool" class="btn buttonRed" href=""><i class="fa fa-eye" style="margin-right:5px"></i>{{msg.LABEL_ANALYZE}}</a></span>
+	<ul class="listTabs" id="tabs">
+		<li><a href="#tab-data">{{msg.LABEL_DATA}}</a></li>
+		<li><a href="#tab-summary">{{msg.LABEL_SUMMARY}}</a></li>
+		<li><a href="#tab-methods">{{msg.LABEL_METHODS}}</a></li>
+		<li><a href="#tab-logs-output">{{msg.LABEL_LOGS_OUTPUT}}</a></li>
+		<li><a href="#tab-logs-error">{{msg.LABEL_LOGS_ERROR}}</a></li>
 	</ul>
 	<div id="tab-data" class="tabContents">
 		<div id="listEx">
 			<ul>
 				<li>
-					<strong>{{messages_properties.LABEL_INPUT}}</strong>
+					<strong>{{msg.LABEL_INPUT}}</strong>
 					<ul id='protocol_input'></ul>
 				</li>
 				<br />
 				<li>
-					<strong>{{messages_properties.LABEL_OUTPUT}}</strong>
+					<strong>{{msg.LABEL_OUTPUT}}</strong>
 					<ul id='protocol_output'></ul>
 				</li>
 			</ul>
 		</div>
 	</div>
 	<div id="tab-summary" class="tabContents">
-		<p>{{messages_properties.NO_INFO_SUMMARY}}</p>
+		<p>{{msg.NO_INFO_SUMMARY}}</p>
 	</div>
 	<div id="tab-methods" class="tabContents">
-		<p>{{messages_properties.NO_INFO_METHODS}}</p>
+		<p>{{msg.NO_INFO_METHODS}}</p>
 	</div>
 	<div id="tab-logs-output" class="tabContents">
-		<p>{{messages_properties.NO_INFO_LOGS}}</p>
+		<p>{{msg.NO_INFO_LOGS}}</p>
 	</div>
 	<div id="tab-logs-error" class="tabContents">
-		<p>{{messages_properties.NO_INFO_LOGS}}</p>
+		<p>{{msg.NO_INFO_LOGS}}</p>
 	</div>
 </div>
 {% endblock %}

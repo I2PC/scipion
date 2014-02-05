@@ -444,31 +444,20 @@ table#data tr:nth-child(even) {
 }
 
 
-
 span #analyzeTool{
 	float: right;
-	margin: 0.5em 0.5em 0em 0em;
-/* 	background-color: #f2f2f2; */
-	width: 10em;
-	height:1.4em;
-	font-weight:bold;
-	text-align: center;
+	margin: 0.25em 0.25em 0em 0.35em;
 	color:white;
-    border-radius: 5px;
-	border: 1px solid #727272;
-	background: Firebrick;
-/*     background: -webkit-gradient(linear, left top, left bottom, from(#f0f0f0), to(#c2c2c2)); */
-/*     background: -moz-linear-gradient(top, #f0f0f0, #c2c2c2); */
-/*     background: linear-gradient(to bottom, #f0f0f0, #c2c2c2); */
-/*     -webkit-box-shadow: #c4c4c4 0px 0px 0px 0px; */
-/*     -moz-box-shadow: #c4c4c4 0px 0px 0px 0px; */
-/*     box-shadow: #c4c4c4 0px 0px 0px 0px; */
-/*     text-shadow: #ffffff 1px 1px 1px; */
+	border-radius: 5px;
+
+/* 	font-weight:bold; */
+/* 	text-align: center; */
+/* 	background-color: #f2f2f2; */
+/* 	width: 10em; */
+/* 	height:1.4em; */
+/* 	border: 1px solid #727272; */
 }
 
-span #analyzeTool:hover{
-	background: white;
-}
 
 
 
