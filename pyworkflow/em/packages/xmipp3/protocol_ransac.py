@@ -34,6 +34,7 @@ from xmipp import MetaData, MD_APPEND, MDL_MAXCC, MDL_WEIGHT, MDL_IMAGE, \
 #    removeFilenamePrefix
 from pyworkflow.utils.path import moveFile, cleanPath, copyFile, removeExt
 from protlib_xmipp import getMdSize
+#from xmipp3 import projMatch
 
 class XmippProtRansac(ProtInitialVolume):
     """ Protocol to obtain a set of initial volumes. """
@@ -143,7 +144,7 @@ class XmippProtRansac(ProtInitialVolume):
         
         # Look for threshold, evaluate volumes and get the best
         if self.initialVolume.hasValue():
-            self._insertFunctionStep("runJob",programname="rm", params=self._getTmpPath("gallery_InitialVolume*"), NumberOfMpi=1)
+            self._insertRunJobStep("rm", params=self._getTmpPath("gallery_InitialVolume*"), NumberOfMpi=1)
             
         self._insertFunctionStep("getCorrThresh",
                                  prerequisites=deps) # Make estimation steps indepent between them)
@@ -153,7 +154,7 @@ class XmippProtRansac(ProtInitialVolume):
         deps = [] # Store all steps ids, final step createOutput depends on all of them
         # Refine the best volumes
         for n in range(self.numVolumes.get()):
-            fnBase='proposedVolume%05d'%n
+            fnBase='proposedVolume%05d' % n
             fnRoot=self._getPath(fnBase)
                     
             # Simulated annealing
