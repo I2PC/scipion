@@ -33,7 +33,7 @@ import tkFont
 
 from pyworkflow.object import OrderedObject
 from pyworkflow.utils.path import findResource
-from pyworkflow.utils.properties import Message
+from pyworkflow.utils.properties import Message, Color
 
 from os.path import join, exists, basename
 
@@ -53,7 +53,7 @@ cfgLabelBgColor = "white"
 cfgHighlightBgColor = cfgBgColor
 cfgButtonFgColor = "white"
 cfgButtonActiveFgColor = "white"
-cfgButtonBgColor = "#7D0709"
+cfgButtonBgColor = Color.RED_COLOR
 cfgButtonActiveBgColor = "#A60C0C"
 cfgEntryBgColor = "lemon chiffon" 
 cfgExpertLabelBgColor = "light salmon"

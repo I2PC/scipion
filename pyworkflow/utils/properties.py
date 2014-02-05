@@ -53,7 +53,7 @@ class Message():
     LABEL_PROJECT = 'Project '
     #-- Protocol Treeview --
     LABEL_WORKFLOW = 'Workflow View: '
-    LABEL_PROTTREE_NONE = 'No athletes.'
+    LABEL_PROTTREE_NONE = 'None'
     #-- Toolbar --
     LABEL_NEW = 'New'
     LABEL_NEW_ACTION = 'New     '

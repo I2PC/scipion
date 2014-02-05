@@ -46,7 +46,7 @@ from pyworkflow.protocol.params import *
 from pyworkflow.protocol import Protocol
 from dialog import showInfo, TextDialog, ListDialog
 from tree import TreeProvider
-from pyworkflow.utils.properties import Message, Icon
+from pyworkflow.utils.properties import Message, Icon, Color
 
 
 #-------------------- Variables wrappers around more complex objects -----------------------------
@@ -628,7 +628,7 @@ class FormWindow(Window):
             icon = Icon.ACTION_EXECUTE
         # Add Execute/Visualize button
         if not self.childMode:
-            btnExecute = Button(btnFrame, text=t, fg='white', bg='#7D0709', font=self.font, 
+            btnExecute = Button(btnFrame, text=t, fg='white', bg=Color.RED_COLOR, font=self.font, 
                                 image=self.getImage(icon), compound=tk.LEFT, 
                             activeforeground='white', activebackground='#A60C0C', command=self.execute)
             btnExecute.grid(row=0, column=2, padx=(5, 28), pady=5, sticky='se')
