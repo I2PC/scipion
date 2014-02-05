@@ -31,6 +31,8 @@ import Tkinter as tk
 import ttk, os, gui
 from pyworkflow.utils import *
 from widgets import Scrollable, Button
+from pyworkflow.utils.properties import Message, Color
+
 
 
 class HyperlinkManager:
@@ -38,7 +40,7 @@ class HyperlinkManager:
     http://effbot.org/zone/tkinter-text-hyperlink.htm """
     def __init__(self, text):
         self.text = text
-        self.text.tag_config("hyper", foreground="blue", underline=1)
+        self.text.tag_config("hyper", foreground=Color.RED_COLOR, underline=1)
         self.text.tag_bind("hyper", "<Enter>", self._enter)
         self.text.tag_bind("hyper", "<Leave>", self._leave)
         self.text.tag_bind("hyper", "<Button-1>", self._click)

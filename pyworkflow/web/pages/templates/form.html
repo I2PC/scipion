@@ -63,14 +63,13 @@
 			{% endif %}
 			<h3 id="protName" style="padding-top:25px;">
 				Protocol: {{protocol.getClassLabel}} 
-				<br />
-				<a id="referenceLink" href="javascript:infoPopup('{{msg.TITLE_DOC}}','{{protocol.htmlDoc|escapejs}}');" style="float:right">
-					<i class="fa fa-question-circle"></i>{{msg.TITLE_DOC}}&nbsp;	
-				</a>
-				<a id="referenceLink" href="javascript:infoPopup('{{msg.TITLE_HELP}}','{{protocol.htmlCitations|escapejs}}');" style="float:right">
-					<i class="fa fa-external-link"></i>{{msg.TITLE_CITE}}&nbsp;
-				</a>
 			</h3>
+			<a href="javascript:infoPopup('{{msg.TITLE_DOC}}','{{protocol.htmlDoc|escapejs}}');" style="float:right">
+				<i class="fa fa-question-circle"></i>&nbsp;{{msg.TITLE_DOC}}&nbsp;	
+			</a>
+			<a href="javascript:infoPopup('{{msg.TITLE_HELP}}','{{protocol.htmlCitations|escapejs}}');" style="float:right">
+				<i class="fa fa-external-link"></i>&nbsp;{{msg.TITLE_CITE}}&nbsp;
+			</a>
 		</div>
 		
 		<form id="protocolForm" action="/protocol/" method="POST" data-mode="">{% csrf_token %}
@@ -172,7 +171,7 @@
 						</tr>
 						<tr>
 							<td>
-								Citations{{msg.TITLE_QUEUE}}
+								{{msg.TITLE_QUEUE}}
 							</td>
 							<td>
 							  <input type="radio" id="queue_yes" name="{{msg.VAR_QUEUE}}" value="yes"/>{{msg.LABEL_QUEUE_YES}}
