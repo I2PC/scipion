@@ -33,10 +33,10 @@ from protocol_filters import XmippProcess
 from convert import createXmippInputImages, readSetOfParticles
 
 
-class XmippProtResizeAdvanced(XmippProcess):
+class XmippProtResize(XmippProcess):
     """ This class implement a protocol to change dimensions of the particles with Xmipp.
     """
-    _label = "resize particles advanced"
+    _label = "resize particles"
     
     def __init__(self):
         XmippProcess.__init__(self)
@@ -74,7 +74,7 @@ class XmippProtResizeAdvanced(XmippProcess):
         
         form.addParam('resizeSize', IntParam, default=0,
                       condition='useResizeOperation',
-                      label='New image size (px)',
+                      label='New image size resize (px)',
                       help='This is the size in pixels of the particle images.')
                
 #         form.addParam('resizeOperation', EnumParam, 
@@ -86,24 +86,25 @@ class XmippProtResizeAdvanced(XmippProcess):
 #                       '_crop_: you choose how many pixels you want to crop from each border. \n ')
 #         
 
-    def _defineSteps(self):
+    def _insertProcessStep(self, inputFn, outputFn, outputMd):
         
-        self._defineFilenames()
         cropSize = self.cropSize.get()
         windowSize = self.windowSize.get()
         
         print self.inputFn
         if self.useWindowOperation.get():
             print 'crop: ',self.getEnumText('windowOperation') 
-            args = ' -i %s -o %s --save_metadata_stack %s ' % (self.inputFn, self.outputStk, self.outputMd)
+#             args = ' -i %s -o %s --save_metadata_stack %s --keep_input_colums' % (self.inputFn, self.outputStk, self.outputMd)
             if self.getEnumText('windowOperation') == "crop":
-                args += " --crop %(cropSize)s "
+                args = self._args + " --crop %(cropSize)s "
             else:
-                args += " --window %(windowSize)s"
+                args = self._args + " --size %(windowSize)s"
+                
+            if outputFn != inputFn:
+                args += " -o " + outputFn
+            
             self._insertRunJobStep(self._programWindow, args % locals())
         
 #         if self.useResizeOperation:
 #             args = ""
             
-        self._insertFunctionStep('createOutput')
-

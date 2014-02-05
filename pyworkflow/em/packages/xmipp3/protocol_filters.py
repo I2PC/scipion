@@ -226,34 +226,3 @@ class XmippProtMask(XmippProcess):
         ImageHandler().convert(self.maskImage.get().getLocation(), (None, self.maskFn))
 
         
-class XmippProtResize(XmippProcess):
-    """ This class implement a protocol to change dimesions of the particles with Xmipp.
-    """
-    _label = "resize particles"
-    
-    def __init__(self):
-        XmippProcess.__init__(self)
-        self._program = "xmipp_transform_mask"
-        
-    def _defineProcessParams(self, form):        
-        form.addParam('resizeOperation', EnumParam, 
-                      choices=['resize', 'crop'], 
-                      default=0,
-                      label="Resize operation", display=EnumParam.DISPLAY_COMBO,
-                      help='Select how do you want to change the size of the particles. \n '
-                      '_resize_: you will provide the new size (in pixels) for your particles. \n '
-                      '_crop_: you choose how many pixels you want to crop from each border. \n ')
-        
-        form.addParam('newSize', IntParam, default=0,
-                      condition='resizeOperation == 0',
-                      label='New image size (px)',
-                      help='This is the size in pixels of the particle images.')       
-    
-        form.addParam('cropSize', IntParam, default=0,
-                      condition='resizeOperation == 1',
-                      label='Crop size (px)',
-                      help='This is the desired output size(in pixels) after cropping.') 
-
-    def _getCommand(self, inputFn, outputFn, outputMd):
-        #TODO: Check if we want to separate crop from resize
-        raise Exception('Not yet implemented.')
