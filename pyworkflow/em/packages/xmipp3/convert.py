@@ -124,6 +124,25 @@ def setRowId(mdRow, obj, label=xmipp.MDL_ITEM_ID):
     mdRow.setValue(label, long(obj.getObjId()))
 
 
+def micrographToCTFParam(mic, ctfparam):
+    """ This function is used to convert a Micrograph object
+    to the .ctfparam metadata needed by some Xmipp protograms.
+    If the micrograph already comes from xmipp, the ctfparam
+    will be returned, if not, the new file. 
+    """
+    if hasattr(mic, '_xmippMd'):
+        return mic._xmippMd.get()
+    
+    md = xmipp.MetaData()
+    row = XmippMdRow()
+    ctfModelToRow(mic.getCTF(), row)
+    acquisitionToRow(mic.getAcquisition(), row)
+    row.writeToMd(md, md.addObject())
+    md.write(ctfparam)
+    
+    return ctfparam
+    
+    
 def imageToRow(img, imgRow, imgLabel):
     setRowId(imgRow, img) # Set the id in the metadata as MDL_ITEM_ID
     index, filename = img.getLocation()
@@ -234,9 +253,9 @@ def rowToCtfModel(md, objId):
     return ctfModel
     
 
-def acquisitionToRow(ctfModel, ctfRow):
+def acquisitionToRow(acquisition, ctfRow):
     """ Set labels values from acquisition to md row. """
-    objectToRow(ctfModel, ctfRow, ACQUISITION_DICT)
+    objectToRow(acquisition, ctfRow, ACQUISITION_DICT)
 
 def rowToAcquisition(md, objId):
     """ Create an acquisition from a row of a metadata. """

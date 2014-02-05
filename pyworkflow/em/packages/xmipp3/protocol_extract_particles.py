@@ -24,6 +24,7 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
+from pyworkflow.em.packages.xmipp3.convert import micrographToCTFParam
 """
 This sub-package contains the XmippProtExtractParticles protocol
 """
@@ -205,14 +206,9 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
             #FIXME: Check only if mic has CTF when implemented ok
             #if self.doFlip or mic.hasCTF():
             if self.ctfRelations.hasValue():
-                # Write CTF metadata if it does not exist
-                mdFn = getattr(mic, '_xmippMd', None)
-                if mdFn:
-                    fnCTF = mdFn.get()
-                else:
-                    fnCTF = self._getTmpPath("%s.ctfParam" % micName)
-                mic.ctfModel.sphericalAberration = Float(self.inputMics.getAcquisition().sphericalAberration.get())
-                #TODO: CHECK THIS writeCTFModel(mic.ctfModel, fnCTF)  
+                # If the micrograph doesn't come from Xmipp, we need to write
+                # a Xmipp ctfparam file to perform the phase flip on the micrograph
+                fnCTF = micrographToCTFParam(mic, self._getTmpPath("%s.ctfParam" % micName))
                  
                 # Insert step to flip micrograph
                 if self.doFlip:
