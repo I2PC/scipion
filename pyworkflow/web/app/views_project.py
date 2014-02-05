@@ -42,7 +42,7 @@ from pyworkflow.em.packages.xmipp3.plotter import XmippPlotter
 from pyworkflow.viewer import WEB_DJANGO
 from pyworkflow.web.app.views_util import loadProject
 
-from pyworkflow.utils.messages_properties import Message
+#from pyworkflow.utils.properties import Message
 
 
 def projects(request):

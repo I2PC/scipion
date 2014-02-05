@@ -45,7 +45,7 @@ from pyworkflow.protocol import *
 from pyworkflow.protocol.params import *
 from pyworkflow.mapper import SqliteMapper, XmlMapper
 from pyworkflow.project import Project
-from pyworkflow.utils.messages_properties import Message, Icon
+from pyworkflow.utils.properties import Message, Icon, Color
 
 import pyworkflow.gui as gui
 from pyworkflow.gui import getImage
@@ -255,7 +255,7 @@ class HostWindow(gui.Window):
                           command=self._save)
         btnSave.grid(row=0, column=1, padx=5, sticky='sw')
         
-        btnTest = tk.Button(self.buttonsFrame, text='Test configuration', fg='white', bg='#7D0709', font=self.font, 
+        btnTest = tk.Button(self.buttonsFrame, text='Test configuration', fg='white', bg=Color.RED_COLOR , font=self.font, 
                         activeforeground='white', activebackground='#A60C0C', command=self._testConfig)
         btnTest.grid(row=0, column=2, padx=5, sticky='se')
         

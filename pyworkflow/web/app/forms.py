@@ -31,7 +31,7 @@ from django.forms.forms import BoundField
 from pyworkflow.object import List
 import json
 import xmipp
-from pyworkflow.utils.messages_properties import Message
+from pyworkflow.utils.properties import Message
 
 #from pyworkflow.web.app.views_showj import get_image_dimensions 
 

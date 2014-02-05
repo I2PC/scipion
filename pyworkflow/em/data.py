@@ -477,12 +477,9 @@ class SetOfImages(Set):
     
     def __str__(self):
         """ String representation of a set of images. """
-        try:
-            s = "%s (%d items, %0.2f A/px)" % (self.getClassName(), self.getSize(), 
-                                               self.getSamplingRate())
-        except Exception, ex:
-            print "Error on set: ", self.getName()
-            raise ex
+        if self.getSamplingRate() is None:
+            raise Exception("FATAL ERROR: Object %s has no sampling rate!!!" % self.getName())
+        s = "%s (%d items, %0.2f A/px)" % (self.getClassName(), self.getSize(), self.getSamplingRate())
         return s
     
     
@@ -792,9 +789,8 @@ class SetOfClasses2D(Set):
     
     def createAverages(self):
         self._averages = SetOfParticles(filename=self.getFileName(), prefix='Averages')
-        images = SetOfImages()
-        self.setImages(images)
-        
+        if not self.getImages().hasValue():
+            raise Exception("SetOfClasses2D.createAverages: you must set the images before creating the averages!!!")
         self._averages.copyInfo(self.getImages())
         return self._averages
     

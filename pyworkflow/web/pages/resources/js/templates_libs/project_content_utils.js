@@ -192,14 +192,16 @@ function fillTabs(id) {
 			// STATUS
 			if(json.status=="running"){
 				// Action Stop Button
-				$("span#analyzeTool").hide();
+//				$("span#analyzeTool").hide();
+				$("span#buttonAnalyzeResult").hide();
 				$("span#stopTool").show();
 				$("a#stopTool").attr('href',
 				'javascript:stopProtocolForm("' + id + '")');
 			} else {
 				// Action Analyze Result Button
 				$("span#stopTool").hide();
-				$("span#analyzeTool").show();
+//				$("span#analyzeTool").show();
+				$("span#buttonAnalyzeResult").show();
 				$("a#analyzeTool").attr('href', 'javascript:launchViewer("'+id +'")');
 			}
 			
