@@ -42,7 +42,6 @@ import xmipp
 class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
     """Protocol to extract particles from a set of coordinates in the project"""
     _label = 'extract particles'
-    _references = ['[[http://www.ncbi.nlm.nih.gov/pubmed/23933392][Vargas, et.al,  JSB (2013)]]']
     
     # Normalization type constants
     ORIGINAL = 0
@@ -393,5 +392,6 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
             validateMsgs.append('Phase flipping cannot be performed unless CTF information is provided.')
         return validateMsgs
             
-        
+    def _citations(self):
+        return ['Vargas2013b']
 
