@@ -201,6 +201,7 @@ public class CTFAnalyzerJFrame extends JFrame implements ActionListener
 		List<Integer> list = Arrays.asList(new Integer[] { new Integer(0), new Integer(1) });
 		plot.mapDatasetToDomainAxes(0, list);
 		plot.mapDatasetToRangeAxes(0, list);
+          
 		ChartUtilities.applyCurrentTheme(chart);
 
 		return new ChartPanel(chart);
