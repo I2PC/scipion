@@ -46,7 +46,7 @@ from pyworkflow.protocol.params import *
 from pyworkflow.protocol import Protocol
 from dialog import showInfo, TextDialog, ListDialog
 from tree import TreeProvider
-from pyworkflow.utils.messages_properties import Message, Icon
+from pyworkflow.utils.properties import Message, Icon
 
 
 #-------------------- Variables wrappers around more complex objects -----------------------------
@@ -386,7 +386,8 @@ class ParamWidget():
         
         elif t is MultiPointerParam:
 #            listBox = Listbox(content)
-            print "poraki"
+#            print "poraki"
+            pass
         
         elif t is PointerParam or t is RelationParam:
             var = PointerVar()
@@ -573,8 +574,8 @@ class FormWindow(Window):
             btn.bind('<Button-1>', command)
             btn.grid(row=1, column=col, padx=5, sticky='se')
         
-        _addButton('Cite', Icon.ACTION_REFERENCES, self._showReferences, 0)
-        _addButton('Help', Icon.ACTION_HELP, self._showHelp, 1)
+        _addButton(Message.TITLE_CITE, Icon.ACTION_REFERENCES, self._showReferences, 0)
+        _addButton(Message.TITLE_DOC ,Icon.ACTION_HELP, self._showHelp, 1)
         
         if protocol.allowHeader:
             commonFrame = self._createHeaderCommons(headerFrame)
