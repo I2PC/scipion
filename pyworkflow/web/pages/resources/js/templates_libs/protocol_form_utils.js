@@ -344,13 +344,14 @@ function evalDependencies(row, newLevel) {
 
 			var row2 = jQuery("tr#" + arrayDepends[cont]);
 			var res = evalCondition(row2);
+			
 			var expLevel = row2.attr('data-expert');
 			
 //			alert("level:"+expLevel+", newlevel:"+newLevel)
 
-			if (res == false || expLevel > newLevel) {
+			if (res || expLevel > newLevel) {
 				row2.hide();
-			} else if (res == true) {
+			} else if (!res) {
 				row2.show();
 				evalDependencies(row2, newLevel);
 			}
@@ -393,6 +394,8 @@ function evalCondition(row) {
 //	}
 	
 	cond_eval = normalizeConditions(cond_eval)
+	
+//	alert(cond_eval + "/"+eval(cond_eval))
 
 //	var foundAnd = cond.indexOf("'0'") != -1;
 //	if (foundAnd)
@@ -405,11 +408,11 @@ function normalizeConditions(cond){
 	/*
 	 * For some conditions not normalized, it is replaced to be evaluated right.
 	 */
-	cond = cond.replace("not","!");
-	cond = cond.replace("and","&&");
-	cond = cond.replace("or","||");
-	cond = cond.replace("'0'","false");
-	cond = cond.replace("'1'","true");
+	cond = replaceAll("not","!", cond);
+	cond = replaceAll("and","&&", cond);
+	cond = replaceAll("or","||", cond);
+	cond = replaceAll("'0'","false", cond);
+	cond = replaceAll("'1'","true", cond);
 	return cond;
 }
 
