@@ -37,6 +37,7 @@ from pyworkflow.em import *
 from pyworkflow.em.constants import NO_INDEX
 from pyworkflow.object import String
 from pyworkflow.utils.path import join, dirname, replaceBaseExt
+from protlib_xmipp import RowMetaData
 
 # This dictionary will be used to map
 # between CTFModel properties and Xmipp labels
@@ -383,7 +384,17 @@ def readSetOfImages(filename, imgSet, rowToFunc, hasCtf):
     imgMd = xmipp.MetaData(filename)
     for objId in imgMd:
         img = rowToFunc(imgMd, objId, hasCtf)
-        imgSet.append(img)   
+        imgSet.append(img)
+    # Read the sampling rate from the acquisition info file if exists
+    
+    acqFile = join(dirname(filename), 'acquisition_info.xmd')
+    print acqFile
+    if exists(acqFile):
+        md = RowMetaData(acqFile)
+        samplingRate = md.getValue(xmipp.MDL_SAMPLING_RATE)
+        imgSet.setSamplingRate(samplingRate)
+    else:
+        pass # TODO: what to do if not exists
         
     imgSet._xmippMd = String(filename)
          

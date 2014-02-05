@@ -41,6 +41,7 @@ from protocol_cl2d_align import XmippProtCL2DAlign
 from protocol_cl2d import XmippProtCL2D
 from protocol_kerdensom import XmippProtKerdensom
 from protocol_rotational_spectra import XmippProtRotSpectra
+from protocol_create_mask import XmippProtCreateMask3D
 from convert import writeSetOfMicrographs, writeSetOfParticles, writeSetOfClasses2D, writeSetOfCoordinates, writeSetOfCTFs, locationToXmipp
 from os.path import dirname, join
 from pyworkflow.utils.path import makePath
@@ -57,8 +58,8 @@ class XmippViewer(Viewer):
     _environments = [DESKTOP_TKINTER, WEB_DJANGO]
     _targets = [Image, SetOfImages, SetOfCoordinates, SetOfClasses2D, 
                 ProtImportMicrographs, XmippProtPreprocessMicrographs, ProtCTFMicrographs,
-                ProtParticlePicking, ProtImportParticles, XmippProtExtractParticles, 
-                ProtAlign, ProtProcessParticles, XmippProtKerdensom, XmippProtRotSpectra, 
+                ProtParticlePicking, ProtImportParticles, XmippProtExtractParticles, ProtUserSubSet,
+                ProtAlign, ProtProcessParticles, XmippProtKerdensom, XmippProtRotSpectra,  XmippProtCreateMask3D,
                 SetOfClasses2D, SetOfCTF, NormalModes]
     
     def __init__(self, **args):
@@ -87,7 +88,8 @@ class XmippViewer(Viewer):
             extra = ''
             if obj.hasCTF():
                 extra = ' --mode metadata --render first'
-            runShowJ(fn, extraParams=extra)  
+            #runShowJ(fn, extraParams=extra)
+            runScipionShowJ(fn, "Set Of Micrographs", obj)    
         
         elif issubclass(cls, SetOfCoordinates):
             obj_mics = obj.getMicrographs()
@@ -101,7 +103,7 @@ class XmippViewer(Viewer):
                 
             extraFn = getattr(obj, '_xmippMd', None)
             if extraFn:
-                extraDir = extraFn.get()
+                extraDir = dirname(extraFn.get())
             else:
                 extraDir = self._getTmpPath(obj.getName()) # TODO: CHECK to create an extra for the coordinates obj
                 makePath(extraDir)
@@ -117,7 +119,10 @@ class XmippViewer(Viewer):
                 fn = self._getTmpPath(obj.getName() + '_images.xmd')
                 #Set hasCTF to False to avoid problems
                 writeSetOfParticles(obj, fn, self._getTmpPath())
-            runShowJ(fn)
+            if issubclass(cls, SetOfParticles):
+                runScipionShowJ(fn, "Set Of Particles", obj)  
+            else:
+                runShowJ(fn)
             md = xmipp.MetaData(fn) 
             #print "MD=%s" % obj.outputParticles.getFileName()
             if md.containsLabel(xmipp.MDL_ZSCORE):
@@ -154,14 +159,20 @@ class XmippViewer(Viewer):
         elif issubclass(cls, ProtParticlePicking):
             self.visualize(obj.outputCoordinates)
         
-        elif (issubclass(cls, ProtImportParticles) or issubclass(cls, XmippProtExtractParticles)):
+        elif (issubclass(cls, ProtImportParticles) or
+              issubclass(cls, XmippProtExtractParticles)):
             self.visualize(obj.outputParticles)
-            # If Zscore on output images plot Zscore particle sorting            
+            # If Zscore on output images plot Zscore particle sorting
+        elif (issubclass(cls, ProtUserSubSet)):
+            self.visualize(obj.outputset)
+                          
         elif issubclass(cls, ProtAlign):
             self.visualize(obj.outputAverage)
             self.visualize(obj.outputParticles) 
         elif issubclass(cls, XmippProtRotSpectra):
             self.visualize(obj.outputClasses, extraParams='--mode rotspectra --columns %d' % obj.SomXdim.get())
+        elif issubclass(cls, XmippProtCreateMask3D):
+            self.visualize(obj.outputMask)
         elif issubclass(cls, XmippProtKerdensom):
             self.visualize(obj.outputClasses, extraParams='--columns %d' % obj.SomXdim.get())
         elif issubclass(cls, ProtCTFMicrographs):
@@ -211,8 +222,13 @@ def runJavaIJapp(memory, appName, args, batchMode=True):
 def runShowJ(inputFiles, memory="1g", extraParams=""):
     runJavaIJapp(memory, "'xmipp.viewer.Viewer'", "-i %s %s" % (inputFiles, extraParams), True)
     
+def runScipionShowJ(inputFiles, set, obj, memory="1g", extraParams=""):
+    SCIPION_PYTHON = os.environ["SCIPION_PYTHON"]
+    PW_HOME = os.environ["PW_HOME"]
+    
+    script = "%s %s/pyworkflow/apps/%s" % (SCIPION_PYTHON, PW_HOME, "pw_create_image_subset.py") 
 
-
+    runJavaIJapp(memory, "'xmipp.viewer.scipion.ScipionViewer'", "-i %s %s --command \"%s\" \"%s\" %s" % (inputFiles, extraParams, set, script, obj.strId()), True)
 
 def runParticlePicker(inputMics, inputCoords, memory="1g", extraParams=""):
     runJavaIJapp(memory, "xmipp.viewer.particlepicker.training.Main", "%s %s %s" % (inputMics, inputCoords, extraParams), True)

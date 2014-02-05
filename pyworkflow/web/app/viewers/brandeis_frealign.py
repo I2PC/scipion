@@ -27,7 +27,6 @@
 import os
 from pyworkflow.web.app.views_util import *
 from pyworkflow.em.packages.brandeis.viewer_frealign import *
-from pyworkflow.web.app.em_viewer import buildShowjPath
 
 def viewerFrealign(request, protocolViewer):
     ioDict = {}

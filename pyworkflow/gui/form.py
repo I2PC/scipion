@@ -427,7 +427,7 @@ class ParamWidget():
             entry.grid(row=0, column=0, sticky='w')
 
         if self.visualizeCallback is not None:
-            self._addButton(Message.LABEL_BUTTON_VIS, Icon.ACTION_VISUZALIZE, self._visualizeVar)    
+            self._addButton(Message.LABEL_BUTTON_VIS, Icon.ACTION_VISUALIZE, self._visualizeVar)    
         if self.paramName in self.window.wizards:
             self._addButton(Message.LABEL_BUTTON_WIZ, Icon.ACTION_WIZ, self._showWizard)
         if param.help.hasValue():
@@ -617,16 +617,18 @@ class FormWindow(Window):
                              compound=tk.LEFT, font=self.font, command=self.close)
         btnClose.grid(row=0, column=0, padx=5, pady=5, sticky='se')
         t = Message.LABEL_BUTTON_VIS
+        icon = Icon.ACTION_VISUALIZE
         # Save button is not added in VISUALIZE or CHILD modes
         if not self.visualizeMode and not self.childMode:
             btnSave = tk.Button(btnFrame, text=Message.LABEL_BUTTON_RETURN, image=self.getImage(Icon.ACTION_SAVE), 
                                 compound=tk.LEFT, font=self.font, command=self.save)
             btnSave.grid(row=0, column=1, padx=5, pady=5, sticky='se')
             t = Message.LABEL_BUTTON_EXEC
+            icon = Icon.ACTION_EXECUTE
         # Add Execute/Visualize button
         if not self.childMode:
             btnExecute = Button(btnFrame, text=t, fg='white', bg='#7D0709', font=self.font, 
-                                image=self.getImage("fa-cogs.png"), compound=tk.LEFT, 
+                                image=self.getImage(icon), compound=tk.LEFT, 
                             activeforeground='white', activebackground='#A60C0C', command=self.execute)
             btnExecute.grid(row=0, column=2, padx=(5, 28), pady=5, sticky='se')
         

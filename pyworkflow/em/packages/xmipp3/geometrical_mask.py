@@ -126,4 +126,24 @@ class XmippGeometricalMask:
             messages.append("   Raised crown between %f and %f (decay=%f)"%(self.innerRadius.get(),self.outerRadius.get(),
                                                                             self.borderDecay.get()))
         return messages
+
+    def methods(self):
+        messages = []      
+        geo=self.geo.get()
+        if geo==MASK3D_SPHERE:
+            messages.append("The mask represented a sphere of radius %d. "%self.radius.get())
+        elif geo==MASK3D_BOX:
+            messages.append("The mask represented a box of size %d. "%self.boxSize.get())
+        elif geo==MASK3D_CROWN:
+            messages.append("The mask represented a crown between %d and %d. "%(self.innerRadius.get(),self.outerRadius.get()))
+        elif geo==MASK3D_CYLINDER:
+            messages.append("The mask represented a cylinder of radius %f and height %f. "%(self.radius.get(),self.height.get()))
+        elif geo==MASK3D_GAUSSIAN:
+            messages.append("The mask represented a Gaussian of sigma %f. "%(self.sigma.get()))
+        elif geo==MASK3D_RAISED_COSINE:
+            messages.append("The mask represented a raised cosine between %f and %f. "%(self.innerRadius.get(),self.outerRadius.get()))
+        elif geo==MASK3D_RAISED_CROWN:
+            messages.append("The mask represented a raised crown between %f and %f (decay=%f)"%(self.innerRadius.get(),self.outerRadius.get(),
+                                                                            self.borderDecay.get()))
+        return messages
     

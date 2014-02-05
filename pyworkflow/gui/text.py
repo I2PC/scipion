@@ -254,14 +254,12 @@ class TaggedText(Text):
         self.hm = HyperlinkManager(self)
 
     def getDefaults(self):
-        return {'bg': "white", 'bd':0, 'font': 'fontNormal'}
+        return {'bg': "white", 'bd':0, 'font': gui.fontNormal}
     
     def configureTags(self):
         self.tag_config('normal', justify=tk.LEFT)
-#        self.tag_config(HYPER_BOLD, justify=tk.LEFT, font=fontBold)
-#        self.tag_config(HYPER_ITALIC, justify=tk.LEFT, font=fontItalic)
-        self.tag_config(HYPER_BOLD, justify=tk.LEFT, font='fontBold')
-        self.tag_config(HYPER_ITALIC, justify=tk.LEFT, font='fontItalic')
+        self.tag_config(HYPER_BOLD, justify=tk.LEFT, font=gui.fontBold)
+        self.tag_config(HYPER_ITALIC, justify=tk.LEFT, font=gui.fontItalic)
         if self.colors:            
             self.colors = configureColorTags(self) # Color can be unavailable, so disable use of colors    
         
@@ -503,6 +501,5 @@ if __name__ == '__main__':
     l = TextfileViewer(root, filelist=sys.argv[1:])
     l.pack(side=tk.TOP, fill=tk.BOTH)
     gui.centerWindows(root)
-    gui.setCommonFonts()
     root.deiconify()
     root.mainloop()               
