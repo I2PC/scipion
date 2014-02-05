@@ -63,6 +63,7 @@ class XmippProtCreateMask3D(ProtCreateMask3D,XmippGeometricalMask):
                       condition=isVolume, help="Volume that will serve as basis for the mask")
         form.addParam('volumeOperation',EnumParam,label='Operation',condition=isVolume,
                       default=OPERATION_THRESHOLD,choices=['Threshold','Segment'])
+        #TODO: add wizard
         form.addParam('threshold',FloatParam,label='Threshold',condition='%s and volumeOperation==%d'%(isVolume,OPERATION_THRESHOLD))
         isSegmentation='%s and volumeOperation==%d'%(isVolume,OPERATION_SEGMENT)
         form.addParam('segmentationType',EnumParam,label='Segmentation type',condition=isSegmentation,
@@ -177,9 +178,16 @@ class XmippProtCreateMask3D(ProtCreateMask3D,XmippGeometricalMask):
         volMask.setFileName(self.maskFile)
         if self.source==SOURCE_VOLUME:
             volMask.setSamplingRate(self.volume.get().getSamplingRate())
-        if self.source==SOURCE_MASK:
+        elif self.source==SOURCE_MASK:
             volMask.setSamplingRate(self.inputMask.get().getSamplingRate())
+        else:
+            volMask.setSamplingRate(self.samplingRate.get())
         self._defineOutputs(outputMask=volMask)
+        
+        if self.source==SOURCE_VOLUME:
+            self._defineSourceRelation(self.volume, self.outputMask)
+        elif self.source==SOURCE_MASK:
+            self._defineTransformRelation(self.inputMask, self.outputMask)
         
     def _summary(self):
         messages = []      
