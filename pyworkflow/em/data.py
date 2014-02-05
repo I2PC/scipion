@@ -53,11 +53,12 @@ class Acquisition(EMObject):
     """Acquisition information"""
     def __init__(self, **args):
         EMObject.__init__(self, **args)
-        #TODO I (ROB) think this values should not have default
-        self.magnification = Float(60000)
-        self.voltage = Float(300)
-        self.sphericalAberration = Float(2.0)
-        self.amplitudeContrast = Float(0.1)
+        self.magnification = Float(args.get('magnification', None)) 
+        # Microscope voltage in kV
+        self.voltage = Float(args.get('voltage', None))
+        # Spherical aberration in mm
+        self.sphericalAberration = Float(args.get('sphericalAberration', None)) 
+        self.amplitudeContrast = Float(args.get('amplitudeConstrast', None))
         
     def copyInfo(self, other):
         self.magnification.set(other.magnification.get())
@@ -172,10 +173,10 @@ class Image(EMObject):
     def setCTF(self, newCTF):
         self._ctfModel = newCTF
         
-    def getAcquisicion(self):
+    def getAcquisition(self):
         return self._acquisition
     
-    def setAcquisicion(self, acquisition):
+    def setAcquisition(self, acquisition):
         self._acquisition = acquisition
         
     def __str__(self):

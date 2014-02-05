@@ -191,9 +191,9 @@ def rowToParticle(md, objId, hasCtf):
     return rowToImage(md, objId, xmipp.MDL_IMAGE, Particle, hasCtf)
     
     
-def particleToRow(part, partRow, ctfFn):
+def particleToRow(part, partRow):
     """ Set labels values from Particle to md row. """
-    imageToRow(part, partRow, ctfFn, imgLabel=xmipp.MDL_IMAGE)
+    imageToRow(part, partRow, imgLabel=xmipp.MDL_IMAGE)
 
 
 def rowToClass2D(md, objId, class2D):

@@ -31,7 +31,7 @@ This sub-package contains the XmippProtExtractParticles protocol
 
 from pyworkflow.em import * 
 
-from convert import writeCTFModel, writeSetOfCoordinates, readSetOfParticles
+from convert import writeSetOfCoordinates, readSetOfParticles
 from pyworkflow.utils.path import makePath, removeBaseExt, join, exists
 from xmipp3 import XmippProtocol
 from glob import glob
@@ -212,7 +212,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
                 else:
                     fnCTF = self._getTmpPath("%s.ctfParam" % micName)
                 mic.ctfModel.sphericalAberration = Float(self.inputMics.getAcquisition().sphericalAberration.get())
-                writeCTFModel(mic.ctfModel, fnCTF)  
+                #TODO: CHECK THIS writeCTFModel(mic.ctfModel, fnCTF)  
                  
                 # Insert step to flip micrograph
                 if self.doFlip:

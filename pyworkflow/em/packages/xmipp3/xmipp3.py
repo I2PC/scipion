@@ -28,8 +28,9 @@ This sub-package will contains Xmipp3.0 specific protocols
 """
 
 import os
-import xmipp
+from collections import OrderedDict
 
+import xmipp
 from constants import *
 import pyworkflow.dataset as ds
 
@@ -101,7 +102,7 @@ class XmippMdRow():
     for classes that maps to a MetaData row like XmippImage, XmippMicrograph..etc. 
     """
     def __init__(self):
-        self._labelDict = {} # Dictionary containing labels and values
+        self._labelDict = OrderedDict() # Dictionary containing labels and values
     
     def hasLabel(self, label):
         return label in self._labelDict
