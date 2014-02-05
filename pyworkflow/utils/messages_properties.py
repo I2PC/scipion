@@ -265,3 +265,16 @@ class Icon():
     #Host template
     BUTTON_CLOSE = 'dialog_close.png'
     BUTTON_SAVE = 'filesave.png'
+
+
+class Color():
+    RED_COLOR = 'Firebrick' # Red color for background label
+    LIGHT_RED_COLOR = '#F3CBCB' # Very light red for row selection
+    LIGHT_BLUE_COLOR = '#EAEBFF' # Very light blue for even rows
+    LIGHT_GREY_COLOR = '#EAEBEC' # Light grey for background color in form, protocol, table header and west container
+    LIGHT_GREY_COLOR_2 = '#F2F2F2' # Very light grey for odd rows, input background, etc
+    DARK_GREY_COLOR = '#6E6E6E' # Very dark grey for project title, tubes, etc
+    
+    
+    
+    
