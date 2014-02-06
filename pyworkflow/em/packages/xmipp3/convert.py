@@ -130,8 +130,8 @@ def micrographToCTFParam(mic, ctfparam):
     If the micrograph already comes from xmipp, the ctfparam
     will be returned, if not, the new file. 
     """
-    if hasattr(mic, '_xmippMd'):
-        return mic._xmippMd.get()
+#    if hasattr(mic, '_xmippMd'):
+#        return mic._xmippMd.get()
     
     md = xmipp.MetaData()
     row = XmippMdRow()
@@ -139,6 +139,10 @@ def micrographToCTFParam(mic, ctfparam):
     acquisitionToRow(mic.getAcquisition(), row)
     row.writeToMd(md, md.addObject())
     md.write(ctfparam)
+    print 'MD------'
+    print md
+    print 'mic-----'
+    mic.printAll()
     
     return ctfparam
     

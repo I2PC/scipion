@@ -205,11 +205,11 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
             #FIXME: Check only if mic has CTF when implemented ok
             #if self.doFlip or mic.hasCTF():
             if self.ctfRelations.hasValue():
+                # If the micrograph doesn't come from Xmipp, we need to write
+                # a Xmipp ctfparam file to perform the phase flip on the micrograph                     
+                fnCTF = micrographToCTFParam(mic, self._getTmpPath("%s.ctfParam" % micName))
                 # Insert step to flip micrograph
                 if self.doFlip:
-                    # If the micrograph doesn't come from Xmipp, we need to write
-                    # a Xmipp ctfparam file to perform the phase flip on the micrograph                     
-                    fnCTF = micrographToCTFParam(mic, self._getTmpPath("%s.ctfParam" % micName))
                     self._insertFunctionStep('flipMicrographStep', micName, fnCTF, micrographToExtract)
                     micrographToExtract = self._getTmpPath(micName +"_flipped.xmp")
                            
@@ -257,25 +257,23 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
             boxSize = self.boxSize.get()
             args = "-i %(micrographToExtract)s --pos %(particlesMd)s -o %(outputRoot)s --Xdim %(boxSize)d" % locals()
             if self.downsampleType.get() != self.SAME_AS_PICKING:
-                args += " --downsampling " + str(self.samplingFinal/self.samplingInput)
+                args += " --downsampling %f" % (self.samplingFinal/self.samplingInput)
             if self.doInvert:
                 args += " --invert"
+            if fnCTF:
+                args += " --ctfparam " + fnCTF
         
             self.runJob(None,"xmipp_micrograph_scissor", args)
             # Normalize 
             if self.doNormalize:
                 self.runNormalize(outputRoot + '.stk', self.normType.get(), self.backRadius.get())          
                                
-            if (self.downsampleType.get() == self.OTHER) or (fnCTF is not None):
+            if self.downsampleType == self.OTHER:
                 selfile = outputRoot + ".xmd"
                 md = xmipp.MetaData(selfile)
-                if self.downsampleType.get() == self.OTHER:
-                    downsamplingFactor = self.samplingFinal/self.samplingInput
-                    md.operate("Xcoor=Xcoor*%f" % downsamplingFactor)
-                    md.operate("Ycoor=Ycoor*%f" % downsamplingFactor)
-                # If micrograph has CTF info copy it
-                if fnCTF is not None:
-                    md.setValueCol(xmipp.MDL_CTF_MODEL, fnCTF)
+                downsamplingFactor = self.samplingFinal/self.samplingInput
+                md.operate("Xcoor=Xcoor*%f" % downsamplingFactor)
+                md.operate("Ycoor=Ycoor*%f" % downsamplingFactor)
                 md.write(selfile)
                 
     def runNormalize(self, stack, normType, bgRadius):
@@ -318,10 +316,9 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
             #imgSet.appendFromMd(mdPos)
             imgsXmd.unionAll(mdPos)
    
-        imgsXmd.sort(xmipp.MDL_IMAGE)
+        #TODO: CHECK WITH JAVI
+        #imgsXmd.sort(xmipp.MDL_IMAGE)
         imgsXmd.write(fnImages)
-        #imgSet.sort() # We need sort?
-        #imgSet.write()
 
         # Run xmipp_image_sort_by_statistics to add zscore info to images.xmd
         args="-i %(fnImages)s --addToInput"

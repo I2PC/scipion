@@ -134,6 +134,7 @@ class XmippMdRow():
         for label, value in self._labelDict.iteritems():
             # TODO: Check how to handle correctly unicode type
             # in Xmipp and Scipion
+            print 'label, value', label, value
             if type(value) is unicode:
                 value = str(value)
             md.setValue(label, value, objId)
