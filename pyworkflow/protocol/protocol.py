@@ -976,8 +976,8 @@ class Protocol(Step):
         else:
             bibtex = self.__getPackageBibTex()
             parsedMethods = []
-            for cite in bibtex:
-                k = '[%s]' % cite['id']
+            for bibId, cite in bibtex.iteritems():
+                k = '[%s]' % bibId
                 link = self.__getCiteText(cite, useKeyLabel=True)
                 for m in baseMethods:
                     parsedMethods.append(m.replace(k, link))
