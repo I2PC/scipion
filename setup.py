@@ -128,13 +128,17 @@ def detectMpi():
     from protlib_filesystem import findFilePath
     inc_dirs = ['/usr/include', '/usr/local/include', '/usr/include/openmpi-x86_64']
     lib_dirs = ['/usr/lib64', '/usr/lib', '/usr/lib/openmpi/lib', '/usr/lib64/openmpi/lib']
+    bin_dirs = ['/usr/bin', '/usr/local/bin', '/usr/lib/openmpi/bin', '/usr/lib64/openmpi/bin']
     inc_mpi = findFilePath('mpi.h', *(inc_dirs + lib_dirs))
     if sys.platform  == 'darwin':
         lib_mpi = findFilePath('libmpi.dylib', *lib_dirs)
     else:
         lib_mpi = findFilePath('libmpi.so', *lib_dirs)
+    bin_mpi = findFilePath('mpirun', *bin_dirs)
     
-    return (inc_mpi, lib_mpi)
+    return (inc_mpi, lib_mpi, bin_mpi)
+    
+        
 
 def detectMatlab():
     from protlib_utils import which
@@ -164,7 +168,7 @@ def addTabOption(tab, option, comment, default, group=None, cond=None, wiz=None,
 some values automatically, and return a list with
 errors if can't found the desired files''' 
 def wizardMpi(tab_mpi):   
-    inc_mpi, lib_mpi = detectMpi()
+    inc_mpi, lib_mpi, bin_mpi = detectMpi()
     errors = ""
     
     if inc_mpi:
@@ -217,6 +221,7 @@ def addTabs(nb):
     addTabOption(tab,'MPI_LINKERFORPROGRAMS', 'MPI Linker for programs', 'mpiCC', 'MPI')
     addTabOption(tab,'MPI_INCLUDE', 'MPI headers dir ', '/usr/include', 'MPI', browse=True, wiz=wizardMpi)
     addTabOption(tab,'MPI_LIBDIR', 'MPI libraries dir ', '/usr/lib', 'MPI', browse=True)
+    addTabOption(tab, 'MPI_BINDIR', 'MPI binaries dir ', '/usr/bin', 'MPI', browse=True)
     addTabOption(tab,'MPI_LIB', 'MPI library', 'mpi', 'MPI')
     tab_mpi = tab
     tab.finishGroupPanel("MPI")
@@ -302,8 +307,11 @@ def run(notebook):
                 if len(parts) == 2:
                     assign = '%s = "%s"' % (parts[0], parts[1])
                     if parts[0].strip() == 'MPI_LIBDIR':
-                        parts[1] = parts[1].replace("'","").strip()
-                        os.environ['LD_LIBRARY_PATH'] += os.pathsep + parts[1]        
+                        parts[1] = parts[1].replace("'", "").strip()
+                        os.environ['LD_LIBRARY_PATH'] += os.pathsep + parts[1]
+                    if parts[0].strip() == 'MPI_BINDIR':
+                        parts[1] = parts[1].replace("'", "").strip()
+                        os.environ['PATH'] += os.pathsep + parts[1]        
         cmd += ('echo "*** CREATING PROGRAMS DATABASE..." >> %(out)s 2>&1\n xmipp_apropos --update >> %(out)s' % locals())    
         
     proc = Popen(cmd % locals(), shell=True)    
@@ -394,6 +402,52 @@ else:
 #    os.remove(OUTPUT)
 # TRY TO READ CONFIG FILE
 CONFIG = '.xmipp_scons.options'
+BASHRC = '.xmipp.bashrc'
+
+def checkMpiInBashrc(mpiPath, type):
+    exists = different = False
+    foundPath = ''
+    stringToSearch = ''
+    if type == 'lib':
+        stringToSearch = 'XMIPP_MPI_LIBDIR'
+    elif type == 'bin':
+        stringToSearch = 'XMIPP_MPI_BINDIR'
+    if os.path.exists(BASHRC):
+        for line in open(BASHRC):
+            parts = line.split('=')
+            if len(parts) == 2:
+                assign = '%s=%s' % (parts[0], parts[1])
+                if parts[0].strip() == ('export '+stringToSearch):
+                    exists = True
+                    foundPath = parts[1]
+                    different = (foundPath.strip() != mpiPath)                    
+    return exists, different, foundPath
+
+def addMpiToBashrc(mpiPath, type, replace=False):
+    if os.path.exists(BASHRC):
+        lines = open(BASHRC, 'r').readlines()
+        filew = open(BASHRC, 'w')
+        found = -1
+        preserv = ''
+        stringToSearch = ''
+        stringToAppend = ''
+        if type == 'lib':
+            stringToSearch = 'LD_LIBRARY_PATH'
+            stringToAppend = 'XMIPP_MPI_LIBDIR'
+        elif type == 'bin':
+            stringToSearch = 'PATH'
+            stringToAppend = 'XMIPP_MPI_BINDIR'
+        if replace:
+            stringToSearch = ('export '+stringToAppend)
+        for index, line in enumerate(lines):
+            parts = line.split('=')
+            if parts[0].strip() == stringToSearch:
+                found = index
+                preserv = parts[1].strip()
+        if found != -1:
+            lines[index] = (stringToSearch+'='+preserv+':$'+stringToAppend)
+            lines += ('export ' + stringToAppend + '=' + mpiPath)
+            filew.writelines(lines)
 
 if os.path.exists(CONFIG):
     for line in open(CONFIG):
@@ -405,6 +459,28 @@ if options.hasOption('configure'):
         if len(parts) == 2:
             assign = '%s = "%s"' % (parts[0], parts[1])
             exec(assign) # Take options from command line, override options file, be carefull with exec
+    if not options.hasOption('unattended'):
+        try:
+            mpiLibDirExists, mpiLibDirIsDifferent, mpiLibDirPath = checkMpiInBashrc(MPI_LIBDIR, 'lib') 
+            if not mpiLibDirExists:
+                addMpiToBashrc(mpiLibDirPath, 'lib')
+            elif mpiLibDirIsDifferent:
+                addMpiToBashrc(mpiLibDirPath, 'lib', True)
+            else:
+                print "MPI_LIBDIR untouched. Already set in "+BASHRC+"file"
+        except NameError:
+            print "Be careful, your MPI_LIBDIR has not been set!"
+        try:
+            mpiBinDirExists, mpiBinDirIsDifferent, mpiBinDirPath = checkMpiInBashrc(MPI_BINDIR, 'bin')
+            if not mpiBinDirExists:
+                addMpiToBashrc(mpiBinDirPath, 'bin')
+            elif mpiBinDirIsDifferent:
+                addMpiToBashrc(mpiBinDirPath, 'bin', True)
+            else:
+                print "MPI_BINDIR untouched. Already set in "+BASHRC+"file"
+        except NameError:
+            print "Be careful, your MPI_BINDIR has not been set! You may need to manually set it in your bashrc"
+        
 
     scons = SCONS
     pid = os.fork()
