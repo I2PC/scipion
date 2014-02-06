@@ -298,7 +298,10 @@ class Object(object):
         """
         # Copy basic object data
         #self._objName = other._objName
+        self._objId = other._objId
         self._objValue = other._objValue
+        self._objLabel = other._objLabel
+        self._objComment = other._objComment
         # Copy attributes recursively
         for name, attr in other.getAttributes():
             myAttr = getattr(self, name, None)
