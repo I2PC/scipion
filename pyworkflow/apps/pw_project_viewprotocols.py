@@ -262,10 +262,12 @@ class RunIOTreeProvider(TreeProvider):
                 obj = obj.get()
                 image = Icon.ACTION_IN
                 parent = self.inputStr
-                objName = self.mapper.getFullName(obj)
+#                objName = self.mapper.getFullName(obj)
+                objName = obj.getNameId()
                 name += '   (from %s)' % objName
             info = {'key': obj.getObjId(), 'parent': parent, 'image': image,
                     'text': name, 'values': (str(obj),)}
+            print info
         return info     
     
    
