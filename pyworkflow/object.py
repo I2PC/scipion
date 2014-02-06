@@ -273,9 +273,9 @@ class Object(object):
         self.__getObjDict('', d, includeClass)
         return d
     
-    def copy(self, other):
+    def copy(self, other, copyId=True):
         copyDict = {'internalPointers': []} 
-        self._copy(other, copyDict)
+        self._copy(other, copyDict, copyId)
         self._updatePointers(copyDict)
         return copyDict
         
@@ -289,7 +289,7 @@ class Object(object):
             if  pointedId in copyDict:
                 ptr.set(copyDict[pointedId])
         
-    def _copy(self, other, copyDict, level=1):
+    def _copy(self, other, copyDict, copyId, level=1):
         """ This method will recursively clone all attributes from one object to the other.
         NOTE: Currently, we are not deleting attributes missing in the 'other' object.
         copyDict: this dict is used to store the ids map between 'other' and 'self' attributes
@@ -298,7 +298,8 @@ class Object(object):
         """
         # Copy basic object data
         #self._objName = other._objName
-        self._objId = other._objId
+        if copyId:
+            self._objId = other._objId
         self._objValue = other._objValue
         self._objLabel = other._objLabel
         self._objComment = other._objComment
@@ -310,7 +311,7 @@ class Object(object):
                 myAttr = attr.getClass()()
                 setattr(self, name, myAttr)
                 
-            myAttr._copy(attr, copyDict, level+2)
+            myAttr._copy(attr, copyDict, copyId, level+2)
             # Store the attr in the copyDict
             if attr.hasObjId():
                 #" storing in copyDict with id=", attr.getObjId()

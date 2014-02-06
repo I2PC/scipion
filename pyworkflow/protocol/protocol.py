@@ -632,8 +632,8 @@ class Protocol(Step):
         """ This will copy relations from protocol other to self """
         pass
     
-    def copy(self, other):
-        copyDict = Object.copy(self, other)
+    def copy(self, other, copyId=True):
+        copyDict = Object.copy(self, other, copyId)
         self._store()
         for r in other.getRelations():
             rName = r['name']
