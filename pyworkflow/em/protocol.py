@@ -567,6 +567,3 @@ class ProtValidate3D(EMProtocol):
 
 class ProtCreateMask3D(EMProtocol):
     pass
-
-class ProtTomo(EMProtocol):
-    pass
