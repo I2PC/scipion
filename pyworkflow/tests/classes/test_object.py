@@ -225,7 +225,7 @@ class TestPyworkflow(unittest.TestCase):
         for c, p in zip(childs, parents):
             self.assertEqual(c, p, "Childs of object i, should be the parents of object p")
 
-        relations = mapper2.getRelations(creator)
+        relations = mapper2.getRelationsByCreator(creator)
         for row in relations:
             print row
         
