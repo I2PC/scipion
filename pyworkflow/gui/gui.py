@@ -459,14 +459,14 @@ class WindowBase(Window):
             tube = tk.Label(viewFrame, text="|", fg="#6F3232", bg="white", padx=5)
             return tube
         
-#        Commented until this functionality it is fully developed
-#        for i, elementText in enumerate(VIEW_LIST):
-#            btn = addLink(elementText)
-#            btn.grid(row=0, column=i*2)
-#            
-#            if i < len(VIEW_LIST)-1:
-#                tube = addTube()
-#                tube.grid(row=0, column=(i*2)+1)
+        #Commented until this functionality it is fully developed
+        for i, elementText in enumerate(VIEW_LIST):
+            btn = addLink(elementText)
+            btn.grid(row=0, column=i*2)
+            
+            if i < len(VIEW_LIST)-1:
+                tube = addTube()
+                tube.grid(row=0, column=(i*2)+1)
         
         return header
     

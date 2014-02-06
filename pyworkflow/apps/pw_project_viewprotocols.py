@@ -254,13 +254,13 @@ class RunIOTreeProvider(TreeProvider):
             value = obj.get()
             info = {'key': value, 'text': value, 'values': (''), 'open': True}
         else:
-            image = 'fa-sign-out.png'
+            image = Icon.ACTION_OUT
             parent = self.outputStr
             name = obj.getLastName()
             
             if isinstance(obj, Pointer):
                 obj = obj.get()
-                image = 'fa-sign-in.png'
+                image = Icon.ACTION_IN
                 parent = self.inputStr
                 objName = self.mapper.getFullName(obj)
                 name += '   (from %s)' % objName
@@ -484,7 +484,7 @@ class ProtocolsView(tk.Frame):
         displayAction(ACTION_DELETE, 2, status != STATUS_RUNNING)     
         displayAction(ACTION_STOP, 4, status == STATUS_RUNNING)
         displayAction(ACTION_CONTINUE, 5, status == STATUS_WAITING_APPROVAL)
-        displayAction(ACTION_RESULTS, 6, status != STATUS_RUNNING)
+#        displayAction(ACTION_RESULTS, 6, status != STATUS_RUNNING)
         
     def createProtocolsTree(self, parent, bgColor):
         """Create the protocols Tree displayed in left panel"""

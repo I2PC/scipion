@@ -39,7 +39,6 @@ from convert import createXmippInputMicrographs, readSetOfCoordinates
 class XmippProtParticlePicking(ProtParticlePicking, XmippProtocol):
     """Protocol to pick particles manually of a set of micrographs in the project"""
     _label = 'manual picking'
-    _references = ['[[http://www.ncbi.nlm.nih.gov/pubmed/23958728][Abrishami, et.al,  Bioinformatics (2013)]]']
     
     def __init__(self, **args):        
         ProtParticlePicking.__init__(self, **args)
@@ -109,3 +108,6 @@ class XmippProtParticlePicking(ProtParticlePicking, XmippProtocol):
         coordSet.write()
         self._defineOutputs(outputCoordinates=coordSet)
         self._defineSourceRelation(self.inputMics, coordSet)
+        
+    def _citations(self):
+        return ['Abrishami2013']

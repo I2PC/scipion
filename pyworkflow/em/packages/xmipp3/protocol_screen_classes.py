@@ -23,18 +23,18 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
-from pyworkflow.em.packages.xmipp3.convert import createXmippInputClasses2D
+from pyworkflow.em.packages.xmipp3.convert import createXmippInputClasses2D,\
+    createXmippInputVolumes
 """
 This sub-package contains wrapper around Screen Classes Xmipp program
 """
 
 from pyworkflow.em import *  
 import xmipp
-from protlib_projmatch import projMatch,produceAlignedImages
+from xmipp3 import ProjMatcher        
 
         
-        
-class XmippProtScreenClasses(ProtAlignClassify):
+class XmippProtScreenClasses(ProtAlignClassify, ProjMatcher):
     """ Protocol to screen a set of classes in the project. """
     _label = 'screen classes'
     
@@ -63,50 +63,39 @@ class XmippProtScreenClasses(ProtAlignClassify):
         
     def _insertAllSteps(self):
         """ Mainly prepare the command line for call cl2d program"""
-        
         # Convert input images if necessary
-        self.inputClasses.get().printAll()
-        print "taka",self.inputClasses.get().getDimensions()
         self.Xdim = self.inputClasses.get().getDimensions()[0]
         
         #TODO: This should be deleted when inputVolume was set to Volume type
-        volume= self.inputVolume.get()[0]
+        self.volume = self.inputVolume.get().getFirstItem()
         
-        self.fn = createXmippInputClasses2D(self, self.inputClasses.get())
+        self.xmippFn = createXmippInputClasses2D(self, self.inputClasses.get())
         
-        fnAngles=self._getExtraPath('angles.xmd')
-        self._insertFunctionStep("projMatch",
-                                 Volume=volume, AngularSampling=self.angularSampling.get(), SymmetryGroup=self.symmetryGroup.get(),
-                                 Images="classes@%s"%self.fn, ExtraDir=self._getExtraPath(),
-                                 fnAngles=fnAngles, NumberOfMpi=self.numberOfMpi.get())
+        self.fn = self._getPath(basename(self.xmippFn))
+        copyFile(self.xmippFn, self.fn)
+        
+        self.fnAngles = self._getExtraPath('angles.xmd')
+        self.images = "classes@%s" % self.fn
+        self._insertFunctionStep("projMatchStep", self.volume.getFileName())
         
         # Reorganize output and produce difference images 
-        self._insertRunJobStep("xmipp_metadata_utilities", "-i classes@%s --set join %s --mode append"%(fnOutputClass,fnAngles), numberOfMpi=1)
-#        self._insertFunctionStep("runJob",programname="xmipp_metadata_utilities", params="-i classes@%s --set join %s --mode append"%(fnOutputClass,fnAngles),NumberOfMpi=1)  
-        
-        self._insertFunctionStep("produceAlignedImages",
-                                 fnIn='classes@'+self.fn, fnOut='classes_aligned@'+self.fn, fnDiff=self._getExtraPath("diff.stk"),
-                                 volumeIsCTFCorrected=False)
-        
-#        self.insertStep("produceAlignedImages",fnIn='classes@'+fnOutputClass, fnOut='classes_aligned@'+fnOutputClass, fnDiff=self.extraPath("diff.stk"),
-#                        volumeIsCTFCorrected=False)
-        self._insertRunJobStep("xmipp_metadata_utilities", "-i classes_aligned@%s --operate sort maxCC desc --mode append"%(fnOutputClass), numberOfMpi=1)  
-   
+        self._insertRunJobStep("xmipp_metadata_utilities", "-i classes@%s --set join %s --mode append" % (self.fn, self.fnAngles), numberOfMpi=1)
+        self._insertFunctionStep("produceAlignedImagesStep", False)
+        self._insertRunJobStep("xmipp_metadata_utilities", "-i classes_aligned@%s --operate sort maxCC desc --mode append" % (self.fn), numberOfMpi=1)  
                 
         self._insertFunctionStep('createOutput')
-
-
                         
     def createOutput(self):
         print "output"
-
+        #Path: self.fn
 
     def _summary(self):
         summary = []
         if not hasattr(self, 'outputClasses'):
             summary.append("Output classes not ready yet.")
         else:
-            summary.append("Set of classes: [%s] " % self.Classes)
-            summary.append("Volume: [%s] " % self.Volume)
-            summary.append("Symmetry: %s " % self.SymmetryGroup)
+            summary.append("Set of classes: [%s] " % self.inputClasses.get().getNameId())
+#            summary.append("Volume: [%s] " % self.inputVolume.get().getNameId())
+            summary.append("Volume: [%s] " % self.volume.getNameId())
+            summary.append("Symmetry: %s " % self.symmetryGroup.get())
         return summary
