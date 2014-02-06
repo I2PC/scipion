@@ -37,8 +37,7 @@ from convert import writeCTFModel, writeSetOfCoordinates, readSetOfParticles
 from pyworkflow.utils.path import makePath, removeBaseExt, join, exists
 from xmipp3 import XmippProtocol
 from glob import glob
-import xmipp
-   
+import xmipp   
                 
 class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
     """Protocol to extract particles from a set of coordinates in the project"""
@@ -244,7 +243,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         if self.downsampleType != self.ORIGINAL:
             downFactor = self.samplingFinal/self.samplingInput
             args += " --downsampling %(downFactor)f"
-            self.runJob(None, "xmipp_ctf_phase_flip", args % locals())
+        self.runJob(None, "xmipp_ctf_phase_flip", args % locals())
         
         
     def extractParticles(self, micId, micName, fnCTF, micrographToExtract):
