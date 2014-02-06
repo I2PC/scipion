@@ -372,7 +372,8 @@ def protocol_info(request):
                   'methods': parseText(methods), 
                   'status': status,
                   'logs_out': parseText(fOutString),
-                  'logs_error': parseText(fErrString)
+                  'logs_error': parseText(fErrString),
+                  'logs_scipion': parseText('Logs de Scipion')
                   }
         
         jsonStr = json.dumps(ioDict, ensure_ascii=False)

@@ -185,6 +185,8 @@ class XmippProtAlignVolume(ProtAlignVolume):
         self._insertFunctionStep('createOutput')
         
     def initialize(self):
+        print "initializing"
+        
          # Convert input vols if necessary
         self.volsFn = createXmippInputVolumes(self, self.inputVolumes.get())
         self.volsMd = xmipp.MetaData(self.volsFn)
@@ -200,7 +202,6 @@ class XmippProtAlignVolume(ProtAlignVolume):
         # Check volsMd is a volume or a stack
         if self.volsMd.size()==1:
             self._insertFunctionStep('executeCommand', self.volsFn) 
-#            self.prepareCommand(self.volsFn)
         else:
             for i, idx in enumerate(self.volsMd):
                 path = self.volsMd.getValue(xmipp.MDL_IMAGE, idx)
@@ -237,11 +238,13 @@ class XmippProtAlignVolume(ProtAlignVolume):
                 self.minimumShiftZ.get(), self.maximumShiftZ.get(), self.stepShiftZ.get(),\
                 self.minimumScale.get(), self.maximumScale.get(), self.stepScale.get())
         
-        self._insertRunJobStep("xmipp_volume_align", args)
+        print "args", args
+        
+        self.runJob(None, "xmipp_volume_align", args)
         
         if self.alignmentAlgorithm.get() == ALIGN_ALGORITHM_EXHAUSTIVE_LOCAL:
             args="--i1 %s --i2 %s --apply --local" % (self.volRef, path)
-            self.insertRunJobStep("xmipp_volume_align", args)
+            self.runJob(None, "xmipp_volume_align", args)
        
         
       
@@ -272,8 +275,6 @@ class XmippProtAlignVolume(ProtAlignVolume):
             return summary
         
     def _citations(self):
-        papers=[]
         if self.alignmentAlgorithm.get() == ALIGN_ALGORITHM_FAST_FOURIER:
-            papers.append('Chen, JSB (2013) [http://www.ncbi.nlm.nih.gov/pubmed/23523719]')
-        return papers
+            return ['Chen2013235']
             

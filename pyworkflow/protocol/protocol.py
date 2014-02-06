@@ -644,7 +644,7 @@ class Protocol(Step):
         
     def getRelations(self):
         """ Return the relations created by this protocol. """
-        return self.mapper.getRelations(self)  
+        return self.mapper.getRelationsByCreator(self)  
     
     def _defineRelation(self, relName, parentObj, childObj):
         """ Insert a new relation in the mapper using self as creator. """

@@ -399,12 +399,17 @@ class ProtocolsView(tk.Frame):
         gui.configureWeigths(elogframe)
         self.errorLogText = TaggedText(elogframe, width=40, height=15, bg='white')
         self.errorLogText.grid(row=0, column=0, sticky='news')  
+        slogframe = tk.Frame(tab)
+        gui.configureWeigths(slogframe)
+        self.scipionLogText = TaggedText(slogframe, width=40, height=15, bg='white')
+        self.scipionLogText.grid(row=0, column=0, sticky='news')
         
         tab.add(dframe, text=Message.LABEL_DATA)
         tab.add(sframe, text=Message.LABEL_SUMMARY)   
         tab.add(mframe, text=Message.LABEL_METHODS)
         tab.add(ologframe, text=Message.LABEL_LOGS_OUTPUT)
         tab.add(elogframe, text=Message.LABEL_LOGS_ERROR)
+        tab.add(slogframe, text=Message.LABEL_LOGS_SCIPION)
         tab.grid(row=1, column=0, sticky='news')
         
         v.add(runsFrame, weight=3)
@@ -691,6 +696,9 @@ class ProtocolsView(tk.Frame):
         
         self.errorLogText.clear()
         self.errorLogText.addText(fErrString)
+        
+        self.scipionLogText.clear()
+        self.scipionLogText.addText("Log de Scipion")
         
     def _scheduleRunsUpdate(self, secs=1):
         self.runsTree.after(secs*1000, self.refreshRuns)

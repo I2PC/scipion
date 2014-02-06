@@ -111,7 +111,7 @@ url = "http://www.sciencedirect.com/science/article/pii/S1047847704000073",
 author = "Sorzano, C.O.S. and S. Jonic and C. El-Bez and J.M. Carazo and S. De Carlo and P. Thevenaz and M. Unser"
 }
 
-@ARTICLE{Vargas2013a,
+@article{Vargas2013a,
 author = {Vargas, J. and Otón, J. and Marabini, R. and Jonic, S. and {de la
   Rosa-Trevín}, J. M. and et.al.},
 title = {{FASTDEF}: Fast defocus and astigmatism estimation for high-throughput
@@ -140,6 +140,22 @@ author = "J. Vargas and V. Abrishami and R. Marabini and J.M. de la Rosa-Trevín 
 keywords = "Electron microscopy, Particle picking, Machine learning, Single particle analysis "
 }
 
+@article{Chen2013235,
+title = "Fast and accurate reference-free alignment of subtomograms ",
+journal = "Journal of Structural Biology ",
+volume = "182",
+number = "3",
+pages = "235 - 245",
+year = "2013",
+note = "",
+issn = "1047-8477",
+doi = "http://dx.doi.org/10.1016/j.jsb.2013.03.002",
+url = "http://www.sciencedirect.com/science/article/pii/S1047847713000737",
+author = "Yuxiang Chen and Stefan Pfeffer and Thomas Hrabe and Jan Michael Schuller and Friedrich Förster",
+keywords = "Cryo-electron tomography",
+keywords = "Subtomogram averaging",
+keywords = "Spherical harmonics "
+}
 """
 
 from pyworkflow.utils import parseBibTex
