@@ -159,7 +159,7 @@ class Mapper():
         """
         pass
     
-    def getRelations(self, creatorObj):
+    def getRelationsByCreator(self, creatorObj):
         """ Return all relations created by creatorObj. """
         pass
     

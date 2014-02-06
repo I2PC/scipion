@@ -64,24 +64,26 @@ def getGeneralLogger(classPath):
 class ScipionLogger():
     def __init__(self, filePath):
         self._filePath = filePath
-        self._fileOut = join(filePath,'run.log')
-        makeFilePath(self._fileOut)
+        makeFilePath(self._filePath)
 
-        if filePath not in config['loggers']:
-            config['handlers'][self._fileOut] = {'level': 'NOTSET',    
+        if self._filePath not in config['loggers']:
+            config['handlers'][self._filePath] = {'level': 'NOTSET',    
                                             'class': 'logging.handlers.RotatingFileHandler',
                                             'formatter': 'fileFormat',
-                                            'filename': self._fileOut,
+                                            'filename': self._filePath,
                                             'maxBytes': 100000,}
-            config['loggers'][self._fileOut] = {'handlers': ['consoleHandler', self._fileOut],        
+            config['loggers'][self._filePath] = {'handlers': ['consoleHandler', self._filePath],        
                                            'level': 'NOTSET',  
                                            'propagate': False,}
             logging.config.dictConfig(config)
             
-        self._log = logging.getLogger(self._fileOut) 
+        self._log = logging.getLogger(self._filePath) 
         
     def getLog(self):
-        return self._log    
+        return self._log  
+    
+    def getLogString(self):
+        return open(self._filePath, 'r').readlines()  
         
     def info(self, message, redirectStandard=False, *args, **kwargs):
         if redirectStandard:

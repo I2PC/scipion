@@ -40,7 +40,7 @@ from django.contrib.gis.shortcuts import render_to_text
 from pyworkflow.em.packages.xmipp3.convert import writeSetOfParticles
 from pyworkflow.em.packages.xmipp3.plotter import XmippPlotter
 from pyworkflow.viewer import WEB_DJANGO
-from pyworkflow.web.app.views_util import loadProject
+#from pyworkflow.web.app.views_util import loadProject
 
 #from pyworkflow.utils.properties import Message
 
@@ -363,7 +363,7 @@ def protocol_info(request):
         status = protocol.status.get()
         
         # LOGS (ERROR & OUTPUT)
-        fOutString, fErrString = protocol.getLogsAsStrings()
+        fOutString, fErrString, fScpnString = protocol.getLogsAsStrings()
 
         from pyworkflow.web.app.views_util import parseText
         ioDict = {'inputs': input_obj,
@@ -372,7 +372,8 @@ def protocol_info(request):
                   'methods': parseText(methods), 
                   'status': status,
                   'logs_out': parseText(fOutString),
-                  'logs_error': parseText(fErrString)
+                  'logs_error': parseText(fErrString),
+                  'logs_scipion': parseText(fScpnString)
                   }
         
         jsonStr = json.dumps(ioDict, ensure_ascii=False)
