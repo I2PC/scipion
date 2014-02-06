@@ -210,13 +210,13 @@ class TestXmippExtractParticles(TestXmippBase):
         pattern = getInputPath('Micrographs_BPV3_Down3', '*.mrc')
         protImport = cls.runImportMicrograph(pattern, samplingRate=1.237, voltage=300, sphericalAberration=2, scannedPixelSize=None, magnification=56000)       
         
-        downFactorValue = 2
-        protDown = XmippProtPreprocessMicrographs(doDownsample=True, downFactor=downFactorValue)
-        protDown.inputMicrographs.set(protImport.outputMicrographs)
-        cls.proj.launchProtocol(protDown, wait=True)
+        #downFactorValue = 2
+        #protDown = XmippProtPreprocessMicrographs(doDownsample=True, downFactor=downFactorValue)
+        #protDown.inputMicrographs.set(protImport.outputMicrographs)
+        #cls.proj.launchProtocol(protDown, wait=True)
         
         protCTF = XmippProtCTFMicrographs()                
-        protCTF.inputMicrographs.set(protDown.outputMicrographs)     
+        protCTF.inputMicrographs.set(protImport.outputMicrographs)     
         cls.proj.launchProtocol(protCTF, wait=True)   
 
         protPP = cls.runFakedPicking(protCTF.inputMicrographs, 'Picking_XmippBPV3_CTF')
