@@ -42,6 +42,23 @@ url = {http://bioinformatics.oxfordjournals.org/content/29/19/2460.abstract},
 journal = {Bioinformatics} 
 }
 
+@article{Chen2013,
+title = "Fast and accurate reference-free alignment of subtomograms ",
+journal = "Journal of Structural Biology ",
+volume = "182",
+number = "3",
+pages = "235 - 245",
+year = "2013",
+note = "",
+issn = "1047-8477",
+doi = "http://dx.doi.org/10.1016/j.jsb.2013.03.002",
+url = "http://www.sciencedirect.com/science/article/pii/S1047847713000737",
+author = "Yuxiang Chen and Stefan Pfeffer and Thomas Hrabe and Jan Michael Schuller and Friedrich Förster",
+keywords = "Cryo-electron tomography",
+keywords = "Subtomogram averaging",
+keywords = "Spherical harmonics "
+}
+
 @article{delaRosaTrevin2013,
 title = "Xmipp 3.0: An improved software suite for image processing in electron microscopy ",
 journal = "JSB",
@@ -138,23 +155,6 @@ doi = "http://dx.doi.org/10.1016/j.jsb.2013.07.015",
 url = "http://www.sciencedirect.com/science/article/pii/S1047847713001950",
 author = "J. Vargas and V. Abrishami and R. Marabini and J.M. de la Rosa-Trevín and A. Zaldivar and J.M. Carazo and C.O.S. Sorzano",
 keywords = "Electron microscopy, Particle picking, Machine learning, Single particle analysis "
-}
-
-@article{Chen2013235,
-title = "Fast and accurate reference-free alignment of subtomograms ",
-journal = "Journal of Structural Biology ",
-volume = "182",
-number = "3",
-pages = "235 - 245",
-year = "2013",
-note = "",
-issn = "1047-8477",
-doi = "http://dx.doi.org/10.1016/j.jsb.2013.03.002",
-url = "http://www.sciencedirect.com/science/article/pii/S1047847713000737",
-author = "Yuxiang Chen and Stefan Pfeffer and Thomas Hrabe and Jan Michael Schuller and Friedrich Förster",
-keywords = "Cryo-electron tomography",
-keywords = "Subtomogram averaging",
-keywords = "Spherical harmonics "
 }
 """
 
