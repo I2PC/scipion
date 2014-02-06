@@ -109,12 +109,6 @@ def imageToRow(img, imgRow, ctfFn, imgLabel):
     imgRow.setValue(imgLabel, fn)
     setRowId(imgRow, img)
         
-def volumeToRow(img, imgRow, imgLabel):
-    index, filename = img.getLocation()
-    fn = locationToXmipp(index, filename)
-    imgRow.setValue(imgLabel, fn)
-    setRowId(imgRow, img)
-        
 def rowToImage(md, objId, imgLabel, imgClass, hasCtf):
     """ Create a Particle from a row of a metadata. """
     img = imgClass()
@@ -138,9 +132,9 @@ def rowToMicrograph(md, objId, hasCtf):
     """ Create a Micrograph object from a row of Xmipp metadata. """
     return rowToImage(md, objId, xmipp.MDL_MICROGRAPH, Micrograph, hasCtf)
 
-def volumeToRow(vol, volRow):
+def volumeToRow(vol, volRow, ctfFn):
     """ Set labels values from volume to md row. """
-    volumeToRow(vol, volRow, imgLabel=xmipp.MDL_IMAGE)
+    imageToRow(vol, volRow, ctfFn=None, imgLabel=xmipp.MDL_IMAGE)
     
 def rowToVolume(md, objId, hasCtf):
     """ Create a Volume object from a row of Xmipp metadata. """
