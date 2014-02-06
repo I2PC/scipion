@@ -247,7 +247,7 @@ class XmippProtCreateMask3D(ProtCreateMask3D,XmippGeometricalMask):
                 messages.append("We thresholded it to a gray value of %f. "%self.threshold.get())
             elif self.volumeOperation == OPERATION_SEGMENT:
                 if self.segmentationType == SEGMENTATION_AUTOMATIC:
-                    messages.append("We automatically segmented it using Otsu's method [Otsu1979_Segmentation]")
+                    messages.append("We automatically segmented it using Otsu's method [Otsu1979]")
                 else:
                     m="We segmented it to a mass of "
                     if self.segmentationType == SEGMENTATION_VOXELS:
