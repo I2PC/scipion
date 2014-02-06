@@ -1,0 +1,334 @@
+# **************************************************************************
+# *
+# * Authors:     L. del Cano (ldelcano@cnb.csic.es)
+# *
+# * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
+# *
+# * This program is free software; you can redistribute it and/or modify
+# * it under the terms of the GNU General Public License as published by
+# * the Free Software Foundation; either version 2 of the License, or
+# * (at your option) any later version.
+# *
+# * This program is distributed in the hope that it will be useful,
+# * but WITHOUT ANY WARRANTY; without even the implied warranty of
+# * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# * GNU General Public License for more details.
+# *
+# * You should have received a copy of the GNU General Public License
+# * along with this program; if not, write to the Free Software
+# * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+# * 02111-1307  USA
+# *
+# *  All comments concerning this program package may be sent to the
+# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *
+# **************************************************************************
+"""
+This module implement the wrappers aroung Xmipp ML3D protocol
+visualization program.
+"""
+from pyworkflow.viewer import ProtocolViewer, DESKTOP_TKINTER, WEB_DJANGO
+from pyworkflow.em import *
+from pyworkflow.gui.form import FormWindow
+from protocol_resolution_3d import XmippProtResolution3D
+from viewer import runShowJ
+from plotter import XmippPlotter
+from xmipp import MetaData, AGGR_SUM, MDL_REF3D, MDL_WEIGHT, MDL_WEIGHT, MDValueEQ
+
+import numpy as np
+
+class XmippResolution3DViewer(ProtocolViewer):
+    """ Wrapper to visualize different type of data objects
+    with the Xmipp program xmipp_showj
+    """
+    _targets = [XmippProtResolution3D]
+    _environments = [DESKTOP_TKINTER, WEB_DJANGO]
+    
+    _label = 'viewer ml3d'
+
+    
+    def _defineParams(self, form):
+        form.addSection(label='Results')
+        form.addParam('doShowFsc', BooleanParam, label="Display Fourier Shell Correlation?", condition='self.protocol.doFSC', default=True)
+        form.addParam('doShowDpr', BooleanParam, label="Display Differential Phase Residual?", condition='self.protocol.doFSC', default=True)
+        form.addParam('doShowEstructureFactor', BooleanParam, label="Display Structure factor?", condition='self.protocol.doStructureFactor', default=True)
+        form.addParam('doShowGuinier', BooleanParam, label="Display Guinier plot?", condition='self.protocol.doStructureFactor', default=True)
+        form.addParam('useMatlab', BooleanParam, label="Use Matlab for Guinier?", condition='self.protocol.doStructureFactor and doShowGuinier', default=True)
+        form.addParam('doShowSsnr', BooleanParam, label="Display Spectral SNR?", condition='self.protocol.doSSNR', default=True)
+        form.addParam('doShowVssnr', BooleanParam, label="Display Volumetric Spectral SNR?", condition='self.protocol.doVSSNR', default=True)
+
+    def _getVisualizeDict(self):
+        return {'doShowFsc': self._viewFsc,
+                'doShowDpr': self._viewDpr,
+                'doShowEstructureFactor': self._viewEstructureFactor,
+                'doShowGuinier': self._viewGuinier,
+                'useMatlab': self._useMatlab,
+                'doShowSsnr': self._viewSsnr,
+                'doShowVssnr': self._viewVssnr
+                }
+        
+    def _viewAll(self, *args):
+        if self.doShowFsc and self.protocol.doFSC:
+            self._viewFsc()
+        if self.doShowDpr and self.protocol.doFSC:
+            self._viewDpr()
+        if self.doShowEstructureFactor and self.protocol.doStructureFactor:
+            self._viewEstructureFactor()
+        if self.doShowGuinier and self.protocol.doStructureFactor:
+            self._viewGuinier()
+        if self.doShowSsnr and self.protocol.doSSNR:
+            self._viewSsnr()
+        if self.doShowVssnr and self.protocol.doVSSNR:
+            self._viewVssnr()
+    
+    def _viewFsc(self):
+        fscFn = self.protocol._defineFscName()
+        md = md = MetaData(fscFn)
+        self._viewPLot("Fourier Shell Correlation", md, mdLabelX, mdLabelY, color='r')
+        
+    def _viewDpr(self):
+        fscFn = self.protocol._defineFscName()
+        md = md = MetaData(fscFn)
+        self._viewPLot("Differential Phase Residual", md, mdLabelX, mdLabelY)
+    
+    def _viewPlot(self, title, md, mdLabelX, mdLabelY, color='g'):
+        xplotter = XmippPlotter(1, 1, figsize=(4,4), title)
+        xplotter.plotMd(md, mdLabelX, mdLabelY, color)
+        return xplotter
+        
+
+
+
+
+    def visualize(self):
+        fnStructure=self.workingDirPath("structureFactor.xmd")
+        if os.path.exists(fnStructure):
+            if self.DisplayStructureFactor and self.DoStructureFactor:
+                os.system('xmipp_metadata_plot -i %s -x resolutionFreqFourier -y resolutionLogStructure --title "Structure factor" --xtitle "Frequency (1/A)" --ytitle "Log(StructureFactor)" &'%fnStructure)
+            if self.DisplayGuinier:
+                if self.UseMatlab:
+                    os.system("matlab -r \"xmipp_show_structure_factor(\'"+self.WorkingDir+"\')\"")
+                else:
+                    os.system('xmipp_metadata_plot -i %s -x resolutionFreqFourier2 -y resolutionLogStructure --title "Guinier plot" --xtitle "Frequency (1/A^2)" --ytitle "Log(StructureFactor)" &'%fnStructure)
+        fnSSNR=self.workingDirPath("ssnr.xmd")
+        if os.path.exists(fnSSNR):
+            if self.DisplaySSNR and self.DoSSNR:
+                os.system('xmipp_metadata_plot -i %s -x resolutionFreqFourier -y resolutionSSNR --title "Spectral SNR" --xtitle "Frequency (1/A)" --ytitle "SNR" &'%fnSSNR)
+        fnVSSNR=self.workingDirPath("vssnr.vol")
+        if os.path.exists(fnVSSNR):
+            if self.DisplayVSSNR and self.DoVSSNR:
+                runShowJ(fnVSSNR)
+
+
+
+
+
+
+
+        
+    def _viewCorrectedVols(self, e=None):
+        runShowJ(self.protocol._getExtraPath("corrected_volumes.stk"))
+        
+    def _viewFilteredVols(self, e=None):
+        runShowJ(self.protocol._getExtraPath("filtered_volumes.stk"))
+        
+    def _viewGeneratedVols(self, e=None):
+        runShowJ(self.protocol._getExtraPath("generated_volumes.stk"))
+        
+    def _view2DAvgs(self, e=None):
+#        extra = '%s2d' % self.protocol.getProgramId() + 'extra'
+#        self._viewIterationFile(extra + "/iter%03d/iter_classes.xmd")
+        files = self._getIterationFile("iter_classes.xmd", extra="mlf2dextra")
+        self._doShowJ(files)
+        
+    def _view3DRefsVolumes(self, e=None):
+#        self._viewIterationFile("extra/iter%03d/vol000001.vol")
+        files = self._getIterationFile("vol000001.vol", extra="extra")
+        self._doShowJ(files)
+    
+    def _plotAngularDistribution(self, e=None):
+        self._showPlots(*self._createAngularDistributionPlots())
+            
+    def _createAngularDistributionPlots(self):
+        """ Plot the angular distributions for each reference and each iteration.
+        Returns:
+            plots: a list of all angular distribution plots.
+            errors: a list of errors (if some iteration does not exists.
+        """
+        plots = []
+        errors = self.setVisualizeIterations()
+        
+        if len(errors) == 0:
+            for iteration in self.visualizeIters:
+                extra = '%s2d' % self.protocol.getProgramId() + 'extra'
+                extraPath = self.protocol._getPath(extra + "/iter%03d/iter_classes.xmd" % iteration)
+                if not os.path.exists(extraPath):
+                    errors.append('Iteration %s does not exist.' % iteration)
+                else:
+                    # Create Angular plot for one iteration
+                    xplotter = self._createIterAngularDistributionPlot(iteration, extraPath)
+                    xplotter.draw()
+                    plots.append(xplotter)
+
+        return plots, errors
+    
+    def _createIterAngularDistributionPlot(self, iteration, extraPath):
+        # Create Angular plot for one iteration
+        md = MetaData("classes@%s" % extraPath)
+        md2 = MetaData()
+        md2.aggregate(md, AGGR_SUM, MDL_REF3D, MDL_WEIGHT, MDL_WEIGHT)
+        nrefs = md2.size()
+        figsize = None
+        if nrefs == 1:
+            gridsize = [1, 1]
+            figsize = (4, 4)
+        elif nrefs == 2:
+            gridsize = [1, 2]
+            figsize = (8, 4)
+        else:
+            gridsize = [(nrefs+1)/2, 2]
+            figsize = (8, 12)
+
+        xplotter = XmippPlotter(*gridsize, figsize=figsize, 
+                                windowTitle="Angular distribution - iteration %d" % iteration)
+        
+        for r in range(1, nrefs+1):
+            md2.importObjects(md, MDValueEQ(MDL_REF3D, r))
+            plot_title = 'ref %d' % r
+            xplotter.plotMdAngularDistribution(plot_title, md2)
+        
+        return xplotter
+    
+
+    def _plotClassDistribution(self, e=None):
+        self._showPlots(*self._createClassDistributionPlots())
+        
+    def _createClassDistributionPlots(self):
+        """ Plot the class distributions for each reference and each iteration.
+        Returns:
+            plots: a list of all angular distribution plots.
+            errors: a list of errors (if some iteration does not exists.
+        """
+        plots = []
+        errors = self.setVisualizeIterations()
+        
+        if len(errors) == 0:
+            for iter in self.visualizeIters:
+                extra = '%s2d' % self.protocol.getProgramId() + 'extra'
+                extraPath = self.protocol._getPath(extra + "/iter%03d/iter_classes.xmd" % iter)
+    
+                if not os.path.exists(extraPath):
+                    errors.append('Iteration %s does not exist.' % iter)        
+                else:
+                    xplotter = self._createIterClassDistributionPlots(iter, extraPath)
+                    xplotter.draw()
+                    plots.append(xplotter)
+        
+        return plots, errors
+    
+    def _createIterClassDistributionPlots(self, iteration, extraPath):
+        from numpy import arange
+        from matplotlib.ticker import FormatStrFormatter
+        
+        xplotter = XmippPlotter(1, 1, figsize=(4,4),
+                                windowTitle="Images distribution - iteration %d" % iteration)
+        md = MetaData("classes@%s" % extraPath)
+        md2 = MetaData()    
+        md2.aggregate(md, AGGR_SUM, MDL_REF3D, MDL_WEIGHT, MDL_WEIGHT)
+        weights = [md2.getValue(MDL_WEIGHT, objId) for objId in md2]
+        nrefs = len(weights)
+        refs3d = arange(1, nrefs + 1)
+        width = 0.85
+        a = xplotter.createSubPlot('3D references weights on last iteration', 'references', 'weight')
+        a.set_xticks(refs3d + 0.45)
+        a.xaxis.set_major_formatter(FormatStrFormatter('%1.0f'))
+        a.set_xlim([0.8, nrefs + 1])
+        a.bar(refs3d, weights, width, color='b')
+
+        return xplotter
+                    
+    def _plotStatistics(self, e=None):
+        from viewer_ml2d import createPlots
+        xplotter = createPlots(self.protocol, ['doShowLL', 'doShowPmax'])
+        if xplotter is not None:
+            return self._showOrReturn(xplotter)
+                
+    def _viewIterationFile(self, filePath):
+        self.setVisualizeIterations()
+        
+        for iter in self.visualizeIters:
+            extraPath = self.protocol._getPath(filePath % iter)
+            print "extraPath=%s" % extraPath
+            
+            if os.path.exists(extraPath):
+                runShowJ(extraPath)        
+            else:
+                self.formWindow.showError('Iteration %s does not exist.' % iter)     
+    
+    
+    def _doShowJ(self, files):
+        if len(files) != 0:
+            for f in files:
+                runShowJ(f)
+    
+    def _getIterationFile(self, filePath, extra=""):
+        self.setVisualizeIterations()
+        
+        paths = []
+        for i, iter in enumerate(self.visualizeIters):
+            path = join(extra, "iter%03d")
+            pathDir = self.protocol._getPath(path % iter)
+            pathNew = join(pathDir, filePath)
+            print "path=%s" % pathNew
+            
+            if os.path.exists(pathNew):
+                paths.append(pathNew)
+            else:
+                self.formWindow.showError('Iteration %s does not exist.' % iter)
+        
+        return paths
+        
+    
+    def setVisualizeIterations(self):
+        '''Validate and set the set of iterations to visualize.
+        If not set is selected, only use the last iteration'''
+        self.lastIter = self.protocol._lastIteration()
+        self.visualizeIters = []
+        
+        if self.iterToShow.get() == LAST_ITER:
+            self.visualizeIters = [self.lastIter]
+            
+        elif self.iterToShow.get() == ALL_ITER:
+            self.visualizeIters = range(1, self.lastIter + 1)
+        elif self.iterToShow.get() == SELECTED_ITERS:
+            if self.selectedIters.empty():
+                return ['Please select the iterations that you want to visualize.']
+            else:
+                try:
+                    self.visualizeIters = self._getListFromRangeString(self.selectedIters.get())
+                except Exception, ex:
+                    return ['Invalid iterations range.']
+        return [] # No errors resulted
+
+    def getVisualizeDictWeb(self):
+        return {'doShowGreyScaleRefVol': 'viewCorrectedVols',
+                'doShowFilterRefVol': 'viewFilteredVolsProtocol',
+                'doShowSeedsVols': 'viewGeneratedVols',
+                'doShow2DAvgs': 'view2DAvgs',
+                'doShow3DRefsVolumes': 'view3DRefsVolumes',
+                'doShowAngDist': 'doPlotAngularDistribution',
+                'doShowDataDist': 'doPlotClassDistribution',
+                'doShowStatistics': 'doPlotStatistics'
+                }
+
+    @classmethod
+    def getView(cls):
+        """ This function will notify the web viewer for this protocol"""
+        return "viewerForm"
+    
+    @classmethod
+    def getViewFunction(cls):
+        """ This will return the name of the function to view
+        in web one (or all) params of the protocol"""
+        return "viewerML3D"
+    

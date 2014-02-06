@@ -35,7 +35,7 @@ from xmipp3 import XmippProtocol
 from convert import createXmippInputVolumes, readSetOfVolumes
 
 
-class XmippProtPreprocessVolumes(ProtValidate3D):
+class XmippProtResolution3D(ProtValidate3D):
     """ Protocol for Xmipp-based resolution3D """
     _label = 'resolution 3D'
       
@@ -75,16 +75,31 @@ class XmippProtPreprocessVolumes(ProtValidate3D):
             self._insertFunctionStep('structureFactorcStep')
             self.insertStep('structureFactorStep',Structure=self.workingDirPath('structureFactor.xmd'),InputVol=self.InputVol)
         if self.doSSNR or self.doVSSNR:
+            # Implement when RECONSTRUCTOR method is implemented
             pass
         
         self._insertFunctionStep('createOutput')
         
+    def _defineMetadataRootName(self, mdrootname):
+        
+        if mdrootname=='fsc':
+            return self._getPath('fsc.xmd')
+        if mdrootname=='structureFactor':
+            return self._getPath('structureFactor.xmd')
+        
+    def _defineStructFactorName(self):
+        structFactFn = self._defineMetadataRootName('structureFactor')
+        return structFactFn
+    
+    def _defineFscName(self):
+        fscFn = self._defineMetadataRootName('fsc')
+        return fscFn
          
     def calculateFscStep(self):
-        """ calculate the FSC between two volumes"""
+        """ Calculate the FSC between two volumes"""
         
         samplingRate = self.inputVol.getSamplingRate()
-        fscFn = self._getPath('fsc.xmd')
+        fscFn = self._defineFscName()
         args="--ref %s -i %s -o %s --sampling_rate %f --do_dpr" % (self.refVol, self.inputVol, fscFn, samplingRate)
         self.runJob(None, "xmipp_resolution_fsc", args)
     
@@ -92,7 +107,7 @@ class XmippProtPreprocessVolumes(ProtValidate3D):
         """ Calculate the structure factors of the volume"""
         
         samplingRate = self.inputVol.getSamplingRate()
-        structureFn = self._getPath('structureFactor.xmd')
+        structureFn = self._defineStructFactorName
         args = "-i %s -o %s --sampling %f" % (self.inputVol, structureFn, samplingRate)
         self.runJob(None, "xmipp_volume_structure_factor", args)
         

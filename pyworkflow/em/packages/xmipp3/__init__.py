@@ -79,6 +79,6 @@ from protocol_nma_alignment import XmippProtAlignmentNMA
 from protocol_create_mask import XmippProtCreateMask3D
 from protocol_align_volume import XmippProtAlignVolume
 from protocol_screen_classes import XmippProtScreenClasses
-from protocol_resolution_3d import XmippProtPreprocessVolumes
+from protocol_resolution_3d import XmippProtResolution3D
 # Wizards
 from wizard import *
