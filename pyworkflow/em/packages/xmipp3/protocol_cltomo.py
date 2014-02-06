@@ -23,6 +23,7 @@
 # *  e-mail address 'xmipp@cnb.csic.es'
 # *
 # **************************************************************************
+from pyworkflow.em.packages.xmipp3.convert import readSetOfVolumes
 """
 This sub-package contains protocols for performing subtomogram averaging.
 """
@@ -30,6 +31,7 @@ This sub-package contains protocols for performing subtomogram averaging.
 from pyworkflow.em import *  
 from constants import *
 from convert import createXmippInputVolumes, readSetOfClasses3D
+from xmipp import MetaData
 
 class XmippProtCLTomo(ProtClassify3D):
     """ Perform subtomogram averaging """
@@ -93,6 +95,20 @@ class XmippProtCLTomo(ProtClassify3D):
             setOfClasses.setVolumes(self.volumelist.get())
             readSetOfClasses3D(setOfClasses,lastLevelFile)
             self._defineOutputs(outputClasses=setOfClasses)
+            self._defineSourceRelation(self.volumelist, self.outputClasses)
+        if self.generateAligned.get():
+            setOfVolumes = self._createSetOfVolumes()
+            fnAligned = self._getExtraPath('results_aligned.xmd')
+            self.runJob(None,'xmipp_metadata_selfile_create', '-p %s -o %s -s'%(self._getExtraPath('results_aligned.stk'),fnAligned))
+            md=MetaData(fnAligned)
+            md.addItemId()
+            md.write(fnAligned)
+            readSetOfVolumes(fnAligned,setOfVolumes)
+            volumeList=self.volumelist.get()
+            setOfVolumes.setSamplingRate(volumeList.getSamplingRate())
+            setOfVolumes.write()
+            self._defineOutputs(alignedVolumes=setOfVolumes)
+            self._defineTransformRelation(self.volumelist, self.alignedVolumes)
             
     def _summary(self):
         messages = []
@@ -102,16 +118,28 @@ class XmippProtCLTomo(ProtClassify3D):
                 messages.append('Input subvolume orientations were randomized')
         if self.dontAlign.get():
             messages.append('Input subvolumes were assumed to be already aligned')
+        messages.append('Number of output classes: %d'%self.numberOfReferences.get())
         return messages
+
+    def _validate(self):
+        errors=[]
+        (Xdim1, Ydim1, Zdim1, _)=self.volumelist.get().getDimensions()
+        if Xdim1!=Ydim1 or Ydim1!=Zdim1:
+            errors.append("Input subvolumes are not cubic")
+        if not self.doGenerateInitial.get():
+            if not self.referenceList.hasValue():
+                errors.append("If references are not self generated, you have to provide a reference set of volumes")
+            else:
+                (Xdim2, Ydim2, Zdim2, _) = self.referenceList.get().getDimensions()
+                if Xdim2!=Ydim2 or Ydim2!=Zdim2:
+                    errors.append("Reference subvolumes are not cubic")
+                if Xdim1!=Xdim2:
+                    errors.append("Input and reference subvolumes are of different size")
+        return errors
 
     def _citations(self):
-        papers=[]
-        return papers
+        return ['Chen2013']
 
-    def _methods(self):
-        messages = []      
-        return messages
-    
     def runCLTomo(self):
         params= ' -i '            + createXmippInputVolumes(self,self.volumelist.get()) + \
                 ' --oroot '       + self._getExtraPath("results") + \
@@ -132,7 +160,7 @@ class XmippProtCLTomo(ProtClassify3D):
             if self.randomizeOrientation.get():
                 params+=' --randomizeStartingOrientation'
         else:
-            params+=' --ref0 '+createXmippInputVolumes(self,self.referenceList.get())
+            params+=' --ref0 '+createXmippInputVolumes(self,self.referenceList.get(),self._getPath('references.xmd'))
         if self.inputMask.hasValue():
             params+=' --mask binary_file '+self.inputMask.get().getLocation()
         if self.generateAligned.get():
@@ -141,5 +169,3 @@ class XmippProtCLTomo(ProtClassify3D):
             params+=" --dontAlign"
 
         self.runJob(None,'xmipp_mpi_classify_CLTomo','%d %s'%(self.numberOfMpi.get(),params))
-
-# *** Falta validate si not doGenerateInitial, check referenceList
