@@ -159,7 +159,7 @@ void ProgPSDSort::processImage(const FileName &fnImg, const FileName &fnImgOut, 
     rowIn.getValue(MDL_PSD,fnPSD);
     if (fnPSD=="NA")
     	return;
-    rowIn.getValue(MDL_CTF_MODEL,fnCTF);
+    //rowIn.getValue(MDL_CTF_MODEL,fnCTF);
     if (rowIn.containsLabel(MDL_CTF_MODEL2))
     	rowIn.getValue(MDL_CTF_MODEL2,fnCTF2);
 
@@ -169,11 +169,10 @@ void ProgPSDSort::processImage(const FileName &fnImg, const FileName &fnImgOut, 
     Image<double> PSD;
     PSD.read(fnPSD);
     CTFDescription CTF1, CTF2;
-    CTF1.read(fnCTF);
+    CTF1.readFromMdRow(rowIn);
     CTF1.produceSideInfo();
     evaluation.defocusU=CTF1.DeltafU;
     evaluation.defocusV=CTF1.DeltafV;
-
     if (!fnCTF2.empty() && fnCTF2 != "NA")
     {
     	CTF2.read(fnCTF2);
@@ -227,15 +226,15 @@ void ProgPSDSort::processImage(const FileName &fnImg, const FileName &fnImgOut, 
     evaluation.PSDcorrelation90=correlationIndex(PSD(), PSDrotated());
 
     // Get the fitting score
-    MetaData MD;
-    MD.read(fnCTF);
-    size_t objId = MD.firstObject();
-    MD.getValue(MDL_CTF_CRIT_FITTINGSCORE,evaluation.fittingScore,objId);
-    MD.getValue(MDL_CTF_CRIT_FITTINGCORR13,evaluation.fittingCorr13,objId);
-    MD.getValue(MDL_CTF_CRIT_PSDVARIANCE,evaluation.PSDVariance,objId);
-    MD.getValue(MDL_CTF_CRIT_PSDPCA1VARIANCE,evaluation.PSDPC1Variance,objId);
-    MD.getValue(MDL_CTF_CRIT_PSDPCARUNSTEST,evaluation.PSDPCRunsTest,objId);
+    //MetaData MD;
+    //MD.read(fnCTF);
 
+    //size_t objId = MD.firstObject();
+    rowIn.getValue(MDL_CTF_CRIT_FITTINGSCORE,evaluation.fittingScore);
+    rowIn.getValue(MDL_CTF_CRIT_FITTINGCORR13,evaluation.fittingCorr13);
+    rowIn.getValue(MDL_CTF_CRIT_PSDVARIANCE,evaluation.PSDVariance);
+    rowIn.getValue(MDL_CTF_CRIT_PSDPCA1VARIANCE,evaluation.PSDPC1Variance);
+    rowIn.getValue(MDL_CTF_CRIT_PSDPCARUNSTEST,evaluation.PSDPCRunsTest);
     // Explore the CTF
     Matrix1D<double> u(2), freqZero1(2), freqZero2(2), freqMin1(2), pixelZero1(2), pixelMin1(2);
     double wmax=0.5/CTF1.Tm;
@@ -365,5 +364,6 @@ void ProgPSDSort::processImage(const FileName &fnImg, const FileName &fnImgOut, 
     rowOut.setValue(MDL_CTF_CRIT_PSDPCA1VARIANCE,evaluation.PSDPC1Variance);
     rowOut.setValue(MDL_CTF_CRIT_PSDPCARUNSTEST,evaluation.PSDPCRunsTest);
     rowOut.setValue(MDL_CTF_CRIT_NORMALITY, evaluation.histogramNormality);
+
 }
 
