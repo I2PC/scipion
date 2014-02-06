@@ -814,10 +814,10 @@ class SetOfClasses3D(Set):
     
     def createAverages(self):
         self._averages = SetOfVolumes(filename=self.getFileName(), prefix='Averages')
-        volumes = SetOfVolumes()
-        self.setVolumes(volumes)
-        
+        if not self.getVolumes().hasValue():
+            raise Exception("SetOfClasses3D.createAverages: you must set the volumes before creating the averages!!!")
         self._averages.copyInfo(self.getVolumes())
+        
         return self._averages
     
     def getVolumes(self):
