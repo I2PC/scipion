@@ -211,6 +211,9 @@ function fillTabs(id) {
 			
 			$("#tab-logs-error").empty();
 			$("#tab-logs-error").append(json.logs_error);
+			
+			$("#tab-logs-scipion").empty();
+			$("#tab-logs-scipion").append(json.logs_scipion);
 		}
 	});
 }

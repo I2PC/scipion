@@ -221,6 +221,12 @@ class TestXmippWorkflow(unittest.TestCase):
         
         img.setSamplingRate(5.0)
         
+        
+    def testRelations(self):
+        projName = "TestXmippWorkflow"
+        project = Manager().loadProject(projName)
+        
+        project.getTransformGraph()
     
    
              
