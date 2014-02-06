@@ -110,6 +110,14 @@ url = "http://www.sciencedirect.com/science/article/pii/S1047847713002566",
 author = "de la Rosa-Trevín, J.M.  and Otón, J. and R. Marabini and A. Zaldívar and J. Vargas and J.M. Carazo and Sorzano, C.O.S.",
 keywords = "Electron microscopy, Single particles analysis, Image processing, Software package "
 }
+
+@article{chen2013fast,
+  title={Fast and accurate reference-free alignment of subtomograms},
+  author={Chen, Yuxiang and Pfeffer, Stefan and Hrabe, Thomas and Schuller, Jan Michael and F{\"o}rster, Friedrich},
+  journal={Journal of structural biology},
+  year={2013},
+  publisher={Elsevier}
+}
 """
 
 from pyworkflow.utils import parseBibTex
