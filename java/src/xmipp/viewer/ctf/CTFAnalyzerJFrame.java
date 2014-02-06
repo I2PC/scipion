@@ -295,6 +295,7 @@ public class CTFAnalyzerJFrame extends JFrame implements ActionListener
                 profileimp.setRoi(line);
 		psdprofileplot = new ProfilePlot(profileimp).getProfile();
 
+
 		ctfmodel.CTFProfile(imageprofilepn.getProfileangle(), samples);
 		bgnoiseplot = ctfmodel.profiles[CTFDescription.BACKGROUND_NOISE];
 		envelopeplot = ctfmodel.profiles[CTFDescription.ENVELOPE];
@@ -323,28 +324,27 @@ public class CTFAnalyzerJFrame extends JFrame implements ActionListener
 	private XYSeriesCollection getXYSeriesCollection(XYPlot plot, double[] psdprofileplot, double[] ctfplot, double[] theorethicalpsdplot, double[] envelopeplot,
 			double[] bgnoiseplot, double[] differenceplot)
 	{
-		double max = Double.MAX_VALUE;
-		double min = -1;
+		double max = -Double.MAX_VALUE;
+		double min = Double.MAX_VALUE;
 		collection = new XYSeriesCollection();
 		serie_index = 0;
 
 		if (showCTF())
-			addSeries(plot, XmippLabel.CB_PLOT_CTF, COLOR_CTF, ctfplot, max, min);
+			addSeries(plot, XmippLabel.CB_PLOT_CTF, COLOR_CTF, ctfplot, 1, -1);
 		else if (showPSD())
 		{
-			addSeries(plot, getPSDProfileLabel(), COLOR_PROFILE, psdprofileplot, max, min);
+			
 
 			/////////////////some max value is established and values displayed are filtered accordingly////////////////////////////////
-			// min = max;
-			max = -max;
-			for (int i = 0; i < xvalues.length; i++)
+			for (int i = 5; i < xvalues.length; i++)
 			{
 				max = Math.max(max, psdprofileplot[i]);
-				// min = Math.min(min, profile[i]);
+				min = Math.min(min, psdprofileplot[i]);
 			}
 			max += Math.abs(max) * 0.1;
-			// min -= Math.abs(min) * 0.1;
+			min -= Math.abs(min) * 0.1;
 			/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+                        addSeries(plot, getPSDProfileLabel(), COLOR_PROFILE, psdprofileplot, max, min);
 
 			if (showBGNoise())
 			{
@@ -368,6 +368,7 @@ public class CTFAnalyzerJFrame extends JFrame implements ActionListener
 	
 	
 	private void addSeries(XYPlot plot, String name, Color c, double[] yvalues, double max, double min){
+
 		collection.addSeries(createSeries(name, xvalues, yvalues, max, min));
 		customizeSerie(plot, c);
 	}
@@ -481,7 +482,7 @@ public class CTFAnalyzerJFrame extends JFrame implements ActionListener
 		{
 			ex.printStackTrace();
 		}
-
+                System.out.printf("sampling rate: %f downsampling:%f\n", samplingRate, downsampling);
 		return samplingRate * downsampling;
 	}
 
