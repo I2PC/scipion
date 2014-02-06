@@ -264,8 +264,14 @@ public class CTFAnalyzerJFrame extends JFrame implements ActionListener
 			theorethicalpsd_avgplot = ctfmodel.avgprofiles[CTFDescription.PSD];
 			ctf_avgplot = ctfmodel.avgprofiles[CTFDescription.CTF];
 			difference_avgplot = new double[bgnoiseplot.length];
+                        double a, b;
 			for (int i = 0; i < xvalues.length; i++)
-				difference_avgplot[i] = Math.log10(Math.pow(10, psdprofile_avgplot[i] * 0.1) - Math.pow(10, bgnoise_avgplot[i] * 0.1));
+                        {
+                            a = psdprofile_avgplot[i];//Math.pow(10, psdprofileplot[i] * 0.1);
+                            b = bgnoise_avgplot[i]; //Math.pow(10, bgnoiseplot[i] * 0.1);
+                            difference_avgplot[i] = a - b;//Math.log10(a - b);
+				//difference_avgplot[i] = Math.log10(Math.pow(10, psdprofile_avgplot[i] * 0.1) - Math.pow(10, bgnoise_avgplot[i] * 0.1));
+                        }
 		}
 		XYPlot plot = getAvgPlot();
 		XYSeriesCollection collection = getXYSeriesCollection(plot, psdprofile_avgplot, ctf_avgplot, theorethicalpsd_avgplot, envelope_avgplot, bgnoise_avgplot, difference_avgplot);
@@ -601,13 +607,13 @@ public class CTFAnalyzerJFrame extends JFrame implements ActionListener
     
     public String getDifferenceLabel()
     {
-    	return XmippLabel.CB_PLOT_BGNOISE + " Corrected " + XmippLabel.LABEL_PSD;
+    	return String.format("%s - %s", XmippLabel.LABEL_PSD, XmippLabel.CB_PLOT_BGNOISE);
     }
     
     private String getTheorethicalPSDLabel()
 	{
 		// TODO Auto-generated method stub
-		return "Theoretical " + XmippLabel.LABEL_PSD;
+		return String.format("Log(%s)", "Theoretical " + XmippLabel.LABEL_PSD);
 	}
     
     public String getPSDProfileLabel()
