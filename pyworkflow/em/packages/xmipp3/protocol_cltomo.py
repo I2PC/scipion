@@ -29,7 +29,7 @@ This sub-package contains protocols for performing subtomogram averaging.
 
 from pyworkflow.em import *  
 from constants import *
-from convert import createXmippInputVolumes
+from convert import createXmippInputVolumes, readSetOfClasses3D
 
 class XmippProtCLTomo(ProtClassify3D):
     """ Perform subtomogram averaging """
@@ -81,18 +81,19 @@ class XmippProtCLTomo(ProtClassify3D):
 
     def _insertAllSteps(self):
         self._insertFunctionStep('runCLTomo')
+        self._insertFunctionStep('createOutput')
     
     def createOutput(self):
-        levelFiles=glob.glob(self._extraPath("results_classes_level*.xmd"))
+        import glob
+        levelFiles=glob.glob(self._getExtraPath("results_classes_level*.xmd"))
         if levelFiles:
             levelFiles.sort()
             lastLevelFile=levelFiles[-1]
-            setOfClasses = SetOfClasses3D()
-            setOfClasses.setFileName(lastLevelFile)
-            setOfClasses.setSamplingRate(self.volumelist.get().getSamplingRate())
+            setOfClasses = self._createSetOfClasses3D()
+            setOfClasses.setVolumes(self.volumelist.get())
+            readSetOfClasses3D(setOfClasses,lastLevelFile)
             self._defineOutputs(outputClasses=setOfClasses)
             
-        
     def _summary(self):
         messages = []
         if self.doGenerateInitial.get():
@@ -138,7 +139,6 @@ class XmippProtCLTomo(ProtClassify3D):
             params+=" --generateAlignedVolumes"
         if self.dontAlign.get():
             params+=" --dontAlign"
-        print('xmipp_mpi_classify_CLTomo','%d %s'%(self.numberOfMpi.get(),params))
 
         self.runJob(None,'xmipp_mpi_classify_CLTomo','%d %s'%(self.numberOfMpi.get(),params))
 
