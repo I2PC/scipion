@@ -27,6 +27,8 @@
 This sub-package will contains Xmipp3.0 specific protocols
 """
 
+from bibtex import _bibtex # Load bibtex dict with references
+
 _logo = "xmipp_logo.png"
 _referencesDict = {
                    'DelaRosa2013_Xmipp':'[[http://www.ncbi.nlm.nih.gov/pubmed/24075951][De la Rosa-Trevin, et.al, JSB (2013)]]',
@@ -37,7 +39,7 @@ _referencesDict = {
                 #'[[http://www.ncbi.nlm.nih.gov/pubmed/8812978][Xmipp: Marabini, JSB (1996)]]',
                 #'[[http://www.sciencedirect.com/science/article/pii/B9780124059146000160][Protocols: Devaux, Meth.Cell.Biol. (2012)]]',
                 #'[[http://www.ncbi.nlm.nih.gov/pubmed/18536645][Protocols: Scheres, Nat.Prot. (2008)]]',
-_references = [_referencesDict['DelaRosa2013_Xmipp'], _referencesDict['Sorzano2013_Protocols']]
+_references = ['delaRosaTrevin2013', 'Sorzano2013']
 
 from xmipp3 import *
 from convert import *
@@ -76,6 +78,7 @@ from protocol_nma_alignment import XmippProtAlignmentNMA
 from protocol_create_mask import XmippProtCreateMask3D
 from protocol_align_volume import XmippProtAlignVolume
 from protocol_cltomo import XmippProtCLTomo
+from protocol_screen_classes import XmippProtScreenClasses
 
 # Wizards
 from wizard import *

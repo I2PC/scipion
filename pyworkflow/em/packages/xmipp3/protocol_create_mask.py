@@ -49,6 +49,7 @@ MORPHOLOGY_EROSION=1
 MORPHOLOGY_CLOSING=2
 MORPHOLOGY_OPENING=3
 
+
 class XmippProtCreateMask3D(ProtCreateMask3D,XmippGeometricalMask):
     """ Create a 3D mask from a geometrical description (Sphere, Box, Cylinder...), from a volume or from another class """
     _label = 'create mask'
@@ -63,6 +64,7 @@ class XmippProtCreateMask3D(ProtCreateMask3D,XmippGeometricalMask):
                       condition=isVolume, help="Volume that will serve as basis for the mask")
         form.addParam('volumeOperation',EnumParam,label='Operation',condition=isVolume,
                       default=OPERATION_THRESHOLD,choices=['Threshold','Segment'])
+        #TODO: add wizard
         form.addParam('threshold',FloatParam,label='Threshold',condition='%s and volumeOperation==%d'%(isVolume,OPERATION_THRESHOLD))
         isSegmentation='%s and volumeOperation==%d'%(isVolume,OPERATION_SEGMENT)
         form.addParam('segmentationType',EnumParam,label='Segmentation type',condition=isSegmentation,
@@ -177,9 +179,16 @@ class XmippProtCreateMask3D(ProtCreateMask3D,XmippGeometricalMask):
         volMask.setFileName(self.maskFile)
         if self.source==SOURCE_VOLUME:
             volMask.setSamplingRate(self.volume.get().getSamplingRate())
-        if self.source==SOURCE_MASK:
+        elif self.source==SOURCE_MASK:
             volMask.setSamplingRate(self.inputMask.get().getSamplingRate())
+        else:
+            volMask.setSamplingRate(self.samplingRate.get())
         self._defineOutputs(outputMask=volMask)
+        
+        if self.source==SOURCE_VOLUME:
+            self._defineSourceRelation(self.volume, self.outputMask)
+        elif self.source==SOURCE_MASK:
+            self._defineTransformRelation(self.inputMask, self.outputMask)
         
     def _summary(self):
         messages = []      
@@ -222,10 +231,10 @@ class XmippProtCreateMask3D(ProtCreateMask3D,XmippGeometricalMask):
         return messages
 
     def _citations(self):
-        papers=[]
-        if self.source==SOURCE_VOLUME and self.volumeOperation==OPERATION_SEGMENT and self.segmentationType==SEGMENTATION_AUTOMATIC:
-            papers.append('[%s] %s'%('Otsu1979_Segmentation',self._package._referencesDict['Otsu1979_Segmentation']))
-        return papers
+        if (self.source == SOURCE_VOLUME and 
+            self.volumeOperation == OPERATION_SEGMENT and 
+            self.segmentationType==SEGMENTATION_AUTOMATIC):
+            return ['Otsu1979']
 
     def _methods(self):
         messages = []      

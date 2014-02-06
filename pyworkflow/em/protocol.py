@@ -38,7 +38,7 @@ from pyworkflow.protocol.params import *
 from constants import *
 from data import * 
 from pyworkflow.utils.path import removeBaseExt, join, basename, cleanPath
-from pyworkflow.utils.messages_properties import Message, Icon 
+from pyworkflow.utils.properties import Message, Icon 
 
 
 class EMProtocol(Protocol):
