@@ -179,6 +179,10 @@ def wizardMpi(tab_mpi):
         tab_mpi.setValue('MPI_LIBDIR', lib_mpi)
     else: errors += "\nLibrary libmpi.so not found in libraries dirs"
     
+    if bin_mpi:
+        tab_mpi.setValue('MPI_BINDIR', bin_mpi)
+    else: errors += "\nBinary mpirun not found in binaries dir"
+    
     return errors
     
 def wizardJava(tab_java):
