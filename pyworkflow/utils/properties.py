@@ -264,7 +264,8 @@ class Icon():
     
     ACTION_SEARCH = 'fa-search.png'
     ACTION_EXECUTE = 'fa-cogs.png'
-    
+    ACTION_IN = 'fa-sign-in.png'
+    ACTION_OUT = 'fa-sign-out.png'
     #Host template
     BUTTON_CLOSE = 'dialog_close.png'
     BUTTON_SAVE = 'filesave.png'

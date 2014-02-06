@@ -254,13 +254,13 @@ class RunIOTreeProvider(TreeProvider):
             value = obj.get()
             info = {'key': value, 'text': value, 'values': (''), 'open': True}
         else:
-            image = 'fa-sign-out.png'
+            image = Icon.ACTION_OUT
             parent = self.outputStr
             name = obj.getLastName()
             
             if isinstance(obj, Pointer):
                 obj = obj.get()
-                image = 'fa-sign-in.png'
+                image = Icon.ACTION_IN
                 parent = self.inputStr
                 objName = self.mapper.getFullName(obj)
                 name += '   (from %s)' % objName
