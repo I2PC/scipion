@@ -45,6 +45,7 @@ from protocol_create_mask import XmippProtCreateMask3D
 from convert import writeSetOfMicrographs, writeSetOfParticles, writeSetOfClasses2D, writeSetOfCoordinates, writeSetOfCTFs, locationToXmipp
 from os.path import dirname, join
 from pyworkflow.utils.path import makePath
+import pyworkflow as pw
 
 
 
@@ -223,10 +224,9 @@ def runShowJ(inputFiles, memory="1g", extraParams=""):
     runJavaIJapp(memory, "'xmipp.viewer.Viewer'", "-i %s %s" % (inputFiles, extraParams), True)
     
 def runScipionShowJ(inputFiles, set, obj, memory="1g", extraParams=""):
-    SCIPION_PYTHON = os.environ["SCIPION_PYTHON"]
-    PW_HOME = os.environ["PW_HOME"]
     
-    script = "%s %s/pyworkflow/apps/%s" % (SCIPION_PYTHON, PW_HOME, "pw_create_image_subset.py") 
+    script = pw.join('apps', 'pw_create_image_subset.py')
+    script = "%s %s" % (pw.PYTHON, script) 
 
     runJavaIJapp(memory, "'xmipp.viewer.scipion.ScipionViewer'", "-i %s %s --command \"%s\" \"%s\" %s" % (inputFiles, extraParams, set, script, obj.strId()), True)
 
