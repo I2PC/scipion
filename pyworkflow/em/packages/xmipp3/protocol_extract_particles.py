@@ -203,16 +203,14 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
                         
             #self._insertFunctionStep('getCTF', micId, micName, micrographToExtract)
             micName = removeBaseExt(mic.getFileName())
-            fnCTF = None
             #FIXME: Check only if mic has CTF when implemented ok
             #if self.doFlip or mic.hasCTF():
             if self.ctfRelations.hasValue():
-                # If the micrograph doesn't come from Xmipp, we need to write
-                # a Xmipp ctfparam file to perform the phase flip on the micrograph
-                fnCTF = micrographToCTFParam(mic, self._getTmpPath("%s.ctfParam" % micName))
-                 
                 # Insert step to flip micrograph
                 if self.doFlip:
+                    # If the micrograph doesn't come from Xmipp, we need to write
+                    # a Xmipp ctfparam file to perform the phase flip on the micrograph                     
+                    fnCTF = micrographToCTFParam(mic, self._getTmpPath("%s.ctfParam" % micName))
                     self._insertFunctionStep('flipMicrograph', micName, fnCTF, micrographToExtract)
                     micrographToExtract = self._getTmpPath(micName +"_flipped.xmp")
                            
