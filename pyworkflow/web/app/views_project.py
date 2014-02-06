@@ -363,7 +363,7 @@ def protocol_info(request):
         status = protocol.status.get()
         
         # LOGS (ERROR & OUTPUT)
-        fOutString, fErrString = protocol.getLogsAsStrings()
+        fOutString, fErrString, fScpnString = protocol.getLogsAsStrings()
 
         from pyworkflow.web.app.views_util import parseText
         ioDict = {'inputs': input_obj,
@@ -373,7 +373,7 @@ def protocol_info(request):
                   'status': status,
                   'logs_out': parseText(fOutString),
                   'logs_error': parseText(fErrString),
-                  'logs_scipion': parseText('Logs de Scipion')
+                  'logs_scipion': parseText(fScpnString)
                   }
         
         jsonStr = json.dumps(ioDict, ensure_ascii=False)

@@ -689,7 +689,7 @@ class ProtocolsView(tk.Frame):
         self.methodText.addText(self.selectedProtocol.methods())
         
     def _fillLogs(self):
-        fOutString, fErrString = self.selectedProtocol.getLogsAsStrings()
+        fOutString, fErrString, fScipionString = self.selectedProtocol.getLogsAsStrings()
         
         self.outputLogText.clear()
         self.outputLogText.addText(fOutString)
@@ -698,7 +698,7 @@ class ProtocolsView(tk.Frame):
         self.errorLogText.addText(fErrString)
         
         self.scipionLogText.clear()
-        self.scipionLogText.addText("Log de Scipion")
+        self.scipionLogText.addText(fScipionString)
         
     def _scheduleRunsUpdate(self, secs=1):
         self.runsTree.after(secs*1000, self.refreshRuns)
