@@ -205,19 +205,27 @@ class TestXmippExtractParticles(TestXmippBase):
     
     @classmethod
     def setUpClass(cls):
+        
         setupProject(cls)    
         pattern = getInputPath('Micrographs_BPV3_Down3', '*.mrc')
         protImport = cls.runImportMicrograph(pattern, samplingRate=1.237, voltage=300, sphericalAberration=2, scannedPixelSize=None, magnification=56000)       
-        pattern = getInputPath('Micrographs_BPV3', '*.mrc')
-        cls.protImport_ori = cls.runImportMicrograph(pattern, samplingRate=1.237, voltage=300, sphericalAberration=2, scannedPixelSize=None, magnification=56000)        
-        cls.protPP = cls.runFakedPicking(protImport.outputMicrographs, 'Picking_XmippBPV3_Down3')
-        downFactor = 2
-        cls.protDown = XmippProtPreprocessMicrographs(doDownsample=True, downFactor=downFactor)
-        cls.protDown.inputMicrographs.set(cls.protImport.outputMicrographs)
-        cls.proj.launchProtocol(cls.protDown, wait=True)
-        cls.protCTF = XmippProtCTFMicrographs()                
-        cls.protCTF.inputMicrographs.set(cls.protDown.outputMicrographs)     
-        cls.proj.launchProtocol(cls.protCTF, wait=True)   
+        
+        #downFactorValue = 2
+        #protDown = XmippProtPreprocessMicrographs(doDownsample=True, downFactor=downFactorValue)
+        #protDown.inputMicrographs.set(protImport.outputMicrographs)
+        #cls.proj.launchProtocol(protDown, wait=True)
+        
+        protCTF = XmippProtCTFMicrographs()                
+        protCTF.inputMicrographs.set(protImport.outputMicrographs)     
+        cls.proj.launchProtocol(protCTF, wait=True)   
+
+        protPP = cls.runFakedPicking(protCTF.inputMicrographs, 'Picking_XmippBPV3_CTF')
+        protAutomaticPP = XmippParticlePickingAutomatic()
+        protAutomaticPP.xmippParticlePicking.set(protPP)
+        protAutomaticPP.inputMicrographs.set(protCTF.inputMicrographs)
+        protAutomaticPP.micsToPick.set(1)
+        cls.proj.launchProtocol(protAutomaticPP, wait=True)
+
 
 #    def testExtractSameAsPicking(self):
 #        print "Run extract particles with downsampling factor equal to the one at picking"
