@@ -366,21 +366,15 @@ public class XmippMenuBar extends MenuBar
 
 	}
         
-<<<<<<< HEAD
+
         protected void close()
-=======
-         protected void close()
->>>>>>> 3.1
         {
             Frame w = (Frame)xw;
             w.setVisible(false);
             w.dispose();
             XmippApplication.removeInstance();
         }
-<<<<<<< HEAD
-=======
-	
->>>>>>> 3.1
+
 	
 	protected void useGeometry(boolean ug)
 	{
