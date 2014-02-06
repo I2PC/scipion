@@ -224,7 +224,7 @@ class XmippFilterParticlesWizard(Wizard):
         if protocol.inputParticles.hasValue():
             particles = [] 
             for i, par in enumerate(protocol.inputParticles.get()):
-                particles.append(par)
+                particles.append(par.clone())
                 if i == 100: # Limit the maximum number of particles to display
                     break
             provider = ListTreeProvider(particles)

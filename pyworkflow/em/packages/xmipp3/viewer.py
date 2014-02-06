@@ -42,10 +42,10 @@ from protocol_cl2d import XmippProtCL2D
 from protocol_kerdensom import XmippProtKerdensom
 from protocol_rotational_spectra import XmippProtRotSpectra
 from protocol_create_mask import XmippProtCreateMask3D
-from convert import writeSetOfMicrographs, writeSetOfParticles, writeSetOfClasses2D, writeSetOfCoordinates, writeSetOfCTFs, locationToXmipp
+from convert import writeSetOfMicrographs, writeSetOfParticles, writeSetOfClasses2D, writeSetOfCoordinates, writeSetOfCTFs, locationToXmipp, \
+                    writeSetOfClasses3D
 from os.path import dirname, join
 from pyworkflow.utils.path import makePath
-
 
 
 import xmipp
@@ -56,7 +56,7 @@ class XmippViewer(Viewer):
     with the Xmipp program xmipp_showj
     """
     _environments = [DESKTOP_TKINTER, WEB_DJANGO]
-    _targets = [Image, SetOfImages, SetOfCoordinates, SetOfClasses2D, 
+    _targets = [Image, SetOfImages, SetOfCoordinates, SetOfClasses2D, SetOfClasses3D,
                 ProtImportMicrographs, XmippProtPreprocessMicrographs, ProtCTFMicrographs,
                 ProtParticlePicking, ProtImportParticles, XmippProtExtractParticles, ProtUserSubSet,
                 ProtAlign, ProtProcessParticles, XmippProtKerdensom, XmippProtRotSpectra,  XmippProtCreateMask3D,
@@ -142,6 +142,14 @@ class XmippViewer(Viewer):
             else:
                 fn = self._getTmpPath(obj.getName() + '_classes.xmd')
                 writeSetOfClasses2D(obj, fn, self._getTmpPath())
+            runShowJ(fn, extraParams=args.get('extraParams', ''))  
+        elif issubclass(cls, SetOfClasses3D):
+            mdFn = getattr(obj, '_xmippMd', None)
+            if mdFn:
+                fn = mdFn.get()
+            else:
+                fn = self._getTmpPath(obj.getName() + '_classes.xmd')
+                writeSetOfClasses3D(obj, fn, self._getTmpPath())
             runShowJ(fn, extraParams=args.get('extraParams', ''))  
         elif issubclass(cls, SetOfCTF):
             mdFn = getattr(obj, '_xmippMd', None)
