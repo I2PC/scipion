@@ -922,6 +922,33 @@ class Protocol(Step):
         """ Should be implemented in subclasses. See citations. """
         return getattr(self, "_references", [])
     
+    def __getPackageBibTex(self):
+        """ Return the _bibtex from the package . """
+        return getattr(self._package, "_bibtex", {})
+     
+    def __getCiteText(self, cite, useKeyLabel=False):
+        # Get the first author surname
+        if useKeyLabel:
+            label = cite['id']
+        else:
+            label = cite['author'].split('and')[0].split(',')[0].strip()
+            label += ', et.al, %s, %s' % (cite['journal'], cite['year'])
+        
+        return '[[%s][%s]] ' % (cite['doi'].strip(), label)
+    
+    def __getCitations(self, citations):
+        """ From the list of citations keys, obtains the full
+        info from the package _bibtex dict. 
+        """
+        bibtex = self.__getPackageBibTex()
+        newCitations = []
+        for c in citations:
+            if c in bibtex:
+                newCitations.append(self.__getCiteText(bibtex[c]))
+            else:
+                newCitations.append(c)
+        return newCitations
+    
     def citations(self):
         """ Return a citation message to provide some information to users. """
         citations = self._citations()
@@ -934,7 +961,7 @@ class Protocol(Step):
         if packageCitations:
             citationsFinal = citationsFinal +['*Package References:*'] + packageCitations   
             
-        return citationsFinal    
+        return self.__getCitations(citationsFinal)    
 
     def _methods(self):
         """ Should be implemented in subclasses. See methods. """
@@ -942,9 +969,19 @@ class Protocol(Step):
         
     def methods(self):
         """ Return a description about methods about current protocol execution. """
+        # TODO: Maybe store the methods and not computing all times??
         baseMethods = self._methods()
         if not baseMethods:
             baseMethods = []
+        else:
+            bibtex = self.__getPackageBibTex()
+            parsedMethods = []
+            for bibId, cite in bibtex.iteritems():
+                k = '[%s]' % bibId
+                link = self.__getCiteText(cite, useKeyLabel=True)
+                for m in baseMethods:
+                    parsedMethods.append(m.replace(k, link))
+            baseMethods = parsedMethods
             
         return baseMethods + [''] + self.citations()
         

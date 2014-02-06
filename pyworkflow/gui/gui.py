@@ -33,7 +33,7 @@ import tkFont
 
 from pyworkflow.object import OrderedObject
 from pyworkflow.utils.path import findResource
-from pyworkflow.utils.properties import Message
+from pyworkflow.utils.properties import Message, Color
 
 from os.path import join, exists, basename
 
@@ -53,7 +53,7 @@ cfgLabelBgColor = "white"
 cfgHighlightBgColor = cfgBgColor
 cfgButtonFgColor = "white"
 cfgButtonActiveFgColor = "white"
-cfgButtonBgColor = "#7D0709"
+cfgButtonBgColor = Color.RED_COLOR
 cfgButtonActiveBgColor = "#A60C0C"
 cfgEntryBgColor = "lemon chiffon" 
 cfgExpertLabelBgColor = "light salmon"
@@ -459,14 +459,14 @@ class WindowBase(Window):
             tube = tk.Label(viewFrame, text="|", fg="#6F3232", bg="white", padx=5)
             return tube
         
-#        Commented until this functionality it is fully developed
-#        for i, elementText in enumerate(VIEW_LIST):
-#            btn = addLink(elementText)
-#            btn.grid(row=0, column=i*2)
-#            
-#            if i < len(VIEW_LIST)-1:
-#                tube = addTube()
-#                tube.grid(row=0, column=(i*2)+1)
+        #Commented until this functionality it is fully developed
+        for i, elementText in enumerate(VIEW_LIST):
+            btn = addLink(elementText)
+            btn.grid(row=0, column=i*2)
+            
+            if i < len(VIEW_LIST)-1:
+                tube = addTube()
+                tube.grid(row=0, column=(i*2)+1)
         
         return header
     

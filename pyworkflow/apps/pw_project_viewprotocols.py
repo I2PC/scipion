@@ -44,7 +44,7 @@ from pyworkflow.protocol import *
 from pyworkflow.protocol.params import *
 from pyworkflow.mapper import SqliteMapper, XmlMapper
 from pyworkflow.project import Project
-from pyworkflow.utils.properties import Message, Icon
+from pyworkflow.utils.properties import Message, Icon, Color
 
 import pyworkflow.gui as gui
 from pyworkflow.gui import getImage
@@ -254,13 +254,13 @@ class RunIOTreeProvider(TreeProvider):
             value = obj.get()
             info = {'key': value, 'text': value, 'values': (''), 'open': True}
         else:
-            image = 'fa-sign-out.png'
+            image = Icon.ACTION_OUT
             parent = self.outputStr
             name = obj.getLastName()
             
             if isinstance(obj, Pointer):
                 obj = obj.get()
-                image = 'fa-sign-in.png'
+                image = Icon.ACTION_IN
                 parent = self.inputStr
                 objName = self.mapper.getFullName(obj)
                 name += '   (from %s)' % objName
@@ -367,7 +367,7 @@ class ProtocolsView(tk.Frame):
         infoFrame.columnconfigure(0, weight=1)
         infoFrame.rowconfigure(1, weight=1)
         # Create the Analyze results button
-        btnAnalyze = gui.Button(infoFrame, text=Message.LABEL_ANALYZE, fg='white', bg='#7D0709',# font=self.font, 
+        btnAnalyze = gui.Button(infoFrame, text=Message.LABEL_ANALYZE, fg='white', bg=Color.RED_COLOR, # font=self.font, 
                           image=self.getImage(Icon.ACTION_VISUALIZE), compound=tk.LEFT, 
                         activeforeground='white', activebackground='#A60C0C', command=self._analyzeResultsClicked)
         btnAnalyze.grid(row=0, column=0, sticky='ne', padx=15)
@@ -484,7 +484,7 @@ class ProtocolsView(tk.Frame):
         displayAction(ACTION_DELETE, 2, status != STATUS_RUNNING)     
         displayAction(ACTION_STOP, 4, status == STATUS_RUNNING)
         displayAction(ACTION_CONTINUE, 5, status == STATUS_WAITING_APPROVAL)
-        displayAction(ACTION_RESULTS, 6, status != STATUS_RUNNING)
+#        displayAction(ACTION_RESULTS, 6, status != STATUS_RUNNING)
         
     def createProtocolsTree(self, parent, bgColor):
         """Create the protocols Tree displayed in left panel"""
