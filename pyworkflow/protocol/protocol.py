@@ -225,8 +225,10 @@ class Protocol(Step):
         self._definition = Form()
         self._defineParams(self._definition)
         self._createVarsFromDefinition(**args)
-        self.stdOut = ""
-        self.stdErr = ""
+        self.__stdOut = None
+        self.__stdErr = None
+        self.__fOut = None
+        self.__fErr = None
         
         # For non-parallel protocols mpi=1 and threads=1
         if not hasattr(self, 'numberOfMpi'):
@@ -685,21 +687,9 @@ class Protocol(Step):
         """ Before calling this method, the working dir for the protocol
         to run should exists. 
         """
-        self._log = ScipionLogger(self._getLogsPath(''))        
-
-        # Open the log file overwriting its content if the protocol is going to be execute from zero. 
-        # Otherwise append the new content to the old one
-        if self.runMode.get() == MODE_RESTART:
-            mode = 'w+'
-        else:     
-            mode = 'a'
+        self.__initLogs()
         
-        self.__initLogs(mode)
-        
-        self.stderr = sys.stderr
-        sys.stdout = self.fOut
-        sys.stderr = self.fErr
-        self._log.info('RUNNING PROTOCOL -----------------')
+        self.info('RUNNING PROTOCOL -----------------')
 #        self._log.info('RUNNING PROTOCOL info -----------------')
 #        self._log.warning('RUNNING PROTOCOL warning-----------------')
 #        self._log.error('RUNNING PROTOCOL error-----------------')
@@ -710,38 +700,73 @@ class Protocol(Step):
 #        self._log.info('          pid: %s' % os.getpid())
 #        self._log.info('         ppid: %s' % os.getppid())
         self._pid.set(os.getpid())
-        self._log.info('   currentDir: %s' % os.getcwd())
-        self._log.info('   workingDir: ' + self.workingDir.get())
-        self._log.info('      runMode: %d' % self.runMode.get())
+        self.info('   currentDir: %s' % os.getcwd())
+        self.info('   workingDir: ' + self.workingDir.get())
+        self.info('      runMode: %d' % self.runMode.get())
         #self.namePrefix = replaceExt(self._steps.getName(), self._steps.strId()) #keep
         #self._run()
         Step.run(self)
         
         #outputs = [getattr(self, o) for o in self._outputs]
         self._store()
-        self._log.info('------------------- PROTOCOL FINISHED')
-        self._log.close()
+        self.info('------------------- PROTOCOL FINISHED')
+        self.__closeLogs()
         
-    def __initLogs(self, mode):
-        self.__getStdErr()
-        self.__getStdOut()
-        self.fOut = open(self.stdOut, mode)
-        self.fErr = open(self.stdErr, mode)
+    def __initLogs(self):
+        """ Open the log file overwriting its content if the protocol is going to be execute from zero. 
+        Otherwise append the new content to the old one.
+        Also open logs files and redirect the systems streams.
+        """
+        self._log = ScipionLogger(self._getLogsPath('')) 
+               
+        if self.runMode.get() == MODE_RESTART:
+            mode = 'w+'
+        else:     
+            mode = 'a'
+        # Backup the the system streams
+        self.__stdErr = sys.stderr
+        self.__stdOut = sys.stdout
+        self.__openLogsFiles(mode)
+        # Redirect the system streams to the protocol files
+        sys.stdout = self.__fOut
+        sys.stderr = self.__fErr
+    
+    def __getLogPaths(self):
+        return self._getLogsPath('run.stdout'), self._getLogsPath('run.stderr')
+    
+    def __openLogsFiles(self, mode):
+        self.__fOut = open(self.__getLogPaths()[0], mode)
+        self.__fErr = open(self.__getLogPaths()[1], mode)
+        
+    def __closeLogsFiles(self):       
+        self.__fOut.close()
+        self.__fErr.close()
+    
+    def __closeLogs(self):
+        self._log.close()
+        # Restore system streams
+        sys.stderr = self.__stdErr
+        sys.stdout = self.__stdOut
+        self.__closeLogsFiles()
         
     def getLogsAsStrings(self):
-        self.__initLogs('r')
-        fOutString = self.fOut.read()
-        fErrString = self.fErr.read()
-        self.fOut.close()
-        self.fErr.close()
+        fOutString = fErrString = ''
+        if os.path.exists(self.__getLogPaths()[0]) and os.path.exists(self.__getLogPaths()[1]):
+            self.__openLogsFiles('r')
+            fOutString = self.__fOut.read()
+            fErrString = self.__fErr.read()
+            self.__closeLogsFiles()
         return fOutString, fErrString
+    
+    def warning(self, message, redirectStandard=True):
+        self._log.warning(message, True)
         
-    def __getStdErr(self):
-        self.stdErr = self._getLogsPath('run.stderr')
-
-    def __getStdOut(self):
-        self.stdOut = self._getLogsPath('run.stdout')
-
+    def info(self, message, redirectStandard=True):
+        self._log.info(message, True)
+        
+    def error(self, message, redirectStandard=True):
+        self._log.error(message, True)
+        
     def getWorkingDir(self):
         return self.workingDir.get()
     
