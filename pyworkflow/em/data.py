@@ -377,6 +377,16 @@ class Set(EMObject):
     def getDimensions(self):
         """Return first image dimensions as a tuple: (xdim, ydim, zdim, n)"""
         return self.getFirstItem().getDim()
+    
+    def getSubset(self, n):
+        """ Return a subset of n element, making a clone of each. """
+        subset = []
+        for i, item in enumerate(self):
+            subset.append(item.clone())
+            if i == n:
+                break
+        return subset
+            
                 
     
 class SetOfImages(Set):

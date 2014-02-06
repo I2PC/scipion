@@ -43,7 +43,6 @@ import xmipp
 class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
     """Protocol to extract particles from a set of coordinates in the project"""
     _label = 'extract particles'
-    _references = ['[[http://www.ncbi.nlm.nih.gov/pubmed/23933392][Vargas, et.al,  JSB (2013)]]']
     
     # Normalization type constants
     ORIGINAL = 0
@@ -211,11 +210,11 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
                     # If the micrograph doesn't come from Xmipp, we need to write
                     # a Xmipp ctfparam file to perform the phase flip on the micrograph                     
                     fnCTF = micrographToCTFParam(mic, self._getTmpPath("%s.ctfParam" % micName))
-                    self._insertFunctionStep('flipMicrograph', micName, fnCTF, micrographToExtract)
+                    self._insertFunctionStep('flipMicrographStep', micName, fnCTF, micrographToExtract)
                     micrographToExtract = self._getTmpPath(micName +"_flipped.xmp")
                            
             # Actually extract
-            self._insertFunctionStep('extractParticles', micId, micName, fnCTF, micrographToExtract)
+            self._insertFunctionStep('extractParticlesStep', micId, micName, fnCTF, micrographToExtract)
                 
         # TODO: Delete temporary files
                         
@@ -228,7 +227,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         #self.posFiles = writeSetOfCoordinates(self._getExtraPath(), self.inputCoords)
         writeSetOfCoordinates(self._getExtraPath(), self.inputCoords)
 
-    def flipMicrograph(self, micName, fnCTF, micrographToExtract):
+    def flipMicrographStep(self, micName, fnCTF, micrographToExtract):
         """ Flip micrograph. """           
         fnFlipped = self._getTmpPath(micName +"_flipped.xmp")
 
@@ -240,7 +239,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         self.runJob(None, "xmipp_ctf_phase_flip", args % locals())
         
         
-    def extractParticles(self, micId, micName, fnCTF, micrographToExtract):
+    def extractParticlesStep(self, micId, micName, fnCTF, micrographToExtract):
         """ Extract particles from one micrograph """
         #If flip selected and exists CTF model use the flip output
 #        if self.doFlip and self.fnCTF:
@@ -424,7 +423,8 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         methodsMsgs.append("Remove dust?: %s" % (self.doRemoveDust.get()))
         if self.doRemoveDust.get():
             methodsMsgs.append("Dust threshold: %s" % (self.thresholdDust.get()))            
-            
-               
 
         return methodsMsgs
+    
+    def _citations(self):
+        return ['Vargas2013b']

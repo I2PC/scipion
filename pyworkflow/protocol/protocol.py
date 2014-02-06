@@ -1003,6 +1003,13 @@ class Protocol(Step):
         """ Should be implemented in subclasses. See methods. """
         return ["No methods information."]
         
+    def methods_old(self):
+        """ Return a description about methods about current protocol execution. """
+        baseMethods = self._methods()
+        if not baseMethods:
+            baseMethods = []
+        return baseMethods + [''] + self.citations()
+        
     def methods(self):
         """ Return a description about methods about current protocol execution. """
         # TODO: Maybe store the methods and not computing all times??
@@ -1012,11 +1019,12 @@ class Protocol(Step):
         else:
             bibtex = self.__getPackageBibTex()
             parsedMethods = []
-            for bibId, cite in bibtex.iteritems():
-                k = '[%s]' % bibId
-                link = self.__getCiteText(cite, useKeyLabel=True)
-                for m in baseMethods:
-                    parsedMethods.append(m.replace(k, link))
+            for m in baseMethods:
+                for bibId, cite in bibtex.iteritems():
+                    k = '[%s]' % bibId
+                    link = self.__getCiteText(cite, useKeyLabel=True)
+                    m = m.replace(k, link)
+                parsedMethods.append(m)
             baseMethods = parsedMethods
             
         return baseMethods + [''] + self.citations()
