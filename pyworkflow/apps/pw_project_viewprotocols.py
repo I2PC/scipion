@@ -267,7 +267,6 @@ class RunIOTreeProvider(TreeProvider):
                 name += '   (from %s)' % objName
             info = {'key': obj.getObjId(), 'parent': parent, 'image': image,
                     'text': name, 'values': (str(obj),)}
-            print info
         return info     
     
    
@@ -315,7 +314,7 @@ class ProtocolsView(tk.Frame):
 
         
         # Protocols Tree Pane        
-        bgColor = '#eaebec'
+        bgColor = Color.LIGHT_GREY_COLOR
         protFrame = tk.Frame(leftFrame, width=300, height=500, bg=bgColor)
         protFrame.grid(row=1, column=0, sticky='news', padx=5, pady=5)
         protFrame.columnconfigure(0, weight=1)
@@ -499,7 +498,7 @@ class ProtocolsView(tk.Frame):
         combo.grid(row=0, column=1)
         comboFrame.grid(row=0, column=0, padx=5, pady=5, sticky='nw')
         
-        self.style.configure("W.Treeview", background='#eaebec', borderwidth=0)
+        self.style.configure("W.Treeview", background=Color.LIGHT_GREY_COLOR, borderwidth=0)
         tree = Tree(parent, show='tree', style='W.Treeview')
         tree.column('#0', minwidth=300)
         tree.tag_configure('protocol', image=self.getImage('python_file.gif'))

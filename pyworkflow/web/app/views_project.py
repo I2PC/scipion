@@ -40,7 +40,7 @@ from django.contrib.gis.shortcuts import render_to_text
 from pyworkflow.em.packages.xmipp3.convert import writeSetOfParticles
 from pyworkflow.em.packages.xmipp3.plotter import XmippPlotter
 from pyworkflow.viewer import WEB_DJANGO
-from pyworkflow.web.app.views_util import loadProject
+#from pyworkflow.web.app.views_util import loadProject
 
 #from pyworkflow.utils.properties import Message
 

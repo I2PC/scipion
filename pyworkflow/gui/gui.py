@@ -439,7 +439,7 @@ class WindowBase(Window):
         # Create the Project Name label
         self.projNameFont = tkFont.Font(size=-28, family='helvetica')
         projLabel = tk.Label(header, text=self.projName if 'projName' in locals() else "", font=self.projNameFont,
-                             borderwidth=0, anchor='nw', bg='white', fg='#6e6e6e')
+                             borderwidth=0, anchor='nw', bg='white', fg=Color.DARK_GREY_COLOR)
         projLabel.grid(row=0, column=1, sticky='sw', padx=(20, 5), pady=10)
         
         # Create view selection frame
