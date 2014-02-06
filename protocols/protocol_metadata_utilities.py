@@ -48,7 +48,7 @@ class ProtMetadataUtils(XmippProtocol):
 def setOption(log,OperationSetType, md, md2, Label, Label2, fnOut,ModeType):
     if OperationSetType=="inner_join":
         runJob(log,'xmipp_metadata_utilities',"-i %s --set %s %s %s -o %s --mode %s"
-               %(md,OperationSetType,md2,Label,fnOut,ModeType))
+               %(md,OperationSetType,md2,Label,Label2,fnOut,ModeType))
     else:
         runJob(log,'xmipp_metadata_utilities',"-i %s --set %s %s %s %s -o %s --mode %s"
                %(md,OperationSetType,md2,Label,Label2,fnOut,ModeType))
