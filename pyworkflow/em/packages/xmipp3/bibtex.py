@@ -113,12 +113,21 @@ author = "de la Rosa-Trevín, J.M.  and Otón, J. and R. Marabini and A. Zaldív
 keywords = "Electron microscopy, Single particles analysis, Image processing, Software package "
 }
 
-@article{chen2013fast,
-  title={Fast and accurate reference-free alignment of subtomograms},
-  author={Chen, Yuxiang and Pfeffer, Stefan and Hrabe, Thomas and Schuller, Jan Michael and F{\"o}rster, Friedrich},
-  journal={Journal of structural biology},
-  year={2013},
-  publisher={Elsevier}
+@article{Chen2013235,
+title = "Fast and accurate reference-free alignment of subtomograms ",
+journal = "Journal of Structural Biology ",
+volume = "182",
+number = "3",
+pages = "235 - 245",
+year = "2013",
+note = "",
+issn = "1047-8477",
+doi = "http://dx.doi.org/10.1016/j.jsb.2013.03.002",
+url = "http://www.sciencedirect.com/science/article/pii/S1047847713000737",
+author = "Yuxiang Chen and Stefan Pfeffer and Thomas Hrabe and Jan Michael Schuller and Friedrich F�rster",
+keywords = "Cryo-electron tomography",
+keywords = "Subtomogram averaging",
+keywords = "Spherical harmonics "
 }
 """
 
