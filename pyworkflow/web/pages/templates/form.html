@@ -131,7 +131,7 @@
 								{{msg.TITLE_EXPERT}}
 							</td>
 							<td>
-								<select name="{msg.VAR_EXPERT}}" size=1
+								<select name="{{msg.VAR_EXPERT}}" size=1
 								onChange="javascript:evalElements();">
 									<option value="0" {% if expertLevel == 0 %} selected="selected" {% endif %}>{{msg.LABEL_EXPERT_NORMAL}}</option>
 									<option value="1" {% if expertLevel == 1 %} selected="selected" {% endif %}>{{msg.LABEL_EXPERT_ADVANCE}}</option>

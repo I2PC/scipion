@@ -24,8 +24,9 @@ a{
 img{
 	border: none;
 }
+
 a:hover {
-	/* color: Firebrick; */
+	color: Firebrick;
 }
 
 .floatRight{
