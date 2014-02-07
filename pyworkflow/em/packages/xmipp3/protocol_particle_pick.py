@@ -37,8 +37,11 @@ from convert import createXmippInputMicrographs, readSetOfCoordinates
 
 
 class XmippProtParticlePicking(ProtParticlePicking, XmippProtocol):
-    """Protocol to pick particles manually of a set of micrographs in the project"""
-    _label = 'manual picking'
+
+    """Protocol to pick particles in a set of micrographs of the project
+    either manually or using automatic picking support  """
+    _label = 'supervised picking'
+
     
     def __init__(self, **args):        
         ProtParticlePicking.__init__(self, **args)
@@ -90,7 +93,7 @@ class XmippProtParticlePicking(ProtParticlePicking, XmippProtocol):
 #            self._params['inputMicsXmipp'] = "TiltedPairs@" + fn
 #            program = "xmipp_micrograph_tiltpair_picking"
         # Run the command with formatted parameters
-        self.runJob(None, program, arguments % self._params)
+        self.runJob(program, arguments % self._params)
         
     def _importFromFolder(self):
         """ This function will copy Xmipp .pos files for
@@ -109,5 +112,7 @@ class XmippProtParticlePicking(ProtParticlePicking, XmippProtocol):
         self._defineOutputs(outputCoordinates=coordSet)
         self._defineSourceRelation(self.inputMics, coordSet)
         
+
     def _citations(self):
         return ['Abrishami2013']
+

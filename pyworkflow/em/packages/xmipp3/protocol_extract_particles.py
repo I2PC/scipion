@@ -34,11 +34,12 @@ This sub-package contains the XmippProtExtractParticles protocol
 
 from pyworkflow.em import * 
 
-from convert import writeSetOfCoordinates, readSetOfParticles
+from convert import writeSetOfCoordinates, readSetOfParticles, writeCTFModel
 from pyworkflow.utils.path import makePath, removeBaseExt, join, exists
 from xmipp3 import XmippProtocol
 from glob import glob
-import xmipp   
+import xmipp
+
                 
 class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
     """Protocol to extract particles from a set of coordinates in the project"""
@@ -236,7 +237,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         if self.downsampleType != self.ORIGINAL:
             downFactor = self.samplingFinal/self.samplingInput
             args += " --downsampling %(downFactor)f"
-        self.runJob(None, "xmipp_ctf_phase_flip", args % locals())
+        self.runJob("xmipp_ctf_phase_flip", args % locals())
         
         
     def extractParticlesStep(self, micId, micName, fnCTF, micrographToExtract):
@@ -263,7 +264,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
             if fnCTF:
                 args += " --ctfparam " + fnCTF
         
-            self.runJob(None,"xmipp_micrograph_scissor", args)
+            self.runJob("xmipp_micrograph_scissor", args)
             # Normalize 
             if self.doNormalize:
                 self.runNormalize(outputRoot + '.stk', self.normType.get(), self.backRadius.get())          
@@ -290,7 +291,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
             args += "--method NewXmipp --background circle %(bgRadius)d"
         else:
             args += "--method Ramp --background circle %(bgRadius)d"
-        self.runJob(None, program, args % locals())
+        self.runJob(program, args % locals())
                     
     def getImgIdFromCoord(self, coordId):
         """ Get the image id from the related coordinate id. """
@@ -329,7 +330,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
             percentage = self.percentage.get()
             args += " --percent " + str(percentage)
 
-        self.runJob(None, "xmipp_image_sort_by_statistics", args % locals())
+        self.runJob("xmipp_image_sort_by_statistics", args % locals())
         md = xmipp.MetaData(fnImages) # Should have ZScore label after runJob
 #         md.addItemId()
         md.sort(xmipp.MDL_ZSCORE)

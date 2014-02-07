@@ -644,7 +644,7 @@ class ProtFrealign(ProtRefine3D):
         params3DR = dict(params.items() + params2.items())
         
         args = self._prepareCommand()
-        self.runJob(None, self._program, args % params3DR)
+        self.runJob(self._program, args % params3DR)
         self._leaveDir()
     
     def refineParticlesStep(self, iter, block):
@@ -671,7 +671,7 @@ class ProtFrealign(ProtRefine3D):
         paramsRefine = dict(initParamsDict.items() + paramDic.items() + param.items())
         args = self._prepareCommand()
         
-        self.runJob(None, self._program, args % paramsRefine)
+        self.runJob(self._program, args % paramsRefine)
         
     def _setParamsRefineParticles(self, iter, block):
         paramDics = {}
@@ -796,7 +796,7 @@ eot
         # time.sleep(block)
         program = "./block%03d.sh" % block
         os.chmod(program, 0775)
-        self.runJob(None, program, "")
+        self.runJob(program, "")
         
         
         #self._leaveDir()

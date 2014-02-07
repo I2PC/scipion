@@ -66,40 +66,6 @@ class Viewer(object):
         in those viewers that have WEB_DJANGO environment defined. 
         """
         return None
-
-
-class Wizard(object):
-    """ This is a special case of GUI to help the user
-    selecting important parameters.
-    The _targets will serve to define to which Definition and 
-    parameters the Wizard is defined, it will be a list of tuples such as:
-    _targets = [(DefImportMicrographs, ['voltage', sphericalAberration']),
-                (DefCTFMicrographs, ['lowRes', 'highRes'])]
-    The _environmets will serve to define when this wizard can be used.
-    For example>
-    _environments = [DESKTOP_TKINTER, WEB_DJANGO]
-    """
-    _targets = []
-    _environments = [DESKTOP_TKINTER]
-    
-    def show(self, form, *params):
-        """ This will show up the wizard to select parametes.
-        Params:
-            form: the protocol form, given access to to all parameters.
-                Some times the same wizard will modifify several elements
-                in the form.
-            *params: a list of params to modify, sometimes the wizard can 
-                be generic and can be used for different parameters in the
-                same form.
-        """
-        pass
-    
-    def getView(self):
-        """ This method should return the string value of the view in web
-        that will respond to this wizard. This method only should be implemented
-        in those wizards that have WEB_DJANGO environment defined. 
-        """
-        return None
     
     
 class ProtocolViewer(Protocol, Viewer):

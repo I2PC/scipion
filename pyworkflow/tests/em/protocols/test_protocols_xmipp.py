@@ -77,8 +77,17 @@ class TestXmippBase(unittest.TestCase):
         if cls.protImport.outputParticles is None:
             raise Exception('Import of images: %s, failed. outputParticles is None.' % pattern)
         return cls.protImport        
-
-
+ 
+    @classmethod
+    def runImportVolumes(cls, pattern, samplingRate, checkStack):
+        """ Run an Import particles protocol. """
+        cls.protImport = ProtImportVolumes(pattern=pattern, samplingRate=samplingRate, checkStack=checkStack)
+        cls.proj.launchProtocol(cls.protImport, wait=True)
+        # check that input images have been imported (a better way to do this?)
+        if cls.protImport.outputVolumes is None:
+            raise Exception('Import of volumes: %s, failed. outputVolumes is None.' % pattern)
+        return cls.protImport        
+ 
 
 class TestImportMicrographs(TestXmippBase):
     
@@ -289,8 +298,11 @@ def setupClassification(cls):
     """ Method to setup classification Test Cases. """
     setupProject(cls)
     #TODO: Find a set of images to make this work, with this it does not
-    pattern = getInputPath('images_LTA', '*.xmp')
-    cls.protImport = cls.runImportParticles(pattern=pattern, samplingRate=5.6, checkStack=False)
+    #pattern = getInputPath('images_LTA', '*.xmp')
+    #cls.protImport = cls.runImportParticles(pattern=pattern, samplingRate=5.6, checkStack=False)
+    
+    images = getInputPath('Images_Vol_ML3D/phantom_images', '*.xmp')
+    cls.protImport = cls.runImportParticles(pattern=images, samplingRate=1, checkStack=False)
     
        
 class TestXmippML2D(TestXmippBase):
@@ -312,15 +324,25 @@ class TestXmippCL2D(TestXmippBase):
     @classmethod
     def setUpClass(cls):
         setupClassification(cls)
+
         
     def testCL2D(self):
         print "Run CL2D"
         protCL2D = XmippProtCL2D(numberOfReferences=2, numberOfInitialReferences=1, 
                                  numberOfIterations=3, numberOfMpi=4)
         protCL2D.inputImages.set(self.protImport.outputParticles)
-        self.proj.launchProtocol(protCL2D, wait=True)        
+        self.proj.launchProtocol(protCL2D, wait=True)
         
-        self.assertIsNotNone(protCL2D.outputClasses, "There was a problem with CL2D")  
+        pattern = getInputPath('ml3dData', 'icoFiltered.vol')
+        protImportVolume = self.runImportVolumes(pattern=pattern, samplingRate=1.237, checkStack=True)        
+        
+        protScreenClasses = XmippProtScreenClasses(symmetryGroup='i1', angularSampling=5)
+        protScreenClasses.inputClasses.set(protCL2D.outputClasses)
+        protScreenClasses.inputVolume.set(protImportVolume.outputVolumes)
+        self.proj.launchProtocol(protScreenClasses, wait=True)
+        
+        self.assertIsNotNone(protCL2D.outputClasses, "There was a problem with CL2D")
+        self.assertIsNotNone(protScreenClasses.getVisualizeInfo().hasValue(), "There was a problem with Screen Classes")
 
 class TestXmippProtCL2DAlign(TestXmippBase):
 

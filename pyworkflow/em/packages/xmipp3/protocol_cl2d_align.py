@@ -97,7 +97,7 @@ class XmippProtCL2DAlign(ProtAlign):
             params += " --apply_transform --keep_input_columns" 
             
             # Apply transformation
-            self.runJob(None, "xmipp_transform_geometry", params % locals())
+            self.runJob("xmipp_transform_geometry", params % locals())
             md = xmipp.MetaData(alignedMd)
             for label in [xmipp.MDL_ANGLE_PSI, xmipp.MDL_SHIFT_X, xmipp.MDL_SHIFT_Y, xmipp.MDL_FLIP]:
                 md.removeLabel(label)
