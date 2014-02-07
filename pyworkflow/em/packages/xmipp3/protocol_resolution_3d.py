@@ -101,7 +101,7 @@ class XmippProtResolution3D(ProtValidate3D):
         samplingRate = self.inputVolume.get().getSamplingRate()
         fscFn = self._defineFscName()
         args="--ref %s -i %s -o %s --sampling_rate %f --do_dpr" % (self.refVol, self.inputVol, fscFn, samplingRate)
-        self.runJob(None, "xmipp_resolution_fsc", args)
+        self.runJob("xmipp_resolution_fsc", args)
     
     def structureFactorcStep(self):
         """ Calculate the structure factors of the volume"""
@@ -109,7 +109,7 @@ class XmippProtResolution3D(ProtValidate3D):
         samplingRate = self.inputVolume.get().getSamplingRate()
         structureFn = self._defineStructFactorName()
         args = "-i %s -o %s --sampling %f" % (self.inputVol, structureFn, samplingRate)
-        self.runJob(None, "xmipp_volume_structure_factor", args)
+        self.runJob("xmipp_volume_structure_factor", args)
         
     def _validate(self):
         validateMsgs = []
