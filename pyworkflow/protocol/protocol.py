@@ -589,8 +589,8 @@ class Protocol(Step):
             doContinue = False
         elif step.status == STATUS_FAILED:
             doContinue = False
-            self.setFailed("Protocol failed: " + step.getError())
-            self.error("Protocol failed: " + step.getError())
+            self.setFailed("Protocol failed: " + step.getError().get())
+            self.error("Protocol failed: " + step.getError().get())
         self.lastStatus = step.status.get()
         self.info("FINISHED: " + step.funcName.get())
         return doContinue
@@ -946,8 +946,8 @@ class Protocol(Step):
     def summary(self):
         """ Return a summary message to provide some information to users. """
         error = ''
-        if self.error.hasValue():
-            error = '*ERROR:*\n' + self.getError()
+        if self.getError().hasValue():
+            error = '*ERROR:*\n' + self.getError().get()
         baseSummary = self._summary()
         if not baseSummary:
             baseSummary = []
