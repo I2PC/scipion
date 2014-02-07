@@ -32,7 +32,7 @@ from test_protocols_xmipp import TestXmippBase
 
 
     
-class TestXmippCLTomo(TestXmippBase):
+class TestXmippProtHelicalParameters(TestXmippBase):
     @classmethod
     def setUpClass(cls):
         setupProject(cls)
@@ -40,18 +40,17 @@ class TestXmippCLTomo(TestXmippBase):
 #         cls.protImport = cls.runImportParticles(pattern=images, samplingRate=1, checkStack=False)
 #         cls.iniVol = getInputPath('ml3dData', 'icoFiltered.vol')
     
-    def testCLTomo(self):
+    def testHelicalParameters(self):
         print "Import volumes"
-        protImportVol = ProtImportVolumes(pattern=getInputPath('CLTomo', 'subvols*.spi'), samplingRate=1)
+        protImportVol = ProtImportVolumes(pattern=getInputPath('Helical', '*.map'), samplingRate=1)
         self.proj.launchProtocol(protImportVol, wait=True)
     
-        print "Run CLTomo"
-        protCLTomo = XmippProtCLTomo(numberOfReferences=1,numberOfIterations=1)
-        protCLTomo.volumelist.set(protImportVol.outputVolumes)
-        self.proj.launchProtocol(protCLTomo, wait=True)        
+        print "Run symmetrize helical"
+        protHelical = XmippProtHelicalParameters(cylinderRadius=20,dihedral=False,rot0=50,rotF=70,rotStep=5,z0=5,zF=10,zStep=0.5)
+        protHelical.inputVolume.set(protImportVol.outputVolume)
+        self.proj.launchProtocol(protHelical, wait=True)        
         
-        self.assertIsNotNone(protCLTomo.outputClasses, "There was a problem with CLTomo output classes")          
-        self.assertIsNotNone(protCLTomo.alignedVolumes, "There was a problem with CLTomo output aligned volumes")          
+        self.assertIsNotNone(protHelical.outputVolume, "There was a problem with Helical output volume")          
 
 if __name__ == "__main__":
     if len(sys.argv) > 1:

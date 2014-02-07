@@ -30,26 +30,26 @@ This module implement some wizards
 import os
 import Tkinter as tk
 import ttk
-from pyworkflow.viewer import Viewer, Wizard, DESKTOP_TKINTER, WEB_DJANGO
 from pyworkflow.em import SetOfImages, SetOfMicrographs, Volume, ProtCTFMicrographs
+
+from constants import *
+from pyworkflow.em.wizard import *
+from pyworkflow.em.convert import ImageHandler
+
 from protocol_filters import *
 from protocol_ca_pca import SpiderProtCAPCA
 from protocol_align_apsr import SpiderProtAlignAPSR
-from pyworkflow.em.packages.xmipp3.wizard import ListTreeProvider, XmippImagePreviewDialog, XmippDownsampleDialog, XmippParticleMaskRadiusWizard, XmippRadiiWizard, XmippFilterParticlesWizard
-import xmipp
+
 import pyworkflow.gui.dialog as dialog
 from pyworkflow.gui.widgets import LabelSlider
-from constants import *
 from spider import SpiderShell
 from convert import locationToSpider
 
-class SpiderProtMaskWizard(XmippParticleMaskRadiusWizard):
-    
+class SpiderProtMaskWizard(particleMaskRadiusWizard):
     _targets = [(SpiderProtCAPCA, ['maskRadius'])]
          
     
-class SpiderProtMaskRadiiWizard(XmippRadiiWizard):
-    
+class SpiderProtMaskRadiiWizard(radiiWizard):
     _targets = [(SpiderProtAlignAPSR, ['innerRadius', 'outerRadius'])]    
 
     def _getText(self, obj):
@@ -75,14 +75,10 @@ class SpiderProtMaskRadiiWizard(XmippRadiiWizard):
             
         return provider
 
-    @classmethod    
-    def getView(self):
-        return "wiz_particle_mask_radii"      
     
 
-class SpiderFilterWizard(XmippFilterParticlesWizard):    
+class SpiderFilterWizard(filterParticlesWizard):    
     _targets = [(SpiderProtFilter, ['filterRadius', 'lowFreq', 'highFreq', 'temperature'])]
-    _environments = [DESKTOP_TKINTER, WEB_DJANGO]
     
     def show(self, form):
         protocol = form.protocol
@@ -110,15 +106,15 @@ class SpiderFilterWizard(XmippFilterParticlesWizard):
 #--------------- Dialogs used by Wizards --------------------------        
        
 #class SpiderGaussianFilterDialog(XmippDownsampleDialog):
-class SpiderFilterDialog(XmippDownsampleDialog):
+class SpiderFilterDialog(downsampleDialog):
     
     def _beforePreview(self):
-        XmippImagePreviewDialog._beforePreview(self)
+        imagePreviewDialog._beforePreview(self)
         self.lastObj = None
         self.rightPreviewLabel = "Filtered particle"
         self.message = "Filtering particle..."
         self.previewLabel = "Particle"
-        self.rightImage = xmipp.Image()
+        self.rightImage = ImageHandler()._img
         
     def _createControls(self, frame):
         self.freqFrame = ttk.LabelFrame(frame, text="Frequencies", padding="5 5 5 5")
@@ -193,7 +189,7 @@ class SpiderFilterDialog(XmippDownsampleDialog):
         filter_spider(outputLocSpiStr, outputLocSpiStr, **pars)
         
         # Get output image and update filtered image
-        img = xmipp.Image()
+        img = ImageHandler()._img
         locXmippStr = locationToXmipp(1, outputPath)
         img.read(locXmippStr)
         self.rightImage = img

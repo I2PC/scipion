@@ -255,7 +255,7 @@ def wiz_filter_spider(protocol, request):
             
             return render_to_response('wizards/wiz_filter_spider.html', context)
 
-def wiz_bandpass(protocol, request):
+def wiz_particle_bandpass(protocol, request):
     particles = protocol.inputParticles.get()
     mode = protocol.fourierMode.get()
     
@@ -294,7 +294,7 @@ def wiz_bandpass(protocol, request):
             
             context = wiz_base(request, context)
             
-            return render_to_response('wizards/wiz_bandpass.html', context)
+            return render_to_response('wizards/wiz_particle_bandpass.html', context)
 
 def wiz_gaussian(protocol, request):
     particles = protocol.inputParticles.get()

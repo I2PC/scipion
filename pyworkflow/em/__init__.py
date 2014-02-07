@@ -34,7 +34,8 @@ from data import *
 from protocol import *
 from constants import *
 from convert import *
-from pyworkflow.viewer import Viewer, Wizard
+from pyworkflow.viewer import Viewer
+from pyworkflow.wizard import Wizard
 from viewer import *
 #from packages import *
 

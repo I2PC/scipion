@@ -111,7 +111,7 @@ class ProtResMap(ProtValidate3D):
         args += '--vxSize=%(vxSize)f --pVal=%(pVal)f '
         args += '--minRes=%(minRes)f --maxRes=%(maxRes)f --stepRes=%(stepRes)f '
         args += '--vis2D' # TODO: move this to viewer
-        self.runJob(None, 'xmipp_python', args % locals())
+        self.runJob('xmipp_python', args % locals())
                     
         self._leaveWorkingDir()
         

@@ -243,7 +243,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         if self.downsampleType != self.ORIGINAL:
             downFactor = self.samplingFinal/self.samplingInput
             args += " --downsampling %(downFactor)f"
-        self.runJob(None, "xmipp_ctf_phase_flip", args % locals())
+        self.runJob("xmipp_ctf_phase_flip", args % locals())
         
         
     def extractParticlesStep(self, micId, micName, fnCTF, micrographToExtract):
@@ -268,7 +268,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
             if self.doInvert:
                 args += " --invert"
         
-            self.runJob(None,"xmipp_micrograph_scissor", args)
+            self.runJob("xmipp_micrograph_scissor", args)
             # Normalize 
             if self.doNormalize:
                 self.runNormalize(outputRoot + '.stk', self.normType.get(), self.backRadius.get())          
@@ -299,7 +299,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
             args += "--method NewXmipp --background circle %(bgRadius)d"
         else:
             args += "--method Ramp --background circle %(bgRadius)d"
-        self.runJob(None, program, args % locals())
+        self.runJob(program, args % locals())
                     
     def getImgIdFromCoord(self, coordId):
         """ Get the image id from the related coordinate id. """
@@ -339,7 +339,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
             percentage = self.percentage.get()
             args += " --percent " + str(percentage)
 
-        self.runJob(None, "xmipp_image_sort_by_statistics", args % locals())
+        self.runJob("xmipp_image_sort_by_statistics", args % locals())
         md = xmipp.MetaData(fnImages) # Should have ZScore label after runJob
 #         md.addItemId()
         md.sort(xmipp.MDL_ZSCORE)

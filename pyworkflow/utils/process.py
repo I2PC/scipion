@@ -40,10 +40,12 @@ def runJob(log, programname, params,
                               numberOfMpi, numberOfThreads, runInBackground,
                               hostConfig)
     
+    gCommand=greenStr(command)
     if log is None:
         #TODO: printLog("Running command: %s" % greenStr(command),log)
-        
-        print "** Running command: %s" % greenStr(command)
+        print "** Running command: %s" % gCommand
+    else:
+        log.info(gCommand, True)
 
     runCommand(command)
         
