@@ -28,7 +28,7 @@ This module implement viewers for some type of common objects.
 """
 
 import os
-from pyworkflow.viewer import Viewer, Wizard, DESKTOP_TKINTER
+from pyworkflow.viewer import Viewer, DESKTOP_TKINTER
 from pyworkflow.em.data import *
 from pyworkflow.em.protocol import *
 

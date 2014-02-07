@@ -31,7 +31,6 @@ This module implement some wizards
 import os
 import Tkinter as tk
 import ttk
-from pyworkflow.viewer import DESKTOP_TKINTER, WEB_DJANGO
 
 import xmipp
 
@@ -69,8 +68,7 @@ class XmippRadiiWizard(radiiWizard):
 class XmippFilterParticlesWizard(filterParticlesWizard):
     pass
 
-
-class XmippBandpassWizard(bandpassWizard):    
+class XmippBandpassWizard(bandpassParticleWizard):    
     _targets = [(XmippProtFilter, ['lowFreq', 'highFreq', 'freqDecay'])]
     
     def show(self, form):

@@ -32,7 +32,6 @@ from pyworkflow.em.packages.xmipp3.constants import *
 from pyworkflow.em.constants import *
 from constants import *
 
-from pyworkflow.viewer import DESKTOP_TKINTER, WEB_DJANGO
 from pyworkflow.em.wizard import *
 from protocol_classify3d import Relion3DClassification
 

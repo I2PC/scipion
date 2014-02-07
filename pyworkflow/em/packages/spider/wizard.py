@@ -30,7 +30,6 @@ This module implement some wizards
 import os
 import Tkinter as tk
 import ttk
-from pyworkflow.viewer import Viewer, Wizard, DESKTOP_TKINTER, WEB_DJANGO
 from pyworkflow.em import SetOfImages, SetOfMicrographs, Volume, ProtCTFMicrographs
 
 from constants import *

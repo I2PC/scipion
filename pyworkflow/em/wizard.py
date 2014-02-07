@@ -34,7 +34,7 @@ import ttk
 from pyworkflow.em.constants import *
 from pyworkflow.em.convert import ImageHandler
 
-from pyworkflow.viewer import Viewer, Wizard, DESKTOP_TKINTER, WEB_DJANGO
+from pyworkflow.wizard import Wizard, DESKTOP_TKINTER, WEB_DJANGO
 from pyworkflow.em import SetOfImages, SetOfMicrographs, Volume, ProtCTFMicrographs
 
 import pyworkflow.gui.dialog as dialog
@@ -45,7 +45,6 @@ from pyworkflow import findResource
 import xmipp
 
 class downsampleWizard(Wizard):
-    _environments = [DESKTOP_TKINTER, WEB_DJANGO]
         
     def show(self, form):
         protocol = form.protocol
@@ -79,7 +78,6 @@ class ListTreeProvider(TreeProvider):
         
     
 class ctfWizard(Wizard):
-    _environments = [DESKTOP_TKINTER, WEB_DJANGO]
         
     def show(self, form):
         protocol = form.protocol
@@ -103,7 +101,6 @@ class ctfWizard(Wizard):
         return "wiz_ctf"            
             
 class maskRadiusWizard(Wizard):
-    _environments = [DESKTOP_TKINTER, WEB_DJANGO]
     
     def _getProvider(self, protocol):
         """ This should be implemented to return the list
@@ -171,7 +168,6 @@ class volumeMaskRadiusWizard(maskRadiusWizard):
         
         
 class radiiWizard(volumeMaskRadiusWizard):
-    _environments = [DESKTOP_TKINTER, WEB_DJANGO]
     
     def show(self, form):
        
@@ -219,15 +215,38 @@ class filterParticlesWizard(Wizard):
             provider.getText = self._getText
             
         return provider
+    
+class filterVolumesWizard(Wizard):
+    
+    def _getText(self, obj):
+        index = obj.getIndex()
+        text = os.path.basename(obj.getFileName())
+        if index:
+            return "%03d@%s" % (index, text)
+        return text
+    
+    def _getProvider(self, protocol):
+        """ This should be implemented to return the list
+        of object to be displayed in the tree.
+        """
+        if protocol.input3DReferences.hasValue():
+            vols = [vol.clone() for vol in protocol.input3DReferences.get()]
+            return ListTreeProvider(vols)
+        return None
 
 
-class bandpassWizard(filterParticlesWizard):
-    _environments = [DESKTOP_TKINTER, WEB_DJANGO]
+class bandpassParticleWizard(filterParticlesWizard):
     
     @classmethod    
     def getView(self):
-        return "wiz_bandpass"   
+        return "wiz_particle_bandpass"   
     
+class bandpassVolumesWizard(filterVolumesWizard):
+    
+    @classmethod    
+    def getView(self):
+        return "wiz_volume_bandpass"  
+
     
 class gaussianWizard(filterParticlesWizard):
     _environments = [DESKTOP_TKINTER, WEB_DJANGO]
@@ -235,6 +254,7 @@ class gaussianWizard(filterParticlesWizard):
     @classmethod    
     def getView(self):
         return "wiz_gaussian"   
+    
 
 #--------------- Dialogs used by Wizards --------------------------
     

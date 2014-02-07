@@ -29,7 +29,7 @@ visualization program.
 """
 
 import os
-from pyworkflow.viewer import Viewer, Wizard, DESKTOP_TKINTER, WEB_DJANGO
+from pyworkflow.viewer import Viewer, DESKTOP_TKINTER, WEB_DJANGO
 from pyworkflow.em.data import *
 from pyworkflow.em.protocol import *
 from pyworkflow.utils.process import runJob
