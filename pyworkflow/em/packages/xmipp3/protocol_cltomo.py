@@ -99,7 +99,7 @@ class XmippProtCLTomo(ProtClassify3D):
         if self.generateAligned.get():
             setOfVolumes = self._createSetOfVolumes()
             fnAligned = self._getExtraPath('results_aligned.xmd')
-            self.runJob(None,'xmipp_metadata_selfile_create', '-p %s -o %s -s'%(self._getExtraPath('results_aligned.stk'),fnAligned))
+            self.runJob('xmipp_metadata_selfile_create', '-p %s -o %s -s'%(self._getExtraPath('results_aligned.stk'),fnAligned))
             md=MetaData(fnAligned)
             md.addItemId()
             md.write(fnAligned)
@@ -173,4 +173,4 @@ class XmippProtCLTomo(ProtClassify3D):
         if self.dontAlign.get():
             params+=" --dontAlign"
 
-        self.runJob(None,'xmipp_mpi_classify_CLTomo','%d %s'%(self.numberOfMpi.get(),params))
+        self.runJob('xmipp_mpi_classify_CLTomo','%d %s'%(self.numberOfMpi.get(),params))

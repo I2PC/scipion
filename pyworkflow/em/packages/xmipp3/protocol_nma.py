@@ -215,7 +215,7 @@ class XmippProtNMA(EMProtocol):
         params += "--targetError %(targetErr)f --sampling_rate %(sampling)f -v 2 --intensityColumn Bfactor"
         if fnMask:
             params += " --mask binary_file %(fnMask)s"
-        self.runJob(None, "xmipp_volume_to_pseudoatoms", params=params % locals())
+        self.runJob("xmipp_volume_to_pseudoatoms", params=params % locals())
         for suffix in ["_approximation.vol", "_distance.hist"]:
             moveFile(self._getPath(prefix+suffix), self._getExtraPath(prefix+suffix))
         cleanPattern(self._getPath(prefix+'_*'))
@@ -223,9 +223,9 @@ class XmippProtNMA(EMProtocol):
     def computeModesStep(self, numberOfModes):
         rc = self._getRc('pseudoatoms')
         self._enterWorkingDir()
-        self.runJob(None, "nma_record_info.py","%d pseudoatoms.pdb %d" % (numberOfModes, rc))
-        self.runJob(None, "nma_pdbmat.pl","pdbmat.dat")
-        self.runJob(None, "nma_diag_arpack","")
+        self.runJob("nma_record_info.py","%d pseudoatoms.pdb %d" % (numberOfModes, rc))
+        self.runJob("nma_pdbmat.pl","pdbmat.dat")
+        self.runJob("nma_diag_arpack","")
         if not exists("fort.11"):
             self._printWarnings(redStr("Modes cannot be computed. Check the number of modes you asked to compute and/or consider increasing cut-off distance. The maximum number of modes allowed by the method for pseudoatomic normal mode analysis is 3 times the number of pseudoatoms but the protocol allows only up to 200 modes as 20-100 modes are usually enough.  If the number of modes is below the minimum between 200 and 3 times the number of pseudoatoms, consider increasing cut-off distance."))
         cleanPath("diag_arpack.in", "pdbmat.dat")
@@ -265,14 +265,14 @@ class XmippProtNMA(EMProtocol):
     def reformatOutputStep(self):
         self._enterWorkingDir()
         n = self._countAtoms("pseudoatoms.pdb")
-        self.runJob(None,"nma_reformat_vector_foranimate.pl","%d fort.11" % n)
-        self.runJob(None,"cat","vec.1* > vec_ani.txt")
-        self.runJob(None,"rm","-f vec.1*")
-        self.runJob(None,"nma_reformat_vector.pl","%d fort.11" % n)
+        self.runJob("nma_reformat_vector_foranimate.pl","%d fort.11" % n)
+        self.runJob("cat","vec.1* > vec_ani.txt")
+        self.runJob("rm","-f vec.1*")
+        self.runJob("nma_reformat_vector.pl","%d fort.11" % n)
         makePath("modes")
-        self.runJob(None,"mv","-f vec.* modes")
-        self.runJob(None,"nma_prepare_for_animate.py","")
-        self.runJob(None,"rm","-f vec_ani.txt fort.11 matrice.sdijf")
+        self.runJob("mv","-f vec.* modes")
+        self.runJob("nma_prepare_for_animate.py","")
+        self.runJob("rm","-f vec_ani.txt fort.11 matrice.sdijf")
         moveFile('vec_ani.pkl','extra/vec_ani.pkl')
         self._leaveWorkingDir()
         
@@ -316,9 +316,9 @@ class XmippProtNMA(EMProtocol):
                 
         self._enterWorkingDir()
         
-        self.runJob(None,"nma_record_info_PDB.py","%d %d atoms.pdb %f %f" % (numberOfModes,RTBblockSize,rc,RTBForceConstant))
-        self.runJob(None,"nma_elnemo_pdbmat","")
-        self.runJob(None,"nma_diagrtb","")
+        self.runJob("nma_record_info_PDB.py","%d %d atoms.pdb %f %f" % (numberOfModes,RTBblockSize,rc,RTBForceConstant))
+        self.runJob("nma_elnemo_pdbmat","")
+        self.runJob("nma_diagrtb","")
 
         if not exists("diagrtb.eigenfacs"):
             msg = "Modes cannot be computed. Check the number of modes you asked to compute and/or consider "
@@ -327,7 +327,7 @@ class XmippProtNMA(EMProtocol):
             msg += "to 200 modes as 20-100 modes are usually enough. If the number of modes is below the minimum "
             msg += "between 200 and 6 times the number of RTB blocks, consider increasing cut-off distance."
             self._printWarnings(redStr(msg) + '\n')
-        self.runJob(None,"rm","-f *.dat_run diagrtb.dat pdbmat.xyzm pdbmat.sdijf pdbmat.dat")
+        self.runJob("rm","-f *.dat_run diagrtb.dat pdbmat.xyzm pdbmat.sdijf pdbmat.dat")
         
         self._leaveWorkingDir()
         
@@ -376,10 +376,10 @@ class XmippProtNMA(EMProtocol):
         fnDiag = "diagrtb.eigenfacs"
         
         if self.structureEM:
-            self.runJob(None,"nma_reformatForElNemo.sh","%d" % numberOfModes)
+            self.runJob("nma_reformatForElNemo.sh","%d" % numberOfModes)
             fnDiag = "diag_arpack.eigenfacs"
             
-        self.runJob(None,"echo","%s | nma_check_modes" % fnDiag)
+        self.runJob("echo","%s | nma_check_modes" % fnDiag)
         cleanPath(fnDiag)
         
         fh = open("Chkmod.res")
@@ -425,7 +425,7 @@ class XmippProtNMA(EMProtocol):
         
         if self.structureEM:
             fn = "pseudoatoms.pdb"
-            self.runJob(None,"nma_animate_pseudoatoms.py","%s extra/vec_ani.pkl 7 %d %f extra/animations/animated_mode %d %d %f"%\
+            self.runJob("nma_animate_pseudoatoms.py","%s extra/vec_ani.pkl 7 %d %f extra/animations/animated_mode %d %d %f"%\
                       (fn,numberOfModes,amplitude,nFrames,downsample,pseudoAtomThreshold))
         else:
             fn="atoms.pdb"

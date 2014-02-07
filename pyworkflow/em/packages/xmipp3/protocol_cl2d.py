@@ -169,7 +169,7 @@ class XmippProtCL2D(ProtClassify):
         for mdFn in levelMdFiles:
             fnRoot = join(dirname(mdFn), "classes%s_sorted" % subset)
             params = "-i classes@%s --oroot %s" % (mdFn, fnRoot)
-            self.runJob(None, "xmipp_image_sort", params, nproc)
+            self.runJob("xmipp_image_sort", params, nproc)
             mdFnOut = fnRoot + ".xmd"
             md = xmipp.MetaData(mdFnOut)
             md.addItemId()
@@ -184,12 +184,12 @@ class XmippProtCL2D(ProtClassify):
         hierarchyFnOut = self._getExtraPath("classes%s_hierarchy.txt" % subset)
         prevMdFn = None
         for mdFn in levelMdFiles:
-            self.runJob(None, "xmipp_classify_evaluate_classes","-i " + mdFn)
+            self.runJob("xmipp_classify_evaluate_classes","-i " + mdFn)
             if prevMdFn is not None:
                 args = "--i1 %s --i2 %s -o %s" % (prevMdFn, mdFn, hierarchyFnOut)
                 if exists(hierarchyFnOut):
                     args += " --append"
-                self.runJob(None, "xmipp_classify_compare_classes",args)
+                self.runJob("xmipp_classify_compare_classes",args)
             prevMdFn = mdFn
             
     def createOutput(self, subset=''):

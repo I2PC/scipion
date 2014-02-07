@@ -81,7 +81,7 @@ class EmanProtBoxing(ProtParticlePicking):
         arguments = "%(inputMics)s --boxsize=%(boxSize)i"
         # Run the command with formatted parameters
         self._log.info('Launching: ' + program + ' ' + arguments % self._params)
-        self.runJob(None, program, arguments % self._params)
+        self.runJob(program, arguments % self._params)
         
     def createOutput(self):
         workDir = self.workingDir.get()

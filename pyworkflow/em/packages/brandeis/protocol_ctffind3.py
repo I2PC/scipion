@@ -70,7 +70,7 @@ class ProtCTFFind(ProtCTFMicrographs):
         self._params['ctffindOut'] = join(micDir, 'ctffind.out')
         self._params['ctffindPSD'] = self._getPsdPath(micDir)
                 
-        self.runJob(None, self._program, self._args % self._params)
+        self.runJob(self._program, self._args % self._params)
         #print "command: ", self._program, self._args % self._params    
 
     def _parseOutput(self, filename):

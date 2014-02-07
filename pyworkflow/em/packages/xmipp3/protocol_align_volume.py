@@ -264,10 +264,10 @@ class XmippProtAlignVolume(ProtAlignVolume):
         args += maskArgs
         args += alignArgs
         
-        self.runJob(None, "xmipp_volume_align", args)
+        self.runJob("xmipp_volume_align", args)
         if self.alignmentAlgorithm.get() == ALIGN_ALGORITHM_EXHAUSTIVE_LOCAL:
             args = "--i1 %s --i2 %s --apply --local" % (refVolFn, volFn)
-            self.runJob(None, "xmipp_volume_align", args)
+            self.runJob("xmipp_volume_align", args)
       
     def createOutputStep(self):
 #        print "summary"

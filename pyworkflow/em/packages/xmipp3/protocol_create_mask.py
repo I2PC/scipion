@@ -125,7 +125,7 @@ class XmippProtCreateMask3D(ProtCreateMask3D,XmippGeometricalMask):
     def createMaskFromVolumeStep(self):
         volume=self.volume.get().getFirstItem()
         if self.volumeOperation==OPERATION_THRESHOLD:
-            self.runJob(None,"xmipp_transform_threshold",
+            self.runJob("xmipp_transform_threshold",
                         "-i %s -o %s --select below %f --substitute binarize"%(volume.getFileName(),self.maskFile,
                                                                                self.threshold.get()))
         elif self.volumeOperation==OPERATION_SEGMENT:
@@ -139,7 +139,7 @@ class XmippProtCreateMask3D(ProtCreateMask3D,XmippGeometricalMask):
                 args+="dalton_mass %d %f"%(self.dalton.get(),Ts)
             else:
                 args+="otsu"
-            self.runJob(None,"xmipp_volume_segment",args)
+            self.runJob("xmipp_volume_segment",args)
         return [self.maskFile]
         
     def createMaskFromGeometryStep(self):
@@ -151,7 +151,7 @@ class XmippProtCreateMask3D(ProtCreateMask3D,XmippGeometricalMask):
         args = '-i %s ' % self.maskFile
         args+=XmippGeometricalMask.argsForTransformMask(self,size)
         args += ' --create_mask %s' % self.maskFile
-        self.runJob(None, "xmipp_transform_mask", args)
+        self.runJob("xmipp_transform_mask", args)
         return [self.maskFile]
     
     def createMaskFromAnotherMaskStep(self):
@@ -159,20 +159,20 @@ class XmippProtCreateMask3D(ProtCreateMask3D,XmippGeometricalMask):
 
     def postProcessMaskStep(self):
         if self.doSmall.get():
-            self.runJob(None,"xmipp_transform_morphology","-i %s --binaryOperation removeSmall %d"%(self.maskFile,self.smallSize.get()))
+            self.runJob("xmipp_transform_morphology","-i %s --binaryOperation removeSmall %d"%(self.maskFile,self.smallSize.get()))
         if self.doBig.get():
-            self.runJob(None,"xmipp_transform_morphology","-i %s --binaryOperation keepBiggest"%self.maskFile)
+            self.runJob("xmipp_transform_morphology","-i %s --binaryOperation keepBiggest"%self.maskFile)
         if self.doSymmetrize.get():
             if self.symmetry.get()!='c1':
-                self.runJob(None,"xmipp_transform_symmetrize","-i %s --sym %s --dont_wrap"%(self.maskFile,self.symmetry.get()))
+                self.runJob("xmipp_transform_symmetrize","-i %s --sym %s --dont_wrap"%(self.maskFile,self.symmetry.get()))
         if self.doMorphological.get():
-            self.runJob(None,"xmipp_transform_morphology","-i %s --binaryOperation %s --size %d"
+            self.runJob("xmipp_transform_morphology","-i %s --binaryOperation %s --size %d"
                         %(self.maskFile,self.getEnumText('morphologicalOperation'),self.elementSize.get()))
         if self.doInvert.get():
-            self.runJob(None,"xmipp_image_operate","-i %s --mult -1"%self.maskFile)
-            self.runJob(None,"xmipp_image_operate","-i %s --plus  1"%self.maskFile)
+            self.runJob("xmipp_image_operate","-i %s --mult -1"%self.maskFile)
+            self.runJob("xmipp_image_operate","-i %s --plus  1"%self.maskFile)
         if self.doSmooth.get():
-            self.runJob(None,"xmipp_transform_filter","-i %s --fourier real_gaussian %f"%(self.maskFile,self.sigmaConvolution.get()))
+            self.runJob("xmipp_transform_filter","-i %s --fourier real_gaussian %f"%(self.maskFile,self.sigmaConvolution.get()))
 
     def createOutput(self):
         volMask = VolumeMask()

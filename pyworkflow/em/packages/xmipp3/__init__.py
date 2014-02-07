@@ -82,8 +82,8 @@ from protocol_create_mask import XmippProtCreateMask3D
 from protocol_align_volume import XmippProtAlignVolume
 from protocol_cltomo import XmippProtCLTomo
 from protocol_screen_classes import XmippProtScreenClasses
+from protocol_helical_parameters import XmippProtHelicalParameters
 from protocol_resolution_3d import XmippProtResolution3D
-#from protocol_helical_params import ProtHelicalParams
 
 
 # Wizards
