@@ -333,11 +333,21 @@ PyMethodDef MetaData_methods[] =
           "Union of two metadatas. The results is stored in self." },
         { "merge", (PyCFunction) MetaData_merge, METH_VARARGS,
           "Merge columns of two metadatas. The results is stored in self." },
+          {
+                "join1",
+                (PyCFunction) MetaData_join,
+                METH_VARARGS,
+                "join between two metadatas using label as common attribute. The results is stored in self." },
+          {
+                "join2",
+                (PyCFunction) MetaData_join,
+                METH_VARARGS,
+                "join between two metadatas, md1.label1=md2.label2. The results is stored in self." },
         {
-            "join",
-            (PyCFunction) MetaData_join,
-            METH_VARARGS,
-            "join between two metadatas, use MDL_UNDEFINED as label. The results is stored in self." },
+              "joinNatural",
+              (PyCFunction) MetaData_join,
+              METH_VARARGS,
+              "natural join between two metadatas. The results is stored in self." },
         {
             "addIndex",
             (PyCFunction) MetaData_addIndex,
@@ -1832,7 +1842,48 @@ MetaData_addIndex(PyObject *obj, PyObject *args, PyObject *kwargs)
 }
 /* join */
 PyObject *
-MetaData_join(PyObject *obj, PyObject *args, PyObject *kwargs)
+MetaData_join1(PyObject *obj, PyObject *args, PyObject *kwargs)
+{
+    int labelLeft;
+    int labelRight;
+    PyObject *pyMdLeft = NULL;
+    PyObject *pyMdright = NULL;
+    JoinType jt=LEFT;
+
+    if (PyArg_ParseTuple(args, "OOi|i", &pyMdLeft, &pyMdright, &labelLeft, &jt))
+    {
+        try
+        {
+            if (!MetaData_Check(pyMdLeft))
+            {
+                PyErr_SetString(PyExc_TypeError,
+                                "MetaData::join: Expecting MetaData as first argument");
+                return NULL;
+            }
+            if (!MetaData_Check(pyMdright))
+            {
+                PyErr_SetString(PyExc_TypeError,
+                                "MetaData::join: Expecting MetaData as second argument");
+                return NULL;
+            }
+            MetaDataObject *self = (MetaDataObject*) obj;
+            self->metadata->join1(MetaData_Value(pyMdLeft),
+                                      MetaData_Value(pyMdright),
+                                      (MDLabel) labelLeft,
+                                      (JoinType) jt);
+            Py_RETURN_NONE;
+        }
+        catch (XmippError &xe)
+        {
+            PyErr_SetString(PyXmippError, xe.msg.c_str());
+        }
+    }
+    return NULL;
+}
+
+/* join */
+PyObject *
+MetaData_join2(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
     int labelLeft;
     int labelRight;
@@ -1857,9 +1908,46 @@ MetaData_join(PyObject *obj, PyObject *args, PyObject *kwargs)
                 return NULL;
             }
             MetaDataObject *self = (MetaDataObject*) obj;
-            self->metadata->join(MetaData_Value(pyMdLeft),
-                                 MetaData_Value(pyMdright), (MDLabel) labelLeft,
-                                 (MDLabel) labelRight, (JoinType) jt);
+            self->metadata->join2(MetaData_Value(pyMdLeft),
+                                  MetaData_Value(pyMdright),
+                                  (MDLabel) labelLeft,
+                                  (MDLabel) labelRight, (JoinType) jt);
+            Py_RETURN_NONE;
+        }
+        catch (XmippError &xe)
+        {
+            PyErr_SetString(PyXmippError, xe.msg.c_str());
+        }
+    }
+    return NULL;
+}
+
+/* join */
+PyObject *
+MetaData_joinNatural(PyObject *obj, PyObject *args, PyObject *kwargs)
+{
+    PyObject *pyMdLeft = NULL;
+    PyObject *pyMdright = NULL;
+
+    if (PyArg_ParseTuple(args, "OO", &pyMdLeft, &pyMdright))
+    {
+        try
+        {
+            if (!MetaData_Check(pyMdLeft))
+            {
+                PyErr_SetString(PyExc_TypeError,
+                                "MetaData::joinNatural: Expecting MetaData as first argument");
+                return NULL;
+            }
+            if (!MetaData_Check(pyMdright))
+            {
+                PyErr_SetString(PyExc_TypeError,
+                                "MetaData::joinNatural: Expecting MetaData as second argument");
+                return NULL;
+            }
+            MetaDataObject *self = (MetaDataObject*) obj;
+            self->metadata->joinNatural(MetaData_Value(pyMdLeft),
+                                  MetaData_Value(pyMdright));
             Py_RETURN_NONE;
         }
         catch (XmippError &xe)

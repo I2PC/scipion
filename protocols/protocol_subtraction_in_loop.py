@@ -17,7 +17,7 @@ def joinImageCTFscale(_log, CTFgroupName,DocFileExp,inputSelfile):
     ctfMD = MetaData(CTFgroupName)
     MDaux = MetaData(inputSelfile)
     outMD = MetaData()
-    outMD.join(MDaux, ctfMD, MDL_IMAGE_ORIGINAL, MDL_IMAGE, INNER_JOIN)
+    outMD.join2(MDaux, ctfMD, MDL_IMAGE_ORIGINAL, MDL_IMAGE, INNER_JOIN)
     outMD.write(DocFileExp, MD_APPEND)
 
 #No defocus group
@@ -25,7 +25,7 @@ def joinImageCTF(_log, CTFgroupName,DocFileExp,inputSelfile):
     ctfMD = MetaData(CTFgroupName)
     MDaux = MetaData(inputSelfile)
     outMD = MetaData()
-    outMD.join(MDaux, ctfMD, MDL_IMAGE, MDL_IMAGE, INNER_JOIN)
+    outMD.join1(MDaux, ctfMD, MDL_IMAGE, INNER_JOIN)
     outMD.write(DocFileExp, MD_APPEND)
 
 #reconstruct

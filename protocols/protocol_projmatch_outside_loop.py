@@ -117,7 +117,7 @@ def initAngularReferenceFile(_log, BlockWithAllExpImages, CtfGroupDirectory, Ctf
         #read blocks
         MDctf.read(block + '@' + join(CtfGroupDirectory, CtfGroupRootName) + '_images.sel', mdList)
         #add angles to blocks
-        mDaux.join(MD, MDctf, MDL_UNDEFINED, MDL_UNDEFINED, NATURAL)
+        mDaux.joinNatural(MD, MDctf)
         #MDctf.intersection(MD, MDL_IMAGE)
         block_name = block + '@' + DocFileWithOriginalAngles
         MDctf.write(block_name, MD_APPEND)
@@ -159,7 +159,7 @@ def createResults(log
         mdCTF.read(CTFDatName, [MDL_IMAGE, MDL_CTF_MODEL])
         md.addIndex(MDL_IMAGE)
         mdCTF.addIndex(MDL_IMAGE)
-        mdOut.join (md, mdCTF, MDL_IMAGE, MDL_IMAGE, NATURAL_JOIN)
+        mdOut.joinNatural(md, mdCTF)
     else:
         mdOut = MetaData(md)#becareful with copy metadata since it only copies pointers
     mdref3D = MetaData()
@@ -183,7 +183,7 @@ def createResults(log
     mdAux1 = MetaData()
     mdAux2 = MetaData()
     mdAux1.read(selFileName,[MDL_IMAGE,MDL_ITEM_ID])
-    mdAux2.join(mdOut, mdAux1, MDL_IMAGE, MDL_IMAGE, LEFT_JOIN)
+    mdAux2.join1(mdOut, mdAux1, MDL_IMAGE, LEFT_JOIN)
     mdAux2.setComment(comment)
     mdAux2.write(fnResultImages)
     #

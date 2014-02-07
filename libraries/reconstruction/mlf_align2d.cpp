@@ -314,9 +314,7 @@ void ProgMLF2D::produceSideInfo()
 
     // Read selfile with experimental images
     MDimg.read(fn_img);
-    // Remove disabled images
-    if (MDimg.containsLabel(MDL_ENABLED))
-        MDimg.removeObjects(MDValueEQ(MDL_ENABLED, -1));
+    MDimg.removeDisabled(); // Discard disabled images
     nr_images_global = MDimg.size();
 
     // Create a vector of objectIDs, which may be randomized later on
@@ -387,12 +385,7 @@ void ProgMLF2D::produceSideInfo()
 
         //CTF info now comes on input metadatas
         MetaData mdCTF;
-        //number of different CTFs
-        if (!MDimg.containsLabel(MDL_CTF_MODEL))
-            REPORT_ERROR(ERR_ARG_MISSING, "Missing MDL_CTF_MODEL in input images metadata");
-
-        mdCTF.aggregate(MDimg, AGGR_COUNT, MDL_CTF_MODEL, MDL_CTF_MODEL, MDL_COUNT);
-        mdCTF.fillExpand(MDL_CTF_MODEL);
+        groupCTFMetaData(MDimg, mdCTF);
 
         if (sampling > 0)
           mdCTF.setValueCol(MDL_CTF_SAMPLING_RATE, sampling);
@@ -429,10 +422,10 @@ void ProgMLF2D::produceSideInfo()
             if (astigmCTFFactor > 0.1)
             {
                 FileName ctfname;
-                mdCTF.getValue(MDL_CTF_MODEL, ctfname, id);
                 //REPORT_ERROR(ERR_NUMERICAL, "Prog_MLFalign2D-ERROR%% Only non-astigmatic CTFs are allowed!");
-                std::cerr << "CTF file " << ctfname << " is too astigmatic. We ill ignore it." << std::endl;
-                std::cerr << "astigmCTFFactor " << astigmCTFFactor <<  std::endl;
+                std::cerr << "CTF is too astigmatic. We ill ignore it." << std::endl;
+                std::cerr << "   defocus U: " << ctf.DeltafU << "   defocus V: " << ctf.DeltafV << std::endl;
+                std::cerr << "   astigmCTFFactor " << astigmCTFFactor <<  std::endl;
                 //continue;
             }
             ctf.DeltafV =  (ctf.DeltafU+ctf.DeltafV)*0.5;
@@ -481,7 +474,15 @@ void ProgMLF2D::produceSideInfo()
         }
 
         MetaData md(MDimg);
-        MDimg.join(md, mdCTF, MDL_CTF_MODEL);
+        MDimg.joinNatural(md, mdCTF);
+        if (IS_MASTER)
+        {
+        mdCTF.write("tmp_ctf.xmd");
+        md.write("tmp_md.xmd");
+        MDimg.write("tmp_images.xmd");
+        exit(1);
+        }
+
     }
 
     // Get a resolution pointer in Fourier-space
@@ -1224,6 +1225,7 @@ void ProgMLF2D::generateInitialReferences()
         for (size_t imgno = first; imgno <= last; imgno++)
         {
             MDimg.getValue(MDL_IMAGE, fn_tmp, img_id[imgno]);
+            std::cerr << "DEBUG_JM: fn_tmp: " << fn_tmp << std::endl;
             ITemp.read(fn_tmp);
             ITemp().setXmippOrigin();
             IRef() += ITemp();

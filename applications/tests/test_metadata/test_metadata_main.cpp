@@ -619,7 +619,7 @@ TEST_F( MetadataTest, LeftJoin)
     MetaData auxMetadata2 = mDsource;
     auxMetadata2.setValue(MDL_Z,222.,auxMetadata2.firstObject());
     auxMetadata2.setValue(MDL_Z,444.,auxMetadata2.firstObject()+1);//A little bit irregular
-    auxMetadata.join(mDsource,mDjoin,MDL_X);
+    auxMetadata.join1(mDsource, mDjoin, MDL_X);
     EXPECT_EQ(auxMetadata,auxMetadata2)<< mDjoin;//print mDjoin if error
 }
 
@@ -633,7 +633,7 @@ TEST_F( MetadataTest, InnerJoin1)
     auxMetadataRight.setValue(MDL_Z,1.,auxMetadataRight.firstObject());
     auxMetadataRight.setValue(MDL_ANGLE_PSI,11.,auxMetadataRight.firstObject());
 
-    auxMetadata.join(auxMetadataLeft,auxMetadataRight,MDL_X,MDL_Z,INNER);
+    auxMetadata.join2(auxMetadataLeft,auxMetadataRight,MDL_X,MDL_Z,INNER);
     auxMetadataResult.setValue(MDL_X,1.,auxMetadataRight.firstObject());
     auxMetadataResult.setValue(MDL_Y,2.,auxMetadataRight.firstObject());
     auxMetadataResult.setValue(MDL_ANGLE_PSI,11.,auxMetadataRight.firstObject());
@@ -651,7 +651,7 @@ TEST_F( MetadataTest, InnerJoin2)
     auxMetadataRight.setValue(MDL_Z,1.,auxMetadataRight.firstObject());
     auxMetadataRight.setValue(MDL_Y,11.,auxMetadataRight.firstObject());
 
-    auxMetadata.join(auxMetadataLeft,auxMetadataRight,MDL_X,MDL_Z,INNER);
+    auxMetadata.join2(auxMetadataLeft,auxMetadataRight,MDL_X,MDL_Z,INNER);
     auxMetadataResult.setValue(MDL_X,1.,auxMetadataRight.firstObject());
     auxMetadataResult.setValue(MDL_Y,2.,auxMetadataRight.firstObject());
 
@@ -674,7 +674,7 @@ TEST_F( MetadataTest, Merge)
     auxMetadata3.setValue(MDL_Z,222.,id);
     id = auxMetadata3.addObject();
     auxMetadata3.setValue(MDL_Z,444.,id);
-    auxMetadata.join(mDsource,mDjoin,MDL_X);
+    auxMetadata.join1(mDsource,mDjoin,MDL_X);
     auxMetadata2 = mDsource;
     auxMetadata2.merge(auxMetadata3);
     EXPECT_EQ(auxMetadata,auxMetadata2);
@@ -767,7 +767,7 @@ TEST_F( MetadataTest, NaturalJoin)
     auxMetadata3.setValue(MDL_Y,6.,id);
     auxMetadata3.setValue(MDL_Z,444.,id);
 
-    auxMetadata.join(mDsource,auxMetadata3,MDL_X,NATURAL);
+    auxMetadata.joinNatural(mDsource,auxMetadata3);
     auxMetadata3.removeObject(id);
     EXPECT_EQ(auxMetadata,auxMetadata3);
 }
