@@ -45,7 +45,7 @@ class TestXmippCLTomo(TestXmippBase):
         protImportVol = ProtImportVolumes(pattern=getInputPath('CLTomo', 'subvols*.spi'), samplingRate=1)
         self.proj.launchProtocol(protImportVol, wait=True)
     
-        print "Run create mask from volume"
+        print "Run CLTomo"
         protCLTomo = XmippProtCLTomo(numberOfReferences=1,numberOfIterations=1)
         protCLTomo.volumelist.set(protImportVol.outputVolumes)
         self.proj.launchProtocol(protCLTomo, wait=True)        
