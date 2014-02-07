@@ -2,6 +2,8 @@
 # *
 # * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
 # *              Laura del Cano (ldelcano@cnb.csic.es)
+# *              Adrian Quintana (aquintana@cnb.csic.es)
+# *              Javier Vargas (jvargas@cnb.csic.es)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -31,17 +33,16 @@ This sub-package contains the XmippProtExtractParticles protocol
 
 from pyworkflow.em import * 
 
-from convert import writeCTFModel, writeSetOfCoordinates, readSetOfParticles
+from convert import writeSetOfCoordinates, readSetOfParticles, writeCTFModel
 from pyworkflow.utils.path import makePath, removeBaseExt, join, exists
 from xmipp3 import XmippProtocol
 from glob import glob
 import xmipp
-   
+
                 
 class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
     """Protocol to extract particles from a set of coordinates in the project"""
     _label = 'extract particles'
-    _references = ['[[http://www.ncbi.nlm.nih.gov/pubmed/23933392][Vargas, et.al,  JSB (2013)]]']
     
     # Normalization type constants
     ORIGINAL = 0
@@ -146,7 +147,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         """       
         # Set sampling rate and inputMics according to downsample type
         self.inputCoords = self.inputCoordinates.get() 
-
+        
         self.samplingInput = self.inputCoords.getMicrographs().getSamplingRate()
         
         if self.downsampleType.get() == self.SAME_AS_PICKING:
@@ -216,16 +217,16 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
                  
                 # Insert step to flip micrograph
                 if self.doFlip:
-                    self._insertFunctionStep('flipMicrograph', micName, fnCTF, micrographToExtract)
+                    self._insertFunctionStep('flipMicrographStep', micName, fnCTF, micrographToExtract)
                     micrographToExtract = self._getTmpPath(micName +"_flipped.xmp")
                            
             # Actually extract
-            self._insertFunctionStep('extractParticles', micId, micName, fnCTF, micrographToExtract)
+            self._insertFunctionStep('extractParticlesStep', micId, micName, fnCTF, micrographToExtract)
                 
         # TODO: Delete temporary files
                         
         # Insert step to create output objects       
-        self._insertFunctionStep('createOutput')
+        self._insertFunctionStep('createOutputStep')
         
         
     def writePosFiles(self):
@@ -233,7 +234,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         #self.posFiles = writeSetOfCoordinates(self._getExtraPath(), self.inputCoords)
         writeSetOfCoordinates(self._getExtraPath(), self.inputCoords)
 
-    def flipMicrograph(self, micName, fnCTF, micrographToExtract):
+    def flipMicrographStep(self, micName, fnCTF, micrographToExtract):
         """ Flip micrograph. """           
         fnFlipped = self._getTmpPath(micName +"_flipped.xmp")
 
@@ -242,23 +243,22 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         if self.downsampleType != self.ORIGINAL:
             downFactor = self.samplingFinal/self.samplingInput
             args += " --downsampling %(downFactor)f"
-            self.runJob(None, "xmipp_ctf_phase_flip", args % locals())
+        self.runJob(None, "xmipp_ctf_phase_flip", args % locals())
         
         
-    def extractParticles(self, micId, micName, fnCTF, micrographToExtract):
+    def extractParticlesStep(self, micId, micName, fnCTF, micrographToExtract):
         """ Extract particles from one micrograph """
         #If flip selected and exists CTF model use the flip output
 #        if self.doFlip and self.fnCTF:
 #            micrographToExtract = self._getTmpPath(micName +"_flipped.xmp")
                 
         outputRoot = str(self._getExtraPath(micName))
-
         #fnPosFile = self.getConvertedInput('inputCoords').getMicrographCoordFile(micId)
         fnPosFile =  self._getExtraPath(micName + ".pos")
 
         # If it has coordinates extract the particles      
         particlesMd = 'particles@%s' % fnPosFile
-
+        
         #if fnPosFile is not None and xmipp.existsBlockInMetaDataFile(particlesMd):
         if exists(fnPosFile):
             boxSize = self.boxSize.get()
@@ -309,7 +309,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         
         return '%06d@%s' %(int(parts[1]), imgFn)
         
-    def createOutput(self):
+    def createOutputStep(self):
         # Create the SetOfImages object on the database
         #imgSet = XmippSetOfParticles(self._getPath('images.xmd'))
                   
@@ -348,7 +348,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         mdavgZscore = xmipp.MetaData()
         md.read(fnImages)
         mdavgZscore.aggregate(md, xmipp.AGGR_AVG, xmipp.MDL_MICROGRAPH, xmipp.MDL_ZSCORE, xmipp.MDL_ZSCORE)
-        
+               
         # Create output SetOfParticles
         imgSet = self._createSetOfParticles()
         imgSet.copyInfo(self.inputMics)
@@ -382,12 +382,16 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         if not hasattr(self, 'outputParticles'):
             summary.append("Output images not ready yet.") 
         else:
-            summary.append("*Input coordinates* http://www.google.com : %s" % self.inputCoordinates.get().getName())
+            summary.append("*Input coordinates* : %s" % self.inputCoordinates.get().getName())
+            if hasattr(self, 'outputParticles'):
+                summary.append("*Output particles* : %s" % self.outputParticles.getNameId())
+            
             summary.append("_Downsample type_: %s" % downsampleTypeText.get(self.downsampleType.get()))
             if self.downsampleType.get() == self.OTHER:
                 summary.append("Downsampling factor: %d" % self.downFactor.get())
             summary.append("Particle size %d" % self.boxSize.get())
             summary.append("Particles extracted: %d" % (self.outputParticles.getSize()))
+            
         return summary
     
     def _validate(self):
@@ -396,6 +400,38 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         if self.doFlip.get() and not self.ctfRelations.hasValue():
             validateMsgs.append('Phase flipping cannot be performed unless CTF information is provided.')
         return validateMsgs
-            
+    
+    def _methods(self):
+        methodsMsgs = []
         
+        if hasattr(self, 'outputParticles'):
+            md= xmipp.MetaData(self._getPath('images.xmd'))
+            numEnabled=md.size()
+            md.removeDisabled()
+            numAutoDisabled=(numEnabled-md.size())
+            zScoreMax = md.getValue(xmipp.MDL_ZSCORE,md.size())
+            
+        methodsMsgs.append("Particle size %d" % self.boxSize.get())
+        if hasattr(self, 'outputParticles'):            
+            methodsMsgs.append("Particles extracted: %d" % (self.outputParticles.getSize()))
+            methodsMsgs.append("Number of Particles enabled: %d" % (numEnabled))
+            methodsMsgs.append("Number of Particles disabled: %d" % (numAutoDisabled))
+            methodsMsgs.append("Maximun ZScore value in medata file: %d" % (zScoreMax))
+        
+        methodsMsgs.append("Automatic Rejection method selected: %s" % (self.rejectionMethod))    
+        methodsMsgs.append("Phase flipping performed?: %s" % (self.doFlip.get()))
+        if self.doFlip.get():
+            methodsMsgs.append("CTFs used: %s" % (self.ctfRelations.hasValue()))
+        methodsMsgs.append("Invert contrast performed?: %s" % (self.doInvert.get()))
+        methodsMsgs.append("Normalize performed?: %s" % (self.doNormalize.get()))
+        if self.doNormalize.get():
+            methodsMsgs.append("Nomalization used: %s" % (self.getEnumText('normType')))
+            methodsMsgs.append("Nomalization used: %s" % (self.backRadius.get()))
+        methodsMsgs.append("Remove dust?: %s" % (self.doRemoveDust.get()))
+        if self.doRemoveDust.get():
+            methodsMsgs.append("Dust threshold: %s" % (self.thresholdDust.get()))            
 
+        return methodsMsgs
+    
+    def _citations(self):
+        return ['Vargas2013b']

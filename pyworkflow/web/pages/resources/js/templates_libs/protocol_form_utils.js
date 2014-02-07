@@ -349,9 +349,9 @@ function evalDependencies(row, newLevel) {
 			
 //			alert("level:"+expLevel+", newlevel:"+newLevel)
 
-			if (res || expLevel > newLevel) {
+			if (res == false || expLevel > newLevel) {
 				row2.hide();
-			} else if (!res) {
+			} else if (res == true) {
 				row2.show();
 				evalDependencies(row2, newLevel);
 			}

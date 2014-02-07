@@ -82,6 +82,7 @@ class Message():
     LABEL_METHODS = 'Methods'
     LABEL_LOGS_OUTPUT = 'Output Log'
     LABEL_LOGS_ERROR = 'Error Log'
+    LABEL_LOGS_SCIPION = 'Scipion Log'
     NO_INFO_SUMMARY = 'No summary information.'
     NO_INFO_METHODS = 'No methods information.'
     NO_INFO_LOGS = 'No logs information'
@@ -264,7 +265,8 @@ class Icon():
     
     ACTION_SEARCH = 'fa-search.png'
     ACTION_EXECUTE = 'fa-cogs.png'
-    
+    ACTION_IN = 'fa-sign-in.png'
+    ACTION_OUT = 'fa-sign-out.png'
     #Host template
     BUTTON_CLOSE = 'dialog_close.png'
     BUTTON_SAVE = 'filesave.png'

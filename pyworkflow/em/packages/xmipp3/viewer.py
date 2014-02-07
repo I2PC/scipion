@@ -42,11 +42,12 @@ from protocol_cl2d import XmippProtCL2D
 from protocol_kerdensom import XmippProtKerdensom
 from protocol_rotational_spectra import XmippProtRotSpectra
 from protocol_create_mask import XmippProtCreateMask3D
-from convert import writeSetOfMicrographs, writeSetOfParticles, writeSetOfClasses2D, writeSetOfCoordinates, writeSetOfCTFs, locationToXmipp
+from protocol_screen_classes import XmippProtScreenClasses
+from convert import writeSetOfMicrographs, writeSetOfParticles, writeSetOfClasses2D, writeSetOfCoordinates, writeSetOfCTFs, locationToXmipp, \
+                    writeSetOfClasses3D
 from os.path import dirname, join
 from pyworkflow.utils.path import makePath
 import pyworkflow as pw
-
 
 
 import xmipp
@@ -57,17 +58,19 @@ class XmippViewer(Viewer):
     with the Xmipp program xmipp_showj
     """
     _environments = [DESKTOP_TKINTER, WEB_DJANGO]
-    _targets = [Image, SetOfImages, SetOfCoordinates, SetOfClasses2D, 
+    _targets = [Image, SetOfImages, SetOfCoordinates, SetOfClasses2D, SetOfClasses3D,
                 ProtImportMicrographs, XmippProtPreprocessMicrographs, ProtCTFMicrographs,
                 ProtParticlePicking, ProtImportParticles, XmippProtExtractParticles, ProtUserSubSet,
                 ProtAlign, ProtProcessParticles, XmippProtKerdensom, XmippProtRotSpectra,  XmippProtCreateMask3D,
-                SetOfClasses2D, SetOfCTF, NormalModes]
+                SetOfClasses2D, SetOfCTF, NormalModes, XmippProtScreenClasses]
     
     def __init__(self, **args):
         Viewer.__init__(self, **args)
 
     def visualize(self, obj, **args):
         cls = type(obj)
+        
+        print "cls", cls
         
         if issubclass(cls, Image):
             print "visualizing Image"
@@ -144,6 +147,14 @@ class XmippViewer(Viewer):
                 fn = self._getTmpPath(obj.getName() + '_classes.xmd')
                 writeSetOfClasses2D(obj, fn, self._getTmpPath())
             runShowJ(fn, extraParams=args.get('extraParams', ''))  
+        elif issubclass(cls, SetOfClasses3D):
+            mdFn = getattr(obj, '_xmippMd', None)
+            if mdFn:
+                fn = mdFn.get()
+            else:
+                fn = self._getTmpPath(obj.getName() + '_classes.xmd')
+                writeSetOfClasses3D(obj, fn, self._getTmpPath())
+            runShowJ(fn, extraParams=args.get('extraParams', ''))  
         elif issubclass(cls, SetOfCTF):
             mdFn = getattr(obj, '_xmippMd', None)
             if mdFn:
@@ -172,6 +183,12 @@ class XmippViewer(Viewer):
             self.visualize(obj.outputParticles) 
         elif issubclass(cls, XmippProtRotSpectra):
             self.visualize(obj.outputClasses, extraParams='--mode rotspectra --columns %d' % obj.SomXdim.get())
+        elif issubclass(cls, XmippProtScreenClasses):
+            runShowJ(obj.getVisualizeInfo(), extraParams=' --mode metadata --render first')
+# TODO: We have to develop a showj analyze tool for classes so we can select classes or images associated to them
+#        Airem this is your good shit
+#            runScipionShowJ(obj.getVisualizeInfo(), "Set Of Classes", obj.inputClasses.get(), 
+#                            extraParams=' --mode metadata --render first')
         elif issubclass(cls, XmippProtCreateMask3D):
             self.visualize(obj.outputMask)
         elif issubclass(cls, XmippProtKerdensom):

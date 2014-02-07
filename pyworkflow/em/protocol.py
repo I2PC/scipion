@@ -68,6 +68,9 @@ class EMProtocol(Protocol):
     def _createSetOfClasses2D(self, suffix=''):
         return self.__createSet(SetOfClasses2D, 'classes2D%s.sqlite', suffix)
 
+    def _createSetOfClasses3D(self, suffix=''):
+        return self.__createSet(SetOfClasses3D, 'classes3D%s.sqlite', suffix)
+
     def _createSetOfVolumes(self, suffix=''):
         return self.__createSet(SetOfVolumes, 'volumes%s.sqlite', suffix)
     
@@ -493,6 +496,9 @@ class ProtProcessParticles(EMProtocol):
         to add other parameter relatives to the specific operation."""
         pass  
 
+class ProtDenoiseParticles(ProtProcessParticles):
+   
+    pass
 
 class ProtFilterParticles(ProtProcessParticles):
     """ This is the base for the branch of filters, 
@@ -566,7 +572,4 @@ class ProtValidate3D(EMProtocol):
     pass
 
 class ProtCreateMask3D(EMProtocol):
-    pass
-
-class ProtTomo(EMProtocol):
     pass

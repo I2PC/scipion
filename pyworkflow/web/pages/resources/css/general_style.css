@@ -24,8 +24,9 @@ a{
 img{
 	border: none;
 }
+
 a:hover {
-	/* color: Firebrick; */
+	color: Firebrick;
 }
 
 .floatRight{
@@ -364,7 +365,7 @@ table#data tr:nth-child(even) {
     vertical-align: middle;
     padding: 7px 19px;
     border: 0px solid #727272;
-    border-radius: 0px;
+    border-radius: 3px;
     background: #992828;
     background: -webkit-gradient(linear, left top, left bottom, from(#f0f0f0), to(#c2c2c2));
     background: -moz-linear-gradient(top, #f0f0f0, #c2c2c2);
@@ -400,7 +401,7 @@ table#data tr:nth-child(even) {
     vertical-align: middle;
     padding: 7px 19px;
     border: 0px solid #802a2a;
-    border-radius: 0px;
+    border-radius: 3px;
     background: #992828;
     background: -webkit-gradient(linear, left top, left bottom, from(#f04e4e), to(#802a2a));
     background: -moz-linear-gradient(top, #f04e4e, #802a2a);
@@ -448,8 +449,8 @@ span #analyzeTool{
 	float: right;
 	margin: 0.25em 0.25em 0em 0.35em;
 	color:white;
-	border-radius: 5px;
 
+/* 	border-radius: 5px; */
 /* 	font-weight:bold; */
 /* 	text-align: center; */
 /* 	background-color: #f2f2f2; */
