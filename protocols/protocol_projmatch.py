@@ -952,7 +952,6 @@ data_noname
                                       'StackCTFs',
                                       'StackWienerFilters',
                                       'SplitAtDefocus']]
-        print 'executeCtfGroups', self.SelFileName
         _dataBase.insertStep('executeCtfGroups', verifyfiles=verifyFiles
                                                , CTFDatName=self.CTFDatName
                                                , CtfGroupDirectory=self.CtfGroupDirectory

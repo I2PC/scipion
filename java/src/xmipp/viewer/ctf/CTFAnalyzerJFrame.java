@@ -201,6 +201,7 @@ public class CTFAnalyzerJFrame extends JFrame implements ActionListener
 		List<Integer> list = Arrays.asList(new Integer[] { new Integer(0), new Integer(1) });
 		plot.mapDatasetToDomainAxes(0, list);
 		plot.mapDatasetToRangeAxes(0, list);
+          
 		ChartUtilities.applyCurrentTheme(chart);
 
 		return new ChartPanel(chart);
@@ -263,8 +264,14 @@ public class CTFAnalyzerJFrame extends JFrame implements ActionListener
 			theorethicalpsd_avgplot = ctfmodel.avgprofiles[CTFDescription.PSD];
 			ctf_avgplot = ctfmodel.avgprofiles[CTFDescription.CTF];
 			difference_avgplot = new double[bgnoiseplot.length];
+                        double a, b;
 			for (int i = 0; i < xvalues.length; i++)
-				difference_avgplot[i] = Math.log10(Math.pow(10, psdprofile_avgplot[i] * 0.1) - Math.pow(10, bgnoise_avgplot[i] * 0.1));
+                        {
+                            a = psdprofile_avgplot[i];//Math.pow(10, psdprofileplot[i] * 0.1);
+                            b = bgnoise_avgplot[i]; //Math.pow(10, bgnoiseplot[i] * 0.1);
+                            difference_avgplot[i] = a - b;//Math.log10(a - b);
+				//difference_avgplot[i] = Math.log10(Math.pow(10, psdprofile_avgplot[i] * 0.1) - Math.pow(10, bgnoise_avgplot[i] * 0.1));
+                        }
 		}
 		XYPlot plot = getAvgPlot();
 		XYSeriesCollection collection = getXYSeriesCollection(plot, psdprofile_avgplot, ctf_avgplot, theorethicalpsd_avgplot, envelope_avgplot, bgnoise_avgplot, difference_avgplot);
@@ -294,14 +301,20 @@ public class CTFAnalyzerJFrame extends JFrame implements ActionListener
                 profileimp.setRoi(line);
 		psdprofileplot = new ProfilePlot(profileimp).getProfile();
 
+
 		ctfmodel.CTFProfile(imageprofilepn.getProfileangle(), samples);
 		bgnoiseplot = ctfmodel.profiles[CTFDescription.BACKGROUND_NOISE];
 		envelopeplot = ctfmodel.profiles[CTFDescription.ENVELOPE];
 		theorethicalpsdplot = ctfmodel.profiles[CTFDescription.PSD];
 		ctfplot = ctfmodel.profiles[CTFDescription.CTF];
 		difference = new double[bgnoiseplot.length];
+                double a, b;
 		for (int i = 0; i < xvalues.length; i++)
-			difference[i] = Math.log10(Math.pow(10, psdprofileplot[i] * 0.1) - Math.pow(10, bgnoiseplot[i] * 0.1));
+                {
+                    a = psdprofileplot[i];//Math.pow(10, psdprofileplot[i] * 0.1);
+                    b = bgnoiseplot[i]; //Math.pow(10, bgnoiseplot[i] * 0.1);
+                    difference[i] = a - b;//Math.log10(a - b);
+                }
 
 		XYPlot plot = ((XYPlot) radialchartpn.getChart().getPlot());
 
@@ -322,28 +335,27 @@ public class CTFAnalyzerJFrame extends JFrame implements ActionListener
 	private XYSeriesCollection getXYSeriesCollection(XYPlot plot, double[] psdprofileplot, double[] ctfplot, double[] theorethicalpsdplot, double[] envelopeplot,
 			double[] bgnoiseplot, double[] differenceplot)
 	{
-		double max = Double.MAX_VALUE;
-		double min = -1;
+		double max = -Double.MAX_VALUE;
+		double min = Double.MAX_VALUE;
 		collection = new XYSeriesCollection();
 		serie_index = 0;
 
 		if (showCTF())
-			addSeries(plot, XmippLabel.CB_PLOT_CTF, COLOR_CTF, ctfplot, max, min);
+			addSeries(plot, XmippLabel.CB_PLOT_CTF, COLOR_CTF, ctfplot, 1, -1);
 		else if (showPSD())
 		{
-			addSeries(plot, getPSDProfileLabel(), COLOR_PROFILE, psdprofileplot, max, min);
+			
 
 			/////////////////some max value is established and values displayed are filtered accordingly////////////////////////////////
-			// min = max;
-			max = -max;
-			for (int i = 0; i < xvalues.length; i++)
+			for (int i = 5; i < xvalues.length; i++)
 			{
 				max = Math.max(max, psdprofileplot[i]);
-				// min = Math.min(min, profile[i]);
+				min = Math.min(min, psdprofileplot[i]);
 			}
 			max += Math.abs(max) * 0.1;
-			// min -= Math.abs(min) * 0.1;
+			min -= Math.abs(min) * 0.1;
 			/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+                        addSeries(plot, getPSDProfileLabel(), COLOR_PROFILE, psdprofileplot, max, min);
 
 			if (showBGNoise())
 			{
@@ -367,6 +379,7 @@ public class CTFAnalyzerJFrame extends JFrame implements ActionListener
 	
 	
 	private void addSeries(XYPlot plot, String name, Color c, double[] yvalues, double max, double min){
+
 		collection.addSeries(createSeries(name, xvalues, yvalues, max, min));
 		customizeSerie(plot, c);
 	}
@@ -480,7 +493,7 @@ public class CTFAnalyzerJFrame extends JFrame implements ActionListener
 		{
 			ex.printStackTrace();
 		}
-
+                System.out.printf("sampling rate: %f downsampling:%f\n", samplingRate, downsampling);
 		return samplingRate * downsampling;
 	}
 
@@ -594,13 +607,13 @@ public class CTFAnalyzerJFrame extends JFrame implements ActionListener
     
     public String getDifferenceLabel()
     {
-    	return XmippLabel.CB_PLOT_BGNOISE + " Corrected " + XmippLabel.LABEL_PSD;
+    	return String.format("%s - %s", XmippLabel.LABEL_PSD, XmippLabel.CB_PLOT_BGNOISE);
     }
     
     private String getTheorethicalPSDLabel()
 	{
 		// TODO Auto-generated method stub
-		return "Theoretical " + XmippLabel.LABEL_PSD;
+		return String.format("Log(%s)", "Theoretical " + XmippLabel.LABEL_PSD);
 	}
     
     public String getPSDProfileLabel()

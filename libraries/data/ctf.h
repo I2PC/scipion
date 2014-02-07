@@ -501,6 +501,23 @@ public:
     }
 
     /// Compute CTF pure at (U,V). Continuous frequencies
+    inline double getValuePureNoKAt() const
+    {
+        double argument = K1 * precomputed.deltaf * precomputed.u2 + K2 *precomputed.u4;
+        double sine_part, cosine_part;
+        sincos(argument,&sine_part, &cosine_part); // OK
+        double Eespr = exp(-K3 * precomputed.u4); // OK
+        //CO: double Eispr=exp(-K4*u4); // OK
+        double EdeltaF = bessj0(K5 * precomputed.u2); // OK
+        double EdeltaR = SINC(precomputed.u * DeltaR); // OK
+        double aux=(K7 * precomputed.u2 * precomputed.u + precomputed.deltaf * precomputed.u);
+        double Ealpha = exp(-K6 * aux * aux); // OK
+        // CO: double E=Eespr*Eispr*EdeltaF*EdeltaR*Ealpha;
+        double E = Eespr * EdeltaF * EdeltaR * Ealpha;
+        return -(Ksin*sine_part - Kcos*cosine_part)*E;
+    }
+
+    /// Compute CTF pure at (U,V). Continuous frequencies
     inline double getValuePureNoPrecomputedAt(double X, double Y, bool show = false) const
     {
         double u2 = X * X + Y * Y;

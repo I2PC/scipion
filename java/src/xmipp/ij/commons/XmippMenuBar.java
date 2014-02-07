@@ -210,9 +210,8 @@ public class XmippMenuBar extends MenuBar
 			
 			@Override
 			public void actionPerformed(ActionEvent e) {
-                                
-                                close();
-				
+
+				close();
 			}
 		});
 
@@ -367,6 +366,7 @@ public class XmippMenuBar extends MenuBar
 
 	}
         
+
         protected void close()
         {
             Frame w = (Frame)xw;
@@ -374,6 +374,7 @@ public class XmippMenuBar extends MenuBar
             w.dispose();
             XmippApplication.removeInstance();
         }
+
 	
 	protected void useGeometry(boolean ug)
 	{
