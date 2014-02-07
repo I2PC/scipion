@@ -76,8 +76,6 @@ class XmippProtocol():
         If not, it will be inputAttr.getFileName()
         """
         inputAttr = getattr(self, inputName)
-        print "inputAttr.getClassName()", inputAttr.getClassName()
-        print "xmippClass", xmippClass
         if not isinstance(inputAttr, xmippClass):
             self._insertFunctionStep('convertInputToXmipp', inputName, xmippClass, resultFn)
             return resultFn
@@ -331,7 +329,6 @@ class XmippDataSet(ds.DataSet):
     def writeTable(self, tableName, table):
         """ Write changes made to a table. """
         md = self._convertTableToMd(table)
-        print "dondecarajo","%s@%s" % (tableName, self._filename)
         md.write("%s@%s" % (tableName, self._filename), xmipp.MD_APPEND)
 
         

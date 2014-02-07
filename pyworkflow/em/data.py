@@ -214,6 +214,10 @@ class Image(EMObject):
     def setAcquisition(self, acquisition):
         self._acquisition = acquisition
         
+    def hasAcquisition(self):
+        return (self._acquisition is not None and 
+                self._acquisition.getMagnification() is not None)
+        
     def __str__(self):
         """ String representation of an Image. """
         return "%s (index=%d, filename=%s)" % (self.getClassName(), self.getIndex(), self.getFileName())

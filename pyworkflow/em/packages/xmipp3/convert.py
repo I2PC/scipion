@@ -154,8 +154,9 @@ def imageToRow(img, imgRow, imgLabel):
        
     if img.hasCTF():
         ctfModelToRow(img.getCTF(), imgRow)
-    acquisitionToRow(img.getAcquisition(), imgRow)
         
+    if img.hasAcquisition():
+        acquisitionToRow(img.getAcquisition(), imgRow)
         
 def rowToImage(md, objId, imgLabel, imgClass, hasCtf):
     """ Create a Particle from a row of a metadata. """
@@ -420,7 +421,6 @@ def readSetOfImages(filename, imgSet, rowToFunc, hasCtf):
     # Read the sampling rate from the acquisition info file if exists
     
     acqFile = join(dirname(filename), 'acquisition_info.xmd')
-    print acqFile
     if exists(acqFile):
         md = RowMetaData(acqFile)
         samplingRate = md.getValue(xmipp.MDL_SAMPLING_RATE)
