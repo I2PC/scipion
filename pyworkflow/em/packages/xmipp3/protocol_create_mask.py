@@ -49,6 +49,7 @@ MORPHOLOGY_EROSION=1
 MORPHOLOGY_CLOSING=2
 MORPHOLOGY_OPENING=3
 
+
 class XmippProtCreateMask3D(ProtCreateMask3D,XmippGeometricalMask):
     """ Create a 3D mask from a geometrical description (Sphere, Box, Cylinder...), from a volume or from another class """
     _label = 'create mask'
@@ -230,10 +231,10 @@ class XmippProtCreateMask3D(ProtCreateMask3D,XmippGeometricalMask):
         return messages
 
     def _citations(self):
-        papers=[]
-        if self.source==SOURCE_VOLUME and self.volumeOperation==OPERATION_SEGMENT and self.segmentationType==SEGMENTATION_AUTOMATIC:
-            papers.append('[%s] %s'%('Otsu1979_Segmentation',self._package._referencesDict['Otsu1979_Segmentation']))
-        return papers
+        if (self.source == SOURCE_VOLUME and 
+            self.volumeOperation == OPERATION_SEGMENT and 
+            self.segmentationType==SEGMENTATION_AUTOMATIC):
+            return ['Otsu1979']
 
     def _methods(self):
         messages = []      
@@ -246,7 +247,7 @@ class XmippProtCreateMask3D(ProtCreateMask3D,XmippGeometricalMask):
                 messages.append("We thresholded it to a gray value of %f. "%self.threshold.get())
             elif self.volumeOperation == OPERATION_SEGMENT:
                 if self.segmentationType == SEGMENTATION_AUTOMATIC:
-                    messages.append("We automatically segmented it using Otsu's method [Otsu1979_Segmentation]")
+                    messages.append("We automatically segmented it using Otsu's method [Otsu1979]")
                 else:
                     m="We segmented it to a mass of "
                     if self.segmentationType == SEGMENTATION_VOXELS:

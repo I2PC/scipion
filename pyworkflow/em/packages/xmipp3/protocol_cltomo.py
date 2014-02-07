@@ -23,14 +23,17 @@
 # *  e-mail address 'xmipp@cnb.csic.es'
 # *
 # **************************************************************************
+from pyworkflow.em.packages.xmipp3.convert import readSetOfVolumes
 """
 This sub-package contains protocols for performing subtomogram averaging.
 """
 
 from pyworkflow.em import *  
 from constants import *
+from convert import createXmippInputVolumes, readSetOfClasses3D
+from xmipp import MetaData
 
-class XmippProtCLTomo(ProtTomo):
+class XmippProtCLTomo(ProtClassify3D):
     """ Perform subtomogram averaging """
     _label = 'cltomo'
     
@@ -50,19 +53,19 @@ class XmippProtCLTomo(ProtTomo):
         form.addSection(label='Initial classes')
         form.addParam('doGenerateInitial',BooleanParam,default=True,label='Generate initial volume',
                       help="Let CLTomo to automatically generate the initial classes")
-        form.addParam('numberOfInitial',IntParam,label='Number of initial', default=1, condition=doGenerateInitial,
+        form.addParam('numberOfReferences0',IntParam,label='Number of initial', default=1, condition="doGenerateInitial",
                       help="How many initial volumes. If set to 1, all subvolumes are aligned to a single reference, "\
                            "and then they are classified")
-        form.addParam('randomizeOrientation',BooleanParam,default=False,label='Randomize orientation', condition=doGenerateInitial,
+        form.addParam('randomizeOrientation',BooleanParam,default=False,label='Randomize orientation', condition="doGenerateInitial",
                       help="Use this option if all the input volumes have the same missing wedge or if they have not been previously aligned.")
         form.addParam('referenceList', PointerParam, pointerClass="SetOfVolumes", label='Set of initial volumes',
-                      condition=not doGenerateInitial, help="Set of initial volumes")
+                      condition="not doGenerateInitial", help="Set of initial volumes")
         
         form.addSection(label='Constraints')
-        form.addParam('symmetry',StringParam,default='c1',label='Symmetry group',condition="doSymmetrize",
+        form.addParam('symmetry',StringParam,default='c1',label='Symmetry group',
                       help="See http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Symmetry for a description of the symmetry groups format."
                            "If no symmetry is present, give c1")
-        form.addParam('inputMask', PointerParam, pointerClass="VolumeMask", label="Spatial mask")
+        form.addParam('inputMask', PointerParam, pointerClass="VolumeMask", label="Spatial mask", allowNull=True)
         form.addParam('maximumResolution',FloatParam,default=0.25,label='Maximum resolution (pixels^-1)',
                       help="The maximum (Nyquist) resolution is 0.5. Use smaller values, e.g. 0.45, to prevent high-resolution artifacts.")
         form.addParam('sparsity',FloatParam,default=90,label='Sparsity in Fourier space',
@@ -79,30 +82,66 @@ class XmippProtCLTomo(ProtTomo):
         form.addParam('maxShiftZ',FloatParam,default=360,label='Maximum shift Z',help="In voxels")
 
     def _insertAllSteps(self):
-        pass
+        self._insertFunctionStep('runCLTomo')
+        self._insertFunctionStep('createOutput')
     
     def createOutput(self):
-        levelFiles=glob.glob(self._extraPath("results_classes_level*.xmd"))
+        import glob
+        levelFiles=glob.glob(self._getExtraPath("results_classes_level*.xmd"))
         if levelFiles:
             levelFiles.sort()
             lastLevelFile=levelFiles[-1]
-            # *** Falta como continuar
-        
+            setOfClasses = self._createSetOfClasses3D()
+            setOfClasses.setVolumes(self.volumelist.get())
+            readSetOfClasses3D(setOfClasses,lastLevelFile)
+            self._defineOutputs(outputClasses=setOfClasses)
+            self._defineSourceRelation(self.volumelist, self.outputClasses)
+        if self.generateAligned.get():
+            setOfVolumes = self._createSetOfVolumes()
+            fnAligned = self._getExtraPath('results_aligned.xmd')
+            self.runJob(None,'xmipp_metadata_selfile_create', '-p %s -o %s -s'%(self._getExtraPath('results_aligned.stk'),fnAligned))
+            md=MetaData(fnAligned)
+            md.addItemId()
+            md.write(fnAligned)
+            readSetOfVolumes(fnAligned,setOfVolumes)
+            volumeList=self.volumelist.get()
+            setOfVolumes.setSamplingRate(volumeList.getSamplingRate())
+            setOfVolumes.write()
+            self._defineOutputs(alignedVolumes=setOfVolumes)
+            self._defineTransformRelation(self.volumelist, self.alignedVolumes)
+            
     def _summary(self):
-        messages = []      
+        messages = []
+        if self.doGenerateInitial.get():
+            messages.append('Number of initial references: %d'%self.numberOfReferences0.get())
+            if self.randomizeOrientation.get():
+                messages.append('Input subvolume orientations were randomized')
+        if self.dontAlign.get():
+            messages.append('Input subvolumes were assumed to be already aligned')
+        messages.append('Number of output classes: %d'%self.numberOfReferences.get())
         return messages
+
+    def _validate(self):
+        errors=[]
+        (Xdim1, Ydim1, Zdim1, _)=self.volumelist.get().getDimensions()
+        if Xdim1!=Ydim1 or Ydim1!=Zdim1:
+            errors.append("Input subvolumes are not cubic")
+        if not self.doGenerateInitial.get():
+            if not self.referenceList.hasValue():
+                errors.append("If references are not self generated, you have to provide a reference set of volumes")
+            else:
+                (Xdim2, Ydim2, Zdim2, _) = self.referenceList.get().getDimensions()
+                if Xdim2!=Ydim2 or Ydim2!=Zdim2:
+                    errors.append("Reference subvolumes are not cubic")
+                if Xdim1!=Xdim2:
+                    errors.append("Input and reference subvolumes are of different size")
+        return errors
 
     def _citations(self):
-        papers=[]
-        return papers
+        return ['Chen2013']
 
-    def _methods(self):
-        messages = []      
-        return messages
-    
     def runCLTomo(self):
-        volume=self.volume.get().getFirstItem()
-        params= ' -i '            + volume.getFileName() + \
+        params= ' -i '            + createXmippInputVolumes(self,self.volumelist.get()) + \
                 ' --oroot '       + self._getExtraPath("results") + \
                 ' --iter '        + str(self.numberOfIterations.get()) + \
                 ' --nref '        + str(self.numberOfReferences.get()) + \
@@ -121,8 +160,8 @@ class XmippProtCLTomo(ProtTomo):
             if self.randomizeOrientation.get():
                 params+=' --randomizeStartingOrientation'
         else:
-            params+=' --ref0 '+self.referenceList.get().getFirstItem().getFileName()
-        if self.Mask!="":
+            params+=' --ref0 '+createXmippInputVolumes(self,self.referenceList.get(),self._getPath('references.xmd'))
+        if self.inputMask.hasValue():
             params+=' --mask binary_file '+self.inputMask.get().getLocation()
         if self.generateAligned.get():
             params+=" --generateAlignedVolumes"
@@ -130,4 +169,3 @@ class XmippProtCLTomo(ProtTomo):
             params+=" --dontAlign"
 
         self.runJob(None,'xmipp_mpi_classify_CLTomo','%d %s'%(self.numberOfMpi.get(),params))
-        

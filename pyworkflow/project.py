@@ -38,6 +38,7 @@ from pyworkflow.utils import cleanPath, makePath, makeFilePath, join, exists, ru
 from pyworkflow.utils.graph import Graph
 from pyworkflow.hosts import HostMapper, HostConfig
 import pyworkflow.protocol.launch as jobs
+from pyworkflow.em.constants import RELATION_TRANSFORM
 
 PROJECT_DBNAME = 'project.sqlite'
 PROJECT_LOGS = 'Logs'
@@ -170,7 +171,7 @@ class Project(object):
             prot2 = getProtocolFromDb(dbPath, protocol.getObjId(), globals())
             # Copy is only working for db restored objects
             protocol.setMapper(self.mapper)
-            protocol.copy(prot2)
+            protocol.copy(prot2, copyId=False)
             # Restore jobId
             protocol.setJobId(jobId)
             self.mapper.store(protocol)
@@ -340,4 +341,11 @@ class Project(object):
             self._runsGraph = g
             
         return self._runsGraph
+    
+    def getTransformGraph(self):
+        """ Get the graph from the TRASNFORM relation. """
+        relations = self.mapper.getRelationsByName(RELATION_TRANSFORM)
+        
+        for rel in relations:
+            print rel
         

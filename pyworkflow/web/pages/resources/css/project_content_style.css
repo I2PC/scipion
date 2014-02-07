@@ -198,6 +198,10 @@
 	color:Firebrick;
 }
 
+.referenceLink a {
+	color:Firebrick;
+	text-decoration: underline;
+}
 
 /* jsPlumb */
 .window {

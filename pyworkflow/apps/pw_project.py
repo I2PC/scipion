@@ -76,28 +76,6 @@ class ProjectWindow(gui.WindowBase):
         gui.WindowBase.__init__(self, self.projName, master, icon=self.icon, minsize=(900,500))
         
         self.switchView(gui.VIEW_PROTOCOLS)
-#        content = tk.Frame(self.root)
-#        content.columnconfigure(0, weight=1)
-#        content.rowconfigure(1, weight=1)
-#        content.grid(row=0, column=0, sticky='news')
-#        self.content = content
-#        
-#        self.createMainMenu()
-        
-#        header = self.createHeaderFrame(content)
-#        header.grid(row=0, column=0, sticky='new')
-        
-#        self.view, self.viewWidget = None, None
-#        self.viewFuncs = {VIEW_PROTOCOLS: self.createProtocolsView,
-#                          VIEW_DATA: self.createDataView,
-#                          VIEW_HOSTS: self.createHostsView
-#                          }
-#        self.switchView(VIEW_PROTOCOLS)
-
-#        gui.WindowBase.__init__(self, path, master)
-
-#    def createMainMenu(self):
-#        gui.Window.createMainMenu(self, self.menuCfg) 
     
     def getSettings(self):
         return self.settings
@@ -111,7 +89,6 @@ class ProjectWindow(gui.WindowBase):
         except Exception, ex:
             print Message.NO_SAVE_SETTINGS + str(ex) 
         gui.Window._onClosing(self)
-    
         
 #    def handleResize(self):
 #        print self._w, self._h
@@ -130,11 +107,12 @@ class ProjectWindow(gui.WindowBase):
         return p
         
     def createDataView(self, parent):
-        dataFrame = tk.Frame(parent)
-        dataLabel = tk.Label(dataFrame, text='DATA VIEW not implemented.',
-                             font=self.projNameFont)
-        dataLabel.grid(row=0, column=0, padx=50, pady=50)
-        return dataFrame
+        return DataView(parent, self)
+#        dataFrame = tk.Frame(parent)
+#        dataLabel = tk.Label(dataFrame, text='DATA VIEW not implemented.',
+#                             font=self.projNameFont)
+#        dataLabel.grid(row=0, column=0, padx=50, pady=50)
+#        return dataFrame
 
     def createHostsView(self, parent):
         from pw_project_viewhosts import HostsView
@@ -148,11 +126,11 @@ class ProjectWindow(gui.WindowBase):
         self.menuCfg = self.settings.getCurrentMenu()
         self.protCfg = self.settings.getCurrentProtocolMenu()
                 
+                
 class DataView(tk.Frame):
     def __init__(self, parent, windows, **args):
         tk.Frame.__init__(self, parent, **args)
-        dataLabel = tk.Label(self, text='DATA VIEW not implemented.',
-                             font=self.projNameFont)
+        dataLabel = tk.Label(self, text='DATA VIEW not implemented.',)
         dataLabel.grid(row=0, column=0, padx=50, pady=50)
 
 if __name__ == '__main__':

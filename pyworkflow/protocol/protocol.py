@@ -225,8 +225,10 @@ class Protocol(Step):
         self._definition = Form()
         self._defineParams(self._definition)
         self._createVarsFromDefinition(**args)
-        self.stdOut = ""
-        self.stdErr = ""
+        self.__stdOut = None
+        self.__stdErr = None
+        self.__fOut = None
+        self.__fErr = None
         
         # For non-parallel protocols mpi=1 and threads=1
         if not hasattr(self, 'numberOfMpi'):
@@ -624,8 +626,8 @@ class Protocol(Step):
         """ This will copy relations from protocol other to self """
         pass
     
-    def copy(self, other):
-        copyDict = Object.copy(self, other)
+    def copy(self, other, copyId=True):
+        copyDict = Object.copy(self, other, copyId)
         self._store()
         for r in other.getRelations():
             rName = r['name']
@@ -644,7 +646,7 @@ class Protocol(Step):
         
     def getRelations(self):
         """ Return the relations created by this protocol. """
-        return self.mapper.getRelations(self)  
+        return self.mapper.getRelationsByCreator(self)  
     
     def _defineRelation(self, relName, parentObj, childObj):
         """ Insert a new relation in the mapper using self as creator. """
@@ -685,21 +687,9 @@ class Protocol(Step):
         """ Before calling this method, the working dir for the protocol
         to run should exists. 
         """
-        self._log = ScipionLogger(self._getLogsPath(''))        
-
-        # Open the log file overwriting its content if the protocol is going to be execute from zero. 
-        # Otherwise append the new content to the old one
-        if self.runMode.get() == MODE_RESTART:
-            mode = 'w+'
-        else:     
-            mode = 'a'
+        self.__initLogs()
         
-        self.__initLogs(mode)
-        
-        self.stderr = sys.stderr
-        sys.stdout = self.fOut
-        sys.stderr = self.fErr
-        self._log.info('RUNNING PROTOCOL -----------------')
+        self.info('RUNNING PROTOCOL -----------------')
 #        self._log.info('RUNNING PROTOCOL info -----------------')
 #        self._log.warning('RUNNING PROTOCOL warning-----------------')
 #        self._log.error('RUNNING PROTOCOL error-----------------')
@@ -710,38 +700,78 @@ class Protocol(Step):
 #        self._log.info('          pid: %s' % os.getpid())
 #        self._log.info('         ppid: %s' % os.getppid())
         self._pid.set(os.getpid())
-        self._log.info('   currentDir: %s' % os.getcwd())
-        self._log.info('   workingDir: ' + self.workingDir.get())
-        self._log.info('      runMode: %d' % self.runMode.get())
+        self.info('   currentDir: %s' % os.getcwd())
+        self.info('   workingDir: ' + self.workingDir.get())
+        self.info('      runMode: %d' % self.runMode.get())
         #self.namePrefix = replaceExt(self._steps.getName(), self._steps.strId()) #keep
         #self._run()
         Step.run(self)
         
         #outputs = [getattr(self, o) for o in self._outputs]
         self._store()
-        self._log.info('------------------- PROTOCOL FINISHED')
-        self._log.close()
+        self.info('------------------- PROTOCOL FINISHED')
+        self.__closeLogs()
         
-    def __initLogs(self, mode):
-        self.__getStdErr()
-        self.__getStdOut()
-        self.fOut = open(self.stdOut, mode)
-        self.fErr = open(self.stdErr, mode)
+    def __initLogs(self):
+        """ Open the log file overwriting its content if the protocol is going to be execute from zero. 
+        Otherwise append the new content to the old one.
+        Also open logs files and redirect the systems streams.
+        """
+        self._log = ScipionLogger(self.__getLogPaths()[2]) 
+               
+        if self.runMode.get() == MODE_RESTART:
+            mode = 'w+'
+        else:     
+            mode = 'a'
+        # Backup the the system streams
+        self.__stdErr = sys.stderr
+        self.__stdOut = sys.stdout
+        self.__openLogsFiles(mode)
+        # Redirect the system streams to the protocol files
+        sys.stdout = self.__fOut
+        sys.stderr = self.__fErr
+    
+    def __getLogPaths(self):
+        return self._getLogsPath('run.stdout'), self._getLogsPath('run.stderr'), self._getLogsPath('run.log')
+    
+    def __openLogsFiles(self, mode):
+        self.__fOut = open(self.__getLogPaths()[0], mode)
+        self.__fErr = open(self.__getLogPaths()[1], mode)
+        
+    def __closeLogsFiles(self):       
+        self.__fOut.close()
+        self.__fErr.close()
+    
+    def __closeLogs(self):
+        self._log.close()
+        # Restore system streams
+        sys.stderr = self.__stdErr
+        sys.stdout = self.__stdOut
+        self.__closeLogsFiles()
         
     def getLogsAsStrings(self):
-        self.__initLogs('r')
-        fOutString = self.fOut.read()
-        fErrString = self.fErr.read()
-        self.fOut.close()
-        self.fErr.close()
-        return fOutString, fErrString
+        fOutString = fErrString = fScpnString = ''
+        if os.path.exists(self.__getLogPaths()[0]) and os.path.exists(self.__getLogPaths()[1]) and os.path.exists(self.__getLogPaths()[2]):
+            self.__openLogsFiles('r')
+            fOutString = self.__fOut.read()
+            fErrString = self.__fErr.read()
+            self.__closeLogsFiles()
+            
+            fScpn = open(self.__getLogPaths()[2], 'r')
+            fScpnString = fScpn.read()
+            fScpn.close()
+            
+        return fOutString, fErrString, fScpnString
+    
+    def warning(self, message, redirectStandard=True):
+        self._log.warning(message, True)
         
-    def __getStdErr(self):
-        self.stdErr = self._getLogsPath('run.stderr')
-
-    def __getStdOut(self):
-        self.stdOut = self._getLogsPath('run.stdout')
-
+    def info(self, message, redirectStandard=True):
+        self._log.info(message, True)
+        
+    def error(self, message, redirectStandard=True):
+        self._log.error(message, True)
+        
     def getWorkingDir(self):
         return self.workingDir.get()
     
@@ -922,6 +952,33 @@ class Protocol(Step):
         """ Should be implemented in subclasses. See citations. """
         return getattr(self, "_references", [])
     
+    def __getPackageBibTex(self):
+        """ Return the _bibtex from the package . """
+        return getattr(self._package, "_bibtex", {})
+     
+    def __getCiteText(self, cite, useKeyLabel=False):
+        # Get the first author surname
+        if useKeyLabel:
+            label = cite['id']
+        else:
+            label = cite['author'].split('and')[0].split(',')[0].strip()
+            label += ', et.al, %s, %s' % (cite['journal'], cite['year'])
+        
+        return '[[%s][%s]] ' % (cite['doi'].strip(), label)
+    
+    def __getCitations(self, citations):
+        """ From the list of citations keys, obtains the full
+        info from the package _bibtex dict. 
+        """
+        bibtex = self.__getPackageBibTex()
+        newCitations = []
+        for c in citations:
+            if c in bibtex:
+                newCitations.append(self.__getCiteText(bibtex[c]))
+            else:
+                newCitations.append(c)
+        return newCitations
+    
     def citations(self):
         """ Return a citation message to provide some information to users. """
         citations = self._citations()
@@ -934,17 +991,35 @@ class Protocol(Step):
         if packageCitations:
             citationsFinal = citationsFinal +['*Package References:*'] + packageCitations   
             
-        return citationsFinal    
+        return self.__getCitations(citationsFinal)    
 
     def _methods(self):
         """ Should be implemented in subclasses. See methods. """
         return ["No methods information."]
         
-    def methods(self):
+    def methods_old(self):
         """ Return a description about methods about current protocol execution. """
         baseMethods = self._methods()
         if not baseMethods:
             baseMethods = []
+        return baseMethods + [''] + self.citations()
+        
+    def methods(self):
+        """ Return a description about methods about current protocol execution. """
+        # TODO: Maybe store the methods and not computing all times??
+        baseMethods = self._methods()
+        if not baseMethods:
+            baseMethods = []
+        else:
+            bibtex = self.__getPackageBibTex()
+            parsedMethods = []
+            for m in baseMethods:
+                for bibId, cite in bibtex.iteritems():
+                    k = '[%s]' % bibId
+                    link = self.__getCiteText(cite, useKeyLabel=True)
+                    m = m.replace(k, link)
+                parsedMethods.append(m)
+            baseMethods = parsedMethods
             
         return baseMethods + [''] + self.citations()
         

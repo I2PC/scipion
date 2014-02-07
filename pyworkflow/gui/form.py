@@ -162,7 +162,8 @@ class SubclassesTreeProvider(TreeProvider):
         return [('Object', 400), ('Info', 250)]
     
     def getObjectInfo(self, obj):
-        objName = self.mapper.getFullName(obj)
+#        objName = self.mapper.getFullName(obj)
+        objName = obj.getNameId()
         return {'key': objName, 'values': (str(obj),)}
 
     def getObjectActions(self, obj):
@@ -170,7 +171,7 @@ class SubclassesTreeProvider(TreeProvider):
         from pyworkflow.em import findViewers
         
         if isinstance(obj, Pointer):
-            obj = obj.get()
+            obj = obj.getName()
         actions = []    
         viewers = findViewers(obj.getClassName(), DESKTOP_TKINTER)
         for v in viewers:
