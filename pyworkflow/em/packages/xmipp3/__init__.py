@@ -47,6 +47,7 @@ from convert import *
 from viewer import XmippViewer
 from viewer_ml2d import XmippML2DViewer
 from viewer_cl2d import XmippCL2DViewer
+from viewer_cltomo import XmippCLTomoViewer
 from viewer_ml3d import XmippML3DViewer
 from viewer_nma import XmippNMAViewer
 from viewer_nma_alignment import XmippAlignmentNMAViewer
@@ -82,5 +83,8 @@ from protocol_align_volume import XmippProtAlignVolume
 from protocol_cltomo import XmippProtCLTomo
 from protocol_screen_classes import XmippProtScreenClasses
 from protocol_resolution_3d import XmippProtResolution3D
+#from protocol_helical_params import ProtHelicalParams
+
+
 # Wizards
 from wizard import *

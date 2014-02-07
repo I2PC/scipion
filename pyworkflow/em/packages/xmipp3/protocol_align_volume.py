@@ -23,6 +23,8 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
+from pyworkflow.em.packages.xmipp3.convert import locationToXmipp,\
+    writeSetOfVolumes
 """
 This sub-package contains the  protocol
 """
@@ -47,7 +49,6 @@ ALIGN_ALGORITHM_FAST_FOURIER = 3
 class XmippProtAlignVolume(ProtAlignVolume):
     """ Protocol to align a set of volumes. """
     _label = 'align volume'
-#    _references = ['[[http://www.ncbi.nlm.nih.gov/pubmed/23671335][Nogales-Cadenas, et.al, NAR (2013)]]']
     
     def __init__(self, **args):
         ProtAlignVolume.__init__(self, **args)
@@ -178,49 +179,67 @@ class XmippProtAlignVolume(ProtAlignVolume):
         
         
     def _insertAllSteps(self):
-        initialStepId = self._insertFunctionStep('initialize')
         
-        self._insertFunctionStep('prepareExecution', initialStepId) 
-        
-        self._insertFunctionStep('createOutput')
-        
-    def initialize(self):
-        print "initializing"
-        
-         # Convert input vols if necessary
-        self.volsFn = createXmippInputVolumes(self, self.inputVolumes.get())
-        self.volsMd = xmipp.MetaData(self.volsFn)
-        
-        self.volRefFn = createXmippInputVolumes(self, self.inputReferenceVolume.get())
-        self.volRefMd = xmipp.MetaData(self.volRefFn)
-        self.volRef = self.volRefMd.getValue(xmipp.MDL_IMAGE, 1)
-        
-        if self.applyMask.get() and self.maskType.get() == ALIGN_MASK_BINARY_FILE:
-            self.volMask = createXmippInputVolumes(self, self.maskFile.get())   
-
-    def prepareExecution(self, initialStepId):
         # Check volsMd is a volume or a stack
-        if self.volsMd.size()==1:
-            self._insertFunctionStep('executeCommand', self.volsFn) 
-        else:
-            for i, idx in enumerate(self.volsMd):
-                path = self.volsMd.getValue(xmipp.MDL_IMAGE, idx)
-                self._insertFunctionStep('executeCommand', path,
-                                    prerequisites=[initialStepId])
-    
-    def executeCommand(self, path):
-        args="--i1 %s --i2 %s --apply" % (self.volRef, path)
+        inputRefVol = self.inputReferenceVolume.get().getFirstItem()
+        inputVols = self.inputVolumes.get()
         
-        if self.applyMask.get():
-            if self.maskType.get() == ALIGN_MASK_CIRCULAR:
-                args+=" --mask circular -%d" % self.maskRadius.get()
-            else:
-                args+=" --mask binary_file %s" % self.volMask
+        if isinstance(inputVols, Volume):
+            inputVols = [inputVols]
+        refVolFn = locationToXmipp(*inputRefVol.getLocation())
+        
+        maskArgs = self._getMaskArgs()
+        alignArgs = self._getAlignArgs()
+             
+        volsFn = []
 
+        self.alignedMd = self._getPath("volume.xmd")
+        writeSetOfVolumes(inputVols, alignedMd)
+        md = xmipp.MetaData(alignedMd)
+        for objId in md:
+            volFileName = md.getValue(xmipp.MDL_IMAGE, objId)
+            volFn = self._getPath(basename(volFileName))
+            print "taka", volFileName, volFn
+            
+            volsFn.append(volFn)
+            
+            ImageHandler().convert(volFileName, volFn)
+            md.setValue(xmipp.MDL_IMAGE, volFn, objId)
+         
+            
+#        md.write(alignedMd)    
+        
+        
+        alignSteps = []
+        for item in volsFn:
+#           volFn = self._getPath(basename(vol.getFileName()))
+#           copyFile(vol.getFileName(), volFn)
+            
+            
+#            volFn = locationToXmipp(*vol.getLocation())
+            
+            stepId = self._insertFunctionStep('alignVolumeStep', refVolFn, item, 
+                                              maskArgs, alignArgs, prerequisites=[])
+            
+            alignSteps.append(stepId)
+            
+        self._insertFunctionStep('createOutputStep', prerequisites=alignSteps)
+        
+    def _getMaskArgs(self):
+        maskArgs = ''
+        if self.applyMask:
+            if self.maskType.get() == ALIGN_MASK_CIRCULAR:
+                maskArgs+=" --mask circular -%d" % self.maskRadius.get()
+            else:
+                maskArgs+=" --mask binary_file %s" % self.volMask
+        return maskArgs
+    
+    def _getAlignArgs(self):
+        alignArgs = ''
         if self.alignmentAlgorithm.get() == ALIGN_ALGORITHM_FAST_FOURIER:
-            args+=" --frm"
+            alignArgs += " --frm"
         elif self.alignmentAlgorithm.get() == ALIGN_ALGORITHM_LOCAL:
-            args+=" --local --rot %f %f 1 --tilt %f %f 1 --psi %f %f 1 -x %f %f 1 -y %f %f 1 -z %f %f 1 --scale %f %f 0.005"%\
+            alignArgs += " --local --rot %f %f 1 --tilt %f %f 1 --psi %f %f 1 -x %f %f 1 -y %f %f 1 -z %f %f 1 --scale %f %f 0.005" %\
                (self.initialRotAngle.get(), self.initialRotAngle.get(),\
                 self.initialTiltAngle.get(), self.initialTiltAngle.get(),\
                 self.initialInplaneAngle.get(), self.initialInplaneAngle.get(),\
@@ -229,7 +248,7 @@ class XmippProtAlignVolume(ProtAlignVolume):
                 self.initialShiftZ.get(),self.initialShiftZ.get(),\
                 self.initialScale.get(), self.initialScale.get())
         else:
-            args+=" --rot %f %f %f --tilt %f %f %f --psi %f %f %f -x %f %f %f -y %f %f %f -z %f %f %f --scale %f %f %f"%\
+            alignArgs += " --rot %f %f %f --tilt %f %f %f --psi %f %f %f -x %f %f %f -y %f %f %f -z %f %f %f --scale %f %f %f" %\
                (self.minRotationalAngle.get(), self.maxRotationalAngle.get(), self.stepRotationalAngle.get(),\
                 self.minTiltAngle.get(), self.maxTiltAngle.get(), self.stepTiltAngle.get(),\
                 self.minInplaneAngle.get(), self.maxInplaneAngle.get(), self.stepInplaneAngle.get(),\
@@ -237,44 +256,41 @@ class XmippProtAlignVolume(ProtAlignVolume):
                 self.minimumShiftY.get(), self.maximumShiftY.get(), self.stepShiftY.get(),\
                 self.minimumShiftZ.get(), self.maximumShiftZ.get(), self.stepShiftZ.get(),\
                 self.minimumScale.get(), self.maximumScale.get(), self.stepScale.get())
+               
+        return alignArgs
         
-        print "args", args
+    def alignVolumeStep(self, refVolFn, volFn, maskArgs, alignArgs):
+        args = "--i1 %s --i2 %s --apply" % (refVolFn, volFn)
+        args += maskArgs
+        args += alignArgs
         
         self.runJob(None, "xmipp_volume_align", args)
-        
         if self.alignmentAlgorithm.get() == ALIGN_ALGORITHM_EXHAUSTIVE_LOCAL:
-            args="--i1 %s --i2 %s --apply --local" % (self.volRef, path)
+            args = "--i1 %s --i2 %s --apply --local" % (refVolFn, volFn)
             self.runJob(None, "xmipp_volume_align", args)
-       
-        
       
-    def createOutput(self):
-        classes2DSet = self.inputClasses.get()
-        fn = self._getPath('volume_aligned.vol')
-        md = xmipp.MetaData(fn)
-        md.addItemId()
-        md.write(fn)
-        
+    def createOutputStep(self):
+#        print "summary"
         volumesSet = self._createSetOfVolumes()
-        readSetOfVolumes(fn, volumesSet)
-        volumesSet.setSamplingRate(self.inputClasses.get().getAverages().getSamplingRate())
+        readSetOfVolumes(self.alignedMd, volumesSet)
+        volumesSet.copyInfo(self.inputVols)
         volumesSet.write()
         
         self._defineOutputs(outputVolumes=volumesSet)
-        self._defineSourceRelation(classes2DSet, volumesSet)
+        self._defineTransformRelation(self.inputVols, volumesSet)
 
     def _summary(self):
         summary = []
         if not hasattr(self, 'outputVolumes'):
             summary.append("Output volumes not ready yet.")
         else:
-            summary.append("Reference volume: [%s] "%self.ReferenceVolume)
-            summary.append("Input volume: [%s] "%self.InputVolume)
-            summary.append("Alignment method: %s"%self.AlignmentMethod)
+            summary.append("Reference volume: [%s] " % self.inputReferenceVolume.get().getFirstItem().getNameId())
+            summary.append("Input volume: [%s] " % self.inputVolumes.get().getNameId())
+            summary.append("Alignment method: %s" % self.alignmentAlgorithm.get())
                 
             return summary
         
     def _citations(self):
         if self.alignmentAlgorithm.get() == ALIGN_ALGORITHM_FAST_FOURIER:
-            return ['Chen2013235']
+            return ['Chen2013']
             

@@ -153,7 +153,7 @@ class XmippViewer(Viewer):
             else:
                 fn = self._getTmpPath(obj.getName() + '_classes.xmd')
                 writeSetOfClasses3D(obj, fn, self._getTmpPath())
-            runShowJ(fn, extraParams=args.get('extraParams', ''))  
+            runShowJ("classes@"+fn, extraParams=args.get('extraParams', ''))  
         elif issubclass(cls, SetOfCTF):
             mdFn = getattr(obj, '_xmippMd', None)
             if mdFn:
@@ -183,7 +183,7 @@ class XmippViewer(Viewer):
         elif issubclass(cls, XmippProtRotSpectra):
             self.visualize(obj.outputClasses, extraParams='--mode rotspectra --columns %d' % obj.SomXdim.get())
         elif issubclass(cls, XmippProtScreenClasses):
-            runShowJ(obj.getVisualizeInfo(), extraParams=' --mode metadata --render first')
+            runShowJ(obj.getVisualizeInfo().get(), extraParams=' --mode metadata --render first')
 # TODO: We have to develop a showj analyze tool for classes so we can select classes or images associated to them
 #        Airem this is your good shit
 #            runScipionShowJ(obj.getVisualizeInfo(), "Set Of Classes", obj.inputClasses.get(), 
@@ -240,7 +240,8 @@ def runShowJ(inputFiles, memory="1g", extraParams=""):
     runJavaIJapp(memory, "'xmipp.viewer.Viewer'", "-i %s %s" % (inputFiles, extraParams), True)
     
 def runScipionShowJ(inputFiles, set, obj, memory="1g", extraParams=""):
-    SCIPION_PYTHON = os.environ["SCIPION_PYTHON"]
+#    SCIPION_PYTHON = os.environ["SCIPION_PYTHON"]
+    SCIPION_PYTHON = os.environ.get("SCIPION_PYTHON", 'xmipp_python')
     PW_HOME = os.environ["PW_HOME"]
     
     script = "%s %s/pyworkflow/apps/%s" % (SCIPION_PYTHON, PW_HOME, "pw_create_image_subset.py") 
