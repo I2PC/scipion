@@ -30,7 +30,7 @@ from pyworkflow.em.packages.xmipp3.convert import createXmippInputImages
 This sub-package contains the protocol projection outliers
 """
 from pyworkflow.em import *  
-
+from xmipp3 import ProjMatcher
 
 class XmippProtIdentifyOutliers(ProtClassify3D, ProjMatcher):
     """ Protocol for screening a number of classes comparing them to a volume. """
