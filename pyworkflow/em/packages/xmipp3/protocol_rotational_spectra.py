@@ -96,7 +96,7 @@ class XmippProtRotSpectra(XmippProtKerdensom):
         args += ' --x0 %(xOffset)d --y0 %(yOffset)d --r1 %(R1)d --r2 %(R2)d' + \
                      ' --low %(spectraLowHarmonic)d --high %(spectraHighHarmonic)d'
         # Run the command with formatted parameters
-        self.runJob(None, program, args % self._params)
+        self.runJob(program, args % self._params)
         return [outputSpectra]     
     
 

@@ -166,7 +166,7 @@ class XmippProtAlignmentNMA(EMProtocol):
             args += "--projMatch "
     
         print "self.numberOfMpi", self.numberOfMpi
-        self.runJob(None, "xmipp_nma_alignment", args % locals(), self.numberOfMpi.get())
+        self.runJob("xmipp_nma_alignment", args % locals(), self.numberOfMpi.get())
         cleanPath(self._getPath('nmaTodo.xmd'))
     
     def extractDeformationsStep(self, imgFn):

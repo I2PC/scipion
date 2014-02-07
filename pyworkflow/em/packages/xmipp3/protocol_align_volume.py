@@ -240,11 +240,11 @@ class XmippProtAlignVolume(ProtAlignVolume):
         
         print "args", args
         
-        self.runJob(None, "xmipp_volume_align", args)
+        self.runJob("xmipp_volume_align", args)
         
         if self.alignmentAlgorithm.get() == ALIGN_ALGORITHM_EXHAUSTIVE_LOCAL:
             args="--i1 %s --i2 %s --apply --local" % (self.volRef, path)
-            self.runJob(None, "xmipp_volume_align", args)
+            self.runJob("xmipp_volume_align", args)
        
         
       

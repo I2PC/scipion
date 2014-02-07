@@ -93,7 +93,7 @@ class XmippProtParticlePicking(ProtParticlePicking, XmippProtocol):
 #            self._params['inputMicsXmipp'] = "TiltedPairs@" + fn
 #            program = "xmipp_micrograph_tiltpair_picking"
         # Run the command with formatted parameters
-        self.runJob(None, program, arguments % self._params)
+        self.runJob(program, arguments % self._params)
         
     def _importFromFolder(self):
         """ This function will copy Xmipp .pos files for

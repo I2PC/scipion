@@ -85,7 +85,7 @@ class XmippProtCTFMicrographs(ProtCTFMicrographs):
         self._params['micFn'] = micFn
         self._params['micDir'] = self._getFilename('prefix', micDir=micDir)
         # CTF estimation with Xmipp                
-        self.runJob(None, self._program, self._args % self._params)    
+        self.runJob(self._program, self._args % self._params)    
 
     def setupMicRow(self, mic, micRow):
         """ Add extra labels to the micrograph row, not present
@@ -134,7 +134,7 @@ class XmippProtCTFMicrographs(ProtCTFMicrographs):
 
         # Evaluate the PSD and add some criterias
         auxMdFn = self._getTmpPath('micrographs.xmd')
-        self.runJob(None, "xmipp_ctf_sort_psds","-i %s -o %s" % (mdFn, auxMdFn))
+        self.runJob("xmipp_ctf_sort_psds","-i %s -o %s" % (mdFn, auxMdFn))
         # Copy result to output metadata
         moveFile(auxMdFn, mdFn)        
         #micSet._xmippMd.set(mdFn)

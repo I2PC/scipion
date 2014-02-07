@@ -83,7 +83,7 @@ class XmippProtScreenParticles(ProtProcessParticles):
         elif self.autoParRejection.get()==REJ_PERCENTAGE:
             args+=" --percent "+str(self.percentage.get())
         #if Ndim > 0:
-        self.runJob(None, "xmipp_image_sort_by_statistics", "-i " + self.outputMd.get() + " --addToInput"+args)
+        self.runJob("xmipp_image_sort_by_statistics", "-i " + self.outputMd.get() + " --addToInput"+args)
 
                         
     def createOutput(self):

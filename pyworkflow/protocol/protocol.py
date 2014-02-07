@@ -674,7 +674,6 @@ class Protocol(Step):
         if len(errors):
             raise Exception('Protocol.run: Validation errors:\n' + '\n'.join(errors))
         
-        self.runJob = self._stepsExecutor.runJob
         self.__backupSteps() # Prevent from overriden previous stored steps
         self._insertAllSteps() # Define steps for execute later
         #self._makePathsAndClean() This is done now in project
@@ -682,6 +681,9 @@ class Protocol(Step):
         self._log.info(" Starting at index: %d" % startIndex)
         self.__cleanStepsFrom(startIndex) # 
         self._runSteps(startIndex)
+    
+    def runJob(self, *args, **kwargs):
+        self._stepsExecutor.runJob(self._log, *args, **kwargs)
         
     def run(self):
         """ Before calling this method, the working dir for the protocol
