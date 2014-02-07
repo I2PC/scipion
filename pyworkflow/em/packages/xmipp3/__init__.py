@@ -71,7 +71,7 @@ from protocol_align_volume import XmippProtAlignVolume
 from protocol_cltomo import XmippProtCLTomo
 from protocol_screen_classes import XmippProtScreenClasses
 #from protocol_helical_params import ProtHelicalParams
-
+from protocol_identify_outliers import XmippProtIdentifyOutliers
 
 # Wizards
 from wizard import *
