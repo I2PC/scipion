@@ -171,7 +171,7 @@ class Project(object):
             prot2 = getProtocolFromDb(dbPath, protocol.getObjId(), globals())
             # Copy is only working for db restored objects
             protocol.setMapper(self.mapper)
-            protocol.copy(prot2)
+            protocol.copy(prot2, copyId=False)
             # Restore jobId
             protocol.setJobId(jobId)
             self.mapper.store(protocol)

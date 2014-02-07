@@ -42,6 +42,7 @@ from protocol_cl2d import XmippProtCL2D
 from protocol_kerdensom import XmippProtKerdensom
 from protocol_rotational_spectra import XmippProtRotSpectra
 from protocol_create_mask import XmippProtCreateMask3D
+from protocol_screen_classes import XmippProtScreenClasses
 from convert import writeSetOfMicrographs, writeSetOfParticles, writeSetOfClasses2D, writeSetOfCoordinates, writeSetOfCTFs, locationToXmipp, \
                     writeSetOfClasses3D
 from os.path import dirname, join
@@ -60,13 +61,15 @@ class XmippViewer(Viewer):
                 ProtImportMicrographs, XmippProtPreprocessMicrographs, ProtCTFMicrographs,
                 ProtParticlePicking, ProtImportParticles, XmippProtExtractParticles, ProtUserSubSet,
                 ProtAlign, ProtProcessParticles, XmippProtKerdensom, XmippProtRotSpectra,  XmippProtCreateMask3D,
-                SetOfClasses2D, SetOfCTF, NormalModes]
+                SetOfClasses2D, SetOfCTF, NormalModes, XmippProtScreenClasses]
     
     def __init__(self, **args):
         Viewer.__init__(self, **args)
 
     def visualize(self, obj, **args):
         cls = type(obj)
+        
+        print "cls", cls
         
         if issubclass(cls, Image):
             print "visualizing Image"
@@ -179,6 +182,12 @@ class XmippViewer(Viewer):
             self.visualize(obj.outputParticles) 
         elif issubclass(cls, XmippProtRotSpectra):
             self.visualize(obj.outputClasses, extraParams='--mode rotspectra --columns %d' % obj.SomXdim.get())
+        elif issubclass(cls, XmippProtScreenClasses):
+            runShowJ(obj.getVisualizeInfo(), extraParams=' --mode metadata --render first')
+# TODO: We have to develop a showj analyze tool for classes so we can select classes or images associated to them
+#        Airem this is your good shit
+#            runScipionShowJ(obj.getVisualizeInfo(), "Set Of Classes", obj.inputClasses.get(), 
+#                            extraParams=' --mode metadata --render first')
         elif issubclass(cls, XmippProtCreateMask3D):
             self.visualize(obj.outputMask)
         elif issubclass(cls, XmippProtKerdensom):
