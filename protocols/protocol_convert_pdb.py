@@ -54,7 +54,7 @@ def createAcquisition(log,WorkingDir,Ts):
 def convertFromPDB(log,InModel,WorkingDir,Ts,Size,CenterPDB):
     args="-i %s -o %s/volume"%(InModel,WorkingDir)
     if CenterPDB:
-        args+" --centerPDB"
+        args+=" --centerPDB"
     if Size>0:
         args+=" --size %d"%(int(Size))
     if Ts>4:
