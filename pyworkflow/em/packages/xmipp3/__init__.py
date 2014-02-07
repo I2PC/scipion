@@ -50,6 +50,7 @@ from viewer_cl2d import XmippCL2DViewer
 from viewer_ml3d import XmippML3DViewer
 from viewer_nma import XmippNMAViewer
 from viewer_nma_alignment import XmippAlignmentNMAViewer
+from viewer_resolution3d import XmippResolution3DViewer
 
 from plotter import XmippPlotter
 from protocol_preprocess_micrographs import XmippProtPreprocessMicrographs

@@ -44,13 +44,13 @@ class XmippProtResolution3D(ProtValidate3D):
         form.addSection(label='Input')
         # Volumes to process
         form.addParam('inputVolume', PointerParam, label="Volume to compare", important=True, 
-                      pointerClass='SetOfVolumes',
+                      pointerClass='Volume',
                       help='This volume will be compared to the reference volume.')  
         form.addParam('doFSC', BooleanParam, default=True,
                       label="Calculate FSC?", 
                       help='If set True calculate FSC and DPR.')
         form.addParam('referenceVolume', PointerParam, label="Reference volume", condition='doFSC', 
-                      pointerClass='SetOfVolumes',
+                      pointerClass='Volume',
                       help='Input volume will be compared to this volume.')  
         form.addParam('doStructureFactor', BooleanParam, default=True,
                       label="Calculate Structure Factor?", 
@@ -67,18 +67,18 @@ class XmippProtResolution3D(ProtValidate3D):
     def _insertAllSteps(self):
         """Insert all steps to calculate the resolution of a 3D reconstruction. """
         
-        self.inputVol = createXmippInputVolumes(self, self.inputVolume.get())
-        self.refVol = createXmippInputVolumes(self, self.referenceVolume.get())
+        self.inputVol = self.inputVolume.get().locationToXmipp()
+        self.refVol = self.referenceVolume.get().locationToXmipp()
+        
         if self.doFSC:
             self._insertFunctionStep('calculateFscStep')
         if self.doStructureFactor:
             self._insertFunctionStep('structureFactorcStep')
-            self.insertStep('structureFactorStep',Structure=self.workingDirPath('structureFactor.xmd'),InputVol=self.InputVol)
         if self.doSSNR or self.doVSSNR:
             # Implement when RECONSTRUCTOR method is implemented
             pass
         
-        self._insertFunctionStep('createOutput')
+#         self._insertFunctionStep('createOutput')
         
     def _defineMetadataRootName(self, mdrootname):
         
@@ -98,16 +98,16 @@ class XmippProtResolution3D(ProtValidate3D):
     def calculateFscStep(self):
         """ Calculate the FSC between two volumes"""
         
-        samplingRate = self.inputVol.getSamplingRate()
+        samplingRate = self.inputVolume.get().getSamplingRate()
         fscFn = self._defineFscName()
         args="--ref %s -i %s -o %s --sampling_rate %f --do_dpr" % (self.refVol, self.inputVol, fscFn, samplingRate)
         self.runJob(None, "xmipp_resolution_fsc", args)
     
-    def structureFactorStep(self):
+    def structureFactorcStep(self):
         """ Calculate the structure factors of the volume"""
         
-        samplingRate = self.inputVol.getSamplingRate()
-        structureFn = self._defineStructFactorName
+        samplingRate = self.inputVolume.get().getSamplingRate()
+        structureFn = self._defineStructFactorName()
         args = "-i %s -o %s --sampling %f" % (self.inputVol, structureFn, samplingRate)
         self.runJob(None, "xmipp_volume_structure_factor", args)
         
