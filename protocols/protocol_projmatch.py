@@ -126,7 +126,7 @@ class ProtProjMatch(XmippProtocol):
     
         
         #Check that acquisition info file is available
-        if not self.findAcquisitionInfo(self.SelFileName):
+        if not self.findAcquisitionInfo(self.SelFileNameInitial):
             errors.append("""Acquisition file for metadata %s is not available. 
 Either import images before using them
 or create a file named acquisition_info.xmd 
