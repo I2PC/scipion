@@ -300,8 +300,13 @@ public class CTFAnalyzerJFrame extends JFrame implements ActionListener
 		theorethicalpsdplot = ctfmodel.profiles[CTFDescription.PSD];
 		ctfplot = ctfmodel.profiles[CTFDescription.CTF];
 		difference = new double[bgnoiseplot.length];
+                double a, b;
 		for (int i = 0; i < xvalues.length; i++)
-			difference[i] = Math.log10(Math.pow(10, psdprofileplot[i] * 0.1) - Math.pow(10, bgnoiseplot[i] * 0.1));
+                {
+                    a = psdprofileplot[i];//Math.pow(10, psdprofileplot[i] * 0.1);
+                    b = bgnoiseplot[i]; //Math.pow(10, bgnoiseplot[i] * 0.1);
+                    difference[i] = a - b;//Math.log10(a - b);
+                }
 
 		XYPlot plot = ((XYPlot) radialchartpn.getChart().getPlot());
 

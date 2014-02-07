@@ -1942,17 +1942,20 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			}
 			else if (cmd.equals(OPEN))
 			{
-				MetadataGalleryTableModel mg = (MetadataGalleryTableModel) gallery;
-				ColumnInfo ci = mg.visibleLabels.get(col);
+                               
+                                MetadataGalleryTableModel mg = (MetadataGalleryTableModel) gallery;
 
-				if (ci.allowRender)
-					gallery.handleDoubleClick(row, col);
-				else
-				{
-					String file = data.getValueFromCol(row, ci);
+                                ColumnInfo ci = mg.visibleLabels.get(col);
 
-					ImagesWindowFactory.openFileAsDefault(file);
-				}
+                                if (ci.allowRender)
+                                        gallery.handleDoubleClick(row, col);
+                                else
+                                {
+                                        String file = data.getValueFromCol(row, ci);
+
+                                        ImagesWindowFactory.openFileAsDefault(file);
+                                }
+                                
 			}
 			else if (cmd.equals(OPEN_ASTEXT))
 			{
