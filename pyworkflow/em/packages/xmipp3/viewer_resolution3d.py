@@ -85,6 +85,7 @@ class XmippResolution3DViewer(ProtocolViewer):
         fscFn = self.protocol._defineFscName()
         md = md = MetaData(fscFn)
         self._viewPlot("Fourier Shell Correlation", 'frequency (1/A)', 'FSC', md, MDL_RESOLUTION_FREQ, MDL_RESOLUTION_FRC, color='r')
+        self._showJ(fscFn)
         
     def _viewDpr(self, e=None):
         fscFn = self.protocol._defineFscName()
@@ -97,12 +98,17 @@ class XmippResolution3DViewer(ProtocolViewer):
         xplotter.createSubPlot(title, xTitle, yTitle)
         xplotter.plotMdFile(md, mdLabelX, mdLabelY, color)
         return xplotter
+        
+    def _showJ(self, filename):
+        runShowJ(filename)
     
     def _viewEstructureFactor(self, e=None):
         
         strFactFn = self.protocol._defineStructFactorName()
         md = md = MetaData(strFactFn)
         self._viewPlot("Structure Factor", 'frequency (1/A)', 'Structure Factor', md, MDL_RESOLUTION_FREQ, MDL_RESOLUTION_STRUCTURE_FACTOR)
+        self._viewPlot("Structure Factor", 'frequency (1/A)', 'log(Structure Factor)', md, MDL_RESOLUTION_FREQ, MDL_RESOLUTION_LOG_STRUCTURE_FACTOR)
+        self._showJ(strFactFn)
         
     
     def _viewSsnr(self, e=None):
