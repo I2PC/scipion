@@ -34,7 +34,7 @@ This sub-package contains the XmippProtExtractParticles protocol
 
 from pyworkflow.em import * 
 
-from convert import writeSetOfCoordinates, readSetOfParticles, writeCTFModel
+from convert import writeSetOfCoordinates, readSetOfParticles
 from pyworkflow.utils.path import makePath, removeBaseExt, join, exists
 from xmipp3 import XmippProtocol
 from glob import glob

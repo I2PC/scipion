@@ -91,9 +91,6 @@ class Step(OrderedObject):
         self._error.set(msg)
         self.status.set(STATUS_FAILED)
         
-    def getError(self):
-        return self.error.get()
-        
     def setAborted(self):
         """ Set the status to aborted and updated the endTime. """
         self.endTime.set(dt.datetime.now())
@@ -494,14 +491,8 @@ class Protocol(Step):
         """ Insert an Step that will simple call runJob function
         **args: see __insertStep
         """
-        step = RunJobStep(self.runJob, progName, progArguments, resultFiles)
-
-        if self.stepsExecutionMode == STEPS_SERIAL:
-            step.mpi = args.get('numberOfMpi', self.numberOfMpi.get())
-            step.threads = args.get('numberOfThreads', self.numberOfThreads.get())
+        self._insertFunctionStep('runJob', progName, progArguments)
             
-        return self.__insertStep(step, **args)
-
     def _enterDir(self, path):
         """ Enter into a new directory path and store the current path.
         The current path will be used in _leaveDir, but nested _enterDir
@@ -691,8 +682,15 @@ class Protocol(Step):
         self.__cleanStepsFrom(startIndex) # 
         self._runSteps(startIndex)
     
-    def runJob(self, *args, **kwargs):
-        self._stepsExecutor.runJob(self._log, *args, **kwargs)
+    def runJob(self, program, arguments, **kwargs):
+        if self.stepsExecutionMode == STEPS_SERIAL:
+            kwargs['numberOfMpi'] = kwargs.get('numberOfMpi', self.numberOfMpi.get())
+            kwargs['numberOfThreads'] = kwargs.get('numberOfThreads', self.numberOfThreads.get())
+        else:
+            kwargs['numberOfMpi'] = kwargs.get('numberOfMpi', 1)
+            kwargs['numberOfThreads'] = kwargs.get('numberOfThreads', 1)           
+            
+        self._stepsExecutor.runJob(self._log, program, arguments, **kwargs)
         
     def run(self):
         """ Before calling this method, the working dir for the protocol
