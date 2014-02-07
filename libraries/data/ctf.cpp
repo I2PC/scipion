@@ -46,11 +46,13 @@ void groupCTFMetaData(const MetaData &imgMd, MetaData &ctfMd)
   }
   else if (containsCTFBasicLabels(imgMd))
   {
-      std::vector<MDLabel> groupbyLabels(CTF_BASIC_LABELS,CTF_BASIC_LABELS+CTF_BASIC_LABELS_SIZE);
-      MetaData auxMd;
-      auxMd.aggregateGroupBy(imgMd, AGGR_COUNT, groupbyLabels, MDL_CTF_DEFOCUSU, MDL_COUNT);
-      std::cerr << "DEBUG_JM: NATURAL: " << NATURAL << std::endl;
-      ctfMd.joinNatural(auxMd, imgMd);
+      std::vector<MDLabel> groupbyLabels;
+      for(int i=0; i < CTF_ALL_LABELS_SIZE; i++)
+        if (imgMd.containsLabel(CTF_ALL_LABELS[i]))
+          groupbyLabels.push_back(CTF_ALL_LABELS[i]);
+
+      //MetaData auxMd;
+      ctfMd.aggregateGroupBy(imgMd, AGGR_COUNT, groupbyLabels, MDL_CTF_DEFOCUSU, MDL_COUNT);
   }
   else
       REPORT_ERROR(ERR_MD_MISSINGLABEL,"Expecting CTF_MODEL or (MDL_CTF_DEFOCUSU, MDL_CTF_DEFOCUSV, MDL_CTF_DEFOCUS_ANGLE) labels");

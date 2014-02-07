@@ -131,8 +131,14 @@ MetaData_aggregateSingle(PyObject *obj, PyObject *args, PyObject *kwargs);
 MetaData_aggregateSingleInt(PyObject *obj, PyObject *args, PyObject *kwargs);
  PyObject *
 MetaData_addIndex(PyObject *obj, PyObject *args, PyObject *kwargs);
+
  PyObject *
-MetaData_join(PyObject *obj, PyObject *args, PyObject *kwargs);
+MetaData_join1(PyObject *obj, PyObject *args, PyObject *kwargs);
+ PyObject *
+MetaData_join2(PyObject *obj, PyObject *args, PyObject *kwargs);
+ PyObject *
+MetaData_joinNatural(PyObject *obj, PyObject *args, PyObject *kwargs);
+
  PyObject *
 MetaData_importObjects(PyObject *obj, PyObject *args, PyObject *kwargs);
  PyObject *

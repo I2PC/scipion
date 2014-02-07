@@ -388,7 +388,10 @@ void ProgMLF2D::produceSideInfo()
         groupCTFMetaData(MDimg, mdCTF);
 
         if (sampling > 0)
+        {
+          MDimg.setValueCol(MDL_CTF_SAMPLING_RATE, sampling);
           mdCTF.setValueCol(MDL_CTF_SAMPLING_RATE, sampling);
+        }
 
         nr_focus = mdCTF.size();
 
@@ -473,16 +476,9 @@ void ProgMLF2D::produceSideInfo()
             ++ifocus;
         }
 
+        // Make a join to set the MDL_DEFGROUP to each image
         MetaData md(MDimg);
         MDimg.joinNatural(md, mdCTF);
-        if (IS_MASTER)
-        {
-        mdCTF.write("tmp_ctf.xmd");
-        md.write("tmp_md.xmd");
-        MDimg.write("tmp_images.xmd");
-        exit(1);
-        }
-
     }
 
     // Get a resolution pointer in Fourier-space
@@ -1225,7 +1221,6 @@ void ProgMLF2D::generateInitialReferences()
         for (size_t imgno = first; imgno <= last; imgno++)
         {
             MDimg.getValue(MDL_IMAGE, fn_tmp, img_id[imgno]);
-            std::cerr << "DEBUG_JM: fn_tmp: " << fn_tmp << std::endl;
             ITemp.read(fn_tmp);
             ITemp().setXmippOrigin();
             IRef() += ITemp();
@@ -1964,10 +1959,6 @@ void ProgMLF2D::processOneImage(const MultidimArray<double> &Mimg,
                                     else
                                         refw_mirror[refno] += weight;
                                     sum_refw += weight;
-
-                                    //std::cerr << "DEBUG_JM: LOOP2: refno << iflip << ipsi: " << refno << " " << iflip << " " << ipsi << std::endl;
-                                    //std::cerr << "DEBUG_JM: LOOP2:         weight: " << weight << " sum_refw: " << sum_refw << std::endl;
-
 
                                     if (do_norm)
                                     {

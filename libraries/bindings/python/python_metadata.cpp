@@ -335,17 +335,17 @@ PyMethodDef MetaData_methods[] =
           "Merge columns of two metadatas. The results is stored in self." },
           {
                 "join1",
-                (PyCFunction) MetaData_join,
+                (PyCFunction) MetaData_join1,
                 METH_VARARGS,
                 "join between two metadatas using label as common attribute. The results is stored in self." },
           {
                 "join2",
-                (PyCFunction) MetaData_join,
+                (PyCFunction) MetaData_join2,
                 METH_VARARGS,
                 "join between two metadatas, md1.label1=md2.label2. The results is stored in self." },
         {
               "joinNatural",
-              (PyCFunction) MetaData_join,
+              (PyCFunction) MetaData_joinNatural,
               METH_VARARGS,
               "natural join between two metadatas. The results is stored in self." },
         {
