@@ -84,20 +84,18 @@ def wiz_downsampling(protocol, request):
     
     if res is not 1:
         return HttpResponse(res)
-    else:
-        for m in micrographs:
-            m.basename = basename(m.getFileName())
+    else:           
         
-#        mics = [mic for mic in micrographs]
-#        for m in mics:
-#            m.basename = basename(m.getFileName())
-            
-        context = {'objects': micrographs,
+        mics = [mic.clone() for mic in micrographs]
+        for m in mics:
+            m.basename = basename(m.getFileName())
+             
+        context = {'objects': mics,
                    'downFactor': protocol.downFactor.get()
                    }
-        
-        context = wiz_base(request, context)
 
+        context = wiz_base(request, context)
+        
         return render_to_response('wizards/wiz_downsampling.html', context)
 
 def wiz_ctf(protocol, request):
@@ -108,7 +106,7 @@ def wiz_ctf(protocol, request):
     if res is not 1:
         return HttpResponse(res)
     else:
-        mics = [mic for mic in micrographs]
+        mics = [mic.clone() for mic in micrographs]
         for m in mics:
             m.basename = basename(m.getFileName())    
         
@@ -184,7 +182,7 @@ def wiz_volume_mask(protocol, request):
     if res is not 1:
         return HttpResponse(res)
     else:
-        vols = [vol for vol in volumes]
+        vols = [vol.clone() for vol in volumes]
         
         for v in vols:
             v.basename = basename(v.getFileName())
@@ -214,7 +212,7 @@ def wiz_volume_mask_radii(protocol, request):
     if res is not 1:
         return HttpResponse(res)
     else:
-        vols = [vol for vol in volumes]
+        vols = [vol.clone() for vol in volumes]
         
         for v in vols:
             v.basename = basename(v.getFileName())
@@ -305,7 +303,7 @@ def wiz_gaussian(protocol, request):
     if res is not 1:
         return HttpResponse(res)
     else:
-        parts = getParticleSubset(particles,100)
+        parts = getParticleSubset(particles.clone(),100)
         
         if len(parts) == 0:
             return HttpResponse("errorIterate")
@@ -328,7 +326,7 @@ def wiz_relion_bandpass(protocol, request):
     if res is not 1:
         return HttpResponse(res)
     else:
-        parts = getParticleSubset(particles,100)
+        parts = getParticleSubset(particles.clone(),100)
         
         if len(parts) == 0:
             return HttpResponse("errorIterate")
@@ -350,7 +348,11 @@ def getParticleSubset(particles, num):
     Method to prepare the particles to use a wizard
     """
     particleList = []
-    for i, particle in enumerate(particles):
+    for i, part in enumerate(particles):
+        
+        # Cloning the particle
+        particle = part.clone() 
+        
         if i == num: # Only load up to NUM particles
             break
         particle.text = particle.getFileName()
