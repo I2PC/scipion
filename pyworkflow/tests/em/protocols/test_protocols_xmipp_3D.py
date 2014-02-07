@@ -65,6 +65,32 @@ class TestXmippCeateMask3D(TestXmippBase):
          
         self.assertIsNotNone(protMask3.outputMask, "There was a problem with mask from another mask")          
 
+class TestXmippResolution3D(TestXmippBase):
+    @classmethod
+    def setUpClass(cls):
+        setupProject(cls)
+        
+#         cls.protImport = cls.runImportParticles(pattern=images, samplingRate=1, checkStack=False)
+#         cls.iniVol = getInputPath('ml3dData', 'icoFiltered.vol')
+    
+    def testCreateMask1(self):
+        print "Import volume 1"
+        protImportVol1 = ProtImportVolumes(pattern=getInputPath('Test_Resolution_Xmipp', 'volume_1_iter_002.mrc'), samplingRate=9.896)
+        self.proj.launchProtocol(protImportVol1, wait=True)
+
+        print "Import volume 2"
+        protImportVol2 = ProtImportVolumes(pattern=getInputPath('Test_Resolution_Xmipp', 'volume_1_iter_002.mrc'), samplingRate=9.896)
+        self.proj.launchProtocol(protImportVol2, wait=True)
+    
+        print "Run resolution 3D"
+        protResol3D = XmippProtResolution3D(doSSNR=False)
+        protResol3D.inputVolume.set(protImportVol1.outputVolume)
+        protResol3D.referenceVolume.set(protImportVol2.outputVolume)
+        self.proj.launchProtocol(protResol3D, wait=True)        
+         
+        self.assertIsNotNone(protResol3D._defineFscName(), "There was a problem with fsc")
+        self.assertIsNotNone(protResol3D._defineStructFactorName(), "There was a problem with structure factor")
+
 if __name__ == "__main__":
     if len(sys.argv) > 1:
         className = sys.argv[1]

@@ -273,10 +273,8 @@ class ProtImportVolumes(EMProtocol):
         """ Copy volumes matching the filename pattern
         Register other parameters.
         """
-        from glob import glob
-        filePaths = glob(pattern)
-        filePaths.sort()
-        n = len(filePaths)
+        n = self._getNumberFilePaths(pattern)
+        filePaths = self._getFilePaths(pattern)
         
         if n == 0:
             raise Exception(Message.ERROR_IMPORT_VOL)
@@ -287,22 +285,52 @@ class ProtImportVolumes(EMProtocol):
             # Create a set of volumes
             volSet = self._createSetOfVolumes()
             volSet.setSamplingRate(self.samplingRate.get())
-            filePaths.sort()
+#             filePaths.sort()
             for f in filePaths:
                 volSet.append(self.createVolume(f))
             self._defineOutputs(outputVolumes=volSet)
     
     def getFiles(self):
-        return self.outputVolumes.getFiles()
+        
+        pattern = self.pattern.get()
+        n = self._getNumberFilePaths(pattern)
+        
+        if n == 1:
+            return self.outputVolume.getFileName()
+        else:
+            return self.outputVolumes.getFiles()
+    
+    def _getFilePaths(self, pattern):
+        """ Return a sorted list with the paths of files"""
+        from glob import glob
+        filePaths = glob(pattern)
+        filePaths.sort()
+        
+        return filePaths
+    
+    def _getNumberFilePaths(self, pattern):
+        """ Return the number of files""" 
+        filePaths = self._getFilePaths(pattern)
+        n = len(filePaths)
+        return n
 
     def _summary(self):
         summary = []
-
-        if not hasattr(self, 'outputVolumes'):
-            summary.append("Output volume not ready yet.") 
+        pattern = self.pattern.get()
+        n = self._getNumberFilePaths(pattern)
+        
+        if n == 1:
+            if not hasattr(self, 'outputVolume'):
+                summary.append("Output volume not ready yet.") 
+            else:
+                summary.append("Import of %d volumes from %s" % (1, self.pattern.get()))
+                summary.append("Sampling rate : %f" % self.samplingRate.get())
         else:
-            summary.append("Import of %d volumes from %s" % (self.outputVolumes.getSize(), self.pattern.get()))
-            summary.append("Sampling rate : %f" % self.samplingRate.get())
+            if not hasattr(self, 'outputVolumes'):
+                summary.append("Output volumes not ready yet.") 
+            else:
+                summary.append("Import of %d volumes from %s" % (n, self.pattern.get()))
+                summary.append("Sampling rate : %f" % self.samplingRate.get())
         
         return summary
     
