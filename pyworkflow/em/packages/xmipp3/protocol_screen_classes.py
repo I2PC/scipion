@@ -31,11 +31,12 @@ This sub-package contains wrapper around Screen Classes Xmipp program
 
 from pyworkflow.em import *  
 import xmipp
-from xmipp3 import ProjMatcher        
+from xmipp3 import ProjMatcher
+from convert import readSetOfClasses2D   
 
         
 class XmippProtScreenClasses(ProtAlignClassify, ProjMatcher):
-    """ Protocol to screen a set of classes in the project. """
+    """ Protocol to screen a set of classes in the project using a volume as reference """
     _label = 'screen classes'
     
     def __init__(self, **args):
@@ -69,10 +70,8 @@ class XmippProtScreenClasses(ProtAlignClassify, ProjMatcher):
         #TODO: This should be deleted when inputVolume was set to Volume type
         self.volume = self.inputVolume.get().getFirstItem()
         
-        self.xmippFn = createXmippInputClasses2D(self, self.inputClasses.get())
-        
-        self.fn = self._getPath(basename(self.xmippFn))
-        copyFile(self.xmippFn, self.fn)
+        self.fn = createXmippInputClasses2D(self, self.inputClasses.get())
+        self.visualizeInfoOutput = String("classes_aligned@%s" % self.fn)  
         
         self.fnAngles = self._getExtraPath('angles.xmd')
         self.images = "classes@%s" % self.fn
@@ -83,19 +82,23 @@ class XmippProtScreenClasses(ProtAlignClassify, ProjMatcher):
         self._insertFunctionStep("produceAlignedImagesStep", False)
         self._insertRunJobStep("xmipp_metadata_utilities", "-i classes_aligned@%s --operate sort maxCC desc --mode append" % (self.fn), numberOfMpi=1)  
                 
-        self._insertFunctionStep('createOutput')
-                        
-    def createOutput(self):
-        print "output"
-        #Path: self.fn
-
+    def getVisualizeInfo(self):
+        return self.visualizeInfoOutput.get()
+     
     def _summary(self):
         summary = []
-        if not hasattr(self, 'outputClasses'):
-            summary.append("Output classes not ready yet.")
-        else:
-            summary.append("Set of classes: [%s] " % self.inputClasses.get().getNameId())
-#            summary.append("Volume: [%s] " % self.inputVolume.get().getNameId())
-            summary.append("Volume: [%s] " % self.volume.getNameId())
-            summary.append("Symmetry: %s " % self.symmetryGroup.get())
+        summary.append("Set of classes: [%s] " % self.inputClasses.get().getNameId())
+        summary.append("Volume: [%s] " % self.inputVolume.getNameId())
+        summary.append("Symmetry: %s " % self.symmetryGroup.get())
         return summary
+    
+    def _methods(self):
+        
+        methods = []
+        methods.append("Set of classes: [%s] " % self.inputClasses.get().getNameId())
+        methods.append("Volume: [%s] " % self.inputVolume.getNameId())
+        methods.append("Symmetry: %s " % self.symmetryGroup.get())       
+        methods.append("angularSampling: %s " % self.angularSampling.get())
+        
+        return methods
+
