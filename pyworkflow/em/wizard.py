@@ -239,7 +239,7 @@ class bandpassParticleWizard(filterParticlesWizard):
     
     @classmethod    
     def getView(self):
-        return "wiz_particle_bandpass"   
+        return "wiz_particle_bandpass"
     
 class bandpassVolumesWizard(filterVolumesWizard):
     

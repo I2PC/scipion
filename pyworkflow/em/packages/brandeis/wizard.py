@@ -34,8 +34,6 @@ import ttk
 from pyworkflow.em.constants import *
 from constants import *
 
-from pyworkflow.em.constants import *
-from pyworkflow.viewer import DESKTOP_TKINTER, WEB_DJANGO
 import pyworkflow.gui.dialog as dialog
 from pyworkflow.em.wizard import *
 from protocol_frealign import ProtFrealign
@@ -47,9 +45,8 @@ class FrealignRadiiWizard(radiiWizard):
     _targets = [(ProtFrealign, ['innerRadius', 'outerRadius'])]
 
 
-class FrealignBandpassWizard(bandpassWizard):
+class FrealignBandpassWizard(bandpassParticleWizard):
     _targets = [(ProtFrealign, ['lowResolRefine', 'highResolRefine'])]
-
     
     def show(self, form):
         protocol = form.protocol
@@ -68,14 +65,42 @@ class FrealignBandpassWizard(bandpassWizard):
 
             d = bandPassFilterDialog(form.root, provider, **args)
             
-            if d.resultYes():
-                print "SAMPLING RATE !!", d.samplingRate
-                print "ITEM DIM !!", d.itemDim
-               
-#                1/self.hfSlider.get()*self.itemDim 
+            if d.resultYes():               
                 
-                form.setVar('lowResolRefine', 1/d.getHighFreq()*d.itemDim)
+                form.setVar('highResolRefine', 1/d.getHighFreq()*d.itemDim)
+                form.setVar('lowResolRefine', 1/d.getLowFreq()*d.itemDim)
                 
         else:
             dialog.showWarning("Input particles", "Select particles first", form.root)  
+
+class FrealignVolBandpassWizard(bandpassVolumesWizard):
+    _targets = [(ProtFrealign, ['resolution'])]
+    
+    
+    
+    def show(self, form):
+        protocol = form.protocol
+        provider = self._getProvider(protocol)
+
+        if provider is not None:
+            self.mode = FILTER_LOW_PASS_NO_DECAY
+            
+            args = {'mode':  self.mode,                   
+                    'highFreq': protocol.highResolRefine.get(),
+                    'lowFreq': protocol.lowResolRefine.get(),
+                    'unit': UNIT_ANGSTROM
+                    }
+            
+            args['showDecay'] = False
+
+            d = bandPassFilterDialog(form.root, provider, **args)
+            
+            if d.resultYes():               
+#                1/self.hfSlider.get()*self.itemDim 
+                
+                form.setVar('highResolRefine', 1/d.getHighFreq()*d.itemDim)
+                form.setVar('lowResolRefine', 1/d.getLowFreq()*d.itemDim)
+                
+        else:
+            dialog.showWarning("Input particles", "Select particles first", form.root)
 
