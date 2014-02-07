@@ -72,5 +72,6 @@ from protocol_cltomo import XmippProtCLTomo
 from protocol_screen_classes import XmippProtScreenClasses
 #from protocol_helical_params import ProtHelicalParams
 
+
 # Wizards
 from wizard import *
