@@ -319,26 +319,27 @@ def run(notebook):
         cmd += ('echo "*** CREATING PROGRAMS DATABASE..." >> %(out)s 2>&1\n xmipp_apropos --update >> %(out)s' % locals())
         # When we are going to install, we need to put some vars in bashrc file
         if not options.hasOption('unattended'):
-            try:
-                mpiLibDirExists, mpiLibDirIsDifferent, mpiLibDirPath = checkMpiInBashrc(MPI_LIBDIR, 'lib')
-                if not mpiLibDirExists:
-                    addMpiToBashrc(MPI_LIBDIR, 'lib')
-                elif mpiLibDirIsDifferent:
-                    addMpiToBashrc(MPI_LIBDIR, 'lib', True)
-                else:
-                    print "MPI_LIBDIR untouched. Already set in "+BASHRC+" file"
-            except NameError:
-                print "Be careful, your MPI_LIBDIR has not been set!"
-            try:
-                mpiBinDirExists, mpiBinDirIsDifferent, mpiBinDirPath = checkMpiInBashrc(MPI_BINDIR, 'bin')
-                if not mpiBinDirExists:
-                    addMpiToBashrc(MPI_BINDIR, 'bin')
-                elif mpiBinDirIsDifferent:
-                    addMpiToBashrc(MPI_BINDIR, 'bin', True)
-                else:
-                    print "MPI_BINDIR untouched. Already set in "+BASHRC+" file"
-            except NameError:
-                print "Be careful, your MPI_BINDIR has not been set! You may need to manually set it in your bashrc"    
+            for shell in ['bash', 'csh']:
+                try:
+                    mpiLibDirExists, mpiLibDirIsDifferent, mpiLibDirPath = checkMpiInBashrc(MPI_LIBDIR, 'lib', shell)
+                    if not mpiLibDirExists:
+                        addMpiToBashrc(MPI_LIBDIR, 'lib', shell)
+                    elif mpiLibDirIsDifferent:
+                        addMpiToBashrc(MPI_LIBDIR, 'lib', shell, True)
+                    else:
+                        print "MPI_LIBDIR untouched. Already set in "+BASHRC+" file"
+                except NameError:
+                    print "Be careful, your MPI_LIBDIR has not been set!"
+                try:
+                    mpiBinDirExists, mpiBinDirIsDifferent, mpiBinDirPath = checkMpiInBashrc(MPI_BINDIR, 'bin', shell)
+                    if not mpiBinDirExists:
+                        addMpiToBashrc(MPI_BINDIR, 'bin', shell)
+                    elif mpiBinDirIsDifferent:
+                        addMpiToBashrc(MPI_BINDIR, 'bin', shell, True)
+                    else:
+                        print "MPI_BINDIR untouched. Already set in "+BASHRC+" file"
+                except NameError:
+                    print "Be careful, your MPI_BINDIR has not been set! You may need to manually set it in your bashrc"    
         
     proc = Popen(cmd % locals(), shell=True)    
     notebook.notifyRun(proc)   
@@ -429,34 +430,54 @@ else:
 # TRY TO READ CONFIG FILE
 CONFIG = '.xmipp_scons.options'
 BASHRC = '.xmipp.bashrc'
+CSH = '.xmipp.csh'
 
-def checkMpiInBashrc(mpiPath, type):
+def checkMpiInBashrc(mpiPath, type, shellType='bash'):
+    fileToOpen = foundPath = stringToSearch = separator = ''
     exists = different = False
-    foundPath = ''
-    stringToSearch = ''
+    if shellType == 'bash':
+        fileToOpen = BASHRC
+        separator = '='
+    elif shellType == 'csh':
+        fileToOpen = CSH
+        separator = ' '
     if type == 'lib':
         stringToSearch = 'XMIPP_MPI_LIBDIR'
     elif type == 'bin':
         stringToSearch = 'XMIPP_MPI_BINDIR'
-    if os.path.exists(BASHRC):
-        for line in open(BASHRC):
-            parts = line.split('=')
+    if os.path.exists(fileToOpen):
+        for line in open(fileToOpen):
+            parts = line.split(separator)
             if len(parts) == 2:
-                assign = '%s=%s' % (parts[0], parts[1])
                 if parts[0].strip() == ('export '+stringToSearch):
                     exists = True
                     foundPath = parts[1]
-                    different = (foundPath.strip() != mpiPath)                    
+                    different = (foundPath.strip() != mpiPath)
+            elif len(parts) == 3:
+                if parts[1].strip() == (stringToSearch):
+                    exists = True
+                    foundPath = parts[2]
+                    different = (foundPath.strip() != mpiPath)
+                    break #In CSH file, we have to find only the first occurrence
+                                        
     return exists, different, foundPath
 
-def addMpiToBashrc(mpiPath, type, replace=False):
-    if os.path.exists(BASHRC):
-        lines = open(BASHRC, 'r').readlines()
-        filew = open(BASHRC, 'w')
+def addMpiToBashrc(mpiPath, type, shellType='bash', replace=False):
+    fileToOpen = preserv = stringToSearch = stringToAppend = ''
+    separator = '='
+    exportation = 'export'
+    if shellType == 'bash':
+        fileToOpen = BASHRC
+        separator = '='
+        exportation = 'export'
+    elif shellType == 'csh':
+        fileToOpen = CSH
+        separator = ' '
+        exportation = 'setenv'
+    if os.path.exists(fileToOpen):
+        lines = open(fileToOpen, 'r').readlines()
+        filew = open(fileToOpen, 'w')
         found = -1
-        preserv = ''
-        stringToSearch = ''
-        stringToAppend = ''
         if type == 'lib':
             stringToSearch = 'LD_LIBRARY_PATH'
             stringToAppend = 'XMIPP_MPI_LIBDIR'
@@ -464,20 +485,26 @@ def addMpiToBashrc(mpiPath, type, replace=False):
             stringToSearch = 'PATH'
             stringToAppend = 'XMIPP_MPI_BINDIR'
         if replace:
-            stringToSearch = ('export '+stringToAppend)
+            stringToSearch = (exportation + ' ' + stringToAppend)
         else:
-            stringToSearch = ('export '+stringToSearch)
+            stringToSearch = (exportation+ ' ' + stringToSearch)
         for index, line in enumerate(lines):
-            parts = line.split('=')
-            if parts[0].strip() == stringToSearch:
-                found = index
-                preserv = parts[1].strip()
+            parts = line.strip().split(separator)
+            if len(parts) == 2:
+                if parts[0].strip() == stringToSearch:
+                    found = index
+                    preserv = parts[1].strip()
+            if len(parts) == 3:
+                if (parts[0].strip()+' '+parts[1].strip()) == stringToSearch:
+                    found = index
+                    preserv = parts[2].strip()
+                    break
         if found != -1:
             if not replace:
-                lines[found] = (stringToSearch+'='+preserv+':$'+stringToAppend+"\n")
-                lines += ('export ' + stringToAppend + '=' + mpiPath+"\n")
+                lines[found] = (stringToSearch + separator + preserv + ':$' + stringToAppend + "\n")
+                lines += (exportation + ' ' + stringToAppend + separator + mpiPath + "\n")
             else:
-                lines[found] = (stringToSearch+'='+mpiPath+"\n")
+                lines[found] = (stringToSearch+separator+mpiPath+"\n")
             filew.writelines(lines)
 
 if os.path.exists(CONFIG):
