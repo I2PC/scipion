@@ -48,6 +48,10 @@
 		$("input#viewerParam").attr("value", param);
 		putMode("viewerElement");
 	}
+	function loadPreviewImage(param){
+		var objId = $("#"+ param).attr("data-objId");
+		customPopup('/visualize_object/?objectId='+objId,1024,600)
+	}
 	</script>
 	 <script>
 	  $(function() {
@@ -203,11 +207,13 @@
 									<td id="inputName" {% if param.isImportant.get %} class="recommended" 
 									{% else %} class="normal" {% endif %}>{{param.label.get}}</td>
 									<td>
+									
 										{% if param.getClassName == "BooleanParam" %}
 										  <input type="radio" id="{{paramName}}_yes" name={{paramName}} onChange="javascript:onChangeParam('true','{{paramName}}');" value="true" 
 										  {% if param.htmlValue == 'true' %} checked {% endif %}/>{{msg.LABEL_PARAM_YES}}
 										  <input type="radio" id="{{paramName}}_no" name={{paramName}} onChange="javascript:onChangeParam('false','{{paramName}}');" value="false"  
 										  {% if param.htmlValue == 'false' %} checked {% endif %} />{{msg.LABEL_PARAM_NO}}
+										
 										{% elif param.getClassName == "EnumParam" %}
 											{% if param.display == 0 %}
 												{% for choice in param.choices %}
@@ -237,6 +243,11 @@
 									<td class="ico">
 										<a href="javascript:browseObjects('{{paramName}}','{{projectName}}','objClass','{{param.pointerClass.get}}','{{param.pointerCondition.get}}');">
 											<i class="fa fa-search" style="font-size:1.1em;"></i>
+										</a> 
+									</td>
+									<td class="ico">
+										<a href="javascript:loadPreviewImage('{{paramName}}_input');">
+											<i class="fa fa-eye" style="font-size:1.1em;"></i>
 										</a> 
 									</td>
 								{% elif param.getClassName == "MultiPointerParam" %}

@@ -280,6 +280,9 @@ class ProtImportVolumes(EMProtocol):
         
         if n == 0:
             raise Exception(Message.ERROR_IMPORT_VOL)
+        elif n == 1:
+            volume = self.createVolume(filePaths[0])
+            self._defineOutputs(outputVolume=volume)
         else:
             # Create a set of volumes
             volSet = self._createSetOfVolumes()
@@ -287,8 +290,6 @@ class ProtImportVolumes(EMProtocol):
             filePaths.sort()
             for f in filePaths:
                 volSet.append(self.createVolume(f))
-            
-            volSet.write()
             self._defineOutputs(outputVolumes=volSet)
     
     def getFiles(self):
@@ -496,6 +497,9 @@ class ProtProcessParticles(EMProtocol):
         to add other parameter relatives to the specific operation."""
         pass  
 
+class ProtDenoiseParticles(ProtProcessParticles):
+   
+    pass
 
 class ProtFilterParticles(ProtProcessParticles):
     """ This is the base for the branch of filters, 
