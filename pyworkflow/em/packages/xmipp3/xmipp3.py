@@ -134,7 +134,6 @@ class XmippMdRow():
         for label, value in self._labelDict.iteritems():
             # TODO: Check how to handle correctly unicode type
             # in Xmipp and Scipion
-            print 'label, value', label, value
             if type(value) is unicode:
                 value = str(value)
             md.setValue(label, value, objId)
@@ -150,8 +149,12 @@ class XmippMdRow():
     def __str__(self):
         s = '{'
         for k, v in self._labelDict.iteritems():
-            s += '%s: %s, ' % (xmipp.label2Str(k), v)
+            s += '  %s = %s\n' % (xmipp.label2Str(k), v)
         return s + '}'
+            
+    def printDict(self):
+        """ Fancy printing of the row, mainly for debugging. """
+        print str(self)
     
     
 def findRow(md, label, value):

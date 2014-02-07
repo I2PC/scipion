@@ -311,7 +311,7 @@ class Set(EMObject):
         """ Get the image with the given id. """
         return self._mapper.selectById(itemId)
 
-    def __iterItems(self):
+    def _iterItems(self):
         return self._mapper.selectAll(iterate=True)
     
     def getFirstItem(self):
@@ -320,7 +320,7 @@ class Set(EMObject):
     
     def __iter__(self):
         """ Iterate over the set of images. """
-        return self.__iterItems()
+        return self._iterItems()
        
     def __len__(self):
         return self._size.get()
@@ -401,7 +401,7 @@ class SetOfImages(Set):
         self._isAmplitudeCorrected = Boolean(False)
         self._acquisition = Acquisition()
            
-    def getAcquisition(self, index=0):
+    def getAcquisition(self):
         return self._acquisition
         
     def hasCTF(self):
@@ -491,7 +491,13 @@ class SetOfImages(Set):
             raise Exception("FATAL ERROR: Object %s has no sampling rate!!!" % self.getName())
         s = "%s (%d items, %0.2f A/px)" % (self.getClassName(), self.getSize(), self.getSamplingRate())
         return s
-    
+
+    def __iter__(self):
+        """ Redefine iteration to set the acquisition to images. """
+        for img in self._iterItems():
+            img.setAcquisition(self.getAcquisition())
+            yield img
+            
     
 class SetOfMicrographs(SetOfImages):
     """Represents a set of Micrographs"""

@@ -198,7 +198,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
                 
             #if self.doFlip.get():
             if self.ctfRelations.hasValue():
-                mic.ctfModel = ctfSet[micId]       
+                mic.setCTF(ctfSet[micId])       
                         
             #self._insertFunctionStep('getCTF', micId, micName, micrographToExtract)
             micName = removeBaseExt(mic.getFileName())
