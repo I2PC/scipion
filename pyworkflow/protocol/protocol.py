@@ -56,7 +56,7 @@ class Step(OrderedObject):
         self.status = String()
         self.initTime = String()
         self.endTime = String()
-        self.error = String()
+        self._error = String()
         self.isInteractive = Boolean(False)
            
     def _preconditions(self):
@@ -81,17 +81,20 @@ class Step(OrderedObject):
         self.initTime.set(dt.datetime.now())
         self.endTime.set(None)
         self.status.set(STATUS_RUNNING)
-        self.error.set(None) # Clean previous error message
+        self._error.set(None) # Clean previous error message
+        
+    def getError(self):
+        return self._error
         
     def setFailed(self, msg):
         """ Set the run failed and store an error message. """
-        self.error.set(msg)
+        self._error.set(msg)
         self.status.set(STATUS_FAILED)
         
     def setAborted(self):
         """ Set the status to aborted and updated the endTime. """
         self.endTime.set(dt.datetime.now())
-        self.error.set("Aborted by user.")
+        self._error.set("Aborted by user.")
         self.status.set(STATUS_ABORTED)
 
     def getStatus(self):
@@ -586,8 +589,8 @@ class Protocol(Step):
             doContinue = False
         elif step.status == STATUS_FAILED:
             doContinue = False
-            self.setFailed("Protocol failed: " + step.error.get())
-            self.error("Protocol failed: " + step.error.get())
+            self.setFailed("Protocol failed: " + step.getError())
+            self.error("Protocol failed: " + step.getError())
         self.lastStatus = step.status.get()
         self.info("FINISHED: " + step.funcName.get())
         return doContinue
@@ -944,7 +947,7 @@ class Protocol(Step):
         """ Return a summary message to provide some information to users. """
         error = ''
         if self.error.hasValue():
-            error = '*ERROR:*\n' + self.error.get()
+            error = '*ERROR:*\n' + self.getError()
         baseSummary = self._summary()
         if not baseSummary:
             baseSummary = []
