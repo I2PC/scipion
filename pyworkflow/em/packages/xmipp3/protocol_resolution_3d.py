@@ -32,7 +32,7 @@ from pyworkflow.em import *
 from pyworkflow.utils import *  
 from math import floor
 from xmipp3 import XmippProtocol
-from convert import createXmippInputVolumes, readSetOfVolumes
+from convert import createXmippInputVolumes, readSetOfVolumes, locationToXmipp
 
 
 class XmippProtResolution3D(ProtValidate3D):
@@ -67,8 +67,8 @@ class XmippProtResolution3D(ProtValidate3D):
     def _insertAllSteps(self):
         """Insert all steps to calculate the resolution of a 3D reconstruction. """
         
-        self.inputVol = self.inputVolume.get().locationToXmipp()
-        self.refVol = self.referenceVolume.get().locationToXmipp()
+        self.inputVol = locationToXmipp(*self.inputVolume.get().getLocation())
+        self.refVol = locationToXmipp(*self.referenceVolume.get().getLocation())
         
         if self.doFSC:
             self._insertFunctionStep('calculateFscStep')
@@ -116,19 +116,28 @@ class XmippProtResolution3D(ProtValidate3D):
         
         if not self.inputVolume.hasValue():
             validateMsgs.append('Please provide an initial volume.')
-        if self.doFSC and not self.referenceVolume.hasValue():
+        if self.doFSC.get() and not self.referenceVolume.hasValue():
             validateMsgs.append('Please provide a reference volume.')
             
         return validateMsgs
     
     def _summary(self):
         summary = []
-        summary.append("Input volumes:  %s" % self.inputVolume.get().getNameId())
-        
+        summary.append("Input volume: %s" % self.inputVolume.get().getNameId())
+        if self.doFSC.get():
+            summary.append("Reference volume: %s" % self.referenceVolume.get().getNameId())
+            summary.append("FSC file: %s" % self._defineFscName())
+        if self.doStructureFactor:
+            summary.append("Structure factor file: %s" % self._defineStructFactorName())
         return summary
-        
+    
+    def _methods(self):
+        messages = []
+        if self.doFSC.get():
+            messages.append('We obtained the FSC of the volume %s' % self.inputVolume.get().getNameId())
+            messages.append('taking volume %s' % self.referenceVolume.get().getNameId() + ' as reference')
+        return messages
+              
     def _citations(self):
-        papers=[]
-        if self.doSSNR or self.doVSSNR:
-            papers.append('[%s] %s'%('Unser2005_SSNR',self._package._referencesDict['Unser2005_SSNR']))
-        return papers
+        if self.doSSNR.get() or self.doVSSNR.get():
+            return ['Unser2005']
