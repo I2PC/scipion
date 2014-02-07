@@ -79,7 +79,7 @@ class TestXmippResolution3D(TestXmippBase):
         self.proj.launchProtocol(protImportVol1, wait=True)
 
         print "Import volume 2"
-        protImportVol2 = ProtImportVolumes(pattern=getInputPath('Test_Resolution_Xmipp', 'volume_1_iter_002.mrc'), samplingRate=9.896)
+        protImportVol2 = ProtImportVolumes(pattern=getInputPath('Test_Resolution_Xmipp', 'volume_2_iter_002.mrc'), samplingRate=9.896)
         self.proj.launchProtocol(protImportVol2, wait=True)
     
         print "Run resolution 3D"
