@@ -101,4 +101,3 @@ class XmippProtScreenClasses(ProtAlignClassify, ProjMatcher):
         methods.append("angularSampling: %s " % self.angularSampling.get())
         
         return methods
-
