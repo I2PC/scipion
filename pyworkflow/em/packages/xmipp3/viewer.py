@@ -240,7 +240,8 @@ def runShowJ(inputFiles, memory="1g", extraParams=""):
     runJavaIJapp(memory, "'xmipp.viewer.Viewer'", "-i %s %s" % (inputFiles, extraParams), True)
     
 def runScipionShowJ(inputFiles, set, obj, memory="1g", extraParams=""):
-    SCIPION_PYTHON = os.environ["SCIPION_PYTHON"]
+#    SCIPION_PYTHON = os.environ["SCIPION_PYTHON"]
+    SCIPION_PYTHON = os.environ.get("SCIPION_PYTHON", 'xmipp_python')
     PW_HOME = os.environ["PW_HOME"]
     
     script = "%s %s/pyworkflow/apps/%s" % (SCIPION_PYTHON, PW_HOME, "pw_create_image_subset.py") 
