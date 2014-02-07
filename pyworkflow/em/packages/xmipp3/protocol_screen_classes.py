@@ -83,7 +83,7 @@ class XmippProtScreenClasses(ProtAlignClassify, ProjMatcher):
         self._insertRunJobStep("xmipp_metadata_utilities", "-i classes_aligned@%s --operate sort maxCC desc --mode append" % (self.fn), numberOfMpi=1)  
                 
     def getVisualizeInfo(self):
-        return self.visualizeInfoOutput.get()
+        return self.visualizeInfoOutput
      
     def _summary(self):
         summary = []

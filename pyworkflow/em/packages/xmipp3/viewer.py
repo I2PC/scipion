@@ -184,7 +184,7 @@ class XmippViewer(Viewer):
         elif issubclass(cls, XmippProtRotSpectra):
             self.visualize(obj.outputClasses, extraParams='--mode rotspectra --columns %d' % obj.SomXdim.get())
         elif issubclass(cls, XmippProtScreenClasses):
-            runShowJ(obj.getVisualizeInfo(), extraParams=' --mode metadata --render first')
+            runShowJ(obj.getVisualizeInfo().get(), extraParams=' --mode metadata --render first')
 # TODO: We have to develop a showj analyze tool for classes so we can select classes or images associated to them
 #        Airem this is your good shit
 #            runScipionShowJ(obj.getVisualizeInfo(), "Set Of Classes", obj.inputClasses.get(), 
