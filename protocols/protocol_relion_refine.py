@@ -256,4 +256,6 @@ class ProtRelionRefinner( ProtRelionBase):
     def _getVolumeKeys(self):
         """ Return the volumes key names. """
         return ['volume']
-               
+ 
+    def _getChangeLabels(self):
+        return [MDL_AVG_CHANGES_ORIENTATIONS, MDL_AVG_CHANGES_OFFSETS]                
