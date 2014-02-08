@@ -428,6 +428,9 @@ class ProtocolGUI(BasicGUI):
             optMenu['menu'].config(bg=ButtonBgColor, activebackground=ButtonActiveBgColor, font=Fonts['normal'])
             optMenu.grid(row=row, column=var_column, sticky='ew', columnspan=2)
             w.widgetslist.append(optMenu)
+            if 'view' in keys:
+                btn = self.addButton("View", lambda:self.visualizeVar(var.name), -1, row, var_column+2, 'nw', 'visualize.gif', frame, 'View')
+                w.widgetslist.append(btn)
             var.tkvar.trace('w', self.checkVisibility)            
         elif 'list' in keys:
             items = var.tags['list'].split(',')
@@ -435,6 +438,9 @@ class ProtocolGUI(BasicGUI):
                 o = o.strip()
                 self.addRadioButton(w, var, o, o, row, var_column, frame)
                 row = self.getRow()
+            if 'view' in keys:
+                btn = self.addButton("View", lambda:self.visualizeVar(var.name), -1, row, var_column+2, 'nw', 'visualize.gif', frame, 'View')
+                w.widgetslist.append(btn)
             var.tkvar.trace('w', self.checkVisibility)
          
         else: #Add a text Entry

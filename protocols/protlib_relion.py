@@ -216,7 +216,9 @@ class ProtRelionBase(XmippProtocol):
     def createFilenameTemplates(self):
         self.extraIter = self.extraPath('relion_it%(iter)03d_')
         myDict = {
-                  'iter_data': self.extraIter + 'data.star'
+                  'iter_data': self.extraIter + 'data.star',
+                  'iter_classes': self.extraIter + 'classes.xmd',
+                  'iter_angularDist': self.extraIter + 'angularDist.xmd'
                   }
 
         return myDict
@@ -301,38 +303,6 @@ class ProtRelionBase(XmippProtocol):
             showError("File not Found", message, self.master)
             return
         
-#        #if relion has not finished metadata has not been converted to xmipp
-#        #do it now if needed
-#        for i in iterations:
-#            for v in self.relionFiles:
-#                fileName =self.getFilename(v+'Xm', iter=i)
-#                if not xmippExists(fileName):
-#                    exportReliontoMetadataFile(self.getFilename(v+'Re', iter=i ),fileName)
-        if doPlot('TableImagesPerClass'):
-            mdOut = MetaData()
-            #mdOut = self.imagesAssignedToClass2(firstIter,self._visualizeLastIteration)
-            mdOut = self.imagesAssignedToClass2(iterations[0],iterations[-1])
-            print mdOut
-            _r = []
-            maxRef3D = 1
-            _c = tuple(['Iter/Ref'] + ['Ref3D_%d' % ref3d for ref3d in ref3Ds])
-
-            oldIter = iterations[0]
-            tmp = ['---']*(len(ref3Ds)+1)
-            for objId in mdOut:
-                _ref3D = mdOut.getValue(MDL_REF3D,objId)
-                _count = mdOut.getValue(MDL_CLASS_PERCENTAGE,objId)
-                _iter  = mdOut.getValue(MDL_ITER,objId)
-                if oldIter != _iter:
-                    tmp[0]=('Iter_%d'%(_iter-1))
-                    _r.append(tuple(tmp))
-                    oldIter = _iter
-                    tmp = ['---']*(len(ref3Ds)+1)
-                tmp [_ref3D] = str(_count)
-            tmp[0]=('Iter_%d'%oldIter)
-            _r.append(tuple(tmp))
-            showTable(_c,_r, title='Images per Class', width=100)
-            
         if doPlot('AvgPMAX'):
             _r = []
             mdOut = MetaData()
@@ -377,17 +347,7 @@ class ProtRelionBase(XmippProtocol):
                 
         if doPlot('DisplayImagesClassification'):
             self._visualizeDisplayImagesClassification()
-                
-#            for ref3d in ref3Ds:
-#                for iter in iterations:
-#                    md=MetaData('images@'+ self.getFilename('dataXm', iter=iter, workingDir=self.WorkingDir ))
-#                    mdOut = MetaData()
-#                    mdOut.importObjects(md, MDValueEQ(MDL_REF3D, ref3d))
-#                    ntf = NamedTemporaryFile(dir=TmpDir, suffix='_it%03d_class%03d.xmd'%(iter,ref3d),delete=False)
-#                    mdOut.write(ntf.name)
-#                    self.display2D(ntf.name)
-#                    md.clear()
-                #save temporary file
+
         if doPlot('DisplayResolutionPlotsSSNR'):
             names = []
             windowTitle = {}
@@ -585,63 +545,93 @@ class ProtRelionBase(XmippProtocol):
         
     def _visualizeDisplayAngularDistribution(self):        
         self.SpheresMaxradius = float(self.parser.getTkValue('SpheresMaxradius'))
-        self.DisplayAngularDistributionWith = self.parser.getTkValue('DisplayAngularDistributionWith')
-        
+        self.DisplayAngularDistribution = self.parser.getTkValue('DisplayAngularDistribution')
+        nrefs = len(self._visualizeRef3Ds)
         volumeKeys = self._getVolumeKeys()
         
         if self.DisplayAngularDistribution == 'chimera':
-            fileNameVol = self.getFilename(volumeKeys[0], iter=iterations[-1], ref3d=1, workingDir=self.WorkingDir )
-            (Xdim, Ydim, Zdim, Ndim) = getImageSize(fileNameVol)
-            for it in iterations:
-                for ref3d in ref3Ds:
-                    print "Computing data for iteration; %03d and class %03d"% (it, ref3d)
-                    #relion save volume either in spider or mrc therefore try first one of them and then the other
-                    #name[0] or name[1] as bakcground is an arbitrary selection
-                    fileNameVol = self.getFilename(volumeKeys[0], iter=it, ref3d=ref3d, workingDir=self.WorkingDir )
-                    fileNameMd  = 'images@'+ self.getFilename('data'+'Xm', iter=it, workingDir=self.WorkingDir)
-                    print "fileNameVol", fileNameVol
-                    print "fileNameMd", fileNameMd
-                    md=MetaData(fileNameMd)
-                    #md=MetaData('images@'+ self.getFilename('data'+'Xm', iter=iterations[-1] ))
-                    mdOut = MetaData()
-                    mdOut.importObjects(md, MDValueEQ(MDL_REF3D, ref3d))
-                    md.clear()
-                    md.aggregateMdGroupBy(mdOut, AGGR_COUNT, [MDL_ANGLE_ROT, MDL_ANGLE_TILT], MDL_ANGLE_ROT, MDL_WEIGHT)
-                    md.setValue(MDL_ANGLE_PSI,0.0, md.firstObject())
-                    _OuterRadius = int(float(self.MaskRadiusA)/self.SamplingRate)
-                    #do not delete file since chimera needs it
-                    ntf = NamedTemporaryFile(dir=TmpDir, suffix='_it%03d_class%03d.xmd'%(it,ref3d),delete=False)
-                    md.write("angularDist@"+ntf.name)
-                    parameters = ' --mode projector 256 -a ' + "angularDist@"+ ntf.name + " red "+\
-                         str(float(_OuterRadius) * 1.1)
+#            fileNameVol = self.getFilename(volumeKeys[0], iter=iterations[-1], ref3d=1, workingDir=self.WorkingDir )
+#            (Xdim, Ydim, Zdim, Ndim) = getImageSize(fileNameVol)
+            
+            outerRadius = int(float(self.MaskRadiusA)/self.SamplingRate)
+            radius = float(outerRadius) * 1.1
+
+            for it in self._visualizeIterations:
+                data_angularDist = self._getIterAngularDist(it)
+                for ref3d in self._visualizeRef3Ds:
+                    volFn = self.getFilename('volume', iter=it, ref3d=ref3d)
+                    args = " --mode projector 256 -a class%06d_angularDist@%s red %f " % (ref3d, data_angularDist, radius)
                     if self.SpheresMaxradius > 0:
-                        parameters += ' %f ' % self.SpheresMaxradius
-                    runChimeraClient(fileNameVol,parameters)
-        else: #DisplayAngularDistributionWith == '2D'
-            if(len(ref3Ds) == 1):
+                        args += ' %f ' % self.SpheresMaxradius
+                        print "runChimeraClient(%s, %s) " % (volFn, args)
+                    runChimeraClient(volFn, args)
+                    
+        elif self.DisplayAngularDistribution == "2D plots": 
+            if nrefs == 1:
                 gridsize1 = [1, 1]
-            elif (len(ref3Ds) == 2):
+            elif nrefs == 2:
                 gridsize1 = [2, 1]
             else:
-                gridsize1 = [(len(ref3Ds)+1)/2, 2]
+                gridsize1 = [(nrefs+1)/2, 2]
             
+            for it in self._visualizeIterations:
+                data_angularDist = self._getIterAngularDist(it)
+                xplotter = XmippPlotter(*gridsize1, mainTitle='Iteration %d' % it, windowTitle="Angular Distribution")
+                for ref3d in self._visualizeRef3Ds:
+                    volFn = self.getFilename('volume', iter=it, ref3d=ref3d)
+                    md = MetaData("class%06d_angularDist@%s" % (ref3d, data_angularDist))
+                    plot_title = 'Class %d' % ref3d
+                    xplotter.plotAngularDistribution(plot_title, md)
+                xplotter.show()
+                               
+    def _getIterClasses(self, it):
+        """ Return the .star file with the classes for this iteration.
+        If the file doesn't exists, it will be created. 
+        """
+        addRelionLabels()
+        data_star = self.getFilename('iter_data', iter=it)
+        data_classes = self.getFilename('iter_classes', iter=it)
+        
+        if not xmippExists(data_classes):
+            md = MetaData(data_star)
+            mdClasses = MetaData()
+            mdClasses.aggregate(md, AGGR_COUNT, MDL_REF3D, MDL_IMAGE, MDL_CLASS_COUNT)
+            #md2.aggregate(md, AGGR_COUNT, MDL_REF3D, MDL_IMAGE, MDL_COUNT)
+            mdClasses.write('classes@' + data_classes)
+            mdImages = MetaData()
             
-            for it in iterations:
-              xplotter = XmippPlotter(*gridsize1, mainTitle='Iteration_%d' % iterations[-1], windowTitle="AngularDistribution")
-              for ref3d in ref3Ds:
-                print "Computing data for iteration; %03d and class %03d"% (it, ref3d)
-                #relion save volume either in spider or mrc therefore try first one of them and then the other
-                fileNameMd  = 'images@'+ self.getFilename('data'+'Xm', iter=it, workingDir=self.WorkingDir)
-                md=MetaData(fileNameMd)
-                mdOut = MetaData()
-                mdOut.importObjects(md, MDValueEQ(MDL_REF3D, ref3d))
-                md.clear()
-                md.aggregateMdGroupBy(mdOut, AGGR_COUNT, [MDL_ANGLE_ROT, MDL_ANGLE_TILT], MDL_ANGLE_ROT, MDL_WEIGHT)
-                #keep only direction projections from the right ref3D
-                plot_title = 'Class_%d' % ref3d
-                xplotter.plotAngularDistribution(plot_title, md)
-            xplotter.draw()
- 
+            for objId in mdClasses:
+                ref3d = mdClasses.getValue(MDL_REF3D, objId)
+                mdImages.importObjects(md, MDValueEQ(MDL_REF3D, ref3d))
+                print "Writing to '%s', %d images" % (('class%06d_images' % ref3d) + data_classes, mdImages.size())
+                mdImages.write(('class%06d_images@' % ref3d) + data_classes, MD_APPEND)
+        
+        return data_classes
+    
+    def _getIterAngularDist(self, it):
+        """ Return the .star file with the classes angular distribution
+        for this iteration. If the file not exists, it will be written.
+        """
+        addRelionLabels()
+        data_classes = self._getIterClasses(it)
+        mdClasses = MetaData('classes@' + data_classes)
+        print mdClasses
+        data_angularDist = self.getFilename('iter_angularDist', iter=it)
+        
+        if not xmippExists(data_angularDist):
+            print "Writing angular distribution to: ", data_angularDist
+            for objId in mdClasses:
+                ref3d = mdClasses.getValue(MDL_REF3D, objId)
+                print "Computing data class %03d" % ref3d
+                mdImages = MetaData(('class%06d_images@' % ref3d) + data_classes)
+                mdDist = MetaData()
+                mdDist.aggregateMdGroupBy(mdImages, AGGR_COUNT, [MDL_ANGLE_ROT, MDL_ANGLE_TILT], MDL_ANGLE_ROT, MDL_WEIGHT)
+                mdDist.setValueCol(MDL_ANGLE_PSI, 0.0)
+                mdDist.write(('class%06d_angularDist@' % ref3d) + data_angularDist, MD_APPEND)
+                    
+        return data_angularDist
+        
+        
     def _visualizeDisplayImagesClassification(self):
         """ Read Relion _data.star images file and 
         generate a new metadata with the Xmipp classification standard:
@@ -649,23 +639,7 @@ class ProtRelionBase(XmippProtocol):
         If the new metadata was already written, it is just shown.
         """
         for it in self._visualizeIterations:
-            data_star = self.getFilename('iter_data', iter=it)
-            data_classes = data_star.replace('.star', '_classes.star')
-            if not xmippExists(data_classes):
-                addRelionLabels(replace=True)
-                md = MetaData(data_star)
-                mdClasses = MetaData()
-                mdClasses.aggregate(md, AGGR_COUNT, MDL_REF3D, MDL_IMAGE, MDL_CLASS_COUNT)
-                #md2.aggregate(md, AGGR_COUNT, MDL_REF3D, MDL_IMAGE, MDL_COUNT)
-                mdClasses.write('classes@' + data_classes)
-                mdImages = MetaData()
-                
-                for objId in mdClasses:
-                    ref3d = mdClasses.getValue(MDL_REF3D, objId)
-                    mdImages.importObjects(md, MDValueEQ(MDL_REF3D, ref3d))
-                    print "writing to '%s', %d images" % (('class%06d_images' % ref3d) + data_classes, mdImages.size())
-                    mdImages.write(('class%06d_images@' % ref3d) + data_classes, MD_APPEND)
-                
+            data_classes = self._getIterClasses(it)
             self.display2D(data_classes)
 
 def imagesAssignedToClass(inputMetadatas):
