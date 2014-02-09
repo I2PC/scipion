@@ -128,13 +128,17 @@ def detectMpi():
     from protlib_filesystem import findFilePath
     inc_dirs = ['/usr/include', '/usr/local/include', '/usr/include/openmpi-x86_64']
     lib_dirs = ['/usr/lib64', '/usr/lib', '/usr/lib/openmpi/lib', '/usr/lib64/openmpi/lib']
+    bin_dirs = ['/usr/bin', '/usr/local/bin', '/usr/lib/openmpi/bin', '/usr/lib64/openmpi/bin', '/usr/lib64/mpi']
     inc_mpi = findFilePath('mpi.h', *(inc_dirs + lib_dirs))
     if sys.platform  == 'darwin':
         lib_mpi = findFilePath('libmpi.dylib', *lib_dirs)
     else:
         lib_mpi = findFilePath('libmpi.so', *lib_dirs)
+    bin_mpi = findFilePath('mpirun', *bin_dirs)
     
-    return (inc_mpi, lib_mpi)
+    return (inc_mpi, lib_mpi, bin_mpi)
+    
+        
 
 def detectMatlab():
     from protlib_utils import which
@@ -164,7 +168,7 @@ def addTabOption(tab, option, comment, default, group=None, cond=None, wiz=None,
 some values automatically, and return a list with
 errors if can't found the desired files''' 
 def wizardMpi(tab_mpi):   
-    inc_mpi, lib_mpi = detectMpi()
+    inc_mpi, lib_mpi, bin_mpi = detectMpi()
     errors = ""
     
     if inc_mpi:
@@ -174,6 +178,10 @@ def wizardMpi(tab_mpi):
     if lib_mpi:
         tab_mpi.setValue('MPI_LIBDIR', lib_mpi)
     else: errors += "\nLibrary libmpi.so not found in libraries dirs"
+    
+    if bin_mpi:
+        tab_mpi.setValue('MPI_BINDIR', bin_mpi)
+    else: errors += "\nBinary mpirun not found in binaries dir"
     
     return errors
     
@@ -217,6 +225,7 @@ def addTabs(nb):
     addTabOption(tab,'MPI_LINKERFORPROGRAMS', 'MPI Linker for programs', 'mpiCC', 'MPI')
     addTabOption(tab,'MPI_INCLUDE', 'MPI headers dir ', '/usr/include', 'MPI', browse=True, wiz=wizardMpi)
     addTabOption(tab,'MPI_LIBDIR', 'MPI libraries dir ', '/usr/lib', 'MPI', browse=True)
+    addTabOption(tab,'MPI_BINDIR', 'MPI binaries dir ', '/usr/bin', 'MPI', browse=True)
     addTabOption(tab,'MPI_LIB', 'MPI library', 'mpi', 'MPI')
     tab_mpi = tab
     tab.finishGroupPanel("MPI")
@@ -235,7 +244,7 @@ def addTabs(nb):
     addTabOption(tab,'warn', 'Show warnings?', 'no')
     addTabOption(tab,'fast', 'Fast?', 'yes')
     addTabOption(tab,'static', 'Prevent dynamic linking?', 'no')
-    addTabOption(tab, 'gtest', 'Build tests?', 'no')
+    addTabOption(tab, 'gtest', 'Build tests?', 'yes')
     addTabOption(tab, 'cuda', 'Build CUDA support?', 'no')
     addTabOption(tab, 'matlab', 'Build Matlab support', 'no')
     addTabOption(tab,'MATLAB_DIR', 'Matlab dir ', '/usr/local/MATLAB/R2011a', None, 'matlab', wizardMatlab, True)
@@ -302,12 +311,15 @@ def run(notebook):
                 if len(parts) == 2:
                     assign = '%s = "%s"' % (parts[0], parts[1])
                     if parts[0].strip() == 'MPI_LIBDIR':
-                        parts[1] = parts[1].replace("'","").strip()
-                        os.environ['LD_LIBRARY_PATH'] += os.pathsep + parts[1]        
+                        parts[1] = parts[1].replace("'", "").strip()
+                        os.environ['LD_LIBRARY_PATH'] += os.pathsep + parts[1]
+                    if parts[0].strip() == 'MPI_BINDIR':
+                        parts[1] = parts[1].replace("'", "").strip()
+                        os.environ['PATH'] += os.pathsep + parts[1]        
         cmd += ('echo "*** CREATING PROGRAMS DATABASE..." >> %(out)s 2>&1\n xmipp_apropos --update >> %(out)s' % locals())    
         
     proc = Popen(cmd % locals(), shell=True)    
-    notebook.notifyRun(proc)   
+    notebook.notifyRun(proc)
     if WINDOWS:
         print cmd 
     
@@ -394,6 +406,8 @@ else:
 #    os.remove(OUTPUT)
 # TRY TO READ CONFIG FILE
 CONFIG = '.xmipp_scons.options'
+BASHRC = '.xmipp.bashrc'
+CSH = '.xmipp.csh'
 
 if os.path.exists(CONFIG):
     for line in open(CONFIG):
@@ -404,7 +418,7 @@ if options.hasOption('configure'):
         parts = arg.split('=')
         if len(parts) == 2:
             assign = '%s = "%s"' % (parts[0], parts[1])
-            exec(assign) # Take options from command line, override options file, be carefull with exec
+            exec(assign) # Take options from command line, override options file, be carefull with exec   
 
     scons = SCONS
     pid = os.fork()
@@ -413,7 +427,7 @@ if options.hasOption('configure'):
         if options.hasOption('unattended'):
             os.execvp('xmipp_python',('xmipp_python', "%(scons)s" % locals(), "mode=dependencies","unattended=yes"))
         else:
-            outputval = os.execvp('xmipp_python',('xmipp_python', "%(scons)s" % locals(), "mode=dependencies"))
+            outputval = os.execvp('xmipp_python',('xmipp_python', "%(scons)s" % locals(), "mode=dependencies"))            
     outputval = os.wait()[1]
     if outputval != 0:
         exit(1) 

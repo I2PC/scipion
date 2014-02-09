@@ -928,6 +928,8 @@ AddLibraryNG('XmippInterface')
 #AddLibrary('XmippRecons_Interface', '#libraries/reconstruction',
 #           ReconsInterfaceSources, ['#libraries', '#external', '#'],['lib'],['XmippExternal','XmippData','XmippRecons','XmippInterface'])
 
+
+
 def WriteJavaEnum(class_name, header_file, pattern, log):
     java_file = "java/src/xmipp/jni/%s.java" % class_name
     env.Depends(java_file, header_file)

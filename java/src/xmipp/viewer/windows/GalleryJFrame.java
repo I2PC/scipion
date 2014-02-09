@@ -1882,7 +1882,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 					MDRow row2 = new MDRow();
 					data.md.getRow(row2, data.ids[row]);
 					mdRow.setRow(row2, mdRow.addObject());
-					String sortFn = psdFile.replace(".psd", ".tmpSort.xmd");
+					String sortFn = psdFile.replace(".psd", ".xmd");
 					mdRow.write(sortFn);
 					mdRow.destroy();
 					ImagesWindowFactory.openCTFImage(imp, ctfModel, psdFile, ctfTasks, data.md.getFilename(), row, sortFn);
@@ -1942,17 +1942,20 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			}
 			else if (cmd.equals(OPEN))
 			{
-				MetadataGalleryTableModel mg = (MetadataGalleryTableModel) gallery;
-				ColumnInfo ci = mg.visibleLabels.get(col);
+                               
+                                MetadataGalleryTableModel mg = (MetadataGalleryTableModel) gallery;
 
-				if (ci.allowRender)
-					gallery.handleDoubleClick(row, col);
-				else
-				{
-					String file = data.getValueFromCol(row, ci);
+                                ColumnInfo ci = mg.visibleLabels.get(col);
 
-					ImagesWindowFactory.openFileAsDefault(file);
-				}
+                                if (ci.allowRender)
+                                        gallery.handleDoubleClick(row, col);
+                                else
+                                {
+                                        String file = data.getValueFromCol(row, ci);
+
+                                        ImagesWindowFactory.openFileAsDefault(file);
+                                }
+                                
 			}
 			else if (cmd.equals(OPEN_ASTEXT))
 			{
