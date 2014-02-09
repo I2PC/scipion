@@ -27,29 +27,53 @@ from protlib_xmipp import getSampling, validateInputSize
 
 class ProtRelionBase(XmippProtocol):
     def __init__(self, protDictName, scriptname, project):
-        self.relionFiles=['data','optimiser','sampling'] 
+        self.FileKeys = ['data', 'optimiser', 'sampling'] 
         XmippProtocol.__init__(self, protDictName, scriptname, project)
         self.ParamsStr = ''
+        
+        program = 'relion_refine'
         if self.NumberOfMpi > 1:
-            self.program = 'relion_refine_mpi'
-        else:
-            self.program = 'relion_refine'
-        self.ParamsDict['program'] = self.program
+            program += '_mpi'
+        
         if self.DoContinue:
-            self.setPreviousRunFromFile(self.optimiserFileName)
-            #if optimizer has not been properly selected this will 
-            #fail, let us go ahead and handle the situation in verify
+            if os.path.exists(self.optimiserFileName):
+                self.setPreviousRunFromFile(self.optimiserFileName)
             try:
                 self.inputProperty('ImgMd')
             except:
                 print "Cannot find the input file with experimental images in protocol %s" % self.PrevRunName
-
+        
+        self.addParam('program', program)
         self.addParam('ORoot', self.WorkingDir + '/')
-        self.addParam('SamplingRate', getSampling(self.ImgMd))
+        self.addParam('SamplingRate', getSampling(self.ImgMd, 0.))
+        
+    def createFilenameTemplates(self):
+        """ Define keywords for getting filenames for each iteration. """
+        self.extraIter = self.extraPath('relion_it%(iter)03d_')
+        myDict = {
+                  #'data': self.extraIter + 'data.star',
+                  #'volume': self.extraIter + 'class%(ref3d)03d.mrc:mrc',
+                  
+                  'data_sorted_xmipp': self.extraIter + 'data_sorted_xmipp.star',
+                  'classes_xmipp': self.extraIter + 'classes_xmipp.xmd',
+                  'angularDist_xmipp': self.extraIter + 'angularDist_xmipp.xmd',
+                  'all_avgPmax_xmipp': self.tmpPath('iterations_avgPmax_xmipp.xmd'),
+                  'all_changes_xmipp': self.tmpPath('iterations_changes_xmipp.xmd'),
+                  'selected_volumes': self.tmpPath('selected_volumes_xmipp.xmd')
+                  }
+        
+        # add to keys, data.star, optimiser.star and sampling.star
+        for key in self.FileKeys:
+            myDict[key] = self.extraIter + '%s.star' % key 
+        # add other keys that depends on prefixes
+        for p in self._getPrefixes():            
+            myDict['%smodel' % p] = self.extraIter + '%smodel.star' % p
+            myDict['%svolume' % p] = self.extraIter + p + 'class%(ref3d)03d.mrc:mrc'
+
+        return myDict
 
     def summary(self):
-        lines = ["Wrapper implemented for RELION **1.2**"]
-        return lines 
+        return ["Wrapper implemented for RELION **1.2**"]
 
     def papers(self):
         papers = ['Bayesian view: Scheres, JMB (2012) [http://www.ncbi.nlm.nih.gov/pubmed/22100448]',
@@ -58,7 +82,7 @@ class ProtRelionBase(XmippProtocol):
         return papers
 
     def lastIter(self):
-        fileNameTemplate = self.getFilename('dataRe', iter=0)
+        fileNameTemplate = self.getFilename('data', iter=0)
         fileNameTemplate = fileNameTemplate.replace('000','???')
         a = sorted(glob(fileNameTemplate))
         if not a:
@@ -66,7 +90,8 @@ class ProtRelionBase(XmippProtocol):
         return int (re.findall(r'_it\d+_',a[-1])[0][3:6])
 
     def firstIter(self):
-        fileNameTemplate = self.getFilename('dataRe', iter=0)
+        fileNameTemplate = self.getFilename('data', iter=0)
+        print "fileNameTemplate", fileNameTemplate
         fileNameTemplate = fileNameTemplate.replace('000','???')
         a = sorted(glob(fileNameTemplate))[0]
         if not a:
@@ -127,35 +152,31 @@ class ProtRelionBase(XmippProtocol):
         return errors 
     
     def defineSteps(self): 
-        #remove ContinueFrom
-        #self.doContinue = len(self.ContinueFrom) > 0
-        #in the future we need to deal with continue
-        restart = False
         #temporary normalized files
-        tmpFileNameSTK = join(self.ExtraDir, 'norRelion.stk')
-        tmpFileNameXMD = join(self.ExtraDir, 'norRelion.xmd')
+        images_xmd = join(self.ExtraDir, 'norRelion.xmd')
         #create extra output directory
         self.insertStep('createDir', verifyfiles=[self.ExtraDir], path=self.ExtraDir)
         self.insertStep("linkAcquisitionInfo", InputFile=self.ImgMd, dirDest=self.WorkingDir) 
         #normalize data
 
         if self.DoNormalizeInputImage:
-            self.insertStep('runNormalizeRelion', verifyfiles=[tmpFileNameSTK,tmpFileNameXMD],
+            images_stk = join(self.ExtraDir, 'images_normalized.stk')
+            self.insertStep('runNormalizeRelion', verifyfiles=[images_stk, images_xmd],
                             inputMd  = self.ImgMd,
-                            outputMd = tmpFileNameSTK,
+                            outputMd = images_stk,
                             normType = 'NewXmipp',
                             bgRadius = int(self.MaskRadiusA/self.SamplingRate),
                             Nproc    = self.NumberOfMpi*self.NumberOfThreads
                             )
         else:
             self.insertStep('createLink',
-                               verifyfiles=[tmpFileNameXMD],
+                               verifyfiles=[images_xmd],
                                source=self.ImgMd,
-                               dest=tmpFileNameXMD)
+                               dest=images_xmd)
         # convert input metadata to relion model
-        self.ImgStar = self.extraPath(replaceBasenameExt(tmpFileNameXMD, '.star'))
+        self.ImgStar = self.extraPath(replaceBasenameExt(images_xmd, '.star'))
         self.insertStep('convertImagesMd', verifyfiles=[self.ImgStar],
-                        inputMd=tmpFileNameXMD, 
+                        inputMd=images_xmd, 
                         outputRelion=self.ImgStar                            
                         )
         
@@ -167,9 +188,9 @@ class ProtRelionBase(XmippProtocol):
         verifyFiles=[]
         inputs=[]
         for i in range (firstIteration, lastIteration+1):
-            for v in self.relionFiles:
+            for v in self.FileKeys:
                  verifyFiles += [self.getFilename(v+'Xm', iter=i, workingDir=self.WorkingDir )]
-#            for v in self.relionFiles:
+#            for v in self.FileKeys:
 #                 inputs += [self.getFilename(v+'Re', iter=i )]
         if not ExtraOutputs is None:
 #            inputs      += ExtraInputs
@@ -213,18 +234,6 @@ class ProtRelionBase(XmippProtocol):
 #                        outputs = outputs
 #                        )
 
-    def createFilenameTemplates(self):
-        self.extraIter = self.extraPath('relion_it%(iter)03d_')
-        myDict = {
-                  'iter_data': self.extraIter + 'data.star',
-                  'iter_classes': self.extraIter + 'classes.xmd',
-                  'iter_angularDist': self.extraIter + 'angularDist.xmd',
-                  'avgPmax': self.tmpPath('iterations_avgPmax.xmd'),
-                  'changes': self.tmpPath('iterations_changes.xmd')
-                  }
-
-        return myDict
-
     def visualize(self):
         
         plots = [k for k in ['TableImagesPerClass'
@@ -254,6 +263,8 @@ class ProtRelionBase(XmippProtocol):
             self._visualizeRef3Ds = range(1, self.NumberOfClasses + 1)
         else:
             self._visualizeRef3Ds = getListFromRangeString(self.parser.getTkValue('SelectedRef3DNo'))
+        
+        self._visualizeNrefs = len(self._visualizeRef3Ds)
         lastIteration = self.lastIter()
         firstIter = self.firstIter()
         
@@ -268,6 +279,23 @@ class ProtRelionBase(XmippProtocol):
         self._visualizeVolumesMode = self.parser.getTkValue('DisplayReconstruction')
         
         
+    def _checkIterData(self):
+        """ check that for last visualized iteration, the data is produced. """
+        volumes = []
+        for prefix in self._getPrefixes():
+            volumes.append(self.getFilename(prefix + 'volume', 
+                                            iter=self._visualizeLastIteration, 
+                                            ref3d=self._visualizeLastRef3D))
+                
+        for v in volumes:
+            if not xmippExists(v):
+                message = "No data available for <iteration %d> and <class %d>" % (self._visualizeLastIteration, self._visualizeLastRef3D)
+                message += '\nVolume <%s> not found. ' % v
+                showError("File not Found", message, self.master)
+                return False
+        return True
+        
+        
     def launchRelionPlots(self, selectedPlots):
         ############TABLES STOP ANALIZE
         ''' Launch some plots for a Projection Matching protocol run '''
@@ -279,31 +307,13 @@ class ProtRelionBase(XmippProtocol):
         xplotter=None
         self._plot_count = 0
         
-        print "launchRelionPlots, before loading..."
         self._loadVisualizeItersAndRefs()
         
-        def doPlot(plotName):
-            return plotName in selectedPlots
-        #check if last iteration exists
-        
-        if( self.relionType == 'classify' ):
-            lastVolume = self.getFilename('volume', iter=self._visualizeLastIteration, ref3d=self._visualizeLastRef3D, workingDir=self.WorkingDir )
-            _volume='volume'
-        else:
-            lastVolume = self.getFilename('volumeh1', iter=self._visualizeLastIteration, ref3d=self._visualizeLastRef3D, workingDir=self.WorkingDir )
-            _volume='volumeFinal'
-            fileNameRe =self.getFilename('modelXmFinalRe')
-            fileNameXm =self.getFilename('modelXmFinalXm')
-            if xmippExists(fileNameRe) and (not xmippExists(fileNameXm)):
-                #since relion crasesh very often after finishing its job
-                #I cannot assume that conversion is done
-                exportReliontoMetadataFile(fileNameRe,fileNameXm)
-                
-        if not xmippExists(lastVolume):
-            message = "No data available for <iteration %d> and <class %d>"%\
-                       (int(self._visualizeLastIteration),int(lastRef3D))
-            showError("File not Found", message, self.master)
+        if not self._checkIterData():
             return
+        
+        def doPlot(plotName):
+            return plotName in selectedPlots        
         
         if doPlot('AvgPMAX'):
             self._visualizeAvgPMAX()
@@ -318,66 +328,7 @@ class ProtRelionBase(XmippProtocol):
             self._visualizeDisplayResolutionPlotsSSNR()
                     
         if doPlot('DisplayResolutionPlotsFSC'):
-            self.ResolutionThreshold=float(self.parser.getTkValue('ResolutionThreshold'))
-            names = []
-            windowTitle = {}
-            #not used for classification but I may change my mind in the future
-            if(self.relionType=='classify'):
-                names = ['modelXm']
-                windowTitle[names[0]]="ResolutionFSC"
-            else:
-                names = ['half1_modelXm','half2_modelXm']
-                windowTitle[names[0]]="ResolutionFSC_half1"
-                windowTitle[names[1]]="ResolutionFSC_half2"
-            if(len(ref3Ds) == 1):
-                gridsize1 = [1, 1]
-            elif (len(ref3Ds) == 2):
-                gridsize1 = [2, 1]
-            else:
-                gridsize1 = [(len(ref3Ds)+1)/2, 2]
-            md = MetaData()
-            activateMathExtensions()
-            for name in names:
-              xplotter = XmippPlotter(*gridsize1,windowTitle=windowTitle[name])
-              for ref3d in ref3Ds:
-                plot_title = 'Ref3D_%s' % ref3d
-                a = xplotter.createSubPlot(plot_title, 'Armstrongs^-1', 'FSC', yformat=False)
-                legendName=[]
-                blockName = 'model_class_%d@'%ref3d
-                for it in iterations:
-                    file_name = blockName + self.getFilename(name, iter=it, workingDir=self.WorkingDir )
-                    #file_name = self.getFilename('ResolutionXmdFile', iter=it, ref=ref3d)
-                    if xmippExists(file_name):
-                        mdOut = MetaData(file_name)
-                        resolution_inv = [mdOut.getValue(MDL_RESOLUTION_FREQ, id) for id in mdOut]
-                        frc = [mdOut.getValue(MDL_RESOLUTION_FRC, id) for id in mdOut]
-                        a.plot(resolution_inv, frc)
-                        legendName.append('Iter_'+str(it))
-                    xplotter.showLegend(legendName)
-                if (self.ResolutionThreshold < max(frc)):
-                    a.plot([min(resolution_inv), max(resolution_inv)],[self.ResolutionThreshold, self.ResolutionThreshold], color='black', linestyle='--')
-                    a.grid(True)
-              xplotter.draw()
-              
-            if(self.relionType=='refine'):
-                file_name = blockName + self.getFilename('modelXmFinalXm', workingDir=self.WorkingDir)
-                print "final model", file_name
-                if xmippExists(file_name):
-                    print "final model exists"
-                    gridsize1 = [1, 1]
-                    xplotter = XmippPlotter(*gridsize1,windowTitle="ResolutionSSNRAll")
-                    plot_title = 'FSC for all images, final iteration'
-                    a = xplotter.createSubPlot(plot_title, 'Armstrongs^-1', 'log(SSNR)', yformat=False)
-                    blockName = 'model_class_%d@'%1
-                    mdOut = MetaData(file_name)
-                    # only cross by 1 is important
-                    resolution_inv = [mdOut.getValue(MDL_RESOLUTION_FREQ, id) for id in mdOut]
-                    frc = [mdOut.getValue(MDL_RESOLUTION_FRC, id) for id in mdOut]
-                    a.plot(resolution_inv, frc)
-                    if (self.ResolutionThreshold < max(frc)):
-                        a.plot([min(resolution_inv), max(resolution_inv)],[self.ResolutionThreshold, self.ResolutionThreshold], color='black', linestyle='--')
-                        a.grid(True)
-                    xplotter.draw()
+            self._visualizeDisplayResolutionPlotsFSC()
 
         if doPlot('DisplayAngularDistribution'):
             self._visualizeDisplayAngularDistribution()
@@ -407,7 +358,9 @@ class ProtRelionBase(XmippProtocol):
     def display2D(self,fn, extraParams=''):
         if xmippExists(fn):
             try:
-                runShowJ(fn, extraParams=extraParams + ' --dont_wrap')
+                # We use os.system to load the relion labels through showj
+                os.system('xmipp_showj %(fn)s %(extraParams)s --dont_wrap &' % locals())
+                #runShowJ(fn, extraParams=extraParams + ' --dont_wrap')
             except Exception, e:
                 showError("Error launching java app", str(e), self.master)
         else:
@@ -419,16 +372,17 @@ class ProtRelionBase(XmippProtocol):
                 inputMetadatas += ["model_classes@"+self.getFilename('model'+'Xm', iter=it, workingDir=self.WorkingDir )]
             return imagesAssignedToClass(inputMetadatas)
         
-    def _getGridSize(self):
+    def _getGridSize(self, n=None):
         """ Figure out the layout of the plots given the number of references. """
-        nrefs = len(self._visualizeRef3Ds)
+        if n is None:
+            n = self._visualizeNrefs
         
-        if nrefs == 1:
+        if n == 1:
             gridsize = [1, 1]
-        elif nrefs == 2:
+        elif n == 2:
             gridsize = [2, 1]
         else:
-            gridsize = [(nrefs+1)/2, 2]
+            gridsize = [(n+1)/2, 2]
             
         return gridsize
                                
@@ -437,8 +391,8 @@ class ProtRelionBase(XmippProtocol):
         If the file doesn't exists, it will be created. 
         """
         addRelionLabels()
-        data_star = self.getFilename('iter_data', iter=it)
-        data_classes = self.getFilename('iter_classes', iter=it)
+        data_star = self.getFilename('data', iter=it)
+        data_classes = self.getFilename('classes_xmipp', iter=it)
         
         if not xmippExists(data_classes):
             md = MetaData(data_star)
@@ -458,144 +412,215 @@ class ProtRelionBase(XmippProtocol):
             mdClasses.write('classes@' + data_classes, MD_APPEND)
         return data_classes
     
+    def _writeIterAngularDist(self, it):
+        """ Write the angular distribution. Should be overriden in subclasses. """
+        pass
+    
     def _getIterAngularDist(self, it):
         """ Return the .star file with the classes angular distribution
         for this iteration. If the file not exists, it will be written.
         """
+        data_angularDist = self.getFilename('angularDist_xmipp', iter=it)
         addRelionLabels()
-        data_classes = self._getIterClasses(it)
-        mdClasses = MetaData('classes@' + data_classes)
-        print mdClasses
-        data_angularDist = self.getFilename('iter_angularDist', iter=it)
         
         if not xmippExists(data_angularDist):
-            print "Writing angular distribution to: ", data_angularDist
-            for objId in mdClasses:
-                ref3d = mdClasses.getValue(MDL_REF3D, objId)
-                print "Computing data class %03d" % ref3d
-                mdImages = MetaData(('class%06d_images@' % ref3d) + data_classes)
-                mdDist = MetaData()
-                mdDist.aggregateMdGroupBy(mdImages, AGGR_COUNT, [MDL_ANGLE_ROT, MDL_ANGLE_TILT], MDL_ANGLE_ROT, MDL_WEIGHT)
-                mdDist.setValueCol(MDL_ANGLE_PSI, 0.0)
-                mdDist.write(('class%06d_angularDist@' % ref3d) + data_angularDist, MD_APPEND)
-                    
-        return data_angularDist
+            self._writeIterAngularDist(it)
  
+        return data_angularDist
+    
+    def _getIterSortedData(self, it):
+        """ Sort the it??.data.star file by the maximum likelihood. """
+        addRelionLabels(True)
+        data_sorted = self.getFilename('data_sorted_xmipp', iter=it)
+        if not xmippExists(data_sorted):
+            print "Sorting particles by likelihood iteration %03d" % it
+            fn = 'images@'+ self.getFilename('data', iter=it)
+            md = MetaData(fn)
+            md.sort(MDL_LL, False)
+            md.write('images_sorted@' + data_sorted)
+        
+        return data_sorted
+            
+    def _visualizeDisplayReconstruction(self):
+        """ Visualize selected volumes per iterations.
+        If show in slices, create a temporal single metadata
+        for avoid opening multiple windows. 
+        """
+        prefixes = self._getPrefixes()
+        
+        if self._visualizeVolumesMode == 'slices':
+            fn = self.getFilename('selected_volumes')
+            volMd = MetaData()
+            for it in self._visualizeIterations:
+                for prefix in prefixes:
+                    for ref3d in self._visualizeRef3Ds:
+                        volFn = self.getFilename('%svolume' % prefix, iter=it, ref3d=ref3d)
+                        volMd.setValue(MDL_IMAGE, volFn, volMd.addObject())
+                block = 'volumes_iter%06d@' % it
+                volMd.write(block + fn, MD_APPEND)
+            self.display2D(fn)         
+        else:
+            for it in self._visualizeIterations:
+              for prefix in prefixes:
+                  for ref3d in self._visualizeRef3Ds:
+                    self.display3D(self.getFilename('%svolume' % prefix, iter=it, ref3d=ref3d))
+   
+
+    def _visualizeDisplayResolutionPlotsFSC(self):
+        self.ResolutionThreshold = float(self.parser.getTkValue('ResolutionThreshold'))
+        n = self._visualizeNrefs * len(self._getPrefixes())
+        gridsize = self._getGridSize(n)
+        
+        activateMathExtensions()
+        addRelionLabels()
+        
+        xplotter = XmippPlotter(*gridsize, windowTitle='Resolution FSC')
+
+        for prefix in self._getPrefixes():
+          for ref3d in self._visualizeRef3Ds:
+            plot_title = prefix + 'class %s' % ref3d
+            a = xplotter.createSubPlot(plot_title, 'Armstrongs^-1', 'FSC', yformat=False)
+            legendName=[]
+            blockName = 'model_class_%d@' % ref3d
+            for it in self._visualizeIterations:
+                model_star = blockName + self.getFilename(prefix + 'model', iter=it)
+                if xmippExists(model_star):
+                    md = MetaData(model_star)
+                    resolution_inv = [md.getValue(MDL_RESOLUTION_FREQ, id) for id in md]
+                    frc = [md.getValue(MDL_RESOLUTION_FRC, id) for id in md]
+                    a.plot(resolution_inv, frc)
+                    legendName.append('iter %d' % it)
+            xplotter.showLegend(legendName)
+            if self.ResolutionThreshold < max(frc):
+                a.plot([min(resolution_inv), max(resolution_inv)],[self.ResolutionThreshold, self.ResolutionThreshold], color='black', linestyle='--')
+            a.grid(True)
+            
+        xplotter.show()
+          
+#        if(self.relionType=='refine'):
+#            file_name = blockName + self.getFilename('modelXmFinalXm', workingDir=self.WorkingDir)
+#            print "final model", file_name
+#            if xmippExists(file_name):
+#                print "final model exists"
+#                gridsize1 = [1, 1]
+#                xplotter = XmippPlotter(*gridsize1,windowTitle="ResolutionSSNRAll")
+#                plot_title = 'FSC for all images, final iteration'
+#                a = xplotter.createSubPlot(plot_title, 'Armstrongs^-1', 'log(SSNR)', yformat=False)
+#                blockName = 'model_class_%d@'%1
+#                md = MetaData(file_name)
+#                # only cross by 1 is important
+#                resolution_inv = [md.getValue(MDL_RESOLUTION_FREQ, id) for id in md]
+#                frc = [md.getValue(MDL_RESOLUTION_FRC, id) for id in md]
+#                a.plot(resolution_inv, frc)
+#                if (self.ResolutionThreshold < max(frc)):
+#                    a.plot([min(resolution_inv), max(resolution_inv)],[self.ResolutionThreshold, self.ResolutionThreshold], color='black', linestyle='--')
+#                    a.grid(True)
+#                xplotter.draw()
+                                      
     def _visualizeDisplayAngularDistribution(self):        
         self.SpheresMaxradius = float(self.parser.getTkValue('SpheresMaxradius'))
         self.DisplayAngularDistribution = self.parser.getTkValue('DisplayAngularDistribution')
-        volumeKeys = self._getVolumeKeys()
         
         if self.DisplayAngularDistribution == 'chimera':
-#            fileNameVol = self.getFilename(volumeKeys[0], iter=iterations[-1], ref3d=1, workingDir=self.WorkingDir )
-#            (Xdim, Ydim, Zdim, Ndim) = getImageSize(fileNameVol)
-            
             outerRadius = int(float(self.MaskRadiusA)/self.SamplingRate)
             radius = float(outerRadius) * 1.1
 
             for it in self._visualizeIterations:
                 data_angularDist = self._getIterAngularDist(it)
                 for ref3d in self._visualizeRef3Ds:
-                    volFn = self.getFilename('volume', iter=it, ref3d=ref3d)
-                    args = " --mode projector 256 -a class%06d_angularDist@%s red %f " % (ref3d, data_angularDist, radius)
-                    if self.SpheresMaxradius > 0:
-                        args += ' %f ' % self.SpheresMaxradius
-                        print "runChimeraClient(%s, %s) " % (volFn, args)
-                    runChimeraClient(volFn, args)
+                    for prefix in self._getPrefixes():
+                        volFn = self.getFilename(prefix + 'volume', iter=it, ref3d=ref3d)
+                        args = " --mode projector 256 -a %sclass%06d_angularDist@%s red %f " % (prefix, ref3d, data_angularDist, radius)
+                        if self.SpheresMaxradius > 0:
+                            args += ' %f ' % self.SpheresMaxradius
+                            print "runChimeraClient(%s, %s) " % (volFn, args)
+                        runChimeraClient(volFn, args)
                     
         elif self.DisplayAngularDistribution == "2D plots": 
-            gridsize = self._getGridSize()
+            n = self._visualizeNrefs * len(self._getPrefixes())
+            gridsize = self._getGridSize(n)
             
             for it in self._visualizeIterations:
                 data_angularDist = self._getIterAngularDist(it)
                 xplotter = XmippPlotter(*gridsize, mainTitle='Iteration %d' % it, windowTitle="Angular Distribution")
                 for ref3d in self._visualizeRef3Ds:
-                    volFn = self.getFilename('volume', iter=it, ref3d=ref3d)
-                    md = MetaData("class%06d_angularDist@%s" % (ref3d, data_angularDist))
-                    plot_title = 'Class %d' % ref3d
-                    xplotter.plotAngularDistribution(plot_title, md)
-                xplotter.show()        
+                    for prefix in self._getPrefixes():
+                        md = MetaData("class%06d_angularDist@%s" % (ref3d, data_angularDist))
+                        plot_title = '%sclass %d' % (prefix, ref3d)
+                        xplotter.plotAngularDistribution(plot_title, md)
+                xplotter.show(interactive=True)        
         
-    def _visualizeDisplayImagesClassification(self):
-        """ Read Relion _data.star images file and 
-        generate a new metadata with the Xmipp classification standard:
-        a 'classes' block and a 'class00000?_images' block per class.
-        If the new metadata was already written, it is just shown.
-        """
-        for it in self._visualizeIterations:
-            data_classes = self._getIterClasses(it)
-            self.display2D(data_classes, extraParams='--mode metadata --render first')
-
+    def _getPrefixes(self):
+        """ This should be redefined in sub-classes. """
+        pass
+    
+    def _getIterFiles(self, iter):
+        """ Return the files that should be produces for a give iteration. """
+        return [self.getFilename(k, iter=iter) for k in self.FileKeys]
+    
     def _visualizeDisplayResolutionPlotsSSNR(self):
-            names = []
-            windowTitle = {}
-            if(self.relionType=='classify'):
-                names = ['modelXm']
-                windowTitle[names[0]]="ResolutionSSNR"
-            else:
-                names = ['half1_modelXm','half2_modelXm']
-                windowTitle[names[0]]="ResolutionSSNR_half1"
-                windowTitle[names[1]]="ResolutionSSNR_half2"
-                
-            gridsize = self._getGridSize()
-            md = MetaData()
-            activateMathExtensions()
-            for name in names:
-              xplotter = XmippPlotter(*gridsize, windowTitle=windowTitle[name])
-              for ref3d in self._visualizeRef3Ds:
-                plot_title = 'SSNR Class %s' % ref3d
-                a = xplotter.createSubPlot(plot_title, 'Armstrongs^-1', 'log(SSNR)', yformat=False)
-                legendName=[]
-                blockName = 'model_class_%d@'%ref3d
-                for it in self._visualizeIterations:
-                    file_name = blockName + self.getFilename(name, iter=it, workingDir=self.WorkingDir )
-                    #file_name = self.getFilename('ResolutionXmdFile', iter=it, ref=ref3d)
-                    if xmippExists(file_name):
-                        mdOut = MetaData(file_name)
-                        md.clear()
-                        # only cross by 1 is important
-                        md.importObjects(mdOut, MDValueGT(MDL_RESOLUTION_SSNR, 0.9))
-                        md.operate("resolutionSSNR=log(resolutionSSNR)")
-                        resolution_inv = [md.getValue(MDL_RESOLUTION_FREQ, id) for id in md]
-                        frc = [md.getValue(MDL_RESOLUTION_SSNR, id) for id in md]
-                        a.plot(resolution_inv, frc)
-                        legendName.append('Iter_'+str(it))
-                    xplotter.showLegend(legendName)
-                a.grid(True)
-              xplotter.show()
+        names = []
+        windowTitle = {}
+        prefixes = self._getPrefixes()
+        
+        n = len(prefixes) * self._visualizeNrefs
+        gridsize = self._getGridSize(n)
+        addRelionLabels()
+        md = MetaData()
+        activateMathExtensions()
+        xplotter = XmippPlotter(*gridsize)
+        
+        for prefix in prefixes:
+            for ref3d in self._visualizeRef3Ds:
+              plot_title = 'Resolution SSNR %s, for Class %s' % (prefix, ref3d)
+              a = xplotter.createSubPlot(plot_title, 'Armstrongs^-1', 'log(SSNR)', yformat=False)
+              legendName=[]
+              blockName = 'model_class_%d@' % ref3d
+              for it in self._visualizeIterations:
+                  file_name = blockName + self.getFilename(prefix + 'model', iter=it)
+                  #file_name = self.getFilename('ResolutionXmdFile', iter=it, ref=ref3d)
+                  if xmippExists(file_name):
+                      mdOut = MetaData(file_name)
+                      md.clear()
+                      # only cross by 1 is important
+                      md.importObjects(mdOut, MDValueGT(MDL_RESOLUTION_SSNR, 0.9))
+                      md.operate("resolutionSSNR=log(resolutionSSNR)")
+                      resolution_inv = [md.getValue(MDL_RESOLUTION_FREQ, id) for id in md]
+                      frc = [md.getValue(MDL_RESOLUTION_SSNR, id) for id in md]
+                      a.plot(resolution_inv, frc)
+                      legendName.append('iter %d' % it)
+                  xplotter.showLegend(legendName)
+              a.grid(True)
+        xplotter.show()
               
-            if(self.relionType=='refine'):
-                file_name = blockName + self.getFilename('modelXmFinalXm')
-                if xmippExists(file_name):
-                    gridsize1 = [1, 1]
-                    xplotter = XmippPlotter(*gridsize1,windowTitle="ResolutionSSNRAll")
-                    plot_title = 'SSNR for all images, final iteration'
-                    a = xplotter.createSubPlot(plot_title, 'Armstrongs^-1', 'log(SSNR)', yformat=False)
-                    blockName = 'model_class_%d@'%1
-                    mdOut = MetaData(file_name)
-                    md.clear()
-                    # only cross by 1 is important
-                    md.importObjects(mdOut, MDValueGT(MDL_RESOLUTION_SSNR, 0.9))
-                    md.operate("resolutionSSNR=log(resolutionSSNR)")
-                    resolution_inv = [md.getValue(MDL_RESOLUTION_FREQ, id) for id in md]
-                    frc = [md.getValue(MDL_RESOLUTION_SSNR, id) for id in md]
-                    a.plot(resolution_inv, frc)
-                    a.grid(True)
-                    xplotter.draw()
+#            if(self.relionType=='refine'):
+#                file_name = blockName + self.getFilename('modelXmFinalXm')
+#                if xmippExists(file_name):
+#                    gridsize1 = [1, 1]
+#                    xplotter = XmippPlotter(*gridsize1,windowTitle="ResolutionSSNRAll")
+#                    plot_title = 'SSNR for all images, final iteration'
+#                    a = xplotter.createSubPlot(plot_title, 'Armstrongs^-1', 'log(SSNR)', yformat=False)
+#                    blockName = 'model_class_%d@'%1
+#                    mdOut = MetaData(file_name)
+#                    md.clear()
+#                    # only cross by 1 is important
+#                    md.importObjects(mdOut, MDValueGT(MDL_RESOLUTION_SSNR, 0.9))
+#                    md.operate("resolutionSSNR=log(resolutionSSNR)")
+#                    resolution_inv = [md.getValue(MDL_RESOLUTION_FREQ, id) for id in md]
+#                    frc = [md.getValue(MDL_RESOLUTION_SSNR, id) for id in md]
+#                    a.plot(resolution_inv, frc)
+#                    a.grid(True)
+#                    xplotter.draw()
               
     def _getChangeLabels(self):
         """ This method should be redefined in each subclass. """
         pass
         
     def _visualizeTableChange(self): 
-            _r = []
             mdIters = MetaData()
             labels = self._getChangeLabels()
             iterations = range(1, self._visualizeLastIteration+1)
-#            if(self.relionType=='classify'):
-#                labels = ('Iter','offset','orientation','classAssigment')
-#            else:
-#                _c = ('Iter','offset','orientation')
+            addRelionLabels()
             
             print " Computing average changes in offset, angles, and class membership"
             for it in iterations:
@@ -603,88 +628,51 @@ class ProtRelionBase(XmippProtocol):
                 objId = mdIters.addObject()
                 mdIters.setValue(MDL_ITER, it, objId)
                 #agregar por ref3D
-                fn = self.getFilename('optimiser'+'Xm', iter=it )
+                fn = self.getFilename('optimiser', iter=it )
                 md = MetaData(fn)
                 firstId = md.firstObject()
                 for label in labels:
                     mdIters.setValue(label, md.getValue(label, firstId), objId)
-            fn = self.getFilename('changes')
+            fn = self.getFilename('all_changes_xmipp')
             mdIters.write(fn)
-            self.display2D(fn)#                if(self.relionType=='classify'):
-#                    _r.append(("Iter_%d" % it, cOrientations,cOffsets,cClasses))
-#                else:
-#                    _r.append(("Iter_%d" % it, cOrientations,cOffsets))
-#            showTable(_c,_r, title='Changes per Iteration', width=100)
-#                if(self.relionType=='classify'):
-#                    _r.append(("Iter_%d" % it, cOrientations,cOffsets,cClasses))
-#                else:
-#                    _r.append(("Iter_%d" % it, cOrientations,cOffsets))
-#            showTable(_c,_r, title='Changes per Iteration', width=100)
+            self.display2D(fn)              
             
     def _visualizeLikelihood(self):  
         for it in self._visualizeIterations:
-            print "Computing data for iteration %03d"% (it)
-            fn = 'images@'+ self.getFilename('dataXm', iter=it)
+            fn = self._getIterSortedData(it)
             md = MetaData(fn)
-            md.sort(MDL_LL, False)
-            md.write(fn)
-            runShowJ(fn)
+            self.display2D(fn)
             xplotter = XmippPlotter(windowTitle="max Likelihood particles sorting Iter_%d"%it)
-            xplotter.createSubPlot("Particle sorting: Iter_%d"%it, "Particle number", "maxLL")
+            xplotter.createSubPlot("Particle sorting: Iter_%d" % it, "Particle number", "maxLL")
             xplotter.plotMd(md, False, mdLabelY=MDL_LL)
-        xplotter.show()
+            xplotter.show()
         
     def _visualizeAvgPMAX(self):         
-            _r = []
-            mdOut = MetaData()
+            addRelionLabels()            
+            mdIters = MetaData()
+            iterations = range(1, self._visualizeLastIteration+1)
+            labels = [MDL_AVGPMAX, MDL_PMAX]
+            colors = ['g', 'b']
             
-            if(self.relionType=='classify'):
-                addRelionLabels()
-                mdIters = MetaData()
-                iterations = range(1, self._visualizeLastIteration+1)
-                
-                for it in iterations: # range (firstIter,self._visualizeLastIteration+1): #alwaya list all iteration
-                    fn = 'model_general@'+ self.getFilename('modelRe', iter=it)
+            for it in iterations: # range (firstIter,self._visualizeLastIteration+1): #alwaya list all iteration
+                objId = mdIters.addObject()
+                mdIters.setValue(MDL_ITER, it, objId)
+                for i, prefix in enumerate(self._getPrefixes()):
+                    fn = 'model_general@'+ self.getFilename(prefix + 'model', iter=it)
                     md = MetaData(fn)
-                    pmax = md.getValue(MDL_AVGPMAX,md.firstObject())
-                    objId = mdIters.addObject()
-                    mdIters.setValue(MDL_ITER, it, objId)
-                    mdIters.setValue(MDL_AVGPMAX, pmax, objId)
-                fn = self.getFilename('avgPmax')
-                mdIters.write(fn)
-                self.display2D(fn)                    
-                #self.display2D(fn, extraParams)
-                xplotter = XmippPlotter()
-                xplotter.createSubPlot("Avg PMax per Iterations", "Iterations", "Avg PMax")
-                xplotter.plotMd(mdIters, MDL_ITER, MDL_AVGPMAX)
-                xplotter.show()
-            else:
-                _c = ('Iteration','Avg PMax h1', 'Avg PMax h2')
-                
-                for it in self._visualizeIterations:#range (firstIter,self._visualizeLastIteration+1): #alwaya list all iteration
-                    fn = 'model_general@'+ self.getFilename('half1_model'+'Xm', iter=it , workingDir=self.WorkingDir)
-                    md = MetaData(fn)
-                    pmax1 = md.getValue(MDL_AVGPMAX,md.firstObject())
-                    fn = 'model_general@'+ self.getFilename('half2_model'+'Xm', iter=it , workingDir=self.WorkingDir)
-                    md = MetaData(fn)
-                    pmax2 = md.getValue(MDL_AVGPMAX,md.firstObject())
-                    _r.append(("Iter_%d" % it, pmax1,pmax2))
-                fn = 'model_general@'+ self.getFilename('modelXmFinalXm', workingDir=self.WorkingDir)
-                if(self.relionType=='refine' and self._visualizeIterations[-1]==self.NumberOfIterations):
-                    md = MetaData(fn)
-                    pmax1 = md.getValue(MDL_AVGPMAX,md.firstObject())
-                    _r.append(("all_particles", pmax1,'---'))
+                    pmax = md.getValue(MDL_AVGPMAX, md.firstObject())
+                    mdIters.setValue(labels[i], pmax, objId)
+            fn = self.getFilename('all_avgPmax_xmipp')
+            mdIters.write(fn)
+            self.display2D(fn)                    
+            #self.display2D(fn, extraParams)
+            xplotter = XmippPlotter()
+            xplotter.createSubPlot("Avg PMax per Iterations", "Iterations", "Avg PMax")
+            for label, color in zip(labels, colors):
+                xplotter.plotMd(mdIters, MDL_ITER, label, color)
+            xplotter.showLegend(self._getPrefixes())
+            xplotter.show()
 
-    def _visualizeDisplayReconstruction(self): 
-            volumeKeys = self._getVolumeKeys()
-                
-            for ref3d in self._visualizeRef3Ds:
-                for it in self._visualizeIterations:
-                  for volKey in volumeKeys:
-                    self.display3D(self.getFilename(volKey, iter=it, ref3d=ref3d , workingDir=self.WorkingDir))
-            
-            if self.relionType=='refine' and iterations[-1]==self.NumberOfIterations:
-                self.display3D(self.getFilename('volumeFinal',ref3d=1, workingDir=self.WorkingDir))
                 
 def convertRelionMetadata(log, inputs,
                           outputs,
@@ -745,10 +733,6 @@ def convertRelionMetadata(log, inputs,
         objId = mdOut.addObject()
         mdOut.setValue(MDL_IMAGE, lastIterationVolumeFn, objId)
     mdOut.write(standardOutputVolumeFn)
-#    if NumberOfClasses >1:
-#        mdOut.clear()
-#        mdOut = imagesAssignedToClass(inputMetadatas)
-#        mdOut.write(imagesAssignedToClassFn)
 
 def convertRelionBinaryData(log, inputs,outputs):
     """Make sure mrc files are volumes properlly defined"""
@@ -756,17 +740,8 @@ def convertRelionBinaryData(log, inputs,outputs):
     for i,o in zip(inputs,outputs):
         args = "-i %s -o %s  --type vol"%(i,o)
         runJob(log, program, args )
-        
-def renameOutput(log, WorkingDir, ProgId):
-    ''' Remove ml2d prefix from:
-        ml2dclasses.stk, ml2dclasses.xmd and ml2dimages.xmd'''
-    prefix = '%s2d' % ProgId
-    for f in ['%sclasses.stk', '%sclasses.xmd', '%simages.xmd']:
-        f = join(WorkingDir, f % prefix)
-        nf = f.replace(prefix, '')
-        moveFile(log, f, nf)
 
-def runNormalizeRelion(log,inputMd,outputMd,normType,bgRadius,Nproc,):
+def runNormalizeRelion(log, inputMd, outputMd, normType, bgRadius, Nproc,):
     stack = inputMd
     if exists(outputMd):
         os.remove(outputMd)
@@ -783,6 +758,7 @@ def runNormalizeRelion(log,inputMd,outputMd,normType,bgRadius,Nproc,):
         args += "--method NewXmipp --background circle %(bgRadius)d"
     else:
         args += "--method Ramp --background circle %(bgRadius)d"
+        
     runJob(log, program, args % locals(), Nproc)
 
 def convertImagesMd(log, inputMd, outputRelion):
@@ -802,10 +778,12 @@ def convertImagesMd(log, inputMd, outputRelion):
     if md.containsLabel(MDL_CTF_MODEL):
         md.fillExpand(MDL_CTF_MODEL)
     # Create the mapping between relion labels and xmipp labels
-    exportMdToRelion(md, outputRelion)
+    addRelionLabels(True, True)
+    md.write(outputRelion)
+    #exportMdToRelion(md, outputRelion)
 
 def getIteration(fileName):
-   return int (re.findall(r'_it\d+_',fileName)[0][3:6])
+   return int(re.findall(r'_it\d+_',fileName)[0][3:6])
 
 def getClass(fileName):
-   return int (re.findall(r'_class\d+',fileName)[0][6:9])
+   return int(re.findall(r'_class\d+',fileName)[0][6:9])

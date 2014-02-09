@@ -21,8 +21,8 @@ from protlib_filesystem import xmippExists, findAcquisitionInfo, moveFile, \
 from protocol_ml2d import lastIteration
 from protlib_filesystem import createLink
 
-from protlib_relion import ProtRelionBase, runNormalizeRelion, convertImagesMd, renameOutput, \
-                                 convertRelionBinaryData, convertRelionMetadata, getIteration
+from protlib_relion import ProtRelionBase, runNormalizeRelion, convertImagesMd, \
+                                 convertRelionMetadata, getIteration
 
 class ProtRelionClassifier(ProtRelionBase):
     
@@ -104,21 +104,7 @@ class ProtRelionClassifier(ProtRelionBase):
         ProtRelionBase.defineSteps2(self, firstIteration
                                         , lastIteration
                                         , self.NumberOfClasses)
-    ##########################TEST HERE
-    def createFilenameTemplates(self):
-        myDict=ProtRelionBase.createFilenameTemplates(self)        
-        #myDict['volume']=self.extraIter + "class%(ref3d)03d.spi"
-        #myDict['volumeMRC']=self.extraIter + "class%(ref3d)03d.mrc:mrc"
-        myDict['volume']=self.extraIter + "class%(ref3d)03d.mrc:mrc"
-        
-        self.relionFiles += ['model']
-        #relionFiles=['data','model','optimiser','sampling']
-        for v in self.relionFiles:
-            myDict[v+'Re']=self.extraIter + v +'.star'
-            myDict[v+'Xm']=self.extraIter + v +'.xmd'
-        #myDict['imagesAssignedToClass']='model_classes@'+myDict[v+'Xm']
-        return myDict
-
+    
     def insertRelionClassify(self):
         args = {'--iter': self.NumberOfIterations,
                 '--tau2_fudge': self.RegularisationParamT,
@@ -186,15 +172,8 @@ class ProtRelionClassifier(ProtRelionBase):
         # Join in a single line all key, value pairs of the args dict    
         params = ' '.join(['%s %s' % (k, str(v)) for k, v in args.iteritems()])
         params += ' ' + self.AdditionalArguments
-        verifyFiles=[]
-        #relionFiles=['data','model','optimiser','sampling']
-        for v in self.relionFiles:
-             verifyFiles += [self.getFilename(v+'Re', iter=self.NumberOfIterations )]
-#        f = open('/tmp/myfile','w')
-#        for item in verifyFiles:
-#            f.write("%s\n" % item)
-#        f.close
-        self.insertRunJobStep(self.program, params,verifyFiles)
+
+        self.insertRunJobStep(self.program, params, self._getIterFiles(self.NumberOfIterations))
 
     def insertRelionClassifyContinue(self):
         args = {
@@ -228,16 +207,39 @@ class ProtRelionClassifier(ProtRelionBase):
         # Join in a single line all key, value pairs of the args dict    
         params = ' '.join(['%s %s' % (k, str(v)) for k, v in args.iteritems()])
         params += ' ' + self.AdditionalArguments
-        verifyFiles=[]
-        #relionFiles=['data','model','optimiser','sampling']
-        for v in self.relionFiles:
-             verifyFiles += [self.getFilename(v+'Re', iter=self.NumberOfIterations, workingDir=self.WorkingDir )]
-        self.insertRunJobStep(self.program, params,verifyFiles)
-        #############self.insertRunJobStep('echo shortcut', params,verifyFiles)
+
+        self.insertRunJobStep(self.program, params, self._getIterFiles(self.NumberOfIterations))
         
-    def _getVolumeKeys(self):
-        """ Return the volumes key names. """
-        return ['volume']
+
+    def _getPrefixes(self):
+        """ This should be redefined in refine protocol. """
+        return [''] 
 
     def _getChangeLabels(self):
         return [MDL_AVG_CHANGES_ORIENTATIONS, MDL_AVG_CHANGES_OFFSETS, MDL_AVG_CHANGES_CLASSES]  
+
+    def _writeIterAngularDist(self, it):
+        """ Write the angular distribution. Should be overriden in subclasses. """
+        data_angularDist = self.getFilename('angularDist_xmipp', iter=it)    
+        data_classes = self._getIterClasses(it)
+        mdClasses = MetaData('classes@' + data_classes)
+        print "Writing angular distribution to: ", data_angularDist
+        for objId in mdClasses:
+            ref3d = mdClasses.getValue(MDL_REF3D, objId)
+            print "Computing data class %03d" % ref3d
+            mdImages = MetaData(('class%06d_images@' % ref3d) + data_classes)
+            mdDist = MetaData()
+            mdDist.aggregateMdGroupBy(mdImages, AGGR_COUNT, [MDL_ANGLE_ROT, MDL_ANGLE_TILT], MDL_ANGLE_ROT, MDL_WEIGHT)
+            mdDist.setValueCol(MDL_ANGLE_PSI, 0.0)
+            mdDist.write(('class%06d_angularDist@' % ref3d) + data_angularDist, MD_APPEND)
+
+    def _visualizeDisplayImagesClassification(self):
+        """ Read Relion _data.star images file and 
+        generate a new metadata with the Xmipp classification standard:
+        a 'classes' block and a 'class00000?_images' block per class.
+        If the new metadata was already written, it is just shown.
+        """
+        for it in self._visualizeIterations:
+            data_classes = self._getIterClasses(it)
+            self.display2D(data_classes, extraParams='--mode metadata --render first')
+             

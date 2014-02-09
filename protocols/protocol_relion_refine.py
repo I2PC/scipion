@@ -23,8 +23,9 @@ from protlib_filesystem import createLink
 from protlib_gui_figure import XmippPlotter
 from protlib_gui_ext import showWarning, showTable, showError
 
-from protlib_relion import ProtRelionBase, runNormalizeRelion, convertImagesMd, renameOutput, \
-                                 convertRelionBinaryData, convertRelionMetadata, getIteration
+from protlib_relion import ProtRelionBase, runNormalizeRelion, convertImagesMd, \
+                                 convertRelionMetadata, getIteration
+
 
 class ProtRelionRefinner( ProtRelionBase):
     def __init__(self, scriptname, project):
@@ -186,19 +187,8 @@ class ProtRelionRefinner( ProtRelionBase):
         # Join in a single line all key, value pairs of the args dict    
         params = ' '.join(['%s %s' % (k, str(v)) for k, v in args.iteritems()])
         params += ' ' + self.AdditionalArguments
-        verifyFiles=[]
-        #relionFiles=['data','model','optimiser','sampling']
-        #refine does not predefine the number of iterations so no verify is possible
-        #let us check that at least iter 1 is done
-        for v in self.relionFiles:
-             verifyFiles += [self.getFilename(v+'Re', iter=1, workingDir=self.WorkingDir )]
-             #verifyFiles += [self.getFilename(v+'Re', iter=self.NumberOfIterations )]
-#        f = open('/tmp/myfile','w')
-#        for item in verifyFiles:
-#            f.write("%s\n" % item)
-#        f.close
-        self.insertRunJobStep(self.program, params,verifyFiles)
-        ###################self.insertRunJobStep('echo shortcut', params,verifyFiles)
+
+        self.insertRunJobStep(self.program, params, self._getIterFiles())
 
     def insertRelionRefineContinue(self):
         args = {
@@ -221,26 +211,14 @@ class ProtRelionRefinner( ProtRelionBase):
         params = ' '.join(['%s %s' % (k, str(v)) for k, v in args.iteritems()])
         params += ' ' + self.AdditionalArguments
         verifyFiles=[]
-        #relionFiles=['data','model','optimiser','sampling']
-        for v in self.relionFiles:
+        #FileKeys=['data','model','optimiser','sampling']
+        for v in self.FileKeys:
              verifyFiles += [self.getFilename(v+'Re', iter=self.NumberOfIterations, workingDir=self.WorkingDir )]
         self.insertRunJobStep(self.program, params,verifyFiles)
         #############self.insertRunJobStep('echo shortcut', params,verifyFiles)
 
     def createFilenameTemplates(self):
-        myDict=ProtRelionBase.createFilenameTemplates(self)
-        self.relionFiles += ['half1_model','half2_model']
-        #relionFiles=['data','half1_model', 'half2_model','optimiser','sampling']
-        for v in self.relionFiles:
-            myDict[v+'Re']=self.extraIter + v +'.star'
-            myDict[v+'Xm']=self.extraIter + v +'.xmd'
-        #myDict['volumeh1']    = self.extraIter + "half1_class%(ref3d)03d.spi"
-        #myDict['volumeMRCh1'] = self.extraIter + "half1_class%(ref3d)03d.mrc:mrc"
-        myDict['volumeh1'] = self.extraIter + "half1_class%(ref3d)03d.mrc:mrc"
-        
-        #myDict['volumeh2']    = self.extraIter + "half2_class%(ref3d)03d.spi"
-        #myDict['volumeMRCh2'] = self.extraIter + "half2_class%(ref3d)03d.mrc:mrc"
-        myDict['volumeh2'] = self.extraIter + "half2_class%(ref3d)03d.mrc:mrc"
+        myDict = ProtRelionBase.createFilenameTemplates(self)
         
         extra = self.workingDirPath('extra')
         self.extraIter2 = join(extra, 'relion_')
@@ -259,3 +237,23 @@ class ProtRelionRefinner( ProtRelionBase):
  
     def _getChangeLabels(self):
         return [MDL_AVG_CHANGES_ORIENTATIONS, MDL_AVG_CHANGES_OFFSETS]                
+
+    def _getPrefixes(self):
+        return ['half1_', 'half2_']
+    
+    def _writeIterAngularDist(self, it):
+        """ Write the angular distribution. Should be overriden in subclasses. """
+        data_angularDist = self.getFilename('angularDist_xmipp', iter=it)
+        data_star = self.getFilename('data', iter=it)
+        md = MetaData(data_star)
+        
+        for group in [1, 2]:
+            mdGroup = MetaData()
+            mdGroup.importObjects(md, MDValueEQ(MDL_RANDOMSEED, group))
+            mdDist = MetaData()
+            mdDist.aggregateMdGroupBy(mdGroup, AGGR_COUNT, [MDL_ANGLE_ROT, MDL_ANGLE_TILT], MDL_ANGLE_ROT, MDL_WEIGHT)
+            mdDist.setValueCol(MDL_ANGLE_PSI, 0.0)
+            blockName = 'half%d_class%06d_angularDist@' % (group, 1)
+            mdDist.write(blockName + data_angularDist, MD_APPEND)
+          
+        
