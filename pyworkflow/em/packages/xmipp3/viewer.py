@@ -202,7 +202,8 @@ class XmippViewer(Viewer):
         elif issubclass(cls, XmippProtHelicalParameters):
             self.visualize(obj.outputVolume)
         elif issubclass(cls, XmippProtConvertToPseudoAtoms):
-            self.visualize(obj.outputPdb)
+            from protlib_gui_ext import chimera
+            chimera(obj.outputPdb.getFileName())
         else:
             raise Exception('XmippViewer.visualize: can not visualize class: %s' % obj.getClassName())
         
