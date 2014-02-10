@@ -20,8 +20,7 @@ from protlib_filesystem import xmippExists, findAcquisitionInfo, moveFile, \
                                replaceBasenameExt
 from protocol_ml2d import lastIteration
 from protlib_filesystem import createLink
-from protlib_relion import ProtRelionBase, runNormalizeRelion, convertImagesMd, \
-                                 convertRelionMetadata, getIteration
+from protlib_relion import *
 
 
 class ProtRelionClassifier(ProtRelionBase):
@@ -44,8 +43,9 @@ class ProtRelionClassifier(ProtRelionBase):
         
     def _summary(self):
         lastIteration = self.lastIter()
-        lines += ['Performed <%d/%d> iterations ' % (lastIteration,self.NumberOfIterations)]
-        lines += ['Number of classes = <%d>' % self.NumberOfClasses]
+        lines = ['Performed <%d/%d> iterations ' % (lastIteration, self.NumberOfIterations)]
+        lines.append('Number of classes = <%d>' % self.NumberOfClasses)
+        
         return lines
 
     def _summaryContinue(self):
@@ -69,12 +69,6 @@ class ProtRelionClassifier(ProtRelionBase):
                 message += " but by relion refine"
             errors.append(message)
         return errors 
-
-    def defineSteps(self): 
-
-        ProtRelionBase.defineSteps2(self, firstIteration
-                                        , lastIteration
-                                        , self.NumberOfClasses)
     
     def _insertSteps(self):
         args = {'--iter': self.NumberOfIterations,
@@ -117,7 +111,8 @@ class ProtRelionClassifier(ProtRelionBase):
         if self.IgnoreCTFUntilFirstPeak:
             args['--ctf_intact_first_peak'] = ''
             
-        if getattr(self, 'MaskZero', True):
+        MaskZero = getattr(self, 'MaskZero', '')
+        if MaskZero.startswith('Yes'):
             args['--zero_mask'] = ''
             
         args['--sym'] = self.SymmetryGroup.upper()
@@ -181,8 +176,11 @@ class ProtRelionClassifier(ProtRelionBase):
 
         self.insertRunJobStep(self.program, params, self._getIterFiles(self.NumberOfIterations))
 
-    def _getFinalVolumeKey(self):
-        return 'volume'        
+    def _getExtraOutputs(self):
+        return []
+    
+    def _getFinalSuffix(self):
+        return ''       
 
     def _getPrefixes(self):
         """ This should be redefined in refine protocol. """

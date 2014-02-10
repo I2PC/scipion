@@ -194,7 +194,7 @@ DoIntensityCorrection = False
 
 
 #------------------------------------------------------------------------------------------------
-# {condition}(DoContinue) {section} Optimisation
+# {condition}(not DoContinue) {section} Optimisation
 #------------------------------------------------------------------------------------------------
 
 # {wizard}(wizardChooseLowPassFilter) Initial low-pass filter (A): 
@@ -236,8 +236,17 @@ reference structures if no user-provided mask is specified.
 """
 MaskRadiusA = 200
 
-# Mask individual particles with zero?
-MaskZero = True
+# {condition}(DoClassify) {list_combo}(Yes: fill with zeros,No: fill with random noise) Mask individual particles with zero?
+"""
+If set to <Yes>, then in the individual particles, the area outside a circle with the radius 
+of the particle will be set to zeros prior to taking the Fourier transform. 
+This will remove noise and therefore increase sensitivity in the alignment and classification. 
+However, it will also introduce correlations between the Fourier components that are not modelled. 
+When set to <No>, then the solvent area is filled with random noise, which prevents introducing 
+correlations.High-resolution refinements (e.g. in 3D auto-refine) tend to work better when filling 
+the solvent area with random noise, some classifications go better when using zeros.
+"""
+MaskZero = "Yes: fill with zeros"
 
 #  {file} Reference mask (optional)
 """
@@ -368,7 +377,7 @@ DisplayAngularDistribution = "2D plots"
 """ Display signal to noise ratio plots (SSNR) """
 DisplayResolutionPlotsSSNR = False
 
-# {view} Display resolution plots (FSC) ?
+# {condition}(DoClassify) {view} Display resolution plots (FSC) ?
 """Not available for classify"""
 DisplayResolutionPlotsFSC = False
 

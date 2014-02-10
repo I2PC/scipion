@@ -23,8 +23,7 @@ from protlib_filesystem import createLink
 from protlib_gui_figure import XmippPlotter
 from protlib_gui_ext import showWarning, showTable, showError
 
-from protlib_relion import ProtRelionBase, runNormalizeRelion, convertImagesMd, \
-                                 convertRelionMetadata, getIteration
+from protlib_relion import *
 
 
 class ProtRelionRefinner( ProtRelionBase):
@@ -45,23 +44,14 @@ class ProtRelionRefinner( ProtRelionBase):
             except:
                 print "Can not access the parameters from the original relion run"
 
-    def summary(self):
-        if self.DoContinue:
-            return self.summaryRefineContinue()
-        else:
-            return self.summaryRefine()
+    def _summary(self):
+        lastIteration = self.lastIter()
+        return ['Performed <%d> iterations ' % lastIteration]
 
-    def summaryRefine(self):
-        lines = ProtRelionBase.summary(self)
-        lastIteration=self.lastIter()
-        lines += ['Performed <%d> iterations ' % lastIteration]
-        return lines
-
-    def summaryRefineContinue(self):
-        lines = ProtRelionBase.summary(self)
+    def _summaryContinue(self):
         lastIteration = self.lastIter()
         firstIteration = getIteration(self.optimiserFileName)
-        lines += ['Continuation from run: <%s>, iter: <%d>' % (self.PrevRunName, firstIteration)]
+        lines = ['Continuation from run: <%s>, iter: <%d>' % (self.PrevRunName, firstIteration)]
         if (lastIteration - firstIteration) < 0 :
             performedIteration=0
         else:
@@ -88,16 +78,6 @@ class ProtRelionRefinner( ProtRelionBase):
                 message += " but by relion classify"
             errors += [message]
         return errors 
-
-
-    def defineSteps(self):
-
-        extra = self.workingDirPath('extra')
-        ExtraInputs  = [ join(extra,'relion_model.star')] 
-        ExtraOutputs = [ join(extra,'relion_model.xmd')] 
-        ProtRelionBase.defineSteps2(self, firstIteration
-                                        , lastIteration
-                                        , NumberOfClasses,ExtraInputs,ExtraOutputs)
                        
     def _insertSteps(self):
         args = {#'--iter': self.NumberOfIterations,
@@ -108,8 +88,11 @@ class ProtRelionRefinner( ProtRelionBase):
                 '--scale': '',
                 '--o': '%s/relion' % self.ExtraDir
                 }
-        if len(self.ReferenceMask):
-            args['--solvent_mask'] = self.ReferenceMask
+        if getattr(self, 'ReferenceMask', '').strip():
+            args['--solvent_mask'] = self.ReferenceMask.strip()
+            
+        if getattr(self, 'SolventMask', '').strip():
+            args['--solvent_mask2'] = self.SolventMask.strip()
             
         args.update({'--i': self.ImgStar,
                      '--particle_diameter': self.MaskRadiusA*2.,
@@ -166,7 +149,7 @@ class ProtRelionRefinner( ProtRelionBase):
         params = ' '.join(['%s %s' % (k, str(v)) for k, v in args.iteritems()])
         params += ' ' + self.AdditionalArguments
 
-        self.insertRunJobStep(self.program, params, self._getIterFiles())
+        self.insertRunJobStep(self.program, params, self._getIterFiles(iter=1))
 
     def _insertStepsContinue(self):
         args = {
@@ -190,8 +173,8 @@ class ProtRelionRefinner( ProtRelionBase):
         params += ' ' + self.AdditionalArguments
         verifyFiles = []
         #FileKeys=['data','model','optimiser','sampling']
-        for v in self.FileKeys:
-             verifyFiles.append(self.getFilename(v+'Re', iter=self.NumberOfIterations))
+        for key in self.FileKeys:
+             verifyFiles.append(self.getFilename(key, iter=self.NumberOfIterations))
         
         self.insertRunJobStep(self.program, params, verifyFiles)
 
@@ -204,13 +187,20 @@ class ProtRelionRefinner( ProtRelionBase):
         #myDict['volumeMRCFinal']   = self.extraIter2 + "class%(ref3d)03d.mrc:mrc"
         myDict['volume_final'] = self.extraPath("relion_class%(ref3d)03d.mrc:mrc")
         myDict['model_final'] = self.extraPath('relion_model.star')
+        myDict['data_final'] = self.extraPath('relion_data.star')
         myDict['model_final_xmipp'] = self.extraPath("relion_model_xmipp.xmd")
 
         return myDict
  
-    def _getFinalVolumeKey(self):
-        return 'volume_final'
+    def _getFinalSuffix(self):
+        return '_final'
     
+    def _getExtraOutputs(self):
+        #TODO we need extra inputs?
+        ExtraInputs  = [ self.extraPath('relion_model.star')] 
+        ExtraOutputs = [ self.extraPath('relion_model.xmd')]
+        return ExtraOutputs         
+        
     def _getChangeLabels(self):
         return [MDL_AVG_CHANGES_ORIENTATIONS, MDL_AVG_CHANGES_OFFSETS]                
 
