@@ -485,8 +485,10 @@ class XmippProtNMA(EMProtocol):
         if self.structureEM:
             pdb = PdbFile(self._getPath('pseudoatoms.pdb'), pseudoatoms=True)
             self._defineOutputs(outputPdb=pdb)
+            self._defineSourceRelation(self.inputStructure.get(), self.outputPdb)
         modes = NormalModes(filename=self._getPath('modes.xmd'))
         self._defineOutputs(outputModes=modes)
+        self._defineSourceRelation(self.inputStructure.get(), self.outputModes)
 
     def _summary(self):
         summary = []

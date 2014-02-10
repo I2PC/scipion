@@ -44,6 +44,7 @@ from protocol_rotational_spectra import XmippProtRotSpectra
 from protocol_create_mask import XmippProtCreateMask3D
 from protocol_screen_classes import XmippProtScreenClasses
 from protocol_helical_parameters import XmippProtHelicalParameters
+from protocol_convert_to_pseudoatoms import XmippProtConvertToPseudoAtoms
 from convert import writeSetOfMicrographs, writeSetOfParticles, writeSetOfClasses2D, writeSetOfCoordinates, writeSetOfCTFs, locationToXmipp, \
                     writeSetOfClasses3D
 from os.path import dirname, join
@@ -62,7 +63,8 @@ class XmippViewer(Viewer):
                 ProtImportMicrographs, XmippProtPreprocessMicrographs, ProtCTFMicrographs,
                 ProtParticlePicking, ProtImportParticles, XmippProtExtractParticles, ProtUserSubSet,
                 ProtAlign, ProtProcessParticles, XmippProtKerdensom, XmippProtRotSpectra,  XmippProtCreateMask3D,
-                SetOfClasses2D, SetOfCTF, NormalModes, XmippProtScreenClasses, XmippProtHelicalParameters]
+                SetOfClasses2D, SetOfCTF, NormalModes, XmippProtScreenClasses, XmippProtHelicalParameters,
+                XmippProtConvertToPseudoAtoms]
     
     def __init__(self, **args):
         Viewer.__init__(self, **args)
@@ -199,6 +201,9 @@ class XmippViewer(Viewer):
             self.visualize(obj.outputParticles)
         elif issubclass(cls, XmippProtHelicalParameters):
             self.visualize(obj.outputVolume)
+        elif issubclass(cls, XmippProtConvertToPseudoAtoms):
+            from protlib_gui_ext import chimera
+            chimera(obj.outputPdb.getFileName())
         else:
             raise Exception('XmippViewer.visualize: can not visualize class: %s' % obj.getClassName())
         

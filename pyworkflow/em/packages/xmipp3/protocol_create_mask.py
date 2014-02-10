@@ -24,6 +24,7 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
+from pyworkflow.em.packages.xmipp3.convert import locationToXmipp
 """
 This sub-package contains protocols for creating 3D masks.
 """
@@ -60,7 +61,7 @@ class XmippProtCreateMask3D(ProtCreateMask3D,XmippGeometricalMask):
         
         # For volume sources
         isVolume = 'source==%d'%SOURCE_VOLUME
-        form.addParam('volume', PointerParam, pointerClass="SetOfVolumes", label="Input volume",
+        form.addParam('volume', PointerParam, pointerClass="Volume", label="Input volume",
                       condition=isVolume, help="Volume that will serve as basis for the mask")
         form.addParam('volumeOperation',EnumParam,label='Operation',condition=isVolume,
                       default=OPERATION_THRESHOLD,choices=['Threshold','Segment'])
@@ -123,13 +124,14 @@ class XmippProtCreateMask3D(ProtCreateMask3D,XmippGeometricalMask):
         self._insertFunctionStep('createOutput')
     
     def createMaskFromVolumeStep(self):
-        volume=self.volume.get().getFirstItem()
+        volume=self.volume.get()
+        fnVol=locationToXmipp(*volume.getLocation())
         if self.volumeOperation==OPERATION_THRESHOLD:
             self.runJob("xmipp_transform_threshold",
-                        "-i %s -o %s --select below %f --substitute binarize"%(volume.getFileName(),self.maskFile,
+                        "-i %s -o %s --select below %f --substitute binarize"%(fnVol,self.maskFile,
                                                                                self.threshold.get()))
         elif self.volumeOperation==OPERATION_SEGMENT:
-            args="-i %s -o %s --method "%(volume.getFileName(),self.maskFile)
+            args="-i %s -o %s --method "%(fnVol,self.maskFile)
             Ts=volume.getSamplingRate()
             if self.segmentationType==SEGMENTATION_VOXELS:
                 args+="voxel_mass %d"%(self.nvoxels.get())
@@ -274,6 +276,7 @@ class XmippProtCreateMask3D(ProtCreateMask3D,XmippGeometricalMask):
             messages.append("We inverted the mask. ")
         if self.doSmooth.get():
             messages.append("And, we smoothed it (sigma=%f voxels)." % self.sigmaConvolution.get())
-        messages.append('We refer to the output mask as %s.' % self.outputMask.getNameId())
+        if self.hasAttribute('outputMask'):
+            messages.append('We refer to the output mask as %s.' % self.outputMask.getNameId())
         return messages
     
