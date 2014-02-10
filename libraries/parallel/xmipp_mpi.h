@@ -238,7 +238,8 @@ public:\
     {\
         baseClassName::preProcess();\
         MetaData &mdIn = *getInputMd();\
-        mdIn.addItemId(); \
+        mdIn.addLabel(MDL_GATHER_ID);\
+        mdIn.fillLinear(MDL_GATHER_ID,1,1);\
         createTaskDistributor(mdIn, blockSize);\
     }\
     void startProcessing()\
@@ -263,8 +264,8 @@ public:\
     {\
         node->gatherMetadatas(*getOutputMd(), fn_out);\
     	MetaData MDaux; \
-    	MDaux.sort(*getOutputMd(), MDL_ITEM_ID); \
-        MDaux.removeItemId(); \
+    	MDaux.sort(*getOutputMd(), MDL_GATHER_ID); \
+        MDaux.removeLabel(MDL_GATHER_ID); \
         *getOutputMd()=MDaux; \
         if (node->isMaster())\
             baseClassName::finishProcessing();\
