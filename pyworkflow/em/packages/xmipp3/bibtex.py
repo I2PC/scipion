@@ -88,6 +88,15 @@ author = "Jonic, S. and C.O.S. Sorzano and P. Thevenaz and C. El-Bez and S. De C
 keywords = "2D/3D registration, Splines, 3DEM, Angular assignment "
 }
 
+@article{Nogales2013,
+  title={3DEM Loupe: analysis of macromolecular dynamics using structures from electron microscopy},
+  author={Nogales-Cadenas, R. and Jonic, S. and Tama, F. and Arteni, A. A. and Tabas-Madrid, D. and V{\'a}zquez, M. and Pascual-Montano, A. and Sorzano, C. O. S.},
+  journal={Nucleic acids research},
+  year={2013},
+  publisher={Oxford Univ Press},
+  doi='http://dx.doi.org/10.1093/nar/gkt385'
+}
+
 @article{Otsu1979,
 title = "A Threshold Selection Method from Gray-Level Histograms",
 journal = "Systems, Man and Cybernetics, IEEE Transactions",
@@ -97,7 +106,7 @@ pages = "62 - 66",
 year = "1979",
 issn = "0018-9472",
 doi = "http://dx.doi.org/10.1109/TSMC.1979.4310076",
-author = "de la Rosa-Trevín, J.M.  and Otón, J. and R. Marabini and A. Zaldívar and J. Vargas and J.M. Carazo and Sorzano, C.O.S.",
+author = "Otsu, N.",
 }
 
 @incollection{Sorzano2013,
