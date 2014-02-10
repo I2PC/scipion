@@ -122,8 +122,8 @@ class XmippProtConvertToPseudoAtoms(ProtPreprocessVolumes):
 
     def _summary(self):
         summary = []
-        summary.append('Pseudoatom radius: %f'%self.pseudoAtomRadius.get())
-        summary.append('Approximation target: %f'%self.pseudoAtomTarget.get())
+        summary.append('Pseudoatom radius (voxels): %f'%self.pseudoAtomRadius.get())
+        summary.append('Approximation target error (%%): %f'%self.pseudoAtomTarget.get())
         return summary
 
     def _methods(self):
@@ -132,7 +132,7 @@ class XmippProtConvertToPseudoAtoms(ProtPreprocessVolumes):
                        ' of %f%%) [Nogales2013].'%(self.inputStructure.get().getNameId(),
                                      self.pseudoAtomRadius.get()*self.inputStructure.get().getSamplingRate(),
                                      self.pseudoAtomTarget.get()));
-        if self.hasAttribute('outputPDB'):
+        if self.hasAttribute('outputPdb'):
             summary.append('We refer to the pseudoatomic model as %s.'%self.outputPdb.getNameId())
         return summary
         
