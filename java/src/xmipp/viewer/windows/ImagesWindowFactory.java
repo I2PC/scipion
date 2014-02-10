@@ -145,7 +145,7 @@ public class ImagesWindowFactory {
                 
 		XmippIJWindow iw;
 		
-		if (impLoader.isVolume())
+		if (impLoader.isStackOrVolume())
 			iw = (title != null)? new XmippStackWindow(window, impLoader, title): new XmippStackWindow(window, impLoader);
 		else
 			iw = (title != null )? new XmippImageWindow(impLoader, title): new XmippImageWindow(impLoader);

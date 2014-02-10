@@ -6,6 +6,8 @@
 package xmipp.ij.commons;
 
 import ij.ImagePlus;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import xmipp.jni.ImageGeneric;
 
 /**
@@ -103,6 +105,19 @@ public abstract class ImagePlusReader {
     }
 
     public abstract String getName() ;
+
+    boolean isStackOrVolume() {
+        try {
+            if(ig != null)
+                return ig.isStackOrVolume();
+            if (imp != null)
+                return imp.getStackSize() > 1;
+            return false;
+        } catch (Exception ex) {
+            Logger.getLogger(ImagePlusReader.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return false;
+    }
     
    
 
