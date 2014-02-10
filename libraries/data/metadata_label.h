@@ -49,6 +49,7 @@ enum MDLabel
     MDL_UNDEFINED = -1,
     MDL_FIRST_LABEL, ///< The label MDL_OBJID is special and should not be used
     MDL_OBJID = MDL_FIRST_LABEL, ///< object id (int), NOTE: This label is special and shouldn't be used
+    MDL_GATHER_ID, /// Special label to be used when gathering MDs in MpiMetadataPrograms
 
     MDL_ANGLE_PSI, ///< Psi angle of an image (double,degrees)
     MDL_ANGLE_PSI2, ///< Psi angle of an image (double,degrees)
@@ -724,6 +725,8 @@ private:
         ///==== Add labels entries from here in the SAME ORDER as declared in ENUM ==========
         //The label MDL_OBJID is special and should not be used
         MDL::addLabel(MDL_OBJID, LABEL_SIZET, "objId");
+        //The label MDL_GATHER_ID is special and should not be used
+        MDL::addLabel(MDL_GATHER_ID, LABEL_SIZET, "gatherId");
 
         //MDL::addLabel(MDL_ANGLE_COMPARISON, LABEL_VECTOR_DOUBLE, "angle_comparison");
         //MDL::addLabelAlias(MDL_ANGLE_COMPARISON, "angleComparison"); //3.0
