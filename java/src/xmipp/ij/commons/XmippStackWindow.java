@@ -36,12 +36,12 @@ public class XmippStackWindow extends StackWindow implements XmippIJWindow{
 	
 	public XmippStackWindow(ImagePlusLoader ipl)
 	{
-		this(null, ipl, ipl.getFileName());
+		this(null, ipl, ipl.getName());
 	}
 	
 	public XmippStackWindow(Window window, ImagePlusLoader ipl)
 	{
-		this(window, ipl, ipl.getFileName());
+		this(window, ipl, ipl.getName());
 	}
 	
 	public XmippStackWindow(ImagePlusLoader ipl, String title)

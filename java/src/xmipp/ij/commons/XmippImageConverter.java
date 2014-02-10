@@ -198,6 +198,7 @@ public class XmippImageConverter {
 			image.read(fn, width, height);
 		
 		ImagePlus ip = convertToImagePlus(image);
+                
 		image.destroy();
 		return ip;
 	}
@@ -209,7 +210,8 @@ public class XmippImageConverter {
 			image.readApplyGeo(fn, md, objId, wrap);
 		else
 			image.read(fn, true);
-		ImagePlus ip = convertToImagePlus(image);
+		ImagePlus ip = convertToImagePlus(image, ImageGeneric.ALL_IMAGES);
+                System.out.println(ip.getStackSize());
 		image.destroy();
 		return ip;
 	}
