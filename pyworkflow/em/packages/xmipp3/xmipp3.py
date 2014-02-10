@@ -377,30 +377,25 @@ class ProjMatcher():
     
     def projMatchStep(self, volume, angularSampling, symmetryGroup, images, fnAngles, Xdim):
         from pyworkflow.utils.path import cleanPath
-        
-#        Xdim=MetaDataInfo(Images)[0]
-    
         # Generate gallery of projections        
         fnGallery = self._getExtraPath('gallery.stk')
-#        images = "classes@%s" % self.fn
         
-        runJob(None,"xmipp_angular_project_library", "-i %s -o %s --sampling_rate %f --sym %s --method fourier 1 0.25 bspline --compute_neighbors --angular_distance -1 --experimental_images %s"\
-                   % (volume, fnGallery, angularSampling, symmetryGroup, images), self.numberOfMpi.get())
+        self.runJob("xmipp_angular_project_library", "-i %s -o %s --sampling_rate %f --sym %s --method fourier 1 0.25 bspline --compute_neighbors --angular_distance -1 --experimental_images %s"\
+                   % (volume, fnGallery, angularSampling, symmetryGroup, images))
     
         # Assign angles
-        runJob(None,"xmipp_angular_projection_matching", "-i %s -o %s --ref %s --Ri 0 --Ro %s --max_shift 1000 --search5d_shift %s --search5d_step  %s --append"\
-                   % (images, fnAngles, fnGallery, str(Xdim/2), str(int(Xdim/10)), str(int(Xdim/25))), self.numberOfMpi.get())
+        self.runJob("xmipp_angular_projection_matching", "-i %s -o %s --ref %s --Ri 0 --Ro %s --max_shift 1000 --search5d_shift %s --search5d_step  %s --append"\
+                   % (images, fnAngles, fnGallery, str(Xdim/2), str(int(Xdim/10)), str(int(Xdim/25))))
         
         cleanPath(self._getExtraPath('gallery_sampling.xmd'))
         cleanPath(self._getExtraPath('gallery_angles.doc'))
         cleanPath(self._getExtraPath('gallery.doc'))
-        
     
         # Write angles in the original file and sort
         MD=MetaData(fnAngles)
         for id in MD:
-            galleryReference=MD.getValue(MDL_REF,id)
-            MD.setValue(MDL_IMAGE_REF,"%05d@%s"%(galleryReference+1,fnGallery),id)
+            galleryReference = MD.getValue(MDL_REF,id)
+            MD.setValue(MDL_IMAGE_REF, "%05d@%s" % (galleryReference+1,fnGallery), id)
         MD.write(fnAngles)
         
     def produceAlignedImagesStep(self, volumeIsCTFCorrected, fn, images):

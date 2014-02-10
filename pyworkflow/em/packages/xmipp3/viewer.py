@@ -45,6 +45,7 @@ from protocol_create_mask import XmippProtCreateMask3D
 from protocol_screen_classes import XmippProtScreenClasses
 from protocol_helical_parameters import XmippProtHelicalParameters
 from protocol_convert_to_pseudoatoms import XmippProtConvertToPseudoAtoms
+from protocol_identify_outliers import XmippProtIdentifyOutliers
 from convert import writeSetOfMicrographs, writeSetOfParticles, writeSetOfClasses2D, writeSetOfCoordinates, writeSetOfCTFs, locationToXmipp, \
                     writeSetOfClasses3D
 from os.path import dirname, join
@@ -64,7 +65,7 @@ class XmippViewer(Viewer):
                 ProtParticlePicking, ProtImportParticles, XmippProtExtractParticles, ProtUserSubSet,
                 ProtAlign, ProtProcessParticles, XmippProtKerdensom, XmippProtRotSpectra,  XmippProtCreateMask3D,
                 SetOfClasses2D, SetOfCTF, NormalModes, XmippProtScreenClasses, XmippProtHelicalParameters,
-                XmippProtConvertToPseudoAtoms]
+                XmippProtConvertToPseudoAtoms, XmippProtIdentifyOutliers]
     
     def __init__(self, **args):
         Viewer.__init__(self, **args)
@@ -187,8 +188,10 @@ class XmippViewer(Viewer):
             self.visualize(obj.outputClasses, extraParams='--mode rotspectra --columns %d' % obj.SomXdim.get())
         elif issubclass(cls, XmippProtScreenClasses):
             runShowJ(obj.getVisualizeInfo().get(), extraParams=' --mode metadata --render first')
+        elif issubclass(cls, XmippProtIdentifyOutliers):
+            runShowJ(obj.getVisualizeInfo().get(), extraParams=' --mode metadata --render first')
 # TODO: We have to develop a showj analyze tool for classes so we can select classes or images associated to them
-#        Airem this is your good shit
+#        Airen this is your good shit
 #            runScipionShowJ(obj.getVisualizeInfo(), "Set Of Classes", obj.inputClasses.get(), 
 #                            extraParams=' --mode metadata --render first')
         elif issubclass(cls, XmippProtCreateMask3D):

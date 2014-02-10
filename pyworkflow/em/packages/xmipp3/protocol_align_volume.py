@@ -23,8 +23,7 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
-from pyworkflow.em.packages.xmipp3.convert import locationToXmipp,\
-    writeSetOfVolumes
+from pyworkflow.em.packages.xmipp3.convert import locationToXmipp, writeSetOfVolumes
 """
 This sub-package contains the  protocol
 """

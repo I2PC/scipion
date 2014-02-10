@@ -742,7 +742,7 @@ class ProtocolsView(tk.Frame):
             firstViewer.project = self.project
             firstViewer.visualize(prot, windows=self.windows)
         else:
-            self.windows.showError(Message.NO_VIEWER_FOUND +"*%s*" % prot.getClassName())
+            self.windows.showError(Message.NO_VIEWER_FOUND +" *%s* " % prot.getClassName())
         
     def _analyzeResultsClicked(self, e=None):
         """ this method should be called when button "Analyze results" is called. """
