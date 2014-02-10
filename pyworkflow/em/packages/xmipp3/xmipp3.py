@@ -30,7 +30,7 @@ This sub-package will contains Xmipp3.0 specific protocols
 
 import os
 import xmipp
-
+from collections import OrderedDict
 from constants import *
 import pyworkflow.dataset as ds
 
@@ -75,8 +75,6 @@ class XmippProtocol():
         If not, it will be inputAttr.getFileName()
         """
         inputAttr = getattr(self, inputName)
-        print "inputAttr.getClassName()", inputAttr.getClassName()
-        print "xmippClass", xmippClass
         if not isinstance(inputAttr, xmippClass):
             self._insertFunctionStep('convertInputToXmipp', inputName, xmippClass, resultFn)
             return resultFn
@@ -109,7 +107,7 @@ class XmippMdRow():
     for classes that maps to a MetaData row like XmippImage, XmippMicrograph..etc. 
     """
     def __init__(self):
-        self._labelDict = {} # Dictionary containing labels and values
+        self._labelDict = OrderedDict() # Dictionary containing labels and values
     
     def hasLabel(self, label):
         return label in self._labelDict
@@ -137,11 +135,23 @@ class XmippMdRow():
                 value = str(value)
             md.setValue(label, value, objId)
             
+    def readFromFile(self, fn):
+        md = xmipp.MetaData(fn)
+        self.readFromMd(md, md.firstObject())
+        
+    def copyFromRow(self, other):
+        for label, value in other._labelDict.iteritems():
+            self.setValue(label, value)
+            
     def __str__(self):
         s = '{'
         for k, v in self._labelDict.iteritems():
-            s += '%s: %s, ' % (xmipp.label2Str(k), v)
+            s += '  %s = %s\n' % (xmipp.label2Str(k), v)
         return s + '}'
+            
+    def printDict(self):
+        """ Fancy printing of the row, mainly for debugging. """
+        print str(self)
     
     
 def findRow(md, label, value):
@@ -318,7 +328,6 @@ class XmippDataSet(ds.DataSet):
     def writeTable(self, tableName, table):
         """ Write changes made to a table. """
         md = self._convertTableToMd(table)
-        print "dondecarajo","%s@%s" % (tableName, self._filename)
         md.write("%s@%s" % (tableName, self._filename), xmipp.MD_APPEND)
 
         
