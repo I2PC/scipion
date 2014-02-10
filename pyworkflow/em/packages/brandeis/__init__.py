@@ -28,6 +28,8 @@ This sub-package contains data and protocol classes
 wrapping Grigrorieff Lab programs at Brandeis
 """
 
+_logo = "brandeis_logo.png"
+
 from brandeis import *
 
 from viewer import FrealignViewer
