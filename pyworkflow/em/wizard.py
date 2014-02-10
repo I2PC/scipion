@@ -253,7 +253,7 @@ class gaussianWizard(filterParticlesWizard):
     
     @classmethod    
     def getView(self):
-        return "wiz_gaussian"   
+        return "wiz_particle_gaussian"   
     
 
 #--------------- Dialogs used by Wizards --------------------------
@@ -433,7 +433,7 @@ class ctfDialog(downsampleDialog):
     
     def _createRightPreview(self, rightFrame):
         from pyworkflow.gui.matplotlib_image import PsdPreview  
-        return  PsdPreview(rightFrame, 1.2*self.dim, self.lf, self.hf, label=self.rightPreviewLabel)
+        return PsdPreview(rightFrame, 1.2*self.dim, self.lf, self.hf, label=self.rightPreviewLabel)
 
     def _createControls(self, frame):
         self.freqFrame = ttk.LabelFrame(frame, text="Frequencies", padding="5 5 5 5")
@@ -469,7 +469,8 @@ class bandPassFilterDialog(downsampleDialog):
         self.rightImage = ImageHandler()._img
 
     def _createControls(self, frame):
-        self.freqFrame = ttk.LabelFrame(frame, text="Frequencies ("+self.unit+")", padding="5 5 5 5")
+        self.freqFrame = ttk.LabelFrame(frame, text="Frequencies ("+self.unit+")", 
+                                        padding="5 5 5 5")
         self.freqFrame.grid(row=0, column=0)
         
         self.showLowFreq = getattr(self, 'showLowFreq', True)
@@ -527,6 +528,7 @@ class bandPassFilterDialog(downsampleDialog):
     def getLowFreq(self):
         if self.showLowFreq:
             if self.unit == UNIT_ANGSTROM:
+                print "Slider value:",self.lfSlider.get()
                 return 1/self.lfSlider.get()*self.itemDim
             else:    
                 return self.lfSlider.get()

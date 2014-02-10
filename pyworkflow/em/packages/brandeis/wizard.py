@@ -76,8 +76,6 @@ class FrealignBandpassWizard(bandpassParticleWizard):
 class FrealignVolBandpassWizard(bandpassVolumesWizard):
     _targets = [(ProtFrealign, ['resolution'])]
     
-    
-    
     def show(self, form):
         protocol = form.protocol
         provider = self._getProvider(protocol)
@@ -86,21 +84,25 @@ class FrealignVolBandpassWizard(bandpassVolumesWizard):
             self.mode = FILTER_LOW_PASS_NO_DECAY
             
             args = {'mode':  self.mode,                   
-                    'highFreq': protocol.highResolRefine.get(),
-                    'lowFreq': protocol.lowResolRefine.get(),
+                    'lowFreq': protocol.resolution.get(),
                     'unit': UNIT_ANGSTROM
                     }
             
+            args['showHighFreq'] = False
             args['showDecay'] = False
 
             d = bandPassFilterDialog(form.root, provider, **args)
             
-            if d.resultYes():               
+            if d.resultYes():
+#                print "SAMPLING RATE !!", d.samplingRate
+#                print "ITEM DIM !!", d.itemDim
 #                1/self.hfSlider.get()*self.itemDim 
                 
-                form.setVar('highResolRefine', 1/d.getHighFreq()*d.itemDim)
-                form.setVar('lowResolRefine', 1/d.getLowFreq()*d.itemDim)
+                form.setVar('resolution', 1/d.getLowFreq()*d.itemDim)
                 
         else:
-            dialog.showWarning("Input particles", "Select particles first", form.root)
-
+            dialog.showWarning("Input volumes", "Select volumes first", form.root)  
+    
+    @classmethod    
+    def getView(self):
+        return "wiz_volume_bandpass"   

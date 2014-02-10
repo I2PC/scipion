@@ -61,13 +61,7 @@ class RelionBandpassWizard(filterParticlesWizard):
             d = bandPassFilterDialog(form.root, provider, **args)
             
             if d.resultYes():
-                print "SAMPLING RATE !!", d.samplingRate
-                print "ITEM DIM !!", d.itemDim
-               
-#                1/self.hfSlider.get()*self.itemDim 
-                
                 form.setVar('iniLowPassFilter', 1/d.getHighFreq()*d.itemDim)
-                
         else:
             dialog.showWarning("Input particles", "Select particles first", form.root)  
     
