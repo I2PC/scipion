@@ -170,4 +170,8 @@ public class ImagePlusLoader {
         this.allowsGeometry = allowsGeometry;
     }
 
+    public boolean isStackOrVolume() {
+        return impreader.isStackOrVolume();
+    }
+
 }
