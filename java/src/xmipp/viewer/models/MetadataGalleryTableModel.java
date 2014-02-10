@@ -263,12 +263,10 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel
 		{
 			if (data.isImageFile(renderLabel))
 			{
-				// new XmippImageWindow(data.window, new
-				// MdRowImageLoader(getIndex(row, col),
-				// renderLabel.getLabel()));
-				ImagePlusLoader loader = new MdRowImageLoader(getIndex(row, col), renderLabel.getLabel());
-				ImagesWindowFactory.openXmippImageWindow(data.window, loader, loader.allowsPoll());
-				return true;
+                            int index = getIndex(row, col);
+                            String file = getImageFilename(index, renderLabel.getLabel());
+                            openXmippImageWindow(file);
+                            return true;
 			}
 		}
 		catch (Exception e)
@@ -277,6 +275,16 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel
 		}
 		return false;
 	}// function handleDoubleClick
+        
+        protected void openXmippImageWindow(String file)
+        {
+                boolean allowsGeometry = data.md.containsGeometryInfo();
+                ImagePlusLoader loader = new ImagePlusLoader(file, allowsGeometry, data.useGeo, data.wrap);
+                
+                if (getNormalized())
+                    loader.setNormalize(normalize_min, normalize_max);
+                ImagesWindowFactory.openXmippImageWindow(data.window, loader, loader.allowsPoll());
+        }
 
 	@Override
 	protected double[] getMinAndMax()
@@ -325,38 +333,17 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel
 	}// function handleRightClick
 
 	// Extension of the ImagePlusLoader, read an image from a Metadata row
-	public class MdRowImageLoader extends ImagePlusLoader
-	{
-		long objId;
-
-		public MdRowImageLoader(int index, int label)
-		{
-			super(getImageFilename(index, label));
-			allowsGeometry = data.md.containsGeometryInfo();
-			useGeometry = data.useGeo;
-
-			wrap = data.wrap;
-			objId = data.ids[index];
-			
-		}
-
-		@Override
-		protected ImagePlus loadSingleImageFromFile() throws Exception
-		{
-			return XmippImageConverter.readMdRowToImagePlus(fileName, data.md, objId, useGeometry, wrap);
-		}
-
-	}// class MetadataImageLoader
+	
 
 	// Extension of the ImagePlusLoader, read an entire metadata as an ImagePlus
 	public class MetadataImageLoader extends ImagePlusLoader
 	{
 		int label;
 
-		public MetadataImageLoader(int label)
+		public MetadataImageLoader(int label) throws Exception
 		{
 
-			super(data.getFileName());
+			super(XmippImageConverter.readMetadataToImagePlus(label, data.md, data.useGeo, data.wrap));
 
 			allowsGeometry = data.md.containsGeometryInfo();
 			useGeometry = data.useGeo;
@@ -365,17 +352,7 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel
 			
 		}
 
-		@Override
-		protected ImagePlus loadSingleImageFromFile() throws Exception
-		{
-			return XmippImageConverter.readMetadataToImagePlus(label, data.md, data.useGeo, data.wrap);
-		}
-
-		@Override
-		public boolean isVolume()
-		{
-			return false;
-		}
+		
 
 	}// class MetadataImageLoader
 
