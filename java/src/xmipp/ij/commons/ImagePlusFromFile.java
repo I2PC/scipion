@@ -27,15 +27,7 @@ public class ImagePlusFromFile extends ImagePlusReader{
                 throw new IllegalArgumentException("empty file");
             this.fileName = fileName;
             this.modified = new File(fileName).lastModified();
-            if (Filename.isVolume(fileName))
-                try
-                {
-                        ig = new ImageGeneric(fileName);
-                }
-                catch (Exception e)
-                {
-                        throw new IllegalArgumentException(e.getMessage());
-                }
+            
         }
         
         public ImagePlusFromFile(String fileName, ImagePlus imp, ImageGeneric ig)
@@ -56,14 +48,28 @@ public class ImagePlusFromFile extends ImagePlusReader{
 			if (ig == null || hasChanged())
                         {
                             ig = new ImageGeneric(fileName);//to read again file
-                            
+                            if(index == -1)
+                                imp = XmippImageConverter.readToImagePlus(ig);
+                            else 
+                            {
+                                if(ig.isStack())
+                                    imp = XmippImageConverter.readToImagePlus(ig, index);
+                                else
+                                    imp = XmippImageConverter.readToImagePlus(ig, (int)index);//read slice
+                            }
                         }
-                        if(index == -1)
-                            imp = XmippImageConverter.readToImagePlus(ig);
-                        else
+                        else if(ig != null)
                         {
-                             
-                             imp = XmippImageConverter.readToImagePlus(ig, index);//reading 
+                            
+                             if(index == -1)
+                                imp = XmippImageConverter.convertToImagePlus(ig);
+                            else 
+                             {
+                                 if(ig.isStack())
+                                    imp = XmippImageConverter.convertToImagePlus(ig, ImageGeneric.FIRST_IMAGE, (int)index);
+                                else
+                                    imp = XmippImageConverter.convertToImagePlus(ig, ImageGeneric.FIRST_IMAGE, (int)index);//read slice
+                             }
                         }
                             
                         

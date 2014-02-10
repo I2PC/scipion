@@ -28,32 +28,7 @@ public class ImagePlusNotFromFile extends ImagePlusReader{
         return false;
     }
 
-    @Override
-   public ImagePlus loadImagePlus()
-    {
-            imp = null;
-            try
-            {
-                    if (ig != null)
-                    {
-                            if (index != -1)
-                                    imp = XmippImageConverter.convertToImagePlus(ig, index);
-                            else
-                                    imp = XmippImageConverter.convertToImagePlus(ig);
-                    }
-                    if(normalize)
-                    {
-                            imp.getProcessor().setMinAndMax(normalize_min, normalize_max);
-                            imp.updateImage();
-                    }
-                    return imp;
-            }
-            catch (Exception e)
-            {
-                    e.printStackTrace();
-            }
-            return imp;
-    }
+
 
     @Override
     public String getName() {

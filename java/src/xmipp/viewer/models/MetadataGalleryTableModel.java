@@ -317,7 +317,8 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel
 	{
 		try
 		{
-			return new MetadataImageLoader(renderLabel.getLabel());
+                    ImagePlus imp = XmippImageConverter.readMetadataToImagePlus(renderLabel.getLabel(), data.md, data.useGeo, data.wrap);
+                    return new ImagePlusLoader(imp);
 		}
 		catch (Exception e)
 		{
@@ -335,25 +336,5 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel
 	// Extension of the ImagePlusLoader, read an image from a Metadata row
 	
 
-	// Extension of the ImagePlusLoader, read an entire metadata as an ImagePlus
-	public class MetadataImageLoader extends ImagePlusLoader
-	{
-		int label;
-
-		public MetadataImageLoader(int label) throws Exception
-		{
-
-			super(XmippImageConverter.readMetadataToImagePlus(label, data.md, data.useGeo, data.wrap));
-
-			allowsGeometry = data.md.containsGeometryInfo();
-			useGeometry = data.useGeo;
-			wrap = data.wrap;
-			this.label = label;
-			
-		}
-
-		
-
-	}// class MetadataImageLoader
 
 }
