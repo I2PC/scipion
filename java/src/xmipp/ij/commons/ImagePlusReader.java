@@ -35,7 +35,41 @@ public abstract class ImagePlusReader {
         return imp;
     }
 
-    public abstract ImagePlus loadImagePlus();
+    public ImagePlus loadImagePlus()
+    {
+		imp = null;
+		try
+		{
+			if(ig != null)
+                        {
+                            
+                             if(index == -1)
+                                imp = XmippImageConverter.convertToImagePlus(ig);
+                            else 
+                             {
+                                 if(ig.isStack())
+                                    imp = XmippImageConverter.convertToImagePlus(ig, ImageGeneric.FIRST_IMAGE, (int)index);
+                                else
+                                    imp = XmippImageConverter.convertToImagePlus(ig, ImageGeneric.FIRST_IMAGE, (int)index);//read slice
+                             }
+                        }
+                            
+                        
+			
+			if(normalize)
+			{
+				imp.getProcessor().setMinAndMax(normalize_min, normalize_max);
+				imp.updateImage();
+			}
+			return imp;
+		}
+		catch (Exception e)
+		{
+			e.printStackTrace();
+		}
+		return imp;
+	
+    }
     
     public void setNormalize(double normalize_min, double normalize_max)
     {
@@ -69,5 +103,7 @@ public abstract class ImagePlusReader {
     }
 
     public abstract String getName() ;
+    
+   
 
 }
