@@ -37,9 +37,9 @@ public class ImagePlusNotFromFile extends ImagePlusReader{
                     if (ig != null)
                     {
                             if (index != -1)
-                                    imp = XmippImageConverter.convertToImagePlus(ig, ImageGeneric.FIRST_IMAGE, index);
+                                    imp = XmippImageConverter.convertToImagePlus(ig, index);
                             else
-                                    imp = XmippImageConverter.readToImagePlus(ig);
+                                    imp = XmippImageConverter.convertToImagePlus(ig);
                     }
                     if(normalize)
                     {
