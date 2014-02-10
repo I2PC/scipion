@@ -108,7 +108,6 @@ class ProtRelionBase(XmippProtocol):
 
     def firstIter(self):
         fileNameTemplate = self.getFilename('data', iter=0)
-        print "fileNameTemplate", fileNameTemplate
         fileNameTemplate = fileNameTemplate.replace('000','???')
         a = sorted(glob(fileNameTemplate))[0]
         if not a:
@@ -651,7 +650,7 @@ class ProtRelionBase(XmippProtocol):
     def _visualizeTableChange(self): 
             mdIters = MetaData()
             labels = self._getChangeLabels()
-            iterations = range(1, self._visualizeLastIteration+1)
+            iterations = range(self.firstIter(), self._visualizeLastIteration+1)
             addRelionLabels()
             
             print " Computing average changes in offset, angles, and class membership"
@@ -682,7 +681,7 @@ class ProtRelionBase(XmippProtocol):
     def _visualizeAvgPMAX(self):         
             addRelionLabels()            
             mdIters = MetaData()
-            iterations = range(1, self._visualizeLastIteration+1)
+            iterations = range(self.firstIter(), self._visualizeLastIteration+1)
             labels = [MDL_AVGPMAX, MDL_PMAX]
             colors = ['g', 'b']
             
@@ -705,67 +704,6 @@ class ProtRelionBase(XmippProtocol):
             xplotter.showLegend(self._getPrefixes())
             xplotter.show(True)
 
-                
-def convertRelionMetadata(log, inputs,
-                          outputs,
-                          lastIterationVolumeFns,
-                          lastIterationMetadata,
-                          NumberOfClasses,
-                          standardOutputClassFns,
-                          standardOutputImageFn,
-                          standardOutputVolumeFn,
-                          extraDir,
-                          inputMetadatas
-                          #,imagesAssignedToClassFn
-                          ):
-    """ Convert the relion style MetaData to one ready for xmipp.
-    Main differences are: STAR labels are named different and
-    optimiser.star -> changes in orientation, offset. number images assigned to each class
-    data.star -> loglikelihood (per image) may be used to delete worst images (10%)
-                 orientation.shift per particle
-    model.star:average_P_max (plot per iteration)
-               block: model_classes
-                  class distribution, number of particles per class
-                  estimated error in orientation and translation
-               block: model_class_N: 
-                    resolution-dependent SNR: report resol where it drops below 1? (not that important?)
-                                    (only in auto-refine) Gold-std FSC: make plot!
-    """
-    for i in glob(join(extraDir,"relion*star")):
-        o = replaceFilenameExt(i,'.xmd')
-        exportReliontoMetadataFile(i,o)
-    #create images. xmd and class metadata
-    #lastIteration = self.NumberOfIterations
-    #this images cames from relion
-    md = MetaData(lastIterationMetadata)
-    #total number Image
-    numberImages = md.size()
-
-
-    #total number volumes 
-    comment = " numberImages=%d..................................................... " % numberImages
-    comment += " numberRef3D=%d........................................................." % NumberOfClasses
-    md.setComment(comment)
-    md.write(standardOutputImageFn)
-    #data_images_ref3d000001
-    mdOut = MetaData()
-    mdOut.setComment(comment)
-    f = FileName(standardOutputClassFns[0])
-    f = f.removeBlockName()
-    if exists(f):
-        os.remove(f)
-    #TODO: write classes block?
-    for i in range (1, NumberOfClasses+1):
-        mdOut.clear()
-        mdOut.importObjects(md, MDValueEQ(MDL_REF3D, i+1))
-        mdOut.write(standardOutputClassFns[i],MD_APPEND)
-        
-    #volume.xmd, metada with volumes
-    mdOut.clear()
-    for lastIterationVolumeFn in lastIterationVolumeFns:
-        objId = mdOut.addObject()
-        mdOut.setValue(MDL_IMAGE, lastIterationVolumeFn, objId)
-    mdOut.write(standardOutputVolumeFn)
     
     
 def produceXmippOutputs(log, inputDataStar, outputImages, outputClasses, outputVolumes, 
@@ -775,7 +713,7 @@ def produceXmippOutputs(log, inputDataStar, outputImages, outputClasses, outputV
         inputDataStar: the filename of the last data.star images file.
         outputImages: the filename to write the images as expected by xmipp.
         outputClasses: the filename to write the classes and images as expected by xmipp.
-        outputVolumes: write a list of produced volumes.
+        outputVolumes: filename to write a list of produced volumes.
     """
     addRelionLabels()
     # Write output images
@@ -794,6 +732,7 @@ def produceXmippOutputs(log, inputDataStar, outputImages, outputClasses, outputV
         volFn = inputDataStar.replace('data.star', 'class001.mrc')
         md.clear()
         md.setValue(MDL_IMAGE, volFn, md.addObject())
+        md.write('volumes@' + outputVolumes)
     
 
 def convertRelionBinaryData(log, inputs,outputs):

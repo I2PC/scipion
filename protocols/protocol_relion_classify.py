@@ -51,13 +51,13 @@ class ProtRelionClassifier(ProtRelionBase):
     def _summaryContinue(self):
         lastIteration = self.lastIter()
         firstIteration = getIteration(self.optimiserFileName)
-        lines += ['Continuation from run: <%s>, iter: <%d>' % (self.PrevRunName, firstIteration)]
+        lines = ['Continuation from run: <%s>, iter: <%d>' % (self.PrevRunName, firstIteration)]
         if (lastIteration - firstIteration) < 0 :
-            performedIteration=0
+            performedIteration = 0
         else:
-            performedIteration=lastIteration - firstIteration
-        lines += ['Performed <%d> iterations (number estimated from the files in working directory)' % performedIteration ]
-        lines += ['Input fileName = <%s>'%self.optimiserFileName]
+            performedIteration = lastIteration - firstIteration
+        lines.append('Performed <%d> iterations (number estimated from the files in working directory)' % performedIteration) 
+        lines.append('Input fileName = <%s>'%self.optimiserFileName)
         return lines
     
     def _validateContinue(self):

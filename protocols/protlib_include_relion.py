@@ -377,7 +377,7 @@ DisplayAngularDistribution = "2D plots"
 """ Display signal to noise ratio plots (SSNR) """
 DisplayResolutionPlotsSSNR = False
 
-# {condition}(DoClassify) {view} Display resolution plots (FSC) ?
+# {condition}(not DoClassify) {view} Display resolution plots (FSC) ?
 """Not available for classify"""
 DisplayResolutionPlotsFSC = False
 

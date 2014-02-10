@@ -56,8 +56,8 @@ class ProtRelionRefinner( ProtRelionBase):
             performedIteration=0
         else:
             performedIteration=lastIteration - firstIteration
-        lines += ['Performed <%d> iterations (number estimated from the files in working directory)' % performedIteration ]
-        lines += ['Input fileName = <%s>'%self.optimiserFileName]
+        lines.append('Performed <%d> iterations (number estimated from the files in working directory)' % performedIteration)
+        lines.append('Input fileName = <%s>'%self.optimiserFileName)
         return lines
 
     def papers(self):
@@ -66,7 +66,7 @@ class ProtRelionRefinner( ProtRelionBase):
     def validate(self):
         errors = ProtRelionBase.validate(self)
         if self.NumberOfMpi < 3:
-            errors.append('''relion refine requires at least 3 mpi proesses to compute golden standard''')
+            errors.append('relion refine requires at least 3 mpi proesses to compute golden standard')
         return errors 
     
     def _validateContinue(self):
@@ -149,7 +149,7 @@ class ProtRelionRefinner( ProtRelionBase):
         params = ' '.join(['%s %s' % (k, str(v)) for k, v in args.iteritems()])
         params += ' ' + self.AdditionalArguments
 
-        self.insertRunJobStep(self.program, params, self._getIterFiles(iter=1))
+        self.insertRunJobStep(self.program, params, self._getVerifyFiles())
 
     def _insertStepsContinue(self):
         args = {
@@ -171,12 +171,8 @@ class ProtRelionRefinner( ProtRelionBase):
         # Join in a single line all key, value pairs of the args dict    
         params = ' '.join(['%s %s' % (k, str(v)) for k, v in args.iteritems()])
         params += ' ' + self.AdditionalArguments
-        verifyFiles = []
-        #FileKeys=['data','model','optimiser','sampling']
-        for key in self.FileKeys:
-             verifyFiles.append(self.getFilename(key, iter=self.NumberOfIterations))
         
-        self.insertRunJobStep(self.program, params, verifyFiles)
+        self.insertRunJobStep(self.program, params, self._getVerifyFiles())
 
     def createFilenameTemplates(self):
         myDict = ProtRelionBase.createFilenameTemplates(self)
@@ -192,6 +188,10 @@ class ProtRelionRefinner( ProtRelionBase):
 
         return myDict
  
+    def _getVerifyFiles(self):
+        """ Return the final files that should be produced. """
+        return [self.getFilename(k + '_final', ref3d=1) for k in ['volume', 'data', 'model']]
+            
     def _getFinalSuffix(self):
         return '_final'
     
