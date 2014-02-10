@@ -106,6 +106,8 @@ def locationToXmipp(index, filename):
     
     return filename
 
+def getImageLocation(image):
+    return locationToXmipp(*image.getLocation())
 
 def xmippToLocation(xmippFilename):
     """ Return a location (index, filename) given
