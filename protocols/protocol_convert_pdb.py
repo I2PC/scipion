@@ -52,7 +52,7 @@ def createAcquisition(log,WorkingDir,Ts):
     md.write(os.path.join(WorkingDir,"acquisition_info.xmd"))
 
 def convertFromPDB(log,InModel,WorkingDir,Ts,Size,CenterPDB):
-    args="-i %s -o %s/volume"%(InModel,WorkingDir)
+    args="-i %s -o %s/volume --sampling %f"%(InModel,WorkingDir,Ts)
     if CenterPDB:
         args+=" --centerPDB"
     if Size>0:
