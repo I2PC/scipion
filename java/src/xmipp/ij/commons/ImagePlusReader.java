@@ -21,7 +21,7 @@ public abstract class ImagePlusReader {
     
     protected long modified;
     
-    protected int index = -1;
+    protected long index = -1;
     protected boolean normalize;
     protected double normalize_min;
     protected double normalize_max;

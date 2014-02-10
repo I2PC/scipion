@@ -103,6 +103,8 @@ public class ImagePlusFromFile extends ImagePlusReader{
 
     @Override
     public String getName() {
+        if(index != -1)
+            return String.format("%d@%s", index, fileName);
         return fileName;
     }
         
