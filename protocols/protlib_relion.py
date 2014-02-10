@@ -72,8 +72,23 @@ class ProtRelionBase(XmippProtocol):
 
         return myDict
 
+    def _summary(self):
+        """ Should be overriden in subclasses to 
+        return summary message for NORMAL EXECUTION. 
+        """
+        pass
+    
+    def _summaryContinue(self):
+        """ Should be overriden in subclasses to
+        return summary messages for CONTINUE EXECUTION.
+        """
+        pass
+    
     def summary(self):
-        return ["Wrapper implemented for RELION **1.2**"]
+        if self.DoContinue:
+            return self._summaryContinue()
+        return self._summary()
+        #return ["Wrapper implemented for RELION **1.2**"]
 
     def papers(self):
         papers = ['Bayesian view: Scheres, JMB (2012) [http://www.ncbi.nlm.nih.gov/pubmed/22100448]',
@@ -126,12 +141,22 @@ class ProtRelionBase(XmippProtocol):
             else:
                 validateInputSize([inputValue], self.ImgMd, md, errors, inputLabel)
             
+    def _validate(self):
+        """ Should be overriden in subclasses to 
+        return summary message for NORMAL EXECUTION. 
+        """
+        return []
+    
+    def _validateContinue(self):
+        """ Should be overriden in subclasses to
+        return summary messages for CONTINUE EXECUTION.
+        """
+        return []
+               
     def validate(self):
         errors = []
         md = MetaData()
-        print "reading md"
         md.read(self.ImgMd, 1) # Read only the first object in md
-        print "done"
         
         if md.containsLabel(MDL_IMAGE):
             self._validateInputSize('Ref3D', 'Reference volume', True, md, errors)
@@ -149,11 +174,19 @@ class ProtRelionBase(XmippProtocol):
         if len(which('relion_movie_handler')) == 0:
             errors.append('''program "relion_movie_handler" is missing. 
                              Are you sure you have relion version 1.2?.''') 
+        
+        if self.DoContinue:
+            errors += self._validateContinue()
+        else:
+            errors += self._validate()
+            
         return errors 
+    
+    
     
     def defineSteps(self): 
         #temporary normalized files
-        images_xmd = join(self.ExtraDir, 'norRelion.xmd')
+        images_xmd = join(self.ExtraDir, 'images.xmd')
         #create extra output directory
         self.insertStep('createDir', verifyfiles=[self.ExtraDir], path=self.ExtraDir)
         self.insertStep("linkAcquisitionInfo", InputFile=self.ImgMd, dirDest=self.WorkingDir) 
@@ -180,48 +213,48 @@ class ProtRelionBase(XmippProtocol):
                         outputRelion=self.ImgStar                            
                         )
         
-    def defineSteps2(self, firstIteration
-                         , lastIteration
-                         , NumberOfClasses
-                         , ExtraInputs=None
-                         , ExtraOutputs=None):
-        verifyFiles=[]
-        inputs=[]
+        if self.DoContinue:
+            self._insertStepsContinue()
+            firstIteration = getIteration(self.optimiserFileName)
+        else:
+            self._insertSteps()
+            firstIteration = 1
+            
+        self.defineSteps2(firstIteration, self.NumberOfIterations, self.NumberOfClasses)
+        
+    def defineSteps2(self, firstIteration, lastIteration, NumberOfClasses):
+        verifyFiles = []
         for i in range (firstIteration, lastIteration+1):
             for v in self.FileKeys:
                  verifyFiles += [self.getFilename(v+'Xm', iter=i, workingDir=self.WorkingDir )]
-#            for v in self.FileKeys:
-#                 inputs += [self.getFilename(v+'Re', iter=i )]
         if not ExtraOutputs is None:
-#            inputs      += ExtraInputs
             verifyFiles += ExtraOutputs
         #data to store in Working dir so it can be easily accessed by users
-        lastIterationVolumeFns = []
+        lastIterVolFns = []
         standardOutputClassFns = []
-        for ref3d in range (1,NumberOfClasses+1):
-            try:
-                lastIterationVolumeFns += [self.getFilename('volume', iter=lastIteration, ref3d=ref3d, workingDir=self.WorkingDir )]
-            except:
-                lastIterationVolumeFns += [self.getFilename('volumeFinal', iter=lastIteration, ref3d=ref3d, workingDir=self.WorkingDir )]
-            
-            standardOutputClassFns += ["images_ref3d%06d@"%ref3d + self.workingDirPath("classes_ref3D.xmd")]
-        lastIterationMetadata = "images@"+self.getFilename('data'+'Xm', iter=lastIteration, workingDir=self.WorkingDir )
+        classesFn = "images_ref3d%06d@" + self.workingDirPath("classes_ref3D.xmd")
+        finalVolKey = self._getFinalVolumeKey()
         
-        extra = self.workingDirPath('extra')
+        for ref3d in range (1, NumberOfClasses+1):
+            lastIterVolFns.append(self.getFilename(finalVolKey, iter=lastIteration, ref3d=ref3d))
+            standardOutputClassFns.append(classesFn % ref3d)
+        
+        lastIterationMetadata = "images@"+self.getFilename('data'+'Xm', iter=lastIteration)
+        
         inputMetadatas = []
-        for it in range (firstIteration,self.NumberOfIterations+1): #always list all iterations
-            inputMetadatas += ["images@"+self.getFilename('data'+'Xm', iter=it, workingDir=self.WorkingDir )]
+        for it in range (firstIteration, self.NumberOfIterations+1): #always list all iterations
+            inputMetadatas.append("images@"+self.getFilename('data'+'Xm', iter=it))
 
         self.insertStep('convertRelionMetadata', verifyfiles=verifyFiles,
                         inputs  = inputs,
                         outputs = verifyFiles,
-                        lastIterationVolumeFns = lastIterationVolumeFns,
+                        lastIterationVolumeFns = lastIterVolFns,
                         lastIterationMetadata  = lastIterationMetadata,
                         NumberOfClasses        = NumberOfClasses,
                         standardOutputClassFns = standardOutputClassFns,
                         standardOutputImageFn  = "images@" + self.workingDirPath("images.xmd"),
                         standardOutputVolumeFn = "volumes@" + self.workingDirPath("volumes.xmd"),
-                        extraDir=extra,
+                        extraDir=self.ExtraDir,
                         inputMetadatas=inputMetadatas
                         )
 #Do NOT change relion binary files, let us use MRC
@@ -777,10 +810,11 @@ def convertImagesMd(log, inputMd, outputRelion):
     # ctfparam files and put values in the row
     if md.containsLabel(MDL_CTF_MODEL):
         md.fillExpand(MDL_CTF_MODEL)
+    #md.dropColumn(MDL_CTF_MODEL)
     # Create the mapping between relion labels and xmipp labels
-    addRelionLabels(True, True)
-    md.write(outputRelion)
-    #exportMdToRelion(md, outputRelion)
+    #addRelionLabels(True, True)
+    #md.write(outputRelion)
+    exportMdToRelion(md, outputRelion)
 
 def getIteration(fileName):
    return int(re.findall(r'_it\d+_',fileName)[0][3:6])
