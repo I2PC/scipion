@@ -29,7 +29,6 @@ This module contains the protocol to obtain a refined 3D recontruction from a se
 
 from pyworkflow.em import *
 from pyworkflow.utils import *
-from pyworkflow.utils.which import which
 import brandeis
 from data import *
 from constants import *
