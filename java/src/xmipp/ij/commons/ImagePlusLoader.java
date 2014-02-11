@@ -21,7 +21,7 @@
  *
  * All comments concerning this program package may be sent to the e-mail
  * address 'xmipp@cnb.csic.es'
- **************************************************************************
+ * *************************************************************************
  */
 package xmipp.ij.commons;
 
@@ -53,41 +53,41 @@ public class ImagePlusLoader {
 
     }
 
-    public ImagePlusLoader(String fileName)
-    {
+    public ImagePlusLoader(String fileName) {
         this(fileName, null, null);
     }
-    
-    public ImagePlusLoader(String fileName, boolean allowsGeometry, boolean useGeometry, boolean wrap)
-    {
+
+    public ImagePlusLoader(String fileName, boolean allowsGeometry, boolean useGeometry, boolean wrap) {
         this(fileName, null, null);
         this.allowsGeometry = allowsGeometry;
         this.useGeometry = useGeometry;
         this.wrap = wrap;
     }
-            
-            
+
     public ImagePlusLoader(String fileName, ImagePlus imp, ImageGeneric ig) {
-        if (fileName == null || fileName.equals("")) {
-            throw new IllegalArgumentException("File not found");
-        }
+
         int index = -1;
-        if (fileName.contains("@")) {
-            int arrobaindex = fileName.lastIndexOf("@");
-            String header = fileName.substring(0, arrobaindex);
-            
-            int sepindex = header.lastIndexOf(File.separator);//-1 if separator does not exists
-            String textindex = fileName.substring(sepindex + 1, arrobaindex);
-            index = Integer.parseInt(textindex);
-            fileName = fileName.substring(arrobaindex + 1);
-            if(sepindex != -1)
-                fileName = Filename.join(header.replace(textindex + "@", ""), fileName);
+        if (fileName != null) {
+            if (fileName != null && fileName.contains("@")) {
+                int arrobaindex = fileName.lastIndexOf("@");
+                String header = fileName.substring(0, arrobaindex);
+
+                int sepindex = header.lastIndexOf(File.separator);//-1 if separator does not exists
+                String textindex = fileName.substring(sepindex + 1, arrobaindex);
+                index = Integer.parseInt(textindex);
+                fileName = fileName.substring(arrobaindex + 1);
+                if (sepindex != -1) {
+                    fileName = Filename.join(header.replace(textindex + "@", ""), fileName);
+                }
+            }
+
+            existsfile = new File(fileName).exists();
         }
-        if (!new File(fileName).exists()) {
-            throw new IllegalArgumentException("File not found " + fileName);
-        }
-        existsfile = true;
-        impreader = new ImagePlusFromFile(fileName, imp, ig);
+        if (existsfile) 
+            impreader = new ImagePlusFromFile(fileName, imp, ig);
+        else 
+            impreader = new ImagePlusNotFromFile(imp, ig);
+        
         impreader.setIndex(index);
 
     }
@@ -150,7 +150,6 @@ public class ImagePlusLoader {
     }
 
     public String getName() {
-        
         return impreader.getName();
     }
 
