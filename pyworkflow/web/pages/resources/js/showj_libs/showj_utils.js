@@ -90,6 +90,28 @@
  ******************************************************************************/
 
  /** METHODS ******************************************************************/
+
+function loadTemplateMode(mode){
+	alert("changing mode");
+	
+	if (mode=="table"){
+		template="/showj_table/"
+	}
+	else if (mode=="gallery"){
+		template="/showj_gallery/"
+	}
+	
+	$(function() {
+		$.ajax({
+			url : template,
+			success : function(data) {
+					$('div#content_view').html(data);
+				}
+		});		
+	});
+}
+
+
 function reloadImages(forceRecallServer){
 	$.waypoints('destroy')
 	initializeImageLoad(forceRecallServer)
@@ -161,7 +183,7 @@ function initializeColRowModeEvents(mode){
 			else{
 				/* Set section div width automatically */
 				updateMainContainerDim($("#id_cols").val())
-			}
+			}gallery
 			
 			/* Display rows & cols menu */
 			$("#colsSubSectionMenu, #rowsSubSectionMenu").show()

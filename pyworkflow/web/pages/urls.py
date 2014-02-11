@@ -76,6 +76,9 @@ urlpatterns = patterns('',
     url(r'^visualize_object/$', 'app.views_showj.visualizeObject'),
     url(r'^visualize_volume/$', 'app.views_showj.visualizeVolume'),
     
+    url(r'^showj_gallery/', 'app.views_showj.showj_gallery'), #Load showj web gallery
+    url(r'^showj_table/', 'app.views_showj.showj_table'), #Load showj web table
+    
     #TESTING
     url(r'^testingSSH/', 'app.views_showj.testingSSH'), #Load web
 )

@@ -186,7 +186,9 @@ def showj(request, inputParameters=None, extraParameters=None):
     elif inputParameters['mode']=='gallery' or inputParameters['mode']=='table' or inputParameters['mode']=='column':
             context.update({"showj_alt_js": os.path.join(settings.STATIC_URL, "js/showj_libs/", 'showj_' + inputParameters['mode'] + '_utils.js')})
     
-    return_page = 'showj/%s%s%s' % ('showj_', showjForm.data['mode'], '.html')
+#    return_page = 'showj/%s%s%s' % ('showj_', showjForm.data['mode'], '.html')
+    return_page = 'showj/showj_base.html'
+    
     return render_to_response(return_page, RequestContext(request, context))
 
 
@@ -277,7 +279,7 @@ def save_showj_table(request):
             element_split = key.rsplit('___')
             if len(element_split)!=2: 
                 print "this fails and sth has to be done"
-            
+            showj_table
             #NAPA de LUXE ahora mismo se realiza una conversion a int pero habria que ver de que tipo de datos se trata 
             #tableLayoutConfiguration.columnsLayout[element_split[0]].typeOfColumn
 
@@ -437,3 +439,17 @@ def testingSSH(request):
     context = {}
 #    return render_to_response("testing_ssh.html", RequestContext(request, context))
     return render_to_response("scipion.html", RequestContext(request, context))
+
+
+def showj_gallery(request):
+    context = {}
+    
+    return render_to_response('showj_gallery.html', RequestContext(request, context))
+
+
+def showj_table(request):
+    context = {}
+    
+    return render_to_response('showj_table.html', RequestContext(request, context))
+
+
