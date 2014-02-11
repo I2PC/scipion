@@ -25,16 +25,18 @@
 # **************************************************************************
 #from pyworkflow.em.packages.xmipp3.convert import locationToXmipp,\
 #    writeSetOfVolumes
-from pyworkflow.em.packages.xmipp3.convert import createXmippInputImages
+from pyworkflow.em.packages.xmipp3.convert import locationToXmipp, createXmippInputImages
+
 """
 This sub-package contains the protocol projection outliers
 """
 from pyworkflow.em import *  
 from xmipp3 import ProjMatcher
+from pyworkflow.utils.path import cleanPath
 
 class XmippProtIdentifyOutliers(ProtClassify3D, ProjMatcher):
     """ Protocol for screening a number of classes comparing them to a volume. """
-    _label = 'Identify Outliers'
+    _label = 'identify outliers'
     
     def __init__(self, **args):
         ProtClassify3D.__init__(self, **args)
@@ -46,8 +48,8 @@ class XmippProtIdentifyOutliers(ProtClassify3D, ProjMatcher):
               help='Select the input iamges from the project.'
                    'It should be a SetOfParticles class') 
         form.addParam('inputVolume', PointerParam, label="Volume to compare images to", important=True, 
-#              pointerClass='Volume',
-              pointerClass='SetOfVolumes',
+              pointerClass='Volume',
+#              pointerClass='SetOfVolumes',
               help='Provide a volume against which images will be compared'
                    'It should be a Volume class')
         form.addParam('volumeIsCTFCorrected', BooleanParam, label="Volume has been corrected by CTF", default=False,
@@ -62,117 +64,63 @@ class XmippProtIdentifyOutliers(ProtClassify3D, ProjMatcher):
          
         form.addParallelSection(mpi=8)
         
-        
     def _insertAllSteps(self):
-        
-        
-        
-         # Projection matching
+        # Projection matching
         self.fnAngles = self._getTmpPath('angles.xmd')
 #        self.images = locationToXmipp(*self.inputImages.get().getLocation())
         self.images = createXmippInputImages(self, self.inputImages.get())
-        print "taka", self.images
-
-        self._insertFunctionStep("projMatchStep", self.Volume)        
+        
+        self._insertFunctionStep("projMatchStep", locationToXmipp(*self.inputVolume.get().getLocation()), self.angularSampling.get(), self.symmetryGroup.get(),\
+                                 self.images, self.fnAngles, self.Xdim)        
 
         # Prepare output
-        fnOutputImages=self._getPath('images.xmd')
-        self.insertRunJobStep("xmipp_metadata_utilities","-i %s --set join %s -o %s" % (self.fnAngles, self.images, fnOutputImages), numberOfMpi=1)
+        self.fnOutputImages = self._getPath('images.xmd')
+        self.visualizeInfoOutput = String(self.fnOutputImages)
+        self._insertRunJobStep("xmipp_metadata_utilities","-i %s --set join %s -o %s" %
+                                (self.fnAngles, self.images, self.fnOutputImages), numberOfMpi=1)
         
         # Produce difference images
-        fnDiff=self._getExtraPath("diff.stk")
-        fnAligned=self._getExtraPath("images_aligned.xmd")
-        self._insertFunctionStep("produceAlignedImages", fnIn=fnOutputImages, fnOut=fnAligned, 
-                        volumeIsCTFCorrected=self.VolumeIsCTFCorrected)
+        fnDiff = self._getExtraPath("diff.stk")
+        fnAligned = self._getExtraPath("images_aligned.xmd")
+        self._insertFunctionStep("produceAlignedImagesStep", self.volumeIsCTFCorrected.get(),\
+                                 fnAligned, self.fnOutputImages)
         
         # Evaluate each image
-        fnAutoCorrelations=self.extraPath("autocorrelations.xmd")
-        self.insertRunJobStep("xmipp_image_residuals", "-i %s -o %s --save_metadata_stack %s"%
-                              (fnDiff,self.extraPath("autocorrelations.stk"),fnAutoCorrelations),
-                              [fnAutoCorrelations],NumberOfMpi=1)
-        self.insertRunJobStep("xmipp_metadata_utilities", "-i %s --set merge %s"%(fnAligned,fnAutoCorrelations),NumberOfMpi=1)
-        self.insertStep("deleteFile",filename=fnAutoCorrelations)
+        fnAutoCorrelations = self._getExtraPath("autocorrelations.xmd")
+        self._insertRunJobStep("xmipp_image_residuals", "-i %s -o %s --save_metadata_stack %s" %
+                              (fnDiff, self._getExtraPath("autocorrelations.stk"), fnAutoCorrelations),
+                              [fnAutoCorrelations], numberOfMpi=1)
+        self._insertRunJobStep("xmipp_metadata_utilities", "-i %s --set merge %s" % 
+                               (fnAligned,fnAutoCorrelations), numberOfMpi=1)
+        
+        cleanPath(fnAutoCorrelations)
 
         # Prepare output
-        self.insertRunJobStep("xmipp_metadata_utilities","-i %s --set join %s"%(fnOutputImages,fnAligned),NumberOfMpi=1)
-        self.insertRunJobStep("xmipp_metadata_utilities","-i %s --operate sort zScoreResCov desc"%fnOutputImages,NumberOfMpi=1)  
-
+        self._insertRunJobStep("xmipp_metadata_utilities", "-i %s --set join %s" % 
+                               (self.fnOutputImages, fnAligned), numberOfMpi=1)
+        self._insertRunJobStep("xmipp_metadata_utilities", "-i %s --operate sort zScoreResCov desc" % 
+                               self.fnOutputImages, numberOfMpi=1)  
             
-        self._insertFunctionStep('createOutputStep', prerequisites=alignSteps)
-        
-    def _getMaskArgs(self):
-        maskArgs = ''
-        if self.applyMask:
-            if self.maskType.get() == ALIGN_MASK_CIRCULAR:
-                maskArgs+=" --mask circular -%d" % self.maskRadius.get()
-            else:
-                maskArgs+=" --mask binary_file %s" % self.volMask
-        return maskArgs
-    
-    def _getAlignArgs(self):
-        alignArgs = ''
-        if self.alignmentAlgorithm.get() == ALIGN_ALGORITHM_FAST_FOURIER:
-            alignArgs += " --frm"
-        elif self.alignmentAlgorithm.get() == ALIGN_ALGORITHM_LOCAL:
-            alignArgs += " --local --rot %f %f 1 --tilt %f %f 1 --psi %f %f 1 -x %f %f 1 -y %f %f 1 -z %f %f 1 --scale %f %f 0.005" %\
-               (self.initialRotAngle.get(), self.initialRotAngle.get(),\
-                self.initialTiltAngle.get(), self.initialTiltAngle.get(),\
-                self.initialInplaneAngle.get(), self.initialInplaneAngle.get(),\
-                self.initialShiftX.get(), self.initialShiftX.get(),\
-                self.initialShiftY.get(), self.initialShiftY.get(),\
-                self.initialShiftZ.get(),self.initialShiftZ.get(),\
-                self.initialScale.get(), self.initialScale.get())
-        else:
-            alignArgs += " --rot %f %f %f --tilt %f %f %f --psi %f %f %f -x %f %f %f -y %f %f %f -z %f %f %f --scale %f %f %f" %\
-               (self.minRotationalAngle.get(), self.maxRotationalAngle.get(), self.stepRotationalAngle.get(),\
-                self.minTiltAngle.get(), self.maxTiltAngle.get(), self.stepTiltAngle.get(),\
-                self.minInplaneAngle.get(), self.maxInplaneAngle.get(), self.stepInplaneAngle.get(),\
-                self.minimumShiftX.get(), self.maximumShiftX.get(), self.stepShiftX.get(),\
-                self.minimumShiftY.get(), self.maximumShiftY.get(), self.stepShiftY.get(),\
-                self.minimumShiftZ.get(), self.maximumShiftZ.get(), self.stepShiftZ.get(),\
-                self.minimumScale.get(), self.maximumScale.get(), self.stepScale.get())
-               
-        return alignArgs
-        
-    def alignVolumeStep(self, refVolFn, volFn, maskArgs, alignArgs):
-        args = "--i1 %s --i2 %s --apply" % (refVolFn, volFn)
-        args += maskArgs
-        args += alignArgs
-        
-        self.runJob(None, "xmipp_volume_align", args)
-        if self.alignmentAlgorithm.get() == ALIGN_ALGORITHM_EXHAUSTIVE_LOCAL:
-            args = "--i1 %s --i2 %s --apply --local" % (refVolFn, volFn)
-            self.runJob(None, "xmipp_volume_align", args)
-      
-    def createOutputStep(self):
-#        print "summary"
-        volumesSet = self._createSetOfVolumes()
-        readSetOfVolumes(self.alignedMd, volumesSet)
-        volumesSet.copyInfo(self.inputVols)
-        volumesSet.write()
-        
-        self._defineOutputs(outputVolumes=volumesSet)
-        self._defineTransformRelation(self.inputVols, volumesSet)
+    def getVisualizeInfo(self):
+        return self.visualizeInfoOutput
 
     def _summary(self):
         summary = []
-        if not hasattr(self, 'outputVolumes'):
-            summary.append("Output volumes not ready yet.")
-        else:
-            summary.append("Reference volume: [%s] " % self.inputReferenceVolume.get().getFirstItem().getNameId())
-            summary.append("Input volume: [%s] " % self.inputVolumes.get().getNameId())
-            summary.append("Alignment method: %s" % self.alignmentAlgorithm.get())
-                
-            return summary
+        summary.append("Set of particles: [%s] " % self.inputImages.get().getNameId())
+        summary.append("Volume: [%s] " % self.inputVolume.getNameId())
+        summary.append("Symmetry: %s " % self.symmetryGroup.get())
+        summary.append("Volume is CTF corrected: %s " % self.volumeIsCTFCorrected.get())
+        return summary
         
     def validate(self):
+        self.Xdim = self.inputImages.get().getDimensions()[0]
+        volumeXdim = self.inputVolume.get().getDim()[0]
+         
         errors = []
-        (Xdim,Ydim,Zdim,Ndim)=getImageSize(self.Volume)
-        if Xdim!=self.Xdim:
+        if volumeXdim != self.Xdim:
             errors.append("Make sure that the volume and the images have the same size")
         return errors  
         
     def _citations(self):
-        if self.alignmentAlgorithm.get() == ALIGN_ALGORITHM_FAST_FOURIER:
-            return ['Chen2013']
+       return []
             

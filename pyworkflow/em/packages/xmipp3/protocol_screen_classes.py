@@ -49,7 +49,8 @@ class XmippProtScreenClasses(ProtAlignClassify, ProjMatcher):
                       pointerClass='SetOfClasses2D', pointerCondition='hasAverages',
                       help='Provide a set of classes object')
         form.addParam('inputVolume', PointerParam, label="Volume to compare classes to", important=True,
-                      pointerClass='SetOfVolumes',
+#                      pointerClass='SetOfVolumes',
+                      pointerClass='Volume',
                       help='Volume to be used for class comparison')
         form.addParam('symmetryGroup', StringParam, default="c1",
                       label='Symmetry group', 
@@ -68,18 +69,22 @@ class XmippProtScreenClasses(ProtAlignClassify, ProjMatcher):
         self.Xdim = self.inputClasses.get().getDimensions()[0]
         
         #TODO: This should be deleted when inputVolume was set to Volume type
-        self.volume = self.inputVolume.get().getFirstItem()
+        #self.volume = self.inputVolume.get().getFirstItem()
+        self.volume = self.inputVolume.get()
         
         self.fn = createXmippInputClasses2D(self, self.inputClasses.get())
         self.visualizeInfoOutput = String("classes_aligned@%s" % self.fn)  
         
         self.fnAngles = self._getExtraPath('angles.xmd')
         self.images = "classes@%s" % self.fn
-        self._insertFunctionStep("projMatchStep", self.volume.getFileName())
+        self._insertFunctionStep("projMatchStep",\
+                                 self.volume.getFileName(), self.angularSampling.get(),\
+                                 self.symmetryGroup.get(), self.images,\
+                                 self.fnAngles, self.Xdim)
         
         # Reorganize output and produce difference images 
         self._insertRunJobStep("xmipp_metadata_utilities", "-i classes@%s --set join %s --mode append" % (self.fn, self.fnAngles), numberOfMpi=1)
-        self._insertFunctionStep("produceAlignedImagesStep", False)
+        self._insertFunctionStep("produceAlignedImagesStep", False, self.fn, self.images)
         self._insertRunJobStep("xmipp_metadata_utilities", "-i classes_aligned@%s --operate sort maxCC desc --mode append" % (self.fn), numberOfMpi=1)  
                 
     def getVisualizeInfo(self):
