@@ -135,4 +135,7 @@ class XmippProtConvertToPseudoAtoms(ProtPreprocessVolumes):
         if self.hasAttribute('outputPdb'):
             summary.append('We refer to the pseudoatomic model as %s.'%self.outputPdb.getNameId())
         return summary
+
+    def _citations(self):
+        return ['Nogales2013']
         
