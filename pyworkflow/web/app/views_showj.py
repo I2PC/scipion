@@ -142,6 +142,12 @@ def showj(request, inputParameters=None, extraParameters=None):
     if inputParameters['mode']=='volume_astex' or inputParameters['mode']=='volume_chimera':
 
         threshold = (_stats[2] + _stats[3])/2 if _stats != None else 1
+        
+        print "Threshold:", threshold
+        print "stats:",_stats
+        print "minStats:", _stats[2]
+        print "maxStats:", _stats[3]
+        
 #        volPath = os.path.join(request.session['projectPath'], _imageVolName)
         
         context.update({"threshold":threshold,
@@ -495,7 +501,12 @@ def visualizeObject(request):
             fnSet = fn.replace('.xmd', '.sqlite')
             cleanPath(fn, fnSet)
             
+#            t = time()
+#            fnSet = fn.replace('.xmd', str(t) + '.sqlite')
+                
             imgSet = SetOfImages(filename=fnSet)
+#            print "imgSet:",imgSet
+
             img = Image()
             #img.copyInfo(obj)
             img.copyLocation(obj)
