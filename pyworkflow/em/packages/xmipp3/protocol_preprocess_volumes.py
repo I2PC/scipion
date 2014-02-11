@@ -223,7 +223,7 @@ class XmippProtPreprocessVolumes(ProtPreprocessVolumes, XmippProtocol):
 			args = "-i %s -o %s -t vol" % (self.inModel, outModel)
 			self.runJob('xmipp_image_convert', args)
     	else:
-    		vloSet.writeStack(outModel)
+    		volSet.writeStack(outModel)
     		self.singleVolume = False
     
     def windowStep(self, outModel, size):
@@ -293,7 +293,8 @@ class XmippProtPreprocessVolumes(ProtPreprocessVolumes, XmippProtocol):
             volumes = self._createSetOfVolumes()
             volumes.setSamplingRate(samplingRate)
             
-            for i in range(1,self.ndim+1):
+            _, _, _, nDim = self.inputVolumes.get().getDimensions()
+            for i in range(1,nDim+1):
                 vol=Volume()
                 vol.setLocation(i,self.outModel)
                 volumes.append(vol)

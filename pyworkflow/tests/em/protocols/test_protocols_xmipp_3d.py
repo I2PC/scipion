@@ -90,6 +90,38 @@ class TestXmippResolution3D(TestXmippBase):
          
         self.assertIsNotNone(protResol3D._defineFscName(), "There was a problem with fsc")
         self.assertIsNotNone(protResol3D._defineStructFactorName(), "There was a problem with structure factor")
+        
+class TestXmippPreprocessVolumes(TestXmippBase):
+    @classmethod
+    def setUpClass(cls):
+        setupProject(cls)
+        
+#         cls.protImport = cls.runImportParticles(pattern=images, samplingRate=1, checkStack=False)
+#         cls.iniVol = getInputPath('ml3dData', 'icoFiltered.vol')
+    
+    def testCreateMask1(self):
+        print "Import volume"
+        protImportVol1 = ProtImportVolumes(pattern=getInputPath('Test_Resolution_Xmipp', 'volume_1_iter_002.mrc'), samplingRate=9.896)
+        self.proj.launchProtocol(protImportVol1, wait=True)
+
+        print "Import SetOfVolumes"
+        protImportVol2 = ProtImportVolumes(pattern=getInputPath('Test_Resolution_Xmipp', '*.mrc'), samplingRate=9.896)
+        self.proj.launchProtocol(protImportVol2, wait=True)
+    
+        print "Run preprocess a volume"
+        protPreprocessVol1 = XmippProtPreprocessVolumes(doWindow=True, finalSize=300, doRandomize=True)
+        protPreprocessVol1.inputVolumes.set(protImportVol1.outputVolume)
+        self.proj.launchProtocol(protPreprocessVol1, wait=True)        
+         
+        self.assertIsNotNone(protPreprocessVol1.outputVol, "There was a problem with a volume")
+
+        print "Run preprocess a SetOfVolumes"
+        protPreprocessVol2 = XmippProtPreprocessVolumes(doWindow=True, finalSize=128, doFilter=True)
+        protPreprocessVol2.inputVolumes.set(protImportVol2.outputVolumes)
+        self.proj.launchProtocol(protPreprocessVol2, wait=True)        
+         
+        self.assertIsNotNone(protPreprocessVol2.outputVol, "There was a problem with preprocess a SetOfVolumes")
+
 
 if __name__ == "__main__":
     if len(sys.argv) > 1:
