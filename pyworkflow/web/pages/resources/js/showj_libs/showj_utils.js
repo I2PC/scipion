@@ -92,21 +92,28 @@
  /** METHODS ******************************************************************/
 
 function loadTemplateMode(mode){
-	alert("changing mode");
+	alert("changing mode: " + mode);
 	
+	template = "";
 	if (mode=="table"){
-		template="/showj_table/"
+		template= "/showj_table/";
+	} else if (mode=="gallery"){
+		template= "/showj_gallery/";
 	}
-	else if (mode=="gallery"){
-		template="/showj_gallery/"
-	}
+	
+	alert(template);
 	
 	$(function() {
 		$.ajax({
 			url : template,
+			dataType:"text",
 			success : function(data) {
-					$('div#content_view').html(data);
-				}
+				alert(template + " - " + mode);
+				$('div#content_view').html(data);
+			},
+			error: function (){
+				alert("error")
+			}
 		});		
 	});
 }

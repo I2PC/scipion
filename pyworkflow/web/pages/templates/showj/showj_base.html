@@ -178,15 +178,16 @@ function setImageSize(refreshElement){
 {% endblock %}
 
 {% block content %}
-	{% block content_view %}{% endblock %}
 	
+<div id="content_view">
+	{% block content_view %}{% endblock %}
 	{% if form.mode.value == 'table' %}
 		{% include "showj/showj_table.html" %} 
 	{% elif form.mode.value == 'gallery' %}
 		{% include "showj/showj_gallery.html" %} 
 	{% endif %}
-	
-<div id="content_view"></div>
+
+</div>
 
 <!-- Hidden menu for multiple selection tool -->
 <div class="multipleSelectionToolContainer" id="multipleSelectionTool">
