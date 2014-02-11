@@ -82,7 +82,7 @@ class ProtParticlePicking(XmippProtocol):
     def validate(self):
         errors = []
         if not exists(self.Input['micrographs']):
-            errors.append("Cannot find input micrographs: \n   <%s>" % inputMicrographs)
+            errors.append("Cannot find input micrographs: \n   <%s>" % self.Input['micrographs'])
         return errors
     
     def visualize(self):
