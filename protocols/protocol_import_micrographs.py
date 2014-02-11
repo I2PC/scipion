@@ -68,6 +68,9 @@ class ProtImportMicrographs(XmippProtocol):
                             errors.append(micrograph+" seems to be corrupted")
                     except Exception:
                         errors.append(micrograph+" seems to be corrupted")
+        if self.DirMicrographs.startswith('Micrographs'):
+            errors.append('The directory with micrographs should not be called Micrographs because it is used by Xmipp.')
+            errors.append('Suggestion: Call it InputMicrographs')
 
         return errors
 

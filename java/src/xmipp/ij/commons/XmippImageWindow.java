@@ -19,14 +19,14 @@ public class XmippImageWindow extends ImageWindow implements XmippIJWindow
 
 	public XmippImageWindow(ImagePlusLoader ipl)
 	{
-		this(ipl, ipl.getFileName());
+		this(ipl, ipl.getName());
 	}
 
 	public XmippImageWindow(ImagePlusLoader ipl, String title)
 	{
 		super(ipl.getImagePlus(), new XmippImageCanvas(ipl.getImagePlus()));
 		this.ipl = ipl;
-		setTitle(title);
+		imp.setTitle(title);
 		menu = new XmippMenuBar(this);
 		setMenuBar(menu);
 		XmippApplication.addInstance();
