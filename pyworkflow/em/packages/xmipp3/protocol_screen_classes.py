@@ -23,19 +23,20 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
-from pyworkflow.em.packages.xmipp3.convert import createXmippInputClasses2D
+from pyworkflow.em.packages.xmipp3.convert import createXmippInputClasses2D,\
+    createXmippInputVolumes
 """
 This sub-package contains wrapper around Screen Classes Xmipp program
 """
 
 from pyworkflow.em import *  
 import xmipp
-from protlib_projmatch import projMatch,produceAlignedImages
+from xmipp3 import ProjMatcher
+from convert import readSetOfClasses2D   
 
         
-        
-class XmippProtScreenClasses(ProtAlignClassify):
-    """ Protocol to screen a set of classes in the project. """
+class XmippProtScreenClasses(ProtAlignClassify, ProjMatcher):
+    """ Protocol to screen a set of classes in the project using a volume as reference """
     _label = 'screen classes'
     
     def __init__(self, **args):
@@ -48,7 +49,8 @@ class XmippProtScreenClasses(ProtAlignClassify):
                       pointerClass='SetOfClasses2D', pointerCondition='hasAverages',
                       help='Provide a set of classes object')
         form.addParam('inputVolume', PointerParam, label="Volume to compare classes to", important=True,
-                      pointerClass='SetOfVolumes',
+#                      pointerClass='SetOfVolumes',
+                      pointerClass='Volume',
                       help='Volume to be used for class comparison')
         form.addParam('symmetryGroup', StringParam, default="c1",
                       label='Symmetry group', 
@@ -63,50 +65,44 @@ class XmippProtScreenClasses(ProtAlignClassify):
         
     def _insertAllSteps(self):
         """ Mainly prepare the command line for call cl2d program"""
-        
         # Convert input images if necessary
-        self.inputClasses.get().printAll()
-        print "taka",self.inputClasses.get().getDimensions()
         self.Xdim = self.inputClasses.get().getDimensions()[0]
         
         #TODO: This should be deleted when inputVolume was set to Volume type
-        volume= self.inputVolume.get()[0]
+        #self.volume = self.inputVolume.get().getFirstItem()
+        self.volume = self.inputVolume.get()
         
         self.fn = createXmippInputClasses2D(self, self.inputClasses.get())
+        self.visualizeInfoOutput = String("classes_aligned@%s" % self.fn)  
         
-        fnAngles=self._getExtraPath('angles.xmd')
-        self._insertFunctionStep("projMatch",
-                                 Volume=volume, AngularSampling=self.angularSampling.get(), SymmetryGroup=self.symmetryGroup.get(),
-                                 Images="classes@%s"%self.fn, ExtraDir=self._getExtraPath(),
-                                 fnAngles=fnAngles, NumberOfMpi=self.numberOfMpi.get())
+        self.fnAngles = self._getExtraPath('angles.xmd')
+        self.images = "classes@%s" % self.fn
+        self._insertFunctionStep("projMatchStep",\
+                                 self.volume.getFileName(), self.angularSampling.get(),\
+                                 self.symmetryGroup.get(), self.images,\
+                                 self.fnAngles, self.Xdim)
         
         # Reorganize output and produce difference images 
-        self._insertRunJobStep("xmipp_metadata_utilities", "-i classes@%s --set join %s --mode append"%(fnOutputClass,fnAngles), numberOfMpi=1)
-#        self._insertFunctionStep("runJob",programname="xmipp_metadata_utilities", params="-i classes@%s --set join %s --mode append"%(fnOutputClass,fnAngles),NumberOfMpi=1)  
-        
-        self._insertFunctionStep("produceAlignedImages",
-                                 fnIn='classes@'+self.fn, fnOut='classes_aligned@'+self.fn, fnDiff=self._getExtraPath("diff.stk"),
-                                 volumeIsCTFCorrected=False)
-        
-#        self.insertStep("produceAlignedImages",fnIn='classes@'+fnOutputClass, fnOut='classes_aligned@'+fnOutputClass, fnDiff=self.extraPath("diff.stk"),
-#                        volumeIsCTFCorrected=False)
-        self._insertRunJobStep("xmipp_metadata_utilities", "-i classes_aligned@%s --operate sort maxCC desc --mode append"%(fnOutputClass), numberOfMpi=1)  
-   
+        self._insertRunJobStep("xmipp_metadata_utilities", "-i classes@%s --set join %s --mode append" % (self.fn, self.fnAngles), numberOfMpi=1)
+        self._insertFunctionStep("produceAlignedImagesStep", False, self.fn, self.images)
+        self._insertRunJobStep("xmipp_metadata_utilities", "-i classes_aligned@%s --operate sort maxCC desc --mode append" % (self.fn), numberOfMpi=1)  
                 
-        self._insertFunctionStep('createOutput')
-
-
-                        
-    def createOutput(self):
-        print "output"
-
-
+    def getVisualizeInfo(self):
+        return self.visualizeInfoOutput
+     
     def _summary(self):
         summary = []
-        if not hasattr(self, 'outputClasses'):
-            summary.append("Output classes not ready yet.")
-        else:
-            summary.append("Set of classes: [%s] " % self.Classes)
-            summary.append("Volume: [%s] " % self.Volume)
-            summary.append("Symmetry: %s " % self.SymmetryGroup)
+        summary.append("Set of classes: [%s] " % self.inputClasses.get().getNameId())
+        summary.append("Volume: [%s] " % self.inputVolume.getNameId())
+        summary.append("Symmetry: %s " % self.symmetryGroup.get())
         return summary
+    
+    def _methods(self):
+        
+        methods = []
+        methods.append("Set of classes: [%s] " % self.inputClasses.get().getNameId())
+        methods.append("Volume: [%s] " % self.inputVolume.getNameId())
+        methods.append("Symmetry: %s " % self.symmetryGroup.get())       
+        methods.append("angularSampling: %s " % self.angularSampling.get())
+        
+        return methods

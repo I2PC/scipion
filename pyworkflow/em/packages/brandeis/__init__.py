@@ -28,9 +28,11 @@ This sub-package contains data and protocol classes
 wrapping Grigrorieff Lab programs at Brandeis
 """
 
+_logo = "brandeis_logo.png"
+
 from brandeis import *
 
-from viewer_frealign import FrealignViewer
+from viewer import FrealignViewer
 from protocol_ctffind3 import ProtCTFFind
 from protocol_frealign import ProtFrealign
 

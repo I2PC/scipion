@@ -109,7 +109,7 @@ class XmippProtConvertPdb(ProtInitialVolume):
         print "infile: " + _inFile + " outfile: " + _outFile
         program = "xmipp_volume_from_pdb"
         args = '-i %s --sampling %f -o %s ' % (_inFile, self._sampling_rate, _outFile)
-        self.runJob(None, program, args)
+        self.runJob(program, args)
 
     def createOutput(self):
         """ Although is not mandatory, usually is used by the protocol to

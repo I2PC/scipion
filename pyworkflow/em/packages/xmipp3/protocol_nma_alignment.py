@@ -44,9 +44,6 @@ NMA_ALIGNMENT_PROJ = 1
 class XmippProtAlignmentNMA(EMProtocol):
     """ Protocol for flexible angular alignment. """
     _label = 'nma analysis'
-    _references = ["[[http://www.ncbi.nlm.nih.gov/pubmed/15885434][Jonic, et.al, Ultramic (2005)]]",
-                   "[[http://www.ncbi.nlm.nih.gov/pubmed/15099579][Sorzano, et.al, JSB (2004)]]"
-                   ]
     
     def _defineParams(self, form):
         form.addSection(label='Input')
@@ -169,7 +166,7 @@ class XmippProtAlignmentNMA(EMProtocol):
             args += "--projMatch "
     
         print "self.numberOfMpi", self.numberOfMpi
-        self.runJob(None, "xmipp_nma_alignment", args % locals(), self.numberOfMpi.get())
+        self.runJob("xmipp_nma_alignment", args % locals(), self.numberOfMpi.get())
         cleanPath(self._getPath('nmaTodo.xmd'))
     
     def extractDeformationsStep(self, imgFn):
@@ -198,4 +195,7 @@ class XmippProtAlignmentNMA(EMProtocol):
         if not isPower2(xdim):
             errors.append("Image dimension (%s) is not a power of two, consider resize them" % xdim)
         return errors
+    
+    def _citations(self):
+        return ['Jonic2005', 'Sorzano2004b']
     

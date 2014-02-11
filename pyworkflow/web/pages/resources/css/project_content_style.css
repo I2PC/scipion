@@ -191,10 +191,17 @@
 }
 
 #tabs a:hover {
+/* 	color:Firebrick; */
+}
+
+.tabContents a:hover {
 	color:Firebrick;
 }
 
-
+.referenceLink a {
+	color:Firebrick;
+	text-decoration: underline;
+}
 
 /* jsPlumb */
 .window {

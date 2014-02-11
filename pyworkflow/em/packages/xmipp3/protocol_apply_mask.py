@@ -62,7 +62,7 @@ class XmippProtApplyMask3D(ProtPreprocessVolumes,XmippGeometricalMask):
             args+=XmippGeometricalMask.argsForTransformMask(self,Xdim)
         elif self.source.get()==SOURCE_MASK:
             args+="--mask binary_file %s"%self.inputMask.get().getFileName()
-        self.runJob(None,"xmipp_transform_mask",args)
+        self.runJob("xmipp_transform_mask",args)
 
     def createOutput(self):
         maskedVolumes = self._createSetOfVolumes()

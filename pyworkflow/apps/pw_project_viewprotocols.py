@@ -44,7 +44,7 @@ from pyworkflow.protocol import *
 from pyworkflow.protocol.params import *
 from pyworkflow.mapper import SqliteMapper, XmlMapper
 from pyworkflow.project import Project
-from pyworkflow.utils.messages_properties import Message, Icon
+from pyworkflow.utils.properties import Message, Icon, Color
 
 import pyworkflow.gui as gui
 from pyworkflow.gui import getImage
@@ -254,15 +254,16 @@ class RunIOTreeProvider(TreeProvider):
             value = obj.get()
             info = {'key': value, 'text': value, 'values': (''), 'open': True}
         else:
-            image = 'fa-sign-out.png'
+            image = Icon.ACTION_OUT
             parent = self.outputStr
             name = obj.getLastName()
             
             if isinstance(obj, Pointer):
                 obj = obj.get()
-                image = 'fa-sign-in.png'
+                image = Icon.ACTION_IN
                 parent = self.inputStr
-                objName = self.mapper.getFullName(obj)
+#                objName = self.mapper.getFullName(obj)
+                objName = obj.getNameId()
                 name += '   (from %s)' % objName
             info = {'key': obj.getObjId(), 'parent': parent, 'image': image,
                     'text': name, 'values': (str(obj),)}
@@ -313,7 +314,7 @@ class ProtocolsView(tk.Frame):
 
         
         # Protocols Tree Pane        
-        bgColor = '#eaebec'
+        bgColor = Color.LIGHT_GREY_COLOR
         protFrame = tk.Frame(leftFrame, width=300, height=500, bg=bgColor)
         protFrame.grid(row=1, column=0, sticky='news', padx=5, pady=5)
         protFrame.columnconfigure(0, weight=1)
@@ -367,7 +368,7 @@ class ProtocolsView(tk.Frame):
         infoFrame.columnconfigure(0, weight=1)
         infoFrame.rowconfigure(1, weight=1)
         # Create the Analyze results button
-        btnAnalyze = gui.Button(infoFrame, text=Message.LABEL_ANALYZE, fg='white', bg='#7D0709',# font=self.font, 
+        btnAnalyze = gui.Button(infoFrame, text=Message.LABEL_ANALYZE, fg='white', bg=Color.RED_COLOR, # font=self.font, 
                           image=self.getImage(Icon.ACTION_VISUALIZE), compound=tk.LEFT, 
                         activeforeground='white', activebackground='#A60C0C', command=self._analyzeResultsClicked)
         btnAnalyze.grid(row=0, column=0, sticky='ne', padx=15)
@@ -399,12 +400,17 @@ class ProtocolsView(tk.Frame):
         gui.configureWeigths(elogframe)
         self.errorLogText = TaggedText(elogframe, width=40, height=15, bg='white')
         self.errorLogText.grid(row=0, column=0, sticky='news')  
+        slogframe = tk.Frame(tab)
+        gui.configureWeigths(slogframe)
+        self.scipionLogText = TaggedText(slogframe, width=40, height=15, bg='white')
+        self.scipionLogText.grid(row=0, column=0, sticky='news')
         
         tab.add(dframe, text=Message.LABEL_DATA)
         tab.add(sframe, text=Message.LABEL_SUMMARY)   
         tab.add(mframe, text=Message.LABEL_METHODS)
         tab.add(ologframe, text=Message.LABEL_LOGS_OUTPUT)
         tab.add(elogframe, text=Message.LABEL_LOGS_ERROR)
+        tab.add(slogframe, text=Message.LABEL_LOGS_SCIPION)
         tab.grid(row=1, column=0, sticky='news')
         
         v.add(runsFrame, weight=3)
@@ -484,7 +490,7 @@ class ProtocolsView(tk.Frame):
         displayAction(ACTION_DELETE, 2, status != STATUS_RUNNING)     
         displayAction(ACTION_STOP, 4, status == STATUS_RUNNING)
         displayAction(ACTION_CONTINUE, 5, status == STATUS_WAITING_APPROVAL)
-        displayAction(ACTION_RESULTS, 6, status != STATUS_RUNNING)
+#        displayAction(ACTION_RESULTS, 6, status != STATUS_RUNNING)
         
     def createProtocolsTree(self, parent, bgColor):
         """Create the protocols Tree displayed in left panel"""
@@ -497,7 +503,7 @@ class ProtocolsView(tk.Frame):
         combo.grid(row=0, column=1)
         comboFrame.grid(row=0, column=0, padx=5, pady=5, sticky='nw')
         
-        self.style.configure("W.Treeview", background='#eaebec', borderwidth=0)
+        self.style.configure("W.Treeview", background=Color.LIGHT_GREY_COLOR, borderwidth=0)
         tree = Tree(parent, show='tree', style='W.Treeview')
         tree.column('#0', minwidth=300)
         tree.tag_configure('protocol', image=self.getImage('python_file.gif'))
@@ -684,13 +690,16 @@ class ProtocolsView(tk.Frame):
         self.methodText.addText(self.selectedProtocol.methods())
         
     def _fillLogs(self):
-        fOutString, fErrString = self.selectedProtocol.getLogsAsStrings()
+        fOutString, fErrString, fScipionString = self.selectedProtocol.getLogsAsStrings()
         
         self.outputLogText.clear()
         self.outputLogText.addText(fOutString)
         
         self.errorLogText.clear()
         self.errorLogText.addText(fErrString)
+        
+        self.scipionLogText.clear()
+        self.scipionLogText.addText(fScipionString)
         
     def _scheduleRunsUpdate(self, secs=1):
         self.runsTree.after(secs*1000, self.refreshRuns)
@@ -733,7 +742,7 @@ class ProtocolsView(tk.Frame):
             firstViewer.project = self.project
             firstViewer.visualize(prot, windows=self.windows)
         else:
-            self.windows.showError(Message.NO_VIEWER_FOUND +"*%s*" % prot.getClassName())
+            self.windows.showError(Message.NO_VIEWER_FOUND +" *%s* " % prot.getClassName())
         
     def _analyzeResultsClicked(self, e=None):
         """ this method should be called when button "Analyze results" is called. """

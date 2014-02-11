@@ -53,7 +53,7 @@ class Message():
     LABEL_PROJECT = 'Project '
     #-- Protocol Treeview --
     LABEL_WORKFLOW = 'Workflow View: '
-    LABEL_PROTTREE_NONE = 'No athletes.'
+    LABEL_PROTTREE_NONE = 'None'
     #-- Toolbar --
     LABEL_NEW = 'New'
     LABEL_NEW_ACTION = 'New     '
@@ -82,12 +82,15 @@ class Message():
     LABEL_METHODS = 'Methods'
     LABEL_LOGS_OUTPUT = 'Output Log'
     LABEL_LOGS_ERROR = 'Error Log'
+    LABEL_LOGS_SCIPION = 'Scipion Log'
     NO_INFO_SUMMARY = 'No summary information.'
     NO_INFO_METHODS = 'No methods information.'
     NO_INFO_LOGS = 'No logs information'
     NO_SAVE_SETTINGS = 'Error try to save settings.'
     
     # Protocol Form Template
+    TITLE_CITE = 'Cite'
+    TITLE_DOC = 'Help'
     TITLE_NAME_RUN = ' Protocol Run: '
     TITLE_RUN = 'Run'
     TITLE_RUN_NAME = 'Run name'
@@ -237,6 +240,7 @@ class Message():
     ERROR_DIMENSIONS = 'Incorrect table width or height: '
     ERROR_WEBGL = 'Your web browser does not support or is not configured for WebGL. See [[http://get.webgl.org/][WebGL Support]] for more information.'
     
+    
 class Icon():
     # Project Content Template
     RUNS_TREE = 'fa-sitemap.png'
@@ -261,7 +265,21 @@ class Icon():
     
     ACTION_SEARCH = 'fa-search.png'
     ACTION_EXECUTE = 'fa-cogs.png'
-    
+    ACTION_IN = 'fa-sign-in.png'
+    ACTION_OUT = 'fa-sign-out.png'
     #Host template
     BUTTON_CLOSE = 'dialog_close.png'
     BUTTON_SAVE = 'filesave.png'
+
+
+class Color():
+    RED_COLOR = 'Firebrick' # Red color for background label
+    LIGHT_RED_COLOR = '#F3CBCB' # Very light red for row selection
+    LIGHT_BLUE_COLOR = '#EAEBFF' # Very light blue for even rows
+    LIGHT_GREY_COLOR = '#EAEBEC' # Light grey for background color in form, protocol, table header and west container
+    LIGHT_GREY_COLOR_2 = '#F2F2F2' # Very light grey for odd rows, input background, etc
+    DARK_GREY_COLOR = '#6E6E6E' # Very dark grey for project title, tubes, etc
+    
+    
+    
+    

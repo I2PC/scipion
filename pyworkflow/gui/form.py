@@ -46,7 +46,7 @@ from pyworkflow.protocol.params import *
 from pyworkflow.protocol import Protocol
 from dialog import showInfo, TextDialog, ListDialog
 from tree import TreeProvider
-from pyworkflow.utils.messages_properties import Message, Icon
+from pyworkflow.utils.properties import Message, Icon, Color
 
 
 #-------------------- Variables wrappers around more complex objects -----------------------------
@@ -162,7 +162,8 @@ class SubclassesTreeProvider(TreeProvider):
         return [('Object', 400), ('Info', 250)]
     
     def getObjectInfo(self, obj):
-        objName = self.mapper.getFullName(obj)
+#        objName = self.mapper.getFullName(obj)
+        objName = obj.getNameId()
         return {'key': objName, 'values': (str(obj),)}
 
     def getObjectActions(self, obj):
@@ -170,7 +171,7 @@ class SubclassesTreeProvider(TreeProvider):
         from pyworkflow.em import findViewers
         
         if isinstance(obj, Pointer):
-            obj = obj.get()
+            obj = obj.getName()
         actions = []    
         viewers = findViewers(obj.getClassName(), DESKTOP_TKINTER)
         for v in viewers:
@@ -386,7 +387,8 @@ class ParamWidget():
         
         elif t is MultiPointerParam:
 #            listBox = Listbox(content)
-            print "poraki"
+#            print "poraki"
+            pass
         
         elif t is PointerParam or t is RelationParam:
             var = PointerVar()
@@ -573,8 +575,8 @@ class FormWindow(Window):
             btn.bind('<Button-1>', command)
             btn.grid(row=1, column=col, padx=5, sticky='se')
         
-        _addButton('Cite', Icon.ACTION_REFERENCES, self._showReferences, 0)
-        _addButton('Help', Icon.ACTION_HELP, self._showHelp, 1)
+        _addButton(Message.TITLE_CITE, Icon.ACTION_REFERENCES, self._showReferences, 0)
+        _addButton(Message.TITLE_DOC ,Icon.ACTION_HELP, self._showHelp, 1)
         
         if protocol.allowHeader:
             commonFrame = self._createHeaderCommons(headerFrame)
@@ -627,7 +629,7 @@ class FormWindow(Window):
             icon = Icon.ACTION_EXECUTE
         # Add Execute/Visualize button
         if not self.childMode:
-            btnExecute = Button(btnFrame, text=t, fg='white', bg='#7D0709', font=self.font, 
+            btnExecute = Button(btnFrame, text=t, fg='white', bg=Color.RED_COLOR, font=self.font, 
                                 image=self.getImage(icon), compound=tk.LEFT, 
                             activeforeground='white', activebackground='#A60C0C', command=self.execute)
             btnExecute.grid(row=0, column=2, padx=(5, 28), pady=5, sticky='se')

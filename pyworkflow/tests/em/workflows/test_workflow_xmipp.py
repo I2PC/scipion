@@ -437,7 +437,7 @@ class TestXmippWorkflow(TestWorkflow):
 
         # The ML3D test is taking too long now
         # skipping until revision
-        #return 
+        return 
         
         print "ML3D"
         protML3D = XmippProtML3D(angularSampling=15, numberOfIterations=2, runMode=1, numberOfMpi=2, numberOfThreads=2)

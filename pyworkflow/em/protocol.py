@@ -38,7 +38,7 @@ from pyworkflow.protocol.params import *
 from constants import *
 from data import * 
 from pyworkflow.utils.path import removeBaseExt, join, basename, cleanPath
-from pyworkflow.utils.messages_properties import Message, Icon 
+from pyworkflow.utils.properties import Message, Icon 
 
 
 class EMProtocol(Protocol):
@@ -67,6 +67,9 @@ class EMProtocol(Protocol):
 
     def _createSetOfClasses2D(self, suffix=''):
         return self.__createSet(SetOfClasses2D, 'classes2D%s.sqlite', suffix)
+
+    def _createSetOfClasses3D(self, suffix=''):
+        return self.__createSet(SetOfClasses3D, 'classes3D%s.sqlite', suffix)
 
     def _createSetOfVolumes(self, suffix=''):
         return self.__createSet(SetOfVolumes, 'volumes%s.sqlite', suffix)
@@ -111,10 +114,11 @@ class ProtImportImages(EMProtocol):
         filePaths = glob(expandPattern(pattern))
         
         imgSet = self._createSet() 
+        acquisition = imgSet.getAcquisition()
         # Setting Acquisition properties
-        imgSet._acquisition.voltage.set(voltage)
-        imgSet._acquisition.sphericalAberration.set(sphericalAberration)
-        imgSet._acquisition.amplitudeContrast.set(amplitudeContrast)
+        acquisition.setVoltage(voltage)
+        acquisition.setSphericalAberration(sphericalAberration)
+        acquisition.setAmplitudeContrast(amplitudeContrast)
         
         # Call a function that should be implemented by each subclass
         self._setOtherPars(imgSet)
@@ -128,7 +132,7 @@ class ProtImportImages(EMProtocol):
             dst = self._getPath(basename(f))            
             shutil.copyfile(f, dst)
             if self.checkStack:
-                x, y, x, n = imgh.getDimensions(dst)
+                _, _, _, n = imgh.getDimensions(dst)
             if n > 1:
                 for i in range(1, n+1):
                     img = findClass(self._className)()
@@ -207,7 +211,8 @@ class ProtImportMicrographs(ProtImportImages):
                                  self.voltage.get(), self.sphericalAberration.get(), self.ampContrast.get()) #, self.samplingRate.get(), 
                                 
     def _setOtherPars(self, micSet):
-        micSet._acquisition.magnification.set(self.magnification.get())
+        micSet.getAcquisition().setMagnification(self.magnification.get())
+        
         if self.samplingRateMode == SAMPLING_FROM_IMAGE:
             micSet.setSamplingRate(self.samplingRate.get())
         else:
@@ -270,35 +275,64 @@ class ProtImportVolumes(EMProtocol):
         """ Copy volumes matching the filename pattern
         Register other parameters.
         """
-        from glob import glob
-        filePaths = glob(pattern)
-        filePaths.sort()
-        n = len(filePaths)
+        n = self._getNumberFilePaths(pattern)
+        filePaths = self._getFilePaths(pattern)
         
         if n == 0:
             raise Exception(Message.ERROR_IMPORT_VOL)
+        elif n == 1:
+            volume = self.createVolume(filePaths[0])
+            self._defineOutputs(outputVolume=volume)
         else:
             # Create a set of volumes
             volSet = self._createSetOfVolumes()
             volSet.setSamplingRate(self.samplingRate.get())
-            filePaths.sort()
+#             filePaths.sort()
             for f in filePaths:
                 volSet.append(self.createVolume(f))
-            
-            volSet.write()
             self._defineOutputs(outputVolumes=volSet)
     
     def getFiles(self):
-        return self.outputVolumes.getFiles()
+        
+        pattern = self.pattern.get()
+        n = self._getNumberFilePaths(pattern)
+        
+        if n == 1:
+            return self.outputVolume.getFileName()
+        else:
+            return self.outputVolumes.getFiles()
+    
+    def _getFilePaths(self, pattern):
+        """ Return a sorted list with the paths of files"""
+        from glob import glob
+        filePaths = glob(pattern)
+        filePaths.sort()
+        
+        return filePaths
+    
+    def _getNumberFilePaths(self, pattern):
+        """ Return the number of files""" 
+        filePaths = self._getFilePaths(pattern)
+        n = len(filePaths)
+        return n
 
     def _summary(self):
         summary = []
-
-        if not hasattr(self, 'outputVolumes'):
-            summary.append("Output volume not ready yet.") 
+        pattern = self.pattern.get()
+        n = self._getNumberFilePaths(pattern)
+        
+        if n == 1:
+            if not hasattr(self, 'outputVolume'):
+                summary.append("Output volume not ready yet.") 
+            else:
+                summary.append("Import of %d volumes from %s" % (1, self.pattern.get()))
+                summary.append("Sampling rate : %f" % self.samplingRate.get())
         else:
-            summary.append("Import of %d volumes from %s" % (self.outputVolumes.getSize(), self.pattern.get()))
-            summary.append("Sampling rate : %f" % self.samplingRate.get())
+            if not hasattr(self, 'outputVolumes'):
+                summary.append("Output volumes not ready yet.") 
+            else:
+                summary.append("Import of %d volumes from %s" % (n, self.pattern.get()))
+                summary.append("Sampling rate : %f" % self.samplingRate.get())
         
         return summary
     
@@ -411,14 +445,15 @@ class ProtCTFMicrographs(EMProtocol):
         """
         # Get pointer to input micrographs 
         self.inputMics = self.inputMicrographs.get() 
-                                
-        self._params = {'voltage': self.inputMics._acquisition.voltage.get(),
-                        'sphericalAberration': self.inputMics._acquisition.sphericalAberration.get(),
-                        'magnification': self.inputMics._acquisition.magnification.get(),
+        acquisition = self.inputMics.getAcquisition()
+         
+        self._params = {'voltage': acquisition.getVoltage(),
+                        'sphericalAberration': acquisition.getSphericalAberration(),
+                        'magnification': acquisition.getMagnification(),
+                        'ampContrast': acquisition.getAmplitudeContrast(),
                         'samplingRate': self.inputMics.getSamplingRate(),
                         'scannedPixelSize': self.inputMics.getScannedPixelSize(),
                         'windowSize': self.windowSize.get(),
-                        'ampContrast': self.inputMics._acquisition.amplitudeContrast.get(),
                         'lowRes': self.lowRes.get(),
                         'highRes': self.highRes.get(),
                         # Convert from microns to Amstrongs
@@ -493,6 +528,9 @@ class ProtProcessParticles(EMProtocol):
         to add other parameter relatives to the specific operation."""
         pass  
 
+class ProtDenoiseParticles(ProtProcessParticles):
+   
+    pass
 
 class ProtFilterParticles(ProtProcessParticles):
     """ This is the base for the branch of filters, 
@@ -566,7 +604,4 @@ class ProtValidate3D(EMProtocol):
     pass
 
 class ProtCreateMask3D(EMProtocol):
-    pass
-
-class ProtTomo(EMProtocol):
     pass

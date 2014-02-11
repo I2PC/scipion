@@ -1,6 +1,6 @@
 <header data-layout='{"type": "border", "hgap": 1, "vgap": 1}' class="north">
 	<div id="headerMainContainer">
-		<a href="/projects" id="headerLogoContainer"><img class="logo" src="/resources/scipion_logo_small.gif" alt="Scipion logo"></a>
+		<a href="/projects" id="headerLogoContainer"><img class="logo" src="/resources/scipion_logo_small_web.png" alt="Scipion logo"></a>
 		
 		<span id="projectName">
 		{% if page_mode == 'showj'%}
@@ -15,11 +15,11 @@
 			{% if page_mode == 'showj'%}
 				<a id="backToProject" href="/project_content/?projectName={{projectName}}">Back to project</a>
 			{% else %}
-				<a href="/projects" class="headerLink{% if view == 'projects' %} headerLinkSelected {% endif %}">{{messages_properties.VIEW_PROJECTS}}</a>
-				{% if projectName != None and projectName != ''%}<span id="tube">|</span><a href="/project_content/?projectName={{projectName}}" class="headerLink{% if view == 'protocols' %} headerLinkSelected {% endif %}">{{messages_properties.VIEW_PROTOCOLS}}</a>{% endif %}
-				<span id="tube">|</span><a href="#" onclick="javascript:alert('Not implemented yet')" class="headerLink{% if view == 'data' %} headerLinkSelected {% endif %}">{{messages_properties.VIEW_DATA}}</a>
+				<a href="/projects" class="headerLink{% if view == 'projects' %} headerLinkSelected {% endif %}">{{msg.VIEW_PROJECTS}}</a>
+				{% if projectName != None and projectName != ''%}<span id="tube">|</span><a href="/project_content/?projectName={{projectName}}" class="headerLink{% if view == 'protocols' %} headerLinkSelected {% endif %}">{{msg.VIEW_PROTOCOLS}}</a>{% endif %}
+				<span id="tube">|</span><a href="#" onclick="javascript:alert('Not implemented yet')" class="headerLink{% if view == 'data' %} headerLinkSelected {% endif %}">{{msg.VIEW_DATA}}</a>
 				{% if projectName != None and projectName != ''%}
-					<span id="tube">|</span><a href="javascript:alert('Not implemented yet')" class="headerLink{% if view == 'hosts' %} headerLinkSelected {% endif %}">{{messages_properties.VIEW_HOSTS}}</a>
+					<span id="tube">|</span><a href="javascript:alert('Not implemented yet')" class="headerLink{% if view == 'hosts' %} headerLinkSelected {% endif %}">{{msg.VIEW_HOSTS}}</a>
 					<!-- <span id="tube">|</span><a href="/view_hosts" class="headerLink{% if view == 'hosts' %} headerLinkSelected {% endif %}">Hosts</a> -->
 				{% endif %}
 			{% endif %}

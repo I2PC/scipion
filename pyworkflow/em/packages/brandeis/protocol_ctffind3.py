@@ -70,7 +70,7 @@ class ProtCTFFind(ProtCTFMicrographs):
         self._params['ctffindOut'] = join(micDir, 'ctffind.out')
         self._params['ctffindPSD'] = self._getPsdPath(micDir)
                 
-        self.runJob(None, self._program, self._args % self._params)
+        self.runJob(self._program, self._args % self._params)
         #print "command: ", self._program, self._args % self._params    
 
     def _parseOutput(self, filename):
@@ -92,10 +92,10 @@ class ProtCTFFind(ProtCTFMicrographs):
         ctf = CTFModel()
 #        ctf.copyAttributes(self.inputMics, 'samplingRate')
 #        ctf.copyAttributes(self.inputMics.microscope, 'voltage', 'sphericalAberration')
-        ctf.defocusU.set(defocusU)
-        ctf.defocusV.set(defocusV)
-        ctf.defocusAngle.set(defocusAngle)
-        ctf.psdFile.set(psdFile)
+        ctf.setDefocusU(defocusU)
+        ctf.setDefocusV(defocusV)
+        ctf.setDefocusAngle(defocusAngle)
+        ctf.setPsdFile(psdFile)
         
         return ctf
         
@@ -113,7 +113,7 @@ class ProtCTFFind(ProtCTFMicrographs):
             #micSet.append(micOut)
             ctfModel = self._getCTFModel(defocusU, defocusV, defocusAngle, 
                                                 self._getPsdPath(micDir))
-            ctfModel.micFile.set(mic.getFileName())
+            ctfModel.setMicFile(mic.getFileName())
             ctfSet.append(ctfModel)
 
         # This property should only be set by CTF estimation protocols

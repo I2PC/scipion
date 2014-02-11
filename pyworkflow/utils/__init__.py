@@ -30,3 +30,4 @@ This module contains utilities functions and classes.
 from utils import *
 from path import *
 from process import *
+from which import *

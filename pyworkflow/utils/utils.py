@@ -75,6 +75,7 @@ def prettyDate(time=False):
         return str(day_diff/30) + " months ago"
     return str(day_diff/365) + " years ago"
 
+
 def prettySize(size):
     """Human friendly file size"""
     from math import log
@@ -90,6 +91,13 @@ def prettySize(size):
     if size == 1:
         return '1 byte'
     
+
+def prettyDict(d):
+    import pprint
+    pp = pprint.PrettyPrinter(indent=4)
+    pp.pprint(d)
+    
+    
 def getUniqueItems(originalList):
     """ Method to remove repeated items from one list 
     originalList -- Original list with repeated items, or not.
@@ -98,6 +106,7 @@ def getUniqueItems(originalList):
     auxDict = {}
     resultList = [auxDict.setdefault(x,x) for x in originalList if x not in auxDict]
     return resultList
+
 
 def executeRemoteX (command, hostName, userName, password):
     """ Execute a remote command with X11 forwarding.
@@ -162,6 +171,7 @@ def executeLongRemote (command, hostName, userName, password):
         if len(rl) > 0:
             print channel.recv(1024)
 
+
 def getLocalUserName():
     """ Recover local machine user name.
     returns: Local machine user name.
@@ -169,12 +179,14 @@ def getLocalUserName():
     import getpass
     return getpass.getuser()
 
+
 def getLocalHostName():
     """ Recover local machine name.
     returns: Local machine name.
     """
     import socket
     return socket.gethostname()
+
 
 def isInFile(text, filePath):
     """ Checks if given text is in the given file.
@@ -192,6 +204,7 @@ def isInFile(text, filePath):
     f.close()
     return False
 
+
 def getLineInFile(text, fileName):
     """ Find the line where the given text is located in the given file.
     params:
@@ -208,6 +221,7 @@ def getLineInFile(text, fileName):
             return cont
     f.close()
     return None
+
 
 #------------- Colored message strings -------------------------------
 def getColorStr(text, color, bold=False):
@@ -300,6 +314,18 @@ def parseHyperText(text, matchCallback):
 #        text = hyperRegex.sub(lambda match: matchCallback(match, hyperMode), text)
 #
 #    return text
+
+def parseBibTex(bibtexStr):
+    """ Parse a bibtex file and return a dictioray. """
+    from bibtexparser.bparser import BibTexParser
+    from StringIO import StringIO
+    
+    f = StringIO()
+    f.write(bibtexStr)
+    f.seek(0, 0)
+    parser = BibTexParser(f)
+    
+    return parser.get_entry_dict()
 
 def isPower2(num):
     """ Return True if 'num' is a power of 2. """

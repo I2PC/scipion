@@ -29,7 +29,6 @@ This module contains the protocol to obtain a refined 3D recontruction from a se
 
 from pyworkflow.em import *
 from pyworkflow.utils import *
-from pyworkflow.utils.which import which
 import brandeis
 from data import *
 from constants import *
@@ -494,13 +493,14 @@ class ProtFrealign(ProtRefine3D):
         # Get the particles stack
         imgsFn = os.path.relpath(self._getTmpPath('particles.mrc'), iterDir)
         paramsDic['imageFn'] = imgsFn
+        acquisition = imgSet.getAcquisition()
         # Get the amplitude Contrast of the micrographs
-        paramsDic['ampContrast'] = imgSet._acquisition.amplitudeContrast.get()
+        paramsDic['ampContrast'] = acquisition.getAmplitudeContrast()
         # Get the scanned pixel size of the micrographs
-        paramsDic['scannedPixelSize'] = imgSet._acquisition.magnification.get() * imgSet.getSamplingRate() / 10000
+        paramsDic['scannedPixelSize'] = acquisition.getMagnification() * imgSet.getSamplingRate() / 10000
         # Get the voltage and spherical aberration of the microscope
-        paramsDic['voltage'] = imgSet._acquisition.voltage.get()
-        paramsDic['sphericalAberration'] = imgSet._acquisition.sphericalAberration.get()
+        paramsDic['voltage'] = acquisition.getVoltage()
+        paramsDic['sphericalAberration'] = acquisition.getSphericalAberration()
 
         # Defining the operation mode
         if self.mode == MOD_RECONSTRUCTION:
@@ -643,7 +643,7 @@ class ProtFrealign(ProtRefine3D):
         params3DR = dict(params.items() + params2.items())
         
         args = self._prepareCommand()
-        self.runJob(None, self._program, args % params3DR)
+        self.runJob(self._program, args % params3DR)
         self._leaveDir()
     
     def refineParticlesStep(self, iter, block):
@@ -670,7 +670,7 @@ class ProtFrealign(ProtRefine3D):
         paramsRefine = dict(initParamsDict.items() + paramDic.items() + param.items())
         args = self._prepareCommand()
         
-        self.runJob(None, self._program, args % paramsRefine)
+        self.runJob(self._program, args % paramsRefine)
         
     def _setParamsRefineParticles(self, iter, block):
         paramDics = {}
@@ -795,7 +795,7 @@ eot
         # time.sleep(block)
         program = "./block%03d.sh" % block
         os.chmod(program, 0775)
-        self.runJob(None, program, "")
+        self.runJob(program, "")
         
         
         #self._leaveDir()

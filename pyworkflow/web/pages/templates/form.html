@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang='es'>
 	<head>
-	<title>{{projectName}}{{messages_properties.TITLE_NAME_RUN}}{{protocol}}</title>
+	<title>{{projectName}}{{msg.TITLE_NAME_RUN}}{{protocol}}</title>
 	<meta charset='utf-8'>
 	<link rel="icon" type="image/png" href={{favicon}} />
 	<!-- CSS -->
@@ -48,6 +48,10 @@
 		$("input#viewerParam").attr("value", param);
 		putMode("viewerElement");
 	}
+	function loadPreviewImage(param){
+		var objId = $("#"+ param).attr("data-objId");
+		customPopup('/visualize_object/?objectId='+objId,1024,600)
+	}
 	</script>
 	 <script>
 	  $(function() {
@@ -61,7 +65,15 @@
 			{% if package_logo != ''%}
 				<img src='{{package_logo}}' style="float:left;"/>
 			{% endif %}
-			<h3 id="protName" style="padding-top:25px;">Protocol: {{protocol.getClassLabel}} <a id="referenceLink" href="javascript:infoPopup('Cite','{{protocol.htmlCitations|escapejs}}');" style="float:right"><i class="fa fa-external-link"></i></a></h3>
+			<h3 id="protName" style="padding-top:25px;">
+				Protocol: {{protocol.getClassLabel}} 
+			</h3>
+			<a href="javascript:infoPopup('','{{protocol.htmlDoc|escapejs}}');" style="float:right">
+				<i class="fa fa-question-circle"></i>&nbsp;{{msg.TITLE_DOC}}&nbsp;	
+			</a>
+			<a href="javascript:infoPopup('','{{protocol.htmlCitations|escapejs}}');" style="float:right">
+				<i class="fa fa-external-link"></i>&nbsp;{{msg.TITLE_CITE}}&nbsp;
+			</a>
 		</div>
 		
 		<form id="protocolForm" action="/protocol/" method="POST" data-mode="">{% csrf_token %}
@@ -80,15 +92,15 @@
 			<div id="main">
 				<div id="mainNode1" class="mainNode floatLeft">
 					<div class="title">
-						{{messages_properties.TITLE_RUN}}
+						{{msg.TITLE_RUN}}
 					</div>
 					<table>
 						<tr>
 							<td>
-								{{messages_properties.TITLE_RUN_NAME}}
+								{{msg.TITLE_RUN_NAME}}
 							</td>
 							<td>
-								<input type="text" id="{{messages_properties.VAR_RUN_NAME}}" name="{{messages_properties.VAR_RUN_NAME}}" value="{{protocol.getObjLabel}}" disabled>
+								<input type="text" id="{{msg.VAR_RUN_NAME}}" name="{{msg.VAR_RUN_NAME}}" value="{{protocol.getObjLabel}}" disabled>
 							</td>
 							<td class="ico">
 								<a id="editTool" 
@@ -98,36 +110,36 @@
 										{% else %}
 														{{protocol.getObjId}},
 										{% endif %}		
-														'{{messages_properties.TITLE_LABEL}}',
+														'{{msg.TITLE_LABEL}}',
 														'{{protocol.getObjLabel}}',
-														'{{messages_properties.TITLE_COMMENT}}',
+														'{{msg.TITLE_COMMENT}}',
 														'{{comment}}',
-														'{{messages_properties.LABEL_COMMENT}}',
+														'{{msg.LABEL_COMMENT}}',
 														'protocol');">				
 								<i class="fa fa-pencil"></i></a>
 							</td>
 						</tr>
 						<tr>
 							<td>
-								{{messages_properties.TITLE_RUN_MODE}}
+								{{msg.TITLE_RUN_MODE}}
 							</td>
 							<td>
-								<select id="{{messages_properties.VAR_RUN_MODE}}_select" name="{{messages_properties.VAR_RUN_MODE}}" size="1" onchange="javascript:onChangeEnumParamCombo('runMode_select', '{{messages_properties.VAR_RUN_MODE}}');">
-									<option value="0">{{messages_properties.LABEL_RUN_MODE_RESUME}}</option>
-									<option value="1" selected="selected">{{messages_properties.LABEL_RUN_MODE_RESTART}}</option>
+								<select id="{{msg.VAR_RUN_MODE}}_select" name="{{msg.VAR_RUN_MODE}}" size="1" onchange="javascript:onChangeEnumParamCombo('runMode_select', '{{msg.VAR_RUN_MODE}}');">
+									<option value="0">{{msg.LABEL_RUN_MODE_RESUME}}</option>
+									<option value="1" selected="selected">{{msg.LABEL_RUN_MODE_RESTART}}</option>
 								</select>		
 							</td>
 						</tr>
 						<tr>
 							<td>
-								{{messages_properties.TITLE_EXPERT}}
+								{{msg.TITLE_EXPERT}}
 							</td>
 							<td>
-								<select name="{{messages_properties.VAR_EXPERT}}" size=1
+								<select name="{{msg.VAR_EXPERT}}" size=1
 								onChange="javascript:evalElements();">
-									<option value="0" {% if expertLevel == 0 %} selected="selected" {% endif %}>{{messages_properties.LABEL_EXPERT_NORMAL}}</option>
-									<option value="1" {% if expertLevel == 1 %} selected="selected" {% endif %}>{{messages_properties.LABEL_EXPERT_ADVANCE}}</option>
-									<option value="2" {% if expertLevel == 2 %} selected="selected" {% endif %}>{{messages_properties.LABEL_EXPERT_EXPERT}}</option>
+									<option value="0" {% if expertLevel == 0 %} selected="selected" {% endif %}>{{msg.LABEL_EXPERT_NORMAL}}</option>
+									<option value="1" {% if expertLevel == 1 %} selected="selected" {% endif %}>{{msg.LABEL_EXPERT_ADVANCE}}</option>
+									<option value="2" {% if expertLevel == 2 %} selected="selected" {% endif %}>{{msg.LABEL_EXPERT_EXPERT}}</option>
 								</select>
 							</td>
 						</tr>					
@@ -136,15 +148,15 @@
 								
 				<div id="mainNode2" class="mainNode floatRight">
 					<div class="title">
-						{{messages_properties.TITLE_EXEC}}
+						{{msg.TITLE_EXEC}}
 					</div>
 					<table>
 						<tr>
 							<td>
-								{{messages_properties.TITLE_EXEC_HOST}}
+								{{msg.TITLE_EXEC_HOST}}
 							</td>
 							<td>
-								<select name="{{messages_properties.VAR_EXEC_HOST}}" size=1 onChange="">
+								<select name="{{msg.VAR_EXEC_HOST}}" size=1 onChange="">
 								{% for h in hosts %}
 									<option value="{{h}}" {% if h == hostName %} selected="selected" {% endif %}>{{h}}</option>
 								{% endfor %}
@@ -153,21 +165,21 @@
 						</tr>
 						<tr>
 							<td>
-								{{messages_properties.TITLE_THREADS}}&nbsp;		
-								<input type="text" id="{{messages_properties.VAR_THREADS}}_input" name="{{messages_properties.VAR_THREADS}}" value="{{numberOfThreads}}" style="width:3em;">
+								{{msg.TITLE_THREADS}}&nbsp;		
+								<input type="text" id="{{msg.VAR_THREADS}}_input" name="{{msg.VAR_THREADS}}" value="{{numberOfThreads}}" style="width:3em;">
 							</td>
 							<td >
-								{{messages_properties.TITLE_MPI}}&nbsp;		
-								<input type="text" id="{{messages_properties.VAR_MPI}}_input" name="{{messages_properties.VAR_MPI}}" value="{{numberOfMpi}}" style="width:3em;">
+								{{msg.TITLE_MPI}}&nbsp;		
+								<input type="text" id="{{msg.VAR_MPI}}_input" name="{{msg.VAR_MPI}}" value="{{numberOfMpi}}" style="width:3em;">
 							</td>
 						</tr>
 						<tr>
 							<td>
-								{{messages_properties.TITLE_QUEUE}}
+								{{msg.TITLE_QUEUE}}
 							</td>
 							<td>
-							  <input type="radio" id="queue_yes" name="{{messages_properties.VAR_QUEUE}}" value="yes"/>{{messages_properties.LABEL_QUEUE_YES}}
-							  <input type="radio" id="queue_no" name="{{messages_properties.VAR_QUEUE}}" value="no"/>{{messages_properties.LABEL_QUEUE_NO}}
+							  <input type="radio" id="queue_yes" name="{{msg.VAR_QUEUE}}" value="yes"/>{{msg.LABEL_QUEUE_YES}}
+							  <input type="radio" id="queue_no" name="{{msg.VAR_QUEUE}}" value="no"/>{{msg.LABEL_QUEUE_NO}}
 							</td>
 						</tr>
 					</table>
@@ -195,11 +207,13 @@
 									<td id="inputName" {% if param.isImportant.get %} class="recommended" 
 									{% else %} class="normal" {% endif %}>{{param.label.get}}</td>
 									<td>
+									
 										{% if param.getClassName == "BooleanParam" %}
 										  <input type="radio" id="{{paramName}}_yes" name={{paramName}} onChange="javascript:onChangeParam('true','{{paramName}}');" value="true" 
-										  {% if param.htmlValue == 'true' %} checked {% endif %}/>{{messages_properties.LABEL_PARAM_YES}}
+										  {% if param.htmlValue == 'true' %} checked {% endif %}/>{{msg.LABEL_PARAM_YES}}
 										  <input type="radio" id="{{paramName}}_no" name={{paramName}} onChange="javascript:onChangeParam('false','{{paramName}}');" value="false"  
-										  {% if param.htmlValue == 'false' %} checked {% endif %} />{{messages_properties.LABEL_PARAM_NO}}
+										  {% if param.htmlValue == 'false' %} checked {% endif %} />{{msg.LABEL_PARAM_NO}}
+										
 										{% elif param.getClassName == "EnumParam" %}
 											{% if param.display == 0 %}
 												{% for choice in param.choices %}
@@ -229,6 +243,11 @@
 									<td class="ico">
 										<a href="javascript:browseObjects('{{paramName}}','{{projectName}}','objClass','{{param.pointerClass.get}}','{{param.pointerCondition.get}}');">
 											<i class="fa fa-search" style="font-size:1.1em;"></i>
+										</a> 
+									</td>
+									<td class="ico">
+										<a href="javascript:loadPreviewImage('{{paramName}}_input');">
+											<i class="fa fa-eye" style="font-size:1.1em;"></i>
 										</a> 
 									</td>
 								{% elif param.getClassName == "MultiPointerParam" %}
@@ -275,14 +294,14 @@
 				 {% endfor %}
 				 </div>		
 			<div class="boxBottom">
-				<a href="javascript:window.close()" class="btn buttonGrey"><i class="fa fa-times"></i>{{messages_properties.LABEL_BUTTON_CLOSE}}</a>
+				<a href="javascript:window.close()" class="btn buttonGrey"><i class="fa fa-times"></i>{{msg.LABEL_BUTTON_CLOSE}}</a>
 				{% if visualize == 0 %}
-				<a href="javascript:putMode('save');" class="btn buttonGrey"><i class="fa fa-save"></i>{{messages_properties.LABEL_BUTTON_SAVE}}</a>
-				<a href="javascript:putMode('execute');" class="btn buttonRed"><i class="fa fa-cogs"></i>{{messages_properties.LABEL_BUTTON_EXEC}}</a>
+				<a href="javascript:putMode('save');" class="btn buttonGrey"><i class="fa fa-save"></i>{{msg.LABEL_BUTTON_SAVE}}</a>
+				<a href="javascript:putMode('execute');" class="btn buttonRed"><i class="fa fa-cogs"></i>{{msg.LABEL_BUTTON_EXEC}}</a>
 				{% elif visualize == 1 %}
-				<a href="javascript:putMode('viewer');" class="btn buttonRed"><i class="fa fa-cogs"></i>{{messages_properties.LABEL_BUTTON_VIS}}</a>
+				<a href="javascript:putMode('viewer');" class="btn buttonRed"><i class="fa fa-cogs"></i>{{msg.LABEL_BUTTON_VIS}}</a>
 				{% elif visualize == 2 %}
-				<a href="javascript:returnProtocol();" class="btn buttonGrey"><i class="fa fa-save"></i>{{messages_properties.LABEL_BUTTON_RETURN}}</a>
+				<a href="javascript:returnProtocol();" class="btn buttonGrey"><i class="fa fa-save"></i>{{msg.LABEL_BUTTON_RETURN}}</a>
 				{% endif %}							
 			</div>
 		</form>

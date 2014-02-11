@@ -40,9 +40,9 @@ from django.contrib.gis.shortcuts import render_to_text
 from pyworkflow.em.packages.xmipp3.convert import writeSetOfParticles
 from pyworkflow.em.packages.xmipp3.plotter import XmippPlotter
 from pyworkflow.viewer import WEB_DJANGO
-from pyworkflow.web.app.views_util import loadProject
+#from pyworkflow.web.app.views_util import loadProject
 
-from pyworkflow.utils.messages_properties import Message
+#from pyworkflow.utils.properties import Message
 
 
 def projects(request):
@@ -342,6 +342,8 @@ def project_content(request):
     return render_to_response('project_content.html', context)
 
 def protocol_info(request):
+    from pyworkflow.web.app.views_util import parseText
+
     if request.is_ajax():
         projectName = request.session['projectName']
         protId = request.GET.get('protocolId', None)
@@ -354,25 +356,25 @@ def protocol_info(request):
         output_obj = [{'name': name, 'id': attr.getObjId()} for name, attr in protocol.iterOutputAttributes(EMObject)]
 
         # PROTOCOL SUMMARY
-        summary = protocol.summary()
+        summary = parseText(protocol.summary())
         
         # PROTOCOL METHODS
-        methods = protocol.methods()
+        methods = parseText(protocol.methods())
 
         # STATUS
         status = protocol.status.get()
         
         # LOGS (ERROR & OUTPUT)
-        fOutString, fErrString = protocol.getLogsAsStrings()
+        fOutString, fErrString, fScpnString = protocol.getLogsAsStrings()
 
-        from pyworkflow.web.app.views_util import parseText
         ioDict = {'inputs': input_obj,
                   'outputs': output_obj,
-                  'summary': parseText(summary),
-                  'methods': parseText(methods), 
+                  'summary': summary,
+                  'methods': methods, 
                   'status': status,
                   'logs_out': parseText(fOutString),
-                  'logs_error': parseText(fErrString)
+                  'logs_error': parseText(fErrString),
+                  'logs_scipion': parseText(fScpnString)
                   }
         
         jsonStr = json.dumps(ioDict, ensure_ascii=False)

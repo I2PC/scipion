@@ -24,6 +24,7 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
+from pyworkflow.em.packages.xmipp3.convert import locationToXmipp
 """
 This sub-package contains protocols for creating 3D masks.
 """
@@ -49,6 +50,7 @@ MORPHOLOGY_EROSION=1
 MORPHOLOGY_CLOSING=2
 MORPHOLOGY_OPENING=3
 
+
 class XmippProtCreateMask3D(ProtCreateMask3D,XmippGeometricalMask):
     """ Create a 3D mask from a geometrical description (Sphere, Box, Cylinder...), from a volume or from another class """
     _label = 'create mask'
@@ -59,10 +61,11 @@ class XmippProtCreateMask3D(ProtCreateMask3D,XmippGeometricalMask):
         
         # For volume sources
         isVolume = 'source==%d'%SOURCE_VOLUME
-        form.addParam('volume', PointerParam, pointerClass="SetOfVolumes", label="Input volume",
+        form.addParam('volume', PointerParam, pointerClass="Volume", label="Input volume",
                       condition=isVolume, help="Volume that will serve as basis for the mask")
         form.addParam('volumeOperation',EnumParam,label='Operation',condition=isVolume,
                       default=OPERATION_THRESHOLD,choices=['Threshold','Segment'])
+        #TODO: add wizard
         form.addParam('threshold',FloatParam,label='Threshold',condition='%s and volumeOperation==%d'%(isVolume,OPERATION_THRESHOLD))
         isSegmentation='%s and volumeOperation==%d'%(isVolume,OPERATION_SEGMENT)
         form.addParam('segmentationType',EnumParam,label='Segmentation type',condition=isSegmentation,
@@ -121,13 +124,14 @@ class XmippProtCreateMask3D(ProtCreateMask3D,XmippGeometricalMask):
         self._insertFunctionStep('createOutput')
     
     def createMaskFromVolumeStep(self):
-        volume=self.volume.get().getFirstItem()
+        volume=self.volume.get()
+        fnVol=locationToXmipp(*volume.getLocation())
         if self.volumeOperation==OPERATION_THRESHOLD:
-            self.runJob(None,"xmipp_transform_threshold",
-                        "-i %s -o %s --select below %f --substitute binarize"%(volume.getFileName(),self.maskFile,
+            self.runJob("xmipp_transform_threshold",
+                        "-i %s -o %s --select below %f --substitute binarize"%(fnVol,self.maskFile,
                                                                                self.threshold.get()))
         elif self.volumeOperation==OPERATION_SEGMENT:
-            args="-i %s -o %s --method "%(volume.getFileName(),self.maskFile)
+            args="-i %s -o %s --method "%(fnVol,self.maskFile)
             Ts=volume.getSamplingRate()
             if self.segmentationType==SEGMENTATION_VOXELS:
                 args+="voxel_mass %d"%(self.nvoxels.get())
@@ -137,7 +141,7 @@ class XmippProtCreateMask3D(ProtCreateMask3D,XmippGeometricalMask):
                 args+="dalton_mass %d %f"%(self.dalton.get(),Ts)
             else:
                 args+="otsu"
-            self.runJob(None,"xmipp_volume_segment",args)
+            self.runJob("xmipp_volume_segment",args)
         return [self.maskFile]
         
     def createMaskFromGeometryStep(self):
@@ -149,7 +153,7 @@ class XmippProtCreateMask3D(ProtCreateMask3D,XmippGeometricalMask):
         args = '-i %s ' % self.maskFile
         args+=XmippGeometricalMask.argsForTransformMask(self,size)
         args += ' --create_mask %s' % self.maskFile
-        self.runJob(None, "xmipp_transform_mask", args)
+        self.runJob("xmipp_transform_mask", args)
         return [self.maskFile]
     
     def createMaskFromAnotherMaskStep(self):
@@ -157,29 +161,36 @@ class XmippProtCreateMask3D(ProtCreateMask3D,XmippGeometricalMask):
 
     def postProcessMaskStep(self):
         if self.doSmall.get():
-            self.runJob(None,"xmipp_transform_morphology","-i %s --binaryOperation removeSmall %d"%(self.maskFile,self.smallSize.get()))
+            self.runJob("xmipp_transform_morphology","-i %s --binaryOperation removeSmall %d"%(self.maskFile,self.smallSize.get()))
         if self.doBig.get():
-            self.runJob(None,"xmipp_transform_morphology","-i %s --binaryOperation keepBiggest"%self.maskFile)
+            self.runJob("xmipp_transform_morphology","-i %s --binaryOperation keepBiggest"%self.maskFile)
         if self.doSymmetrize.get():
             if self.symmetry.get()!='c1':
-                self.runJob(None,"xmipp_transform_symmetrize","-i %s --sym %s --dont_wrap"%(self.maskFile,self.symmetry.get()))
+                self.runJob("xmipp_transform_symmetrize","-i %s --sym %s --dont_wrap"%(self.maskFile,self.symmetry.get()))
         if self.doMorphological.get():
-            self.runJob(None,"xmipp_transform_morphology","-i %s --binaryOperation %s --size %d"
+            self.runJob("xmipp_transform_morphology","-i %s --binaryOperation %s --size %d"
                         %(self.maskFile,self.getEnumText('morphologicalOperation'),self.elementSize.get()))
         if self.doInvert.get():
-            self.runJob(None,"xmipp_image_operate","-i %s --mult -1"%self.maskFile)
-            self.runJob(None,"xmipp_image_operate","-i %s --plus  1"%self.maskFile)
+            self.runJob("xmipp_image_operate","-i %s --mult -1"%self.maskFile)
+            self.runJob("xmipp_image_operate","-i %s --plus  1"%self.maskFile)
         if self.doSmooth.get():
-            self.runJob(None,"xmipp_transform_filter","-i %s --fourier real_gaussian %f"%(self.maskFile,self.sigmaConvolution.get()))
+            self.runJob("xmipp_transform_filter","-i %s --fourier real_gaussian %f"%(self.maskFile,self.sigmaConvolution.get()))
 
     def createOutput(self):
         volMask = VolumeMask()
         volMask.setFileName(self.maskFile)
         if self.source==SOURCE_VOLUME:
             volMask.setSamplingRate(self.volume.get().getSamplingRate())
-        if self.source==SOURCE_MASK:
+        elif self.source==SOURCE_MASK:
             volMask.setSamplingRate(self.inputMask.get().getSamplingRate())
+        else:
+            volMask.setSamplingRate(self.samplingRate.get())
         self._defineOutputs(outputMask=volMask)
+        
+        if self.source==SOURCE_VOLUME:
+            self._defineSourceRelation(self.volume, self.outputMask)
+        elif self.source==SOURCE_MASK:
+            self._defineTransformRelation(self.inputMask, self.outputMask)
         
     def _summary(self):
         messages = []      
@@ -222,10 +233,10 @@ class XmippProtCreateMask3D(ProtCreateMask3D,XmippGeometricalMask):
         return messages
 
     def _citations(self):
-        papers=[]
-        if self.source==SOURCE_VOLUME and self.volumeOperation==OPERATION_SEGMENT and self.segmentationType==SEGMENTATION_AUTOMATIC:
-            papers.append('[%s] %s'%('Otsu1979_Segmentation',self._package._referencesDict['Otsu1979_Segmentation']))
-        return papers
+        if (self.source == SOURCE_VOLUME and 
+            self.volumeOperation == OPERATION_SEGMENT and 
+            self.segmentationType==SEGMENTATION_AUTOMATIC):
+            return ['Otsu1979']
 
     def _methods(self):
         messages = []      
@@ -238,7 +249,7 @@ class XmippProtCreateMask3D(ProtCreateMask3D,XmippGeometricalMask):
                 messages.append("We thresholded it to a gray value of %f. "%self.threshold.get())
             elif self.volumeOperation == OPERATION_SEGMENT:
                 if self.segmentationType == SEGMENTATION_AUTOMATIC:
-                    messages.append("We automatically segmented it using Otsu's method [Otsu1979_Segmentation]")
+                    messages.append("We automatically segmented it using Otsu's method [Otsu1979]")
                 else:
                     m="We segmented it to a mass of "
                     if self.segmentationType == SEGMENTATION_VOXELS:
@@ -265,6 +276,7 @@ class XmippProtCreateMask3D(ProtCreateMask3D,XmippGeometricalMask):
             messages.append("We inverted the mask. ")
         if self.doSmooth.get():
             messages.append("And, we smoothed it (sigma=%f voxels)." % self.sigmaConvolution.get())
-        messages.append('We refer to the output mask as %s.' % self.outputMask.getNameId())
+        if self.hasAttribute('outputMask'):
+            messages.append('We refer to the output mask as %s.' % self.outputMask.getNameId())
         return messages
     

@@ -315,11 +315,15 @@ class SqliteMapper(Mapper):
         
         return self.__objectsFromIds(parentIds)  
 
-    def getRelations(self, creatorObj):
+    def getRelationsByCreator(self, creatorObj):
         """ Return all relations created by creatorObj. """
         return self.db.selectRelationsByCreator(creatorObj.getObjId())
     
-    def deleteRelations(self, creatorObj):
+    def getRelationsByName(self, relationName):
+        """ Return all relations stored of a given type. """
+        return self.db.selectRelationsByName(relationName)
+
+    def deleteRelations(self, relationType):
         """ Delete all relations created by object creatorObj """
         pass
     
@@ -335,7 +339,7 @@ class SqliteDb():
     DELETE = "DELETE FROM Objects WHERE "
     
     SELECT_RELATION = "SELECT object_%s_id AS id FROM Relations WHERE name=? AND object_%s_id=?"
-    SELECT_RELATIONS = "SELECT * FROM Relations WHERE parent_id=?"
+    SELECT_RELATIONS = "SELECT * FROM Relations WHERE "
     
     def selectCmd(self, whereStr, orderByStr=' ORDER BY id'):
         return self.SELECT + whereStr + orderByStr
@@ -485,9 +489,13 @@ class SqliteDb():
         return self._results()
     
     def selectRelationsByCreator(self, parent_id):
-        self.executeCommand(self.SELECT_RELATIONS, (parent_id,))
+        self.executeCommand(self.SELECT_RELATIONS + "parent_id=?", (parent_id,))
         return self._results()
-    
+     
+    def selectRelationsByName(self, relationName):
+        self.executeCommand(self.SELECT_RELATIONS + "name=?", (relationName,))
+        return self._results()
+       
     def deleteRelationsByCreator(self, parent_id):
         self.executeCommand("DELETE FROM Relations where parent_id=?", (parent_id,))
 

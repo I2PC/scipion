@@ -41,8 +41,7 @@ ALL_ITER = 1
 SELECTED_ITERS = 2
 
 class FrealignViewer(ProtocolViewer):
-    """ Visualization of Frealign.
-    """
+    """ Visualization of Frealign."""
     
     _targets = [ProtFrealign]
     _environments = [DESKTOP_TKINTER, WEB_DJANGO]

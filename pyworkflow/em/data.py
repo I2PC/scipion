@@ -36,6 +36,7 @@ from pyworkflow.utils.path import cleanPath, dirname, join, replaceExt
 import xmipp
 
 
+
 class EMObject(OrderedObject):
     """Base object for all EM classes"""
     def __init__(self, **args):
@@ -53,40 +54,85 @@ class Acquisition(EMObject):
     """Acquisition information"""
     def __init__(self, **args):
         EMObject.__init__(self, **args)
-        self.magnification = Float(60000)
-        self.voltage = Float(300)
-        self.sphericalAberration = Float(2.0)
-        self.amplitudeContrast = Float(0.1)
+        self._magnification = Float(args.get('magnification', None)) 
+        # Microscope voltage in kV
+        self._voltage = Float(args.get('voltage', None))
+        # Spherical aberration in mm
+        self._sphericalAberration = Float(args.get('sphericalAberration', None)) 
+        self._amplitudeContrast = Float(args.get('amplitudeContrast', None))
         
     def copyInfo(self, other):
-        self.magnification.set(other.magnification.get())
-        self.voltage.set(other.voltage.get())
-        self.sphericalAberration.set(other.sphericalAberration.get())
-        self.amplitudeContrast.set(other.amplitudeContrast.get())
+        self.copyAttributes(other, '_magnification', '_voltage', 
+                            '_sphericalAberration', '_amplitudeContrast')
+        
+    def getMagnification(self):
+        return self._magnification.get()
+        
+    def setMagnification(self, value):
+        self._magnification.set(value)
+        
+    def getVoltage(self):
+        return self._voltage.get()
+        
+    def setVoltage(self, value):
+        self._voltage.set(value)
+        
+    def getSphericalAberration(self):
+        return self._sphericalAberration.get()
     
-
+    def setSphericalAberration(self, value):
+        self._sphericalAberration.set(value)
+        
+    def getAmplitudeContrast(self):
+        return self._amplitudeContrast.get()
+    
+    def setAmplitudeContrast(self, value):
+        self._amplitudeContrast.set(value)        
+       
+    
 class CTFModel(EMObject):
     """ Represents a generic CTF model. """
     def __init__(self, **args):
         EMObject.__init__(self, **args)
-        self.defocusU = Float()
-        self.defocusV = Float()
-        self.defocusAngle = Float()
-        self.psdFile = String()
-        self.micFile = String()
+        self._defocusU = Float(args.get('defocusU', None))
+        self._defocusV = Float(args.get('defocusV', None))
+        self._defocusAngle = Float(args.get('defocusAngle', None))
+        self._psdFile = String()
+        self._micFile = String()
         
     def getDefocusU(self):
-        return self.defocusU.get()
-    
+        return self._defocusU.get()
+        
+    def setDefocusU(self, value):
+        self._defocusU.set(value)
+        
     def getDefocusV(self):
-        return self.defocusV.get()
-
+        return self._defocusV.get()
+        
+    def setDefocusV(self, value):
+        self._defocusV.set(value)
+        
     def getDefocusAngle(self):
-        return self.defocusAngle.get()
-
+        return self._defocusAngle.get()
+        
+    def setDefocusAngle(self, value):
+        self._defocusAngle.set(value)
+        
     def copyInfo(self, other):
-        self.copyAttributes(other, 'defocusU', 'defocusV',
-                            'defocusAngle', 'psdFile')
+        self.copyAttributes(other, '_defocusU', '_defocusV',
+                            '_defocusAngle', '_psdFile', '_micFile')
+        
+    def getPsdFile(self):
+        return self._psdFile.get()
+    
+    def setPsdFile(self, value):
+        self._psdFile.set(value)
+        
+    def getMicFile(self):
+        return self._micFile.get()
+    
+    def setMicFile(self, value):
+        self._micFile.set(value)
 
 
 class Image(EMObject):
@@ -98,6 +144,7 @@ class Image(EMObject):
         self._filename = String()
         self._samplingRate = Float()
         self._ctfModel = None
+        self._acquisition = None
         
     def getSamplingRate(self):
         """ Return image sampling rate. (A/pix) """
@@ -160,6 +207,16 @@ class Image(EMObject):
     
     def setCTF(self, newCTF):
         self._ctfModel = newCTF
+        
+    def getAcquisition(self):
+        return self._acquisition
+    
+    def setAcquisition(self, acquisition):
+        self._acquisition = acquisition
+        
+    def hasAcquisition(self):
+        return (self._acquisition is not None and 
+                self._acquisition.getMagnification() is not None)
         
     def __str__(self):
         """ String representation of an Image. """
@@ -258,7 +315,7 @@ class Set(EMObject):
         """ Get the image with the given id. """
         return self._mapper.selectById(itemId)
 
-    def __iterItems(self):
+    def _iterItems(self):
         return self._mapper.selectAll(iterate=True)
     
     def getFirstItem(self):
@@ -267,7 +324,7 @@ class Set(EMObject):
     
     def __iter__(self):
         """ Iterate over the set of images. """
-        return self.__iterItems()
+        return self._iterItems()
        
     def __len__(self):
         return self._size.get()
@@ -324,6 +381,16 @@ class Set(EMObject):
     def getDimensions(self):
         """Return first image dimensions as a tuple: (xdim, ydim, zdim, n)"""
         return self.getFirstItem().getDim()
+    
+    def getSubset(self, n):
+        """ Return a subset of n element, making a clone of each. """
+        subset = []
+        for i, item in enumerate(self):
+            subset.append(item.clone())
+            if i == n:
+                break
+        return subset
+            
                 
     
 class SetOfImages(Set):
@@ -338,7 +405,7 @@ class SetOfImages(Set):
         self._isAmplitudeCorrected = Boolean(False)
         self._acquisition = Acquisition()
            
-    def getAcquisition(self, index=0):
+    def getAcquisition(self):
         return self._acquisition
         
     def hasCTF(self):
@@ -424,14 +491,17 @@ class SetOfImages(Set):
     
     def __str__(self):
         """ String representation of a set of images. """
-        try:
-            s = "%s (%d items, %0.2f A/px)" % (self.getClassName(), self.getSize(), 
-                                               self.getSamplingRate())
-        except Exception, ex:
-            print "Error on set: ", self.getName()
-            raise ex
+        if self.getSamplingRate() is None:
+            raise Exception("FATAL ERROR: Object %s has no sampling rate!!!" % self.getName())
+        s = "%s (%d items, %0.2f A/px)" % (self.getClassName(), self.getSize(), self.getSamplingRate())
         return s
-    
+
+    def __iter__(self):
+        """ Redefine iteration to set the acquisition to images. """
+        for img in self._iterItems():
+            img.setAcquisition(self.getAcquisition())
+            yield img
+            
     
 class SetOfMicrographs(SetOfImages):
     """Represents a set of Micrographs"""
@@ -449,7 +519,7 @@ class SetOfMicrographs(SetOfImages):
     def setSamplingRate(self, samplingRate):
         """ Set the sampling rate and adjust the scannedPixelSize. """
         self._samplingRate.set(samplingRate)
-        self._scannedPixelSize.set(1e-4 * samplingRate * self._acquisition.magnification.get())
+        self._scannedPixelSize.set(1e-4 * samplingRate * self._acquisition.getMagnification())
                
     def getScannedPixelSize(self):
         return self._scannedPixelSize.get()
@@ -457,7 +527,7 @@ class SetOfMicrographs(SetOfImages):
     def setScannedPixelSize(self, scannedPixelSize):
         """ Set scannedPixelSize and update samplingRate. """
         self._scannedPixelSize.set(scannedPixelSize)
-        self._samplingRate.set((1e+4 * scannedPixelSize) / self._acquisition.magnification.get())
+        self._samplingRate.set((1e+4 * scannedPixelSize) / self._acquisition.getMagnification())
 
 
 class SetOfParticles(SetOfImages):
@@ -739,9 +809,8 @@ class SetOfClasses2D(Set):
     
     def createAverages(self):
         self._averages = SetOfParticles(filename=self.getFileName(), prefix='Averages')
-        images = SetOfImages()
-        self.setImages(images)
-        
+        if not self.getImages().hasValue():
+            raise Exception("SetOfClasses2D.createAverages: you must set the images before creating the averages!!!")
         self._averages.copyInfo(self.getImages())
         return self._averages
     
@@ -773,6 +842,85 @@ class SetOfClasses2D(Set):
         if self._averages: # Write if not None
             self._averages.write()
             
+
+class Class3D(SetOfVolumes):
+    """ Represent a Class that group some elements 
+    from a classification. 
+    """
+    def __init__(self, **args):
+        SetOfVolumes.__init__(self, **args)
+        # This properties should be set when retrieving from the SetOfClasses2D
+        self._average = None
+    
+    def setAverage(self, avgVolume):
+        self._average = avgVolume
+    
+    def getAverage(self):
+        """ Usually the representative is an average of 
+        the volumes assigned to that class.
+        """
+        return self._average
+    
+    def hasAverage(self):
+        """ Return true if have an average volume. """
+        return self._average is not None
+
+
+class SetOfClasses3D(Set):
+    """ Store results from a 3D classification. """
+    def __init__(self, **args):
+        Set.__init__(self, **args)
+        self._averages = None # Store the averages images of each class(SetOfParticles)
+        self._imagesPointer = Pointer()
+
+    def iterClassImages(self):
+        """ Iterate over the images of a class. """
+        pass
+    
+    def hasAverages(self):
+        return self._averages is not None
+    
+    def getAverages(self):
+        """ Return a SetOfVolumes composed by all the average volumes 
+        of the 3D classes. """
+        return self._averages
+    
+    def createAverages(self):
+        self._averages = SetOfVolumes(filename=self.getFileName(), prefix='Averages')
+        if not self.getVolumes().hasValue():
+            raise Exception("SetOfClasses3D.createAverages: you must set the volumes before creating the averages!!!")
+        self._averages.copyInfo(self.getVolumes())
+        
+        return self._averages
+    
+    def getVolumes(self):
+        """ Return the SetOfVolumes used to create the SetOfClasses3D. """
+        return self._imagesPointer.get()
+    
+    def setVolumes(self, volumes):
+        self._imagesPointer.set(volumes)
+        
+    def getDimensions(self):
+        """Return first volume dimensions as a tuple: (xdim, ydim, zdim, n)"""
+        if self.hasAverages():
+            return self.getAverages().getDimensions()
+        
+    def _insertItem(self, class3D):
+        """ Create the SetOfVolumes assigned to a class.
+        If the file exists, it will load the Set.
+        """
+        if class3D.getFileName() is None:
+            classPrefix = 'Class%03d' % class3D.getObjId()
+            class3D._mapperPath.set('%s,%s' % (self.getFileName(), classPrefix))
+        Set._insertItem(self, class3D)
+        class3D.write()#Set.write(self)
+        
+    def write(self):
+        """ Override super method to also write the averages. """
+        Set.write(self)
+        if self._averages: # Write if not None
+            self._averages.write()
+
 
 class NormalModes(EMObject):
     """ Store results from a 2D classification. """

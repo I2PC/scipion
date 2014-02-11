@@ -39,6 +39,9 @@ class XmippGeometricalMask:
         if addSize:
             form.addParam('size', IntParam, condition=isGeometry, label="Mask size (px)", 
                           help='Select the mask dimensions in voxels. The mask will be size x size x size voxels')
+        form.addParam('samplingRate', FloatParam, default=1, condition=isGeometry,
+                      label="Sampling Rate (A/px)")                
+
         form.addParam('geo', EnumParam, label='Mask type', default=MASK3D_SPHERE, condition=isGeometry, 
                       choices = ['Sphere', 'Box', 'Crown', 'Cylinder', 
                                  'Gaussian', 'Raised cosine', 'Raised crown'])

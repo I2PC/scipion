@@ -29,18 +29,20 @@ section {
 {% if form.typeVolume.value != 'pdb' %}
 <script type="text/javascript">
 $(function() {
-	$( "#slider" ).slider({
+	$("#slider").slider({
 		range: "min",
 		value: {{threshold}},
-		min: {{minStats}},
-		max: {{maxStats}},
-		change: function( event, ui ) {
+		min: {{minStats}}*100,
+		max: {{maxStats}}*100,
+		step: {{threshold}}/2,
+		change: function(event, ui) {
 			value = ui.value/100
-			$( "#amount" ).val(+ (value) );
+// 			alert("valueSlider:"+ value)
+			$("#amount").val(+(value));
 			av_map_level(value)
 		}
 	});
-	$( "#amount" ).val($( "#slider" ).slider( "value" ) );
+	$("#amount").val($( "#slider" ).slider( "value" ) );
 });
 
 function av_execute(command){
@@ -101,8 +103,8 @@ function av_map_level(l){
 	{% if form.typeVolume.value != 'pdb' %}
 	 	<div>
 			<p>
-				<label for="amount">{{messages_properties.LABEL_THRESHOLD}}</label>
-				<input type="text" id="amount" style="border: 0; color: #f6931f; font-weight: bold;" />
+				<label for="amount">{{msg.LABEL_THRESHOLD}}</label>
+				<input type="text" id="amount" style="border: 0; color: #f6931f; font-weight: bold;" disabled />
 			</p>
 			<div id="slider"></div>
 		</div>
