@@ -108,8 +108,7 @@ public abstract class ImagePlusReader {
 
     boolean isStackOrVolume() {
         try {
-            if(ig != null)
-                return ig.isStackOrVolume();
+            
             if (imp != null)
                 return imp.getStackSize() > 1;
             return false;

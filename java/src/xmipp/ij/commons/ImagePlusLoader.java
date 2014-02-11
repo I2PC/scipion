@@ -83,7 +83,6 @@ public class ImagePlusLoader {
             if(sepindex != -1)
                 fileName = Filename.join(header.replace(textindex + "@", ""), fileName);
         }
-        System.out.println(fileName);
         if (!new File(fileName).exists()) {
             throw new IllegalArgumentException("File not found " + fileName);
         }
@@ -151,6 +150,7 @@ public class ImagePlusLoader {
     }
 
     public String getName() {
+        
         return impreader.getName();
     }
 
