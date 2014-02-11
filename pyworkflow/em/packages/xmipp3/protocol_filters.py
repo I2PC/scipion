@@ -63,7 +63,6 @@ class XmippProcess(ProtProcessParticles):
         imgSet = self._createSetOfParticles()
         imgSet.copyInfo(self.inputParticles.get())
         readSetOfParticles(self.outputMd, imgSet, imgSet.hasCTF())
-        imgSet.write()
         self._processOutput(imgSet)
         self._defineOutputs(outputParticles=imgSet)
         
