@@ -29,7 +29,7 @@ This sub-package contains wrapper around XmippProtPreprocessVolumes protocol
 
 
 from pyworkflow.em import *  
-from pyworkflow.utils import *  
+from pyworkflow.utils import *
 from math import floor
 from xmipp3 import XmippProtocol
 from convert import createXmippInputVolumes, readSetOfVolumes
@@ -54,12 +54,33 @@ class XmippProtPreprocessVolumes(ProtPreprocessVolumes, XmippProtocol):
     def _defineParams(self, form):
         form.addSection(label='Input')
         # Volumes to process
-        form.addParam('inputVolumes', PointerParam, label="Volumes to process", important=True, 
-                      pointerClass='SetOfVolumes',
-                      help='Can be a density volume or a PDB file.')  
-#        form.addParam('inputVoxel', FloatParam, label='Input voxel size (A/voxel)')
+        form.addParam('inputVolumes', PointerParam, label="Input Volume(s):", important=True, 
+                      pointerClass='SetOfVolumes, Volume',
+                      help='Can be a density volume or a SetOfVolumes.')
+#         form.addParam('doResize', BooleanParam, default=False,
+#                       label="Resize the volume(s)", 
+#                       help='If set to True, resize the volume(s).')
+#         form.addParam('outputVoxel', FloatParam, default=0, condition='doResize', label='Final voxel size (A/voxel):',
+#                       help='Set a desire sampling rate.\n '
+#                       'If Final box size is larger than 0, the sampling rate will be\n'
+#                       'calculated by automatic estimation. If both Final voxel size and\n '
+#                       'Final box size has valid values, the protocol ignores the Final box size\n'
+#                       'than Final box size')
+#         form.addParam('size', IntParam, default=0, condition='doResize',
+#                       label='Final box size (voxels):', help='Set to 0 (or negative) for automatic estimation\n'
+#                       'if a valid value of final voxel size is set. If both Final voxel size and\n'
+#                       'Final box size has valid values, the protocol ignores the Final box size\n'
+#                       'than Final box size')
         
         form.addSection(label='Preprocess steps')
+        form.addParam('doWindow', BooleanParam, default=False,
+                      label="Pad or crop volume(s)",
+                      help='If set to True, resize the volume(s).')
+        form.addParam('finalSize', IntParam, default=256, condition='doWindow',
+                      label='Final dimensions (voxels):',
+                      help='Set the desire value to modify the dimensions.\n'
+                      'Important: With this transformation you NOT modify the sampling rate\n'
+                      'of your SetOfVolumes (or volume). Only modify the dimensions')
         # Change hand
         form.addParam('doChangeHand', BooleanParam, default=False,
                       label="Change hand", 
@@ -132,58 +153,51 @@ class XmippProtPreprocessVolumes(ProtPreprocessVolumes, XmippProtocol):
                       label="Molecule Mass", condition='doSegment and segmentationType != 3',
                       help='In automatic segmentation, set it to -1.')
         
-        form.addSection(label='Output')
-        form.addParam('outputVoxel', FloatParam, default=1.0, label='Final voxel size (A/voxel):')
-        form.addParam('finalSize', FloatParam, default=-1, label='Final box size (voxels):', help='Set to -1 for automatic estimation.')
-
 #        form.addParallelSection(threads=1, mpi=8)         
     
     def _insertAllSteps(self):
-        """The preprocess is realized for a set of volumes"""
+        """The preprocess is realized for a set of volumes or a single volume"""
         
         # Convert SetOfVolumes to Xmipp Metadata
         volSet = self.inputVolumes.get()
-        self.volsFn = createXmippInputVolumes(self, volSet)
+        self.outModel = self._getPath("volumes.stk")
         samplingRate = volSet.getSamplingRate()
-        self.volsMd = xmipp.MetaData(self.volsFn)
+        finalSamplingRate = samplingRate
+
+#         xDim, _, _, self.ndim = volSet.getDimensions()
+#         if self.doResize.get():
+# 
+#             if self.outputVoxel.get() >> 0:
+#                 finalSamplingRate = self.outputVoxel.get()
+#                 factor = floor(samplingRate / finalSamplingRate)
+#                 args = "-i %s -o %s --factor %f" % (self.inModel, self.outModel, factor)
+#             elif self.size.get() >= 1:
+#                 dimensions = self.size.get()
+#                 finalSamplingRate = floor(self.size.get() * samplingRate / xDim)
+#                 args = "-i %s -o %s --dim %d" % (self.inModel, self.outModel, dimensions)
+#             
+#             if not singleVolume:
+#                 args+=" --save_metadata_stack"
+#             self._insertRunJobStep(self, "xmipp_image_resize", args)
         
-        # Check volsMd is a volume or a stack
-        if self.volsMd.size()==1:
-            self.outModel=self._getPath("volume.vol")
-            self.singleVolume=True
-        else:
-            self.outModel=self._getPath("volumes.stk")
-            self.singleVolume=False
+        self._insertFunctionStep('copyFilesStep', self.outModel)
+        if self.doWindow:
+            self._insertFunctionStep("windowStep", self.outModel, self.finalSize.get())
         
-        if samplingRate != self.outputVoxel.get() or self.finalSize.get()!=-1:
-            if samplingRate != self.outputVoxel.get() and self.finalSize.get()==-1:
-                x, _, _, _ = volSet.getDimensions()
-                fnSize = floor(x/(self.outputVoxel.get()/samplingRate))
-                self.finalSize.set(fnSize)
-            
-            self._insertFunctionStep("changeSamplingRateAndOrBox",self.volsMd, self.outModel,
-                            self.singleVolume, samplingRate,self.outputVoxel.get(),
-                            self.finalSize.get())
-        else:
-            if self.singleVolume:
-                copyFile(self.volsFn, self.outModel)
-            else:
-                self._insertRunJobStep('xmipp_image_convert', "-i %s -o %s --save_metadata_stack --track_origin"%(self.volsFn,self.outModel))
-         
         if self.doChangeHand:
-            self._insertFunctionStep("changeHand", self.outModel)
+            self._insertFunctionStep("changeHandStep", self.outModel)
         
         if self.doRandomize:
-            self._insertFunctionStep("randomize", self.outModel, self.finalSize.get(), self.maxResolutionRandomize.get())
+            self._insertFunctionStep("randomizeStep", self.outModel, finalSamplingRate, self.maxResolutionRandomize.get())
         
         if self.doFilter:
-            self._insertFunctionStep("filter", self.outModel, self.finalSize.get(), self.maxResFilt.get())
+            self._insertFunctionStep("filterStep", self.outModel, self.finalSize.get(), self.maxResFilt.get())
         
         if self.doSymmetrize:
-            self._insertFunctionStep("symmetrize", self.outModel, self.symmetryGroup.get(), self.aggregation.get())
+            self._insertFunctionStep("symmetrizeStep", self.outModel, self.symmetryGroup.get(), self.aggregation.get())
         
         if self.doMask:
-            self._insertFunctionStep("mask", self.outModel, self.maskRadius.get())
+            self._insertFunctionStep("maskStep", self.outModel, self.maskRadius.get())
         
         if self.doAdjust:
             self._insertFunctionStep("adjust", self.outModel, self.setOfProjections.get())
@@ -197,107 +211,104 @@ class XmippProtPreprocessVolumes(ProtPreprocessVolumes, XmippProtocol):
         if self.doSegment:
             self._insertFunctionStep("segment", self.outModel, self.segmentationType.get(), self.segmentationMass.get(),
                             self.finalSize.get())
-         
-    def window(self,input,outModel,singleVolume,size):
-        if size>0:
-            args="-i %s --size %d"%(input,int(size))
-            if not singleVolume:
-                args+=" --save_metadata_stack"
-            if input!=outModel:
-                args+=" -o %s"%outModel
-            
-            self._insertRunJobStep(self,"xmipp_transform_window",args)
-
-    def scale(self,input,outModel,singleVolume,scale):
-        args="-i %s -o %s --scale %f --dont_wrap"%(input,outModel,scale)
-        if not singleVolume:
-            args+=" --save_metadata_stack"
-        
-        self._insertRunJobStep(self,"xmipp_transform_geometry",args)
+        self._insertFunctionStep('createOutput', finalSamplingRate)
     
-    def changeSamplingRateAndOrBox(self,inModel,outModel,singleVolume,initialTs,finalTs,size):
-        if initialTs==finalTs:
-            self.window(inModel,outModel,singleVolume,size)
-        elif initialTs<finalTs:
-            self.scale(inModel,outModel,singleVolume,initialTs/finalTs)
-            self.window(outModel, outModel,singleVolume,size)
-        else:
-            self.window(inModel,outModel,singleVolume,size)
-            self.scale(outModel,outModel,singleVolume,initialTs/finalTs)
-
-    def randomize(self, outModel, ts, maxResolution):
-        self._insertRunJobStep("xmipp_transform_randomize_phases","-i %s --freq continuous %f %f"%(outModel,float(maxResolution),float(ts)))
+    def copyFilesStep(self, outModel):
+    	""" Prepare the files to process """
+    	volSet = self.inputVolumes.get()
+		# Check volsMd is a volume or a stack
+    	if isinstance(volSet, Volume):
+			self.inModel  = volSet.getFileName()
+			self.singleVolume = True
+			args = "-i %s -o %s -t vol" % (self.inModel, outModel)
+			self.runJob('xmipp_image_convert', args)
+    	else:
+    		vloSet.writeStack(outModel)
+    		self.singleVolume = False
     
-    def filter(self, outModel, ts, maxResolution):
-        self._insertRunJobStep("xmipp_transform_filter","-i %s --fourier low_pass %f --sampling %f"%(outModel,float(maxResolution),float(ts)))
+    def windowStep(self, outModel, size):
+        self.runJob("xmipp_transform_window", "-i %s --size %d" % (outModel, int(size)))
     
-    def mask(self, outModel, maskRadius):
+    def randomizeStep(self, outModel, ts, maxResolution):
+        self.runJob("xmipp_transform_randomize_phases","-i %s --freq continuous %f %f"%(outModel,float(maxResolution),float(ts)))
+    
+    def filterStep(self, outModel, ts, maxResolution):
+        self.runJob("xmipp_transform_filter","-i %s --fourier low_pass %f --sampling %f"%(outModel,float(maxResolution),float(ts)))
+    
+    def maskStep(self, outModel, maskRadius):
         if maskRadius==-1:
             md= xmipp.MetaData(outModel)
             Xdim, _, _, _, _ = xmipp.MetaDataInfo(md)    
             maskRadius=Xdim/2
-        self._insertRunJobStep("xmipp_transform_mask","-i %s --mask circular %d"%(outModel,-int(maskRadius)))
+        self.runJob("xmipp_transform_mask", "-i %s --mask circular %d"%(outModel,-int(maskRadius)))
     
-    def symmetrize(self, outModel, symmetry, symmetryAggregation):
+    def symmetrizeStep(self, outModel, symmetry, symmetryAggregation):
         if symmetry!='c1':
             args="-i %s --sym %s"%(outModel, symmetry)
             if symmetryAggregation=="sum":
                 args+=" --sum"
-            self._insertRunJobStep("xmipp_transform_symmetrize",args)
+            self.runJob("xmipp_transform_symmetrize", args)
     
     def adjust(self, outModel, setOfImages):
-        self._insertRunJobStep("xmipp_adjust_volume_grey_levels","-i %s -m %s"%(outModel, setOfImages))
+        self.runJob("xmipp_adjust_volume_grey_levels", "-i %s -m %s"%(outModel, setOfImages))
     
     def normalize(self, outModel, maskRadius):
         if maskRadius==-1:
             md= xmipp.MetaData(outModel)
             Xdim, _, _, _, _ = xmipp.MetaDataInfo(md)    
             maskRadius=Xdim/2
-        self._insertRunJobStep("xmipp_transform_normalize","-i %s --method NewXmipp --background circle %d"%(outModel, int(maskRadius)))
+        self.runJob("xmipp_transform_normalize", "-i %s --method NewXmipp --background circle %d" % (outModel, int(maskRadius)))
     
     def thresholdFunc(self, outModel, threshold):
-        self._insertRunJobStep("xmipp_transform_threshold","-i %s --select below %f --substitute value 0"%(outModel, float(threshold)))
+        self.runJob("xmipp_transform_threshold", "-i %s --select below %f --substitute value 0" % (outModel, float(threshold)))
     
-    def changeHand(self, outModel):
-        self._insertRunJobStep("xmipp_transform_mirror","-i %s --flipX"%outModel)
+    def changeHandStep(self, outModel):
+        self.runJob("xmipp_transform_mirror","-i %s --flipX"%outModel)
     
     def segment(self, outModel, segmentationType, segmentationMass, ts):
         fnMask=self._getPath("mask.vol")
         args="-i %s -o %s --method "%(outModel, fnMask)
         
-        if segmentationType== "Voxel mass":
-            args+="voxel_mass %d"%(int(segmentationMass))
-        elif segmentationType=="Aminoacid mass":
-            args+="aa_mass %d %f"%(int(segmentationMass),float(ts))
-        elif segmentationType=="Dalton mass":
-            args+="dalton_mass %d %f"%(int(segmentationMass),float(ts))
+        if segmentationType == "Voxel mass":
+            args += "voxel_mass %d" % (int(segmentationMass))
+        elif segmentationType == "Aminoacid mass":
+            args += "aa_mass %d %f" % (int(segmentationMass),float(ts))
+        elif segmentationType == "Dalton mass":
+            args += "dalton_mass %d %f" % (int(segmentationMass),float(ts))
         else:
-            args+="otsu"
+            args += "otsu"
         
-        self._insertRunJobStep("xmipp_volume_segment",args)
+        self.runJob("xmipp_volume_segment",args)
         
         if exists(fnMask):
-            self._insertRunJobStep("xmipp_transform_mask","-i %s --mask binary_file %s"%(outModel, fnMask))
+            self.runJob("xmipp_transform_mask", "-i %s --mask binary_file %s" % (outModel, fnMask))
             
-    def createOutput(self):
-#         volumes = self._createSetOfVolumes()
-#         volumes.setSamplingRate(samplingRate)
-#         
-#         for k in range(1, self.numberOfModels.get() + 1):
-#             volFn = self._getPath('initial_models/model_00_%02d.hdf' % k)
-#             vol = Volume()
-#             vol.setFileName(volFn)
-#             volumes.append(vol)
-# 
-#         volumes.write()
-#         self._defineOutputs(outputVolumes=volumes)
-        pass
+    def createOutput(self, samplingRate):
         
+        if self.singleVolume:
+            vol = Volume()
+            vol.setFileName(self.outModel)
+            self._defineOutputs(outputVol=vol)
+        else:
+            volumes = self._createSetOfVolumes()
+            volumes.setSamplingRate(samplingRate)
+            
+            for i in range(1,self.ndim+1):
+                vol=Volume()
+                vol.setLocation(i,self.outModel)
+                volumes.append(vol)
+            self._defineOutputs(outputVol=volumes)
+
+        self._defineTransformRelation(self.inputVolumes.get(), self.outputVol)
+    
     def _validate(self):
         validateMsgs = []
         
         if not self.inputVolumes.hasValue():
             validateMsgs.append('Please provide an initial volume(s).')
+#         if self.doResize.get():
+#             if self.outputVoxel.get() <= 0 and self.size.get() <= 0:
+#             	validateMsgs.append('Please enter a valid value for Final voxel size or Final box size.')
         
         return validateMsgs
     
@@ -305,10 +316,10 @@ class XmippProtPreprocessVolumes(ProtPreprocessVolumes, XmippProtocol):
         summary = []
         summary.append("Input volumes:  %s" % self.inputVolumes.get().getNameId())
         
-        if not hasattr(self, 'outputVolumes'):
+        if not hasattr(self, 'outputVol'):
             summary.append("Output volumes not ready yet.")
         else:
-            summary.append("Output volumes: %s" % self.outputVolumes.get())
+            summary.append("Output volumes: %s" % self.outputVol)
         
         return summary
         

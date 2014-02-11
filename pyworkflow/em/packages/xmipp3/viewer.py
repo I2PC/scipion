@@ -46,6 +46,7 @@ from protocol_screen_classes import XmippProtScreenClasses
 from protocol_helical_parameters import XmippProtHelicalParameters
 from protocol_convert_to_pseudoatoms import XmippProtConvertToPseudoAtoms
 from protocol_identify_outliers import XmippProtIdentifyOutliers
+from protocol_preprocess_volumes import XmippProtPreprocessVolumes
 from convert import writeSetOfMicrographs, writeSetOfParticles, writeSetOfClasses2D, writeSetOfCoordinates, writeSetOfCTFs, locationToXmipp, \
                     writeSetOfClasses3D
 from os.path import dirname, join
@@ -65,7 +66,7 @@ class XmippViewer(Viewer):
                 ProtParticlePicking, ProtImportParticles, XmippProtExtractParticles, ProtUserSubSet,
                 ProtAlign, ProtProcessParticles, XmippProtKerdensom, XmippProtRotSpectra,  XmippProtCreateMask3D,
                 SetOfClasses2D, SetOfCTF, NormalModes, XmippProtScreenClasses, XmippProtHelicalParameters,
-                XmippProtConvertToPseudoAtoms, XmippProtIdentifyOutliers]
+                XmippProtConvertToPseudoAtoms, XmippProtIdentifyOutliers, XmippProtPreprocessVolumes]
     
     def __init__(self, **args):
         Viewer.__init__(self, **args)
@@ -201,6 +202,8 @@ class XmippViewer(Viewer):
             self.visualize(obj.outputParticles)
         elif issubclass(cls, XmippProtHelicalParameters):
             self.visualize(obj.outputVolume)
+        elif issubclass(cls, XmippProtPreprocessVolumes):
+            self.visualize(obj.outputVol)
         elif issubclass(cls, XmippProtConvertToPseudoAtoms):
             from protlib_gui_ext import chimera
             chimera(obj.outputPdb.getFileName())
