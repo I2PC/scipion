@@ -72,10 +72,7 @@ class XmippViewer(Viewer):
     def visualize(self, obj, **args):
         cls = type(obj)
         
-        print "cls", cls
-        
         if issubclass(cls, Image):
-            print "visualizing Image"
             fn = locationToXmipp(*obj.getLocation())
             runShowJ(fn)
             
