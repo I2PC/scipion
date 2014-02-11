@@ -53,7 +53,6 @@ import java.util.Collections;
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 
 import javax.swing.AbstractAction;
@@ -71,7 +70,6 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JMenuItem;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JRadioButtonMenuItem;
@@ -106,8 +104,6 @@ import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippFileChooser;
 import xmipp.utils.XmippLabel;
 import xmipp.utils.XmippMenuBarCreator;
-import xmipp.utils.XmippMenuCreator;
-import xmipp.utils.XmippMessage;
 import xmipp.utils.XmippPopupMenuCreator;
 import xmipp.utils.XmippQuestionDialog;
 import xmipp.utils.XmippResource;
@@ -123,7 +119,6 @@ import xmipp.viewer.models.MetadataGalleryTableModel;
 import xmipp.viewer.models.MicrographsTableModel;
 import xmipp.viewer.particlepicker.extract.ExtractParticlePicker;
 import xmipp.viewer.particlepicker.extract.ExtractPickerJFrame;
-import xmipp.viewer.windows.ClassesJDialog;
 
 
 /**
@@ -1090,7 +1085,8 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			public void stateChanged(javax.swing.event.ChangeEvent evt)
 			{
 				Integer zoom = (Integer) jsZoom.getValue();
-				if (gallery.getCellSize().getHeight() < 30)
+
+				if (gallery.getCellSize().getHeight() < 30 && zoom < gallery.data.zoom)
 				{
 					jsZoom.setValue(gallery.data.zoom);//keep previous zoom
 					return;
