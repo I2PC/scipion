@@ -49,8 +49,7 @@ class XmippProtConvertToPseudoAtoms(ProtPreprocessVolumes):
     def _defineParams(self, form):
         form.addSection(label='Input')
         form.addParam('inputStructure', PointerParam, label="Input structure", important=True, 
-                      pointerClass='Volume',
-                      help='You can choose either a PDB atomic structure or EM volume')  
+                      pointerClass='Volume')  
         form.addParam('maskMode', EnumParam, choices=['none', 'threshold', 'file'], 
                       default=NMA_MASK_NONE, 
                       label='Mask mode', display=EnumParam.DISPLAY_COMBO,
@@ -62,7 +61,7 @@ class XmippProtConvertToPseudoAtoms(ProtPreprocessVolumes):
         form.addParam('volumeMask', PointerParam, pointerClass='VolumeMask',
                       label='Mask volume', condition='maskMode==%d' % NMA_MASK_FILE,
                       )          
-        form.addParam('pseudoAtomRadius', IntParam, default=1, 
+        form.addParam('pseudoAtomRadius', FloatParam, default=1, 
                       label='Pseudoatom radius (vox)',
                       help='Pseudoatoms are defined as Gaussians whose \n'
                            'standard deviation is this value in voxels') 
@@ -92,7 +91,8 @@ class XmippProtConvertToPseudoAtoms(ProtPreprocessVolumes):
         fnMask = ''
         if self.maskMode == NMA_MASK_THRE:
             fnMask = self._getExtraPath('mask.vol')
-            maskParams = '-i %s -o %s --select below %f --substitute binarize' % (self.inputStructure.get().getFirstItem().getFileName(), fnMask, self.maskThreshold.get())
+            maskParams = '-i %s -o %s --select below %f --substitute binarize' % (getImageLocation(self.inputStructure.get()),
+                                                                                  fnMask, self.maskThreshold.get())
             self._insertRunJobStep('xmipp_transform_threshold', maskParams)
         elif self.maskMode == NMA_MASK_FILE:
             fnMask = getImageLocation(self.volumeMask.get())
