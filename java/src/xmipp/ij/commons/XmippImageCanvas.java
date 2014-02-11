@@ -154,9 +154,11 @@ public class XmippImageCanvas extends ImageCanvas implements MouseWheelListener
 		double currmagnif = getMagnification();
 		Rectangle rect = getSrcRect();
 		imp = xiw.getImagePlusLoader().loadImagePlus();
+                imp.setTitle(xiw.getImagePlusLoader().getName());
 		ImageWindow iw = (ImageWindow) xiw;
 		iw.setImage(getImage());
 		iw.updateImage(getImage());
+                
 		setSourceRect(rect);
 		double prefmagnif = getPreferredMagnification();
 		if (currmagnif < prefmagnif)

@@ -23,11 +23,18 @@ ImportRun = ''
 
 # Automatic quality assessment
 """ 
-Reject micrographs meeting the following conditionctfCritFirstZero<5 OR ctfCritMaxFreq>20 OR
-ctfCritfirstZeroRatio<0.9 OR ctfCritfirstZeroRatio>1.1 OR ctfCritFirstMinFirstZeroRatio>10 OR
-ctfCritCorr13<0 OR ctfCritCtfMargin<2.5 OR ctfCritNonAstigmaticValidty<0.3 OR ctfCritNonAstigmaticValidty>25
+Reject micrographs meeting the following condition: 
+ctfCritFirstZero<5 OR
+ctfCritMaxFreq>20 OR
+ctfCritfirstZeroRatio<0.9 OR
+ctfCritfirstZeroRatio>1.1 OR
+ctfCritFirstMinFirstZeroRatio>10 OR
+ctfCritCorr13<0 OR 
+ctfCritCtfMargin<2.5 OR 
+ctfCritNonAstigmaticValidty<0.3 OR
+ctfCritNonAstigmaticValidty>25
 
-See [[http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Ctf_sort_psds_v31]]
+See [http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Ctf_sort_psds_v31]
 """
 AutomaticQuality = True
 

@@ -4753,7 +4753,7 @@ public:
      * components of the two input arrays. They must have the same shape, if
      * not an exception is thrown
      */
-    friend void MAX(const MultidimArray<T>& v1, const MultidimArray<T>& v2,
+    friend void MultidimArrayMax(const MultidimArray<T>& v1, const MultidimArray<T>& v2,
                     MultidimArray<T>& result)
     {
         if (!v1.sameShape(v2))
@@ -4772,7 +4772,7 @@ public:
      * components of the two input arrays. They must have the same shape, if
      * not an exception is thrown
      */
-    friend void MIN(const MultidimArray<T>& v1, const MultidimArray<T>& v2,
+    friend void MultidimArrayMIN(const MultidimArray<T>& v1, const MultidimArray<T>& v2,
                     MultidimArray<T>& result)
     {
         if (!v1.sameShape(v2))

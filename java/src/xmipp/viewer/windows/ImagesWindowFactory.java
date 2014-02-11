@@ -136,7 +136,7 @@ public class ImagesWindowFactory {
 
 	public static XmippIJWindow openXmippImageWindow(Window window,
 			ImagePlusLoader impLoader, boolean poll) {
-		return openXmippImageWindow(window, impLoader, null, poll);
+		return openXmippImageWindow(window, impLoader, impLoader.getName(), poll);
 		
 	}
 	public static XmippIJWindow openXmippImageWindow(Window window,
@@ -149,6 +149,7 @@ public class ImagesWindowFactory {
 			iw = (title != null)? new XmippStackWindow(window, impLoader, title): new XmippStackWindow(window, impLoader);
 		else
 			iw = (title != null )? new XmippImageWindow(impLoader, title): new XmippImageWindow(impLoader);
+                
 		SwingUtilities.invokeLater(new Worker(iw));
 		return iw;
 	}
@@ -164,7 +165,9 @@ public class ImagesWindowFactory {
 		@Override
 		public void run() {
 			((XmippImageCanvas)  iw.getCanvas()).adjustMagnification();
-			((ImageWindow) iw).setVisible(true);
+                        Frame frame = (ImageWindow) iw;
+			frame.setVisible(true);
+                        
 		}
 	}
 
