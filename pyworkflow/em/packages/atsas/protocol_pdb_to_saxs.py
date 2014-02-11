@@ -102,4 +102,10 @@ class AtsasProtConvertPdbToSAXS(ProtPreprocessVolumes):
 
     def _citations(self):
         return ['Svergun1995']
+    
+    def _validate(self):
+        retval=[]
+        if which('crysol') is '':
+            retval.append('You should have the program crysol in the PATH')
+        return retval
         
