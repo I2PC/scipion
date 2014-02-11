@@ -84,6 +84,7 @@ public:
     std::vector<Particle_coords> coords;
     FileName                 fn_coords;
     FileName                 fn_micrograph;
+    MDRow                    ctfRow; //MetaData row with CTF params
     FileName                 fn_inf;
     int                      X_window_size;
     int                      Y_window_size;
@@ -141,6 +142,19 @@ public:
     {
         fn_micrograph = fn;
     }
+
+    /** Set the CTF parameters */
+    void set_ctfparams(const MDRow &ctf)
+    {
+        ctfRow = ctf;
+    }
+
+    /** Return the row with CTF params. */
+    const MDRow& get_ctfparams()
+    {
+      return ctfRow;
+    }
+
     void setStdevFilter(double d)
     {
         stdevFilter=d;

@@ -216,21 +216,7 @@ void ProgCtfGroup::produceSideInfo()
 
 
     MetaData ctfMD;
-    //number of different CTFs
-    if (SF.containsLabel(MDL_CTF_MODEL))
-    {
-        ctfMD.aggregate(SF, AGGR_COUNT,MDL_CTF_MODEL,MDL_CTF_MODEL,MDL_COUNT);
-        ctfMD.fillExpand(MDL_CTF_MODEL);
-    }
-    else if (containsCTFBasicLabels(SF))
-    {
-        std::vector<MDLabel> groupbyLabels(CTF_BASIC_LABELS,CTF_BASIC_LABELS+CTF_BASIC_LABELS_SIZE);
-        MetaData auxMd;
-        auxMd.aggregateGroupBy(SF, AGGR_COUNT,groupbyLabels,MDL_CTF_DEFOCUSU,MDL_COUNT);
-        ctfMD.join(auxMd,SF,MDL_UNDEFINED,NATURAL);
-    }
-    else
-    	REPORT_ERROR(ERR_MD_MISSINGLABEL,"Expecting CTF_MODEL or (MDL_CTF_DEFOCUSU, MDL_CTF_DEFOCUSV, MDL_CTF_DEFOCUS_ANGLE) labels");
+    groupCTFMetaData(SF, ctfMD);
 
     int nCTFs = ctfMD.size();
     //how much memory do I need to store them
@@ -617,13 +603,13 @@ void ProgCtfGroup::writeOutputToDisc()
     //
     if (ImagesMD.containsLabel(MDL_CTF_MODEL))
     {
-        ctfImagesGroup.join(ImagesMD,sortedCtfMD,MDL_CTF_MODEL,INNER );
+        ctfImagesGroup.join1(ImagesMD, sortedCtfMD, MDL_CTF_MODEL, INNER );
     }
     else
     {
-    	ImagesMD.write("/tmp/ImagesMD");
-    	sortedCtfMD.write("/tmp/sortedCtfMD");
-        ctfImagesGroup.join(ImagesMD,sortedCtfMD,MDL_ITEM_ID,INNER);
+    	//ImagesMD.write("/tmp/ImagesMD");
+    	//sortedCtfMD.write("/tmp/sortedCtfMD");
+        ctfImagesGroup.join1(ImagesMD, sortedCtfMD, MDL_ITEM_ID, INNER);
     }
 
     //

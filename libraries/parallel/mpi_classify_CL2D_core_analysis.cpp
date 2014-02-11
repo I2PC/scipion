@@ -249,7 +249,7 @@ void ProgClassifyCL2DCore::computeStableCores()
                             continue;
                         anotherClass.read(anotherBlock.block+"@"+anotherBlock.fnLevelCore);
                         anotherClass.intersection(thisClass,MDL_IMAGE);
-                        commonImages.join(anotherClass,thisClass,MDL_IMAGE,LEFT);
+                        commonImages.join1(anotherClass, thisClass, MDL_IMAGE,LEFT);
                         commonIdx.resize(commonImages.size());
                         size_t idx=0;
                         FOR_ALL_OBJECTS_IN_METADATA(commonImages)

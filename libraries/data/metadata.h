@@ -917,11 +917,16 @@ public:
     /** Join two Metadatas
      * Result in "calling" metadata
      */
-    void join(const MetaData &mdInLeft, const MetaData &mdInRight, const MDLabel label, JoinType type=LEFT);
+    void join1(const MetaData &mdInLeft, const MetaData &mdInRight, const MDLabel label, JoinType type=LEFT);
+
     /** Join two Metadatas
      * Result in "calling" metadata. join may be done using different labels in each metadata
      */
-    void join(const MetaData &mdInLeft, const MetaData &mdInRight, const MDLabel labelLeft, const MDLabel labelRight , JoinType type=LEFT);
+    void join2(const MetaData &mdInLeft, const MetaData &mdInRight, const MDLabel labelLeft, const MDLabel labelRight , JoinType type=LEFT);
+
+    /** Join two Metadatas using all common labels (NATURAL_JOIN)
+     */
+    void joinNatural(const MetaData &mdInLeft, const MetaData &mdInRight);
 
     /** Basic operations on columns data.
      * Mainly perform replacements on string values and

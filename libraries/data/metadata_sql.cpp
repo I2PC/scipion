@@ -748,7 +748,6 @@ void MDSql::setOperate(const MetaData *mdInLeft,
     std::stringstream ss, ss2, ss3;
     size_t size;
     std::string join_type = "", sep = "";
-
     switch (operation)
     {
     case INNER_JOIN:
@@ -771,19 +770,19 @@ void MDSql::setOperate(const MetaData *mdInLeft,
     if(operation==NATURAL_JOIN)
     {
         std::vector<MDLabel> intersectLabels;
-
-        for (std::vector<MDLabel>
-             ::const_iterator right=(mdInRight->activeLabels)
-                                    .begin();
+        std::vector<MDLabel>::const_iterator left, right;
+        for (right=(mdInRight->activeLabels).begin();
              right!=(mdInRight->activeLabels).end();
              ++right)
-            for (std::vector<MDLabel>
-                 ::const_iterator left=(mdInLeft->activeLabels).begin();
+            for (left=(mdInLeft->activeLabels).begin();
                  left!=(mdInLeft->activeLabels).end();
                  ++left)
             {
                 if (*left == *right)
+                {
+                    String labelStr = MDL::label2Str(*left);
                     intersectLabels.push_back(*left);
+                }
             }
         mdInRight->addIndex(intersectLabels);
         mdInLeft->addIndex(intersectLabels);
@@ -1095,7 +1094,6 @@ bool MDSql::createTable(const std::vector<MDLabel> * labelsVector, bool withObjI
         }
     }
     ss << ");";
-    //std::cerr << "DEBUG_JM: MDSql::createTable " << ss.str() << std::endl;
     return execSingleStmt(ss);
 }
 

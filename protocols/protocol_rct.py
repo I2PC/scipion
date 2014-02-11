@@ -133,15 +133,15 @@ def gatherPairs(log,WorkingDir,ExtraDir,ClassSelection,ClassFile,ExtractDir,Pick
         MDclass = MetaData(getClassBlock(classNo, ClassFile))
         if not MDclass.containsLabel(MDL_IMAGE_TILTED):
             if MDclass.containsLabel(MDL_IMAGE_ORIGINAL):
-                fixedMdClass.join(MDclass,mdImages,MDL_IMAGE_ORIGINAL,MDL_IMAGE,INNER_JOIN)
+                fixedMdClass.join2(MDclass,mdImages,MDL_IMAGE_ORIGINAL,MDL_IMAGE,INNER_JOIN)
             else:
-                fixedMdClass.join(MDclass,mdImages,MDL_IMAGE,MDL_IMAGE,INNER_JOIN)
+                fixedMdClass.join1(MDclass,mdImages,MDL_IMAGE,INNER_JOIN)
         else:
             fixedMdClass=MDclass
-        mdJoin1.join(fixedMdClass,mdImages,MDL_IMAGE,MDL_IMAGE,LEFT_JOIN)
-        mdJoin2.join(mdJoin1,mdUAux, MDL_IMAGE,MDL_IMAGE,LEFT_JOIN)
-        mdJoin3.join(mdJoin2,mdTAux, MDL_IMAGE_TILTED,MDL_IMAGE_TILTED,LEFT_JOIN)
-        mdJoin4.join(mdJoin3,mdTiltAngles,MDL_MICROGRAPH,MDL_MICROGRAPH,LEFT_JOIN)
+        mdJoin1.join1(fixedMdClass,mdImages,MDL_IMAGE, LEFT_JOIN)
+        mdJoin2.join1(mdJoin1, mdUAux, MDL_IMAGE, LEFT_JOIN)
+        mdJoin3.join1(mdJoin2, mdTAux, MDL_IMAGE_TILTED, LEFT_JOIN)
+        mdJoin4.join1(mdJoin3, mdTiltAngles, MDL_MICROGRAPH, LEFT_JOIN)
         fnClassOut=getClassBlock(classNo, fnOut)
         mdJoin4.write(fnClassOut, MD_APPEND)
 

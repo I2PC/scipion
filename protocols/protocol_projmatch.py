@@ -587,7 +587,7 @@ data_noname
                 md2.addLabel(MDL_SHIFT_Y_DIFF)
                 md2.addLabel(MDL_SHIFT_DIFF)
                 tdEnd = datetime.now() - dtBegin
-                mdIter.join (md1, md2, MDL_IMAGE, MDL_IMAGE, INNER_JOIN)
+                mdIter.join1(md1, md2, MDL_IMAGE, INNER_JOIN)
                 tdEnd = datetime.now() - dtBegin
                 SL.computeDistance(mdIter,False,False,False)
                 #md1.write("kk1.xmd")

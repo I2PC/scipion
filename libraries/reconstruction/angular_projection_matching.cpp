@@ -221,7 +221,7 @@ void ProgAngularProjectionMatching::produceSideInfo()
         MetaDataRight.read(rightFn);
         MetaDataLeft.read(fn_exp);
         //Join with angles and shifhts
-        DFexp.join(MetaDataLeft,MetaDataRight,MDL_IMAGE,LEFT);
+        DFexp.join1(MetaDataLeft, MetaDataRight, MDL_IMAGE,LEFT);
     }
     else
         DFexp.read(fn_exp);

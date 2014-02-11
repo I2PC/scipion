@@ -307,9 +307,8 @@ def assign_images_to_references(_log
         #CC use it in both reconstruction
         #recover atribbutes after aggregate function
         
-        MD1.join  (MD, MDaux, MDL_UNDEFINED, MDL_UNDEFINED, NATURAL)
-        MDout.join(MD1, MDSort, MDL_UNDEFINED, MDL_UNDEFINED, NATURAL)
-        print 'write file: ', auxInputdocfile + outputdocfile
+        MD1.joinNatural(MD, MDaux)
+        MDout.joinNatural(MD1, MDSort)
         MDout.write(auxInputdocfile + outputdocfile, MD_APPEND)
         MDout2.unionAll(MDout)
         

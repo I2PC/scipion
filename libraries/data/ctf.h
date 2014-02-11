@@ -36,10 +36,37 @@ const MDLabel CTF_BASIC_LABELS[] =
 	{
 		MDL_CTF_DEFOCUSU, MDL_CTF_DEFOCUSV, MDL_CTF_DEFOCUS_ANGLE, MDL_CTF_CS, MDL_CTF_Q0
 	};
-/**Check that metadata contains ALL CTF_BASIC_LABELS labels
- *
- */
+
+const int CTF_ALL_LABELS_SIZE = 13;
+const MDLabel CTF_ALL_LABELS[] =
+    {
+        MDL_CTF_VOLTAGE,
+        MDL_CTF_DEFOCUSU,
+        MDL_CTF_DEFOCUSV,
+        MDL_CTF_DEFOCUS_ANGLE,
+        MDL_CTF_CS,
+        MDL_CTF_CA,
+        MDL_CTF_ENERGY_LOSS,
+        MDL_CTF_LENS_STABILITY,
+        MDL_CTF_CONVERGENCE_CONE,
+        MDL_CTF_LONGITUDINAL_DISPLACEMENT,
+        MDL_CTF_TRANSVERSAL_DISPLACEMENT,
+        MDL_CTF_Q0,
+        MDL_CTF_K
+    };
+
+/** Check that a metadata contains ALL CTF_BASIC_LABELS labels */
 bool containsCTFBasicLabels(const MetaData &md);
+
+/** From a give images metadata, group by CTF_BASIC_LABELS and fill a ctfs metadata.
+ * Params:
+ *  imgMd: input images metadata.
+ *  ctfMd: the ctfs metadata that will be filled.
+ *
+ * Raise error if neither CTF_MODEL or ALL CTF_BASIC_LABELS are found
+ * in input images metadata.
+ * */
+void groupCTFMetaData(const MetaData &imgMd, MetaData &ctfMd);
 
 /**@defgroup CTFSupport CTF support classes
    @ingroup DataLibrary */

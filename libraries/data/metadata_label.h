@@ -347,7 +347,6 @@ enum MDLabel
     MDL_VOLUME_SCORE2,/// < Score 2 for volumes
     MDL_VOLUME_SCORE3,/// < Score 3 for volumes
     MDL_VOLUME_SCORE4,/// < Score 4 for volumes
-    MDL_VOLTAGE, ///< microscope voltage (double)
     MDL_WEIGHT, ///< Weight assigned to the image (double)
     MDL_WROBUST, ///< Weight of t-student distribution in robust Maximum likelihood
     MDL_X, ///< X component (double)
@@ -1135,7 +1134,6 @@ private:
 
         MDL::addLabel(MDL_TRANSFORM_MATRIX, LABEL_VECTOR_DOUBLE, "transformMatrix");
 
-        MDL::addLabel(MDL_VOLTAGE, LABEL_DOUBLE, "voltage");
         MDL::addLabel(MDL_VOLUME_SCORE_SUM, LABEL_DOUBLE, "volScoreSum");
         MDL::addLabel(MDL_VOLUME_SCORE_MEAN, LABEL_DOUBLE, "volScoreMean");
         MDL::addLabel(MDL_VOLUME_SCORE_MIN, LABEL_DOUBLE, "volScoreMin");

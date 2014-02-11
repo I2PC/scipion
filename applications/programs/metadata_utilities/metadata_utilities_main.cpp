@@ -228,19 +228,19 @@ protected:
         else if (operation == "join")
         {
             MetaData md;
-            md.join(mdIn, md2, label);
+            md.join1(mdIn, md2, label);
             mdIn = md;
         }
         else if (operation == "natural_join")
         {
             MetaData md;
-            md.join(mdIn, md2, label,NATURAL);
+            md.joinNatural(mdIn, md2);
             mdIn = md;
         }
         else if (operation == "inner_join")
         {
             MetaData md;
-            md.join(mdIn, md2, label,label2, INNER);
+            md.join2(mdIn, md2, label, label2, INNER);
             mdIn = md;
         }
         else if (operation == "merge")

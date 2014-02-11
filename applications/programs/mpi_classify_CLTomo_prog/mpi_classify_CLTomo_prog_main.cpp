@@ -1503,7 +1503,7 @@ void ProgClassifyCL3D::run()
         SFaux = SF;
         SFaux.subtraction(SFclassified, MDL_IMAGE);
         SFaux.fillConstant(MDL_ENABLED, "-1");
-        SFaux2.join(SFclassified, SF, MDL_IMAGE, LEFT);
+        SFaux2.join1(SFclassified, SF, MDL_IMAGE, LEFT);
         SFclassified.clear();
         SFaux2.unionAll(SFaux);
         SFaux.clear();
