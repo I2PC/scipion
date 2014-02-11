@@ -289,7 +289,7 @@ class PathParam(StringParam):
     """Param for path strings"""
     pass
 
-
+# TODO: Handle filter pattern
 class FileParam(PathParam):
     """Filename path"""
     pass
