@@ -1,6 +1,6 @@
 # **************************************************************************
 # *
-# * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
+# * Authors:     Carlos Oscar Sorzano (coss@cnb.csic.es)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -24,10 +24,14 @@
 # *
 # **************************************************************************
 """
-This module contains utilities functions and classes.
+This sub-package contains data and protocol classes
+wrapping ATSAS programs http://www.embl-hamburg.de/biosaxs/software.html
 """
 
-from utils import *
-from path import *
-from process import *
-from which import *
+_logo = "atsas_logo.gif"
+
+from bibtex import _bibtex # Load bibtex dict with references
+from atsas import *
+from protocol_pdb_to_saxs import AtsasProtConvertPdbToSAXS
+from viewer import AtsasViewer
+

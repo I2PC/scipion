@@ -141,3 +141,5 @@ class XmippProtResolution3D(ProtValidate3D):
     def _citations(self):
         if self.doSSNR.get() or self.doVSSNR.get():
             return ['Unser2005']
+        return []
+    
