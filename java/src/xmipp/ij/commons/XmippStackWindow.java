@@ -19,7 +19,7 @@ public class XmippStackWindow extends StackWindow implements XmippIJWindow{
 		super(ipl.getImagePlus(), new XmippImageCanvas(ipl.getImagePlus()));
 		this.window = window;
 		this.ipl = ipl;
-		setTitle(title);
+		imp.setTitle(title);
 		menu = new XmippMenuBar(this);
 		setMenuBar(menu);
 		//getCanvas().adjustMagnification();
@@ -36,12 +36,12 @@ public class XmippStackWindow extends StackWindow implements XmippIJWindow{
 	
 	public XmippStackWindow(ImagePlusLoader ipl)
 	{
-		this(null, ipl, ipl.getFileName());
+		this(null, ipl, ipl.getName());
 	}
 	
 	public XmippStackWindow(Window window, ImagePlusLoader ipl)
 	{
-		this(window, ipl, ipl.getFileName());
+		this(window, ipl, ipl.getName());
 	}
 	
 	public XmippStackWindow(ImagePlusLoader ipl, String title)
