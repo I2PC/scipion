@@ -184,9 +184,14 @@ function setImageSize(refreshElement){
 	{% if form.mode.value == 'table' %}
 		{% include "showj/showj_table.html" %} 
 	{% elif form.mode.value == 'gallery' %}
-		{% include "showj/showj_gallery.html" %} 
+		{% include "showj/showj_gallery.html" %}
+	{% elif form.mode.value == 'column' %}
+		{% include "showj/showj_column.html" %} 
+	{% elif form.mode.value == 'volume_astex' %}
+		{% include "showj/showj_volume_astex.html" %}
+	{% elif form.mode.value == 'volume_chimera' %}
+		{% include "showj/showj_volume_chimera.html" %} 
 	{% endif %}
-
 </div>
 
 <!-- Hidden menu for multiple selection tool -->

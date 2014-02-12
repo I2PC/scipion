@@ -76,9 +76,12 @@ urlpatterns = patterns('',
     url(r'^visualize_object/$', 'app.views_showj.visualizeObject'),
     url(r'^visualize_volume/$', 'app.views_showj.visualizeVolume'),
     
-    url(r'^showj_menu/', 'app.views_showj.showj_menu'), #Load showj web menu
-    url(r'^showj_gallery/', 'app.views_showj.showj_gallery'), #Load showj web gallery
-    url(r'^showj_table/', 'app.views_showj.showj_table'), #Load showj web table
+    url(r'^showj_menu/$', 'app.views_showj.showj_menu'), #Load showj web menu
+    url(r'^showj_gallery/$', 'app.views_showj.showj_gallery'), #Load showj web gallery
+    url(r'^showj_table/$', 'app.views_showj.showj_table'), #Load showj web table
+    url(r'^showj_volume_astex/$', 'app.views_showj.showj_volume_astex'), #Load showj web astex visualizer
+    url(r'^showj_volume_chimera/$', 'app.views_showj.showj_volume_chimera'), #Load showj web chimera visualizer
+    
     
     #TESTING
     url(r'^testingSSH/', 'app.views_showj.testingSSH'), #Load web

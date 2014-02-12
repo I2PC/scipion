@@ -53,14 +53,16 @@ def showj(request, inputParameters=None, extraParameters=None):
     tableDataset = None
     
     
-    
     if request.method == 'POST': # If the form has been submitted... Post method
         inputParameters=request.POST.copy()
         
-    print "inputParameters",inputParameters    
+#    print "inputParameters: ",inputParameters    
     
-    if inputParameters["typeVolume"] != 'pdb':
-        
+    if inputParameters["typeVolume"] == 'pdb':
+        inputParameters['tableLayoutConfiguration'] = None
+        volPath = inputParameters['path']
+    
+    else:
         #Init Dataset
         #NAPA DE LUXE: Check type of Dataset 
         dataset = loadDatasetXmipp(inputParameters['path']) 
@@ -123,11 +125,7 @@ def showj(request, inputParameters=None, extraParameters=None):
         request.session['dataset'] = dataset
         request.session['labelsToRenderComboBox'] = inputParameters['labelsToRenderComboBox']
         request.session['blockComboBox'] = inputParameters['blockComboBox']
-        request.session['imageDimensions'] = _imageDimensions
-        
-    else:
-        inputParameters['tableLayoutConfiguration'] = None
-        volPath = inputParameters['path']
+        request.session['imageDimensions'] = _imageDimensions        
 
 
     showjForm = ShowjForm(dataset,
@@ -140,51 +138,11 @@ def showj(request, inputParameters=None, extraParameters=None):
     context = createContext(dataset, tableDataset, inputParameters['tableLayoutConfiguration'], request, showjForm)
 
     if inputParameters['mode']=='volume_astex' or inputParameters['mode']=='volume_chimera':
-
-        threshold = (_stats[2] + _stats[3])/2 if _stats != None else 1
-        
-        print "Threshold:", threshold
-        print "stats:",_stats
-        print "minStats:", _stats[2]
-        print "maxStats:", _stats[3]
-        
-#        volPath = os.path.join(request.session['projectPath'], _imageVolName)
-        
-        context.update({"threshold":threshold,
-                        'minStats':_stats[2] if _stats != None else 1,
-                        'maxStats':_stats[3] if _stats != None else 1, })
-        
-        if inputParameters['mode']=='volume_astex':
-    
-            #        volPath='/home/adrian/Scipion/tests/input/showj/emd_1042.map'        
-#            fileName, fileExtension = os.path.splitext(_imageVolName)
-            
-            linkName = 'test_link_' + request.session._session_key + '.' + inputParameters["typeVolume"]
-            volLinkPath = os.path.join(pw.WEB_RESOURCES, 'astex', 'tmp', linkName)
-            from pyworkflow.utils.path import cleanPath, createLink
-            cleanPath(volLinkPath)
-            createLink(volPath, volLinkPath)
-            volLink = os.path.join('/', settings.STATIC_ROOT, 'astex', 'tmp', linkName)
-            
-            context.update({"volLink":volLink})
-         
-        elif inputParameters['mode']=='volume_chimera':   
-            from subprocess import Popen, PIPE, STDOUT
-            p = Popen([os.environ.get('CHIMERA_HEADLESS'), volPath], stdout=PIPE, stdin=PIPE, stderr=PIPE)
-            outputHtmlFile = os.path.join(pw.WEB_RESOURCES, 'astex', 'tmp', 'test.html')
-            #chimeraCommand= 'volume #0 level ' + str(threshold) + '; export format WebGL ' + outputHtmlFile + '; stop'
-            chimeraCommand= 'export format WebGL ' + outputHtmlFile + '; stop'
-            stdout_data, stderr_data = p.communicate(input=chimeraCommand)
-#            print "stdout_data",stdout_data
-#            print "stderr_data",stderr_data
-            f = open(outputHtmlFile)
-            chimeraHtml = f.read().decode('string-escape').decode("utf-8").split("</html>")[1]
-            
-            context.update({"chimeraHtml":chimeraHtml})
+        context.update(mode_visualize_volume(request, inputParameters, volPath, _stats))
                
-#               'volType': 2, #0->byte, 1 ->Integer, 2-> Float
     elif inputParameters['mode']=='gallery' or inputParameters['mode']=='table' or inputParameters['mode']=='column':
-            context.update({"showj_alt_js": os.path.join(settings.STATIC_URL, "js/showj_libs/", 'showj_' + inputParameters['mode'] + '_utils.js')})
+        showj_alt_js = os.path.join(settings.STATIC_URL, "js/showj_libs/", 'showj_' + inputParameters['mode'] + '_utils.js')
+        context.update({"showj_alt_js": showj_alt_js})
     
 #    return_page = 'showj/%s%s%s' % ('showj_', showjForm.data['mode'], '.html')
     return_page = 'showj/showj_base.html'
@@ -441,15 +399,94 @@ def testingSSH(request):
     return render_to_response("scipion.html", RequestContext(request, context))
 
 
+def mode_visualize_volume(request, inputParameters, volPath, param_stats):
+#        volPath = os.path.join(request.session['projectPath'], _imageVolName)
+
+    threshold = calculateThreshold(param_stats)
+    
+    context = {"threshold":threshold,
+                    'minStats':param_stats[2] if param_stats != None else 1,
+                    'maxStats':param_stats[3] if param_stats != None else 1 }
+    
+    if inputParameters['mode'] == 'volume_astex':
+        context.update(mode_astex(request, inputParameters['typeVolume'], volPath))
+        
+    elif inputParameters['mode'] == 'volume_chimera':   
+        context.update(mode_chimera(volPath))
+        
+#               'volType': 2, #0->byte, 1 ->Integer, 2-> Float
+
+    return context
+        
+
+def mode_astex(request, typeVolume, volPath):
+#   volPath='/home/adrian/Scipion/tests/input/showj/emd_1042.map'        
+#   fileName, fileExtension = os.path.splitext(_imageVolName)
+            
+#    linkName = 'test_link_' + request.session._session_key + '.' + inputParameters["typeVolume"]
+
+    linkName = 'test_link_' + request.session._session_key + '.' + typeVolume
+    volLinkPath = os.path.join(pw.WEB_RESOURCES, 'astex', 'tmp', linkName)
+    
+    from pyworkflow.utils.path import cleanPath, createLink
+    cleanPath(volLinkPath)
+    createLink(volPath, volLinkPath)
+    volLink = os.path.join('/', settings.STATIC_ROOT, 'astex', 'tmp', linkName)
+    
+    return {"volLink":volLink}
+    
+    
+def mode_chimera(volPath):
+    from subprocess import Popen, PIPE, STDOUT
+    
+    p = Popen([os.environ.get('CHIMERA_HEADLESS'), volPath], stdout=PIPE, stdin=PIPE, stderr=PIPE)
+    outputHtmlFile = os.path.join(pw.WEB_RESOURCES, 'astex', 'tmp', 'test.html')
+    #chimeraCommand= 'volume #0 level ' + str(threshold) + '; export format WebGL ' + outputHtmlFile + '; stop'
+    chimeraCommand= 'export format WebGL ' + outputHtmlFile + '; stop'
+    stdout_data, stderr_data = p.communicate(input=chimeraCommand)
+#            print "stdout_data",stdout_data
+#            print "stderr_data",stderr_data
+    f = open(outputHtmlFile)
+    chimeraHtml = f.read().decode('string-escape').decode("utf-8").split("</html>")[1]
+    
+    return {"chimeraHtml":chimeraHtml}
+    
+    
+def calculateThreshold(params):
+    threshold = (params[2] + params[3])/2 if params != None else 1
+        
+    print "Threshold:", threshold
+    print "stats:",params
+    print "minStats:", params[2]
+    print "maxStats:", params[3]
+    
+    return threshold
+
+
 def showj_gallery(request):
     context = {}
-    
-    return render_to_response('showj_gallery.html', RequestContext(request, context))
-
+    context = RequestContext(request, context)
+    return render_to_response('showj_gallery.html', context)
 
 def showj_table(request):
     context = {}
-    
-    return render_to_response('showj_table.html', RequestContext(request, context))
+    context = RequestContext(request, context)
+    return render_to_response('showj_table.html', context)
+
+def showj_column(request):
+    context = {}
+    context = RequestContext(request, context)
+    return render_to_response('showj_column.html', context)
+
+def showj_volume_astex(request):
+    context = {}
+    context = RequestContext(request, context)
+    return render_to_response('showj_volume_astex.html', context)
+
+def showj_volume_chimera(request):
+    context = {}
+    context = RequestContext(request, context)
+    return render_to_response('showj_volume_chimera.html', context)
+
 
 
