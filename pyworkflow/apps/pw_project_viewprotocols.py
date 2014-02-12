@@ -213,7 +213,8 @@ class RunIOTreeProvider(TreeProvider):
         return objs
     
     def visualize(self, Viewer, obj):
-        Viewer().visualize(obj)
+        viewer = Viewer(project=self.protocol.getProject())
+        viewer.visualize(obj)
         
     def edit(self, obj):
         """Open the Edit GUI Form given an instance"""
@@ -738,8 +739,7 @@ class ProtocolsView(tk.Frame):
         viewers = findViewers(prot.getClassName(), DESKTOP_TKINTER)
         if len(viewers):
             #TODO: If there are more than one viewer we should display a selection menu
-            firstViewer = viewers[0]() # Instanciate the first available viewer
-            firstViewer.project = self.project
+            firstViewer = viewers[0](project=self.project) # Instanciate the first available viewer
             firstViewer.visualize(prot, windows=self.windows)
         else:
             self.windows.showError(Message.NO_VIEWER_FOUND +" *%s* " % prot.getClassName())

@@ -235,6 +235,8 @@ class Protocol(Step):
         self.__stdErr = None
         self.__fOut = None
         self.__fErr = None
+        # Project to which the protocol belongs
+        self.__project = None
         
         # For non-parallel protocols mpi=1 and threads=1
         if not hasattr(self, 'numberOfMpi'):
@@ -296,7 +298,11 @@ class Protocol(Step):
             
         self._storeAttributes(self._outputs, args)
         
-        
+    def getProject(self):
+        return self.__project
+    
+    def setProject(self, project):
+        self.__project = project
                 
     @staticmethod
     def hasDefinition(cls):
