@@ -47,7 +47,7 @@ from protocol_helical_parameters import XmippProtHelicalParameters
 from protocol_convert_to_pseudoatoms import XmippProtConvertToPseudoAtoms
 from protocol_identify_outliers import XmippProtIdentifyOutliers
 from protocol_preprocess_volumes import XmippProtPreprocessVolumes
-from convert import writeSetOfMicrographs, writeSetOfParticles, writeSetOfClasses2D, writeSetOfCoordinates, writeSetOfCTFs, locationToXmipp, \
+from convert import writeSetOfMicrographs, writeSetOfParticles, writeSetOfVolumes, writeSetOfClasses2D, writeSetOfCoordinates, writeSetOfCTFs, locationToXmipp, \
                     writeSetOfClasses3D
 from os.path import dirname, join
 from pyworkflow.utils.path import makePath
@@ -123,7 +123,10 @@ class XmippViewer(Viewer):
             else:
                 fn = self._getTmpPath(obj.getName() + '_images.xmd')
                 #Set hasCTF to False to avoid problems
-                writeSetOfParticles(obj, fn, self._getTmpPath())
+                if issubclass(cls, SetOfParticles):
+                    writeSetOfParticles(obj, fn)
+                else:
+                    writeSetOfVolumes(obj, fn)
             if issubclass(cls, SetOfParticles):
                 runScipionShowJ(fn, "Set Of Particles", obj)  
             else:

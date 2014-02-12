@@ -294,7 +294,8 @@ class XmippProtPreprocessVolumes(ProtPreprocessVolumes, XmippProtocol):
             volumes.setSamplingRate(samplingRate)
             inVolSet = self.inputVolumes.get()
             for i, vol in enumerate(inVolSet):
-                vol.setLocation(i, self.outModel)
+                j = i + 1 
+                vol.setLocation(j, self.outModel)
                 volumes.append(vol)
             self._defineOutputs(outputVol=volumes)
 
