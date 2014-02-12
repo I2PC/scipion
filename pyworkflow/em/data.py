@@ -36,6 +36,7 @@ from pyworkflow.utils.path import cleanPath, dirname, join, replaceExt
 import xmipp
 
 
+
 class EMObject(OrderedObject):
     """Base object for all EM classes"""
     def __init__(self, **args):
@@ -53,40 +54,85 @@ class Acquisition(EMObject):
     """Acquisition information"""
     def __init__(self, **args):
         EMObject.__init__(self, **args)
-        self.magnification = Float(60000)
-        self.voltage = Float(300)
-        self.sphericalAberration = Float(2.0)
-        self.amplitudeContrast = Float(0.1)
+        self._magnification = Float(args.get('magnification', None)) 
+        # Microscope voltage in kV
+        self._voltage = Float(args.get('voltage', None))
+        # Spherical aberration in mm
+        self._sphericalAberration = Float(args.get('sphericalAberration', None)) 
+        self._amplitudeContrast = Float(args.get('amplitudeContrast', None))
         
     def copyInfo(self, other):
-        self.magnification.set(other.magnification.get())
-        self.voltage.set(other.voltage.get())
-        self.sphericalAberration.set(other.sphericalAberration.get())
-        self.amplitudeContrast.set(other.amplitudeContrast.get())
+        self.copyAttributes(other, '_magnification', '_voltage', 
+                            '_sphericalAberration', '_amplitudeContrast')
+        
+    def getMagnification(self):
+        return self._magnification.get()
+        
+    def setMagnification(self, value):
+        self._magnification.set(value)
+        
+    def getVoltage(self):
+        return self._voltage.get()
+        
+    def setVoltage(self, value):
+        self._voltage.set(value)
+        
+    def getSphericalAberration(self):
+        return self._sphericalAberration.get()
     
-
+    def setSphericalAberration(self, value):
+        self._sphericalAberration.set(value)
+        
+    def getAmplitudeContrast(self):
+        return self._amplitudeContrast.get()
+    
+    def setAmplitudeContrast(self, value):
+        self._amplitudeContrast.set(value)        
+       
+    
 class CTFModel(EMObject):
     """ Represents a generic CTF model. """
     def __init__(self, **args):
         EMObject.__init__(self, **args)
-        self.defocusU = Float()
-        self.defocusV = Float()
-        self.defocusAngle = Float()
-        self.psdFile = String()
-        self.micFile = String()
+        self._defocusU = Float(args.get('defocusU', None))
+        self._defocusV = Float(args.get('defocusV', None))
+        self._defocusAngle = Float(args.get('defocusAngle', None))
+        self._psdFile = String()
+        self._micFile = String()
         
     def getDefocusU(self):
-        return self.defocusU.get()
-    
+        return self._defocusU.get()
+        
+    def setDefocusU(self, value):
+        self._defocusU.set(value)
+        
     def getDefocusV(self):
-        return self.defocusV.get()
-
+        return self._defocusV.get()
+        
+    def setDefocusV(self, value):
+        self._defocusV.set(value)
+        
     def getDefocusAngle(self):
-        return self.defocusAngle.get()
-
+        return self._defocusAngle.get()
+        
+    def setDefocusAngle(self, value):
+        self._defocusAngle.set(value)
+        
     def copyInfo(self, other):
-        self.copyAttributes(other, 'defocusU', 'defocusV',
-                            'defocusAngle', 'psdFile')
+        self.copyAttributes(other, '_defocusU', '_defocusV',
+                            '_defocusAngle', '_psdFile', '_micFile')
+        
+    def getPsdFile(self):
+        return self._psdFile.get()
+    
+    def setPsdFile(self, value):
+        self._psdFile.set(value)
+        
+    def getMicFile(self):
+        return self._micFile.get()
+    
+    def setMicFile(self, value):
+        self._micFile.set(value)
 
 
 class Image(EMObject):
@@ -98,6 +144,7 @@ class Image(EMObject):
         self._filename = String()
         self._samplingRate = Float()
         self._ctfModel = None
+        self._acquisition = None
         
     def getSamplingRate(self):
         """ Return image sampling rate. (A/pix) """
@@ -160,6 +207,16 @@ class Image(EMObject):
     
     def setCTF(self, newCTF):
         self._ctfModel = newCTF
+        
+    def getAcquisition(self):
+        return self._acquisition
+    
+    def setAcquisition(self, acquisition):
+        self._acquisition = acquisition
+        
+    def hasAcquisition(self):
+        return (self._acquisition is not None and 
+                self._acquisition.getMagnification() is not None)
         
     def __str__(self):
         """ String representation of an Image. """
@@ -258,7 +315,7 @@ class Set(EMObject):
         """ Get the image with the given id. """
         return self._mapper.selectById(itemId)
 
-    def __iterItems(self):
+    def _iterItems(self):
         return self._mapper.selectAll(iterate=True)
     
     def getFirstItem(self):
@@ -267,7 +324,7 @@ class Set(EMObject):
     
     def __iter__(self):
         """ Iterate over the set of images. """
-        return self.__iterItems()
+        return self._iterItems()
        
     def __len__(self):
         return self._size.get()
@@ -348,7 +405,7 @@ class SetOfImages(Set):
         self._isAmplitudeCorrected = Boolean(False)
         self._acquisition = Acquisition()
            
-    def getAcquisition(self, index=0):
+    def getAcquisition(self):
         return self._acquisition
         
     def hasCTF(self):
@@ -438,7 +495,13 @@ class SetOfImages(Set):
             raise Exception("FATAL ERROR: Object %s has no sampling rate!!!" % self.getName())
         s = "%s (%d items, %0.2f A/px)" % (self.getClassName(), self.getSize(), self.getSamplingRate())
         return s
-    
+
+    def __iter__(self):
+        """ Redefine iteration to set the acquisition to images. """
+        for img in self._iterItems():
+            img.setAcquisition(self.getAcquisition())
+            yield img
+            
     
 class SetOfMicrographs(SetOfImages):
     """Represents a set of Micrographs"""
@@ -456,7 +519,7 @@ class SetOfMicrographs(SetOfImages):
     def setSamplingRate(self, samplingRate):
         """ Set the sampling rate and adjust the scannedPixelSize. """
         self._samplingRate.set(samplingRate)
-        self._scannedPixelSize.set(1e-4 * samplingRate * self._acquisition.magnification.get())
+        self._scannedPixelSize.set(1e-4 * samplingRate * self._acquisition.getMagnification())
                
     def getScannedPixelSize(self):
         return self._scannedPixelSize.get()
@@ -464,7 +527,7 @@ class SetOfMicrographs(SetOfImages):
     def setScannedPixelSize(self, scannedPixelSize):
         """ Set scannedPixelSize and update samplingRate. """
         self._scannedPixelSize.set(scannedPixelSize)
-        self._samplingRate.set((1e+4 * scannedPixelSize) / self._acquisition.magnification.get())
+        self._samplingRate.set((1e+4 * scannedPixelSize) / self._acquisition.getMagnification())
 
 
 class SetOfParticles(SetOfImages):

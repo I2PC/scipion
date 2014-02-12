@@ -27,7 +27,7 @@
 This sub-package contains protocol for ResMap
 """
 
-_logo = None
+_logo = "resmap_logo.png"
 _references = ['A. Kucukelbir, F.J. Sigworth, and H.D. Tagare, Quantifying the Local Resolution of Cryo-EM Density Maps, Nature Methods. In Press, 2013.']
 
 from protocol_resmap import ProtResMap

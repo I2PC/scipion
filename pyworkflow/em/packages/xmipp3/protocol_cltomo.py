@@ -99,7 +99,7 @@ class XmippProtCLTomo(ProtClassify3D):
         if self.generateAligned.get():
             setOfVolumes = self._createSetOfVolumes()
             fnAligned = self._getExtraPath('results_aligned.xmd')
-            self.runJob(None,'xmipp_metadata_selfile_create', '-p %s -o %s -s'%(self._getExtraPath('results_aligned.stk'),fnAligned))
+            self.runJob('xmipp_metadata_selfile_create', '-p %s -o %s -s'%(self._getExtraPath('results_aligned.stk'),fnAligned))
             md=MetaData(fnAligned)
             md.addItemId()
             md.write(fnAligned)
@@ -126,15 +126,20 @@ class XmippProtCLTomo(ProtClassify3D):
         (Xdim1, Ydim1, Zdim1, _)=self.volumelist.get().getDimensions()
         if Xdim1!=Ydim1 or Ydim1!=Zdim1:
             errors.append("Input subvolumes are not cubic")
+        N0=-1
         if not self.doGenerateInitial.get():
             if not self.referenceList.hasValue():
                 errors.append("If references are not self generated, you have to provide a reference set of volumes")
             else:
-                (Xdim2, Ydim2, Zdim2, _) = self.referenceList.get().getDimensions()
+                (Xdim2, Ydim2, Zdim2, N0) = self.referenceList.get().getDimensions()
                 if Xdim2!=Ydim2 or Ydim2!=Zdim2:
                     errors.append("Reference subvolumes are not cubic")
                 if Xdim1!=Xdim2:
                     errors.append("Input and reference subvolumes are of different size")
+        else:
+            N0=self.numberOfReferences0.get()
+        if N0>0 and N0>self.numberOfReferences.get():
+            errors.append("The number of initial references have to be smaller or equal than the number of final references")            
         return errors
 
     def _citations(self):
@@ -168,4 +173,4 @@ class XmippProtCLTomo(ProtClassify3D):
         if self.dontAlign.get():
             params+=" --dontAlign"
 
-        self.runJob(None,'xmipp_mpi_classify_CLTomo','%d %s'%(self.numberOfMpi.get(),params))
+        self.runJob('xmipp_mpi_classify_CLTomo','%d %s'%(self.numberOfMpi.get(),params))

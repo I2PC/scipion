@@ -23,7 +23,7 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
-from pyworkflow.protocol.constants import STATUS_RUNNING
+from pyworkflow.protocol.constants import STATUS_RUNNING, STATUS_FAILED
 """
 This modules contains classes required for the workflow
 execution and tracking like: Step and Protocol
@@ -56,7 +56,7 @@ class Step(OrderedObject):
         self.status = String()
         self.initTime = String()
         self.endTime = String()
-        self.error = String()
+        self._error = String()
         self.isInteractive = Boolean(False)
            
     def _preconditions(self):
@@ -81,17 +81,20 @@ class Step(OrderedObject):
         self.initTime.set(dt.datetime.now())
         self.endTime.set(None)
         self.status.set(STATUS_RUNNING)
-        self.error.set(None) # Clean previous error message
+        self._error.set(None) # Clean previous error message
+        
+    def getError(self):
+        return self._error
         
     def setFailed(self, msg):
         """ Set the run failed and store an error message. """
-        self.error.set(msg)
+        self._error.set(msg)
         self.status.set(STATUS_FAILED)
         
     def setAborted(self):
         """ Set the status to aborted and updated the endTime. """
         self.endTime.set(dt.datetime.now())
-        self.error.set("Aborted by user.")
+        self._error.set("Aborted by user.")
         self.status.set(STATUS_ABORTED)
 
     def getStatus(self):
@@ -111,6 +114,9 @@ class Step(OrderedObject):
     
     def isRunning(self):
         return self.getStatus() == STATUS_RUNNING
+    
+    def isFailed(self):
+        return self.getStatus() == STATUS_FAILED
     
     def run(self):
         """ Do the job of this step"""
@@ -485,14 +491,8 @@ class Protocol(Step):
         """ Insert an Step that will simple call runJob function
         **args: see __insertStep
         """
-        step = RunJobStep(self.runJob, progName, progArguments, resultFiles)
-
-        if self.stepsExecutionMode == STEPS_SERIAL:
-            step.mpi = args.get('numberOfMpi', self.numberOfMpi.get())
-            step.threads = args.get('numberOfThreads', self.numberOfThreads.get())
+        self._insertFunctionStep('runJob', progName, progArguments)
             
-        return self.__insertStep(step, **args)
-
     def _enterDir(self, path):
         """ Enter into a new directory path and store the current path.
         The current path will be used in _leaveDir, but nested _enterDir
@@ -537,7 +537,7 @@ class Protocol(Step):
             return 0
         
         n = min(len(self._steps), len(self._prevSteps))
-        self._log.info("len(steps) " + str(len(self._steps)) + " len(prevSteps) " + str(len(self._prevSteps)))
+        self.info("len(steps) " + str(len(self._steps)) + " len(prevSteps) " + str(len(self._prevSteps)))
         
         for i in range(n):
             newStep = self._steps[i]
@@ -571,7 +571,7 @@ class Protocol(Step):
         """This function will be called whenever an step
         has started running.
         """
-        self._log.info("STARTED: " + step.funcName.get())
+        self.info("STARTED: " + step.funcName.get())
         self.status.set(step.status)
         self._store(step)
     
@@ -586,10 +586,10 @@ class Protocol(Step):
             doContinue = False
         elif step.status == STATUS_FAILED:
             doContinue = False
-            self.setFailed("Protocol failed: " + step.error.get())
-            self._log.error("Protocol failed: " + step.error.get())
+            self.setFailed("Protocol failed: " + step.getError().get())
+            self.error("Protocol failed: " + step.getError().get())
         self.lastStatus = step.status.get()
-        self._log.info("FINISHED: " + step.funcName.get())
+        self.info("FINISHED: " + step.funcName.get())
         return doContinue
     
     def _runSteps(self, startIndex):
@@ -674,14 +674,23 @@ class Protocol(Step):
         if len(errors):
             raise Exception('Protocol.run: Validation errors:\n' + '\n'.join(errors))
         
-        self.runJob = self._stepsExecutor.runJob
         self.__backupSteps() # Prevent from overriden previous stored steps
         self._insertAllSteps() # Define steps for execute later
         #self._makePathsAndClean() This is done now in project
         startIndex = self.__findStartingStep() # Find at which step we need to start
-        self._log.info(" Starting at index: %d" % startIndex)
+        self.info(" Starting at index: %d" % startIndex)
         self.__cleanStepsFrom(startIndex) # 
         self._runSteps(startIndex)
+    
+    def runJob(self, program, arguments, **kwargs):
+        if self.stepsExecutionMode == STEPS_SERIAL:
+            kwargs['numberOfMpi'] = kwargs.get('numberOfMpi', self.numberOfMpi.get())
+            kwargs['numberOfThreads'] = kwargs.get('numberOfThreads', self.numberOfThreads.get())
+        else:
+            kwargs['numberOfMpi'] = kwargs.get('numberOfMpi', 1)
+            kwargs['numberOfThreads'] = kwargs.get('numberOfThreads', 1)           
+            
+        self._stepsExecutor.runJob(self._log, program, arguments, **kwargs)
         
     def run(self):
         """ Before calling this method, the working dir for the protocol
@@ -690,15 +699,15 @@ class Protocol(Step):
         self.__initLogs()
         
         self.info('RUNNING PROTOCOL -----------------')
-#        self._log.info('RUNNING PROTOCOL info -----------------')
-#        self._log.warning('RUNNING PROTOCOL warning-----------------')
-#        self._log.error('RUNNING PROTOCOL error-----------------')
-#        self._log.info('RUNNING PROTOCOL info red-----------------', True)
-#        self._log.warning('RUNNING PROTOCOL warning red-----------------', True)
-#        self._log.error('RUNNING PROTOCOL error red-----------------', True)
-#        self._log.info('        jobId: %s' % self.getJobId())
-#        self._log.info('          pid: %s' % os.getpid())
-#        self._log.info('         ppid: %s' % os.getppid())
+#        self.info('RUNNING PROTOCOL info -----------------')
+#        self.warning('RUNNING PROTOCOL warning-----------------')
+#        self.error('RUNNING PROTOCOL error-----------------')
+#        self.info('RUNNING PROTOCOL info red-----------------', True)
+#        self.warning('RUNNING PROTOCOL warning red-----------------', True)
+#        self.error('RUNNING PROTOCOL error red-----------------', True)
+#        self.info('        jobId: %s' % self.getJobId())
+#        self.info('          pid: %s' % os.getpid())
+#        self.info('         ppid: %s' % os.getppid())
         self._pid.set(os.getpid())
         self.info('   currentDir: %s' % os.getcwd())
         self.info('   workingDir: ' + self.workingDir.get())
@@ -764,13 +773,13 @@ class Protocol(Step):
         return fOutString, fErrString, fScpnString
     
     def warning(self, message, redirectStandard=True):
-        self._log.warning(message, True)
+        self._log.warning(message, redirectStandard)
         
     def info(self, message, redirectStandard=True):
-        self._log.info(message, True)
+        self._log.info(message, redirectStandard)
         
     def error(self, message, redirectStandard=True):
-        self._log.error(message, True)
+        self._log.error(message, redirectStandard)
         
     def getWorkingDir(self):
         return self.workingDir.get()
@@ -941,8 +950,8 @@ class Protocol(Step):
     def summary(self):
         """ Return a summary message to provide some information to users. """
         error = ''
-        if self.error.hasValue():
-            error = '*ERROR:*\n' + self.error.get()
+        if self.getError().hasValue():
+            error = '*ERROR:*\n' + self.getError().get()
         baseSummary = self._summary()
         if not baseSummary:
             baseSummary = []

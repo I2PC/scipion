@@ -1,6 +1,6 @@
 # **************************************************************************
 # *
-# * Authors:    Josue Gomez Blanco (jgomez@cnb.csic.es)
+# * Authors:    Carlos Oscar Sorzano (coss@cnb.csic.es)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -32,7 +32,7 @@ from test_protocols_xmipp import TestXmippBase
 
 
     
-class TestXmippCeateMask3D(TestXmippBase):
+class TestXmippCLTomo(TestXmippBase):
     @classmethod
     def setUpClass(cls):
         setupProject(cls)
@@ -40,30 +40,18 @@ class TestXmippCeateMask3D(TestXmippBase):
 #         cls.protImport = cls.runImportParticles(pattern=images, samplingRate=1, checkStack=False)
 #         cls.iniVol = getInputPath('ml3dData', 'icoFiltered.vol')
     
-    def testCreateMask1(self):
-        print "Import volume"
-        protImportVol = ProtImportVolumes(pattern=getInputPath('Volumes_BPV', 'BPV_scale_filtered_windowed_64.vol'), samplingRate=9.896)
+    def testCLTomo(self):
+        print "Import volumes"
+        protImportVol = ProtImportVolumes(pattern=getInputPath('CLTomo', 'subvols*.spi'), samplingRate=1)
         self.proj.launchProtocol(protImportVol, wait=True)
     
-        print "Run create mask from volume"
-        protMask1 = XmippProtCreateMask3D(source=0, threshold=0.4)
-        protMask1.volume.set(protImportVol.outputVolumes)
-        self.proj.launchProtocol(protMask1, wait=True)        
+        print "Run CLTomo"
+        protCLTomo = XmippProtCLTomo(numberOfReferences=1,numberOfIterations=1)
+        protCLTomo.volumelist.set(protImportVol.outputVolumes)
+        self.proj.launchProtocol(protCLTomo, wait=True)        
         
-        self.assertIsNotNone(protMask1.outputMask, "There was a problem with create mask from volume")          
-
-        print "Run create mask from geometry"
-        protMask2 = XmippProtCreateMask3D(source=1, size=64, samplingRate=9.89, geo=6, innerRadius=10, outerRadius=25, borderDecay=2)
-        self.proj.launchProtocol(protMask2, wait=True)        
-        
-        self.assertIsNotNone(protMask2.outputMask, "There was a problem with create mask from geometry")          
-
-        print "Run create mask from another mask"
-        protMask3 = XmippProtCreateMask3D(source=2, doMorphological=True, elementSize=3)
-        protMask3.inputMask.set(protMask1.outputMask)
-        self.proj.launchProtocol(protMask3, wait=True)        
-         
-        self.assertIsNotNone(protMask3.outputMask, "There was a problem with mask from another mask")          
+        self.assertIsNotNone(protCLTomo.outputClasses, "There was a problem with CLTomo output classes")          
+        self.assertIsNotNone(protCLTomo.alignedVolumes, "There was a problem with CLTomo output aligned volumes")          
 
 if __name__ == "__main__":
     if len(sys.argv) > 1:

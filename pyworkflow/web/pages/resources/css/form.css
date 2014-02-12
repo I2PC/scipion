@@ -183,7 +183,7 @@ table td:nth-child(odd) {
 	padding: 4px 6px 6px 2px;
 }
 table td:nth-child(even){
-	padding: 4px 2px 6px 6px;
+/* 	padding: 4px 2px 6px 6px; */
 }
 table a{
 	color: firebrick;

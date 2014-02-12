@@ -29,7 +29,7 @@ visualization program.
 """
 
 import os
-from pyworkflow.viewer import Viewer, Wizard, DESKTOP_TKINTER, WEB_DJANGO
+from pyworkflow.viewer import Viewer, DESKTOP_TKINTER, WEB_DJANGO
 from pyworkflow.em.data import *
 from pyworkflow.em.protocol import *
 from pyworkflow.utils.process import runJob
@@ -43,7 +43,11 @@ from protocol_kerdensom import XmippProtKerdensom
 from protocol_rotational_spectra import XmippProtRotSpectra
 from protocol_create_mask import XmippProtCreateMask3D
 from protocol_screen_classes import XmippProtScreenClasses
-from convert import writeSetOfMicrographs, writeSetOfParticles, writeSetOfClasses2D, writeSetOfCoordinates, writeSetOfCTFs, locationToXmipp, \
+from protocol_helical_parameters import XmippProtHelicalParameters
+from protocol_convert_to_pseudoatoms import XmippProtConvertToPseudoAtoms
+from protocol_identify_outliers import XmippProtIdentifyOutliers
+from protocol_preprocess_volumes import XmippProtPreprocessVolumes
+from convert import writeSetOfMicrographs, writeSetOfParticles, writeSetOfVolumes, writeSetOfClasses2D, writeSetOfCoordinates, writeSetOfCTFs, locationToXmipp, \
                     writeSetOfClasses3D
 from os.path import dirname, join
 from pyworkflow.utils.path import makePath
@@ -62,7 +66,8 @@ class XmippViewer(Viewer):
                 ProtImportMicrographs, XmippProtPreprocessMicrographs, ProtCTFMicrographs,
                 ProtParticlePicking, ProtImportParticles, XmippProtExtractParticles, ProtUserSubSet,
                 ProtAlign, ProtProcessParticles, XmippProtKerdensom, XmippProtRotSpectra,  XmippProtCreateMask3D,
-                SetOfClasses2D, SetOfCTF, NormalModes, XmippProtScreenClasses]
+                SetOfClasses2D, SetOfCTF, NormalModes, XmippProtScreenClasses, XmippProtHelicalParameters,
+                XmippProtConvertToPseudoAtoms, XmippProtIdentifyOutliers, XmippProtPreprocessVolumes]
     
     def __init__(self, **args):
         Viewer.__init__(self, **args)
@@ -70,10 +75,7 @@ class XmippViewer(Viewer):
     def visualize(self, obj, **args):
         cls = type(obj)
         
-        print "cls", cls
-        
         if issubclass(cls, Image):
-            print "visualizing Image"
             fn = locationToXmipp(*obj.getLocation())
             runShowJ(fn)
             
@@ -124,7 +126,10 @@ class XmippViewer(Viewer):
             else:
                 fn = self._getTmpPath(obj.getName() + '_images.xmd')
                 #Set hasCTF to False to avoid problems
-                writeSetOfParticles(obj, fn, self._getTmpPath())
+                if issubclass(cls, SetOfParticles):
+                    writeSetOfParticles(obj, fn)
+                else:
+                    writeSetOfVolumes(obj, fn)
             if issubclass(cls, SetOfParticles):
                 runScipionShowJ(fn, "Set Of Particles", obj)  
             else:
@@ -156,7 +161,7 @@ class XmippViewer(Viewer):
             else:
                 fn = self._getTmpPath(obj.getName() + '_classes.xmd')
                 writeSetOfClasses3D(obj, fn, self._getTmpPath())
-            runShowJ(fn, extraParams=args.get('extraParams', ''))  
+            runShowJ("classes@"+fn, extraParams=args.get('extraParams', ''))  
         elif issubclass(cls, SetOfCTF):
             mdFn = getattr(obj, '_xmippMd', None)
             if mdFn:
@@ -186,9 +191,11 @@ class XmippViewer(Viewer):
         elif issubclass(cls, XmippProtRotSpectra):
             self.visualize(obj.outputClasses, extraParams='--mode rotspectra --columns %d' % obj.SomXdim.get())
         elif issubclass(cls, XmippProtScreenClasses):
-            runShowJ(obj.getVisualizeInfo(), extraParams=' --mode metadata --render first')
+            runShowJ(obj.getVisualizeInfo().get(), extraParams=' --mode metadata --render first')
+        elif issubclass(cls, XmippProtIdentifyOutliers):
+            runShowJ(obj.getVisualizeInfo().get(), extraParams=' --mode metadata --render first')
 # TODO: We have to develop a showj analyze tool for classes so we can select classes or images associated to them
-#        Airem this is your good shit
+#        Airen this is your good shit
 #            runScipionShowJ(obj.getVisualizeInfo(), "Set Of Classes", obj.inputClasses.get(), 
 #                            extraParams=' --mode metadata --render first')
         elif issubclass(cls, XmippProtCreateMask3D):
@@ -199,6 +206,13 @@ class XmippViewer(Viewer):
             self.visualize(obj.outputCTF)
         elif issubclass(cls, ProtProcessParticles):
             self.visualize(obj.outputParticles)
+        elif issubclass(cls, XmippProtHelicalParameters):
+            self.visualize(obj.outputVolume)
+        elif issubclass(cls, XmippProtPreprocessVolumes):
+            self.visualize(obj.outputVol)
+        elif issubclass(cls, XmippProtConvertToPseudoAtoms):
+            from protlib_gui_ext import chimera
+            chimera(obj.outputPdb.getFileName())
         else:
             raise Exception('XmippViewer.visualize: can not visualize class: %s' % obj.getClassName())
         
@@ -243,6 +257,7 @@ def runShowJ(inputFiles, memory="1g", extraParams=""):
     runJavaIJapp(memory, "'xmipp.viewer.Viewer'", "-i %s %s" % (inputFiles, extraParams), True)
     
 def runScipionShowJ(inputFiles, set, obj, memory="1g", extraParams=""):
+
     
     script = pw.join('apps', 'pw_create_image_subset.py')
     script = "%s %s" % (pw.PYTHON, script) 

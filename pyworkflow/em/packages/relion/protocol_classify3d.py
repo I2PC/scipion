@@ -27,11 +27,11 @@
 This module contains the protocol for 3d classification with relion.
 """
 
-
 from pyworkflow.em import *  
 from pyworkflow.utils.which import which
 from pyworkflow.utils.path import makePath, replaceBaseExt, join, basename
 from convert import createRelionInputImages, createRelionInputVolume
+
 
 class ProtRelionBase(EMProtocol):
     """ Base class for all relion protocols"""

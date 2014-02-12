@@ -26,6 +26,7 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
+from pyworkflow.em.packages.xmipp3.convert import micrographToCTFParam
 """
 This sub-package contains the XmippProtExtractParticles protocol
 """
@@ -33,7 +34,7 @@ This sub-package contains the XmippProtExtractParticles protocol
 
 from pyworkflow.em import * 
 
-from convert import writeSetOfCoordinates, readSetOfParticles, writeCTFModel
+from convert import writeSetOfCoordinates, readSetOfParticles
 from pyworkflow.utils.path import makePath, removeBaseExt, join, exists
 from xmipp3 import XmippProtocol
 from glob import glob
@@ -198,23 +199,16 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
                 
             #if self.doFlip.get():
             if self.ctfRelations.hasValue():
-                mic.ctfModel = ctfSet[micId]       
+                mic.setCTF(ctfSet[micId])       
                         
             #self._insertFunctionStep('getCTF', micId, micName, micrographToExtract)
             micName = removeBaseExt(mic.getFileName())
-            fnCTF = None
             #FIXME: Check only if mic has CTF when implemented ok
             #if self.doFlip or mic.hasCTF():
             if self.ctfRelations.hasValue():
-                # Write CTF metadata if it does not exist
-                mdFn = getattr(mic, '_xmippMd', None)
-                if mdFn:
-                    fnCTF = mdFn.get()
-                else:
-                    fnCTF = self._getTmpPath("%s.ctfParam" % micName)
-                mic.ctfModel.sphericalAberration = Float(self.inputMics.getAcquisition().sphericalAberration.get())
-                writeCTFModel(mic.ctfModel, fnCTF)  
-                 
+                # If the micrograph doesn't come from Xmipp, we need to write
+                # a Xmipp ctfparam file to perform the phase flip on the micrograph                     
+                fnCTF = micrographToCTFParam(mic, self._getTmpPath("%s.ctfParam" % micName))
                 # Insert step to flip micrograph
                 if self.doFlip:
                     self._insertFunctionStep('flipMicrographStep', micName, fnCTF, micrographToExtract)
@@ -243,7 +237,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         if self.downsampleType != self.ORIGINAL:
             downFactor = self.samplingFinal/self.samplingInput
             args += " --downsampling %(downFactor)f"
-        self.runJob(None, "xmipp_ctf_phase_flip", args % locals())
+        self.runJob("xmipp_ctf_phase_flip", args % locals())
         
         
     def extractParticlesStep(self, micId, micName, fnCTF, micrographToExtract):
@@ -264,25 +258,23 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
             boxSize = self.boxSize.get()
             args = "-i %(micrographToExtract)s --pos %(particlesMd)s -o %(outputRoot)s --Xdim %(boxSize)d" % locals()
             if self.downsampleType.get() != self.SAME_AS_PICKING:
-                args += " --downsampling " + str(self.samplingFinal/self.samplingInput)
+                args += " --downsampling %f" % (self.samplingFinal/self.samplingInput)
             if self.doInvert:
                 args += " --invert"
+            if fnCTF:
+                args += " --ctfparam " + fnCTF
         
-            self.runJob(None,"xmipp_micrograph_scissor", args)
+            self.runJob("xmipp_micrograph_scissor", args)
             # Normalize 
             if self.doNormalize:
                 self.runNormalize(outputRoot + '.stk', self.normType.get(), self.backRadius.get())          
                                
-            if (self.downsampleType.get() == self.OTHER) or (fnCTF is not None):
+            if self.downsampleType == self.OTHER:
                 selfile = outputRoot + ".xmd"
                 md = xmipp.MetaData(selfile)
-                if self.downsampleType.get() == self.OTHER:
-                    downsamplingFactor = self.samplingFinal/self.samplingInput
-                    md.operate("Xcoor=Xcoor*%f" % downsamplingFactor)
-                    md.operate("Ycoor=Ycoor*%f" % downsamplingFactor)
-                # If micrograph has CTF info copy it
-                if fnCTF is not None:
-                    md.setValueCol(xmipp.MDL_CTF_MODEL, fnCTF)
+                downsamplingFactor = self.samplingFinal/self.samplingInput
+                md.operate("Xcoor=Xcoor*%f" % downsamplingFactor)
+                md.operate("Ycoor=Ycoor*%f" % downsamplingFactor)
                 md.write(selfile)
                 
     def runNormalize(self, stack, normType, bgRadius):
@@ -299,7 +291,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
             args += "--method NewXmipp --background circle %(bgRadius)d"
         else:
             args += "--method Ramp --background circle %(bgRadius)d"
-        self.runJob(None, program, args % locals())
+        self.runJob(program, args % locals())
                     
     def getImgIdFromCoord(self, coordId):
         """ Get the image id from the related coordinate id. """
@@ -325,10 +317,9 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
             #imgSet.appendFromMd(mdPos)
             imgsXmd.unionAll(mdPos)
    
-        imgsXmd.sort(xmipp.MDL_IMAGE)
+        #TODO: CHECK WITH JAVI
+        #imgsXmd.sort(xmipp.MDL_IMAGE)
         imgsXmd.write(fnImages)
-        #imgSet.sort() # We need sort?
-        #imgSet.write()
 
         # Run xmipp_image_sort_by_statistics to add zscore info to images.xmd
         args="-i %(fnImages)s --addToInput"
@@ -339,7 +330,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
             percentage = self.percentage.get()
             args += " --percent " + str(percentage)
 
-        self.runJob(None, "xmipp_image_sort_by_statistics", args % locals())
+        self.runJob("xmipp_image_sort_by_statistics", args % locals())
         md = xmipp.MetaData(fnImages) # Should have ZScore label after runJob
 #         md.addItemId()
         md.sort(xmipp.MDL_ZSCORE)

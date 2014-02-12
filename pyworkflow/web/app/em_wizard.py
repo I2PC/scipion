@@ -255,7 +255,7 @@ def wiz_filter_spider(protocol, request):
             
             return render_to_response('wizards/wiz_filter_spider.html', context)
 
-def wiz_bandpass(protocol, request):
+def wiz_particle_bandpass(protocol, request):
     particles = protocol.inputParticles.get()
     mode = protocol.fourierMode.get()
     
@@ -295,8 +295,37 @@ def wiz_bandpass(protocol, request):
             context = wiz_base(request, context)
             
             return render_to_response('wizards/wiz_bandpass.html', context)
+        
+def wiz_volume_bandpass(protocol, request):
+    volumes = protocol.input3DReferences.get()
+    res = validateSet(volumes)
+    
+    highFreq = protocol.resolution.get()
+    
+    if res is not 1:
+        return HttpResponse(res)
+    else:
+        vols = [vol.clone() for vol in volumes]
+        
+        for v in vols:
+            v.basename = basename(v.getFileName())
+                
+        if len(vols) == 0:
+            return HttpResponse("errorIterate")
+        else:
+            context = {'objects': vols,
+                       'lowFreq': 0,
+                       'highFreq': highFreq,
+                       'decayFreq': 0,
+                       'unit': UNIT_PIXEL
+                       }
+            
+            context = wiz_base(request, context)
+            
+            return render_to_response('wizards/wiz_relion_bandpass.html', context)
 
-def wiz_gaussian(protocol, request):
+
+def wiz_particle_gaussian(protocol, request):
     particles = protocol.inputParticles.get()
     res = validateParticles(particles) 
     

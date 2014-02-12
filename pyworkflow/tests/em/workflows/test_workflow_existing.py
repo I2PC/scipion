@@ -196,8 +196,8 @@ class TestXmippWorkflow(unittest.TestCase):
         img.setLocation(1, 'image.spi')
         img.setSamplingRate(3.5)
         ctf = CTFModel()
-        ctf.defocusU.set(1000)
-        ctf.defocusAngle.set(90)
+        ctf.setDefocusU(1000)
+        ctf.setDefocusAngle(90)
         img.setCTF(ctf)
         img.setAttributeValue('_ctfModel.defocusV', 1000)
         return img

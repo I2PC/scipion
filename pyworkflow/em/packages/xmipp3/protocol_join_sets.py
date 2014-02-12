@@ -34,7 +34,6 @@ import xmipp
 class XmippProtJoinSets(ProtPreprocessMicrographs):
     """ Protocol to obtain a set of initial volumes. """
     _label = 'join sets'
-    _references=['Mierdita mia','peromierditawena']
     
     def __init__(self, **args):
         ProtPreprocessMicrographs.__init__(self, **args)
@@ -43,46 +42,64 @@ class XmippProtJoinSets(ProtPreprocessMicrographs):
     def _defineParams(self, form):
         form.addSection(label='Input')
         
-        form.addParam('inputMicrographs', MultiPointerParam, label="Input set of micrographs", important=True, 
-                      pointerClass='SetOfMicrographs', minNumObjects=1, maxNumObjects=0,
-                      help='Select the input set of micrographs from the project.'
-                           'They should 2 or more SetOfMicrographs classes')
-        
+        form.addParam('inputSet', MultiPointerParam, label="Input set of images", important=True, 
+                      pointerClass='SetOfImages', minNumObjects=2, maxNumObjects=0,
+                      help='Select the set of images (it can be a set of micrographs, particles o volumes) from the project.'
+                           'They should 2 or more object classes')
         
     def _insertAllSteps(self):
-        
         self._insertFunctionStep('createOutput')
   
     def createOutput(self):
+        #Read Classname and generate corresponding SetOfImages (SetOfParticles, SetOfVolumes, SetOfMicrographs)
+        self.inputType = str(self.inputSet[0].get().getClassName())
+        func ="_create%s" % self.inputType
+        outputSetFunction = getattr(self, func)
+        outputSet = outputSetFunction()
+        
+        #Copy info from input (sampling rate, etc)
+        outputSet.copyInfo(self.inputSet[0].get())
        
-        micsSet = self._createSetOfMicrographs()
-        micsSet.copyInfo(self.inputMicrographs[0].get())
+        for itemSet in self.inputSet:
+            for itemObj in itemSet.get():
+                itemObj.cleanObjId()
+                outputSet.append(itemObj)
+        outputSet.write()
         
-        # Get pointer to input micrographs 
-        for setOfMicrograph in self.inputMicrographs:
-            for mic in setOfMicrograph.get():
-                mic.cleanObjId()
-                micsSet.append(mic)
-                
-        micsSet.write()
+        self._defineOutputs(outputImages=outputSet)
         
-        self._defineOutputs(outputMicrographs=micsSet)
+    def validate(self):
+        classList = []
+        for itemSet in self.inputSet:
+            itemClassName = itemSet.get().getClassName()
+            if len(classList) == 0 or itemClassName not in classList:
+                classList.append(itemClassName)
+            
+        errors = []
+        if len(classList) > 1:
+            errors.append("Object should have same type")
+            errors.append("Types of objects found: " + ", ".join(classList))
+        return errors  
 
     def _summary(self):
         summary = []
-        if not hasattr(self, 'outputMicrographs'):
-            summary.append("Output micrographs not ready yet.")
+        if not hasattr(self, 'outputImages'):
+            summary.append("Output set not ready yet.")
         else:
-            summary.append("RANSAC iterations: ")
-
+            summary.append("Input sets of type %s:" % self.outputImages.getClassName())
+            for itemSet in self.inputSet:
+                summary.append("%s" % itemSet.get().getNameId())
         return summary
         
     def _methods(self):
         methods = []
-        if not hasattr(self, 'outputMicrographs'):
+        if not hasattr(self, 'outputImages'):
             methods.append("Protocol has not finished yet.")
         else:
-            methods.append("Ese material and methods de moda")
+            m = "We have joint the following sets: "
+            for itemSet in self.inputSet:
+                m += "%s, " % itemSet.get().getNameId()
+            methods.append(m[:-2])
         
         return methods
             
