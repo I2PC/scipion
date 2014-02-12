@@ -28,8 +28,10 @@
  
 def expandRelion(classify=True):
     samplingStr = '# {section} Sampling'
+    changesStr = 'Changes in Offset, Angles and Classes'
     if not classify:
         samplingStr += ' (initial value will be autoincremented)'
+        changesStr = 'Changes in Offset and Angles'
     
     linesStr = '''
 # {cite}
@@ -411,7 +413,7 @@ Likelihood = False
 """ Average (per class) of the maximum value of normalized probability function """
 AvgPMAX = False
 
-# {view} Changes in Offset, Angles and Classes
+# {view} ''' + changesStr + '''
 """ Visualize changes in orientation, offset and number images assigned to each class"""
 TableChange = False
     '''

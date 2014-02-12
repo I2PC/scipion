@@ -278,16 +278,22 @@ class ProtRelionBase(XmippProtocol):
 
     def visualize(self):
         
-        plots = [k for k in ['TableImagesPerClass'
-                           , 'DisplayResolutionPlotsFSC'
+        plots = [k for k in ['DisplayResolutionPlotsFSC'
                            , 'DisplayResolutionPlotsSSNR'
                            , 'TableChange'
                            , 'Likelihood'
-                           , 'DisplayReconstruction'
-                           , 'DisplayAngularDistribution'
+                           #, 'DisplayReconstruction'
+                           #, 'DisplayAngularDistribution'
                            , 'DisplayImagesClassification'
                            , 'AvgPMAX'
                            ] if self.ParamsDict[k]]
+        
+        if self.DisplayAngularDistribution != "none":
+            plots.append('DisplayAngularDistribution')
+            
+        if self.DisplayReconstruction != 'none':
+            plots.append('DisplayReconstruction')
+            
 
         if len(plots):
             self.launchRelionPlots(plots)
