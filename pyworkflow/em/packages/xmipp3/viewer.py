@@ -112,12 +112,12 @@ class XmippViewer(Viewer):
             #    extraDir = dirname(extraFn.get())
             #else:
             #creating set of coords tmp dir to persist coords and provide output dir to picker on review mode 
-            extraDir = self._getTmpPath(obj.getName()) # TODO: CHECK to create an extra for the coordinates obj
-            print "=========================pwd: %s extraDir:%s"%(os.getcwd(), extraDir)
-            makePath(extraDir)
-            writeSetOfCoordinates(extraDir, obj)            
+            tmpDir = self._getTmpPath(obj.getName()) # TODO: CHECK to create an extra for the coordinates obj
+            
+            makePath(tmpDir)
+            writeSetOfCoordinates(tmpDir, obj)            
                 
-            runParticlePicker(fn, extraDir, extraParams='review')
+            runParticlePicker(fn, tmpDir, extraParams='review')
         
         elif issubclass(cls, SetOfParticles) or issubclass(cls, SetOfVolumes):
             mdFn = getattr(obj, '_xmippMd', None)
