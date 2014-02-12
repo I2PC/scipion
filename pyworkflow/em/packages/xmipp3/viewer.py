@@ -96,24 +96,26 @@ class XmippViewer(Viewer):
             runScipionShowJ(fn, "Set Of Micrographs", obj)    
         
         elif issubclass(cls, SetOfCoordinates):
-            obj_mics = obj.getMicrographs()
+            obj_mics = obj.getMicrographs()#accessing mics to provide metadata file
             mdFn = getattr(obj_mics, '_xmippMd', None)
             
             if mdFn:
                 fn = mdFn.get()
-            else:
+            else:#if no metadata file, create one on tmp folder, happens if protocol is not an xmipp one
                 fn = self._getTmpPath(obj_mics.getName() + '_micrographs.xmd')
                 writeSetOfMicrographs(obj_mics, fn)
                 
-            extraFn = getattr(obj, '_xmippMd', None)
-            if extraFn:
-                extraDir = dirname(extraFn.get())
-            else:
-                extraDir = self._getTmpPath(obj.getName()) # TODO: CHECK to create an extra for the coordinates obj
-                makePath(extraDir)
-                writeSetOfCoordinates(extraDir, obj)            
+            #extraFn = getattr(obj, '_xmippMd', None)#accessing object metadata to look for extra dir, which is output dir for visualizer 
+            #if extraFn:
+            #    extraDir = dirname(extraFn.get())
+            #else:
+            #creating set of coords tmp dir to persist coords and provide output dir to picker on review mode 
+            extraDir = self._getTmpPath(obj.getName()) # TODO: CHECK to create an extra for the coordinates obj
+            print "=========================pwd: %s extraDir:%s"%(os.getcwd(), extraDir)
+            makePath(extraDir)
+            writeSetOfCoordinates(extraDir, obj)            
                 
-            runParticlePicker(fn, extraDir, extraParams='readonly')
+            runParticlePicker(fn, extraDir, extraParams='review')
         
         elif issubclass(cls, SetOfParticles) or issubclass(cls, SetOfVolumes):
             mdFn = getattr(obj, '_xmippMd', None)
