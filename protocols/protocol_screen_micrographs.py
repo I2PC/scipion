@@ -66,10 +66,10 @@ class ProtScreenMicrographs(XmippProtocol):
             micrographName = os.path.basename(inputFile)
             shortname = os.path.splitext(micrographName)[0]
             micrographDir = os.path.join(extraDir,shortname)                    
-
+            automaticDownsampling=getattr(self,'AutomaticDownsampling',True)
             self.insertParallelStep('estimateSingleCTF',verifyfiles=[_getFilename('ctfparam', micrographDir=micrographDir)],
                                     WorkingDir=self.WorkingDir, inputFile=inputFile, DownsampleFactor=self.DownsampleFactor,
-                                    AutomaticDownsampling=self.AutomaticDownsampling, Voltage=Voltage,
+                                    AutomaticDownsampling=automaticDownsampling, Voltage=Voltage,
                                     SphericalAberration=SphericalAberration, AngPix=AngPix, AmplitudeContrast=self.AmplitudeContrast,
                                     LowResolCutoff=self.LowResolCutoff, HighResolCutoff=self.HighResolCutoff,WinSize=self.WinSize,
                                     MaxFocus=self.MaxFocus,MinFocus=self.MinFocus,FastDefocus=self.FastDefocus,
@@ -83,7 +83,7 @@ class ProtScreenMicrographs(XmippProtocol):
                            importMicrographs=self.MicrographsMd,
                            Downsampling=self.DownsampleFactor,
                            NumberOfMpi=self.NumberOfMpi)
-        if self.AutomaticQuality:
+        if getattr(self,'AutomaticQuality',True):
             condition="ctfCritFirstZero<5 OR ctfCritMaxFreq>20 OR ctfCritfirstZeroRatio<0.9 OR ctfCritfirstZeroRatio>1.1 OR "\
                       "ctfCritFirstMinFirstZeroRatio>10 OR ctfCritCorr13<0 OR ctfCritCtfMargin<2.5 OR ctfCritNonAstigmaticValidty<0.3 OR "\
                       "ctfCritNonAstigmaticValidty>25"
