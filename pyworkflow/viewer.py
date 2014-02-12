@@ -49,6 +49,7 @@ class Viewer(object):
     
     def __init__(self, tmpPath='./Tmp', **args):
         self._tmpPath = tmpPath
+        self._project = args.get('project', None)
         
     def _getTmpPath(self, *paths):
         return join(self._tmpPath, *paths)
@@ -66,6 +67,12 @@ class Viewer(object):
         in those viewers that have WEB_DJANGO environment defined. 
         """
         return None
+    
+    def getProject(self):
+        return self._project
+    
+    def setProject(self, project):
+        self._project = project
     
     
 class ProtocolViewer(Protocol, Viewer):
