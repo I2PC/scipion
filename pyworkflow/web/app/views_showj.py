@@ -98,9 +98,8 @@ def showj_block(request, inputParameters, extraParameters):
         
         _typeOfColumnToRender = inputParameters['tableLayoutConfiguration'].columnsLayout[inputParameters['labelsToRenderComboBox']].typeOfColumn
         
-        _imageDimensions = readDimensions(request,
-                                          _imageVolName,
-                                          _typeOfColumnToRender)
+        _imageDimensions = readDimensions(request, _imageVolName, _typeOfColumnToRender)
+        
         dataset.setNumberSlices(_imageDimensions[2])
         
         if _typeOfColumnToRender == "image":
@@ -164,10 +163,7 @@ def showj(request, inputParameters=None, extraParameters=None):
     
     if inputParameters is None:
         inputParameters = request.POST.copy()
-    
-    print "INPUT PARAMETERS!!!!!!!!!!!! ", inputParameters
-    print "BlockComboBox: ",inputParameters['blockComboBox']
-    
+        
     if 'dataset' not in request.session:
         #Init Dataset first time
         showj_init_dataset(request, inputParameters, extraParameters)
@@ -218,6 +214,7 @@ def createContext(dataset, tableDataset, tableLayoutConfiguration, request, show
     if dataset is not None:
         context.update({'dataset': dataset})
     if tableLayoutConfiguration is not None:
+        
         context.update({'tableLayoutConfiguration': json.dumps({'columnsLayout': tableLayoutConfiguration.columnsLayout,
                                                                'colsOrder': tableLayoutConfiguration.colsOrder},
                                                                ensure_ascii=False,
@@ -230,8 +227,9 @@ def createContext(dataset, tableDataset, tableLayoutConfiguration, request, show
     return context
 
 def getExtraParameters(extraParameters, tableDataset):
-    print "extraParameters",extraParameters 
+#    print "extraParameters: ",extraParameters 
     defaultColumnsLayoutProperties = None
+    
     if extraParameters != None and extraParameters != {}:
         defaultColumnsLayoutProperties = {k.getName(): {} for k in tableDataset.iterColumns()}
         for key, value in extraParameters.iteritems():
@@ -386,22 +384,28 @@ def visualizeObject(request):
             inputParameters['path'] = os.path.join(projectPath, createXmippInputImages(None, obj, imagesFn=os.path.join(projectPath, fn)))
 #            writeSetOfParticles(obj, fn)
 #            inputParameters['path']= os.path.join(projectPath, fn)
-        elif isinstance(obj, Image):  
+        elif isinstance(obj, Image):
             fn = project.getTmpPath(obj.getName() + '_image.xmd')
-            fnSet = fn.replace('.xmd', '.sqlite')
-            cleanPath(fn, fnSet)
-            
-#            t = time()
-#            fnSet = fn.replace('.xmd', str(t) + '.sqlite')
-                
-            imgSet = SetOfImages(filename=fnSet)
-#            print "imgSet:",imgSet
-
-            img = Image()
-            #img.copyInfo(obj)
-            img.copyLocation(obj)
-            imgSet.append(img)
-            inputParameters['path'] = os.path.join(projectPath, createXmippInputImages(None, imgSet, imagesFn=os.path.join(projectPath, fn)))
+#            
+#            # TODO: Improve this part saving the file
+##            from time import time
+##            t = time()
+##            fnSet = fn.replace('.xmd', str(t) + '.sqlite')
+#            fnSet = fn.replace('.xmd', '.sqlite')
+#            cleanPath(fn, fnSet)
+#                
+#            imgSet = SetOfImages(filename=fnSet)
+##            print "imgSet:",imgSet
+#
+#            img = Image()
+#            #img.copyInfo(obj)
+#            img.copyLocation(obj)
+#            imgSet.append(img)
+#            inputParameters['path'] = os.path.join(projectPath, createXmippInputImages(None, imgSet, imagesFn=os.path.join(projectPath, fn)))
+            md = xmipp.MetaData()
+            md.setValue(xmipp.MDL_IMAGE, getImageLocation(obj), md.addObject())
+            md.write(fn)
+            inputParameters['path'] = os.path.join(projectPath, fn)
 #            writeSetOfParticles(imgSet, fn)
 #            inputParameters['path']= os.path.join(projectPath, fn)
             
@@ -491,10 +495,10 @@ def create_context_chimera(volPath):
 def calculateThreshold(params):
     threshold = (params[2] + params[3])/2 if params != None else 1
         
-    print "Threshold:", threshold
-    print "stats:",params
-    print "minStats:", params[2]
-    print "maxStats:", params[3]
+#    print "Threshold:", threshold
+#    print "stats:",params
+#    print "minStats:", params[2]
+#    print "maxStats:", params[3]
     
     return threshold
 
