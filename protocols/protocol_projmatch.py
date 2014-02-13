@@ -69,10 +69,12 @@ class ProtProjMatch(XmippProtocol):
             self.DocFileName = self.SelFileName
         #sampling is now in acquisition info
         #self.ResolSam=float(self.ResolSam)
-        acquisionInfo = self.findAcquisitionInfo(self.SelFileName)
+        acquisionInfo = self.findAcquisitionInfo(self.SelFileNameInitial)
         if not acquisionInfo is None: 
             md = MetaData(acquisionInfo)
             self.ResolSam = md.getValue(MDL_SAMPLINGRATE, md.firstObject())
+        else:
+            self.ResolSam = 1
         if self.MaskRadius == -1:
            (Xdim, Ydim, Zdim, Ndim) = getImageSize(self.ReferenceFileNames[0])
            self.MaskRadius = Xdim/2
