@@ -448,7 +448,7 @@ class ProtRelionBase(XmippProtocol):
     
     def _writeIterAngularDist(self, it):
         """ Write the angular distribution. Should be overriden in subclasses. """
-        pass
+        print "Doing nothing....."
     
     def _getIterAngularDist(self, it):
         """ Return the .star file with the classes angular distribution
@@ -464,7 +464,7 @@ class ProtRelionBase(XmippProtocol):
     
     def _getIterSortedData(self, it):
         """ Sort the it??.data.star file by the maximum likelihood. """
-        addRelionLabels(True)
+        addRelionLabels()
         data_sorted = self.getFilename('data_sorted_xmipp', iter=it)
         if not xmippExists(data_sorted):
             print "Sorting particles by likelihood iteration %03d" % it
@@ -524,8 +524,10 @@ class ProtRelionBase(XmippProtocol):
                 if xmippExists(model_star):
                     md = MetaData(model_star)
                     resolution_inv = [md.getValue(MDL_RESOLUTION_FREQ, id) for id in md]
+                    ticks = ['0'] + ['1/%d' % int(1/r) for r in resolution_inv[1:]]
                     frc = [md.getValue(MDL_RESOLUTION_FRC, id) for id in md]
                     a.plot(resolution_inv, frc)
+                    a.xaxis.set_ticklabels(ticks)
                     legendName.append('iter %d' % it)
             xplotter.showLegend(legendName)
             if self.ResolutionThreshold < max(frc):
@@ -611,8 +613,8 @@ class ProtRelionBase(XmippProtocol):
             for ref3d in self._visualizeRef3Ds:
               plot_title = 'Resolution SSNR %s, for Class %s' % (prefix, ref3d)
               a = xplotter.createSubPlot(plot_title, 'Armstrongs^-1', 'log(SSNR)', yformat=False)
-              legendName=[]
               blockName = 'model_class_%d@' % ref3d
+              legendName = []
               for it in self._visualizeIterations:
                   file_name = blockName + self.getFilename(prefix + 'model', iter=it)
                   #file_name = self.getFilename('ResolutionXmdFile', iter=it, ref=ref3d)
@@ -623,10 +625,12 @@ class ProtRelionBase(XmippProtocol):
                       md.importObjects(mdOut, MDValueGT(MDL_RESOLUTION_SSNR, 0.9))
                       md.operate("resolutionSSNR=log(resolutionSSNR)")
                       resolution_inv = [md.getValue(MDL_RESOLUTION_FREQ, id) for id in md]
+                      ticks = ['0'] + ['1/%d' % int(1/r) for r in resolution_inv[1:]]
                       frc = [md.getValue(MDL_RESOLUTION_SSNR, id) for id in md]
                       a.plot(resolution_inv, frc)
+                      a.xaxis.set_ticklabels(ticks)
                       legendName.append('iter %d' % it)
-                  xplotter.showLegend(legendName)
+              xplotter.showLegend(legendName)
               a.grid(True)
         xplotter.show(True)
               
@@ -690,11 +694,11 @@ class ProtRelionBase(XmippProtocol):
             iterations = range(self.firstIter(), self._visualizeLastIteration+1)
             labels = [MDL_AVGPMAX, MDL_PMAX]
             colors = ['g', 'b']
-            
+            prefixes = self._getPrefixes()
             for it in iterations: # range (firstIter,self._visualizeLastIteration+1): #alwaya list all iteration
                 objId = mdIters.addObject()
                 mdIters.setValue(MDL_ITER, it, objId)
-                for i, prefix in enumerate(self._getPrefixes()):
+                for i, prefix in enumerate(prefixes):
                     fn = 'model_general@'+ self.getFilename(prefix + 'model', iter=it)
                     md = MetaData(fn)
                     pmax = md.getValue(MDL_AVGPMAX, md.firstObject())
@@ -707,7 +711,9 @@ class ProtRelionBase(XmippProtocol):
             xplotter.createSubPlot("Avg PMax per Iterations", "Iterations", "Avg PMax")
             for label, color in zip(labels, colors):
                 xplotter.plotMd(mdIters, MDL_ITER, label, color)
-            xplotter.showLegend(self._getPrefixes())
+            
+            if len(prefixes) > 1:
+                xplotter.showLegend(prefixes)
             xplotter.show(True)
 
     
