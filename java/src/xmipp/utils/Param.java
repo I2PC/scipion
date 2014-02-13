@@ -51,7 +51,7 @@ public class Param {
     public final static String NO_GEO = "dont_apply_geo";
     public final static String NO_WRAP = "dont_wrap";
     
-    public final static String COMMAND = "command";
+    
     
     public String directory;
     public String files[];

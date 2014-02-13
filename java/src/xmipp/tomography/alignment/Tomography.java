@@ -17,7 +17,7 @@ import com.labun.surf.InterestPoint;
 import com.labun.surf.Matcher;
 import com.labun.surf.Params;
 
-import xmipp.ij.commons.XmippIJUtil;
+import xmipp.ij.commons.XmippUtil;
 
 public class Tomography {
 	
@@ -132,7 +132,7 @@ public class Tomography {
 	public ImagePlus getImagePlus()
 	{
 		if(imp == null)
-			imp = XmippIJUtil.getImagePlus(tomofile);
+			imp = XmippUtil.getImagePlus(tomofile);
 		return imp;
 	}
 	

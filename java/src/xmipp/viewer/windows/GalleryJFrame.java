@@ -89,7 +89,7 @@ import javax.swing.table.JTableHeader;
 import xmipp.ij.commons.ImagePlusLoader;
 import xmipp.ij.commons.Tool;
 import xmipp.ij.commons.XmippApplication;
-import xmipp.ij.commons.XmippIJUtil;
+import xmipp.ij.commons.XmippUtil;
 import xmipp.ij.commons.XmippImageConverter;
 import xmipp.ij.commons.XmippImageWindow;
 import xmipp.jni.Filename;
@@ -1695,7 +1695,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 					{
 						ImagePlusLoader loader = gallery.getImageLoader();
 						ImagesWindowFactory.openXmippImageWindow(GalleryJFrame.this, loader, true);
-						XmippIJUtil.showImageJ(Tool.VIEWER);
+						XmippUtil.showImageJ(Tool.VIEWER);
 					}
 					catch (Exception e1)
 					{

@@ -8,7 +8,7 @@ package xmipp.viewer.scipion;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import xmipp.utils.Param;
-import static xmipp.utils.Param.COMMAND;
+
 
 /**
  *
@@ -16,8 +16,10 @@ import static xmipp.utils.Param.COMMAND;
  */
 public class ScipionParams extends Param {
 
+    public final static String SCIPION = "scipion";
     public String set;
     public String script;
+    public String projectid;
     public String imagesid;
 
     public ScipionParams(String args[]) {
@@ -26,8 +28,8 @@ public class ScipionParams extends Param {
 
     public void defineArgs() {
         super.defineArgs();
-        Option cmdoption = new Option(COMMAND, "");
-        cmdoption.setArgs(3);
+        Option cmdoption = new Option(SCIPION, "");
+        cmdoption.setArgs(4);
         options.addOption(cmdoption);
     }
 
@@ -35,11 +37,12 @@ public class ScipionParams extends Param {
     public void processArgs(String args[]) {
         super.processArgs(args);
 
-        if (cmdLine.hasOption(COMMAND)) {
-            String[] cmdargs = cmdLine.getOptionValues(COMMAND);
+        if (cmdLine.hasOption(SCIPION)) {
+            String[] cmdargs = cmdLine.getOptionValues(SCIPION);
             set = cmdargs[0];
             script = cmdargs[1]; 
-            imagesid = cmdargs[2];
+            projectid = cmdargs[2];
+            imagesid = cmdargs[3];
         }
     }
 }

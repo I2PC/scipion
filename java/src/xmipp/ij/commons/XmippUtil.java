@@ -7,11 +7,13 @@ import javax.swing.ImageIcon;
 
 import ij.IJ;
 import ij.ImagePlus;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 import xmipp.jni.Filename;
 import xmipp.jni.ImageGeneric;
 
 
-public class XmippIJUtil {
+public class XmippUtil {
 
 	private static XmippImageJ xij;
 
@@ -30,6 +32,8 @@ public class XmippIJUtil {
 	public static XmippImageJ getXmippImageJ() {
 		return xij;
 	}
+        
+        
 
 	public static ImagePlus getImagePlus(String file) {
 		try {
@@ -54,5 +58,31 @@ public class XmippIJUtil {
 
 		return icon;
 	}
+        
+        public static void executeCommand(String command) throws Exception {
+
+            System.out.println(command);
+            StringBuffer output = new StringBuffer();
+
+            Process p;
+
+            p = Runtime.getRuntime().exec(command);
+            p.waitFor();
+            BufferedReader reader
+                    = new BufferedReader(new InputStreamReader(p.getInputStream()));
+
+            output.append("Output\n");
+            String line = "";
+            while ((line = reader.readLine()) != null) {
+                output.append(line + "\n");
+            }
+            reader = new BufferedReader(new InputStreamReader(p.getErrorStream()));
+            output.append("Error\n");
+            while ((line = reader.readLine()) != null) {
+                output.append(line + "\n");
+            }
+            System.out.println(output.toString());
+        }
+
 
 }

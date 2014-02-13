@@ -21,7 +21,7 @@ import javax.vecmath.Color3f;
 
 import xmipp.ij.commons.ImagePlusLoader;
 import xmipp.ij.commons.Tool;
-import xmipp.ij.commons.XmippIJUtil;
+import xmipp.ij.commons.XmippUtil;
 import xmipp.ij.commons.XmippIJWindow;
 import xmipp.ij.commons.XmippImageCanvas;
 import xmipp.ij.commons.XmippImageConverter;
@@ -239,7 +239,7 @@ public class ImagesWindowFactory {
 	public static ImageWindow openCTFImage(ImagePlus ip, String CTFfilename,
 			String PSDfilename, TasksEngine tasksEngine,
 			String MicrographFilename, int row, String sortFn) {
-		XmippIJUtil.showImageJ(Tool.VIEWER);// removed Toolbar.FREEROI
+		XmippUtil.showImageJ(Tool.VIEWER);// removed Toolbar.FREEROI
 		return new CTFRecalculateImageWindow(ip, CTFfilename, PSDfilename,
 				tasksEngine, row, sortFn);
 	}

@@ -14,6 +14,7 @@ import java.io.InputStreamReader;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JButton;
+import xmipp.ij.commons.XmippUtil;
 import xmipp.jni.MetaData;
 import xmipp.utils.Param;
 import xmipp.utils.XmippWindowUtil;
@@ -27,6 +28,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
 
     private final String set;
     private final String script;
+    private final String projectid;
     private final String imagesid;
     private JButton cmdbutton;
 
@@ -34,6 +36,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
         super(filename, md, parameters);
         set = parameters.set;
         script = parameters.script;
+        projectid = parameters.projectid;
         imagesid = parameters.imagesid;
         initComponents();
     }
@@ -48,10 +51,11 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
                         String selectionmd = "selection.xmd";
                         selectionmd = new File(selectionmd).getAbsolutePath();
                         saveSelection(selectionmd, true);
-                        String command = String.format("%s %s %s %s", script, selectionmd, set.replaceAll("\\s",""), imagesid);
-                        executeCommand(command);
+                        String command = String.format("%s %s %s %s %s", script, selectionmd, set.replaceAll("\\s",""), projectid, imagesid);
+                        XmippUtil.executeCommand(command);
                     } catch (Exception ex) {
                         Logger.getLogger(ScipionGalleryJFrame.class.getName()).log(Level.SEVERE, null, ex);
+                        
                     }
                 }
             });
@@ -74,29 +78,5 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
         cmdbutton.setEnabled(isImageSelected());
     }
 
-    private void executeCommand(String command) throws Exception {
 
-        System.out.println(command);
-        StringBuffer output = new StringBuffer();
-
-        Process p;
-
-        p = Runtime.getRuntime().exec(command);
-        p.waitFor();
-        BufferedReader reader
-                = new BufferedReader(new InputStreamReader(p.getInputStream()));
-
-        output.append("Output\n");
-        String line = "";
-        while ((line = reader.readLine()) != null) {
-            output.append(line + "\n");
-        }
-        reader = new BufferedReader(new InputStreamReader(p.getErrorStream()));
-        output.append("Error\n");
-        while ((line = reader.readLine()) != null) {
-            output.append(line + "\n");
-        }
-        System.out.println(output.toString());
-
-    }
 }
