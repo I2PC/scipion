@@ -91,6 +91,7 @@
 
  /** METHODS ******************************************************************/
 
+// Experimental method, not used yet 
 function loadTemplateMode(mode){
 	alert("changing mode: " + mode);
 	

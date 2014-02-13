@@ -91,15 +91,20 @@ jsDict = {'jquery': 'jquery/jquery.js',
           'project_utils': 'templates_libs/project_utils.js',
           'protocol_form_utils': 'templates_libs/protocol_form_utils.js',
           'wizard_utils': 'templates_libs/wizard_utils.js',
-          'showj_utils': 'showj_libs/showj_utils.js',
 
 #          'tabs_config': 'tabs_config.js',
           'jquery_colreorder': 'showj_libs/colReorder.js',
           'jquery_colreorder_resize': 'showj_libs/colReorderWithResize.js',
           'jquery_waypoints': 'showj_libs/waypoints.min.js',
           'transpose': 'showj_libs/transpose.js',
+          
+          'showj_utils': 'showj_libs/showj_utils.js',
+          'showj_gallery_utils': 'showj_libs/showj_gallery_utils.js',
+          'showj_table_utils': 'showj_libs/showj_table_utils.js',
+          'showj_column_utils': 'showj_libs/showj_column_utils.js',
+          
           'messi': 'messi/messi.js',
-          'raphael': 'raphael/raphael.js'
+          'raphael': 'raphael/raphael.js',
           
           }
 

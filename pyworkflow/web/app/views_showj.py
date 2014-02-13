@@ -44,7 +44,6 @@ from views_base import *
 
 
 def showj_init_dataset(request, inputParameters, extraParameters):
-
     #Init Dataset
     dataset = loadDatasetXmipp(inputParameters['path']) 
     
@@ -54,25 +53,34 @@ def showj_init_dataset(request, inputParameters, extraParameters):
         inputParameters['blockComboBox'] = dataset.listTables()[0]
         
     request.session['dataset'] = dataset
-    
 
-def showj_block(request, inputParameters, extraParameters):
-    
+def showj_table_dataset(request, inputParameters, extraParameters):
     #Getting Dataset from session
     dataset = request.session['dataset']
     
     #Get table from block name
     dataset.setTableName(inputParameters['blockComboBox'])
-    request.session['blockComboBox'] = inputParameters['blockComboBox']
     
     #Table used in the Dataset
-    tableDataset=dataset.getTable()
-        
+    tableDataset = dataset.getTable()
+    
     #Put extra parameter into session (just first time)
     request.session['defaultColumnsLayoutProperties'] = getExtraParameters(extraParameters, tableDataset)
     
     #Load table layout configuration. How to display columns and attributes (visible, render, editable)  
-    inputParameters['tableLayoutConfiguration']= TableLayoutConfiguration(dataset, tableDataset, inputParameters['allowRender'], request.session['defaultColumnsLayoutProperties'])
+    inputParameters['tableLayoutConfiguration'] = TableLayoutConfiguration(dataset, tableDataset, inputParameters['allowRender'], request.session['defaultColumnsLayoutProperties'])
+    
+    request.session['dataset'] = dataset
+    request.session['tableDataset'] = tableDataset
+    request.session['blockComboBox'] = inputParameters['blockComboBox']
+
+#    return dataset, tableDataset, inputParameters
+    return inputParameters
+
+def showj_block(request, inputParameters, extraParameters):
+    #Getting variables from session
+    dataset = request.session['dataset']
+    tableDataset = request.session['tableDataset']
     
 #    If no label is set to render, set the first one if exists
     if 'labelsToRenderComboBox' not in inputParameters or inputParameters['labelsToRenderComboBox'] == '' or request.session['blockComboBox'] != inputParameters['blockComboBox']:
@@ -122,7 +130,6 @@ def showj_block(request, inputParameters, extraParameters):
     request.session['labelsToRenderComboBox'] = inputParameters['labelsToRenderComboBox']
     request.session['imageDimensions'] = _imageDimensions
     #Additional variables
-    request.session['tableDataset'] = tableDataset
     request.session['volPath'] = volPath
     
     return _stats
@@ -147,14 +154,15 @@ def create_showj_context(request, inputParameters, params_stats):
         context.update(create_context_volume(request, inputParameters, volPath, params_stats))
                
     elif inputParameters['mode']=='gallery' or inputParameters['mode']=='table' or inputParameters['mode']=='column':
-        utils_js_file ='showj_' + inputParameters['mode'] + '_utils.js'
-        showj_alt_js = os.path.join(settings.STATIC_URL, "js/showj_libs/", utils_js_file)
-        context.update({"showj_alt_js": showj_alt_js})
+        context.update({"showj_alt_js": getResourceJs('showj_' + inputParameters['mode'] + '_utils')})
         
     return context
 
 
 def showj(request, inputParameters=None, extraParameters=None):
+    
+    print "LOADING SHOWJ WEB...."
+    
     #############
     # WEB INPUT PARAMETERS
     _imageVolName = ''
@@ -172,6 +180,8 @@ def showj(request, inputParameters=None, extraParameters=None):
         inputParameters['tableLayoutConfiguration'] = None
         volPath = inputParameters['path']
     else:
+        #Init the table dataset
+        inputParameters = showj_table_dataset(request, inputParameters, extraParameters)
         #Init Block and Label
         _stats = showj_block(request, inputParameters, extraParameters)
     
@@ -179,6 +189,9 @@ def showj(request, inputParameters=None, extraParameters=None):
 
     return_page = 'showj/showj_base.html'
     context = create_showj_context(request, inputParameters, _stats)
+    
+    print "FINISHED RENDER SHOWJ WEB...."
+    print "CONTEXT!!!!! ", context
     
     return render_to_response(return_page, RequestContext(request, context))
     
