@@ -222,4 +222,29 @@ class ProtRelionRefinner( ProtRelionBase):
             blockName = 'half%d_class%06d_angularDist@' % (group, 1)
             mdDist.write(blockName + data_angularDist, MD_APPEND)
           
-        
+    def _visualizeDisplayResolutionPlotsSSNR(self):
+        ProtRelionBase._visualizeDisplayResolutionPlotsSSNR(self)
+        finalModel = self.getFilename('model_final')
+        if xmippExists(finalModel):
+            xplotter = XmippPlotter()
+            plot_title = 'SSNR for all images, final iteration'
+            a = xplotter.createSubPlot(plot_title, 'Armstrongs^-1', 'log(SSNR)', yformat=False)
+            blockName = 'model_class_%d@' % 1
+            fn = blockName + finalModel
+            self._plotSSNR(a, fn)
+            a.grid(True)
+            xplotter.show(True)
+            
+    def _visualizeDisplayResolutionPlotsFSC(self):
+        ProtRelionBase._visualizeDisplayResolutionPlotsFSC(self)
+        finalModel = self.getFilename('model_final')
+        if xmippExists(finalModel):
+            xplotter = XmippPlotter(windowTitle='Resolution SSNR Final')
+            plot_title = 'FSC for all images, final iteration'
+            a = xplotter.createSubPlot(plot_title, 'Armstrongs^-1', 'FSC', yformat=False)
+            model_star = 'model_class_1@' + finalModel
+            self._plotFSC(a, model_star)
+            if self.ResolutionThreshold < self.maxFrc:
+                a.plot([self.minInv, self.maxInv],[self.ResolutionThreshold, self.ResolutionThreshold], color='black', linestyle='--')
+            a.grid(True)
+             

@@ -502,7 +502,21 @@ class ProtRelionBase(XmippProtocol):
                   for ref3d in self._visualizeRef3Ds:
                     self.display3D(self.getFilename('%svolume' % prefix, iter=it, ref3d=ref3d))
    
-
+   
+    def _plotFSC(self, a, model_star):
+        if xmippExists(model_star):
+            md = MetaData(model_star)
+            resolution_inv = [md.getValue(MDL_RESOLUTION_FREQ, id) for id in md]
+            ticks = ['0'] + ['1/%d' % int(1/r) for r in resolution_inv[1:]]
+            frc = [md.getValue(MDL_RESOLUTION_FRC, id) for id in md]
+            self.maxFrc = max(frc)
+            self.minInv = min(resolution_inv)
+            self.maxInv = max(resolution_inv)
+            a.plot(resolution_inv, frc)
+            a.xaxis.set_ticklabels(ticks)
+            return True
+        return False
+            
     def _visualizeDisplayResolutionPlotsFSC(self):
         self.ResolutionThreshold = float(self.parser.getTkValue('ResolutionThreshold'))
         n = self._visualizeNrefs * len(self._getPrefixes())
@@ -517,45 +531,19 @@ class ProtRelionBase(XmippProtocol):
           for ref3d in self._visualizeRef3Ds:
             plot_title = prefix + 'class %s' % ref3d
             a = xplotter.createSubPlot(plot_title, 'Armstrongs^-1', 'FSC', yformat=False)
-            legendName=[]
+            legends = []
             blockName = 'model_class_%d@' % ref3d
             for it in self._visualizeIterations:
                 model_star = blockName + self.getFilename(prefix + 'model', iter=it)
-                if xmippExists(model_star):
-                    md = MetaData(model_star)
-                    resolution_inv = [md.getValue(MDL_RESOLUTION_FREQ, id) for id in md]
-                    ticks = ['0'] + ['1/%d' % int(1/r) for r in resolution_inv[1:]]
-                    frc = [md.getValue(MDL_RESOLUTION_FRC, id) for id in md]
-                    a.plot(resolution_inv, frc)
-                    a.xaxis.set_ticklabels(ticks)
-                    legendName.append('iter %d' % it)
-            xplotter.showLegend(legendName)
-            if self.ResolutionThreshold < max(frc):
-                a.plot([min(resolution_inv), max(resolution_inv)],[self.ResolutionThreshold, self.ResolutionThreshold], color='black', linestyle='--')
+                if self._plotFSC(a, model_star):
+                    legends.append('iter %d' % it)
+            xplotter.showLegend(legends)
+            if self.ResolutionThreshold < self.maxFrc:
+                a.plot([self.minInv, self.maxInv],[self.ResolutionThreshold, self.ResolutionThreshold], color='black', linestyle='--')
             a.grid(True)
             
         xplotter.show(True)
           
-#        if(self.relionType=='refine'):
-#            file_name = blockName + self.getFilename('modelXmFinalXm', workingDir=self.WorkingDir)
-#            print "final model", file_name
-#            if xmippExists(file_name):
-#                print "final model exists"
-#                gridsize1 = [1, 1]
-#                xplotter = XmippPlotter(*gridsize1,windowTitle="ResolutionSSNRAll")
-#                plot_title = 'FSC for all images, final iteration'
-#                a = xplotter.createSubPlot(plot_title, 'Armstrongs^-1', 'log(SSNR)', yformat=False)
-#                blockName = 'model_class_%d@'%1
-#                md = MetaData(file_name)
-#                # only cross by 1 is important
-#                resolution_inv = [md.getValue(MDL_RESOLUTION_FREQ, id) for id in md]
-#                frc = [md.getValue(MDL_RESOLUTION_FRC, id) for id in md]
-#                a.plot(resolution_inv, frc)
-#                if (self.ResolutionThreshold < max(frc)):
-#                    a.plot([min(resolution_inv), max(resolution_inv)],[self.ResolutionThreshold, self.ResolutionThreshold], color='black', linestyle='--')
-#                    a.grid(True)
-#                xplotter.draw()
-                                      
     def _visualizeDisplayAngularDistribution(self):        
         self.SpheresMaxradius = float(self.parser.getTkValue('SpheresMaxradius'))
         self.DisplayAngularDistribution = self.parser.getTkValue('DisplayAngularDistribution')
@@ -597,6 +585,19 @@ class ProtRelionBase(XmippProtocol):
         """ Return the files that should be produces for a give iteration. """
         return [self.getFilename(k, iter=iter) for k in self.FileKeys]
     
+    def _plotSSNR(self, a, file_name):
+        if xmippExists(file_name):                        
+            mdOut = MetaData(file_name)
+            md = MetaData()
+            # only cross by 1 is important
+            md.importObjects(mdOut, MDValueGT(MDL_RESOLUTION_SSNR, 0.9))
+            md.operate("resolutionSSNR=log(resolutionSSNR)")
+            resolution_inv = [md.getValue(MDL_RESOLUTION_FREQ, id) for id in md]
+            ticks = ['0'] + ['1/%d' % int(1/r) for r in resolution_inv[1:]]
+            frc = [md.getValue(MDL_RESOLUTION_SSNR, id) for id in md]
+            a.plot(resolution_inv, frc)
+            a.xaxis.set_ticklabels(ticks)
+        
     def _visualizeDisplayResolutionPlotsSSNR(self):
         names = []
         windowTitle = {}
@@ -605,7 +606,6 @@ class ProtRelionBase(XmippProtocol):
         n = len(prefixes) * self._visualizeNrefs
         gridsize = self._getGridSize(n)
         addRelionLabels()
-        md = MetaData()
         activateMathExtensions()
         xplotter = XmippPlotter(*gridsize)
         
@@ -618,40 +618,11 @@ class ProtRelionBase(XmippProtocol):
               for it in self._visualizeIterations:
                   file_name = blockName + self.getFilename(prefix + 'model', iter=it)
                   #file_name = self.getFilename('ResolutionXmdFile', iter=it, ref=ref3d)
-                  if xmippExists(file_name):
-                      mdOut = MetaData(file_name)
-                      md.clear()
-                      # only cross by 1 is important
-                      md.importObjects(mdOut, MDValueGT(MDL_RESOLUTION_SSNR, 0.9))
-                      md.operate("resolutionSSNR=log(resolutionSSNR)")
-                      resolution_inv = [md.getValue(MDL_RESOLUTION_FREQ, id) for id in md]
-                      ticks = ['0'] + ['1/%d' % int(1/r) for r in resolution_inv[1:]]
-                      frc = [md.getValue(MDL_RESOLUTION_SSNR, id) for id in md]
-                      a.plot(resolution_inv, frc)
-                      a.xaxis.set_ticklabels(ticks)
-                      legendName.append('iter %d' % it)
+                  self._plotSSNR(a, file_name)
+                  legendName.append('iter %d' % it)
               xplotter.showLegend(legendName)
               a.grid(True)
         xplotter.show(True)
-              
-#            if(self.relionType=='refine'):
-#                file_name = blockName + self.getFilename('modelXmFinalXm')
-#                if xmippExists(file_name):
-#                    gridsize1 = [1, 1]
-#                    xplotter = XmippPlotter(*gridsize1,windowTitle="ResolutionSSNRAll")
-#                    plot_title = 'SSNR for all images, final iteration'
-#                    a = xplotter.createSubPlot(plot_title, 'Armstrongs^-1', 'log(SSNR)', yformat=False)
-#                    blockName = 'model_class_%d@'%1
-#                    mdOut = MetaData(file_name)
-#                    md.clear()
-#                    # only cross by 1 is important
-#                    md.importObjects(mdOut, MDValueGT(MDL_RESOLUTION_SSNR, 0.9))
-#                    md.operate("resolutionSSNR=log(resolutionSSNR)")
-#                    resolution_inv = [md.getValue(MDL_RESOLUTION_FREQ, id) for id in md]
-#                    frc = [md.getValue(MDL_RESOLUTION_SSNR, id) for id in md]
-#                    a.plot(resolution_inv, frc)
-#                    a.grid(True)
-#                    xplotter.draw()
               
     def _getChangeLabels(self):
         """ This method should be redefined in each subclass. """
