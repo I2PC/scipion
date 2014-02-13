@@ -95,10 +95,16 @@ function loadTemplateMode(mode){
 	alert("changing mode: " + mode);
 	
 	template = "";
-	if (mode=="table"){
-		template= "/showj_table/";
-	} else if (mode=="gallery"){
-		template= "/showj_gallery/";
+	if (mode == "table"){
+		template = "/showj_table/";
+	} else if (mode == "gallery"){
+		template = "/showj_gallery/";
+	}else if (mode == "column"){
+		template = "/showj_column/";
+	}else if (mode == "volume_astex"){
+		template = "/showj_volume_astex/";
+	}else if (mode == "volume_chimera"){
+		template = "/showj_volume_chimera/";
 	}
 	
 	alert(template);

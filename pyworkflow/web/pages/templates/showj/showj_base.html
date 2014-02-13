@@ -173,14 +173,17 @@ function setImageSize(refreshElement){
 	{% include "header.html" with page_mode="showj"%} 
 {% endblock %}
 
+<div id="content_menu">
 {% block menu %}
 	{% include "showj/showj_menu.html" %}
 {% endblock %}
+</div>
 
 {% block content %}
 	
 <div id="content_view">
 	{% block content_view %}{% endblock %}
+	
 	{% if form.mode.value == 'table' %}
 		{% include "showj/showj_table.html" %} 
 	{% elif form.mode.value == 'gallery' %}
@@ -192,6 +195,7 @@ function setImageSize(refreshElement){
 	{% elif form.mode.value == 'volume_chimera' %}
 		{% include "showj/showj_volume_chimera.html" %} 
 	{% endif %}
+	
 </div>
 
 <!-- Hidden menu for multiple selection tool -->

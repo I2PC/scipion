@@ -7,7 +7,7 @@
 			 {% if form.typeVolume.value == 'pdb'%}
 			 onclick="return false;"
 			 {% else %}
-			 onclick="javascript:loadTemplateMode('table');"
+			 onclick="document.forms['showjForm'].id_mode.value='table';" 
 			 {% endif %}
 			 class="submitButton
 			 {% if form.mode.value != 'table' %}
@@ -21,13 +21,12 @@
 			  {% endif %}
 			  />
 			
-			
 			<!-- GALLERY -->
 			<input type="submit" value="gallery" name="select_mode" 
 			 {% if form.typeVolume.value == 'pdb'%}
 			 onclick="return false;"
 			 {% else %}
-			 onclick="javascript:loadTemplateMode('gallery');"
+			 onclick="document.forms['showjForm'].id_mode.value='gallery';" 
 			 {% endif %}
 			 class="submitButton
 			 {% if form.mode.value != 'gallery'  %}
@@ -35,6 +34,7 @@
 			 {% else %}
 			  galleryOn
 			 {% endif %}
+			 
 			 "
 			 {% if form.mode.value == 'column' %}
 			  disabled
