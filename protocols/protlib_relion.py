@@ -326,6 +326,9 @@ class ProtRelionBase(XmippProtocol):
         
         self._visualizeVolumesMode = self.parser.getTkValue('DisplayReconstruction')
         
+        from matplotlib.ticker import FuncFormatter
+        self._plotFormatter = FuncFormatter(self._formatFreq) 
+        
         
     def _checkIterData(self):
         """ check that for last visualized iteration, the data is produced. """
@@ -503,17 +506,23 @@ class ProtRelionBase(XmippProtocol):
                     self.display3D(self.getFilename('%svolume' % prefix, iter=it, ref3d=ref3d))
    
    
+    def _formatFreq(self, value, pos):
+        """ Format function for Matplotlib formatter. """
+        inv = 999
+        if value:
+            inv = int(1/value)
+        return "1/%d" % inv
+        
     def _plotFSC(self, a, model_star):
         if xmippExists(model_star):
             md = MetaData(model_star)
             resolution_inv = [md.getValue(MDL_RESOLUTION_FREQ, id) for id in md]
-            ticks = ['0'] + ['1/%d' % int(1/r) for r in resolution_inv[1:]]
             frc = [md.getValue(MDL_RESOLUTION_FRC, id) for id in md]
             self.maxFrc = max(frc)
             self.minInv = min(resolution_inv)
             self.maxInv = max(resolution_inv)
             a.plot(resolution_inv, frc)
-            a.xaxis.set_ticklabels(ticks)
+            a.xaxis.set_major_formatter(self._plotFormatter)
             return True
         return False
             
@@ -593,10 +602,9 @@ class ProtRelionBase(XmippProtocol):
             md.importObjects(mdOut, MDValueGT(MDL_RESOLUTION_SSNR, 0.9))
             md.operate("resolutionSSNR=log(resolutionSSNR)")
             resolution_inv = [md.getValue(MDL_RESOLUTION_FREQ, id) for id in md]
-            ticks = ['0'] + ['1/%d' % int(1/r) for r in resolution_inv[1:]]
             frc = [md.getValue(MDL_RESOLUTION_SSNR, id) for id in md]
             a.plot(resolution_inv, frc)
-            a.xaxis.set_ticklabels(ticks)
+            a.xaxis.set_major_formatter(self._plotFormatter)
         
     def _visualizeDisplayResolutionPlotsSSNR(self):
         names = []
