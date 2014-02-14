@@ -42,105 +42,102 @@ from layout_configuration import *
 
 from views_base import * 
 
-
 def showj_init_dataset(request, inputParameters, extraParameters):
     #Init Dataset
-    dataset = loadDatasetXmipp(inputParameters['path']) 
+    if 'dataset' not in request.session:
+        dataset = loadDatasetXmipp(inputParameters['path'])
+#        request.session['dataset'] = dataset
+    else:
+        dataset = request.session['dataset']
+    return dataset
+
+
+def showj(request, inputParameters=None, extraParameters=None):
+    #############
+    # WEB INPUT PARAMETERS
+    _imageDimensions = ''
+    _imageVolName = ''
+    _stats = None
+    dataset = None
+    tableDataset = None
     
-    #Check type of Dataset 
-    if inputParameters['blockComboBox'] == '':
-        #If empty, get the first one
-        inputParameters['blockComboBox'] = dataset.listTables()[0]
+    
+    if request.method == 'POST': # If the form has been submitted... Post method
+        inputParameters=request.POST.copy()
         
-    request.session['dataset'] = dataset
-
-def showj_table_dataset(request, inputParameters, extraParameters):
-    #Getting Dataset from session
-    dataset = request.session['dataset']
+#    print "inputParameters", inputParameters    
     
-    #Get table from block name
-    dataset.setTableName(inputParameters['blockComboBox'])
+    if inputParameters["typeVolume"] != 'pdb':
+        
+        #Init Dataset
+        dataset =  showj_init_dataset(request, inputParameters, extraParameters)
+        
+        if inputParameters['blockComboBox'] == '':
+            inputParameters['blockComboBox'] = dataset.listTables()[0]
+        
+        #Get table from block name
+        dataset.setTableName(inputParameters['blockComboBox'])
+        tableDataset=dataset.getTable()
     
-    #Table used in the Dataset
-    tableDataset = dataset.getTable()
+        if request.method == 'GET':
+            request.session['defaultColumnsLayoutProperties'] = getExtraParameters(extraParameters, tableDataset)
+        
+        #Load table layout configuration. How to display columns and attributes (visible, render, editable)  
+        inputParameters['tableLayoutConfiguration']= TableLayoutConfiguration(dataset, tableDataset, inputParameters['allowRender'], request.session['defaultColumnsLayoutProperties'])
     
-    #Put extra parameter into session (just first time)
-    request.session['defaultColumnsLayoutProperties'] = getExtraParameters(extraParameters, tableDataset)
+        #If no label is set to render, set the first one if exists
+        if 'labelsToRenderComboBox' not in inputParameters or inputParameters['labelsToRenderComboBox'] == '' or request.session['blockComboBox'] != inputParameters['blockComboBox']:
+            labelsToRenderComboBoxValues = inputParameters['tableLayoutConfiguration'].getLabelsToRenderComboBoxValues()
+            if len(labelsToRenderComboBoxValues) > 0:
+                inputParameters['labelsToRenderComboBox'] = labelsToRenderComboBoxValues[0][0]
+            else:
+                # If there is no image to display and it is initial load, switch to table mode 
+                if request.method == 'GET' and inputParameters['mode']!='table':
+                    inputParameters['mode']='table'
+                    showj(request, inputParameters, extraParameters) 
+                inputParameters['labelsToRenderComboBox'] = ''
     
-    #Load table layout configuration. How to display columns and attributes (visible, render, editable)  
-    inputParameters['tableLayoutConfiguration'] = TableLayoutConfiguration(dataset, tableDataset, inputParameters['allowRender'], request.session['defaultColumnsLayoutProperties'])
+        dataset.setLabelToRender(inputParameters['labelsToRenderComboBox']) 
     
-    request.session['dataset'] = dataset
-    request.session['tableDataset'] = tableDataset
-    request.session['blockComboBox'] = inputParameters['blockComboBox']
-
-#    return dataset, tableDataset, inputParameters
-    return inputParameters
-
-def showj_block(request, inputParameters, extraParameters):
-    #Getting variables from session
-    dataset = request.session['dataset']
-    tableDataset = request.session['tableDataset']
-    
-#    If no label is set to render, set the first one if exists
-    if 'labelsToRenderComboBox' not in inputParameters or inputParameters['labelsToRenderComboBox'] == '' or request.session['blockComboBox'] != inputParameters['blockComboBox']:
-        labelsToRenderComboBoxValues = inputParameters['tableLayoutConfiguration'].getLabelsToRenderComboBoxValues()
-        if len(labelsToRenderComboBoxValues) > 0:   
-            inputParameters['labelsToRenderComboBox'] = labelsToRenderComboBoxValues[0][0]
-        else:
-            # If there is no image to display and it is initial load, switch to table mode 
-            if request.method == 'GET' and inputParameters['mode']!='table':
-#            if inputParameters['mode']!='table':
-                inputParameters['mode']='table'
-                showj(request, inputParameters, extraParameters) 
-            inputParameters['labelsToRenderComboBox'] = ''
-
-    dataset.setLabelToRender(inputParameters['labelsToRenderComboBox']) 
-    
-    if inputParameters['labelsToRenderComboBox'] == '':
+        if inputParameters['labelsToRenderComboBox'] == '':
             inputParameters['zoom']=0
             _imageDimensions = None
             dataset.setNumberSlices(0)
-    else:
-        _imageVolName = inputParameters['volumesToRenderComboBox'] if ("volumesToRenderComboBox" in inputParameters and inputParameters['volumesToRenderComboBox'] != '') else tableDataset.getElementById(0,inputParameters['labelsToRenderComboBox'])
-        
-        _typeOfColumnToRender = inputParameters['tableLayoutConfiguration'].columnsLayout[inputParameters['labelsToRenderComboBox']].typeOfColumn
-        
-        _imageDimensions = readDimensions(request, _imageVolName, _typeOfColumnToRender)
-        
-        dataset.setNumberSlices(_imageDimensions[2])
-        
-        if _typeOfColumnToRender == "image":
-            _convert = dataset.getNumberSlices()>1 and (inputParameters['mode']=='gallery' or inputParameters['mode']=='volume_astex' or inputParameters['mode']=='volume_chimera')
-            _reslice = dataset.getNumberSlices()>1 and inputParameters['mode']=='gallery'
-            _getStats = dataset.getNumberSlices()>1 and (inputParameters['mode']=='volume_astex' or inputParameters['mode']=='volume_chimera')
-            _dataType = xmipp.DT_FLOAT if dataset.getNumberSlices()>1 and inputParameters['mode']=='volume_astex' else xmipp.DT_UCHAR
-                
-            _imageVolName, _stats = readImageVolume(request, _imageVolName, _convert, _dataType, _reslice, int(inputParameters['resliceComboBox']), _getStats)
+        else:
             
-            if dataset.getNumberSlices()>1:
-                inputParameters['tableLayoutConfiguration'].columnsLayout[inputParameters['labelsToRenderComboBox']].columnLayoutProperties.renderFunc = "get_slice"
-                dataset.setVolumeName(_imageVolName)
+            _imageVolName = inputParameters['volumesToRenderComboBox'] if ("volumesToRenderComboBox" in inputParameters and inputParameters['volumesToRenderComboBox'] != '') else tableDataset.getElementById(0,inputParameters['labelsToRenderComboBox'])
+            _typeOfColumnToRender = inputParameters['tableLayoutConfiguration'].columnsLayout[inputParameters['labelsToRenderComboBox']].typeOfColumn
+            _imageDimensions = readDimensions(request,
+                                              _imageVolName,
+                                              _typeOfColumnToRender)
+            dataset.setNumberSlices(_imageDimensions[2])
+            
+            if _typeOfColumnToRender == "image":
+                _convert = dataset.getNumberSlices()>1 and (inputParameters['mode']=='gallery' or inputParameters['mode']=='volume_astex' or inputParameters['mode']=='volume_chimera')
+                _reslice = dataset.getNumberSlices()>1 and inputParameters['mode']=='gallery'
+                _getStats = dataset.getNumberSlices()>1 and (inputParameters['mode']=='volume_astex' or inputParameters['mode']=='volume_chimera')
+                _dataType = xmipp.DT_FLOAT if dataset.getNumberSlices()>1 and inputParameters['mode']=='volume_astex' else xmipp.DT_UCHAR
+                    
+                _imageVolName, _stats = readImageVolume(request, _imageVolName, _convert, _dataType, _reslice, int(inputParameters['resliceComboBox']), _getStats)
                 
-        volPath = os.path.join(request.session['projectPath'], _imageVolName)
-
-
-    #Store multiple variables in session
-    request.session['dataset'] = dataset
-    request.session['labelsToRenderComboBox'] = inputParameters['labelsToRenderComboBox']
-    request.session['imageDimensions'] = _imageDimensions
-    #Additional variables
-    request.session['volPath'] = volPath
+                if dataset.getNumberSlices()>1:
+                    inputParameters['tableLayoutConfiguration'].columnsLayout[inputParameters['labelsToRenderComboBox']].columnLayoutProperties.renderFunc = "get_slice"
+                    dataset.setVolumeName(_imageVolName)
+                    
+            volPath = os.path.join(request.session['projectPath'], _imageVolName)
+                    
     
-    return _stats
+        #Store dataset and labelsToRender in session 
+        request.session['dataset'] = dataset
+        request.session['labelsToRenderComboBox'] = inputParameters['labelsToRenderComboBox']
+        request.session['blockComboBox'] = inputParameters['blockComboBox']
+        request.session['imageDimensions'] = _imageDimensions
+        
+    else:
+        inputParameters['tableLayoutConfiguration'] = None
+        volPath = inputParameters['path']
 
 
-def create_showj_context(request, inputParameters, params_stats):
-    
-    dataset = request.session['dataset']
-    tableDataset = request.session['tableDataset']
-    volPath = request.session['volPath']
-    
     showjForm = ShowjForm(dataset,
                           inputParameters['tableLayoutConfiguration'],
                           inputParameters) # A form bound for the POST data and unbound for the GET
@@ -151,64 +148,15 @@ def create_showj_context(request, inputParameters, params_stats):
     context = createContext(dataset, tableDataset, inputParameters['tableLayoutConfiguration'], request, showjForm)
 
     if inputParameters['mode']=='volume_astex' or inputParameters['mode']=='volume_chimera':
-        context.update(create_context_volume(request, inputParameters, volPath, params_stats))
+        context.update(create_context_volume(request, inputParameters, volPath, _stats))
                
     elif inputParameters['mode']=='gallery' or inputParameters['mode']=='table' or inputParameters['mode']=='column':
         context.update({"showj_alt_js": getResourceJs('showj_' + inputParameters['mode'] + '_utils')})
-        
-    return context
-
-
-def showj(request, inputParameters=None, extraParameters=None):
     
-    print "SESSION: ", request.session.items()
-    
-    print "LOADING SHOWJ WEB..."
-    
-    #############
-    # WEB INPUT PARAMETERS
-    _imageVolName = ''
-    _stats = None
-    _imageDimensions = ''
-    
-    if inputParameters is None:
-        inputParameters = request.POST.copy()
-        
-    if 'dataset' not in request.session:
-        print "LOADING DATASET"
-        
-        #Init Dataset first time
-        showj_init_dataset(request, inputParameters, extraParameters)
-        print request.session["dataset"]
-
-    if inputParameters["typeVolume"] == 'pdb':
-        inputParameters['tableLayoutConfiguration'] = None
-        volPath = inputParameters['path']
-    else:
-        if 'tableDataset' not in request.session:
-            print "LOADING TABLE DATASET"
-            
-            #Init the table dataset
-            inputParameters = showj_table_dataset(request, inputParameters, extraParameters)
-        
-        print "LOADING BLOCK AND LABEL"
-        #Init Block and Label
-        _stats = showj_block(request, inputParameters, extraParameters)
-    
-#    print "inputParameters: ", inputParameters
-
-    return_page = 'showj/showj_base.html'
-    
-    print "CREATING CONTEXT TO RENDER SHOWJ WEB"
-    
-    context = create_showj_context(request, inputParameters, _stats)
-    
-    print "FINISHED RENDER SHOWJ WEB..."
-    
-    print "SESSION: ", request.session.items()
+    return_page = 'showj/%s%s%s' % ('showj_', showjForm.data['mode'], '.html')
     
     return render_to_response(return_page, RequestContext(request, context))
-    
+
 
 def createContext(dataset, tableDataset, tableLayoutConfiguration, request, showjForm):
     #Create context to be send
@@ -241,7 +189,6 @@ def createContext(dataset, tableDataset, tableLayoutConfiguration, request, show
     if dataset is not None:
         context.update({'dataset': dataset})
     if tableLayoutConfiguration is not None:
-        
         context.update({'tableLayoutConfiguration': json.dumps({'columnsLayout': tableLayoutConfiguration.columnsLayout,
                                                                'colsOrder': tableLayoutConfiguration.colsOrder},
                                                                ensure_ascii=False,
@@ -254,9 +201,8 @@ def createContext(dataset, tableDataset, tableLayoutConfiguration, request, show
     return context
 
 def getExtraParameters(extraParameters, tableDataset):
-#    print "extraParameters: ",extraParameters 
+    print "extraParameters",extraParameters 
     defaultColumnsLayoutProperties = None
-    
     if extraParameters != None and extraParameters != {}:
         defaultColumnsLayoutProperties = {k.getName(): {} for k in tableDataset.iterColumns()}
         for key, value in extraParameters.iteritems():
@@ -299,6 +245,7 @@ def save_showj_table(request):
             element_split = key.rsplit('___')
             if len(element_split)!=2: 
                 print "this fails and sth has to be done"
+            
             #NAPA de LUXE ahora mismo se realiza una conversion a int pero habria que ver de que tipo de datos se trata 
             #tableLayoutConfiguration.columnsLayout[element_split[0]].typeOfColumn
 
@@ -411,30 +358,14 @@ def visualizeObject(request):
             inputParameters['path'] = os.path.join(projectPath, createXmippInputImages(None, obj, imagesFn=os.path.join(projectPath, fn)))
 #            writeSetOfParticles(obj, fn)
 #            inputParameters['path']= os.path.join(projectPath, fn)
-        elif isinstance(obj, Image):
+        elif isinstance(obj, Image):  
             fn = project.getTmpPath(obj.getName() + '_image.xmd')
-#            
-#            # TODO: Improve this part saving the file
-##            from time import time
-##            t = time()
-##            fnSet = fn.replace('.xmd', str(t) + '.sqlite')
-#            fnSet = fn.replace('.xmd', '.sqlite')
-#            cleanPath(fn, fnSet)
-#                
-#            imgSet = SetOfImages(filename=fnSet)
-##            print "imgSet:",imgSet
-#
-#            img = Image()
-#            #img.copyInfo(obj)
-#            img.copyLocation(obj)
-#            imgSet.append(img)
-#            inputParameters['path'] = os.path.join(projectPath, createXmippInputImages(None, imgSet, imagesFn=os.path.join(projectPath, fn)))
+            
             md = xmipp.MetaData()
             md.setValue(xmipp.MDL_IMAGE, getImageLocation(obj), md.addObject())
             md.write(fn)
+            
             inputParameters['path'] = os.path.join(projectPath, fn)
-#            writeSetOfParticles(imgSet, fn)
-#            inputParameters['path']= os.path.join(projectPath, fn)
             
         elif isinstance(obj, SetOfClasses2D):
             fn = project.getTmpPath(obj.getName() + '_classes.xmd')
@@ -457,6 +388,11 @@ def visualizeObject(request):
         raise Exception('Showj Web visualizer: No object identifier or path found')         
 
     request.session['defaultZoom'] = inputParameters['zoom']
+    
+    # Clean the dataset if exist 
+    if 'dataset' in request.session:
+        request.session.__delitem__('dataset')
+    
     return showj(request, inputParameters, extraParameters)  
 
 
@@ -464,6 +400,7 @@ def testingSSH(request):
     context = {}
 #    return render_to_response("testing_ssh.html", RequestContext(request, context))
     return render_to_response("scipion.html", RequestContext(request, context))
+
 
 
 def create_context_volume(request, inputParameters, volPath, param_stats):
@@ -528,32 +465,3 @@ def calculateThreshold(params):
 #    print "maxStats:", params[3]
     
     return threshold
-
-
-def showj_gallery(request):
-    context = {}
-    context = RequestContext(request, context)
-    return render_to_response('showj_gallery.html', context)
-
-def showj_table(request):
-    context = {}
-    context = RequestContext(request, context)
-    return render_to_response('showj_table.html', context)
-
-def showj_column(request):
-    context = {}
-    context = RequestContext(request, context)
-    return render_to_response('showj_column.html', context)
-
-def showj_volume_astex(request):
-    context = {}
-    context = RequestContext(request, context)
-    return render_to_response('showj_volume_astex.html', context)
-
-def showj_volume_chimera(request):
-    context = {}
-    context = RequestContext(request, context)
-    return render_to_response('showj_volume_chimera.html', context)
-
-
-

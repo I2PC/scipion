@@ -90,7 +90,7 @@ class XmippProtocol():
         inputXmipp = xmippClass.convert(inputAttr, resultFn)
          
         if inputXmipp is not inputAttr:
-            print "======== CONVERTIN........."
+            print "======== CONVERTING........."
             self._insertChild(inputName + 'Xmipp', inputXmipp)
             return [resultFn] # validate resultFn was produced if converted
          
