@@ -62,7 +62,8 @@ class XmippViewer(Viewer):
     with the Xmipp program xmipp_showj
     """
     _environments = [DESKTOP_TKINTER, WEB_DJANGO]
-    _targets = [Image, SetOfImages, SetOfCoordinates, SetOfClasses2D, SetOfClasses3D,
+    _targets = [Image, SetOfImages, SetOfCoordinates, SetOfClasses2D, SetOfClasses3D, 
+                ProtExtractParticles,
                 ProtAlign, XmippProtKerdensom, XmippProtRotSpectra,  XmippProtCreateMask3D,
                 SetOfClasses2D, SetOfCTF, NormalModes, XmippProtScreenClasses,
                 XmippProtConvertToPseudoAtoms, XmippProtIdentifyOutliers]
@@ -129,17 +130,6 @@ class XmippViewer(Viewer):
                 runScipionShowJ(fn, "Particles", self._project.getName(), obj.strId())  
             else:
                 runShowJ(fn)
-            md = xmipp.MetaData(fn) 
-            #print "MD=%s" % obj.outputParticles.getFileName()
-            if md.containsLabel(xmipp.MDL_ZSCORE):
-                print "MD contains ZSCORE"
-                from plotter import XmippPlotter
-                xplotter = XmippPlotter(windowTitle="Zscore particles sorting")
-                xplotter.createSubPlot("Particle sorting", "Particle number", "Zscore")
-                xplotter.plotMd(md, False, mdLabelY=xmipp.MDL_ZSCORE)
-                figFn = fn.replace('.xmd', '.png')
-                xplotter.savefig(figFn)
-                xplotter.show()
         
         elif issubclass(cls, SetOfClasses2D):
             mdFn = getattr(obj, '_xmippMd', None)
@@ -157,8 +147,9 @@ class XmippViewer(Viewer):
             else:
                 fn = self._getTmpPath(obj.getName() + '_classes.xmd')
                 writeSetOfClasses3D(obj, fn, self._getTmpPath())
-            runShowJ("classes@"+fn, extraParams=args.get('extraParams', ''))  
-            
+
+            runShowJ("classes@"+fn, extraParams=args.get('extraParams', ''))
+              
         elif issubclass(cls, SetOfCTF):
             mdFn = getattr(obj, '_xmippMd', None)
             if mdFn:
@@ -167,17 +158,35 @@ class XmippViewer(Viewer):
                 fn = self._getTmpPath(obj.getName() + '_ctfs.xmd')
                 writeSetOfCTFs(obj, fn)
             runShowJ(fn, extraParams=' --mode metadata --render first')  
-                        
+
+        
+
+        
+        elif (issubclass(cls, XmippProtExtractParticles)):
+            self.visualize(obj.outputParticles)
+            fn = getattr(obj.outputParticles, '_xmippMd', None)
+            if fn:
+                md = xmipp.MetaData(fn) 
+                #print "MD=%s" % obj.outputParticles.getFileName()
+                if md.containsLabel(xmipp.MDL_ZSCORE):
+                    from plotter import XmippPlotter
+                    xplotter = XmippPlotter(windowTitle="Zscore particles sorting")
+                    xplotter.createSubPlot("Particle sorting", "Particle number", "Zscore")
+                    xplotter.plotMd(md, False, mdLabelY=xmipp.MDL_ZSCORE)
+                    xplotter.show()
+            # If Zscore on output images plot Zscore particle sorting
+    
         elif issubclass(cls, ProtAlign):
             self.visualize(obj.outputAverage)
             self.visualize(obj.outputParticles) 
             
         elif issubclass(cls, XmippProtRotSpectra):
             self.visualize(obj.outputClasses, extraParams='--mode rotspectra --columns %d' % obj.SomXdim.get())
-            
+
+        
         elif issubclass(cls, XmippProtScreenClasses):
             runShowJ(obj.getVisualizeInfo().get(), extraParams=' --mode metadata --render first')
-            
+        
         elif issubclass(cls, XmippProtIdentifyOutliers):
             runShowJ(obj.getVisualizeInfo().get(), extraParams=' --mode metadata --render first')
 

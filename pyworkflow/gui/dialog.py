@@ -384,10 +384,14 @@ def askString(title, label, parent, entryWidth=20):
 class ListDialog(Dialog):
     """Dialog to select an element from a list.
     It is implemented using a Tree widget"""
-    def __init__(self, parent, title, provider, message=None):
+    def __init__(self, parent, title, provider, message=None, **args):
+        """ From args:
+                message: message tooltip to show when browsing.
+                selected: the item that should be selected.
+        """
         self.value = None
         self.provider = provider
-        self.message = message
+        self.message = args.get('message', None)
         Dialog.__init__(self, parent, title,
                         buttons=[('Select', RESULT_YES), ('Cancel', RESULT_CANCEL)])
         

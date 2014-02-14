@@ -90,7 +90,7 @@ class XmippProtocol():
         inputXmipp = xmippClass.convert(inputAttr, resultFn)
          
         if inputXmipp is not inputAttr:
-            print "======== CONVERTIN........."
+            print "======== CONVERTING........."
             self._insertChild(inputName + 'Xmipp', inputXmipp)
             return [resultFn] # validate resultFn was produced if converted
          
@@ -357,7 +357,7 @@ class XmippDataSet(ds.DataSet):
                 tMatrix[1][0], tMatrix[1][1], tMatrix[1][2], y if y!=None else 0,
                 tMatrix[2][0], tMatrix[2][1], tMatrix[2][2], z if z!=None else 0]
         
-        print matrix
+#        print matrix
 
         return matrix
         
