@@ -4,7 +4,7 @@
 # Author: Carlos Oscar, September 2013
 #
 from protlib_base import *
-from xmipp import MetaData
+from xmipp import MetaData, MetaDataInfo
 import glob
 import os
 from protlib_filesystem import createLink
@@ -55,6 +55,15 @@ class ProtCLTomo(XmippProtocol):
             errors.append("Sparsity must be a value between 0 and 100");
         if self.DWTSparsity>100 or self.DWTSparsity<0:
             errors.append("Wavelet sparsity must be a value between 0 and 100");
+        (Xdim1, Ydim1, Zdim1, Ndim1, _) = MetaDataInfo(self.VolumeList)
+        if Xdim1!=Ydim1 or Ydim1!=Zdim1:
+            errors.append("Input subvolumes are not cubic")
+        if not self.DoGenerateInitial:
+            (Xdim2, Ydim2, Zdim2, Ndim2, _) = MetaDataInfo(self.RefMd)
+            if Xdim2!=Ydim2 or Ydim2!=Zdim2:
+                errors.append("Reference subvolumes are not cubic")
+            if Xdim1!=Xdim2:
+                errors.append("Input and reference subvolumes are of different size")
         return errors
 
     def summary(self):
