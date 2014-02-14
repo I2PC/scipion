@@ -452,13 +452,19 @@ class XmippPlotter():
         md = MetaData(mdFilename)
         self.plotMd(md, mdLabelX, mdLabelY, color='g',**args)
         
-    def show(self):
+    def show(self, interactive=False):
+        if interactive:
+            self.setInteractive()
+            
         plt.tight_layout()
         plt.show()
 
     def draw(self):
         plt.tight_layout()
         plt.draw()
+        
+    def setInteractive(self):
+        plt.ion()
         
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
