@@ -92,6 +92,11 @@ def prettySize(size):
         return '1 byte'
     
 
+def prettyDelta(timedelta):
+    """ Remove the milliseconds of the timedelta. """
+    return str(timedelta).split('.')[0]
+
+    
 def prettyDict(d):
     import pprint
     pp = pprint.PrettyPrinter(indent=4)

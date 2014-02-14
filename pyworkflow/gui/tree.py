@@ -32,6 +32,7 @@ import ttk
 
 from pyworkflow.object import Scalar
 from pyworkflow.mapper import SqliteMapper
+from pyworkflow.utils import prettyDelta
 import gui
 from widgets import Scrollable
 
@@ -182,7 +183,6 @@ class BoundTree(Tree):
         """ Set new provider and updated items. """
         self.provider = provider
         self.update()
-        
         
     def _unpostMenu(self, e=None):
         self.menu.unpost()
@@ -349,10 +349,8 @@ class ProjectRunsTreeProvider(TreeProvider):
     def getObjectInfo(self, obj):
         objId = obj.getObjId()
         self._objDict[objId] = obj
-        
-        info = {'key': obj.getObjId(),
-                'text': obj.getRunName(),
-                'values': (obj.getStatusMessage(), obj.getElapsedTime())}
+        info = {'key': obj.getObjId(), 'text': obj.getRunName(),
+                'values': (obj.getStatusMessage(), prettyDelta(obj.getElapsedTime()))}
         objPid = obj.getObjParentId()
         if objPid in self._objDict:
             info['parent'] = self._objDict[objPid]
