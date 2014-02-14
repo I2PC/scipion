@@ -1,13 +1,25 @@
+<script>
+function changeMode(mode){
+	alert(mode);
+	
+	var form = document.forms['showjForm']
+	form.id_mode.value = mode;
+	form.submit();
+	
+// 	loadTemplateMode(mode)
+}
+</script>
+
 <div id="asideMainContainer">
 	<form id="showjForm" action="/showj/" method="post"> {% csrf_token %}
 		<div id="modeContainer" class="sectionMenu">
 			
 			<!-- TABLE -->
-			<input type="submit" value="table" name="select_mode"
+			<input type="button" value="table" name="select_mode"
 			 {% if form.typeVolume.value == 'pdb'%}
 			 onclick="return false;"
 			 {% else %}
-			 onclick="document.forms['showjForm'].id_mode.value='table';" 
+			 onclick="changeMode('table');"
 			 {% endif %}
 			 class="submitButton
 			 {% if form.mode.value != 'table' %}
@@ -22,11 +34,11 @@
 			  />
 			
 			<!-- GALLERY -->
-			<input type="submit" value="gallery" name="select_mode" 
+			<input type="button" value="gallery" name="select_mode" 
 			 {% if form.typeVolume.value == 'pdb'%}
 			 onclick="return false;"
 			 {% else %}
-			 onclick="document.forms['showjForm'].id_mode.value='gallery';" 
+			 onclick="changeMode('gallery');"
 			 {% endif %}
 			 class="submitButton
 			 {% if form.mode.value != 'gallery'  %}
@@ -43,7 +55,9 @@
 			 
 			<!-- VOLUME VISUALIZE WITH ASTEX -->
 			{% if dataset.getNumberSlices > 1 or form.typeVolume.value == 'pdb'%} 
-			<input type="submit" value="volume_astex" name="select_mode" onclick="document.forms['showjForm'].id_mode.value='volume_astex';" class="submitButton
+			<input type="button" value="volume_astex" name="select_mode" 
+			onclick="changeMode('volume_astex');"
+			class="submitButton
 			 {% if form.mode.value != 'volume_astex' %}
 			 visualizeVolOff
 			 {% else %}
@@ -55,7 +69,9 @@
 			 
 			 <!-- VOLUME VISUALIZE WITH CHIMERA -->
 			 {% if dataset.getNumberSlices > 1 or form.typeVolume.value == 'pdb' %} 
-			<input type="submit" value="volume_chimera" name="select_mode" onclick="document.forms['showjForm'].id_mode.value='volume_chimera';" class="submitButton
+			<input type="button" value="volume_chimera" name="select_mode" 
+			onclick="changeMode('volume_chimera');"
+			class="submitButton
 			 {% if form.mode.value != 'volume_chimera' %}
 			 visualizeVolOff
 			 {% else %}

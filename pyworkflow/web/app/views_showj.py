@@ -161,7 +161,9 @@ def create_showj_context(request, inputParameters, params_stats):
 
 def showj(request, inputParameters=None, extraParameters=None):
     
-    print "LOADING SHOWJ WEB...."
+    print "SESSION: ", request.session.items()
+    
+    print "LOADING SHOWJ WEB..."
     
     #############
     # WEB INPUT PARAMETERS
@@ -173,25 +175,37 @@ def showj(request, inputParameters=None, extraParameters=None):
         inputParameters = request.POST.copy()
         
     if 'dataset' not in request.session:
+        print "LOADING DATASET"
+        
         #Init Dataset first time
         showj_init_dataset(request, inputParameters, extraParameters)
+        print request.session["dataset"]
 
     if inputParameters["typeVolume"] == 'pdb':
         inputParameters['tableLayoutConfiguration'] = None
         volPath = inputParameters['path']
     else:
-        #Init the table dataset
-        inputParameters = showj_table_dataset(request, inputParameters, extraParameters)
+        if 'tableDataset' not in request.session:
+            print "LOADING TABLE DATASET"
+            
+            #Init the table dataset
+            inputParameters = showj_table_dataset(request, inputParameters, extraParameters)
+        
+        print "LOADING BLOCK AND LABEL"
         #Init Block and Label
         _stats = showj_block(request, inputParameters, extraParameters)
     
 #    print "inputParameters: ", inputParameters
 
     return_page = 'showj/showj_base.html'
+    
+    print "CREATING CONTEXT TO RENDER SHOWJ WEB"
+    
     context = create_showj_context(request, inputParameters, _stats)
     
-    print "FINISHED RENDER SHOWJ WEB...."
-    print "CONTEXT!!!!! ", context
+    print "FINISHED RENDER SHOWJ WEB..."
+    
+    print "SESSION: ", request.session.items()
     
     return render_to_response(return_page, RequestContext(request, context))
     

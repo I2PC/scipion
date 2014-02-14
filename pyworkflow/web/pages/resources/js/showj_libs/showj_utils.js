@@ -91,11 +91,19 @@
 
  /** METHODS ******************************************************************/
 
+ 
+//$(document).ready(function() {
+//	
+//	$("#showjForm").submit(function() {
+//		});
+//	});
+
+
 // Experimental method, not used yet 
 function loadTemplateMode(mode){
-	alert("changing mode: " + mode);
 	
 	template = "";
+	template_menu="/showj_menu/"
 	if (mode == "table"){
 		template = "/showj_table/";
 	} else if (mode == "gallery"){
