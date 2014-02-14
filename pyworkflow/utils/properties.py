@@ -274,6 +274,7 @@ class Icon():
 
 class Color():
     RED_COLOR = 'Firebrick' # Red color for background label
+#    RED_COLOR = '#B22222'
     LIGHT_RED_COLOR = '#F3CBCB' # Very light red for row selection
     LIGHT_BLUE_COLOR = '#EAEBFF' # Very light blue for even rows
     LIGHT_GREY_COLOR = '#EAEBEC' # Light grey for background color in form, protocol, table header and west container
