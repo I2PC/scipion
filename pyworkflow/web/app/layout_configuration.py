@@ -59,7 +59,7 @@ class ColumnLayoutConfiguration():
         self.columnLayoutProperties = ColumnLayoutProperties(self.typeOfColumn, allowRender)
         self.columnLayoutProperties.setValues(defaultColumnLayoutProperties)
         
-        print "columnLayoutProperties",self.columnLayoutProperties 
+#        print "columnLayoutProperties",self.columnLayoutProperties 
         
         
 #NAPA DE LUXE: Y si lo pasamos a una namedtupple
@@ -79,7 +79,7 @@ class ColumnLayoutProperties():
         self.extraRenderFunc = ""
         
     def setValues(self, defaultColumnLayoutProperties):
-        print "defaultColumnLayoutProperties",defaultColumnLayoutProperties
+#        print "defaultColumnLayoutProperties",defaultColumnLayoutProperties
         for key in defaultColumnLayoutProperties:
             setattr(self, key, defaultColumnLayoutProperties[key])
         

@@ -43,6 +43,17 @@ from layout_configuration import *
 from views_base import * 
 
 
+def showj_init_dataset(request, inputParameters, extraParameters):
+    #Init Dataset
+    if 'dataset' not in request.session:
+        dataset = loadDatasetXmipp(inputParameters['path'])
+#        request.session['dataset'] = dataset
+    else:
+        dataset = request.session['dataset']
+            
+    return dataset
+
+
 def showj(request, inputParameters=None, extraParameters=None):
     #############
     # WEB INPUT PARAMETERS
@@ -53,17 +64,16 @@ def showj(request, inputParameters=None, extraParameters=None):
     tableDataset = None
     
     
-    
     if request.method == 'POST': # If the form has been submitted... Post method
         inputParameters=request.POST.copy()
         
-    print "inputParameters",inputParameters    
+#    print "inputParameters", inputParameters    
     
     if inputParameters["typeVolume"] != 'pdb':
         
         #Init Dataset
-        #NAPA DE LUXE: Check type of Dataset 
-        dataset = loadDatasetXmipp(inputParameters['path']) 
+        dataset =  showj_init_dataset(request, inputParameters, extraParameters)
+        
         if inputParameters['blockComboBox'] == '':
             inputParameters['blockComboBox'] = dataset.listTables()[0]
         
@@ -187,6 +197,7 @@ def showj(request, inputParameters=None, extraParameters=None):
             context.update({"showj_alt_js": os.path.join(settings.STATIC_URL, "js/showj_libs/", 'showj_' + inputParameters['mode'] + '_utils.js')})
     
     return_page = 'showj/%s%s%s' % ('showj_', showjForm.data['mode'], '.html')
+    
     return render_to_response(return_page, RequestContext(request, context))
 
 
