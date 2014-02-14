@@ -634,8 +634,7 @@ class ProtocolsView(tk.Frame):
     def _protocolItemClick(self, e=None):
         protClassName = self.protTree.getFirst().split('.')[-1]
         protClass = emProtocolsDict.get(protClassName)
-        prot = protClass()
-        prot.mapper = self.project.mapper
+        prot = self.project.newProtocol(protClass)
         self._openProtocolForm(prot)
         
     def _selectProtocol(self, prot):
