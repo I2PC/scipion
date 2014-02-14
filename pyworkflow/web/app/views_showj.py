@@ -69,7 +69,7 @@ def showj(request, inputParameters=None, extraParameters=None):
     
     if inputParameters["typeVolume"] != 'pdb':
         
-        #Init Dataset
+        #Get the initial Dataset
         dataset =  showj_init_dataset(request, inputParameters, extraParameters)
         
         if inputParameters['blockComboBox'] == '':
