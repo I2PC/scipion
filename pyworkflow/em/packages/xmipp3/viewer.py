@@ -63,16 +63,15 @@ class XmippViewer(Viewer):
     """
     _environments = [DESKTOP_TKINTER, WEB_DJANGO]
     _targets = [Image, SetOfImages, SetOfCoordinates, SetOfClasses2D, SetOfClasses3D,
-                ProtImportMicrographs, XmippProtPreprocessMicrographs, ProtCTFMicrographs,
-                ProtParticlePicking, ProtImportParticles, XmippProtExtractParticles, ProtUserSubSet,
-                ProtAlign, ProtProcessParticles, XmippProtKerdensom, XmippProtRotSpectra,  XmippProtCreateMask3D,
-                SetOfClasses2D, SetOfCTF, NormalModes, XmippProtScreenClasses, XmippProtHelicalParameters,
-                XmippProtConvertToPseudoAtoms, XmippProtIdentifyOutliers, XmippProtPreprocessVolumes]
+                ProtAlign, XmippProtKerdensom, XmippProtRotSpectra,  XmippProtCreateMask3D,
+                SetOfClasses2D, SetOfCTF, NormalModes, XmippProtScreenClasses,
+                XmippProtConvertToPseudoAtoms, XmippProtIdentifyOutliers]
     
     def __init__(self, **args):
         Viewer.__init__(self, **args)
 
     def visualize(self, obj, **args):
+        
         cls = type(obj)
         
         if issubclass(cls, Image):
@@ -95,7 +94,7 @@ class XmippViewer(Viewer):
             if obj.hasCTF():
                 extra = ' --mode metadata --render first'
             #runShowJ(fn, extraParams=extra)
-            runScipionShowJ(fn, "Micrographs", obj)    
+            runScipionShowJ(fn, "Micrographs", self._project.getName(), obj.strId())    
         
         elif issubclass(cls, SetOfCoordinates):
             obj_mics = obj.getMicrographs()#accessing mics to provide metadata file
@@ -107,10 +106,6 @@ class XmippViewer(Viewer):
                 fn = self._getTmpPath(obj_mics.getName() + '_micrographs.xmd')
                 writeSetOfMicrographs(obj_mics, fn)
                 
-            #extraFn = getattr(obj, '_xmippMd', None)#accessing object metadata to look for extra dir, which is output dir for visualizer 
-            #if extraFn:
-            #    extraDir = dirname(extraFn.get())
-            #else:
             #creating set of coords tmp dir to persist coords and provide output dir to picker on review mode 
             tmpDir = self._getTmpPath(obj.getName()) # TODO: CHECK to create an extra for the coordinates obj
             
@@ -154,6 +149,7 @@ class XmippViewer(Viewer):
                 fn = self._getTmpPath(obj.getName() + '_classes.xmd')
                 writeSetOfClasses2D(obj, fn, self._getTmpPath())
             runShowJ(fn, extraParams=args.get('extraParams', ''))  
+            
         elif issubclass(cls, SetOfClasses3D):
             mdFn = getattr(obj, '_xmippMd', None)
             if mdFn:
@@ -162,6 +158,7 @@ class XmippViewer(Viewer):
                 fn = self._getTmpPath(obj.getName() + '_classes.xmd')
                 writeSetOfClasses3D(obj, fn, self._getTmpPath())
             runShowJ("classes@"+fn, extraParams=args.get('extraParams', ''))  
+            
         elif issubclass(cls, SetOfCTF):
             mdFn = getattr(obj, '_xmippMd', None)
             if mdFn:
@@ -170,46 +167,26 @@ class XmippViewer(Viewer):
                 fn = self._getTmpPath(obj.getName() + '_ctfs.xmd')
                 writeSetOfCTFs(obj, fn)
             runShowJ(fn, extraParams=' --mode metadata --render first')  
-        
-        elif (issubclass(cls, ProtImportMicrographs) or
-              issubclass(cls, XmippProtPreprocessMicrographs)):
-            self.visualize(obj.outputMicrographs)
-        
-        elif issubclass(cls, ProtParticlePicking):
-            self.visualize(obj.outputCoordinates)
-        
-        elif (issubclass(cls, ProtImportParticles) or
-              issubclass(cls, XmippProtExtractParticles)):
-            self.visualize(obj.outputParticles)
-            # If Zscore on output images plot Zscore particle sorting
-        elif (issubclass(cls, ProtUserSubSet)):
-            self.visualize(obj.getOutputSet())
-                          
+                        
         elif issubclass(cls, ProtAlign):
             self.visualize(obj.outputAverage)
             self.visualize(obj.outputParticles) 
+            
         elif issubclass(cls, XmippProtRotSpectra):
             self.visualize(obj.outputClasses, extraParams='--mode rotspectra --columns %d' % obj.SomXdim.get())
+            
         elif issubclass(cls, XmippProtScreenClasses):
             runShowJ(obj.getVisualizeInfo().get(), extraParams=' --mode metadata --render first')
+            
         elif issubclass(cls, XmippProtIdentifyOutliers):
             runShowJ(obj.getVisualizeInfo().get(), extraParams=' --mode metadata --render first')
-# TODO: We have to develop a showj analyze tool for classes so we can select classes or images associated to them
-#        Airen this is your good shit
-#            runScipionShowJ(obj.getVisualizeInfo(), "Set Of Classes", obj.inputClasses.get(), 
-#                            extraParams=' --mode metadata --render first')
+
         elif issubclass(cls, XmippProtCreateMask3D):
             self.visualize(obj.outputMask)
+            
         elif issubclass(cls, XmippProtKerdensom):
             self.visualize(obj.outputClasses, extraParams='--columns %d' % obj.SomXdim.get())
-        elif issubclass(cls, ProtCTFMicrographs):
-            self.visualize(obj.outputCTF)
-        elif issubclass(cls, ProtProcessParticles):
-            self.visualize(obj.outputParticles)
-        elif issubclass(cls, XmippProtHelicalParameters):
-            self.visualize(obj.outputVolume)
-        elif issubclass(cls, XmippProtPreprocessVolumes):
-            self.visualize(obj.outputVol)
+
         elif issubclass(cls, XmippProtConvertToPseudoAtoms):
             from protlib_gui_ext import chimera
             chimera(obj._getPath('chimera.cmd'))
@@ -258,7 +235,6 @@ def runShowJ(inputFiles, memory="1g", extraParams=""):
     
 def runScipionShowJ(inputFiles, type, projectid, objid, memory="1g", extraParams=""):
 
-    
     script = pw.join('apps', 'pw_create_image_subset.py')
     script = "%s %s" % (pw.PYTHON, script) 
 

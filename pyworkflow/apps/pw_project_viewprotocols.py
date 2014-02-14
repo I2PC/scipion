@@ -742,7 +742,15 @@ class ProtocolsView(tk.Frame):
             firstViewer = viewers[0](project=self.project) # Instanciate the first available viewer
             firstViewer.visualize(prot, windows=self.windows)
         else:
-            self.windows.showError(Message.NO_VIEWER_FOUND +" *%s* " % prot.getClassName())
+            for key, output in prot.iterOutputAttributes(EMObject):
+                viewers = findViewers(output.getClassName(), DESKTOP_TKINTER)
+                if len(viewers):
+                    #TODO: If there are more than one viewer we should display a selection menu
+                    viewerclass = viewers[0]
+                    print viewerclass
+                    firstViewer = viewerclass(project=self.project) # Instanciate the first available viewer
+                    firstViewer.visualize(output, windows=self.windows)
+            
         
     def _analyzeResultsClicked(self, e=None):
         """ this method should be called when button "Analyze results" is called. """
