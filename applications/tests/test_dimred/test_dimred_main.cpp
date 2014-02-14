@@ -107,9 +107,9 @@ TEST_F( DimRedTest, intrinsic_dimensionality)
 	TEST_F( DimRedTest, method) \
 { \
 	const char * doTest = getenv ("XMIPP_FULLTEST");\
-	if (doTest!=NULL && !doTestAlways)\
+	if (doTest==NULL && !doTestAlways)\
 	{\
-       std::cout << "Skiping test: DimRedTest using file " << file << ".\n Define environmental variable FULLTEST to activate test"<< std::endl;\
+       std::cout << "Skipping test: DimRedTest using file " << file << ".\n Define environmental variable XMIPP_FULLTEST to activate test"<< std::endl;\
        ASSERT_TRUE(true);\
        return;\
     }\

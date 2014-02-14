@@ -16,7 +16,7 @@ from protlib_utils import runShowJ, getListFromVector, getListFromRangeString
 from protlib_parser import ProtocolParser
 from protlib_xmipp import redStr, cyanStr
 from protlib_gui_ext import showWarning
-from protlib_filesystem import xmippExists, findAcquisitionInfo, moveFile
+from protlib_filesystem import xmippExists, findAcquisitionInfo, moveFile, linkAcquisitionInfo
 from protocol_ml2d import lastIteration
 
 class ProtML3D(XmippProtocol):
@@ -117,7 +117,8 @@ class ProtML3D(XmippProtocol):
             
         return errors 
     
-    def defineSteps(self):        
+    def defineSteps(self):    
+        self.insertStep("linkAcquisitionInfo", InputFile=self.ImgMd, dirDest=self.WorkingDir)    
         restart = False
         if restart:            #Not yet implemented
             pass
