@@ -4,6 +4,12 @@
 import os
 import platform 
 import SCons.Script
+CONFIG = '.xmipp_scons.options'
+BASHRC = '.xmipp.bashrc'
+CSH = '.xmipp.csh'
+MPI_LIBDIR = ''
+MPI_BINDIR = ''
+
 if platform.system() == 'Windows':
     env = Environment(tools = ['mingw'], ENV = os.environ)
     env['ENV']['JAVA_HOME'] = "/c/Java/jdk1.6.0_34"
@@ -110,6 +116,7 @@ opts.Add('MPI_LINKERFORPROGRAMS', 'MPI Linker for programs', 'mpiCC')
 opts.Add('MPI_INCLUDE', 'MPI headers dir ', '/usr/include')
 opts.Add('MPI_LIBDIR', 'MPI libraries dir ', '/usr/lib')
 opts.Add('MPI_LIB', 'MPI library', 'mpi')
+opts.Add('MPI_BINDIR', 'MPI binaries', '/usr/bin')
 
 #MINGW 
 opts.Add('MINGW_PATHS', 'Include path for MinGW', '')
@@ -154,6 +161,81 @@ env['JARFLAGS'] = '-Mcf'    # Default "cf". "M" = Do not add a manifest file.
 env.SetDefault(LIBS='')
 env.SetDefault(LIBPATH='')
 env.SetDefault(CPPPATH='')
+
+def checkMpiInBashrc(mpiPath, type, shellType='bash'):
+    fileToOpen = foundPath = stringToSearch = separator = ''
+    exists = different = False
+    if shellType == 'bash':
+        fileToOpen = BASHRC
+        separator = '='
+    elif shellType == 'csh':
+        fileToOpen = CSH
+        separator = ' '
+    if type == 'lib':
+        stringToSearch = 'XMIPP_MPI_LIBDIR'
+    elif type == 'bin':
+        stringToSearch = 'XMIPP_MPI_BINDIR'
+    if os.path.exists(fileToOpen):
+        for line in open(fileToOpen):
+            parts = line.split(separator)
+            if len(parts) == 2:
+                if parts[0].strip() == ('export '+stringToSearch):
+                    exists = True
+                    foundPath = parts[1]
+                    different = (foundPath.strip() != mpiPath)
+            elif len(parts) == 3:
+                if parts[1].strip() == (stringToSearch):
+                    exists = True
+                    foundPath = parts[2]
+                    different = (foundPath.strip() != mpiPath)
+                    break #In CSH file, we have to find only the first occurrence             
+    return exists, different, foundPath
+
+def addMpiToBashrc(mpiPath, type, shellType='bash', replace=False):
+    fileToOpen = preserv = stringToSearch = stringToAppend = ''
+    separator = '='
+    exportation = 'export'
+    if shellType == 'bash':
+        fileToOpen = BASHRC
+        separator = '='
+        exportation = 'export'
+    elif shellType == 'csh':
+        fileToOpen = CSH
+        separator = ' '
+        exportation = 'setenv'
+    if os.path.exists(fileToOpen):
+        lines = open(fileToOpen, 'r').readlines()
+        filew = open(fileToOpen, 'w')
+        found = -1
+        if type == 'lib':
+            stringToSearch = 'LD_LIBRARY_PATH'
+            stringToAppend = 'XMIPP_MPI_LIBDIR'
+        elif type == 'bin':
+            stringToSearch = 'PATH'
+            stringToAppend = 'XMIPP_MPI_BINDIR'
+        if replace:
+            stringToSearch = (exportation + ' ' + stringToAppend)
+        else:
+            stringToSearch = (exportation+ ' ' + stringToSearch)
+        for index, line in enumerate(lines):
+            parts = line.strip().split(separator)
+            if len(parts) == 2:
+                if parts[0].strip() == stringToSearch:
+                    found = index
+                    preserv = parts[1].strip()
+            if len(parts) == 3:
+                if (parts[0].strip()+' '+parts[1].strip()) == stringToSearch:
+                    found = index
+                    preserv = parts[2].strip()
+                    break
+        if found != -1:
+            if not replace:
+                lines[found] = (stringToSearch + separator + preserv + ':$' + stringToAppend + "\n")
+                lines[found] = (exportation + ' ' + stringToAppend + separator + mpiPath + "\n") + lines[found]
+            else:
+                lines[found] = (stringToSearch+separator+mpiPath+"\n")
+            filew.writelines(lines)
+
 
 def AppendIfNotExists(**args):
     append = True
@@ -312,8 +394,47 @@ if (ARGUMENTS['mode'] == 'configure'):
 
     # Finish configuration
     env = conf.Finish()
-    opts.Save('.xmipp_scons.options', env)
-
+    CONFIG = '.xmipp_scons.options'
+    opts.Save(CONFIG, env)
+    if os.path.exists(CONFIG):
+        for line in open(CONFIG):
+            parts = line.split('=')
+            if len(parts) == 2:
+                assign = '%s = "%s"' % (parts[0], parts[1])
+                if parts[0].strip() == 'MPI_LIBDIR':
+                    parts[1] = parts[1].replace("'", "").strip()
+                    os.environ['LD_LIBRARY_PATH'] += os.pathsep + parts[1]
+                    os.environ['MPI_LIBDIR'] = os.pathsep + parts[1]
+                    MPI_LIBDIR = os.environ['MPI_LIBDIR']
+                if parts[0].strip() == 'MPI_BINDIR':
+                    parts[1] = parts[1].replace("'", "").strip()
+                    os.environ['PATH'] += os.pathsep + parts[1]
+                    os.environ['MPI_BINDIR'] = os.pathsep + parts[1]
+                    MPI_BINDIR = os.environ['MPI_BINDIR']
+    
+    # When we are going to install, we need to put some vars in bashrc file
+    if not 'unattended' in ARGUMENTS or (ARGUMENTS('unattended') != 'yes'):
+        for shell in ['bash', 'csh']:
+            try:
+                mpiLibDirExists, mpiLibDirIsDifferent, mpiLibDirPath = checkMpiInBashrc(MPI_LIBDIR, 'lib', shell)
+                if not mpiLibDirExists:
+                    addMpiToBashrc(MPI_LIBDIR, 'lib', shell)
+                elif mpiLibDirIsDifferent:
+                    addMpiToBashrc(MPI_LIBDIR, 'lib', shell, True)
+                else:
+                    print "MPI_LIBDIR untouched. Already set in "+BASHRC+" file"
+            except NameError:
+                print "Be careful, your MPI_LIBDIR has not been set!"
+            try:
+                mpiBinDirExists, mpiBinDirIsDifferent, mpiBinDirPath = checkMpiInBashrc(MPI_BINDIR, 'bin', shell)
+                if not mpiBinDirExists:
+                    addMpiToBashrc(MPI_BINDIR, 'bin', shell)
+                elif mpiBinDirIsDifferent:
+                    addMpiToBashrc(MPI_BINDIR, 'bin', shell, True)
+                else:
+                    print "MPI_BINDIR untouched. Already set in "+BASHRC+" file"
+            except NameError:
+                print "Be careful, your MPI_BINDIR has not been set! You may need to manually set it in your bashrc"
 
 elif (ARGUMENTS['mode'] == 'compile'):
     # --- This is the compilation mode

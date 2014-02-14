@@ -69,10 +69,12 @@ class ProtProjMatch(XmippProtocol):
             self.DocFileName = self.SelFileName
         #sampling is now in acquisition info
         #self.ResolSam=float(self.ResolSam)
-        acquisionInfo = self.findAcquisitionInfo(self.SelFileName)
+        acquisionInfo = self.findAcquisitionInfo(self.SelFileNameInitial)
         if not acquisionInfo is None: 
             md = MetaData(acquisionInfo)
             self.ResolSam = md.getValue(MDL_SAMPLINGRATE, md.firstObject())
+        else:
+            self.ResolSam = 1
         if self.MaskRadius == -1:
            (Xdim, Ydim, Zdim, Ndim) = getImageSize(self.ReferenceFileNames[0])
            self.MaskRadius = Xdim/2
@@ -97,8 +99,10 @@ class ProtProjMatch(XmippProtocol):
         #getListFromVector(self.ReferenceFileNames,processX=False)
         #listOfReferences=self.ReferenceFileNames.split()
         md = MetaData()
-        md.read(self.SelFileName, 1)
-        validateInputSize(self.ReferenceFileNames, self.SelFileName, md, errors)
+        if not xmippExists(self.SelFileNameInitial):
+            errors.append("Can not find input file: %s"% self.SelFileNameInitial)
+        md.read(self.SelFileNameInitial, 1)
+        validateInputSize(self.ReferenceFileNames, self.SelFileNameInitial, md, errors)
         
         # Check there are enough images to avoid overfitting through the FSC
         if md.getParsedLines() < 100 and self.ConstantToAddToFiltration < 0:
@@ -124,7 +128,7 @@ class ProtProjMatch(XmippProtocol):
     
         
         #Check that acquisition info file is available
-        if not self.findAcquisitionInfo(self.SelFileName):
+        if not self.findAcquisitionInfo(self.SelFileNameInitial):
             errors.append("""Acquisition file for metadata %s is not available. 
 Either import images before using them
 or create a file named acquisition_info.xmd 
@@ -136,7 +140,7 @@ EXAMPLE:
 # change XXXXX by the sampling rate
 data_noname
  _sampling_rate XXXXX
-""" %(self.SelFileName,self.SelFileName))
+""" %(self.SelFileNameInitial,self.SelFileNameInitial))
             
         #FIXME ROB
         if self.DoCtfCorrection:
@@ -144,9 +148,16 @@ data_noname
             if self.SplitDefocusDocFile:
                 tmpCTFDatName = self.SplitDefocusDocFile
             else:
-                tmpCTFDatName = self.SelFileName
+                tmpCTFDatName = self.SelFileNameInitial
             tmpMd=MetaData(tmpCTFDatName)
-            if not tmpMd.containsLabel(MDL_CTF_MODEL):
+            if not (tmpMd.containsLabel(MDL_CTF_MODEL) or \
+               (\
+                tmpMd.containsLabel(MDL_CTF_DEFOCUSU) and\
+                tmpMd.containsLabel(MDL_CTF_DEFOCUSV) and\
+                tmpMd.containsLabel(MDL_CTF_DEFOCUS_ANGLE)\
+                )
+               ):
+                print "has no CTF information available"
                 errors.append("input file: " + tmpCTFDatName + " has no CTF information available")
 
             
@@ -943,7 +954,6 @@ data_noname
                                       'StackCTFs',
                                       'StackWienerFilters',
                                       'SplitAtDefocus']]
-        print 'executeCtfGroups', self.SelFileName
         _dataBase.insertStep('executeCtfGroups', verifyfiles=verifyFiles
                                                , CTFDatName=self.CTFDatName
                                                , CtfGroupDirectory=self.CtfGroupDirectory

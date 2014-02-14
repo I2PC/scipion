@@ -1072,7 +1072,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			public void stateChanged(javax.swing.event.ChangeEvent evt)
 			{
 				Integer zoom = (Integer) jsZoom.getValue();
-				if (gallery.getCellSize().getHeight() < 30)
+				if (gallery.getCellSize().getHeight() < 30 && zoom < gallery.data.zoom)
 				{
 					jsZoom.setValue(gallery.data.zoom);//keep previous zoom
 					return;
@@ -1658,7 +1658,8 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 						// // FIXME: Check chimera is installed
 						// Process p = new ProcessBuilder("chimera",
 						// args).start();
-						Runtime.getRuntime().exec("xmipp_chimera_client -i " + args);
+                                                String run = String.format("xmipp_chimera_client -i %s --mode projector", args);
+						Runtime.getRuntime().exec(run);
 					}
 					catch (Exception ex)
 					{
@@ -1942,17 +1943,20 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			}
 			else if (cmd.equals(OPEN))
 			{
-				MetadataGalleryTableModel mg = (MetadataGalleryTableModel) gallery;
-				ColumnInfo ci = mg.visibleLabels.get(col);
+                               
+                                MetadataGalleryTableModel mg = (MetadataGalleryTableModel) gallery;
 
-				if (ci.allowRender)
-					gallery.handleDoubleClick(row, col);
-				else
-				{
-					String file = data.getValueFromCol(row, ci);
+                                ColumnInfo ci = mg.visibleLabels.get(col);
 
-					ImagesWindowFactory.openFileAsDefault(file);
-				}
+                                if (ci.allowRender)
+                                        gallery.handleDoubleClick(row, col);
+                                else
+                                {
+                                        String file = data.getValueFromCol(row, ci);
+
+                                        ImagesWindowFactory.openFileAsDefault(file);
+                                }
+                                
 			}
 			else if (cmd.equals(OPEN_ASTEXT))
 			{

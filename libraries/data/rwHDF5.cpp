@@ -122,7 +122,7 @@ int ImageBase::readHDF5(size_t select_img)
 {
     bool isStack = false;
 
-    H5infoProvider provider = getProvider(fhdf5); // Dataset name
+    H5infoProvider provider = getProvider(fhdf5); // Provider name
 
     int errCode = 0;
 
@@ -145,12 +145,15 @@ int ImageBase::readHDF5(size_t select_img)
         case EMAN: // Images in stack are stored in separated groups
             hid_t grpid;
             grpid = H5Gopen(fhdf5,"/MDF/images/", H5P_DEFAULT);
-            /*herr_t err = */ H5Gget_num_objs(grpid, &nobjEman);
+            /*herr_t err = */
+            H5Gget_num_objs(grpid, &nobjEman);
 
             dsname = formatString(dsname.c_str(), IMG_INDEX(select_img));
+
+            H5Gclose(grpid);
             break;
         default:
-        	break;
+            break;
         }
     }
 
@@ -202,7 +205,7 @@ int ImageBase::readHDF5(size_t select_img)
         break;
         //    case EMAN: // Images in stack are stored in separated groups
     default:
-    	break;
+        break;
     }
 
 

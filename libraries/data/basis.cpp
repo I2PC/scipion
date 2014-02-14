@@ -68,18 +68,26 @@ String Basis::basisName() const
 void Basis::defineParams(XmippProgram * program, const char* prefix, const char* comment)
 {
     char tempLine[256];
+    char lineOut[256];
 
     if(prefix == NULL)
         sprintf(tempLine, "  [--basis <basis_type=blobs>] ");
     else
         sprintf(tempLine,"%s --basis <basis_type=blobs> ", prefix);
-    if (comment != NULL)
-        sprintf(tempLine, "%s : %s", tempLine, comment);
-    else
-        sprintf(tempLine, "%s : Basis function to use for the reconstruction", tempLine);
 
-    program->addParamsLine(tempLine);
-    program->addParamsLine("    where <basis_type> ");
+    std::cerr << "DEBUG_JM: tempLine: " << tempLine << std::endl;
+
+
+    if (comment != NULL)
+        sprintf(lineOut, "%s : %s", tempLine, comment);
+    else
+        sprintf(lineOut, "%s : Basis function to use for the reconstruction", tempLine);
+
+    program->addParamsLine(lineOut);
+
+    std::cerr << "DEBUG_JM: tempLine: " << lineOut << std::endl;
+
+    program->addParamsLine("    where <basis_type>");
     program->addParamsLine("      blobs <radius=2> <Bessel_order=2> <alpha_param=10.4> : Default blob parameters and grid relative size adjusted to use small blobs");
     program->addParamsLine("     voxels");
     program->addParamsLine("     splines");

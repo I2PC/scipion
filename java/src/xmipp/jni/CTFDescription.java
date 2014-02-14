@@ -38,6 +38,7 @@ public class CTFDescription {
         else
         	downsampling = 1.0;
         md.destroy();
+        
         FMAX = getFMAX()/downsampling;
     }
 
