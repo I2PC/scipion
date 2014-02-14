@@ -33,6 +33,7 @@ import shutil
 from os.path import exists, join, splitext, isdir, isfile, expanduser, expandvars, basename, dirname, split, relpath
 import pyworkflow as pw
 from glob import glob
+from distutils.dir_util import copy_tree
 
 
 def findFile(filename, *paths):
@@ -149,6 +150,10 @@ def copyTree(source, dest):
                 shutil.copy(fnPath, dest)
             elif os.path.isdir(fnPath):
                 copyTree(fnPath, join(dest, f))
+
+def moveTree(src, dest):
+    copyTree(src, dest)
+    cleanPath(src)
                 
 def copyFile(source, dest):
     """ Shortcut to shutil.copy. """

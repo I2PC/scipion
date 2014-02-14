@@ -51,55 +51,55 @@ class XmippProtJoinSets(ProtPreprocessMicrographs):
         self._insertFunctionStep('createOutput')
   
     def createOutput(self):
+        #Read Classname and generate corresponding SetOfImages (SetOfParticles, SetOfVolumes, SetOfMicrographs)
         self.inputType = str(self.inputSet[0].get().getClassName())
-       
         func ="_create%s" % self.inputType
-        
-        print "func", func
-       
         outputSetFunction = getattr(self, func)
-        
         outputSet = outputSetFunction()
-        outputSet.printAll()
+        
+        #Copy info from input (sampling rate, etc)
         outputSet.copyInfo(self.inputSet[0].get())
        
         for itemSet in self.inputSet:
             for itemObj in itemSet.get():
                 itemObj.cleanObjId()
                 outputSet.append(itemObj)
-                
         outputSet.write()
-       
-       
-#        micsSet = self._createSetOfMicrographs()
-#        micsSet.copyInfo(self.inputMicrographs[0].get())
-#        
-#        # Get pointer to input micrographs 
-#        for setOfMicrograph in self.inputMicrographs:
-#            for mic in setOfMicrograph.get():
-#                mic.cleanObjId()
-#                micsSet.append(mic)
-#                
-#        micsSet.write()
         
-        self._defineOutputs(outputSet=outputSet)
+        self._defineOutputs(outputImages=outputSet)
+        
+    def validate(self):
+        classList = []
+        for itemSet in self.inputSet:
+            itemClassName = itemSet.get().getClassName()
+            if len(classList) == 0 or itemClassName not in classList:
+                classList.append(itemClassName)
+            
+        errors = []
+        if len(classList) > 1:
+            errors.append("Object should have same type")
+            errors.append("Types of objects found: " + ", ".join(classList))
+        return errors  
 
     def _summary(self):
         summary = []
-        if not hasattr(self, 'outputSet'):
+        if not hasattr(self, 'outputImages'):
             summary.append("Output set not ready yet.")
         else:
-            summary.append("Input sets of type [%s]:" % self.inputType)
+            summary.append("Input sets of type %s:" % self.outputImages.getClassName())
             for itemSet in self.inputSet:
-                summary.append("[%s]" % itemSet.get().getNameId())
+                summary.append("%s" % itemSet.get().getNameId())
         return summary
         
     def _methods(self):
         methods = []
-        if not hasattr(self, 'outputSet'):
+        if not hasattr(self, 'outputImages'):
             methods.append("Protocol has not finished yet.")
         else:
-            methods.append("We have joint the following sets ")
+            m = "We have joint the following sets: "
+            for itemSet in self.inputSet:
+                m += "%s, " % itemSet.get().getNameId()
+            methods.append(m[:-2])
         
         return methods
             

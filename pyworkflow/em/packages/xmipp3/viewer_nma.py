@@ -24,7 +24,7 @@
 # *
 # **************************************************************************
 """
-This module implement the wrappers aroung Xmipp CL2D protocol
+This module implement the wrappers around Xmipp NMA protocol
 visualization program.
 """
 from pyworkflow.viewer import ProtocolViewer, DESKTOP_TKINTER, WEB_DJANGO
@@ -45,10 +45,11 @@ CLASS_STABLE_CORES = 2
 
         
 class XmippNMAViewer(ProtocolViewer):
-    """ Visualization of results from the NMA protocol
+    """ Visualization of results from the NMA protocol.
+    
+        Normally, NMA modes with high collectivity and 
     """
     _label = 'viewer nma'
-    _references = ['[[http://www.ncbi.nlm.nih.gov/pubmed/23671335][Nogales-Cadenas, et.al, NAR (2013)]]']
     _targets = [XmippProtNMA]
     _environments = [DESKTOP_TKINTER, WEB_DJANGO]
 

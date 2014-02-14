@@ -82,6 +82,7 @@ class XmippProtConvertToPseudoAtoms(ProtPreprocessVolumes):
         self.sampling = inputStructure.getSamplingRate()
         self.fnIn=getImageLocation(inputStructure)
         self._insertFunctionStep('convertToPseudoAtomsStep', self.fnIn, fnMask)
+        self._insertFunctionStep('createChimeraScriptStep')
         self._insertFunctionStep('createOutputStep')
         
     def _insertMaskStep(self):
@@ -114,6 +115,26 @@ class XmippProtConvertToPseudoAtoms(ProtPreprocessVolumes):
         for suffix in ["_approximation.vol", "_distance.hist"]:
             moveFile(self._getPath(prefix+suffix), self._getExtraPath(prefix+suffix))
         cleanPattern(self._getPath(prefix+'_*'))
+        
+    def createChimeraScriptStep(self):
+        radius = self.sampling * self.pseudoAtomRadius.get() 
+        input = self.inputStructure.get()
+        localInputFn = self._getBasePath(self.fnIn)
+        createLink(self.fnIn, localInputFn)
+        fhCmd = open(self._getPath("chimera.cmd"),'w')
+        fhCmd.write("open pseudoatoms.pdb\n")
+        fhCmd.write("rangecol bfactor,a 0 white 1 red\n")
+        fhCmd.write("setattr a radius %f\n" % radius)
+        fhCmd.write("represent sphere\n")
+        fhCmd.write("open %s\n" % basename(localInputFn))
+         
+        threshold = 0.01
+        if self.maskMode == NMA_MASK_THRE:
+            self.maskThreshold.get()
+        xdim, _, _, _ = input.getDim()
+        origin = xdim / 2
+        fhCmd.write("volume #1 level %f transparency 0.5 voxelSize %f originIndex %d\n" % (threshold, self.sampling, origin))
+        fhCmd.close()
      
     def createOutputStep(self):
         pdb = PdbFile(self._getPath('pseudoatoms.pdb'), pseudoatoms=True)

@@ -74,6 +74,18 @@ author = "de la Rosa-Trevi­n, J.M.  and Oton, J. and R. Marabini and A. Zaldi­va
 keywords = "Electron microscopy, Single particles analysis, Image processing, Software package "
 }
 
+@article{Jin2014,
+title = "Iterative Elastic 3D-to-2D Alignment Method Using Normal Modes for Studying Structural Dynamics of Large Macromolecular Complexes",
+journal = "Structure",
+volume = "22",
+pages = "1 - 11",
+year = "2014",
+doi = "http://dx.doi.org/10.1016/j.str.2014.01.004",
+url = "http://www.ncbi.nlm.nih.gov/pubmed/24508340",
+author = "Jin, Q. and Sorzano, C. O. S. and de la Rosa-Trevin, J. M. and Bilbao-Castro, J. R. and Nuñez-Ramirez, R. and Llorca, O. and Tama, F. and Jonic, S.",
+keywords = "Normal mode analysis, NMA "
+}
+
 @article{Jonic2005,
 title = "Spline-based image-to-volume registration for three-dimensional electron microscopy ",
 journal = "Ultramicroscopy ",
