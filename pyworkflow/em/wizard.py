@@ -305,7 +305,7 @@ class previewDialog(dialog.Dialog):
         controlsFrame.grid(row=1, column=1, padx=5, pady=5, sticky='news')
         self._createControls(controlsFrame)
         self._itemSelected(self.firstItem)
-        itemsTree.selectItem(0) # Select the first item
+        itemsTree.selectChildByIndex(0) # Select the first item
     
     def _beforePreview(self):
         """ Called just before setting the preview.

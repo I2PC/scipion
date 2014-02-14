@@ -35,6 +35,7 @@ from pyworkflow.mapper import SqliteMapper
 import gui
 from widgets import Scrollable
 
+
 class Tree(ttk.Treeview, Scrollable):
     """ This widget acts as a wrapper around the ttk.Treeview"""
     _images = {}
@@ -91,9 +92,12 @@ class Tree(ttk.Treeview, Scrollable):
         for c in childs:
             self.delete(c)
             
-    def selectItem(self, index):
+    def selectChildByIndex(self, index):
         """ Select the item at the position index """
         child = self.get_children('')[index]
+        self.selection_set(child)
+        
+    def selectChild(self, child):
         self.selection_set(child)
             
             
@@ -253,6 +257,8 @@ class BoundTree(Tree):
                 self._objDict[obj._treeId] = obj
                 if open:
                     self.itemConfig(obj, open=open)
+                if objDict.get('selected', False):
+                    self.selectChild(obj._treeId)
 
     def itemConfig(self, obj, **args):
         """ Configure inserted items. """

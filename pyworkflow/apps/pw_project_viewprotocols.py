@@ -562,7 +562,7 @@ class ProtocolsView(tk.Frame):
             if self.selectedProtocol is not None:
                 for i, obj in enumerate(self.runsTree._objects):
                     if self.selectedProtocol.getObjId() == obj.getObjId():
-                        self.runsTree.selectItem(i)
+                        self.runsTree.selectChildByIndex(i)
                         break
     
     def createRunsGraph(self, parent):
@@ -591,7 +591,7 @@ class ProtocolsView(tk.Frame):
                     #item.setSelected(True)
                     run = item.run
                     if run and self.selectedProtocol.getObjId() == run.getObjId():
-                        self.runsGraph.selectItem(item)
+                        self.runsGraph.selectChildByIndex(item)
                         break
                             
     def createRunItem(self, canvas, node, y):

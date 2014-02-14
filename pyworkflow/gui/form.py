@@ -140,9 +140,10 @@ class ProtocolClassTreeProvider(TreeProvider):
 class SubclassesTreeProvider(TreeProvider):
     """Will implement the methods to provide the object info
     of subclasses objects(of className) found by mapper"""
-    def __init__(self, mapper, pointerParam):
+    def __init__(self, mapper, pointerParam, selected=None):
         self.className = pointerParam.pointerClass.get()
         self.condition = pointerParam.pointerCondition.get()
+        self.selected = selected
         self.mapper = mapper
         
     def getObjects(self):
@@ -163,9 +164,9 @@ class SubclassesTreeProvider(TreeProvider):
         return [('Object', 400), ('Info', 250)]
     
     def getObjectInfo(self, obj):
-#        objName = self.mapper.getFullName(obj)
         objName = obj.getNameId()
-        return {'key': objName, 'values': (str(obj),)}
+        selected = self.selected is not None and self.selected.getObjId() == obj.getObjId()
+        return {'key': objName, 'values': (str(obj),), 'selected': selected}
 
     def getObjectActions(self, obj):
         if isinstance(obj, Pointer):
@@ -442,9 +443,9 @@ class ParamWidget():
     def _browseObject(self, e=None):
         """Select an object from DB
         This function is suppose to be used only for PointerParam"""
-        tp = SubclassesTreeProvider(self.window.protocol.mapper, self.param)
-        dlg = ListDialog(self.parent, "Select object", tp, 
-                         "Double click an item to preview the object")
+        print "_browseObject: ", self.get()
+        tp = SubclassesTreeProvider(self.window.protocol.mapper, self.param, selected=self.get())
+        dlg = ListDialog(self.parent, "Select object", tp, "Double click an item to preview the object")
         if dlg.value is not None:
             self.set(dlg.value)
             
