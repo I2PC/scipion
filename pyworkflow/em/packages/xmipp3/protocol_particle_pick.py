@@ -82,7 +82,7 @@ class XmippProtParticlePicking(ProtParticlePicking, XmippProtocol):
         
     def launchParticlePickGUI(self):
         # Get the converted input micrographs in Xmipp format
-        # if not exists, means the input was already in Xmipp
+        # if not exists, means the input was already in Xmippmeditacion
         micFn = createXmippInputMicrographs(self, self.inputMics)
         self._params['inputMicsXmipp'] = micFn
         # Launch the particle picking GUI

@@ -95,7 +95,7 @@ class XmippViewer(Viewer):
             if obj.hasCTF():
                 extra = ' --mode metadata --render first'
             #runShowJ(fn, extraParams=extra)
-            runScipionShowJ(fn, "Set Of Micrographs", obj)    
+            runScipionShowJ(fn, "Micrographs", obj)    
         
         elif issubclass(cls, SetOfCoordinates):
             obj_mics = obj.getMicrographs()#accessing mics to provide metadata file
@@ -117,7 +117,7 @@ class XmippViewer(Viewer):
             makePath(tmpDir)
             writeSetOfCoordinates(tmpDir, obj)            
                 
-            runParticlePicker(fn, tmpDir, extraParams='review')
+            runScipionParticlePicker(fn, tmpDir, self._project.getName(), obj.strId())
         
         elif issubclass(cls, SetOfParticles) or issubclass(cls, SetOfVolumes):
             mdFn = getattr(obj, '_xmippMd', None)
@@ -131,7 +131,7 @@ class XmippViewer(Viewer):
                 else:
                     writeSetOfVolumes(obj, fn)
             if issubclass(cls, SetOfParticles):
-                runScipionShowJ(fn, "Set Of Particles", obj)  
+                runScipionShowJ(fn, "Particles", self._project.getName(), obj.strId())  
             else:
                 runShowJ(fn)
             md = xmipp.MetaData(fn) 
@@ -183,7 +183,7 @@ class XmippViewer(Viewer):
             self.visualize(obj.outputParticles)
             # If Zscore on output images plot Zscore particle sorting
         elif (issubclass(cls, ProtUserSubSet)):
-            self.visualize(obj.outputset)
+            self.visualize(obj.getOutputSet())
                           
         elif issubclass(cls, ProtAlign):
             self.visualize(obj.outputAverage)
@@ -256,16 +256,21 @@ def runJavaIJapp(memory, appName, args, batchMode=True):
 def runShowJ(inputFiles, memory="1g", extraParams=""):
     runJavaIJapp(memory, "'xmipp.viewer.Viewer'", "-i %s %s" % (inputFiles, extraParams), True)
     
-def runScipionShowJ(inputFiles, set, obj, memory="1g", extraParams=""):
+def runScipionShowJ(inputFiles, type, projectid, objid, memory="1g", extraParams=""):
 
     
     script = pw.join('apps', 'pw_create_image_subset.py')
     script = "%s %s" % (pw.PYTHON, script) 
 
-    runJavaIJapp(memory, "'xmipp.viewer.scipion.ScipionViewer'", "-i %s %s --command \"%s\" \"%s\" %s" % (inputFiles, extraParams, set, script, obj.strId()), True)
+    runJavaIJapp(memory, "'xmipp.viewer.scipion.ScipionViewer'", "-i %s %s --scipion \"%s\" \"%s\" \"%s\" %s" % (inputFiles, extraParams, type, script, projectid, objid), True)
 
 def runParticlePicker(inputMics, inputCoords, memory="1g", extraParams=""):
-    runJavaIJapp(memory, "xmipp.viewer.particlepicker.training.Main", "%s %s %s" % (inputMics, inputCoords, extraParams), True)
+    runJavaIJapp(memory, "xmipp.viewer.particlepicker.training.SupervisedPickerRunner", "--input %s --output %s %s" % (inputMics, inputCoords, extraParams), True)
+    
+def runScipionParticlePicker(inputMics, inputCoords,  projectid, objid, memory="1g"):
+    script = pw.join('apps', 'pw_create_coords_subset.py')
+    script = "%s %s" % (pw.PYTHON, script) 
+    runJavaIJapp(memory, "xmipp.viewer.particlepicker.training.SupervisedPickerRunner", "--input %s --output %s --mode review --scipion \"%s\" \"%s\" %s" % (inputMics, inputCoords, script, projectid, objid), True)
 
 
 
