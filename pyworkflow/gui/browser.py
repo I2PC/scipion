@@ -135,7 +135,7 @@ class ObjectBrowser(tk.Frame):
 
 class FileBrowser():
     def __init__(self, initialDir='.', parent=None, root=None, seltype="both", selmode="browse", allowFilter=True, filter=None, previewDim=144):
-        ''' seltype is the selection type, it could be:
+        """ seltype is the selection type, it could be:
               - file -> only allow files selection
               - folder -> only allow folder selection
               - both -> allow any selection
@@ -143,7 +143,7 @@ class FileBrowser():
             selmode is the selection mode, it could be:
               - browse -> only single file selection
               - extended -> multiple file selection
-        '''
+        """
         self.seltype = seltype
         self.selmode = selmode
 #        self.dir = abspath(initialDir)
@@ -611,8 +611,8 @@ def pretty_size(size):
         return '1 byte'
     
 def splitFilename(filename):
-    ''' Split filename separating by @ 
-    separating in block and filename'''
+    """ Split filename separating by @ 
+    separating in block and filename"""
     if '@' in filename:
         block, filename = filename.split('@')
     else:
@@ -632,13 +632,13 @@ def scipionExists(path):
     return FileName(path).exists()
 
 def getImageData(img):
-    ''' Function to get a matrix from an Image'''
+    """ Function to get a matrix from an Image"""
     Z = img.getData()
     return Z
 
 
 class AutoScrollbar(tk.Scrollbar):
-    '''A scrollbar that hides itself if it's not needed.'''
+    """A scrollbar that hides itself if it's not needed."""
     def set(self, lo, hi):
         if float(lo) <= 0.0 and float(hi) >= 1.0:
             self.tk.call("grid", "remove", self)
@@ -654,7 +654,7 @@ def dirname(p):
         head = head.rstrip('/')
     return head
 
-'''**************  Implementation of Xmipp Browser *************'''
+"""**************  Implementation of Xmipp Browser *************"""
 # Some helper functions for the browser
 def showj(filename, mode="default"):
     from protlib_utils import runShowJ
@@ -708,7 +708,7 @@ def defaultOnDoubleClick(filename, browser):
     pass
 
 def isChimeraSession(filename):
-    ''' check if the file is a chimera .py session '''
+    """ check if the file is a chimera .py session """
     # Check if it is a chimera .py session
     if filename.endswith('.py'):
         f = open(filename)
@@ -857,7 +857,7 @@ def pdbOnDoubleClick(filename, browser):
     chimera(filename)
     
 class FileManager():
-    ''' Class to handle different types of files '''
+    """ Class to handle different types of files """
     def __init__(self, **attributes):
         for k, v in attributes.iteritems():
             setattr(self, k, v)
