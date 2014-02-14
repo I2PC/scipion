@@ -388,6 +388,11 @@ def visualizeObject(request):
         raise Exception('Showj Web visualizer: No object identifier or path found')         
 
     request.session['defaultZoom'] = inputParameters['zoom']
+    
+    # Clean the dataset if exist 
+    if 'dataset' in request.session:
+        request.session.__delitem__('dataset')
+    
     return showj(request, inputParameters, extraParameters)  
 
 
