@@ -585,26 +585,29 @@ class ProtUserSelection(EMProtocol):
 
 class ProtUserSubSet(EMProtocol):
     
-    def __init__(self, type):
-        self.type = type
+    def __init__(self, **args):
+        EMProtocol.__init__(self, **args)
+        self._setType = String(args.get('setType'))
     
     def getType(self):
-        return self.type
+        return self._itemType.get()
+    
+    
         
     def createInputSet(self, inputset):
         
         inputsetpt = Pointer()
         inputsetpt.set(inputset)
-        inputs = {'input' + type: inputsetpt}
+        inputs = {'input' + self._setType.get(): inputsetpt}
         self._defineInputs(**inputs)
         
         
     def createOutputSet(self, outputset):
-         outputs = {'output' + type: outputset}
+         outputs = {'output' + self._setType.get(): outputset}
          self._defineOutputs(**outputs)
    
     def getOutputSet(self):
-       return getattr(self, 'output' + type)
+        return getattr(self, 'output' + self._setType.get())
 
 
 class ProtAlignClassify(EMProtocol):
