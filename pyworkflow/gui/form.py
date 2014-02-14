@@ -47,7 +47,8 @@ from pyworkflow.protocol import Protocol
 from dialog import showInfo, TextDialog, ListDialog
 from tree import TreeProvider
 from pyworkflow.utils.properties import Message, Icon, Color
-
+from pyworkflow.viewer import DESKTOP_TKINTER
+#from pyworkflow.em import findViewers
 
 #-------------------- Variables wrappers around more complex objects -----------------------------
 
@@ -139,9 +140,10 @@ class ProtocolClassTreeProvider(TreeProvider):
 class SubclassesTreeProvider(TreeProvider):
     """Will implement the methods to provide the object info
     of subclasses objects(of className) found by mapper"""
-    def __init__(self, mapper, pointerParam):
+    def __init__(self, mapper, pointerParam, selected=None):
         self.className = pointerParam.pointerClass.get()
         self.condition = pointerParam.pointerCondition.get()
+        self.selected = selected
         self.mapper = mapper
         
     def getObjects(self):
@@ -162,17 +164,15 @@ class SubclassesTreeProvider(TreeProvider):
         return [('Object', 400), ('Info', 250)]
     
     def getObjectInfo(self, obj):
-#        objName = self.mapper.getFullName(obj)
         objName = obj.getNameId()
-        return {'key': objName, 'values': (str(obj),)}
+        selected = self.selected is not None and self.selected.getObjId() == obj.getObjId()
+        return {'key': objName, 'values': (str(obj),), 'selected': selected}
 
     def getObjectActions(self, obj):
-        from pyworkflow.viewer import DESKTOP_TKINTER
-        from pyworkflow.em import findViewers
-        
         if isinstance(obj, Pointer):
             obj = obj.getName()
         actions = []    
+        from pyworkflow.em import findViewers
         viewers = findViewers(obj.getClassName(), DESKTOP_TKINTER)
         for v in viewers:
             actions.append(('Open with %s' % v.__name__, lambda : v().visualize(obj)))
@@ -443,9 +443,9 @@ class ParamWidget():
     def _browseObject(self, e=None):
         """Select an object from DB
         This function is suppose to be used only for PointerParam"""
-        tp = SubclassesTreeProvider(self.window.protocol.mapper, self.param)
-        dlg = ListDialog(self.parent, "Select object", tp, 
-                         "Double click an item to preview the object")
+        print "_browseObject: ", self.get()
+        tp = SubclassesTreeProvider(self.window.protocol.mapper, self.param, selected=self.get())
+        dlg = ListDialog(self.parent, "Select object", tp, "Double click an item to preview the object")
         if dlg.value is not None:
             self.set(dlg.value)
             
@@ -549,7 +549,7 @@ class FormWindow(Window):
         self.visualizeMode = args.get('visualizeMode', False)  # This control when to close or not after execute
         self.childMode = args.get('childMode', False) # Allow to open child protocols form (for workflows)
         
-        from pyworkflow.viewer import DESKTOP_TKINTER
+        
         from pyworkflow.em import findWizards
         self.wizards = findWizards(protocol, DESKTOP_TKINTER)
         
@@ -789,7 +789,24 @@ class FormWindow(Window):
         else:
             widgetValue = protVar.get(param.default.get())  
         return widgetValue
-           
+          
+    def _visualize(self, paramName):
+        protVar = getattr(self.protocol, paramName)
+        if protVar.hasValue():
+            from pyworkflow.em import findViewers
+            obj = protVar.get() # Get the reference to the object
+            viewers = findViewers(obj.getClassName(), DESKTOP_TKINTER)
+            if len(viewers):
+                v = viewers[0] # Use the first viewer registered
+                proj = self.protocol.getProject()
+                if proj is None:
+                    raise Exception("none project")
+                v(project=self.protocol.getProject()).visualize(obj) # Instanciate the viewer and visualize object
+            else:
+                self.showInfo("There is not viewer registered for this object")
+        else:
+            self.showInfo("Select the object before visualize")
+         
     def _fillSection(self, sectionParam, sectionWidget):
         parent = sectionWidget.contentFrame
         r = 0
@@ -804,8 +821,10 @@ class FormWindow(Window):
                 if not protVar:
                     widget.hide() # Show only if question var is True
             else:
-                # Create the label
-                visualizeCallback = self.visualizeDict.get(paramName, None)
+                if isinstance(param, PointerParam):
+                    visualizeCallback = self._visualize # Add visualize icon for pointer params
+                else:
+                    visualizeCallback = self.visualizeDict.get(paramName, None)
                 
                 widget = ParamWidget(r, paramName, param, self, parent, 
                                                          value=self.getWidgetValue(protVar, param),

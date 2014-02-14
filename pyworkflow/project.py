@@ -233,12 +233,18 @@ class Project(object):
       
         self.mapper.commit()     
         
+    def newProtocol(self, protocolClass):
+        """ Create a new protocol from a given class. """
+        newProt = protocolClass()
+        newProt.setMapper(self.mapper)
+        newProt.setProject(self)
+
+        return newProt
+        
     def copyProtocol(self, protocol):
         """ Make a copy of the protocol, return a new one with copied values. """
-        cls = protocol.getClass()
-        newProt = cls() # Create new protocol instance
+        newProt = self.newProtocol(protocol.getClass())
         newProt.copyDefinitionAttributes(protocol)
-        newProt.setMapper(self.mapper)
         
         return newProt
     
