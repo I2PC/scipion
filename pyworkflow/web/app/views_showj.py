@@ -151,8 +151,7 @@ def showj(request, inputParameters=None, extraParameters=None):
         context.update(create_context_volume(request, inputParameters, volPath, _stats))
                
     elif inputParameters['mode']=='gallery' or inputParameters['mode']=='table' or inputParameters['mode']=='column':
-#        context.update({"showj_alt_js": getResourceJs('showj_' + inputParameters['mode'] + '_utils')})
-        context.update({"showj_alt_js": os.path.join(settings.STATIC_URL, "js/showj_libs/", 'showj_' + inputParameters['mode'] + '_utils.js')})
+        context.update({"showj_alt_js": getResourceJs('showj_' + inputParameters['mode'] + '_utils')})
     
     return_page = 'showj/%s%s%s' % ('showj_', showjForm.data['mode'], '.html')
     
