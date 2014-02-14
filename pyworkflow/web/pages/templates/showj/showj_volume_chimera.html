@@ -1,3 +1,5 @@
+{% extends 'showj/showj_base.html' %} 
+{% block head %}
 <!-- TABLE STYLES 
 Overwrite general section property for volume view with Chimera-->
 <style type="text/css">
@@ -30,6 +32,13 @@ $(document).ready(function(){
 })
 </script>
 
+{% endblock %}
+
+{% block content_menu %}{% endblock %}
+			
+{% block content_view %}{% endblock %}
+
+{% block content_end_page %}	
 <!-- CHIMERA -->
 <div id="fallback" class="fallback"></div>
 <canvas id="molview" width="512" height="334"></canvas>
@@ -43,10 +52,8 @@ if (!PhiloGL.hasWebGL()) {
 	+ '</div>';
 }
 </script>
-
 {% autoescape off %}
 	{{chimeraHtml}}
 {% endautoescape %}	
 
-
-
+{% endblock %}

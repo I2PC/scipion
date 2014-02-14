@@ -1,3 +1,5 @@
+{% extends 'showj/showj_base.html' %} 
+{% block head %}
 <!-- JS -->
 <script type="text/javascript" src="{{jquery_ui}}"></script>
 
@@ -54,7 +56,11 @@ function av_map_level(l){
 }
 </script>
 {% endif %}
+{% endblock %}
 
+{% block content_menu %}{% endblock %}
+			
+{% block content_view %}
 
 <div id="astexContainer">
 
@@ -105,4 +111,5 @@ function av_map_level(l){
 	{% endif %}	
 	
 </div>
-
+			
+{% endblock %}

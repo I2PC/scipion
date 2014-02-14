@@ -54,7 +54,8 @@ var jsonTableLayoutConfiguration = {{tableLayoutConfiguration|safe }}
 console.log("json",jsonTableLayoutConfiguration)
 
 $(document).ready(function(){ 
-
+	
+	
 	{% if form.mode.value != 'column' and dataset.getNumberSlices > 0 %}
 	setImageSize(true)
 	initializeZoomEvents();
@@ -164,40 +165,207 @@ function setImageSize(refreshElement){
 }
 </script>
 {% endif %}
-
-{% block head %}{% endblock %}
-
+{% block head %}  {% endblock %}
 {% endblock %}
 
-{% block content_header %}	
-	{% include "header.html" with page_mode="showj"%} 
-{% endblock %}
+{% block content_header %}	{% include "header.html" with page_mode="showj"%} {% endblock %}
 
-<div id="content_menu">
 {% block menu %}
-	{% include "showj/showj_menu.html" %}
+<div id="asideMainContainer">
+	<form id="showjForm" action="/showj/" method="post"> {% csrf_token %}
+		<div id="modeContainer" class="sectionMenu">
+			<!-- TABLE -->
+			<input type="submit" value="table" name="select_mode"
+			 {% if form.typeVolume.value == 'pdb'%}
+			 onclick="return false;"
+			 {% else %}
+			 onclick="document.forms['showjForm'].id_mode.value='table';" 
+			 {% endif %}
+			 class="submitButton
+			 {% if form.mode.value != 'table' %}
+			  tableOff
+			 {% else %}
+			  tableOn
+			 {% endif %}	
+			  " 
+			  {% if form.mode.value == 'column' %}
+			  disabled
+			  {% endif %}
+			  />
+			
+			<!-- GALLERY -->
+			<input type="submit" value="gallery" name="select_mode" 
+			 {% if form.typeVolume.value == 'pdb'%}
+			 onclick="return false;"
+			 {% else %}
+			 onclick="document.forms['showjForm'].id_mode.value='gallery';" 
+			 {% endif %}
+			 class="submitButton
+			 {% if form.mode.value != 'gallery'  %}
+			  galleryOff
+			 {% else %}
+			  galleryOn
+			 {% endif %}
+			 
+			 "
+			 {% if form.mode.value == 'column' %}
+			  disabled
+			 {% endif %}
+			 />
+			 
+			<!-- VOLUME VISUALIZE WITH ASTEX -->
+			{% if dataset.getNumberSlices > 1 or form.typeVolume.value == 'pdb'%} 
+			<input type="submit" value="volume_astex" name="select_mode" onclick="document.forms['showjForm'].id_mode.value='volume_astex';" class="submitButton
+			 {% if form.mode.value != 'volume_astex' %}
+			 visualizeVolOff
+			 {% else %}
+			  visualizeVolOn
+			 {% endif %}
+			 "
+			 />
+			 {% endif %}
+			 
+			 <!-- VOLUME VISUALIZE WITH CHIMERA -->
+			 {% if dataset.getNumberSlices > 1 or form.typeVolume.value == 'pdb' %} 
+			<input type="submit" value="volume_chimera" name="select_mode" onclick="document.forms['showjForm'].id_mode.value='volume_chimera';" class="submitButton
+			 {% if form.mode.value != 'volume_chimera' %}
+			 visualizeVolOff
+			 {% else %}
+			  visualizeVolOn
+			 {% endif %}
+			 "
+			 
+			   
+			 />
+			 {% endif %}
+		</div>
+		
+		{% if not form.zoom.is_hidden %}
+			<div id="zoomContainer" class="sectionMenu">
+				<i class="fa fa-search" style="margin-right:5px"></i>
+				{{ form.zoom }}
+				
+				<div id="arrowContainer" class="arrowSectionMenu">
+					<img src="/resources/showj/arrowUp.png" class="arrowImage">
+					<img src="/resources/showj/arrowDown.png" class="arrowImage">
+				</div>
+			</div>
+		{% endif %}
+		
+		{% if not form.goto.is_hidden %}
+			<div id="gotoContainer" class="sectionMenu">
+				<img src="/resources/showj/goto.png" class="menuIcon">
+				{{ form.goto }}
+				
+				<div id="arrowContainer" class="arrowSectionMenu">
+					<img src="/resources/showj/arrowUp.png" class="arrowImage">
+					<img src="/resources/showj/arrowDown.png" class="arrowImage">
+				</div>
+			</div>
+		{% endif %}
+		
+		{% if not form.zoom.is_hidden or not form.goto.is_hidden %}
+			<div class="sectionMenu">
+				<img src="/resources/showj/separator.png" class="menuIcon">
+			</div>
+		{% endif %}	
+		
+		{% if form.mode.value == 'gallery' %}
+		<div id="colRowContainer" class="sectionMenu">
+			<button id="colRowMode"> 
+				<img src="/resources/showj/colRowMode{{form.colRowMode.value}}.png" id="colRowModeImage" />
+			</button>
+			
+			<div class="subSectionMenu" id="colsSubSectionMenu">
+				<span class="textMenu">{{ form.cols.label_tag }}</span>
+				{{ form.cols }}
+				
+				<div id="arrowContainer" class="arrowSectionMenu">
+					<img src="/resources/showj/arrowUp.png" class="arrowImage">
+					<img src="/resources/showj/arrowDown.png" class="arrowImage">
+				</div>
+			</div>
+			<div class="subSectionMenu" id="rowsSubSectionMenu">
+				<span class="textMenu">{{ form.rows.label_tag }}</span>
+				{{ form.rows }}
+				
+				<div id="arrowContainer" class="arrowSectionMenu">
+					<img src="/resources/showj/arrowUp.png" class="arrowImage">
+					<img src="/resources/showj/arrowDown.png" class="arrowImage">
+				</div>
+			</div>
+		</div>
+		
+		<div class="sectionMenu">
+			<img src="/resources/showj/separator.png" class="menuIcon">
+		</div>
+		{% endif %}
+	
+		<div id="blockSelectorContainer" class="sectionMenu">
+			<span class="textMenu"> {{ form.blockComboBox.label_tag }} </span>
+			{{ form.blockComboBox }} 
+		</div>
+		
+		<div id="metadataSelectorContainer" class="sectionMenu">
+			<span class="textMenu">
+			{% if not form.labelsToRenderComboBox.is_hidden %}
+			{{ form.labelsToRenderComboBox.label_tag }}
+			{% endif %}
+			</span>
+			{{ form.labelsToRenderComboBox }}
+		</div>
+		
+		<div id="volumeSelectorContainer" class="sectionMenu">
+			<span class="textMenu">
+			{% if not form.volumesToRenderComboBox.is_hidden %}
+			{{ form.volumesToRenderComboBox.label_tag }}
+			{% endif %}
+			</span>
+			{{ form.volumesToRenderComboBox }}
+		</div>
+		
+		<div id="resliceSelectorContainer" class="sectionMenu">
+			<span class="textMenu">
+			{% if not form.resliceComboBox.is_hidden %}
+			{{ form.resliceComboBox.label_tag }}
+			{% endif %}
+			</span>
+			{{ form.resliceComboBox }}
+		</div>
+	
+		{% if form.blockComboBox.value != '' or form.labelsToRenderComboBox.value != '' or form.volumesToRenderComboBox.value != '' or not form.resliceComboBox.is_hidden %}	
+			<div class="sectionMenu">
+				<img src="/resources/showj/separator.png" class="menuIcon">
+			</div>
+		{% endif %}
+		
+		<div id="saveContainer" class="sectionMenu">
+			<a id="saveButton" href="javascript:saveShowjTable('{{ csrf_token }}');" class="btn buttonGrey" style="padding: 5px 10px;"><i class="fa fa-save"></i></a>
+		</div>
+		
+		{% if not form.mirrorY.is_hidden or not form.applyTransformMatrix.is_hidden or not form.onlyShifts.is_hidden or not form.wrap.is_hidden %}
+			<div id="optionsContainer" class="sectionMenu">
+				<a id="optionsButton" href="javascript:showHideOptionMenu();" class="btn buttonGrey" style="padding: 5px 10px;"><i class="fa fa-wrench"></i></a>
+				<ul id="optionsList">
+					<li>{{ form.mirrorY }} {{ form.mirrorY.label_tag }}</li>
+					<li>{{ form.applyTransformMatrix }} {{ form.applyTransformMatrix.label_tag }}</li>
+					<li>{{ form.onlyShifts }} {{ form.onlyShifts.label_tag }}</li>
+					<li>{{ form.wrap }} {{ form.wrap.label_tag }}</li>
+				</ul>
+			</div>
+		{% endif %}  
+		{% block content_menu %}	{% endblock %}
+		 
+		{% for hidden in form.hidden_fields %}
+	    {{ hidden }}
+	    {% endfor %} 
+		 
+	</form>
+</div>	
 {% endblock %}
-</div>
 
-{% block content %}
-	
-<div id="content_view">
-	{% block content_view %}{% endblock %}
-	
-	{% if form.mode.value == 'table' %}
-		{% include "showj/showj_table.html" %} 
-	{% elif form.mode.value == 'gallery' %}
-		{% include "showj/showj_gallery.html" %}
-	{% elif form.mode.value == 'column' %}
-		{% include "showj/showj_column.html" %} 
-	{% elif form.mode.value == 'volume_astex' %}
-		{% include "showj/showj_volume_astex.html" %}
-	{% elif form.mode.value == 'volume_chimera' %}
-		{% include "showj/showj_volume_chimera.html" %} 
-	{% endif %}
-	
-</div>
-
+{% block content %}	
+{% block content_view %}	{% endblock %}	
 <!-- Hidden menu for multiple selection tool -->
 <div class="multipleSelectionToolContainer" id="multipleSelectionTool">
 	{% if dataset.getTable.hasEnabledColumn %}

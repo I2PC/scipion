@@ -90,50 +90,6 @@
  ******************************************************************************/
 
  /** METHODS ******************************************************************/
-
- 
-//$(document).ready(function() {
-//	
-//	$("#showjForm").submit(function() {
-//		});
-//	});
-
-
-// Experimental method, not used yet 
-function loadTemplateMode(mode){
-	
-	template = "";
-	template_menu="/showj_menu/"
-	if (mode == "table"){
-		template = "/showj_table/";
-	} else if (mode == "gallery"){
-		template = "/showj_gallery/";
-	}else if (mode == "column"){
-		template = "/showj_column/";
-	}else if (mode == "volume_astex"){
-		template = "/showj_volume_astex/";
-	}else if (mode == "volume_chimera"){
-		template = "/showj_volume_chimera/";
-	}
-	
-	alert(template);
-	
-	$(function() {
-		$.ajax({
-			url : template,
-			dataType:"text",
-			success : function(data) {
-				alert(template + " - " + mode);
-				$('div#content_view').html(data);
-			},
-			error: function (){
-				alert("error")
-			}
-		});		
-	});
-}
-
-
 function reloadImages(forceRecallServer){
 	$.waypoints('destroy')
 	initializeImageLoad(forceRecallServer)
@@ -205,7 +161,7 @@ function initializeColRowModeEvents(mode){
 			else{
 				/* Set section div width automatically */
 				updateMainContainerDim($("#id_cols").val())
-			}gallery
+			}
 			
 			/* Display rows & cols menu */
 			$("#colsSubSectionMenu, #rowsSubSectionMenu").show()
