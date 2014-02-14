@@ -591,7 +591,7 @@ class ProtocolsView(tk.Frame):
                     #item.setSelected(True)
                     run = item.run
                     if run and self.selectedProtocol.getObjId() == run.getObjId():
-                        self.runsGraph.selectChildByIndex(item)
+                        self.runsGraph.selectItem(item)
                         break
                             
     def createRunItem(self, canvas, node, y):
