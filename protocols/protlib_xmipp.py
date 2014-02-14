@@ -545,19 +545,19 @@ def validateSameSize(fileList, errors, errorPrefix='References'):
                            (errorPrefix, firstFile, filename)) 
     return dim1
 
-def validateInputSize(references, images, md, errors):
+def validateInputSize(references, images, md, errors, errorPrefix='References'):
     '''This function will validate that all references
     have the same size and also the input images
     The images metadata file should contains the MDL_IMAGE label
     '''
     from xmipp import MetaData, MDL_IMAGE, MetaDataInfo
     # Check reference size
-    xdim, ydim, _, _ = validateSameSize(references, errors)    
+    xdim, ydim, _, _ = validateSameSize(references, errors, errorPrefix)    
     # Check that volume and images have the same size
     if md.containsLabel(MDL_IMAGE):
         xdimImg, ydimImg, _,_,_ = MetaDataInfo(md)    
         if (xdimImg, ydimImg) != (xdim, ydim):
-            errors.append("References and images have not the same size")
+            errors.append("<%s> and images have not the same size" % errorPrefix)
     else:
         errors.append("Input metadata <%s> does not contain image column" % images)
         
@@ -645,7 +645,7 @@ class ScriptShowJ(ScriptAppIJ):
         if self.checkParam('--label_alias'):
             os.environ['XMIPP_EXTRA_ALIASES'] = self.getParam('--label_alias')
 
-        if self.checkParam('--label_relion'):
+        if self.checkParam('--label_relion') or self.getParam('-i').endswith('.star'):
             from protlib_import import relionLabelString
             os.environ['XMIPP_EXTRA_ALIASES'] = relionLabelString()
  
