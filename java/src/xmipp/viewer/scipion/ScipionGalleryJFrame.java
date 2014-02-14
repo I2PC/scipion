@@ -26,7 +26,7 @@ import xmipp.viewer.windows.GalleryJFrame;
  */
 public class ScipionGalleryJFrame extends GalleryJFrame {
 
-    private final String set;
+    private final String type;
     private final String script;
     private final String projectid;
     private final String imagesid;
@@ -34,7 +34,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
 
     public ScipionGalleryJFrame(String filename, MetaData md, ScipionParams parameters) {
         super(filename, md, parameters);
-        set = parameters.set;
+        type = parameters.type;
         script = parameters.script;
         projectid = parameters.projectid;
         imagesid = parameters.imagesid;
@@ -42,8 +42,8 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
     }
 
     private void initComponents() {
-        if (set != null) {
-            cmdbutton = XmippWindowUtil.getTextButton("Create New " + set, new ActionListener() {
+        if (type != null) {
+            cmdbutton = XmippWindowUtil.getTextButton("Create New Set Of " + type, new ActionListener() {
 
                 @Override
                 public void actionPerformed(ActionEvent ae) {
@@ -51,7 +51,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
                         String selectionmd = "selection.xmd";
                         selectionmd = new File(selectionmd).getAbsolutePath();
                         saveSelection(selectionmd, true);
-                        String command = String.format("%s %s %s %s %s", script, selectionmd, set.replaceAll("\\s",""), projectid, imagesid);
+                        String command = String.format("%s %s %s %s %s", script, selectionmd, type, projectid, imagesid);
                         XmippUtil.executeCommand(command);
                     } catch (Exception ex) {
                         Logger.getLogger(ScipionGalleryJFrame.class.getName()).log(Level.SEVERE, null, ex);

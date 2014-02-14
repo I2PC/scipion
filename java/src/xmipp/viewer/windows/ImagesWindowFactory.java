@@ -99,9 +99,8 @@ public class ImagesWindowFactory {
 	public static void openFileAsImage(Frame pframe, String filename,
 			Param parameters) {
 		try {
-			// ImagePlus imp = openFileAsImagePlus(filename, parameters);
-			ImageGeneric ig = new ImageGeneric(filename);
-			ImagePlusLoader ipl = new ImagePlusLoader(ig);
+			
+			ImagePlusLoader ipl = new ImagePlusLoader(filename);
 			XmippIJWindow xiw = openXmippImageWindow(pframe, ipl,
 					parameters.poll);
 			if (parameters.mask_toolbar)

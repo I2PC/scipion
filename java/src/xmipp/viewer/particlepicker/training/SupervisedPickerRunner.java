@@ -29,7 +29,7 @@ public class SupervisedPickerRunner implements Runnable {
     public final static String FASTOPT = "fast";
     public final static String INCOREOPT = "incore";
     public boolean isscipionsave;
-    public String set;
+    
     public String script;
     public String projectid;
     public String inputid;
