@@ -89,8 +89,8 @@ class ProtML3D(XmippProtocol):
     
     def papers(self):
         papers=[]
-        if self.DoFast:
-            papers.append('Scheres, Bioinformatics (2005) [http://www.ncbi.nlm.nih.gov/pubmed/16204112]')
+        # Do fast is always used in 3D
+        papers.append('Scheres, Bioinformatics (2005) [http://www.ncbi.nlm.nih.gov/pubmed/16204112]')
         papers.append('Scheres, Nat.Meth (2007) [http://www.ncbi.nlm.nih.gov/pubmed/17179934]')
         if self.DoMlf:
             papers.append('Scheres, Structure (2007) [http://www.ncbi.nlm.nih.gov/pubmed/17937907]')
