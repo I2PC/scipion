@@ -140,11 +140,12 @@ class ProtocolClassTreeProvider(TreeProvider):
 class SubclassesTreeProvider(TreeProvider):
     """Will implement the methods to provide the object info
     of subclasses objects(of className) found by mapper"""
-    def __init__(self, mapper, pointerParam, selected=None):
+    def __init__(self, protocol, pointerParam, selected=None):
         self.className = pointerParam.pointerClass.get()
         self.condition = pointerParam.pointerCondition.get()
         self.selected = selected
-        self.mapper = mapper
+        self.protocol = protocol
+        self.mapper = protocol.mapper
         
     def getObjects(self):
         objs = []
@@ -156,7 +157,11 @@ class SubclassesTreeProvider(TreeProvider):
             
     def objFilter(self, obj):
         result = True
-        if self.condition:
+        # Do not allow to select objects that are childs of the protocol
+        if self.protocol.getObjId() == obj.getObjParentId():
+            result = False
+        # Check that the condition is met
+        elif self.condition:
             result = obj.evalCondition(self.condition)
         return result
         
@@ -180,6 +185,7 @@ class SubclassesTreeProvider(TreeProvider):
         return actions
     
     
+#TODO: check if need to inherit from SubclassesTreeProvider
 class RelationsTreeProvider(SubclassesTreeProvider):
     """Will implement the methods to provide the object info
     of subclasses objects(of className) found by mapper"""
@@ -444,8 +450,7 @@ class ParamWidget():
     def _browseObject(self, e=None):
         """Select an object from DB
         This function is suppose to be used only for PointerParam"""
-        print "_browseObject: ", self.get()
-        tp = SubclassesTreeProvider(self.window.protocol.mapper, self.param, selected=self.get())
+        tp = SubclassesTreeProvider(self.window.protocol, self.param, selected=self.get())
         dlg = ListDialog(self.parent, "Select object", tp, "Double click an item to preview the object")
         if dlg.value is not None:
             self.set(dlg.value)
@@ -873,7 +878,6 @@ class FormWindow(Window):
         self._checkAllChanges()
         
     def _onRunModeChanged(self, paramName):
-        print "protocol.runMode: ", self.protocol.runMode.get()
         self.setParamFromVar(paramName)
         
     def getVarValue(self, varName):
