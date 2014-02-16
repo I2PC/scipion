@@ -270,6 +270,11 @@ class Icon():
     #Host template
     BUTTON_CLOSE = 'dialog_close.png'
     BUTTON_SAVE = 'filesave.png'
+    
+    ARROW_UP = 'fa-arrow-up.png'
+    ARROW_LEFT = 'fa-arrow-left.png'
+    
+    HOME = 'fa-home.png'
 
 
 class Color():
