@@ -99,6 +99,7 @@ void ProgAngularProjectLibrary::readParams()
 void ProgAngularProjectLibrary::defineParams()
 {
     addUsageLine("Create a gallery of projections from a volume");
+    addUsageLine("+see [[http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Angular_project_library_v3][here]] for further information about this program.");
 
     addParamsLine("   -i <input_volume_file>       : Input Volume");
     addParamsLine("   -o <output_file_name>        : stack with output files");

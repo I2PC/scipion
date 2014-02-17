@@ -6,9 +6,9 @@ import javax.swing.SwingUtilities;
 
 import xmipp.utils.XmippDialog;
 import xmipp.viewer.particlepicker.ParticlePicker;
-import xmipp.viewer.particlepicker.training.gui.SingleParticlePickerJFrame;
+import xmipp.viewer.particlepicker.training.gui.SupervisedParticlePickerJFrame;
 import xmipp.viewer.particlepicker.training.model.Mode;
-import xmipp.viewer.particlepicker.training.model.SingleParticlePicker;
+import xmipp.viewer.particlepicker.training.model.SupervisedParticlePicker;
 
 class Main
 {
@@ -36,14 +36,14 @@ class Main
 			{
 				try
 				{
-					SingleParticlePicker ppicker = null;
+					SupervisedParticlePicker ppicker = null;
 					String selfile = myargs[0];
 					String outputdir = myargs[1];
 					//mode is the third argument 
 					Mode mode = Mode.getMode(myargs[2]);
 
 					if (mode == Mode.ReadOnly)
-						ppicker = new SingleParticlePicker(selfile, outputdir, mode);
+						ppicker = new SupervisedParticlePicker(selfile, outputdir, mode);
 
 					else if (mode == Mode.Manual)
 					{
@@ -53,16 +53,16 @@ class Main
 							int threads = Integer.parseInt(myargs[index]);
 							boolean fastmode = Boolean.parseBoolean(myargs[index + 1]);
 							boolean incore = Boolean.parseBoolean(myargs[index + 2]);
-							ppicker = new SingleParticlePicker(selfile, outputdir, threads, fastmode, incore);
+							ppicker = new SupervisedParticlePicker(selfile, outputdir, threads, fastmode, incore);
 						}
 						else
-							ppicker = new SingleParticlePicker(selfile, outputdir, Mode.Manual);
+							ppicker = new SupervisedParticlePicker(selfile, outputdir, Mode.Manual);
 					}
 
 					else if (mode == Mode.Review)
-						ppicker = new SingleParticlePicker(selfile, outputdir, Mode.Review);
+						ppicker = new SupervisedParticlePicker(selfile, outputdir, Mode.Review);
 
-					new SingleParticlePickerJFrame(ppicker);
+					new SupervisedParticlePickerJFrame(ppicker);
 				}
 				catch (Exception e)
 				{
