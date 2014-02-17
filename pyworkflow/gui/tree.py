@@ -27,13 +27,17 @@
 Tree widget implementation.
 """
         
+import os
+import stat
 import Tkinter as tk
 import ttk
 
 from pyworkflow.object import Scalar
 from pyworkflow.mapper import SqliteMapper
+from pyworkflow.utils import prettyDelta
 import gui
 from widgets import Scrollable
+
 
 class Tree(ttk.Treeview, Scrollable):
     """ This widget acts as a wrapper around the ttk.Treeview"""
@@ -91,9 +95,12 @@ class Tree(ttk.Treeview, Scrollable):
         for c in childs:
             self.delete(c)
             
-    def selectItem(self, index):
+    def selectChildByIndex(self, index):
         """ Select the item at the position index """
         child = self.get_children('')[index]
+        self.selection_set(child)
+        
+    def selectChild(self, child):
         self.selection_set(child)
             
             
@@ -179,7 +186,6 @@ class BoundTree(Tree):
         self.provider = provider
         self.update()
         
-        
     def _unpostMenu(self, e=None):
         self.menu.unpost()
         
@@ -253,6 +259,8 @@ class BoundTree(Tree):
                 self._objDict[obj._treeId] = obj
                 if open:
                     self.itemConfig(obj, open=open)
+                if objDict.get('selected', False):
+                    self.selectChild(obj._treeId)
 
     def itemConfig(self, obj, **args):
         """ Configure inserted items. """
@@ -343,13 +351,65 @@ class ProjectRunsTreeProvider(TreeProvider):
     def getObjectInfo(self, obj):
         objId = obj.getObjId()
         self._objDict[objId] = obj
-        
-        info = {'key': obj.getObjId(),
-                'text': obj.getRunName(),
-                'values': (obj.getStatusMessage(), obj.getElapsedTime())}
+        info = {'key': obj.getObjId(), 'text': obj.getRunName(),
+                'values': (obj.getStatusMessage(), prettyDelta(obj.getElapsedTime()))}
         objPid = obj.getObjParentId()
         if objPid in self._objDict:
             info['parent'] = self._objDict[objPid]
       
         return info
 
+
+class FileInfo(object):
+    def __init__(self, path, filename):
+        self._fullpath = os.path.join(path, filename)
+        self._filename = filename
+        self._stat = os.stat(self._fullpath)
+        
+    def isDir(self):
+        return stat.S_ISDIR(self._stat.st_mode)
+    
+    def getFileName(self):
+        return self._filename
+    
+    def getPath(self):
+        return self._fullpath
+    
+    
+class FileTreeProvider(TreeProvider):
+    """ Populate a tree with files and folders of a given path """
+    def __init__(self, currentDir=None, showHidden=False):
+        self._currentDir = os.path.abspath(currentDir)
+        self._showHidden = showHidden
+        self.getColumns = lambda: [('File', 300), ('Id', 70), ('Time', 150)]
+    
+    def getObjectInfo(self, obj):
+        filename = obj.getFileName()
+        if obj.isDir():
+            img = 'file_folder.gif'
+        else:
+            img = 'file_generic.gif'
+        info = {'key': filename, 'text': filename, 
+                'values': ('', 'time'), 'image': img
+                }
+            
+        return info
+    
+    def getObjectPreview(self, obj):
+        return (None, None)
+    
+    def getObjectActions(self, obj):
+        return []
+    
+    def getObjects(self):
+        files = os.listdir(self._currentDir)
+        files.sort()
+        for f in files:
+            if self._showHidden or not f.startswith('.'):
+                yield FileInfo(self._currentDir, f)
+
+    def getDir(self):
+        return self._currentDir
+    
+    def setDir(self, newPath):
+        self._currentDir = newPath

@@ -136,8 +136,8 @@ if __name__ == '__main__':
             
         elif mode == MODE_DBBROWSE:
             if n > 2:
-                dbPath = sys.argv[2]
-                runApp('pw_browser.py', args=dbPath)
+                browserArgs = " ".join(sys.argv[2:])
+                runApp('pw_browser.py', args=browserArgs)
              
         elif mode == MODE_VIEWER:
             if n > 2:

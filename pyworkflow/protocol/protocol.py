@@ -236,7 +236,7 @@ class Protocol(Step):
         self.__fOut = None
         self.__fErr = None
         # Project to which the protocol belongs
-        self.__project = None
+        self.__project = args.get('project', None)
         
         # For non-parallel protocols mpi=1 and threads=1
         if not hasattr(self, 'numberOfMpi'):
