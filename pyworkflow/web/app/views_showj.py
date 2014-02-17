@@ -437,7 +437,8 @@ def create_context_astex(request, typeVolume, volPath):
     createLink(volPath, volLinkPath)
     volLink = os.path.join('/', settings.STATIC_ROOT, 'astex', 'tmp', linkName)
     
-    return {"volLink":volLink}
+    return {"volLink":volLink, 
+            "jquery_ui_css": getResourceCss("jquery_ui")}
     
     
 def create_context_chimera(volPath):
