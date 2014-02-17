@@ -15,18 +15,18 @@ import xmipp.viewer.particlepicker.training.model.AutomaticParticle;
 import xmipp.viewer.particlepicker.training.model.Mode;
 import xmipp.viewer.particlepicker.training.model.ParticleToTemplatesTask;
 import xmipp.viewer.particlepicker.training.model.SupervisedParticlePicker;
-import xmipp.viewer.particlepicker.training.model.SingleParticlePickerMicrograph;
+import xmipp.viewer.particlepicker.training.model.SupervisedParticlePickerMicrograph;
 import xmipp.viewer.particlepicker.training.model.ManualParticle;
 
-public class SingleParticlePickerCanvas extends ParticlePickerCanvas
+public class SupervisedParticlePickerCanvas extends ParticlePickerCanvas
 {
 
 	private SupervisedParticlePickerJFrame frame;
-	private SingleParticlePickerMicrograph micrograph;
+	private SupervisedParticlePickerMicrograph micrograph;
 	private ManualParticle active;
 	private SupervisedParticlePicker ppicker;
 
-	public SingleParticlePickerCanvas(SupervisedParticlePickerJFrame frame)
+	public SupervisedParticlePickerCanvas(SupervisedParticlePickerJFrame frame)
 	{
 		super(frame.getMicrograph().getImagePlus(frame.getParticlePicker().getFilters()));
 
@@ -261,7 +261,7 @@ public class SingleParticlePickerCanvas extends ParticlePickerCanvas
 	@Override
 	public void setMicrograph(Micrograph m)
 	{
-		micrograph = (SingleParticlePickerMicrograph) m;
+		micrograph = (SupervisedParticlePickerMicrograph) m;
 
 	}
 

@@ -48,12 +48,12 @@ import xmipp.viewer.particlepicker.training.model.MicrographState;
 import xmipp.viewer.particlepicker.training.model.Mode;
 import xmipp.viewer.particlepicker.training.model.ParticleToTemplatesTask;
 import xmipp.viewer.particlepicker.training.model.SupervisedParticlePicker;
-import xmipp.viewer.particlepicker.training.model.SingleParticlePickerMicrograph;
+import xmipp.viewer.particlepicker.training.model.SupervisedParticlePickerMicrograph;
 import xmipp.viewer.particlepicker.training.model.UpdateTemplatesTask;
 
 public class SupervisedParticlePickerJFrame extends ParticlePickerJFrame {
 
-    private SingleParticlePickerCanvas canvas;
+    private SupervisedParticlePickerCanvas canvas;
     private JMenuBar mb;
     private SupervisedParticlePicker ppicker;
     private JPanel micrographpn;
@@ -105,7 +105,7 @@ public class SupervisedParticlePickerJFrame extends ParticlePickerJFrame {
         return new ParticlesJDialog(this);
     }
 
-    public SingleParticlePickerMicrograph getMicrograph() {
+    public SupervisedParticlePickerMicrograph getMicrograph() {
         return ppicker.getMicrograph();
     }
 
@@ -201,7 +201,7 @@ public class SupervisedParticlePickerJFrame extends ParticlePickerJFrame {
     protected void initializeCanvas() {
 
         if (canvas == null) {
-            canvas = new SingleParticlePickerCanvas(this);
+            canvas = new SupervisedParticlePickerCanvas(this);
         } else {
             canvas.updateMicrograph();
         }
@@ -626,7 +626,7 @@ public class SupervisedParticlePickerJFrame extends ParticlePickerJFrame {
             ppicker.saveData();
         }
 
-        SingleParticlePickerMicrograph next = ppicker.getMicrographs().get(index);
+        SupervisedParticlePickerMicrograph next = ppicker.getMicrographs().get(index);
 
         if (!getMicrograph().equals(next))// app just started
         {
@@ -660,7 +660,7 @@ public class SupervisedParticlePickerJFrame extends ParticlePickerJFrame {
 
     }
 
-    private int tryCorrectAndAutopick(SingleParticlePickerMicrograph current, SingleParticlePickerMicrograph next) {
+    private int tryCorrectAndAutopick(SupervisedParticlePickerMicrograph current, SupervisedParticlePickerMicrograph next) {
         int result = 3;
 
         boolean isautopick = ppicker.getMode() == Mode.Supervised && next.getState() == MicrographState.Available;
