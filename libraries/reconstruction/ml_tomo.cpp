@@ -56,7 +56,8 @@ ProgMLTomo::defineParams()
         "although we still recommend reading this page carefully in order "
         "to fully understand the options given in the protocol. Note that this protocol is available "
         "from the main xmipp_protocols setup window by pressing the _Additional protocols_ button.)");
-
+    addUsageLine(" ");
+    addUsageLine("See http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Ml_tomo_v3 for further documentation");
     addParamsLine(
         "   -i <metadata>                : Metadata file with input images (and angles) ");
     addParamsLine(
