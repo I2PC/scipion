@@ -63,8 +63,8 @@ class XmippProcess(EMProtocol):
 
 class XmippProcessParticles(ProtProcessParticles, XmippProcess):
     """ Class to create a base template for Xmipp protocols that process SetOfParticles """
-    def __init__(self):
-        ProtProcessParticles.__init__(self)
+    def __init__(self, **args):
+        ProtProcessParticles.__init__(self, **args)
         XmippProcess.__init__(self)
     
     def _defineFilenames(self):
@@ -94,8 +94,8 @@ class XmippProcessParticles(ProtProcessParticles, XmippProcess):
 
 class XmippProcessVolumes(ProtPreprocessVolumes, XmippProcess):
     """ Class to create a base template for Xmipp protocols that process both volume or a SetOfVolumes objects """
-    def __init__(self):
-        ProtPreprocessVolumes.__init__(self)
+    def __init__(self, **args):
+        ProtPreprocessVolumes.__init__(self, **args)
         XmippProcess.__init__(self)
     
     def _defineFilenames(self):

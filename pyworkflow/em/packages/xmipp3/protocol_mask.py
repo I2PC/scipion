@@ -98,10 +98,10 @@ class XmippProtMaskParticles(ProtMaskParticles, XmippProtMask, XmippProcessParti
     """ Apply some filter to SetOfParticles """
     _label = 'mask particles'
     
-    def __init__(self):
+    def __init__(self, **args):
         ProtMaskParticles.__init__(self)
-        XmippProtMask.__init__(self)
-        XmippProcessParticles.__init__(self)
+        XmippProtMask.__init__(self, **args)
+        XmippProcessParticles.__init__(self, **args)
         
     def _defineProtParams(self, form):
         form.addParam('inputMask', PointerParam, pointerClass="Mask", label="Input mask",condition='source==%d'%SOURCE_MASK)
@@ -130,10 +130,10 @@ class XmippProtMaskVolumes(ProtMaskVolumes, XmippProtMask, XmippProcessVolumes, 
     """ Apply mask to volume or SetOfVolumes """
     _label = 'apply mask'
     
-    def __init__(self):
+    def __init__(self, **args):
         ProtMaskVolumes.__init__(self)
-        XmippProtMask.__init__(self)
-        XmippProcessVolumes.__init__(self)
+        XmippProtMask.__init__(self, **args)
+        XmippProcessVolumes.__init__(self, **args)
     
     def _defineProtParams(self, form):
         form.addParam('inputMask', PointerParam, pointerClass="VolumeMask", label="Input mask",condition='source==%d'%SOURCE_MASK)

@@ -41,7 +41,7 @@ class XmippProtFilter():
     """ Some filters operations such as: Fourier or Gaussian. """
     _label = 'filter particles'
     
-    def __init__(self):
+    def __init__(self, **args):
         self._program = "xmipp_transform_filter"
         
     def _defineProcessParams(self, form):
@@ -103,17 +103,18 @@ class XmippProtFilterParticles(ProtFilterParticles, XmippProtFilter, XmippProces
     """ Apply some filter to SetOfParticles """
     _label = 'filter particles'
     
-    def __init__(self):
+    def __init__(self, **args):
         ProtFilterParticles.__init__(self)
-        XmippProtFilter.__init__(self)
-        XmippProcessParticles.__init__(self)
+        XmippProtFilter.__init__(self, **args)
+        XmippProcessParticles.__init__(self, **args)
 
 
 class XmippProtFilterVolumes(ProtFilterVolumes, XmippProtFilter, XmippProcessVolumes):
     """ Apply some filter to SetOfParticles """
     _label = 'filter volumes'
-    def __init__(self):
+    
+    def __init__(self, **args):
         ProtFilterVolumes.__init__(self)
-        XmippProtFilter.__init__(self)
-        XmippProcessVolumes.__init__(self)
+        XmippProtFilter.__init__(self, **args)
+        XmippProcessVolumes.__init__(self, **args)
 
