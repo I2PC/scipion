@@ -66,11 +66,12 @@ from protocol_kerdensom import XmippProtKerdensom
 from protocol_rotational_spectra import XmippProtRotSpectra 
 from protocol_ml3d import XmippProtML3D
 from protocol_projmatch import XmippProtProjMatch
-from protocol_filters import XmippProtFilter
-from protocol_filters import XmippProtMask
+from protocol_filter import XmippProtFilterParticles
+from protocol_filter import XmippProtFilterVolumes
+from protocol_mask import XmippProtMaskParticles
+from protocol_mask import XmippProtMaskVolumes
 from protocol_particle_crop_resize import XmippProtResize
 from protocol_create_mask import XmippProtCreateMask3D
-#from protocol_apply_mask import XmippProtApplyMask3D
 from protocol_particle_pick_automatic import XmippParticlePickingAutomatic
 from protocol_screen_particles import XmippProtScreenParticles
 from protocol_simulated_annealing import XmippProtInitVolSimAnneal
@@ -79,7 +80,6 @@ from protocol_convert_pdb import XmippProtConvertPdb
 from protocol_join_sets import XmippProtJoinSets
 from protocol_nma import XmippProtNMA
 from protocol_nma_alignment import XmippProtAlignmentNMA
-from protocol_create_mask import XmippProtCreateMask3D
 from protocol_align_volume import XmippProtAlignVolume
 from protocol_cltomo import XmippProtCLTomo
 from protocol_screen_classes import XmippProtScreenClasses

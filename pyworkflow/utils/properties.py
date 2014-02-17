@@ -154,6 +154,7 @@ class Message():
     LABEL_INPUT = 'Input'
     LABEL_INPUT_MIC = 'Input Micrographs'
     LABEL_INPUT_PART = 'Input Particles'
+    LABEL_INPUT_VOLS = 'Input Volumes'
     LABEL_ALIG_PART = 'Write aligned particles?'
     TEXT_ALIG_PART = 'If set to *Yes*, the aligment will be applied to \n'+'input particles and a new aligned set will be created.'
     LABEL_LOW_RES = 'Lowest resolution'

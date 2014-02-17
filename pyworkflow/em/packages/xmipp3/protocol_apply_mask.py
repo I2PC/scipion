@@ -28,21 +28,21 @@ This sub-package contains protocols for applying 3D masks.
 """
 
 from pyworkflow.em import *
-from geometrical_mask import *  
+from geometrical_mask import XmippGeometricalMask3D
 
 SOURCE_GEOMETRY=0
 SOURCE_MASK=1
 
-class XmippProtApplyMask3D(ProtPreprocessVolumes,XmippGeometricalMask):
+class XmippProtApplyMask3D(ProtPreprocessVolumes,XmippGeometricalMask3D):
     """ Apply a 3D mask to a volume or set of volumes """
-    _label = 'apply mask'
+    _label = 'apply mask volumes'
     
     def _defineParams(self, form):
         form.addSection(label='Input')
         form.addParam('volume', PointerParam, pointerClass="SetOfVolumes", label="Input volume",
                       help="Volume or set of volumes to be masked")
         form.addParam('source', EnumParam, label='Mask source', default=SOURCE_GEOMETRY, choices=['Geometry','Created mask'])
-        XmippGeometricalMask.defineParams(self, form, isGeometry='source==%d'%SOURCE_GEOMETRY, addSize=False)
+        XmippGeometricalMask3D.defineParams(self, form, isGeometry='source==%d'%SOURCE_GEOMETRY, addSize=False)
         form.addParam('inputMask', PointerParam, pointerClass="VolumeMask", label="Input mask",condition='source==%d'%SOURCE_MASK)
 
     def _insertAllSteps(self):
@@ -59,7 +59,7 @@ class XmippProtApplyMask3D(ProtPreprocessVolumes,XmippGeometricalMask):
         args="-i %s "%self.maskedVolumes
         if self.source.get()==SOURCE_GEOMETRY:
             (Xdim, _, _, self.ndim)=self.volume.get().getDimensions()
-            args+=XmippGeometricalMask.argsForTransformMask(self,Xdim)
+            args += XmippGeometricalMask3D.argsForTransformMask(self,Xdim)
         elif self.source.get()==SOURCE_MASK:
             args+="--mask binary_file %s"%self.inputMask.get().getFileName()
         self.runJob("xmipp_transform_mask",args)
@@ -77,6 +77,6 @@ class XmippProtApplyMask3D(ProtPreprocessVolumes,XmippGeometricalMask):
     def _summary(self):
         messages = []      
         if self.source.get()==SOURCE_GEOMETRY:
-            messages+=XmippGeometricalMask.summary(self)
+            messages+=XmippGeometricalMask3D.summary(self)
         return messages
     

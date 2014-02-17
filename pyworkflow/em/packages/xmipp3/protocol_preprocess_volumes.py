@@ -73,9 +73,9 @@ class XmippProtPreprocessVolumes(ProtPreprocessVolumes, XmippProtocol):
 #                       'than Final box size')
         
         form.addSection(label='Preprocess steps')
-        form.addParam('doWindow', BooleanParam, default=False,
-                      label="Pad or crop volume(s)",
-                      help='If set to True, resize the volume(s).')
+#         form.addParam('doWindow', BooleanParam, default=False,
+#                       label="Pad or crop volume(s)",
+#                       help='If set to True, resize the volume(s).')
         form.addParam('finalSize', IntParam, default=256, condition='doWindow',
                       label='Final dimensions (voxels):',
                       help='Set the desire value to modify the dimensions.\n'
@@ -180,9 +180,9 @@ class XmippProtPreprocessVolumes(ProtPreprocessVolumes, XmippProtocol):
 #                 args+=" --save_metadata_stack"
 #             self._insertRunJobStep(self, "xmipp_image_resize", args)
         
-        self._insertFunctionStep('copyFilesStep', self.outModel)
-        if self.doWindow:
-            self._insertFunctionStep("windowStep", self.outModel, self.finalSize.get())
+#         self._insertFunctionStep('copyFilesStep', self.outModel)
+#         if self.doWindow:
+#             self._insertFunctionStep("windowStep", self.outModel, self.finalSize.get())
         
         if self.doChangeHand:
             self._insertFunctionStep("changeHandStep", self.outModel)
@@ -287,6 +287,7 @@ class XmippProtPreprocessVolumes(ProtPreprocessVolumes, XmippProtocol):
         
         if self.singleVolume:
             vol = Volume()
+            vol.setSamplingRate(samplingRate)
             vol.setFileName(self.outModel)
             self._defineOutputs(outputVol=vol)
         else:
