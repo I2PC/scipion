@@ -99,7 +99,7 @@ public class ImagesWindowFactory {
 	public static void openFileAsImage(Frame pframe, String filename,
 			Param parameters) {
 		try {
-			
+	
 			ImagePlusLoader ipl = new ImagePlusLoader(filename);
 			XmippIJWindow xiw = openXmippImageWindow(pframe, ipl,
 					parameters.poll);

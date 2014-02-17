@@ -50,7 +50,8 @@ ProgNmaAlignment::~ProgNmaAlignment() {
 // Params definition ============================================================
 void ProgNmaAlignment::defineParams() {
 	addUsageLine("Align images with an atomic or pseudo-atomic (from EM volume) structure by computing deformation amplitudes along normal modes, three Euler angles, and two in-plane shifts");
-        defaultComments["-i"].clear();
+	addUsageLine("+See [[http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Nma_alignment_v3][here]] for further information about the parameters of this program.");
+	defaultComments["-i"].clear();
 	defaultComments["-i"].addComment("Metadata with image filenames");
 	defaultComments["-o"].clear();
 	defaultComments["-o"].addComment("Metadata with output Euler angles, shifts, and deformation amplitudes");
