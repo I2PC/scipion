@@ -28,7 +28,7 @@ public class ParticleToTemplatesTask extends SwingWorker<String, Object>
 		try
 		{
 			
-			SingleParticlePicker picker = (SingleParticlePicker)particle.getParticlePicker();
+			SupervisedParticlePicker picker = (SupervisedParticlePicker)particle.getParticlePicker();
 			picker.addParticleToTemplates(particle);
 			
 		}

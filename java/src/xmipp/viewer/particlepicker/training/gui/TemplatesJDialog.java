@@ -13,11 +13,11 @@ import xmipp.utils.XmippWindowUtil;
 public class TemplatesJDialog extends JDialog
 {
 
-	protected SingleParticlePickerJFrame frame;
+	protected SupervisedParticlePickerJFrame frame;
 	protected JPanel templatespn;
 	protected int width, height;
 
-	public TemplatesJDialog(SingleParticlePickerJFrame frame)
+	public TemplatesJDialog(SupervisedParticlePickerJFrame frame)
 	{
 		super(frame);
 		this.frame = frame;
