@@ -42,7 +42,7 @@ class XmippProtMask():
     """ This class implement a protocol for applying a mask with Xmipp.
     """
     
-    def __init__(self):
+    def __init__(self, **args):
         self._program = "xmipp_transform_mask"
 
     def _defineProcessParams(self, form):
@@ -102,6 +102,7 @@ class XmippProtMaskParticles(ProtMaskParticles, XmippProtMask, XmippProcessParti
         ProtMaskParticles.__init__(self)
         XmippProtMask.__init__(self, **args)
         XmippProcessParticles.__init__(self, **args)
+#         XmippGeometricalMask2D.__init__(self, **args)
         
     def _defineProtParams(self, form):
         form.addParam('inputMask', PointerParam, pointerClass="Mask", label="Input mask",condition='source==%d'%SOURCE_MASK)
@@ -149,10 +150,10 @@ class XmippProtMaskVolumes(ProtMaskVolumes, XmippProtMask, XmippProcessVolumes, 
         XmippProcessVolumes._insertProcessStep(self, inputFn, outputFn, outputMd)
     
     def _getGeometryCommand(self):
-        if self.singleVolume:
+        if isinstance(self.inputVolumes.get(), Volume):
             Xdim, _, _, _ = self.inputVolumes.get().getDim()
         else:
-            Xdim, _, _, _ = self.volume.get().getDimensions()
+            Xdim, _, _, _ = self.inputVolumes.get().getDimensions()
         args = XmippGeometricalMask3D.argsForTransformMask(self,Xdim)
         return args
 
