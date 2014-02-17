@@ -63,28 +63,31 @@ class XmippProtParticlePicking(ProtParticlePicking, XmippProtocol):
         # Get pointer to input micrographs 
         self.inputMics = self.inputMicrographs.get()
         # Parameters needed 
-        self._params = {'memory': self.memory.get(),
-                        'pickingMode': 'manual',
-                        'extraDir': self._getExtraPath()
-                        }
+        
         
         # Convert input SetOfMicrographs to Xmipp if needed
 #        self._insertConvertStep('inputMics', XmippSetOfMicrographs, 
 #                                 self._getPath('micrographs.xmd'))
         # Launch Particle Picking GUI
         if not self.importFolder.hasValue():
-            self._insertFunctionStep('launchParticlePickGUI', isInteractive=True)
+            self._insertFunctionStep('launchParticlePickGUIStep', isInteractive=True)
         else: # This is only used for test purposes
-            self._insertFunctionStep('_importFromFolder')       
+            self._insertFunctionStep('_importFromFolderStep')       
         # Insert step to create output objects       
-        self._insertFunctionStep('createOutput')
+        self._insertFunctionStep('createOutputStep')
         
         
-    def launchParticlePickGUI(self):
+    def launchParticlePickGUIStep(self):
+        
         # Get the converted input micrographs in Xmipp format
-        # if not exists, means the input was already in Xmippmeditacion
+        # if not exists, means the input was already in Xmipp
         micFn = createXmippInputMicrographs(self, self.inputMics)
-        self._params['inputMicsXmipp'] = micFn
+        self._params = {'memory': self.memory.get(),
+                        'inputMicsXmipp': micFn,
+                        'extraDir': self._getExtraPath(),
+                        'pickingMode': 'manual'
+                        }
+        
         # Launch the particle picking GUI
         program = "xmipp_micrograph_particle_picking"
         arguments = "-i %(inputMicsXmipp)s -o %(extraDir)s --mode %(pickingMode)s --memory %(memory)dg"
@@ -95,25 +98,34 @@ class XmippProtParticlePicking(ProtParticlePicking, XmippProtocol):
         # Run the command with formatted parameters
         self.runJob(program, arguments % self._params)
         
-    def _importFromFolder(self):
+    def _importFromFolderStep(self):
         """ This function will copy Xmipp .pos files for
-        simulating an particle picking run...this is only
+        simulating a particle picking run...this is only
         for testing purposes.
         """
         for f in getFiles(self.importFolder.get()):
             copyFile(f, self._getExtraPath())
         
-    def createOutput(self):
+    def createOutputStep(self):
         posDir = self._getExtraPath()
         coordSet = self._createSetOfCoordinates()
         coordSet.setMicrographs(self.inputMics)
         readSetOfCoordinates(posDir, self.inputMics, coordSet)
-        coordSet.write()
         self._defineOutputs(outputCoordinates=coordSet)
         
         self._defineSourceRelation(self.inputMics, coordSet)
         
 
+    def __str__(self):
+        """ String representation of a Supervised Picking run """
+    
+        if not hasattr(self, 'outputCoordinates'):
+            picked = 0
+        else:
+            picked = self.outputCoordinates.getSize()
+        return  "Number of particles picked: %d (from %d micrographs)" % (picked, self.inputMicrographs.get().getSize())
+    
+    
     def _citations(self):
         return ['Abrishami2013']
 
