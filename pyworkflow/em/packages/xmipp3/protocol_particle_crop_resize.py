@@ -29,7 +29,7 @@ from pyworkflow.em import *
 from pyworkflow.utils import *  
 import xmipp
 import xmipp3
-from protocol_filters import XmippProcess
+from protocol_process import XmippProcessParticles
 from convert import createXmippInputImages, readSetOfParticles
 
 RESIZE_OP_AUTO    = 0
@@ -38,13 +38,14 @@ RESIZE_OP_SPLINES = 2
 RESIZE_OP_PYRAMID = 3
 
 
-class XmippProtResize(XmippProcess):
+class XmippProtResize(XmippProcessParticles, ProtProcessParticles):
     """ This class implement a protocol to change dimensions of the particles with Xmipp.
     """
     _label = "resize particles"
     
     def __init__(self):
-        XmippProcess.__init__(self)
+        ProtProcessParticles.__init__(self)
+        XmippProcessParticles.__init__(self)
 #         self._program = "xmipp_transform_window"
         self._programWindow = "xmipp_transform_window"
         self._programResize = "xmipp_image_resize"

@@ -140,11 +140,12 @@ class ProtocolClassTreeProvider(TreeProvider):
 class SubclassesTreeProvider(TreeProvider):
     """Will implement the methods to provide the object info
     of subclasses objects(of className) found by mapper"""
-    def __init__(self, mapper, pointerParam, selected=None):
+    def __init__(self, protocol, pointerParam, selected=None):
         self.className = pointerParam.pointerClass.get()
         self.condition = pointerParam.pointerCondition.get()
         self.selected = selected
-        self.mapper = mapper
+        self.protocol = protocol
+        self.mapper = protocol.mapper
         
     def getObjects(self):
         objs = []
@@ -156,7 +157,11 @@ class SubclassesTreeProvider(TreeProvider):
             
     def objFilter(self, obj):
         result = True
-        if self.condition:
+        # Do not allow to select objects that are childs of the protocol
+        if self.protocol.getObjId() == obj.getObjParentId():
+            result = False
+        # Check that the condition is met
+        elif self.condition:
             result = obj.evalCondition(self.condition)
         return result
         
@@ -180,6 +185,7 @@ class SubclassesTreeProvider(TreeProvider):
         return actions
     
     
+#TODO: check if need to inherit from SubclassesTreeProvider
 class RelationsTreeProvider(SubclassesTreeProvider):
     """Will implement the methods to provide the object info
     of subclasses objects(of className) found by mapper"""
@@ -203,12 +209,14 @@ class SectionFrame(tk.Frame):
     with white background
     """
     def __init__(self, master, label, callback=None, **args):
+        headerBgColor = args.get('headerBgColor', gui.cfgButtonBgColor)
+        if 'headerBgColor' in args:
+            del args['headerBgColor']
         tk.Frame.__init__(self, master, bg='white', **args)
-        self._createHeader(label)
+        self._createHeader(label, headerBgColor)
         self._createContent()
         
-    def _createHeader(self, label):
-        bgColor = gui.cfgButtonBgColor
+    def _createHeader(self, label, bgColor):
         self.headerFrame = tk.Frame(self, bd=2, relief=tk.RAISED, bg=bgColor)
         self.headerFrame.grid(row=0, column=0, sticky='new')
         configureWeigths(self.headerFrame)
@@ -232,9 +240,8 @@ class SectionWidget(SectionFrame):
         self.callback = callback
         SectionFrame.__init__(self, master, self.section.label.get(), **args)
         
-    def _createHeader(self, label):
-        SectionFrame._createHeader(self, label)        
-        bgColor = gui.cfgButtonBgColor
+    def _createHeader(self, label, bgColor):
+        SectionFrame._createHeader(self, label, bgColor)        
         
         if self.section.hasQuestion():
             question = self.section.getQuestion() 
@@ -443,8 +450,7 @@ class ParamWidget():
     def _browseObject(self, e=None):
         """Select an object from DB
         This function is suppose to be used only for PointerParam"""
-        print "_browseObject: ", self.get()
-        tp = SubclassesTreeProvider(self.window.protocol.mapper, self.param, selected=self.get())
+        tp = SubclassesTreeProvider(self.window.protocol, self.param, selected=self.get())
         dlg = ListDialog(self.parent, "Select object", tp, "Double click an item to preview the object")
         if dlg.value is not None:
             self.set(dlg.value)
@@ -547,6 +553,9 @@ class FormWindow(Window):
         self.hostList = hostList
         self.protocol = protocol
         self.visualizeMode = args.get('visualizeMode', False)  # This control when to close or not after execute
+        self.headerBgColor = Color.RED_COLOR
+        if self.visualizeMode:
+            self.headerBgColor = Color.DARK_GREY_COLOR
         self.childMode = args.get('childMode', False) # Allow to open child protocols form (for workflows)
         
         
@@ -675,7 +684,8 @@ class FormWindow(Window):
         ############# Create the run part ###############
         # Run name
         #runFrame = ttk.Labelframe(commonFrame, text='Run')
-        runSection = SectionFrame(commonFrame, label=Message.TITLE_RUN)
+        runSection = SectionFrame(commonFrame, label=Message.TITLE_RUN, 
+                                  headerBgColor=self.headerBgColor)
         runFrame = runSection.contentFrame
         self._createHeaderLabel(runFrame, Message.TITLE_RUN_NAME).grid(row=0, column=0, padx=5, pady=5, sticky='ne')
         entry = self._createBoundEntry(runFrame, Message.VAR_RUN_NAME, width=15, 
@@ -700,7 +710,8 @@ class FormWindow(Window):
         ############## Create the execution part ############
         # Host name
         #execFrame = ttk.Labelframe(commonFrame, text='Execution')
-        execSection = SectionFrame(commonFrame, label=Message.TITLE_EXEC)
+        execSection = SectionFrame(commonFrame, label=Message.TITLE_EXEC, 
+                                  headerBgColor=self.headerBgColor)
         execFrame = execSection.contentFrame        
         self._createHeaderLabel(execFrame, Message.TITLE_EXEC_HOST).grid(row=0, column=0, padx=5, pady=5, sticky='ne')
         param = EnumParam(choices=self.hostList)
@@ -867,7 +878,6 @@ class FormWindow(Window):
         self._checkAllChanges()
         
     def _onRunModeChanged(self, paramName):
-        print "protocol.runMode: ", self.protocol.runMode.get()
         self.setParamFromVar(paramName)
         
     def getVarValue(self, varName):
@@ -920,7 +930,8 @@ class FormWindow(Window):
             label = section.getLabel()
             if label != 'General' and label != 'Parallelization':
                 frame = SectionWidget(self, tab, section, 
-                                      callback=self._checkChanges)
+                                      callback=self._checkChanges,
+                                      headerBgColor=self.headerBgColor)
             #frame.grid(row=r, column=0, padx=10, pady=5, sticky='new')
                 tab.add(frame, text=section.getLabel())
                 frame.columnconfigure(0, minsize=400)
