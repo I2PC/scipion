@@ -27,11 +27,11 @@ InSelFile=''
 # {list_combo}(Use the middle of the image,Minimize first harmonic)How to find the center of rotation?
 HowCenter='Use the middle of the image'
 
-# {expert} Inner radius for rotational harmonics (%):
+# Inner radius for rotational harmonics (%):
 """ A percentage of the image radius """
 SpectraInnerRadius = 15
 
-# {expert} Outer radius for rotational harmonics (%):
+# Outer radius for rotational harmonics (%):
 """ A percentage of the image radius """
 SpectraOuterRadius = 80
 
