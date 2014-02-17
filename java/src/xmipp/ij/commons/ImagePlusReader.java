@@ -82,23 +82,22 @@ public abstract class ImagePlusReader {
     }
     
     public boolean isVolume()
-	{
-		try
-		{
-                    
-                    if (ig != null)
-                        return ig.isVolume();
-                    if(imp != null)
-                        return imp.getStackSize() > 1;
-                    loadImagePlus();
-                    return isVolume();
+    {
+            try
+            {
 
-		}
-		catch (Exception e)
-		{
-			throw new IllegalArgumentException(e.getMessage());
-		}
-	}
+
+                if(imp != null)
+                    return imp.getStackSize() > 1;
+                loadImagePlus();
+                return isVolume();
+
+            }
+            catch (Exception e)
+            {
+                    throw new IllegalArgumentException(e.getMessage());
+            }
+    }
 
     void setIndex(int index) {
         this.index = index;
@@ -106,7 +105,7 @@ public abstract class ImagePlusReader {
 
     public abstract String getName() ;
 
-    boolean isStackOrVolume() {
+    public boolean isStackOrVolume() {
         try {
 
             if (imp != null)

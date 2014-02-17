@@ -17,6 +17,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.swing.JOptionPane;
+import xmipp.ij.commons.XmippUtil;
 
 import xmipp.jni.Filename;
 import xmipp.jni.MDLabel;
@@ -94,6 +95,7 @@ public abstract class ParticlePicker {
         return getParticlesBlock(Format.Xmipp301, file);
 
     }
+    private ScipionSave scipionsave;
 
     public String getParticlesAutoBlock(String file) {
         return particlesAutoBlock + "@" + file;
@@ -587,6 +589,40 @@ public abstract class ParticlePicker {
 
     public int getRadius() {
         return size / 2;
+    }
+
+     public void addScipionSave(String script, String projectid, String inputid) {
+            scipionsave = new ScipionSave(script, projectid, inputid);
+     }
+     
+     public boolean isScipionSave()
+     {
+         return scipionsave != null;
+     }
+
+    void doScipionSave() {
+        try {
+            
+            String cmd = String.format("%s %s %s %s", scipionsave.script, outputdir, scipionsave.projectid, scipionsave.inputid);;
+            XmippUtil.executeCommand(cmd);
+        } catch (Exception ex) {
+            Logger.getLogger(ParticlePicker.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+     
+     
+
+    class ScipionSave {
+
+        public String script, projectid, inputid;
+        
+
+        public ScipionSave(String script, String projectid, String inputid) {
+            
+            this.script = script;
+            this.projectid = projectid;
+            this.inputid = inputid;
+        }
     }
 
 }

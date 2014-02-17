@@ -37,10 +37,11 @@ public class SupervisedParticlePicker extends ParticlePicker
 	public static final int defAutoPickPercent = 50;
 	private int autopickpercent = defAutoPickPercent;
 
-
+        //used in previous versions
 	private int threads = 1;
 	private boolean fastmode = true;
 	private boolean incore = false;
+        ///////////////////////////
 
 	public static int dtemplatesnum = 1;
 	private ImageGeneric templates;
@@ -1071,6 +1072,8 @@ public class SupervisedParticlePicker extends ParticlePicker
 
 	}
 
+       
+
 	public class TrainRunnable implements Runnable
 	{
 
@@ -1133,6 +1136,7 @@ public class SupervisedParticlePicker extends ParticlePicker
 		}
 	}
 
+
 	public void autopick(SupervisedParticlePickerJFrame frame, SupervisedParticlePickerMicrograph next)
 	{
 		next.setState(MicrographState.Supervised);
@@ -1151,7 +1155,6 @@ public class SupervisedParticlePicker extends ParticlePicker
 		private SupervisedParticlePickerJFrame frame;
 		private MetaData outputmd;
 		private SupervisedParticlePickerMicrograph micrograph;
-
 		public AutopickRunnable(SupervisedParticlePickerJFrame frame, SupervisedParticlePickerMicrograph micrograph)
 		{
 			this.frame = frame;
@@ -1217,6 +1220,7 @@ public class SupervisedParticlePicker extends ParticlePicker
 
 		private MetaData manualmd;
 		private MetaData automaticmd;
+
 		private SupervisedParticlePickerMicrograph next;
 		private SupervisedParticlePickerJFrame frame;
 		private MetaData outputmd;

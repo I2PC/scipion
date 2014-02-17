@@ -7,7 +7,7 @@ import xmipp
 #512 is too low memory, should be 1024 the default.
 class ScriptTrainingPicking(ScriptAppIJ):
     def __init__(self):
-        ScriptAppIJ.__init__(self, 'xmipp.viewer.particlepicker.training.Main')
+        ScriptAppIJ.__init__(self, 'xmipp.viewer.particlepicker.training.SupervisedPickerRunner')
         
     def defineOtherParams(self):
         self.addParamsLine(" -o <directory>                                       : Output directory for load/save session data without updating model.");
@@ -31,12 +31,13 @@ class ScriptTrainingPicking(ScriptAppIJ):
         manual = (mode == 'manual')
         if manual:
             numberOfThreads = self.getIntParam('--mode', 1)
-            fastMode = self.getParam('--mode', 2)
+            fast = self.getParam('--mode', 2)
             incore = self.getParam('--mode', 3)
             
-        self.args = "%(input)s %(output)s %(mode)s" %locals()
+        self.args = "--input %(input)s --output %(output)s --mode %(mode)s" %locals()
         if manual:
-            self.args += " %(numberOfThreads)d %(fastMode)s %(incore)s" %locals()
+            self.args += " --threads %(numberOfThreads)d --fast %(fast)s --incore %(incore)s" %locals()
+            
         
 if __name__ == '__main__':
     ScriptTrainingPicking().tryRun()

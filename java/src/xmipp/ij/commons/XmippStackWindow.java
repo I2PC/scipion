@@ -85,8 +85,8 @@ public class XmippStackWindow extends StackWindow implements XmippIJWindow{
 			System.exit(0);
 		super.windowClosing(e);
 		close();//it works for stack
-		if(XmippIJUtil.getXmippImageJ() != null)
-			XmippIJUtil.getXmippImageJ().close();
+		if(XmippUtil.getXmippImageJ() != null)
+			XmippUtil.getXmippImageJ().close();
 	}
 
 	@Override

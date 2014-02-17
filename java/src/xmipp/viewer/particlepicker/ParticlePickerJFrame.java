@@ -2,6 +2,7 @@ package xmipp.viewer.particlepicker;
 
 import ij.IJ;
 import ij.WindowManager;
+import ij3d.behaviors.Picker;
 
 import java.awt.Color;
 import java.awt.Dimension;
@@ -49,7 +50,7 @@ import javax.swing.event.MenuListener;
 
 import xmipp.ij.commons.Tool;
 import xmipp.ij.commons.XmippApplication;
-import xmipp.ij.commons.XmippIJUtil;
+import xmipp.ij.commons.XmippUtil;
 import xmipp.utils.ColorIcon;
 import xmipp.utils.QuickHelpJDialog;
 import xmipp.utils.XmippDialog;
@@ -168,11 +169,17 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 			{
 				if (getParticlePicker().getMode() != Mode.ReadOnly)
 					getParticlePicker().saveData();
+                                if(getParticlePicker().isScipionSave())
+                                    getParticlePicker().doScipionSave();
 				close();
 
 			}
 		});
-
+                if(picker.isScipionSave())
+                {
+                    savebt.setVisible(false);
+                    saveandexitbt.setText("Create New Set Of Coordinates");
+                }
 		micrographstb = new JTable();
 		micrographstb.getSelectionModel().addListSelectionListener(new ListSelectionListener()
 		{
@@ -291,7 +298,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 			@Override
 			public void actionPerformed(ActionEvent e)
 			{
-				XmippIJUtil.showImageJ(Tool.PICKER);
+				XmippUtil.showImageJ(Tool.PICKER);
 			}
 		});
 
@@ -809,8 +816,8 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		dispose();
 		if (getCanvas() != null)
 			getCanvas().getIw().close();
-		if (XmippIJUtil.getXmippImageJ() != null)
-			XmippIJUtil.getXmippImageJ().close();
+		if (XmippUtil.getXmippImageJ() != null)
+			XmippUtil.getXmippImageJ().close();
 		XmippApplication.removeInstance();
 	}
 
