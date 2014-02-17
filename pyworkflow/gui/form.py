@@ -158,7 +158,8 @@ class SubclassesTreeProvider(TreeProvider):
     def objFilter(self, obj):
         result = True
         # Do not allow to select objects that are childs of the protocol
-        if self.protocol.getObjId() == obj.getObjParentId():
+        if (self.protocol.getObjId() and 
+            self.protocol.getObjId() == obj.getObjParentId()):
             result = False
         # Check that the condition is met
         elif self.condition:
