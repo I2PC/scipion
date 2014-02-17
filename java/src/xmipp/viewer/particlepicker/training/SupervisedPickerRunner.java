@@ -13,9 +13,9 @@ import org.apache.commons.cli.ParseException;
 
 import xmipp.utils.XmippDialog;
 import xmipp.viewer.particlepicker.ParticlePicker;
-import xmipp.viewer.particlepicker.training.gui.SingleParticlePickerJFrame;
+import xmipp.viewer.particlepicker.training.gui.SupervisedParticlePickerJFrame;
 import xmipp.viewer.particlepicker.training.model.Mode;
-import xmipp.viewer.particlepicker.training.model.SingleParticlePicker;
+import xmipp.viewer.particlepicker.training.model.SupervisedParticlePicker;
 
 public class SupervisedPickerRunner implements Runnable {
 
@@ -100,15 +100,15 @@ public class SupervisedPickerRunner implements Runnable {
     @Override
     public void run() {
 
-        SingleParticlePicker ppicker = null;
+        SupervisedParticlePicker ppicker = null;
         if (mode == Mode.Manual) 
-            ppicker = new SingleParticlePicker(inputfile, outputdir, threads, fast, incore);
+            ppicker = new SupervisedParticlePicker(inputfile, outputdir, threads, fast, incore);
         else 
-            ppicker = new SingleParticlePicker(inputfile, outputdir, mode);
+            ppicker = new SupervisedParticlePicker(inputfile, outputdir, mode);
         if(isscipionsave)
             ppicker.addScipionSave(script, projectid, inputid);
 
-        new SingleParticlePickerJFrame(ppicker);
+        new SupervisedParticlePickerJFrame(ppicker);
 
     }
 

@@ -14,19 +14,19 @@ import xmipp.viewer.particlepicker.ParticlePickerJFrame;
 import xmipp.viewer.particlepicker.training.model.AutomaticParticle;
 import xmipp.viewer.particlepicker.training.model.Mode;
 import xmipp.viewer.particlepicker.training.model.ParticleToTemplatesTask;
-import xmipp.viewer.particlepicker.training.model.SingleParticlePicker;
+import xmipp.viewer.particlepicker.training.model.SupervisedParticlePicker;
 import xmipp.viewer.particlepicker.training.model.SingleParticlePickerMicrograph;
 import xmipp.viewer.particlepicker.training.model.ManualParticle;
 
 public class SingleParticlePickerCanvas extends ParticlePickerCanvas
 {
 
-	private SingleParticlePickerJFrame frame;
+	private SupervisedParticlePickerJFrame frame;
 	private SingleParticlePickerMicrograph micrograph;
 	private ManualParticle active;
-	private SingleParticlePicker ppicker;
+	private SupervisedParticlePicker ppicker;
 
-	public SingleParticlePickerCanvas(SingleParticlePickerJFrame frame)
+	public SingleParticlePickerCanvas(SupervisedParticlePickerJFrame frame)
 	{
 		super(frame.getMicrograph().getImagePlus(frame.getParticlePicker().getFilters()));
 

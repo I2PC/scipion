@@ -18,7 +18,7 @@ public class SingleParticlePickerMicrograph extends Micrograph
 	private List<ManualParticle> manualparticles;
 	private List<AutomaticParticle> autoparticles;
 	private MicrographState state;
-	private int autopickpercent = SingleParticlePicker.defAutoPickPercent;
+	private int autopickpercent = SupervisedParticlePicker.defAutoPickPercent;
 	private double threshold = 0.0;
 
 	public double getThreshold() {
@@ -90,7 +90,7 @@ public class SingleParticlePickerMicrograph extends Micrograph
 
 	}
 
-	public void removeParticles(int x, int y, SingleParticlePicker ppicker)
+	public void removeParticles(int x, int y, SupervisedParticlePicker ppicker)
 	{
 		List<ManualParticle> particles = new ArrayList<ManualParticle>();
 
@@ -119,7 +119,7 @@ public class SingleParticlePickerMicrograph extends Micrograph
 		return autoparticles;
 	}
 
-	public void addManualParticle(ManualParticle p, SingleParticlePicker ppicker, boolean center)
+	public void addManualParticle(ManualParticle p, SupervisedParticlePicker ppicker, boolean center)
 	{
 		manualparticles.add(p);
 
@@ -138,7 +138,7 @@ public class SingleParticlePickerMicrograph extends Micrograph
 		
 	}
 
-	public void removeParticle(PickerParticle p, SingleParticlePicker ppicker)
+	public void removeParticle(PickerParticle p, SupervisedParticlePicker ppicker)
 	{
 		if (p == null)
 			throw new IllegalArgumentException(XmippMessage.getEmptyFieldMsg("particle"));
@@ -281,7 +281,7 @@ public class SingleParticlePickerMicrograph extends Micrograph
 		this.autopickpercent = autopickpercent;
 	}
 	
-	public Rectangle getParticlesRectangle(SingleParticlePicker picker)
+	public Rectangle getParticlesRectangle(SupervisedParticlePicker picker)
 	{
 		double x1 = Double.POSITIVE_INFINITY, y1 = Double.POSITIVE_INFINITY, x2 = Double.NEGATIVE_INFINITY, y2 = Double.NEGATIVE_INFINITY;
 		List<ManualParticle> particles = getParticles();

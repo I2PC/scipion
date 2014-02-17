@@ -19,7 +19,7 @@ import xmipp.utils.XmippWindowUtil;
 import xmipp.viewer.particlepicker.Format;
 import xmipp.viewer.particlepicker.Micrograph;
 import xmipp.viewer.particlepicker.ParticlePicker;
-import xmipp.viewer.particlepicker.training.gui.SingleParticlePickerJFrame;
+import xmipp.viewer.particlepicker.training.gui.SupervisedParticlePickerJFrame;
 
 /**
  * Business object for Single Particle Picker GUI. Inherits from ParticlePicker
@@ -27,7 +27,7 @@ import xmipp.viewer.particlepicker.training.gui.SingleParticlePickerJFrame;
  * @author airen
  * 
  */
-public class SingleParticlePicker extends ParticlePicker
+public class SupervisedParticlePicker extends ParticlePicker
 {
 
 
@@ -51,13 +51,13 @@ public class SingleParticlePicker extends ParticlePicker
 
 	// private String reviewfile;
 
-	public SingleParticlePicker(String selfile, String outputdir, Mode mode)
+	public SupervisedParticlePicker(String selfile, String outputdir, Mode mode)
 	{
 		this(null, selfile, outputdir, mode);
 
 	}
 
-	public SingleParticlePicker(String block, String selfile, String outputdir, Mode mode)
+	public SupervisedParticlePicker(String block, String selfile, String outputdir, Mode mode)
 	{
 
 		super(block, selfile, outputdir, mode);
@@ -99,7 +99,7 @@ public class SingleParticlePicker extends ParticlePicker
 	// importAllParticles(reviewfile);
 	// }
 
-	public SingleParticlePicker(String selfile, String outputdir, Integer threads, boolean fastmode, boolean incore)
+	public SupervisedParticlePicker(String selfile, String outputdir, Integer threads, boolean fastmode, boolean incore)
 	{
 		this(selfile, outputdir, Mode.Manual);
 
@@ -1037,7 +1037,7 @@ public class SingleParticlePicker extends ParticlePicker
 	 * @param frame
 	 * @param autopickout
 	 */
-	public void trainAndAutopick(SingleParticlePickerJFrame frame, Rectangle rectangle)
+	public void trainAndAutopick(SupervisedParticlePickerJFrame frame, Rectangle rectangle)
 	{
 		frame.getCanvas().setEnabled(false);
 		XmippWindowUtil.blockGUI(frame, "Training and Autopicking...");
@@ -1076,12 +1076,12 @@ public class SingleParticlePicker extends ParticlePicker
 	public class TrainRunnable implements Runnable
 	{
 
-		private SingleParticlePickerJFrame frame;
+		private SupervisedParticlePickerJFrame frame;
 		private MetaData trainmd;
 		private MetaData outputmd;
 		private Rectangle rectangle;
 
-		public TrainRunnable(SingleParticlePickerJFrame frame, MetaData trainmd, Rectangle rectangle)
+		public TrainRunnable(SupervisedParticlePickerJFrame frame, MetaData trainmd, Rectangle rectangle)
 		{
 			this.frame = frame;
 			this.trainmd = trainmd;
@@ -1124,7 +1124,7 @@ public class SingleParticlePicker extends ParticlePicker
 				x = outputmd.getValueInt(MDLabel.MDL_XCOOR, id);
 				y = outputmd.getValueInt(MDLabel.MDL_YCOOR, id);
 				cost = outputmd.getValueDouble(MDLabel.MDL_COST, id);
-				ap = new AutomaticParticle(x, y, SingleParticlePicker.this, micrograph, cost, false);
+				ap = new AutomaticParticle(x, y, SupervisedParticlePicker.this, micrograph, cost, false);
 				if (isautopickout && rectangle.contains(new Point(x, y)))
 				{
 					ap.setDeleted(true);
@@ -1135,7 +1135,7 @@ public class SingleParticlePicker extends ParticlePicker
 		}
 	}
 
-	public void autopick(SingleParticlePickerJFrame frame, SingleParticlePickerMicrograph next)
+	public void autopick(SupervisedParticlePickerJFrame frame, SingleParticlePickerMicrograph next)
 	{
 		next.setState(MicrographState.Supervised);
 		saveData(next);
@@ -1150,11 +1150,11 @@ public class SingleParticlePicker extends ParticlePicker
 	public class AutopickRunnable implements Runnable
 	{
 
-		private SingleParticlePickerJFrame frame;
+		private SupervisedParticlePickerJFrame frame;
 		private MetaData outputmd;
 		private SingleParticlePickerMicrograph micrograph;
 
-		public AutopickRunnable(SingleParticlePickerJFrame frame, SingleParticlePickerMicrograph micrograph)
+		public AutopickRunnable(SupervisedParticlePickerJFrame frame, SingleParticlePickerMicrograph micrograph)
 		{
 			this.frame = frame;
 			this.outputmd = new MetaData();
@@ -1178,7 +1178,7 @@ public class SingleParticlePicker extends ParticlePicker
 
 	}
 
-	public void correctAndAutopick(SingleParticlePickerJFrame frame, SingleParticlePickerMicrograph current, SingleParticlePickerMicrograph next,
+	public void correctAndAutopick(SupervisedParticlePickerJFrame frame, SingleParticlePickerMicrograph current, SingleParticlePickerMicrograph next,
 			Rectangle correctout)
 	{
 		current.setState(MicrographState.Corrected);
@@ -1220,10 +1220,10 @@ public class SingleParticlePicker extends ParticlePicker
 		private MetaData manualmd;
 		private MetaData automaticmd;
 		private SingleParticlePickerMicrograph next;
-		private SingleParticlePickerJFrame frame;
+		private SupervisedParticlePickerJFrame frame;
 		private MetaData outputmd;
 
-		public CorrectAndAutopickRunnable(SingleParticlePickerJFrame frame, MetaData manualmd, MetaData automaticmd,
+		public CorrectAndAutopickRunnable(SupervisedParticlePickerJFrame frame, MetaData manualmd, MetaData automaticmd,
 				SingleParticlePickerMicrograph next)
 		{
 			this.frame = frame;
