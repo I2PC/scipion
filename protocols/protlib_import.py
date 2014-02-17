@@ -70,8 +70,8 @@ XMIPP_RELION_LABELS = {
                        ,MDL_IMAGE:             'rlnImageName'
                        ,MDL_IMAGE_REF:         'rlnReferenceImage'
                        ,MDL_ITEM_ID:           'rlnImageId'
-                       ,MDL_LL:                'rlnLogLikelihood'
-                       ,MDL_MAXCC:              'rlnLogLikeliContribution'
+                       ,MDL_MAXCC:             'rlnLogLikelihood'
+                       ,MDL_LL:                'rlnLogLikeliContribution'
                        ,MDL_MAGNIFICATION:     'rlnMagnification'
                        ,MDL_MICROGRAPH:        'rlnMicrographName'
                        ,MDL_AVGPMAX:           'rlnAveragePmax'
@@ -80,6 +80,7 @@ XMIPP_RELION_LABELS = {
                        ,MDL_RESOLUTION_FRC:     'rlnGoldStandardFsc'
                        ,MDL_RESOLUTION_FREQ:    'rlnResolution'
                        ,MDL_RESOLUTION_SSNR:    'rlnSsnrMap'
+                       ,MDL_RANDOMSEED:         'rlnRandomSubset'
                        ,MDL_SAMPLINGRATE:       'rlnPixelSize'
                        #,MDL_SAMPLINGRATE_ORIGINAL: 'rlnPixelSize'
                        ,MDL_SCALE:              'rlnMagnificationCorrection'
@@ -96,10 +97,11 @@ XMIPP_RELION_LABELS = {
                        ,MDL_YSIZE:              'rlnImageSizeY'
                        ,MDL_WEIGHT:             'rlnNrOfSignificantSamples'
                        ,MDL_ZSIZE:              'rlnImageSizeZ'
-                       
+                       }
+XMIPP_RELION_LABELS_EXTRA = {
                        # Following labels have no correct matching, just to 
                        # pick one with the same datatype
-                       ,MDL_BLOCK_NUMBER:       'rlnGroupNumber' # just one
+                       MDL_BLOCK_NUMBER:       'rlnGroupNumber' # just one
                        ,MDL_COUNT:             'rlnGroupNrParticles' # just one
                        ,MDL_CTF_CRIT_FITTINGSCORE:   'rlnCtfFigureOfMerit' #just one
                        ,MDL_CTF_CRIT_NORMALITY:   'rlnNormCorrection' #just one
@@ -303,12 +305,15 @@ def exportMdToRelion(md, outputRelion):
     from protlib_filesystem import deleteFile
     deleteFile(None, tmpFile)
     
-def addRelionLabels():
+def addRelionLabels(replace=False, extended=False):
     '''Add relion labels as aliases
     '''
     from xmipp import addLabelAlias
     for k, v in XMIPP_RELION_LABELS.iteritems():
-        addLabelAlias(k,v)
+        addLabelAlias(k, v, replace)
+    if extended:
+        for k, v in XMIPP_RELION_LABELS_EXTRA.iteritems():    
+            addLabelAlias(k, v, replace)        
         
 def relionLabelString():
     """ create an string that can be used for XMIPP_EXTRA_ALIASES
@@ -318,6 +323,8 @@ def relionLabelString():
     pairs = []
     for k, v in XMIPP_RELION_LABELS.iteritems():
         pairs.append('%s=%s' % (label2Str(k), v))
+    for k, v in XMIPP_RELION_LABELS_EXTRA.iteritems():
+        pairs.append('%s=%s' % (label2Str(k), v))        
     return ';'.join(pairs)
         
 def exportReliontoMetadataFile(inputRelion,outputXmipp):

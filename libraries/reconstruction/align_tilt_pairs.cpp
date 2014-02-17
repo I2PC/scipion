@@ -34,8 +34,8 @@ void ProgAlignTiltPairs::defineParams()
     addUsageLine("+This program receives as input a metadata with two sets of images, untilted and tilted.");
     addUsageLine("+Untilted images must have been previously classified and aligned. Then, the tilted images");
     addUsageLine("+are aligned to their untilted versions. The alignment parameters from the classification plus");
-    addUsageLine("+the alignment parameters from the tilted-untilted comparison are used to deduce the");
-    addUsageLine("+3D alignment parameters for the tilted images.");
+    addUsageLine("+the alignment parameters from the tilted-untilted comparison are used to deduce the 3D");
+    addUsageLine("+alignment parameters for the tilted images.");
 
     //Examples
     addExampleLine("To center tilted images allowing a maximum shift of 10 pixels:",false);
