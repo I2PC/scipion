@@ -27,25 +27,28 @@
 This sub-package contains wrapper around ML3D Xmipp program
 """
 
-
 from pyworkflow.em import *  
 from pyworkflow.utils import *  
 import xmipp
 from convert import createXmippInputImages, readSetOfVolumes, createXmippInputVolumes
 
-#from xmipp3 import XmippProtocol
         
-        
+# Reconstruction method constants
+RECONS_FOURIER = 0
+RECONS_WLSART = 1
+    
+    
 class XmippProtML3D(ProtRefine3D, ProtClassify3D):
-    """ Protocol for Xmipp-based ML3D/MLF3D classification. """
+    """ 
+    Separate structurally heterogenous data sets into homogeneous 
+    classes by a multi-reference 3D-angular refinement using a 
+    maximum-likelihood ( *ML* ) target function.   
+    """
     _label = 'ml3d'
     _reference = ['[[http://www.ncbi.nlm.nih.gov/pubmed/17179934][ML3D: Scheres, et.al,  Nat.Meth (2007)]]',
                   '[[http://www.ncbi.nlm.nih.gov/pubmed/17937907][MLF3D: Scheres, et.al,  Structure (2007)]]'
                   ]
     
-    # Reconstruction method constants
-    FOURIER = 0
-    WLSART = 1
 
     def getProgramId(self):
         progId = "ml"
@@ -53,15 +56,16 @@ class XmippProtML3D(ProtRefine3D, ProtClassify3D):
             progId += "f" 
         return progId   
     
+    #--------------------------- DEFINE param functions -------------------------------------------- 
     def _defineParams(self, form):
         form.addSection(label='Input')
         form.addParam('inputImages', PointerParam, label="Input images", important=True, 
                       pointerClass='SetOfParticles',
                       help='Select the input images from the project.'
                            'It should be a SetOfImages class')  
-        #TODO: the following parameter should be a Pointer to a Volume and not a string containing the path      
-        form.addParam('ini3DrefVolumes', PointerParam, label='Initial 3D reference volumes',
-                      pointerClass='SetOfVolumes', help='Initial 3D density maps with the same dimensions as your particles.')
+        form.addParam('ini3DrefVolumes', PointerParam, pointerClass='Volume,SetOfVolumes',
+                      label='Initial 3D reference volume(s)', 
+                      help='Initial 3D density maps with the same dimensions as your particles.')
         form.addParam('numberOfSeedsPerRef', IntParam, default=1,
                       label='Number of seeds per reference',
                       help='The total number of seeds generated will be the number of provided '
@@ -157,6 +161,7 @@ class XmippProtML3D(ProtRefine3D, ProtClassify3D):
         
         form.addParallelSection(threads=1, mpi=8)    
              
+    #--------------------------- INSERT steps functions --------------------------------------------  
     def _insertAllSteps(self):
 
         self.ParamsDict = {}
@@ -175,37 +180,26 @@ class XmippProtML3D(ProtRefine3D, ProtClassify3D):
         #Get sampling rate from input images
         self.samplingRate = self.inputImages.get().getSamplingRate()
         
-        self._insertFunctionStep('copyVolumes', refMd, initVols)
+        self._insertFunctionStep('copyVolumesStep', refMd, initVols)
         
         if self.doCorrectGreyScale.get():
-            self.insertCorrectGreyScaleSteps()
+            self._insertCorrectGreyScaleSteps()
                     
         if self.doLowPassFilter.get():
-            self.insertFilterStep()
+            self._insertFilterStep()
             
         if self.numberOfSeedsPerRef.get() > 1:
-            self.insertGenerateRefSteps()
+            self._insertGenerateRefSteps()
             
-        self.insertML3DStep(self.imgMd, self.workingDir.get() + '/', self.ParamsDict['InitialVols'], 
+        self._insertML3DStep(self.imgMd, self.workingDir.get() + '/', self.ParamsDict['InitialVols'], 
                             self.numberOfIterations.get(), self.seedsAreAmplitudeCorrected.get())
         
-        self._insertFunctionStep('renameOutput', self.workingDir.get(), self.getProgramId())
+        self._insertFunctionStep('renameOutputStep', self.workingDir.get(), self.getProgramId())
                 
-        self._insertFunctionStep('createOutput')
+        self._insertFunctionStep('createOutputStep')
 
-    def copyVolumes(self, inputMd, outputStack):
-        ''' This function will copy input references into a stack in working directory'''
-        if exists(outputStack):
-            os.remove(outputStack)
-        md = xmipp.MetaData(inputMd)
-        img = xmipp.Image()
-        for i, idx in enumerate(md):
-            img.read(md.getValue(xmipp.MDL_IMAGE, idx))
-            img.write('%d@%s' % (i + 1, outputStack))
-
-        
-    def insertCorrectGreyScaleSteps(self):
-        ''' Correct the initial reference greyscale '''
+    def _insertCorrectGreyScaleSteps(self):
+        """ Correct the initial reference greyscale """
         cgsDir = self._getPath('CorrectGreyscale')
         makePath(cgsDir)
         volStack = self.ParamsDict['InitialVols'] = self._getExtraPath('corrected_volumes.stk')
@@ -247,8 +241,8 @@ class XmippProtML3D(ProtRefine3D, ProtClassify3D):
             self.ParamsStr = '-i %(projMatch)s -o %(outputVol)s --sym %(symmetry)s --weight --thr %(numberOfThreads)d'
             self._insertRunJobStep('xmipp_reconstruct_fourier', self.ParamsStr % self.ParamsDict)
             index += 1
-
-    def insertFilterStep(self):
+         
+    def _insertFilterStep(self):
         volStack = self.ParamsDict['FilteredVols'] = self._getExtraPath('filtered_volumes.stk')
         index = 1
         outputVol = ''
@@ -264,8 +258,8 @@ class XmippProtML3D(ProtRefine3D, ProtClassify3D):
         self._insertRunJobStep('xmipp_transform_filter', self.ParamsStr % self.ParamsDict)
         self.ParamsDict['InitialVols'] = self.ParamsDict['FilteredVols']
 
-    def insertGenerateRefSteps(self):
-        ''' Generate more reference volumes than provided in input reference '''
+    def _insertGenerateRefSteps(self):
+        """ Generate more reference volumes than provided in input reference """
         grDir = self._getPath('GeneratedReferences')
         # Create dir for seeds generation
         makePath(grDir)
@@ -284,7 +278,7 @@ class XmippProtML3D(ProtRefine3D, ProtClassify3D):
                 outputVol = "%d@%s" % (index, volStack)
                 generatedVol = join(grDir, "vol%03dextra/iter%03d/vol%06d.vol" % (index, 1, 1))
                 copyVols.append((outputVol, generatedVol))
-                self.insertML3DStep(files[index-1], join(grDir, 'vol%03d' % index), self.mdVols.getValue(xmipp.MDL_IMAGE, idx), 1, 
+                self._insertML3DStep(files[index-1], join(grDir, 'vol%03d' % index), self.mdVols.getValue(xmipp.MDL_IMAGE, idx), 1, 
                                     self.initialMapIsAmplitudeCorrected)
                 #self.mdVols.setValue(MDL_IMAGE, outputVol, idx)
                 index += 1
@@ -297,7 +291,7 @@ class XmippProtML3D(ProtRefine3D, ProtClassify3D):
         # Seed generation with MLF always does amplitude correction
         self.seedsAreAmplitudeCorrected.set(True)
 
-    def insertML3DStep(self, inputImg, oRoot, initialVols, numberOfIters, amplitudCorrected):
+    def _insertML3DStep(self, inputImg, oRoot, initialVols, numberOfIters, amplitudCorrected):
         self.ParamsDict.update({
                          '_ImgMd': inputImg,
                          '_ORoot': oRoot,
@@ -342,18 +336,30 @@ class XmippProtML3D(ProtRefine3D, ProtClassify3D):
             if self.fourierExtraParams.hasValue(): self.ParamsStr += " %(fourierExtraParams)s" 
             
         self._insertRunJobStep('xmipp_%s_refine3d' % self.getProgramId(), self.ParamsStr % self.ParamsDict)
-        
-    def renameOutput(self, WorkingDir, ProgId):
-        ''' Remove ml2d prefix from:
-            ml2dclasses.stk, ml2dclasses.xmd and ml2dimages.xmd'''
+                   
+    #--------------------------- STEPS functions --------------------------------------------       
+    def copyVolumesStep(self, inputMd, outputStack):
+        """ Copy input references into a stack in working directory."""
+        if exists(outputStack):
+            os.remove(outputStack)
+        md = xmipp.MetaData(inputMd)
+        img = xmipp.Image()
+        for i, idx in enumerate(md):
+            img.read(md.getValue(xmipp.MDL_IMAGE, idx))
+            img.write('%d@%s' % (i + 1, outputStack))
+
+    def renameOutputStep(self, WorkingDir, ProgId):
+        """ Remove ml2d prefix from:
+            ml2dclasses.stk, ml2dclasses.xmd and ml2dimages.xmd
+        """
         prefix = '%s2d' % ProgId
         for f in ['%sclasses.stk', '%sclasses.xmd', '%simages.xmd']:
             f = join(WorkingDir, f % prefix)
             nf = f.replace(prefix, '')
             shutil.move(f, nf)
                                                     
-    def createOutput(self):
-        #lastIter = self._lastIteration()
+    def createOutputStep(self):
+        """ Define the SetOfClasses3D as output of the protocol. """    
         lastIter = 'iter%03d' % self._lastIteration()
         md = xmipp.MetaData(self._getExtraPath(lastIter, 'iter_volumes.xmd'))
         md.addItemId()
@@ -362,8 +368,13 @@ class XmippProtML3D(ProtRefine3D, ProtClassify3D):
         volumes = self._createSetOfVolumes()
         volumes.setSamplingRate(self.inputImages.get().getSamplingRate())
         readSetOfVolumes(fn, volumes)
-        volumes.write()
         self._defineOutputs(outputVolumes=volumes)
+
+    #--------------------------- INFO functions -------------------------------------------- 
+    def _validate(self):
+        validateMsgs = []
+        #TODO: Check images dimension when it is implemented on SetOFImages class
+        return validateMsgs
 
     def _summary(self):
         summary = []
@@ -388,27 +399,19 @@ class XmippProtML3D(ProtRefine3D, ProtClassify3D):
             summary.append("Output volumes: %s" % self.outputVolumes.get())
         return summary
     
-    def _validate(self):
-        validateMsgs = []
-        # Volume references cannot be empty (REMOVE this when we use a pointer to a set instead of a path)
-        if not self.ini3DrefVolumes.hasValue():
-            validateMsgs.append('Please provide an initial reference volume(s).')
-        # Correct grey scale needs mpi to b e run
-        if self.doCorrectGreyScale.get() and self.numberOfMpi < 2:
-            validateMsgs.append('Correct grey scale needs mpi to be run.')
-            
-        #TODO: Check images dimension when it is implemented on SetOFImages class
-        return validateMsgs
+    def _methods(self):
+        return self._summary()  # summary is quite explicit and serve as methods    
     
+    #--------------------------- UTILS functions --------------------------------------------
     def _lastIteration(self):
-        ''' Find the last iteration number '''
-        iter = 1        
+        """ Find the last iteration number """
+        it = 1        
         while True:
-            if not os.path.exists(self._getExtraPath('iter%03d' % iter, 'iter_volumes.xmd')):
+            if not os.path.exists(self._getExtraPath('iter%03d' % it, 'iter_volumes.xmd')):
                 break
-            iter = iter + 1
+            it = it + 1
         #return 'iter%03d' % (iter - 1)
-        return iter - 1
+        return it - 1
     
     #TODO: This method is exactly the same as in protocol_ml2d, try to unify them.
     def _getIterClasses(self, iter=None, block=None):

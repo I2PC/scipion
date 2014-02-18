@@ -151,8 +151,26 @@ keywords = {Algorithms; Cryoelectron Microscopy, methods; Image Enhancement, met
   and Specificity}
 }
 
-@article{Scheres2007,
-  author = {Scheres, Sjors H W. and Núñez-Ramírez, Rafael and Gómez-Llorente,
+@article{Scheres2007a,
+  author = {Scheres, Sjors H. W. and Haixiao Gao and Mikel Valle and Gabor T Herman
+    and Paul P B Eggermont and et.al.},
+  title = {Disentangling conformational states of macromolecules in 3D-EM through
+    likelihood optimization.},
+  journal = {Nature Methods},
+  year = {2007},
+  volume = {4},
+  pages = {27--29},
+  number = {1},
+  month = {Jan},
+  doi = {http://dx.doi.org/10.1038/nmeth992}
+  keywords = {Antigens, Polyomavirus Transforming; Escherichia coli; Image Processing,
+    Computer-Assisted; Imaging, Three-Dimensional; Likelihood Functions;
+    Microscopy, Electron; Models, Molecular; Protein Conformation; Ribosomes;
+    Sensitivity and Specificity; Simian virus 40},
+}
+
+@article{Scheres2007b,
+  author = {Scheres, Sjors H. W. and Núñez-Ramírez, Rafael and Gómez-Llorente,
     Yacob and {San Martín}, Carmen and Eggermont, Paul P B. and Carazo,
     José María},
   title = {Modeling experimental image formation for likelihood-based classification
