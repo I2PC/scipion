@@ -1506,7 +1506,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			addSeparator(FILE);
 			addItem(FILE_SAVE, "Save", "save.gif", "control released S");
 			addItem(FILE_SAVEAS, "Save as", "save_as.gif");
-                        addItem(FILE_EXPORTIMAGES, "Export Images ...");
+                        addItem(FILE_EXPORTIMAGES, "Export Images ...", "export_wiz.gif");
 			addItem(FILE_REFRESH, "Refresh", "refresh.gif", "released F5");
 			addSeparator(FILE);
 			addItem(FILE_EXIT, "Exit", null, "control released Q");
@@ -1553,7 +1553,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			boolean volMode = data.isVolumeMode();
 			setItemEnabled(FILE_OPENWITH_CHIMERA, volMode);
 			setItemEnabled(FILE_OPENMICROGRAPHS, data.hasMicrographParticles());
-                        setItemEnabled(FILE_EXPORTIMAGES, data.hasRenderLabel());
+                        setItemEnabled(FILE_EXPORTIMAGES, data.hasRenderLabel() && !volMode);
 			setItemEnabled(FILE_SAVE, !volMode);
 			setItemEnabled(FILE_SAVEAS, !volMode);
 			setItemSelected(DISPLAY_NORMALIZE, gallery.getNormalized());
