@@ -381,10 +381,21 @@ class XmippProtML3D(ProtRefine3D, ProtClassify3D):
         validateMsgs = []
         #TODO: Check images dimension when it is implemented on SetOFImages class
         return validateMsgs
-
+    
+    def _citations(self):
+        cites = ['Scheres2005a', 'Scheres2005b', 'Scheres2007a']
+        
+        if self.doMlf:
+            cites.append('Scheres2007b')
+            
+        if self.doNorm:
+            cites.append('Scheres2009b')
+            
+        return cites
+    
     def _summary(self):
         summary = []
-        summary.append("Input images:  %s" % self.inputParticles.get().getNameId())
+        summary.append("Number of input images:  *%s* " % self.inputParticles.get().getSize())
         if self.doMlf:
             if self.doCorrectAmplitudes:
                 suffix = "with CTF correction "
@@ -398,7 +409,6 @@ class XmippProtML3D(ProtRefine3D, ProtClassify3D):
             summary.append("Number of references per volume: *%d*" % self.numberOfSeedsPerRef.get())
            
         # TODO: Add information at info@iter_classes.xmd from last iteration
-        
         if not hasattr(self, 'outputVolumes'):
             summary.append("Output volumes not ready yet.")
         else:

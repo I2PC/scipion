@@ -187,7 +187,7 @@ class XmippProtML2D(ProtClassify):
         cites = ['Scheres2005a']
         
         if self.doMlf:
-            cites.append('Scheres2007a')
+            cites.append('Scheres2007b')
         elif self.doFast:
             cites.append('Scheres2005b')
             
