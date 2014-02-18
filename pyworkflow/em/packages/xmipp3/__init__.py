@@ -77,6 +77,6 @@ from protocol_helical_parameters import XmippProtHelicalParameters
 from protocol_resolution_3d import XmippProtResolution3D
 from protocol_identify_outliers import XmippProtIdentifyOutliers
 from protocol_convert_to_pseudoatoms import XmippProtConvertToPseudoAtoms
-
+from protocol_ctf_defocus_group import XmippProtCTFDefocusGroup
 # Wizards
 from wizard import *
