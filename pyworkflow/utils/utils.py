@@ -28,6 +28,7 @@ This module contains utilities functions and classes.
 """
 
 import os, sys, re
+from datetime import datetime
 
 
 def prettyDate(time=False):
@@ -36,7 +37,6 @@ def prettyDate(time=False):
     pretty string like 'an hour ago', 'Yesterday', '3 months ago',
     'just now', etc
     """
-    from datetime import datetime
     now = datetime.now()
     if type(time) is int:
         diff = now - datetime.fromtimestamp(time)
@@ -74,6 +74,14 @@ def prettyDate(time=False):
     if day_diff < 365:
         return str(day_diff/30) + " months ago"
     return str(day_diff/365) + " years ago"
+
+
+def dateStr(dt):
+    """ Get a normal string representation of datetime. """
+    if isinstance(dt, float) or isinstance(dt, int):
+        dt = datetime.fromtimestamp(dt)
+
+    return dt.strftime('%d-%m-%y %H:%M')
 
 
 def prettySize(size):

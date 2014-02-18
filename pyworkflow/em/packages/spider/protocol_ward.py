@@ -109,7 +109,7 @@ class SpiderProtClassifyWard(ProtClassify, SpiderProtocol):
 
     def createOutput(self):
         rootNode = self.buildDendrogram(True)
-        classes = self._createSetOfClasses2D()
+        classes = self._createSetOfClasses2D(self.inputParticles.get())
         averages = classes.createAverages()
         g = graph.Graph(root=rootNode)  
             
@@ -122,7 +122,6 @@ class SpiderProtClassifyWard(ProtClassify, SpiderProtocol):
         """ Create the SetOfClasses2D from the images of each node
         in the dendogram. 
         """
-        classes.setImages(self.inputParticles.get())
         class2D = Class2D()
         avg = Particle()
         img = Particle()

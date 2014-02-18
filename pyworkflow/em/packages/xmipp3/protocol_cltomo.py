@@ -23,15 +23,15 @@
 # *  e-mail address 'xmipp@cnb.csic.es'
 # *
 # **************************************************************************
-from pyworkflow.em.packages.xmipp3.convert import readSetOfVolumes
 """
 This sub-package contains protocols for performing subtomogram averaging.
 """
 
 from pyworkflow.em import *  
 from constants import *
-from convert import createXmippInputVolumes, readSetOfClasses3D
+from convert import createXmippInputVolumes, readSetOfClasses3D, readSetOfVolumes
 from xmipp import MetaData
+
 
 class XmippProtCLTomo(ProtClassify3D):
     """ Perform subtomogram averaging """

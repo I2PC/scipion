@@ -29,40 +29,75 @@ from views_util import *
 
 from pyworkflow.web.app.properties import MessageWeb
 
+
 def base(request, context):
     
     # Messages properties class
     messages = MessageWeb()
     
     context_base = {
-                'favicon': getResourceIcon('favicon'),
-                'general_css': getResourceCss('general'),
-                'messi_css': getResourceCss('messi'),
-                'font_awesome': getResourceCss('font_awesome'),
-                'jquery': getResourceJs('jquery'),
-                'messi_js': getResourceJs('messi'),
-                'utils': getResourceJs('utils'),
-                'msg': messages
-               }
+                    #ICON
+                    'favicon': getResourceIcon('favicon'),
+                    'logo_scipion': getResourceIcon('logo_scipion'),
+                    'logo_scipion_transparent' : getResourceIcon('logo_scipion_transparent'),
+                    #CSS
+                    'general_css': getResourceCss('general'),
+                    'messi_css': getResourceCss('messi'),
+                    'font_awesome': getResourceCss('font_awesome'),
+                    #JS
+                    'jquery': getResourceJs('jquery'),
+                    'messi_js': getResourceJs('messi'),
+                    'utils': getResourceJs('utils'),
+                    #OTHER
+                    'msg': messages
+                    }
     
     context.update(context_base)
     return context
 
+
 def base_form(request, context):
+    
     context_base = {
+                    #CSS
                     'form_css': getResourceCss('form'),
+                    'jquery_ui_css': getResourceCss('jquery_ui'),
+                    #JS
                     'jquery_ui': getResourceJs('jquery_ui'),
-                    'jquery_ui_css': getResourceCss('jquery_ui')
                     }
 
     context = base(request, context)
     context.update(context_base)
     return context
 
+
+def base_flex(request, context):
+    
+    context_base = {
+                    #CSS
+                    'general_flex': getResourceCss('general_flex'),
+                    'jquery_ui_css': getResourceCss('jquery_ui'),
+                    #JS
+                    'jquery_ui': getResourceJs('jquery_ui'),
+                    'jsplumb': getResourceJs('jsplumb'),
+                    'jquery_sizes': getResourceJs('jquery_sizes'),
+                    'jlayout_border': getResourceJs('jlayout_border'),
+                    'jquery_layout': getResourceJs('jquery_layout'),
+                    #OTHER
+                    'contentConfig': 'divided'
+                    }
+    
+    context = base(request, context)
+    context.update(context_base)
+    return context
+
+
 def base_grid(request, context):
     
     context_base = {
+                    #CSS
                     'general_grid': getResourceCss('general_grid'),
+                    #JS
                     'jquery_sizes': getResourceJs('jquery_sizes'),
                     'jlayout_border': getResourceJs('jlayout_border'),
                     'jquery_layout': getResourceJs('jquery_layout')
@@ -72,20 +107,27 @@ def base_grid(request, context):
     context.update(context_base)
     return context
 
-def base_flex(request, context):
+
+def base_showj(request, context):
     
     context_base = {
-                    'general_flex': getResourceCss('general_flex'),
-                    'jquery_ui': getResourceJs('jquery_ui'),
-                    'jquery_ui_css': getResourceCss('jquery_ui'),
-                    'jsplumb': getResourceJs('jsplumb'),
-                    'jquery_sizes': getResourceJs('jquery_sizes'),
-                    'jlayout_border': getResourceJs('jlayout_border'),
-                    'jquery_layout': getResourceJs('jquery_layout'),
-                    'contentConfig': 'divided'
+                    #CSS
+                    'showj_css': getResourceCss('showj'),
+                    'smoothness': getResourceCss('ui_smoothness'),
+                    'demo_table_jui': getResourceCss('showj_demo_table_jui'),
+                    #JS
+                    'jquery_datatable': getResourceJs('jquery_datatables'),
+                    'jquerydataTables_colreorder': getResourceJs('jquery_colreorder'),
+                    'jquerydataTables_colreorder_resize': getResourceJs('jquery_colreorder_resize'),
+                    'jeditable': getResourceJs('jquery_editable'),
+                    'jquery_waypoints':getResourceJs('jquery_waypoints'),
+                    'jquery_hover_intent':getResourceJs('jquery_hover_intent'),
+                    'showj_js':getResourceJs('showj_utils'),
+                    'jquery_ui':getResourceJs('jquery_ui'),
+                    'transpose_lib':getResourceJs('transpose'),
                     }
     
-    context = base(request, context)
+    context = base_grid(request, context)
     context.update(context_base)
     return context
 

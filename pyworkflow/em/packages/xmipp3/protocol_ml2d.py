@@ -27,49 +27,52 @@
 This sub-package contains wrapper around ML2D Xmipp program
 """
 
-
 from pyworkflow.em import *  
 from pyworkflow.utils import *  
 import xmipp
 from convert import createXmippInputImages, readSetOfClasses2D, readSetOfParticles
 
-#from xmipp3 import XmippProtocol
-        
         
 class XmippProtML2D(ProtClassify):
-    """ Protocol to preprocess a set of micrographs in the project. """
+    """
+    Perform (multi-reference) 2D-alignment using 
+    a maximum-likelihood ( *ML* ) target function.
+    
+    Initial refereces can be generated from random subsets of the experimental 
+    images or can be provided by the user (this can introduce bias). The output 
+    of the protocol consists of the refined 2D classes (weighted averages over 
+    all experimental images). The experimental images are not altered at all.    
+    
+    Although the calculations can be rather time-consuming (especially for 
+    many, large experimental images and a large number of references we 
+    strongly recommend to let the calculations converge. 
+    """
     _label = 'ml2d'
-    _references = ['[[http://www.ncbi.nlm.nih.gov/pubmed/15808859][Scheres, et.al,  JMB (2005)]]',
-                   '[[http://www.ncbi.nlm.nih.gov/pubmed/16204112][Scheres, et.al,  Bioinformatics (2005)]]',
-                   '[[http://www.ncbi.nlm.nih.gov/pubmed/17937907][Scheres, et.al,  Structure (2007)]]'
-                   ]
     
     def __init__(self, **args):
-        ProtClassify.__init__(self, **args)
-        
+        ProtClassify.__init__(self, **args)        
         self.progId = "ml"
         self.oroot = ""
-        
+       
+    #--------------------------- DEFINE param functions --------------------------------------------   
     def _defineParams(self, form):
         form.addSection(label='Input')
         form.addParam('inputParticles', PointerParam, label="Input particles", important=True, 
                       pointerClass='SetOfParticles',
-                      help='Select the input images from the project.'
-                           'It should be a SetOfImages class')        
+                      help='Select the input images from the project.')        
         form.addParam('doGenerateReferences', BooleanParam, default=True,
                       label='Generate references?', 
                       help='If you set to *No*, you should provide references images'
                            'If *Yes*, the default generation is done by averaging'
-                           'subsets of the input images.')
+                           'subsets of the input images. (less bias introduced)')
         form.addParam('numberOfReferences', IntParam, default=3, condition='doGenerateReferences',
                       label='Number of references:',
                       help='Number of references to be generated.')
         form.addParam('referenceParticles', PointerParam, condition='not doGenerateReferences',
                       label="Reference image(s)", 
-                      pointerClass='SetOfImages',
-                      help='Image(s) that will serve as class references')
+                      pointerClass='SetOfParticles',
+                      help='Image(s) that will serve as initial 2D references')
         
-        #form.addSection(label='MLF-specific parameters', questionParam='doMlf')        
         form.addParam('doMlf', BooleanParam, default=False, important=True,
                       label='Use MLF2D instead of ML2D?')
         form.addParam('doCorrectAmplitudes', BooleanParam, default=True, condition='doMlf',
@@ -93,24 +96,22 @@ class XmippProtML2D(ProtClassify):
                            'have a handedness and may fall either face-up or face-down on the grid.'
                            )
         form.addParam('doFast', BooleanParam, default=True, condition='not doMlf',
-                      label='Use the fast version of this algorithm?',
-                      help='For details see (and please cite): \n '
-                           '*Scheres et al., Bioinformatics, 21 (Suppl. 2), ii243-ii244* \n '
-                           '[[http://dx.doi.org/10.1093/bioinformatics/bti1140][Info]]'
-                           )        
+                      label='Use the fast version?',
+                      help='If set to *Yes*, a fast approach will be used to avoid\n'
+                           'searching in the whole solutions space.             \n\n'
+                           'For details see (and please cite): \n' + self._getCite('Scheres2005b')
+                           )
         form.addParam('doNorm', BooleanParam, default=False,
                       label='Refine the normalization for each image?',
-                      help='This variant of the algorithm deals with normalization errors. \n '
-                           'For details see (and please cite): \n '
-                           '*Scheres et. al. (2009) J. Struc. Biol., Vol 166, Issue 2, May 2009* \n '
-                           '[[http://dx.doi.org/10.1016/j.jsb.2009.02.007][Info]]'
+                      help='This variant of the algorithm deals with normalization errors. \n\n'
+                           'For details see (and please cite): \n ' + self._getCite('Scheres2009b')
                            )             
         # Advance or expert parameters
-        form.addParam('maxIters', IntParam, default=100,# expertLevel=LEVEL_ADVANCED,
+        form.addParam('maxIters', IntParam, default=100, expertLevel=LEVEL_ADVANCED,
                       label='Maximum number of iterations',
                       help='If the convergence has not been reached after this number'
                            'of iterations, the process will be stopped.')   
-        form.addParam('psiStep', FloatParam, default=5.0,# expertLevel=LEVEL_ADVANCED,
+        form.addParam('psiStep', FloatParam, default=5.0, expertLevel=LEVEL_ADVANCED,
                       label='In-plane rotation sampling (degrees)',
                       help='In-plane rotation sampling interval (degrees).')          
         form.addParam('stdNoise', FloatParam, default=1.0, expertLevel=LEVEL_EXPERT,
@@ -121,61 +122,35 @@ class XmippProtML2D(ProtClassify):
                       help='Expected standard deviation for origin offset (pixels).') 
         
         form.addParallelSection(threads=2, mpi=2)
-            
-    def _getIterClasses(self, iter=None, block=None):
-        """ Return the classes metadata for this iteration.
-        block parameter can be 'info' or 'classes'.
-        """
-        if iter is None:
-            iter = self._lastIteration()
-        extra = self.oroot + 'extra'
-        mdFile = join(extra, 'iter%03d' % iter, 'iter_classes.xmd')
-        if block:
-            mdFile = block + '@' + mdFile
-        
-        return mdFile
-    
-    def _lastIteration(self):
-        """ Find the last iteration number """
-        if self.oroot == "":
-            self.oroot = self._getOroot()
-        iterNumber = 0        
-        while True:
-            if not exists(self._getIterClasses(iterNumber+1)):
-                break
-            iterNumber = iterNumber + 1
-        return iterNumber        
-    
-    def _getOroot(self):
-        
-        if self.doMlf:
-            self.progId += "f"
-        return self._getPath('%s2d_' % self.progId)       
-        
-    def _insertAllSteps(self):
-        """ Mainly prepare the command line for call ml(f)2d program"""
-        
+           
+    #--------------------------- INSERT steps functions --------------------------------------------  
+    def _insertAllSteps(self):        
         self.oroot = self._getOroot()
         self.program = "xmipp_%s_align2d" % self.progId       
         
         # Convert input images if necessary
-        imgsFn = createXmippInputImages(self, self.inputParticles.get())
+        self.imgsFn = createXmippInputImages(self, self.inputParticles.get())
         
-        params = ' -i %s --oroot %s' % (imgsFn, self.oroot)
-        # Number of references will be ignored if -ref is passed as expert option
+        self._insertMLStep()
+        self._insertFunctionStep('createOutputStep')
+
+    def _insertMLStep(self):
+        """ Mainly prepare the command line for call ml(f)2d program"""
+        params = ' -i %s --oroot %s' % (self.imgsFn, self.oroot)
         if self.doGenerateReferences:
             params += ' --nref %d' % self.numberOfReferences.get()
         else:
             self.inputRefs = self.referenceParticles.get()
             refsFn = createXmippInputImages(self, self.inputRefs, imagesFn='input_references.xmd')
             params += ' --ref %s' % refsFn
+            self.numberOfReferences.set(self.inputRefs.getSize())
         
         if self.doMlf:
             if not self.doCorrectAmplitudes:
                 params += ' --no_ctf'                    
             if not self.areImagesPhaseFlipped:
                 params += ' --not_phase_flipped'
-            if self.highResLimit.get() > 0:
+            if self.highResLimit > 0:
                 params += ' --limit_resolution 0 %f' % self.highResLimit.get()
             params += ' --sampling_rate %f' % self.inputParticles.get().getSamplingRate()
         else:
@@ -194,23 +169,78 @@ class XmippProtML2D(ProtClassify):
             params += ' --norm'
 
         self._insertRunJobStep(self.program, params)
-                
-        self._insertFunctionStep('createOutput')
         
-    def createOutput(self):
+    #--------------------------- STEPS functions --------------------------------------------       
+    def createOutputStep(self):
         imgSet = self.inputParticles.get()
-        classes2DSet = self._createSetOfClasses2D()
-        classes2DSet.setImages(self.inputParticles.get())
+        classes2DSet = self._createSetOfClasses2D(imgSet)
         readSetOfClasses2D(classes2DSet, self.oroot + 'classes.xmd')
         self._defineOutputs(outputClasses=classes2DSet)
         self._defineSourceRelation(imgSet, classes2DSet)
     
+    #--------------------------- INFO functions -------------------------------------------- 
+    def _validate(self):
+        errors = []
+        return errors
+    
+    def _citations(self):
+        cites = ['Scheres2005a']
+        
+        if self.doMlf:
+            cites.append('Scheres2007a')
+        elif self.doFast:
+            cites.append('Scheres2005b')
+            
+        if self.doNorm:
+            cites.append('Scheres2009b')
+            
+        return cites
+    
     def _summary(self):
         summary = []
-        if not hasattr(self, 'outputClasses'):
-            summary.append("Output classes not ready yet.")
-        else:
-            summary.append("Input Images: %s" % self.inputParticles.get().getNameId())
-            summary.append("Number of references: %d" % self.numberOfReferences.get())
-            summary.append("Output classes: %s" % self.outputClasses.get())
+        summary.append('Number of input images: *%d*' % self.inputParticles.get().getSize())
+        summary.append('Classified into *%d* classes' % self.numberOfReferences.get())
+        
+        if self.doMlf:
+            summary.append('- Used a ML in _Fourier-space_')
+        elif self.doFast:
+            summary.append('- Used _fast_, reduced search-space approach')
+
+        if self.doNorm:
+            summary.append('- Refined _normalization_ for each experimental image')
+            
         return summary
+    
+    def _methods(self):
+        return self._summary()  # summary is quite explicit and serve as methods
+    
+    #--------------------------- UTILS functions --------------------------------------------
+    def _getIterClasses(self, it=None, block=None):
+        """ Return the classes metadata for this iteration.
+        block parameter can be 'info' or 'classes'.
+        """
+        if it is None:
+            it = self._lastIteration()
+        extra = self.oroot + 'extra'
+        mdFile = join(extra, 'iter%03d' % it, 'iter_classes.xmd')
+        if block:
+            mdFile = block + '@' + mdFile
+        
+        return mdFile
+    
+    def _lastIteration(self):
+        """ Find the last iteration number """
+        if self.oroot == "":
+            self.oroot = self._getOroot()
+        it = 0        
+        while True:
+            if not exists(self._getIterClasses(it+1)):
+                break
+            it += 1
+        return it        
+    
+    def _getOroot(self):        
+        if self.doMlf:
+            self.progId += "f"
+        return self._getPath('%s2d_' % self.progId)  
+    
