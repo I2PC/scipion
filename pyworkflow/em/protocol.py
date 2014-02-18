@@ -503,7 +503,36 @@ class ProtCTFMicrographs(EMProtocol):
 class ProtPreprocessMicrographs(EMProtocol):
     pass
 
+
 class ProtPreprocessVolumes(EMProtocol):
+    """ This class will serve as a base for all protocol
+    that performs some operation on Volumes (i.e. filters, mask, resize, etc)
+    It is mainly defined by an inputVolumes and outputVolumes.
+    """
+    def _defineParams(self, form):
+        form.addSection(label=Message.LABEL_INPUT)
+        
+        form.addParam('inputVolumes', PointerParam, important=True,
+                      label=Message.LABEL_INPUT_VOLS, pointerClass='Volume, SetOfVolumes',
+                      help='Can be a density volume or a SetOfVolumes.')
+        # Hook that should be implemented in subclasses
+        self._defineProcessParams(form)
+        form.addParallelSection(threads=2, mpi=1)
+        
+    def _defineProcessParams(self, form):
+        """ This method should be implemented by subclasses
+        to add other parameter relatives to the specific operation."""
+        pass
+
+
+class ProtFilterVolumes(ProtPreprocessVolumes):
+    """ This is the base for the branch of filters, 
+    between the ProtPreprocessVolumes """
+    pass
+
+class ProtMaskVolumes(ProtPreprocessVolumes):
+    """ This is the base for the branch of mask, 
+    between the ProtPreprocessVolumes """
     pass
 
 
@@ -536,6 +565,12 @@ class ProtDenoiseParticles(ProtProcessParticles):
 
 class ProtFilterParticles(ProtProcessParticles):
     """ This is the base for the branch of filters, 
+    between the ProtPreprocessParticles """
+    pass
+
+
+class ProtMaskParticles(ProtProcessParticles):
+    """ This is the base for the branch of mask, 
     between the ProtPreprocessParticles """
     pass
 

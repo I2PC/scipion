@@ -47,7 +47,7 @@ class TestXmippCeateMask3D(TestXmippBase):
     
         print "Run create mask from volume"
         protMask1 = XmippProtCreateMask3D(source=0, threshold=0.4)
-        protMask1.volume.set(protImportVol.outputVolumes)
+        protMask1.volume.set(protImportVol.outputVolume)
         self.proj.launchProtocol(protMask1, wait=True)        
         
         self.assertIsNotNone(protMask1.outputMask, "There was a problem with create mask from volume")          
@@ -73,7 +73,7 @@ class TestXmippResolution3D(TestXmippBase):
 #         cls.protImport = cls.runImportParticles(pattern=images, samplingRate=1, checkStack=False)
 #         cls.iniVol = getInputPath('ml3dData', 'icoFiltered.vol')
     
-    def testCreateMask1(self):
+    def testCalculateResolution(self):
         print "Import volume 1"
         protImportVol1 = ProtImportVolumes(pattern=getInputPath('Test_Resolution_Xmipp', 'volume_1_iter_002.mrc'), samplingRate=9.896)
         self.proj.launchProtocol(protImportVol1, wait=True)
@@ -99,7 +99,7 @@ class TestXmippPreprocessVolumes(TestXmippBase):
 #         cls.protImport = cls.runImportParticles(pattern=images, samplingRate=1, checkStack=False)
 #         cls.iniVol = getInputPath('ml3dData', 'icoFiltered.vol')
     
-    def testCreateMask1(self):
+    def testPreprocessVolumes(self):
         print "Import volume"
         protImportVol1 = ProtImportVolumes(pattern=getInputPath('Test_Resolution_Xmipp', 'volume_1_iter_002.mrc'), samplingRate=9.896)
         self.proj.launchProtocol(protImportVol1, wait=True)
@@ -121,6 +121,70 @@ class TestXmippPreprocessVolumes(TestXmippBase):
         self.proj.launchProtocol(protPreprocessVol2, wait=True)        
          
         self.assertIsNotNone(protPreprocessVol2.outputVol, "There was a problem with preprocess a SetOfVolumes")
+
+
+class TestXmippFilterVolumes(TestXmippBase):
+    @classmethod
+    def setUpClass(cls):
+        setupProject(cls)
+        
+#         cls.protImport = cls.runImportParticles(pattern=images, samplingRate=1, checkStack=False)
+#         cls.iniVol = getInputPath('ml3dData', 'icoFiltered.vol')
+    
+    def testFilterVolumes(self):
+        print "Import volume"
+        protImportVol1 = ProtImportVolumes(pattern=getInputPath('Test_Resolution_Xmipp', 'volume_1_iter_002.mrc'), samplingRate=9.896)
+        self.proj.launchProtocol(protImportVol1, wait=True)
+
+        print "Import SetOfVolumes"
+        protImportVol2 = ProtImportVolumes(pattern=getInputPath('Test_Resolution_Xmipp', 'volume_?_iter_002.mrc'), samplingRate=9.896)
+        self.proj.launchProtocol(protImportVol2, wait=True)
+    
+        print "Run filter single volume"
+        protFilterVolume = XmippProtFilterVolumes(lowFreq=0.1, highFreq=0.25)
+        protFilterVolume.inputVolumes.set(protImportVol1.outputVolume)
+        self.proj.launchProtocol(protFilterVolume, wait=True)        
+        
+        self.assertIsNotNone(protFilterVolume.outputVol, "There was a problem with filter a volume")
+
+        print "Run filter SetOfVolumes"
+        protFilterVolumes = XmippProtFilterVolumes(lowFreq=0.1, highFreq=0.25)
+        protFilterVolumes.inputVolumes.set(protImportVol2.outputVolumes)
+        self.proj.launchProtocol(protFilterVolumes, wait=True)        
+        
+        self.assertIsNotNone(protFilterVolumes.outputVol, "There was a problem with filter SetOfVolumes")
+
+
+class TestXmippMaskVolumes(TestXmippBase):
+    @classmethod
+    def setUpClass(cls):
+        setupProject(cls)
+        
+#         cls.protImport = cls.runImportParticles(pattern=images, samplingRate=1, checkStack=False)
+#         cls.iniVol = getInputPath('ml3dData', 'icoFiltered.vol')
+    
+    def testMaskVolumes(self):
+        print "Import volume"
+        protImportVol1 = ProtImportVolumes(pattern=getInputPath('Test_Resolution_Xmipp', 'volume_1_iter_002.mrc'), samplingRate=9.896)
+        self.proj.launchProtocol(protImportVol1, wait=True)
+
+        print "Import SetOfVolumes"
+        protImportVol2 = ProtImportVolumes(pattern=getInputPath('Test_Resolution_Xmipp', 'volume_?_iter_002.mrc'), samplingRate=9.896)
+        self.proj.launchProtocol(protImportVol2, wait=True)
+    
+        print "Run mask single volume"
+        protMaskVolume = XmippProtMaskVolumes(radius=23)
+        protMaskVolume.inputVolumes.set(protImportVol1.outputVolume)
+        self.proj.launchProtocol(protMaskVolume, wait=True)        
+        
+        self.assertIsNotNone(protMaskVolume.outputVol, "There was a problem with applying mask to a volume")
+
+        print "Run mask SetOfVolumes"
+        protMaskVolumes = XmippProtMaskVolumes(geo=MASK3D_CROWN, innerRadius=18, outerRadius=23)
+        protMaskVolumes.inputVolumes.set(protImportVol2.outputVolumes)
+        self.proj.launchProtocol(protMaskVolumes, wait=True)        
+        
+        self.assertIsNotNone(protMaskVolumes.outputVol, "There was a problem with applying mask to SetOfVolumes")
 
 
 if __name__ == "__main__":

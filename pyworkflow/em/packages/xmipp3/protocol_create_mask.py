@@ -51,7 +51,7 @@ MORPHOLOGY_CLOSING=2
 MORPHOLOGY_OPENING=3
 
 
-class XmippProtCreateMask3D(ProtCreateMask3D,XmippGeometricalMask):
+class XmippProtCreateMask3D(ProtCreateMask3D,XmippGeometricalMask3D):
     """ Create a 3D mask from a geometrical description (Sphere, Box, Cylinder...), from a volume or from another class """
     _label = 'create mask'
     
@@ -78,7 +78,8 @@ class XmippProtCreateMask3D(ProtCreateMask3D,XmippGeometricalMask):
                       condition='%s and segmentationType==%d'%(isSegmentation,SEGMENTATION_DALTON))
         
         # For geometrical sources
-        XmippGeometricalMask.defineParams(self, form, isGeometry='source==%d'%SOURCE_GEOMETRY, addSize=True)
+        form.addParam('samplingRate', FloatParam, default=1, condition='source==%d' % SOURCE_GEOMETRY, label="Sampling Rate (A/px)")
+        XmippGeometricalMask3D.defineParams(self, form, isGeometry='source==%d' % SOURCE_GEOMETRY, addSize=True)
 
         # For another mask
         form.addParam('inputMask', PointerParam, pointerClass="VolumeMask", label="Input mask",condition='source==%d'%SOURCE_MASK)
@@ -151,7 +152,7 @@ class XmippProtCreateMask3D(ProtCreateMask3D,XmippGeometricalMask):
         
         # Create the mask
         args = '-i %s ' % self.maskFile
-        args+=XmippGeometricalMask.argsForTransformMask(self,size)
+        args+=XmippGeometricalMask3D.argsForTransformMask(self,size)
         args += ' --create_mask %s' % self.maskFile
         self.runJob("xmipp_transform_mask", args)
         return [self.maskFile]
@@ -215,7 +216,7 @@ class XmippProtCreateMask3D(ProtCreateMask3D,XmippGeometricalMask):
         elif self.source==SOURCE_GEOMETRY:
             size=self.size.get()
             messages.append("   Mask of size: %d x %d x %d"%(size,size,size))
-            messages+=XmippGeometricalMask.summary(self)
+            messages+=XmippGeometricalMask3D.summary(self)
 
         messages.append("*Mask processing*")
         if self.doSmall.get():
@@ -262,7 +263,7 @@ class XmippProtCreateMask3D(ProtCreateMask3D,XmippGeometricalMask):
         elif self.source == SOURCE_GEOMETRY:
             size=self.size.get()
             messages.append("We created a mask of size: %d x %d x %d voxels. "%(size,size,size))
-            messages+=XmippGeometricalMask.methods(self)
+            messages+=XmippGeometricalMask3D.methods(self)
 
         if self.doSmall.get():
             messages.append("We removed components smaller than %d voxels."%(self.smallSize.get()))

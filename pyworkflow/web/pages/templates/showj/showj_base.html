@@ -59,10 +59,10 @@ $(document).ready(function(){
 	{% if form.mode.value != 'column' and dataset.getNumberSlices > 0 %}
 	setImageSize(true)
 	initializeZoomEvents();
-	{% if form.mode.value == 'gallery' %}
-	initializeColRowModeEvents('{{form.mode.value}}')
-	initializeColsRowsEvents()
-	{% endif %}
+		{% if form.mode.value == 'gallery' %}
+		initializeColRowModeEvents('{{form.mode.value}}')
+		initializeColsRowsEvents()
+		{% endif %}
 	{% endif %}
 	initializeComboBoxEvents('{{defaultZoom}}')
 	initializeArrowEvents()

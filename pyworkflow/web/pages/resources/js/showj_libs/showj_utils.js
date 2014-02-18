@@ -217,7 +217,7 @@ function updateGalleryLayout(cols, rows, setElement){
 }
 
 function updateMainContainerDim(colVal){
-	imgContainerWidth =$(".img_container").width() + (parseInt($(".img_container").css("padding-right")) * 2)
+	imgContainerWidth = $(".img_container").width() + (parseInt($(".img_container").css("padding-right")) * 2)
 	sectionWidth = colVal * imgContainerWidth
 	$("section").width(sectionWidth)
 	

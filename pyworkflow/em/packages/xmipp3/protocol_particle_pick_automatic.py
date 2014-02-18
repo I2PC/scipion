@@ -39,9 +39,9 @@ MICS_SAMEASPICKING = 0
 MICS_OTHER = 1
 
 class XmippParticlePickingAutomatic(ProtParticlePicking, XmippProtocol):
-    """Protocol to pick particles automatically in the project"""
+    """Protocol to pick particles automatically in a set of micrographs of the project using previous training """
     _label = 'automatic picking'
-    _references = ['[[http://www.ncbi.nlm.nih.gov/pubmed/23958728][Abrishami, et.al,  Bioinformatics (2013)]]']
+  
     
     filesToCopy = ['model_training.txt', 'model_svm.txt', 'model_pca_model.stk', 'model_rotpca_model.stk', 
                'model_particle_avg.xmp', 'config.xmd', 'templates.stk']
@@ -49,12 +49,13 @@ class XmippParticlePickingAutomatic(ProtParticlePicking, XmippProtocol):
     
     def __init__(self, **args):        
         ProtParticlePicking.__init__(self, **args)
+        self.stepsExecutionMode = STEPS_PARALLEL
         
     def _defineParams(self, form):
     
         form.addSection(label='Input')
         form.addParam('xmippParticlePicking', PointerParam, label="Xmipp particle picking run",
-                      pointerClass='XmippProtParticlePicking', pointerCondition='isFinished',
+                      pointerClass='XmippProtParticlePicking', #pointerCondition='isFinished',
                       help='Select the previous xmipp particle picking run.')
         form.addParam('micsToPick', EnumParam, choices=['Same as supervised', 'Other'], 
                       default=0, label='Micrographs to pick', display=EnumParam.DISPLAY_LIST,
@@ -63,7 +64,7 @@ class XmippParticlePickingAutomatic(ProtParticlePicking, XmippProtocol):
                       'will be used at this point. If you select Other, you can select another set of micrograph'
                       '(normally from the same specimen) and pick them completely automatic using the trainned picker.')
         form.addParam('inputMicrographs', PointerParam, label="Micrographs",
-                      pointerClass='SetOfMicrographs', condition='micsToPick == 1',
+                      pointerClass='SetOfMicrographs', condition='micsToPick==%d' % MICS_OTHER,
                       help='Select other set of micrographs to pick using the trained picker.')
         form.addParam('memory', FloatParam, default=2,
                    label='Memory to use (In Gb)', expertLevel=2)        
@@ -73,16 +74,8 @@ class XmippParticlePickingAutomatic(ProtParticlePicking, XmippProtocol):
         
         # Get pointer to input micrographs 
         self.particlePickingRun = self.xmippParticlePicking.get()
-
-        # Get particle picking boxsize from the previous run
-        boxSize = self.particlePickingRun.outputCoordinates.getBoxSize()
         
-        modelRoot = self._getExtraPath('model')
-        
-        # Copy training model files to current run
-        for file in self.filesToCopy:
-            copyFile(self.particlePickingRun._getExtraPath(file), self._getExtraPath(file))
-        
+        copyId = self._insertFunctionStep('copyInputFilesStep')
         # Get micrographs to pick
         if self.micsToPick.get() == MICS_SAMEASPICKING:
             self.micrographs = self.particlePickingRun.inputMicrographs.get()
@@ -91,37 +84,51 @@ class XmippParticlePickingAutomatic(ProtParticlePicking, XmippProtocol):
         else:
             self.micrographs = self.inputMicrographs.get()
             
+        deps = []
         for mic in self.micrographs:
-            micPath = mic.getFileName()
-            micName = removeBaseExt(micPath)
-            proceed = True
-            if self.micsToPick == MICS_SAMEASPICKING:
-                fnPos = self.particlePickingRun._getExtraPath(replaceBaseExt(micPath, "pos"))
-                if exists(fnPos):
-                    blocks = xmipp.getBlocksInMetaDataFile(fnPos)
-                    copy = True
-                    if 'header' in blocks:
-                        mdheader = xmipp.MetaData("header@" + fnPos)
-                        state = mdheader.getValue(xmipp.MDL_PICKING_MICROGRAPH_STATE, mdheader.firstObject())
-                        if state == "Available":
-                            copy = False
-                    if copy:
-                        # Copy manual .pos file of this micrograph
-                        copyFile(fnPos, self._getExtraPath(basename(fnPos)))
-                        proceed = False            
-    
-            if proceed:
-                oroot = self._getExtraPath(micName)
-                cmd = "-i %(micPath)s --particleSize %(boxSize)d --model %(modelRoot)s --outputRoot %(oroot)s --mode autoselect" % locals()
-                #TODO: What is this?
+            stepId = self._insertFunctionStep('autopickMicrographStep', mic.getFileName(), prerequisites=[copyId])
+            deps.append(stepId)
+                    
+        self._insertFunctionStep('createOutputStep', prerequisites=deps)
+        
+
+    def copyInputFilesStep(self):
+        # Copy training model files to current run
+        for f in self.filesToCopy:
+            copyFile(self.particlePickingRun._getExtraPath(f), self._getExtraPath(f))
+        
+    def autopickMicrographStep(self, micPath):
+        # Get particle picking boxsize from the previous run
+        boxSize = self.particlePickingRun.outputCoordinates.getBoxSize()
+        modelRoot = self._getExtraPath('model')
+
+        micName = removeBaseExt(micPath)
+        proceed = True
+        if self.micsToPick == MICS_SAMEASPICKING:
+            fnPos = self.particlePickingRun._getExtraPath(replaceBaseExt(micPath, "pos"))
+            if exists(fnPos):
+                blocks = xmipp.getBlocksInMetaDataFile(fnPos)
+                copy = True
+                if 'header' in blocks:
+                    mdheader = xmipp.MetaData("header@" + fnPos)
+                    state = mdheader.getValue(xmipp.MDL_PICKING_MICROGRAPH_STATE, mdheader.firstObject())
+                    if state == "Available":
+                        copy = False
+                if copy:
+                    # Copy manual .pos file of this micrograph
+                    copyFile(fnPos, self._getExtraPath(basename(fnPos)))
+                    proceed = False            
+
+        if proceed:
+            oroot = self._getExtraPath(micName)
+            args = "-i %(micPath)s --particleSize %(boxSize)d --model %(modelRoot)s --outputRoot %(oroot)s --mode autoselect" % locals()
+            #TODO: What is this?
 #                if self.Fast:
 #                    cmd += " --fast "
-                self._insertRunJobStep("xmipp_micrograph_automatic_picking", cmd)
-                    
-        # Insert step to create output objects       
-        self._insertFunctionStep('createOutput')
-            
-    def createOutput(self):
+            self.runJob("xmipp_micrograph_automatic_picking", args)
+        
+                  
+    def createOutputStep(self):
         posDir = self._getExtraPath()
         coordSet = self._createSetOfCoordinates()
         coordSet.setMicrographs(self.micrographs)
@@ -132,11 +139,12 @@ class XmippParticlePickingAutomatic(ProtParticlePicking, XmippProtocol):
         
     def _validate(self):
         validateMsgs = []
+   
         srcPaths = [self.xmippParticlePicking.get()._getExtraPath(k) for k in self.filesToCopy]
         print srcPaths
         # Check that all needed files exist
         if missingPaths(*srcPaths):
-            validateMsgs.append('Input particle picking run is not valid.')
+            validateMsgs.append('Input supervised picking run is not valid.')
             
         # If other set of micrographs is provided they should have same sampling rate and acquisition
         if self.micsToPick.get() == MICS_OTHER:
@@ -154,3 +162,7 @@ class XmippParticlePickingAutomatic(ProtParticlePicking, XmippProtocol):
             summary.append("Previous run: " + self.xmippParticlePicking.get().getNameId())
             summary.append("Number of particles picked: %d (from %d micrographs)" % (self.outputCoordinates.getSize(), self.inputMicrographs.get().getSize()))
         return summary
+    
+    def _citations(self):
+        return ['Abrishami2013']
+    

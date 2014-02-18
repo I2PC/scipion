@@ -748,7 +748,7 @@ class ProtocolsView(tk.Frame):
                     viewerclass = viewers[0]
                     print viewerclass
                     firstViewer = viewerclass(project=self.project) # Instanciate the first available viewer
-                    firstViewer.visualize(output, windows=self.windows)
+                    firstViewer.visualize(output, windows=self.windows, protocol=prot)
             
         
     def _analyzeResultsClicked(self, e=None):
