@@ -147,6 +147,7 @@ def showj(request, inputParameters=None, extraParameters=None, firstTime=False):
     _stats = None
     dataset = None
     tableDataset = None
+    volPath = None
     
     if firstTime is False:
         inputParameters = request.POST.copy()
@@ -214,6 +215,7 @@ def createContextShowj(request, inputParameters, dataset, tableDataset, paramSta
         context.update({"showj_alt_js": getResourceJs('showj_' + inputParameters['mode'] + '_utils')})
         
     return_page = 'showj/%s%s%s' % ('showj_', showjForm.data['mode'], '.html')
+#    return_page = 'showj/showj_base.html'
         
     return context, return_page
     
@@ -460,11 +462,12 @@ def create_context_volume(request, inputParameters, volPath, param_stats):
     
     if inputParameters['mode'] == 'volume_astex':
         context.update(create_context_astex(request, inputParameters['typeVolume'], volPath))
+
+#   'volType': 2, #0->byte, 1 ->Integer, 2-> Float
         
     elif inputParameters['mode'] == 'volume_chimera':   
         context.update(create_context_chimera(volPath))
         
-#               'volType': 2, #0->byte, 1 ->Integer, 2-> Float
 
     return context
         

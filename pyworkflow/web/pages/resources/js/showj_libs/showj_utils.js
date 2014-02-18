@@ -90,6 +90,31 @@
  ******************************************************************************/
 
  /** METHODS ******************************************************************/
+
+ 
+function loadTemplateMode(mode){
+
+	var template = ""
+	if (mode=="table"){
+		template = "/showj_table/"
+	}
+	
+	$(function() {
+		$.ajax({
+			type: "GET",
+			url : template,
+			dataType: "html",
+			success : function(html) {
+				$('div#content_view').html(html);
+			},
+			error: function(){
+				alert("error");
+			}
+			
+		});
+  	});
+}
+
 function reloadImages(forceRecallServer){
 	$.waypoints('destroy')
 	initializeImageLoad(forceRecallServer)
