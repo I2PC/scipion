@@ -44,7 +44,6 @@ import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippMessage;
 import xmipp.utils.XmippPopupMenuCreator;
 import xmipp.viewer.FloatRenderer;
-import xmipp.viewer.models.MetadataGalleryTableModel.MdRowImageLoader;
 import xmipp.viewer.windows.ImagesWindowFactory;
 
 public class MetadataTableModel extends MetadataGalleryTableModel {
@@ -225,17 +224,9 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 		try {
 			ColumnInfo ci = visibleLabels.get(col);
 			if (ci.allowRender && data.isImageFile(ci)) {
-                            
-				// new XmippImageWindow(data.window, new MdRowImageLoader(row,
-				// ci.getLabel()));
-                            
-				ImagePlusLoader loader = new MdRowImageLoader(row,
-						ci.getLabel());
-                                
-				if (getNormalized())
-					loader.setNormalize(normalize_min, normalize_max);
-				ImagesWindowFactory.openXmippImageWindow(data.window, loader,
-						loader.allowsPoll());
+                                int index = getIndex(row, col);
+				String file = getImageFilename(index, ci.getLabel());
+                                openXmippImageWindow(file);
 				return true;
 			}
 		} catch (Exception e) {
