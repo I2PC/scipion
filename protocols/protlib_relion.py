@@ -523,6 +523,7 @@ class ProtRelionBase(XmippProtocol):
             self.maxInv = max(resolution_inv)
             a.plot(resolution_inv, frc)
             a.xaxis.set_major_formatter(self._plotFormatter)
+            a.set_ylim([-0.1, 1.1])
             return True
         return False
             
