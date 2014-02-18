@@ -77,6 +77,7 @@ class TestConversions(unittest.TestCase):
         acquisition = Acquisition(magnification=60000, voltage=300,
                                   sphericalAberration=2., amplitudeContrast=0.07)
         mdXmipp = xmipp.MetaData()
+        imgSet.setAcquisition(acquisition)
 
         for i in range(n):
             p = Particle()
@@ -99,9 +100,7 @@ class TestConversions(unittest.TestCase):
             
         mdScipion = xmipp.MetaData()
         setOfParticlesToMd(imgSet, mdScipion)
-        #print "mdScipion", mdScipion
-        #print "mdXmipp", mdXmipp
-        #self.assertEqual(mdScipion, mdXmipp, "metadata are not the same")
+        self.assertEqual(mdScipion, mdXmipp, "metadata are not the same")
 
     def test_writeSetOfDefocusGroups(self):
         #reference metadata
