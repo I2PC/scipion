@@ -971,7 +971,11 @@ class Protocol(Step):
         """ Return the _bibtex from the package . """
         return getattr(self._package, "_bibtex", {})
      
-    def __getCiteText(self, cite, useKeyLabel=False):
+    def _getCite(self, citeStr):
+        bibtex = self.__getPackageBibTex()
+        return self._getCiteText(bibtex[citeStr])
+    
+    def _getCiteText(self, cite, useKeyLabel=False):
         # Get the first author surname
         if useKeyLabel:
             label = cite['id']
@@ -989,7 +993,7 @@ class Protocol(Step):
         newCitations = []
         for c in citations:
             if c in bibtex:
-                newCitations.append(self.__getCiteText(bibtex[c]))
+                newCitations.append(self._getCiteText(bibtex[c]))
             else:
                 newCitations.append(c)
         return newCitations
@@ -1031,7 +1035,7 @@ class Protocol(Step):
             for m in baseMethods:
                 for bibId, cite in bibtex.iteritems():
                     k = '[%s]' % bibId
-                    link = self.__getCiteText(cite, useKeyLabel=True)
+                    link = self._getCiteText(cite, useKeyLabel=True)
                     m = m.replace(k, link)
                 parsedMethods.append(m)
             baseMethods = parsedMethods

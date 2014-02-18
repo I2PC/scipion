@@ -101,12 +101,12 @@ keywords = "2D/3D registration, Splines, 3DEM, Angular assignment "
 }
 
 @article{Nogales2013,
-  title={3DEM Loupe: analysis of macromolecular dynamics using structures from electron microscopy},
-  author={Nogales-Cadenas, R. and Jonic, S. and Tama, F. and Arteni, A. A. and Tabas-Madrid, D. and V{\'a}zquez, M. and Pascual-Montano, A. and Sorzano, C. O. S.},
-  journal={Nucleic acids research},
-  year={2013},
-  publisher={Oxford Univ Press},
-  doi='http://dx.doi.org/10.1093/nar/gkt385'
+title={3DEM Loupe: analysis of macromolecular dynamics using structures from electron microscopy},
+author={Nogales-Cadenas, R. and Jonic, S. and Tama, F. and Arteni, A. A. and Tabas-Madrid, D. and V{\'a}zquez, M. and Pascual-Montano, A. and Sorzano, C. O. S.},
+journal={Nucleic acids research},
+year={2013},
+publisher={Oxford Univ Press},
+doi='http://dx.doi.org/10.1093/nar/gkt385'
 }
 
 @article{Otsu1979,
@@ -119,6 +119,76 @@ year = "1979",
 issn = "0018-9472",
 doi = "http://dx.doi.org/10.1109/TSMC.1979.4310076",
 author = "Otsu, N.",
+}
+
+@article{Scheres2005a,
+title = "Maximum-likelihood Multi-reference Refinement for Electron Microscopy Images ",
+journal = "JMB",
+volume = "348",
+number = "1",
+pages = "139 - 149",
+year = "2005",
+issn = "0022-2836",
+doi = "http://dx.doi.org/10.1016/j.jmb.2005.02.031",
+url = "http://www.sciencedirect.com/science/article/pii/S0022283605001932",
+author = "Scheres, Sjors H.W. and Valle, Mikel and Rafael Nuñez and Carlos O.S. Sorzano and Roberto Marabini and Gabor T. Herman and Jose-Maria Carazo",
+keywords = "maximum-likelihood, multi-reference refinement, single-particles, 2D-alignment, classification "
+}
+
+@article{Scheres2005b,
+author = {Scheres, Sjors H.W. and Valle, Mikel and Carazo, José-María},
+title = {Fast maximum-likelihood refinement of electron microscopy images.},
+journal = {Bioinformatics},
+year = {2005},
+volume = {21 Suppl 2},
+pages = {ii243--ii244},
+month = {Sep},
+doi = {http://dx.doi.org/10.1093/bioinformatics/bti1140},
+url = {http://dx.doi.org/10.1093/bioinformatics/bti1140},
+keywords = {Algorithms; Cryoelectron Microscopy, methods; Image Enhancement, methods;
+  Image Interpretation, Computer-Assisted, methods; Imaging, Three-Dimensional,
+  methods; Likelihood Functions; Reproducibility of Results; Sensitivity
+  and Specificity}
+}
+
+@article{Scheres2007,
+  author = {Scheres, Sjors H W. and Núñez-Ramírez, Rafael and Gómez-Llorente,
+    Yacob and {San Martín}, Carmen and Eggermont, Paul P B. and Carazo,
+    José María},
+  title = {Modeling experimental image formation for likelihood-based classification
+    of electron microscopy data.},
+  journal = {Structure},
+  year = {2007},
+  volume = {15},
+  pages = {1167--1177},
+  number = {10},
+  month = {Oct},
+  doi = {http://dx.doi.org/10.1016/j.str.2007.09.003},
+  url = {http://dx.doi.org/10.1016/j.str.2007.09.003},
+  keywords = {Algorithms; Antigens, Polyomavirus Transforming, chemistry/ultrastructure;
+    Archaeal Proteins, chemistry/ultrastructure; Cryoelectron Microscopy,
+    methods/statistics /&/ numerical data; DNA Helicases, chemistry/ultrastructure;
+    Escherichia coli, metabolism; Imaging, Three-Dimensional; Likelihood
+    Functions; Models, Molecular; Models, Statistical; Protein Conformation;
+    Ribosomes, chemistry/ultrastructure}
+}
+}
+
+@article{Scheres2009b,
+  author = {Scheres, Sjors H W. and Carazo, José María},
+  title = {Introducing robustness to maximum-likelihood refinement of electron-microscopy
+    data.},
+  journal = {Acta Crystallogr D Biol Crystallogr},
+  year = {2009},
+  volume = {65},
+  pages = {672--678},
+  number = {Pt 7},
+  month = {Jul},
+  doi = {http://dx.doi.org/10.1107/S0907444909012049},
+  url = {http://dx.doi.org/10.1107/S0907444909012049},
+  keywords = {Algorithms; Cryoelectron Microscopy; Escherichia coli, chemistry;
+    Likelihood Functions; Models, Molecular; Peptide Elongation Factor
+    G, chemistry/ultrastructure; Protein Structure, Tertiary}
 }
 
 @incollection{Sorzano2013,

@@ -34,29 +34,24 @@ import xmipp
 import xmipp3
 from convert import createXmippInputImages, readSetOfClasses2D
 from glob import glob
-        
-        
-class XmippProtKerdensom(ProtClassify):
-    """ Protocol to align a set of particles. """
-    _label = 'kerdensom'
-    _references = ['[[http://www.ncbi.nlm.nih.gov/pubmed/11472094][Pascual-Montano, et.al,  JSB (2001)]]',
-                   '[[http://www.ncbi.nlm.nih.gov/pubmed/12160707][Pascual-Montano, et.al,  JSB (2002)]]'
-                   ]
 
+
+class KendersomBaseClassify(ProtClassify):
+    """ Class to create a base template for Kendersom and rotational spectra protocols that share
+    a common structure. 
+    """
+    
     def _defineParams(self, form):
         form.addSection(label='Input')
         form.addParam('inputImages', PointerParam, label="Input images", important=True, 
                       pointerClass='SetOfParticles', pointerCondition='hasAlignment',
                       help='Select the input images from the project.'
                            'It should be a SetOfParticles class')
-        self._addParams(form)
-        
-    def _addParams(self, form):
         form.addParam('useMask', BooleanParam, default=False,
                       label='Use a Mask ?', 
                       help='If you set to *Yes*, you should provide a mask')
         form.addParam('Mask', StringParam , condition='useMask',
-                      label="Mask", 
+                      label="Mask",
                       help='Mask image will serve to enhance the classification')
         form.addParam('SomXdim', IntParam, default=7,
                       label='X-dimension of the map:')
@@ -78,19 +73,14 @@ class XmippProtKerdensom(ProtClassify):
                       label="Additional parameters:", 
                       help='Additional parameters for kerdensom program. \n For a complete description'
                       'See [[http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/KerDenSOM][KerDenSOM]]')
-        
-        
+        self._addParams(form)
+    
     def _insertAllSteps(self):
-        self._prepareParams()       
-        self._insertImgToVector()
-        self._insertKerdensom()
-        self._insertVectorToImg()
-        self._insertFunctionStep('rewriteClassBlock')
-        self._insertFunctionStep('createOutput')
+        self._defineParamsStep()
+        self._defineProccesStep()
+        self._insertFunctionStep('createOutputStep')
     
-    
-    def _prepareParams(self):
-        
+    def _defineParamsStep(self):
         # Convert input images if necessary
         imgsFn = createXmippInputImages(self, self.inputImages.get())
         
@@ -108,51 +98,14 @@ class XmippProtKerdensom(ProtClassify):
                         'classes': self._getExtraPath("classes.stk"),
                         'kvectors': self._getExtraPath("kerdensom_vectors.xmd"),
                         'kclasses': self._getExtraPath("kerdensom_classes.xmd")
-                       }    
-        
-    def _insertImgToVector(self):
-        """ Insert runJob for convert into a vector Md """
-        args = ' -i %(imgsFn)s -o %(vectors)s '
-        if self.useMask:
-            args += ' --mask binary_file %(mask)s'
-        
-        self._insertRunJobStep("xmipp_image_vectorize", args % self._params)
+                       }
 
-    def _insertKerdensom(self):
+    def _insertKerdensomStep(self):
         args = '-i %(vectors)s --oroot %(oroot)s --xdim %(SomXdim)d --ydim %(SomYdim)d' + \
                ' --deterministic_annealing %(SomSteps)f %(SomReg0)f %(SomReg1)f %(extraParams)s'
         self._insertRunJobStep("xmipp_classify_kerdensom", args % self._params)
 #        deleteFiles([self._getExtraPath("vectors.xmd"),self._getExtraPath("vectors.vec")], True)
-   
-    def _insertVectorToImg(self):
-        args = ' -i %(kvectors)s -o %(classes)s' 
-        if self.useMask:
-            args += ' --mask binary_file %(mask)s'
-        self._insertRunJobStep("xmipp_image_vectorize", args % self._params)
-#        deleteFiles([self._getExtraPath("kerdensom_vectors.xmd"),self._getExtraPath("kerdensom_vectors.vec")], True)
-
-    def rewriteClassBlock(self):
-        fnClass = "classes@%(kclasses)s" % self._params
-        fnClassStack = self._params['classes']
-        md = xmipp.MetaData(fnClass)
-        # TODO: Check if following is necessary
-        counter = 1
-        for objId in md:
-            md.setValue(xmipp.MDL_IMAGE,"%06d@%s"%(counter,fnClassStack), objId)
-            counter += 1
-        md.write(fnClass, xmipp.MD_APPEND)
     
-    def createOutput(self):
-        """ Store the kenserdom object 
-        as result of the protocol. 
-        """
-        imgSet = self.inputImages.get()
-        classes2DSet = self._createSetOfClasses2D()
-        classes2DSet.setImages(self.inputImages.get())
-        readSetOfClasses2D(classes2DSet, self._params['kclasses'])
-        self._defineOutputs(outputClasses=classes2DSet)
-        self._defineSourceRelation(imgSet, classes2DSet)
-
     def _validate(self):
         errors = []
         mask = self.Mask.get()
@@ -166,12 +119,74 @@ class XmippProtKerdensom(ProtClassify):
             else:
                 errors.append("Please, enter a mask file")
         return errors
-        
+    
+    def createOutputStep(self):
+        """ Store the kenserdom object 
+        as result of the protocol. 
+        """
+        imgSet = self.inputImages.get()
+        classes2DSet = self._createSetOfClasses2D(self.inputImages.get())
+        readSetOfClasses2D(classes2DSet, self._params['kclasses'])
+        self._defineOutputs(outputClasses=classes2DSet)
+        self._defineSourceRelation(imgSet, classes2DSet)
+    
     def _summary(self):
         summary = []
         if not hasattr(self, 'outputClasses'):
             summary.append("Output classification not ready yet.")
         else:
             summary.append("Input Images: %s" % self.inputImages.get().getNameId())
-            summary.append("Output Classified Images: %s" % self.outputClasses.get())
+            summary.append("Output Classified Images: %s" % self.outputClasses)
         return summary
+    
+    def _methods(self):
+        messages = []      
+        messages.append("*Kendersom classification*")
+        messages.append('The particles %s were classified to obtain the classes %s.' % (self.inputImages.get().getNameId(), self.outputClasses.getNameId()))
+        return messages
+
+
+class XmippProtKerdensom(KendersomBaseClassify):
+    """ Protocol to align a set of particles. """
+    _label = 'kerdensom'
+    
+    def __init__(self, **args):
+        KendersomBaseClassify.__init__(self, **args)
+    
+    def _addParams(self, form):
+        pass
+    
+    def _defineProccesStep(self):
+        self._insertImgToVectorStep()
+        self._insertKerdensomStep()
+        self._insertVectorToImgStep()
+        self._insertFunctionStep('rewriteClassBlockStep')
+    
+    def _insertImgToVectorStep(self):
+        """ Insert runJob for convert into a vector Md """
+        args = ' -i %(imgsFn)s -o %(vectors)s '
+        if self.useMask:
+            args += ' --mask binary_file %(mask)s'
+        
+        self._insertRunJobStep("xmipp_image_vectorize", args % self._params)
+   
+    def _insertVectorToImgStep(self):
+        args = ' -i %(kvectors)s -o %(classes)s' 
+        if self.useMask:
+            args += ' --mask binary_file %(mask)s'
+        self._insertRunJobStep("xmipp_image_vectorize", args % self._params)
+#        deleteFiles([self._getExtraPath("kerdensom_vectors.xmd"),self._getExtraPath("kerdensom_vectors.vec")], True)
+
+    def rewriteClassBlockStep(self):
+        fnClass = "classes@%(kclasses)s" % self._params
+        fnClassStack = self._params['classes']
+        md = xmipp.MetaData(fnClass)
+        # TODO: Check if following is necessary
+        counter = 1
+        for objId in md:
+            md.setValue(xmipp.MDL_IMAGE,"%06d@%s"%(counter,fnClassStack), objId)
+            counter += 1
+        md.write(fnClass, xmipp.MD_APPEND)
+    
+    def _citations(self):
+        return ['Montano2001', 'Montano2002']

@@ -161,30 +161,13 @@ def showj(request, inputParameters=None, extraParameters=None):
 def createContext(dataset, tableDataset, tableLayoutConfiguration, request, showjForm):
     #Create context to be send
     
-    context = {'showj_css': getResourceCss('showj'),
-            'smoothness': getResourceCss('ui_smoothness'),
-            'demo_table_jui': getResourceCss('showj_demo_table_jui'),
-           
-            'logo': getResourceIcon('logo_scipion'),
-            'logo_transparent': getResourceIcon('logo_scipion_transparent'),
-           
-            'jquery_datatable': getResourceJs('jquery_datatables'),
-            'jquerydataTables_colreorder': getResourceJs('jquery_colreorder'),
-            'jquerydataTables_colreorder_resize': getResourceJs('jquery_colreorder_resize'),
-            'jeditable': getResourceJs('jquery_editable'),
-            'jquery_waypoints':getResourceJs('jquery_waypoints'),
-            'jquery_hover_intent':getResourceJs('jquery_hover_intent'),
-            'showj_js':getResourceJs('showj_utils'),
-            'jquery_ui':getResourceJs('jquery_ui'),
-            
-            'transpose_lib':getResourceJs('transpose'),
-           
+    context = {
             'imageDimensions': request.session['imageDimensions'] if 'imageDimensions' in request.session else 0,
             'defaultZoom': request.session['defaultZoom'] if 'defaultZoom' in request.session else 0,
             'projectName': request.session['projectName'],
-            
             'form': showjForm
             }
+    
     
     if dataset is not None:
         context.update({'dataset': dataset})
@@ -195,9 +178,11 @@ def createContext(dataset, tableDataset, tableLayoutConfiguration, request, show
                                                                cls=ColumnLayoutConfigurationEncoder)})
     if tableDataset is not None:
         context.update({'tableDataset': tableDataset})
-
-    context = base_grid(request, context)
     
+    # showj_base context
+    context = base_showj(request, context)
+    context.update(context)
+
     return context
 
 def getExtraParameters(extraParameters, tableDataset):
@@ -437,7 +422,8 @@ def create_context_astex(request, typeVolume, volPath):
     createLink(volPath, volLinkPath)
     volLink = os.path.join('/', settings.STATIC_ROOT, 'astex', 'tmp', linkName)
     
-    return {"volLink":volLink}
+    return {"volLink":volLink, 
+            "jquery_ui_css": getResourceCss("jquery_ui")}
     
     
 def create_context_chimera(volPath):

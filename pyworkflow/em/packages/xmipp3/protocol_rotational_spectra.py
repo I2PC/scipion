@@ -1,17 +1,45 @@
+# **************************************************************************
+# *
+# * Authors:     Josue Gomez Blanco (jgomez@cnb.csic.es)
+# *
+# * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
+# *
+# * This program is free software; you can redistribute it and/or modify
+# * it under the terms of the GNU General Public License as published by
+# * the Free Software Foundation; either version 2 of the License, or
+# * (at your option) any later version.
+# *
+# * This program is distributed in the hope that it will be useful,
+# * but WITHOUT ANY WARRANTY; without even the implied warranty of
+# * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# * GNU General Public License for more details.
+# *
+# * You should have received a copy of the GNU General Public License
+# * along with this program; if not, write to the Free Software
+# * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+# * 02111-1307  USA
+# *
+# *  All comments concerning this program package may be sent to the
+# *  e-mail address 'jgomez@cnb.csic.es'
+# *
+# **************************************************************************
+"""
+This sub-package contains wrapper around rotational spectra Xmipp program
+"""
+
 from pyworkflow.em import *  
 import xmipp
 
 import xmipp, xmipp3
-from protocol_kerdensom import *
+from protocol_kerdensom import KendersomBaseClassify
 
         
-class XmippProtRotSpectra(XmippProtKerdensom):
+class XmippProtRotSpectra(KendersomBaseClassify):
     """Protocol to compute the rotational spectrum of the given particles"""
     _label = 'rotational spectra'
-    _reference = ['[[http://www.ncbi.nlm.nih.gov/pubmed/10896143][Pascual-Montano, et.al,  Ultramic (2000)]]']
     
-    def _defineParams(self, form):
-        XmippProtKerdensom._defineParams(self, form)
+    def __init__(self, **args):
+        KendersomBaseClassify.__init__(self, **args)
         
     def _addParams(self, form):
         form.addParam('howCenter', EnumParam, choices=['Middle of the image', 'Minimize first harmonic'], 
@@ -31,10 +59,9 @@ class XmippProtRotSpectra(XmippProtKerdensom):
                       label='Highest harmonic to calculate',
                       expertLevel=LEVEL_ADVANCED) 
         form.addSection(label='Kerdensom')
-        XmippProtKerdensom._addParams(self, form)
         
-    def _prepareParams(self):
-        XmippProtKerdensom._prepareParams(self)
+    def _defineParamsStep(self):
+        KendersomBaseClassify._defineParamsStep(self)
         self._params['extraDir'] = self._getExtraPath()
         self._params['R1'] = self.spectraInnerRadius.get()
         self._params['R2'] = self.spectraOuterRadius.get()
@@ -42,23 +69,20 @@ class XmippProtRotSpectra(XmippProtKerdensom):
         self._params['spectraHighHarmonic'] = self.spectraHighHarmonic.get()
         self._params['vectors'] = self._getExtraPath("rotSpectra.xmd")
     
-    def _insertAllSteps(self):
-        self._prepareParams()  
+    def _defineProccesStep(self):
         imagesFn = self._params['imgsFn']
         centerFn = self._getExtraPath("center2d_center.xmd")
         # After any of this steps the file "center2d_center.xmd" should be produced
         if self.howCenter == xmipp3.ROTSPECTRA_CENTER_MIDDLE:
-            self._insertMiddle(imagesFn, centerFn)
+            self._insertMiddleStep(imagesFn, centerFn)
         else:
-            self._insertFunctionStep('centerFirstHarmonic', imagesFn, centerFn)
+            self._insertFunctionStep('centerFirstHarmonicStep', imagesFn, centerFn)
         # Produce "rotSpectra.xmd" vectors
-        self._insertFunctionStep('calculateSpectra', imagesFn, centerFn, self._params['vectors'])
+        self._insertFunctionStep('calculateSpectraStep', imagesFn, centerFn, self._params['vectors'])
         # Call kerdensom for classification
-        self._insertKerdensom()
-        # Store outputs in db
-        self._insertFunctionStep('createOutput')
-        
-    def _insertMiddle(self, inputImages, outputCenter):
+        self._insertKerdensomStep()
+    
+    def _insertMiddleStep(self, inputImages, outputCenter):
         R2 = self._params['R2']
         
         if R2 + 20 > 100:
@@ -76,7 +100,7 @@ class XmippProtRotSpectra(XmippProtKerdensom):
         # Run the command with formatted parameters
         self._insertRunJobStep(program, args % self._params)
             
-    def centerFirstHarmonic(self, inputImages, outputCenter):
+    def centerFirstHarmonicStep(self, inputImages, outputCenter):
         dims = xmipp.MetaDataInfo(str(inputImages))
         md = xmipp.MetaData()
         objId = md.addObject()
@@ -85,7 +109,7 @@ class XmippProtRotSpectra(XmippProtKerdensom):
         md.write(outputCenter)
         return [outputCenter] # this file should exists after the step
             
-    def calculateSpectra(self, inputImages, inputCenter, outputSpectra):     
+    def calculateSpectraStep(self, inputImages, inputCenter, outputSpectra):     
         md = xmipp.MetaData(inputCenter)
         objId = md.firstObject()
         self._params['xOffset'] = md.getValue(xmipp.MDL_X, objId)
@@ -97,14 +121,8 @@ class XmippProtRotSpectra(XmippProtKerdensom):
                      ' --low %(spectraLowHarmonic)d --high %(spectraHighHarmonic)d'
         # Run the command with formatted parameters
         self.runJob(program, args % self._params)
-        return [outputSpectra]     
-    
-
-#         
-#     def _validate(self):
-#         validateMsgs = []
-#         if self.initialRegFactor < self.finalRegFactor:
-#             validateMsgs.append("Regularization must decrease over iterations:")
-#             validateMsgs.append("    Initial regularization must be larger than final")
-#         return validateMsgs
+        return [outputSpectra]
+         
+    def _citations(self):
+        return ['Montano2000']
         

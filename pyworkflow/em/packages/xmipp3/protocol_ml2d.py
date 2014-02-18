@@ -37,16 +37,20 @@ from convert import createXmippInputImages, readSetOfClasses2D, readSetOfParticl
         
         
 class XmippProtML2D(ProtClassify):
-    """ Protocol to preprocess a set of micrographs in the project. """
+    """Perform (multi-reference) 2D-alignment using a maximum-likelihood (ML) target function.
+    
+    Initial refereces can be generated from random subsets of the experimental images or
+    can be provided by the user (this can introduce bias). The output of the protocol consists 
+    of the refined 2D classes (weighted averages over all experimental images). 
+    The experimental images are not altered at all.    
+    
+    Although the calculations can be rather time-consuming (especially for many,large experimental
+    images and a large number of references we strongly recommend to let the calculations converge. 
+    """
     _label = 'ml2d'
-    _references = ['[[http://www.ncbi.nlm.nih.gov/pubmed/15808859][Scheres, et.al,  JMB (2005)]]',
-                   '[[http://www.ncbi.nlm.nih.gov/pubmed/16204112][Scheres, et.al,  Bioinformatics (2005)]]',
-                   '[[http://www.ncbi.nlm.nih.gov/pubmed/17937907][Scheres, et.al,  Structure (2007)]]'
-                   ]
     
     def __init__(self, **args):
-        ProtClassify.__init__(self, **args)
-        
+        ProtClassify.__init__(self, **args)        
         self.progId = "ml"
         self.oroot = ""
         
@@ -54,20 +58,19 @@ class XmippProtML2D(ProtClassify):
         form.addSection(label='Input')
         form.addParam('inputParticles', PointerParam, label="Input particles", important=True, 
                       pointerClass='SetOfParticles',
-                      help='Select the input images from the project.'
-                           'It should be a SetOfImages class')        
+                      help='Select the input images from the project.')        
         form.addParam('doGenerateReferences', BooleanParam, default=True,
                       label='Generate references?', 
                       help='If you set to *No*, you should provide references images'
                            'If *Yes*, the default generation is done by averaging'
-                           'subsets of the input images.')
+                           'subsets of the input images. (less bias introduced)')
         form.addParam('numberOfReferences', IntParam, default=3, condition='doGenerateReferences',
                       label='Number of references:',
                       help='Number of references to be generated.')
         form.addParam('referenceParticles', PointerParam, condition='not doGenerateReferences',
                       label="Reference image(s)", 
-                      pointerClass='SetOfImages',
-                      help='Image(s) that will serve as class references')
+                      pointerClass='SetOfParticles',
+                      help='Image(s) that will serve as initial 2D references')
         
         #form.addSection(label='MLF-specific parameters', questionParam='doMlf')        
         form.addParam('doMlf', BooleanParam, default=False, important=True,
@@ -94,23 +97,19 @@ class XmippProtML2D(ProtClassify):
                            )
         form.addParam('doFast', BooleanParam, default=True, condition='not doMlf',
                       label='Use the fast version of this algorithm?',
-                      help='For details see (and please cite): \n '
-                           '*Scheres et al., Bioinformatics, 21 (Suppl. 2), ii243-ii244* \n '
-                           '[[http://dx.doi.org/10.1093/bioinformatics/bti1140][Info]]'
+                      help='For details see (and please cite): \n ' + self._getCite('Scheres2005b')
                            )        
         form.addParam('doNorm', BooleanParam, default=False,
                       label='Refine the normalization for each image?',
                       help='This variant of the algorithm deals with normalization errors. \n '
-                           'For details see (and please cite): \n '
-                           '*Scheres et. al. (2009) J. Struc. Biol., Vol 166, Issue 2, May 2009* \n '
-                           '[[http://dx.doi.org/10.1016/j.jsb.2009.02.007][Info]]'
+                           'For details see (and please cite): \n ' + self._getCite('Scheres2009b')
                            )             
         # Advance or expert parameters
-        form.addParam('maxIters', IntParam, default=100,# expertLevel=LEVEL_ADVANCED,
+        form.addParam('maxIters', IntParam, default=100, expertLevel=LEVEL_ADVANCED,
                       label='Maximum number of iterations',
                       help='If the convergence has not been reached after this number'
                            'of iterations, the process will be stopped.')   
-        form.addParam('psiStep', FloatParam, default=5.0,# expertLevel=LEVEL_ADVANCED,
+        form.addParam('psiStep', FloatParam, default=5.0, expertLevel=LEVEL_ADVANCED,
                       label='In-plane rotation sampling (degrees)',
                       help='In-plane rotation sampling interval (degrees).')          
         form.addParam('stdNoise', FloatParam, default=1.0, expertLevel=LEVEL_EXPERT,
@@ -146,8 +145,7 @@ class XmippProtML2D(ProtClassify):
             iterNumber = iterNumber + 1
         return iterNumber        
     
-    def _getOroot(self):
-        
+    def _getOroot(self):        
         if self.doMlf:
             self.progId += "f"
         return self._getPath('%s2d_' % self.progId)       
@@ -199,8 +197,7 @@ class XmippProtML2D(ProtClassify):
         
     def createOutput(self):
         imgSet = self.inputParticles.get()
-        classes2DSet = self._createSetOfClasses2D()
-        classes2DSet.setImages(self.inputParticles.get())
+        classes2DSet = self._createSetOfClasses2D(imgSet)
         readSetOfClasses2D(classes2DSet, self.oroot + 'classes.xmd')
         self._defineOutputs(outputClasses=classes2DSet)
         self._defineSourceRelation(imgSet, classes2DSet)
@@ -214,3 +211,4 @@ class XmippProtML2D(ProtClassify):
             summary.append("Number of references: %d" % self.numberOfReferences.get())
             summary.append("Output classes: %s" % self.outputClasses.get())
         return summary
+    
