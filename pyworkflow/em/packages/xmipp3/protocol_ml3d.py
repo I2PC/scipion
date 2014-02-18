@@ -30,7 +30,7 @@ This sub-package contains wrapper around ML3D Xmipp program
 from pyworkflow.em import *  
 from pyworkflow.utils import *  
 import xmipp
-from convert import createXmippInputImages, readSetOfVolumes, createXmippInputVolumes
+import convert
 
         
 # Reconstruction method constants
@@ -45,21 +45,11 @@ class XmippProtML3D(ProtRefine3D, ProtClassify3D):
     maximum-likelihood ( *ML* ) target function.   
     """
     _label = 'ml3d'
-    _reference = ['[[http://www.ncbi.nlm.nih.gov/pubmed/17179934][ML3D: Scheres, et.al,  Nat.Meth (2007)]]',
-                  '[[http://www.ncbi.nlm.nih.gov/pubmed/17937907][MLF3D: Scheres, et.al,  Structure (2007)]]'
-                  ]
-    
-
-    def getProgramId(self):
-        progId = "ml"
-        if self.doMlf:
-            progId += "f" 
-        return progId   
     
     #--------------------------- DEFINE param functions -------------------------------------------- 
     def _defineParams(self, form):
         form.addSection(label='Input')
-        form.addParam('inputImages', PointerParam, label="Input images", important=True, 
+        form.addParam('inputParticles', PointerParam, label="Input images", important=True, 
                       pointerClass='SetOfParticles',
                       help='Select the input images from the project.'
                            'It should be a SetOfImages class')  
@@ -143,15 +133,15 @@ class XmippProtML3D(ProtRefine3D, ProtClassify3D):
                       'irrelevant as they will always be amplitude-corrected.') 
         form.addSection(label='3D Reconstruction', expertLevel=LEVEL_ADVANCED)    
         form.addParam('reconstructionMethod', EnumParam, choices=['fourier', 'wlsART'], 
-                      default=0, label='Reconstruction method', display=EnumParam.DISPLAY_LIST,
+                      default=RECONS_FOURIER, label='Reconstruction method', display=EnumParam.DISPLAY_LIST,
                       expertLevel=LEVEL_ADVANCED, 
                       help='Choose between wslART or fourier.')
-        form.addParam('aRTExtraParams', TextParam,
-                      condition='reconstructionMethod==1', expertLevel=LEVEL_ADVANCED,
+        form.addParam('artExtraParams', TextParam,
+                      condition='reconstructionMethod==%d' % RECONS_WLSART, expertLevel=LEVEL_ADVANCED,
                       label='Extra parameters',
                       help='Additional reconstruction parameters for ART.')  
         form.addParam('fourierExtraParams', TextParam, 
-                      condition='reconstructionMethod==0', expertLevel=LEVEL_ADVANCED,
+                      condition='reconstructionMethod==%d' % RECONS_FOURIER, expertLevel=LEVEL_ADVANCED,
                       label='Extra parameters',
                       help='The Fourier-interpolation reconstruction method is much faster than wlsART '
                       'and may give similar results. It however is not guaranteed to optimize the '
@@ -168,17 +158,25 @@ class XmippProtML3D(ProtRefine3D, ProtClassify3D):
         self.ParamsDict['ProgId'] = self.getProgramId()
         
         volSet = self.ini3DrefVolumes.get()
-        refMd = createXmippInputVolumes(self, volSet)
+        
+        if isinstance(volSet, Volume):
+            self.mdVols = xmipp.MetaData()
+            volFn = convert.getImageLocation(volSet)
+            self.mdVols.setValue(xmipp.MDL_IMAGE, volFn, self.mdVols.addObject())
+            refMd = self._getPath('input_volumes.xmd')
+            self.mdVols.write(refMd)
+        else:
+            refMd = convert.createXmippInputVolumes(self, volSet)
+            self.mdVols = xmipp.MetaData(refMd)
         
         initVols = self.ParamsDict['InitialVols'] = self._getExtraPath('initial_volumes.stk')
-        self.mdVols = xmipp.MetaData(refMd)
         
         # Convert input images if necessary
-        imgsFn = createXmippInputImages(self, self.inputImages.get())
+        imgsFn = convert.createXmippInputImages(self, self.inputParticles.get())
         self.imgMd = self.ParamsDict['ImgMd'] = imgsFn
         
         #Get sampling rate from input images
-        self.samplingRate = self.inputImages.get().getSamplingRate()
+        self.samplingRate = self.inputParticles.get().getSamplingRate()
         
         self._insertFunctionStep('copyVolumesStep', refMd, initVols)
         
@@ -188,8 +186,8 @@ class XmippProtML3D(ProtRefine3D, ProtClassify3D):
         if self.doLowPassFilter.get():
             self._insertFilterStep()
             
-        if self.numberOfSeedsPerRef.get() > 1:
-            self._insertGenerateRefSteps()
+        if self.numberOfSeedsPerRef > 1:
+            self._insertFunctionStep('generateRefsStep')
             
         self._insertML3DStep(self.imgMd, self.workingDir.get() + '/', self.ParamsDict['InitialVols'], 
                             self.numberOfIterations.get(), self.seedsAreAmplitudeCorrected.get())
@@ -257,41 +255,16 @@ class XmippProtML3D(ProtRefine3D, ProtClassify3D):
                                 })
         self._insertRunJobStep('xmipp_transform_filter', self.ParamsStr % self.ParamsDict)
         self.ParamsDict['InitialVols'] = self.ParamsDict['FilteredVols']
-
-    def _insertGenerateRefSteps(self):
-        """ Generate more reference volumes than provided in input reference """
-        grDir = self._getPath('GeneratedReferences')
-        # Create dir for seeds generation
-        makePath(grDir)
-        # Split images metadata
-        nvols = self.ParamsDict['NumberOfVols'] = self.mdVols.size() * self.numberOfSeedsPerRef.get()
-        sroot = self.ParamsDict['SplitRoot'] = join(grDir, 'images')
-        self.ParamsStr = '-i %(ImgMd)s -n %(NumberOfVols)d --oroot %(SplitRoot)s'
-        files = ['%s%06d.xmd' % (sroot, i) for i in range(1, nvols+1)]        
-        self._insertRunJobStep('xmipp_metadata_split', self.ParamsStr % self.ParamsDict, numberOfMpi=1)
         
-        volStack = self.ParamsDict['InitialVols'] = self._getExtraPath('generated_volumes.stk') 
-        index = 1
-        copyVols = []
-        for idx in self.mdVols:
-            for i in range(self.numberOfSeedsPerRef.get()):
-                outputVol = "%d@%s" % (index, volStack)
-                generatedVol = join(grDir, "vol%03dextra/iter%03d/vol%06d.vol" % (index, 1, 1))
-                copyVols.append((outputVol, generatedVol))
-                self._insertML3DStep(files[index-1], join(grDir, 'vol%03d' % index), self.mdVols.getValue(xmipp.MDL_IMAGE, idx), 1, 
-                                    self.initialMapIsAmplitudeCorrected)
-                #self.mdVols.setValue(MDL_IMAGE, outputVol, idx)
-                index += 1
-                
-        for outVol, genVol in copyVols:
-            self.ParamsDict.update({'outVol': outVol, 'genVol':genVol})
-            self.ParamsStr = '-i %(genVol)s -o %(outVol)s'
-            self._insertRunJobStep('xmipp_image_convert', self.ParamsStr % self.ParamsDict, numberOfMpi=1)
-            
-        # Seed generation with MLF always does amplitude correction
-        self.seedsAreAmplitudeCorrected.set(True)
-
+    def _runML3D(self, inputImg, oRoot, initialVols, numberOfIters, amplitudCorrected):
+        program, arguments = self._getML3DCommand(inputImg, oRoot, initialVols, numberOfIters, amplitudCorrected)
+        self.runJob(program, arguments)
+        
     def _insertML3DStep(self, inputImg, oRoot, initialVols, numberOfIters, amplitudCorrected):
+        program, arguments = self._getML3DCommand(inputImg, oRoot, initialVols, numberOfIters, amplitudCorrected)
+        self._insertRunJobStep(program, arguments)
+        
+    def _getML3DCommand(self, inputImg, oRoot, initialVols, numberOfIters, amplitudCorrected):
         self.ParamsDict.update({
                          '_ImgMd': inputImg,
                          '_ORoot': oRoot,
@@ -304,7 +277,7 @@ class XmippProtML3D(ProtRefine3D, ProtClassify3D):
                          'highResLimit': self.highResLimit.get(),
                          'samplingRate': self.samplingRate,
                          'reconstructionMethod': self.getEnumText('reconstructionMethod'),
-                         'aRTExtraParams': self.aRTExtraParams.get(),
+                         'artExtraParams': self.artExtraParams.get(),
                          'fourierExtraParams': self.fourierExtraParams.get()
                         })
         self.ParamsStr = "-i %(_ImgMd)s --oroot %(_ORoot)s --ref %(_InitialVols)s --iter %(_NumberOfIterations)d " + \
@@ -312,15 +285,15 @@ class XmippProtML3D(ProtRefine3D, ProtClassify3D):
         if self.extraParams.hasValue(): self.ParamsStr += " %(extraParams)s"
 #        if self.NumberOfReferences > 1:
 #            self.ParamsStr += " --nref %(NumberOfReferences)s"
-        if self.numberOfThreads.get() > 1:
+        if self.numberOfThreads > 1:
             self.ParamsStr += " --thr %(numberOfThreads)d"
-        if self.doNorm.get():
+        if self.doNorm:
             self.ParamsStr += " --norm"
         
-        if self.doMlf.get():
-            if not self.doCorrectAmplitudes.get():
+        if self.doMlf:
+            if not self.doCorrectAmplitudes:
                 self.ParamsStr += " --no_ctf"
-            if not self.areImagesPhaseFlipped.get():
+            if not self.areImagesPhaseFlipped:
                 self.ParamsStr += " --not_phase_flipped"
             if not amplitudCorrected:
                 self.ParamsStr += " --ctf_affected_refs"
@@ -330,12 +303,12 @@ class XmippProtML3D(ProtRefine3D, ProtClassify3D):
 
         self.ParamsStr += " --recons %(reconstructionMethod)s "
         
-        if self.reconstructionMethod.get() == self.WLSART:
-            if self.aRTExtraParams.hasValue(): self.ParamsStr += " %(aRTExtraParams)s"
+        if self.reconstructionMethod == RECONS_WLSART:
+            if self.artExtraParams.hasValue(): self.ParamsStr += " %(artExtraParams)s"
         else:
             if self.fourierExtraParams.hasValue(): self.ParamsStr += " %(fourierExtraParams)s" 
-            
-        self._insertRunJobStep('xmipp_%s_refine3d' % self.getProgramId(), self.ParamsStr % self.ParamsDict)
+          
+        return  'xmipp_%s_refine3d' % self.getProgramId(), self.ParamsStr % self.ParamsDict
                    
     #--------------------------- STEPS functions --------------------------------------------       
     def copyVolumesStep(self, inputMd, outputStack):
@@ -347,6 +320,39 @@ class XmippProtML3D(ProtRefine3D, ProtClassify3D):
         for i, idx in enumerate(md):
             img.read(md.getValue(xmipp.MDL_IMAGE, idx))
             img.write('%d@%s' % (i + 1, outputStack))
+            
+    def generateRefsStep(self):
+        """ Generate more reference volumes than provided in input reference """
+        grDir = self._getPath('GeneratedReferences')
+        # Create dir for seeds generation
+        makePath(grDir)
+        # Split images metadata
+        nvols = self.ParamsDict['NumberOfVols'] = self.mdVols.size() * self.numberOfSeedsPerRef.get()
+        sroot = self.ParamsDict['SplitRoot'] = join(grDir, 'images')
+        self.ParamsStr = '-i %(ImgMd)s -n %(NumberOfVols)d --oroot %(SplitRoot)s'
+        files = ['%s%06d.xmd' % (sroot, i) for i in range(1, nvols+1)]        
+        self.runJob('xmipp_metadata_split', self.ParamsStr % self.ParamsDict, numberOfMpi=1)
+        
+        volStack = self.ParamsDict['InitialVols'] = self._getExtraPath('generated_volumes.stk') 
+        index = 1
+        copyVols = []
+        for idx in self.mdVols:
+            for i in range(self.numberOfSeedsPerRef.get()):
+                outputVol = "%d@%s" % (index, volStack)
+                generatedVol = join(grDir, "vol%03dextra/iter%03d/vol%06d.vol" % (index, 1, 1))
+                copyVols.append((outputVol, generatedVol))
+                self._runML3D(files[index-1], join(grDir, 'vol%03d' % index), self.mdVols.getValue(xmipp.MDL_IMAGE, idx), 1, 
+                                    self.initialMapIsAmplitudeCorrected)
+                #self.mdVols.setValue(MDL_IMAGE, outputVol, idx)
+                index += 1
+                
+        for outVol, genVol in copyVols:
+            self.ParamsDict.update({'outVol': outVol, 'genVol':genVol})
+            self.ParamsStr = '-i %(genVol)s -o %(outVol)s'
+            self.runJob('xmipp_image_convert', self.ParamsStr % self.ParamsDict, numberOfMpi=1)
+            
+        # Seed generation with MLF always does amplitude correction
+        self.seedsAreAmplitudeCorrected.set(True)
 
     def renameOutputStep(self, WorkingDir, ProgId):
         """ Remove ml2d prefix from:
@@ -366,7 +372,7 @@ class XmippProtML3D(ProtRefine3D, ProtClassify3D):
         fn = self._getPath('output_volumes.xmd')
         md.write('Volumes@%s' % fn)
         volumes = self._createSetOfVolumes()
-        volumes.setSamplingRate(self.inputImages.get().getSamplingRate())
+        volumes.setSamplingRate(self.inputParticles.get().getSamplingRate())
         readSetOfVolumes(fn, volumes)
         self._defineOutputs(outputVolumes=volumes)
 
@@ -378,9 +384,9 @@ class XmippProtML3D(ProtRefine3D, ProtClassify3D):
 
     def _summary(self):
         summary = []
-        summary.append("Input images:  %s" % self.inputImages.get().getNameId())
-        if self.doMlf.get():
-            if self.doCorrectAmplitudes.get():
+        summary.append("Input images:  %s" % self.inputParticles.get().getNameId())
+        if self.doMlf:
+            if self.doCorrectAmplitudes:
                 suffix = "with CTF correction "
             else:
                 suffix = "ignoring CTF effects "
@@ -388,7 +394,7 @@ class XmippProtML3D(ProtRefine3D, ProtClassify3D):
          
         summary.append("Reference volumes(s): [%s]" % self.ini3DrefVolumes.get())
 
-        if self.numberOfSeedsPerRef.get() > 1:
+        if self.numberOfSeedsPerRef > 1:
             summary.append("Number of references per volume: *%d*" % self.numberOfSeedsPerRef.get())
            
         # TODO: Add information at info@iter_classes.xmd from last iteration
@@ -403,6 +409,12 @@ class XmippProtML3D(ProtRefine3D, ProtClassify3D):
         return self._summary()  # summary is quite explicit and serve as methods    
     
     #--------------------------- UTILS functions --------------------------------------------
+    def getProgramId(self):
+        progId = "ml"
+        if self.doMlf:
+            progId += "f" 
+        return progId
+      
     def _lastIteration(self):
         """ Find the last iteration number """
         it = 1        
