@@ -135,13 +135,18 @@ class FileBrowser(ObjectBrowser):
     where the "objects" are just files and directories.
     """
     def __init__(self, parent, initialDir='.', 
-                 selectionType=SELECT_NONE, selectionSingle=True, 
+                 selectionType=SELECT_FILE, selectionSingle=True, 
                  allowFilter=True, filterFunction=None, previewDim=144,
                  showHidden=False):
         """ 
         """
         tp = FileTreeProvider(initialDir, showHidden)
         ObjectBrowser.__init__(self, parent, tp)
+        
+        if selectionType != SELECT_NONE:
+            buttonsFrame = tk.Frame(self)
+            self._fillButtonsFrame(buttonsFrame)
+            buttonsFrame.grid(row=1, column=0)
 
     def _fillLeftPanel(self, frame):
         """ Redefine this method to include a buttons toolbar and
@@ -180,6 +185,15 @@ class FileBrowser(ObjectBrowser):
         addButton('Home', Icon.HOME, self._actionHome)
         addButton('Back', Icon.ARROW_LEFT, self._actionUp)
         addButton('Up', Icon.ARROW_UP, self._actionUp)
+        
+    def _fillButtonsFrame(self, frame):
+        """ Add button to the bottom frame if the selectMode
+        is distinct from SELECT_NONE.
+        """
+        tk.Button(frame, text="Select", image=self.getImage(Icon.BUTTON_SELECT),
+                        compound=tk.LEFT).grid(row=0, column=0, padx=(0,5))
+        tk.Button(frame, text="Close", image=self.getImage(Icon.BUTTON_CLOSE),
+                        compound=tk.LEFT).grid(row=0, column=1)                        
                 
     def _actionRefresh(self, e=None):
         self.tree.update()

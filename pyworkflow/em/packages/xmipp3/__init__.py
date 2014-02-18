@@ -24,25 +24,12 @@
 # *
 # **************************************************************************
 """
-This sub-package will contains Xmipp3.0 specific protocols
+This sub-package will contains Xmipp specific protocols
 """
 
 from bibtex import _bibtex # Load bibtex dict with references
 
 _logo = "xmipp_logo.png"
-_referencesDict = {
-                   'DelaRosa2013_Xmipp':'[[http://www.ncbi.nlm.nih.gov/pubmed/24075951][De la Rosa-Trevin, et.al, JSB (2013)]]',
-                   'Sorzano2013_Protocols':'[[http://www.ncbi.nlm.nih.gov/pubmed/23086876][Sorzano, et.al, Meth.Mol.Biol. (2013)]]',
-                   'Otsu1979_Segmentation':'[[http://ieeexplore.ieee.org/xpl/articleDetails.jsp?arnumber=4310076][Otsu, IEEE. Trans. SCM. (1979)]]',
-                   'Unser2005_SSNR':'[[http://www.ncbi.nlm.nih.gov/pubmed/15721578][Unser M, et. al, JSB (2005)]]',
-                   'Montano2000':'[[http://www.ncbi.nlm.nih.gov/pubmed/10896143][Pascual-Montano, et.al,  Ultramic (2000)]]',
-                   'Montano2001':'[[http://www.ncbi.nlm.nih.gov/pubmed/11472094][Pascual-Montano, et.al,  JSB (2001)]]',
-                   'Montano2002':'[[http://www.ncbi.nlm.nih.gov/pubmed/12160707][Pascual-Montano, et.al,  JSB (2002)]]'
-                   }
-                #'[[http://www.ncbi.nlm.nih.gov/pubmed/15477099][Xmipp: Sorzano, JSB (2004)]]',
-                #'[[http://www.ncbi.nlm.nih.gov/pubmed/8812978][Xmipp: Marabini, JSB (1996)]]',
-                #'[[http://www.sciencedirect.com/science/article/pii/B9780124059146000160][Protocols: Devaux, Meth.Cell.Biol. (2012)]]',
-                #'[[http://www.ncbi.nlm.nih.gov/pubmed/18536645][Protocols: Scheres, Nat.Prot. (2008)]]',
 _references = ['delaRosaTrevin2013', 'Sorzano2013']
 
 from xmipp3 import *
