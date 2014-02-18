@@ -122,7 +122,7 @@ class KendersomBaseClassify(ProtClassify):
     
     def createOutputStep(self):
         """ Store the kenserdom object 
-        as result of the protocol. 
+        as result of the protocol.
         """
         imgSet = self.inputImages.get()
         classes2DSet = self._createSetOfClasses2D()
