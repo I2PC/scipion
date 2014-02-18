@@ -44,6 +44,10 @@ public class XmippFileChooser extends JFileChooser {
 		super(f);
 		init();
 	}
+
+    public XmippFileChooser(String path) {
+        this(new File(path));
+    }
 	
 	/** Perform customization */
 	private void init(){		

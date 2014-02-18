@@ -1506,6 +1506,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			addSeparator(FILE);
 			addItem(FILE_SAVE, "Save", "save.gif", "control released S");
 			addItem(FILE_SAVEAS, "Save as", "save_as.gif");
+                        addItem(FILE_EXPORTIMAGES, "Export Images ...");
 			addItem(FILE_REFRESH, "Refresh", "refresh.gif", "released F5");
 			addSeparator(FILE);
 			addItem(FILE_EXIT, "Exit", null, "control released Q");
@@ -1645,6 +1646,10 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 				else if (cmd.equals(FILE_SAVEAS))
 				{
 					saveAs();
+				}
+                                else if (cmd.equals(FILE_EXPORTIMAGES))
+				{
+                                        exportImages();
 				}
 				else if (cmd.equals(FILE_EXIT))
 				{
@@ -2176,6 +2181,21 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			if (dlgSave.doSaveImages())
 				data.md.writeImages(dlgSave.getOutput(), dlgSave.isOutputIndependent(), dlgSave.getImageLabel());
 		}
+
+	}
+        
+        private void exportImages() throws Exception
+	{
+		SwingUtilities.invokeLater(new Runnable() {
+
+                    @Override
+                    public void run() {
+                        ExportImagesJDialog d = new ExportImagesJDialog(GalleryJFrame.this);
+                    }
+                });
+
+			
+		
 
 	}
 

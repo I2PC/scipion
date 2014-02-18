@@ -1666,8 +1666,8 @@ class XmippBrowser():
         if len(self.pattern):
             self.tree.clear()
             for root, dirs, files in os.walk(self.dir, followlinks=True):
-                if files:
-                    files.sort()
+                files.sort()
+                dirs.sort()
                 for f in files:
                     if self.matchPattern(f):
                         relRoot = relpath(root, self.dir)

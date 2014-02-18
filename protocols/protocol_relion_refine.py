@@ -239,7 +239,7 @@ class ProtRelionRefinner( ProtRelionBase):
         ProtRelionBase._visualizeDisplayResolutionPlotsFSC(self)
         finalModel = self.getFilename('model_final')
         if xmippExists(finalModel):
-            xplotter = XmippPlotter(windowTitle='Resolution SSNR Final')
+            xplotter = XmippPlotter(windowTitle='FSC Final')
             plot_title = 'FSC for all images, final iteration'
             a = xplotter.createSubPlot(plot_title, 'Armstrongs^-1', 'FSC', yformat=False)
             model_star = 'model_class_1@' + finalModel
