@@ -268,8 +268,9 @@ class Icon():
     ACTION_IN = 'fa-sign-in.png'
     ACTION_OUT = 'fa-sign-out.png'
     #Host template
-    BUTTON_CLOSE = 'dialog_close.png'
-    BUTTON_SAVE = 'filesave.png'
+    BUTTON_SELECT = 'fa-check.png'
+    BUTTON_CLOSE = 'fa-times.png'
+    BUTTON_CANCEL = 'fa-ban.png'
     
     ARROW_UP = 'fa-arrow-up.png'
     ARROW_LEFT = 'fa-arrow-left.png'

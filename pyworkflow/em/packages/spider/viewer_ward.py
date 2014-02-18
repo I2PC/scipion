@@ -153,7 +153,7 @@ class SpiderViewerWard(ProtocolViewer):
             prot.inputClasses.set(self.protocol.outputClasses)
             self.project._setupProtocol(prot)
             prot.makePathsAndClean()
-            classes = prot._createSetOfClasses2D(suffix)
+            classes = prot._createSetOfClasses2D(self.protocol.inputImages.get(), suffix)
             averages = prot._createSetOfParticles(suffix)
             averages.copyInfo(self.protocol.outputClasses.getAverages())
             self.protocol._fillClassesFromNodes(classes, averages, selectedNodes)

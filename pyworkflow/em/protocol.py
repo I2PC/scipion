@@ -65,8 +65,10 @@ class EMProtocol(Protocol):
     def _createSetOfParticles(self, suffix=''):
         return self.__createSet(SetOfParticles, 'particles%s.sqlite', suffix)
 
-    def _createSetOfClasses2D(self, suffix=''):
-        return self.__createSet(SetOfClasses2D, 'classes2D%s.sqlite', suffix)
+    def _createSetOfClasses2D(self, imgSet, suffix=''):
+        classes = self.__createSet(SetOfClasses2D, 'classes2D%s.sqlite', suffix)
+        classes.setImaqes(imgSet)
+        return classes
 
     def _createSetOfClasses3D(self, suffix=''):
         return self.__createSet(SetOfClasses3D, 'classes3D%s.sqlite', suffix)

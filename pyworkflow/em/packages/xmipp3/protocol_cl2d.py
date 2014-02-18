@@ -198,8 +198,7 @@ class XmippProtCL2D(ProtClassify):
         """
         levelMdFiles = self._getLevelMdFiles(subset)
         lastMdFn = levelMdFiles[-1]
-        classes2DSet = self._createSetOfClasses2D(subset)
-        classes2DSet.setImages(self.inputImages.get())
+        classes2DSet = self._createSetOfClasses2D(self.inputImages.get(), subset)
         readSetOfClasses2D(classes2DSet, lastMdFn, 'classes_sorted')
         classes2DSet.write()
         result = {'outputClasses' + subset: classes2DSet}
