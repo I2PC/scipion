@@ -38,24 +38,27 @@ from pyworkflow.em.constants import NO_INDEX
 from pyworkflow.object import String
 from pyworkflow.utils.path import join, dirname, replaceBaseExt
 from protlib_xmipp import RowMetaData
-
+from collections import OrderedDict
 # This dictionary will be used to map
 # between CTFModel properties and Xmipp labels
-ACQUISITION_DICT = { 
-       "_amplitudeContrast": xmipp.MDL_CTF_Q0,
-       "_sphericalAberration": xmipp.MDL_CTF_CS,
-       "_voltage": xmipp.MDL_CTF_VOLTAGE,
-       }
+ACQUISITION_DICT = OrderedDict([ 
+       ("_amplitudeContrast", xmipp.MDL_CTF_Q0),
+       ("_sphericalAberration", xmipp.MDL_CTF_CS),
+       ("_voltage", xmipp.MDL_CTF_VOLTAGE)
+       ])
 
-COOR_DICT = {"_x": xmipp.MDL_XCOOR, 
-             "_y": xmipp.MDL_YCOOR 
-             }
+COOR_DICT = OrderedDict([
+             ("_x", xmipp.MDL_XCOOR), 
+             ("_y", xmipp.MDL_YCOOR) 
+             ])
 
-CTF_DICT = { 
-       "_defocusAngle": xmipp.MDL_CTF_DEFOCUS_ANGLE,
-       "_defocusU": xmipp.MDL_CTF_DEFOCUSU,
-       "_defocusV": xmipp.MDL_CTF_DEFOCUSV,
-       }
+
+
+CTF_DICT = OrderedDict([
+       ("_defocusU", xmipp.MDL_CTF_DEFOCUSU),
+       ("_defocusV", xmipp.MDL_CTF_DEFOCUSV),
+       ("_defocusAngle", xmipp.MDL_CTF_DEFOCUS_ANGLE)
+       ])
 
 def objectToRow(obj, row, attrDict):
     """ This function will convert an EMObject into a XmippMdRow.
@@ -261,6 +264,9 @@ def ctfModelToRow(ctfModel, ctfRow):
     """ Set labels values from ctfModel to md row. """
     objectToRow(ctfModel, ctfRow, CTF_DICT)
 
+def defocusGroupSetToRow(defocusGroup, defocusGroupRow):
+    """ Set labels values from ctfModel to md row. """
+    objectToRow(defocusGroup, defocusGroupRow, CTF_DICT)
 
 def rowToCtfModel(md, objId):
     """ Create a CTFModel from a row of a metadata. """
@@ -502,6 +508,27 @@ def writeSetOfCTFs(ctfSet, mdCTF):
         
     md.write(mdCTF)
     ctfSet._xmippMd = String(mdCTF)
+    
+def writeSetOfDefocusGroups(defocusGroupSet, fnDefocusGroup): # also metadata
+    """ Write a defocuGroupSet on metadata format. 
+    Params:
+        defocusGroupSet: the SetOfDefocus that will be read.
+        fnDefocusGroup: The file where defocusGroup should be written.
+    """
+    md = xmipp.MetaData()
+            
+    for defocusGroup in defocusGroupSet:
+        objId = md.addObject()
+        defocusGroupRow = XmippMdRow()
+        defocusGroupSetToRow(defocusGroup, defocusGroupRow)
+        defocusGroupRow.setValue(xmipp.MDL_CTF_GROUP, defocusGroup.getObjId())
+        defocusGroupRow.setValue(xmipp.MDL_MIN, defocusGroup.getDefocusMin())
+        defocusGroupRow.setValue(xmipp.MDL_MAX, defocusGroup.getDefocusMax())
+        defocusGroupRow.setValue(xmipp.MDL_AVG, defocusGroup.getDefocusAvg())
+        defocusGroupRow.writeToMd(md, objId)
+        
+    md.write(fnDefocusGroup)
+    defocusGroupSet._xmippMd = String(fnDefocusGroup)
     
 def writeSetOfClasses2D(classes2DSet, filename, classesBlock='classes'):    
     """ This function will write a SetOfClasses2D as Xmipp metadata.
