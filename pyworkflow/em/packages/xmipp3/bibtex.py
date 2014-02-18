@@ -172,7 +172,6 @@ keywords = {Algorithms; Cryoelectron Microscopy, methods; Image Enhancement, met
     Functions; Models, Molecular; Models, Statistical; Protein Conformation;
     Ribosomes, chemistry/ultrastructure}
 }
-}
 
 @article{Scheres2009b,
   author = {Scheres, Sjors H W. and Carazo, José María},
