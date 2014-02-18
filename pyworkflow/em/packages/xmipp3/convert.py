@@ -386,7 +386,7 @@ def readSetOfCoordinates(posDir, micSet, coordSet):
             posMd.setValue(xmipp.MDL_ITEM_ID, long(coord.getObjId()), objId)
         if not posMd.isEmpty():
             posMd.write("particles@%s"  % scipionPosFile)
-    coordSet._xmippMd = String(scipionPosFile)
+    coordSet._xmippMd = String(posDir)
     coordSet.setBoxSize(boxSize)
 
 def readPosCoordinates(posFile):
