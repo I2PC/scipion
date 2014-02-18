@@ -1504,6 +1504,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			addSeparator(FILE);
 			addItem(FILE_SAVE, "Save", "save.gif", "control released S");
 			addItem(FILE_SAVEAS, "Save as", "save_as.gif");
+                        addItem(FILE_EXPORTIMAGES, "Export Images as Stack");
 			addItem(FILE_REFRESH, "Refresh", "refresh.gif", "released F5");
 			addSeparator(FILE);
 			addItem(FILE_EXIT, "Exit", null, "control released Q");
@@ -1641,6 +1642,10 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 					save();
 				}
 				else if (cmd.equals(FILE_SAVEAS))
+				{
+					saveAs();
+				}
+                                else if (cmd.equals(FILE_EXPORTIMAGES))
 				{
 					saveAs();
 				}
