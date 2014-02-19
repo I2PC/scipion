@@ -38,7 +38,7 @@ class XmippProtJoinSets(ProtPreprocessMicrographs):
     def __init__(self, **args):
         ProtPreprocessMicrographs.__init__(self, **args)
 
-        
+    #--------------------------- DEFINE param functions --------------------------------------------
     def _defineParams(self, form):
         form.addSection(label='Input')
         
@@ -46,10 +46,12 @@ class XmippProtJoinSets(ProtPreprocessMicrographs):
                       pointerClass='SetOfImages', minNumObjects=2, maxNumObjects=0,
                       help='Select the set of images (it can be a set of micrographs, particles o volumes) from the project.'
                            'They should 2 or more object classes')
-        
+    
+    #--------------------------- INSERT steps functions --------------------------------------------   
     def _insertAllSteps(self):
         self._insertFunctionStep('createOutput')
-  
+    
+    #--------------------------- STEPS functions --------------------------------------------
     def createOutput(self):
         #Read Classname and generate corresponding SetOfImages (SetOfParticles, SetOfVolumes, SetOfMicrographs)
         self.inputType = str(self.inputSet[0].get().getClassName())
@@ -68,7 +70,8 @@ class XmippProtJoinSets(ProtPreprocessMicrographs):
         
         self._defineOutputs(outputImages=outputSet)
         
-    def validate(self):
+    #--------------------------- INFO functions --------------------------------------------
+    def _validate(self):
         classList = []
         for itemSet in self.inputSet:
             itemClassName = itemSet.get().getClassName()

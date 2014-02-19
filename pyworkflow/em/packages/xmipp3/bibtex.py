@@ -309,7 +309,24 @@ url = "http://www.sciencedirect.com/science/article/pii/S1047847713001950",
 author = "J. Vargas and V. Abrishami and R. Marabini and J.M. de la Rosa-Trevín and A. Zaldivar and J.M. Carazo and C.O.S. Sorzano",
 keywords = "Electron microscopy, Particle picking, Machine learning, Single particle analysis "
 }
+
+@article{Sorzano2010a,
+title = "A clustering approach to multireference alignment of single-particle projections in electron microscopy ",
+journal = "Journal of Structural Biology ",
+volume = "171",
+number = "2",
+pages = "197 - 206",
+year = "2010",
+note = "",
+issn = "1047-8477",
+doi = "http://dx.doi.org/10.1016/j.jsb.2010.03.011",
+url = "http://www.sciencedirect.com/science/article/pii/S1047847710000882",
+author = "C.O.S. Sorzano and J.R. Bilbao-Castro and Y. Shkolnisky and M. Alcorlo and R. Melero and G. Caffarena-Fernández and M. Li and G. Xu and R. Marabini and J.M. Carazo",
+keywords = "Single-particle analysis, 2D analysis, Multireference analysis", Electron microscopy "
+}
 """
+
+
 
 from pyworkflow.utils import parseBibTex
 

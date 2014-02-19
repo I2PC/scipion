@@ -47,7 +47,8 @@ class XmippProtParticlePicking(ProtParticlePicking, XmippProtocol):
         ProtParticlePicking.__init__(self, **args)
         # The following attribute is only for testing
         self.importFolder = String(args.get('importFolder', None))
-        
+    
+    #--------------------------- DEFINE param functions --------------------------------------------    
     def _defineParams(self, form):
     
         form.addSection(label='Input')
@@ -55,8 +56,9 @@ class XmippProtParticlePicking(ProtParticlePicking, XmippProtocol):
                       pointerClass='SetOfMicrographs',
                       help='Select the SetOfMicrograph ')
         form.addParam('memory', FloatParam, default=2,
-                   label='Memory to use (In Gb)', expertLevel=2)        
-        
+                   label='Memory to use (In Gb)', expertLevel=2)  
+              
+    #--------------------------- INSERT steps functions --------------------------------------------    
     def _insertAllSteps(self):
         """The Particle Picking proccess is realized for a set of micrographs"""
         
@@ -76,7 +78,8 @@ class XmippProtParticlePicking(ProtParticlePicking, XmippProtocol):
         # Insert step to create output objects       
         self._insertFunctionStep('createOutputStep')
         
-        
+    
+    #--------------------------- STEPS functions --------------------------------------------
     def launchParticlePickGUIStep(self):
         
         # Get the converted input micrographs in Xmipp format
@@ -116,6 +119,12 @@ class XmippProtParticlePicking(ProtParticlePicking, XmippProtocol):
         self._defineSourceRelation(self.inputMics, coordSet)
         
 
+    #--------------------------- INFO functions --------------------------------------------
+    def _citations(self):
+        return ['Abrishami2013']
+
+
+    #--------------------------- UTILS functions --------------------------------------------
     def __str__(self):
         """ String representation of a Supervised Picking run """
     
@@ -124,8 +133,3 @@ class XmippProtParticlePicking(ProtParticlePicking, XmippProtocol):
         else:
             picked = self.outputCoordinates.getSize()
         return  "Number of particles picked: %d (from %d micrographs)" % (picked, self.inputMicrographs.get().getSize())
-    
-    
-    def _citations(self):
-        return ['Abrishami2013']
-

@@ -59,7 +59,7 @@ from protocol_filter import XmippProtFilterVolumes
 from protocol_mask import XmippProtMaskParticles
 from protocol_mask import XmippProtMaskVolumes
 from protocol_particle_crop_resize import XmippProtResize
-from protocol_create_mask import XmippProtCreateMask3D
+from protocol_create_mask3d import XmippProtCreateMask3D
 from protocol_particle_pick_automatic import XmippParticlePickingAutomatic
 from protocol_screen_particles import XmippProtScreenParticles
 from protocol_simulated_annealing import XmippProtInitVolSimAnneal
@@ -72,7 +72,7 @@ from protocol_align_volume import XmippProtAlignVolume
 from protocol_cltomo import XmippProtCLTomo
 from protocol_screen_classes import XmippProtScreenClasses
 from protocol_helical_parameters import XmippProtHelicalParameters
-from protocol_resolution_3d import XmippProtResolution3D
+from protocol_resolution3d import XmippProtResolution3D
 from protocol_identify_outliers import XmippProtIdentifyOutliers
 from protocol_convert_to_pseudoatoms import XmippProtConvertToPseudoAtoms
 from protocol_ctf_defocus_group import XmippProtCTFDefocusGroup
