@@ -44,7 +44,11 @@
 
 {% block menu %}
 <div id="asideMainContainer">
-<a href="javascript:createProjectForm('{{msg.TITLE_CREATE_PROJECT}}', '{{msg.TITLE_CREATE_PROJECT_NAME}}');" ><button class="priorityButton" type="button">{{msg.LABEL_CREATE_PROJECT}}</button></a>
+	<a href="javascript:createProjectForm('{{msg.TITLE_CREATE_PROJECT}}', '{{msg.TITLE_CREATE_PROJECT_NAME}}');" >
+		<button class="btn buttonRed" type="button">
+			{{msg.LABEL_CREATE_PROJECT}}
+		</button>
+	</a>
 </div>
 {% endblock %}
 
