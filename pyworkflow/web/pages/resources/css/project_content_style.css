@@ -194,6 +194,11 @@
 /* 	color:Firebrick; */
 }
 
+.tabContents, .referenceLink {
+	max-height:15em;
+	overflow-y:scroll;
+}
+
 .tabContents a:hover {
 	color:Firebrick;
 }
