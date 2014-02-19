@@ -97,8 +97,25 @@ class XmippProtInitVolSimAnneal(ProtInitialVolume):
 
 
     #--------------------------- INSERT steps functions --------------------------------------------
+    def _prepareParams(self):
+        """ Step to define the protocol params """
+        self._params = {'symmetry': self.symmetryGroup.get(),
+                        'angSampling': self.angularSampling.get(),
+                        'numSimAnnealRef': self.numberOfSimAnnealRef.get(),
+                        'temperature': self.initTemperature.get(),
+                        'numIterGreedy':self.numIterGreedy.get(),
+                        'reject':self.percentRejection.get()
+                       }
+
+        # Convert input images if necessary
+        classFn = createXmippInputClasses2D(self, self.inputClasses.get())
+        self._params['classFn'] = classFn
+        
+        outVolFn = self._getExtraPath("output_volume")
+        self._params['volOutput'] = outVolFn
+    
     def _insertAllSteps(self):
-        self._defineParamsStep()
+        self._prepareParams()
         self._insertSteps()
     
     def _insertSteps(self):
@@ -121,23 +138,6 @@ class XmippProtInitVolSimAnneal(ProtInitialVolume):
         self._insertRunJobStep("xmipp_volume_initial_simulated_annealing", args % self._params)
     
     #--------------------------- STEPS functions ---------------------------------------------------
-    def _defineParamsStep(self):
-        """ Step to define the protocol params """
-        self._params = {'symmetry': self.symmetryGroup.get(),
-                        'angSampling': self.angularSampling.get(),
-                        'numSimAnnealRef': self.numberOfSimAnnealRef.get(),
-                        'temperature': self.initTemperature.get(),
-                        'numIterGreedy':self.numIterGreedy.get(),
-                        'reject':self.percentRejection.get()
-                       }
-
-        # Convert input images if necessary
-        classFn = createXmippInputClasses2D(self, self.inputClasses.get())
-        self._params['classFn'] = classFn
-        
-        outVolFn = self._getExtraPath("output_volume")
-        self._params['volOutput'] = outVolFn
-    
     def createOutputStep(self):
         classes2DSet = self.inputClasses.get()
         
