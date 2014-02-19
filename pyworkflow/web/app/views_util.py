@@ -281,6 +281,7 @@ def convertTktoHtml(text):
     return text
 
 def render_column(request):
+    
     renderFunction = request.GET.get("renderFunc")
     
     #PAJM: No se puede llamar a una funcion con reflex sino pertenece auna clase
