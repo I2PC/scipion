@@ -203,9 +203,10 @@ class ProtRelionBase(XmippProtocol):
                             Nproc    = self.NumberOfMpi*self.NumberOfThreads
                             )
         else:
+            imgFn = FileName(self.ImgMd).removeBlockName()
             self.insertStep('createLink',
                                verifyfiles=[images_xmd],
-                               source=self.ImgMd,
+                               source=imgFn,
                                dest=images_xmd)
         # convert input metadata to relion model
         self.ImgStar = self.extraPath(replaceBasenameExt(images_xmd, '.star'))
