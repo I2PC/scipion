@@ -260,6 +260,18 @@ class Particle(Image):
     """ Represents an EM Particle object """
     def __init__(self, **args):
         Image.__init__(self, **args)
+        # This may be redundant, but make the Particle
+        # object more indenpent for tracking coordinates
+        self._coordinate = None
+        
+    def hasCoordinate(self):
+        return self._coordinate is not None
+    
+    def setCoordinate(self, coordinate):
+        self._coordinate = coordinate
+        
+    def getCoordinate(self):
+        return self._coordinate
 
 
 class Mask(Particle):

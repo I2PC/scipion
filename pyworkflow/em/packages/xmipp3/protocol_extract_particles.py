@@ -349,17 +349,20 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         if self.downsampleType == self.OTHER:
             imgSet.setSamplingRate(self.inputMics.getSamplingRate()*self.downFactor.get())
         imgSet.setCoordinates(self.inputCoords)
-        readSetOfParticles(fnImages, imgSet, imgSet.hasCTF())
+        
+        imgSetAux = self._createSetOfParticles('aux')
+        readSetOfParticles(fnImages, imgSetAux, imgSet.hasCTF())
         # For each particle retrieve micId from SetOFCoordinates and set it on the CTFModel
-        for img in imgSet:
+        for img in imgSetAux:
+            #FIXME: This can be slow to make a query to grab the coord, maybe use zip(imgSet, coordSet)???
             coord = self.inputCoords[img.getObjId()]
             ctfModel = img.getCTF()
             if ctfModel is not None:
                 ctfModel.setObjId(coord.getMicId())
                 img.setCTF(ctfModel)
-                #FIXME: imgSet.update(img)
-        imgSet.write()
-        
+            img.setCoordinate(coord)
+            img.cleanObjId()
+            imgSet.append(img)
         self._defineOutputs(outputParticles=imgSet)
         self._defineSourceRelation(self.inputCoords, imgSet)
         #TODO: pass CTF relation from input micrographs to imgSet
