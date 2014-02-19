@@ -131,21 +131,19 @@ class XmippProtCL2D(ProtClassify):
         if not self.extraParams.hasValue() or not '--ref0' in self.extraParams.get():
             args += ' --nref0 %(nref0)d'
     
-        self._defineClassifySteps("xmipp_classify_CL2D", args)
+        self._insertClassifySteps("xmipp_classify_CL2D", args)
         
         # Analyze cores and stable cores
         if self.numberOfReferences > self.numberOfInitialReferences:
             program = "xmipp_classify_CL2D_core_analysis"
             args = "--dir %(extraDir)s --root level "
             # core analysis
-            self._defineClassifySteps(program, args + "--computeCore %(thZscore)f %(thPCAZscore)f", subset='_core')
+            self._insertClassifySteps(program, args + "--computeCore %(thZscore)f %(thPCAZscore)f", subset='_core')
             if self.numberOfReferences > (2 * self.numberOfInitialReferences.get()): # Number of levels should be > 2
                 # stable core analysis
-                self._defineClassifySteps(program, args + "--computeStableCore %(tolerance)d", subset='_stable_core')
+                self._insertClassifySteps(program, args + "--computeStableCore %(tolerance)d", subset='_stable_core')
             
-            
-    #--------------------------- STEPS functions --------------------------------------------   
-    def _defineClassifySteps(self, program, args, subset=''):
+    def _insertClassifySteps(self, program, args, subset=''):
         """ Defines four steps for the subset:
         1. Run the main program.
         2. Evaluate classes
@@ -155,54 +153,10 @@ class XmippProtCL2D(ProtClassify):
         self._insertRunJobStep(program, args % self._params)
         self._insertFunctionStep('evaluateClasses', subset)
         self._insertFunctionStep('sortClasses', subset)
-        self._insertFunctionStep('createOutput', subset)        
-
-    
-    def createOutput(self, subset=''):
-        """ Store the SetOfClasses2D object  
-        resulting from the protocol execution. 
-        """
-        levelMdFiles = self._getLevelMdFiles(subset)
-        lastMdFn = levelMdFiles[-1]
-        classes2DSet = self._createSetOfClasses2D(self.inputImages.get(), subset)
-        readSetOfClasses2D(classes2DSet, lastMdFn, 'classes_sorted')
-        result = {'outputClasses' + subset: classes2DSet}
-        self._defineOutputs(**result)
-
-    #--------------------------- INFO functions --------------------------------------------
-    def _validate(self):
-        validateMsgs = []
-        # Some prepocessing option need to be marked
-        if self.numberOfMpi <= 1:
-            validateMsgs.append('Mpi needs to be greater than 1.')
-        return validateMsgs
-    
-    def _citations(self):
-        cites = ['Sorzano2010a']
-        
-        return cites
-    
-    def _summary(self):
-        summary = []
-        if not hasattr(self, 'outputClasses'):
-            summary.append("Output classes not ready yet.")
-        else:
-            summary.append("Input Images: %s" % self.inputImages.get().getNameId())
-            summary.append("Number of references: %d" % self.numberOfReferences.get())
-            summary.append("Output classes: %s" % self.outputClasses.get())
-        return summary
-    
-    def _methods(self):
-        """ METHODS TO DO"""
-        pass
-    
-    #--------------------------- UTILS functions --------------------------------------------
-    def _getLevelMdFiles(self, subset=''):
-        """ Grab the metadata class files for each level. """
-        levelMdFiles = glob(self._getExtraPath("level_??/level_classes%s.xmd" % subset))
-        levelMdFiles.sort()
-        return levelMdFiles        
-    
+        self._insertFunctionStep('createOutputStep', subset)        
+            
+            
+    #--------------------------- STEPS functions --------------------------------------------   
     def sortClasses(self, subset=''):
         """ Sort the classes and provided a quality criterion. """
         nproc = self.numberOfMpi.get()
@@ -234,5 +188,49 @@ class XmippProtCL2D(ProtClassify):
                     args += " --append"
                 self.runJob("xmipp_classify_compare_classes",args, numberOfMpi=1)
             prevMdFn = mdFn
+    
+    def createOutputStep(self, subset=''):
+        """ Store the SetOfClasses2D object  
+        resulting from the protocol execution. 
+        """
+        levelMdFiles = self._getLevelMdFiles(subset)
+        lastMdFn = levelMdFiles[-1]
+        classes2DSet = self._createSetOfClasses2D(self.inputImages.get(), subset)
+        readSetOfClasses2D(classes2DSet, lastMdFn, 'classes_sorted')
+        result = {'outputClasses' + subset: classes2DSet}
+        self._defineOutputs(**result)
+
+    #--------------------------- INFO functions --------------------------------------------
+    def _validate(self):
+        validateMsgs = []
+        # Some prepocessing option need to be marked
+        if self.numberOfMpi <= 1:
+            validateMsgs.append('Mpi needs to be greater than 1.')
+        return validateMsgs
+    
+    def _citations(self):
+        return ['Sorzano2010a']
+    
+    def _summary(self):
+        summary = []
+        if not hasattr(self, 'outputClasses'):
+            summary.append("Output classes not ready yet.")
+        else:
+            summary.append("Input Images: %s" % self.inputImages.get().getNameId())
+            summary.append("Number of references: %d" % self.numberOfReferences.get())
+            summary.append("Output classes: %s" % self.outputClasses.get())
+        return summary
+    
+    def _methods(self):
+        """ METHODS TO DO"""
+        pass
+    
+    #--------------------------- UTILS functions --------------------------------------------
+    def _getLevelMdFiles(self, subset=''):
+        """ Grab the metadata class files for each level. """
+        levelMdFiles = glob(self._getExtraPath("level_??/level_classes%s.xmd" % subset))
+        levelMdFiles.sort()
+        return levelMdFiles        
+    
     
     
