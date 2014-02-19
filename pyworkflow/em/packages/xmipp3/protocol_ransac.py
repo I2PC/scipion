@@ -45,11 +45,10 @@ class XmippProtRansac(ProtInitialVolume):
         
 #        self.progId = "ransac"
 #        self.oroot = ""
-        
+
+    #--------------------------- DEFINE param functions --------------------------------------------        
     def _defineParams(self, form):
         form.addSection(label='Input')
-        # JUST for testing purpose        
-#        pointerClassList='SetOfClasses2D,SetOfVolumes'
         
         form.addParam('inputClasses', PointerParam, label="Input classes", important=True, 
                       pointerClass='SetOfClasses2D', pointerCondition='hasAverages',
@@ -78,7 +77,6 @@ class XmippProtRansac(ProtInitialVolume):
         form.addParam('numSamples', IntParam, default=8, condition='not dimRed', expertLevel=LEVEL_EXPERT,
                       label='Number of random samples',
                       help='Number of squares to sample the classes')
-        
         
         form.addParam('corrThresh', FloatParam, default=0.77, expertLevel=LEVEL_EXPERT,
                       label='Inliers threshold',
@@ -114,7 +112,6 @@ class XmippProtRansac(ProtInitialVolume):
                        help='At each iteration, the lowest correlated particles are'
                             'removed from the 3D reconstruction, although they may '
                             'participate in the next iteration')
-        
 
         form.addParam('useAll', BooleanParam, default=False, expertLevel=LEVEL_EXPERT,
                       label='Use all images to refine', 
@@ -144,10 +141,10 @@ class XmippProtRansac(ProtInitialVolume):
         
         # Look for threshold, evaluate volumes and get the best
         if self.initialVolume.hasValue():
+            #ToDo: remove rm command and check what to clean
             self._insertRunJobStep("rm", params=self._getTmpPath("gallery_InitialVolume*"), NumberOfMpi=1)
             
-        self._insertFunctionStep("getCorrThresh",
-                                 prerequisites=deps) # Make estimation steps indepent between them)
+        self._insertFunctionStep("getCorrThresh", prerequisites=deps) # Make estimation steps indepent between them)
         self._insertFunctionStep("evaluateVolumes")
         bestVolumesStepId = self._insertFunctionStep("getBestVolumes")        
         
