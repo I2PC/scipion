@@ -33,7 +33,8 @@ public class ExportImagesJDialog extends JDialog{
     private XmippFileChooser fc;
     private JButton savebt;
     private JButton cancelbt;
-    private String note = "<html> <font color='red'>Extensions supported are: jpg, mrc, ...</font> ";
+    private String note1 = "<html><b>Note 1:</b> Only enabled images will be saved";
+    private String note2 = "<html><b>Note 2:</b> Use extension stk, mrcs or img to save as SPIDER, MRC or IMAGIC stacks";
     private JButton browsebt;
     private JTextField pathtf;
     
@@ -81,8 +82,8 @@ public class ExportImagesJDialog extends JDialog{
             }
         });
         add(browsebt, XmippWindowUtil.getConstraints(c, 2, 0));
-        add(new JLabel(note), XmippWindowUtil.getConstraints(c, 0, 1, GridBagConstraints.HORIZONTAL));
-        
+        add(new JLabel(note1), XmippWindowUtil.getConstraints(c, 0, 1, GridBagConstraints.HORIZONTAL));
+        add(new JLabel(note2), XmippWindowUtil.getConstraints(c, 0, 2, GridBagConstraints.HORIZONTAL));
         JPanel actionspn = new JPanel();
         cancelbt = XmippWindowUtil.getTextButton("Cancel", new ActionListener() {
 
@@ -102,7 +103,7 @@ public class ExportImagesJDialog extends JDialog{
             }
         });
         actionspn.add(savebt);
-        add(actionspn, XmippWindowUtil.getConstraints(c, 0, 2, GridBagConstraints.HORIZONTAL));
+        add(actionspn, XmippWindowUtil.getConstraints(c, 0, 3, GridBagConstraints.HORIZONTAL));
         pack();
         XmippWindowUtil.setLocation(0.5, 0.5, this);
         setVisible(true);

@@ -33,7 +33,7 @@
 ProgClassifyCL2D *prm = NULL;
 FILE * _logCL2D = NULL;
 
-//#define DEBUG_WITH_LOG
+#define DEBUG_WITH_LOG
 #ifdef DEBUG_WITH_LOG
 #define CREATE_LOG() _logCL2D = fopen(formatString("nodo%02d.log", node->rank).c_str(), "w+")
 #define LOG(msg) do{fprintf(_logCL2D, "%s\t%s\n", getCurrentTimeString(), msg); fflush(_logCL2D); }while(0)
@@ -72,6 +72,11 @@ void CL2DAssignment::copyAlignment(const CL2DAssignment &alignment)
     psi = alignment.psi;
     shiftx = alignment.shiftx;
     shifty = alignment.shifty;
+}
+
+bool CL2DAssignmentComparator(const CL2DAssignment& d1, const CL2DAssignment& d2)
+{
+  return d1.objId < d2.objId;
 }
 
 /* CL2DClass basics ---------------------------------------------------- */
@@ -563,6 +568,9 @@ void CL2D::shareAssignments(bool shareAssignment, bool shareUpdates,
                     }
                 }
             }
+            // This is important to ensure that all nodes have all images in the same order
+            std::sort(receivedNextListImage.begin(),receivedNextListImage.end(),CL2DAssignmentComparator);
+
             // Copy the received elements
             listSize = receivedNextListImage.size();
             P[q]->nextListImg.reserve(P[q]->nextListImg.size() + listSize);
@@ -644,6 +652,9 @@ void CL2D::shareSplitAssignments(Matrix1D<int> &assignment, CL2DClass *node1,
                     receivedNonClassCorr.push_back(auxList2[j]);
             }
         }
+        // This is important to ensure that all nodes have all images in the same order
+        std::sort(receivedNextListImage.begin(),receivedNextListImage.end(),CL2DAssignmentComparator);
+
         // Copy the received elements
         listSize = receivedNextListImage.size();
         node->nextListImg.reserve(node->nextListImg.size() + listSize);
@@ -1205,6 +1216,8 @@ void CL2D::splitNode(CL2DClass *node, CL2DClass *&node1, CL2DClass *&node2,
     bool success = true;
     do
     {
+    	// Sort the currentListImg to make sure that all nodes have the same order
+    	std::sort(node->currentListImg.begin(),node->currentListImg.end(),CL2DAssignmentComparator);
 #ifdef DEBUG
 	std::cout << "Splitting node " << node << "(" << node->currentListImg.size() << ") into " << node1 << " and " << node2 << std::endl;
 #endif
