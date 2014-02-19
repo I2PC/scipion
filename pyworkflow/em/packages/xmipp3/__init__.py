@@ -38,7 +38,6 @@ from viewer import XmippViewer
 from viewer_ml2d import XmippML2DViewer
 from viewer_cl2d import XmippCL2DViewer
 from viewer_cltomo import XmippCLTomoViewer
-from viewer_ml3d import XmippML3DViewer
 from viewer_nma import XmippNMAViewer
 from viewer_nma_alignment import XmippAlignmentNMAViewer
 from viewer_resolution3d import XmippResolution3DViewer
@@ -54,7 +53,6 @@ from protocol_cl2d import XmippProtCL2D
 from protocol_cl2d_align import XmippProtCL2DAlign
 from protocol_kerdensom import XmippProtKerdensom
 from protocol_rotational_spectra import XmippProtRotSpectra 
-from protocol_ml3d import XmippProtML3D
 from protocol_projmatch import XmippProtProjMatch
 from protocol_filter import XmippProtFilterParticles
 from protocol_filter import XmippProtFilterVolumes

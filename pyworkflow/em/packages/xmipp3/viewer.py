@@ -100,19 +100,20 @@ class XmippViewer(Viewer):
         elif issubclass(cls, SetOfCoordinates):
             obj_mics = obj.getMicrographs()#accessing mics to provide metadata file
             mdFn = getattr(obj_mics, '_xmippMd', None)
+            tmpDir = self._getTmpPath(obj.getName()) 
+            makePath(tmpDir)
             
             if mdFn:
                 fn = mdFn.get()
-            else:#if no metadata file, create one on tmp folder, happens if protocol is not an xmipp one
+            else: # happens if protocol is not an xmipp one
                 fn = self._getTmpPath(obj_mics.getName() + '_micrographs.xmd')
                 writeSetOfMicrographs(obj_mics, fn)
-                
-            #creating set of coords tmp dir to persist coords and provide output dir to picker on review mode 
-            tmpDir = self._getTmpPath(obj.getName()) # TODO: CHECK to create an extra for the coordinates obj
-            
-            makePath(tmpDir)
-            writeSetOfCoordinates(tmpDir, obj)            
-                
+            posDir = getattr(obj, '_xmippMd', None)#extra dir istead of md file for SetOfCoordinates
+            if posDir:
+                copyTree(posDir.get(), tmpDir)
+            else:
+                 writeSetOfCoordinates(tmpDir, obj)   
+                           
             runScipionParticlePicker(fn, tmpDir, self._project.getName(), obj.strId())
         
         elif issubclass(cls, SetOfParticles) or issubclass(cls, SetOfVolumes):

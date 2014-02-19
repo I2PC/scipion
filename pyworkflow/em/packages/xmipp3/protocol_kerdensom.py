@@ -41,6 +41,7 @@ class KendersomBaseClassify(ProtClassify):
     a common structure. 
     """
     
+    #--------------------------- DEFINE param functions --------------------------------------------
     def _defineParams(self, form):
         form.addSection(label='Input')
         form.addParam('inputImages', PointerParam, label="Input images", important=True, 
@@ -75,12 +76,8 @@ class KendersomBaseClassify(ProtClassify):
                       'See [[http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/KerDenSOM][KerDenSOM]]')
         self._addParams(form)
     
-    def _insertAllSteps(self):
-        self._defineParamsStep()
-        self._defineProccesStep()
-        self._insertFunctionStep('createOutputStep')
-    
-    def _defineParamsStep(self):
+    #--------------------------- INSERT steps functions --------------------------------------------
+    def _prepareParams(self):
         # Convert input images if necessary
         imgsFn = createXmippInputImages(self, self.inputImages.get())
         
@@ -99,13 +96,30 @@ class KendersomBaseClassify(ProtClassify):
                         'kvectors': self._getExtraPath("kerdensom_vectors.xmd"),
                         'kclasses': self._getExtraPath("kerdensom_classes.xmd")
                        }
-
+    
+    def _insertAllSteps(self):
+        self._prepareParams()
+        self._insertProccesStep()
+        self._insertFunctionStep('createOutputStep')
+    
     def _insertKerdensomStep(self):
         args = '-i %(vectors)s --oroot %(oroot)s --xdim %(SomXdim)d --ydim %(SomYdim)d' + \
                ' --deterministic_annealing %(SomSteps)f %(SomReg0)f %(SomReg1)f %(extraParams)s'
         self._insertRunJobStep("xmipp_classify_kerdensom", args % self._params)
 #        deleteFiles([self._getExtraPath("vectors.xmd"),self._getExtraPath("vectors.vec")], True)
     
+    #--------------------------- STEPS functions ---------------------------------------------------
+    def createOutputStep(self):
+        """ Store the kenserdom object 
+        as result of the protocol.
+        """
+        imgSet = self.inputImages.get()
+        classes2DSet = self._createSetOfClasses2D(self.inputImages.get())
+        readSetOfClasses2D(classes2DSet, self._params['kclasses'])
+        self._defineOutputs(outputClasses=classes2DSet)
+        self._defineSourceRelation(imgSet, classes2DSet)
+    
+    #--------------------------- INFO functions ----------------------------------------------------
     def _validate(self):
         errors = []
         mask = self.Mask.get()
@@ -119,16 +133,6 @@ class KendersomBaseClassify(ProtClassify):
             else:
                 errors.append("Please, enter a mask file")
         return errors
-    
-    def createOutputStep(self):
-        """ Store the kenserdom object 
-        as result of the protocol.
-        """
-        imgSet = self.inputImages.get()
-        classes2DSet = self._createSetOfClasses2D(self.inputImages.get())
-        readSetOfClasses2D(classes2DSet, self._params['kclasses'])
-        self._defineOutputs(outputClasses=classes2DSet)
-        self._defineSourceRelation(imgSet, classes2DSet)
     
     def _summary(self):
         summary = []
@@ -147,16 +151,29 @@ class KendersomBaseClassify(ProtClassify):
 
 
 class XmippProtKerdensom(KendersomBaseClassify):
-    """ Protocol to align a set of particles. """
+    """
+    Perform Kernel Probability Density Estimator Self-Organizing Map.
+    
+    The kerdenSOM algorithm anneals from an initial high regularization factor
+    to a final lower one, in a user-defined number of steps.
+    
+    KerdenSOM is an excellent tool for classification, especially when
+    using a large number of data and classes and when the transition between
+    the classes is almost continuous, with no clear separation between them.
+    
+    The input images must be previously aligned.
+    """
     _label = 'kerdensom'
     
     def __init__(self, **args):
         KendersomBaseClassify.__init__(self, **args)
     
+    #--------------------------- DEFINE param functions --------------------------------------------
     def _addParams(self, form):
         pass
     
-    def _defineProccesStep(self):
+    #--------------------------- INSERT steps functions --------------------------------------------
+    def _insertProccesStep(self):
         self._insertImgToVectorStep()
         self._insertKerdensomStep()
         self._insertVectorToImgStep()
@@ -176,7 +193,8 @@ class XmippProtKerdensom(KendersomBaseClassify):
             args += ' --mask binary_file %(mask)s'
         self._insertRunJobStep("xmipp_image_vectorize", args % self._params)
 #        deleteFiles([self._getExtraPath("kerdensom_vectors.xmd"),self._getExtraPath("kerdensom_vectors.vec")], True)
-
+    
+    #--------------------------- INFO functions ----------------------------------------------------
     def rewriteClassBlockStep(self):
         fnClass = "classes@%(kclasses)s" % self._params
         fnClassStack = self._params['classes']
@@ -188,5 +206,6 @@ class XmippProtKerdensom(KendersomBaseClassify):
             counter += 1
         md.write(fnClass, xmipp.MD_APPEND)
     
+    #--------------------------- INFO functions ----------------------------------------------------
     def _citations(self):
-        return ['Montano2001', 'Montano2002']
+        return ['PascualMontano2001', 'PascualMontano2002']
