@@ -81,7 +81,7 @@ public class XmippUtil {
             while ((line = reader.readLine()) != null) {
                 output.append(line + "\n");
             }
-            System.out.println(output.toString());
+            //System.out.println(output.toString());
         }
 
 
