@@ -111,6 +111,20 @@ def prettyDict(d):
     pp.pprint(d)
     
     
+def prettyXml(elem, level=0):
+    """ Add indentation for XML elements for more human readable text. """
+    i = "\n" + level*"  "
+    if len(elem):
+        if not elem.text or not elem.text.strip():
+            elem.text = i + "  "
+        if not elem.tail or not elem.tail.strip():
+            elem.tail = i
+        for _elem in elem:
+            prettyXml(_elem, level+1)
+        if not _elem.tail or not _elem.tail.strip():
+            _elem.tail = i
+    
+    
 def getUniqueItems(originalList):
     """ Method to remove repeated items from one list 
     originalList -- Original list with repeated items, or not.
