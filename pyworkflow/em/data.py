@@ -135,6 +135,33 @@ class CTFModel(EMObject):
         self._micFile.set(value)
 
 
+class DefocusGroup(EMObject):
+    """ Groups CTFs by defocus"""
+    def __init__(self, **args):
+        EMObject.__init__(self, **args)
+        self._defocusMin = Float()
+        self._defocusMax = Float()
+        self._defocusAvg = Float()
+        
+    def getDefocusMin(self):
+        return self._defocusMin.get()
+        
+    def setDefocusMin(self, value):
+        self._defocusMin.set(value)
+        
+    def getDefocusMax(self):
+        return self._defocusMax.get()
+        
+    def setDefocusMax(self, value):
+        self._defocusMax.set(value)
+        
+    def getDefocusAvg(self):
+        return self._defocusAvg.get()
+        
+    def setDefocusAvg(self, value):
+        self._defocusAvg.set(value)
+
+
 class Image(EMObject):
     """Represents an EM Image object"""
     def __init__(self, **args):
@@ -408,6 +435,9 @@ class SetOfImages(Set):
     def getAcquisition(self):
         return self._acquisition
         
+    def setAcquisition(self, acquisition):
+        self._acquisition = acquisition
+        
     def hasCTF(self):
         """Return True if the SetOfImages has associated a CTF model"""
         return self._hasCtf.get()  
@@ -570,6 +600,35 @@ class SetOfCTF(Set):
     def __init__(self, **args):
         Set.__init__(self, **args)    
         
+        
+class SetOfDefocusGroup(Set):
+    """ Contains a set of DefocusGroup.
+        id min/max/avg exists the corresponding flaf must be
+        set to true"""
+    def __init__(self, **args):
+        Set.__init__(self, **args) 
+        self._minSet=False
+        self._maxSet=False
+        self._avgSet=False
+        
+    def getMinSet(self):
+        return self._minSet.get()
+        
+    def setMinSet(self, value):
+        self._minSet.set(value)
+        
+    def getMaxSet(self):
+        return self._maxSet.get()
+        
+    def setMaxSet(self, value):
+        self._maxSet.set(value)
+        
+    def getAvgSet(self):
+        return self._avgSet.get()
+        
+    def setAvgSet(self, value):
+        self._avgSet.set(value)
+
 
 class Coordinate(EMObject):
     """This class holds the (x,y) position and other information
