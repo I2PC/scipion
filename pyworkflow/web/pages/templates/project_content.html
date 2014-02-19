@@ -102,7 +102,8 @@
 		<a href="javascript:switchGraph();"><i class="fa fa-bars" style="margin-right:5px"></i>{{msg.LABEL_LIST}}</a>
 	</span>
 	<span id="refreshTool" style="display:both;">
-		<a href="javascript:refreshRuns(0);"><i class="fa fa-refresh fa-spin" style="margin-right:5px"></i>{{msg.LABEL_REFRESH}}</a>
+		<a href="javascript:refreshRuns(1);"><i class="fa fa-refresh" style="margin-right:5px"></i>{{msg.LABEL_REFRESH}}</a>
+<!-- 		<a href="javascript:refreshRuns(0);"><i class="fa fa-refresh fa-spin" style="margin-right:5px"></i>{{msg.LABEL_REFRESH}}</a> -->
 	</span>
 </span>
 <div id="toolbar" style="display: none;">
@@ -120,7 +121,13 @@
 
 {% block contentCenter %}
 <div class="tabContaier" id="tabs">
-	<span id="buttonAnalyzeResult" style="display:None;"><a id="analyzeTool" class="btn buttonRed" href=""><i class="fa fa-eye" style="margin-right:5px"></i>{{msg.LABEL_ANALYZE}}</a></span>
+	<span id="buttonAnalyzeResult" style="display:None;">
+		<a id="analyzeTool" class="btn buttonRed" href="">
+			<i class="fa fa-eye" style="margin-right:5px">
+			</i>
+			{{msg.LABEL_ANALYZE}}
+		</a>
+	</span>
 	<ul class="listTabs" id="tabs">
 		<li><a href="#tab-data">{{msg.LABEL_DATA}}</a></li>
 		<li><a href="#tab-summary">{{msg.LABEL_SUMMARY}}</a></li>
