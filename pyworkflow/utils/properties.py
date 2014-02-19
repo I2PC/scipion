@@ -147,6 +147,8 @@ class Message():
     LABEL_MAGNI_RATE = 'Magnification rate'
     LABEL_SCANNED = 'Scanned pixel size'
     
+    LABEL_IMPORT_MIC = 'Import micrographs'
+    LABEL_IMPORT_PART = 'Import particles'
     LABEL_IMPORT_VOL = 'Import volumes'
     ERROR_IMPORT_VOL = 'importVolumes:There is not filePaths matching pattern'
     
