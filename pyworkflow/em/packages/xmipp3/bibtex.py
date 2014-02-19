@@ -121,6 +121,50 @@ doi = "http://dx.doi.org/10.1109/TSMC.1979.4310076",
 author = "Otsu, N.",
 }
 
+@article{Pascual2000,
+title = "Mapping and fuzzy classification of macromolecular images using self-organizing neural networks ",
+journal = "Ultramicroscopy",
+volume = "84",
+number = "1-2",
+pages = "85 - 99",
+year = "2000",
+note = "",
+issn = "0304-3991",
+doi = "http://dx.doi.org/10.1016/S0304-3991(00)00022-X",
+url = "http://www.sciencedirect.com/science/article/pii/S030439910000022X",
+author = "Pascual-Montano, A and Montserrat Bárcena and J.J Merelo and José-María Carazo",
+keywords = "Image processing, Cluster analysis, Neural networks, Self-organizing maps, Fuzzy logic "
+}
+
+@article{PascualMontano2001,
+title = "A Novel Neural Network Technique for Analysis and Classification of \{EM\} Single-Particle Images",
+journal = "JSB",
+volume = "133",
+number = "2 - 3",
+pages = "233 - 245",
+year = "2001",
+issn = "1047-8477",
+doi = "http://dx.doi.org/10.1006/jsbi.2001.4369",
+url = "http://www.sciencedirect.com/science/article/pii/S1047847701943692",
+author = "Pascual-Montano, A and L.E Donate and M Valle and M Bárcena and R.D Pascual-Marqui and J.M Carazo",
+keywords = "classification, cryo-EM, image processing, neural networks, self-organizing maps, probability density function, kernel functions",
+}
+
+@article{PascualMontano2002,
+title = "Quantitative self-organizing maps for clustering electron tomograms ",
+journal = "JSB",
+volume = "138",
+number = "1-2",
+pages = "114 - 122",
+year = "2002",
+note = "",
+issn = "1047-8477",
+doi = "http://dx.doi.org/10.1016/S1047-8477(02)00008-4",
+url = "http://www.sciencedirect.com/science/article/pii/S1047847702000084",
+author = "Pascual-Montano, A and K.A. Taylor and H. Winkler and R.D. Pascual-Marqui and J.-M. Carazo",
+keywords = "Classification, Electron tomography, Image processing, Neural networks, Self-organizing maps, Probability density function, Kernel functions, Actin, Myosin, Muscle proteins "
+}
+
 @article{Scheres2005a,
 title = "Maximum-likelihood Multi-reference Refinement for Electron Microscopy Images ",
 journal = "JMB",
