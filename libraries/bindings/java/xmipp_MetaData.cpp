@@ -941,15 +941,17 @@ JNIEXPORT void JNICALL Java_xmipp_jni_MetaData_readPlain
     XMIPP_JAVA_CATCH;
 }
 
+
+
 JNIEXPORT void JNICALL Java_xmipp_jni_MetaData_writeImages
-(JNIEnv * env, jobject jobj, jstring joutput, jboolean independent, jint image_label)
+(JNIEnv * env, jobject jobj, jstring joutput, jboolean independent, jboolean applyGeo, jint image_label)
 {
     XMIPP_JAVA_TRY
     {
         MetaData * md = GET_INTERNAL_METADATA(jobj);
         jboolean aux=false;
         const char * output = env->GetStringUTFChars(joutput, &aux);
-        copyImages(*md, output, independent, (MDLabel) image_label);
+        copyImages(*md, output, independent, applyGeo, (MDLabel) image_label);
         env->ReleaseStringUTFChars(joutput, output);
     }
     XMIPP_JAVA_CATCH;

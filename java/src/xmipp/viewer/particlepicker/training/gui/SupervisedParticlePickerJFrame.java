@@ -169,7 +169,8 @@ public class SupervisedParticlePickerJFrame extends ParticlePickerJFrame {
         try {
             ppicker.resetParticleImages();
             super.updateSize(size);
-            ppicker.initUpdateTemplates();
+            new UpdateTemplatesTask(ppicker, ppicker.getTemplatesNumber()).execute();
+            
 
         } catch (Exception e) {
             String msg = (e.getMessage() != null) ? e.getMessage() : XmippMessage.getUnexpectedErrorMsg();
@@ -188,7 +189,8 @@ public class SupervisedParticlePickerJFrame extends ParticlePickerJFrame {
             updateMicrographsModel(true);
             getCanvas().refreshActive(null);
 
-            ppicker.initUpdateTemplates();
+            new UpdateTemplatesTask(ppicker, ppicker.getTemplatesNumber()).execute();
+            
 
         } else // only can choose file if TrainingPickerJFrame instance
         {
@@ -261,6 +263,7 @@ public class SupervisedParticlePickerJFrame extends ParticlePickerJFrame {
 
     private void initComponents() {
         try {
+            System.out.println("Main Frame esta en el hilo " + Thread.currentThread().getName());
             setResizable(false);
             setTitle("Xmipp Particle Picker - " + ppicker.getMode());
             initMenuBar();
@@ -685,7 +688,8 @@ public class SupervisedParticlePickerJFrame extends ParticlePickerJFrame {
         ppicker.resetMicrograph(getMicrograph());
         canvas.refreshActive(null);
         updateMicrographsModel();
-        ppicker.initUpdateTemplates();
+        new UpdateTemplatesTask(ppicker, ppicker.getTemplatesNumber()).execute();
+        
         if (ppicker.getMode() == Mode.Supervised) {
             ppicker.autopick(this, getMicrograph());
         }
