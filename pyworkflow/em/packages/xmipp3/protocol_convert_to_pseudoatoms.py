@@ -46,6 +46,7 @@ class XmippProtConvertToPseudoAtoms(ProtPreprocessVolumes):
     """ Protocol for converting an EM volume into pseudoatoms """
     _label = 'convert to pseudoatoms'
     
+    #--------------------------- DEFINE param functions --------------------------------------------
     def _defineParams(self, form):
         form.addSection(label='Input')
         form.addParam('inputStructure', PointerParam, label="Input structure", important=True, 
@@ -76,6 +77,7 @@ class XmippProtConvertToPseudoAtoms(ProtPreprocessVolumes):
               
         form.addParallelSection(threads=4, mpi=1)    
              
+    #--------------------------- INSERT steps functions --------------------------------------------
     def _insertAllSteps(self):
         inputStructure = self.inputStructure.get()
         fnMask = self._insertMaskStep()
@@ -99,6 +101,8 @@ class XmippProtConvertToPseudoAtoms(ProtPreprocessVolumes):
             fnMask = getImageLocation(self.volumeMask.get())
         return fnMask
         
+        
+    #--------------------------- STEPS functions --------------------------------------------
     def convertToPseudoAtomsStep(self, inputFn, fnMask):
         prefix = 'pseudoatoms'
         outputFn = self._getPath(prefix)
@@ -141,6 +145,8 @@ class XmippProtConvertToPseudoAtoms(ProtPreprocessVolumes):
         self._defineOutputs(outputPdb=pdb)
         self._defineSourceRelation(self.inputStructure.get(), self.outputPdb)
 
+
+    #--------------------------- INFO functions --------------------------------------------
     def _summary(self):
         summary = []
         summary.append('Pseudoatom radius (voxels): %f'%self.pseudoAtomRadius.get())

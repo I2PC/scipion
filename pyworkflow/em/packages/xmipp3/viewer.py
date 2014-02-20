@@ -41,7 +41,7 @@ from protocol_cl2d_align import XmippProtCL2DAlign
 from protocol_cl2d import XmippProtCL2D
 from protocol_kerdensom import XmippProtKerdensom
 from protocol_rotational_spectra import XmippProtRotSpectra
-from protocol_create_mask import XmippProtCreateMask3D
+from protocol_create_mask3d import XmippProtCreateMask3D
 from protocol_screen_classes import XmippProtScreenClasses
 from protocol_helical_parameters import XmippProtHelicalParameters
 from protocol_convert_to_pseudoatoms import XmippProtConvertToPseudoAtoms

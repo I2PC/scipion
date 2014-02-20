@@ -39,7 +39,7 @@ from constants import *
 
 
 class XmippProtMask():
-    """ This class implement a protocol for applying a mask with Xmipp.
+    """ This class implement the common features for applying a mask with Xmipp either SetOfParticles, Volume or SetOfVolumes objects.
     """
     
     def __init__(self, **args):
@@ -80,7 +80,7 @@ class XmippProtMask():
 #         maskBand *= -1
         
         if self.fillType == MASK_FILL_VALUE:
-            fillStr = str(self.fillValue.get())
+            fillStr += str(self.fillValue.get())
         
         self._args += " --substitute %(fillStr)s "
         
@@ -94,14 +94,14 @@ class XmippProtMask():
         return self._args % locals()
 
 
-class XmippProtMaskParticles(ProtMaskParticles, XmippProtMask, XmippProcessParticles, XmippGeometricalMask2D):
+class XmippProtMaskParticles(XmippProtMask, XmippProcessParticles, XmippGeometricalMask2D):
     """ Apply some filter to SetOfParticles """
     _label = 'mask particles'
     
     def __init__(self, **args):
-        ProtMaskParticles.__init__(self)
-        XmippProtMask.__init__(self, **args)
+#         ProtMaskParticles.__init__(self)
         XmippProcessParticles.__init__(self, **args)
+        XmippProtMask.__init__(self, **args)
 #         XmippGeometricalMask2D.__init__(self, **args)
         
     def _defineProtParams(self, form):
@@ -127,14 +127,14 @@ class XmippProtMaskParticles(ProtMaskParticles, XmippProtMask, XmippProcessParti
         return args
 
 
-class XmippProtMaskVolumes(ProtMaskVolumes, XmippProtMask, XmippProcessVolumes, XmippGeometricalMask3D):
+class XmippProtMaskVolumes(XmippProtMask, XmippProcessVolumes, XmippGeometricalMask3D):
     """ Apply mask to volume or SetOfVolumes """
     _label = 'apply mask'
     
     def __init__(self, **args):
-        ProtMaskVolumes.__init__(self)
-        XmippProtMask.__init__(self, **args)
+#         ProtMaskVolumes.__init__(self)
         XmippProcessVolumes.__init__(self, **args)
+        XmippProtMask.__init__(self, **args)
     
     def _defineProtParams(self, form):
         form.addParam('inputMask', PointerParam, pointerClass="VolumeMask", label="Input mask",condition='source==%d'%SOURCE_MASK)

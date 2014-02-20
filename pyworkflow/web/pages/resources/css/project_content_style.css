@@ -194,6 +194,11 @@
 /* 	color:Firebrick; */
 }
 
+.tabContents, .referenceLink {
+	max-height:16em;
+	overflow-y:scroll;
+}
+
 .tabContents a:hover {
 	color:Firebrick;
 }
@@ -201,6 +206,18 @@
 .referenceLink a {
 	color:Firebrick;
 	text-decoration: underline;
+}
+
+#tab-logs-output, #tab-logs-error, #tab-logs-scipion {
+	background-color:black;
+	color:white;
+	
+/* 	background-color:white; */
+/* 	color:black; */
+	
+	font-family:Monospace;
+	padding:1em;
+	font-size:90%;
 }
 
 /* jsPlumb */

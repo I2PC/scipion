@@ -38,6 +38,7 @@ class XmippProtHelicalParameters(ProtPreprocessVolumes):
          Helical symmetry is defined as V(r,rot,z)=V(r,rot+k*DeltaRot,z+k*Deltaz)."""
     _label = 'helical symmetry'
     
+    #--------------------------- DEFINE param functions --------------------------------------------
     def _defineParams(self, form):
         form.addSection(label='General parameters')
         form.addParam('inputVolume', PointerParam, pointerClass="Volume", label='Input volume')
@@ -55,6 +56,7 @@ class XmippProtHelicalParameters(ProtPreprocessVolumes):
         self.deltaZ=Float()
         self.deltaRot=Float()
 
+    #--------------------------- INSERT steps functions --------------------------------------------
     def _insertAllSteps(self):
         self._insertFunctionStep('coarseSearch')
         self._insertFunctionStep('fineSearch')
@@ -63,41 +65,7 @@ class XmippProtHelicalParameters(ProtPreprocessVolumes):
             self._insertFunctionStep('applyDihedral')
         self._insertFunctionStep('createOutput')
     
-    def createOutput(self):
-        volume=Volume()
-        volume.setFileName(self._getPath('volume_symmetrized.vol'))
-        volume.setSamplingRate(self.inputVolume.get().getSamplingRate())
-        self._defineOutputs(outputVolume=volume)
-        self._defineTransformRelation(self.inputVolume, self.outputVolume)
-        
-        md=MetaData(self._getExtraPath('fineParams.xmd'))
-        objId=md.firstObject()
-        self.deltaRot.set(md.getValue(MDL_ANGLE_ROT,objId))
-        self.deltaZ.set(md.getValue(MDL_SHIFT_Z,objId))
-        
-    def _summary(self):
-        messages = []
-        if self.deltaZ.hasValue():
-            messages.append('DeltaZ=%f (voxels) %f (Angstroms)'%(self.deltaZ.get(),self.deltaZ.get()*self.inputVolume.get().getSamplingRate()))
-            messages.append('DeltaRot=%f (degrees)'%self.deltaRot.get())      
-        return messages
-
-    def _citations(self):
-        papers=[]
-        return papers
-
-    def _methods(self):
-        messages = []      
-        messages.append('We looked for the helical symmetry parameters of the volume %s using Xmipp [delaRosaTrevin2013].'%self.inputVolume.get().getNameId())
-        if self.deltaZ.hasValue():
-            messages.append('We found them to be %f Angstroms and %f degrees.'%(self.deltaZ.get()*self.inputVolume.get().getSamplingRate(),
-                                                                                self.deltaRot.get()))
-            messages.append('We symmetrized %s with these parameters and produced the volume %s.'%(self.inputVolume.get().getNameId(),
-                                                                                                  self.outputVolume.getNameId()))
-            if self.dihedral.get():
-                messages.append('We applied dihedral symmetry.')
-        return messages
-
+    #--------------------------- STEPS functions --------------------------------------------
     def coarseSearch(self):
         fnVol=locationToXmipp(*self.inputVolume.get().getLocation())
         args="-i %s --sym helical -z %f %f %f --rotHelical %f %f %f --thr %d -o %s"%(fnVol,
@@ -151,3 +119,40 @@ class XmippProtHelicalParameters(ProtPreprocessVolumes):
         self.runJob("xmipp_image_operate","-i %s --plus %s -o %s"%(fnOut,fnRotated,fnOut))
         self.runJob("xmipp_image_operate","-i %s --divide 2"%(fnOut))
         self.runJob("xmipp_transform_mask","-i %s "%(fnOut)+maskArgs)
+    
+    def createOutput(self):
+        volume=Volume()
+        volume.setFileName(self._getPath('volume_symmetrized.vol'))
+        volume.setSamplingRate(self.inputVolume.get().getSamplingRate())
+        self._defineOutputs(outputVolume=volume)
+        self._defineTransformRelation(self.inputVolume, self.outputVolume)
+        
+        md=MetaData(self._getExtraPath('fineParams.xmd'))
+        objId=md.firstObject()
+        self.deltaRot.set(md.getValue(MDL_ANGLE_ROT,objId))
+        self.deltaZ.set(md.getValue(MDL_SHIFT_Z,objId))
+              
+    #--------------------------- INFO functions --------------------------------------------
+    def _summary(self):
+        messages = []
+        if self.deltaZ.hasValue():
+            messages.append('DeltaZ=%f (voxels) %f (Angstroms)'%(self.deltaZ.get(),self.deltaZ.get()*self.inputVolume.get().getSamplingRate()))
+            messages.append('DeltaRot=%f (degrees)'%self.deltaRot.get())      
+        return messages
+
+    def _citations(self):
+        papers=[]
+        return papers
+
+    def _methods(self):
+        messages = []      
+        messages.append('We looked for the helical symmetry parameters of the volume %s using Xmipp [delaRosaTrevin2013].'%self.inputVolume.get().getNameId())
+        if self.deltaZ.hasValue():
+            messages.append('We found them to be %f Angstroms and %f degrees.'%(self.deltaZ.get()*self.inputVolume.get().getSamplingRate(),
+                                                                                self.deltaRot.get()))
+            messages.append('We symmetrized %s with these parameters and produced the volume %s.'%(self.inputVolume.get().getNameId(),
+                                                                                                  self.outputVolume.getNameId()))
+            if self.dihedral.get():
+                messages.append('We applied dihedral symmetry.')
+        return messages
+

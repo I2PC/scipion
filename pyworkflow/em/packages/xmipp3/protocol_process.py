@@ -47,7 +47,7 @@ class XmippProcess(EMProtocol):
         self._defineFilenames()
         self._insertFunctionStep("convertStep")
         self._insertProcessStep(self.inputFn, self.outputStk, self.outputMd)
-        self._insertFunctionStep('createOutput')
+        self._insertFunctionStep('createOutputStep')
         
     def _insertProcessStep(self, inputFn, outputFn, outputMd):
         args = self._getCommand(inputFn)
@@ -76,7 +76,7 @@ class XmippProcessParticles(ProtProcessParticles, XmippProcess):
         """ convert if necessary"""
         pass
     
-    def createOutput(self):
+    def createOutputStep(self):
         imgSet = self._createSetOfParticles()
         imgSet.copyInfo(self.inputParticles.get())
         readSetOfParticles(self.outputMd, imgSet, imgSet.hasCTF())
@@ -117,7 +117,7 @@ class XmippProcessVolumes(ProtPreprocessVolumes, XmippProcess):
             volSet.writeStack(self.outputStk)
             self.singleVolume = False
     
-    def createOutput(self):
+    def createOutputStep(self):
         volSet = self.inputVolumes.get()
         if self.singleVolume:
             vol = Volume()

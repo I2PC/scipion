@@ -40,7 +40,8 @@ class XmippProtIdentifyOutliers(ProtClassify3D, ProjMatcher):
     
     def __init__(self, **args):
         ProtClassify3D.__init__(self, **args)
-        
+    
+    #--------------------------- DEFINE param functions --------------------------------------------
     def _defineParams(self, form):
         form.addSection(label='Input')
         form.addParam('inputImages', PointerParam, label="Input particles", important=True, 
@@ -63,7 +64,8 @@ class XmippProtIdentifyOutliers(ProtClassify3D, ProjMatcher):
                       help='In degrees. This sampling defines how fine the projection gallery from the volume is explored.')
          
         form.addParallelSection(mpi=8)
-        
+    
+    #--------------------------- INSERT steps functions --------------------------------------------
     def _insertAllSteps(self):
         # Projection matching
         self.fnAngles = self._getTmpPath('angles.xmd')
@@ -100,10 +102,8 @@ class XmippProtIdentifyOutliers(ProtClassify3D, ProjMatcher):
                                (self.fnOutputImages, fnAligned), numberOfMpi=1)
         self._insertRunJobStep("xmipp_metadata_utilities", "-i %s --operate sort zScoreResCov desc" % 
                                self.fnOutputImages, numberOfMpi=1)  
-            
-    def getVisualizeInfo(self):
-        return self.visualizeInfoOutput
-
+    
+    #--------------------------- INFO functions --------------------------------------------
     def _summary(self):
         summary = []
         summary.append("Set of particles: [%s] " % self.inputImages.get().getNameId())
@@ -112,7 +112,7 @@ class XmippProtIdentifyOutliers(ProtClassify3D, ProjMatcher):
         summary.append("Volume is CTF corrected: %s " % self.volumeIsCTFCorrected.get())
         return summary
         
-    def validate(self):
+    def _validate(self):
         self.Xdim = self.inputImages.get().getDimensions()[0]
         volumeXdim = self.inputVolume.get().getDim()[0]
          
@@ -122,5 +122,8 @@ class XmippProtIdentifyOutliers(ProtClassify3D, ProjMatcher):
         return errors  
         
     def _citations(self):
-       return []
+        return []
             
+    #--------------------------- UTILS functions --------------------------------------------
+    def getVisualizeInfo(self):
+        return self.visualizeInfoOutput

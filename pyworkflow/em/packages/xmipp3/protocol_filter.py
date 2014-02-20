@@ -39,7 +39,6 @@ from constants import *
 
 class XmippProtFilter():
     """ Some filters operations such as: Fourier or Gaussian. """
-    _label = 'filter particles'
     
     def __init__(self, **args):
         self._program = "xmipp_transform_filter"
@@ -99,22 +98,22 @@ class XmippProtFilter():
         return args
 
 
-class XmippProtFilterParticles(ProtFilterParticles, XmippProtFilter, XmippProcessParticles):
+class XmippProtFilterParticles(XmippProtFilter, XmippProcessParticles):
     """ Apply some filter to SetOfParticles """
     _label = 'filter particles'
     
     def __init__(self, **args):
-        ProtFilterParticles.__init__(self)
-        XmippProtFilter.__init__(self, **args)
+#         ProtFilterParticles.__init__(self)
         XmippProcessParticles.__init__(self, **args)
+        XmippProtFilter.__init__(self, **args)
 
 
-class XmippProtFilterVolumes(ProtFilterVolumes, XmippProtFilter, XmippProcessVolumes):
+class XmippProtFilterVolumes(XmippProtFilter, XmippProcessVolumes):
     """ Apply some filter to SetOfParticles """
     _label = 'filter volumes'
     
     def __init__(self, **args):
-        ProtFilterVolumes.__init__(self)
-        XmippProtFilter.__init__(self, **args)
+#         ProtFilterVolumes.__init__(self)
         XmippProcessVolumes.__init__(self, **args)
+        XmippProtFilter.__init__(self, **args)
 
