@@ -204,6 +204,7 @@ class ProtImportMicrographs(ProtImportImages):
     """Protocol to import a set of micrographs in the project"""
 
     _className = 'Micrograph'
+    _label = Message.LABEL_IMPORT_MIC
     
     def _defineParams(self, form):
         ProtImportImages._defineParams(self, form)
@@ -239,6 +240,7 @@ class ProtImportParticles(ProtImportImages):
     """Protocol to import a set of particles in the project"""
  
     _className = 'Particle'
+    _label = Message.LABEL_IMPORT_PART
         
     def _defineParams(self, form):
         ProtImportImages._defineParams(self, form)

@@ -39,7 +39,7 @@ from constants import *
 
 
 class XmippProtMask():
-    """ This class implement a protocol for applying a mask with Xmipp.
+    """ This class implement the common features for applying a mask with Xmipp either SetOfParticles, Volume or SetOfVolumes objects.
     """
     
     def __init__(self, **args):
@@ -80,7 +80,7 @@ class XmippProtMask():
 #         maskBand *= -1
         
         if self.fillType == MASK_FILL_VALUE:
-            fillStr = str(self.fillValue.get())
+            fillStr += str(self.fillValue.get())
         
         self._args += " --substitute %(fillStr)s "
         

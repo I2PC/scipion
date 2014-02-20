@@ -39,7 +39,6 @@ from constants import *
 
 class XmippProtFilter():
     """ Some filters operations such as: Fourier or Gaussian. """
-    _label = 'filter particles'
     
     def __init__(self, **args):
         self._program = "xmipp_transform_filter"

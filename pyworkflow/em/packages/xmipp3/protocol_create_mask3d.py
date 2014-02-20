@@ -55,6 +55,7 @@ class XmippProtCreateMask3D(ProtCreateMask3D,XmippGeometricalMask3D):
     """ Create a 3D mask from a geometrical description (Sphere, Box, Cylinder...), from a volume or from another class """
     _label = 'create mask'
     
+    #--------------------------- DEFINE param functions --------------------------------------------
     def _defineParams(self, form):
         form.addSection(label='Mask generation')
         form.addParam('source', EnumParam, label='Mask source', default=SOURCE_VOLUME, choices=['Volume','Geometry','Another mask'])
@@ -109,6 +110,7 @@ class XmippProtCreateMask3D(ProtCreateMask3D,XmippGeometricalMask3D):
         form.addParam('sigmaConvolution',FloatParam,default=2,label='Gaussian sigma (px)',condition="doSmooth",
                       help="The larger this value, the more the effect will be noticed")
 
+    #--------------------------- INSERT steps functions --------------------------------------------
     def _insertAllSteps(self):
         self.maskFile = self._getPath('mask.vol')
         if self.source==SOURCE_VOLUME:
@@ -124,6 +126,7 @@ class XmippProtCreateMask3D(ProtCreateMask3D,XmippGeometricalMask3D):
         self._insertFunctionStep('postProcessMaskStep')
         self._insertFunctionStep('createOutput')
     
+     #--------------------------- STEPS functions --------------------------------------------
     def createMaskFromVolumeStep(self):
         volume=self.volume.get()
         fnVol=locationToXmipp(*volume.getLocation())
@@ -193,6 +196,7 @@ class XmippProtCreateMask3D(ProtCreateMask3D,XmippGeometricalMask3D):
         elif self.source==SOURCE_MASK:
             self._defineTransformRelation(self.inputMask, self.outputMask)
         
+    #--------------------------- INFO functions --------------------------------------------
     def _summary(self):
         messages = []      
         messages.append("*Mask creation*")

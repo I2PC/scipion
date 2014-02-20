@@ -51,7 +51,8 @@ class XmippProtAlignVolume(ProtAlignVolume):
     
     def __init__(self, **args):
         ProtAlignVolume.__init__(self, **args)
-        
+    
+    #--------------------------- DEFINE param functions --------------------------------------------
     def _defineParams(self, form):
         form.addSection(label='Volume parameters')
         form.addParam('inputReferenceVolume', PointerParam, label="Reference volume", important=True, 
@@ -176,7 +177,7 @@ class XmippProtAlignVolume(ProtAlignVolume):
         
         form.addParallelSection()
         
-        
+    #--------------------------- INSERT steps functions --------------------------------------------    
     def _insertAllSteps(self):
         
         # Check volsMd is a volume or a stack
@@ -224,6 +225,44 @@ class XmippProtAlignVolume(ProtAlignVolume):
             
         self._insertFunctionStep('createOutputStep', prerequisites=alignSteps)
         
+    #--------------------------- STEPS functions --------------------------------------------
+    def alignVolumeStep(self, refVolFn, volFn, maskArgs, alignArgs):
+        args = "--i1 %s --i2 %s --apply" % (refVolFn, volFn)
+        args += maskArgs
+        args += alignArgs
+        
+        self.runJob("xmipp_volume_align", args)
+        if self.alignmentAlgorithm.get() == ALIGN_ALGORITHM_EXHAUSTIVE_LOCAL:
+            args = "--i1 %s --i2 %s --apply --local" % (refVolFn, volFn)
+            self.runJob("xmipp_volume_align", args)
+      
+    def createOutputStep(self):
+#        print "summary"
+        volumesSet = self._createSetOfVolumes()
+        readSetOfVolumes(self.alignedMd, volumesSet)
+        volumesSet.copyInfo(self.inputVols)
+        volumesSet.write()
+        
+        self._defineOutputs(outputVolumes=volumesSet)
+        self._defineTransformRelation(self.inputVols, volumesSet)
+    
+    #--------------------------- INFO functions --------------------------------------------
+    def _summary(self):
+        summary = []
+        if not hasattr(self, 'outputVolumes'):
+            summary.append("Output volumes not ready yet.")
+        else:
+            summary.append("Reference volume: [%s] " % self.inputReferenceVolume.get().getFirstItem().getNameId())
+            summary.append("Input volume: [%s] " % self.inputVolumes.get().getNameId())
+            summary.append("Alignment method: %s" % self.alignmentAlgorithm.get())
+                
+            return summary
+        
+    def _citations(self):
+        if self.alignmentAlgorithm.get() == ALIGN_ALGORITHM_FAST_FOURIER:
+            return ['Chen2013']
+        
+    #--------------------------- UTILS functions --------------------------------------------
     def _getMaskArgs(self):
         maskArgs = ''
         if self.applyMask:
@@ -257,39 +296,4 @@ class XmippProtAlignVolume(ProtAlignVolume):
                 self.minimumScale.get(), self.maximumScale.get(), self.stepScale.get())
                
         return alignArgs
-        
-    def alignVolumeStep(self, refVolFn, volFn, maskArgs, alignArgs):
-        args = "--i1 %s --i2 %s --apply" % (refVolFn, volFn)
-        args += maskArgs
-        args += alignArgs
-        
-        self.runJob("xmipp_volume_align", args)
-        if self.alignmentAlgorithm.get() == ALIGN_ALGORITHM_EXHAUSTIVE_LOCAL:
-            args = "--i1 %s --i2 %s --apply --local" % (refVolFn, volFn)
-            self.runJob("xmipp_volume_align", args)
-      
-    def createOutputStep(self):
-#        print "summary"
-        volumesSet = self._createSetOfVolumes()
-        readSetOfVolumes(self.alignedMd, volumesSet)
-        volumesSet.copyInfo(self.inputVols)
-        volumesSet.write()
-        
-        self._defineOutputs(outputVolumes=volumesSet)
-        self._defineTransformRelation(self.inputVols, volumesSet)
-
-    def _summary(self):
-        summary = []
-        if not hasattr(self, 'outputVolumes'):
-            summary.append("Output volumes not ready yet.")
-        else:
-            summary.append("Reference volume: [%s] " % self.inputReferenceVolume.get().getFirstItem().getNameId())
-            summary.append("Input volume: [%s] " % self.inputVolumes.get().getNameId())
-            summary.append("Alignment method: %s" % self.alignmentAlgorithm.get())
-                
-            return summary
-        
-    def _citations(self):
-        if self.alignmentAlgorithm.get() == ALIGN_ALGORITHM_FAST_FOURIER:
-            return ['Chen2013']
             

@@ -50,7 +50,8 @@ class XmippParticlePickingAutomatic(ProtParticlePicking, XmippProtocol):
     def __init__(self, **args):        
         ProtParticlePicking.__init__(self, **args)
         self.stepsExecutionMode = STEPS_PARALLEL
-        
+    
+    #--------------------------- DEFINE param functions --------------------------------------------  
     def _defineParams(self, form):
     
         form.addSection(label='Input')
@@ -68,7 +69,8 @@ class XmippParticlePickingAutomatic(ProtParticlePicking, XmippProtocol):
                       help='Select other set of micrographs to pick using the trained picker.')
         form.addParam('memory', FloatParam, default=2,
                    label='Memory to use (In Gb)', expertLevel=2)        
-        
+    
+    #--------------------------- INSERT steps functions --------------------------------------------    
     def _insertAllSteps(self):
         """The Particle Picking proccess is realized for a set of micrographs"""
         
@@ -91,7 +93,8 @@ class XmippParticlePickingAutomatic(ProtParticlePicking, XmippProtocol):
                     
         self._insertFunctionStep('createOutputStep', prerequisites=deps)
         
-
+    
+    #--------------------------- STEPS functions --------------------------------------------
     def copyInputFilesStep(self):
         # Copy training model files to current run
         for f in self.filesToCopy:
@@ -137,6 +140,7 @@ class XmippParticlePickingAutomatic(ProtParticlePicking, XmippProtocol):
         self._defineOutputs(outputCoordinates=coordSet)
         self._defineSourceRelation(self.micrographs, coordSet)
         
+    #--------------------------- INFO functions --------------------------------------------
     def _validate(self):
         validateMsgs = []
    

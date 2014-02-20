@@ -41,7 +41,8 @@ class XmippProtScreenClasses(ProtAlignClassify, ProjMatcher):
     
     def __init__(self, **args):
         ProtAlignClassify.__init__(self, **args)
-
+    
+    #--------------------------- DEFINE param functions --------------------------------------------
     def _defineParams(self, form):
         form.addSection(label='Input')
         
@@ -62,7 +63,8 @@ class XmippProtScreenClasses(ProtAlignClassify, ProjMatcher):
                       ' This sampling defines how fine the projection gallery from the volume is explored.')
         
         form.addParallelSection(mpi=8)
-        
+    
+    #--------------------------- INSERT steps functions --------------------------------------------
     def _insertAllSteps(self):
         """ Mainly prepare the command line for call cl2d program"""
         # Convert input images if necessary
@@ -86,10 +88,8 @@ class XmippProtScreenClasses(ProtAlignClassify, ProjMatcher):
         self._insertRunJobStep("xmipp_metadata_utilities", "-i classes@%s --set join %s --mode append" % (self.fn, self.fnAngles), numberOfMpi=1)
         self._insertFunctionStep("produceAlignedImagesStep", False, self.fn, self.images)
         self._insertRunJobStep("xmipp_metadata_utilities", "-i classes_aligned@%s --operate sort maxCC desc --mode append" % (self.fn), numberOfMpi=1)  
-                
-    def getVisualizeInfo(self):
-        return self.visualizeInfoOutput
-     
+    
+    #--------------------------- INFO functions -------------------------------------------- 
     def _summary(self):
         summary = []
         summary.append("Set of classes: [%s] " % self.inputClasses.get().getNameId())
@@ -106,3 +106,9 @@ class XmippProtScreenClasses(ProtAlignClassify, ProjMatcher):
         methods.append("angularSampling: %s " % self.angularSampling.get())
         
         return methods
+    
+    #--------------------------- UTILS functions --------------------------------------------
+    def getVisualizeInfo(self):
+        return self.visualizeInfoOutput
+    
+

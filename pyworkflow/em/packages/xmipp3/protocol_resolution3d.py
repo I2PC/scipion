@@ -39,7 +39,7 @@ class XmippProtResolution3D(ProtValidate3D):
     """ Protocol for Xmipp-based resolution3D """
     _label = 'resolution 3D'
       
-
+    #--------------------------- DEFINE param functions --------------------------------------------   
     def _defineParams(self, form):
         form.addSection(label='Input')
         # Volumes to process
@@ -64,6 +64,7 @@ class XmippProtResolution3D(ProtValidate3D):
 
 #        form.addParallelSection(threads=1, mpi=8)         
     
+    #--------------------------- INSERT steps functions --------------------------------------------  
     def _insertAllSteps(self):
         """Insert all steps to calculate the resolution of a 3D reconstruction. """
         
@@ -79,22 +80,8 @@ class XmippProtResolution3D(ProtValidate3D):
             pass
         
 #         self._insertFunctionStep('createOutput')
-        
-    def _defineMetadataRootName(self, mdrootname):
-        
-        if mdrootname=='fsc':
-            return self._getPath('fsc.xmd')
-        if mdrootname=='structureFactor':
-            return self._getPath('structureFactor.xmd')
-        
-    def _defineStructFactorName(self):
-        structFactFn = self._defineMetadataRootName('structureFactor')
-        return structFactFn
-    
-    def _defineFscName(self):
-        fscFn = self._defineMetadataRootName('fsc')
-        return fscFn
-         
+
+    #--------------------------- STEPS steps functions --------------------------------------------
     def calculateFscStep(self):
         """ Calculate the FSC between two volumes"""
         
@@ -111,6 +98,7 @@ class XmippProtResolution3D(ProtValidate3D):
         args = "-i %s -o %s --sampling %f" % (self.inputVol, structureFn, samplingRate)
         self.runJob("xmipp_volume_structure_factor", args)
         
+    #--------------------------- INFO steps functions --------------------------------------------
     def _validate(self):
         validateMsgs = []
         
@@ -139,7 +127,23 @@ class XmippProtResolution3D(ProtValidate3D):
         return messages
               
     def _citations(self):
+        citations = []
         if self.doSSNR.get() or self.doVSSNR.get():
-            return ['Unser2005']
-        return []
+            citations = ['Unser2005']
+        return citations
     
+    
+    def _defineMetadataRootName(self, mdrootname):
+        
+        if mdrootname=='fsc':
+            return self._getPath('fsc.xmd')
+        if mdrootname=='structureFactor':
+            return self._getPath('structureFactor.xmd')
+        
+    def _defineStructFactorName(self):
+        structFactFn = self._defineMetadataRootName('structureFactor')
+        return structFactFn
+    
+    def _defineFscName(self):
+        fscFn = self._defineMetadataRootName('fsc')
+        return fscFn
