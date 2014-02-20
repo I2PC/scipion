@@ -204,18 +204,8 @@ class XmippProtAlignmentNMA(EMProtocol):
         for l in lines:
             print >> fWarn, l
         fWarn.close()
-        
-#    def _getLocalModesFn(self):
-#        modesFn = self.inputModes.get().getFileName()
-#        return self._getBasePath(modesFn)
     
     def _getLocalModesFn(self):
         modesFn = self.inputModes.get().getFileName()
-        return self._getBasePath(modesFn)= open(defFn, 'w')
-        for deformation in deformations:
-            for coef in deformation:
-                fhDef.write("%f " % coef)
-            fhDef.write("\n")
-        fhDef.close()
-        return defFn
+        return self._getBasePath(modesFn)
     
