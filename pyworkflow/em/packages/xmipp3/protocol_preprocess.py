@@ -335,15 +335,15 @@ class XmippProtPreprocessVolumes(XmippProcessVolumes, XmippPreprocess):
     def segmentStep(self, outModel, segmentationType, segmentationMass):
         
         if self.singleVolume:
-            self._segmentExecutionStep(outModel, segmentationType, segmentationMass)
+            self._segmentVolume(outModel, segmentationType, segmentationMass)
         else:
             numberOfParticles = self.inputVolumes.get().getSize()
             for i in range(1, numberOfParticles + 1):
                 
                 volOutModel = locationToXmipp(i, outModel)
-                self._segmentExecutionStep(volOutModel, segmentationType, segmentationMass)
+                self._segmentVolume(volOutModel, segmentationType, segmentationMass)
         
-    def _segmentExecutionStep(self, outModel, segmentationType, segmentationMass):
+    def _segmentVolume(self, outModel, segmentationType, segmentationMass):
         fnMask = self._getTmpPath("mask.vol")
         ts = self._getSize()
         args = "-i %s -o %s --method " % (outModel, fnMask)
