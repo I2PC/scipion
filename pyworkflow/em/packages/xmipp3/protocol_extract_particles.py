@@ -215,7 +215,8 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
                 if self.doFlip:
                     self._insertFunctionStep('flipMicrographStep', micName, fnCTF, micrographToExtract)
                     micrographToExtract = self._getTmpPath(micName +"_flipped.xmp")
-                           
+            else:
+                fnCTF = None        
             # Actually extract
             self._insertFunctionStep('extractParticlesStep', micId, micName, fnCTF, micrographToExtract)
                 
@@ -359,10 +360,8 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
             #FIXME: This can be slow to make a query to grab the coord, maybe use zip(imgSet, coordSet)???
             coord = self.inputCoords[img.getObjId()]
             ctfModel = img.getCTF()
-            ctfModel.printAll()
             if ctfModel is not None:
                 ctfModel.setObjId(coord.getMicId())
-                img.setCTF(ctfModel)
             img.setCoordinate(coord)
             img.cleanObjId()
             imgSet.append(img)

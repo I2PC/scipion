@@ -216,6 +216,7 @@ class TestXmippAutomaticPicking(TestXmippBase):
         
         self.assertIsNotNone(protAutomaticPP.outputCoordinates, "There was a problem with the automatic particle picking")
                     
+                    
 class TestXmippExtractParticles(TestXmippBase):
     
     SAME_AS_PICKING = 1
@@ -244,6 +245,7 @@ class TestXmippExtractParticles(TestXmippBase):
         
         protExtract.inputMicrographs.set(self.protImport.outputMicrographs)
         protExtract.inputCoordinates.set(self.protPP.outputCoordinates)
+        protExtract.setObjLabel("extract-same as picking")
         self.proj.launchProtocol(protExtract, wait=True)
 
         self.assertIsNotNone(protExtract.outputParticles, "There was a problem with the extract particles")
@@ -253,6 +255,7 @@ class TestXmippExtractParticles(TestXmippBase):
         protExtract = XmippProtExtractParticles(boxSize=512, downsampleType=self.ORIGINAL, doFlip=False)
         protExtract.inputCoordinates.set(self.protPP.outputCoordinates)
         protExtract.inputMicrographs.set(self.protImport.outputMicrographs)
+        protExtract.setObjLabel("extract-original")
         self.proj.launchProtocol(protExtract, wait=True)
         
         self.assertIsNotNone(protExtract.outputParticles, "There was a problem with the extract particles")
@@ -262,6 +265,7 @@ class TestXmippExtractParticles(TestXmippBase):
         protExtract = XmippProtExtractParticles(boxSize=256, downsampleType=self.OTHER, downFactor=2,doFlip=False)
         protExtract.inputCoordinates.set(self.protPP.outputCoordinates)
         protExtract.inputMicrographs.set(self.protImport.outputMicrographs)
+        protExtract.setObjLabel("extract-other")
         self.proj.launchProtocol(protExtract, wait=True)
         
         self.assertIsNotNone(protExtract.outputParticles, "There was a problem with the extract particles")
@@ -272,9 +276,11 @@ class TestXmippExtractParticles(TestXmippBase):
         protExtract.inputCoordinates.set(self.protPP.outputCoordinates)
         protExtract.inputMicrographs.set(self.protCTF.inputMicrographs.get())
         protExtract.ctfRelations.set(self.protCTF.outputCTF)
+        protExtract.setObjLabel("extract-ctf")
         self.proj.launchProtocol(protExtract, wait=True)
         
         self.assertIsNotNone(protExtract.outputParticles, "There was a problem with the extract particles") 
+     
      
 class TestXmippScreenParticles(TestXmippBase):
     
