@@ -98,7 +98,7 @@ class XmippProtCTFMicrographs(ProtCTFMicrographs):
         ctfParam = self._getFilename('ctfparam', micDir=micDir)
         ctfRow = XmippMdRow()
         ctfRow.readFromFile(ctfParam)
-        keys = ['psd', 'enhanced_psd', 'ctfparam', 'ctfmodel_quadrant', 'ctfmodel_halfplane']
+        keys = ['psd', 'enhanced_psd', 'ctfmodel_quadrant', 'ctfmodel_halfplane']
         values = [self._getFilename(key, micDir=micDir) for key in keys]
         for l, v in zip(labels, values):
             micRow.setValue(l, v)
@@ -117,6 +117,7 @@ class XmippProtCTFMicrographs(ProtCTFMicrographs):
             micSet.append(mic)
             #TODO: WE need to use 2 objects cause same object cannot be inserted on
             #2 different mappers: change this
+            
             ctfModel2 = readCTFModel(ctfparam)
             ctfModel2.setMicFile(mic.getFileName())
             ctfModel2.setObjId(mic.getObjId())
