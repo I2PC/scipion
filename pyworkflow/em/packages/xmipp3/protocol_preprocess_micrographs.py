@@ -94,10 +94,25 @@ class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
     def _insertAllSteps(self):
         '''for each micrograph insert the steps to preprocess it
         '''
-        # Get pointer to input micrographs 
-        inputMics = self.inputMicrographs.get() 
-        
         IOTable = {}
+        
+        self._defineInputs()
+        
+        # For each micrograph insert the steps to preprocess it
+        pre = []
+        for mic in self.inputMics:
+            fn = mic.getFileName()
+            fnOut = self._getExtraPath(os.path.basename(fn))
+            stepId = self.__insertStepsForMicrograph(fn, fnOut)
+            pre.append(stepId)
+            IOTable[fn] = fnOut
+        
+        # Insert step to create output objects       
+        self._insertFunctionStep('createOutputStep', IOTable, prerequisites=pre)
+
+    def _defineInputs(self):
+        # Get pointer to input micrographs 
+        self.inputMics = self.inputMicrographs.get() 
         
         # Parameters needed to preprocess the micrographs
         self.params = {'downFactor': self.downFactor.get(),
@@ -106,19 +121,7 @@ class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
                        'logB': self.logB.get(),
                        'logC': self.logC.get(),
                        'stddev': self.mulStddev.get()}
-        
-        # For each micrograph insert the steps to preprocess it
-        pre = []
-        for mic in inputMics:
-            fn = mic.getFileName()
-            fnOut = self._getPath(os.path.basename(fn))
-            stepId = self.__insertStepsForMicrograph(fn, fnOut)
-            pre.append(stepId)
-            IOTable[fn] = fnOut
-        
-        # Insert step to create output objects       
-        self._insertFunctionStep('createOutputStep', IOTable, prerequisites=pre)
-        
+    
     def __insertOneStep(self, condition, program, arguments):
         """Insert operation if the condition is met.
         Possible conditions are: doDownsample, doCrop...etc"""
@@ -157,20 +160,19 @@ class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
     
     #--------------------------- STEPS functions --------------------------------------------
     def createOutputStep(self, IOTable):        
-        inputMics = self.inputMicrographs.get()
         outputMics = self._createSetOfMicrographs()
-        outputMics.copyInfo(inputMics)
+        outputMics.copyInfo(self.inputMics)
         
         if self.doDownsample.get():
             outputMics.setDownsample(self.downFactor.get())
 
-        for mic in inputMics:
+        for mic in self.inputMics:
             # Update micrograph name and append to the new Set
             mic.setFileName(IOTable[mic.getFileName()])
             outputMics.append(mic)
 
         self._defineOutputs(outputMicrographs=outputMics)
-        self._defineTransformRelation(inputMics, outputMics)
+        self._defineTransformRelation(self.inputMics, outputMics)
         
     #--------------------------- INFO functions --------------------------------------------
     def _summary(self):
