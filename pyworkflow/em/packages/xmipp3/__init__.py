@@ -44,7 +44,6 @@ from viewer_resolution3d import XmippResolution3DViewer
 
 from plotter import XmippPlotter
 from protocol_preprocess_micrographs import XmippProtPreprocessMicrographs
-from protocol_preprocess_volumes import XmippProtPreprocessVolumes
 from protocol_ctf_micrographs import XmippProtCTFMicrographs
 from protocol_particle_pick import XmippProtParticlePicking 
 from protocol_extract_particles import XmippProtExtractParticles
@@ -58,6 +57,8 @@ from protocol_filter import XmippProtFilterParticles
 from protocol_filter import XmippProtFilterVolumes
 from protocol_mask import XmippProtMaskParticles
 from protocol_mask import XmippProtMaskVolumes
+from protocol_preprocess import XmippProtPreprocessParticles
+from protocol_preprocess import XmippProtPreprocessVolumes
 from protocol_particle_crop_resize import XmippProtResize
 from protocol_create_mask3d import XmippProtCreateMask3D
 from protocol_particle_pick_automatic import XmippParticlePickingAutomatic
