@@ -176,6 +176,9 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         ctfSet = self.ctfRelations.get()
            
         # For each micrograph insert the steps
+        #run in parallel
+        self.stepsExecutionMode = STEPS_PARALLEL
+
         for mic in self.inputMics:
             micrographToExtract = mic.getFileName()
             micName = removeBaseExt(mic.getFileName())
@@ -205,6 +208,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
             micName = removeBaseExt(mic.getFileName())
             #FIXME: Check only if mic has CTF when implemented ok
             #if self.doFlip or mic.hasCTF():
+            fnCTF=None
             if self.ctfRelations.hasValue():
                 # If the micrograph doesn't come from Xmipp, we need to write
                 # a Xmipp ctfparam file to perform the phase flip on the micrograph                     
@@ -263,7 +267,6 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
                 args += " --invert"
             if fnCTF:
                 args += " --ctfparam " + fnCTF
-        
             self.runJob("xmipp_micrograph_scissor", args)
             # Normalize 
             if self.doNormalize:
