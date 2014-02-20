@@ -28,22 +28,22 @@
 This sub-package contains the XmippPreprocessMicrographs protocol
 """
 
-
 from pyworkflow.em import *  
 from pyworkflow.utils import *  
 import xmipp
 
 
-
 class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
     """Protocol to preprocess a set of micrographs in the project"""
     _label = 'preprocess micrographs'
-    _references = ['[[http://ieeexplore.ieee.org/xpl/login.jsp?arnumber=5286563][Sorzano, et.al,  IEEE WISP (2009)]]']
+
 
     def __init__(self, **args):        
         ProtPreprocessMicrographs.__init__(self, **args)
         self.stepsExecutionMode = STEPS_PARALLEL
-        
+    
+    
+    #--------------------------- DEFINE param functions --------------------------------------------
     def _defineParams(self, form):
         form.addSection(label='Preprocess')
         form.addParam('inputMicrographs', PointerParam, label="Input micrographs", isImportant=True,
@@ -89,6 +89,8 @@ class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
     
         form.addParallelSection(threads=2, mpi=1)
         
+    
+    #--------------------------- INSERT steps functions --------------------------------------------
     def _insertAllSteps(self):
         '''for each micrograph insert the steps to preprocess it
         '''
@@ -115,7 +117,7 @@ class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
             IOTable[fn] = fnOut
         
         # Insert step to create output objects       
-        self._insertFunctionStep('createOutput', IOTable, prerequisites=pre)
+        self._insertFunctionStep('createOutputStep', IOTable, prerequisites=pre)
         
     def __insertOneStep(self, condition, program, arguments):
         """Insert operation if the condition is met.
@@ -131,7 +133,7 @@ class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
             self.prerequisites = [self.lastStepId] # next should depend on this step
             # Update inputMic for next step as outputMic
             self.params['inputMic'] = self.params['outputMic']
-            
+    
     def __insertStepsForMicrograph(self, inputMic, outputMic):
         self.params['inputMic'] = inputMic
         self.params['outputMic'] = outputMic
@@ -153,7 +155,8 @@ class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
                 
         return self.lastStepId
     
-    def createOutput(self, IOTable):        
+    #--------------------------- STEPS functions --------------------------------------------
+    def createOutputStep(self, IOTable):        
         inputMics = self.inputMicrographs.get()
         outputMics = self._createSetOfMicrographs()
         outputMics.copyInfo(inputMics)
@@ -169,6 +172,7 @@ class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
         self._defineOutputs(outputMicrographs=outputMics)
         self._defineTransformRelation(inputMics, outputMics)
         
+    #--------------------------- INFO functions --------------------------------------------
     def _summary(self):
         summary = []
         if not self.inputMicrographs.hasValue():
@@ -191,3 +195,10 @@ class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
         if not(self.doCrop or self.doDownsample or self.doLog or self.doRemoveBadPix):
             validateMsgs.append('Some preprocessing option need to be selected.')
         return validateMsgs
+    
+    def _citations(self):
+        return ["Sorzano2009d"]
+    
+    def _methods(self):
+        return self.summary()
+    
