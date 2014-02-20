@@ -80,7 +80,6 @@ public class SupervisedParticlePickerCanvas extends ParticlePickerCanvas
 				refresh();
 			}
 		}
-
 	}
 
 	protected void erase(int x, int y)

@@ -494,7 +494,20 @@ public class MetaData {
 	 * @param independent if False write images to stack, if True using a prefix
 	 * @param image_label Which label have the images to write @
 	 */
-	public native void writeImages(String output, boolean independent,
+	public void writeImages(String output, boolean independent,
+			int image_label)
+        {
+            writeImages(output, independent, false, image_label);
+        }
+        
+        /**
+	 * Write the images on metadata to some location
+	 * 
+	 * @param output Stack name or prefix, depending on indepent param
+	 * @param independent if False write images to stack, if True using a prefix
+	 * @param image_label Which label have the images to write @
+	 */
+	public native void writeImages(String output, boolean independent, boolean applyGeo,
 			int image_label);
 	
 	/**

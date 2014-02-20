@@ -663,6 +663,12 @@ void XmippMetadataProgram::setup(MetaData *md, const FileName &out, const FileNa
     // if input is volume do not apply geo
     if (zdimOut > 1)
         apply_geo = false;
+    else
+    {
+    	allow_apply_geo = applyGeo;
+    	apply_geo = applyGeo;
+    	std::cout << "allow " << allow_apply_geo << " applyGeo" << applyGeo << std::endl;
+    }
 }//function setup
 
 void XmippMetadataProgram::show()
