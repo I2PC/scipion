@@ -45,6 +45,7 @@ class XmippProtAlignmentNMA(EMProtocol):
     """ Protocol for flexible angular alignment. """
     _label = 'nma analysis'
     
+    #--------------------------- DEFINE param functions --------------------------------------------
     def _defineParams(self, form):
         form.addSection(label='Input')
         form.addParam('modeList', NumericRangeParam, label="Modes selection",
@@ -91,19 +92,9 @@ class XmippProtAlignmentNMA(EMProtocol):
                            'alignment is chosen.')
                       
         form.addParallelSection(threads=1, mpi=8)    
-             
-    def _printWarnings(self, *lines):
-        """ Print some warning lines to 'warnings.xmd', 
-        the function should be called inside the working dir."""
-        fWarn = open("warnings.xmd",'w')
-        for l in lines:
-            print >> fWarn, l
-        fWarn.close()
-        
-    def _getLocalModesFn(self):
-        modesFn = self.inputModes.get().getFileName()
-        return self._getBasePath(modesFn)
     
+    
+    #--------------------------- INSERT steps functions --------------------------------------------
     def _insertAllSteps(self):
         atomsFn = self.inputPdb.get().getFileName()
         modesFn = self.inputModes.get().getFileName()
@@ -123,6 +114,8 @@ class XmippProtAlignmentNMA(EMProtocol):
             
         self._insertFunctionStep('createOutputStep')
         
+        
+    #--------------------------- STEPS functions --------------------------------------------    
     def copyFilesStep(self, atomsFn, modesFn):
         """ Copy the input files to the local working dir. """
         for fn in [modesFn, atomsFn]:
@@ -173,18 +166,19 @@ class XmippProtAlignmentNMA(EMProtocol):
         md = xmipp.MetaData(imgFn)
         deformations = md.getColumnValues(xmipp.MDL_NMA)
         defFn = self._getExtraPath("deformations.txt")
-        fhDef = open(defFn, 'w')
-        for deformation in deformations:
-            for coef in deformation:
-                fhDef.write("%f " % coef)
-            fhDef.write("\n")
-        fhDef.close()
-        return defFn
+        fhDef def _printWarnings(self, *lines):
+        """ Print some warning lines to 'warnings.xmd', 
+        the function should be called inside the working dir."""
+        fWarn = open("warnings.xmd",'w')
+        for l in lines:
+            print >> fWarn, l
+        fWarn.close()
     
     def createOutputStep(self):
         modes = NormalModes(filename=self._getLocalModesFn())
         self._defineOutputs(selectedModes=modes)
 
+    #--------------------------- INFO functions --------------------------------------------
     def _summary(self):
         summary = []
         return summary
@@ -198,4 +192,30 @@ class XmippProtAlignmentNMA(EMProtocol):
     
     def _citations(self):
         return ['Jonic2005', 'Sorzano2004b']
+    
+    def _methods(self):
+        pass
+    
+    #--------------------------- UTILS functions --------------------------------------------
+    def _printWarnings(self, *lines):
+        """ Print some warning lines to 'warnings.xmd', 
+        the function should be called inside the working dir."""
+        fWarn = open("warnings.xmd",'w')
+        for l in lines:
+            print >> fWarn, l
+        fWarn.close()
+        
+#    def _getLocalModesFn(self):
+#        modesFn = self.inputModes.get().getFileName()
+#        return self._getBasePath(modesFn)
+    
+    def _getLocalModesFn(self):
+        modesFn = self.inputModes.get().getFileName()
+        return self._getBasePath(modesFn)= open(defFn, 'w')
+        for deformation in deformations:
+            for coef in deformation:
+                fhDef.write("%f " % coef)
+            fhDef.write("\n")
+        fhDef.close()
+        return defFn
     
