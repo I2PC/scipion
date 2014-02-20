@@ -35,7 +35,32 @@ except ImportError:
 from pyworkflow.utils import *
     
 
-def writeCTF(ctf, f):
+def writeHeader(f):
+    """ Write the header of the EMX file. """
+    f.write("""
+<?xml version='1.0' encoding='utf-8'?>
+<EMX version="1.0">
+ <!--
+  ##########################################################################
+  #               EMX Exchange file 
+  #               Produced by Scipion
+  # 
+  #  This is a EMX file.
+  #
+  #  Information on this file format is available at 
+  #  http://i2pc.cnb.csic.es/emx
+  ##########################################################################
+  -->
+     """)
+    
+    
+def writeFooter(f):
+    f.write("""
+    
+</EMX>""")
+    
+    
+def _writeCTF(f, ctf):
     """ Write the CTF values in the EMX file. """
     ctfDict = {'defocusU': ctf.getDefocusU(),
                'defocusV': ctf.getDefocusV(),
@@ -47,7 +72,7 @@ def writeCTF(ctf, f):
   <defocusUAngle unit="deg">%(defocusUAngle)0.2f</defocusUAngle>""" % ctfDict)
     
     
-def writeMicrograph(mic, f):
+def writeMicrograph(f, mic):
     """ Write the micrograph xml to the file """
     index, filename = mic.getLocation()
     acq = mic.getAcquisition()
@@ -68,52 +93,116 @@ def writeMicrograph(mic, f):
     <Y unit="A/px">%(samplingRate)0.2f</Y>
   </pixelSpacing>""" % micDict)
     if mic.hasCTF():
-        writeCTF(mic.getCTF(), f)
+        _writeCTF(f, mic.getCTF())
     f.write("""
-</micrograph>
-    """)
+</micrograph> """)
     
     
-def writeParticle(particle, f):
-    """ Write the partice xml to the file. """
-    particleXmlStr = """
-<particle fileName="particles.mrc" index="3">
-    <micrograph fileName="image002.mrc"/>
+def _writeCenter(f, coord):
+    coordDict = {'X': coord.getX(), 'Y': coord.getY()}
+    f.write("""
     <centerCoord>
-      <X unit="px">522</X>
-      <Y unit="px">194</Y>
-   </centerCoord>
-</particle> """
+      <X unit="px">%(X)d</X> <Y unit="px">%(Y)d</Y>
+    </centerCoord> """ % coordDict)
     
     
-def writeSetOfMicrographs(micSet, f):
+def _writeCommon(f, coordinate, index, filename, micSet):
+    """ This helper function will serve to write common xml string
+    of Coordinate and Particle, actually, in EMX both are 'particle'
+    """
+    partDict = {'index': index or 1,
+               'fileName': filename,
+               }
+    """ Write the partice xml to the file. """
+    f.write("""
+<particle fileName="%(fileName)s" index="%(index)d">""" % partDict)
+    if coordinate:
+        mic = micSet[coordinate.getMicId()] # get micrograph
+        index, filename = mic.getLocation()
+        partDict.update({'index': index or 1, 'fileName': basename(filename)})
+        f.write("""
+    <micrograph fileName="%(fileName)s" index="%(index)d">""" % partDict)
+        _writeCenter(f, coordinate)
+        
+        
+def _writeCommonFooter(f):
+    f.write("""
+</particle> """ )
+           
+           
+def writeParticle(f, particle, micSet):
+    index, filename = particle.getLocation()
+    _writeCommon(f, particle.getCoordinate(), index, filename, micSet)
+    if particle.hasCTF():
+        particle.getCTF().printAll()
+        _writeCTF(f, particle.getCTF())
+    _writeCommonFooter(f)
+
+
+def writeCoordinate(f, coordinate, micSet):
+    _writeCommon(f, coordinate, 1, "coordinate", micSet)  
+    _writeCommonFooter(f)
+    
+    
+def writeSetOfMicrographs(f, micSet, emxDir, ctfSet=None, writeData=True):
     """ Write a SetOfMicrograph as expected in EMX format (xml file)
     Params:
         micSet: input set of micrographs
         filename: the EMX file where to store the micrographs information.
     """
+    from convert import ImageHandler
+    from constants import NO_INDEX
+    ih = ImageHandler()
+    
     for mic in micSet:
-        writeMicrograph(mic, f)
+        loc = mic.getLocation()
+        fnMicBase = basename(loc[1])
+        if writeData:
+            newLoc = join(emxDir, fnMicBase)
+            ih.convert(loc, newLoc)
+        mic.setLocation(NO_INDEX, fnMicBase)
+        if ctfSet:
+            mic.setCTF(ctfSet[mic.getObjId()])
+        writeMicrograph(f, mic)
     
-
-def exportSetOfMicrographs(emxDir, micSet=None, ctfSet=None, partSet=None):
-    """ Export micrographs as EMX format. """
-    fnXml = os.path.join(emxDir, 'data.emx')
-    f = open(fnXml, 'w+')
     
+def writeSetOfParticles(f, partSet, stackFn=None, micSet=None):
+    """ Write a SetOfMicrograph as expected in EMX format (xml file)
+    Params:
+        micSet: input set of micrographs
+        filename: the EMX file where to store the micrographs information.
+    """
     from pyworkflow.em.convert import ImageHandler
     ih = ImageHandler()
     
-    for i, mic in enumerate(micSet):
-        loc = mic.getLocation()
-        fnMicBase = basename(loc[1])
-        fnMicNew = join(emxDir, fnMicBase)
-        newLoc = (i+1, fnMicNew)
-        ih.convert(loc, newLoc)
-        mic.setLocation(None, fnMicBase)
-        if ctfSet:
-            mic.setCTF(ctfSet[mic.getObjId()])
-        writeMicrograph(mic, f)
+    for i, particle in enumerate(partSet):
+        if stackFn:
+            loc = particle.getLocation()
+            newLoc = (i+1, stackFn)
+            ih.convert(loc, newLoc)
+            newFn = basename(stackFn)
+        else:
+            newFn = "coordinate"
+        particle.setLocation(i+1, newFn)
+        writeParticle(f, particle, micSet)
         
+        
+def exportSetOfMicrographs(emxDir, micSet=None, ctfSet=None, partSet=None):
+    """ Export micrographs as EMX format. """
+    fnXml = join(emxDir, 'data.emx')
+    f = open(fnXml, 'w+')
+    writeHeader(f)
+    
+    if micSet:
+        writeSetOfMicrographs(f, micSet, emxDir, ctfSet)
+        
+    elif partSet:
+        if partSet.hasCoordinates():
+            micSet = partSet.getCoordinates().getMicrographs()
+            writeSetOfMicrographs(f, micSet, emxDir, writeData=False)
+        fnMrcs = join(emxDir, 'data.mrcs')
+        writeSetOfParticles(f, partSet, fnMrcs, micSet)
+        
+    writeFooter(f)
     f.close()
     

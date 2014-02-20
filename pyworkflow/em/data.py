@@ -431,7 +431,6 @@ class Set(EMObject):
         return subset
             
                 
-    
 class SetOfImages(Set):
     """ Represents a set of Images """
     def __init__(self, **args):
@@ -582,6 +581,9 @@ class SetOfParticles(SetOfImages):
         SetOfImages.__init__(self, **args)
         self._coordsPointer = Pointer()
         
+    def hasCoordinates(self):
+        return self._coordsPointer.hasValue()
+    
     def getCoordinates(self):
         """ Returns the SetOfCoordinates associated with 
         this SetOfParticles"""

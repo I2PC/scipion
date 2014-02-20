@@ -37,27 +37,27 @@ from constants import *
 from data import * 
 import emx
 
+
 class ProtEmxExportMicrographs(ProtClassify):
     """Export a SetOfMicrographs object and export in the corresponding. """
-        
         
     #--------------------------- DEFINE param functions --------------------------------------------   
     def _defineParams(self, form):
         form.addSection(label='Input')
-        form.addParam('inputMicrographs', PointerParam, pointerClass='SetOfMicrographs', 
-                      label="Micrographs to export",
-                      help='Select the micrographs object to be exported to EMX.')
+        form.addParam('inputSet', PointerParam, pointerClass='SetOfMicrographs,SetOfParticles', 
+                      label="Data to export",
+                      help='Select the particles or micrographs objects to be exported to EMX.')
         form.addParam('ctfRelations', RelationParam, 
                       allowNull=True, relationName=RELATION_CTF, 
                       relationParent='getInputMicrographs', relationReverse=True, 
                       label='Include CTF from', 
                       help='You can select a CTF estimation associated with these\n'
-                           'micrographs to be included in the EMX file')            
+                           'micrographs to be included in the EMX file')   
+                 
     #--------------------------- INSERT steps functions --------------------------------------------  
     def _insertAllSteps(self):
-        self._insertFunctionStep('exportMicrographsStep', self.inputMicrographs.get().getObjId())       
+        self._insertFunctionStep('exportMicrographsStep', self.inputSet.get().getObjId())       
 
-        
     #--------------------------- STEPS functions --------------------------------------------       
     def exportMicrographsStep(self, micsId):
         """ Export micrographs to EMX file.
@@ -65,9 +65,16 @@ class ProtEmxExportMicrographs(ProtClassify):
         """
         emxDir = self._getPath('emxData')
         cleanPath(emxDir)
-        makePath(emxDir)
-        emx.exportSetOfMicrographs(emxDir, micSet=self.inputMicrographs.get(),
-                               ctfSet=self.ctfRelations.get())
+        makePath(emxDir)        
+        inputSet = self.inputSet.get()
+        kwargs = {}
+        
+        if isinstance(inputSet, SetOfMicrographs):
+            kwargs['micSet'] = inputSet
+        elif isinstance(inputSet, SetOfParticles):
+            kwargs['partSet'] = inputSet
+            
+        emx.exportSetOfMicrographs(emxDir, **kwargs)
     
     #--------------------------- INFO functions -------------------------------------------- 
     def _validate(self):
