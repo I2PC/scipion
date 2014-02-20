@@ -200,5 +200,5 @@ class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
         return ["Sorzano2009d"]
     
     def _methods(self):
-        return self.summary()
+        return self._summary()
     
