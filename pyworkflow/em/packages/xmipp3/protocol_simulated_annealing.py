@@ -32,13 +32,15 @@ This sub-package contains wrapper around Initial Volume Simulated Annealing Xmip
 from pyworkflow.em import *  
 from pyworkflow.utils import *  
 import xmipp
-from convert import createXmippInputClasses2D, readSetOfVolumes, createXmippInputVolumes, writeSetOfVolumes
+from convert import createXmippInputClasses2D, createXmippInputVolumes
         
         
 class XmippProtInitVolSimAnneal(ProtInitialVolume):
     """ Protocol for Xmipp-based Initial Volume Simulated Annealing. """
     _label = 'simulated annealing'
-    
+
+
+    #--------------------------- DEFINE param functions --------------------------------------------
     def _defineParams(self, form):
         form.addSection(label='Input')
         form.addParam('inputClasses', PointerParam, label="Input classes", important=True, 
@@ -52,7 +54,7 @@ class XmippProtInitVolSimAnneal(ProtInitialVolume):
         form.addParam('isRefVolume', BooleanParam, default=False,
                       label="There are a Reference Volume?", 
                        help='Set to _True or False_ if you want to use a Reference Volume')
-        form.addParam('RefVolume', PointerParam, label='Initial 3D reference volumes',
+        form.addParam('refVolume', PointerParam, label='Initial 3D reference volumes',
                       pointerClass='SetOfVolumes', condition="isRefVolume",
                       help='You may provide a very rough initial volume as a way to constraint the angular search. \n\n'
                       '_For instance_: when reconstructing a fiber, you may provide a cylinder so that side views \n'
@@ -77,28 +79,26 @@ class XmippProtInitVolSimAnneal(ProtInitialVolume):
                       'as a way to have a slower cooling.')          
         form.addParam('DontApplyPositiveConstraint', BooleanParam, default=False,
                       label="Don't apply non-negative constraints?", 
-                      help="""In between simulated annealing iterations, the reconstructed
-volume is constrained to have non-negative values. This helps
-to reduce the search space, but it might be incorrect depending
-on the normalization of the input images""")
+                      help='In between simulated annealing iterations, the reconstructed \n'
+                      'volume is constrained to have non-negative values. This helps \n'
+                      'to reduce the search space, but it might be incorrect depending \n'
+                      'on the normalization of the input images')
         form.addParam('numIterGreedy', IntParam, default=2,
                       label='Number of greedy iterations',
                       help='After simulating annealing, you may run some greedy \n'
                       'iterations by simply applying a projection matching approach.')
         form.addParam('percentRejection', IntParam, default=50,
                       label='Percentage of rejected particles',
-                      help="""At each iteration, the lowest correlated particles are
-removed from the 3D reconstruction, although they may participate
-in the next iteration""")    
+                      help='At each iteration, the lowest correlated particles are\n'
+                      'removed from the 3D reconstruction, although they may participate\n'
+                      'in the next iteration')    
         
         form.addParallelSection(threads=2, mpi=1)    
-             
-    def _insertAllSteps(self):
-        self._prepareDefinition()
-        self._insertSteps()
-        
-        
-    def _prepareDefinition(self):
+
+
+    #--------------------------- INSERT steps functions --------------------------------------------
+    def _prepareParams(self):
+        """ Step to define the protocol params """
         self._params = {'symmetry': self.symmetryGroup.get(),
                         'angSampling': self.angularSampling.get(),
                         'numSimAnnealRef': self.numberOfSimAnnealRef.get(),
@@ -113,13 +113,17 @@ in the next iteration""")
         
         outVolFn = self._getExtraPath("output_volume")
         self._params['volOutput'] = outVolFn
-
+    
+    def _insertAllSteps(self):
+        self._prepareParams()
+        self._insertSteps()
+    
     def _insertSteps(self):
-        self._insertInitialVolumeStep()      
-        self._insertFunctionStep('createOutput')
-
+        self._insertInitialVolumeStep()
+        self._insertFunctionStep('createOutputStep')
+    
     def _insertInitialVolumeStep(self):
-        
+        """Prepare the command line and run job step"""
         args='-i %(classFn)s --oroot %(volOutput)s --sym %(symmetry)s --randomIter %(numSimAnnealRef)d --greedyIter %(numIterGreedy)d --rejection %(reject)f --keepIntermediateVolumes --T0 %(temperature)f --angularSampling %(angSampling)f'
         
         if self.DontApplyPositiveConstraint:
@@ -127,57 +131,64 @@ in the next iteration""")
         
         if self.isRefVolume.get():
             # convert the set of Volumes into Xmipp enviroment
-            volSet = self.RefVolume.get()
+            volSet = self.refVolume.get()
             refVolMd = createXmippInputVolumes(self, volSet)
             self._params['volume'] = refVolMd
             args += " --initial %(volume)s"
         self._insertRunJobStep("xmipp_volume_initial_simulated_annealing", args % self._params)
-        
-    def createOutput(self):
-        
+    
+    #--------------------------- STEPS functions ---------------------------------------------------
+    def createOutputStep(self):
         classes2DSet = self.inputClasses.get()
-        # create an output SetOfVolumes
+        
+        # create a SetOfVolumes
         volumes = self._createSetOfVolumes()
         volumes.setSamplingRate(self.inputClasses.get().getAverages().getSamplingRate())
-        volumes._xmippMd = String(self._getExtraPath('output_volumes.xmd'))
+        
         # rename the projection file to reconstruct the last Volume.
         moveFile(self._getExtraPath('output_volume.xmd'), self._getExtraPath('volume_projections.xmd'))
         iters = self.numberOfSimAnnealRef.get() + self.numIterGreedy.get()
+        
+        # create a Volume object to store the final volume obtained
+        finalVolFn = self._getExtraPath('output_volume.vol')
+        finalVol = Volume()
+        finalVol.setFileName(finalVolFn)
+        
+        # create a SetOfVolumes with volumes created in all iterations
         for k in range(1, iters + 1):
             volFn = self._getExtraPath('output_volume_iter%02d.vol' % k)
             vol = Volume()
             vol.setFileName(volFn)
             volumes.append(vol)
-        volumes.write()
-        # generate the xmipp Metadata of the SetOfVolumes.
-        self._createLocalXmippInputVolumes(volumes)
         
+        self._defineOutputs(outputVolume=finalVol)
         self._defineOutputs(outputVolumes=volumes)
+        self._defineSourceRelation(classes2DSet, finalVol)
         self._defineSourceRelation(classes2DSet, volumes)
-
-    def _createLocalXmippInputVolumes(self, volSet):    
-        volsFn = self._getExtraPath('output_volumes.xmd')
-        writeSetOfVolumes(volSet, volsFn)
-
-
+    
+    #--------------------------- INFO functions ----------------------------------------------------
+    def _validate(self):
+        validateMsgs = []
+        # if there are Volume references, it cannot be empty.
+        if self.isRefVolume.get() and not self.refVolume.hasValue():
+            validateMsgs.append('Please provide an initial reference volume.')
+        return validateMsgs
+    
+    def _citations(self):
+        """ there aren't citations for this protocol """
+        pass
+    
     def _summary(self):
         summary = []
         summary.append("Input images:  %s" % self.inputClasses.get().getNameId())
         if self.isRefVolume.get():
-            summary.append("Reference volumes(s): [%s]" % self.RefVolume.get())
+            summary.append("Reference volumes(s): [%s]" % self.refVolume.get())
             
         if not hasattr(self, 'outputVolumes'):
             summary.append("Output volumes not ready yet.")
         else:
-            summary.append("Output volumes: %s" % self.outputVolumes.get())
+            summary.append("Output volumes: %s" % self.outputVolumes.getNameId())
         return summary
     
-    def _validate(self):
-        validateMsgs = []
-        # if there are Volume references, it cannot be empty.
-        if self.isRefVolume.get() and not self.RefVolume.hasValue():
-            validateMsgs.append('Please provide an initial reference volume.')
-            
-        #TODO: Check images dimension when it is implemented on SetOFImages class
-        return validateMsgs
-    
+    def _methods(self):
+        return self._summary()  # summary is quite explicit and serve as methods

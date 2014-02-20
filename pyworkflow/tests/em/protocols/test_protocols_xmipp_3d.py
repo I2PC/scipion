@@ -187,6 +187,48 @@ class TestXmippMaskVolumes(TestXmippBase):
         self.assertIsNotNone(protMaskVolumes.outputVol, "There was a problem with applying mask to SetOfVolumes")
 
 
+class TestXmippSimAnnealing(TestXmippBase):
+    @classmethod
+    def setUpClass(cls):
+        setupProject(cls)
+        
+#         cls.protImport = cls.runImportParticles(pattern=images, samplingRate=1, checkStack=False)
+#         cls.iniVol = getInputPath('ml3dData', 'icoFiltered.vol')
+    
+    def testSimAnnealing(self):
+        
+        """ Run an Import particles protocol. """
+        project = self.proj
+        pattern = os.environ.get('HEMOGLOBIN', getInputPath('particlesHemoglobin', '*.spi'))
+        protImport = ProtImportParticles(pattern=pattern, samplingRate=3.5)
+        project.launchProtocol(protImport, wait=True)
+        # check that input images have been imported (a better way to do this?)
+        if protImport.outputParticles is None:
+            raise Exception('Import of images: %s, failed. outputParticles is None.' % pattern)
+
+#         print "Run CL2D"
+#         protCL2D = XmippProtCL2D(numberOfReferences=8, numberOfInitialReferences=2, 
+#                                  numberOfIterations=3, numberOfMpi=3)
+#         protCL2D.inputImages.set(protImport.outputParticles)
+#         self.proj.launchProtocol(protCL2D, wait=True)        
+#         
+#         self.assertIsNotNone(protCL2D.outputClasses, "There was a problem with CL2D")
+
+        print "Run ML2D"
+        protML2D = XmippProtML2D(numberOfReferences=8, maxIters=4, doMlf=False,
+                                 numberOfMpi=2, numberOfThreads=1)
+        protML2D.inputParticles.set(protImport.outputParticles)
+        self.proj.launchProtocol(protML2D, wait=True)        
+        self.assertIsNotNone(protML2D.outputClasses, "There was a problem with ML2D") 
+
+        print "Run Simulating annealing"
+        protSimAnneal = XmippProtInitVolSimAnneal(symmetryGroup='d6', numberOfSimAnnealRef=2, percentRejection=0)
+        protSimAnneal.inputClasses.set(protML2D.outputClasses)
+        self.proj.launchProtocol(protSimAnneal, wait=True)        
+        
+        self.assertIsNotNone(protSimAnneal.outputVolumes, "There was a problem with simulating annealing protocol")
+
+
 if __name__ == "__main__":
     if len(sys.argv) > 1:
         className = sys.argv[1]

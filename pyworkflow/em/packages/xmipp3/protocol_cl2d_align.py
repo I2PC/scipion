@@ -39,8 +39,8 @@ from glob import glob
 class XmippProtCL2DAlign(ProtAlign):
     """ Protocol to align a set of particles. """
     _label = 'cl2d align'
-    _references = ['[[http://www.ncbi.nlm.nih.gov/pubmed/20362059][Sorzano, et.al,  JSB (2010)]]']
 
+    #--------------------------- DEFINE param functions --------------------------------------------
     def _defineAlignParams(self, form):
         form.addParam('useReferenceImage', BooleanParam, default=True,
                       label='Use a Reference Image ?', 
@@ -59,7 +59,8 @@ class XmippProtCL2DAlign(ProtAlign):
                       help='Maximum number of iterations')
         form.addParallelSection(threads=1, mpi=3)
         
-        
+    
+    #--------------------------- INSERT steps functions --------------------------------------------
     def _insertAllSteps(self):
         """ Mainly prepare the command line for call cl2d align program"""
         
@@ -78,13 +79,15 @@ class XmippProtCL2DAlign(ProtAlign):
         else:
             args += " --nref0 1"
             
-        self._defineClassifySteps("xmipp_classify_CL2D", args)
-              
-    def _defineClassifySteps(self, program, args, subset=''):
+        self._insertClassifySteps("xmipp_classify_CL2D", args)
+    
+    
+    def _insertClassifySteps(self, program, args, subset=''):
         self._insertRunJobStep(program, args % self._params)
-        self._insertFunctionStep('createOutput')        
-        
-    def createOutput(self):
+        self._insertFunctionStep('createOutputStep')        
+
+    #--------------------------- STEPS functions --------------------------------------------        
+    def createOutputStep(self):
         """ Store the setOfParticles object 
         as result of the protocol. 
         """
@@ -121,7 +124,8 @@ class XmippProtCL2DAlign(ProtAlign):
             self._defineOutputs(outputParticles=imgSet)
             self._defineTransformRelation(particles, imgSet)
 
-    def validate(self):
+    #--------------------------- INFO functions --------------------------------------------
+    def _validate(self):
         errors = []
         refImage = self.ReferenceImage.get()
         if self.useReferenceImage:
@@ -140,3 +144,11 @@ class XmippProtCL2DAlign(ProtAlign):
             summary.append("Input Images: %s" % self.inputParticles.get().getNameId())
             summary.append("Output Aligned Images: %s" % self.outputParticles.get())
         return summary
+    
+    def _citations(self):
+        return ['Sorzano2010a']
+    
+    def _methods(self):
+        """ METHODS TO DO"""
+        pass
+        

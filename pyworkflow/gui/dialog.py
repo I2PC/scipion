@@ -35,7 +35,7 @@ import gui
 from widgets import Button
 from tree import BoundTree, TreeProvider
 from text import Text, TaggedText
-from pyworkflow.utils.properties import Message
+from pyworkflow.utils.properties import Message, Icon
 
 
 # Possible result values for a Dialog
@@ -83,9 +83,9 @@ class Dialog(tk.Toplevel):
         bodyFrame.grid(row=0, column=0, sticky='news',
                        padx=5, pady=5)
 
-        self.icons = {RESULT_YES: 'fa-check.png', 
-                      RESULT_NO: 'fa-times.png',
-                      RESULT_CANCEL: 'fa-ban.png'}
+        self.icons = {RESULT_YES: Icon.BUTTON_SELECT, 
+                      RESULT_NO: Icon.BUTTON_CLOSE,
+                      RESULT_CANCEL: Icon.BUTTON_CANCEL}
         
         self.buttons = args.get('buttons', [('OK', RESULT_YES),
                                             ('Cancel', RESULT_CANCEL)])
@@ -378,7 +378,6 @@ def showError(title, msg, parent):
 def askString(title, label, parent, entryWidth=20):
     d = EntryDialog(parent, title, label, entryWidth)
     return d.value
-    
 
                 
 class ListDialog(Dialog):
@@ -446,7 +445,42 @@ class FlashMessage():
     def close(self):
         self.root.destroy()
         
-                
+
+class FileBrowseDialog(Dialog):
+    """Dialog to select files from the filesystem."""
+    def __init__(self, parent, title, provider, message=None, **args):
+        """ From args:
+                message: message tooltip to show when browsing.
+                selected: the item that should be selected.
+        """
+        self.value = None
+        self.provider = provider
+        self.message = args.get('message', None)
+        Dialog.__init__(self, parent, title,
+                        buttons=[('Select', RESULT_YES), ('Cancel', RESULT_CANCEL)])
+        
+    def body(self, bodyFrame):
+        bodyFrame.config(bg='white')
+        gui.configureWeigths(bodyFrame)
+        self._createTree(bodyFrame)
+        if self.message:
+            label = tk.Label(bodyFrame, text=self.message, bg='white',
+                     image=self.getImage('fa-lightbulb-o.png'), compound=tk.LEFT)
+            label.grid(row=1, column=0, sticky='nw', padx=5, pady=5)
+        self.initial_focus = self.tree
+        
+    def _createTree(self, parent):
+        self.tree = BoundTree(parent, self.provider)
+        
+    def apply(self):
+        index = self.tree.index(self.tree.getFirst())
+        self.value = self.tree._objects[index]
+    
+    def validate(self):
+        if self.tree.getFirst() is None:
+            showError("Validation error", "Please select an element", self)
+            return False
+        return True                
         
 if __name__ == '__main__':
     import sys

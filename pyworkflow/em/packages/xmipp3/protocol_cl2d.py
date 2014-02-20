@@ -47,14 +47,15 @@ CL_ROBUST = 1
         
 class XmippProtCL2D(ProtClassify):
     """ Protocol to preprocess a set of micrographs in the project. """
+    
     _label = 'cl2d'
-    _references=['[[http://www.ncbi.nlm.nih.gov/pubmed/20362059][Sorzano, et.al,  JSB (2010)]]']
     
     def __init__(self, **args):
         if 'numberOfMpi' not in args:
             args['numberOfMpi'] = 2
         Protocol.__init__(self, **args)        
 
+    #--------------------------- DEFINE param functions --------------------------------------------
     def _defineParams(self, form):
         form.addSection(label='Input')
         form.addParam('inputImages', PointerParam, label="Input images", important=True, 
@@ -104,7 +105,7 @@ class XmippProtCL2D(ProtClassify):
         
         form.addParallelSection(threads=0, mpi=2)
         
-                
+    #--------------------------- INSERT steps functions --------------------------------------------                
     def _insertAllSteps(self):
         """ Mainly prepare the command line for call cl2d program"""
         
@@ -130,19 +131,19 @@ class XmippProtCL2D(ProtClassify):
         if not self.extraParams.hasValue() or not '--ref0' in self.extraParams.get():
             args += ' --nref0 %(nref0)d'
     
-        self._defineClassifySteps("xmipp_classify_CL2D", args)
+        self._insertClassifySteps("xmipp_classify_CL2D", args)
         
         # Analyze cores and stable cores
         if self.numberOfReferences > self.numberOfInitialReferences:
             program = "xmipp_classify_CL2D_core_analysis"
             args = "--dir %(extraDir)s --root level "
             # core analysis
-            self._defineClassifySteps(program, args + "--computeCore %(thZscore)f %(thPCAZscore)f", subset='_core')
+            self._insertClassifySteps(program, args + "--computeCore %(thZscore)f %(thPCAZscore)f", subset='_core')
             if self.numberOfReferences > (2 * self.numberOfInitialReferences.get()): # Number of levels should be > 2
                 # stable core analysis
-                self._defineClassifySteps(program, args + "--computeStableCore %(tolerance)d", subset='_stable_core')
-        
-    def _defineClassifySteps(self, program, args, subset=''):
+                self._insertClassifySteps(program, args + "--computeStableCore %(tolerance)d", subset='_stable_core')
+            
+    def _insertClassifySteps(self, program, args, subset=''):
         """ Defines four steps for the subset:
         1. Run the main program.
         2. Evaluate classes
@@ -152,14 +153,10 @@ class XmippProtCL2D(ProtClassify):
         self._insertRunJobStep(program, args % self._params)
         self._insertFunctionStep('evaluateClasses', subset)
         self._insertFunctionStep('sortClasses', subset)
-        self._insertFunctionStep('createOutput', subset)        
-        
-    def _getLevelMdFiles(self, subset=''):
-        """ Grab the metadata class files for each level. """
-        levelMdFiles = glob(self._getExtraPath("level_??/level_classes%s.xmd" % subset))
-        levelMdFiles.sort()
-        return levelMdFiles        
-    
+        self._insertFunctionStep('createOutputStep', subset)        
+            
+            
+    #--------------------------- STEPS functions --------------------------------------------   
     def sortClasses(self, subset=''):
         """ Sort the classes and provided a quality criterion. """
         nproc = self.numberOfMpi.get()
@@ -191,20 +188,29 @@ class XmippProtCL2D(ProtClassify):
                     args += " --append"
                 self.runJob("xmipp_classify_compare_classes",args, numberOfMpi=1)
             prevMdFn = mdFn
-            
-    def createOutput(self, subset=''):
+    
+    def createOutputStep(self, subset=''):
         """ Store the SetOfClasses2D object  
         resulting from the protocol execution. 
         """
         levelMdFiles = self._getLevelMdFiles(subset)
         lastMdFn = levelMdFiles[-1]
-        classes2DSet = self._createSetOfClasses2D(subset)
-        classes2DSet.setImages(self.inputImages.get())
+        classes2DSet = self._createSetOfClasses2D(self.inputImages.get(), subset)
         readSetOfClasses2D(classes2DSet, lastMdFn, 'classes_sorted')
-        classes2DSet.write()
         result = {'outputClasses' + subset: classes2DSet}
         self._defineOutputs(**result)
 
+    #--------------------------- INFO functions --------------------------------------------
+    def _validate(self):
+        validateMsgs = []
+        # Some prepocessing option need to be marked
+        if self.numberOfMpi <= 1:
+            validateMsgs.append('Mpi needs to be greater than 1.')
+        return validateMsgs
+    
+    def _citations(self):
+        return ['Sorzano2010a']
+    
     def _summary(self):
         summary = []
         if not hasattr(self, 'outputClasses'):
@@ -215,18 +221,16 @@ class XmippProtCL2D(ProtClassify):
             summary.append("Output classes: %s" % self.outputClasses.get())
         return summary
     
-    def _validate(self):
-        validateMsgs = []
-        # Some prepocessing option need to be marked
-        if self.numberOfMpi <= 1:
-            validateMsgs.append('Mpi needs to be greater than 1.')
-        return validateMsgs
-    
     def _methods(self):
-        methods = []
-        if not hasattr(self, 'outputClasses'):
-            methods.append("Protocol has not finished yet.")
-        else:
-            methods.append("Ese material and methods de moda")
-        
-        return methods
+        """ METHODS TO DO"""
+        pass
+    
+    #--------------------------- UTILS functions --------------------------------------------
+    def _getLevelMdFiles(self, subset=''):
+        """ Grab the metadata class files for each level. """
+        levelMdFiles = glob(self._getExtraPath("level_??/level_classes%s.xmd" % subset))
+        levelMdFiles.sort()
+        return levelMdFiles        
+    
+    
+    

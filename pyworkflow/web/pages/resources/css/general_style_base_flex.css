@@ -18,3 +18,7 @@ html, body {
     display: inline-block;
 }
 
+.center {
+	min-width: 20em;
+}
+

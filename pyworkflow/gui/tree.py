@@ -34,7 +34,7 @@ import ttk
 
 from pyworkflow.object import Scalar
 from pyworkflow.mapper import SqliteMapper
-from pyworkflow.utils import prettyDelta
+from pyworkflow.utils import prettyDelta, prettySize, dateStr
 import gui
 from widgets import Scrollable
 
@@ -375,13 +375,20 @@ class FileInfo(object):
     def getPath(self):
         return self._fullpath
     
+    def getSize(self):
+        """ Return a human readable string of the file size."""
+        return prettySize(self._stat.st_size)
+    
+    def getDate(self):
+        return dateStr(self._stat.st_mtime)
+    
     
 class FileTreeProvider(TreeProvider):
     """ Populate a tree with files and folders of a given path """
     def __init__(self, currentDir=None, showHidden=False):
         self._currentDir = os.path.abspath(currentDir)
         self._showHidden = showHidden
-        self.getColumns = lambda: [('File', 300), ('Id', 70), ('Time', 150)]
+        self.getColumns = lambda: [('File', 300), ('Size', 70), ('Time', 150)]
     
     def getObjectInfo(self, obj):
         filename = obj.getFileName()
@@ -390,7 +397,7 @@ class FileTreeProvider(TreeProvider):
         else:
             img = 'file_generic.gif'
         info = {'key': filename, 'text': filename, 
-                'values': ('', 'time'), 'image': img
+                'values': (obj.getSize(), obj.getDate()), 'image': img
                 }
             
         return info

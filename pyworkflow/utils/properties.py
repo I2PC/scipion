@@ -147,6 +147,8 @@ class Message():
     LABEL_MAGNI_RATE = 'Magnification rate'
     LABEL_SCANNED = 'Scanned pixel size'
     
+    LABEL_IMPORT_MIC = 'Import micrographs'
+    LABEL_IMPORT_PART = 'Import particles'
     LABEL_IMPORT_VOL = 'Import volumes'
     ERROR_IMPORT_VOL = 'importVolumes:There is not filePaths matching pattern'
     
@@ -269,8 +271,9 @@ class Icon():
     ACTION_IN = 'fa-sign-in.png'
     ACTION_OUT = 'fa-sign-out.png'
     #Host template
-    BUTTON_CLOSE = 'dialog_close.png'
-    BUTTON_SAVE = 'filesave.png'
+    BUTTON_SELECT = 'fa-check.png'
+    BUTTON_CLOSE = 'fa-times.png'
+    BUTTON_CANCEL = 'fa-ban.png'
     
     ARROW_UP = 'fa-arrow-up.png'
     ARROW_LEFT = 'fa-arrow-left.png'

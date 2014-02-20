@@ -393,17 +393,21 @@ class ProtocolsView(tk.Frame):
         self.methodText = TaggedText(mframe, width=40, height=15, bg='white')
         self.methodText.grid(row=0, column=0, sticky='news')   
         #Logs 
+        #TODO: join 3 logs in just one tab
         ologframe = tk.Frame(tab)
         gui.configureWeigths(ologframe)
-        self.outputLogText = TaggedText(ologframe, width=40, height=15, bg='white')
+        self.outputLogText = TaggedText(ologframe, width=40, height=15, 
+                                        bg='black', foreground='white')
         self.outputLogText.grid(row=0, column=0, sticky='news')
         elogframe = tk.Frame(tab)
         gui.configureWeigths(elogframe)
-        self.errorLogText = TaggedText(elogframe, width=40, height=15, bg='white')
+        self.errorLogText = TaggedText(elogframe, width=40, height=15, 
+                                       bg='black', foreground='white')
         self.errorLogText.grid(row=0, column=0, sticky='news')  
         slogframe = tk.Frame(tab)
         gui.configureWeigths(slogframe)
-        self.scipionLogText = TaggedText(slogframe, width=40, height=15, bg='white')
+        self.scipionLogText = TaggedText(slogframe, width=40, height=15, 
+                                         bg='black', foreground='white')
         self.scipionLogText.grid(row=0, column=0, sticky='news')
         
         tab.add(dframe, text=Message.LABEL_DATA)
@@ -690,16 +694,20 @@ class ProtocolsView(tk.Frame):
         self.methodText.addText(self.selectedProtocol.methods())
         
     def _fillLogs(self):
+        #TODO: REMOVE THIS...READ LOGS DIRECTLY FROM FILE
         fOutString, fErrString, fScipionString = self.selectedProtocol.getLogsAsStrings()
         
         self.outputLogText.clear()
         self.outputLogText.addText(fOutString)
+        self.outputLogText.goEnd()
         
         self.errorLogText.clear()
         self.errorLogText.addText(fErrString)
+        self.errorLogText.goEnd()
         
         self.scipionLogText.clear()
         self.scipionLogText.addText(fScipionString)
+        self.scipionLogText.goEnd()
         
     def _scheduleRunsUpdate(self, secs=1):
         self.runsTree.after(secs*1000, self.refreshRuns)

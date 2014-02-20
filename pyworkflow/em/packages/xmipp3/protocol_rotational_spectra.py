@@ -35,12 +35,14 @@ from protocol_kerdensom import KendersomBaseClassify
 
         
 class XmippProtRotSpectra(KendersomBaseClassify):
-    """Protocol to compute the rotational spectrum of the given particles"""
+    """Protocol to compute the rotational spectrum of the given particles.
+    """
     _label = 'rotational spectra'
     
     def __init__(self, **args):
         KendersomBaseClassify.__init__(self, **args)
         
+    #--------------------------- DEFINE param functions --------------------------------------------
     def _addParams(self, form):
         form.addParam('howCenter', EnumParam, choices=['Middle of the image', 'Minimize first harmonic'], 
                       default=xmipp3.ROTSPECTRA_CENTER_MIDDLE, important=True, 
@@ -59,9 +61,10 @@ class XmippProtRotSpectra(KendersomBaseClassify):
                       label='Highest harmonic to calculate',
                       expertLevel=LEVEL_ADVANCED) 
         form.addSection(label='Kerdensom')
-        
-    def _defineParamsStep(self):
-        KendersomBaseClassify._defineParamsStep(self)
+    
+    #--------------------------- INSERT steps functions --------------------------------------------
+    def _prepareParams(self):
+        KendersomBaseClassify._prepareParams(self)
         self._params['extraDir'] = self._getExtraPath()
         self._params['R1'] = self.spectraInnerRadius.get()
         self._params['R2'] = self.spectraOuterRadius.get()
@@ -69,7 +72,7 @@ class XmippProtRotSpectra(KendersomBaseClassify):
         self._params['spectraHighHarmonic'] = self.spectraHighHarmonic.get()
         self._params['vectors'] = self._getExtraPath("rotSpectra.xmd")
     
-    def _defineProccesStep(self):
+    def _insertProccesStep(self):
         imagesFn = self._params['imgsFn']
         centerFn = self._getExtraPath("center2d_center.xmd")
         # After any of this steps the file "center2d_center.xmd" should be produced
@@ -99,7 +102,8 @@ class XmippProtRotSpectra(KendersomBaseClassify):
         args += ' --oroot %(extraDir)s/center2d --r1 %(R1)d --r2 %(R2)d --r3 %(R3)d --r4 %(R4)d'
         # Run the command with formatted parameters
         self._insertRunJobStep(program, args % self._params)
-            
+    
+    #--------------------------- STEPS functions ---------------------------------------------------
     def centerFirstHarmonicStep(self, inputImages, outputCenter):
         dims = xmipp.MetaDataInfo(str(inputImages))
         md = xmipp.MetaData()
@@ -122,7 +126,8 @@ class XmippProtRotSpectra(KendersomBaseClassify):
         # Run the command with formatted parameters
         self.runJob(program, args % self._params)
         return [outputSpectra]
-         
+    
+    #--------------------------- INFO functions ----------------------------------------------------
     def _citations(self):
-        return ['Montano2000']
+        return ['Pascual2000']
         

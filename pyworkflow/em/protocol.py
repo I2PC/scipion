@@ -65,8 +65,10 @@ class EMProtocol(Protocol):
     def _createSetOfParticles(self, suffix=''):
         return self.__createSet(SetOfParticles, 'particles%s.sqlite', suffix)
 
-    def _createSetOfClasses2D(self, suffix=''):
-        return self.__createSet(SetOfClasses2D, 'classes2D%s.sqlite', suffix)
+    def _createSetOfClasses2D(self, imgSet, suffix=''):
+        classes = self.__createSet(SetOfClasses2D, 'classes2D%s.sqlite', suffix)
+        classes.setImages(imgSet)
+        return classes
 
     def _createSetOfClasses3D(self, suffix=''):
         return self.__createSet(SetOfClasses3D, 'classes3D%s.sqlite', suffix)
@@ -88,6 +90,20 @@ class EMProtocol(Protocol):
         if isinstance(child, Set):
             child.write()
         Protocol._insertChild(self, key, child)
+        
+    def _validateDim(self, obj1, obj2, errors, label1='Input 1', label2='Input 2'):
+        """ Validate that obj1 and obj2 has the same dimensions.
+        Params:
+            obj1, obj2: input objects that can be Images or SetOfImages subclasses.
+            errors: an error list where to append the error if not same dimensions
+            label1, label2: labels for input objects used for the error message.
+        """
+        d1 = obj1.getDim()
+        d2 = obj2.getDim()
+        if d1 != d2:
+            msg = '%s and %s have not the same dimensions, \n' % (label1, label2)
+            msg += 'which are %d and %d, respectively' % (d1, d2)
+            errors.append(msg)
         
         
 class ProtImportImages(EMProtocol):
@@ -188,6 +204,7 @@ class ProtImportMicrographs(ProtImportImages):
     """Protocol to import a set of micrographs in the project"""
 
     _className = 'Micrograph'
+    _label = Message.LABEL_IMPORT_MIC
     
     def _defineParams(self, form):
         ProtImportImages._defineParams(self, form)
@@ -223,6 +240,7 @@ class ProtImportParticles(ProtImportImages):
     """Protocol to import a set of particles in the project"""
  
     _className = 'Particle'
+    _label = Message.LABEL_IMPORT_PART
         
     def _defineParams(self, form):
         ProtImportImages._defineParams(self, form)

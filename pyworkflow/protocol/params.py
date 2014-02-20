@@ -37,9 +37,6 @@ from pyworkflow.object import *
 from constants import *
 
 
-
-
-
 class FormElement(OrderedObject):
     """Base for any element on the form"""
     

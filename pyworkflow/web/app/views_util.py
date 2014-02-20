@@ -39,7 +39,7 @@ from pyworkflow.utils import *
 
 
 iconDict = {
-            'logo_scipion': 'scipion_logo_small.gif',
+            'logo_scipion': 'scipion_logo_small_web.png',
             'logo_scipion_transparent': 'scipion_logo_transparent.png',
             'favicon': 'favicon.png',
             'help': 'system_help24.png',
@@ -281,6 +281,7 @@ def convertTktoHtml(text):
     return text
 
 def render_column(request):
+    
     renderFunction = request.GET.get("renderFunc")
     
     #PAJM: No se puede llamar a una funcion con reflex sino pertenece auna clase

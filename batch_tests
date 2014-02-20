@@ -19,6 +19,7 @@ scipion tests em.protocols.test_protocols_xmipp.TestXmippCTFEstimation.test_Micr
 scipion tests em.protocols.test_protocols_xmipp.TestXmippPreprocessMicrographs
 or
 scipion tests em.protocols.test_protocols_xmipp_3d.TestXmippCeateMask3D
+scipion tests em.protocols.test_protocols_xmipp_3d.TestXmippSimAnnealing
 
 # For workflows, the same way
 scipion tests em.workflows.test_workflow_xmipp
