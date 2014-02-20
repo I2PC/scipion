@@ -10,8 +10,8 @@
 # {eval} expandCommentRun()
 # {cite}
 CiteML3D = """
-for ML3D:  Scheres et al. (2007) Nature Methods, 4, 27-29
-for MLF3D: Scheres et al. (2007) Structure, 15, 1167-1177
+Bayesian view: Scheres, JMB (2012) 
+RELION implementation: Scheres, JSB (2012)
 """
 
 #------------------------------------------------------------------------------------------

@@ -24,11 +24,9 @@ class ProtRelionPostProcess(XmippProtocol):
         return lines
     
     def papers(self):
-        papers=[]
-        papers.append('Scheres, Bioinformatics (2005) [http://www.ncbi.nlm.nih.gov/pubmed/16204112]')
-        papers.append('Scheres, Nat.Meth (2007) [http://www.ncbi.nlm.nih.gov/pubmed/17179934]')
-
-        return papers
+        return ['Bayesian view: Scheres, JMB (2012) [http://www.ncbi.nlm.nih.gov/pubmed/22100448]',
+                  'RELION implementation: Scheres, JSB (2012) [http://www.ncbi.nlm.nih.gov/pubmed/23000701]'
+                  ]
 
     def validate(self):
         errors = []
