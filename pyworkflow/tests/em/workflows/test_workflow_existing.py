@@ -228,7 +228,20 @@ class TestXmippWorkflow(unittest.TestCase):
         
         project.getTransformGraph()
     
-   
+    def test_exportEMX(self):
+        projName = "TestXmippWorkflow"
+        project = Manager().loadProject(projName)
+        
+        protExtract = project.mapper.selectByClass('XmippProtExtractParticles')[0]
+        
+        #protExtract2 = project.copyProtocol(protExtract)
+        #project.launchProtocol(protExtract2, wait=True)
+        
+        protEmx = ProtEmxExportMicrographs()
+        protEmx.inputSet.set(protExtract.outputParticles)
+        
+        project.launchProtocol(protEmx, wait=True)
+         
              
 class ConditionFilter():
     def __init__(self, condition):

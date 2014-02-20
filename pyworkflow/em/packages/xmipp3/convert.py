@@ -170,8 +170,7 @@ def rowToImage(md, objId, imgLabel, imgClass, hasCtf):
     index, filename = xmippToLocation(md.getValue(imgLabel, objId))
     img.setLocation(index, filename)
     if hasCtf:
-        ctfModel = CTFModel()
-        rowToCtfModel(md, objId)
+        ctfModel = rowToCtfModel(md, objId)
         #TODO: CHECK NEXT LINE
         #ctfModel.setMicFile(md.getValue(xmipp.MDL_MICROGRAPH, objId))
         img.setCTF(ctfModel)
