@@ -25,7 +25,7 @@ class ProtRelionPostProcess(XmippProtocol):
     
     def papers(self):
         return ['Bayesian view: Scheres, JMB (2012) [http://www.ncbi.nlm.nih.gov/pubmed/22100448]',
-                  'RELION implementation: Scheres, JSB (2012) [http://www.ncbi.nlm.nih.gov/pubmed/23000701]'
+                'RELION implementation: Scheres, JSB (2012) [http://www.ncbi.nlm.nih.gov/pubmed/23000701]'
                   ]
 
     def validate(self):
