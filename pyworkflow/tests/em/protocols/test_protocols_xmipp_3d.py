@@ -109,14 +109,18 @@ class TestXmippPreprocessVolumes(TestXmippBase):
         self.proj.launchProtocol(protImportVol2, wait=True)
     
         print "Run preprocess a volume"
-        protPreprocessVol1 = XmippProtPreprocessVolumes(doWindow=True, finalSize=300, doRandomize=True)
+        protPreprocessVol1 = XmippProtPreprocessVolumes(doChangeHand=True, doRandomize=True, doSymmetrize=True, symmetryGroup='d6',
+                                                        doSegment=True, doNormalize=True, backRadius=20, doInvert=True,
+                                                        doThreshold=True, thresholdType=1)
         protPreprocessVol1.inputVolumes.set(protImportVol1.outputVolume)
         self.proj.launchProtocol(protPreprocessVol1, wait=True)        
          
         self.assertIsNotNone(protPreprocessVol1.outputVol, "There was a problem with a volume")
 
         print "Run preprocess a SetOfVolumes"
-        protPreprocessVol2 = XmippProtPreprocessVolumes(doWindow=True, finalSize=128, doFilter=True)
+        protPreprocessVol2 = XmippProtPreprocessVolumes(doChangeHand=True, doRandomize=True, doSymmetrize=True, symmetryGroup='d6',
+                                                        doSegment=True, doNormalize=True, backRadius=20, doInvert=True,
+                                                        doThreshold=True, thresholdType=1)
         protPreprocessVol2.inputVolumes.set(protImportVol2.outputVolumes)
         self.proj.launchProtocol(protPreprocessVol2, wait=True)        
          

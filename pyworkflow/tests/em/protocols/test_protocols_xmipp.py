@@ -328,9 +328,9 @@ class TestXmippCL2D(TestXmippBase):
         
     def testCL2D(self):
         print "Run CL2D"
-        protCL2D = XmippProtCL2D(numberOfReferences=2, numberOfInitialReferences=1, 
+        protCL2D = XmippProtPreprocessParticles(numberOfReferences=2, numberOfInitialReferences=1, 
                                  numberOfIterations=3, numberOfMpi=4)
-        protCL2D.inputImages.set(self.protImport.outputParticles)
+        protCL2D.inputParticles.set(self.protImport.outputParticles)
         self.proj.launchProtocol(protCL2D, wait=True)
         
         pattern = getInputPath('ml3dData', 'icoFiltered.vol')
@@ -409,6 +409,21 @@ class TestXmippML3D(TestXmippBase):
         self.proj.launchProtocol(protML3D, wait=True)        
         
         self.assertIsNotNone(protML3D.outputVolumes, "There was a problem with ML3D")          
+
+class TestXmippPreprocessParticles(TestXmippBase):
+
+    @classmethod
+    def setUpClass(cls):
+        setupClassification(cls)
+    
+    def testPreprocessPart(self):
+        print "Run Preprocess particles"
+        protPreproc = XmippProtPreprocessParticles(doRemoveDust=True, doNormalize=True, backRadius=10, doInvert=True,
+                                              doThreshold=True, thresholdType=1)
+        protPreproc.inputParticles.set(self.protImport.outputParticles)
+        self.proj.launchProtocol(protPreproc, wait=True)
+        
+        self.assertIsNotNone(protPreproc.outputParticles, "There was a problem with preprocess particles")
 
 
 if __name__ == "__main__":
