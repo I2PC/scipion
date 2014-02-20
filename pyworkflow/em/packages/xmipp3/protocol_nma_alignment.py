@@ -166,7 +166,8 @@ class XmippProtAlignmentNMA(EMProtocol):
         md = xmipp.MetaData(imgFn)
         deformations = md.getColumnValues(xmipp.MDL_NMA)
         defFn = self._getExtraPath("deformations.txt")
-      fhDef = open(defFn, 'w')
+        fhDef = open(defFn, 'w')
+        
         for deformation in deformations:
             for coef in deformation:
                 fhDef.write("%f " % coef)
