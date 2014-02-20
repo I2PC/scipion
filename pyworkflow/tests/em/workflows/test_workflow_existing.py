@@ -237,7 +237,7 @@ class TestXmippWorkflow(unittest.TestCase):
         #protExtract2 = project.copyProtocol(protExtract)
         #project.launchProtocol(protExtract2, wait=True)
         
-        protEmx = ProtEmxExportMicrographs()
+        protEmx = ProtEmxExport()
         protEmx.inputSet.set(protExtract.outputParticles)
         
         project.launchProtocol(protEmx, wait=True)

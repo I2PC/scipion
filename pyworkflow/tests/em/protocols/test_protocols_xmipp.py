@@ -247,12 +247,11 @@ class TestXmippExtractParticles(TestXmippBase):
         protExtract.inputCoordinates.set(self.protPP.outputCoordinates)
         protExtract.setObjLabel("extract-same as picking")
         self.proj.launchProtocol(protExtract, wait=True)
-
         self.assertIsNotNone(protExtract.outputParticles, "There was a problem with the extract particles")
         
     def testExtractOriginal(self):
         print "Run extract particles with downsampling factor equal to the original micrographs"
-        protExtract = XmippProtExtractParticles(boxSize=512, downsampleType=self.ORIGINAL, doFlip=False)
+        protExtract = XmippProtExtractParticles(boxSize=256, downsampleType=self.ORIGINAL, doFlip=False)
         protExtract.inputCoordinates.set(self.protPP.outputCoordinates)
         protExtract.inputMicrographs.set(self.protImport.outputMicrographs)
         protExtract.setObjLabel("extract-original")
@@ -262,7 +261,7 @@ class TestXmippExtractParticles(TestXmippBase):
 
     def testExtractOther(self):
         print "Run extract particles with downsampling factor equal to other"
-        protExtract = XmippProtExtractParticles(boxSize=256, downsampleType=self.OTHER, downFactor=2,doFlip=False)
+        protExtract = XmippProtExtractParticles(boxSize=175, downsampleType=self.OTHER, downFactor=2,doFlip=False)
         protExtract.inputCoordinates.set(self.protPP.outputCoordinates)
         protExtract.inputMicrographs.set(self.protImport.outputMicrographs)
         protExtract.setObjLabel("extract-other")
@@ -280,7 +279,16 @@ class TestXmippExtractParticles(TestXmippBase):
         self.proj.launchProtocol(protExtract, wait=True)
         
         self.assertIsNotNone(protExtract.outputParticles, "There was a problem with the extract particles") 
-     
+        
+        protEmx1 = ProtEmxExport()
+        protEmx1.setObjLabel("emx export coordinates")
+        protEmx1.inputSet.set(self.protPP.outputCoordinates)
+        self.proj.launchProtocol(protEmx1, wait=True)
+        
+        protEmx2 = ProtEmxExport()
+        protEmx2.setObjLabel("emx export particles")
+        protEmx2.inputSet.set(protExtract.outputParticles)
+        self.proj.launchProtocol(protEmx2, wait=True)
      
 class TestXmippScreenParticles(TestXmippBase):
     

@@ -38,15 +38,21 @@ from data import *
 import emx
 
 
-class ProtEmxExportMicrographs(ProtClassify):
-    """Export a SetOfMicrographs object and export in the corresponding. """
+class ProtEmxExport(ProtClassify):
+    """
+    Export a micrographs, coordinates or particles to EMX format.
+    
+    EMX is a joint initiative for data exchange format between different 
+    EM software packages. See more about [[http://i2pc.cnb.csic.es/emx][EMX format]]
+    """
         
     #--------------------------- DEFINE param functions --------------------------------------------   
     def _defineParams(self, form):
         form.addSection(label='Input')
-        form.addParam('inputSet', PointerParam, pointerClass='SetOfMicrographs,SetOfParticles', 
-                      label="Data to export",
-                      help='Select the particles or micrographs objects to be exported to EMX.')
+        form.addParam('inputSet', PointerParam, 
+                      pointerClass='SetOfMicrographs,SetOfCoordinates,SetOfParticles', 
+                      label="Set to export",
+                      help='Select the microgrpahs, coordinates or particles set to be exported to EMX.')
         form.addParam('ctfRelations', RelationParam, 
                       allowNull=True, relationName=RELATION_CTF, 
                       relationParent='getInputMicrographs', relationReverse=True, 
@@ -56,25 +62,15 @@ class ProtEmxExportMicrographs(ProtClassify):
                  
     #--------------------------- INSERT steps functions --------------------------------------------  
     def _insertAllSteps(self):
-        self._insertFunctionStep('exportMicrographsStep', self.inputSet.get().getObjId())       
+        self._insertFunctionStep('exportDataStep', self.inputSet.get().getObjId())       
 
     #--------------------------- STEPS functions --------------------------------------------       
-    def exportMicrographsStep(self, micsId):
+    def exportDataStep(self, micsId):
         """ Export micrographs to EMX file.
         micsId is only passed to force redone of this step if micrographs change.
         """
         emxDir = self._getPath('emxData')
-        cleanPath(emxDir)
-        makePath(emxDir)        
-        inputSet = self.inputSet.get()
-        kwargs = {}
-        
-        if isinstance(inputSet, SetOfMicrographs):
-            kwargs['micSet'] = inputSet
-        elif isinstance(inputSet, SetOfParticles):
-            kwargs['partSet'] = inputSet
-            
-        emx.exportSetOfMicrographs(emxDir, **kwargs)
+        emx.exportData(emxDir, self.inputSet.get(), ctfSet=None)
     
     #--------------------------- INFO functions -------------------------------------------- 
     def _validate(self):

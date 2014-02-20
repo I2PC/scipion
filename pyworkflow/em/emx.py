@@ -33,6 +33,7 @@ except ImportError:
     import xml.etree.ElementTree as ET
 
 from pyworkflow.utils import *
+from data import SetOfMicrographs, SetOfCoordinates, SetOfParticles
     
 
 def writeHeader(f):
@@ -89,8 +90,7 @@ def writeMicrograph(f, mic):
   <amplitudeContrast>%(amplitudeContrast)0.2f</amplitudeContrast>
   <cs unit="mm">%(cs)0.2f</cs>
   <pixelSpacing>
-    <X unit="A/px">%(samplingRate)0.2f</X>
-    <Y unit="A/px">%(samplingRate)0.2f</Y>
+    <X unit="A/px">%(samplingRate)0.2f</X> <Y unit="A/px">%(samplingRate)0.2f</Y>
   </pixelSpacing>""" % micDict)
     if mic.hasCTF():
         _writeCTF(f, mic.getCTF())
@@ -181,27 +181,34 @@ def writeSetOfParticles(f, partSet, stackFn=None, micSet=None):
             newLoc = (i+1, stackFn)
             ih.convert(loc, newLoc)
             newFn = basename(stackFn)
+            particle.setLocation(i+1, newFn)
+            writeParticle(f, particle, micSet)
         else:
-            newFn = "coordinate"
-        particle.setLocation(i+1, newFn)
-        writeParticle(f, particle, micSet)
+            writeCoordinate(f, particle, micSet)
         
         
-def exportSetOfMicrographs(emxDir, micSet=None, ctfSet=None, partSet=None):
-    """ Export micrographs as EMX format. """
+def exportData(emxDir, inputSet, ctfSet=None):
+    """ Export micrographs, coordinates or particles to  EMX format. """
+    cleanPath(emxDir)
+    makePath(emxDir) 
     fnXml = join(emxDir, 'data.emx')
     f = open(fnXml, 'w+')
     writeHeader(f)
-    
-    if micSet:
-        writeSetOfMicrographs(f, micSet, emxDir, ctfSet)
+
+    if isinstance(inputSet, SetOfMicrographs):
+        writeSetOfMicrographs(f, inputSet, emxDir, ctfSet)
         
-    elif partSet:
-        if partSet.hasCoordinates():
-            micSet = partSet.getCoordinates().getMicrographs()
+    elif isinstance(inputSet, SetOfCoordinates):
+        micSet = inputSet.getMicrographs()
+        writeSetOfMicrographs(f, micSet, emxDir, ctfSet)
+        writeSetOfParticles(f, inputSet, None, micSet)
+        
+    elif isinstance(inputSet, SetOfParticles):
+        if inputSet.hasCoordinates():
+            micSet = inputSet.getCoordinates().getMicrographs()
             writeSetOfMicrographs(f, micSet, emxDir, writeData=False)
         fnMrcs = join(emxDir, 'data.mrcs')
-        writeSetOfParticles(f, partSet, fnMrcs, micSet)
+        writeSetOfParticles(f, inputSet, fnMrcs, micSet)
         
     writeFooter(f)
     f.close()
