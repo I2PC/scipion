@@ -12,6 +12,7 @@ import xmipp.viewer.particlepicker.Micrograph;
 import xmipp.viewer.particlepicker.ParticlePickerCanvas;
 import xmipp.viewer.particlepicker.ParticlePickerJFrame;
 import xmipp.viewer.particlepicker.training.model.AutomaticParticle;
+import xmipp.viewer.particlepicker.training.model.CenterParticleTask;
 import xmipp.viewer.particlepicker.training.model.Mode;
 import xmipp.viewer.particlepicker.training.model.ParticleToTemplatesTask;
 import xmipp.viewer.particlepicker.training.model.SupervisedParticlePicker;
@@ -71,8 +72,11 @@ public class SupervisedParticlePickerCanvas extends ParticlePickerCanvas
 			}
 			else if (SwingUtilities.isLeftMouseButton(e) && micrograph.fits(x, y, frame.getParticlePicker().getSize()))
 			{
+                            
 				p = new ManualParticle(x, y, frame.getParticlePicker(), micrograph);
-				micrograph.addManualParticle(p, ppicker, frame.isCenterParticle());
+				micrograph.addManualParticle(p, ppicker);
+                                if(frame.isCenterParticle())
+                                    new CenterParticleTask(this, ppicker, p).execute();
 				active = p;
 				if(ppicker.getMode() == Mode.Manual)
 //					TasksManager.getInstance().addTask(new ParticleToTemplatesTask(active));
@@ -117,7 +121,7 @@ public class SupervisedParticlePickerCanvas extends ParticlePickerCanvas
 				{
 					micrograph.removeParticle(active, ppicker);
 					active = new ManualParticle(active.getX(), active.getY(), ppicker, micrograph);
-					micrograph.addManualParticle(active, ppicker, frame.isCenterParticle());
+					micrograph.addManualParticle(active, ppicker);
 					
 				}
 				else
@@ -179,7 +183,7 @@ public class SupervisedParticlePickerCanvas extends ParticlePickerCanvas
 
 			micrograph.removeParticle(active, ppicker);
 			active = new ManualParticle(active.getX(), active.getY(), active.getParticlePicker(), micrograph);
-			micrograph.addManualParticle(active, ppicker, frame.isCenterParticle());
+			micrograph.addManualParticle(active, ppicker);
 			repaint();
 		}
 		else
