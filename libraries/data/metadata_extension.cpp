@@ -282,7 +282,9 @@ bool compareTwoMetadataFiles(const FileName &fn1, const FileName &fn2)
     return true;
 }
 
-void copyImages(const MetaData &md, const char * output, bool independent, MDLabel image_label)
+
+
+void copyImages(const MetaData &md, const char * output, bool independent, bool applyGeo, MDLabel image_label)
 {
     ProgConvImg conv;
     FileName out, oroot;
@@ -291,7 +293,7 @@ void copyImages(const MetaData &md, const char * output, bool independent, MDLab
     else
         out = output;
     //Image convert dont use applyGeo
-    conv.setup(new MetaData(md), out, oroot, false, image_label);
+    conv.setup(new MetaData(md), out, oroot, applyGeo, image_label);
     conv.tryRun();
 }
 
