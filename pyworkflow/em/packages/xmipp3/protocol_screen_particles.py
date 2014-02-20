@@ -42,7 +42,8 @@ REJ_PERCENTAGE =2
 class XmippProtScreenParticles(ProtProcessParticles):
     """ Protocol to screen a set of particles in the project. """
     _label = 'screen particles'
-
+    
+    #--------------------------- DEFINE param functions --------------------------------------------
     def _defineProcessParams(self, form):
         
         form.addParam('autoParRejection', EnumParam, choices=['None', 'MaxZscore', 'Percentage'],
@@ -58,7 +59,7 @@ class XmippProtScreenParticles(ProtProcessParticles):
                       label='Percentage (%)', expertLevel=LEVEL_EXPERT,
                       help='Percentage.', validators=[Range(0, 100, error="Percentage must be between 0 and 100.")])        
         
-                
+    #--------------------------- INSERT steps functions --------------------------------------------            
     def _insertAllSteps(self):
         """ Mainly prepare the command line for call cl2d program"""
         
@@ -67,8 +68,9 @@ class XmippProtScreenParticles(ProtProcessParticles):
         
         self._insertFunctionStep('sortImages', imgsFn) 
         
-        self._insertFunctionStep('createOutput')
+        self._insertFunctionStep('createOutputStep')
 
+    #--------------------------- STEPS functions --------------------------------------------
     def sortImages(self, inputFile):
         from xmipp import MetaDataInfo
         #(Xdim, Ydim, Zdim, Ndim, _) = MetaDataInfo(inputFile)
@@ -85,8 +87,7 @@ class XmippProtScreenParticles(ProtProcessParticles):
         #if Ndim > 0:
         self.runJob("xmipp_image_sort_by_statistics", "-i " + self.outputMd.get() + " --addToInput"+args)
 
-                        
-    def createOutput(self):
+    def createOutputStep(self):
         imgSet = self._createSetOfParticles()
         imgSet.copyInfo(self.inputParticles.get())
         readSetOfParticles(self.outputMd.get(), imgSet, imgSet.hasCTF())
@@ -94,6 +95,7 @@ class XmippProtScreenParticles(ProtProcessParticles):
 
         self._defineOutputs(outputParticles=imgSet)
 
+    #--------------------------- INFO functions --------------------------------------------                
     def _summary(self):
         summary = []
         if not hasattr(self, 'outputParticles'):
@@ -102,3 +104,14 @@ class XmippProtScreenParticles(ProtProcessParticles):
             summary.append("Input Images: %s" % self.inputParticles.get().getNameId())
             summary.append("Output particles: %s" % self.outputParticles.get())
         return summary
+    
+    def _validate(self):
+        pass
+        
+    def _citations(self):
+        return []
+    
+    def _methods(self):
+        pass
+    
+    
