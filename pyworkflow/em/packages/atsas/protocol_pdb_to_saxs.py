@@ -40,6 +40,7 @@ class AtsasProtConvertPdbToSAXS(ProtPreprocessVolumes):
     This is actually a wrapper to the program Crysol from Atsas ( see documentation at http://www.embl-hamburg.de/biosaxs/manuals/crysol.html ) """
     _label = 'convert PDB to SAXS curve'
     
+    #--------------------------- DEFINE param functions --------------------------------------------
     def _defineParams(self, form):
         form.addSection(label='Input')
         form.addParam('inputStructure', PointerParam, label="Input structure", important=True, 
@@ -58,10 +59,12 @@ class AtsasProtConvertPdbToSAXS(ProtPreprocessVolumes):
         form.addParam('otherCrysol', StringParam, default='', 
                       label='Other parameters for Crysol',
                       help='See http://www.embl-hamburg.de/biosaxs/manuals/crysol.html') 
-             
+    
+    #--------------------------- INSERT steps functions --------------------------------------------
     def _insertAllSteps(self):
         self._insertFunctionStep('crysolWrapper')
         
+    #--------------------------- STEPS functions --------------------------------------------
     def crysolWrapper(self):
         experimentalSAXS=""
         if self.experimentalSAXS.get()!="":
@@ -79,8 +82,9 @@ class AtsasProtConvertPdbToSAXS(ProtPreprocessVolumes):
         self.runJob("mv","*log *txt extra")
         if experimentalSAXS=="":
             self.runJob("mv","*alm extra")
-        self._leaveWorkingDir()        
+        self._leaveWorkingDir()       
         
+    #--------------------------- INFO functions --------------------------------------------
     def _summary(self):
         summary = []
         summary.append('Number of samples: %d'%self.numberOfSamples.get())

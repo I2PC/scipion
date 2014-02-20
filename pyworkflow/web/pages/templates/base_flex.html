@@ -1,7 +1,9 @@
 <!DOCTYPE html>
 <html lang='es'>
 <head>
-<title>Scipion {% block title %} {% endblock %}</title>
+<title>
+	Scipion {% block title %} {% endblock %}
+</title>
 <meta charset='utf-8'>
 <link rel="icon" type="image/png" href="{{favicon}}" />
 <!-- CSS -->
@@ -21,7 +23,9 @@
 <script type="text/javascript" src="{{jquery_layout}}"></script>
 <script type="text/javascript" src="{{utils}}"></script>
 
-{% block head %} {% endblock %}
+{% block head %} 
+{% endblock %}
+
 </head>
 
 <body>
@@ -33,21 +37,26 @@
 			{% if contentConfig == 'divided' %}
 				<section data-layout='{"type": "border", "hgap": 1, "vgap": 1}' class="center layout-inner">
 					<div class="north">
-				        {% block contentNorth %}{%endblock %}
+				        {% block contentNorth %}	
+				        {% endblock %}
 				    </div>
 				    <div class="center">
-				        {% block contentCenter %}{%endblock %}
+				        {% block contentCenter %}	
+				        {% endblock %}
 				    </div>
 				</section>
 				<aside class="west">
-					{% block sideLeft %} {%endblock %}
+					{% block sideLeft %}	
+					{% endblock %}
 				</aside>
 			{% elif contentConfig == 'full' %}
 				<aside class="center">
-					{% block menu %} {%endblock %}
+					{% block menu %}	
+					{% endblock %}
 				</aside>
 				<section class="south">
-					{% block content %}{%endblock %}
+					{% block content %}	
+					{% endblock %}
 				</section>
 			{% endif %}
 				

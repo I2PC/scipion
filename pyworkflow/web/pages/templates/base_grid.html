@@ -1,7 +1,9 @@
 <!DOCTYPE html>
 <html lang='es'>
 <head>
-<title>Scipion {% block title %} {% endblock %}</title>
+<title>
+	Scipion {% block title %} {% endblock %}
+</title>
 <meta charset='utf-8'>
 <link rel="icon" type="image/png" href="{{favicon}}" />
 <!-- CSS -->
@@ -23,14 +25,16 @@
 <body>
 
 	<div data-layout='{"type": "flexGrid", "columns": 1, "hgap": 1, "vgap": 1}' class="layout-outer">
-		{% block content_header %}{%endblock %}
+		{% block content_header %}	
+		{% endblock %}
 		
 		<aside>
-			{% block menu %} {%endblock %}
+			{% block menu %} 
+			{% endblock %}
 		</aside>
 	
 		<section>
-			{% block content %}{%endblock %}
+			{% block content %}	{% endblock %}
 		</section>
 			
 		{% include "footer.html" %}

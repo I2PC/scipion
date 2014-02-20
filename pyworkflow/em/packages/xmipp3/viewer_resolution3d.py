@@ -30,7 +30,7 @@ visualization program.
 from pyworkflow.viewer import ProtocolViewer, DESKTOP_TKINTER, WEB_DJANGO
 from pyworkflow.em import *
 from pyworkflow.gui.form import FormWindow
-from protocol_resolution_3d import *
+from protocol_resolution3d import *
 from viewer import runShowJ
 from plotter import XmippPlotter
 from xmipp import *

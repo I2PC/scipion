@@ -37,6 +37,7 @@ class XmippProtCLTomo(ProtClassify3D):
     """ Perform subtomogram averaging """
     _label = 'cltomo'
     
+    #--------------------------- DEFINE param functions --------------------------------------------
     def _defineParams(self, form):
         form.addSection(label='General parameters')
         form.addParam('volumelist', PointerParam, pointerClass="SetOfVolumes", label='Set of volumes',
@@ -81,10 +82,12 @@ class XmippProtCLTomo(ProtClassify3D):
         form.addParam('maxShiftY',FloatParam,default=360,label='Maximum shift Y',help="In voxels")
         form.addParam('maxShiftZ',FloatParam,default=360,label='Maximum shift Z',help="In voxels")
 
+    #--------------------------- INSERT steps functions --------------------------------------------
     def _insertAllSteps(self):
         self._insertFunctionStep('runCLTomo')
         self._insertFunctionStep('createOutput')
     
+    #--------------------------- STEPS functions --------------------------------------------
     def createOutput(self):
         import glob
         levelFiles=glob.glob(self._getExtraPath("results_classes_level*.xmd"))
@@ -110,6 +113,7 @@ class XmippProtCLTomo(ProtClassify3D):
             self._defineOutputs(alignedVolumes=setOfVolumes)
             self._defineTransformRelation(self.volumelist, self.alignedVolumes)
             
+    #--------------------------- INFO functions --------------------------------------------
     def _summary(self):
         messages = []
         if self.doGenerateInitial.get():
@@ -145,6 +149,7 @@ class XmippProtCLTomo(ProtClassify3D):
     def _citations(self):
         return ['Chen2013']
 
+    #--------------------------- UTILS functions --------------------------------------------
     def runCLTomo(self):
         params= ' -i '            + createXmippInputVolumes(self,self.volumelist.get()) + \
                 ' --oroot '       + self._getExtraPath("results") + \
