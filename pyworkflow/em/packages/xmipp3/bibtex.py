@@ -338,8 +338,6 @@ author = "Sorzano, C. O. S. and Iriarte-Ruiz, A. and Marabini, R. and Carazo, J.
 keywords = "Downsampling, Single Particles, Electron microscopy"
 }
 
-
-
 """
 
 
