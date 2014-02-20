@@ -204,7 +204,7 @@ class XmippProtAlignmentNMA(EMProtocol):
         for l in lines:
             print >> fWarn, l
         fWarn.close()
-        
+
     def _getLocalModesFn(self):
         modesFn = self.inputModes.get().getFileName()
         return self._getBasePath(modesFn)
