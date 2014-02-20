@@ -80,6 +80,11 @@ void CL3DAssignment::copyAlignment(const CL3DAssignment &alignment)
     shiftz = alignment.shiftz;
 }
 
+bool CL3DAssignmentComparator(const CL3DAssignment& d1, const CL3DAssignment& d2)
+{
+  return d1.objId < d2.objId;
+}
+
 /* CL3DClass basics ---------------------------------------------------- */
 CL3DClass::CL3DClass()
 {
@@ -470,6 +475,9 @@ void CL3D::shareAssignments(bool shareAssignment, bool shareUpdates)
                         receivedNextListImage.push_back(auxList[j]);
                 }
             }
+            // This is important to ensure that all nodes have all images in the same order
+            std::sort(receivedNextListImage.begin(),receivedNextListImage.end(),CL3DAssignmentComparator);
+
             // Copy the received elements
             listSize = receivedNextListImage.size();
             P[q]->nextListImg.reserve(P[q]->nextListImg.size() + listSize);
@@ -530,6 +538,9 @@ void CL3D::shareSplitAssignments(Matrix1D<int> &assignment, CL3DClass *node1,
                     receivedNextListImage.push_back(auxList[j]);
             }
         }
+        // This is important to ensure that all nodes have all images in the same order
+        std::sort(receivedNextListImage.begin(),receivedNextListImage.end(),CL3DAssignmentComparator);
+
         // Copy the received elements
         listSize = receivedNextListImage.size();
         node->nextListImg.reserve(node->nextListImg.size() + listSize);
@@ -1021,7 +1032,10 @@ void CL3D::splitNode(CL3DClass *node, CL3DClass *&node1, CL3DClass *&node2,
     bool success = true;
     do
     {
-        finish = true;
+    	// Sort the currentListImg to make sure that all nodes have the same order
+    	std::sort(node->currentListImg.begin(),node->currentListImg.end(),CL3DAssignmentComparator);
+
+    	finish = true;
         node2->neighboursIdx = node1->neighboursIdx = node->neighboursIdx;
         node1->P = node->P;
         node2->P = node->P;
@@ -1383,7 +1397,10 @@ void ProgClassifyCL3D::defineParams()
     addParamsLine("   [--dontAlign]             : Do not align volumes, only classify");
     addParamsLine("   [--generateAlignedVolumes]: Generate aligned subvolumes at the end");
     Mask::defineParams(this,INT_MASK,NULL,NULL,true);
-    addExampleLine("mpirun -np 3 `which xmipp_mpi_classify_CL3D` -i images.stk --nref 256 --oroot class --iter 10");
+    addExampleLine("The MPI program as to be called through a python wrapper that encapsulates some path setting",false);
+    addExampleLine(" ",false);
+    addExampleLine("Call the program as xmipp_classify_CLTomo [numberOfMPIProcessors] [arguments as above]",false);
+    addExampleLine("xmipp_classify_CLTomo 8 -i images.stk --nref 256 --oroot class --iter 10");
 }
 
 void ProgClassifyCL3D::produceSideInfo()

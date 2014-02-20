@@ -13,6 +13,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -21,6 +22,7 @@ import xmipp.jni.Filename;
 import xmipp.jni.MetaData;
 import xmipp.utils.XmippFileChooser;
 import xmipp.utils.XmippWindowUtil;
+import xmipp.viewer.models.GalleryData;
 
 /**
  *
@@ -37,11 +39,13 @@ public class ExportImagesJDialog extends JDialog{
     private String note2 = "<html><b>Note 2:</b> Use extension stk, mrcs or img to save as SPIDER, MRC or IMAGIC stacks";
     private JButton browsebt;
     private JTextField pathtf;
+    private JCheckBox applygeochb;
+    private GalleryData data;
     
     public ExportImagesJDialog(GalleryJFrame parent)
     {
         super(parent);
-        
+        this.data = parent.data;
         md = parent.data.md;
         path = parent.data.getFileName();
         path = Filename.removeExtension(path) + "_export.stk";
@@ -54,6 +58,7 @@ public class ExportImagesJDialog extends JDialog{
         
         setLayout(new GridBagLayout());
         GridBagConstraints c = new GridBagConstraints();
+        c.anchor = GridBagConstraints.WEST;
         c.insets = new Insets(5, 5, 5, 5);
         add(new JLabel("Path:"), XmippWindowUtil.getConstraints(c, 0, 0));
         
@@ -82,8 +87,14 @@ public class ExportImagesJDialog extends JDialog{
             }
         });
         add(browsebt, XmippWindowUtil.getConstraints(c, 2, 0));
-        add(new JLabel(note1), XmippWindowUtil.getConstraints(c, 0, 1, GridBagConstraints.HORIZONTAL));
-        add(new JLabel(note2), XmippWindowUtil.getConstraints(c, 0, 2, GridBagConstraints.HORIZONTAL));
+        add(new JLabel("Apply Geometry:"), XmippWindowUtil.getConstraints(c, 0, 1));
+        
+
+        applygeochb = new JCheckBox();
+        applygeochb.setSelected(data.useGeo);
+        add(applygeochb, XmippWindowUtil.getConstraints(c, 1, 1));
+        add(new JLabel(note1), XmippWindowUtil.getConstraints(c, 0, 2, GridBagConstraints.HORIZONTAL));
+        add(new JLabel(note2), XmippWindowUtil.getConstraints(c, 0, 3, GridBagConstraints.HORIZONTAL));
         JPanel actionspn = new JPanel();
         cancelbt = XmippWindowUtil.getTextButton("Cancel", new ActionListener() {
 
@@ -103,7 +114,7 @@ public class ExportImagesJDialog extends JDialog{
             }
         });
         actionspn.add(savebt);
-        add(actionspn, XmippWindowUtil.getConstraints(c, 0, 3, GridBagConstraints.HORIZONTAL));
+        add(actionspn, XmippWindowUtil.getConstraints(c, 0, 4, GridBagConstraints.HORIZONTAL));
         pack();
         XmippWindowUtil.setLocation(0.5, 0.5, this);
         setVisible(true);
@@ -118,7 +129,8 @@ public class ExportImagesJDialog extends JDialog{
     private void saveImages()
     {
         path = pathtf.getText();
-        md.writeImages(path, false, label);
+        System.out.printf("appliedGeo:%s\n", applygeochb.isSelected());
+        md.writeImages(path, false, applygeochb.isSelected(), label);
     }
     
 }
