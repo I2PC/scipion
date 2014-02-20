@@ -166,13 +166,13 @@ class XmippProtAlignmentNMA(EMProtocol):
         md = xmipp.MetaData(imgFn)
         deformations = md.getColumnValues(xmipp.MDL_NMA)
         defFn = self._getExtraPath("deformations.txt")
-        fhDef def _printWarnings(self, *lines):
-        """ Print some warning lines to 'warnings.xmd', 
-        the function should be called inside the working dir."""
-        fWarn = open("warnings.xmd",'w')
-        for l in lines:
-            print >> fWarn, l
-        fWarn.close()
+      fhDef = open(defFn, 'w')
+        for deformation in deformations:
+            for coef in deformation:
+                fhDef.write("%f " % coef)
+            fhDef.write("\n")
+        fhDef.close()
+        return defFn
     
     def createOutputStep(self):
         modes = NormalModes(filename=self._getLocalModesFn())
