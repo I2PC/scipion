@@ -57,8 +57,7 @@ class ObjectBrowser(tk.Frame):
     each element such as: icon, preview and description.
     A TreeProvider will be used to populate the list (Tree).
     """
-    def __init__(self, parent, treeProvider, 
-                 showPreview=True, **args):
+    def __init__(self, parent, treeProvider, showPreview=True, **args):
         tk.Frame.__init__(self, parent, **args)
         self.treeProvider = treeProvider
         gui.configureWeigths(self)
@@ -74,7 +73,7 @@ class ObjectBrowser(tk.Frame):
         p.paneconfig(leftPanel, minsize=300)
         
         if showPreview:
-            rightPanel = tk.Frame(p, bg='blue')
+            rightPanel = tk.Frame(p)
             gui.configureWeigths(rightPanel)
             self._fillRightPanel(rightPanel)
             p.add(rightPanel, padx=5, pady=5)    

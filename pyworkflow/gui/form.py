@@ -181,7 +181,7 @@ class SubclassesTreeProvider(TreeProvider):
         from pyworkflow.em import findViewers
         viewers = findViewers(obj.getClassName(), DESKTOP_TKINTER)
         for v in viewers:
-            actions.append(('Open with %s' % v.__name__, lambda : v().visualize(obj)))
+            actions.append(('Open with %s' % v.__name__, lambda : v(project=self.protocol.getProject()).visualize(obj)))
             
         return actions
     

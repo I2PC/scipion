@@ -279,6 +279,7 @@ class Icon():
     ARROW_LEFT = 'fa-arrow-left.png'
     
     HOME = 'fa-home.png'
+    LIGHTBULB = 'fa-lightbulb-o.png'
 
 
 class Color():
