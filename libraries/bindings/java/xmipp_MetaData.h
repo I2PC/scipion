@@ -461,12 +461,6 @@ extern "C"
     (JNIEnv *, jobject, jstring, jstring);
 
 
-    /*
-     * Class:     xmipp_MetaData
-     * Method:    writeImages
-     */
-    JNIEXPORT void JNICALL Java_xmipp_jni_MetaData_writeImages
-    (JNIEnv *, jobject, jstring, jboolean, jboolean, jint);
 
 
     JNIEXPORT void JNICALL Java_xmipp_jni_MetaData_operate

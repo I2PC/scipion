@@ -12,6 +12,9 @@ import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
+import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JDialog;
@@ -20,6 +23,7 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 import xmipp.jni.Filename;
 import xmipp.jni.MetaData;
+import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippFileChooser;
 import xmipp.utils.XmippWindowUtil;
 import xmipp.viewer.models.GalleryData;
@@ -29,7 +33,7 @@ import xmipp.viewer.models.GalleryData;
  * @author airen
  */
 public class ExportImagesJDialog extends JDialog{
-    private MetaData md;
+
     private int label;
     private String path;
     private XmippFileChooser fc;
@@ -46,7 +50,7 @@ public class ExportImagesJDialog extends JDialog{
     {
         super(parent);
         this.data = parent.data;
-        md = parent.data.md;
+
         path = parent.data.getFileName();
         path = Filename.removeExtension(path) + "_export.stk";
         label = parent.data.getRenderLabel();
@@ -128,9 +132,20 @@ public class ExportImagesJDialog extends JDialog{
     
     private void saveImages()
     {
-        path = pathtf.getText();
-        System.out.printf("appliedGeo:%s\n", applygeochb.isSelected());
-        md.writeImages(path, false, applygeochb.isSelected(), label);
+        try {
+            path = pathtf.getText();
+            String command = String.format("xmipp_transform_geometry %s -o %s", data.getFileName(), path);
+            if(applygeochb.isSelected())
+                command += " --apply_transform";
+            
+            Runtime.getRuntime().exec(command);
+        } catch (IOException ex) {
+            String msg = ex.getMessage();
+            if(msg.isEmpty())
+                ex.printStackTrace();
+            else
+                XmippDialog.showError(null, msg);
+        }
     }
     
 }
