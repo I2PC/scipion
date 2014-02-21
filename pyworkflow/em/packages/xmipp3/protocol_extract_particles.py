@@ -55,7 +55,13 @@ REJECT_PERCENTAGE = 2
 class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
     """Protocol to extract particles from a set of coordinates in the project"""
     _label = 'extract particles'
+    stepsExecutionMode = STEPS_PARALLEL
+    
+    def __init__(self, **args):
+        ProtExtractParticles.__init__(self, **args)
+        self.methodsInfo = String()
         
+    #--------------------------- DEFINE param functions --------------------------------------------   
     def _defineParams(self, form):
         form.addSection(label='Input')
         form.addParam('inputCoordinates', PointerParam, label="Coordinates", 
@@ -139,12 +145,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
                       'If this value is 0, then half the box size is used.', 
                       expertLevel=LEVEL_ADVANCED)
         
-    def getInputMicrographs(self):
-        """ Return the micrographs associated to the SetOfCoordinates. """
-        if self.inputCoordinates.get() is None:
-            return None
-        return self.inputCoordinates.get().getMicrographs()
-        
+    #--------------------------- INSERT steps functions --------------------------------------------  
     def _insertAllSteps(self):
         """for each micrograph insert the steps to preprocess it
         """       
@@ -172,26 +173,31 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
 #                                 self._getExtraPath('scipion_micrographs_coordinates.xmd'))
                 
         # Write pos files for each micrograph
-        self._insertFunctionStep('writePosFiles')
+        self._insertFunctionStep('writePosFilesStep')
                 
         #if self.doFlip.get():
         ctfSet = self.ctfRelations.get()
            
         # For each micrograph insert the steps
         #run in parallel
-        self.stepsExecutionMode = STEPS_PARALLEL
-
+        
+        deps = []
         for mic in self.inputMics:
+            localDeps = []
             micrographToExtract = mic.getFileName()
             micName = removeBaseExt(mic.getFileName())
             micId = mic.getObjId()
                                             
+            #if self.doFlip.get():
+            if self.ctfRelations.hasValue():
+                mic.setCTF(ctfSet[micId])       
+
             # If downsample type is 'other' perform a downsample
             if self.downsampleType == OTHER:
                 fnDownsampled = self._getTmpPath(micName+"_downsampled.xmp")
                 downFactor = self.downFactor.get()
                 args = "-i %(micrographToExtract)s -o %(fnDownsampled)s --step %(downFactor)f --method fourier"
-                self._insertRunJobStep("xmipp_transform_downsample", args % locals())
+                localDeps=[self._insertRunJobStep("xmipp_transform_downsample", args % locals())]
                 micrographToExtract = fnDownsampled
             # If remove dust 
             if self.doRemoveDust:
@@ -199,12 +205,9 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
                 
                 thresholdDust = self.thresholdDust.get() #TODO: remove this extra variable
                 args=" -i %(micrographToExtract)s -o %(fnNoDust)s --bad_pixels outliers %(thresholdDust)f"
-                self._insertRunJobStep("xmipp_transform_filter", args % locals())
+                localDeps=[self._insertRunJobStep("xmipp_transform_filter", args % locals(),prerequisites=localDeps)]
                 micrographToExtract = fnNoDust
                 
-            #if self.doFlip.get():
-            if self.ctfRelations.hasValue():
-                mic.setCTF(ctfSet[micId])       
                         
             #self._insertFunctionStep('getCTF', micId, micName, micrographToExtract)
             micName = removeBaseExt(mic.getFileName())
@@ -217,24 +220,26 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
                 fnCTF = micrographToCTFParam(mic, self._getTmpPath("%s.ctfParam" % micName))
                 # Insert step to flip micrograph
                 if self.doFlip:
-                    self._insertFunctionStep('flipMicrographStep', micName, fnCTF, micrographToExtract)
+                    localDeps = [self._insertFunctionStep('flipMicrographStep', 
+                                                      micName, fnCTF, micrographToExtract,
+                                                      prerequisites=localDeps)]
                     micrographToExtract = self._getTmpPath(micName +"_flipped.xmp")
             else:
                 fnCTF = None        
             # Actually extract
-            self._insertFunctionStep('extractParticlesStep', micId, micName, fnCTF, micrographToExtract)
-                
+            deps.append(self._insertFunctionStep('extractParticlesStep', micId, micName, 
+                                              fnCTF, micrographToExtract, prerequisites=localDeps))
         # TODO: Delete temporary files
                         
-        # Insert step to create output objects       
-        self._insertFunctionStep('createOutputStep')
-        
-        
-    def writePosFiles(self):
+        # Insert step to create output objects      
+        self._insertFunctionStep('createOutputStep', prerequisites=deps)
+
+    #--------------------------- STEPS functions --------------------------------------------
+    def writePosFilesStep(self):
         """ Write the pos file for each micrograph on metadata format. """
         #self.posFiles = writeSetOfCoordinates(self._getExtraPath(), self.inputCoords)
         writeSetOfCoordinates(self._getExtraPath(), self.inputCoords)
-
+               
     def flipMicrographStep(self, micName, fnCTF, micrographToExtract):
         """ Flip micrograph. """           
         fnFlipped = self._getTmpPath(micName +"_flipped.xmp")
@@ -245,7 +250,6 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
             downFactor = self.samplingFinal/self.samplingInput
             args += " --downsampling %(downFactor)f"
         self.runJob("xmipp_ctf_phase_flip", args % locals())
-        
         
     def extractParticlesStep(self, micId, micName, fnCTF, micrographToExtract):
         """ Extract particles from one micrograph """
@@ -298,14 +302,6 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         else:
             args += "--method Ramp --background circle %(bgRadius)d"
         self.runJob(program, args % locals())
-                    
-    def getImgIdFromCoord(self, coordId):
-        """ Get the image id from the related coordinate id. """
-        '%s:%06d'
-        parts = coordId.split(':')
-        imgFn = self._getExtraPath(replaceBaseExt(parts[0], "stk")) 
-        
-        return '%06d@%s' %(int(parts[1]), imgFn)
         
     def createOutputStep(self):
         # Create the SetOfImages object on the database
@@ -337,27 +333,21 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
             args += " --percent " + str(percentage)
 
         self.runJob("xmipp_image_sort_by_statistics", args % locals())
-        md = xmipp.MetaData(fnImages) # Should have ZScore label after runJob
-#         md.addItemId()
-        md.sort(xmipp.MDL_ZSCORE)
-        md.write(fnImages) 
-        
-        mdavgZscore = xmipp.MetaData()
-        md.read(fnImages)
-        mdavgZscore.aggregate(md, xmipp.AGGR_AVG, xmipp.MDL_MICROGRAPH, xmipp.MDL_ZSCORE, xmipp.MDL_ZSCORE)
-               
+        self._storeMethodsInfo(fnImages)
         # Create output SetOfParticles
         imgSet = self._createSetOfParticles()
         imgSet.copyInfo(self.inputMics)
+        
         #imgSet.setHasCTF(self.fnCTF is not None)       
         imgSet.setHasCTF(self.ctfRelations.get() is not None)
-                 
         if self.downsampleType == OTHER:
             imgSet.setSamplingRate(self.inputMics.getSamplingRate()*self.downFactor.get())
         imgSet.setCoordinates(self.inputCoords)
         
         imgSetAux = self._createSetOfParticles('aux')
+        imgSetAux.copyInfo(imgSet)
         readSetOfParticles(fnImages, imgSetAux, imgSet.hasCTF())
+        imgSet._xmippMd = imgSetAux._xmippMd.clone()
         # For each particle retrieve micId from SetOFCoordinates and set it on the CTFModel
         for img in imgSetAux:
             #FIXME: This can be slow to make a query to grab the coord, maybe use zip(imgSet, coordSet)???
@@ -365,34 +355,16 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
             ctfModel = img.getCTF()
             if ctfModel is not None:
                 ctfModel.setObjId(coord.getMicId())
+                ##img.setCTF(ctfModel)####JM
             img.setCoordinate(coord)
             img.cleanObjId()
             imgSet.append(img)
+        #imgSet.write()###JM
         self._defineOutputs(outputParticles=imgSet)
         self._defineSourceRelation(self.inputCoords, imgSet)
         #TODO: pass CTF relation from input micrographs to imgSet
     
-    def _summary(self):
-        downsampleTypeText = {
-                              ORIGINAL:'Original micrographs',
-                              SAME_AS_PICKING:'Same as picking',
-                              OTHER: 'Other downsampling factor'}
-        summary = []
-        if not hasattr(self, 'outputParticles'):
-            summary.append("Output images not ready yet.") 
-        else:
-            summary.append("*Input coordinates* : %s" % self.inputCoordinates.get().getName())
-            if hasattr(self, 'outputParticles'):
-                summary.append("*Output particles* : %s" % self.outputParticles.getNameId())
-            
-            summary.append("_Downsample type_: %s" % downsampleTypeText.get(self.downsampleType.get()))
-            if self.downsampleType == OTHER:
-                summary.append("Downsampling factor: %d" % self.downFactor.get())
-            summary.append("Particle size %d" % self.boxSize.get())
-            summary.append("Particles extracted: %d" % (self.outputParticles.getSize()))
-            
-        return summary
-    
+    #--------------------------- INFO functions -------------------------------------------- 
     def _validate(self):
         validateMsgs = []
         # doFlip can only be True if CTF information is available on picked micrographs
@@ -400,22 +372,33 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
             validateMsgs.append('Phase flipping cannot be performed unless CTF information is provided.')
         return validateMsgs
     
+    def _citations(self):
+        return ['Vargas2013b']
+        
+    def _summary(self):
+        downsampleTypeText = {
+                              ORIGINAL:'Original micrographs',
+                              SAME_AS_PICKING:'Same as picking',
+                              OTHER: 'Other downsampling factor'}
+        summary = []
+        summary.append("_Downsample type_: %s" % downsampleTypeText.get(self.downsampleType.get()))
+        if self.downsampleType == OTHER:
+            summary.append("Downsampling factor: %d" % self.downFactor.get())
+        summary.append("Particle box size: %d" % self.boxSize.get())
+        
+        if not hasattr(self, 'outputParticles'):
+            summary.append("Output images not ready yet.") 
+        else:
+            summary.append("Particles extracted: %d" % (self.outputParticles.getSize()))
+            
+        return summary
+    
     def _methods(self):
         methodsMsgs = []
-        
-        if hasattr(self, 'outputParticles'):
-            md= xmipp.MetaData(self._getPath('images.xmd'))
-            numEnabled=md.size()
-            md.removeDisabled()
-            numAutoDisabled=(numEnabled-md.size())
-            zScoreMax = md.getValue(xmipp.MDL_ZSCORE,md.size())
-            
-        methodsMsgs.append("Particle size %d" % self.boxSize.get())
-        if hasattr(self, 'outputParticles'):            
-            methodsMsgs.append("Particles extracted: %d" % (self.outputParticles.getSize()))
-            methodsMsgs.append("Number of Particles enabled: %d" % (numEnabled))
-            methodsMsgs.append("Number of Particles disabled: %d" % (numAutoDisabled))
-            methodsMsgs.append("Maximun ZScore value in medata file: %d" % (zScoreMax))
+        methodsMsgs.append("Particle box size %d" % self.boxSize.get())
+
+        if self.methodsInfo.hasValue():
+            methodsMsgs.append(self.methodsInfo.get())
         
         methodsMsgs.append("Automatic Rejection method selected: %s" % (self.rejectionMethod))    
         methodsMsgs.append("Phase flipping performed?: %s" % (self.doFlip.get()))
@@ -431,6 +414,32 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
             methodsMsgs.append("Dust threshold: %s" % (self.thresholdDust.get()))            
 
         return methodsMsgs
+
+    #--------------------------- UTILS functions --------------------------------------------
+    def getInputMicrographs(self):
+        """ Return the micrographs associated to the SetOfCoordinates. """
+        if self.inputCoordinates.get() is None:
+            return None
+        return self.inputCoordinates.get().getMicrographs()
     
-    def _citations(self):
-        return ['Vargas2013b']
+    def getImgIdFromCoord(self, coordId):
+        """ Get the image id from the related coordinate id. """
+        '%s:%06d'
+        parts = coordId.split(':')
+        imgFn = self._getExtraPath(replaceBaseExt(parts[0], "stk")) 
+        
+        return '%06d@%s' %(int(parts[1]), imgFn)
+    
+    def _storeMethodsInfo(self, fnImages):
+        """ Store some information when the protocol finishes. """
+        md = xmipp.MetaData(fnImages) 
+        numEnabled = md.size()
+        md.removeDisabled()
+        numAutoDisabled = numEnabled-md.size()
+        zScoreMax = md.getValue(xmipp.MDL_ZSCORE, md.lastObject())
+        msg = "Particles extracted: %d\n" % self.outputParticles.getSize()
+        msg += "Number of Particles enabled: %d\n" % numEnabled
+        msg += "Number of Particles disabled: %d\n" % numAutoDisabled
+        msg += "Maximun ZScore value in medata file: %d\n" % zScoreMax
+        
+        self.methodsInfo.set(msg)
