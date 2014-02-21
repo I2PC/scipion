@@ -120,7 +120,7 @@ class XmippProtRansac(ProtInitialVolume):
         form.addParallelSection(mpi=2)
             
          
-        
+    #--------------------------- INSERT steps functions --------------------------------------------    
     def _insertAllSteps(self):
         # Convert input images if necessary
         self.imgsFn = createXmippInputClasses2D(self, self.inputClasses.get())
@@ -173,8 +173,8 @@ class XmippProtRansac(ProtInitialVolume):
         self._insertFunctionStep("scoreFinalVolumes",
                                  prerequisites=deps) # Make estimation steps indepent between them
         
-        self._insertFunctionStep('createOutput')
-        
+        self._insertFunctionStep('createOutputStep')
+    
     def initialize(self):
         self.Xdim=self.inputClasses.get().getDimensions()[0]
         
@@ -198,7 +198,15 @@ class XmippProtRansac(ProtInitialVolume):
         self._insertRunJobStep("xmipp_transform_filter","-i %s -o %s --fourier low_pass %f --oroot %s"
                                                 %(self.imgsFn,fnOutputReducedClass,freq,fnOutputReducedClassNoExt))
         return self._insertRunJobStep("xmipp_image_resize","-i %s --fourier %d -o %s" %(fnOutputReducedClass,self.Xdim2,fnOutputReducedClassNoExt))
-    
+
+    def simulatedAnnealing(self, fnRoot):
+        self._insertRunJobStep("xmipp_volume_initial_simulated_annealing","-i %s.xmd --initial %s.vol --oroot %s_sa --sym %s --randomIter %d --rejection %f --dontApplyPositive"\
+                         %(fnRoot,fnRoot,fnRoot,self.symmetryGroup.get(),self.nIterRandom.get(),self.rejection.get()))
+        self._insertRunJobStep('moveFile', source=fnRoot+"_sa.vol", dest=fnRoot+".vol")
+        self._insertRunJobStep('deleteFile', filename=fnRoot+"_sa.xmd") 
+        
+
+    #--------------------------- STEPS functions --------------------------------------------
     def ransacIteration(self, n):
     
         fnOutputReducedClass = self._getExtraPath("reducedClasses.xmd")  
@@ -252,15 +260,10 @@ class XmippProtRansac(ProtInitialVolume):
         cleanPath(self._getTmpPath(fnBase+'.xmd'))
     
     
-    def simulatedAnnealing(self, fnRoot):
-        self._insertRunJobStep("xmipp_volume_initial_simulated_annealing","-i %s.xmd --initial %s.vol --oroot %s_sa --sym %s --randomIter %d --rejection %f --dontApplyPositive"\
-                         %(fnRoot,fnRoot,fnRoot,self.symmetryGroup.get(),self.nIterRandom.get(),self.rejection.get()))
-        self._insertRunJobStep('moveFile', source=fnRoot+"_sa.vol", dest=fnRoot+".vol")
-        self._insertRunJobStep('deleteFile', filename=fnRoot+"_sa.xmd") 
-    
     def reconstruct(self, fnRoot):
         self.runJob("xmipp_reconstruct_fourier","-i %s.xmd -o %s.vol --sym %s " %(fnRoot,fnRoot,self.symmetryGroup.get()))
         self.runJob("xmipp_transform_mask","-i %s.vol --mask circular -%d "%(fnRoot,self.Xdim2/2))
+     
      
     def getCorrThresh(self):
         corrVector = []
@@ -290,7 +293,8 @@ class XmippProtRansac(ProtInitialVolume):
         mdCorr.setValue(MDL_WEIGHT,self.corrThresh.get(),objId)
         mdCorr.write("corrThreshold@"+fnCorr,MD_APPEND)
         print "Correlation threshold: "+str(self.corrThresh.get())
- 
+    
+    
     def evaluateVolumes(self):
         fnCorr=self._getExtraPath("correlations.xmd")
         fnCorr = 'corrThreshold@'+fnCorr
@@ -312,7 +316,7 @@ class XmippProtRansac(ProtInitialVolume):
             objId = md.addObject()
             md.setValue(MDL_WEIGHT,float(numInliers),objId)
             md.write("inliers@"+fnAngles,MD_APPEND)
-        
+    
     def getBestVolumes(self):
         volumes = []
         inliers = []
@@ -347,8 +351,7 @@ class XmippProtRansac(ProtInitialVolume):
         for n in range(self.nRansac.get()):
             fnAngles = self._getTmpPath("angles_ransac%05d"%n+".xmd")
             cleanPath(fnAngles)
-            
-            
+             
     def projMatch(self,fnBase):
         fnRoot=self._getPath(fnBase)
         fnGallery=self._getTmpPath('gallery_'+fnBase+'.stk')
@@ -364,11 +367,7 @@ class XmippProtRansac(ProtInitialVolume):
         cleanPath(self._getTmpPath('gallery_'+fnBase+'_sampling.xmd'))
         cleanPath(self._getTmpPath('gallery_'+fnBase+'.doc'))
         cleanPath(self._getTmpPath('gallery_'+fnBase+'.stk'))
-            
-    def getCCThreshold(self):
-        fnCorr=self._getExtraPath("correlations.xmd")               
-        mdCorr=MetaData("corrThreshold@"+fnCorr)
-        return mdCorr.getValue(MDL_WEIGHT, mdCorr.firstObject())
+             
     
     def scoreFinalVolumes(self):
         threshold=self.getCCThreshold()
@@ -399,6 +398,7 @@ class XmippProtRansac(ProtInitialVolume):
                 mdOut.setValue(MDL_VOLUME_SCORE_MIN,float(minCC),id)
         mdOut.write(self._getPath("proposedVolumes.xmd"))
 
+
     def projectInitialVolume(self):
         self.volFn = createXmippInputVolumes(self, self.initialVolume.get())
         
@@ -409,8 +409,8 @@ class XmippProtRansac(ProtInitialVolume):
         fnOutputReducedClass = self._getExtraPath("reducedClasses.xmd") 
         self.runJob("xmipp_angular_project_library", "-i %s -o %s --sampling_rate %f --sym %s --method fourier 1 0.25 bspline --compute_neighbors --angular_distance -1 --experimental_images %s"\
                               %(fnOutputInitVolume,fnGallery,self.angularSampling.get(),self.symmetryGroup.get(),fnOutputReducedClass))
-            
-    def createOutput(self):
+   
+    def createOutputStep(self):
         classes2DSet = self.inputClasses.get()
         fn = self._getPath('proposedVolumes.xmd')
         md = xmipp.MetaData(fn)
@@ -424,6 +424,12 @@ class XmippProtRansac(ProtInitialVolume):
         
         self._defineOutputs(outputVolumes=volumesSet)
         self._defineSourceRelation(classes2DSet, volumesSet)
+
+    
+    #--------------------------- INFO functions --------------------------------------------
+    def _validate(self):
+        errors = []
+        return errors
 
     def _summary(self):
         summary = []
@@ -456,4 +462,13 @@ class XmippProtRansac(ProtInitialVolume):
             if self.useSA:
                 summary.append("Simulated annealing used")
             return summary
+        
+    def _methods(self):
+        return self._summary()  # summary is quite explicit and serve as methods
             
+    #--------------------------- UTILS functions --------------------------------------------        
+    def getCCThreshold(self):
+        fnCorr=self._getExtraPath("correlations.xmd")               
+        mdCorr=MetaData("corrThreshold@"+fnCorr)
+        return mdCorr.getValue(MDL_WEIGHT, mdCorr.firstObject())
+    
