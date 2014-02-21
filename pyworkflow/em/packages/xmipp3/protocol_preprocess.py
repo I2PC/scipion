@@ -94,7 +94,11 @@ class XmippPreprocess():
         if self.fillType == MASK_FILL_VALUE:
             args += " %f" % self.fillValue.get()
             
-        self.runJob("xmipp_transform_threshold", args % locals())
+        self.runJob("xmipp_transform_threshold", args % locals())        
+    
+    #--------------------------- INFO functions ----------------------------------------------------
+    def _methods(self):
+        return self._summary()
 
 
 class XmippProtPreprocessParticles(XmippProcessParticles, XmippPreprocess):
@@ -206,9 +210,6 @@ class XmippProtPreprocessParticles(XmippProcessParticles, XmippPreprocess):
             summary.append("Output particles: %s" % self.outputParticles.getNameId())
         
         return summary
-    
-    def _methods(self):
-        return self._summary()
     
     #--------------------------- UTILS functions ---------------------------------------------------
     def _getSize(self):
