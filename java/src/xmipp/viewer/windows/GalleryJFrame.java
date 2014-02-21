@@ -2179,8 +2179,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			else
 				saveAll();
 
-			if (dlgSave.doSaveImages())
-				data.md.writeImages(dlgSave.getOutput(), dlgSave.isOutputIndependent(), dlgSave.getImageLabel());
+			
 		}
 
 	}
