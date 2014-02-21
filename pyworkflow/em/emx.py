@@ -27,6 +27,7 @@
 This module implement the import/export of Micrographs and Particles to EMX
 """
 import os
+from datetime import datetime as dt
 try:
     import xml.etree.cElementTree as ET
 except ImportError:
@@ -38,21 +39,19 @@ from data import SetOfMicrographs, SetOfCoordinates, SetOfParticles
 
 def writeHeader(f):
     """ Write the header of the EMX file. """
-    f.write("""
-<?xml version='1.0' encoding='utf-8'?>
+    f.write("""<?xml version='1.0' encoding='utf-8'?>
 <EMX version="1.0">
  <!--
   ##########################################################################
   #               EMX Exchange file 
-  #               Produced by Scipion
+  #               Produced by Scipion (%s)
   # 
   #  This is a EMX file.
   #
   #  Information on this file format is available at 
   #  http://i2pc.cnb.csic.es/emx
   ##########################################################################
-  -->
-     """)
+  --> """ % dateStr(dt.now()))
     
     
 def writeFooter(f):
@@ -121,7 +120,7 @@ def _writeCommon(f, coordinate, index, filename, micSet):
         index, filename = mic.getLocation()
         partDict.update({'index': index or 1, 'fileName': basename(filename)})
         f.write("""
-    <micrograph fileName="%(fileName)s" index="%(index)d">""" % partDict)
+    <micrograph fileName="%(fileName)s" index="%(index)d"/>""" % partDict)
         _writeCenter(f, coordinate)
         
         
@@ -153,7 +152,12 @@ def writeSetOfMicrographs(f, micSet, emxDir, ctfSet=None, writeData=True):
     from convert import ImageHandler
     from constants import NO_INDEX
     ih = ImageHandler()
-    
+    f.write(""" 
+ <!--
+  ##########################################################################
+  #               Micrographs
+  ##########################################################################
+  --> """)
     for mic in micSet:
         loc = mic.getLocation()
         fnMicBase = basename(loc[1])
@@ -172,6 +176,12 @@ def writeSetOfParticles(f, partSet, stackFn=None, micSet=None):
         micSet: input set of micrographs
         filename: the EMX file where to store the micrographs information.
     """
+    f.write("""
+ <!--
+  ##########################################################################
+  #               Particles
+  ##########################################################################
+  --> """)
     from pyworkflow.em.convert import ImageHandler
     ih = ImageHandler()
     
@@ -212,4 +222,29 @@ def exportData(emxDir, inputSet, ctfSet=None):
         
     writeFooter(f)
     f.close()
+    
+    
+def _iterXml(xmlFn, tagsCallback):
+    """ Iterate incrementally a give XML file. 
+    This implementation is used having in mind huge xml files.
+    Recipe taken from:
+    http://effbot.org/zone/element-iterparse.htm
+    Params:
+        xmlFn: filename of the xml file.
+        tagsCallback: a dictionary containing the tags of interest as keys
+                      and the callbacks functions for each tag
+    """
+    # get an iterable
+    context = ET.iterparse(xmlFn)#, events=("start", "end"))
+    
+    # turn it into an iterator
+    context = iter(context)
+    
+    # get the root element
+    _, root = context.next()
+    
+    for _, elem in context:
+        if elem.tag in tagsCallback:
+            tagsCallback[elem.tag](elem)
+        #root.clear()
     
