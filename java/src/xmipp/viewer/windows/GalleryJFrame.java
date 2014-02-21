@@ -2201,7 +2201,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 
 	}
         
-        private void exportImages() throws Exception
+    private void exportImages() throws Exception
 	{
 		SwingUtilities.invokeLater(new Runnable() {
 

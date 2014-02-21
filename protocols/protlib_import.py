@@ -29,6 +29,7 @@
 from xmipp import *
 import os
 from os.path import  exists
+from xmipp import addLabelAlias
 
 CTF_BASIC_LABELS = [
                      MDL_CTF_CA
@@ -137,6 +138,14 @@ XMIPP_RELION_LABELS_EXTRA = {
                        ,MDL_ZSCORE_RESCOV: 'rlnSpectralOrientabilityContribution'
 
 
+                       }
+
+
+# Map from Xmipp labels to Relion labels names
+XMIPP_BSOFT_LABELS = {
+                        MDL_XCOOR:         'particle.x'
+                       ,MDL_YCOOR:        'particle.y'
+                       ,MDL_PICKING_PARTICLE_SIZE:   'particle.origin_x'
                        }
 # from data.star
 #WARNING: Ignoring unknown column: rlnMaxValueProbDistribution
@@ -326,6 +335,10 @@ def relionLabelString():
     for k, v in XMIPP_RELION_LABELS_EXTRA.iteritems():
         pairs.append('%s=%s' % (label2Str(k), v))        
     return ';'.join(pairs)
+
+def addBsoftLabelAliases():
+    for k, v in XMIPP_BSOFT_LABELS.iteritems():
+        addLabelAlias(k, v, False)
         
 def exportReliontoMetadataFile(inputRelion,outputXmipp):
     """ This function will receive a relion file and will
