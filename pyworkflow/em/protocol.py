@@ -656,8 +656,8 @@ class ProtUserSubSet(EMProtocol):
         
         
     def createOutputSet(self, outputset):
-         outputs = {'output' + self._setType.get(): outputset}
-         self._defineOutputs(**outputs)
+        outputs = {'output' + self._setType.get(): outputset}
+        self._defineOutputs(**outputs)
    
     def getOutputSet(self):
         return getattr(self, 'output' + self._setType.get())

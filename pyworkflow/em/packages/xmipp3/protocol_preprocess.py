@@ -27,22 +27,22 @@
 """
 This sub-package contains wrapper around XmippProtPreprocessVolumes protocol
 """
-
-
 from pyworkflow.em import *  
-from pyworkflow.utils import *
-from math import floor
+from pyworkflow.utils import *  
 import xmipp
-from xmipp3 import XmippProtocol
-from constants import *
 from protocol_process import XmippProcess, XmippProcessParticles, XmippProcessVolumes
 from pyworkflow.utils.path import cleanPath
+from pyworkflow.em.constants import *
+from constants import *
+from convert import locationToXmipp
 
 
 
 class XmippPreprocess():
     """ This class has the common functions to preprocess objects like SetOfParticles, Volume or SetOfVolumes. """
     
+    def __init__(self, **args):
+        pass
     
     #--------------------------- DEFINE param functions --------------------------------------------
     def _defineProcessParams(self, form):
@@ -54,7 +54,7 @@ class XmippPreprocess():
         form.addParam('doThreshold', BooleanParam, default=False,
                       label="Threshold", 
                       help='Remove voxels below a certain value.')
-        form.addParam('thresholdType', EnumParam,
+        form.addParam('thresholdType', EnumParam, condition='doThreshold',
                       choices=['abs_below', 'below', 'above'], 
                       default=MASK_FILL_VALUE,
                       label="Fill with ", display=EnumParam.DISPLAY_COMBO,
@@ -62,22 +62,19 @@ class XmippPreprocess():
         form.addParam('threshold', FloatParam, default=0,
                       label="Threshold value", condition='doThreshold',
                       help='Grey value below which all voxels should be set to 0.')
-        form.addParam('fillType', EnumParam, 
+        form.addParam('fillType', EnumParam, condition='doThreshold',
                       choices=['value', 'binarize', 'avg'], 
                       default=FILL_VALUE,
                       label="Substitute by", display=EnumParam.DISPLAY_COMBO,
                       help='If you select: value: Selected are substitute by a desired value.\n'
                            '            binarize: Selected are set to 0, non-selected to 1.\n'
                            '                 avg: Average of non-selected.')
-        form.addParam('fillValue', IntParam, default=0,
-                      condition='fillType == %d' % FILL_VALUE,
+        form.addParam('fillValue', IntParam, default=0, condition='doThreshold and fillType == %d'  % FILL_VALUE,
                       label='Fill value',
                       help=' Substitute selected pixels by this value.')
     
     #--------------------------- INSERT steps functions --------------------------------------------
-    def _insertProcessStep(self, inputFn, outputFn, outputMd):
-        
-        self._insertSingularPreprocessStep(outputFn)
+    def _insertCommonSteps(self, outputFn):
         if self.doInvert:
             self._insertFunctionStep("invertStep", outputFn)
         
@@ -85,33 +82,37 @@ class XmippPreprocess():
             self._insertFunctionStep("thresholdStep", outputFn, self.threshold.get())
     
     #--------------------------- STEPS functions ---------------------------------------------------
-    def invertStep(outputFn):
-        runJob(log,'xmipp_image_operate','-i %(outputFn)s --mult -1' % locals())
+    def invertStep(self, outputFn):
+        args = ' -i %s --mult -1' % outputFn
+        self.runJob('xmipp_image_operate', args)
     
     def thresholdStep(self, outputFn, threshold):
-        args = "-i %(outputFn)s --select below %(threshold)f "
+        args = " -i %(outputFn)s --select below %(threshold)f "
         fillStr = self.getEnumText('fillType')
-        
-        if self.fillType == MASK_FILL_VALUE:
-            fillStr += str(self.fillValue.get())
         args += "--substitute %(fillStr)s "
         
-        self.runJob("xmipp_transform_threshold", args % locals())
+        if self.fillType == MASK_FILL_VALUE:
+            args += " %f" % self.fillValue.get()
+            
+        self.runJob("xmipp_transform_threshold", args % locals())        
+    
+    #--------------------------- INFO functions ----------------------------------------------------
+    def _methods(self):
+        return self._summary()
 
 
-class XmippProtPreprocessParticles(ProtProcessParticles, XmippPreprocess, XmippProcessParticles):
+class XmippProtPreprocessParticles(XmippProcessParticles, XmippPreprocess):
     """ Apply some filter to SetOfParticles """
     _label = 'preprocess particles'
     
     def __init__(self, **args):
-        ProtProcessParticles.__init__(self)
         XmippProcessParticles.__init__(self, **args)
         XmippPreprocess.__init__(self, **args)
     
     #--------------------------- DEFINE param functions --------------------------------------------
     def _defineProcessParams(self, form):
         form.addParam('doRemoveDust', BooleanParam, default=False,
-                      label='Dust removal (Recommended)', 
+                      label='Dust removal', 
                       help='Sets pixels with unusually large values to random values from a Gaussian '
                       'with zero-mean and unity-standard deviation.')
         form.addParam('thresholdDust', FloatParam, default=3.5, condition='doRemoveDust',
@@ -122,7 +123,7 @@ class XmippProtPreprocessParticles(ProtProcessParticles, XmippPreprocess, XmippP
                       'that a higher value may be preferable.',
                       expertLevel=LEVEL_ADVANCED)
         form.addParam('doNormalize', BooleanParam, default=False,
-                      label='Normalize (Recommended)', 
+                      label='Normalize', 
                       help='It subtract a ramp in the gray values and normalizes so that in the '
                       'background there is 0 mean and standard deviation 1.')
         form.addParam('normType', EnumParam, choices=['OldXmipp','NewXmipp','Ramp'], 
@@ -141,24 +142,26 @@ class XmippProtPreprocessParticles(ProtProcessParticles, XmippPreprocess, XmippP
         XmippPreprocess._defineProcessParams(self, form)
     
     #--------------------------- INSERT steps functions --------------------------------------------
-    def _insertSingularPreprocessStep(self, outputFn):
+    def _insertProcessStep(self, inputFn, outputFn, outputMd):
         if self.doRemoveDust:
             self._insertFunctionStep("removeDustStep", outputFn)
         
         if self.doNormalize:
-            self._insertFunctionStep("normalizeStep", outputFn, self.normType.get(), self.maskRadiusNormalize.get())
+            self._insertFunctionStep("normalizeStep", outputFn, self.normType.get(), self.backRadius.get())
+        
+        self._insertCommonSteps(outputFn)
     
     #--------------------------- STEPS functions ---------------------------------------------------
-    def removeDustStep(ImagesMd):
+    def removeDustStep(self, outputFn):
         threshold = self.thresholdDust.get()
-        runJob('xmipp_transform_filter','-i %(ImagesMd)s --bad_pixels outliers %(threshold)f' % locals())
+        self.runJob('xmipp_transform_filter','-i %(outputFn)s --bad_pixels outliers %(threshold)f' % locals())
     
     def normalizeStep(self, ImagesMd, normType, bgRadius):
         args = "-i %(ImagesMd)s "
-        
+        radii = self._getSize()
+        print "RADIUS:", radii
         if bgRadius <= 0:
-            particleSize = xmipp.MetaDataInfo(stack)[0]
-            bgRadius = int(particleSize/2)
+            bgRadius = int(radii)
         
         if normType == "OldXmipp":
             args += "--method OldXmipp"
@@ -185,9 +188,38 @@ class XmippProtPreprocessParticles(ProtProcessParticles, XmippPreprocess, XmippP
         
         self._defineOutputs(outputParticles=imgSet)
         self._defineTransformRelation(inImgSet, imgSet)
+    
+    #--------------------------- INFO functions ----------------------------------------------------
+    def _validate(self):
+        validateMsgs = []
+        
+        if self.doNormalize.get() and self.normType.get() != 0:
+            size = self._getSize()
+            if self.backRadius.get() > size:
+                validateMsgs.append('Set a valid Background radius less than %d' % size)
+            
+        return validateMsgs
+    
+    def _summary(self):
+        summary = []
+        summary.append("Input particles:  %s" % self.inputParticles.get().getNameId())
+        
+        if not hasattr(self, 'outputVol'):
+            summary.append("Output particles not ready yet.")
+        else:
+            summary.append("Output particles: %s" % self.outputParticles.getNameId())
+        
+        return summary
+    
+    #--------------------------- UTILS functions ---------------------------------------------------
+    def _getSize(self):
+        """ get the size of SetOfParticles object"""
+        Xdim, _, _, _ = self.inputParticles.get().getDimensions()
+        size = int(Xdim/2)
+        return size
 
 
-class XmippProtPreprocessVolumes(ProtPreprocessVolumes, XmippPreprocess, XmippProcessVolumes):
+class XmippProtPreprocessVolumes(XmippProcessVolumes, XmippPreprocess):
     """ Protocol for Xmipp-based preprocess for volumes """
     _label = 'preprocess volumes'
     
@@ -203,7 +235,6 @@ class XmippProtPreprocessVolumes(ProtPreprocessVolumes, XmippPreprocess, XmippPr
 
 
     def __init__(self, **args):
-        ProtPreprocessVolumes.__init__(self)
         XmippProcessVolumes.__init__(self, **args)
         XmippPreprocess.__init__(self, **args)
     
@@ -257,13 +288,13 @@ class XmippProtPreprocessVolumes(ProtPreprocessVolumes, XmippPreprocess, XmippPr
                       label="Normalize background", 
                       help='Set background to have zero mean and standard deviation 1.')
         # ToDo: add wizard
-        form.addParam('maskRadiusNormalize', FloatParam, default=-1,
+        form.addParam('backRadius', FloatParam, default=-1,
                       label="Mask Radius", condition='doNormalize',
                       help='In pixels. Set to -1 for half of the size of the volume.')
         XmippPreprocess._defineProcessParams(self, form)
         
     #--------------------------- INSERT steps functions --------------------------------------------
-    def _insertSingularPreprocessStep(self, outputFn):
+    def _insertProcessStep(self, inputFn, outputFn, outputMd):
         if self.doChangeHand:
             self._insertFunctionStep("changeHandStep", outputFn)
         
@@ -280,7 +311,9 @@ class XmippProtPreprocessVolumes(ProtPreprocessVolumes, XmippPreprocess, XmippPr
             self._insertFunctionStep("segmentStep", outputFn, self.segmentationType.get(), self.segmentationMass.get())
         
         if self.doNormalize:
-            self._insertFunctionStep("normalizeStep", outputFn, self.maskRadiusNormalize.get())
+            self._insertFunctionStep("normalizeStep", outputFn, self.backRadius.get())
+        
+        self._insertCommonSteps(outputFn)
     
     #--------------------------- STEPS functions ---------------------------------------------------
     def changeHandStep(self, outModel):
@@ -301,9 +334,20 @@ class XmippProtPreprocessVolumes(ProtPreprocessVolumes, XmippPreprocess, XmippPr
         self.runJob("xmipp_adjust_volume_grey_levels", "-i %s -m %s" % (outModel, setOfImages))
     
     def segmentStep(self, outModel, segmentationType, segmentationMass):
+        
+        if self.singleVolume:
+            self._segmentVolume(outModel, segmentationType, segmentationMass)
+        else:
+            numberOfParticles = self.inputVolumes.get().getSize()
+            for i in range(1, numberOfParticles + 1):
+                
+                volOutModel = locationToXmipp(i, outModel)
+                self._segmentVolume(volOutModel, segmentationType, segmentationMass)
+        
+    def _segmentVolume(self, outModel, segmentationType, segmentationMass):
         fnMask = self._getTmpPath("mask.vol")
         ts = self._getSize()
-        args="-i %s -o %s --method " % (outModel, fnMask)
+        args = "-i %s -o %s --method " % (outModel, fnMask)
         
         if segmentationType == "Voxel mass":
             args += "voxel_mass %d" % (int(segmentationMass))
@@ -313,7 +357,6 @@ class XmippProtPreprocessVolumes(ProtPreprocessVolumes, XmippPreprocess, XmippPr
             args += "dalton_mass %d %f" % (int(segmentationMass),float(ts))
         else:
             args += "otsu"
-        
         self.runJob("xmipp_volume_segment", args)
         
         if exists(fnMask):
@@ -321,10 +364,9 @@ class XmippProtPreprocessVolumes(ProtPreprocessVolumes, XmippPreprocess, XmippPr
             cleanPath(fnMask)
     
     def normalizeStep(self, outModel, maskRadius):
-        if maskRadius==-1:
-            md= xmipp.MetaData(outModel)
-            Xdim, _, _, _, _ = xmipp.MetaDataInfo(md)    
-            maskRadius=Xdim/2
+        if maskRadius <= 0:
+            size = self._getSize()
+            maskRadius = size/2
         self.runJob("xmipp_transform_normalize", "-i %s --method NewXmipp --background circle %d" % (outModel, int(maskRadius)))
     
     #--------------------------- INFO functions ----------------------------------------------------
@@ -333,6 +375,12 @@ class XmippProtPreprocessVolumes(ProtPreprocessVolumes, XmippPreprocess, XmippPr
         
         if not self.inputVolumes.hasValue():
             validateMsgs.append('Please provide an initial volume(s).')
+            
+        if self.doNormalize.get():
+            size = int(self._getSize()/2)
+            
+            if self.backRadius.get() > size:
+                validateMsgs.append('Set a valid Background radius less than %d' % size)
             
         return validateMsgs
     

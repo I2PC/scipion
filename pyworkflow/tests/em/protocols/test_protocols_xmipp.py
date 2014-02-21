@@ -216,6 +216,7 @@ class TestXmippAutomaticPicking(TestXmippBase):
         
         self.assertIsNotNone(protAutomaticPP.outputCoordinates, "There was a problem with the automatic particle picking")
                     
+                    
 class TestXmippExtractParticles(TestXmippBase):
     
     SAME_AS_PICKING = 1
@@ -244,24 +245,26 @@ class TestXmippExtractParticles(TestXmippBase):
         
         protExtract.inputMicrographs.set(self.protImport.outputMicrographs)
         protExtract.inputCoordinates.set(self.protPP.outputCoordinates)
+        protExtract.setObjLabel("extract-same as picking")
         self.proj.launchProtocol(protExtract, wait=True)
-
         self.assertIsNotNone(protExtract.outputParticles, "There was a problem with the extract particles")
         
     def testExtractOriginal(self):
         print "Run extract particles with downsampling factor equal to the original micrographs"
-        protExtract = XmippProtExtractParticles(boxSize=512, downsampleType=self.ORIGINAL, doFlip=False)
+        protExtract = XmippProtExtractParticles(boxSize=256, downsampleType=self.ORIGINAL, doFlip=False)
         protExtract.inputCoordinates.set(self.protPP.outputCoordinates)
         protExtract.inputMicrographs.set(self.protImport.outputMicrographs)
+        protExtract.setObjLabel("extract-original")
         self.proj.launchProtocol(protExtract, wait=True)
         
         self.assertIsNotNone(protExtract.outputParticles, "There was a problem with the extract particles")
 
     def testExtractOther(self):
         print "Run extract particles with downsampling factor equal to other"
-        protExtract = XmippProtExtractParticles(boxSize=256, downsampleType=self.OTHER, downFactor=2,doFlip=False)
+        protExtract = XmippProtExtractParticles(boxSize=175, downsampleType=self.OTHER, downFactor=2,doFlip=False)
         protExtract.inputCoordinates.set(self.protPP.outputCoordinates)
         protExtract.inputMicrographs.set(self.protImport.outputMicrographs)
+        protExtract.setObjLabel("extract-other")
         self.proj.launchProtocol(protExtract, wait=True)
         
         self.assertIsNotNone(protExtract.outputParticles, "There was a problem with the extract particles")
@@ -272,9 +275,20 @@ class TestXmippExtractParticles(TestXmippBase):
         protExtract.inputCoordinates.set(self.protPP.outputCoordinates)
         protExtract.inputMicrographs.set(self.protCTF.inputMicrographs.get())
         protExtract.ctfRelations.set(self.protCTF.outputCTF)
+        protExtract.setObjLabel("extract-ctf")
         self.proj.launchProtocol(protExtract, wait=True)
         
         self.assertIsNotNone(protExtract.outputParticles, "There was a problem with the extract particles") 
+        
+        protEmx1 = ProtEmxExport()
+        protEmx1.setObjLabel("emx export coordinates")
+        protEmx1.inputSet.set(self.protPP.outputCoordinates)
+        self.proj.launchProtocol(protEmx1, wait=True)
+        
+        protEmx2 = ProtEmxExport()
+        protEmx2.setObjLabel("emx export particles")
+        protEmx2.inputSet.set(protExtract.outputParticles)
+        self.proj.launchProtocol(protEmx2, wait=True)
      
 class TestXmippScreenParticles(TestXmippBase):
     
@@ -328,9 +342,9 @@ class TestXmippCL2D(TestXmippBase):
         
     def testCL2D(self):
         print "Run CL2D"
-        protCL2D = XmippProtCL2D(numberOfReferences=2, numberOfInitialReferences=1, 
+        protCL2D = XmippProtPreprocessParticles(numberOfReferences=2, numberOfInitialReferences=1, 
                                  numberOfIterations=3, numberOfMpi=4)
-        protCL2D.inputImages.set(self.protImport.outputParticles)
+        protCL2D.inputParticles.set(self.protImport.outputParticles)
         self.proj.launchProtocol(protCL2D, wait=True)
         
         pattern = getInputPath('ml3dData', 'icoFiltered.vol')
@@ -409,6 +423,21 @@ class TestXmippML3D(TestXmippBase):
         self.proj.launchProtocol(protML3D, wait=True)        
         
         self.assertIsNotNone(protML3D.outputVolumes, "There was a problem with ML3D")          
+
+class TestXmippPreprocessParticles(TestXmippBase):
+
+    @classmethod
+    def setUpClass(cls):
+        setupClassification(cls)
+    
+    def testPreprocessPart(self):
+        print "Run Preprocess particles"
+        protPreproc = XmippProtPreprocessParticles(doRemoveDust=True, doNormalize=True, backRadius=10, doInvert=True,
+                                              doThreshold=True, thresholdType=1)
+        protPreproc.inputParticles.set(self.protImport.outputParticles)
+        self.proj.launchProtocol(protPreproc, wait=True)
+        
+        self.assertIsNotNone(protPreproc.outputParticles, "There was a problem with preprocess particles")
 
 
 if __name__ == "__main__":

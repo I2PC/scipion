@@ -35,6 +35,7 @@ import ttk
 import tkFont
 
 from pyworkflow.gui.tree import TreeProvider, BoundTree
+from pyworkflow.gui.browser import ObjectBrowser, FileBrowser
 from pyworkflow.protocol.protocol import *
 
 import pyworkflow as pw
@@ -676,7 +677,8 @@ class ProtocolsView(tk.Frame):
         
     def _browseRunData(self):
         provider = ProtocolTreeProvider(self.selectedProtocol)
-        window = BrowserWindow(Message.TITLE_BROWSE_DATA, provider, self.windows, icon=self.icon)
+        window = BrowserWindow(Message.TITLE_BROWSE_DATA, self.windows, icon=self.icon)
+        window.setBrowser(ObjectBrowser(window.root, provider))
         window.itemConfig(self.selectedProtocol, open=True)  
         window.show()
         

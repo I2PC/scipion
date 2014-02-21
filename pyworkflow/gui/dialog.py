@@ -390,7 +390,7 @@ class ListDialog(Dialog):
         """
         self.value = None
         self.provider = provider
-        self.message = args.get('message', None)
+        self.message = message
         Dialog.__init__(self, parent, title,
                         buttons=[('Select', RESULT_YES), ('Cancel', RESULT_CANCEL)])
         
@@ -400,7 +400,7 @@ class ListDialog(Dialog):
         self._createTree(bodyFrame)
         if self.message:
             label = tk.Label(bodyFrame, text=self.message, bg='white',
-                     image=self.getImage('fa-lightbulb-o.png'), compound=tk.LEFT)
+                     image=self.getImage(Icon.LIGHTBULB), compound=tk.LEFT)
             label.grid(row=1, column=0, sticky='nw', padx=5, pady=5)
         self.initial_focus = self.tree
         
