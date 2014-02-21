@@ -190,8 +190,9 @@ class SubclassesTreeProvider(TreeProvider):
 class RelationsTreeProvider(SubclassesTreeProvider):
     """Will implement the methods to provide the object info
     of subclasses objects(of className) found by mapper"""
-    def __init__(self, protocol, relationParam):
+    def __init__(self, protocol, relationParam, selected=None):
         self.mapper = protocol.mapper
+        self.selected = selected
         parentObject = protocol.getAttributeValue(relationParam.relationParent.get())
         if parentObject is not None:
             queryFunc =  protocol.mapper.getRelationChilds      
@@ -459,7 +460,7 @@ class ParamWidget():
     def _browseRelation(self, e=None):
         """Select a relation from DB
         This function is suppose to be used only for RelationParam"""
-        tp = RelationsTreeProvider(self.window.protocol, self.param)
+        tp = RelationsTreeProvider(self.window.protocol, self.param, selected=self.get())
         dlg = ListDialog(self.parent, "Select object", tp)
         if dlg.value is not None:
             self.set(dlg.value)
