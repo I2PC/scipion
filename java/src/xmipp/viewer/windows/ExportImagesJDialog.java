@@ -44,12 +44,13 @@ public class ExportImagesJDialog extends JDialog{
     private JButton browsebt;
     private JTextField pathtf;
     private JCheckBox applygeochb;
-    private GalleryData data;
+ 
+    private GalleryJFrame frame;
     
     public ExportImagesJDialog(GalleryJFrame parent)
     {
         super(parent);
-        this.data = parent.data;
+        this.frame = parent;
 
         path = parent.data.getFileName();
         path = Filename.removeExtension(path) + "_export.stk";
@@ -95,7 +96,7 @@ public class ExportImagesJDialog extends JDialog{
         
 
         applygeochb = new JCheckBox();
-        applygeochb.setSelected(data.useGeo);
+        applygeochb.setSelected(frame.data.useGeo);
         add(applygeochb, XmippWindowUtil.getConstraints(c, 1, 1));
         add(new JLabel(note1), XmippWindowUtil.getConstraints(c, 0, 2, GridBagConstraints.HORIZONTAL));
         add(new JLabel(note2), XmippWindowUtil.getConstraints(c, 0, 3, GridBagConstraints.HORIZONTAL));
@@ -134,12 +135,14 @@ public class ExportImagesJDialog extends JDialog{
     {
         try {
             path = pathtf.getText();
-            String command = String.format("xmipp_transform_geometry %s -o %s", data.getFileName(), path);
+            File tmpfile = File.createTempFile("temp", ".xmd");
+            frame.saveMd(tmpfile.getAbsolutePath(), false, true);//remove disabled on tmpfile to export afterwords
+            String command = String.format("xmipp_transform_geometry %s -o %s", tmpfile, path);
             if(applygeochb.isSelected())
                 command += " --apply_transform";
             
             Runtime.getRuntime().exec(command);
-        } catch (IOException ex) {
+        } catch (Exception ex) {
             String msg = ex.getMessage();
             if(msg.isEmpty())
                 ex.printStackTrace();

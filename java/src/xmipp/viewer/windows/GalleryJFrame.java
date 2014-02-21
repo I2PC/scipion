@@ -2048,12 +2048,12 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		XmippDialog.showInfo(this, String.format("Calculating ctf: DONE"));
 	}
 
-	private void saveMd() throws Exception
+	protected void saveMd() throws Exception
 	{
-		saveMd(dlgSave.getMdFilename(), false);
+		saveMd(dlgSave.getMdFilename(), false, dlgSave.isOverwrite() );
 	}
 
-	private void saveMd(String path, boolean saveall) throws Exception
+	protected void saveMd(String path, boolean saveall, boolean isoverwrite) throws Exception
 	{
 		try
 		{
@@ -2079,7 +2079,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			}
 			else
 			{
-				overwritewithblock = dlgSave.isOverwrite() && dlgSave.saveActiveMetadataOnly();
+				overwritewithblock = isoverwrite && !saveall;
 				if (overwritewithblock)
 					data.md.write(path);// overwrite with active block only,
 										// other blocks were dismissed
@@ -2103,7 +2103,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		}
 	}// function saveMd
 
-	private void saveAll() throws Exception
+	protected void saveAll() throws Exception
 	{
 		String from = data.getFileName();
 		String blockto = dlgSave.getMdFilename();
@@ -2131,14 +2131,14 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			{
 				md = mds.get(blockit);
 				if (blockit.equals(getBlock()))
-					saveMd(blockto, true);
+					saveMd(blockto, true, dlgSave.isOverwrite() );
 				else
 					md.writeBlock(blockit + "@" + to);
 				md.destroy();
 			}
 		}
 		else {
-			saveMd(blockto, true);
+			saveMd(blockto, true, dlgSave.isOverwrite() );
 		}
 
 		data.setMdChanges(false);
