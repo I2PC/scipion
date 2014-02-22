@@ -57,13 +57,6 @@ bool compareImageSize(const FileName &filename1, const FileName &filename2);
 bool compareTwoMetadataFiles(const FileName &fn1, const FileName &fn2);
 
 
-/**Copy images listed in metadata to some location using the
- * same logic as in xmipp_image_convert program
- * if independent is false, output will be treated as the output stack name
- * if is true, will be the prefix for the output images
-*/
-void copyImages(const MetaData &md, const char * output, bool independent, bool applyGeo, MDLabel image_label=MDL_IMAGE);
-
 /** Maximum length of the filenames inside */
 int maxFileNameLength(const MetaData &MD, MDLabel image_label=MDL_IMAGE);
 
