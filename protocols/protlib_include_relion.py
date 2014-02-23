@@ -354,7 +354,7 @@ If you want two see iterations 2 and 5 write
 SelectedIters = ""
 
 #----------------------------------------------------------------------------------------------------
-# {section}{visualize} Volumes (per iteration)
+# {section}{visualize} {condition}(not Is2D) Volumes (per iteration)
 #----------------------------------------------------------------------------------------------------
 
 # {condition}(DoClassify){list}(all, selection) CLASS 3D to visualize
