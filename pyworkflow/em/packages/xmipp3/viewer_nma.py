@@ -47,7 +47,7 @@ CLASS_STABLE_CORES = 2
 class XmippNMAViewer(ProtocolViewer):
     """ Visualization of results from the NMA protocol.
     
-        Normally, NMA modes with high collectivity and 
+        Normally, NMA modes with high collectivity and low NMA score are preferred.
     """
     _label = 'viewer nma'
     _targets = [XmippProtNMA]
