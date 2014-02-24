@@ -34,7 +34,7 @@ except ImportError:
     import xml.etree.ElementTree as ET
 
 from pyworkflow.utils import *
-from data import SetOfMicrographs, SetOfCoordinates, SetOfParticles
+from data import *
     
 
 def writeHeader(f):
@@ -46,9 +46,7 @@ def writeHeader(f):
   #               EMX Exchange file 
   #               Produced by Scipion (%s)
   # 
-  #  This is a EMX file.
-  #
-  #  Information on this file format is available at 
+  #  Information about EMX file format is available at 
   #  http://i2pc.cnb.csic.es/emx
   ##########################################################################
   --> """ % dateStr(dt.now()))
@@ -71,6 +69,12 @@ def _writeCTF(f, ctf):
   <defocusV unit="nm">%(defocusV)0.2f</defocusV>
   <defocusUAngle unit="deg">%(defocusUAngle)0.2f</defocusUAngle>""" % ctfDict)
     
+def _writeSamplingRate(f, sampling):
+    """ Write sampling rate info as expected by EMX. """
+    f.write("""
+  <pixelSpacing>
+    <X unit="A/px">%(sampling)0.2f</X> <Y unit="A/px">%(sampling)0.2f</Y>
+  </pixelSpacing>""" % locals())
     
 def writeMicrograph(f, mic):
     """ Write the micrograph xml to the file """
@@ -81,16 +85,13 @@ def writeMicrograph(f, mic):
                'voltage': acq.getVoltage(),
                'amplitudeContrast': acq.getAmplitudeContrast(),
                'cs': acq.getSphericalAberration(),
-               'samplingRate': mic.getSamplingRate(),
                }
     f.write("""
 <micrograph index="%(index)d" fileName="%(fileName)s">    
   <acceleratingVoltage unit="kV">%(voltage)0.2f</acceleratingVoltage>
   <amplitudeContrast>%(amplitudeContrast)0.2f</amplitudeContrast>
-  <cs unit="mm">%(cs)0.2f</cs>
-  <pixelSpacing>
-    <X unit="A/px">%(samplingRate)0.2f</X> <Y unit="A/px">%(samplingRate)0.2f</Y>
-  </pixelSpacing>""" % micDict)
+  <cs unit="mm">%(cs)0.2f</cs>""" % micDict)
+    _writeSamplingRate(f, mic.getSamplingRate())
     if mic.hasCTF():
         _writeCTF(f, mic.getCTF())
     f.write("""
@@ -133,8 +134,8 @@ def writeParticle(f, particle, micSet):
     index, filename = particle.getLocation()
     _writeCommon(f, particle.getCoordinate(), index, filename, micSet)
     if particle.hasCTF():
-        particle.getCTF().printAll()
         _writeCTF(f, particle.getCTF())
+    _writeSamplingRate(f, particle.getSamplingRate())
     _writeCommonFooter(f)
 
 
@@ -160,7 +161,7 @@ def writeSetOfMicrographs(f, micSet, emxDir, ctfSet=None, writeData=True):
   --> """)
     for mic in micSet:
         loc = mic.getLocation()
-        fnMicBase = basename(loc[1])
+        fnMicBase = replaceBaseExt(loc[1], 'mrc')
         if writeData:
             newLoc = join(emxDir, fnMicBase)
             ih.convert(loc, newLoc)
@@ -217,13 +218,73 @@ def exportData(emxDir, inputSet, ctfSet=None):
         if inputSet.hasCoordinates():
             micSet = inputSet.getCoordinates().getMicrographs()
             writeSetOfMicrographs(f, micSet, emxDir, writeData=False)
-        fnMrcs = join(emxDir, 'data.mrcs')
+        fnMrcs = join(emxDir, 'data.mrc')
         writeSetOfParticles(f, inputSet, fnMrcs, micSet)
         
     writeFooter(f)
     f.close()
     
+def _getFloat(elem, key):
+    """ Parse a float value from elem child text. """
+    return float(elem.find(key).text.strip())
     
+def _setLocationFromElem(elem, img):
+    """ Set image location from attributes "index" and "fileName". """
+    index = elem.get('index', 1)
+    img.setLocation(index, elem.get('fileName'))
+    
+def _setSamplingFromElem(elem, img):
+    """ Set the sampling rate from the pixelSpacing element. """
+    s = elem.find('pixelSpacing')
+    if s is None:
+        print "NO pixelSpacing:", elem
+    else:
+        img.setSamplingRate(_getFloat(s, 'X'))
+        
+def _setCoordinatesFromElem(elem, coordinate):
+    c = elem.find('centerCoord')
+    if c is not None:
+        coordinate.setX(_getFloat(c, 'X'))
+        coordinate.setY(_getFloat(c, 'Y'))
+    
+def _acquisitionFromElem(elem, acquisition):
+    """ Create an acquistion from elem. """
+    acquisition.setVoltage(_getFloat(elem, 'acceleratingVoltage'))
+    acquisition.setAmplitudeContrast(_getFloat(elem, 'amplitudeContrast'))
+    acquisition.setSphericalAberration(_getFloat(elem, 'cs'))    
+    
+def _ctfFromElem(elem, ctf):
+    """ Create a CTF model from the values in elem. """
+    for tag in ['defocusU', 'defocusV', 'defocusUAngle']:
+        if elem.find(tag) is None:
+            return None
+    ctf.setDefocusU(_getFloat(elem, 'defocusU'))
+    ctf.setDefocusV(_getFloat(elem, 'defocusV'))
+    ctf.setDefocusAngle(_getFloat(elem, 'defocusUAngle'))
+    
+def _imageFromElem(elem, img):
+    """ Create either Micrograph or Particle from xml elem. """
+    _setLocationFromElem(elem, img)
+    _setSamplingFromElem(elem, img)
+    _ctfFromElem(elem, img.getCTF())
+    
+def _micrographFromElem(elem, mic):
+    """ Create a micrograph and set the values properly
+    from the corresponding xml tree element.
+    """
+    _imageFromElem(elem, mic)
+    _acquisitionFromElem(elem, mic.getAcquisition())
+    
+    #mic.printAll()
+    
+def _particleFromElem(elem, particle):
+    _imageFromElem(elem, particle)
+    _setCoordinatesFromElem(elem, particle.getCoordinate())
+    
+def _coordinateFromElem(elem, coordinate):
+    #_imageFromElem(elem, coordinate)
+    _setCoordinatesFromElem(elem, coordinate)
+  
 def _iterXml(xmlFn, tagsCallback):
     """ Iterate incrementally a give XML file. 
     This implementation is used having in mind huge xml files.
@@ -231,20 +292,61 @@ def _iterXml(xmlFn, tagsCallback):
     http://effbot.org/zone/element-iterparse.htm
     Params:
         xmlFn: filename of the xml file.
-        tagsCallback: a dictionary containing the tags of interest as keys
-                      and the callbacks functions for each tag
     """
     # get an iterable
-    context = ET.iterparse(xmlFn)#, events=("start", "end"))
-    
+    context = ET.iterparse(xmlFn, events=("start", "end"))
     # turn it into an iterator
     context = iter(context)
-    
     # get the root element
     _, root = context.next()
     
-    for _, elem in context:
-        if elem.tag in tagsCallback:
-            tagsCallback[elem.tag](elem)
-        #root.clear()
+    # This flag will serve to check whether we are parsing micrographs
+    # or we are parsing particles or coordinates
+    # After the first <particle> tag is found, the flag should be set to False
+    onlyMics = True
+    # Check if pixelSpacing is present to create Particle or Coordinate
+    foundPixelSpacing = False
+    # Create single instances of objects that will be populated with 
+    # the values parsed from the EMX file
+    mic = Micrograph()
+    mic.setAcquisition(Acquisition())    
+    coordinate = Coordinate()
+    particle = Particle() # particle should be of type Particle or Coordinate
+    particle.setCoordinate(coordinate)
+    
+    for event, elem in context:
+        if event == 'start':
+            # After found the first particle, set onlyMics flag to False
+            # after this, micrographs tags are just particle references
+            if elem.tag == 'particle':
+                onlyMics = False
+            # If pixelSpacing is found(and we require it for particles)
+            # we asume that element are Particle, if not, there are Coordinates
+            if elem.tag == 'pixelSpacing':
+                if not onlyMics:
+                    foundPixelSpacing = True
+            # If found CTF information, set the CTFModel
+            # only once for either micrograph or particle
+            if elem.tag == 'defocusU':
+                if onlyMics:
+                    if not mic.hasCTF():
+                        mic.setCTF(CTFModel())
+                else:
+                    if not particle.hasCTF():
+                        particle.setCTF(CTFModel())
+        else: # event == 'end'
+            if elem.tag == 'micrograph':
+                if onlyMics:
+                    _micrographFromElem(elem, mic)
+                    root.clear()
+                else:
+                    pass #TODO: set particle micrograph reference
+            elif elem.tag == 'particle':
+                if foundPixelSpacing:
+                    _particleFromElem(elem, particle)
+                    #kparticle.printAll()
+                else:
+                    _coordinateFromElem(elem, coordinate)
+                    #coordinate.printAll()
+                root.clear()
     
