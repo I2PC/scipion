@@ -31,7 +31,7 @@ This sub-package contains the XmippParticlePicking protocol
 from pyworkflow.em import *  
 from pyworkflow.utils.path import *  
 from convert import readSetOfCoordinates
-
+from posixpath import abspath
 
 
 
@@ -69,15 +69,17 @@ class BsoftProtParticlePicking(ProtParticlePicking):
         
         
     def launchParticlePickGUIStep(self):
-        self._enterWorkingDir()
+        
         # Launch the particle picking GUI
-        program = "bshow"  
-       
+        outputdir = self._getExtraPath()
         for mic in self.inputMics:
-            micfile = os.path.relpath(mic.getFileName(), self.workingDir.get())
-            print micfile
-            self.runJob(program, micfile)
-        self._leaveWorkingDir()
+            args = "%s %s"%(abspath(mic.getFileName()), outputdir)
+            self.runJob("ln -s", args)
+            
+        self._enterDir(outputdir)
+        for mic in self.inputMics:
+            self.runJob("bshow", getFile(mic.getFileName()))
+        self._leaveDir()
    
         
     def createOutputStep(self):
