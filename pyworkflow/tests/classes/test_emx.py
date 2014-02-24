@@ -68,4 +68,20 @@ class TestEMX(unittest.TestCase):
             mic.setCTF(ctf)
             micSet.append(mic)
             
-        emx.writeSetOfMicrographs(micSet, fnXml)                             
+        emx.writeSetOfMicrographs(micSet, fnXml)
+        
+        
+    def test_readEMX(self):
+        import pyworkflow.em.emx as emx
+        fn = 'emxData/data.emx'
+        
+        def handleMicrograph(elem):
+            print 'elem.tag: ', elem.tag
+            print 'elem.attrib', elem.attrib
+         
+        def handleParticle(elem):
+            print 'elem.tag: ', elem.tag     
+            print 'elem.attrib', elem.attrib
+              
+        emx._iterXml(fn, {'micrograph': handleMicrograph, 
+                          'particle': handleParticle})

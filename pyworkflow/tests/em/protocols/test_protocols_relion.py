@@ -27,7 +27,7 @@
 import unittest, sys
 from pyworkflow.em import *
 from pyworkflow.tests import *
-from pyworkflow.em.packages.relion import Relion3DClassification
+from pyworkflow.em.packages.relion import ProtRelionClassify3D
 
 
 # Some utility functions to import micrographs that are used
@@ -54,9 +54,9 @@ class TestRelionClassify3D(TestRelionBase):
         cls.protImport = cls.runImportParticles(pattern=pattern, checkStack=True, samplingRate=1)
         cls.iniVol = getInputPath('ml3dData', 'icoFiltered.vol')
         
-    def NOtestRelion3DClassification(self):
-        print "Run Relion3DClassification"
-        relion3DClass = Relion3DClassification(numberOfClasses=3, numberOfIterations=4, doCtf=False, runMode=1, 
+    def NOtestProtRelionClassify3D(self):
+        print "Run ProtRelionClassify3D"
+        relion3DClass = ProtRelionClassify3D(numberOfClasses=3, numberOfIterations=4, doCtf=False, runMode=1, 
                                  numberOfMpi=2, numberOfThreads=2)
         relion3DClass.inputImages.set(self.protImport.outputParticles)
         relion3DClass.ini3DrefVolumes.set(self.iniVol)
