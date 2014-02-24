@@ -25,7 +25,7 @@
 # *
 # **************************************************************************
 """
-This sub-package will contains Xmipp3.0 specific protocols
+This sub-package will contains Xmipp3.1 specific protocols
 """
 
 import os
@@ -37,9 +37,6 @@ import pyworkflow.dataset as ds
 from xmipp import MetaData, MetaDataInfo, MDL_IMAGE, MDL_IMAGE1, MDL_IMAGE_REF, MDL_ANGLE_ROT, MDL_ANGLE_TILT, MDL_ANGLE_PSI, MDL_REF, \
         MDL_SHIFT_X, MDL_SHIFT_Y, MDL_FLIP, MD_APPEND, MDL_MAXCC, MDL_ENABLED, MDL_CTF_MODEL, MDL_SAMPLINGRATE, DT_DOUBLE, \
         Euler_angles2matrix, Image, FileName, getBlocksInMetaDataFile
-from protlib_utils import runJob
-from protlib_filesystem import deleteFile, findAcquisitionInfo
-import os
 
 LABEL_TYPES = { 
                xmipp.LABEL_SIZET: long,
