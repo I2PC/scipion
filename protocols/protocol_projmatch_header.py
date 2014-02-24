@@ -723,8 +723,15 @@ DisplayProjectionMatchingLibraryAndClasses=False
 # {view} Display library and experimental images in a single image?
 DisplayProjectionMatchingLibraryAndImages=False
 
-# {view} Display discarded images?
+# {view} Display input image
 DisplayDiscardedImages=False
+
+# {view} Display experimental imagess?
+"""Display Input images with alignment and classification information
+WARNING: the angles and shifts are the adecuate for reconstruction
+but not for 2D aligment.
+"""
+DisplayExperimentalImages=False
 
 #-----------------------------------------------------------------------------
 # {section}{visualize} Convergence 
