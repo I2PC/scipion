@@ -56,7 +56,7 @@ void ProgImageResize::defineParams()
     addParamsLine(" alias -n;");
     addParamsLine("or --dim <x> <y=x> <z=x>         : New x,y and z dimensions");
     addParamsLine(" alias -d;");
-    addParamsLine("or --fourier <x> <y=x> <z=x> <thr=1>   : Use padding/windowing in Fourier Space to resize");
+    addParamsLine("or --fourier <x> <y=x> <z=x> <thr=1>   : Use padding/windowing in Fourier Space to resize. thr=number of threads");
     addParamsLine(" alias -f;");
     addParamsLine("or --pyramid <levels=1>          : Use positive value to expand and negative to reduce");
     addParamsLine(" alias -p;");
