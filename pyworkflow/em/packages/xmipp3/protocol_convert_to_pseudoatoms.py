@@ -27,22 +27,9 @@
 # *
 # **************************************************************************
 
-import math
-from glob import glob
+from protocol_convert_to_pseudoatoms_base import *
 
-from pyworkflow.em import *  
-from pyworkflow.utils import * 
-from pyworkflow.protocol.constants import LEVEL_EXPERT, LEVEL_ADVANCED
-import xmipp
-from pyworkflow.em.packages.xmipp3.convert import getImageLocation
-
-#from xmipp3 import XmippProtocol
-NMA_MASK_NONE = 0
-NMA_MASK_THRE = 1
-NMA_MASK_FILE = 2
-
-# TODO: Move to 3D Tools
-class XmippProtConvertToPseudoAtoms(ProtPreprocessVolumes):
+class XmippProtConvertToPseudoAtoms(XmippProtConvertToPseudoAtomsBase):
     """ Protocol for converting an EM volume into pseudoatoms """
     _label = 'convert to pseudoatoms'
     
@@ -50,96 +37,23 @@ class XmippProtConvertToPseudoAtoms(ProtPreprocessVolumes):
     def _defineParams(self, form):
         form.addSection(label='Input')
         form.addParam('inputStructure', PointerParam, label="Input structure", important=True, 
-                      pointerClass='Volume')  
-        form.addParam('maskMode', EnumParam, choices=['none', 'threshold', 'file'], 
-                      default=NMA_MASK_NONE, 
-                      label='Mask mode', display=EnumParam.DISPLAY_COMBO,
-                      help='')        
-        form.addParam('maskThreshold', FloatParam, default=0.01, 
-                      condition='maskMode==%d' % NMA_MASK_THRE,
-                      label='Threshold value',
-                      help='Gray values below this threshold are set to 0')
-        form.addParam('volumeMask', PointerParam, pointerClass='VolumeMask',
-                      label='Mask volume', condition='maskMode==%d' % NMA_MASK_FILE,
-                      )          
-        form.addParam('pseudoAtomRadius', FloatParam, default=1, 
-                      label='Pseudoatom radius (vox)',
-                      help='Pseudoatoms are defined as Gaussians whose \n'
-                           'standard deviation is this value in voxels') 
-        form.addParam('pseudoAtomTarget', FloatParam, default=5,
-                      expertLevel=LEVEL_ADVANCED, 
-                      label='Volume approximation error(%)',
-                      help='This value is a percentage (between 0.001 and 100) \n'
-                           'specifying how fine you want to approximate the EM \n'
-                           'volume by the pseudoatomic structure. Lower values \n'
-                           'imply lower approximation error, and consequently, \n'
-                           'more pseudoatoms.')        
-              
+                      pointerClass='Volume')
+        XmippProtConvertToPseudoAtomsBase._defineParams(self,form)
         form.addParallelSection(threads=4, mpi=1)    
              
     #--------------------------- INSERT steps functions --------------------------------------------
     def _insertAllSteps(self):
         inputStructure = self.inputStructure.get()
-        fnMask = self._insertMaskStep()
         self.sampling = inputStructure.getSamplingRate()
         self.fnIn=getImageLocation(inputStructure)
+
+        fnMask = self._insertMaskStep(self.fnIn)
         self._insertFunctionStep('convertToPseudoAtomsStep', self.fnIn, fnMask)
-        self._insertFunctionStep('createChimeraScriptStep')
+        self._insertFunctionStep('createChimeraScriptStep',inputStructure,self.fnIn)
         self._insertFunctionStep('createOutputStep')
-        
-    def _insertMaskStep(self):
-        """ Check the mask selected and insert the necessary steps.
-        Return the mask filename if needed.
-        """
-        fnMask = ''
-        if self.maskMode == NMA_MASK_THRE:
-            fnMask = self._getExtraPath('mask.vol')
-            maskParams = '-i %s -o %s --select below %f --substitute binarize' % (getImageLocation(self.inputStructure.get()),
-                                                                                  fnMask, self.maskThreshold.get())
-            self._insertRunJobStep('xmipp_transform_threshold', maskParams)
-        elif self.maskMode == NMA_MASK_FILE:
-            fnMask = getImageLocation(self.volumeMask.get())
-        return fnMask
         
         
     #--------------------------- STEPS functions --------------------------------------------
-    def convertToPseudoAtomsStep(self, inputFn, fnMask):
-        prefix = 'pseudoatoms'
-        outputFn = self._getPath(prefix)
-        sampling = self.sampling
-        sigma = sampling * self.pseudoAtomRadius.get() 
-        targetErr = self.pseudoAtomTarget.get()
-        nthreads = self.numberOfThreads.get()
-        params = "-i %(inputFn)s -o %(outputFn)s --sigma %(sigma)f --thr %(nthreads)d "
-        params += "--targetError %(targetErr)f --sampling_rate %(sampling)f -v 2 --intensityColumn Bfactor"
-        if fnMask:
-            params += " --mask binary_file %(fnMask)s"
-        print params%locals()
-        self.runJob("xmipp_volume_to_pseudoatoms", params % locals())
-        for suffix in ["_approximation.vol", "_distance.hist"]:
-            moveFile(self._getPath(prefix+suffix), self._getExtraPath(prefix+suffix))
-        cleanPattern(self._getPath(prefix+'_*'))
-        
-    def createChimeraScriptStep(self):
-        radius = self.sampling * self.pseudoAtomRadius.get() 
-        input = self.inputStructure.get()
-        localInputFn = self._getBasePath(self.fnIn)
-        createLink(self.fnIn, localInputFn)
-        fhCmd = open(self._getPath("chimera.cmd"),'w')
-        fhCmd.write("open pseudoatoms.pdb\n")
-        fhCmd.write("rangecol bfactor,a 0 white 1 red\n")
-        fhCmd.write("setattr a radius %f\n" % radius)
-        fhCmd.write("represent sphere\n")
-        fhCmd.write("open %s\n" % basename(localInputFn))
-         
-        threshold = 0.01
-        if self.maskMode == NMA_MASK_THRE:
-            self.maskThreshold.get()
-        xdim, _, _, _ = input.getDim()
-        origin = xdim / 2
-        fhCmd.write("volume #1 level %f transparency 0.5 voxelSize %f originIndex %d\n" % (threshold, self.sampling, origin))
-        fhCmd.close()
-     
     def createOutputStep(self):
         pdb = PdbFile(self._getPath('pseudoatoms.pdb'), pseudoatoms=True)
         self._defineOutputs(outputPdb=pdb)
