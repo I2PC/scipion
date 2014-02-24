@@ -436,7 +436,6 @@ def readSetOfImages(filename, imgSet, rowToFunc, hasCtf):
         pass # TODO: what to do if not exists
         
     imgSet._xmippMd = String(filename)
-         
  
 def setOfImagesToMd(imgSet, md, imgToFunc, rowFunc):
     """ This function will fill Xmipp metadata from a SetOfMicrographs
