@@ -261,7 +261,7 @@ class TestXmippExtractParticles(TestXmippBase):
 
     def testExtractOther(self):
         print "Run extract particles with downsampling factor equal to other"
-        protExtract = XmippProtExtractParticles(boxSize=175, downsampleType=self.OTHER, downFactor=2,doFlip=False)
+        protExtract = XmippProtExtractParticles(boxSize=110, downsampleType=self.OTHER, downFactor=2,doFlip=False)
         protExtract.inputCoordinates.set(self.protPP.outputCoordinates)
         protExtract.inputMicrographs.set(self.protImport.outputMicrographs)
         protExtract.setObjLabel("extract-other")

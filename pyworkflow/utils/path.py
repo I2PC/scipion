@@ -78,6 +78,10 @@ def joinExt(*extensions):
     """ Join several path parts with a ."""
     return '.'.join(extensions)
 
+def getFile(filePath):
+    """ Given a path, remove the folders and return the file """
+    return split(filePath)[1]
+
 def cleanPath(*paths):
     """ Remove a list of paths, either folders or files"""
     for p in paths:

@@ -497,7 +497,7 @@ class Protocol(Step):
         """ Insert an Step that will simple call runJob function
         **args: see __insertStep
         """
-        self._insertFunctionStep('runJob', progName, progArguments)
+        return self._insertFunctionStep('runJob', progName, progArguments)
             
     def _enterDir(self, path):
         """ Enter into a new directory path and store the current path.
