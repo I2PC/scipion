@@ -34,13 +34,13 @@ class DataSet(object):
     All tables should have an unique tableName. 
     """
     
-    def __init__(self, tables, tableName=None, volumeName=None, numberSlices=0, labelToRender=None):
+    def __init__(self, tables, tableName=None, volumeName=None, numberSlices=0):
         self._tables = list(tables)
         self._tableName = tableName
         #NAPA de LUXE: Hay que ver si el volumen name se usa en algun lado        
         self._volumeName = volumeName 
         self._numberSlices = numberSlices 
-        self._labelToRender = labelToRender
+        
         
     def setTableName(self, tableName):    
         self._tableName = tableName
@@ -51,21 +51,6 @@ class DataSet(object):
     def getVolumeName(self):
         return self._volumeName
     
-    def setLabelToRender(self, labelToRender):
-        self._labelToRender = labelToRender
-        
-    def getDataToRender(self):
-        return self.getTable().getColumnValues(self._labelToRender)
-    
-    def getDataToRenderAndExtra(self):
-        return zip(self.getIdColumn(),
-                   self.getTable().getColumnValues("enabled"),
-                   self.getDataToRender(),
-                   self.getTransformationMatrix())
-    
-    def getIdColumn(self):
-        return self.getTable().getColumnValues("id")
-    
     def setNumberSlices(self, numberSlices):
         self._numberSlices = numberSlices
         
@@ -74,9 +59,6 @@ class DataSet(object):
     
     def getNumberSlicesForTemplate(self):
         return range(self._numberSlices)
-        
-    def getTransformationMatrix(self):    
-        return self.getTable().getColumnValues(self._labelToRender+"_transformationMatrix")
         
     def listTables(self):
         """ List the actual table names on the DataSet. """
@@ -115,6 +97,9 @@ class Table(object):
         colNames = [col.getName() for col in self.iterColumns()]
         # This imply that columns can only be added in __init__
         self.Row = namedtuple('Row', colNames, verbose=False)
+    
+    def setLabelToRender(self, labelToRender):
+        self._labelToRender = labelToRender
         
     def _addColumn(self, col):
         self._columns[col.getName()] = col
@@ -159,6 +144,21 @@ class Table(object):
     
     def _setRow(self, rowId, row):
         self._rowDict[rowId] = row
+    
+    def getDataToRenderAndExtra(self):
+        return zip(self.getIdColumn(),
+                   self.getColumnValues("enabled"),
+                   self.getDataToRender(),
+                   self.getTransformationMatrix())
+    
+    def getDataToRender(self):
+        return self.getColumnValues(self._labelToRender)
+    
+    def getIdColumn(self):
+        return self.getColumnValues("id")
+        
+    def getTransformationMatrix(self):    
+        return self.getColumnValues(self._labelToRender+"_transformationMatrix")
     
     def _convertValues(self, values):
         """ Convert the input values to the actual

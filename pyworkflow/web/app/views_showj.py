@@ -74,7 +74,7 @@ def initTableDataSet(dataset, inputParameters):
 def getTableLayoutConfig(request, dataset, tableDataset, inputParameters, extraParameters, firstTime):
     """ Load table layout configuration. How to display columns and attributes (visible, render, editable) """ 
     
-    if firstTime is True:
+    if firstTime:
         colums_properties = getExtraParameters(extraParameters, tableDataset)
         request.session['defaultColumnsLayoutProperties'] = colums_properties
     else:
@@ -85,7 +85,7 @@ def getTableLayoutConfig(request, dataset, tableDataset, inputParameters, extraP
     return layoutConfig
 
 
-def setLabelToRender(request, dataset, inputParameters, extraParameters, firstTime):
+def setLabelToRender(request, dataset, tableDataset, inputParameters, extraParameters, firstTime):
     """ If no label is set to render, set the first one if exists """
     
     if 'labelsToRenderComboBox' not in inputParameters or inputParameters['labelsToRenderComboBox'] == '' or request.session['blockComboBox'] != inputParameters['blockComboBox']:
@@ -94,14 +94,14 @@ def setLabelToRender(request, dataset, inputParameters, extraParameters, firstTi
             inputParameters['labelsToRenderComboBox'] = labelsToRenderComboBoxValues[0][0]
         else:
             # If there is no image to display and it is initial load, switch to table mode 
-            if firstTime is True and inputParameters['mode']!='table':
+            if firstTime and inputParameters['mode']!='table':
                 inputParameters['mode']='table'
                 showj(request, inputParameters, extraParameters) 
             inputParameters['labelsToRenderComboBox'] = ''
     
-    dataset.setLabelToRender(inputParameters['labelsToRenderComboBox']) 
+    tableDataset.setLabelToRender(inputParameters['labelsToRenderComboBox']) 
     
-    return dataset
+    return dataset, tableDataset
 
 
 def setRenderingOptions(request, dataset, tableDataset, inputParameters):
@@ -140,6 +140,9 @@ def setRenderingOptions(request, dataset, tableDataset, inputParameters):
     
 
 def showj(request, inputParameters=None, extraParameters=None, firstTime=False):
+    from datetime import datetime
+    start = datetime.now()
+    
     #############
     # WEB INPUT PARAMETERS
     _imageDimensions = '' 
@@ -149,7 +152,7 @@ def showj(request, inputParameters=None, extraParameters=None, firstTime=False):
     tableDataset = None
     volPath = None
     
-    if firstTime is False:
+    if not firstTime:
         inputParameters = request.POST.copy()
 
     if inputParameters["typeVolume"] != 'pdb':
@@ -164,7 +167,7 @@ def showj(request, inputParameters=None, extraParameters=None, firstTime=False):
         inputParameters['tableLayoutConfiguration'] = getTableLayoutConfig(request, dataset, tableDataset, inputParameters, extraParameters, firstTime)
     
         #If no label is set to render, set the first one if exists
-        dataset = setLabelToRender(request, dataset, inputParameters, extraParameters, firstTime)
+        dataset, tableDataset = setLabelToRender(request, dataset, tableDataset, inputParameters, extraParameters, firstTime)
         
         if inputParameters['labelsToRenderComboBox'] == '':
             
@@ -184,8 +187,10 @@ def showj(request, inputParameters=None, extraParameters=None, firstTime=False):
 
 
     context, return_page = createContextShowj(request, inputParameters, dataset, tableDataset, _stats, volPath)
-    
-    return render_to_response(return_page, RequestContext(request, context))
+
+    render_var =render_to_response(return_page, RequestContext(request, context))
+    print "post render", datetime.now()-start    
+    return render_var
 
 
 def storeToSession(request, inputParameters, dataset, _imageDimensions):

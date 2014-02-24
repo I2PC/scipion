@@ -336,8 +336,9 @@ def get_image(request):
             imgXmipp = xmipp.Image()
     
             imgXmipp.readPreview(imagePath, int(imageDim))
+            
             if applyTransformMatrix: 
-                print "akitikiri"
+                #print "akitikiri"
                 takarras=[tMatrix[0][0], tMatrix[0][1], tMatrix[0][2], x if x!=None else 0,
                 tMatrix[1][0], tMatrix[1][1], tMatrix[1][2], y if y!=None else 0,
                 tMatrix[2][0], tMatrix[2][1], tMatrix[2][2], z if z!=None else 0]
