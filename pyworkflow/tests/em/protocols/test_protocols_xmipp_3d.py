@@ -191,6 +191,40 @@ class TestXmippMaskVolumes(TestXmippBase):
         self.assertIsNotNone(protMaskVolumes.outputVol, "There was a problem with applying mask to SetOfVolumes")
 
 
+class TestXmippCropResizeVolumes(TestXmippBase):
+    @classmethod
+    def setUpClass(cls):
+        setupProject(cls)
+        
+#         cls.protImport = cls.runImportParticles(pattern=images, samplingRate=1, checkStack=False)
+#         cls.iniVol = getInputPath('ml3dData', 'icoFiltered.vol')
+    
+    def testCropResizeVolumes(self):
+        print "Import volume"
+        protImportVol1 = ProtImportVolumes(pattern=getInputPath('Test_Resolution_Xmipp', 'volume_1_iter_002.mrc'), samplingRate=9.896)
+        self.proj.launchProtocol(protImportVol1, wait=True)
+
+        print "Import SetOfVolumes"
+        protImportVol2 = ProtImportVolumes(pattern=getInputPath('Test_Resolution_Xmipp', 'volume_?_iter_002.mrc'), samplingRate=9.896)
+        self.proj.launchProtocol(protImportVol2, wait=True)
+    
+        print "Run Resize-Crop single volume"
+        protCropResizeVolume = XmippProtCropResizeVolumes(doResize=True, resizeOption=1, resizeDim=128, doWindow=True,
+                                                    windowOperation=1, windowSize=256)
+        protCropResizeVolume.inputVolumes.set(protImportVol1.outputVolume)
+        self.proj.launchProtocol(protCropResizeVolume, wait=True)        
+        
+        self.assertIsNotNone(protCropResizeVolume.outputVol, "There was a problem with applying resize and crop to a volume")
+
+        print "Run Resize-Crop SetOfVolumes"
+        protCropResizeVolumes = XmippProtCropResizeVolumes(doResize=True, resizeOption=1, resizeDim=128, doWindow=True,
+                                                    windowOperation=1, windowSize=256)
+        protCropResizeVolumes.inputVolumes.set(protImportVol2.outputVolumes)
+        self.proj.launchProtocol(protCropResizeVolumes, wait=True)
+        
+        self.assertIsNotNone(protCropResizeVolumes.outputVol, "There was a problem with applying resize and crop to SetOfVolumes")
+
+
 class TestXmippSimAnnealing(TestXmippBase):
     @classmethod
     def setUpClass(cls):

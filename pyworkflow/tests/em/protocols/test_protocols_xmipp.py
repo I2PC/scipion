@@ -422,7 +422,8 @@ class TestXmippML3D(TestXmippBase):
         protML3D.numberOfSeedsPerRef.set(2)
         self.proj.launchProtocol(protML3D, wait=True)        
         
-        self.assertIsNotNone(protML3D.outputVolumes, "There was a problem with ML3D")          
+        self.assertIsNotNone(protML3D.outputVolumes, "There was a problem with ML3D")
+
 
 class TestXmippPreprocessParticles(TestXmippBase):
 
@@ -438,6 +439,22 @@ class TestXmippPreprocessParticles(TestXmippBase):
         self.proj.launchProtocol(protPreproc, wait=True)
         
         self.assertIsNotNone(protPreproc.outputParticles, "There was a problem with preprocess particles")
+
+
+class TestXmippCropResizeParticles(TestXmippBase):
+
+    @classmethod
+    def setUpClass(cls):
+        setupClassification(cls)
+    
+    def testPreprocessPart(self):
+        print "Run Preprocess particles"
+        protCropResize = XmippProtCropResizeParticles(doResize=True, resizeOption=1, resizeDim=128, doWindow=True,
+                                                      windowOperation=1, windowSize=256)
+        protCropResize.inputParticles.set(self.protImport.outputParticles)
+        self.proj.launchProtocol(protCropResize, wait=True)
+        
+        self.assertIsNotNone(protCropResize.outputParticles, "There was a problem with resize/crop the particles")
 
 
 if __name__ == "__main__":
