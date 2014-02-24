@@ -158,6 +158,7 @@ class XmippParticlePickingAutomatic(ProtParticlePicking, XmippProtocol):
                 validateMsgs.append('New micrographs should have same acquisition parameters as the ones already picked.')
         return validateMsgs
     
+    
     def _summary(self):
         summary = []
         if not hasattr(self, 'outputCoordinates'):
@@ -166,6 +167,12 @@ class XmippParticlePickingAutomatic(ProtParticlePicking, XmippProtocol):
             summary.append("Previous run: " + self.xmippParticlePicking.get().getNameId())
             summary.append("Number of particles picked: %d (from %d micrographs)" % (self.outputCoordinates.getSize(), self.inputMicrographs.get().getSize()))
         return summary
+    
+    def _methods(self):
+        methodsMsgs = []
+        #TODO: Provide summary with more details
+        return methodsMsgs
+    
     
     def _citations(self):
         return ['Abrishami2013']

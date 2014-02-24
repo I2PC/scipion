@@ -364,10 +364,10 @@ def writeSetOfCoordinates(posDir, coordSet):
     
     return posFiles
     
-def readSetOfCoordinates(posDir, micSet, coordSet):
+def readSetOfCoordinates(outputDir, micSet, coordSet):
     """ Read from Xmipp .pos files.
     Params:
-        posDir: the directory where the .pos files are.
+        outputDir: the directory where the .pos files are.
             It is also expected a file named: config.xmd
             in this directory where the box size can be read.
         micSet: the SetOfMicrographs to associate the .pos, which 
@@ -375,12 +375,12 @@ def readSetOfCoordinates(posDir, micSet, coordSet):
         coordSet: the SetOfCoordinates that will be populated.
     """
     # Read the boxSize from the config.xmd metadata
-    md = xmipp.MetaData('properties@' + join(posDir, 'config.xmd'))
+    md = xmipp.MetaData('properties@' + join(outputDir, 'config.xmd'))
     boxSize = md.getValue(xmipp.MDL_PICKING_PARTICLE_SIZE, md.firstObject())
     
     for mic in micSet:
-        posFile = join(posDir, replaceBaseExt(mic.getFileName(), 'pos'))
-        scipionPosFile = join(posDir, "scipion_" + replaceBaseExt(mic.getFileName(), 'pos'))
+        posFile = join(outputDir, replaceBaseExt(mic.getFileName(), 'pos'))
+        scipionPosFile = join(outputDir, "scipion_" + replaceBaseExt(mic.getFileName(), 'pos'))
         posMd = readPosCoordinates(posFile)
         
         for objId in posMd:
@@ -391,7 +391,7 @@ def readSetOfCoordinates(posDir, micSet, coordSet):
             posMd.setValue(xmipp.MDL_ITEM_ID, long(coord.getObjId()), objId)
         if not posMd.isEmpty():
             posMd.write("particles@%s"  % scipionPosFile)
-    coordSet._xmippMd = String(posDir)
+    coordSet._xmippMd = String(outputDir)
     coordSet.setBoxSize(boxSize)
 
 def readPosCoordinates(posFile):

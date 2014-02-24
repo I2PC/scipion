@@ -46,7 +46,7 @@ from protocol_screen_classes import XmippProtScreenClasses
 from protocol_helical_parameters import XmippProtHelicalParameters
 from protocol_convert_to_pseudoatoms import XmippProtConvertToPseudoAtoms
 from protocol_identify_outliers import XmippProtIdentifyOutliers
-from protocol_preprocess_volumes import XmippProtPreprocessVolumes
+
 from convert import writeSetOfMicrographs, writeSetOfParticles, writeSetOfVolumes, writeSetOfClasses2D, writeSetOfCoordinates, writeSetOfCTFs, locationToXmipp, \
                     writeSetOfClasses3D
 from os.path import dirname, join

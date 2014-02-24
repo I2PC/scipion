@@ -134,6 +134,11 @@ class XmippProtParticlePicking(ProtParticlePicking, XmippProtocol):
             picked = self.outputCoordinates.getSize()
         return  "Number of particles picked: %d (from %d micrographs)" % (picked, self.inputMicrographs.get().getSize())
     
+    def _methods(self):
+        methodsMsgs = []
+        #TODO: Provide summary with more details
+        return methodsMsgs
+    
     def _summary(self):
         summary = []
         if not hasattr(self, 'outputCoordinates'):

@@ -30,7 +30,7 @@ This sub-package contains the XmippParticlePicking protocol
 
 from pyworkflow.em import *  
 from pyworkflow.utils.path import *  
-
+from convert import readSetOfCoordinates
 
 
 
@@ -84,7 +84,7 @@ class BsoftProtParticlePicking(ProtParticlePicking):
         outputDir = self._getExtraPath()
         coordSet = self._createSetOfCoordinates()
         coordSet.setMicrographs(self.inputMics)
-        
+        readSetOfCoordinates(outputDir, self.inputMics, coordSet)
         self._defineOutputs(outputCoordinates=coordSet)        
         self._defineSourceRelation(self.inputMics, coordSet)
         
