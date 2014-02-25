@@ -228,8 +228,8 @@ function fillUL(list, ulId, icon) {
 	for ( var i = 0; i < list.length; i++) {
 		
 		// Visualize Object
-		var visualize_html = '<a href="javascript:popup(\'/visualize_object/?objectId=' + list[i].id
-		+ '\');"><i class="fa ' + icon + '" style="margin-right:10px;"></i>'
+		var visualize_html = '<a href="javascript:customPopup(\'/visualize_object/?objectId=' + list[i].id
+		+ '\',1200,800);"><i class="fa ' + icon + '" style="margin-right:10px;"></i>'
 		+ list[i].name + '</a>'
 		
 		// Edit Object

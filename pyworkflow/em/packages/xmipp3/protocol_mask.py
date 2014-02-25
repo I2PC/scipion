@@ -90,7 +90,7 @@ class XmippProtMask():
         elif self.source == SOURCE_MASK:
             self._args += "--mask binary_file %s" % self.maskFn
         else:
-            raise Exception("Unrecognized mask type: %d" % self.source.get())
+            raise Exception("Unrecognized mask type: %d" % self.source)
 
         return self._args % locals()
 
@@ -106,7 +106,7 @@ class XmippProtMaskParticles(XmippProcessParticles, XmippProtMask, XmippGeometri
 #         XmippGeometricalMask2D.__init__(self, **args)
         
     def _defineProtParams(self, form):
-        form.addParam('inputMask', PointerParam, pointerClass="Mask", label="Input mask",condition='source==%d'%SOURCE_MASK)
+        form.addParam('inputMask', PointerParam, pointerClass="Mask", label="Input mask",condition='source==%d' % SOURCE_MASK)
         XmippGeometricalMask2D.defineParams(self, form, isGeometry='source==%d' % SOURCE_GEOMETRY, addSize=False)
     
     def _defineFilenames(self):
@@ -138,15 +138,15 @@ class XmippProtMaskVolumes(XmippProcessVolumes, XmippProtMask, XmippGeometricalM
         XmippProtMask.__init__(self, **args)
     
     def _defineProtParams(self, form):
-        form.addParam('inputMask', PointerParam, pointerClass="VolumeMask", label="Input mask",condition='source==%d'%SOURCE_MASK)
-        XmippGeometricalMask3D.defineParams(self, form, isGeometry='source==%d'%SOURCE_GEOMETRY, addSize=False)
+        form.addParam('inputMask', PointerParam, pointerClass="VolumeMask", label="Input mask",condition='source==%d' % SOURCE_MASK)
+        XmippGeometricalMask3D.defineParams(self, form, isGeometry='source==%d' % SOURCE_GEOMETRY, addSize=False)
     
     def _defineFilenames(self):
         XmippProcessVolumes._defineFilenames(self)
         self.maskFn = self._getPath('mask.spi')
     
     def _insertProcessStep(self, inputFn, outputFn, outputMd):
-        if self.source == SOURCE_MASK:
+        if self.source.get() == SOURCE_MASK:
             self._insertFunctionStep('copyFileStep', self.inputMask.get().getLocation())
         XmippProcessVolumes._insertProcessStep(self, inputFn, outputFn, outputMd)
     
