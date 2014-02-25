@@ -322,14 +322,13 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame {
 												// reopen
 			return;
 		if (tppicker.isChanged()) 
-			tppicker.saveData(getMicrograph());
+			tppicker.saveData();
 		getMicrograph().releaseImage();
 
 		index = micrographstb.getSelectedRow();
 		tppicker.setMicrograph(tppicker.getMicrographs().get(index));
-		tppicker.saveConfig();
 		
-		
+		setChanged(false);
 		// anglesmi.setEnabled(getMicrograph().getAddedCount() >= 4);
 		initializeCanvas();
 

@@ -200,6 +200,13 @@ public class TiltPairPicker extends ParticlePicker
 	}
 
 
+	public void saveData()
+	{
+		super.saveData();
+		saveData(micrograph);//every time you switch micrograph data is saved
+		setChanged(false);
+	}
+
 	
 	public void saveMicrographAngles(UntiltedMicrograph m)
 	{
@@ -280,6 +287,7 @@ public class TiltPairPicker extends ParticlePicker
 				
 				mdU.destroy();
 				mdT.destroy();
+                                saveMicrographAngles(um);
 			}
                         saveMicrographAngles(um);
 		}
@@ -309,6 +317,7 @@ public class TiltPairPicker extends ParticlePicker
 			{
 				result += importParticlesFromFiles(uFn, tFn, f, um, scale, invertx, inverty);
 				saveData(um);
+
 			}
 		}
                 super.saveData();
