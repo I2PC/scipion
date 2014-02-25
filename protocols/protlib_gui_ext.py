@@ -2051,8 +2051,10 @@ class XmippBrowserMask(XmippBrowser):
         self.rate = self.dim / self.real_dim
         self.image = Image()
         self.image.readPreview(self.imgFn, self.dim)
-        #self.root.minsize(600, 400)
-        self.outerRadius = getattr(self, 'outerRadius', int(self.real_dim / 2))
+
+        if self.unit == 'angstrom':
+            self.rate /= self.sampling
+
         self.innerRadius = getattr(self, 'innerRadius', 0)
         self.showInner = getattr(self, 'showInner', False)
         self.preview = MaskPreview(self.detailstop, self.dim, label="Central slice", 
@@ -2068,19 +2070,18 @@ class XmippBrowserMask(XmippBrowser):
         frame = ttk.Frame(parent)
         xdim = self.real_dim 
         step = 1
+        unitLabel = 'px'
         if self.unit == 'angstrom':
+            unitLabel = 'A'
             xdim *= self.sampling
             step *= self.sampling
-            self.innerRadius *= self.sampling
-            self.outerRadius *= self.sampling
-            self.rate /= self.sampling
             
-        self.innerRadiusSlider = XmippSlider(frame, "Inner radius", 
+        self.innerRadiusSlider = XmippSlider(frame, "Inner radius (%s)" % unitLabel, 
                                              from_=0, 
                                              to=xdim/2, 
                                              value=self.innerRadius, step=step,
                                              callback=lambda a, b, c:self.updateMaskRadius())
-        self.outerRadiusSlider = XmippSlider(frame, "Outer radius", 
+        self.outerRadiusSlider = XmippSlider(frame, "Outer radius (%s)" % unitLabel, 
                                              from_=1, 
                                              to=xdim/2, 
                                              value=self.outerRadius, step=step,
@@ -2092,6 +2093,7 @@ class XmippBrowserMask(XmippBrowser):
         if self.showInner:
             self.innerRadiusSlider.grid(row=0, column=0)#, padx=3, pady=3)
         self.outerRadiusSlider.grid(row=1, column=0)#, padx=3, pady=3)
+        self.updateMaskRadius()
         return frame
     
     def insertFiles(self, path):
