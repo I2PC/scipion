@@ -290,29 +290,30 @@ class XmippProject():
             for run in runs:
                 state = run['run_state']
                 stateStr = SqliteDb.StateNames[state]
-                runName = getExtendedRunName(run)
-                done, total = self.projectDb.getRunProgress(run)
-                
-                if done > 0 and done == total:
-                    state = SqliteDb.RUN_FINISHED
-                
-                if state == SqliteDb.RUN_FINISHED:
-                    cleanPossibleDead(runName)
-                
-                if not state in [SqliteDb.RUN_SAVED, SqliteDb.RUN_FINISHED]:
-                    stateStr += " - %d/%d" % (done, total)
-                    if not state in [SqliteDb.RUN_ABORTED, SqliteDb.RUN_FAILED]:
-                        from protlib_utils import ProcessManager
-                        if checkDead and not ProcessManager(run).isAlive():
-                            if runName in self.possibleDead:
-                                self.projectDb.updateRunState(SqliteDb.RUN_FAILED, run['run_id'])
-                                stateStr = SqliteDb.StateNames[SqliteDb.RUN_FAILED]
-                                del self.possibleDead[runName]
-                            else:
-                                stateStr = SqliteDb.StateNames[state]
-                                self.possibleDead[runName] = True
-                        else: 
-                            self.projectDb.updateRunState(SqliteDb.RUN_STARTED, run['run_id'])
+                if state in [SqliteDb.RUN_STARTED, SqliteDb.RUN_LAUNCHED]:
+                    runName = getExtendedRunName(run)
+                    done, total = self.projectDb.getRunProgress(run)
+                    
+                    if done > 0 and done == total:
+                        state = SqliteDb.RUN_FINISHED
+                    
+                    if state == SqliteDb.RUN_FINISHED:
+                        cleanPossibleDead(runName)
+                    
+                    if not state in [SqliteDb.RUN_SAVED, SqliteDb.RUN_FINISHED]:
+                        stateStr += " - %d/%d" % (done, total)
+                        if not state in [SqliteDb.RUN_ABORTED, SqliteDb.RUN_FAILED]:
+                            from protlib_utils import ProcessManager
+                            if checkDead and not ProcessManager(run).isAlive():
+                                if runName in self.possibleDead:
+                                    self.projectDb.updateRunState(SqliteDb.RUN_FAILED, run['run_id'])
+                                    stateStr = SqliteDb.StateNames[SqliteDb.RUN_FAILED]
+                                    del self.possibleDead[runName]
+                                else:
+                                    stateStr = SqliteDb.StateNames[state]
+                                    self.possibleDead[runName] = True
+                            else: 
+                                self.projectDb.updateRunState(SqliteDb.RUN_STARTED, run['run_id'])
                 stateList.append(('  ' + getExtendedRunName(run), state, stateStr, run['last_modified']))       
         return runs, stateList
         
