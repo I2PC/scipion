@@ -290,7 +290,7 @@ class XmippProject():
             for run in runs:
                 state = run['run_state']
                 stateStr = SqliteDb.StateNames[state]
-                
+
                 if state in [SqliteDb.RUN_STARTED, SqliteDb.RUN_LAUNCHED]:
                     runName = getExtendedRunName(run)
                     done, total = self.projectDb.getRunProgress(run)
