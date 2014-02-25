@@ -43,10 +43,12 @@ def findHome():
     return os.path.dirname(absPath)
 
 PW_HOME = findHome()
+os.environ['PW_HOME'] = PW_HOME
 PW_APPS = os.path.join(PW_HOME, 'pyworkflow', 'apps')
 PW_APPS_TEMP = os.path.join(PW_APPS, '%s')
 
-XMIPP_HOME = os.environ['XMIPP_HOME']
+import em_packages
+XMIPP_HOME = em_packages.XMIPP_HOME #os.environ['XMIPP_HOME']
 XMIPP_BIN = os.path.join(XMIPP_HOME, 'bin')
 XMIPP_LIB = os.path.join(XMIPP_HOME, 'lib')
 
@@ -60,6 +62,12 @@ VARS = {
         'PYTHONPATH': os.pathsep.join([PW_HOME, XMIPP_LIB, os.environ.get('PYTHONPATH', '')]),
         'PATH': os.pathsep.join([PW_APPS, os.environ['PATH'], XMIPP_BIN]),
         'LD_LIBRARY_PATH': os.pathsep.join([XMIPP_LIB, os.environ.get('LD_LIBRARY_PATH', '')]),
+        'XMIPP_HOME': XMIPP_HOME,
+        'SPIDER_DIR': em_packages.SPIDER_DIR,
+        'EMAN2DIR': em_packages.EMAN2DIR,
+        'CTFFIND_HOME': em_packages.CTFFIND_HOME,
+        'FREALIGN_HOME': em_packages.FREALIGN_HOME,
+        'RELION_HOME': em_packages.RELION_HOME
         }
 
 
