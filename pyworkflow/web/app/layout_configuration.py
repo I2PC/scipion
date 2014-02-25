@@ -59,7 +59,7 @@ class ColumnLayoutConfiguration():
         self.columnLayoutProperties = ColumnLayoutProperties(self.typeOfColumn, allowRender)
         self.columnLayoutProperties.setValues(defaultColumnLayoutProperties)
         
-#        print "columnLayoutProperties",self.columnLayoutProperties 
+#        print "columnLayoutProperties",self.columnLayoutProperties
         
         
 #NAPA DE LUXE: Y si lo pasamos a una namedtupple
@@ -82,6 +82,19 @@ class ColumnLayoutProperties():
 #        print "defaultColumnLayoutProperties",defaultColumnLayoutProperties
         for key in defaultColumnLayoutProperties:
             setattr(self, key, defaultColumnLayoutProperties[key])
+            
+    
+    def getValues(self):
+        return {"visible":self.visible,
+                "allowSetVisible":self.allowSetVisible,
+                "editable":self.editable,
+                "allowSetEditable":self.allowSetEditable,
+                "renderable":self.renderable,
+                "allowSetRenderable":self.allowSetRenderable,
+                "renderFunc":self.renderFunc,
+                "extraRenderFunc":self.extraRenderFunc
+                }
+
         
 def defineColsLayout(labels):
     colsOrder = range(len(labels))
@@ -92,16 +105,9 @@ def defineColsLayout(labels):
 
 class ColumnLayoutConfigurationEncoder(json.JSONEncoder):
     def default(self, columnLayoutConfiguration):
-        columnLayoutConfigurationCoded={}
-        columnLayoutConfigurationCoded={"typeOfColumn":columnLayoutConfiguration.typeOfColumn,
-                                        "columnLayoutProperties":{"visible":columnLayoutConfiguration.columnLayoutProperties.visible,
-                                                                  "allowSetVisible":columnLayoutConfiguration.columnLayoutProperties.allowSetVisible,
-                                                                  "editable":columnLayoutConfiguration.columnLayoutProperties.editable,
-                                                                  "allowSetEditable":columnLayoutConfiguration.columnLayoutProperties.allowSetEditable,
-                                                                  "renderable":columnLayoutConfiguration.columnLayoutProperties.renderable,
-                                                                  "allowSetRenderable":columnLayoutConfiguration.columnLayoutProperties.allowSetRenderable,
-                                                                  "renderFunc":columnLayoutConfiguration.columnLayoutProperties.renderFunc,
-                                                                  "extraRenderFunc":columnLayoutConfiguration.columnLayoutProperties.extraRenderFunc
-                                                                  }
-                                        }
-        return columnLayoutConfigurationCoded  
+        
+        return {"typeOfColumn":columnLayoutConfiguration.typeOfColumn,
+                "columnLayoutProperties":columnLayoutConfiguration.columnLayoutProperties.getValues()
+                }
+        
+    
