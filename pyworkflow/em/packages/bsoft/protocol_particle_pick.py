@@ -30,8 +30,8 @@ This sub-package contains the XmippParticlePicking protocol
 
 from pyworkflow.em import *  
 from pyworkflow.utils.path import *  
-
-
+from convert import readSetOfCoordinates
+from posixpath import abspath
 
 
 
@@ -69,25 +69,40 @@ class BsoftProtParticlePicking(ProtParticlePicking):
         
         
     def launchParticlePickGUIStep(self):
-        self._enterWorkingDir()
+        
         # Launch the particle picking GUI
-        program = "bshow"  
-       
+        outputdir = self._getExtraPath()
         for mic in self.inputMics:
-            micfile = os.path.relpath(mic.getFileName(), self.workingDir.get())
-            print micfile
-            self.runJob(program, micfile)
-        self._leaveWorkingDir()
+            args = "%s %s"%(abspath(mic.getFileName()), outputdir)
+            self.runJob("ln -s", args)
+            
+        self._enterDir(outputdir)
+        for mic in self.inputMics:
+            self.runJob("bshow", getFile(mic.getFileName()))
+        self._leaveDir()
    
         
     def createOutputStep(self):
         outputDir = self._getExtraPath()
         coordSet = self._createSetOfCoordinates()
         coordSet.setMicrographs(self.inputMics)
-        
+        readSetOfCoordinates(outputDir, self.inputMics, coordSet)
         self._defineOutputs(outputCoordinates=coordSet)        
         self._defineSourceRelation(self.inputMics, coordSet)
         
+    def _methods(self):
+        methodsMsgs = self.summary()
+        #TODO: Provide summary with more details
+        return methodsMsgs
+    
+    def _summary(self):
+        summary = []
+        if not hasattr(self, 'outputCoordinates'):
+            summary.append("Output coordinates not ready yet.") 
+        else:
+            summary.append("Particles picked: %d (from %d micrographs)" % (self.outputCoordinates.getSize(), self.inputMicrographs.get().getSize()))
+            summary.append("Particle size:%d" % self.outputCoordinates.getBoxSize())
+        return summary
 
     def __str__(self):
         """ String representation of a Supervised Picking run """
@@ -96,7 +111,7 @@ class BsoftProtParticlePicking(ProtParticlePicking):
             picked = 0
         else:
             picked = self.outputCoordinates.getSize()
-        return  "Number of particles picked: %d (from %d micrographs)" % (picked, self.inputMicrographs.get().getSize())
+        return  "Particles picked: %d (from %d micrographs)" % (picked, self.inputMicrographs.get().getSize())
     
   
 
