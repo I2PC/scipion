@@ -660,6 +660,7 @@ void MDSql::setOperate(MetaData *mdPtrOut, MDLabel column, SetOperation operatio
         << " NOT IN (SELECT " << MDL::label2Str(column)
         << " FROM " << tableName(mdPtrOut->myMDSql->tableId) << ");";
         break;
+    case DISTINCT:
     case REMOVE_DUPLICATE:
         //Create string with columns list
         size = mdPtrOut->activeLabels.size();

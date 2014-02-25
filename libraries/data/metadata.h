@@ -266,6 +266,11 @@ protected:
                       const MDLabel labelLeft,
                       const MDLabel labelRight,
                       SetOperation operation);
+    /** This function is for generalize the sets operations
+     * in which the output has a single label
+     * a vector of labels instead of a single label may be implemented in the future
+     */
+    void _setOperatesLabel(const MetaData &mdIn, const MDLabel label, SetOperation operation);
     /** clear data and table structure */
     void _clear(bool onlyData=false);
 
@@ -913,6 +918,11 @@ public:
      * Result in "calling" metadata
      */
     void subtraction(const MetaData &mdIn, const MDLabel label);
+
+    /** Return only distinct (different) values of column label.
+     * Result in "calling" metadata with a single column
+     */
+    void distinct(MetaData &MDin, MDLabel label);
 
     /** Join two Metadatas
      * Result in "calling" metadata
