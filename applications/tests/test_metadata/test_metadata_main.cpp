@@ -604,6 +604,74 @@ TEST_F( MetadataTest, compareTwoMetadataFiles)
     XMIPP_CATCH
 }
 
+TEST_F( MetadataTest, FillExpand)
+{
+    XMIPP_TRY
+	//create 2 temporary CTFs plus a metadata with dependences
+    char sfn1[64] = "";
+    strncpy(sfn1, "/tmp/FillExpandCTF2_XXXXXX", sizeof sfn1);
+    if (mkstemp(sfn1)==-1)
+    	REPORT_ERROR(ERR_IO_NOTOPEN,"Cannot create temporary file");
+    char sfn2[64] = "";
+    strncpy(sfn2, "/tmp/FillExpandMD_XXXXXX", sizeof sfn2);
+    if (mkstemp(sfn2)==-1)
+    	REPORT_ERROR(ERR_IO_NOTOPEN,"Cannot create temporary file");
+
+    //create 2 CTFs
+    MetaData ctfMd1, ctfMd2, md;
+    ctfMd1.setColumnFormat(false);
+    ctfMd2.setColumnFormat(false);
+    size_t id1 =ctfMd1.addObject();
+    size_t id2 =ctfMd2.addObject();
+    ctfMd1.setValue(MDL_CTF_SAMPLING_RATE,1.,id1);
+    ctfMd2.setValue(MDL_CTF_SAMPLING_RATE,1.,id2);
+    ctfMd1.setValue(MDL_CTF_VOLTAGE,100.,id1);
+    ctfMd2.setValue(MDL_CTF_VOLTAGE,100.,id2);
+    ctfMd1.setValue(MDL_CTF_DEFOCUSU,1000.,id1);
+    ctfMd2.setValue(MDL_CTF_DEFOCUSU,1500.,id2);
+    ctfMd1.write(sfn1,MD_OVERWRITE);
+    ctfMd2.write(sfn2,MD_OVERWRITE);
+    //create 1 md refering the ctf
+    size_t id =md.addObject();
+    md.setValue(MDL_IMAGE,(String)"image1",id);
+    md.setValue(MDL_CTF_MODEL,(String)sfn1,id);
+    id =md.addObject();
+    md.setValue(MDL_IMAGE,(String)"image2",id);
+    md.setValue(MDL_CTF_MODEL,(String)sfn1,id);
+    id =md.addObject();
+    md.setValue(MDL_IMAGE,(String)"image3",id);
+    md.setValue(MDL_CTF_MODEL,(String)sfn2,id);
+    // call fillExpand
+    md.fillExpand(MDL_CTF_MODEL);
+    //create md with results
+    MetaData mdResults;
+    id =mdResults.addObject();
+    mdResults.setValue(MDL_IMAGE,(String)"image1",id);
+    mdResults.setValue(MDL_CTF_MODEL,(String)sfn1,id);
+    mdResults.setValue(MDL_CTF_SAMPLING_RATE,1.,id);
+    mdResults.setValue(MDL_CTF_VOLTAGE,100.,id);
+    mdResults.setValue(MDL_CTF_DEFOCUSU,1000.,id);
+    id =mdResults.addObject();
+    mdResults.setValue(MDL_IMAGE,(String)"image2",id);
+    mdResults.setValue(MDL_CTF_MODEL,(String)sfn1,id);
+    mdResults.setValue(MDL_CTF_SAMPLING_RATE,1.,id);
+    mdResults.setValue(MDL_CTF_VOLTAGE,100.,id);
+    mdResults.setValue(MDL_CTF_DEFOCUSU,1000.,id);
+    id =mdResults.addObject();
+    mdResults.setValue(MDL_IMAGE,(String)"image3",id);
+    mdResults.setValue(MDL_CTF_MODEL,(String)sfn2,id);
+    mdResults.setValue(MDL_CTF_SAMPLING_RATE,1.,id);
+    mdResults.setValue(MDL_CTF_VOLTAGE,100.,id);
+    mdResults.setValue(MDL_CTF_DEFOCUSU,1500.,id);
+    EXPECT_EQ(md,mdResults);
+    //mdResults.setValue(MDL_CTF_DEFOCUSU,15000.,id);
+    //EXPECT_NE(md,mdResults);
+
+    unlink(sfn1);
+    unlink(sfn2);
+    XMIPP_CATCH
+}
+
 TEST_F( MetadataTest, ImportObject)
 {
     //FIXME importObjects test is in the test named select

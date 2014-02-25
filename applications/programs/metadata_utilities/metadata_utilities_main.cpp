@@ -198,10 +198,10 @@ protected:
         if (checkParam("--query") &&
             (STR_EQUAL(getParam("--query"), "size") ||
              STR_EQUAL(getParam("--query"), "labels")))
-          mdIn.setMaxRows(1); //avoid parse the entire metadata
+            mdIn.setMaxRows(1); //avoid parse the entire metadata
 
         if (readIn)
-          mdIn.read(fn_in);
+            mdIn.read(fn_in);
         doWrite = true;
         fn_out = checkParam("-o") ? getParam("-o") : fn_in;
         mode = MD_OVERWRITE;
@@ -260,16 +260,16 @@ protected:
             //    mdIn.addLabel(labels[i]);//removeLabel(labels[i]);
         }
         else if ( operation == "drop_column")
-               {
-                   MDL::str2LabelVector(getParam("--operate", 1), labels);
-                   for (size_t i = 0; i < labels.size(); ++i)
-                       mdIn.removeLabel(labels[i]);
-               }
+        {
+            MDL::str2LabelVector(getParam("--operate", 1), labels);
+            for (size_t i = 0; i < labels.size(); ++i)
+                mdIn.removeLabel(labels[i]);
+        }
         else if ( operation == "rename_column")
-               {
-                   MDL::str2LabelVector(getParam("--operate", 1), labels);
-				   mdIn.renameColumn(labels[0],labels[1]);
-               }
+        {
+            MDL::str2LabelVector(getParam("--operate", 1), labels);
+            mdIn.renameColumn(labels[0],labels[1]);
+        }
         else if (operation == "modify_values")// modify_values
         {
             MDSql::activateMathExtensions();
@@ -277,43 +277,43 @@ protected:
         }
         else if (operation == "expand")// modify_values
         {
-          int factor = getIntParam("--operate", 1);
-          MetaData md;
-          for (int i = 0; i < factor; i++)
-            md.unionAll(mdIn);
+            int factor = getIntParam("--operate", 1);
+            MetaData md;
+            for (int i = 0; i < factor; i++)
+                md.unionAll(mdIn);
 
-          mdIn = md;
+            mdIn = md;
         }else
         {
             MetaData md(mdIn);
             if (operation == "sort")
             {
-            	String order=getParam("--operate",2);
+                String order=getParam("--operate",2);
                 mdIn.sort(md, getParam("--operate", 1),order=="asc");
             }
             else if (operation == "randomize")
                 mdIn.randomize(md);
             else if (operation == "bootstrap")
             {
-            	std::vector<size_t> objId;
-            	objId.resize(md.size());
-            	size_t n=0;
-            	FOR_ALL_OBJECTS_IN_METADATA(md)
-            	objId[n++]=__iter.objId;
-            	// md.getColumnValues(MDL_OBJID,objId); COSS: It should work, but it does not
-            	int N_1=((int)objId.size())-1;
-            	MDRow row;
-            	MetaData mdAux;
-            	FOR_ALL_OBJECTS_IN_METADATA(md)
-            	{
-            		md.getRow(row,objId[(size_t)rnd_unif(0,N_1)]);
-            		mdAux.setRow(row,mdAux.addObject());
-            	}
-            	mdIn.sort(mdAux,MDL_IMAGE);
+                std::vector<size_t> objId;
+                objId.resize(md.size());
+                size_t n=0;
+                FOR_ALL_OBJECTS_IN_METADATA(md)
+                objId[n++]=__iter.objId;
+                // md.getColumnValues(MDL_OBJID,objId); COSS: It should work, but it does not
+                int N_1=((int)objId.size())-1;
+                MDRow row;
+                MetaData mdAux;
+                FOR_ALL_OBJECTS_IN_METADATA(md)
+                {
+                    md.getRow(row,objId[(size_t)rnd_unif(0,N_1)]);
+                    mdAux.setRow(row,mdAux.addObject());
+                }
+                mdIn.sort(mdAux,MDL_IMAGE);
             }
             else if (operation == "random_subset")
             {
-            	MetaData mdAux, mdAux2;
+                MetaData mdAux, mdAux2;
                 mdAux.randomize(md);
                 md.clear();
                 mdAux2.selectPart(mdAux, 0, getIntParam("--operate", 1));
@@ -335,7 +335,13 @@ protected:
         MDValueGenerator * generator=NULL;
 
         // Select wich generator to use
-        if (operation == "constant")
+        if (operation == "expand")
+        {
+            mdIn.fillExpand(labels[0]);
+            return;
+        }
+        //generator = new MDExpandGenerator();
+        else if (operation == "constant")
             generator = new MDConstGenerator(getParam("--fill", 2));
         else if (operation.find("rand_") == 0)
         {
@@ -347,8 +353,6 @@ protected:
                 op3 = getDoubleParam("--fill", 4);
             generator = new MDRandGenerator(op1, op2, type, op3);
         }
-        else if (operation == "expand")
-            generator = new MDExpandGenerator();
         else if (operation == "lineal")
             generator = new MDLinealGenerator(getDoubleParam("--fill", 2), getDoubleParam("--fill", 3));
 
@@ -398,7 +402,7 @@ protected:
             std::cout << fn_in + " has labels: " << std::endl;
             MDLabelVector labels = mdIn.getActiveLabels();
             for (size_t i = 0; i < labels.size(); ++i)
-              std::cout << "  " << MDL::label2Str(labels[i]) << std::endl;
+                std::cout << "  " << MDL::label2Str(labels[i]) << std::endl;
         }
         else if (operation == "blocks")
         {

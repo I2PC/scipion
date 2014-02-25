@@ -1385,8 +1385,42 @@ void MetaData::merge(const MetaData &md2)
 
 void MetaData::fillExpand(MDLabel label)
 {
-    MDExpandGenerator generator;
-    SET_AND_FILL();
+	//aggregate metadata by label (that is, avoid repetitions
+    MetaData mdCTFs;
+    mdCTFs.aggregate(*this, AGGR_COUNT, label, label, MDL_COUNT);
+    mdCTFs.removeLabel(MDL_COUNT);
+    //read file-metadatas in new metadata
+    MetaData ctfModel;
+    FileName fn;
+    MDRow row;
+    size_t id;
+
+    FOR_ALL_OBJECTS_IN_METADATA(mdCTFs)
+    {
+    	id = __iter.objId;
+		if (mdCTFs.getValue(label, fn, id))
+		{
+			ctfModel.read(fn);
+			if (ctfModel.isEmpty())
+				REPORT_ERROR(ERR_VALUE_INCORRECT, "Only can expand non empty metadatas");
+			ctfModel.getRow(row, ctfModel.firstObject());
+			mdCTFs.setRow(row, id);
+		}
+    }
+	//join
+    MetaData md(*this);
+    join(md, mdCTFs, label);
+
+	//that is all
+
+//     MDExpandGenerator generator;
+//    FOR_ALL_OBJECTS_IN_METADATA(md)
+//    {
+//        fillValue(md, __iter.objId);
+//    }
+
+//    SET_AND_FILL();
+
 }
 
 void MetaData::fillConstant(MDLabel label, const String &value)
@@ -2109,6 +2143,7 @@ void MDValueGenerator::fill(MetaData &md)
     }
 }
 
+#ifdef NEVERDEFINED
 /* Class to fill columns with another metadata in row format */
 void MDExpandGenerator::fillValue(MetaData &md, size_t objId)
 {
@@ -2124,3 +2159,4 @@ void MDExpandGenerator::fillValue(MetaData &md, size_t objId)
         REPORT_ERROR(ERR_MD_BADLABEL, formatString("Can't expand missing label '%s'", MDL::label2Str(label).c_str()));
 }
 
+#endif

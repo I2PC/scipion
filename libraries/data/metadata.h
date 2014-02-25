@@ -1125,6 +1125,7 @@ public:
 }
 ;//end of class MDConstGenerator
 
+#ifdef NEVERDEFINED
 /** Class to fill columns with another metadata in row format */
 class MDExpandGenerator: public MDValueGenerator
 {
@@ -1136,6 +1137,7 @@ public:
     void fillValue(MetaData &md, size_t objId);
 }
 ;//end of class MDExpandGenerator
+#endif
 
 /** Class to fill columns with a lineal serie */
 class MDLinealGenerator: public MDValueGenerator

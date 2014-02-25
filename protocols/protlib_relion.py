@@ -165,7 +165,7 @@ class ProtRelionBase(XmippProtocol):
         md.read(self.ImgMd, 1) # Read only the first object in md
         
         if md.containsLabel(MDL_IMAGE):
-            if not self.Is2D:
+            if not getattr(self, 'Is2D', False):
                 self._validateInputSize('Ref3D', 'Reference volume', True, md, errors)
             self._validateInputSize('ReferenceMask', 'Reference mask', False, md, errors)
             self._validateInputSize('SolventMask','Solvent mask', False, md, errors)
