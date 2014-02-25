@@ -263,6 +263,7 @@ public class XmippMenuBar extends MenuBar
 
 		// image filters menu
 		addIJMenuItem(filtersmn, "Bandpass Filter", "Bandpass Filter...");
+                addIJMenuItem(filtersmn, "Gaussian Blur", "Gaussian Blur...");
 		addIJMenuItem(filtersmn, "Anisotropic Diffusion", "Anisotropic Diffusion...", IJRequirement.EIGHTBIT);
 		addIJMenuItem(filtersmn, "Mean Shift", "Mean Shift");
 
