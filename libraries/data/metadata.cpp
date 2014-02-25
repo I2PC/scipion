@@ -1633,7 +1633,6 @@ void MetaData::_setOperatesLabel(const MetaData &mdIn,
         REPORT_ERROR(ERR_MD, "Couldn't perform this operation if both metadata are empty");
     //Add label to be sure is present in output
     addLabel(label);
-
     mdIn.myMDSql->setOperate(this, label, operation);
 
 }
