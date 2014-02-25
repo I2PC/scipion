@@ -22,6 +22,7 @@ def readSetOfCoordinates(outputDir, micSet, coordSet):
     """
 
     addBsoftLabelAliases()
+    boxSize = None
     for mic in micSet:
         outputFile = join(outputDir, replaceBaseExt(mic.getFileName(), 'star'))
         scipionPosFile = join(outputDir, "scipion_" + replaceBaseExt(mic.getFileName(), 'pos'))
@@ -32,12 +33,17 @@ def readSetOfCoordinates(outputDir, micSet, coordSet):
         
         for objId in posMd:
             coord = rowToCoordinate(posMd, objId)
+            boxSize = 2 * posMd.getValue(xmipp.MDL_PICKING_PARTICLE_SIZE, objId)
             coord.setMicrograph(mic)
+            coord.setX(coord.getX())
+            coord.setY(coord.getY())
+            
             coordSet.append(coord)      
             # Add an unique ID that will be propagated to particles
             posMd.setValue(xmipp.MDL_ITEM_ID, long(coord.getObjId()), objId)
         if not posMd.isEmpty():
-            boxSize = posMd.getValue(xmipp.MDL_PICKING_PARTICLE_SIZE, posMd.firstObject())
             posMd.write("particles@%s"  % scipionPosFile)
-    
-    coordSet.setBoxSize(boxSize)
+            
+            
+             #reading origin.x value and converting to particle size, can change, we take last value
+            coordSet.setBoxSize(boxSize)
