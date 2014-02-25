@@ -248,7 +248,8 @@ class Image(EMObject):
     def __str__(self):
         """ String representation of an Image. """
         return "%s (index=%d, filename=%s)" % (self.getClassName(), self.getIndex(), self.getFileName())
-        
+    
+    
         
 class Micrograph(Image):
     """ Represents an EM Micrograph object """
@@ -696,6 +697,14 @@ class Coordinate(EMObject):
         
     def getMicId(self):
         return self._micId.get()
+    
+    def invertY(self):
+        if not self.getMicrograph() is None:
+            dims = self.getMicrograph().getDim()
+            height = dims[1]
+            self.setY(height - self.getY())
+        #else: error TODO
+            
         
     
 class SetOfCoordinates(Set):
