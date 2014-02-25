@@ -181,13 +181,19 @@ function getHeaderWithIcon(text, columnLayoutProperties){
 	if (columnLayoutProperties.allowSetEditable){
 		iconElements+="<span class=\"css_right fa-stack\"><a id=\""+ text+"_editable_icon\" href='#' onclick=\"enableDisableEditableColumn(event,this);\"><i class=\"fa fa-pencil fa-stack-1x"
 		iconElements+="\"></i><i id=\"banElement\" class=\"fa fa-stack-1x "
-		if (columnLayoutProperties.renderable){iconElements+="fa-times"}
+		if (columnLayoutProperties.renderable){
+			iconElements+="fa-times"
+		}
 		iconElements+="\"></i></a></span>"
 	}
 	
 	if (columnLayoutProperties.allowSetRenderable){
 		iconElements+="<span class=\"css_right\"><a id=\""+ text+"_renderable_icon\" href='#' onclick=\"javascript:enableDisableRenderColumn(event,this);\"><i class=\"fa "
-		if (columnLayoutProperties.renderable){iconElements+="fa-eye"}else{iconElements+="fa-eye-slash"}
+		if (columnLayoutProperties.renderable){
+			iconElements+="fa-eye"
+		}else{
+			iconElements+="fa-eye-slash"
+		}
 		iconElements+="\"></i></a></span>"
 	}
 	return iconElements; 
@@ -213,24 +219,36 @@ function getColumnsDefinition(){
 }
  
 function enableDisableColumn(event, element){
+	alert("entra")
 	//From the image element we get the column header index
 	var thCell= $(element).closest('th')
 	var iCol = $('th').index(thCell)
 	var iCol2 = oTable.fnVisibleToColumnIndex(iCol)
 	
 	var bVis = oTable.fnSettings().aoColumns[iCol2].bVisible;
-	oTable.fnSetColumnVis( iCol2, bVis ? false : true );
+	
+	bvis_var = bVis ? false : true ;
+			
+	oTable.fnSetColumnVis(iCol2,  bvis_var);
 
 //	Update table layout configuration model
 	var labelColumn = thCell.attr("id").split("___")[0]
 	jsonTableLayoutConfiguration.columnsLayout[labelColumn].columnLayoutProperties.visible=!bVis
 	
+	//Update the session variable
+//	var status = "disable";
+//	if (bvis_var){
+//		status = "enable";
+//	}
+//	updateSession("visible", status)
+//	
 	//This will avoid column sorting
 	event.stopPropagation() 
+
 }
  
 function enableDisableRenderColumn(event, element){
-//	Switch button from on to off or viceversa
+	//Switch button from on to off or viceversa
 	$(element).find("i").toggleClass("fa-eye").toggleClass("fa-eye-slash")
 	
 	//From the image element we get the column header index
@@ -249,12 +267,20 @@ function enableDisableRenderColumn(event, element){
 		$(this).find("span").toggle()
 	})
 
-//	Update table layout configuration model
+	//Update table layout configuration model
 	var labelColumn = thCell.attr("id").split("___")[0]
 	jsonTableLayoutConfiguration.columnsLayout[labelColumn].columnLayoutProperties.renderable=$(element).find("i").hasClass("fa-eye")
 	
+	//Update the session variable
+	var status = "enable";
+	if ($(element).find("i").attr("class")=="fa fa-eye-slash"){
+		status = "disable";
+	}
+	updateSession("render", status)
+
 	//This will avoid column sorting
 	event.stopPropagation() 
+	
 }
  
 function enableDisableEditableColumn(event, element){
@@ -269,19 +295,24 @@ function enableDisableEditableColumn(event, element){
 	if (!$(element).find("#banElement").hasClass("fa-times")){
 		$('td:nth-child('+(iCol+1)+')', nTrs).addClass('editable')
 		setElementsEditable('td:nth-child('+(iCol+1)+')')
+		var status = "enable";
 	}
 	else{
 		$('td:nth-child('+(iCol+1)+')', nTrs).removeClass('editable')
 		$('td:nth-child('+(iCol+1)+')', nTrs).unbind('click');
+		var status = "disable";
 	}
 	$('td:nth-child('+(iCol+1)+')', nTrs).each(function(){
 		$(this).toggleClass("editable")
 	})
 	
-//	Update table layout configuration model
+	//Update table layout configuration model
 	var labelColumn = thCell.attr("id").split("___")[0]
 	jsonTableLayoutConfiguration.columnsLayout[labelColumn].columnLayoutProperties.editable=!$(element).find("#banElement").hasClass("fa-times")
 	
+	//Update the session variable
+	updateSession("editable", status)
+
 	//This will avoid column sorting
 	event.stopPropagation()
 	
@@ -531,3 +562,14 @@ function multipleSelect(mode){
 		}	
 	})
 }
+
+
+
+function updateSession(type, status){	
+	$.ajax({
+		type : "GET", 
+		url : "/update_session_table/?type="+type+"&option=" + status
+	});
+}
+
+

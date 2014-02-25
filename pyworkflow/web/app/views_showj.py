@@ -75,13 +75,18 @@ def getTableLayoutConfig(request, dataset, tableDataset, inputParameters, extraP
     """ Load table layout configuration. How to display columns and attributes (visible, render, editable) """ 
     
     if firstTime:
-        colums_properties = getExtraParameters(extraParameters, tableDataset)
-        request.session['defaultColumnsLayoutProperties'] = colums_properties
+        columns_properties = getExtraParameters(extraParameters, tableDataset)
+        request.session['defaultColumnsLayoutProperties'] = columns_properties
+
+        layoutConfig = TableLayoutConfiguration(dataset, tableDataset, inputParameters['allowRender'], columns_properties)
+        request.session['tableLayoutConfiguration'] = layoutConfig
+        
+        for col in layoutConfig.columnsLayout.values():
+            print "val!! ", col.columnLayoutProperties.getValues() 
+    
     else:
-        colums_properties = request.session['defaultColumnsLayoutProperties']
-        
-    layoutConfig = TableLayoutConfiguration(dataset, tableDataset, inputParameters['allowRender'], colums_properties)
-        
+        layoutConfig = request.session['tableLayoutConfiguration'] 
+            
     return layoutConfig
 
 
@@ -140,8 +145,12 @@ def setRenderingOptions(request, dataset, tableDataset, inputParameters):
     
 
 def showj(request, inputParameters=None, extraParameters=None, firstTime=False):
+    
+    #=TIME CONTROL==============================================================
     from datetime import datetime
     start = datetime.now()
+    print "INIT SHOWJ: ", datetime.now()-start
+    #===========================================================================
     
     #############
     # WEB INPUT PARAMETERS
@@ -170,11 +179,9 @@ def showj(request, inputParameters=None, extraParameters=None, firstTime=False):
         dataset, tableDataset = setLabelToRender(request, dataset, tableDataset, inputParameters, extraParameters, firstTime)
         
         if inputParameters['labelsToRenderComboBox'] == '':
-            
             inputParameters['zoom'] = 0
             _imageDimensions = None
             dataset.setNumberSlices(0)
-            
         else:
             dataset, volPath, _stats, _imageDimensions = setRenderingOptions(request, dataset, tableDataset, inputParameters)
     
@@ -185,11 +192,14 @@ def showj(request, inputParameters=None, extraParameters=None, firstTime=False):
         inputParameters['tableLayoutConfiguration'] = None
         volPath = inputParameters['path']
 
-
     context, return_page = createContextShowj(request, inputParameters, dataset, tableDataset, _stats, volPath)
 
-    render_var =render_to_response(return_page, RequestContext(request, context))
-    print "post render", datetime.now()-start    
+    render_var = render_to_response(return_page, RequestContext(request, context))
+    
+    #=TIME CONTROL==============================================================
+    print "FINISH SHOWJ: ", datetime.now()-start    
+    #===========================================================================
+    
     return render_var
 
 
@@ -254,7 +264,7 @@ def createContext(dataset, tableDataset, tableLayoutConfiguration, request, show
 
 
 def getExtraParameters(extraParameters, tableDataset):
-    print "extraParameters",extraParameters 
+#    print "extraParameters",extraParameters 
     defaultColumnsLayoutProperties = None
     if extraParameters != None and extraParameters != {}:
         defaultColumnsLayoutProperties = {k.getName(): {} for k in tableDataset.iterColumns()}
@@ -286,7 +296,7 @@ def save_showj_table(request):
         changes = request.POST.get('changes')
         jsonChanges = json.loads(changes)
         
-        print "jsonChanges",jsonChanges 
+#        print "jsonChanges",jsonChanges 
         
         dataset=request.session['dataset']
         blockComboBox=request.session['blockComboBox']
@@ -520,3 +530,15 @@ def calculateThreshold(params):
 #    print "maxStats:", params[3]
     
     return threshold
+
+
+def updateSessionTable(request):
+    type = request.GET.get('type', None)
+    option = request.GET.get('option', None)
+    
+    print "type: ", type
+    print "option: ", option
+    
+    return HttpResponse(mimetype='application/javascript')
+
+

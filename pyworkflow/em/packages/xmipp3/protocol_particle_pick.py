@@ -135,7 +135,7 @@ class XmippProtParticlePicking(ProtParticlePicking, XmippProtocol):
         return  "Number of particles picked: %d (from %d micrographs)" % (picked, self.inputMicrographs.get().getSize())
     
     def _methods(self):
-        methodsMsgs = []
+        methodsMsgs = self.summary()
         #TODO: Provide summary with more details
         return methodsMsgs
     
@@ -144,8 +144,23 @@ class XmippProtParticlePicking(ProtParticlePicking, XmippProtocol):
         if not hasattr(self, 'outputCoordinates'):
             summary.append("Output coordinates not ready yet.") 
         else:
-            summary.append("Number of particles picked: %d (from %d micrographs)" % (self.outputCoordinates.getSize(), self.inputMicrographs.get().getSize()))
+            
+            summary.append("Particles picked: %d (from %d micrographs)" % (self.outputCoordinates.getSize(), self.inputMicrographs.get().getSize()))
+            # Read the picking state from the config.xmd metadata
+            md = xmipp.MetaData('properties@' + join(self._getExtraPath(), 'config.xmd'))
+            configobj = md.firstObject()
+            size = md.getValue(xmipp.MDL_PICKING_PARTICLE_SIZE, configobj)
+            state = md.getValue(xmipp.MDL_PICKING_STATE, configobj)
+            if(state is "Manual"):
+                autopick = "No"
+            else:
+                autopick = "Yes"
+            activemic = md.getValue(xmipp.MDL_MICROGRAPH, configobj)
+            summary.append("Particle size: %d" % size)
+            summary.append("Autopick: " + autopick)
+            summary.append("Last micrograph: " + activemic)
         return summary
+    
     
     
 
