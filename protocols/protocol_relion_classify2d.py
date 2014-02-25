@@ -146,11 +146,8 @@ class ProtRelion2DClassifier(ProtRelionBase):
                 }
         iover = 1 #TODO: check this DROP THIS
         
-        if self.PerformLocalAngularSearch:
-            args['--sigma_ang'] = self.LocalAngularSearchRange / 3.
- 
          # Sampling stuff
-        args['--psi_step'] = self.InPlaneAngularSamplingDeg           
+        args['--psi_step'] = self.InPlaneAngularSamplingDeg * pow(2, iover)        
         args['--offset_range'] = self.OffsetSearchRangePix
         args['--offset_step']  = self.OffsetSearchStepPix * pow(2, iover)
 
