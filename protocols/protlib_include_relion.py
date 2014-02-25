@@ -73,7 +73,8 @@ optimiserFileName= ""
 # {condition}(not DoContinue) {section} Input
 #------------------------------------------------------------------------------------------
 # {condition}(DoClassify) Number of classes
-"""The number of classes (K) for a multi-reference refinement. 
+"""
+The number of classes (K) for a multi-reference refinement. 
 These classes will be made in an unsupervised manner from a single 
 reference by division of the data into random subsets during the 
 first iteration.
@@ -216,12 +217,12 @@ NumberOfIterations = 25
 # Regularisation paramter T:
 """
 Bayes law strictly determines the relative weight between the contribution of the experimental data and the prior.
- However, in practice one may need to adjust this weight to put slightly more weight on the experimental 
- data to allow optimal results. Values greater than 1 for this regularisation parameter 
- (T in the JMB2011 paper) put more weight on the experimental data. Values around 2-4
-  have been observed to be useful for 3D refinements, values of 1-2 for 2D refinements.
-   Too small values yield too-low resolution structures; too high values result in
-    over-estimated resolutions and overfitting.
+However, in practice one may need to adjust this weight to put slightly more weight on the experimental 
+data to allow optimal results. Values greater than 1 for this regularisation parameter 
+(T in the JMB2011 paper) put more weight on the experimental data. Values around 2-4
+have been observed to be useful for 3D refinements, values of 1-2 for 2D refinements.
+Too small values yield too-low resolution structures; too high values result in
+over-estimated resolutions and overfitting.
 """
 RegularisationParamT = 1
 
@@ -235,8 +236,9 @@ size no masking will be performed.
 
 The same radius will also be used for a spherical mask of the
 reference structures if no user-provided mask is specified.
+If -1 is used, then half of the particles size will be used as radius.
 """
-MaskRadiusA = 200
+MaskRadiusA = -1
 
 # {condition}(DoClassify) {list_combo}(Yes: fill with zeros,No: fill with random noise) Mask individual particles with zero?
 """
@@ -284,6 +286,16 @@ SolventMask = ""
 """
 AngularSamplingDeg = '7.5'
 
+<<<<<<< Updated upstream
+=======
+If auto-sampling is used, this will be the value for the first 
+iteration(s) only, and the sampling rate will be increased 
+automatically after that.
+"""
+InPlaneAngularSamplingDeg = 5
+'''
+    linesStr += '''
+>>>>>>> Stashed changes
 # {condition}(DoClassify or not DoContinue) Offset search range (pix):
 """Probabilities will be calculated only for translations in a circle with this radius (in pixels). The center of this circle changes at every iteration and is placed at the optimal translation for each image in the previous iteration.
 """

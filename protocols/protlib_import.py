@@ -76,7 +76,7 @@ XMIPP_RELION_LABELS = {
                        ,MDL_MAGNIFICATION:     'rlnMagnification'
                        ,MDL_MICROGRAPH:        'rlnMicrographName'
                        ,MDL_AVGPMAX:           'rlnAveragePmax'
-                       ,MDL_REF3D:             'rlnClassNumber'
+                       ,MDL_REF:               'rlnClassNumber'
                        ,MDL_RESOLUTION_FREQREAL:'rlnAngstromResolution'
                        ,MDL_RESOLUTION_FRC:     'rlnGoldStandardFsc'
                        ,MDL_RESOLUTION_FREQ:    'rlnResolution'
