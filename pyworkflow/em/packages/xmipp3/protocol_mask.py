@@ -1,6 +1,7 @@
 # **************************************************************************
 # *
 # * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
+# *              Josue Gomez Blanco     (jgomez@cnb.csic.es)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -94,7 +95,7 @@ class XmippProtMask():
         return self._args % locals()
 
 
-class XmippProtMaskParticles(XmippProtMask, XmippProcessParticles, XmippGeometricalMask2D):
+class XmippProtMaskParticles(XmippProcessParticles, XmippProtMask, XmippGeometricalMask2D):
     """ Apply some filter to SetOfParticles """
     _label = 'mask particles'
     
@@ -127,7 +128,7 @@ class XmippProtMaskParticles(XmippProtMask, XmippProcessParticles, XmippGeometri
         return args
 
 
-class XmippProtMaskVolumes(XmippProtMask, XmippProcessVolumes, XmippGeometricalMask3D):
+class XmippProtMaskVolumes(XmippProcessVolumes, XmippProtMask, XmippGeometricalMask3D):
     """ Apply mask to volume or SetOfVolumes """
     _label = 'apply mask'
     
