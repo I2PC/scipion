@@ -642,7 +642,6 @@ TEST_F( MetadataTest, FillExpand)
     md.setValue(MDL_IMAGE,(String)"image3",id);
     md.setValue(MDL_CTF_MODEL,(String)sfn2,id);
     // call fillExpand
-    md.write("/tmp/md1.xmd");
     md.fillExpand(MDL_CTF_MODEL);
     //create md with results
     MetaData mdResults;
@@ -668,9 +667,8 @@ TEST_F( MetadataTest, FillExpand)
     //mdResults.setValue(MDL_CTF_DEFOCUSU,15000.,id);
     //EXPECT_NE(md,mdResults);
 
-    ////unlink(sfn1);
-    ////unlink(sfn2);
-    md.write("/tmp/md2.xmd");
+    unlink(sfn1);
+    unlink(sfn2);
     XMIPP_CATCH
 }
 
