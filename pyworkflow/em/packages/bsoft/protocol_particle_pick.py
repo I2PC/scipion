@@ -91,7 +91,7 @@ class BsoftProtParticlePicking(ProtParticlePicking):
         self._defineSourceRelation(self.inputMics, coordSet)
         
     def _methods(self):
-        methodsMsgs = []
+        methodsMsgs = self.summary()
         #TODO: Provide summary with more details
         return methodsMsgs
     
@@ -100,7 +100,8 @@ class BsoftProtParticlePicking(ProtParticlePicking):
         if not hasattr(self, 'outputCoordinates'):
             summary.append("Output coordinates not ready yet.") 
         else:
-            summary.append("Number of particles picked: %d (from %d micrographs)" % (self.outputCoordinates.getSize(), self.inputMicrographs.get().getSize()))
+            summary.append("Particles picked: %d (from %d micrographs)" % (self.outputCoordinates.getSize(), self.inputMicrographs.get().getSize()))
+            summary.append("Particle size:%d" % self.outputCoordinates.getBoxSize())
         return summary
 
     def __str__(self):
@@ -110,7 +111,7 @@ class BsoftProtParticlePicking(ProtParticlePicking):
             picked = 0
         else:
             picked = self.outputCoordinates.getSize()
-        return  "Number of particles picked: %d (from %d micrographs)" % (picked, self.inputMicrographs.get().getSize())
+        return  "Particles picked: %d (from %d micrographs)" % (picked, self.inputMicrographs.get().getSize())
     
   
 

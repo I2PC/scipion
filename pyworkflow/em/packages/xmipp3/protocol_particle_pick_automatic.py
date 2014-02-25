@@ -165,11 +165,17 @@ class XmippParticlePickingAutomatic(ProtParticlePicking, XmippProtocol):
             summary.append("Output coordinates not ready yet.") 
         else:
             summary.append("Previous run: " + self.xmippParticlePicking.get().getNameId())
-            summary.append("Number of particles picked: %d (from %d micrographs)" % (self.outputCoordinates.getSize(), self.inputMicrographs.get().getSize()))
+            summary.append("Particles picked: %d (from %d micrographs)" % (self.outputCoordinates.getSize(), self.inputMicrographs.get().getSize()))
+            md = xmipp.MetaData('properties@' + join(self._getExtraPath(), 'config.xmd'))
+            configobj = md.firstObject()
+            size = md.getValue(xmipp.MDL_PICKING_PARTICLE_SIZE, configobj)
+            
+            summary.append("Particle size:%d" % size)
+            
         return summary
     
     def _methods(self):
-        methodsMsgs = []
+        methodsMsgs = self.summary()
         #TODO: Provide summary with more details
         return methodsMsgs
     
