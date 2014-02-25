@@ -1409,17 +1409,7 @@ void MetaData::fillExpand(MDLabel label)
     }
 	//join
     MetaData md(*this);
-    join(md, mdCTFs, label);
-
-	//that is all
-
-//     MDExpandGenerator generator;
-//    FOR_ALL_OBJECTS_IN_METADATA(md)
-//    {
-//        fillValue(md, __iter.objId);
-//    }
-
-//    SET_AND_FILL();
+    join1(md, mdCTFs, label);
 
 }
 
