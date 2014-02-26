@@ -143,7 +143,7 @@ class TestFrealignProtocol(TestXmippBase):
                                     innerRadius=150, outerRadius=315, symmetry='I2', PhaseResidual=70,
                                     resolution=20, runMode=1, numberOfMpi=1, numberOfThreads=4)
         protFrealign.inputParticles.set(protExtract.outputParticles)
-        protFrealign.input3DReferences.set(protImportVol.outputVolumes)
+        protFrealign.input3DReferences.set(protImportVol.outputVolume)
 
         self.proj.launchProtocol(protFrealign, wait=True)        
         

@@ -28,9 +28,10 @@ This module contains the protocol for CTF estimation with ctffind3
 """
 
 
-from pyworkflow.em import *  
-from pyworkflow.utils.which import which
 from pyworkflow.utils.path import makePath, replaceBaseExt, join, basename
+from pyworkflow.em import *
+from brandeis import *
+# from pyworkflow.utils.which import which
 
 
 class ProtCTFFind(ProtCTFMicrographs):
@@ -45,11 +46,10 @@ class ProtCTFFind(ProtCTFMicrographs):
         sampling = self.inputMics.getSamplingRate()
         self._params['lowRes'] = sampling / self._params['lowRes']
         self._params['highRes'] = sampling / self._params['highRes']        
-        
-        if which('ctffind3.exe') is '':
-            raise Exception('Missing ctffind3.exe')
+        if not exists(CTFFIND_PATH):
+            raise Exception('Missing ' + CTFFIND)
          
-        self._program = 'export NATIVEMTZ=kk ; ' + which('ctffind3.exe')
+        self._program = 'export NATIVEMTZ=kk ; ' + CTFFIND_PATH
         self._args = """   << eof > %(ctffindOut)s
 %(micFn)s
 %(ctffindPSD)s
@@ -129,7 +129,8 @@ class ProtCTFFind(ProtCTFMicrographs):
 
     def _validate(self):
         errors = []
-        if which('ctffind3.exe') is '':
+        ctffind = join(os.environ['CTFFIND_HOME'], 'ctffind3.exe')
+        if not exists(ctffind):
             errors.append('Missing ctffind3.exe')
         return errors
             

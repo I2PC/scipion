@@ -246,10 +246,16 @@ class TestMixedWorkflow_2(TestWorkflow):
         #self.validateFiles('protDownsampling', protDownsampling) 
 
         # Now estimate CTF on the downsampled micrographs 
-        print "Performing CTF estimation..."   
-        protCTF = XmippProtCTFMicrographs(numberOfThreads=3, runMode=1)         
+        print "Performing CTFfind..."   
+        protCTF = ProtCTFFind(runMode=1, numberOfMpi=1, numberOfThreads=3)         
         protCTF.inputMicrographs.set(protDownsampling.outputMicrographs)        
         self.proj.launchProtocol(protCTF, wait=True)
+        
+#         # Now estimate CTF on the downsampled micrographs 
+#         print "Performing CTF estimation..."   
+#         protCTF = XmippProtCTFMicrographs(numberOfThreads=3, runMode=1)         
+#         protCTF.inputMicrographs.set(protDownsampling.outputMicrographs)        
+#         self.proj.launchProtocol(protCTF, wait=True)
         
         #self.validateFiles('protCTF', protCTF) 
         print "Running Eman fake particle picking..."
