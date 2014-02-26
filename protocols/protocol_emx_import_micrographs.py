@@ -130,8 +130,8 @@ class ProtEmxImportMicrographs(XmippProtocol):
     def summary(self):
         self._loadInfo()
         summary = ['Input EMX file: [%s]' % self.EmxFileName,
-                   'Main class: <%s>' % self.classElement,
-                   'Binary file: [%s]' % self.binaryFile]            
+                   'Main class: <%s>'     % self.classElement,
+                   'Binary file: [%s]'    % self.binaryFile]            
         return summary
     
     def visualize(self):
