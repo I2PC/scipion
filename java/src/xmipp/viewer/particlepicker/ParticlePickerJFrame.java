@@ -111,7 +111,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 
 	public ParticlePickerJFrame(ParticlePicker picker)
 	{
-		XmippApplication.addInstance();
+		XmippApplication.addInstance(false);
 		setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
 		addWindowListener(new WindowAdapter()
 		{
@@ -816,9 +816,10 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		dispose();
 		if (getCanvas() != null)
 			getCanvas().getIw().close();
-		if (XmippUtil.getXmippImageJ() != null)
-			XmippUtil.getXmippImageJ().close();
-		XmippApplication.removeInstance();
+
+		
+		XmippApplication.removeInstance(false);
+
 	}
 
 	public abstract String importParticles(Format format, String dir, float scale, boolean invertx, boolean inverty);

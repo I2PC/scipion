@@ -12,9 +12,5 @@ public class XmippImageJ extends ImageJ
 		setVisible(false);
 	}
 	
-	public void close()
-	{
-		new Executer("Quit", null);
-		
-	}
+	
 }

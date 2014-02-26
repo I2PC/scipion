@@ -373,7 +373,7 @@ public class XmippMenuBar extends MenuBar
             Frame w = (Frame)xw;
             w.setVisible(false);
             w.dispose();
-            XmippApplication.removeInstance();
+            XmippApplication.removeInstance(false);
         }
 
 	
