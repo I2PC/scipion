@@ -1387,8 +1387,7 @@ void MetaData::fillExpand(MDLabel label)
 {
 	//aggregate metadata by label (that is, avoid repetitions
     MetaData mdCTFs;
-    mdCTFs.aggregate(*this, AGGR_COUNT, label, label, MDL_COUNT);
-    mdCTFs.removeLabel(MDL_COUNT);
+    mdCTFs.distinct(*this,label);
     //read file-metadatas in new metadata
     MetaData ctfModel;
     FileName fn;
@@ -1599,7 +1598,9 @@ void MetaData::aggregateGroupBy(const MetaData &mdIn,
 }
 
 //-------------Set Operations ----------------------
-void MetaData::_setOperates(const MetaData &mdIn, const MDLabel label, SetOperation operation)
+void MetaData::_setOperates(const MetaData &mdIn,
+		                    const MDLabel label,
+		                    SetOperation operation)
 {
     if (this == &mdIn) //not sense to operate on same metadata
         REPORT_ERROR(ERR_MD, "Couldn't perform this operation on input metadata");
@@ -1610,6 +1611,20 @@ void MetaData::_setOperates(const MetaData &mdIn, const MDLabel label, SetOperat
         addLabel(mdIn.activeLabels[i]);
 
     mdIn.myMDSql->setOperate(this, label, operation);
+}
+
+void MetaData::_setOperatesLabel(const MetaData &mdIn,
+		                    const MDLabel label,
+		                    SetOperation operation)
+{
+    if (this == &mdIn) //not sense to operate on same metadata
+        REPORT_ERROR(ERR_MD, "Couldn't perform this operation on input metadata");
+    if (mdIn.size() == 0)
+        REPORT_ERROR(ERR_MD, "Couldn't perform this operation if both metadata are empty");
+    //Add label to be sure is present in output
+    addLabel(label);
+    mdIn.myMDSql->setOperate(this, label, operation);
+
 }
 
 void MetaData::_setOperates(const MetaData &mdInLeft,
@@ -1658,6 +1673,13 @@ void MetaData::removeDuplicates(MetaData &MDin, MDLabel label)
     if(MDin.isEmpty())
         return;
     _setOperates(MDin, label, REMOVE_DUPLICATE);
+}
+
+void MetaData::distinct(MetaData &MDin, MDLabel label)
+{
+    if(MDin.isEmpty())
+        return;
+    _setOperatesLabel(MDin, label, DISTINCT);
 }
 
 void MetaData::removeDisabled()

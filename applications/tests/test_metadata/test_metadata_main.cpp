@@ -1145,6 +1145,28 @@ TEST_F( MetadataTest, RemoveDuplicates)
     EXPECT_EQ(auxMetadata1,mDsource);//print mDjoin if error
 }
 
+TEST_F( MetadataTest, Distinct)
+{
+    MetaData auxMetadata1,auxMetadata3;
+    id = auxMetadata3.addObject();
+    auxMetadata3.setValue(MDL_X,1.,id);
+    auxMetadata3.setValue(MDL_Y,2.,id);
+    id = auxMetadata3.addObject();
+    auxMetadata3.setValue(MDL_X,3.,id);
+    auxMetadata3.setValue(MDL_Y,4.,id);
+    id = auxMetadata3.addObject();
+    auxMetadata3.setValue(MDL_X,1.,id);
+    auxMetadata3.setValue(MDL_Y,2.,id);
+    auxMetadata1.distinct(auxMetadata3,MDL_X);
+    auxMetadata3.clear();
+    id = auxMetadata3.addObject();
+    auxMetadata3.setValue(MDL_X,1.,id);
+    id = auxMetadata3.addObject();
+    auxMetadata3.setValue(MDL_X,3.,id);
+
+    EXPECT_EQ(auxMetadata1,auxMetadata3);
+}
+
 TEST_F( MetadataTest, Removelabel)
 {
     MetaData auxMetadata = mDunion;
