@@ -186,7 +186,7 @@ def emxCTFToXmipp(emxData,
         for var in CTF.ctfVarLabels.keys():
             setattr(ctf, var, object.get(var))
 
-    if ctfRoot:# is None:
+    if not ctfRoot:# is None:
         ctfRoot = dirname(outputFileName)
 
     for micrograph in emxData.iterClasses(MICROGRAPH):
