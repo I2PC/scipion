@@ -219,7 +219,6 @@ function getColumnsDefinition(){
 }
  
 function enableDisableColumn(event, element){
-	alert("entra")
 	//From the image element we get the column header index
 	var thCell= $(element).closest('th')
 	var iCol = $('th').index(thCell)
@@ -241,7 +240,7 @@ function enableDisableColumn(event, element){
 //		status = "enable";
 //	}
 //	updateSession("visible", status)
-//	
+
 	//This will avoid column sorting
 	event.stopPropagation() 
 
@@ -276,7 +275,7 @@ function enableDisableRenderColumn(event, element){
 	if ($(element).find("i").attr("class")=="fa fa-eye-slash"){
 		status = "disable";
 	}
-	updateSession("render", status)
+	updateSession(labelColumn, "renderable", status)
 
 	//This will avoid column sorting
 	event.stopPropagation() 
@@ -311,7 +310,7 @@ function enableDisableEditableColumn(event, element){
 	jsonTableLayoutConfiguration.columnsLayout[labelColumn].columnLayoutProperties.editable=!$(element).find("#banElement").hasClass("fa-times")
 	
 	//Update the session variable
-	updateSession("editable", status)
+	updateSession(labelColumn, "editable", status)
 
 	//This will avoid column sorting
 	event.stopPropagation()
@@ -510,20 +509,23 @@ function showTableConfig(){
 function saveTableConfiguration(){
 	for (var label in jsonTableLayoutConfiguration.columnsLayout){ 
 		columnLayoutProperties=jsonTableLayoutConfiguration.columnsLayout[label].columnLayoutProperties
-		columnLayoutProperties.visible=$("#"+label+"_visible").prop('checked')
+		columnLayoutProperties.visible = $("#"+label+"_visible").prop('checked')
+		
 		//From the image element we get the column header index
-		columnId=oTable.fnGetColumnIndex(label)
+		columnId = oTable.fnGetColumnIndex(label)
 		oTable.fnSetColumnVis(columnId, columnLayoutProperties.visible);
 		
-		newValue=$("#"+label+"_renderable").prop('checked')
+		var newValue = ""
+		
+		newValue = $("#"+label+"_renderable").prop('checked')
 		if (newValue != columnLayoutProperties.renderable){
-			columnLayoutProperties.renderable=newValue
+			columnLayoutProperties.renderable = newValue
 			$("#"+label+"_renderable_icon").find("i").toggleClass("fa-eye").toggleClass("fa-eye-slash")
 		}
 		
-		newValue=$("#"+label+"_editable").prop('checked')
+		newValue = $("#"+label+"_editable").prop('checked')
 		if (newValue != columnLayoutProperties.editable){
-			columnLayoutProperties.editable=newValue
+			columnLayoutProperties.editable = newValue
 			$("#"+label+"_editable_icon").find("#banElement").toggleClass("fa-times")
 		}
 		
@@ -563,12 +565,14 @@ function multipleSelect(mode){
 	})
 }
 
-
-
-function updateSession(type, status){	
+function updateSession(label, type, status){	
 	$.ajax({
 		type : "GET", 
-		url : "/update_session_table/?type="+type+"&option=" + status
+		url : "/update_session_table/?label="+label+"&type="+type+"&option=" + status,
+		success: function(){
+//			alert(jsonTableLayoutConfiguration.columnsLayout[label].columnLayoutProperties["renderable"]);
+		}
+	
 	});
 }
 

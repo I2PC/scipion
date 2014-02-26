@@ -81,11 +81,10 @@ def getTableLayoutConfig(request, dataset, tableDataset, inputParameters, extraP
         layoutConfig = TableLayoutConfiguration(dataset, tableDataset, inputParameters['allowRender'], columns_properties)
         request.session['tableLayoutConfiguration'] = layoutConfig
         
-        for col in layoutConfig.columnsLayout.values():
-            print "val!! ", col.columnLayoutProperties.getValues() 
     
     else:
         layoutConfig = request.session['tableLayoutConfiguration'] 
+            
             
     return layoutConfig
 
@@ -174,6 +173,9 @@ def showj(request, inputParameters=None, extraParameters=None, firstTime=False):
         
         #Load table layout configuration. How to display columns and attributes (visible, render, editable)  
         inputParameters['tableLayoutConfiguration'] = getTableLayoutConfig(request, dataset, tableDataset, inputParameters, extraParameters, firstTime)
+    
+        for col in inputParameters['tableLayoutConfiguration'].columnsLayout.values():
+            print "val!! ", col.columnLayoutProperties.getValues() 
     
         #If no label is set to render, set the first one if exists
         dataset, tableDataset = setLabelToRender(request, dataset, tableDataset, inputParameters, extraParameters, firstTime)
@@ -483,7 +485,6 @@ def create_context_volume(request, inputParameters, volPath, param_stats):
     elif inputParameters['mode'] == 'volume_chimera':   
         context.update(create_context_chimera(volPath))
         
-
     return context
         
 
@@ -533,12 +534,16 @@ def calculateThreshold(params):
 
 
 def updateSessionTable(request):
+    label = request.GET.get('label', None)
     type = request.GET.get('type', None)
     option = request.GET.get('option', None)
     
-    print "type: ", type
-    print "option: ", option
-    
+    if type == "renderable":
+        request.session["tableLayoutConfiguration"].columnsLayout[label].renderable = option
+    elif type == "editable":    
+        request.session["tableLayoutConfiguration"].columnsLayout[label].editable = option
+        
+#    print request.session["tableLayoutConfiguration"].columnsLayout[label].renderable
+     
     return HttpResponse(mimetype='application/javascript')
-
 
