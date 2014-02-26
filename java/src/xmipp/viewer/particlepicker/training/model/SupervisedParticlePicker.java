@@ -75,8 +75,7 @@ public class SupervisedParticlePicker extends ParticlePicker
 				radialtemplates = new ImageGeneric(ImageGeneric.Float);
 				radialtemplates.resize(getSize(), getSize(), 1, getTemplatesNumber());
 			}
-
-			templates.getRadialAvg(radialtemplates);
+                        templates.getRadialAvg(radialtemplates);
 
 			for (SupervisedParticlePickerMicrograph m : micrographs)
 				loadMicrographData(m);
@@ -772,6 +771,16 @@ public class SupervisedParticlePicker extends ParticlePicker
 			importAllParticles(particlesfile);
 			return "";
 		}
+                if(f == Format.Xmipp301)
+                {
+                    String configfile = String.format("%s%s%s", path, File.separator, "config.xmd");
+                    if(new File(configfile).exists())
+                    {
+                        MetaData configmd = new MetaData(configfile);
+                        int size = configmd.getValueInt(MDLabel.MDL_PICKING_PARTICLE_SIZE, configmd.firstObject());
+                        setSize(size);
+                    }
+                }
 		for (SupervisedParticlePickerMicrograph m : micrographs)
 		{
 			filename = getImportMicrographName(path, m.getFile(), f);
@@ -783,6 +792,8 @@ public class SupervisedParticlePicker extends ParticlePicker
 
 		return result;
 	}// function importParticlesFromFolder
+        
+        
 
 	/** Return the number of particles imported from a file */
 	public String importParticlesFromFile(String path, Format f, SupervisedParticlePickerMicrograph m, float scale, boolean invertx, boolean inverty)

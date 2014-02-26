@@ -491,17 +491,7 @@ public abstract class ParticlePicker {
                 }
                 break;
             case Xmipp301:
-                 blockname = getParticlesBlockName(f); //only used with Xmipp
-                if (MetaData.containsBlock(path, blockname)) {
-                    md.read(getParticlesBlock(f, path));
-                }
-                if (MetaData.containsBlock(path, particlesAutoBlock)) {
-                    MetaData mdAuto = new MetaData();
-                    mdAuto.read(getParticlesAutoBlock(path));
-                    mdAuto.removeDisabled();
-                    md.unionAll(mdAuto);
-                    mdAuto.destroy();
-                }
+                fillParticlesMdFromXmipp301File(path, m, md);
                 break;
             case Eman:
                 fillParticlesMdFromEmanFile(path, m, md, scale);
@@ -522,6 +512,21 @@ public abstract class ParticlePicker {
         }
 
     }// function importParticlesFromFile
+    
+    public void fillParticlesMdFromXmipp301File(String file, Micrograph m, MetaData md) {
+         String blockname = getParticlesBlockName(Format.Xmipp301); //only used with Xmipp
+                if (MetaData.containsBlock(file, blockname)) {
+                    md.read(getParticlesBlock(Format.Xmipp301, file));
+                }
+                if (MetaData.containsBlock(file, particlesAutoBlock)) {
+                    MetaData mdAuto = new MetaData();
+                    mdAuto.read(getParticlesAutoBlock(file));
+                    mdAuto.removeDisabled();
+                    md.unionAll(mdAuto);
+                    mdAuto.destroy();
+                }
+                
+    }
 
     public void fillParticlesMdFromEmanFile(String file, Micrograph m, MetaData md, float scale) {
         // inverty = true;

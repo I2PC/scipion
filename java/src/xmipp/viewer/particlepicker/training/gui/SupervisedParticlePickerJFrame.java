@@ -188,7 +188,7 @@ public class SupervisedParticlePickerJFrame extends ParticlePickerJFrame {
             getCanvas().repaint();
             updateMicrographsModel(true);
             getCanvas().refreshActive(null);
-
+            sizetf.setValue(ppicker.getSize());
             new UpdateTemplatesTask(ppicker, ppicker.getTemplatesNumber()).execute();
             
 
