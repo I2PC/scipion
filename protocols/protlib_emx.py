@@ -476,7 +476,6 @@ def xmippMicrographsToEmx(micMd, emxData, emxDir):
         img.write(join(emxDir, fnOut))
         
         micrograph = Emxmicrograph(fnOut)
-        print "micrograph1",micrograph
         # Set CTF parameters if present
         if hasCtf:
             xmippCtfToEmx(md, objId, micrograph)
@@ -497,10 +496,8 @@ def xmippMicrographsToEmx(micMd, emxData, emxDir):
                 particle.setForeignKey(micrograph)
                 emxData.addObject(particle)
                 
-        print "micrograph2",micrograph
         emxData.addObject(micrograph)
     # Write EMX particles
-    print "emxData", emxData
     _writeEmxData(emxData, join(emxDir, 'micrographs.emx'))
  
 

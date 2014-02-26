@@ -169,7 +169,6 @@ def createMicrographs(log,
                       AmplitudeContrast
                       ):
     
-    print "Creating metadata   file %s with micrographs"%micsFileName
     filesPrefix = dirname(emxFileName)
     emxData = loadEmxData(emxFileName)
     _SamplingRate = emxMicsToXmipp(emxData, 
@@ -213,7 +212,6 @@ def validateSameMd(fnOut, fn1, fn2):
     '''Check fn1 and fn2 metadata are identical and write 
     a 3rd one with the union of both '''
     #check md1 and m2 are identical  
-    print "validateSameMd", fnOut, fn1, fn2
     md1 = MetaData(fn1)
     md2 = MetaData(fn2)
     id1=md1.firstObject()
@@ -224,7 +222,6 @@ def validateSameMd(fnOut, fn1, fn2):
         if math.fabs(check1-check2) > EQUAL_ACCURACY:
             raise Exception('Error: %s is not the same for both runs. run1=%f while run2=%f' 
                          % (label2Str(label), check1, check2))
-    print "WRINTING: ", fnOut
     md1.write(fnOut)
                 
 def merge(log, OutWd, InWd1, InWd2):
