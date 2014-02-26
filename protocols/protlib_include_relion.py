@@ -139,10 +139,10 @@ K*2*8*(size*pad)^3/1024/1024/1024
 PaddingFactor = 3.0
 
 #------------------------------------------------------------------------------------------------
-# {condition}(not DoContinue){section}{has_question} CTF
+# {condition}(not DoContinue){section} CTF
 #------------------------------------------------------------------------------------------------
 
-#  Use CTF-amplitude correction?
+#  Do CTF-correction?
 """
 If set to Yes, CTFs will be corrected inside the MAP refinement. 
 The resulting algorithm intrinsically implements the optimal linear, 
@@ -159,13 +159,6 @@ then in the first iteration, the Fourier transforms of the reference projections
 are not multiplied by the CTFs.
 """
 HasReferenceCTFCorrected = False
-
-# {expert} Only flip phases?
-"""
-Set this to Yes to switch CTF-amplitude correction off. 
-This option is NOT generally recommended.
-"""
-OnlyFlipPhases = False
 
 # Have data been phase-flipped?
 """
@@ -184,16 +177,6 @@ Still, in general using higher amplitude contrast on the CTFs (e.g. 10-20%) ofte
 Therefore, this option is not generally recommended.
 """
 IgnoreCTFUntilFirstPeak = False
-
-# {expert} Do intensity correction?
-"""
-An internal correction for differences in the intensity (grey-scale) of the signal between 
-distinct micrographs is applied. This is useful if micrographs have very different 
-signal-to-noise ratios, e.g. due to different ice thickness or contamination. 
-Because one typically normalises the noise, this leads to distinct signal intensities in the data, 
-and this procedure corrects for this. It is quite robust and therefore recommended for the general case.
-"""
-DoIntensityCorrection = False
 
 
 #------------------------------------------------------------------------------------------------
