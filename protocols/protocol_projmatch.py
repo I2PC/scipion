@@ -293,7 +293,7 @@ data_noname
             for ref3d in ref3Ds:
                 for it in iterations:
                     file_name = self.getFilename('ReconstructedFileNamesIters', iter=it, ref=ref3d)
-                    #print 'it: ',it, ' | file_name:',file_name
+                    print 'it: ',it, ' | file_name:',file_name
                     if xmippExists(file_name):
                         #Chimera
                         if(self.DisplayVolumeSlicesAlong == 'surface'):
