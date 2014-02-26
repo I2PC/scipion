@@ -142,7 +142,7 @@ PaddingFactor = 3.0
 # {condition}(not DoContinue){section}{has_question} CTF
 #------------------------------------------------------------------------------------------------
 
-#  Use CTF-amplitude correction?
+#  Do CTF-correction?
 """
 If set to Yes, CTFs will be corrected inside the MAP refinement. 
 The resulting algorithm intrinsically implements the optimal linear, 
