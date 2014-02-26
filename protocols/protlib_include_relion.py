@@ -26,7 +26,7 @@
  '''
 #------------------------------------------------------------------------------------------------
  
-def expandRelion(classify=True):
+def expandRelion(classify=True, is2D=False):
     samplingStr = '# {section} Sampling'
     changesStr = 'Changes in Offset, Angles and Classes'
     if not classify:
@@ -39,12 +39,12 @@ CiteRelion3D = """
 "A Bayesian view on cryo-EM structure determination" 
 by Sjors H.W. Scheres (DOI: 10.1016/j.jmb.2011.11.010)
 """
+
 # {hidden} Classify or Refine?
 ''' + 'DoClassify = %s' % classify + '''
+# {hidden} Classify in 2D?
+''' + 'Is2D = %s' % is2D + '''
 
-#------------------------------------------------------------------------------------------
-# {section} Mode
-#------------------------------------------------------------------------------------------
 # Continue from previous run
 DoContinue = False
 
@@ -58,6 +58,15 @@ can be performed.Nor will it be possible to perform noise spectra estimation or 
 scale corrections in image groups.
 """
 ImgMd = ""
+
+# {condition}(not DoContinue) Normalize input images?
+""" 
+Normalize input images ?
+average background value must be 0 and a stddev value must be 1. 
+Note that the average and stddev values for the background are
+ calculated outside a circle with the particle diameter 
+"""
+DoNormalizeInputImage = False
 
 # {condition}(DoContinue){file}(*optimiser.star) Optimiser file:
 """ 
@@ -73,21 +82,22 @@ optimiserFileName= ""
 # {condition}(not DoContinue) {section} Input
 #------------------------------------------------------------------------------------------
 # {condition}(DoClassify) Number of classes
-"""The number of classes (K) for a multi-reference refinement. 
+"""
+The number of classes (K) for a multi-reference refinement. 
 These classes will be made in an unsupervised manner from a single 
 reference by division of the data into random subsets during the 
 first iteration.
 """
 NumberOfClasses = 2
 
-# {file}(*.vol, *.mrc) Initial 3D reference volume:
+# {file}(*.vol, *.mrc){condition}(not Is2D) Initial 3D reference volume:
 """
 A 3D map in MRC/Spider format. Make sure this map has the same dimensions
 and the same pixel size as your input images.
 """
 Ref3D = ""
 
-# {condition}(not DoContinue) Ref. map is on absolute greyscale?
+# {condition}(not DoContinue and not Is2D) Ref. map is on absolute greyscale?
 """ The probabilities are based on squared differences, so that the absolute grey scale is important.
 Probabilities are calculated based on a Gaussian noise model, 
 which contains a squared difference term between the reference and the experimental image. 
@@ -102,15 +112,15 @@ This procedure is relatively quick and typically does not negatively affect the 
 subsequent MAP refinement. Therefore, if in doubt it is recommended to set this option to No."""
 IsMapAbsoluteGreyScale = True
 
-# Normalize input images?
+# {condition}(not Is2D) Symmetry group
 """ 
-Normalize input images ?
-average background value must be 0 and a stddev value must be 1. 
-Note that the average and stddev values for the background are
- calculated outside a circle with the particle diameter 
+See [http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Symmetry]
+for a description of the symmetry groups format
+If no symmetry is present, give c1
 """
-DoNormalizeInputImage = False
-
+SymmetryGroup = 'c1'
+'''
+    linesStr +='''
 # {expert}{condition}(DoClassify) Padding factor:
 """
 The padding factor used for oversampling of the Fourier transform. The default is 3x padding, 
@@ -128,14 +138,6 @@ K*2*8*(size*pad)^3/1024/1024/1024
 """
 PaddingFactor = 3.0
 
-# Symmetry group
-""" 
-See [http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Symmetry]
-for a description of the symmetry groups format
-If no symmetry is present, give c1
-"""
-SymmetryGroup = 'c1'
-
 #------------------------------------------------------------------------------------------------
 # {condition}(not DoContinue){section}{has_question} CTF
 #------------------------------------------------------------------------------------------------
@@ -149,7 +151,7 @@ be given in the input STAR file.
 """
 DoCTFCorrection = True
 
-# Has reference been CTF-corrected?
+# {condition}(not Is2D) Has reference been CTF-corrected?
 """
 Set this option to Yes if the reference map represents CTF-unaffected density, 
 e.g. it was created using Wiener filtering inside RELION or from a PDB. If set to No, 
@@ -194,12 +196,11 @@ and this procedure corrects for this. It is quite robust and therefore recommend
 DoIntensityCorrection = False
 
 
-
 #------------------------------------------------------------------------------------------------
 # {condition}(not DoContinue) {section} Optimisation
 #------------------------------------------------------------------------------------------------
 
-# {wizard}(wizardChooseLowPassFilter) Initial low-pass filter (A): 
+# {wizard}(wizardChooseLowPassFilter) {condition}(not Is2D) Initial low-pass filter (A): 
 """
 It is recommended to strongly low-pass filter your initial reference map. 
 If it has not yet been low-pass filtered, it may be done internally using this option. 
@@ -216,12 +217,12 @@ NumberOfIterations = 25
 # Regularisation paramter T:
 """
 Bayes law strictly determines the relative weight between the contribution of the experimental data and the prior.
- However, in practice one may need to adjust this weight to put slightly more weight on the experimental 
- data to allow optimal results. Values greater than 1 for this regularisation parameter 
- (T in the JMB2011 paper) put more weight on the experimental data. Values around 2-4
-  have been observed to be useful for 3D refinements, values of 1-2 for 2D refinements.
-   Too small values yield too-low resolution structures; too high values result in
-    over-estimated resolutions and overfitting.
+However, in practice one may need to adjust this weight to put slightly more weight on the experimental 
+data to allow optimal results. Values greater than 1 for this regularisation parameter 
+(T in the JMB2011 paper) put more weight on the experimental data. Values around 2-4
+have been observed to be useful for 3D refinements, values of 1-2 for 2D refinements.
+Too small values yield too-low resolution structures; too high values result in
+over-estimated resolutions and overfitting.
 """
 RegularisationParamT = 1
 
@@ -235,8 +236,9 @@ size no masking will be performed.
 
 The same radius will also be used for a spherical mask of the
 reference structures if no user-provided mask is specified.
+If -1 is used, then half of the particles size will be used as radius.
 """
-MaskRadiusA = 200
+MaskRadiusA = -1
 
 # {condition}(DoClassify) {list_combo}(Yes: fill with zeros,No: fill with random noise) Mask individual particles with zero?
 """
@@ -278,12 +280,34 @@ SolventMask = ""
 ''' + samplingStr + '''
 #-----------------------------------------------------------------------------
 
-# 
+#
+''' 
+    if not is2D:
+        linesStr += '''
 # {condition}(DoClassify or not DoContinue){list_combo}(30,15,7.5,3.7,1.8,0.9,0.5,0.2,0.1) Angular sampling interval (deg):
-"""There are only a few discrete angular samplings possible because we use the HealPix library to generate the sampling of the first two Euler angles on the sphere. The samplings are approximate numbers and vary slightly over the sphere.
+"""
+There are only a few discrete angular samplings possible because 
+we use the HealPix library to generate the sampling of the first 
+two Euler angles on the sphere. The samplings are approximate numbers 
+and vary slightly over the sphere.
 """
 AngularSamplingDeg = '7.5'
+'''
+    else:
+        linesStr += '''
+# In-plane angular sampling (deg):
+"""
+The sampling rate for the in-plane rotation angle (psi) in degrees. 
+Using fine values will slow down the program. Recommended value for 
+most 2D refinements: 5 degrees.
 
+If auto-sampling is used, this will be the value for the first 
+iteration(s) only, and the sampling rate will be increased 
+automatically after that.
+"""
+InPlaneAngularSamplingDeg = 5
+'''
+    linesStr += '''
 # {condition}(DoClassify or not DoContinue) Offset search range (pix):
 """Probabilities will be calculated only for translations in a circle with this radius (in pixels). The center of this circle changes at every iteration and is placed at the optimal translation for each image in the previous iteration.
 """
@@ -294,12 +318,13 @@ OffsetSearchRangePix = 5
 """
 OffsetSearchStepPix = 1
 
-# Perform local angular search? 
+
+# {condition}(not Is2D) Perform local angular search? 
 """If set to Yes, then rather than performing exhaustive angular searches, local searches within the range given below will be performed. A prior Gaussian distribution centered at the optimal orientation in the previous iteration and with a stddev of 1/3 of the range given below will be enforced.
 """
 PerformLocalAngularSearch = False
 
-# {condition}(PerformLocalAngularSearch)Local angular search range
+# {condition}(not Is2D and PerformLocalAngularSearch)Local angular search range
 """
 """
 LocalAngularSearchRange = 5.0
@@ -331,7 +356,7 @@ If you want two see iterations 2 and 5 write
 SelectedIters = ""
 
 #----------------------------------------------------------------------------------------------------
-# {section}{visualize} Volumes (per iteration)
+# {section}{visualize} {condition}(not Is2D) Volumes (per iteration)
 #----------------------------------------------------------------------------------------------------
 
 # {condition}(DoClassify){list}(all, selection) CLASS 3D to visualize

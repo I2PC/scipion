@@ -418,6 +418,9 @@ def wizardHelperSetRadii(gui, inputVarName, outerVarName, innerVarName=None, uni
             img.read(fn, HEADER)
             xdim = img.getDimensions()[0]
             outerRadius = xdim / 2 
+            if unit == 'angstrom':
+                outerRadius *= sampling
+                
             gui.setVarValue(outerVarName, outerRadius)
     from protlib_gui_ext import XmippBrowserMask
     results = showBrowseDialog(parent=gui.master, browser=XmippBrowserMask, title="Select mask radius", allowFilter=False, 
@@ -439,7 +442,7 @@ def wizardSetMaskRadiusAlign(gui, var):
     
 def wizardSetMaskRadiusRelion(gui, var):
     fnSel = gui.getVarValue('ImgMd')
-    wizardHelperSetRadii(gui, 'ImgMd','MaskRadiusA',unit='angstrom', sampling=getSampling(fnSel))
+    wizardHelperSetRadii(gui, 'ImgMd','MaskRadiusA', unit='angstrom', sampling=getSampling(fnSel))
 
 def wizardSetMaskRadiusPreprocess(gui, var):
     wizardHelperSetRadii(gui, 'InModel', 'MaskRadius')

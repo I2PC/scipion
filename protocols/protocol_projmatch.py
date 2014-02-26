@@ -233,6 +233,7 @@ data_noname
                            , 'PlotHistogramAngularMovement'
                            , 'DisplayAngularDistribution'
                            , 'DisplayResolutionPlots'
+                           , 'DisplayExperimentalImages'
                            ] if self.ParamsDict[k]]
         if len(plots):
             self.launchProjmatchPlots(plots)
@@ -292,7 +293,7 @@ data_noname
             for ref3d in ref3Ds:
                 for it in iterations:
                     file_name = self.getFilename('ReconstructedFileNamesIters', iter=it, ref=ref3d)
-                    #print 'it: ',it, ' | file_name:',file_name
+                    print 'it: ',it, ' | file_name:',file_name
                     if xmippExists(file_name):
                         #Chimera
                         if(self.DisplayVolumeSlicesAlong == 'surface'):
@@ -407,6 +408,16 @@ data_noname
                                 runShowJ(file_name, extraParams = runShowJExtraParameters)
                             except Exception, e:
                                 showError("Error launching java app", str(e), self.master)
+
+        if doPlot('DisplayExperimentalImages'):
+            for ref3d in ref3Ds:
+                for it in iterations:
+                    file_name = "ctfGroup[0-9][0-9][0-9][0-9][0-9][0-9]@"+self.getFilename('DocfileInputAnglesIters', iter=it)
+                    if xmippExists(file_name):
+                        try:
+                            runShowJ(file_name, extraParams = runShowJExtraParameters)
+                        except Exception, e:
+                            showError("Error launching java app", str(e), self.master)
         
         if doPlot('DisplayProjectionMatchingLibraryAndClasses'):       
         #map stack position with ref number

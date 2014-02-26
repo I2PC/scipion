@@ -28,6 +28,11 @@ from protlib_xmipp import getSampling, validateInputSize
 class ProtRelionBase(XmippProtocol):
     def __init__(self, protDictName, scriptname, project):
         self.FileKeys = ['data', 'optimiser', 'sampling'] 
+        self.ClassLabel = MDL_REF # by default 3d
+        self.ClassFnTemplate = '%(rootDir)s/relion_it%(iter)03d_class%(ref)03d.mrc:mrc'
+        self.outputClasses = 'classes_ref3D.xmd'
+        self.outputVols = 'volumes.xmd'
+        
         XmippProtocol.__init__(self, protDictName, scriptname, project)
         self.ParamsStr = ''
         
@@ -160,8 +165,9 @@ class ProtRelionBase(XmippProtocol):
         md.read(self.ImgMd, 1) # Read only the first object in md
         
         if md.containsLabel(MDL_IMAGE):
-            self._validateInputSize('Ref3D', 'Reference volume', True, md, errors)
-            self._validateInputSize('ReferenceMask', 'Reference mask',False, md, errors)
+            if not getattr(self, 'Is2D', False):
+                self._validateInputSize('Ref3D', 'Reference volume', True, md, errors)
+            self._validateInputSize('ReferenceMask', 'Reference mask', False, md, errors)
             self._validateInputSize('SolventMask','Solvent mask', False, md, errors)
         else:
             errors.append("Input metadata <%s> doesn't contains image label" % self.ImgMd)
@@ -183,8 +189,6 @@ class ProtRelionBase(XmippProtocol):
             
         return errors 
     
-    
-    
     def defineSteps(self): 
         #temporary normalized files
         images_xmd = join(self.ExtraDir, 'images.xmd')
@@ -203,9 +207,10 @@ class ProtRelionBase(XmippProtocol):
                             Nproc    = self.NumberOfMpi*self.NumberOfThreads
                             )
         else:
+            imgFn = FileName(self.ImgMd).removeBlockName()
             self.insertStep('createLink',
                                verifyfiles=[images_xmd],
-                               source=self.ImgMd,
+                               source=imgFn,
                                dest=images_xmd)
         # convert input metadata to relion model
         self.ImgStar = self.extraPath(replaceBasenameExt(images_xmd, '.star'))
@@ -247,34 +252,15 @@ class ProtRelionBase(XmippProtocol):
         for it in range (firstIteration, self.NumberOfIterations+1): #always list all iterations
             inputMetadatas.append("images@" + self.getFilename('data_xmipp', iter=it))
 
-#        self.insertStep('convertRelionMetadata', verifyfiles=verifyFiles,
-#                        inputs  = inputs,
-#                        outputs = verifyFiles,
-#                        lastIterationVolumeFns = lastIterVolFns,
-#                        lastIterationMetadata  = lastIterationMetadata,
-#                        NumberOfClasses        = NumberOfClasses,
-#                        standardOutputClassFns = standardOutputClassFns,
-#                        standardOutputImageFn  = "images@" + self.workingDirPath("images.xmd"),
-#                        standardOutputVolumeFn = "volumes@" + self.workingDirPath("volumes.xmd"),
-#                        extraDir=self.ExtraDir,
-#                        inputMetadatas=inputMetadatas
-#                        )
-        
+       
         self.insertStep('produceXmippOutputs', verifyfiles=[],
                         inputDataStar=self.getFilename('data' + finalSuffix, iter=lastIteration),
                         outputImages=self.workingDirPath('images.xmd'), 
                         outputClasses=self.workingDirPath('classes_ref3D.xmd'),
-                        outputVolumes=self.workingDirPath('volumes.xmd')
+                        outputVolumes=self.workingDirPath('volumes.xmd'),
+                        classLabel=self.ClassLabel, 
+                        classTemplate=self.ClassFnTemplate
                         )
-#Do NOT change relion binary files, let us use MRC
-#                 for ref3d in range(1,NumberOfClasses+1):
-#                       inputs  += [self.getFilename('volumeMRC', iter=it, ref3d=ref3d )]
-#                       outputs += [self.getFilename('volume', iter=it, ref3d=ref3d )]
-#           
-#        self.insertStep('convertRelionBinaryData',
-#                        inputs  = inputs,
-#                        outputs = outputs
-#                        )
 
     def visualize(self):
         
@@ -446,7 +432,8 @@ class ProtRelionBase(XmippProtocol):
         data_classes = self.getFilename('classes_xmipp', iter=it)
         
         if not xmippExists(data_classes):
-            createClassesFromImages(data_star, data_classes, it)
+            createClassesFromImages(data_star, data_classes, it, 
+                                    self.ClassLabel, self.ClassFnTemplate)
         return data_classes
     
     def _writeIterAngularDist(self, it):
@@ -523,6 +510,7 @@ class ProtRelionBase(XmippProtocol):
             self.maxInv = max(resolution_inv)
             a.plot(resolution_inv, frc)
             a.xaxis.set_major_formatter(self._plotFormatter)
+            a.set_ylim([-0.1, 1.1])
             return True
         return False
             
@@ -697,14 +685,16 @@ class ProtRelionBase(XmippProtocol):
 
     
     
-def produceXmippOutputs(log, inputDataStar, outputImages, outputClasses, outputVolumes, 
-                        ):
+def produceXmippOutputs(log, inputDataStar, 
+                        outputImages, outputClasses, outputVolumes,
+                        classLabel, classTemplate):
     """ After Relion have finished, produce the files expected by Xmipp.
     Params:
         inputDataStar: the filename of the last data.star images file.
         outputImages: the filename to write the images as expected by xmipp.
         outputClasses: the filename to write the classes and images as expected by xmipp.
         outputVolumes: filename to write a list of produced volumes.
+        classLabel: either MDL_REF or MDL_REF3D
     """
     addRelionLabels()
     # Write output images
@@ -715,15 +705,18 @@ def produceXmippOutputs(log, inputDataStar, outputImages, outputClasses, outputV
     # If iteration is not None, means that is a classification
     # since for refinenment, the final images should not have iteration
     if iteration is not None:
-        createClassesFromImages(inputDataStar, outputClasses, iteration)
+        createClassesFromImages(inputDataStar, outputClasses, iteration, 
+                                classLabel, classTemplate)
         # Write volumes (the same as classes block)
         md.read('classes@' + outputClasses)
-        md.write('volumes@' + outputVolumes)
+        if outputVolumes.endswith('.xmd'): # do not write volumes.xmd for 2d
+            md.write('volumes@' + outputVolumes)
     else:
         volFn = inputDataStar.replace('data.star', 'class001.mrc')
         md.clear()
         md.setValue(MDL_IMAGE, volFn, md.addObject())
-        md.write('volumes@' + outputVolumes)
+        if outputVolumes.endswith('.xmd'): # do not write volumes.xmd for 2d
+            md.write('volumes@' + outputVolumes)
     
 
 def convertRelionBinaryData(log, inputs,outputs):
@@ -775,30 +768,36 @@ def convertImagesMd(log, inputMd, outputRelion):
     #md.write(outputRelion)
     exportMdToRelion(md, outputRelion)
     
-def createClassesFromImages(imgsFn, classesFn, iter):
+def createClassesFromImages(imgsFn, classesFn, iter, classLabel, classFnTemplate):
     """ Give a Relion data file, produces a classes metadata as expected by Xmipp.
     Params:
         imgsFn: the filename with relion star format.
         classesFn: filename where to write the classes.
+        iter: the iteration number to which create the classes file
+        classLabel: the label used for classes (normally MDL_REF)
+        classFnTemplate: this should be the filename template for either volumes 3d references
+            or 2d stacks of references.
     Note: it is assumed that addRelionLabels is done before calling this function.
     """
     md = MetaData(imgsFn)
+    numberOfImages = float(md.size())
     mdClasses = MetaData()
-    mdClasses.aggregate(md, AGGR_COUNT, MDL_REF3D, MDL_IMAGE, MDL_CLASS_COUNT)
-    #md2.aggregate(md, AGGR_COUNT, MDL_REF3D, MDL_IMAGE, MDL_COUNT)
+    mdClasses.aggregate(md, AGGR_COUNT, classLabel, MDL_IMAGE, MDL_CLASS_COUNT)
+    #md2.aggregate(md, AGGR_COUNT, classLabel, MDL_IMAGE, MDL_COUNT)
     mdClasses.write('classes@' + classesFn)
     mdImages = MetaData()
     # We asume here that the volumes (classes3d) are in the same folder than imgsFn
     rootDir = os.path.dirname(imgsFn)
-    volPattern = os.path.join(rootDir, 'relion_it%(iter)03d_class%(ref3d)03d.mrc:mrc')
     
     for objId in mdClasses:
-        ref3d = mdClasses.getValue(MDL_REF3D, objId)
-        volFn = volPattern % locals() # replace iter and class3d
-        mdClasses.setValue(MDL_IMAGE, volFn, objId)
-        mdImages.importObjects(md, MDValueEQ(MDL_REF3D, ref3d))
-        print "Writing to '%s', %d images" % (('class%06d_images' % ref3d) + classesFn, mdImages.size())
-        mdImages.write(('class%06d_images@' % ref3d) + classesFn, MD_APPEND)
+        ref = mdClasses.getValue(classLabel, objId)
+        refFn = classFnTemplate % locals()
+        mdClasses.setValue(MDL_IMAGE, refFn, objId)
+        weight = mdClasses.getValue(MDL_CLASS_COUNT, objId) / numberOfImages
+        mdClasses.setValue(MDL_WEIGHT, weight, objId)
+        mdImages.importObjects(md, MDValueEQ(classLabel, ref))
+        print "Writing to '%s', %d images" % (('class%06d_images' % ref) + classesFn, mdImages.size())
+        mdImages.write(('class%06d_images@' % ref) + classesFn, MD_APPEND)
     mdClasses.write('classes@' + classesFn, MD_APPEND)
 
 def getIteration(fileName):

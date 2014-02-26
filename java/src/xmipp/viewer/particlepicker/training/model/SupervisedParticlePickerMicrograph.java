@@ -119,7 +119,7 @@ public class SupervisedParticlePickerMicrograph extends Micrograph
 		return autoparticles;
 	}
 
-	public void addManualParticle(ManualParticle p, SupervisedParticlePicker ppicker, boolean center)
+	public void addManualParticle(ManualParticle p, SupervisedParticlePicker ppicker)
 	{
 		manualparticles.add(p);
 
@@ -133,8 +133,7 @@ public class SupervisedParticlePickerMicrograph extends Micrograph
 				throw new IllegalArgumentException(
 						String.format("Micrograph %s could not update its state to %s and can't keep previous state %s and have particles", getName(), state, MicrographState.Available));
 		}
-		if (center)
-			ppicker.centerParticle(p);
+		
 		
 	}
 
