@@ -30,6 +30,13 @@ from emx.emxmapper import *
 from numpy import eye
 from protlib_filesystem import join, dirname, abspath, replaceBasenameExt
 from protlib_xmipp import RowMetaData
+import sys
+try:
+    import collections
+except ImportError:
+    sys.stderr.write('Could not import OrderedDict. For Python versions '
+                     'earlier than 2.7 this module may be missing. '
+                     )
 
 BINENDING     = '.mrc'
 CTFENDING     = '_ctf.param'
@@ -43,27 +50,30 @@ STACKENDING   = '.stk'
 
 class CTF(object):
     # Dictionary for matching between EMX var and Xmipp labes
-    ctfVarLabels = {'acceleratingVoltage': MDL_CTF_VOLTAGE,
-                    'amplitudeContrast'  : MDL_CTF_Q0,
-                    'cs'                 : MDL_CTF_CS,
-                    'defocusU'           : MDL_CTF_DEFOCUSU,
-                    'defocusV'           : MDL_CTF_DEFOCUSV,
-                    'defocusUAngle'      : MDL_CTF_DEFOCUS_ANGLE,
-                    'pixelSpacing__X'    : MDL_CTF_SAMPLING_RATE,
-                    }
+    ctfVarLabels = collections.OrderedDict([
+                   ('acceleratingVoltage', MDL_CTF_VOLTAGE),
+                   ('amplitudeContrast'  , MDL_CTF_Q0),
+                   ('cs'                 , MDL_CTF_CS),
+                   ('defocusU'           , MDL_CTF_DEFOCUSU),
+                   ('defocusV'           , MDL_CTF_DEFOCUSV),
+                   ('defocusUAngle'      , MDL_CTF_DEFOCUS_ANGLE),
+                   ('pixelSpacing__X'    , MDL_CTF_SAMPLING_RATE),
+                 ])
 class CTFDEFOCUS(object):
     # Dictionary for matching between EMX var and Xmipp labes
-    ctfVarLabels = {'defocusU'     : MDL_CTF_DEFOCUSU,
-                    'defocusV'     : MDL_CTF_DEFOCUSV,
-                    'defocusUAngle': MDL_CTF_DEFOCUS_ANGLE,
-                    }
+    ctfVarLabels = collections.OrderedDict([
+                    ('defocusU'     , MDL_CTF_DEFOCUSU),
+                    ('defocusV'     , MDL_CTF_DEFOCUSV),
+                    ('defocusUAngle', MDL_CTF_DEFOCUS_ANGLE)
+                    ])
 class CTFNODEFOCUS(object):
     # Dictionary for matching between EMX var and Xmipp labes
-    ctfVarLabels = {'acceleratingVoltage' : MDL_CTF_VOLTAGE,
-                    'amplitudeContrast'   : MDL_CTF_Q0,
-                    'cs'                  : MDL_CTF_CS,
-                    'pixelSpacing__X'     : MDL_CTF_SAMPLING_RATE,
-                    }
+    ctfVarLabels = collections.OrderedDict([
+                    ('acceleratingVoltage', MDL_CTF_VOLTAGE),
+                    ('amplitudeContrast'   , MDL_CTF_Q0),
+                    ('cs'                  , MDL_CTF_CS),
+                    ('pixelSpacing__X'     , MDL_CTF_SAMPLING_RATE)
+                    ])
 
 
 #*******************************************************************
@@ -144,10 +154,9 @@ def emxCTFToXmipp(emxData,
     """ This function will iterate over the EMX micrographs and create
     a file .ctfparam for each micrograph.
     """
-
     hasCTFMicro = False
     hasCTFParticle = False
-    if (emxData.objLists[PARTICLE][0]).get('defocusU') is not None:
+    if emxData.objLists[PARTICLE] and (emxData.objLists[PARTICLE][0]).get('defocusU') is not None:
         hasCTFParticle = True
         objectClass = PARTICLE
 
@@ -193,7 +202,6 @@ def emxCTFToXmipp(emxData,
     oldVoltage      = -1.
     oldCs           = -1.
     oldAmplitudeContrast = -1.0
-    
     for micrograph in emxData.iterClasses(MICROGRAPH):
         micIndex = micrograph.get(INDEX)
         micFileName = micrograph.get(FILENAME)
@@ -436,7 +444,7 @@ def xmippCtfToEmx(md, objId, micrograph):
     
     while ctf.defocusUAngle > 180.:
         ctf.defocusUAngle -= 180.; 
-        
+    #this maust be ordered
     for var in CTF.ctfVarLabels.keys():
         micrograph.set(var, getattr(ctf, var))           
 
@@ -468,6 +476,7 @@ def xmippMicrographsToEmx(micMd, emxData, emxDir):
         img.write(join(emxDir, fnOut))
         
         micrograph = Emxmicrograph(fnOut)
+        print "micrograph1",micrograph
         # Set CTF parameters if present
         if hasCtf:
             xmippCtfToEmx(md, objId, micrograph)
@@ -488,8 +497,10 @@ def xmippMicrographsToEmx(micMd, emxData, emxDir):
                 particle.setForeignKey(micrograph)
                 emxData.addObject(particle)
                 
+        print "micrograph2",micrograph
         emxData.addObject(micrograph)
     # Write EMX particles
+    print "emxData", emxData
     _writeEmxData(emxData, join(emxDir, 'micrographs.emx'))
  
 
