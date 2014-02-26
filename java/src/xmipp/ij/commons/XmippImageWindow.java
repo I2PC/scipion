@@ -29,18 +29,12 @@ public class XmippImageWindow extends ImageWindow implements XmippIJWindow
 		imp.setTitle(title);
 		menu = new XmippMenuBar(this);
 		setMenuBar(menu);
-		XmippApplication.addInstance();
-		addWindowListener(new WindowAdapter()
-		{
-			@Override
-			public void windowClosing(WindowEvent arg0)
-			{
-				XmippApplication.removeInstance();
-			}
-		});
+		XmippApplication.addInstance(true);
+		
 		pixelslb = new Label("                                                   ");
 		add(pixelslb);
 		pack();//avoids header bad view
+                
 	}
 
 	public void openMaskToolbar()
@@ -128,6 +122,16 @@ public class XmippImageWindow extends ImageWindow implements XmippIJWindow
 		}
 		String text = String.format("x=%s, y=%s, value=%s", x, y, value);
 		pixelslb.setText(text);
+	}
+        
+        @Override
+	public void windowClosing(WindowEvent e) {
+            
+            super.windowClosing(e);
+            XmippApplication.removeInstance(true);
+                
+		          
+		
 	}
 
 }// class XmippImageWindow

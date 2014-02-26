@@ -1,5 +1,6 @@
 package xmipp.ij.commons;
 
+import ij.WindowManager;
 import ij.gui.StackWindow;
 
 import java.awt.Window;
@@ -23,15 +24,8 @@ public class XmippStackWindow extends StackWindow implements XmippIJWindow{
 		menu = new XmippMenuBar(this);
 		setMenuBar(menu);
 		//getCanvas().adjustMagnification();
-		XmippApplication.addInstance();
-		addWindowListener(new WindowAdapter()
-		{
-			@Override
-			public void windowClosing(WindowEvent arg0)
-			{
-				XmippApplication.removeInstance();
-			}
-		});
+		XmippApplication.addInstance(true);
+		
 	}
 	
 	public XmippStackWindow(ImagePlusLoader ipl)
@@ -81,12 +75,11 @@ public class XmippStackWindow extends StackWindow implements XmippIJWindow{
 	
 	@Override
 	public void windowClosing(WindowEvent e) {
-		if(window == null)//if I am the main process I can close java
-			System.exit(0);
-		super.windowClosing(e);
-		close();//it works for stack
-		if(XmippIJUtil.getXmippImageJ() != null)
-			XmippIJUtil.getXmippImageJ().close();
+		 
+		 super.windowClosing(e);
+                 XmippApplication.removeInstance(true);
+               
+		
 	}
 
 	@Override

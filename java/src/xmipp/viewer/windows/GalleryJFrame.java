@@ -224,7 +224,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			this.data = data;
 			createModel();
 			createGUI();
-			XmippApplication.addInstance();
+			XmippApplication.addInstance(false);
 		}
 		catch (Exception e)
 		{
@@ -275,7 +275,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		{
 			setVisible(false);
 			dispose();
-			XmippApplication.removeInstance();
+			XmippApplication.removeInstance(false);
 
 		}
 	}// function close
@@ -1686,9 +1686,11 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 				{
 					try
 					{
+                                                XmippIJUtil.showImageJ(Tool.VIEWER);
 						ImagePlusLoader loader = gallery.getImageLoader();
 						ImagesWindowFactory.openXmippImageWindow(GalleryJFrame.this, loader, true);
-						XmippIJUtil.showImageJ(Tool.VIEWER);
+                                                
+						
 					}
 					catch (Exception e1)
 					{
