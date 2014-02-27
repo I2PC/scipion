@@ -250,7 +250,7 @@ public class SupervisedParticlePicker extends ParticlePicker
 			initTemplates(num);
 			ImageGeneric igp;
 			List<ManualParticle> particles;
-			int size;
+			
 			ManualParticle particle;
 			double[] align;
 
@@ -268,8 +268,8 @@ public class SupervisedParticlePicker extends ParticlePicker
 				if (count >= maxcount)
 					break;
 				particles = m.getManualParticles();
-				size = particles.size();
-				for (int i = 0; i < size; i++)
+				
+				for (int i = 0; i < particles.size(); i++)
 				{
 					particle = particles.get(i);
 					igp = particle.getImageGeneric();
@@ -771,16 +771,7 @@ public class SupervisedParticlePicker extends ParticlePicker
 			importAllParticles(particlesfile);
 			return "";
 		}
-                if(f == Format.Xmipp301)
-                {
-                    String configfile = String.format("%s%s%s", path, File.separator, "config.xmd");
-                    if(new File(configfile).exists())
-                    {
-                        MetaData configmd = new MetaData(configfile);
-                        int size = configmd.getValueInt(MDLabel.MDL_PICKING_PARTICLE_SIZE, configmd.firstObject());
-                        setSize(size);
-                    }
-                }
+                importSize(path, f);
 		for (SupervisedParticlePickerMicrograph m : micrographs)
 		{
 			filename = getImportMicrographName(path, m.getFile(), f);

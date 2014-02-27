@@ -24,15 +24,14 @@ public class TemplatesJDialog extends JDialog
 		initComponents();
 	}
 
-	public synchronized void loadTemplates(boolean resize)
+	public void loadTemplates(boolean resize)
 	{
 		try
 		{
 			ImageGeneric templates = frame.getParticlePicker().getTemplates();
 			int size = frame.getParticlePicker().getSize();
 			templatespn.removeAll();
-//			if (!frame.getParticlePicker().hasManualParticles())
-				templatespn.setPreferredSize(new Dimension((int) (size * templates.getNDim()  + 20), size + 5));
+			
 			if(frame.getParticlePicker().hasManualParticles())
 			{
 				ImagePlus template;

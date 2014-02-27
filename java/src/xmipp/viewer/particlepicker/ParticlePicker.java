@@ -629,5 +629,19 @@ public abstract class ParticlePicker {
             this.inputid = inputid;
         }
     }
+    
+    public void importSize(String path, Format f)
+    {
+        if(f == Format.Xmipp301)
+                {
+                    String configfile = String.format("%s%s%s", path, File.separator, "config.xmd");
+                    if(new File(configfile).exists())
+                    {
+                        MetaData configmd = new MetaData(configfile);
+                        int size = configmd.getValueInt(MDLabel.MDL_PICKING_PARTICLE_SIZE, configmd.firstObject());
+                        setSize(size);
+                    }
+                }
+    }
 
 }
