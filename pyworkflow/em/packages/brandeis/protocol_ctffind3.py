@@ -90,8 +90,6 @@ class ProtCTFFind(ProtCTFMicrographs):
             
     def _getCTFModel(self, defocusU, defocusV, defocusAngle, psdFile):
         ctf = CTFModel()
-#        ctf.copyAttributes(self.inputMics, 'samplingRate')
-#        ctf.copyAttributes(self.inputMics.microscope, 'voltage', 'sphericalAberration')
         ctf.setDefocusU(defocusU)
         ctf.setDefocusV(defocusV)
         ctf.setDefocusAngle(defocusAngle)
@@ -106,25 +104,12 @@ class ProtCTFFind(ProtCTFMicrographs):
             out = join(micDir, 'ctffind.out')
             result = self._parseOutput(out)
             defocusU, defocusV, defocusAngle = result
-            #micOut = Micrograph()
-            #micOut.setFileName(mic.getFileName())
-            #micOut.setCTF(self._getCTFModel(defocusU, defocusV, defocusAngle, 
-            #                                    self._getPsdPath(micDir)))
-            #micSet.append(micOut)
             ctfModel = self._getCTFModel(defocusU, defocusV, defocusAngle, 
                                                 self._getPsdPath(micDir))
             ctfModel.setMicFile(mic.getFileName())
             ctfSet.append(ctfModel)
 
-        # This property should only be set by CTF estimation protocols
-        #micSet.setHasCTF(True)     
-            
-        #micSet.write()
-        ctfSet.write() 
-        
-        #self._defineOutputs(outputMicrographs=micSet)
         self._defineOutputs(outputCTF=ctfSet)
-        #self._defineSourceRelation(self.inputMics, micSet)
         self._defineRelation(RELATION_CTF, ctfSet, self.inputMics)
 
     def _validate(self):
