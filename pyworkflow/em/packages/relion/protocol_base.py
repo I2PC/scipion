@@ -28,8 +28,9 @@ This module contains the protocol base class for Relion protocols
 """
 
 import xmipp
-from pyworkflow.em import *
 from pyworkflow.protocol.params import BooleanParam, PointerParam, IntParam
+from pyworkflow.utils import environAdd
+from pyworkflow.em import *
 from constants import ANGULAR_SAMPLING_LIST
 
 
@@ -46,6 +47,9 @@ class ProtRelionBase(EMProtocol):
     _label = '2d classify'
     IS_CLASSIFY = True
     IS_2D = False
+    FILE_KEYS = ['data', 'optimiser', 'sampling'] 
+    CLASS_LABEL = xmipp.MDL_REF
+    PREFIXES = ['']
     
     def __init__(self, **args):        
         EMProtocol.__init__(self, **args)
@@ -57,8 +61,6 @@ class ProtRelionBase(EMProtocol):
         self._createFilenameTemplates()
         self._createIterTemplates()
         
-        self.FileKeys = ['data', 'optimiser', 'sampling'] 
-        self.ClassLabel = xmipp.MDL_REF # by default 3d
         self.ClassFnTemplate = '%(rootDir)s/relion_it%(iter)03d_class%(ref)03d.mrc:mrc'
         self.outputClasses = 'classes_ref3D.xmd'
         self.outputVols = 'volumes.xmd'
@@ -66,23 +68,24 @@ class ProtRelionBase(EMProtocol):
         
     def _createFilenameTemplates(self):
         """ Centralize how files are called for iterations and references. """
-        self.extraIter = self.extraPath('relion_it%(iter)03d_')
+        self.extraIter = self._getExtraPath('relion_it%(iter)03d_')
         myDict = {
-                  'input_particles': self._getPath('input_particles.star'),
+                  'input_star': self._getPath('input_particles.star'),
+                  'input_mrcs': self._getPath('input_particles.mrcs'),
                   'data_sorted_xmipp': self.extraIter + 'data_sorted_xmipp.star',
                   'classes_xmipp': self.extraIter + 'classes_xmipp.xmd',
                   'angularDist_xmipp': self.extraIter + 'angularDist_xmipp.xmd',
-                  'all_avgPmax_xmipp': self.tmpPath('iterations_avgPmax_xmipp.xmd'),
-                  'all_changes_xmipp': self.tmpPath('iterations_changes_xmipp.xmd'),
-                  'selected_volumes': self.tmpPath('selected_volumes_xmipp.xmd')
+                  'all_avgPmax_xmipp': self._getTmpPath('iterations_avgPmax_xmipp.xmd'),
+                  'all_changes_xmipp': self._getTmpPath('iterations_changes_xmipp.xmd'),
+                  'selected_volumes': self._getTmpPath('selected_volumes_xmipp.xmd')
                   }
         # add to keys, data.star, optimiser.star and sampling.star
-        for key in self.FileKeys:
+        for key in self.FILE_KEYS:
             myDict[key] = self.extraIter + '%s.star' % key
             key_xmipp = key + '_xmipp'             
             myDict[key_xmipp] = self.extraIter + '%s.xmd' % key
         # add other keys that depends on prefixes
-        for p in self._getPrefixes():            
+        for p in self.PREFIXES:            
             myDict['%smodel' % p] = self.extraIter + '%smodel.star' % p
             myDict['%svolume' % p] = self.extraIter + p + 'class%(ref3d)03d.mrc:mrc'
 
@@ -113,11 +116,11 @@ class ProtRelionBase(EMProtocol):
                       label="Input particles",  
                       help='Select the input images from the project.')   
         form.addParam('continueRun', PointerParam, pointerClass=self.getClassName(),
-                      condition='doContinue', allowsNull=True,
+                      condition='doContinue', allowNull=True,
                       label='Select previous run',
                       help='Select a previous run to continue from.')
         form.addParam('continueIter', StringParam, default='last',
-                      condition='doContinue', allowsNull=True,
+                      condition='doContinue', 
                       label='Continue from iteration',
                       help='Select from which iteration do you want to continue.'
                            'if you use *last*, then the last iteration will be used.'
@@ -135,7 +138,7 @@ class ProtRelionBase(EMProtocol):
                       label="Initial 3D map", 
                       help='Initial reference 3D map, it should have the same '
                            'dimensions and the same pixel size as your input particles.')
-        form.addParam('isAbsoluteGreyScale', BooleanParam, default=False,
+        form.addParam('isMapAbsoluteGreyScale', BooleanParam, default=False,
                       condition='not doContinue and not is2D',
                       label="Is initial 3D map on absolute greyscale?", 
                       help='The probabilities are based on squared differences, '
@@ -168,7 +171,11 @@ class ProtRelionBase(EMProtocol):
                            'The approximate amount of memory (in Gb) required to store K maps of (size x size x size) voxels and a' 
                            'padding factor (pad) may be calculated as: K*2*8*(size*pad)^3/1024/1024/1024\n' 
                            '<Note>: also consider the use of threads if memory is an issue.')
-        
+        form.addParam('extraParams', StringParam, default='',
+                      expertLevel=LEVEL_EXPERT,
+                      label='Additional parameters',
+                      help='')
+               
         form.addSection(label='CTF')
         form.addParam('doCTF', BooleanParam, default=True,
                       label='Do CTF-amplitud correction?',
@@ -252,7 +259,7 @@ class ProtRelionBase(EMProtocol):
                            'correlations.High-resolution refinements (e.g. in 3D auto-refine) tend to work better when filling ' 
                            'the solvent area with random noise, some classifications go better when using zeros.') 
         form.addParam('referenceMask', PointerParam, pointerClass='Mask',
-                      label='Reference mask (optional)',
+                      label='Reference mask (optional)', allowNull=True,
                       help='A volume mask containing a (soft) mask with the same dimensions ' 
                            'as the reference(s), and values between 0 and 1, with 1 being 100% protein '
                            'and 0 being 100% solvent. The reconstructed reference map will be multiplied '
@@ -261,7 +268,7 @@ class ProtRelionBase(EMProtocol):
                            'In some cases, for example for non-empty icosahedral viruses, it is also useful ' 
                            'to use a second mask. Use <More options> and check <Solvent mask> parameter. ') 
         form.addParam('solventMask', PointerParam, pointerClass='Mask',
-                      expertLevel=LEVEL_ADVANCED,
+                      expertLevel=LEVEL_ADVANCED, allowNull=True,
                       label='Solvent mask (optional)',
                       help='For all white (value 1) pixels in this second mask the '
                            'corresponding pixels in the reconstructed map are set to the average value of '
@@ -282,17 +289,41 @@ class ProtRelionBase(EMProtocol):
                            'two Euler angles on the sphere. The samplings are approximate numbers ' 
                            'and vary slightly over the sphere.')
         else:
-            form.addParam('inplaneAngularSamplingDeg', EnumParam, default=2,
-                          choices=[str(s) for s in ANGULAR_SAMPLING_LIST],
+            form.addParam('inplaneAngularSamplingDeg', FloatParam, default=5,
                           label='Angular sampling interval (deg)',
                           help='There are only a few discrete angular samplings possible because '
                            'we use the HealPix library to generate the sampling of the first '
                            'two Euler angles on the sphere. The samplings are approximate numbers ' 
                            'and vary slightly over the sphere.')           
-            
-        
+        form.addParam('offsetSearchRangePix', FloatParam, default=5,
+                      condition='isClassify or not doContinue',
+                      label='Offset search range (pix)',
+                      help='Probabilities will be calculated only for translations in a circle '
+                           'with this radius (in pixels). The center of this circle changes at '
+                           'every iteration and is placed at the optimal translation for each '
+                           'image in the previous iteration.')
+        form.addParam('offsetSearchStepPix', FloatParam, default=1.0,
+                      condition='isClassify or not doContinue',
+                      label='Offset search step (pix)',
+                      help='Translations will be sampled with this step-size (in pixels). '
+                           'Translational sampling is also done using the adaptive approach. '
+                           'Therefore, if adaptive=1, the translations will first be evaluated'
+                           'on a 2x coarser grid.')
+        form.addParam('localAngularSearch', BooleanParam, default=False,
+                      condition='not is2D',
+                      label='Perform local angular search?',
+                      help='If set to Yes, then rather than performing exhaustive angular searches, '
+                           'local searches within the range given below will be performed. A prior '
+                           'Gaussian distribution centered at the optimal orientation in the previous '
+                           'iteration and with a stddev of 1/3 of the range given below will be enforced.')
+        form.addParam('localAngularSearchRange', FloatParam, default=5.0,
+                      condition='localAngularSearch',
+                      label='Local angular search range',
+                      help='Local angular searches will be performed within +/- the given amount (in degrees) from the optimal orientation in the previous iteration. A Gaussian prior (also see previous option) will be applied, so that orientations closer to the optimal orientation in the previous iteration will get higher weights than those further away.')
+         
     #--------------------------- INSERT steps functions --------------------------------------------  
     def _insertAllSteps(self): 
+        self._initialize()
         self._insertFunctionStep('convertInputStep')
         self._insertRelionStep()            
         self._insertFunctionStep('createOutputStep')
@@ -306,10 +337,11 @@ class ProtRelionBase(EMProtocol):
         else:
             self._setNormalArgs(args)
         params = ' '.join(['%s %s' % (k, str(v)) for k, v in args.iteritems()])
-        params += ' ' + self.AdditionalArguments
+        
+        if self.extraParams.hasValue():
+            params += ' ' + self.extraParams.get()
 
-        self.insertRunJobStep(self.program, params, self._getIterFiles(self.NumberOfIterations))
-    
+        self._insertFunctionStep('runRelionStep', params)
    
     #--------------------------- STEPS functions --------------------------------------------       
     def convertInputStep(self):
@@ -318,7 +350,14 @@ class ProtRelionBase(EMProtocol):
         """
         from convert import createRelionInputParticles
         createRelionInputParticles(self.inputParticles.get(), 
-                                   self._getFileName('input_particles'))
+                                   self._getFileName('input_star'),
+                                   self._getFileName('input_mrcs'))
+        
+    def runRelionStep(self, params):
+        """ Execute the relion steps with the give params. """
+        self._loadEnvironment()
+        params += ' --j %d' % self.numberOfThreads.get()
+        self.runJob(self._getProgram(), params)
         
     def createOutputStep(self):
         pass # should be implemented in subclasses
@@ -350,7 +389,7 @@ class ProtRelionBase(EMProtocol):
         return cites
     
     def _summary(self):
-        if self.DoContinue:
+        if self.doContinue:
             return self._summaryContinue()
         return self._summaryNormal()
 
@@ -371,9 +410,16 @@ class ProtRelionBase(EMProtocol):
     def _getProgram(self):
         """ Get the program name depending on the MPI use or not. """
         program = 'relion_refine'
-        if self.NumberOfMpi > 1:
+        if self.numberOfMpi > 1:
             program += '_mpi'
         return program
+    
+    def _loadEnvironment(self):
+        """ Setup the environment variables needed to launch Relion. """
+        RELION_BIN = join(os.environ['RELION_HOME'], 'bin')
+        RELION_LD = join(os.environ['RELION_HOME'], 'lib')
+        environAdd('PATH', RELION_BIN)
+        environAdd('LD_LIBRARY_PATH', RELION_LD)
     
     def _getFileName(self, key, **args):
         """ Retrieve a filename from the templates. """

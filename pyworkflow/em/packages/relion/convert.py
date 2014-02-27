@@ -33,6 +33,7 @@ This module contains converter functions that will serve to:
 import os
 from pyworkflow.object import String
 from pyworkflow.utils.path import createLink
+from pyworkflow.em import ImageHandler
 from constants import *
 # Since Relion share several conventions with Xmipp, we will reuse 
 # the xmipp3 tools implemented for Scipion here
@@ -60,27 +61,51 @@ def addRelionLabels(replace=False, extended=False):
         for k, v in XMIPP_RELION_LABELS_EXTRA.iteritems():    
             xmipp.addLabelAlias(k, v, replace)  
       
-            
-def writeSetOfParticles(imgSet, filename):
+    
+class ParticleAdaptor():
+    """ Class used to convert a set of particles for Relion.
+    It will write an stack of in Spider format and also
+    modify the output star file to point to the new stack.
+    """
+    def __init__(self, stackFile):
+        self._rowCount = 1
+        self._ih = ImageHandler()
+        self._stackFile = stackFile
+        
+        import pyworkflow.em.packages.xmipp3 as xmipp3
+        self._particleToRow = xmipp3.particleToRow
+        
+    def setupRow(self, img, imgRow):
+        """ Convert image and modify the row. """
+        newLoc = (self._rowCount, self._stackFile)
+        self._ih.convert(img.getLocation(), newLoc)
+        img.setLocation(newLoc)
+        # Re-write the row with the new location
+        self._particleToRow(img, imgRow)
+        self._rowCount += 1
+    
+    
+def writeSetOfParticles(imgSet, starFile, stackFile):
     """ This function will write a SetOfImages as Relion metadata.
     Params:
         imgSet: the SetOfImages instance.
         filename: the filename where to write the metadata.
     """
     import pyworkflow.em.packages.xmipp3 as xmipp3
-    addRelionLabels()
-    xmipp3.writeSetOfParticles(imgSet, filename)
-    imgSet._relionStar = String(filename)
+    addRelionLabels(replace=True)
+    pa = ParticleAdaptor(stackFile)
+    xmipp3.writeSetOfParticles(imgSet, starFile, rowFunc=pa.setupRow)
+    imgSet._relionStar = String(starFile)
     
     
-def createRelionInputParticles(imgSet, filename): 
+def createRelionInputParticles(imgSet, starFile, stackFile): 
     """ Ensure that in 'filename' it is a valid STAR files with particles.
     If the imgSet comes from Relion, just create a link.
     If not, then write the proper file.
     """
     imgsStar = getattr(imgSet, '_relionStar', None)
     if imgsStar is None:
-        writeSetOfParticles(imgSet, filename)
+        writeSetOfParticles(imgSet, starFile, stackFile)
     else:
         imgsFn = imgsStar.get()
         createLink(imgsFn, imgsStar.get())

@@ -468,7 +468,7 @@ def writeSetOfImages(imgSet, filename, imgToFunc, rowFunc):
     imgSet._xmippMd = String(filename)
         
         
-def writeImgToMetadata(md, img, hasCtf, imgToFunc, rowFunc ):
+def writeImgToMetadata(md, img, hasCtf, imgToFunc, rowFunc):
     objId = md.addObject()
     imgRow = XmippMdRow()
     imgToFunc(img, imgRow, hasCtf)

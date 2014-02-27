@@ -64,8 +64,7 @@ class ProtRelionClassify2D(ProtRelionBase, ProtClassify):
                     '--norm': '',
                     '--scale': '',
                     '--o': self._getExtraPath('relion'),
-                    '--oversampling': '1',
-                    '--j': self.numberOfThreads.get()
+                    '--oversampling': '1'
                     })
         self._setSamplingArgs(args)
         
@@ -99,20 +98,20 @@ class ProtRelionClassify2D(ProtRelionBase, ProtClassify):
             
         
     def _setNormalArgs(self, args):
-        args.update({'--i': self._getFileName('input_particles'),
+        args.update({'--i': self._getFileName('input_star'),
                 '--particle_diameter': self.maskRadiusA.get() * 2.0,
                 '--angpix': self.inputParticles.get().getSamplingRate(),
                 })
         self._setBasicArgs(args)
         self._setMaskArgs(args)
         
-        if not self.isMapAbsoluteGreyScale:
-            args[' --firstiter_cc'] = '' 
+#        if not self.isMapAbsoluteGreyScale:
+#            args[' --firstiter_cc'] = '' 
             
         if self.maskZero == MASK_FILL_ZERO:
             args['--zero_mask'] = ''
             
-        args['--K'] = self.NumberOfClasses
+        args['--K'] = self.numberOfClasses.get()
         
 
     def _setContinueArgs(self):
