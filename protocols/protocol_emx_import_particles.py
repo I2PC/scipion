@@ -13,7 +13,6 @@ import math
 
 import xmipp
 from emx import *
-from emx.emxmapper import *
 
 from protlib_base import *
 from protlib_filesystem import replaceBasenameExt, renameFile
@@ -30,7 +29,6 @@ class ProtEmxImportParticles(XmippProtocol):
         #read emx file
         #Class to group EMX objects
         self.emxData = EmxData()
-        self.xmlMapper = XmlMapper(self.emxData)
         self.TiltPairs = False
         self.MicrographsMd = self.workingDirPath('micrographs.xmd')
         
@@ -73,7 +71,7 @@ class ProtEmxImportParticles(XmippProtocol):
         self.objDict = {}
         
         for classElement in CLASSLIST:
-            obj = self.xmlMapper.firstObject(classElement, self.EmxFileName)
+            obj = self.emxData.readFirstObject(classElement, self.EmxFileName)
             if obj is not None:
                 self.objDict[classElement] = obj
                 #is the binary file of this type
@@ -133,8 +131,7 @@ class ProtEmxImportParticles(XmippProtocol):
 def loadEmxData(emxFileName):
     """ Given an EMX filename, load data. """
     emxData = EmxData()
-    xmlMapper = XmlMapper(emxData)
-    xmlMapper.readEMXFile(emxFileName)
+    emxData.read(emxFileName)
     
     return emxData
     
