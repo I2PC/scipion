@@ -13,7 +13,6 @@ import math
 
 import xmipp
 from emx import *
-from emx.emxmapper import *
 
 from protlib_base import *
 from protlib_filesystem import replaceBasenameExt, renameFile, copyFile
