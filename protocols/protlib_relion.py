@@ -758,6 +758,7 @@ def convertImagesMd(log, inputMd, outputRelion):
     from protlib_import import exportMdToRelion
     
     md = MetaData(inputMd)
+    md.removeDisabled()
     # Get the values (defocus, magnification, etc) from each 
     # ctfparam files and put values in the row
     if md.containsLabel(MDL_CTF_MODEL):
