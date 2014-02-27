@@ -17,7 +17,6 @@ from protlib_utils import runJob
 from protlib_xmipp import redStr, RowMetaData
 import math
 from emx import *
-from emx.emxmapper import *
 from protlib_emx import *
 from os.path import relpath, join, abspath, dirname, exists
 
@@ -30,7 +29,6 @@ class ProtEmxImportMicrographs(XmippProtocol):
         #read emx file
         #Class to group EMX objects
         self.emxData = EmxData()
-        self.xmlMapper = XmlMapper(self.emxData)
         self.TiltPairs = False
         self.MicrographsMd = self.workingDirPath('micrographs.xmd')
         
@@ -91,7 +89,7 @@ class ProtEmxImportMicrographs(XmippProtocol):
         self.objDict = {}
         
         for classElement in CLASSLIST:
-            obj = self.xmlMapper.firstObject(classElement, self.EmxFileName)
+            obj = self.emxData.readFirstObject(classElement, self.EmxFileName)
             if obj is not None:
                 self.objDict[classElement] = obj
                 #is the binary file of this type
@@ -143,8 +141,7 @@ class ProtEmxImportMicrographs(XmippProtocol):
 def loadEmxData(emxFileName):
     """ Given an EMX filename, load data. """
     emxData = EmxData()
-    xmlMapper = XmlMapper(emxData)
-    xmlMapper.readEMXFile(emxFileName)
+    emxData.read(emxFileName)
     
     return emxData
     
