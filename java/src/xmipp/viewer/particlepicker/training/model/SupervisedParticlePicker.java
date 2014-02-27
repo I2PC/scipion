@@ -75,8 +75,8 @@ public class SupervisedParticlePicker extends ParticlePicker
 				radialtemplates = new ImageGeneric(ImageGeneric.Float);
 				radialtemplates.resize(getSize(), getSize(), 1, getTemplatesNumber());
 			}
+            templates.getRadialAvg(radialtemplates);
 
-			templates.getRadialAvg(radialtemplates);
 
 			for (SupervisedParticlePickerMicrograph m : micrographs)
 				loadMicrographData(m);
@@ -251,7 +251,7 @@ public class SupervisedParticlePicker extends ParticlePicker
 			initTemplates(num);
 			ImageGeneric igp;
 			List<ManualParticle> particles;
-			int size;
+			
 			ManualParticle particle;
 			double[] align;
 
@@ -269,8 +269,8 @@ public class SupervisedParticlePicker extends ParticlePicker
 				if (count >= maxcount)
 					break;
 				particles = m.getManualParticles();
-				size = particles.size();
-				for (int i = 0; i < size; i++)
+				
+				for (int i = 0; i < particles.size(); i++)
 				{
 					particle = particles.get(i);
 					igp = particle.getImageGeneric();
@@ -772,6 +772,8 @@ public class SupervisedParticlePicker extends ParticlePicker
 			importAllParticles(particlesfile);
 			return "";
 		}
+
+		importSize(path, f);
 		for (SupervisedParticlePickerMicrograph m : micrographs)
 		{
 			filename = getImportMicrographName(path, m.getFile(), f);
@@ -783,6 +785,8 @@ public class SupervisedParticlePicker extends ParticlePicker
 
 		return result;
 	}// function importParticlesFromFolder
+        
+        
 
 	/** Return the number of particles imported from a file */
 	public String importParticlesFromFile(String path, Format f, SupervisedParticlePickerMicrograph m, float scale, boolean invertx, boolean inverty)

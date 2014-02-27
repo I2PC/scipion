@@ -308,7 +308,7 @@ public class TiltPairPicker extends ParticlePicker
 
 		String uFn, tFn;
 		String result = "";
-
+                importSize(path, f);
 		for (UntiltedMicrograph um : micrographs)
 		{
 			uFn = getImportMicrographName(path, um.getFile(), f);

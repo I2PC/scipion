@@ -491,17 +491,8 @@ public abstract class ParticlePicker {
                 }
                 break;
             case Xmipp301:
-                 blockname = getParticlesBlockName(f); //only used with Xmipp
-                if (MetaData.containsBlock(path, blockname)) {
-                    md.read(getParticlesBlock(f, path));
-                }
-                if (MetaData.containsBlock(path, particlesAutoBlock)) {
-                    MetaData mdAuto = new MetaData();
-                    mdAuto.read(getParticlesAutoBlock(path));
-                    mdAuto.removeDisabled();
-                    md.unionAll(mdAuto);
-                    mdAuto.destroy();
-                }
+                fillParticlesMdFromXmipp301File(path, m, md);
+
                 break;
             case Eman:
                 fillParticlesMdFromEmanFile(path, m, md, scale);
@@ -522,7 +513,25 @@ public abstract class ParticlePicker {
         }
 
     }// function importParticlesFromFile
+    
+    public void fillParticlesMdFromXmipp301File(String file, Micrograph m, MetaData md) {
+         String blockname = getParticlesBlockName(Format.Xmipp301); //only used with Xmipp
+                if (MetaData.containsBlock(file, blockname)) {
+                    md.read(getParticlesBlock(Format.Xmipp301, file));
+                }
+                if (MetaData.containsBlock(file, particlesAutoBlock)) {
+                    MetaData mdAuto = new MetaData();
+                    mdAuto.read(getParticlesAutoBlock(file));
+                    mdAuto.removeDisabled();
+                    md.unionAll(mdAuto);
+                    mdAuto.destroy();
+                }
+                
+    }
 
+    
+
+    
     public void fillParticlesMdFromEmanFile(String file, Micrograph m, MetaData md, float scale) {
         // inverty = true;
         md.readPlain(file, "xcoor ycoor particleSize");
@@ -590,6 +599,22 @@ public abstract class ParticlePicker {
     public int getRadius() {
         return size / 2;
     }
+    
+    public void importSize(String path, Format f)
+    {
+        if(f == Format.Xmipp301)
+                {
+                    String configfile = String.format("%s%s%s", path, File.separator, "config.xmd");
+                    if(new File(configfile).exists())
+                    {
+                        MetaData configmd = new MetaData(configfile);
+                        int size = configmd.getValueInt(MDLabel.MDL_PICKING_PARTICLE_SIZE, configmd.firstObject());
+                        setSize(size);
+                        saveConfig();
+                    }
+                }
+    }
+
 
      public void addScipionSave(String script, String projectid, String inputid) {
             scipionsave = new ScipionSave(script, projectid, inputid);
@@ -624,5 +649,7 @@ public abstract class ParticlePicker {
             this.inputid = inputid;
         }
     }
+    
+
 
 }
