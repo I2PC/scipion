@@ -132,9 +132,9 @@ class Form(object):
     def getClass(self):
         return type(self)
         
-    def addSection(self, **args):
+    def addSection(self, label='', **args):
         """Add a new section"""
-        self.lastSection = Section(self, **args)
+        self.lastSection = Section(self, label=label, **args)
         self._sectionList.append(self.lastSection)
         return self.lastSection
 
