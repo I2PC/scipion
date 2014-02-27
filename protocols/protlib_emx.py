@@ -475,7 +475,7 @@ def xmippMicrographsToEmx(micMd, emxData, emxDir):
         img.read(fnIn)
         img.write(join(emxDir, fnOut))
         
-        micrograph = Emxmicrograph(fnOut)
+        micrograph = EmxMicrograph(fnOut)
         # Set CTF parameters if present
         if hasCtf:
             xmippCtfToEmx(md, objId, micrograph)
@@ -490,7 +490,7 @@ def xmippMicrographsToEmx(micMd, emxData, emxDir):
                 pIndex += 1
                 # We are using here a dummy filename, since not make sense
                 # for particles with just coordinates
-                particle = Emxparticle(str(pIndex), pIndex)
+                particle = EmxParticle(str(pIndex), pIndex)
                 particle.set('centerCoord__X', mdPos.getValue(MDL_XCOOR, pId))
                 particle.set('centerCoord__Y', mdPos.getValue(MDL_YCOOR, pId))
                 particle.setForeignKey(micrograph)
@@ -528,7 +528,7 @@ def xmippParticlesToEmx(imagesMd, emxData, emxDir):
         # Write to mrc stack
         index += 1
         img.write('%d@%s' % (index, mrcFn))
-        particle = Emxparticle(imgFn, index)
+        particle = EmxParticle(imgFn, index)
         # Create the micrograph object if exists
         if hasMicrograph:
             fn = md.getValue(MDL_MICROGRAPH, objId)
@@ -537,7 +537,7 @@ def xmippParticlesToEmx(imagesMd, emxData, emxDir):
             else:
                 idx, path = FileName(fn).decompose()
                 idx = idx or None
-                micrograph = Emxmicrograph(path, idx)
+                micrograph = EmxMicrograph(path, idx)
                 emxData.addObject(micrograph)
                 micsDict[fn] = micrograph 
             
@@ -606,7 +606,7 @@ def ctfMicXmippToEmx(emxData,xmdFileName):
     for objId in md:
         micrographName = md.getValue(MDL_MICROGRAPH, objId)
         ctfModel       = md.getValue(MDL_CTF_MODEL,objId)
-        m1             = Emxmicrograph(fileName=micrographName)
+        m1             = EmxMicrograph(fileName=micrographName)
 
         mdCTF.read(ctfModel)
         objId2 = mdCTF.firstObject()
@@ -640,7 +640,7 @@ def ctfMicXmippToEmxChallenge(emxData,xmdFileName):
     for objId in md:
         micrographName = md.getValue(MDL_MICROGRAPH, objId)
         ctfModel       = md.getValue(MDL_CTF_MODEL,objId)
-        m1             = Emxmicrograph(fileName=micrographName)
+        m1             = EmxMicrograph(fileName=micrographName)
 
         mdCTF.read(ctfModel)
         objId2 = mdCTF.firstObject()
@@ -668,7 +668,7 @@ def alignXmippToEmx(emxData,xmdFileName):
         (index,fileName)=fileName.decompose()
         if index==0:
             index= None
-        p1=Emxparticle(fileName=fileName, index=index)
+        p1=EmxParticle(fileName=fileName, index=index)
         rot  = md.getValue(MDL_ANGLE_ROT ,objId)
         tilt = md.getValue(MDL_ANGLE_TILT,objId)
         psi  = md.getValue(MDL_ANGLE_PSI ,objId)
@@ -776,7 +776,7 @@ def coorrXmippToEmx(emxData,xmdFileName):
     xmdFileNameNoExtNoBlock = xmdFileNameNoExt.removeBlockName()
     micrographName = xmdFileNameNoExtNoBlock + BINENDING
     particleName   = xmdFileNameNoExtNoBlock + STACKENDING
-    m1 = Emxmicrograph(fileName=micrographName)
+    m1 = EmxMicrograph(fileName=micrographName)
     emxData.addObject(m1)
     counter = FIRSTIMAGE
     #check if MDL_XCOOR column exists if not 
@@ -785,7 +785,7 @@ def coorrXmippToEmx(emxData,xmdFileName):
 
         coorX = md.getValue(MDL_XCOOR, objId)
         coorY = md.getValue(MDL_YCOOR, objId)
-        p1    = Emxparticle(fileName=particleName, index=counter)
+        p1    = EmxParticle(fileName=particleName, index=counter)
         p1.set('centerCoord__X',coorX)
         p1.set('centerCoord__Y',coorY)
         p1.setForeignKey(m1)

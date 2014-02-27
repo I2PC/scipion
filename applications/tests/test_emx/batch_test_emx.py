@@ -46,7 +46,6 @@ except ImportError:
 import random
 import unittest
 from emx import *
-from emx.emxmapper import *
 from os.path import join
 import filecmp
 try:
@@ -64,7 +63,7 @@ class TestEMX(unittest.TestCase):
     def test_00emxMicrograph(self):
         """ Create micrograph and play a little with it 
         """
-        m1 = Emxmicrograph('mic',1)
+        m1 = EmxMicrograph('mic',1)
         m1.set('acceleratingVoltage',100)
         m1.set('defocusU',1000.)
         m1.set('pixelSpacing__X',5.6)
@@ -83,18 +82,18 @@ class TestEMX(unittest.TestCase):
     def test_10emxParticle(self):
         """ Create a particle and play a little with it 
         """
-        m1 = Emxmicrograph('mic',1)
+        m1 = EmxMicrograph('mic',1)
         m1.set('acceleratingVoltage',100)
         m1.set('defocusU',1000.)
         m1.set('pixelSpacing__X',5.6)
         m1.set('pixelSpacing__Y',5.7)
 
-        p1 = Emxparticle('part',1)
+        p1 = EmxParticle('part',1)
         p1.set('defocusU',1000.10)
         p1.set('pixelSpacing__X',5.66)
         p1.set('pixelSpacing__Y',5.77)
         
-        p1.setForeignKey(m1)
+        p1.setMicrograph(m1)
         #reference
  
         dictPrimaryKeys = collections.OrderedDict([('fileName', 'part'), 
@@ -115,14 +114,14 @@ class TestEMX(unittest.TestCase):
     def test_20clear(self):
         """Test clear function
         """
-        m1 = Emxmicrograph('mic',1)
+        m1 = EmxMicrograph('mic',1)
         m1.set('acceleratingVoltage',100)
         m1.set('defocusU',1000.)
         m1.set('pixelSpacing__X',5.6)
         m1.set('pixelSpacing__Y',5.27)
         m1.clear()
         
-        m2 = Emxmicrograph('mic',1)
+        m2 = EmxMicrograph('mic',1)
         m2.set('activeFlag',None)
         
         self.assertEqual(m1, m2)
@@ -132,21 +131,20 @@ class TestEMX(unittest.TestCase):
         #fileName = "massive_million.xml"
         #fileName = "massive_100000.xml"
         fileName = join(self.testsPath,'EMX/EMXread.emx')
-        emxData=EmxData()
-        xmlMapper = XmlMapper(emxData)
-        xmlMapper.readEMXFile(fileName)
+        emxData = EmxData()
+        emxData.read(fileName)
 
-        m1 = Emxmicrograph('mic',1)
+        m1 = EmxMicrograph('mic',1)
         m1.set('acceleratingVoltage',100.)
         m1.set('defocusU',1000.)
         m1.set('pixelSpacing__X',5.6)
         m1.set('pixelSpacing__Y',5.7)
 
-        m2 = Emxmicrograph('mic',2)
+        m2 = EmxMicrograph('mic',2)
         m2.set('acceleratingVoltage',200.)
         m2.set('defocusUAngle',135.)
 
-        p1 = Emxparticle('parti',1)
+        p1 = EmxParticle('parti',1)
         p1.set('boxSize__X',11)
         p1.set('boxSize__Y',33)
         p1.set('defocusU',1000.)
@@ -166,7 +164,7 @@ class TestEMX(unittest.TestCase):
         p1.set('transformationMatrix__t33',33.1)
         p1.set('transformationMatrix__t34',34.1)
 
-        p1.setForeignKey(m1)
+        p1.setMicrograph(m1)
 
         self.assertTrue(emxData.objLists[MICROGRAPH][0].strongEq(m1))
         self.assertTrue(emxData.objLists[MICROGRAPH][1].strongEq(m2))
@@ -178,52 +176,49 @@ class TestEMX(unittest.TestCase):
         #fileName = "massive_100000.xml"
         fileName = join(self.testsPath,'EMX/EMXread.emx')
         emxData = EmxData()
-        xmlMapper = XmlMapper(emxData)
-        
-        mic = xmlMapper.firstObject(MICROGRAPH, fileName)
-        m1 = Emxmicrograph('mic', 1)
+        mic = emxData.readFirstObject(MICROGRAPH, fileName)
+
+        m1 = EmxMicrograph('mic', 1)
         self.assertEqual(mic, m1, "first micrograph differ from expected")    
  
-        particle = xmlMapper.firstObject(PARTICLE, fileName)  
-        p1 = Emxparticle('parti', 1)
+        particle = emxData.readFirstObject(PARTICLE, fileName)  
+        p1 = EmxParticle('parti', 1)
         self.assertEqual(particle, p1, "first particle differ from expected")  
             
         
     def test_35size(self):
-        emxData=EmxData()
+        emxData = EmxData()
 
-        p1 = Emxparticle('part',1)
+        p1 = EmxParticle('part',1)
         p1.set('defocusU',1000.10)
         p1.set('pixelSpacing__X',5.66)
         p1.set('pixelSpacing__Y',5.77)
         emxData.addObject(p1)
 
-
-        m1 = Emxmicrograph('mic',1)
+        m1 = EmxMicrograph('mic',1)
         m1.set('acceleratingVoltage',100)
         m1.set('defocusU',1000.)
         m1.set('pixelSpacing__X',5.6)
         m1.set('pixelSpacing__Y',5.7)
-        
 
         for i in range (1,10):
-            m1.set('index',i)
+            m1.set('index', i)
             emxData.addObject(m1)
-        self.assertEqual(emxData.size(),10)
+        self.assertEqual(emxData.size(), 10)
 
     def test_40write(self):
         fileName = join(self.testsPath,'EMX/EMXwrite.emx')
-        emxData=EmxData()
-        xmlMapper = XmlMapper(emxData)
+        emxData = EmxData()
+        
         for i in range (1,3):
-            m1 = Emxmicrograph('mic',i)
+            m1 = EmxMicrograph('mic',i)
             m1.set('acceleratingVoltage',100)
             m1.set('defocusU',1000.)
             m1.set('pixelSpacing__X',5.6)
             m1.set('pixelSpacing__Y',5.7)
             emxData.addObject(m1)
 
-        p1 = Emxparticle('part',1)
+        p1 = EmxParticle('part',1)
         p1.set('defocusU',1000.10)
         p1.set('pixelSpacing__X',5.66)
         p1.set('pixelSpacing__Y',5.77)
@@ -243,11 +238,12 @@ class TestEMX(unittest.TestCase):
         p1.set('transformationMatrix__t33',33)
         p1.set('transformationMatrix__t34',34)
         
-        p1.addForeignKey(MICROGRAPH,m1)
+        p1.setMicrograph(m1)
+        #TODO: check the following line
+        #p1.addForeignKey(MICROGRAPH,m1)
         emxData.addObject(p1)
         fileName2= os.path.join('/tmp','EMXwrite.emx')
-        xmlMapper.writeEMXFile(fileName2)
-
+        emxData.write(fileName2)
         #print "kdiff3", fileName,fileName2
         self.assertTrue(filecmp.cmp(fileName,fileName2))
         if os.path.exists(fileName2):
@@ -258,62 +254,60 @@ class TestEMX(unittest.TestCase):
         but an auxiliary function
         """
         fileName2 = join(self.testsPath,'EMX/EMXMasiveWrite.emx')
-        emxDataW=EmxData()
-        emxDataR=EmxData()
-        xmlMapperW = XmlMapper(emxDataW)
-        xmlMapperR = XmlMapper(emxDataR)
+        emxDataW = EmxData()
+        emxDataR = EmxData()
 
         numberMic=3
         numberPartPerMic = 2
 #        numberMic=100
 #        numberPartPerMic = 1000
         for i in range (1,numberMic):
-            m1 = Emxmicrograph('mic',i)
+            m1 = EmxMicrograph('mic',i)
             m1.set('acceleratingVoltage',100)
             m1.set('defocusU',1000.)
             m1.set('pixelSpacing__X',5.6)
             m1.set('pixelSpacing__Y',5.7)
             emxDataW.addObject(m1)
             for p in range (1,numberPartPerMic):
-                p1 = Emxparticle('part',p)
+                p1 = EmxParticle('part',p)
                 p1.set('defocusU',1000.10)
                 p1.set('pixelSpacing__X',5.66)
                 p1.set('pixelSpacing__Y',5.77)
-                p1.addForeignKey(MICROGRAPH,m1)
+                p1.setMicrograph(m1)
                 emxDataW.addObject(p1)
-        fileName= os.path.join('/tmp','EMXMasiveWrite.emx')
-        xmlMapperW.writeEMXFile(fileName)
-        xmlMapperR.readEMXFile(fileName)
-        xmlMapperR.writeEMXFile(fileName+"2")
-        self.assertTrue(filecmp.cmp(fileName,fileName+'2'))
-        #print "kdiff3", fileName,fileName+"2"
-        if os.path.exists(fileName):
-            os.remove(fileName)
-        if os.path.exists(fileName+'2'):
-            os.remove(fileName+'2')
+        fn = os.path.join('/tmp','EMXMasiveWrite.emx')
+        fn2 = fn.replace('.emx', '2.emx')
+        emxDataW.write(fn)
+        emxDataR.read(fn)
+        emxDataR.write(fn2)
+        self.assertTrue(filecmp.cmp(fn, fn2))
+        #print "kdiff3", fn,fn+"2"
+        if os.path.exists(fn):
+            os.remove(fn)
+        if os.path.exists(fn2):
+            os.remove(fn2)
 
     def test_60iterate(self):
         #fileName = "massive_million.xml"
         #fileName = "massive_100000.xml"
         fileName = join(self.testsPath,'EMX/EMXread.emx')
-        emxData=EmxData()
-        xmlMapper = XmlMapper(emxData)
-        xmlMapper.readEMXFile(fileName)
+        emxData = EmxData()
+        emxData.read(fileName)
         _list = []
         
-        m1 = Emxmicrograph('mic',1)
+        m1 = EmxMicrograph('mic',1)
         m1.set('acceleratingVoltage',100.)
         m1.set('defocusU',1000.)
         m1.set('pixelSpacing__X',5.6)
         m1.set('pixelSpacing__Y',5.7)
         _list.append(m1)
 
-        m2 = Emxmicrograph('mic',2)
+        m2 = EmxMicrograph('mic',2)
         m2.set('acceleratingVoltage',200.)
         m2.set('defocusUAngle',135.)
         _list.append(m2)
 
-        p1 = Emxparticle('parti',1)
+        p1 = EmxParticle('parti',1)
         p1.set('boxSize__X',11)
         p1.set('boxSize__Y',33)
         p1.set('defocusU',1000.)
@@ -337,7 +331,6 @@ class TestEMX(unittest.TestCase):
         xmlFile    = join(self.testsPath,'EMX/EMXwrite.emx')
         (code,_out,_err) = validateSchema(xmlFile)
         self.assertEqual(code,0)
-        
         
         xmlFile    = join(self.testsPath,'EMX/EMXwrite_badly_formed.emx')
         try:
