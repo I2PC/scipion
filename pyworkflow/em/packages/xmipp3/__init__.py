@@ -70,6 +70,7 @@ from protocol_convert_pdb import XmippProtConvertPdb
 from protocol_join_sets import XmippProtJoinSets
 from protocol_nma import XmippProtNMA
 from protocol_nma_alignment import XmippProtAlignmentNMA
+from protocol_nma_choose import XmippProtNMAChoose
 from protocol_align_volume import XmippProtAlignVolume
 from protocol_cltomo import XmippProtCLTomo
 from protocol_screen_classes import XmippProtScreenClasses
