@@ -58,13 +58,14 @@ class XmippProtNMAChoose(XmippProtConvertToPseudoAtomsBase, XmippProtNMABase):
         filenames=[]
         for inputStructure in inputStructures:
             filenames.append(getImageLocation(inputStructure))
-            
+          
+        deps = []  
         for volCounter in range(1,len(filenames)+1):
             fnIn=filenames[volCounter-1]
             prefix="_%02d"%volCounter
             fnMask = self._insertMaskStep(fnIn, prefix)
             
-            self._insertFunctionStep('convertToPseudoAtomsStep', inputStructure, fnIn, fnMask, prefix)
+            self._insertFunctionStep('convertToPseudoAtomsStep', inputStructure, fnIn, fnMask, prefix, prerequisites=deps)
             parentId=self._insertFunctionStep('computeNMAStep',self._getPath("pseudoatoms%s.pdb"%prefix), prefix)
             deps=[]
             for volCounter2 in range(1,len(filenames)+1):
