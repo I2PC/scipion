@@ -27,13 +27,13 @@
 This module contains the protocol to obtain a refined 3D recontruction from a set of particles using Frealign
 """
 
-from pyworkflow.em import *
-from pyworkflow.utils import *
-import brandeis
-from data import *
-from constants import *
 import os
-import time
+from pyworkflow.utils import *
+from pyworkflow.em import *
+from data import *
+from brandeis import *
+from constants import *
+# import time
 
 
 class ProtFrealign(ProtRefine3D):
@@ -61,7 +61,7 @@ class ProtFrealign(ProtRefine3D):
                       help='Select the input particles.\n')  
 
         form.addParam('input3DReferences', PointerParam,
-                      pointerClass='SetOfVolumes',
+                      pointerClass='Volume',
                       label='Initial 3D reference volume:', 
                       help='Input 3D reference reconstruction.\n')
 
@@ -77,7 +77,7 @@ class ProtFrealign(ProtRefine3D):
         form.addSection(label='Flow Control')
 
         form.addParam('Firstmode', EnumParam, condition='not useInitialAngles', choices=['Simple search & Refine', 'Search, Refine, Randomise'],
-                      label="Operation mode for iteration 1:", default=brandeis.MOD2_SIMPLE_SEARCH_REFINEMENT,
+                      label="Operation mode for iteration 1:", default=MOD2_SIMPLE_SEARCH_REFINEMENT,
                       display=EnumParam.DISPLAY_COMBO,
                       help='Parameter *IFLAG* in FREALIGN\n\n'
                            'This option is only for the iteration 1.\n'
@@ -86,7 +86,7 @@ class ProtFrealign(ProtRefine3D):
 
         form.addParam('mode', EnumParam, choices=['Recontruction only', 'Refinement', 'Random Search & Refine',
                                                    'Simple search & Refine', 'Search, Refine, Randomise'],
-                      label="Operation mode:", default=brandeis.MOD_REFINEMENT,
+                      label="Operation mode:", default=MOD_REFINEMENT,
                       display=EnumParam.DISPLAY_COMBO,
                       help='Parameter *IFLAG* in FREALIGN\n\n'
                            '_Mode 0_: Reconstruction only parameters as read in\n'
@@ -119,7 +119,7 @@ class ProtFrealign(ProtRefine3D):
 
         form.addParam('methodEwaldSphere', EnumParam, choices=['Disable', 'Simple', 'Reference-based', 'Simple with reversed handedness',
                                                                'Reference-based with reversed handedness'],
-                      default=brandeis.EWA_DISABLE, expertLevel=LEVEL_EXPERT,
+                      default=EWA_DISABLE, expertLevel=LEVEL_EXPERT,
                       label="Ewald sphere correction", display=EnumParam.DISPLAY_COMBO,
                       help='Parameter *IEWALD* in FREALIGN\n\n'
                            'The options available to Ewald correction are:\n'
@@ -156,7 +156,7 @@ class ProtFrealign(ProtRefine3D):
         form.addParam('methodCalcFsc', EnumParam, choices=['calculate FSC', 'Calculate one 3DR with odd particles', 
                                                      'Calculate one 3DR with even particles',
                                                      'Calculate one 3DR with all particles'],
-                      default=brandeis.FSC_CALC,
+                      default=FSC_CALC,
                       label="Calculation of FSC", display=EnumParam.DISPLAY_COMBO,
                       help='parameter *IFSC* in FREALIGN\n\n'
                            'Calculation of FSC table:\n'
@@ -177,7 +177,7 @@ class ProtFrealign(ProtRefine3D):
                            'Calculate additional statistics in resolution table at the end \n'
                            '(*QFACT, SSNR, CC* and related columns). Setting *FSTAT* False saves over 50% of memory!.')
 
-        form.addParam('paddingFactor', EnumParam, choices=['1', '2', '4'], default=brandeis.PAD_4,
+        form.addParam('paddingFactor', EnumParam, choices=['1', '2', '4'], default=PAD_4,
                       label='Padding Factor', display=EnumParam.DISPLAY_COMBO,
                       help='Parameter *IBLOW* in FREALIGN\n\n'
                            'Padding factor for reference structure.\n'
@@ -260,7 +260,7 @@ class ProtFrealign(ProtRefine3D):
                            'a subsequent local refinement.\n')
 
         form.addParam('paramRefine', EnumParam, choices=['Refine all', 'Refine only euler angles', 'Refine only X & Y shifts'],
-                      default=brandeis.REF_ALL,
+                      default=REF_ALL,
                       label="Parameters to refine", display=EnumParam.DISPLAY_COMBO,
                       help='Parameter *MASK* in FREALIGN\n\n'
                            'Parameters to include in refinement')
@@ -363,12 +363,11 @@ class ProtFrealign(ProtRefine3D):
                            'high values in the FSC curve (se publication #2 above). FREALIGN uses an\n'
                            'automatic weighting scheme and RBFACT should normally be set to 0.0.')
 
-        form.addParallelSection(threads=1, mpi=1)        
+        form.addParallelSection(threads=1, mpi=1)
     
     def _insertAllSteps(self):
         """Insert the steps to refine orientations and shifts of the SetOfParticles
         """
-       
         numberOfBlocks = self.numberOfThreads.get()
         depsRecons = []
         
@@ -397,7 +396,7 @@ class ProtFrealign(ProtRefine3D):
         
         if iter==1:
             imgSet.writeStack(imgFn) # convert the SetOfParticles into a mrc stack.
-            vol.writeStack(volFn) # convert the reference volume into a mrc volume
+            ImageHandler().convert(vol.getLocation(), volFn) # convert the reference volume into a mrc volume
             copyFile(volFn, refVol)  #Copy the initial volume in the current directory.
         else:
             self._splitParFile(iter, numberOfBlocks)
@@ -466,7 +465,9 @@ class ProtFrealign(ProtRefine3D):
         samplingRate3DR = imgSet.getSamplingRate()
         paramDic = {}
         #Prepare arguments to call program fralign_v8.exe
-        paramsDic = {'mode': self.mode.get(),
+        
+        paramsDic = {'frealign': FREALIGN_PATH,
+                        'mode': self.mode.get(),
                         'useInitialAngles': self.useInitialAngles.get(),
                         'innerRadius': self.innerRadius.get(),
                         'outerRadius': self.outerRadius.get(),
@@ -643,7 +644,8 @@ class ProtFrealign(ProtRefine3D):
         params3DR = dict(params.items() + params2.items())
         
         args = self._prepareCommand()
-        self.runJob(self._program, args % params3DR)
+        # frealign program is already in the args script, that's why runJob('')
+        self.runJob('', args % params3DR)
         self._leaveDir()
     
     def refineParticlesStep(self, iter, block):
@@ -670,7 +672,8 @@ class ProtFrealign(ProtRefine3D):
         paramsRefine = dict(initParamsDict.items() + paramDic.items() + param.items())
         args = self._prepareCommand()
         
-        self.runJob(self._program, args % paramsRefine)
+        # frealign program is already in the args script, that's why runJob('')
+        self.runJob('', args % paramsRefine)
         
     def _setParamsRefineParticles(self, iter, block):
         paramDics = {}
@@ -706,9 +709,9 @@ class ProtFrealign(ProtRefine3D):
         
     def __openParamFile(self, blockNumber, paramsDict):
         """ Open the file and write the first part of the block param file. """
-        if which('frealign_v8.exe') is '':
-            raise Exception('Missing frealign_v8.exe')
-        initaLines = """frealign_v8.exe << eot > %(frealignOut)s
+        if not exists(FREALIGN_PATH):
+            raise Exception('Missing ' + FREALIGN)
+        initaLines = """%(frealign)s << eot > %(frealignOut)s
 M,%(mode2)s,%(doMagRefinement)s,%(doDefocusRef)s,%(doAstigRef)s,%(doDefocusPartRef)s,%(metEwaldSphere)s,%(doExtraRealSpaceSym)s,%(doWienerFilter)s,%(doBfactor)s,%(writeMatchProj)s,%(metFsc)s,%(doAditionalStatisFSC)s,%(padFactor)s
 %(outerRadius)s,%(innerRadius)s,%(sampling3DR)s,%(ampContrast)s,%(ThresholdMask)s,%(pseudoBFactor)s,%(avePhaseResidual)s,%(angStepSize)s,%(numberRandomSearch)s,%(numberPotentialMatches)s
 %(paramRefine)s
@@ -752,7 +755,7 @@ eot
         self._enterDir(iterDir)
         
         imgSet = self.inputParticles.get()
-        magnification = imgSet._acquisition.magnification.get()
+        magnification = imgSet.getAcquisition().getMagnification()
         blockParticles = self._particlesPerBlock(numberOfBlocks, imgSet.getSize())
         initParamsDict = self._getParamsIteration(imgSet, iter)
         params = {}
@@ -803,10 +806,9 @@ eot
     def _prepareCommand(self):
         """ prepare the command to execute"""
 
-        if which('frealign_v8.exe') is '':
-            raise Exception('Missing frealign_v8.exe')
-        self._program = which('frealign_v8.exe')
-        args = """  << eot >> %(frealignOut)s
+        if not exists(FREALIGN_PATH):
+            raise Exception('Missing ' + FREALIGN)
+        args = """%(frealign)s  << eot >> %(frealignOut)s
 M,%(mode)s,%(doMagRefinement)s,%(doDefocusRef)s,%(doAstigRef)s,%(doDefocusPartRef)s,%(metEwaldSphere)s,%(doExtraRealSpaceSym)s,%(doWienerFilter)s,%(doBfactor)s,%(writeMatchProj)s,%(metFsc)s,%(doAditionalStatisFSC)s,%(padFactor)s
 %(outerRadius)s,%(innerRadius)s,%(sampling3DR)s,%(ampContrast)s,%(ThresholdMask)s,%(pseudoBFactor)s,%(avePhaseResidual)s,%(angStepSize)s,%(numberRandomSearch)s,%(numberPotentialMatches)s
 %(paramRefine)s
@@ -881,7 +883,6 @@ eot
                             break
                 f2.close()
                 f1.close()
-
     
     def createOutput(self):
         
@@ -895,8 +896,8 @@ eot
         
     def _validate(self):
         errors = []
-        if which('frealign_v8.exe') is '':
-            errors.append('Missing frealign_v8.exe')
+        if not exists(FREALIGN_PATH):
+            errors.append('Missing ' + FREALIGN)
         return errors
     
     def _summary(self):
@@ -904,9 +905,9 @@ eot
         summary.append("Input particles:  %s" % self.inputParticles.get().getNameId())
         summary.append("Input volumes:  %s" % self.input3DReferences.get().getNameId())
         
-        if not hasattr(self, 'outputVolumes'):
+        if not hasattr(self, 'outputVolume'):
             summary.append("Output volumes not ready yet.")
         else:
-            summary.append("Output volumes: %s" % self.vol.get())
+            summary.append("Output volumes: %s" % self.outputVolume.getNameId())
         
         return summary

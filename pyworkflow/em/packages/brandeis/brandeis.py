@@ -28,8 +28,13 @@ This sub-package contains data and protocol classes
 wrapping Grigrorieff Lab programs at Brandeis
 """
 
-
+from os.path import join
 from pyworkflow.em import *
 from constants import *
 
+CTFFIND = 'ctffind3.exe'
+FREALIGN = 'frealign_v8.exe'
+
+CTFFIND_PATH = join(os.environ['CTFFIND_HOME'], CTFFIND)
+FREALIGN_PATH = join(os.environ['FREALIGN_HOME'], 'bin', FREALIGN)
 
