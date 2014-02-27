@@ -28,9 +28,10 @@ This module contains the protocol for CTF estimation with ctffind3
 """
 
 
-from pyworkflow.em import *  
-from pyworkflow.utils.which import which
 from pyworkflow.utils.path import makePath, replaceBaseExt, join, basename
+from pyworkflow.em import *
+from brandeis import *
+# from pyworkflow.utils.which import which
 
 
 class ProtCTFFind(ProtCTFMicrographs):
@@ -45,11 +46,10 @@ class ProtCTFFind(ProtCTFMicrographs):
         sampling = self.inputMics.getSamplingRate()
         self._params['lowRes'] = sampling / self._params['lowRes']
         self._params['highRes'] = sampling / self._params['highRes']        
-        
-        if which('ctffind3.exe') is '':
-            raise Exception('Missing ctffind3.exe')
+        if not exists(CTFFIND_PATH):
+            raise Exception('Missing ' + CTFFIND)
          
-        self._program = 'export NATIVEMTZ=kk ; ' + which('ctffind3.exe')
+        self._program = 'export NATIVEMTZ=kk ; ' + CTFFIND_PATH
         self._args = """   << eof > %(ctffindOut)s
 %(micFn)s
 %(ctffindPSD)s
@@ -90,8 +90,6 @@ class ProtCTFFind(ProtCTFMicrographs):
             
     def _getCTFModel(self, defocusU, defocusV, defocusAngle, psdFile):
         ctf = CTFModel()
-#        ctf.copyAttributes(self.inputMics, 'samplingRate')
-#        ctf.copyAttributes(self.inputMics.microscope, 'voltage', 'sphericalAberration')
         ctf.setDefocusU(defocusU)
         ctf.setDefocusV(defocusV)
         ctf.setDefocusAngle(defocusAngle)
@@ -106,30 +104,18 @@ class ProtCTFFind(ProtCTFMicrographs):
             out = join(micDir, 'ctffind.out')
             result = self._parseOutput(out)
             defocusU, defocusV, defocusAngle = result
-            #micOut = Micrograph()
-            #micOut.setFileName(mic.getFileName())
-            #micOut.setCTF(self._getCTFModel(defocusU, defocusV, defocusAngle, 
-            #                                    self._getPsdPath(micDir)))
-            #micSet.append(micOut)
             ctfModel = self._getCTFModel(defocusU, defocusV, defocusAngle, 
                                                 self._getPsdPath(micDir))
             ctfModel.setMicFile(mic.getFileName())
             ctfSet.append(ctfModel)
 
-        # This property should only be set by CTF estimation protocols
-        #micSet.setHasCTF(True)     
-            
-        #micSet.write()
-        ctfSet.write() 
-        
-        #self._defineOutputs(outputMicrographs=micSet)
         self._defineOutputs(outputCTF=ctfSet)
-        #self._defineSourceRelation(self.inputMics, micSet)
         self._defineRelation(RELATION_CTF, ctfSet, self.inputMics)
 
     def _validate(self):
         errors = []
-        if which('ctffind3.exe') is '':
+        ctffind = join(os.environ['CTFFIND_HOME'], 'ctffind3.exe')
+        if not exists(ctffind):
             errors.append('Missing ctffind3.exe')
         return errors
             

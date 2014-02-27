@@ -23,12 +23,13 @@ $(document).ready(function(){
 
 
 	{% if dataset.getNumberSlices == 1 %}
-		{% for id,enable,data,transformationMatrix in dataset.getDataToRenderAndExtra %}
+	    
+		{% for id,enable,data,transformationMatrix in tableDataset.getDataToRenderAndExtra %}
 			<div class="img_container" id="img_container___{{id}}">
 				<div class="img_inner_container">
 					<img class="tableImages" title="{{data}}" data-real_src="/render_column/?renderFunc=get_image&image={{data}}"/>
 					
-					{% if dataset.getTable.hasEnabledColumn %}
+					{% if tableDataset.hasEnabledColumn %}
 					<img class="enabledGallery
 					{% if enable == 0 %}
 					selected
