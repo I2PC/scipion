@@ -492,6 +492,7 @@ public abstract class ParticlePicker {
                 break;
             case Xmipp301:
                 fillParticlesMdFromXmipp301File(path, m, md);
+
                 break;
             case Eman:
                 fillParticlesMdFromEmanFile(path, m, md, scale);
@@ -528,6 +529,9 @@ public abstract class ParticlePicker {
                 
     }
 
+    
+
+    
     public void fillParticlesMdFromEmanFile(String file, Micrograph m, MetaData md, float scale) {
         // inverty = true;
         md.readPlain(file, "xcoor ycoor particleSize");
@@ -595,6 +599,22 @@ public abstract class ParticlePicker {
     public int getRadius() {
         return size / 2;
     }
+    
+    public void importSize(String path, Format f)
+    {
+        if(f == Format.Xmipp301)
+                {
+                    String configfile = String.format("%s%s%s", path, File.separator, "config.xmd");
+                    if(new File(configfile).exists())
+                    {
+                        MetaData configmd = new MetaData(configfile);
+                        int size = configmd.getValueInt(MDLabel.MDL_PICKING_PARTICLE_SIZE, configmd.firstObject());
+                        setSize(size);
+                        saveConfig();
+                    }
+                }
+    }
+
 
      public void addScipionSave(String script, String projectid, String inputid) {
             scipionsave = new ScipionSave(script, projectid, inputid);
@@ -630,18 +650,6 @@ public abstract class ParticlePicker {
         }
     }
     
-    public void importSize(String path, Format f)
-    {
-        if(f == Format.Xmipp301)
-                {
-                    String configfile = String.format("%s%s%s", path, File.separator, "config.xmd");
-                    if(new File(configfile).exists())
-                    {
-                        MetaData configmd = new MetaData(configfile);
-                        int size = configmd.getValueInt(MDLabel.MDL_PICKING_PARTICLE_SIZE, configmd.firstObject());
-                        setSize(size);
-                    }
-                }
-    }
+
 
 }

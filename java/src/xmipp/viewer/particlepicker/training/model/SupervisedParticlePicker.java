@@ -75,7 +75,8 @@ public class SupervisedParticlePicker extends ParticlePicker
 				radialtemplates = new ImageGeneric(ImageGeneric.Float);
 				radialtemplates.resize(getSize(), getSize(), 1, getTemplatesNumber());
 			}
-                        templates.getRadialAvg(radialtemplates);
+            templates.getRadialAvg(radialtemplates);
+
 
 			for (SupervisedParticlePickerMicrograph m : micrographs)
 				loadMicrographData(m);
@@ -771,7 +772,8 @@ public class SupervisedParticlePicker extends ParticlePicker
 			importAllParticles(particlesfile);
 			return "";
 		}
-                importSize(path, f);
+
+		importSize(path, f);
 		for (SupervisedParticlePickerMicrograph m : micrographs)
 		{
 			filename = getImportMicrographName(path, m.getFile(), f);
