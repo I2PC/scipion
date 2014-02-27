@@ -73,6 +73,8 @@ class ProtEmxExportMicrographs(XmippProtocol):
 
 
 def exportMicrographs(log, emxDir, inputMd):
+    #TODO we get sampling form CTF, that is not correct
     emxData = EmxData()
+    #get sampling rate
     xmippMicrographsToEmx(inputMd, emxData, emxDir)
 

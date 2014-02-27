@@ -156,19 +156,20 @@ class XmlMapper():
         # print xmlString
         return xmlString
 
-    _attributes = [
-        'acceleratingVoltage'
-        , 'activeFlag'
-        , 'amplitudeContrast'
-        , 'cs'
-        , 'defocusU'
-        , 'defocusV'
-        , 'defocusUAngle'
-        , 'fom'
-        , 'pixelSpacing__X'
-        , 'pixelSpacing__Y'
-        , 'pixelSpacing__Z'
-        ] 
+    #TODO remove this? ROB
+#    _attributes = [
+#        'acceleratingVoltage'
+#        , 'activeFlag'
+#        , 'amplitudeContrast'
+#        , 'cs'
+#        , 'defocusU'
+#        , 'defocusV'
+#        , 'defocusUAngle'
+#        , 'fom'
+#        , 'pixelSpacing__X'
+#        , 'pixelSpacing__Y'
+#        , 'pixelSpacing__Z'
+#        ] 
     
     def readEMXFile(self, fileName, classElement=None):
         """ create tree from xml file 
