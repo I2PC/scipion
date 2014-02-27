@@ -286,6 +286,7 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame {
 			float scale, boolean invertx, boolean inverty) {
 		String result = tppicker.importParticlesFromFolder(dir, format, scale,
 				invertx, inverty);
+		sizetf.setValue(tppicker.getSize());
 		getCanvas().repaint();
 		updateMicrographsModel(true);
 		getCanvas().refreshActive(null);
