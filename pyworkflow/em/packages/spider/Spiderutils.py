@@ -20,6 +20,7 @@ import os, re, time
 import struct, sys
 from commands import getoutput
 from types import *
+from spider import SPIDER
 
 WRITE_SPIREOUT = "WRITE_SPIREOUT"   # environmental variable for Spire
 
@@ -1202,7 +1203,7 @@ def findProgram(prog):
 
 def findSpider():
     "returns path to SPIDER, or else an empty string"
-    spider = findProgram('spider')
+    spider = findProgram(SPIDER)
     if spider != "" and testSpider(spider):
         return spider
     else:
