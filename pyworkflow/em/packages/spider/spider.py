@@ -37,7 +37,7 @@ import subprocess
 
 END_HEADER = 'END BATCH HEADER'
 
-SPIDER = 'spider'
+SPIDER = 'spider_linux_mp_intel64'
 
 def loadEnvironment():
     """ Load the environment variables needed for Spider.
