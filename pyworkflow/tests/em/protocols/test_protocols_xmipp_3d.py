@@ -231,8 +231,6 @@ class TestXmippSimAnnealing(TestXmippBase):
     def setUpClass(cls):
         setupProject(cls)
         
-#         cls.protImport = cls.runImportParticles(pattern=images, samplingRate=1, checkStack=False)
-#         cls.iniVol = getInputPath('ml3dData', 'icoFiltered.vol')
     
     def testSimAnnealing(self):
         
@@ -255,7 +253,7 @@ class TestXmippSimAnnealing(TestXmippBase):
 
         print "Run ML2D"
         protML2D = XmippProtML2D(numberOfReferences=8, maxIters=4, doMlf=False,
-                                 numberOfMpi=2, numberOfThreads=1)
+                                 numberOfMpi=2, numberOfThreads=2)
         protML2D.inputParticles.set(protImport.outputParticles)
         self.proj.launchProtocol(protML2D, wait=True)        
         self.assertIsNotNone(protML2D.outputClasses, "There was a problem with ML2D") 
@@ -266,6 +264,40 @@ class TestXmippSimAnnealing(TestXmippBase):
         self.proj.launchProtocol(protSimAnneal, wait=True)        
         
         self.assertIsNotNone(protSimAnneal.outputVolumes, "There was a problem with simulating annealing protocol")
+
+
+class TestXmippRansac(TestXmippBase):
+    @classmethod
+    def setUpClass(cls):
+        setupProject(cls)
+     
+    
+    def testRansac(self):
+        
+        """ Run an Import particles protocol. """
+        project = self.proj
+        pattern = os.environ.get('HEMOGLOBIN', getInputPath('particlesHemoglobin', '*.spi'))
+        protImport = ProtImportParticles(pattern=pattern, samplingRate=3.5)
+        project.launchProtocol(protImport, wait=True)
+        # check that input images have been imported (a better way to do this?)
+        if protImport.outputParticles is None:
+            raise Exception('Import of images: %s, failed. outputParticles is None.' % pattern)
+
+        print "Run CL2D"
+        protCL2D = XmippProtCL2D(numberOfReferences=8, numberOfInitialReferences=2, 
+                                 numberOfIterations=3, numberOfMpi=4)
+        protCL2D.inputImages.set(protImport.outputParticles)
+        self.proj.launchProtocol(protCL2D, wait=True)        
+         
+        self.assertIsNotNone(protCL2D.outputClasses, "There was a problem with CL2D")
+
+        print "Run Ransac"
+        protRansac = XmippProtRansac(symmetryGroup='d6', angularSampling=15, nRansac=25, numSamples=5,
+                                     dimRed=False, numVolumes=2, maxFreq=30, useAll=True, numberOfThreads=4)
+        protRansac.inputClasses.set(protCL2D.outputClasses)
+        self.proj.launchProtocol(protRansac, wait=True)        
+        
+        self.assertIsNotNone(protRansac.outputVolumes, "There was a problem with simulating annealing protocol")
 
 
 if __name__ == "__main__":

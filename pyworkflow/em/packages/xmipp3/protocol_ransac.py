@@ -42,6 +42,7 @@ class XmippProtRansac(ProtInitialVolume):
     
     def __init__(self, **args):
         ProtInitialVolume.__init__(self, **args)
+        self.stepsExecutionMode = STEPS_PARALLEL
         self.summaryInfo = String()
 #        self.progId = "ransac"
 #        self.oroot = ""
@@ -158,7 +159,7 @@ class XmippProtRansac(ProtInitialVolume):
             self._insertFunctionStep('reconstruct',fnRoot,
                                                prerequisites=[bestVolumesStepId]) # Make estimation steps indepent between them
             if self.useSA.get():
-                self._insertFunctionStep('simulatedAnnealing',fnRoot)
+                self._insertFunctionStep('simulatedAnnealingStep',fnRoot)
         
             for it in range(self.numIter.get()):    
                 self._insertFunctionStep('reconstruct',fnRoot) 
@@ -199,12 +200,11 @@ class XmippProtRansac(ProtInitialVolume):
                                                 %(self.imgsFn,fnOutputReducedClass,freq,fnOutputReducedClassNoExt))
         return self._insertRunJobStep("xmipp_image_resize","-i %s --fourier %d -o %s" %(fnOutputReducedClass,self.Xdim2,fnOutputReducedClassNoExt))
 
-    def simulatedAnnealing(self, fnRoot):
-        self._insertRunJobStep("xmipp_volume_initial_simulated_annealing","-i %s.xmd --initial %s.vol --oroot %s_sa --sym %s --randomIter %d --rejection %f --dontApplyPositive"\
+    def simulatedAnnealingStep(self, fnRoot):
+        self.runJob("xmipp_volume_initial_simulated_annealing","-i %s.xmd --initial %s.vol --oroot %s_sa --sym %s --randomIter %d --rejection %f --dontApplyPositive"\
                          %(fnRoot,fnRoot,fnRoot,self.symmetryGroup.get(),self.nIterRandom.get(),self.rejection.get()))
-        self._insertRunJobStep('moveFile', source=fnRoot+"_sa.vol", dest=fnRoot+".vol")
-        self._insertRunJobStep('deleteFile', filename=fnRoot+"_sa.xmd") 
-        
+        moveFile(fnRoot+"_sa.vol", fnRoot+".vol")
+        cleanPath(fnRoot+"_sa.xmd")
 
     #--------------------------- STEPS functions --------------------------------------------
     def ransacIteration(self, n):
