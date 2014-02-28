@@ -54,11 +54,11 @@ REJECT_PERCENTAGE = 2
 class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
     """Protocol to extract particles from a set of coordinates in the project"""
     _label = 'extract particles'
-    stepsExecutionMode = STEPS_PARALLEL
     
     def __init__(self, **args):
         ProtExtractParticles.__init__(self, **args)
         self.methodsInfo = String()
+        self.stepsExecutionMode = STEPS_PARALLEL
         
     #--------------------------- DEFINE param functions --------------------------------------------   
     def _defineParams(self, form):
