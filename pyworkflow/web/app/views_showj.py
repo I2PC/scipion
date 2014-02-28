@@ -146,9 +146,9 @@ def setRenderingOptions(request, dataset, tableDataset, inputParameters):
 def showj(request, inputParameters=None, extraParameters=None, firstTime=False):
     
     #=TIME CONTROL==============================================================
-    from datetime import datetime
-    start = datetime.now()
-    print "INIT SHOWJ: ", datetime.now()-start
+#    from datetime import datetime
+#    start = datetime.now()
+#    print "INIT SHOWJ: ", datetime.now()-start
     #===========================================================================
     
     #############
@@ -174,8 +174,8 @@ def showj(request, inputParameters=None, extraParameters=None, firstTime=False):
         #Load table layout configuration. How to display columns and attributes (visible, render, editable)  
         inputParameters['tableLayoutConfiguration'] = getTableLayoutConfig(request, dataset, tableDataset, inputParameters, extraParameters, firstTime)
     
-        for col in inputParameters['tableLayoutConfiguration'].columnsLayout.values():
-            print "val!! ", col.columnLayoutProperties.getValues() 
+#        for col in inputParameters['tableLayoutConfiguration'].columnsLayout.values():
+#            print "val!! ", col.columnLayoutProperties.getValues() 
     
         #If no label is set to render, set the first one if exists
         dataset, tableDataset = setLabelToRender(request, dataset, tableDataset, inputParameters, extraParameters, firstTime)
@@ -199,7 +199,7 @@ def showj(request, inputParameters=None, extraParameters=None, firstTime=False):
     render_var = render_to_response(return_page, RequestContext(request, context))
     
     #=TIME CONTROL==============================================================
-    print "FINISH SHOWJ: ", datetime.now()-start    
+#    print "FINISH SHOWJ: ", datetime.now()-start    
     #===========================================================================
     
     return render_var
