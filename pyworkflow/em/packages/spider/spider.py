@@ -60,7 +60,7 @@ def loadEnvironment():
         os.environ['SPPROC_DIR'] = join(SPIDER_DIR, 'proc', '')
     
     # Get the executable or 'spider' by default
-    SPIDER = join(os.environ['SPBIN_DIR'], os.environ.get('SPIDER', 'spider'))
+    SPIDER = join(os.environ['SPBIN_DIR'], os.environ.get('SPIDER', 'spider_linux_mp_intel64'))
     # expand ~ and vars
     SPIDER = abspath(os.path.expanduser(os.path.expandvars(SPIDER)))
     # Check that executable exists
