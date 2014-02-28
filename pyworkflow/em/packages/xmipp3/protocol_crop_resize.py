@@ -183,14 +183,19 @@ class XmippProtResize():
         return samplingRate
 
 
-class XmippProtCropResizeParticles(XmippProtResize, XmippProcessParticles):
+class XmippProtCropResizeParticles(ProtProcessParticles, XmippProcessParticles, XmippProtResize):
     """ Change the dimensions to SetOfParticles object """
     _label = 'resize crop particles'
     
     def __init__(self, **args):
+        ProtProcessParticles.__init__(self)
         XmippProcessParticles.__init__(self, **args)
         XmippProtResize.__init__(self, **args)
     
+    #--------------------------- DEFINE param functions --------------------------------------------
+    def _defineProcessParams(self, form):
+        XmippProtResize._defineProcessParams(form)
+     
     #--------------------------- STEPS functions ---------------------------------------------------
     def convertStep(self):
         """ convert if necessary"""
@@ -244,13 +249,18 @@ class XmippProtCropResizeParticles(XmippProtResize, XmippProcessParticles):
         return samplingRate
 
 
-class XmippProtCropResizeVolumes(XmippProtResize, XmippProcessVolumes):
+class XmippProtCropResizeVolumes(ProtPreprocessVolumes, XmippProtResize, XmippProcessVolumes):
     """ Change the dimensions to either Volume or SetOfVolumes objects """
     _label = 'resize crop volumes'
     
     def __init__(self, **args):
-        XmippProcessVolumes.__init__(self, **args)
+        ProtPreprocessVolumes.__init__(self, **args)
+        XmippProcessVolumes.__init__(self)
         XmippProtResize.__init__(self, **args)
+    
+    #--------------------------- DEFINE param functions --------------------------------------------
+    def _defineProcessParams(self, form):
+        XmippProtResize._defineProcessParams(self, form)
     
     #--------------------------- STEPS functions ---------------------------------------------------
     def createOutputStep(self):

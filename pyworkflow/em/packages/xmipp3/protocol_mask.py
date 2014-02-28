@@ -45,7 +45,8 @@ class XmippProtMask():
     
     def __init__(self, **args):
         self._program = "xmipp_transform_mask"
-
+    
+    #--------------------------- DEFINE param functions --------------------------------------------
     def _defineProcessParams(self, form):
         """ Add common mask parameters that can be used
         in several protocols definitions.
@@ -71,19 +72,18 @@ class XmippProtMask():
                       label='Fill value',
                       help='Value to fill the pixel values outside the mask. ')
     
+    #--------------------------- INSERT steps functions --------------------------------------------
+    def _insertProcessStep(self, inputFn, outputFn, outputMd):
+        if self.source.get() == SOURCE_MASK:
+            self._insertFunctionStep('copyFileStep', self.inputMask.get().getLocation())
+        self._insertProtStep(self, inputFn, outputFn, outputMd)
+    
+    #--------------------------- UTILS functions ---------------------------------------------------
     def _getCommand(self, inputFn):
-        fillStr = self.getEnumText('fillType')
-#         maskRadius = self.maskRadius.get()
-#         maskBand = maskRadius + self.maskOuterRadius.get()
-#         
-#         # Weird logic of Xmipp, minus to define the mask
-#         maskRadius *= -1
-#         maskBand *= -1
-        
         if self.fillType == MASK_FILL_VALUE:
-            fillStr += str(self.fillValue.get())
+            fillValue = self.fillValue.get()
         
-        self._args += " --substitute %(fillStr)s "
+        self._args += " --substitute %(fillValue)f "
         
         if self.source == SOURCE_GEOMETRY:
             self._args += self._getGeometryCommand()
@@ -95,32 +95,36 @@ class XmippProtMask():
         return self._args % locals()
 
 
-class XmippProtMaskParticles(XmippProcessParticles, XmippProtMask, XmippGeometricalMask2D):
+class XmippProtMaskParticles(ProtMaskParticles, XmippProcessParticles, XmippProtMask, XmippGeometricalMask2D):
     """ Apply some filter to SetOfParticles """
     _label = 'mask particles'
     
     def __init__(self, **args):
-#         ProtMaskParticles.__init__(self)
-        XmippProcessParticles.__init__(self, **args)
+        ProtMaskParticles.__init__(self, **args)
+        XmippProcessParticles.__init__(self)
         XmippProtMask.__init__(self, **args)
-#         XmippGeometricalMask2D.__init__(self, **args)
-        
+    
+    #--------------------------- DEFINE param functions --------------------------------------------
+    def _defineProcessParams(self, form):
+        XmippProtMask._defineProcessParams(self, form)
+    
     def _defineProtParams(self, form):
         form.addParam('inputMask', PointerParam, pointerClass="Mask", label="Input mask",condition='source==%d' % SOURCE_MASK)
         XmippGeometricalMask2D.defineParams(self, form, isGeometry='source==%d' % SOURCE_GEOMETRY, addSize=False)
     
-    def _defineFilenames(self):
-        XmippProcessParticles._defineFilenames(self)
-        self.maskFn = self._getPath('mask.spi')
+    #--------------------------- INSERT steps functions --------------------------------------------
+    def _insertProtStep(prot, inputFn, outputFn, outputMd):
+        XmippProcessParticles._insertProcessStep(prot, inputFn, outputFn, outputMd)
     
+    #--------------------------- STEPS functions ---------------------------------------------------
     def copyFileStep(self, *args):
         """ Convert the input mask to file. """
         ImageHandler().convert(self.inputMask.get().getLocation(), (None, self.maskFn))
     
-    def _insertProcessStep(self, inputFn, outputFn, outputMd):
-        if self.source == SOURCE_MASK:
-            self._insertFunctionStep('copyFileStep', self.inputMask.get().getLocation())
-        XmippProcessParticles._insertProcessStep(self, inputFn, outputFn, outputMd)
+    #--------------------------- UTILS functions ---------------------------------------------------
+    def _defineFilenames(self):
+        XmippProcessParticles._defineFilenames(self)
+        self.maskFn = self._getPath('mask.spi')
     
     def _getGeometryCommand(self):
         (Xdim, _, _, self.ndim) = self.inputParticles.get().getDimensions()
@@ -128,27 +132,31 @@ class XmippProtMaskParticles(XmippProcessParticles, XmippProtMask, XmippGeometri
         return args
 
 
-class XmippProtMaskVolumes(XmippProcessVolumes, XmippProtMask, XmippGeometricalMask3D):
+class XmippProtMaskVolumes(ProtMaskVolumes, XmippProcessVolumes, XmippProtMask, XmippGeometricalMask3D):
     """ Apply mask to volume or SetOfVolumes """
     _label = 'apply mask'
     
     def __init__(self, **args):
-#         ProtMaskVolumes.__init__(self)
-        XmippProcessVolumes.__init__(self, **args)
+        ProtMaskVolumes.__init__(self, **args)
+        XmippProcessVolumes.__init__(self)
         XmippProtMask.__init__(self, **args)
+    
+    #--------------------------- DEFINE param functions --------------------------------------------
+    def _defineProcessParams(self, form):
+        XmippProtMask._defineProcessParams(self, form)
     
     def _defineProtParams(self, form):
         form.addParam('inputMask', PointerParam, pointerClass="VolumeMask", label="Input mask",condition='source==%d' % SOURCE_MASK)
         XmippGeometricalMask3D.defineParams(self, form, isGeometry='source==%d' % SOURCE_GEOMETRY, addSize=False)
     
+    #--------------------------- INSERT steps functions --------------------------------------------
+    def _insertProtStep(inputFn, outputFn, outputMd):
+        XmippProcessVolumes._insertProcessStep(inputFn, outputFn, outputMd)
+    
+    #--------------------------- UTILS functions ---------------------------------------------------
     def _defineFilenames(self):
         XmippProcessVolumes._defineFilenames(self)
         self.maskFn = self._getPath('mask.spi')
-    
-    def _insertProcessStep(self, inputFn, outputFn, outputMd):
-        if self.source.get() == SOURCE_MASK:
-            self._insertFunctionStep('copyFileStep', self.inputMask.get().getLocation())
-        XmippProcessVolumes._insertProcessStep(self, inputFn, outputFn, outputMd)
     
     def _getGeometryCommand(self):
         if isinstance(self.inputVolumes.get(), Volume):

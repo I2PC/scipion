@@ -101,12 +101,13 @@ class XmippPreprocess():
         return self._summary()
 
 
-class XmippProtPreprocessParticles(XmippProcessParticles, XmippPreprocess):
+class XmippProtPreprocessParticles(ProtProcessParticles, XmippProcessParticles, XmippPreprocess):
     """ Apply some filter to SetOfParticles """
     _label = 'preprocess particles'
     
     def __init__(self, **args):
-        XmippProcessParticles.__init__(self, **args)
+        ProtProcessParticles.__init__(self, **args)
+        XmippProcessParticles.__init__(self)
         XmippPreprocess.__init__(self, **args)
     
     #--------------------------- DEFINE param functions --------------------------------------------
@@ -219,7 +220,7 @@ class XmippProtPreprocessParticles(XmippProcessParticles, XmippPreprocess):
         return size
 
 
-class XmippProtPreprocessVolumes(XmippProcessVolumes, XmippPreprocess):
+class XmippProtPreprocessVolumes(ProtPreprocessVolumes, XmippProcessVolumes, XmippPreprocess):
     """ Protocol for Xmipp-based preprocess for volumes """
     _label = 'preprocess volumes'
     
@@ -235,7 +236,8 @@ class XmippProtPreprocessVolumes(XmippProcessVolumes, XmippPreprocess):
 
 
     def __init__(self, **args):
-        XmippProcessVolumes.__init__(self, **args)
+        ProtPreprocessVolumes.__init__(self, **args)
+        XmippProcessVolumes.__init__(self)
         XmippPreprocess.__init__(self, **args)
     
     #--------------------------- DEFINE param functions --------------------------------------------
