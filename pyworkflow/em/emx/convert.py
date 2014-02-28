@@ -27,8 +27,8 @@
 This module implement the import/export of Micrographs and Particles to EMX
 """
 from pyworkflow.utils import *
-from data import *
-from pyworkflow import emx
+from pyworkflow.em.data import *
+import emx
 from collections import OrderedDict
     
 

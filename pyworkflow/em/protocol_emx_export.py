@@ -35,7 +35,7 @@ from glob import glob
 from protocol import *
 from constants import *
 from data import * 
-import emx
+from pyworkflow.em import emx
 
 
 class ProtEmxExport(ProtClassify):
