@@ -36,6 +36,7 @@ public class GalleryColumnModel extends DefaultTableColumnModel {
 
     public GalleryColumnModel(int w){
     	super();
+    	
     	width = w;
     }
     
