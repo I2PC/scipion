@@ -151,13 +151,12 @@ class XmippProtCL2D(ProtClassify):
         4. And create output
         """
         self._insertRunJobStep(program, args % self._params)
-        self._insertFunctionStep('evaluateClasses', subset)
-        self._insertFunctionStep('sortClasses', subset)
+        self._insertFunctionStep('evaluateClassesStep', subset)
+        self._insertFunctionStep('sortClassesStep', subset)
         self._insertFunctionStep('createOutputStep', subset)        
-            
-            
+    
     #--------------------------- STEPS functions --------------------------------------------   
-    def sortClasses(self, subset=''):
+    def sortClassesStep(self, subset=''):
         """ Sort the classes and provided a quality criterion. """
         nproc = self.numberOfMpi.get()
         if nproc < 2:
@@ -173,7 +172,7 @@ class XmippProtCL2D(ProtClassify):
             md.write("classes_sorted@" + mdFn, xmipp.MD_APPEND)
             #deleteFile(log,fnRoot+".xmd")
         
-    def evaluateClasses(self, subset=''):
+    def evaluateClassesStep(self, subset=''):
         """ Calculate the FRC and output the hierarchy for 
         each level of classes.
         """
@@ -199,7 +198,7 @@ class XmippProtCL2D(ProtClassify):
         readSetOfClasses2D(classes2DSet, lastMdFn, 'classes_sorted')
         result = {'outputClasses' + subset: classes2DSet}
         self._defineOutputs(**result)
-
+    
     #--------------------------- INFO functions --------------------------------------------
     def _validate(self):
         validateMsgs = []
@@ -218,7 +217,9 @@ class XmippProtCL2D(ProtClassify):
         else:
             summary.append("Input Images: %s" % self.inputImages.get().getNameId())
             summary.append("Number of references: %d" % self.numberOfReferences.get())
-            summary.append("Output classes: %s" % self.outputClasses.get())
+            summary.append("Output classes: %s" % self.outputClasses.getNameId())
+            summary.append("Output classes core: %s" % self.outputClasses_core.getNameId())
+            summary.append("Output classes stable core: %s" % self.outputClasses_stable_core.getNameId())
         return summary
     
     def _methods(self):

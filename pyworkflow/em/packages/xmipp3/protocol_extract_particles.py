@@ -26,7 +26,6 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
-from pyworkflow.em.packages.xmipp3.convert import micrographToCTFParam
 """
 This sub-package contains the XmippProtExtractParticles protocol
 """
@@ -34,7 +33,7 @@ This sub-package contains the XmippProtExtractParticles protocol
 
 from pyworkflow.em import * 
 
-from convert import writeSetOfCoordinates, readSetOfParticles
+from convert import writeSetOfCoordinates, readSetOfParticles, micrographToCTFParam
 from pyworkflow.utils.path import makePath, removeBaseExt, join, exists
 from xmipp3 import XmippProtocol
 from glob import glob

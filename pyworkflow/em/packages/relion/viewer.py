@@ -27,16 +27,9 @@
 This module implement the wrappers around xmipp_showj
 visualization program.
 """
-import Tkinter as tk
-from pyworkflow.protocol.params import *
 from pyworkflow.viewer import Viewer, ProtocolViewer, DESKTOP_TKINTER, WEB_DJANGO
-from pyworkflow.utils.graph import Graph
-from pyworkflow.gui.graph import LevelTree
-from pyworkflow.gui.canvas import Canvas, ImageBox
-from pyworkflow.em.packages.xmipp3.viewer import XmippViewer, runShowJ
-from pyworkflow.gui.text import showTextfileViewer
 
-from protocol_classify3d import Relion3DClassification
+#from protocol_classify3d import ProtRelionClassify3D
 
     
 class RelionViewer(Viewer):
@@ -44,13 +37,11 @@ class RelionViewer(Viewer):
     with the Xmipp program xmipp_showj. """
     
     _environments = [DESKTOP_TKINTER, WEB_DJANGO]
-    _targets = [Relion3DClassification]
+    _targets = []
     _label = 'viewer'
 
     def visualize(self, obj, **args):
-                
-        if isinstance(obj, Relion3DClassification):
-            XmippViewer().visualize(obj.outputVolumes)
+        pass   
             
     @classmethod
     def getView(self):

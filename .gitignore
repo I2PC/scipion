@@ -55,6 +55,7 @@ bin/
 build/
 lib/
 documentation/
+software/
 gmon.out
 *~
 \#*

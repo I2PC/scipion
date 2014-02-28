@@ -42,7 +42,8 @@ class XmippProcess(EMProtocol):
     a common structure: build a commmand line and call a program. """
     def __init__(self):
         self._args = "-i %(inputFn)s"
-        
+    
+    #--------------------------- INSERT steps functions --------------------------------------------
     def _insertAllSteps(self):
         self._defineFilenames()
         self._insertFunctionStep("convertStep")
@@ -61,17 +62,12 @@ class XmippProcess(EMProtocol):
         self._insertRunJobStep(self._program, args)
 
 
-class XmippProcessParticles(ProtProcessParticles, XmippProcess):
+class XmippProcessParticles(XmippProcess):
     """ Class to create a base template for Xmipp protocols that process SetOfParticles """
-    def __init__(self, **args):
-        ProtProcessParticles.__init__(self, **args)
+    def __init__(self):
         XmippProcess.__init__(self)
     
-    def _defineFilenames(self):
-        self.inputFn = createXmippInputImages(self, self.inputParticles.get())
-        self.outputMd = self._getPath('output_images.xmd')
-        self.outputStk = self._getPath('output_images.stk')
-    
+    #--------------------------- STEPS functions ---------------------------------------------------
     def convertStep(self):
         """ convert if necessary"""
         pass
@@ -83,7 +79,13 @@ class XmippProcessParticles(ProtProcessParticles, XmippProcess):
         self._processOutput(imgSet)
         self._defineOutputs(outputParticles=imgSet)
         self._defineTransformRelation(self.inputParticles.get(), imgSet)
-        
+    
+    #--------------------------- UTILS functions ---------------------------------------------------
+    def _defineFilenames(self):
+        self.inputFn = createXmippInputImages(self, self.inputParticles.get())
+        self.outputMd = self._getPath('output_images.xmd')
+        self.outputStk = self._getPath('output_images.stk')
+    
     def _processOutput(self, outputPcts):
         """ This function should be implemented
         if some additional modifications needs to be done
@@ -92,18 +94,12 @@ class XmippProcessParticles(ProtProcessParticles, XmippProcess):
         pass
 
 
-class XmippProcessVolumes(ProtPreprocessVolumes, XmippProcess):
+class XmippProcessVolumes(XmippProcess):
     """ Class to create a base template for Xmipp protocols that process both volume or a SetOfVolumes objects """
-    def __init__(self, **args):
-        ProtPreprocessVolumes.__init__(self, **args)
+    def __init__(self):
         XmippProcess.__init__(self)
     
-    def _defineFilenames(self):
-        """ Prepare the files to process """
-        self.outputStk = self._getPath("output_volumes.stk")
-        self.inputFn = self.outputStk
-        self.outputMd = None
-    
+    #--------------------------- STEPS functions ---------------------------------------------------
     def convertStep(self):
         """ convert if necessary"""
         volSet = self.inputVolumes.get()
@@ -135,6 +131,13 @@ class XmippProcessVolumes(ProtPreprocessVolumes, XmippProcess):
             self._defineOutputs(outputVol=volumes)
 
         self._defineTransformRelation(volSet, self.outputVol)
+    
+    #--------------------------- UTILS functions ---------------------------------------------------
+    def _defineFilenames(self):
+        """ Prepare the files to process """
+        self.outputStk = self._getPath("output_volumes.stk")
+        self.inputFn = self.outputStk
+        self.outputMd = None
     
     def _processOutput(self, outputPcts):
         """ This function should be implemented

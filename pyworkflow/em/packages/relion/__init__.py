@@ -31,10 +31,12 @@ from bibtex import _bibtex # Load bibtex dict with references
 
 _logo = "relion_logo.png"
 _references = ['Scheres2012a', 'Scheres2012b', 'Chen2012']
+
+from convert import *
+from protocol_classify2d import ProtRelionClassify2D
+from protocol_classify3d import ProtRelionClassify3D
+
 # Wizards
 from wizard import *
 
-
-from protocol_classify3d import Relion3DClassification
-
-from viewer import RelionViewer
+from viewer import *

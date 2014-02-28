@@ -123,7 +123,7 @@ def viewerSpider(project, protocol, viewer):
 def viewerRelion(project, protocol, viewer):
     ioDict={}    
         
-    if isinstance(protocol, Relion3DClassification):
+    if isinstance(protocol, ProtRelionClassify3D):
         
         volumes = protocol.outputVolumes
         url1 = "/visualize_object/?objectId="+str(volumes.getObjId())
