@@ -90,7 +90,8 @@ class TestXmippResolution3D(TestXmippBase):
          
         self.assertIsNotNone(protResol3D._defineFscName(), "There was a problem with fsc")
         self.assertIsNotNone(protResol3D._defineStructFactorName(), "There was a problem with structure factor")
-        
+
+
 class TestXmippPreprocessVolumes(TestXmippBase):
     @classmethod
     def setUpClass(cls):

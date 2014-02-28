@@ -265,7 +265,7 @@ class ProtFrealign(ProtRefine3D):
                       help='Parameter *MASK* in FREALIGN\n\n'
                            'Parameters to include in refinement')
 
-        form.addParam('symmetry', TextParam, default='c1',
+        form.addParam('symmetry', TextParam, default='C1',
                       label='Point group symmetry:',
                       help='Parameter *ASYM* in FREALIGN\n\n'
                            'Specify the symmetry.Choices are: C(n),D(n),T,O,I,I1,I2 or N (can be zero)\n'

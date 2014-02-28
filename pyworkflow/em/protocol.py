@@ -192,9 +192,12 @@ class ProtImportImages(EMProtocol):
             summary.append("Output " + self._className + "s not ready yet.") 
         else:
             summary.append("Import of %d " % getattr(self, outputSet).getSize() + self._className + "s from %s" % self.pattern.get())
-            summary.append("Sampling rate : %f" % self.samplingRate.get())
+            summary.append("Sampling rate : %0.2f A/px" % getattr(self, outputSet).getSamplingRate())
         
         return summary
+    
+    def _methods(self):
+        return self._summary()
     
     def _getOutputSet(self, setName):
         return "output" + setName + "s"
@@ -233,7 +236,7 @@ class ProtImportMicrographs(ProtImportImages):
         if self.samplingRateMode == SAMPLING_FROM_IMAGE:
             micSet.setSamplingRate(self.samplingRate.get())
         else:
-            micSet.setScannedPixelSize(self.scannedPixelSize.get())   
+            micSet.setScannedPixelSize(self.scannedPixelSize.get())
       
 
 class ProtImportParticles(ProtImportImages):

@@ -42,7 +42,7 @@ class XmippProtRansac(ProtInitialVolume):
     
     def __init__(self, **args):
         ProtInitialVolume.__init__(self, **args)
-        
+        self.summaryInfo = String()
 #        self.progId = "ransac"
 #        self.oroot = ""
 
@@ -424,41 +424,21 @@ class XmippProtRansac(ProtInitialVolume):
         
         self._defineOutputs(outputVolumes=volumesSet)
         self._defineSourceRelation(classes2DSet, volumesSet)
-
+        self._storeSummaryInfo(self.numVolumes.get())
     
     #--------------------------- INFO functions --------------------------------------------
     def _validate(self):
         errors = []
         return errors
-
+    
     def _summary(self):
         summary = []
         if not hasattr(self, 'outputVolumes'):
             summary.append("Output volumes not ready yet.")
         else:
-            summary.append("RANSAC iterations: %d"%self.nRansac.get())
-        
-            for n in range(self.numVolumes.get()):
-    
-                fnBase='proposedVolume%05d'%n
-                fnRoot=self._getPath(fnBase+".xmd")
-                               
-                if os.path.isfile(fnRoot):
-                    md=MetaData(fnRoot)
-                    if (md.size()< 5) :
-                        summary.append("Num of inliers for %s too small and equal to %d"%(fnRoot,md.size()))
-                        summary.append("Decrease the value of Inlier Threshold parameter and run again")
-                                    
-            fnRoot=self._getTmpPath("ransac00000.xmd")    
-            
-            if os.path.isfile(fnRoot):
-                md=MetaData(fnRoot)
-            
-                if (md.size()< 5) :
-                    summary.append("Num of random samples too small and equal to %d"%(md.size()))
-                    summary.append("If the option Dimensionality reduction is on, increase the number of grids per dimension")
-                    summary.append("If the option Dimensionality reduction is off, increase the number of random samples")
-                
+            summary.append("RANSAC iterations: %d" % self.nRansac.get())
+            if self.summaryInfo.hasValue():
+                summary.append(self.summaryInfo.get())
             if self.useSA:
                 summary.append("Simulated annealing used")
             return summary
@@ -472,3 +452,27 @@ class XmippProtRansac(ProtInitialVolume):
         mdCorr=MetaData("corrThreshold@"+fnCorr)
         return mdCorr.getValue(MDL_WEIGHT, mdCorr.firstObject())
     
+    def _storeSummaryInfo(self, numVolumes):
+        """ Store some information when the protocol finishes. """
+        msg = ''
+        for n in range(numVolumes):
+            fnBase = 'proposedVolume%05d' % n
+            fnRoot=self._getPath(fnBase + ".xmd")
+                               
+            if os.path.isfile(fnRoot):
+                md=MetaData(fnRoot)
+                size = md.size()
+                if (size < 5):
+                    msg += "Num of inliers for model %d too small and equal to %d \n" %(n, size)
+                    msg += "Decrease the value of Inlier Threshold parameter and run again \n"
+                 
+        fnRoot = self._getTmpPath("ransac00000.xmd")
+        
+        if os.path.isfile(fnRoot):
+            md = MetaData(fnRoot)
+            size = md.size()
+            if (size < 5):
+                msg += "Num of random samples too small and equal to %d.\n" % size
+                msg += "If the option Dimensionality reduction is on, increase the number of grids per dimension.\n"
+                msg += "If the option Dimensionality reduction is off, increase the number of random samples.\n"
+        self.summaryInfo.set(msg)

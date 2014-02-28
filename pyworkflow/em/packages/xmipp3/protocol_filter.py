@@ -42,7 +42,8 @@ class XmippProtFilter():
     
     def __init__(self, **args):
         self._program = "xmipp_transform_filter"
-        
+    
+    #--------------------------- DEFINE param functions --------------------------------------------
     def _defineProcessParams(self, form):
         form.addParam('filterType', EnumParam, choices=['fourier', 'gaussian'], 
                       default=FILTER_FOURIER, display=EnumParam.DISPLAY_LIST,
@@ -73,6 +74,7 @@ class XmippProtFilter():
                       label='Frequency sigma',
                       help='Remind that the Fourier frequency is normalized between 0 and 0.5')   
     
+    #--------------------------- UTILS functions ---------------------------------------------------
     def _getCommand(self, inputFn):
         if self.filterType == FILTER_FOURIER:
             lowFreq = self.lowFreq.get()
@@ -98,22 +100,30 @@ class XmippProtFilter():
         return args
 
 
-class XmippProtFilterParticles(XmippProtFilter, XmippProcessParticles):
+class XmippProtFilterParticles(ProtFilterParticles, XmippProcessParticles, XmippProtFilter):
     """ Apply some filter to SetOfParticles """
     _label = 'filter particles'
     
     def __init__(self, **args):
-#         ProtFilterParticles.__init__(self)
-        XmippProcessParticles.__init__(self, **args)
+        ProtFilterParticles.__init__(self, **args)
+        XmippProcessParticles.__init__(self)
         XmippProtFilter.__init__(self, **args)
+    
+    #--------------------------- DEFINE param functions --------------------------------------------
+    def _defineProcessParams(self, form):
+        XmippProtFilter._defineProcessParams(self, form)
 
 
-class XmippProtFilterVolumes(XmippProtFilter, XmippProcessVolumes):
+class XmippProtFilterVolumes(ProtFilterVolumes, XmippProcessVolumes, XmippProtFilter):
     """ Apply some filter to SetOfParticles """
     _label = 'filter volumes'
     
     def __init__(self, **args):
-#         ProtFilterVolumes.__init__(self)
-        XmippProcessVolumes.__init__(self, **args)
+        ProtFilterVolumes.__init__(self, **args)
+        XmippProcessVolumes.__init__(self)
         XmippProtFilter.__init__(self, **args)
-
+    
+    #--------------------------- DEFINE param functions --------------------------------------------
+    def _defineProcessParams(self, form):
+        XmippProtFilter._defineProcessParams(self, form)
+    
