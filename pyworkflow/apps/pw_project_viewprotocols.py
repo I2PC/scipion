@@ -563,6 +563,7 @@ class ProtocolsView(tk.Frame):
         self.updateRunsTreeSelection()
 
     def updateRunsTreeSelection(self):
+        
         if not self.showGraph:
             if self.selectedProtocol is not None:
                 for i, obj in enumerate(self.runsTree._objects):

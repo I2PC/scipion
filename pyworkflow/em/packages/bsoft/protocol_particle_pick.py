@@ -101,7 +101,9 @@ class BsoftProtParticlePicking(ProtParticlePicking):
             summary.append("Output coordinates not ready yet.") 
         else:
             summary.append("Particles picked: %d (from %d micrographs)" % (self.outputCoordinates.getSize(), self.inputMicrographs.get().getSize()))
-            summary.append("Particle size:%d" % self.outputCoordinates.getBoxSize())
+            boxSize = self.outputCoordinates.getBoxSize()
+            if not boxSize is None:
+                summary.append("Particle size:%d" % boxSize)
         return summary
 
     def __str__(self):
