@@ -400,29 +400,29 @@ class TestXmippRotSpectra(TestXmippBase):
         
         self.assertIsNotNone(xmippProtRotSpectra.outputClasses, "There was a problem with Rotational Spectra")  
 
-    
-class TestXmippML3D(TestXmippBase):
-    @classmethod
-    def setUpClass(cls):
-        setupProject(cls)
-        #TODO: Find a set of images to make this work, with this it does not
-        imagesPattern = getInputPath('Images_Vol_ML3D/phantom_images', '*.xmp')
-        cls.protImportParticles = cls.runImportParticles(pattern=imagesPattern, samplingRate=1, checkStack=False)
-        volPattern = getInputPath('ml3dData', 'icoFiltered.vol')
-        cls.protImportVolume = cls.runImportVolumes(pattern=volPattern, samplingRate=1.237, checkStack=False)
-        
-    def testML3D(self):
-        print "Run ML3D"
-        
-        protML3D = XmippProtML3D(angularSampling=15, numberOfIterations=2, runMode=1, 
-                                 numberOfMpi=2, numberOfThreads=2, extraParams='--random_seed 1971')
-        protML3D.inputParticles.set(self.protImportParticles.outputParticles)
-        protML3D.ini3DrefVolumes.set(self.protImportVolume.outputVolume)
-        protML3D.doCorrectGreyScale.set(True)
-        protML3D.numberOfSeedsPerRef.set(2)
-        self.proj.launchProtocol(protML3D, wait=True)        
-        
-        self.assertIsNotNone(protML3D.outputVolumes, "There was a problem with ML3D")
+    # Deprecated
+# class TestXmippML3D(TestXmippBase):
+#     @classmethod
+#     def setUpClass(cls):
+#         setupProject(cls)
+#         #TODO: Find a set of images to make this work, with this it does not
+#         imagesPattern = getInputPath('Images_Vol_ML3D/phantom_images', '*.xmp')
+#         cls.protImportParticles = cls.runImportParticles(pattern=imagesPattern, samplingRate=1, checkStack=False)
+#         volPattern = getInputPath('ml3dData', 'icoFiltered.vol')
+#         cls.protImportVolume = cls.runImportVolumes(pattern=volPattern, samplingRate=1.237, checkStack=False)
+#         
+#     def testML3D(self):
+#         print "Run ML3D"
+#         
+#         protML3D = XmippProtML3D(angularSampling=15, numberOfIterations=2, runMode=1, 
+#                                  numberOfMpi=2, numberOfThreads=2, extraParams='--random_seed 1971')
+#         protML3D.inputParticles.set(self.protImportParticles.outputParticles)
+#         protML3D.ini3DrefVolumes.set(self.protImportVolume.outputVolume)
+#         protML3D.doCorrectGreyScale.set(True)
+#         protML3D.numberOfSeedsPerRef.set(2)
+#         self.proj.launchProtocol(protML3D, wait=True)        
+#         
+#         self.assertIsNotNone(protML3D.outputVolumes, "There was a problem with ML3D")
 
 
 class TestXmippPreprocessParticles(TestXmippBase):

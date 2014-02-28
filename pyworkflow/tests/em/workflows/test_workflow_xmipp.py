@@ -437,20 +437,20 @@ class TestXmippWorkflow(TestWorkflow):
 
         # The ML3D test is taking too long now
         # skipping until revision
-        return 
         
-        print "ML3D"
-        protML3D = XmippProtML3D(angularSampling=15, numberOfIterations=2, runMode=1, numberOfMpi=2, numberOfThreads=2)
-        protML3D.inputImages.set(protExtract.outputParticles)
-        protML3D.ini3DrefVolumes.set(protImportVol.outputVolumes)
-        protML3D.doCorrectGreyScale.set(True)
-        protML3D.doMlf.set(True)
-        protML3D.numberOfSeedsPerRef.set(2)
-
-        self.proj.launchProtocol(protML3D, wait=True)        
-        
-        self.assertIsNotNone(protML3D.outputVolumes, "There was a problem with ML3D")
-        self.validateFiles('protML3D', protML3D)
+        # Deprecated
+#         print "ML3D"
+#         protML3D = XmippProtML3D(angularSampling=15, numberOfIterations=2, runMode=1, numberOfMpi=2, numberOfThreads=2)
+#         protML3D.inputImages.set(protExtract.outputParticles)
+#         protML3D.ini3DrefVolumes.set(protImportVol.outputVolumes)
+#         protML3D.doCorrectGreyScale.set(True)
+#         protML3D.doMlf.set(True)
+#         protML3D.numberOfSeedsPerRef.set(2)
+# 
+#         self.proj.launchProtocol(protML3D, wait=True)        
+#         
+#         self.assertIsNotNone(protML3D.outputVolumes, "There was a problem with ML3D")
+#         self.validateFiles('protML3D', protML3D)
 
 if __name__ == "__main__":
     unittest.main()
