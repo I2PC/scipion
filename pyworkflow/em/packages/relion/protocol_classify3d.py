@@ -27,13 +27,13 @@
 This module contains the protocol for 3d classification with relion.
 """
 
-from pyworkflow.em import *  
+from protocol_base import *
 from pyworkflow.utils.which import which
 from pyworkflow.utils.path import makePath, replaceBaseExt, join, basename
-from convert import createRelionInputImages, createRelionInputVolume
-from protocol_base import ProtRelionBase
 
-class Relion3DClassification(ProtClassify3D, ProtRelionBase):
+
+
+class ProtRelionClassify3D(ProtClassify3D, ProtRelionBase):
     """Protocol to perform CTF estimation on a set of micrographs
     using the ctffind3 program"""
     _label = '3D classification'

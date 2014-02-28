@@ -132,9 +132,9 @@ class Form(object):
     def getClass(self):
         return type(self)
         
-    def addSection(self, **args):
+    def addSection(self, label='', **args):
         """Add a new section"""
-        self.lastSection = Section(self, **args)
+        self.lastSection = Section(self, label=label, **args)
         self._sectionList.append(self.lastSection)
         return self.lastSection
 
@@ -144,6 +144,11 @@ class Form(object):
         self._paramsDict[paramName] = param
         self._analizeCondition(paramName, param)
         return self.lastSection.addParam(paramName)
+    
+    def addHidden(self, paramName, ParamClass, **args):
+        """Add a hidden parameter to be used in conditions. """
+        args.update({'label': '', 'condition': 'False'})
+        self.addParam(paramName, ParamClass, **args)
     
     def _analizeCondition(self, paramName, param):
         if param.hasCondition():

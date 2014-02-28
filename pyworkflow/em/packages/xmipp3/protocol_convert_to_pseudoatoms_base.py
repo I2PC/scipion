@@ -70,15 +70,6 @@ class XmippProtConvertToPseudoAtomsBase(ProtPreprocessVolumes):
                            'more pseudoatoms.')        
              
     #--------------------------- INSERT steps functions --------------------------------------------
-    def _insertAllSteps(self):
-        inputStructure = self.inputStructure.get()
-        fnMask = self._insertMaskStep()
-        self.sampling = inputStructure.getSamplingRate()
-        self.fnIn=getImageLocation(inputStructure)
-        self._insertFunctionStep('convertToPseudoAtomsStep', self.fnIn, fnMask)
-        self._insertFunctionStep('createChimeraScriptStep')
-        self._insertFunctionStep('createOutputStep')
-        
     def _insertMaskStep(self,fnVol,prefix=''):
         """ Check the mask selected and insert the necessary steps.
         Return the mask filename if needed.

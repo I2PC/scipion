@@ -27,12 +27,16 @@
 import unittest, sys
 from pyworkflow.em import *
 from pyworkflow.tests import *
-from pyworkflow.em.packages.relion import Relion3DClassification
 
 
 # Some utility functions to import micrographs that are used
 # in several tests.
 class TestRelionBase(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        setupProject(cls)
+        pattern = getInputPath('images_LTA', '*.xmp')
+        cls.protImport = cls.runImportParticles(pattern=pattern, samplingRate=5.6, checkStack=False)
     
     @classmethod
     def runImportParticles(cls, pattern, checkStack, samplingRate):
@@ -44,7 +48,28 @@ class TestRelionBase(unittest.TestCase):
             raise Exception('Import of images: %s, failed. outputParticles is None.' % pattern)
         return cls.protImport        
  
+#def setupClassification(cls):
+#    """ Method to setup classification Test Cases. """
+#    #TODO: Find a set of images to make this work, with this it does not
+#    
+#    images = getInputPath('Images_Vol_ML3D/phantom_images', '*.xmp')
+#    cls.protImport = cls.runImportParticles(pattern=images, samplingRate=1, checkStack=False)
     
+       
+class TestRelionClassify2D(TestRelionBase):
+        
+    def testML2D(self):
+        print "Run ML2D"
+        prot2D = ProtRelionClassify2D(numberOfMpi=2, numberOfThreads=2)
+        prot2D.numberOfClasses.set(4)
+        prot2D.numberOfIterations.set(3)
+        prot2D.inputParticles.set(self.protImport.outputParticles)
+        self.proj.launchProtocol(prot2D, wait=True)        
+        
+        self.assertIsNotNone(getattr(prot2D, 'outputClasses', None), 
+                             "There was a problem with Relion 2D:\n" + prot2D.getErrorMessage()) 
+            
+            
 class TestRelionClassify3D(TestRelionBase):
     @classmethod
     def setUpClass(cls):
@@ -54,13 +79,14 @@ class TestRelionClassify3D(TestRelionBase):
         cls.protImport = cls.runImportParticles(pattern=pattern, checkStack=True, samplingRate=1)
         cls.iniVol = getInputPath('ml3dData', 'icoFiltered.vol')
         
-    def NOtestRelion3DClassification(self):
-        print "Run Relion3DClassification"
-        relion3DClass = Relion3DClassification(numberOfClasses=3, numberOfIterations=4, doCtf=False, runMode=1, 
+    def NOtestProtRelionClassify3D(self):
+        print "Run ProtRelionClassify3D"
+        relion3DClass = ProtRelionClassify3D(numberOfClasses=3, numberOfIterations=4, doCtf=False, runMode=1, 
                                  numberOfMpi=2, numberOfThreads=2)
         relion3DClass.inputImages.set(self.protImport.outputParticles)
         relion3DClass.ini3DrefVolumes.set(self.iniVol)
         self.proj.launchProtocol(relion3DClass, wait=True)        
+        
         
         
 if __name__ == "__main__":

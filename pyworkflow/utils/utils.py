@@ -403,3 +403,15 @@ def getRangeStringFromList(list):
     addRange()
     return ','.join(ranges)
 
+
+def environAdd(varName, newValue, valueFirst=False):
+    """ Add a new value to some environ variable.
+    If valueFirst is true, the new value will be at the beginning.
+    """
+    varList = [os.environ[varName]]
+    i = 1
+    if valueFirst:
+        i = 0
+    varList.insert(i, newValue)
+    os.environ[varName] = os.pathsep.join(varList)
+

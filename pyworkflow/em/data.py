@@ -23,6 +23,7 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
+from pyworkflow.em.constants import NO_INDEX
 """
 This modules contains basic hierarchy
 for EM data objects like: Image, SetOfImage and others
@@ -211,8 +212,25 @@ class Image(EMObject):
         """
         return (self.getIndex(), self.getFileName())
     
-    def setLocation(self, index, filename):
-        """ Set the image location, see getLocation. """
+    def setLocation(self, *args):
+        """ Set the image location, see getLocation. 
+        Params:
+            First argument can be:
+             1. a tuple with (index, filename)
+             2. a index, this implies a second argument with filename
+             3. a filename, this implies index=NO_INDEX
+        """
+        first = args[0]
+        t = type(first)
+        if t == tuple:
+            index, filename = first
+        elif t == int or t == long:
+            index , filename = first, args[1]
+        elif t == str or t == unicode:
+            index, filename = NO_INDEX, first
+        else:
+            raise Exception('setLocation: unsupported type %s as input.' % t)
+            
         self.setIndex(index)
         self.setFileName(filename)
         
