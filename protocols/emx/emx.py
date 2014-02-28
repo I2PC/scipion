@@ -67,7 +67,7 @@ CLASSLIST  = [MICROGRAPH, PARTICLE]
 #primary keys
 FILENAME   = 'fileName'
 INDEX      = 'index'
-
+COMMENT    = 'comment'
 
 class EmxLabel:
     """
@@ -89,9 +89,11 @@ class EmxLabel:
 
 #Dictionary with attribute names, data types and units
 #By default an attribute does not has unit assign to it
+
 emxDataTypes={
               FILENAME:EmxLabel(str)
               ,INDEX:EmxLabel(int)
+              , COMMENT:EmxLabel(str)
               ,'acceleratingVoltage':EmxLabel(float,'kV')
               ,'activeFlag':EmxLabel(int)
               ,'amplitudeContrast':EmxLabel(float)
@@ -296,7 +298,8 @@ class EmxMicrograph(EmxImage):
     _foreignKey = None
     _name = MICROGRAPH 
     _attributes = [
-         'acceleratingVoltage'
+         COMMENT
+        ,'acceleratingVoltage'
         ,'activeFlag'
         ,'amplitudeContrast'
         ,'cs'
@@ -316,7 +319,9 @@ class EmxParticle(EmxImage):
     _foreignKeys = [MICROGRAPH]
     _foreignKeysMap = {MICROGRAPH:EmxMicrograph('a',1)}
     _name = PARTICLE
-    _attributes=['activeFlag'
+    _attributes=[
+                 COMMENT
+                ,'activeFlag'
                 ,'boxSize__X'
                 ,'boxSize__Y'
                 ,'boxSize__Z'
@@ -693,6 +698,8 @@ class EmxXmlMapper():
                          , '</t33>\n    ':'</t33> '
                          }.iteritems():
                 text = text.replace(i, j)
+            text = text.replace('<comment>','<!--') 
+            text = text.replace('</comment>','-->')
             xmlFile.write(text)
         xmlFile.write("</EMX>")
         xmlFile.close()

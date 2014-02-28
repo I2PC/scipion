@@ -493,7 +493,7 @@ def xmippMicrographsToEmx(micMd, emxData, emxDir):
                 particle.set('centerCoord__Y', mdPos.getValue(MDL_YCOOR, pId))
                 particle.setMicrograph(micrograph)
                 emxData.addObject(particle)
-                
+        micrograph.set(COMMENT,'original filename=%s'%fnIn)
         emxData.addObject(micrograph)
     # Write EMX particles
     _writeEmxData(emxData, join(emxDir, 'micrographs.emx'))
@@ -516,9 +516,8 @@ def xmippParticlesToEmx(imagesMd, emxData, emxDir):
     hasMicrograph = md.containsLabel(MDL_MICROGRAPH)
     hasCtf = md.containsLabel(MDL_CTF_MODEL)
     micsDict = {}
-    
-    
-    for objId in md:            
+
+    for objId in md:
         # Read image from filename
         fn = FileName(md.getValue(MDL_IMAGE, objId))
         img.read(fn)
@@ -554,7 +553,7 @@ def xmippParticlesToEmx(imagesMd, emxData, emxDir):
         # If there is geometrical info, convert and set
         if hasGeo:
             xmippTransformToEmx(md, objId, particle)
-        
+        particle.set(COMMENT,'original filename=%s'%fn)
         # Add particle to emxData
         emxData.addObject(particle)
         
@@ -568,16 +567,19 @@ def xmippTransformToEmx(md, objId, particle):
     psi = md.getValue(MDL_ANGLE_PSI , objId) or 0.
     
     tMatrix = Euler_angles2matrix(rot, tilt, psi)
-
+    SHIFT=[MDL_SHIFT_X,
+           MDL_SHIFT_Y,
+           MDL_SHIFT_Z]
     for i, j, label in iterTransformationMatrix():
         particle.set(label, tMatrix[i][j])
+        if j==2:
+            value = md.getValue(SHIFT[i], objId) or 0.
+            particle.set('transformationMatrix__t%d4'%(i+1), value)
 
-    x = md.getValue(MDL_SHIFT_X, objId) or 0.
-    particle.set('transformationMatrix__t14', x)
-    y = md.getValue(MDL_SHIFT_Y, objId) or 0.
-    particle.set('transformationMatrix__t24', y)
-    z = md.getValue(MDL_SHIFT_Z, objId) or 0.
-    particle.set('transformationMatrix__t34', z)
+#    y = md.getValue(MDL_SHIFT_Y, objId) or 0.
+#    particle.set('transformationMatrix__t24', y)
+#    z = md.getValue(MDL_SHIFT_Z, objId) or 0.
+#    particle.set('transformationMatrix__t34', z)
 
 
 def iterTransformationMatrix():
