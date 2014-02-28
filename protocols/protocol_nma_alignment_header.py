@@ -25,7 +25,7 @@ InSelFile=''
 PDBfile=''
 
 # {file}(modes*.xmd){validate}(PathExists) Normal modes:
-""" Set of normal modes to explore 
+""" Set of normal modes to explore. The Normal Mode Analysis protocol can be used to obtain this file in the required format. 
 """
 Modesfile=''
 
@@ -36,15 +36,15 @@ SamplingRate=2
 # {section}{expert} Angular assignment and mode detection
 #----------------------------------------------------------------------------------
 # Trust region scale
-"""For elastic alignment, this parameter scales the initial value of the trust region radius for optimization purposes. Use larger values for larger expected deformation amplitudes."""
+"""This parameter can be used to scale the default initial value of the trust-region radius in the elastic-alignment optimizer, if much larger movements are expected than those that are usually encountered. The default value of 1 works well for usually encountered movement amplitudes."""
 TrustRegionScale=1
 
 # Use Projection Matching:
-"""For rigid-body alignment, use Projection Matching (faster) instead of Wavelets and Splines (more accurate). In the case of Wavelets and Splines, the size of images should be a power of 2."""
+"""If the answer to this question is "No" (default), Wavelets-and-Splines strategy will be used for rigid-body alignment. If the answer is "Yes", Projection Matching will be used for rigid-body alignment. Preferably use Wavelets-and-Splines (more accurate) instead of Projection Matching (faster). In the case of Wavelets-and-Splines, the size of images should be a power of 2."""
 ProjMatch=False
 
 # Discrete angular sampling rate
-"""This parameter is used in Projection Matching and Wavelets methods for a rough rigid-body alignment. It is the angular step (in degrees) with which the library of reference projections is computed. This alignment is refined with Splines method if Wavelets and Splines alignment is chosen."""
+"""This parameter is used in Projection Matching and Wavelets methods for a rough rigid-body alignment. It is the angular step (in degrees) with which the library of reference projections is computed. This alignment is refined with Splines method if Wavelets-and-Splines alignment is chosen."""
 DiscreteAngularSampling=10
 
 # {eval} expandParallel(threads=0,mpi=2)
