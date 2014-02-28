@@ -336,8 +336,8 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         imgSet = self._createSetOfParticles()
         imgSet.copyInfo(self.inputMics)
         
-        #imgSet.setHasCTF(self.fnCTF is not None)       
-        imgSet.setHasCTF(self.ctfRelations.get() is not None)
+        #imgSet.setHasCTF(self.fnCTF is not None)
+        imgSet.setHasCTF(self.ctfRelations.hasValue())
         if self.downsampleType == OTHER:
             imgSet.setSamplingRate(self.inputMics.getSamplingRate()*self.downFactor.get())
         imgSet.setCoordinates(self.inputCoords)
