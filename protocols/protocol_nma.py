@@ -101,7 +101,8 @@ class ProtNMA(XmippProtocol):
     
     def papers(self):
         papers=[]
-        papers.append("Nogales-Cadenas, NAR (2013) [http://www.ncbi.nlm.nih.gov/pubmed/23671335]")
+        papers.append("NMA of EM volumes: Nogales-Cadenas et al, NAR (2013) [http://www.ncbi.nlm.nih.gov/pubmed/23671335]")
+        papers.append("NMA of atomic structures: Suhre and Sanejouand, NAR (2004) [http://www.ncbi.nlm.nih.gov/pubmed/15215461]")
         return papers
 
     def validate(self):
