@@ -4,13 +4,26 @@ Created on Feb 21, 2014
 @author: airen
 '''
 import os
-import xmipp
+from xmipp import *
 from pyworkflow.utils.path import join, dirname, replaceBaseExt
-from protlib_import import addBsoftLabelAliases
+from xmipp import addLabelAlias
 from pyworkflow.em import *
 from pyworkflow.em.packages.xmipp3.convert import rowToCoordinate
 
+# Map from Xmipp labels to Relion labels names
+XMIPP_BSOFT_LABELS = {
+                        MDL_XCOOR:         'particle.x'
+                       ,MDL_YCOOR:        'particle.y'
+                       ,MDL_PICKING_PARTICLE_SIZE:   'particle.origin_x'
+                       }
 
+
+
+def addBsoftLabelAliases():
+    for k, v in XMIPP_BSOFT_LABELS.iteritems():
+        addLabelAlias(k, v, False)
+        
+        
 def readSetOfCoordinates(outputDir, micSet, coordSet):
     """ Read from Bsoft .star files.
     Params:
