@@ -402,6 +402,17 @@ class EmxData():
     def readFirstObject(self, className, emxFile):
         """ Read only the first object of a given className from file."""
         return self._mapper.firstObject(className, emxFile)
+    
+    def getFirstObject(self, className):
+        """ Return the first object of a given className.
+        This function should be called after read.
+        """
+        objList = self.objLists[className]
+        
+        if len(objList):
+            return objList[0]
+        
+        return None 
         
     def write(self, emxFile):
         """ Write data to an emxFile. """

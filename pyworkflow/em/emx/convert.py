@@ -31,6 +31,69 @@ from pyworkflow.em.data import *
 import emx
 from collections import OrderedDict
     
+        
+def exportData(emxDir, inputSet, ctfSet=None):
+    """ Export micrographs, coordinates or particles to  EMX format. """
+    cleanPath(emxDir)
+    makePath(emxDir) 
+    emxData = emx.EmxData()
+
+    if isinstance(inputSet, SetOfMicrographs):
+        emxSetOfMicrographs(emxData, inputSet, emxDir, ctfSet)
+        
+    elif isinstance(inputSet, SetOfCoordinates):
+        micSet = inputSet.getMicrographs()
+        emxSetOfMicrographs(emxData, micSet, emxDir, ctfSet)
+        emxSetOfParticles(emxData, inputSet, None, micSet)
+        
+    elif isinstance(inputSet, SetOfParticles):
+        if inputSet.hasCoordinates():
+            micSet = inputSet.getCoordinates().getMicrographs()
+            emxSetOfMicrographs(emxData, micSet, emxDir, writeData=False)
+        fnMrcs = join(emxDir, 'data.mrc')
+        emxSetOfParticles(emxData, inputSet, fnMrcs, micSet)
+        
+    fnXml = join(emxDir, 'data.emx')
+    emxData.write(fnXml)
+    
+    
+def importData(protocol, emxFile):
+    """ Import objects into Scipion from a give EMX file. 
+    Returns:
+        a dictionary with key and values as outputs sets
+        (Micrographs, Coordinates or Particles)
+    """
+    emxData = emx.EmxData()
+    emxData.read(emxFile)
+    
+    emxMic = emxData.getFirstObject(emx.MICROGRAPH)
+    outputDict = {}
+    
+    if emxMic is not None:
+        hasMicrographs = True
+        micSet = protocol._createSetOfMicrographs()
+        mic = Micrograph()
+        mic.setAcquisition(Acquisition())
+        if emxMic.has('acceleratingVoltage'):
+            mic.setCTF(CTFModel())
+        _micrographFromEmx(emxMic, mic)
+        acq = mic.getAcquisition().clone()
+        if acq.getMagnification() is None:
+            acq.setMagnification(6000)
+            acq.setScannedPixel
+        micSet.setAcquisition(acq)        
+        micSet.setSamplingRate(mic.getSamplingRate())
+    
+        for emxMic in emxData.iterClasses(emx.MICROGRAPH):
+            _micrographFromEmx(emxMic, mic)
+            micSet.append(mic)
+            
+        outputDict['outputMicrographs'] = micSet
+        
+    return outputDict
+
+
+#---------------- Export related functions -------------------------------
 
 def _writeDict(emxObj, dictValues):
     """ Set values of an EMX object. 
@@ -150,157 +213,61 @@ def emxSetOfParticles(emxData, partSet, stackFn=None, micSet=None):
             emxObj = emxCoordinate(emxData, particle, micSet)
         emxData.addObject(emxObj)
         
-        
-def exportData(emxDir, inputSet, ctfSet=None):
-    """ Export micrographs, coordinates or particles to  EMX format. """
-    cleanPath(emxDir)
-    makePath(emxDir) 
-    emxData = emx.EmxData()
 
-    if isinstance(inputSet, SetOfMicrographs):
-        emxSetOfMicrographs(emxData, inputSet, emxDir, ctfSet)
-        
-    elif isinstance(inputSet, SetOfCoordinates):
-        micSet = inputSet.getMicrographs()
-        emxSetOfMicrographs(emxData, micSet, emxDir, ctfSet)
-        emxSetOfParticles(emxData, inputSet, None, micSet)
-        
-    elif isinstance(inputSet, SetOfParticles):
-        if inputSet.hasCoordinates():
-            micSet = inputSet.getCoordinates().getMicrographs()
-            emxSetOfMicrographs(emxData, micSet, emxDir, writeData=False)
-        fnMrcs = join(emxDir, 'data.mrc')
-        emxSetOfParticles(emxData, inputSet, fnMrcs, micSet)
-        
-    fnXml = join(emxDir, 'data.emx')
-    emxData.write(fnXml)
+
+ #---------------- Export related functions ------------------------------- 
     
-    
-    
-    
-def _getFloat(elem, key):
-    """ Parse a float value from elem child text. """
-    return float(elem.find(key).text.strip())
-    
-def _setLocationFromElem(elem, img):
+   
+def _setLocationFromEmx(emxObj, img):
     """ Set image location from attributes "index" and "fileName". """
-    index = elem.get('index', 1)
-    img.setLocation(index, elem.get('fileName'))
+    img.setLocation(emxObj.get(emx.INDEX, 1), 
+                    emxObj.get(emx.FILENAME))
     
-def _setSamplingFromElem(elem, img):
+def _setSamplingFromEmx(emxObj, img):
     """ Set the sampling rate from the pixelSpacing element. """
-    s = elem.find('pixelSpacing')
-    if s is None:
-        print "NO pixelSpacing:", elem
-    else:
-        img.setSamplingRate(_getFloat(s, 'X'))
+    img.setSamplingRate(emxObj.get('pixelSpacing'))
         
-def _setCoordinatesFromElem(elem, coordinate):
-    c = elem.find('centerCoord')
-    if c is not None:
-        coordinate.setX(_getFloat(c, 'X'))
-        coordinate.setY(_getFloat(c, 'Y'))
+def _setCoordinatesFromEmx(emxObj, coordinate):
+    if emxObj.has('centerCoord__X'):
+        coordinate.setX(emxObj.get('centerCoord__X'))
+        coordinate.setY(emxObj.get('centerCoord__Y'))
     
-def _acquisitionFromElem(elem, acquisition):
+def _acquisitionFromEmx(emxObj, acquisition):
     """ Create an acquistion from elem. """
-    acquisition.setVoltage(_getFloat(elem, 'acceleratingVoltage'))
-    acquisition.setAmplitudeContrast(_getFloat(elem, 'amplitudeContrast'))
-    acquisition.setSphericalAberration(_getFloat(elem, 'cs'))    
+    acquisition.setVoltage(emxObj.get('acceleratingVoltage'))
+    acquisition.setAmplitudeContrast(emxObj.get('amplitudeContrast'))
+    acquisition.setSphericalAberration(emxObj.get('cs'))    
     
-def _ctfFromElem(elem, ctf):
+def _ctfFromEmx(emxObj, ctf):
     """ Create a CTF model from the values in elem. """
     for tag in ['defocusU', 'defocusV', 'defocusUAngle']:
-        if elem.find(tag) is None:
+        if not emxObj.has(tag):
             return None
-    ctf.setDefocusU(_getFloat(elem, 'defocusU'))
-    ctf.setDefocusV(_getFloat(elem, 'defocusV'))
-    ctf.setDefocusAngle(_getFloat(elem, 'defocusUAngle'))
+    ctf.setDefocusU(emxObj.get('defocusU'))
+    ctf.setDefocusV(emxObj.get('defocusV'))
+    ctf.setDefocusAngle(emxObj.get('defocusUAngle'))
     
-def _imageFromElem(elem, img):
+def _imageFromEmx(emxObj, img):
     """ Create either Micrograph or Particle from xml elem. """
-    _setLocationFromElem(elem, img)
-    _setSamplingFromElem(elem, img)
-    _ctfFromElem(elem, img.getCTF())
+    _setLocationFromEmx(emxObj, img)
+    _setSamplingFromEmx(emxObj, img)
+    _ctfFromEmx(emxObj, img.getCTF())
     
-def _micrographFromElem(elem, mic):
+def _micrographFromEmx(emxMic, mic):
     """ Create a micrograph and set the values properly
     from the corresponding xml tree element.
     """
-    _imageFromElem(elem, mic)
-    _acquisitionFromElem(elem, mic.getAcquisition())
+    _imageFromEmx(emxMic, mic)
+    _acquisitionFromEmx(emxMic, mic.getAcquisition())
     
     #mic.printAll()
     
-def _particleFromElem(elem, particle):
-    _imageFromElem(elem, particle)
-    _setCoordinatesFromElem(elem, particle.getCoordinate())
+def _particleFromEmx(emxObj, particle):
+    _imageFromEmx(emxObj, particle)
+    _setCoordinatesFromEmx(emxObj, particle.getCoordinate())
     
-def _coordinateFromElem(elem, coordinate):
-    #_imageFromElem(elem, coordinate)
-    _setCoordinatesFromElem(elem, coordinate)
+def _coordinateFromEmx(emxObj, coordinate):
+    #_imageFromEmx(emxObj, coordinate)
+    _setCoordinatesFromEmx(emxObj, coordinate)
   
-def _iterXml(xmlFn, tagsCallback):
-    """ Iterate incrementally a give XML file. 
-    This implementation is used having in mind huge xml files.
-    Recipe taken from:
-    http://effbot.org/zone/element-iterparse.htm
-    Params:
-        xmlFn: filename of the xml file.
-    """
-    # get an iterable
-    context = ET.iterparse(xmlFn, events=("start", "end"))
-    # turn it into an iterator
-    context = iter(context)
-    # get the root element
-    _, root = context.next()
-    
-    # This flag will serve to check whether we are parsing micrographs
-    # or we are parsing particles or coordinates
-    # After the first <particle> tag is found, the flag should be set to False
-    onlyMics = True
-    # Check if pixelSpacing is present to create Particle or Coordinate
-    foundPixelSpacing = False
-    # Create single instances of objects that will be populated with 
-    # the values parsed from the EMX file
-    mic = Micrograph()
-    mic.setAcquisition(Acquisition())    
-    coordinate = Coordinate()
-    particle = Particle() # particle should be of type Particle or Coordinate
-    particle.setCoordinate(coordinate)
-    
-    for event, elem in context:
-        if event == 'start':
-            # After found the first particle, set onlyMics flag to False
-            # after this, micrographs tags are just particle references
-            if elem.tag == 'particle':
-                onlyMics = False
-            # If pixelSpacing is found(and we require it for particles)
-            # we asume that element are Particle, if not, there are Coordinates
-            if elem.tag == 'pixelSpacing':
-                if not onlyMics:
-                    foundPixelSpacing = True
-            # If found CTF information, set the CTFModel
-            # only once for either micrograph or particle
-            if elem.tag == 'defocusU':
-                if onlyMics:
-                    if not mic.hasCTF():
-                        mic.setCTF(CTFModel())
-                else:
-                    if not particle.hasCTF():
-                        particle.setCTF(CTFModel())
-        else: # event == 'end'
-            if elem.tag == 'micrograph':
-                if onlyMics:
-                    _micrographFromElem(elem, mic)
-                    root.clear()
-                else:
-                    pass #TODO: set particle micrograph reference
-            elif elem.tag == 'particle':
-                if foundPixelSpacing:
-                    _particleFromElem(elem, particle)
-                    #kparticle.printAll()
-                else:
-                    _coordinateFromElem(elem, coordinate)
-                    #coordinate.printAll()
-                root.clear()
-    
+   
