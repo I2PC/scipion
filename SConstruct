@@ -526,6 +526,43 @@ elif (ARGUMENTS['mode'] == 'docs'):
     action = env.Action("doxygen")
     env.Execute(action)
 
+elif (ARGUMENTS['mode'] == 'install'):
+    if not 'dir' in ARGUMENTS:
+        raise Exception("dir=PATH should be passed when mode=install")
+    path = ARGUMENTS['dir']
+    
+    import shutil
+    if os.path.exists(path):
+        print "Removing dir: '%s'" % path
+        shutil.rmtree(path) # Remove install directory
+        
+    INSTALL_DIRS = ['lib', 'bin', 'resources', 'protocols', 'java/lib', 'external/python/Python-2.7.2/']
+    
+    for src in INSTALL_DIRS:
+        dest = os.path.join(path, src)
+        print "Coping directory from '%s' to '%s'" % (src, dest)
+        shutil.copytree(src, dest, ignore=shutil.ignore_patterns("*.o", "*.pyc"))
+        
+    #PYTHON_FILES = ['external/python/Python-2.7.2/' + f for f in ['libpython2.7.a', 'libpython2.7.so', 'libpython2.7.so.1.0', 'python']]
+    XMIPP_FILES = ['.xmipp' + s for s in ['.autocomplete', '.bashrc', '.csh', '_programs.autocomplete', '_programs.sqlite']]
+    TCLTK_FILES = ['external/python/%s8.5.10/unix/lib%s.so' % (s, s) for s in ['tcl', 'tk']]
+    INSTALL_FILES = XMIPP_FILES + TCLTK_FILES
+    
+    for src in INSTALL_FILES:
+        dest = os.path.join(path, src)
+        destDir = os.path.dirname(dest)
+        if not os.path.exists(destDir):
+            print "Creating dir '%s'" % destDir
+            os.makedirs(destDir)
+        print "Coping file from '%s' to '%s'" % (src, dest)
+        shutil.copy2(src, dest)
+
+    CLEAN_DIRS = ['lib/python2.7/site-packages/matplotlib/tests', 'resources/test']
+    
+    for src in CLEAN_DIRS:
+        dest = os.path.join(path, src)
+        print "Deleting directory '%s'" % dest
+        shutil.rmtree(dest)
 # TODO: make specific modes for generation of dist
 
 # distribution
