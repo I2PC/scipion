@@ -28,7 +28,6 @@ from os.path import basename, splitext,exists
 from os import remove
 from protlib_xmipp import XmippScript
 from xmipp import MetaData, MDL_CTF_MODEL, MD_APPEND, MD_OVERWRITE, FileName
-from emx.emxmapper import *
 from emx.emx import *
 from protlib_emx import *
 
@@ -67,7 +66,6 @@ class ScriptImportEMX(XmippScript):
         if exists(emxFileName):
            remove(emxFileName)
         emxData = EmxData()
-        mapper  = XmlMapper(emxData)
         #create emx files with mic CTF information
         if mode   == 'micCTF':
             ctfMicXmippToEmx(emxData,xmdFileName)
@@ -77,7 +75,7 @@ class ScriptImportEMX(XmippScript):
             coorrXmippToEmx(emxData,xmdFileName)
         elif mode == 'alignment':
             alignXmippToEmx(emxData,xmdFileName)
-        mapper.writeEMXFile(emxFileName)
+        emxData.write(emxFileName)
                     
         
 if __name__ == '__main__':
