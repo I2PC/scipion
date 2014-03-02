@@ -599,7 +599,13 @@ class SqliteFlatMapper(Mapper):
         obj.setObjComment(self._getStrValue(objRow['comment']))
         
         for c, attrName in self._objColumns:
-            obj.setAttributeValue(attrName, objRow[c])
+            if attrName == '_mapperPath':
+                #FIXME: this is a really dirty-dirty fix in order to 
+                # continue with Ward protocol before fixing this bug
+                obj._mapperPath.trace(obj.load)
+                obj._mapperPath.set(objRow[c])
+            else:
+                obj.setAttributeValue(attrName, objRow[c])
 
         return obj
         
@@ -629,8 +635,8 @@ class SqliteFlatMapper(Mapper):
     def selectAll(self, iterate=True, objectFilter=None):
         if self._objTemplate is None:
             self.__loadObjDict()
-            
         objRows = self.db.selectAll()
+
         return self.__objectsFromRows(objRows, iterate, objectFilter)    
     
     def __objectsFromIds(self, objIds):
