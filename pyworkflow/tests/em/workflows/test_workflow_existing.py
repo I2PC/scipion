@@ -241,6 +241,26 @@ class TestXmippWorkflow(unittest.TestCase):
         protEmx.inputSet.set(protExtract.outputParticles)
         
         project.launchProtocol(protEmx, wait=True)
+        
+    def test_classesWard(self):
+        projName = "relion_tutorial"
+        project = Manager().loadProject(projName)
+        
+        protName = 'XmippProtCL2D'
+        protName = 'SpiderProtClassifyWard'
+        prot = project.mapper.selectByClass(protName)[0]
+        
+        classes = prot.outputClasses
+        import pyworkflow.em.packages.xmipp3 as xmipp3
+        #xmipp3.writeSetOfClasses2D(classes, "classes.xmd")
+        
+        print "=" * 100
+        for cls in classes:
+            #for img in cls:
+            #    print img.getLocation()
+            #cls.printAll()
+            print cls.getObjId()
+            #break
          
              
 class ConditionFilter():
