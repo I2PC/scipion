@@ -119,9 +119,12 @@ class Object(object):
     
     def trace(self, callback):
         """ Add an observer when the set method is called. """
-        self.__set = self.set 
+        if self.set == self.__setTrace:
+            pass #print "trace already set"
+        else:
+            self.__set = self.set 
+            self.set = self.__setTrace
         self.__setCallback = callback 
-        self.set = self.__setTrace
         
     def __setTrace(self, value):
         self.__set(value)
@@ -358,7 +361,7 @@ class Object(object):
             if name == 'submitTemplate': # Skip this because very large value
                 value = '...'
             else:
-                value = self._objValue
+                value = self.getObjValue()
                 
             print tab, '%s = %s' % (name, value), idStr
         for k, v in self.getAttributes():
@@ -605,7 +608,6 @@ class CsvList(Scalar, list):
     def _convertValue(self, value):
         """Value should be a str with comman separated values"""
         self.clear()
-        
         if value:
             for s in value.split(','):
                 self.append(self._pType(s))
@@ -625,7 +627,7 @@ class CsvList(Scalar, list):
     
     def clear(self):
         del self[:]
-           
+        
         
 class Array(Object):
     """Class for holding fixed len array"""
