@@ -256,8 +256,7 @@ def class2DToRow(class2D, classRow):
         classRow.setValue(xmipp.MDL_IMAGE, fn)
     n = long(len(class2D))
     classRow.setValue(xmipp.MDL_CLASS_COUNT, n)
-    setRowId(classRow, class2D, label=xmipp.MDL_REF)
-        
+    classRow.setValue(xmipp.MDL_REF, int(class2D.getObjId()))
         
 def ctfModelToRow(ctfModel, ctfRow):
     """ Set labels values from ctfModel to md row. """
