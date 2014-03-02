@@ -175,8 +175,9 @@ def emxSetOfMicrographs(emxData, micSet, emxDir, ctfSet=None, writeData=True):
         micSet: input set of micrographs
         filename: the EMX file where to store the micrographs information.
     """
-    from convert import ImageHandler
-    from constants import NO_INDEX
+    from pyworkflow.em.convert import ImageHandler
+    from pyworkflow.em.constants import NO_INDEX
+    
     ih = ImageHandler()
 
     for mic in micSet:
@@ -199,6 +200,7 @@ def emxSetOfParticles(emxData, partSet, stackFn=None, micSet=None):
         filename: the EMX file where to store the micrographs information.
     """
     from pyworkflow.em.convert import ImageHandler
+    
     ih = ImageHandler()
     
     for i, particle in enumerate(partSet):

@@ -24,9 +24,7 @@
 # *
 # **************************************************************************
 """
-In this module are protocol base classes related to EM.
-Them should be sub-classes in the different sub-packages from
-each EM-software packages.
+In this module are two protocols to Import/Export data from/to EMX.
 """
 
 from pyworkflow.em import *
