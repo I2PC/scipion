@@ -109,7 +109,7 @@ class XmippProtNMAChoose(XmippProtConvertToPseudoAtomsBase, XmippProtNMABase):
         # Remove intermediate files
         cleanPath(self._getPath("pseudoatoms.pdb"), fnModes, self._getExtraPath('vec_ani.pkl'))
     
-    def evaluateDeformationsStep(self,n):
+    def evaluateDeformationsStep(self):
         N = self.inputStructures.get().getSize()
         import numpy
         distances=numpy.zeros([N,N])
@@ -121,12 +121,18 @@ class XmippProtNMAChoose(XmippProtConvertToPseudoAtomsBase, XmippProtNMABase):
                     Navg=0.
                     pdb2=open(self._getExtraPath('alignment_%02d_%02d.pdb'%(volCounter,volCounter2))).readlines()
                     for i in range(len(pdb1)):
-                        tokens1=pdb1[i].split()
-                        if tokens1[0]=="ATOM":
-                            tokens2=pdb2[i].split()
-                            dx=float(tokens1[5])-float(tokens2[5])
-                            dy=float(tokens1[6])-float(tokens2[6])
-                            dz=float(tokens1[7])-float(tokens2[7])
+                        line1=pdb1[i]
+                        if line1.startswith("ATOM"):
+                            line2=pdb2[i]
+                            x1=float(line1[30:37])
+                            y1=float(line1[38:45])
+                            z1=float(line1[46:53])
+                            x2=float(line2[30:37])
+                            y2=float(line2[38:45])
+                            z2=float(line2[46:53])
+                            dx=x1-x2
+                            dy=y1-y2
+                            dz=z1-z2
                             d=math.sqrt(dx*dx+dy*dy+dz*dz)
                             davg+=d
                             Navg+=1
@@ -157,6 +163,9 @@ class XmippProtNMAChoose(XmippProtConvertToPseudoAtomsBase, XmippProtNMABase):
                         minDisplacement[idx2]=min(minDisplacement[idx2],displacements[idx1])
                         maxDisplacement[idx2]=max(maxDisplacement[idx2],displacements[idx1])
                         idx1+=1
+                    else:
+                        minDisplacement[idx2]=0
+                        maxDisplacement[idx2]=0
                     idx2+=1
         idx2=0
         for idRow in mdNMA:
@@ -172,6 +181,7 @@ class XmippProtNMAChoose(XmippProtConvertToPseudoAtomsBase, XmippProtNMABase):
                 print("The corresponding volume is %s"%(getImageLocation(inputStructure)))
                 finalStructure=inputStructure
                 break
+            volCounter+=1
 
         pdb = PdbFile(self._getPath('pseudoatoms.pdb'), pseudoatoms=True)
         self._defineOutputs(outputPdb=pdb)
