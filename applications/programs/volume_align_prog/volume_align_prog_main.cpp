@@ -427,11 +427,12 @@ public:
         A = A * Aaux;
         scale3DMatrix(vectorR3(best_align(5), best_align(5), best_align(5)),Aaux);
         A = A * Aaux;
-        std::cout << "xmipp_transform_geometry will require the following values"
-                  << "\n   Angles: " << best_align(2) << " " 
-                  << best_align(3) << " " << best_align(4) 
-                  << "\n   Shifts: " << A(0,3) << " " << A(1,3) << " " << A(2,3)
-                  << std::endl;
+        if (verbose!=0)
+			std::cout << "xmipp_transform_geometry will require the following values"
+					  << "\n   Angles: " << best_align(2) << " "
+					  << best_align(3) << " " << best_align(4)
+					  << "\n   Shifts: " << A(0,3) << " " << A(1,3) << " " << A(2,3)
+					  << std::endl;
         if (apply)
         {
             applyTransformation(params.V2(),params.Vaux(),MATRIX1D_ARRAY(best_align));

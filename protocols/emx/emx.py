@@ -67,7 +67,7 @@ CLASSLIST  = [MICROGRAPH, PARTICLE]
 #primary keys
 FILENAME   = 'fileName'
 INDEX      = 'index'
-
+COMMENT    = 'comment'
 
 class EmxLabel:
     """
@@ -89,9 +89,11 @@ class EmxLabel:
 
 #Dictionary with attribute names, data types and units
 #By default an attribute does not has unit assign to it
+
 emxDataTypes={
               FILENAME:EmxLabel(str)
               ,INDEX:EmxLabel(int)
+              , COMMENT:EmxLabel(str)
               ,'acceleratingVoltage':EmxLabel(float,'kV')
               ,'activeFlag':EmxLabel(int)
               ,'amplitudeContrast':EmxLabel(float)
@@ -296,7 +298,8 @@ class EmxMicrograph(EmxImage):
     _foreignKey = None
     _name = MICROGRAPH 
     _attributes = [
-         'acceleratingVoltage'
+         COMMENT
+        ,'acceleratingVoltage'
         ,'activeFlag'
         ,'amplitudeContrast'
         ,'cs'
@@ -316,7 +319,9 @@ class EmxParticle(EmxImage):
     _foreignKeys = [MICROGRAPH]
     _foreignKeysMap = {MICROGRAPH:EmxMicrograph('a',1)}
     _name = PARTICLE
-    _attributes=['activeFlag'
+    _attributes=[
+                 COMMENT
+                ,'activeFlag'
                 ,'boxSize__X'
                 ,'boxSize__Y'
                 ,'boxSize__Z'
@@ -476,6 +481,17 @@ class EmxXmlMapper():
             xmlString += ' %(key)s="%(value)s"' % ({'key':key, 'value':str(value)})
         xmlString += ">\n"
         
+        # write foreign key
+        if len(object.dictForeignKeys) and\
+               object.dictForeignKeys[object.dictForeignKeys.keys()[0]]:
+            pointedObject = object.dictForeignKeys[object.dictForeignKeys.keys()[0]]
+            xmlString += "    <%s" % pointedObject._name
+            for key, value in pointedObject.dictPrimaryKeys.iteritems():
+                if value is None:
+                    continue
+                xmlString += ' %(key)s="%(value)s"' % ({'key':key, 'value':str(value)})
+            xmlString += "/>\n"
+
         # write attributes
         oldParent = ""
         for key, value in object.iterAttributes():
@@ -517,16 +533,6 @@ class EmxXmlMapper():
                 else:
                     xmlString += '    <%(key)s unit="%(unit)s">%(value)s</%(key)s>\n' % ({'key':key, 'value':str(value), 'unit':unit})
                     
-        # write foreign key
-        if len(object.dictForeignKeys) and\
-               object.dictForeignKeys[object.dictForeignKeys.keys()[0]]:
-            pointedObject = object.dictForeignKeys[object.dictForeignKeys.keys()[0]]
-            xmlString += "    <%s" % pointedObject._name
-            for key, value in pointedObject.dictPrimaryKeys.iteritems():
-                if value is None:
-                    continue
-                xmlString += ' %(key)s="%(value)s"' % ({'key':key, 'value':str(value)})
-            xmlString += "/>\n"
         xmlString += "  </%s>\n" % object._name
         # print xmlString
         return xmlString
@@ -671,7 +677,7 @@ class EmxXmlMapper():
         return self._object
         
     def writeEMXFile(self, fileName):
-        """read xml file and store it in a document
+        """write xml file and store it in a document
         """
         xmlFile = open(fileName, "w")
         xmlFile.write("<?xml version='1.0' encoding='utf-8'?>\n")
@@ -693,6 +699,8 @@ class EmxXmlMapper():
                          , '</t33>\n    ':'</t33> '
                          }.iteritems():
                 text = text.replace(i, j)
+            text = text.replace('<comment>','<!--') 
+            text = text.replace('</comment>','-->')
             xmlFile.write(text)
         xmlFile.write("</EMX>")
         xmlFile.close()

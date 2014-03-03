@@ -200,6 +200,8 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 	private JMenuItem rendercolumnmi;
 
 	private Hashtable<String, ColumnInfo> imagecolumns;
+
+	protected JPanel buttonspn;
 	/** Some static initialization for fancy default dimensions */
 	static
 	{
@@ -309,7 +311,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 	 * Function to create general GUI base on a TableModel. It will use helper
 	 * functions to create different components of the GUI
 	 */
-	private void createGUI()
+	protected void createGUI()
 	{
 		// Create file chooser and set current dir
 		setIconImage(XmippResource.getIcon("xmipp_logo.png").getImage());
@@ -342,39 +344,28 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 
 		// Create toolbar buttons
 		createToolbar();
-		c.fill = GridBagConstraints.HORIZONTAL;
-		c.gridx = 0;
-		c.gridy = 0;
-		container.add(toolBar, c);
+		container.add(toolBar, XmippWindowUtil.getConstraints(c, 0, 0, 1, 1, GridBagConstraints.HORIZONTAL));
 		setInitialValues();
 
 		// Create combos for selection of blocks and/or volumes
 		createCombos();
-		c.fill = GridBagConstraints.HORIZONTAL;
-		c.gridx = 0;
-		c.gridy = 1;
-		container.add(cbPanel, c);
+		container.add(cbPanel, XmippWindowUtil.getConstraints(c, 0, 1, 1, 1, GridBagConstraints.HORIZONTAL));
 		updateVisibleCombos();
 
 		jspContent = new GalleryScroll();
 		// Create table
 		createTable();
-		c.fill = GridBagConstraints.BOTH;
-		c.gridx = 0;
-		c.gridy = 2;
+		
 		c.weightx = 1.0;
 		c.weighty = 1.0;
-		container.add(jspContent, c);
-                
-                commandspn = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-               
-                c.fill = GridBagConstraints.HORIZONTAL;
-		c.gridx = 0;
-		c.gridy = 3;
+		container.add(jspContent, XmippWindowUtil.getConstraints(c, 0, 2, 1, 1, GridBagConstraints.BOTH));
+		
 		c.weightx = 0;
 		c.weighty = 0;
-		container.add(commandspn, c);
-				
+		buttonspn = new JPanel(new FlowLayout(FlowLayout.TRAILING));
+		
+		container.add(buttonspn, XmippWindowUtil.getConstraints(c, 0, 3, 1, 1, GridBagConstraints.HORIZONTAL));
+						
 		// Create the menu for table
 		menu = new GalleryMenu();
 		setJMenuBar(menu.getMenuBar());
@@ -562,6 +553,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			@Override
 			public void keyPressed(KeyEvent arg0)
 			{
+				
 				int vdir = 0, hdir = 0;
 
 				switch (arg0.getKeyCode())
@@ -584,8 +576,9 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 				}
 				if (vdir != 0 || hdir != 0)
 				{
+					
 					int newRow = table.getSelectedRow() + vdir;
-					int col = table.getSelectedColumn() + hdir;
+					int col = (table.getSelectedColumn() == -1)? 0 : table.getSelectedColumn() + hdir;//col is -1 in metadata mode
 					//System.err.format("newRow: %d, col: %d\n", newRow, col);
 					selectItem(newRow, col);
 
@@ -1370,7 +1363,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 
 	public void selectItem(int row, int col)
 	{
-		if (row < 0 || row > table.getRowCount() - 1 || col < 0 || col > table.getColumnCount() - 1)
+		if (row < 0 || row > table.getRowCount() - 1 || col < 0 || col > table.getColumnCount())
 			return;
 		
 		if (gallery.data.isGalleryMode() && 

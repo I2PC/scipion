@@ -49,32 +49,32 @@ PseudoAtomTarget=5
 # {section} Normal Mode Analysis
 #------------------------------------------------------------------------------------------------
 # Number of modes:
-"""The maximum number of modes allowed by the method for atomic normal mode analysis is 6 times the number of RTB blocks and for pseudoatomic normal mode analysis 3 times the number of pseudoatoms. However, the protocol allows only up to 200 modes as 20-100 modes are usually enough. The number of modes given here should be below the minimum between these two numbers."""
+"""This is the number of modes that will be computed and animated. The maximum number of modes allowed by the method for atomic normal mode analysis is 6 times the number of RTB blocks. The maximum number of modes allowed by the method for pseudoatomic normal mode analysis is 3 times the number of pseudoatoms. However, the protocol allows computing and animating only up to 200 modes (20-100 modes are usually enough). """
 NumberOfModes=20
 
 # {list}(Absolute,Relative) Cut-off mode:
 CutoffMode="Relative"
 
 # {condition}(CutoffMode=="Absolute") Cut-off distance (A):
-"""Atoms or pseudoatoms beyond this distance will not interact"""
+"""Atoms or pseudoatoms beyond this distance will not interact. Larger values of this distance result in more rigid structures."""
 Rc=8
 
 # {condition}(CutoffMode=="Relative") Cut-off percentage:
-"""The interaction cutoff distance is calculated as the distance below which is this percentage of interatomic or interpseudoatomic distances. Atoms or pseudoatoms beyond this distance will not interact. """
+"""The interaction cutoff distance is calculated as the distance below which is this percentage of interatomic or interpseudoatomic distances. Atoms or pseudoatoms beyond this distance will not interact. Larger values of this distance result in more rigid structures."""
 RcPercentage=95
 
 # {expert}{condition}(StructureType=="PDB") Number of residues per RTB block:
 """This is the RTB block size for the RTB NMA method. 
-When calculating the normal modes, aminoacids are grouped into blocks of this size that are moved translationally and rotationally together """
+Aminoacids are grouped into rigid-body blocks of this size (the blocks are shifted and rotated independantly from each other). """
 RTBblockSize=10
 
 # {expert}{condition}(StructureType=="PDB") Interaction force constant
 """This is the RTB interaction force constant for the RTB NMA method. 
-If it increases, then the structure will be more rigid. """
+Larger values result in more rigid structures. """
 RTBForceConstant=10.0
 
 # {expert} Threshold on collectivity
-""" Collectivity degree is related to the number of atoms or pseudoatoms that are affected by the mode, and it is normalized between 0 and 1. Modes below this threshold are deselected in the modes metadata file. Set to 0 for no deselection. You can always modify the selection manually after the modes metadata file is created. The modes metadata file can be used with Flexible fitting protocol. Modes 1-6 are always deselected as they are related to rigid-body movements.  """
+""" Collectivity degree is related to the number of atoms or pseudoatoms that are affected by the mode, and it is normalized between 0 and 1. Modes below this threshold are deselected in the modes metadata file. Set to 0 for no deselection. You can always modify the selection manually after the modes metadata file is created. The modes metadata file can be used with Flexible alignment protocol. Modes 1-6 are always deselected as they are related to rigid-body movements.  """
 CollectivityThreshold=0.15
 
 #------------------------------------------------------------------------------------------------

@@ -1755,8 +1755,8 @@ if [ $? -eq 1 ]; then
   fi
   if [ $DO_COMPILE  -eq 1 ]; then
     FC=${FC:-gfortran}
-    FFLAGS=${fc:-'-O3'}
-    echoExec "make FC=${FC} FFLAGS=${FFLAGS}" "${XMIPP_HOME}/build/make_NMA.log" 1
+    FFLAGS=${FFLAGS:-'-O3'}
+    echoExec "make FC=${FC} FFLAGS=\"${FFLAGS}\"" "${XMIPP_HOME}/build/make_NMA.log" 1
     echoExec "cp nma_* ${XMIPP_HOME}/bin" "${XMIPP_HOME}/build/make_NMA.log"
     echoExec "cd -" "${XMIPP_HOME}/build/make_NMA.log"  1
     echoExec "cd ${XMIPP_HOME}/external/NMA/NMA_cart" "${XMIPP_HOME}/build/make_NMA.log" 1

@@ -50,7 +50,7 @@ class ChimeraServer:
                 if self.remote_conn.poll():
                     
                     msg = self.remote_conn.recv()
-                    print msg
+                    
                     
                     if msg == 'exit_client':
                         break
@@ -74,7 +74,7 @@ class ChimeraServer:
                     #print msg
                     if msg == 'open_volume':
                         data = self.remote_conn.recv()
-                        #print 'volume data'
+                        print data
                         grid = Array_Grid_Data(data)
                         self.volume = volume_from_grid_data(grid)
                         runCommand("focus")
