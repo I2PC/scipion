@@ -737,6 +737,8 @@ public class GalleryData {
 		}
 		return selectionMd;
 	}
+        
+       
 
 	/**
 	 * Compute the metadatas

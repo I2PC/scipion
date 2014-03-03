@@ -2353,5 +2353,10 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
            //what if there are no images on metadata??
            return gallery.getSelectionCount() > 0;
        }
+       
+       public boolean is2DClassSelection()
+        {
+            return data.is2DClassificationMd() && gallery.getSelectionCount() > 0;
+        }
 
 }// class JFrameGallery

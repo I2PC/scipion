@@ -50,7 +50,10 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
                     try {
                         String selectionmd = "selection.xmd";
                         selectionmd = new File(selectionmd).getAbsolutePath();
-                        saveSelection(selectionmd, true);
+                        if(is2DClassSelection())
+                            System.out.println("is2DClassification");
+                        else
+                            saveSelection(selectionmd, true);
                         String command = String.format("%s %s %s %s %s", script, selectionmd, type, projectid, imagesid);
                         XmippUtil.executeCommand(command);
                     } catch (Exception ex) {
