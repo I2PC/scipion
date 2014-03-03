@@ -39,27 +39,8 @@ class ProtCTFFind(ProtCTFMicrographs):
     using the ctffind3 program"""
     _label = 'ctffind3'
     _references = ['[[http://www.ncbi.nlm.nih.gov/pubmed/12781660][Mindell JA & Grigorieff N., J Struct Biol. (2003)]]']
-
-    def _prepareCommand(self):
-        self._params['step_focus'] = 1000.0
-        # Convert digital frequencies to spatial frequencies
-        sampling = self.inputMics.getSamplingRate()
-        self._params['lowRes'] = sampling / self._params['lowRes']
-        self._params['highRes'] = sampling / self._params['highRes']        
-        if not exists(CTFFIND_PATH):
-            raise Exception('Missing ' + CTFFIND)
-         
-        self._program = 'export NATIVEMTZ=kk ; ' + CTFFIND_PATH
-        self._args = """   << eof > %(ctffindOut)s
-%(micFn)s
-%(ctffindPSD)s
-%(sphericalAberration)f,%(voltage)f,%(ampContrast)f,%(magnification)f,%(scannedPixelSize)f
-%(windowSize)d,%(lowRes)f,%(highRes)f,%(minDefocus)f,%(maxDefocus)f,%(step_focus)f
-"""
-
-    def _getPsdPath(self, micDir):
-        return join(micDir, 'ctffind_psd.mrc')
     
+    #--------------------------- STEPS functions ---------------------------------------------------
     def _estimateCTF(self, micFn, micDir):
         """ Run ctffind3 with required parameters """
         # Create micrograph dir 
@@ -69,9 +50,53 @@ class ProtCTFFind(ProtCTFMicrographs):
         self._params['micDir'] = micDir
         self._params['ctffindOut'] = join(micDir, 'ctffind.out')
         self._params['ctffindPSD'] = self._getPsdPath(micDir)
-                
         self.runJob(self._program, self._args % self._params)
-        #print "command: ", self._program, self._args % self._params    
+    
+    def createOutputStep(self):
+        ctfSet = self._createSetOfCTF()
+        defocusList = []
+        
+        for fn, micDir, mic in self._iterMicrographs():
+            out = join(micDir, 'ctffind.out')
+            result = self._parseOutput(out)
+            defocusU, defocusV, defocusAngle = result
+            ctfModel = self._getCTFModel(defocusU, defocusV, defocusAngle, 
+                                                self._getPsdPath(micDir))
+            ctfModel.setMicFile(mic.getFileName())
+                        # save the values of defocus for each micrograph in a list
+            defocusList.append(ctfModel.getDefocusU())
+            defocusList.append(ctfModel.getDefocusV())
+            ctfSet.append(ctfModel)
+        
+        self._defocusMaxMin(defocusList)
+        self._defineOutputs(outputCTF=ctfSet)
+        self._defineRelation(RELATION_CTF, ctfSet, self.inputMics)
+    
+    #--------------------------- INFO functions ----------------------------------------------------
+    def _validate(self):
+        errors = []
+        ctffind = join(os.environ['CTFFIND_HOME'], 'ctffind3.exe')
+        if not exists(ctffind):
+            errors.append('Missing ctffind3.exe')
+        return errors
+    
+    #--------------------------- UTILS functions ---------------------------------------------------
+    def _prepareCommand(self):
+        self._params['step_focus'] = 1000.0
+        # Convert digital frequencies to spatial frequencies
+        sampling = self.inputMics.getSamplingRate()
+        self._params['lowRes'] = sampling / self._params['lowRes']
+        self._params['highRes'] = sampling / self._params['highRes']        
+        self._program = 'export NATIVEMTZ=kk ; ' + CTFFIND_PATH
+        self._args = """   << eof > %(ctffindOut)s
+%(micFn)s
+%(ctffindPSD)s
+%(sphericalAberration)f,%(voltage)f,%(ampContrast)f,%(magnification)f,%(scannedPixelSize)f
+%(windowSize)d,%(lowRes)f,%(highRes)f,%(minDefocus)f,%(maxDefocus)f,%(step_focus)f
+"""
+    
+    def _getPsdPath(self, micDir):
+        return join(micDir, 'ctffind_psd.mrc')
 
     def _parseOutput(self, filename):
         """ Try to find the output estimation parameters
@@ -96,26 +121,4 @@ class ProtCTFFind(ProtCTFMicrographs):
         ctf.setPsdFile(psdFile)
         
         return ctf
-        
-    def createOutput(self):
-        ctfSet = self._createSetOfCTF()
-        
-        for fn, micDir, mic in self._iterMicrographs():
-            out = join(micDir, 'ctffind.out')
-            result = self._parseOutput(out)
-            defocusU, defocusV, defocusAngle = result
-            ctfModel = self._getCTFModel(defocusU, defocusV, defocusAngle, 
-                                                self._getPsdPath(micDir))
-            ctfModel.setMicFile(mic.getFileName())
-            ctfSet.append(ctfModel)
-
-        self._defineOutputs(outputCTF=ctfSet)
-        self._defineRelation(RELATION_CTF, ctfSet, self.inputMics)
-
-    def _validate(self):
-        errors = []
-        ctffind = join(os.environ['CTFFIND_HOME'], 'ctffind3.exe')
-        if not exists(ctffind):
-            errors.append('Missing ctffind3.exe')
-        return errors
             

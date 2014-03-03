@@ -105,10 +105,11 @@ class XmippProtCTFMicrographs(ProtCTFMicrographs):
             
         micRow.copyFromRow(ctfRow)  
         
-    def createOutput(self):
+    def createOutputStep(self):
         # Create the SetOfMicrographs 
         micSet = self._createSetOfMicrographs()
         ctfSet = self._createSetOfCTF()
+        defocusList = []
         
         for _, micDir, mic in self._iterMicrographs():
             ctfparam = self._getFilename('ctfparam', micDir=micDir)
@@ -122,7 +123,12 @@ class XmippProtCTFMicrographs(ProtCTFMicrographs):
             ctfModel2.setMicFile(mic.getFileName())
             ctfModel2.setObjId(mic.getObjId())
             ctfSet.append(ctfModel2)
+            
+            # save the values of defocus for each micrograph in a list
+            defocusList.append(ctfModel2.getDefocusU())
+            defocusList.append(ctfModel2.getDefocusV())
  
+        self._defocusMaxMin(defocusList)
         #Copy attributes from input to output micrographs
         micSet.copyInfo(self.inputMics)
         
