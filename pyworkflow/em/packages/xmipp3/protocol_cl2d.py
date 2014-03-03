@@ -218,8 +218,9 @@ class XmippProtCL2D(ProtClassify):
             summary.append("Input Images: %s" % self.inputImages.get().getNameId())
             summary.append("Number of references: %d" % self.numberOfReferences.get())
             summary.append("Output classes: %s" % self.outputClasses.getNameId())
-            summary.append("Output classes core: %s" % self.outputClasses_core.getNameId())
-            summary.append("Output classes stable core: %s" % self.outputClasses_stable_core.getNameId())
+            if self.hasAttribute('outputClasses_core'):
+                summary.append("Output classes core: %s" % self.outputClasses_core.getNameId())
+                summary.append("Output classes stable core: %s" % self.outputClasses_stable_core.getNameId())
         return summary
     
     def _methods(self):
