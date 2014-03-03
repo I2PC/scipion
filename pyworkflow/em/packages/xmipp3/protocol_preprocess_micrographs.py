@@ -88,7 +88,6 @@ class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
                       help='Non-integer downsample factors are possible. Must be larger than 1.')
     
         form.addParallelSection(threads=2, mpi=1)
-        
     
     #--------------------------- INSERT steps functions --------------------------------------------
     def _insertAllSteps(self):
@@ -158,7 +157,7 @@ class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
                 
         return self.lastStepId
     
-    #--------------------------- STEPS functions --------------------------------------------
+    #--------------------------- STEPS functions ---------------------------------------------------
     def createOutputStep(self, IOTable):        
         outputMics = self._createSetOfMicrographs()
         outputMics.copyInfo(self.inputMics)
@@ -174,23 +173,7 @@ class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
         self._defineOutputs(outputMicrographs=outputMics)
         self._defineTransformRelation(self.inputMics, outputMics)
         
-    #--------------------------- INFO functions --------------------------------------------
-    def _summary(self):
-        summary = []
-        if not self.inputMicrographs.hasValue():
-            summary.append("No *Input Micrographs* selected.")
-        else:
-            summary.append("Input micrographs: " + self.inputMicrographs.get().getNameId())
-            if self.doDownsample.get():
-                summary.append("Downsampling factor: %d" % self.downFactor.get())
-            if self.doCrop.get():
-                summary.append("Number of pixels cropped: %d" % self.cropPixels.get())
-            if self.doLog.get():
-                summary.append("Formula applied: %f - %f ln(x + %f)" % (self.logA.get(), self.logB.get(), self.logC.get(),))
-            if self.doRemoveBadPix.get():
-                summary.append("Number of pixels removed: %d" % self.mulStddev.get())
-        return summary
-    
+    #--------------------------- INFO functions ----------------------------------------------------
     def _validate(self):
         validateMsgs = []
         # Some prepocessing option need to be marked
@@ -201,6 +184,35 @@ class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
     def _citations(self):
         return ["Sorzano2009d"]
     
+    def _summary(self):
+        summary = []
+        if not self.outputMicrographs.hasValue():
+            summary.append("*Output Micrographs* not ready yet.")
+        else:
+            summary.append("Micrographs preprocessed: %d" % self.inputMicrographs.get().getSize())
+            if self.doDownsample.get():
+                summary.append("Downsampling factor: %d" % self.downFactor.get())
+            if self.doCrop.get():
+                summary.append("Number of pixels cropped: %d" % self.cropPixels.get())
+            if self.doLog.get():
+                summary.append("Formula applied: %f - %f ln(x + %f)" % (self.logA.get(), self.logB.get(), self.logC.get(),))
+            if self.doRemoveBadPix.get():
+                summary.append("Multiple of standard deviation to remove pixels: %d" % self.mulStddev.get())
+        return summary
+    
     def _methods(self):
-        return self._summary()
+        methods = []
+        if not self.outputMicrographs.hasValue():
+            methods.append("*Output micrographs* not ready yet.")
+        else:
+            methods.append("The %d micrographs has been" % self.inputMicrographs.get().getSize())
+            if self.doDownsample.get():
+                methods.append("downsampled with a factor of %d" % self.downFactor.get())
+            if self.doCrop.get():
+                methods.append("cropped %d pixels" % self.cropPixels.get())
+            if self.doLog.get():
+                methods.append("changed from trasmisivity to density with the formula: %f - %f ln(x + %f)" % (self.logA.get(), self.logB.get(), self.logC.get(),))
+            if self.doRemoveBadPix.get():
+                methods.append("removed pixels with standard deviation beyond %d times" % self.mulStddev.get())
+        return methods
     
