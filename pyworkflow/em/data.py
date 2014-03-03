@@ -942,6 +942,9 @@ class SetOfClasses2D(Set):
         if self._averages: # Write if not None
             self._averages.write()
             
+    def getSamplingRate(self):
+        return self.getAverages().getSamplingRate()
+            
 
 class Class3D(SetOfVolumes):
     """ Represent a Class that group some elements 

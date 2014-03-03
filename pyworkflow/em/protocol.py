@@ -373,6 +373,10 @@ class ProtImportVolumes(EMProtocol):
         errors = []
         if self.pattern.get() == "":
             errors.append(Message.ERROR_PATTERN_EMPTY)
+        
+        if self._getNumberFilePaths(self.pattern.get()) == 0:
+                errors.append(Message.ERROR_PATTERN_FILES)
+
         return errors
          
 
