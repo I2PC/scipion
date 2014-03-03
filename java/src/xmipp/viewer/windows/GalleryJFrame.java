@@ -2355,5 +2355,12 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
         {
             return data.is2DClassificationMd() && gallery.getSelectionCount() > 0;
         }
+       
+       public void saveImagesFromClassSelection(String path)
+       {
+            MetaData imagesMd = gallery.data.getImagesFromClassSelection();
+            imagesMd.write(path);
+            imagesMd.destroy();
+       }
 
 }// class JFrameGallery
