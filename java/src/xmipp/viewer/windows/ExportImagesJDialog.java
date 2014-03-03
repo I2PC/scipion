@@ -136,7 +136,7 @@ public class ExportImagesJDialog extends JDialog{
         try {
             path = pathtf.getText();
             File tmpfile = File.createTempFile("temp", ".xmd");
-            frame.saveMd(tmpfile.getAbsolutePath(), false, true);//remove disabled on tmpfile to export afterwords
+            frame.saveMd(tmpfile.getAbsolutePath(), false, true, false);//remove disabled on tmpfile to export afterwords
             String command = String.format("xmipp_transform_geometry %s -o %s", tmpfile, path);
             if(applygeochb.isSelected())
                 command += " --apply_transform";
