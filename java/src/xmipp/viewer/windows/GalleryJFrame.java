@@ -1781,7 +1781,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			for (ColumnInfo column : data.getColumns())
 				if (column.allowRender)
 					imagecolumns.put(column.toString(), column);
-			boolean rendercolumn = imagecolumns.size() > 1;
+			boolean rendercolumn = imagecolumns.size() > 0;
 			setItemEnabled(DISPLAY_RENDERIMAGECOLUMN, rendercolumn);
 			if(rendercolumn)
 			{
