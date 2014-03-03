@@ -454,25 +454,25 @@ class XmippProtRansac(ProtInitialVolume):
     
     def _storeSummaryInfo(self, numVolumes):
         """ Store some information when the protocol finishes. """
-        msg = ''
         for n in range(numVolumes):
             fnBase = 'proposedVolume%05d' % n
-            fnRoot=self._getPath(fnBase + ".xmd")
+            fnRoot = self._getPath(fnBase + ".xmd")
                                
             if os.path.isfile(fnRoot):
-                md=MetaData(fnRoot)
+                md = MetaData(fnRoot)
                 size = md.size()
                 if (size < 5):
-                    msg += "Num of inliers for model %d too small and equal to %d \n" %(n, size)
-                    msg += "Decrease the value of Inlier Threshold parameter and run again \n"
+                    msg1 = "Num of inliers for model %d too small and equal to %d \n" % (n, size)
+                    msg1 += "Decrease the value of Inlier Threshold parameter and run again \n"
                  
         fnRoot = self._getTmpPath("ransac00000.xmd")
-        
         if os.path.isfile(fnRoot):
             md = MetaData(fnRoot)
             size = md.size()
             if (size < 5):
-                msg += "Num of random samples too small and equal to %d.\n" % size
-                msg += "If the option Dimensionality reduction is on, increase the number of grids per dimension.\n"
-                msg += "If the option Dimensionality reduction is off, increase the number of random samples.\n"
+                msg2 = "Num of random samples too small and equal to %d.\n" % size
+                msg2 += "If the option Dimensionality reduction is on, increase the number of grids per dimension.\n"
+                msg2 += "If the option Dimensionality reduction is off, increase the number of random samples.\n"
+                
+        msg = msg1 + msg2
         self.summaryInfo.set(msg)
