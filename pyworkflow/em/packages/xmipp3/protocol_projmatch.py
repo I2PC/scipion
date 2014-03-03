@@ -134,7 +134,7 @@ class XmippProtProjMatch(xmipp3.XmippProtocol, ProtRefine3D, ProtClassify3D):
         
         # doMask, doSphericalMask now merged into maskType
         
-        form.addParam('maskType', EnumParam, choices=['None', 'circular', 'binary file'], default=xmipp3.MASK_CIRCULAR, 
+        form.addParam('maskType', EnumParam, choices=['None', 'circular', 'binary file'], default=xmipp3.MASK2D_CIRCULAR, 
                       label="Mask reference volumes", display=EnumParam.DISPLAY_COMBO,
                       help='Masking the reference volume will increase the signal to noise ratio. \n '
                            'Do not provide a very tight mask. \n ')
