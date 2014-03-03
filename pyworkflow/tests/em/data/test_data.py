@@ -11,6 +11,7 @@ from pyworkflow.em.data import *
 from pyworkflow.utils.path import makePath
 from pyworkflow.em.packages.xmipp3.convert import *
 import pyworkflow.em.packages.eman2.convert as e2convert
+from pyworkflow.em.protocol import EMProtocol
 
 class TestImage(unittest.TestCase):
         
@@ -118,8 +119,39 @@ class TestSetOfMicrographs(unittest.TestCase):
 #        #readSetOfParticles(fnImages, imgSet)
 #        
 #        os.chdir(cwd)
-    
-       
+
+
+class TestSetOfParticles(unittest.TestCase):
+    """ Check if the information of the images is copied to another image when a new SetOfParticles is created"""
+    @classmethod
+    def setUpClass(cls):
+        cls.outputPath = getOutputPath('test_data')
+        
+        cls.dbGold = getGoldPath('SetOfParticles', 'input_particles.sqlite')
+        
+    def testCreateFromOther(self):
+        inImgSet = SetOfParticles(filename=self.dbGold)
+        inImgSet.setHasCTF(True)
+        outImgFn = self.outputPath + "_particles.sqlite"
+        outImgSet = SetOfParticles(filename=outImgFn)
+        outImgSet.copyInfo(inImgSet)
+        
+        print "inputs particles has CTF?", inImgSet.hasCTF()
+        for i, img in enumerate(inImgSet):
+            j = i + 1
+            img.setLocation(j, "test.stk")
+            outImgSet.append(img)
+        
+        outImgSet.write()
+        
+        if outImgSet.hasCTF():
+            print "everything OK!"
+        else:
+            print "The info of the particles was not copied"
+        
+        cleanPath(outImgFn)
+
+
 if __name__ == '__main__':
 #    suite = unittest.TestLoader().loadTestsFromName('test_data_xmipp.TestXmippCTFModel.testConvertXmippCtf')
 #    unittest.TextTestRunner(verbosity=2).run(suite)

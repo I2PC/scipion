@@ -171,9 +171,8 @@ class SpiderProtFilter(ProtFilterParticles, SpiderProtocol):
         for c in cmds:
             spi.runCmd(c)
             
-        for i in range(1, n+1):
-            img = Image()
-            img.setLocation(i, self.particlesStk)
+        for i, img in enumerate(particles):
+            img.setLocation(i+1, self.particlesStk)
             imgSet.append(img)
             
         spi.close()

@@ -233,7 +233,6 @@ class SpiderProtocol(EMProtocol):
             stackFn: the name of the stack for converted images
             selFn: the name of the selection file.
         """
-        """ Convert the input particles to a Spider stack. """
         imgSetPointer = getattr(self, attrName)
         from convert import writeSetOfImages
         writeSetOfImages(imgSetPointer.get(), stackFn, selFn)

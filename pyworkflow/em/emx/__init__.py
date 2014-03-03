@@ -32,3 +32,4 @@ convert.py : which provides conversions between EMObjects and EMX objects.
 """
 from emx import *
 from convert import *
+from protocol import *

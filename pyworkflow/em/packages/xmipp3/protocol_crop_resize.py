@@ -204,18 +204,20 @@ class XmippProtCropResizeParticles(ProtProcessParticles, XmippProcessParticles, 
     
     def createOutputStep(self):
         inImgSet = self.inputParticles.get()
-        imgSet = self._createSetOfParticles()
-        imgSet.copyInfo(inImgSet)
+        outImgSet = self._createSetOfParticles()
+        outImgSet.copyInfo(inImgSet)
         if self.doResize:
-            imgSet.setSamplingRate(self.samplingRate)
+            outImgSet.setSamplingRate(self.samplingRate)
         
         for i, img in enumerate(inImgSet):
-            j = i + 1 
+            j = i + 1
             img.setLocation(j, self.outputStk)
-            imgSet.append(img)
+            if self.doResize:
+                img.setSamplingRate(self.samplingRate)
+            outImgSet.append(img)
         
-        self._defineOutputs(outputParticles=imgSet)
-        self._defineTransformRelation(inImgSet, imgSet)
+        self._defineOutputs(outputParticles=outImgSet)
+        self._defineTransformRelation(inImgSet, self.outputParticles)
     
     #--------------------------- INFO functions ----------------------------------------------------
     def _summary(self):

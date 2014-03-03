@@ -55,14 +55,12 @@ class SpiderProtClassifyWard(ProtClassify, SpiderProtocol):
                         'averages': 'averages'
                         }
     
+    #--------------------------- DEFINE param functions --------------------------------------------   
     def _defineParams(self, form):
         form.addSection(label='Input')
         form.addParam('inputParticles', PointerParam, label="Input particles", important=True, 
                       pointerClass='SetOfParticles',
                       help='Input images to perform PCA')
-        
-        #form.addParam('maskType', )
-              
         form.addParam('pcaFilePointer', PointerParam, pointerClass='PcaFile',
                       label="PCA file", 
                       help='IMC or SEQ file generated in CA-PCA')        
@@ -71,21 +69,17 @@ class SpiderProtClassifyWard(ProtClassify, SpiderProtocol):
                       help='After running, examine the eigenimages and decide which ones to use.\n'
                            'Typically all but the first few are noisy.')
         
-        
-    def _getFileName(self, key):
-        #TODO: Move to a base Spider protocol
-        template = '%(' + key + ')s.%(ext)s'
-        return self._getPath(template % self._params)
-    
+    #--------------------------- INSERT steps functions --------------------------------------------  
     def _insertAllSteps(self):
         pcaFile = self.pcaFilePointer.get().filename.get()
         
         self._insertFunctionStep('convertInput', 'inputParticles',
                                  self._getFileName('particles'), self._getFileName('particlesSel'))
-        self._insertFunctionStep('classifyWard', pcaFile, self.numberOfFactors.get())
-        self._insertFunctionStep('createOutput')
+        self._insertFunctionStep('classifyWardStep', pcaFile, self.numberOfFactors.get())
+        self._insertFunctionStep('createOutputStep')
             
-    def classifyWard(self, imcFile, numberOfFactors):
+    #--------------------------- STEPS functions --------------------------------------------       
+    def classifyWardStep(self, imcFile, numberOfFactors):
         """ Apply the selected filter to particles. 
         Create the set of particles.
         """
@@ -106,8 +100,7 @@ class SpiderProtClassifyWard(ProtClassify, SpiderProtocol):
         
         self._leaveWorkingDir() # Go back to project dir
         
-
-    def createOutput(self):
+    def createOutputStep(self):
         rootNode = self.buildDendrogram(True)
         classes = self._createSetOfClasses2D(self.inputParticles.get())
         averages = classes.createAverages()
@@ -117,30 +110,48 @@ class SpiderProtClassifyWard(ProtClassify, SpiderProtocol):
         
         self._defineOutputs(outputClasses=classes)
          
+    #--------------------------- INFO functions -------------------------------------------- 
+    def _validate(self):
+        errors = []
+        return errors
     
+    def _citations(self):
+        cites = []
+        return cites
+    
+    def _summary(self):
+        summary = []
+        return summary
+    
+    def _methods(self):
+        return self._summary()  # summary is quite explicit and serve as methods
+    
+    #--------------------------- UTILS functions --------------------------------------------
+    def _getFileName(self, key):
+        #TODO: Move to a base Spider protocol
+        template = '%(' + key + ')s.%(ext)s'
+        return self._getPath(template % self._params)
+      
     def _fillClassesFromNodes(self, classes, averages, nodeList):
         """ Create the SetOfClasses2D from the images of each node
         in the dendogram. 
         """
-        class2D = Class2D()
         avg = Particle()
         img = Particle()
         
         for node in nodeList:
             if node.path:
+                print "node.path: ", node.path
+                class2D = Class2D()
                 classes.append(class2D)
-                avg.copyObjId(class2D)
-                avg.setLocation(node.avgCount, self.dendroAverages)
-                averages.append(avg)
+                print "class2D.id: ", class2D.getObjId()
                 for i in node.imageList:
                     #img.setObjId(i) # FIXME: this is wrong if the id is different from index
                     img.cleanObjId()
                     class2D.append(img)
-                class2D.write() # Write images set
-                class2D.cleanObjId() # This is needed to reuse the same Class2D() object
-                
-        classes.write()
-          
+                avg.copyObjId(class2D)
+                avg.setLocation(node.avgCount, self.dendroAverages)
+                averages.append(avg)
         
     def buildDendrogram(self, writeAverages=False):
         """ Parse Spider docfile with the information to build the dendogram.
@@ -224,10 +235,6 @@ class SpiderProtClassifyWard(ProtClassify, SpiderProtocol):
                     doc.writeValues(i)
                 doc.close()
         return node
-            
-    def _summary(self):
-        summary = []
-        return summary
     
 
 class DendroNode(graph.Node):
@@ -242,3 +249,4 @@ class DendroNode(graph.Node):
         
     def getChilds(self):
         return [c for c in self._childs if c.path]
+    

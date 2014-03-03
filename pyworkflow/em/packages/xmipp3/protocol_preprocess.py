@@ -179,16 +179,16 @@ class XmippProtPreprocessParticles(ProtProcessParticles, XmippProcessParticles, 
     
     def createOutputStep(self):
         inImgSet = self.inputParticles.get()
-        imgSet = self._createSetOfParticles()
-        imgSet.copyInfo(inImgSet)
+        outImgSet = self._createSetOfParticles()
+        outImgSet.copyInfo(inImgSet)
         
         for i, img in enumerate(inImgSet):
-            j = i + 1 
+            j = i + 1
             img.setLocation(j, self.outputStk)
-            imgSet.append(img)
+            outImgSet.append(img)
         
-        self._defineOutputs(outputParticles=imgSet)
-        self._defineTransformRelation(inImgSet, imgSet)
+        self._defineOutputs(outputParticles=outImgSet)
+        self._defineTransformRelation(inImgSet, self.outputParticles)
     
     #--------------------------- INFO functions ----------------------------------------------------
     def _validate(self):
@@ -198,14 +198,13 @@ class XmippProtPreprocessParticles(ProtProcessParticles, XmippProcessParticles, 
             size = self._getSize()
             if self.backRadius.get() > size:
                 validateMsgs.append('Set a valid Background radius less than %d' % size)
-            
         return validateMsgs
     
     def _summary(self):
         summary = []
         summary.append("Input particles:  %s" % self.inputParticles.get().getNameId())
         
-        if not hasattr(self, 'outputVol'):
+        if not hasattr(self, 'outputParticles'):
             summary.append("Output particles not ready yet.")
         else:
             summary.append("Output particles: %s" % self.outputParticles.getNameId())
