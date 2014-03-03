@@ -188,7 +188,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 	protected static int MAX_WIDTH;
 	protected static Dimension screenSize;
 	private Integer rows, columns;
-        protected JPanel commandspn;
+
 
 	/** Store data about visualization */
 	GalleryData data;
@@ -359,9 +359,10 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		c.weightx = 1.0;
 		c.weighty = 1.0;
 		container.add(jspContent, XmippWindowUtil.getConstraints(c, 0, 2, 1, 1, GridBagConstraints.BOTH));
-		
 		c.weightx = 0;
 		c.weighty = 0;
+		
+		
 		buttonspn = new JPanel(new FlowLayout(FlowLayout.TRAILING));
 		
 		container.add(buttonspn, XmippWindowUtil.getConstraints(c, 0, 3, 1, 1, GridBagConstraints.HORIZONTAL));

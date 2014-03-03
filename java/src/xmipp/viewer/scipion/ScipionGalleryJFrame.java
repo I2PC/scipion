@@ -63,7 +63,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
                 }
             });
 
-            commandspn.add(cmdbutton);
+            buttonspn.add(cmdbutton);
             cmdbutton.setEnabled(false);
         }
        
