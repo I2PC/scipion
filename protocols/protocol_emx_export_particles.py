@@ -50,9 +50,15 @@ class ProtEmxExportParticles(XmippProtocol):
         return errors
 
     def summary(self):
-        summary = ['Images to export: [%s]' % self.ImagesMd,
-                   ]
-        return summary
+        emxDir = self.getFilename('emxDir')
+        emxFile = join(emxDir, 'particles.emx')
+        message=[]
+        message.append ('Images to export: [%s]' % self.ImagesMd)
+        if os.path.exists(emxFile):
+            message.append ('EMX file: [%s]' % emxFile)
+            message.append ('Directory with Binary files: [%s]' % emxDir)
+        return message
+
     
     def papers(self):
         papers=[]
@@ -61,7 +67,11 @@ class ProtEmxExportParticles(XmippProtocol):
         return papers
 
     def visualize(self):
-        pass
+        emxDir = self.getFilename('emxDir')
+        emxFile = join(emxDir, 'particles.emx')
+        if os.path.exists(emxFile):
+            from protlib_gui_ext import showTextfileViewer
+            showTextfileViewer(emxFile,[emxFile])
 
 
 

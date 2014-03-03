@@ -2052,10 +2052,13 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 
 	protected void saveMd() throws Exception
 	{
-		saveMd(dlgSave.getMdFilename(), false, dlgSave.isOverwrite() );
+		saveMd(dlgSave.getMdFilename(), false, dlgSave.isOverwrite(), true );
+                
 	}
+        
+      
 
-	protected void saveMd(String path, boolean saveall, boolean isoverwrite) throws Exception
+	protected void saveMd(String path, boolean saveall, boolean isoverwrite, boolean reload) throws Exception
 	{
 		try
 		{
@@ -2089,14 +2092,14 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 					data.md.writeBlock(path);// either if save active block or all, save active, other blocks where already managed
 
 			}
-			if (!saveall)
+			if (reload)
 			{
-				data.setMdChanges(false);
+				
 				gallery.data.setFileName(file);
 				if (path.contains("@"))
 					gallery.data.selectBlock(path.substring(0, path.lastIndexOf("@")));
 				reloadFile(file, false);
-				setTitle(gallery.getTitle());
+				setGalleryTitle();
 			}
 		}
 		catch (Exception e)
@@ -2133,14 +2136,14 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			{
 				md = mds.get(blockit);
 				if (blockit.equals(getBlock()))
-					saveMd(blockto, true, dlgSave.isOverwrite() );
+					saveMd(blockto, true, dlgSave.isOverwrite(), false );
 				else
 					md.writeBlock(blockit + "@" + to);
 				md.destroy();
 			}
 		}
 		else {
-			saveMd(blockto, true, dlgSave.isOverwrite() );
+			saveMd(blockto, true, dlgSave.isOverwrite(), false );
 		}
 
 		data.setMdChanges(false);
