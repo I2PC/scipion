@@ -109,7 +109,7 @@ class XmippProtNMAChoose(XmippProtConvertToPseudoAtomsBase, XmippProtNMABase):
         # Remove intermediate files
         cleanPath(self._getPath("pseudoatoms.pdb"), fnModes, self._getExtraPath('vec_ani.pkl'))
     
-    def evaluateDeformationsStep(self,n):
+    def evaluateDeformationsStep(self):
         N = self.inputStructures.get().getSize()
         import numpy
         distances=numpy.zeros([N,N])
