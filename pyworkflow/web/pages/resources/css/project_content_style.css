@@ -148,10 +148,10 @@
 	font-weight: bold;
 }
 
-.filetree li.expandable span.section {
-	font-size: 1.2em;
-	font-weight: bold;
-}
+/* .filetree li.expandable span.section { */
+/* 	font-size: 1.2em; */
+/* 	font-weight: bold; */
+/* } */
 
 /* .filetree span.protocol_base { */
 /* 	background: url(../../../../resources/class_obj.gif) 0 0 no-repeat; */
@@ -195,7 +195,9 @@
 }
 
 .tabContents, .referenceLink {
-	max-height:16em;
+/*  	max-height:14em;  */
+/*  	min-height:14em; */
+	height:14em;
 	overflow-y:scroll;
 }
 
@@ -217,7 +219,7 @@
 	
 	font-family:Monospace;
 	padding:1em;
-	font-size:90%;
+ 	font-size:90%; 
 }
 
 /* jsPlumb */

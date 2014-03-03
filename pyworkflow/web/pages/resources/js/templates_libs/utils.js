@@ -206,9 +206,10 @@ function infoPopup(title, msgText, autoclose, closeFunc) {
 	msg="<table><tr><td><i class=\"fa fa-info-circle fa-4x\" style=\"color:#6fabb5;\"></i>"
 		+ "</td><td>"+ msgText +"</td></tr></table>";
 	
+	
 	if(autoclose){
 		new Messi(msg, {
-			title : 'Help' + ' ' + title,
+			title : title,
 			modal : true,
 			buttons : [ {
 				id : 0,
@@ -226,7 +227,7 @@ function infoPopup(title, msgText, autoclose, closeFunc) {
 	}
 	else{
 		new Messi(msg, {
-			title : 'Help' + ' ' + title,
+			title : title,
 			modal : true,
 			buttons : [ {
 				id : 0,
