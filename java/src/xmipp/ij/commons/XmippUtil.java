@@ -61,7 +61,7 @@ public class XmippUtil {
         
         public static void executeCommand(String command) throws Exception {
 
-            System.out.println(command);
+            //System.out.println(command);
             StringBuffer output = new StringBuffer();
 
             Process p;
@@ -81,7 +81,7 @@ public class XmippUtil {
             while ((line = reader.readLine()) != null) {
                 output.append(line + "\n");
             }
-            System.out.println(output.toString());
+            //System.out.println(output.toString());
         }
 
 
