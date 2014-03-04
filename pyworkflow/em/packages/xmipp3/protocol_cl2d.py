@@ -215,17 +215,23 @@ class XmippProtCL2D(ProtClassify):
         if not hasattr(self, 'outputClasses'):
             summary.append("Output classes not ready yet.")
         else:
-            summary.append("Input Images: %s" % self.inputImages.get().getNameId())
+            summary.append("Input Images: %s" % self.inputImages.get().getName())
             summary.append("Number of references: %d" % self.numberOfReferences.get())
-            summary.append("Output classes: %s" % self.outputClasses.getNameId())
+            summary.append("Output classes: %s" % self.outputClasses.getName())
             if self.hasAttribute('outputClasses_core'):
-                summary.append("Output classes core: %s" % self.outputClasses_core.getNameId())
-                summary.append("Output classes stable core: %s" % self.outputClasses_stable_core.getNameId())
+                summary.append("Output classes core: %s" % self.outputClasses_core.getName())
+            if self.hasAttribute('outputClasses_stable_core'):
+                summary.append("Output classes stable core: %s" % self.outputClasses_stable_core.getName())
         return summary
     
     def _methods(self):
-        """ METHODS TO DO"""
-        pass
+        methods = []
+        if hasattr(self, 'outputClasses'):
+            methods.append("The SetOfParticles with *%d* particles" % self.inputImages.get().getSize())
+            methods.append("has been classified in *%d* classes." % self.numberOfReferences.get())
+            methods.append("The method used to compare was *%s*" % self.getEnumText('comparisonMethod'))
+            methods.append("and to clustering was *%s*" % self.getEnumText('clusteringMethod'))
+        return methods
     
     #--------------------------- UTILS functions --------------------------------------------
     def _getLevelMdFiles(self, subset=''):
