@@ -338,6 +338,21 @@ author = "Sorzano, C. O. S. and Iriarte-Ruiz, A. and Marabini, R. and Carazo, J.
 keywords = "Downsampling, Single Particles, Electron microscopy"
 }
 
+@article{Vargas2013,
+title = "FASTDEF: Fast defocus and astigmatism estimation for high-throughput transmission electron microscopy ",
+journal = "JSB",
+volume = "181",
+number = "2",
+pages = "136 - 148",
+year = "2013",
+note = "",
+issn = "1047-8477",
+doi = "http://dx.doi.org/10.1016/j.jsb.2012.12.006",
+url = "http://www.sciencedirect.com/science/article/pii/S1047847712003401",
+author = "J. Vargas and J. Otón and R. Marabini and S. Jonic and J.M. de la Rosa-Trevín and J.M. Carazo and C.O.S. Sorzano",
+keywords = "Contrast transfer function, Power spectrum, Single particle analysis "
+}
+
 """
 
 

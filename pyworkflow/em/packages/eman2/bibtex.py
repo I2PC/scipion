@@ -1,3 +1,4 @@
+# coding: latin-1
 # **************************************************************************
 # *
 # * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
@@ -24,17 +25,29 @@
 # *
 # **************************************************************************
 """
-This package contains the protocols and data for EMAN2
+Bibtex string file for Xmipp package.
 """
 
-from bibtex import _bibtex # Load bibtex dict with references
+_bibtexStr = """
+@article{Tang2007,
+title = "EMAN2: An extensible image processing suite for electron microscopy ",
+journal = "JSB",
+volume = "157",
+number = "1",
+pages = "38 - 46",
+year = "2007",
+note = "Software tools for macromolecular microscopy ",
+issn = "1047-8477",
+doi = "http://dx.doi.org/10.1016/j.jsb.2006.05.009",
+url = "http://www.sciencedirect.com/science/article/pii/S1047847706001894",
+author = "Guang Tang and Liwei Peng and Philip R. Baldwin and Deepinder S. Mann and Wen Jiang and Ian Rees and Steven J. Ludtke",
+keywords = "EMAN, Single particle analysis , cryoEMTEM, Software, Image processing, Electron microscopy}
 
-_logo = "eman2_logo.png"
-_references = ['Tang2007']
+
+"""
 
 
-from eman2 import *
-from data import *
-from protocol_boxing import EmanProtBoxing
-from protocol_initialmodel import EmanProtInitModel
-from viewer import EmanViewerGeneric
+
+from pyworkflow.utils import parseBibTex
+
+_bibtex = parseBibTex(_bibtexStr)  

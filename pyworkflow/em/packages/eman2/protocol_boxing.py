@@ -42,7 +42,8 @@ class EmanProtBoxing(ProtParticlePicking):
         ProtParticlePicking.__init__(self, **args)
         # The following attribute is only for testing
         self.importFolder = String(args.get('importFolder', None))
-        
+    
+    #--------------------------- DEFINE param functions --------------------------------------------
     def _defineParams(self, form):
         form.addSection(label='Input')
         form.addParam('inputMicrographs', PointerParam, label="Micrographs",
@@ -50,32 +51,24 @@ class EmanProtBoxing(ProtParticlePicking):
                       help='Select the SetOfMicrograph ')
         form.addParam('boxSize', IntParam, label='Box size',
                       validators=[Positive])
-        
-        
-    def _runSteps(self, startIndex):
-        # Redefine run to change to workingDir path
-        # Change to protocol working directory
-        self._enterWorkingDir()
-        eman2.loadEnvironment()
-        Protocol._runSteps(self, startIndex)
-        
+    
+    #--------------------------- INSERT steps functions --------------------------------------------
     def _insertAllSteps(self):
         self.inputMics = self.inputMicrographs.get()
         micList = [os.path.relpath(mic.getFileName(), self.workingDir.get()) for mic in self.inputMics]
 
-        #dirName = str(micList[0:1])
-        #splitDir = [s.strip() for s in dirName.split("/")]
         self._params = {'inputMics': ' '.join(micList), 
                         'boxSize': self.boxSize.get()}      
         # Launch Boxing GUI
         if not self.importFolder.hasValue():
-            self._insertFunctionStep('launchBoxingGUI', isInteractive=True)
+            self._insertFunctionStep('launchBoxingGUIStep', isInteractive=True)
         else: # This is only used for test purposes
-            self._insertFunctionStep('_importFromFolder')  
+            self._insertFunctionStep('_importFromFolderStep')  
         # Insert step to create output objects       
-        self._insertFunctionStep('createOutput')
+        self._insertFunctionStep('createOutputStep')
     
-    def launchBoxingGUI(self):
+    #--------------------------- STEPS functions ---------------------------------------------------
+    def launchBoxingGUIStep(self):
         # First we go to runs directory (we create if it does not exist)
         #path.makePath("runs")
         # Program to execute and it arguments
@@ -85,7 +78,7 @@ class EmanProtBoxing(ProtParticlePicking):
         self._log.info('Launching: ' + program + ' ' + arguments % self._params)
         self.runJob(program, arguments % self._params)
         
-    def createOutput(self):
+    def createOutputStep(self):
         workDir = self.workingDir.get()
         
         # As we move to workingDir we must leave it. 
@@ -97,13 +90,8 @@ class EmanProtBoxing(ProtParticlePicking):
         coordSet.write()
         self._defineOutputs(outputCoordinates=coordSet)
         self._defineSourceRelation(micSet, coordSet)
-        
-        
-    def getFiles(self):
-        filePaths = self.inputMicrographs.get().getFiles() | ProtParticlePicking.getFiles(self)
-        return filePaths
-        
-    def _importFromFolder(self):
+    
+    def _importFromFolderStep(self):
         """ This function will copy Xmipp .pos files for
         simulating an particle picking run...this is only
         for testing purposes.
@@ -111,6 +99,16 @@ class EmanProtBoxing(ProtParticlePicking):
         from pyworkflow.utils.path import copyTree
 
         print "COPYTREE from %s TO %s" % (self.importFolder.get(), os.getcwd())
-        
         copyTree(self.importFolder.get(), os.getcwd())
-
+    
+    #--------------------------- UTILS functions ---------------------------------------------------
+    def _runSteps(self, startIndex):
+        # Redefine run to change to workingDir path
+        # Change to protocol working directory
+        self._enterWorkingDir()
+        eman2.loadEnvironment()
+        Protocol._runSteps(self, startIndex)
+    
+    def getFiles(self):
+        filePaths = self.inputMicrographs.get().getFiles() | ProtParticlePicking.getFiles(self)
+        return filePaths
