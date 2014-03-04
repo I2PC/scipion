@@ -634,15 +634,26 @@ class ProtMaskParticles(ProtProcessParticles):
 
 
 class ProtParticlePicking(EMProtocol):
+    #--------------------------- INFO functions ----------------------------------------------------
     def _summary(self):
         summary = []
         if not hasattr(self, 'outputCoordinates'):
             summary.append(Message.TEXT_NO_OUTPUT_CO) 
         else:
             #TODO: MOVE following line to manual picking
-            summary.append("Input micrographs: " + self.inputMicrographs.get().getNameId())
-            summary.append("Number of particles picked: %d (from %d micrographs)" % (self.outputCoordinates.getSize(), self.inputMicrographs.get().getSize()))
+            summary.append("Number of input micrographs: %d" % self.inputMicrographs.get().getSize())
+            summary.append("Number of particles picked: %d" % self.outputCoordinates.getSize())
         return summary
+    
+    def _methods(self):
+        methods = []
+        if not hasattr(self, 'outputCoordinates'):
+            methods.append(Message.TEXT_NO_OUTPUT_CO) 
+        else:
+            #TODO: MOVE following line to manual picking
+            methods.append("Has been picked %d particles" % self.outputCoordinates.getSize())
+            methods.append("from %d micrographs" % self.inputMicrographs.get().getSize())
+        return methods
 
 
 class ProtCreateMask(EMProtocol):

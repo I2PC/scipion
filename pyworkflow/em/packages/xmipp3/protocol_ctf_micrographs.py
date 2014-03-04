@@ -40,7 +40,6 @@ from xmipp3 import XmippMdRow
 class XmippProtCTFMicrographs(ProtCTFMicrographs):
     """Protocol to perform CTF estimation on a set of micrographs in the project"""
     _label = 'ctf estimation'
-    _references = ['[[http://www.ncbi.nlm.nih.gov/pubmed/23261401][FASTDEF: Vargas.J. JSB (2013)]]']    
     __prefix = join('%(micDir)s','xmipp_ctf')
     _templateDict = {
         # This templates are relative to a micDir
@@ -55,26 +54,7 @@ class XmippProtCTFMicrographs(ProtCTFMicrographs):
 #        'ctffind_spectrum': join('%(micDir)s', 'ctffind_spectrum.mrc')
         }
     
-    def _prepareCommand(self):
-        self._program = 'xmipp_ctf_estimate_from_micrograph'       
-        self._args = "--micrograph %(micFn)s --oroot %(micDir)s --fastDefocus"
-        
-        # Mapping between base protocol parameters and the package specific command options
-        self.__params = {'kV': self._params['voltage'],
-                'Cs': self._params['sphericalAberration'],
-                'sampling_rate': self._params['samplingRate'], 
-                'ctfmodelSize': self._params['windowSize'],
-                'Q0': self._params['ampContrast'],
-                'min_freq': self._params['lowRes'],
-                'max_freq': self._params['highRes'],
-                'pieceDim': self._params['windowSize'],
-                'defocus_range': (self._params['maxDefocus']-self._params['minDefocus'])/2,
-                'defocusU': (self._params['maxDefocus']+self._params['minDefocus'])/2
-                }
-        
-        for par, val in self.__params.iteritems():
-            self._args += " --%s %s" % (par, str(val))
-
+    #--------------------------- STEPS functions ---------------------------------------------------
     def _estimateCTF(self, micFn, micDir):
         """ Run the estimate CTF program """        
         # Create micrograph dir under extra directory
@@ -87,24 +67,7 @@ class XmippProtCTFMicrographs(ProtCTFMicrographs):
         self._params['micDir'] = self._getFilename('prefix', micDir=micDir)
         # CTF estimation with Xmipp                
         self.runJob(self._program, self._args % self._params)    
-
-    def setupMicRow(self, mic, micRow):
-        """ Add extra labels to the micrograph row, not present
-        in the base class. 
-        """
-        micDir = self._getMicrographDir(mic)
-        labels = [xmipp.MDL_PSD, xmipp.MDL_PSD_ENHANCED, xmipp.MDL_IMAGE1, xmipp.MDL_IMAGE2]
-        # Filenames key related to ctf estimation
-        ctfParam = self._getFilename('ctfparam', micDir=micDir)
-        ctfRow = XmippMdRow()
-        ctfRow.readFromFile(ctfParam)
-        keys = ['psd', 'enhanced_psd', 'ctfmodel_quadrant', 'ctfmodel_halfplane']
-        values = [self._getFilename(key, micDir=micDir) for key in keys]
-        for l, v in zip(labels, values):
-            micRow.setValue(l, v)
-            
-        micRow.copyFromRow(ctfRow)  
-        
+    
     def createOutputStep(self):
         # Create the SetOfMicrographs 
         micSet = self._createSetOfMicrographs()
@@ -131,8 +94,6 @@ class XmippProtCTFMicrographs(ProtCTFMicrographs):
         self._defocusMaxMin(defocusList)
         #Copy attributes from input to output micrographs
         micSet.copyInfo(self.inputMics)
-        
-
         # Write as a Xmipp metadata
         mdFn = self._getPath('micrographs_ctf.xmd')
         writeSetOfMicrographs(micSet, mdFn, self.setupMicRow)
@@ -154,6 +115,45 @@ class XmippProtCTFMicrographs(ProtCTFMicrographs):
         self._defineOutputs(outputCTF=ctfSet)
         #self._defineSourceRelation(self.inputMics, micSet)
         self._defineRelation(RELATION_CTF, ctfSet, self.inputMics)
+    
+
+    def _citations(self):
+        return ['Vargas2013']
+    
+    #--------------------------- UTILS functions ---------------------------------------------------
+    def _prepareCommand(self):
+        self._program = 'xmipp_ctf_estimate_from_micrograph'       
+        self._args = "--micrograph %(micFn)s --oroot %(micDir)s --fastDefocus"
         
-        #TODO: Remove when output setOfmics dissapear
-        #self._defineRelation(RELATION_CTF, ctfSet, micSet)
+        # Mapping between base protocol parameters and the package specific command options
+        self.__params = {'kV': self._params['voltage'],
+                'Cs': self._params['sphericalAberration'],
+                'sampling_rate': self._params['samplingRate'], 
+                'ctfmodelSize': self._params['windowSize'],
+                'Q0': self._params['ampContrast'],
+                'min_freq': self._params['lowRes'],
+                'max_freq': self._params['highRes'],
+                'pieceDim': self._params['windowSize'],
+                'defocus_range': (self._params['maxDefocus']-self._params['minDefocus'])/2,
+                'defocusU': (self._params['maxDefocus']+self._params['minDefocus'])/2
+                }
+        
+        for par, val in self.__params.iteritems():
+            self._args += " --%s %s" % (par, str(val))
+
+    def setupMicRow(self, mic, micRow):
+        """ Add extra labels to the micrograph row, not present
+        in the base class. 
+        """
+        micDir = self._getMicrographDir(mic)
+        labels = [xmipp.MDL_PSD, xmipp.MDL_PSD_ENHANCED, xmipp.MDL_IMAGE1, xmipp.MDL_IMAGE2]
+        # Filenames key related to ctf estimation
+        ctfParam = self._getFilename('ctfparam', micDir=micDir)
+        ctfRow = XmippMdRow()
+        ctfRow.readFromFile(ctfParam)
+        keys = ['psd', 'enhanced_psd', 'ctfmodel_quadrant', 'ctfmodel_halfplane']
+        values = [self._getFilename(key, micDir=micDir) for key in keys]
+        for l, v in zip(labels, values):
+            micRow.setValue(l, v)
+            
+        micRow.copyFromRow(ctfRow)  

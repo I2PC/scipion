@@ -121,4 +121,3 @@ class ProtCTFFind(ProtCTFMicrographs):
         ctf.setPsdFile(psdFile)
         
         return ctf
-            
