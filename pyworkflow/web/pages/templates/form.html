@@ -283,7 +283,7 @@
 									</td>
 								{% endif %}
 								{% if param.htmlHelp %}
-									<td class="ico"><a href="javascript:infoPopup('Help {{paramName}}','{{param.htmlHelp|escapejs}}');"><i class="fa fa-question-circle" style="font-size:1.3em;"></i></a></td>
+									<td class="ico"><a href="javascript:infoPopup('Help {{param.label.get}}','{{param.htmlHelp|escapejs}}');"><i class="fa fa-question-circle" style="font-size:1.3em;"></i></a></td>
 								{% endif %}
 								</tr>
 								{% endfor %}
