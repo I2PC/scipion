@@ -18,6 +18,7 @@ import xmipp.ij.commons.XmippUtil;
 import xmipp.jni.MetaData;
 import xmipp.utils.Param;
 import xmipp.utils.XmippWindowUtil;
+import xmipp.viewer.particlepicker.training.model.SupervisedParticlePicker;
 import xmipp.viewer.windows.GalleryJFrame;
 
 /**
@@ -31,6 +32,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
     private final String projectid;
     private final String imagesid;
     private JButton cmdbutton;
+    private String selectionmdfile;
 
     public ScipionGalleryJFrame(String filename, MetaData md, ScipionParams parameters) {
         super(filename, md, parameters);
@@ -38,6 +40,8 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
         script = parameters.script;
         projectid = parameters.projectid;
         imagesid = parameters.imagesid;
+        selectionmdfile = "selection.xmd";
+        selectionmdfile = new File(selectionmdfile).getAbsolutePath();
         initComponents();
     }
 
@@ -48,14 +52,28 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
                 @Override
                 public void actionPerformed(ActionEvent ae) {
                     try {
-                        String selectionmdfile = "selection.xmd";
-                        selectionmdfile = new File(selectionmdfile).getAbsolutePath();
+                        
                         if(is2DClassSelection())
                             saveImagesFromClassSelection(selectionmdfile);
                         else
                             saveSelection(selectionmdfile, true);
-                        String command = String.format("%s %s %s %s %s", script, selectionmdfile, type, projectid, imagesid);
-                        XmippUtil.executeCommand(command);
+                        
+                        XmippWindowUtil.blockGUI(ScipionGalleryJFrame.this, "Creating set ..." + "(You may need to refresh the main window to visualize output)");
+                        new Thread(new Runnable() {
+
+                            @Override
+                            public void run() {
+                                String command = String.format("%s %s %s %s %s", script, selectionmdfile, type, projectid, imagesid);
+                                try {
+                                    XmippUtil.executeCommand(command);
+                                    XmippWindowUtil.releaseGUI(ScipionGalleryJFrame.this.getRootPane());
+                                } catch (Exception ex) {
+                                    throw new IllegalArgumentException(ex.getMessage());
+                                }
+                                
+                            }
+                        }).start();
+                        
                     } catch (Exception ex) {
                         Logger.getLogger(ScipionGalleryJFrame.class.getName()).log(Level.SEVERE, null, ex);
                         
@@ -68,6 +86,8 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
         }
        
     }
+    
+   
 
     public void selectItem(int row, int col)
     {
