@@ -375,6 +375,7 @@ def protocol_info(request):
                   'logs_out': parseText(fOutString),
                   'logs_error': parseText(fErrString),
                   'logs_scipion': parseText(fScpnString)
+                  
                   }
         
         jsonStr = json.dumps(ioDict, ensure_ascii=False)

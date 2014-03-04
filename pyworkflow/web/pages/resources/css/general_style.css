@@ -317,6 +317,7 @@ table#data th {
 }
 
 table#data th:first-child {
+	
 	text-align: left;
 	padding-left: 20px;
 }

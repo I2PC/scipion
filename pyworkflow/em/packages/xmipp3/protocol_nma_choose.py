@@ -147,6 +147,7 @@ class XmippProtNMAChoose(XmippProtConvertToPseudoAtomsBase, XmippProtNMABase):
         print("The volume in the middle is pseudoatoms_%02d.pdb"%(imin+1))
         createLink(self._getPath("pseudoatoms_%02d.pdb"%(imin+1)),self._getPath("pseudoatoms.pdb"))
         createLink(self._getPath("modes_%02d.xmd"%(imin+1)),self._getPath("modes.xmd"))
+        createLink(self._getExtraPath("pseudoatoms_%02d_distance.hist"%(imin+1)),self._getExtraPath("pseudoatoms_distance.hist"))
 
         # Measure range
         minDisplacement= 1e38*numpy.ones([self.numberOfModes.get(),1])
