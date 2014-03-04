@@ -29,13 +29,18 @@ if __name__ == '__main__':
     prot.createInputSet(inputset)
     
     
+    
+    
     createSetFun = getattr(prot, '_createSetOf' + type)
     outputset = createSetFun()
     readSetFun = getattr(xmipp3, 'readSetOf' + type )
     
     readSetFun(mdfile, outputset)
-    createSetFun = getattr(prot, '_createSetOf' + type)
-    outputset.setSamplingRate(inputset.getSamplingRate())
+    # For inputset of classes, we need to copy properties from
+    # the images used in the classification.
+    if isinstance(inputset, SetOfClasses2D):
+        inputset = inputset.getImages()
+    outputset.copyInfo(inputset)    
     project._setupProtocol(prot)
     prot.makePathsAndClean()
     prot.createOutputSet(outputset)

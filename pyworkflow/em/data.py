@@ -943,7 +943,7 @@ class SetOfClasses2D(Set):
             self._averages.write()
             
     def getSamplingRate(self):
-        return self.getAverages().getSamplingRate()
+        return self.getImages().getSamplingRate()
             
 
 class Class3D(SetOfVolumes):
