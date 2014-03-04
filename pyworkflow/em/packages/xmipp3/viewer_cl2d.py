@@ -30,7 +30,7 @@ visualization program.
 from pyworkflow.viewer import ProtocolViewer, DESKTOP_TKINTER, WEB_DJANGO
 from pyworkflow.em import *
 from protocol_cl2d import XmippProtCL2D
-from viewer import runShowJ
+from viewer import runScipionShowJ
 from pyworkflow.gui.text import *
 from pyworkflow.gui.dialog import showError, showWarning
 import glob
@@ -47,10 +47,15 @@ class XmippCL2DViewer(ProtocolViewer):
     _label = 'viewer cl2d'
     _targets = [XmippProtCL2D]
     _environments = [DESKTOP_TKINTER, WEB_DJANGO]
+    choices=['Classes', 'Class Cores', 'Class Stable Cores']
+    
+    def __init__(self, **args):
+        ProtocolViewer.__init__(self, **args)
+        self.choices = ['Classes', 'Class Cores', 'Class Stable Cores']
 
     def _defineParams(self, form):
         form.addSection(label='Visualization')
-        form.addParam('classesToShow', EnumParam, choices=['Classes', 'Class Cores', 'Class Stable Cores'],
+        form.addParam('classesToShow', EnumParam, choices=self.choices,
                       label="What to show", default=CLASS_CORES,
                       display=EnumParam.DISPLAY_COMBO)
         form.addParam('doShowClassHierarchy', BooleanParam, label="Visualize class hierarchy.", default=True)      
@@ -81,13 +86,20 @@ class XmippCL2DViewer(ProtocolViewer):
             showTextfileViewer(fnHierarchy,[fnHierarchy]) 
             
     def _viewLevelFiles(self, e=None):
+
+        
+        
         fnSubset = self._getSubset()
+        
+        obj = getattr(self.protocol, "outputClasses" + fnSubset)
         levelFiles = self.protocol._getLevelMdFiles(fnSubset)
         if levelFiles:
             levelFiles.sort()
             lastLevelFile = levelFiles[-1]
             if self.doShowLastLevel:
-                runShowJ("classes@"+lastLevelFile)
+                #runShowJ("classes@"+lastLevelFile)
+                
+                runScipionShowJ("classes@"+lastLevelFile, "Particles", self._project.getName(), obj.strId())  
             else:
                 if self.showSeveralLevels.empty():
                     self.formWindow.showError('Please select the levels that you want to visualize.')
@@ -108,7 +120,8 @@ class XmippCL2DViewer(ProtocolViewer):
                         else:
                             self.formWindow.showError('Level %s does not exist.' % level)
                     if files != "":
-                        runShowJ(files)        
+                        #runShowJ(files)
+                        runScipionShowJ(files, "Particles", self._project.getName(), obj.strId())          
         
     def _viewAll(self, *args):
 

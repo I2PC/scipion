@@ -912,6 +912,7 @@ class SetOfClasses2D(Set):
         if not self.getImages().hasValue():
             raise Exception("SetOfClasses2D.createAverages: you must set the images before creating the averages!!!")
         self._averages.copyInfo(self.getImages())
+        self._averages.setHasCTF(False)
         return self._averages
     
     def getImages(self):
@@ -943,7 +944,7 @@ class SetOfClasses2D(Set):
             self._averages.write()
             
     def getSamplingRate(self):
-        return self.getAverages().getSamplingRate()
+        return self.getImages().getSamplingRate()
             
 
 class Class3D(SetOfVolumes):
