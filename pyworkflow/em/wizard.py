@@ -107,20 +107,41 @@ class maskRadiusWizard(Wizard):
         """
         pass
         
-    def show(self, form):
+    def show(self, form, value, label, units=UNIT_PIXEL):
         protocol = form.protocol
         provider = self._getProvider(protocol)
 
         if provider is not None:
             d = maskPreviewDialog(form.root, 
                                        provider, 
-                                       maskRadius=protocol.maskRadius.get(), 
-                                       unit=UNIT_ANGSTROM)
+                                       maskRadius = value, 
+                                       unit=units)
             if d.resultYes():
-                form.setVar('maskRadius', d.getRadius())
+                form.setVar(label, d.getRadius())
         else:
             dialog.showWarning("Empty input", "Select elements first", form.root)
-                
+
+class maskRadiiWizard(Wizard):
+    
+    def show(self, form, value, label, units=UNIT_PIXEL):
+        protocol = form.protocol
+        provider = self._getProvider(protocol)
+        
+        if provider is not None:
+            d = maskRadiiPreviewDialog(form.root, 
+                                            provider, 
+                                            innerRadius=value[0], 
+                                            outerRadius=value[1],
+                                            unit=units)
+            if d.resultYes():
+                form.setVar(label[0], d.getRadius(d.radiusSliderIn))
+                form.setVar(label[1], d.getRadius(d.radiusSliderOut))
+        else:
+            dialog.showWarning("Empty input", "Select elements first", form.root)    
+    
+    @classmethod    
+    def getView(self):
+        return "wiz_volume_mask_radii"   
                 
 class particleMaskRadiusWizard(maskRadiusWizard):
         
@@ -131,14 +152,14 @@ class particleMaskRadiusWizard(maskRadiusWizard):
             return "%03d@%s" % (index, text)
         return text
         
-    def _getProvider(self, protocol):
+    def _getProvider(self, protocol, objs):
         """ This should be implemented to return the list
         of object to be displayed in the tree.
         """
         provider = None
-        if protocol.inputParticles.hasValue():
+        if objs.hasValue():
             particles = [] 
-            for i, par in enumerate(protocol.inputParticles.get()):
+            for i, par in enumerate(objs):
                 particles.append(par.clone())
                 if i == 100: # Limit the maximum number of particles to display
                     break
@@ -149,46 +170,39 @@ class particleMaskRadiusWizard(maskRadiusWizard):
     
     @classmethod    
     def getView(self):
-        return "wiz_particle_mask"       
+        return "wiz_particle_mask_radius"       
     
 class volumeMaskRadiusWizard(maskRadiusWizard):
         
-    def _getProvider(self, protocol):
+    def _getProvider(self, protocol, objs):
         """ This should be implemented to return the list
         of object to be displayed in the tree.
         """
-        if protocol.input3DReferences.hasValue():
-            vols = [vol.clone() for vol in protocol.input3DReferences.get()]
+        if objs.hasValue():
+            vols = []
+            if isinstance(objs, Volume):
+                vols.append(objs)
+            else: 
+                vols = [vol.clone() for vol in objs]
             return ListTreeProvider(vols)
         return None
-    
+        
     @classmethod    
     def getView(self):
-        return "wiz_volume_mask"       
-        
-        
-class radiiWizard(volumeMaskRadiusWizard):
-    
-    def show(self, form):
-       
-        protocol = form.protocol
-        provider = self._getProvider(protocol)
+        return "wiz_volume_mask_radius"       
 
-        if provider is not None:
-            d = maskRadiiPreviewDialog(form.root, 
-                                            provider, 
-                                            innerRadius=protocol.innerRadius.get(), 
-                                            outerRadius=protocol.outerRadius.get(),
-                                            unit=UNIT_ANGSTROM)
-            if d.resultYes():
-                form.setVar('innerRadius', d.getRadius(d.radiusSliderIn))
-                form.setVar('outerRadius', d.getRadius(d.radiusSliderOut))
-        else:
-            dialog.showWarning("Empty input", "Select elements first", form.root)    
+class particlesMaskRadiiWizard(maskRadiiWizard, particleMaskRadiusWizard):
     
     @classmethod    
     def getView(self):
-        return "wiz_volume_mask_radii"   
+        return "wiz_particles_mask_radii"          
+        
+class volumeMaskRadiiWizard(maskRadiiWizard, volumeMaskRadiusWizard):
+    
+    @classmethod    
+    def getView(self):
+        return "wiz_volumes_mask_radii"   
+
 
 
 class filterParticlesWizard(Wizard):
@@ -596,6 +610,7 @@ class maskPreviewDialog(imagePreviewDialog):
             self.iniRadius = self.dim_par/2 
         else:
             self.iniRadius = self.maskRadius
+            
         self.preview = MaskPreview(frame, self.dim, label=self.previewLabel, outerRadius=self.iniRadius*self.ratio)
         self.preview.grid(row=0, column=0) 
     

@@ -28,7 +28,7 @@
 This sub-package contains protocol for masks operations
 """
 
-from pyworkflow.em import *  
+from pyworkflow.em import *
 from pyworkflow.utils import *  
 import xmipp
 from geometrical_mask import XmippGeometricalMask3D, XmippGeometricalMask2D
