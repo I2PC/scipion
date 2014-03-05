@@ -54,6 +54,8 @@ import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.swing.AbstractAction;
 import javax.swing.AbstractButton;
@@ -111,6 +113,7 @@ import xmipp.utils.XmippWindowUtil;
 import xmipp.viewer.RowHeaderRenderer;
 import xmipp.viewer.ctf.TasksEngine;
 import xmipp.viewer.ctf.iCTFGUI;
+import xmipp.viewer.models.ClassInfo;
 import xmipp.viewer.models.ColumnInfo;
 import xmipp.viewer.models.GalleryData;
 import xmipp.viewer.models.GalleryRowHeaderModel;
@@ -1011,6 +1014,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 	public void saveSelection(String path, boolean overwrite) throws Exception
 	{
 		MetaData md = data.getSelectionMd();
+
                 String file = path.substring(path.lastIndexOf("@") + 1, path.length());
                 if (!new File(file).exists())// overwrite or append, save selection
                         md.write(path);
@@ -2356,11 +2360,27 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
             return data.is2DClassificationMd() && gallery.getSelectionCount() > 0;
         }
        
+       public boolean is2DClassificationMd()
+       {
+           return data.is2DClassificationMd();
+       }
+       
        public void saveImagesFromClassSelection(String path)
        {
             MetaData imagesMd = gallery.data.getImagesFromClassSelection();
             imagesMd.write(path);
             imagesMd.destroy();
+       }
+       
+       public void saveClassSelection(String path)
+       {
+            try {
+                String classesmdfile = "classes" + Filename.SEPARATOR + path;
+                saveSelection(classesmdfile, true);
+                data.saveClassSelection(path);
+            } catch (Exception ex) {
+                Logger.getLogger(GalleryJFrame.class.getName()).log(Level.SEVERE, null, ex);
+            }
        }
 
 }// class JFrameGallery

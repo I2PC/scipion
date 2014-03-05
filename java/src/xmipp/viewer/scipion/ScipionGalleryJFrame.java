@@ -33,6 +33,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
     private final String imagesid;
     private JButton cmdbutton;
     private String selectionmdfile;
+    private JButton classcmdbutton;
 
     public ScipionGalleryJFrame(String filename, MetaData md, ScipionParams parameters) {
         super(filename, md, parameters);
@@ -57,22 +58,9 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
                             saveImagesFromClassSelection(selectionmdfile);
                         else
                             saveSelection(selectionmdfile, true);
+                        String command = String.format("%s %s %s %s %s", script, selectionmdfile, type, projectid, imagesid);
+                        runCommand(command);
                         
-                        XmippWindowUtil.blockGUI(ScipionGalleryJFrame.this, "Creating set ..." + "(You may need to refresh the main window to visualize output)");
-                        new Thread(new Runnable() {
-
-                            @Override
-                            public void run() {
-                                String command = String.format("%s %s %s %s %s", script, selectionmdfile, type, projectid, imagesid);
-                                try {
-                                    XmippUtil.executeCommand(command);
-                                    XmippWindowUtil.releaseGUI(ScipionGalleryJFrame.this.getRootPane());
-                                } catch (Exception ex) {
-                                    throw new IllegalArgumentException(ex.getMessage());
-                                }
-                                
-                            }
-                        }).start();
                         
                     } catch (Exception ex) {
                         Logger.getLogger(ScipionGalleryJFrame.class.getName()).log(Level.SEVERE, null, ex);
@@ -80,11 +68,49 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
                     }
                 }
             });
+            if(is2DClassificationMd())
+            {
+                classcmdbutton = XmippWindowUtil.getTextButton("Create New Set Of Classes", new ActionListener() {
 
+                    @Override
+                    public void actionPerformed(ActionEvent ae) {
+                        try {
+                            saveClassSelection(selectionmdfile);
+                            String command = String.format("%s %s %s %s %s", script, selectionmdfile, "Classes2D", projectid, imagesid);
+                            runCommand(command);
+                        } catch (Exception ex) {
+                            Logger.getLogger(ScipionGalleryJFrame.class.getName()).log(Level.SEVERE, null, ex);
+                        }
+                    }
+                });
+                buttonspn.add(classcmdbutton);
+                classcmdbutton.setEnabled(false);
+            }
             buttonspn.add(cmdbutton);
             cmdbutton.setEnabled(false);
+            
         }
        
+    }
+    
+    protected void runCommand(final String command)
+    {
+        XmippWindowUtil.blockGUI(ScipionGalleryJFrame.this, "Creating set ...(You may need to refresh the main window to visualize output)");
+        new Thread(new Runnable() {
+
+            @Override
+            public void run() {
+
+                try {
+                    XmippUtil.executeCommand(command);
+                    XmippWindowUtil.releaseGUI(ScipionGalleryJFrame.this.getRootPane());
+                    
+                } catch (Exception ex) {
+                    throw new IllegalArgumentException(ex.getMessage());
+                }
+
+            }
+        }).start();
     }
     
    
@@ -93,12 +119,16 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
     {
         super.selectItem(row, col);
         cmdbutton.setEnabled(isImageSelected());
+        if(is2DClassificationMd())
+            classcmdbutton.setEnabled(isImageSelected());
     }
 
     protected void tableMouseClicked(MouseEvent evt)
     {
         super.tableMouseClicked(evt);
         cmdbutton.setEnabled(isImageSelected());
+        if(is2DClassificationMd())
+            classcmdbutton.setEnabled(isImageSelected());
     }
 
 
