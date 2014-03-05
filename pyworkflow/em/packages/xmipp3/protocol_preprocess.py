@@ -94,11 +94,7 @@ class XmippPreprocess():
         if self.fillType == MASK_FILL_VALUE:
             args += " %f" % self.fillValue.get()
             
-        self.runJob("xmipp_transform_threshold", args % locals())        
-    
-    #--------------------------- INFO functions ----------------------------------------------------
-    def _methods(self):
-        return self._summary()
+        self.runJob("xmipp_transform_threshold", args % locals())
 
 
 class XmippProtPreprocessParticles(ProtProcessParticles, XmippProcessParticles, XmippPreprocess):
@@ -130,9 +126,9 @@ class XmippProtPreprocessParticles(ProtProcessParticles, XmippProcessParticles, 
         form.addParam('normType', EnumParam, choices=['OldXmipp','NewXmipp','Ramp'], 
                       default=2, condition='doNormalize', display=EnumParam.DISPLAY_COMBO,
                       label='Normalization type', 
-                      help='OldXmipp (mean(Image)=0, stddev(Image)=1).  \n  '
-                           'NewXmipp (mean(background)=0, stddev(background)=1)  \n  '
-                           'Ramp (subtract background+NewXmipp).  \n  ',
+                      help='OldXmipp (mean(Image)=0, stddev(Image)=1). \n  '
+                           'NewXmipp (mean(background)=0, stddev(background)=1) \n  '
+                           'Ramp (subtract background+NewXmipp). \n',
                       expertLevel=LEVEL_ADVANCED)
         form.addParam('backRadius', IntParam, default=-1, condition='doNormalize',
                       label='Background radius',
@@ -214,7 +210,18 @@ class XmippProtPreprocessParticles(ProtProcessParticles, XmippProcessParticles, 
         return summary
     
     def _methods(self):
-        return self._summary()
+        methods = []
+        methods.append("Input particles: %s" % self.inputParticles.get().getName())
+        
+        if hasattr(self, 'outputParticles'):
+            methods.append("A set of %d particles was preprocessed." % self.outputParticles.getSize())
+            if self.doNormalize:
+                methods.append("The background was normalized with %s method." % self.getEnumText('normType'))
+            if self.doInvert:
+                methods.append("The contrast was inverted")
+            if self.doThreshold:
+                methods.append("Pixels with values below %f was removed" % self.threshold.get())
+        return methods
     
     #--------------------------- UTILS functions ---------------------------------------------------
     def _getSize(self):
@@ -401,6 +408,9 @@ class XmippProtPreprocessVolumes(ProtPreprocessVolumes, XmippProcessVolumes, Xmi
         
         return summary
     
+    def _methods(self):
+        return self._summary()
+
     #--------------------------- UTILS functions ---------------------------------------------------
     def _getSize(self):
         """ get the size of either Volume or SetOfVolumes object"""
