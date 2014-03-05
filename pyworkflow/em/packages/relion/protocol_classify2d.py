@@ -105,9 +105,6 @@ class ProtRelionClassify2D(ProtRelionBase, ProtClassify):
         self._setBasicArgs(args)
         self._setMaskArgs(args)
         
-#        if not self.isMapAbsoluteGreyScale:
-#            args[' --firstiter_cc'] = '' 
-            
         if self.maskZero == MASK_FILL_ZERO:
             args['--zero_mask'] = ''
             
