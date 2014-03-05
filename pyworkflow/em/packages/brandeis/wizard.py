@@ -43,6 +43,16 @@ from pyworkflow import findResource
 
 class FrealignRadiiWizard(radiiWizard):
     _targets = [(ProtFrealign, ['innerRadius', 'outerRadius'])]
+    
+    def _getProvider(self, protocol):
+        """ This should be implemented to return the list
+        of object to be displayed in the tree.
+        """
+        if protocol.input3DReferences.hasValue():
+            vols = []
+            vols.append(protocol.input3DReferences.get().clone())
+            return ListTreeProvider(vols)
+        return None
 
 
 class FrealignBandpassWizard(bandpassParticleWizard):
@@ -75,6 +85,16 @@ class FrealignBandpassWizard(bandpassParticleWizard):
 
 class FrealignVolBandpassWizard(bandpassVolumesWizard):
     _targets = [(ProtFrealign, ['resolution'])]
+    
+    def _getProvider(self, protocol):
+        """ This should be implemented to return the list
+        of object to be displayed in the tree.
+        """
+        if protocol.input3DReferences.hasValue():
+            vols = []
+            vols.append(protocol.input3DReferences.get().clone())
+            return ListTreeProvider(vols)
+        return None
     
     def show(self, form):
         protocol = form.protocol
