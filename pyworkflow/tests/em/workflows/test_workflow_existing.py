@@ -260,8 +260,97 @@ class TestXmippWorkflow(unittest.TestCase):
             #    print img.getLocation()
             #cls.printAll()
             print cls.getObjId()
-            #break
-         
+            
+    
+    def test_cleanDay2(self):
+        """ Delete all runs from Day2. """
+        projName = "relion_tutorial"
+        project = Manager().loadProject(projName)
+        protocols = project.getRuns()
+        for prot in reversed(protocols):
+            if 'Day2' in prot.getObjLabel():
+                print "Deleting protocol: ", prot.getObjLabel()
+                project.deleteProtocol(prot)
+        
+    def test_autoDay2(self):
+        projName = "relion_tutorial"
+        project = Manager().loadProject(projName)
+        
+        def getProtocol(className):
+            """ Return the first protocol found from a give className. """
+            return project.mapper.selectByClass(className)[0]
+        
+        
+        # Launch a copy of import micrograph, but with a different pattern
+        protImport1 = getProtocol('ProtImportMicrographs')
+        pattern = protImport1.pattern.get()
+        protImport2 = project.copyProtocol(protImport1)
+        protImport2.setObjLabel('import mics - Day2')
+        protImport2.pattern.set(pattern.replace('day1', 'day2'))
+        project.launchProtocol(protImport2, wait=True)
+        
+        # Copy of preprocess
+        protPrep1 = getProtocol('XmippProtPreprocessMicrographs')
+        protPrep2 = project.copyProtocol(protPrep1)
+        protPrep2.setObjLabel('crop mics 50 px - Day2')
+        protPrep2.inputMicrographs.set(protImport2.outputMicrographs)
+        project.launchProtocol(protPrep2, wait=True)
+        
+        # Copy of CTF estimation.
+        protCTF1 = getProtocol('XmippProtCTFMicrographs')
+        protCTF2 = project.copyProtocol(protCTF1)
+        protCTF2.setObjLabel('ctf - Day2')
+        protCTF2.numberOfThreads.set(4)
+        protCTF2.inputMicrographs.set(protPrep2.outputMicrographs)
+        project.launchProtocol(protCTF2, wait=True)
+        
+        # Launch an automatic picking using the previous train
+        protPick1 = getProtocol('XmippProtParticlePicking')
+        protPick2 = XmippParticlePickingAutomatic()
+        protPick2.setObjLabel('autopicking - Day2')
+        protPick2.xmippParticlePicking.set(protPick1)
+        protPick2.micsToPick.set(1) # OTHER
+        protPick2.inputMicrographs.set(protPrep2.outputMicrographs)
+        project.launchProtocol(protPick2, wait=True)
+        
+        # Extract particles of day 2
+        protExtract1 = getProtocol('XmippProtExtractParticles')
+        protExtract2 = project.copyProtocol(protExtract1)
+        protExtract2.setObjLabel('extract particles - Day2')
+        protExtract2.numberOfThreads.set(4)
+        protExtract2.inputCoordinates.set(protPick2.outputCoordinates)
+        protExtract2.ctfRelations.set(protCTF2.outputCTF)
+        project.launchProtocol(protExtract2, wait=True)
+        
+        # Run Spider-filter for day 2
+        protFilter1 = getProtocol('SpiderProtFilter')
+        protFilter2 = project.copyProtocol(protFilter1)
+        protFilter2.setObjLabel('spi filter - Day2')
+        protFilter2.inputParticles.set(protExtract2.outputParticles)
+        project.launchProtocol(protFilter2, wait=True)
+        
+        # align for day 2
+        protAlign1 = getProtocol('XmippProtCL2DAlign')
+        protAlign2 = project.copyProtocol(protAlign1)
+        protAlign2.setObjLabel('cl2d align - Day2')
+        protAlign2.inputParticles.set(protFilter2.outputParticles)
+        project.launchProtocol(protAlign2, wait=True)
+        
+        # capca for day 2
+        protCAPCA1 = getProtocol('SpiderProtCAPCA')
+        protCAPCA2 = project.copyProtocol(protCAPCA1)
+        protCAPCA2.setObjLabel('spi capca - Day2')
+        protCAPCA2.inputParticles.set(protAlign2.outputParticles)
+        project.launchProtocol(protCAPCA2, wait=True)
+        
+        # ward for day 2
+        protWard1 = getProtocol('SpiderProtClassifyWard')
+        protWard2 = project.copyProtocol(protWard1)
+        protWard2.setObjLabel('spi ward - Day2')
+        protWard2.inputParticles.set(protAlign2.outputParticles)
+        protWard2.pcaFilePointer.set(protCAPCA2.imcFile)
+        project.launchProtocol(protWard2, wait=True)        
+             
              
 class ConditionFilter():
     def __init__(self, condition):

@@ -135,9 +135,13 @@ function enableMultipleMarkGraph(elm){
 	if (elm.attr("selected") == "selected"){
 		elm.css("border", "");
 		elm.removeAttr("selected")
+		
+		$("div#graphActiv").removeAttr("data-option");
 	} else {
 		elm.css("border", "2.5px solid Firebrick");
 		elm.attr("selected", "selected")
+		
+		$("div#graphActiv").attr("data-option", "graph_"+elm.attr("id"));
 	}
 }
 
@@ -145,14 +149,12 @@ function disableMultipleMarkGraph(id){
 	
 	$.each($(".window"), function(){
 		elm = $(this)
-		if (elm.attr("id") != "graph_"+id){
-			if(elm.attr("selected") != undefined){
-				elm.removeAttr("selected")
-				elm.css("border", "");
-			}
+		
+		if (elm.attr("id") != "graph_"+id && elm.attr("selected") != undefined){
+			elm.removeAttr("selected")
+			elm.css("border", "");
 		}
 	}) 
-	
 }
 
 function launchToolbarTree(id, elm) {

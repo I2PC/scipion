@@ -528,7 +528,7 @@ class bandPassFilterDialog(downsampleDialog):
     def getLowFreq(self):
         if self.showLowFreq:
             if self.unit == UNIT_ANGSTROM:
-                print "Slider value:",self.lfSlider.get()
+#                print "Slider value:",self.lfSlider.get()
                 return 1/self.lfSlider.get()*self.itemDim
             else:    
                 return self.lfSlider.get()
