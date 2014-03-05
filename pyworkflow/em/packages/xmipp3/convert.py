@@ -564,6 +564,7 @@ def readSetOfClasses2D(classes2DSet, filename, classesBlock='classes', **args):
         hasCtf: is True if the ctf information exists.
     """
     blocks = xmipp.getBlocksInMetaDataFile(filename)
+    
     classesMd = xmipp.MetaData('%s@%s' % (classesBlock, filename))
     samplingRate = classes2DSet.getImages().getSamplingRate()
     averages = None

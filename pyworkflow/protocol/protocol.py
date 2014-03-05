@@ -1059,6 +1059,7 @@ class Protocol(Step):
         protocol.makePathsAndClean()
         protocol.setStepsExecutor(self._stepsExecutor)
         protocol.run()
+        self._store() #TODO: check if this is needed
         
     def isChild(self):
         """ Return true if this protocol was invoked from a workflow (another protocol)"""

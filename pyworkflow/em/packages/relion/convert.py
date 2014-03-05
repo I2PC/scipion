@@ -64,7 +64,7 @@ def addRelionLabels(replace=False, extended=False):
     
 class ParticleAdaptor():
     """ Class used to convert a set of particles for Relion.
-    It will write an stack of in Spider format and also
+    It will write an stack in Spider format and also
     modify the output star file to point to the new stack.
     """
     def __init__(self, stackFile):

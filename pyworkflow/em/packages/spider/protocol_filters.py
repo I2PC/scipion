@@ -30,13 +30,21 @@ This sub-package contains protocol for particles filters operations
 from pyworkflow.em import *  
 from pyworkflow.utils import removeBaseExt
 from constants import *
-from spider import SpiderShell, SpiderProtocol
+from spider import *
         
-
       
 class SpiderProtFilter(ProtFilterParticles, SpiderProtocol):
-    """ Protocol for Spider filters. """
-    _label = 'filters'
+    """ Apply Fourier filters to an image or volume 
+    using Spider FQ or FQ NP. 
+    
+    To improve boundary quality the image is padded 
+    with the average value to twice the original size 
+    during filtration if padding is selected.  
+    
+    See more documentation in: 
+    [[http://spider.wadsworth.org/spider_doc/spider/docs/man/fq.html][FQ Spider online manual]]
+    """
+    _label = 'filter'
     
     def __init__(self):
         ProtFilterParticles.__init__(self)
@@ -46,62 +54,40 @@ class SpiderProtFilter(ProtFilterParticles, SpiderProtocol):
                         'particles': 'particles_filtered',
                         'particlesSel': 'particles_filtered_sel'}
 
+    #--------------------------- DEFINE param functions --------------------------------------------   
     def _defineProcessParams(self, form):
         form.addParam('filterType', EnumParam, choices=['Top-hat', 'Gaussian', 'Fermi', 'Butterworth', 'Raised cosine'],
                       label="Filter type", default=3,
                       help="""Select what type of filter do you want to apply.
                       
-<Top-hat>   <low-pass>. truncation. Filter is a "top-hat" function that truncates
-                the Fourier transform at spatial frequency: SPF.
-            <high-pass>. truncation. Filter is inverse "top-hat" function that 
-                passes the Fourier transform beyond spatial frequency: SPF.
+*Top-hat*: Filter is a "top-hat" function 
+that truncates the Fourier transform at spatial frequency.
             
-<Gaussian>  <low-pass>. 
-                Filter is the Gaussian function: EXP(-F**2 / (2 * SPF**2)), 
-                where F is the frequency.
-            <high-pass>. Filter is complement of the Gaussian function: 
-                1 - EXP(-F**2 / (2 * SPF**2)), where F is the frequency.
+*Gaussian*: Filter is the Gaussian function: EXP(-F**2 / (2 * SPF**2)), 
+where F is the frequency.
               
-<Fermi>     <low-pass>. Filter is: 1 / (1 + EXP((F - SPF) / T)) which negotiates 
-                between "Top-hat" and Gaussian characteristics, depending on 
-                the value of the temperature: T (see below).
-            <high-pass>. Filter is: 1 / (1 + EXP((F - SPF) / -T)) 
-                (Same as in low-pass, but with T replaced by -T).
+*Fermi*: Filter is: 1 / (1 + EXP((F - SPF) / T)) which negotiates 
+between "Top-hat" and Gaussian characteristics, depending on 
+the value of the temperature.
 
-<Butterworth> <low-pass>. Filter is: 1 / (SQRT(1 + F / RAD)**(2 * ORDER)) 
-                where 
-                ORDER = (2 * log(eps/SQRT(**2-1)) ) / (log(Flow/Fup)) 
-                RAD = Flow / ((eps)**(2 / ORDER)) 
-                In the Butterworth filter the ORDER determines the filter 
-                fall off and RAD corresponds to the cut-off radius. 
-                Frequencies below the lower frequency are preserved, 
-                frequencies above the upper frequency are removed, 
-                with a smooth transition in between lower and upper 
-                limiting frequencies.
-              <high-pass>. Filter is: 1 - (1 / (SQRT(1 + F / RAD)**(2 * ORDER))) 
-                Frequencies below the lower frequency are removed, 
-                frequencies above upper frequency are preserved, 
-                with a smooth transition in between lower and upper 
-                limiting frequencies.
+*Butterworth* Filter is: 1 / (SQRT(1 + F / RAD)**(2 * ORDER)) 
+The ORDER determines the filter fall off and RAD corresponds 
+to the cut-off radius. 
 
-<Raised cosine> <low-pass>. Filter is: 
-                    0.5 * (COS(PI * (F - Flow) / (Flow - Fup)) + 1) 
-                       if Flow < F < Fup, 
-                    1  if F < Flow, and 
-                    0  if F > Fup. 
-                <high-pass>. Filter is: 
-                    0.5 * (-COS(PI*(F - Flow) / (Flow - Fup)) + 1) 
-                       if Flow < F < Fup 
-                    1  if F < Flow, and 
-                    1  if F > Fup. 
+*Raised cosine* Filter is: 
+
+See detailed description of the filter in [[http://spider.wadsworth.org/spider_doc/spider/docs/man/fq.html][FQ Spider online manual]]
                            """)
         form.addParam('filterMode', EnumParam, choices=['low-pass', 'high-pass'],
                       label='Filter mode', default=0,
                       )
         form.addParam('usePadding', BooleanParam, default=True, 
                       label='Use padding?',
-                      help="If <No> padding is applied, this may lead to artifacts near boundary of image,\n"
-                           "we suggest use of padding to avoid this.\n")  
+                      help='If set to *Yes*, to improve boundary quality\n'
+                           'the image is padded with the average value to\n'
+                           'twice the original size during filtration.\n\n'
+                           'If *No* padding is applied, this may lead to\n'
+                           'artifacts near boundary of image.')
         form.addParam('filterRadius', DigFreqParam, default=0.12, 
                       label='Filter radius (0 < f < 0.5)',
                       condition='filterType <= %d' % FILTER_GAUSSIAN,
@@ -122,15 +108,17 @@ class SpiderProtFilter(ProtFilterParticles, SpiderProtocol):
                       help='Enter a temperature parameter T The filter falls off roughly within \n'
                            'this reciprocal distance (in terms of frequency units).')     
         
+    #--------------------------- INSERT steps functions --------------------------------------------  
     def _insertAllSteps(self):
         # Define some names
         self.particlesStk = self._getPath('%(particles)s.%(ext)s' % self._params)
         # Insert processing steps
         self._insertFunctionStep('convertInput', 'inputParticles', 
                                  self._getFileName('particles'), self._getFileName('particlesSel'))
-        self._insertFunctionStep('filterParticles', self.filterType.get())
+        self._insertFunctionStep('filterStep', self.filterType.get())
 
-    def filterParticles(self, filterType):
+    #--------------------------- STEPS functions --------------------------------------------       
+    def filterStep(self, filterType):
         """ Apply the selected filter to particles. 
         Create the set of particles.
         """
@@ -181,7 +169,21 @@ class SpiderProtFilter(ProtFilterParticles, SpiderProtocol):
             
         self._defineOutputs(outputParticles=imgSet)
         
+#--------------------------- INFO functions -------------------------------------------- 
+    def _validate(self):
+        errors = []
+        return errors
+    
+    def _citations(self):
+        cites = []
+        return cites
+    
     def _summary(self):
         summary = []
         return summary
+    
+    def _methods(self):
+        return self._summary()  # summary is quite explicit and serve as methods
+    
+    
     

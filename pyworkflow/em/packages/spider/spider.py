@@ -247,5 +247,8 @@ class SpiderProtocol(EMProtocol):
         return self._getPath(template % self._params)
     
 
-    
+def getDocsLink(op, label):
+    """ Return a label for documentation url of a given command. """
+    from constants import SPIDER_DOCS
+    return '[[%(SPIDER_DOCS)s/%(op)s.html][%(label)s]]' % locals()
     

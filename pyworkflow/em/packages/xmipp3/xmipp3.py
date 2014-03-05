@@ -36,7 +36,7 @@ import pyworkflow.dataset as ds
 
 from xmipp import MetaData, MetaDataInfo, MDL_IMAGE, MDL_IMAGE1, MDL_IMAGE_REF, MDL_ANGLE_ROT, MDL_ANGLE_TILT, MDL_ANGLE_PSI, MDL_REF, \
         MDL_SHIFT_X, MDL_SHIFT_Y, MDL_FLIP, MD_APPEND, MDL_MAXCC, MDL_ENABLED, MDL_CTF_MODEL, MDL_SAMPLINGRATE, DT_DOUBLE, \
-        Euler_angles2matrix, Image, FileName, getBlocksInMetaDataFile
+        Euler_angles2matrix, Image, FileName, getBlocksInMetaDataFile, label2Str
 
 LABEL_TYPES = { 
                xmipp.LABEL_SIZET: long,
@@ -130,7 +130,12 @@ class XmippMdRow():
             # in Xmipp and Scipion
             if type(value) is unicode:
                 value = str(value)
-            md.setValue(label, value, objId)
+            try:
+                md.setValue(label, value, objId)
+            except Exception, ex:
+                print "Error writting value to metadata."
+                print " label: %s, value: %s, type(value): %s" % (label2Str(label), value, type(value))
+                raise ex
             
     def readFromFile(self, fn):
         md = xmipp.MetaData(fn)
