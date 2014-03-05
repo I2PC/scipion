@@ -171,6 +171,7 @@ class Message():
     TEXT_WINDOW_SIZE = 'The PSD is estimated from small patches of this size. Bigger patches '+'allow identifying more details. However, since there are fewer windows, '+'estimations are noisier'
     
     TEXT_NO_INPUT_MIC = 'No *Input Micrographs* selected.'
+    TEXT_NO_CTF_READY = 'CTF of *Input Micrographs* not ready yet.'
     TEXT_NO_OUTPUT_CO = 'Output coordinates not ready yet.'
     ERROR_NO_EST_CTF = '_estimateCTF should be implemented'
     

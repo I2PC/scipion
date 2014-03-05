@@ -211,7 +211,7 @@ function paintBox(nodeSource, id, msg) {
 		var onclick = "launchToolbarTree('" + objId	+ "',($(this)))";
 		var aux = '<div class="window" style="" onclick="' + onclick + '" id="'
 				+ id + '"><a href="' + href + '"><strong>' + msg
-				+ '</strong></a><br/><span id="nodeStatus" data-val="hola"></span></div>';	
+				+ '</strong></a><br/><span id="nodeStatus" data-val=""></span></div>';	
 	} else {
 		var aux = '<div class="window" style="" id="' + id + '"><strong>' + msg
 				+ '</strong><br /></div>';

@@ -636,6 +636,7 @@ class Protocol(Step):
         pass
     
     def copy(self, other, copyId=True):
+        print "self:%s other:%s"%(self.getObjId(), other.getObjId())
         copyDict = Object.copy(self, other, copyId)
         self._store()
         for r in other.getRelations():
@@ -649,7 +650,8 @@ class Protocol(Step):
                             
             if rChild in copyDict:
                 rChild = copyDict.get(rChild).getObjId()
-            
+            print "self:%s other:%s"%(self.getObjId(), other.getObjId())
+            print ("rName: %s, rCreator: %s, rParent: %s, rChild: %s"%(rName, rCreator, rParent, rChild))
             self.mapper.insertRelationData(rName, rCreator, rParent, rChild)
         
         

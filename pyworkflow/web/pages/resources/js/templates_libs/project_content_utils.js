@@ -129,42 +129,49 @@ function launchToolbarList(id, elm) {
 	row.show(); // Show toolbar
 }
 
+var event = jQuery("div#graphActiv").trigger(jQuery.Event("click"));
+
+function enableMultipleMarkGraph(elm){
+	if (elm.attr("selected") == "selected"){
+		elm.css("border", "");
+		elm.removeAttr("selected")
+	} else {
+		elm.css("border", "2.5px solid Firebrick");
+		elm.attr("selected", "selected")
+	}
+}
+
+function disableMultipleMarkGraph(id){
+	
+	$.each($(".window"), function(){
+		elm = $(this)
+		if (elm.attr("id") != "graph_"+id){
+			if(elm.attr("selected") != undefined){
+				elm.removeAttr("selected")
+				elm.css("border", "");
+			}
+		}
+	}) 
+	
+}
+
 function launchToolbarTree(id, elm) {
 	/*
 	 * Toolbar used in the project content template for list view
 	 */
-	var row = $("div#toolbar");
-	updateTree(id, elm, row);
-	updateButtons(id, elm);
-	row.show(); // Show toolbar
+	
+	if (event.ctrlKey){
+		enableMultipleMarkGraph(elm)
+	} else {
+		disableMultipleMarkGraph(id)
+		
+		var row = $("div#toolbar");
+		updateTree(id, elm, row);
+		updateButtons(id, elm);
+		row.show(); // Show toolbar
+	}
 }
 
-//function checkRunStatus(id) {
-//	/*
-//	 * Function to check a protocol run, depend on the status two button will be
-//	 * switching in the toolbar (Stop / Analyze Results).
-//	 */
-//	$.ajax({
-//		type : "GET",
-//		url : '/protocol_status/?protocolId=' + id,
-//		dataType:"text",
-//		success : function(status) {
-//			if(status=="running"){
-//				// Action Stop Button
-//				$("span#analyzeTool").hide();
-//				$("span#stopTool").show();
-//				$("a#stopTool").attr('href',
-//				'javascript:stopProtocolForm("' + id + '")');
-//			}
-//			else{
-//				// Action Analyze Result Button
-//				$("span#stopTool").hide();
-//				$("span#analyzeTool").show();
-//				$("a#analyzeTool").attr('href', 'javascript:launchViewer("'+id +'")');
-//			}
-//		}
-//	});
-//}
 
 function fillTabs(id) {
 	/*
@@ -305,12 +312,23 @@ function updateTree(id, elm, row){
 		if (oldSelect != "") {
 			var aux = "div#" + oldSelect + ".window";
 			$(aux).css("border", "");
+			elm.removeAttr("selected")
 		}
 		row.attr('value', id);
 		$("div#graphActiv").attr("data-option", selected);
 		elm.css("border", "2.5px solid Firebrick");
+		elm.attr("selected", "selected")
 	}
 }
+
+function selectElmGraph(elm){
+	if(elm.css("border") == ""){
+		elm.css("border", "2.5px solid Firebrick");
+	} else {
+		elm.css("border", "");
+	}
+}
+
 
 function graphON(graph, icon_graph, list, icon_list){
 	/*
@@ -319,7 +337,7 @@ function graphON(graph, icon_graph, list, icon_list){
 	
 	// Graph ON
 	graph.attr("data-mode", "active");
-	graph.attr("style", "");
+	graph.removeAttr("style");
 	icon_graph.hide();
 	
 	// Table OFF
@@ -329,6 +347,7 @@ function graphON(graph, icon_graph, list, icon_list){
 
 	// Update Graph View
 	updateGraphView("True");
+	
 }
 
 function graphOFF(graph, icon_graph, list, icon_list){
@@ -338,7 +357,7 @@ function graphOFF(graph, icon_graph, list, icon_list){
 	
 	// Table ON	
 	list.attr("data-mode", "active");
-	list.attr("style", "");
+	list.removeAttr("style");
 	icon_list.hide();
 	
 	// Graph OFF

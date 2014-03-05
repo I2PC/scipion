@@ -202,14 +202,19 @@ class XmippProtPreprocessParticles(ProtProcessParticles, XmippProcessParticles, 
     
     def _summary(self):
         summary = []
-        summary.append("Input particles:  %s" % self.inputParticles.get().getNameId())
+        summary.append("Input particles: %s" % self.inputParticles.get().getName())
         
         if not hasattr(self, 'outputParticles'):
             summary.append("Output particles not ready yet.")
         else:
-            summary.append("Output particles: %s" % self.outputParticles.getNameId())
-        
+            summary.append("Dust removal: %s" % self.doRemoveDust)
+            summary.append("Normalize the background: %s" % self.doNormalize)
+            summary.append("Invert contrast: %s" % self.doInvert)
+            summary.append("Remove voxels with threshold: %s" % self.doThreshold)
         return summary
+    
+    def _methods(self):
+        return self._summary()
     
     #--------------------------- UTILS functions ---------------------------------------------------
     def _getSize(self):

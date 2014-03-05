@@ -109,6 +109,7 @@ class EMProtocol(Protocol):
 class ProtImportImages(EMProtocol):
     """Common protocol to import a set of images in the project"""
         
+    #--------------------------- DEFINE param functions --------------------------------------------
     def _defineParams(self, form):
         form.addSection(label='Input')
         form.addParam('pattern', StringParam, label=Message.LABEL_PATTERN,
@@ -122,6 +123,7 @@ class ProtImportImages(EMProtocol):
                       label=Message.LABEL_AMPLITUDE,
                       help=Message.TEXT_AMPLITUDE)
         
+    #--------------------------- STEPS functions ---------------------------------------------------
     def importImages(self, pattern, checkStack, voltage, sphericalAberration, amplitudeContrast):
         """ Copy images matching the filename pattern
         Register other parameters.
@@ -168,7 +170,8 @@ class ProtImportImages(EMProtocol):
         self._defineOutputs(**args)
         
         return outFiles
-  
+    
+    #--------------------------- INFO functions ----------------------------------------------------
     def _validate(self):
         errors = []
         if not self.pattern.get():
@@ -180,9 +183,6 @@ class ProtImportImages(EMProtocol):
                 errors.append(Message.ERROR_PATTERN_FILES)
 
         return errors
-    
-    def getFiles(self):
-        return getattr(self, self._getOutputSet(self._className)).getFiles()
     
     def _summary(self):
         summary = []
@@ -197,7 +197,19 @@ class ProtImportImages(EMProtocol):
         return summary
     
     def _methods(self):
-        return self._summary()
+        methods = []
+        outputSet = self._getOutputSet(self._className)
+        if not hasattr(self, outputSet):
+            methods.append("Has no method information yet.") 
+        else:
+            methods.append("%d " % getattr(self, outputSet).getSize() + self._className + "s has been imported")
+            methods.append("with a sampling rate of %0.2f A/px" % getattr(self, outputSet).getSamplingRate())
+            
+        return methods
+    
+    #--------------------------- UTILS functions ---------------------------------------------------
+    def getFiles(self):
+        return getattr(self, self._getOutputSet(self._className)).getFiles()
     
     def _getOutputSet(self, setName):
         return "output" + setName + "s"
@@ -361,6 +373,10 @@ class ProtImportVolumes(EMProtocol):
         errors = []
         if self.pattern.get() == "":
             errors.append(Message.ERROR_PATTERN_EMPTY)
+        
+        if self._getNumberFilePaths(self.pattern.get()) == 0:
+                errors.append(Message.ERROR_PATTERN_FILES)
+
         return errors
          
 
@@ -416,8 +432,10 @@ class ProtCTFMicrographs(EMProtocol):
     """ Base class for all protocols that estimates the CTF"""
     def __init__(self, **args):
         EMProtocol.__init__(self, **args)
+        self.methodsInfo = String()
         self.stepsExecutionMode = STEPS_PARALLEL
-        
+    
+    #--------------------------- DEFINE param functions --------------------------------------------
     def _defineParams(self, form):
         form.addSection(label=Message.LABEL_CTF_ESTI)
         
@@ -446,21 +464,8 @@ class ProtCTFMicrographs(EMProtocol):
                       expertLevel=LEVEL_ADVANCED)
         
         form.addParallelSection(threads=2, mpi=1)       
-         
     
-    def _getMicrographDir(self, mic):
-        """ Return an unique dir name for results of the micrograph. """
-        return self._getExtraPath(removeBaseExt(mic.getFileName()))        
-        
-    def _iterMicrographs(self):
-        """ Iterate over micrographs and yield
-        micrograph name and a directory to process.
-        """
-        for mic in self.inputMics:
-            micFn = mic.getFileName()
-            micDir = self._getExtraPath(removeBaseExt(micFn)) 
-            yield (micFn, micDir, mic)  
-        
+    #--------------------------- INSERT steps functions --------------------------------------------
     def _insertAllSteps(self):
         """ Insert the steps to perform ctf estimation on a set of micrographs.
         """
@@ -491,24 +496,9 @@ class ProtCTFMicrographs(EMProtocol):
                                               prerequisites=[]) # Make estimation steps indepent between them
             deps.append(stepId)
         # Insert step to create output objects       
-        self._insertFunctionStep('createOutput', prerequisites=deps)
-            
-    def _summary(self):
-        summary = []
-        if not self.inputMicrographs.hasValue():
-            summary.append(Message.TEXT_NO_INPUT_MIC)
-        else:
-            summary.append("CTF estimation of %d micrographs." % self.inputMicrographs.get().getSize())
-            summary.append("Input micrographs: " + self.inputMicrographs.get().getNameId())
-        return summary
-                
-    def _prepareCommand(self):
-        """ This function should be implemented to prepare the
-        arguments template if doesn't change for each micrograph
-        After this method self._program and self._args should be set. 
-        """
-        pass
+        self._insertFunctionStep('createOutputStep', prerequisites=deps)
     
+    #--------------------------- STEPS functions ---------------------------------------------------
     def _estimateCTF(self, micFn, micDir):
         """ Do the CTF estimation with the specific program
         and the parameters required.
@@ -517,6 +507,55 @@ class ProtCTFMicrographs(EMProtocol):
          micDir: micrograph directory
         """
         raise Exception(Message.ERROR_NO_EST_CTF)
+    
+    #--------------------------- INFO functions ----------------------------------------------------
+    def _summary(self):
+        summary = []
+        if not hasattr(self, 'outputCTF'):
+            summary.append(Message.TEXT_NO_CTF_READY)
+        else:
+            summary.append("CTF estimation of %d micrographs." % self.inputMicrographs.get().getSize())
+        return summary
+    
+    def _methods(self):
+        methods = []
+        
+        if not hasattr(self, 'outputCTF'):
+            methods.append(Message.TEXT_NO_CTF_READY)
+        else:
+            methods.append(self.methodsInfo.get())
+            
+        return methods
+    
+    #--------------------------- UTILS functions ---------------------------------------------------
+    def _getMicrographDir(self, mic):
+        """ Return an unique dir name for results of the micrograph. """
+        return self._getExtraPath(removeBaseExt(mic.getFileName()))        
+        
+    def _iterMicrographs(self):
+        """ Iterate over micrographs and yield
+        micrograph name and a directory to process.
+        """
+        for mic in self.inputMics:
+            micFn = mic.getFileName()
+            micDir = self._getExtraPath(removeBaseExt(micFn)) 
+            yield (micFn, micDir, mic)  
+                
+    def _prepareCommand(self):
+        """ This function should be implemented to prepare the
+        arguments template if doesn't change for each micrograph
+        After this method self._program and self._args should be set. 
+        """
+        pass
+    
+    def _defocusMaxMin(self, list):
+        """ This function return the minimum and maximum of the defocus
+        of a SetOfMicrographs.
+        """
+        minimum = float(min(list))/10000
+        maximum = float(max(list))/10000
+        msg = "The range of micrograph's experimental defocus are %(minimum)0.3f - %(maximum)0.3f microns" % locals()
+        self.methodsInfo.set(msg)
 
 
 class ProtPreprocessMicrographs(EMProtocol):
@@ -595,15 +634,26 @@ class ProtMaskParticles(ProtProcessParticles):
 
 
 class ProtParticlePicking(EMProtocol):
+    #--------------------------- INFO functions ----------------------------------------------------
     def _summary(self):
         summary = []
         if not hasattr(self, 'outputCoordinates'):
             summary.append(Message.TEXT_NO_OUTPUT_CO) 
         else:
             #TODO: MOVE following line to manual picking
-            summary.append("Input micrographs: " + self.inputMicrographs.get().getNameId())
-            summary.append("Number of particles picked: %d (from %d micrographs)" % (self.outputCoordinates.getSize(), self.inputMicrographs.get().getSize()))
+            summary.append("Number of input micrographs: %d" % self.inputMicrographs.get().getSize())
+            summary.append("Number of particles picked: %d" % self.outputCoordinates.getSize())
         return summary
+    
+    def _methods(self):
+        methods = []
+        if not hasattr(self, 'outputCoordinates'):
+            methods.append(Message.TEXT_NO_OUTPUT_CO) 
+        else:
+            #TODO: MOVE following line to manual picking
+            methods.append("Has been picked %d particles" % self.outputCoordinates.getSize())
+            methods.append("from %d micrographs" % self.inputMicrographs.get().getSize())
+        return methods
 
 
 class ProtCreateMask(EMProtocol):
