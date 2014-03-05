@@ -52,8 +52,8 @@ class XmippDownsampleWizard(downsampleWizard):
 class XmippCTFWizard(ctfWizard):
     _targets = [(ProtCTFMicrographs, ['lowRes', 'highRes'])]
             
-# class XmippMaskRadiusWizard(maskRadiusWizard):
-#     pass
+#class XmippMaskRadiusWizard(maskRadiusWizard):
+#    pass
 
 class XmippParticleMaskRadiusWizard(particleMaskRadiusWizard):
     _targets = [(XmippProtMaskParticles, ['radius'])]
@@ -80,6 +80,7 @@ class XmippVolumeMaskRadiusWizard(volumeMaskRadiusWizard):
         _label = "radius"
         volumeMaskRadiusWizard.show(self, form, _value, _label, UNIT_PIXEL)
  
+ 
 class XmippParticleMaskRadiiWizard(particlesMaskRadiiWizard):
     _targets = [(XmippProtMaskParticles, ['innerRadius', 'outerRadius'])]
     
@@ -103,100 +104,70 @@ class XmippVolumeRadiiWizard(volumeMaskRadiiWizard):
     def show(self, form):
         _value = [form.protocol.innerRadius.get(), form.protocol.outerRadius.get()]
         _label = ["innerRadius", "outerRadius"]
-        
         volumeMaskRadiiWizard.show(self, form, _value, _label, UNIT_PIXEL)
-
-# class XmippFilterParticlesWizard(filterParticlesWizard):
-#     pass
+        
  
-# class XmippBandpassParticleWizard(bandpassParticleWizard):    
-#     _targets = [(XmippProtFilterParticles, ['lowFreq', 'highFreq', 'freqDecay'])]
-#     
-#     def show(self, form):
-#         protocol = form.protocol
-#         provider = self._getProvider(protocol)
-# 
-#         if provider is not None:
-#             self.mode = protocol.fourierMode.get()
-#             args = {'mode':  self.mode,                   
-#                     'lowFreq': protocol.lowFreq.get(),
-#                     'highFreq': protocol.highFreq.get(),
-#                     'freqDecay': protocol.freqDecay.get(),
-#                     'unit': UNIT_PIXEL_FOURIER
-#                     }
-#             if self.mode == FILTER_LOW_PASS:
-#                 args['showLowFreq'] = False
-#             elif self.mode == FILTER_HIGH_PASS:
-#                 args['showHighFreq'] = False
-#             elif self.mode == FILTER_LOW_PASS_NO_DECAY:
-#                 args['showLowFreq'] = False
-#                 args['showDecay'] = False
-#             elif self.mode == FILTER_BAND_PASS:
-#                 pass
-#             else:
-#                 print "Not Mode"
-#                 
-#             d = bandPassFilterDialog(form.root, provider, **args)
-#             
-#             if d.resultYes():
-#                 form.setVar('lowFreq', d.getLowFreq())
-#                 form.setVar('highFreq', d.getHighFreq())
-#                 form.setVar('freqDecay', d.getFreqDecay())
-#         else:
-#             dialog.showWarning("Input particles", "Select particles first", form.root)  
-# 
-# 
-# class XmippBandpassVolumeWizard(bandpassVolumesWizard):    
-#     _targets = [(XmippProtFilterVolumes, ['lowFreq', 'highFreq', 'freqDecay'])]
-#     
-#     def show(self, form):
-#         protocol = form.protocol
-#         provider = self._getProvider(protocol)
-# 
-#         if provider is not None:
-#             self.mode = protocol.fourierMode.get()
-#             args = {'mode':  self.mode,                   
-#                     'lowFreq': protocol.lowFreq.get(),
-#                     'highFreq': protocol.highFreq.get(),
-#                     'freqDecay': protocol.freqDecay.get(),
-#                     'unit': UNIT_PIXEL_FOURIER
-#                     }
-#             if self.mode == FILTER_LOW_PASS:
-#                 args['showLowFreq'] = False
-#             elif self.mode == FILTER_HIGH_PASS:
-#                 args['showHighFreq'] = False
-#             elif self.mode == FILTER_LOW_PASS_NO_DECAY:
-#                 args['showLowFreq'] = False
-#                 args['showDecay'] = False
-#             elif self.mode == FILTER_BAND_PASS:
-#                 pass
-#             else:
-#                 print "Not Mode"
-#                 
-#             d = bandPassFilterDialog(form.root, provider, **args)
-#             
-#             if d.resultYes():
-#                 form.setVar('lowFreq', d.getLowFreq())
-#                 form.setVar('highFreq', d.getHighFreq())
-#                 form.setVar('freqDecay', d.getFreqDecay())
-#         else:
-#             dialog.showWarning("Input volume(s)", "Select volume(s) first", form.root)  
-
-
+class XmippFilterParticlesWizard(filterParticlesWizard):   
+    _targets = [(XmippProtFilterParticles, ['lowFreq', 'highFreq', 'freqDecay'])]
     
-# class XmippGaussianWizard(gaussianWizard):
-#     _targets = [(XmippProtFilter, ['freqSigma'])]
-#     
-#     def show(self, form):
-#         protocol = form.protocol
-#         provider = self._getProvider(protocol)
-# 
-#         if provider is not None:
-#             d = gaussianFilterDialog(form.root, provider, freqSigma=protocol.freqSigma.get())
-#             if d.resultYes():
-#                 form.setVar('freqSigma', d.getFreqSigma())
-#         else:
-#             dialog.showWarning("Input particles", "Select particles first", form.root)  
-
+    def _getProvider(self, protocol):
+        _objs = protocol.inputParticles.get()
+        return filterParticlesWizard._getProvider(self, protocol, _objs)
     
+    def show(self, form):
+        _value = [form.protocol.lowFreq.get(), 
+                  form.protocol.highFreq.get(), 
+                  form.protocol.freqDecay.get()]
+        _label = ["lowFreq", 
+                  "highFreq", 
+                  "freqDecay"]
+        _mode = form.protocol.fourierMode.get()
+        
+        filterParticlesWizard.show(self, form, _value, _label, _mode, UNIT_PIXEL_FOURIER)
+
+
+class XmippGaussianParticlesWizard(gaussianParticlesWizard):
+    _targets = [(XmippProtFilterParticles, ['freqSigma'])]
+    
+    def _getProvider(self, protocol):
+        _objs = protocol.inputParticles.get()
+        return gaussianParticlesWizard._getProvider(self, protocol, _objs)
+    
+    def show(self, form):
+        _value = form.protocol.freqSigma.get()
+        _label = "freqSigma"
+        gaussianParticlesWizard.show(self, form, _value, _label, UNIT_PIXEL_FOURIER)
+    
+    
+class XmippFilterVolumesWizard(filterVolumesWizard):   
+    _targets = [(XmippProtFilterVolumes, ['lowFreq', 'highFreq', 'freqDecay'])]
+    
+    def _getProvider(self, protocol):
+        _objs = protocol.inputVolumes.get()    
+        return filterVolumesWizard._getProvider(self, protocol, _objs)
+    
+    def show(self, form):
+        _value = [form.protocol.lowFreq.get(), 
+                  form.protocol.highFreq.get(), 
+                  form.protocol.freqDecay.get()]
+        _label = ["lowFreq", 
+                  "highFreq", 
+                  "freqDecay"]
+        _mode = form.protocol.fourierMode.get()
+        
+        filterVolumesWizard.show(self, form, _value, _label, _mode, UNIT_PIXEL_FOURIER)
+     
+     
+class XmippGaussianVolumesWizard(gaussianVolumesWizard):
+    _targets = [(XmippProtFilterVolumes, ['freqSigma'])]
+    
+    def _getProvider(self, protocol):
+        _objs = protocol.inputVolumes.get()
+        return gaussianVolumesWizard._getProvider(self, protocol, _objs)
+    
+    def show(self, form):
+        _value = form.protocol.freqSigma.get()
+        _label = "freqSigma"
+        gaussianVolumesWizard.show(self, form, _value, _label, UNIT_PIXEL_FOURIER)
+
   

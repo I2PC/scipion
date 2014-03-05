@@ -99,7 +99,7 @@ class ctfWizard(Wizard):
     @classmethod    
     def getView(self):
         return "wiz_ctf"            
-            
+    
 class maskRadiusWizard(Wizard):
     
     def _getProvider(self, protocol):
@@ -203,9 +203,43 @@ class volumeMaskRadiiWizard(maskRadiiWizard, volumeMaskRadiusWizard):
     def getView(self):
         return "wiz_volumes_mask_radii"   
 
+class filterWizard(Wizard):
+                
+    def show(self, form, value, label, mode, units=UNIT_PIXEL):
+        protocol = form.protocol
+        provider = self._getProvider(protocol)
 
+        if provider is not None:
+            self.mode = mode
+            args = {'mode':  self.mode,                   
+                    'lowFreq': value[0],
+                    'highFreq': value[1],
+                    'freqDecay': value[2],
+                    'unit': UNIT_PIXEL_FOURIER
+                    }
+            if self.mode == FILTER_LOW_PASS:
+                args['showLowFreq'] = False
+            elif self.mode == FILTER_HIGH_PASS:
+                args['showHighFreq'] = False
+            elif self.mode == FILTER_LOW_PASS_NO_DECAY:
+                args['showLowFreq'] = False
+                args['showDecay'] = False
+            elif self.mode == FILTER_BAND_PASS:
+                pass
+            else:
+                print "Not Mode"
+                
+            d = bandPassFilterDialog(form.root, provider, **args)
+            
+            if d.resultYes():
+                form.setVar(label[0], d.getLowFreq())
+                form.setVar(label[1], d.getHighFreq())
+                form.setVar(label[2], d.getFreqDecay())
+        else:
+            dialog.showWarning("Empty input", "Select elements first", form.root)
+            
 
-class filterParticlesWizard(Wizard):
+class filterParticlesWizard(filterWizard):
     
     def _getText(self, obj):
         index = obj.getIndex()
@@ -214,14 +248,14 @@ class filterParticlesWizard(Wizard):
             return "%03d@%s" % (index, text)
         return text
     
-    def _getProvider(self, protocol):
+    def _getProvider(self, protocol, objs):
         """ This should be implemented to return the list
         of object to be displayed in the tree.
         """
         provider = None
-        if protocol.inputParticles.hasValue():
+        if objs.hasValue():
             particles = [] 
-            for i, par in enumerate(protocol.inputParticles.get()):
+            for i, par in enumerate(objs):
                 particles.append(par.clone())
                 if i == 100: # Limit the maximum number of particles to display
                     break
@@ -230,7 +264,49 @@ class filterParticlesWizard(Wizard):
             
         return provider
     
-class filterVolumesWizard(Wizard):
+    @classmethod    
+    def getView(self):
+        return "wiz_filter_particle"
+    
+class filterVolumesWizard(filterWizard):
+    
+    def _getProvider(self, protocol, objs):
+        """ This should be implemented to return the list
+        of object to be displayed in the tree.
+        """
+        if objs.hasValue():
+            vols = []
+            if isinstance(objs, Volume):
+                vols.append(objs)
+            else: 
+                vols = [vol.clone() for vol in objs]
+            return ListTreeProvider(vols)
+        return None
+    
+    @classmethod    
+    def getView(self):
+        return "wiz_filter_volumes"  
+    
+    
+class gaussianWizard(Wizard):
+    
+    def show(self, form, value, label, units=UNIT_PIXEL_FOURIER):
+        protocol = form.protocol
+        provider = self._getProvider(protocol)
+
+        if provider is not None:
+            args = {'freqSigma':  value,                   
+                    'unit': units
+                    }
+            
+            d = gaussianFilterDialog(form.root, provider, **args)
+            if d.resultYes():
+                form.setVar(label, d.getFreqSigma())
+        else:
+            dialog.showWarning("Empty input", "Select elements first", form.root)
+            
+
+class gaussianParticlesWizard(gaussianWizard):
     
     def _getText(self, obj):
         index = obj.getIndex()
@@ -239,35 +315,45 @@ class filterVolumesWizard(Wizard):
             return "%03d@%s" % (index, text)
         return text
     
-    def _getProvider(self, protocol):
+    def _getProvider(self, protocol, objs):
         """ This should be implemented to return the list
         of object to be displayed in the tree.
         """
-        if protocol.input3DReferences.hasValue():
-            vols = [vol.clone() for vol in protocol.input3DReferences.get()]
+        provider = None
+        if objs.hasValue():
+            particles = [] 
+            for i, par in enumerate(objs):
+                particles.append(par.clone())
+                if i == 100: # Limit the maximum number of particles to display
+                    break
+            provider = ListTreeProvider(particles)
+            provider.getText = self._getText
+            
+        return provider
+    
+    @classmethod    
+    def getView(self):
+        return "wiz_gaussian_particle"
+
+    
+class gaussianVolumesWizard(gaussianWizard):
+    
+    def _getProvider(self, protocol, objs):
+        """ This should be implemented to return the list
+        of object to be displayed in the tree.
+        """
+        if objs.hasValue():
+            vols = []
+            if isinstance(objs, Volume):
+                vols.append(objs)
+            else: 
+                vols = [vol.clone() for vol in objs]
             return ListTreeProvider(vols)
         return None
-
-
-class bandpassParticleWizard(filterParticlesWizard):
     
     @classmethod    
     def getView(self):
-        return "wiz_particle_bandpass"
-    
-class bandpassVolumesWizard(filterVolumesWizard):
-    
-    @classmethod    
-    def getView(self):
-        return "wiz_volume_bandpass"  
-
-    
-class gaussianWizard(filterParticlesWizard):
-    _environments = [DESKTOP_TKINTER, WEB_DJANGO]
-    
-    @classmethod    
-    def getView(self):
-        return "wiz_particle_gaussian"   
+        return "wiz_gaussian_volume"   
     
 
 #--------------- Dialogs used by Wizards --------------------------
