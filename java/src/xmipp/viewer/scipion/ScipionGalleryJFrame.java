@@ -5,6 +5,7 @@
  */
 package xmipp.viewer.scipion;
 
+import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
@@ -14,6 +15,7 @@ import java.io.InputStreamReader;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JButton;
+import javax.swing.UIManager;
 import xmipp.ij.commons.XmippUtil;
 import xmipp.jni.MetaData;
 import xmipp.utils.Param;
@@ -34,6 +36,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
     private JButton cmdbutton;
     private String selectionmdfile;
     private JButton classcmdbutton;
+    private String firebrick = "#B22222";
 
     public ScipionGalleryJFrame(String filename, MetaData md, ScipionParams parameters) {
         super(filename, md, parameters);
@@ -48,7 +51,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
 
     private void initComponents() {
         if (type != null) {
-            cmdbutton = XmippWindowUtil.getTextButton("Create New Set Of " + type, new ActionListener() {
+            cmdbutton = getScipionButton("Create New Set Of " + type, new ActionListener() {
 
                 @Override
                 public void actionPerformed(ActionEvent ae) {
@@ -70,7 +73,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
             });
             if(is2DClassificationMd())
             {
-                classcmdbutton = XmippWindowUtil.getTextButton("Create New Set Of Classes", new ActionListener() {
+                classcmdbutton = getScipionButton("Create New Set Of Classes", new ActionListener() {
 
                     @Override
                     public void actionPerformed(ActionEvent ae) {
@@ -111,6 +114,22 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
 
             }
         }).start();
+    }
+    
+    public JButton getScipionButton(String text, ActionListener listener)
+    {
+         
+        UIManager.getDefaults().put("Button.background", Color.decode(firebrick));
+        UIManager.getDefaults().put("Button.foreground",Color.WHITE);
+//        UIManager.getDefaults().put("Button.disabledShadow", Color.LIGHT_GRAY);
+        
+        JButton button = new JButton(text);
+        
+        button.addActionListener(listener);
+        //button.setBackground(Color.decode(firebrick));
+        //button.setForeground(Color.WHITE);
+       
+        return button;
     }
     
    
