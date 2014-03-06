@@ -49,16 +49,35 @@ from pyworkflow.em.wizard import *
 class XmippDownsampleWizard(downsampleWizard):
     _targets = [(XmippProtPreprocessMicrographs, ['downFactor'])]
     
+    def _getProvider(self, protocol):
+        _objs = protocol.inputMicrographs.get()
+        return downsampleWizard._getListProvider(self, _objs)
+    
+    def show(self, form):
+        _value = form.protocol.downFactor.get()
+        _label = "downFactor"
+        downsampleWizard.show(self, form, _value, _label, UNIT_PIXEL)
+    
+    
 class XmippCTFWizard(ctfWizard):
     _targets = [(ProtCTFMicrographs, ['lowRes', 'highRes'])]
-
+    
+    def _getProvider(self, protocol):
+        _objs = protocol.inputMicrographs.get()
+        return ctfWizard._getListProvider(self, _objs)
+    
+    def show(self, form):
+        _value = [form.protocol.lowRes.get(), form.protocol.highRes.get()]
+        _label = ["lowRes", "highRes"]
+        ctfWizard.show(self, form, _value, _label, UNIT_PIXEL)
+        
 
 class XmippParticleMaskRadiusWizard(particleMaskRadiusWizard):
     _targets = [(XmippProtMaskParticles, ['radius'])]
     
     def _getProvider(self, protocol):
         _objs = protocol.inputParticles.get()
-        return particleMaskRadiusWizard._getProvider(self, protocol, _objs)
+        return particleMaskRadiusWizard._getListProvider(self, _objs)
     
     def show(self, form):
         _value = form.protocol.radius.get()
@@ -71,7 +90,7 @@ class XmippVolumeMaskRadiusWizard(volumeMaskRadiusWizard):
       
     def _getProvider(self, protocol):
         _objs = protocol.inputVolumes.get()    
-        return volumeMaskRadiusWizard._getProvider(self, protocol, _objs)
+        return volumeMaskRadiusWizard._getListProvider(self, _objs)
     
     def show(self, form):
         _label = "radius"
@@ -84,7 +103,7 @@ class XmippParticleMaskRadiiWizard(particlesMaskRadiiWizard):
     
     def _getProvider(self, protocol):
         _objs = protocol.inputParticles.get()
-        return particlesMaskRadiiWizard._getProvider(self, protocol, _objs)
+        return particlesMaskRadiiWizard._getListProvider(self, _objs)
     
     def show(self, form):
         _value = [form.protocol.innerRadius.get(), form.protocol.outerRadius.get()]
@@ -97,7 +116,7 @@ class XmippVolumeRadiiWizard(volumeMaskRadiiWizard):
  
     def _getProvider(self, protocol):
         _objs = protocol.inputVolumes.get()    
-        return volumeMaskRadiiWizard._getProvider(self, protocol, _objs)
+        return volumeMaskRadiiWizard._getListProvider(self, _objs)
     
     def show(self, form):
         _value = [form.protocol.innerRadius.get(), form.protocol.outerRadius.get()]
@@ -110,7 +129,7 @@ class XmippFilterParticlesWizard(filterParticlesWizard):
     
     def _getProvider(self, protocol):
         _objs = protocol.inputParticles.get()
-        return filterParticlesWizard._getProvider(self, protocol, _objs)
+        return filterParticlesWizard._getListProvider(self, _objs)
     
     def show(self, form):
         _value = [form.protocol.lowFreq.get(), 
@@ -129,7 +148,7 @@ class XmippGaussianParticlesWizard(gaussianParticlesWizard):
     
     def _getProvider(self, protocol):
         _objs = protocol.inputParticles.get()
-        return gaussianParticlesWizard._getProvider(self, protocol, _objs)
+        return gaussianParticlesWizard._getListProvider(self, _objs)
     
     def show(self, form):
         _value = form.protocol.freqSigma.get()
@@ -142,7 +161,7 @@ class XmippFilterVolumesWizard(filterVolumesWizard):
     
     def _getProvider(self, protocol):
         _objs = protocol.inputVolumes.get()    
-        return filterVolumesWizard._getProvider(self, protocol, _objs)
+        return filterVolumesWizard._getListProvider(self, _objs)
     
     def show(self, form):
         _value = [form.protocol.lowFreq.get(), 
@@ -161,7 +180,7 @@ class XmippGaussianVolumesWizard(gaussianVolumesWizard):
     
     def _getProvider(self, protocol):
         _objs = protocol.inputVolumes.get()
-        return gaussianVolumesWizard._getProvider(self, protocol, _objs)
+        return gaussianVolumesWizard._getListProvider(self, _objs)
     
     def show(self, form):
         _value = form.protocol.freqSigma.get()

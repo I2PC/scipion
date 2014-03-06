@@ -74,7 +74,6 @@ def wiz_base(request, context):
                }
     
     context.update(context_base)
-    
     return context
 
 
@@ -95,7 +94,6 @@ def wiz_downsampling(protocol, request):
                    }
 
         context = wiz_base(request, context)
-        
         return render_to_response('wizards/wiz_downsampling.html', context)
 
 def wiz_ctf(protocol, request):
@@ -119,7 +117,7 @@ def wiz_ctf(protocol, request):
         
         return render_to_response('wizards/wiz_ctf.html', context)
 
-def wiz_particle_mask(protocol, request):
+def wiz_particle_mask_radius(protocol, request):
     particles = protocol.inputParticles.get()
     res = validateParticles(particles) 
     
@@ -133,7 +131,7 @@ def wiz_particle_mask(protocol, request):
         else:
             xdim = getImageXdim(request, parts[0].text)
     
-            mask_radius = protocol.maskRadius.get()
+            mask_radius = protocol.radius.get()
              
             if mask_radius > xdim :
                 mask_radius = xdim
@@ -147,9 +145,9 @@ def wiz_particle_mask(protocol, request):
 
             context = wiz_base(request, context)
             
-            return render_to_response('wizards/wiz_particle_mask.html', context)
+            return render_to_response('wizards/wiz_particle_mask_radius.html', context)
 
-def wiz_particle_mask_radii(protocol, request):
+def wiz_particles_mask_radii(protocol, request):
     particles = protocol.inputParticles.get()
     res = validateParticles(particles) 
     
@@ -173,15 +171,16 @@ def wiz_particle_mask_radii(protocol, request):
             
             context = wiz_base(request, context)
             
-            return render_to_response('wizards/wiz_particle_mask_radii.html', context)
+            return render_to_response('wizards/wiz_particles_mask_radii.html', context)
 
-def wiz_volume_mask(protocol, request):
-    volumes = protocol.input3DReferences.get()
+def wiz_volume_mask_radius(protocol, request):
+    volumes = protocol.inputVolumes.get()
     res = validateSet(volumes)
     
     if res is not 1:
         return HttpResponse(res)
     else:
+        
         vols = [vol.clone() for vol in volumes]
         
         for v in vols:
@@ -189,7 +188,7 @@ def wiz_volume_mask(protocol, request):
                     
         xdim = getImageXdim(request, vols[0].getFileName())
     
-        mask_radius = protocol.maskRadius.get()
+        mask_radius = protocol.radius.get()
          
         if mask_radius > xdim :
             mask_radius = xdim
@@ -203,9 +202,9 @@ def wiz_volume_mask(protocol, request):
         
         context = wiz_base(request, context)
         
-        return render_to_response('wizards/wiz_volume_mask.html', context)
+        return render_to_response('wizards/wiz_volume_mask_radius.html', context)
 
-def wiz_volume_mask_radii(protocol, request):
+def wiz_volumes_mask_radii(protocol, request):
     volumes = protocol.input3DReferences.get()
     res = validateSet(volumes)
     
@@ -230,7 +229,7 @@ def wiz_volume_mask_radii(protocol, request):
         
         context = wiz_base(request, context)
         
-        return render_to_response('wizards/wiz_volume_mask_radii.html', context)
+        return render_to_response('wizards/wiz_volumes_mask_radii.html', context)
 
 def wiz_filter_spider(protocol, request):
     particles = protocol.inputParticles.get()
