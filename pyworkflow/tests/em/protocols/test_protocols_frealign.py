@@ -139,7 +139,7 @@ class TestFrealignProtocol(TestXmippBase):
 
         # Refine the SetOfParticles and reconstruct a refined volume.    
         print "Running Frealign..."
-        protFrealign = ProtFrealign(angularSampling=15, numberOfIterations=2, mode=1, doExtraRealSpaceSym=True,
+        protFrealign = ProtFrealign(angStepSize=7.5, numberOfIterations=2, mode=1, doExtraRealSpaceSym=True,
                                     innerRadius=150, outerRadius=315, symmetry='I2', PhaseResidual=70,
                                     resolution=20, runMode=1, numberOfMpi=1, numberOfThreads=4)
         protFrealign.inputParticles.set(protExtract.outputParticles)
