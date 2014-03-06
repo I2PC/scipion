@@ -58,10 +58,10 @@ class ProtCTFFind(ProtCTFMicrographs):
         
         for fn, micDir, mic in self._iterMicrographs():
             out = join(micDir, 'ctffind.out')
+            psdfile = join(micDir, 'ctffind_psd.mrc')
             result = self._parseOutput(out)
             defocusU, defocusV, defocusAngle = result
-            ctfModel = self._getCTFModel(defocusU, defocusV, defocusAngle, 
-                                                self._getPsdPath(micDir))
+            ctfModel = self._getCTFModel(defocusU, defocusV, defocusAngle, psdfile)
             ctfModel.setMicFile(mic.getFileName())
                         # save the values of defocus for each micrograph in a list
             defocusList.append(ctfModel.getDefocusU())
