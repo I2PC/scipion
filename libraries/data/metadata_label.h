@@ -122,6 +122,7 @@ enum MDLabel
     MDL_CTF_CA, ///< Chromatic aberration
     MDL_CTF_GROUP, ///< group images by defocus
     MDL_CTF_ENERGY_LOSS, ///< Energy loss
+    MDL_CTF_ENVELOPE, //<Envelope function
     MDL_CTF_LENS_STABILITY, ///< Lens stability
     MDL_CTF_CONVERGENCE_CONE, ///< Convergence cone
     MDL_CTF_LONGITUDINAL_DISPLACEMENT, ///< Longitudinal displacement
@@ -867,6 +868,7 @@ private:
         MDL::addLabel(MDL_CTF_DIMENSIONS, LABEL_VECTOR_DOUBLE, "ctfDimensions");
         MDL::addLabel(MDL_CTF_DOWNSAMPLE_PERFORMED, LABEL_DOUBLE, "CtfDownsampleFactor");
         MDL::addLabel(MDL_CTF_ENERGY_LOSS, LABEL_DOUBLE, "ctfEnergyLoss");
+        MDL::addLabel(MDL_CTF_ENVELOPE, LABEL_DOUBLE, "ctfEnvelope");
         MDL::addLabel(MDL_CTF_GROUP, LABEL_INT, "ctfGroup");
         MDL::addLabel(MDL_CTF_INPUTPARAMS, LABEL_STRING, "ctfInputParams", TAGLABEL_TEXTFILE);
         MDL::addLabel(MDL_CTF_K, LABEL_DOUBLE, "ctfK");
