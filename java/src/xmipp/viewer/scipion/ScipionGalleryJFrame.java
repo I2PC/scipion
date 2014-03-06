@@ -37,6 +37,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
     private String selectionmdfile;
     private JButton classcmdbutton;
     private String firebrick = "#B22222";
+    private String lightgrey = "#EAEBEC";
 
     public ScipionGalleryJFrame(String filename, MetaData md, ScipionParams parameters) {
         super(filename, md, parameters);
@@ -87,10 +88,10 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
                     }
                 });
                 buttonspn.add(classcmdbutton);
-                classcmdbutton.setEnabled(false);
+                
             }
             buttonspn.add(cmdbutton);
-            cmdbutton.setEnabled(false);
+            enableActions();
             
         }
        
@@ -119,15 +120,15 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
     public JButton getScipionButton(String text, ActionListener listener)
     {
          
-        UIManager.getDefaults().put("Button.background", Color.decode(firebrick));
+        //UIManager.getDefaults().put("Button.background", Color.decode(firebrick));
         UIManager.getDefaults().put("Button.foreground",Color.WHITE);
-//        UIManager.getDefaults().put("Button.disabledShadow", Color.LIGHT_GRAY);
+        //UIManager.getDefaults().put("Button.disabledShadow", Color.WHITE);
         
         JButton button = new JButton(text);
         
         button.addActionListener(listener);
         //button.setBackground(Color.decode(firebrick));
-        //button.setForeground(Color.WHITE);
+        button.setForeground(Color.WHITE);
        
         return button;
     }
@@ -137,18 +138,27 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
     public void selectItem(int row, int col)
     {
         super.selectItem(row, col);
-        cmdbutton.setEnabled(isImageSelected());
-        if(is2DClassificationMd())
-            classcmdbutton.setEnabled(isImageSelected());
+        enableActions();
+       
     }
 
     protected void tableMouseClicked(MouseEvent evt)
     {
         super.tableMouseClicked(evt);
-        cmdbutton.setEnabled(isImageSelected());
-        if(is2DClassificationMd())
-            classcmdbutton.setEnabled(isImageSelected());
+        enableActions();
     }
 
+    protected void enableActions()
+    {
+        boolean isenabled = isImageSelected();
+        Color color = Color.decode(isenabled? firebrick: lightgrey); 
+        cmdbutton.setEnabled(isenabled);
+        cmdbutton.setBackground(color);
+         if(is2DClassificationMd())
+         {
+            classcmdbutton.setEnabled(isImageSelected());
+            classcmdbutton.setBackground(color);
+         }
+    }
 
 }
