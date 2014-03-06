@@ -16,7 +16,7 @@ from protlib_utils import runShowJ, getListFromVector, getListFromRangeString
 from protlib_parser import ProtocolParser
 from protlib_xmipp import redStr, cyanStr
 from protlib_gui_ext import showWarning
-from protlib_filesystem import xmippExists, findAcquisitionInfo, moveFile
+from protlib_filesystem import xmippExists, findAcquisitionInfo, moveFile, linkAcquisitionInfo
 from protocol_ml2d import lastIteration
 
 class ProtML3D(XmippProtocol):
@@ -89,8 +89,8 @@ class ProtML3D(XmippProtocol):
     
     def papers(self):
         papers=[]
-        if self.DoFast:
-            papers.append('Scheres, Bioinformatics (2005) [http://www.ncbi.nlm.nih.gov/pubmed/16204112]')
+        # Do fast is always used in 3D
+        papers.append('Scheres, Bioinformatics (2005) [http://www.ncbi.nlm.nih.gov/pubmed/16204112]')
         papers.append('Scheres, Nat.Meth (2007) [http://www.ncbi.nlm.nih.gov/pubmed/17179934]')
         if self.DoMlf:
             papers.append('Scheres, Structure (2007) [http://www.ncbi.nlm.nih.gov/pubmed/17937907]')
@@ -117,7 +117,8 @@ class ProtML3D(XmippProtocol):
             
         return errors 
     
-    def defineSteps(self):        
+    def defineSteps(self):    
+        self.insertStep("linkAcquisitionInfo", InputFile=self.ImgMd, dirDest=self.WorkingDir)    
         restart = False
         if restart:            #Not yet implemented
             pass

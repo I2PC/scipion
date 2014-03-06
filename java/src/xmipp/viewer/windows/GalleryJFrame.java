@@ -224,7 +224,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			this.data = data;
 			createModel();
 			createGUI();
-			XmippApplication.addInstance();
+			XmippApplication.addInstance(false);
 		}
 		catch (Exception e)
 		{
@@ -275,7 +275,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		{
 			setVisible(false);
 			dispose();
-			XmippApplication.removeInstance();
+			XmippApplication.removeInstance(false);
 
 		}
 	}// function close
@@ -1504,6 +1504,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			addSeparator(FILE);
 			addItem(FILE_SAVE, "Save", "save.gif", "control released S");
 			addItem(FILE_SAVEAS, "Save as", "save_as.gif");
+                        addItem(FILE_EXPORTIMAGES, "Export Images ...", "export_wiz.gif");
 			addItem(FILE_REFRESH, "Refresh", "refresh.gif", "released F5");
 			addSeparator(FILE);
 			addItem(FILE_EXIT, "Exit", null, "control released Q");
@@ -1550,6 +1551,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			boolean volMode = data.isVolumeMode();
 			setItemEnabled(FILE_OPENWITH_CHIMERA, volMode);
 			setItemEnabled(FILE_OPENMICROGRAPHS, data.hasMicrographParticles());
+                        setItemEnabled(FILE_EXPORTIMAGES, data.hasRenderLabel() && !volMode);
 			setItemEnabled(FILE_SAVE, !volMode);
 			setItemEnabled(FILE_SAVEAS, !volMode);
 			setItemSelected(DISPLAY_NORMALIZE, gallery.getNormalized());
@@ -1644,6 +1646,10 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 				{
 					saveAs();
 				}
+                                else if (cmd.equals(FILE_EXPORTIMAGES))
+				{
+                                        exportImages();
+				}
 				else if (cmd.equals(FILE_EXIT))
 				{
 					close();
@@ -1680,9 +1686,11 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 				{
 					try
 					{
+                                                XmippIJUtil.showImageJ(Tool.VIEWER);
 						ImagePlusLoader loader = gallery.getImageLoader();
 						ImagesWindowFactory.openXmippImageWindow(GalleryJFrame.this, loader, true);
-						XmippIJUtil.showImageJ(Tool.VIEWER);
+                                                
+						
 					}
 					catch (Exception e1)
 					{
@@ -1773,7 +1781,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			for (ColumnInfo column : data.getColumns())
 				if (column.allowRender)
 					imagecolumns.put(column.toString(), column);
-			boolean rendercolumn = imagecolumns.size() > 1;
+			boolean rendercolumn = imagecolumns.size() > 0;
 			setItemEnabled(DISPLAY_RENDERIMAGECOLUMN, rendercolumn);
 			if(rendercolumn)
 			{
@@ -2040,12 +2048,15 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		XmippDialog.showInfo(this, String.format("Calculating ctf: DONE"));
 	}
 
-	private void saveMd() throws Exception
+	protected void saveMd() throws Exception
 	{
-		saveMd(dlgSave.getMdFilename(), false);
+		saveMd(dlgSave.getMdFilename(), false, dlgSave.isOverwrite(), true );
+                
 	}
+        
+      
 
-	private void saveMd(String path, boolean saveall) throws Exception
+	protected void saveMd(String path, boolean saveall, boolean isoverwrite, boolean reload) throws Exception
 	{
 		try
 		{
@@ -2071,7 +2082,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			}
 			else
 			{
-				overwritewithblock = dlgSave.isOverwrite() && dlgSave.saveActiveMetadataOnly();
+				overwritewithblock = isoverwrite && !saveall;
 				if (overwritewithblock)
 					data.md.write(path);// overwrite with active block only,
 										// other blocks were dismissed
@@ -2079,14 +2090,14 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 					data.md.writeBlock(path);// either if save active block or all, save active, other blocks where already managed
 
 			}
-			if (!saveall)
+			if (reload)
 			{
-				data.setMdChanges(false);
+				
 				gallery.data.setFileName(file);
 				if (path.contains("@"))
 					gallery.data.selectBlock(path.substring(0, path.lastIndexOf("@")));
 				reloadFile(file, false);
-				setTitle(gallery.getTitle());
+				setGalleryTitle();
 			}
 		}
 		catch (Exception e)
@@ -2095,7 +2106,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		}
 	}// function saveMd
 
-	private void saveAll() throws Exception
+	protected void saveAll() throws Exception
 	{
 		String from = data.getFileName();
 		String blockto = dlgSave.getMdFilename();
@@ -2123,14 +2134,14 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			{
 				md = mds.get(blockit);
 				if (blockit.equals(getBlock()))
-					saveMd(blockto, true);
+					saveMd(blockto, true, dlgSave.isOverwrite(), false );
 				else
 					md.writeBlock(blockit + "@" + to);
 				md.destroy();
 			}
 		}
 		else {
-			saveMd(blockto, true);
+			saveMd(blockto, true, dlgSave.isOverwrite(), false );
 		}
 
 		data.setMdChanges(false);
@@ -2171,9 +2182,23 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			else
 				saveAll();
 
-			if (dlgSave.doSaveImages())
-				data.md.writeImages(dlgSave.getOutput(), dlgSave.isOutputIndependent(), dlgSave.getImageLabel());
+			
 		}
+
+	}
+        
+        private void exportImages() throws Exception
+	{
+		SwingUtilities.invokeLater(new Runnable() {
+
+                    @Override
+                    public void run() {
+                        ExportImagesJDialog d = new ExportImagesJDialog(GalleryJFrame.this);
+                    }
+                });
+
+			
+		
 
 	}
 

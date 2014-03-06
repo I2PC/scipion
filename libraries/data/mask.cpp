@@ -1809,6 +1809,8 @@ void ProgMask::defineParams()
     addUsageLine("+ ");
     addUsageLine("+This utility also allows you to count the number of pixels/voxels in an image/volume");
     addUsageLine("+which are inside a given mask and whose value is below|above or both some threshold.");
+    addUsageLine("+ ");
+    addUsageLine("+See [[http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Transform_mask_v3][here]] for more information about the program.");
 
     addExampleLine("Sample at circular mask inside radius 72:", false);
     addExampleLine("xmipp_transform_mask  -i reference.vol -o output_volume.vol --mask circular -72");

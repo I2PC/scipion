@@ -75,7 +75,7 @@ void Basis::defineParams(XmippProgram * program, const char* prefix, const char*
     else
         sprintf(tempLine,"%s --basis <basis_type=blobs> ", prefix);
 
-    std::cerr << "DEBUG_JM: tempLine: " << tempLine << std::endl;
+    //std::cerr << "DEBUG_JM: tempLine: " << tempLine << std::endl;
 
 
     if (comment != NULL)
@@ -85,7 +85,7 @@ void Basis::defineParams(XmippProgram * program, const char* prefix, const char*
 
     program->addParamsLine(lineOut);
 
-    std::cerr << "DEBUG_JM: tempLine: " << lineOut << std::endl;
+    //std::cerr << "DEBUG_JM: tempLine: " << lineOut << std::endl;
 
     program->addParamsLine("    where <basis_type>");
     program->addParamsLine("      blobs <radius=2> <Bessel_order=2> <alpha_param=10.4> : Default blob parameters and grid relative size adjusted to use small blobs");

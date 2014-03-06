@@ -242,12 +242,6 @@ def assign_images_to_references(_log
     else:
         NumberOfCtfGroups = 1
 
-    #!a
-    #DocFileInputAngles  = DocFileInputAngles
-    #ProjMatchRootName   = ProjMatchRootName#
-    #NumberOfCtfGroups   = NumberOfCtfGroups
-    #NumberOfReferences  = NumberOfReferences
-    
     #first we need a list with the references used. That is,
     #read all docfiles and map referecendes to a mdl_order
     MDaux = MetaData()
@@ -285,7 +279,6 @@ def assign_images_to_references(_log
     if os.path.exists(outputdocfile):
         os.remove(outputdocfile)
         
-        
     MDout2 = MetaData()
     for iCTFGroup in range(1, NumberOfCtfGroups + 1):
         MDaux.clear()
@@ -314,6 +307,23 @@ def assign_images_to_references(_log
         MDout2.unionAll(MDout)
         
     MDout2.write(BlockWithAllExpImages + '@' + outputdocfile, MD_APPEND)
+    #Aggregate for ref3D and print warning if all images has been assigned to a single volume
+    #ROB
+    MD1.clear()
+    MD1.aggregate(MDout2, AGGR_COUNT, MDL_REF3D, MDL_REF3D, MDL_COUNT)
+    import sys
+    MD1_size = MD1.size()
+    if MD1_size !=NumberOfReferences:
+        print >> sys.stderr,"********************************************"
+        print >> sys.stderr,MD1
+        print >> sys.stderr,"ERROR: Some 3D references do not have assigned any projection assigned to them"
+        print >> sys.stderr,"Consider reducing the number of 3D references"
+        print >> sys.stderr,"Number of References:" ,NumberOfReferences
+        print >> sys.stderr,"Number of Empty references", NumberOfReferences - MD1_size
+        
+        sys.exit()
+
+
     #!a original_angles too
     
     #we are done but for the future it is convenient to create more blocks

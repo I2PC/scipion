@@ -82,6 +82,7 @@ public class GalleryData {
 	public boolean wrap;
 	// flag to check if is 2d classification
 	public boolean is2dClassification = false;
+	public int refLabel;
 	// Store the selection state for each item
 	public boolean[] selection;
 	// Array with all ClassInfo
@@ -574,17 +575,21 @@ public class GalleryData {
 	/** Return true if current metadata comes from 2d classification */
 	public boolean checkifIs2DClassificationMd() {
 		try {
-			if (!selectedBlock.startsWith("classes")
-					|| !(md.containsLabel(MDLabel.MDL_REF) && md
-							.containsLabel(MDLabel.MDL_CLASS_COUNT)))
+			boolean valid = selectedBlock.startsWith("classes") && 
+					(md.containsLabel(MDLabel.MDL_REF) || md.containsLabel(MDLabel.MDL_REF3D)) &&
+					 md.containsLabel(MDLabel.MDL_CLASS_COUNT);
+			
+			if (!valid)
 				return false;
+			
+			refLabel = md.containsLabel(MDLabel.MDL_REF) ? MDLabel.MDL_REF : MDLabel.MDL_REF3D;
+			
 			for (long id : ids) {
-				int ref = md.getValueInt(MDLabel.MDL_REF, id);
+				int ref = md.getValueInt(refLabel, id);
 				long count = md.getValueLong(MDLabel.MDL_CLASS_COUNT, id);
 				String s = Filename.getClassBlockName(ref);
 				if (count > 0 && !containsBlock(s)) {
-					// DEBUG.printFormat("2Dclass: for ref: %d, no block '%s'",
-					// ref, s);
+					 DEBUG.printFormat("2Dclass: for ref: %d, no block '%s'\n", ref, s);
 					return false;
 				}
 			}
@@ -783,7 +788,7 @@ public class GalleryData {
 	public MetaData getClassImages(int index) {
 		try {
 			long id = ids[index];
-			int ref = md.getValueInt(MDLabel.MDL_REF, id);
+			int ref = md.getValueInt(refLabel, id);
 			String blockName = Filename.getClassBlockName(ref);
 			if (containsBlock(blockName)) {
 				return new MetaData(blockName + Filename.SEPARATOR + filename);

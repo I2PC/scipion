@@ -27,7 +27,6 @@ from os.path import basename, splitext
 from protlib_xmipp import XmippScript
 from xmipp import MetaData, MDL_CTF_MODEL, MD_APPEND, MD_OVERWRITE, FileName,XmippError
 from protlib_emx import ctfMicXmippToEmx
-from emx.emxmapper import *
 from emx.emx import *
 from protlib_emx import emxMicsToXmipp, emxCoordsToXmipp, alignEMXToXmipp
 import sys
@@ -91,10 +90,11 @@ class ScriptImportEMX(XmippScript):
         #object to store emx data
         emxData = EmxData()
         #object to read/write emxData
-        mapper = XmlMapper(emxData)
+        ##mapper = XmlMapper(emxData)
         try:
             #read file
-            mapper.readEMXFile(emxFileName)
+            ##mapper.readEMXFile(emxFileName)
+            emxData.read(emxFileName)
             #create xmd files with mic CTF information and auxiliary files
             if mode == 'mic':
                 emxMicsToXmipp(emxData)
