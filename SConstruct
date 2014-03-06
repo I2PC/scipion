@@ -230,7 +230,7 @@ def addMpiToBashrc(mpiPath, type, shellType='bash', replace=False):
                     break
         if found != -1:
             if not replace:
-                lines[found] = (stringToSearch + separator + preserv + ':$' + stringToAppend + "\n")
+                lines[found] = (stringToSearch + separator + preserv + ':${' + stringToAppend + '}' + "\n")
                 lines[found] = (exportation + ' ' + stringToAppend + separator + mpiPath + "\n") + lines[found]
             else:
                 lines[found] = (stringToSearch+separator+mpiPath+"\n")
