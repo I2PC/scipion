@@ -696,7 +696,7 @@ class ProtUserSubSet(EMProtocol):
         self._setType = String(args.get('setType'))
     
     def getType(self):
-        return self._itemType.get()
+        return self._setType.get()
     
     
         
@@ -714,6 +714,16 @@ class ProtUserSubSet(EMProtocol):
    
     def getOutputSet(self):
         return getattr(self, 'output' + self._setType.get())
+    
+    def getInputSet(self):
+        inputsetpt = getattr(self, 'input' + self._setType.get())
+        return inputsetpt.get()
+    
+    def _summary(self):
+        summary = []
+        
+        summary.append("From input set of %s %s created subset of %s %s"%(self.getInputSet().getSize(), self.getType(), self.getOutputSet().getSize(), self.getType()))
+        return summary
 
 
 class ProtAlignClassify(EMProtocol):

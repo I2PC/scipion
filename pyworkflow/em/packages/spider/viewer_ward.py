@@ -29,7 +29,7 @@ This module implement the wrappers around xmipp_showj
 visualization program.
 """
 import Tkinter as tk
-from pyworkflow.em import ProtUserSelection
+from pyworkflow.em import ProtUserSubSet
 from pyworkflow.protocol.params import *
 from pyworkflow.viewer import Viewer, ProtocolViewer, DESKTOP_TKINTER, WEB_DJANGO
 from pyworkflow.utils.graph import Graph
@@ -148,23 +148,23 @@ class SpiderViewerWard(ProtocolViewer):
         try:
             selectedNodes = [node for node in self.graph.getNodes() if node.selected]
             suffix = 'Selection'
-            prot = ProtUserSelection()
-            prot.inputClasses = Pointer()
-            prot.inputClasses.set(self.protocol.outputClasses)
-            self.project._setupProtocol(prot)
+            prot = ProtUserSubSet(setType='Classes')
+            prot.createInputSet(self.protocol.outputClasses)
+            self._project._setupProtocol(prot)
             prot.makePathsAndClean()
-            classes = prot._createSetOfClasses2D(self.protocol.inputImages.get(), suffix)
+            classes = prot._createSetOfClasses2D(self.protocol.inputParticles.get(), suffix)
             averages = prot._createSetOfParticles(suffix)
             averages.copyInfo(self.protocol.outputClasses.getAverages())
             self.protocol._fillClassesFromNodes(classes, averages, selectedNodes)
-            prot._defineOutputs(outputSelection=classes)
+            prot.createOutputSet(classes)
             prot.setStatus(STATUS_FINISHED)
-            self.project._storeProtocol(prot)
+            self._project._storeProtocol(prot)
             #self.project.launchProtocol(prot, wait=True)
             self.win.showInfo("Protocol %s created. " % prot.getName())
         except Exception, ex:
-            self.win.showError(str(ex))
             
+            self.win.showError(str(ex))
+            raise
         
         
     def getVisualizeDictWeb(self):
