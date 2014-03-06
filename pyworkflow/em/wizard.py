@@ -24,7 +24,6 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
-from pyworkflow.em.data import Micrograph
 """
 This module implement some wizards
 """
@@ -37,6 +36,7 @@ from pyworkflow.em.convert import ImageHandler
 
 from pyworkflow.wizard import Wizard, DESKTOP_TKINTER, WEB_DJANGO
 from pyworkflow.em import SetOfImages, SetOfMicrographs, Volume, SetOfParticles, SetOfVolumes, ProtCTFMicrographs
+from pyworkflow.em.data import Micrograph
 
 import pyworkflow.gui.dialog as dialog
 from pyworkflow.gui.widgets import LabelSlider
@@ -45,7 +45,7 @@ from pyworkflow import findResource
 
 import xmipp
 
-class emWizard(Wizard):    
+class EmWizard(Wizard):    
     
     def _getMics(self, objs):
         return [mic.clone() for mic in objs]
@@ -113,7 +113,7 @@ class ListTreeProvider(TreeProvider):
         return os.path.basename(obj.getFileName())
 
 
-class downsampleWizard(emWizard):
+class downsampleWizard(EmWizard):
         
     def show(self, form, value, label, units=UNIT_PIXEL):
         protocol = form.protocol
@@ -135,7 +135,7 @@ class downsampleWizard(emWizard):
         return "wiz_downsampling"
         
     
-class ctfWizard(emWizard):
+class ctfWizard(EmWizard):
         
     def show(self, form, value, label, units=UNIT_PIXEL):
         protocol = form.protocol
@@ -159,7 +159,7 @@ class ctfWizard(emWizard):
     def getView(self):
         return "wiz_ctf"            
     
-class maskRadiusWizard(emWizard):
+class maskRadiusWizard(EmWizard):
         
     def show(self, form, value, label, units=UNIT_PIXEL):
         protocol = form.protocol
@@ -175,7 +175,7 @@ class maskRadiusWizard(emWizard):
         else:
             dialog.showWarning("Empty input", "Select elements first", form.root)
 
-class maskRadiiWizard(emWizard):
+class maskRadiiWizard(EmWizard):
     
     def show(self, form, value, label, units=UNIT_PIXEL):
         protocol = form.protocol
@@ -221,7 +221,7 @@ class volumeMaskRadiiWizard(maskRadiiWizard):
     def getView(self):
         return "wiz_volumes_mask_radii"   
 
-class filterWizard(emWizard):
+class filterWizard(EmWizard):
                 
     def show(self, form, value, label, mode, units=UNIT_PIXEL):
         protocol = form.protocol
@@ -287,7 +287,7 @@ class filterVolumesWizard(filterWizard):
     def getView(self):
         return "wiz_filter_volumes"  
     
-class gaussianWizard(emWizard):
+class gaussianWizard(EmWizard):
     
     def show(self, form, value, label, units=UNIT_PIXEL_FOURIER):
         protocol = form.protocol
