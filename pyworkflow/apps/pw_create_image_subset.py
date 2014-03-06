@@ -45,8 +45,7 @@ if __name__ == '__main__':
         readSetFun(mdfile, outputset, outputset.hasCTF())
     else:
         outputset = createSetFun(inputset)
-        readSetFun = getattr(xmipp3, 'readSetOf' + type )
-        
+        readSetFun = getattr(xmipp3, 'readSetOf' + type )       
         readSetFun(outputset, mdfile)
 
         
@@ -54,6 +53,9 @@ if __name__ == '__main__':
    
     prot.setStatus(STATUS_FINISHED)
     project._storeProtocol(prot)
+    
+    print "%s Subset created...\n(You may need to refresh the main window to visualize output)"%(type)
+  
     
     
     
