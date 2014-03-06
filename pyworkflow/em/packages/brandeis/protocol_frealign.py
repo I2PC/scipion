@@ -48,11 +48,11 @@ class ProtFrealign(ProtRefine3D):
                    '[[http://www.sciencedirect.com/science/article/pii/S1047847713001858][Lyumkis D, et. al, JSB (2013)]]'
                     ]
 
-
     def __init__(self, **args):
         ProtRefine3D.__init__(self, **args)
         self.stepsExecutionMode = STEPS_PARALLEL
 
+    #--------------------------- DEFINE param functions --------------------------------------------
     def _defineParams(self, form):
         form.addSection(label='Input')
 
@@ -365,6 +365,7 @@ class ProtFrealign(ProtRefine3D):
 
         form.addParallelSection(threads=1, mpi=1)
     
+    #--------------------------- INSERT steps functions --------------------------------------------
     def _insertAllSteps(self):
         """Insert the steps to refine orientations and shifts of the SetOfParticles
         """
@@ -378,6 +379,29 @@ class ProtFrealign(ProtRefine3D):
             depsRecons = [reconsId]
         self._insertFunctionStep("createOutput", prerequisites=depsRecons)
     
+    def _insertRefineIterStep(self, numberOfBlocks, iter, depsInitId):
+        """ execute the refinement for the current iteration """
+        
+        depsRefine = []
+        iterDir = self._iterWorkingDir(iter)
+        
+        if iter == 1:
+            if not self.useInitialAngles.get():
+                stepConstructId = self._insertFunctionStep("constructParamFilesStep", numberOfBlocks, iterDir, iter, prerequisites=depsInitId)
+                depsConstruct = [stepConstructId]
+                for block in range(1, numberOfBlocks + 1):
+                    refineId = self._insertFunctionStep("refineBlockStep", iterDir, block, prerequisites=depsConstruct)
+                    depsRefine.append(refineId)
+            else:
+                # ToDo: Construct the function to extract the coordinates and euler angles for each particle from SetOfParticles.
+                pass
+        else:
+            for block in range(1, numberOfBlocks + 1):
+                refineId = self._insertFunctionStep("refineParticlesStep", iter, block, prerequisites=depsInitId)
+                depsRefine.append(refineId)
+        return depsRefine
+    
+    #--------------------------- STEPS functions ---------------------------------------------------
     def initIterStep(self, iter, numberOfBlocks):
         """ Prepare files and directories for the current iteration """
         
@@ -402,61 +426,140 @@ class ProtFrealign(ProtRefine3D):
             self._splitParFile(iter, numberOfBlocks)
             copyFile(prevIterVol, refVol)   #Copy the reference volume as refined volume.
         copyFile(refVol, iterVol)   #Copy the reference volume as refined volume.
-        
-    def _insertRefineIterStep(self, numberOfBlocks, iter, depsInitId):
-        """ execute the refinement for the current iteration """
-        
-        depsRefine = []
-        iterDir = self._iterWorkingDir(iter)
-        
-        if iter == 1:
-            if not self.useInitialAngles.get():
-                stepConstructId = self._insertFunctionStep("constructParamFilesStep", numberOfBlocks, iterDir, iter, prerequisites=depsInitId)
-                depsConstruct = [stepConstructId]
-                for block in range(1, numberOfBlocks + 1):
-                    refineId = self._insertFunctionStep("refineBlockStep", iterDir, block, prerequisites=depsConstruct)
-                    depsRefine.append(refineId)
-            else:
-                # ToDo: Construct the function to extract the coordinates and euler angles for each particle from SetOfParticles.
-                pass
-        else:
-            for block in range(1, numberOfBlocks + 1):
-                refineId = self._insertFunctionStep("refineParticlesStep", iter, block, prerequisites=depsInitId)
-                depsRefine.append(refineId)
-        return depsRefine
     
-    def _particlesPerBlock(self, numberOfBlocks, numberOfParticles):
-        """ Return a list with numberOfBlocks values, each value will be
-        the number of particles assigned to each block. The number of particles
-        will be distributed equally between each block as possible.
+    def constructParamFilesStep(self, numberOfBlocks, iterDir, iter):
+        """ This function construct a parameter file (.par) with the information of the SetOfParticle.
+        This function will execute only in iteration 1.
         """
-        restBlock = numberOfParticles % numberOfBlocks
-        colBlock = numberOfParticles / numberOfBlocks
-        # Create a list with the number of particles assigned
-        # to each block, initially equally distributed
-        blockParticles = [colBlock] * numberOfBlocks
-        # Now assign the particles in the rest
-        for i, v in enumerate(blockParticles):
-            if i < restBlock:
-                blockParticles[i] += 1
-                
-        return blockParticles
         
-    def _particlesInBlock(self, block):
-        """calculate the initial and final particles that belongs to this block"""
+        self._enterDir(iterDir)
         
         imgSet = self.inputParticles.get()
-        numberOfBlocks = self.numberOfThreads.get()
-        
+        magnification = imgSet.getAcquisition().getMagnification()
         blockParticles = self._particlesPerBlock(numberOfBlocks, imgSet.getSize())
-        initPart = 0
+        initParamsDict = self._getParamsIteration(imgSet, iter)
+        params = {}
         lastPart = 0
-        for i in range(block):
-            initPart = lastPart + 1
-            lastPart = lastPart + blockParticles[i]
-        particlesInilast = [initPart, lastPart]
-        return particlesInilast
+        for block in range(numberOfBlocks):
+            more = 1
+            params['initParticle'] = 1 + lastPart
+            lastPart = lastPart + blockParticles[block]
+            params['finalParticle'] = lastPart
+            numberOfBlock = block + 1
+            params['frealignOut'] = 'frealign_Output_%02d.log' % numberOfBlock
+            paramDic = self._setParamsRefineParticles(iter, numberOfBlock)
+            paramsRefine = dict(initParamsDict.items() + params.items() + paramDic.items())
+            f = self.__openParamFile(block + 1, paramsRefine)
+            
+            # ToDo: Implement a better method to get the info particles. Now, you iterate several times over the SetOfParticles (as many threads as you have)
+            for i, img in enumerate(imgSet):
+                film = img.getObjId()
+                ctf = img.getCTF()
+                defocusU, defocusV, astig = ctf.getDefocusU(), ctf.getDefocusV(), ctf.getDefocusAngle()
+                partCounter = i + 1
+                
+                if partCounter == lastPart: # The last particle in the block
+                    more = 0
+                particleLine = '1, %05d,' % magnification + ' %05d,'% film + ' %05f,'% defocusU + ' %05f,'% defocusV + ' %02f,'% astig + ' %01d\n' % more
+                self.__writeParamParticle(f, particleLine)
+                
+                if more == 0: # close the block.
+                    self.__closeParamFile(f, paramsRefine)
+                    break
+        self._leaveDir()
+                
+    def refineBlockStep(self, iterDir, block):
+        """ This function execute the bash script for refine a subset(block) of images.
+        It will enter in the iteration dir and execute the script there. 
+        """
+        if block == 1:
+            self._enterDir(iterDir)
+            
+        program = "./block%03d.sh" % block
+        os.chmod(program, 0775)
+        self.runJob(program, "")
     
+    def refineParticlesStep(self, iter, block):
+        """Only refine the parameters of the SetOfParticles
+        """
+        
+        param = {}
+        imgSet = self.inputParticles.get()
+        
+        iterDir = self._iterWorkingDir(iter)
+        if block==1:
+            self._enterDir(iterDir) # enter to the working directory for the current iteration.
+        
+        iniPart, lastPart = self._particlesInBlock(block)
+        prevIter = iter - 1
+        param['inputParFn'] = 'particles_%02d_' % block + 'iter_%03d.par' % prevIter
+        param['initParticle'] = iniPart
+        param['finalParticle'] = lastPart
+        param['frealignOut'] = 'frealign_Output_%02d.log' % block
+
+        paramDic = self._setParamsRefineParticles(iter, block)
+        initParamsDict = self._getParamsIteration(imgSet, iter)
+        
+        paramsRefine = dict(initParamsDict.items() + paramDic.items() + param.items())
+        args = self._prepareCommand()
+        
+        # frealign program is already in the args script, that's why runJob('')
+        self.runJob('', args % paramsRefine)
+    
+    def reconstructVolumeStep(self, iter, numberOfBlocks):
+        """Reconstruct a volume from a SetOfParticles with its current parameters refined
+        """
+
+        imgSet = self.inputParticles.get()
+        self._mergeAllParFiles(iter, numberOfBlocks)  # merge all parameter files generated in a refineIterStep function.
+        
+        initParticle = 1
+        finalParticle = imgSet.getSize()
+        params = self._getParamsIteration(imgSet, iter)
+        
+        params['outputParFn'] = 'output_param_file_%06d' % initParticle + '_%06d_' % finalParticle + 'iter_%03d.par' % iter
+        params['initParticle'] = initParticle
+        params['finalParticle'] = finalParticle
+
+        params2 = self._setParams3DR(iter)
+        
+        params3DR = dict(params.items() + params2.items())
+        
+        args = self._prepareCommand()
+        # frealign program is already in the args script, that's why runJob('')
+        self.runJob('', args % params3DR)
+        self._leaveDir()
+    
+    def createOutput(self):
+        
+        lastIter = self.numberOfIterations.get()
+        lastIterDir = self._iterWorkingDir(lastIter)
+        volFn = join(lastIterDir, 'volume_iter_%03d.mrc' % lastIter)
+        vol = Volume()
+        vol.setSamplingRate(self.inputParticles.get().getSamplingRate())
+        vol.setFileName(volFn)
+        self._defineOutputs(outputVolume=vol)
+    
+    #--------------------------- INFO functions ----------------------------------------------------
+    def _validate(self):
+        errors = []
+        if not exists(FREALIGN_PATH):
+            errors.append('Missing ' + FREALIGN)
+        return errors
+    
+    def _summary(self):
+        summary = []
+        summary.append("Input particles:  %s" % self.inputParticles.get().getNameId())
+        summary.append("Input volumes:  %s" % self.input3DReferences.get().getNameId())
+        
+        if not hasattr(self, 'outputVolume'):
+            summary.append("Output volumes not ready yet.")
+        else:
+            summary.append("Output volumes: %s" % self.outputVolume.getNameId())
+        
+        return summary
+    
+    #--------------------------- UTILS functions ---------------------------------------------------
     def _getParamsIteration(self, imgSet, iter):
         """ Defining the current iteration
         """
@@ -612,6 +715,22 @@ class ProtFrealign(ProtRefine3D):
         
         return paramsDic
     
+    def _particlesPerBlock(self, numberOfBlocks, numberOfParticles):
+        """ Return a list with numberOfBlocks values, each value will be
+        the number of particles assigned to each block. The number of particles
+        will be distributed equally between each block as possible.
+        """
+        restBlock = numberOfParticles % numberOfBlocks
+        colBlock = numberOfParticles / numberOfBlocks
+        # Create a list with the number of particles assigned
+        # to each block, initially equally distributed
+        blockParticles = [colBlock] * numberOfBlocks
+        # Now assign the particles in the rest
+        for i, v in enumerate(blockParticles):
+            if i < restBlock:
+                blockParticles[i] += 1
+        return blockParticles
+        
     def _createIterWorkingDir(self, iter):
         """create a new directory for the iterarion and change to this directory.
         """
@@ -624,57 +743,21 @@ class ProtFrealign(ProtRefine3D):
         workDir = self._getExtraPath(iterDir)
         return workDir
 
-    def reconstructVolumeStep(self, iter, numberOfBlocks):
-        """Reconstruct a volume from a SetOfParticles with its current parameters refined
-        """
-
+    def _particlesInBlock(self, block):
+        """calculate the initial and final particles that belongs to this block"""
+        
         imgSet = self.inputParticles.get()
-        self._mergeAllParFiles(iter, numberOfBlocks)  # merge all parameter files generated in a refineIterStep function.
+        numberOfBlocks = self.numberOfThreads.get()
         
-        initParticle = 1
-        finalParticle = imgSet.getSize()
-        params = self._getParamsIteration(imgSet, iter)
-        
-        params['outputParFn'] = 'output_param_file_%06d' % initParticle + '_%06d_' % finalParticle + 'iter_%03d.par' % iter
-        params['initParticle'] = initParticle
-        params['finalParticle'] = finalParticle
-
-        params2 = self._setParams3DR(iter)
-        
-        params3DR = dict(params.items() + params2.items())
-        
-        args = self._prepareCommand()
-        # frealign program is already in the args script, that's why runJob('')
-        self.runJob('', args % params3DR)
-        self._leaveDir()
+        blockParticles = self._particlesPerBlock(numberOfBlocks, imgSet.getSize())
+        initPart = 0
+        lastPart = 0
+        for i in range(block):
+            initPart = lastPart + 1
+            lastPart = lastPart + blockParticles[i]
+        particlesInilast = [initPart, lastPart]
+        return particlesInilast
     
-    def refineParticlesStep(self, iter, block):
-        """Only refine the parameters of the SetOfParticles
-        """
-        
-        param = {}
-        imgSet = self.inputParticles.get()
-        
-        iterDir = self._iterWorkingDir(iter)
-        if block==1:
-            self._enterDir(iterDir) # enter to the working directory for the current iteration.
-        
-        iniPart, lastPart = self._particlesInBlock(block)
-        prevIter = iter - 1
-        param['inputParFn'] = 'particles_%02d_' % block + 'iter_%03d.par' % prevIter
-        param['initParticle'] = iniPart
-        param['finalParticle'] = lastPart
-        param['frealignOut'] = 'frealign_Output_%02d.log' % block
-
-        paramDic = self._setParamsRefineParticles(iter, block)
-        initParamsDict = self._getParamsIteration(imgSet, iter)
-        
-        paramsRefine = dict(initParamsDict.items() + paramDic.items() + param.items())
-        args = self._prepareCommand()
-        
-        # frealign program is already in the args script, that's why runJob('')
-        self.runJob('', args % paramsRefine)
-        
     def _setParamsRefineParticles(self, iter, block):
         paramDics = {}
         paramDics['stopParam'] = -100
@@ -746,62 +829,6 @@ eot
 """
         f.write(finaLines % paramsDict)
         f.close()
-        
-    def constructParamFilesStep(self, numberOfBlocks, iterDir, iter):
-        """ This function construct a parameter file (.par) with the information of the SetOfParticle.
-        This function will execute only in iteration 1.
-        """
-        
-        self._enterDir(iterDir)
-        
-        imgSet = self.inputParticles.get()
-        magnification = imgSet.getAcquisition().getMagnification()
-        blockParticles = self._particlesPerBlock(numberOfBlocks, imgSet.getSize())
-        initParamsDict = self._getParamsIteration(imgSet, iter)
-        params = {}
-        lastPart = 0
-        for block in range(numberOfBlocks):
-            more = 1
-            params['initParticle'] = 1 + lastPart
-            lastPart = lastPart + blockParticles[block]
-            params['finalParticle'] = lastPart
-            numberOfBlock = block + 1
-            params['frealignOut'] = 'frealign_Output_%02d.log' % numberOfBlock
-            paramDic = self._setParamsRefineParticles(iter, numberOfBlock)
-            paramsRefine = dict(initParamsDict.items() + params.items() + paramDic.items())
-            f = self.__openParamFile(block + 1, paramsRefine)
-            
-            # ToDo: Implement a better method to get the info particles. Now, you iterate several times over the SetOfParticles (as many threads as you have)
-            for i, img in enumerate(imgSet):
-                film = img.getObjId()
-                ctf = img.getCTF()
-                defocusU, defocusV, astig = ctf.getDefocusU(), ctf.getDefocusV(), ctf.getDefocusAngle()
-                partCounter = i + 1
-                
-                if partCounter == lastPart: # The last particle in the block
-                    more = 0
-                particleLine = '1, %05d,' % magnification + ' %05d,'% film + ' %05f,'% defocusU + ' %05f,'% defocusV + ' %02f,'% astig + ' %01d\n' % more
-                self.__writeParamParticle(f, particleLine)
-                
-                if more == 0: # close the block.
-                    self.__closeParamFile(f, paramsRefine)
-                    break
-        self._leaveDir()
-                
-    def refineBlockStep(self, iterDir, block):
-        """ This function execute the bash script for refine a subset(block) of images.
-        It will enter in the iteration dir and execute the script there. 
-        """
-        if block == 1:
-            self._enterDir(iterDir)
-            
-        # time.sleep(block)
-        program = "./block%03d.sh" % block
-        os.chmod(program, 0775)
-        self.runJob(program, "")
-        
-        
-        #self._leaveDir()
         
     def _prepareCommand(self):
         """ prepare the command to execute"""
@@ -883,31 +910,3 @@ eot
                             break
                 f2.close()
                 f1.close()
-    
-    def createOutput(self):
-        
-        lastIter = self.numberOfIterations.get()
-        lastIterDir = self._iterWorkingDir(lastIter)
-        volFn = join(lastIterDir, 'volume_iter_%03d.mrc' % lastIter)
-        vol = Volume()
-        vol.setSamplingRate(self.inputParticles.get().getSamplingRate())
-        vol.setFileName(volFn)
-        self._defineOutputs(outputVolume=vol)
-        
-    def _validate(self):
-        errors = []
-        if not exists(FREALIGN_PATH):
-            errors.append('Missing ' + FREALIGN)
-        return errors
-    
-    def _summary(self):
-        summary = []
-        summary.append("Input particles:  %s" % self.inputParticles.get().getNameId())
-        summary.append("Input volumes:  %s" % self.input3DReferences.get().getNameId())
-        
-        if not hasattr(self, 'outputVolume'):
-            summary.append("Output volumes not ready yet.")
-        else:
-            summary.append("Output volumes: %s" % self.outputVolume.getNameId())
-        
-        return summary
