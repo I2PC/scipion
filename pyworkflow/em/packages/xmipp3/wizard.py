@@ -51,9 +51,7 @@ class XmippDownsampleWizard(downsampleWizard):
     
 class XmippCTFWizard(ctfWizard):
     _targets = [(ProtCTFMicrographs, ['lowRes', 'highRes'])]
-            
-#class XmippMaskRadiusWizard(maskRadiusWizard):
-#    pass
+
 
 class XmippParticleMaskRadiusWizard(particleMaskRadiusWizard):
     _targets = [(XmippProtMaskParticles, ['radius'])]
@@ -76,8 +74,8 @@ class XmippVolumeMaskRadiusWizard(volumeMaskRadiusWizard):
         return volumeMaskRadiusWizard._getProvider(self, protocol, _objs)
     
     def show(self, form):
-        _value = form.protocol.radius.get()
         _label = "radius"
+        _value = form.protocol.radius.get()
         volumeMaskRadiusWizard.show(self, form, _value, _label, UNIT_PIXEL)
  
  

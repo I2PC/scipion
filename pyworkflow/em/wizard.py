@@ -211,30 +211,48 @@ class filterWizard(Wizard):
 
         if provider is not None:
             self.mode = mode
-            args = {'mode':  self.mode,                   
-                    'lowFreq': value[0],
-                    'highFreq': value[1],
-                    'freqDecay': value[2],
-                    'unit': UNIT_PIXEL_FOURIER
-                    }
+            args = {'mode':  self.mode,
+                    'unit': units}
+            
             if self.mode == FILTER_LOW_PASS:
-                args['showLowFreq'] = False
+                args['showLowFreq'] = False                
+                args['highFreq'] = value[1]
+                args['freqDecay'] = value[2]
             elif self.mode == FILTER_HIGH_PASS:
                 args['showHighFreq'] = False
+                args ['lowFreq'] = value[0]
+                args ['freqDecay'] = value[2]
+            elif self.mode == FILTER_BAND_PASS:
+                args['lowFreq'] = value[0]
+                args['highFreq'] = value[1]
+                args['freqDecay'] = value[2]
             elif self.mode == FILTER_LOW_PASS_NO_DECAY:
                 args['showLowFreq'] = False
                 args['showDecay'] = False
-            elif self.mode == FILTER_BAND_PASS:
-                pass
+                args['highFreq'] = value[1]
+            elif self.mode == FILTER_NO_DECAY:
+                args['lowFreq'] = value[0]
+                args['highFreq'] = value[1]
+                args['showDecay'] = False
             else:
                 print "Not Mode"
                 
             d = bandPassFilterDialog(form.root, provider, **args)
             
             if d.resultYes():
-                form.setVar(label[0], d.getLowFreq())
-                form.setVar(label[1], d.getHighFreq())
-                form.setVar(label[2], d.getFreqDecay())
+                lowFreq = d.getLowFreq() 
+                highFreq = d.getHighFreq()
+                decayFreq = d.getFreqDecay() 
+                
+                if units == UNIT_ANGSTROM:
+                    itemDim = d.itemDim
+                    lowFreq = 1/lowFreq * itemDim
+                    highFreq = 1/highFreq * itemDim
+                    decayFreq = 1/decayFreq * itemDim
+                    
+                form.setVar(label[0], lowFreq)
+                form.setVar(label[1], highFreq)
+                form.setVar(label[2], decayFreq)
         else:
             dialog.showWarning("Empty input", "Select elements first", form.root)
             

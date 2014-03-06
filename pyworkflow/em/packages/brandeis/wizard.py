@@ -41,88 +41,83 @@ from protocol_frealign import ProtFrealign
 from pyworkflow import findResource
 
 
-# class FrealignRadiiWizard(radiiWizard):
-#     _targets = [(ProtFrealign, ['innerRadius', 'outerRadius'])]
-#     
-#     def _getProvider(self, protocol):
-#         """ This should be implemented to return the list
-#         of object to be displayed in the tree.
-#         """
-#         if protocol.input3DReferences.hasValue():
-#             vols = []
-#             vols.append(protocol.input3DReferences.get().clone())
-#             return ListTreeProvider(vols)
-#         return None
-# 
-# 
-# class FrealignBandpassWizard(bandpassParticleWizard):
-#     _targets = [(ProtFrealign, ['lowResolRefine', 'highResolRefine'])]
-#     
-#     def show(self, form):
-#         protocol = form.protocol
-#         provider = self._getProvider(protocol)
-# 
-#         if provider is not None:
-#             self.mode = FILTER_LOW_PASS_NO_DECAY
-#             
-#             args = {'mode':  self.mode,                   
-#                     'highFreq': protocol.highResolRefine.get(),
-#                     'lowFreq': protocol.lowResolRefine.get(),
-#                     'unit': UNIT_ANGSTROM
-#                     }
-#             
-#             args['showDecay'] = False
-# 
-#             d = bandPassFilterDialog(form.root, provider, **args)
-#             
-#             if d.resultYes():               
-#                 
-#                 form.setVar('highResolRefine', 1/d.getHighFreq()*d.itemDim)
-#                 form.setVar('lowResolRefine', 1/d.getLowFreq()*d.itemDim)
-#                 
-#         else:
-#             dialog.showWarning("Input particles", "Select particles first", form.root)  
-# 
-# class FrealignVolBandpassWizard(bandpassVolumesWizard):
-#     _targets = [(ProtFrealign, ['resolution'])]
-#     
-#     def _getProvider(self, protocol):
-#         """ This should be implemented to return the list
-#         of object to be displayed in the tree.
-#         """
-#         if protocol.input3DReferences.hasValue():
-#             vols = []
-#             vols.append(protocol.input3DReferences.get().clone())
-#             return ListTreeProvider(vols)
-#         return None
-#     
-#     def show(self, form):
-#         protocol = form.protocol
-#         provider = self._getProvider(protocol)
-# 
-#         if provider is not None:
-#             self.mode = FILTER_LOW_PASS_NO_DECAY
-#             
-#             args = {'mode':  self.mode,                   
-#                     'lowFreq': protocol.resolution.get(),
-#                     'unit': UNIT_ANGSTROM
-#                     }
-#             
-#             args['showHighFreq'] = False
-#             args['showDecay'] = False
-# 
-#             d = bandPassFilterDialog(form.root, provider, **args)
-#             
-#             if d.resultYes():
-# #                print "SAMPLING RATE !!", d.samplingRate
-# #                print "ITEM DIM !!", d.itemDim
-# #                1/self.hfSlider.get()*self.itemDim 
-#                 
-#                 form.setVar('resolution', 1/d.getLowFreq()*d.itemDim)
-#                 
-#         else:
-#             dialog.showWarning("Input volumes", "Select volumes first", form.root)  
-#     
-#     @classmethod    
-#     def getView(self):
-#         return "wiz_volume_bandpass"   
+class FrealignVolRadiiWizard(volumeMaskRadiiWizard):
+    _targets = [(ProtFrealign, ['innerRadius', 'outerRadius'])]
+    
+    def _getProvider(self, protocol):
+        _objs = protocol.input3DReferences.get()    
+        return volumeMaskRadiiWizard._getProvider(self, protocol, _objs)
+    
+    def show(self, form):
+        _value = [form.protocol.innerRadius.get(), form.protocol.outerRadius.get()]
+        _label = ["innerRadius", "outerRadius"]
+        volumeMaskRadiiWizard.show(self, form, _value, _label, UNIT_PIXEL)
+
+ 
+class FrealignBandpassWizard(filterParticlesWizard):
+    _targets = [(ProtFrealign, ['lowResolRefine', 'highResolRefine'])]
+    
+    def _getProvider(self, protocol):
+        _objs = protocol.inputParticles.get()
+        return filterParticlesWizard._getProvider(self, protocol, _objs)
+    
+    def show(self, form):
+        protocol = form.protocol
+        provider = self._getProvider(protocol)
+
+        if provider is not None:
+            self.mode = FILTER_LOW_PASS_NO_DECAY
+            
+            args = {'mode':  self.mode,                   
+                    'highFreq': protocol.highResolRefine.get(),
+                    'lowFreq': protocol.lowResolRefine.get(),
+                    'unit': UNIT_ANGSTROM
+                    }
+            
+            args['showDecay'] = False
+
+            d = bandPassFilterDialog(form.root, provider, **args)
+            
+            if d.resultYes():               
+                form.setVar('highResolRefine', 1/d.getHighFreq()*d.itemDim)
+                form.setVar('lowResolRefine', 1/d.getLowFreq()*d.itemDim)
+                
+        else:
+            dialog.showWarning("Input particles", "Select particles first", form.root)  
+ 
+ 
+class FrealignVolBandpassWizard(filterVolumesWizard):
+    _targets = [(ProtFrealign, ['resolution'])]
+    
+    def _getProvider(self, protocol):
+        _objs = protocol.input3DReferences.get()    
+        return filterVolumesWizard._getProvider(self, protocol, _objs)
+    
+    def show(self, form):
+        protocol = form.protocol
+        provider = self._getProvider(protocol)
+
+        if provider is not None:
+            self.mode = FILTER_LOW_PASS_NO_DECAY
+            
+            args = {'mode':  self.mode,                   
+                    'lowFreq': protocol.resolution.get(),
+                    'unit': UNIT_ANGSTROM
+                    }
+            
+            args['showHighFreq'] = False
+            args['showDecay'] = False
+
+            d = bandPassFilterDialog(form.root, provider, **args)
+            
+            if d.resultYes():
+#                print "SAMPLING RATE !!", d.samplingRate
+#                print "ITEM DIM !!", d.itemDim
+#                1/self.hfSlider.get()*self.itemDim 
+                
+                form.setVar('resolution', 1/d.getLowFreq()*d.itemDim)
+                
+        else:
+            dialog.showWarning("Input volumes", "Select volumes first", form.root)  
+    
+    

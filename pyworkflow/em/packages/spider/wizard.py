@@ -45,62 +45,62 @@ from pyworkflow.gui.widgets import LabelSlider
 from spider import SpiderShell
 from convert import locationToSpider
 
-# class SpiderProtMaskWizard(particleMaskRadiusWizard):
-#     _targets = [(SpiderProtCAPCA, ['maskRadius'])]
-#          
-#     
-# class SpiderProtMaskRadiiWizard(radiiWizard):
-#     _targets = [(SpiderProtAlignAPSR, ['innerRadius', 'outerRadius'])]    
-# 
-#     def _getText(self, obj):
-#         index = obj.getIndex()
-#         text = os.path.basename(obj.getFileName())
-#         if index:
-#             return "%03d@%s" % (index, text)
-#         return text
-#         
-#     def _getProvider(self, protocol):
-#         """ This should be implemented to return the list
-#         of object to be displayed in the tree.
-#         """
-#         provider = None
-#         if protocol.inputParticles.hasValue():
-#             particles = [] 
-#             for i, par in enumerate(protocol.inputParticles.get()):
-#                 particles.append(par)
-#                 if i == 100: # Limit the maximum number of particles to display
-#                     break
-#             provider = ListTreeProvider(particles)
-#             provider.getText = self._getText
-#             
-#         return provider
-# 
-#     
-# 
-# class SpiderFilterWizard(filterParticlesWizard):    
-#     _targets = [(SpiderProtFilter, ['filterRadius', 'lowFreq', 'highFreq', 'temperature'])]
-#     
-#     def show(self, form):
-#         protocol = form.protocol
-#         provider = self._getProvider(protocol)
-# 
-#         if provider is not None:
-#             d = SpiderFilterDialog(form.root, provider, 
-#                                           protocolParent=protocol)
-#             if d.resultYes():
-#                 if protocol.filterType <= FILTER_GAUSSIAN:
-#                     form.setVar('filterRadius', d.getRadius())
-#                 else:
-#                     form.setVar('lowFreq', d.getLowFreq())
-#                     form.setVar('highFreq', d.getHighFreq())
-#                     if protocol.filterType == FILTER_FERMI:
-#                         form.setVar('temperature', d.getTemperature())
-#         else:
-#             dialog.showWarning("Input particles", "Select particles first", form.root)  
-#     
-#     @classmethod    
-#     def getView(self):
-#         return "wiz_filter_spider"
+
+class SpiderProtMaskWizard(particleMaskRadiusWizard):
+    _targets = [(SpiderProtCAPCA, ['maskRadius'])]
+    
+    def _getProvider(self, protocol):
+        _objs = protocol.inputParticles.get()
+        return particleMaskRadiusWizard._getProvider(self, protocol, _objs)
+    
+    def show(self, form):
+        _value = form.protocol.maskRadius.get()
+        _label = "maskRadius"
+        particleMaskRadiusWizard.show(self, form, _value, _label, UNIT_PIXEL)
+    
+    
+class SpiderParticlesMaskRadiiWizard(particlesMaskRadiiWizard):
+    _targets = [(SpiderProtAlignAPSR, ['innerRadius', 'outerRadius'])]        
+    
+    def _getProvider(self, protocol):
+        _objs = protocol.inputParticles.get()
+        return particlesMaskRadiiWizard._getProvider(self, protocol, _objs)
+    
+    def show(self, form):
+        _value = [form.protocol.innerRadius.get(), form.protocol.outerRadius.get()]
+        _label = ["innerRadius", "outerRadius"]
+        particlesMaskRadiiWizard.show(self, form, _value, _label, UNIT_PIXEL)
+    
+
+class SpiderFilterParticlesWizard(filterParticlesWizard):    
+    _targets = [(SpiderProtFilter, ['filterRadius', 'lowFreq', 'highFreq', 'temperature'])]
+    
+    def _getProvider(self, protocol):
+        _objs = protocol.inputParticles.get()
+        return filterParticlesWizard._getProvider(self, protocol, _objs)
+    
+    def show(self, form):
+        protocol = form.protocol
+        provider = self._getProvider(protocol)
+
+        if provider is not None:
+            d = SpiderFilterDialog(form.root, provider, 
+                                          protocolParent=protocol)
+            if d.resultYes():
+                if protocol.filterType <= FILTER_GAUSSIAN:
+                    form.setVar('filterRadius', d.getRadius())
+                else:
+                    form.setVar('lowFreq', d.getLowFreq())
+                    form.setVar('highFreq', d.getHighFreq())
+                    if protocol.filterType == FILTER_FERMI:
+                        form.setVar('temperature', d.getTemperature())
+        else:
+            dialog.showWarning("Input particles", "Select particles first", form.root)  
+    
+    
+    @classmethod    
+    def getView(self):
+        return "wiz_filter_spider"
 
 
 #--------------- Dialogs used by Wizards --------------------------        
