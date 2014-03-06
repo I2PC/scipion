@@ -13,7 +13,6 @@ import math
 
 import xmipp
 from emx import *
-from emx.emxmapper import *
 
 from protlib_base import *
 from protlib_filesystem import replaceBasenameExt, renameFile, copyFile
@@ -36,12 +35,16 @@ class ProtEmxExportMicrographs(XmippProtocol):
         
     def defineSteps(self):
         emxDir = self.getFilename('emxDir')
-        self.insertStep("createDir", verifyfiles=[emxDir], 
+        emxFile = join(emxDir, 'micrographs.emx')
+        self.insertStep("createDir", 
+                        verifyfiles=[emxDir], 
                         path=emxDir)
         
         emxMicrographs = join(emxDir, 'micrographs.emx')
-        self.insertStep("exportMicrographs", verifyfiles=[emxMicrographs],
-                        emxDir=emxDir, inputMd=self.MicrographsMd,
+        self.insertStep("exportMicrographs", 
+                        verifyfiles=[emxMicrographs],
+                        emxDir=emxDir, 
+                        inputMd=self.MicrographsMd,
                         )
         
     def validate(self):
@@ -50,12 +53,21 @@ class ProtEmxExportMicrographs(XmippProtocol):
         return errors
 
     def summary(self):
-        summary = ['Images to export: [%s]' % self.MicrographsMd,
-                   ]
-        return summary
+        emxDir = self.getFilename('emxDir')
+        emxFile = join(emxDir, 'micrographs.emx')
+        message=[]
+        message.append ('Images to export: [%s]' % self.MicrographsMd)
+        if os.path.exists(emxFile):
+            message.append ('EMX file: [%s]' % emxFile)
+            message.append ('Directory with Binary files: [%s]' % emxDir)
+        return message
     
     def visualize(self):
-        pass
+        emxDir = self.getFilename('emxDir')
+        emxFile = join(emxDir, 'micrographs.emx')
+        if os.path.exists(emxFile):
+            from protlib_gui_ext import showTextfileViewer
+            showTextfileViewer(emxFile,[emxFile])
 
 
 

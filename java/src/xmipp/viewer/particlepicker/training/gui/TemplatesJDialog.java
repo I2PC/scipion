@@ -13,26 +13,25 @@ import xmipp.utils.XmippWindowUtil;
 public class TemplatesJDialog extends JDialog
 {
 
-	protected SingleParticlePickerJFrame frame;
+	protected SupervisedParticlePickerJFrame frame;
 	protected JPanel templatespn;
 	protected int width, height;
 
-	public TemplatesJDialog(SingleParticlePickerJFrame frame)
+	public TemplatesJDialog(SupervisedParticlePickerJFrame frame)
 	{
 		super(frame);
 		this.frame = frame;
 		initComponents();
 	}
 
-	public synchronized void loadTemplates(boolean resize)
+	public void loadTemplates(boolean resize)
 	{
 		try
 		{
 			ImageGeneric templates = frame.getParticlePicker().getTemplates();
 			int size = frame.getParticlePicker().getSize();
 			templatespn.removeAll();
-//			if (!frame.getParticlePicker().hasManualParticles())
-				templatespn.setPreferredSize(new Dimension((int) (size * templates.getNDim()  + 20), size + 5));
+			templatespn.setPreferredSize(new Dimension((int) (size * templates.getNDim()  + 20), size + 5));
 			if(frame.getParticlePicker().hasManualParticles())
 			{
 				ImagePlus template;

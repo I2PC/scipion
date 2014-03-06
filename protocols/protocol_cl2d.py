@@ -149,6 +149,8 @@ def postCl2d(log, WorkingDir, NumberOfReferences):
 def sortClasses(log,ExtraDir,Nproc,suffix):
     if Nproc==1:
         Nproc=2
+    if Nproc>8:
+        Nproc=8
     for filename in glob.glob(os.path.join(ExtraDir,"level_??/level_classes%s.xmd"%suffix)):
         level=int(re.search('level_(\d\d)',filename).group(1))
         fnRoot=os.path.join(ExtraDir,"level_%02d/level_classes%s_sorted"%(level,suffix))

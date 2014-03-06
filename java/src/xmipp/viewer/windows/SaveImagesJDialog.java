@@ -78,17 +78,11 @@ public class SaveImagesJDialog extends SaveJDialog {
 
 	@Override
 	protected void createContent(JPanel panel) {
-//		setResizable(false);
-//		panel.setLayout(new GridBagLayout());
-//		gbc.insets = new Insets(5, 5, 5, 5);
 		super.createContent(panel);
 		imagesMd = gallery.data.getImagesFromClassSelection();
-		//gbc.anchor = GridBagConstraints.EAST;
 		String text = String.format("<html>You are about to save <font color='red'>%d</font> images from <font color='red'>%d</font> classes.",
 				imagesMd.size(), gallery.data.getSelectionCount());
 		panel.add(new JLabel(text), XmippWindowUtil.getConstraints(gbc, 0, 1, 2));
-		//textField = new JTextField("images_selection.xmd", 25);
-		//panel.add(textField, XmippWindowUtil.getConstraints(gbc, 0, 1, 2));
 	}// function initComponents
 	
 	@Override
@@ -107,6 +101,4 @@ public class SaveImagesJDialog extends SaveJDialog {
 	public void handleCancel(){
 		imagesMd.destroy();
 	}
-	
-
 }// class ColumnsJDialog

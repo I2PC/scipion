@@ -9,10 +9,10 @@ public class UpdateTemplatesTask extends SwingWorker<String, Object>
 {
 
 	private static TemplatesJDialog dialog;
-	private SingleParticlePicker picker;
+	private SupervisedParticlePicker picker;
 	private int num;
 
-	public UpdateTemplatesTask(SingleParticlePicker picker, int num)
+	public UpdateTemplatesTask(SupervisedParticlePicker picker, int num)
 	{
 		this.picker = picker;
 		this.num = num;
@@ -31,6 +31,7 @@ public class UpdateTemplatesTask extends SwingWorker<String, Object>
 		try
 		{
 			picker.updateTemplates(num);
+                        System.out.println("UpdateTemplates doInBackground() esta en el hilo " + Thread.currentThread().getName());
 			
 		}
 		catch (Exception e)

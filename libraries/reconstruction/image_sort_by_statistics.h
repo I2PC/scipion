@@ -63,7 +63,7 @@ public:
     //and minor axis. Also a other coarser descriptor based on the image histogram is used to detect outliers. Additionaly,
     //the centroid of the normalized image (SPT) is used as a descriptor but with a very low weight in the zScore
     //JavierVargas : September 2012 BCU
-    void processInprocessInputPrepareSPTH(MetaData &SF);
+    void processInprocessInputPrepareSPTH(MetaData &SF, bool trained);
 
     void run();
 };

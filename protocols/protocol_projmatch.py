@@ -69,10 +69,12 @@ class ProtProjMatch(XmippProtocol):
             self.DocFileName = self.SelFileName
         #sampling is now in acquisition info
         #self.ResolSam=float(self.ResolSam)
-        acquisionInfo = self.findAcquisitionInfo(self.SelFileName)
+        acquisionInfo = self.findAcquisitionInfo(self.SelFileNameInitial)
         if not acquisionInfo is None: 
             md = MetaData(acquisionInfo)
             self.ResolSam = md.getValue(MDL_SAMPLINGRATE, md.firstObject())
+        else:
+            self.ResolSam = 1
         if self.MaskRadius == -1:
            (Xdim, Ydim, Zdim, Ndim) = getImageSize(self.ReferenceFileNames[0])
            self.MaskRadius = Xdim/2
@@ -231,6 +233,7 @@ data_noname
                            , 'PlotHistogramAngularMovement'
                            , 'DisplayAngularDistribution'
                            , 'DisplayResolutionPlots'
+                           , 'DisplayExperimentalImages'
                            ] if self.ParamsDict[k]]
         if len(plots):
             self.launchProjmatchPlots(plots)
@@ -290,7 +293,7 @@ data_noname
             for ref3d in ref3Ds:
                 for it in iterations:
                     file_name = self.getFilename('ReconstructedFileNamesIters', iter=it, ref=ref3d)
-                    #print 'it: ',it, ' | file_name:',file_name
+                    print 'it: ',it, ' | file_name:',file_name
                     if xmippExists(file_name):
                         #Chimera
                         if(self.DisplayVolumeSlicesAlong == 'surface'):
@@ -405,6 +408,16 @@ data_noname
                                 runShowJ(file_name, extraParams = runShowJExtraParameters)
                             except Exception, e:
                                 showError("Error launching java app", str(e), self.master)
+
+        if doPlot('DisplayExperimentalImages'):
+            for ref3d in ref3Ds:
+                for it in iterations:
+                    file_name = "ctfGroup[0-9][0-9][0-9][0-9][0-9][0-9]@"+self.getFilename('DocfileInputAnglesIters', iter=it)
+                    if xmippExists(file_name):
+                        try:
+                            runShowJ(file_name, extraParams = runShowJExtraParameters)
+                        except Exception, e:
+                            showError("Error launching java app", str(e), self.master)
         
         if doPlot('DisplayProjectionMatchingLibraryAndClasses'):       
         #map stack position with ref number

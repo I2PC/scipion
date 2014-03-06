@@ -487,15 +487,9 @@ public class MetaData {
 	 */
 	public native void readPlain(String file, String columns);
 
-	/**
-	 * Write the images on metadata to some location
-	 * 
-	 * @param output Stack name or prefix, depending on indepent param
-	 * @param independent if False write images to stack, if True using a prefix
-	 * @param image_label Which label have the images to write @
-	 */
-	public native void writeImages(String output, boolean independent,
-			int image_label);
+
+        
+        
 	
 	/**
 	 * Operate directly in metadata

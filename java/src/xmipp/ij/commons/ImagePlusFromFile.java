@@ -48,15 +48,29 @@ public class ImagePlusFromFile extends ImagePlusReader{
 			if (ig == null || hasChanged())
                         {
                             ig = new ImageGeneric(fileName);//to read again file
-                            
-                        }
                             if(index == -1)
                                 imp = XmippImageConverter.readToImagePlus(ig);
                             else 
                             {
+                                if(ig.isStack())
+                                    imp = XmippImageConverter.readToImagePlus(ig, index);
+                                else
+                                    imp = XmippImageConverter.readToImagePlus(ig, (int)index);//read slice
+                            }
+                        }
+                        else if(ig != null)
+                        {
                             
-                             imp = XmippImageConverter.readToImagePlus(ig, index);//reading 
+                             if(index == -1)
+                                imp = XmippImageConverter.convertToImagePlus(ig);
+                            else 
+                             {
+                                 if(ig.isStack())
+                                    imp = XmippImageConverter.convertToImagePlus(ig, ImageGeneric.FIRST_IMAGE, (int)index);
+                                else
+                                    imp = XmippImageConverter.convertToImagePlus(ig, ImageGeneric.FIRST_IMAGE, (int)index);//read slice
                              }
+                        }
                             
                         
 			

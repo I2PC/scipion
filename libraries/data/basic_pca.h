@@ -130,7 +130,7 @@ public:
      * NPCA is the dimension of the dimensionally reduced vectors before Mahalanobis
      * Niter is used to learn the PCA basis (typically, Niter=10).
      */
-    void evaluateZScore(int NPCA, int Niter);
+    void evaluateZScore(int NPCA, int Niter, bool trained=false);
 
     /** Get the Zscore of vector n */
     inline double getZscore(int n)
