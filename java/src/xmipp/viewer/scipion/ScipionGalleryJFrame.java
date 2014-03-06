@@ -19,6 +19,7 @@ import javax.swing.UIManager;
 import xmipp.ij.commons.XmippUtil;
 import xmipp.jni.MetaData;
 import xmipp.utils.Param;
+import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippWindowUtil;
 import xmipp.viewer.particlepicker.training.model.SupervisedParticlePicker;
 import xmipp.viewer.windows.GalleryJFrame;
@@ -99,14 +100,14 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
     
     protected void runCommand(final String command)
     {
-        XmippWindowUtil.blockGUI(ScipionGalleryJFrame.this, "Creating set ...(You may need to refresh the main window to visualize output)");
+        XmippWindowUtil.blockGUI(ScipionGalleryJFrame.this, "Creating set ...");
         new Thread(new Runnable() {
 
             @Override
             public void run() {
 
                 try {
-                    XmippUtil.executeCommand(command);
+                    String output = XmippUtil.executeCommand(command);
                     XmippWindowUtil.releaseGUI(ScipionGalleryJFrame.this.getRootPane());
                     
                 } catch (Exception ex) {

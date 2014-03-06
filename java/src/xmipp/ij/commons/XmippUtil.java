@@ -59,7 +59,7 @@ public class XmippUtil {
 		return icon;
 	}
         
-        public static void executeCommand(String command) throws Exception {
+        public static String executeCommand(String command) throws Exception {
 
             //System.out.println(command);
             StringBuffer output = new StringBuffer();
@@ -71,17 +71,17 @@ public class XmippUtil {
             BufferedReader reader
                     = new BufferedReader(new InputStreamReader(p.getInputStream()));
 
-            output.append("Output\n");
+           
             String line = "";
             while ((line = reader.readLine()) != null) {
                 output.append(line + "\n");
             }
             reader = new BufferedReader(new InputStreamReader(p.getErrorStream()));
-            output.append("Error\n");
+            
             while ((line = reader.readLine()) != null) {
                 output.append(line + "\n");
             }
-            //System.out.println(output.toString());
+            return output.toString();
         }
 
 
