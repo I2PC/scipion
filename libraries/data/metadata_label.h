@@ -240,10 +240,13 @@ enum MDLabel
     MDL_NEIGHBOR, ///< Particular neighbor (pointed myNEIGHBORS)
     MDL_NEIGHBORHOOD_RADIUS, ///< Radius of the neigborhood (radians)
     MDL_NMA, ///< Normal mode displacements (vector double)
-    MDL_NMA_MODEFILE, ///< File with an NMA mode
     MDL_NMA_COLLECTIVITY, ///< NMA Collectivity of a given mode
-    MDL_NMA_SCORE, ///< NMA Score of a given mode
     MDL_NMA_ATOMSHIFT, ///< NMA Atom shift in Angstroms
+    MDL_NMA_ENERGY, ///< NMA energy contained in the NMA displacement vector
+    MDL_NMA_MINRANGE, ///< Minimum value observed for a given NMA mode
+    MDL_NMA_MAXRANGE, ///< Maximum value observed for a given NMA mode
+    MDL_NMA_MODEFILE, ///< File with an NMA mode
+    MDL_NMA_SCORE, ///< NMA Score of a given mode
     MDL_NOISE_ANGLES, ///< Noise description for projected angles
     MDL_NOISE_PARTICLE_COORD, ///< Noise description for particle's center coordenates (when projecting)
     MDL_NOISE_COORD,  //Use instead of MDL_NOISE_PARTICLE_COORD in future
@@ -1015,11 +1018,14 @@ private:
         MDL::addLabel(MDL_NEIGHBORS, LABEL_VECTOR_SIZET, "neighbors");
         MDL::addLabel(MDL_NMA, LABEL_VECTOR_DOUBLE, "nmaDisplacements");
         MDL::addLabelAlias(MDL_NMA, "NMADisplacements");//3.0
+        MDL::addLabel(MDL_NMA_ATOMSHIFT, LABEL_DOUBLE, "nmaAtomShift");
+        MDL::addLabel(MDL_NMA_COLLECTIVITY, LABEL_DOUBLE, "nmaCollectivity");
+        MDL::addLabel(MDL_NMA_ENERGY, LABEL_DOUBLE, "nmaEnergy");
+        MDL::addLabel(MDL_NMA_MINRANGE, LABEL_DOUBLE, "nmaMin");
+        MDL::addLabel(MDL_NMA_MAXRANGE, LABEL_DOUBLE, "nmaMax");
         MDL::addLabel(MDL_NMA_MODEFILE, LABEL_STRING, "nmaModefile", TAGLABEL_TEXTFILE);
         MDL::addLabelAlias(MDL_NMA_MODEFILE, "NMAModefile");//3.0
-        MDL::addLabel(MDL_NMA_COLLECTIVITY, LABEL_DOUBLE, "nmaCollectivity");
         MDL::addLabel(MDL_NMA_SCORE, LABEL_DOUBLE, "nmaScore");
-        MDL::addLabel(MDL_NMA_ATOMSHIFT, LABEL_DOUBLE, "nmaAtomShift");
         MDL::addLabel(MDL_NOISE_ANGLES, LABEL_VECTOR_DOUBLE, "noiseAngles");
         MDL::addLabel(MDL_NOISE_COORD, LABEL_VECTOR_DOUBLE, "noiseCoord");
         MDL::addLabel(MDL_NOISE_PARTICLE_COORD, LABEL_VECTOR_DOUBLE, "noiseParticleCoord");
