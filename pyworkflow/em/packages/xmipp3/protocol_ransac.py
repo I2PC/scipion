@@ -420,7 +420,6 @@ class XmippProtRansac(ProtInitialVolume):
         volumesSet = self._createSetOfVolumes()
         readSetOfVolumes(fn, volumesSet)
         volumesSet.setSamplingRate(self.inputClasses.get().getAverages().getSamplingRate())
-        volumesSet.write()
         
         self._defineOutputs(outputVolumes=volumesSet)
         self._defineSourceRelation(classes2DSet, volumesSet)

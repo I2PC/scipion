@@ -163,7 +163,6 @@ class ProtImportImages(EMProtocol):
                 imgSet.append(img)
             outFiles.append(dst)
         
-        imgSet.write()
         args = {}
         outputSet = self._getOutputSet(self._className)
         args[outputSet] = imgSet

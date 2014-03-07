@@ -200,7 +200,6 @@ class ProtRelionClassify3D(ProtClassify3D, ProtRelionBase):
                 vol.setFileName(volFn)
                 volumes.append(vol)
         
-        volumes.write()
         self._defineOutputs(outputVolumes=volumes)
 
     #TODO

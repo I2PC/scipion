@@ -66,7 +66,6 @@ class XmippProtJoinSets(ProtPreprocessMicrographs):
             for itemObj in itemSet.get():
                 itemObj.cleanObjId()
                 outputSet.append(itemObj)
-        outputSet.write()
         
         self._defineOutputs(outputImages=outputSet)
         

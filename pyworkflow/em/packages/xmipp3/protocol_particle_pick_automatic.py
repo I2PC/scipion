@@ -136,7 +136,6 @@ class XmippParticlePickingAutomatic(ProtParticlePicking, XmippProtocol):
         coordSet = self._createSetOfCoordinates()
         coordSet.setMicrographs(self.micrographs)
         readSetOfCoordinates(posDir, self.micrographs, coordSet)
-        coordSet.write()
         self._defineOutputs(outputCoordinates=coordSet)
         self._defineSourceRelation(self.micrographs, coordSet)
         

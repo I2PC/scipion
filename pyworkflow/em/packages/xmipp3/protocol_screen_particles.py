@@ -91,7 +91,6 @@ class XmippProtScreenParticles(ProtProcessParticles):
         imgSet = self._createSetOfParticles()
         imgSet.copyInfo(self.inputParticles.get())
         readSetOfParticles(self.outputMd.get(), imgSet, imgSet.hasCTF())
-        imgSet.write()
 
         self._defineOutputs(outputParticles=imgSet)
 
