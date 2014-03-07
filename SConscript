@@ -1097,6 +1097,7 @@ AddXmippProgram('mrc_create_metadata')
 AddXmippProgram('nma_alignment', ['XmippRecons'])
 AddXmippProgram('nma_alignment_vol', ['XmippRecons'])
 AddXmippProgram('flexible_alignment', ['XmippRecons'])
+
 AddXmippProgram('pdb_nma_deform', ['XmippRecons'])
 AddXmippProgram('pdb_analysis', ['XmippRecons'])
 AddXmippProgram('phantom_create', ['XmippRecons'])

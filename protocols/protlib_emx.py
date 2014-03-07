@@ -622,6 +622,7 @@ def ctfMicXmippToEmx(emxData,xmdFileName):
     md    = MetaData()
     mdCTF = MetaData()
     md.read(xmdFileName)
+    #if exists acquisition info 
     for objId in md:
         micrographName = md.getValue(MDL_MICROGRAPH, objId)
         ctfModel       = md.getValue(MDL_CTF_MODEL,objId)
@@ -629,7 +630,8 @@ def ctfMicXmippToEmx(emxData,xmdFileName):
 
         mdCTF.read(ctfModel)
         objId2 = mdCTF.firstObject()
-        ##pixelSpacing        = mdCTF.getValue(MDL_CTF_SAMPLING_RATE, objId2)####
+        print "Using CTF sampling as Micrograph sampling"
+        pixelSpacing        = mdCTF.getValue(MDL_CTF_SAMPLING_RATE, objId2)####
         acceleratingVoltage = mdCTF.getValue(MDL_CTF_VOLTAGE, objId2)
         cs                  = mdCTF.getValue(MDL_CTF_CS, objId2)
         defocusU            = mdCTF.getValue(MDL_CTF_DEFOCUSU, objId2)/10.
@@ -647,8 +649,8 @@ def ctfMicXmippToEmx(emxData,xmdFileName):
         m1.set('defocusU',defocusU)
         m1.set('defocusV',defocusV)
         m1.set('defocusUAngle',defocusUAngle)
-#        m1.set('pixelSpacing__X',pixelSpacing)
-#        m1.set('pixelSpacing__Y',pixelSpacing)
+        m1.set('pixelSpacing__X',pixelSpacing)
+        m1.set('pixelSpacing__Y',pixelSpacing)
         emxData.addObject(m1)
 
 def ctfMicXmippToEmxChallenge(emxData,xmdFileName):

@@ -347,7 +347,7 @@ void PCAMahalanobisAnalyzer::computeStatistics(MultidimArray<double> & avg,
 
 /* Evaluate score --------------------------------------------------------- */
 //#define DEBUG
-void PCAMahalanobisAnalyzer::evaluateZScore(int NPCA, int Niter)
+void PCAMahalanobisAnalyzer::evaluateZScore(int NPCA, int Niter, bool trained)
 {
     int N=v.size();
     if (N==0)
@@ -384,7 +384,8 @@ void PCAMahalanobisAnalyzer::evaluateZScore(int NPCA, int Niter)
     }
 #endif
 
-    learnPCABasis(NPCA, Niter);
+    if (~trained)
+    	learnPCABasis(NPCA, Niter);
 
 #ifdef DEBUG
 

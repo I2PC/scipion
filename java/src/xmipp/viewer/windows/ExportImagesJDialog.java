@@ -53,6 +53,8 @@ public class ExportImagesJDialog extends JDialog{
         this.frame = parent;
 
         path = parent.data.getFileName();
+        if(path == null)
+            path = "images";
         path = Filename.removeExtension(path) + "_export.stk";
         label = parent.data.getRenderLabel();
         initComponents();

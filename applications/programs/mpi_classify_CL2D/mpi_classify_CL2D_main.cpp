@@ -121,7 +121,7 @@ void CL2DClass::updateProjection(const MultidimArray<double> &I,
 }
 
 //#define DEBUG
-void CL2DClass::transferUpdate()
+void CL2DClass::transferUpdate(bool centerReference)
 {
     if (nextListImg.size() > 0)
     {
@@ -137,7 +137,8 @@ void CL2DClass::transferUpdate()
         Pupdate.initZeros(P);
 
         // Make sure the image is centered
-        centerImage(P,corrAux,rotAux);
+        if (centerReference)
+        	centerImage(P,corrAux,rotAux);
         FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(P)
         if (!DIRECT_A2D_ELEM(prm->mask,i,j))
             DIRECT_A2D_ELEM(P,i,j) = 0;
@@ -716,7 +717,7 @@ void CL2D::initialize(MetaData &_SF,
         {
             P[q]->Pupdate = _codes0[q];
             P[q]->nextListImg.push_back(assignment);
-            P[q]->transferUpdate();
+            P[q]->transferUpdate(false);
         }
     }
 
@@ -1627,6 +1628,9 @@ void ProgClassifyCL2D::defineParams()
 
 void ProgClassifyCL2D::produceSideInfo()
 {
+	if (!useCorrelation)
+		normalizeImages=false;
+
     maxShift2 = maxShift * maxShift;
 
     gaussianInterpolator.initialize(6, 60000, false);
