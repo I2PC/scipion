@@ -37,15 +37,22 @@ from django.http import HttpResponse
 from pyworkflow.em.convert import ImageHandler
 from pyworkflow.em.constants import *
 
+from pyworkflow.em.wizard import EmWizard
+
 from pyworkflow.em.packages.xmipp3.convert import xmippToLocation, locationToXmipp
 from pyworkflow.em.packages.spider.convert import locationToSpider
 from pyworkflow.em.packages.spider.wizard import filter_spider
 from pyworkflow.em.packages.xmipp3.constants import *
 
+from xmipp_wizard import *
+from spider_wizard import *
+
+
 def wizard(request):
     # Get the Wizard Name
     requestDict = getattr(request, "POST")
     functionName = requestDict.get("wizName")
+    className = requestDict.get("wizClassName")
     function = globals().get(functionName, None)
     
     print "======================= in wizard: " + functionName
@@ -60,6 +67,8 @@ def wizard(request):
         pass  # redirect to error: name is not a function
     else:
         return function(protocol, request)
+#        return function(className)
+    
     
 def wiz_base(request, context):
     context_base = {'general_style': getResourceCss('general'),
@@ -77,28 +86,30 @@ def wiz_base(request, context):
     context.update(context_base)
     return context
 
-
-def wiz_downsampling(protocol, request):
-    micrographs = protocol.inputMicrographs.get()
+def wiz_downsampling(protocol, params, request):
+    micrographs = params['input'].get()
+    value = params['value']    
+    
     res = validateSet(micrographs)
     
     if res is not 1:
         return HttpResponse(res)
     else:           
-        
         mics = [mic.clone() for mic in micrographs]
         for m in mics:
             m.basename = basename(m.getFileName())
              
         context = {'objects': mics,
-                   'downFactor': protocol.downFactor.get()
+                   'downFactor': value
                    }
 
         context = wiz_base(request, context)
         return render_to_response('wizards/wiz_downsampling.html', context)
 
-def wiz_ctf(protocol, request):
-    micrographs = protocol.inputMicrographs.get()
+
+def wiz_ctf(protocol, params, request):
+    micrographs = params['input'].get()
+    value = params['value']
     
     res = validateSet(micrographs)
     
@@ -110,16 +121,17 @@ def wiz_ctf(protocol, request):
             m.basename = basename(m.getFileName())    
         
         context = {'objects': mics,
-                   'high_res' : protocol.highRes.get(),
-                   'low_res': protocol.lowRes.get(),
+                   'low_res': value[0],
+                   'high_res' : value [1],
                    }
         
         context = wiz_base(request, context)
-        
         return render_to_response('wizards/wiz_ctf.html', context)
 
-def wiz_particle_mask_radius(protocol, request):
-    particles = protocol.inputParticles.get()
+def wiz_particle_mask_radius(protocol, params, request):
+    particles = params['input'].get()
+    value = params['value']
+    
     res = validateParticles(particles) 
     
     if res is not 1:
@@ -132,7 +144,7 @@ def wiz_particle_mask_radius(protocol, request):
         else:
             xdim = getImageXdim(request, parts[0].text)
     
-            mask_radius = protocol.radius.get()
+            mask_radius = value
              
             if mask_radius > xdim :
                 mask_radius = xdim
@@ -145,11 +157,12 @@ def wiz_particle_mask_radius(protocol, request):
                        }
 
             context = wiz_base(request, context)
-            
             return render_to_response('wizards/wiz_particle_mask_radius.html', context)
 
-def wiz_particles_mask_radii(protocol, request):
-    particles = protocol.inputParticles.get()
+def wiz_particles_mask_radii(protocol, params, request):
+    particles = params['input'].get()
+    value = params['value']
+    
     res = validateParticles(particles) 
     
     if res is not 1:
@@ -161,8 +174,8 @@ def wiz_particles_mask_radii(protocol, request):
             return HttpResponse("errorIterate")
         else:
             xdim = getImageXdim(request, parts[0].text)
-            inner_radius = protocol.innerRadius.get()
-            outer_radius = protocol.outerRadius.get()
+            inner_radius = value[0]
+            outer_radius = value[1]
                 
             context = {'objects': parts,
                        'innerRadius': inner_radius,
@@ -174,22 +187,27 @@ def wiz_particles_mask_radii(protocol, request):
             
             return render_to_response('wizards/wiz_particles_mask_radii.html', context)
 
-def wiz_volume_mask_radius(protocol, request):
-    volumes = protocol.inputVolumes.get()
+def wiz_volume_mask_radius(protocol, params, request):
+    volumes = params['input'].get()
+    value = params['value']
+    
     res = validateSet(volumes)
     
     if res is not 1:
         return HttpResponse(res)
     else:
-        
-        vols = [vol.clone() for vol in volumes]
+        vols = []
+        if isinstance(volumes, Volume):
+            vols.append(volumes)
+        else: 
+            vols = [vol.clone() for vol in volumes]
         
         for v in vols:
             v.basename = basename(v.getFileName())
                     
         xdim = getImageXdim(request, vols[0].getFileName())
     
-        mask_radius = protocol.radius.get()
+        mask_radius = value
          
         if mask_radius > xdim :
             mask_radius = xdim
@@ -205,26 +223,29 @@ def wiz_volume_mask_radius(protocol, request):
         
         return render_to_response('wizards/wiz_volume_mask_radius.html', context)
 
-def wiz_volumes_mask_radii(protocol, request):
-    volumes = protocol.input3DReferences.get()
+def wiz_volumes_mask_radii(protocol, params, request):
+    volumes = params['input'].get()
+    value = params['value']
+    
     res = validateSet(volumes)
     
     if res is not 1:
         return HttpResponse(res)
     else:
-        vols = [vol.clone() for vol in volumes]
+        vols = []
+        if isinstance(volumes, Volume):
+            vols.append(volumes)
+        else: 
+            vols = [vol.clone() for vol in volumes]
         
         for v in vols:
             v.basename = basename(v.getFileName())
                     
         xdim = getImageXdim(request, vols[0].getFileName())
-    
-        inner_radius = protocol.innerRadius.get()
-        outer_radius = protocol.outerRadius.get()
             
         context = {'objects': vols,
-                   'innerRadius': inner_radius,
-                   'outerRadius': outer_radius,
+                   'innerRadius': value[0],
+                   'outerRadius': value[1],
                    'xdim': xdim,
                    }
         
@@ -232,48 +253,26 @@ def wiz_volumes_mask_radii(protocol, request):
         
         return render_to_response('wizards/wiz_volumes_mask_radii.html', context)
 
-def wiz_filter_spider(protocol, request):
-    particles = protocol.inputParticles.get()
-    res = validateParticles(particles) 
-    
-    if res is not 1:
-        return HttpResponse(res)
-    else:
-        parts = getParticleSubset(particles,100)
-        
-        if len(parts) == 0:
-            return HttpResponse("errorIterate")
-        else:
-            context = {'objects': parts,
-                       'filterType': protocol.filterType.get(),
-                       'filterMode': protocol.filterMode.get(),
-                       'usePadding': protocol.usePadding.get(),
-                       'protocol': protocol,
-                       }
-            
-            context = wiz_base(request, context)
-            
-            return render_to_response('wizards/wiz_filter_spider.html', context)
-
-def wiz_particle_bandpass(protocol, request):
-    particles = protocol.inputParticles.get()
-    mode = protocol.fourierMode.get()
+def wiz_filter_particle(protocol, params, request):
+    particles = params['input'].get()
+    value = params['value']
+    mode = params['mode']
     
     if mode == 0:
         # low pass
         lowFreq = 0.
-        highFreq = protocol.highFreq.get()
-        decay = protocol.freqDecay.get()
+        highFreq = value[1]
+        decay = value[2]
     elif mode == 1:
         # high pass
-        lowFreq = protocol.lowFreq.get()
+        lowFreq = value[0]
         highFreq = 1.0
-        decay = protocol.freqDecay.get()
+        decay = value[2]
     elif mode== 2:
         #band pass
-        highFreq = protocol.highFreq.get()
-        lowFreq = protocol.lowFreq.get()
-        decay = protocol.freqDecay.get()
+        highFreq = value[0]
+        lowFreq = value[1]
+        decay = value[2]
     
     res = validateParticles(particles)
     
@@ -296,16 +295,41 @@ def wiz_particle_bandpass(protocol, request):
             
             return render_to_response('wizards/wiz_bandpass.html', context)
         
-def wiz_volume_bandpass(protocol, request):
-    volumes = protocol.input3DReferences.get()
+def wiz_filter_volume(protocol, params, request):
+    volumes = params['input'].get()
+    value = params['input'].get()
+    mode = params['mode'].get()
+    
+    
+    if mode == 0:
+        # low pass
+        lowFreq = 0.
+        highFreq = value[1]
+        decay = value[2]
+    elif mode == 1:
+        # high pass
+        lowFreq = value[0]
+        highFreq = 1.0
+        decay = value[2]
+    elif mode== 2:
+        #band pass
+        highFreq = value[0]
+        lowFreq = value[1]
+        decay = value[2]
+    
+    
     res = validateSet(volumes)
     
-    highFreq = protocol.resolution.get()
+#    highFreq = protocol.resolution.get()
     
     if res is not 1:
         return HttpResponse(res)
     else:
-        vols = [vol.clone() for vol in volumes]
+        vols = []
+        if isinstance(volumes, Volume):
+            vols.append(volumes)
+        else: 
+            vols = [vol.clone() for vol in volumes]
         
         for v in vols:
             v.basename = basename(v.getFileName())
@@ -314,19 +338,22 @@ def wiz_volume_bandpass(protocol, request):
             return HttpResponse("errorIterate")
         else:
             context = {'objects': vols,
-                       'lowFreq': 0,
+                       'mode': mode,
+                       'lowFreq': lowFreq,
                        'highFreq': highFreq,
-                       'decayFreq': 0,
+                       'decayFreq': decay,
                        'unit': UNIT_PIXEL
                        }
             
             context = wiz_base(request, context)
             
-            return render_to_response('wizards/wiz_relion_bandpass.html', context)
+            return render_to_response('wizards/wiz_bandpass.html', context)
 
 
-def wiz_particle_gaussian(protocol, request):
-    particles = protocol.inputParticles.get()
+def wiz_particle_gaussian(protocol, params, request):
+    particles = params['input'].get()
+    value = params['value']
+    
     res = validateParticles(particles) 
     
     if res is not 1:
@@ -338,39 +365,66 @@ def wiz_particle_gaussian(protocol, request):
             return HttpResponse("errorIterate")
         else:
             context = {'objects': parts,
-                       'freqSigma': protocol.freqSigma.get(),
+                       'freqSigma': value,
                        }
             
             context = wiz_base(request, context)
             
             return render_to_response('wizards/wiz_gaussian.html', context)
         
-def wiz_relion_bandpass(protocol, request):
-    particles = protocol.inputParticles.get()
+        
+def wiz_volume_gaussian(protocol, params, request):
+    volumes = params['input'].get()
+    value = params['value']
     
-    highFreq = protocol.iniLowPassFilter.get()
-    
-    res = validateParticles(particles)
+    res = validateSet(volumes) 
     
     if res is not 1:
         return HttpResponse(res)
     else:
-        parts = getParticleSubset(particles.clone(),100)
+        vols = []
+        if isinstance(volumes, Volume):
+            vols.append(volumes)
+        else: 
+            vols = [vol.clone() for vol in volumes]
         
-        if len(parts) == 0:
+        if len(vols) == 0:
             return HttpResponse("errorIterate")
         else:
-            context = {'objects': parts,
-                       'lowFreq': 0,
-                       'highFreq': highFreq,
-                       'decayFreq': 0,
-                       'unit': UNIT_PIXEL
+            context = {'objects': vols,
+                       'freqSigma': value,
                        }
             
             context = wiz_base(request, context)
             
-            return render_to_response('wizards/wiz_relion_bandpass.html', context)
+            return render_to_response('wizards/wiz_gaussian.html', context)
         
+#def wiz_relion_bandpass(protocol, request):
+#    particles = protocol.inputParticles.get()
+#    
+#    highFreq = protocol.iniLowPassFilter.get()
+#    
+#    res = validateParticles(particles)
+#    
+#    if res is not 1:
+#        return HttpResponse(res)
+#    else:
+#        parts = getParticleSubset(particles.clone(),100)
+#        
+#        if len(parts) == 0:
+#            return HttpResponse("errorIterate")
+#        else:
+#            context = {'objects': parts,
+#                       'lowFreq': 0,
+#                       'highFreq': highFreq,
+#                       'decayFreq': 0,
+#                       'unit': UNIT_PIXEL
+#                       }
+#            
+#            context = wiz_base(request, context)
+#            
+#            return render_to_response('wizards/wiz_relion_bandpass.html', context)
+#        
 
 def getParticleSubset(particles, num):
     """
@@ -397,9 +451,7 @@ def getParticleSubset(particles, num):
     return particleList
 
 def validateSet(setOf):
-    """
-    Validation for a set of micrographs
-    """
+    """Validation for a set of micrographs."""
     if setOf is None:
         res = "errorInput"
     else:
@@ -407,9 +459,7 @@ def validateSet(setOf):
     return res
 
 def validateParticles(particles):
-    """
-    Validation for a set of particles
-    """
+    """Validation for a set of particles."""
     if particles is None:
         res = "errorInput"
     elif particles.getSize() == 0:

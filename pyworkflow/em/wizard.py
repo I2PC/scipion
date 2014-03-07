@@ -88,7 +88,7 @@ class EmWizard(Wizard):
             if isinstance(objs, SetOfParticles):
                 particles = self._getParticles(objs)
                 provider = ListTreeProvider(particles)
-                provider.getText = self._getText    
+                provider.getText = self._getText
             
             if isinstance(objs, SetOfVolumes) or isinstance(objs, Volume) :
                 vols = self._getVols(objs)
@@ -149,7 +149,7 @@ class ctfWizard(EmWizard):
                     'hf': value[1]
                     }
             d = ctfDialog(form.root, provider, **args)
-#            d = ctfDialog(form.root, provider, lf=protocol.lowRes.get(), hf=protocol.highRes.get())
+
             if d.resultYes():
                 form.setVar(label[0], d.getLowFreq())
                 form.setVar(label[1], d.getHighFreq())
@@ -158,7 +158,7 @@ class ctfWizard(EmWizard):
     
     @classmethod    
     def getView(self):
-        return "wiz_ctf"            
+        return "wiz_ctf"           
     
 class maskRadiusWizard(EmWizard):
         
@@ -199,28 +199,16 @@ class maskRadiiWizard(EmWizard):
         return "wiz_volume_mask_radii"   
                 
 class particleMaskRadiusWizard(maskRadiusWizard):
-    
-    @classmethod    
-    def getView(self):
-        return "wiz_particle_mask_radius"       
+    pass       
     
 class volumeMaskRadiusWizard(maskRadiusWizard):
-            
-    @classmethod    
-    def getView(self):
-        return "wiz_volume_mask_radius"       
+    pass       
 
 class particlesMaskRadiiWizard(maskRadiiWizard):
-
-    @classmethod    
-    def getView(self):
-        return "wiz_particles_mask_radii"          
+    pass
         
 class volumeMaskRadiiWizard(maskRadiiWizard):
-    
-    @classmethod    
-    def getView(self):
-        return "wiz_volumes_mask_radii"   
+    pass
 
 class filterWizard(EmWizard):
                 
@@ -277,16 +265,10 @@ class filterWizard(EmWizard):
             
 
 class filterParticlesWizard(filterWizard):
-    
-    @classmethod    
-    def getView(self):
-        return "wiz_filter_particle"
+    pass
     
 class filterVolumesWizard(filterWizard):    
-
-    @classmethod    
-    def getView(self):
-        return "wiz_filter_volumes"  
+    pass
     
 class gaussianWizard(EmWizard):
     
@@ -307,17 +289,11 @@ class gaussianWizard(EmWizard):
             
 
 class gaussianParticlesWizard(gaussianWizard):
-    
-    @classmethod    
-    def getView(self):
-        return "wiz_gaussian_particle"
+    pass
 
     
 class gaussianVolumesWizard(gaussianWizard):
-    
-    @classmethod    
-    def getView(self):
-        return "wiz_gaussian_volume"   
+    pass   
     
 
 #--------------- Dialogs used by Wizards --------------------------

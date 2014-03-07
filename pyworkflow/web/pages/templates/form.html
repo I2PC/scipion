@@ -40,8 +40,9 @@
 		$("#protocolForm").attr('data-mode', mode);
 		$('#protocolForm').submit();
 	}
-	function putModeWiz(functionName){
+	function putModeWiz(functionName, className){
 		$("input#wizName").attr("value", functionName);
+		$("input#wizClassName").attr("value", className);
 		putMode("wiz");
 	}
 	function putModeViewElm(param, func){
@@ -82,6 +83,7 @@
 			<input type="hidden" name="protocolId" value="{{protocol.getObjId}}"/>
 			<input type="hidden" name="protRunIdViewer" value="{{protRunIdViewer}}"/>
 			<input type="hidden" id="wizName" name="wizName" value=""/>
+			<input type="hidden" id="wizClassName" name="wizClassName" value=""/>
 			<input type="hidden" id="viewerParam" name="viewerParam" value="None"/>
 			<input type="hidden" id="label" name="label" value="{{protocol.getObjLabel}}"/>
 			<input type="hidden" id="comment" name="comment" value="{{comment}}"/>
@@ -272,7 +274,7 @@
 									</td>
 								{% elif param.hasWizard %}
 									<td class="ico">
-										<a href="javascript:putModeWiz('{{param.wizardName}}');"><i class="fa fa-magic" style="font-size:1.2em;"></i></a>
+										<a href="javascript:putModeWiz('{{param.wizardName}}','{{param.wizardClassName}}' );"><i class="fa fa-magic" style="font-size:1.2em;"></i></a>
 									</td>
 								{% elif param.hasViewer %}
 									<td class="ico">

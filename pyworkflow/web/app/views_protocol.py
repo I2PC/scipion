@@ -102,6 +102,7 @@ def form(request):
             if paramName in wizards:
                 param.hasWizard = True
                 param.wizardName = wizards[paramName].getView()
+                param.wizardClassName = wizards[paramName].__name__
 #                print "param: ", paramName, " has wizard", " view: "
             
             if visualize == 1:
