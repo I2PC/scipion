@@ -1126,8 +1126,14 @@ class AutoCompleteEntry(tk.Entry):
 '''**************  Implementation of Xmipp Browser *************'''
 # Some helper functions for the browser
 def showj(filename, mode="default"):
-    from protlib_utils import runShowJ
-    runShowJ(filename, extraParams="--mode %s" % mode)
+    if filename.endswith('.star'):
+        showj_relion(filename, mode)
+    else:
+        from protlib_utils import runShowJ
+        runShowJ(filename, extraParams="--mode %s" % mode)
+    
+def showj_relion(filename, mode="default"):
+    os.system('xmipp_showj -i %(filename)s --mode %(mode)s' % locals())
     
 def chimera(filename):
     runChimera(filename)
