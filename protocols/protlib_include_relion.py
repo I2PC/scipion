@@ -62,11 +62,11 @@ ImgMd = ""
 # {condition}(not DoContinue) Normalize input images?
 """ 
 Normalize input images ?
-average background value must be 0 and a stddev value must be 1. 
+Average background value must be 0 and a stddev value must be 1. 
 Note that the average and stddev values for the background are
- calculated outside a circle with the particle diameter 
+calculated outside a circle with the particle diameter 
 """
-DoNormalizeInputImage = False
+DoNormalizeInputImage = True
 
 # {condition}(DoContinue){file}(*optimiser.star) Optimiser file:
 """ 
