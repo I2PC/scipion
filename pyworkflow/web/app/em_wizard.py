@@ -68,6 +68,7 @@ def wiz_base(request, context):
                'font_awesome': getResourceCss('font_awesome'),
                'jquery': getResourceJs('jquery'),
                'jquery_ui': getResourceJs('jquery_ui'),
+               'jquery_ui_touch': getResourceJs('jquery_ui_touch'),
                'wizard_utils': getResourceJs('wizard_utils'),
                'raphael':getResourceJs('raphael'),
                'projectName': request.session['projectName']

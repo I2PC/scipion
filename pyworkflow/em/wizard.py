@@ -79,6 +79,7 @@ class EmWizard(Wizard):
         """
         provider = None
         if objs.hasValue():
+            objs = objs.get()
             
             if isinstance(objs, SetOfMicrographs):
                 mics = self._getMics(objs)

@@ -11,6 +11,7 @@
 <!-- JS -->
 <script type="text/javascript" src="{{jquery}}"></script>
 <script type="text/javascript" src="{{jquery_ui}}"></script>
+<script type="text/javascript" src="{{jquery_ui_touch}}"></script>
 <script type="text/javascript" src="{{wizard_utils}}"></script>
 <script type="text/javascript" src="{{raphael}}"></script>
 <script>
@@ -22,6 +23,12 @@
 		window.close();
 	}
 </script>
+
+<script>
+// Fix to move UI elements in touch displays
+$('#widget').draggable();
+</script>	
+
 {% block head %} {% endblock %}
 </head>
 <body>

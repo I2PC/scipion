@@ -50,8 +50,9 @@ class XmippDownsampleWizard(downsampleWizard):
     _targets = [(XmippProtPreprocessMicrographs, ['downFactor'])]
     
     def _getProvider(self, protocol):
-        _objs = protocol.inputMicrographs.get()
+        _objs = protocol.inputMicrographs
         return downsampleWizard._getListProvider(self, _objs)
+    
     
     def show(self, form):
         _value = form.protocol.downFactor.get()
@@ -63,7 +64,7 @@ class XmippCTFWizard(ctfWizard):
     _targets = [(ProtCTFMicrographs, ['lowRes', 'highRes'])]
     
     def _getProvider(self, protocol):
-        _objs = protocol.inputMicrographs.get()
+        _objs = protocol.inputMicrographs
         return ctfWizard._getListProvider(self, _objs)
     
     def show(self, form):
@@ -76,7 +77,7 @@ class XmippParticleMaskRadiusWizard(particleMaskRadiusWizard):
     _targets = [(XmippProtMaskParticles, ['radius'])]
     
     def _getProvider(self, protocol):
-        _objs = protocol.inputParticles.get()
+        _objs = protocol.inputParticles
         return particleMaskRadiusWizard._getListProvider(self, _objs)
     
     def show(self, form):
@@ -89,7 +90,7 @@ class XmippVolumeMaskRadiusWizard(volumeMaskRadiusWizard):
     _targets = [(XmippProtMaskVolumes, ['radius'])]
       
     def _getProvider(self, protocol):
-        _objs = protocol.inputVolumes.get()    
+        _objs = protocol.inputVolumes
         return volumeMaskRadiusWizard._getListProvider(self, _objs)
     
     def show(self, form):
@@ -102,7 +103,7 @@ class XmippParticleMaskRadiiWizard(particlesMaskRadiiWizard):
     _targets = [(XmippProtMaskParticles, ['innerRadius', 'outerRadius'])]
     
     def _getProvider(self, protocol):
-        _objs = protocol.inputParticles.get()
+        _objs = protocol.inputParticles
         return particlesMaskRadiiWizard._getListProvider(self, _objs)
     
     def show(self, form):
@@ -115,7 +116,7 @@ class XmippVolumeRadiiWizard(volumeMaskRadiiWizard):
     _targets = [(XmippProtMaskVolumes, ['innerRadius', 'outerRadius'])]
  
     def _getProvider(self, protocol):
-        _objs = protocol.inputVolumes.get()    
+        _objs = protocol.inputVolumes  
         return volumeMaskRadiiWizard._getListProvider(self, _objs)
     
     def show(self, form):
@@ -128,7 +129,7 @@ class XmippFilterParticlesWizard(filterParticlesWizard):
     _targets = [(XmippProtFilterParticles, ['lowFreq', 'highFreq', 'freqDecay'])]
     
     def _getProvider(self, protocol):
-        _objs = protocol.inputParticles.get()
+        _objs = protocol.inputParticles
         return filterParticlesWizard._getListProvider(self, _objs)
     
     def show(self, form):
@@ -147,7 +148,7 @@ class XmippGaussianParticlesWizard(gaussianParticlesWizard):
     _targets = [(XmippProtFilterParticles, ['freqSigma'])]
     
     def _getProvider(self, protocol):
-        _objs = protocol.inputParticles.get()
+        _objs = protocol.inputParticles
         return gaussianParticlesWizard._getListProvider(self, _objs)
     
     def show(self, form):
@@ -160,7 +161,7 @@ class XmippFilterVolumesWizard(filterVolumesWizard):
     _targets = [(XmippProtFilterVolumes, ['lowFreq', 'highFreq', 'freqDecay'])]
     
     def _getProvider(self, protocol):
-        _objs = protocol.inputVolumes.get()    
+        _objs = protocol.inputVolumes    
         return filterVolumesWizard._getListProvider(self, _objs)
     
     def show(self, form):
@@ -179,7 +180,7 @@ class XmippGaussianVolumesWizard(gaussianVolumesWizard):
     _targets = [(XmippProtFilterVolumes, ['freqSigma'])]
     
     def _getProvider(self, protocol):
-        _objs = protocol.inputVolumes.get()
+        _objs = protocol.inputVolumes
         return gaussianVolumesWizard._getListProvider(self, _objs)
     
     def show(self, form):
