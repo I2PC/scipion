@@ -93,7 +93,13 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
             }
             buttonspn.add(cmdbutton);
             enableActions();
-            
+            jcbBlocks.addActionListener(new ActionListener() {
+
+                @Override
+                public void actionPerformed(ActionEvent ae) {
+                    enableActions();
+                }
+            });
         }
        
     }
@@ -155,11 +161,11 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
         Color color = Color.decode(isenabled? firebrick: lightgrey); 
         cmdbutton.setEnabled(isenabled);
         cmdbutton.setBackground(color);
-         if(is2DClassificationMd())
-         {
-            classcmdbutton.setEnabled(isImageSelected());
-            classcmdbutton.setBackground(color);
-         }
+        isenabled = is2DClassificationMd() && isenabled;
+        color = Color.decode(isenabled? firebrick: lightgrey); 
+        classcmdbutton.setEnabled( isenabled);
+        classcmdbutton.setBackground(color);
+         
     }
 
 }
