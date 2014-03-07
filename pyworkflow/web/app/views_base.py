@@ -64,6 +64,7 @@ def base_form(request, context):
                     'jquery_ui_css': getResourceCss('jquery_ui'),
                     #JS
                     'jquery_ui': getResourceJs('jquery_ui'),
+                    'jquery_ui_touch': getResourceJs('jquery_ui_touch'),
                     }
 
     context = base(request, context)
@@ -79,6 +80,7 @@ def base_flex(request, context):
                     'jquery_ui_css': getResourceCss('jquery_ui'),
                     #JS
                     'jquery_ui': getResourceJs('jquery_ui'),
+                    'jquery_ui_touch': getResourceJs('jquery_ui_touch'),
                     'jsplumb': getResourceJs('jsplumb'),
                     'jquery_sizes': getResourceJs('jquery_sizes'),
                     'jlayout_border': getResourceJs('jlayout_border'),

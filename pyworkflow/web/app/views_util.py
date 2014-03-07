@@ -81,6 +81,7 @@ jsDict = {'jquery': 'jquery/jquery.js',
           'jquery_layout': 'jquery/jquery.jlayout.js',
           'jlayout_border': 'jquery/jlayout.border.js',
           'jquery_ui': 'jquery/jquery-ui.js',
+          'jquery_ui_touch': 'jquery/jquery.ui.touch-punch.min.js',
           'jquery_hover_intent': 'jquery/jquery.hoverIntent.minified.js',
           'jsplumb': 'jsPlumb/jquery.jsPlumb.js',
           
