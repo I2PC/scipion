@@ -71,7 +71,7 @@ void ProgSortByStatistics::defineParams()
 
 
 //majorAxis and minorAxis is the estimated particle size in px
-void ProgSortByStatistics::processInprocessInputPrepareSPTH(MetaData &SF)
+void ProgSortByStatistics::processInprocessInputPrepareSPTH(MetaData &SF, bool trained)
 {
     //#define DEBUG
     pcaAnalyzer[5];
@@ -317,11 +317,11 @@ void ProgSortByStatistics::processInprocessInputPrepareSPTH(MetaData &SF)
     }
 
 
-    tempPcaAnalyzer0.evaluateZScore(2,20);
-    tempPcaAnalyzer1.evaluateZScore(2,20);
-    tempPcaAnalyzer2.evaluateZScore(2,20);
-    tempPcaAnalyzer3.evaluateZScore(2,20);
-    tempPcaAnalyzer4.evaluateZScore(2,20);
+    tempPcaAnalyzer0.evaluateZScore(2,20,trained);
+    tempPcaAnalyzer1.evaluateZScore(2,20,trained);
+    tempPcaAnalyzer2.evaluateZScore(2,20,trained);
+    tempPcaAnalyzer3.evaluateZScore(2,20,trained);
+    tempPcaAnalyzer4.evaluateZScore(2,20,trained);
 
     pcaAnalyzer.push_back(tempPcaAnalyzer0);
     pcaAnalyzer.push_back(tempPcaAnalyzer1);
@@ -411,7 +411,7 @@ void ProgSortByStatistics::processInputPrepare(MetaData &SF)
 
     MultidimArray<double> vavg,vstddev;
     tempPcaAnalyzer.computeStatistics(vavg,vstddev);
-    tempPcaAnalyzer.evaluateZScore(2,20);
+    tempPcaAnalyzer.evaluateZScore(2,20,false);
     pcaAnalyzer.insert(pcaAnalyzer.begin(), tempPcaAnalyzer);
 }
 
@@ -423,10 +423,17 @@ void ProgSortByStatistics::run()
     MetaData SF2 = SF;
     SF = SF2;
 
+    bool trained = false;
+
     if (fn_train != "")
+    {
         SFtrain.read(fn_train);
+    	processInprocessInputPrepareSPTH(SFtrain,trained);
+    	trained = true;
+    	processInprocessInputPrepareSPTH(SF,trained);
+    }
     else
-        processInprocessInputPrepareSPTH(SF);
+        processInprocessInputPrepareSPTH(SF,trained);
 
     int imgno = 0;
     int numPCAs = pcaAnalyzer.size();

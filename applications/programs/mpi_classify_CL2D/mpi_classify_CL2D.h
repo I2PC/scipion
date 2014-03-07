@@ -127,7 +127,7 @@ public:
     }
 
     /** Transfer update */
-    void transferUpdate();
+    void transferUpdate(bool centerReference=true);
 
     /** Compute the fit of the input image with this node.
         The input image is rotationally and traslationally aligned
