@@ -1369,7 +1369,7 @@ class XmippBrowser():
         self.managers = {}
         self.extSet = {}
         addFm = self.addFileManager
-        addFm('md', 'md.gif', ['.xmd', '.sel', '.doc', '.ctfparam', '.ctfdat', '.pos', '.descr', '.param', '.hist'], 
+        addFm('md', 'md.gif', ['.xmd', '.sel', '.doc', '.ctfparam', '.ctfdat', '.pos', '.descr', '.param', '.hist', '.star'], 
                             mdFillMenu, mdOnClick, mdOnDoubleClick)
         addFm('stk', 'stack.gif', ['.stk', '.mrcs', '.st', '.pif'],
                             stackFillMenu, imgOnClick, stackOnDoubleClick)
