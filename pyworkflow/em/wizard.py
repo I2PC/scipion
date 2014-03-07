@@ -35,7 +35,8 @@ from pyworkflow.em.constants import *
 from pyworkflow.em.convert import ImageHandler
 
 from pyworkflow.wizard import Wizard, DESKTOP_TKINTER, WEB_DJANGO
-from pyworkflow.em import SetOfImages, SetOfMicrographs, Volume, ProtCTFMicrographs
+from pyworkflow.em import SetOfImages, SetOfMicrographs, Volume, SetOfParticles, SetOfVolumes, ProtCTFMicrographs
+from pyworkflow.em.data import Micrograph
 
 import pyworkflow.gui.dialog as dialog
 from pyworkflow.gui.widgets import LabelSlider
@@ -44,23 +45,58 @@ from pyworkflow import findResource
 
 import xmipp
 
-class downsampleWizard(Wizard):
-        
-    def show(self, form):
-        protocol = form.protocol
-        if protocol.inputMicrographs.hasValue():
-            mics = [mic.clone() for mic in protocol.inputMicrographs.get()]
-            d = downsampleDialog(form.root, ListTreeProvider(mics), downsample=protocol.downFactor.get())
-            if d.resultYes():
-                form.setVar('downFactor', d.getDownsample())
-        else:
-            dialog.showWarning("Input micrographs", "Select micrographs first", form.root)
+class EmWizard(Wizard):    
     
-    @classmethod
-    def getView(self):
-        return "wiz_downsampling"
-        
+    def _getMics(self, objs):
+        return [mic.clone() for mic in objs]
     
+    def _getParticles(self, objs):
+        particles = [] 
+        for i, par in enumerate(objs):
+            particles.append(par.clone())
+            if i == 100: # Limit the maximum number of particles to display
+                break
+        return particles
+    
+    def _getText(self, obj):
+        index = obj.getIndex()
+        text = os.path.basename(obj.getFileName())
+        if index:
+            return "%03d@%s" % (index, text)
+        return text
+    
+    def _getVols(self, objs):    
+        vols = []
+        if isinstance(objs, Volume):
+            vols.append(objs)
+        else: 
+            vols = [vol.clone() for vol in objs]
+        return vols
+    
+    def _getListProvider(self, objs):
+        """ This should be implemented to return the list
+        of object to be displayed in the tree.
+        """
+        provider = None
+        if objs.hasValue():
+            
+            if isinstance(objs, SetOfMicrographs):
+                mics = self._getMics(objs)
+                provider = ListTreeProvider(mics)
+
+            if isinstance(objs, SetOfParticles):
+                particles = self._getParticles(objs)
+                provider = ListTreeProvider(particles)
+                provider.getText = self._getText    
+            
+            if isinstance(objs, SetOfVolumes) or isinstance(objs, Volume) :
+                vols = self._getVols(objs)
+                provider = ListTreeProvider(vols)
+            
+            return provider
+        return None
+    
+
 class ListTreeProvider(TreeProvider):
     """ Simple list tree provider. """
     def __init__(self, objList=None):
@@ -75,37 +111,55 @@ class ListTreeProvider(TreeProvider):
     def getText(self, obj):
         """ Get the text to display for an object. """
         return os.path.basename(obj.getFileName())
+
+
+class downsampleWizard(EmWizard):
+        
+    def show(self, form, value, label, units=UNIT_PIXEL):
+        protocol = form.protocol
+        provider = self._getProvider(protocol)
+        
+        if provider is not None:
+            args = {'unit': units,
+                    'downsample': value
+                    }
+            
+            d = downsampleDialog(form.root, provider, **args)
+            if d.resultYes():
+                form.setVar(label, d.getDownsample())
+        else:
+            dialog.showWarning("Empty input", "Select elements first", form.root)    
+    
+    @classmethod
+    def getView(self):
+        return "wiz_downsampling"
         
     
-class ctfWizard(Wizard):
+class ctfWizard(EmWizard):
         
-    def show(self, form):
+    def show(self, form, value, label, units=UNIT_PIXEL):
         protocol = form.protocol
+#        form.setParamFromVar('inputMicrographs') # update selected input micrographs
+        provider = self._getProvider(protocol)
         
-        form.setParamFromVar('inputMicrographs') # update selected input micrographs
-        
-        if protocol.inputMicrographs.hasValue():
-            mics = [mic.clone() for mic in protocol.inputMicrographs.get()]
-            #XmippDownsampleDialog(form.root, ListTreeProvider(mics))
-            d = ctfDialog(form.root, ListTreeProvider(mics), 
-                               lf=protocol.lowRes.get(), hf=protocol.highRes.get())
+        if provider is not None:
+            args = {'unit': units,
+                    'lf': value[0],
+                    'hf': value[1]
+                    }
+            d = ctfDialog(form.root, provider, **args)
+#            d = ctfDialog(form.root, provider, lf=protocol.lowRes.get(), hf=protocol.highRes.get())
             if d.resultYes():
-                form.setVar('lowRes', d.getLowFreq())
-                form.setVar('highRes', d.getHighFreq())
-            #dialog.showWarning("Input micrographs", "Select some micrographs first", form.root)
+                form.setVar(label[0], d.getLowFreq())
+                form.setVar(label[1], d.getHighFreq())
         else:
-            dialog.showWarning("Input micrographs", "Select micrographs first", form.root)
+            dialog.showWarning("Empty input", "Select elements first", form.root)    
     
     @classmethod    
     def getView(self):
         return "wiz_ctf"            
     
-class maskRadiusWizard(Wizard):
-    
-    def _getProvider(self, protocol):
-        """ This should be implemented to return the list
-        """
-        pass
+class maskRadiusWizard(EmWizard):
         
     def show(self, form, value, label, units=UNIT_PIXEL):
         protocol = form.protocol
@@ -121,7 +175,7 @@ class maskRadiusWizard(Wizard):
         else:
             dialog.showWarning("Empty input", "Select elements first", form.root)
 
-class maskRadiiWizard(Wizard):
+class maskRadiiWizard(EmWizard):
     
     def show(self, form, value, label, units=UNIT_PIXEL):
         protocol = form.protocol
@@ -144,66 +198,30 @@ class maskRadiiWizard(Wizard):
         return "wiz_volume_mask_radii"   
                 
 class particleMaskRadiusWizard(maskRadiusWizard):
-        
-    def _getText(self, obj):
-        index = obj.getIndex()
-        text = os.path.basename(obj.getFileName())
-        if index:
-            return "%03d@%s" % (index, text)
-        return text
-        
-    def _getProvider(self, protocol, objs):
-        """ This should be implemented to return the list
-        of object to be displayed in the tree.
-        """
-        provider = None
-        if objs.hasValue():
-            particles = [] 
-            for i, par in enumerate(objs):
-                particles.append(par.clone())
-                if i == 100: # Limit the maximum number of particles to display
-                    break
-            provider = ListTreeProvider(particles)
-            provider.getText = self._getText
-            
-        return provider
     
     @classmethod    
     def getView(self):
         return "wiz_particle_mask_radius"       
     
 class volumeMaskRadiusWizard(maskRadiusWizard):
-        
-    def _getProvider(self, protocol, objs):
-        """ This should be implemented to return the list
-        of object to be displayed in the tree.
-        """
-        if objs.hasValue():
-            vols = []
-            if isinstance(objs, Volume):
-                vols.append(objs)
-            else: 
-                vols = [vol.clone() for vol in objs]
-            return ListTreeProvider(vols)
-        return None
-        
+            
     @classmethod    
     def getView(self):
         return "wiz_volume_mask_radius"       
 
-class particlesMaskRadiiWizard(maskRadiiWizard, particleMaskRadiusWizard):
-    
+class particlesMaskRadiiWizard(maskRadiiWizard):
+
     @classmethod    
     def getView(self):
         return "wiz_particles_mask_radii"          
         
-class volumeMaskRadiiWizard(maskRadiiWizard, volumeMaskRadiusWizard):
+class volumeMaskRadiiWizard(maskRadiiWizard):
     
     @classmethod    
     def getView(self):
         return "wiz_volumes_mask_radii"   
 
-class filterWizard(Wizard):
+class filterWizard(EmWizard):
                 
     def show(self, form, value, label, mode, units=UNIT_PIXEL):
         protocol = form.protocol
@@ -259,54 +277,17 @@ class filterWizard(Wizard):
 
 class filterParticlesWizard(filterWizard):
     
-    def _getText(self, obj):
-        index = obj.getIndex()
-        text = os.path.basename(obj.getFileName())
-        if index:
-            return "%03d@%s" % (index, text)
-        return text
-    
-    def _getProvider(self, protocol, objs):
-        """ This should be implemented to return the list
-        of object to be displayed in the tree.
-        """
-        provider = None
-        if objs.hasValue():
-            particles = [] 
-            for i, par in enumerate(objs):
-                particles.append(par.clone())
-                if i == 100: # Limit the maximum number of particles to display
-                    break
-            provider = ListTreeProvider(particles)
-            provider.getText = self._getText
-            
-        return provider
-    
     @classmethod    
     def getView(self):
         return "wiz_filter_particle"
     
-class filterVolumesWizard(filterWizard):
-    
-    def _getProvider(self, protocol, objs):
-        """ This should be implemented to return the list
-        of object to be displayed in the tree.
-        """
-        if objs.hasValue():
-            vols = []
-            if isinstance(objs, Volume):
-                vols.append(objs)
-            else: 
-                vols = [vol.clone() for vol in objs]
-            return ListTreeProvider(vols)
-        return None
-    
+class filterVolumesWizard(filterWizard):    
+
     @classmethod    
     def getView(self):
         return "wiz_filter_volumes"  
     
-    
-class gaussianWizard(Wizard):
+class gaussianWizard(EmWizard):
     
     def show(self, form, value, label, units=UNIT_PIXEL_FOURIER):
         protocol = form.protocol
@@ -326,48 +307,12 @@ class gaussianWizard(Wizard):
 
 class gaussianParticlesWizard(gaussianWizard):
     
-    def _getText(self, obj):
-        index = obj.getIndex()
-        text = os.path.basename(obj.getFileName())
-        if index:
-            return "%03d@%s" % (index, text)
-        return text
-    
-    def _getProvider(self, protocol, objs):
-        """ This should be implemented to return the list
-        of object to be displayed in the tree.
-        """
-        provider = None
-        if objs.hasValue():
-            particles = [] 
-            for i, par in enumerate(objs):
-                particles.append(par.clone())
-                if i == 100: # Limit the maximum number of particles to display
-                    break
-            provider = ListTreeProvider(particles)
-            provider.getText = self._getText
-            
-        return provider
-    
     @classmethod    
     def getView(self):
         return "wiz_gaussian_particle"
 
     
 class gaussianVolumesWizard(gaussianWizard):
-    
-    def _getProvider(self, protocol, objs):
-        """ This should be implemented to return the list
-        of object to be displayed in the tree.
-        """
-        if objs.hasValue():
-            vols = []
-            if isinstance(objs, Volume):
-                vols.append(objs)
-            else: 
-                vols = [vol.clone() for vol in objs]
-            return ListTreeProvider(vols)
-        return None
     
     @classmethod    
     def getView(self):
