@@ -190,7 +190,7 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 				md.setValueDouble(label, ((Double) value).doubleValue(), id);
 				break;
 			case MetaData.LABEL_SIZET:
-				md.setValueInt(label, ((Long) value).intValue(), id);
+				md.setValueLong(label, ((Long) value).longValue(), id);
 				break;
 			case MetaData.LABEL_STRING:
 			case MetaData.LABEL_VECTOR_DOUBLE:
