@@ -1319,7 +1319,7 @@ class FileManager():
             setattr(self, k, v)
 
 
-TEXT_EXTENSIONS = ['.txt', '.c', '.h', '.cpp', '.java', '.sh', '.star', '.emx']
+TEXT_EXTENSIONS = ['.txt', '.c', '.h', '.cpp', '.java', '.sh', '.emx']
 CHIMERA_EXTENSIONS = ['.pdb']
 
 class XmippBrowser():
