@@ -241,7 +241,6 @@ class XmippProtAlignVolume(ProtAlignVolume):
         volumesSet = self._createSetOfVolumes()
         readSetOfVolumes(self.alignedMd, volumesSet)
         volumesSet.copyInfo(self.inputVols)
-        volumesSet.write()
         
         self._defineOutputs(outputVolumes=volumesSet)
         self._defineTransformRelation(self.inputVols, volumesSet)

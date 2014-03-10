@@ -102,7 +102,6 @@ class XmippProtCTFMicrographs(ProtCTFMicrographs):
         writeSetOfMicrographs(micSet, tmpFn, self.setupMicRow)
         # Mark flag of CTF as True
         #micSet.setHasCTF(True)      
-        #micSet.write()         
         ctfSet._xmippMd = String(mdFn)
 
         # Evaluate the PSD and add some criterias

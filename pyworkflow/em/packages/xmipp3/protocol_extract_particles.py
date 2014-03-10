@@ -357,7 +357,6 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
             img.setCoordinate(coord)
             img.cleanObjId()
             imgSet.append(img)
-        #imgSet.write()###JM
         self._storeMethodsInfo(fnImages)
         self._defineOutputs(outputParticles=imgSet)
         self._defineSourceRelation(self.inputCoords, imgSet)

@@ -67,7 +67,8 @@ VARS = {
         'EMAN2DIR': em_packages.EMAN2DIR,
         'CTFFIND_HOME': em_packages.CTFFIND_HOME,
         'FREALIGN_HOME': em_packages.FREALIGN_HOME,
-        'RELION_HOME': em_packages.RELION_HOME
+        'RELION_HOME': em_packages.RELION_HOME,
+        'OPT_ALIGN_HOME': em_packages.OPT_ALIGN_HOME,
         }
 
 

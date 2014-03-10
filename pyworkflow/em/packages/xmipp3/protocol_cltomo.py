@@ -109,7 +109,6 @@ class XmippProtCLTomo(ProtClassify3D):
             readSetOfVolumes(fnAligned,setOfVolumes)
             volumeList=self.volumelist.get()
             setOfVolumes.setSamplingRate(volumeList.getSamplingRate())
-            setOfVolumes.write()
             self._defineOutputs(alignedVolumes=setOfVolumes)
             self._defineTransformRelation(self.volumelist, self.alignedVolumes)
             

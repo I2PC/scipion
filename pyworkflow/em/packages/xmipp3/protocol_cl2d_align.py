@@ -120,7 +120,6 @@ class XmippProtCL2DAlign(ProtAlign):
             imgSet.copyInfo(particles)
             imgSet.setHasAlignment(True)
             readSetOfParticles(alignedMd, imgSet, imgSet.hasCTF())
-            imgSet.write()
             self._defineOutputs(outputParticles=imgSet)
             self._defineTransformRelation(particles, imgSet)
 

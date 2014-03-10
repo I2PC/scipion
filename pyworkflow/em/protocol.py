@@ -36,7 +36,7 @@ from pyworkflow.object import String, Float
 from pyworkflow.protocol import *
 from pyworkflow.protocol.params import *
 from constants import *
-from data import * 
+from data import *
 from pyworkflow.utils.path import removeBaseExt, join, basename, cleanPath
 from pyworkflow.utils.properties import Message, Icon 
 
@@ -55,37 +55,40 @@ class EMProtocol(Protocol):
         cleanPath(setFn)
         setObj = SetClass(filename=setFn)
         return setObj
-        
+    
     def _createSetOfMicrographs(self, suffix=''):
         return self.__createSet(SetOfMicrographs, 'micrographs%s.sqlite', suffix)
-
+    
     def _createSetOfCoordinates(self, suffix=''):
         return self.__createSet(SetOfCoordinates, 'coordinates%s.sqlite', suffix)
     
     def _createSetOfParticles(self, suffix=''):
         return self.__createSet(SetOfParticles, 'particles%s.sqlite', suffix)
-
+    
     def _createSetOfClasses2D(self, imgSet, suffix=''):
         classes = self.__createSet(SetOfClasses2D, 'classes2D%s.sqlite', suffix)
         classes.setImages(imgSet)
         return classes
-
+    
     def _createSetOfClasses3D(self, suffix=''):
         return self.__createSet(SetOfClasses3D, 'classes3D%s.sqlite', suffix)
-
+    
     def _createSetOfVolumes(self, suffix=''):
         return self.__createSet(SetOfVolumes, 'volumes%s.sqlite', suffix)
     
     def _createSetOfCTF(self, suffix=''):
         return self.__createSet(SetOfCTF, 'ctfs%s.sqlite', suffix)
     
+    def _createSetOfMovies(self, suffix=''):
+        return self.__createSet(SetOfMovies, 'movies%s.sqlite', suffix)
+    
     def _defineSourceRelation(self, srcObj, dstObj):
         """ Add a DATASOURCE relation between srcObj and dstObj """
         self._defineRelation(RELATION_SOURCE, srcObj, dstObj)
-        
+    
     def _defineTransformRelation(self, srcObj, dstObj):
         self._defineRelation(RELATION_TRANSFORM, srcObj, dstObj)
-
+    
     def _insertChild(self, key, child):
         if isinstance(child, Set):
             child.write()
@@ -104,8 +107,8 @@ class EMProtocol(Protocol):
             msg = '%s and %s have not the same dimensions, \n' % (label1, label2)
             msg += 'which are %d and %d, respectively' % (d1, d2)
             errors.append(msg)
-        
-        
+
+
 class ProtImportImages(EMProtocol):
     """Common protocol to import a set of images in the project"""
         
@@ -122,7 +125,7 @@ class ProtImportImages(EMProtocol):
         form.addParam('ampContrast', FloatParam, default=0.1,
                       label=Message.LABEL_AMPLITUDE,
                       help=Message.TEXT_AMPLITUDE)
-        
+    
     #--------------------------- STEPS functions ---------------------------------------------------
     def importImages(self, pattern, checkStack, voltage, sphericalAberration, amplitudeContrast):
         """ Copy images matching the filename pattern
@@ -131,7 +134,7 @@ class ProtImportImages(EMProtocol):
         from pyworkflow.em import findClass
         filePaths = glob(expandPattern(pattern))
         
-        imgSet = self._createSet() 
+        imgSet = self._createSet()
         acquisition = imgSet.getAcquisition()
         # Setting Acquisition properties
         acquisition.setVoltage(voltage)
@@ -146,8 +149,10 @@ class ProtImportImages(EMProtocol):
         n = 1
         
         filePaths.sort()
+        
         for f in filePaths:
-            dst = self._getPath(basename(f))            
+#             ext = os.path.splitext(basename(f))[1]
+            dst = self._getPath(basename(f))
             shutil.copyfile(f, dst)
             if self.checkStack:
                 _, _, _, n = imgh.getDimensions(dst)
@@ -163,7 +168,6 @@ class ProtImportImages(EMProtocol):
                 imgSet.append(img)
             outFiles.append(dst)
         
-        imgSet.write()
         args = {}
         outputSet = self._getOutputSet(self._className)
         args[outputSet] = imgSet
@@ -199,9 +203,7 @@ class ProtImportImages(EMProtocol):
     def _methods(self):
         methods = []
         outputSet = self._getOutputSet(self._className)
-        if not hasattr(self, outputSet):
-            methods.append("Has no method information yet.") 
-        else:
+        if hasattr(self, outputSet):
             methods.append("%d " % getattr(self, outputSet).getSize() + self._className + "s has been imported")
             methods.append("with a sampling rate of %0.2f A/px" % getattr(self, outputSet).getSamplingRate())
             
@@ -213,8 +215,8 @@ class ProtImportImages(EMProtocol):
     
     def _getOutputSet(self, setName):
         return "output" + setName + "s"
-        
-        
+
+
 class ProtImportMicrographs(ProtImportImages):
     """Protocol to import a set of micrographs in the project"""
 
@@ -227,21 +229,26 @@ class ProtImportMicrographs(ProtImportImages):
                    label=Message.LABEL_SAMP_MODE,
                    choices=[Message.LABEL_SAMP_MODE_1, Message.LABEL_SAMP_MODE_2])
         form.addParam('samplingRate', FloatParam, default=1, 
-                   label=Message.LABEL_SAMP_RATE, 
+                   label=Message.LABEL_SAMP_RATE,
                    condition='samplingRateMode==%d' % SAMPLING_FROM_IMAGE)
-        form.addParam('magnification', IntParam, default=60000,
-                   label=Message.LABEL_MAGNI_RATE, 
+        form.addParam('magnification', IntParam, default=50000,
+                   label=Message.LABEL_MAGNI_RATE,
                    condition='samplingRateMode==%d' % SAMPLING_FROM_SCANNER)
         form.addParam('scannedPixelSize', FloatParam, default=7.0,
-                   label=Message.LABEL_SCANNED, 
+                   label=Message.LABEL_SCANNED,
                    condition='samplingRateMode==%d' % SAMPLING_FROM_SCANNER)
-        
-        
+    
+    def _validate(self):
+        errors = ProtImportImages._validate(self)
+        if self._checkMrcStack():
+            errors.append("The micrographs can't be a mrc stack")
+        return errors
+    
     def _insertAllSteps(self):
         self._createSet = self._createSetOfMicrographs
         self._insertFunctionStep('importImages', self.pattern.get(), self.checkStack.get(), 
-                                 self.voltage.get(), self.sphericalAberration.get(), self.ampContrast.get()) #, self.samplingRate.get(), 
-                                
+                                 self.voltage.get(), self.sphericalAberration.get(), self.ampContrast.get()) #, self.samplingRate.get(),
+    
     def _setOtherPars(self, micSet):
         micSet.getAcquisition().setMagnification(self.magnification.get())
         
@@ -249,7 +256,19 @@ class ProtImportMicrographs(ProtImportImages):
             micSet.setSamplingRate(self.samplingRate.get())
         else:
             micSet.setScannedPixelSize(self.scannedPixelSize.get())
-      
+    
+    def _checkMrcStack(self):
+        filePaths = glob(expandPattern(self.pattern.get()))
+        imgh = ImageHandler()
+        stack = False
+        for f in filePaths:
+            ext = os.path.splitext(basename(f))[1]
+            _, _, _, n = imgh.getDimensions(f)
+            if ext == ".mrc" and n > 1:
+                stack = True
+                break
+        return stack
+
 
 class ProtImportParticles(ProtImportImages):
     """Protocol to import a set of particles in the project"""
@@ -274,7 +293,7 @@ class ProtImportParticles(ProtImportImages):
     
     def getFiles(self):
         return self.outputParticles.getFiles()
-        
+
 
 class ProtImportVolumes(EMProtocol):
     """Protocol to import a set of volumes in the project"""
@@ -303,7 +322,7 @@ class ProtImportVolumes(EMProtocol):
         vol.setFileName(dst)
         vol.setSamplingRate(self.samplingRate.get())
         return vol
-        
+    
     def importVolumes(self, pattern, samplingRate):
         """ Copy volumes matching the filename pattern
         Register other parameters.
@@ -378,7 +397,7 @@ class ProtImportVolumes(EMProtocol):
                 errors.append(Message.ERROR_PATTERN_FILES)
 
         return errors
-         
+
 
 class ProtImportPdb(EMProtocol):
     """Protocol to import a set of volumes in the project"""
@@ -416,7 +435,137 @@ class ProtImportPdb(EMProtocol):
         errors = []
         if not exists(self.path.get()):
             errors.append("PDB not found at *%s*" % self.path.get())
-        return errors       
+        return errors
+
+
+class ProtImportMovies(ProtImportImages):
+    """Protocol to import a set of movies (from direct detector cameras) in the project"""
+    
+    _className = 'Movie'
+    _label = Message.LABEL_IMPORT_MOV
+    
+    def _defineParams(self, form):
+        ProtImportImages._defineParams(self, form)
+        form.addParam('samplingRateMode', EnumParam, default=SAMPLING_FROM_IMAGE,
+                   label=Message.LABEL_SAMP_MODE,
+                   choices=[Message.LABEL_SAMP_MODE_1, Message.LABEL_SAMP_MODE_2])
+        form.addParam('samplingRate', FloatParam, default=1, 
+                   label=Message.LABEL_SAMP_RATE,
+                   condition='samplingRateMode==%d' % SAMPLING_FROM_IMAGE)
+        form.addParam('magnification', IntParam, default=50000,
+                   label=Message.LABEL_MAGNI_RATE,
+                   condition='samplingRateMode==%d' % SAMPLING_FROM_SCANNER)
+        form.addParam('scannedPixelSize', FloatParam, default=7.0,
+                   label=Message.LABEL_SCANNED,
+                   condition='samplingRateMode==%d' % SAMPLING_FROM_SCANNER)
+    
+    def _insertAllSteps(self):
+        self._insertFunctionStep('importMoviesStep', self.pattern.get(), self.voltage.get(), self.magnification.get(),
+                                 self.sphericalAberration.get(), self.ampContrast.get())
+    
+    #--------------------------- STEPS functions ---------------------------------------------------
+    def importMoviesStep(self, pattern, voltage, magnification, sphericalAberration, amplitudeContrast):
+        """ Copy movies matching the filename pattern
+        Register other parameters.
+        """
+        filePaths = self._getFilePaths(pattern)
+        movSet = self._createSetOfMovies()
+        acquisition = movSet.getAcquisition()
+        # Setting Acquisition properties
+        acquisition.setVoltage(voltage)
+        acquisition.setSphericalAberration(sphericalAberration)
+        acquisition.setAmplitudeContrast(amplitudeContrast)
+        acquisition.setMagnification(magnification)
+        
+        if self.samplingRateMode == SAMPLING_FROM_IMAGE:
+            movSet.setSamplingRate(self.samplingRate.get())
+        else:
+            movSet.setScannedPixelSize(self.scannedPixelSize.get())
+        
+        for f in filePaths:
+#             ext = os.path.splitext(basename(f))[1]
+            dst = self._getPath(basename(f))
+            shutil.copyfile(f, dst)
+            mov = Movie()
+            mov.setFileName(dst)
+            mov.setAcquisition(acquisition)
+            if self.samplingRateMode == SAMPLING_FROM_IMAGE:
+                mov.setSamplingRate(movSet.getSamplingRate())
+            else:
+                mov.setScannedPixelSize(movSet.getScannedPixelSize())
+            movSet.append(mov)
+        
+        self._defineOutputs(outputMovies=movSet)
+    
+    def _getFilePaths(self, pattern):
+        """ Return a sorted list with the paths of files"""
+        from glob import glob
+        filePaths = glob(pattern)
+        filePaths.sort()
+        
+        return filePaths
+
+
+class ProtProcessMovies(EMProtocol):
+    """Protocol base for protocols to process movies from direct detectors cameras"""
+    
+    #--------------------------- DEFINE param functions --------------------------------------------
+    def _defineParams(self, form):
+        form.addSection(label=Message.LABEL_INPUT)
+        
+        form.addParam('inputMovies', PointerParam, important=True,
+                      label=Message.LABEL_INPUT_MOVS, pointerClass='SetOfMovies')
+        form.addParallelSection(threads=1, mpi=1)
+    
+    #--------------------------- INSERT steps functions --------------------------------------------
+    def _insertAllSteps(self):
+        self._insertFunctionStep('processMoviesStep')
+        self._insertFunctionStep('createOutputStep')
+    
+    #--------------------------- STEPS functions ---------------------------------------------------
+    def processMoviesStep(self):
+        self._micList = []
+        dir = self._getTmpPath()
+        self._enterDir(dir)
+        movSet = self.inputMovies.get()
+        micJob = "justtest.mrc"
+        
+        for m in movSet:
+            movFn = os.path.relpath(dir, m.getFileName())
+            movBase = basename(movfn)
+            copyFile(movFn, movBase)
+            mov = removeExt(movBase)
+            
+            self._defineProgram()
+            args = "%s" % movBase
+            self.runJob(self._program, args)
+            micFn = os.path.relpath(self._getExtraPath(mov + ".mrc"))
+            moveFile(micJob, micFn)
+            self._micList.append(micFn)
+        
+        self._leaveDir()
+    
+    def createOutputStep(self):
+        micSet = self._createSetOfMicrographs()
+        movSet = self.inputMovies.get()
+        micSet.setAcquisition(movSet.getAcquisition())
+        micSet.setSamplingRate(movSet.getSamplingRate())
+        
+        for m in self._micList:
+            mic = Micrograph()
+            mic.setFileName(m)
+            micSet.append(mic)
+        self._defineOutputs(outputMicrographs=micSet)
+
+
+class ProtOpticalAlignment(ProtProcessMovies):
+    """ Protocol to align movies, from direct detectors cameras, into micrographs.
+    """
+    _label = 'optical alignment'
+    
+    def _defineProgram(self):
+        XMP_OPT_ALIGN = 'xmipp_optical_alignment'
+        self._program = join(os.environ['OPT_ALIGN_HOME'], XMP_OPT_ALIGN)
 
 
 class ProtInitialVolume(EMProtocol):
@@ -697,20 +846,17 @@ class ProtUserSubSet(EMProtocol):
     def getType(self):
         return self._setType.get()
     
-    
-        
     def createInputSet(self, inputset):
         
         inputsetpt = Pointer()
         inputsetpt.set(inputset)
         inputs = {'input' + self._setType.get(): inputsetpt}
         self._defineInputs(**inputs)
-        
-        
+    
     def createOutputSet(self, outputset):
         outputs = {'output' + self._setType.get(): outputset}
         self._defineOutputs(**outputs)
-   
+    
     def getOutputSet(self):
         return getattr(self, 'output' + self._setType.get())
     

@@ -588,6 +588,7 @@ def readSetOfClasses2D(classes2DSet, filename, classesBlock='classes', **args):
                 img.setSamplingRate(samplingRate)
                 class2D.append(img)
                 
+        # Check if write function is necessary
         class2D.write()
     
         if averages is not None:
@@ -654,6 +655,7 @@ def readSetOfClasses3D(classes3DSet, filename, classesBlock='classes', **args):
                 img.setSamplingRate(samplingRate)
                 class3D.append(img)
                 
+        # Check if write function is necessary
         class3D.write()
     
         if averages is not None:

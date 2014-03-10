@@ -112,7 +112,6 @@ class EmanProtInitModel(ProtInitialVolume):
             vol.setFileName(volFn)
             volumes.append(vol)
 
-        volumes.write()
         self._defineOutputs(outputVolumes=volumes)
         self._defineSourceRelation(classes2DSet, volumes)
         

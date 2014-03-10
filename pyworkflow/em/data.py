@@ -266,15 +266,14 @@ class Image(EMObject):
     def __str__(self):
         """ String representation of an Image. """
         return "%s (index=%d, filename=%s)" % (self.getClassName(), self.getIndex(), self.getFileName())
-    
-    
-        
+
+
 class Micrograph(Image):
     """ Represents an EM Micrograph object """
     def __init__(self, **args):
         Image.__init__(self, **args)
-        
-        
+
+
 class Particle(Image):
     """ Represents an EM Particle object """
     def __init__(self, **args):
@@ -448,13 +447,13 @@ class Set(EMObject):
             if i == n:
                 break
         return subset
-            
-                
+
+
 class SetOfImages(Set):
     """ Represents a set of Images """
     def __init__(self, **args):
         Set.__init__(self, **args)
-        self._samplingRate = Float()        
+        self._samplingRate = Float()
         self._hasCtf = Boolean(args.get('ctf', False))
         self._hasAlignment = Boolean(args.get('alignmet', False))
         self._hasProjectionMatrix = Boolean(False)
@@ -504,7 +503,7 @@ class SetOfImages(Set):
         if not image.getSamplingRate():
             image.setSamplingRate(self.getSamplingRate())
         Set.append(self, image)
-
+    
     def copyInfo(self, other):
         """ Copy basic information (sampling rate, scannedPixelSize and ctf)
         from other set of images to current one"""
@@ -522,7 +521,7 @@ class SetOfImages(Set):
 #                # ctf is a XMippCTFModel
 #                filePaths.update(item.getCTF().getFiles())
         return filePaths
-            
+    
     def setDownsample(self, downFactor):
         """ Update the values of samplingRate and scannedPixelSize
         after applying a downsampling factor of downFactor.
@@ -561,29 +560,29 @@ class SetOfImages(Set):
         for img in self._iterItems():
             img.setAcquisition(self.getAcquisition())
             yield img
-            
-    
+
+
 class SetOfMicrographs(SetOfImages):
     """Represents a set of Micrographs"""
     def __init__(self, **args):
         SetOfImages.__init__(self, **args)
         self._scannedPixelSize = Float()
-        
+    
     def copyInfo(self, other):
         """ Copy basic information (voltage, spherical aberration and sampling rate)
         from other set of micrographs to current one.
         """
         SetOfImages.copyInfo(self, other)
         self._scannedPixelSize.set(other.getScannedPixelSize())
-        
+    
     def setSamplingRate(self, samplingRate):
         """ Set the sampling rate and adjust the scannedPixelSize. """
         self._samplingRate.set(samplingRate)
         self._scannedPixelSize.set(1e-4 * samplingRate * self._acquisition.getMagnification())
-               
+    
     def getScannedPixelSize(self):
         return self._scannedPixelSize.get()
-                       
+    
     def setScannedPixelSize(self, scannedPixelSize):
         """ Set scannedPixelSize and update samplingRate. """
         self._scannedPixelSize.set(scannedPixelSize)
@@ -723,9 +722,8 @@ class Coordinate(EMObject):
             height = dims[1]
             self.setY(height - self.getY())
         #else: error TODO
-            
-        
-    
+
+
 class SetOfCoordinates(Set):
     """ Encapsulate the logic of a set of particles coordinates.
     Each coordinate has a (x,y) position and is related to a Micrograph
@@ -795,8 +793,8 @@ class Transform(EMObject):
         from numpy import eye
         self._matrix = eye(4)
         self._matrix[3, 3] = 0.
-      
-      
+
+
 class TransformParams(object):
     """ Class to store transform parameters in the way
     expected by Xmipp/Spider.
@@ -806,66 +804,9 @@ class TransformParams(object):
                     'angleRot': 0., 'angleTilt': 0., 'anglePsi': 0.,
                     'scale': 1., 'mirror': False}.update(args)
         for k, v in defaults.iteritems():
-            setattr(self, k, v)  
+            setattr(self, k, v)
 
-        
-#class ImageClassAssignment(EMObject):
-#    """ This class represents the relation of
-#    an image assigned to a class. It serve to
-#    store additional information like weight, transformation
-#    or others. 
-#    """
-#    def __init__(self, **args):
-#        EMObject.__init__(self, **args)
-#        #self._imagePointer = Pointer() # Pointer to image
-#        # This parameters will dissappear when transformation matrix is used
-##         self._anglePsi = Float()
-##         self._shiftX = Float()
-##         self._shiftY = Float()
-##         self._flip = Boolean()
-#        self._imgId = Integer()
-#        
-##    def setImage(self, image):
-##        """ Set associated image. """
-##        self._imagePointer.set(image)
-##        
-##    def getImage(self):
-##        """ Get associated image. """
-##        return self._imagePointer.get()
-#
-#    def setImageId(self, imgId):
-#        """ Set associated image Id. """
-#        self._imgId.set(imgId)
-#        
-#    def getImageId(self):
-#        """ Get associated image Id. """
-#        return self._imgId.get()
-#    
-#    def setAnglePsi(self, anglePsi):
-#        self._anglePsi.set(anglePsi)
-        
-#     def getAnglePsi(self):
-#         return self._anglePsi.get()
-#     
-#     def setShiftX(self, shiftX):
-#         self._shiftX.set(shiftX)
-#         
-#     def getShiftX(self):
-#         return self.shiftX.get()
-# 
-#     def setShiftY(self, shiftY):
-#         self._shiftY.set(shiftY)
-#         
-#     def getShiftY(self):
-#         return self.shiftY.get()   
-# 
-#     def setFlip(self, flip):
-#         self._flip.set(flip)
-#         
-#     def getFlip(self):
-#         return self.flip.get()       
-     
-    
+
 class Class2D(SetOfParticles):
     """ Represent a Class that group some elements 
     from a classification. 
@@ -922,7 +863,7 @@ class SetOfClasses2D(Set):
     
     def setImages(self, images):
         self._imagesPointer.set(images)
-        
+    
     def getDimensions(self):
         """Return first image dimensions as a tuple: (xdim, ydim, zdim, n)"""
         if self.hasAverages():
@@ -946,9 +887,7 @@ class SetOfClasses2D(Set):
             
     def getSamplingRate(self):
         return self.getImages().getSamplingRate()
-    
-  
-            
+
 
 class Class3D(SetOfVolumes):
     """ Represent a Class that group some elements 
@@ -1037,4 +976,113 @@ class NormalModes(EMObject):
         
     def getFileName(self):
         return self._filename.get()
+
+
+class Movie(SetOfMicrographs):
+    """ Represent a set of frames of micrographs.
+    """
+    def __init__(self, **args):
+        SetOfMicrographs.__init__(self, **args)
+        # This properties should be set when retrieving from the SetOfMovies
+        self._filename = String()
+        self._representative = None
+        
+    def getFileName(self):
+        """ Use the _objValue attribute to store filename. """
+        return self._filename.get()
     
+    def setFileName(self, filename):
+        """ Use the _objValue attribute to store filename. """
+        self._filename.set(filename)
+    
+    def setRepresentative(self, avgMicrograph):
+        self._representative = avgMicrograph
+    
+    def getRepresentative(self):
+        """ The representative is an average of 
+        the aligned micrographs stored in each frame
+        of the movie.
+        """
+        return self._representative
+    
+    def hasRepresentative(self):
+        """ Return true if have a reprensentative. """
+        return self._representative is not None
+
+
+class SetOfMovies(Set):
+    """ Represents a set of Movies.
+    """
+    def __init__(self, **args):
+        Set.__init__(self, **args)
+        self._acquisition = Acquisition()
+        self._samplingRate = Float()
+        self._scannedPixelSize = Float()
+        self._representatives = None # Store the averages images of each class(SetOfMicrographs)
+        self._imagesPointer = Pointer()
+    
+    def setSamplingRate(self, samplingRate):
+        """ Set the sampling rate and adjust the scannedPixelSize. """
+        self._samplingRate.set(samplingRate)
+        self._scannedPixelSize.set(1e-4 * samplingRate * self._acquisition.getMagnification())
+    
+    def getScannedPixelSize(self):
+        return self._scannedPixelSize.get()
+    
+    def setScannedPixelSize(self, scannedPixelSize):
+        """ Set scannedPixelSize and update samplingRate. """
+        self._scannedPixelSize.set(scannedPixelSize)
+        self._samplingRate.set((1e+4 * scannedPixelSize) / self._acquisition.getMagnification())
+    
+    def getSamplingRate(self):
+        return self._samplingRate.get()
+    
+    def getAcquisition(self):
+        return self._acquisition
+    
+    def setAcquisition(self, acquisition):
+        self._acquisition = acquisition
+    
+    def copyInfo(self, other):
+        """ Copy basic information (sampling rate, scannedPixelSize and ctf)
+        from other set of movies to current one"""
+        self.copyAttributes(other, '_samplingRate')
+        self._acquisition.copyInfo(other._acquisition)
+    
+    def getFiles(self):
+        filePaths = set()
+        filePaths.add(self.getFileName())
+        for item in self:
+            filePaths.add(item.getFileName())
+        return filePaths
+    
+    def iterMovieFrames(self):
+        """ Iterate over the frames of a movie. """
+        pass
+    
+    def hasRepresentatives(self):
+        return self._representatives is not None
+    
+    def getRepresentatives(self):
+        """ Return a SetOfMicrographs composed by all the representatives micrographs 
+        of the movies. """
+        return self._representatives
+    
+    def createRepresentatives(self):
+        self._representatives = SetOfMicrographs(filename=self.getFileName(), prefix='Representatives')
+        if not self.getMicrographs().hasValue():
+            raise Exception("SetOfMovies.createAverages: you must set the micrographs before creating the representatives!!!")
+        self._representatives.copyInfo(self.getMicrographs())
+        return self._representatives
+    
+    def getMicrographs(self):
+        """ Return the SetOfMicrographs used to create the SetOfMovies. """
+        return self._imagesPointer.get()
+    
+    def setMicrographs(self, micrographs):
+        self._imagesPointer.set(micrographs)
+    
+    def getDimensions(self):
+        """Return first micrograph dimensions as a tuple: (xdim, ydim, zdim, n)"""
+        if self.hasRepresentatives():
+            return self.getRepresentatives().getDimensions()
