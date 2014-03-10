@@ -519,31 +519,32 @@ class ProtProcessMovies(EMProtocol):
     
     #--------------------------- INSERT steps functions --------------------------------------------
     def _insertAllSteps(self):
-        self._insertFunctionStep('processMoviesStep')
+        movSet = self.inputMovies.get()
+        self._micList = []
+        for mov in movSet:
+            self._movie = mov
+            self._insertFunctionStep('processMoviesStep')
         self._insertFunctionStep('createOutputStep')
     
     #--------------------------- STEPS functions ---------------------------------------------------
     def processMoviesStep(self):
-        self._micList = []
-        dir = self._getTmpPath()
-        self._enterDir(dir)
-        movSet = self.inputMovies.get()
-        micJob = "justtest.mrc"
+        movFn = self._movie.getFileName()
+        movName = removeBaseExt(movFn)
         
-        for m in movSet:
-            movFn = os.path.relpath(dir, m.getFileName())
-            movBase = basename(movfn)
-            copyFile(movFn, movBase)
-            mov = removeExt(movBase)
-            
-            self._defineProgram()
-            args = "%s" % movBase
-            self.runJob(self._program, args)
-            micFn = os.path.relpath(self._getExtraPath(mov + ".mrc"))
-            moveFile(micJob, micFn)
-            self._micList.append(micFn)
+        self._createMovWorkingDir(movName)
+        movDir = self._movWorkingDir(movName)
         
+        self._enterDir(movDir)
+        self._defineProgram()
+        movRelFn = os.path.relpath(movFn, movDir)
+        args = "%s" % movRelFn
+        self.runJob(self._program, args)
         self._leaveDir()
+        
+        micJob = join(movDir, "justtest.mrc")
+        micFn = self._getExtraPath(movName + ".mrc")
+        moveFile(micJob, micFn)
+        self._micList.append(micFn)
     
     def createOutputStep(self):
         micSet = self._createSetOfMicrographs()
@@ -556,6 +557,18 @@ class ProtProcessMovies(EMProtocol):
             mic.setFileName(m)
             micSet.append(mic)
         self._defineOutputs(outputMicrographs=micSet)
+    
+    def _createMovWorkingDir(self, movFn):
+        """create a new directory for the movie and change to this directory.
+        """
+        workDir = self._movWorkingDir(movFn)
+        makePath(workDir)   # Create a directory for a current iteration
+    
+    def _movWorkingDir(self, movFn):
+        """ Define which is the directory for the current movie"""
+        movDir = '%s' % movFn
+        workDir = self._getTmpPath(movFn)
+        return workDir
 
 
 class ProtOpticalAlignment(ProtProcessMovies):
