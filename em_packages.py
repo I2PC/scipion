@@ -17,3 +17,5 @@ FREALIGN_HOME = os.path.join(os.environ['EM_SOFTWARE'], 'brandeis', 'frealign_v8
 CTFFIND_HOME = os.path.join(os.environ['EM_SOFTWARE'], 'brandeis', 'ctffind')
 # Relion
 RELION_HOME = os.path.join(os.environ['EM_SOFTWARE'], 'relion-1.2')
+# xmipp_optical_alignment
+OPT_ALIGN_HOME = os.path.join(os.environ['EM_SOFTWARE'], 'opt_flow_alignment')
