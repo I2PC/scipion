@@ -867,7 +867,8 @@ class ProtUserSubSet(EMProtocol):
     def _summary(self):
         summary = []
         inputclass = self.getInputSet().__class__.__name__
-        summary.append("From %s of %s elements created subset of %s %s"%(inputclass, self.getInputSet().getSize(), self.getOutputSet().getSize(), self.getType()))
+        outputclass = self.getOutputSet().__class__.__name__
+        summary.append("From %s of %s elements created %s of %s elements"%(inputclass, self.getInputSet().getSize(), outputclass, self.getOutputSet().getSize()))
         return summary
 
 
