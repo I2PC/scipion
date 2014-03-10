@@ -68,6 +68,10 @@ class SpiderProtClassifyWard(ProtClassify, SpiderProtocol):
                       label='Number of factors',
                       help='After running, examine the eigenimages and decide which ones to use.\n'
                            'Typically all but the first few are noisy.')
+        form.addParam('numberOfLevels', IntParam, default=10, expertLevel=LEVEL_ADVANCED,
+                      label='Number of levels',
+                      help='When creating the set of classes, the classification tree.'
+                           'whill be cut after this level.')
         
     #--------------------------- INSERT steps functions --------------------------------------------  
     def _insertAllSteps(self):
@@ -136,22 +140,27 @@ class SpiderProtClassifyWard(ProtClassify, SpiderProtocol):
         """ Create the SetOfClasses2D from the images of each node
         in the dendogram. 
         """
-        avg = Particle()
         img = Particle()
+        sampling = classes.getSamplingRate()
         
         for node in nodeList:
             if node.path:
-                print "node.path: ", node.path
+                #print "node.path: ", node.path
                 class2D = Class2D()
+                avg = Particle()
+                #avg.copyObjId(class2D)
+                avg.setLocation(node.avgCount, self.dendroAverages)
+                avg.setSamplingRate(sampling)
+                
+                class2D.setAverage(avg)
+                class2D.setSamplingRate(sampling)
                 classes.append(class2D)
-                print "class2D.id: ", class2D.getObjId()
+                #print "class2D.id: ", class2D.getObjId()
                 for i in node.imageList:
                     #img.setObjId(i) # FIXME: this is wrong if the id is different from index
                     img.cleanObjId()
+                    img.setLocation(int(i), self.dendroImages)
                     class2D.append(img)
-                avg.copyObjId(class2D)
-                avg.setLocation(node.avgCount, self.dendroAverages)
-                averages.append(avg)
                 
                 
     def _fillParticlesFromNodes(self, particles, nodeList):
@@ -191,10 +200,11 @@ class SpiderProtClassifyWard(ProtClassify, SpiderProtocol):
         self.dendroImages = self._getFileName('particles')
         self.dendroAverages = self._getFileName('averages')
         self.dendroAverageCount = 0 # Write only the number of needed averages
+        self.dendroMaxLevel = self.numberOfLevels.get()
         
         return self._buildDendrogram(0, len(values)-1, 1, writeAverages)
     
-    def _buildDendrogram(self, leftIndex, rightIndex, index, writeAverages=False):
+    def _buildDendrogram(self, leftIndex, rightIndex, index, writeAverages=False, level=0):
         """ This function is recursively called to create the dendogram graph(binary tree)
         and also to write the average image files.
         Params:
@@ -228,7 +238,7 @@ class SpiderProtClassifyWard(ProtClassify, SpiderProtocol):
             
         def addChildNode(left, right, index):
             if right > left:
-                child = self._buildDendrogram(left, right, index, writeAverages)
+                child = self._buildDendrogram(left, right, index, writeAverages, level+1)
                 node.addChild(child)
                 node.length += child.length
                 node.imageList += child.imageList
@@ -237,7 +247,7 @@ class SpiderProtClassifyWard(ProtClassify, SpiderProtocol):
                     node.image += child.image
                     del child.image # Allow to free child image memory
                 
-        if rightIndex > leftIndex + 1:
+        if rightIndex > leftIndex + 1 and level < self.dendroMaxLevel:
             addChildNode(leftIndex, m, 2*index)
             addChildNode(m+1, rightIndex, 2*index+1)
             node.avgCount = self.dendroAverageCount + 1

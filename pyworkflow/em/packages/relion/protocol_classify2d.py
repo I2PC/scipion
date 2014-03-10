@@ -23,6 +23,7 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
+from pyworkflow.em.packages.relion.convert import addRelionLabels
 """
 This module contains the protocol base class for Relion protocols
 """
@@ -119,10 +120,18 @@ class ProtRelionClassify2D(ProtRelionBase, ProtClassify):
                                                iter=self.continueIter.get())
         
     #--------------------------- STEPS functions --------------------------------------------       
-    def createOutputStep(self):
-        pass # should be implemented in subclasses
+    def createOutputStep(self, stamp):
+        from convert import createClassesFromImages, readSetOfClasses2D
+        imagesStar = self._getFileName('data', iter=self._lastIter())
+        classesStar = self._getPath('output_classes.star')
+        self.ClassFnTemplate = '%(ref)03d@%(rootDir)s/relion_it%(iter)03d_classes.mrcs'
+        addRelionLabels(replace=True, extended=True)
+        createClassesFromImages(imagesStar, classesStar, self._lastIter(), 
+                                xmipp.MDL_REF, self.ClassFnTemplate)
+        classes = self._createSetOfClasses2D(self.inputParticles.get())
+        readSetOfClasses2D(classes, classesStar)
+        self._defineOutputs(outputClasses=classes)
         
-    
     #--------------------------- INFO functions -------------------------------------------- 
     def _validateNormal(self):
         """ Should be overriden in subclasses to 

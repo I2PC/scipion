@@ -243,28 +243,48 @@ class TestXmippWorkflow(unittest.TestCase):
         project.launchProtocol(protEmx, wait=True)
         
     def test_classesWard(self):
-        projName = "relion_tutorial"
+        projName = "high throughput"
         project = Manager().loadProject(projName)
         
         protName = 'XmippProtCL2D'
         protName = 'SpiderProtClassifyWard'
-        prot = project.mapper.selectByClass(protName)[0]
+        prot = project.mapper.selectByClass(protName)[-1]
+        print "prot.getObjId(): ", prot.getObjId()
         
         classes = prot.outputClasses
+        averages = prot.outputClasses.getAverages()
         import pyworkflow.em.packages.xmipp3 as xmipp3
         #xmipp3.writeSetOfClasses2D(classes, "classes.xmd")
         
         print "=" * 100
-        for cls in classes:
+        
+        i = 0
+        for cls, avg in zip(classes, averages):
             #for img in cls:
             #    print img.getLocation()
             #cls.printAll()
-            print cls.getObjId()
+            print "class id: ", cls.getObjId(), "avg: ", avg.getLocation()
+            if i == 9:
+                break
+            i += 1
+        
+        i = 0           
+        for cls in classes:
+            print "class id: ", cls.getObjId()
+            if i == 9:
+                break
+            i += 1    
             
+        i = 0
+        for avg in averages:
+            print "avg: ", avg.getLocation()
+            if i == 9:
+                break
+            i += 1                    
     
     def test_cleanDay2(self):
         """ Delete all runs from Day2. """
-        projName = "relion_tutorial"
+        projName = "high throughput"
         project = Manager().loadProject(projName)
         protocols = project.getRuns()
         for prot in reversed(protocols):
@@ -273,7 +293,7 @@ class TestXmippWorkflow(unittest.TestCase):
                 project.deleteProtocol(prot)
         
     def test_autoDay2(self):
-        projName = "relion_tutorial"
+        projName = "high throughput"
         project = Manager().loadProject(projName)
         
         def getProtocol(className):

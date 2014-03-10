@@ -1,6 +1,6 @@
 {% extends 'wizards/wiz_base.html' %} 
-{% block title %} Bandpass Filter {% endblock %} 
-{% block name %} Bandpass Filter {% endblock %} 
+{% block title %} Volumes Filter {% endblock %} 
+{% block name %} Volumes Filter {% endblock %} 
 {% block head %}
 	<script>
 		function returnParams(){
@@ -19,14 +19,14 @@
 </script>
 {% endif %}
 <tr id="{{obj.getObjId}}" class="no-selected"
-	onclick="compositeBandpass(($(this)),$('#low_val').attr('value'),$('#high_val').attr('value'),$('#decay_val').attr('value'));" value="{{obj.text}}">
+	onclick="compositeBandpassVol(($(this)),$('#low_val').attr('value'),$('#high_val').attr('value'),$('#decay_val').attr('value'));" value="{{obj.getFileName}}">
 	<td>{{obj.basename}}</td>
 </tr>
 {% endfor %} {% endblock %} {% block images %}
 <tr>
 	<td>
 		<div id="wrapper" class="image">
-			<img id="particle"/>
+			<img id="mic"/>
 		</div>Image
 	</td>
 	<td>
@@ -132,7 +132,7 @@ $(".slider_decay").slider({
 	}
 });
 //Load the First Element of the list
-window.onload = compositeBandpass($("tr#"+firstElm),$('#low_val').attr('value'),$('#high_val').attr('value'),$('#decay_val').attr('value'));
+window.onload = compositeBandpassVol($("tr#"+firstElm),$('#low_val').attr('value'),$('#high_val').attr('value'),$('#decay_val').attr('value'));
 </script>
 {% endblock %}
 {% block function %}

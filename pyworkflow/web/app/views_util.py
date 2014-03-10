@@ -164,7 +164,7 @@ def browse_objects(request):
 
         objs = {}
         for objClass in objClassList.split(","):
-            for obj in project.mapper.selectByClass(objClass, 
+            for obj in project.mapper.selectByClass(objClass.strip(), 
                                                     objectFilter=filterObject.objFilter, 
                                                     iterate=True):
                 objs[obj.getObjId()]=obj.getNameId()

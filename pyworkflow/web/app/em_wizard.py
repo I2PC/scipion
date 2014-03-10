@@ -37,6 +37,7 @@ from django.http import HttpResponse
 from pyworkflow.em.convert import ImageHandler
 from pyworkflow.em.constants import *
 
+from pyworkflow.em import SetOfImages, SetOfMicrographs, Volume, SetOfParticles, SetOfVolumes, ProtCTFMicrographs
 from pyworkflow.em.wizard import EmWizard
 
 from pyworkflow.em.packages.xmipp3.convert import xmippToLocation, locationToXmipp
@@ -293,12 +294,12 @@ def wiz_filter_particle(protocol, params, request):
             
             context = wiz_base(request, context)
             
-            return render_to_response('wizards/wiz_bandpass.html', context)
+            return render_to_response('wizards/wiz_filter_particles.html', context)
         
 def wiz_filter_volume(protocol, params, request):
     volumes = params['input'].get()
-    value = params['input'].get()
-    mode = params['mode'].get()
+    value = params['value']
+    mode = params['mode']
     
     
     if mode == 0:
@@ -317,10 +318,7 @@ def wiz_filter_volume(protocol, params, request):
         lowFreq = value[1]
         decay = value[2]
     
-    
     res = validateSet(volumes)
-    
-#    highFreq = protocol.resolution.get()
     
     if res is not 1:
         return HttpResponse(res)
@@ -347,7 +345,7 @@ def wiz_filter_volume(protocol, params, request):
             
             context = wiz_base(request, context)
             
-            return render_to_response('wizards/wiz_bandpass.html', context)
+            return render_to_response('wizards/wiz_filter_volumes.html', context)
 
 
 def wiz_particle_gaussian(protocol, params, request):
@@ -370,14 +368,14 @@ def wiz_particle_gaussian(protocol, params, request):
             
             context = wiz_base(request, context)
             
-            return render_to_response('wizards/wiz_gaussian.html', context)
+            return render_to_response('wizards/wiz_gaussian_particle.html', context)
         
         
 def wiz_volume_gaussian(protocol, params, request):
     volumes = params['input'].get()
     value = params['value']
     
-    res = validateSet(volumes) 
+    res = validateSet(volumes)
     
     if res is not 1:
         return HttpResponse(res)
@@ -388,6 +386,9 @@ def wiz_volume_gaussian(protocol, params, request):
         else: 
             vols = [vol.clone() for vol in volumes]
         
+        for v in vols:
+            v.basename = basename(v.getFileName())
+        
         if len(vols) == 0:
             return HttpResponse("errorIterate")
         else:
@@ -397,7 +398,7 @@ def wiz_volume_gaussian(protocol, params, request):
             
             context = wiz_base(request, context)
             
-            return render_to_response('wizards/wiz_gaussian.html', context)
+            return render_to_response('wizards/wiz_gaussian_vol.html', context)
         
 #def wiz_relion_bandpass(protocol, request):
 #    particles = protocol.inputParticles.get()

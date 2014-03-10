@@ -235,5 +235,5 @@ class XmippGaussianVolumesWizard(gaussianVolumesWizard):
 
     @classmethod
     def getView(self):
-        return "wiz_xmipp_filter_volume"
+        return "wiz_xmipp_gaussian_volume"
   

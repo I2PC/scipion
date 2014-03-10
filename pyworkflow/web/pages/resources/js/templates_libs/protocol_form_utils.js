@@ -135,7 +135,7 @@ $(document).ready(function() {
 			/* Execute the protocol */
 			var action = $("#protocolForm").attr("action");
 			
-			console.log($("#protocolForm").serialize())
+			// console.log($("#protocolForm").serialize())
 			
 			var serialize_form = fixInput($("#protocolForm").serialize());
 			
@@ -222,14 +222,14 @@ function fixInput(serialize_form){
 	var attrs = serialize_form.split("&");
 
 	$.each(attrs, function(param, paramName) {
-		console.log(param)
-		console.log(paramName)
+		// console.log(param)
+		// console.log(paramName)
 		var aux = paramName.split("=");
 		if($("#"+aux[0]+"_input")){
 			var objId = $("#"+aux[0]+"_input").attr("data-objId");
 			if (objId){
-				console.log("eybaby")
-				console.log(paramName)
+				// console.log("eybaby")
+				// console.log(paramName)
 				serialize_form = serialize_form.replace(paramName , aux[0]+"="+objId)
 			}
 		}
@@ -253,9 +253,9 @@ function evalElements() {
 		var type = jQuery(this).attr('data-type');
 		var param = jQuery(this).attr('id');
 		
-		console.log(value)
-		console.log(type)
-		console.log(param)
+		// console.log(value)
+		// console.log(type)
+		// console.log(param)
 
 //		alert(value +" - "+type+" - "+param);
 
@@ -427,6 +427,7 @@ function browseObjects(param, projName, type_param, value_param, pointerConditio
 	if (type_param == 'protClassName'){
 		url_param = "/browse_protocol_class/?projectName=" + projName + "&protClassName=" + value_param
 	}
+	
 		
 	$.ajax({
 		type : "GET",
@@ -437,7 +438,7 @@ function browseObjects(param, projName, type_param, value_param, pointerConditio
 			// for us
 			var res = getTableFormatted(param, json, value_param, 1);
 			var selectionFunc = "processSelectionTable"
-			if (maxNumObjects == 0 || maxNumObjects >1){
+			if (maxNumObjects == 0 || maxNumObjects > 1){
 				selectionFunc = "processMultipleSelectionTable"
 			}
 			selectDialog(param, res, selectionFunc);
@@ -518,7 +519,8 @@ function getTableFormatted(node, json, id, previsualize) {
 			var func = "&nbsp&nbsp&nbsp" + first + 'customPopup("/visualize_object/?objectId='+ key +'",1024,600)' + second;
 		}
 				
-		res += "<tr><td id='" + id + x + "' class='" + key + "' value='"
+//		res += "<tr><td id='" + id + x + "' class='" + key + "' value='"
+		res += "<tr><td id='"+ x + "' class='" + key + "' value='"
 				+ value + "' onclick=javascript:selTableMessi($(this)); >" 
 				+ value + func +"</td></tr>";
 		x++;
@@ -569,8 +571,8 @@ function processSelectionTable(elm) {
 	 */
 	var value = getSelectedValue(elm);
 //	$('input#' + elm.attr('data-node') + '_input').val(value[0]);
-	$('input#' + elm.attr('data-node') + '_input').attr('value', value[0]); 
-	$('input#' + elm.attr('data-node') + '_input').attr('data-objId', value[1]); 
+	$('input#' + elm.attr('data-node') + '_input').attr('value', value[0]);
+	$('input#' + elm.attr('data-node') + '_input').attr('data-objId', value[1]);
 }
 
 function processMultipleSelectionTable(elm) {
