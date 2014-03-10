@@ -588,16 +588,15 @@ def readSetOfClasses2D(classes2DSet, filename, classesBlock='classes', **args):
                 img.setSamplingRate(samplingRate)
                 class2D.append(img)
                 
-        # Check if write function is necessary
-        class2D.write()
-    
         if averages is not None:
             index, avgFn = xmippToLocation(classesMd.getValue(xmipp.MDL_IMAGE, objId))
             avg = Particle()
             avg.setLocation(index, avgFn)
             avg.copyObjId(class2D)
             averages.append(avg)
+
     classes2DSet._xmippMd = String(filename)
+    
 
 def writeSetOfClasses3D(classes3DSet, filename, classesBlock='classes'):    
     """ This function will write a SetOfClasses3D as Xmipp metadata.
