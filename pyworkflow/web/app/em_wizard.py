@@ -47,13 +47,14 @@ from pyworkflow.em.packages.xmipp3.constants import *
 
 from xmipp_wizard import *
 from spider_wizard import *
+from relion_wizard import *
 
 
 def wizard(request):
     # Get the Wizard Name
     requestDict = getattr(request, "POST")
     functionName = requestDict.get("wizName")
-    className = requestDict.get("wizClassName")
+#    className = requestDict.get("wizClassName")
     function = globals().get(functionName, None)
     
     print "======================= in wizard: " + functionName
@@ -399,33 +400,7 @@ def wiz_volume_gaussian(protocol, params, request):
             context = wiz_base(request, context)
             
             return render_to_response('wizards/wiz_gaussian_vol.html', context)
-        
-#def wiz_relion_bandpass(protocol, request):
-#    particles = protocol.inputParticles.get()
-#    
-#    highFreq = protocol.iniLowPassFilter.get()
-#    
-#    res = validateParticles(particles)
-#    
-#    if res is not 1:
-#        return HttpResponse(res)
-#    else:
-#        parts = getParticleSubset(particles.clone(),100)
-#        
-#        if len(parts) == 0:
-#            return HttpResponse("errorIterate")
-#        else:
-#            context = {'objects': parts,
-#                       'lowFreq': 0,
-#                       'highFreq': highFreq,
-#                       'decayFreq': 0,
-#                       'unit': UNIT_PIXEL
-#                       }
-#            
-#            context = wiz_base(request, context)
-#            
-#            return render_to_response('wizards/wiz_relion_bandpass.html', context)
-#        
+    
 
 def getParticleSubset(particles, num):
     """
@@ -536,6 +511,36 @@ def get_image_gaussian(request):
     img.save(response, "PNG")
     return response
 
+
+def wiz_filter_spider(protocol, request):
+    particles = protocol.inputParticles.get()
+    
+    res = validateParticles(particles) 
+    
+    if res is not 1:
+        return HttpResponse(res)
+    else:
+        parts = getParticleSubset(particles,100)
+        
+        if len(parts) == 0:
+            return HttpResponse("errorIterate")
+        else:
+            context = {'objects': parts,
+                       'filterType': protocol.filterType.get(),
+                       'filterMode': protocol.filterMode.get(),
+                       'usePadding': protocol.usePadding.get(),
+                       'protocol': protocol,
+                       }
+            
+            context = wiz_base(request, context)
+            
+            return render_to_response('wizards/wiz_filter_spider.html', context)
+       
+       
+#========================================================================
+# SPIDER
+#========================================================================
+
 def get_image_filter_spider(request):
     """
     Function to get the computing image with a spider filter applied
@@ -581,4 +586,35 @@ def get_image_filter_spider(request):
     response = HttpResponse(mimetype="image/png")
     img.save(response, "PNG")
     return response
+
+
+#===============================================================================
+# RELION
+#===============================================================================
+
+def wiz_relion_bandpass(protocol, request):
+    particles = protocol.inputParticles.get()
+    
+    highFreq = protocol.iniLowPassFilter.get()
+    
+    res = validateParticles(particles)
+    
+    if res is not 1:
+        return HttpResponse(res)
+    else:
+        parts = getParticleSubset(particles.clone(),100)
+        
+        if len(parts) == 0:
+            return HttpResponse("errorIterate")
+        else:
+            context = {'objects': parts,
+                       'lowFreq': 0,
+                       'highFreq': highFreq,
+                       'decayFreq': 0,
+                       'unit': UNIT_PIXEL
+                       }
+            
+            context = wiz_base(request, context)
+            
+            return render_to_response('wizards/wiz_relion_bandpass.html', context)
     

@@ -47,6 +47,9 @@ class RelionVolMaskRadiusWizard(volumeMaskRadiusWizard):
         _value = form.protocol.maskRadius.get()
         volumeMaskRadiusWizard.show(self, form, _value, _label, UNIT_PIXEL)
     
+    @classmethod    
+    def getView(self):
+        return "wiz_relion_volume_mask_radius" 
 
 class RelionBandpassWizard(filterParticlesWizard):
     _targets = [(ProtRelionClassify3D, ['iniLowPassFilter'])]
@@ -79,5 +82,5 @@ class RelionBandpassWizard(filterParticlesWizard):
     
     @classmethod    
     def getView(self):
-        return "wiz_relion_bandpass"   
+        return "wiz_relion_filter_particles"   
 

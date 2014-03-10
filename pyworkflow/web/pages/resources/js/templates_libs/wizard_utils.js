@@ -385,7 +385,9 @@ function compositeGaussian(elm) {
 	 * 	1. Select a particle from a list.
 	 * 	2. Apply a gaussian filter to the image based in the sigma parameter.
 	 */
-	$.when(selectParticle(elm,"normal").then(previewSigma()));
+	selectParticle(elm,"normal")
+	previewSigma()
+//	$.when(selectParticle(elm,"normal").then(previewSigma()));
 }
 
 function compositeGaussianVol(elm) {
@@ -394,7 +396,9 @@ function compositeGaussianVol(elm) {
 	 * 	1. Select a volume from a list.
 	 * 	2. Apply a gaussian filter to the image based in the sigma parameter.
 	 */
-	$.when(selectList(elm,"normal").then(previewSigma()));
+	selectList(elm,"normal")
+	previewSigma()
+//	$.when(selectList(elm,"normal").then(previewSigma()));
 }
 
 function previewSigma() {

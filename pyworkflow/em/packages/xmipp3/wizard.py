@@ -197,7 +197,7 @@ class XmippGaussianParticlesWizard(gaussianParticlesWizard):
     
     @classmethod
     def getView(self):
-        return "wiz_xmipp_filter_particle"
+        return "wiz_xmipp_gaussian_particle"
     
 class XmippFilterVolumesWizard(filterVolumesWizard):   
     _targets = [(XmippProtFilterVolumes, ['lowFreq', 'highFreq', 'freqDecay'])]

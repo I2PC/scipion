@@ -52,6 +52,10 @@ class FrealignVolRadiiWizard(volumeMaskRadiiWizard):
         _value = [form.protocol.innerRadius.get(), form.protocol.outerRadius.get()]
         _label = ["innerRadius", "outerRadius"]
         volumeMaskRadiiWizard.show(self, form, _value, _label, UNIT_PIXEL)
+        
+    @classmethod    
+    def getView(self):
+        return "wiz_frealign_volume_mask_radii" 
 
  
 class FrealignBandpassWizard(filterParticlesWizard):
@@ -84,6 +88,11 @@ class FrealignBandpassWizard(filterParticlesWizard):
                 
         else:
             dialog.showWarning("Input particles", "Select particles first", form.root)  
+            
+    
+    @classmethod    
+    def getView(self):
+        return "wiz_frealign_filter_particle" 
  
  
 class FrealignVolBandpassWizard(filterVolumesWizard):
@@ -119,5 +128,9 @@ class FrealignVolBandpassWizard(filterVolumesWizard):
                 
         else:
             dialog.showWarning("Input volumes", "Select volumes first", form.root)  
+    
+    @classmethod    
+    def getView(self):
+        return "wiz_frealign_filter_volumes" 
     
     
