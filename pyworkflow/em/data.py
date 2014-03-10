@@ -625,8 +625,8 @@ class SetOfVolumes(SetOfImages):
     """Represents a set of Volumes"""
     def __init__(self, **args):
         SetOfImages.__init__(self, **args)
-        
-        
+
+
 class SetOfCTF(Set):
     """ Contains a set of CTF models estimated for a set of images."""
     def __init__(self, **args):
@@ -982,31 +982,6 @@ class Movie(SetOfMicrographs):
     """
     def __init__(self, **args):
         SetOfMicrographs.__init__(self, **args)
-        # This properties should be set when retrieving from the SetOfMovies
-        self._filename = String()
-#         self._representative = None
-#         
-    def getFileName(self):
-        """ Use the _objValue attribute to store filename. """
-        return self._filename.get()
-     
-    def setFileName(self, filename):
-        """ Use the _objValue attribute to store filename. """
-#         self._filename.set(filename)
-#     
-#     def setRepresentative(self, avgMicrograph):
-#         self._representative = avgMicrograph
-#     
-#     def getRepresentative(self):
-#         """ The representative is an average of 
-#         the aligned micrographs stored in each frame
-#         of the movie.
-#         """
-#         return self._representative
-#     
-#     def hasRepresentative(self):
-#         """ Return true if have a reprensentative. """
-#         return self._representative is not None
 
 
 class SetOfMovies(Set):
@@ -1085,3 +1060,13 @@ class SetOfMovies(Set):
         """Return first micrograph dimensions as a tuple: (xdim, ydim, zdim, n)"""
         if self.hasRepresentatives():
             return self.getRepresentatives().getDimensions()
+    
+    def _insertItem(self, movie):
+        """ Create the SetOfMicrographs assigned to a Movie.
+        If the file exists, it will load the Set.
+        """
+        if movie.getFileName() is None:
+            moviePrefix = 'Movie%03d' % movie.getObjId()
+            movie._mapperPath.set('%s,%s' % (self.getFileName(), moviePrefix))
+        Set._insertItem(self, movie)
+        movie.write()#Set.write(self)
