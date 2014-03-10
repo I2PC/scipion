@@ -161,7 +161,23 @@ class SpiderProtClassifyWard(ProtClassify, SpiderProtocol):
                     img.cleanObjId()
                     img.setLocation(int(i), self.dendroImages)
                     class2D.append(img)
-                #averages.append(avg)
+                
+                
+    def _fillParticlesFromNodes(self, particles, nodeList):
+        """ Create the SetOfClasses2D from the images of each node
+        in the dendogram. 
+        """
+        
+        img = Particle()
+        
+        for node in nodeList:
+            if node.path:
+                for i in node.imageList:
+                    #img.setObjId(i) # FIXME: this is wrong if the id is different from index
+                    img.cleanObjId()
+                    particles
+                    particles.append(img)
+                
         
     def buildDendrogram(self, writeAverages=False):
         """ Parse Spider docfile with the information to build the dendogram.

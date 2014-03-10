@@ -848,8 +848,7 @@ class ProtAlign(EMProtocol):
 class ProtClassify(EMProtocol):
     pass
 
-class ProtUserSelection(EMProtocol):
-    pass
+
 
 class ProtUserSubSet(EMProtocol):
     
@@ -880,8 +879,9 @@ class ProtUserSubSet(EMProtocol):
     
     def _summary(self):
         summary = []
-        
-        summary.append("From input set of %s %s created subset of %s %s"%(self.getInputSet().getSize(), self.getType(), self.getOutputSet().getSize(), self.getType()))
+        inputclass = self.getInputSet().__class__.__name__
+        outputclass = self.getOutputSet().__class__.__name__
+        summary.append("From %s of %s elements created %s of %s elements"%(inputclass, self.getInputSet().getSize(), outputclass, self.getOutputSet().getSize()))
         return summary
 
 

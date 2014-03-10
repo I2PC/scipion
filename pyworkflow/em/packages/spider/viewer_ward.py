@@ -29,6 +29,7 @@ This module implement the wrappers around xmipp_showj
 visualization program.
 """
 import Tkinter as tk
+from Tkinter import *
 from pyworkflow.em import ProtUserSubSet
 from pyworkflow.protocol.params import *
 from pyworkflow.viewer import Viewer, ProtocolViewer, DESKTOP_TKINTER, WEB_DJANGO
@@ -133,8 +134,14 @@ class SpiderViewerWard(ProtocolViewer):
         canvas.grid(row=0, column=0, sticky='nsew')
         root.grid_columnconfigure(0, weight=1)
         root.grid_rowconfigure(0, weight=1) 
-        btn = Button(root, "Save classes", command=self.saveClasses)
-        btn.grid(row=1, column=0, sticky='n', padx=5, pady=5)        
+        
+        self.buttonframe = Frame(root)
+        self.buttonframe.grid(row=2, column=0, columnspan=2)   
+        saveparticlesbtn = Button(self.buttonframe, "Create New Set Of Particles", command=self.saveParticles)
+        saveparticlesbtn.grid(row=0, column=0, sticky='n', padx=5, pady=5)  
+        btn = Button(self.buttonframe, "Create New Set Of Classes", command=self.saveClasses)
+        btn.grid(row=0, column=1)
+              
             
         lt = LevelTree(g)
         lt.DY = 135 # TODO: change in percent of the image size
@@ -164,7 +171,30 @@ class SpiderViewerWard(ProtocolViewer):
         except Exception, ex:
             
             self.win.showError(str(ex))
-            raise
+            #raise
+            
+    def saveParticles(self, e=None):
+        """ Store particles from selected classes. """
+        try:
+            selectedNodes = [node for node in self.graph.getNodes() if node.selected]
+            suffix = 'Selection'
+            prot = ProtUserSubSet(setType='Particles')
+            prot.createInputSet(self.protocol.outputClasses)
+            self._project._setupProtocol(prot)
+            prot.makePathsAndClean()
+            
+            particles = prot._createSetOfParticles(suffix)
+            particles.copyInfo(self.protocol.outputClasses.getImages())
+            self.protocol._fillParticlesFromNodes(particles, selectedNodes)
+            prot.createOutputSet(particles)
+            prot.setStatus(STATUS_FINISHED)
+            self._project._storeProtocol(prot)
+            #self.project.launchProtocol(prot, wait=True)
+            self.win.showInfo("Protocol %s created. " % prot.getName())
+        except Exception, ex:
+            
+            self.win.showError(str(ex))
+            #raise
         
         
     def getVisualizeDictWeb(self):
