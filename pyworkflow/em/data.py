@@ -618,7 +618,6 @@ class SetOfParticles(SetOfImages):
         """ Copy basic information (voltage, spherical aberration and sampling rate)
         from other set of micrographs to current one.
         """
- 
         SetOfImages.copyInfo(self, other)
         self.setHasCTF(other.hasCTF())    
 
@@ -724,7 +723,6 @@ class Coordinate(EMObject):
             self.setY(height - self.getY())
         #else: error TODO
             
-        
     
 class SetOfCoordinates(Set):
     """ Encapsulate the logic of a set of particles coordinates.
@@ -809,63 +807,6 @@ class TransformParams(object):
             setattr(self, k, v)  
 
         
-#class ImageClassAssignment(EMObject):
-#    """ This class represents the relation of
-#    an image assigned to a class. It serve to
-#    store additional information like weight, transformation
-#    or others. 
-#    """
-#    def __init__(self, **args):
-#        EMObject.__init__(self, **args)
-#        #self._imagePointer = Pointer() # Pointer to image
-#        # This parameters will dissappear when transformation matrix is used
-##         self._anglePsi = Float()
-##         self._shiftX = Float()
-##         self._shiftY = Float()
-##         self._flip = Boolean()
-#        self._imgId = Integer()
-#        
-##    def setImage(self, image):
-##        """ Set associated image. """
-##        self._imagePointer.set(image)
-##        
-##    def getImage(self):
-##        """ Get associated image. """
-##        return self._imagePointer.get()
-#
-#    def setImageId(self, imgId):
-#        """ Set associated image Id. """
-#        self._imgId.set(imgId)
-#        
-#    def getImageId(self):
-#        """ Get associated image Id. """
-#        return self._imgId.get()
-#    
-#    def setAnglePsi(self, anglePsi):
-#        self._anglePsi.set(anglePsi)
-        
-#     def getAnglePsi(self):
-#         return self._anglePsi.get()
-#     
-#     def setShiftX(self, shiftX):
-#         self._shiftX.set(shiftX)
-#         
-#     def getShiftX(self):
-#         return self.shiftX.get()
-# 
-#     def setShiftY(self, shiftY):
-#         self._shiftY.set(shiftY)
-#         
-#     def getShiftY(self):
-#         return self.shiftY.get()   
-# 
-#     def setFlip(self, flip):
-#         self._flip.set(flip)
-#         
-#     def getFlip(self):
-#         return self.flip.get()       
-     
-    
 class Class2D(SetOfParticles):
     """ Represent a Class that group some elements 
     from a classification. 
@@ -947,8 +888,6 @@ class SetOfClasses2D(Set):
     def getSamplingRate(self):
         return self.getImages().getSamplingRate()
     
-  
-            
 
 class Class3D(SetOfVolumes):
     """ Represent a Class that group some elements 
