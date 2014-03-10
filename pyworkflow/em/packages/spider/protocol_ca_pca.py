@@ -39,7 +39,16 @@ from glob import glob
 
 
 class SpiderProtCAPCA(SpiderProtocol):
-    """ Correspondence Analysis or Principal Component Analysis. """
+    """Correspondence Analysis (CA) or Principal Component Analysis (PCA).
+    
+    CA is the preferred method of finding inter-image variations. 
+    PCA computes the distance between data vectors with Euclidean 
+    distances, while CA uses Chi-squared distance.     
+    CA is superior here because it ignores differences in exposure 
+    between images, eliminating the need to rescale between images.
+    
+    See [[http://spider.wadsworth.org/spider_doc/spider/docs/techs/classification/tutorial.html#CAPCA][Spider documentation]] for more info. 
+    """
     _label = 'CAPCA'
     
     def __init__(self):

@@ -138,7 +138,7 @@ class XmippViewer(Viewer):
                 fn = mdFn.get()
             else:
                 fn = self._getTmpPath(obj.getName() + '_classes.xmd')
-                writeSetOfClasses2D(obj, fn, self._getTmpPath())
+                writeSetOfClasses2D(obj, fn)
             runScipionShowJ(fn, "Particles", self._project.getName(), obj.strId())  
             #runShowJ(fn, extraParams=args.get('extraParams', ''))  
             

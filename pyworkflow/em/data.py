@@ -617,7 +617,6 @@ class SetOfParticles(SetOfImages):
         """ Copy basic information (voltage, spherical aberration and sampling rate)
         from other set of micrographs to current one.
         """
- 
         SetOfImages.copyInfo(self, other)
         self.setHasCTF(other.hasCTF())    
 
