@@ -356,6 +356,16 @@ function compositeBandpass(elm, low, high, decay) {
 	$.when(selectParticle(elm, "normal")).then(previewBandpassFilter(low, high, decay));
 }
 
+function compositeBandpassVol(elm, low, high, decay) {
+	/*
+	 * Function composite structured in two steps:
+	 * 	1. Select a volume from a list.
+	 * 	2. Apply a bandpass filter to the image based in three parameters and
+	 * 	show the preview.
+	 */
+	$.when(selectList(elm, "normal")).then(previewBandpassFilter(low, high, decay));
+}
+
 function previewBandpassFilter(low, high, decay) {
 	// get the img path
 	var path_img = $("tr#" + $("table#data").attr("value")).attr("value");

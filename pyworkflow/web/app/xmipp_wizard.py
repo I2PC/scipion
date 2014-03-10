@@ -67,15 +67,22 @@ def wiz_xmipp_particle_mask_radii(protocol, request):
     protParams['value']= [protocol.innerRadius.get(), protocol.outerRadius.get()]
     return em_wizard.wiz_particles_mask_radii(protocol, protParams, request)
 
+def wiz_xmipp_volume_mask_radii(protocol, request):
+    protParams = {}
+    protParams['input']= protocol.inputVolumes
+    protParams['label']= ["innerRadius", "outerRadius"]
+    protParams['value']= [protocol.innerRadius.get(), protocol.outerRadius.get()]
+    return em_wizard.wiz_volumes_mask_radii(protocol, protParams, request)
+
 
 def wiz_xmipp_filter_particle(protocol, request):
     protParams = {}
     protParams['input']= protocol.inputParticles
-    protParams['label']= ["lowFreq", 
-                          "highFreq", 
+    protParams['label']= ["lowFreq",
+                          "highFreq",
                           "freqDecay"]
-    protParams['value']= [protocol.lowFreq.get(), 
-                          protocol.highFreq.get(), 
+    protParams['value']= [protocol.lowFreq.get(),
+                          protocol.highFreq.get(),
                           protocol.freqDecay.get()]
     protParams['mode']= protocol.fourierMode.get()
     return em_wizard.wiz_filter_particle(protocol, protParams, request)
@@ -91,9 +98,9 @@ def wiz_xmipp_gaussian_particle(protocol, request):
 
 def wiz_xmipp_filter_volume(protocol, request):
     protParams = {}
-    protParams['input']= protocol.inputParticles
-    protParams['label']= ["lowFreq", 
-                          "highFreq", 
+    protParams['input']= protocol.inputVolumes
+    protParams['label']= ["lowFreq",
+                          "highFreq",
                           "freqDecay"]
     protParams['value']= [protocol.lowFreq.get(), 
                           protocol.highFreq.get(), 
