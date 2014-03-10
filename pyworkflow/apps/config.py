@@ -263,6 +263,14 @@ def addProtocols(settings):
     """ Write protocols configuration. """
     menu = ProtocolConfig("Protocols SPA")
     
+    # ------------------- DD cameras ----------------------------
+    m1 = menu.addSubMenu('DDCameras', tag='section')
+    
+    m1.addSubMenu(' Import', value='ProtImportMovies', 
+                  tag='protocol', icon='bookmark.png')
+    m1.addSubMenu('Process', value='ProtProcessMovies',
+                  tag='protocol_base')
+    
     # ------------------- Micrographs ----------------------------
     m1 = menu.addSubMenu('Micrographs', tag='section')
     
