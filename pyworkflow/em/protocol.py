@@ -686,8 +686,7 @@ class ProtAlign(EMProtocol):
 class ProtClassify(EMProtocol):
     pass
 
-class ProtUserSelection(EMProtocol):
-    pass
+
 
 class ProtUserSubSet(EMProtocol):
     

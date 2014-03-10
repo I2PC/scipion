@@ -636,7 +636,6 @@ class Protocol(Step):
         pass
     
     def copy(self, other, copyId=True):
-        print "self:%s other:%s"%(self.getObjId(), other.getObjId())
         copyDict = Object.copy(self, other, copyId)
         self._store()
         for r in other.getRelations():

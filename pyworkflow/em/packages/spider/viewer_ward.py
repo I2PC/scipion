@@ -164,7 +164,7 @@ class SpiderViewerWard(ProtocolViewer):
         except Exception, ex:
             
             self.win.showError(str(ex))
-            raise
+            #raise
         
         
     def getVisualizeDictWeb(self):
