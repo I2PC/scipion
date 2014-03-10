@@ -486,8 +486,7 @@ class ProtImportMovies(ProtImportImages):
 #             ext = os.path.splitext(basename(f))[1]
             dst = self._getPath(basename(f))
             shutil.copyfile(f, dst)
-            mov = Movie()
-            mov.setFileName(dst)
+            mov = Movie(filename=dst)
             mov.setAcquisition(acquisition)
             if self.samplingRateMode == SAMPLING_FROM_IMAGE:
                 mov.setSamplingRate(movSet.getSamplingRate())
@@ -522,6 +521,7 @@ class ProtProcessMovies(EMProtocol):
         movSet = self.inputMovies.get()
         self._micList = []
         for mov in movSet:
+            print "Path Movie: ", mov.getFileName()
             self._movie = mov
             self._insertFunctionStep('processMoviesStep')
         self._insertFunctionStep('createOutputStep')
