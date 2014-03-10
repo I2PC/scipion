@@ -326,7 +326,7 @@ class ProtRelionBase(EMProtocol):
         self._initialize()
         self._insertFunctionStep('convertInputStep')
         self._insertRelionStep()            
-        self._insertFunctionStep('createOutputStep')
+        self._insertFunctionStep('createOutputStep', 2)
  
     def _insertRelionStep(self):
         """ Prepare the command line arguments before calling Relion. """
@@ -417,7 +417,7 @@ class ProtRelionBase(EMProtocol):
     def _loadEnvironment(self):
         """ Setup the environment variables needed to launch Relion. """
         RELION_BIN = join(os.environ['RELION_HOME'], 'bin')
-        RELION_LD = join(os.environ['RELION_HOME'], 'lib')
+        RELION_LD = join(os.environ['RELION_HOME'], 'lib64')
         environAdd('PATH', RELION_BIN)
         environAdd('LD_LIBRARY_PATH', RELION_LD)
     
@@ -439,5 +439,6 @@ class ProtRelionBase(EMProtocol):
     def _lastIter(self):
         return self._getIterNumber(-1)
 
-    def firstIter(self):
+    def _firstIter(self):
         return self._getIterNumber(0) or 1
+    
