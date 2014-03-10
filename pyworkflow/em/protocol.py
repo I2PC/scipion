@@ -302,15 +302,15 @@ class ProtImportVolumes(EMProtocol):
     
     def __init__(self, **args):
         EMProtocol.__init__(self, **args)         
-        
-    def _insertAllSteps(self):
-        self._insertFunctionStep('importVolumes', self.pattern.get(), self.samplingRate.get())
        
     def _defineParams(self, form):
         form.addSection(label='Input')
         form.addParam('pattern', StringParam, label=Message.LABEL_PATTERN)
         form.addParam('samplingRate', FloatParam,
                    label=Message.LABEL_SAMP_RATE)
+    
+    def _insertAllSteps(self):
+        self._insertFunctionStep('importVolumes', self.pattern.get(), self.samplingRate.get())
         
     def createVolume(self, volumePath):
         """ Copy the volume to WorkingDir and create
@@ -506,7 +506,7 @@ class ProtImportMovies(ProtImportImages):
     def _getFilePaths(self, pattern):
         """ Return a sorted list with the paths of files"""
         from glob import glob
-        filePaths = glob(pattern)
+        filePaths = glob(expandPattern(pattern))
         filePaths.sort()
         
         return filePaths
