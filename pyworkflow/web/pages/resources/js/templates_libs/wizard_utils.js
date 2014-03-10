@@ -388,6 +388,15 @@ function compositeGaussian(elm) {
 	$.when(selectParticle(elm,"normal").then(previewSigma()));
 }
 
+function compositeGaussianVol(elm) {
+	/*
+	 * Function composite structured in two steps:
+	 * 	1. Select a volume from a list.
+	 * 	2. Apply a gaussian filter to the image based in the sigma parameter.
+	 */
+	$.when(selectList(elm,"normal").then(previewSigma()));
+}
+
 function previewSigma() {
 	/*
 	 * This function get a image using a gaussian filter based in the sigma
