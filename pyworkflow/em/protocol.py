@@ -522,6 +522,7 @@ class ProtProcessMovies(EMProtocol):
         movSet = self.inputMovies.get()
         self._micList = []
         for mov in movSet:
+            print "Path Movie: ", mov.getFileName
             self._movie = mov
             self._insertFunctionStep('processMoviesStep')
         self._insertFunctionStep('createOutputStep')
@@ -848,7 +849,8 @@ class ProtAlign(EMProtocol):
 class ProtClassify(EMProtocol):
     pass
 
-
+class ProtUserSelection(EMProtocol):
+    pass
 
 class ProtUserSubSet(EMProtocol):
     
@@ -879,9 +881,8 @@ class ProtUserSubSet(EMProtocol):
     
     def _summary(self):
         summary = []
-        inputclass = self.getInputSet().__class__.__name__
-        outputclass = self.getOutputSet().__class__.__name__
-        summary.append("From %s of %s elements created %s of %s elements"%(inputclass, self.getInputSet().getSize(), outputclass, self.getOutputSet().getSize()))
+        
+        summary.append("From input set of %s %s created subset of %s %s"%(self.getInputSet().getSize(), self.getType(), self.getOutputSet().getSize(), self.getType()))
         return summary
 
 
