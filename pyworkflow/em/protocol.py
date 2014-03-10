@@ -482,18 +482,24 @@ class ProtImportMovies(ProtImportImages):
         else:
             movSet.setScannedPixelSize(self.scannedPixelSize.get())
         
+        imgh = ImageHandler()
+        
         for f in filePaths:
-#             ext = os.path.splitext(basename(f))[1]
             dst = self._getPath(basename(f))
-            shutil.copyfile(f, dst)
+            copyFile(f, dst)
+            _, _, _, n = imgh.getDimensions(dst)
+            
             mov = Movie()
-            mov.setFileName(dst)
             mov.setAcquisition(acquisition)
-            if self.samplingRateMode == SAMPLING_FROM_IMAGE:
-                mov.setSamplingRate(movSet.getSamplingRate())
-            else:
-                mov.setScannedPixelSize(movSet.getScannedPixelSize())
+            mov.setSamplingRate(movSet.getSamplingRate())
             movSet.append(mov)
+            
+            for i in range(1, n + 1):
+                mic = Micrograph()
+                mic.setAcquisition(acquisition)
+                mic.setLocation(i, dst)
+                mic.setSamplingRate(mov.getSamplingRate())
+                mov.append(mic)
         
         self._defineOutputs(outputMovies=movSet)
     
@@ -521,15 +527,15 @@ class ProtProcessMovies(EMProtocol):
     def _insertAllSteps(self):
         movSet = self.inputMovies.get()
         self._micList = []
+        print "Path Movie: ", movSet.getFileName()
         for mov in movSet:
-            print "Path Movie: ", mov.getFileName
             self._movie = mov
             self._insertFunctionStep('processMoviesStep')
         self._insertFunctionStep('createOutputStep')
     
     #--------------------------- STEPS functions ---------------------------------------------------
     def processMoviesStep(self):
-        movFn = self._movie.getFileName()
+        movFn = self._movie.getFirstItem().getFileName()
         movName = removeBaseExt(movFn)
         
         self._createMovWorkingDir(movName)

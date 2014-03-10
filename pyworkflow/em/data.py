@@ -1060,3 +1060,13 @@ class SetOfMovies(Set):
         """Return first micrograph dimensions as a tuple: (xdim, ydim, zdim, n)"""
         if self.hasRepresentatives():
             return self.getRepresentatives().getDimensions()
+    
+    def _insertItem(self, movie):
+        """ Create the SetOfMicrographs assigned to a Movie.
+        If the file exists, it will load the Set.
+        """
+        if movie.getFileName() is None:
+            moviePrefix = 'Movie%03d' % movie.getObjId()
+            movie._mapperPath.set('%s,%s' % (self.getFileName(), moviePrefix))
+        Set._insertItem(self, movie)
+        movie.write()#Set.write(self)
