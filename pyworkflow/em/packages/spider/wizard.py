@@ -48,7 +48,7 @@ from convert import locationToSpider
 
 
 class SpiderProtMaskWizard(particleMaskRadiusWizard):
-    _targets = [(SpiderProtCAPCA, ['maskRadius'])]
+    _targets = [(SpiderProtCAPCA, ['radius'])]
     
     def _getProvider(self, protocol):
         _objs = protocol.inputParticles
@@ -56,9 +56,12 @@ class SpiderProtMaskWizard(particleMaskRadiusWizard):
     
     def show(self, form):
         _value = form.protocol.maskRadius.get()
-        _label = "maskRadius"
+        _label = "radius"
         particleMaskRadiusWizard.show(self, form, _value, _label, UNIT_PIXEL)
-    
+        
+    @classmethod    
+    def getView(self):
+        return "wiz_spider_particle_mask_radius"
     
 class SpiderParticlesMaskRadiiWizard(particlesMaskRadiiWizard):
     _targets = [(SpiderProtAlignAPSR, ['innerRadius', 'outerRadius'])]        
@@ -72,6 +75,9 @@ class SpiderParticlesMaskRadiiWizard(particlesMaskRadiiWizard):
         _label = ["innerRadius", "outerRadius"]
         particlesMaskRadiiWizard.show(self, form, _value, _label, UNIT_PIXEL)
     
+    @classmethod    
+    def getView(self):
+        return "wiz_spider_particle_mask_radii"
 
 class SpiderFilterParticlesWizard(filterParticlesWizard):    
     _targets = [(SpiderProtFilter, ['filterRadius', 'lowFreq', 'highFreq', 'temperature'])]

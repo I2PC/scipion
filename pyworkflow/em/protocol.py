@@ -444,6 +444,7 @@ class ProtImportMovies(ProtImportImages):
     _className = 'Movie'
     _label = Message.LABEL_IMPORT_MOV
     
+    #--------------------------- DEFINE param functions --------------------------------------------
     def _defineParams(self, form):
         ProtImportImages._defineParams(self, form)
         form.addParam('samplingRateMode', EnumParam, default=SAMPLING_FROM_IMAGE,
@@ -459,6 +460,7 @@ class ProtImportMovies(ProtImportImages):
                    label=Message.LABEL_SCANNED,
                    condition='samplingRateMode==%d' % SAMPLING_FROM_SCANNER)
     
+    #--------------------------- INSERT steps functions --------------------------------------------
     def _insertAllSteps(self):
         self._insertFunctionStep('importMoviesStep', self.pattern.get(), self.voltage.get(), self.magnification.get(),
                                  self.sphericalAberration.get(), self.ampContrast.get())
@@ -503,6 +505,7 @@ class ProtImportMovies(ProtImportImages):
         
         self._defineOutputs(outputMovies=movSet)
     
+    #--------------------------- UTILS functions ---------------------------------------------------
     def _getFilePaths(self, pattern):
         """ Return a sorted list with the paths of files"""
         from glob import glob
@@ -527,15 +530,14 @@ class ProtProcessMovies(EMProtocol):
     def _insertAllSteps(self):
         movSet = self.inputMovies.get()
         self._micList = []
-        print "Path Movie: ", movSet.getFileName()
         for mov in movSet:
-            self._movie = mov
-            self._insertFunctionStep('processMoviesStep')
+            movFn = mov.getFirstItem().getFileName()
+            print "Path Movie: ", movFn
+            self._insertFunctionStep('processMoviesStep', movFn)
         self._insertFunctionStep('createOutputStep')
     
     #--------------------------- STEPS functions ---------------------------------------------------
-    def processMoviesStep(self):
-        movFn = self._movie.getFirstItem().getFileName()
+    def processMoviesStep(self, movFn):
         movName = removeBaseExt(movFn)
         
         self._createMovWorkingDir(movName)
@@ -565,6 +567,7 @@ class ProtProcessMovies(EMProtocol):
             micSet.append(mic)
         self._defineOutputs(outputMicrographs=micSet)
     
+    #--------------------------- UTILS functions ---------------------------------------------------
     def _createMovWorkingDir(self, movFn):
         """create a new directory for the movie and change to this directory.
         """

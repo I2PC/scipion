@@ -46,8 +46,8 @@ from pyworkflow.em.packages.spider.wizard import filter_spider
 from pyworkflow.em.packages.xmipp3.constants import *
 
 from xmipp_wizard import *
-from spider_wizard import *
-from relion_wizard import *
+#from spider_wizard import *
+#from relion_wizard import *
 
 
 def wizard(request):
@@ -586,6 +586,23 @@ def get_image_filter_spider(request):
     response = HttpResponse(mimetype="image/png")
     img.save(response, "PNG")
     return response
+
+def wiz_spider_particle_mask_radius(protocol, request):
+    protParams = {}
+    protParams['input']= protocol.inputParticles
+    protParams['label']= "radius"
+    protParams['value']= protocol.radius.get()
+#    return em_wizard.wiz_particle_mask_radius(protocol, protParams, request)
+    return wiz_particle_mask_radius(protocol, protParams, request)
+
+
+def wiz_spider_particle_mask_radii(protocol, request):
+    protParams = {}
+    protParams['input']= protocol.inputParticles
+    protParams['label']= ["innerRadius", "outerRadius"]
+    protParams['value']= [protocol.innerRadius.get(), protocol.outerRadius.get()]
+#    return em_wizard.wiz_particles_mask_radii(protocol, protParams, request)
+    return wiz_particles_mask_radii(protocol, protParams, request)
 
 
 #===============================================================================
