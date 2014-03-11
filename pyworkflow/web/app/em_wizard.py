@@ -595,7 +595,8 @@ def wiz_spider_particle_mask_radius(protocol, request):
 #    return em_wizard.wiz_particle_mask_radius(protocol, protParams, request)
     return wiz_particle_mask_radius(protocol, protParams, request)
 
-def wiz_spider_mask_radii(protocol, request):
+
+def wiz_spider_particle_mask_radii(protocol, request):
     protParams = {}
     protParams['input']= protocol.inputParticles
     protParams['label']= ["innerRadius", "outerRadius"]
