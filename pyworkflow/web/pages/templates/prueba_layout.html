@@ -8,7 +8,13 @@
 	<script type='text/javascript' src='{{jquery_}}'></script>
 	<script type="text/javascript" src="{{layout_}}"></script>
 	<script type="text/javascript" src="{{jqueryui_}}"></script>
-
+	
+	<script type="text/javascript" src="{{jquery_ui_touch}}"></script>
+	<script>
+	// Fix to move UI elements in touch displays
+	$('#widget').draggable();
+	</script>
+	
 	<script type="text/javascript">
 
 	var myLayout; // a var is required because this page utilizes: myLayout.allowOverflow() method

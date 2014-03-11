@@ -18,6 +18,7 @@ urlpatterns = patterns('',
     url(r'^admin/', include(admin.site.urls)),
     
     url(r'^prueba_layout/$', 'app.views_project.prueba_layout'),
+    url(r'^prueba_layout_nested/$', 'app.views_project.prueba_layout_nested'),
     
     #HOST
     url(r'^view_hosts', 'app.views_host.viewHosts', name='view_hosts'),    

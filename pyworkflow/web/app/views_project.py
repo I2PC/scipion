@@ -49,6 +49,7 @@ def prueba_layout(request):
     context = {'jquery_': getResourceJs('jquery_'),
                'layout_': getResourceJs('layout_'),
                'jqueryui_': getResourceJs('jquery_ui_all_'),
+               'jquery_ui_touch': getResourceJs('jquery_ui_touch'),
                }
     
     return render_to_response('prueba_layout.html', context)
@@ -58,6 +59,7 @@ def prueba_layout_nested(request):
     context = {'jquery_': getResourceJs('jquery_'),
                'layout_': getResourceJs('layout_'),
                'jqueryui_': getResourceJs('jquery_ui_all_'),
+               'jquery_ui_touch': getResourceJs('jquery_ui_touch'),
                }
     
     return render_to_response('prueba_layout_nested.html', context)
