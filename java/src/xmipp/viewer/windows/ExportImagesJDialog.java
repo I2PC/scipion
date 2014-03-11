@@ -71,7 +71,7 @@ public class ExportImagesJDialog extends JDialog{
         
 
         pathtf = new JTextField(path);
-        add(pathtf, XmippWindowUtil.getConstraints(c, 1, 0));
+        add(pathtf, XmippWindowUtil.getConstraints(c, 1, 0, GridBagConstraints.HORIZONTAL));
         fc = new XmippFileChooser(path);
         if(path.contains(File.separator))
         {
