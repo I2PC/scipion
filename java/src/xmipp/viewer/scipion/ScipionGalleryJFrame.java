@@ -115,6 +115,11 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
                 try {
                     String output = XmippUtil.executeCommand(command);
                     XmippWindowUtil.releaseGUI(ScipionGalleryJFrame.this.getRootPane());
+                    if(output != null && !output.isEmpty())
+                    {
+                        XmippDialog.showInfo(ScipionGalleryJFrame.this, output);
+                        System.out.println(output);
+                    }
                     
                 } catch (Exception ex) {
                     throw new IllegalArgumentException(ex.getMessage());
@@ -126,16 +131,10 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
     
     public JButton getScipionButton(String text, ActionListener listener)
     {
-         
-        //UIManager.getDefaults().put("Button.background", Color.decode(firebrick));
-        UIManager.getDefaults().put("Button.foreground",Color.WHITE);
-        //UIManager.getDefaults().put("Button.disabledShadow", Color.WHITE);
-        
+    
         JButton button = new JButton(text);
-        
         button.addActionListener(listener);
-        //button.setBackground(Color.decode(firebrick));
-        button.setForeground(Color.WHITE);
+   
        
         return button;
     }
@@ -159,14 +158,18 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
     {
         boolean isenabled = isImageSelected();
         Color color = Color.decode(isenabled? firebrick: lightgrey); 
+        Color forecolor = isenabled? Color.WHITE: Color.GRAY;
         cmdbutton.setEnabled(isenabled);
         cmdbutton.setBackground(color);
+        cmdbutton.setForeground(forecolor);
         if(classcmdbutton != null)
         {
             isenabled = is2DClassificationMd() && isenabled;
             color = Color.decode(isenabled? firebrick: lightgrey); 
+            forecolor = isenabled? Color.WHITE: Color.GRAY;
             classcmdbutton.setEnabled( isenabled);
             classcmdbutton.setBackground(color);
+            classcmdbutton.setForeground(forecolor);
         }
     }
 
