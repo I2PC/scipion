@@ -127,12 +127,13 @@ class XmippProtParticlePicking(ProtParticlePicking, XmippProtocol):
     #--------------------------- UTILS functions --------------------------------------------
     def __str__(self):
         """ String representation of a Supervised Picking run """
-    
         if not hasattr(self, 'outputCoordinates'):
-            picked = 0
+            msg = "No particles picked yet."
         else:
             picked = self.outputCoordinates.getSize()
-        return  "Number of particles picked: %d (from %d micrographs)" % (picked, self.inputMicrographs.get().getSize())
+            msg = "Number of particles picked: %d (from %d micrographs)" % (picked, self.inputMicrographs.get().getSize())
+    
+        return msg
     
     def _methods(self):
         methodsMsgs = self.summary()
