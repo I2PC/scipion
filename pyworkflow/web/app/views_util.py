@@ -85,6 +85,12 @@ jsDict = {'jquery': 'jquery/jquery.js',
           'jquery_hover_intent': 'jquery/jquery.hoverIntent.minified.js',
           'jsplumb': 'jsPlumb/jquery.jsPlumb.js',
           
+          #==== JQuery Layout ==================================================
+           'jquery_': 'jquery_layout/jquery.js',
+           'layout_': 'jquery_layout/jquery.layout.min.js',
+           'jquery_ui_all_':'jquery_layout/jquery.ui.all.js',
+          #=====================================================================
+          
           'utils': 'templates_libs/utils.js',
           'host_utils': 'templates_libs/host_utils.js',
           'graph_utils': 'templates_libs/graph_utils.js',

@@ -54,7 +54,7 @@ if __name__ == '__main__':
     prot.setStatus(STATUS_FINISHED)
     project._storeProtocol(prot)
     
-    print "%s Subset created...\n(You may need to refresh the main window to visualize output)"%(type)
+    
   
     
     
