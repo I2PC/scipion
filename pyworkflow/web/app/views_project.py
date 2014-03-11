@@ -40,10 +40,27 @@ from django.contrib.gis.shortcuts import render_to_text
 from pyworkflow.em.packages.xmipp3.convert import writeSetOfParticles
 from pyworkflow.em.packages.xmipp3.plotter import XmippPlotter
 from pyworkflow.viewer import WEB_DJANGO
-#from pyworkflow.web.app.views_util import loadProject
 
+#from pyworkflow.web.app.views_util import loadProject
 #from pyworkflow.utils.properties import Message
 
+def prueba_layout(request):   
+
+    context = {'jquery_': getResourceJs('jquery_'),
+               'layout_': getResourceJs('layout_'),
+               'jqueryui_': getResourceJs('jquery_ui_all_'),
+               }
+    
+    return render_to_response('prueba_layout.html', context)
+
+def prueba_layout_nested(request):   
+
+    context = {'jquery_': getResourceJs('jquery_'),
+               'layout_': getResourceJs('layout_'),
+               'jqueryui_': getResourceJs('jquery_ui_all_'),
+               }
+    
+    return render_to_response('prueba_layout_nested.html', context)
 
 def projects(request):
     manager = Manager()
@@ -335,7 +352,8 @@ def project_content(request):
                'choiceSelected': choiceSelected,
                'provider':provider,
                'view': 'protocols',
-               'graphView': graphView}
+               'graphView': graphView,
+               }
     
     context = base_flex(request, context)
     

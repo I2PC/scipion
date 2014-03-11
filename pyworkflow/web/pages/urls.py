@@ -17,6 +17,8 @@ urlpatterns = patterns('',
     # Uncomment the next line to enable the admin:
     url(r'^admin/', include(admin.site.urls)),
     
+    url(r'^prueba_layout/$', 'app.views_project.prueba_layout'),
+    
     #HOST
     url(r'^view_hosts', 'app.views_host.viewHosts', name='view_hosts'),    
     url(r'^update_host', 'app.views_host.updateHost'),
@@ -83,7 +85,6 @@ urlpatterns = patterns('',
     url(r'^showj_table/$', 'app.views_showj.showj_table'), #Load showj web table
     url(r'^showj_volume_astex/$', 'app.views_showj.showj_volume_astex'), #Load showj web astex visualizer
     url(r'^showj_volume_chimera/$', 'app.views_showj.showj_volume_chimera'), #Load showj web chimera visualizer
-    
     
     #TESTING
     url(r'^testingSSH/', 'app.views_showj.testingSSH'), #Load web
