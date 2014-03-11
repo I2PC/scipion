@@ -46,8 +46,8 @@ from pyworkflow.em.packages.spider.wizard import filter_spider
 from pyworkflow.em.packages.xmipp3.constants import *
 
 from xmipp_wizard import *
-from spider_wizard import *
-from relion_wizard import *
+#from spider_wizard import *
+#from relion_wizard import *
 
 
 def wizard(request):
