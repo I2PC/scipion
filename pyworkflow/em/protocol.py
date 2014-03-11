@@ -530,15 +530,14 @@ class ProtProcessMovies(EMProtocol):
     def _insertAllSteps(self):
         movSet = self.inputMovies.get()
         self._micList = []
-        print "Path Movie: ", movSet.getFileName()
         for mov in movSet:
-            self._movie = mov
-            self._insertFunctionStep('processMoviesStep')
+            movFn = mov.getFirstItem().getFileName()
+            print "Path Movie: ", movFn
+            self._insertFunctionStep('processMoviesStep', movFn)
         self._insertFunctionStep('createOutputStep')
     
     #--------------------------- STEPS functions ---------------------------------------------------
-    def processMoviesStep(self):
-        movFn = self._movie.getFirstItem().getFileName()
+    def processMoviesStep(self, movFn):
         movName = removeBaseExt(movFn)
         
         self._createMovWorkingDir(movName)
