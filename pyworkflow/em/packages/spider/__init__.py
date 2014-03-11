@@ -30,6 +30,9 @@ This sub-package will contains Spider protocols
 
 _logo = "spider_logo.png"
 
+from bibtex import _bibtex # Load bibtex dict with references
+_references = ['Shaikh2008', 'Frank1996b']
+
 from spider import *
 
 from protocol_filters import SpiderProtFilter

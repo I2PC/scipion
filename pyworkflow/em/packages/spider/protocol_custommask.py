@@ -36,11 +36,8 @@ from convert import locationToSpider
 from glob import glob
 
 
-
 class SpiderProtCustomMask(ProtCreateMask, SpiderProtocol):
-    """ Reference-free alignment shift and rotational alignment of an image series. 
-    Uses Spider AP SR command.
-    """
+    """ Create custom mask. """
     _label = 'custom mask'
     
     def __init__(self):
