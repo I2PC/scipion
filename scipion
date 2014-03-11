@@ -90,6 +90,7 @@ def runCmd(cmd):
 MODE_MANAGER = 'manager'
 MODE_PROJECT = 'project'
 MODE_WEBSERVER = 'webserver'
+MODE_COLLECTSTATIC = 'collectstatic'
 MODE_TESTS = 'tests'
 MODE_TESTS_DATA = 'testdata'
 MODE_HELP = 'help'
@@ -125,6 +126,10 @@ if __name__ == '__main__':
         elif mode == MODE_WEBSERVER:
             manage = os.path.join(PW_HOME, 'pyworkflow', 'web', 'manage.py')
             runCmd('%s runserver 0.0.0.0:8000 ' % manage)
+            
+        elif mode == MODE_COLLECTSTATIC:
+            manage = os.path.join(PW_HOME, 'pyworkflow', 'web', 'manage.py')
+            runCmd('%s collectstatic' % manage)
             
         elif mode == MODE_TESTS:
             if n > 2:
