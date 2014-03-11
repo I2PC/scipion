@@ -161,11 +161,13 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
         Color color = Color.decode(isenabled? firebrick: lightgrey); 
         cmdbutton.setEnabled(isenabled);
         cmdbutton.setBackground(color);
-        isenabled = is2DClassificationMd() && isenabled;
-        color = Color.decode(isenabled? firebrick: lightgrey); 
-        classcmdbutton.setEnabled( isenabled);
-        classcmdbutton.setBackground(color);
-         
+        if(classcmdbutton != null)
+        {
+            isenabled = is2DClassificationMd() && isenabled;
+            color = Color.decode(isenabled? firebrick: lightgrey); 
+            classcmdbutton.setEnabled( isenabled);
+            classcmdbutton.setBackground(color);
+        }
     }
 
 }
