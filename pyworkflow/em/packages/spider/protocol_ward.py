@@ -175,7 +175,7 @@ class SpiderProtClassifyWard(ProtClassify, SpiderProtocol):
                 for i in node.imageList:
                     #img.setObjId(i) # FIXME: this is wrong if the id is different from index
                     img.cleanObjId()
-                    particles
+                    img.setLocation(int(i), self.dendroImages)
                     particles.append(img)
                 
         
