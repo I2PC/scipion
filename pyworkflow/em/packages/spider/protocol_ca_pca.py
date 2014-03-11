@@ -83,7 +83,7 @@ class SpiderProtCAPCA(SpiderProtocol):
                       help='Number of eigenfactors to calculate.')
         form.addParam('maskType', EnumParam, choices=['circular', 'file'], default=0,
                       label='Mask type', help='Select which type of mask do you want to apply.')
-        form.addParam('maskRadius', IntParam, default=-1,
+        form.addParam('radius', IntParam, default=-1,
                       label='Mask radius (px)', condition='maskType==0',
                       help='If -1, the entire radius (in pixels) will be considered.')
         form.addParam('maskImage', PointerParam, label="Mask image", condition='maskType==1',
@@ -117,7 +117,7 @@ class SpiderProtCAPCA(SpiderProtocol):
         dim = self.inputParticles.get().getDimensions()[0]
         
         self._params.update({'dim': dim,
-                             'radius': self.maskRadius.get(),
+                             'radius': self.radius.get(),
                              'analysisType': analysisType + 1, # Index starts at 0
                              'addConstant': self.addConstant.get(),
                              'numberOfFactors': numberOfFactors

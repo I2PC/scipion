@@ -587,6 +587,22 @@ def get_image_filter_spider(request):
     img.save(response, "PNG")
     return response
 
+def wiz_spider_particle_mask_radius(protocol, request):
+    protParams = {}
+    protParams['input']= protocol.inputParticles
+    protParams['label']= "radius"
+    protParams['value']= protocol.radius.get()
+#    return em_wizard.wiz_particle_mask_radius(protocol, protParams, request)
+    return wiz_particle_mask_radius(protocol, protParams, request)
+
+def wiz_spider_mask_radii(protocol, request):
+    protParams = {}
+    protParams['input']= protocol.inputParticles
+    protParams['label']= ["innerRadius", "outerRadius"]
+    protParams['value']= [protocol.innerRadius.get(), protocol.outerRadius.get()]
+#    return em_wizard.wiz_particles_mask_radii(protocol, protParams, request)
+    return wiz_particles_mask_radii(protocol, protParams, request)
+
 
 #===============================================================================
 # RELION

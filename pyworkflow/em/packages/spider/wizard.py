@@ -58,7 +58,10 @@ class SpiderProtMaskWizard(particleMaskRadiusWizard):
         _value = form.protocol.maskRadius.get()
         _label = "maskRadius"
         particleMaskRadiusWizard.show(self, form, _value, _label, UNIT_PIXEL)
-    
+        
+    @classmethod    
+    def getView(self):
+        return "wiz_spider_particle_mask_radius"
     
 class SpiderParticlesMaskRadiiWizard(particlesMaskRadiiWizard):
     _targets = [(SpiderProtAlignAPSR, ['innerRadius', 'outerRadius'])]        
@@ -72,6 +75,9 @@ class SpiderParticlesMaskRadiiWizard(particlesMaskRadiiWizard):
         _label = ["innerRadius", "outerRadius"]
         particlesMaskRadiiWizard.show(self, form, _value, _label, UNIT_PIXEL)
     
+    @classmethod    
+    def getView(self):
+        return "wiz_spider_particle_mask_radii"
 
 class SpiderFilterParticlesWizard(filterParticlesWizard):    
     _targets = [(SpiderProtFilter, ['filterRadius', 'lowFreq', 'highFreq', 'temperature'])]
