@@ -39,11 +39,7 @@ from glob import glob
 
       
 class SpiderProtAlignPairwise(ProtAlign, SpiderProtocol):
-    """ Reference-free alignment shift and rotational alignment of an image series. 
-    Described in Marco S, Chagoyen M, de la Fraga LG, Carazo JM, Carrascosa JL (1996)
-    "A variant to the Random Approximation of the reference-free algorithm."
-    Ultramicroscopy. Vol 66: pg. 5-10.
-    """
+    """ Reference-free alignment shift and rotational alignment of an image series. """
     _label = 'align pairwise'
     
     def __init__(self, **args):
@@ -167,5 +163,8 @@ class SpiderProtAlignPairwise(ProtAlign, SpiderProtocol):
             errors.append("<innerRadius> should be between 0 and %d" % r)
         
         return errors
+    
+    def _citations(self):
+        return ['Marco1996']
     
 
