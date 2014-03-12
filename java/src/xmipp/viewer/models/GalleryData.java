@@ -806,8 +806,11 @@ public class GalleryData {
 		for (int i = 0; i < ids.length; ++i){
 			if (selection[i]){
 				md = getClassImages(i);
-				mdImages.unionAll(md);
-				md.destroy();
+				if(md != null)
+                                {
+                                    mdImages.unionAll(md);
+                                    md.destroy();
+                                }
 			}
 		}
 		return mdImages;

@@ -453,6 +453,9 @@ void ProgXrayImport::getFlatfield(const FileName &fnFFinput,
 
     MultidimArray<char> &mdaMask = MULTIDIM_ARRAY(bpMask);
 
+    if ( !fnBPMask.empty() && !mdaIavg.sameShape(mdaMask) )
+    	REPORT_ERROR(ERR_MULTIDIM_SIZE, "XrayImport: Mask size does not match flat fields size.");
+
     if (BPFactor > 0)
     {
         double  avg, std;

@@ -432,8 +432,10 @@ if options.hasOption('configure'):
     if outputval != 0:
         exit(1) 
     
-    
-GUI = options.hasOption('gui')
+if not options.hasOption('unattended'): 
+    GUI = options.hasOption('gui')
+else:
+    GUI = False
 # Check if Tkinter is available
 if GUI:    
     try:
