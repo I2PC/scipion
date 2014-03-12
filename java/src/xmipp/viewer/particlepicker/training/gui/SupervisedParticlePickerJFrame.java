@@ -264,7 +264,7 @@ public class SupervisedParticlePickerJFrame extends ParticlePickerJFrame {
 
     private void initComponents() {
         try {
-            System.out.println("Main Frame esta en el hilo " + Thread.currentThread().getName());
+            
             setResizable(false);
             setTitle("Xmipp Particle Picker - " + ppicker.getMode());
             initMenuBar();

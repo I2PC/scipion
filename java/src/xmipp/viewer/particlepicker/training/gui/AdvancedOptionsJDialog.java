@@ -152,8 +152,7 @@ public class AdvancedOptionsJDialog extends JDialog
 			frame.getParticlePicker().setTemplatesNumber(templates);
 			frame.loadTemplates();
 		}
-		else if (frame.templatesdialog == null)
-			frame.loadTemplates();
+		
 	}
 
 

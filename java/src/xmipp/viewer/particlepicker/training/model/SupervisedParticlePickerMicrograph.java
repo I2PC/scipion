@@ -18,7 +18,7 @@ public class SupervisedParticlePickerMicrograph extends Micrograph
 	private List<ManualParticle> manualparticles;
 	private List<AutomaticParticle> autoparticles;
 	private MicrographState state;
-	private int autopickpercent = SupervisedParticlePicker.defAutoPickPercent;
+	private int autopickpercent;
 	private double threshold = 0.0;
 
 	public double getThreshold() {
@@ -36,7 +36,7 @@ public class SupervisedParticlePickerMicrograph extends Micrograph
 	public SupervisedParticlePickerMicrograph(String file, String psd, String ctf)
 	{
 		super(file, psd, ctf);
-
+                
 		this.manualparticles = new ArrayList<ManualParticle>();
 		this.autoparticles = new ArrayList<AutomaticParticle>();
 		state = MicrographState.Available;
