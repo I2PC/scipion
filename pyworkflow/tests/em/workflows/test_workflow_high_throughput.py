@@ -65,9 +65,7 @@ class HighThroughputTestDay1(TestWorkflow):
         self.assertIsNotNone(protExtract.outputParticles, "There was a problem with the extract particles")
         
         print "Running Spider Filter"
-        protFilter = SpiderProtFilter()
-        protFilter.lowFreq.set(0.07)
-        protFilter.highFreq.set(0.43)
+        protFilter = SpiderProtFilter(lowFreq=0.07, highFreq=0.43)
         protFilter.inputParticles.set(protExtract.outputParticles)
         protFilter.setObjLabel('spi filter')
         project.launchProtocol(protFilter, wait=True)
