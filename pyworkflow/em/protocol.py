@@ -532,7 +532,6 @@ class ProtProcessMovies(EMProtocol):
         self._micList = []
         for mov in movSet:
             movFn = mov.getFirstItem().getFileName()
-            print "Path Movie: ", movFn
             self._insertFunctionStep('processMoviesStep', movFn)
         self._insertFunctionStep('createOutputStep')
     
