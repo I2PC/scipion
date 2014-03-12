@@ -68,7 +68,7 @@ class HighThroughputTestDay1(TestWorkflow):
         protFilter = SpiderProtFilter(lowFreq=0.07, highFreq=0.43)
         protFilter.inputParticles.set(protExtract.outputParticles)
         protFilter.setObjLabel('spi filter')
-        project.launchProtocol(protFilter, wait=True)
+        self.proj.launchProtocol(protFilter, wait=True)
         self.assertIsNotNone(protFilter.outputParticles, "There was a problem with the Spider filter")
         
         print "Run Only Align2d"
@@ -83,7 +83,7 @@ class HighThroughputTestDay1(TestWorkflow):
         protCAPCA = SpiderProtCAPCA()
         protCAPCA.inputParticles.set(protOnlyAlign.outputParticles)
         protCAPCA.setObjLabel('spi PCA')
-        project.launchProtocol(protCAPCA, wait=True)
+        self.proj.launchProtocol(protCAPCA, wait=True)
         self.assertIsNotNone(protCAPCA.imcFile, "There was a problem with Spider Dimension Reduction")
         
         print "Running Spider Ward Classification"
@@ -91,7 +91,7 @@ class HighThroughputTestDay1(TestWorkflow):
         protWard.pcaFilePointer.set(protCAPCA.imcFile)
         protWard.inputParticles.set(protOnlyAlign.outputParticles)
         protWard.setObjLabel('spi ward')
-        project.launchProtocol(protWard, wait=True)
+        self.proj.launchProtocol(protWard, wait=True)
         self.assertIsNotNone(protWard.outputClasses, "There was a problem with Spider Ward Classification")
 
 
