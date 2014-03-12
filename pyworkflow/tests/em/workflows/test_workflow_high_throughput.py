@@ -20,7 +20,7 @@ class HighThroughputTestDay1(TestWorkflow):
     def testWorkflow(self):
         #First, import a set of movies
         print "Importing a set of movies..."
-        protImport = ProtImportMovies(pattern=self.pattern, samplingRate=1.2, magnification=60000,
+        protImport = ProtImportMovies(pattern=self.pattern, samplingRate=2.37, magnification=59000,
                                       voltage=300, sphericalAberration=2.0)
         protImport.setObjLabel('import movies - Day1')
         self.proj.launchProtocol(protImport, wait=True)
@@ -42,8 +42,7 @@ class HighThroughputTestDay1(TestWorkflow):
         
         # Now estimate CTF on the micrographs
         print "Performing CTF Micrographs..."
-        protCTF = XmippProtCTFMicrographs(lowRes=0.04, highRes=0.31, minDefocus=0.3, maxDefocus=2,
-                              runMode=1, numberOfMpi=1, numberOfThreads=3)
+        protCTF = XmippProtCTFMicrographs(lowRes=0.04, highRes=0.31, runMode=1, numberOfMpi=1, numberOfThreads=3)
         protCTF.inputMicrographs.set(protPreprocess.outputMicrographs)
         protCTF.setObjLabel('ctf - Day1')
         self.proj.launchProtocol(protCTF, wait=True)
