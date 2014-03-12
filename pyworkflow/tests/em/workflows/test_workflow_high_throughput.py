@@ -14,7 +14,7 @@ class HighThroughputTestDay1(TestWorkflow):
         # Create a new project
         setupProject(cls)
         cls.pattern = join(os.environ['HOME'], 'javi_movies', 'day1', '1??_*.mrcs')
-#         cls.importFolder = getInputPath('Ribosomes_Sjors', 'EmanBoxing')
+        cls.importFolder = getInputPath('FakePick_HighThroughput')
 #         cls.importVol = getInputPath('Ribosomes_Sjors', 'reference.mrc')
         
     def testWorkflow(self):
