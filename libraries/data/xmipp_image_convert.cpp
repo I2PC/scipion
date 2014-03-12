@@ -119,7 +119,12 @@ void  ProgConvImg::defineParams()
     addParamsLine("                 cdouble: Complex double");
     addParamsLine("                 bool");
     addParamsLine("  alias -d;");
-    addParamsLine("  [--swap]        : Swap the endianess of the image file");
+    addParamsLine("  [--swap <type=arch>]        : Swap the endianness of the image file");
+    addParamsLine("          where <type>");
+    addParamsLine("                arch   : Set the opposite endian of the architecture");
+    addParamsLine("                little : Set to little endian");
+    addParamsLine("                big    : Set to big endian");
+
     addParamsLine("  [--range_adjust] : Adjust the histogram to fill the gray level range");
     addParamsLine("  alias -r;");
     addParamsLine("or --dont_convert : Do not apply any conversion to gray levels when writing");
@@ -177,8 +182,17 @@ void ProgConvImg::readParams()
         if (depthTemp != "default")
             depth = "%" + depthTemp;
     }
-    swap = checkParam("--swap");
 
+    if ( swap = checkParam("--swap") )
+    {
+        String swapType = getParam("--swap");
+
+        if (swapType != "arch")
+        {
+            bool setLE = swapType == "little";
+            swap = IsLittleEndian()^setLE;
+        }
+    }
 }
 
 void ProgConvImg::preProcess()
@@ -266,7 +280,8 @@ void ProgConvImg::preProcess()
             imIn.read(fn_in, DATA, ALL_IMAGES, true);
             imOut = new ImageGeneric(datatypeOut);
             k = 0; // Reset to zero to select the slices when working with volumes
-            createEmptyFile(fn_out+depth, xdimOut, ydimOut, 1, zdimOut, true, WRITE_OVERWRITE, swap);
+            if (!fn_out.empty())
+                createEmptyFile(fn_out+depth, xdimOut, ydimOut, 1, zdimOut, true, WRITE_OVERWRITE, swap);
         }
     }
     else if (create_empty_stackfile)

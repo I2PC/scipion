@@ -35,7 +35,7 @@ public class SupervisedParticlePicker extends ParticlePicker
 	protected List<SupervisedParticlePickerMicrograph> micrographs;
 	private SupervisedParticlePickerMicrograph micrograph;
 	public static final int defAutoPickPercent = 50;
-	private int autopickpercent = defAutoPickPercent;
+	protected int autopickpercent = defAutoPickPercent;
 
         //used in previous versions
 	private int threads = 1;
@@ -546,21 +546,22 @@ public class SupervisedParticlePicker extends ParticlePicker
 			MetaData md = new MetaData(file);
 			Mode configmode;
 			boolean hasautopercent = md.containsLabel(MDLabel.MDL_PICKING_AUTOPICKPERCENT);
-			for (long id : md.findObjects())
-			{
-				if (hasautopercent)
-					autopickpercent = md.getValueInt(MDLabel.MDL_PICKING_AUTOPICKPERCENT, id);
-				dtemplatesnum = md.getValueInt(MDLabel.MDL_PICKING_TEMPLATES, id);
-				if (dtemplatesnum == 0)
-					dtemplatesnum = 1;// for compatibility with previous
-										// projects
-				configmode = Mode.valueOf(md.getValueString(MDLabel.MDL_PICKING_STATE, id));
-				if (mode == Mode.Supervised && configmode == Mode.Manual)
-					throw new IllegalArgumentException("Cannot switch to Supervised mode from the command line");
-				if (mode == Mode.Manual && configmode == Mode.Supervised)
-					mode = Mode.Supervised;
+                        long id = md.firstObject();
+                        if (hasautopercent)
+                        {
+                            autopickpercent = md.getValueInt(MDLabel.MDL_PICKING_AUTOPICKPERCENT, id);
+                            System.out.println("percent " + autopickpercent);
+                        }
+                        dtemplatesnum = md.getValueInt(MDLabel.MDL_PICKING_TEMPLATES, id);
+                        if (dtemplatesnum == 0)
+                                dtemplatesnum = 1;// for compatibility with previous
+                                                                        // projects
+                        configmode = Mode.valueOf(md.getValueString(MDLabel.MDL_PICKING_STATE, id));
+                        if (mode == Mode.Supervised && configmode == Mode.Manual)
+                                throw new IllegalArgumentException("Cannot switch to Supervised mode from the command line");
+                        if (mode == Mode.Manual && configmode == Mode.Supervised)
+                                mode = Mode.Supervised;
 
-			}
 			md.destroy();
 		}
 		catch (Exception e)
@@ -589,6 +590,7 @@ public class SupervisedParticlePicker extends ParticlePicker
 
 	public void setAutopickpercent(int autopickpercent)
 	{
+            System.out.printf("setting autopickpercent: %d\n", autopickpercent);
 		this.autopickpercent = autopickpercent;
 	}
 
