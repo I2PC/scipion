@@ -403,9 +403,14 @@ def visualizeObject(request):
 
         if isinstance(obj, SetOfMicrographs):
             fn = project.getTmpPath(obj.getName() + '_micrographs.xmd')
-            inputParameters['path'] = os.path.join(projectPath, createXmippInputMicrographs(None, obj, micsFn=os.path.join(projectPath, fn)))
+            fn = createXmippInputMicrographs(None, obj, micsFn=os.path.join(projectPath, fn))
+            inputParameters['path'] = os.path.join(projectPath, fn)
 #            writeSetOfMicrographs(obj, fn)
 #            inputParameters['path']= os.path.join(projectPath, fn)
+        elif isinstance(obj, SetOfMovies):
+            fn = project.getTmpPath(obj.getName() + '_movies.xmd')
+            writeSetOfMovies(obj, fn)
+            inputParameters['path']= os.path.join(projectPath, fn)
         elif isinstance(obj, SetOfVolumes):
             fn = project.getTmpPath(obj.getName()+ '_volumes.xmd')
             inputParameters['path'] = os.path.join(projectPath, createXmippInputVolumes(None, obj, volsFn=os.path.join(projectPath, fn))) 
