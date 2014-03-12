@@ -911,3 +911,77 @@ class ProtValidate3D(EMProtocol):
 
 class ProtCreateMask3D(EMProtocol):
     pass
+
+class ProtJoinSets(EMProtocol):
+    """ Protocol to join two sets. """
+    _label = 'join sets'
+    
+    def __init__(self, **args):
+        EMProtocol.__init__(self, **args)
+
+    #--------------------------- DEFINE param functions --------------------------------------------
+    def _defineParams(self, form):
+        form.addSection(label='Input')
+        
+        form.addParam('inputSet', MultiPointerParam, label="Input set of images", important=True, 
+                      pointerClass='SetOfImages', minNumObjects=2, maxNumObjects=0,
+                      help='Select the set of images (it can be a set of micrographs, particles o volumes) from the project.'
+                           'They should 2 or more object classes')
+    
+    #--------------------------- INSERT steps functions --------------------------------------------   
+    def _insertAllSteps(self):
+        self._insertFunctionStep('createOutput')
+    
+    #--------------------------- STEPS functions --------------------------------------------
+    def createOutput(self):
+        #Read Classname and generate corresponding SetOfImages (SetOfParticles, SetOfVolumes, SetOfMicrographs)
+        self.inputType = str(self.inputSet[0].get().getClassName())
+        func ="_create%s" % self.inputType
+        outputSetFunction = getattr(self, func)
+        outputSet = outputSetFunction()
+        
+        #Copy info from input (sampling rate, etc)
+        outputSet.copyInfo(self.inputSet[0].get())
+       
+        for itemSet in self.inputSet:
+            for itemObj in itemSet.get():
+                itemObj.cleanObjId()
+                outputSet.append(itemObj)
+        
+        self._defineOutputs(outputImages=outputSet)
+        
+    #--------------------------- INFO functions --------------------------------------------
+    def _validate(self):
+        classList = []
+        for itemSet in self.inputSet:
+            itemClassName = itemSet.get().getClassName()
+            if len(classList) == 0 or itemClassName not in classList:
+                classList.append(itemClassName)
+            
+        errors = []
+        if len(classList) > 1:
+            errors.append("Object should have same type")
+            errors.append("Types of objects found: " + ", ".join(classList))
+        return errors  
+
+    def _summary(self):
+        summary = []
+        if not hasattr(self, 'outputImages'):
+            summary.append("Output set not ready yet.")
+        else:
+            summary.append("Input sets of type %s:" % self.outputImages.getClassName())
+            for itemSet in self.inputSet:
+                summary.append("%s" % itemSet.get().getNameId())
+        return summary
+        
+    def _methods(self):
+        methods = []
+        if not hasattr(self, 'outputImages'):
+            methods.append("Protocol has not finished yet.")
+        else:
+            m = "We have joint the following sets: "
+            for itemSet in self.inputSet:
+                m += "%s, " % itemSet.get().getNameId()
+            methods.append(m[:-2])
+        
+        return methods
