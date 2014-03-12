@@ -42,7 +42,7 @@ class ScipionMixedWorkflow(TestWorkflow):
         # Now estimate CTF on the micrographs 
         print "Performing CTFfind..."   
         protCTF = ProtCTFFind(lowRes=0.04, highRes=0.45, minDefocus=1.2, maxDefocus=3,
-                              runMode=1, numberOfMpi=1, numberOfThreads=4)         
+                              runMode=1, numberOfMpi=1, numberOfThreads=16)         
         protCTF.inputMicrographs.set(protPreprocess.outputMicrographs)
         protCTF.setObjLabel('ctf estimation')
         self.proj.launchProtocol(protCTF, wait=True)
