@@ -66,8 +66,8 @@ class ScipionMixedWorkflow(TestWorkflow):
         self.assertIsNotNone(protExtract.outputParticles, "There was a problem with the extract particles")
         
         print "Run CL2D"
-        protCL2D = XmippProtCL2D(numberOfReferences=8, numberOfInitialReferences=4, 
-                                 numberOfIterations=1, numberOfMpi=4)
+        protCL2D = XmippProtCL2D(numberOfReferences=32, numberOfInitialReferences=4, 
+                                 numberOfIterations=2, numberOfMpi=16)
         protCL2D.inputImages.set(protExtract.outputParticles)
         protCL2D.setObjLabel('CL2D')
         self.proj.launchProtocol(protCL2D, wait=True)   
@@ -75,9 +75,9 @@ class ScipionMixedWorkflow(TestWorkflow):
         
         # Refine the SetOfParticles and reconstruct a refined volume.
         print "Running Frealign..."
-        protFrealign = ProtFrealign(angStepSize=40, numberOfIterations=2, mode=1, doExtraRealSpaceSym=True,
+        protFrealign = ProtFrealign(angStepSize=20, numberOfIterations=2, mode=1, doExtraRealSpaceSym=True,
                                     outerRadius=180, PhaseResidual=65, lowResolRefine=300, highResolRefine=15,
-                                    resolution=15, runMode=1, numberOfMpi=1, numberOfThreads=4)
+                                    resolution=15, runMode=1, numberOfMpi=1, numberOfThreads=16)
         protFrealign.inputParticles.set(protExtract.outputParticles)
         protFrealign.input3DReferences.set(protImportVol.outputVolume)
         protFrealign.setObjLabel('Frealign')
