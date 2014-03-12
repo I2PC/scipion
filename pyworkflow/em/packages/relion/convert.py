@@ -52,14 +52,25 @@ def locationToRelion(index, filename):
     else:
         return filename
 
+_xmippLabelsDict = {} # Dictionary to store mappings replaced
 
 def addRelionLabels(replace=False, extended=False):
     """ Add relion labels as aliases for Xmipp metadata. """
+    global _xmippLabelsDict
+    _xmippLabelsDict = {}
     for k, v in XMIPP_RELION_LABELS.iteritems():
+        _xmippLabelsDict[k] = xmipp.label2Str(k) # store original label string
         xmipp.addLabelAlias(k, v, replace)
     if extended:
         for k, v in XMIPP_RELION_LABELS_EXTRA.iteritems():    
+            _xmippLabelsDict[k] = xmipp.label2Str(k) # store original label string
             xmipp.addLabelAlias(k, v, replace)
+            
+def restoreXmippLabels():
+    global _xmippLabelsDict
+    for k, v in _xmippLabelsDict.iteritems():
+        xmipp.addLabelAlias(k, v, True)
+    _xmippLabelsDict = {}
             
             
 def addRelionLabelsToEnviron(env):
@@ -110,6 +121,7 @@ def writeSetOfParticles(imgSet, starFile, stackFile):
     pa = ParticleAdaptor(stackFile)
     xmipp3.writeSetOfParticles(imgSet, starFile, rowFunc=pa.setupRow)
     imgSet._relionStar = String(starFile)
+    restoreXmippLabels()
     
     
 def createRelionInputParticles(imgSet, starFile, stackFile): 
@@ -169,3 +181,4 @@ def readSetOfClasses2D(classes2DSet, filename, classesBlock='classes', **args):
     import pyworkflow.em.packages.xmipp3 as xmipp3
     addRelionLabels(replace=True, extended=True)
     xmipp3.readSetOfClasses2D(classes2DSet, filename, classesBlock)
+    restoreXmippLabels()

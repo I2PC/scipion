@@ -23,7 +23,6 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
-from pyworkflow.em.packages.relion.convert import addRelionLabels
 """
 This module contains the protocol base class for Relion protocols
 """
@@ -32,6 +31,7 @@ import os, re
 from glob import glob
 
 from protocol_base import *
+from convert import addRelionLabels
 from constants import MASK_FILL_ZERO
 
 
