@@ -44,8 +44,8 @@ public abstract class ParticlePicker {
     protected String selfile;
     protected String command;
     protected String configfile;
-    public static final int defAutoPickPercent = 90;
-    protected int autopickpercent = defAutoPickPercent;
+
+
     String[] commonfilters = new String[]{"Install...", "Duplicate", "Bandpass Filter...", "Anisotropic Diffusion...", "Mean Shift",
         "Subtract Background...", "Gaussian Blur...", "Brightness/Contrast...", "Invert LUT"};
     static String xmippsmoothfilter = "Xmipp Smooth Filter";
