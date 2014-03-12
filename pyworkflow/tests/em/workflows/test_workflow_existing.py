@@ -293,34 +293,39 @@ class TestXmippWorkflow(unittest.TestCase):
                 project.deleteProtocol(prot)
         
     def test_autoDay2(self):
-        projName = "high throughput"
+        projName = "HighThroughputTest"
         project = Manager().loadProject(projName)
         
         def getProtocol(className):
             """ Return the first protocol found from a give className. """
             return project.mapper.selectByClass(className)[0]
-        
-        
-        # Launch a copy of import micrograph, but with a different pattern
-        protImport1 = getProtocol('ProtImportMicrographs')
+
+        protImport1 = getProtocol('ProtImportMovies')
         pattern = protImport1.pattern.get()
         protImport2 = project.copyProtocol(protImport1)
-        protImport2.setObjLabel('import mics - Day2')
+        protImport.setObjLabel('import movies - Day2')
         protImport2.pattern.set(pattern.replace('day1', 'day2'))
         project.launchProtocol(protImport2, wait=True)
+        
+        # Copy of align movies
+        protAlignMov1 = getProtocol('ProtOpticalAlignment')
+        protAlignMov2 = project.copyProtocol(protAlignMov1)
+        protAlignMov2.setObjLabel('crop mics 50 px - Day2')
+        protAlignMov2.inputMovies.set(protImport2.outputMovies)
+        project.launchProtocol(protAlignMov2, wait=True)
         
         # Copy of preprocess
         protPrep1 = getProtocol('XmippProtPreprocessMicrographs')
         protPrep2 = project.copyProtocol(protPrep1)
         protPrep2.setObjLabel('crop mics 50 px - Day2')
-        protPrep2.inputMicrographs.set(protImport2.outputMicrographs)
+        protPrep2.inputMicrographs.set(protAlignMov2.outputMicrographs)
         project.launchProtocol(protPrep2, wait=True)
         
         # Copy of CTF estimation.
         protCTF1 = getProtocol('XmippProtCTFMicrographs')
         protCTF2 = project.copyProtocol(protCTF1)
         protCTF2.setObjLabel('ctf - Day2')
-        protCTF2.numberOfThreads.set(4)
+        protCTF2.numberOfThreads.set(3)
         protCTF2.inputMicrographs.set(protPrep2.outputMicrographs)
         project.launchProtocol(protCTF2, wait=True)
         
@@ -337,7 +342,7 @@ class TestXmippWorkflow(unittest.TestCase):
         protExtract1 = getProtocol('XmippProtExtractParticles')
         protExtract2 = project.copyProtocol(protExtract1)
         protExtract2.setObjLabel('extract particles - Day2')
-        protExtract2.numberOfThreads.set(4)
+        protExtract2.numberOfThreads.set(3)
         protExtract2.inputCoordinates.set(protPick2.outputCoordinates)
         protExtract2.ctfRelations.set(protCTF2.outputCTF)
         project.launchProtocol(protExtract2, wait=True)
@@ -353,6 +358,7 @@ class TestXmippWorkflow(unittest.TestCase):
         protAlign1 = getProtocol('XmippProtCL2DAlign')
         protAlign2 = project.copyProtocol(protAlign1)
         protAlign2.setObjLabel('cl2d align - Day2')
+        protAlign2.numberOfMpi.set(8)
         protAlign2.inputParticles.set(protFilter2.outputParticles)
         project.launchProtocol(protAlign2, wait=True)
         

@@ -7,13 +7,13 @@ from pyworkflow.em.packages.eman2 import *
 from test_workflow import TestWorkflow
 
 
-class HighThroughputTestDay1(TestWorkflow):
+class HighThroughputTest(TestWorkflow):
         
     @classmethod
     def setUpClass(cls):    
         # Create a new project
         setupProject(cls)
-        cls.pattern = join(os.environ['HOME'], 'javi_movies', 'day1', '1??_*.mrcs')
+        cls.pattern = join(os.environ['HOME'], 'javi_movies', 'day1', '*.mrcs')
         cls.importFolder = getInputPath('FakePick_HighThroughput')
 #         cls.importVol = getInputPath('Ribosomes_Sjors', 'reference.mrc')
         
@@ -72,7 +72,7 @@ class HighThroughputTestDay1(TestWorkflow):
         
         print "Run Only Align2d"
         protOnlyAlign = XmippProtCL2DAlign(maximumShift=5, numberOfIterations=10, 
-                                 numberOfMpi=4, numberOfThreads=1, useReferenceImage=False)
+                                 numberOfMpi=8, numberOfThreads=1, useReferenceImage=False)
         protOnlyAlign.inputParticles.set(protFilter.outputParticles)
         protOnlyAlign.setObjLabel('cl2d align')
         self.proj.launchProtocol(protOnlyAlign, wait=True)        
