@@ -59,7 +59,21 @@ def addRelionLabels(replace=False, extended=False):
         xmipp.addLabelAlias(k, v, replace)
     if extended:
         for k, v in XMIPP_RELION_LABELS_EXTRA.iteritems():    
-            xmipp.addLabelAlias(k, v, replace)  
+            xmipp.addLabelAlias(k, v, replace)
+            
+            
+def addRelionLabelsToEnviron(env):
+    """ create an string that can be used for XMIPP_EXTRA_ALIASES
+    for adding the labels of Relion.
+    """
+    from xmipp import label2Str
+    pairs = []
+    for k, v in XMIPP_RELION_LABELS.iteritems():
+        pairs.append('%s=%s' % (label2Str(k), v))
+    for k, v in XMIPP_RELION_LABELS_EXTRA.iteritems():
+        pairs.append('%s=%s' % (label2Str(k), v))        
+    varStr = ';'.join(pairs)
+    env['XMIPP_EXTRA_ALIASES'] = varStr
       
     
 class ParticleAdaptor():
