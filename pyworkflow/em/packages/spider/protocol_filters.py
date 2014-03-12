@@ -46,7 +46,7 @@ class SpiderProtFilter(ProtFilterParticles, SpiderProtocol):
     """
     _label = 'filter'
     
-    def __init__(self):
+    def __init__(self, **args):
         ProtFilterParticles.__init__(self)
         SpiderProtocol.__init__(self)
         self._op = "FQ"

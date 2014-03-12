@@ -51,7 +51,8 @@ class HighThroughputTestDay1(TestWorkflow):
         
         print "Running Xmipp supervised fake particle picking..."
         protPP = XmippProtParticlePicking(importFolder=self.importFolder, runMode=1)                
-        protPP.inputMicrographs.set(protPreprocess.outputMicrographs)  
+        protPP.inputMicrographs.set(protPreprocess.outputMicrographs)
+        protPP.setObjLabel('Picking - Day1')
         self.proj.launchProtocol(protPP, wait=True)
         self.assertIsNotNone(protPP.outputCoordinates, "There was a problem with the faked picking")
         
