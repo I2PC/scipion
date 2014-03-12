@@ -51,7 +51,8 @@ class HighThroughputTestDay1(TestWorkflow):
         
         print "Running Xmipp supervised fake particle picking..."
         protPP = XmippProtParticlePicking(importFolder=self.importFolder, runMode=1)                
-        protPP.inputMicrographs.set(protPreprocess.outputMicrographs)  
+        protPP.inputMicrographs.set(protPreprocess.outputMicrographs)
+        protPP.setObjLabel('Picking - Day1')
         self.proj.launchProtocol(protPP, wait=True)
         self.assertIsNotNone(protPP.outputCoordinates, "There was a problem with the faked picking")
         
@@ -64,7 +65,9 @@ class HighThroughputTestDay1(TestWorkflow):
         self.assertIsNotNone(protExtract.outputParticles, "There was a problem with the extract particles")
         
         print "Running Spider Filter"
-        protFilter = SpiderProtFilter(lowFreq=0.07, highFreq=0.43)
+        protFilter = SpiderProtFilter()
+        protFilter.lowFreq.set(0.07)
+        protFilter.highFreq.set(0.43)
         protFilter.inputParticles.set(protExtract.outputParticles)
         protFilter.setObjLabel('spi filter')
         project.launchProtocol(protFilter, wait=True)
