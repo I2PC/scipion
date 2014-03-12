@@ -47,8 +47,7 @@ from protocol_helical_parameters import XmippProtHelicalParameters
 from protocol_convert_to_pseudoatoms import XmippProtConvertToPseudoAtoms
 from protocol_identify_outliers import XmippProtIdentifyOutliers
 from protocol_preprocess import XmippProtPreprocessVolumes
-from convert import writeSetOfMicrographs, writeSetOfParticles, writeSetOfVolumes, writeSetOfClasses2D, writeSetOfCoordinates, writeSetOfCTFs, locationToXmipp, \
-                    writeSetOfClasses3D
+from convert import *
 from os.path import dirname, join
 from pyworkflow.utils.path import makePath
 import pyworkflow as pw
@@ -63,7 +62,7 @@ class XmippViewer(Viewer):
     """
     _environments = [DESKTOP_TKINTER, WEB_DJANGO]
     _targets = [Image, SetOfImages, SetOfCoordinates, SetOfClasses2D, SetOfClasses3D, 
-                ProtExtractParticles,
+                SetOfMovies, ProtExtractParticles,
                 ProtAlign, XmippProtKerdensom, XmippProtRotSpectra,  XmippProtCreateMask3D,
                 SetOfCTF, NormalModes, XmippProtScreenClasses,
                 XmippProtConvertToPseudoAtoms, XmippProtIdentifyOutliers]
@@ -84,19 +83,14 @@ class XmippViewer(Viewer):
               
         elif issubclass(cls, SetOfMicrographs):
             
-            mdFn = getattr(obj, '_xmippMd', None)
-            if mdFn:
-                fn = mdFn.get()
-            else:
-                fn = self._getTmpPath(obj.getName() + '_micrographs.xmd')
-                writeSetOfMicrographs(obj, fn)
+            self.openMicrographs()  
+            
+        elif issubclass(cls, SetOfMovies):
+            fn = self._getTmpPath(obj.getName() + '_movies.xmd')
+            writeSetOfMovies(obj, fn)
                 
-            extra = ''
-            if obj.hasCTF():
-                extra = ' --mode metadata --render first'
-            #runShowJ(fn, extraParams=extra)
-            runScipionShowJ(fn, "Micrographs", self._project.getName(), obj.strId())    
-        
+            runScipionShowJ(fn, "Micrographs", self._project.getName(), obj.strId())  
+                
         elif issubclass(cls, SetOfCoordinates):
             obj_mics = obj.getMicrographs()#accessing mics to provide metadata file
             mdFn = getattr(obj_mics, '_xmippMd', None)
@@ -207,6 +201,20 @@ class XmippViewer(Viewer):
     @classmethod
     def getView(self):
         return "viewerXmipp"
+    
+    def openMicrographs(self, obj):
+            mdFn = getattr(obj, '_xmippMd', None)
+            if mdFn:
+                fn = mdFn.get()
+            else:
+                fn = self._getTmpPath(obj.getName() + '_micrographs.xmd')
+                writeSetOfMicrographs(obj, fn)
+                
+#            extra = ''
+#            if obj.hasCTF():
+#                extra = ' --mode metadata --render first'
+            #runShowJ(fn, extraParams=extra)
+            runScipionShowJ(fn, "Micrographs", self._project.getName(), obj.strId())  
         
 # ------------- Xmipp utilities function to launch Java applications ------------
 

@@ -7,20 +7,20 @@ from pyworkflow.em.packages.eman2 import *
 from test_workflow import TestWorkflow
 
 
-class HighThroughputTestDay1(TestWorkflow):
+class HighThroughputTest(TestWorkflow):
         
     @classmethod
     def setUpClass(cls):    
         # Create a new project
         setupProject(cls)
-        cls.pattern = join(os.environ['HOME'], 'javi_movies', 'day1', '1??_*.mrcs')
+        cls.pattern = join(os.environ['HOME'], 'javi_movies', 'day1', '*.mrcs')
         cls.importFolder = getInputPath('FakePick_HighThroughput')
 #         cls.importVol = getInputPath('Ribosomes_Sjors', 'reference.mrc')
         
     def testWorkflow(self):
         #First, import a set of movies
         print "Importing a set of movies..."
-        protImport = ProtImportMovies(pattern=self.pattern, samplingRate=1.2, magnification=60000,
+        protImport = ProtImportMovies(pattern=self.pattern, samplingRate=2.37, magnification=59000,
                                       voltage=300, sphericalAberration=2.0)
         protImport.setObjLabel('import movies - Day1')
         self.proj.launchProtocol(protImport, wait=True)
@@ -42,8 +42,7 @@ class HighThroughputTestDay1(TestWorkflow):
         
         # Now estimate CTF on the micrographs
         print "Performing CTF Micrographs..."
-        protCTF = XmippProtCTFMicrographs(lowRes=0.04, highRes=0.31, minDefocus=1.2, maxDefocus=2.5,
-                              runMode=1, numberOfMpi=1, numberOfThreads=3)
+        protCTF = XmippProtCTFMicrographs(lowRes=0.04, highRes=0.31, runMode=1, numberOfMpi=1, numberOfThreads=3)
         protCTF.inputMicrographs.set(protPreprocess.outputMicrographs)
         protCTF.setObjLabel('ctf - Day1')
         self.proj.launchProtocol(protCTF, wait=True)
@@ -51,7 +50,8 @@ class HighThroughputTestDay1(TestWorkflow):
         
         print "Running Xmipp supervised fake particle picking..."
         protPP = XmippProtParticlePicking(importFolder=self.importFolder, runMode=1)                
-        protPP.inputMicrographs.set(protPreprocess.outputMicrographs)  
+        protPP.inputMicrographs.set(protPreprocess.outputMicrographs)
+        protPP.setObjLabel('Picking - Day1')
         self.proj.launchProtocol(protPP, wait=True)
         self.assertIsNotNone(protPP.outputCoordinates, "There was a problem with the faked picking")
         
@@ -67,12 +67,12 @@ class HighThroughputTestDay1(TestWorkflow):
         protFilter = SpiderProtFilter(lowFreq=0.07, highFreq=0.43)
         protFilter.inputParticles.set(protExtract.outputParticles)
         protFilter.setObjLabel('spi filter')
-        project.launchProtocol(protFilter, wait=True)
+        self.proj.launchProtocol(protFilter, wait=True)
         self.assertIsNotNone(protFilter.outputParticles, "There was a problem with the Spider filter")
         
         print "Run Only Align2d"
         protOnlyAlign = XmippProtCL2DAlign(maximumShift=5, numberOfIterations=10, 
-                                 numberOfMpi=4, numberOfThreads=1, useReferenceImage=False)
+                                 numberOfMpi=8, numberOfThreads=1, useReferenceImage=False)
         protOnlyAlign.inputParticles.set(protFilter.outputParticles)
         protOnlyAlign.setObjLabel('cl2d align')
         self.proj.launchProtocol(protOnlyAlign, wait=True)        
@@ -82,7 +82,7 @@ class HighThroughputTestDay1(TestWorkflow):
         protCAPCA = SpiderProtCAPCA()
         protCAPCA.inputParticles.set(protOnlyAlign.outputParticles)
         protCAPCA.setObjLabel('spi PCA')
-        project.launchProtocol(protCAPCA, wait=True)
+        self.proj.launchProtocol(protCAPCA, wait=True)
         self.assertIsNotNone(protCAPCA.imcFile, "There was a problem with Spider Dimension Reduction")
         
         print "Running Spider Ward Classification"
@@ -90,7 +90,7 @@ class HighThroughputTestDay1(TestWorkflow):
         protWard.pcaFilePointer.set(protCAPCA.imcFile)
         protWard.inputParticles.set(protOnlyAlign.outputParticles)
         protWard.setObjLabel('spi ward')
-        project.launchProtocol(protWard, wait=True)
+        self.proj.launchProtocol(protWard, wait=True)
         self.assertIsNotNone(protWard.outputClasses, "There was a problem with Spider Ward Classification")
 
 
