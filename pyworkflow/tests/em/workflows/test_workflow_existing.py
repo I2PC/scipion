@@ -303,7 +303,7 @@ class TestXmippWorkflow(unittest.TestCase):
         protImport1 = getProtocol('ProtImportMovies')
         pattern = protImport1.pattern.get()
         protImport2 = project.copyProtocol(protImport1)
-        protImport.setObjLabel('import movies - Day2')
+        protImport2.setObjLabel('import movies - Day2')
         protImport2.pattern.set(pattern.replace('day1', 'day2'))
         project.launchProtocol(protImport2, wait=True)
         
