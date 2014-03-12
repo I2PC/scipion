@@ -42,7 +42,7 @@ class HighThroughputTestDay1(TestWorkflow):
         
         # Now estimate CTF on the micrographs
         print "Performing CTF Micrographs..."
-        protCTF = XmippProtCTFMicrographs(lowRes=0.04, highRes=0.31, minDefocus=1.2, maxDefocus=2.5,
+        protCTF = XmippProtCTFMicrographs(lowRes=0.04, highRes=0.31, minDefocus=0.3, maxDefocus=2,
                               runMode=1, numberOfMpi=1, numberOfThreads=3)
         protCTF.inputMicrographs.set(protPreprocess.outputMicrographs)
         protCTF.setObjLabel('ctf - Day1')
