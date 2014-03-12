@@ -303,10 +303,11 @@ def formatProvider(provider):
     for obj in provider.getObjects():
         # First policy used to compare runs
         id = obj.getObjId()
+        label = obj.getObjLabel()
         name = obj.getName()
         status = obj.status.get()
 #        time = obj.getElapsedTime()
-        runs[id] = [name, status]
+        runs[id] = [label, name, status]
     return runs
 
 def project_content(request):        

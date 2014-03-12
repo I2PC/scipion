@@ -983,6 +983,8 @@ class Movie(SetOfMicrographs):
     def __init__(self, **args):
         SetOfMicrographs.__init__(self, **args)
 
+        
+
 
 class SetOfMovies(Set):
     """ Represents a set of Movies.
