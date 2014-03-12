@@ -14,7 +14,7 @@ class HighThroughputTestDay1(TestWorkflow):
         # Create a new project
         setupProject(cls)
         cls.pattern = join(os.environ['HOME'], 'javi_movies', 'day1', '1??_*.mrcs')
-#         cls.importFolder = getInputPath('Ribosomes_Sjors', 'EmanBoxing')
+        cls.importFolder = getInputPath('FakePick_HighThroughput')
 #         cls.importVol = getInputPath('Ribosomes_Sjors', 'reference.mrc')
         
     def testWorkflow(self):
@@ -51,7 +51,8 @@ class HighThroughputTestDay1(TestWorkflow):
         
         print "Running Xmipp supervised fake particle picking..."
         protPP = XmippProtParticlePicking(importFolder=self.importFolder, runMode=1)                
-        protPP.inputMicrographs.set(protPreprocess.outputMicrographs)  
+        protPP.inputMicrographs.set(protPreprocess.outputMicrographs)
+        protPP.setObjLabel('Picking - Day1')
         self.proj.launchProtocol(protPP, wait=True)
         self.assertIsNotNone(protPP.outputCoordinates, "There was a problem with the faked picking")
         

@@ -22,31 +22,36 @@ class ScipionMixedWorkflow(TestWorkflow):
         print "Importing a set of micrographs..."
         protImport = ProtImportMicrographs(pattern=self.pattern, samplingRateMode=1, magnification=79096,
                                            scannedPixelSize=56, voltage=300, sphericalAberration=2.0)
+        protImport.setObjLabel('import 20 mics')
         self.proj.launchProtocol(protImport, wait=True)
         self.assertIsNotNone(protImport.outputMicrographs, "There was a problem with the import")
         
         print "Importing a volume..."
         protImportVol = ProtImportVolumes(pattern=self.importVol, samplingRate=7.08)
+        protImportVol.setObjLabel('import single vol')
         self.proj.launchProtocol(protImportVol, wait=True)
         self.assertIsNotNone(protImportVol.outputVolume, "There was a problem with the import")
         
         print "Preprocessing the micrographs..."
         protPreprocess = XmippProtPreprocessMicrographs(doCrop=True, cropPixels=50)
         protPreprocess.inputMicrographs.set(protImport.outputMicrographs)
+        protPreprocess.setObjLabel('crop 50px')
         self.proj.launchProtocol(protPreprocess, wait=True)
         self.assertIsNotNone(protPreprocess.outputMicrographs, "There was a problem with the downsampling")
 
         # Now estimate CTF on the micrographs 
         print "Performing CTFfind..."   
         protCTF = ProtCTFFind(lowRes=0.04, highRes=0.45, minDefocus=1.2, maxDefocus=3,
-                              runMode=1, numberOfMpi=1, numberOfThreads=4)         
-        protCTF.inputMicrographs.set(protPreprocess.outputMicrographs)        
+                              runMode=1, numberOfMpi=1, numberOfThreads=16)         
+        protCTF.inputMicrographs.set(protPreprocess.outputMicrographs)
+        protCTF.setObjLabel('ctf estimation')
         self.proj.launchProtocol(protCTF, wait=True)
         
         print "Running Eman fake particle picking..."
         protPP = EmanProtBoxing(importFolder=self.importFolder, runMode=1)                
         protPP.inputMicrographs.set(protPreprocess.outputMicrographs)  
-        protPP.boxSize.set(60)      
+        protPP.boxSize.set(60)
+        protPP.setObjLabel('Eman boxing') 
         self.proj.launchProtocol(protPP, wait=True)
         self.assertIsNotNone(protPP.outputCoordinates, "There was a problem with the faked picking")
         #self.protDict['protPP'] = protPP
@@ -56,23 +61,26 @@ class ScipionMixedWorkflow(TestWorkflow):
                                                 doFlip=False, backRadius=28, runMode=1)
         protExtract.inputCoordinates.set(protPP.outputCoordinates)
         protExtract.ctfRelations.set(protCTF.outputCTF)
+        protExtract.setObjLabel('Extract particles')
         self.proj.launchProtocol(protExtract, wait=True)
         self.assertIsNotNone(protExtract.outputParticles, "There was a problem with the extract particles")
         
         print "Run CL2D"
-        protCL2D = XmippProtCL2D(numberOfReferences=8, numberOfInitialReferences=4, 
-                                 numberOfIterations=1, numberOfMpi=4)
+        protCL2D = XmippProtCL2D(numberOfReferences=32, numberOfInitialReferences=4, 
+                                 numberOfIterations=2, numberOfMpi=16)
         protCL2D.inputImages.set(protExtract.outputParticles)
+        protCL2D.setObjLabel('CL2D')
         self.proj.launchProtocol(protCL2D, wait=True)   
         self.assertIsNotNone(protCL2D.outputClasses, "There was a problem with CL2D")
         
         # Refine the SetOfParticles and reconstruct a refined volume.
         print "Running Frealign..."
-        protFrealign = ProtFrealign(angStepSize=40, numberOfIterations=2, mode=1, doExtraRealSpaceSym=True,
+        protFrealign = ProtFrealign(angStepSize=20, numberOfIterations=2, mode=1, doExtraRealSpaceSym=True,
                                     outerRadius=180, PhaseResidual=65, lowResolRefine=300, highResolRefine=15,
-                                    resolution=15, runMode=1, numberOfMpi=1, numberOfThreads=4)
+                                    resolution=15, runMode=1, numberOfMpi=1, numberOfThreads=16)
         protFrealign.inputParticles.set(protExtract.outputParticles)
         protFrealign.input3DReferences.set(protImportVol.outputVolume)
+        protFrealign.setObjLabel('Frealign')
         self.proj.launchProtocol(protFrealign, wait=True)        
         self.assertIsNotNone(protFrealign.outputVolume, "There was a problem with Frealign")
 

@@ -257,6 +257,9 @@ def class2DToRow(class2D, classRow):
     n = long(len(class2D))
     classRow.setValue(xmipp.MDL_CLASS_COUNT, n)
     classRow.setValue(xmipp.MDL_REF, int(class2D.getObjId()))
+    
+
+    
         
 def ctfModelToRow(ctfModel, ctfRow):
     """ Set labels values from ctfModel to md row. """
@@ -557,6 +560,27 @@ def writeSetOfClasses2D(classes2DSet, filename, classesBlock='classes'):
     classMd.write(classFn, xmipp.MD_APPEND) # Empty write to ensure the classes is the first block
     classes2DSet._xmippMd = String(filename)
 
+def writeSetOfMovies(moviesSet, filename, moviesBlock='movies'):    
+    """ This function will write a SetOfMovies as Xmipp metadata.
+    Params:
+        moviesSet: the SetOfMovies instance.
+        filename: the filename where to write the metadata.
+    """
+       
+    for movie in moviesSet:        
+        
+        ref = movie.getObjId()
+        micrographsFn = 'movie%06d_micrographs@%s' % (ref, filename)
+        micrographsMd = xmipp.MetaData()
+        micRow = XmippMdRow()
+        
+        for mic in movie:
+            micrographToRow(mic, micRow)
+            micRow.writeToMd(micrographsMd, micrographsMd.addObject())
+        micrographsMd.write(micrographsFn, xmipp.MD_APPEND)
+    
+    
+    moviesSet._xmippMd = String(filename)
 
 def readSetOfClasses2D(classes2DSet, filename, classesBlock='classes', **args):
     """read from Xmipp image metadata.
