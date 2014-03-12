@@ -34,8 +34,7 @@ public class SupervisedParticlePicker extends ParticlePicker
 
 	protected List<SupervisedParticlePickerMicrograph> micrographs;
 	private SupervisedParticlePickerMicrograph micrograph;
-	public static final int defAutoPickPercent = 50;
-	protected int autopickpercent = defAutoPickPercent;
+	protected int autopickpercent;
 
         //used in previous versions
 	private int threads = 1;
@@ -534,9 +533,11 @@ public class SupervisedParticlePicker extends ParticlePicker
 		return true;
 	}
 
+        @Override
 	public void loadConfig()
 	{
 		super.loadConfig();
+                autopickpercent = 50;
 		String file = configfile;
 		if (!new File(file).exists())
 			return;
@@ -547,11 +548,10 @@ public class SupervisedParticlePicker extends ParticlePicker
 			Mode configmode;
 			boolean hasautopercent = md.containsLabel(MDLabel.MDL_PICKING_AUTOPICKPERCENT);
                         long id = md.firstObject();
-                        if (hasautopercent)
-                        {
+
+                        if(hasautopercent) 
                             autopickpercent = md.getValueInt(MDLabel.MDL_PICKING_AUTOPICKPERCENT, id);
-                            System.out.println("percent " + autopickpercent);
-                        }
+                        
                         dtemplatesnum = md.getValueInt(MDLabel.MDL_PICKING_TEMPLATES, id);
                         if (dtemplatesnum == 0)
                                 dtemplatesnum = 1;// for compatibility with previous
@@ -590,7 +590,6 @@ public class SupervisedParticlePicker extends ParticlePicker
 
 	public void setAutopickpercent(int autopickpercent)
 	{
-            System.out.printf("setting autopickpercent: %d\n", autopickpercent);
 		this.autopickpercent = autopickpercent;
 	}
 
@@ -975,7 +974,7 @@ public class SupervisedParticlePicker extends ParticlePicker
 		{
 			String file = getOutputPath(micrograph.getPosFile());
 			MicrographState state;
-			Integer autopickpercent;
+			int micautopickpercent;
 			if (!new File(file).exists())
 				return;
 			if (MetaData.containsBlock(file, "header"))
@@ -984,14 +983,11 @@ public class SupervisedParticlePicker extends ParticlePicker
 				boolean hasautopercent = md.containsLabel(MDLabel.MDL_PICKING_AUTOPICKPERCENT);
 				long id = md.firstObject();
 				state = MicrographState.valueOf(md.getValueString(MDLabel.MDL_PICKING_MICROGRAPH_STATE, id));
-				if (hasautopercent)
-					autopickpercent = md.getValueInt(MDLabel.MDL_PICKING_AUTOPICKPERCENT, id);
-				else
-					autopickpercent = 50;// compatibility with previous projects
+				micautopickpercent = hasautopercent ? md.getValueInt(MDLabel.MDL_PICKING_AUTOPICKPERCENT, id) : getAutopickpercent();
 				double threshold = md.getValueDouble(MDLabel.MDL_COST, id);
 				micrograph.setThreshold(threshold);
 				micrograph.setState(state);
-				micrograph.setAutopickpercent(autopickpercent);
+				micrograph.setAutopickpercent(micautopickpercent);
 				md.destroy();
 			}
 			loadManualParticles(micrograph, file);
