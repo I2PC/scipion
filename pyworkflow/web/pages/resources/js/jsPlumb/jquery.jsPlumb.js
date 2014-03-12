@@ -678,7 +678,12 @@
             var o = jsPlumb.CurrentLibrary.getOffset(_gel(el));
 			if (_instance != null) {
                 var z = _instance.getZoom();
-                return {left:o.left / z, top:o.top / z };    
+		if (o != undefined){
+			return {left:o.left / z, top:o.top / z };    
+		}
+		else {
+	                return o;    
+		}
             }
             else
                 return o;

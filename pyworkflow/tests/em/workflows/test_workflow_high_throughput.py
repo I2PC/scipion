@@ -20,7 +20,7 @@ class HighThroughputTestDay1(TestWorkflow):
     def testWorkflow(self):
         #First, import a set of movies
         print "Importing a set of movies..."
-        protImport = ProtImportMovies(pattern=self.pattern, samplingRate=1.2, magnification=60000,
+        protImport = ProtImportMovies(pattern=self.pattern, samplingRate=2.37, magnification=59000,
                                       voltage=300, sphericalAberration=2.0)
         protImport.setObjLabel('import movies - Day1')
         self.proj.launchProtocol(protImport, wait=True)
@@ -42,8 +42,7 @@ class HighThroughputTestDay1(TestWorkflow):
         
         # Now estimate CTF on the micrographs
         print "Performing CTF Micrographs..."
-        protCTF = XmippProtCTFMicrographs(lowRes=0.04, highRes=0.31, minDefocus=1.2, maxDefocus=2.5,
-                              runMode=1, numberOfMpi=1, numberOfThreads=3)
+        protCTF = XmippProtCTFMicrographs(lowRes=0.04, highRes=0.31, runMode=1, numberOfMpi=1, numberOfThreads=3)
         protCTF.inputMicrographs.set(protPreprocess.outputMicrographs)
         protCTF.setObjLabel('ctf - Day1')
         self.proj.launchProtocol(protCTF, wait=True)
@@ -68,7 +67,7 @@ class HighThroughputTestDay1(TestWorkflow):
         protFilter = SpiderProtFilter(lowFreq=0.07, highFreq=0.43)
         protFilter.inputParticles.set(protExtract.outputParticles)
         protFilter.setObjLabel('spi filter')
-        project.launchProtocol(protFilter, wait=True)
+        self.proj.launchProtocol(protFilter, wait=True)
         self.assertIsNotNone(protFilter.outputParticles, "There was a problem with the Spider filter")
         
         print "Run Only Align2d"
@@ -83,7 +82,7 @@ class HighThroughputTestDay1(TestWorkflow):
         protCAPCA = SpiderProtCAPCA()
         protCAPCA.inputParticles.set(protOnlyAlign.outputParticles)
         protCAPCA.setObjLabel('spi PCA')
-        project.launchProtocol(protCAPCA, wait=True)
+        self.proj.launchProtocol(protCAPCA, wait=True)
         self.assertIsNotNone(protCAPCA.imcFile, "There was a problem with Spider Dimension Reduction")
         
         print "Running Spider Ward Classification"
@@ -91,7 +90,7 @@ class HighThroughputTestDay1(TestWorkflow):
         protWard.pcaFilePointer.set(protCAPCA.imcFile)
         protWard.inputParticles.set(protOnlyAlign.outputParticles)
         protWard.setObjLabel('spi ward')
-        project.launchProtocol(protWard, wait=True)
+        self.proj.launchProtocol(protWard, wait=True)
         self.assertIsNotNone(protWard.outputClasses, "There was a problem with Spider Ward Classification")
 
 
