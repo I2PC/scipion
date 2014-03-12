@@ -34,7 +34,7 @@ from utils import greenStr
 # The job should be launched from the working directory!
 def runJob(log, programname, params,           
            numberOfMpi=1, numberOfThreads=1, 
-           runInBackground=False, hostConfig=None):
+           runInBackground=False, hostConfig=None, env=None):
 
     command = buildRunCommand(log, programname, params,
                               numberOfMpi, numberOfThreads, runInBackground,
@@ -47,14 +47,14 @@ def runJob(log, programname, params,
     else:
         log.info(gCommand, True)
 
-    runCommand(command)
+    runCommand(command, env)
         
 
-def runCommand(command):
+def runCommand(command, env=None):
     from subprocess import call
     retcode = 1000
     try:
-        retcode = call(command, shell=True, stdout=sys.stdout, stderr=sys.stderr)
+        retcode = call(command, shell=True, stdout=sys.stdout, stderr=sys.stderr, env=env)
         if retcode != 0:
             raise Exception("Process returned with code %d, command: %s" % (retcode,command))
     except OSError, e:

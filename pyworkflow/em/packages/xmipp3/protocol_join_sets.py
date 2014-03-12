@@ -95,13 +95,13 @@ class XmippProtJoinSets(ProtPreprocessMicrographs):
         
     def _methods(self):
         methods = []
-        if not hasattr(self, 'outputImages'):
-            methods.append("Protocol has not finished yet.")
-        else:
-            m = "We have joint the following sets: "
-            for itemSet in self.inputSet:
-                m += "%s, " % itemSet.get().getNameId()
-            methods.append(m[:-2])
+#        if not hasattr(self, 'outputImages'):
+#            methods.append("Protocol has not finished yet.")
+#        else:
+#            m = "We have joint the following sets: "
+#            for itemSet in self.inputSet:
+#                m += "%s, " % itemSet.get().getNameId()
+#            methods.append(m[:-2])
         
         return methods
             
