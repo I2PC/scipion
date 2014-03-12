@@ -497,6 +497,7 @@ def submitProtocol(script, **params):
     nodesFile = script.replace('.py', '.nodes')
     params['nodesfileBackup'] = nodesFile
     params['file'] = launchFilename
+    params['XMIPP_HOME'] = os.environ['XMIPP_HOME']
     #create launch file
     launchfile = open(launchFilename, 'w')
     launchfile.write(launch.FileTemplate % params)
