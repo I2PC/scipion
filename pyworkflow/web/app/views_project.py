@@ -309,7 +309,6 @@ def run_table_graph(request):
 def formatProvider(provider):
     runs = []
     for obj in provider.getObjects():
-<<<<<<< HEAD
         objInfo = provider.getObjectInfo(obj)
         
         id = objInfo["key"]
@@ -320,15 +319,6 @@ def formatProvider(provider):
         
         runs.append((id, [id, name, status, time]))
         
-=======
-        # First policy used to compare runs
-        id = obj.getObjId()
-        label = obj.getObjLabel()
-        name = obj.getName()
-        status = obj.status.get()
-#        time = obj.getElapsedTime()
-        runs[id] = [label, name, status]
->>>>>>> parent of c87f09e... Merge branch 'master' of
     return runs
 
 def project_content(request):        
