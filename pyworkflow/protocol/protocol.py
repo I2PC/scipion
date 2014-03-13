@@ -588,7 +588,8 @@ class Protocol(Step):
         """This function will be called whenever an step
         has finished its run.
         """
-        self._store(step)
+        self.endTime.set(step.endTime.get())
+        self._store(self.endTime, step)
         doContinue = True
         if step.status == STATUS_WAITING_APPROVAL:
             doContinue = False
@@ -886,9 +887,8 @@ class Protocol(Step):
         if self.initTime.hasValue():
             f = "%Y-%m-%d %H:%M:%S.%f"
             t1 = dt.datetime.strptime(self.initTime.get(), f)
-            endTimeStr = self.endTime.get()
-            if endTimeStr:
-                t2 = dt.datetime.strptime(endTimeStr, f)
+            if self.endTime.hasValue():
+                t2 = dt.datetime.strptime(self.endTime.get(), f)
             else:
                 t2 = dt.datetime.now()
             elapsed = t2 - t1

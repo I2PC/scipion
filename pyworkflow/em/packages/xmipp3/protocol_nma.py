@@ -131,7 +131,7 @@ class XmippProtNMA(XmippProtNMABase):
                 
         self._enterWorkingDir()
         
-        self.runJob("xmipp_python nma_record_info_PDB.py","%d %d atoms.pdb %f %f" % (numberOfModes,RTBblockSize,rc,RTBForceConstant))
+        self.runJob("nma_record_info_PDB.py","%d %d atoms.pdb %f %f" % (numberOfModes,RTBblockSize,rc,RTBForceConstant))
         self.runJob("nma_elnemo_pdbmat","")
         self.runJob("nma_diagrtb","")
 

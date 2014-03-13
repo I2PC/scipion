@@ -94,8 +94,7 @@ class XmippProtNMABase(EMProtocol):
         fnDistanceHist=os.path.join(baseDir,'extra',fnBase+'_distance.hist')
         rc = self._getRc(fnDistanceHist)
         self._enterWorkingDir()
-        nma_record_info = join(os.environ['XMIPP_HOME'], 'bin', 'nma_record_info.py')
-        self.runJob("xmipp_python", "%s %d %s.pdb %d" % (nma_record_info, numberOfModes, fnBase, rc))
+        self.runJob("nma_record_info.py","%d %s.pdb %d" % (numberOfModes, fnBase, rc))
         self.runJob("nma_pdbmat.pl","pdbmat.dat")
         self.runJob("nma_diag_arpack","")
         if not exists("fort.11"):

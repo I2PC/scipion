@@ -549,22 +549,15 @@ class ProtFrealign(ProtRefine3D):
     
     def _summary(self):
         summary = []
-        summary.append("Number of particles:  %d" % self.inputParticles.get().getSize())
-        summary.append("Input volume:  %s" % self.input3DReferences.get().getFileName())
+        summary.append("Input particles:  %s" % self.inputParticles.get().getNameId())
+        summary.append("Input volumes:  %s" % self.input3DReferences.get().getNameId())
         
         if not hasattr(self, 'outputVolume'):
             summary.append("Output volumes not ready yet.")
         else:
-            summary.append("Number of iterations: %d" % self.numberOfIterations.get())
-            summary.append("Angular step size: %f" % self.angStepSize.get())
-            summary.append("symmetry: %s" % self.symmetry.get())
-            summary.append("Final volume: %s" % self.outputVolume.getFileName())
+            summary.append("Output volumes: %s" % self.outputVolume.getNameId())
         
         return summary
-    
-    def _methods(self):
-        # ToDo: implement this method
-        return self._summary()
     
     #--------------------------- UTILS functions ---------------------------------------------------
     def _getParamsIteration(self, imgSet, iter):

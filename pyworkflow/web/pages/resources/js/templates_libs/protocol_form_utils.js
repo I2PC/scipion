@@ -508,21 +508,22 @@ function getTableFormatted(node, json, id, previsualize) {
 			+ "'>";
 	
 	var func = "";
-	var first = "<a class='fa fa-eye' href='javascript:";
-	var second = "'></a>";
+	var first = "<a href='javascript:";
+	var second = "'><i class='fa fa-eye'></i></a>";
 	
 	var x = 0;
 	$.each(json, function(key, value) {
 		// key is the param ObjId for the object
 		// value is the name of the object
 		if(previsualize){
-			var func = "&nbsp&nbsp&nbsp" + first + 'customPopup("/visualize_object/?objectId='+ key +'",1024,600)' + second;
+//			var func = "<td class='ico'><a href='javascript:customPopup('/visualize_object/?objectId="+ key +"',1024,600);'><i class='fa fa-eye' style='font-size:1.1em;'></i></a></td>"
+			var func = first + 'customPopup("/visualize_object/?objectId='+ key +'",1024,600)' + second;
 		}
 				
 //		res += "<tr><td id='" + id + x + "' class='" + key + "' value='"
-		res += "<tr><td id='"+ x + "' class='" + key + "' value='"
-				+ value + "' onclick=javascript:selTableMessi($(this)); >" 
-				+ value + func +"</td></tr>";
+		res += "<tr id='"+ x + "' class='" + key + "' value='"
+				+ value["nameId"]  + "' onclick=javascript:selTableMessi($(this)); ><td>" 
+				+ value["nameId"] + "</td><td>"  + value["info"]+"</td><td>"+ func +"</td></tr>";
 		x++;
 	});
 	
@@ -556,7 +557,7 @@ function selectDialog(objClass, msg, funcName) {
 function getSelectedValue(elm){
 	var res = []
 	           
-	var selected = $("td#" + elm.attr('value'));
+	var selected = $("tr#" + elm.attr('value'));
 	res[0] = selected.attr('value')
 	res[1] = selected.attr('class');
 	
@@ -632,10 +633,11 @@ function selTableMessi(elm) {
 	var id = elm.attr('id');
 
 	if (row.attr('value') != undefined && row.attr('value') != id) {
-		var rowOld = $("td#" + row.attr('value'));
+		var rowOld = $("tr#" + row.attr('value'));
 		rowOld.attr('style', '');
 	}
 	row.attr('value', id);
+//	elm.attr('style', 'background-color: #eaebff;');
 	elm.attr('style', 'background-color: #eaebff;');
 }
 
