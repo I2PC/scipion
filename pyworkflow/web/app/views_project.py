@@ -270,25 +270,33 @@ def run_table_graph(request):
         runsNew = formatProvider(provider)
         
         refresh = False
+        listNewElm = []
         
         if len(runs) != len(runsNew):
             print 'Change detected, different size'
             refresh = True
         else:
-            for x in runs.iteritems():
-                for y in runsNew.iteritems():
-                    if x[0]==y[0]:
-                        if x != y:
-                            print 'Change detected', x, y
-                            refresh = True
+            for kx, vx in runs.iteritems():
+                for ky, vy in runsNew.iteritems():
+                    if kx == ky and vx != vy:
+                        print 'Change detected', vx, vy
+    #                   refresh = True
+                        listNewElm.append(vy)
         if refresh:
             request.session['runs'] = runsNew
             graphView = project.getSettings().graphView.get()
-        
-            context = {'provider': provider,
+            
+            context = {'runs': runsNew,
+                       'columns': provider.getColumns(),
                        'graphView': graphView}
             
             return render_to_response('run_table_graph.html', context)
+        
+        elif listNewElm:
+            request.session['runs'] = runsNew
+            jsonStr = json.dumps(listNewElm, ensure_ascii=False)
+            return HttpResponse(jsonStr,mimetype='application/json')
+        
         else:
             print "No changes detected"
             return HttpResponse("ok")
@@ -301,13 +309,16 @@ def run_table_graph(request):
 def formatProvider(provider):
     runs = {}
     for obj in provider.getObjects():
-        # First policy used to compare runs
-        id = obj.getObjId()
-        label = obj.getObjLabel()
-        name = obj.getName()
-        status = obj.status.get()
-#        time = obj.getElapsedTime()
-        runs[id] = [label, name, status]
+        objInfo = provider.getObjectInfo(obj)
+        
+        id = objInfo["key"]
+        name = objInfo["text"]
+        info = objInfo["values"]
+        status = info[0]
+        time = info[1]
+        
+        runs[id] = [id, name, status, time]
+        
     return runs
 
 def project_content(request):        
@@ -323,7 +334,10 @@ def project_content(request):
     project = loadProject(projectName)
     
     provider = ProjectRunsTreeProvider(project)
-    request.session['runs'] = formatProvider(provider)
+    runs = formatProvider(provider)
+    request.session['runs'] = runs
+    
+    
     
     graphView = project.getSettings().graphView.get()
     
@@ -353,7 +367,8 @@ def project_content(request):
                'sections': root.childs,
                'choices':choices,
                'choiceSelected': choiceSelected,
-               'provider':provider,
+               'runs': runs,
+               'columns': provider.getColumns(),
                'view': 'protocols',
                'graphView': graphView,
                }
@@ -373,8 +388,13 @@ def protocol_info(request):
         protocol = project.mapper.selectById(int(protId))
         
         # PROTOCOL IO
-        input_obj = [{'name': name, 'id': attr.getObjId()} for name, attr in protocol.iterInputAttributes()]
-        output_obj = [{'name': name, 'id': attr.getObjId()} for name, attr in protocol.iterOutputAttributes(EMObject)]
+#        input_obj = [{'name': name, 'id': attr.getObjId()} for name, attr in protocol.iterInputAttributes()]
+#        output_obj = [{'name': name, 'id': attr.getObjId()} for name, attr in protocol.iterOutputAttributes(EMObject)]
+
+        input_obj = [{'name':name, 'nameId': attr.getNameId(), 'id': attr.getObjId(), 'info': str(attr)} for name, attr in protocol.iterInputAttributes()]
+        
+        output_obj = [{'name':name, 'nameId': attr.getNameId(), 'id': attr.getObjId(), 'info': str(attr)} for name, attr in protocol.iterOutputAttributes(EMObject)]
+
 
         # PROTOCOL SUMMARY
         summary = parseText(protocol.summary())
