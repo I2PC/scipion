@@ -145,21 +145,23 @@ def project_graph (request):
         # Project Id(or Name) should be stored in SESSION
         projectName = request.session['projectName']
         # projectName = request.GET.get('projectName')
-        project = loadProject(projectName)
+        project = loadProject(projectName)  
+        provider = ProjectRunsTreeProvider(project)
+        
         g = project.getRunsGraph()
         root = g.getRoot()
         root.w = 100
         root.h = 40
         root.item = WebNode('project', x=0, y=0)
         
-        
         for box in boxList.split(','):
-            i, w, h = box.split('-')
-            node = g.getNode(i)
+            id, w, h = box.split('-')
+            node = g.getNode(id)
             if node is None:
-                print "Get NONE node: i=%s" % i
+                print "Get NONE node: i=%s" % id
             else:
 #            print node.getName()
+                node.id = id
                 node.w = float(w)
                 node.h = float(h)
             
@@ -175,8 +177,14 @@ def project_graph (request):
                 hy = node.h / 2
                 childs = [c.getName() for c in node.getChilds()]
                 status, color = getNodeStateColor(node)
+                
+                info = ""
+                if str(node.id) != "PROJECT":
+                    protocol = project.mapper.selectById(int(node.id))
+                    info = provider.getObjectInfo(protocol)["values"][0]
+                
                 nodeList.append({'id': node.getName(), 'x': node.item.x - hx, 'y': node.item.y - hy,
-                                 'color': color, 'status': status,
+                                 'color': color, 'status': info,
                                  'childs': childs})
             except Exception:
                 print "Error with node: ", node.getName()
@@ -276,8 +284,8 @@ def run_table_graph(request):
             print 'Change detected, different size'
             refresh = True
         else:
-            for kx, vx in runs.iteritems():
-                for ky, vy in runsNew.iteritems():
+            for kx, vx in runs:
+                for ky, vy in runsNew:
                     if kx == ky and vx != vy:
                         print 'Change detected', vx, vy
     #                   refresh = True
@@ -307,7 +315,7 @@ def run_table_graph(request):
 
 
 def formatProvider(provider):
-    runs = {}
+    runs = []
     for obj in provider.getObjects():
         objInfo = provider.getObjectInfo(obj)
         
@@ -317,7 +325,7 @@ def formatProvider(provider):
         status = info[0]
         time = info[1]
         
-        runs[id] = [id, name, status, time]
+        runs.append((id, [id, name, status, time]))
         
     return runs
 
