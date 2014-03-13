@@ -70,8 +70,13 @@ FileTemplate = """
 # Use as working dir the path where qsub was launched
 WORKDIR=$PBS_O_WORKDIR
 #################################
+
 ### Set environment varible to know running mode is non interactive
 export XMIPP_IN_QUEUE=1
+
+### Load the current Xmipp bash.rc
+source %(XMIPP_HOME)s/.xmipp.bashrc
+
 ### Switch to the working directory;
 cd $WORKDIR
 # Make a copy of PBS_NODEFILE 
