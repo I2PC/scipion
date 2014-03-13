@@ -12,12 +12,11 @@ from protlib_base import *
 from os.path import join, exists, split, basename
 from xmipp import MetaData, MetaDataInfo, MD_APPEND, MDL_MAXCC, MDL_WEIGHT, MDL_IMAGE, MDL_VOLUME_SCORE_SUM, MDL_VOLUME_SCORE_SUM_TH, MDL_VOLUME_SCORE_MEAN, MDL_VOLUME_SCORE_MIN
 from math import floor
-from numpy import array, savetxt, sum, zeros,  empty, loadtxt, ones, empty
+from numpy import array, savetxt, sum, zeros,  empty, loadtxt, ones, where, percentile
 from protlib_xmipp import getMdSize
 from protlib_utils import getListFromRangeString, runJob, runShowJ
 from protlib_filesystem import copyFile, deleteFile, moveFile, removeFilenamePrefix, createDir
 from protlib_hg3d import *
-import Queue as q
 
 
 class ProtHG3D(ProtHG3DBase):
@@ -28,10 +27,13 @@ class ProtHG3D(ProtHG3DBase):
     def defineSteps(self):
         ProtHG3DBase.defineSteps(self)
         
-#JV        
         self.nHg = 0
+        md=MetaData(self.Classes)
+        Nimgs=md.size()
 #JV     
         WorkingDirStructure = os.path.join(self.WorkingDir,"Structure%05d"%self.nHg)
+        self.insertStep("createDir",path=WorkingDirStructure)
+        fnOutputReducedClass = self.extraPath("reducedClasses.stk")     
         
         #for nI in range (self.NumVolumes):
         for nI in range (1):          
@@ -45,18 +47,19 @@ class ProtHG3D(ProtHG3DBase):
                 self.insertParallelStep('ransacIteration',WorkingDir=self.WorkingDir,n=n,SymmetryGroup=self.SymmetryGroup,Xdim=self.Xdim,
                                         Xdim2=self.Xdim2,NumSamples=self.NumSamples,InitialVolume=self.InitialVolume,
                                         AngularSampling=self.AngularSampling,
-                                        UseSA=self.UseSA, NIterRandom=self.NIterRandom, Rejection=self.Rejection,
                                         parent_step_id=XmippProjectDb.FIRST_STEP)
             
             # Look for threshold, evaluate volumes and get the best
             if (self.InitialVolume != ''):
                 self.insertStep("runJob",programname="rm", params=self.tmpPath("gallery_InitialVolume*"), NumberOfMpi=1)
             
-            self.insertStep("getCorrThresh",WorkingDir=self.WorkingDir, NRansac=self.NRansac, CorrThresh=self.CorrThresh)
-            self.insertStep("evaluateVolumes",WorkingDir=self.WorkingDir,NRansac=self.NRansac)        
-            self.insertStep("getBestVolumes",WorkingDir=self.WorkingDir, NRansac=self.NRansac, NumVolumes=self.NumVolumes, UseAll=self.UseAll,nHg=nI)        
+            self.insertStep("getCorrThresh",WorkingDir=self.WorkingDir, WorkingDirStructure=WorkingDirStructure,
+                            NRansac=self.NRansac, CorrThresh=self.CorrThresh)
+            self.insertStep("evaluateVolumes",WorkingDir=self.WorkingDir,NRansac=self.NRansac,WorkingDirStructure=WorkingDirStructure)        
+            self.insertStep("getBestVolumes",WorkingDir=self.WorkingDir, WorkingDirStructure=WorkingDirStructure,
+                            NRansac=self.NRansac, NumVolumes=self.NumVolumes, UseAll=self.UseAll,nHg=nI)        
             
-            # Refine the best volume    
+            # Refine the best volumes
             for n in range(self.NumVolumes):
                 fnBase='proposedVolume%05d'%n
                 fnRoot=os.path.join(WorkingDirStructure+'/'+fnBase)
@@ -65,40 +68,18 @@ class ProtHG3D(ProtHG3DBase):
                 # Simulated annealing
                 parent_id = self.insertParallelStep('reconstruct',fnRoot=fnRoot,symmetryGroup=self.SymmetryGroup,maskRadius=self.Xdim2/2,
                                                     parent_step_id=parent_id)
-                if self.UseSA:
-                    parent_id = self.insertParallelRunJobStep("xmipp_volume_initial_simulated_annealing","-i %s.xmd --initial %s.vol --oroot %s_sa --sym %s --randomIter %d --rejection %f --dontApplyPositive"\
-                              %(fnRoot,fnRoot,fnRoot,self.SymmetryGroup,self.NIterRandom,self.Rejection),parent_step_id=parent_id)
-                    parent_id = self.insertParallelStep('moveFile', source=fnRoot+"_sa.vol", dest=fnRoot+".vol",parent_step_id=parent_id)
-                    parent_id = self.insertParallelStep('deleteFile', filename=fnRoot+"_sa.xmd",parent_step_id=parent_id)
             
                 for it in range(self.NumIter):    
                     parent_id = self.insertParallelStep('reconstruct',fnRoot=fnRoot,symmetryGroup=self.SymmetryGroup,maskRadius=self.Xdim2/2,
                                                         parent_step_id=parent_id)
-                    parent_id = self.insertParallelStep('projMatch',WorkingDir=self.WorkingDir,WorkingDirStructure=WorkingDirStructure,fnBase=fnBase,AngularSampling=self.AngularSampling,
+                    parent_id = self.insertParallelStep('projMatch',WorkingDir=self.WorkingDir,WorkingDirStructure=WorkingDirStructure,
+                                                        fnBase=fnBase,AngularSampling=self.AngularSampling,
                                                         SymmetryGroup=self.SymmetryGroup, Xdim=self.Xdim2, parent_step_id=parent_id)
-                self.insertParallelRunJobStep("xmipp_image_resize","-i %s.vol -o %s.vol --dim %d %d" 
-                                              %(fnRoot,fnRoot,self.Xdim,self.Xdim),parent_step_id=parent_id)
-                
             
-            # Score each of the final volumes        
-            self.insertStep("scoreFinalVolumes",WorkingDir=self.WorkingDir,WorkingDirStructure=WorkingDirStructure,NumVolumes=self.NumVolumes)
-    
-            self.insertStep("coocurenceMatrix",WorkingDirStructure=WorkingDirStructure,
-                                NumVolumes=self.NumVolumes,nI=nI)
+            from random import randint
+            self.insertStep("coocurenceMatrix",WorkingDirStructure=WorkingDirStructure,fnClasses=fnOutputReducedClass,
+                                NumVolumes=self.NumVolumes,nI=nI,Nimgs=Nimgs,randomNumber=randint(1,9000))
             
-            WorkingDirStructure = os.path.join(self.WorkingDir,"Structure%05d"%self.nHg)
-            self.InitialVolume=os.path.join(WorkingDirStructure,'proposedVolume%05d'%nI)+'.vol'
-            WorkingDirStructure = os.path.join(self.WorkingDir,"Structure%05d"%(nI+1))
-            self.SymmetryGroup ='c1'
-            #self.NRansac=int(floor(self.NRansac/2))
-            #if (nI==0):
-            #    self.CorrThresh = (1-self.CorrThresh)/2+self.CorrThresh
-        
-
-        fnOutputReducedClass = self.extraPath("reducedClasses.xmd")     
-        self.insertStep("procCoocurenceMatrix",fnClasses=fnOutputReducedClass,NumVolumes=self.NumVolumes,nI=nI)
-
-        
     def validate(self):
         errors = []
         if float(self.MaxFreq)<2*float(self.Ts):
@@ -131,8 +112,6 @@ class ProtHG3D(ProtHG3DBase):
                 message.append("If the option Dimensionality reduction is on, increase the number of grids per dimension")
                 message.append("If the option Dimensionality reduction is off, increase the number of random samples")
             
-        if self.UseSA:
-            message.append("Simulated annealing used")
         return message
     
     def visualize(self):
@@ -145,14 +124,14 @@ class ProtHG3D(ProtHG3DBase):
                 fnRoot=self.workingDirPath('proposedVolume%05d'%int(volume))
                 os.system("xmipp_chimera_client -i %s.vol --mode projector 256 --angulardist %s.xmd"%(fnRoot,fnRoot))
 
-def evaluateVolumes(log,WorkingDir,NRansac):
-    fnCorr=os.path.join(WorkingDir,"extra/correlations.xmd")
+def evaluateVolumes(log,WorkingDir,NRansac,WorkingDirStructure):
+    fnCorr=os.path.join(WorkingDirStructure,"correlations.xmd")
     fnCorr = 'corrThreshold@'+fnCorr
     mdCorr= MetaData(fnCorr)
     objId = mdCorr.firstObject()    
     CorrThresh = mdCorr.getValue(MDL_WEIGHT,objId)
     for n in range(NRansac):        
-        fnRoot=os.path.join("ransac%05d"%n)              
+        fnRoot="ransac%05d"%n              
         fnAngles=os.path.join(WorkingDir,"tmp/angles_"+fnRoot+".xmd")    
         md=MetaData(fnAngles)
         numInliers=0
@@ -161,17 +140,15 @@ def evaluateVolumes(log,WorkingDir,NRansac):
            
             if (corr >= CorrThresh) :
                 numInliers = numInliers+corr
-#JV: QUIZA cambiar esta linea a: numInliers += numInliers
-#                numInliers = numInliers+corr
 
         md= MetaData()
         objId = md.addObject()
         md.setValue(MDL_WEIGHT,float(numInliers),objId)
         md.write("inliers@"+fnAngles,MD_APPEND)
     
-def getCorrThresh(log,WorkingDir,NRansac,CorrThresh):
+def getCorrThresh(log,WorkingDir,WorkingDirStructure,NRansac,CorrThresh):
     corrVector = []
-    fnCorr=os.path.join(WorkingDir,"extra/correlations.xmd")               
+    fnCorr=os.path.join(WorkingDirStructure,"correlations.xmd")               
     mdCorr= MetaData()
 
     for n in range(NRansac):
@@ -198,12 +175,12 @@ def getCorrThresh(log,WorkingDir,NRansac,CorrThresh):
     mdCorr.write("corrThreshold@"+fnCorr,MD_APPEND)
     print "Correlation threshold: "+str(CorrThresh)
 
-def getCCThreshold(WorkingDir):
-    fnCorr=os.path.join(WorkingDir,"extra/correlations.xmd")               
+def getCCThreshold(WorkingDirStructure):
+    fnCorr=os.path.join(WorkingDirStructure,"correlations.xmd")               
     mdCorr=MetaData("corrThreshold@"+fnCorr)
     return mdCorr.getValue(MDL_WEIGHT, mdCorr.firstObject())
     
-def getBestVolumes(log,WorkingDir,NRansac,NumVolumes,UseAll,nHg):
+def getBestVolumes(log,WorkingDir,WorkingDirStructure,NRansac,NumVolumes,UseAll,nHg):
     
     StructureDir = os.path.join(WorkingDir,"Structure%05d"%nHg) 
     createDir(log,StructureDir)
@@ -220,7 +197,7 @@ def getBestVolumes(log,WorkingDir,NRansac,NumVolumes,UseAll,nHg):
     
     index = sorted(range(inliers.__len__()), key=lambda k: inliers[k])
     fnBestAngles = ''
-    threshold=getCCThreshold(WorkingDir)
+    threshold=getCCThreshold(WorkingDirStructure)
  
     i=NRansac-1
     indx = 0
@@ -256,9 +233,7 @@ def reconstruct(log,fnRoot,symmetryGroup,maskRadius):
     runJob(log,"xmipp_reconstruct_fourier","-i %s.xmd -o %s.vol --sym %s " %(fnRoot,fnRoot,symmetryGroup))
     runJob(log,"xmipp_transform_mask","-i %s.vol --mask circular -%d "%(fnRoot,maskRadius))
 
-def ransacIteration(log,WorkingDir,n,SymmetryGroup,Xdim,Xdim2,NumSamples,InitialVolume,AngularSampling,UseSA,
-                    NIterRandom,Rejection):
-    
+def ransacIteration(log,WorkingDir,n,SymmetryGroup,Xdim,Xdim2,NumSamples,InitialVolume,AngularSampling):
     fnBase="ransac%05d"%n
     TmpDir=os.path.join(WorkingDir,"tmp")
     fnRoot=os.path.join(TmpDir,fnBase)
@@ -281,14 +256,6 @@ def ransacIteration(log,WorkingDir,n,SymmetryGroup,Xdim,Xdim2,NumSamples,Initial
     reconstruct(log,fnRoot,SymmetryGroup,Xdim2/2)
     fnVol = fnRoot+'.vol'
     
-    # Simulated annealing
-    if UseSA:
-        smallIter=int(min(floor(NIterRandom/5.0),0));
-        runJob(log,"xmipp_volume_initial_simulated_annealing","-i %s --initial %s --oroot %s_sa --sym %s --randomIter %d --rejection %f --dontApplyPositive"
-                  %(fnRoot+".xmd",fnVol,fnRoot,SymmetryGroup,smallIter,Rejection))
-        moveFile(log, fnRoot+"_sa.vol", fnVol)
-        deleteFile(log, fnRoot+"_sa.xmd")
-
     # Generate projections from this reconstruction
     fnGallery=os.path.join(TmpDir,'gallery_'+fnBase+'.stk')
     runJob(log,"xmipp_angular_project_library", "-i %s -o %s --sampling_rate %f --sym %s --method fourier 1 0.25 bspline --compute_neighbors --angular_distance -1 --experimental_images %s"\
@@ -322,45 +289,12 @@ def projMatch(log, WorkingDir,WorkingDirStructure, fnBase, AngularSampling, Symm
     deleteFile(log,os.path.join(WorkingDir,'tmp/gallery_'+fnBase+'.doc'))
     deleteFile(log,os.path.join(WorkingDir,'tmp/gallery_'+fnBase+'.stk'))
 
-def scoreFinalVolumes(log,WorkingDir,WorkingDirStructure,NumVolumes):
-    threshold=getCCThreshold(WorkingDir)
-    mdOut=MetaData()
+def coocurenceMatrix(log,WorkingDirStructure,fnClasses,NumVolumes,nI,Nimgs,randomNumber):
+    import numpy
+    matrixTotal = numpy.zeros([Nimgs,Nimgs])
     for n in range(NumVolumes):
-        fnRoot=os.path.join(WorkingDirStructure,'proposedVolume%05d'%n)
-        fnAssignment=fnRoot+".xmd"
-        if exists(fnAssignment):
-            runJob(log,"xmipp_metadata_utilities","-i %s --fill weight constant 1"%fnAssignment)
-            MDassignment=MetaData(fnAssignment)
-            sum=0
-            thresholdedSum=0
-            N=0
-            minCC=2
-            for id in MDassignment:
-                cc=MDassignment.getValue(MDL_MAXCC,id)
-                sum+=cc
-                thresholdedSum+=cc-threshold
-                if cc<minCC:
-                    minCC=cc
-                N+=1
-            avg=sum/N
-            id=mdOut.addObject()
-            mdOut.setValue(MDL_IMAGE,fnRoot+".vol",id)
-            mdOut.setValue(MDL_VOLUME_SCORE_SUM,float(sum),id)
-            mdOut.setValue(MDL_VOLUME_SCORE_SUM_TH,float(thresholdedSum),id)
-            mdOut.setValue(MDL_VOLUME_SCORE_MEAN,float(avg),id)
-            mdOut.setValue(MDL_VOLUME_SCORE_MIN,float(minCC),id)
-    mdOut.write(os.path.join(WorkingDirStructure,"proposedVolumes.xmd"))
-
-#http://jivp.eurasipjournals.com/content/2013/1/17        
-def coocurenceMatrix(log,WorkingDirStructure,NumVolumes,nI):
-     
-    matrix=numpy.loadtxt('cooMatrix.txt')
-    
-    for n in range(NumVolumes):
-        
-        fnMatrix = 'cooMatrix%05d_%05d.txt'%(nI,n)
         fnBase='proposedVolume%05d'%n
-        fnRoot=os.path.join(WorkingDirStructure+'/'+fnBase)
+        fnRoot=os.path.join(WorkingDirStructure,fnBase)
         
         md = MetaData(fnRoot+".xmd")
         size = md.size()
@@ -374,79 +308,89 @@ def coocurenceMatrix(log,WorkingDirStructure,NumVolumes,nI):
         idx = 0
         
         for objId in md:
-                        
             name[idx] = md.getValue(MDL_IMAGE, objId)
             num[idx] = int(name[idx].rsplit('@',1)[0])-1
             corr[idx] = md.getValue(MDL_MAXCC, objId)          
             idx+=1
         
-        for i in xrange(1,len(num)):
-            for j in xrange(1,len(num)):
+        matrix = numpy.zeros([Nimgs,Nimgs])
+        for i in range(size):
+            for j in range(size):
                 matrix[num[i],num[j]]=((corr[i]+corr[j])/2)
         
-        numpy.savetxt(fnMatrix, matrix) 
+        #numpy.savetxt(os.path.join(WorkingDirStructure,'coocurrenceMatrix_%05d.txt'%n), matrix) 
+        matrixTotal=matrixTotal+matrix
+    matrixTotal=matrixTotal/NumVolumes
+    numpy.savetxt(os.path.join(WorkingDirStructure,'coocurrenceMatrix.txt'),matrixTotal)
+    largestComponent=procCoocurenceMatrix(matrixTotal)
+
+    md = MetaData()
+    for idx in largestComponent:
+        id=md.addObject()
+        md.setValue(MDL_IMAGE,"%d@%s"%(idx+1,fnClasses),id)
+    md.write(os.path.join(WorkingDirStructure,"imagesCore.xmd"))
 
 #http://wiki.scipy.org/NumPy_for_Matlab_Users        
-def procCoocurenceMatrix(log,fnClasses,NumVolumes,nI):
-    digitaliceValue = 10
-    sumMatrix = numpy.loadtxt('cooMatrix.txt')
-    for n in range(NumVolumes):        
-        fnMatrix = 'cooMatrix%05d_%05d.txt'%(nI,n)        
-        matrix=numpy.loadtxt(fnMatrix)
-        sumMatrix += matrix
-        
-    maxMatrix = sumMatrix.max()
-    intSumMatrix = (sumMatrix/maxMatrix)*digitaliceValue
-    intSumMatrix.astype(int)
-    intSumMatrix = intSumMatrix>(digitaliceValue-1)
+def procCoocurenceMatrix(sumMatrix):
+    import numpy
+    import Queue as q
     
+    # Binarize sum matrix to the 80%
+    y=sumMatrix[numpy.where(sumMatrix!=0)]
+    threshold=numpy.percentile(y,80)
+    intSumMatrix = sumMatrix
+    intSumMatrix[sumMatrix<threshold]=0
+    intSumMatrix[sumMatrix>=threshold]=1
+    
+    #Compute connected components
     num = intSumMatrix.shape[0]
-    
-    for idx in range(num):
-        for idy in range(num):
-            if(idy>idx):
-                intSumMatrix[idy,idx]=0
-    #We define the dictionary between the coocurence matrix indexes and the class images
-    mdClasses = MetaData(fnClasses)
-    objId = mdClasses.firstObject()
-    n = 0;
-    dictM = numpy.empty(num,dtype='object')                
-    for objId in mdClasses:
-        name = mdClasses.getValue(MDL_IMAGE, objId)
-        dictM[n] = str(name)
-        n+=1        
-    print dictM    
-    #Get the largest component
-    remaining = ones(num)
+    rowSum=sum(sumMatrix,0)
+    remaining = numpy.ones(num)
     queue = q.Queue()
-    components = empty((num,num))
+    components = numpy.empty((num,num))
     components[:] = -1
     nComp = -1
     idxComp = 0
     
+    for i in range(num):
+       if rowSum[i]==0:
+          remaining[i]=0
+    
     while (sum(remaining) != 0):
         if (queue.empty()):
-            var = 0
-            while ((remaining[var])==0):
-                var += 1
-            idx=int(var)
-            remaining[idx] = 0
+            idy = 0
+            while ((remaining[idy])==0):
+                idy += 1
             nComp += 1
             idxComp = 0
+            remaining[idy] = 0
         else:
-            idx=int(queue.get())    
-            remaining[idx] = 0
-        for idy in range(int(idx),num):
-            if (intSumMatrix[idy,idx]!=0):
-                queue.put(idy)
-                intSumMatrix[idy,idx] = 0
-                components[nComp,idxComp]=idy
+            idy=int(queue.get())
+        for idx in range(idy,num):
+            if (intSumMatrix[idy,idx]!=0 and remaining[idx]==1):
+                queue.put(idx)
+                remaining[idx] = 0
+                components[nComp,idxComp]=idx
                 idxComp += 1
-    for idx in range(num):
-        md = MetaData()
-        for idy in range(num):
-            if ((components[idy,idx])!=-1.0):
-                id=md.addObject()
-                print int(components[idy,idx])
-                md.setValue(MDL_IMAGE,dictM[int(components[idy,idx])],id)
-        md.write("class%02d_images@javi.xmd"%idx,MD_APPEND)
+    
+    # Compute largest component
+    nBest=-1
+    nBestSize=-1
+    for i in range(nComp+1):
+        currentSize=0
+        j=0
+        while components[i,j]!=-1:
+           currentSize+=1
+           j+=1
+           if j==num:
+                 break
+        if currentSize>nBestSize:
+            nBestSize=currentSize
+            nBest=i
+    
+    # Isolate largest component
+    largestComponent=[]
+    for j in range(nBestSize):
+        largestComponent.append(int(components[nBest,j]))
+    largestComponent.sort()
+    return largestComponent

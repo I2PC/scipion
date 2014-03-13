@@ -28,9 +28,8 @@
 # This library contains some common utilities 
 # for all particles related protocols: Extract, Import
 from protlib_base import *
-from xmipp import MetaData, MetaDataInfo, MDL_IMAGE
+from xmipp import MetaData, MetaDataInfo
 from protlib_utils import runJob, runShowJ
-import numpy
 
 class ProtHG3DBase(XmippProtocol):
     '''This class will serve as base for init volume related protocols'''
@@ -39,13 +38,11 @@ class ProtHG3DBase(XmippProtocol):
         self.Import = 'from protlib_hg3d import *; '
         self.Xdim=MetaDataInfo(self.Classes)[0]
         
-        
     def defineSteps(self):
         self.insertStep('createDir',path=self.ExtraDir)
         self.insertStep("linkAcquisitionInfo",InputFile=self.Classes,dirDest=self.WorkingDir)
-        fnOutputReducedClass = self.extraPath("reducedClasses.xmd")
-        fnOutputReducedClassNoExt = os.path.splitext(fnOutputReducedClass)[0]
-           
+        fnOutputReducedClass = self.extraPath("reducedClasses")
+    
         # Low pass filter and resize        
         self.MaxFreq = float(self.MaxFreq)
         self.Ts = float(self.Ts)
@@ -60,16 +57,10 @@ class ProtHG3DBase(XmippProtocol):
         freq = self.Ts/self.MaxFreq
         self.Ts = K*self.Ts
 
-        self.insertRunJobStep("xmipp_transform_filter","-i %s -o %s --fourier low_pass %f --oroot %s"
-                                                %(self.Classes,fnOutputReducedClass,freq,fnOutputReducedClassNoExt),
-                                                verifyFiles=[fnOutputReducedClass])
-        self.insertRunJobStep("xmipp_image_resize","-i %s --dim %d %d -o %s" %(fnOutputReducedClass,self.Xdim2,self.Xdim2,fnOutputReducedClassNoExt))
-            
-        md = MetaData(self.Classes)
-        n=md.size()
-        matrix = numpy.zeros((n, n))
-        numpy.savetxt('cooMatrix.txt',matrix)
- 
+        self.insertRunJobStep("xmipp_transform_filter","-i %s -o %s.stk --fourier low_pass %f --save_metadata_stack %s.xmd"
+                                                %(self.Classes,fnOutputReducedClass,freq,fnOutputReducedClass))
+        self.insertRunJobStep("xmipp_image_resize","-i %s.stk --dim %d %d" %(fnOutputReducedClass,self.Xdim2,self.Xdim2))
+
     def summary(self):
         message=[]
         message.append("Input images: [%s]"%self.Classes)
@@ -77,15 +68,4 @@ class ProtHG3DBase(XmippProtocol):
             message.append("Initial volume: [%s]"%self.InitialVolume)
         message.append("Symmetry: "+self.SymmetryGroup)
         return message
-    
-def matrix(WorkingDir,dict,matrix):
-    fnOutputReducedClass = os.path.join(WorkingDir,"extra/reducedClasses.xmd")
-    #We define the dictionary to fill up the coocurrence matrix    
-    md = MetaData(fnOutputReducedClass)
-    objId = md.firstObject()
-    n = 0;                
-    for objId in md:
-        name = md.getValue(MDL_IMAGE, objId)
-        dict[name] = n
-        n+=1        
-    matrix = numpy.zeros((n, n))
+

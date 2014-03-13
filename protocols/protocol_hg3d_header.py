@@ -19,7 +19,7 @@ Provide a metadata or stack with classes
 Classes = ""
 
 # Symmetry group
-""" See [http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Symmetry]
+""" See [http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Symmetry]
     for a description of the symmetry groups format
     If no symmetry is present, give c1
 """
@@ -70,26 +70,6 @@ MaxFreq = 5
 """ Sampling rate (A/px)
 """
 Ts = '1'
-
-# Combine simulated annealing and RANSAC
-"""This option produces better results at a higher computational cost"""
-UseSA=False
-
-#{expert}{condition}(UseSA) Number of simulated annealing iterations
-""" During the simulated annealing iterations, all those particles positively contributing to the improvement of the volume are considered.
-In this way, the same image may participate several times from different projection directions (but different weights) depending
-on whether it improves the correlation with the volume or not"""
-NIterRandom = 10
-
-#{expert}{condition}(UseSA) Percentage of rejected particles
-"""At each iteration, the lowest correlated particles are removed from the 3D reconstruction, although they may participate in the
-next iteration""" 
-Rejection = 50
-
-#{expert} Use all images to refine
-""" When refining a RANSAC volume, use all images to refine it instead of only inliers
-"""
-UseAll=False
 
 # {eval} expandParallel(threads=0,hours=12)
 
