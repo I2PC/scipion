@@ -149,7 +149,8 @@ class Plotter(object):
         self.figure.set_facecolor('white')
         return a
         
-    def show(self):
+    def show(self, interactive=True):
+        self.setInteractive(interactive)
         self.plt.tight_layout()
         self.plt.show()
 

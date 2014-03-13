@@ -33,7 +33,7 @@ from glob import glob
 from protocol_base import *
 from convert import addRelionLabels
 from constants import MASK_FILL_ZERO
-
+import xmipp
 
 
 class ProtRelionClassify2D(ProtRelionBase, ProtClassify):
@@ -42,6 +42,9 @@ class ProtRelionClassify2D(ProtRelionBase, ProtClassify):
     _label = '2d classify'
     IS_CLASSIFY = True
     IS_2D = True
+    CHANGE_LABELS = [xmipp.MDL_AVG_CHANGES_ORIENTATIONS, 
+                     xmipp.MDL_AVG_CHANGES_OFFSETS, 
+                     xmipp.MDL_AVG_CHANGES_CLASSES]
     
     def __init__(self, **args):        
         ProtRelionBase.__init__(self, **args)
@@ -51,7 +54,7 @@ class ProtRelionClassify2D(ProtRelionBase, ProtClassify):
         working dir for the protocol have been set. (maybe after recovery from mapper)
         """
         ProtRelionBase._initialize(self)
-        self.ClassFnTemplate = '%(rootDir)s/relion_it%(iter)03d_class%(ref)03d.mrc:mrc'
+        self.ClassFnTemplate = '%(ref)03d@%(rootDir)s/relion_it%(iter)03d_classes.mrcs'
         self.outputClasses = 'classes.xmd'
         self.outputVols = ''
         
@@ -121,13 +124,8 @@ class ProtRelionClassify2D(ProtRelionBase, ProtClassify):
         
     #--------------------------- STEPS functions --------------------------------------------       
     def createOutputStep(self, stamp):
-        from convert import createClassesFromImages, readSetOfClasses2D
-        imagesStar = self._getFileName('data', iter=self._lastIter())
-        classesStar = self._getPath('output_classes.star')
-        self.ClassFnTemplate = '%(ref)03d@%(rootDir)s/relion_it%(iter)03d_classes.mrcs'
-        addRelionLabels(replace=True, extended=True)
-        createClassesFromImages(imagesStar, classesStar, self._lastIter(), 
-                                xmipp.MDL_REF, self.ClassFnTemplate)
+        from convert import readSetOfClasses2D
+        classesStar = self._getIterClasses(self._lastIter())
         classes = self._createSetOfClasses2D(self.inputParticles.get())
         readSetOfClasses2D(classes, classesStar)
         self._defineOutputs(outputClasses=classes)

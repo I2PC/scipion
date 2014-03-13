@@ -32,7 +32,7 @@ from pyworkflow.protocol.params import BooleanParam, PointerParam, IntParam
 from pyworkflow.utils import environAdd
 from pyworkflow.em import *
 from constants import ANGULAR_SAMPLING_LIST
-
+from convert import createRelionInputParticles, createClassesFromImages
 
 
 class ProtRelionBase(EMProtocol):
@@ -49,6 +49,7 @@ class ProtRelionBase(EMProtocol):
     IS_2D = False
     FILE_KEYS = ['data', 'optimiser', 'sampling'] 
     CLASS_LABEL = xmipp.MDL_REF
+    CHANGE_LABELS = []
     PREFIXES = ['']
     
     def __init__(self, **args):        
@@ -73,7 +74,7 @@ class ProtRelionBase(EMProtocol):
                   'input_star': self._getPath('input_particles.star'),
                   'input_mrcs': self._getPath('input_particles.mrcs'),
                   'data_sorted_xmipp': self.extraIter + 'data_sorted_xmipp.star',
-                  'classes_xmipp': self.extraIter + 'classes_xmipp.xmd',
+                  'classes_xmipp': self.extraIter + 'classes_xmipp.star',
                   'angularDist_xmipp': self.extraIter + 'angularDist_xmipp.xmd',
                   'all_avgPmax_xmipp': self._getTmpPath('iterations_avgPmax_xmipp.xmd'),
                   'all_changes_xmipp': self._getTmpPath('iterations_changes_xmipp.xmd'),
@@ -348,7 +349,6 @@ class ProtRelionBase(EMProtocol):
         """ Create the input file in STAR format as expected by Relion.
         If the input particles comes from Relion, just link the file. 
         """
-        from convert import createRelionInputParticles
         createRelionInputParticles(self.inputParticles.get(), 
                                    self._getFileName('input_star'),
                                    self._getFileName('input_mrcs'))
@@ -442,3 +442,25 @@ class ProtRelionBase(EMProtocol):
     def _firstIter(self):
         return self._getIterNumber(0) or 1
     
+    def _getIterClasses(self, it):
+        """ Return the .star file with the classes for this iteration.
+        If the file doesn't exists, it will be created. 
+        """
+        data_star = self._getFileName('data', iter=it)
+        data_classes = self._getFileName('classes_xmipp', iter=it)
+        
+        if not exists(data_classes):
+            createClassesFromImages(data_star, data_classes, it, 
+                                    self.CLASS_LABEL, self.ClassFnTemplate)
+        return data_classes
+
+    def _getIterSortedData(self, it):
+        """ Sort the it??.data.star file by the maximum likelihood. """
+        data_sorted = self._getFileName('data_sorted_xmipp', iter=it)
+        
+        if not exists(data_sorted):
+            data = self._getFileName('data', iter=it)
+            from convert import sortImagesByLL
+            sortImagesByLL(data, data_sorted)
+        
+        return data_sorted

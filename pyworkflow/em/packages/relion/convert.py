@@ -146,8 +146,8 @@ def createClassesFromImages(imgsFn, classesFn, iter, classLabel, classFnTemplate
         classLabel: the label used for classes (normally MDL_REF)
         classFnTemplate: this should be the filename template for either volumes 3d references
             or 2d stacks of references.
-    Note: it is assumed that addRelionLabels is done before calling this function.
     """
+    addRelionLabels(replace=True, extended=True)
     md = xmipp.MetaData(imgsFn)
     numberOfImages = float(md.size())
     mdClasses = xmipp.MetaData()
@@ -169,6 +169,7 @@ def createClassesFromImages(imgsFn, classesFn, iter, classLabel, classFnTemplate
         print "Writing to '%s', %d images" % (('class%06d_images' % ref) + classesFn, mdImages.size())
         mdImages.write(('class%06d_images@' % ref) + classesFn, xmipp.MD_APPEND)
     mdClasses.write('classes@' + classesFn, xmipp.MD_APPEND)
+    restoreXmippLabels()
     
 
 def readSetOfClasses2D(classes2DSet, filename, classesBlock='classes', **args):
@@ -182,3 +183,17 @@ def readSetOfClasses2D(classes2DSet, filename, classesBlock='classes', **args):
     addRelionLabels(replace=True, extended=True)
     xmipp3.readSetOfClasses2D(classes2DSet, filename, classesBlock)
     restoreXmippLabels()
+    
+    
+def sortImagesByLL(imgStar, imgSortedStar):
+    """ Given a Relion images star file, sort by LogLikelihood 
+    and save a new file. 
+    """
+    addRelionLabels(replace=True, extended=True)
+    print "Sorting particles by likelihood, input: ", imgStar
+    fn = 'images@'+ imgStar
+    md = xmipp.MetaData(fn)
+    md.sort(xmipp.MDL_LL, False)
+    md.write('images_sorted@' + imgSortedStar)   
+    restoreXmippLabels()
+    

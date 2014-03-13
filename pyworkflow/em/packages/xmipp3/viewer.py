@@ -154,9 +154,6 @@ class XmippViewer(Viewer):
                 fn = self._getTmpPath(obj.getName() + '_ctfs.xmd')
                 writeSetOfCTFs(obj, fn)
             runShowJ(fn, extraParams=' --mode metadata --render first')  
-
-        
-
         
         elif (issubclass(cls, XmippProtExtractParticles)):
             self.visualize(obj.outputParticles)
