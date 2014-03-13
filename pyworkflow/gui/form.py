@@ -45,7 +45,7 @@ from widgets import Button
 from pyworkflow.protocol.params import *
 from pyworkflow.protocol import Protocol
 from dialog import showInfo, TextDialog, ListDialog
-from tree import TreeProvider
+from tree import TreeProvider, BoundTree
 from pyworkflow.utils.properties import Message, Icon, Color
 from pyworkflow.viewer import DESKTOP_TKINTER
 #from pyworkflow.em import findViewers
@@ -91,6 +91,31 @@ class PointerVar():
             
     def get(self):
         return self.value
+    
+    
+class MultiPointerVar():
+    """Wrapper around tk.StringVar to hold object pointers"""
+    def __init__(self, provider, tree):
+        self.provider = provider # keep a reference to tree provider to add or remove objects
+        self.tree = tree
+        self.tkVar = tk.StringVar()
+        self.trace = self.tkVar.trace
+        
+    def set(self, value):
+        if isinstance(value, Object):
+            self.provider.addObject(value)
+            self.tree.update()
+        print "MultiPointerVar.set, value=%s, type=%s" % (value, type(value))
+          
+    def remove(self):
+        """ Remove first element selected. """
+        value = self.tree.getFirst()
+        if value:
+            self.provider.removeObject(value)
+            self.tree.update()   
+        
+    def get(self):
+        return self.provider._objectList
     
    
 class ComboVar():
@@ -169,10 +194,17 @@ class SubclassesTreeProvider(TreeProvider):
     def getColumns(self):
         return [('Object', 400), ('Info', 250)]
     
+    def isSelected(self, obj):
+        """ Check if an object is selected or not. """
+        if self.selected:
+            for s in self.selected:
+                if s and s.getObjId() == obj.getObjId():
+                    return True
+        return False
+    
     def getObjectInfo(self, obj):
         objName = obj.getNameId()
-        selected = self.selected is not None and self.selected.getObjId() == obj.getObjId()
-        return {'key': objName, 'values': (str(obj),), 'selected': selected}
+        return {'key': objName, 'values': (str(obj),), 'selected': self.isSelected(obj)}
 
     def getObjectActions(self, obj):
         if isinstance(obj, Pointer):
@@ -200,7 +232,33 @@ class RelationsTreeProvider(SubclassesTreeProvider):
                 queryFunc =  protocol.mapper.getRelationParents
             self.getObjects = lambda: queryFunc(relationParam.relationName.get(), parentObject)
         else:
-            self.getObjects = lambda: []   
+            self.getObjects = lambda: [] 
+            
+
+class MultiPointerTreeProvider(TreeProvider):
+    """Store several objects to be used for Multipointer"""
+    def __init__(self):
+        self._objectList = []
+        
+    def addObject(self, obj):
+        if not obj in self._objectList:
+            self._objectList.append(obj)
+        
+    def removeObject(self, objId):
+        objId = int(objId)
+        for obj in self._objectList:
+            if objId == obj.getObjId():
+                self._objectList.remove(obj)
+                break 
+     
+    def getObjects(self):
+        return self._objectList
+        
+    def getColumns(self):
+        return [('Object', 250)]
+    
+    def getObjectInfo(self, obj):
+        return {'key': obj.getObjId(), 'text': (obj.getNameId(),)}  
             
    
 #---------------------- Other widgets ----------------------------------------
@@ -395,9 +453,12 @@ class ParamWidget():
                 raise Exception("Invalid display value '%s' for EnumParam" % str(param.display))
         
         elif t is MultiPointerParam:
-#            listBox = Listbox(content)
-#            print "poraki"
-            pass
+            tp = MultiPointerTreeProvider()
+            tree = BoundTree(content, tp)
+            var = MultiPointerVar(tp, tree)
+            tree.grid(row=0, column=0, sticky='w')
+            self._addButton("Select", Icon.ACTION_SEARCH, self._browseObject)
+            self._addButton("Remove", Icon.ACTION_DELETE, self._removeObject)
         
         elif t is PointerParam or t is RelationParam:
             var = PointerVar()
@@ -452,11 +513,21 @@ class ParamWidget():
     def _browseObject(self, e=None):
         """Select an object from DB
         This function is suppose to be used only for PointerParam"""
-        tp = SubclassesTreeProvider(self.window.protocol, self.param, selected=self.get())
+        value = self.get()
+        selected = []
+        if isinstance(value, list):
+            selected = value
+        elif selected is not None:
+            selected = [value]
+        tp = SubclassesTreeProvider(self.window.protocol, self.param, selected=selected)
         dlg = ListDialog(self.parent, "Select object", tp, "Double click an item to preview the object")
         if dlg.value is not None:
             self.set(dlg.value)
-            
+        
+    def _removeObject(self, e=None):
+        """ Remove an object from a MultiPointer param. """
+        self.var.remove()
+                        
     def _browseRelation(self, e=None):
         """Select a relation from DB
         This function is suppose to be used only for RelationParam"""

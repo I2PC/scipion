@@ -278,7 +278,6 @@ def run_table_graph(request):
         runsNew = formatProvider(provider)
         
         refresh = False
-        listNewElm = []
         
         if len(runs) != len(runsNew):
             print 'Change detected, different size'
@@ -293,18 +292,11 @@ def run_table_graph(request):
         if refresh:
             request.session['runs'] = runsNew
             graphView = project.getSettings().graphView.get()
-            
-            context = {'runs': runsNew,
-                       'columns': provider.getColumns(),
+        
+            context = {'provider': provider,
                        'graphView': graphView}
             
             return render_to_response('run_table_graph.html', context)
-        
-        elif listNewElm:
-            request.session['runs'] = runsNew
-            jsonStr = json.dumps(listNewElm, ensure_ascii=False)
-            return HttpResponse(jsonStr,mimetype='application/json')
-        
         else:
             print "No changes detected"
             return HttpResponse("ok")
@@ -317,6 +309,7 @@ def run_table_graph(request):
 def formatProvider(provider):
     runs = []
     for obj in provider.getObjects():
+<<<<<<< HEAD
         objInfo = provider.getObjectInfo(obj)
         
         id = objInfo["key"]
@@ -327,6 +320,15 @@ def formatProvider(provider):
         
         runs.append((id, [id, name, status, time]))
         
+=======
+        # First policy used to compare runs
+        id = obj.getObjId()
+        label = obj.getObjLabel()
+        name = obj.getName()
+        status = obj.status.get()
+#        time = obj.getElapsedTime()
+        runs[id] = [label, name, status]
+>>>>>>> parent of c87f09e... Merge branch 'master' of
     return runs
 
 def project_content(request):        
@@ -342,10 +344,7 @@ def project_content(request):
     project = loadProject(projectName)
     
     provider = ProjectRunsTreeProvider(project)
-    runs = formatProvider(provider)
-    request.session['runs'] = runs
-    
-    
+    request.session['runs'] = formatProvider(provider)
     
     graphView = project.getSettings().graphView.get()
     
@@ -375,8 +374,7 @@ def project_content(request):
                'sections': root.childs,
                'choices':choices,
                'choiceSelected': choiceSelected,
-               'runs': runs,
-               'columns': provider.getColumns(),
+               'provider':provider,
                'view': 'protocols',
                'graphView': graphView,
                }
@@ -396,13 +394,8 @@ def protocol_info(request):
         protocol = project.mapper.selectById(int(protId))
         
         # PROTOCOL IO
-#        input_obj = [{'name': name, 'id': attr.getObjId()} for name, attr in protocol.iterInputAttributes()]
-#        output_obj = [{'name': name, 'id': attr.getObjId()} for name, attr in protocol.iterOutputAttributes(EMObject)]
-
-        input_obj = [{'name':name, 'nameId': attr.getNameId(), 'id': attr.getObjId(), 'info': str(attr)} for name, attr in protocol.iterInputAttributes()]
-        
-        output_obj = [{'name':name, 'nameId': attr.getNameId(), 'id': attr.getObjId(), 'info': str(attr)} for name, attr in protocol.iterOutputAttributes(EMObject)]
-
+        input_obj = [{'name': name, 'id': attr.getObjId()} for name, attr in protocol.iterInputAttributes()]
+        output_obj = [{'name': name, 'id': attr.getObjId()} for name, attr in protocol.iterOutputAttributes(EMObject)]
 
         # PROTOCOL SUMMARY
         summary = parseText(protocol.summary())

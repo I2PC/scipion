@@ -12,7 +12,7 @@
 <div id="runTable">	
 	<table id="data" cellspacing="0">
 		<tr>
-			{% for colName, colWidth in columns %}
+			{% for colName, colWidth in provider.getColumns %}
 			<th>
 				{{colName}}
 			</th>
@@ -23,12 +23,16 @@
 		data-label="{{obj.1}}"
 			onclick='javascript:launchToolbarList("{{obj.0}}", ($(this)));'>
 			<td>
-				<a class="nameId" href="javascript:popup('/form/?protocolId={{obj.0}}')">
-					{{obj.1}} 
+				<a href="javascript:popup('/form/?protocolId={{obj.getObjId}}')">
+					{% if obj.getObjLabel == '' %} 
+						{{obj.getName}}
+					{% else %} 
+						{{obj.getObjLabel}} 
+					{% endif %}
 				</a>
 			</td>
-			<td class="status">{{obj.2}}</td>
-			<td class="time">{{obj.3}}</td>
+			<td>{{obj.status.get}}</td>
+			<td>{{obj.getElapsedTime}}</td>
 		</tr>
 		{% endfor %}
 	</table>

@@ -71,7 +71,7 @@ def restoreXmippLabels():
     for k, v in _xmippLabelsDict.iteritems():
         xmipp.addLabelAlias(k, v, True)
     _xmippLabelsDict = {}
-            
+
             
 def addRelionLabelsToEnviron(env):
     """ create an string that can be used for XMIPP_EXTRA_ALIASES
