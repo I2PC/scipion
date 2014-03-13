@@ -590,15 +590,6 @@ class List(Object, list):
     def clear(self):
         del self[:]
         
-    def _convertValue(self, value):
-        """Value should be a list."""
-        if not isinstance(value, list):
-            raise Exception("List.set: value should be a list.")
-        self.clear()
-        for item in value:
-            self.append(item)
-        return None
-    
         
 class PointerList(List):
     def __init__(self, **args):

@@ -67,6 +67,7 @@ from protocol_screen_particles import XmippProtScreenParticles
 from protocol_simulated_annealing import XmippProtInitVolSimAnneal
 from protocol_ransac import XmippProtRansac
 from protocol_convert_pdb import XmippProtConvertPdb
+from protocol_join_sets import XmippProtJoinSets
 from protocol_nma import XmippProtNMA
 from protocol_nma_alignment import XmippProtAlignmentNMA
 #from protocol_nma_choose import XmippProtNMAChoose

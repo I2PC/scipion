@@ -51,8 +51,6 @@ from convert import *
 from os.path import dirname, join
 from pyworkflow.utils.path import makePath
 import pyworkflow as pw
-
-
 import xmipp
 
 
@@ -106,7 +104,7 @@ class XmippViewer(Viewer):
             if posDir:
                 copyTree(posDir.get(), tmpDir)
             else:
-                writeSetOfCoordinates(tmpDir, obj)   
+                 writeSetOfCoordinates(tmpDir, obj)   
                            
             runScipionParticlePicker(fn, tmpDir, self._project.getName(), obj.strId())
         
@@ -250,18 +248,11 @@ def runShowJ(inputFiles, memory="1g", extraParams=""):
     runJavaIJapp(memory, "'xmipp.viewer.Viewer'", "-i %s %s" % (inputFiles, extraParams), True)
     
 def runScipionShowJ(inputFiles, type, projectid, objid, memory="1g", extraParams=""):
-    env = None
-    # This is not very nice here, is just a patch
-    # to visualize the relion .star files as xmipp metadatas    
-    if inputFiles.endswith('star'):
-        from pyworkflow.em.packages.relion.convert import addRelionLabelsToEnviron
-        env = os.environ.copy()
-        addRelionLabelsToEnviron(env)
-        
+
     script = pw.join('apps', 'pw_create_image_subset.py')
     script = "%s %s" % (pw.PYTHON, script) 
 
-    runJavaIJapp(memory, "'xmipp.viewer.scipion.ScipionViewer'", "-i %s %s --scipion \"%s\" \"%s\" \"%s\" %s" % (inputFiles, extraParams, type, script, projectid, objid), True, env)
+    runJavaIJapp(memory, "'xmipp.viewer.scipion.ScipionViewer'", "-i %s %s --scipion \"%s\" \"%s\" \"%s\" %s" % (inputFiles, extraParams, type, script, projectid, objid), True)
 
 def runParticlePicker(inputMics, inputCoords, memory="1g", extraParams=""):
     runJavaIJapp(memory, "xmipp.viewer.particlepicker.training.SupervisedPickerRunner", "--input %s --output %s %s" % (inputMics, inputCoords, extraParams), True)
