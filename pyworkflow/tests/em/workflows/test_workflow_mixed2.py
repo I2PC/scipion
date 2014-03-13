@@ -14,7 +14,8 @@ class ScipionMixedWorkflow(TestWorkflow):
         # Create a new project
         setupProject(cls)
         cls.pattern = getInputPath('Ribosomes_Sjors', 'Mics', '*.mrc')
-        cls.importFolder = getInputPath('Ribosomes_Sjors', 'EmanBoxing')
+        cls.importFolder1 = getInputPath('Ribosomes_Sjors', 'EmanBoxing')
+        cls.importFolder2 = getInputPath('Ribosomes_Sjors', 'XmippPicking')
         cls.importVol = getInputPath('Ribosomes_Sjors', 'reference.mrc')
         
     def testWorkflow(self):
@@ -39,22 +40,21 @@ class ScipionMixedWorkflow(TestWorkflow):
         self.proj.launchProtocol(protPreprocess, wait=True)
         self.assertIsNotNone(protPreprocess.outputMicrographs, "There was a problem with the downsampling")
 
-        # Now estimate CTF on the micrographs 
+        # Now estimate CTF on the micrographs with ctffind 
         print "Performing CTFfind..."   
         protCTF = ProtCTFFind(lowRes=0.04, highRes=0.45, minDefocus=1.2, maxDefocus=3,
                               runMode=1, numberOfMpi=1, numberOfThreads=16)         
         protCTF.inputMicrographs.set(protPreprocess.outputMicrographs)
-        protCTF.setObjLabel('ctf estimation')
+        protCTF.setObjLabel('CTF ctffind')
         self.proj.launchProtocol(protCTF, wait=True)
         
         print "Running Eman fake particle picking..."
-        protPP = EmanProtBoxing(importFolder=self.importFolder, runMode=1)                
+        protPP = EmanProtBoxing(importFolder=self.importFolder1, runMode=1)                
         protPP.inputMicrographs.set(protPreprocess.outputMicrographs)  
         protPP.boxSize.set(60)
         protPP.setObjLabel('Eman boxing') 
         self.proj.launchProtocol(protPP, wait=True)
-        self.assertIsNotNone(protPP.outputCoordinates, "There was a problem with the faked picking")
-        #self.protDict['protPP'] = protPP
+        self.assertIsNotNone(protPP.outputCoordinates, "There was a problem with the Eman faked picking")
         
         print "Run extract particles with <Same as picking> option"
         protExtract = XmippProtExtractParticles(boxSize=60, downsampleType=1, doRemoveDust=False,
@@ -83,6 +83,30 @@ class ScipionMixedWorkflow(TestWorkflow):
         protFrealign.setObjLabel('Frealign')
         self.proj.launchProtocol(protFrealign, wait=True)        
         self.assertIsNotNone(protFrealign.outputVolume, "There was a problem with Frealign")
+        
+        # Now estimate CTF on the micrographs with xmipp
+        print "Performing Xmipp CTF..."   
+        protCTF2 = XmippProtCTFMicrographs(lowRes=0.04, highRes=0.45, minDefocus=1.2, maxDefocus=3,
+                              runMode=1, numberOfMpi=1, numberOfThreads=16)         
+        protCTF2.inputMicrographs.set(protPreprocess.outputMicrographs)
+        protCTF2.setObjLabel('CTF xmipp')
+        self.proj.launchProtocol(protCTF2, wait=True)
+        
+        print "Running Xmipp fake particle picking..."
+        protPP2 = XmippProtParticlePicking(importFolder=self.importFolder2, runMode=1)                
+        protPP2.inputMicrographs.set(protPreprocess.outputMicrographs)  
+        protPP2.setObjLabel('Xmipp Picking') 
+        self.proj.launchProtocol(protPP2, wait=True)
+        self.assertIsNotNone(protPP2.outputCoordinates, "There was a problem with the Xmipp faked picking")
+        
+        print "Run extract particles with <Same as picking> option"
+        protExtract2 = XmippProtExtractParticles(boxSize=60, downsampleType=1, doRemoveDust=False,
+                                                doFlip=False, backRadius=28, runMode=1)
+        protExtract2.inputCoordinates.set(protPP2.outputCoordinates)
+        protExtract2.ctfRelations.set(protCTF2.outputCTF)
+        protExtract2.setObjLabel('Extract particles')
+        self.proj.launchProtocol(protExtract2, wait=True)
+        self.assertIsNotNone(protExtract2.outputParticles, "There was a problem with the extract particles")
 
 if __name__ == "__main__":
     unittest.main()
