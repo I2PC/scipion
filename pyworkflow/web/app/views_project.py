@@ -178,7 +178,7 @@ def project_graph (request):
                 childs = [c.getName() for c in node.getChilds()]
                 status, color = getNodeStateColor(node)
                 
-                info= ""
+                info = ""
                 if str(node.id) != "PROJECT":
                     protocol = project.mapper.selectById(int(node.id))
                     info = provider.getObjectInfo(protocol)["values"][0]

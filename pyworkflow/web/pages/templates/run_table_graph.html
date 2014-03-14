@@ -18,7 +18,7 @@
 			</th>
 			{% endfor %}
 		</tr>
-		{% for obj in runs.values %}
+		{% for k, obj in runs %}
 		<tr id="{{obj.0}}" class="runtr" data-name="{{obj.1}}"
 		data-label="{{obj.1}}"
 			onclick='javascript:launchToolbarList("{{obj.0}}", ($(this)));'>

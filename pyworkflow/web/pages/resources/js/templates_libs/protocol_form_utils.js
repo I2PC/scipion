@@ -633,7 +633,7 @@ function selTableMessi(elm) {
 	var id = elm.attr('id');
 
 	if (row.attr('value') != undefined && row.attr('value') != id) {
-		var rowOld = $("td#" + row.attr('value'));
+		var rowOld = $("tr#" + row.attr('value'));
 		rowOld.attr('style', '');
 	}
 	row.attr('value', id);
