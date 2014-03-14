@@ -12,9 +12,15 @@
 # {section} Input
 #-----------------------------------------------------------------------------
 
-# {file}(classes*.xmd){validate}(PathExists) Set of classes:
+# {file}(classes*.xmd){validate}(PathExists) Set of remaining classes:
 """ 
-Provide a metadata or stack with classes
+Provide a metadata or stack with classes to construct the model
+"""
+RemainingClasses = ""
+
+# {file}(classes*.xmd) Set of complementary classes:
+""" 
+Images from this set will be used to complement the model
 """
 Classes = ""
 
@@ -70,6 +76,10 @@ MaxFreq = 5
 """ Sampling rate (A/px)
 """
 Ts = '1'
+
+#{expert}CorePercentile:
+""" Percentile of coocurrence to be in the core """
+CorePercentile=95
 
 # {eval} expandParallel(threads=0,hours=12)
 
