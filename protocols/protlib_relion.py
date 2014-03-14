@@ -24,6 +24,8 @@ from protlib_gui_ext import showWarning, showTable, showError
 from protlib_gui_figure import XmippPlotter
 from protlib_xmipp import getSampling, validateInputSize
 
+HEALPIX_LIST = ['30','15','7.5','3.7','1.8', '0.9','0.5','0.2','0.1']
+
 
 class ProtRelionBase(XmippProtocol):
     def __init__(self, protDictName, scriptname, project):
