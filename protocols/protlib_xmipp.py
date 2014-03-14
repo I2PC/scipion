@@ -560,8 +560,12 @@ def validateInputSize(references, images, md, errors, errorPrefix='References'):
             errors.append("<%s> and images have not the same size" % errorPrefix)
     else:
         errors.append("Input metadata <%s> does not contain image column" % images)
-        
-        
+
+def validateVolumeZdim(fileName,errors):
+    (Xdim, Ydim, Zdim, Ndim) = xmipp.getImageSize(fileName)
+    if Zdim == 1:
+        errors.append("Volume %s has Zdim=1. If MRC file add :mrc at the end of the fileName")
+
 class RowMetaData():
     """ This class is a wrapper for MetaData in row mode.
     Where only one object is used.

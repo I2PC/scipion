@@ -200,7 +200,7 @@ or classes.
 """
 NumberOfIterations = 25
 
-# Regularisation paramter T:
+# {condition}(DoClassify) Regularisation paramter T:
 """
 Bayes law strictly determines the relative weight between the contribution of the experimental data and the prior.
 However, in practice one may need to adjust this weight to put slightly more weight on the experimental 
@@ -224,7 +224,7 @@ The same radius will also be used for a spherical mask of the
 reference structures if no user-provided mask is specified.
 If -1 is used, then half of the particles size will be used as radius.
 """
-MaskRadiusA = -1
+MaskRadiusA = 180
 
 # {condition}(DoClassify) {list_combo}(Yes: fill with zeros,No: fill with random noise) Mask individual particles with zero?
 """
