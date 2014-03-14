@@ -52,6 +52,7 @@ from os.path import dirname, join
 from pyworkflow.utils.path import makePath
 import pyworkflow as pw
 import xmipp
+from pyworkflow.em.packages.relion.convert import addRelionLabelsToEnviron
 
 
 class XmippViewer(Viewer):
@@ -81,13 +82,20 @@ class XmippViewer(Viewer):
               
         elif issubclass(cls, SetOfMicrographs):
             
-            self.openMicrographs()  
+            mdFn = getattr(obj, '_xmippMd', None)
+            if mdFn:
+                fn = mdFn.get()
+            else:
+                fn = self._getTmpPath(obj.getName() + '_micrographs.xmd')
+                writeSetOfMicrographs(obj, fn)
+
+            runScipionShowJ(fn, "Micrographs", self._project.getName(), obj.strId(), obj.strId())  
             
         elif issubclass(cls, SetOfMovies):
             fn = self._getTmpPath(obj.getName() + '_movies.xmd')
             writeSetOfMovies(obj, fn)
                 
-            runScipionShowJ(fn, "Micrographs", self._project.getName(), obj.strId())  
+            runScipionShowJ(fn, "Micrographs", self._project.getName(), obj.strId(). obj.strId())  
                 
         elif issubclass(cls, SetOfCoordinates):
             obj_mics = obj.getMicrographs()#accessing mics to provide metadata file
@@ -120,7 +128,7 @@ class XmippViewer(Viewer):
                 else:
                     writeSetOfVolumes(obj, fn)
             if issubclass(cls, SetOfParticles):
-                runScipionShowJ(fn, "Particles", self._project.getName(), obj.strId())  
+                runScipionShowJ(fn, "Particles", self._project.getName(), obj.strId(), obj.strId())  
             else:
                 runShowJ(fn)
         
@@ -131,7 +139,8 @@ class XmippViewer(Viewer):
             else:
                 fn = self._getTmpPath(obj.getName() + '_classes.xmd')
                 writeSetOfClasses2D(obj, fn)
-            runScipionShowJ(fn, "Particles", self._project.getName(), obj.strId())  
+            
+            runScipionShowJ(fn, "Particles", self._project.getName(), obj.strId(), obj.getImages().strId())  
             #runShowJ(fn, extraParams=args.get('extraParams', ''))  
             
         elif issubclass(cls, SetOfClasses3D):
@@ -197,19 +206,7 @@ class XmippViewer(Viewer):
     def getView(self):
         return "viewerXmipp"
     
-    def openMicrographs(self, obj):
-            mdFn = getattr(obj, '_xmippMd', None)
-            if mdFn:
-                fn = mdFn.get()
-            else:
-                fn = self._getTmpPath(obj.getName() + '_micrographs.xmd')
-                writeSetOfMicrographs(obj, fn)
-                
-#            extra = ''
-#            if obj.hasCTF():
-#                extra = ' --mode metadata --render first'
-            #runShowJ(fn, extraParams=extra)
-            runScipionShowJ(fn, "Micrographs", self._project.getName(), obj.strId())  
+
         
 # ------------- Xmipp utilities function to launch Java applications ------------
 
@@ -245,20 +242,21 @@ def runJavaIJapp(memory, appName, args, batchMode=True, env=None):
     runJob(None, "java", args, runInBackground=batchMode, env=env)
     
 def runShowJ(inputFiles, memory="1g", extraParams=""):
+    
+    env = os.environ.copy()
+    addRelionLabelsToEnviron(env)
     runJavaIJapp(memory, "'xmipp.viewer.Viewer'", "-i %s %s" % (inputFiles, extraParams), True)
     
-def runScipionShowJ(inputFiles, type, projectid, objid, memory="1g", extraParams=""):
+def runScipionShowJ(inputFiles, type, projectid, objid, inputimagesid, memory="1g", extraParams=""):
     env = None
     # This is not very nice here, is just a patch
     # to visualize the relion .star files as xmipp metadatas    
-    if inputFiles.endswith('star'):
-        from pyworkflow.em.packages.relion.convert import addRelionLabelsToEnviron
-        env = os.environ.copy()
-        addRelionLabelsToEnviron(env)
+    env = os.environ.copy()
+    addRelionLabelsToEnviron(env)
         
     script = pw.join('apps', 'pw_create_image_subset.py')
 
-    runJavaIJapp(memory, "'xmipp.viewer.scipion.ScipionViewer'", "-i %s %s --scipion %s %s %s \"%s\" %s" % (inputFiles, extraParams, type, pw.PYTHON, script, projectid, objid), True, env)
+    runJavaIJapp(memory, "'xmipp.viewer.scipion.ScipionViewer'", "-i %s %s --scipion %s %s %s \"%s\" %s %s" % (inputFiles, extraParams, type, pw.PYTHON, script, projectid, objid, inputimagesid), True, env)
 
 def runParticlePicker(inputMics, inputCoords, memory="1g", extraParams=""):
     runJavaIJapp(memory, "xmipp.viewer.particlepicker.training.SupervisedPickerRunner", "--input %s --output %s %s" % (inputMics, inputCoords, extraParams), True)

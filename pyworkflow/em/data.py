@@ -848,11 +848,12 @@ class SetOfClasses2D(Set):
         of the 2D classes. """
         return self._averages
     
-    def createAverages(self):
+    def createAverages(self, **args):
         self._averages = SetOfParticles(filename=self.getFileName(), prefix='Averages')
+        inputImages = args.get('inputImages', self.getImages())#specified on subsets
         if not self.getImages().hasValue():
             raise Exception("SetOfClasses2D.createAverages: you must set the images before creating the averages!!!")
-        self._averages.copyInfo(self.getImages())
+        self._averages.copyInfo(inputImages)
         self._averages.setHasCTF(False)
         return self._averages
     

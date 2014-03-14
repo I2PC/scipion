@@ -102,9 +102,10 @@ Examples:
     def _viewAll(self, *args):
         pass
         
-    def display2D(self, filename, extraParams=''):
+    def display2D(self, filename, inputid, inputimagesid, extraParams=''):
         from pyworkflow.em.packages.xmipp3.viewer import runScipionShowJ
-        runScipionShowJ(filename, "Particles", self._project.getName(), 999)
+        
+        runScipionShowJ(filename, "Particles", self._project.getName(), inputid, inputimagesid)
 
     def _load(self):
         """ Load selected iterations and classes 3D for visualization mode. """
@@ -141,9 +142,10 @@ Examples:
         If the new metadata was already written, it is just shown.
         """
         self._load()
+        inputParticlesId = self.protocol.inputParticles.get().strId()
         for it in self._iterations:
             data_classes = self.protocol._getIterClasses(it)
-            self.display2D(data_classes, extraParams='--mode metadata --render first')
+            self.display2D(data_classes, inputParticlesId, inputParticlesId,extraParams='--mode metadata --render first')
                   
     def _showLL(self, paramName):
         self._load()
