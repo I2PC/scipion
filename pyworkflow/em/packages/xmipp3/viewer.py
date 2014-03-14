@@ -257,9 +257,8 @@ def runScipionShowJ(inputFiles, type, projectid, objid, memory="1g", extraParams
         addRelionLabelsToEnviron(env)
         
     script = pw.join('apps', 'pw_create_image_subset.py')
-    script = "%s %s" % (pw.PYTHON, script) 
 
-    runJavaIJapp(memory, "'xmipp.viewer.scipion.ScipionViewer'", "-i %s %s --scipion \"%s\" \"%s\" \"%s\" %s" % (inputFiles, extraParams, type, script, projectid, objid), True, env)
+    runJavaIJapp(memory, "'xmipp.viewer.scipion.ScipionViewer'", "-i %s %s --scipion %s %s %s \"%s\" %s" % (inputFiles, extraParams, type, pw.PYTHON, script, projectid, objid), True, env)
 
 def runParticlePicker(inputMics, inputCoords, memory="1g", extraParams=""):
     runJavaIJapp(memory, "xmipp.viewer.particlepicker.training.SupervisedPickerRunner", "--input %s --output %s %s" % (inputMics, inputCoords, extraParams), True)
