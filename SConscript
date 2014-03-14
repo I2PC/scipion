@@ -1095,8 +1095,9 @@ AddXmippProgram('mlf_refine3d', ['XmippRecons'])
 AddXmippProgram('ml_tomo', ['XmippRecons'])
 AddXmippProgram('mrc_create_metadata')
 AddXmippProgram('nma_alignment', ['XmippRecons'])
-if not int(env['release']):
-    AddXmippProgram('flexible_alignment', ['XmippRecons'])
+AddXmippProgram('nma_alignment_vol', ['XmippRecons'])
+AddXmippProgram('flexible_alignment', ['XmippRecons'])
+
 AddXmippProgram('pdb_nma_deform', ['XmippRecons'])
 AddXmippProgram('pdb_analysis', ['XmippRecons'])
 AddXmippProgram('phantom_create', ['XmippRecons'])
