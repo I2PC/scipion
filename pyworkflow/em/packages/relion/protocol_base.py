@@ -164,8 +164,8 @@ class ProtRelionBase(EMProtocol):
                       help='See http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Symmetry '
                            'for a description of the symmetry groups format')  
         form.addParam('paddingFactor', FloatParam, default=3,
-                      condition='isClassify', expertLevel=LEVEL_ADVANCED,
-                      label='',
+                      condition='isClassify', expertLevel=LEVEL_EXPERT,
+                      label='Padding factor',
                       help='The padding factor used for oversampling of the Fourier transform. The default is 3x padding, '
                            'which is combined with nearest-neighbour interpolation. However, for large 3D maps, storing the '
                            'entire 3x oversampled Fourier transform (as doubles) plus the real-space padded map in memory may ' 
@@ -193,11 +193,6 @@ class ProtRelionBase(EMProtocol):
                            'e.g. it was created using Wiener filtering inside RELION or from a PDB. If set to No, ' 
                            'then in the first iteration, the Fourier transforms of the reference projections ' 
                            'are not multiplied by the CTFs.')        
-        form.addParam('onlyFlipPhases', BooleanParam, default=False,
-                      expertLevel=LEVEL_ADVANCED,
-                      label='Only flip phases?',
-                      help='Set this to Yes to switch CTF-amplitude correction off.'
-                           'This option is NOT generally recommended.')          
         form.addParam('haveDataPhaseFlipped', BooleanParam, default=False,
                       label='Have data been phase-flipped?',
                       help='Set this to Yes if the images have been ctf-phase corrected during the pre-processing steps. '
@@ -212,14 +207,6 @@ class ProtRelionBase(EMProtocol):
                            'of each CTF onward. This can be useful if the CTF model is inadequate at the lowest resolution. ' 
                            'Still, in general using higher amplitude contrast on the CTFs (e.g. 10-20%) often yields better results. '
                            'Therefore, this option is not generally recommended.')    
-        form.addParam('doIntensityCorrection', BooleanParam, default=False,
-                      expertLevel=LEVEL_ADVANCED,
-                      label='Do intensity correction?',
-                      help='An internal correction for differences in the intensity (grey-scale) of the signal between '
-                           'distinct micrographs is applied. This is useful if micrographs have very different ' 
-                           'signal-to-noise ratios, e.g. due to different ice thickness or contamination. ' 
-                           'Because one typically normalises the noise, this leads to distinct signal intensities in the data, ' 
-                           'and this procedure corrects for this. It is quite robust and therefore recommended for the general case.')                                
         
         form.addSection(label='Optimisation')
         form.addParam('initialLowPassFilterA', FloatParam, default=60,
@@ -274,7 +261,7 @@ class ProtRelionBase(EMProtocol):
                            'In some cases, for example for non-empty icosahedral viruses, it is also useful ' 
                            'to use a second mask. Use <More options> and check <Solvent mask> parameter. ') 
         form.addParam('solventMask', PointerParam, pointerClass='Mask',
-                      expertLevel=LEVEL_ADVANCED, allowNull=True,
+                      expertLevel=LEVEL_EXPERT, allowNull=True,
                       label='Solvent mask (optional)',
                       help='For all white (value 1) pixels in this second mask the '
                            'corresponding pixels in the reconstructed map are set to the average value of '

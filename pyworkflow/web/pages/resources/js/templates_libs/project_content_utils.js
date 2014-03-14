@@ -187,8 +187,8 @@ function fillTabs(id) {
 		success : function(json) {
 			
 			// DATA
-			fillUL(json.inputs, "protocol_input", "fa-sign-in");
-			fillUL(json.outputs, "protocol_output", "fa-sign-out");
+			fillUL("input", json.inputs, "protocol_input", "fa-sign-in");
+			fillUL("output", json.outputs, "protocol_output", "fa-sign-out");
 			
 			// SUMMARY
 			$("#tab-summary").empty();
@@ -227,7 +227,7 @@ function fillTabs(id) {
 	});
 }
 
-function fillUL(list, ulId, icon) {
+function fillUL(type, list, ulId, icon) {
 	/*
 	 * Fill an UL element with items from a list items should contains id and name
 	 * properties
@@ -236,16 +236,29 @@ function fillUL(list, ulId, icon) {
 	ul.empty();
 	for ( var i = 0; i < list.length; i++) {
 		
+//		inihtml = "<table><tr><td><strong>Attribute</strong></td><td><strong>&nbsp;&nbsp;&nbsp;Info</strong></td></tr>"
+		
 		// Visualize Object
 		var visualize_html = '<a href="javascript:customPopup(\'/visualize_object/?objectId=' + list[i].id
 		+ '\',1200,800);"><i class="fa ' + icon + '" style="margin-right:10px;"></i>'
-		+ list[i].name + '</a>'
+		+ list[i].name
+
+		if(type=="input"){
+			visualize_html += ' (from ' + list[i].nameId +')</a>'
+		}
+		else if(type=="output"){
+			visualize_html += '</a>'
+		}
 		
 		// Edit Object
 		var edit_html = '<a href="javascript:editObject('+ list[i].id + ');"> '+
-		'<i class="fa fa-pencil" style="margin-left:10px;"></i></a>'
+		'<i class="fa fa-pencil" style="margin-left:0px;"></i></a>'
 		
-		ul.append('<li>' + visualize_html + edit_html + '</li>');
+//		endhtml = "</table>"
+		
+		ul.append('<li>' + visualize_html + edit_html +"&nbsp;&nbsp;&nbsp;" +list[i].info+ '</li>');
+//		ul.append(inihtml+'<tr><td>' + visualize_html +"</td><td>&nbsp;&nbsp;&nbsp;" + list[i].info + edit_html + '</td></tr>' + endhtml);
+		
 	}
 }
 
@@ -577,16 +590,31 @@ function refreshRuns(mode){
 		$.ajax({
 			url : '/run_table_graph/',
 			success : function(data) {
-				if (data=='stop'){
-					window.clearTimeout(updatetimer);
-					// stop the script
-				}
-				else if(data == 'ok'){
-					// no changes
+			
+				if (typeof data == 'string' || data instanceof String){
+					
+					if (data=='stop'){
+						window.clearTimeout(updatetimer);
+						// stop the script
+					}
+					else if(data == 'ok'){
+						// no changes
+					}
+					else {
+						$('div#runsInfo').html(data);
+						// refresh the data keeping the element marked
+					}
 				}
 				else {
-					$('div#runsInfo').html(data);
-					// refresh the data keeping the element marked
+					for (var x=0;x< data.length;x++){
+						var id = data[x][0];
+						var status = data[x][2];
+						var time = data[x][3];
+
+						checkStatusNode(id, status)
+						checkStatusRow(id, status, time)
+
+					}
 				}
 			}
 		});
@@ -598,6 +626,32 @@ function refreshRuns(mode){
 	  	}, 3000);
 	}
 }
+
+function checkStatusNode(id, status){
+	node = $("#graph_"+ id);
+	
+	if(status.indexOf('running')==0){
+		node.css("background-color", "#FCCE62");
+	}
+	if(status.indexOf('failed')==0){
+		node.css("background-color", "#F5CCCB");
+	}
+	if(status.indexOf('finished')==0){
+		node.css("background-color", "#D2F5CB");
+	}
+	node.find("#nodeStatus").html(status);
+		
+}
+
+function checkStatusRow(id, status, time){
+	row = $("tr#"+ id);
+	
+	row.find(".status").html(status);
+	row.find(".time").html(time);
+		
+}
+
+
 
 
 

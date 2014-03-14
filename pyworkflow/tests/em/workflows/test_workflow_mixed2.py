@@ -4,6 +4,7 @@ from pyworkflow.tests import *
 from pyworkflow.em.packages.xmipp3 import *
 from pyworkflow.em.packages.brandeis import *
 from pyworkflow.em.packages.eman2 import *
+from pyworkflow.em.packages.relion import *
 from test_workflow import TestWorkflow
     
     
@@ -83,6 +84,21 @@ class ScipionMixedWorkflow(TestWorkflow):
         protFrealign.setObjLabel('Frealign')
         self.proj.launchProtocol(protFrealign, wait=True)        
         self.assertIsNotNone(protFrealign.outputVolume, "There was a problem with Frealign")
+        
+        print "Run Preprocess particles"
+        protPreproc = XmippProtPreprocessParticles(doRemoveDust=False, doNormalize=True, doInvert=True, doThreshold=False)
+        protPreproc.inputParticles.set(protExtract.outputParticles)
+        self.proj.launchProtocol(protPreproc, wait=True)
+        self.assertIsNotNone(protPreproc.outputParticles, "There was a problem with preprocess particles")
+        
+        print "Run Relion Classification2d"
+        prot2D = ProtRelionClassify2D(regularisationParamT=2, numberOfMpi=4, numberOfThreads=4)
+        prot2D.numberOfClasses.set(32)
+        prot2D.numberOfIterations.set(10)
+        prot2D.inputParticles.set(protPreproc.outputParticles)
+        self.proj.launchProtocol(prot2D, wait=True)        
+        self.assertIsNotNone(getattr(prot2D, 'outputClasses', None), 
+                             "There was a problem with Relion 2D:\n" + prot2D.getErrorMessage()) 
         
         # Now estimate CTF on the micrographs with xmipp
         print "Performing Xmipp CTF..."   
