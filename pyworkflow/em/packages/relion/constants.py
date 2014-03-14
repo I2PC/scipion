@@ -34,7 +34,7 @@ import xmipp
 MASK_FILL_ZERO = 0
 MASK_FILL_NOISE = 1
 
-ANGULAR_SAMPLING_LIST = [30,15,7.5,3.7,1.8,0.9,0.5,0.2,0.1]
+ANGULAR_SAMPLING_LIST = ['30', '15', '7.5', '3.7', '1.8', '0.9', '0.5', '0.2', '0.1']
 
 # Map from Xmipp labels to Relion labels names
 XMIPP_RELION_LABELS = {

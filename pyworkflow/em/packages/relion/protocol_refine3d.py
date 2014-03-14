@@ -24,7 +24,7 @@
 # *
 # **************************************************************************
 """
-This module contains the protocol for 3d classification with relion.
+This module contains the protocol for 3d refinement with Relion.
 """
 
 from protocol_base import *
@@ -33,10 +33,11 @@ from pyworkflow.utils.path import makePath, replaceBaseExt, join, basename
 
 
 
-class ProtRelionClassify3D(ProtClassify3D, ProtRelionBase):
-    """Protocol to classify 3D using Relion. 
+class ProtRelionRefine3D(ProtRefine3D, ProtRelionBase):
+    """Protocol to refine a 3D map using Relion. 
     """    
-    _label = '3D classify'
+    _label = '3D refine'
+    IS_CLASSIFY = False
     CHANGE_LABELS = [xmipp.MDL_AVG_CHANGES_ORIENTATIONS, 
                      xmipp.MDL_AVG_CHANGES_OFFSETS]
     
@@ -55,11 +56,12 @@ class ProtRelionClassify3D(ProtClassify3D, ProtRelionBase):
 
     #--------------------------- INSERT steps functions --------------------------------------------  
     def _setSamplingArgs(self, args):
-        """ Set sampling related params. """
+        """ Set sampling related params"""
+        # Sampling stuff
         args['--healpix_order'] = self.angularSamplingDeg.get()
-        if self.localAngularSearch:
-            args['--sigma_ang'] = self.localAngularSearchRange.get() / 3.
+        args['--auto_local_healpix_order'] = self.localSearchAutoSamplingDeg.get()
         
+    #--------------------------- STEPS functions --------------------------------------------       
     def createOutputStep(self, stamp):
         pass
         
@@ -90,9 +92,6 @@ class ProtRelionClassify3D(ProtClassify3D, ProtRelionBase):
 
 
     #--------------------------- UTILS functions --------------------------------------------
-            
-            
-   
             
             
    
