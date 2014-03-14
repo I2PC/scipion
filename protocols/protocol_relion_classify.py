@@ -123,9 +123,8 @@ class ProtRelionClassifier(ProtRelionBase):
         # Find the index(starting at 0) of the selected
         # sampling rate, as used in relion program
         iover = 1 #TODO: check this DROP THIS
-        index = ['30','15','7.5','3.7','1.8',
-                 '0.9','0.5','0.2','0.1'].index(self.AngularSamplingDeg)
-        args['--healpix_order'] = float(index + 1 - iover)
+        index = HEALPIX_LIST.index(self.AngularSamplingDeg)
+        args['--healpix_order'] = index + 1 - iover
         
         if self.PerformLocalAngularSearch:
             args['--sigma_ang'] = self.LocalAngularSearchRange / 3.
