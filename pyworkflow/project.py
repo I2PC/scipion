@@ -162,7 +162,7 @@ class Project(object):
             self.mapper.store(protocol)
         self.mapper.commit()
         
-    def _updateProtocol(self, protocol):
+    def _updateProtocol(self, protocol, tries=0):
         try:
             # FIXME: this will not work for a real remote host
             jobId = protocol.getJobId() # Preserve the jobId before copy
@@ -176,15 +176,16 @@ class Project(object):
             protocol.setJobId(jobId)
             self.mapper.store(protocol)
         except Exception, ex:
-            print "Error trying to update protocol: %s(jobId=%s)\n ERROR: %s" % (protocol.getName(), jobId, ex)
-            import traceback
-            traceback.print_exc()
-            
-            # If any problem happens, the protocol will be marked wih a status fail
-            protocol.setFailed(str(ex))
-            self.mapper.store(protocol)
-            
-#            raise ex
+            print "Error trying to update protocol: %s(jobId=%s)\n ERROR: %s, tries=%d" % (protocol.getName(), jobId, ex, tries)
+            if tries == 2: # 3 tries have been failed
+                import traceback
+                traceback.print_exc()
+                # If any problem happens, the protocol will be marked wih a status fail
+                protocol.setFailed(str(ex))
+                self.mapper.store(protocol)
+            else:
+                time.sleep(1)
+                self._updateProtocol(protocol, tries+1)
         
     def stopProtocol(self, protocol):
         """ Stop a running protocol """

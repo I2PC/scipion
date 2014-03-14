@@ -175,7 +175,7 @@ def browse_objects(request):
                                                     iterate=True):
                 objs[obj.getObjId()]={"nameId":obj.getNameId(), "info": str(obj)} 
 #                objs.append(obj.getNameId())
-                
+        
         jsonStr = json.dumps(objs, ensure_ascii=False)
         return HttpResponse(jsonStr, mimetype='application/javascript')
 

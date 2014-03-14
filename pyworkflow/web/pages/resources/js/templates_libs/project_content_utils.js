@@ -240,8 +240,7 @@ function fillUL(type, list, ulId, icon) {
 		
 		// Visualize Object
 		var visualize_html = '<a href="javascript:customPopup(\'/visualize_object/?objectId=' + list[i].id
-		+ '\',1200,800);"><i class="fa ' + icon + '" style="margin-right:10px;"></i>'
-		+ list[i].name
+		+ '\',1200,800);"><i class="fa ' + icon + '" style="margin-right:10px;"></i>'+ list[i].name
 
 		if(type=="input"){
 			visualize_html += ' (from ' + list[i].nameId +')</a>'
