@@ -56,6 +56,7 @@ public:
 	double PSDPC1Variance;
 	double PSDPCRunsTest;
 	double histogramNormality;
+	FileName ctf_envelope_ssnr;
 };
 
 /* Sort PSD Program Parameters ------------------------------------------ */
