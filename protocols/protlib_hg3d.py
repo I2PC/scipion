@@ -36,11 +36,11 @@ class ProtHG3DBase(XmippProtocol):
     def __init__(self, protocolName, scriptname, project):
         XmippProtocol.__init__(self, protocolName, scriptname, project)        
         self.Import = 'from protlib_hg3d import *; '
-        self.Xdim=MetaDataInfo(self.Classes)[0]
+        self.Xdim=MetaDataInfo(self.RemainingClasses)[0]
         
     def defineSteps(self):
         self.insertStep('createDir',path=self.ExtraDir)
-        self.insertStep("linkAcquisitionInfo",InputFile=self.Classes,dirDest=self.WorkingDir)
+        self.insertStep("linkAcquisitionInfo",InputFile=self.RemainingClasses,dirDest=self.WorkingDir)
         fnOutputReducedClass = self.extraPath("reducedClasses")
     
         # Low pass filter and resize        
@@ -57,13 +57,13 @@ class ProtHG3DBase(XmippProtocol):
         freq = self.Ts/self.MaxFreq
         self.Ts = K*self.Ts
 
-        self.insertRunJobStep("xmipp_transform_filter","-i %s -o %s.stk --fourier low_pass %f --save_metadata_stack %s.xmd"
-                                                %(self.Classes,fnOutputReducedClass,freq,fnOutputReducedClass))
+        self.insertRunJobStep("xmipp_transform_filter","-i %s -o %s.stk --fourier low_pass %f --save_metadata_stack %s.xmd --track_origin"
+                                                %(self.RemainingClasses,fnOutputReducedClass,freq,fnOutputReducedClass))
         self.insertRunJobStep("xmipp_image_resize","-i %s.stk --dim %d %d" %(fnOutputReducedClass,self.Xdim2,self.Xdim2))
 
     def summary(self):
         message=[]
-        message.append("Input images: [%s]"%self.Classes)
+        message.append("Input images: [%s]"%self.RemainingClasses)
         if self.InitialVolume!="":
             message.append("Initial volume: [%s]"%self.InitialVolume)
         message.append("Symmetry: "+self.SymmetryGroup)
