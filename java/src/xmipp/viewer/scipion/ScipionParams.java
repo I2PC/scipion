@@ -21,7 +21,8 @@ public class ScipionParams extends Param {
     public String type;
     public String script;
     public String projectid;
-    public String imagesid;
+    public String inputimagesid;
+    public String inputid;
 
     public ScipionParams(String args[]) {
         super(args);
@@ -30,7 +31,7 @@ public class ScipionParams extends Param {
     public void defineArgs() {
         super.defineArgs();
         Option cmdoption = new Option(SCIPION, "");
-        cmdoption.setArgs(5);
+        cmdoption.setArgs(6);
         options.addOption(cmdoption);
     }
 
@@ -44,7 +45,8 @@ public class ScipionParams extends Param {
             python = cmdargs[1];
             script = cmdargs[2]; 
             projectid = cmdargs[3];
-            imagesid = cmdargs[4];
+            inputid = cmdargs[4];
+            inputimagesid = cmdargs[5];
         }
     }
 }

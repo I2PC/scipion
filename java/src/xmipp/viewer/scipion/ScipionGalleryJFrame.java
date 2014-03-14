@@ -9,21 +9,14 @@ import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.InputStreamReader;
-import java.net.MalformedURLException;
-import java.net.URLDecoder;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JButton;
-import javax.swing.UIManager;
 import xmipp.ij.commons.XmippUtil;
 import xmipp.jni.MetaData;
-import xmipp.utils.Param;
 import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippWindowUtil;
-import xmipp.viewer.particlepicker.training.model.SupervisedParticlePicker;
 import xmipp.viewer.windows.GalleryJFrame;
 
 /**
@@ -35,13 +28,14 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
     private final String type;
     private final String script;
     private final String projectid;
-    private final String imagesid;
     private JButton cmdbutton;
     private String selectionmdfile;
     private JButton classcmdbutton;
     private String firebrick = "#B22222";
     private String lightgrey = "#EAEBEC";
     private String python;
+    private String inputimagesid;
+    private String inputid;
 
     public ScipionGalleryJFrame(String filename, MetaData md, ScipionParams parameters) {
         super(filename, md, parameters);
@@ -50,8 +44,8 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
             python = parameters.python;
             script = parameters.script;
             projectid = parameters.projectid;
-            System.out.println("projectid " + projectid);
-            imagesid = parameters.imagesid;
+            inputid = parameters.inputid;
+            inputimagesid = parameters.inputimagesid;
             selectionmdfile = projectid + File.separator + "selection.xmd";
             initComponents();
         } catch (Exception ex) {
@@ -72,7 +66,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
                             saveImagesFromClassSelection(selectionmdfile);
                         else
                             saveSelection(selectionmdfile, true);
-                        String[] command = new String[]{python, script, selectionmdfile, type, projectid, imagesid};
+                        String[] command = new String[]{python, script, selectionmdfile, type, projectid, inputid, inputimagesid};
                         runCommand(command);
                         
                         
@@ -90,7 +84,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
                     public void actionPerformed(ActionEvent ae) {
                         try {
                             saveClassSelection(selectionmdfile);
-                            String[] command = new String[]{python, script, selectionmdfile, "Classes2D", projectid, imagesid};
+                            String[] command = new String[]{python, script, selectionmdfile, "Classes2D", projectid, inputid, inputimagesid};
                             runCommand(command);
                         } catch (Exception ex) {
                             Logger.getLogger(ScipionGalleryJFrame.class.getName()).log(Level.SEVERE, null, ex);
@@ -122,6 +116,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
             public void run() {
 
                 try {
+                    
                     String output = XmippUtil.executeCommand(command);
                     XmippWindowUtil.releaseGUI(ScipionGalleryJFrame.this.getRootPane());
                     if(output != null && !output.isEmpty())
