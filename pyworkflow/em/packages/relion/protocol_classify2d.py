@@ -32,7 +32,6 @@ from glob import glob
 
 from protocol_base import *
 from convert import addRelionLabels
-from constants import MASK_FILL_ZERO
 import xmipp
 
 
