@@ -47,6 +47,10 @@ os.environ['PW_HOME'] = PW_HOME
 PW_APPS = os.path.join(PW_HOME, 'pyworkflow', 'apps')
 PW_APPS_TEMP = os.path.join(PW_APPS, '%s')
 
+# ensure PW_HOME is available within apache, to be able to find em_packages
+if not PW_HOME in sys.path:
+	sys.path.append(PW_HOME)
+
 import em_packages
 XMIPP_HOME = em_packages.XMIPP_HOME #os.environ['XMIPP_HOME']
 XMIPP_BIN = os.path.join(XMIPP_HOME, 'bin')
@@ -97,7 +101,7 @@ MODE_HELP = 'help'
 MODE_DBBROWSE = 'browser'
 MODE_VIEWER = 'viewer'
 MODE_INSTALL = 'install'
-
+MODE_APACHE_VARS = 'apache_vars'
 
 if __name__ == '__main__':
     n = len(sys.argv)
@@ -127,6 +131,16 @@ if __name__ == '__main__':
             manage = os.path.join(PW_HOME, 'pyworkflow', 'web', 'manage.py')
             runCmd('%s runserver 0.0.0.0:8000 ' % manage)
             
+        elif mode == MODE_APACHE_VARS:
+            # WSGI needs some variables set on apache start (/etc/apache2/envvars):
+            #   * PW_HOME: is required to find this script, so it has to be declared "manually" in envvars
+            #   * HOME: so it can reach Scipion directory
+            #   * LD_LIBRARY_PATH:  set it with a call to this mode. For example,
+            #       scipion_ld_library_path=$( ${PW_HOME}/scipion apache_vars)
+            #       export LD_LIBRARY_PATH=${scipion_ld_library_path}:${LD_LIBRARY_PATH}
+            print VARS["LD_LIBRARY_PATH"]
+            sys.exit(0)
+
         elif mode == MODE_COLLECTSTATIC:
             manage = os.path.join(PW_HOME, 'pyworkflow', 'web', 'manage.py')
             runCmd('%s collectstatic' % manage)
@@ -175,3 +189,25 @@ Usage:
             special case "show" will list all possible tests.
         help : print this help message
 """
+elif __name__.startswith('_mod_wsgi'):
+    os.environ['DJANGO_SETTINGS_MODULE'] = 'pages.settings'
+    os.environ.update(VARS)
+    # !!!! reuse VARS for these sys.path too
+    sys.path.append(os.path.join(XMIPP_HOME, 'lib'))
+    sys.path.append(os.path.join(XMIPP_HOME, 'lib', 'python2.7', 'site-packages'))
+    sys.path.append(os.path.join(XMIPP_HOME, 'protocols'))
+    # sys.path.append(xmipp_home + '/applications/tests/pythonlib')
+
+    # print sys.path
+    # print os.environ
+
+    pages_settings_path = os.path.join(PW_HOME,'pyworkflow','web')
+    if not pages_settings_path in sys.path:
+	sys.path.append(pages_settings_path)
+    
+    import django.core.handlers.wsgi
+    
+    # default name for the function that WSGI calls is "application"
+    # you can change it wsgi.conf
+    application = django.core.handlers.wsgi.WSGIHandler()
+
