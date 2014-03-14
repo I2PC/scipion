@@ -55,10 +55,12 @@ class HighThroughputTest(TestWorkflow):
         self.proj.launchProtocol(protPP, wait=True)
         self.assertIsNotNone(protPP.outputCoordinates, "There was a problem with the faked picking")
         
-        print "Run extract particles with <Same as picking> option"
-        protExtract = XmippProtExtractParticles(boxSize=240, downsampleType=1, doInvert=True, backRadius=110, runMode=1)
+        print "Run extract particles with <Other> option"
+        protExtract = XmippProtExtractParticles(boxSize=60, downsampleType=2, doInvert=True,
+                                                downFactor=4, backRadius=28, runMode=1, numberOfThreads=3)
         protExtract.inputCoordinates.set(protPP.outputCoordinates)
         protExtract.ctfRelations.set(protCTF.outputCTF)
+        protExtract.inputMicrographs.set(protPreprocess.outputMicrographs)
         protExtract.setObjLabel('extract particles')
         self.proj.launchProtocol(protExtract, wait=True)
         self.assertIsNotNone(protExtract.outputParticles, "There was a problem with the extract particles")

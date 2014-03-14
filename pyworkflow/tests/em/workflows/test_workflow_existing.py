@@ -345,6 +345,7 @@ class TestXmippWorkflow(unittest.TestCase):
         protExtract2.numberOfThreads.set(3)
         protExtract2.inputCoordinates.set(protPick2.outputCoordinates)
         protExtract2.ctfRelations.set(protCTF2.outputCTF)
+        protExtract2.inputMicrographs.set(protPrep2.outputMicrographs)
         project.launchProtocol(protExtract2, wait=True)
         
         # Run Spider-filter for day 2
