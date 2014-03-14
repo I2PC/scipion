@@ -17,6 +17,7 @@ import xmipp.utils.Param;
 public class ScipionParams extends Param {
 
     public final static String SCIPION = "scipion";
+    public String python;
     public String type;
     public String script;
     public String projectid;
@@ -29,7 +30,7 @@ public class ScipionParams extends Param {
     public void defineArgs() {
         super.defineArgs();
         Option cmdoption = new Option(SCIPION, "");
-        cmdoption.setArgs(4);
+        cmdoption.setArgs(5);
         options.addOption(cmdoption);
     }
 
@@ -40,9 +41,10 @@ public class ScipionParams extends Param {
         if (cmdLine.hasOption(SCIPION)) {
             String[] cmdargs = cmdLine.getOptionValues(SCIPION);
             type = cmdargs[0];
-            script = cmdargs[1]; 
-            projectid = cmdargs[2];
-            imagesid = cmdargs[3];
+            python = cmdargs[1];
+            script = cmdargs[2]; 
+            projectid = cmdargs[3];
+            imagesid = cmdargs[4];
         }
     }
 }

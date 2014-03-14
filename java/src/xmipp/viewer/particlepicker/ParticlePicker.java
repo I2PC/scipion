@@ -628,7 +628,7 @@ public abstract class ParticlePicker {
     void doScipionSave() {
         try {
             
-            String cmd = String.format("%s %s %s %s", scipionsave.script, outputdir, scipionsave.projectid, scipionsave.inputid);;
+            String[] cmd = new String[]{scipionsave.script, outputdir, scipionsave.projectid, scipionsave.inputid};
             XmippUtil.executeCommand(cmd);
         } catch (Exception ex) {
             Logger.getLogger(ParticlePicker.class.getName()).log(Level.SEVERE, null, ex);
