@@ -310,7 +310,7 @@ class TestXmippWorkflow(unittest.TestCase):
         # Copy of align movies
         protAlignMov1 = getProtocol('ProtOpticalAlignment')
         protAlignMov2 = project.copyProtocol(protAlignMov1)
-        protAlignMov2.setObjLabel('crop mics 50 px - Day2')
+        protAlignMov2.setObjLabel('Align Movies - Day2')
         protAlignMov2.inputMovies.set(protImport2.outputMovies)
         project.launchProtocol(protAlignMov2, wait=True)
         

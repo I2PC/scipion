@@ -88,6 +88,7 @@ class ScipionMixedWorkflow(TestWorkflow):
         print "Run Preprocess particles"
         protPreproc = XmippProtPreprocessParticles(doRemoveDust=False, doNormalize=True, doInvert=True, doThreshold=False)
         protPreproc.inputParticles.set(protExtract.outputParticles)
+        protPreproc.setObjLabel('Invert')
         self.proj.launchProtocol(protPreproc, wait=True)
         self.assertIsNotNone(protPreproc.outputParticles, "There was a problem with preprocess particles")
         
@@ -96,6 +97,7 @@ class ScipionMixedWorkflow(TestWorkflow):
         prot2D.numberOfClasses.set(50)
         prot2D.numberOfIterations.set(5)
         prot2D.inputParticles.set(protPreproc.outputParticles)
+        prot2D.setObjLabel('relion 2D')
         self.proj.launchProtocol(prot2D, wait=True)        
         self.assertIsNotNone(prot2D.outputClasses, "There was a problem with Relion 2D:\n" + (prot2D.getErrorMessage() or "No error set"))
         
