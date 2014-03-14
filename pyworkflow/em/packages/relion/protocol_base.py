@@ -31,7 +31,7 @@ import xmipp
 from pyworkflow.protocol.params import BooleanParam, PointerParam, IntParam
 from pyworkflow.utils import environAdd
 from pyworkflow.em import *
-from constants import ANGULAR_SAMPLING_LIST
+from constants import ANGULAR_SAMPLING_LIST, MASK_FILL_ZERO
 from convert import createRelionInputParticles, createClassesFromImages
 
 
@@ -56,7 +56,6 @@ class ProtRelionBase(EMProtocol):
     
     def __init__(self, **args):        
         EMProtocol.__init__(self, **args)
-        self.IS_3D = not self.IS_2D
         
     def _initialize(self):
         """ This function is mean to be called after the 
@@ -105,6 +104,7 @@ class ProtRelionBase(EMProtocol):
         
     #--------------------------- DEFINE param functions --------------------------------------------   
     def _defineParams(self, form):
+        self.IS_3D = not self.IS_2D
         form.addSection(label='Input')
         # Some hidden variables to be used for conditions
         form.addHidden('isClassify', BooleanParam, default=self.IS_CLASSIFY)
