@@ -178,7 +178,7 @@ def project_graph (request):
                 childs = [c.getName() for c in node.getChilds()]
                 status, color = getNodeStateColor(node)
                 
-                info = ""
+                info= ""
                 if str(node.id) != "PROJECT":
                     protocol = project.mapper.selectById(int(node.id))
                     info = provider.getObjectInfo(protocol)["values"][0]
@@ -278,6 +278,7 @@ def run_table_graph(request):
         runsNew = formatProvider(provider)
         
         refresh = False
+        listNewElm = []
         
         if len(runs) != len(runsNew):
             print 'Change detected, different size'
@@ -292,11 +293,18 @@ def run_table_graph(request):
         if refresh:
             request.session['runs'] = runsNew
             graphView = project.getSettings().graphView.get()
-        
-            context = {'provider': provider,
+            
+            context = {'runs': runsNew,
+                       'columns': provider.getColumns(),
                        'graphView': graphView}
             
             return render_to_response('run_table_graph.html', context)
+        
+        elif listNewElm:
+            request.session['runs'] = runsNew
+            jsonStr = json.dumps(listNewElm, ensure_ascii=False)
+            return HttpResponse(jsonStr,mimetype='application/json')
+        
         else:
             print "No changes detected"
             return HttpResponse("ok")
@@ -334,7 +342,10 @@ def project_content(request):
     project = loadProject(projectName)
     
     provider = ProjectRunsTreeProvider(project)
-    request.session['runs'] = formatProvider(provider)
+    runs = formatProvider(provider)
+    request.session['runs'] = runs
+    
+    
     
     graphView = project.getSettings().graphView.get()
     
@@ -364,7 +375,8 @@ def project_content(request):
                'sections': root.childs,
                'choices':choices,
                'choiceSelected': choiceSelected,
-               'provider':provider,
+               'runs': runs,
+               'columns': provider.getColumns(),
                'view': 'protocols',
                'graphView': graphView,
                }
@@ -384,8 +396,13 @@ def protocol_info(request):
         protocol = project.mapper.selectById(int(protId))
         
         # PROTOCOL IO
-        input_obj = [{'name': name, 'id': attr.getObjId()} for name, attr in protocol.iterInputAttributes()]
-        output_obj = [{'name': name, 'id': attr.getObjId()} for name, attr in protocol.iterOutputAttributes(EMObject)]
+#        input_obj = [{'name': name, 'id': attr.getObjId()} for name, attr in protocol.iterInputAttributes()]
+#        output_obj = [{'name': name, 'id': attr.getObjId()} for name, attr in protocol.iterOutputAttributes(EMObject)]
+
+        input_obj = [{'name':name, 'nameId': attr.getNameId(), 'id': attr.getObjId(), 'info': str(attr)} for name, attr in protocol.iterInputAttributes()]
+        
+        output_obj = [{'name':name, 'nameId': attr.getNameId(), 'id': attr.getObjId(), 'info': str(attr)} for name, attr in protocol.iterOutputAttributes(EMObject)]
+
 
         # PROTOCOL SUMMARY
         summary = parseText(protocol.summary())

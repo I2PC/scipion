@@ -173,7 +173,7 @@ def browse_objects(request):
             for obj in project.mapper.selectByClass(objClass.strip(), 
                                                     objectFilter=filterObject.objFilter, 
                                                     iterate=True):
-                objs[obj.getObjId()]=obj.getNameId()
+                objs[obj.getObjId()]={"nameId":obj.getNameId(), "info": str(obj)} 
 #                objs.append(obj.getNameId())
                 
         jsonStr = json.dumps(objs, ensure_ascii=False)
