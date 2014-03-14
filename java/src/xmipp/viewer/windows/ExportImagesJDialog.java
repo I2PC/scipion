@@ -12,9 +12,6 @@ import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
-import java.io.IOException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JDialog;
@@ -22,11 +19,9 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 import xmipp.jni.Filename;
-import xmipp.jni.MetaData;
 import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippFileChooser;
 import xmipp.utils.XmippWindowUtil;
-import xmipp.viewer.models.GalleryData;
 
 /**
  *
@@ -39,8 +34,8 @@ public class ExportImagesJDialog extends JDialog{
     private XmippFileChooser fc;
     private JButton savebt;
     private JButton cancelbt;
-    private String note1 = "<html><b>Note 1:</b> Only enabled images will be saved";
-    private String note2 = "<html><b>Note 2:</b> Use extension stk, mrcs or img to save as SPIDER, MRC or IMAGIC stacks";
+    private final String note1 = "<html><b>Note 1:</b> Only enabled images will be saved";
+    private final String note2 = "<html><b>Note 2:</b> Use extension stk, mrcs or img to save as SPIDER, MRC or IMAGIC stacks";
     private JButton browsebt;
     private JTextField pathtf;
     private JCheckBox applygeochb;
@@ -53,6 +48,8 @@ public class ExportImagesJDialog extends JDialog{
         this.frame = parent;
 
         path = parent.data.getFileName();
+        if(path == null)
+            path = "images";
         path = Filename.removeExtension(path) + "_export.stk";
         label = parent.data.getRenderLabel();
         initComponents();
@@ -69,6 +66,7 @@ public class ExportImagesJDialog extends JDialog{
         
 
         pathtf = new JTextField(path);
+        pathtf.setColumns(50);
         add(pathtf, XmippWindowUtil.getConstraints(c, 1, 0));
         fc = new XmippFileChooser(path);
         if(path.contains(File.separator))

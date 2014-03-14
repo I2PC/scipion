@@ -122,7 +122,7 @@ class ProtImportMicrographs(XmippProtocol):
             self.AngPix = (10000. * scannedPixelSize) / self.Magnification
         fnOut = self.getFilename('microscope')
         self.insertStep("createMicroscope", verifyfiles=[fnOut], fnOut=fnOut, Voltage=self.Voltage,
-                        SphericalAberration=self.SphericalAberration,SamplingRate=self.AngPix,
+                        SphericalAberration=self.SphericalAberration,SamplingRate=self.AngPix, SamplingRateMode=self.SamplingRateMode,
                         Magnification=self.Magnification)
             
     def insertCreateResults(self, filenameDict):
@@ -207,12 +207,13 @@ def merge(log, OutWd, InWd1, InWd2):
     md1.write(getWdFile(OutWd, 'micrographs'))
 
 
-def createMicroscope(log, fnOut, Voltage, SphericalAberration, SamplingRate, Magnification):
+def createMicroscope(log, fnOut, Voltage, SphericalAberration, SamplingRate, SamplingRateMode, Magnification):
     md = RowMetaData()
     md.setValue(MDL_CTF_VOLTAGE, float(Voltage))    
     md.setValue(MDL_CTF_CS, float(SphericalAberration))    
     md.setValue(MDL_CTF_SAMPLING_RATE, float(SamplingRate))
-    md.setValue(MDL_MAGNIFICATION, float(Magnification))
+    if SamplingRateMode != "From image":
+        md.setValue(MDL_MAGNIFICATION, float(Magnification))
     md.write(fnOut)    
 
 def createResults(log, WorkingDir, PairsMd, FilenameDict, MicrographFn, PixelSize):

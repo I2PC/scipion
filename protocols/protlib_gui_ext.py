@@ -1126,8 +1126,14 @@ class AutoCompleteEntry(tk.Entry):
 '''**************  Implementation of Xmipp Browser *************'''
 # Some helper functions for the browser
 def showj(filename, mode="default"):
-    from protlib_utils import runShowJ
-    runShowJ(filename, extraParams="--mode %s" % mode)
+    if filename.endswith('.star'):
+        showj_relion(filename, mode)
+    else:
+        from protlib_utils import runShowJ
+        runShowJ(filename, extraParams="--mode %s" % mode)
+    
+def showj_relion(filename, mode="default"):
+    os.system('xmipp_showj -i %(filename)s --mode %(mode)s' % locals())
     
 def chimera(filename):
     runChimera(filename)
@@ -1319,7 +1325,7 @@ class FileManager():
             setattr(self, k, v)
 
 
-TEXT_EXTENSIONS = ['.txt', '.c', '.h', '.cpp', '.java', '.sh', '.star', '.emx']
+TEXT_EXTENSIONS = ['.txt', '.c', '.h', '.cpp', '.java', '.sh', '.emx']
 CHIMERA_EXTENSIONS = ['.pdb']
 
 class XmippBrowser():
@@ -1369,7 +1375,7 @@ class XmippBrowser():
         self.managers = {}
         self.extSet = {}
         addFm = self.addFileManager
-        addFm('md', 'md.gif', ['.xmd', '.sel', '.doc', '.ctfparam', '.ctfdat', '.pos', '.descr', '.param', '.hist'], 
+        addFm('md', 'md.gif', ['.xmd', '.sel', '.doc', '.ctfparam', '.ctfdat', '.pos', '.descr', '.param', '.hist', '.star'], 
                             mdFillMenu, mdOnClick, mdOnDoubleClick)
         addFm('stk', 'stack.gif', ['.stk', '.mrcs', '.st', '.pif'],
                             stackFillMenu, imgOnClick, stackOnDoubleClick)

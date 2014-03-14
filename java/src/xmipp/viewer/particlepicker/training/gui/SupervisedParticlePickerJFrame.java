@@ -1,6 +1,5 @@
 package xmipp.viewer.particlepicker.training.gui;
 
-import ij.gui.MessageDialog;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.GridBagConstraints;
@@ -21,7 +20,6 @@ import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSlider;
@@ -264,7 +262,7 @@ public class SupervisedParticlePickerJFrame extends ParticlePickerJFrame {
 
     private void initComponents() {
         try {
-            System.out.println("Main Frame esta en el hilo " + Thread.currentThread().getName());
+            
             setResizable(false);
             setTitle("Xmipp Particle Picker - " + ppicker.getMode());
             initMenuBar();
