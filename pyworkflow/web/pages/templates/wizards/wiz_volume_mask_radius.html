@@ -46,18 +46,18 @@ $(".slider_radius").slider({
 	step : 1,
 	//this gets a live reading of the value and prints it on the page
 	slide : function(event, ui) {
-		$("#slider_radius_result").html(ui.value);
+		$("#slider_radius_result").html(ui.value/2);
 		
 		//update the circle
  		putCircle((ui.value*125)/{{xdim}}, "canvas", "blue");
 	},
 	//this updates the hidden form field so we can submit the data using a form
 	change : function(event, ui) {
-		$('#radius_val').attr('value', ui.value);
+		$('#radius_val').attr('value', ui.value/2);
 	}
 });
 //Load the First Element of the list
-window.onload = compositeVol($("tr#"+firstElm));putCircle(({{maskRadius}}*125)/{{xdim}}, "canvas", "blue");
+window.onload = compositeVol($("tr#"+firstElm));putCircle(({{maskRadius}}*125)/{{xdim}}, "canvas", "blue");$("#slider_radius_result").html({{maskRadius}}/2);
 </script>
 {% endblock %}
 {% block function %}

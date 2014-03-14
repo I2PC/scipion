@@ -59,14 +59,14 @@ $(".slider_inner").slider({
 	step : 1,
 	//this gets a live reading of the value and prints it on the page
 	slide : function(event, ui) {
-		$("#slider_inner_radius").html(ui.value);
+		$("#slider_inner_radius").html(ui.value/2);
 		
 		//update the circle
  		putCircle((ui.value*125)/{{xdim}}, "canvas_low", "red");
 	},
 	//this updates the hidden form field so we can submit the data using a form
 	change : function(event, ui) {
-		$('#inner_val').attr('value', ui.value);
+		$('#inner_val').attr('value', ui.value/2);
 	}
 });
 
@@ -79,18 +79,18 @@ $(".slider_outer").slider({
 	step : 1,
 	//this gets a live reading of the value and prints it on the page
 	slide : function(event, ui) {
-		$("#slider_outer_radius").html(ui.value);
+		$("#slider_outer_radius").html(ui.value/2);
 		
 		//update the circle
  		putCircle((ui.value*125)/{{xdim}}, "canvas_high", "blue");
 	},
 	//this updates the hidden form field so we can submit the data using a form
 	change : function(event, ui) {
-		$('#outer_val').attr('value', ui.value);
+		$('#outer_val').attr('value', ui.value/2);
 	}
 });
 //Load the First Element of the list
-window.onload = compositeVol($("tr#"+firstElm));putCircle(({{outerRadius}}*125)/{{xdim}}, "canvas_high", "blue");putCircle(({{innerRadius}}*125)/{{xdim}}, "canvas_low", "red");
+window.onload = compositeVol($("tr#"+firstElm));putCircle(({{outerRadius}}*125)/{{xdim}}, "canvas_high", "blue");putCircle(({{innerRadius}}*125)/{{xdim}}, "canvas_low", "red");$("#slider_outer_radius").html({{outerRadius}}/2);$("#slider_inner_radius").html({{innerRadius}}/2);
 </script>
 {% endblock %}
 {% block function %}
