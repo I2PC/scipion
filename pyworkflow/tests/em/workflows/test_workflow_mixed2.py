@@ -88,17 +88,18 @@ class ScipionMixedWorkflow(TestWorkflow):
         print "Run Preprocess particles"
         protPreproc = XmippProtPreprocessParticles(doRemoveDust=False, doNormalize=True, doInvert=True, doThreshold=False)
         protPreproc.inputParticles.set(protExtract.outputParticles)
+        protPreproc.setObjLabel('Invert')
         self.proj.launchProtocol(protPreproc, wait=True)
         self.assertIsNotNone(protPreproc.outputParticles, "There was a problem with preprocess particles")
         
         print "Run Relion Classification2d"
         prot2D = ProtRelionClassify2D(regularisationParamT=2, numberOfMpi=4, numberOfThreads=4)
-        prot2D.numberOfClasses.set(32)
-        prot2D.numberOfIterations.set(10)
+        prot2D.numberOfClasses.set(50)
+        prot2D.numberOfIterations.set(5)
         prot2D.inputParticles.set(protPreproc.outputParticles)
+        prot2D.setObjLabel('relion 2D')
         self.proj.launchProtocol(prot2D, wait=True)        
-        self.assertIsNotNone(getattr(prot2D, 'outputClasses', None), 
-                             "There was a problem with Relion 2D:\n" + prot2D.getErrorMessage()) 
+        self.assertIsNotNone(prot2D.outputClasses, "There was a problem with Relion 2D:\n" + (prot2D.getErrorMessage() or "No error set"))
         
         # Now estimate CTF on the micrographs with xmipp
         print "Performing Xmipp CTF..."   

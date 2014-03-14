@@ -310,7 +310,7 @@ class TestXmippWorkflow(unittest.TestCase):
         # Copy of align movies
         protAlignMov1 = getProtocol('ProtOpticalAlignment')
         protAlignMov2 = project.copyProtocol(protAlignMov1)
-        protAlignMov2.setObjLabel('crop mics 50 px - Day2')
+        protAlignMov2.setObjLabel('Align Movies - Day2')
         protAlignMov2.inputMovies.set(protImport2.outputMovies)
         project.launchProtocol(protAlignMov2, wait=True)
         
@@ -345,6 +345,7 @@ class TestXmippWorkflow(unittest.TestCase):
         protExtract2.numberOfThreads.set(3)
         protExtract2.inputCoordinates.set(protPick2.outputCoordinates)
         protExtract2.ctfRelations.set(protCTF2.outputCTF)
+        protExtract2.inputMicrographs.set(protPrep2.outputMicrographs)
         project.launchProtocol(protExtract2, wait=True)
         
         # Run Spider-filter for day 2
