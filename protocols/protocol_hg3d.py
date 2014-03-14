@@ -56,7 +56,7 @@ class ProtHG3D(ProtHG3DBase):
 
         # Compute RANSAC with the core
         fnClasses=os.path.join(WorkingDirStructureCore,'imagesCore.xmd')
-        self.defineRANSACSteps(fnClasses,WorkingDirStructureCore,True,max(5,int(self.NRansac/5)))
+        self.defineRANSACSteps(fnClasses,WorkingDirStructureCore,True,max(5,int(self.NRansac/2)))
         self.defineRefinementSteps(fnClasses,WorkingDirStructureCore)
                                
         # Match the rest of images and extend the core
@@ -75,6 +75,8 @@ class ProtHG3D(ProtHG3DBase):
             fnRoot=os.path.join(WorkingDirStructureExtended,"proposedVolume%05d"%i)
             self.insertParallelRunJobStep("xmipp_image_resize","-i %s.vol -o %s.vol --dim %d %d" 
                                           %(fnRoot,fnRoot,self.Xdim,self.Xdim))
+        
+        self.insertStep("scoreFinalVolumes",WorkingDir=self.WorkingDir,NumVolumes=self.NumVolumes)
 
     def defineRANSACSteps(self,fnClasses,WorkingDirStructure,useAll,NRansac):
         # RANSAC iterations
@@ -147,7 +149,7 @@ class ProtHG3D(ProtHG3DBase):
         if self.VolumesToShow!="":
             listOfVolumes = getListFromRangeString(self.VolumesToShow)
             for volume in listOfVolumes:
-                fnRoot=self.workingDirPath('proposedVolume%05d'%int(volume))
+                fnRoot=os.path.join(WorkingDir,'Structure00000_core_extended','proposedVolume%05d'%volume)
                 os.system("xmipp_chimera_client -i %s.vol --mode projector 256 --angulardist %s.xmd"%(fnRoot,fnRoot))
 
 def evaluateVolumes(log,WorkingDir,NRansac,WorkingDirStructure):
@@ -449,3 +451,27 @@ def extendCore(log,WorkingDirStructureCore,WorkingDirStructureExtended,NumVolume
         runJob(log,"xmipp_metadata_utilities",'-i %s --operate sort'%fnExtended)
     
     deleteFile(log,os.path.join(WorkingDirStructureExtended,"gallery.stk"))
+
+def scoreFinalVolumes(log,WorkingDir,NumVolumes):
+    mdOut=MetaData()
+    for n in range(NumVolumes):
+        fnRoot=os.path.join(WorkingDir,'Structure00000_core_extended','proposedVolume%05d'%n)
+        fnAssignment=fnRoot+".xmd"
+        if exists(fnAssignment):
+            MDassignment=MetaData(fnAssignment)
+            sum=0
+            N=0
+            minCC=2
+            for id in MDassignment:
+                cc=MDassignment.getValue(MDL_MAXCC,id)
+                sum+=cc
+                if cc<minCC:
+                    minCC=cc
+                N+=1
+            avg=sum/N
+            id=mdOut.addObject()
+            mdOut.setValue(MDL_IMAGE,fnRoot+".vol",id)
+            mdOut.setValue(MDL_VOLUME_SCORE_SUM,float(sum),id)
+            mdOut.setValue(MDL_VOLUME_SCORE_MEAN,float(avg),id)
+            mdOut.setValue(MDL_VOLUME_SCORE_MIN,float(minCC),id)
+    mdOut.write(os.path.join(WorkingDir,"proposedVolumes.xmd"))
