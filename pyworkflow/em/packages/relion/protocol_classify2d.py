@@ -40,12 +40,8 @@ class ProtRelionClassify2D(ProtRelionBase, ProtClassify):
     """ This class implements the wrapper to Relion 2D - class averages program.
     """
     _label = '2d classify'
-    IS_CLASSIFY = True
     IS_2D = True
-    CHANGE_LABELS = [xmipp.MDL_AVG_CHANGES_ORIENTATIONS, 
-                     xmipp.MDL_AVG_CHANGES_OFFSETS, 
-                     xmipp.MDL_AVG_CHANGES_CLASSES]
-    
+
     def __init__(self, **args):        
         ProtRelionBase.__init__(self, **args)
         
@@ -60,68 +56,11 @@ class ProtRelionClassify2D(ProtRelionBase, ProtClassify):
         
 
     #--------------------------- INSERT steps functions --------------------------------------------  
-    def _setBasicArgs(self, args):
-        """ Return a dictionary with basic arguments. """
-        args.update({'--iter': self.numberOfIterations.get(),
-                    '--tau2_fudge': self.regularisationParamT.get(),
-                    '--flatten_solvent': '',
-                    '--norm': '',
-                    '--scale': '',
-                    '--o': self._getExtraPath('relion'),
-                    '--oversampling': '1'
-                    })
-        self._setSamplingArgs(args)
-        
-    def _setCTFArgs(self, args):        
-        # CTF stuff
-        if self.doCTF:
-            args['--ctf'] = ''
-        
-        if self.hasReferenceCTFCorrected:
-            args['--ctf_corrected_ref'] = ''
-            
-        if self.haveDataPhaseFlipped:
-            args['--ctf_phase_flipped'] = ''
-            
-        if self.ignoreCTFUntilFirstPeak:
-            args['--ctf_intact_first_peak'] = ''
-        
     def _setSamplingArgs(self, args):
         """ Set sampling related params. """
         # Sampling stuff            
         args['--psi_step'] = self.inplaneAngularSamplingDeg.get() * 2
-        args['--offset_range'] = self.offsetSearchRangePix.get()
-        args['--offset_step']  = self.offsetSearchStepPix.get() * 2
-        
-    def _setMaskArgs(self, args):
-        if self.referenceMask.hasValue():
-            args['--solvent_mask'] = self.referenceMask.get().getFileName() #FIXE: CHANGE BY LOCATION
-            
-        if self.solventMask.hasValue():
-            args['--solvent_mask2'] = self.solventMask.get().getFileName() #FIXME: CHANGE BY LOCATION
-            
-        
-    def _setNormalArgs(self, args):
-        args.update({'--i': self._getFileName('input_star'),
-                '--particle_diameter': self.maskRadiusA.get() * 2.0,
-                '--angpix': self.inputParticles.get().getSamplingRate(),
-                })
-        self._setBasicArgs(args)
-        self._setMaskArgs(args)
-        
-        if self.maskZero == MASK_FILL_ZERO:
-            args['--zero_mask'] = ''
-            
-        args['--K'] = self.numberOfClasses.get()
-        
 
-    def _setContinueArgs(self):
-        args = {}
-        self.copyAttributes(self.continueRun.get(), 'regularisationParamT')
-        self._setBasicArgs(args)
-        args['--continue'] = self._getFileName('optimiser', 
-                                               iter=self.continueIter.get())
-        
     #--------------------------- STEPS functions --------------------------------------------       
     def createOutputStep(self, stamp):
         from convert import readSetOfClasses2D

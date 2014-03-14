@@ -49,11 +49,14 @@ class ProtRelionBase(EMProtocol):
     IS_2D = False
     FILE_KEYS = ['data', 'optimiser', 'sampling'] 
     CLASS_LABEL = xmipp.MDL_REF
-    CHANGE_LABELS = []
+    CHANGE_LABELS = [xmipp.MDL_AVG_CHANGES_ORIENTATIONS, 
+                 xmipp.MDL_AVG_CHANGES_OFFSETS, 
+                 xmipp.MDL_AVG_CHANGES_CLASSES]
     PREFIXES = ['']
     
     def __init__(self, **args):        
         EMProtocol.__init__(self, **args)
+        self.IS_3D = not self.IS_2D
         
     def _initialize(self):
         """ This function is mean to be called after the 
@@ -225,21 +228,22 @@ class ProtRelionBase(EMProtocol):
                       help='It is recommended to strongly low-pass filter your initial reference map. '
                            'If it has not yet been low-pass filtered, it may be done internally using this option. ' 
                            'If set to 0, no low-pass filter will be applied to the initial reference(s).')
-        form.addParam('numberOfIterations', IntParam, default=25,
-                      label='Number of iterations',
-                      help='Number of iterations to be performed. Note that the current implementation does NOT '
-                           'comprise a convergence criterium. Therefore, the calculations will need to be stopped'
-                           'by the user if further iterations do not yield improvements in resolution or classes.') 
-        form.addParam('regularisationParamT', IntParam, default=1,
-                      label='Regularisation parameter T',
-                      help='Bayes law strictly determines the relative weight between the contribution of the '
-                           'experimental data and the prior. '
-                           'However, in practice one may need to adjust this weight to put slightly more weight on the experimental '
-                           'data to allow optimal results. Values greater than 1 for this regularisation parameter '
-                           '(T in the JMB2011 paper) put more weight on the experimental data. Values around 2-4 '
-                           'have been observed to be useful for 3D refinements, values of 1-2 for 2D refinements. '
-                           'Too small values yield too-low resolution structures; too high values result in ' 
-                           'over-estimated resolutions and overfitting.') 
+        if self.IS_CLASSIFY:
+            form.addParam('numberOfIterations', IntParam, default=25,
+                          label='Number of iterations',
+                          help='Number of iterations to be performed. Note that the current implementation does NOT '
+                               'comprise a convergence criterium. Therefore, the calculations will need to be stopped'
+                               'by the user if further iterations do not yield improvements in resolution or classes.') 
+            form.addParam('regularisationParamT', IntParam, default=1,
+                          label='Regularisation parameter T',
+                          help='Bayes law strictly determines the relative weight between the contribution of the '
+                               'experimental data and the prior. '
+                               'However, in practice one may need to adjust this weight to put slightly more weight on the experimental '
+                               'data to allow optimal results. Values greater than 1 for this regularisation parameter '
+                               '(T in the JMB2011 paper) put more weight on the experimental data. Values around 2-4 '
+                               'have been observed to be useful for 3D refinements, values of 1-2 for 2D refinements. '
+                               'Too small values yield too-low resolution structures; too high values result in ' 
+                               'over-estimated resolutions and overfitting.') 
         form.addParam('maskRadiusA', IntParam, default=200,
                       label='Particle mask RADIUS (A)',
                       help='The experimental images will be masked with a soft circular mask '
@@ -249,16 +253,17 @@ class ProtRelionBase(EMProtocol):
                            'size no masking will be performed.\n\n'
                            'The same radius will also be used for a spherical mask of the '
                            'reference structures if no user-provided mask is specified.') 
-        form.addParam('maskZero', EnumParam, default=0,
-                      choices=['Yes, fill with zeros', 'No, fill with random noise'],
-                      label='Mask particles with zeros?',
-                      help='If set to <Yes>, then in the individual particles, the area outside a circle with the radius '
-                           'of the particle will be set to zeros prior to taking the Fourier transform. '
-                           'This will remove noise and therefore increase sensitivity in the alignment and classification. ' 
-                           'However, it will also introduce correlations between the Fourier components that are not modelled. ' 
-                           'When set to <No>, then the solvent area is filled with random noise, which prevents introducing '
-                           'correlations.High-resolution refinements (e.g. in 3D auto-refine) tend to work better when filling ' 
-                           'the solvent area with random noise, some classifications go better when using zeros.') 
+        if self.IS_CLASSIFY:
+            form.addParam('maskZero', EnumParam, default=0,
+                          choices=['Yes, fill with zeros', 'No, fill with random noise'],
+                          label='Mask particles with zeros?',
+                          help='If set to <Yes>, then in the individual particles, the area outside a circle with the radius '
+                               'of the particle will be set to zeros prior to taking the Fourier transform. '
+                               'This will remove noise and therefore increase sensitivity in the alignment and classification. ' 
+                               'However, it will also introduce correlations between the Fourier components that are not modelled. ' 
+                               'When set to <No>, then the solvent area is filled with random noise, which prevents introducing '
+                               'correlations.High-resolution refinements (e.g. in 3D auto-refine) tend to work better when filling ' 
+                               'the solvent area with random noise, some classifications go better when using zeros.') 
         form.addParam('referenceMask', PointerParam, pointerClass='Mask',
                       label='Reference mask (optional)', allowNull=True,
                       help='A volume mask containing a (soft) mask with the same dimensions ' 
@@ -281,9 +286,9 @@ class ProtRelionBase(EMProtocol):
         if not self.IS_CLASSIFY:
             samplingSection += ' (initial value will be autoincremented)'
         form.addSection(samplingSection)
-        if not self.IS_2D:
+        if self.IS_3D:
             form.addParam('angularSamplingDeg', EnumParam, default=2,
-                          choices=[str(s) for s in ANGULAR_SAMPLING_LIST],
+                          choices=ANGULAR_SAMPLING_LIST,
                           label='Angular sampling interval (deg)',
                           help='There are only a few discrete angular samplings possible because '
                            'we use the HealPix library to generate the sampling of the first '
@@ -310,17 +315,32 @@ class ProtRelionBase(EMProtocol):
                            'Translational sampling is also done using the adaptive approach. '
                            'Therefore, if adaptive=1, the translations will first be evaluated'
                            'on a 2x coarser grid.')
-        form.addParam('localAngularSearch', BooleanParam, default=False,
-                      condition='not is2D',
-                      label='Perform local angular search?',
-                      help='If set to Yes, then rather than performing exhaustive angular searches, '
-                           'local searches within the range given below will be performed. A prior '
-                           'Gaussian distribution centered at the optimal orientation in the previous '
-                           'iteration and with a stddev of 1/3 of the range given below will be enforced.')
-        form.addParam('localAngularSearchRange', FloatParam, default=5.0,
-                      condition='localAngularSearch',
-                      label='Local angular search range',
-                      help='Local angular searches will be performed within +/- the given amount (in degrees) from the optimal orientation in the previous iteration. A Gaussian prior (also see previous option) will be applied, so that orientations closer to the optimal orientation in the previous iteration will get higher weights than those further away.')
+        if self.IS_3D: 
+            if self.IS_CLASSIFY:
+                form.addParam('localAngularSearch', BooleanParam, default=False,
+                              condition='not is2D',
+                              label='Perform local angular search?',
+                              help='If set to Yes, then rather than performing exhaustive angular searches, '
+                                   'local searches within the range given below will be performed. A prior '
+                                   'Gaussian distribution centered at the optimal orientation in the previous '
+                                   'iteration and with a stddev of 1/3 of the range given below will be enforced.')
+                form.addParam('localAngularSearchRange', FloatParam, default=5.0,
+                              condition='localAngularSearch',
+                              label='Local angular search range',
+                              help='Local angular searches will be performed within +/- \n'
+                                   'the given amount (in degrees) from the optimal orientation\n'
+                                   'in the previous iteration. A Gaussian prior (also see \n'
+                                   'previous option) will be applied, so that orientations \n'
+                                   'closer to the optimal orientation in the previous iteration \n'
+                                   'will get higher weights than those further away.')
+            else:
+                form.addParam('localSearchAutoSamplingDeg', EnumParam, default=4,
+                              choices=ANGULAR_SAMPLING_LIST,
+                              label='Local search from auto-sampling (deg)',
+                              help='In the automated procedure to increase the angular samplings,\n'
+                                   'local angular searches of -6/+6 times the sampling rate will\n'
+                                   'be used from this angular sampling rate onwards.')
+                
          
     #--------------------------- INSERT steps functions --------------------------------------------  
     def _insertAllSteps(self): 
@@ -343,6 +363,64 @@ class ProtRelionBase(EMProtocol):
             params += ' ' + self.extraParams.get()
 
         self._insertFunctionStep('runRelionStep', params)
+        
+    def _setNormalArgs(self, args):
+        args.update({'--i': self._getFileName('input_star'),
+                     '--particle_diameter': self.maskRadiusA.get() * 2.0,
+                     '--angpix': self.inputParticles.get().getSamplingRate(),
+                    })
+        self._setBasicArgs(args)
+        self._setMaskArgs(args)
+        
+        if self.IS_CLASSIFY:
+            if self.maskZero == MASK_FILL_ZERO:
+                args['--zero_mask'] = ''                
+            args['--K'] = self.numberOfClasses.get()
+        
+    def _setContinueArgs(self, args):
+        args = {}
+        if self.IS_CLASSIFY:
+            self.copyAttributes(self.continueRun.get(), 'regularisationParamT')
+        self._setBasicArgs(args)
+        args['--continue'] = self._getFileName('optimiser', iter=self.continueIter.get())
+            
+    def _setBasicArgs(self, args):
+        """ Return a dictionary with basic arguments. """
+        args.update({'--flatten_solvent': '',
+                     '--norm': '',
+                     '--scale': '',
+                     '--o': self._getExtraPath('relion'),
+                     '--oversampling': '1'
+                    })
+        if self.IS_CLASSIFY:
+            args['--tau2_fudge'] = self.regularisationParamT.get()
+            args['--iter'] = self.numberOfIterations.get()
+            
+        self._setSamplingArgs(args)
+        args['--offset_range'] = self.offsetSearchRangePix.get()
+        args['--offset_step']  = self.offsetSearchStepPix.get() * 2
+                        
+    def _setCTFArgs(self, args):        
+        # CTF stuff
+        if self.doCTF:
+            args['--ctf'] = ''
+        
+        if self.hasReferenceCTFCorrected:
+            args['--ctf_corrected_ref'] = ''
+            
+        if self.haveDataPhaseFlipped:
+            args['--ctf_phase_flipped'] = ''
+            
+        if self.ignoreCTFUntilFirstPeak:
+            args['--ctf_intact_first_peak'] = ''
+            
+    def _setMaskArgs(self, args):
+        if self.referenceMask.hasValue():
+            args['--solvent_mask'] = self.referenceMask.get().getFileName() #FIXE: CHANGE BY LOCATION
+            
+        if self.solventMask.hasValue():
+            args['--solvent_mask2'] = self.solventMask.get().getFileName() #FIXME: CHANGE BY LOCATION
+ 
    
     #--------------------------- STEPS functions --------------------------------------------       
     def convertInputStep(self):
