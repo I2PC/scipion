@@ -199,33 +199,33 @@ class ProtRelionBase(XmippProtocol):
         self.insertStep("linkAcquisitionInfo", InputFile=self.ImgMd, dirDest=self.WorkingDir) 
         #normalize data
 
-        if self.DoNormalizeInputImage:
-            images_stk = join(self.ExtraDir, 'images_normalized.stk')
-            images_xmd = join(self.ExtraDir, 'images_normalized.xmd')
-            self.insertStep('runNormalizeRelion', verifyfiles=[images_stk, images_xmd],
-                            inputMd  = self.ImgMd,
-                            outputMd = images_stk,
-                            normType = 'NewXmipp',
-                            bgRadius = int(self.MaskRadiusA/self.SamplingRate),
-                            Nproc    = self.NumberOfMpi*self.NumberOfThreads
-                            )
-        else:
-            imgFn = FileName(self.ImgMd).removeBlockName()
-            self.insertStep('createLink',
-                               verifyfiles=[images_xmd],
-                               source=imgFn,
-                               dest=images_xmd)
-        # convert input metadata to relion model
-        self.ImgStar = self.extraPath(replaceBasenameExt(images_xmd, '.star'))
-        self.insertStep('convertImagesMd', verifyfiles=[self.ImgStar],
-                        inputMd=images_xmd, 
-                        outputRelion=self.ImgStar                            
-                        )
         
         if self.DoContinue:
             self._insertStepsContinue()
             firstIteration = getIteration(self.optimiserFileName)
         else:
+            if self.DoNormalizeInputImage:
+        	images_stk = join(self.ExtraDir, 'images_normalized.stk')
+        	images_xmd = join(self.ExtraDir, 'images_normalized.xmd')
+        	self.insertStep('runNormalizeRelion', verifyfiles=[images_stk, images_xmd],
+                        	inputMd  = self.ImgMd,
+                        	outputMd = images_stk,
+                        	normType = 'NewXmipp',
+                        	bgRadius = int(self.MaskRadiusA/self.SamplingRate),
+                        	Nproc    = self.NumberOfMpi*self.NumberOfThreads
+                        	)
+            else:
+        	imgFn = FileName(self.ImgMd).removeBlockName()
+        	self.insertStep('createLink',
+                        	   verifyfiles=[images_xmd],
+                        	   source=imgFn,
+                        	   dest=images_xmd)
+            # convert input metadata to relion model
+            self.ImgStar = self.extraPath(replaceBasenameExt(images_xmd, '.star'))
+            self.insertStep('convertImagesMd', verifyfiles=[self.ImgStar],
+                            inputMd=images_xmd, 
+                            outputRelion=self.ImgStar                            
+                            )
             self._insertSteps()
             firstIteration = 1
             
@@ -675,8 +675,7 @@ class ProtRelionBase(XmippProtocol):
                     mdIters.setValue(labels[i], pmax, objId)
             fn = self.getFilename('all_avgPmax_xmipp')
             mdIters.write(fn)
-            self.display2D(fn, extraParams='--label_relion')                    
-            #self.display2D(fn, extraParams)
+            #self.display2D(fn, extraParams='--label_relion') //do not display table since labels are confussing                   
             xplotter = XmippPlotter()
             xplotter.createSubPlot("Avg PMax per Iterations", "Iterations", "Avg PMax")
             for label, color in zip(labels, colors):
