@@ -39,7 +39,12 @@ AngularSampling = 5
 #{expert} Number of RANSAC iterations
 """ Number of initial volumes to test by RANSAC
 """
-NRansac = 100
+NRansacInitial = 2000
+
+#{expert} Number of RANSAC iterations for core
+""" Number of initial volumes to determine core
+"""
+NRansacCore = 400
 
 #{expert} Number of random samples
 NumSamples = 8
@@ -48,12 +53,15 @@ NumSamples = 8
 """ correlation value threshold to determine if an experimental projection is an
 inlier or outlier
 """
-CorrThresh = 0.77
+CorrThresh = 0.8
+
+#{expert} Number of volumes to determine core
+NumVolumesInitial=50
 
 #{expert} Number of best volumes to refine
 """ Number of best volumes to refine 
 """
-NumVolumes =10
+NumVolumesFinal=10
 
 #{expert} Number of iterations to perform to refine the volumes
 """ Number of iterations to perform to refine the volumes 
@@ -79,7 +87,7 @@ Ts = '1'
 
 #{expert}CorePercentile:
 """ Percentile of coocurrence to be in the core """
-CorePercentile=95
+CorePercentile=99
 
 # {eval} expandParallel(threads=0,hours=12)
 
