@@ -49,10 +49,9 @@ class ProtHG3D(ProtHG3DBase):
         # Compute imagesCore for this structure
         WorkingDirStructureCore = os.path.join(self.WorkingDir,"Structure%05d_core"%nI)
         self.insertStep('createDir',path=WorkingDirStructureCore)
-        from random import randint
         self.insertStep("coocurenceMatrix",RemainingClasses=self.RemainingClasses,WorkingDirStructure=WorkingDirStructure,
                             NumVolumes=self.NumVolumesInitial,nI=nI,CorePercentile=self.CorePercentile,
-                            CorrThresh=self.CorrThresh,r=randint(1,10000))
+                            CorrThresh=self.CorrThresh)
 
         # Compute RANSAC with the core
         fnClasses=os.path.join(WorkingDirStructureCore,'imagesCore.xmd')
@@ -64,7 +63,8 @@ class ProtHG3D(ProtHG3DBase):
         self.insertStep('createDir',path=WorkingDirStructureExtended)
         self.insertStep('extendCore',WorkingDirStructureCore=WorkingDirStructureCore,WorkingDirStructureExtended=WorkingDirStructureExtended,
                         NumVolumes=self.NumVolumesFinal,RemainingClasses=self.RemainingClasses,ComplementaryClasses=self.Classes,
-                        AngularSampling=self.AngularSampling,SymmetryGroup=self.SymmetryGroup, NumberOfMpi=self.NumberOfMpi)
+                        AngularSampling=self.AngularSampling,SymmetryGroup=self.SymmetryGroup, CorrThresh=self.CorrThresh,
+                        NumberOfMpi=self.NumberOfMpi)
         
         # Refine the extended cores
         fnClasses=self.RemainingClasses
@@ -301,7 +301,7 @@ def projMatch(log, WorkingDir,WorkingDirStructure, fnClasses, fnBase, AngularSam
     deleteFile(log,os.path.join(WorkingDir,'tmp/gallery_'+fnBase+'.doc'))
     deleteFile(log,os.path.join(WorkingDir,'tmp/gallery_'+fnBase+'.stk'))
 
-def coocurenceMatrix(log,RemainingClasses,WorkingDirStructure,NumVolumes,nI,CorePercentile,CorrThresh,r):
+def coocurenceMatrix(log,RemainingClasses,WorkingDirStructure,NumVolumes,nI,CorePercentile,CorrThresh):
     import numpy
     mdRemaining = MetaData(RemainingClasses)
     Nimgs=mdRemaining.size()
@@ -414,7 +414,7 @@ def procCoocurenceMatrix(sumMatrix,CorePercentile,CorrThresh):
     return largestComponent
 
 def extendCore(log,WorkingDirStructureCore,WorkingDirStructureExtended,NumVolumes,RemainingClasses,ComplementaryClasses,AngularSampling,\
-               SymmetryGroup,NumberOfMpi):
+               SymmetryGroup,CorrThresh,NumberOfMpi):
     from protlib_projmatch import projMatch
     
     fnCore=os.path.join(WorkingDirStructureCore,"imagesCore.xmd")
@@ -439,7 +439,7 @@ def extendCore(log,WorkingDirStructureCore,WorkingDirStructureExtended,NumVolume
         md=MetaData(fnInliers)
         cc=md.getColumnValues(MDL_MAXCC)
         cc.sort()
-        minCC=cc[0]
+        minCC=min(cc[0],CorrThresh)
         
         # Choose those complementary images whose correlation is larger than the minimum
         fnAnglesChosen=os.path.join(WorkingDirStructureExtended,"anglesComplementaryChosen%05d.xmd"%i)
