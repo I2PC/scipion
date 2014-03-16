@@ -356,8 +356,6 @@ def procCoocurenceMatrix(sumMatrix,CorePercentile,CorrThresh):
     y=sumMatrix[numpy.where(sumMatrix!=0)]
     threshold=numpy.percentile(y,CorePercentile)
     print "Correlation threshold due to CorePercentile=",threshold
-    threshold=max(threshold,CorrThresh)
-    print "Correlation threshold used to filter coocurrence matrix=",threshold
     intSumMatrix = sumMatrix
     intSumMatrix[sumMatrix<threshold]=0
     intSumMatrix[sumMatrix>=threshold]=1
