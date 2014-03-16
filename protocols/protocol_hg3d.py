@@ -422,8 +422,12 @@ def extendCore(log,WorkingDirStructureCore,WorkingDirStructureExtended,NumVolume
     fnCore=os.path.join(WorkingDirStructureCore,"imagesCore.xmd")
     fnComplementary=os.path.join(WorkingDirStructureExtended,"imagesComplementary.xmd")
     runJob(log,"xmipp_metadata_utilities","-i %s --set subtraction %s image image -o %s"%(RemainingClasses,fnCore,fnComplementary))
+    runJob(log,"xmipp_metadata_utilities","-i %s --operate keep_column image"%fnComplementary)
     if ComplementaryClasses!="":
-        runJob(log,"xmipp_metadata_utilities", "-i %s  --set union %s image image"%(fnComplementary,ComplementaryClasses))
+        fnAux=os.path.join(WorkingDirStructureExtended,"aux.xmd")
+        runJob(log,"xmipp_metadata_utilities","-i %s -o %s --operate keep_column image"%(ComplementaryClasses,fnAux))
+        runJob(log,"xmipp_metadata_utilities", "-i %s  --set union %s image image"%(fnComplementary,fnAux))
+        deleteFile(log,fnAux)
         runJob(log,"xmipp_metadata_utilities", "-i %s  --set subtraction %s image image"%(fnComplementary,fnCore))
         
     for i in range(NumVolumes):
