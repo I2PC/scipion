@@ -28,19 +28,18 @@ class ProtHG3D(ProtHG3DBase):
         ProtHG3DBase.defineSteps(self)
         
         md=MetaData(self.RemainingClasses)
-        Nimgs=md.size()
-        
         nI=0
         
         # Generate projection gallery from the initial volume
         if (self.InitialVolume != ''):
-            self.insertStep("projectInitialVolume",WorkingDir=self.WorkingDir,InitialVolume=self.InitialVolume,Xdim2=self.Xdim2,
+            self.insertStep("projectInitialVolume",WorkingDir=self.WorkingDir,InitialVolume=self.InitialVolume,
+                            RemainingClasses=self.RemainingClasses,Xdim2=self.Xdim2,
                             AngularSampling=self.AngularSampling,SymmetryGroup=self.SymmetryGroup)
         
         # Compute RANSAC with all remaining images
         WorkingDirStructure = os.path.join(self.WorkingDir,"Structure%05d"%nI)
         self.insertStep('createDir',path=WorkingDirStructure)
-        fnClasses=self.extraPath('reducedClasses.xmd')
+        fnClasses=self.RemainingClasses
         self.defineRANSACSteps(fnClasses,WorkingDirStructure,False,self.NRansacInitial,self.NumVolumesInitial)
         self.defineRefinementSteps(fnClasses,WorkingDirStructure,self.NumVolumesInitial)
         
@@ -50,8 +49,10 @@ class ProtHG3D(ProtHG3DBase):
         # Compute imagesCore for this structure
         WorkingDirStructureCore = os.path.join(self.WorkingDir,"Structure%05d_core"%nI)
         self.insertStep('createDir',path=WorkingDirStructureCore)
-        self.insertStep("coocurenceMatrix",WorkingDirStructure=WorkingDirStructure,fnClasses=self.extraPath("reducedClasses.stk") ,
-                            NumVolumes=self.NumVolumesInitial,nI=nI,Nimgs=Nimgs,CorePercentile=self.CorePercentile)
+        from random import randint
+        self.insertStep("coocurenceMatrix",RemainingClasses=self.RemainingClasses,WorkingDirStructure=WorkingDirStructure,
+                            NumVolumes=self.NumVolumesInitial,nI=nI,CorePercentile=self.CorePercentile,
+                            CorrThresh=self.CorrThresh,r=randint(1,10000))
 
         # Compute RANSAC with the core
         fnClasses=os.path.join(WorkingDirStructureCore,'imagesCore.xmd')
@@ -62,11 +63,11 @@ class ProtHG3D(ProtHG3DBase):
         WorkingDirStructureExtended = os.path.join(self.WorkingDir,"Structure%05d_core_extended"%nI)
         self.insertStep('createDir',path=WorkingDirStructureExtended)
         self.insertStep('extendCore',WorkingDirStructureCore=WorkingDirStructureCore,WorkingDirStructureExtended=WorkingDirStructureExtended,
-                        NumVolumes=self.NumVolumesFinal,RemainingClasses=self.extraPath('reducedClasses.xmd'),ComplementaryClasses=self.Classes,
+                        NumVolumes=self.NumVolumesFinal,RemainingClasses=self.RemainingClasses,ComplementaryClasses=self.Classes,
                         AngularSampling=self.AngularSampling,SymmetryGroup=self.SymmetryGroup, NumberOfMpi=self.NumberOfMpi)
         
         # Refine the extended cores
-        fnClasses=self.extraPath('reducedClasses.xmd')
+        fnClasses=self.RemainingClasses
         self.defineRefinementSteps(fnClasses,WorkingDirStructureExtended,self.NumVolumesFinal)
         
         # Resize the output volumes
@@ -109,8 +110,6 @@ class ProtHG3D(ProtHG3DBase):
 
     def validate(self):
         errors = []
-        if float(self.MaxFreq)<2*float(self.Ts):
-            errors.append("Maximum frequency cannot be smaller than twice the sampling rate")
         return errors
 
     def summary(self):
@@ -132,11 +131,6 @@ class ProtHG3D(ProtHG3DBase):
         if os.path.isfile(fnRoot):
             md=MetaData(fnRoot)
         
-            if (md.size()< 5) :
-                message.append("Num of random samples too small and equal to %d"%(md.size()))
-                message.append("If the option Dimensionality reduction is on, increase the number of grids per dimension")
-                message.append("If the option Dimensionality reduction is off, increase the number of random samples")
-            
         return message
     
     def visualize(self):
@@ -157,19 +151,20 @@ def evaluateVolumes(log,WorkingDir,NRansac,WorkingDirStructure):
     CorrThresh = mdCorr.getValue(MDL_WEIGHT,objId)
     for n in range(NRansac):        
         fnRoot="ransac%05d"%n              
-        fnAngles=os.path.join(WorkingDir,"tmp/angles_"+fnRoot+".xmd")    
-        md=MetaData(fnAngles)
-        numInliers=0
-        for objId in md:
-            corr = md.getValue(MDL_MAXCC, objId)
-           
-            if (corr >= CorrThresh) :
-                numInliers = numInliers+corr
-
-        md= MetaData()
-        objId = md.addObject()
-        md.setValue(MDL_WEIGHT,float(numInliers),objId)
-        md.write("inliers@"+fnAngles,MD_APPEND)
+        fnAngles=os.path.join(WorkingDir,"tmp/angles_"+fnRoot+".xmd")
+        if os.path.exists(fnAngles):    
+            md=MetaData(fnAngles)
+            numInliers=0
+            for objId in md:
+                corr = md.getValue(MDL_MAXCC, objId)
+               
+                if (corr >= CorrThresh) :
+                    numInliers = numInliers+corr
+    
+            md= MetaData()
+            objId = md.addObject()
+            md.setValue(MDL_WEIGHT,float(numInliers),objId)
+            md.write("inliers@"+fnAngles,MD_APPEND)
     
 def getCorrThresh(log,WorkingDir,WorkingDirStructure,NRansac,CorrThresh):
     corrVector = []
@@ -179,13 +174,14 @@ def getCorrThresh(log,WorkingDir,WorkingDirStructure,NRansac,CorrThresh):
     for n in range(NRansac):
         fnRoot=os.path.join("ransac%05d"%n)
         fnAngles=os.path.join(WorkingDir,"tmp/angles_"+fnRoot+".xmd")
-        md=MetaData(fnAngles)
-        
-        for objId in md:
-            corr = md.getValue(MDL_MAXCC, objId)
-            corrVector.append(corr)
-            objIdCorr = mdCorr.addObject()
-            mdCorr.setValue(MDL_MAXCC,float(corr),objIdCorr)
+        if os.path.exists(fnAngles):
+            md=MetaData(fnAngles)
+            
+            for objId in md:
+                corr = md.getValue(MDL_MAXCC, objId)
+                corrVector.append(corr)
+                objIdCorr = mdCorr.addObject()
+                mdCorr.setValue(MDL_MAXCC,float(corr),objIdCorr)
 
     mdCorr.write("correlations@"+fnCorr,MD_APPEND)                            
     mdCorr= MetaData()
@@ -203,10 +199,13 @@ def getBestVolumes(log,WorkingDir,WorkingDirStructure,NRansac,NumVolumes,UseAll)
     
     for n in range(NRansac):
         fnAngles = os.path.join(WorkingDir,"tmp/angles_ransac%05d"%n+".xmd")
-        md=MetaData("inliers@"+fnAngles)
-        numInliers=md.getValue(MDL_WEIGHT,md.firstObject())
-        volumes.append(fnAngles)
-        inliers.append(numInliers)
+        if os.path.exists(fnAngles):
+            md=MetaData("inliers@"+fnAngles)
+            numInliers=md.getValue(MDL_WEIGHT,md.firstObject())
+            volumes.append(fnAngles)
+            inliers.append(numInliers)
+        else:
+            inliers.append(0)
     
     index = sorted(range(inliers.__len__()), key=lambda k: inliers[k])
     fnBestAngles = ''
@@ -236,14 +235,13 @@ def getBestVolumes(log,WorkingDir,WorkingDirStructure,NRansac,NumVolumes,UseAll)
         fnAngles = os.path.join(WorkingDir,"tmp/angles_ransac%05d"%n+".xmd")
         deleteFile(log, fnAngles)
    
-def projectInitialVolume(log,WorkingDir,InitialVolume,Xdim2,AngularSampling,SymmetryGroup):
+def projectInitialVolume(log,WorkingDir,InitialVolume,RemainingClasses,Xdim2,AngularSampling,SymmetryGroup):
     fnOutputInitVolume=os.path.join(WorkingDir,"tmp/initialVolume.vol")
     runJob(log,'xmipp_image_convert',"-i %s -o %s"%(removeFilenamePrefix(InitialVolume),fnOutputInitVolume))
     runJob(log,"xmipp_image_resize","-i %s --dim %d %d"%(fnOutputInitVolume,Xdim2,Xdim2))
     fnGallery=os.path.join(WorkingDir,'tmp/gallery_InitialVolume.stk')
-    fnOutputReducedClass = os.path.join(WorkingDir,"extra/reducedClasses.xmd") 
     runJob(log,"xmipp_angular_project_library", "-i %s -o %s --sampling_rate %f --sym %s --method fourier 1 0.25 bspline --compute_neighbors --angular_distance -1 --experimental_images %s"\
-                          %(fnOutputInitVolume,fnGallery,float(AngularSampling),SymmetryGroup,fnOutputReducedClass))
+                          %(fnOutputInitVolume,fnGallery,float(AngularSampling),SymmetryGroup,RemainingClasses))
 
 def reconstruct(log,fnRoot,symmetryGroup,maskRadius):
     runJob(log,"xmipp_reconstruct_fourier","-i %s.xmd -o %s.vol --sym %s -v 0" %(fnRoot,fnRoot,symmetryGroup))
@@ -303,8 +301,11 @@ def projMatch(log, WorkingDir,WorkingDirStructure, fnClasses, fnBase, AngularSam
     deleteFile(log,os.path.join(WorkingDir,'tmp/gallery_'+fnBase+'.doc'))
     deleteFile(log,os.path.join(WorkingDir,'tmp/gallery_'+fnBase+'.stk'))
 
-def coocurenceMatrix(log,WorkingDirStructure,fnClasses,NumVolumes,nI,Nimgs,CorePercentile):
+def coocurenceMatrix(log,RemainingClasses,WorkingDirStructure,NumVolumes,nI,CorePercentile,CorrThresh,r):
     import numpy
+    mdRemaining = MetaData(RemainingClasses)
+    Nimgs=mdRemaining.size()
+    allNames=mdRemaining.getColumnValues(MDL_IMAGE)
     matrixTotal = numpy.zeros([Nimgs,Nimgs])
     for n in range(NumVolumes):
         fnBase='proposedVolume%05d'%n
@@ -313,19 +314,18 @@ def coocurenceMatrix(log,WorkingDirStructure,fnClasses,NumVolumes,nI,Nimgs,CoreP
         md = MetaData(fnRoot+".xmd")
         size = md.size()
         
-        objId = md.firstObject()
-        
-        name = [''] * size
-        num = [0] * size
-        corr = [0] * size
-        
-        idx = 0
-        
+        num=[]
+        corr=[]
         for objId in md:
-            name[idx] = md.getValue(MDL_IMAGE, objId)
-            num[idx] = int(name[idx].rsplit('@',1)[0])-1
-            corr[idx] = md.getValue(MDL_MAXCC, objId)          
-            idx+=1
+            name = md.getValue(MDL_IMAGE, objId)
+            if name in allNames:
+                num.append(allNames.index(name))
+                corr.append(md.getValue(MDL_MAXCC, objId))
+            else:
+                print "Cannot find ",name      
+        if size!=len(num):
+            print "Error when processing: ",fnRoot+".xmd"
+            aaa
         
         matrix = numpy.zeros([Nimgs,Nimgs])
         for i in range(size):
@@ -336,22 +336,28 @@ def coocurenceMatrix(log,WorkingDirStructure,fnClasses,NumVolumes,nI,Nimgs,CoreP
         matrixTotal=matrixTotal+matrix
     matrixTotal=matrixTotal/NumVolumes
     numpy.savetxt(os.path.join(WorkingDirStructure,'coocurrenceMatrix.txt'),matrixTotal)
-    largestComponent=procCoocurenceMatrix(matrixTotal,CorePercentile)
+    largestComponent=procCoocurenceMatrix(matrixTotal,CorePercentile,CorrThresh)
 
     md = MetaData()
     for idx in largestComponent:
         id=md.addObject()
-        md.setValue(MDL_IMAGE,"%06d@%s"%(idx+1,fnClasses),id)
+        md.setValue(MDL_IMAGE,allNames[idx],id)
     md.write(os.path.join(WorkingDirStructure+"_core","imagesCore.xmd"))
+    if md.size()==0:
+        print "There are no images in the core"
+        aaa
 
 #http://wiki.scipy.org/NumPy_for_Matlab_Users        
-def procCoocurenceMatrix(sumMatrix,CorePercentile):
+def procCoocurenceMatrix(sumMatrix,CorePercentile,CorrThresh):
     import numpy
     import Queue as q
     
     # Binarize sum matrix to the 80%
     y=sumMatrix[numpy.where(sumMatrix!=0)]
     threshold=numpy.percentile(y,CorePercentile)
+    print "Correlation threshold due to CorePercentile=",threshold
+    threshold=max(threshold,CorrThresh)
+    print "Correlation threshold used to filter coocurrence matrix=",threshold
     intSumMatrix = sumMatrix
     intSumMatrix[sumMatrix<threshold]=0
     intSumMatrix[sumMatrix>=threshold]=1
@@ -442,9 +448,8 @@ def extendCore(log,WorkingDirStructureCore,WorkingDirStructureExtended,NumVolume
         deleteFile(log,fnAnglesChosen)
         fnOutOfCore=os.path.join(WorkingDirStructureExtended,"imagesOutOfCore%05d.xmd"%i)
         runJob(log,"xmipp_metadata_utilities",'-i %s --set subtraction %s -o %s'%(RemainingClasses,fnExtended,fnOutOfCore))
-        runJob(log,"xmipp_metadata_utilities",'-i %s --operate keep_column imageOriginal'%fnOutOfCore)
-        runJob(log,"xmipp_metadata_utilities",'-i %s --operate rename_column "imageOriginal image"'%fnOutOfCore)
         runJob(log,"xmipp_metadata_utilities",'-i %s --operate sort'%fnOutOfCore)
+        runJob(log,"xmipp_metadata_utilities",'-i %s --operate drop_column scale'%fnOutOfCore)
         runJob(log,"xmipp_metadata_utilities",'-i %s --operate sort'%fnExtended)
     
     deleteFile(log,os.path.join(WorkingDirStructureExtended,"gallery.stk"))
