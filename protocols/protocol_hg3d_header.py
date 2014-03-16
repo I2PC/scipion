@@ -75,16 +75,6 @@ NumIter = 10
 """
 InitialVolume = ''
 
-#{expert} Max frequency of the initial volume
-""" Max frequency of the initial volume in Angstroms
-"""
-MaxFreq = 5
-
-# Sampling Rate
-""" Sampling rate (A/px)
-"""
-Ts = '1'
-
 #{expert}CorePercentile:
 """ Percentile of coocurrence to be in the core """
 CorePercentile=99

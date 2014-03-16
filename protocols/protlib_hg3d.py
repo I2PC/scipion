@@ -41,25 +41,7 @@ class ProtHG3DBase(XmippProtocol):
     def defineSteps(self):
         self.insertStep('createDir',path=self.ExtraDir)
         self.insertStep("linkAcquisitionInfo",InputFile=self.RemainingClasses,dirDest=self.WorkingDir)
-        fnOutputReducedClass = self.extraPath("reducedClasses")
-    
-        # Low pass filter and resize        
-        self.MaxFreq = float(self.MaxFreq)
-        self.Ts = float(self.Ts)
-        K = 0.25*(self.MaxFreq/self.Ts)
-        if K<1:
-            K=1
-        self.Xdim2 = self.Xdim/K
-        if (self.Xdim2 < 32):
-            self.Xdim2 = 32
-            K = self.Xdim/self.Xdim2
-            
-        freq = self.Ts/self.MaxFreq
-        self.Ts = K*self.Ts
-
-        self.insertRunJobStep("xmipp_transform_filter","-i %s -o %s.stk --fourier low_pass %f --save_metadata_stack %s.xmd --track_origin"
-                                                %(self.RemainingClasses,fnOutputReducedClass,freq,fnOutputReducedClass))
-        self.insertRunJobStep("xmipp_image_resize","-i %s.stk --dim %d %d" %(fnOutputReducedClass,self.Xdim2,self.Xdim2))
+        self.Xdim2 = self.Xdim
 
     def summary(self):
         message=[]
