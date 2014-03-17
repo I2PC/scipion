@@ -261,6 +261,7 @@ class ProtRelionRefinner( ProtRelionBase):
         if xmippExists(filename):
             #Chimera
             if _visualizeVolumesMode == 'chimera':
+                print "filename", filename
                 runChimeraClient(filename)
             else:
                 try:
