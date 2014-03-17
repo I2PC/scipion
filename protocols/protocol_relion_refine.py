@@ -257,9 +257,16 @@ class ProtRelionRefinner( ProtRelionBase):
         """
         prefixes = self._getPrefixes()
         _visualizeVolumesMode = self.parser.getTkValue('DisplayFinalReconstruction')
-        if _visualizeVolumesMode == 'slices':
-            fn = self.extraPath('relion_class001.mrc:mrc')
-            self.display2D(fn)         
-        elif _visualizeVolumesMode == 'chimera':
-            fn = self.extraPath('relion_class001.mrc')
-            self.display3D(fn)
+        filename = self.extraPath('relion_class001.mrc')
+        if xmippExists(filename):
+            #Chimera
+            if _visualizeVolumesMode == 'chimera':
+                runChimeraClient(filename)
+            else:
+                try:
+                    filename = self.extraPath('relion_class001.mrc:mrc')
+                    runShowJ(filename, extraParams=' --dont_wrap ')
+                except Exception, e:
+                    showError("Error launching xmipp_showj: ", str(e), self.master)
+        else:
+            showError("Can not visualize volume file <%s>\nit does not exists." % filename, self.master)
