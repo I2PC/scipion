@@ -20,6 +20,7 @@ if __name__ == '__main__':
     projectid = sys.argv[3]
     inputid = sys.argv[4]
     inputimagesid = sys.argv[5]
+    mdname = mdfile[mdfile.rfind(os.sep) + 1:]
     
     
     project = Manager().loadProject(projectid)
@@ -32,7 +33,8 @@ if __name__ == '__main__':
     project._setupProtocol(prot)
     prot.makePathsAndClean()
     moveFile(mdfile, prot._getExtraPath())
-    mdfile = join(prot._getExtraPath(), "selection.xmd")
+    mdfile = join(prot._getExtraPath(), mdname)
+
     createSetFun = getattr(prot, '_createSetOf' + setType)
     if setType != 'Classes2D':
         outputset = createSetFun()

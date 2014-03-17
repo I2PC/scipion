@@ -12,8 +12,11 @@
 	<link href="{{font_awesome}}" rel="stylesheet" type="text/css">
 	<style type="text/css">
 	.ui-state-active {
-		/* background: DarkRed !important; */
+		{% if visualize == 1 %}
+		background: #6E6E6E !important;
+		{% else %}
 		background: Firebrick !important;
+		{% endif %}
 		font-size: 0.9em !important;
 		font-weight: bold !important;
 		text-align: center !important;
@@ -301,7 +304,7 @@
 				<a href="javascript:putMode('save');" class="btn buttonGrey"><i class="fa fa-save"></i>{{msg.LABEL_BUTTON_SAVE}}</a>
 				<a href="javascript:putMode('execute');" class="btn buttonRed"><i class="fa fa-cogs"></i>{{msg.LABEL_BUTTON_EXEC}}</a>
 				{% elif visualize == 1 %}
-				<a href="javascript:putMode('viewer');" class="btn buttonRed"><i class="fa fa-cogs"></i>{{msg.LABEL_BUTTON_VIS}}</a>
+				<a href="javascript:putMode('viewer');" class="btn buttonDarkGrey"><i class="fa fa-eye"></i>{{msg.LABEL_BUTTON_VIS}}</a>
 				{% elif visualize == 2 %}
 				<a href="javascript:returnProtocol();" class="btn buttonGrey"><i class="fa fa-save"></i>{{msg.LABEL_BUTTON_RETURN}}</a>
 				{% endif %}							
