@@ -46,7 +46,7 @@ from viewers.xmipp_nma_align import *
 from viewers.spider_capca import *
 from viewers.spider_ward import *
 # BRANDEIS
-#from viewers.brandeis_frealign import *
+from viewers.brandeis_frealign import *
 
 ############## 1ST STEP: LAUNCH VIEWER METHODS ##############
 def launch_viewer(request):
