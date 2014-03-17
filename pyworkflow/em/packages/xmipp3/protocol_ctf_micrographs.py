@@ -119,13 +119,7 @@ class XmippProtCTFMicrographs(ProtCTFMicrographs):
     def _citations(self):
         return ['Vargas2013']
     
-    def methods(self):
-        return self.summary()
-    
-    
-    def summary(self):
-        summary = []
-        return summary
+ 
     
     #--------------------------- UTILS functions ---------------------------------------------------
     def _prepareCommand(self):
