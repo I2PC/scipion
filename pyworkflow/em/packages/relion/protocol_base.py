@@ -334,7 +334,7 @@ class ProtRelionBase(EMProtocol):
         self._initialize()
         self._insertFunctionStep('convertInputStep')
         self._insertRelionStep()            
-        self._insertFunctionStep('createOutputStep', 2)
+        self._insertFunctionStep('createOutputStep')
  
     def _insertRelionStep(self):
         """ Prepare the command line arguments before calling Relion. """
