@@ -342,21 +342,21 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
             imgSet.setSamplingRate(self.inputMics.getSamplingRate()*self.downFactor.get())
         imgSet.setCoordinates(self.inputCoords)
         
-#         imgSetAux = self._createSetOfParticles('aux')
-#         imgSetAux.copyInfo(imgSet)
-        readSetOfParticles(fnImages, imgSet, imgSet.hasCTF())
-#         imgSet._xmippMd = imgSetAux._xmippMd.clone()
-#         # For each particle retrieve micId from SetOFCoordinates and set it on the CTFModel
-#         for img in imgSetAux:
-#             #FIXME: This can be slow to make a query to grab the coord, maybe use zip(imgSet, coordSet)???
-#             coord = self.inputCoords[img.getObjId()]
-#             ctfModel = img.getCTF()
-#             if ctfModel is not None:
-#                 ctfModel.setObjId(coord.getMicId())
-#                 ##img.setCTF(ctfModel)####JM
-#             img.setCoordinate(coord)
-#             img.cleanObjId()
-#             imgSet.append(img)
+        imgSetAux = self._createSetOfParticles('aux')
+        imgSetAux.copyInfo(imgSet)
+        readSetOfParticles(fnImages, imgSetAux, imgSet.hasCTF())
+        imgSet._xmippMd = imgSetAux._xmippMd.clone()
+        # For each particle retrieve micId from SetOFCoordinates and set it on the CTFModel
+        for img in imgSetAux:
+            #FIXME: This can be slow to make a query to grab the coord, maybe use zip(imgSet, coordSet)???
+            coord = self.inputCoords[img.getObjId()]
+            ctfModel = img.getCTF()
+            if ctfModel is not None:
+                ctfModel.setObjId(coord.getMicId())
+                ##img.setCTF(ctfModel)####JM
+            img.setCoordinate(coord)
+            img.cleanObjId()
+            imgSet.append(img)
         self._storeMethodsInfo(fnImages)
         self._defineOutputs(outputParticles=imgSet)
         self._defineSourceRelation(self.inputCoords, imgSet)

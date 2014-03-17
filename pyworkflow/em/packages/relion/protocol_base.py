@@ -422,7 +422,6 @@ class ProtRelionBase(EMProtocol):
         """ Create the input file in STAR format as expected by Relion.
         If the input particles comes from Relion, just link the file. 
         """
-        print "File Particles:", self.inputParticles.get().getFileName()
         createRelionInputParticles(self.inputParticles.get(), 
                                    self._getFileName('input_star'),
                                    self._getFileName('input_mrcs'))
