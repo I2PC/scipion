@@ -9,7 +9,7 @@ import glob, os, sys, shutil,time
 from os.path import exists
 from protlib_base import *
 from config_protocols import protDict
-from protlib_filesystem import renameFile
+from protlib_filesystem import renameFile, xmippExists
 from protlib_utils import runJob
 from xmipp import MetaData, Image
 
@@ -43,7 +43,7 @@ class ProtCL2DAlignment(XmippProtocol):
     def validate(self):
         errors = []
         if self.ReferenceImage != "":
-            if not exists(self.ReferenceImage):
+            if not xmippExists(self.ReferenceImage):
                 errors.append("Cannot find the file "+self.ReferenceImage)
         return errors
     

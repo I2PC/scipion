@@ -52,6 +52,13 @@ class ProtProjMatch(XmippProtocol):
         self.CTFDatName = self.DocFileName = ''
         
         #FIXME ROB
+        #create a new self file without disabled images
+        #this is easiest than make sure that all the programs 
+        #support the disabled label
+        #linkAcquisitionInfo(log, InputFile, self.TmpDir)
+        self.tmpSelfFileName = join(self.TmpDir,'inMetadataFile.xmd')
+        self.SelFileNameInitial = self.SelFileName
+        self.SelFileName        = self.tmpSelfFileName
         if self.DoCtfCorrection:
             if self.SplitDefocusDocFile:
                 self.CTFDatName = self.SplitDefocusDocFile
@@ -62,10 +69,12 @@ class ProtProjMatch(XmippProtocol):
             self.DocFileName = self.SelFileName
         #sampling is now in acquisition info
         #self.ResolSam=float(self.ResolSam)
-        acquisionInfo = self.findAcquisitionInfo(self.SelFileName)
+        acquisionInfo = self.findAcquisitionInfo(self.SelFileNameInitial)
         if not acquisionInfo is None: 
             md = MetaData(acquisionInfo)
             self.ResolSam = md.getValue(MDL_SAMPLINGRATE, md.firstObject())
+        else:
+            self.ResolSam = 1
         if self.MaskRadius == -1:
            (Xdim, Ydim, Zdim, Ndim) = getImageSize(self.ReferenceFileNames[0])
            self.MaskRadius = Xdim/2
@@ -76,7 +85,7 @@ class ProtProjMatch(XmippProtocol):
            self.MaskRadius = Xdim/2
     
     def validate(self):
-        from protlib_xmipp import validateInputSize
+        from protlib_xmipp import validateInputSize, validateVolumeZdim
         errors = []
         
 #        # Check reference and projection size match
@@ -90,9 +99,11 @@ class ProtProjMatch(XmippProtocol):
         #getListFromVector(self.ReferenceFileNames,processX=False)
         #listOfReferences=self.ReferenceFileNames.split()
         md = MetaData()
-        md.read(self.SelFileName, 1)
-        validateInputSize(self.ReferenceFileNames, self.SelFileName, md, errors)
-        
+        if not xmippExists(self.SelFileNameInitial):
+            errors.append("Can not find input file: %s"% self.SelFileNameInitial)
+        md.read(self.SelFileNameInitial, 1)
+        validateInputSize(self.ReferenceFileNames, self.SelFileNameInitial, md, errors)
+        validateVolumeZdim(self.ReferenceFileNames[0], errors)
         # Check there are enough images to avoid overfitting through the FSC
         if md.getParsedLines() < 100 and self.ConstantToAddToFiltration < 0:
             errors.append("You have less than 100 images. The constant to be added to the estimated resolution should be non-negative.")
@@ -117,7 +128,7 @@ class ProtProjMatch(XmippProtocol):
     
         
         #Check that acquisition info file is available
-        if not self.findAcquisitionInfo(self.SelFileName):
+        if not self.findAcquisitionInfo(self.SelFileNameInitial):
             errors.append("""Acquisition file for metadata %s is not available. 
 Either import images before using them
 or create a file named acquisition_info.xmd 
@@ -129,7 +140,7 @@ EXAMPLE:
 # change XXXXX by the sampling rate
 data_noname
  _sampling_rate XXXXX
-""" %(self.SelFileName,self.SelFileName))
+""" %(self.SelFileNameInitial,self.SelFileNameInitial))
             
         #FIXME ROB
         if self.DoCtfCorrection:
@@ -137,9 +148,16 @@ data_noname
             if self.SplitDefocusDocFile:
                 tmpCTFDatName = self.SplitDefocusDocFile
             else:
-                tmpCTFDatName = self.SelFileName
+                tmpCTFDatName = self.SelFileNameInitial
             tmpMd=MetaData(tmpCTFDatName)
-            if not tmpMd.containsLabel(MDL_CTF_MODEL):
+            if not (tmpMd.containsLabel(MDL_CTF_MODEL) or \
+               (\
+                tmpMd.containsLabel(MDL_CTF_DEFOCUSU) and\
+                tmpMd.containsLabel(MDL_CTF_DEFOCUSV) and\
+                tmpMd.containsLabel(MDL_CTF_DEFOCUS_ANGLE)\
+                )
+               ):
+                print "has no CTF information available"
                 errors.append("input file: " + tmpCTFDatName + " has no CTF information available")
 
             
@@ -215,6 +233,7 @@ data_noname
                            , 'PlotHistogramAngularMovement'
                            , 'DisplayAngularDistribution'
                            , 'DisplayResolutionPlots'
+                           , 'DisplayExperimentalImages'
                            ] if self.ParamsDict[k]]
         if len(plots):
             self.launchProjmatchPlots(plots)
@@ -274,7 +293,7 @@ data_noname
             for ref3d in ref3Ds:
                 for it in iterations:
                     file_name = self.getFilename('ReconstructedFileNamesIters', iter=it, ref=ref3d)
-                    #print 'it: ',it, ' | file_name:',file_name
+                    print 'it: ',it, ' | file_name:',file_name
                     if xmippExists(file_name):
                         #Chimera
                         if(self.DisplayVolumeSlicesAlong == 'surface'):
@@ -389,6 +408,16 @@ data_noname
                                 runShowJ(file_name, extraParams = runShowJExtraParameters)
                             except Exception, e:
                                 showError("Error launching java app", str(e), self.master)
+
+        if doPlot('DisplayExperimentalImages'):
+            for ref3d in ref3Ds:
+                for it in iterations:
+                    file_name = "ctfGroup[0-9][0-9][0-9][0-9][0-9][0-9]@"+self.getFilename('DocfileInputAnglesIters', iter=it)
+                    if xmippExists(file_name):
+                        try:
+                            runShowJ(file_name, extraParams = runShowJExtraParameters)
+                        except Exception, e:
+                            showError("Error launching java app", str(e), self.master)
         
         if doPlot('DisplayProjectionMatchingLibraryAndClasses'):       
         #map stack position with ref number
@@ -404,25 +433,18 @@ data_noname
                     for id in mdReferences:
                         convert_refno_to_stack_position[mdReferences.getValue(MDL_NEIGHBOR,id)]=id
                     file_nameAverages   = self.getFilename('OutClassesXmd', iter=it, ref=ref3d)
+                    file_references = self.getFilename('ProjectLibraryStk', iter=it, ref=ref3d)
                     if xmippExists(file_nameAverages):
                         #print "OutClassesXmd", OutClassesXmd
                         MDin.read(file_nameAverages)
                         MDout.clear()
                         for i in MDin:
-                            id1=MDout.addObject()
-                            MDout.setValue(MDL_IMAGE,     MDin.getValue(MDL_IMAGE,i),id1)
-                            #MDout.setValue(MDL_SHIFT_X, MDin.getValue(MDL_SHIFT_X,i),id1)
-                            #MDout.setValue(MDL_SHIFT_Y, MDin.getValue(MDL_SHIFT_Y,i),id1)
-                            #MDout.setValue(MDL_SHIFT_Z, MDin.getValue(MDL_SHIFT_Z,i),id1)
                             ref2D = MDin.getValue(MDL_REF,i)
-                            file_references = self.getFilename('ProjectLibraryStk', iter=it, ref=ref3d)
                             file_reference=FileName()
                             file_reference.compose(convert_refno_to_stack_position[ref2D],file_references)
-                            id2=MDout.addObject()
-                            MDout.setValue(MDL_IMAGE,file_reference,id2)
-                            #MDout.setValue(MDL_SHIFT_X,   0.,id1)
-                            #MDout.setValue(MDL_SHIFT_Y,   0.,id1)
-                            #MDout.setValue(MDL_SHIFT_Z,   0.,id1)
+                            id1=MDout.addObject()
+                            MDout.setValue(MDL_IMAGE,     MDin.getValue(MDL_IMAGE,i),id1)
+                            MDout.setValue(MDL_IMAGE2,file_reference,id1)
                         if MDout.size()==0:
                             print "Empty metadata: ", file_name
                         else:
@@ -430,7 +452,9 @@ data_noname
                                 file_nameReferences = self.getFilename('ProjectLibrarySampling', iter=it, ref=ref3d)
                                 sfn   = createUniqueFileName(file_nameReferences)
                                 file_nameReferences = 'projectionDirections@'+sfn
+                                MDout.merge(MDin)
                                 MDout.write( sfn )
+                                runShowJExtraParameters = ' --dont_wrap --mode metadata --render first'
                                 runShowJ(sfn, extraParams = runShowJExtraParameters)
                             except Exception, e:
                                 showError("Error launching java app", str(e), self.master)
@@ -851,10 +875,14 @@ data_noname
 #        _dataBase.insertStep('createAcquisitionData',verifyfiles=[fnOut],samplingRate=self.AngSamplingRateDeg, fnOut=fnOut)
 #        print "createAcquisitionData|| fnOut=",fnOut, " samplingRate=", self.AngSamplingRateDeg
 
+        _dataBase.insertStep('removeDisabled',
+                             verifyfiles = [self.SelFileName],
+                             SelFileNameInitial = self.SelFileNameInitial,
+                             SelFileName =self.SelFileName
+                             )
         _dataBase.insertStep("linkAcquisitionInfo",
-                        InputFile=self.SelFileName,
-                        dirDest=self.WorkingDir)
-        
+                        InputFile=self.SelFileNameInitial,
+                        dirDest=self.TmpDir)
         # Construct special filename list with zero special case
         self.DocFileInputAngles = [self.DocFileWithOriginalAngles] + [self.getFilename('DocfileInputAnglesIters', iter=i) for i in range(1, self.NumberOfIterations + 1)]
         #print 'self.DocFileInputAngles: ', self.DocFileInputAngles
@@ -937,7 +965,6 @@ data_noname
                                       'StackCTFs',
                                       'StackWienerFilters',
                                       'SplitAtDefocus']]
-
         _dataBase.insertStep('executeCtfGroups', verifyfiles=verifyFiles
                                                , CTFDatName=self.CTFDatName
                                                , CtfGroupDirectory=self.CtfGroupDirectory

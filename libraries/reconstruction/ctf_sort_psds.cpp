@@ -31,6 +31,7 @@
 #include <data/transformations.h>
 #include <data/histogram.h>
 
+
 /* Constructor ------------------------------------------------------------- */
 ProgPSDSort::ProgPSDSort()
 {
@@ -154,6 +155,9 @@ void ProgPSDSort::show()
 void ProgPSDSort::processImage(const FileName &fnImg, const FileName &fnImgOut, const MDRow &rowIn, MDRow &rowOut)
 {
 	PSDEvaluation evaluation;
+
+	evaluation.ctf_envelope_ssnr = fn_in.getDir()+"envelope.xmd";
+
     FileName fnMicrograph, fnPSD, fnCTF, fnCTF2;
     rowIn.getValue(MDL_MICROGRAPH,fnMicrograph);
     rowIn.getValue(MDL_PSD,fnPSD);
@@ -255,7 +259,13 @@ void ProgPSDSort::processImage(const FileName &fnImg, const FileName &fnImgOut, 
     CTF1.precomputeValues(0.0,0.0);
 	double idamping0=1.0/CTF1.getValueDampingAt();
 	double f2pixel=CTF1.Tm*downsampling*XSIZE(PSD());
-    for (double alpha=0; alpha<=PI; alpha+=PI/180, N++)
+
+	MetaData mdEnvelope;
+	Matrix1D< double > envelope(100);
+	envelope.initZeros();
+
+	double Nalpha = 180;
+    for (double alpha=0; alpha<=PI; alpha+=PI/Nalpha, N++)
     {
     	VECTOR_R2(u,cos(alpha),sin(alpha));
 
@@ -288,6 +298,7 @@ void ProgPSDSort::processImage(const FileName &fnImg, const FileName &fnImgOut, 
     	damping=damping*damping;
     	evaluation.maxDampingAtBorder=XMIPP_MAX(evaluation.maxDampingAtBorder,damping);
 
+        int idx = 0;
     	for (double w=0; w<wmax; w+=wmax/100.0)
     	{
         	wx=w*XX(u);
@@ -296,7 +307,11 @@ void ProgPSDSort::processImage(const FileName &fnImg, const FileName &fnImgOut, 
         	double normalizedDamping=fabs(CTF1.getValueDampingAt()*idamping0);
         	if (normalizedDamping>0.1)
         		evaluation.maxFreq=std::min(evaluation.maxFreq,1.0/w);
+
+        	VEC_ELEM(envelope,idx) += double(normalizedDamping);
+    		idx++;
     	}
+
     	if (fnCTF2!="") {
         	CTF2.lookFor(1, u, freqZero2, 0);
         	double module2=1.0/freqZero2.module();
@@ -304,6 +319,17 @@ void ProgPSDSort::processImage(const FileName &fnImg, const FileName &fnImgOut, 
         	evaluation.firstZeroDisagreement=XMIPP_MAX(evaluation.firstZeroDisagreement,diff);
     	}
     }
+
+    size_t objId2 = mdEnvelope.firstObject();
+    int idx=0;
+	for (double w=0; w<wmax; w+=wmax/100.0)
+	{
+		mdEnvelope.setValue(MDL_RESOLUTION_FREQ,w,objId2);
+		mdEnvelope.setValue(MDL_CTF_ENVELOPE,VEC_ELEM(envelope,idx)/Nalpha,objId2);
+		objId2 = mdEnvelope.addObject();
+		idx++;
+	}
+
     evaluation.firstZeroAvg/=N;
     evaluation.firstZeroRatio=maxModuleZero/minModuleZero;
     firstZeroAvgPSD/=N;
@@ -353,7 +379,9 @@ void ProgPSDSort::processImage(const FileName &fnImg, const FileName &fnImgOut, 
 	rowOut.setValue(MDL_CTF_CRIT_DAMPING,evaluation.maxDampingAtBorder);
     if (evaluation.firstZeroDisagreement>0)
     	rowOut.setValue(MDL_CTF_CRIT_FIRSTZERODISAGREEMENT,evaluation.firstZeroDisagreement);
+
     rowOut.setValue(MDL_CTF_CRIT_FIRSTZERORATIO,evaluation.firstZeroRatio);
+    rowOut.setValue(MDL_CTF_ENVELOPE_PLOT,evaluation.ctf_envelope_ssnr);
     rowOut.setValue(MDL_CTF_CRIT_FIRSTMINIMUM_FIRSTZERO_RATIO,evaluation.firstMinimumStddev_ZeroStddev);
     rowOut.setValue(MDL_CTF_CRIT_FIRSTMINIMUM_FIRSTZERO_DIFF_RATIO,evaluation.firstMinimumDiffStddev_ZeroStddev);
     rowOut.setValue(MDL_CTF_CRIT_FITTINGSCORE,evaluation.fittingScore);
@@ -365,5 +393,9 @@ void ProgPSDSort::processImage(const FileName &fnImg, const FileName &fnImgOut, 
     rowOut.setValue(MDL_CTF_CRIT_PSDPCA1VARIANCE,evaluation.PSDPC1Variance);
     rowOut.setValue(MDL_CTF_CRIT_PSDPCARUNSTEST,evaluation.PSDPCRunsTest);
     rowOut.setValue(MDL_CTF_CRIT_NORMALITY, evaluation.histogramNormality);
+
+    //mdEnvelope.write(evaluation.ctf_envelope_ssnr,MD_OVERWRITE);
+    mdEnvelope.write(evaluation.ctf_envelope_ssnr,MD_OVERWRITE);
+    //std::cout << mdEnvelope << std::endl;
 }
 

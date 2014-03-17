@@ -55,9 +55,8 @@ class ProtRCT(XmippProtocol):
                                    SkipTiltedTranslations=self.SkipTiltedTranslations,
                                    ClassVolumeOut=classVolumeOut,
                                    ReconstructAdditionalParams=self.ReconstructAdditionalParams,
-                                   DoLowPassFilter=self.DoLowPassFilter,LowPassFilter=self.LowPassFilter)
-#                else:
-#                    self.Log.error("Cannot find representative for class %d"%classNo)
+                                   DoLowPassFilter=self.DoLowPassFilter,LowPassFilter=self.LowPassFilter,
+                                   parent_step_id=XmippProjectDb.FIRST_STEP)
                 
     def summary(self):
         message = []
@@ -170,7 +169,7 @@ def reconstructClass(log,WorkingDir,ExtraDir,ClassNameIn,ClassNameOut,ClassImage
     runJob(log, "xmipp_image_align_tilt_pairs", params)
     
     params = "-i %(ClassNameOut)s -o %(ClassVolumeOut)s %(ReconstructAdditionalParams)s" % locals()
-    runJob(log, "xmipp_reconstruct_fourier", params)
+    runJob(log, "xmipp_reconstruct_art", params)
     
     if exists(ClassVolumeOut):
         mdFn = join(WorkingDir, 'volumes.xmd')

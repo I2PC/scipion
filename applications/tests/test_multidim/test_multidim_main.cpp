@@ -162,19 +162,21 @@ TEST( MultidimTest, modulo)
 
     double value = 2*3.14159265;
     mod(mSource,mTarget,value);
-
     //We test the obtained values with the results obtained from method "mod" of Matlab
-    ASSERT_TRUE( (A2D_ELEM(mTarget,0,0) - 0)       < 1e-3);
-    ASSERT_TRUE( (A2D_ELEM(mTarget,0,1) - 3.7168)  < 1e-3 );
-    ASSERT_TRUE( (A2D_ELEM(mTarget,0,2) - 3.1416)  < 1e-3);
+    ASSERT_NEAR( A2D_ELEM(mTarget,0,0), 0,        1e-3);
+    ASSERT_NEAR( A2D_ELEM(mTarget,0,1), 3.7168,   1e-3 );
+    ASSERT_NEAR( A2D_ELEM(mTarget,0,2), 3.1416,   1e-3);
 
-    ASSERT_TRUE( (A2D_ELEM(mTarget,1,0) - 0)       < 1e-3);
-    ASSERT_TRUE( (A2D_ELEM(mTarget,1,1) - 1.5708)  < 1e-3);
-    ASSERT_TRUE( (A2D_ELEM(mTarget,1,2) - 4.7124)  < 1e-2);
+    ASSERT_NEAR( A2D_ELEM(mTarget,1,0), 0,        1e-3);
+    ASSERT_NEAR( A2D_ELEM(mTarget,1,1), 1.5708,   1e-3);
+    ASSERT_NEAR( A2D_ELEM(mTarget,1,2), 4.7124,   1e-2);
 
-    ASSERT_TRUE( (A2D_ELEM(mTarget,2,0) - 3.1416)  < 1e-3);
-    ASSERT_TRUE( (A2D_ELEM(mTarget,2,1) - 0)       < 1e-3);
-    ASSERT_TRUE( (A2D_ELEM(mTarget,2,2) - 0)       < 1e-3);
+    ASSERT_NEAR( A2D_ELEM(mTarget,2,0), 3.1416,   1e-3);
+    if (A2D_ELEM(mTarget,2,1) > value - 1e3)
+        ASSERT_NEAR( A2D_ELEM(mTarget,2,1), value,        1e-3);
+    else
+        ASSERT_NEAR( A2D_ELEM(mTarget,2,1), 0,        1e-3);
+    ASSERT_NEAR( A2D_ELEM(mTarget,2,2), 0,        1e-3);
 
 }
 

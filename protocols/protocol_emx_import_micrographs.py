@@ -17,7 +17,6 @@ from protlib_utils import runJob
 from protlib_xmipp import redStr, RowMetaData
 import math
 from emx import *
-from emx.emxmapper import *
 from protlib_emx import *
 from os.path import relpath, join, abspath, dirname, exists
 
@@ -30,7 +29,6 @@ class ProtEmxImportMicrographs(XmippProtocol):
         #read emx file
         #Class to group EMX objects
         self.emxData = EmxData()
-        self.xmlMapper = XmlMapper(self.emxData)
         self.TiltPairs = False
         self.MicrographsMd = self.workingDirPath('micrographs.xmd')
         
@@ -91,7 +89,7 @@ class ProtEmxImportMicrographs(XmippProtocol):
         self.objDict = {}
         
         for classElement in CLASSLIST:
-            obj = self.xmlMapper.firstObject(classElement, self.EmxFileName)
+            obj = self.emxData.readFirstObject(classElement, self.EmxFileName)
             if obj is not None:
                 self.objDict[classElement] = obj
                 #is the binary file of this type
@@ -130,8 +128,8 @@ class ProtEmxImportMicrographs(XmippProtocol):
     def summary(self):
         self._loadInfo()
         summary = ['Input EMX file: [%s]' % self.EmxFileName,
-                   'Main class: <%s>' % self.classElement,
-                   'Binary file: [%s]' % self.binaryFile]            
+                   'Main class: <%s>'     % self.classElement,
+                   'Binary file: [%s]'    % self.binaryFile]            
         return summary
     
     def visualize(self):
@@ -143,8 +141,7 @@ class ProtEmxImportMicrographs(XmippProtocol):
 def loadEmxData(emxFileName):
     """ Given an EMX filename, load data. """
     emxData = EmxData()
-    xmlMapper = XmlMapper(emxData)
-    xmlMapper.readEMXFile(emxFileName)
+    emxData.read(emxFileName)
     
     return emxData
     
@@ -169,7 +166,6 @@ def createMicrographs(log,
                       AmplitudeContrast
                       ):
     
-    print "Creating metadata   file %s with micrographs"%micsFileName
     filesPrefix = dirname(emxFileName)
     emxData = loadEmxData(emxFileName)
     _SamplingRate = emxMicsToXmipp(emxData, 
@@ -195,7 +191,7 @@ def createMicroscope(log, microscopeFn, Voltage, SphericalAberration, SamplingRa
     md.setValue(MDL_CTF_VOLTAGE, float(Voltage))    
     md.setValue(MDL_CTF_CS, float(SphericalAberration))    
     md.setValue(MDL_CTF_SAMPLING_RATE, float(SamplingRate))
-    md.setValue(MDL_CTF_QO, float(AmplitudeContrast))
+    md.setValue(MDL_CTF_Q0, float(AmplitudeContrast))
     #md.setValue(MDL_MAGNIFICATION, 60000.0)
     md.write(microscopeFn)
     
@@ -205,84 +201,81 @@ def createCoordinates(log, emxFileName, oroot):
     
 ################### Old functions ########################3
 
-def getWdFile(wd, key):
-    return getProtocolFilename(key, WorkingDir=wd)
-
-def validateSameMd(fnOut, fn1, fn2):
-    EQUAL_ACCURACY = 1.e-8
-    '''Check fn1 and fn2 metadata are identical and write 
-    a 3rd one with the union of both '''
-    #check md1 and m2 are identical  
-    print "validateSameMd", fnOut, fn1, fn2
-    md1 = MetaData(fn1)
-    md2 = MetaData(fn2)
-    id1=md1.firstObject()
-    id2=md2.firstObject()
-    for label in md1.getActiveLabels(): 
-        check1 = md1.getValue(label,id1)
-        check2 = md2.getValue(label,id2)
-        if math.fabs(check1-check2) > EQUAL_ACCURACY:
-            raise Exception('Error: %s is not the same for both runs. run1=%f while run2=%f' 
-                         % (label2Str(label), check1, check2))
-    print "WRINTING: ", fnOut
-    md1.write(fnOut)
+#def getWdFile(wd, key):
+#    return getProtocolFilename(key, WorkingDir=wd)
+##
+#def validateSameMd(fnOut, fn1, fn2):
+#    EQUAL_ACCURACY = 1.e-8
+#    '''Check fn1 and fn2 metadata are identical and write 
+#    a 3rd one with the union of both '''
+#    #check md1 and m2 are identical  
+#    md1 = MetaData(fn1)
+#    md2 = MetaData(fn2)
+#    id1=md1.firstObject()
+#    id2=md2.firstObject()
+#    for label in md1.getActiveLabels(): 
+#        check1 = md1.getValue(label,id1)
+#        check2 = md2.getValue(label,id2)
+#        if math.fabs(check1-check2) > EQUAL_ACCURACY:
+#            raise Exception('Error: %s is not the same for both runs. run1=%f while run2=%f' 
+#                         % (label2Str(label), check1, check2))
+#    md1.write(fnOut)
                 
-def merge(log, OutWd, InWd1, InWd2):
-    ''' Generate import micrograph files from two existing runs.
-    Respective working directories are passed as argument '''
-    
-        #if tilt pair report error since it is not implemented
-#        fn1 = PrevRun1.getFilename('TiltPairs')
-#        if exists(fn1):
-#        	raise Exception('Error (%s): Merging for "%s" is not yet implemented' 
-#                        	 % (self.scriptName,'tilt pairs'))
-        #check acquisition and microscopy are identical in both runs
-    for key in ['acquisition', 'microscope']:
-        validateSameMd(getWdFile(OutWd, key), getWdFile(InWd1, key), getWdFile(InWd2, key))
+#def merge(log, OutWd, InWd1, InWd2):
+#    ''' Generate import micrograph files from two existing runs.
+#    Respective working directories are passed as argument '''
+#    
+#        #if tilt pair report error since it is not implemented
+##        fn1 = PrevRun1.getFilename('TiltPairs')
+##        if exists(fn1):
+##        	raise Exception('Error (%s): Merging for "%s" is not yet implemented' 
+##                        	 % (self.scriptName,'tilt pairs'))
+#        #check acquisition and microscopy are identical in both runs
+#    for key in ['acquisition', 'microscope']:
+#        validateSameMd(getWdFile(OutWd, key), getWdFile(InWd1, key), getWdFile(InWd2, key))
+#
+#    #open micrographs and union them
+#    fn1 = getWdFile(InWd1, 'micrographs')
+#    fn2 = getWdFile(InWd2, 'micrographs')
+#    md1 = MetaData(fn1)
+#    md2 = MetaData(fn2)
+#    #md1.union(md2, MDL_MICROGRAPH)
+#    md1.unionAll(md2)
+#    md1.write(getWdFile(OutWd, 'micrographs'))
 
-    #open micrographs and union them
-    fn1 = getWdFile(InWd1, 'micrographs')
-    fn2 = getWdFile(InWd2, 'micrographs')
-    md1 = MetaData(fn1)
-    md2 = MetaData(fn2)
-    #md1.union(md2, MDL_MICROGRAPH)
-    md1.unionAll(md2)
-    md1.write(getWdFile(OutWd, 'micrographs'))
 
+#def createResults(log, WorkingDir, PairsMd, FilenameDict, MicrographFn, TiltedFn, PixelSize):
+#    ''' Create a metadata micrographs.xmd with all micrographs
+#    and if tilted pairs another one tilted_pairs.xmd'''
+#    md = MetaData()
+#    micrographs = FilenameDict.values()
+#    micrographs.sort()
+#    for m in micrographs:
+#        md.setValue(MDL_MICROGRAPH, m, md.addObject())
+#    md.write("micrographs@"+MicrographFn)
+#    mdAcquisition = MetaData()
+#    mdAcquisition.setValue(MDL_SAMPLINGRATE,float(PixelSize),mdAcquisition.addObject())
+#    mdAcquisition.write(os.path.join(WorkingDir,"acquisition_info.xmd"))
+#    
+#    if len(PairsMd):
+#        md.clear()
+#        mdTilted = MetaData(PairsMd)
+#        for objId in mdTilted:
+#            u = mdTilted.getValue(MDL_MICROGRAPH, objId)
+#            t = mdTilted.getValue(MDL_MICROGRAPH_TILTED, objId)
+#            id2 = md.addObject()
+#            md.setValue(MDL_MICROGRAPH, FilenameDict[u], id2)
+#            md.setValue(MDL_MICROGRAPH_TILTED, FilenameDict[t], id2)
+#        md.write("micrographPairs@"+TiltedFn)
 
-
-def createResults(log, WorkingDir, PairsMd, FilenameDict, MicrographFn, TiltedFn, PixelSize):
-    ''' Create a metadata micrographs.xmd with all micrographs
-    and if tilted pairs another one tilted_pairs.xmd'''
-    md = MetaData()
-    micrographs = FilenameDict.values()
-    micrographs.sort()
-    for m in micrographs:
-        md.setValue(MDL_MICROGRAPH, m, md.addObject())
-    md.write("micrographs@"+MicrographFn)
-    mdAcquisition = MetaData()
-    mdAcquisition.setValue(MDL_SAMPLINGRATE,float(PixelSize),mdAcquisition.addObject())
-    mdAcquisition.write(os.path.join(WorkingDir,"acquisition_info.xmd"))
-    
-    if len(PairsMd):
-        md.clear()
-        mdTilted = MetaData(PairsMd)
-        for objId in mdTilted:
-            u = mdTilted.getValue(MDL_MICROGRAPH, objId)
-            t = mdTilted.getValue(MDL_MICROGRAPH_TILTED, objId)
-            id2 = md.addObject()
-            md.setValue(MDL_MICROGRAPH, FilenameDict[u], id2)
-            md.setValue(MDL_MICROGRAPH_TILTED, FilenameDict[t], id2)
-        md.write("micrographPairs@"+TiltedFn)
-
-def checkBorders(log,MicrographFn,WarningFn):
-    md = MetaData()
-    md.read("micrographs@"+MicrographFn)
-    
-    mdOut = MetaData()
-    for objId in md:
-        micrograph=md.getValue(MDL_MICROGRAPH,objId)
-        if not checkImageCorners(micrograph):
-            mdOut.setValue(MDL_MICROGRAPH,micrograph, mdOut.addObject())
-    if mdOut.size() > 0:
-        mdOut.write(WarningFn)
+#def checkBorders(log,MicrographFn,WarningFn):
+#    md = MetaData()
+#    md.read("micrographs@"+MicrographFn)
+#    
+#    mdOut = MetaData()
+#    for objId in md:
+#        micrograph=md.getValue(MDL_MICROGRAPH,objId)
+#        if not checkImageCorners(micrograph):
+#            mdOut.setValue(MDL_MICROGRAPH,micrograph, mdOut.addObject())
+#    if mdOut.size() > 0:
+#        mdOut.write(WarningFn)

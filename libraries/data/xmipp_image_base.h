@@ -368,6 +368,11 @@ public:
     void applyGeo(const MetaData &md, size_t objId,
                   const ApplyGeoParams &params = DefaultApplyGeoParams);
 
+    /** Set geo.
+     * Copy the input geometry row into the image metadata row n.
+     */
+    void setGeo(const MDRow &row, size_t n=0);
+
     /* Read an image with a lower resolution as a preview image.
      * If Zdim parameter is not passed, then all slices are rescaled.
      * If Ydim is not passed, then Ydim is rescaled same factor as Xdim.

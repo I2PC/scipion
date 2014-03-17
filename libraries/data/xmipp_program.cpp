@@ -485,7 +485,7 @@ XmippMetadataProgram::XmippMetadataProgram()
 {
     oroot = oext = fn_out = fn_in = "";
     mode = MD_OVERWRITE;
-    apply_geo=false;
+    apply_geo = false;
     allow_apply_geo = false;
     produces_an_output = false;
     produces_a_metadata = false;
@@ -660,6 +660,7 @@ void XmippMetadataProgram::setup(MetaData *md, const FileName &out, const FileNa
     if (get_image_info || create_empty_stackfile)
         getImageInfo(*mdIn, xdimOut, ydimOut, zdimOut, ndimOut, datatypeOut, image_label);
 
+    apply_geo = applyGeo;
     // if input is volume do not apply geo
     if (zdimOut > 1)
         apply_geo = false;

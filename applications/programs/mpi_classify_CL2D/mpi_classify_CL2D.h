@@ -127,7 +127,7 @@ public:
     }
 
     /** Transfer update */
-    void transferUpdate();
+    void transferUpdate(bool centerReference=true);
 
     /** Compute the fit of the input image with this node.
         The input image is rotationally and traslationally aligned
@@ -254,6 +254,15 @@ public:
     /// Mirror
     bool mirrorImages;
 
+    /// Use threshold mask
+    bool useThresholdMask;
+
+    /// Threshold to use
+    double threshold;
+
+    /// Don't align images
+    bool alignImages;
+
     /// MPI constructor
     ProgClassifyCL2D(int argc, char** argv);
 
@@ -278,9 +287,6 @@ public:
     // Selfile with all the input images
     MetaData SF;
     
-    // Task distributor
-    MpiTaskDistributor *taskDistributor;
-
     // Object Ids
     std::vector<size_t> objId;
 

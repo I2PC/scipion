@@ -708,7 +708,10 @@ void ProgAngularDiscreteAssign::processImage(const FileName &fnImg, const FileNa
     // if they are available. If not, take them from the header.
     // If not, set them to 0.
     Image<double> img;
-    img.readApplyGeo(fnImg, rowIn);
+    img.read(fnImg);
+    img.setGeo(rowIn);
+    if (rowIn.containsLabel(MDL_ANGLE_PSI))
+    	img.setPsi(-img.psi());
 
     double best_rot, best_tilt, best_psi, best_shiftX, best_shiftY,
     best_score = 0, best_rate;
@@ -1046,6 +1049,7 @@ void ProgAngularDiscreteAssign::processImage(const FileName &fnImg, const FileNa
             VECTOR_R2(shift, Xoff, Yoff);
             translate(LINEAR,Ip(),img(),shift,WRAP);
         }
+        Ip().setXmippOrigin();
 
         double shiftX, shiftY;
         CorrelationAux aux;
@@ -1087,7 +1091,7 @@ void ProgAngularDiscreteAssign::processImage(const FileName &fnImg, const FileNa
     rowOut.setValue(MDL_ANGLE_PSI,  -best_psi);
     rowOut.setValue(MDL_SHIFT_X,    best_shiftX);
     rowOut.setValue(MDL_SHIFT_Y,    best_shiftY);
-    rowOut.setValue(MDL_MAXCC,     best_score);
+    rowOut.setValue(MDL_MAXCC,      best_score);
 }
 #undef DEBUG
 

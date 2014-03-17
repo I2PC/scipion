@@ -165,7 +165,7 @@ NewXmipp (mean(background)=0, stddev(background)=1),
 Ramp (subtract background+NewXmipp)"""
 NormType = "Ramp"
 
-# {expert}{condition}(DoNorm) Background radius
+# {expert}{condition}(DoNorm and NormType!='OldXmipp') Background radius
 """
 Pixels outside this circle are assumed to be noise and their stddev 
 is set to 1. Radius for background circle definition (in pix.).
@@ -304,3 +304,4 @@ def expandPreprocessFilterMask(allowFlip):
         
         
 from protlib_include_xray import *
+from protlib_include_relion import *

@@ -1,28 +1,28 @@
-/***************************************************************************
- * Authors:     J.M. de la Rosa Trevin (jmdelarosa@cnb.csic.es)
+/**
+ * *************************************************************************
+ * Authors: J.M. de la Rosa Trevin (jmdelarosa@cnb.csic.es)
  *
  *
- * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
+ * Unidad de Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
+ * This program is free software; you can redistribute it and/or modify it under
+ * the terms of the GNU General Public License as published by the Free Software
+ * Foundation; either version 2 of the License, or (at your option) any later
+ * version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
+ * details.
  *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
- * 02111-1307  USA
+ * You should have received a copy of the GNU General Public License along with
+ * this program; if not, write to the Free Software Foundation, Inc., 59 Temple
+ * Place, Suite 330, Boston, MA 02111-1307 USA
  *
- *  All comments concerning this program package may be sent to the
- *  e-mail address 'xmipp@cnb.csic.es'
- ***************************************************************************/
-
+ * All comments concerning this program package may be sent to the e-mail
+ * address 'xmipp@cnb.csic.es'
+ * *************************************************************************
+ */
 package xmipp.ij.commons;
 
 import java.io.File;
@@ -30,195 +30,147 @@ import xmipp.jni.Filename;
 import xmipp.jni.ImageGeneric;
 import ij.ImagePlus;
 
-public class ImagePlusLoader
-{
+public class ImagePlusLoader {
 
-	protected String fileName = null;
-	protected boolean allowsPoll;
-	protected boolean allowsGeometry = false;
-	protected boolean useGeometry;
-	protected ImagePlus imp;
-	protected ImageGeneric ig;
-	protected long modified;
-	protected boolean wrap;
-	private int index = -1;
-	private boolean normalize;
-	private double normalize_min;
-	private double normalize_max;
+    protected ImagePlusReader impreader;
+    protected boolean wrap;
+    protected boolean allowsGeometry = false;
+    protected boolean useGeometry;
+    private boolean existsfile;
 
-	public ImagePlusLoader()
-	{
-		this.imp = null;
-		allowsPoll = existsFile();
-	}
+    public ImagePlusLoader() {
 
-	public ImagePlusLoader(ImagePlus imp)
-	{
-		this.imp = imp;
-		allowsPoll = existsFile();
-		
-	}
+    }
 
-	public ImagePlusLoader(int index, ImageGeneric ig)
-	{
-		this(ig);
-		this.index = index;
+    public ImagePlusLoader(ImagePlus imp) {
+        this(getFile(imp), imp, null);
 
-	}
+    }
 
-	public ImagePlusLoader(String fileName)
-	{
-                if(fileName == null)
-                    throw new IllegalArgumentException("File not found");
-		this.fileName = fileName;
-		allowsPoll = existsFile();
-		this.modified = new File(fileName).lastModified();
-		if (allowsPoll && Filename.isVolume(fileName))
-			try
-			{
-				ig = new ImageGeneric(fileName);
-			}
-			catch (Exception e)
-			{
-				throw new IllegalArgumentException(e.getMessage());
-			}
-	}
+    public ImagePlusLoader(int index, ImageGeneric ig) {
+        this(getFile(ig), null, ig);
+        impreader.setIndex(index);
 
+    }
 
-	public void setNormalize(double normalize_min, double normalize_max)
-	{
-		this.normalize = true;
-		this.normalize_min = normalize_min;
-		this.normalize_max = normalize_max;
-		
-	}
-	
+    public ImagePlusLoader(String fileName) {
+        this(fileName, null, null);
+    }
 
-	
-	public ImagePlusLoader(ImageGeneric ig)
-	{
-		this.ig = ig;
-		allowsPoll = existsFile();
-		if (allowsPoll)
-			fileName = ig.getFilename();
-	}
+    public ImagePlusLoader(String fileName, boolean allowsGeometry, boolean useGeometry, boolean wrap) {
+        this(fileName, null, null);
+        this.allowsGeometry = allowsGeometry;
+        this.useGeometry = useGeometry;
+        this.wrap = wrap;
+    }
 
-	public ImagePlus getImagePlus()
-	{
-		if (imp == null)
-			imp = loadImagePlus();
-		return imp;
-	}
+    public ImagePlusLoader(String fileName, ImagePlus imp, ImageGeneric ig) {
 
-	public ImagePlus loadImagePlus()
-	{
-		imp = null;
-		try
-		{
-			if (fileName != null && Filename.exists(fileName) && ig == null && (hasChanged() || imp == null))
-				imp = loadSingleImageFromFile();
-			else if (ig != null)
-			{
-				if (index != -1)
-					imp = XmippImageConverter.convertToImagePlus(ig, ImageGeneric.FIRST_IMAGE, index);
-				else
-					imp = XmippImageConverter.readToImagePlus(ig);
-			}
-			if(normalize)
-			{
-				imp.getProcessor().setMinAndMax(normalize_min, normalize_max);
-				imp.updateImage();
-			}
-			return imp;
-		}
-		catch (Exception e)
-		{
-			e.printStackTrace();
-		}
-		return imp;
-	}
+        int index = -1;
+        if (fileName != null) {
+            if (fileName != null && fileName.contains("@")) {
+                int arrobaindex = fileName.lastIndexOf("@");
+                String header = fileName.substring(0, arrobaindex);
 
-	protected ImagePlus loadSingleImageFromFile() throws Exception
-	{
-		ig = new ImageGeneric(fileName);
-		long select_image = Filename.getNimage(fileName);
-		imp = XmippImageConverter.readToImagePlus(ig, ig.getXDim(), ig.getYDim(), select_image);
-		return imp;
+                int sepindex = header.lastIndexOf(File.separator);//-1 if separator does not exists
+                String textindex = fileName.substring(sepindex + 1, arrobaindex);
+                index = Integer.parseInt(textindex);
+                fileName = fileName.substring(arrobaindex + 1);
+                if (sepindex != -1) {
+                    fileName = Filename.join(header.replace(textindex + "@", ""), fileName);
+                }
+            }
 
-	}
+            existsfile = new File(fileName).exists();
+        }
+        if (existsfile) 
+            impreader = new ImagePlusFromFile(fileName, imp, ig);
+        else 
+            impreader = new ImagePlusNotFromFile(imp, ig);
+        
+        impreader.setIndex(index);
 
-	public boolean hasChanged()
-	{
-		return new File(fileName).lastModified() > modified;
-	}
+    }
 
-	public String getFileName()
-	{
-		return fileName;
-	}
+    public ImagePlusLoader(ImageGeneric ig) {
+        this(-1, ig);
+    }
 
-	public boolean allowsPoll()
-	{
-		return allowsPoll;
-	}
+    public void setNormalize(double normalize_min, double normalize_max) {
+        impreader.setNormalize(normalize_min, normalize_max);
 
-	public boolean allowsGeometry()
-	{
-		return allowsGeometry;
-	}
+    }
 
-	
-	public boolean getUseGeometry()
-	{
-		return useGeometry;
-	}
+    public ImagePlus getImagePlus() {
+        return impreader.getImagePlus();
+    }
 
-	public void setUseGeometry(boolean value)
-	{
-		useGeometry = value;
+    public boolean allowsGeometry() {
+        return allowsGeometry;
+    }
 
-	}
+    public boolean getUseGeometry() {
+        return useGeometry;
+    }
 
-	public void setWrap(boolean value)
-	{
-		wrap = value;
+    public void setUseGeometry(boolean value) {
+        useGeometry = value;
 
-	}
+    }
 
-	public boolean isWrap()
-	{
-		return wrap;
-	}
+    public void setWrap(boolean value) {
+        wrap = value;
 
-	public boolean isVolume()
-	{
-		try
-		{
-			if (ig == null)
-				return false;
-			return ig.isVolume();
+    }
 
-		}
-		catch (Exception e)
-		{
-			throw new IllegalArgumentException(e.getMessage());
-		}
-	}
+    public boolean isWrap() {
+        return wrap;
+    }
 
-	public boolean existsFile()
-	{
-		String file = null;
-		if (fileName != null && !fileName.equals(""))
-			file = fileName;
-		else if (imp != null && imp.getOriginalFileInfo() != null)
-			file = imp.getOriginalFileInfo().directory + File.separator + imp.getOriginalFileInfo().fileName;
-		else if (ig != null && ig.getFilename() != null)
-			file = ig.getFilename();
-		if (file == null)
-			return false;
-		if (!new File(file).exists())
-			return false;
-		return true;
-	}
+    public static String getFile(ImagePlus imp) {
+        String file = null;
+
+        if (imp != null && imp.getOriginalFileInfo() != null) {
+            file = imp.getOriginalFileInfo().directory + File.separator + imp.getOriginalFileInfo().fileName;
+        }
+
+        return file;
+    }
+
+    public static String getFile(ImageGeneric ig) {
+        String file = null;
+        if (ig != null && ig.getFilename() != null) {
+            file = ig.getFilename();
+        }
+        return file;
+    }
+
+    public boolean allowsPoll() {
+        return impreader.allowsPoll;
+    }
+
+    public String getName() {
+        return impreader.getName();
+    }
+
+    public ImagePlus loadImagePlus() {
+        return impreader.loadImagePlus();
+    }
+
+    public boolean existsFile() {
+        return existsfile;
+    }
+
+    public boolean isVolume() {
+        return impreader.isVolume();
+    }
+
+    public void setAllowsGeometry(boolean allowsGeometry) {
+        this.allowsGeometry = allowsGeometry;
+    }
+
+    public boolean isStackOrVolume() {
+        return impreader.isStackOrVolume();
+    }
 
 }

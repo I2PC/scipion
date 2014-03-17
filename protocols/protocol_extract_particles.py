@@ -193,7 +193,7 @@ class ProtExtractParticles(ProtParticlesBase):
         papers=[]
         if self.DoNorm:
             papers.append('Sorzano, Ultramic (2004) [http://www.ncbi.nlm.nih.gov/pubmed/15450658]')
-        if self.TsFinal!=self.TsInput:
+        if hasattr(self,'TsFinal') and self.TsFinal!=self.TsInput:
             papers.append('Sorzano, IEEE WISP (2009) [http://ieeexplore.ieee.org/xpl/login.jsp?arnumber=5286563]')
         if self.DoRemoveDust or self.DoFlip:
             papers.append('Sorzano, Meth.Mol.Biol. (2013) [http://www.ncbi.nlm.nih.gov/pubmed/23086876]')
@@ -220,8 +220,23 @@ def updateSampling(log, SamplingMd, TsOriginal, Ts, TsMode):
     md.setValue(MDL_SAMPLINGRATE, Ts, objId)
     md.write(SamplingMd)
 
-def extractParticles(log,ExtraDir,micrographName, micrographPos, ctf, fullMicrographName, micrographOriginal, micrographToExtract,
-                     TsFinal, TsInput, downsamplingMode, particleSize, doFlip, doInvert, doNorm, normType, bgRadius):
+def extractParticles(log,
+                     ExtraDir,
+                     micrographName, 
+                     micrographPos, 
+                     ctf, 
+                     fullMicrographName, 
+                     micrographOriginal, 
+                     micrographToExtract,
+                     TsFinal, 
+                     TsInput, 
+                     downsamplingMode, 
+                     particleSize, 
+                     doFlip, 
+                     doInvert, 
+                     doNorm, 
+                     normType, 
+                     bgRadius):
     md=readPosCoordinates(micrographPos)
     fnTmpPos=os.path.join(ExtraDir,"tmp_%s.pos"%micrographName)
     md.write(fnTmpPos)

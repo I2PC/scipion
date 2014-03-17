@@ -22,14 +22,14 @@ import xmipp.viewer.particlepicker.training.model.Mode;
 public class AdvancedOptionsJDialog extends JDialog
 {
 
-	protected SingleParticlePickerJFrame frame;
+	protected SupervisedParticlePickerJFrame frame;
 	protected int width, height;
 	private JFormattedTextField templatestf;
 	private JLabel checkpercentlb;
 	private JFormattedTextField autopickpercenttf;
 	private JButton okbt;
 
-	public AdvancedOptionsJDialog(SingleParticlePickerJFrame frame)
+	public AdvancedOptionsJDialog(SupervisedParticlePickerJFrame frame)
 	{
 		super(frame);
 		this.frame = frame;
@@ -152,8 +152,7 @@ public class AdvancedOptionsJDialog extends JDialog
 			frame.getParticlePicker().setTemplatesNumber(templates);
 			frame.loadTemplates();
 		}
-		else if (frame.templatesdialog == null)
-			frame.loadTemplates();
+		
 	}
 
 

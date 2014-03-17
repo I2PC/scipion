@@ -172,6 +172,14 @@ const ApplyGeoParams &params)
     APPLY_GEO();
 }
 
+void ImageBase::setGeo(const MDRow &row, size_t n)
+{
+	if (n<MD.size())
+		MD[n]=row;
+	else
+		REPORT_ERROR(ERR_MD_OBJECTNUMBER,"Trying to set a value outside the current metadata size");
+}
+
 int ImageBase::readApplyGeo(const FileName &name, const MDRow &row,
                             const ApplyGeoParams &params)
 {

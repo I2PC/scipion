@@ -23,13 +23,21 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
  '''
-#from emx_data_model import *
+
+import sys
+from os.path import exists, join
 from xmipp import *
 from emx.emx import *
-from emx.emxmapper import *
 from numpy import eye
-from protlib_filesystem import join, dirname, abspath, replaceBasenameExt
+from protlib_filesystem import join, dirname, abspath, replaceBasenameExt\
+   , findAcquisitionInfo
 from protlib_xmipp import RowMetaData
+try:
+    import collections
+except ImportError:
+    sys.stderr.write('Could not import OrderedDict. For Python versions '
+                     'earlier than 2.7 this module may be missing. '
+                     )
 
 BINENDING     = '.mrc'
 CTFENDING     = '_ctf.param'
@@ -43,27 +51,30 @@ STACKENDING   = '.stk'
 
 class CTF(object):
     # Dictionary for matching between EMX var and Xmipp labes
-    ctfVarLabels = {'acceleratingVoltage': MDL_CTF_VOLTAGE,
-                    'amplitudeContrast': MDL_CTF_Q0,
-                    'cs': MDL_CTF_CS,
-                    'defocusU': MDL_CTF_DEFOCUSU,
-                    'defocusV': MDL_CTF_DEFOCUSV,
-                    'defocusUAngle': MDL_CTF_DEFOCUS_ANGLE,
-                    'pixelSpacing__X': MDL_CTF_SAMPLING_RATE,
-                    }
+    ctfVarLabels = collections.OrderedDict([
+                   ('acceleratingVoltage', MDL_CTF_VOLTAGE),
+                   ('amplitudeContrast'  , MDL_CTF_Q0),
+                   ('cs'                 , MDL_CTF_CS),
+                   ('defocusU'           , MDL_CTF_DEFOCUSU),
+                   ('defocusV'           , MDL_CTF_DEFOCUSV),
+                   ('defocusUAngle'      , MDL_CTF_DEFOCUS_ANGLE),
+                   ('pixelSpacing__X'    , MDL_CTF_SAMPLING_RATE),
+                 ])
 class CTFDEFOCUS(object):
     # Dictionary for matching between EMX var and Xmipp labes
-    ctfVarLabels = {'defocusU': MDL_CTF_DEFOCUSU,
-                    'defocusV': MDL_CTF_DEFOCUSV,
-                    'defocusUAngle': MDL_CTF_DEFOCUS_ANGLE,
-                    }
+    ctfVarLabels = collections.OrderedDict([
+                    ('defocusU'     , MDL_CTF_DEFOCUSU),
+                    ('defocusV'     , MDL_CTF_DEFOCUSV),
+                    ('defocusUAngle', MDL_CTF_DEFOCUS_ANGLE)
+                    ])
 class CTFNODEFOCUS(object):
-    # Dictionary for matching between EMX var and Xmipp labes
-    ctfVarLabels = {'acceleratingVoltage': MDL_CTF_VOLTAGE,
-                    'amplitudeContrast': MDL_CTF_Q0,
-                    'cs': MDL_CTF_CS,
-                    'pixelSpacing__X': MDL_CTF_SAMPLING_RATE,
-                    }
+    # Dictionary for matching between EMX var and Xmipp labels
+    ctfVarLabels = collections.OrderedDict([
+                    ('acceleratingVoltage', MDL_CTF_VOLTAGE),
+                    ('amplitudeContrast'   , MDL_CTF_Q0),
+                    ('cs'                  , MDL_CTF_CS),
+                    ('pixelSpacing__X'     , MDL_CTF_SAMPLING_RATE)
+                    ])
 
 
 #*******************************************************************
@@ -73,30 +84,31 @@ class CTFNODEFOCUS(object):
 def emxMicsToXmipp(emxData, 
                    outputFileName=MICFILE, 
                    filesPrefix=None,
-                   ctfRoot=None
+                   ctfRoot=''
                    ):
     """ This function will iterate over the EMX micrographs and create
     the equivalent Xmipp 'micrographs.xmd' with the list of micrographs.
     If CTF information is found, for each micrograph, an attribute CTF_MODEL
     will be added to the micrograph file as expected by Xmipp.
+    This function will NOT create the CTF param files. See emxCTFToXmipp
     """
-    samplingRate = 0.
+    samplingRate    =  0.
     oldSamplingRate = -1.
-    mdMic = MetaData()
-    hasCTF = False
-    if (emxData.objLists[PARTICLE][0]).get('defocusU') is not None\
-       or \
-       (emxData.objLists[MICROGRAPH][0]).get('defocusU') is not None:
-        
+    mdMic           = MetaData()
+    mdCtfParam      = MetaData()
+    hasCTF          = False
+#    if (emxData.objLists[PARTICLE][0]).get('defocusU') is not None\
+#       or \
+    if (emxData.objLists[MICROGRAPH][0]).get('defocusU') is not None:
         hasCTF = True
-    
+
     for micrograph in emxData.iterClasses(MICROGRAPH):
         micIndex = micrograph.get(INDEX)
         micFileName = micrograph.get(FILENAME)
 
         if micFileName is None:
             raise Exception("emxMicsToXmipp: Xmipp doesn't support Micrograph without filename")
-        
+
         if filesPrefix is not None:
             micFileName = join(filesPrefix, micFileName)
         # micIndex is ignored now, in a more general solution
@@ -108,22 +120,23 @@ def emxMicsToXmipp(emxData,
         if hasCTF:
             ctfModelFileName = join(ctfRoot, replaceBasenameExt(micFileName, CTFENDING))
             mdMic.setValue(MDL_CTF_MODEL, ctfModelFileName, mdMicId)
-        
+
         #sampling is set in another function
         _samRateX = micrograph.get('pixelSpacing__X')
         _samRateY = micrograph.get('pixelSpacing__Y')
-        
+
         if _samRateY is not None:
             if _samRateX != _samRateY:
                 raise Exception ('pixelSpacingX != pixelSpacingY. Xmipp does not support it')
-            
+
         if _samRateX is not None:
             samplingRate    = _samRateX
             if (oldSamplingRate > -1):
                 if oldSamplingRate != samplingRate:
                     raise Exception ('Xmipp emx import cannot import emx files with different samplingRate') 
             oldSamplingRate = samplingRate
-            
+
+
     # Sort metadata by micrograph name
     mdMic.sort(MDL_MICROGRAPH)
     # Write micrographs metadata
@@ -132,8 +145,8 @@ def emxMicsToXmipp(emxData,
 
 def emxCTFToXmipp(emxData, 
                    outputFileName=MICFILE, 
-                   filesPrefix=None, 
-                   ctfRoot=None, 
+                   filesPrefix='', #dirname
+                   ctfRoot='', 
                    _voltage=None,
                    _sphericalAberration=None,
                    _samplingRate=None,
@@ -142,46 +155,44 @@ def emxCTFToXmipp(emxData,
     """ This function will iterate over the EMX micrographs and create
     a file .ctfparam for each micrograph.
     """
-
     hasCTFMicro = False
     hasCTFParticle = False
-    if (emxData.objLists[PARTICLE][0]).get('defocusU') is not None:
+    if emxData.objLists[PARTICLE] and (emxData.objLists[PARTICLE][0]).get('defocusU') is not None:
         hasCTFParticle = True
         objectClass = PARTICLE
+
     if (emxData.objLists[MICROGRAPH][0]).get('defocusU') is not None:
         hasCTFMicro = True
         objectClass = MICROGRAPH
-    if not (hasCTFParticle and hasCTFMicro):
+
+    if not (hasCTFParticle or hasCTFMicro):
+        print "No CTF information available"
         return # no ctf info
-    
+
     #fill metadata with CTF info
-    objMd = MetaData()
+    #objMd = MetaData()
     for object in emxData.iterClasses(objectClass):
         objIndex = object.get(INDEX)
         objFileName = object.get(FILENAME)
-
         if objFileName is None:
             raise Exception("emxCTFToXmipp: Xmipp doesn't support Objects without filename")
-        
-        if filesPrefix is not None:
-            objFileName = join(filesPrefix, "%06d%s"%(filesPrefix,objFileName))
+        elif objIndex is not None:
+            objFileName = join(filesPrefix, "%06d@%s"%(int(objIndex),objFileName))
+        else:
+            objFileName = join(filesPrefix, "%s"%(objFileName))
 
         ctfModelFileName = join(ctfRoot, replaceBasenameExt(objFileName, CTFENDING))
         ctf = CTFDEFOCUS()
         # Set the variables in the dict
         for var in CTF.ctfVarLabels.keys():
-            setattr(ctf, var, micrograph.get(var))
+            setattr(ctf, var, object.get(var))
 
-
-
-    if ctfRoot is None:
+    if not ctfRoot:# is None:
         ctfRoot = dirname(outputFileName)
 
     for micrograph in emxData.iterClasses(MICROGRAPH):
         micIndex = micrograph.get(INDEX)
         micFileName = micrograph.get(FILENAME)
-
-
 
     samplingRate = 0.
     voltage      = 0.
@@ -192,18 +203,21 @@ def emxCTFToXmipp(emxData,
     oldVoltage      = -1.
     oldCs           = -1.
     oldAmplitudeContrast = -1.0
-    
-    
     for micrograph in emxData.iterClasses(MICROGRAPH):
         micIndex = micrograph.get(INDEX)
         micFileName = micrograph.get(FILENAME)
 
         if micFileName is None:
             raise Exception("emxMicsToXmipp: Xmipp doesn't support Micrograph without filename")
-        
-        if filesPrefix is not None:
-            micFileName = join(filesPrefix, "%06d%s"%(filesPrefix,micFileName))
+#
+        if micFileName is None:
+            raise Exception("emxCTFToXmipp: Xmipp doesn't support Objects without filename")
+        elif micIndex is not None:
+            objFileName = join(filesPrefix, "%06d@%s"%(int(micIndex),micFileName))
+        else:
+            objFileName = join(filesPrefix, "%s"%(micFileName))
 
+#
         ctfModelFileName = join(ctfRoot, replaceBasenameExt(micFileName, CTFENDING))
 
         ctf = CTF()
@@ -271,14 +285,11 @@ def emxCTFToXmipp(emxData,
 
             mdCtf.setValue(MDL_CTF_K, 1.0)
             mdCtf.write(ctfModelFileName)
-        
-    # Sort metadata by micrograph name
-    mdMic.sort(MDL_MICROGRAPH)
-    # Write micrographs metadata
-    mdMic.write('Micrographs@' + outputFileName)
-    
 
-    
+    # Sort metadata by micrograph name
+    #mdMic.sort(MDL_MICROGRAPH)
+    # Write micrographs metadata
+    #mdMic.write('Micrographs@' + outputFileName)
     return voltage, cs, samplingRate
 
 def emxCoordsToXmipp(emxData, filesRoot):
@@ -298,7 +309,7 @@ def emxCoordsToXmipp(emxData, filesRoot):
         
     #loop through particles and save coordinates in the right place
     for part in emxData.iterClasses(PARTICLE):
-        mic = part.getForeignObject(MICROGRAPH)
+        mic = part.getMicrograph()
         micFileName = mic.get(FILENAME)
         md = mdDict[micFileName]
         objId = md.addObject()
@@ -310,7 +321,7 @@ def emxCoordsToXmipp(emxData, filesRoot):
         micFileName = mic.get(FILENAME)
         md = mdDict[micFileName]
         mdFn = join(filesRoot, replaceBasenameExt(micFileName, POSENDING))
-        md.write('coordinates@' + mdFn)
+        md.write('particles@' + mdFn)
         
     #save boxsize
     part = emxData.iterClasses(PARTICLE)[0]
@@ -322,7 +333,7 @@ def emxCoordsToXmipp(emxData, filesRoot):
         md.write('properties@' + join(filesRoot, 'config.xmd'))
 
     
-def emxParticlesToXmipp(emxData, outputFileName=PARTFILE, filesPrefix=None, ctfRoot=None):
+def emxParticlesToXmipp(emxData, outputFileName=PARTFILE, filesPrefix=None, ctfRoot=''):
     """ This function will iterate over the EMX particles and create
     the equivalent Xmipp 'images.xmd' with the list of particles.
     If CTF information is found, for each particle will contains information about the CTF
@@ -330,7 +341,7 @@ def emxParticlesToXmipp(emxData, outputFileName=PARTFILE, filesPrefix=None, ctfR
     #iterate though emxData
     md    = MetaData()
     mdMic = MetaData()
-    if ctfRoot is None:
+    if ctfRoot:# is None:
         ctfRoot = dirname(outputFileName)
     
     samplingRate = 0.
@@ -354,7 +365,7 @@ def emxParticlesToXmipp(emxData, outputFileName=PARTFILE, filesPrefix=None, ctfR
         objId = md.addObject()
         md.setValue(MDL_IMAGE, pFileName, objId)
         
-        mic = particle.getForeignObject(MICROGRAPH)
+        mic = particle.getMicrograph()
 
         if mic is not None:
             micFileName = mic.get(FILENAME)
@@ -434,17 +445,15 @@ def xmippCtfToEmx(md, objId, micrograph):
     
     while ctf.defocusUAngle > 180.:
         ctf.defocusUAngle -= 180.; 
-        
+    #this maust be ordered
     for var in CTF.ctfVarLabels.keys():
         micrograph.set(var, getattr(ctf, var))           
 
-    micrograph.set('pixelSpacing__Y', ctf.pixelSpacing__X)
+    #micrograph.set('pixelSpacing__Y', ctf.pixelSpacing__X)
 
     
 def _writeEmxData(emxData, filename):
-    xmlMapper = XmlMapper(emxData)
-    xmlMapper.writeEMXFile(filename)      
-    
+    emxData.write(filename)
     
 def xmippMicrographsToEmx(micMd, emxData, emxDir):
     """ Export micrographs from xmipp metadata to EMX.
@@ -457,7 +466,14 @@ def xmippMicrographsToEmx(micMd, emxData, emxDir):
     img = Image()
     hasCtf = md.containsLabel(MDL_CTF_MODEL)
     filesRoot = dirname(micMd)
-
+    #assume sam pixelspacing for every micrograph
+    acquisionInfo = findAcquisitionInfo(md.getValue(MDL_MICROGRAPH, md.firstObject()))
+    if not acquisionInfo is None:
+        mdAux = MetaData(acquisionInfo)
+        pixelSpacing = mdAux.getValue(MDL_SAMPLINGRATE, mdAux.firstObject())
+    else:
+        pixelSpacing = 1.
+        
     for objId in md:
         fnIn = md.getValue(MDL_MICROGRAPH, objId)
         index += 1
@@ -465,7 +481,7 @@ def xmippMicrographsToEmx(micMd, emxData, emxDir):
         img.read(fnIn)
         img.write(join(emxDir, fnOut))
         
-        micrograph = Emxmicrograph(fnOut)
+        micrograph = EmxMicrograph(fnOut)
         # Set CTF parameters if present
         if hasCtf:
             xmippCtfToEmx(md, objId, micrograph)
@@ -480,12 +496,15 @@ def xmippMicrographsToEmx(micMd, emxData, emxDir):
                 pIndex += 1
                 # We are using here a dummy filename, since not make sense
                 # for particles with just coordinates
-                particle = Emxparticle(str(pIndex), pIndex)
+                particle = EmxParticle(str(pIndex), pIndex)
                 particle.set('centerCoord__X', mdPos.getValue(MDL_XCOOR, pId))
                 particle.set('centerCoord__Y', mdPos.getValue(MDL_YCOOR, pId))
-                particle.setForeignKey(micrograph)
+                particle.setMicrograph(micrograph)
                 emxData.addObject(particle)
-                
+        micrograph.set('pixelSpacing__X',pixelSpacing)
+        micrograph.set('pixelSpacing__Y',pixelSpacing)
+        micrograph.set(COMMENT,'original filename=%s'%fnIn)
+
         emxData.addObject(micrograph)
     # Write EMX particles
     _writeEmxData(emxData, join(emxDir, 'micrographs.emx'))
@@ -496,6 +515,7 @@ def xmippParticlesToEmx(imagesMd, emxData, emxDir):
     imagesMd: the filename of the images metadata
     emxData: the emxData object to be populated.
     """
+
     md = MetaData(imagesMd)
     md.removeDisabled()
     
@@ -508,30 +528,39 @@ def xmippParticlesToEmx(imagesMd, emxData, emxDir):
     hasMicrograph = md.containsLabel(MDL_MICROGRAPH)
     hasCtf = md.containsLabel(MDL_CTF_MODEL)
     micsDict = {}
-    
-    
-    for objId in md:            
+
+    acquisionInfo = findAcquisitionInfo(md.getValue(MDL_IMAGE, md.firstObject()))
+    if not acquisionInfo is None:
+        mdAux = MetaData(acquisionInfo)
+        pixelSpacing = mdAux.getValue(MDL_SAMPLINGRATE, mdAux.firstObject())
+    else:
+        pixelSpacing = 1.
+
+    for objId in md:
         # Read image from filename
-        fn = FileName(md.getValue(MDL_IMAGE, objId))
-        img.read(fn)
+        fnIn = FileName(md.getValue(MDL_IMAGE, objId))
+        img.read(fnIn)
         
         # Write to mrc stack
         index += 1
         img.write('%d@%s' % (index, mrcFn))
-        particle = Emxparticle(imgFn, index)
+        particle = EmxParticle(imgFn, index)
         # Create the micrograph object if exists
-        if hasMicrograph:
+        if hasMicrograph or hasCtf:
             fn = md.getValue(MDL_MICROGRAPH, objId)
+            if fn is None:
+                fn = md.getValue(MDL_CTF_MODEL, objId)
+
             if fn in micsDict:
                 micrograph = micsDict[fn]
             else:
                 idx, path = FileName(fn).decompose()
                 idx = idx or None
-                micrograph = Emxmicrograph(path, idx)
+                micrograph = EmxMicrograph(path, idx)
                 emxData.addObject(micrograph)
                 micsDict[fn] = micrograph 
             
-            particle.setForeignKey(micrograph)
+            particle.setMicrograph(micrograph)
             
             if hasCtf:
                 xmippCtfToEmx(md, objId, micrograph)
@@ -542,14 +571,15 @@ def xmippParticlesToEmx(imagesMd, emxData, emxDir):
         if hasCoords:
             particle.set('centerCoord__X', md.getValue(MDL_XCOOR, objId))
             particle.set('centerCoord__Y', md.getValue(MDL_YCOOR, objId))
-        
         # If there is geometrical info, convert and set
+        particle.set('pixelSpacing__X',pixelSpacing)
+        particle.set('pixelSpacing__Y',pixelSpacing)
         if hasGeo:
             xmippTransformToEmx(md, objId, particle)
-        
-        # Add particle to emxData
+
+        particle.set(COMMENT,'original filename=%s'%fnIn)        # Add particle to emxData
         emxData.addObject(particle)
-        
+
     # Write EMX particles
     _writeEmxData(emxData, join(emxDir, 'particles.emx'))
        
@@ -560,16 +590,19 @@ def xmippTransformToEmx(md, objId, particle):
     psi = md.getValue(MDL_ANGLE_PSI , objId) or 0.
     
     tMatrix = Euler_angles2matrix(rot, tilt, psi)
-
+    SHIFT=[MDL_SHIFT_X,
+           MDL_SHIFT_Y,
+           MDL_SHIFT_Z]
     for i, j, label in iterTransformationMatrix():
         particle.set(label, tMatrix[i][j])
+        if j==2:
+            value = md.getValue(SHIFT[i], objId) or 0.
+            particle.set('transformationMatrix__t%d4'%(i+1), value)
 
-    x = md.getValue(MDL_SHIFT_X, objId) or 0.
-    particle.set('transformationMatrix__t14', x)
-    y = md.getValue(MDL_SHIFT_Y, objId) or 0.
-    particle.set('transformationMatrix__t24', y)
-    z = md.getValue(MDL_SHIFT_Z, objId) or 0.
-    particle.set('transformationMatrix__t34', z)
+#    y = md.getValue(MDL_SHIFT_Y, objId) or 0.
+#    particle.set('transformationMatrix__t24', y)
+#    z = md.getValue(MDL_SHIFT_Z, objId) or 0.
+#    particle.set('transformationMatrix__t34', z)
 
 
 def iterTransformationMatrix():
@@ -593,13 +626,15 @@ def ctfMicXmippToEmx(emxData,xmdFileName):
     md    = MetaData()
     mdCTF = MetaData()
     md.read(xmdFileName)
+    #if exists acquisition info 
     for objId in md:
         micrographName = md.getValue(MDL_MICROGRAPH, objId)
         ctfModel       = md.getValue(MDL_CTF_MODEL,objId)
-        m1             = Emxmicrograph(fileName=micrographName)
+        m1             = EmxMicrograph(fileName=micrographName)
 
         mdCTF.read(ctfModel)
         objId2 = mdCTF.firstObject()
+        print "Using CTF sampling as Micrograph sampling"
         pixelSpacing        = mdCTF.getValue(MDL_CTF_SAMPLING_RATE, objId2)####
         acceleratingVoltage = mdCTF.getValue(MDL_CTF_VOLTAGE, objId2)
         cs                  = mdCTF.getValue(MDL_CTF_CS, objId2)
@@ -630,7 +665,7 @@ def ctfMicXmippToEmxChallenge(emxData,xmdFileName):
     for objId in md:
         micrographName = md.getValue(MDL_MICROGRAPH, objId)
         ctfModel       = md.getValue(MDL_CTF_MODEL,objId)
-        m1             = Emxmicrograph(fileName=micrographName)
+        m1             = EmxMicrograph(fileName=micrographName)
 
         mdCTF.read(ctfModel)
         objId2 = mdCTF.firstObject()
@@ -658,7 +693,7 @@ def alignXmippToEmx(emxData,xmdFileName):
         (index,fileName)=fileName.decompose()
         if index==0:
             index= None
-        p1=Emxparticle(fileName=fileName, index=index)
+        p1=EmxParticle(fileName=fileName, index=index)
         rot  = md.getValue(MDL_ANGLE_ROT ,objId)
         tilt = md.getValue(MDL_ANGLE_TILT,objId)
         psi  = md.getValue(MDL_ANGLE_PSI ,objId)
@@ -766,7 +801,7 @@ def coorrXmippToEmx(emxData,xmdFileName):
     xmdFileNameNoExtNoBlock = xmdFileNameNoExt.removeBlockName()
     micrographName = xmdFileNameNoExtNoBlock + BINENDING
     particleName   = xmdFileNameNoExtNoBlock + STACKENDING
-    m1 = Emxmicrograph(fileName=micrographName)
+    m1 = EmxMicrograph(fileName=micrographName)
     emxData.addObject(m1)
     counter = FIRSTIMAGE
     #check if MDL_XCOOR column exists if not 
@@ -775,10 +810,10 @@ def coorrXmippToEmx(emxData,xmdFileName):
 
         coorX = md.getValue(MDL_XCOOR, objId)
         coorY = md.getValue(MDL_YCOOR, objId)
-        p1    = Emxparticle(fileName=particleName, index=counter)
+        p1    = EmxParticle(fileName=particleName, index=counter)
         p1.set('centerCoord__X',coorX)
         p1.set('centerCoord__Y',coorY)
-        p1.setForeignKey(m1)
+        p1.setMicrograph(m1)
         emxData.addObject(p1)
 
         counter += 1

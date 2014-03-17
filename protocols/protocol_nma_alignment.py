@@ -39,15 +39,16 @@ class ProtNMAAlignment(XmippProtocol):
     def summary(self):
         message=[];
         message.append("Input images: ["+self.InSelFile+"]")
-        message.append("PDB volume:   ["+self.PDBfile+"]")
+        message.append("Structure (atoms or pseudoatoms):   ["+self.PDBfile+"]")
         message.append("Normal modes: ["+self.Modesfile+"]")
         return message
     
     def papers(self):
         papers=[]
         if not self.ProjMatch:
-            papers.append("Sorzano, JSB (2004) [http://www.ncbi.nlm.nih.gov/pubmed/15099579]")
-            papers.append("Jonic, Ultramic (2005) [http://www.ncbi.nlm.nih.gov/pubmed/15885434]")
+            papers.append("Elastic alignment, HEMNMA: Jin et al, Structure (2014) [http://www.ncbi.nlm.nih.gov/pubmed/24508340]")
+            papers.append("Rigid-body alignment - wavelets: Sorzano et al, JSB (2004) [http://www.ncbi.nlm.nih.gov/pubmed/15099579]")
+            papers.append("Rigid-body alignment - splines: Jonic et al, Ultramic (2005) [http://www.ncbi.nlm.nih.gov/pubmed/15885434]")
         return papers
 
     def validate(self):

@@ -190,7 +190,7 @@ class TestXmippPythonInterface(unittest.TestCase):
         id = md1.addObject()
         md1.setValue(MDL_CTF_SAMPLING_RATE, 2., id)
         md1.setValue(MDL_CTF_VOLTAGE, 300., id);
-        md1.setValue(MDL_CTF_DEFOCUSU, 5400., id);
+        md1.setValue(MDL_CTF_DEFOCUSU, 10000., id);
         md1.setValue(MDL_CTF_DEFOCUSV, 5400., id);
         md1.setValue(MDL_CTF_DEFOCUS_ANGLE, 45., id);
         md1.setValue(MDL_CTF_CS, 2., id);
@@ -207,7 +207,7 @@ class TestXmippPythonInterface(unittest.TestCase):
         md2.setValue(MDL_CTF_Q0, 0.1, id);
         resolution = errorMaxFreqCTFs2D(md1,md2)
 
-        self.assertAlmostEqual(resolution, 3.94458,2)
+        self.assertAlmostEqual(resolution, 13.921659080780355,2)
 
 
     def test_FileName_compose(self):

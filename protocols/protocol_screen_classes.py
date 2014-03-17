@@ -48,10 +48,12 @@ class ProtScreenClasses(XmippProtocol):
                         Images="classes@%s"%fnOutputClass,ExtraDir=self.ExtraDir,fnAngles=fnAngles,NumberOfMpi=self.NumberOfMpi)        
 
         # Reorganize output and produce difference images 
-        self.insertStep("runJob",programname="xmipp_metadata_utilities", params="-i classes@%s --set join %s --mode append"%(fnOutputClass,fnAngles),NumberOfMpi=1)  
-        self.insertStep("produceAlignedImages",fnIn='classes@'+fnOutputClass, fnOut='classes_aligned@'+fnOutputClass, fnDiff=self.extraPath("diff.stk"),
+        self.insertStep("runJob",programname="xmipp_metadata_utilities", params="-i classes@%s --set join %s --mode append"%(fnOutputClass,fnAngles),NumberOfMpi=1)
+        fnIn='classes@'+fnOutputClass
+        self.insertStep("produceAlignedImages",fnIn=fnIn, fnOut='classes_aligned@'+fnOutputClass, fnDiff=self.extraPath("diff.stk"),
                         volumeIsCTFCorrected=False)
         self.insertStep("runJob",programname="xmipp_metadata_utilities", params="-i classes_aligned@%s --operate sort maxCC desc --mode append"%(fnOutputClass),NumberOfMpi=1)  
+        self.insertStep("runJob",programname="xmipp_metadata_utilities", params="-i classes_aligned@%s --set join %s image --mode append"%(fnOutputClass,fnIn),NumberOfMpi=1)  
    
     def summary(self):
         message = []

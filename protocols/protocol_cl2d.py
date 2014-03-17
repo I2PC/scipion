@@ -76,10 +76,12 @@ class ProtCL2D(XmippProtocol):
         errors = []
         if self.NumberOfInitialReferences>self.NumberOfReferences:
             errors.append("The number of initial classes cannot be larger than the number of final classes")
-        mD=MetaData(self.InSelFile)
+        mD = MetaData()
+        mD.read(self.InSelFile, 1)
+        
         if not mD.containsLabel(MDL_IMAGE):
-            errors.append("%s does not contain a column of images"%self.InSelFile)
-        if self.Tolerance<0:
+            errors.append("%s does not contain a column of images" % self.InSelFile)
+        if self.Tolerance < 0:
             errors.append("Tolerance must be larger than 0")
         return errors
     
@@ -147,6 +149,8 @@ def postCl2d(log, WorkingDir, NumberOfReferences):
 def sortClasses(log,ExtraDir,Nproc,suffix):
     if Nproc==1:
         Nproc=2
+    if Nproc>8:
+        Nproc=8
     for filename in glob.glob(os.path.join(ExtraDir,"level_??/level_classes%s.xmd"%suffix)):
         level=int(re.search('level_(\d\d)',filename).group(1))
         fnRoot=os.path.join(ExtraDir,"level_%02d/level_classes%s_sorted"%(level,suffix))

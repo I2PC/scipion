@@ -282,18 +282,9 @@ bool compareTwoMetadataFiles(const FileName &fn1, const FileName &fn2)
     return true;
 }
 
-void copyImages(const MetaData &md, const char * output, bool independent, MDLabel image_label)
-{
-    ProgConvImg conv;
-    FileName out, oroot;
-    if (independent)
-        oroot = output;
-    else
-        out = output;
-    //Image convert dont use applyGeo
-    conv.setup(new MetaData(md), out, oroot, false, image_label);
-    conv.tryRun();
-}
+
+
+
 
 int maxFileNameLength(const MetaData &md, MDLabel image_label)
 {

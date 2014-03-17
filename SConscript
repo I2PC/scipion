@@ -928,6 +928,8 @@ AddLibraryNG('XmippInterface')
 #AddLibrary('XmippRecons_Interface', '#libraries/reconstruction',
 #           ReconsInterfaceSources, ['#libraries', '#external', '#'],['lib'],['XmippExternal','XmippData','XmippRecons','XmippInterface'])
 
+
+
 def WriteJavaEnum(class_name, header_file, pattern, log):
     java_file = "java/src/xmipp/jni/%s.java" % class_name
     env.Depends(java_file, header_file)
@@ -1093,6 +1095,7 @@ AddXmippProgram('mlf_refine3d', ['XmippRecons'])
 AddXmippProgram('ml_tomo', ['XmippRecons'])
 AddXmippProgram('mrc_create_metadata')
 AddXmippProgram('nma_alignment', ['XmippRecons'])
+AddXmippProgram('nma_alignment_vol', ['XmippRecons'])
 AddXmippProgram('flexible_alignment', ['XmippRecons'])
 AddXmippProgram('pdb_nma_deform', ['XmippRecons'])
 AddXmippProgram('pdb_analysis', ['XmippRecons'])

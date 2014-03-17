@@ -80,6 +80,11 @@ void CL3DAssignment::copyAlignment(const CL3DAssignment &alignment)
     shiftz = alignment.shiftz;
 }
 
+bool CL3DAssignmentComparator(const CL3DAssignment& d1, const CL3DAssignment& d2)
+{
+  return d1.objId < d2.objId;
+}
+
 /* CL3DClass basics ---------------------------------------------------- */
 CL3DClass::CL3DClass()
 {
@@ -470,6 +475,9 @@ void CL3D::shareAssignments(bool shareAssignment, bool shareUpdates)
                         receivedNextListImage.push_back(auxList[j]);
                 }
             }
+            // This is important to ensure that all nodes have all images in the same order
+            std::sort(receivedNextListImage.begin(),receivedNextListImage.end(),CL3DAssignmentComparator);
+
             // Copy the received elements
             listSize = receivedNextListImage.size();
             P[q]->nextListImg.reserve(P[q]->nextListImg.size() + listSize);
@@ -530,6 +538,9 @@ void CL3D::shareSplitAssignments(Matrix1D<int> &assignment, CL3DClass *node1,
                     receivedNextListImage.push_back(auxList[j]);
             }
         }
+        // This is important to ensure that all nodes have all images in the same order
+        std::sort(receivedNextListImage.begin(),receivedNextListImage.end(),CL3DAssignmentComparator);
+
         // Copy the received elements
         listSize = receivedNextListImage.size();
         node->nextListImg.reserve(node->nextListImg.size() + listSize);
@@ -587,15 +598,15 @@ void CL3D::initialize(MetaData &_SF,
     Image<double> I;
     MultidimArray<double> Iaux, Ibest;
     CL3DAssignment bestAssignment;
-    size_t first, last;
-    while (prm->taskDistributor->getTasks(first, last))
+    size_t imgCounter=0, localCounter=0;
+    FOR_ALL_OBJECTS_IN_METADATA(prm->SF)
     {
-        for (size_t idx = first; idx <= last; ++idx)
+        if ((imgCounter+1)%prm->node->size==prm->node->rank)
         {
             int q = -1;
             if (!initialCodesGiven)
-                q = idx % (prm->Ncodes0);
-            size_t objId = prm->objId[idx];
+                q = (localCounter+1) % (prm->Ncodes0);
+            size_t objId = prm->objId[imgCounter];
             readImage(I, objId, true);
 
             // Put it randomly in one of the classes
@@ -634,11 +645,14 @@ void CL3D::initialize(MetaData &_SF,
                     P[q]->updateProjection(Ibest, bestAssignment);
             }
             SF->setValue(MDL_REF, q + 1, objId);
-            if (idx % 100 == 0 && prm->node->rank == 0)
-                progress_bar(idx);
+            if (imgCounter % 100 == 0 && prm->node->rank == 0)
+                progress_bar(imgCounter);
+            localCounter++;
         }
+        imgCounter++;
     }
-    prm->taskDistributor->wait();
+
+    prm->node->barrierWait();
     if (prm->node->rank == 0)
         progress_bar(Nimgs);
 
@@ -824,26 +838,26 @@ void CL3D::run(const FileName &fnOut, int level)
         for (size_t n = 0; n < Nimgs; ++n, ++ptrOld)
             *ptrOld -= 1;
         SF->fillConstant(MDL_REF, "-1");
-        prm->taskDistributor->reset();
-        size_t first, last;
-        while (prm->taskDistributor->getTasks(first, last))
+        size_t imgCounter=0;
+        FOR_ALL_OBJECTS_IN_METADATA(prm->SF)
         {
-            for (size_t idx = first; idx <= last; ++idx)
+            if ((imgCounter+1)%prm->node->size==prm->node->rank)
             {
-                size_t objId = prm->objId[idx];
+                size_t objId = prm->objId[imgCounter];
                 readImage(I, objId, false);
 
                 assignment.objId = objId;
-                lookNode(I(), oldAssignment[idx], node, assignment);
-                LOG(formatString("Analyzing %s oldAssignment=%d newAssignment=%d",I.name().c_str(),oldAssignment[idx], node));
+                lookNode(I(), oldAssignment[imgCounter], node, assignment);
+                LOG(formatString("Analyzing %s oldAssignment=%d newAssignment=%d",I.name().c_str(),oldAssignment[imgCounter], node));
                 SF->setValue(MDL_REF, node + 1, objId);
                 if (assignment.score>0)
                     corrSum += assignment.score;
-                if (prm->node->rank == 0 && idx % progressStep == 0)
-                    progress_bar(idx);
+                if (prm->node->rank == 0 && imgCounter % progressStep == 0)
+                    progress_bar(imgCounter);
             }
+            imgCounter++;
         }
-        prm->taskDistributor->wait();
+        prm->node->barrierWait();
 
         FileName fnAux;
         for (int q=0; q<Q; q++)
@@ -1018,7 +1032,10 @@ void CL3D::splitNode(CL3DClass *node, CL3DClass *&node1, CL3DClass *&node2,
     bool success = true;
     do
     {
-        finish = true;
+    	// Sort the currentListImg to make sure that all nodes have the same order
+    	std::sort(node->currentListImg.begin(),node->currentListImg.end(),CL3DAssignmentComparator);
+
+    	finish = true;
         node2->neighboursIdx = node1->neighboursIdx = node->neighboursIdx;
         node1->P = node->P;
         node2->P = node->P;
@@ -1275,7 +1292,6 @@ ProgClassifyCL3D::ProgClassifyCL3D(int argc, char** argv)
     node = new MpiNode(argc, argv);
     if (!node->isMaster())
         verbose = 0;
-    taskDistributor = NULL;
     mask.allowed_data_types=INT_MASK;
 }
 
@@ -1283,7 +1299,6 @@ ProgClassifyCL3D::ProgClassifyCL3D(int argc, char** argv)
 ProgClassifyCL3D::~ProgClassifyCL3D()
 {
     delete node;
-    delete taskDistributor;
 }
 
 /* VQPrm I/O --------------------------------------------------------------- */
@@ -1382,7 +1397,10 @@ void ProgClassifyCL3D::defineParams()
     addParamsLine("   [--dontAlign]             : Do not align volumes, only classify");
     addParamsLine("   [--generateAlignedVolumes]: Generate aligned subvolumes at the end");
     Mask::defineParams(this,INT_MASK,NULL,NULL,true);
-    addExampleLine("mpirun -np 3 `which xmipp_mpi_classify_CL3D` -i images.stk --nref 256 --oroot class --iter 10");
+    addExampleLine("The MPI program as to be called through a python wrapper that encapsulates some path setting",false);
+    addExampleLine(" ",false);
+    addExampleLine("Call the program as xmipp_classify_CLTomo [numberOfMPIProcessors] [arguments as above]",false);
+    addExampleLine("xmipp_classify_CLTomo 8 -i images.stk --nref 256 --oroot class --iter 10");
 }
 
 void ProgClassifyCL3D::produceSideInfo()
@@ -1418,9 +1436,6 @@ void ProgClassifyCL3D::produceSideInfo()
 
     // Prepare the Task distributor
     SF.findObjects(objId);
-    size_t Nimgs = objId.size();
-    taskDistributor = new MpiTaskDistributor(Nimgs,
-                      XMIPP_MAX(1,Nimgs/(5*node->size)), node);
 
     // Prepare mask for evaluating the noise outside
     MultidimArray<int> sphericalMask;

@@ -636,6 +636,7 @@ void MDSql::setOperate(MetaData *mdPtrOut, MDLabel column, SetOperation operatio
     bool execStmt = true;
     int size;
     std::string sep = " ";
+
     switch (operation)
     {
     case UNION:
@@ -660,13 +661,23 @@ void MDSql::setOperate(MetaData *mdPtrOut, MDLabel column, SetOperation operatio
         << " NOT IN (SELECT " << MDL::label2Str(column)
         << " FROM " << tableName(mdPtrOut->myMDSql->tableId) << ");";
         break;
+    case DISTINCT:
     case REMOVE_DUPLICATE:
         //Create string with columns list
         size = mdPtrOut->activeLabels.size();
         sep = ' ';
+        std::vector<MDLabel> * labelVector;
+        if (operation == REMOVE_DUPLICATE)
+        {
+            labelVector = &(myMd->activeLabels);
+        }
+        else if (operation == DISTINCT)
+        {
+            labelVector = &(mdPtrOut->activeLabels);
+        }
         for (int i = 0; i < size; i++)
         {
-            ss2 << sep << MDL::label2Str( myMd->activeLabels[i]);
+            ss2 << sep << MDL::label2Str( labelVector->at(i));
             sep = ", ";
         }
         ss << "INSERT INTO " << tableName(mdPtrOut->myMDSql->tableId)
