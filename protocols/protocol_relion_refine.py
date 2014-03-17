@@ -261,4 +261,5 @@ class ProtRelionRefinner( ProtRelionBase):
             fn = self.extraPath('relion_class001.mrc:mrc')
             self.display2D(fn)         
         elif _visualizeVolumesMode == 'chimera':
+            fn = self.extraPath('relion_class001.mrc')
             self.display3D(fn)
