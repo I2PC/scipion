@@ -342,21 +342,12 @@ class TestXmippCL2D(TestXmippBase):
         
     def testCL2D(self):
         print "Run CL2D"
-        protCL2D = XmippProtPreprocessParticles(numberOfReferences=2, numberOfInitialReferences=1, 
-                                 numberOfIterations=3, numberOfMpi=4)
-        protCL2D.inputParticles.set(self.protImport.outputParticles)
-        self.proj.launchProtocol(protCL2D, wait=True)
-        
-        pattern = getInputPath('ml3dData', 'icoFiltered.vol')
-        protImportVolume = self.runImportVolumes(pattern=pattern, samplingRate=1.237, checkStack=True)        
-        
-        protScreenClasses = XmippProtScreenClasses(symmetryGroup='i1', angularSampling=5)
-        protScreenClasses.inputClasses.set(protCL2D.outputClasses)
-        protScreenClasses.inputVolume.set(protImportVolume.outputVolumes)
-        self.proj.launchProtocol(protScreenClasses, wait=True)
-        
+        protCL2D = XmippProtCL2D(numberOfReferences=2, numberOfInitialReferences=1, 
+                                 numberOfIterations=4, numberOfMpi=2)
+        protCL2D.inputImages.set(self.protImport.outputParticles)
+        self.proj.launchProtocol(protCL2D, wait=True)        
         self.assertIsNotNone(protCL2D.outputClasses, "There was a problem with CL2D")
-        self.assertIsNotNone(protScreenClasses.getVisualizeInfo().hasValue(), "There was a problem with Screen Classes")
+
 
 class TestXmippProtCL2DAlign(TestXmippBase):
 
