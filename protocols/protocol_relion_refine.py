@@ -257,7 +257,7 @@ class ProtRelionRefinner( ProtRelionBase):
         """
         prefixes = self._getPrefixes()
         _visualizeVolumesMode = self.parser.getTkValue('DisplayFinalReconstruction')
-        filename = self.extraPath('relion_class001.mrc')
+        filename = self.extraPath('relion_class001.mrc:mrc')
         if xmippExists(filename):
             #Chimera
             if _visualizeVolumesMode == 'chimera':
@@ -265,7 +265,6 @@ class ProtRelionRefinner( ProtRelionBase):
                 runChimeraClient(filename)
             else:
                 try:
-                    filename = self.extraPath('relion_class001.mrc:mrc')
                     runShowJ(filename, extraParams=' --dont_wrap ')
                 except Exception, e:
                     showError("Error launching xmipp_showj: ", str(e), self.master)
