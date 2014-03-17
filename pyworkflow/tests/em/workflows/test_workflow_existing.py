@@ -284,7 +284,7 @@ class TestXmippWorkflow(unittest.TestCase):
     
     def test_cleanDay2(self):
         """ Delete all runs from Day2. """
-        projName = "high throughput"
+        projName = "HighThroughputTest"
         project = Manager().loadProject(projName)
         protocols = project.getRuns()
         for prot in reversed(protocols):
