@@ -356,13 +356,20 @@ class ProtRelionBase(EMProtocol):
                      '--particle_diameter': self.maskRadiusA.get() * 2.0,
                      '--angpix': self.inputParticles.get().getSamplingRate(),
                     })
-        self._setBasicArgs(args)
         self._setMaskArgs(args)
+        self._setCTFArgs(args)
         
         if self.IS_CLASSIFY:
             if self.maskZero == MASK_FILL_ZERO:
                 args['--zero_mask'] = ''                
             args['--K'] = self.numberOfClasses.get()
+        
+        if self.IS_3D:
+            args['--ref'] = self.referenceVolume.get()
+            args['--ini_high'] = self.initialLowPassFilterA.get()
+            args['--sym'] = self.symmetryGroup.get()
+            
+        self._setBasicArgs(args)
         
     def _setContinueArgs(self, args):
         args = {}
@@ -392,6 +399,7 @@ class ProtRelionBase(EMProtocol):
         if self.doCTF:
             args['--ctf'] = ''
         
+        # this only can be true if is 3D.
         if self.hasReferenceCTFCorrected:
             args['--ctf_corrected_ref'] = ''
             
