@@ -106,9 +106,10 @@ Examples:
         from pyworkflow.em.packages.xmipp3.viewer import runShowJ
         runShowJ(filename, extraParams=extraParams)
         
-    def displayScipion(self, filename, inputid, inputimagesid, extraParams=''):
+    def displayScipion(self, filename, extraParams=''):
+        inputParticlesId = self.protocol.inputParticles.get().strId()
         from pyworkflow.em.packages.xmipp3.viewer import runScipionShowJ        
-        runScipionShowJ(filename, "Particles", self._project.getName(), inputid, inputimagesid)
+        runScipionShowJ(filename, "Particles", self._project.getName(), self.protocol.strId(), inputParticlesId)
 
     def _load(self):
         """ Load selected iterations and classes 3D for visualization mode. """
@@ -145,10 +146,10 @@ Examples:
         If the new metadata was already written, it is just shown.
         """
         self._load()
-        inputParticlesId = self.protocol.inputParticles.get().strId()
+        
         for it in self._iterations:
             data_classes = self.protocol._getIterClasses(it)
-            self.displayScipion(data_classes, inputParticlesId, inputParticlesId,extraParams='--mode metadata --render first')
+            self.displayScipion(data_classes, extraParams='--mode metadata --render first')
                   
     def _showLL(self, paramName):
         self._load()

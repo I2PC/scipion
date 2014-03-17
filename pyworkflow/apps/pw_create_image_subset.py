@@ -16,24 +16,26 @@ from xmipp import *
 if __name__ == '__main__':
 
     mdfile = sys.argv[1]
-    setType = sys.argv[2]
-    projectid = sys.argv[3]
-    inputid = sys.argv[4]
-    inputimagesid = sys.argv[5]
+    inputType = sys.argv[2]
+    setType = sys.argv[3]
+    projectid = sys.argv[4]
+    inputid = sys.argv[5]
+    inputimagesid = sys.argv[6]
     mdname = mdfile[mdfile.rfind(os.sep) + 1:]
     
     
     project = Manager().loadProject(projectid)
     
-    prot = ProtUserSubSet(setType=setType)
-    inputset = project.mapper.selectById(int(inputid))
+    prot = ProtUserSubSet(inputType=inputType, outputType=setType)
+    input = project.mapper.selectById(int(inputid))
     inputimages = project.mapper.selectById(int(inputimagesid))
     
-    prot.createInputSet(inputset)
+    prot.createInputPointer(input)
     project._setupProtocol(prot)
     prot.makePathsAndClean()
     moveFile(mdfile, prot._getExtraPath())
     mdfile = join(prot._getExtraPath(), mdname)
+
 
     createSetFun = getattr(prot, '_createSetOf' + setType)
     if setType != 'Classes2D':
