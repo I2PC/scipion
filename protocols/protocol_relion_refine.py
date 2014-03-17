@@ -258,7 +258,7 @@ class ProtRelionRefinner( ProtRelionBase):
         prefixes = self._getPrefixes()
         _visualizeVolumesMode = self.parser.getTkValue('DisplayFinalReconstruction')
         if _visualizeVolumesMode == 'slices':
-            fn = 'relion_class001.mrc:mrc'
+            fn = self.extraPath('relion_class001.mrc:mrc')
             self.display2D(fn)         
         elif _visualizeVolumesMode == 'chimera':
             self.display3D(fn)
