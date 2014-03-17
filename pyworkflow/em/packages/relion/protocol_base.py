@@ -365,7 +365,7 @@ class ProtRelionBase(EMProtocol):
             args['--K'] = self.numberOfClasses.get()
         
         if self.IS_3D:
-            args['--ref'] = self.referenceVolume.get()
+            args['--ref'] = self.referenceVolume.get().getFileName()
             args['--ini_high'] = self.initialLowPassFilterA.get()
             args['--sym'] = self.symmetryGroup.get()
             
