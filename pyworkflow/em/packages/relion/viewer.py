@@ -102,9 +102,12 @@ Examples:
     def _viewAll(self, *args):
         pass
         
-    def display2D(self, filename, inputid, inputimagesid, extraParams=''):
-        from pyworkflow.em.packages.xmipp3.viewer import runScipionShowJ
+    def display2D(self, filename, extraParams=''):
+        from pyworkflow.em.packages.xmipp3.viewer import runShowJ
+        runShowJ(filename, extraParams=extraParams)
         
+    def displayScipion(self, filename, inputid, inputimagesid, extraParams=''):
+        from pyworkflow.em.packages.xmipp3.viewer import runScipionShowJ        
         runScipionShowJ(filename, "Particles", self._project.getName(), inputid, inputimagesid)
 
     def _load(self):
@@ -145,7 +148,7 @@ Examples:
         inputParticlesId = self.protocol.inputParticles.get().strId()
         for it in self._iterations:
             data_classes = self.protocol._getIterClasses(it)
-            self.display2D(data_classes, inputParticlesId, inputParticlesId,extraParams='--mode metadata --render first')
+            self.displayScipion(data_classes, inputParticlesId, inputParticlesId,extraParams='--mode metadata --render first')
                   
     def _showLL(self, paramName):
         self._load()
@@ -183,7 +186,7 @@ Examples:
                 mdIters.setValue(labels[i], pmax, objId)
         fn = self.protocol._getFileName('all_avgPmax_xmipp')
         mdIters.write(fn)
-        self.display2D(fn, extraParams='--label_relion')                    
+        self.display2D(fn)                    
         #self.display2D(fn, extraParams)
         xplotter = XmippPlotter()
         xplotter.createSubPlot("Avg PMax per Iterations", "Iterations", "Avg PMax")
@@ -217,7 +220,7 @@ Examples:
                 mdIters.setValue(label, md.getValue(label, firstId), objId)
         fn = self.protocol._getFileName('all_changes_xmipp')
         mdIters.write(fn)
-        self.display2D(fn, extraParams='--label_relion')  
+        self.display2D(fn)  
 
     @classmethod
     def getView(cls):

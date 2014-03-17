@@ -52,7 +52,6 @@ from os.path import dirname, join
 from pyworkflow.utils.path import makePath
 import pyworkflow as pw
 import xmipp
-from pyworkflow.em.packages.relion.convert import addRelionLabelsToEnviron
 
 
 class XmippViewer(Viewer):
@@ -242,17 +241,20 @@ def runJavaIJapp(memory, appName, args, batchMode=True, env=None):
     runJob(None, "java", args, runInBackground=batchMode, env=env)
     
 def runShowJ(inputFiles, memory="1g", extraParams=""):
-    
-    env = os.environ.copy()
-    addRelionLabelsToEnviron(env)
+    if inputFiles.endswith('star'):
+        from pyworkflow.em.packages.relion.convert import addRelionLabelsToEnviron
+        env = os.environ.copy()
+        addRelionLabelsToEnviron(env)    
     runJavaIJapp(memory, "'xmipp.viewer.Viewer'", "-i %s %s" % (inputFiles, extraParams), True)
     
 def runScipionShowJ(inputFiles, type, projectid, objid, inputimagesid, memory="1g", extraParams=""):
     env = None
     # This is not very nice here, is just a patch
     # to visualize the relion .star files as xmipp metadatas    
-    env = os.environ.copy()
-    addRelionLabelsToEnviron(env)
+    if inputFiles.endswith('star'):
+        from pyworkflow.em.packages.relion.convert import addRelionLabelsToEnviron
+        env = os.environ.copy()
+        addRelionLabelsToEnviron(env)
         
     script = pw.join('apps', 'pw_create_image_subset.py')
 
