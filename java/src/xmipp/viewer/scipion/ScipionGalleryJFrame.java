@@ -16,6 +16,7 @@ import javax.swing.JButton;
 import xmipp.ij.commons.XmippUtil;
 import xmipp.jni.MetaData;
 import xmipp.utils.XmippDialog;
+import xmipp.utils.XmippStringUtils;
 import xmipp.utils.XmippWindowUtil;
 import xmipp.viewer.windows.GalleryJFrame;
 
@@ -46,7 +47,8 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
             projectid = parameters.projectid;
             inputid = parameters.inputid;
             inputimagesid = parameters.inputimagesid;
-            selectionmdfile = projectid + File.separator + "selection.xmd";
+            selectionmdfile = String.format("%s%sselection%s", projectid, File.separator, getFileExtension());
+            
             initComponents();
         } catch (Exception ex) {
             Logger.getLogger(ScipionGalleryJFrame.class.getName()).log(Level.SEVERE, null, ex);

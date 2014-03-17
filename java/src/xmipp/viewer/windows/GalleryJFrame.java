@@ -109,6 +109,7 @@ import xmipp.utils.XmippMenuBarCreator;
 import xmipp.utils.XmippPopupMenuCreator;
 import xmipp.utils.XmippQuestionDialog;
 import xmipp.utils.XmippResource;
+import xmipp.utils.XmippStringUtils;
 import xmipp.utils.XmippWindowUtil;
 import xmipp.viewer.RowHeaderRenderer;
 import xmipp.viewer.ctf.TasksEngine;
@@ -2381,6 +2382,13 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
             } catch (Exception ex) {
                 Logger.getLogger(GalleryJFrame.class.getName()).log(Level.SEVERE, null, ex);
             }
+       }
+       
+       public String getFileExtension()
+       {
+           if(data.getFileName() == null)
+               return "";
+           return XmippStringUtils.getFileExtension(data.getFileName());
        }
 
 }// class JFrameGallery
