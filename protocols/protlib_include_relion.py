@@ -456,7 +456,6 @@ AvgPMAX = False
 # {view} ''' + changesStr + '''
 """ Visualize changes in orientation, offset and number images assigned to each class"""
 TableChange = False
-    '''
     
 # {condition}(not DoClassify) {view}{list_combo}(slices, chimera, none) Display final 3D map
 """
@@ -468,6 +467,7 @@ Display final 3D map computed using ALL the images
 <none>: Do not display any volume.
 """
 DisplayFinalReconstruction = "slices"
+    '''
 
     return linesStr# % locals()    
  
