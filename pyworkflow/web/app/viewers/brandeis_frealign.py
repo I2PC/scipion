@@ -26,7 +26,7 @@
 
 import os
 from pyworkflow.web.app.views_util import *
-from pyworkflow.em.packages.brandeis.viewer_frealign import *
+from pyworkflow.em.packages.brandeis.viewer import *
 
 def viewerFrealign(request, protocolViewer):
     ioDict = {}
@@ -36,6 +36,7 @@ def viewerFrealign(request, protocolViewer):
     if protocolViewer.selectedIters:
         pass
     if protocolViewer.doShow3DRefsVolumes:
+        print "entra aqui!!"
         typeUrl, url = doShow3DRefsVolumes(request, protocolViewer)
         ioDict[typeUrl]= url
     if protocolViewer.doShow3DReconsVolumes:

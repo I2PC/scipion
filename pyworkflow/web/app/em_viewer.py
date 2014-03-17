@@ -46,7 +46,7 @@ from viewers.xmipp_nma_align import *
 from viewers.spider_capca import *
 from viewers.spider_ward import *
 # BRANDEIS
-#from viewers.brandeis_frealign import *
+from viewers.brandeis_frealign import *
 
 ############## 1ST STEP: LAUNCH VIEWER METHODS ##############
 def launch_viewer(request):
@@ -87,7 +87,7 @@ def viewerXmipp(project, protocol, viewer):
     elif getattr(protocol, 'outputParticles', False):
         objId = protocol.outputParticles.getObjId()
         protId = protocol.getObjId()
-        ioDict["plot"] = "/view_plot_xmipp/?protocolId="+ str(protId)
+        ioDict["plot"] = "/view_plot_xmipp/?protocolId="+ str(protId) +"&width=800&height=600"
         
     ioDict["url"] = "/visualize_object/?objectId="+str(objId)
     

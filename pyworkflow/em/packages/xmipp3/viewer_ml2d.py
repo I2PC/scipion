@@ -129,7 +129,7 @@ def createPlots(protML, selectedPlots):
     lastIter = protML._lastIteration()
     if lastIter == 0:
         return
-    refs = protML._getIterClasses(iter=lastIter, block='classes')
+    refs = protML._getIterClasses(it=lastIter, block='classes')
 #    if not exists(refs):
 #        return 
 #    blocks = getBlocksInMetaDataFile(refs)
@@ -161,7 +161,7 @@ def createPlots(protML, selectedPlots):
     ll = []
     pmax = []
     for iter in iters:
-        logs = protML._getIterClasses(iter=iter, block='info')
+        logs = protML._getIterClasses(it=iter, block='info')
         md = xmipp.MetaData(logs)
         id = md.firstObject()
         ll.append(md.getValue(xmipp.MDL_LL, id))
@@ -194,7 +194,7 @@ def createPlots(protML, selectedPlots):
     if doPlot('doShowSignalChange'):
         md = xmipp.MetaData()
         for iter in iters:
-            fn = protML._getIterClasses(iter=iter, block='classes')
+            fn = protML._getIterClasses(it=iter, block='classes')
             md2 = xmipp.MetaData(fn)
             md2.fillConstant(xmipp.MDL_ITER, str(iter))
             md.unionAll(md2)

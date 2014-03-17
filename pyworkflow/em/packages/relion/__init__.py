@@ -35,6 +35,7 @@ _references = ['Scheres2012a', 'Scheres2012b', 'Chen2012']
 from convert import *
 from protocol_classify2d import ProtRelionClassify2D
 from protocol_classify3d import ProtRelionClassify3D
+from protocol_refine3d import ProtRelionRefine3D
 
 # Wizards
 from wizard import *
