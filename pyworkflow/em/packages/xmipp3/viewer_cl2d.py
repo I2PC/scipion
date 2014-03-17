@@ -99,7 +99,7 @@ class XmippCL2DViewer(ProtocolViewer):
             if self.doShowLastLevel:
                 #runShowJ("classes@"+lastLevelFile)
                 
-                runScipionShowJ("classes@"+lastLevelFile, "Particles", self._project.getName(), obj.strId())  
+                runScipionShowJ("classes@"+lastLevelFile, "Particles", self._project.getName(), obj.strId(), obj.getImages().strId())  
             else:
                 if self.showSeveralLevels.empty():
                     self.formWindow.showError('Please select the levels that you want to visualize.')
@@ -121,7 +121,8 @@ class XmippCL2DViewer(ProtocolViewer):
                             self.formWindow.showError('Level %s does not exist.' % level)
                     if files != "":
                         #runShowJ(files)
-                        runScipionShowJ(files, "Particles", self._project.getName(), obj.strId())          
+                        inputImagesId = self.protocol.inputImages.get().strId()
+                        runScipionShowJ(files, "Particles", self._project.getName(), self.protocol.strId(), inputImagesId)          
         
     def _viewAll(self, *args):
 

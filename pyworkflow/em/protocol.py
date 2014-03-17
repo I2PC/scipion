@@ -864,35 +864,47 @@ class ProtUserSubSet(EMProtocol):
     
     def __init__(self, **args):
         EMProtocol.__init__(self, **args)
-        self._setType = String(args.get('setType'))
+        self._inputType = String(args.get('inputType'))
+        self._outputType = String(args.get('outputType'))
+        
     
-    def getType(self):
-        return self._setType.get()
+    def getInputType(self):
+        return self._inputType.get()
     
-    def createInputSet(self, inputset):
+    def getOutputType(self):
+        return self._outputType.get()
+    
+    def createInputPointer(self, inputset):
         
         inputsetpt = Pointer()
         inputsetpt.set(inputset)
-        inputs = {'input' + self._setType.get(): inputsetpt}
+        inputs = {'input' + self.getInputType(): inputsetpt}
         self._defineInputs(**inputs)
+        
     
     def createOutputSet(self, outputset):
-        outputs = {'output' + self._setType.get(): outputset}
+        outputs = {'output' + self.getOutputType(): outputset}
         self._defineOutputs(**outputs)
     
     def getOutputSet(self):
-        return getattr(self, 'output' + self._setType.get())
+        return getattr(self, 'output' + self._outputType.get())
     
-    def getInputSet(self):
-        inputsetpt = getattr(self, 'input' + self._setType.get())
+    def getInputPointer(self):
+        inputsetpt = getattr(self, 'input' + self._inputType.get())
         return inputsetpt.get()
     
     def _summary(self):
         summary = []
-        
-        summary.append("From input set of %s %s created subset of %s %s"%(self.getInputSet().getSize(), self.getType(), self.getOutputSet().getSize(), self.getType()))
+        input = self.getInputType()
+        if hasattr(self.getInputPointer(), "getSize"):
+            input = "%d %s"%(self.getInputPointer().getSize(), input)
+        summary.append("From input set of %s created subset of %s %s"%(input, self.getOutputSet().getSize(), self.getOutputType()))
         return summary
 
+    def _methods(self):
+        return self._summary()
+    
+       
 
 class ProtAlignClassify(EMProtocol):
     pass
