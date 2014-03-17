@@ -457,6 +457,18 @@ AvgPMAX = False
 """ Visualize changes in orientation, offset and number images assigned to each class"""
 TableChange = False
     '''
+    
+# {condition}(not DoClassify) {view}{list_combo}(slices, chimera, none) Display final 3D map
+"""
+Display final 3D map computed using ALL the images
+<slices>: display volumes as 2D slices along z axis
+(you can change the view to x or y axis)
+<chimera>: display volumes as surface with Chimera.
+(you will need Chimera installed in your computer)
+<none>: Do not display any volume.
+"""
+DisplayFinalReconstruction = "slices"
+
     return linesStr# % locals()    
  
  

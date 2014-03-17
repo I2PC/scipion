@@ -250,3 +250,15 @@ class ProtRelionRefinner( ProtRelionBase):
                 a.plot([self.minInv, self.maxInv],[self.ResolutionThreshold, self.ResolutionThreshold], color='black', linestyle='--')
             a.grid(True)
              
+    def _visualizeDisplayFinalReconstruction(self):
+        """ Visualize final 3D map.
+        If show in slices, create a temporal single metadata
+        for avoid opening multiple windows. 
+        """
+        prefixes = self._getPrefixes()
+        _visualizeVolumesMode = self.parser.getTkValue('DisplayFinalReconstruction')
+        if _visualizeVolumesMode == 'slices':
+            fn = 'relion_class001.mrc:mrc'
+            self.display2D(fn)         
+        elif _visualizeVolumesMode == 'chimera':
+            self.display3D(self.getFilename(fn)
