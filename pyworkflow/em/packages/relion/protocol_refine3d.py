@@ -52,19 +52,23 @@ class ProtRelionRefine3D(ProtRefine3D, ProtRelionBase):
         self.ClassFnTemplate = '%(ref)03d@%(rootDir)s/relion_it%(iter)03d_classes.mrcs'
         self.outputClasses = 'classes.xmd'
         self.outputVols = ''
-        
-
+    
     #--------------------------- INSERT steps functions --------------------------------------------  
     def _setSamplingArgs(self, args):
         """ Set sampling related params"""
         # Sampling stuff
         args['--healpix_order'] = self.angularSamplingDeg.get()
         args['--auto_local_healpix_order'] = self.localSearchAutoSamplingDeg.get()
+        args['--auto_refine'] = ''
+        args['--split_random_halves'] = ''
+        if args['--sym'].startswith('C'):
+            args['--low_resol_join_halves'] = "40";
         
     #--------------------------- STEPS functions --------------------------------------------       
-    def createOutputStep(self, stamp):
+    def createOutputStep(self):
+#         self._defineOutputs(outputClasses=classes)
         pass
-        
+            
     #--------------------------- INFO functions -------------------------------------------- 
     def _validateNormal(self):
         """ Should be overriden in subclasses to 
@@ -89,9 +93,5 @@ class ProtRelionRefine3D(ProtRefine3D, ProtRelionBase):
         return summary messages for CONTINUE EXECUTION.
         """
         return []
-
-
+    
     #--------------------------- UTILS functions --------------------------------------------
-            
-            
-   

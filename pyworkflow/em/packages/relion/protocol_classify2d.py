@@ -61,7 +61,7 @@ class ProtRelionClassify2D(ProtRelionBase, ProtClassify):
         args['--psi_step'] = self.inplaneAngularSamplingDeg.get() * 2
 
     #--------------------------- STEPS functions --------------------------------------------       
-    def createOutputStep(self, stamp):
+    def createOutputStep(self):
         from convert import readSetOfClasses2D
         classesStar = self._getIterClasses(self._lastIter())
         classes = self._createSetOfClasses2D(self.inputParticles.get())
