@@ -591,7 +591,7 @@ def readSetOfClasses2D(classes2DSet, filename, classesBlock='classes', **args):
     blocks = xmipp.getBlocksInMetaDataFile(filename)
     
     classesMd = xmipp.MetaData('%s@%s' % (classesBlock, filename))
-    inputImages = args.get('inputImages', None)#specified on subsets
+    inputImages = args.get('inputImages', classes2DSet.getImages())#specified on subsets
     if inputImages is None:
         samplingRate = classes2DSet.getImages().getSamplingRate()
     else:
