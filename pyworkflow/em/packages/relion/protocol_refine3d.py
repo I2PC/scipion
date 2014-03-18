@@ -64,13 +64,15 @@ class ProtRelionRefine3D(ProtRefine3D, ProtRelionBase):
         if args['--sym'].startswith('C'):
             args['--low_resol_join_halves'] = "40";
         
-    #--------------------------- STEPS functions --------------------------------------------       
+    #--------------------------- STEPS functions --------------------------------------------     
+    def curve(self):
+        pass
+      
     def createOutputStep(self):
         imgSet = self.inputParticles.get()
         vol = Volume()
         vol.setFileName(self._getExtraPath('relion_class001.mrc'))
         vol.setSamplingRate(imgSet.getSamplingRate())
-        vol.setSamplingRate(sampling)
         self._defineOutputs(outputVolume=vol)
         self._defineSourceRelation(imgSet, vol)
     
