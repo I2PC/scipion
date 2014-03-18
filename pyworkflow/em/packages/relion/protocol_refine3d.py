@@ -66,9 +66,6 @@ class ProtRelionRefine3D(ProtRefine3D, ProtRelionBase):
             args['--low_resol_join_halves'] = "40";
         
     #--------------------------- STEPS functions --------------------------------------------     
-    def curve(self):
-        pass
-      
     def createOutputStep(self):
         imgSet = self.inputParticles.get()
         vol = Volume()
