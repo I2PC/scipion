@@ -293,7 +293,7 @@ Examples:
         if self.displayAngDist == 1:
             # FIXME
             #outerRadius = int(float(self.MaskRadiusA)/self.SamplingRate)
-            outerRadius = 60
+            outerRadius = 30
             radius = float(outerRadius) * 1.1
 
             for it in self._iterations:

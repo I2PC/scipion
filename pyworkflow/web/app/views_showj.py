@@ -432,7 +432,10 @@ def visualizeObject(request):
             fn = project.getTmpPath(obj.getName() + '_image.xmd')
             
             md = xmipp.MetaData()
-            md.setValue(xmipp.MDL_IMAGE, getImageLocation(obj), md.addObject())
+            imgFn = getImageLocation(obj)
+            if isinstance(obj, Volume) and imgFn.endswith('.mrc'):
+                imgFn += ':mrc'
+            md.setValue(xmipp.MDL_IMAGE, imgFn, md.addObject())
             md.write(fn)
             
             inputParameters['path'] = os.path.join(projectPath, fn)
