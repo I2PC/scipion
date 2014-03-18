@@ -71,8 +71,14 @@ class XmippViewer(Viewer):
     def visualize(self, obj, **args):
         
         cls = type(obj)
-        
-        if issubclass(cls, Image):
+
+        if issubclass(cls, Volume):
+            fn = locationToXmipp(*obj.getLocation())
+            if fn.endswith('.mrc'):
+                fn += ":mrc"
+            runShowJ(fn)   
+                 
+        elif issubclass(cls, Image):
             fn = locationToXmipp(*obj.getLocation())
             runShowJ(fn)
             
