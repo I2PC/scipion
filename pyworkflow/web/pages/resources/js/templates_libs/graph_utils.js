@@ -119,6 +119,8 @@ function callPaintGraph() {
 	 * This function paint the protocol graph in the template project_content.html
 	 */ 
 	
+	$("img#loading").show();
+	
 	// Draw the boxes
 	var nodeSource = $("div#graphActiv");
 	

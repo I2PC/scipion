@@ -382,6 +382,7 @@ function graphOFF(graph, icon_graph, list, icon_list){
 	graph.attr("data-mode", "inactive");
 //	graph.attr("style", "display:none;");
 	graph.hide();
+	$("img#loading").hide();
 	icon_graph.show();
 	
 	// Update Graph View
