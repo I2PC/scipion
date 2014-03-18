@@ -40,6 +40,7 @@ class ProtRelionRefine3D(ProtRefine3D, ProtRelionBase):
     IS_CLASSIFY = False
     CHANGE_LABELS = [xmipp.MDL_AVG_CHANGES_ORIENTATIONS, 
                      xmipp.MDL_AVG_CHANGES_OFFSETS]
+    PREFIXES = ['half1_', 'half2_']
     
     def __init__(self, **args):        
         ProtRelionBase.__init__(self, **args)

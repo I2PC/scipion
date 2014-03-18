@@ -537,3 +537,36 @@ class ProtRelionBase(EMProtocol):
             sortImagesByLL(data, data_sorted)
         
         return data_sorted
+    
+    def _getIterAngularDist(self, it):
+        """ Return the .star file with the classes angular distribution
+        for this iteration. If the file not exists, it will be written.
+        """
+        data_angularDist = self._getFileName('angularDist_xmipp', iter=it)
+        
+        if not exists(data_angularDist):
+            self._writeIterAngularDist(it)
+ 
+        return data_angularDist
+    
+    def _writeIterAngularDist(self, it):
+        """ Write the angular distribution. Should be overriden in subclasses. """
+        from convert import addRelionLabels
+        addRelionLabels()
+        
+        data_star = self._getFileName('data', iter=it)
+        md = xmipp.MetaData(data_star)
+        data_angularDist = self._getFileName('angularDist_xmipp', iter=it)
+        
+        for group in [1, 2]:
+            mdGroup = xmipp.MetaData()
+            mdGroup.importObjects(md, xmipp.MDValueEQ(xmipp.MDL_RANDOMSEED, group))
+            mdDist = xmipp.MetaData()
+            mdDist.aggregateMdGroupBy(mdGroup, xmipp.AGGR_COUNT, 
+                                      [xmipp.MDL_ANGLE_ROT, xmipp.MDL_ANGLE_TILT], 
+                                      xmipp.MDL_ANGLE_ROT, xmipp.MDL_WEIGHT)
+            mdDist.setValueCol(xmipp.MDL_ANGLE_PSI, 0.0)
+            blockName = 'half%d_class%06d_angularDist@' % (group, 1)
+            print "Writing angular distribution to: ", blockName + data_angularDist
+            mdDist.write(blockName + data_angularDist, xmipp.MD_APPEND)   
+                 
