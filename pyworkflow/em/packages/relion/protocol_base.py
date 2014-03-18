@@ -334,7 +334,6 @@ class ProtRelionBase(EMProtocol):
         self._initialize()
         self._insertFunctionStep('convertInputStep')
         self._insertRelionStep()
-        self._insertFunctionStep('curve')
         self._insertFunctionStep('createOutputStep')
  
     def _insertRelionStep(self):
