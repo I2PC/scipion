@@ -182,7 +182,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
                 if(picker.isScipionSave())
                 {
                     savebt.setVisible(false);
-                    saveandexitbt.setText("Create New Set Of Coordinates");
+                    saveandexitbt.setText("Create New Set Of Coordinates And Exit");
                 }
 		micrographstb = new JTable();
 		micrographstb.getSelectionModel().addListSelectionListener(new ListSelectionListener()
@@ -863,7 +863,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
                             XmippDialog.showInfo(ParticlePickerJFrame.this, output);
                             System.out.println(output);
                         }
-                       
+                        close();
 
                     } catch (Exception ex) {
                         throw new IllegalArgumentException(ex.getMessage());
