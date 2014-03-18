@@ -60,7 +60,7 @@ class SpiderViewerWard(ProtocolViewer):
                       help='The dendrogram will be show until that height')
         form.addParam('doShowClasses', BooleanParam, label="Visualize class averages?", default=True, 
                       help='')
-        form.addParam('maxLevel', IntParam, default=5,
+        form.addParam('maxLevel', IntParam, default=4,
                       label='Maximum level',
                       help='Maximum level of classes to show')
 
@@ -128,7 +128,7 @@ class SpiderViewerWard(ProtocolViewer):
         g = Graph(root=node)
         self.graph = g
                
-        self.win = Window("Select classes", self.formWindow, minsize=(1200, 800))
+        self.win = Window("Select classes", self.formWindow, minsize=(1000, 600))
         root = self.win.root
         canvas = Canvas(root)
         canvas.grid(row=0, column=0, sticky='nsew')
@@ -155,8 +155,8 @@ class SpiderViewerWard(ProtocolViewer):
         try:
             selectedNodes = [node for node in self.graph.getNodes() if node.selected]
             suffix = 'Selection'
-            prot = ProtUserSubSet(setType='Classes')
-            prot.createInputSet(self.protocol.outputClasses)
+            prot = ProtUserSubSet(inputType='Classes', outputType='Classes')
+            prot.createInputPointer(self.protocol.outputClasses)
             self._project._setupProtocol(prot)
             prot.makePathsAndClean()
             classes = prot._createSetOfClasses2D(self.protocol.inputParticles.get(), suffix)
@@ -169,7 +169,8 @@ class SpiderViewerWard(ProtocolViewer):
             #self.project.launchProtocol(prot, wait=True)
             self.win.showInfo("Protocol %s created. " % prot.getName())
         except Exception, ex:
-            
+            import traceback
+            traceback.print_exc()    
             self.win.showError(str(ex))
             #raise
             
@@ -178,8 +179,8 @@ class SpiderViewerWard(ProtocolViewer):
         try:
             selectedNodes = [node for node in self.graph.getNodes() if node.selected]
             suffix = 'Selection'
-            prot = ProtUserSubSet(setType='Particles')
-            prot.createInputSet(self.protocol.outputClasses)
+            prot = ProtUserSubSet(inputType='Classes', outputType='Particles')
+            prot.createInputPointer(self.protocol.outputClasses)
             self._project._setupProtocol(prot)
             prot.makePathsAndClean()
             
@@ -192,7 +193,8 @@ class SpiderViewerWard(ProtocolViewer):
             #self.project.launchProtocol(prot, wait=True)
             self.win.showInfo("Protocol %s created. " % prot.getName())
         except Exception, ex:
-            
+            import traceback
+            traceback.print_exc()    
             self.win.showError(str(ex))
             #raise
         

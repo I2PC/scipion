@@ -864,10 +864,9 @@ class ProtUserSubSet(EMProtocol):
     
     def __init__(self, **args):
         EMProtocol.__init__(self, **args)
-        self._inputType = String(args.get('inputType'))
-        self._outputType = String(args.get('outputType'))
+        self._inputType = String(args.get('inputType', None))
+        self._outputType = String(args.get('outputType', None))
         
-    
     def getInputType(self):
         return self._inputType.get()
     
@@ -875,12 +874,10 @@ class ProtUserSubSet(EMProtocol):
         return self._outputType.get()
     
     def createInputPointer(self, inputset):
-        
         inputsetpt = Pointer()
         inputsetpt.set(inputset)
         inputs = {'input' + self.getInputType(): inputsetpt}
         self._defineInputs(**inputs)
-        
     
     def createOutputSet(self, outputset):
         outputs = {'output' + self.getOutputType(): outputset}

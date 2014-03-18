@@ -34,22 +34,18 @@ class EmPlotter(Plotter):
     def plotAngularDistribution(self, title, rot, tilt, weight=[], max_p=40, min_p=5, max_w=2, min_w=1, color='blue'):
         '''Create an special type of subplot, representing the angular
         distribution of weight projections. '''
-#        from math import radians
-        
-        if (len(weight) > 0):
+        if weight:
             max_w = max(weight)
             min_w = min(weight)
-            a = self.createSubPlot(title, 'Min weight=%(min_w)f, Max weight=%(max_w)f' % locals(), '', projection='polar')
+            a = self.createSubPlot(title, 'Min weight=%(min_w).2f, Max weight=%(max_w).2f' % locals(), '', projection='polar')
+            for r, t, w in zip(rot, tilt, weight):
+                pointsize = int((w - min_w)/(max_w - min_w + 0.001) * (max_p - min_p) + min_p)
+                a.plot(r, t, markerfacecolor=color, marker='.', markersize=pointsize)
         else:
             a = self.createSubPlot(title, 'Empty plot', '', projection='polar')
+            for r, t in zip(rot, tilt):
+                a.plot(r, t, markerfacecolor=color, marker='.', markersize=10)
       
-        for i, rotItem in enumerate(rot):
-            if (len(weight) > 0):
-                pointsize = int((weight[i] - min_w)/(max_w - min_w + 0.001) * (max_p - min_p) + min_p)
-            else:
-                pointsize = 10
-            a.plot(rot[i], tilt[i], markerfacecolor=color, marker='.', markersize=pointsize)
-    
     def plotHist(self, xCol, yCol, color, **args):
         """ plot columns xCol and yCol
             if nbins is in args then and histogram over y data is made

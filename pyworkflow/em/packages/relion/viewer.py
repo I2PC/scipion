@@ -27,9 +27,13 @@
 This module implement the wrappers around xmipp_showj
 visualization program.
 """
+import os
+
 from pyworkflow.viewer import Viewer, ProtocolViewer, DESKTOP_TKINTER, WEB_DJANGO
 from protocol_classify2d import ProtRelionClassify2D
+from protocol_refine3d import ProtRelionRefine3D
 from pyworkflow.protocol.params import *
+
 
 ITER_LAST = 0
 ITER_SELECTION = 1
@@ -37,7 +41,7 @@ ITER_SELECTION = 1
     
 class RelionViewer(ProtocolViewer):
     """ Class to visualize Relion protocols """
-    _targets = [ProtRelionClassify2D]
+    _targets = [ProtRelionClassify2D, ProtRelionRefine3D]
     _environments = [DESKTOP_TKINTER, WEB_DJANGO]
     
     _label = 'viewer relion'
@@ -71,10 +75,7 @@ Examples:
                       condition='viewIter==%d' % ITER_SELECTION, 
                       label="Iterations list", 
                       help="Write the iteration list to visualize.")
-         
-        if not self.protocol.IS_2D:
-            pass # add 3d stuff
-        
+
         changesLabel = 'Changes in Offset and Angles'
         if self.protocol.IS_CLASSIFY:
             form.addParam('showImagesInClasses', BooleanParam, default=True,
@@ -91,12 +92,54 @@ Examples:
         form.addParam('showChanges', BooleanParam, default=True,
                       label=changesLabel,
                       help='Visualize changes in orientation, offset and\n number images assigned to each class')
+
+         
+        if self.protocol.IS_3D:
+            form.addSection('3D analysis')
+            
+            if self.protocol.IS_CLASSIFY:
+                form.addParam('showClasses3D', EnumParam, choices=['selection', 'all'], default=0,
+                              condition='isClassify',
+                              display=EnumParam.DISPLAY_LIST,
+                              label='CLASS 3D to visualize',
+                              help='')
+                form.addParam('class3DSelection', NumericRangeParam, default='1',
+                              condition='showClasses3D == 0',
+                              label='Classes list',
+                              help='')
+            
+            form.addParam('displayVol', EnumParam, choices=['slices', 'chimera'], 
+                          display=EnumParam.DISPLAY_LIST, default=0,
+                          label='Display volume with',
+                          help='*slices*: display volumes as 2D slices along z axis.\n'
+                               '*chimera*: display volumes as surface with Chimera.')
+            form.addParam('displayAngDist', EnumParam, choices=['2D plot', 'chimera'], 
+                          display=EnumParam.DISPLAY_LIST, default=0,
+                          label='Display angular distribution',
+                          help='*2D plot*: display angular distribution as interative 2D in matplotlib.\n'
+                               '*chimera*: display angular distribution using Chimera with red spheres.') 
+            form.addParam('spheresScale', IntParam, default=-1, 
+                          expertLevel=LEVEL_ADVANCED,
+                          label='',
+                          help='')
+            form.addParam('resolutionPlotsSSNR', BooleanParam, default=True,
+                          label='Display SSNR plots?',
+                          help='Display signal to noise ratio plots (SSNR) ')
+            form.addParam('resolutionPlotsFSC', BooleanParam, default=True,
+                          label='Display resolution plots (FSC) ?',
+                          help='')
+            form.addParam('resolutionThresholdFSC', FloatParam, default=0.5, 
+                          expertLevel=LEVEL_ADVANCED,
+                          label='Threshold in resolution plots',
+                          help='')                                      
         
     def _getVisualizeDict(self):
         return {'showImagesInClasses': self._showImagesInClasses,
                 'showLL': self._showLL,
                 'showPMax': self._showPMax,
                 'showChanges': self._showChanges,
+                'showClasses3D': self._showClasses3D,
+                'displayAngDist': self._showAngularDistribution
                 }
         
     def _viewAll(self, *args):
@@ -131,13 +174,27 @@ Examples:
         else:
             self._iterations = self._getListFromRangeString(self.iterSelection.get())
 
-#        self._visualizeLastIteration = self._visualizeIterations[-1]
+#        self._visualizeLastIteration = self._iterations[-1]
 #        self._visualizeLastRef3D = self._visualizeRef3Ds[-1]
 #        
 #        self._visualizeVolumesMode = self.parser.getTkValue('DisplayReconstruction')
 #        
 #        from matplotlib.ticker import FuncFormatter
 #        self._plotFormatter = FuncFormatter(self._formatFreq) 
+
+    def _getGridSize(self, n=None):
+        """ Figure out the layout of the plots given the number of references. """
+        if n is None:
+            n = len(self._refsList)
+        
+        if n == 1:
+            gridsize = [1, 1]
+        elif n == 2:
+            gridsize = [2, 1]
+        else:
+            gridsize = [(n+1)/2, 2]
+            
+        return gridsize
                 
     def _showImagesInClasses(self, paramName):
         """ Read Relion _data.star images file and 
@@ -222,6 +279,48 @@ Examples:
         fn = self.protocol._getFileName('all_changes_xmipp')
         mdIters.write(fn)
         self.display2D(fn)  
+        
+    def _showClasses3D(self, iter=None):
+        pass
+    
+    def _showAngularDistribution(self, paramName):
+        self._load()
+        import xmipp
+        from pyworkflow.em.packages.xmipp3.plotter import XmippPlotter
+        sphere = self.spheresScale.get()      
+        self._refsList = [1]
+        
+        if self.displayAngDist == 1:
+            # FIXME
+            #outerRadius = int(float(self.MaskRadiusA)/self.SamplingRate)
+            outerRadius = 60
+            radius = float(outerRadius) * 1.1
+
+            for it in self._iterations:
+                data_angularDist = self.protocol._getIterAngularDist(it)
+                for ref3d in self._refsList:
+                    for prefix in self.protocol.PREFIXES:
+                        volFn = self.protocol._getFileName(prefix + 'volume', iter=it, ref3d=ref3d)
+                        args = " --mode projector 256 -a %sclass%06d_angularDist@%s red %f " % (prefix, ref3d, data_angularDist, radius)
+                        if sphere > 0:
+                            args += ' %f ' % sphere
+                        #print "runChimeraClient(%s, %s) " % (volFn, args)
+                        os.system('xmipp_chimera_client --input "%s" %s &' % (volFn, args))
+                    
+        elif self.displayAngDist == 0:
+            nrefs = len(self._refsList)
+            n = nrefs * len(self.protocol.PREFIXES)
+            gridsize = self._getGridSize(n)
+            
+            for it in self._iterations:
+                data_angularDist = self.protocol._getIterAngularDist(it)
+                xplotter = XmippPlotter(*gridsize, mainTitle='Iteration %d' % it, windowTitle="Angular Distribution")
+                for ref3d in self._refsList:
+                    for prefix in self.protocol.PREFIXES:
+                        md = xmipp.MetaData("class%06d_angularDist@%s" % (ref3d, data_angularDist))
+                        plot_title = '%sclass %d' % (prefix, ref3d)
+                        xplotter.plotMdAngularDistribution(plot_title, md)
+                xplotter.show(interactive=True) 
 
     @classmethod
     def getView(cls):
