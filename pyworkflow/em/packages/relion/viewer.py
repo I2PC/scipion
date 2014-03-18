@@ -99,7 +99,6 @@ Examples:
             
             if self.protocol.IS_CLASSIFY:
                 form.addParam('showClasses3D', EnumParam, choices=['selection', 'all'], default=0,
-                              condition='isClassify',
                               display=EnumParam.DISPLAY_LIST,
                               label='CLASS 3D to visualize',
                               help='')
@@ -107,6 +106,10 @@ Examples:
                               condition='showClasses3D == 0',
                               label='Classes list',
                               help='')
+            else:
+                form.addParam('showHalves', EnumParam, choices=['half1', 'half2', 'both'], default=0,
+                              label='Half to visualize',
+                              help='Select which half do you want to visualize.')
             
             form.addParam('displayVol', EnumParam, choices=['slices', 'chimera'], 
                           display=EnumParam.DISPLAY_LIST, default=0,
@@ -138,7 +141,7 @@ Examples:
                 'showLL': self._showLL,
                 'showPMax': self._showPMax,
                 'showChanges': self._showChanges,
-                'showClasses3D': self._showClasses3D,
+                'displayVol': self._showVolumes,
                 'displayAngDist': self._showAngularDistribution
                 }
         
@@ -165,6 +168,8 @@ Examples:
 #            self._visualizeRef3Ds = getListFromRangeString(self.parser.getTkValue('SelectedRef3DNo'))
 #        
 #        self._visualizeNrefs = len(self._visualizeRef3Ds)
+
+        self._refsList = [1] #FIXME: Change this for classify 2d and 3d
         self.protocol._initialize() # Load filename templates
         self.firstIter = self.protocol._firstIter()
         self.lastIter = self.protocol._lastIter()
@@ -195,6 +200,16 @@ Examples:
             gridsize = [(n+1)/2, 2]
             
         return gridsize
+    
+    def _getPrefixes(self):
+        prefixes = self.protocol.PREFIXES
+        halves = getattr(self, 'showHalves', None)
+        if halves:
+            if halves == 0:
+                prefixes = ['half1_']
+            elif halves == 1:
+                prefixes = ['half2_']
+        return prefixes
                 
     def _showImagesInClasses(self, paramName):
         """ Read Relion _data.star images file and 
@@ -280,15 +295,23 @@ Examples:
         mdIters.write(fn)
         self.display2D(fn)  
         
-    def _showClasses3D(self, iter=None):
-        pass
-    
+    def _showVolumes(self, paramName=None):
+        self._load()
+        prefixes = self._getPrefixes()
+        for it in self._iterations:
+            for ref3d in self._refsList:
+                for prefix in prefixes:
+                    volFn = self.protocol._getFileName(prefix + 'volume', iter=it, ref3d=ref3d)
+                    #print "runChimeraClient(%s, %s) " % (volFn, args)
+                    os.system('xmipp_chimera_client --input "%s" --mode projector 256 &' % volFn)
+                            
     def _showAngularDistribution(self, paramName):
         self._load()
         import xmipp
         from pyworkflow.em.packages.xmipp3.plotter import XmippPlotter
         sphere = self.spheresScale.get()      
-        self._refsList = [1]
+        
+        prefixes = self._getPrefixes()
         
         if self.displayAngDist == 1:
             # FIXME
@@ -299,7 +322,7 @@ Examples:
             for it in self._iterations:
                 data_angularDist = self.protocol._getIterAngularDist(it)
                 for ref3d in self._refsList:
-                    for prefix in self.protocol.PREFIXES:
+                    for prefix in prefixes:
                         volFn = self.protocol._getFileName(prefix + 'volume', iter=it, ref3d=ref3d)
                         args = " --mode projector 256 -a %sclass%06d_angularDist@%s red %f " % (prefix, ref3d, data_angularDist, radius)
                         if sphere > 0:
@@ -309,14 +332,14 @@ Examples:
                     
         elif self.displayAngDist == 0:
             nrefs = len(self._refsList)
-            n = nrefs * len(self.protocol.PREFIXES)
+            n = nrefs * len(prefixes)
             gridsize = self._getGridSize(n)
             
             for it in self._iterations:
                 data_angularDist = self.protocol._getIterAngularDist(it)
                 xplotter = XmippPlotter(*gridsize, mainTitle='Iteration %d' % it, windowTitle="Angular Distribution")
                 for ref3d in self._refsList:
-                    for prefix in self.protocol.PREFIXES:
+                    for prefix in prefixes:
                         md = xmipp.MetaData("class%06d_angularDist@%s" % (ref3d, data_angularDist))
                         plot_title = '%sclass %d' % (prefix, ref3d)
                         xplotter.plotMdAngularDistribution(plot_title, md)
