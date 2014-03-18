@@ -308,7 +308,7 @@ void ProgPSDSort::processImage(const FileName &fnImg, const FileName &fnImgOut, 
         	if (normalizedDamping>0.1)
         		evaluation.maxFreq=std::min(evaluation.maxFreq,1.0/w);
 
-        	VEC_ELEM(envelope,idx) += double(normalizedDamping);
+        	VEC_ELEM(envelope,idx) += double(fabs(CTF1.getValueDampingAt()));
     		idx++;
     	}
 
