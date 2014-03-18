@@ -351,12 +351,15 @@ function graphON(graph, icon_graph, list, icon_list){
 	
 	// Graph ON
 	graph.attr("data-mode", "active");
-	graph.removeAttr("style");
+//	graph.removeAttr("style");
+	graph.show();
+	graph.css("margin-top","50em")
 	icon_graph.hide();
 	
 	// Table OFF
 	list.attr("data-mode", "inactive");
-	list.attr("style", "display:none;");
+//	list.attr("style", "display:none;");
+	list.hide();
 	icon_list.show();
 
 	// Update Graph View
@@ -371,12 +374,14 @@ function graphOFF(graph, icon_graph, list, icon_list){
 	
 	// Table ON	
 	list.attr("data-mode", "active");
-	list.removeAttr("style");
+//	list.removeAttr("style");
+	list.show();
 	icon_list.hide();
 	
 	// Graph OFF
 	graph.attr("data-mode", "inactive");
-	graph.attr("style", "display:none;");
+//	graph.attr("style", "display:none;");
+	graph.hide();
 	icon_graph.show();
 	
 	// Update Graph View

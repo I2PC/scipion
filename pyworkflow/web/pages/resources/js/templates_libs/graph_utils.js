@@ -121,6 +121,7 @@ function callPaintGraph() {
 	
 	// Draw the boxes
 	var nodeSource = $("div#graphActiv");
+	
 	var status = "finished";
 	var aux = [];
 
@@ -146,8 +147,8 @@ function callPaintGraph() {
 		var height = $("div#" + idNew + ".window").height();
 
 		aux.push(id + "-" + width + "-" + height);
-	});
-
+	});	
+	
 	$.ajax({
 		type : "GET",
 		url : '/project_graph/?list=' + aux,
@@ -192,6 +193,10 @@ function callPaintGraph() {
 				aux += "border:2.5px solid Firebrick;"
 				elm.attr("style", aux);
 			}
+			
+			$("img#loading").hide();
+			nodeSource.css("margin-top","0")
+			
 		}
 	});
 	jsPlumb.draggable($(".window"));
