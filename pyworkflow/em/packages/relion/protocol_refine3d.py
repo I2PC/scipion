@@ -67,9 +67,14 @@ class ProtRelionRefine3D(ProtRefine3D, ProtRelionBase):
         
     #--------------------------- STEPS functions --------------------------------------------       
     def createOutputStep(self):
-#         self._defineOutputs(outputClasses=classes)
-        pass
-            
+        imgSet = self.inputParticles.get()
+        vol = Volume()
+        vol.setFileName(self._getExtraPath('relion_class001.mrc'))
+        vol.setSamplingRate(imgSet.getSamplingRate())
+        vol.setSamplingRate(sampling)
+        self._defineOutputs(outputVolume=vol)
+        self._defineSourceRelation(imgSet, vol)
+    
     #--------------------------- INFO functions -------------------------------------------- 
     def _validateNormal(self):
         """ Should be overriden in subclasses to 
