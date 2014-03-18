@@ -62,7 +62,7 @@ class XmippCL2DViewer(ProtocolViewer):
         form.addParam('doShowLastLevel', BooleanParam, label="Visualize last level.", default=True)     
         form.addParam('showSeveralLevels', StringParam, default='',
               label='Visualize several levels', condition='not doShowLastLevel',
-              help='Create a  list of levels like: 0,1,3 or 0-3 ')    
+              help='Specify a  list of levels like: 0,1,3 or 0-3 ')    
     
     def _getVisualizeDict(self):
         return {'doShowClassHierarchy': self._viewClassHierarchy,
