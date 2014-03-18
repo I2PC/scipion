@@ -170,8 +170,12 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 				if (getParticlePicker().getMode() != Mode.ReadOnly)
 					getParticlePicker().saveData();
                                 if(getParticlePicker().isScipionSave())
-                                    getParticlePicker().doScipionSave();
-				close();
+                                {
+                                     String[] cmd = getParticlePicker().getScipionSaveCommand();
+                                     executeScipionSave(cmd);
+                                }
+                                else
+                                    close();
 
 			}
 		});
@@ -839,5 +843,34 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		map.put("Down", "Moves selected particle down");
 		return map;
 	}
+        
+        protected void executeScipionSave(final String[] command)
+        {
+            getCanvas().setEnabled(false);
+            XmippWindowUtil.blockGUI(ParticlePickerJFrame.this, "Creating set ...");
+            new Thread(new Runnable() {
+
+                @Override
+                public void run() {
+
+                    try {
+
+                        String output = XmippUtil.executeCommand(command);
+                        XmippWindowUtil.releaseGUI(ParticlePickerJFrame.this.getRootPane());
+                        getCanvas().setEnabled(true);
+                        if(output != null && !output.isEmpty())
+                        {
+                            XmippDialog.showInfo(ParticlePickerJFrame.this, output);
+                            System.out.println(output);
+                        }
+                       
+
+                    } catch (Exception ex) {
+                        throw new IllegalArgumentException(ex.getMessage());
+                    }
+
+                }
+            }).start();
+        }
 
 }

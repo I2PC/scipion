@@ -9,8 +9,12 @@ import ij.IJ;
 import ij.ImagePlus;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
+import javax.swing.JFrame;
 import xmipp.jni.Filename;
 import xmipp.jni.ImageGeneric;
+import xmipp.utils.XmippDialog;
+import xmipp.utils.XmippWindowUtil;
+import xmipp.viewer.particlepicker.ParticlePickerJFrame;
 
 
 public class XmippUtil {
@@ -60,7 +64,10 @@ public class XmippUtil {
 	}
         
         public static String executeCommand(String[] command) throws Exception {
-
+            for(String value: command)
+                System.out.printf(value);
+            System.out.println();
+                     
             StringBuffer output = new StringBuffer();
 
             Process p;
@@ -84,4 +91,5 @@ public class XmippUtil {
         }
 
 
+       
 }

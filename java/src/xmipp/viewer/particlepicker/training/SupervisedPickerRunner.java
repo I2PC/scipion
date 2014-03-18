@@ -30,6 +30,7 @@ public class SupervisedPickerRunner implements Runnable {
     public final static String INCOREOPT = "incore";
     public boolean isscipionsave;
     
+    public String python;
     public String script;
     public String projectid;
     public String inputid;
@@ -90,25 +91,33 @@ public class SupervisedPickerRunner implements Runnable {
         if (cmdLine.hasOption(SCIPIONOPT)) {
             isscipionsave = true;
             cmdargs = cmdLine.getOptionValues(SCIPIONOPT);
-            script = cmdargs[0];
-            projectid = cmdargs[1];
-            inputid = cmdargs[2];
+            python = cmdargs[0];
+            script = cmdargs[1];
+            projectid = cmdargs[2];
+            inputid = cmdargs[3];
         }
 
     }
 
     @Override
     public void run() {
+        try
+        {
+            SupervisedParticlePicker ppicker = null;
+            if (mode == Mode.Manual) 
+                ppicker = new SupervisedParticlePicker(inputfile, outputdir, threads, fast, incore);
+            else 
+                ppicker = new SupervisedParticlePicker(inputfile, outputdir, mode);
+            if(isscipionsave)
+                ppicker.addScipionSave(python, script, projectid, inputid);
 
-        SupervisedParticlePicker ppicker = null;
-        if (mode == Mode.Manual) 
-            ppicker = new SupervisedParticlePicker(inputfile, outputdir, threads, fast, incore);
-        else 
-            ppicker = new SupervisedParticlePicker(inputfile, outputdir, mode);
-        if(isscipionsave)
-            ppicker.addScipionSave(script, projectid, inputid);
+            new SupervisedParticlePickerJFrame(ppicker);
+        } catch (Exception e) {
+            System.out.println("Error catched on main");
+            ParticlePicker.getLogger().log(Level.SEVERE, e.getMessage(), e);
+            XmippDialog.showException(null, e);
 
-        new SupervisedParticlePickerJFrame(ppicker);
+        }
 
     }
 

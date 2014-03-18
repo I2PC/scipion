@@ -616,8 +616,8 @@ public abstract class ParticlePicker {
     }
 
 
-     public void addScipionSave(String script, String projectid, String inputid) {
-            scipionsave = new ScipionSave(script, projectid, inputid);
+     public void addScipionSave(String python, String script, String projectid, String inputid) {
+            scipionsave = new ScipionSave(python, script, projectid, inputid);
      }
      
      public boolean isScipionSave()
@@ -625,25 +625,22 @@ public abstract class ParticlePicker {
          return scipionsave != null;
      }
 
-    void doScipionSave() {
-        try {
+    public String[] getScipionSaveCommand() {
+        
             
-            String[] cmd = new String[]{scipionsave.script, outputdir, scipionsave.projectid, scipionsave.inputid};
-            XmippUtil.executeCommand(cmd);
-        } catch (Exception ex) {
-            Logger.getLogger(ParticlePicker.class.getName()).log(Level.SEVERE, null, ex);
+            String[] cmd = new String[]{scipionsave.python, scipionsave.script, outputdir, scipionsave.projectid, scipionsave.inputid};
+            return cmd;
         }
-    }
      
      
 
     class ScipionSave {
 
-        public String script, projectid, inputid;
+        public String python, script, projectid, inputid;
         
 
-        public ScipionSave(String script, String projectid, String inputid) {
-            
+        public ScipionSave(String python, String script, String projectid, String inputid) {
+            this.python = python;
             this.script = script;
             this.projectid = projectid;
             this.inputid = inputid;
