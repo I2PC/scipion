@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+
 '''
 Created on Jan 27, 2014
 
@@ -27,10 +27,10 @@ if __name__ == '__main__':
     
     project = Manager().loadProject(projectid)
     
-    prot = ProtUserSubSet(setType=type)
+    prot = ProtUserSubSet(inputType=type, outputType=type)
     
     inputset = project.mapper.selectById(int(inputid))
-    prot.createInputSet(inputset)
+    prot.createInputPointer(inputset)
     
     project._setupProtocol(prot)
     prot.makePathsAndClean()

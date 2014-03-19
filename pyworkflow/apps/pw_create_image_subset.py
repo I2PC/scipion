@@ -46,7 +46,7 @@ if __name__ == '__main__':
     else:
         outputset = createSetFun(inputimages)
         readSetFun = getattr(xmipp3, 'readSetOf' + setType )       
-        readSetFun(outputset, mdfile, inputImages=inputimages)
+        readSetFun(outputset, mdfile)
 
         
     prot.createOutputSet(outputset)
