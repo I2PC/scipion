@@ -250,3 +250,23 @@ class ProtRelionRefinner( ProtRelionBase):
                 a.plot([self.minInv, self.maxInv],[self.ResolutionThreshold, self.ResolutionThreshold], color='black', linestyle='--')
             a.grid(True)
              
+    def _visualizeDisplayFinalReconstruction(self):
+        """ Visualize final 3D map.
+        If show in slices, create a temporal single metadata
+        for avoid opening multiple windows. 
+        """
+        prefixes = self._getPrefixes()
+        _visualizeVolumesMode = self.parser.getTkValue('DisplayFinalReconstruction')
+        filename = self.extraPath('relion_class001.mrc:mrc')
+        if xmippExists(filename):
+            #Chimera
+            if _visualizeVolumesMode == 'chimera':
+                print "filename", filename
+                runChimeraClient(filename)
+            else:
+                try:
+                    runShowJ(filename, extraParams=' --dont_wrap ')
+                except Exception, e:
+                    showError("Error launching xmipp_showj: ", str(e), self.master)
+        else:
+            showError("Can not visualize volume file <%s>\nit does not exists." % filename, self.master)

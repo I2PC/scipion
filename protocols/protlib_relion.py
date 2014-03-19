@@ -378,6 +378,9 @@ class ProtRelionBase(XmippProtocol):
 
         if doPlot('Likelihood'):
             self._visualizeLikelihood()
+
+        if doPlot('DisplayFinalReconstruction'):
+            self._visualizeDisplayFinalReconstruction()
 #            
 #        if xplotter:
 #            xplotter.show()
