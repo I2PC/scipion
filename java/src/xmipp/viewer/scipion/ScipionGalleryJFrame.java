@@ -58,25 +58,14 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
 
     private void initComponents() {
         if (type != null) {
-            final String inputType = is2DClassificationMd()? "Classes2D": type;
+            
             cmdbutton = getScipionButton("Create New Set Of " + type, new ActionListener() {
 
                 @Override
                 public void actionPerformed(ActionEvent ae) {
-                    try {
-                        
-                        if(is2DClassSelection())
-                            saveImagesFromClassSelection(selectionmdfile);
-                        else
-                            saveSelection(selectionmdfile, true);
-                        String[] command = new String[]{python, script, selectionmdfile, inputType, type, projectid, inputid, inputimagesid};
-                        runCommand(command);
-                        
-                        
-                    } catch (Exception ex) {
-                        Logger.getLogger(ScipionGalleryJFrame.class.getName()).log(Level.SEVERE, null, ex);
-                        
-                    }
+                    boolean create = XmippDialog.showQuestion(ScipionGalleryJFrame.this, "Are you sure you want to create a new set of " + type + "?");
+                    if(create)
+                        createSubset();
                 }
             });
             if(is2DClassificationMd())
@@ -85,13 +74,9 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
 
                     @Override
                     public void actionPerformed(ActionEvent ae) {
-                        try {
-                            saveClassSelection(selectionmdfile);
-                            String[] command = new String[]{python, script, selectionmdfile, "Classes2D", "Classes2D", projectid, inputid, inputimagesid};
-                            runCommand(command);
-                        } catch (Exception ex) {
-                            Logger.getLogger(ScipionGalleryJFrame.class.getName()).log(Level.SEVERE, null, ex);
-                        }
+                        boolean create = XmippDialog.showQuestion(ScipionGalleryJFrame.this, "Are you sure you want to create a new set of Classes2D ?");
+                        if(create)
+                            createSubsetOfClasses();
                     }
                 });
                 buttonspn.add(classcmdbutton);
@@ -178,6 +163,37 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
             classcmdbutton.setBackground(color);
             classcmdbutton.setForeground(forecolor);
         }
+    }
+    
+    public void createSubset()
+    {
+        try {
+            final String inputType = is2DClassificationMd()? "Classes2D": type;            
+            if(is2DClassSelection())
+                saveImagesFromClassSelection(selectionmdfile);
+            else
+                saveSelection(selectionmdfile, true);
+            String[] command = new String[]{python, script, selectionmdfile, inputType, type, projectid, inputid, inputimagesid};
+            runCommand(command);
+
+
+        } catch (Exception ex) {
+            Logger.getLogger(ScipionGalleryJFrame.class.getName()).log(Level.SEVERE, null, ex);
+
+        }
+    }
+    
+    public void createSubsetOfClasses()
+    {
+        try 
+        {
+            saveClassSelection(selectionmdfile);
+            String[] command = new String[]{python, script, selectionmdfile, "Classes2D", "Classes2D", projectid, inputid, inputimagesid};
+            runCommand(command);
+        } catch (Exception ex) {
+            Logger.getLogger(ScipionGalleryJFrame.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    
     }
 
 }

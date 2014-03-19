@@ -60,6 +60,7 @@ import xmipp.utils.XmippResource;
 import xmipp.utils.XmippWindowUtil;
 import xmipp.viewer.particlepicker.extract.ExtractPickerJFrame;
 import xmipp.viewer.particlepicker.training.model.Mode;
+import xmipp.viewer.scipion.ScipionGalleryJFrame;
 
 public abstract class ParticlePickerJFrame extends JFrame implements ActionListener
 {
@@ -171,8 +172,12 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 					getParticlePicker().saveData();
                                 if(getParticlePicker().isScipionSave())
                                 {
-                                     String[] cmd = getParticlePicker().getScipionSaveCommand();
-                                     executeScipionSave(cmd);
+                                    boolean create = XmippDialog.showQuestion(ParticlePickerJFrame.this, "Are you sure you want to create a new set of coordinates ?");
+                                    if(create)
+                                    {
+                                        executeScipionSaveAndExit();
+                                        
+                                    }
                                 }
                                 else
                                     close();
@@ -844,8 +849,9 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		return map;
 	}
         
-        protected void executeScipionSave(final String[] command)
+        protected void executeScipionSaveAndExit()
         {
+            
             getCanvas().setEnabled(false);
             XmippWindowUtil.blockGUI(ParticlePickerJFrame.this, "Creating set ...");
             new Thread(new Runnable() {
@@ -854,8 +860,8 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
                 public void run() {
 
                     try {
-
-                        String output = XmippUtil.executeCommand(command);
+                        String[] cmd = getParticlePicker().getScipionSaveCommand();
+                        String output = XmippUtil.executeCommand(cmd);
                         XmippWindowUtil.releaseGUI(ParticlePickerJFrame.this.getRootPane());
                         getCanvas().setEnabled(true);
                         if(output != null && !output.isEmpty())
