@@ -33,7 +33,7 @@
 ProgClassifyCL2D *prm = NULL;
 FILE * _logCL2D = NULL;
 
-#define DEBUG_WITH_LOG
+//#define DEBUG_WITH_LOG
 #ifdef DEBUG_WITH_LOG
 #define CREATE_LOG() _logCL2D = fopen(formatString("nodo%02d.log", node->rank).c_str(), "w+")
 #define LOG(msg) do{fprintf(_logCL2D, "%s\t%s\n", getCurrentTimeString(), msg); fflush(_logCL2D); }while(0)
