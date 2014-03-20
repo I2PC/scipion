@@ -19,3 +19,6 @@ CTFFIND_HOME = os.path.join(os.environ['EM_SOFTWARE'], 'brandeis', 'ctffind')
 RELION_HOME = os.path.join(os.environ['EM_SOFTWARE'], 'relion-1.2')
 # xmipp_optical_alignment
 OPT_ALIGN_HOME = os.path.join(os.environ['EM_SOFTWARE'], 'opt_flow_alignment')
+# BSOFT
+BSOFT_HOME = os.path.join(os.environ['EM_SOFTWARE'], 'bsoft')
+
