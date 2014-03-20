@@ -163,7 +163,12 @@ class ProtRelionBase(XmippProtocol):
         #get protocol
         #check if this is my protocol
         #print error
+        f = open("/tmp/validate.txt", "w")
+        f.write("_validateContinue")
+        
         if self.optimiserFileName.startswith(self.WorkingDir):
+            f.write("if ... _validateContinue")
+            f.close()
             return [''' Input for continue cannot be an iteration 
  of the same protocol.
  If you want to continue this protocol from 
@@ -171,6 +176,7 @@ class ProtRelionBase(XmippProtocol):
  and select the apropiate optimiser file
  from this protocol''']
         
+        f.close()
         return []
                
     def validate(self):
