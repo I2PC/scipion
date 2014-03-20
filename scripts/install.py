@@ -50,20 +50,25 @@ def bashVar(name, value):
 def tcshVar(name, value):
     return "setenv %(name)s %(value)s" % locals()    
     
+    
 if __name__ == '__main__':
-    print "Installing Scipion in : ", FULLPATH
     
-    VARS = [('SCIPION_HOME', '$HOME/Scipion'),
-            ('PW_HOME', FULLPATH),
-            ('PYTHONPATH', '$PW_HOME:$XMIPP_HOME/lib:$XMIPP_HOME/protocols:$PYTHONPATH'),
-            ('PATH', '$PW_HOME/pyworkflow/apps:$PATH')]
-    config(BASHRC, VARS, bashVar)    
-    config(CSHRC, VARS, tcshVar)
+    SCIPION_HOME = os.environ['SCIPION_HOME']
+    SCIPION_USER_DATA = os.environ['SCIPION_USER_DATA']
     
-    os.environ['SCIPION_HOME'] = join(os.environ['HOME'], 'Scipion')
-    # Create SCIPION_HOME folder
+    print "Installing Scipion in : ", SCIPION_HOME
+    # source files for bash and tcsh are not longer needed
+#    VARS = [('SCIPION_USER_DATA', os.environ['SCIPION_USER_DATA']),
+#            ('SCIPION_HOME', SCIPION_HOME),
+#            ('PYTHONPATH', '$SCIPION_HOME:$XMIPP_HOME/lib:$XMIPP_HOME/protocols:$PYTHONPATH'),
+#            ('PATH', '$SCIPION_HOME/pyworkflow/apps:$PATH')]
+    #config(BASHRC, VARS, bashVar)    
+    #config(CSHRC, VARS, tcshVar)
+    
+    # Create SCIPION_USER_DATA folder
+    print "  creating folder: ", SCIPION_USER_DATA
     from pyworkflow.utils.path import makePath
-    makePath(os.environ['SCIPION_HOME'])
+    makePath(SCIPION_USER_DATA)
     # Write default configurations
     from pyworkflow.apps.config import writeDefaults
     writeDefaults()
