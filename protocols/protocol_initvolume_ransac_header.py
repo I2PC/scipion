@@ -97,6 +97,11 @@ Rejection = 50
 """
 UseAll=False
 
+#{expert} Finally refine the volume with the classes without filtering
+""" When refining a RANSAC volume, use finally the classes without low-pass filter
+"""
+UseNoFiltering=False
+
 # {eval} expandParallel(threads=0,hours=12)
 
 #------------------------------------------------------------------------------------------------
