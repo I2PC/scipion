@@ -159,6 +159,18 @@ class ProtRelionBase(XmippProtocol):
         """ Should be overriden in subclasses to
         return summary messages for CONTINUE EXECUTION.
         """
+        #check if continue from the very same protocol
+        #get protocol
+        #check if this is my protocol
+        #print error
+        if self.optimiserFileName.startswith(self.WorkingDir):
+            return [''' Input for continue cannot be an iteration 
+ of the same protocol.
+ If you want to continue this protocol from 
+ a given iteration you should create a NEW protocol
+ and select the apropiate optimiser file
+ from this protocol''']
+        
         return []
                
     def validate(self):
