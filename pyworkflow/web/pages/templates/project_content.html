@@ -49,13 +49,13 @@
 	
 		
 		{% if contentConfig == 'divided' %}
-//   			$('.layout-inner > .north').resizable({handles: 's', stop: layout});
-// 			$('.layout-inner > .center').resizable({handles: 's', stop: layout});
+  			$('.layout-inner > .north').resizable({handles: 's', stop: layout});
+			$('.layout-inner > .center').resizable({handles: 's', stop: layout});
 /*   			$('.layout-inner > .center').resizable({handles: 'n', stop: layout});  */
 		{% endif %}
 		// This selector is changed to only select the west and east
 		// components of the outer layout.
-// 		$('.layout-outer > .west').resizable({handles: 'e',	stop: layout});
+		$('.layout-outer > .west').resizable({handles: 'e',	stop: layout});
 	});
 	
 	$(document).ready(function() {
