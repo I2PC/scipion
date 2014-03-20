@@ -505,7 +505,7 @@ function getTableFormatted(node, json, id, previsualize) {
 	 * the function browse_object.
 	 */
 	var res = "<table class='content' style='overflow:auto' data-node='" + node
-			+ "'>";
+			+ "'><tr><th>Name</th><th>Description</th><th></th></tr>";
 	
 	var func = "";
 	var first = "<a href='javascript:";
@@ -637,7 +637,7 @@ function selTableMessi(elm) {
 		rowOld.attr('style', '');
 	}
 	row.attr('value', id);
-//	elm.attr('style', 'background-color: #eaebff;');
-	elm.attr('style', 'background-color: #eaebff;');
+	elm.attr("selected","selected")
+	elm.attr('style', 'background-color: #F3CBCB;font-weight: bold;');
 }
 
