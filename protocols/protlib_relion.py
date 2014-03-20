@@ -44,11 +44,8 @@ class ProtRelionBase(XmippProtocol):
         
         if self.DoContinue:
             if os.path.exists(self.optimiserFileName):
-                f = open("/tmp/validate.txt", "w")
-                f.write("DoContinue1")
-                self.setPreviousRunFromFile(self.optimiserFileName)
-                f.write("DoContinue2")
-                
+                if not self.optimiserFileName.startswith(self.WorkingDir):
+                    self.setPreviousRunFromFile(self.optimiserFileName)
             try:
                 self.inputProperty('ImgMd')
             except:
@@ -159,7 +156,7 @@ class ProtRelionBase(XmippProtocol):
         """
         return []
     
-    def _validateContinue(self):
+    def __validateContinue(self):
         """ Should be overriden in subclasses to
         return summary messages for CONTINUE EXECUTION.
         """
@@ -167,24 +164,17 @@ class ProtRelionBase(XmippProtocol):
         #get protocol
         #check if this is my protocol
         #print error
-        f = open("/tmp/validate.txt", "w")
-        f.write("_validateContinue")
         
         if self.optimiserFileName.startswith(self.WorkingDir):
-            f.write("if ... _validateContinue")
-            f.close()
-            return [''' Input for continue cannot be an iteration 
- of the same protocol.
- If you want to continue this protocol from 
- a given iteration you should create a NEW protocol
- and select the apropiate optimiser file
- from this protocol''']
+            return [''' Input for continue cannot be an optimiser 
+ file produced by the same Run.
+ 
+ If you want to use the continue option 
+ create a NEW run and select the appropiate optimiser file''']
         
-        f.close()
         return []
                
     def validate(self):
-        print "validate1"
         errors = []
         md = MetaData()
         md.read(self.ImgMd, 1) # Read only the first object in md
@@ -208,10 +198,11 @@ class ProtRelionBase(XmippProtocol):
                              Are you sure you have relion version 1.2?.''') 
         
         if self.DoContinue:
-            errors += self._validateContinue()
+            errors += self.__validateContinue()
+            if self.PrevRun:
+                errors += self._validateContinue()
         else:
             errors += self._validate()
-        print "validate2"
             
         return errors 
     
