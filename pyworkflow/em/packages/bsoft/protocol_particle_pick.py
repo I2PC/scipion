@@ -32,7 +32,7 @@ from pyworkflow.em import *
 from pyworkflow.utils.path import *  
 from convert import readSetOfCoordinates
 from posixpath import abspath
-
+import bsoft
 
 
 class BsoftProtParticlePicking(ProtParticlePicking):
@@ -77,6 +77,7 @@ class BsoftProtParticlePicking(ProtParticlePicking):
             self.runJob("ln -s", args)
             
         self._enterDir(outputdir)
+        bsoft.loadEnvironment()
         for mic in self.inputMics:
             self.runJob("bshow", getFile(mic.getFileName()))
         self._leaveDir()
