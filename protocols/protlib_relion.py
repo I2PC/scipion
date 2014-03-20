@@ -44,7 +44,11 @@ class ProtRelionBase(XmippProtocol):
         
         if self.DoContinue:
             if os.path.exists(self.optimiserFileName):
+                f = open("/tmp/validate.txt", "w")
+                f.write("DoContinue1")
                 self.setPreviousRunFromFile(self.optimiserFileName)
+                f.write("DoContinue2")
+                
             try:
                 self.inputProperty('ImgMd')
             except:
@@ -180,6 +184,7 @@ class ProtRelionBase(XmippProtocol):
         return []
                
     def validate(self):
+        print "validate1"
         errors = []
         md = MetaData()
         md.read(self.ImgMd, 1) # Read only the first object in md
@@ -206,6 +211,7 @@ class ProtRelionBase(XmippProtocol):
             errors += self._validateContinue()
         else:
             errors += self._validate()
+        print "validate2"
             
         return errors 
     
