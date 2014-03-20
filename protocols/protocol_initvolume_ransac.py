@@ -86,10 +86,10 @@ class ProtInitVolRANSAC(ProtInitVolumeBase):
                 parent_id=XmippProjectDb.FIRST_STEP
                             
                 for it in range(self.NumIter):
-                    parent_id = self.insertParallelStep('reconstruct',fnRoot=fnRoot,symmetryGroup=self.SymmetryGroup,maskRadius=self.Xdim2/2,
+                    parent_id = self.insertParallelStep('reconstruct',fnRoot=fnRoot,symmetryGroup=self.SymmetryGroup,maskRadius=self.Xdim/2,
                                                         parent_step_id=parent_id)
                     parent_id = self.insertParallelStep('projMatch',WorkingDir=self.WorkingDir,fnBase=fnBase,AngularSampling=self.AngularSampling,
-                                                        SymmetryGroup=self.SymmetryGroup, Xdim=self.Xdim2, parent_step_id=parent_id)
+                                                        SymmetryGroup=self.SymmetryGroup, Xdim=self.Xdim, parent_step_id=parent_id)
  
         
         # Score each of the final volumes
