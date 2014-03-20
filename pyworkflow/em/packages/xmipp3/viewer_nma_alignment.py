@@ -27,6 +27,7 @@
 This module implement the wrappers aroung Xmipp CL2D protocol
 visualization program.
 """
+import glob
 from pyworkflow.viewer import ProtocolViewer, DESKTOP_TKINTER, WEB_DJANGO
 from pyworkflow.em import *
 from protocol_nma import XmippProtNMA
@@ -34,9 +35,11 @@ from protocol_nma_alignment import XmippProtAlignmentNMA
 from viewer import runShowJ
 from pyworkflow.gui.text import *
 from pyworkflow.gui.dialog import showError, showWarning
+import numpy as np
+from plotter import XmippPlotter
+
 # FIXME: REMOVE DEPENDENCIES FROM XMIPP
 from protlib_gui_ext import chimera, showj
-import glob
 
 CLASSES = 0
 CLASS_CORES = 1
@@ -139,13 +142,6 @@ class XmippAlignmentNMAViewer(ProtocolViewer):
         """ This will return the name of the function to view
         in web one (or all) params of the protocol"""
         return "viewerNMAAlign"
-        
-import matplotlib.pyplot as plt
-import matplotlib.patches as patches
-import matplotlib.path as path
-import mpl_toolkits.mplot3d.axes3d as p3
-import numpy as np
-from plotter import XmippPlotter
 
 
 class XmippNmaPlotter(XmippPlotter):
@@ -184,6 +180,7 @@ class XmippNmaPlotter(XmippPlotter):
         # get the Path object
         barpath = path.Path.make_compound_path_from_polys(XY)
         
+        import matplotlib.patches as patches
         # make a patch out of it
         patch = patches.PathPatch(barpath, facecolor='blue', edgecolor='gray', alpha=0.8)
         ax.add_patch(patch)
@@ -197,6 +194,7 @@ class XmippNmaPlotter(XmippPlotter):
         ax.plot(self._data[:,colX], self._data[:,colY], '.')
     
     def plotArray3D(self, title, colX, colY, colZ, xlabel, ylabel, zlabel):
+        import mpl_toolkits.mplot3d.axes3d as p3
         ax = p3.Axes3D(self.figure)
         ax.set_title(title)
         ax.set_xlabel(xlabel)
