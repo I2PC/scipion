@@ -9,12 +9,10 @@ import ij.IJ;
 import ij.ImagePlus;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
-import javax.swing.JFrame;
+import java.util.Arrays;
+import xmipp.ij.commons.XmippUtil;
 import xmipp.jni.Filename;
 import xmipp.jni.ImageGeneric;
-import xmipp.utils.XmippDialog;
-import xmipp.utils.XmippWindowUtil;
-import xmipp.viewer.particlepicker.ParticlePickerJFrame;
 
 
 public class XmippUtil {
@@ -64,31 +62,31 @@ public class XmippUtil {
 	}
         
         public static String executeCommand(String[] command) throws Exception {
-            for(String value: command)
-                System.out.printf(value);
-            System.out.println();
-                     
-            StringBuffer output = new StringBuffer();
 
-            Process p;
+        System.out.println(Arrays.toString(command));
+                 
+        StringBuffer output = new StringBuffer();
 
-            p = Runtime.getRuntime().exec(command);
-            p.waitFor();
-            BufferedReader reader
-                    = new BufferedReader(new InputStreamReader(p.getInputStream()));
+        Process p;
 
-           
-            String line = "";
-            while ((line = reader.readLine()) != null) {
-                output.append(line + "\n");
-            }
-            reader = new BufferedReader(new InputStreamReader(p.getErrorStream()));
-            
-            while ((line = reader.readLine()) != null) {
-                output.append(line + "\n");
-            }
-            return output.toString();
+        p = Runtime.getRuntime().exec(command);
+        p.waitFor();
+        BufferedReader reader
+                = new BufferedReader(new InputStreamReader(p.getInputStream()));
+
+       
+        String line = "";
+        while ((line = reader.readLine()) != null) {
+            output.append(line + "\n");
         }
+        reader = new BufferedReader(new InputStreamReader(p.getErrorStream()));
+        
+        while ((line = reader.readLine()) != null) {
+            output.append(line + "\n");
+        }
+        return output.toString();
+    }
+
 
 
        
