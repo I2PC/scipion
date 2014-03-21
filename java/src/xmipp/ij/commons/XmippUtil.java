@@ -9,12 +9,8 @@ import ij.IJ;
 import ij.ImagePlus;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
-import javax.swing.JFrame;
 import xmipp.jni.Filename;
 import xmipp.jni.ImageGeneric;
-import xmipp.utils.XmippDialog;
-import xmipp.utils.XmippWindowUtil;
-import xmipp.viewer.particlepicker.ParticlePickerJFrame;
 
 
 public class XmippUtil {
@@ -63,32 +59,30 @@ public class XmippUtil {
 		return icon;
 	}
         
-        public static String executeCommand(String[] command) throws Exception {
-            for(String value: command)
-                System.out.printf(value);
-            System.out.println();
-                     
-            StringBuffer output = new StringBuffer();
+    public static String executeCommand(String[] command) throws Exception {
+        
+                 
+        StringBuffer output = new StringBuffer();
 
-            Process p;
+        Process p;
 
-            p = Runtime.getRuntime().exec(command);
-            p.waitFor();
-            BufferedReader reader
-                    = new BufferedReader(new InputStreamReader(p.getInputStream()));
+        p = Runtime.getRuntime().exec(command);
+        p.waitFor();
+        BufferedReader reader
+                = new BufferedReader(new InputStreamReader(p.getInputStream()));
 
-           
-            String line = "";
-            while ((line = reader.readLine()) != null) {
-                output.append(line + "\n");
-            }
-            reader = new BufferedReader(new InputStreamReader(p.getErrorStream()));
-            
-            while ((line = reader.readLine()) != null) {
-                output.append(line + "\n");
-            }
-            return output.toString();
+       
+        String line = "";
+        while ((line = reader.readLine()) != null) {
+            output.append(line + "\n");
         }
+        reader = new BufferedReader(new InputStreamReader(p.getErrorStream()));
+        
+        while ((line = reader.readLine()) != null) {
+            output.append(line + "\n");
+        }
+        return output.toString();
+    }
 
 
        
