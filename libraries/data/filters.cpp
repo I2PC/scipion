@@ -900,6 +900,163 @@ double fastCorrentropy(const MultidimArray<double> &x,
     return (retvalxy / maskSum);
 }
 
+/* Imed distance ---------------------------------------------------------- */
+double imedDistance(const MultidimArray<double>& I1, const MultidimArray<double>& I2)
+{
+	// [x,y]=meshgrid([-3:1:3],[-3:1:3])
+	// format long
+	// w=1/sqrt(2*pi)*exp(-0.5*(x.*x+y.*y))
+	const double w[7][7]={
+			0.000049233388666,   0.000599785460091,   0.002688051941039,   0.004431848411938,   0.002688051941039,   0.000599785460091,   0.000049233388666,
+			0.000599785460091,   0.007306882745281,   0.032747176537767,   0.053990966513188,   0.032747176537767,   0.007306882745281,   0.000599785460091,
+			0.002688051941039,   0.032747176537767,   0.146762663173740,   0.241970724519143,   0.146762663173740,   0.032747176537767,   0.002688051941039,
+			0.004431848411938,   0.053990966513188,   0.241970724519143,   0.398942280401433,   0.241970724519143,   0.053990966513188,   0.004431848411938,
+			0.002688051941039,   0.032747176537767,   0.146762663173740,   0.241970724519143,   0.146762663173740,   0.032747176537767,   0.002688051941039,
+			0.000599785460091,   0.007306882745281,   0.032747176537767,   0.053990966513188,   0.032747176537767,   0.007306882745281,   0.000599785460091,
+			0.000049233388666,   0.000599785460091,   0.002688051941039,   0.004431848411938,   0.002688051941039,   0.000599785460091,   0.000049233388666
+	};
+    double imed = 0;
+    int imiddle=YSIZE(I1)/2;
+    int jmiddle=XSIZE(I1)/2;
+    int R2max=imiddle*imiddle;
+    for (int i=3; i<YSIZE(I1)-3; ++i)
+    {
+    	int i2=(i-imiddle)*(i-imiddle);
+        for (int j=3; j<XSIZE(I1)-3; ++j)
+        {
+        	int j2=(j-jmiddle)*(j-jmiddle);
+        	if (i2+j2>R2max) // Measure only within the maximum circle
+        		continue;
+        	double diffi=DIRECT_A2D_ELEM(I1,i,j)-DIRECT_A2D_ELEM(I2,i,j);
+        	for (int ii=-3; ii<=3; ++ii)
+        	{
+        		int i_ii=i+ii;
+            	for (int jj=-3; jj<=3; ++jj)
+            	{
+            		int j_jj=j+jj;
+                	double diffj=DIRECT_A2D_ELEM(I1,i_ii,j_jj)-DIRECT_A2D_ELEM(I2,i_ii,j_jj);
+                	double wiijj=w[ii+3][jj+3];
+            		imed+=wiijj*diffi*diffj;
+            	}
+        	}
+        }
+    }
+	return sqrt(imed);
+}
+
+/* Imed distance ---------------------------------------------------------- */
+double imedNormalizedDistance(const MultidimArray<double>& I1, const MultidimArray<double>& I2)
+{
+	// [x,y]=meshgrid([-3:1:3],[-3:1:3])
+	// format long
+	// w=1/sqrt(2*pi)*exp(-0.5*(x.*x+y.*y))
+	const double w[7][7]={
+			0.000049233388666,   0.000599785460091,   0.002688051941039,   0.004431848411938,   0.002688051941039,   0.000599785460091,   0.000049233388666,
+			0.000599785460091,   0.007306882745281,   0.032747176537767,   0.053990966513188,   0.032747176537767,   0.007306882745281,   0.000599785460091,
+			0.002688051941039,   0.032747176537767,   0.146762663173740,   0.241970724519143,   0.146762663173740,   0.032747176537767,   0.002688051941039,
+			0.004431848411938,   0.053990966513188,   0.241970724519143,   0.398942280401433,   0.241970724519143,   0.053990966513188,   0.004431848411938,
+			0.002688051941039,   0.032747176537767,   0.146762663173740,   0.241970724519143,   0.146762663173740,   0.032747176537767,   0.002688051941039,
+			0.000599785460091,   0.007306882745281,   0.032747176537767,   0.053990966513188,   0.032747176537767,   0.007306882745281,   0.000599785460091,
+			0.000049233388666,   0.000599785460091,   0.002688051941039,   0.004431848411938,   0.002688051941039,   0.000599785460091,   0.000049233388666
+	};
+    int imiddle=YSIZE(I1)/2;
+    int jmiddle=XSIZE(I1)/2;
+    int R2max=imiddle*imiddle;
+    // Measure the average of both images
+    double avg1=0, avg2=0;
+    double N=0;
+    for (int i=3; i<YSIZE(I1)-3; ++i)
+    {
+    	int i2=(i-imiddle)*(i-imiddle);
+        for (int j=3; j<XSIZE(I1)-3; ++j)
+        {
+        	int j2=(j-jmiddle)*(j-jmiddle);
+        	if (i2+j2>R2max) // Measure only within the maximum circle
+        		continue;
+        	avg1+=DIRECT_A2D_ELEM(I1,i,j);
+        	avg2+=DIRECT_A2D_ELEM(I2,i,j);
+        	++N;
+        }
+    }
+    avg1/=N;
+    avg2/=N;
+    double diffAvg=avg1-avg2;
+
+    double imed = 0, imed1=0, imed2=0;
+    for (int i=3; i<YSIZE(I1)-3; ++i)
+    {
+    	int i2=(i-imiddle)*(i-imiddle);
+        for (int j=3; j<XSIZE(I1)-3; ++j)
+        {
+        	int j2=(j-jmiddle)*(j-jmiddle);
+        	if (i2+j2>R2max) // Measure only within the maximum circle
+        		continue;
+        	double subtractedI1ij=DIRECT_A2D_ELEM(I1,i,j)-avg1;
+        	double subtractedI2ij=DIRECT_A2D_ELEM(I2,i,j)-avg2;
+        	double diffi=DIRECT_A2D_ELEM(I1,i,j)-DIRECT_A2D_ELEM(I2,i,j)-diffAvg;
+        	for (int ii=-3; ii<=3; ++ii)
+        	{
+        		int i_ii=i+ii;
+            	for (int jj=-3; jj<=3; ++jj)
+            	{
+            		int j_jj=j+jj;
+                	//double diffj=DIRECT_A2D_ELEM(I1,i_ii,j_jj)-DIRECT_A2D_ELEM(I2,i_ii,j_jj)-diffAvg;
+                	double diffj=DIRECT_A2D_ELEM(I1,i,j)-DIRECT_A2D_ELEM(I2,i_ii,j_jj)-diffAvg;
+                	double wiijj=w[ii+3][jj+3];
+            		imed+=wiijj*diffi*diffj;
+                	double subtractedI2=DIRECT_A2D_ELEM(I2,i,j)-avg1;
+            		imed1+=wiijj*subtractedI1ij*(DIRECT_A2D_ELEM(I1,i_ii,j_jj)-avg1);
+            		imed2+=wiijj*subtractedI2ij*(DIRECT_A2D_ELEM(I2,i_ii,j_jj)-avg2);
+            	}
+        	}
+        }
+    }
+	return imed/sqrt((imed1+imed2)/2);
+}
+
+double svdCorrelation(const MultidimArray<double>& I1, const MultidimArray<double>& I2, const MultidimArray< int >* mask)
+{
+	// Copy input images into matrix2Ds
+	Matrix2D<double> mI1, mI2;
+	I1.copy(mI1);
+	I2.copy(mI2);
+
+	// SVD Decomposition of I1
+	Matrix2D<double> U1, V1;
+	Matrix1D<double> W1;
+	svdcmp(mI1,U1,W1,V1);
+
+	// Express I2 in the basis of I1
+	Matrix2D<double> aux, W2;
+	matrixOperation_AB(mI2,V1,aux);
+	matrixOperation_AtB(U1,aux,W2);
+
+	// Make W2 to be diagonal
+	FOR_ALL_ELEMENTS_IN_MATRIX2D(W2)
+	if (i!=j)
+		MAT_ELEM(W2,i,j)=0.0;
+
+	// Recover I2p
+	matrixOperation_ABt(W2,V1,aux);
+	matrixOperation_AB(U1,aux,mI2);
+
+	// Measure correlation
+	MultidimArray<double> I2p;
+	I2p=mI2;
+//	Image<double> save;
+//	save()=I1;
+//	save.write("PPPI1.xmp");
+//	save()=I2;
+//	save.write("PPPI2.xmp");
+//	save()=I2p;
+//	save.write("PPPI2p.xmp");
+//	std::cout << "Correlation= " << correlationIndex(I1,I2p,mask) << std::endl;
+//	std::cout << "Press any key\n";
+//	char c; std::cin >> c;
+	// double ratio=I2p.computeStddev()/I2.computeStddev();
+	return correlationIndex(I1,I2p,mask); //*ratio;
+}
+
 /* Covariance matrix ------------------------------------------------------ */
 void covarianceMatrix(const MultidimArray<double> &I, Matrix2D<double> &C)
 {
