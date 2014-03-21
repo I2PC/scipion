@@ -80,7 +80,7 @@ class ProtInitVolRANSAC(ProtInitVolumeBase):
             self.insertRunJobStep("xmipp_transform_filter","-i %s -o %s --fourier low_pass %f --oroot %s"
                                                     %(self.Classes,fnOutputReducedClass,freq,fnOutputReducedClassNoExt))
             self.Xdim2 = int(self.Xdim+self.Xdim2)/2
-            self.insertRunJobStep("xmipp_image_resize","-i %s --fourier %d -o %s" %(fnOutputReducedClass,self.Xdim,fnOutputReducedClassNoExt))
+            self.insertRunJobStep("xmipp_image_resize","-i %s --fourier %d -o %s" %(fnOutputReducedClass,self.Xdim2,fnOutputReducedClassNoExt))
 
             
             for n in range(self.NumVolumes):
