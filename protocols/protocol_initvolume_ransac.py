@@ -93,8 +93,10 @@ class ProtInitVolRANSAC(ProtInitVolumeBase):
                                                         SymmetryGroup=self.SymmetryGroup, Xdim=self.Xdim2, parent_step_id=parent_id)
                     parent_id = self.insertParallelStep('reconstruct',fnRoot=fnRoot,symmetryGroup=self.SymmetryGroup,maskRadius=self.Xdim2/2,
                                                         parent_step_id=parent_id)
- 
-        
+            
+            self.insertParallelRunJobStep("xmipp_image_resize","-i %s.vol -o %s.vol --dim %d %d" 
+                                          %(fnRoot,fnRoot,self.Xdim,self.Xdim),parent_step_id=parent_id)
+                    
         # Score each of the final volumes
         self.insertStep("scoreFinalVolumes",WorkingDir=self.WorkingDir,NumVolumes=self.NumVolumes)
         
