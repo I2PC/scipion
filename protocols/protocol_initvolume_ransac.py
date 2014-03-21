@@ -79,8 +79,11 @@ class ProtInitVolRANSAC(ProtInitVolumeBase):
             fnOutputReducedClassNoExt = os.path.splitext(fnOutputReducedClass)[0]
             self.insertRunJobStep("xmipp_transform_filter","-i %s -o %s --fourier low_pass %f --oroot %s"
                                                     %(self.Classes,fnOutputReducedClass,freq,fnOutputReducedClassNoExt))
-            self.insertRunJobStep("xmipp_image_resize","-i %s --fourier %d -o %s" %(fnOutputReducedClass,self.Xdim,fnOutputReducedClassNoExt))
+            self.Xdim2 = int(self.Xdim+self.Xdim2)/2
+            self.insertRunJobStep("xmipp_image_resize","-i %s --fourier %d -o %s" %(fnOutputReducedClass,self.Xdim2,fnOutputReducedClassNoExt))
 
+            #We want only a few iterations maybe 2
+            self.NumIter = 2
             
             for n in range(self.NumVolumes):
                 fnBase='volumeProposed%05d'%n
@@ -89,11 +92,13 @@ class ProtInitVolRANSAC(ProtInitVolumeBase):
                             
                 for it in range(self.NumIter):
                     parent_id = self.insertParallelStep('projMatch',WorkingDir=self.WorkingDir,fnBase=fnBase,AngularSampling=self.AngularSampling,
-                                                        SymmetryGroup=self.SymmetryGroup, Xdim=self.Xdim, parent_step_id=parent_id)
-                    parent_id = self.insertParallelStep('reconstruct',fnRoot=fnRoot,symmetryGroup=self.SymmetryGroup,maskRadius=self.Xdim/2,
+                                                        SymmetryGroup=self.SymmetryGroup, Xdim=self.Xdim2, parent_step_id=parent_id)
+                    parent_id = self.insertParallelStep('reconstruct',fnRoot=fnRoot,symmetryGroup=self.SymmetryGroup,maskRadius=self.Xdim2/2,
                                                         parent_step_id=parent_id)
- 
-        
+            
+            self.insertParallelRunJobStep("xmipp_image_resize","-i %s.vol -o %s.vol --dim %d %d" 
+                                          %(fnRoot,fnRoot,self.Xdim,self.Xdim),parent_step_id=parent_id)
+                    
         # Score each of the final volumes
         self.insertStep("scoreFinalVolumes",WorkingDir=self.WorkingDir,NumVolumes=self.NumVolumes)
         
