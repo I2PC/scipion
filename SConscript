@@ -1108,6 +1108,7 @@ AddXmippProgram('reconstruct_art_pseudo', ['XmippRecons'])
 if not int(env['release']):
     AddXmippProgram('reconstruct_art_xray', ['XmippRecons'])
 AddXmippProgram('reconstruct_fourier', ['XmippRecons'])
+AddXmippProgram('reconstruct_significant', ['XmippRecons'])
 AddXmippProgram('reconstruct_wbp', ['XmippRecons'])
 AddXmippProgram('resolution_fsc')
 if not int(env['release']):
