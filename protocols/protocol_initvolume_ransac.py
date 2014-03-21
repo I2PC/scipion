@@ -79,6 +79,7 @@ class ProtInitVolRANSAC(ProtInitVolumeBase):
             fnOutputReducedClassNoExt = os.path.splitext(fnOutputReducedClass)[0]
             self.insertRunJobStep("xmipp_transform_filter","-i %s -o %s --fourier low_pass %f --oroot %s"
                                                     %(self.Classes,fnOutputReducedClass,freq,fnOutputReducedClassNoExt))
+            self.Xdim2 = (self.Xdim+self.Xdim2)/2
             self.insertRunJobStep("xmipp_image_resize","-i %s --fourier %d -o %s" %(fnOutputReducedClass,self.Xdim,fnOutputReducedClassNoExt))
 
             
@@ -89,8 +90,8 @@ class ProtInitVolRANSAC(ProtInitVolumeBase):
                             
                 for it in range(self.NumIter):
                     parent_id = self.insertParallelStep('projMatch',WorkingDir=self.WorkingDir,fnBase=fnBase,AngularSampling=self.AngularSampling,
-                                                        SymmetryGroup=self.SymmetryGroup, Xdim=self.Xdim, parent_step_id=parent_id)
-                    parent_id = self.insertParallelStep('reconstruct',fnRoot=fnRoot,symmetryGroup=self.SymmetryGroup,maskRadius=self.Xdim/2,
+                                                        SymmetryGroup=self.SymmetryGroup, Xdim=self.Xdim2, parent_step_id=parent_id)
+                    parent_id = self.insertParallelStep('reconstruct',fnRoot=fnRoot,symmetryGroup=self.SymmetryGroup,maskRadius=self.Xdim2/2,
                                                         parent_step_id=parent_id)
  
         
