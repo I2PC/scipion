@@ -4,96 +4,80 @@ from pyworkflow.tests import *
 from pyworkflow.em.packages.xmipp3 import *
 from pyworkflow.em.packages.brandeis import *
 from pyworkflow.em.packages.eman2 import *
+from pyworkflow.em.packages.relion import *
 from test_workflow import TestWorkflow
+
+
+class TestMixedBPV(TestXmippBase):
     
-    
-#class TestMixedWorkflow_1(TestWorkflow):
-#
-#    GOLD_FILES = {'protImport': [
-#                    'protImport/BPV_1386.mrc',
-#                    'protImport/micrographs.sqlite'],
-#              'protDownsampling': [
-#                    'protDownsampling/BPV_1386.mrc', 
-#                    'protImport/BPV_1386.mrc',
-#                    'protDownsampling/micrographs.xmd', 
-#                    'protImport/micrographs.sqlite', 
-#                    'protDownsampling/logs/run.log',
-#                    'protDownsampling/logs/run.db'
-#                    ],
-#              'protCTF': [
-#                    'protCTF/extra/BPV_1386/ctffind_psd.mrc', 
-#                    'protCTF/extra/BPV_1386/ctffind.out', 
-#                    'protCTF/micrographs.sqlite',
-#                    'protDownsampling/micrographs.xmd', 
-#                    'protDownsampling/BPV_1386.mrc',
-#                    'protCTF/logs/run.log', 
-#                    'protCTF/logs/run.db'],
-#              'protExtract':[
-#                    'protPicking/extra/BPV_1386.pos', 
-#                    'protExtract/tmp/BPV_1386_noDust.xmp', 
-#                    'protExtract/extra/BPV_1386.xmd', 
-#                    'protExtract/images.xmd', 
-#                    'protExtract/extra/BPV_1386.stk', 
-#                    'protExtract/extra/BPV_1386.pos', 
-#                    'protExtract/tmp/BPV_1386_flipped.xmp',
-#                    'protExtract/logs/run.log',
-#                    'protExtract/logs/run.db'],
-#              }
-#    
-#    @classmethod
-#    def setUpClass(cls):    
-#        # Create a new project
-#        setupProject(cls)
-#        cls.pattern = getInputPath('Micrographs_BPV1', '*.mrc')        
-#        cls.importFolder = getInputPath('Picking_XmippBPV1')
-#        
-#    def testWorkflow(self):
-#        #First, import a set of micrographs
-#        protImport = ProtImportMicrographs(pattern=self.pattern, samplingRate=1.237, voltage=300)
-#        self.proj.launchProtocol(protImport, wait=True)
-#        
-#        self.assertIsNotNone(protImport.outputMicrographs, "There was a problem with the import")
-#        self.validateFiles('protImport', protImport) 
-#        
-#        # Perform a downsampling on the micrographs
-#
-#        print "Downsampling..."
-#        protDownsampling = XmippProtPreprocessMicrographs(doDownsample=True, downFactor=3, doCrop=False,
-#                                                          numberOfMpi=1, numberOfThreads=3)
-#        protDownsampling.inputMicrographs.set(protImport.outputMicrographs)
-#        self.proj.launchProtocol(protDownsampling, wait=True)
-#          
-#        self.assertIsNotNone(protDownsampling.outputMicrographs, "There was a problem with the downsampling")
-#        self.validateFiles('protDownsampling', protDownsampling) 
-#
-#
-#        # Now estimate CTF on the downsampled micrographs 
-#        print "Performing CTFfind..."   
-#        protCTF = ProtCTFFind(runMode=1, numberOfMpi=1, numberOfThreads=3)         
-#        protCTF.inputMicrographs.set(protDownsampling.outputMicrographs)        
-#        self.proj.launchProtocol(protCTF, wait=True)
-#        
-#        self.validateFiles('protCTF', protCTF) 
-#        
-#        print "Running fake particle picking..."   
-#        protPicking = XmippProtParticlePicking(importFolder=self.importFolder, runMode=1)                
-#        protPicking.inputMicrographs.set(protCTF.outputMicrographs)        
-#        self.proj.launchProtocol(protPicking, wait=True)
-#        self.protDict['protPicking'] = protPicking
-#            
-#        self.assertIsNotNone(protPicking.outputCoordinates, "There was a problem with the faked picking")
-#            
-#        print "Run extract particles with Same as picking"
-#        protExtract = XmippProtExtractParticles(boxSize=171, downsampleType=1, runMode=1)
-#        protExtract.inputCoordinates.set(protPicking.outputCoordinates)
-#        #protExtract.inputMicrographs.set(protDownsampling.outputMicrographs)
-#        self.proj.launchProtocol(protExtract, wait=True)
-#        
-#        self.assertIsNotNone(protExtract.outputParticles, "There was a problem with the extract particles")
-#        self.validateFiles('protExtract', protExtract)
+    @classmethod
+    def setUpClass(cls):    
+        # Create a new project
+        setupProject(cls)
+        cls.pattern = getInputPath('Micrographs_BPV3', '*.mrc') 
+        cls.importFolder = getInputPath('EmanTestProject2')
         
+    def testXmippWorkflow(self):
+        #First, import a set of micrographs
+        protImport = ProtImportMicrographs(pattern=self.pattern, samplingRate=1.237, voltage=300)
+        self.proj.launchProtocol(protImport, wait=True)
+        self.assertIsNotNone(protImport.outputMicrographs, "There was a problem with the import")
+#         self.validateFiles('protImport', protImport) 
         
-class TestMixedWorkflow_2(TestWorkflow):
+        #Import a set of volumes        
+        print "Import Volume"
+        protImportVol = ProtImportVolumes(pattern=getInputPath('Volumes_BPV', 'BPV_scale_filtered_windowed_64.vol'), samplingRate=9.896)
+        self.proj.launchProtocol(protImportVol, wait=True)
+        self.assertIsNotNone(protImportVol.getFiles(), "There was a problem with the import")
+#        self.validateFiles('protImportVol', protImportVol)        
+
+        # Perform a downsampling on the micrographs
+        print "Downsampling..."
+        protDownsampling = XmippProtPreprocessMicrographs(doDownsample=True, downFactor=3, doCrop=False, runMode=1)
+        protDownsampling.inputMicrographs.set(protImport.outputMicrographs)
+        self.proj.launchProtocol(protDownsampling, wait=True)
+        self.assertIsNotNone(protDownsampling.outputMicrographs, "There was a problem with the downsampling")
+#         self.validateFiles('protDownsampling', protDownsampling)
+
+        # Estimate CTF on the downsampled micrographs 
+        print "Performing CTFfind..."   
+        protCTF = ProtCTFFind(numberOfThreads=3)         
+        protCTF.inputMicrographs.set(protDownsampling.outputMicrographs)        
+        self.proj.launchProtocol(protCTF, wait=True)
+        self.assertIsNotNone(protCTF.outputCTF, "There was a problem with the CTF estimation")
+#         self.validateFiles('protCTF', protCTF)
+        
+        print "Running Eman fake particle picking..."
+        protPP = EmanProtBoxing(importFolder=self.importFolder, runMode=1)                
+        protPP.inputMicrographs.set(protDownsampling.outputMicrographs)  
+        protPP.boxSize.set(64)
+        self.proj.launchProtocol(protPP, wait=True)
+        self.assertIsNotNone(protPP.outputCoordinates, "There was a problem with the faked picking")
+#         self.protDict['protPP'] = protPP
+        
+        # Extract the SetOfParticles.    
+        print "Run extract particles with other downsampling factor"
+        protExtract = XmippProtExtractParticles(boxSize=64, downsampleType=2, doFlip=False, downFactor=8, runMode=1, doInvert=False)
+        protExtract.inputCoordinates.set(protPP.outputCoordinates)
+        protExtract.ctfRelations.set(protCTF.outputCTF)
+        protExtract.inputMicrographs.set(self.protImport.outputMicrographs)
+        self.proj.launchProtocol(protExtract, wait=True)
+        self.assertIsNotNone(protExtract.outputParticles, "There was a problem with the extract particles")
+#         self.validateFiles('protExtract', protExtract)
+        
+        # Refine the SetOfParticles and reconstruct a refined volume.    
+        print "Running Frealign..."
+        protFrealign = ProtFrealign(angStepSize=7.5, numberOfIterations=2, mode=1, doExtraRealSpaceSym=True,
+                                    innerRadius=150, outerRadius=315, symmetry='I2', PhaseResidual=70,
+                                    resolution=20, runMode=1, numberOfMpi=1, numberOfThreads=4)
+        protFrealign.inputParticles.set(protExtract.outputParticles)
+        protFrealign.input3DReferences.set(protImportVol.outputVolume)
+        self.proj.launchProtocol(protFrealign, wait=True)        
+        self.assertIsNotNone(protFrealign.outputVolume, "There was a problem with Frealign")
+#         self.validateFiles('protFrealign', protFrealign)
+
+
+class TestMixedBPV2(TestWorkflow):
 
     GOLD_FILES = {'protImport': [
                     'protImport/BPV_1388.mrc',
@@ -241,7 +225,6 @@ class TestMixedWorkflow_2(TestWorkflow):
                                                           doDownsample=True, downFactor=5, doCrop=False)
         protDownsampling.inputMicrographs.set(protImport.outputMicrographs)
         self.proj.launchProtocol(protDownsampling, wait=True)
-          
         self.assertIsNotNone(protDownsampling.outputMicrographs, "There was a problem with the downsampling")
         #self.validateFiles('protDownsampling', protDownsampling) 
 
@@ -250,14 +233,8 @@ class TestMixedWorkflow_2(TestWorkflow):
         protCTF = ProtCTFFind(runMode=1, numberOfMpi=1, numberOfThreads=3)         
         protCTF.inputMicrographs.set(protDownsampling.outputMicrographs)        
         self.proj.launchProtocol(protCTF, wait=True)
+        #self.validateFiles('protCTF', protCTF)
         
-#         # Now estimate CTF on the downsampled micrographs 
-#         print "Performing CTF estimation..."   
-#         protCTF = XmippProtCTFMicrographs(numberOfThreads=3, runMode=1)         
-#         protCTF.inputMicrographs.set(protDownsampling.outputMicrographs)        
-#         self.proj.launchProtocol(protCTF, wait=True)
-        
-        #self.validateFiles('protCTF', protCTF) 
         print "Running Eman fake particle picking..."
         protPP = EmanProtBoxing(importFolder=self.importFolder, runMode=1)                
         protPP.inputMicrographs.set(protDownsampling.outputMicrographs)  
@@ -271,41 +248,137 @@ class TestMixedWorkflow_2(TestWorkflow):
         protExtract = XmippProtExtractParticles(boxSize=110, downsampleType=1, doFlip=True, doInvert=True, runMode=1)
         protExtract.inputCoordinates.set(protPP.outputCoordinates)
         protExtract.ctfRelations.set(protCTF.outputCTF)
-        #protExtract.inputMicrographs.set(protDownsampling.outputMicrographs)
         self.proj.launchProtocol(protExtract, wait=True)
-        
         self.assertIsNotNone(protExtract.outputParticles, "There was a problem with the extract particles")
         #self.validateFiles('protExtract', protExtract)
-        
-#         print "Run Only Align2d"
-#         protOnlyalign = XmippProtCL2DAlign(maximumShift=5, numberOfIterations=5, 
-#                                  numberOfMpi=2, numberOfThreads=1, useReferenceImage=False)
-# 
-#         protOnlyalign.inputImages.set(protExtract.outputParticles)
-#         self.proj.launchProtocol(protOnlyalign, wait=True)        
-#         
-#         self.assertIsNotNone(protOnlyalign.outputParticles, "There was a problem with Only align2d")  
-#         self.validateFiles('protOnlyalign', protOnlyalign)
         
         print "Run ML2D"
         protML2D = XmippProtML2D(numberOfReferences=8, maxIters=2, 
                                  numberOfMpi=2, numberOfThreads=2)
-#        protML2D.inputImages.set(protExtract.outputParticles)
         protML2D.inputParticles.set(protExtract.outputParticles)
         self.proj.launchProtocol(protML2D, wait=True)        
-        
         self.assertIsNotNone(protML2D.outputClasses, "There was a problem with ML2D")  
         #self.validateFiles('protML2D', protML2D)
-
+        
         print "Run Initial Model"
         protIniModel = EmanProtInitModel(numberOfIterations=1, numberOfModels=2,
                                  shrink=1, symmetry='icos', numberOfThreads=3)
-#        protML2D.inputImages.set(protExtract.outputParticles)
         protIniModel.inputClasses.set(protML2D.outputClasses)
         self.proj.launchProtocol(protIniModel, wait=True)        
-        
         self.assertIsNotNone(protIniModel.outputVolumes, "There was a problem with Initial Model")  
         #self.validateFiles('protIniModel', protIniModel)
+
+
+class TestMixedRelionTutorial(TestWorkflow):
+    
+    @classmethod
+    def setUpClass(cls):    
+        # Create a new project
+        setupProject(cls)
+        cls.pattern = getInputPath('Ribosomes_Sjors', 'Mics', '*.mrc')
+        cls.importFolder1 = getInputPath('Ribosomes_Sjors', 'EmanBoxing')
+        cls.importFolder2 = getInputPath('Ribosomes_Sjors', 'XmippPicking')
+        cls.importVol = getInputPath('Ribosomes_Sjors', 'reference.mrc')
+        
+    def testWorkflow(self):
+        #First, import a set of micrographs
+        print "Importing a set of micrographs..."
+        protImport = ProtImportMicrographs(pattern=self.pattern, samplingRateMode=1, magnification=79096,
+                                           scannedPixelSize=56, voltage=300, sphericalAberration=2.0)
+        protImport.setObjLabel('import 20 mics')
+        self.proj.launchProtocol(protImport, wait=True)
+        self.assertIsNotNone(protImport.outputMicrographs, "There was a problem with the import")
+        
+        print "Importing a volume..."
+        protImportVol = ProtImportVolumes(pattern=self.importVol, samplingRate=7.08)
+        protImportVol.setObjLabel('import single vol')
+        self.proj.launchProtocol(protImportVol, wait=True)
+        self.assertIsNotNone(protImportVol.outputVolume, "There was a problem with the import")
+        
+        print "Preprocessing the micrographs..."
+        protPreprocess = XmippProtPreprocessMicrographs(doCrop=True, cropPixels=50)
+        protPreprocess.inputMicrographs.set(protImport.outputMicrographs)
+        protPreprocess.setObjLabel('crop 50px')
+        self.proj.launchProtocol(protPreprocess, wait=True)
+        self.assertIsNotNone(protPreprocess.outputMicrographs, "There was a problem with the downsampling")
+
+        # Now estimate CTF on the micrographs with ctffind 
+        print "Performing CTFfind..."   
+        protCTF = ProtCTFFind(lowRes=0.04, highRes=0.45, minDefocus=1.2, maxDefocus=3,
+                              runMode=1, numberOfMpi=1, numberOfThreads=16)         
+        protCTF.inputMicrographs.set(protPreprocess.outputMicrographs)
+        protCTF.setObjLabel('CTF ctffind')
+        self.proj.launchProtocol(protCTF, wait=True)
+        
+        print "Running Eman fake particle picking..."
+        protPP = EmanProtBoxing(importFolder=self.importFolder1, runMode=1)                
+        protPP.inputMicrographs.set(protPreprocess.outputMicrographs)  
+        protPP.boxSize.set(60)
+        protPP.setObjLabel('Eman boxing') 
+        self.proj.launchProtocol(protPP, wait=True)
+        self.assertIsNotNone(protPP.outputCoordinates, "There was a problem with the Eman faked picking")
+        
+        print "Run extract particles with <Same as picking> option"
+        protExtract = XmippProtExtractParticles(boxSize=60, downsampleType=1, doRemoveDust=False,
+                                                doFlip=False, backRadius=28, runMode=1)
+        protExtract.inputCoordinates.set(protPP.outputCoordinates)
+        protExtract.ctfRelations.set(protCTF.outputCTF)
+        protExtract.setObjLabel('Extract particles')
+        self.proj.launchProtocol(protExtract, wait=True)
+        self.assertIsNotNone(protExtract.outputParticles, "There was a problem with the extract particles")
+        
+        print "Run CL2D"
+        protCL2D = XmippProtCL2D(numberOfReferences=32, numberOfInitialReferences=4, 
+                                 numberOfIterations=2, numberOfMpi=16)
+        protCL2D.inputImages.set(protExtract.outputParticles)
+        protCL2D.setObjLabel('CL2D')
+        self.proj.launchProtocol(protCL2D, wait=True)   
+        self.assertIsNotNone(protCL2D.outputClasses, "There was a problem with CL2D")
+        
+#         # Refine the SetOfParticles and reconstruct a refined volume.
+#         print "Running Frealign..."
+#         protFrealign = ProtFrealign(angStepSize=20, numberOfIterations=2, mode=1, doExtraRealSpaceSym=True,
+#                                     outerRadius=180, PhaseResidual=65, lowResolRefine=300, highResolRefine=15,
+#                                     resolution=15, runMode=1, numberOfMpi=1, numberOfThreads=16)
+#         protFrealign.inputParticles.set(protExtract.outputParticles)
+#         protFrealign.input3DReferences.set(protImportVol.outputVolume)
+#         protFrealign.setObjLabel('Frealign')
+#         self.proj.launchProtocol(protFrealign, wait=True)        
+#         self.assertIsNotNone(protFrealign.outputVolume, "There was a problem with Frealign")
+        
+        # Now estimate CTF on the micrographs with xmipp
+        print "Performing Xmipp CTF..."   
+        protCTF2 = XmippProtCTFMicrographs(lowRes=0.04, highRes=0.45, minDefocus=1.2, maxDefocus=3,
+                              runMode=1, numberOfMpi=1, numberOfThreads=16)         
+        protCTF2.inputMicrographs.set(protPreprocess.outputMicrographs)
+        protCTF2.setObjLabel('CTF xmipp')
+        self.proj.launchProtocol(protCTF2, wait=True)
+        
+        print "Running Xmipp fake particle picking..."
+        protPP2 = XmippProtParticlePicking(importFolder=self.importFolder2, runMode=1)                
+        protPP2.inputMicrographs.set(protPreprocess.outputMicrographs)  
+        protPP2.setObjLabel('Xmipp Picking') 
+        self.proj.launchProtocol(protPP2, wait=True)
+        self.assertIsNotNone(protPP2.outputCoordinates, "There was a problem with the Xmipp faked picking")
+        
+        print "Run extract particles with <Same as picking> option"
+        protExtract2 = XmippProtExtractParticles(boxSize=60, downsampleType=1, doRemoveDust=False, doInvert=True,
+                                                doFlip=False, backRadius=28, runMode=1)
+        protExtract2.inputCoordinates.set(protPP2.outputCoordinates)
+        protExtract2.ctfRelations.set(protCTF2.outputCTF)
+        protExtract2.setObjLabel('Extract particles')
+        self.proj.launchProtocol(protExtract2, wait=True)
+        self.assertIsNotNone(protExtract2.outputParticles, "There was a problem with the extract particles")
+        
+        print "Run Relion Classification2d"
+        prot2D = ProtRelionClassify2D(regularisationParamT=2, numberOfMpi=4, numberOfThreads=4)
+        prot2D.numberOfClasses.set(50)
+        prot2D.numberOfIterations.set(25)
+        prot2D.inputParticles.set(protExtract2.outputParticles)
+        prot2D.setObjLabel('relion 2D')
+        self.proj.launchProtocol(prot2D, wait=True)        
+        self.assertIsNotNone(prot2D.outputClasses, "There was a problem with Relion 2D:\n" + (prot2D.getErrorMessage() or "No error set"))
+
 
 if __name__ == "__main__":
     unittest.main()
