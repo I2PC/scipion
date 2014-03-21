@@ -112,7 +112,7 @@ public class ExportImagesJDialog extends JDialog{
         });
         actionspn.add(cancelbt);
                 
-        savebt = XmippWindowUtil.getTextButton("Save", new ActionListener() {
+        savebt = XmippWindowUtil.getTextButton("Export", new ActionListener() {
 
             @Override
             public void actionPerformed(ActionEvent ae) {
@@ -139,10 +139,10 @@ public class ExportImagesJDialog extends JDialog{
             path = pathtf.getText();
             File tmpfile = File.createTempFile("temp", ".xmd");
             frame.saveMd(tmpfile.getAbsolutePath(), false, true, false);//remove disabled on tmpfile to export afterwords
-            List<String> command = Arrays.asList(new String[]{"xmipp_transform_geometry", tmpfile.getAbsolutePath(), "-o", path});
+            List<String> command = Arrays.asList(new String[]{"xmipp_transform_geometry", tmpfile.getAbsolutePath(), "-o", path, "--label", frame.data.getRenderColumn().labelName});
             if(applygeochb.isSelected())
                 command.add("--apply_transform");
-            
+                       
             executeCommand(command.toArray(new String[]{}));
             
         } catch (Exception ex) {
