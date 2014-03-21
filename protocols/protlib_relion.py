@@ -44,7 +44,8 @@ class ProtRelionBase(XmippProtocol):
         
         if self.DoContinue:
             if os.path.exists(self.optimiserFileName):
-                self.setPreviousRunFromFile(self.optimiserFileName)
+                if not self.optimiserFileName.startswith(self.WorkingDir):
+                    self.setPreviousRunFromFile(self.optimiserFileName)
             try:
                 self.inputProperty('ImgMd')
             except:
@@ -155,10 +156,22 @@ class ProtRelionBase(XmippProtocol):
         """
         return []
     
-    def _validateContinue(self):
+    def __validateContinue(self):
         """ Should be overriden in subclasses to
         return summary messages for CONTINUE EXECUTION.
         """
+        #check if continue from the very same protocol
+        #get protocol
+        #check if this is my protocol
+        #print error
+        
+        if self.optimiserFileName.startswith(self.WorkingDir):
+            return [''' Input for continue cannot be an optimiser 
+ file produced by the same Run.
+ 
+ If you want to use the continue option 
+ create a NEW run and select the appropiate optimiser file''']
+        
         return []
                
     def validate(self):
@@ -185,7 +198,9 @@ class ProtRelionBase(XmippProtocol):
                              Are you sure you have relion version 1.2?.''') 
         
         if self.DoContinue:
-            errors += self._validateContinue()
+            errors += self.__validateContinue()
+            if self.PrevRun:
+                errors += self._validateContinue()
         else:
             errors += self._validate()
             
@@ -378,6 +393,9 @@ class ProtRelionBase(XmippProtocol):
 
         if doPlot('Likelihood'):
             self._visualizeLikelihood()
+
+        if doPlot('DisplayFinalReconstruction'):
+            self._visualizeDisplayFinalReconstruction()
 #            
 #        if xplotter:
 #            xplotter.show()

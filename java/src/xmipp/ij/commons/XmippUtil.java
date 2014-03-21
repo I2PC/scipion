@@ -7,11 +7,14 @@ import javax.swing.ImageIcon;
 
 import ij.IJ;
 import ij.ImagePlus;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.util.Arrays;
 import xmipp.jni.Filename;
 import xmipp.jni.ImageGeneric;
 
 
-public class XmippIJUtil {
+public class XmippUtil {
 
 	private static XmippImageJ xij;
 
@@ -54,5 +57,30 @@ public class XmippIJUtil {
 
 		return icon;
 	}
+        
+        public static String executeCommand(String[] command) throws Exception {
+        System.out.println(Arrays.toString(command));
+                 
+        StringBuffer output = new StringBuffer();
+
+        Process p;
+
+        p = Runtime.getRuntime().exec(command);
+        p.waitFor();
+        BufferedReader reader
+                = new BufferedReader(new InputStreamReader(p.getInputStream()));
+
+       
+        String line = "";
+        while ((line = reader.readLine()) != null) {
+            output.append(line + "\n");
+        }
+        reader = new BufferedReader(new InputStreamReader(p.getErrorStream()));
+        
+        while ((line = reader.readLine()) != null) {
+            output.append(line + "\n");
+        }
+        return output.toString();
+    }
 
 }

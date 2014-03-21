@@ -359,7 +359,7 @@ public class XmippMenuBar extends MenuBar
 			@Override
 			public void actionPerformed(ActionEvent e)
 			{
-				XmippIJUtil.showImageJ(Tool.VIEWER);
+				XmippUtil.showImageJ(Tool.VIEWER);
 			}
 		});
 
@@ -486,7 +486,7 @@ public class XmippMenuBar extends MenuBar
 				switch (requirement)
 				{
 				case IMAGEJ:
-					XmippIJUtil.showImageJ(Tool.VIEWER);
+					XmippUtil.showImageJ(Tool.VIEWER);
 					break;
 				case BINARY:
 					IJ.run("Make Binary");

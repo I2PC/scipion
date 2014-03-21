@@ -11,7 +11,7 @@ import java.util.logging.Level;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
 
-import xmipp.ij.commons.XmippIJUtil;
+import xmipp.ij.commons.XmippUtil;
 import xmipp.ij.commons.XmippImageConverter;
 import xmipp.jni.Filename;
 import xmipp.jni.ImageGeneric;
@@ -77,7 +77,7 @@ public abstract class Micrograph {
 	public ImagePlus getPSDImage() {
 		if (psd == null || !(new File(psd).exists()))
 			return null;
-		return XmippIJUtil.getImagePlus(psd);
+		return XmippUtil.getImagePlus(psd);
 
 	}
 
@@ -89,7 +89,7 @@ public abstract class Micrograph {
 						+ "no-image.jpg"));
 			else
 				file = psd;
-			ImagePlus imp = XmippIJUtil.getImagePlus(file);
+			ImagePlus imp = XmippUtil.getImagePlus(file);
 			Image image = imp.getImage().getScaledInstance(120, 110,
 					Image.SCALE_SMOOTH);
 			ctficon = new ImageIcon(image);
@@ -103,7 +103,7 @@ public abstract class Micrograph {
 		if (noimageicon == null) {
 			file = (Filename.getXmippPath("resources" + File.separator
 					+ "no-image.jpg"));
-			ImagePlus imp = XmippIJUtil.getImagePlus(file);
+			ImagePlus imp = XmippUtil.getImagePlus(file);
 			Image image = imp.getImage().getScaledInstance(120, 110,
 					Image.SCALE_SMOOTH);
 			noimageicon = new ImageIcon(image);
