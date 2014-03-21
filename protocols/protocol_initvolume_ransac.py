@@ -82,6 +82,8 @@ class ProtInitVolRANSAC(ProtInitVolumeBase):
             self.Xdim2 = int(self.Xdim+self.Xdim2)/2
             self.insertRunJobStep("xmipp_image_resize","-i %s --fourier %d -o %s" %(fnOutputReducedClass,self.Xdim2,fnOutputReducedClassNoExt))
 
+            #We want only a few iterations maybe 2
+            self.NumIter = 2
             
             for n in range(self.NumVolumes):
                 fnBase='volumeProposed%05d'%n
