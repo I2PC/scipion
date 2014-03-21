@@ -102,6 +102,7 @@ class Object(object):
         to another object"""
         return self._objIsPointer
         
+    # does nothing?
     def _convertValue(self, value):
         """Convert a value to desired scalar type"""
         return value

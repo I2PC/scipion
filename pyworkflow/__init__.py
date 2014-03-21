@@ -44,7 +44,7 @@ PYTHON = os.environ.get("SCIPION_PYTHON", 'python')
 
 PROJECTS = os.path.join(SCIPION_HOME, 'projects')
 SETTINGS = os.path.join(SCIPION_HOME, 'settings.sqlite')
-TESTS = os.path.join(SCIPION_HOME, 'tests')
+
 
 from utils.path import findResource
 

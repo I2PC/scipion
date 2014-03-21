@@ -10,15 +10,14 @@ from pyworkflow.em.packages.xmipp3 import *
 from pyworkflow.tests import *
 
 
-class TestXmippSetOfMicrographs(unittest.TestCase):
+class TestXmippSetOfMicrographs(tests.BaseTest):
         
     @classmethod
     def setUpClass(cls):
-        cls.outputPath = getOutputPath('test_data_xmipp')
-        
-        cls.dbGold = getGoldPath('Micrographs_BPV3', 'micrographs_gold.sqlite')
-        cls.mdGold = getGoldPath('Micrographs_BPV3', 'micrographs_gold.xmd')
-        
+        cls.dataset = DataSet.getDataSet('xmipp_tutorial')  
+        cls.dbGold = cls.dataset.getFile( 'micsGoldSqlite')
+        cls.mdGold = cls.dataset.getFile('micsGoldXmd')
+        cls.outputPath = cls.getOutputPath('test_data_xmipp')
                 
     def setUp(self):
 #        cleanPath(self.outputPath)
