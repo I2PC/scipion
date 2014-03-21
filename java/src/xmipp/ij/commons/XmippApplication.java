@@ -30,8 +30,8 @@ public class XmippApplication
                 if(isijwindow)
                 {
                     ijwindows --;
-                    if(XmippIJUtil.getXmippImageJ() != null && ijwindows == 0)
-			XmippIJUtil.getXmippImageJ().setVisible(false);//if ImageJ is not shared hide it
+                    if(XmippUtil.getXmippImageJ() != null && ijwindows == 0)
+			XmippUtil.getXmippImageJ().setVisible(false);//if ImageJ is not shared hide it
                 }
                 //System.out.printf("instances %s\n", instances);
 		if (instances == 0)
