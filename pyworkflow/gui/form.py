@@ -497,6 +497,9 @@ class ParamWidget():
                 entryWidth = 10 # Reduce the entry width for numbers entries
             entry = tk.Entry(content, width=entryWidth, textvariable=var)
             entry.grid(row=0, column=0, sticky='w')
+            
+            if t is PathParam:
+                self._addButton('Browse', Icon.ACTION_BROWSE, self._browsePath)
 
         if self.visualizeCallback is not None:
             self._addButton(Message.LABEL_BUTTON_VIS, Icon.ACTION_VISUALIZE, self._visualizeVar)    
@@ -542,6 +545,9 @@ class ParamWidget():
         if dlg.value is not None:
             self.set(dlg.value)
             self._openProtocolForm()
+            
+    def _browsePath(self, e=None):
+        
             
     def _openProtocolForm(self, e=None):
         className = self.get().strip()

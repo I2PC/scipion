@@ -28,20 +28,11 @@
 Object browser
 """
         
+import sys
 import Tkinter as tk
 
-import xmipp
-import pyworkflow.gui as gui
-from PIL import ImageTk
-from pyworkflow.object import *
-from pyworkflow.mapper import SqliteMapper, XmlMapper
-from pyworkflow.gui import getPILImage
-from pyworkflow.gui.tree import BoundTree, DbTreeProvider, FileTreeProvider, FileHandler
-from pyworkflow.gui.browser import ObjectBrowser, FileBrowser
-from pyworkflow.protocol import *
-from pyworkflow.protocol.params import *
-from pyworkflow.em import *
-from pyworkflow.apps.config import *
+from pyworkflow.gui.tree import DbTreeProvider
+from pyworkflow.gui.browser import *
             
             
 class EMTreeProvider(DbTreeProvider):
@@ -60,58 +51,6 @@ class EMTreeProvider(DbTreeProvider):
         return (None, desc)
     
     
-class BrowserWindow(gui.Window):
-    def __init__(self, title, master=None, **args):
-        if 'minsize' not in args:
-            args['minsize'] = (800, 400)
-        gui.Window.__init__(self, title, master, **args)
-        
-    def setBrowser(self, browser):
-        browser.grid(row=0, column=0, sticky='news')
-        self.itemConfig = browser.tree.itemConfig
-    
-    
-class TextFileHandler(FileHandler):   
-    def __init__(self, textIcon):
-        FileHandler.__init__(self)
-        self._icon = textIcon
-         
-    def getFileIcon(self, objFile):
-        return self._icon
-    
-class MdFileHandler(FileHandler):
-    def getFileIcon(self, objFile):
-        return 'file_md.gif'
-    
-class SqlFileHandler(FileHandler):
-    def getFileIcon(self, objFile):
-        return 'file_sqlite.gif'    
-    
-class ImageFileHandler(FileHandler):
-    _image = xmipp.Image()
-    _index = ''
-    
-    def getFilePreview(self, objFile):
-        self._image.readPreview(self._index + objFile.getPath(), 128)
-        pilImg = getPILImage(self._image)
-        self.tkImg = ImageTk.PhotoImage(pilImg)
-        
-        return self.tkImg, None 
-    
-class ParticleFileHandler(ImageFileHandler):
-    def getFileIcon(self, objFile):
-        return 'file_image.gif'
-    
-class VolFileHandler(ImageFileHandler):
-    def getFileIcon(self, objFile):
-        return 'file_vol.gif'
-    
-class StackHandler(ImageFileHandler):
-    _index = '1@'
-    
-    def getFileIcon(self, objFile):
-        return 'file_stack.gif'
-    
         
 USAGE = "usage: pw_browser.py [db|dir] path"
 
@@ -120,30 +59,15 @@ if __name__ == '__main__':
     if len(sys.argv) == 3:
         browseMode = sys.argv[1]
         path = sys.argv[2]
-        window = BrowserWindow("Browsing: " + path)    
         if browseMode == 'dir':
-            FileTreeProvider.registerFileHandler(TextFileHandler('file_text.gif'), '.txt', '.log', '.out', '.err')
-            FileTreeProvider.registerFileHandler(TextFileHandler('file_python.gif'), '.py')
-            FileTreeProvider.registerFileHandler(TextFileHandler('file_java.gif'), '.java')
-            FileTreeProvider.registerFileHandler(MdFileHandler(), '.xmd', '.star')
-            FileTreeProvider.registerFileHandler(SqlFileHandler(), '.sqlite')
-            FileTreeProvider.registerFileHandler(ParticleFileHandler(), '.mrc', '.spi')
-            FileTreeProvider.registerFileHandler(VolFileHandler(), '.vol')
-            FileTreeProvider.registerFileHandler(StackHandler(), '.stk', '.spi')
-            provider = FileTreeProvider(path)
-            browser = FileBrowser(window.root, path)
-            def selected(obj):
-                print obj.getPath()
-            browser.onClose = window.close
-            browser.onSelect = selected
-                
+            window = FileBrowserWindow("Browsing: " + path, path=path) 
         elif browseMode == 'db':
+            window = BrowserWindow("Browsing: " + path)    
             provider = EMTreeProvider(path)
             browser = ObjectBrowser(window.root, provider)
-            pass
+            window.setBrowser(browser)
         else:
             print "Unknown mode %s\n%s" % (browseMode, USAGE)
-        window.setBrowser(browser)
         window.show()
     else:
         print USAGE

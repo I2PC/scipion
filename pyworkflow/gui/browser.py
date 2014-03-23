@@ -33,19 +33,17 @@ elements to inspect and preview are files.
 
 import os
 import os.path
+import stat
 
 import Tkinter as tk
 import ttk
 
-from tree import Tree
+import xmipp
 import gui
-import tooltip
-import widgets
-import matplotlib_image
-from pyworkflow.utils.path import findResource, dirname, getHomePath
-from tree import BoundTree, FileTreeProvider
+from pyworkflow.utils import dirname, getHomePath, prettySize, getExt, dateStr
+from tree import BoundTree, TreeProvider
 from text import TaggedText
-from pyworkflow.utils.properties import Message, Icon
+from pyworkflow.utils.properties import Icon
 
 
 class ObjectBrowser(tk.Frame):
@@ -128,6 +126,156 @@ class ObjectBrowser(tk.Frame):
         """ Return the selected object. """
         return self._lastSelected
       
+
+#------------- Classes and Functions related to File browsing --------------
+
+class FileInfo(object):
+    """ This class will store some information about a file.
+    It will serve to display files items in the Tree.
+    """
+    def __init__(self, path, filename):
+        self._fullpath = os.path.join(path, filename)
+        self._filename = filename
+        self._stat = os.stat(self._fullpath)
+        
+    def isDir(self):
+        return stat.S_ISDIR(self._stat.st_mode)
+    
+    def getFileName(self):
+        return self._filename
+    
+    def getPath(self):
+        return self._fullpath
+    
+    def getSize(self):
+        """ Return a human readable string of the file size."""
+        return prettySize(self._stat.st_size)
+    
+    def getDate(self):
+        return dateStr(self._stat.st_mtime)
+    
+    
+class FileHandler(object):
+    """ This class will be used to get the icon, preview and info
+    from the different types of objects.
+    It should be used with FileTreeProvider, where different
+    types of handlers can be registered.
+    """
+    def getFileIcon(self, objFile):
+        """ Return the icon name for a given file. """
+        if objFile.isDir():
+            icon = 'file_folder.gif'
+        else:
+            icon = 'file_generic.gif'
+        
+        return icon
+    
+    def getFilePreview(self, objFile):
+        """ Return the preview image and description for the specific object. """
+        if objFile.isDir():
+            return 'fa-folder-open.png', None
+        return None, None
+    
+    
+class TextFileHandler(FileHandler):   
+    def __init__(self, textIcon):
+        FileHandler.__init__(self)
+        self._icon = textIcon
+         
+    def getFileIcon(self, objFile):
+        return self._icon
+    
+class MdFileHandler(FileHandler):
+    def getFileIcon(self, objFile):
+        return 'file_md.gif'
+    
+class SqlFileHandler(FileHandler):
+    def getFileIcon(self, objFile):
+        return 'file_sqlite.gif'    
+    
+class ImageFileHandler(FileHandler):
+    _image = xmipp.Image()
+    _index = ''
+    
+    def getFilePreview(self, objFile):
+        fn = self._index + objFile.getPath()
+        dim = 128
+        self.tkImg = gui.getTkImage(self._image, fn, dim)
+        
+        return self.tkImg, None 
+    
+class ParticleFileHandler(ImageFileHandler):
+    def getFileIcon(self, objFile):
+        return 'file_image.gif'
+    
+class VolFileHandler(ImageFileHandler):
+    def getFileIcon(self, objFile):
+        return 'file_vol.gif'
+    
+class StackHandler(ImageFileHandler):
+    _index = '1@'
+    
+    def getFileIcon(self, objFile):
+        return 'file_stack.gif'
+    
+    
+class FileTreeProvider(TreeProvider):
+    """ Populate a tree with files and folders of a given path """
+    
+    _FILE_HANDLERS = {}
+    _DEFAULT_HANDLER = FileHandler()
+    
+    @classmethod
+    def registerFileHandler(cls, fileHandler, *extensions):
+        """ Register a FileHandler for a given file extention. 
+        Params:
+            fileHandler: the FileHandler that will take care of extensions.
+            *extensions: the extensions list that will be associated to this FileHandler.
+        """
+        for fileExt in extensions:
+            cls._FILE_HANDLERS[fileExt] = fileHandler
+        
+    def __init__(self, currentDir=None, showHidden=False):
+        self._currentDir = os.path.abspath(currentDir)
+        self._showHidden = showHidden
+        self.getColumns = lambda: [('File', 300), ('Size', 70), ('Time', 150)]
+    
+    def getFileHandler(self, obj):
+        filename = obj.getFileName()
+        fileExt = getExt(filename)
+        return self._FILE_HANDLERS.get(fileExt, self._DEFAULT_HANDLER)
+        
+    def getObjectInfo(self, obj):
+        filename = obj.getFileName()
+        fileHandler = self.getFileHandler(obj)
+        icon = fileHandler.getFileIcon(obj)
+        
+        info = {'key': filename, 'text': filename, 
+                'values': (obj.getSize(), obj.getDate()), 'image': icon
+                }
+            
+        return info
+    
+    def getObjectPreview(self, obj):
+        fileHandler = self.getFileHandler(obj)
+        return fileHandler.getFilePreview(obj)
+    
+    def getObjectActions(self, obj):
+        return []
+    
+    def getObjects(self):
+        files = os.listdir(self._currentDir)
+        files.sort()
+        for f in files:
+            if self._showHidden or not f.startswith('.'):
+                yield FileInfo(self._currentDir, f)
+
+    def getDir(self):
+        return self._currentDir
+    
+    def setDir(self, newPath):
+        self._currentDir = newPath
+        
 # Some constants for the type of selection
 # when the file browser is opened
 SELECT_NONE = 0 # No selection, just browse files                  
@@ -231,3 +379,38 @@ class FileBrowser(ObjectBrowser):
         
     def _select(self, e=None):
         self.onSelect(self.getSelected())
+        
+        
+class BrowserWindow(gui.Window):
+    """ Windows to hold a browser frame inside. """
+    def __init__(self, title, master=None, **args):
+        if 'minsize' not in args:
+            args['minsize'] = (800, 400)
+        gui.Window.__init__(self, title, master, **args)
+        
+    def setBrowser(self, browser):
+        browser.grid(row=0, column=0, sticky='news')
+        self.itemConfig = browser.tree.itemConfig
+        
+class FileBrowserWindow(BrowserWindow):
+    """ Windows to hold a browser frame inside. """
+    def __init__(self, title, master=None, path=None, **args):
+        BrowserWindow.__init__(self, title, master, **args)
+        self.registerHandlers()
+        browser = FileBrowser(self.root, path)
+        def selected(obj):
+            print obj.getPath()
+        browser.onClose = self.close
+        browser.onSelect = selected
+        self.setBrowser(browser) 
+        
+    def registerHandlers(self):
+        FileTreeProvider.registerFileHandler(TextFileHandler('file_text.gif'), '.txt', '.log', '.out', '.err')
+        FileTreeProvider.registerFileHandler(TextFileHandler('file_python.gif'), '.py')
+        FileTreeProvider.registerFileHandler(TextFileHandler('file_java.gif'), '.java')
+        FileTreeProvider.registerFileHandler(MdFileHandler(), '.xmd', '.star')
+        FileTreeProvider.registerFileHandler(SqlFileHandler(), '.sqlite')
+        FileTreeProvider.registerFileHandler(ParticleFileHandler(), '.mrc', '.spi')
+        FileTreeProvider.registerFileHandler(VolFileHandler(), '.vol')
+        FileTreeProvider.registerFileHandler(StackHandler(), '.stk', '.spi')
+    
