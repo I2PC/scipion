@@ -186,9 +186,43 @@ class TextFileHandler(FileHandler):
     def getFileIcon(self, objFile):
         return self._icon
     
+    
 class MdFileHandler(FileHandler):
     def getFileIcon(self, objFile):
         return 'file_md.gif'
+    
+    def _getMdString(self, filename):
+        from xmipp import MetaData, MDL_IMAGE, label2Str, labelIsImage
+        md = MetaData()
+        md.read(filename, 1)
+        labels = md.getActiveLabels()
+        msg =  "  <%d items>\n" % md.getParsedLines()
+        msg += "  <labels:>" + ''.join(["\n   - %s" % label2Str(l) for l in labels])
+        
+#         img = 'no-image.png'
+#         for label in labels:
+#             if labelIsImage(label):
+#                 img = md.getValue(label, md.firstObject())
+#                 break
+#         browser.updatePreview(img)
+        return msg
+    
+    def getFilePreview(self, objFile):
+        filename = objFile.getPath()
+        if '@' not in filename:
+            import xmipp
+            msg = "<Metadata File>\n"
+            blocks = xmipp.getBlocksInMetaDataFile(filename)
+            nblocks = len(blocks)
+            if nblocks <= 1:
+                msg += "  <single block>\n" + self._getMdString(filename)
+            else:
+                msg += "  <%d blocks:>" % nblocks + ''.join(["\n  - %s" % b for b in blocks])
+        else:
+            block, filename = splitFilename(filename)
+            filename = join(browser.dir, filename)
+            msg = "<Metadata Block>\n" + self._getMdString("%s@%s" % (block, filename))
+        return None, msg
     
 class SqlFileHandler(FileHandler):
     def getFileIcon(self, objFile):

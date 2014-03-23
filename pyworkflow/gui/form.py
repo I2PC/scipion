@@ -203,8 +203,8 @@ class SubclassesTreeProvider(TreeProvider):
         return False
     
     def getObjectInfo(self, obj):
-        objName = obj.getNameId()
-        return {'key': objName, 'values': (str(obj),), 'selected': self.isSelected(obj)}
+        return {'key': obj.strId(), 'text': obj.getNameId(),
+                'values': (str(obj),), 'selected': self.isSelected(obj)}
 
     def getObjectActions(self, obj):
         if isinstance(obj, Pointer):
@@ -523,7 +523,8 @@ class ParamWidget():
         elif selected is not None:
             selected = [value]
         tp = SubclassesTreeProvider(self.window.protocol, self.param, selected=selected)
-        dlg = ListDialog(self.parent, "Select object", tp, "Double click an item to preview the object")
+        dlg = ListDialog(self.parent, "Select object", tp, 
+                         "Double click an item to preview the object")
         if dlg.value is not None:
             self.set(dlg.value)
         

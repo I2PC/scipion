@@ -241,7 +241,6 @@ class BoundTree(Tree):
                 key = objDict.get('key')
                 text = objDict.get('text', key)
                 parent = objDict.get('parent', None)
-                open = objDict.get('open', False)
                 
                 if parent is None:
                     parentId = ''
@@ -260,8 +259,10 @@ class BoundTree(Tree):
                 obj._treeId = self.insert(parentId, 'end', key,
                             text=text, image=image, values=values)
                 self._objDict[obj._treeId] = obj
-                if open:
-                    self.itemConfig(obj, open=open)
+                
+                if objDict.get('open', False):
+                    self.itemConfig(obj, open=True)
+                
                 if objDict.get('selected', False):
                     self.selectChild(obj._treeId)
 
