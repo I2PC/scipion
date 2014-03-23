@@ -39,11 +39,12 @@ import Tkinter as tk
 import ttk
 
 import xmipp
+from pyworkflow.utils.properties import Icon
 import gui
 from pyworkflow.utils import dirname, getHomePath, prettySize, getExt, dateStr
 from tree import BoundTree, TreeProvider
 from text import TaggedText
-from pyworkflow.utils.properties import Icon
+from widgets import Button, HotButton
 
 
 class ObjectBrowser(tk.Frame):
@@ -344,12 +345,10 @@ class FileBrowser(ObjectBrowser):
         """ Add button to the bottom frame if the selectMode
         is distinct from SELECT_NONE.
         """
-        tk.Button(frame, text="Close", image=self.getImage(Icon.BUTTON_CLOSE),
-                  command=self._close,
-                  compound=tk.LEFT).grid(row=0, column=0, padx=(0,5))                        
-        tk.Button(frame, text="Select", image=self.getImage(Icon.BUTTON_SELECT),
-                  command=self._select, 
-                  compound=tk.LEFT).grid(row=0, column=1)
+        Button(frame, "Close", Icon.BUTTON_CLOSE, 
+               command=self._close).grid(row=0, column=0, padx=(0,5))                        
+        HotButton(frame, "Select", Icon.BUTTON_SELECT,
+                  command=self._select).grid(row=0, column=1)
                 
     def _actionRefresh(self, e=None):
         self.tree.update()
@@ -394,14 +393,17 @@ class BrowserWindow(gui.Window):
         
 class FileBrowserWindow(BrowserWindow):
     """ Windows to hold a browser frame inside. """
-    def __init__(self, title, master=None, path=None, **args):
+    def __init__(self, title, master=None, path=None, 
+                 onSelect=None, **args):
         BrowserWindow.__init__(self, title, master, **args)
         self.registerHandlers()
         browser = FileBrowser(self.root, path)
-        def selected(obj):
-            print obj.getPath()
+        if onSelect:
+            def selected(obj):
+                onSelect(obj)
+                self.close()
+            browser.onSelect = selected
         browser.onClose = self.close
-        browser.onSelect = selected
         self.setBrowser(browser) 
         
     def registerHandlers(self):
