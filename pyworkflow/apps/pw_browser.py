@@ -30,10 +30,13 @@ Object browser
         
 import Tkinter as tk
 
+import xmipp
 import pyworkflow.gui as gui
+from PIL import ImageTk
 from pyworkflow.object import *
 from pyworkflow.mapper import SqliteMapper, XmlMapper
-from pyworkflow.gui.tree import BoundTree, DbTreeProvider, FileTreeProvider
+from pyworkflow.gui import getPILImage
+from pyworkflow.gui.tree import BoundTree, DbTreeProvider, FileTreeProvider, FileHandler
 from pyworkflow.gui.browser import ObjectBrowser, FileBrowser
 from pyworkflow.protocol import *
 from pyworkflow.protocol.params import *
@@ -57,7 +60,6 @@ class EMTreeProvider(DbTreeProvider):
         return (None, desc)
     
     
-    
 class BrowserWindow(gui.Window):
     def __init__(self, title, master=None, **args):
         if 'minsize' not in args:
@@ -69,6 +71,48 @@ class BrowserWindow(gui.Window):
         self.itemConfig = browser.tree.itemConfig
     
     
+class TextFileHandler(FileHandler):   
+    def __init__(self, textIcon):
+        FileHandler.__init__(self)
+        self._icon = textIcon
+         
+    def getFileIcon(self, objFile):
+        return self._icon
+    
+class MdFileHandler(FileHandler):
+    def getFileIcon(self, objFile):
+        return 'file_md.gif'
+    
+class SqlFileHandler(FileHandler):
+    def getFileIcon(self, objFile):
+        return 'file_sqlite.gif'    
+    
+class ImageFileHandler(FileHandler):
+    _image = xmipp.Image()
+    _index = ''
+    
+    def getFilePreview(self, objFile):
+        self._image.readPreview(self._index + objFile.getPath(), 128)
+        pilImg = getPILImage(self._image)
+        self.tkImg = ImageTk.PhotoImage(pilImg)
+        
+        return self.tkImg, None 
+    
+class ParticleFileHandler(ImageFileHandler):
+    def getFileIcon(self, objFile):
+        return 'file_image.gif'
+    
+class VolFileHandler(ImageFileHandler):
+    def getFileIcon(self, objFile):
+        return 'file_vol.gif'
+    
+class StackHandler(ImageFileHandler):
+    _index = '1@'
+    
+    def getFileIcon(self, objFile):
+        return 'file_stack.gif'
+    
+        
 USAGE = "usage: pw_browser.py [db|dir] path"
 
 if __name__ == '__main__':
@@ -78,8 +122,21 @@ if __name__ == '__main__':
         path = sys.argv[2]
         window = BrowserWindow("Browsing: " + path)    
         if browseMode == 'dir':
+            FileTreeProvider.registerFileHandler(TextFileHandler('file_text.gif'), '.txt', '.log', '.out', '.err')
+            FileTreeProvider.registerFileHandler(TextFileHandler('file_python.gif'), '.py')
+            FileTreeProvider.registerFileHandler(TextFileHandler('file_java.gif'), '.java')
+            FileTreeProvider.registerFileHandler(MdFileHandler(), '.xmd', '.star')
+            FileTreeProvider.registerFileHandler(SqlFileHandler(), '.sqlite')
+            FileTreeProvider.registerFileHandler(ParticleFileHandler(), '.mrc', '.spi')
+            FileTreeProvider.registerFileHandler(VolFileHandler(), '.vol')
+            FileTreeProvider.registerFileHandler(StackHandler(), '.stk', '.spi')
             provider = FileTreeProvider(path)
             browser = FileBrowser(window.root, path)
+            def selected(obj):
+                print obj.getPath()
+            browser.onClose = window.close
+            browser.onSelect = selected
+                
         elif browseMode == 'db':
             provider = EMTreeProvider(path)
             browser = ObjectBrowser(window.root, provider)

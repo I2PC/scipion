@@ -34,7 +34,7 @@ import ttk
 
 from pyworkflow.object import Scalar
 from pyworkflow.mapper import SqliteMapper
-from pyworkflow.utils import prettyDelta, prettySize, dateStr
+from pyworkflow.utils import prettyDelta, prettySize, dateStr, getExt
 import gui
 from widgets import Scrollable
 
@@ -191,17 +191,21 @@ class BoundTree(Tree):
         
     def _onClick(self, e=None):
         if hasattr(self, 'itemClick'):
-            obj = self._objDict[self.getFirst()]
-            self.itemClick(obj)
+            selected = self.getFirst()
+            if selected:
+                obj = self._objDict[selected]
+                self.itemClick(obj)
             
     def _onDoubleClick(self, e=None):  
-        obj = self._objDict[self.getFirst()]
-        if hasattr(self, 'itemDoubleClick'):
-            self.itemDoubleClick(obj)
-        else: # If not callback, use default action
-            actions = self.provider.getObjectActions(obj)
-            if len(actions):
-                actions[0][1]() # actions[0] = first Action, [1] = the action callback
+        selected = self.getFirst()
+        if selected:
+            obj = self._objDict[selected]
+            if hasattr(self, 'itemDoubleClick'):
+                self.itemDoubleClick(obj)
+            else: # If not callback, use default action
+                actions = self.provider.getObjectActions(obj)
+                if len(actions):
+                    actions[0][1]() # actions[0] = first Action, [1] = the action callback
             
     def _onRightClick(self, e=None):
         item = self.identify('item', e.x, e.y)
@@ -361,6 +365,9 @@ class ProjectRunsTreeProvider(TreeProvider):
 
 
 class FileInfo(object):
+    """ This class will store some information about a file.
+    It will serve to display files items in the Tree.
+    """
     def __init__(self, path, filename):
         self._fullpath = os.path.join(path, filename)
         self._filename = filename
@@ -383,27 +390,68 @@ class FileInfo(object):
         return dateStr(self._stat.st_mtime)
     
     
+class FileHandler(object):
+    """ This class will be used to get the icon, preview and info
+    from the different types of objects.
+    It should be used with FileTreeProvider, where different
+    types of handlers can be registered.
+    """
+    def getFileIcon(self, objFile):
+        """ Return the icon name for a given file. """
+        if objFile.isDir():
+            icon = 'file_folder.gif'
+        else:
+            icon = 'file_generic.gif'
+        
+        return icon
+    
+    def getFilePreview(self, objFile):
+        """ Return the preview image and description for the specific object. """
+        if objFile.isDir():
+            return 'fa-folder-open.png', None
+        return None, None
+    
+    
 class FileTreeProvider(TreeProvider):
     """ Populate a tree with files and folders of a given path """
+    
+    _FILE_HANDLERS = {}
+    _DEFAULT_HANDLER = FileHandler()
+    
+    @classmethod
+    def registerFileHandler(cls, fileHandler, *extensions):
+        """ Register a FileHandler for a given file extention. 
+        Params:
+            fileHandler: the FileHandler that will take care of extensions.
+            *extensions: the extensions list that will be associated to this FileHandler.
+        """
+        for fileExt in extensions:
+            cls._FILE_HANDLERS[fileExt] = fileHandler
+        
     def __init__(self, currentDir=None, showHidden=False):
         self._currentDir = os.path.abspath(currentDir)
         self._showHidden = showHidden
         self.getColumns = lambda: [('File', 300), ('Size', 70), ('Time', 150)]
     
+    def getFileHandler(self, obj):
+        filename = obj.getFileName()
+        fileExt = getExt(filename)
+        return self._FILE_HANDLERS.get(fileExt, self._DEFAULT_HANDLER)
+        
     def getObjectInfo(self, obj):
         filename = obj.getFileName()
-        if obj.isDir():
-            img = 'file_folder.gif'
-        else:
-            img = 'file_generic.gif'
+        fileHandler = self.getFileHandler(obj)
+        icon = fileHandler.getFileIcon(obj)
+        
         info = {'key': filename, 'text': filename, 
-                'values': (obj.getSize(), obj.getDate()), 'image': img
+                'values': (obj.getSize(), obj.getDate()), 'image': icon
                 }
             
         return info
     
     def getObjectPreview(self, obj):
-        return (None, None)
+        fileHandler = self.getFileHandler(obj)
+        return fileHandler.getFilePreview(obj)
     
     def getObjectActions(self, obj):
         return []

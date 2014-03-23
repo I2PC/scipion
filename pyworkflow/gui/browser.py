@@ -60,6 +60,7 @@ class ObjectBrowser(tk.Frame):
     def __init__(self, parent, treeProvider, showPreview=True, **args):
         tk.Frame.__init__(self, parent, **args)
         self.treeProvider = treeProvider
+        self._lastSelected = None
         gui.configureWeigths(self)
         # The main layout will be two panes, 
         # At the left containing the elements list
@@ -112,14 +113,20 @@ class ObjectBrowser(tk.Frame):
         self.text.grid(row=0, column=0, sticky='news')
         
     def _itemClicked(self, obj):
+        self._lastSelected = obj
         img, desc = self.treeProvider.getObjectPreview(obj)
         self.text.clear()
-        img = self.getImage(img)
+        if isinstance(img, str):
+            img = self.getImage(img)
         if img is None:
             img = self.noImage
         self.label.config(image=img)
         if desc is not None:
             self.text.addText(desc)
+            
+    def getSelected(self):
+        """ Return the selected object. """
+        return self._lastSelected
       
 # Some constants for the type of selection
 # when the file browser is opened
@@ -189,10 +196,12 @@ class FileBrowser(ObjectBrowser):
         """ Add button to the bottom frame if the selectMode
         is distinct from SELECT_NONE.
         """
-        tk.Button(frame, text="Select", image=self.getImage(Icon.BUTTON_SELECT),
-                        compound=tk.LEFT).grid(row=0, column=0, padx=(0,5))
         tk.Button(frame, text="Close", image=self.getImage(Icon.BUTTON_CLOSE),
-                        compound=tk.LEFT).grid(row=0, column=1)                        
+                  command=self._close,
+                  compound=tk.LEFT).grid(row=0, column=0, padx=(0,5))                        
+        tk.Button(frame, text="Select", image=self.getImage(Icon.BUTTON_SELECT),
+                  command=self._select, 
+                  compound=tk.LEFT).grid(row=0, column=1)
                 
     def _actionRefresh(self, e=None):
         self.tree.update()
@@ -210,3 +219,15 @@ class FileBrowser(ObjectBrowser):
     def _itemDoubleClick(self, obj):
         if obj.isDir():
             self._goDir(obj.getPath())
+            
+    def onClose(self):
+        pass
+    
+    def onSelect(self, obj):
+        pass
+    
+    def _close(self, e=None):
+        self.onClose()
+        
+    def _select(self, e=None):
+        self.onSelect(self.getSelected())
