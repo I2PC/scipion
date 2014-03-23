@@ -185,59 +185,43 @@ class TextFileHandler(FileHandler):
          
     def getFileIcon(self, objFile):
         return self._icon
-    
-    
-class MdFileHandler(FileHandler):
-    def getFileIcon(self, objFile):
-        return 'file_md.gif'
-    
-    def _getMdString(self, filename):
-        from xmipp import MetaData, MDL_IMAGE, label2Str, labelIsImage
-        md = MetaData()
-        md.read(filename, 1)
-        labels = md.getActiveLabels()
-        msg =  "  <%d items>\n" % md.getParsedLines()
-        msg += "  <labels:>" + ''.join(["\n   - %s" % label2Str(l) for l in labels])
-        
-#         img = 'no-image.png'
-#         for label in labels:
-#             if labelIsImage(label):
-#                 img = md.getValue(label, md.firstObject())
-#                 break
-#         browser.updatePreview(img)
-        return msg
-    
-    def getFilePreview(self, objFile):
-        filename = objFile.getPath()
-        if '@' not in filename:
-            import xmipp
-            msg = "<Metadata File>\n"
-            blocks = xmipp.getBlocksInMetaDataFile(filename)
-            nblocks = len(blocks)
-            if nblocks <= 1:
-                msg += "  <single block>\n" + self._getMdString(filename)
-            else:
-                msg += "  <%d blocks:>" % nblocks + ''.join(["\n  - %s" % b for b in blocks])
-        else:
-            block, filename = splitFilename(filename)
-            filename = join(browser.dir, filename)
-            msg = "<Metadata Block>\n" + self._getMdString("%s@%s" % (block, filename))
-        return None, msg
+
     
 class SqlFileHandler(FileHandler):
     def getFileIcon(self, objFile):
         return 'file_sqlite.gif'    
     
+    
 class ImageFileHandler(FileHandler):
     _image = xmipp.Image()
     _index = ''
     
-    def getFilePreview(self, objFile):
-        fn = self._index + objFile.getPath()
+    def _getImageString(self, filename):
+        import xmipp
+        x, y, z, n = xmipp.getImageSize(filename)
+        objType = 'Image'
+        dimMsg = "*%(objType)s file*\n  dimensions: %(x)d x %(y)d" 
+        expMsg = "Columns x Rows "
+        if z > 1: 
+            dimMsg += " x %(z)d"
+            expMsg += " x Slices"
+            objType = 'Volume'
+        if n > 1:
+            dimMsg += " x %(n)d" 
+            expMsg += " x Objects"
+            objType = 'Stack'
+        return (dimMsg + "\n" + expMsg) % locals()
+    
+    def _getImagePreview(self, filename):
+        fn = self._index + filename
         dim = 128
         self.tkImg = gui.getTkImage(self._image, fn, dim)
+        return self.tkImg
         
-        return self.tkImg, None 
+    def getFilePreview(self, objFile):
+        fn = objFile.getPath()
+        return self._getImagePreview(fn), self._getImageString(fn)
+    
     
 class ParticleFileHandler(ImageFileHandler):
     def getFileIcon(self, objFile):
@@ -252,6 +236,81 @@ class StackHandler(ImageFileHandler):
     
     def getFileIcon(self, objFile):
         return 'file_stack.gif'
+    
+    
+class MdFileHandler(ImageFileHandler):
+    def getFileIcon(self, objFile):
+        return 'file_md.gif'
+    
+    def _getImgPath(self, mdFn, imgFn):
+        """ Get ups and ups until finding the relative location to images. """
+        path = dirname(mdFn)
+        from xmipp import FileName
+        index, fn = FileName(imgFn).decompose()
+        
+        while path and path != '/':
+            newFn = os.path.join(path, fn)
+            if os.path.exists(newFn):
+                if index:
+                    newFn = '%d@%s' % (index, newFn)
+                return newFn
+            path = dirname(path)
+            
+        return None
+            
+    def _getMdString(self, filename, block=None):
+        from xmipp import MetaData, MDL_IMAGE, label2Str, labelIsImage
+        md = MetaData()
+        if block:
+            md.read(block + '@' + filename)
+        else:
+            md.read(filename, 1)
+        labels = md.getActiveLabels()
+        msg =  "Metadata items: *%d*\n" % md.getParsedLines()
+        msg += "Metadata labels: " + ''.join(["\n   - %s" % label2Str(l) for l in labels])
+        
+        imgPath = None
+        for label in labels:
+            if labelIsImage(label):
+                imgPath = self._getImgPath(filename, md.getValue(label, md.firstObject()))
+                break
+        if imgPath:
+            self._imgPreview = self._getImagePreview(imgPath)
+            self._imgInfo = self._getImageString(imgPath)
+        return msg
+    
+    def getFilePreview(self, objFile):
+        self._imgPreview = None
+        self._imgInfo = None
+        filename = objFile.getPath()
+        ext = getExt(filename)
+        
+        if ext == '.xmd':
+            import xmipp
+            msg = "*Metadata File* "
+            blocks = xmipp.getBlocksInMetaDataFile(filename)
+            nblocks = len(blocks)
+            if nblocks <= 1:
+                mdStr = self._getMdString(filename)
+                msg += "  (single block)\n"
+                if self._imgInfo:
+                    msg += "First item: \n" + self._imgInfo
+                msg += '\n' + mdStr
+            else:
+                mdStr = self._getMdString(filename, blocks[0])
+                msg += "  (%d blocks) " % nblocks
+                if self._imgInfo:
+                    msg += "First item: \n" + self._imgInfo
+                msg += "First block: \n" + mdStr
+                msg += "All blocks:\n" + ''.join(["\n  - %s" % b for b in blocks])
+        elif ext == '.star':
+            msg = "*Relion STAR file* \n"
+            from pyworkflow.em.packages.relion.convert import addRelionLabels, restoreXmippLabels
+            addRelionLabels(replace=True)
+            msg += self._getMdString(filename)
+            restoreXmippLabels()
+            
+        return self._imgPreview, msg
     
     
 class FileTreeProvider(TreeProvider):
