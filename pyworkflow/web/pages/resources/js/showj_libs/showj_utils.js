@@ -91,29 +91,6 @@
 
  /** METHODS ******************************************************************/
 
- 
-function loadTemplateMode(mode){
-
-	var template = ""
-	if (mode=="table"){
-		template = "/showj_table/"
-	}
-	
-	$(function() {
-		$.ajax({
-			type: "GET",
-			url : template,
-			dataType: "html",
-			success : function(html) {
-				$('div#content_view').html(html);
-			},
-			error: function(){
-				alert("error");
-			}
-			
-		});
-  	});
-}
 
 function reloadImages(forceRecallServer){
 	$.waypoints('destroy')
@@ -272,6 +249,7 @@ function initializeZoomEvents(){
 
 function initializeImageLoad(forceRecall){
 	forceRecallServer = forceRecall
+
 	$('.tableImages').waypoint(function(direction){
 		element=$(this)
 		if (element.data('real_src') != element.attr("src") || forceRecallServer){ 
@@ -290,7 +268,6 @@ function initializeImageLoad(forceRecall){
 
 function saveShowjTable(csrf_token){
 	if ($("#saveButton").hasClass("buttonGreyHovered")){
-		alert("witol")
 		$.ajax({
 			type : "POST",
 			url : "/save_showj_table/",
