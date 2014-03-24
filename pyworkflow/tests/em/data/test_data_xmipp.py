@@ -14,12 +14,11 @@ class TestXmippSetOfMicrographs(BaseTest):
         
     @classmethod
     def setUpClass(cls):
-        super(TestXmippSetOfMicrographs, cls).setUpClass()
+        setupTestOutput(cls)
         cls.dataset = DataSet.getDataSet('xmipp_tutorial')  
         cls.dbGold = cls.dataset.getFile( 'micsGoldSqlite')
         cls.mdGold = cls.dataset.getFile('micsGoldXmd')
-        
-            
+    
     def testConvert(self):
         """ Test the convertion of a SetOfMicrographs to Xmipp"""
         micSet = SetOfMicrographs(filename=self.dbGold)
@@ -34,7 +33,7 @@ class TestXmippSetOfCoordinates(BaseTest):
     
     @classmethod
     def setUpClass(cls):
-        super(TestXmippSetOfCoordinates, cls).setUpClass()
+        setupTestOutput(cls)
         cls.dataset = DataSet.getDataSet('xmipp_tutorial')  
         cls.dbGold = cls.dataset.getFile( 'micsGoldSqlite')
         cls.posDir = cls.dataset.getFile('posDir')
@@ -69,7 +68,7 @@ class TestXmippCTFModel(BaseTest):
     
     @classmethod
     def setUpClass(cls):
-        super(TestXmippCTFModel, cls).setUpClass()
+        setupTestOutput(cls)
         cls.dataset = DataSet.getDataSet('xmipp_tutorial')  
 
                     
