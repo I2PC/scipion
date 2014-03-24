@@ -491,8 +491,8 @@ class BrowserWindow(gui.Window):
             args['minsize'] = (800, 400)
         gui.Window.__init__(self, title, master, **args)
         
-    def setBrowser(self, browser):
-        browser.grid(row=0, column=0, sticky='news')
+    def setBrowser(self, browser, row=0, column=0):
+        browser.grid(row=row, column=column, sticky='news')
         self.itemConfig = browser.tree.itemConfig
         
         

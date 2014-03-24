@@ -225,6 +225,38 @@ class StepsTreeProvider(TreeProvider):
         return None, msg
     
 
+class StepsWindow(BrowserWindow):
+    def __init__(self, title, parentWindow, protocol, **args):
+        self._protocol = protocol
+        provider = StepsTreeProvider(protocol._steps)
+        BrowserWindow.__init__(self, title, parentWindow, weight=False, **args)
+        # Create buttons toolbar
+        self.root.columnconfigure(0, weight=1)
+        self.root.rowconfigure(1, weight=1)
+        
+        toolbar = tk.Frame(self.root)
+        toolbar.grid(row=0, column=0, sticky='nw', padx=5, pady=5)
+        btn = tk.Label(toolbar, text="Tree", image=self.getImage(Icon.ACTION_STEPS), 
+                       compound=tk.LEFT, cursor='hand2')
+        btn.bind('<Button-1>', self._showTree)
+        btn.grid(row=0, column=0, sticky='nw')
+        # Create and set browser
+        browser = ObjectBrowser(self.root, provider, showPreviewTop=False)
+        self.setBrowser(browser, row=1, column=0)
+        
+    def _showTree(self, e=None):
+        g = self._protocol.getStepsGraph()
+        w = gui.Window("Protocol steps", self, minsize=(800, 600))
+        root = w.root
+        canvas = Canvas(root, width=600, height=500)
+        canvas.grid(row=0, column=0, sticky='nsew')
+        lt = LevelTree(g)
+        lt.setCanvas(canvas)
+        lt.paint()
+        canvas.updateScrollRegion()
+        w.show()
+    
+
 class RunIOTreeProvider(TreeProvider):
     """Create the tree elements from a Protocol Run input/output childs"""
     def __init__(self, protocol, mapper):
@@ -721,12 +753,9 @@ class ProtocolsView(tk.Frame):
 #         canvas.updateScrollRegion()
 #         w.show()
         
-        provider = StepsTreeProvider(self.selectedProtocol._steps)
-        window = BrowserWindow(Message.TITLE_BROWSE_DATA, self.windows, icon=self.icon)
-        window.setBrowser(ObjectBrowser(window.root, provider, showPreviewTop=False))
-        #window.itemConfig(self.selectedProtocol, open=True)  
+        window = StepsWindow(Message.TITLE_BROWSE_DATA, self.windows, 
+                             self.selectedProtocol, icon=self.icon)
         window.show()        
-        #g.printDot()
     
     def _browseRunData(self):
         provider = ProtocolTreeProvider(self.selectedProtocol)
