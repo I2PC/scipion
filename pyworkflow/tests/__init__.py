@@ -44,14 +44,15 @@ DataSet(name='xmipp_tutorial', folder='xmipp_tutorial',
                'micsGoldXmd': 'gold/micrographs_gold.xmd',
                'micsSqlite': 'micrographs/micrographs.sqlite',
                'coordsGoldSqlite': 'gold/coordinates_gold.sqlite', 
-               'posDir': 'pickingXmipp',
+               'posSupervisedDir': 'pickingXmipp/pickedSupervised',
+               'posAlldDir': 'pickingXmipp/pickedAll',
                'allMics': 'micrographs/*.mrc',
                'mic1': 'micrographs/BPV_1386.mrc'})
 
 
-DataSet('coordinatesDataset', 'Picking_XmippBPV3_Down3', 
-        {'coordsGoldSqlite': 'gold/coordinates_gold.sqlite', 
-         'micsGoldSqlite': 'micrographs_gold.sqlite'})
+DataSet('model', 'model', 
+        {'modelGoldSqlite': 'gold/model_gold.sqlite', 
+         'modelGoldXml': 'gold/model_gold.xml'})
    
   
 def greenStr(msg):

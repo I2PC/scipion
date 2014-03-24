@@ -7,9 +7,10 @@
 import os
 import os.path
 import unittest
-import pyworkflow.mapper.postgresql
+from pyworkflow.mapper import *
 from pyworkflow.object import *
 from pyworkflow.em.data import Acquisition
+from pyworkflow.tests import *
 #Postgre??
 # @see test_object.TestPyworkflow.test_SqliteMapper
 class TestPostgreSqlMapper(unittest.TestCase):
@@ -32,7 +33,7 @@ class TestPostgreSqlMapper(unittest.TestCase):
         try:
             dbconfig= os.path.join(cls.getScipionHome() , "postgresql.xml")
             if os.path.isfile(dbconfig):
-                cls.mapper = pyworkflow.mapper.postgresql.PostgresqlMapper(dbconfig)
+                cls.mapper = postgresql.PostgresqlMapper(dbconfig)
             else:
                 print "Config file %s not found" % (dbconfig,)
                 return None
@@ -142,7 +143,7 @@ class TestPostgreSqlDb(unittest.TestCase):
         try:
             dbconfig= os.path.join(cls.getScipionHome() , "postgresql.xml")
             if os.path.isfile(dbconfig):
-                cls.database= pyworkflow.mapper.postgresql.PostgresqlDb()
+                cls.database= postgresql.PostgresqlDb()
                 cls.database.connectUsing(dbconfig)
             else:
                 print "Config file %s not found" % dbconfig
@@ -155,7 +156,7 @@ class TestPostgreSqlDb(unittest.TestCase):
     def getMapper(self):
         if self.mapper == None and TestPostgreSqlDb.database != None :
             try:
-                self.mapper = pyworkflow.mapper.postgresql.PostgresqlMapper("",database=TestPostgreSqlDb.database)
+                self.mapper = postgresql.PostgresqlMapper("",database=TestPostgreSqlDb.database)
             except Exception as e:
                 print str(e)
         return self.mapper
@@ -278,3 +279,190 @@ class TestPostgreSqlDb(unittest.TestCase):
                 TestPostgreSqlDb.database.updateObject(objectId, i.getName(), i.getClassName(), 67, i.getAttributeValue("parent_id"))
                 object = mapper.selectById(objectId)
                 self.assertTrue(object.get() == 67)
+
+
+
+
+
+class TestSqliteMapper(BaseTest):
+    
+    @classmethod
+    def setUpClass(cls):
+        setupTestOutput(cls)
+        cls.dataset = DataSet.getDataSet('model')  
+        cls.modelGoldSqlite = cls.dataset.getFile( 'modelGoldSqlite')
+
+
+    def test_SqliteMapper(self):
+        fn = self.getOutputPath("basic.sqlite")
+        mapper = SqliteMapper(fn)
+        # Insert a Complex
+        c = Complex.createComplex()
+        mapper.insert(c)
+        # Insert an Integer
+        i = Integer(1)
+        mapper.insert(i)
+        # Insert two Boolean
+        b = Boolean(False)
+        b2 = Boolean(True)
+        mapper.insert(b)
+        mapper.insert(b2)
+        #Test storing pointers
+        p = Pointer()
+        p.set(c)
+        mapper.insert(p)
+        
+        
+        # Store list
+        strList = ['1', '2', '3']
+        csv = CsvList()
+        csv += strList
+        mapper.insert(csv)
+
+        # Test to add relations
+        relName = 'testRelation'
+        creator = c
+        mapper.insertRelation(relName, creator, i, b)
+        mapper.insertRelation(relName, creator, i, b2)
+        
+        mapper.insertRelation(relName, creator, b, p)
+        mapper.insertRelation(relName, creator, b2, p)        
+        
+        # Save changes to file
+        mapper.commit()
+
+        # Reading test
+        fnGold = self.modelGoldSqlite
+        mapper2 = SqliteMapper(fnGold, globals())
+        
+        l = mapper2.selectByClass('Integer')[0]
+        self.assertEqual(l.get(), 1)
+        
+        c2 = mapper2.selectByClass('Complex')[0]
+        self.assertTrue(c.equalAttributes(c2))
+        
+        b = mapper2.selectByClass('Boolean')[0]
+        self.assertTrue(not b.get())
+        
+        p = mapper2.selectByClass('Pointer')[0]
+        self.assertEqual(c, p.get())
+        
+        csv2 = mapper2.selectByClass('CsvList')[0]
+        self.assertTrue(list.__eq__(csv2, strList))
+        
+        # Update a CsvList
+#        lc = ListContainer()
+#        mapper.store(lc)
+#        mapper.commit()
+#        
+#        lc.csv.append('4')
+#        lc.csv.append('3')
+#        mapper.store(lc)
+#        mapper.commit()
+#        
+#        mapper3 = SqliteMapper(fn, globals())
+#        lc3 = mapper3.selectByClass('ListContainer')[0]
+#        print 'csv3: ', lc3.csv
+        
+        # Iterate over all objects
+        allObj = mapper2.selectAll()
+        iterAllObj = mapper2.selectAll(iterate=True)
+        
+        for a1, a2 in zip(allObj, iterAllObj):
+            self.assertEqual(a1, a2)
+            
+        # Test relations
+        childs = mapper2.getRelationChilds(relName, i)
+        parents = mapper2.getRelationParents(relName, p)
+        # In this case both childs and parent should be the same
+        for c, p in zip(childs, parents):
+            self.assertEqual(c, p, "Childs of object i, should be the parents of object p")
+
+        relations = mapper2.getRelationsByCreator(creator)
+        for row in relations:
+            print row
+        
+        
+    def test_Protocol(self):
+        """Test the list with several Complex"""
+        fn = self.getOutputPath("protocol.sqlite")   
+        mapper = SqliteMapper(fn, globals())
+        prot = MyProtocol(mapper=mapper, n=2, workingDir=self.getOutputPath(''))
+        prot._stepsExecutor = StepExecutor(hostConfig=None)
+        prot.run()
+        
+        self.assertEqual(prot._steps[0].status, STATUS_FINISHED)
+        
+        mapper2 = SqliteMapper(fn, globals())
+        prot2 = mapper2.selectById(prot.getObjId())
+        
+        self.assertEqual(prot.endTime, prot2.endTime)
+        self.assertEqual(prot._steps[1].status, prot2._steps[1].status)
+        
+        
+        
+class TestXmlMapper(BaseTest):
+    
+    @classmethod
+    def setUpClass(cls):
+        setupTestOutput(cls)
+        cls.dataset = DataSet.getDataSet('model')  
+        cls.modelGoldXml = cls.dataset.getFile( 'modelGoldXml')
+        
+    def test_XMLMapper(self):
+        fn = self.getOutputPath("model.xml")
+        c = Complex.createComplex()
+        mapper = XmlMapper(fn)
+        mapper.insert(c)
+        #write file
+        mapper.commit()
+
+        fnGold = self.modelGoldXml
+        #self.assertTrue(filecmp.cmp(fnGold, fn))
+        #read file
+        mapper2 = XmlMapper(fnGold, globals())
+        c2 = mapper2.selectFirst()
+        self.assertEquals(c.imag.get(), c2.imag.get())
+        
+#    def test_zStep(self):
+#        fn = self.getTmpPath(self.sqliteFile)
+#        s = MyStep()
+#        s.x.set(7)
+#        s.y.set(3.0)
+#        s.status = "KKK"
+#        mapper = SqliteMapper(fn, globals())
+#        mapper.insert(s)
+#        #write file
+#        mapper.commit()
+#        
+#        s2 = mapper.selectByClass('MyStep')[0]
+#        self.assertTrue(s.equalAttributes(s2))
+        
+#    def test_List(self):
+#        """Test the list with several Complex"""
+#        n = 10
+#        l1 = List()
+#        for i in range(n):
+#            c = Complex(3., 3.)
+#            l1.append(c)
+#        fn = self.getTmpPath(self.sqliteFile)        
+#        mapper = SqliteMapper(fn, globals())
+#        mapper.store(l1)
+#        mapper.commit()
+#        
+#        mapper2 = XmlMapper('kk.xml', globals())
+#        mapper2.setClassTag('Complex.Float', 'attribute')
+#        mapper2.setClassTag('List.ALL', 'class_name')
+#        mapper2.setClassTag('MyStep.ALL', 'attribute')
+#        mapper2.setClassTag('MyStep.Boolean', 'name_only')
+#        step = MyStep()
+#        step.b.set('false')
+#        step.status = "running"
+#        step.inittime = "now"
+#        l1.append(step)
+#        mapper2.insert(l1)
+#        mapper2.commit()
+#        
+#        mapper3 = SqliteMapper('kk.sqlite', globals())
+#        mapper3.insert(l1)
+#        mapper3.commit()

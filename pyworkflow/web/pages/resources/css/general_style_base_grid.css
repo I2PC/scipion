@@ -11,8 +11,8 @@ html, body {
 
 /* FLEX DESIGN */
 .layout-outer {
- 	height: 110%;
-	min-height: 110%; 
+ 	height: 100%;
+	min-height: 100%; 
 }
 .center, .west, .north, .south {
     display: inline-block;

@@ -1,22 +1,40 @@
-'''
-Created on Apr 30, 2013
+#!/usr/bin/env python
+# **************************************************************************
+# *
+# * Authors:     Antonio Poza (Apr 30, 2013)
+# *
+# * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
+# *
+# * This program is free software; you can redistribute it and/or modify
+# * it under the terms of the GNU General Public License as published by
+# * the Free Software Foundation; either version 2 of the License, or
+# * (at your option) any later version.
+# *
+# * This program is distributed in the hope that it will be useful,
+# * but WITHOUT ANY WARRANTY; without even the implied warranty of
+# * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# * GNU General Public License for more details.
+# *
+# * You should have received a copy of the GNU General Public License
+# * along with this program; if not, write to the Free Software
+# * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+# * 02111-1307  USA
+# *
+# *  All comments concerning this program package may be sent to the
+# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *
+# **************************************************************************
 
-@author: antonio
-'''
 import logging
 import logging.config
 import os
 from pyworkflow.utils.path import *
 import sys
 
-SCIPION_PATH = 'Scipion'
-LOG_PATH = 'logs'
 
 """ Get general log file path """
-logPath = join (getHomePath(), SCIPION_PATH, LOG_PATH, 'scipionLog.log')
+LOG_FILE = join (os.environ['SCIPION_LOGS'], 'scipion.log')
 
-""" Create the folders path if it does not exist """
-makeFilePath(logPath)
 
 """ Config the log """
 config = {  'version': 1,              
@@ -34,7 +52,7 @@ config = {  'version': 1,
                     'level': 'NOTSET',    
                     'class': 'logging.handlers.RotatingFileHandler',
                     'formatter': 'standard',
-                    'filename': logPath,
+                    'filename': LOG_FILE,
                     'maxBytes': 100000,
                 },
                 'consoleHandler': {
