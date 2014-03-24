@@ -58,7 +58,8 @@ class Step(OrderedObject):
         self.endTime = String()
         self._error = String()
         self.isInteractive = Boolean(False)
-           
+        self._index = None
+        
     def _preconditions(self):
         """ Check if the necessary conditions to
         step execution are met""" 
@@ -105,6 +106,23 @@ class Step(OrderedObject):
         if status == None:
             status= "new"
         return status
+    
+    def getElapsedTime(self):
+        """ Return the time that took to run 
+        (or the actual running time if still is running )
+        """
+        elapsed = None
+        if self.initTime.hasValue():
+            f = "%Y-%m-%d %H:%M:%S.%f"
+            t1 = dt.datetime.strptime(self.initTime.get(), f)
+            endTimeStr = self.endTime.get()
+            if endTimeStr:
+                t2 = dt.datetime.strptime(endTimeStr, f)
+            else:
+                t2 = dt.datetime.now()
+            elapsed = t2 - t1
+        
+        return elapsed
     
     def setStatus(self, value):
         return self.status.set(value)
@@ -192,6 +210,9 @@ class FunctionStep(Step):
         
     def __ne__(self, other):
         return not self.__eq__(other)
+    
+    def __str__(self):
+        return self.funcName.get()
         
             
 class RunJobStep(FunctionStep):
@@ -216,7 +237,9 @@ class RunJobStep(FunctionStep):
         return self._func(None, self._args[0], self._args[1], 
                numberOfMpi=self.mpi, numberOfThreads=self.threads)
         #TODO: Add the option to return resultFiles
-             
+    
+    def __str__(self):
+        return self._args[0] # return program name         
                 
 class Protocol(Step):
     """ The Protocol is a higher type of Step.
@@ -450,8 +473,9 @@ class Protocol(Step):
                 step._prerequisites.append(i)
                 
         self._steps.append(step)
-        # Return step number
-        return len(self._steps)
+        # Setup and return step index
+        step._index = len(self._steps)        
+        return step._index
         
     def _getPath(self, *paths):
         """ Return a path inside the workingDir. """
@@ -877,24 +901,6 @@ class Protocol(Step):
         """ Return True if the protocol should be launched throught a queue. """
         return self._useQueue.get()
         
-    def getElapsedTime(self):
-        """ Return the time that protocols
-        took to run (or the actual running time 
-        if still is running )
-        """
-        elapsed = None
-        if self.initTime.hasValue():
-            f = "%Y-%m-%d %H:%M:%S.%f"
-            t1 = dt.datetime.strptime(self.initTime.get(), f)
-            endTimeStr = self.endTime.get()
-            if endTimeStr:
-                t2 = dt.datetime.strptime(endTimeStr, f)
-            else:
-                t2 = dt.datetime.now()
-            elapsed = t2 - t1
-        
-        return elapsed
-    
     def getStepsDone(self):
         """ Return the number of steps executed. """
         done = 0
@@ -1063,6 +1069,28 @@ class Protocol(Step):
     def isChild(self):
         """ Return true if this protocol was invoked from a workflow (another protocol)"""
         return self.hasObjParentId()
+    
+    def getStepsGraph(self, refresh=True):
+        """ Build a graph taking into account the dependencies between steps. """
+        from pyworkflow.utils.graph import Graph
+        g = Graph(rootName='PROTOCOL')
+        root = g.getRoot()
+        root.label = 'Protocol'
+        stepsDict = {}
+        
+        for i, s in enumerate(self._steps):
+            index = s._index or (i+1)
+            sid = str(index)
+            n = g.createNode(sid)
+            n.label = sid
+            stepsDict[sid] = n
+            if s._prerequisites.isEmpty():
+                root.addChild(n)
+            else:
+                for p in s._prerequisites:
+                    stepsDict[p].addChild(n)
+            
+        return g
         
                 
 #---------- Helper functions related to Protocols --------------------

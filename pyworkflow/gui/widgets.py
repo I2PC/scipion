@@ -38,9 +38,7 @@ class Button(tk.Button):
     _images = {}
     
     def __init__(self, master, text, imagePath=None, tooltip=None, **opts):
-        defaults = {'activebackground': gui.cfgButtonActiveBgColor, 'bg': gui.cfgButtonBgColor,
-                    'fg': gui.cfgButtonFgColor, 'activeforeground': gui.cfgButtonActiveFgColor,
-                    'font': gui.fontButton}
+        defaults = {'font': gui.fontButton}
         defaults.update(opts)
         
         if imagePath is not None:
@@ -49,10 +47,9 @@ class Button(tk.Button):
             btnImage = None
             
         if btnImage is not None:
-            #height=28, width=28,
-            if not opts.has_key('bg'):
-                del defaults['bg']
-            tk.Button.__init__(self, master, text=text, image=btnImage, bd=0,  **defaults)
+            if 'compound' not in defaults:
+                defaults['compound'] = tk.LEFT
+            tk.Button.__init__(self, master, text=text, image=btnImage, **defaults)
             self.image = btnImage
         else:
             tk.Button.__init__(self, master, text=text, **defaults)
@@ -64,6 +61,25 @@ class Button(tk.Button):
     def setImage(self, imagePath):
         self.image = gui.getImage(imagePath)
         self.config(image=self.image)
+        
+        
+class HotButton(Button):
+    """ Button having the firebrick color and some other settings. """
+    def __init__(self, master, text, imagePath=None, tooltip=None, **opts):
+        defaults = {'activebackground': gui.cfgButtonActiveBgColor, 'bg': gui.cfgButtonBgColor,
+                    'fg': gui.cfgButtonFgColor, 'activeforeground': gui.cfgButtonActiveFgColor,
+                    'compound': tk.LEFT}
+        defaults.update(opts)
+        Button.__init__(self, master, text, imagePath, tooltip, **defaults)
+        
+        
+class IconButton(HotButton):
+    """ Hot button, but only with image and no border """
+    def __init__(self, master, text, imagePath, tooltip=None, **opts):
+        defaults = {'bd': 0, 'bg': 'white', 'compound': tk.NONE}
+        defaults.update(opts)
+        HotButton.__init__(self, master, text, imagePath, tooltip, **defaults)
+                
 
 class AutoScrollbar(tk.Scrollbar):
     """"A scrollbar that hides itself if it's not needed."""

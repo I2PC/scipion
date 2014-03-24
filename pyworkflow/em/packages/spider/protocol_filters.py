@@ -159,13 +159,13 @@ See detailed description of the filter in [[http://spider.wadsworth.org/spider_d
         for c in cmds:
             spi.runCmd(c)
             
-        for i, img in enumerate(particles):
-            img.setLocation(i+1, self.particlesStk)
-            imgSet.append(img)
-            
         spi.close()
             
         self._leaveWorkingDir() # Go back to project dir
+            
+        for i, img in enumerate(particles):
+            img.setLocation(i+1, self.particlesStk)
+            imgSet.append(img)            
             
         self._defineOutputs(outputParticles=imgSet)
         

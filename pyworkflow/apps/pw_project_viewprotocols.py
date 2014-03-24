@@ -27,9 +27,6 @@
 """
 Main project window application
 """
-import os, sys
-from os.path import join, exists, basename
-
 import Tkinter as tk
 import ttk
 import tkFont
@@ -45,6 +42,7 @@ from pyworkflow.protocol import *
 from pyworkflow.protocol.params import *
 from pyworkflow.mapper import SqliteMapper, XmlMapper
 from pyworkflow.project import Project
+from pyworkflow.utils import prettyDelta
 from pyworkflow.utils.properties import Message, Icon, Color
 
 import pyworkflow.gui as gui
@@ -64,7 +62,8 @@ ACTION_EDIT = Message.LABEL_EDIT
 ACTION_COPY = Message.LABEL_COPY
 ACTION_DELETE = Message.LABEL_DELETE
 ACTION_REFRESH = Message.LABEL_REFRESH
-ACTION_STEPS = Message.LABEL_BROWSE
+ACTION_STEPS = Message.LABEL_STEPS
+ACTION_BROWSE = Message.LABEL_BROWSE
 ACTION_TREE = Message.LABEL_TREE
 ACTION_LIST = Message.LABEL_LIST
 ACTION_STOP = Message.LABEL_STOP
@@ -81,6 +80,7 @@ ActionIcons = {
     ACTION_DELETE:  Icon.ACTION_DELETE,
     ACTION_REFRESH:  Icon.ACTION_REFRESH,
     ACTION_STEPS:  Icon.ACTION_STEPS,
+    ACTION_BROWSE:  Icon.ACTION_BROWSE,
     ACTION_TREE:  None, # should be set
     ACTION_LIST:  Icon.ACTION_LIST,
     ACTION_STOP: Icon.ACTION_STOP,
@@ -151,7 +151,8 @@ class RunsTreeProvider(ProjectRunsTreeProvider):
                        (ACTION_DELETE, Message.LABEL_DELETE_ACTION),
                        #(None, None),
                        #(ACTION_STOP, 'Stop'),
-                       (ACTION_STEPS, Message.LABEL_BROWSE_ACTION)
+                       (ACTION_STEPS, Message.LABEL_STEPS)
+                       (ACTION_BROWSE, Message.LABEL_BROWSE_ACTION)
                        ]
         status = prot.status.get()
         if status == STATUS_RUNNING:
@@ -190,6 +191,70 @@ class ProtocolTreeProvider(ObjectTreeProvider):
         else:
             objList = [protocol]
         ObjectTreeProvider.__init__(self, objList)
+        
+        
+class StepsTreeProvider(TreeProvider):
+    """Create the tree elements for a Protocol run"""
+    def __init__(self, stepsList):
+        for i, s in enumerate(stepsList):
+            if not s._index:
+                s._index = i + 1
+            
+        self._stepsList = stepsList
+        self.getColumns = lambda: [('Index', 50), ('Step', 200), ('Time', 150), ('Class', 100)]
+        self._parentDict = {}
+    
+    def getObjects(self):
+        return self._stepsList
+        
+    def getObjectInfo(self, obj):
+        info = {'key': obj._index, 
+                'values': (str(obj), prettyDelta(obj.getElapsedTime()), obj.getClassName())}
+            
+        return info
+    
+    def getObjectPreview(self, obj):
+        args = pickle.loads(obj.argsStr.get())
+        msg = "*Prerequisites*: %s \n" % str(obj._prerequisites)
+        msg += "*Arguments*: " + '\n  '.join([str(a) for a in args])
+        if hasattr(obj, 'resultFiles'):
+            results = pickle.loads(obj.resultFiles.get())
+            if len(results):
+                msg += "\n*Result files:* " + '\n  '.join(results)
+
+        return None, msg
+    
+
+class StepsWindow(BrowserWindow):
+    def __init__(self, title, parentWindow, protocol, **args):
+        self._protocol = protocol
+        provider = StepsTreeProvider(protocol._steps)
+        BrowserWindow.__init__(self, title, parentWindow, weight=False, **args)
+        # Create buttons toolbar
+        self.root.columnconfigure(0, weight=1)
+        self.root.rowconfigure(1, weight=1)
+        
+        toolbar = tk.Frame(self.root)
+        toolbar.grid(row=0, column=0, sticky='nw', padx=5, pady=5)
+        btn = tk.Label(toolbar, text="Tree", image=self.getImage(Icon.ACTION_STEPS), 
+                       compound=tk.LEFT, cursor='hand2')
+        btn.bind('<Button-1>', self._showTree)
+        btn.grid(row=0, column=0, sticky='nw')
+        # Create and set browser
+        browser = ObjectBrowser(self.root, provider, showPreviewTop=False)
+        self.setBrowser(browser, row=1, column=0)
+        
+    def _showTree(self, e=None):
+        g = self._protocol.getStepsGraph()
+        w = gui.Window("Protocol steps", self, minsize=(800, 600))
+        root = w.root
+        canvas = Canvas(root, width=600, height=500)
+        canvas.grid(row=0, column=0, sticky='nsew')
+        lt = LevelTree(g)
+        lt.setCanvas(canvas)
+        lt.paint()
+        canvas.updateScrollRegion()
+        w.show()
     
 
 class RunIOTreeProvider(TreeProvider):
@@ -453,7 +518,7 @@ class ProtocolsView(tk.Frame):
     def createActionToolbar(self):
         """ Prepare the buttons that will be available for protocol actions. """
        
-        self.actionList = [ACTION_EDIT, ACTION_COPY, ACTION_DELETE, ACTION_STEPS, 
+        self.actionList = [ACTION_EDIT, ACTION_COPY, ACTION_DELETE, ACTION_STEPS, ACTION_BROWSE, 
                            ACTION_STOP, ACTION_CONTINUE, ACTION_RESULTS]
         self.actionButtons = {}
         
@@ -676,6 +741,22 @@ class ProtocolsView(tk.Frame):
                        hostList=hosts)
         w.show(center=True)
         
+    def _browseSteps(self):
+#         g = self.selectedProtocol.getStepsGraph()
+#         w = gui.Window("Protocol steps", self.windows, minsize=(800, 600))
+#         root = w.root
+#         canvas = Canvas(root, width=600, height=500)
+#         canvas.grid(row=0, column=0, sticky='nsew')
+#         lt = LevelTree(g)
+#         lt.setCanvas(canvas)
+#         lt.paint()
+#         canvas.updateScrollRegion()
+#         w.show()
+        
+        window = StepsWindow(Message.TITLE_BROWSE_DATA, self.windows, 
+                             self.selectedProtocol, icon=self.icon)
+        window.show()        
+    
     def _browseRunData(self):
         provider = ProtocolTreeProvider(self.selectedProtocol)
         window = BrowserWindow(Message.TITLE_BROWSE_DATA, self.windows, icon=self.icon)
@@ -780,6 +861,8 @@ class ProtocolsView(tk.Frame):
                 elif action == ACTION_DELETE:
                     self._deleteProtocol(prot)
                 elif action == ACTION_STEPS:
+                    self._browseSteps()                    
+                elif action == ACTION_BROWSE:
                     self._browseRunData()
                 elif action == ACTION_STOP:
                     self._stopProtocol(prot)

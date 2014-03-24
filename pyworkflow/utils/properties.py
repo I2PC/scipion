@@ -63,6 +63,7 @@ class Message():
     LABEL_COPY_ACTION = 'Copy   '
     LABEL_DELETE = 'Delete'
     LABEL_DELETE_ACTION = 'Delete    '
+    LABEL_STEPS = 'Steps'
     LABEL_BROWSE = 'Browse'
     LABEL_BROWSE_ACTION = 'Browse '
     LABEL_STOP = 'Stop'
@@ -256,7 +257,9 @@ class Icon():
     ACTION_COPY = 'fa-files-o.png'
     ACTION_DELETE = 'fa-trash-o.png'
     ACTION_REFRESH = 'fa-refresh.png'
-    ACTION_STEPS = 'fa-folder-open.png'
+    # TODO: change action_steps icon - fa-codefork?
+    ACTION_STEPS = 'fa-sitemap.png'
+    ACTION_BROWSE = 'fa-folder-open.png'
     ACTION_TREE = None
     ACTION_LIST = 'fa-bars.png'
     ACTION_STOP = 'fa-stop.png'

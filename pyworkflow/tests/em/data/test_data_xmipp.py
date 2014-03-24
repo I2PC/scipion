@@ -10,81 +10,60 @@ from pyworkflow.em.packages.xmipp3 import *
 from pyworkflow.tests import *
 
 
-class TestXmippSetOfMicrographs(unittest.TestCase):
+class TestXmippSetOfMicrographs(BaseTest):
         
     @classmethod
     def setUpClass(cls):
-        cls.outputPath = getOutputPath('test_data_xmipp')
-        
-        cls.dbGold = getGoldPath('Micrographs_BPV3', 'micrographs_gold.sqlite')
-        cls.mdGold = getGoldPath('Micrographs_BPV3', 'micrographs_gold.xmd')
-        
-                
-    def setUp(self):
-#        cleanPath(self.outputPath)
-        makePath(self.outputPath)
-            
+        setupTestOutput(cls)
+        cls.dataset = DataSet.getDataSet('xmipp_tutorial')  
+        cls.dbGold = cls.dataset.getFile( 'micsGoldSqlite')
+        cls.mdGold = cls.dataset.getFile('micsGoldXmd')
+    
     def testConvert(self):
-        """ Test the convertion of a SetOfMicrographs to Xmipp"""
-        micSet = SetOfMicrographs()
-        dbMic = getInputPath('Micrographs_BPV3', 'micrographs.sqlite')
-        micSet.setFileName(dbMic)
-        mdFn = getOutputPath(self.outputPath, 'micrographs.xmd')
+        """ Test the convertion of a SetOfMicrographs to Xmipp metadata"""
+        micSet = SetOfMicrographs(filename=self.dbGold)
+        mdFn = self.getOutputPath('micrographs.xmd')
         
         writeSetOfMicrographs(micSet, mdFn)
                 
         self.assertEqual(xmipp.MetaData(mdFn), xmipp.MetaData(self.mdGold), "xmipp metadata wrong")
                   
     
-class TestXmippSetOfCoordinates(unittest.TestCase):  
+class TestXmippSetOfCoordinates(BaseTest):  
     
     @classmethod
     def setUpClass(cls):
-        cls.outputPath = getOutputPath('test_data_xmipp')   
+        setupTestOutput(cls)
+        cls.dataset = DataSet.getDataSet('xmipp_tutorial')  
+        cls.dbGold = cls.dataset.getFile( 'micsGoldSqlite')
+        cls.posDir = cls.dataset.getFile('posDir')
+        cls.dbCoord = cls.dataset.getFile('coordsGoldSqlite')
         
-        cls.dbGold = getGoldPath('Micrographs_BPV3', 'micrographs_gold.sqlite')
-        cls.mdGold = getGoldPath('Picking_XmippBPV3_Down3', 'coordinates_gold.sqlite')
-
-        
-    def setUp(self):
-        cleanPath(self.outputPath)
-        makePath(self.outputPath)
         
     def testConvert(self):
         """ Test converting a SetOfCoordinates to Xmipp """
-        micSet = SetOfMicrographs()
-        micSet.setFileName(self.dbGold)
+        micSet = SetOfMicrographs(filename=self.dbGold)
         
         # Test reading a set of coordinates
-        posDir = getInputPath('Picking_XmippBPV3_Down3')
-        print "reading pos from :", posDir
-        coordSet = SetOfCoordinates()
-        fn = getOutputPath(self.outputPath, 'coordinates.sqlite')
-        coordSet.setFileName(fn)
-        
-        readSetOfCoordinates(posDir, micSet, coordSet)
+        fn = self.getOutputPath('coordinates.sqlite')
+        coordSet = SetOfCoordinates(filename=fn)
+        readSetOfCoordinates(self.posDir, micSet, coordSet)
         coordSet.write()
         
         # Test writing a set of coordinates to xmipp format
-        coordSet = SetOfCoordinates()
-        dbCoord = getInputPath('Picking_XmippBPV3_Down3', 'coordinates.sqlite')
-        coordSet.setFileName(dbCoord)
+        coordSet = SetOfCoordinates(filename=self.dbCoord)
         coordSet.setBoxSize(512)
         coordSet.setMicrographs(micSet)
-        
-        posDir = getOutputPath(self.outputPath)
-        writeSetOfCoordinates(posDir, coordSet)
+        writeSetOfCoordinates(self.outputPath, coordSet)
         
     
-class TestXmippCTFModel(unittest.TestCase):
+class TestXmippCTFModel(BaseTest):
     
     @classmethod
     def setUpClass(cls):
-        cls.outputPath = getOutputPath('test_data_xmipp')   
-        
-    def setUp(self):
-        cleanPath(self.outputPath)
-        makePath(self.outputPath)
+        setupTestOutput(cls)
+        cls.dataset = DataSet.getDataSet('xmipp_tutorial')  
+
                     
     def testConvert(self):
         """ Test converting a CTFModel to Xmipp """

@@ -155,17 +155,19 @@ def findClosestConnectors(item1, item2):
 
 
 def findUpDownClosestConnectors(item1, item2):
-    srcConnectors=item1.getUpDownConnectorsCoordinates()
-    dstConnectors=item2.getUpDownConnectorsCoordinates()
-    c1Coords,c2Coords=findClosestPoints(srcConnectors,dstConnectors)
-    return c1Coords,c2Coords
+    srcConnectors = item1.getUpDownConnectorsCoordinates()
+    dstConnectors = item2.getUpDownConnectorsCoordinates()
+    if srcConnectors and dstConnectors:
+        c1Coords, c2Coords = findClosestPoints(srcConnectors,dstConnectors)
+        return c1Coords, c2Coords
+    return None
 
 
 def findStrictClosestConnectors(item1, item2):
-    srcConnectors=item1.getConnectorsCoordinates()
-    dstConnectors=item2.getConnectorsCoordinates()
-    c1Coords,c2Coords=findClosestPoints(srcConnectors,dstConnectors)
-    return c1Coords,c2Coords
+    srcConnectors = item1.getConnectorsCoordinates()
+    dstConnectors = item2.getConnectorsCoordinates()
+    c1Coords,c2Coords = findClosestPoints(srcConnectors,dstConnectors)
+    return c1Coords, c2Coords
 
 
 class Item(object):      
@@ -191,11 +193,14 @@ class Item(object):
         return [(xc,y1), (x2,yc), (xc,y2), (x1,yc)]
 
     def getUpDownConnectorsCoordinates(self):
-        x1,y1,x2,y2=self.getCorners()
-        xc,yc=self.getCenter(x1,y1,x2,y2)
-        return [(xc,y1), (xc,y2)]
+        corners = self.getCorners()
+        if corners:
+            x1,y1,x2,y2 = self.getCorners()
+            xc, yc = self.getCenter(x1,y1,x2,y2)
+            return [(xc,y1), (xc,y2)]
+        return None
 
-    def getCorners(self):
+    def getCorners(self): 
         return self.canvas.bbox(self.id)
 
     def countSockets(self,verticalLocation):
@@ -463,15 +468,17 @@ class Edge():
         self.paint()
         
     def paint(self):
-        c1Coords,c2Coords=findClosestConnectors(self.source,self.dest)
-
-        if self.id:
-           self.canvas.delete(self.id)
-
-        self.id = self.canvas.create_line(c1Coords[0], c1Coords[1], 
-                                          c2Coords[0], c2Coords[1],
-                                          width=2)
-        self.canvas.tag_lower(self.id)
+        coords = findClosestConnectors(self.source,self.dest)
+        if coords:
+            c1Coords, c2Coords = coords
+    
+            if self.id:
+                self.canvas.delete(self.id)
+    
+            self.id = self.canvas.create_line(c1Coords[0], c1Coords[1], 
+                                              c2Coords[0], c2Coords[1],
+                                              width=2)
+            self.canvas.tag_lower(self.id)
         
     def updateSrc(self, dx, dy):
         self.srcX += dx

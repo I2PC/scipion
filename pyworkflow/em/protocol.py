@@ -115,7 +115,7 @@ class ProtImportImages(EMProtocol):
     #--------------------------- DEFINE param functions --------------------------------------------
     def _defineParams(self, form):
         form.addSection(label='Input')
-        form.addParam('pattern', StringParam, label=Message.LABEL_PATTERN,
+        form.addParam('pattern', PathParam, label=Message.LABEL_PATTERN,
                       help=Message.TEXT_PATTERN)
         form.addParam('checkStack', BooleanParam, label=Message.LABEL_CHECKSTACK, default=False)
         form.addParam('voltage', FloatParam, default=200,
@@ -857,8 +857,7 @@ class ProtAlign(EMProtocol):
 class ProtClassify(EMProtocol):
     pass
 
-class ProtUserSelection(EMProtocol):
-    pass
+
 
 class ProtUserSubSet(EMProtocol):
     

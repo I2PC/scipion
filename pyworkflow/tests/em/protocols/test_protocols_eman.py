@@ -30,6 +30,7 @@ from pyworkflow.em import *
 from pyworkflow.em.packages.xmipp3 import *
 from pyworkflow.em.packages.eman2 import *
 
+
 class TestEmanBoxing(unittest.TestCase):
 
     @classmethod
@@ -52,8 +53,9 @@ class TestEmanBoxing(unittest.TestCase):
         protPP.inputMicrographs.set(protImport.outputMicrographs)
         protPP.boxSize.set(110)
         self.proj.launchProtocol(protPP, wait=True)
-            
+        
         self.assertIsNotNone(protPP.outputCoordinates, "There was a problem with the faked picking")
+
 
 if __name__ == "__main__":
     suite = unittest.TestLoader().loadTestsFromTestCase(TestEmanBoxing)

@@ -24,30 +24,30 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
-
+from pyworkflow.utils.path import getHomePath
 """
 This modules implements the automatic
 creation of protocol form GUI from its
 params definition.
 """
-
-from pyworkflow.mapper.mapper import Mapper
-from pyworkflow.mapper import mapper
-
+import os
 import Tkinter as tk
 import ttk
 import tkFont
 
+from pyworkflow.mapper.mapper import Mapper
+from pyworkflow.mapper import mapper
+from pyworkflow.utils.properties import Message, Icon, Color
+from pyworkflow.viewer import DESKTOP_TKINTER
 import gui
 from gui import configureWeigths, Window
+from browser import FileBrowserWindow
 from text import TaggedText
-from widgets import Button
+from widgets import Button, HotButton, IconButton
 from pyworkflow.protocol.params import *
 from pyworkflow.protocol import Protocol
 from dialog import showInfo, TextDialog, ListDialog
 from tree import TreeProvider, BoundTree
-from pyworkflow.utils.properties import Message, Icon, Color
-from pyworkflow.viewer import DESKTOP_TKINTER
 #from pyworkflow.em import findViewers
 
 #-------------------- Variables wrappers around more complex objects -----------------------------
@@ -203,8 +203,8 @@ class SubclassesTreeProvider(TreeProvider):
         return False
     
     def getObjectInfo(self, obj):
-        objName = obj.getNameId()
-        return {'key': objName, 'values': (str(obj),), 'selected': self.isSelected(obj)}
+        return {'key': obj.strId(), 'text': obj.getNameId(),
+                'values': (str(obj),), 'selected': self.isSelected(obj)}
 
     def getObjectActions(self, obj):
         if isinstance(obj, Pointer):
@@ -390,7 +390,7 @@ class ParamWidget():
         self._createContentWidgets(self.param, self.content) # self.var should be set after this
         
     def _addButton(self, text, imgPath, cmd):
-        btn = Button(self.btnFrame, text, imgPath, bg='white', command=cmd)
+        btn = IconButton(self.btnFrame, text, imgPath, command=cmd)
         btn.grid(row=0, column=self._btnCol, sticky='e', padx=2)
         self.btnFrame.columnconfigure(self._btnCol, weight=1)
         self._btnCol += 1
@@ -497,6 +497,9 @@ class ParamWidget():
                 entryWidth = 10 # Reduce the entry width for numbers entries
             entry = tk.Entry(content, width=entryWidth, textvariable=var)
             entry.grid(row=0, column=0, sticky='w')
+            
+            if t is PathParam:
+                self._addButton('Browse', Icon.ACTION_BROWSE, self._browsePath)
 
         if self.visualizeCallback is not None:
             self._addButton(Message.LABEL_BUTTON_VIS, Icon.ACTION_VISUALIZE, self._visualizeVar)    
@@ -520,7 +523,8 @@ class ParamWidget():
         elif selected is not None:
             selected = [value]
         tp = SubclassesTreeProvider(self.window.protocol, self.param, selected=selected)
-        dlg = ListDialog(self.parent, "Select object", tp, "Double click an item to preview the object")
+        dlg = ListDialog(self.parent, "Select object", tp, 
+                         "Double click an item to preview the object")
         if dlg.value is not None:
             self.set(dlg.value)
         
@@ -542,6 +546,20 @@ class ParamWidget():
         if dlg.value is not None:
             self.set(dlg.value)
             self._openProtocolForm()
+            
+    def _browsePath(self, e=None):
+        def onSelect(obj):
+            self.set(obj.getPath())
+        v = self.get().strip()
+        path = None
+        if v:
+            v = os.path.dirname(v)
+            if os.path.exists(v):
+                path = v        
+        if not path:
+            path = getHomePath()
+        browser = FileBrowserWindow("Browsing", self.window, path=path, onSelect=onSelect)
+        browser.show()
             
     def _openProtocolForm(self, e=None):
         className = self.get().strip()
@@ -697,23 +715,25 @@ class FormWindow(Window):
         
     def _createButtons(self, btnFrame):
         """ Create the bottom buttons: Close, Save and Execute. """
-        btnClose = tk.Button(btnFrame, text=Message.LABEL_BUTTON_CLOSE, image=self.getImage(Icon.ACTION_CLOSE), 
-                             compound=tk.LEFT, font=self.font, command=self.close)
+        btnClose = Button(btnFrame, Message.LABEL_BUTTON_CLOSE, Icon.ACTION_CLOSE, 
+                          command=self.close)
         btnClose.grid(row=0, column=0, padx=5, pady=5, sticky='se')
         t = Message.LABEL_BUTTON_VIS
         icon = Icon.ACTION_VISUALIZE
         # Save button is not added in VISUALIZE or CHILD modes
         if not self.visualizeMode and not self.childMode:
-            btnSave = tk.Button(btnFrame, text=Message.LABEL_BUTTON_RETURN, image=self.getImage(Icon.ACTION_SAVE), 
-                                compound=tk.LEFT, font=self.font, command=self.save)
+            btnSave = Button(btnFrame, Message.LABEL_BUTTON_RETURN, Icon.ACTION_SAVE, 
+                                command=self.save)
             btnSave.grid(row=0, column=1, padx=5, pady=5, sticky='se')
             t = Message.LABEL_BUTTON_EXEC
             icon = Icon.ACTION_EXECUTE
         # Add Execute/Visualize button
         if not self.childMode:
-            btnExecute = Button(btnFrame, text=t, fg='white', bg=Color.RED_COLOR, font=self.font, 
-                                image=self.getImage(icon), compound=tk.LEFT, 
-                            activeforeground='white', activebackground='#A60C0C', command=self.execute)
+            btnExecute = HotButton(btnFrame, t, icon, command=self.execute)
+                                    #activeforeground='white', activebackground='#A60C0C')
+#             btnExecute = Button(btnFrame, text=t, fg='white', bg=Color.RED_COLOR, font=self.font, 
+#                     image=self.getImage(icon), compound=tk.LEFT, 
+#                     activeforeground='white', activebackground='#A60C0C', command=self.execute)
             btnExecute.grid(row=0, column=2, padx=(5, 28), pady=5, sticky='se')
         
     def _addVarBinding(self, paramName, var, func=None, *callbacks):
@@ -766,7 +786,7 @@ class FormWindow(Window):
         entry.grid(row=0, column=1, padx=(0, 5), pady=5, sticky='nw')
         # Run Name not editable
         entry.configure(state='readonly')
-        btnComment = Button(runFrame, Message.TITLE_COMMENT, Icon.ACTION_EDIT, bg='white', command=self._editObjParams)
+        btnComment = IconButton(runFrame, Message.TITLE_COMMENT, Icon.ACTION_EDIT, command=self._editObjParams)
         btnComment.grid(row=0, column=2, padx=(0, 5), pady=5, sticky='nw')
         # Run mode
         self.protocol.getDefinitionParam('')

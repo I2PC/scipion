@@ -194,7 +194,7 @@ class XmippProtCropResizeParticles(ProtProcessParticles, XmippProcessParticles, 
     
     #--------------------------- DEFINE param functions --------------------------------------------
     def _defineProcessParams(self, form):
-        XmippProtResize._defineProcessParams(form)
+        XmippProtResize._defineProcessParams(self, form)
      
     #--------------------------- STEPS functions ---------------------------------------------------
     def convertStep(self):

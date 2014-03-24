@@ -32,6 +32,7 @@ from pyworkflow.tests import *
 # Some utility functions to import micrographs that are used
 # in several tests.
 class TestRelionBase(unittest.TestCase):
+    
     @classmethod
     def setUpClass(cls):
         setupProject(cls)
@@ -68,9 +69,10 @@ class TestRelionClassify2D(TestRelionBase):
         
         self.assertIsNotNone(getattr(prot2D, 'outputClasses', None), 
                              "There was a problem with Relion 2D:\n" + prot2D.getErrorMessage()) 
-            
-            
+
+
 class TestRelionClassify3D(TestRelionBase):
+    
     @classmethod
     def setUpClass(cls):
         setupProject(cls)
@@ -86,9 +88,8 @@ class TestRelionClassify3D(TestRelionBase):
         relion3DClass.inputImages.set(self.protImport.outputParticles)
         relion3DClass.ini3DrefVolumes.set(self.iniVol)
         self.proj.launchProtocol(relion3DClass, wait=True)        
-        
-        
-        
+
+
 if __name__ == "__main__":
     if len(sys.argv) > 1:
         className = sys.argv[1]

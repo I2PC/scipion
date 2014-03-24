@@ -102,6 +102,7 @@ class Object(object):
         to another object"""
         return self._objIsPointer
         
+    # does nothing?
     def _convertValue(self, value):
         """Convert a value to desired scalar type"""
         return value
@@ -615,11 +616,19 @@ class CsvList(Scalar, list):
         self._pType = pType
         
     def _convertValue(self, value):
-        """Value should be a str with comman separated values"""
+        """Value should be a str with comman separated values
+        or a list.
+        """
         self.clear()
         if value:
-            for s in value.split(','):
-                self.append(self._pType(s))
+            if isinstance(value, str) or isinstance(value, unicode):
+                for s in value.split(','):
+                    self.append(self._pType(s))
+            elif isinstance(value, list) or isinstance(value, tuple):
+                for s in value:
+                    self.append(s)
+            else:
+                raise Exception("CsvList.set: Invalid value type: ", type(value))
             
     def getObjValue(self):
         self._objValue = ','.join(map(str, self))

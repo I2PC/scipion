@@ -10,7 +10,7 @@ import unittest
 import pyworkflow.mapper.postgresql
 from pyworkflow.object import *
 from pyworkflow.em.data import Acquisition
-
+#Postgre??
 # @see test_object.TestPyworkflow.test_SqliteMapper
 class TestPostgreSqlMapper(unittest.TestCase):
     mapper=None
