@@ -335,16 +335,16 @@ class TestMixedRelionTutorial(TestWorkflow):
         self.proj.launchProtocol(protCL2D, wait=True)   
         self.assertIsNotNone(protCL2D.outputClasses, "There was a problem with CL2D")
         
-#         # Refine the SetOfParticles and reconstruct a refined volume.
-#         print "Running Frealign..."
-#         protFrealign = ProtFrealign(angStepSize=20, numberOfIterations=2, mode=1, doExtraRealSpaceSym=True,
-#                                     outerRadius=180, PhaseResidual=65, lowResolRefine=300, highResolRefine=15,
-#                                     resolution=15, runMode=1, numberOfMpi=1, numberOfThreads=16)
-#         protFrealign.inputParticles.set(protExtract.outputParticles)
-#         protFrealign.input3DReferences.set(protImportVol.outputVolume)
-#         protFrealign.setObjLabel('Frealign')
-#         self.proj.launchProtocol(protFrealign, wait=True)        
-#         self.assertIsNotNone(protFrealign.outputVolume, "There was a problem with Frealign")
+        # Refine the SetOfParticles and reconstruct a refined volume.
+        print "Running Frealign..."
+        protFrealign = ProtFrealign(angStepSize=20, numberOfIterations=2, mode=1, doExtraRealSpaceSym=True,
+                                    outerRadius=180, PhaseResidual=65, lowResolRefine=300, highResolRefine=15,
+                                    resolution=15, runMode=1, numberOfMpi=1, numberOfThreads=16)
+        protFrealign.inputParticles.set(protExtract.outputParticles)
+        protFrealign.input3DReferences.set(protImportVol.outputVolume)
+        protFrealign.setObjLabel('Frealign')
+        self.proj.launchProtocol(protFrealign, wait=True)        
+        self.assertIsNotNone(protFrealign.outputVolume, "There was a problem with Frealign")
         
         # Now estimate CTF on the micrographs with xmipp
         print "Performing Xmipp CTF..."   
