@@ -41,56 +41,58 @@ except ImportError:
 
     
 DataSet(name='xmipp_tutorial', folder='xmipp_tutorial', 
-        files={'micsGoldSqlite': 
-               'gold/micrographs_gold.sqlite',
-               'micsGoldXmd': 'gold/micrographs_gold.xmd'})
+        files={'micsGoldSqlite': 'gold/micrographs_gold.sqlite',
+               'micsGoldXmd': 'gold/micrographs_gold.xmd',
+               'micsSqlite': 'micrographs/micrographs.sqlite',
+               'coordsGoldSqlite': 'gold/coordinates_gold.sqlite', 
+               'posDir': 'pickingXmipp'})
 
 DataSet('coordinatesDataset', 'Picking_XmippBPV3_Down3', 
         {'coordsGoldSqlite': 'gold/coordinates_gold.sqlite', 
          'micsGoldSqlite': 'micrographs_gold.sqlite'})
    
-def getPath(*filenames):
-    """Return the path to the SCIPION_HOME/tests/input dir
-    joined with filename"""
-    return join(pw.TESTS, *filenames)
-
-def getInputPath(*filenames):
-    """Return the path to the SCIPION_HOME/tests/input dir
-    joined with filename"""
-    return join(pw.TESTS, "input", *filenames)
-
-def getGoldPath(*filenames):
-    """Return the path to the SCIPION_HOME/tests/gold dir
-    joined with filename"""
-    return join(pw.TESTS, "gold", *filenames)
-
-def getOutputPath(*filenames):
-    """Return the path to the SCIPION_HOME/tests/output dir
-    joined with filename"""
-    return join(pw.TESTS, "output", *filenames)
-
-def getRelPath(filename):
-    """Return the path relative to SCIPION_HOME/tests"""
-    return relpath(filename, pw.TESTS)
-
-def setupOutput(test, outputDir):
-    """ Define the output path for the calling test and 
-    define a function to retrieve output path from this root. 
-    """
-    test.outputPath = getOutputPath(outputDir)
-    cleanPath(test.outputPath)
-    
-def setupProject(testClass):
-    """ Create and setup a project for this test. """
-    projName = testClass.__name__
-    proj = Manager().createProject(projName) # Now it will be loaded if exists
-    # Check that exists hosts for execution
-    hosts = proj.getSettings().getHosts()
-    if len(hosts) <= 0:
-        raise Exception("Project: %s can't load host configuration." % projName)
-    
-    testClass.projName = projName
-    testClass.proj = proj
+#def getPath(*filenames):
+#    """Return the path to the SCIPION_HOME/tests/input dir
+#    joined with filename"""
+#    return join(pw.TESTS, *filenames)
+#
+#def getInputPath(*filenames):
+#    """Return the path to the SCIPION_HOME/tests/input dir
+#    joined with filename"""
+#    return join(pw.TESTS, "input", *filenames)
+#
+#def getGoldPath(*filenames):
+#    """Return the path to the SCIPION_HOME/tests/gold dir
+#    joined with filename"""
+#    return join(pw.TESTS, "gold", *filenames)
+#
+#def getOutputPath(*filenames):
+#    """Return the path to the SCIPION_HOME/tests/output dir
+#    joined with filename"""
+#    return join(TESTS_OUTPUT, "output", *filenames)
+#
+#def getRelPath(filename):
+#    """Return the path relative to SCIPION_HOME/tests"""
+#    return relpath(filename, pw.TESTS)
+#
+#def setupOutput(test, outputDir):
+#    """ Define the output path for the calling test and 
+#    define a function to retrieve output path from this root. 
+#    """
+#    test.outputPath = getOutputPath(outputDir)
+#    cleanPath(test.outputPath)
+#    
+#def setupProject(testClass):
+#    """ Create and setup a project for this test. """
+#    projName = testClass.__name__
+#    proj = Manager().createProject(projName) # Now it will be loaded if exists
+#    # Check that exists hosts for execution
+#    hosts = proj.getSettings().getHosts()
+#    if len(hosts) <= 0:
+#        raise Exception("Project: %s can't load host configuration." % projName)
+#    
+#    testClass.projName = projName
+#    testClass.proj = proj
     
     
 def greenStr(msg):

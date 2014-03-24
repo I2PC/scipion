@@ -391,7 +391,7 @@ def addNMAProtocols(settings):
     
         
 def getScipionHome(userHome):
-    """ Returns default SCIPION_HOME from HOME. """
+    """ Returns default SCIPION_USER_DATA from HOME. """
     return join(userHome, 'Scipion')
   
 def setQueueSystem(host, maxCores):
@@ -458,7 +458,7 @@ def addHosts(settings):
     host = HostConfig()
     host.label.set('localhost')
     host.hostName.set('localhost')
-    host.hostPath.set(pw.SCIPION_HOME)   
+    host.hostPath.set(pw.SCIPION_USER_DATA)   
     setQueueSystem(host, maxCores=4)
     
     #writeConfig(host, dbPath, mapperClass=HostMapper, clean=True)

@@ -5,16 +5,16 @@ import unittest
 import os, sys, time
 from os.path import join, exists, isdir, relpath
 from unittest import TestResult
-from pyworkflow.utils.path import cleanPath, makeFilePath
+from pyworkflow.utils.path import cleanPath, makePath
 from pyworkflow.manager import Manager
 
 
-TESTS_INPUT = join(os.environ['SCIPION_HOME'], 'tests')
+TESTS_INPUT = join(os.environ['SCIPION_HOME'], 'data', 'tests')
 TESTS_OUTPUT = join(os.environ['SCIPION_USER_DATA'], 'Tests')
 
 
 class DataSet:
-    
+
     _datasetDict = {} # store all created datasets
 
     def __init__(self, name, folder, files):
@@ -29,7 +29,7 @@ class DataSet:
         self.filesDict = files
         
     def getFile(self, key):
-        return self.filesDict[key]
+        return join(self.path, self.filesDict[key])
     
     @classmethod
     def getDataSet(cls, name):
@@ -39,7 +39,9 @@ class BaseTest(unittest.TestCase):
     
     @classmethod
     def setUpClass(cls):
-        pass
+        cls.outputPath = join(TESTS_OUTPUT, cls.__name__)
+        cleanPath(cls.outputPath)
+        makePath(cls.outputPath)
         
         
     def setUp(self):
@@ -52,7 +54,7 @@ class BaseTest(unittest.TestCase):
     def getOutputPath(cls, *filenames):
         """Return the path to the SCIPION_HOME/tests/output dir
         joined with filename"""
-        return join(TESTS_OUTPUT, "output", *filenames)   
+        return join(cls.outputPath, *filenames)   
     
     @classmethod
     def getRelPath(cls, filename):

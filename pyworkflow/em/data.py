@@ -163,6 +163,34 @@ class DefocusGroup(EMObject):
         self._defocusAvg.set(value)
 
 
+class ImageDim(CsvList):
+    """ Just a wrapper to a CsvList to store image dimensions
+    as X, Y and Z. 
+    """
+    def __init__(self, x=None, y=None, z=None):
+        CsvList.__init__(self, pType=int)
+        if x is not None and y is not None:
+            self.append(x)
+            self.append(y)
+        if z is not None:
+            self.append(z)
+        
+    def getX(self):
+        return self[0]
+    
+    def getY(self):
+        return self[1]
+    
+    def getZ(self):
+        return self[2]
+    
+    def __str__(self):
+        s = '%dx%d' % (self.getX(), self.getY())
+        if self.getZ() > 1:
+            s += 'x%d' % self.getZ()
+        return s
+
+    
 class Image(EMObject):
     """Represents an EM Image object"""
     def __init__(self, **args):
@@ -189,7 +217,8 @@ class Image(EMObject):
     
     def getDim(self):
         """Return image dimensions as tuple: (Xdim, Ydim, Zdim, N)"""
-        return ImageHandler().getDimensions(self.getLocation())
+        x, y, z, n = ImageHandler().getDimensions(self.getLocation())
+        return (x, y, z)
     
     def getIndex(self):
         return self._index.get()
@@ -338,6 +367,8 @@ class Set(EMObject):
     It will use an extra sqlite file to store the elements.
     All items will have an unique id that identifies each element in the set.
     """
+    ITEM_TYPE = None # This property should be defined to know the item type
+    
     def __init__(self, filename=None, prefix='', mapperClass=SqliteFlatMapper, **args):
         # Use the object value to store the filename
         EMObject.__init__(self, **args)
@@ -415,6 +446,7 @@ class Set(EMObject):
             raise Exception("Set.load:  mapper path and prefix not set.")
         fn, prefix = self._mapperPath
         self._mapper = self._MapperClass(fn, globals(), prefix)
+        # TODO: updated size with the real size from the mapper
             
     def append(self, item):
         """ Add a image to the set. """
@@ -435,6 +467,7 @@ class Set(EMObject):
     def __str__(self):
         return "%-20s (%d items)" % (self.getClassName(), self.getSize())
     
+    #TODO: remove this from here
     def getDimensions(self):
         """Return first image dimensions as a tuple: (xdim, ydim, zdim, n)"""
         return self.getFirstItem().getDim()
@@ -451,6 +484,8 @@ class Set(EMObject):
 
 class SetOfImages(Set):
     """ Represents a set of Images """
+    ITEM_TYPE = Image
+    
     def __init__(self, **args):
         Set.__init__(self, **args)
         self._samplingRate = Float()
@@ -460,6 +495,7 @@ class SetOfImages(Set):
         self._isPhaseFlippled = Boolean(False)
         self._isAmplitudeCorrected = Boolean(False)
         self._acquisition = Acquisition()
+        self._firstDim = ImageDim() # Dimensions of the first image
            
     def getAcquisition(self):
         return self._acquisition
@@ -502,6 +538,8 @@ class SetOfImages(Set):
         """ Add a image to the set. """
         if not image.getSamplingRate():
             image.setSamplingRate(self.getSamplingRate())
+        if self._firstDim.isEmpty():
+            self._firstDim.set(image.getDim())
         Set.append(self, image)
     
     def copyInfo(self, other):
@@ -541,18 +579,29 @@ class SetOfImages(Set):
         for i, img in enumerate(self):
             ih.convert(img.getLocation(), (i+1, fnStack))
     
-# TODO: Create this general purpose function. See example in protocol_apply_mask
-#    def readFromStack(self, fnStack):
-#        """ Populate the set with the images in the stack """
-#        (_,_,_,ndim)=ImageHandler().getDimensions(fnStack)
-#        for i in range(1,ndim+1):
-#            image=ImageHandler().convert(img.getLocation(), (i, fnStack))
+    # TODO: Check whether this function can be used.
+    # for example: protocol_apply_mask
+    def readStack(self, fnStack):
+        """ Populate the set with the images in the stack """
+        _,_,_, ndim = ImageHandler().getDimensions(fnStack)
+        img = self.ITEM_TYPE()
+        for i in range(1, ndim+1):
+            img.setLocation(i, fnStack)
+            self.append(img)
+            img.cleanObjId()
     
+    def getDim(self):
+        """ Return the dimensions of the first image in the set. """
+        x, y, z = self._firstDim
+        return x, y, z
+        
     def __str__(self):
         """ String representation of a set of images. """
         if self.getSamplingRate() is None:
             raise Exception("FATAL ERROR: Object %s has no sampling rate!!!" % self.getName())
-        s = "%s (%d items, %0.2f A/px)" % (self.getClassName(), self.getSize(), self.getSamplingRate())
+        if self._firstDim.isEmpty():
+            self._firstDim.set(self.getFirstItem().getDim())
+        s = "%s (%d items, %s, %0.2f A/px)" % (self.getClassName(), self.getSize(), self._firstDim, self.getSamplingRate())
         return s
 
     def __iter__(self):
@@ -564,6 +613,8 @@ class SetOfImages(Set):
 
 class SetOfMicrographs(SetOfImages):
     """Represents a set of Micrographs"""
+    ITEM_TYPE = Micrograph
+    
     def __init__(self, **args):
         SetOfImages.__init__(self, **args)
         self._scannedPixelSize = Float()
@@ -595,6 +646,8 @@ class SetOfParticles(SetOfImages):
     concepts of Micrographs and Particles, even if
     both are considered Images
     """
+    ITEM_TYPE = Particle
+    
     def __init__(self, **args):
         SetOfImages.__init__(self, **args)
         self._coordsPointer = Pointer()
@@ -623,12 +676,16 @@ class SetOfParticles(SetOfImages):
 
 class SetOfVolumes(SetOfImages):
     """Represents a set of Volumes"""
+    ITEM_TYPE = Volume
+    
     def __init__(self, **args):
         SetOfImages.__init__(self, **args)
 
 
 class SetOfCTF(Set):
     """ Contains a set of CTF models estimated for a set of images."""
+    ITEM_TYPE = CTFModel
+    
     def __init__(self, **args):
         Set.__init__(self, **args)    
         
@@ -636,7 +693,10 @@ class SetOfCTF(Set):
 class SetOfDefocusGroup(Set):
     """ Contains a set of DefocusGroup.
         id min/max/avg exists the corresponding flaf must be
-        set to true"""
+        set to true.
+    """
+    ITEM_TYPE = DefocusGroup
+        
     def __init__(self, **args):
         Set.__init__(self, **args) 
         self._minSet=False
@@ -728,6 +788,8 @@ class SetOfCoordinates(Set):
     Each coordinate has a (x,y) position and is related to a Micrograph
     The SetOfCoordinates can also have information about TiltPairs.
     """
+    ITEM_TYPE = Coordinate
+    
     def __init__(self, **args):
         Set.__init__(self, **args)
         self._micrographsPointer = Pointer()
@@ -831,6 +893,8 @@ class Class2D(SetOfParticles):
 
 class SetOfClasses2D(Set):
     """ Store results from a 2D classification. """
+    ITEM_TYPE = Class2D
+    
     def __init__(self, **args):
         Set.__init__(self, **args)
         self._averages = None # Store the averages images of each class(SetOfParticles)
@@ -914,6 +978,8 @@ class Class3D(SetOfVolumes):
 
 class SetOfClasses3D(Set):
     """ Store results from a 3D classification. """
+    ITEM_TYPE = Class3D
+    
     def __init__(self, **args):
         Set.__init__(self, **args)
         self._averages = None # Store the averages images of each class(SetOfParticles)
@@ -984,12 +1050,11 @@ class Movie(SetOfMicrographs):
     def __init__(self, **args):
         SetOfMicrographs.__init__(self, **args)
 
-        
-
 
 class SetOfMovies(Set):
-    """ Represents a set of Movies.
-    """
+    """ Represents a set of Movies. """
+    ITEM_TYPE = Movie
+    
     def __init__(self, **args):
         Set.__init__(self, **args)
         self._acquisition = Acquisition()

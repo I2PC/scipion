@@ -36,14 +36,15 @@ def join(*paths):
 RESOURCES = [join('resources')]
 WEB_RESOURCES = os.path.join(HOME, 'web', 'pages', 'resources')
 
-if "SCIPION_HOME" not in os.environ:
-    raise Exception("SCIPION_HOME is not defined as environment variable")
+if "SCIPION_USER_DATA" not in os.environ:
+    raise Exception("SCIPION_USER_DATA is not defined as environment variable")
 
-SCIPION_HOME = os.environ["SCIPION_HOME"]
+SCIPION_USER_DATA = os.environ["SCIPION_USER_DATA"]
 PYTHON = os.environ.get("SCIPION_PYTHON", 'python')
 
-PROJECTS = os.path.join(SCIPION_HOME, 'projects')
-SETTINGS = os.path.join(SCIPION_HOME, 'settings.sqlite')
+
+PROJECTS = os.path.join(SCIPION_USER_DATA, 'projects')
+SETTINGS = os.path.join(SCIPION_USER_DATA, 'settings.sqlite')
 
 
 from utils.path import findResource

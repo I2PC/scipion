@@ -16,7 +16,7 @@ import syslog
 # sys.path.append(xmipp_home + '/lib/python2.7/site-packages')
 
 
-# PW_HOME = os.environ.get('PW_HOME', os.path.join('home','scipionweb', 'pyworkflow'))
+# SCIPION_HOME = os.environ.get('SCIPION_HOME', os.path.join('home','scipionweb', 'pyworkflow'))
 
 # os.environ.update(module_globals["VARS"])
 
