@@ -3,17 +3,19 @@
 import os, time
 import unittest
 from subprocess import Popen
-import psutil
 from pyworkflow.utils.process import killWithChilds
+from pyworkflow.tests import *
 
 
-class TestProccess(unittest.TestCase):
+#FIXME:Jose Miguel
+class TestProccess(BaseTest):
     """ Some tests for utils.process module. """
 
-    def setUp(self):
-        pass
+    @classmethod
+    def setUpClass(cls):
+        setupTestOutput(cls)
         
-    def test_Object(self):
+    def test_Process(self):
         p = Popen('pw_sleep.py 500', shell=True)
         print "pid: ", p.pid
         time.sleep(5)

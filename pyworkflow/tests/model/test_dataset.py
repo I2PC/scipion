@@ -3,15 +3,16 @@
 import os, time
 import unittest
 import pyworkflow.dataset as ds
-from pyworkflow.tests import getInputPath
+from pyworkflow.tests import *
 
 
 
-class TestDataSet(unittest.TestCase):
+class TestDataSet(BaseTest):
     """ Some tests for DataSet implementation. """
 
-    def setUp(self):
-        pass
+    @classmethod
+    def setUpClass(cls):
+        setupTestOutput(cls)
         
     def test_Table(self):
         table = ds.Table(ds.Column('x', int, 5),

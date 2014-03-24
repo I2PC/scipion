@@ -8,11 +8,16 @@ import pyworkflow.gui.canvas
 import Tkinter
 import math
 from sets import Set
+from pyworkflow.tests import *
 
-class TestCanvas(unittest.TestCase):
+class TestCanvas(BaseTest):
     # IMPORTANT: Tk requires at least that DISPLAY is defined
     # hence in some environments (like builbot) the test may fail,
     # check for the TclError exception
+    
+    @classmethod
+    def setUpClass(cls):
+        setupTestOutput(cls)
 
     def distance(self,c1,c2):
         return round(math.hypot(c2[0] - c1[0], c2[1] - c1[1]),2)

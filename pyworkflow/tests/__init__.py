@@ -47,7 +47,9 @@ DataSet(name='xmipp_tutorial', folder='xmipp_tutorial',
                'posSupervisedDir': 'pickingXmipp/pickedSupervised',
                'posAlldDir': 'pickingXmipp/pickedAll',
                'allMics': 'micrographs/*.mrc',
-               'mic1': 'micrographs/BPV_1386.mrc'})
+               'mic1': 'micrographs/BPV_1386.mrc',
+               'mic2': 'micrographs/BPV_1387.mrc',
+               'mic3': 'micrographs/BPV_1388.mrc'})
 
 
 DataSet('model', 'model', 

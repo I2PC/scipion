@@ -5,10 +5,16 @@ import unittest
 from os.path import join, dirname, exists
 from StringIO import StringIO
 from bibtexparser.bparser import BibTexParser   
+from pyworkflow.tests import *
     
-class TestPyworkflow(unittest.TestCase):
+class TestBibtex(BaseTest):
     """ Some minor tests to the bibtexparser library. """
 
+    @classmethod
+    def setUpClass(cls):
+        setupTestOutput(cls)
+        
+        
     def test_Parsing(self):
         bibtex = """
 
