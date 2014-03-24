@@ -21,7 +21,7 @@ class TestXmippSetOfMicrographs(BaseTest):
         
             
     def testConvert(self):
-        """ Test the convertion of a SetOfMicrographs to Xmipp"""
+        """ Test the convertion of a SetOfMicrographs to Xmipp metadata"""
         micSet = SetOfMicrographs(filename=self.dbGold)
         mdFn = self.getOutputPath('micrographs.xmd')
         
@@ -40,20 +40,14 @@ class TestXmippSetOfCoordinates(BaseTest):
         cls.posDir = cls.dataset.getFile('posDir')
         cls.dbCoord = cls.dataset.getFile('coordsGoldSqlite')
         
-    def setUp(self):
-        cleanPath(self.outputPath)
-        makePath(self.outputPath)
         
     def testConvert(self):
         """ Test converting a SetOfCoordinates to Xmipp """
         micSet = SetOfMicrographs(filename=self.dbGold)
         
         # Test reading a set of coordinates
-        
         fn = self.getOutputPath('coordinates.sqlite')
         coordSet = SetOfCoordinates(filename=fn)
-
-        
         readSetOfCoordinates(self.posDir, micSet, coordSet)
         coordSet.write()
         
@@ -61,7 +55,6 @@ class TestXmippSetOfCoordinates(BaseTest):
         coordSet = SetOfCoordinates(filename=self.dbCoord)
         coordSet.setBoxSize(512)
         coordSet.setMicrographs(micSet)
-        
         writeSetOfCoordinates(self.outputPath, coordSet)
         
     
