@@ -16,7 +16,9 @@ import xmipp.jni.ImageGeneric;
  */
 public class ImagePlusNotFromFile extends ImagePlusReader{
 
+
     public ImagePlusNotFromFile(ImagePlus imp, ImageGeneric ig) {
+
         this.imp = imp;
         this.ig = ig;
     }
@@ -38,6 +40,7 @@ public class ImagePlusNotFromFile extends ImagePlusReader{
                 return String.format("%d@%s", index, imp.getTitle());
             return imp.getTitle();
         }
+
         return null;
     }
 }

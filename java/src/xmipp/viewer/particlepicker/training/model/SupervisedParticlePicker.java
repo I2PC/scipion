@@ -34,13 +34,13 @@ public class SupervisedParticlePicker extends ParticlePicker
 
 	protected List<SupervisedParticlePickerMicrograph> micrographs;
 	private SupervisedParticlePickerMicrograph micrograph;
-	
 	protected int autopickpercent;
 
-
+        //used in previous versions
 	private int threads = 1;
 	private boolean fastmode = true;
 	private boolean incore = false;
+        ///////////////////////////
 
 	public static int dtemplatesnum = 1;
 	private ImageGeneric templates;
@@ -74,9 +74,8 @@ public class SupervisedParticlePicker extends ParticlePicker
 				radialtemplates = new ImageGeneric(ImageGeneric.Float);
 				radialtemplates.resize(getSize(), getSize(), 1, getTemplatesNumber());
 			}
-                        templates.printShape();
-                        radialtemplates.printShape();
-			templates.getRadialAvg(radialtemplates);
+            templates.getRadialAvg(radialtemplates);
+
 
 			for (SupervisedParticlePickerMicrograph m : micrographs)
 				loadMicrographData(m);
@@ -549,6 +548,7 @@ public class SupervisedParticlePicker extends ParticlePicker
 			Mode configmode;
 			boolean hasautopercent = md.containsLabel(MDLabel.MDL_PICKING_AUTOPICKPERCENT);
                         long id = md.firstObject();
+
                         if(hasautopercent) 
                             autopickpercent = md.getValueInt(MDLabel.MDL_PICKING_AUTOPICKPERCENT, id);
                         
@@ -590,7 +590,6 @@ public class SupervisedParticlePicker extends ParticlePicker
 
 	public void setAutopickpercent(int autopickpercent)
 	{
-
 		this.autopickpercent = autopickpercent;
 	}
 
@@ -774,6 +773,7 @@ public class SupervisedParticlePicker extends ParticlePicker
 			importAllParticles(particlesfile);
 			return "";
 		}
+
 		importSize(path, f);
 		for (SupervisedParticlePickerMicrograph m : micrographs)
 		{
@@ -786,6 +786,8 @@ public class SupervisedParticlePicker extends ParticlePicker
 
 		return result;
 	}// function importParticlesFromFolder
+        
+        
 
 	/** Return the number of particles imported from a file */
 	public String importParticlesFromFile(String path, Format f, SupervisedParticlePickerMicrograph m, float scale, boolean invertx, boolean inverty)
@@ -1071,6 +1073,8 @@ public class SupervisedParticlePicker extends ParticlePicker
 
 	}
 
+       
+
 	public class TrainRunnable implements Runnable
 	{
 
@@ -1133,6 +1137,7 @@ public class SupervisedParticlePicker extends ParticlePicker
 		}
 	}
 
+
 	public void autopick(SupervisedParticlePickerJFrame frame, SupervisedParticlePickerMicrograph next)
 	{
 		next.setState(MicrographState.Supervised);
@@ -1151,7 +1156,6 @@ public class SupervisedParticlePicker extends ParticlePicker
 		private SupervisedParticlePickerJFrame frame;
 		private MetaData outputmd;
 		private SupervisedParticlePickerMicrograph micrograph;
-
 		public AutopickRunnable(SupervisedParticlePickerJFrame frame, SupervisedParticlePickerMicrograph micrograph)
 		{
 			this.frame = frame;
@@ -1217,6 +1221,7 @@ public class SupervisedParticlePicker extends ParticlePicker
 
 		private MetaData manualmd;
 		private MetaData automaticmd;
+
 		private SupervisedParticlePickerMicrograph next;
 		private SupervisedParticlePickerJFrame frame;
 		private MetaData outputmd;

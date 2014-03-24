@@ -59,8 +59,8 @@ public class XmippLabel {
     public final static String BUTTON_EXPORT_PROFILE = "Export Profiles";
     public final static String BUTTON_EXPORT_RADIAL_AVERAGE = "Export Radial AVG.";
     public final static String CB_PLOT_PROFILE = "Profile";
-    public final static String CB_PLOT_BGNOISE = "BGNoise";
-    public final static String CB_PLOT_ENVELOPE = "Envelope";
+    public final static String CB_PLOT_BGNOISE = "Log(BGNoise)";
+    public final static String CB_PLOT_ENVELOPE = "Log(Envelope)";
     public final static String CB_PLOT_PSD = "PSD";
     public final static String CB_PLOT_CTF = "CTF";
     public final static String CB_PLOT_DIFFERENCE = "Difference";
@@ -216,7 +216,7 @@ public class XmippLabel {
     public final static String LABEL_RESLICE_TOP = "Reslice Top (Y)";
     public final static String LABEL_RESLICE_RIGHT = "Reslice Right (X)";
     public final static String LABEL_CTF = "CTF";
-    public final static String LABEL_PSD = "PSD";
+    public final static String LABEL_PSD = "Log(PSD)";
     public final static String LABEL_SAMPLING = "1/A";
     public final static String LABEL_PROFILES = "Profiles";
     public final static String LABEL_RADIAL_AVERAGE = "Radial Average";

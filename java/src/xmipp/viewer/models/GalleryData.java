@@ -30,6 +30,8 @@ import java.awt.Window;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import xmipp.ij.commons.XmippApplication;
 import xmipp.jni.Filename;
@@ -40,6 +42,7 @@ import xmipp.jni.MDRow;
 import xmipp.utils.DEBUG;
 import xmipp.utils.Param;
 import xmipp.utils.XmippStringUtils;
+import xmipp.viewer.windows.GalleryJFrame;
 
 /** This class will serve to store important data about the gallery */
 public class GalleryData {
@@ -58,6 +61,8 @@ public class GalleryData {
 	public int zoom;
 	private String filename;
 	public int resliceView;
+
+
 
 	public enum Mode {
 		GALLERY_MD, GALLERY_VOL, TABLE_MD, GALLERY_ROTSPECTRA
@@ -742,6 +747,8 @@ public class GalleryData {
 		}
 		return selectionMd;
 	}
+        
+       
 
 	/**
 	 * Compute the metadatas
@@ -804,6 +811,7 @@ public class GalleryData {
 		return null;
 	}
 	
+        
 	/** Get all the images assigned to all selected classes */
 	public MetaData getImagesFromClassSelection(){
 		MetaData mdImages = new MetaData();
@@ -1001,4 +1009,31 @@ public class GalleryData {
 				+ "Size: " + Filename.humanReadableByteCount(file.length());
 		return fileInfo;
 	}
+        
+       public void saveClassSelection(String path)
+       {
+            try {
+                
+                MetaData imagesmd;
+                // Fill the classX_images blocks
+                for (int i = 0; i < ids.length; ++i) 
+                    if(selection[i])
+                    {
+                        long id = ids[i];
+                        int ref = md.getValueInt(MDLabel.MDL_REF, id);
+                        String blockName = Filename.getClassBlockName(ref);
+                        if (containsBlock(blockName)) {
+                                imagesmd = new MetaData(blockName + Filename.SEPARATOR + filename);
+                                imagesmd.writeBlock(blockName + Filename.SEPARATOR + path);
+                                imagesmd.destroy();
+                        }
+                    }
+                
+                
+                
+            } catch (Exception ex) {
+                Logger.getLogger(GalleryJFrame.class.getName()).log(Level.SEVERE, null, ex);
+            }
+       }
+      
 }// class GalleryDaa
