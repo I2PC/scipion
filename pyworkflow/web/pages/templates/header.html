@@ -13,7 +13,7 @@
 		
 		<div id="headerRightContainer">
 			{% if page_mode == 'showj'%}
-				<a id="backToProject" href="/project_content/?projectName={{projectName}}">Back to project</a>
+<!-- 				<a id="backToProject" href="/project_content/?projectName={{projectName}}">Back to project</a> -->
 			{% else %}
 				<a href="/projects" class="headerLink{% if view == 'projects' %} headerLinkSelected {% endif %}">{{msg.VIEW_PROJECTS}}</a>
 				{% if projectName != None and projectName != ''%}<span id="tube">|</span><a href="/project_content/?projectName={{projectName}}" class="headerLink{% if view == 'protocols' %} headerLinkSelected {% endif %}">{{msg.VIEW_PROTOCOLS}}</a>{% endif %}
