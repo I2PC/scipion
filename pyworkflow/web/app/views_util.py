@@ -29,7 +29,6 @@ import os
 import xmipp
 import json
 from pyworkflow.em import emProtocolsDict
-from pyworkflow.tests import getInputPath
 from pyworkflow.web.pages import settings
 from pyworkflow.manager import Manager
 from pyworkflow.project import Project
@@ -334,7 +333,8 @@ def get_image(request):
             if 'projectPath' in request.session:
                 imagePathTmp = os.path.join(request.session['projectPath'], imagePath)
                 if not os.path.isfile(imagePathTmp):
-                    imagePath = getInputPath('showj', imagePath)      
+                    raise Exception('should not use getInputPath')
+                    #imagePath = getInputPath('showj', imagePath)      
     
             if imageNo:
                 imagePath = '%s@%s' % (imageNo, imagePath) 
@@ -404,7 +404,8 @@ def get_slice(request):
         if 'projectPath' in request.session:
             imagePathTmp = os.path.join(request.session['projectPath'], imagePath)
             if not os.path.isfile(imagePathTmp):
-                imagePath = getInputPath('showj', imagePath)
+                raise Exception('should not use getInputPath')
+                #imagePath = getInputPath('showj', imagePath)
                 
         if imageNo:
             imagePath = '%s@%s' % (imageNo, imagePath)                 
