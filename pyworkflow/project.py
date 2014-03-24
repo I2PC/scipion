@@ -350,6 +350,33 @@ class Project(object):
             
         return self._runsGraph
     
+    def getDataGraph(self, refresh=True):
+        """ Retrieve objects produced as outputs and
+        make a graph taking into account the SOURCE relation. """
+        print "project.getDataGraph"
+        relations = self.mapper.getRelationsByName(RELATION_SOURCE)
+        g = Graph(rootName='PROJECT')
+        root = g.getRoot()
+        
+        for rel in relations:
+            pid = str(rel['object_parent_id'])
+            parent = g.getNode(pid)
+            if not parent:
+                obj = self.mapper.selectById(rel['object_parent_id'])
+                parent = g.createNode(pid, obj.getNameId())
+            cid = str(rel['object_child_id'])
+            child = g.getNode(cid)
+            if not child:
+                obj = self.mapper.selectById(rel['object_child_id'])
+                child = g.createNode(cid, obj.getNameId())
+            parent.addChild(child)
+            
+        for n in g.getNodes():
+            if n.isRoot() and not n is root:
+                root.addChild(n)
+            
+        return g
+               
     def getTransformGraph(self):
         """ Get the graph from the TRASNFORM relation. """
         relations = self.mapper.getRelationsByName(RELATION_TRANSFORM)
