@@ -31,7 +31,6 @@ from pyworkflow.em.packages.xmipp3 import *
 from test_protocols_xmipp import TestXmippBase
 
 
-    
 class TestXmippCeateMask3D(TestXmippBase):
     @classmethod
     def setUpClass(cls):
@@ -64,6 +63,7 @@ class TestXmippCeateMask3D(TestXmippBase):
         self.proj.launchProtocol(protMask3, wait=True)        
          
         self.assertIsNotNone(protMask3.outputMask, "There was a problem with mask from another mask")          
+
 
 class TestXmippResolution3D(TestXmippBase):
     @classmethod
@@ -270,10 +270,8 @@ class TestXmippRansac(TestXmippBase):
     @classmethod
     def setUpClass(cls):
         setupProject(cls)
-     
     
     def testRansac(self):
-        
         """ Run an Import particles protocol. """
         project = self.proj
         pattern = os.environ.get('HEMOGLOBIN', getInputPath('particlesHemoglobin', '*.spi'))
@@ -298,6 +296,70 @@ class TestXmippRansac(TestXmippBase):
         self.proj.launchProtocol(protRansac, wait=True)        
         
         self.assertIsNotNone(protRansac.outputVolumes, "There was a problem with simulating annealing protocol")
+
+
+class TestXmippCLTomo(TestXmippBase):
+    @classmethod
+    def setUpClass(cls):
+        setupProject(cls)
+        
+#         cls.protImport = cls.runImportParticles(pattern=images, samplingRate=1, checkStack=False)
+#         cls.iniVol = getInputPath('ml3dData', 'icoFiltered.vol')
+    
+    def testCLTomo(self):
+        print "Import volumes"
+        protImportVol = ProtImportVolumes(pattern=getInputPath('CLTomo', 'subvols*.spi'), samplingRate=1)
+        self.proj.launchProtocol(protImportVol, wait=True)
+        
+        print "Run CLTomo"
+        protCLTomo = XmippProtCLTomo(numberOfReferences=1,numberOfIterations=1)
+        protCLTomo.volumelist.set(protImportVol.outputVolumes)
+        self.proj.launchProtocol(protCLTomo, wait=True)        
+        
+        self.assertIsNotNone(protCLTomo.outputClasses, "There was a problem with CLTomo output classes") 
+        self.assertIsNotNone(protCLTomo.alignedVolumes, "There was a problem with CLTomo output aligned volumes")
+
+
+class TestXmippConvertToPseudotaoms(TestXmippBase):
+    @classmethod
+    def setUpClass(cls):
+        setupProject(cls)
+        
+#         cls.protImport = cls.runImportParticles(pattern=images, samplingRate=1, checkStack=False)
+#         cls.iniVol = getInputPath('ml3dData', 'icoFiltered.vol')
+    
+    def testConvertToPseudoatoms(self):
+        print "Import volumes"
+        protImportVol = ProtImportVolumes(pattern=getInputPath('Volumes_BPV', 'BPV_scale_filtered_windowed_110.vol'), samplingRate=6.5)
+        self.proj.launchProtocol(protImportVol, wait=True)
+    
+        print "Run convert to pseudoatoms"
+        prot = XmippProtConvertToPseudoAtoms(pseudoAtomTarget=15)
+        prot.inputStructure.set(protImportVol.outputVolume)
+        self.proj.launchProtocol(prot, wait=True)        
+        
+        self.assertIsNotNone(prot.outputPdb, "There was a problem with Convert to pseudoatoms output Pdb")
+
+
+class TestXmippProtHelicalParameters(TestXmippBase):
+    @classmethod
+    def setUpClass(cls):
+        setupProject(cls)
+        
+#         cls.protImport = cls.runImportParticles(pattern=images, samplingRate=1, checkStack=False)
+#         cls.iniVol = getInputPath('ml3dData', 'icoFiltered.vol')
+    
+    def testHelicalParameters(self):
+        print "Import volumes"
+        protImportVol = ProtImportVolumes(pattern=getInputPath('Helical', '*.map'), samplingRate=1)
+        self.proj.launchProtocol(protImportVol, wait=True)
+    
+        print "Run symmetrize helical"
+        protHelical = XmippProtHelicalParameters(cylinderRadius=20,dihedral=False,rot0=50,rotF=70,rotStep=5,z0=5,zF=10,zStep=0.5)
+        protHelical.inputVolume.set(protImportVol.outputVolume)
+        self.proj.launchProtocol(protHelical, wait=True)        
+        
+        self.assertIsNotNone(protHelical.outputVolume, "There was a problem with Helical output volume")
 
 
 if __name__ == "__main__":

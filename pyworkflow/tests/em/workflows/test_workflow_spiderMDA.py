@@ -20,7 +20,6 @@ class TestSpiderWorkflow(TestWorkflow):
         # check that input images have been imported (a better way to do this?)
         if protImport.outputParticles is None:
             raise Exception('Import of images: %s, failed. outputParticles is None.' % pattern)
-
         
         protFilter = SpiderProtFilter()
         protFilter.inputParticles.set(protImport.outputParticles)
@@ -44,7 +43,6 @@ class TestSpiderWorkflow(TestWorkflow):
         protWard.pcaFilePointer.set(protCAPCA.imcFile)
         protWard.inputParticles.set(protAPSR.outputParticles)
         project.launchProtocol(protWard, wait=True)
-        
 
 
 if __name__ == "__main__":

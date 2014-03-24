@@ -17,7 +17,7 @@ class TestXmippBase(unittest.TestCase):
         else:
             cls.protImport = ProtImportMicrographs(samplingRateMode=1, pattern=pattern, scannedPixelSize=scannedPixelSize, 
                                                    voltage=voltage, magnification=magnification, sphericalAberration=sphericalAberration)
-            
+        
         cls.proj.launchProtocol(cls.protImport, wait=True)
         # check that input micrographs have been imported (a better way to do this?)
         if cls.protImport.outputMicrographs is None:
@@ -32,57 +32,7 @@ class TestXmippBase(unittest.TestCase):
 
 
 class TestFrealignProtocol(TestXmippBase):
-
-    GOLD_FILES = {'protDownsampling': ['protDownsampling/BPV_1388.mrc', 
-                    'protDownsampling/BPV_1387.mrc', 
-                    'protImport/BPV_1386.mrc', 
-                    'protDownsampling/micrographs.xmd', 
-                    'protImport/BPV_1388.mrc', 
-                    'protImport/micrographs.sqlite', 
-                    'protDownsampling/BPV_1386.mrc', 
-                    'protImport/BPV_1387.mrc',
-                    'protDownsampling/logs/run.log',
-                    'protDownsampling/logs/run.db'],
-            'protCTF': [
-                  'protCTF/extra/BPV_1386/ctffind_psd.mrc', 
-                  'protCTF/extra/BPV_1386/ctffind.out', 
-                  'protDownsampling/BPV_1386.mrc',
-                  'protCTF/extra/BPV_1387/ctffind_psd.mrc', 
-                  'protCTF/extra/BPV_1387/ctffind.out', 
-                  'protDownsampling/BPV_1387.mrc',
-                  'protCTF/extra/BPV_1388/ctffind_psd.mrc', 
-                  'protCTF/extra/BPV_1388/ctffind.out', 
-                  'protDownsampling/BPV_1388.mrc',
-                  'protCTF/micrographs.sqlite',
-                  'protDownsampling/micrographs.xmd', 
-                  'protCTF/logs/run.log', 
-                  'protCTF/logs/run.db'],
-              'protExtract':[
-                    'protPP/info/BPV_1386_info.json',
-                    'protPP/info/BPV_1387_info.json',
-                    'protPP/info/BPV_1388_info.json',
-                    'protExtract/extra/scipion_micrographs_coordinates.xmd',
-                    'protExtract/images.xmd', 
-                    'protExtract/extra/BPV_1386.pos', 
-                    'protExtract/extra/BPV_1387.pos', 
-                    'protExtract/extra/BPV_1388.pos', 
-                    'protExtract/tmp/BPV_1388_flipped.xmp', 
-                    'protExtract/tmp/BPV_1387_flipped.xmp', 
-                    'protExtract/tmp/BPV_1386_flipped.xmp',
-                    'protExtract/tmp/BPV_1386_noDust.xmp', 
-                    'protExtract/tmp/BPV_1387_noDust.xmp', 
-                    'protExtract/tmp/BPV_1388_noDust.xmp', 
-                    'protExtract/extra/BPV_1386.xmd', 
-                    'protExtract/extra/BPV_1387.xmd', 
-                    'protExtract/extra/BPV_1388.xmd', 
-                    'protExtract/extra/BPV_1388.stk', 
-                    'protExtract/extra/BPV_1386.stk', 
-                    'protExtract/extra/BPV_1387.stk', 
-                    'protExtract/logs/run.log',
-                    'protExtract/logs/run.db',
-                    ],
-                }
-        
+    
     @classmethod
     def setUpClass(cls):    
         # Create a new project

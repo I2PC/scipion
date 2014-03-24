@@ -56,8 +56,9 @@ class TestBrandeisCtffind(unittest.TestCase):
         protCTF.inputMicrographs.set(protImport.outputMicrographs)
         self.proj.launchProtocol(protCTF, wait=True)
         
-        self.assertIsNotNone(protCTF.outputCTF, "SetOfCTF has not been produced.") 
-        
+        self.assertIsNotNone(protCTF.outputCTF, "SetOfCTF has not been produced.")
+
+
 if __name__ == "__main__":
     suite = unittest.TestLoader().loadTestsFromTestCase(TestBrandeisCtffind)
     #suite = unittest.TestLoader().loadTestsFromName('test_protocols_brandeis.TestBrandeisCtffind.testCtffind')
