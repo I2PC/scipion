@@ -56,11 +56,14 @@ class ObjectBrowser(tk.Frame):
     each element such as: icon, preview and description.
     A TreeProvider will be used to populate the list (Tree).
     """
-    def __init__(self, parent, treeProvider, showPreview=True, **args):
+    def __init__(self, parent, treeProvider, 
+                 showPreview=True, showPreviewTop=True,
+                 **args):
         tk.Frame.__init__(self, parent, **args)
         self.treeProvider = treeProvider
         self._lastSelected = None
         gui.configureWeigths(self)
+        self.showPreviewTop = showPreviewTop
         # The main layout will be two panes, 
         # At the left containing the elements list
         # and the right containing the preview and description
@@ -73,8 +76,7 @@ class ObjectBrowser(tk.Frame):
         p.paneconfig(leftPanel, minsize=300)
         
         if showPreview:
-            rightPanel = tk.Frame(p)
-            gui.configureWeigths(rightPanel)
+            rightPanel = tk.Frame(p)            
             self._fillRightPanel(rightPanel)
             p.add(rightPanel, padx=5, pady=5)    
             p.paneconfig(rightPanel, minsize=200)    
@@ -90,14 +92,20 @@ class ObjectBrowser(tk.Frame):
         self.getImage = self.tree.getImage
     
     def _fillRightPanel(self, frame):
-        top = tk.Frame(frame)
-        top.grid(row=0, column=0, sticky='news')
-        gui.configureWeigths(top)
-        top.rowconfigure(0, minsize=200)
-        self._fillRightTop(top)
+        frame.columnconfigure(0, weight=1)
+        
+        if self.showPreviewTop:
+            print "showing top....."
+            top = tk.Frame(frame)
+            top.grid(row=0, column=0, sticky='news')
+            frame.rowconfigure(0, weight=3)
+            gui.configureWeigths(top)
+            top.rowconfigure(0, minsize=200)
+            self._fillRightTop(top)
         
         bottom = tk.Frame(frame)
         bottom.grid(row=1, column=0, sticky='news')
+        frame.rowconfigure(1, weight=1)
         gui.configureWeigths(bottom)
         bottom.rowconfigure(1, weight=1)
         self._fillRightBottom(bottom)
@@ -114,13 +122,16 @@ class ObjectBrowser(tk.Frame):
     def _itemClicked(self, obj):
         self._lastSelected = obj
         img, desc = self.treeProvider.getObjectPreview(obj)
-        self.text.clear()
-        if isinstance(img, str):
-            img = self.getImage(img)
-        if img is None:
-            img = self.noImage
-        self.label.config(image=img)
+        # Update image preview
+        if self.showPreviewTop:
+            if isinstance(img, str):
+                img = self.getImage(img)
+            if img is None:
+                img = self.noImage
+            self.label.config(image=img)
+        # Update text preview
         if desc is not None:
+            self.text.clear()
             self.text.addText(desc)
             
     def getSelected(self):
@@ -480,12 +491,13 @@ class BrowserWindow(gui.Window):
             args['minsize'] = (800, 400)
         gui.Window.__init__(self, title, master, **args)
         
-    def setBrowser(self, browser):
-        browser.grid(row=0, column=0, sticky='news')
+    def setBrowser(self, browser, row=0, column=0):
+        browser.grid(row=row, column=column, sticky='news')
         self.itemConfig = browser.tree.itemConfig
         
+        
 class FileBrowserWindow(BrowserWindow):
-    """ Windows to hold a browser frame inside. """
+    """ Windows to hold a file browser frame inside. """
     def __init__(self, title, master=None, path=None, 
                  onSelect=None, **args):
         BrowserWindow.__init__(self, title, master, **args)
