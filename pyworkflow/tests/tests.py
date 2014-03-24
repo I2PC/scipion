@@ -7,7 +7,7 @@ from os.path import join, exists, isdir, relpath
 from unittest import TestResult
 from pyworkflow.utils.path import cleanPath, makePath
 from pyworkflow.manager import Manager
-
+from pyworkflow.object import *
 
 TESTS_INPUT = join(os.environ['SCIPION_HOME'], 'data', 'tests')
 TESTS_OUTPUT = join(os.environ['SCIPION_USER_DATA'], 'Tests')
@@ -31,12 +31,16 @@ class DataSet:
     def getFile(self, key):
         return join(self.path, self.filesDict[key])
     
+    def getPath(self):
+        return self.path
+    
     @classmethod
     def getDataSet(cls, name):
         return cls._datasetDict[name]
 
 
 class BaseTest(unittest.TestCase):
+    
     @classmethod
     def getOutputPath(cls, *filenames):
         """Return the path to the SCIPION_HOME/tests/output dir
@@ -46,15 +50,9 @@ class BaseTest(unittest.TestCase):
     @classmethod
     def getRelPath(cls, filename):
         """Return the path relative to SCIPION_HOME/tests"""
-        return relpath(filename, TESTS_OUTPUT)
+        return relpath(filename, cls.outputPath)
+       
 
-    
-    def setupOutput(self, outputDir):
-        """ Define the output path for the calling test and 
-        define a function to retrieve output path from this root. 
-        """
-        self.outputPath = self.getOutputPath(outputDir)
-        cleanPath(self.outputPath)
         
  
 def setupTestOutput(cls):
@@ -77,13 +75,38 @@ def setupTestProject(cls):
     cls.proj = proj
         
         
-    def getTmpPath(self, *filenames):
-        """Return the filename in /tmp/ folder.
-        If the file exists, it will be deleted"""
-        path = self.getTestPath('tmp', *filenames)
-        if os.path.exists(path) and not os.path.isdir(path):
-            os.remove(path)
-        return path
+#class for tests
+class Complex(Object):
+    
+    cGold = complex(1.0, 1.0)
+    
+    
+    def __init__(self, imag=0., real=0., **args):
+        Object.__init__(self, **args)
+        self.imag = Float(imag)
+        self.real = Float(real)
+        # Create reference complex values
+        
+        
+    def __str__(self):
+        return '(%s, %s)' % (self.imag, self.real)
+    
+    def __eq__(self, other):
+        return (self.imag == other.imag and 
+                self.real == other.real)
+            
+    def hasValue(self):
+        return True
+    
+    @classmethod
+    def createComplex(self):
+        """Create a Complex object and set
+        values with self.cGold standard"""
+        c = Complex() # Create Complex object and set values
+        c.imag.set(self.cGold.imag)
+        c.real.set(self.cGold.real)
+        return c
+    
         
 class GTestResult(TestResult):
     """ Subclass TestResult to ouput tests results with colors (green for success and red for failure)
