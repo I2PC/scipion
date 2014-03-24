@@ -881,19 +881,20 @@ class ProtUserSubSet(EMProtocol):
     def createOutputSet(self, outputset):
         outputs = {'output' + self.getOutputType(): outputset}
         self._defineOutputs(**outputs)
+        self._defineSourceRelation(self.getInput(), outputset)
     
     def getOutputSet(self):
         return getattr(self, 'output' + self._outputType.get())
     
-    def getInputPointer(self):
+    def getInput(self):
         inputsetpt = getattr(self, 'input' + self._inputType.get())
         return inputsetpt.get()
     
     def _summary(self):
         summary = []
         input = self.getInputType()
-        if hasattr(self.getInputPointer(), "getSize"):
-            input = "%d %s"%(self.getInputPointer().getSize(), input)
+        if hasattr(self.getInput(), "getSize"):
+            input = "%d %s"%(self.getInput().getSize(), input)
         summary.append("From input set of %s created subset of %s %s"%(input, self.getOutputSet().getSize(), self.getOutputType()))
         return summary
 

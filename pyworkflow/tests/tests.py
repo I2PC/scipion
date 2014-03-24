@@ -8,6 +8,7 @@ from unittest import TestResult
 from pyworkflow.utils.path import cleanPath, makePath
 from pyworkflow.manager import Manager
 from pyworkflow.object import *
+from pyworkflow.protocol import *
 
 TESTS_INPUT = join(os.environ['SCIPION_HOME'], 'data', 'tests')
 TESTS_OUTPUT = join(os.environ['SCIPION_USER_DATA'], 'Tests')
@@ -106,6 +107,27 @@ class Complex(Object):
         c.imag.set(self.cGold.imag)
         c.real.set(self.cGold.real)
         return c
+    
+#Protocol for tests, runs in resume mode, and sleeps for??
+class MyProtocol(Protocol):
+    def __init__(self, **args):
+        Protocol.__init__(self, **args)
+        self.name = String(args.get('name', None))
+        self.numberOfSleeps = Integer(args.get('n', 1))
+        self.runMode = Integer(MODE_RESUME)
+        
+    def sleep(self, t, s):
+        log = self._getPath("step_%02d.txt" % t)
+        import time 
+        time.sleep(t)
+        f = open(log, 'w+')
+        f.write("Slept: %d seconds\n" % t)
+        f.close()
+        return [log]
+        
+    def _insertAllSteps(self):
+        for i in range(self.numberOfSleeps.get()):
+            self._insertFunctionStep('sleep', i+1, 'sleeping %d'%i)
     
         
 class GTestResult(TestResult):

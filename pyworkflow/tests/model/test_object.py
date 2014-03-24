@@ -6,10 +6,6 @@ import unittest
 import filecmp
 
 from pyworkflow.object import *
-from pyworkflow.protocol import *
-from pyworkflow.mapper import *
-from pyworkflow.utils.log import *
-from pyworkflow.utils.utils import getLineInFile, isInFile
 from pyworkflow.tests import *
 
     
@@ -18,29 +14,10 @@ class ListContainer(Object):
         Object.__init__(self, **args)
         self.csv = CsvList() 
 
-#Protocol for tests, runs in resume mode, and sleeps for??
-class MyProtocol(Protocol):
-    def __init__(self, **args):
-        Protocol.__init__(self, **args)
-        self.name = String(args.get('name', None))
-        self.numberOfSleeps = Integer(args.get('n', 1))
-        self.runMode = Integer(MODE_RESUME)
-        
-    def sleep(self, t, s):
-        log = self._getPath("step_%02d.txt" % t)
-        import time 
-        time.sleep(t)
-        f = open(log, 'w+')
-        f.write("Slept: %d seconds\n" % t)
-        f.close()
-        return [log]
-        
-    def _insertAllSteps(self):
-        for i in range(self.numberOfSleeps.get()):
-            self._insertFunctionStep('sleep', i+1, 'sleeping %d'%i)
+
     
     
-class TestPyworkflow(BaseTest):
+class TestObject(BaseTest):
     
     @classmethod
     def setUpClass(cls):
@@ -48,16 +25,6 @@ class TestPyworkflow(BaseTest):
         cls.dataset = DataSet.getDataSet('model')  
         cls.modelGoldSqlite = cls.dataset.getFile( 'modelGoldSqlite')
         cls.modelGoldXml = cls.dataset.getFile( 'modelGoldXml')
-
-    def setUp(self):
-        #Get the tester.py path
-        self.path = dirname(__file__)
-        
-        self.seq = range(10)
-        
-        
-   
-   
 
             
     def test_Object(self):
@@ -112,24 +79,6 @@ class TestPyworkflow(BaseTest):
         self.assertEqual(len(l), 0)
         
 
-
-    def test_Protocol(self):
-        """Test the list with several Complex"""
-        fn = self.getOutputPath("protocol.sqlite")   
-        mapper = SqliteMapper(fn, globals())
-        prot = MyProtocol(mapper=mapper, n=2, workingDir=self.getOutputPath(''))
-        prot._stepsExecutor = StepExecutor(hostConfig=None)
-        prot.run()
-        
-        self.assertEqual(prot._steps[0].status, STATUS_FINISHED)
-        
-        mapper2 = SqliteMapper(fn, globals())
-        prot2 = mapper2.selectById(prot.getObjId())
-        
-        self.assertEqual(prot.endTime, prot2.endTime)
-        self.assertEqual(prot._steps[1].status, prot2._steps[1].status)
-        
-        
 
         
         

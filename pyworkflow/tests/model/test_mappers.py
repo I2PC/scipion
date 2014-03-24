@@ -33,7 +33,7 @@ class TestPostgreSqlMapper(unittest.TestCase):
         try:
             dbconfig= os.path.join(cls.getScipionHome() , "postgresql.xml")
             if os.path.isfile(dbconfig):
-                cls.mapper = pyworkflow.mapper.postgresql.PostgresqlMapper(dbconfig)
+                cls.mapper = postgresql.PostgresqlMapper(dbconfig)
             else:
                 print "Config file %s not found" % (dbconfig,)
                 return None
@@ -143,7 +143,7 @@ class TestPostgreSqlDb(unittest.TestCase):
         try:
             dbconfig= os.path.join(cls.getScipionHome() , "postgresql.xml")
             if os.path.isfile(dbconfig):
-                cls.database= pyworkflow.mapper.postgresql.PostgresqlDb()
+                cls.database= postgresql.PostgresqlDb()
                 cls.database.connectUsing(dbconfig)
             else:
                 print "Config file %s not found" % dbconfig
@@ -156,7 +156,7 @@ class TestPostgreSqlDb(unittest.TestCase):
     def getMapper(self):
         if self.mapper == None and TestPostgreSqlDb.database != None :
             try:
-                self.mapper = pyworkflow.mapper.postgresql.PostgresqlMapper("",database=TestPostgreSqlDb.database)
+                self.mapper = postgresql.PostgresqlMapper("",database=TestPostgreSqlDb.database)
             except Exception as e:
                 print str(e)
         return self.mapper
@@ -282,6 +282,8 @@ class TestPostgreSqlDb(unittest.TestCase):
 
 
 
+
+
 class TestSqliteMapper(BaseTest):
     
     @classmethod
@@ -379,6 +381,25 @@ class TestSqliteMapper(BaseTest):
         relations = mapper2.getRelationsByCreator(creator)
         for row in relations:
             print row
+        
+        
+    def test_Protocol(self):
+        """Test the list with several Complex"""
+        fn = self.getOutputPath("protocol.sqlite")   
+        mapper = SqliteMapper(fn, globals())
+        prot = MyProtocol(mapper=mapper, n=2, workingDir=self.getOutputPath(''))
+        prot._stepsExecutor = StepExecutor(hostConfig=None)
+        prot.run()
+        
+        self.assertEqual(prot._steps[0].status, STATUS_FINISHED)
+        
+        mapper2 = SqliteMapper(fn, globals())
+        prot2 = mapper2.selectById(prot.getObjId())
+        
+        self.assertEqual(prot.endTime, prot2.endTime)
+        self.assertEqual(prot._steps[1].status, prot2._steps[1].status)
+        
+        
         
 class TestXmlMapper(BaseTest):
     
