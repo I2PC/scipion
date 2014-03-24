@@ -11,6 +11,7 @@ from pyworkflow.mapper import *
 from pyworkflow.utils.log import *
 from pyworkflow.utils.utils import getLineInFile, isInFile
 
+#class for tests
 class Complex(Object):
     def __init__(self, imag=0., real=0., **args):
         Object.__init__(self, **args)
@@ -32,7 +33,7 @@ class ListContainer(Object):
         Object.__init__(self, **args)
         self.csv = CsvList() 
 
-
+#Protocol for tests, runs in resume mode, and sleeps for??
 class MyProtocol(Protocol):
     def __init__(self, **args):
         Protocol.__init__(self, **args)
@@ -328,7 +329,7 @@ class TestPyworkflow(unittest.TestCase):
         log.debug(fileDebugTest)
         log.warning(fileWarningTest)
         
-        log = getGeneralLogger('pyworkflow.test.log.test_scipon_log')
+        log = getGeneralLogger('pyworkflow.test.log.test_scipon_log
         log.error(genErrorTest)
         
         log = getFileLogger(logFn)

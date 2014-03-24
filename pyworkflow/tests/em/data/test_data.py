@@ -14,6 +14,7 @@ import pyworkflow.em.packages.eman2.convert as e2convert
 from pyworkflow.em.protocol import EMProtocol
 
 
+
 class TestImage(unittest.TestCase):
         
     def setUp(self):
@@ -169,6 +170,36 @@ class TestSetOfParticles(unittest.TestCase):
 #            print img.getLocation()
         
         
+
+class TestSetOfClasses2D(unittest.TestCase):
+    
+    @classmethod
+    def setUpClass(cls):
+        cls.outputPath = getOutputPath('test_data')
+        
+        cls.dbGold = getGoldPath('SetOfParticles', 'input_particles.sqlite')
+        
+    def testCreateFromOther(self):
+        inImgSet = SetOfParticles(filename=self.dbGold)
+        inImgSet.setHasCTF(True)
+        outImgFn = self.outputPath + "_particles.sqlite"
+        outImgSet = SetOfParticles(filename=outImgFn)
+        outImgSet.copyInfo(inImgSet)
+        
+        print "inputs particles has CTF?", inImgSet.hasCTF()
+        for i, img in enumerate(inImgSet):
+            j = i + 1
+            img.setLocation(j, "test.stk")
+            outImgSet.append(img)
+        
+        outImgSet.write()
+        
+        if outImgSet.hasCTF():
+            print "everything OK!"
+        else:
+            print "The info of the particles was not copied"
+        
+        cleanPath(outImgFn)
 
 if __name__ == '__main__':
 #    suite = unittest.TestLoader().loadTestsFromName('test_data_xmipp.TestXmippCTFModel.testConvertXmippCtf')
