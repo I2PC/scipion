@@ -35,21 +35,8 @@ class DataSet:
     def getDataSet(cls, name):
         return cls._datasetDict[name]
 
+
 class BaseTest(unittest.TestCase):
-    
-    @classmethod
-    def setUpClass(cls):
-        cls.outputPath = join(TESTS_OUTPUT, cls.__name__)
-        cleanPath(cls.outputPath)
-        makePath(cls.outputPath)
-        
-        
-    def setUp(self):
-        pass
-    
-   
-    
-    
     @classmethod
     def getOutputPath(cls, *filenames):
         """Return the path to the SCIPION_HOME/tests/output dir
@@ -69,18 +56,26 @@ class BaseTest(unittest.TestCase):
         self.outputPath = self.getOutputPath(outputDir)
         cleanPath(self.outputPath)
         
+ 
+def setupTestOutput(cls):
+    """ Create the output folder for a give Test class. """
+    cls.outputPath = join(TESTS_OUTPUT, cls.__name__)
+    cleanPath(cls.outputPath)
+    makePath(cls.outputPath)
+       
+
+def setupTestProject(cls):
+    """ Create and setup a Project for a give Test class. """
+    projName = cls.__name__
+    proj = Manager().createProject(projName) # Now it will be loaded if exists
+    # Check that exists hosts for execution
+    hosts = proj.getSettings().getHosts()
+    if len(hosts) <= 0:
+        raise Exception("Project: %s can't load host configuration." % projName)
     
-    def setupProject(self):
-        """ Create and setup a project for this test. """
-        projName = self.__name__
-        proj = Manager().createProject(projName) # Now it will be loaded if exists
-        # Check that exists hosts for execution
-        hosts = proj.getSettings().getHosts()
-        if len(hosts) <= 0:
-            raise Exception("Project: %s can't load host configuration." % projName)
+    cls.projName = projName
+    cls.proj = proj
         
-        self.projName = projName
-        self.proj = proj
         
 class GTestResult(TestResult):
     """ Subclass TestResult to ouput tests results with colors (green for success and red for failure)
