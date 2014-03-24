@@ -78,11 +78,13 @@ XMIPP_BIN = join(XMIPP_HOME, 'bin')
 XMIPP_LIB = join(XMIPP_HOME, 'lib')
 
 SCIPION_DATA = join(SCIPION_HOME, 'data')
+SCIPION_LOGS = join(SCIPION_DATA, 'logs')
 SCIPION_USER_DATA = getUserDataPath()
 SCIPION_PYTHON = join(XMIPP_BIN, 'xmipp_python')
 
 os.environ['SCIPION_HOME'] = SCIPION_HOME
 os.environ['SCIPION_DATA'] = SCIPION_DATA
+os.environ['SCIPION_LOGS'] = SCIPION_LOGS
 os.environ['SCIPION_USER_DATA'] = SCIPION_USER_DATA
 os.environ['SCIPION_PYTHON'] = SCIPION_PYTHON
 

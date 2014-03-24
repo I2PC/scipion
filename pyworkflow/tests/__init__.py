@@ -51,9 +51,9 @@ DataSet(name='xmipp_tutorial', folder='xmipp_tutorial',
                'particles': 'particles/*.hdf'})
 
 
-DataSet('coordinatesDataset', 'Picking_XmippBPV3_Down3', 
-        {'coordsGoldSqlite': 'gold/coordinates_gold.sqlite', 
-         'micsGoldSqlite': 'micrographs_gold.sqlite'})
+DataSet('model', 'model', 
+        {'modelGoldSqlite': 'gold/model_gold.sqlite', 
+         'modelGoldXml': 'gold/model_gold.xml'})
    
   
 def greenStr(msg):
