@@ -10,7 +10,7 @@ from pyworkflow.protocol import *
 from pyworkflow.mapper import *
 from pyworkflow.utils.log import *
 from pyworkflow.utils.utils import getLineInFile, isInFile
-
+from pyworkflow.tests import *
 #class for tests
 class Complex(Object):
     def __init__(self, imag=0., real=0., **args):
@@ -55,7 +55,12 @@ class MyProtocol(Protocol):
             self._insertFunctionStep('sleep', i+1, 'sleeping %d'%i)
     
     
-class TestPyworkflow(unittest.TestCase):
+class TestPyworkflow(BaseTest):
+    
+    @classmethod
+    def setUpClass(cls):
+        super(TestXmippSetOfMicrographs, cls).setUpClass()
+        cls.dataset = DataSet.getDataSet('xmipp_tutorial')  
 
     def setUp(self):
         #Get the tester.py path

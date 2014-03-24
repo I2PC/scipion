@@ -82,6 +82,14 @@ class BaseTest(unittest.TestCase):
         self.projName = projName
         self.proj = proj
         
+    def getTmpPath(self, *filenames):
+        """Return the filename in /tmp/ folder.
+        If the file exists, it will be deleted"""
+        path = self.getTestPath('tmp', *filenames)
+        if os.path.exists(path) and not os.path.isdir(path):
+            os.remove(path)
+        return path
+        
 class GTestResult(TestResult):
     """ Subclass TestResult to ouput tests results with colors (green for success and red for failure)
     and write a report on an .xml file. 
