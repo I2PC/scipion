@@ -44,7 +44,8 @@ DataSet(name='xmipp_tutorial', folder='xmipp_tutorial',
                'micsGoldXmd': 'gold/micrographs_gold.xmd',
                'micsSqlite': 'micrographs/micrographs.sqlite',
                'coordsGoldSqlite': 'gold/coordinates_gold.sqlite', 
-               'posDir': 'pickingXmipp',
+               'posSupervisedDir': 'pickingXmipp/pickedSupervised',
+               'posAlldDir': 'pickingXmipp/pickedAll',
                'allMics': 'micrographs/*.mrc',
                'mic1': 'micrographs/BPV_1386.mrc'})
 
