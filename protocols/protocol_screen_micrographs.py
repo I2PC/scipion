@@ -39,16 +39,13 @@ class ProtScreenMicrographs(XmippProtocol):
             self.MDL_TYPE = xmipp.MDL_MICROGRAPH_MOVIE
             self.inputProperty('MoviesMd')
             self.TiltPairs = None
-            self.inputFilename( self.dataType)
-            self.MicrographsMd = 'classes@%s'% self.dataType
         else:
             self.dataType = 'micrographs'
             self.inputProperty('TiltPairs', 'MicrographsMd')
             self.MDL_TYPE = xmipp.MDL_MICROGRAPH
-            self.inputFilename( self.dataType)
-            self.MicrographsMd = self.Input[self.dataType]
-            
-        
+
+        self.inputFilename( self.dataType)
+        self.MicrographsMd = self.Input[self.dataType]    
         self.micrographs = self.getFilename(self.dataType)
         if self.TiltPairs:
             self.MicrographsMd='micrographPairs@'+self.MicrographsMd

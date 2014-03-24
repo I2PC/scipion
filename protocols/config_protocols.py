@@ -7,6 +7,7 @@ protocols = {
         'import_movies': ('Import Movies', 'Micrographs/ImportedMovies'),
         'downsample_micrographs': ('Downsample', 'Micrographs/Downsampled'),
         'screen_micrographs': ('Screen', 'Micrographs/Screen'),
+        'align_movies': ('AlignMovies', 'Micrographs/AlignMovies'),
         'particle_pick': ('Manual/Supervised', 'ParticlePicking/Supervised'),
         'particle_pick_auto': ('Automatic', 'ParticlePicking/Auto'),
         'extract_particles': ('Extract', 'Images/Extracted'),
@@ -64,7 +65,7 @@ protocols = {
 #--------------------------------------------------------------------------------
 sections = [
 ('Preprocessing',
-   [['Micrographs', 'import_micrographs','import_movies','screen_micrographs', 'downsample_micrographs'],
+   [['Micrographs', 'import_micrographs','import_movies','screen_micrographs', 'align_movies', 'downsample_micrographs'],
     ['Particle picking', 'particle_pick', 'particle_pick_auto'],
     ['Particles', 'extract_particles', 'import_particles', ['Other', 'preprocess_particles', 'screen_particles', 'merge_particles',
                                                             'subset_particles']]]),
