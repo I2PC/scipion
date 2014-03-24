@@ -33,19 +33,18 @@ elements to inspect and preview are files.
 
 import os
 import os.path
+import stat
 
 import Tkinter as tk
 import ttk
 
-from tree import Tree
+import xmipp
+from pyworkflow.utils.properties import Icon
 import gui
-import tooltip
-import widgets
-import matplotlib_image
-from pyworkflow.utils.path import findResource, dirname, getHomePath
-from tree import BoundTree, FileTreeProvider
+from pyworkflow.utils import dirname, getHomePath, prettySize, getExt, dateStr
+from tree import BoundTree, TreeProvider
 from text import TaggedText
-from pyworkflow.utils.properties import Message, Icon
+from widgets import Button, HotButton
 
 
 class ObjectBrowser(tk.Frame):
@@ -60,6 +59,7 @@ class ObjectBrowser(tk.Frame):
     def __init__(self, parent, treeProvider, showPreview=True, **args):
         tk.Frame.__init__(self, parent, **args)
         self.treeProvider = treeProvider
+        self._lastSelected = None
         gui.configureWeigths(self)
         # The main layout will be two panes, 
         # At the left containing the elements list
@@ -112,15 +112,264 @@ class ObjectBrowser(tk.Frame):
         self.text.grid(row=0, column=0, sticky='news')
         
     def _itemClicked(self, obj):
+        self._lastSelected = obj
         img, desc = self.treeProvider.getObjectPreview(obj)
         self.text.clear()
-        img = self.getImage(img)
+        if isinstance(img, str):
+            img = self.getImage(img)
         if img is None:
             img = self.noImage
         self.label.config(image=img)
         if desc is not None:
             self.text.addText(desc)
+            
+    def getSelected(self):
+        """ Return the selected object. """
+        return self._lastSelected
       
+
+#------------- Classes and Functions related to File browsing --------------
+
+class FileInfo(object):
+    """ This class will store some information about a file.
+    It will serve to display files items in the Tree.
+    """
+    def __init__(self, path, filename):
+        self._fullpath = os.path.join(path, filename)
+        self._filename = filename
+        self._stat = os.stat(self._fullpath)
+        
+    def isDir(self):
+        return stat.S_ISDIR(self._stat.st_mode)
+    
+    def getFileName(self):
+        return self._filename
+    
+    def getPath(self):
+        return self._fullpath
+    
+    def getSize(self):
+        """ Return a human readable string of the file size."""
+        return prettySize(self._stat.st_size)
+    
+    def getDate(self):
+        return dateStr(self._stat.st_mtime)
+    
+    
+class FileHandler(object):
+    """ This class will be used to get the icon, preview and info
+    from the different types of objects.
+    It should be used with FileTreeProvider, where different
+    types of handlers can be registered.
+    """
+    def getFileIcon(self, objFile):
+        """ Return the icon name for a given file. """
+        if objFile.isDir():
+            icon = 'file_folder.gif'
+        else:
+            icon = 'file_generic.gif'
+        
+        return icon
+    
+    def getFilePreview(self, objFile):
+        """ Return the preview image and description for the specific object. """
+        if objFile.isDir():
+            return 'fa-folder-open.png', None
+        return None, None
+    
+    
+class TextFileHandler(FileHandler):   
+    def __init__(self, textIcon):
+        FileHandler.__init__(self)
+        self._icon = textIcon
+         
+    def getFileIcon(self, objFile):
+        return self._icon
+
+    
+class SqlFileHandler(FileHandler):
+    def getFileIcon(self, objFile):
+        return 'file_sqlite.gif'    
+    
+    
+class ImageFileHandler(FileHandler):
+    _image = xmipp.Image()
+    _index = ''
+    
+    def _getImageString(self, filename):
+        import xmipp
+        x, y, z, n = xmipp.getImageSize(filename)
+        objType = 'Image'
+        dimMsg = "*%(objType)s file*\n  dimensions: %(x)d x %(y)d" 
+        expMsg = "Columns x Rows "
+        if z > 1: 
+            dimMsg += " x %(z)d"
+            expMsg += " x Slices"
+            objType = 'Volume'
+        if n > 1:
+            dimMsg += " x %(n)d" 
+            expMsg += " x Objects"
+            objType = 'Stack'
+        return (dimMsg + "\n" + expMsg) % locals()
+    
+    def _getImagePreview(self, filename):
+        fn = self._index + filename
+        dim = 128
+        self.tkImg = gui.getTkImage(self._image, fn, dim)
+        return self.tkImg
+        
+    def getFilePreview(self, objFile):
+        fn = objFile.getPath()
+        return self._getImagePreview(fn), self._getImageString(fn)
+    
+    
+class ParticleFileHandler(ImageFileHandler):
+    def getFileIcon(self, objFile):
+        return 'file_image.gif'
+    
+class VolFileHandler(ImageFileHandler):
+    def getFileIcon(self, objFile):
+        return 'file_vol.gif'
+    
+class StackHandler(ImageFileHandler):
+    _index = '1@'
+    
+    def getFileIcon(self, objFile):
+        return 'file_stack.gif'
+    
+    
+class MdFileHandler(ImageFileHandler):
+    def getFileIcon(self, objFile):
+        return 'file_md.gif'
+    
+    def _getImgPath(self, mdFn, imgFn):
+        """ Get ups and ups until finding the relative location to images. """
+        path = dirname(mdFn)
+        from xmipp import FileName
+        index, fn = FileName(imgFn).decompose()
+        
+        while path and path != '/':
+            newFn = os.path.join(path, fn)
+            if os.path.exists(newFn):
+                if index:
+                    newFn = '%d@%s' % (index, newFn)
+                return newFn
+            path = dirname(path)
+            
+        return None
+            
+    def _getMdString(self, filename, block=None):
+        from xmipp import MetaData, MDL_IMAGE, label2Str, labelIsImage
+        md = MetaData()
+        if block:
+            md.read(block + '@' + filename)
+        else:
+            md.read(filename, 1)
+        labels = md.getActiveLabels()
+        msg =  "Metadata items: *%d*\n" % md.getParsedLines()
+        msg += "Metadata labels: " + ''.join(["\n   - %s" % label2Str(l) for l in labels])
+        
+        imgPath = None
+        for label in labels:
+            if labelIsImage(label):
+                imgPath = self._getImgPath(filename, md.getValue(label, md.firstObject()))
+                break
+        if imgPath:
+            self._imgPreview = self._getImagePreview(imgPath)
+            self._imgInfo = self._getImageString(imgPath)
+        return msg
+    
+    def getFilePreview(self, objFile):
+        self._imgPreview = None
+        self._imgInfo = None
+        filename = objFile.getPath()
+        ext = getExt(filename)
+        
+        if ext == '.xmd':
+            import xmipp
+            msg = "*Metadata File* "
+            blocks = xmipp.getBlocksInMetaDataFile(filename)
+            nblocks = len(blocks)
+            if nblocks <= 1:
+                mdStr = self._getMdString(filename)
+                msg += "  (single block)\n"
+                if self._imgInfo:
+                    msg += "\nFirst item: \n" + self._imgInfo
+                msg += '\n' + mdStr
+            else:
+                mdStr = self._getMdString(filename, blocks[0])
+                msg += "  (%d blocks) " % nblocks
+                if self._imgInfo:
+                    msg += "\nFirst item: \n" + self._imgInfo
+                msg += "\nFirst block: \n" + mdStr
+                msg += "\nAll blocks:" + ''.join(["\n  - %s" % b for b in blocks])
+        elif ext == '.star':
+            msg = "*Relion STAR file* \n"
+            from pyworkflow.em.packages.relion.convert import addRelionLabels, restoreXmippLabels
+            addRelionLabels(replace=True)
+            msg += self._getMdString(filename)
+            restoreXmippLabels()
+            
+        return self._imgPreview, msg
+    
+    
+class FileTreeProvider(TreeProvider):
+    """ Populate a tree with files and folders of a given path """
+    
+    _FILE_HANDLERS = {}
+    _DEFAULT_HANDLER = FileHandler()
+    
+    @classmethod
+    def registerFileHandler(cls, fileHandler, *extensions):
+        """ Register a FileHandler for a given file extention. 
+        Params:
+            fileHandler: the FileHandler that will take care of extensions.
+            *extensions: the extensions list that will be associated to this FileHandler.
+        """
+        for fileExt in extensions:
+            cls._FILE_HANDLERS[fileExt] = fileHandler
+        
+    def __init__(self, currentDir=None, showHidden=False):
+        self._currentDir = os.path.abspath(currentDir)
+        self._showHidden = showHidden
+        self.getColumns = lambda: [('File', 300), ('Size', 70), ('Time', 150)]
+    
+    def getFileHandler(self, obj):
+        filename = obj.getFileName()
+        fileExt = getExt(filename)
+        return self._FILE_HANDLERS.get(fileExt, self._DEFAULT_HANDLER)
+        
+    def getObjectInfo(self, obj):
+        filename = obj.getFileName()
+        fileHandler = self.getFileHandler(obj)
+        icon = fileHandler.getFileIcon(obj)
+        
+        info = {'key': filename, 'text': filename, 
+                'values': (obj.getSize(), obj.getDate()), 'image': icon
+                }
+            
+        return info
+    
+    def getObjectPreview(self, obj):
+        fileHandler = self.getFileHandler(obj)
+        return fileHandler.getFilePreview(obj)
+    
+    def getObjectActions(self, obj):
+        return []
+    
+    def getObjects(self):
+        files = os.listdir(self._currentDir)
+        files.sort()
+        for f in files:
+            if self._showHidden or not f.startswith('.'):
+                yield FileInfo(self._currentDir, f)
+
+    def getDir(self):
+        return self._currentDir
+    
+    def setDir(self, newPath):
+        self._currentDir = newPath
+        
 # Some constants for the type of selection
 # when the file browser is opened
 SELECT_NONE = 0 # No selection, just browse files                  
@@ -189,10 +438,10 @@ class FileBrowser(ObjectBrowser):
         """ Add button to the bottom frame if the selectMode
         is distinct from SELECT_NONE.
         """
-        tk.Button(frame, text="Select", image=self.getImage(Icon.BUTTON_SELECT),
-                        compound=tk.LEFT).grid(row=0, column=0, padx=(0,5))
-        tk.Button(frame, text="Close", image=self.getImage(Icon.BUTTON_CLOSE),
-                        compound=tk.LEFT).grid(row=0, column=1)                        
+        Button(frame, "Close", Icon.BUTTON_CLOSE, 
+               command=self._close).grid(row=0, column=0, padx=(0,5))                        
+        HotButton(frame, "Select", Icon.BUTTON_SELECT,
+                  command=self._select).grid(row=0, column=1)
                 
     def _actionRefresh(self, e=None):
         self.tree.update()
@@ -210,3 +459,55 @@ class FileBrowser(ObjectBrowser):
     def _itemDoubleClick(self, obj):
         if obj.isDir():
             self._goDir(obj.getPath())
+            
+    def onClose(self):
+        pass
+    
+    def onSelect(self, obj):
+        pass
+    
+    def _close(self, e=None):
+        self.onClose()
+        
+    def _select(self, e=None):
+        self.onSelect(self.getSelected())
+        
+        
+class BrowserWindow(gui.Window):
+    """ Windows to hold a browser frame inside. """
+    def __init__(self, title, master=None, **args):
+        if 'minsize' not in args:
+            args['minsize'] = (800, 400)
+        gui.Window.__init__(self, title, master, **args)
+        
+    def setBrowser(self, browser):
+        browser.grid(row=0, column=0, sticky='news')
+        self.itemConfig = browser.tree.itemConfig
+        
+class FileBrowserWindow(BrowserWindow):
+    """ Windows to hold a browser frame inside. """
+    def __init__(self, title, master=None, path=None, 
+                 onSelect=None, **args):
+        BrowserWindow.__init__(self, title, master, **args)
+        self.registerHandlers()
+        browser = FileBrowser(self.root, path)
+        if onSelect:
+            def selected(obj):
+                onSelect(obj)
+                self.close()
+            browser.onSelect = selected
+        browser.onClose = self.close
+        self.setBrowser(browser) 
+        
+    def registerHandlers(self):
+        FileTreeProvider.registerFileHandler(TextFileHandler('file_text.gif'), '.txt', '.log', '.out', '.err')
+        FileTreeProvider.registerFileHandler(TextFileHandler('file_python.gif'), '.py')
+        FileTreeProvider.registerFileHandler(TextFileHandler('file_java.gif'), '.java')
+        FileTreeProvider.registerFileHandler(MdFileHandler(), '.xmd', '.star')
+        FileTreeProvider.registerFileHandler(SqlFileHandler(), '.sqlite')
+        FileTreeProvider.registerFileHandler(ParticleFileHandler(), '.xmp', '.tif', '.tiff', '.spi', '.mrc', 
+                                             '.map', '.raw', '.inf', '.dm3', '.em', '.pif', '.psd', '.spe', 
+                                             '.ser', '.img', '.hed')
+        FileTreeProvider.registerFileHandler(VolFileHandler(), '.vol')
+        FileTreeProvider.registerFileHandler(StackHandler(), '.stk', '.mrcs', '.st', '.pif')
+    

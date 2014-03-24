@@ -54,6 +54,7 @@ def tcshVar(name, value):
 if __name__ == '__main__':
     
     SCIPION_HOME = os.environ['SCIPION_HOME']
+    SCIPION_DATA = os.environ['SCIPION_DATA']
     SCIPION_USER_DATA = os.environ['SCIPION_USER_DATA']
     
     print "Installing Scipion in : ", SCIPION_HOME
@@ -66,8 +67,10 @@ if __name__ == '__main__':
     #config(CSHRC, VARS, tcshVar)
     
     # Create SCIPION_USER_DATA folder
-    print "  creating folder: ", SCIPION_USER_DATA
     from pyworkflow.utils.path import makePath
+    print "  creating DATA folder: ", SCIPION_DATA
+    makePath(SCIPION_DATA)
+    print "  creating USER_DATA folder: ", SCIPION_USER_DATA
     makePath(SCIPION_USER_DATA)
     # Write default configurations
     from pyworkflow.apps.config import writeDefaults

@@ -170,6 +170,11 @@ def getPILImage(imageXmipp, dim=None, normalize=True):
         image.thumbnail(size, Image.ANTIALIAS)
     return image
 
+def getTkImage(imageXmipp, filename, dim):
+    from PIL import ImageTk
+    imageXmipp.readPreview(filename, dim)
+    return ImageTk.PhotoImage(getPILImage(imageXmipp))
+
 def getImageFromPath(imagePath):
     """ Read an image using Xmipp, convert to PIL
     and then return as expected by Tk.
