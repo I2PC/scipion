@@ -77,11 +77,12 @@ XMIPP_HOME = getConfigPath('XMIPP_HOME') #os.environ['XMIPP_HOME']
 XMIPP_BIN = join(XMIPP_HOME, 'bin')
 XMIPP_LIB = join(XMIPP_HOME, 'lib')
 
-SCIPION_HOME = os.environ.get('SCIPION_HOME', join(os.environ['HOME'], 'Scipion'))
+SCIPION_DATA = join(SCIPION_HOME, 'data')
 SCIPION_USER_DATA = getUserDataPath()
 SCIPION_PYTHON = join(XMIPP_BIN, 'xmipp_python')
 
 os.environ['SCIPION_HOME'] = SCIPION_HOME
+os.environ['SCIPION_DATA'] = SCIPION_DATA
 os.environ['SCIPION_USER_DATA'] = SCIPION_USER_DATA
 os.environ['SCIPION_PYTHON'] = SCIPION_PYTHON
 
@@ -101,6 +102,7 @@ def runApp(app, args=''):
     
 def runCmd(cmd):
     os.environ.update(VARS)
+    os.chdir(SCIPION_HOME)
     cmd = '%s %s' % (SCIPION_PYTHON, cmd)
     print ">>>>>", cmd
     result = os.system(cmd)
@@ -119,6 +121,7 @@ MODE_VIEWER = 'viewer'
 MODE_INSTALL = 'install'
 MODE_APACHE_VARS = 'apache_vars'
 MODE_VERSION = 'version'
+MODE_STATS = 'stats'
 
 
 if __name__ == '__main__':
@@ -130,10 +133,13 @@ if __name__ == '__main__':
             mode = sys.argv[1]
         
         # Create SCIPION_HOME folder if not exists
-        if mode != MODE_INSTALL and not exists(SCIPION_USER_DATA):
-            print "ERROR: SCIPION_USER_DATA='%s' folder doesn't exists" % SCIPION_USER_DATA
-            print "  RUN: scipion install"
-            sys.exit(1)
+        if mode != MODE_INSTALL:
+            if (not exists(SCIPION_USER_DATA) or 
+                not exists(SCIPION_DATA)):
+                print "ERROR: SCIPION_USER_DATA='%s' folder " % SCIPION_USER_DATA
+                print "    or SCIPION_DATA='%s' do not exists." % SCIPION_DATA
+                print "  RUN: scipion install"
+                sys.exit(1)
             
         if mode == MODE_MANAGER:
             runApp('pw_manager.py')
@@ -189,9 +195,14 @@ if __name__ == '__main__':
                 viewerArgs = ' '.join(sys.argv[2:])
                 runApp('pw_viewer.py', args=viewerArgs)  
              
-                
         elif mode == MODE_INSTALL:
             runCmd('scripts/install.py')
+            
+        elif mode == MODE_STATS:
+            statsDir = join(SCIPION_HOME, 'data', 'stats')
+            if not exists(statsDir):
+                os.makedirs(statsDir)
+            runApp('gitstats/gitstats', args='%s %s' % (SCIPION_HOME, statsDir))
             
         elif mode == MODE_VERSION:
             print __version__

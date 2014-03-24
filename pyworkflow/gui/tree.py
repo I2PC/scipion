@@ -28,13 +28,12 @@ Tree widget implementation.
 """
         
 import os
-import stat
 import Tkinter as tk
 import ttk
 
 from pyworkflow.object import Scalar
 from pyworkflow.mapper import SqliteMapper
-from pyworkflow.utils import prettyDelta, prettySize, dateStr
+from pyworkflow.utils import prettyDelta, prettySize, dateStr, getExt
 import gui
 from widgets import Scrollable
 
@@ -191,17 +190,21 @@ class BoundTree(Tree):
         
     def _onClick(self, e=None):
         if hasattr(self, 'itemClick'):
-            obj = self._objDict[self.getFirst()]
-            self.itemClick(obj)
+            selected = self.getFirst()
+            if selected:
+                obj = self._objDict[selected]
+                self.itemClick(obj)
             
     def _onDoubleClick(self, e=None):  
-        obj = self._objDict[self.getFirst()]
-        if hasattr(self, 'itemDoubleClick'):
-            self.itemDoubleClick(obj)
-        else: # If not callback, use default action
-            actions = self.provider.getObjectActions(obj)
-            if len(actions):
-                actions[0][1]() # actions[0] = first Action, [1] = the action callback
+        selected = self.getFirst()
+        if selected:
+            obj = self._objDict[selected]
+            if hasattr(self, 'itemDoubleClick'):
+                self.itemDoubleClick(obj)
+            else: # If not callback, use default action
+                actions = self.provider.getObjectActions(obj)
+                if len(actions):
+                    actions[0][1]() # actions[0] = first Action, [1] = the action callback
             
     def _onRightClick(self, e=None):
         item = self.identify('item', e.x, e.y)
@@ -238,7 +241,6 @@ class BoundTree(Tree):
                 key = objDict.get('key')
                 text = objDict.get('text', key)
                 parent = objDict.get('parent', None)
-                open = objDict.get('open', False)
                 
                 if parent is None:
                     parentId = ''
@@ -257,8 +259,10 @@ class BoundTree(Tree):
                 obj._treeId = self.insert(parentId, 'end', key,
                             text=text, image=image, values=values)
                 self._objDict[obj._treeId] = obj
-                if open:
-                    self.itemConfig(obj, open=open)
+                
+                if objDict.get('open', False):
+                    self.itemConfig(obj, open=True)
+                
                 if objDict.get('selected', False):
                     self.selectChild(obj._treeId)
 
@@ -358,65 +362,3 @@ class ProjectRunsTreeProvider(TreeProvider):
             info['parent'] = self._objDict[objPid]
       
         return info
-
-
-class FileInfo(object):
-    def __init__(self, path, filename):
-        self._fullpath = os.path.join(path, filename)
-        self._filename = filename
-        self._stat = os.stat(self._fullpath)
-        
-    def isDir(self):
-        return stat.S_ISDIR(self._stat.st_mode)
-    
-    def getFileName(self):
-        return self._filename
-    
-    def getPath(self):
-        return self._fullpath
-    
-    def getSize(self):
-        """ Return a human readable string of the file size."""
-        return prettySize(self._stat.st_size)
-    
-    def getDate(self):
-        return dateStr(self._stat.st_mtime)
-    
-    
-class FileTreeProvider(TreeProvider):
-    """ Populate a tree with files and folders of a given path """
-    def __init__(self, currentDir=None, showHidden=False):
-        self._currentDir = os.path.abspath(currentDir)
-        self._showHidden = showHidden
-        self.getColumns = lambda: [('File', 300), ('Size', 70), ('Time', 150)]
-    
-    def getObjectInfo(self, obj):
-        filename = obj.getFileName()
-        if obj.isDir():
-            img = 'file_folder.gif'
-        else:
-            img = 'file_generic.gif'
-        info = {'key': filename, 'text': filename, 
-                'values': (obj.getSize(), obj.getDate()), 'image': img
-                }
-            
-        return info
-    
-    def getObjectPreview(self, obj):
-        return (None, None)
-    
-    def getObjectActions(self, obj):
-        return []
-    
-    def getObjects(self):
-        files = os.listdir(self._currentDir)
-        files.sort()
-        for f in files:
-            if self._showHidden or not f.startswith('.'):
-                yield FileInfo(self._currentDir, f)
-
-    def getDir(self):
-        return self._currentDir
-    
-    def setDir(self, newPath):
-        self._currentDir = newPath

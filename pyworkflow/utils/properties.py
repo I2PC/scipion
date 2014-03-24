@@ -256,7 +256,9 @@ class Icon():
     ACTION_COPY = 'fa-files-o.png'
     ACTION_DELETE = 'fa-trash-o.png'
     ACTION_REFRESH = 'fa-refresh.png'
+    # TODO: change action_steps icon
     ACTION_STEPS = 'fa-folder-open.png'
+    ACTION_BROWSE = 'fa-folder-open.png'
     ACTION_TREE = None
     ACTION_LIST = 'fa-bars.png'
     ACTION_STOP = 'fa-stop.png'

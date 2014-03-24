@@ -28,17 +28,11 @@
 Object browser
 """
         
+import sys
 import Tkinter as tk
 
-import pyworkflow.gui as gui
-from pyworkflow.object import *
-from pyworkflow.mapper import SqliteMapper, XmlMapper
-from pyworkflow.gui.tree import BoundTree, DbTreeProvider, FileTreeProvider
-from pyworkflow.gui.browser import ObjectBrowser, FileBrowser
-from pyworkflow.protocol import *
-from pyworkflow.protocol.params import *
-from pyworkflow.em import *
-from pyworkflow.apps.config import *
+from pyworkflow.gui.tree import DbTreeProvider
+from pyworkflow.gui.browser import *
             
             
 class EMTreeProvider(DbTreeProvider):
@@ -57,18 +51,7 @@ class EMTreeProvider(DbTreeProvider):
         return (None, desc)
     
     
-    
-class BrowserWindow(gui.Window):
-    def __init__(self, title, master=None, **args):
-        if 'minsize' not in args:
-            args['minsize'] = (800, 400)
-        gui.Window.__init__(self, title, master, **args)
         
-    def setBrowser(self, browser):
-        browser.grid(row=0, column=0, sticky='news')
-        self.itemConfig = browser.tree.itemConfig
-    
-    
 USAGE = "usage: pw_browser.py [db|dir] path"
 
 if __name__ == '__main__':
@@ -76,17 +59,15 @@ if __name__ == '__main__':
     if len(sys.argv) == 3:
         browseMode = sys.argv[1]
         path = sys.argv[2]
-        window = BrowserWindow("Browsing: " + path)    
         if browseMode == 'dir':
-            provider = FileTreeProvider(path)
-            browser = FileBrowser(window.root, path)
+            window = FileBrowserWindow("Browsing: " + path, path=path) 
         elif browseMode == 'db':
+            window = BrowserWindow("Browsing: " + path)    
             provider = EMTreeProvider(path)
             browser = ObjectBrowser(window.root, provider)
-            pass
+            window.setBrowser(browser)
         else:
             print "Unknown mode %s\n%s" % (browseMode, USAGE)
-        window.setBrowser(browser)
         window.show()
     else:
         print USAGE

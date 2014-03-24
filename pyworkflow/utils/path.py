@@ -33,7 +33,6 @@ import shutil
 from os.path import exists, join, splitext, isdir, isfile, expanduser, expandvars, basename, dirname, split, relpath
 import pyworkflow as pw
 from glob import glob
-from distutils.dir_util import copy_tree
 
 
 def findFile(filename, *paths):
@@ -81,6 +80,10 @@ def joinExt(*extensions):
 def getFile(filePath):
     """ Given a path, remove the folders and return the file """
     return split(filePath)[1]
+
+def getExt(filePath):
+    """ Return the extesion given a file. """
+    return splitext(filePath)[1]
 
 def cleanPath(*paths):
     """ Remove a list of paths, either folders or files"""
