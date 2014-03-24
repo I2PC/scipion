@@ -294,15 +294,15 @@ class MdFileHandler(ImageFileHandler):
                 mdStr = self._getMdString(filename)
                 msg += "  (single block)\n"
                 if self._imgInfo:
-                    msg += "First item: \n" + self._imgInfo
+                    msg += "\nFirst item: \n" + self._imgInfo
                 msg += '\n' + mdStr
             else:
                 mdStr = self._getMdString(filename, blocks[0])
                 msg += "  (%d blocks) " % nblocks
                 if self._imgInfo:
-                    msg += "First item: \n" + self._imgInfo
-                msg += "First block: \n" + mdStr
-                msg += "All blocks:\n" + ''.join(["\n  - %s" % b for b in blocks])
+                    msg += "\nFirst item: \n" + self._imgInfo
+                msg += "\nFirst block: \n" + mdStr
+                msg += "\nAll blocks:" + ''.join(["\n  - %s" % b for b in blocks])
         elif ext == '.star':
             msg = "*Relion STAR file* \n"
             from pyworkflow.em.packages.relion.convert import addRelionLabels, restoreXmippLabels
@@ -505,7 +505,9 @@ class FileBrowserWindow(BrowserWindow):
         FileTreeProvider.registerFileHandler(TextFileHandler('file_java.gif'), '.java')
         FileTreeProvider.registerFileHandler(MdFileHandler(), '.xmd', '.star')
         FileTreeProvider.registerFileHandler(SqlFileHandler(), '.sqlite')
-        FileTreeProvider.registerFileHandler(ParticleFileHandler(), '.mrc', '.spi')
+        FileTreeProvider.registerFileHandler(ParticleFileHandler(), '.xmp', '.tif', '.tiff', '.spi', '.mrc', 
+                                             '.map', '.raw', '.inf', '.dm3', '.em', '.pif', '.psd', '.spe', 
+                                             '.ser', '.img', '.hed')
         FileTreeProvider.registerFileHandler(VolFileHandler(), '.vol')
-        FileTreeProvider.registerFileHandler(StackHandler(), '.stk', '.spi')
+        FileTreeProvider.registerFileHandler(StackHandler(), '.stk', '.mrcs', '.st', '.pif')
     
