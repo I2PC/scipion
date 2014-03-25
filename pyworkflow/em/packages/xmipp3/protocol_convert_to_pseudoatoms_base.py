@@ -117,7 +117,7 @@ class XmippProtConvertToPseudoAtomsBase(ProtPreprocessVolumes):
         threshold = 0.01
         if self.maskMode == NMA_MASK_THRE:
             self.maskThreshold.get()
-        xdim, _, _, _ = inputVolume.getDim()
+        xdim = inputVolume.getDim()[0]
         origin = xdim / 2
         fhCmd.write("volume #1 level %f transparency 0.5 voxelSize %f originIndex %d\n" % (threshold, self.sampling, origin))
         fhCmd.close()

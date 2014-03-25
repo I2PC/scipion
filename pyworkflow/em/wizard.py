@@ -529,7 +529,7 @@ class bandPassFilterDialog(downsampleDialog):
         self.sliFrom = 0.
         if self.unit == UNIT_ANGSTROM:
             self.samplingRate = self.firstItem.getSamplingRate()
-            self.itemDim,_,_,_ = self.firstItem.getDim()
+            self.itemDim,_,_ = self.firstItem.getDim()
             self.sliFrom = 2.*self.samplingRate
 #            print "Sampling rate !!", self.samplingRate
 #            print "from !!", self.sliFrom
