@@ -25,10 +25,214 @@
 # **************************************************************************
 
 import unittest
-import os, sys
+import os, sys, time
 from pyworkflow.utils.path import *
 from pyworkflow.utils.remote import *
+import unittest
+import argparse
+from os.path import join, basename
+from pyworkflow.utils.file_transfer import *
+from pyworkflow.utils.utils import executeRemote, getLocalUserName, getLocalHostName
 
+remoteHostName1 = os.environ['remoteHostName1']
+remoteUserName1 = os.environ['remoteUserName1']
+remotePassword1 = os.environ['remotePassword1']
+remoteSourceFolder1 = os.environ['remoteSourceFolder1']
+remoteTargetFolder1 = os.environ['remoteTargetFolder1']
+
+remoteHostName2 = os.environ['remoteHostName2']
+remoteUserName2 = os.environ['remoteUserName2']
+remotePassword2 = os.environ['remotePassword2']
+remoteSourceFolder2 = os.environ['remoteSourceFolder2']
+remoteTargetFolder2 = os.environ['remoteTargetFolder2']
+
+localSourceFolder = os.environ['localSourceFolder']
+localTargetFolder = os.environ['localTargetFolder']
+
+class TestFileTransfer(unittest.TestCase):  
+    
+    def setUp(self):       
+        self.fileTransfer = FileTransfer()
+        self.gatewayHosts = None 
+        self.numberTrials = 1                      
+        self.forceOperation = False
+        self.operationId = 1
+        self.hostsRefs = self.getHostsRefs()
+        self.hostPasswords = self.getHostsPasswords()
+      
+    def testLocalToSeveralRemoteHosts(self):
+        tempFolder = "localToSeveralRemote"
+        filePaths = {}
+        sourceFilesPathList = getFiles(localSourceFolder)
+        for sourceFilePath in sourceFilesPathList:
+            sourceFileName = basename(sourceFilePath)
+            targetFilePath1 = join(remoteTargetFolder1, tempFolder, sourceFileName)
+            targetFilePath2 = join(remoteTargetFolder2, tempFolder, sourceFileName)
+            targetFilePathList = []
+            targetFilePathList.append(self.hostsRefs[0] + ":" + targetFilePath1)
+            targetFilePathList.append(self.hostsRefs[1] + ":" + targetFilePath2)
+            filePaths[sourceFilePath] = targetFilePathList
+        self.fileTransfer.transferFiles(filePaths, self.hostPasswords, gatewayHosts=self.gatewayHosts, numberTrials=self.numberTrials, forceOperation=self.forceOperation, operationId=self.operationId)
+        checkPathList = getFilePathList(filePaths)
+        passTest = len(self.fileTransfer.checkFiles(checkPathList, self.hostPasswords, gatewayHosts=self.gatewayHosts, numberTrials=self.numberTrials, forceOperation=self.forceOperation, operationId=self.operationId)) == 0
+#         self.fileTransfer.deleteFiles(checkPathList, self.hostPasswords, gatewayHosts=self.gatewayHosts, numberTrials=self.numberTrials, forceOperation=self.forceOperation, operationId=self.operationId)
+        removeRemoteFolder (remoteHostName1, remoteUserName1, remotePassword1, join(remoteTargetFolder1, tempFolder))
+        removeRemoteFolder (remoteHostName2, remoteUserName2, remotePassword2, join(remoteTargetFolder2, tempFolder))
+        self.assertTrue(passTest)
+         
+    def testSeveralRemoteHostsToLocal(self):
+        tempFolder = "severalRemoteToLocal"
+        filePaths = {}
+        remoteSourceFilePathList1 = getRemoteFolderFiles(remoteHostName1, remoteUserName1, remotePassword1, remoteSourceFolder1)
+        remoteSourceFilePathList2 = getRemoteFolderFiles(remoteHostName2, remoteUserName2, remotePassword2, remoteSourceFolder2)
+        for remoteSourceFilePath in remoteSourceFilePathList1:
+            targetFilePathList = []
+            targetFilePathList.append(join(localTargetFolder, tempFolder, "test1", basename(remoteSourceFilePath)))
+            filePaths[self.hostsRefs[0] + ":" + remoteSourceFilePath] = targetFilePathList
+        for remoteSourceFilePath in remoteSourceFilePathList2:
+            targetFilePathList = []
+            targetFilePathList.append(join(localTargetFolder, tempFolder, "test2", basename(remoteSourceFilePath)))
+            filePaths[self.hostsRefs[1] + ":" + remoteSourceFilePath] = targetFilePathList
+        self.fileTransfer.transferFiles(filePaths, self.hostPasswords, gatewayHosts=self.gatewayHosts, numberTrials=self.numberTrials, forceOperation=self.forceOperation, operationId=self.operationId)
+        checkPathList = getFilePathList(filePaths)
+        passTest = len(self.fileTransfer.checkFiles(checkPathList, self.hostPasswords, gatewayHosts=self.gatewayHosts, numberTrials=self.numberTrials, forceOperation=self.forceOperation, operationId=self.operationId)) == 0
+#         self.fileTransfer.deleteFiles(checkPathList, self.hostPasswords, gatewayHosts=self.gatewayHosts, numberTrials=self.numberTrials, forceOperation=self.forceOperation, operationId=self.operationId)
+        cleanPath(join(localTargetFolder, tempFolder))
+        self.assertTrue(passTest) 
+           
+    def testLocalToLocal(self):
+        tempFolder = "localToLocal"
+        filePaths = {}
+        sourceFilesPathList = getFiles(localSourceFolder)
+        for sourceFilePath in sourceFilesPathList:
+            sourceFileName = basename(sourceFilePath)
+            targetFilePath = join(localTargetFolder, tempFolder, sourceFileName)
+            targetFilePathList = []
+            targetFilePathList.append(targetFilePath)
+            filePaths[sourceFilePath] = targetFilePathList
+        self.fileTransfer.transferFiles(filePaths, self.hostPasswords, gatewayHosts=self.gatewayHosts, numberTrials=self.numberTrials, forceOperation=self.forceOperation, operationId=self.operationId)
+        checkPathList = getFilePathList(filePaths)
+        passTest = len(self.fileTransfer.checkFiles(checkPathList, self.hostPasswords, gatewayHosts=self.gatewayHosts, numberTrials=self.numberTrials, forceOperation=self.forceOperation, operationId=self.operationId)) == 0
+#         self.fileTransfer.deleteFiles(checkPathList, self.hostPasswords, gatewayHosts=self.gatewayHosts, numberTrials=self.numberTrials, forceOperation=self.forceOperation, operationId=self.operationId)
+        cleanPath(join(localTargetFolder, tempFolder))
+        self.assertTrue(passTest)
+          
+    def testLocalToOneRemoteHost(self):
+        tempFolder = "localToOneRemote"
+        filePaths = {}
+        checkPathList = []
+        sourceFilesPathList = getFiles(localSourceFolder)
+        for sourceFilePath in sourceFilesPathList:
+            sourceFileName = basename(sourceFilePath)
+            targetFilePath = join(remoteTargetFolder1, tempFolder, sourceFileName)
+            filePaths[sourceFilePath] = targetFilePath
+            checkPathList.append(self.hostsRefs[0] + ":" + targetFilePath)
+        self.fileTransfer.transferFilesTo(filePaths, remoteHostName1, remoteUserName1, remotePassword1, gatewayHosts=self.gatewayHosts, numberTrials=self.numberTrials, forceOperation=self.forceOperation, operationId=self.operationId)
+        passTest = len(self.fileTransfer.checkFiles(checkPathList, self.hostPasswords, gatewayHosts=self.gatewayHosts, numberTrials=self.numberTrials, forceOperation=self.forceOperation, operationId=self.operationId)) == 0
+        removeRemoteFolder (remoteHostName1, remoteUserName1, remotePassword1, join(remoteTargetFolder1, tempFolder))
+        self.assertTrue(passTest)
+     
+    def testOneRemoteHostToLocal(self):
+        tempFolder = "oneRemoteHostToLocal"
+        filePaths = {}
+        checkPathList = []
+        remoteSourceFilePathList2 = getRemoteFolderFiles(remoteHostName2, remoteUserName2, remotePassword2, remoteSourceFolder2)
+        for remoteSourceFilePath in remoteSourceFilePathList2:
+            remoteSourceFileName = basename(remoteSourceFilePath)
+            targetFilePath = join(localTargetFolder, tempFolder, "test2", remoteSourceFileName)
+            filePaths[remoteSourceFilePath] = targetFilePath
+            checkPathList.append(targetFilePath)
+          
+        self.fileTransfer.transferFilesFrom(filePaths, remoteHostName2, remoteUserName2, remotePassword2, gatewayHosts=self.gatewayHosts, numberTrials=self.numberTrials, forceOperation=self.forceOperation, operationId=self.operationId)
+        passTest = len(self.fileTransfer.checkFiles(checkPathList, self.hostPasswords, gatewayHosts=self.gatewayHosts, numberTrials=self.numberTrials, forceOperation=self.forceOperation, operationId=self.operationId)) == 0
+        cleanPath(join(localTargetFolder, tempFolder))
+        self.assertTrue(passTest)
+
+    def testAll(self):
+        tempFolder = "allTransfer"
+        filePaths = {}
+        
+        sourceFilesPathList = getFiles(localSourceFolder)
+        remoteSourceFilePathList1 = getRemoteFolderFiles(remoteHostName1, remoteUserName1, remotePassword1, remoteSourceFolder1)
+        remoteSourceFilePathList2 = getRemoteFolderFiles(remoteHostName2, remoteUserName2, remotePassword2, remoteSourceFolder2)
+        
+        localUserName = getLocalUserName()
+        localHostname = getLocalHostName()
+        
+        for sourceFilePath in sourceFilesPathList:
+            sourceFileName = basename(sourceFilePath)
+            targetFilePath1 = join(remoteTargetFolder1, tempFolder, sourceFileName)
+            targetFilePath2 = join(remoteTargetFolder2, tempFolder, sourceFileName)
+            targetFilePath3 = join (localTargetFolder, tempFolder, sourceFileName)
+            targetFilePathList = []
+            targetFilePathList.append(self.hostsRefs[0] + ":" + targetFilePath1)
+            targetFilePathList.append(self.hostsRefs[1] + ":" + targetFilePath2)
+            targetFilePathList.append(localUserName + "@" + localHostname + ":" + targetFilePath3)
+            filePaths[sourceFilePath] = targetFilePathList
+        
+        for remoteSourceFilePath in remoteSourceFilePathList1:
+            targetFilePathList = []
+            targetFilePathList.append(join(localTargetFolder, tempFolder, "test1", basename(remoteSourceFilePath)))
+            filePaths[self.hostsRefs[0] + ":" + remoteSourceFilePath] = targetFilePathList
+        for remoteSourceFilePath in remoteSourceFilePathList2:
+            targetFilePathList = []
+            targetFilePathList.append(join(localTargetFolder, tempFolder, "test2", basename(remoteSourceFilePath)))
+            filePaths[self.hostsRefs[1] + ":" + remoteSourceFilePath] = targetFilePathList
+        
+        self.fileTransfer.transferFiles(filePaths, self.hostPasswords, gatewayHosts=self.gatewayHosts, numberTrials=self.numberTrials, forceOperation=self.forceOperation, operationId=self.operationId)
+        checkPathList = getFilePathList(filePaths)
+        passTest = len(self.fileTransfer.checkFiles(checkPathList, self.hostPasswords, gatewayHosts=self.gatewayHosts, numberTrials=self.numberTrials, forceOperation=self.forceOperation, operationId=self.operationId)) == 0
+#         self.fileTransfer.deleteFiles(checkPathList, self.hostPasswords, gatewayHosts=self.gatewayHosts, numberTrials=self.numberTrials, forceOperation=self.forceOperation, operationId=self.operationId)
+        cleanPath(join(localTargetFolder, tempFolder))
+        removeRemoteFolder (remoteHostName1, remoteUserName1, remotePassword1, join(remoteTargetFolder1, tempFolder))
+        removeRemoteFolder (remoteHostName2, remoteUserName2, remotePassword2, join(remoteTargetFolder2, tempFolder))
+        self.assertTrue(passTest) 
+         
+    def getHostsPasswords(self):
+        hostPasswords = {}
+        hostPasswords[self.hostsRefs[0]] = remotePassword1
+        hostPasswords[self.hostsRefs[1]] = remotePassword2
+        return hostPasswords
+    
+    def getHostsRefs(self):
+        hostRefs = []
+        hostRefs.append(remoteUserName1 + "@" + remoteHostName1)
+        hostRefs.append(remoteUserName2 + "@" + remoteHostName2)
+        return hostRefs
+
+
+
+
+class TestRedirect(unittest.TestCase):
+
+
+    def testRedirect(self):
+        fOut = open('/home/antonio/Documents/Scipion/testFileTransfer/stdout.txt', 'a')
+#         fErr = open('/home/antonio/Documents/Scipion/stderr.txt', 'a')
+        sys.stdout = fOut
+#         sys.stderr = fErr
+        numberList = list(range(20))
+        for num in numberList:
+            print "WACKA " + str(num)
+            #self.copyFile('/home/antonio/Documents/Scipion/testFileTransfer/stdout.txt', '/home/antonio/Documents/Scipion/testFileTransfer/stdoutCopy.txt')
+            fOut.flush()
+            time.sleep(3)
+        fOut.close()
+        
+    def copyFile(self, file1, file2):
+        f = open(file1)
+        g = open(file2, 'a')
+        linea = f.readline()
+        while linea != "":
+            g.write(linea)
+            linea = f.readline()
+        g.close()
+        f.close()
+        
+        
+        
+               
+        
 
 class TestRemotePath(unittest.TestCase):  
     
@@ -45,4 +249,37 @@ class TestRemotePath(unittest.TestCase):
 
 
 if __name__ == "__main__":
+    
+    """
+    parser = argparse.ArgumentParser()
+    parser.add_argument('remoteHostName1')
+    parser.add_argument('remoteUserName1')
+    parser.add_argument('remotePassword1')
+    parser.add_argument('remoteSourceFolder1')
+    parser.add_argument('remoteTargetFolder1')
+    parser.add_argument('remoteHostName2')
+    parser.add_argument('remoteUserName2')
+    parser.add_argument('remotePassword2')
+    parser.add_argument('remoteSourceFolder2')
+    parser.add_argument('remoteTargetFolder2')
+    parser.add_argument('localSourceFolder')
+    parser.add_argument('localTargetFolder')
+    parser.add_argument('unittest_args', nargs='*')
+    args = parser.parse_args()
+    remoteHostName1 = args.remoteHostName1
+    remoteUserName1 = args.remoteUserName1
+    remotePassword1 = args.remotePassword1
+    remoteSourceFolder1 = args.remoteSourceFolder1
+    remoteTargetFolder1 = args.remoteTargetFolder1
+    remoteHostName2 = args.remoteHostName2
+    remoteUserName2 = args.remoteUserName2
+    remotePassword2 = args.remotePassword2
+    remoteSourceFolder2 = args.remoteSourceFolder2
+    remoteTargetFolder2 = args.remoteTargetFolder2   
+    localSourceFolder = args.localSourceFolder
+    localTargetFolder = args.localTargetFolder 
+    sys.argv[1:] = args.unittest_args
+    """
+    
     unittest.main()
+    

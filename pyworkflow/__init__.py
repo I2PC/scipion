@@ -48,4 +48,5 @@ SETTINGS = os.path.join(SCIPION_USER_DATA, 'settings.sqlite')
 
 
 from utils.path import findResource
+import tests
 

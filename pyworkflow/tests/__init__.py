@@ -33,6 +33,7 @@ from tests import *
 from os.path import join, exists, isdir, relpath
 from pyworkflow.utils.path import cleanPath, makeFilePath
 
+
 try:
    from unittest.runner import _WritelnDecorator # Python 2.7+
 except ImportError:
