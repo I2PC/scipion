@@ -14,24 +14,19 @@ from pyworkflow.tests import *
 import pyworkflow.em.packages.relion as relion
 
 
-class TestConversions(unittest.TestCase):
+class TestConversions(BaseTest):
     
     @classmethod
     def setUpClass(cls):
-        cls.outputPath = getOutputPath('test_convert_relion')   
-
-    def setUp(self):
-        cleanPath(self.outputPath)
-        makePath(self.outputPath)
-        
-    def getPath(self, fn):
-        return os.path.join(self.outputPath, fn)
+        setupTestOutput(cls)
+        cls.dataset = DataSet.getDataSet('xmipp_tutorial')  
+        cls.particles = cls.dataset.getFile( 'particles1')
         
     def test_particlesToRelion(self):
         """ Test the convertion of a SetOfParticles to Xmipp metadata. """
-        imgSet = SetOfParticles(filename=self.getPath("particles.sqlite"))
+        imgSet = SetOfParticles(filename=self.getOutputPath("particles.sqlite"))
         n = 10
-        fn = "particles.mrc"
+        fn = self.particles
         ctfs = [CTFModel(defocusU=10000, defocusV=15000, defocusAngle=15),
                 CTFModel(defocusU=20000, defocusV=25000, defocusAngle=25)
                ]
@@ -48,8 +43,8 @@ class TestConversions(unittest.TestCase):
             p.setAcquisition(acquisition)
             imgSet.append(p)
             
-        fnStar = self.getPath('particles.star')
-        fnStk = self.getPath('particles.stk')
+        fnStar = self.getOutputPath('particles.star')
+        fnStk = self.getOutputPath('particles.stk')
         
         relion.writeSetOfParticles(imgSet, fnStar, fnStk)
         

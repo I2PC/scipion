@@ -59,6 +59,23 @@ DataSet(name='xmipp_tutorial', folder='xmipp_tutorial',
                'vol2': 'volumes/volume_1_iter_002.mrc',
                'vol3': 'volumes/volume_1_iter_002.mrc'})
 
+DataSet(name='relion_tutorial', folder='relion_tutorial', 
+        files={
+               
+               'posSupervisedDir': 'pickingXmipp/pickedSupervised',
+               'posAlldDir': 'pickingXmipp/pickedAll',
+               'boxingDir': 'pickingEman',
+               'allMics': 'micrographs/*.mrc',
+               'mic1': 'micrographs/BPV_1386.mrc',
+               'mic2': 'micrographs/BPV_1387.mrc',
+               'mic3': 'micrographs/BPV_1388.mrc',
+               'particles': 'particles/*.hdf',
+               'particles1': 'particles/BPV_1386_ptcls.hdf',
+               'volumes': 'volumes/*.mrc',
+               'vol1': 'volumes/BPV_scale_filtered_windowed_64.vol',
+               'vol2': 'volumes/volume_1_iter_002.mrc',
+               'vol3': 'volumes/volume_1_iter_002.mrc'})
+
 
 DataSet(name='mda', folder='hemoglobin_mda', 
         files={'particles': 'particles/*.spi'})
