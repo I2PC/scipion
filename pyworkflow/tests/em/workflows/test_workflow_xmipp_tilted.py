@@ -5,7 +5,7 @@ from pyworkflow.tests import *
 from pyworkflow.em.packages.xmipp3 import *
 from test_workflow import TestWorkflow
 
-
+# update this test when RCT workflow are implemented
 class TestXmippTiltedWorkflow(TestWorkflow):
     
     GOLD_FILES = {
@@ -136,10 +136,11 @@ class TestXmippTiltedWorkflow(TestWorkflow):
     
     @classmethod
     def setUpClass(cls):    
-        # Create a new project
-        setupProject(cls)
-        cls.pattern = getInputPath('Micrographs_TiltedPhantom', '*.mrc')        
-        cls.importFolder = getInputPath('Picking_TiltedPhantom')
+        setupTestProject(cls)
+        cls.dataset = DataSet.getDataSet('xmipp_tutorial')
+        cls.allCrdsDir = cls.dataset.getFile('posAlldDir')
+        cls.micsFn = cls.dataset.getFile('allMics')
+        cls.vol1 = cls.dataset.getFile('vol1')
 
     def atestXmippTiltedWorkflow(self):
         #First, import a set of micrographs

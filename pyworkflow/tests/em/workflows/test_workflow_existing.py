@@ -62,7 +62,7 @@ class TestXmippWorkflow(unittest.TestCase):
             print "coord: ", c.getPosition(), " from mic: ", c.getMicrograph().getFileName()        
             
         
-    def test_Sets(self):
+    def test_sets(self):
         projName = "TestXmippWorkflow"
         project = Manager().loadProject(projName) # Now it will be loaded if exists
         
@@ -87,7 +87,7 @@ class TestXmippWorkflow(unittest.TestCase):
             if i == 10:
                 break # Limit to 10 images
             
-    def testXmippWriteImages(self):
+    def test_xmippWriteImages(self):
         projName = "relion_ribo"
         project = Manager().loadProject(projName) # Now it will be loaded if exists
         
@@ -122,7 +122,7 @@ class TestXmippWorkflow(unittest.TestCase):
             
         print s.getObjDict()
         
-    def testFlatDb(self):
+    def test_flatDb(self):
         projName = "relion_ribo"
         self.proj = Manager().loadProject(projName) # Now it will be loaded if exists
         
@@ -222,7 +222,7 @@ class TestXmippWorkflow(unittest.TestCase):
         img.setSamplingRate(5.0)
         
         
-    def testRelations(self):
+    def test_relations(self):
         projName = "TestXmippWorkflow"
         project = Manager().loadProject(projName)
         
@@ -304,7 +304,7 @@ class TestXmippWorkflow(unittest.TestCase):
         pattern = protImport1.pattern.get()
         protImport2 = project.copyProtocol(protImport1)
         protImport2.setObjLabel('import movies - Day2')
-        protImport2.pattern.set(pattern.replace('day1', 'day2'))
+        protImport2.pattern.set(pattern.replace('1', '2'))
         project.launchProtocol(protImport2, wait=True)
         
         # Copy of align movies

@@ -13,24 +13,20 @@ from pyworkflow.em.packages.xmipp3 import *
 from pyworkflow.tests import *
 from pyworkflow.em.packages.xmipp3.convert import *
 
-class TestConversions(unittest.TestCase):
+class TestConversions(BaseTest):
     
     @classmethod
     def setUpClass(cls):
-        cls.outputPath = getOutputPath('test_convert_xmipp')   
+        setupTestOutput(cls)
+        cls.dataset = DataSet.getDataSet('xmipp_tutorial')  
+        cls.dbGold = cls.dataset.getFile( 'micsGoldSqlite')
+        cls.particles = cls.dataset.getFile( 'particles1')
 
-    def setUp(self):
-        cleanPath(self.outputPath)
-        makePath(self.outputPath)
-        
-    def getPath(self, fn):
-        return os.path.join(self.outputPath, fn)
         
     def test_micrographsToMd(self):
         """ Test the convertion of a SetOfMicrographs to Xmipp metadata. """
-        micSet = SetOfMicrographs(filename=self.getPath("micrographs.sqlite"))
-        n = 10
-        fn = "images.stk"
+        micSet = SetOfMicrographs(filename=self.getOutputPath("micrographs.sqlite"))
+        n = 3
         ctfs = [CTFModel(defocusU=10000, defocusV=15000, defocusAngle=15),
                 CTFModel(defocusU=20000, defocusV=25000, defocusAngle=25)
                ]
@@ -45,13 +41,14 @@ class TestConversions(unittest.TestCase):
 
         for i in range(n):
             p = Micrograph()
-            p.setLocation(i+1, fn)
+            file = self.dataset.getFile("mic%s"%(i + 1))
+            p.setLocation(file)
             ctf = ctfs[i%2]
             p.setCTF(ctf)
             micSet.append(p)
             id = mdXmipp.addObject()
             mdXmipp.setValue(xmipp.MDL_ITEM_ID, long(i+1), id)
-            mdXmipp.setValue(xmipp.MDL_MICROGRAPH, locationToXmipp(i+1, fn), id)
+            mdXmipp.setValue(xmipp.MDL_MICROGRAPH, file, id)
             # set CTFModel params
             mdXmipp.setValue(xmipp.MDL_CTF_DEFOCUSU, ctf.getDefocusU(), id)
             mdXmipp.setValue(xmipp.MDL_CTF_DEFOCUSV, ctf.getDefocusV(), id)
@@ -63,14 +60,14 @@ class TestConversions(unittest.TestCase):
             
         mdScipion = xmipp.MetaData()
         setOfMicrographsToMd(micSet, mdScipion)
-        writeSetOfMicrographs(micSet, self.getPath("micrographs.xmd"))
+        writeSetOfMicrographs(micSet, self.getOutputPath("micrographs.xmd"))
         self.assertEqual(mdScipion, mdXmipp, "metadata are not the same")
         
     def test_particlesToMd(self):
         """ Test the convertion of a SetOfParticles to Xmipp metadata. """
-        imgSet = SetOfParticles(filename=self.getPath("particles.sqlite"))
+        imgSet = SetOfParticles(filename=self.getOutputPath("particles.sqlite"))
         n = 10
-        fn = "images.stk"
+        fn = self.particles
         ctfs = [CTFModel(defocusU=10000, defocusV=15000, defocusAngle=15),
                 CTFModel(defocusU=20000, defocusV=25000, defocusAngle=25)
                ]
@@ -121,7 +118,7 @@ class TestConversions(unittest.TestCase):
         defocusGroupRow.setValue(xmipp.MDL_AVG, 5000.)
         defocusGroupRow.writeToMd(md, objId)
         #
-        fnScipion=self.getPath("writeSetOfDefocusGroups.sqlite")
+        fnScipion=self.getOutputPath("writeSetOfDefocusGroups.sqlite")
         setOfDefocus = SetOfDefocusGroup(filename=fnScipion)
 
         df = DefocusGroup()
@@ -136,7 +133,7 @@ class TestConversions(unittest.TestCase):
         df.setDefocusAvg(5000)
         setOfDefocus.append(df)
         
-        fnXmipp=self.getPath("writeSetOfDefocusGroups.xmd")
+        fnXmipp=self.getOutputPath("writeSetOfDefocusGroups.xmd")
         writeSetOfDefocusGroups(setOfDefocus, fnXmipp)
         mdAux = xmipp.MetaData(fnXmipp)
         self.assertEqual(md,mdAux, "test writeSetOfDefocusGroups fails")

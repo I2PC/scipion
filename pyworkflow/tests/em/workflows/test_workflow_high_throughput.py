@@ -8,19 +8,17 @@ from test_workflow import TestWorkflow
 
 
 class HighThroughputTest(TestWorkflow):
-        
     @classmethod
-    def setUpClass(cls):    
-        # Create a new project
-        setupProject(cls)
-        cls.pattern = join(os.environ['HOME'], 'javi_movies', 'day1', '*.mrcs')
-        cls.importFolder = getInputPath('FakePick_HighThroughput')
-#         cls.importVol = getInputPath('Ribosomes_Sjors', 'reference.mrc')
-        
-    def testWorkflow(self):
+    def setUpClass(cls):
+        setupTestProject(cls)
+        cls.dataset = DataSet.getDataSet('ribo_movies')
+        cls.movies = cls.dataset.getFile('movies')
+        cls.crdsDir = cls.dataset.getFile('posAlldDir')
+    
+    def test_workflow(self):
         #First, import a set of movies
         print "Importing a set of movies..."
-        protImport = ProtImportMovies(pattern=self.pattern, samplingRate=2.37, magnification=59000,
+        protImport = ProtImportMovies(pattern=self.movies, samplingRate=2.37, magnification=59000,
                                       voltage=300, sphericalAberration=2.0)
         protImport.setObjLabel('import movies - Day1')
         self.proj.launchProtocol(protImport, wait=True)
@@ -49,7 +47,7 @@ class HighThroughputTest(TestWorkflow):
         self.assertIsNotNone(protCTF.outputCTF, "There was a problem with the CTF")
         
         print "Running Xmipp supervised fake particle picking..."
-        protPP = XmippProtParticlePicking(importFolder=self.importFolder, runMode=1)                
+        protPP = XmippProtParticlePicking(importFolder=self.crdsDir, runMode=1)                
         protPP.inputMicrographs.set(protPreprocess.outputMicrographs)
         protPP.setObjLabel('Picking - Day1')
         self.proj.launchProtocol(protPP, wait=True)

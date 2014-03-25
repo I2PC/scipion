@@ -52,6 +52,24 @@ DataSet(name='xmipp_tutorial', folder='xmipp_tutorial',
                'mic2': 'micrographs/BPV_1387.mrc',
                'mic3': 'micrographs/BPV_1388.mrc',
                'particles': 'particles/*.hdf',
+               'particles1': 'particles/BPV_1386_ptcls.hdf',
+               'volumes': 'volumes/*.mrc',
+               'vol1': 'volumes/BPV_scale_filtered_windowed_64.vol',
+               'vol2': 'volumes/volume_1_iter_002.mrc',
+               'vol3': 'volumes/volume_1_iter_002.mrc'})
+
+DataSet(name='relion_tutorial', folder='relion_tutorial', 
+        files={
+               
+               'posSupervisedDir': 'pickingXmipp/pickedSupervised',
+               'posAlldDir': 'pickingXmipp/pickedAll',
+               'boxingDir': 'pickingEman',
+               'allMics': 'micrographs/*.mrc',
+               'mic1': 'micrographs/BPV_1386.mrc',
+               'mic2': 'micrographs/BPV_1387.mrc',
+               'mic3': 'micrographs/BPV_1388.mrc',
+               'particles': 'particles/*.hdf',
+               'particles1': 'particles/BPV_1386_ptcls.hdf',
                'volumes': 'volumes/*.mrc',
                'vol1': 'volumes/BPV_scale_filtered_windowed_64.vol',
                'vol2': 'volumes/volume_1_iter_002.mrc',
@@ -59,7 +77,8 @@ DataSet(name='xmipp_tutorial', folder='xmipp_tutorial',
 
 
 DataSet(name='mda', folder='hemoglobin_mda', 
-        files={'particles': 'particles/*.spi'})
+        files={'particles': 'particles/*.spi',
+               'volumes': 'volumes/*.spi'})
 
 
 DataSet(name='tomo', folder='xmipp_tomo_test', 
@@ -67,6 +86,18 @@ DataSet(name='tomo', folder='xmipp_tomo_test',
                'vol1': 'volumes/subvols_6E6.001.mrc.spi',
                'vol2': 'volumes/subvols_6E6.002.mrc.spi',
                'vol3': 'volumes/subvols_6E6.003.mrc.spi'})
+
+
+DataSet(name='relion_tutorial', folder='relion_tutorial', 
+        files={'posAlldDir': 'pickingXmipp',
+               'boxingDir': 'pickingEman',
+               'allMics': 'micrographs/*.mrc',
+               'volume': 'volumes/reference.mrc'})
+
+
+DataSet(name='ribo_movies', folder='ribo_movies', 
+        files={'posAlldDir': 'pickingXmipp',
+               'movies': 'movies/1??_*.mrcs'})
 
 
 DataSet('model', 'model', 
