@@ -48,12 +48,10 @@ DataSet(name='xmipp_tutorial', folder='xmipp_tutorial',
                'posAlldDir': 'pickingXmipp/pickedAll',
                'allMics': 'micrographs/*.mrc',
                'mic1': 'micrographs/BPV_1386.mrc',
-<<<<<<< HEAD
                'mic2': 'micrographs/BPV_1387.mrc',
-               'mic3': 'micrographs/BPV_1388.mrc'})
-=======
+               'mic3': 'micrographs/BPV_1388.mrc',
                'particles': 'particles/*.hdf'})
->>>>>>> 2dd51b055c01c7705703c4c3fed6ebe10b3dfb06
+
 
 
 DataSet('model', 'model', 
