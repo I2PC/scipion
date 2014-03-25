@@ -1,14 +1,31 @@
 #!/usr/bin/env python
 # coding: latin-1
+'''
+Created on Mar 25, 2014
 
+@author: airen
+'''
+import os, time
 import unittest
 from os.path import join, dirname, exists
 from StringIO import StringIO
 from bibtexparser.bparser import BibTexParser   
+from pyworkflow.tests import *
+
+from subprocess import Popen
+from pyworkflow.utils.process import killWithChilds
+from pyworkflow.tests import *
+
+
     
-class TestPyworkflow(unittest.TestCase):
+class TestBibtex(BaseTest):
     """ Some minor tests to the bibtexparser library. """
 
+    @classmethod
+    def setUpClass(cls):
+        setupTestOutput(cls)
+        
+        
     def test_Parsing(self):
         bibtex = """
 
@@ -22,7 +39,7 @@ year = "2013",
 issn = "1047-8477",
 doi = "http://dx.doi.org/10.1016/j.jsb.2013.09.015",
 url = "http://www.sciencedirect.com/science/article/pii/S1047847713002566",
-author = "J.M. de la Rosa-TrevÌn and J. OtÛn and R. Marabini and A. ZaldÌvar and J. Vargas and J.M. Carazo and C.O.S. Sorzano",
+author = "J.M. de la Rosa-Trev√≠n and J. Ot√≥n and R. Marabini and A. Zald√≠var and J. Vargas and J.M. Carazo and C.O.S. Sorzano",
 keywords = "Electron microscopy, Single particles analysis, Image processing, Software package "
 }
 
@@ -38,7 +55,7 @@ doi = "10.1007/978-1-62703-137-0_11",
 url = "http://dx.doi.org/10.1007/978-1-62703-137-0_11",
 publisher = "Humana Press",
 keywords = "Single particle analysis; Electron microscopy; Image processing; 3D reconstruction; Workflows",
-author = "Sorzano, CarlosOscar and Rosa TrevÌn, J.M. and OtÛn, J. and Vega, J.J. and Cuenca, J. and ZaldÌvar-Peraza, A. and GÛmez-Blanco, J. and Vargas, J. and Quintana, A. and Marabini, Roberto and Carazo, JosÈMarÌa",
+author = "Sorzano, CarlosOscar and Rosa Trev√≠n, J.M. and Ot√≥n, J. and Vega, J.J. and Cuenca, J. and Zald√≠var-Peraza, A. and G√≥mez-Blanco, J. and Vargas, J. and Quintana, A. and Marabini, Roberto and Carazo, Jos√©Mar√≠a",
 pages = "171-193",
 }
 """        
@@ -51,6 +68,21 @@ pages = "171-193",
         
         
         
+#FIXME:Jose Miguel
+class TestProccess(BaseTest):
+    """ Some tests for utils.process module. """
+
+    @classmethod
+    def setUpClass(cls):
+        setupTestOutput(cls)
+        
+    def test_Process(self):
+        p = Popen('pw_sleep.py 500', shell=True)
+        print "pid: ", p.pid
+        time.sleep(5)
+        killWithChilds(p.pid)
+
+
+
 if __name__ == '__main__':
-    unittest.main()
-    
+    unittest.main()        

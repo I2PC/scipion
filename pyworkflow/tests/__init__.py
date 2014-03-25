@@ -32,6 +32,7 @@ from tests import *
 from os.path import join, exists, isdir, relpath
 from pyworkflow.utils.path import cleanPath, makeFilePath
 
+
 try:
    from unittest.runner import _WritelnDecorator # Python 2.7+
 except ImportError:
@@ -45,8 +46,11 @@ DataSet(name='xmipp_tutorial', folder='xmipp_tutorial',
                'coordsGoldSqlite': 'gold/coordinates_gold.sqlite', 
                'posSupervisedDir': 'pickingXmipp/pickedSupervised',
                'posAlldDir': 'pickingXmipp/pickedAll',
+               'boxingDir': 'pickingEman',
                'allMics': 'micrographs/*.mrc',
                'mic1': 'micrographs/BPV_1386.mrc',
+               'mic2': 'micrographs/BPV_1387.mrc',
+               'mic3': 'micrographs/BPV_1388.mrc',
                'particles': 'particles/*.hdf',
                'volumes': 'volumes/*.mrc',
                'vol1': 'volumes/BPV_scale_filtered_windowed_64.vol',

@@ -30,32 +30,46 @@ from pyworkflow.tests import *
 from pyworkflow.em.packages.brandeis import *
 
 
-class TestBrandeisCtffind(unittest.TestCase):
+class TestBrandeisBase(BaseTest):
+    @classmethod
+    def setData(cls, dataProject='xmipp_tutorial'):
+        cls.dataset = DataSet.getDataSet(dataProject)
+        cls.micFn = cls.dataset.getFile('mic1')
     
     @classmethod
-    def setUpClass(cls):    
-        # Create a new project for the tests
-        setupProject(cls)
-        
-    @classmethod
-    def runImportMicrograph(cls, pattern, samplingRate, voltage):
+    def runImportMicrograph(cls, pattern, samplingRate, voltage, scannedPixelSize, magnification, sphericalAberration):
         """ Run an Import micrograph protocol. """
-        cls.protImport = ProtImportMicrographs(pattern=pattern, samplingRate=samplingRate, voltage=voltage)
+        # We have two options: passe the SamplingRate or the ScannedPixelSize + microscope magnification
+        if not samplingRate is None:
+            cls.protImport = ProtImportMicrographs(samplingRateMode=0, pattern=pattern, samplingRate=samplingRate, magnification=magnification, 
+                                                   voltage=voltage, sphericalAberration=sphericalAberration)
+        else:
+            cls.protImport = ProtImportMicrographs(samplingRateMode=1, pattern=pattern, scannedPixelSize=scannedPixelSize, 
+                                                   voltage=voltage, magnification=magnification, sphericalAberration=sphericalAberration)
+        
         cls.proj.launchProtocol(cls.protImport, wait=True)
         # check that input micrographs have been imported (a better way to do this?)
         if cls.protImport.outputMicrographs is None:
             raise Exception('Import of micrograph: %s, failed. outputMicrographs is None.' % pattern)
         return cls.protImport
     
+    @classmethod
+    def runImportMicrographBPV(cls, pattern):
+        """ Run an Import micrograph protocol. """
+        return cls.runImportMicrograph(pattern, samplingRate=1.237, voltage=300, sphericalAberration=2, scannedPixelSize=None, magnification=56000)
+
+
+class TestBrandeisCtffind(TestBrandeisBase):
+    @classmethod
+    def setUpClass(cls):
+        setupTestProject(cls)
+        TestBrandeisBase.setData()
+        cls.protImport = cls.runImportMicrographBPV(cls.micFn)
+    
     def testCtffind(self):
-        #First, import a set of micrographs
-        pattern = getInputPath('Micrographs_BPV1', '*.mrc')
-        protImport = self.runImportMicrograph(pattern, samplingRate=1.273, voltage=300)
-        
         protCTF = ProtCTFFind()
-        protCTF.inputMicrographs.set(protImport.outputMicrographs)
+        protCTF.inputMicrographs.set(self.protImport.outputMicrographs)
         self.proj.launchProtocol(protCTF, wait=True)
-        
         self.assertIsNotNone(protCTF.outputCTF, "SetOfCTF has not been produced.")
 
 
