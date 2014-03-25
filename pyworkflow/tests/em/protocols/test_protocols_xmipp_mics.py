@@ -40,6 +40,7 @@ class TestXmippBase(BaseTest):
         cls.micFn = cls.dataset.getFile('mic1')
         cls.micsFn = cls.dataset.getFile('allMics')
         cls.coordsDir = cls.dataset.getFile('posSupervisedDir')
+        cls.allCrdsDir = cls.dataset.getFile('posAlldDir')
     
     @classmethod
     def runImportMicrograph(cls, pattern, samplingRate, voltage, scannedPixelSize, magnification, sphericalAberration):
@@ -212,52 +213,47 @@ class TestXmippExtractParticles(TestXmippBase):
     
     @classmethod
     def setUpClass(cls):
-
-        setupProject(cls)
+        setupTestProject(cls)
+        TestXmippBase.setData()
+        cls.protImport = cls.runImportMicrographBPV(cls.micsFn)
+        cls.protDown = cls.runDownsamplingMicrographs(cls.protImport.outputMicrographs, 5)
         
-        pattern = getInputPath('Micrographs_BPV3_Down3', '*.mrc')
+        cls.protCTF = XmippProtCTFMicrographs(minDefocus=1.8, maxDefocus=2.8, numberOfThreads=3)         
+        cls.protCTF.inputMicrographs.set(cls.protDown.outputMicrographs)        
+        cls.proj.launchProtocol(cls.protCTF, wait=True)
         
-        protImport = cls.runImportMicrograph(pattern, samplingRate=3.711, voltage=300, sphericalAberration=2, scannedPixelSize=None, magnification=56000)       
-        cls.proj.launchProtocol(protImport, wait=True)
-        
-        cls.protCTF = XmippProtCTFMicrographs()                
-        cls.protCTF.inputMicrographs.set(protImport.outputMicrographs)     
-        cls.proj.launchProtocol(cls.protCTF, wait=True)        
-        
-        cls.protPP = cls.runFakedPicking(cls.protCTF.inputMicrographs.get(), 'Picking_XmippBPV3_Down3_Super')
-
+        cls.protPP = cls.runFakedPicking(cls.protDown.outputMicrographs, cls.allCrdsDir)
+    
     def testExtractSameAsPicking(self):
         print "Run extract particles with downsampling factor equal to the one at picking"
-        protExtract = XmippProtExtractParticles(boxSize=171, downsampleType=self.SAME_AS_PICKING, 
-                                                doFlip=False)
-        
+        protExtract = XmippProtExtractParticles(boxSize=110, downsampleType=self.SAME_AS_PICKING, doFlip=False)
         protExtract.inputMicrographs.set(self.protImport.outputMicrographs)
         protExtract.inputCoordinates.set(self.protPP.outputCoordinates)
         protExtract.setObjLabel("extract-same as picking")
         self.proj.launchProtocol(protExtract, wait=True)
         self.assertIsNotNone(protExtract.outputParticles, "There was a problem with the extract particles")
-        
+    
     def testExtractOriginal(self):
         print "Run extract particles with downsampling factor equal to the original micrographs"
-        protExtract = XmippProtExtractParticles(boxSize=256, downsampleType=self.ORIGINAL, doFlip=False)
+        protExtract = XmippProtExtractParticles(boxSize=550, downsampleType=self.ORIGINAL, doFlip=False)
         protExtract.inputCoordinates.set(self.protPP.outputCoordinates)
         protExtract.inputMicrographs.set(self.protImport.outputMicrographs)
         protExtract.setObjLabel("extract-original")
         self.proj.launchProtocol(protExtract, wait=True)
         self.assertIsNotNone(protExtract.outputParticles, "There was a problem with the extract particles")
-
+    
     def testExtractOther(self):
         print "Run extract particles with downsampling factor equal to other"
-        protExtract = XmippProtExtractParticles(boxSize=110, downsampleType=self.OTHER, downFactor=2,doFlip=False)
+        protExtract = XmippProtExtractParticles(boxSize=183, downsampleType=self.OTHER, downFactor=3,doFlip=False)
         protExtract.inputCoordinates.set(self.protPP.outputCoordinates)
         protExtract.inputMicrographs.set(self.protImport.outputMicrographs)
         protExtract.setObjLabel("extract-other")
         self.proj.launchProtocol(protExtract, wait=True)
         self.assertIsNotNone(protExtract.outputParticles, "There was a problem with the extract particles")
-        
+    
     def testExtractCTF(self):
         print "Run extract particles with CTF"#        
-        protExtract = XmippProtExtractParticles(boxSize=250, downsampleType=self.ORIGINAL,doFlip=True)
+        protExtract = XmippProtExtractParticles(boxSize=110, downsampleType=self.ORIGINAL,doFlip=True)
         protExtract.inputCoordinates.set(self.protPP.outputCoordinates)
         protExtract.inputMicrographs.set(self.protCTF.inputMicrographs.get())
         protExtract.ctfRelations.set(self.protCTF.outputCTF)
