@@ -4,20 +4,49 @@ import os, sys
 from os.path import join, dirname, exists
 import unittest
 import pyworkflow as pw
-from pyworkflow.tests import GTestResult
+from pyworkflow.tests import *
 
 
 def discoverTests(pathList, pattern):
     tests = unittest.TestSuite()
     for path in pathList:
         testPath = join('pyworkflow','tests', path)
+        print "discovering '%s'" % testPath
         tests.addTests(unittest.defaultTestLoader.discover(testPath, pattern=pattern, top_level_dir=pw.HOME))
     return tests
 
-def printTests(tests):
+lastClass = None
+lastModule = None
+
+def printTests(tests, mode='modules'):
+    global lastClass
+    global lastModule
+    
     for t in tests:
-        print '-'*100, '\n', t
-        
+        if isinstance(t, unittest.TestSuite):
+#             if t.countTestCases():
+#                 print indent, "Suite, count=", t.countTestCases(), "class", t.__class__
+            printTests(t, mode)
+        elif isinstance(t, unittest.TestCase):
+            parts = t.id().split('.')
+            testName = parts[-1]
+            className = parts[-2]
+            moduleName = '.'.join(parts[:-2])  
+            
+            if moduleName != lastModule:
+                lastModule = moduleName
+                if moduleName == 'unittest.loader.ModuleImportFailure.tests':
+                    print failStr(moduleName)
+                    print "  test: ", t.id()
+                print moduleName
+            if mode in ['classes', 'all']:
+                if className != lastClass:
+                    lastClass = className
+                    print "  ", className
+            if mode == 'all':
+                print "    ", testName
+
+       
 def runTests(tests):
     result = GTestResult()
     tests.run(result)
@@ -33,7 +62,7 @@ CASE = 'case'
 PRINT = 'print'
 PATTERN = 'pattern'
 
-CASE_DICT = {'classes': {PATH:'classes em/data', PATTERN: 'test*.py'},
+CASE_DICT = {'model': {PATH:'model em/data', PATTERN: 'test*.py'},
              'xmipp': {PATH:'em/workflows', PATTERN: 'test*xmipp*.py'},
              'mixed': {PATH:'em/workflows', PATTERN: 'test*mixed*.py'},
              'protocols': {PATH:'em/protocols', PATTERN: 'test_protocols*.py'}}
@@ -57,24 +86,27 @@ def parseArgs(args):
 
 
 if __name__ == '__main__':
-    
     if len(sys.argv) > 1:
         argsDict = parseArgs(sys.argv[1:])
     else:
-        argsDict = {PATH: 'classes'}
+        argsDict = {}
       
     # CASE and PATH are excusive
     if CASE in argsDict:
         case = argsDict[CASE]
         argsDict.update(CASE_DICT[case])
     
-    path = argsDict[PATH]
+    if PRINT in argsDict:
+        defaultPath = '.'
+    else:
+        defaultPath = 'model'
+    path = argsDict.get(PATH, defaultPath)
     pattern = argsDict.get(PATTERN, 'test*.py')    
     pathList = path.split()
     
     tests = discoverTests(pathList, pattern)
     
     if PRINT in argsDict:
-        printTests(tests)
+        printTests(tests, argsDict.get('mode', 'modules'))
     else:
         runTests(tests)

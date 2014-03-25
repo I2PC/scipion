@@ -98,7 +98,8 @@ VARS = {
         'XMIPP_HOME': XMIPP_HOME,
         }
 
-for var in ['SPIDER_DIR', 'EMAN2DIR', 'CTFFIND_HOME', 'FREALIGN_HOME', 'OPT_ALIGN_HOME']:
+for var in ['SPIDER_DIR', 'EMAN2DIR', 'CTFFIND_HOME', 'FREALIGN_HOME', 
+            'OPT_ALIGN_HOME', 'RELION_HOME', 'BSOFT_HOME']:
     VARS[var] = getConfigPath(var)
 
 def runApp(app, args=''):
@@ -184,17 +185,17 @@ if __name__ == '__main__':
             
         elif mode == MODE_TESTS:
             if n > 2:
-                tests = sys.argv[2]
-                if tests == "show": # only show available tests
+                option = sys.argv[2]
+                if option in ["show", "run"]: # only show available tests
+                    args = ' '.join(sys.argv[3:])
+                    if option == 'show':
+                        args += " print"
+                    runCmd('scripts/run_tests.py %s' % args)
                     f = open(join(SCIPION_HOME, 'scripts', 'batch_tests'))
-                    for l in f:
-                        print l.strip()
-                    f.close()
-                    sys.exit(0)
                 else: # run the desired test
                     path = os.getcwd()
                     os.chdir(SCIPION_HOME)
-                    runCmd('-m unittest pyworkflow.tests.%s' % tests)
+                    runCmd('-m unittest pyworkflow.tests.%s' % option)
                     os.chdir(path)
                     
         elif mode == MODE_TESTS_DATA:
@@ -240,8 +241,12 @@ USAGE:
          
         stats                  Write git statistics to data/stats folder.
         
-        tests [TEST_NAME]      Run a test starting from pyworkflow.tests
-                               special case 'show' list all possible tests.
+        tests [OPTION]         Run a test starting from pyworkflow.tests
+                               OPTION can be:
+                                  test name: the specified tests will be run.
+                                  [show|run]: in this case a more sofisticated run tests 
+                                  script will be used. Further options are: path=VALUE case=VALUE 
+                                  or pattern=VALUE (print will be added in show case)
                               
         viewer [FILE]          Open a file with Scipion showj program.
          
