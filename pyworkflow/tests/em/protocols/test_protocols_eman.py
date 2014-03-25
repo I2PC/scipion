@@ -27,33 +27,52 @@
 import unittest, sys
 from pyworkflow.tests import *
 from pyworkflow.em import *
-from pyworkflow.em.packages.xmipp3 import *
 from pyworkflow.em.packages.eman2 import *
 
 
-class TestEmanBoxing(unittest.TestCase):
-
+class TestEmanBase(BaseTest):
     @classmethod
-    def setUpClass(cls):    
-        # Create a new project
-        setupProject(cls)
-        cls.pattern = getInputPath('Micrographs_BPV3', '*.mrc')        
-        cls.importFolder = getInputPath('EmanTestProject2')
-        
-    def testCreateOutput(self):    
-        #First, import a set of micrographs
-        protImport = ProtImportMicrographs(pattern=self.pattern, samplingRate=1.237, voltage=300)
-        self.proj.launchProtocol(protImport, wait=True)
-        
-        self.assertIsNotNone(protImport.outputMicrographs, "There was a problem with the import")
-        
-        print "Running Eman fake particle picking..."   
-        protPP = EmanProtBoxing(importFolder=self.importFolder, runMode=1)                
-#        protPP.inputMicrographs.set(protCTF.outputMicrographs)        
-        protPP.inputMicrographs.set(protImport.outputMicrographs)
-        protPP.boxSize.set(110)
+    def setData(cls, projectData='xmipp_tutorial'):
+        cls.dataset = DataSet.getDataSet(projectData)
+        cls.micsFn = cls.dataset.getFile('allMics')
+        cls.crdsDir = cls.dataset.getFile('boxingDir')
+    
+    @classmethod
+    def runImportMicrograph(cls, pattern, samplingRate, voltage, scannedPixelSize, magnification, sphericalAberration):
+        """ Run an Import micrograph protocol. """
+        # We have two options: passe the SamplingRate or the ScannedPixelSize + microscope magnification
+        if not samplingRate is None:
+            cls.protImport = ProtImportMicrographs(samplingRateMode=0, pattern=pattern, samplingRate=samplingRate, magnification=magnification, 
+                                                   voltage=voltage, sphericalAberration=sphericalAberration)
+        else:
+            cls.protImport = ProtImportMicrographs(samplingRateMode=1, pattern=pattern, scannedPixelSize=scannedPixelSize, 
+                                                   voltage=voltage, magnification=magnification, sphericalAberration=sphericalAberration)
+            
+        cls.proj.launchProtocol(cls.protImport, wait=True)
+        # check that input micrographs have been imported (a better way to do this?)
+        if cls.protImport.outputMicrographs is None:
+            raise Exception('Import of micrograph: %s, failed. outputMicrographs is None.' % pattern)
+        return cls.protImport
+    
+    @classmethod
+    def runImportMicrographBPV(cls, pattern):
+        """ Run an Import micrograph protocol. """
+        return cls.runImportMicrograph(pattern, samplingRate=1.237, voltage=300, sphericalAberration=2, scannedPixelSize=None, magnification=56000)
+
+
+class TestEmanBoxing(TestEmanBase):
+    @classmethod
+    def setUpClass(cls):
+        setupTestProject(cls)
+        TestEmanBase.setData()
+        cls.protImport = cls.runImportMicrographBPV(cls.micsFn)
+    
+    def testCreateOutput(self):
+        print "Running Eman fake particle picking..."
+        protPP = EmanProtBoxing(importFolder=self.crdsDir, runMode=1)
+        protPP.inputMicrographs.set(self.protImport.outputMicrographs)
+        protPP.boxSize.set(550)
         self.proj.launchProtocol(protPP, wait=True)
-        
         self.assertIsNotNone(protPP.outputCoordinates, "There was a problem with the faked picking")
 
 
