@@ -51,11 +51,15 @@ DataSet(name='xmipp_tutorial', folder='xmipp_tutorial',
                'particles': 'particles/*.hdf'})
 
 
+DataSet(name='mda', folder='hemoglobin_mda', 
+        files={'particles': 'particles/*.spi'})
+
+
 DataSet('model', 'model', 
         {'modelGoldSqlite': 'gold/model_gold.sqlite', 
          'modelGoldXml': 'gold/model_gold.xml'})
-   
-  
+
+
 def greenStr(msg):
     return getColorStr(msg, 'green')
 
