@@ -74,7 +74,7 @@ class TestXmippPreprocessParticles(TestXmippBase):
         TestXmippBase.setData('mda')
         cls.protImport = cls.runImportParticles(cls.particlesFn, 3.5)
     
-    def testPreprocessPart(self):
+    def test_preprocessPart(self):
         print "Run Preprocess particles"
         protPreproc = XmippProtPreprocessParticles(doRemoveDust=True, doNormalize=True, backRadius=48, doInvert=True,
                                               doThreshold=True, thresholdType=1)
@@ -92,8 +92,8 @@ class TestXmippCropResizeParticles(TestXmippBase):
         TestXmippBase.setData('xmipp_tutorial')
         cls.protImport = cls.runImportParticles(cls.particlesFn, 1.237, True)
     
-    def testPreprocessPart(self):
-        print "Run Preprocess particles"
+    def test_crpResizePart(self):
+        print "Run crop/resize particles"
         protCropResize = XmippProtCropResizeParticles(doResize=True, resizeOption=1, resizeDim=128, doWindow=True,
                                                       windowOperation=1, windowSize=256)
         protCropResize.inputParticles.set(self.protImport.outputParticles)
@@ -110,7 +110,7 @@ class TestXmippML2D(TestXmippBase):
         TestXmippBase.setData('mda')
         cls.protImport = cls.runImportParticles(cls.particlesFn, 3.5)
     
-    def testML2D(self):
+    def test_ml2d(self):
         print "Run ML2D"
         protML2D = XmippProtML2D(numberOfReferences=2, maxIters=3, 
                                  numberOfMpi=2, numberOfThreads=2)
@@ -128,7 +128,7 @@ class TestXmippCL2D(TestXmippBase):
         TestXmippBase.setData('mda')
         cls.protImport = cls.runImportParticles(cls.particlesFn, 3.5)
     
-    def testCL2D(self):
+    def test_cl2d(self):
         print "Run CL2D"
         protCL2D = XmippProtCL2D(numberOfReferences=2, numberOfInitialReferences=1, 
                                  numberOfIterations=4, numberOfMpi=2)
@@ -145,7 +145,7 @@ class TestXmippProtCL2DAlign(TestXmippBase):
         TestXmippBase.setData('mda')
         cls.protImport = cls.runImportParticles(cls.particlesFn, 3.5)
     
-    def testXmippProtCL2DAlign(self):
+    def test_xmippProtCL2DAlign(self):
         print "Run Only Align"
         CL2DAlign = XmippProtCL2DAlign(maximumShift=5, numberOfIterations=5,
                                        numberOfMpi=4, numberOfThreads=1, useReferenceImage=False)
@@ -163,7 +163,7 @@ class TestXmippRotSpectra(TestXmippBase):
         cls.protImport = cls.runImportParticles(cls.particlesFn, 3.5)
         cls.align2D = cls.runCL2DAlign(cls.protImport.outputParticles)
          
-    def testRotSpectra(self):
+    def test_rotSpectra(self):
         print "Run Rotational Spectra"
         xmippProtRotSpectra = XmippProtRotSpectra(SomXdim=2, SomYdim=2)
         xmippProtRotSpectra.inputImages.set(self.align2D.outputParticles)
@@ -179,7 +179,7 @@ class TestXmippSimAnnealing(TestXmippBase):
         cls.protImport = cls.runImportParticles(cls.particlesFn, 3.5)
         cls.Class2D = cls.runClassify(cls.protImport.outputParticles)
     
-    def testSimAnnealing(self):
+    def test_simAnnealing(self):
         print "Run Simulating annealing"
         protSimAnneal = XmippProtInitVolSimAnneal(symmetryGroup='d6', numberOfSimAnnealRef=2, percentRejection=0)
         protSimAnneal.inputClasses.set(self.Class2D.outputClasses)
@@ -195,7 +195,7 @@ class TestXmippRansac(TestXmippBase):
         cls.protImport = cls.runImportParticles(cls.particlesFn, 3.5)
         cls.Class2D = cls.runClassify(cls.protImport.outputParticles)
     
-    def testRansac(self):
+    def test_ransac(self):
         print "Run Ransac"
         protRansac = XmippProtRansac(symmetryGroup='d6', angularSampling=15, nRansac=25, numSamples=5,
                                      dimRed=False, numVolumes=2, maxFreq=30, useAll=True, numberOfThreads=4)

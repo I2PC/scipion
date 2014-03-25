@@ -9,13 +9,15 @@ class TestSpiderWorkflow(TestWorkflow):
     @classmethod
     def setUpClass(cls):    
         # Create a new project
-        setupProject(cls)
+        setupTestProject(cls)
+        cls.dataset = DataSet.getDataSet(dataProject)
+        cls.particlesFn = cls.dataset.getFile('particles')
+
     
     def testMSAWorkflow(self):
         """ Run an Import particles protocol. """
         project = self.proj
-        pattern = os.environ.get('HEMOGLOBIN', getInputPath('particlesHemoglobin', '*.spi'))
-        protImport = ProtImportParticles(pattern=pattern, samplingRate=3.5)
+        protImport = ProtImportParticles(pattern=self.particlesFn, samplingRate=3.5)
         project.launchProtocol(protImport, wait=True)
         # check that input images have been imported (a better way to do this?)
         if protImport.outputParticles is None:

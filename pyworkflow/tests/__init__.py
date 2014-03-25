@@ -60,7 +60,8 @@ DataSet(name='xmipp_tutorial', folder='xmipp_tutorial',
 
 
 DataSet(name='mda', folder='hemoglobin_mda', 
-        files={'particles': 'particles/*.spi'})
+        files={'particles': 'particles/*.spi',
+               'volumes': 'volumes/*.spi'})
 
 
 DataSet(name='tomo', folder='xmipp_tomo_test', 
@@ -68,6 +69,18 @@ DataSet(name='tomo', folder='xmipp_tomo_test',
                'vol1': 'volumes/subvols_6E6.001.mrc.spi',
                'vol2': 'volumes/subvols_6E6.002.mrc.spi',
                'vol3': 'volumes/subvols_6E6.003.mrc.spi'})
+
+
+DataSet(name='relion_tutorial', folder='relion_tutorial', 
+        files={'posAlldDir': 'pickingXmipp',
+               'boxingDir': 'pickingEman',
+               'allMics': 'micrographs/*.mrc',
+               'volume': 'volumes/reference.mrc'})
+
+
+DataSet(name='ribo_movies', folder='ribo_movies', 
+        files={'posAlldDir': 'pickingXmipp',
+               'movies': 'movies/1??_*.mrcs'})
 
 
 DataSet('model', 'model', 

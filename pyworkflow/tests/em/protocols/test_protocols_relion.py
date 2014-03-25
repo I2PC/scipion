@@ -32,36 +32,40 @@ from pyworkflow.tests import *
 # Some utility functions to import micrographs that are used
 # in several tests.
 class TestRelionBase(unittest.TestCase):
+    @classmethod
+    def setData(cls, dataProject='xmipp_tutorial'):
+        cls.dataset = DataSet.getDataSet(dataProject)
+        cls.particlesFn = cls.dataset.getFile('particles')
+        cls.vol = cls.dataset.getFile('volumes')
     
+    @classmethod
+    def runImportParticles(cls, pattern, samplingRate, checkStack=False):
+        """ Run an Import particles protocol. """
+        protImport = ProtImportParticles(pattern=pattern, samplingRate=samplingRate, checkStack=checkStack)
+        cls.proj.launchProtocol(protImport, wait=True)
+        # check that input images have been imported (a better way to do this?)
+        if protImport.outputParticles is None:
+            raise Exception('Import of images: %s, failed. outputParticles is None.' % pattern)
+        return protImport
+    
+    @classmethod
+    def runImportVolumes(cls, pattern, samplingRate):
+        """ Run an Import particles protocol. """
+        protImport = ProtImportVolumes(pattern=pattern, samplingRate=samplingRate)
+        cls.proj.launchProtocol(protImport, wait=True)
+        return protImport
+
+
+class TestRelionClassify2D(TestRelionBase):
     @classmethod
     def setUpClass(cls):
-        setupProject(cls)
-        pattern = getInputPath('images_LTA', '*.xmp')
-        cls.protImport = cls.runImportParticles(pattern=pattern, samplingRate=5.6, checkStack=False)
-    
-    @classmethod
-    def runImportParticles(cls, pattern, checkStack, samplingRate):
-        """ Run an Import particles protocol. """
-        cls.protImport = ProtImportParticles(pattern=pattern, checkStack=checkStack, samplingRate=samplingRate)
-        cls.proj.launchProtocol(cls.protImport, wait=True)
-        # check that input images have been imported (a better way to do this?)
-        if cls.protImport.outputParticles is None:
-            raise Exception('Import of images: %s, failed. outputParticles is None.' % pattern)
-        return cls.protImport        
- 
-#def setupClassification(cls):
-#    """ Method to setup classification Test Cases. """
-#    #TODO: Find a set of images to make this work, with this it does not
-#    
-#    images = getInputPath('Images_Vol_ML3D/phantom_images', '*.xmp')
-#    cls.protImport = cls.runImportParticles(pattern=images, samplingRate=1, checkStack=False)
-    
-       
-class TestRelionClassify2D(TestRelionBase):
-        
-    def testML2D(self):
-        print "Run ML2D"
-        prot2D = ProtRelionClassify2D(numberOfMpi=2, numberOfThreads=2)
+        setupTestProject(cls)
+        TestRelionBase.setData('mda')
+        cls.protImport = cls.runImportParticles(cls.particlesFn, 3.5)
+            
+    def testRelion2D(self):
+        print "Run relion2D"
+        prot2D = ProtRelionClassify2D(doCTF=False, maskRadiusA=170, numberOfMpi=4, numberOfThreads=1)
         prot2D.numberOfClasses.set(4)
         prot2D.numberOfIterations.set(3)
         prot2D.inputParticles.set(self.protImport.outputParticles)
@@ -72,22 +76,20 @@ class TestRelionClassify2D(TestRelionBase):
 
 
 class TestRelionClassify3D(TestRelionBase):
-    
     @classmethod
     def setUpClass(cls):
-        setupProject(cls)
-        #TODO: Find a set of images to make this work, with this it does not
-        pattern = getInputPath('Images_Vol_ML3D/phantom_images', '*.xmp')
-        cls.protImport = cls.runImportParticles(pattern=pattern, checkStack=True, samplingRate=1)
-        cls.iniVol = getInputPath('ml3dData', 'icoFiltered.vol')
-        
-    def NOtestProtRelionClassify3D(self):
+        setupTestProject(cls)
+        TestRelionBase.setData('mda')
+        cls.protImport = cls.runImportParticles(cls.particlesFn, 3.5)
+        cls.protImportVol = cls.runImportVolumes(cls.vol, 3.5)
+    
+    def testProtRelionClassify3D(self):
         print "Run ProtRelionClassify3D"
-        relion3DClass = ProtRelionClassify3D(numberOfClasses=3, numberOfIterations=4, doCtf=False, runMode=1, 
+        relion3DClass = ProtRelionClassify3D(numberOfClasses=3, numberOfIterations=4, doCTF=False, runMode=1, 
                                  numberOfMpi=2, numberOfThreads=2)
-        relion3DClass.inputImages.set(self.protImport.outputParticles)
-        relion3DClass.ini3DrefVolumes.set(self.iniVol)
-        self.proj.launchProtocol(relion3DClass, wait=True)        
+        relion3DClass.inputParticles.set(self.protImport.outputParticles)
+        relion3DClass.referenceVolume.set(self.protImportVol.outputVolume)
+        self.proj.launchProtocol(relion3DClass, wait=True)
 
 
 if __name__ == "__main__":
