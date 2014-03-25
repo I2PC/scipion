@@ -245,8 +245,9 @@ USAGE:
                                OPTION can be:
                                   test name: the specified tests will be run.
                                   [show|run]: in this case a more sofisticated run tests 
-                                  script will be used. Further options are: path=VALUE case=VALUE 
-                                  or pattern=VALUE (print will be added in show case)
+                                  script will be used. 
+                                  Further options are: 
+                                  path=VALUE case=VALUE pattern="test*py" mode=[modules|classes|all]
                               
         viewer [FILE]          Open a file with Scipion showj program.
          

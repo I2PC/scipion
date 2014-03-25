@@ -33,18 +33,20 @@ def printTests(tests, mode='modules'):
             className = parts[-2]
             moduleName = '.'.join(parts[:-2])  
             
-            if moduleName != lastModule:
-                lastModule = moduleName
-                if moduleName == 'unittest.loader.ModuleImportFailure.tests':
-                    print failStr(moduleName)
-                    print "  test: ", t.id()
-                print moduleName
-            if mode in ['classes', 'all']:
-                if className != lastClass:
-                    lastClass = className
-                    print "  ", className
-            if mode == 'all':
-                print "    ", testName
+            # Check of Failure loading tests
+            if moduleName.startswith('unittest.loader.ModuleImportFailure'):
+                print failStr(moduleName)
+                print "  test: ", t.id()
+            else:
+                if moduleName != lastModule:
+                    lastModule = moduleName
+                    print moduleName
+                if mode in ['classes', 'all']:
+                    if className != lastClass:
+                        lastClass = className
+                        print "  ", className
+                if mode == 'all':
+                    print "    ", testName
 
        
 def runTests(tests):

@@ -10,7 +10,8 @@ import unittest
 from pyworkflow.mapper import *
 from pyworkflow.object import *
 from pyworkflow.em.data import Acquisition
-from pyworkflow.tests import *import pyworkflow.dataset as ds
+from pyworkflow.tests import *
+import pyworkflow.dataset as ds
 
 
 
@@ -44,14 +45,14 @@ class TestPostgreSqlMapper(unittest.TestCase):
 
 
     def test_insert(self,intValue=22):
-       """Test mapper insertion and selection by Id"""
-       mapper=TestPostgreSqlMapper.mapper
-       if mapper != None:
-           i = Integer(intValue)
-           objectId=mapper.insert(i)
-           object = mapper.selectById(objectId)
-           self.assertEqual(object.get(),intValue)
-           return objectId
+        """Test mapper insertion and selection by Id"""
+        mapper=TestPostgreSqlMapper.mapper
+        if mapper != None:
+            i = Integer(intValue)
+            objectId=mapper.insert(i)
+            object = mapper.selectById(objectId)
+            self.assertEqual(object.get(),intValue)
+            return objectId
 
 
     def test_insertChildren(self):
