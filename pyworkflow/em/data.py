@@ -467,11 +467,6 @@ class Set(EMObject):
     def __str__(self):
         return "%-20s (%d items)" % (self.getClassName(), self.getSize())
     
-    #TODO: remove this from here
-    def getDimensions(self):
-        """Return first image dimensions as a tuple: (xdim, ydim, zdim, n)"""
-        return self.getFirstItem().getDim()
-    
     def getSubset(self, n):
         """ Return a subset of n element, making a clone of each. """
         subset = []
@@ -594,7 +589,11 @@ class SetOfImages(Set):
         """ Return the dimensions of the first image in the set. """
         x, y, z = self._firstDim
         return x, y, z
-        
+    
+    def getDimensions(self):
+        """Return first image dimensions as a tuple: (xdim, ydim, zdim)"""
+        return self.getFirstItem().getDim()
+    
     def __str__(self):
         """ String representation of a set of images. """
         if self.getSamplingRate() is None:
@@ -929,7 +928,7 @@ class SetOfClasses2D(Set):
         self._imagesPointer.set(images)
     
     def getDimensions(self):
-        """Return first image dimensions as a tuple: (xdim, ydim, zdim, n)"""
+        """Return first image dimensions as a tuple: (xdim, ydim, zdim)"""
         if self.hasAverages():
             return self.getAverages().getDimensions()
         
@@ -1013,7 +1012,7 @@ class SetOfClasses3D(Set):
         self._imagesPointer.set(volumes)
         
     def getDimensions(self):
-        """Return first volume dimensions as a tuple: (xdim, ydim, zdim, n)"""
+        """Return first volume dimensions as a tuple: (xdim, ydim, zdim)"""
         if self.hasAverages():
             return self.getAverages().getDimensions()
         
@@ -1125,7 +1124,7 @@ class SetOfMovies(Set):
         self._imagesPointer.set(micrographs)
     
     def getDimensions(self):
-        """Return first micrograph dimensions as a tuple: (xdim, ydim, zdim, n)"""
+        """Return first micrograph dimensions as a tuple: (xdim, ydim, zdim)"""
         if self.hasRepresentatives():
             return self.getRepresentatives().getDimensions()
     

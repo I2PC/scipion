@@ -75,7 +75,7 @@ class XmippProtHelicalParameters(ProtPreprocessVolumes):
                                                                                      self.numberOfThreads.get(),
                                                                                      self._getExtraPath('coarseParams.xmd'))
         if self.cylinderRadius.get()>0:
-            [xdim,_,_,_]=self.inputVolume.get().getDim()
+            [xdim,_,_]=self.inputVolume.get().getDim()
             args+=" --mask cylinder %d %d"%(int(-self.cylinderRadius.get()),int(-xdim))
         self.runJob('xmipp_volume_find_symmetry',args)
 
@@ -87,7 +87,7 @@ class XmippProtHelicalParameters(ProtPreprocessVolumes):
         fnVol=locationToXmipp(*self.inputVolume.get().getLocation())
         args="-i %s --sym helical --localHelical %f %f -o %s"%(fnVol,z0,rot0,self._getExtraPath('fineParams.xmd'))
         if self.cylinderRadius.get()>0:
-            [xdim,_,_,_]=self.inputVolume.get().getDim()
+            [xdim,_,_]=self.inputVolume.get().getDim()
             args+=" --mask cylinder %d %d"%(int(-self.cylinderRadius.get()),int(-xdim))
         self.runJob('xmipp_volume_find_symmetry',args)
 
@@ -101,7 +101,7 @@ class XmippProtHelicalParameters(ProtPreprocessVolumes):
         args="-i %s --sym helical --helixParams %f %f -o %s"%(fnVol,z0,rot0,fnOut)
         self.runJob('xmipp_transform_symmetrize',args)
         if self.cylinderRadius.get()>0:
-            [xdim,_,_,_]=self.inputVolume.get().getDim()
+            [xdim,_,_]=self.inputVolume.get().getDim()
             args="-i %s --mask cylinder %d %d"%(fnOut,int(-self.cylinderRadius.get()),int(-xdim))
             self.runJob('xmipp_transform_mask',args)
 
@@ -110,7 +110,7 @@ class XmippProtHelicalParameters(ProtPreprocessVolumes):
         fnOut=self._getPath('volume_symmetrized.vol')
         self.runJob("xmipp_transform_geometry","-i %s -o %s --rotate_volume axis 180 1 0 0"%(fnOut,fnRotated))
         if self.cylinderRadius.get()>0:
-            [xdim,_,_,_]=self.inputVolume.get().getDim()
+            [xdim,_,_]=self.inputVolume.get().getDim()
             maskArgs=" --mask cylinder %d %d"%(int(-self.cylinderRadius.get()),int(-xdim))
         else:
             maskArgs=""
