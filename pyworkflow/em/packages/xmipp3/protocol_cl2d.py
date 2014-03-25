@@ -194,10 +194,12 @@ class XmippProtCL2D(ProtClassify):
         """
         levelMdFiles = self._getLevelMdFiles(subset)
         lastMdFn = levelMdFiles[-1]
-        classes2DSet = self._createSetOfClasses2D(self.inputImages.get(), subset)
+        inputImages = self.inputImages.get()
+        classes2DSet = self._createSetOfClasses2D(inputImages, subset)
         readSetOfClasses2D(classes2DSet, lastMdFn, 'classes_sorted')
         result = {'outputClasses' + subset: classes2DSet}
         self._defineOutputs(**result)
+        self._defineSourceRelation(inputImages, classes2DSet)
     
     #--------------------------- INFO functions --------------------------------------------
     def _validate(self):

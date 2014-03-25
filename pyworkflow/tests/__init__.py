@@ -52,14 +52,28 @@ DataSet(name='xmipp_tutorial', folder='xmipp_tutorial',
                'mic2': 'micrographs/BPV_1387.mrc',
                'mic3': 'micrographs/BPV_1388.mrc',
                'particles': 'particles/*.hdf'})
+               'volumes': 'volumes/*.mrc',
+               'vol1': 'volumes/BPV_scale_filtered_windowed_64.vol',
+               'vol2': 'volumes/volume_1_iter_002.mrc',
+               'vol3': 'volumes/volume_1_iter_002.mrc'})
 
+
+DataSet(name='mda', folder='hemoglobin_mda', 
+        files={'particles': 'particles/*.spi'})
+
+
+DataSet(name='tomo', folder='xmipp_tomo_test', 
+        files={'volumes': 'volumes/*.spi',
+               'vol1': 'volumes/subvols_6E6.001.mrc.spi',
+               'vol2': 'volumes/subvols_6E6.002.mrc.spi',
+               'vol3': 'volumes/subvols_6E6.003.mrc.spi'})
 
 
 DataSet('model', 'model', 
         {'modelGoldSqlite': 'gold/model_gold.sqlite', 
          'modelGoldXml': 'gold/model_gold.xml'})
-   
-  
+
+
 def greenStr(msg):
     return getColorStr(msg, 'green')
 
