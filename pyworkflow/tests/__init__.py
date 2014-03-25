@@ -28,11 +28,10 @@
 import os, sys
 
 import pyworkflow as pw
-from pyworkflow.utils.utils import getColorStr
 from tests import *
 from os.path import join, exists, isdir, relpath
 from pyworkflow.utils.path import cleanPath, makeFilePath
-
+import model
 
 try:
    from unittest.runner import _WritelnDecorator # Python 2.7+
@@ -91,12 +90,4 @@ DataSet(name='tomo', folder='xmipp_tomo_test',
 DataSet('model', 'model', 
         {'modelGoldSqlite': 'gold/model_gold.sqlite', 
          'modelGoldXml': 'gold/model_gold.xml'})
-
-
-def greenStr(msg):
-    return getColorStr(msg, 'green')
-
-
-def failStr(msg):
-    return getColorStr(msg, 'red')
 
