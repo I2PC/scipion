@@ -31,14 +31,18 @@ class Node(object):
     """ A node inside the graph. """
     _count = 1
     
-    def __init__(self, name=None):
+    def __init__(self, name=None, label=None):
         self._childs = []
         self._parents = []
-        self._name = name
         
         if name is None:
-            self.name = str(self._count)
+            name = str(self._count)
             self._count += 1
+        self._name = name
+        
+        if label is None:
+            label = name
+        self._label = label
         
     def getChilds(self):
         return self._childs
@@ -54,6 +58,12 @@ class Node(object):
     
     def getName(self):
         return self._name
+    
+    def getLabel(self):
+        return self._label
+    
+    def setLabel(self, newLabel):
+        self._label = newLabel
     
     def __str__(self):
         return self._name
@@ -82,9 +92,9 @@ class Graph(object):
     def getRoot(self):
         return self._root
     
-    def createNode(self, nodeName):
+    def createNode(self, nodeName, nodeLabel=None):
         """ Add a node to the graph """
-        node = Node(nodeName)
+        node = Node(nodeName, nodeLabel)
         self._registerNode(node)
         
         return node

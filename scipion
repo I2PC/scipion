@@ -137,9 +137,11 @@ if __name__ == '__main__':
         # Create SCIPION_HOME folder if not exists
         if mode != MODE_INSTALL:
             if (not exists(SCIPION_USER_DATA) or 
-                not exists(SCIPION_DATA)):
+                not exists(SCIPION_DATA) or
+                not exists(SCIPION_LOGS)):
                 print "ERROR: SCIPION_USER_DATA='%s' folder " % SCIPION_USER_DATA
                 print "    or SCIPION_DATA='%s' do not exists." % SCIPION_DATA
+                print "    or SCIPION_LOGS='%s' do not exists." % SCIPION_LOGS
                 print "  RUN: scipion install"
                 sys.exit(1)
             

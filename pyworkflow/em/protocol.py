@@ -88,6 +88,8 @@ class EMProtocol(Protocol):
     
     def _defineTransformRelation(self, srcObj, dstObj):
         self._defineRelation(RELATION_TRANSFORM, srcObj, dstObj)
+        # A transform relation allways implies a source relation
+        self._defineSourceRelation(srcObj, dstObj)
     
     def _insertChild(self, key, child):
         if isinstance(child, Set):
