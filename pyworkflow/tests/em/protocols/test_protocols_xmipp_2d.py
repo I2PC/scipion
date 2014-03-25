@@ -30,6 +30,7 @@ from pyworkflow.em import *
 from pyworkflow.tests import *
 from pyworkflow.em.packages.xmipp3 import *
 
+
 # Some utility functions to import particles that are used
 # in several tests.
 class TestXmippBase(BaseTest):
@@ -55,6 +56,14 @@ class TestXmippBase(BaseTest):
         cls.CL2DAlign.inputParticles.set(particles)
         cls.proj.launchProtocol(cls.CL2DAlign, wait=True)
         return cls.CL2DAlign
+    
+    @classmethod
+    def runClassify(cls, particles):
+        cls.ProtClassify = XmippProtML2D(numberOfReferences=8, maxIters=4, doMlf=False,
+                                 numberOfMpi=2, numberOfThreads=2)
+        cls.ProtClassify.inputParticles.set(particles)
+        cls.proj.launchProtocol(cls.ProtClassify, wait=True)
+        return cls.ProtClassify
 
 
 class TestXmippPreprocessParticles(TestXmippBase):
@@ -160,6 +169,39 @@ class TestXmippRotSpectra(TestXmippBase):
         xmippProtRotSpectra.inputImages.set(self.align2D.outputParticles)
         self.proj.launchProtocol(xmippProtRotSpectra, wait=True)        
         self.assertIsNotNone(xmippProtRotSpectra.outputClasses, "There was a problem with Rotational Spectra")
+
+
+class TestXmippSimAnnealing(TestXmippBase):
+    @classmethod
+    def setUpClass(cls):
+        setupTestProject(cls)
+        TestXmippBase.setData('mda')
+        cls.protImport = cls.runImportParticles(cls.particlesFn, 3.5)
+        cls.Class2D = cls.runClassify(cls.protImport.outputParticles)
+    
+    def testSimAnnealing(self):
+        print "Run Simulating annealing"
+        protSimAnneal = XmippProtInitVolSimAnneal(symmetryGroup='d6', numberOfSimAnnealRef=2, percentRejection=0)
+        protSimAnneal.inputClasses.set(self.Class2D.outputClasses)
+        self.proj.launchProtocol(protSimAnneal, wait=True)        
+        self.assertIsNotNone(protSimAnneal.outputVolumes, "There was a problem with simulating annealing protocol")
+
+
+class TestXmippRansac(TestXmippBase):
+    @classmethod
+    def setUpClass(cls):
+        setupTestProject(cls)
+        TestXmippBase.setData('mda')
+        cls.protImport = cls.runImportParticles(cls.particlesFn, 3.5)
+        cls.Class2D = cls.runClassify(cls.protImport.outputParticles)
+    
+    def testRansac(self):
+        print "Run Ransac"
+        protRansac = XmippProtRansac(symmetryGroup='d6', angularSampling=15, nRansac=25, numSamples=5,
+                                     dimRed=False, numVolumes=2, maxFreq=30, useAll=True, numberOfThreads=4)
+        protRansac.inputClasses.set(self.Class2D.outputClasses)
+        self.proj.launchProtocol(protRansac, wait=True) 
+        self.assertIsNotNone(protRansac.outputVolumes, "There was a problem with simulating annealing protocol")
 
 
 if __name__ == "__main__":
