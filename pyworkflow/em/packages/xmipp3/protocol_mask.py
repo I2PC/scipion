@@ -127,8 +127,9 @@ class XmippProtMaskParticles(ProtMaskParticles, XmippProcessParticles, XmippProt
         self.maskFn = self._getPath('mask.spi')
     
     def _getGeometryCommand(self):
-        (Xdim, _, _, self.ndim) = self.inputParticles.get().getDimensions()
-        args = XmippGeometricalMask2D.argsForTransformMask(self,Xdim)
+        Xdim = self.inputParticles.get().getDimensions()[0]
+        self.ndim = self.inputParticles.get().getSize()
+        args = XmippGeometricalMask2D.argsForTransformMask(self, Xdim)
         return args
 
 
@@ -160,9 +161,9 @@ class XmippProtMaskVolumes(ProtMaskVolumes, XmippProcessVolumes, XmippProtMask, 
     
     def _getGeometryCommand(self):
         if isinstance(self.inputVolumes.get(), Volume):
-            Xdim, _, _, _ = self.inputVolumes.get().getDim()
+            Xdim = self.inputVolumes.get().getDim()[0]
         else:
-            Xdim, _, _, _ = self.inputVolumes.get().getDimensions()
+            Xdim = self.inputVolumes.get().getDimensions()[0]
         args = XmippGeometricalMask3D.argsForTransformMask(self,Xdim)
         return args
 

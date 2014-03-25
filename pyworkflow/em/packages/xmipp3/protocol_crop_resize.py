@@ -172,9 +172,9 @@ class XmippProtResize():
     def _getSize(self, imgSet):
         """ get the size of an object"""
         if isinstance(imgSet, Volume):
-            Xdim, _, _, _ = imgSet.getDim()
+            Xdim = imgSet.getDim()[0]
         else:
-            Xdim, _, _, _ = imgSet.getDimensions()
+            Xdim = imgSet.getDimensions()[0]
         return Xdim
     
     def _getSampling(self, imgSet):
@@ -183,14 +183,14 @@ class XmippProtResize():
         return samplingRate
 
 
-class XmippProtCropResizeParticles(ProtProcessParticles, XmippProcessParticles, XmippProtResize):
+class XmippProtCropResizeParticles(ProtProcessParticles, XmippProtResize, XmippProcessParticles):
     """ Change the dimensions to SetOfParticles object """
     _label = 'resize crop particles'
     
     def __init__(self, **args):
-        ProtProcessParticles.__init__(self)
-        XmippProcessParticles.__init__(self, **args)
+        ProtProcessParticles.__init__(self, **args)
         XmippProtResize.__init__(self, **args)
+        XmippProcessParticles.__init__(self)
     
     #--------------------------- DEFINE param functions --------------------------------------------
     def _defineProcessParams(self, form):
@@ -257,8 +257,8 @@ class XmippProtCropResizeVolumes(ProtPreprocessVolumes, XmippProtResize, XmippPr
     
     def __init__(self, **args):
         ProtPreprocessVolumes.__init__(self, **args)
-        XmippProcessVolumes.__init__(self)
         XmippProtResize.__init__(self, **args)
+        XmippProcessVolumes.__init__(self)
     
     #--------------------------- DEFINE param functions --------------------------------------------
     def _defineProcessParams(self, form):

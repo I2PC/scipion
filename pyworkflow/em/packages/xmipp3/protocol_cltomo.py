@@ -126,7 +126,7 @@ class XmippProtCLTomo(ProtClassify3D):
 
     def _validate(self):
         errors=[]
-        (Xdim1, Ydim1, Zdim1, _)=self.volumelist.get().getDimensions()
+        (Xdim1, Ydim1, Zdim1)=self.volumelist.get().getDimensions()
         if Xdim1!=Ydim1 or Ydim1!=Zdim1:
             errors.append("Input subvolumes are not cubic")
         N0=-1
@@ -134,7 +134,7 @@ class XmippProtCLTomo(ProtClassify3D):
             if not self.referenceList.hasValue():
                 errors.append("If references are not self generated, you have to provide a reference set of volumes")
             else:
-                (Xdim2, Ydim2, Zdim2, N0) = self.referenceList.get().getDimensions()
+                (Xdim2, Ydim2, Zdim2) = self.referenceList.get().getDimensions()
                 if Xdim2!=Ydim2 or Ydim2!=Zdim2:
                     errors.append("Reference subvolumes are not cubic")
                 if Xdim1!=Xdim2:
