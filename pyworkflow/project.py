@@ -353,16 +353,16 @@ class Project(object):
     def getDataGraph(self, refresh=False):
         """ Retrieve objects produced as outputs and
         make a graph taking into account the SOURCE relation. """
-        print "project.getDataGraph"
         relations = self.mapper.getRelationsByName(RELATION_SOURCE)
         g = Graph(rootName='PROJECT')
         root = g.getRoot()
+        root.object = None
         runs = self.getRuns(refresh=refresh)
         
         for r in runs:
             for _, attr in r.iterOutputAttributes(EMObject):
-                print "creating node: ", attr.strId()
-                g.createNode(attr.strId(), attr.getNameId())
+                node = g.createNode(attr.strId(), attr.getNameId())
+                node.object = attr                
         
         for rel in relations:
             pid = str(rel['object_parent_id'])

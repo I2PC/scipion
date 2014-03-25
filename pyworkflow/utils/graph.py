@@ -105,6 +105,10 @@ class Graph(object):
     def getNodes(self):
         return self._nodes
     
+    def getRootNodes(self):
+        """ Return all nodes that have no parent. """
+        return [n for n in self._nodes if n.isRoot()]
+    
     def printNodes(self):
         for node in self.getNodes():
             print "Node: ", node

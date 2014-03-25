@@ -414,8 +414,8 @@ class WindowBase(Window):
         
         
         from pyworkflow.apps.pw_manager import ProjectsView
-        from pyworkflow.apps.pw_project import DataView
         from pyworkflow.apps.pw_project_viewprotocols import ProtocolsView
+        from pyworkflow.apps.pw_project_viewdata import DataView
         from pyworkflow.apps.pw_project_viewhosts import HostsView
         
         self.viewFuncs = {VIEW_PROJECTS: ProjectsView,

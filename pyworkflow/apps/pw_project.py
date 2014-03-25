@@ -58,7 +58,6 @@ import pyworkflow.apps.config as config
 
 from config import *
 from pw_browser import BrowserWindow
-
 from pyworkflow.gui.plotter import Plotter
 Plotter.setInteractive(True)   
    
@@ -89,38 +88,7 @@ class ProjectWindow(gui.WindowBase):
         except Exception, ex:
             print Message.NO_SAVE_SETTINGS + str(ex) 
         gui.Window._onClosing(self)
-        
-#    def handleResize(self):
-#        print self._w, self._h
-#        
-#    def handleMove(self):
-#        print self._x, self._y
-        
-#     def createProtocolsView(self, parent):
-#         """ Create the Protocols View for the Project.
-#         It has two panes:
-#             Left: containing the Protocol classes tree
-#             Right: containing the Runs list
-#         """
-#         from pw_project_viewprotocols import ProtocolsView
-#         p = ProtocolsView(parent, self)
-#         return p
-#         
-#     def createDataView(self, parent):
-#         print "createDataView"
-#         self.project.getDataGraph()
-#         
-#         return DataView(parent, self)
-#     
-# #        dataFrame = tk.Frame(parent)
-# #        dataLabel = tk.Label(dataFrame, text='DATA VIEW not implemented.',
-# #                             font=self.projNameFont)
-# #        dataLabel.grid(row=0, column=0, padx=50, pady=50)
-# #        return dataFrame
-# 
-#     def createHostsView(self, parent):
-#         from pw_project_viewhosts import HostsView
-#         return HostsView(parent, self)
+
      
     def loadProject(self):
         self.project = Project(self.projPath)
@@ -129,23 +97,6 @@ class ProjectWindow(gui.WindowBase):
         self.generalCfg = self.settings.getConfig()
         self.menuCfg = self.settings.getCurrentMenu()
         self.protCfg = self.settings.getCurrentProtocolMenu()
-                
-                
-class DataView(tk.Frame):
-    def __init__(self, parent, windows, **args):
-        tk.Frame.__init__(self, parent, **args)
-        dataLabel = tk.Label(self, text='DATA VIEW not implemented.',)
-        dataLabel.grid(row=0, column=0, padx=50, pady=50)
-        g = windows.project.getDataGraph()
-        self.columnconfigure(0, weight=1)
-        self.rowconfigure(0, weight=1)
-        canvas = Canvas(self, width=600, height=500)
-        canvas.grid(row=0, column=0, sticky='nsew')
-        lt = LevelTree(g)
-        lt.setCanvas(canvas)
-        lt.paint()
-        canvas.updateScrollRegion()
-        
 
 
 if __name__ == '__main__':
