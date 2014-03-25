@@ -6,6 +6,9 @@
 
 import os
 import unittest
+from pyworkflow.tests import *
+from pyworkflow.emx.convert import *
+
 try:
     import xml.etree.cElementTree as ET
 except ImportError:
@@ -24,8 +27,13 @@ def indent(elem, level=0):
         if not _elem.tail or not _elem.tail.strip():
             _elem.tail = i
                
-                
-class TestEMX(unittest.TestCase):
+#FIXME:Jose Miguel                
+class TestEMX(BaseTest):
+    
+    @classmethod
+    def setUpClass(cls):
+        setupTestOutput(cls)
+        cls.dataset = DataSet.getDataSet('xmipp_tutorial')  
 
     def test_writeXML(self):
         fn = 'test.xml'
@@ -47,8 +55,8 @@ class TestEMX(unittest.TestCase):
         import pyworkflow.em.emx as emx
         from pyworkflow.utils import cleanPath
         
-        fnXml = 'test_micrographs.xml'
-        fnSql = 'test_micrographs.sqlite'
+        fnXml = self.getOutputPath('test_micrographs.xml')
+        fnSql = self.getOutputPath('test_micrographs.sqlite')
         cleanPath(fnXml, fnSql)
         
         micSet = SetOfMicrographs(filename=fnSql)
@@ -61,10 +69,12 @@ class TestEMX(unittest.TestCase):
         ctf.setDefocusU(1000)
         ctf.setDefocusV(2000)
         
-        for i in range(10):
+        for i in range(3):
             mic = Micrograph()
-            #mic.setLocation(1, "mic%03d.mrc" % (i+1))
-            mic.setLocation(i+1, "mics.stk")
+            file = self.dataset.getFile("mic%d" % (i+1))
+            print file
+            mic.setLocation(i + 1, file)
+            #mic.setLocation(i+1, "mics.stk")
             mic.setCTF(ctf)
             micSet.append(mic)
             

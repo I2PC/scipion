@@ -30,52 +30,22 @@ This script will generate the pw.bashrc and pw.cshrc file to include
 """
 import os, sys
 from os.path import abspath, dirname, join
-FULLPATH = dirname(abspath(__file__))
-BASHRC = '.bashrc'
-CSHRC = '.cshrc'
+from pyworkflow.utils.path import makePath
+from pyworkflow.apps.config import writeDefaults
 
-def config(shell, varList, shellVar):  
-    shellFile = 'pw' + shell
-    print " - Creating file: ", shellFile
-    f = open(shellFile, 'w+')
-    for name, value in varList:
-        line = shellVar(name, value)
-        print >> f, line
-    f.close()
-    print " - Include: \n      source %(shellFile)s in your %(shell)s file" % locals()
-
-def bashVar(name, value):
-    return "export %(name)s=%(value)s" % locals()
-
-def tcshVar(name, value):
-    return "setenv %(name)s %(value)s" % locals()    
-    
-    
 if __name__ == '__main__':
     
     SCIPION_HOME = os.environ['SCIPION_HOME']
-    SCIPION_DATA = os.environ['SCIPION_DATA']
-    SCIPION_LOGS = os.environ['SCIPION_LOGS']
-    SCIPION_USER_DATA = os.environ['SCIPION_USER_DATA']
+    SCIPION_DIRS = ['SCIPION_DATA', 'SCIPION_LOGS', 'SCIPION_TESTS', 'SCIPION_USER_DATA']
     
     print "Installing Scipion in : ", SCIPION_HOME
-    # source files for bash and tcsh are not longer needed
-#    VARS = [('SCIPION_USER_DATA', os.environ['SCIPION_USER_DATA']),
-#            ('SCIPION_HOME', SCIPION_HOME),
-#            ('PYTHONPATH', '$SCIPION_HOME:$XMIPP_HOME/lib:$XMIPP_HOME/protocols:$PYTHONPATH'),
-#            ('PATH', '$SCIPION_HOME/pyworkflow/apps:$PATH')]
-    #config(BASHRC, VARS, bashVar)    
-    #config(CSHRC, VARS, tcshVar)
     
-    # Create SCIPION_USER_DATA folder
-    from pyworkflow.utils.path import makePath
-    print "  creating DATA folder: ", SCIPION_DATA
-    makePath(SCIPION_DATA)
-    print "  creating LOGS folder: ", SCIPION_LOGS
-    makePath(SCIPION_LOGS)
-    print "  creating USER_DATA folder: ", SCIPION_USER_DATA
-    makePath(SCIPION_USER_DATA)
+    # Create DATA folders
+    for d in SCIPION_DIRS:
+        path = os.environ[d]
+        print "  creating %s folder: %s" % (d, path)
+        makePath(path)
+        
     # Write default configurations
-    from pyworkflow.apps.config import writeDefaults
     writeDefaults()
     

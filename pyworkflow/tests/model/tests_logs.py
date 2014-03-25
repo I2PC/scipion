@@ -11,9 +11,15 @@ from pyworkflow.mapper import *
 from pyworkflow.utils.log import *
 from pyworkflow.utils.utils import getLineInFile, isInFile
 from pyworkflow.tests import *
-#class for tests
 
-        
+
+#FIXME:Nacho
+
+class TestSqliteMapper(BaseTest):
+    
+    @classmethod
+    def setUpClass(cls):
+        setupTestOutput(cls)        
         
     def testSimpleFileLog(self):
         import random

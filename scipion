@@ -79,14 +79,17 @@ XMIPP_LIB = join(XMIPP_HOME, 'lib')
 
 SCIPION_DATA = join(SCIPION_HOME, 'data')
 SCIPION_LOGS = join(SCIPION_DATA, 'logs')
+SCIPION_TESTS = join(SCIPION_DATA, 'tests')
 SCIPION_USER_DATA = getUserDataPath()
+SCIPION_DIRS = ['SCIPION_DATA', 'SCIPION_LOGS', 'SCIPION_TESTS', 'SCIPION_USER_DATA']
+
 SCIPION_PYTHON = join(XMIPP_BIN, 'xmipp_python')
 
 os.environ['SCIPION_HOME'] = SCIPION_HOME
-os.environ['SCIPION_DATA'] = SCIPION_DATA
-os.environ['SCIPION_LOGS'] = SCIPION_LOGS
-os.environ['SCIPION_USER_DATA'] = SCIPION_USER_DATA
 os.environ['SCIPION_PYTHON'] = SCIPION_PYTHON
+
+for var in SCIPION_DIRS:
+    os.environ[var] = globals()[var]
 
 VARS = {
         'PYTHONPATH': os.pathsep.join([SCIPION_HOME, XMIPP_LIB, os.environ.get('PYTHONPATH', '')]),
@@ -136,14 +139,14 @@ if __name__ == '__main__':
         
         # Create SCIPION_HOME folder if not exists
         if mode != MODE_INSTALL:
-            if (not exists(SCIPION_USER_DATA) or 
-                not exists(SCIPION_DATA) or
-                not exists(SCIPION_LOGS)):
-                print "ERROR: SCIPION_USER_DATA='%s' folder " % SCIPION_USER_DATA
-                print "    or SCIPION_DATA='%s' do not exists." % SCIPION_DATA
-                print "    or SCIPION_LOGS='%s' do not exists." % SCIPION_LOGS
-                print "  RUN: scipion install"
-                sys.exit(1)
+            error = ''
+            for d in SCIPION_DIRS:
+                path = os.environ[d]
+                if not exists(path):
+                    error += "Missing %s folder: '%s'\n" % (d, path)
+            if error:
+                print error + 'RUN:  scipion install'
+                sys.exit(1) 
             
         if mode == MODE_MANAGER:
             runApp('pw_manager.py')
@@ -154,22 +157,30 @@ if __name__ == '__main__':
                 runApp('pw_project.py', args=projectName)
         
         elif mode == MODE_WEBSERVER:
-            manage = join(SCIPION_HOME, 'pyworkflow', 'web', 'manage.py')
-            runCmd('%s runserver 0.0.0.0:8000 ' % manage)
+            if n > 2:
+                option = sys.argv[2]
+            else:
+                option = 'django'
             
-        elif mode == MODE_APACHE_VARS:
-            # WSGI needs some variables set on apache start (/etc/apache2/envvars):
-            #   * SCIPION_HOME: is required to find this script, so it has to be declared "manually" in envvars
-            #   * HOME: so it can reach Scipion directory
-            #   * LD_LIBRARY_PATH:  set it with a call to this mode. For example,
-            #       scipion_ld_library_path=$( ${SCIPION_HOME}/scipion apache_vars)
-            #       export LD_LIBRARY_PATH=${scipion_ld_library_path}:${LD_LIBRARY_PATH}
-            print VARS["LD_LIBRARY_PATH"]
-            sys.exit(0)
-
-        elif mode == MODE_COLLECTSTATIC:
-            manage = join(SCIPION_HOME, 'pyworkflow', 'web', 'manage.py')
-            runCmd('%s collectstatic' % manage)
+            if option == 'apache_vars':
+                # WSGI needs some variables set on apache start (/etc/apache2/envvars):
+                #   * SCIPION_HOME: is required to find this script, so it has to be declared "manually" in envvars
+                #   * HOME: so it can reach Scipion directory
+                #   * LD_LIBRARY_PATH:  set it with a call to this mode. For example,
+                #       scipion_ld_library_path=$( ${SCIPION_HOME}/scipion apache_vars)
+                #       export LD_LIBRARY_PATH=${scipion_ld_library_path}:${LD_LIBRARY_PATH}
+                print VARS["LD_LIBRARY_PATH"]
+                sys.exit(0)
+                
+            elif option in ['django', 'collectstatic']:
+                manage = join(SCIPION_HOME, 'pyworkflow', 'web', 'manage.py')
+                if option == 'django':
+                    args = 'runserver 0.0.0.0:8000'
+                else:
+                    args = 'collectstatic'
+                runCmd('%s %s' % (manage, args))
+            else:
+                print "\nERROR: invalid option '%s' for mode %s." % (option, MODE_WEBSERVER)   
             
         elif mode == MODE_TESTS:
             if n > 2:
@@ -214,15 +225,30 @@ if __name__ == '__main__':
                 
     # If reach this point, bad arguments passed
     print """
-Usage: 
+USAGE: 
     scipion [MODE] [ARGUMENTS]
     where MODE can be:
-        manager : open the manager with list of all projects
-        project [PROJECT_NAME] : will open the specified project, special name 'last' can be used.  
-        webserver : will launch django webserver
-        tests :  will run the tests starting from pyworkflow.tests
-            special case "show" will list all possible tests.
-        help : print this help message
+        browser                Browser a dir or an sqlite database. (TODO: merge with viewer)
+        
+        help                   Print this help message.
+        
+        install                Create needed folders and settings to run Scipion.
+        
+        manager                Open the manager with list of all projects.
+        
+        project [PROJECT_NAME] Open the specified project, special name 'last' can be used. 
+         
+        stats                  Write git statistics to data/stats folder.
+        
+        tests [TEST_NAME]      Run a test starting from pyworkflow.tests
+                               special case 'show' list all possible tests.
+                              
+        viewer [FILE]          Open a file with Scipion showj program.
+         
+        webserver [OPTION]     webserver management OPTION can be:
+                               django: open local django webserver (default)
+                               collectstatic: copy static files for django server
+                               apache_vars: show the LD_LIBRARY_PATH needed by apache server
 """
 
 elif __name__.startswith('_mod_wsgi'):
