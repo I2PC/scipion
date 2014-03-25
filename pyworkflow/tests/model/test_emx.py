@@ -38,7 +38,7 @@ class TestEMX(BaseTest):
         cls.dataset = DataSet.getDataSet('xmipp_tutorial')  
 
     def test_writeXML(self):
-        fn = 'test.xml'
+        fn = self.getOutputPath('test.xml')
         if os.path.exists(fn):
             os.remove(fn)
         f = open(fn, 'w+')  
@@ -75,7 +75,7 @@ class TestEMX(BaseTest):
             mic = Micrograph()
             micFn = self.dataset.getFile("mic%d" % (i+1))
             print micFn
-            mic.setLocation(i + 1, micFn)
+            mic.setLocation(micFn)
             #mic.setLocation(i+1, "mics.stk")
             mic.setCTF(ctf)
             micSet.append(mic)
