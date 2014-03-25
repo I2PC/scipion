@@ -6,8 +6,10 @@
 
 import os
 import unittest
+
 from pyworkflow.tests import *
-from pyworkflow.emx.convert import *
+from pyworkflow.em.data import Acquisition, Micrograph, SetOfMicrographs, CTFModel
+import pyworkflow.em.emx as emx
 
 try:
     import xml.etree.cElementTree as ET
@@ -51,9 +53,9 @@ class TestEMX(BaseTest):
         
         
     def test_writeMicrographs(self):
-        from pyworkflow.em.data import Acquisition, Micrograph, SetOfMicrographs, CTFModel
-        import pyworkflow.em.emx as emx
-        from pyworkflow.utils import cleanPath
+        
+        
+        emxDir = self.getOutputPath('emx')
         
         fnXml = self.getOutputPath('test_micrographs.xml')
         fnSql = self.getOutputPath('test_micrographs.sqlite')
@@ -71,27 +73,15 @@ class TestEMX(BaseTest):
         
         for i in range(3):
             mic = Micrograph()
-            file = self.dataset.getFile("mic%d" % (i+1))
-            print file
-            mic.setLocation(i + 1, file)
+            micFn = self.dataset.getFile("mic%d" % (i+1))
+            print micFn
+            mic.setLocation(i + 1, micFn)
             #mic.setLocation(i+1, "mics.stk")
             mic.setCTF(ctf)
             micSet.append(mic)
             
-        emx.writeSetOfMicrographs(micSet, fnXml)
+        emx.exportData(emxDir, micSet)
         
         
     def test_readEMX(self):
-        import pyworkflow.em.emx as emx
-        fn = 'emxData/data.emx'
-        
-        def handleMicrograph(elem):
-            print 'elem.tag: ', elem.tag
-            print 'elem.attrib', elem.attrib
-         
-        def handleParticle(elem):
-            print 'elem.tag: ', elem.tag     
-            print 'elem.attrib', elem.attrib
-              
-        emx._iterXml(fn, {'micrograph': handleMicrograph, 
-                          'particle': handleParticle})
+        pass

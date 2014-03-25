@@ -49,7 +49,7 @@ from pyworkflow.protocol.params import *
 import config
 from pyworkflow.em import *
 import pyworkflow.gui as gui
-from pyworkflow.gui.widgets import Button
+from pyworkflow.gui.widgets import HotButton
 from pyworkflow.gui.text import TaggedText
 from pyworkflow.gui.dialog import askString, askYesNo, showError
 
@@ -160,7 +160,7 @@ class ProjectsView(tk.Frame):
         self.projDateFont = tkFont.Font(size=8, family='helvetica')
         self.projDelFont = tkFont.Font(size=8, family='helvetica', weight='bold')
         self.manager = Manager()
-        btn = Button(self, text=Message.LABEL_CREATE_PROJECT, font=self.projNameFont, 
+        btn = HotButton(self, text=Message.LABEL_CREATE_PROJECT, font=self.projNameFont, 
                      command=self.createNewProject)
         btn.grid(row=0, column=0, sticky='nw', padx=10, pady=10)
         

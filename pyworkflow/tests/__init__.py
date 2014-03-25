@@ -28,11 +28,10 @@
 import os, sys
 
 import pyworkflow as pw
-from pyworkflow.utils.utils import getColorStr
 from tests import *
 from os.path import join, exists, isdir, relpath
 from pyworkflow.utils.path import cleanPath, makeFilePath
-
+import model
 
 try:
    from unittest.runner import _WritelnDecorator # Python 2.7+
@@ -53,6 +52,24 @@ DataSet(name='xmipp_tutorial', folder='xmipp_tutorial',
                'mic2': 'micrographs/BPV_1387.mrc',
                'mic3': 'micrographs/BPV_1388.mrc',
                'particles': 'particles/*.hdf',
+               'particles1': 'particles/BPV_1386_ptcls.hdf',
+               'volumes': 'volumes/*.mrc',
+               'vol1': 'volumes/BPV_scale_filtered_windowed_64.vol',
+               'vol2': 'volumes/volume_1_iter_002.mrc',
+               'vol3': 'volumes/volume_1_iter_002.mrc'})
+
+DataSet(name='relion_tutorial', folder='relion_tutorial', 
+        files={
+               
+               'posSupervisedDir': 'pickingXmipp/pickedSupervised',
+               'posAlldDir': 'pickingXmipp/pickedAll',
+               'boxingDir': 'pickingEman',
+               'allMics': 'micrographs/*.mrc',
+               'mic1': 'micrographs/BPV_1386.mrc',
+               'mic2': 'micrographs/BPV_1387.mrc',
+               'mic3': 'micrographs/BPV_1388.mrc',
+               'particles': 'particles/*.hdf',
+               'particles1': 'particles/BPV_1386_ptcls.hdf',
                'volumes': 'volumes/*.mrc',
                'vol1': 'volumes/BPV_scale_filtered_windowed_64.vol',
                'vol2': 'volumes/volume_1_iter_002.mrc',
@@ -86,12 +103,4 @@ DataSet(name='ribo_movies', folder='ribo_movies',
 DataSet('model', 'model', 
         {'modelGoldSqlite': 'gold/model_gold.sqlite', 
          'modelGoldXml': 'gold/model_gold.xml'})
-
-
-def greenStr(msg):
-    return getColorStr(msg, 'green')
-
-
-def failStr(msg):
-    return getColorStr(msg, 'red')
 

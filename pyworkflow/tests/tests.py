@@ -7,6 +7,7 @@ from os.path import join, exists, isdir, relpath
 from unittest import TestResult
 from pyworkflow.utils.path import cleanPath, makePath
 from pyworkflow.manager import Manager
+from pyworkflow.utils.utils import getColorStr
 from pyworkflow.object import *
 from pyworkflow.protocol import *
 
@@ -186,3 +187,11 @@ class GTestResult(TestResult):
         
     def addFailure(self, test, err):
         self.reportError(test, err)
+        
+
+def greenStr(msg):
+    return getColorStr(msg, 'green')
+
+
+def failStr(msg):
+    return getColorStr(msg, 'red')

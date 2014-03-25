@@ -17,11 +17,14 @@ from pyworkflow.em.protocol import EMProtocol
 
 class TestImage(unittest.TestCase):
         
-    def setUp(self):
-        pass
+    @classmethod
+    def setUpClass(cls):
+        setupTestOutput(cls)
+        cls.dataset = DataSet.getDataSet('xmipp_tutorial')  
+        cls.mic1 = cls.dataset.getFile( 'mic1')
     
     def testLocation(self):
-        fn = 'mic0001.mrc'
+        fn = self.mic1
         mic = Micrograph()
         mic.setFileName(fn)
 
@@ -29,34 +32,34 @@ class TestImage(unittest.TestCase):
         self.assertEqual(fn, mic.getFileName())
         
         
-class TestSetOfMicrographs(unittest.TestCase):
-        
+class TestSetOfMicrographs(BaseTest):
+    
+    
     @classmethod
     def setUpClass(cls):
-        cls.outputPath = getOutputPath('test_data')
+        setupTestOutput(cls)
+        cls.dataset = DataSet.getDataSet('xmipp_tutorial')  
+        cls.dbGold = cls.dataset.getFile( 'micsGoldSqlite')
         
-        cls.dbGold = getGoldPath('Micrographs_BPV3', 'micrographs_gold.sqlite')
+        cls.micsPattern = cls.dataset.getFile('allMics')
         
-        cls.micsPattern = getInputPath('Micrographs_BPV3', '*.mrc')
-        
-        cls.dbFn = getOutputPath(cls.outputPath, 'micrographs.sqlite')
+        cls.dbFn = cls.getOutputPath('micrographs.sqlite')
         
         #cls.mics = glob(cls.micsPattern)
         cls.mics = []
         for mic in iglob(cls.micsPattern):
-            cls.mics.append(getRelPath(mic))
+            cls.mics.append(cls.getRelPath(mic))
         
         if len(cls.mics) == 0:
             raise Exception('There are not micrographs matching pattern')
         cls.mics.sort()
                   
-        cleanPath(cls.outputPath)
-        makePath(cls.outputPath)
+
     
         
     def checkSet(self, micSet):
         idCount = 1
-        micSet.loadIfEmpty()
+        
         
         for fn, mic in zip(self.mics, micSet):            
             micFn = mic.getFileName()
@@ -72,8 +75,7 @@ class TestSetOfMicrographs(unittest.TestCase):
         
     def testCreate(self):
         """ Create a SetOfMicrographs from a list of micrographs """
-        micSet = SetOfMicrographs()
-        micSet.setFileName(self.dbFn)
+        micSet = SetOfMicrographs(filename=self.dbFn)
         micSet.setSamplingRate(1.2)
         for fn in self.mics:
             mic = Micrograph()
@@ -122,43 +124,43 @@ class TestSetOfMicrographs(unittest.TestCase):
 #        os.chdir(cwd)
 
 
-class TestSetOfParticles(unittest.TestCase):
+class TestSetOfParticles(BaseTest):
     """ Check if the information of the images is copied to another image when a new SetOfParticles is created"""
+    
     @classmethod
     def setUpClass(cls):
-        cls.outputPath = getOutputPath('test_data')
-        cleanPath(cls.outputPath)
-        makePath(cls.outputPath)
-        
-        cls.outputParticles = getOutputPath('test_data', 'output_particles.sqlite')
-        
-        cls.dbGold = getGoldPath('SetOfParticles', 'input_particles.sqlite')
-        
-    def aaatestCreateFromOther(self):
-        inImgSet = SetOfParticles(filename=self.dbGold)
-        inImgSet.setHasCTF(True)
-        outImgFn = self.outputPath + "_particles.sqlite"
-        outImgSet = SetOfParticles(filename=outImgFn)
-        outImgSet.copyInfo(inImgSet)
-        
-        print "inputs particles has CTF?", inImgSet.hasCTF()
-        for i, img in enumerate(inImgSet):
-            j = i + 1
-            img.setLocation(j, "test.stk")
-            outImgSet.append(img)
-        
-        outImgSet.write()
-        
-        if outImgSet.hasCTF():
-            print "everything OK!"
-        else:
-            print "The info of the particles was not copied"
-        
-        cleanPath(outImgFn)
+        setupTestOutput(cls)
+        cls.dataset = DataSet.getDataSet('xmipp_tutorial')  
+        cls.outputParticles = cls.getOutputPath('output_particles.sqlite')
+        #cls.dbGold = cls.dataset.getFile('particlesGold.sqlite')
+        cls.particles = cls.dataset.getFile( 'particles1')
+#        
+#    def testCreateFromOther(self):
+#        inImgSet = SetOfParticles(filename=self.dbGold)
+#        inImgSet.setHasCTF(True)
+#        outImgFn = self.getOutputPath("particles.sqlite")
+#        outImgSet = SetOfParticles(filename=outImgFn)
+#        outImgSet.copyInfo(inImgSet)
+#        
+#        print "inputs particles has CTF?", inImgSet.hasCTF()
+#        teststk = self.getOutputPath('test.stk')
+#        for i, img in enumerate(inImgSet):
+#            j = i + 1
+#            img.setLocation(j, teststk)
+#            outImgSet.append(img)
+#        
+#        outImgSet.write()
+#        
+#        if outImgSet.hasCTF():
+#            print "everything OK!"
+#        else:
+#            print "The info of the particles was not copied"
+#        
+#        cleanPath(outImgFn)
         
     def test_str(self):
         """ Test the string representation of a SetOfParticles. """
-        stackFn = getInputPath('images_LTA.stk')
+        stackFn = self.particles
         imgSet = SetOfParticles(filename=self.outputParticles)
         imgSet.setSamplingRate(1.0)
         imgSet.readStack(stackFn)
@@ -171,35 +173,36 @@ class TestSetOfParticles(unittest.TestCase):
         
         
 
-class TestSetOfClasses2D(unittest.TestCase):
+class TestSetOfClasses2D(BaseTest):
     
     @classmethod
     def setUpClass(cls):
-        cls.outputPath = getOutputPath('test_data')
+        setupTestOutput(cls)
+        cls.dataset = DataSet.getDataSet('xmipp_tutorial')  
+        cls.outputParticles = cls.getOutputPath('output_particles.sqlite')
+        #cls.dbGold = cls.dataset.getFile('particlesGold.sqlite')
         
-        cls.dbGold = getGoldPath('SetOfParticles', 'input_particles.sqlite')
-        
-    def testCreateFromOther(self):
-        inImgSet = SetOfParticles(filename=self.dbGold)
-        inImgSet.setHasCTF(True)
-        outImgFn = self.outputPath + "_particles.sqlite"
-        outImgSet = SetOfParticles(filename=outImgFn)
-        outImgSet.copyInfo(inImgSet)
-        
-        print "inputs particles has CTF?", inImgSet.hasCTF()
-        for i, img in enumerate(inImgSet):
-            j = i + 1
-            img.setLocation(j, "test.stk")
-            outImgSet.append(img)
-        
-        outImgSet.write()
-        
-        if outImgSet.hasCTF():
-            print "everything OK!"
-        else:
-            print "The info of the particles was not copied"
-        
-        cleanPath(outImgFn)
+#    def testCreateFromOther(self):
+#        inImgSet = SetOfParticles(filename=self.dbGold)
+#        inImgSet.setHasCTF(True)
+#        outImgFn = self.outputPath + "_particles.sqlite"
+#        outImgSet = SetOfParticles(filename=outImgFn)
+#        outImgSet.copyInfo(inImgSet)
+#        teststk = self.getOutputPath('test.stk')
+#        print "inputs particles has CTF?", inImgSet.hasCTF()
+#        for i, img in enumerate(inImgSet):
+#            j = i + 1
+#            img.setLocation(j, teststk)
+#            outImgSet.append(img)
+#        
+#        outImgSet.write()
+#        
+#        if outImgSet.hasCTF():
+#            print "everything OK!"
+#        else:
+#            print "The info of the particles was not copied"
+#        
+#        cleanPath(outImgFn)
 
 if __name__ == '__main__':
 #    suite = unittest.TestLoader().loadTestsFromName('test_data_xmipp.TestXmippCTFModel.testConvertXmippCtf')
