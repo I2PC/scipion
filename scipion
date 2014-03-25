@@ -79,14 +79,17 @@ XMIPP_LIB = join(XMIPP_HOME, 'lib')
 
 SCIPION_DATA = join(SCIPION_HOME, 'data')
 SCIPION_LOGS = join(SCIPION_DATA, 'logs')
+SCIPION_TESTS = join(SCIPION_DATA, 'tests')
 SCIPION_USER_DATA = getUserDataPath()
+SCIPION_DIRS = ['SCIPION_DATA', 'SCIPION_LOGS', 'SCIPION_TESTS', 'SCIPION_USER_DATA']
+
 SCIPION_PYTHON = join(XMIPP_BIN, 'xmipp_python')
 
 os.environ['SCIPION_HOME'] = SCIPION_HOME
-os.environ['SCIPION_DATA'] = SCIPION_DATA
-os.environ['SCIPION_LOGS'] = SCIPION_LOGS
-os.environ['SCIPION_USER_DATA'] = SCIPION_USER_DATA
 os.environ['SCIPION_PYTHON'] = SCIPION_PYTHON
+
+for var in SCIPION_DIRS:
+    os.environ[var] = globals()[var]
 
 VARS = {
         'PYTHONPATH': os.pathsep.join([SCIPION_HOME, XMIPP_LIB, os.environ.get('PYTHONPATH', '')]),
@@ -136,14 +139,14 @@ if __name__ == '__main__':
         
         # Create SCIPION_HOME folder if not exists
         if mode != MODE_INSTALL:
-            if (not exists(SCIPION_USER_DATA) or 
-                not exists(SCIPION_DATA) or
-                not exists(SCIPION_LOGS)):
-                print "ERROR: SCIPION_USER_DATA='%s' folder " % SCIPION_USER_DATA
-                print "    or SCIPION_DATA='%s' do not exists." % SCIPION_DATA
-                print "    or SCIPION_LOGS='%s' do not exists." % SCIPION_LOGS
-                print "  RUN: scipion install"
-                sys.exit(1)
+            error = ''
+            for d in SCIPION_DIRS:
+                path = os.environ[d]
+                if not exists(path):
+                    error += "Missing %s folder: '%s'\n" % (d, path)
+            if error:
+                print error + 'RUN:  scipion install'
+                sys.exit(1) 
             
         if mode == MODE_MANAGER:
             runApp('pw_manager.py')
