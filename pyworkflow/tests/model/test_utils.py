@@ -11,6 +11,7 @@ from os.path import join, dirname, exists
 from StringIO import StringIO
 from bibtexparser.bparser import BibTexParser   
 from pyworkflow.tests import *
+import pyworkflow as pw
 
 from subprocess import Popen
 from pyworkflow.utils.process import killWithChilds
@@ -68,7 +69,6 @@ pages = "171-193",
         
         
         
-#FIXME:Jose Miguel
 class TestProccess(BaseTest):
     """ Some tests for utils.process module. """
 
@@ -77,7 +77,8 @@ class TestProccess(BaseTest):
         setupTestOutput(cls)
         
     def test_Process(self):
-        p = Popen('pw_sleep.py 500', shell=True)
+        prog = pw.join('apps', 'pw_sleep.py')
+        p = Popen('xmipp_python %s 500' % prog, shell=True)
         print "pid: ", p.pid
         time.sleep(5)
         killWithChilds(p.pid)
