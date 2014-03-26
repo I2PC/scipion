@@ -92,6 +92,7 @@ class Canvas(tk.Canvas, Scrollable):
         if self.lastItem:
             self.lastItem.setSelected(False)
             self.lastItem = None
+        self.callbackResults = None
         self.lastPos = (0, 0)
         for i in items:
             if i in self.items:
