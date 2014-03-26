@@ -46,7 +46,7 @@ from text import TaggedText
 from widgets import Button, HotButton, IconButton
 from pyworkflow.protocol.params import *
 from pyworkflow.protocol import Protocol
-from dialog import showInfo, TextDialog, ListDialog
+from dialog import showInfo, EditObjectDialog, ListDialog
 from tree import TreeProvider, BoundTree
 #from pyworkflow.em import findViewers
 
@@ -832,10 +832,7 @@ class FormWindow(Window):
     def _editObjParams(self, e=None):
         """ Show a Text area to edit the protocol label and comment. """
         
-        d = editObject(self, "Edit", self.root, self.protocol, self.protocol.mapper)
-        
-#        self.mapper = self.protocol.mapper
-#        d = TextDialog(self.root, "Edit", self.protocol, self.mapper)
+        d = EditObjectDialog(self.root, Message.TITLE_EDIT_OBJECT, self.protocol, self.protocol.mapper)
         
         if d.resultYes():
             label = d.valueLabel
@@ -1043,7 +1040,7 @@ class FormWindow(Window):
 
 def editObject(self, title, root, obj, mapper):
     """ Show a Text area to edit the protocol label and comment. """    
-    return TextDialog(root, title, obj, mapper)
+    return EditObjectDialog(root, title, obj, mapper)
     
 
 if __name__ == '__main__':

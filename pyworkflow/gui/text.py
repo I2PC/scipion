@@ -121,8 +121,14 @@ class Text(tk.Text, Scrollable):
 
     def getText(self):
         return self.get(0.0, tk.END)
+    
+    def setText(self, text):
+        """ Replace the current text with new one. """
+        self.clear()
+        self.addText(text)
         
     def addText(self, text):
+        """ Add some text to the current state. """
         self.config(state=tk.NORMAL)
         if isinstance(text, list):
             for line in text:

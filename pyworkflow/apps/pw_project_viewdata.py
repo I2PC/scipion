@@ -37,28 +37,21 @@ import tkFont
 from pyworkflow.gui.tree import TreeProvider, BoundTree
 from pyworkflow.protocol.protocol import *
 
-import pyworkflow as pw
 from pyworkflow.object import *
 from pyworkflow.em import *
 from pyworkflow.protocol import *
 from pyworkflow.protocol.params import *
-from pyworkflow.mapper import SqliteMapper, XmlMapper
-from pyworkflow.project import Project
 from pyworkflow.utils.graph import Graph
 from pyworkflow.utils.properties import Message, Icon, Color
 
 import pyworkflow.gui as gui
-from pyworkflow.gui import getImage
 from pyworkflow.gui.tree import Tree, ObjectTreeProvider, DbTreeProvider, ProjectRunsTreeProvider
-from pyworkflow.gui.form import FormWindow, editObject
-from pyworkflow.gui.dialog import askYesNo
+from pyworkflow.gui.dialog import askYesNo, EditObjectDialog
 from pyworkflow.gui.text import TaggedText
 from pyworkflow.gui import Canvas
 from pyworkflow.gui.graph import LevelTree
-from pyworkflow.gui.widgets import ComboBox
-
 from config import *
-from pw_browser import BrowserWindow
+
 
 ACTION_EDIT = Message.LABEL_EDIT
 ACTION_COPY = Message.LABEL_COPY
@@ -233,9 +226,10 @@ class DataView(tk.Frame):
         gui.configureWeigths(runsFrame)
         
         # Create the Selected Run Info
-        infoFrame = tk.Frame(v, bg='red')
-        infoFrame.columnconfigure(0, weight=1)
-        infoFrame.rowconfigure(1, weight=1)
+        infoFrame = tk.Frame(v)
+        gui.configureWeigths(infoFrame)
+        self._infoText = TaggedText(infoFrame, bg='white')
+        self._infoText.grid(row=0, column=0, sticky='news')
         
         v.add(runsFrame, weight=3)
         v.add(infoFrame, weight=1)
@@ -250,6 +244,34 @@ class DataView(tk.Frame):
         lt = LevelTree(self._dataGraph)
         lt.setCanvas(canvas)
         lt.paint()
-        canvas.updateScrollRegion()   
+        canvas.updateScrollRegion()
+        canvas.onClickCallback = self._onClick
+        canvas.onDoubleClickCallback = self._onDoubleClick
+        canvas.onRightClickCallback = self._onRightClick
         
- 
+    def _selectObject(self, obj):
+        self._selected = obj
+        self._infoText.setText('*Info:* ' + str(obj))
+        self._infoText.addText('*Created:* ' + '2014-11-22')
+        self._infoText.addText('\n*Label:* ' + obj.getNameId())
+        if obj.getObjComment():
+            self._infoText.addText('*Comments:* ' + obj.getObjComment())
+        
+    def _onClick(self, e=None):
+        if e.node.object:
+            self._selectObject(e.node.object)
+    
+    def _onDoubleClick(self, e=None):
+        if e.node.object:
+            self._selectObject(e.node.object)
+            # Graph the first viewer available for this type of object
+            ViewerClass = findViewers(self._selected.getClassName(), DESKTOP_TKINTER)[0] #
+            viewer = ViewerClass(project=self.project)
+            viewer.visualize(self._selected)
+        
+    def _onRightClick(self, e=None):
+        return [(Message.LABEL_EDIT, self._editObject, Icon.ACTION_EDIT)]
+    
+    def _editObject(self):
+        """Open the Edit GUI Form given an instance"""
+        EditObjectDialog(self, Message.TITLE_EDIT_OBJECT, self._selected, self.project.mapper)

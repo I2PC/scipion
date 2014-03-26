@@ -307,7 +307,7 @@ class ProtImportVolumes(EMProtocol):
        
     def _defineParams(self, form):
         form.addSection(label='Input')
-        form.addParam('pattern', StringParam, label=Message.LABEL_PATTERN)
+        form.addParam('pattern', PathParam, label=Message.LABEL_PATTERN)
         form.addParam('samplingRate', FloatParam,
                    label=Message.LABEL_SAMP_RATE)
     

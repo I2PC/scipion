@@ -298,7 +298,7 @@ class EntryDialog(Dialog):
         return True
     
     
-class TextDialog(Dialog):
+class EditObjectDialog(Dialog):
     """Dialog to edit some text"""
     def __init__(self, parent, title, obj, mapper):
         

@@ -350,10 +350,10 @@ class Project(object):
             
         return self._runsGraph
     
-    def getDataGraph(self, refresh=False):
+    def getDataGraph(self, relation=RELATION_SOURCE, refresh=False):
         """ Retrieve objects produced as outputs and
         make a graph taking into account the SOURCE relation. """
-        relations = self.mapper.getRelationsByName(RELATION_SOURCE)
+        relations = self.mapper.getRelationsByName(relation)
         g = Graph(rootName='PROJECT')
         root = g.getRoot()
         root.object = None

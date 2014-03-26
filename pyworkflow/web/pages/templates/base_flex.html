@@ -39,11 +39,20 @@ $('#widget').draggable();
 	<!-- <div id="mainContainer"> -->
 		<div data-layout='{"type": "border", "hgap": 1, "vgap": 1}' class="layout-outer">
 			{% include "header.html" %}
-	
+			
 			{% if contentConfig == 'divided' %}
-				<section data-layout='{"type": "border", "hgap": 1, "vgap": 1}' class="center layout-inner">
-					<div class="north">
-				        {% block contentNorth %}	
+			
+				<aside class="west">
+					{% block sideLeft %}	
+					{% endblock %}
+				</aside>
+				
+				<section class="center layout-inner"
+					style="height:100%;overflow-y:scroll;" 
+					data-layout='{"type": "border", "hgap": 1, "vgap": 1}'>
+	
+					<div class="north" style="height:50%;overflow-y:scroll;">				        
+						{% block contentNorth %}	
 				        {% endblock %}
 				    </div>
 				    <div class="center">
@@ -51,10 +60,8 @@ $('#widget').draggable();
 				        {% endblock %}
 				    </div>
 				</section>
-				<aside class="west">
-					{% block sideLeft %}	
-					{% endblock %}
-				</aside>
+				
+				
 			{% elif contentConfig == 'full' %}
 				<aside class="center">
 					{% block menu %}	
