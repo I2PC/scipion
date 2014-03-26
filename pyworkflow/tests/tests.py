@@ -50,9 +50,9 @@ class BaseTest(unittest.TestCase):
         return join(cls.outputPath, *filenames)   
     
     @classmethod
-    def getRelPath(cls, filename):
+    def getRelPath(cls, basedir, filename):
         """Return the path relative to SCIPION_HOME/tests"""
-        return relpath(filename, cls.outputPath)
+        return relpath(filename, basedir)
        
 
         
