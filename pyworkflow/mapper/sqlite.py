@@ -612,7 +612,7 @@ class SqliteFlatMapper(Mapper):
     def __iterObjectsFromRows(self, objRows, objectFilter=None):
         for objRow in objRows:
             obj = self.__objFromRow(objRow)
-            if objectFilter is None or objectFilter(obj):
+            if objectFilter is None or objectFilter(obj): 
                 yield obj
         
     def __objectsFromRows(self, objRows, iterate=False, objectFilter=None):
@@ -623,7 +623,7 @@ class SqliteFlatMapper(Mapper):
             objectFilter: function to filter some of the objects of the results. 
         """
         if not iterate:
-            return [obj for obj in self.__iterObjectsFromRows(objRows, objectFilter)]
+            return [obj.clone() for obj in self.__iterObjectsFromRows(objRows, objectFilter)]
         else:
             return self.__iterObjectsFromRows(objRows, objectFilter)
          
@@ -633,10 +633,11 @@ class SqliteFlatMapper(Mapper):
         return self.__objectsFromRows(objRows, iterate, objectFilter)
     
     def selectAll(self, iterate=True, objectFilter=None):
+        
         if self._objTemplate is None:
             self.__loadObjDict()
         objRows = self.db.selectAll()
-
+        
         return self.__objectsFromRows(objRows, iterate, objectFilter)    
     
     def __objectsFromIds(self, objIds):

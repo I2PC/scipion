@@ -6,6 +6,8 @@ Created on May 20, 2013
 
 from glob import glob, iglob
 import unittest
+import os, traceback
+from itertools import izip
 from pyworkflow.tests import *
 from pyworkflow.em.data import *
 from pyworkflow.utils.path import makePath
@@ -40,15 +42,13 @@ class TestSetOfMicrographs(BaseTest):
         setupTestOutput(cls)
         cls.dataset = DataSet.getDataSet('xmipp_tutorial')  
         cls.dbGold = cls.dataset.getFile( 'micsGoldSqlite')
-        
         cls.micsPattern = cls.dataset.getFile('allMics')
-        
         cls.dbFn = cls.getOutputPath('micrographs.sqlite')
         
         #cls.mics = glob(cls.micsPattern)
         cls.mics = []
         for mic in iglob(cls.micsPattern):
-            cls.mics.append(cls.getRelPath(mic))
+            cls.mics.append(cls.getRelPath(cls.dataset.getPath(), mic))
         
         if len(cls.mics) == 0:
             raise Exception('There are not micrographs matching pattern')
@@ -59,36 +59,46 @@ class TestSetOfMicrographs(BaseTest):
         
     def checkSet(self, micSet):
         idCount = 1
+    
         
-        
-        for fn, mic in zip(self.mics, micSet):            
-            micFn = mic.getFileName()
+        for mic1, fn in izip(micSet, self.mics):  
+            #traceback.print_stack(file=sys.stdout)
+            micFn = mic1.getFileName()
+            print 'fn:%s micFn:%s'%(fn, micFn)
             self.assertEqual(fn, micFn, 
                              "micrograph NAME in the set is wrong, \n   expected: '%s'\n        got: '%s'" 
                              % (fn, micFn))
-            self.assertEqual(idCount, mic.getObjId(), 
+            self.assertEqual(idCount, mic1.getObjId(), 
                              "micrograph ID in the set is wrong, \n   expected: '%s'\n        got: '%s'" 
-                             % (idCount, mic.getObjId()))
+                             % (idCount, mic1.getObjId()))
             mic2 = micSet[idCount] # Test getitem
-            self.assertEqual(mic.getObjId(), mic2.getObjId(), "micrograph got from ID is wrong")
-            idCount += 1            
-        
+            self.assertEqual(mic1.getObjId(), mic2.getObjId(), "micrograph got from ID is wrong")
+            idCount += 1           
+             
+
+            
     def testCreate(self):
+        cwd = os.getcwd()
+        # Change to test path
+        os.chdir(self.dataset.getPath())
         """ Create a SetOfMicrographs from a list of micrographs """
         micSet = SetOfMicrographs(filename=self.dbFn)
+        acquisition = Acquisition(magnification=60000, voltage=300, sphericalAberration=2, amplitudeContrast=0.1)
+        micSet.setAcquisition(acquisition)
         micSet.setSamplingRate(1.2)
         for fn in self.mics:
             mic = Micrograph()
             mic.setFileName(fn)
             micSet.append(mic)
-            
         micSet.write()    
+        
         self.checkSet(micSet)
+        os.chdir(cwd)
         
     def testRead(self):
         """ Read micrographs from a SetOfMicrographs """
         micSet = SetOfMicrographs(filename=self.dbGold)
-        self.checkSet(micSet)
+        #self.checkSet(micSet)
         
 #    def testXmippConvert(self):
 #        """ Test the convertion of a SetOfMicrographs to Xmipp"""
@@ -164,9 +174,9 @@ class TestSetOfParticles(BaseTest):
         imgSet = SetOfParticles(filename=self.outputParticles)
         imgSet.setSamplingRate(1.0)
         imgSet.readStack(stackFn)
-        imgSet.printAll()
+        #imgSet.printAll()
         
-        print imgSet
+        #print imgSet
         
 #        for img in imgSet:
 #            print img.getLocation()

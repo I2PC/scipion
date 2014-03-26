@@ -404,7 +404,8 @@ class Set(EMObject):
         return self._mapper.selectById(itemId)
 
     def _iterItems(self):
-        return self._mapper.selectAll(iterate=True)
+        
+        return self._mapper.selectAll()#has flat mapper, iterate is true
     
     def getFirstItem(self):
         """ Return the first item in the Set. """
@@ -607,6 +608,7 @@ class SetOfImages(Set):
         """ Redefine iteration to set the acquisition to images. """
         for img in self._iterItems():
             img.setAcquisition(self.getAcquisition())
+            
             yield img
 
 
