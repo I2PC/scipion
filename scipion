@@ -223,6 +223,11 @@ if __name__ == '__main__':
         elif mode == MODE_VERSION:
             print __version__
             sys.exit(0)
+            
+        elif mode == 'runprotocol':
+            if n == 5:
+                from pyworkflow.protocol import runProtocolMain
+                runProtocolMain(*sys.argv[2:5])
                 
     # If reach this point, bad arguments passed
     print """
