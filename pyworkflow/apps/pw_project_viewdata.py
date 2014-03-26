@@ -233,9 +233,10 @@ class DataView(tk.Frame):
         gui.configureWeigths(runsFrame)
         
         # Create the Selected Run Info
-        infoFrame = tk.Frame(v, bg='red')
-        infoFrame.columnconfigure(0, weight=1)
-        infoFrame.rowconfigure(1, weight=1)
+        infoFrame = tk.Frame(v)
+        gui.configureWeigths(infoFrame)
+        self._infoText = TaggedText(infoFrame, bg='white')
+        self._infoText.grid(row=0, column=0, sticky='news')
         
         v.add(runsFrame, weight=3)
         v.add(infoFrame, weight=1)
@@ -250,6 +251,21 @@ class DataView(tk.Frame):
         lt = LevelTree(self._dataGraph)
         lt.setCanvas(canvas)
         lt.paint()
-        canvas.updateScrollRegion()   
+        canvas.updateScrollRegion()
+        canvas.onClickCallback = self._runItemClick
+        canvas.onDoubleClickCallback = self._runItemDoubleClick
         
+    def _selectObject(self, obj):
+        self._selected = obj
+        self._infoText.setText('*Info:* ' + str(obj))
+        self._infoText.addText('*Created:* ' + '2014-11-22')
+        self._infoText.addText('\n*Label:* ' + obj.getNameId())
+        if obj.getObjComment():
+            self._infoText.addText('*Comments:* ' + obj.getObjComment())
+        
+    def _runItemClick(self, e=None):
+        self._selectObject(e.node.object)
+    
+    def _runItemDoubleClick(self, e=None):
+        pass    
  

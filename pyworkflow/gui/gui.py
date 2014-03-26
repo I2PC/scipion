@@ -187,35 +187,6 @@ def getImageFromPath(imagePath):
     
     return imgTk
 
-# Standard icons
-
-ICONS = {
-         'select': 'fa-check.gif',
-         'cancel': 'fa-ban.gif',
-#fa-check  -> Select
-#fa-ban -> Cancel
-#fa-times -> Close
-#fa-floppy-o (fa-save) -> Save
-#fa-eye -> Visualize
-#fa-pencil -> Edit
-#fa-cogs -> Execute
-#fa-question -> Help
-#fa-search -> Zoom
-#fa-sign-in , fa-sign-out -> Input & Output Parameters
-#fa-magic -> Wizard
-#fa-file-o -> New
-#fa-files-o (fa-copy) -> Copy
-#fa-trash-o -> Delete
-#fa-folder-open -> Browse
-#fa-sitemap -> Tree
-#fa-bars -> List
-#fa-refresh -> Refresh
-         }
-
-def getIcon(iconName, imgDict=None):
-    """ Search for standard icons. """
-    return getImage(ICONS[iconName], imgDict)
-
 """
 Windows geometry utilities
 """
@@ -245,12 +216,13 @@ def centerWindows(root, dim=None, refWindows=None):
         
     root.geometry("%dx%d+%d+%d" % (gw, gh, x, y))
     
-def configureWeigths(widget):
+def configureWeigths(widget, row=0, column=0):
     """This function is a shortcut to a common
     used pair of calls: rowconfigure and columnconfigure
     for making childs widgets take the space available"""
-    widget.columnconfigure(0, weight=1)
-    widget.rowconfigure(0, weight=1)
+    widget.columnconfigure(row, weight=1)
+    widget.rowconfigure(column, weight=1)
+    
     
 class Window():
     """Class to manage a Tk windows.
