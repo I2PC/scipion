@@ -27,6 +27,7 @@
 This module implement the classes to create plots on xmipp.
 """
 from pyworkflow.gui.plotter import Plotter
+from itertools import izip
 
 class EmPlotter(Plotter):
     ''' Class to create several plots'''
@@ -38,12 +39,12 @@ class EmPlotter(Plotter):
             max_w = max(weight)
             min_w = min(weight)
             a = self.createSubPlot(title, 'Min weight=%(min_w).2f, Max weight=%(max_w).2f' % locals(), '', projection='polar')
-            for r, t, w in zip(rot, tilt, weight):
+            for r, t, w in izip(rot, tilt, weight):
                 pointsize = int((w - min_w)/(max_w - min_w + 0.001) * (max_p - min_p) + min_p)
                 a.plot(r, t, markerfacecolor=color, marker='.', markersize=pointsize)
         else:
             a = self.createSubPlot(title, 'Empty plot', '', projection='polar')
-            for r, t in zip(rot, tilt):
+            for r, t in izip(rot, tilt):
                 a.plot(r, t, markerfacecolor=color, marker='.', markersize=10)
       
     def plotHist(self, xCol, yCol, color, **args):
