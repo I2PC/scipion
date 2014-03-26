@@ -371,14 +371,14 @@ class ProtocolsView(tk.Frame):
         """
         p = tk.PanedWindow(self, orient=tk.HORIZONTAL, bg='white')
         
+        bgColor = Color.LIGHT_GREY_COLOR
         # Left pane, contains Protocols Pane
-        leftFrame = tk.Frame(p, bg='white')
+        leftFrame = tk.Frame(p, bg=bgColor)
         leftFrame.columnconfigure(0, weight=1)
         leftFrame.rowconfigure(1, weight=1)
 
         
         # Protocols Tree Pane        
-        bgColor = Color.LIGHT_GREY_COLOR
         protFrame = tk.Frame(leftFrame, width=300, height=500, bg=bgColor)
         protFrame.grid(row=1, column=0, sticky='news', padx=5, pady=5)
         protFrame.columnconfigure(0, weight=1)
@@ -486,7 +486,7 @@ class ProtocolsView(tk.Frame):
         v.grid(row=1, column=0, sticky='news')
         
         # Add sub-windows to PanedWindows
-        p.add(leftFrame, padx=5, pady=5)
+        p.add(leftFrame, padx=5, pady=5, sticky='news')
         p.add(rightFrame, padx=5, pady=5)
         p.paneconfig(leftFrame, minsize=300)
         p.paneconfig(rightFrame, minsize=400)        
