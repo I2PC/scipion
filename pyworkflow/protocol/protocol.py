@@ -1114,8 +1114,7 @@ def runProtocolMain(projectPath, protDbPath, protId):
         
     # Enter to the project directory
     os.chdir(projectPath)
-    import pyworkflow.em as em 
-    protocol = _getProtocolFromDb(protDbPath, protId, em.__dict__)
+    protocol = getProtocolFromDb(protDbPath, protId)
     hostConfig = protocol.getHostConfig()  
   
     # Create the steps executor
@@ -1145,7 +1144,7 @@ def runProtocolMainMPI(dbPath, protId, mpiComm):
     and the proper MPI scripts have been started...so no validations 
     will be made.
     """ 
-    protocol = _getProtocolFromDb(dbPath, protId)
+    protocol = getProtocolFromDb(dbPath, protId)
     hostConfig = protocol.getHostConfig()
     # Create the steps executor
     executor = MPIStepExecutor(hostConfig, protocol.numberOfMpi.get(), mpiComm)
@@ -1155,10 +1154,13 @@ def runProtocolMainMPI(dbPath, protId, mpiComm):
     protocol.run()        
     
      
-def _getProtocolFromDb(dbPath, protId):
+def getProtocolFromDb(dbPath, protId):
     import pyworkflow.em as em
+    import pyworkflow.apps.config as config
+    classDict = dict(em.__dict__)
+    classDict.update(config.__dict__)
     from pyworkflow.mapper import SqliteMapper
-    mapper = SqliteMapper(dbPath, em.__dict__)
+    mapper = SqliteMapper(dbPath, classDict)
     protocol = mapper.selectById(protId)
     if protocol is None:
         raise Exception("Not protocol found with id: %d" % protId)

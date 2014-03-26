@@ -105,7 +105,9 @@ def _launchLocal(protocol, wait):
 #         mpi = 1
     protStrId = protocol.strId()
     #threads = protocol.numberOfThreads.get()
-    command = 'scipion runprotocol %s %s %s' % (protocol.getProject().path, protocol.getDbPath(), protStrId)
+    python = os.environ['SCIPION_PYTHON']
+    scipion = os.path.join(os.environ['SCIPION_HOME'], 'scipion')
+    command = '%s %s runprotocol %s %s %s' % (python, scipion, protocol.getProject().path, protocol.getDbPath(), protStrId)
     hostConfig = protocol.getHostConfig()
     useQueue = hostConfig.isQueueMandatory() or protocol.useQueue()
     #bg = not wait and not useQueue

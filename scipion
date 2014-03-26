@@ -77,6 +77,9 @@ XMIPP_HOME = getConfigPath('XMIPP_HOME') #os.environ['XMIPP_HOME']
 XMIPP_BIN = join(XMIPP_HOME, 'bin')
 XMIPP_LIB = join(XMIPP_HOME, 'lib')
 
+if not XMIPP_LIB in sys.path:
+    sys.path.append(XMIPP_LIB)
+
 SCIPION_DATA = join(SCIPION_HOME, 'data')
 SCIPION_LOGS = join(SCIPION_DATA, 'logs')
 SCIPION_TESTS = join(SCIPION_DATA, 'tests')
@@ -226,8 +229,8 @@ if __name__ == '__main__':
             
         elif mode == 'runprotocol':
             if n == 5:
-                from pyworkflow.protocol import runProtocolMain
-                runProtocolMain(*sys.argv[2:5])
+                args = ' '.join(sys.argv[2:5])
+                runApp('pw_protocol_run.py', args)
                 
     # If reach this point, bad arguments passed
     print """
