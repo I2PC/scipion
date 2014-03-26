@@ -109,17 +109,13 @@ class XmippProtCTFMicrographs(ProtCTFMicrographs):
         self.runJob("xmipp_ctf_sort_psds","-i %s -o %s" % (mdFn, auxMdFn))
         # Copy result to output metadata
         moveFile(auxMdFn, mdFn)        
-        #micSet._xmippMd.set(mdFn)
-        #self._defineOutputs(outputMicrographs=micSet)
         self._defineOutputs(outputCTF=ctfSet)
-        #self._defineSourceRelation(self.inputMics, micSet)
-        self._defineRelation(RELATION_CTF, ctfSet, self.inputMics)
+        self._defineSourceRelation(self.inputMics, ctfSet)
+        self._defineRelation(RELATION_CTF, self.inputMics, ctfSet)
     
 
     def _citations(self):
         return ['Vargas2013']
-    
- 
     
     #--------------------------- UTILS functions ---------------------------------------------------
     def _prepareCommand(self):
