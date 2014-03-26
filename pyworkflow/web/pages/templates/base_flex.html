@@ -48,14 +48,15 @@ $('#widget').draggable();
 				</aside>
 				
 				<section class="center layout-inner"
-					style="height:100%;overflow-y:scroll;" 
+					style="height:80%;overflow-y:scroll;overflow:auto;"
 					data-layout='{"type": "border", "hgap": 1, "vgap": 1}'>
 	
-					<div class="north" style="height:50%;overflow-y:scroll;">				        
+					<div class="north" style="height:70%;overflow-y:scroll;overflow:auto;">
+<!-- 					<div class="north">				         -->
 						{% block contentNorth %}	
 				        {% endblock %}
 				    </div>
-				    <div class="center">
+				    <div class="center" style="height:30%;">
 				        {% block contentCenter %}	
 				        {% endblock %}
 				    </div>

@@ -220,8 +220,8 @@ def configureWeigths(widget, row=0, column=0):
     """This function is a shortcut to a common
     used pair of calls: rowconfigure and columnconfigure
     for making childs widgets take the space available"""
-    widget.columnconfigure(row, weight=1)
-    widget.rowconfigure(column, weight=1)
+    widget.columnconfigure(column, weight=1)
+    widget.rowconfigure(row, weight=1)
     
     
 class Window():
