@@ -9,7 +9,7 @@
 
 <!-- Run Table ---------------------->
 
-<div id="runTable">	
+<div id="runTable" style="display:inline;">
 	<table id="data" cellspacing="0">
 		<tr>
 			{% for colName, colWidth in columns %}
@@ -35,9 +35,10 @@
 </div>
 
 <!-- Run Graph ---------------------->
-
-<img id="loading" src="../../../../resources/loading.gif" style="width: 20%;height: 20%;margin-top:12.5em;margin-left:15em;display:none;"/>
-<div id="graphActiv" style="display: none;" data-mode="inactive"
-	data-time="first" data-project="{{projectName}}" data-option="">
-	<!-- <h3>History</h3> -->
+<div id="runGraph">
+	<img id="loading" src="../../../../resources/loading.gif" style="width: 20%;height: 20%;margin-top:12.5em;margin-left:15em;display:none;"/>
+	<div id="graphActiv" style="display:none;" data-mode="inactive"
+		data-time="first" data-project="{{projectName}}" data-option="">
+		<!-- <h3>History</h3> -->
+	</div>
 </div>
