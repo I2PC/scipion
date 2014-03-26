@@ -10,41 +10,39 @@ class TestSpiderWorkflow(TestWorkflow):
     def setUpClass(cls):    
         # Create a new project
         setupTestProject(cls)
-        cls.dataset = DataSet.getDataSet(dataProject)
+        cls.dataset = DataSet.getDataSet('mda')
         cls.particlesFn = cls.dataset.getFile('particles')
-
     
-    def testMSAWorkflow(self):
+    def test_mdaWorkflow(self):
         """ Run an Import particles protocol. """
-        project = self.proj
         protImport = ProtImportParticles(pattern=self.particlesFn, samplingRate=3.5)
-        project.launchProtocol(protImport, wait=True)
+        self.proj.launchProtocol(protImport, wait=True)
         # check that input images have been imported (a better way to do this?)
         if protImport.outputParticles is None:
             raise Exception('Import of images: %s, failed. outputParticles is None.' % pattern)
         
         protFilter = SpiderProtFilter()
         protFilter.inputParticles.set(protImport.outputParticles)
-        project.launchProtocol(protFilter, wait=True)
+        self.proj.launchProtocol(protFilter, wait=True)
         
         protAPSR = SpiderProtAlignAPSR()
         protAPSR.inputParticles.set(protFilter.outputParticles)
-        project.launchProtocol(protAPSR, wait=True)
+        self.proj.launchProtocol(protAPSR, wait=True)
          
         protMask = SpiderProtCustomMask()
         protMask.inputImage.set(protAPSR.outputAverage)
-        project.launchProtocol(protMask, wait=True)       
+        self.proj.launchProtocol(protMask, wait=True)       
               
         protCAPCA = SpiderProtCAPCA()
         protCAPCA.maskType.set(1)
         protCAPCA.maskImage.set(protMask.outputMask)
         protCAPCA.inputParticles.set(protAPSR.outputParticles)
-        project.launchProtocol(protCAPCA, wait=True)
+        self.proj.launchProtocol(protCAPCA, wait=True)
         
         protWard = SpiderProtClassifyWard()
         protWard.pcaFilePointer.set(protCAPCA.imcFile)
         protWard.inputParticles.set(protAPSR.outputParticles)
-        project.launchProtocol(protWard, wait=True)
+        self.proj.launchProtocol(protWard, wait=True)
 
 
 if __name__ == "__main__":
