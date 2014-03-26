@@ -28,7 +28,9 @@
 	height: 80%;
 	margin-bottom: 30px;
 	max-height: 70%;
-	overflow-y: auto;
+/* 	min-height: 30%; */
+	overflow-y: scroll;
+	position: static;
 } 
 .layout-inner > .center {
 
@@ -39,13 +41,16 @@
 	color: Firebrick !important;
 }
 .north .ui-resizable-s {
+	position: absolute;
 	bottom: 0px !important;
 	background: url("/resources/handle_hor.gif") no-repeat center center transparent;
+/* 	background-color: red; */
 }
 
 .ui-resizable-e {
 	background: url("/resources/handle_ver.gif") no-repeat center center transparent;
 	margin-right: 5px;
+	padding-right: 5px
 }	
 
 /* SECTION */
@@ -53,6 +58,7 @@
 	padding: 15px 10px;
 	background-color: #eaebec;
 	font-size: 0.9em;
+	overflow-x:hidden;
 }
 
 /* TREEVIEW */
