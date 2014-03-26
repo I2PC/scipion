@@ -31,6 +31,8 @@
 		$("#tabs").tabs();
 	});
 	
+// 	alert($(window).height());
+	
 	jQuery(function($) {
 		// Just call the inner layout once to initialize it. This
 		// must happen before the outer layout is initialized. It
@@ -46,17 +48,11 @@
 		layout();
 
 		$(window).resize(layout);
-	
 		
 		{% if contentConfig == 'divided' %}
 			
-// 	  		$('.layout-inner > .north').resizable({
-// 	  			handles: 's',
-// 	  			stop: layout
-// 	  			});
-	// 			$('.layout-inner > .center').resizable({handles: 's', stop: layout});
-	/*   			$('.layout-inner > .center').resizable({handles: 'n', stop: layout});  */
-	
+			$('.layout-inner > .north').resizable({handles: 's'});
+
 		{% endif %}
 		
 		// This selector is changed to only select the west and east
@@ -70,6 +66,7 @@
 	});	
 	
 </script>
+
 {% endblock %} 
 
 {% block sideLeft %}
@@ -87,6 +84,7 @@
 	</div>
 </div>
 {% endblock %} 
+
 
 {% block contentNorth %}
 <div id="headerToolbar">

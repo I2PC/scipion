@@ -22,6 +22,7 @@
 <script type="text/javascript" src="{{jquery_sizes}}"></script>
 <script type="text/javascript" src="{{jlayout_border}}"></script>
 <script type="text/javascript" src="{{jquery_layout}}"></script>
+<script type="text/javascript" src="{{jquery_splitter}}"></script>
 <script type="text/javascript" src="{{utils}}"></script>
 
 <script>
@@ -51,15 +52,19 @@ $('#widget').draggable();
 					style="height:80%;overflow-y:scroll;overflow:auto;"
 					data-layout='{"type": "border", "hgap": 1, "vgap": 1}'>
 	
-					<div class="north" style="height:70%;overflow-y:scroll;overflow:auto;">
-<!-- 					<div class="north">				         -->
-						{% block contentNorth %}	
-				        {% endblock %}
-				    </div>
+<!-- 					<div class="north" style="position:relative;height:100%;height:70%;overflow-y:scroll;overflow:auto;"> -->
+					<div class="north">				        
+					 	<div class="text" style="position:relative;height:100%;overflow:auto;">
+							{% block contentNorth %}	
+					        {% endblock %}
+						</div>
+					</div>
+				    
 				    <div class="center" style="height:30%;">
 				        {% block contentCenter %}	
 				        {% endblock %}
 				    </div>
+				    
 				</section>
 				
 				
