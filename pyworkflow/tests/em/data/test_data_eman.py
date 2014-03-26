@@ -21,7 +21,7 @@ class TestEmanSetOfMicrographs(BaseTest):
         
                 
 
-            
+    #Fixme: cache output is written in test input files        
     def testConvert(self):
         micSet = SetOfMicrographs(filename=self.dbGold)
         
