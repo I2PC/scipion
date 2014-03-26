@@ -64,7 +64,6 @@ class TestSetOfMicrographs(BaseTest):
         for mic1, fn in izip(micSet, self.mics):  
             #traceback.print_stack(file=sys.stdout)
             micFn = mic1.getFileName()
-            print 'fn:%s micFn:%s'%(fn, micFn)
             self.assertEqual(fn, micFn, 
                              "micrograph NAME in the set is wrong, \n   expected: '%s'\n        got: '%s'" 
                              % (fn, micFn))
@@ -98,7 +97,7 @@ class TestSetOfMicrographs(BaseTest):
     def testRead(self):
         """ Read micrographs from a SetOfMicrographs """
         micSet = SetOfMicrographs(filename=self.dbGold)
-        #self.checkSet(micSet)
+        self.checkSet(micSet)
         
 #    def testXmippConvert(self):
 #        """ Test the convertion of a SetOfMicrographs to Xmipp"""
