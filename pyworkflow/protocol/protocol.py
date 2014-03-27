@@ -1123,10 +1123,10 @@ def runProtocolMain(projectPath, protDbPath, protId):
         if protocol.numberOfMpi > 1:
             # Handle special case to execute in parallel
             from pyworkflow.utils import runJob
-            params = pw.join('apps', 'pw_protocol_mpirun.py')
-            params += '%s %s' % (protDbPath, protId)
+            prog = pw.join('apps', 'pw_protocol_mpirun.py')
+            params = ' %s %s' % (protDbPath, protId)
             
-            retcode = runJob(None, os.environ['SCIPION_PYTHON'], params,
+            retcode = runJob(None, prog, params,
                              numberOfMpi=protocol.numberOfMpi.get(), hostConfig=hostConfig)
             sys.exit(retcode)
         elif protocol.numberOfThreads > 1:
