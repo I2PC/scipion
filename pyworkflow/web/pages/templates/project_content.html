@@ -79,6 +79,7 @@
 			{% endfor %}
 		</select>
 	</div> 
+	
 	<div class="protFieldsetTree">
 	{% include "tree_prot_view.html" %}
 	</div>
@@ -116,7 +117,7 @@
 {% endblock %}
 
 {% block contentCenter %}
-<div class="tabContaier" id="tabs">
+<div class="tabContaier" id="tabs" style="height:100%;overflow-y:auto;">
 	<span id="buttonAnalyzeResult" style="display:None;">
 		<a id="analyzeTool" class="btn buttonRed" href="">
 			<i class="fa fa-eye" style="margin-right:5px">
@@ -132,7 +133,9 @@
 		<li><a href="#tab-logs-error">{{msg.LABEL_LOGS_ERROR}}</a></li>
 		<li><a href="#tab-logs-scipion">{{msg.LABEL_LOGS_SCIPION}}</a></li>
 	</ul>
-	<div id="tab-data" class="tabContents">
+	<div id="listTabsContent">
+	</div>
+	<div id="tab-data" class="tabContents"> 
 		<div id="listEx">
 			<ul>
 				<li>

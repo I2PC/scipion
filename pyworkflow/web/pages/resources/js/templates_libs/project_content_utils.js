@@ -353,7 +353,7 @@ function graphON(graph, icon_graph, list, icon_list){
 	graph.attr("data-mode", "active");
 //	graph.removeAttr("style");
 	graph.show();
-	graph.css("margin-top","50em")
+	graph.css("margin-top","-50em")
 	icon_graph.hide();
 	
 	// Table OFF
