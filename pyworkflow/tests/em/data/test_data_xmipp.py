@@ -18,15 +18,20 @@ class TestXmippSetOfMicrographs(BaseTest):
         cls.dataset = DataSet.getDataSet('xmipp_tutorial')  
         cls.dbGold = cls.dataset.getFile( 'micsGoldSqlite')
         cls.mdGold = cls.dataset.getFile('micsGoldXmd')
+        cls.acquisition = Acquisition(magnification=60000, voltage=200, sphericalAberration=2.26, amplitudeContrast=0.1)#according to gold file
+        
+
     
     def testConvert(self):
         """ Test the convertion of a SetOfMicrographs to Xmipp metadata"""
         micSet = SetOfMicrographs(filename=self.dbGold)
+        micSet.setAcquisition(self.acquisition)
         mdFn = self.getOutputPath('micrographs.xmd')
         
         writeSetOfMicrographs(micSet, mdFn)
-                
         self.assertEqual(xmipp.MetaData(mdFn), xmipp.MetaData(self.mdGold), "xmipp metadata wrong")
+        
+  
                   
     
 class TestXmippSetOfCoordinates(BaseTest):  
@@ -36,7 +41,7 @@ class TestXmippSetOfCoordinates(BaseTest):
         setupTestOutput(cls)
         cls.dataset = DataSet.getDataSet('xmipp_tutorial')  
         cls.dbGold = cls.dataset.getFile( 'micsGoldSqlite')
-        cls.posDir = cls.dataset.getFile('posDir')
+        cls.posDir = cls.dataset.getFile('posAllDir')
         cls.dbCoord = cls.dataset.getFile('coordsGoldSqlite')
         
         

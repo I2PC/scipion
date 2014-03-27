@@ -13,7 +13,7 @@ class HighThroughputTest(TestWorkflow):
         setupTestProject(cls)
         cls.dataset = DataSet.getDataSet('ribo_movies')
         cls.movies = cls.dataset.getFile('movies')
-        cls.crdsDir = cls.dataset.getFile('posAlldDir')
+        cls.crdsDir = cls.dataset.getFile('posAllDir')
     
     def test_workflow(self):
         #First, import a set of movies

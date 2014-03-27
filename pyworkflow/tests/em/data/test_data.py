@@ -44,6 +44,7 @@ class TestSetOfMicrographs(BaseTest):
         cls.dbGold = cls.dataset.getFile( 'micsGoldSqlite')
         cls.micsPattern = cls.dataset.getFile('allMics')
         cls.dbFn = cls.getOutputPath('micrographs.sqlite')
+        cls.acquisition = Acquisition(magnification=60000, voltage=300, sphericalAberration=2, amplitudeContrast=0.1)
         
         #cls.mics = glob(cls.micsPattern)
         cls.mics = []
@@ -82,7 +83,7 @@ class TestSetOfMicrographs(BaseTest):
         os.chdir(self.dataset.getPath())
         """ Create a SetOfMicrographs from a list of micrographs """
         micSet = SetOfMicrographs(filename=self.dbFn)
-        acquisition = Acquisition(magnification=60000, voltage=300, sphericalAberration=2, amplitudeContrast=0.1)
+        
         micSet.setAcquisition(acquisition)
         micSet.setSamplingRate(1.2)
         for fn in self.mics:

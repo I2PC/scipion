@@ -287,7 +287,7 @@ class TestMixedRelionTutorial(TestWorkflow):
         setupTestProject(cls)
         cls.dataset = DataSet.getDataSet('relion_tutorial')
         cls.crdsEmanDir = cls.dataset.getFile('boxingDir')
-        cls.crdsXmippDir = cls.dataset.getFile('posAlldDir')
+        cls.crdsXmippDir = cls.dataset.getFile('posAllDir')
         cls.micsFn = cls.dataset.getFile('allMics')
         cls.vol = cls.dataset.getFile('volume')
     
