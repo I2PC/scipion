@@ -23,9 +23,7 @@
 # *  e-mail address 'jgomez@cnb.csic.es'
 # *
 # **************************************************************************
-"""
-This module contains the protocol to obtain a refined 3D recontruction from a set of particles using Frealign
-"""
+"""This module contains the protocol base class for frealign protocols"""
 
 import os
 from pyworkflow.utils import *
@@ -33,49 +31,41 @@ from pyworkflow.em import *
 from data import *
 from brandeis import *
 from constants import *
-# import time
 
 
-class ProtFrealign(ProtRefine3D):
-    """Protocol to perform a volume from a SetOfParticles
-    using the frealign program"""
-    _label = 'frealign'
-    _references = ['[[http://dx.doi.org/10.1016/j.jsb.2006.05.004][Grigorieff N,  JSB (2007)]]',
-                   '[[http://www.ncbi.nlm.nih.gov/pubmed/16384646][Wolf M, et.al, Ultramicroscopy (2006)]]',
-                   '[[http://www.ncbi.nlm.nih.gov/pubmed/15556702][Stewart A & Grigorieff N, Ultramicroscopy (2004)]]',
-                   '[[http://www.ncbi.nlm.nih.gov/pubmed/9571020][Grigorieff N, JMB (1998)]]',
-                   '[[http://www.sciencedirect.com/science/article/pii/S104784771200144X][Sindelar CV & Grigorieff N, Ultramicroscopy (2012)]]',
-                   '[[http://www.sciencedirect.com/science/article/pii/S1047847713001858][Lyumkis D, et. al, JSB (2013)]]'
-                    ]
+class ProtFrealignBase():
+    """ This class cointains the common functionalities for all Frealign protocols.
+    In subclasses there should be little changes about the steps to execute and several parameters
+    """
+    IS_REFINE = True
 
     def __init__(self, **args):
-        ProtRefine3D.__init__(self, **args)
         self.stepsExecutionMode = STEPS_PARALLEL
 
     #--------------------------- DEFINE param functions --------------------------------------------
     def _defineParams(self, form):
         form.addSection(label='Input')
+        
+        # Some hidden variables to be used for conditions
+        form.addHidden('isRefine', BooleanParam, default=self.IS_REFINE)
 
         form.addParam('inputParticles', PointerParam, label="Input particles", important=True,
                       pointerClass='SetOfParticles',pointerCondition='hasCTF',
                       help='Select the input particles.\n')  
-
         form.addParam('input3DReferences', PointerParam,
                       pointerClass='Volume',
                       label='Initial 3D reference volume:', 
                       help='Input 3D reference reconstruction.\n')
-
         form.addParam('numberOfIterations', IntParam, default=10,
                       label='Number of iterations:',
                       help='Number of iterations to perform.')
-
         form.addParam('useInitialAngles', BooleanParam, default=False,
                       label="Use initial angles/shifts ? ", 
                       help='Set to *Yes* if you want to use the projection assignment (angles/shifts) \n '
                       'associated with the input particles (hasProjectionAssigment=True)')
-
+        
         form.addSection(label='Flow Control')
-
+        
         form.addParam('Firstmode', EnumParam, condition='not useInitialAngles', choices=['Simple search & Refine', 'Search, Refine, Randomise'],
                       label="Operation mode for iteration 1:", default=MOD2_SIMPLE_SEARCH_REFINEMENT,
                       display=EnumParam.DISPLAY_COMBO,
@@ -83,7 +73,6 @@ class ProtFrealign(ProtRefine3D):
                            'This option is only for the iteration 1.\n'
                            '_Mode -3_: Simple search, Refine and create a parameter file for the set\n'
                            '_Mode -4_: Search, Refine, Randomize and create a parameterfile for the set')
-
         form.addParam('mode', EnumParam, choices=['Recontruction only', 'Refinement', 'Random Search & Refine',
                                                    'Simple search & Refine', 'Search, Refine, Randomise'],
                       label="Operation mode:", default=MOD_REFINEMENT,
@@ -94,29 +83,25 @@ class ProtFrealign(ProtRefine3D):
                            '_Mode 2_: Random Search & Refinement\n'
                            '_Mode 3_: Simple search & Refine\n'
                            '_Mode 4_: Search, Refine, Randomise & extend to *RREC*\n')
-
         form.addParam('doMagRefinement', BooleanParam, default=False,
                       label="Refine magnification?", expertLevel=LEVEL_EXPERT,
                       help='Parameter *FMAG* in FREALIGN\n\n'
                            'Set _True or False_ to enable/disable magnification refinement')
-
         form.addParam('doDefRefinement', BooleanParam, default=False,
                       label="Refine defocus?", expertLevel=LEVEL_ADVANCED,
                       help='Parameter *FDEF* in FREALIGN\n\n'
                            'Set _True of False_ to enable/disable defocus parameter refinement')
-
         form.addParam('doAstigRefinement', BooleanParam, default=False,
                       label="Refine astigmatism?", expertLevel=LEVEL_EXPERT,
                       help='Parameter *FASTIG* in FREALIGN\n\n'
                            'Set _True or False_ to enable/disable astigmatic angle refinement')
-
         form.addParam('doDefPartRefinement', BooleanParam, default=False,
-                      label="Refine defocus for individual particles?", expertLevel=LEVEL_EXPERT,
+                      label="Refine defocus for individual particles?", expertLevel=LEVEL_ADVANCED,
+                      condition='doDefRefinement',
                       help='Parameter *FPART* in FREALIGN\n\n'
                            'Set _True or False_ to enable/disable defocus parameter refinement\n'
-                           'for individual particles. Otherwise defocus change is constrained\n'
-                           'to be the same for all particles in one image\n')
-
+                           'for individual particles if Refine defocus is True, otherwise defocus\n'
+                           'change is constrained to be the same for all particles in one image\n')
         form.addParam('methodEwaldSphere', EnumParam, choices=['Disable', 'Simple', 'Reference-based', 'Simple with reversed handedness',
                                                                'Reference-based with reversed handedness'],
                       default=EWA_DISABLE, expertLevel=LEVEL_EXPERT,
@@ -130,29 +115,24 @@ class ProtFrealign(ProtRefine3D):
                            '   Do correction, simple insertion method with inverted handedness. *Option -1*\n'
                            '_Reference-based with reversed handedness_: \n'
                            '   Do correction, reference-based method with inverted handedness. *Option -2*')
-
         form.addParam('doExtraRealSpaceSym', BooleanParam, default=False,
                       label="Apply extra real space symmetry?",
                       help='Parameter *FBEAUT* in FREALIGN\n\n'
                            'Apply extra real space symmetry averaging \n'
                            'and masking to beautify final map just prior to output.')
-
         form.addParam('doWienerFilter', BooleanParam, default=False,
-                      label="Apply Wiener filter?", expertLevel=LEVEL_EXPERT,
+                      label="Apply Wiener filter?",
                       help='Parameter *FFILT* in FREALIGN\n\n'
                            'Apply single particle Wiener filter to final reconstruction.')
-
         form.addParam('doBfactor', BooleanParam, default=False,
                       label="Calculate and apply Bfactor?", expertLevel=LEVEL_EXPERT,
                       help='Parameter *FBFACT* in FREALIGN\n\n'
                            'Determine and apply B-factor to final reconstruction.')
-
         form.addParam('writeMatchProjections', BooleanParam, default=True,
                       label="Write matching projections?",
                       help='Parameter *FMATCH* in FREALIGN\n\n'
                            'Set _True or False_ to enable/disable output \n'
                            'of matching projections (for diagnostic purposes).')
-
         form.addParam('methodCalcFsc', EnumParam, choices=['calculate FSC', 'Calculate one 3DR with odd particles', 
                                                      'Calculate one 3DR with even particles',
                                                      'Calculate one 3DR with all particles'],
@@ -170,20 +150,33 @@ class ProtFrealign(ProtRefine3D):
                            '   Only calculate one reconstruction using even particles. *Option 2*.\n'
                            '_Calculate one 3DR with all particles_:\n'
                            '   Only calculate one reconstruction using all particles. *Option 3*.')
-
         form.addParam('doAditionalStatisFSC', BooleanParam, default=True,
                       label="Calculate aditional statistics in FSC?",
                       help='Parameter *FSTAT* in FREALIGN\n\n'
                            'Calculate additional statistics in resolution table at the end \n'
                            '(*QFACT, SSNR, CC* and related columns). Setting *FSTAT* False saves over 50% of memory!.')
-
-        form.addParam('paddingFactor', EnumParam, choices=['1', '2', '4'], default=PAD_4,
-                      label='Padding Factor', display=EnumParam.DISPLAY_COMBO,
-                      help='Parameter *IBLOW* in FREALIGN\n\n'
-                           'Padding factor for reference structure.\n'
-                           'Padding factor 4 requires the most memory but results\n'
-                           'in the fastest search & refinement.\n')
-
+        form.addParam('memory', EnumParam, choices=['NO pad - NO multi-vol', 'pad - NO multi-vol',
+                                                         'NO pad- multi-vol', 'pad - multi-vol'],
+                      default=MEM_0,
+                      label='Memory usage', display=EnumParam.DISPLAY_COMBO,
+                      help='Parameter *IMEM* in FREALIGN\n\n'
+                            '_NO pad - NO multi-vol_: no padding of reference during refinement,\n'
+                            '  no multi-volume parallelization during reconstruction (least memory usage).\n'
+                            '  *Option 0* for parameter *IMEM* in FREALIGN\n'
+                           '_pad - NO multi-vol_: padding of reference during refinement,\n'
+                           '   no multi-volume parallelization during reconstruction. *Option 1*.\n'
+                           '_NO pad - multi-vol_:no padding of reference during refinement,\n'
+                           '   multi-volume parallelization during reconstruction. *Option 2*.\n'
+                           '_pad - multi-vol_: padding of reference during refinement,\n'
+                           '   multi-volume parallelization during reconstruction (most memory usage). *Option 3*.')
+        form.addParam('interpolationScheme', EnumParam, choices=['Nearest neighbor', 'Trilinear'],
+                      default=INTERPOLATION_1,
+                      label='Interpolation Scheme', display=EnumParam.DISPLAY_COMBO,
+                      help='Parameter *INTERP* in FREALIGN\n\n'
+                            'The options are:\n'
+                            '_Nearest neighbor_. *Option 0* for parameter *INTERP* in FREALIGN\n'
+                           '_Trilinear_. More time-consuming. *Option 1* for parameter *INTERP* in FREALIGN\n')
+        
         form.addSection(label='General Parameters')
         
         form.addParam('innerRadius', FloatParam, default='0.0', 
@@ -193,7 +186,6 @@ class ProtFrealign(ProtRefine3D):
                            'Enter the inner radius of the volume to be reconstructed.\n' 
                            'This is useful for reconstructions of viruses and other\n' 
                            'particles that might be hollow or have a disordered core.')
-              
         form.addParam('outerRadius', FloatParam, default='108.0', 
                       label='Outer radius of reconstruction (A):', 
                       help='Parameter *RO* in FREALIGN\n\n'
@@ -201,7 +193,12 @@ class ProtFrealign(ProtRefine3D):
                            'Enter the outer radius of the volume to be reconstructed.\n'
                            'The program will also apply a mask with a cosine edge to the particle image\n'
                            'before processing (done inside *CTFAPPLY* using  *HALFW=6* pixels for cosine bell).')
-        
+        form.addParam('molMass', FloatParam, default='500.0', 
+                      label='Molecular mass of the specimen (kDa):',
+                      condition="doWienerFilter",
+                      help='Parameter *MW* in FREALIGN\n\n'
+                           'Approximate molecular mass of the particle, in kDa. This is used to\n'
+                           'calculate the optimal filter for the 3D reconstruction.\n')
         form.addParam('ThresholdMask', FloatParam, default='0.0', 
                       label='Threshold to for masking the input 3D structure:', expertLevel=LEVEL_ADVANCED,
                       help='Parameter *XSTD* in FREALIGN\n\n'
@@ -218,8 +215,7 @@ class ProtFrealign(ProtRefine3D):
                            '  is also always masked with a cosine bell edged function of\n'
                            '  radius RI.\n'
                            'If set 0, disables this function.')
-        
-        form.addParam('pseudoBFactor', FloatParam, default='100.0', 
+        form.addParam('pseudoBFactor', FloatParam, default='20.0', 
                       label='Resol-Dependent weighting of particles for 3D reconstruction:',
                       help='Parameter *PBC* in FREALIGN\n\n'
                            'Automatic weighting is applied to each particle: a pseudo-temperature (B)\n'
@@ -230,52 +226,50 @@ class ProtFrealign(ProtRefine3D):
                            'PBC = conversion constant (5.0 in the example),\n'
                            'and R^2 the squared resolution in Fourier units (R = 0.0 ... 0.5).\n'
                            'A large value for PBC (e.g. 100.0) gives equal weighting to each particle.')
-
-        form.addParam('avePhaseResidual', FloatParam, default='65.0', 
+        form.addParam('avePhaseResidual', FloatParam, default='35.0', 
                       label='Average phase residual:',
                       help='Parameter *BOFF* in FREALIGN\n\n'
                            'Approximate average phase residual of all particles,\n'
                            ' used in calculating weights for contributions of different\n'
                            'particles to 3D map (see Grigorieff, 1998).')
-
-        form.addParam('angStepSize', FloatParam, default='15.0', 
+        form.addParam('angStepSize', FloatParam, default='100.0',
+                      condition="mode==3 or mode==4",
                       label='Angular step size for the angular search:',
                       help='Parameter *DANG* in FREALIGN\n\n'
                            'Angular step size for the angular search used in modes *IFLAG*=3,4.\n'
                            'There is a program default value calculated taking resolution into\n'
                            'account, but if this input value is non-zero, the program value is\n'
                            'overridden.')
-
         form.addParam('numberRandomSearch', FloatParam, default='10.0', 
                       label='Number of randomised search/refinement trials:',
+                      condition="mode==2 or mode==4",
                       help='Parameter *ITMAX* in FREALIGN\n\n'
                            'number of cycles of randomised search/refinement used in modes IFLAG=2,4\n'
                            'There is a program default value (10 cycles), but if this input value is\n'
                            'non-zero, the program value is overridden.\n')
-
-        form.addParam('numberPotentialMatches', FloatParam, default='10.0', 
+        form.addParam('numberPotentialMatches', FloatParam, default='20.0', 
                       label='number of potential matches:',
                       help='Parameter *IPMAX* in FREALIGN\n\n'
                            'number of potential matches in a search that should be tested further in\n'
                            'a subsequent local refinement.\n')
-
-        form.addParam('paramRefine', EnumParam, choices=['Refine all', 'Refine only euler angles', 'Refine only X & Y shifts'],
+        form.addParam('paramRefine', EnumParam, choices=['Refine all', 'Refine only euler angles',
+                                                         'Refine only X & Y shifts', 'None'],
                       default=REF_ALL,
                       label="Parameters to refine", display=EnumParam.DISPLAY_COMBO,
                       help='Parameter *MASK* in FREALIGN\n\n'
                            'Parameters to include in refinement')
-
         form.addParam('symmetry', TextParam, default='C1',
                       label='Point group symmetry:',
                       help='Parameter *ASYM* in FREALIGN\n\n'
-                           'Specify the symmetry.Choices are: C(n),D(n),T,O,I,I1,I2 or N (can be zero)\n'
+                           'Specify the symmetry.Choices are: Cn,Dn,T,O,I,I1,I2,N or H (can be zero)\n'
                            'n  = rotational symmetry required in pointgroup C(n) or D(n)\n'
                            'N  = number of symmetry matrices to read in.\n'
                            'T  = tetrahedral pointgroup 23\n'
                            'O  = octahedral pointgroup 432\n'
                            'I  = icosahedral 532 symmetry in setting 1 (5fold is on X)\n'
                            'I1 = also in setting 1 (X) - as used by Imagic\n'
-                           'I2 = in setting 2 (Y) - as used by Crowther et. al')        
+                           'I2 = in setting 2 (Y) - as used by Crowther et. al\n'
+                           'H  = helical symmetry')
 
         form.addSection(label='3D Reconstruction')
         
@@ -284,32 +278,27 @@ class ProtFrealign(ProtRefine3D):
                       help='Parameter *RELMAG* in FREALIGN\n\n'
                            'Relative magnification of data set. The magnification feature allows\n'
                            'for manual variations of magnification between data sets.')
-
-        form.addParam('targetPhaseResidual', FloatParam, default='10.0',
-                      label='Target phase residual:', expertLevel=LEVEL_EXPERT,
+        form.addParam('targetScore', FloatParam, default='90.0',
+                      label='Target score:', expertLevel=LEVEL_EXPERT,
                       help='Parameter *TARGET* in FREALIGN\n\n'
-                           'Target phase residual (for resolution between RMAX1 and RMAX2)\n'
-                           'during parameter saerch and refinement, below which the search and/or\n'
-                           'refinement is terminated.  This is normally set low (e.g. THRESH=10.0)\n'
+                           'Target score (for resolution between RMAX1 and RMAX2)\n'
+                           'during parameter search and refinement, above which the search and/or\n'
+                           'refinement is terminated.  This is normally set high (e.g. THRESH=90.0)\n'
                            'This will give excellent determination of particle orientations.')
-
-        form.addParam('PhaseResidual', FloatParam, default='90.0', 
-                      label='Phase residual cut-off:',
+        form.addParam('score', FloatParam, default='10.0', 
+                      label='Score cut-off:',
                       help='Parameter *THRESH* in FREALIGN\n\n'
-                           'Any particles with a higher overall phase residual will not be\n'
-                           'included in the reconstruction when IFLAG=0,1,2,3. This variable\n'
+                           'Any particles with a lower overall score will not be included\n'
+                           'in the reconstruction when IFLAG=0,1,2,3. This variable\n'
                            'is often used with IFLAG=0 in separate runs to calculate maps\n'
                            'using various values of THRESH to find the optimum value to produce\n'
                            'the best map as judged from the statistics.')
-
         form.addParam('beamTiltX', FloatParam, default='0.0',
                       label='Beam tilt in X direction (in mrad):', expertLevel=LEVEL_EXPERT,
                       help='Parameter *TX* in FREALIGN.')
-
         form.addParam('beamTiltY', FloatParam, default='0.0',
                       label='Beam tilt in Y direction (in mrad):', expertLevel=LEVEL_EXPERT,
                       help='Parameter *TY* in FREALIGN.')
-
         form.addParam('resolution', FloatParam, default='10.0', 
                       label='Resol. of reconstruction (A):',
                       help='Parameter *RREC* in FREALIGN\n\n'
@@ -318,7 +307,6 @@ class ProtFrealign(ProtRefine3D):
                            'limited in the summation to the RREC resolution but symmetry is\n'
                            'applied, statistics output and the final map calculated to the\n'
                            'maximum resolution requested for any dataset.')
-
         form.addParam('lowResolRefine', FloatParam, default='200.0', 
                       label='Low resolution in refinement (A):',
                       help='Parameter *RMAX1* in FREALIGN\n\n'
@@ -330,7 +318,6 @@ class ProtFrealign(ProtRefine3D):
                            'artefacts at low resolution can make a big difference.  Success can\n'
                            'be judged by whether the X,Y coordinates of the particle centres are\n'
                            'reasonable.')
-
         form.addParam('highResolRefine', FloatParam, default='25.0', 
                       label='High resolution in refinement (A):',
                       help='Parameter *RMAX2* in FREALIGN\n\n'
@@ -342,13 +329,11 @@ class ProtFrealign(ProtRefine3D):
                            'artefacts at low resolution can make a big difference.  Success can\n'
                            'be judged by whether the X,Y coordinates of the particle centres are\n'
                            'reasonable.')
-
         form.addParam('defocusUncertainty', FloatParam, default='200.0', 
                       label='Defocus uncertainty (A):', expertLevel=LEVEL_EXPERT,
                       help='Parameter *DFSIG* in FREALIGN\n\n'
                            'This will restrain the change in defocus when refining defocus values\n'
                            'for individual particles.')
-
         form.addParam('Bfactor', FloatParam, default='0.0', 
                       label='B-factor to apply to particle:', expertLevel=LEVEL_EXPERT,
                       help='Parameter *RBFACT* in FREALIGN\n\n'
@@ -574,7 +559,7 @@ class ProtFrealign(ProtRefine3D):
         iterDir = self._iterWorkingDir(iter)
         samplingRate3DR = imgSet.getSamplingRate()
         paramDic = {}
-        #Prepare arguments to call program fralign_v8.exe
+        #Prepare arguments to call program fralign_v9.exe
         
         paramsDic = {'frealign': FREALIGN_PATH,
                         'mode': self.mode.get(),
@@ -706,19 +691,28 @@ class ProtFrealign(ProtRefine3D):
         else:
             paramsDic['doAditionalStatisFSC'] = 'F'
             
-        if self.paddingFactor == PAD_1:
-            paramsDic['padFactor'] = 1
-        elif self.paddingFactor == PAD_2:
-            paramsDic['padFactor'] = 2
+        if self.memory == MEM_0:
+            paramsDic['memory'] = 0
+        elif self.memory == MEM_1:
+            paramsDic['memory'] = 1
+        elif self.memory == MEM_2:
+            paramsDic['memory'] = 2
         else:
-            paramsDic['padFactor'] = 4
+            paramsDic['memory'] = 3
+        
+        if self.interpolationScheme == INTERPOLATION_0:
+            paramsDic['interpolation'] = 0
+        else:
+            paramsDic['interpolation'] = 1
             
         if self.paramRefine == REF_ALL:
             paramsDic['paramRefine'] = '1, 1, 1, 1, 1'
         elif self.paramRefine == REF_ANGLES:
             paramsDic['paramRefine'] = '1, 1, 1, 0, 0'
-        else:
+        elif self.paramRefine == REF_SHIFTS:
             paramsDic['paramRefine'] = '0, 0, 0, 1, 1'
+        else:
+            paramsDic['paramRefine'] = '0, 0, 0, 0, 0'
         
         return paramsDic
     
@@ -802,7 +796,7 @@ class ProtFrealign(ProtRefine3D):
         if not exists(FREALIGN_PATH):
             raise Exception('Missing ' + FREALIGN)
         initaLines = """%(frealign)s << eot > %(frealignOut)s
-M,%(mode2)s,%(doMagRefinement)s,%(doDefocusRef)s,%(doAstigRef)s,%(doDefocusPartRef)s,%(metEwaldSphere)s,%(doExtraRealSpaceSym)s,%(doWienerFilter)s,%(doBfactor)s,%(writeMatchProj)s,%(metFsc)s,%(doAditionalStatisFSC)s,%(padFactor)s
+M,%(mode2)s,%(doMagRefinement)s,%(doDefocusRef)s,%(doAstigRef)s,%(doDefocusPartRef)s,%(metEwaldSphere)s,%(doExtraRealSpaceSym)s,%(doWienerFilter)s,%(doBfactor)s,%(writeMatchProj)s,%(metFsc)s,%(doAditionalStatisFSC)s,%(memory)s,%(interpolation)s
 %(outerRadius)s,%(innerRadius)s,%(sampling3DR)s,%(ampContrast)s,%(ThresholdMask)s,%(pseudoBFactor)s,%(avePhaseResidual)s,%(angStepSize)s,%(numberRandomSearch)s,%(numberPotentialMatches)s
 %(paramRefine)s
 %(initParticle)s,%(finalParticle)s
@@ -843,7 +837,7 @@ eot
         if not exists(FREALIGN_PATH):
             raise Exception('Missing ' + FREALIGN)
         args = """%(frealign)s  << eot >> %(frealignOut)s
-M,%(mode)s,%(doMagRefinement)s,%(doDefocusRef)s,%(doAstigRef)s,%(doDefocusPartRef)s,%(metEwaldSphere)s,%(doExtraRealSpaceSym)s,%(doWienerFilter)s,%(doBfactor)s,%(writeMatchProj)s,%(metFsc)s,%(doAditionalStatisFSC)s,%(padFactor)s
+M,%(mode)s,%(doMagRefinement)s,%(doDefocusRef)s,%(doAstigRef)s,%(doDefocusPartRef)s,%(metEwaldSphere)s,%(doExtraRealSpaceSym)s,%(doWienerFilter)s,%(doBfactor)s,%(writeMatchProj)s,%(metFsc)s,%(doAditionalStatisFSC)s,%(memory)s,%(interpolation)s
 %(outerRadius)s,%(innerRadius)s,%(sampling3DR)s,%(ampContrast)s,%(ThresholdMask)s,%(pseudoBFactor)s,%(avePhaseResidual)s,%(angStepSize)s,%(numberRandomSearch)s,%(numberPotentialMatches)s
 %(paramRefine)s
 %(initParticle)s,%(finalParticle)s

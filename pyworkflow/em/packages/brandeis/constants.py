@@ -54,12 +54,18 @@ FSC_3DR_ODD = 1
 FSC_3DR_EVEN = 2
 FSC_3DR_ALL = 3
 
-# Padding factor
-PAD_1 = 0
-PAD_2 = 1
-PAD_4 = 2
+# Memory Usage
+MEM_0 = 0
+MEM_1 = 1
+MEM_2 = 2
+MEM_3 = 3
+
+# Interpolation
+INTERPOLATION_0 = 0
+INTERPOLATION_0 = 1
 
 # Parameters to Remine
 REF_ALL = 0
 REF_ANGLES = 1
 REF_SHIFTS = 2
+REF_NONE = 3
