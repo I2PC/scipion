@@ -115,6 +115,7 @@ class XmippProtCL2DAlign(ProtAlign):
             avg.setLocation(1, avgFile)
             avg.copyInfo(particles)
             self._defineOutputs(outputAverage=avg)
+            self._defineSourceRelation(particles, avg)
             # Define the output of aligned particles
             imgSet = self._createSetOfParticles()
             imgSet.copyInfo(particles)

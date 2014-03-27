@@ -47,7 +47,7 @@ def runJob(log, programname, params,
     else:
         log.info(gCommand, True)
 
-    runCommand(command, env)
+    return runCommand(command, env)
         
 
 def runCommand(command, env=None):

@@ -28,12 +28,11 @@
 """
 This script will generate the pw.bashrc and pw.cshrc file to include
 """
-import os, sys
-from os.path import abspath, dirname, join
-from pyworkflow.utils.path import makePath
-from pyworkflow.apps.config import writeDefaults
+import os
 
 if __name__ == '__main__':
+    from pyworkflow.utils.path import makePath
+    from pyworkflow.apps.config import writeDefaults
     
     SCIPION_HOME = os.environ['SCIPION_HOME']
     SCIPION_DIRS = ['SCIPION_DATA', 'SCIPION_LOGS', 'SCIPION_TESTS', 'SCIPION_USER_DATA']

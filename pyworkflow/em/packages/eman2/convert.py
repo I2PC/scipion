@@ -122,12 +122,17 @@ def writeSetOfCoordinates():
 def readSetOfParticles(filename):
     pass
 
-def writeSetOfParticles(partSet, filename):
+def writeSetOfParticles(partSet, filename, inputdir):
     """ Convert the imgSet particles to a single .hdf file as expected by Eman. 
     This function should be called from a current dir where
     the images in the set are available.
     """
     cwd = os.getcwd()
+    workingdir = filename[0: filename.rfind(os.sep)]
+    
+    # Change to test path
+    os.chdir(workingdir)
+    print workingdir
     loadEnvironment()
     program = pw.join('em', 'packages', 'eman2', 'e2converter.py')        
     cmd = getEmanCommand(program, filename)
@@ -141,9 +146,10 @@ def writeSetOfParticles(partSet, filename):
     for part in partSet:
         index, fn = part.getLocation()
         # Write the e2converter.py process from where to read the image
-        print "sending: ", part.getObjId(), index, fn
-        print >> proc.stdin, part.getObjId(), index, join(cwd, fn)
+        print "sending: ", part.getObjId(), index, join(inputdir, fn)
+        print >> proc.stdin, part.getObjId(), index, join(inputdir, fn)
         proc.stdin.flush()
         response = proc.stdout.readline()
         print "response: ", response
     #proc.wait()
+    os.chdir(cwd)

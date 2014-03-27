@@ -80,10 +80,10 @@ def stop(protocol):
 # ******************************************************************
 # *         Internal utility functions
 # ******************************************************************
-
 def _isLocal(protocol):
     return protocol.getHostName() == LOCALHOST
     
+
 # ******************************************************************
 # *                 Function related to LAUNCH
 # ******************************************************************
@@ -93,22 +93,25 @@ def _getAppsProgram(prog):
     """
     return os.environ.get('SCIPION_PYTHON', 'python') + ' ' + pw.join('apps', prog)
     
+    
 def _launchLocal(protocol, wait):
     # Check first if we need to launch with MPI or not
-    if (protocol.stepsExecutionMode == STEPS_PARALLEL and
-        protocol.numberOfMpi > 1):
-        script = _getAppsProgram('pw_protocol_mpirun.py')
-        mpi = protocol.numberOfMpi.get() + 1
-    else:
-        script = _getAppsProgram('pw_protocol_run.py')
-        mpi = 1
+#     if (protocol.stepsExecutionMode == STEPS_PARALLEL and
+#         protocol.numberOfMpi > 1):
+#         script = _getAppsProgram('pw_protocol_mpirun.py')
+#         mpi = protocol.numberOfMpi.get() + 1
+#     else:
+#         script = _getAppsProgram('pw_protocol_run.py')
+#         mpi = 1
     protStrId = protocol.strId()
-    threads = protocol.numberOfThreads.get()
-    params = '%s %s' % (protocol.getDbPath(), protStrId)
+    #threads = protocol.numberOfThreads.get()
+    python = os.environ['SCIPION_PYTHON']
+    scipion = os.path.join(os.environ['SCIPION_HOME'], 'scipion')
+    command = '%s %s runprotocol %s %s %s' % (python, scipion, protocol.getProject().path, protocol.getDbPath(), protStrId)
     hostConfig = protocol.getHostConfig()
     useQueue = hostConfig.isQueueMandatory() or protocol.useQueue()
-    bg = not wait and not useQueue
-    command = process.buildRunCommand(None, script, params, mpi, threads, bg, hostConfig)
+    #bg = not wait and not useQueue
+    #command = process.buildRunCommand(None, script, params, mpi, threads, bg, hostConfig)
     # Check if need to submit to queue    
     if useQueue:        
         submitDict = protocol.getSubmitDict()
@@ -118,6 +121,7 @@ def _launchLocal(protocol, wait):
         jobId = _run(command, wait)
 
     return jobId
+    
     
 def _launchRemote(protocol, wait):
     from pyworkflow.utils.remote import sshConnectFromHost, RemotePath

@@ -49,7 +49,7 @@ import pyworkflow.gui as gui
 from pyworkflow.gui import getImage
 from pyworkflow.gui.tree import Tree, ObjectTreeProvider, DbTreeProvider, ProjectRunsTreeProvider
 from pyworkflow.gui.form import FormWindow, editObject
-from pyworkflow.gui.dialog import askYesNo
+from pyworkflow.gui.dialog import askYesNo, EditObjectDialog
 from pyworkflow.gui.text import TaggedText
 from pyworkflow.gui import Canvas
 from pyworkflow.gui.graph import LevelTree
@@ -151,7 +151,7 @@ class RunsTreeProvider(ProjectRunsTreeProvider):
                        (ACTION_DELETE, Message.LABEL_DELETE_ACTION),
                        #(None, None),
                        #(ACTION_STOP, 'Stop'),
-                       (ACTION_STEPS, Message.LABEL_STEPS)
+                       (ACTION_STEPS, Message.LABEL_STEPS),
                        (ACTION_BROWSE, Message.LABEL_BROWSE_ACTION)
                        ]
         status = prot.status.get()
@@ -259,8 +259,9 @@ class StepsWindow(BrowserWindow):
 
 class RunIOTreeProvider(TreeProvider):
     """Create the tree elements from a Protocol Run input/output childs"""
-    def __init__(self, protocol, mapper):
+    def __init__(self, parent, protocol, mapper):
         #TreeProvider.__init__(self)
+        self.parent = parent
         self.protocol = protocol
         self.mapper = mapper
         self.viewer = XmippViewer()
@@ -278,18 +279,13 @@ class RunIOTreeProvider(TreeProvider):
             objs = [self.inputStr, self.outputStr] + inputs + outputs                
         return objs
     
-    def visualize(self, Viewer, obj):
+    def _visualizeObject(self, Viewer, obj):
         viewer = Viewer(project=self.protocol.getProject())
         viewer.visualize(obj)
         
-    def edit(self, obj):
+    def _editObject(self, obj):
         """Open the Edit GUI Form given an instance"""
-        root = tk.Frame()
-        d = editObject(self, "Object Editor", root, obj, self.mapper)
-        
-        if d.resultYes():
-            pass
-#            print "Object edited"
+        EditObjectDialog(self.parent, Message.TITLE_EDIT_OBJECT, obj, self.mapper)
         
     def getObjectPreview(self, obj):
         desc = "<name>: " + obj.getName()
@@ -297,19 +293,20 @@ class RunIOTreeProvider(TreeProvider):
         return (None, desc)
     
     def getObjectActions(self, obj):
-        from pyworkflow.viewer import DESKTOP_TKINTER
-        
         if isinstance(obj, Pointer):
             obj = obj.get()
         actions = []    
         
-        
         viewers = findViewers(obj.getClassName(), DESKTOP_TKINTER)
         for v in viewers:
-            actions.append(('Open with %s' % v.__name__, lambda : self.visualize(v, obj)))
+            actions.append(('Open with %s' % v.__name__, 
+                            lambda : self._visualizeObject(v, obj), 
+                            Icon.ACTION_VISUALIZE))
             
         # EDIT 
-        actions.append((Message.LABEL_EDIT, lambda : self.edit(obj)))
+        actions.append((Message.LABEL_EDIT, 
+                        lambda : self._editObject(obj),
+                        Icon.ACTION_EDIT))
             
         return actions
     
@@ -374,14 +371,14 @@ class ProtocolsView(tk.Frame):
         """
         p = tk.PanedWindow(self, orient=tk.HORIZONTAL, bg='white')
         
+        bgColor = Color.LIGHT_GREY_COLOR
         # Left pane, contains Protocols Pane
-        leftFrame = tk.Frame(p, bg='white')
+        leftFrame = tk.Frame(p, bg=bgColor)
         leftFrame.columnconfigure(0, weight=1)
         leftFrame.rowconfigure(1, weight=1)
 
         
         # Protocols Tree Pane        
-        bgColor = Color.LIGHT_GREY_COLOR
         protFrame = tk.Frame(leftFrame, width=300, height=500, bg=bgColor)
         protFrame.grid(row=1, column=0, sticky='news', padx=5, pady=5)
         protFrame.columnconfigure(0, weight=1)
@@ -444,7 +441,7 @@ class ProtocolsView(tk.Frame):
         # Data tab
         dframe = tk.Frame(tab)
         gui.configureWeigths(dframe)
-        provider = RunIOTreeProvider(self.selectedProtocol, self.project.mapper)
+        provider = RunIOTreeProvider(self, self.selectedProtocol, self.project.mapper)
         self.infoTree = BoundTree(dframe, provider) 
         TaggedText(dframe, width=40, height=15, bg='white')
         self.infoTree.grid(row=0, column=0, sticky='news')  
@@ -489,7 +486,7 @@ class ProtocolsView(tk.Frame):
         v.grid(row=1, column=0, sticky='news')
         
         # Add sub-windows to PanedWindows
-        p.add(leftFrame, padx=5, pady=5)
+        p.add(leftFrame, padx=5, pady=5, sticky='news')
         p.add(rightFrame, padx=5, pady=5)
         p.paneconfig(leftFrame, minsize=300)
         p.paneconfig(rightFrame, minsize=400)        
@@ -640,6 +637,8 @@ class ProtocolsView(tk.Frame):
         self.runsGraph = Canvas(parent, width=400, height=400)
         self.runsGraph.onClickCallback = self._runItemClick
         self.runsGraph.onDoubleClickCallback = self._runItemDoubleClick
+        self.runsGraph.onRightClickCallback = lambda e: self.provider.getObjectActions(e.node.run)
+        
         parent.grid_columnconfigure(0, weight=1)
         parent.grid_rowconfigure(0, weight=1)
         
@@ -765,7 +764,7 @@ class ProtocolsView(tk.Frame):
         window.show()
         
     def _fillData(self):
-        provider = RunIOTreeProvider(self.selectedProtocol, self.project.mapper)
+        provider = RunIOTreeProvider(self, self.selectedProtocol, self.project.mapper)
         self.infoTree.setProvider(provider)
         #self.infoTree.itemConfig(self.selectedProtocol, open=True)  
         
@@ -824,8 +823,7 @@ class ProtocolsView(tk.Frame):
             self._scheduleRunsUpdate()
 
     def _analyzeResults(self, prot):
-        from pyworkflow.em import findViewers
-        from pyworkflow.viewer import DESKTOP_TKINTER
+        
 
         viewers = findViewers(prot.getClassName(), DESKTOP_TKINTER)
         if len(viewers):

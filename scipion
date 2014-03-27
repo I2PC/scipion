@@ -77,6 +77,9 @@ XMIPP_HOME = getConfigPath('XMIPP_HOME') #os.environ['XMIPP_HOME']
 XMIPP_BIN = join(XMIPP_HOME, 'bin')
 XMIPP_LIB = join(XMIPP_HOME, 'lib')
 
+if not XMIPP_LIB in sys.path:
+    sys.path.append(XMIPP_LIB)
+
 SCIPION_DATA = join(SCIPION_HOME, 'data')
 SCIPION_LOGS = join(SCIPION_DATA, 'logs')
 SCIPION_TESTS = join(SCIPION_DATA, 'tests')
@@ -93,7 +96,7 @@ for var in SCIPION_DIRS:
 
 VARS = {
         'PYTHONPATH': os.pathsep.join([SCIPION_HOME, XMIPP_LIB, os.environ.get('PYTHONPATH', '')]),
-        'PATH': os.pathsep.join([PW_APPS, os.environ['PATH'], XMIPP_BIN]),
+        'PATH': os.pathsep.join([XMIPP_BIN, PW_APPS, os.environ['PATH']]),
         'LD_LIBRARY_PATH': os.pathsep.join([XMIPP_LIB, os.environ.get('LD_LIBRARY_PATH', '')]),
         'XMIPP_HOME': XMIPP_HOME,
         }
@@ -223,6 +226,11 @@ if __name__ == '__main__':
         elif mode == MODE_VERSION:
             print __version__
             sys.exit(0)
+            
+        elif mode == 'runprotocol':
+            if n == 5:
+                args = ' '.join(sys.argv[2:5])
+                runApp('pw_protocol_run.py', args)
                 
     # If reach this point, bad arguments passed
     print """

@@ -1095,33 +1095,40 @@ class Protocol(Step):
                 
 #---------- Helper functions related to Protocols --------------------
 
-def getProtocolFromDb(dbPath, protId, protDict):
-    from pyworkflow.mapper import SqliteMapper
-    mapper = SqliteMapper(dbPath, protDict)
-    protocol = mapper.selectById(protId)
-    if protocol is None:
-        raise Exception("Not protocol found with id: %d" % protId)
-    protocol.setMapper(mapper)
-    return protocol
-    
-def runProtocolFromDb(dbPath, protId, protDict, mpiComm=None):
-    """ Retrieve a protocol stored in a db and run it. 
+def runProtocolMain(projectPath, protDbPath, protId):
+    """ Main entry point when a protocol will be executed.
+    This function should be called when:
+    scipion runprotocol ...
     Params:
-     path: file path to read the mapper
-     protId: the protocolo id in the mapper
-     protDict: the dictionary with protocol classes.
-     mpiComm: MPI connection object (only used when executing with MPI)
+        projectPath: the absolute path to the project directory.
+        protDbPath: path to protocol db relative to projectPath
+        protId: id of the protocol object in db.
     """
-    protocol = getProtocolFromDb(dbPath, protId, protDict)
-    hostConfig = protocol.getHostConfig()
+    if not os.path.exists(projectPath):
+        print "ERROR: project path '%s' does not exist. " % projectPath
+        sys.exit(1)
+    fullDbPath = os.path.join(projectPath, protDbPath)
+    if not os.path.exists(fullDbPath):
+        print "ERROR: protocol database '%s' does not exist. " % fullDbPath
+        sys.exit(1)
+        
+    # Enter to the project directory
+    os.chdir(projectPath)
+    protocol = getProtocolFromDb(protDbPath, protId)
+    hostConfig = protocol.getHostConfig()  
+  
     # Create the steps executor
     executor = None
     if protocol.stepsExecutionMode == STEPS_PARALLEL:
         if protocol.numberOfMpi > 1:
-            if mpiComm is None:
-                raise Exception('Trying to create MPIStepExecutor and mpiComm is None')
-            executor = MPIStepExecutor(hostConfig,
-                                       protocol.numberOfMpi.get(), mpiComm)
+            # Handle special case to execute in parallel
+            from pyworkflow.utils import runJob
+            prog = pw.join('apps', 'pw_protocol_mpirun.py')
+            params = ' %s %s' % (protDbPath, protId)
+            
+            retcode = runJob(None, prog, params,
+                             numberOfMpi=protocol.numberOfMpi.get(), hostConfig=hostConfig)
+            sys.exit(retcode)
         elif protocol.numberOfThreads > 1:
             executor = ThreadStepExecutor(hostConfig,
                                           protocol.numberOfThreads.get()) 
@@ -1129,5 +1136,34 @@ def runProtocolFromDb(dbPath, protId, protDict, mpiComm=None):
         executor = StepExecutor(hostConfig)
     protocol.setStepsExecutor(executor)
     # Finally run the protocol
+    protocol.run()
+    
+    
+def runProtocolMainMPI(dbPath, protId, mpiComm):
+    """ This function only should be called after enter in runProtocolMain
+    and the proper MPI scripts have been started...so no validations 
+    will be made.
+    """ 
+    protocol = getProtocolFromDb(dbPath, protId)
+    hostConfig = protocol.getHostConfig()
+    # Create the steps executor
+    executor = MPIStepExecutor(hostConfig, protocol.numberOfMpi.get(), mpiComm)
+    
+    protocol.setStepsExecutor(executor)
+    # Finally run the protocol
     protocol.run()        
+    
+     
+def getProtocolFromDb(dbPath, protId):
+    import pyworkflow.em as em
+    import pyworkflow.apps.config as config
+    classDict = dict(em.__dict__)
+    classDict.update(config.__dict__)
+    from pyworkflow.mapper import SqliteMapper
+    mapper = SqliteMapper(dbPath, classDict)
+    protocol = mapper.selectById(protId)
+    if protocol is None:
+        raise Exception("Not protocol found with id: %d" % protId)
+    protocol.setMapper(mapper)
+    return protocol
 

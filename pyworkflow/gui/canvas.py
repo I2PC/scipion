@@ -28,10 +28,11 @@ This module extends the functionalities of a normal Tkinter Canvas.
 The new Canvas class allows to easily display Texboxes and Edges
 that can be interactively dragged and clicked.
 """
-
 import math
-import operator
 import Tkinter as tk
+
+import gui
+import operator
 from widgets import Scrollable
 
 
@@ -43,6 +44,8 @@ DEFAULT_CONNECTOR_OUTLINE = "black"
 class Canvas(tk.Canvas, Scrollable):
     """Canvas to draw some objects.
     It will really contains a Frame, a Canvas and scrollbars"""
+    _images = {}
+    
     def __init__(self, parent, **args):
         Scrollable.__init__(self, parent, tk.Canvas, bg='white')
         
@@ -58,8 +61,18 @@ class Canvas(tk.Canvas, Scrollable):
         self.bind("<Button-3>", self.onRightClick)
         self.bind("<Double-Button-1>", self.onDoubleClick)
         self.bind("<B1-Motion>", self.onDrag)
+                # Hide the right-click menu
+        self.bind('<FocusOut>', self._unpostMenu)
+        self.bind("<Key>", self._unpostMenu)
         #self.bind("<MouseWheel>", self.onScroll)
+        self._menu = tk.Menu(self, tearoff=0)
+        
+    def getImage(self, img):
+        return gui.getImage(img, self._images)
     
+    def _unpostMenu(self, e=None):
+        self._menu.unpost()
+      
     def getCoordinates(self, event):
         """Converts the events coordinates to canvas coordinates"""
         # Convert screen coordinates to canvas coordinates
@@ -79,23 +92,45 @@ class Canvas(tk.Canvas, Scrollable):
         if self.lastItem:
             self.lastItem.setSelected(False)
             self.lastItem = None
+        self.callbackResults = None
         self.lastPos = (0, 0)
         for i in items:
             if i in self.items:
                 self.lastItem = self.items[i]
                 self.lastItem.setSelected(True)
                 if callback:
-                    callback(self.lastItem)
+                    self.callbackResults = callback(self.lastItem)
                 self.lastPos = (xc, yc)
                 break
         
     def onClick(self, event):
+        self._unpostMenu()
         self._handleMouseEvent(event, self.onClickCallback)
             
-    def onRightClick(self, event):
+    def onRightClick(self, e=None):
         # RightClick callback will not work not, as it need
         # the event information to know the coordinates
-        self._handleMouseEvent(event, self.onRightClickCallback)
+        self._handleMouseEvent(e, self.onRightClickCallback)
+        unpost = True
+        # If the callback return a list of actions
+        # we will show up a menu with them
+        actions = self.callbackResults
+        
+        if actions:
+            self._menu.delete(0, tk.END)
+            for a in actions:
+                if a is None: 
+                    self._menu.add_separator()
+                else:
+                    img = ''
+                    if len(a) > 2: # image for the action
+                        img = self.getImage(a[2])
+                    self._menu.add_command(label=a[0], command=a[1], 
+                                          image=img, compound=tk.LEFT)
+            self._menu.post(e.x_root, e.y_root)
+            unpost = False
+        if unpost:
+            self._menu.unpost()
     
     def onDoubleClick(self, event):
         self._handleMouseEvent(event, self.onDoubleClickCallback)

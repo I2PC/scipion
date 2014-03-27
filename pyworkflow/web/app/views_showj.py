@@ -32,7 +32,6 @@ import xmipp
 from django.http import HttpResponse
 from pyworkflow.web.pages import settings
 from django.shortcuts import render_to_response
-from pyworkflow.tests import getInputPath
 from django.template import RequestContext
 from pyworkflow.web.app.views_util import *
 from forms import VolVisualizationForm, ShowjForm
@@ -289,8 +288,7 @@ def getExtraParameters(extraParameters, tableDataset):
 def loadDatasetXmipp(path):
     """ Create a table from a metadata. """
     from pyworkflow.em.packages.xmipp3 import XmippDataSet
-    mdPath = getInputPath('showj', path)
-    return XmippDataSet(str(mdPath))
+    return XmippDataSet(str(path))
 
     
 def save_showj_table(request):

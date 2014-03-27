@@ -379,6 +379,7 @@ class Set(EMObject):
         self.setMapperClass(mapperClass)
         self._mapperPath = CsvList() # sqlite filename
         self._mapperPath.trace(self.load) # Load the mapper whenever the filename is changed
+        self._representative = None
 
 #TODO
 #        self.itemType
@@ -404,7 +405,8 @@ class Set(EMObject):
         return self._mapper.selectById(itemId)
 
     def _iterItems(self):
-        return self._mapper.selectAll(iterate=True)
+        
+        return self._mapper.selectAll()#has flat mapper, iterate is true
     
     def getFirstItem(self):
         """ Return the first item in the Set. """
@@ -475,6 +477,17 @@ class Set(EMObject):
             if i == n:
                 break
         return subset
+    
+    def setRepresentative(self, representative):
+        self._representative = representative
+    
+    def getRepresentative(self):
+       
+        return self._representative
+    
+    def hasRepresentative(self):
+        """ Return true if have a representative image. """
+        return self._representative is not None
 
 
 class SetOfImages(Set):
@@ -607,6 +620,7 @@ class SetOfImages(Set):
         """ Redefine iteration to set the acquisition to images. """
         for img in self._iterItems():
             img.setAcquisition(self.getAcquisition())
+            
             yield img
 
 
@@ -871,57 +885,42 @@ class Class2D(SetOfParticles):
     """ Represent a Class that group some elements 
     from a classification. 
     """
-    def __init__(self, **args):
-        SetOfParticles.__init__(self, **args)
-        # This properties should be set when retrieving from the SetOfClasses2D
-        self._average = None
+    pass
+        
     
-    def setAverage(self, avgImage):
-        self._average = avgImage
-    
-    def getAverage(self):
-        """ Usually the representative is an average of 
-        the images assigned to that class.
-        """
-        return self._average
-    
-    def hasAverage(self):
-        """ Return true if have an average image. """
-        return self._average is not None
+class Class3D(SetOfVolumes):
+    """ Represent a Class that group some elements 
+    from a classification. 
+    """
+    pass
 
 
-class SetOfClasses2D(Set):
-    """ Store results from a 2D classification. """
+class SetOfClasses(Set):
+    """ Store results from a classification. """
     ITEM_TYPE = Class2D
     
     def __init__(self, **args):
         Set.__init__(self, **args)
-        self._averages = None # Store the averages images of each class(SetOfParticles)
+        self._representatives = None # Store the average images of each class(SetOfParticles)
         self._imagesPointer = Pointer()
 
     def iterClassImages(self):
         """ Iterate over the images of a class. """
         pass
     
-    def hasAverages(self):
-        return self._averages is not None
+    def hasRepresentatives(self):
+        return self._representatives is not None
     
-    def getAverages(self):
-        """ Return a SetOfImages composed by all the average images 
-        of the 2D classes. """
-        return self._averages
+    def getRepresentatives(self):
+        """ Return a SetOfImages composed by all the representative images 
+        of the classes. """
+        return self._representatives
     
-    def createAverages(self, **args):
-        self._averages = SetOfParticles(filename=self.getFileName(), prefix='Averages')
-        
-        if not self.getImages().hasValue():
-            raise Exception("SetOfClasses2D.createAverages: you must set the images before creating the averages!!!")
-        self._averages.copyInfo(self.getImages())
-        self._averages.setHasCTF(False)
-        return self._averages
+    def createRepresentatives(self, **args):
+        pass
     
     def getImages(self):
-        """ Return the SetOFImages used to create the SetOfClasses2D. """
+        """ Return the SetOFImages used to create the SetOfClasses. """
         return self._imagesPointer.get()
     
     def setImages(self, images):
@@ -929,109 +928,55 @@ class SetOfClasses2D(Set):
     
     def getDimensions(self):
         """Return first image dimensions as a tuple: (xdim, ydim, zdim)"""
-        if self.hasAverages():
-            return self.getAverages().getDimensions()
+        if self.hasRepresentatives():
+            return self.getRepresentatives().getDimensions()
         
-    def _insertItem(self, class2D):
+    def _insertItem(self, classItem):
         """ Create the SetOfImages assigned to a class.
         If the file exists, it will load the Set.
         """
-        if class2D.getFileName() is None:
-            classPrefix = 'Class%03d' % class2D.getObjId()
-            class2D._mapperPath.set('%s,%s' % (self.getFileName(), classPrefix))
-        Set._insertItem(self, class2D)
-        class2D.write()#Set.write(self)
-        
+        if classItem.getFileName() is None:
+            classPrefix = 'Class%03d' % classItem.getObjId()
+            classItem._mapperPath.set('%s,%s' % (self.getFileName(), classPrefix))
+        Set._insertItem(self, classItem)
+        classItem.write()#Set.write(self)
+           
     def write(self):
-        """ Override super method to also write the averages. """
+        """ Override super method to also write the representatives. """
         Set.write(self)
-        if self._averages: # Write if not None
-            self._averages.write()
+        if self._representatives: # Write if not None
+            self._representatives.write()
             
     def getSamplingRate(self):
         return self.getImages().getSamplingRate()
 
 
-class Class3D(SetOfVolumes):
-    """ Represent a Class that group some elements 
-    from a classification. 
-    """
-    def __init__(self, **args):
-        SetOfVolumes.__init__(self, **args)
-        # This properties should be set when retrieving from the SetOfClasses2D
-        self._average = None
+class SetOfClasses2D(SetOfClasses):
+    """ Store results from a 2D classification. """
+    ITEM_TYPE = Class2D
     
-    def setAverage(self, avgVolume):
-        self._average = avgVolume
-    
-    def getAverage(self):
-        """ Usually the representative is an average of 
-        the volumes assigned to that class.
-        """
-        return self._average
-    
-    def hasAverage(self):
-        """ Return true if have an average volume. """
-        return self._average is not None
+    def createRepresentatives(self, **args):
+        self._representatives = SetOfParticles(filename=self.getFileName(), prefix='Averages')
+        
+        if not self.getImages().hasValue():
+            raise Exception("SetOfClasses2D.createAverages: you must set the images before creating the averages!!!")
+        self._representatives.copyInfo(self.getImages())
+        self._representatives.setHasCTF(False)
+        return self._representatives
 
 
-class SetOfClasses3D(Set):
+class SetOfClasses3D(SetOfClasses):
     """ Store results from a 3D classification. """
     ITEM_TYPE = Class3D
     
-    def __init__(self, **args):
-        Set.__init__(self, **args)
-        self._averages = None # Store the averages images of each class(SetOfParticles)
-        self._imagesPointer = Pointer()
-
-    def iterClassImages(self):
-        """ Iterate over the images of a class. """
-        pass
-    
-    def hasAverages(self):
-        return self._averages is not None
-    
-    def getAverages(self):
-        """ Return a SetOfVolumes composed by all the average volumes 
-        of the 3D classes. """
-        return self._averages
-    
-    def createAverages(self):
-        self._averages = SetOfVolumes(filename=self.getFileName(), prefix='Averages')
-        if not self.getVolumes().hasValue():
-            raise Exception("SetOfClasses3D.createAverages: you must set the volumes before creating the averages!!!")
-        self._averages.copyInfo(self.getVolumes())
+    def createRepresentatives(self):
+        self._representatives = SetOfVolumes(filename=self.getFileName(), prefix='Averages')
+        if not self.getImages().hasValue():
+            raise Exception("SetOfClasses3D.createRepresentatives: you must set the volumes before creating the representatives!!!")
+        self._representatives.copyInfo(self.getImages())
         
-        return self._averages
+        return self._representatives
     
-    def getVolumes(self):
-        """ Return the SetOfVolumes used to create the SetOfClasses3D. """
-        return self._imagesPointer.get()
-    
-    def setVolumes(self, volumes):
-        self._imagesPointer.set(volumes)
-        
-    def getDimensions(self):
-        """Return first volume dimensions as a tuple: (xdim, ydim, zdim)"""
-        if self.hasAverages():
-            return self.getAverages().getDimensions()
-        
-    def _insertItem(self, class3D):
-        """ Create the SetOfVolumes assigned to a class.
-        If the file exists, it will load the Set.
-        """
-        if class3D.getFileName() is None:
-            classPrefix = 'Class%03d' % class3D.getObjId()
-            class3D._mapperPath.set('%s,%s' % (self.getFileName(), classPrefix))
-        Set._insertItem(self, class3D)
-        class3D.write()#Set.write(self)
-        
-    def write(self):
-        """ Override super method to also write the averages. """
-        Set.write(self)
-        if self._averages: # Write if not None
-            self._averages.write()
-
 
 class NormalModes(EMObject):
     """ Store results from a 2D classification. """

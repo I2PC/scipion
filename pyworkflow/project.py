@@ -38,7 +38,7 @@ from pyworkflow.utils import cleanPath, makePath, makeFilePath, join, exists, ru
 from pyworkflow.utils.graph import Graph
 from pyworkflow.hosts import HostMapper, HostConfig
 import pyworkflow.protocol.launch as jobs
-from pyworkflow.em.constants import RELATION_TRANSFORM
+from pyworkflow.em.constants import RELATION_TRANSFORM, RELATION_SOURCE
 
 PROJECT_DBNAME = 'project.sqlite'
 PROJECT_LOGS = 'Logs'
@@ -168,7 +168,7 @@ class Project(object):
             jobId = protocol.getJobId() # Preserve the jobId before copy
             dbPath = self.getPath(protocol.getDbPath())
             #join(protocol.getHostConfig().getHostPath(), protocol.getDbPath())
-            prot2 = getProtocolFromDb(dbPath, protocol.getObjId(), globals())
+            prot2 = getProtocolFromDb(dbPath, protocol.getObjId())
             # Copy is only working for db restored objects
             protocol.setMapper(self.mapper)
             protocol.copy(prot2, copyId=False)
@@ -279,6 +279,7 @@ class Project(object):
         self._storeProtocol(protocol) # Store first to get a proper id
         # Set important properties of the protocol
         name = protocol.getClassName() + protocol.strId()
+        protocol.setProject(self)
         protocol.setName(name)
         protocol.setWorkingDir(self.getPath(PROJECT_RUNS, name))
         protocol.setMapper(self.mapper)
@@ -350,10 +351,10 @@ class Project(object):
             
         return self._runsGraph
     
-    def getDataGraph(self, refresh=False):
+    def getDataGraph(self, relation=RELATION_SOURCE, refresh=False):
         """ Retrieve objects produced as outputs and
         make a graph taking into account the SOURCE relation. """
-        relations = self.mapper.getRelationsByName(RELATION_SOURCE)
+        relations = self.mapper.getRelationsByName(relation)
         g = Graph(rootName='PROJECT')
         root = g.getRoot()
         root.object = None

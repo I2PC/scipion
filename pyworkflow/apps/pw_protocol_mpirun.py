@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env xmipp_python
 # **************************************************************************
 # *
 # * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
@@ -29,7 +29,7 @@ This module is responsible for launching protocol executions.
 """
 import sys
 from os.path import basename
-from pyworkflow.protocol import runProtocolFromDb
+from pyworkflow.protocol import runProtocolMainMPI
 from pyworkflow.em import *
 from pyworkflow.apps.config import *
 from mpi4py import MPI
@@ -38,13 +38,11 @@ from mpi4py import MPI
 if __name__ == '__main__':
     comm = MPI.COMM_WORLD
     rank = comm.Get_rank()
-    projName = sys.argv[1]
-    protId = int(sys.argv[2])
     
     if rank == 0:
         dbPath = sys.argv[1]
         protId = int(sys.argv[2])
-        runProtocolFromDb(dbPath, protId, globals(), comm)
+        runProtocolMainMPI(dbPath, protId, comm)
         
     else:
         from pyworkflow.utils.mpi import runJobMPISlave
