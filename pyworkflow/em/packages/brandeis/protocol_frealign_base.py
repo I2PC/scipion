@@ -33,13 +33,14 @@ from brandeis import *
 from constants import *
 
 
-class ProtFrealignBase():
+class ProtFrealignBase(EMProtocol):
     """ This class cointains the common functionalities for all Frealign protocols.
     In subclasses there should be little changes about the steps to execute and several parameters
     """
     IS_REFINE = True
 
     def __init__(self, **args):
+        EMProtocol.__init__(self, **args)
         self.stepsExecutionMode = STEPS_PARALLEL
 
     #--------------------------- DEFINE param functions --------------------------------------------
@@ -574,8 +575,8 @@ class ProtFrealignBase():
                         'numberPotentialMatches': self.numberPotentialMatches.get(),
                         'sym': self.symmetry.get(),
                         'relMagnification': self.relMagnification.get(),
-                        'targetPhaseResidual': self.targetPhaseResidual.get(),
-                        'PhaseResidual': self.PhaseResidual.get(),
+                        'targetScore': self.targetScore.get(),
+                        'score': self.score.get(),
                         'beamTiltX': self.beamTiltX.get(),
                         'beamTiltY': self.beamTiltY.get(),
                         'resol': self.resolution.get(),
@@ -801,7 +802,7 @@ M,%(mode2)s,%(doMagRefinement)s,%(doDefocusRef)s,%(doAstigRef)s,%(doDefocusPartR
 %(paramRefine)s
 %(initParticle)s,%(finalParticle)s
 %(sym)s
-%(relMagnification)s,%(scannedPixelSize)s,%(targetPhaseResidual)s,%(PhaseResidual)s,%(sphericalAberration)s,%(voltage)s,%(beamTiltX)s,%(beamTiltY)s
+%(relMagnification)s,%(scannedPixelSize)s,%(targetScore)s,%(score)s,%(sphericalAberration)s,%(voltage)s,%(beamTiltX)s,%(beamTiltY)s
 %(resol)s,%(lowRes)s,%(highRes)s,%(defocusUncertainty)s,%(Bfactor)s
 %(imageFn)s
 %(imgFnMatch)s
@@ -842,7 +843,7 @@ M,%(mode)s,%(doMagRefinement)s,%(doDefocusRef)s,%(doAstigRef)s,%(doDefocusPartRe
 %(paramRefine)s
 %(initParticle)s,%(finalParticle)s
 %(sym)s
-%(relMagnification)s,%(scannedPixelSize)s,%(targetPhaseResidual)s,%(PhaseResidual)s,%(sphericalAberration)s,%(voltage)s,%(beamTiltX)s,%(beamTiltY)s
+%(relMagnification)s,%(scannedPixelSize)s,%(targetScore)s,%(score)s,%(sphericalAberration)s,%(voltage)s,%(beamTiltX)s,%(beamTiltY)s
 %(resol)s,%(lowRes)s,%(highRes)s,%(defocusUncertainty)s,%(Bfactor)s
 %(imageFn)s
 %(imgFnMatch)s

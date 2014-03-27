@@ -62,7 +62,7 @@ MEM_3 = 3
 
 # Interpolation
 INTERPOLATION_0 = 0
-INTERPOLATION_0 = 1
+INTERPOLATION_1 = 1
 
 # Parameters to Remine
 REF_ALL = 0
