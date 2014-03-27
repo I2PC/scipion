@@ -386,24 +386,6 @@ class TestSqliteMapper(BaseTest):
             print row
         
         
-    def test_Protocol(self):
-        """Test the list with several Complex"""
-        fn = self.getOutputPath("protocol.sqlite")   
-        mapper = SqliteMapper(fn, globals())
-        prot = MyProtocol(mapper=mapper, n=2, workingDir=self.getOutputPath(''))
-        prot._stepsExecutor = StepExecutor(hostConfig=None)
-        prot.run()
-        
-        self.assertEqual(prot._steps[0].status, STATUS_FINISHED)
-        
-        mapper2 = SqliteMapper(fn, globals())
-        prot2 = mapper2.selectById(prot.getObjId())
-        
-        self.assertEqual(prot.endTime, prot2.endTime)
-        self.assertEqual(prot._steps[1].status, prot2._steps[1].status)
-        
-        
-        
 class TestXmlMapper(BaseTest):
     
     @classmethod
