@@ -595,7 +595,7 @@ def readSetOfClasses2D(classes2DSet, filename, classesBlock='classes', **args):
     averages = None
     
     if classesMd.containsLabel(xmipp.MDL_IMAGE):
-        averages = classes2DSet.createAverages()
+        averages = classes2DSet.createRepresentatives()
     
     for objId in classesMd:
         class2D = Class2D()
@@ -661,7 +661,7 @@ def readSetOfClasses3D(classes3DSet, filename, classesBlock='classes', **args):
     averages = None
     
     if classesMd.containsLabel(xmipp.MDL_IMAGE):
-        averages = classes3DSet.createAverages()
+        averages = classes3DSet.createRepresentatives()
     
     for objId in classesMd:
         class3D = Class3D()
