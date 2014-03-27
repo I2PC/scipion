@@ -44,7 +44,7 @@ class XmippProtInitVolSimAnneal(ProtInitialVolume):
     def _defineParams(self, form):
         form.addSection(label='Input')
         form.addParam('inputClasses', PointerParam, label="Input classes", important=True, 
-                      pointerClass='SetOfClasses2D', pointerCondition='hasAverages',
+                      pointerClass='SetOfClasses2D', pointerCondition='hasRepresentatives',
                       help='Select the input classes2D from the project.\n'
                            'It should be a SetOfClasses2D class with class representative')
         form.addParam('symmetryGroup', TextParam, default='c1',
@@ -143,7 +143,7 @@ class XmippProtInitVolSimAnneal(ProtInitialVolume):
         
         # create a SetOfVolumes
         volumes = self._createSetOfVolumes()
-        volumes.setSamplingRate(self.inputClasses.get().getAverages().getSamplingRate())
+        volumes.setSamplingRate(self.inputClasses.get().getRepresentatives().getSamplingRate())
         
         # rename the projection file to reconstruct the last Volume.
         moveFile(self._getExtraPath('output_volume.xmd'), self._getExtraPath('volume_projections.xmd'))
