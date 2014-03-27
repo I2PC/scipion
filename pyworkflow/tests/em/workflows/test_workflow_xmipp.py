@@ -190,7 +190,7 @@ class TestXmippWorkflow(TestWorkflow):
     def setUpClass(cls):
         setupTestProject(cls)
         cls.dataset = DataSet.getDataSet('xmipp_tutorial')
-        cls.allCrdsDir = cls.dataset.getFile('posAlldDir')
+        cls.allCrdsDir = cls.dataset.getFile('posAllDir')
         cls.micsFn = cls.dataset.getFile('allMics')
         cls.vol1 = cls.dataset.getFile('vol1')
     

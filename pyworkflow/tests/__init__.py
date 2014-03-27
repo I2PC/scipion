@@ -73,14 +73,14 @@ DataSet(name='tomo', folder='xmipp_tomo_test',
 
 
 DataSet(name='relion_tutorial', folder='relion_tutorial', 
-        files={'posAlldDir': 'pickingXmipp',
+        files={'posAllDir': 'pickingXmipp',
                'boxingDir': 'pickingEman',
                'allMics': 'micrographs/*.mrc',
                'volume': 'volumes/reference.mrc'})
 
 
 DataSet(name='ribo_movies', folder='ribo_movies', 
-        files={'posAlldDir': 'pickingXmipp',
+        files={'posAllDir': 'pickingXmipp',
                'movies': 'movies/1??_*.mrcs'})
 
 
