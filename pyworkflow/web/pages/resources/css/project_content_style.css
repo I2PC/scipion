@@ -45,8 +45,8 @@
 .north .ui-resizable-s {
 	position: absolute;
 	bottom: 0px !important;
-/* 	background: url("/resources/handle_hor.gif") no-repeat center center transparent; */
-	background: linear-gradient(to right, #d2a7a7 0%,#820808 50%,#d2a7a7 100%);
+	background: url("/resources/handle_hor.gif") no-repeat center center transparent;
+/* 	background: linear-gradient(to right, #d2a7a7 0%,#820808 50%,#d2a7a7 100%); */
 /* 	background-color: red; */
 }
 

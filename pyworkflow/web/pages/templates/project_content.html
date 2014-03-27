@@ -85,8 +85,7 @@
 </div>
 {% endblock %} 
 
-
-{% block contentNorth %}
+{% block headerNorth %}
 <div id="headerToolbar">
 	<span id="toolbar" style="float:right;">
 		<span id="treeTool">
@@ -109,6 +108,8 @@
 	<!-- 	<span id="analyzeTool"><a id="analyzeTool" href=""><i class="fa fa-eye" style="margin-right:5px"></i>{{msg.LABEL_ANALYZE}}</a></span> -->
 	</div>
 </div>
+{% endblock %}
+{% block contentNorth %}
 <div id="runsInfo">
 	{% include "run_table_graph.html" %}
 </div>
