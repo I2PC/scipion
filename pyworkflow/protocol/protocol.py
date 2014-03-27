@@ -1123,15 +1123,16 @@ def runProtocolMain(projectPath, protDbPath, protId):
         if protocol.numberOfMpi > 1:
             # Handle special case to execute in parallel
             from pyworkflow.utils import runJob
-            prog = pw.join('apps', 'pw_protocol_mpirun.py')
-            params = ' %s %s' % (protDbPath, protId)
+            prog = os.environ['SCIPION_PYTHON']
+            params = pw.join('apps', 'pw_protocol_mpirun.py')
+            params += ' %s %s' % (protDbPath, protId)
             
             retcode = runJob(None, prog, params,
                              numberOfMpi=protocol.numberOfMpi.get(), hostConfig=hostConfig)
             sys.exit(retcode)
         elif protocol.numberOfThreads > 1:
             executor = ThreadStepExecutor(hostConfig,
-                                          protocol.numberOfThreads.get()) 
+                                          protocol.numberOfThreads.get()-1) 
     if executor is None:
         executor = StepExecutor(hostConfig)
     protocol.setStepsExecutor(executor)
@@ -1147,7 +1148,7 @@ def runProtocolMainMPI(dbPath, protId, mpiComm):
     protocol = getProtocolFromDb(dbPath, protId)
     hostConfig = protocol.getHostConfig()
     # Create the steps executor
-    executor = MPIStepExecutor(hostConfig, protocol.numberOfMpi.get(), mpiComm)
+    executor = MPIStepExecutor(hostConfig, protocol.numberOfMpi.get()-1, mpiComm)
     
     protocol.setStepsExecutor(executor)
     # Finally run the protocol
