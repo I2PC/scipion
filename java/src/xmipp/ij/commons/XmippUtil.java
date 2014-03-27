@@ -9,11 +9,8 @@ import ij.IJ;
 import ij.ImagePlus;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
-<<<<<<< HEAD
-=======
 import java.util.Arrays;
 import xmipp.ij.commons.XmippUtil;
->>>>>>> f8c0ddc730b701e57319e79e583e785a459a412b
 import xmipp.jni.Filename;
 import xmipp.jni.ImageGeneric;
 
