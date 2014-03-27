@@ -11,13 +11,14 @@ from pyworkflow.mapper.sqlite import SqliteFlatMapper
     
     
 class TestXmippWorkflow(unittest.TestCase):
+    
+    def loadProject(self, projName):
+        """ Try to load an existing project. """
+        manager = Manager()
+        return manager.loadProject(projName)
 
     def a_testEmanConvert(self):
-        projName = "TestXmippWorkflow"
-        project = Manager().loadProject(projName) # Now it will be loaded if exists
-        
-#        g = project.getRunsGraph()
-#        g.printNodes()
+        project = self.loadProject("TestXmippWorkflow")
 
         particleList = project.mapper.selectByClass('SetOfParticles')
         
@@ -280,7 +281,17 @@ class TestXmippWorkflow(unittest.TestCase):
             print "avg: ", avg.getLocation()
             if i == 9:
                 break
-            i += 1                    
+            i += 1
+            
+            
+    def test_mpiStepsExecution(self):
+        project = self.loadProject("TestXmippWorkflow")
+        protCTF1 = project.mapper.selectByClass('XmippProtCTFMicrographs')[0]   
+        protCTF2 = project.copyProtocol(protCTF1)
+        protCTF2.setObjLabel('ctf - Day2')
+        protCTF2.numberOfMpi.set(3)
+        protCTF2.inputMicrographs.set(protCTF1.inputMicrographs.get())
+        project.launchProtocol(protCTF2, wait=True)                 
     
     def test_cleanDay2(self):
         """ Delete all runs from Day2. """
@@ -291,6 +302,7 @@ class TestXmippWorkflow(unittest.TestCase):
             if 'Day2' in prot.getObjLabel():
                 print "Deleting protocol: ", prot.getObjLabel()
                 project.deleteProtocol(prot)
+        
         
     def test_autoDay2(self):
         projName = "HighThroughputTest"
