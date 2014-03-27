@@ -160,7 +160,7 @@ class TestXmippWorkflow(unittest.TestCase):
         images.setSamplingRate(1.2)
         classes2DSet = SetOfClasses2D(filename=fn)
         classes2DSet.setImages(images)
-        averages = classes2DSet.createAverages()
+        averages = classes2DSet.createRepresentatives()
     
         for ref in range(1, 11):
             print "class: ", ref
@@ -253,7 +253,7 @@ class TestXmippWorkflow(unittest.TestCase):
         print "prot.getObjId(): ", prot.getObjId()
         
         classes = prot.outputClasses
-        averages = prot.outputClasses.getAverages()
+        averages = prot.outputClasses.getRepresentatives()
         import pyworkflow.em.packages.xmipp3 as xmipp3
         #xmipp3.writeSetOfClasses2D(classes, "classes.xmd")
         

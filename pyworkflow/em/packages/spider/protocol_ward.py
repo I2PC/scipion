@@ -107,7 +107,7 @@ class SpiderProtClassifyWard(ProtClassify, SpiderProtocol):
     def createOutputStep(self):
         rootNode = self.buildDendrogram(True)
         classes = self._createSetOfClasses2D(self.inputParticles.get())
-        averages = classes.createAverages()
+        averages = classes.createRepresentatives()
         g = graph.Graph(root=rootNode)  
             
         self._fillClassesFromNodes(classes, averages, g.getNodes())
@@ -152,7 +152,7 @@ class SpiderProtClassifyWard(ProtClassify, SpiderProtocol):
                 avg.setLocation(node.avgCount, self.dendroAverages)
                 avg.setSamplingRate(sampling)
                 
-                class2D.setAverage(avg)
+                class2D.setRepresentative(avg)
                 class2D.setSamplingRate(sampling)
                 classes.append(class2D)
                 #print "class2D.id: ", class2D.getObjId()

@@ -230,7 +230,7 @@ def rowToClass2D(md, objId, class2D):
         img = Particle()
         img.copyObjId(class2D)
         img.setLocation(index, filename)
-        class2D.setAverage(img)
+        class2D.setRepresentative(img)
     
     return class2D
     
@@ -243,15 +243,15 @@ def rowToClass3D(md, objId, class3D):
         img = Volume()
         img.copyObjId(class3D)
         img.setLocation(index, filename)
-        class3D.setAverage(img)
+        class3D.setRepresentative(img)
     
     return class3D
     
 def class2DToRow(class2D, classRow):
     """ Set labels values from Class2D to md row. """
 
-    if class2D.hasAverage():
-        index, filename = class2D.getAverage().getLocation()
+    if class2D.hasRepresentative():
+        index, filename = class2D.getRepresentative().getLocation()
         fn = locationToXmipp(index, filename)
         classRow.setValue(xmipp.MDL_IMAGE, fn)
     n = long(len(class2D))
@@ -595,7 +595,7 @@ def readSetOfClasses2D(classes2DSet, filename, classesBlock='classes', **args):
     averages = None
     
     if classesMd.containsLabel(xmipp.MDL_IMAGE):
-        averages = classes2DSet.createAverages()
+        averages = classes2DSet.createRepresentatives()
     
     for objId in classesMd:
         class2D = Class2D()
@@ -661,7 +661,7 @@ def readSetOfClasses3D(classes3DSet, filename, classesBlock='classes', **args):
     averages = None
     
     if classesMd.containsLabel(xmipp.MDL_IMAGE):
-        averages = classes3DSet.createAverages()
+        averages = classes3DSet.createRepresentatives()
     
     for objId in classesMd:
         class3D = Class3D()

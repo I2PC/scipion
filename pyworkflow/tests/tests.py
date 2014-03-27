@@ -30,6 +30,7 @@ class DataSet:
         self.path = join(TESTS_INPUT, folder)
         self.filesDict = files
         
+        
     def getFile(self, key):
         return join(self.path, self.filesDict[key])
     

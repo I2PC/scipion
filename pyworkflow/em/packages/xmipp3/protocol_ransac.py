@@ -52,7 +52,7 @@ class XmippProtRansac(ProtInitialVolume):
         form.addSection(label='Input')
         
         form.addParam('inputClasses', PointerParam, label="Input classes", important=True, 
-                      pointerClass='SetOfClasses2D', pointerCondition='hasAverages',
+                      pointerClass='SetOfClasses2D', pointerCondition='hasRepresentatives',
                       help='Select the input classes from the project.'
                            'It should be a SetOfClasses2D class')    
         
@@ -184,7 +184,7 @@ class XmippProtRansac(ProtInitialVolume):
     
         # Low pass filter and resize        
         maxFreq = self.maxFreq.get()
-        ts = self.inputClasses.get().getAverages().getSamplingRate()
+        ts = self.inputClasses.get().getRepresentatives().getSamplingRate()
         K = 0.25*(maxFreq/ts)
         if K<1:
             K=1
@@ -419,7 +419,7 @@ class XmippProtRansac(ProtInitialVolume):
         
         volumesSet = self._createSetOfVolumes()
         readSetOfVolumes(fn, volumesSet)
-        volumesSet.setSamplingRate(self.inputClasses.get().getAverages().getSamplingRate())
+        volumesSet.setSamplingRate(self.inputClasses.get().getRepresentatives().getSamplingRate())
         
         self._defineOutputs(outputVolumes=volumesSet)
         self._defineSourceRelation(classes2DSet, volumesSet)
