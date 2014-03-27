@@ -30,10 +30,12 @@
 	max-height: 70%;
 /* 	min-height: 30%; */
 /* 	overflow-y: scroll; */
-	position: static;
+	position: relative;
+	overflow: auto;
+/* 	background-color:blue; */
 } 
 .layout-inner > .center {
-
+/* 	background-color:red; */
 }
 
 /* FLEX TEMPLATE (These styles are to create custom resize handles.) */ 
@@ -43,7 +45,8 @@
 .north .ui-resizable-s {
 	position: absolute;
 	bottom: 0px !important;
-	background: url("/resources/handle_hor.gif") no-repeat center center transparent;
+/* 	background: url("/resources/handle_hor.gif") no-repeat center center transparent; */
+	background: linear-gradient(to right, #d2a7a7 0%,#820808 50%,#d2a7a7 100%);
 /* 	background-color: red; */
 }
 
@@ -188,7 +191,7 @@
 #listEx ul {
 	position: inherit;
 	margin: 10px 0px 0px 10px;
-	font-size: 0.9em;
+/* 	font-size: 0.9em; */
 }
 
 #listEx li a {
@@ -201,10 +204,13 @@
 }
 
 .tabContents, .referenceLink {
-/*  	max-height:14em;  */
-/*  	min-height:14em; */
-	height:14em;
+/* 	min-height:14em; */
+	max-height:40%;
+/* 	height:14em; */
 	overflow-y:scroll;
+	overflow: auto;
+	padding:1em;
+	font-size:90%;
 }
 
 .tabContents a:hover {
@@ -219,13 +225,12 @@
 #tab-logs-output, #tab-logs-error, #tab-logs-scipion {
 	background-color:black;
 	color:white;
-	
 /* 	background-color:white; */
 /* 	color:black; */
-	
 	font-family:Monospace;
 	padding:1em;
  	font-size:90%; 
+/*  	max-height:18em; */
 }
 
 /* jsPlumb */
