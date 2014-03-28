@@ -68,7 +68,7 @@ class TestMixedBPV(TestWorkflow):
         # Refine the SetOfParticles and reconstruct a refined volume.    
         print "Running Frealign..."
         protFrealign = ProtFrealign(angStepSize=15, numberOfIterations=2, mode=1, doExtraRealSpaceSym=True,
-                                    innerRadius=150, outerRadius=315, symmetry='I2', PhaseResidual=30,
+                                    innerRadius=150, outerRadius=315, symmetry='I2', PhaseResidual=30,molMass=19400,
                                     resolution=20, runMode=1, numberOfMpi=1, numberOfThreads=4)
         protFrealign.inputParticles.set(protExtract.outputParticles)
         protFrealign.input3DReferences.set(protImportVol.outputVolume)
