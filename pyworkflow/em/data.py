@@ -882,22 +882,33 @@ class TransformParams(object):
 
 
 class Class2D(SetOfParticles):
-    """ Represent a Class that group some elements 
-    from a classification. 
+    """ Represent a Class that groups Particles objects.
+    Usually the representative of the class is another Particle 
+    (some kind of average particle from the particles assigned
+    to the class) 
     """
     pass
         
     
-class Class3D(SetOfVolumes):
-    """ Represent a Class that group some elements 
-    from a classification. 
+class Class3D(SetOfParticles):
+    """ Represent a Class that groups Particles objects.
+    Usually the representative of the class is a Volume 
+    reconstructed from the particles assigned to the class.
+    """
+    pass
+
+
+class ClassVol(SetOfVolumes):
+    """ Represent a Class that groups Volume objects.
+    Usually the representative of the class is another Volume. 
     """
     pass
 
 
 class SetOfClasses(Set):
     """ Store results from a classification. """
-    ITEM_TYPE = Class2D
+    ITEM_TYPE = None # type of classes stored in the set
+    REP_TYPE = None # type of the representatives of each class
     
     def __init__(self, **args):
         Set.__init__(self, **args)
@@ -917,7 +928,18 @@ class SetOfClasses(Set):
         return self._representatives
     
     def createRepresentatives(self, **args):
-        pass
+        """ Create the empty set for storing the representative of each class.
+        Usually a SetOfParticles for 2D classification and SetOfVolumes for 3D.
+        """
+        self._representatives = self.REP_TYPE(filename=self.getFileName(), prefix='Representatives')
+        
+        if not self.getImages().hasValue():
+            raise Exception(self.getClassName() + ".createRepresentatives: you must set the input images before creating the representatives!!!")
+        
+        self._representatives.copyInfo(self.getImages())
+        self._representatives.setHasCTF(False)
+        
+        return self._representatives
     
     def getImages(self):
         """ Return the SetOFImages used to create the SetOfClasses. """
@@ -941,6 +963,7 @@ class SetOfClasses(Set):
         Set._insertItem(self, classItem)
         classItem.write()#Set.write(self)
            
+    
     def write(self):
         """ Override super method to also write the representatives. """
         Set.write(self)
@@ -952,30 +975,26 @@ class SetOfClasses(Set):
 
 
 class SetOfClasses2D(SetOfClasses):
-    """ Store results from a 2D classification. """
+    """ Store results from a 2D classification of Particles. """
     ITEM_TYPE = Class2D
-    
-    def createRepresentatives(self, **args):
-        self._representatives = SetOfParticles(filename=self.getFileName(), prefix='Representatives')
-        
-        if not self.getImages().hasValue():
-            raise Exception("SetOfClasses2D.createRepresentatives: you must set the images before creating the representatives!!!")
-        self._representatives.copyInfo(self.getImages())
-        self._representatives.setHasCTF(False)
-        return self._representatives
+    REP_TYPE = SetOfParticles
+
+    pass
 
 
 class SetOfClasses3D(SetOfClasses):
-    """ Store results from a 3D classification. """
+    """ Store results from a 3D classification of Particles. """
     ITEM_TYPE = Class3D
+    REP_TYPE = SetOfVolumes
     
-    def createRepresentatives(self):
-        self._representatives = SetOfVolumes(filename=self.getFileName(), prefix='Representatives')
-        if not self.getImages().hasValue():
-            raise Exception("SetOfClasses3D.createRepresentatives: you must set the volumes before creating the representatives!!!")
-        self._representatives.copyInfo(self.getImages())
-        
-        return self._representatives
+    pass
+       
+
+class SetOfClassesVol(SetOfClasses3D):
+    """ Store results from a classification of Volumes. """
+    ITEM_TYPE = ClassVol
+
+    pass
     
 
 class NormalModes(EMObject):
