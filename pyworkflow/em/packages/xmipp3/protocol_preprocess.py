@@ -262,8 +262,8 @@ class XmippProtPreprocessParticles(ProtProcessParticles, XmippProcessParticles, 
     #--------------------------- UTILS functions ---------------------------------------------------
     def _getSize(self):
         """ get the size of SetOfParticles object"""
+
         Xdim = self.inputParticles.get().getDimensions()[0]
-        
         size = int(Xdim/2)
         return size
 
