@@ -2,8 +2,11 @@
 function changeMode(mode){
 
 	var form = document.forms['showjForm']
-	form.id_mode.value = mode;
-	form.submit();
+	
+	if (mode != form.mode.value){
+		form.mode.value = mode;
+		form.submit();
+	}
 	
 // 	loadTemplateMode(mode)
 }
