@@ -39,26 +39,17 @@ def runJobMPI(log, programname, params, mpiComm, mpiDest,
     command = buildRunCommand(log, programname, params,
                               numberOfMpi, numberOfThreads, 
                               runInBackground, hostConfig)
-    
     print "Sending command: %s to %d" % (command, mpiDest)
-    mpiComm.send(command, dest=mpiDest, tag=TAG_RUN_JOB)
-    result = mpiComm.recv(source=mpiDest, tag=TAG_RUN_JOB)
+    mpiComm.send(command, dest=mpiDest, tag=TAG_RUN_JOB + mpiDest)
+    result = mpiComm.recv(source=mpiDest, tag=TAG_RUN_JOB + mpiDest)
+    if result == 999:
+        result = runCommand(command)
     
     if isinstance(result, str):
         raise Exception(result)
     
     # If not string should be the retcode
     return result
-
-
-def runCommandMPI(command, mpiComm):
-    """ Run a command that will be sent from another MPI node. """
-    #command = mpiComm.recv(source=mpiSource, tag=TAG_RUN_JOB)
-    try:
-        result = runCommand(command)
-    except Exception, e:
-        result = str(e)
-    mpiComm.send(result, dest=0, tag=TAG_RUN_JOB)
     
 
 def runJobMPISlave(mpiComm):
@@ -68,11 +59,15 @@ def runJobMPISlave(mpiComm):
     rank = mpiComm.Get_rank()
     print "Running runJobMPISlave: ", rank
     while True:
-        command = mpiComm.recv(source=0, tag=TAG_RUN_JOB)
+        command = mpiComm.recv(source=0, tag=TAG_RUN_JOB + rank)
         print "Slave %d, received command: %s" % (rank, command)
         if command == 'None':
             break
-        runCommandMPI(command, mpiComm)
+        try:
+            result = runCommand(command)
+        except Exception, e:
+            result = str(e)
+        mpiComm.send(result, dest=0, tag=TAG_RUN_JOB + rank)
     print "finishing slave...", rank
     
 

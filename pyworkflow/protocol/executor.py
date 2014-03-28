@@ -218,7 +218,8 @@ class MPIStepExecutor(ThreadStepExecutor):
     def finishThread(self, th):
         from pyworkflow.utils.mpi import TAG_RUN_JOB
         th.setStep(None)
-        self.comm.send('None', dest=th.thId+1, tag=TAG_RUN_JOB)
+        destMpi = th.thId+1
+        self.comm.send('None', dest=destMpi, tag=TAG_RUN_JOB + destMpi)
         th.join()
         
         

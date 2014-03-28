@@ -189,9 +189,13 @@ class Project(object):
         
     def stopProtocol(self, protocol):
         """ Stop a running protocol """
-        jobs.stop(protocol)
-        protocol.setAborted()
-        self._storeProtocol(protocol)
+        try:
+            jobs.stop(protocol)
+        except Exception:
+            raise
+        finally:
+            protocol.setAborted()
+            self._storeProtocol(protocol)
         
     def continueProtocol(self, protocol):
         """ This function should be called 
