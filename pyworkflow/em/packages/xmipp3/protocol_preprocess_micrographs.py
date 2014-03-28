@@ -184,9 +184,13 @@ class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
     def _citations(self):
         return ["Sorzano2009d"]
     
+    def _hasOutput(self):
+        return (getattr(self, 'outputMicrographs', False) and
+                self.outputMicrographs.hasValue())
+                
     def _summary(self):
         summary = []
-        if not self.outputMicrographs.hasValue():
+        if not self._hasOutput():
             summary.append("*Output Micrographs* not ready yet.")
         else:
             summary.append("Micrographs preprocessed: %d" % self.inputMicrographs.get().getSize())
@@ -202,7 +206,7 @@ class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
     
     def _methods(self):
         methods = []
-        if not self.outputMicrographs.hasValue():
+        if not self._hasOutput():
             methods.append("*Output micrographs* not ready yet.")
         else:
             methods.append("The %d micrographs has been" % self.inputMicrographs.get().getSize())
