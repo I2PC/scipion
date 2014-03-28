@@ -85,8 +85,6 @@ def base_flex(request, context):
                     'jquery_sizes': getResourceJs('jquery_sizes'),
                     'jlayout_border': getResourceJs('jlayout_border'),
                     'jquery_layout': getResourceJs('jquery_layout'),
-                    #OTHER
-                    'contentConfig': 'divided'
                     }
     
     context = base(request, context)

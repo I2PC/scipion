@@ -36,53 +36,32 @@ $('#widget').draggable();
 </head>
 
 <body>
+	<div data-layout='{"type": "border", "hgap": 1, "vgap": 1}' class="layout-outer">
+		{% include "header.html" %}
+		
+		<aside class="west">
+			{% block sideLeft %}	
+			{% endblock %}
+		</aside>
+		
+		<section class="center layout-inner" data-layout='{"type": "border", "hgap": 1, "vgap": 1}'>
 
-	<!-- <div id="mainContainer"> -->
-		<div data-layout='{"type": "border", "hgap": 1, "vgap": 1}' class="layout-outer">
-			{% include "header.html" %}
-			
-			{% if contentConfig == 'divided' %}
-			
-				<aside class="west">
-					{% block sideLeft %}	
-					{% endblock %}
-				</aside>
-				
-				<section class="center layout-inner" data-layout='{"type": "border", "hgap": 1, "vgap": 1}'>
-	
-					{% block headerNorth %}	
-			        {% endblock %}			
-			        	        
-					<div class="north">
-					 	<div class="text">
-							{% block contentNorth %}	
-					        {% endblock %}
-						</div>
-					</div>
-				    
-				    <div class="center">
-				        {% block contentCenter %}	
-				        {% endblock %}
-				    </div>
-				    
-				</section>
-				
-				
-			{% elif contentConfig == 'full' %}
-				<aside class="center">
-					{% block menu %}	
-					{% endblock %}
-				</aside>
-				<section class="south">
-					{% block content %}	
-					{% endblock %}
-				</section>
-			{% endif %}
-				
-			
-		</div>
-	<!-- </div> -->
-	
+			{% block headerNorth %}	
+	        {% endblock %}			
+	        	        
+			<div class="north">
+			 	<div class="text" style="">
+					{% block contentNorth %}	
+			        {% endblock %}
+				</div>
+			</div>
+		    
+		    <div class="center">
+		        {% block contentCenter %}	
+		        {% endblock %}
+		    </div>
+		</section>
+	</div>
 	
 <!-- 	{% include "footer.html" %} -->
 

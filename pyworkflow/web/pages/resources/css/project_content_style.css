@@ -21,7 +21,6 @@
  */
 .layout-inner {
 	width: 75%;
-	/* height: 60%; */
 	height: 100%;
 	background-color: white;
 	border: 0px;
@@ -35,8 +34,6 @@
 	margin-top: 1.5em;
 	margin-bottom: 30px;
 	max-height: 70%;
-	/* 	min-height: 30%; */
-	/* 	overflow-y: scroll; */
 	position: relative;
 	overflow: auto;
 }
