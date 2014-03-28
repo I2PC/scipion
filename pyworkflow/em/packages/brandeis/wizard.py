@@ -36,7 +36,7 @@ from constants import *
 
 import pyworkflow.gui.dialog as dialog
 from pyworkflow.em.wizard import *
-from protocol_frealign import ProtFrealign
+from protocol_refinement import ProtFrealign
 
 from pyworkflow import findResource
 

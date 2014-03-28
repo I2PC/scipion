@@ -48,4 +48,4 @@ class ProtFrealign(ProtFrealignBase, ProtRefine3D):
     
     def __init__(self, **args):
         ProtFrealignBase.__init__(self, **args)
-        self.stepsExecutionMode = STEPS_PARALLEL
+#         self.stepsExecutionMode = STEPS_PARALLEL
