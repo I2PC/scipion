@@ -78,6 +78,7 @@ class TestXmippPreprocessParticles(TestXmippBase):
         print "Run Preprocess particles"
         protPreproc = XmippProtPreprocessParticles(doRemoveDust=True, doNormalize=True, backRadius=48, doInvert=True,
                                               doThreshold=True, thresholdType=1)
+        
         protPreproc.inputParticles.set(self.protImport.outputParticles)
         self.proj.launchProtocol(protPreproc, wait=True)
         
