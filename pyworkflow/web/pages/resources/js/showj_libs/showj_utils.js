@@ -204,13 +204,16 @@ function initializeColsRowsEvents(){
 	$("#id_cols, #id_rows").on('click change keyup',function(){
 		if (!isNaturalNumber($("#id_cols").val())){$("#id_cols").val(1)}
 		if (!isNaturalNumber($("#id_rows").val())){$("#id_rows").val(1)}
-		updateGalleryLayout($("#id_cols").val(),$("#id_rows").val(), $(this).attr("id"))
+//		updateGalleryLayout($("#id_cols").val(),$("#id_rows").val(), $(this).attr("id"))
+		
+//		Patch-to-fix
+		updateGalleryLayout($("#id_cols").val(),$("#id_rows").val()-1, $(this).attr("id"))
 	});
 }
 
 function updateGalleryLayout(cols, rows, setElement){
 	if (setElement == "id_cols"){
-		$("#id_rows").val(Math.ceil($(".img_container").length/cols))
+		$("#id_rows").val(Math.ceil($(".img_container").length/cols)+1)
 	}
 	else{
 		$("#id_cols").val(Math.ceil($(".img_container").length/rows))
