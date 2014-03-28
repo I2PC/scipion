@@ -577,6 +577,11 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 				case KeyEvent.VK_RIGHT:
 					hdir = 1;
 					break;
+                                case KeyEvent.VK_SPACE:
+                                        for (int i = 0; i < data.selection.length; ++i)
+                                        if (data.selection[i])
+                                            data.setEnabled(i, !data.isEnabled(i));
+                                        gallery.fireTableDataChanged();
 				}
 				if (vdir != 0 || hdir != 0)
 				{
@@ -1403,25 +1408,9 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 				boolean move = true;
 				if (!evt.isControlDown() && !evt.isShiftDown())
 				{
-
-					boolean clear = true;
-
-					if (gallery.getSelectionCount() > 1)
-					{
-						clear = XmippDialog.showQuestion(this, "You will lose previous selection.\nDo you want to proceed?");
-					}
-
-					if (clear)
-					{
-						gallery.clearSelection();
-						gallery.touchItem(row, col);
-
-					}
-					else
-					{
-						gallery.fireTableDataChanged();
-						move = false;
-					}
+                                        gallery.clearSelection();
+                                        gallery.touchItem(row, col);
+					
 				}
 				else
 				{
@@ -2327,6 +2316,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		map.put("Ctrl + R", "Render images");
 		map.put("Ctrl + G", "Apply geometry");
 		map.put("Ctrl + W", "Wrap");
+                map.put("Space Bar", "Enable/Disable selection");
 
 		return map;
 	}

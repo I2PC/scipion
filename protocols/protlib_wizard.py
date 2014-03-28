@@ -295,10 +295,11 @@ def wizardTiltPairs(gui, var):
     if exists(resultFilename):
         md = MetaData(resultFilename)
         for id in md:
-            tList.append(md.getValue(MDL_MICROGRAPH_TILTED, id))
-            path = md.getValue(MDL_MICROGRAPH, id)
-            uList.append(basename(path))
-            prefix = dirname(path) # This assumes that all micrograph are in the same folder         
+            tPath = md.getValue(MDL_MICROGRAPH_TILTED, id)
+            tList.append(basename(tPath))
+            uPath = md.getValue(MDL_MICROGRAPH, id)
+            uList.append(basename(uPath))
+            prefix = dirname(uPath) # This assumes that all micrograph are in the same folder         
     else:
         if len(resultFilename) == 0:
             resultFilename = "tilted_pairs.xmd"
