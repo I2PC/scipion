@@ -43,3 +43,5 @@ class ProtFrealignClassify(ProtFrealignBase, ProtClassify3D):
     
     def __init__(self, **args):
         ProtFrealignBase.__init__(self, **args)
+    
+    

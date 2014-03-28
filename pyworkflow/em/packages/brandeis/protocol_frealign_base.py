@@ -503,6 +503,8 @@ class ProtFrealignBase(EMProtocol):
         finalParticle = imgSet.getSize()
         params = self._getParamsIteration(imgSet, iter)
         
+        os.environ['NCPUS'] = self.numberOfThreads.get()
+        params['frealign'] = FREALIGNMP_PATH
         params['outputParFn'] = 'output_param_file_%06d' % initParticle + '_%06d_' % finalParticle + 'iter_%03d.par' % iter
         params['initParticle'] = initParticle
         params['finalParticle'] = finalParticle
@@ -567,6 +569,7 @@ class ProtFrealignBase(EMProtocol):
                         'useInitialAngles': self.useInitialAngles.get(),
                         'innerRadius': self.innerRadius.get(),
                         'outerRadius': self.outerRadius.get(),
+                        'molMass': self.molMass.get(),
                         'ThresholdMask': self.ThresholdMask.get(),
                         'pseudoBFactor': self.pseudoBFactor.get(),
                         'avePhaseResidual': self.avePhaseResidual.get(),
@@ -798,7 +801,7 @@ class ProtFrealignBase(EMProtocol):
             raise Exception('Missing ' + FREALIGN)
         initaLines = """%(frealign)s << eot > %(frealignOut)s
 M,%(mode2)s,%(doMagRefinement)s,%(doDefocusRef)s,%(doAstigRef)s,%(doDefocusPartRef)s,%(metEwaldSphere)s,%(doExtraRealSpaceSym)s,%(doWienerFilter)s,%(doBfactor)s,%(writeMatchProj)s,%(metFsc)s,%(doAditionalStatisFSC)s,%(memory)s,%(interpolation)s
-%(outerRadius)s,%(innerRadius)s,%(sampling3DR)s,%(ampContrast)s,%(ThresholdMask)s,%(pseudoBFactor)s,%(avePhaseResidual)s,%(angStepSize)s,%(numberRandomSearch)s,%(numberPotentialMatches)s
+%(outerRadius)s,%(innerRadius)s,%(sampling3DR)s,%(molMass)s,%(ampContrast)s,%(ThresholdMask)s,%(pseudoBFactor)s,%(avePhaseResidual)s,%(angStepSize)s,%(numberRandomSearch)s,%(numberPotentialMatches)s
 %(paramRefine)s
 %(initParticle)s,%(finalParticle)s
 %(sym)s
@@ -839,7 +842,7 @@ eot
             raise Exception('Missing ' + FREALIGN)
         args = """%(frealign)s  << eot >> %(frealignOut)s
 M,%(mode)s,%(doMagRefinement)s,%(doDefocusRef)s,%(doAstigRef)s,%(doDefocusPartRef)s,%(metEwaldSphere)s,%(doExtraRealSpaceSym)s,%(doWienerFilter)s,%(doBfactor)s,%(writeMatchProj)s,%(metFsc)s,%(doAditionalStatisFSC)s,%(memory)s,%(interpolation)s
-%(outerRadius)s,%(innerRadius)s,%(sampling3DR)s,%(ampContrast)s,%(ThresholdMask)s,%(pseudoBFactor)s,%(avePhaseResidual)s,%(angStepSize)s,%(numberRandomSearch)s,%(numberPotentialMatches)s
+%(outerRadius)s,%(innerRadius)s,%(sampling3DR)s,%(molMass)s,%(ampContrast)s,%(ThresholdMask)s,%(pseudoBFactor)s,%(avePhaseResidual)s,%(angStepSize)s,%(numberRandomSearch)s,%(numberPotentialMatches)s
 %(paramRefine)s
 %(initParticle)s,%(finalParticle)s
 %(sym)s

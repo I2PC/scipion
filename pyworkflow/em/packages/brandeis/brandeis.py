@@ -34,7 +34,10 @@ from constants import *
 
 CTFFIND = 'ctffind3.exe'
 FREALIGN = 'frealign_v9.exe'
+FREALIGNMP = 'frealign_v9_mp.exe'
+CALC_OCC = 'calc_occ.exe'
 
 CTFFIND_PATH = join(os.environ['CTFFIND_HOME'], CTFFIND)
 FREALIGN_PATH = join(os.environ['FREALIGN_HOME'], 'bin', FREALIGN)
-
+FREALIGNMP_PATH = join(os.environ['FREALIGN_HOME'], 'bin', FREALIGNMP)
+CALC_OCC_PATH = join(os.environ['FREALIGN_HOME'], 'bin', CALC_OCC)
