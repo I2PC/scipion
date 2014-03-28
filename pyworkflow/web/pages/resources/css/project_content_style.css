@@ -1,11 +1,13 @@
 /* CSS Document */
 
 .layout-outer > .west {
+	padding: 5px 10px 20px 10px;
 	width: 25%;
-	padding: 20px 10px 20px 10px;
-	min-width: 200px;
+	min-width: 15%;
+	max-width: 35%;
 	overflow-y: auto;
 	overflow-x: hidden;
+	background-color: white;;
 }
 .layout-outer > .center{
 	padding: 20px 20px 20px 10px;
@@ -45,15 +47,14 @@
 .north .ui-resizable-s {
 	position: absolute;
 	bottom: 0px !important;
-/* 	background: url("/resources/handle_hor.gif") no-repeat center center transparent; */
-	background: linear-gradient(to right, #d2a7a7 0%,#820808 50%,#d2a7a7 100%);
-/* 	background-color: red; */
+	background: url("/resources/handle_hor.gif") no-repeat center center transparent;
+/* 	background: linear-gradient(to right, #d2a7a7 0%,#820808 50%,#d2a7a7 100%); */
 }
 
 .ui-resizable-e {
 	background: url("/resources/handle_ver.gif") no-repeat center center transparent;
 	margin-right: 5px;
-	padding-right: 5px
+	padding-right: 5px;
 }	
 
 /* SECTION */
@@ -204,13 +205,22 @@
 }
 
 .tabContents, .referenceLink {
-/* 	min-height:14em; */
-	max-height:40%;
-/* 	height:14em; */
-	overflow-y:scroll;
-	overflow: auto;
+/* 	max-height:10em; */
+/* 	min-height:10em; */
+/* 	height:10em; */
+
+/* 	max-height:100%; */
+	height:auto;
+	
+/* 	overflow-y:scroll; */
+/* 	overflow: auto; */
+	
 	padding:1em;
 	font-size:90%;
+	
+/* 	min-height:14em; */	
+/* 	height:14em; */
+	
 }
 
 .tabContents a:hover {
@@ -223,14 +233,16 @@
 }
 
 #tab-logs-output, #tab-logs-error, #tab-logs-scipion {
+	font-family:Monospace;
+	font-size: 90%;
 	background-color:black;
 	color:white;
-/* 	background-color:white; */
-/* 	color:black; */
-	font-family:Monospace;
-	padding:1em;
- 	font-size:90%; 
-/*  	max-height:18em; */
+	
+/* 	After change the font-family the height is modified due to the font adjust size, fix here. */
+/* 	max-height:12.8em; */
+/* 	min-height:12.8em; */
+/* 	height:12.8em; */
+
 }
 
 /* jsPlumb */
