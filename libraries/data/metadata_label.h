@@ -218,6 +218,7 @@ enum MDLabel
     MDL_MAXCC, ///< Maximum cross-correlation for the image (double)
     MDL_MAX, ///< Maximum value (double)
     MDL_MICROGRAPH, ///< Name of a micrograph (std::string)
+    MDL_MICROGRAPH_MOVIE, ///< Name of a movie (std::string)
     MDL_MICROGRAPH_PARTICLES, ///< Name of a position file (std::string)
     MDL_MICROGRAPH_ORIGINAL, ///< Name of the original micrograph, MDL_MICROGRAPH is probably a downsampled version of this one (std::string)
     MDL_MICROGRAPH_TILTED, ///< Name of the corresponding tilted micrograph (std::string)
@@ -352,7 +353,6 @@ enum MDLabel
     MDL_VOLUME_SCORE2,/// < Score 2 for volumes
     MDL_VOLUME_SCORE3,/// < Score 3 for volumes
     MDL_VOLUME_SCORE4,/// < Score 4 for volumes
-    MDL_VOLTAGE, ///< microscope voltage (double)
     MDL_WEIGHT, ///< Weight assigned to the image (double)
     MDL_WROBUST, ///< Weight of t-student distribution in robust Maximum likelihood
     MDL_X, ///< X component (double)
@@ -995,6 +995,7 @@ private:
         MDL::addLabel(MDL_MAXCC, LABEL_DOUBLE, "maxCC");
         MDL::addLabel(MDL_MAX, LABEL_DOUBLE, "max");
         MDL::addLabel(MDL_MICROGRAPH, LABEL_STRING, "micrograph", TAGLABEL_MICROGRAPH);
+        MDL::addLabel(MDL_MICROGRAPH_MOVIE, LABEL_STRING, "movie", TAGLABEL_MICROGRAPH);
         MDL::addLabel(MDL_MICROGRAPH_PARTICLES, LABEL_STRING, "micrographParticles", TAGLABEL_MICROGRAPH);
         MDL::addLabel(MDL_MICROGRAPH_ORIGINAL, LABEL_STRING, "micrographOriginal", TAGLABEL_MICROGRAPH);
         MDL::addLabel(MDL_MICROGRAPH_TILTED, LABEL_STRING, "micrographTilted", TAGLABEL_MICROGRAPH);
@@ -1145,7 +1146,6 @@ private:
 
         MDL::addLabel(MDL_TRANSFORM_MATRIX, LABEL_VECTOR_DOUBLE, "transformMatrix");
 
-        MDL::addLabel(MDL_VOLTAGE, LABEL_DOUBLE, "voltage");
         MDL::addLabel(MDL_VOLUME_SCORE_SUM, LABEL_DOUBLE, "volScoreSum");
         MDL::addLabel(MDL_VOLUME_SCORE_MEAN, LABEL_DOUBLE, "volScoreMean");
         MDL::addLabel(MDL_VOLUME_SCORE_MIN, LABEL_DOUBLE, "volScoreMin");

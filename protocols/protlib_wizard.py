@@ -265,7 +265,7 @@ def wizardDesignMask(gui, var):
 #Select micrograph extension
 def wizardMicrographExtension(gui,var):
     import fnmatch
-    imgExt=['.raw','.tif','.tiff','.mrc','.dm3','.em','.ser','.spi', '.xmp']
+    imgExt=['.raw','.tif','.tiff','.mrc', '.dm3','.em','.ser','.spi', '.xmp']
     files = []
     currentDir=gui.getVarValue('DirMicrographs')
     if currentDir=="":
@@ -281,7 +281,28 @@ def wizardMicrographExtension(gui,var):
         dir,ext = split(selected)
         gui.setVarValue('DirMicrographs',dir)
         gui.setVarValue('ExtMicrographs',ext)
-                
+
+#Select movies extension
+def wizardMoviesExtension(gui,var):
+    import fnmatch
+    imgExt=['.mrc','.mrcs','.spi','.stk', '.xmp']
+    files = []
+    currentDir=gui.getVarValue('DirMovies')
+    if currentDir=="":
+        currentDir="."
+
+    possibleLocations=[]
+    for ext in imgExt:
+        for root, dirnames, filenames in os.walk(currentDir):
+            if len(fnmatch.filter(filenames, '*'+ext))>0:
+                possibleLocations.append(join(root, '*'+ext))
+    selected=wizardSelectFromList(gui.master, gui.frame, possibleLocations)
+    if selected is not None:
+        dir,ext = split(selected)
+        gui.setVarValue('DirMovies',dir)
+        gui.setVarValue('ExtMovies',ext)
+  
+  
 #Select Tilt pairs
 def wizardTiltPairs(gui, var):
     dirMicrographs = gui.getVarValue('DirMicrographs')

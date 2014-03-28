@@ -53,8 +53,9 @@ import java.util.Collections;
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.swing.AbstractAction;
 import javax.swing.AbstractButton;
@@ -71,7 +72,6 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JMenuItem;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JRadioButtonMenuItem;
@@ -106,15 +106,15 @@ import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippFileChooser;
 import xmipp.utils.XmippLabel;
 import xmipp.utils.XmippMenuBarCreator;
-import xmipp.utils.XmippMenuCreator;
-import xmipp.utils.XmippMessage;
 import xmipp.utils.XmippPopupMenuCreator;
 import xmipp.utils.XmippQuestionDialog;
 import xmipp.utils.XmippResource;
+import xmipp.utils.XmippStringUtils;
 import xmipp.utils.XmippWindowUtil;
 import xmipp.viewer.RowHeaderRenderer;
 import xmipp.viewer.ctf.TasksEngine;
 import xmipp.viewer.ctf.iCTFGUI;
+import xmipp.viewer.models.ClassInfo;
 import xmipp.viewer.models.ColumnInfo;
 import xmipp.viewer.models.GalleryData;
 import xmipp.viewer.models.GalleryRowHeaderModel;
@@ -123,7 +123,6 @@ import xmipp.viewer.models.MetadataGalleryTableModel;
 import xmipp.viewer.models.MicrographsTableModel;
 import xmipp.viewer.particlepicker.extract.ExtractParticlePicker;
 import xmipp.viewer.particlepicker.extract.ExtractPickerJFrame;
-import xmipp.viewer.windows.ClassesJDialog;
 
 
 /**
@@ -194,6 +193,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 	protected static Dimension screenSize;
 	private Integer rows, columns;
 
+
 	/** Store data about visualization */
 	GalleryData data;
 	private ExtractPickerJFrame extractframe;
@@ -217,6 +217,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		aux = (float) MAX_HEIGHT * DIM_RATE;
 		MAX_WIDTH = Math.round(aux);
 	}
+    
 
 	/** Initialization function after GalleryData structure is created */
 	private void init(GalleryData data)
@@ -362,14 +363,14 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		c.weightx = 1.0;
 		c.weighty = 1.0;
 		container.add(jspContent, XmippWindowUtil.getConstraints(c, 0, 2, 1, 1, GridBagConstraints.BOTH));
-		
 		c.weightx = 0;
 		c.weighty = 0;
+		
+		
 		buttonspn = new JPanel(new FlowLayout(FlowLayout.TRAILING));
 		
 		container.add(buttonspn, XmippWindowUtil.getConstraints(c, 0, 3, 1, 1, GridBagConstraints.HORIZONTAL));
-		
-				
+						
 		// Create the menu for table
 		menu = new GalleryMenu();
 		setJMenuBar(menu.getMenuBar());
@@ -1008,22 +1009,31 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		boolean save = dlg.showDialog();
 		if (save)
 		{
-			boolean overwrite;
+			boolean overwrite= dlg.isOverwrite();
 			String path = dlg.getMdFilename();
-			String file = path.substring(path.lastIndexOf("@") + 1, path.length());
-			if (!new File(file).exists())// overwrite or append, save selection
-				md.write(path);
-			else
-			{
-				overwrite = dlg.isOverwrite();
-				if (overwrite)
-					md.write(path);// overwrite with active block only, other
-									// blocks were dismissed
-				else
-					md.writeBlock(path);// append selection
-
-			}
+			saveSelection(path, overwrite);
 		}
+		md.destroy();
+	}
+        
+        	/** Save selected items as a metadata */
+	public void saveSelection(String path, boolean overwrite) throws Exception
+	{
+		MetaData md = data.getSelectionMd();
+
+                String file = path.substring(path.lastIndexOf("@") + 1, path.length());
+                if (!new File(file).exists())// overwrite or append, save selection
+                        md.write(path);
+                else
+                {
+                        if (overwrite)
+                                md.write(path);// overwrite with active block only, other
+                                                                // blocks were dismissed
+                        else
+                                md.writeBlock(path);// append selection
+
+                }
+		
 		md.destroy();
 	}
 
@@ -1382,7 +1392,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 
 	}
 
-	private void tableMouseClicked(MouseEvent evt)
+	protected void tableMouseClicked(MouseEvent evt)
 	{
 		final Point p = evt.getPoint();
 		int row = table.rowAtPoint(p);
@@ -1495,6 +1505,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			addSeparator(FILE);
 			addItem(FILE_SAVE, "Save", "save.gif", "control released S");
 			addItem(FILE_SAVEAS, "Save as", "save_as.gif");
+
                         addItem(FILE_EXPORTIMAGES, "Export Images ...", "export_wiz.gif");
 			addItem(FILE_REFRESH, "Refresh", "refresh.gif", "released F5");
 			addSeparator(FILE);
@@ -1639,7 +1650,9 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 				}
                                 else if (cmd.equals(FILE_EXPORTIMAGES))
 				{
+
                                         exportImages();
+
 				}
 				else if (cmd.equals(FILE_EXIT))
 				{
@@ -1680,8 +1693,8 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
                                                 XmippUtil.showImageJ(Tool.VIEWER);
 						ImagePlusLoader loader = gallery.getImageLoader();
 						ImagesWindowFactory.openXmippImageWindow(GalleryJFrame.this, loader, true);
+
                                                 
-						
 					}
 					catch (Exception e1)
 					{
@@ -2027,11 +2040,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 
 	}
 
-	@Override
-	public String getFilename()
-	{
-		return data.getMdFilename();
-	}
+	
 
 	@Override
 	public void done()
@@ -2097,7 +2106,15 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		}
 	}// function saveMd
 
-	protected void saveAll() throws Exception
+
+        
+	public String getFilename()
+	{
+		return data.getFileName();
+	}
+        
+        
+	private void saveAll() throws Exception
 	{
 		String from = data.getFileName();
 		String blockto = dlgSave.getMdFilename();
@@ -2178,7 +2195,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 
 	}
         
-        private void exportImages() throws Exception
+    private void exportImages() throws Exception
 	{
 		SwingUtilities.invokeLater(new Runnable() {
 
@@ -2320,5 +2337,48 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 
 		return map;
 	}
+        
+       public boolean isImageSelected()
+       {
+           if(!data.allowGallery())
+               return false;
+           //what if there are no images on metadata??
+           return gallery.getSelectionCount() > 0;
+       }
+       
+       public boolean is2DClassSelection()
+        {
+            return data.is2DClassificationMd() && gallery.getSelectionCount() > 0;
+        }
+       
+       public boolean is2DClassificationMd()
+       {
+           return data.is2DClassificationMd();
+       }
+       
+       public void saveImagesFromClassSelection(String path)
+       {
+            MetaData imagesMd = gallery.data.getImagesFromClassSelection();
+            imagesMd.write(path);
+            imagesMd.destroy();
+       }
+       
+       public void saveClassSelection(String path)
+       {
+            try {
+                String classesmdfile = "classes" + Filename.SEPARATOR + path;
+                saveSelection(classesmdfile, true);
+                data.saveClassSelection(path);
+            } catch (Exception ex) {
+                Logger.getLogger(GalleryJFrame.class.getName()).log(Level.SEVERE, null, ex);
+            }
+       }
+       
+       public String getFileExtension()
+       {
+           if(data.getFileName() == null)
+               return "";
+           return XmippStringUtils.getFileExtension(data.getFileName());
+       }
 
 }// class JFrameGallery

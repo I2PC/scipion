@@ -2,6 +2,7 @@ package xmipp.viewer.particlepicker;
 
 import ij.IJ;
 import ij.WindowManager;
+import ij3d.behaviors.Picker;
 
 import java.awt.Color;
 import java.awt.Dimension;
@@ -59,6 +60,7 @@ import xmipp.utils.XmippResource;
 import xmipp.utils.XmippWindowUtil;
 import xmipp.viewer.particlepicker.extract.ExtractPickerJFrame;
 import xmipp.viewer.particlepicker.training.model.Mode;
+import xmipp.viewer.scipion.ScipionGalleryJFrame;
 
 public abstract class ParticlePickerJFrame extends JFrame implements ActionListener
 {
@@ -168,11 +170,25 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 			{
 				if (getParticlePicker().getMode() != Mode.ReadOnly)
 					getParticlePicker().saveData();
-				close();
+                                if(getParticlePicker().isScipionSave())
+                                {
+                                    boolean create = XmippDialog.showQuestion(ParticlePickerJFrame.this, "Are you sure you want to create a new set of coordinates ?");
+                                    if(create)
+                                    {
+                                        executeScipionSaveAndExit();
+                                        
+                                    }
+                                }
+                                else
+                                    close();
 
 			}
 		});
-
+                if(picker.isScipionSave())
+                {
+                    savebt.setVisible(false);
+                    saveandexitbt.setText("Create New Set Of Coordinates And Exit");
+                }
 		micrographstb = new JTable();
 		micrographstb.getSelectionModel().addListSelectionListener(new ListSelectionListener()
 		{
@@ -724,9 +740,8 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 			@Override
 			public void actionPerformed(ActionEvent e)
 			{
-				if (sizesl.getValue() == ((Number) sizetf.getValue()).intValue())// event
-																					// from
-																					// sizesl
+                            // event from sizesl
+				if (((Number)sizetf.getValue()).intValue() == getParticlePicker().getSize())
 					return;
 
 				int size = ((Number) sizetf.getValue()).intValue();
@@ -749,7 +764,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 			{
 				if (sizesl.getValueIsAdjusting()) 
 					return;
-				if (sizesl.getValue() == ((Number) sizetf.getValue()).intValue())// event
+				if (sizesl.getValue() == getParticlePicker().getSize())// event
 																					// from
 																					// sizetf
 					return;
@@ -809,8 +824,10 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		dispose();
 		if (getCanvas() != null)
 			getCanvas().getIw().close();
+
 		
 		XmippApplication.removeInstance(false);
+
 	}
 
 	public abstract String importParticles(Format format, String dir, float scale, boolean invertx, boolean inverty);
@@ -831,5 +848,35 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		map.put("Down", "Moves selected particle down");
 		return map;
 	}
+        
+        protected void executeScipionSaveAndExit()
+        {
+            
+            getCanvas().setEnabled(false);
+            XmippWindowUtil.blockGUI(ParticlePickerJFrame.this, "Creating set ...");
+            new Thread(new Runnable() {
+
+                @Override
+                public void run() {
+
+                    try {
+                        String[] cmd = getParticlePicker().getScipionSaveCommand();
+                        String output = XmippUtil.executeCommand(cmd);
+                        XmippWindowUtil.releaseGUI(ParticlePickerJFrame.this.getRootPane());
+                        getCanvas().setEnabled(true);
+                        if(output != null && !output.isEmpty())
+                        {
+                            XmippDialog.showInfo(ParticlePickerJFrame.this, output);
+                            System.out.println(output);
+                        }
+                        close();
+
+                    } catch (Exception ex) {
+                        throw new IllegalArgumentException(ex.getMessage());
+                    }
+
+                }
+            }).start();
+        }
 
 }

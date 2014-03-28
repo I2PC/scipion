@@ -417,6 +417,9 @@ void Micrograph::produce_all_images(int label, double minCost,
             }
             else
                 SF.setValue(MDL_ENABLED, 1, id);
+            // If the ctfRow was set, copy the info to images metadata
+            if (ctfRow.containsLabel(MDL_CTF_DEFOCUSU))
+                SF.setRow(ctfRow, id);
             //  if (ang!=0) I().rotate(-ang);
             I.write(fn_out, ii, true, WRITE_APPEND);
         }

@@ -6,7 +6,7 @@
 from protlib_base import *
 from protlib_utils import which, runJob, runShowJ,printLog
 from protlib_filesystem import deleteFile, createLink2, exists, replaceFilenameExt, createDir
-import xmipp
+import xmipp 
 from protlib_gui_ext import showWarning
 
 # The dictionary with specific filename templates 
@@ -32,12 +32,24 @@ class ProtScreenMicrographs(XmippProtocol):
         XmippProtocol.__init__(self, protDict.screen_micrographs.name, scriptname, project)
         self.Import = "from protocol_screen_micrographs import *"
         self.setPreviousRun(self.ImportRun) 
-        self.inputFilename('microscope', 'micrographs', 'acquisition')
-        self.inputProperty('TiltPairs', 'MicrographsMd')
-        self.micrographs = self.getFilename('micrographs')
-        self.MicrographsMd = self.Input['micrographs']
+        self.inputFilename('microscope', 'acquisition')
+        
+        if self.PrevRun.Name == 'import_movies':
+            self.dataType = 'movies'
+            self.MDL_TYPE = xmipp.MDL_MICROGRAPH_MOVIE
+            self.inputProperty('MoviesMd')
+            self.TiltPairs = None
+        else:
+            self.dataType = 'micrographs'
+            self.inputProperty('TiltPairs', 'MicrographsMd')
+            self.MDL_TYPE = xmipp.MDL_MICROGRAPH
+
+        self.inputFilename( self.dataType)
+        self.MicrographsMd = self.Input[self.dataType]    
+        self.micrographs = self.getFilename(self.dataType)
         if self.TiltPairs:
             self.MicrographsMd='micrographPairs@'+self.MicrographsMd
+
 
     def defineSteps(self):
         extraDir=self.workingDirPath('extra')
@@ -62,18 +74,31 @@ class ProtScreenMicrographs(XmippProtocol):
 	
         # Now the estimation actions
         for objId in MD:
-            inputFile = MD.getValue(xmipp.MDL_MICROGRAPH, objId)
+            inputFile = MD.getValue(self.MDL_TYPE, objId)
             micrographName = os.path.basename(inputFile)
             shortname = os.path.splitext(micrographName)[0]
             micrographDir = os.path.join(extraDir,shortname)                    
             automaticDownsampling=getattr(self,'AutomaticDownsampling',True)
-            self.insertParallelStep('estimateSingleCTF',verifyfiles=[_getFilename('ctfparam', micrographDir=micrographDir)],
-                                    WorkingDir=self.WorkingDir, inputFile=inputFile, DownsampleFactor=self.DownsampleFactor,
-                                    AutomaticDownsampling=automaticDownsampling, Voltage=Voltage,
-                                    SphericalAberration=SphericalAberration, AngPix=AngPix, AmplitudeContrast=self.AmplitudeContrast,
-                                    LowResolCutoff=self.LowResolCutoff, HighResolCutoff=self.HighResolCutoff,WinSize=self.WinSize,
-                                    MaxFocus=self.MaxFocus,MinFocus=self.MinFocus,FastDefocus=self.FastDefocus,
-                                    parent_step_id=XmippProjectDb.FIRST_STEP)
+            self.insertParallelStep('estimateSingleCTF'
+                                    , verifyfiles=[_getFilename('ctfparam', micrographDir=micrographDir)]
+                                    , WorkingDir=self.WorkingDir
+                                    , inputFile=inputFile
+                                    , DownsampleFactor=self.DownsampleFactor
+                                    , AutomaticDownsampling=automaticDownsampling
+                                    , Voltage=Voltage
+                                    , SphericalAberration=SphericalAberration
+                                    , AngPix=AngPix
+                                    , AmplitudeContrast=self.AmplitudeContrast
+                                    , LowResolCutoff=self.LowResolCutoff
+                                    , HighResolCutoff=self.HighResolCutoff
+                                    , WinSize=self.WinSize
+                                    , MaxFocus=self.MaxFocus
+                                    , MinFocus=self.MinFocus
+                                    , FastDefocus=self.FastDefocus
+                                    , parent_step_id=XmippProjectDb.FIRST_STEP
+                                    , dataType = self.dataType
+                                    , MDL_TYPE = self.MDL_TYPE
+                                    )
         
         # Gather results after external actions
         self.insertStep('gatherResults',verifyfiles=[self.micrographs],
@@ -82,12 +107,16 @@ class ProtScreenMicrographs(XmippProtocol):
                            summaryFile=self.micrographs,
                            importMicrographs=self.MicrographsMd,
                            Downsampling=self.DownsampleFactor,
-                           NumberOfMpi=self.NumberOfMpi)
+                           NumberOfMpi=self.NumberOfMpi,
+                           MDL_TYPE = self.MDL_TYPE)
         if getattr(self,'AutomaticQuality',True):
             condition="ctfCritFirstZero<5 OR ctfCritMaxFreq>20 OR ctfCritfirstZeroRatio<0.9 OR ctfCritfirstZeroRatio>1.1 OR "\
                       "ctfCritFirstMinFirstZeroRatio>10 OR ctfCritCorr13<0 OR ctfCritCtfMargin<2.5 OR ctfCritNonAstigmaticValidty<0.3 OR "\
                       "ctfCritNonAstigmaticValidty>25"
-            self.insertStep("automaticRejection",WorkingDir=self.WorkingDir,condition=condition)
+            self.insertStep("automaticRejection",
+                            WorkingDir=self.WorkingDir,
+                            condition=condition,
+                            MDL_TYPE = self.MDL_TYPE)
         if self.TiltPairs:
             self.insertStep("copyTiltPairs",WorkingDir=self.WorkingDir,inputMicrographs=self.MicrographsMd)
     
@@ -100,7 +129,7 @@ class ProtScreenMicrographs(XmippProtocol):
         if self.DownsampleFactor<1:
             errors.append("Downsampling must be >=1");
 
-        micsFn = self.Input['micrographs']
+        micsFn = self.Input[self.dataType]
         # Check that there are any micrograph to process
         if xmippExists(micsFn):
             md = xmipp.MetaData(micsFn)
@@ -123,8 +152,8 @@ class ProtScreenMicrographs(XmippProtocol):
     def summary(self):
         message = []
         from protlib_xmipp import getMdSize
-        size = getMdSize(self.Input['micrographs'])
-        message.append("CTF screening of <%d> micrographs." % size)
+        size = getMdSize(self.Input[self.dataType])
+        message.append("CTF screening of <%d> %s" % (size,self.dataType))
         message.append("Input directory: [%s]" % self.PrevRun.WorkingDir)
         return message
     
@@ -139,11 +168,11 @@ class ProtScreenMicrographs(XmippProtocol):
         return papers
     
     def visualize(self):
-        summaryFile = self.getFilename('micrographs')
+        summaryFile = self.getFilename(self.dataType)
         
         if not exists(summaryFile): # Try to create partial summary file
             summaryFile = summaryFile.replace(self.WorkingDir, self.TmpDir)
-            buildSummaryMetadata(self.WorkingDir, self.Input['micrographs'], summaryFile)
+            buildSummaryMetadata(self.WorkingDir, self.Input[self.dataType], summaryFile, self.MDL_TYPE)
         
         if exists(summaryFile):
             self.regenerateSummary(summaryFile)
@@ -170,11 +199,12 @@ class ProtScreenMicrographs(XmippProtocol):
                           summaryFile=self.micrographs,
                           importMicrographs=self.MicrographsMd,
                           Downsampling=self.DownsampleFactor,
-                          NumberOfMpi=self.NumberOfMpi)
+                          NumberOfMpi=self.NumberOfMpi,
+                          MDL_TYPE=self.MDL_TYPE)
 
 def estimateSingleCTF(log, WorkingDir, inputFile, DownsampleFactor, AutomaticDownsampling,
                       Voltage, SphericalAberration, AngPix, AmplitudeContrast, LowResolCutoff, 
-                      HighResolCutoff,WinSize,MaxFocus,MinFocus,FastDefocus):
+                      HighResolCutoff,WinSize,MaxFocus,MinFocus,FastDefocus,dataType,MDL_TYPE):
     extraDir=os.path.join(WorkingDir,'extra')
     tmpDir=os.path.join(WorkingDir,'tmp')
     micrographName = os.path.basename(inputFile)
@@ -219,6 +249,10 @@ def estimateSingleCTF(log, WorkingDir, inputFile, DownsampleFactor, AutomaticDow
              " --defocusU "+str((MaxFocus+MinFocus)*10000/2)
         if (FastDefocus):
             args+=" --fastDefocus"
+        
+        if (dataType=='movie'):
+            args+=" --movies"
+
         runJob(log,'xmipp_ctf_estimate_from_micrograph', args)
         
         if deleteTmp:
@@ -226,7 +260,7 @@ def estimateSingleCTF(log, WorkingDir, inputFile, DownsampleFactor, AutomaticDow
         
         md = xmipp.MetaData()
         id = md.addObject()
-        md.setValue(xmipp.MDL_MICROGRAPH,inputFile,id)
+        md.setValue(MDL_TYPE,inputFile,id)
         md.setValue(xmipp.MDL_PSD,oroot+".psd",id)
         md.setValue(xmipp.MDL_PSD_ENHANCED,oroot+"_enhanced_psd.xmp",id)
         md.setValue(xmipp.MDL_CTF_MODEL,oroot+".ctfparam",id)
@@ -245,7 +279,14 @@ def estimateSingleCTF(log, WorkingDir, inputFile, DownsampleFactor, AutomaticDow
         if md.size()==0:
             break
 
-def gatherResults(log,TmpDir,WorkingDir,summaryFile, importMicrographs,Downsampling,NumberOfMpi):
+def gatherResults(log,
+                  TmpDir,
+                  WorkingDir,
+                  summaryFile, 
+                  importMicrographs,
+                  Downsampling,
+                  NumberOfMpi,
+                  MDL_TYPE):
     # This is the old gather Results, just in case
     #    buildSummaryMetadata(WorkingDir, importMicrographs, summaryFile)
     #    dirSummary,fnSummary=os.path.split(summaryFile)
@@ -258,23 +299,23 @@ def gatherResults(log,TmpDir,WorkingDir,summaryFile, importMicrographs,Downsampl
     for file in fnList:
         mdMic=xmipp.MetaData(file)
         md.unionAll(mdMic)
-    md.sort(xmipp.MDL_MICROGRAPH)
+    md.sort(MDL_TYPE)
     md.write(summaryFile)
     if Downsampling!=1:
         runJob(log,"find",TmpDir+" -type f -exec rm {} \;")
 
-def buildSummaryMetadata(WorkingDir,importMicrographs,summaryFile):
+def buildSummaryMetadata(WorkingDir,importMicrographs,summaryFile,MDL_TYPE):
     md = xmipp.MetaData()
     importMd = xmipp.MetaData(importMicrographs)
     importMd.removeDisabled()
     for id in importMd:
-        inputFile = importMd.getValue(xmipp.MDL_MICROGRAPH,id)
+        inputFile = importMd.getValue(MDL_TYPE,id)
         micrographName = os.path.basename(inputFile)
         shortname = replaceFilenameExt(micrographName, '')
         micrographDir = join(WorkingDir, 'extra', shortname)                    
         
         objId = md.addObject()
-        md.setValue(xmipp.MDL_MICROGRAPH, inputFile, objId)
+        md.setValue(MDL_TYPE, inputFile, objId)
         ctfparam = _getFilename('ctfparam', micrographDir=micrographDir)
         labels = [xmipp.MDL_PSD, xmipp.MDL_PSD_ENHANCED, xmipp.MDL_CTF_MODEL,xmipp.MDL_IMAGE1, xmipp.MDL_IMAGE2]
         if exists(ctfparam): # Get filenames
@@ -288,18 +329,18 @@ def buildSummaryMetadata(WorkingDir,importMicrographs,summaryFile):
             md.setValue(label, value, objId)
     
     if not md.isEmpty():
-        md.sort(xmipp.MDL_MICROGRAPH)
+        md.sort(MDL_TYPE)
         md.write(summaryFile)
 
-def automaticRejection(log,WorkingDir,condition):
+def automaticRejection(log,WorkingDir,condition,MDL_TYPE):
     fnMic=os.path.join(WorkingDir,"micrographs.xmd")
     fnRejected=os.path.join(WorkingDir,"tmp/rejectedMicrographs.xmd")
     runJob(log,"xmipp_metadata_utilities",'-i %s --query select "%s" -o %s'%(fnMic,condition,fnRejected))
     md = xmipp.MetaData(fnRejected)
-    fnRejectedMicrographs=md.getColumnValues(xmipp.MDL_MICROGRAPH)
+    fnRejectedMicrographs=md.getColumnValues(MDL_TYPE)
     md.read(fnMic)
     for id in md:
-        fnCurrentMicrograph=md.getValue(xmipp.MDL_MICROGRAPH,id)
+        fnCurrentMicrograph=md.getValue(MDL_TYPE,id)
         if fnCurrentMicrograph in fnRejectedMicrographs:
             md.setValue(xmipp.MDL_ENABLED,-1,id)
     md.write(fnMic)

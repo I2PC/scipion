@@ -28,6 +28,37 @@
 #include "xmipp_fftw.h"
 #include <math.h>
 
+bool containsCTFBasicLabels(const MetaData & md)
+{
+	for(int i=0; i < CTF_BASIC_LABELS_SIZE; i++)
+		if (!md.containsLabel(CTF_BASIC_LABELS[i]))
+			return false;
+	return true;
+}
+
+void groupCTFMetaData(const MetaData &imgMd, MetaData &ctfMd)
+{
+  //number of different CTFs
+  if (imgMd.containsLabel(MDL_CTF_MODEL))
+  {
+      ctfMd.aggregate(imgMd, AGGR_COUNT, MDL_CTF_MODEL, MDL_CTF_MODEL, MDL_COUNT);
+      ctfMd.fillExpand(MDL_CTF_MODEL);
+  }
+  else if (containsCTFBasicLabels(imgMd))
+  {
+      std::vector<MDLabel> groupbyLabels;
+      for(int i=0; i < CTF_ALL_LABELS_SIZE; i++)
+        if (imgMd.containsLabel(CTF_ALL_LABELS[i]))
+          groupbyLabels.push_back(CTF_ALL_LABELS[i]);
+
+      //MetaData auxMd;
+      ctfMd.aggregateGroupBy(imgMd, AGGR_COUNT, groupbyLabels, MDL_CTF_DEFOCUSU, MDL_COUNT);
+  }
+  else
+      REPORT_ERROR(ERR_MD_MISSINGLABEL,"Expecting CTF_MODEL or (MDL_CTF_DEFOCUSU, MDL_CTF_DEFOCUSV, MDL_CTF_DEFOCUS_ANGLE) labels");
+
+}
+
 /* Read -------------------------------------------------------------------- */
 void CTFDescription::readFromMdRow(const MDRow &row, bool disable_if_not_K)
 {
@@ -516,7 +547,7 @@ void CTFDescription::getProfile(double angle, double fmax, int nsamples,
         A2D_ELEM(profiles, i, 0) = 10*log10(bgNoise);
         A2D_ELEM(profiles, i, 1) = 10*log10(bgNoise + E * E);
         A2D_ELEM(profiles, i, 2) = 10*log10(bgNoise + ctf * ctf);
-        A2D_ELEM(profiles, i, 3) = ctf;
+        A2D_ELEM(profiles, i, 3) = getValuePureNoKAt();
     }
 }
 
@@ -549,7 +580,7 @@ void CTFDescription::getAverageProfile(double fmax, int nsamples,
             A2D_ELEM(profiles, i, 0) += 10*log10(bgNoise);
             A2D_ELEM(profiles, i, 1) += 10*log10(bgNoise + E * E);
             A2D_ELEM(profiles, i, 2) += 10*log10(bgNoise + ctf * ctf);
-            A2D_ELEM(profiles, i, 3) += ctf;
+            A2D_ELEM(profiles, i, 3) += getValuePureNoKAt();
         }
     }
     profiles*=1.0/360;

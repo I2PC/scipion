@@ -216,9 +216,8 @@ void ProgCtfGroup::produceSideInfo()
 
 
     MetaData ctfMD;
-    //number of different CTFs
-    ctfMD.aggregate(SF, AGGR_COUNT,MDL_CTF_MODEL,MDL_CTF_MODEL,MDL_COUNT);
-    ctfMD.fillExpand(MDL_CTF_MODEL);
+    groupCTFMetaData(SF, ctfMD);
+
     int nCTFs = ctfMD.size();
     //how much memory do I need to store them
     double _sizeGb = (double) ypaddim * xpaddim * sizeof(double) * nCTFs /1073741824.;
@@ -232,7 +231,7 @@ void ProgCtfGroup::produceSideInfo()
     //use this sampling instead of the one in the CTFparam file
     if(replaceSampling)
     {
-    	ctfMD.setValueCol(MDL_CTF_SAMPLING_RATE, samplingRate);
+        ctfMD.setValueCol(MDL_CTF_SAMPLING_RATE, samplingRate);
     }
     ctf.readFromMetadataRow(ctfMD,ctfMD.firstObject());
 
@@ -601,8 +600,19 @@ void ProgCtfGroup::writeOutputToDisc()
     //(3) make block-sel per image group
     MetaData ImagesMD;
     ImagesMD.read(fn_ctfdat);
-    ctfImagesGroup.join(ImagesMD,sortedCtfMD,MDL_CTF_MODEL,INNER );
+    //
+    if (ImagesMD.containsLabel(MDL_CTF_MODEL))
+    {
+        ctfImagesGroup.join1(ImagesMD, sortedCtfMD, MDL_CTF_MODEL, INNER );
+    }
+    else
+    {
+    	//ImagesMD.write("/tmp/ImagesMD");
+    	//sortedCtfMD.write("/tmp/sortedCtfMD");
+        ctfImagesGroup.join1(ImagesMD, sortedCtfMD, MDL_ITEM_ID, INNER);
+    }
 
+    //
     unlink( (fn_root+"s_images.sel").c_str());
     FileName imagesInDefoculGroup;
     auxMetaData.clear();

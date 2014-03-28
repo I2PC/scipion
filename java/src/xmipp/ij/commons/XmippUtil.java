@@ -10,6 +10,7 @@ import ij.ImagePlus;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.util.Arrays;
+import xmipp.ij.commons.XmippUtil;
 import xmipp.jni.Filename;
 import xmipp.jni.ImageGeneric;
 
@@ -33,6 +34,8 @@ public class XmippUtil {
 	public static XmippImageJ getXmippImageJ() {
 		return xij;
 	}
+        
+        
 
 	public static ImagePlus getImagePlus(String file) {
 		try {
@@ -58,8 +61,11 @@ public class XmippUtil {
 		return icon;
 	}
         
-        public static String executeCommand(String[] command) throws Exception {
+
+    public static String executeCommand(String[] command) throws Exception {
+
         System.out.println(Arrays.toString(command));
+
                  
         StringBuffer output = new StringBuffer();
 
@@ -83,4 +89,7 @@ public class XmippUtil {
         return output.toString();
     }
 
+
+
+       
 }

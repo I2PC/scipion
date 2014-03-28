@@ -14,6 +14,7 @@ from protlib_utils import runJob
 from xmipp import MetaData, Image
 
 class ProtDenoiseParticles(XmippProtocol):
+    
     def __init__(self, scriptname, project):
         XmippProtocol.__init__(self, protDict.denoise_particles.name, scriptname, project)
         self.Import = 'from protocol_denoise_particles import *'    

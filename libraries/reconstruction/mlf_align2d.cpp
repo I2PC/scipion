@@ -314,9 +314,7 @@ void ProgMLF2D::produceSideInfo()
 
     // Read selfile with experimental images
     MDimg.read(fn_img);
-    // Remove disabled images
-    if (MDimg.containsLabel(MDL_ENABLED))
-        MDimg.removeObjects(MDValueEQ(MDL_ENABLED, -1));
+    MDimg.removeDisabled(); // Discard disabled images
     nr_images_global = MDimg.size();
 
     // Create a vector of objectIDs, which may be randomized later on
@@ -387,15 +385,13 @@ void ProgMLF2D::produceSideInfo()
 
         //CTF info now comes on input metadatas
         MetaData mdCTF;
-        //number of different CTFs
-        if (!MDimg.containsLabel(MDL_CTF_MODEL))
-            REPORT_ERROR(ERR_ARG_MISSING, "Missing MDL_CTF_MODEL in input images metadata");
-
-        mdCTF.aggregate(MDimg, AGGR_COUNT, MDL_CTF_MODEL, MDL_CTF_MODEL, MDL_COUNT);
-        mdCTF.fillExpand(MDL_CTF_MODEL);
+        groupCTFMetaData(MDimg, mdCTF);
 
         if (sampling > 0)
+        {
+          MDimg.setValueCol(MDL_CTF_SAMPLING_RATE, sampling);
           mdCTF.setValueCol(MDL_CTF_SAMPLING_RATE, sampling);
+        }
 
         nr_focus = mdCTF.size();
 
@@ -429,10 +425,10 @@ void ProgMLF2D::produceSideInfo()
             if (astigmCTFFactor > 0.1)
             {
                 FileName ctfname;
-                mdCTF.getValue(MDL_CTF_MODEL, ctfname, id);
                 //REPORT_ERROR(ERR_NUMERICAL, "Prog_MLFalign2D-ERROR%% Only non-astigmatic CTFs are allowed!");
-                std::cerr << "CTF file " << ctfname << " is too astigmatic. We ill ignore it." << std::endl;
-                std::cerr << "astigmCTFFactor " << astigmCTFFactor <<  std::endl;
+                std::cerr << "CTF is too astigmatic. We ill ignore it." << std::endl;
+                std::cerr << "   defocus U: " << ctf.DeltafU << "   defocus V: " << ctf.DeltafV << std::endl;
+                std::cerr << "   astigmCTFFactor " << astigmCTFFactor <<  std::endl;
                 //continue;
             }
             ctf.DeltafV =  (ctf.DeltafU+ctf.DeltafV)*0.5;
@@ -480,8 +476,9 @@ void ProgMLF2D::produceSideInfo()
             ++ifocus;
         }
 
+        // Make a join to set the MDL_DEFGROUP to each image
         MetaData md(MDimg);
-        MDimg.join(md, mdCTF, MDL_CTF_MODEL);
+        MDimg.joinNatural(md, mdCTF);
     }
 
     // Get a resolution pointer in Fourier-space
@@ -1962,10 +1959,6 @@ void ProgMLF2D::processOneImage(const MultidimArray<double> &Mimg,
                                     else
                                         refw_mirror[refno] += weight;
                                     sum_refw += weight;
-
-                                    //std::cerr << "DEBUG_JM: LOOP2: refno << iflip << ipsi: " << refno << " " << iflip << " " << ipsi << std::endl;
-                                    //std::cerr << "DEBUG_JM: LOOP2:         weight: " << weight << " sum_refw: " << sum_refw << std::endl;
-
 
                                     if (do_norm)
                                     {

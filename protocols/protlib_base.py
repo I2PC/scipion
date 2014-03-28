@@ -439,6 +439,7 @@ _baseProtocolNames = {
         'family':       join('%(WorkingDir)s', '%(family)s.xmd'),
         'macros':       join('%(ExtraDir)s', 'macros.xmd'), 
         'micrographs':  join('%(WorkingDir)s','micrographs.xmd'),
+        'movies':       join('classes@%(WorkingDir)s','movies.xmd'),
         'microscope':   join('%(WorkingDir)s','microscope.xmd'),
         'images':       join('%(WorkingDir)s', 'images.xmd'),
         'images_stk':       join('%(WorkingDir)s', 'images.stk'),

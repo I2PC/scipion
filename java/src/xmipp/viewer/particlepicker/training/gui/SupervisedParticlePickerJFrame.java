@@ -187,7 +187,7 @@ public class SupervisedParticlePickerJFrame extends ParticlePickerJFrame {
             getCanvas().repaint();
             updateMicrographsModel(true);
             getCanvas().refreshActive(null);
-
+            
             new UpdateTemplatesTask(ppicker, ppicker.getTemplatesNumber()).execute();
             
 
@@ -263,7 +263,7 @@ public class SupervisedParticlePickerJFrame extends ParticlePickerJFrame {
 
     private void initComponents() {
         try {
-            
+
             setResizable(false);
             setTitle("Xmipp Particle Picker - " + ppicker.getMode());
             initMenuBar();

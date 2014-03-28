@@ -29,15 +29,9 @@ from os.path import exists, join
 from xmipp import *
 from emx.emx import *
 from numpy import eye
-from protlib_filesystem import join, dirname, abspath, replaceBasenameExt\
-   , findAcquisitionInfo
+
+from protlib_filesystem import join, dirname, abspath, replaceBasenameExt, findAcquisitionInfo
 from protlib_xmipp import RowMetaData
-try:
-    import collections
-except ImportError:
-    sys.stderr.write('Could not import OrderedDict. For Python versions '
-                     'earlier than 2.7 this module may be missing. '
-                     )
 
 BINENDING     = '.mrc'
 CTFENDING     = '_ctf.param'
@@ -458,6 +452,8 @@ def _writeEmxData(emxData, filename):
 def xmippMicrographsToEmx(micMd, emxData, emxDir):
     """ Export micrographs from xmipp metadata to EMX.
     """
+    acquisionInfo = findAcquisitionInfo(self.SelFileNameInitial)
+
     from protlib_particles import readPosCoordinates
     md = MetaData(micMd)
     micFn = 'mic%06d.mrc'
