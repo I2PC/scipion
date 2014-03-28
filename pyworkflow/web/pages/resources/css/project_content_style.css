@@ -1,6 +1,5 @@
 /* CSS Document */
-
-.layout-outer > .west {
+.layout-outer>.west {
 	padding: 5px 10px 20px 10px;
 	width: 25%;
 	min-width: 15%;
@@ -9,7 +8,8 @@
 	overflow-x: hidden;
 	background-color: white;;
 }
-.layout-outer > .center{
+
+.layout-outer>.center {
 	padding: 20px 20px 20px 10px;
 }
 /**
@@ -25,48 +25,62 @@
 	height: 100%;
 	background-color: white;
 	border: 0px;
-}
-.layout-inner > .north {
-	height: 80%;
-	margin-bottom: 30px;
-	max-height: 70%;
-/* 	min-height: 30%; */
-/* 	overflow-y: scroll; */
-	position: relative;
+	max-height: 80%;
+	overflow-y: scroll;
 	overflow: auto;
-/* 	background-color:blue; */
-} 
-.layout-inner > .center {
-/* 	background-color:red; */
 }
 
-/* FLEX TEMPLATE (These styles are to create custom resize handles.) */ 
-#tab-summary a{
+.layout-inner>.north {
+	height: 80%;
+	margin-top: 1.5em;
+	margin-bottom: 30px;
+	max-height: 70%;
+	/* 	min-height: 30%; */
+	/* 	overflow-y: scroll; */
+	position: relative;
+	overflow: auto;
+}
+
+.layout-inner>.north>.text {
+	position: relative;
+	height: 100%;
+	overflow: auto;
+}
+
+.layout-inner>.center {
+	height: 100%;
+}
+
+/* FLEX TEMPLATE (These styles are to create custom resize handles.) */
+#tab-summary a {
 	color: Firebrick !important;
 }
+
 .north .ui-resizable-s {
 	position: absolute;
 	bottom: 0px !important;
-	background: url("/resources/handle_hor.gif") no-repeat center center transparent;
-/* 	background: linear-gradient(to right, #d2a7a7 0%,#820808 50%,#d2a7a7 100%); */
+	background: url("/resources/handle_hor.gif") no-repeat center center
+		transparent;
+	/* 	background: linear-gradient(to right, #d2a7a7 0%,#820808 50%,#d2a7a7 100%); */
 }
 
 .ui-resizable-e {
-	background: url("/resources/handle_ver.gif") no-repeat center center transparent;
+	background: url("/resources/handle_ver.gif") no-repeat center center
+		transparent;
 	margin-right: 5px;
 	padding-right: 5px;
-}	
+}
 
 /* SECTION */
-#westContainer{
+#westContainer {
 	padding: 15px 10px;
 	background-color: #eaebec;
 	font-size: 0.9em;
-	overflow-x:hidden;
+	overflow-x: hidden;
 }
 
 /* TREEVIEW */
-.viewTree{
+.viewTree {
 	margin-bottom: 10px;
 }
 
@@ -192,7 +206,7 @@
 #listEx ul {
 	position: inherit;
 	margin: 10px 0px 0px 10px;
-/* 	font-size: 0.9em; */
+	/* 	font-size: 0.9em; */
 }
 
 #listEx li a {
@@ -201,48 +215,44 @@
 }
 
 #tabs a:hover {
-/* 	color:Firebrick; */
+	/* 	color:Firebrick; */
+	
 }
 
-.tabContents, .referenceLink {
-/* 	max-height:10em; */
-/* 	min-height:10em; */
-/* 	height:10em; */
+.tabContents,.referenceLink {
+	/* 	max-height:10em; */
+	/* 	min-height:10em; */
+	/* 	height:10em; */
+	/* 	max-height:100%; */
+	height: auto;
+	/* 	overflow-y:scroll; */
+	/* 	overflow: auto; */
+	padding: 1em;
+	font-size: 90%;
 
-/* 	max-height:100%; */
-	height:auto;
-	
-/* 	overflow-y:scroll; */
-/* 	overflow: auto; */
-	
-	padding:1em;
-	font-size:90%;
-	
-/* 	min-height:14em; */	
-/* 	height:14em; */
-	
+	/* 	min-height:14em; */
+	/* 	height:14em; */
 }
 
 .tabContents a:hover {
-	color:Firebrick;
+	color: Firebrick;
 }
 
 .referenceLink a {
-	color:Firebrick;
+	color: Firebrick;
 	text-decoration: underline;
 }
 
-#tab-logs-output, #tab-logs-error, #tab-logs-scipion {
-	font-family:Monospace;
+#tab-logs-output,#tab-logs-error,#tab-logs-scipion {
+	font-family: Monospace;
 	font-size: 90%;
-	background-color:black;
-	color:white;
-	
-/* 	After change the font-family the height is modified due to the font adjust size, fix here. */
-/* 	max-height:12.8em; */
-/* 	min-height:12.8em; */
-/* 	height:12.8em; */
+	background-color: black;
+	color: white;
 
+	/* 	After change the font-family the height is modified due to the font adjust size, fix here. */
+	/* 	max-height:12.8em; */
+	/* 	min-height:12.8em; */
+	/* 	height:12.8em; */
 }
 
 /* jsPlumb */
@@ -265,6 +275,3 @@
 .dragActive {
 	border: 3px solid #346789;
 }
-
-
-
