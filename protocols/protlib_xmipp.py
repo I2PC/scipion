@@ -28,7 +28,7 @@
 
 import os
 import xmipp
-from xmipp import Program, FileName
+from xmipp import Program, FileName, MetaData
 from protlib_utils import runImageJPlugin, runJavaIJapp
 from protlib_filesystem import getXmippPath, xmippExists, findAcquisitionInfo
 
@@ -162,7 +162,7 @@ def getImageData(img):
     
 def getFirstImage(mdFn):
     ''' Read the first image from Metadata'''
-    md = xmipp.MetaData(mdFn)
+    md = MetaData(mdFn)
     return md.getValue(xmipp.MDL_IMAGE, md.firstObject())
 
 #------------- FUNCTION TO WORK WITH PROGRAMS META-INFORMATION -----------------
@@ -518,13 +518,19 @@ def findColor(color):
             return (k, fx, fy, color)
     return None
 
-def getMdSize(filename):
-    """ Return the metadata size without parsing entirely. """
-    from xmipp import MetaData
+def mdFirstRow(filename):
+    """ Create a MetaData but only read the first row.
+    This method should be used for validations of labels
+    or metadata size, but the full metadata is not needed.
+    """
     md = MetaData()
     md.read(filename, 1)
     
-    return md.getParsedLines()
+    return md
+
+def getMdSize(filename):
+    """ Return the metadata size without parsing entirely. """
+    return mdFirstRow(filename).getParsedLines()
 
 def emptyMd(filename):
     """ Use getMdSize to check if metadata is empty. """
