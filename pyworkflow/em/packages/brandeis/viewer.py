@@ -30,7 +30,7 @@ visualization program.
 from pyworkflow.viewer import ProtocolViewer, DESKTOP_TKINTER, WEB_DJANGO
 from pyworkflow.em import *
 from pyworkflow.gui.form import FormWindow
-from protocol_frealign import ProtFrealign
+from protocol_refinement import ProtFrealign
 from pyworkflow.em.packages.xmipp3.viewer import runShowJ
 from pyworkflow.em.plotter import EmPlotter
 
