@@ -40,7 +40,7 @@ class TestXmippBase(BaseTest):
         cls.micFn = cls.dataset.getFile('mic1')
         cls.micsFn = cls.dataset.getFile('allMics')
         cls.coordsDir = cls.dataset.getFile('posSupervisedDir')
-        cls.allCrdsDir = cls.dataset.getFile('posAlldDir')
+        cls.allCrdsDir = cls.dataset.getFile('posAllDir')
     
     @classmethod
     def runImportMicrograph(cls, pattern, samplingRate, voltage, scannedPixelSize, magnification, sphericalAberration):

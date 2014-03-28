@@ -47,7 +47,7 @@ class XmippProtScreenClasses(ProtAlignClassify, ProjMatcher):
         form.addSection(label='Input')
         
         form.addParam('inputClasses', PointerParam, label="Set of classes", important=True,
-                      pointerClass='SetOfClasses2D', pointerCondition='hasAverages',
+                      pointerClass='SetOfClasses2D', pointerCondition='hasRepresentatives',
                       help='Provide a set of classes object')
         form.addParam('inputVolume', PointerParam, label="Volume to compare classes to", important=True,
 #                      pointerClass='SetOfVolumes',

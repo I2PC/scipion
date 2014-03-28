@@ -956,10 +956,10 @@ class SetOfClasses2D(SetOfClasses):
     ITEM_TYPE = Class2D
     
     def createRepresentatives(self, **args):
-        self._representatives = SetOfParticles(filename=self.getFileName(), prefix='Averages')
+        self._representatives = SetOfParticles(filename=self.getFileName(), prefix='Representatives')
         
         if not self.getImages().hasValue():
-            raise Exception("SetOfClasses2D.createAverages: you must set the images before creating the averages!!!")
+            raise Exception("SetOfClasses2D.createRepresentatives: you must set the images before creating the representatives!!!")
         self._representatives.copyInfo(self.getImages())
         self._representatives.setHasCTF(False)
         return self._representatives
@@ -970,7 +970,7 @@ class SetOfClasses3D(SetOfClasses):
     ITEM_TYPE = Class3D
     
     def createRepresentatives(self):
-        self._representatives = SetOfVolumes(filename=self.getFileName(), prefix='Averages')
+        self._representatives = SetOfVolumes(filename=self.getFileName(), prefix='Representatives')
         if not self.getImages().hasValue():
             raise Exception("SetOfClasses3D.createRepresentatives: you must set the volumes before creating the representatives!!!")
         self._representatives.copyInfo(self.getImages())
@@ -1057,7 +1057,7 @@ class SetOfMovies(Set):
     def createRepresentatives(self):
         self._representatives = SetOfMicrographs(filename=self.getFileName(), prefix='Representatives')
         if not self.getMicrographs().hasValue():
-            raise Exception("SetOfMovies.createAverages: you must set the micrographs before creating the representatives!!!")
+            raise Exception("SetOfMovies.createRepresentatives: you must set the micrographs before creating the representatives!!!")
         self._representatives.copyInfo(self.getMicrographs())
         return self._representatives
     
