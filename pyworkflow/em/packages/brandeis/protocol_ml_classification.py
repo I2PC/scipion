@@ -1,6 +1,6 @@
 # **************************************************************************
 # *
-# * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
+# * Authors:     Josue Gomez Blanco (jgomez@cnb.csic.es)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -20,22 +20,26 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'jgomez@cnb.csic.es'
 # *
 # **************************************************************************
 """
-This sub-package contains data and protocol classes
-wrapping Grigrorieff Lab programs at Brandeis
+This module contains the protocol to obtain a refined 3D recontruction from a set of particles using Frealign
 """
-
-_logo = "brandeis_logo.png"
-
+import os
+from pyworkflow.utils import *
+from pyworkflow.em import *
+from data import *
 from brandeis import *
+from constants import *
+from protocol_frealign_base import ProtFrealignBase
 
-from viewer import FrealignViewer
-from protocol_ctffind3 import ProtCTFFind
-from protocol_refinement import ProtFrealign
-from protocol_ml_classification import ProtFrealignClassify
 
-# Wizards
-from wizard import *
+class ProtFrealignClassify(ProtFrealignBase, ProtClassify3D):
+    """ This class implements the wrapper to single particle refinement protocol with frealign."""
+    _label = 'frealign classify'
+    
+    IS_CLASSIFY = True
+    
+    def __init__(self, **args):
+        ProtFrealignBase.__init__(self, **args)

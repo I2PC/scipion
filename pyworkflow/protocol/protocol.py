@@ -672,8 +672,7 @@ class Protocol(Step):
                             
             if rChild in copyDict:
                 rChild = copyDict.get(rChild).getObjId()
-            print "self:%s other:%s"%(self.getObjId(), other.getObjId())
-            print ("rName: %s, rCreator: %s, rParent: %s, rChild: %s"%(rName, rCreator, rParent, rChild))
+            
             self.mapper.insertRelationData(rName, rCreator, rParent, rChild)
         
         

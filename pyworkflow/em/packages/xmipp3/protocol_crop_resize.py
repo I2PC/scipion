@@ -107,16 +107,14 @@ class XmippProtResize():
                 
     #--------------------------- INSERT steps functions --------------------------------------------
     def _insertProcessStep(self, inputFn, outputFn, outputMd):
-        
         if self.doResize:
-            self._insertFunctionStep("resizeStep", inputFn, outputFn, outputMd)
+            self._insertFunctionStep("resizeStep", outputFn) # The input is outputFn that is a stack of images
         if self.doWindow:
-            self._insertFunctionStep("windowStep", inputFn, outputFn, outputMd)
+            self._insertFunctionStep("windowStep", outputFn) # The input is outputFn that is a stack of images
     
     #--------------------------- STEPS functions ---------------------------------------------------
-    def resizeStep(self, inputFn, outputFn, outputMd):
+    def resizeStep(self, inputFn):
         samplingRate = self._getSetSampling()
-        
         if self.resizeOption == RESIZE_SAMPLINGRATE:
             newSamplingRate = self.resizeSamplingRate.get()
             factor = samplingRate / newSamplingRate
@@ -141,10 +139,10 @@ class XmippProtResize():
             factor = pow(2, level)
             self.samplingRate = samplingRate / factor
             args = self._args + " --pyramid %(level)d"
-        
+            
         self.runJob(self._programResize, args % locals())
     
-    def windowStep(self, inputFn, outputFn, outputMd):
+    def windowStep(self, inputFn):
         if self.getEnumText('windowOperation') == "crop":
             cropSize = self.cropSize.get() * 2
             windowSize = x - cropSize
@@ -189,7 +187,7 @@ class XmippProtCropResizeParticles(ProtProcessParticles, XmippProtResize, XmippP
     
     def __init__(self, **args):
         ProtProcessParticles.__init__(self, **args)
-        XmippProtResize.__init__(self, **args)
+        XmippProtResize.__init__(self)
         XmippProcessParticles.__init__(self)
     
     #--------------------------- DEFINE param functions --------------------------------------------

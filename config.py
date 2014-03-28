@@ -14,7 +14,7 @@ SPIDER_DIR = EM_ROOT + 'spider'
 EMAN2DIR = EM_ROOT + 'EMAN2-1_alpha1'
 
 # frealign 8.11
-FREALIGN_HOME = EM_ROOT + 'brandeis/frealign_v8.11'
+FREALIGN_HOME = EM_ROOT + 'brandeis/frealign_v9.06'
 
 # Ctffind 3
 CTFFIND_HOME = EM_ROOT + 'brandeis/ctffind'

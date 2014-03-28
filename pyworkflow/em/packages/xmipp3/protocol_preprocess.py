@@ -37,7 +37,6 @@ from constants import *
 from convert import locationToXmipp
 
 
-
 class XmippPreprocess():
     """ This class has the common functions to preprocess objects like SetOfParticles, Volume or SetOfVolumes. """
     
@@ -100,6 +99,11 @@ class XmippPreprocess():
 class XmippProtPreprocessParticles(ProtProcessParticles, XmippProcessParticles, XmippPreprocess):
     """ Apply some filter to SetOfParticles """
     _label = 'preprocess particles'
+
+    # Automatic Particle rejection enum
+    REJ_NONE = 0
+    REJ_MAXZSCORE = 1
+    REJ_PERCENTAGE =2
     
     def __init__(self, **args):
         ProtProcessParticles.__init__(self, **args)
@@ -137,6 +141,18 @@ class XmippProtPreprocessParticles(ProtProcessParticles, XmippProcessParticles, 
                       'If this value is 0, then half the box size is used.', 
                       expertLevel=LEVEL_ADVANCED)
         XmippPreprocess._defineProcessParams(self, form)
+#         form.addParam('autoParRejection', EnumParam, choices=['None', 'MaxZscore', 'Percentage'],
+#                       label="Automatic particle rejection", default=REJ_NONE,
+#                       display=EnumParam.DISPLAY_COMBO, expertLevel=LEVEL_EXPERT,
+#                       help='How to automatically reject particles. It can be none (no rejection), '
+#                       'maxZscore (reject a particle if its Zscore is larger than this value), '
+#                       'Percentage (reject a given percentage in each one of the screening criteria). ')
+#         form.addParam('maxZscore', IntParam, default=3, condition='autoParRejection==1',
+#                       label='Maximum Zscore', expertLevel=LEVEL_EXPERT,
+#                       help='Maximum Zscore.', validators=[Positive])      
+#         form.addParam('percentage', IntParam, default=5, condition='autoParRejection==2',
+#                       label='Percentage (%)', expertLevel=LEVEL_EXPERT,
+#                       help='Percentage.', validators=[Range(0, 100, error="Percentage must be between 0 and 100.")])        
     
     #--------------------------- INSERT steps functions --------------------------------------------
     def _insertProcessStep(self, inputFn, outputFn, outputMd):
@@ -147,6 +163,9 @@ class XmippProtPreprocessParticles(ProtProcessParticles, XmippProcessParticles, 
             self._insertFunctionStep("normalizeStep", outputFn, self.normType.get(), self.backRadius.get())
         
         self._insertCommonSteps(outputFn)
+        
+#         if self.getEnumText('autoParRejection') != 'None':
+#             self._insertFunctionStep("rejectionStep", outputFn, outputMd)
     
     #--------------------------- STEPS functions ---------------------------------------------------
     def removeDustStep(self, outputFn):
@@ -168,6 +187,23 @@ class XmippProtPreprocessParticles(ProtProcessParticles, XmippProcessParticles, 
             args += "--method Ramp --background circle %(bgRadius)d"
         self.runJob("xmipp_transform_normalize", args % locals())
     
+    def sortImages(self, outputFn, outputMd):
+        pass
+#         from xmipp import MetaDataInfo
+#         #(Xdim, Ydim, Zdim, Ndim, _) = MetaDataInfo(inputFile)
+#         args=""
+#         # copy file to run path
+#         self.outputMd = String(self._getPath(replaceBaseExt(inputFile, 'xmd')))
+#         self.outputMd._objDoStore = True
+#         if inputFile != self.outputMd.get():
+#             copyFile(inputFile, self.outputMd.get())
+#         if self.autoParRejection.get()==REJ_MAXZSCORE:
+#             args+=" --zcut "+str(self.maxZscore.get())
+#         elif self.autoParRejection.get()==REJ_PERCENTAGE:
+#             args+=" --percent "+str(self.percentage.get())
+#         #if Ndim > 0:
+#         self.runJob("xmipp_image_sort_by_statistics", "-i " + self.outputMd.get() + " --addToInput"+args)
+#     
     def convertStep(self):
         """ convert if necessary"""
         imgSet = self.inputParticles.get()
@@ -226,7 +262,8 @@ class XmippProtPreprocessParticles(ProtProcessParticles, XmippProcessParticles, 
     #--------------------------- UTILS functions ---------------------------------------------------
     def _getSize(self):
         """ get the size of SetOfParticles object"""
-        Xdim, _, _, _ = self.inputParticles.get().getDimensions()
+
+        Xdim = self.inputParticles.get().getDimensions()[0]
         size = int(Xdim/2)
         return size
 
@@ -415,7 +452,7 @@ class XmippProtPreprocessVolumes(ProtPreprocessVolumes, XmippProcessVolumes, Xmi
     def _getSize(self):
         """ get the size of either Volume or SetOfVolumes object"""
         if isinstance(self.inputVolumes.get(), Volume):
-            Xdim, _, _, _ = self.inputVolumes.get().getDim()
+            Xdim = self.inputVolumes.get().getDim()[0]
         else:
-            Xdim, _, _, _ = self.inputVolumes.get().getDimensions()
+            Xdim = self.inputVolumes.get().getDimensions()[0]
         return Xdim
