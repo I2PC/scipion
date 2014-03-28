@@ -333,7 +333,7 @@ def visualizeObject(request):
                        'path': '',
                        'allowRender': True,                 # Image can be displayed, depending on column layout 
                        'mode': 'gallery',                   # Mode Options: gallery, table, column, volume_astex, volume_chimera
-                       'zoom': '150px',                     # Zoom set by default
+                       'zoom': '128px',                     # Zoom set by default
                        'blockComboBox': '',                 # Metadata Block to display. If None the first one will be displayed
                        'labelsToRenderComboBox': '',        # Column to be displayed in gallery mode. If None the first one will be displayed
                        'volumesToRenderComboBox': '',       # If 3D, Volume to be displayed in gallery, volume_astex and volume_chimera mode. If None the first one will be displayed
@@ -348,9 +348,9 @@ def visualizeObject(request):
                        'wrap': False,                       # When 'True' if there is transform matrix, only shifts will be applied
                        'resliceComboBox': xmipp.VIEW_Z_NEG, # If 3D, axis to slice volume 
                        'imageMaxWidth': 512,                # Maximum image width (in pixels)
-                       'imageMinWidth': 30,                 # Minimum image width (in pixels)
+                       'imageMinWidth': 64,                 # Minimum image width (in pixels)
                        'imageMaxHeight': 512,               # Maximum image height (in pixels)
-                       'imageMinHeight': 30,                # Minimum image height (in pixels)
+                       'imageMinHeight': 64,                # Minimum image height (in pixels)
                        'typeVolume': 'map'}                 # If map, it will be displayed normally, else if pdb only astexViewer and chimera display will be available
 
 
