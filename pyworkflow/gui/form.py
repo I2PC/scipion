@@ -130,7 +130,10 @@ class ComboVar():
         
     def set(self, value):
         self.value = value
-        self.tkVar.set(self.enum.choices[value])
+        if isinstance(value, int):
+            self.tkVar.set(self.enum.choices[value])
+        else:
+            self.tkVar.set(value) # also support string values
                     
     def get(self):
         v = self.tkVar.get()
@@ -415,14 +418,13 @@ class ParamWidget():
         """
         var = BoolVar()
         frame = tk.Frame(parent, **args)
-        frame.grid(row=0, column=0, sticky='w')
         rb1 = tk.Radiobutton(frame, text='Yes', variable=var.tkVar, value=1, **args)
         rb1.grid(row=0, column=0, padx=2, sticky='w')
         rb2 = tk.Radiobutton(frame, text='No', variable=var.tkVar, value=0, **args)
         rb2.grid(row=0, column=1, padx=2, sticky='w') 
         
-        return (var, frame)       
-        
+        return (var, frame)
+    
     def _createContentWidgets(self, param, content):
         """Create the specific widgets inside the content frame"""
         # Create widgets for each type of param
@@ -431,6 +433,7 @@ class ParamWidget():
         #TODO: Move this to a Renderer class to be more flexible
         if t is BooleanParam:
             var, frame = ParamWidget.createBoolWidget(content, bg='white')
+            frame.grid(row=0, column=0, sticky='w')
 #            var = BoolVar()
 #            frame = tk.Frame(content, bg='white')
 #            frame.grid(row=0, column=0, sticky='w')
@@ -657,31 +660,17 @@ class FormWindow(Window):
         self.font = tkFont.Font(size=10, family='helvetica')#, weight='bold')
         self.fontBold = tkFont.Font(size=10, family='helvetica', weight='bold')        
         
-        headerFrame = tk.Frame(self.root)
-        headerFrame.grid(row=0, column=0, sticky='new')
-        headerFrame.columnconfigure(0, weight=1)
-        package = protocol._package
-        t = '  Protocol: %s' % (protocol.getClassLabel())
-        logoPath = getattr(package, '_logo', None)
-        if logoPath:
-            headerLabel = tk.Label(headerFrame, text=t, font=self.fontBig, image=self.getImage(logoPath), compound=tk.LEFT)
-        else:
-            headerLabel = tk.Label(headerFrame, text=t, font=self.fontBig)
-        headerLabel.grid(row=0, column=0, padx=5, pady=(5,0), columnspan=5)
-        
-        def _addButton(text, icon, command, col):
-            btn = tk.Label(headerFrame, text=text, image=self.getImage(icon), 
-                       compound=tk.LEFT, cursor='hand2')
-            btn.bind('<Button-1>', command)
-            btn.grid(row=1, column=col, padx=5, sticky='se')
-        
-        _addButton(Message.TITLE_CITE, Icon.ACTION_REFERENCES, self._showReferences, 0)
-        _addButton(Message.TITLE_DOC ,Icon.ACTION_HELP, self._showHelp, 1)
+        headerFrame = self._createHeader(self.root)
         
         if protocol.allowHeader:
             commonFrame = self._createHeaderCommons(headerFrame)
             commonFrame.grid(row=2, column=0, padx=5, pady=(0,5), 
                              sticky='news', columnspan=5)
+            
+        # Expert level
+        tk.Label(headerFrame, text=Message.LABEL_EXPERT).grid(row=3, column=0, sticky='nw', padx=5, pady=5)
+        expCombo = self._createBoundCombo(headerFrame, Message.VAR_EXPERT, LEVEL_CHOICES, self._onExpertLevelChanged)   
+        expCombo.grid(row=3, column=1, sticky='nw', padx=(0, 5), pady=5)
         
         text = TaggedText(self.root, width=40, height=15, bd=0, cursor='arrow')
         text.grid(row=1, column=0, sticky='news')
@@ -704,6 +693,35 @@ class FormWindow(Window):
         # Resize windows to use more space if needed
         self.desiredDimensions = lambda: self.resize(contentFrame)
         #self.resize(contentFrame)
+        
+    def _createHeader(self, parent):
+        """ Fill the header frame with the logo, title 
+        and cite-help buttons. 
+        """
+        headerFrame = tk.Frame(parent)
+        headerFrame.grid(row=0, column=0, sticky='new')
+        headerFrame.columnconfigure(0, weight=1)
+        package = self.protocol._package
+        t = '  Protocol: %s' % (self.protocol.getClassLabel())
+        logoPath = getattr(package, '_logo', None)
+        
+        if logoPath:
+            headerLabel = tk.Label(headerFrame, text=t, font=self.fontBig, 
+                                   image=self.getImage(logoPath, maxheight=40), compound=tk.LEFT)
+        else:
+            headerLabel = tk.Label(headerFrame, text=t, font=self.fontBig)
+        headerLabel.grid(row=0, column=0, padx=5, pady=(5,0), sticky='nw')#, columnspan=5)
+        
+        def _addButton(text, icon, command, col):
+            btn = tk.Label(headerFrame, text=text, image=self.getImage(icon), 
+                       compound=tk.LEFT, cursor='hand2')
+            btn.bind('<Button-1>', command)
+            btn.grid(row=0, column=col, padx=5, sticky='e')
+        
+        _addButton(Message.LABEL_CITE, Icon.ACTION_REFERENCES, self._showReferences, 1)
+        _addButton(Message.LABEL_HELP ,Icon.ACTION_HELP, self._showHelp, 2)
+        
+        return headerFrame
         
     def _showReferences(self, e=None):
         """ Show the list of references of the protocol. """
@@ -752,80 +770,114 @@ class FormWindow(Window):
             var.set(value)
         return tk.Entry(parent, font=self.font, width=width, textvariable=var)
     
-    def _createBoundCombo(self, parent, paramName, choices, *callbacks):
-        # Create expert level combo
+    def _createEnumBinding(self, paramName, choices, *callbacks):
         param = EnumParam(choices=choices)
         var = ComboVar(param)
-        #self.protocol.expertLevel.set(0)
         self._addVarBinding(paramName, var, None, *callbacks)
-        #var.set(self.protocol.expertLevel.get())
-        combo = ttk.Combobox(parent, textvariable=var.tkVar, 
-                                state='readonly', width=10)
+        return param, var
+        
+        
+    def _createBoundCombo(self, parent, paramName, choices, *callbacks):
+        param, var = self._createEnumBinding(paramName, choices, *callbacks)
+        combo = ttk.Combobox(parent, textvariable=var.tkVar, state='readonly', width=10)
         combo['values'] = param.choices
+        
         return combo
+    
+    def _createBoundOptions(self, parent, paramName, choices, *callbacks, **args):
+        param, var = self._createEnumBinding(paramName, choices, *callbacks)
+        frame = tk.Frame(parent, **args)
+        for i, opt in enumerate(param.choices):
+            rb = tk.Radiobutton(frame, text=opt, variable=var, value=opt)
+            rb.grid(row=0, column=i, sticky='nw', padx=(0, 5))  
+        
+        return frame       
             
         
-    def _createHeaderLabel(self, parent, text):
-        return tk.Label(parent, text=text, font=self.font, bg='white')
+    def _createHeaderLabel(self, parent, text, bold=False, **gridArgs):
+        font = self.font
+        if bold:
+            font = self.fontBold
+        label = tk.Label(parent, text=text, font=font, bg='white')
+        if gridArgs:
+            gridDefaults = {'row': 0, 'column': 0, 'padx': 5, 'pady': 5}
+            gridDefaults.update(gridArgs)
+            label.grid(**gridDefaults)
+        return label
     
     def _createHeaderCommons(self, parent):
-        """ Create the header common values such as: runName, expertLevel, mpi... """
+        """ Create the header common values such as: 
+        runName, expertLevel, mpi... 
+        """
         commonFrame = tk.Frame(parent)
         commonFrame.columnconfigure(0, weight=1)
-        commonFrame.columnconfigure(1, weight=1)
+        #commonFrame.columnconfigure(1, weight=1)
         
         ############# Create the run part ###############
-        # Run name
-        #runFrame = ttk.Labelframe(commonFrame, text='Run')
         runSection = SectionFrame(commonFrame, label=Message.TITLE_RUN, 
                                   headerBgColor=self.headerBgColor)
-        runFrame = runSection.contentFrame
-        self._createHeaderLabel(runFrame, Message.TITLE_RUN_NAME).grid(row=0, column=0, padx=5, pady=5, sticky='ne')
-        entry = self._createBoundEntry(runFrame, Message.VAR_RUN_NAME, width=15, 
+        runFrame = tk.Frame(runSection.contentFrame, bg='white')
+        runFrame.grid(row=0, column=0, sticky='nw')
+        #runFrame.columnconfigure(1, weight=1)
+        
+        r = 0 # Run name
+        self._createHeaderLabel(runFrame, Message.LABEL_RUNNAME, bold=True, sticky='ne')
+        entry = self._createBoundEntry(runFrame, Message.VAR_RUN_NAME, width=25, 
                                        func=self.setProtocolLabel, value=self.protocol.getObjLabel())
-        entry.grid(row=0, column=1, padx=(0, 5), pady=5, sticky='nw')
-        # Run Name not editable
-        entry.configure(state='readonly')
+        entry.grid(row=r, column=1, padx=(0, 5), pady=5, sticky='new')#, columnspan=5)
         btnComment = IconButton(runFrame, Message.TITLE_COMMENT, Icon.ACTION_EDIT, command=self._editObjParams)
-        btnComment.grid(row=0, column=2, padx=(0, 5), pady=5, sticky='nw')
+        btnComment.grid(row=r, column=2, padx=(10,0), pady=5, sticky='nw')
+        
+        c = 3 # Comment
+        self._createHeaderLabel(runFrame, Message.TITLE_COMMENT, sticky='ne', column=c)
+        entry = self._createBoundEntry(runFrame, Message.VAR_RUN_NAME, width=25, 
+                                       func=self.setProtocolLabel, value=self.protocol.getObjLabel())
+        entry.grid(row=r, column=c+1, padx=(0, 5), pady=5, sticky='new')#, columnspan=5)
+                
+        r = 1 # Execution
+        self._createHeaderLabel(runFrame, Message.LABEL_EXECUTION, bold=True, sticky='ne', row=r, pady=0)
+        modeFrame = tk.Frame(runFrame, bg='white')
+        self._createHeaderLabel(modeFrame, "Mode", sticky='ne', row=0, pady=0, column=0)
+        runMode = self._createBoundCombo(modeFrame, Message.VAR_RUN_MODE, MODE_CHOICES, self._onRunModeChanged)   
+        runMode.grid(row=0, column=1, sticky='new', padx=(0, 5), pady=5)
+        btnHelp = IconButton(modeFrame, Message.TITLE_COMMENT, Icon.ACTION_HELP, command=self._editObjParams)
+        btnHelp.grid(row=0, column=2, padx=(5, 0), pady=2, sticky='ne')
+        modeFrame.columnconfigure(0, minsize=60)
+        modeFrame.columnconfigure(1, weight=1)
+        modeFrame.grid(row=r, column=1, sticky='new', columnspan=2)
+        
+        # Host
+        self._createHeaderLabel(runFrame, Message.LABEL_HOST, row=r, column=c, pady=0, padx=(15,5), sticky='ne')
+        self._createBoundCombo(runFrame, Message.VAR_EXEC_HOST, self.hostList).grid(row=r, column=c+1, pady=5, sticky='nw')
+        
+        r = 2 # Parallel
+        self._createHeaderLabel(runFrame, Message.LABEL_PARALLEL, bold=True, sticky='ne', row=r, pady=0)
+        # THREADS
+        procFrame = tk.Frame(runFrame, bg='white')
+        r2 = 0
+        self._createHeaderLabel(procFrame, Message.LABEL_THREADS, sticky='ne', row=r2, pady=0)
+        entry = self._createBoundEntry(procFrame, Message.VAR_THREADS)
+        entry.grid(row=r2, column=1, padx=(0, 5), sticky='nw')
+        if True:# MPI
+            self._createHeaderLabel(procFrame, Message.LABEL_MPI, sticky='nw', row=r2, column=2, pady=0)
+            entry = self._createBoundEntry(procFrame, Message.VAR_MPI)
+            entry.grid(row=r2, column=3, padx=(0, 5), sticky='nw')
+        btnHelp = IconButton(procFrame, Message.TITLE_COMMENT, Icon.ACTION_HELP, command=self._editObjParams)
+        btnHelp.grid(row=0, column=4, padx=(5, 0), pady=2, sticky='ne')
+        procFrame.columnconfigure(0, minsize=60)
+        procFrame.grid(row=r, column=1, sticky='new', columnspan=2)
+        # Queue
+        self._createHeaderLabel(runFrame, Message.LABEL_QUEUE, row=r, sticky='ne', column=c, padx=(15,5), pady=0)
+        var, frame = ParamWidget.createBoolWidget(runFrame, bg='white')
+        self._addVarBinding(Message.VAR_QUEUE, var)
+        frame.grid(row=2, column=c+1, pady=5, sticky='nw')
+        
+        # Run Name not editable
+        #entry.configure(state='readonly')
         # Run mode
         self.protocol.getDefinitionParam('')
-        self._createHeaderLabel(runFrame, Message.TITLE_RUN_MODE).grid(row=1, column=0, sticky='ne', padx=5, pady=5)
-        modeCombo = self._createBoundCombo(runFrame, Message.VAR_RUN_MODE, MODE_CHOICES, self._onRunModeChanged)   
-        modeCombo.grid(row=1, column=1, sticky='nw', padx=(0, 5), pady=5)        
-        # Expert level
-        self._createHeaderLabel(runFrame, Message.TITLE_EXPERT).grid(row=2, column=0, sticky='ne', padx=5, pady=5)
-        expCombo = self._createBoundCombo(runFrame, Message.VAR_EXPERT, LEVEL_CHOICES, self._onExpertLevelChanged)   
-        expCombo.grid(row=2, column=1, sticky='nw', padx=(0, 5), pady=5)
-        
+        #self._createHeaderLabel(runFrame, Message.LABEL_RUNMODE).grid(row=1, column=0, sticky='ne', padx=5, pady=5)
         runSection.grid(row=0, column=0, sticky='news', padx=5, pady=5)
-        
-        ############## Create the execution part ############
-        # Host name
-        #execFrame = ttk.Labelframe(commonFrame, text='Execution')
-        execSection = SectionFrame(commonFrame, label=Message.TITLE_EXEC, 
-                                  headerBgColor=self.headerBgColor)
-        execFrame = execSection.contentFrame        
-        self._createHeaderLabel(execFrame, Message.TITLE_EXEC_HOST).grid(row=0, column=0, padx=5, pady=5, sticky='ne')
-        param = EnumParam(choices=self.hostList)
-        self.hostVar = tk.StringVar()
-        self._addVarBinding(Message.VAR_EXEC_HOST, self.hostVar)
-        #self.hostVar.set(self.protocol.getHostName())
-        expCombo = ttk.Combobox(execFrame, textvariable=self.hostVar, state='readonly', width=15)
-        expCombo['values'] = param.choices        
-        expCombo.grid(row=0, column=1, columnspan=3, padx=(0, 5), pady=5, sticky='nw')
-        # Threads and MPI
-        self._createHeaderLabel(execFrame, Message.TITLE_THREADS).grid(row=1, column=0, padx=5, pady=5, sticky='ne')
-        self._createBoundEntry(execFrame, Message.VAR_THREADS).grid(row=1, column=1, padx=(0, 5))
-        self._createHeaderLabel(execFrame, Message.TITLE_MPI).grid(row=1, column=2, padx=(0, 5))
-        self._createBoundEntry(execFrame, Message.VAR_MPI).grid(row=1, column=3, padx=(0, 5), pady=5, sticky='nw')
-        # Queue
-        self._createHeaderLabel(execFrame, Message.TITLE_QUEUE).grid(row=2, column=0, padx=5, pady=5, sticky='ne', columnspan=3)
-        var, frame = ParamWidget.createBoolWidget(execFrame, bg='white')
-        self._addVarBinding(Message.VAR_QUEUE, var)
-        frame.grid(row=2, column=3, padx=5, pady=5, sticky='nw')
-        
-        execSection.grid(row=0, column=1, sticky='news', padx=5, pady=5)
         
         return commonFrame
     

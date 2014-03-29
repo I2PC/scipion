@@ -133,7 +133,7 @@ def changeFontSize(font, event, minSize=-999, maxSize=999):
 IMAGE related variables and functions 
 """
 
-def getImage(imageName, imgDict=None, tkImage=True, percent=100):
+def getImage(imageName, imgDict=None, tkImage=True, percent=100, maxheight=None):
     """ Search for the image in the RESOURCES path list. """
     if imageName is None:
         return None
@@ -144,10 +144,14 @@ def getImage(imageName, imgDict=None, tkImage=True, percent=100):
     if imagePath:
         from PIL import Image, ImageTk
         image = Image.open(imagePath)
+        w, h = image.size
+        newSize = None
         if percent != 100: # Display image with other dimensions
-            (w, h) = image.size
             fp = float(percent)/100.0
             newSize = int(fp * w), int(fp * h)
+        elif maxheight and h > maxheight:
+            newSize = int(w * float(maxheight)/h), maxheight
+        if newSize:
             image.thumbnail(newSize, Image.ANTIALIAS)
         if tkImage:
             image = ImageTk.PhotoImage(image)
@@ -320,8 +324,8 @@ class Window():
             self.master.root.focus_set()
         self.close()
         
-    def getImage(self, imgName, percent=100):
-        return getImage(imgName, self._images, percent=percent)
+    def getImage(self, imgName, percent=100, maxheight=None):
+        return getImage(imgName, self._images, percent=percent, maxheight=maxheight)
     
     def createMainMenu(self, menuConfig):
         """Create Main menu from a given configuration"""
