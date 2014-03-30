@@ -861,23 +861,34 @@ class FormWindow(Window):
         self._createHeaderLabel(runFrame, Message.LABEL_HOST, row=r, column=c, pady=0, padx=(15,5), sticky='ne')
         self._createBoundCombo(runFrame, Message.VAR_EXEC_HOST, self.hostList).grid(row=r, column=c+1, pady=5, sticky='nw')
         
-        r = 2 # Parallel
-        self._createHeaderLabel(runFrame, Message.LABEL_PARALLEL, bold=True, sticky='ne', row=r, pady=0)
-        # THREADS
-        procFrame = tk.Frame(runFrame, bg='white')
-        r2 = 0
-        self._createHeaderLabel(procFrame, Message.LABEL_THREADS, sticky='ne', row=r2, pady=0)
-        entry = self._createBoundEntry(procFrame, Message.VAR_THREADS)
-        entry.grid(row=r2, column=1, padx=(0, 5), sticky='nw')
-        if True:# MPI
-            self._createHeaderLabel(procFrame, Message.LABEL_MPI, sticky='nw', row=r2, column=2, pady=0)
-            entry = self._createBoundEntry(procFrame, Message.VAR_MPI)
-            entry.grid(row=r2, column=3, padx=(0, 5), sticky='nw')
-        btnHelp = IconButton(procFrame, Message.TITLE_COMMENT, Icon.ACTION_HELP, 
-                             command=self._createHelpCommand(Message.HELP_MPI_THREADS))
-        btnHelp.grid(row=0, column=4, padx=(5, 0), pady=2, sticky='ne')
-        procFrame.columnconfigure(0, minsize=60)
-        procFrame.grid(row=r, column=1, sticky='new', columnspan=2)
+        r = 2
+        # Parallel
+        if self.protocol.allowThreads or self.protocol.allowMpi:
+            self._createHeaderLabel(runFrame, Message.LABEL_PARALLEL, bold=True, sticky='ne', row=r, pady=0)
+            procFrame = tk.Frame(runFrame, bg='white')
+            r2 = 0
+            c2 = 0
+            sticky = 'ne'
+            # THREADS
+            if self.protocol.allowThreads:
+                self._createHeaderLabel(procFrame, Message.LABEL_THREADS, sticky=sticky, row=r2, column=c2, pady=0)
+                entry = self._createBoundEntry(procFrame, Message.VAR_THREADS)
+                entry.grid(row=r2, column=c2+1, padx=(0, 5), sticky='nw')
+                # Modify values to be used in MPI entry
+                c2 += 2
+                sticky = 'nw'
+            # MPI
+            if self.protocol.allowMpi:
+                self._createHeaderLabel(procFrame, Message.LABEL_MPI, sticky=sticky, row=r2, column=c2, pady=0)
+                entry = self._createBoundEntry(procFrame, Message.VAR_MPI)
+                entry.grid(row=r2, column=c2+1, padx=(0, 5), sticky='nw')
+                
+            btnHelp = IconButton(procFrame, Message.TITLE_COMMENT, Icon.ACTION_HELP, 
+                                 command=self._createHelpCommand(Message.HELP_MPI_THREADS))
+            btnHelp.grid(row=0, column=4, padx=(5, 0), pady=2, sticky='ne')
+            procFrame.columnconfigure(0, minsize=60)
+            procFrame.grid(row=r, column=1, sticky='new', columnspan=2)
+        
         # Queue
         self._createHeaderLabel(runFrame, Message.LABEL_QUEUE, row=r, sticky='ne', column=c, padx=(15,5), pady=0)
         var, frame = ParamWidget.createBoolWidget(runFrame, bg='white')

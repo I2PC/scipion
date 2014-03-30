@@ -265,10 +265,13 @@ class Protocol(Step):
         self.__project = args.get('project', None)
         
         # For non-parallel protocols mpi=1 and threads=1
-        if not hasattr(self, 'numberOfMpi'):
+        self.allowMpi = hasattr(self, 'numberOfMpi')
+        if not self.allowMpi:
             self.numberOfMpi = Integer(1)
         
-        if not hasattr(self, 'numberOfThreads'):
+        self.allowThreads = hasattr(self, 'numberOfThreads')
+        
+        if not self.allowThreads:
             self.numberOfThreads = Integer(1)
         
         # Check if MPI or threads are passed in **args, mainly used in tests

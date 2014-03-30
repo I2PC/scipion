@@ -121,7 +121,7 @@ class XmippProtML2D(ProtClassify):
                       label='Std for origin offset',
                       help='Expected standard deviation for origin offset (pixels).') 
         
-        form.addParallelSection(threads=2, mpi=2)
+        form.addParallelSection(threads=2, mpi=4)
            
     #--------------------------- INSERT steps functions --------------------------------------------  
     def _insertAllSteps(self):        

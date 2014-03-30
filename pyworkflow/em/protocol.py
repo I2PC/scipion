@@ -636,7 +636,7 @@ class ProtCTFMicrographs(EMProtocol):
                       help=Message.TEXT_WINDOW_SIZE,
                       expertLevel=LEVEL_ADVANCED)
         
-        form.addParallelSection(threads=2, mpi=1)       
+        form.addParallelSection(threads=2, mpi=0)       
     
     #--------------------------- INSERT steps functions --------------------------------------------
     def _insertAllSteps(self):
