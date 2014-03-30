@@ -351,41 +351,46 @@ class SectionFrame(tk.Frame):
         self.contentFrame = tk.Frame(self.canvas, bg='white', bd=0)
         self.contentId = self.canvas.create_window(0, 0, anchor=tk.NW, window=self.contentFrame)
         
-        def _getReqSize(widget):
-            return widget.winfo_reqwidth(), widget.winfo_reqheight()
+        self.contentFrame.bind('<Configure>', self._configure_interior)
+        self.canvas.bind('<Configure>', self._configure_canvas)
         
-        def _getSize(widget):
-            return widget.winfo_width(), widget.winfo_height()
-        # track changes to the canvas and frame width and sync them,
-        # also updating the scrollbar
-        def _configure_interior(event):
-            # update the scrollbars to match the size of the inner frame
-            fsize = _getReqSize(self.contentFrame)
-            csize = _getSize(self.canvas)
-            self.canvas.config(scrollregion="0 0 %s %s" % fsize)
-            #if fsize[0] != self.canvas.winfo_width():
-            if fsize != csize:
-                # update the canvas's width to fit the inner frame
-                self.canvas.config(width=fsize[0], height=fsize[1])
-        self.contentFrame.bind('<Configure>', _configure_interior)
-
-        def _configure_canvas(event):
-            fsize = _getReqSize(self.contentFrame)
-            csize = _getSize(self.canvas)
-
-            #if self.contentFrame.winfo_reqwidth() != self.canvas.winfo_width():
-            if fsize != csize:
-                # update the inner frame's width to fill the canvas
-                self.canvas.itemconfigure(self.contentId, width=csize[0], height=csize[1])
-        self.canvas.bind('<Configure>', _configure_canvas)
-        
-        configureWeigths(self.contentFrame)
+        self.contentFrame.columnconfigure(0, weight=1)
+        #configureWeigths(self.contentFrame)
         self.columnconfigure(0, weight=1)
         
-    def addContent(self):
-        return
-        self.canvas.update_idletasks()
-        self.canvas.create_window(0, 0, anchor=tk.NW, window=self.contentFrame)
+        
+    def _getReqSize(self, widget):
+        return widget.winfo_reqwidth(), widget.winfo_reqheight()
+    
+    def _getSize(self, widget):
+        return widget.winfo_width(), widget.winfo_height()
+    # track changes to the canvas and frame width and sync them,
+    # also updating the scrollbar
+    def _configure_interior(self, event=None):
+        # update the scrollbars to match the size of the inner frame
+        fsize = self._getReqSize(self.contentFrame)
+        csize = self._getSize(self.canvas)
+        #if fsize[0] != self.canvas.winfo_width():
+        if fsize != csize:
+            # update the canvas's width to fit the inner frame
+            self.canvas.config(width=fsize[0], height=fsize[1])
+            self.canvas.config(scrollregion="0 0 %s %s" % fsize)
+
+    def _configure_canvas(self, event=None):
+        fsize = self._getReqSize(self.contentFrame)
+        csize = self._getSize(self.canvas)
+        #if self.contentFrame.winfo_reqwidth() != self.canvas.winfo_width():
+        if fsize != csize:
+            # update the inner frame's width to fill the canvas
+            self.canvas.itemconfigure(self.contentId, width=csize[0])
+            if csize[1] > fsize[1]:
+                self.canvas.itemconfigure(self.contentId, height=csize[1])
+                self.canvas.config(scrollregion="0 0 %s %s" % csize)
+                
+    def adjustContent(self):
+        self._configure_interior()
+        self.update_idletasks()
+        self._configure_canvas()
         
                     
 class SectionWidget(SectionFrame):
@@ -887,7 +892,7 @@ class FormWindow(Window):
         # Run mode
         self.protocol.getDefinitionParam('')
         #self._createHeaderLabel(runFrame, Message.LABEL_RUNMODE).grid(row=1, column=0, sticky='ne', padx=5, pady=5)
-        runSection.addContent()
+        #runSection.addContent()
         runSection.grid(row=0, column=0, sticky='news', padx=5, pady=5)
         
         return commonFrame 
@@ -932,6 +937,7 @@ class FormWindow(Window):
         tab = ttk.Notebook(sectionsFrame) 
         tab.grid(row=0, column=0, sticky='news',
                  padx=5, pady=5)
+        self._sections = []
         
         for section in self.protocol.iterDefinitionSections():
             label = section.getLabel()
@@ -943,6 +949,7 @@ class FormWindow(Window):
                 tab.add(frame, text=section.getLabel())
                 frame.columnconfigure(0, minsize=400)
                 self._fillSection(section, frame)
+                self._sections.append(frame)
                 r += 1
         self._checkAllChanges()
         
@@ -1152,6 +1159,9 @@ class FormWindow(Window):
             
     def _onExpertLevelChanged(self, *args):
         self._checkAllChanges()
+        self.root.update_idletasks()
+        for s in self._sections:
+            s.adjustContent()
         
     def _onRunModeChanged(self, paramName):
         self.setParamFromVar(paramName)
