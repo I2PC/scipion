@@ -47,7 +47,9 @@ class Canvas(tk.Canvas, Scrollable):
     _images = {}
     
     def __init__(self, parent, **args):
-        Scrollable.__init__(self, parent, tk.Canvas, bg='white')
+        defaults = {'bg': 'white'}
+        defaults.update(args)
+        Scrollable.__init__(self, parent, tk.Canvas, **defaults)
         
         self.lastItem = None # Track last item selected
         self.lastPos = (0, 0) # Track last clicked position

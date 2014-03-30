@@ -738,20 +738,11 @@ class ProtocolsView(tk.Frame):
         w = FormWindow(Message.TITLE_NAME_RUN + prot.getClassName(), prot, 
                        self._executeSaveProtocol, self.windows,
                        hostList=hosts)
+        w.adjustSize()
         w.show(center=True)
         
     def _browseSteps(self):
-#         g = self.selectedProtocol.getStepsGraph()
-#         w = gui.Window("Protocol steps", self.windows, minsize=(800, 600))
-#         root = w.root
-#         canvas = Canvas(root, width=600, height=500)
-#         canvas.grid(row=0, column=0, sticky='nsew')
-#         lt = LevelTree(g)
-#         lt.setCanvas(canvas)
-#         lt.paint()
-#         canvas.updateScrollRegion()
-#         w.show()
-        
+        """ Open a new window with the steps list. """
         window = StepsWindow(Message.TITLE_BROWSE_DATA, self.windows, 
                              self.selectedProtocol, icon=self.icon)
         window.show()        

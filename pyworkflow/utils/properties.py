@@ -110,6 +110,23 @@ class Message():
     LABEL_EXPERT_ADVANCE = 'Advanced'
     LABEL_EXPERT_EXPERT = 'Expert'
     
+    HELP_RUNMODE = """  
+Normally, each protocol is composed by more atomic steps.
+Each step could be computationally intensive, that's why
+the *Resume* execution mode will try to continue from the
+last completed step. On the other hand, the *Restart* mode
+will clean the whole run directory and start from scratch.    
+    """    
+    HELP_MPI_THREADS = """  
+Define the number of processors to be used in the execution.
+*MPI*: This are a number of independent process 
+       that comunicates throught message passing 
+       over the network (or the same computer).
+*Threads*: This refers to different execution threads 
+       in the same process that can share memory. They run in
+       the same computer.     
+    """
+    
     TITLE_NAME_RUN = ' Protocol Run: '
     TITLE_RUN = 'Run'
     TITLE_LABEL = 'Label'
