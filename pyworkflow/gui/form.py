@@ -351,27 +351,33 @@ class SectionFrame(tk.Frame):
         self.contentFrame = tk.Frame(self.canvas, bg='white', bd=0)
         self.contentId = self.canvas.create_window(0, 0, anchor=tk.NW, window=self.contentFrame)
         
+        def _getReqSize(widget):
+            return widget.winfo_reqwidth(), widget.winfo_reqheight()
+        
+        def _getSize(widget):
+            return widget.winfo_width(), widget.winfo_height()
         # track changes to the canvas and frame width and sync them,
         # also updating the scrollbar
         def _configure_interior(event):
             # update the scrollbars to match the size of the inner frame
-            size = (self.contentFrame.winfo_reqwidth(), self.contentFrame.winfo_reqheight())
-            self.canvas.config(scrollregion="0 0 %s %s" % size)
-            if self.contentFrame.winfo_reqwidth() != self.canvas.winfo_width():
+            fsize = _getReqSize(self.contentFrame)
+            csize = _getSize(self.canvas)
+            self.canvas.config(scrollregion="0 0 %s %s" % fsize)
+            #if fsize[0] != self.canvas.winfo_width():
+            if fsize != csize:
                 # update the canvas's width to fit the inner frame
-                self.canvas.config(width=self.contentFrame.winfo_reqwidth())
+                self.canvas.config(width=fsize[0], height=fsize[1])
         self.contentFrame.bind('<Configure>', _configure_interior)
 
         def _configure_canvas(event):
-            if self.contentFrame.winfo_reqwidth() != self.canvas.winfo_width():
+            fsize = _getReqSize(self.contentFrame)
+            csize = _getSize(self.canvas)
+
+            #if self.contentFrame.winfo_reqwidth() != self.canvas.winfo_width():
+            if fsize != csize:
                 # update the inner frame's width to fill the canvas
-                self.canvas.itemconfigure(self.contentId, width=self.canvas.winfo_width())
+                self.canvas.itemconfigure(self.contentId, width=csize[0], height=csize[1])
         self.canvas.bind('<Configure>', _configure_canvas)
-        #self.contentFrame.grid(row=0, column=0, sticky='news', padx=5, pady=5)
-        
-#         frame = VerticalScrolledFrame(self)
-#         frame.grid(row=1, column=0, sticky='news')
-#         self.contentFrame = frame.interior
         
         configureWeigths(self.contentFrame)
         self.columnconfigure(0, weight=1)
@@ -517,17 +523,10 @@ class ParamWidget():
         # Create widgets for each type of param
         t = type(param)
         entryWidth = 30
-        #TODO: Move this to a Renderer class to be more flexible
+
         if t is BooleanParam:
             var, frame = ParamWidget.createBoolWidget(content, bg='white')
             frame.grid(row=0, column=0, sticky='w')
-#            var = BoolVar()
-#            frame = tk.Frame(content, bg='white')
-#            frame.grid(row=0, column=0, sticky='w')
-#            rb1 = tk.Radiobutton(frame, text='Yes', bg='white', variable=var.tkVar, value=1)
-#            rb1.grid(row=0, column=0, padx=2, sticky='w')
-#            rb2 = tk.Radiobutton(frame, text='No', bg='white', variable=var.tkVar, value=0)
-#            rb2.grid(row=0, column=1, padx=2, sticky='w')
             
         elif t is EnumParam:
             var = ComboVar(param)
@@ -747,7 +746,6 @@ class FormWindow(Window):
             self.headerBgColor = Color.DARK_GREY_COLOR
         self.childMode = args.get('childMode', False) # Allow to open child protocols form (for workflows)
         
-        
         from pyworkflow.em import findWizards
         self.wizards = findWizards(protocol, DESKTOP_TKINTER)
         
@@ -756,23 +754,6 @@ class FormWindow(Window):
         self.fontBold = tkFont.Font(size=10, family='helvetica', weight='bold')        
         
         self._createGUI()
-        return
-        
-        if protocol.allowHeader:
-            commonFrame = self._createHeaderCommons(headerFrame)
-            commonFrame.grid(row=2, column=0, padx=5, pady=(0,5), 
-                             sticky='news', columnspan=5)
-            
-
-        
-
-        
-        self.root.columnconfigure(0, weight=1)
-        self.root.rowconfigure(1, weight=1)
-        
-        # Resize windows to use more space if needed
-        #self.desiredDimensions = lambda: self.resize(contentFrame)
-        #self.resize(contentFrame)
         
     def _createGUI(self):
         mainFrame = tk.Frame(self.root)
