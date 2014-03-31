@@ -213,7 +213,7 @@ function initializeColsRowsEvents(){
 
 function updateGalleryLayout(cols, rows, setElement){
 	if (setElement == "id_cols"){
-		$("#id_rows").val(Math.ceil($(".img_container").length/cols)+1)
+		$("#id_rows").val(Math.ceil($(".img_container").length/cols))
 	}
 	else{
 		$("#id_cols").val(Math.ceil($(".img_container").length/rows))
@@ -224,7 +224,10 @@ function updateGalleryLayout(cols, rows, setElement){
 function updateMainContainerDim(colVal){
 	imgContainerWidth = $(".img_container").width() + (parseInt($(".img_container").css("padding-right")) * 2)
 	sectionWidth = colVal * imgContainerWidth
-	$("section").width(sectionWidth)
+//	$("section").width(sectionWidth)
+	
+	// Patch-to-fix (40 px to count the scroll width)
+	$("section").width(sectionWidth + 40)
 	
 	reloadImages(false)
 	
@@ -265,7 +268,8 @@ function initializeImageLoad(forceRecall){
 				)
 		}
 	}, {
-		offset: '150%'
+		offset: '150%',
+		context: 'section'
 	});
 }
 
