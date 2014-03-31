@@ -46,7 +46,7 @@ MpiProgram = "mpirun"
 import os
 hostfile = os.environ.get('XMIPP_HOSTFILE')
 # hostfile = os.environ.get('HOME') + "/machinefile.txt" 
-MpiArgsTemplate = "-n %(nodes)d -hostfile " + hostfile + " %(command)s"
+MpiArgsTemplate = "-n %(nodes)d --bynode -hostfile " + hostfile + " %(command)s"
 #
 # For SGE-OPENMPI
 #MpiProgram = "mpiexec"
