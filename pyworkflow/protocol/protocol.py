@@ -973,7 +973,10 @@ class Protocol(Step):
         baseSummary = self._summary()
         if not baseSummary:
             baseSummary = []
-        return baseSummary + ['', '*Comments:* ', self.getObjComment(), error]
+        comments = self.getObjComment()
+        if comments:
+            baseSummary += ['', '*Comments:* ', comments]
+        return baseSummary + ['', error]
     
     def _citations(self):
         """ Should be implemented in subclasses. See citations. """

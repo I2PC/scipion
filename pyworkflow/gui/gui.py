@@ -108,7 +108,7 @@ def aliasFont(fontAlias, fontKey):
     g = globals()
     g[fontAlias] = g[fontKey] 
     
-def setCommonFonts():
+def setCommonFonts(windows=None):
     """Set some predifined common fonts.
     Same conditions of setFont applies here."""
     setFont('fontNormal', family=cfgFontName, size=cfgFontSize)
@@ -116,6 +116,10 @@ def setCommonFonts():
     setFont('fontBold', family=cfgFontName, size=cfgFontSize, weight='bold')
     setFont('fontItalic', family=cfgFontName, size=cfgFontSize, slant='italic')
     setFont('fontLabel', family=cfgFontName, size=cfgFontSize+1, weight='bold')
+    if windows:
+        windows.fontBig = tkFont.Font(size=cfgFontSize+2, family=cfgFontName, weight='bold')
+        windows.font = tkFont.Font(size=cfgFontSize, family=cfgFontName)
+        windows.fontBold = tkFont.Font(size=cfgFontSize, family=cfgFontName, weight='bold') 
 
 def changeFontSizeByDeltha(font, deltha, minSize=-999, maxSize=999):
     size = font['size']
@@ -266,7 +270,7 @@ class Window():
         self._w, self._h, self._x, self._y = 0, 0, 0, 0
         self.root.bind("<Configure>", self._configure)
         self.master = masterWindow
-        setCommonFonts()
+        setCommonFonts(self)
         
     def desiredDimensions(self):
         """This method should be used by subclasses

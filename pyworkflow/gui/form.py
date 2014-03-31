@@ -754,10 +754,6 @@ class FormWindow(Window):
         from pyworkflow.em import findWizards
         self.wizards = findWizards(protocol, DESKTOP_TKINTER)
         
-        self.fontBig = tkFont.Font(size=12, family='helvetica', weight='bold')
-        self.font = tkFont.Font(size=10, family='helvetica')#, weight='bold')
-        self.fontBold = tkFont.Font(size=10, family='helvetica', weight='bold')        
-        
         self._createGUI()
         
     def _createGUI(self):
