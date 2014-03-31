@@ -367,24 +367,35 @@ class OutputText(Text):
             self.refreshAlarm = None
 
   
-class TextfileViewer(tk.Frame):
+class TextFileViewer(tk.Frame):
     """ Implementation of a simple textfile viewer """
     
     LabelBgColor = "white"
     
-    def __init__(self, master, filelist):
+    def __init__(self, master, filelist=[]):
         tk.Frame.__init__(self, master)
         self.searchList = None
         self.lastSearch = None
         self.refreshAlarm = None
-        self.filelist = filelist
+        self.filelist = []
         self.taList = []
         self.fontDict = {}
-        self.createWidgets()
+        self.createWidgets(filelist)
         self.master = master
         self.addBinding()
         
-    def addFileTab(self, filename):
+    def addFile(self, filename):
+        self.filelist.append(filename)
+        self._addFileTab(filename)
+        
+    def clear(self):
+        """ Remove all added files. """
+        self.filelist = []
+        for i, _ in enumerate(self.taList):
+            self.notebook.forget(i)       
+        self.taList = []
+        
+    def _addFileTab(self, filename):
         tab = tk.Frame(self.notebook)
         tab.rowconfigure(0, weight=1)
         tab.columnconfigure(0, weight=1)
@@ -394,7 +405,7 @@ class TextfileViewer(tk.Frame):
         tabText = "   %s   " % os.path.basename(filename)
         self.notebook.add(tab, text=tabText)        
     
-    def createWidgets(self):
+    def createWidgets(self, filelist):
         #registerCommonFonts()
         self.columnconfigure(0, weight=1)
         self.rowconfigure(1, weight=1)        
@@ -407,8 +418,8 @@ class TextfileViewer(tk.Frame):
         self.notebook = ttk.Notebook(tabsFrame)  
         self.notebook.rowconfigure(0, weight=1)
         self.notebook.columnconfigure(0, weight=1)      
-        for f in self.filelist:
-            self.addFileTab(f)
+        for f in filelist:
+            self._addFileTab(f)
         self.notebook.grid(column=0, row=0, sticky='nsew', padx=5, pady=5)        
 
     def addBinding(self):
@@ -484,7 +495,7 @@ class TextfileViewer(tk.Frame):
         text.see(idx)
   
   
-def showTextfileViewer(title, filelist, parent=None, main=False):
+def showTextFileViewer(title, filelist, parent=None, main=False):
     if main:
         root = tk.Tk()
     else:
@@ -493,7 +504,7 @@ def showTextfileViewer(title, filelist, parent=None, main=False):
     root.title(title)
     from xmipp import FileName
     files = [FileName(f).removeBlockName() for f in filelist]
-    l = TextfileViewer(root, files)
+    l = TextFileViewer(root, files)
     root.columnconfigure(0, weight=1)
     root.rowconfigure(0, weight=1)
     l.grid(column=0, row=0, sticky='nsew')
@@ -507,7 +518,7 @@ if __name__ == '__main__':
     root = tk.Tk()
     root.withdraw()
     root.title("View files")
-    l = TextfileViewer(root, filelist=sys.argv[1:])
+    l = TextFileViewer(root, filelist=sys.argv[1:])
     l.pack(side=tk.TOP, fill=tk.BOTH)
     gui.centerWindows(root)
     root.deiconify()

@@ -761,7 +761,7 @@ class Protocol(Step):
         Otherwise append the new content to the old one.
         Also open logs files and redirect the systems streams.
         """
-        self._log = ScipionLogger(self.__getLogPaths()[2]) 
+        self._log = ScipionLogger(self.getLogPaths()[2]) 
                
         if self.runMode.get() == MODE_RESTART:
             mode = 'w+'
@@ -775,12 +775,12 @@ class Protocol(Step):
         sys.stdout = self.__fOut
         sys.stderr = self.__fErr
     
-    def __getLogPaths(self):
+    def getLogPaths(self):
         return self._getLogsPath('run.stdout'), self._getLogsPath('run.stderr'), self._getLogsPath('run.log')
     
     def __openLogsFiles(self, mode):
-        self.__fOut = open(self.__getLogPaths()[0], mode)
-        self.__fErr = open(self.__getLogPaths()[1], mode)
+        self.__fOut = open(self.getLogPaths()[0], mode)
+        self.__fErr = open(self.getLogPaths()[1], mode)
         
     def __closeLogsFiles(self):       
         self.__fOut.close()
@@ -795,13 +795,13 @@ class Protocol(Step):
         
     def getLogsAsStrings(self):
         fOutString = fErrString = fScpnString = ''
-        if os.path.exists(self.__getLogPaths()[0]) and os.path.exists(self.__getLogPaths()[1]) and os.path.exists(self.__getLogPaths()[2]):
+        if os.path.exists(self.getLogPaths()[0]) and os.path.exists(self.getLogPaths()[1]) and os.path.exists(self.getLogPaths()[2]):
             self.__openLogsFiles('r')
             fOutString = self.__fOut.read()
             fErrString = self.__fErr.read()
             self.__closeLogsFiles()
             
-            fScpn = open(self.__getLogPaths()[2], 'r')
+            fScpn = open(self.getLogPaths()[2], 'r')
             fScpnString = fScpn.read()
             fScpn.close()
             

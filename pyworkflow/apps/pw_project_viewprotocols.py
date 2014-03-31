@@ -50,7 +50,7 @@ from pyworkflow.gui import getImage
 from pyworkflow.gui.tree import Tree, ObjectTreeProvider, DbTreeProvider, ProjectRunsTreeProvider
 from pyworkflow.gui.form import FormWindow, editObject
 from pyworkflow.gui.dialog import askYesNo, EditObjectDialog
-from pyworkflow.gui.text import TaggedText
+from pyworkflow.gui.text import TaggedText, TextFileViewer
 from pyworkflow.gui import Canvas
 from pyworkflow.gui.graph import LevelTree
 from pyworkflow.gui.widgets import ComboBox
@@ -450,30 +450,34 @@ class ProtocolsView(tk.Frame):
         gui.configureWeigths(mframe)
         self.methodText = TaggedText(mframe, width=40, height=15, bg='white')
         self.methodText.grid(row=0, column=0, sticky='news')   
+        
         #Logs 
         #TODO: join 3 logs in just one tab
         ologframe = tk.Frame(tab)
         gui.configureWeigths(ologframe)
-        self.outputLogText = TaggedText(ologframe, width=40, height=15, 
-                                        bg='black', foreground='white')
-        self.outputLogText.grid(row=0, column=0, sticky='news')
-        elogframe = tk.Frame(tab)
-        gui.configureWeigths(elogframe)
-        self.errorLogText = TaggedText(elogframe, width=40, height=15, 
-                                       bg='black', foreground='white')
-        self.errorLogText.grid(row=0, column=0, sticky='news')  
-        slogframe = tk.Frame(tab)
-        gui.configureWeigths(slogframe)
-        self.scipionLogText = TaggedText(slogframe, width=40, height=15, 
-                                         bg='black', foreground='white')
-        self.scipionLogText.grid(row=0, column=0, sticky='news')
+        self.outputViewer = TextFileViewer(ologframe)
+        self.outputViewer.grid(row=0, column=0, sticky='news')
         
-        #tab.add(dframe, text=Message.LABEL_DATA)
+#         self.outputLogText = TaggedText(ologframe, width=40, height=15, 
+#                                         bg='black', foreground='white')
+#         self.outputLogText.grid(row=0, column=0, sticky='news')
+#         elogframe = tk.Frame(tab)
+#         gui.configureWeigths(elogframe)
+#         self.errorLogText = TaggedText(elogframe, width=40, height=15, 
+#                                        bg='black', foreground='white')
+#         self.errorLogText.grid(row=0, column=0, sticky='news')  
+#         slogframe = tk.Frame(tab)
+#         gui.configureWeigths(slogframe)
+#         self.scipionLogText = TaggedText(slogframe, width=40, height=15, 
+#                                          bg='black', foreground='white')
+#         self.scipionLogText.grid(row=0, column=0, sticky='news')
+        
+        # Add all tabs
         tab.add(dframe, text=Message.LABEL_SUMMARY)   
         tab.add(mframe, text=Message.LABEL_METHODS)
         tab.add(ologframe, text=Message.LABEL_LOGS_OUTPUT)
-        tab.add(elogframe, text=Message.LABEL_LOGS_ERROR)
-        tab.add(slogframe, text=Message.LABEL_LOGS_SCIPION)
+#         tab.add(elogframe, text=Message.LABEL_LOGS_ERROR)
+#         tab.add(slogframe, text=Message.LABEL_LOGS_SCIPION)
         tab.grid(row=1, column=0, sticky='news')
         
         v.add(runsFrame, weight=3)
@@ -760,20 +764,22 @@ class ProtocolsView(tk.Frame):
         self.methodText.addText(self.selectedProtocol.methods())
         
     def _fillLogs(self):
+        for f in self.selectedProtocol.getLogPaths():
+            self.outputViewer.addFile(f)
         #TODO: REMOVE THIS...READ LOGS DIRECTLY FROM FILE
-        fOutString, fErrString, fScipionString = self.selectedProtocol.getLogsAsStrings()
-        
-        self.outputLogText.clear()
-        self.outputLogText.addText(fOutString)
-        self.outputLogText.goEnd()
-        
-        self.errorLogText.clear()
-        self.errorLogText.addText(fErrString)
-        self.errorLogText.goEnd()
-        
-        self.scipionLogText.clear()
-        self.scipionLogText.addText(fScipionString)
-        self.scipionLogText.goEnd()
+#         fOutString, fErrString, fScipionString = self.selectedProtocol.getLogsAsStrings()
+#         
+#         self.outputLogText.clear()
+#         self.outputLogText.addText(fOutString)
+#         self.outputLogText.goEnd()
+#         
+#         self.errorLogText.clear()
+#         self.errorLogText.addText(fErrString)
+#         self.errorLogText.goEnd()
+#         
+#         self.scipionLogText.clear()
+#         self.scipionLogText.addText(fScipionString)
+#         self.scipionLogText.goEnd()
         
     def _scheduleRunsUpdate(self, secs=1):
         self.runsTree.after(secs*1000, self.refreshRuns)

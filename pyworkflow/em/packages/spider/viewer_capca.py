@@ -34,7 +34,7 @@ from pyworkflow.utils.graph import Graph
 from pyworkflow.gui.graph import LevelTree
 from pyworkflow.gui.canvas import Canvas, ImageBox
 from pyworkflow.em.packages.xmipp3.viewer import XmippViewer, runShowJ
-from pyworkflow.gui.text import showTextfileViewer
+from pyworkflow.gui.text import showTextFileViewer
 
 from spider import PcaFile
 from protocol_ca_pca import SpiderProtCAPCA
@@ -84,7 +84,7 @@ class SpiderViewerCAPCA(ProtocolViewer):
         elif param == 'doShowReconsImages':
             runShowJ(self.protocol._getFileName('reconstituted'))
         elif param == 'doShowPcaFile':
-            showTextfileViewer("PCA files", [self.protocol.imcFile.filename.get()])
+            showTextFileViewer("PCA files", [self.protocol.imcFile.filename.get()])
             
     def _plotHistogram(self, param=None):
         """ First we parse the cas_EIG file and we read:

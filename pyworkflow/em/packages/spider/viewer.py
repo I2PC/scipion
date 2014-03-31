@@ -34,7 +34,7 @@ from pyworkflow.utils.graph import Graph
 from pyworkflow.gui.graph import LevelTree
 from pyworkflow.gui.canvas import Canvas, ImageBox
 from pyworkflow.em.packages.xmipp3.viewer import XmippViewer, runShowJ
-from pyworkflow.gui.text import showTextfileViewer
+from pyworkflow.gui.text import showTextFileViewer
 
 from spider import PcaFile
 from protocol_filters import SpiderProtFilter
@@ -53,7 +53,7 @@ class SpiderViewer(Viewer):
     def visualize(self, obj, **args):
         
         if isinstance(obj, PcaFile):
-            showTextfileViewer("PCA file", [obj.filename.get()])
+            showTextFileViewer("PCA file", [obj.filename.get()])
         
         elif isinstance(obj, SpiderProtFilter):
             XmippViewer().visualize(obj.outputParticles)
