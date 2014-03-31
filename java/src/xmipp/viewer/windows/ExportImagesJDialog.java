@@ -147,7 +147,7 @@ public class ExportImagesJDialog extends JDialog{
             
         } catch (Exception ex) {
             String msg = ex.getMessage();
-            if(msg.isEmpty())
+            if(msg == null || msg.isEmpty())
                 ex.printStackTrace();
             else
                 XmippDialog.showError(null, msg);
