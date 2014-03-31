@@ -40,7 +40,7 @@ class ProtRelionClassify2D(ProtRelionBase, ProtClassify):
     """
     _label = '2d classify'
     IS_2D = True
-
+    
     def __init__(self, **args):        
         ProtRelionBase.__init__(self, **args)
         
@@ -93,9 +93,4 @@ class ProtRelionClassify2D(ProtRelionBase, ProtClassify):
         """
         return []
 
-
     #--------------------------- UTILS functions --------------------------------------------
-   
-    
-
-

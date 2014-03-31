@@ -183,8 +183,21 @@ def readSetOfClasses2D(classes2DSet, filename, classesBlock='classes', **args):
     addRelionLabels(replace=True, extended=True)
     xmipp3.readSetOfClasses2D(classes2DSet, filename, classesBlock)
     restoreXmippLabels()
-    
-    
+
+
+def readSetOfClasses3D(classes3DSet, filename, classesBlock='classes', **args):
+    """ Fill a set of classes 3d from a Relion star file.
+    Params:
+        classesStar: the set of classes that will be populated.
+        filename: the path to the input Relion star file.
+        classesBlock: the name of the block in the star file.
+    """
+    import pyworkflow.em.packages.xmipp3 as xmipp3
+    addRelionLabels(replace=True, extended=True)
+    xmipp3.readSetOfClasses3D(classes3DSet, filename, classesBlock)
+    restoreXmippLabels()
+
+
 def sortImagesByLL(imgStar, imgSortedStar):
     """ Given a Relion images star file, sort by LogLikelihood 
     and save a new file. 

@@ -70,8 +70,13 @@ class EMProtocol(Protocol):
         classes.setImages(imgSet)
         return classes
     
-    def _createSetOfClasses3D(self, suffix=''):
-        return self.__createSet(SetOfClasses3D, 'classes3D%s.sqlite', suffix)
+    def _createSetOfClasses3D(self, imgSet, suffix=''):
+        classes =  self.__createSet(SetOfClasses3D, 'classes3D%s.sqlite', suffix)
+        classes.setImages(imgSet)
+        return classes
+    
+    def _createSetOfClassesVol(self, suffix=''):
+        return self.__createSet(SetOfClassesVol, 'classesVol%s.sqlite', suffix)
     
     def _createSetOfVolumes(self, suffix=''):
         return self.__createSet(SetOfVolumes, 'volumes%s.sqlite', suffix)
