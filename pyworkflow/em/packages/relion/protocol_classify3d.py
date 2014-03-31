@@ -48,21 +48,22 @@ class ProtRelionClassify3D(ProtClassify3D, ProtRelionBase):
         working dir for the protocol have been set. (maybe after recovery from mapper)
         """
         ProtRelionBase._initialize(self)
-        self.ClassFnTemplate = '%(ref)03d@%(rootDir)s/relion_it%(iter)03d_classes.mrcs'
-        self.outputClasses = 'classes.xmd'
-        self.outputVols = ''
-        
-
+    
     #--------------------------- INSERT steps functions --------------------------------------------  
     def _setSamplingArgs(self, args):
         """ Set sampling related params. """
         args['--healpix_order'] = self.angularSamplingDeg.get()
         if self.localAngularSearch:
             args['--sigma_ang'] = self.localAngularSearchRange.get() / 3.
-        
-    def createOutputStep(self, stamp):
-        pass
-        
+    
+    #--------------------------- STEPS functions --------------------------------------------
+    def createOutputStep(self):
+        from convert import readSetOfClasses3D
+        classesStar = self._getIterClasses(self._lastIter())
+        classes = self._createSetOfClasses3D(self.inputParticles.get())
+        readSetOfClasses3D(classes, classesStar)
+        self._defineOutputs(outputClasses=classes)
+    
     #--------------------------- INFO functions -------------------------------------------- 
     def _validateNormal(self):
         """ Should be overriden in subclasses to 
@@ -87,12 +88,5 @@ class ProtRelionClassify3D(ProtClassify3D, ProtRelionBase):
         return summary messages for CONTINUE EXECUTION.
         """
         return []
-
-
+    
     #--------------------------- UTILS functions --------------------------------------------
-            
-            
-   
-            
-            
-   

@@ -221,32 +221,37 @@ def particleToRow(part, partRow):
     imageToRow(part, partRow, imgLabel=xmipp.MDL_IMAGE)
 
 
+def rowToClassLabel(md, objId, classLabel, imgClass):
+    """ Method base to create a class2D, class3D or classVol from
+    a row of a metadata
+    """
+    setObjId(classLabel, rowFromMd(md, objId), label=xmipp.MDL_REF)
+
+    if md.containsLabel(xmipp.MDL_IMAGE):
+        index, filename = xmippToLocation(md.getValue(xmipp.MDL_IMAGE, objId))
+        img = imgClass()
+        img.copyObjId(classLabel)
+        img.setLocation(index, filename)
+        classLabel.setRepresentative(img)
+    
+    return classLabel
+
+
 def rowToClass2D(md, objId, class2D):
     """ Create a Class2D from a row of a metadata. """
-    setObjId(class2D, rowFromMd(md, objId), label=xmipp.MDL_REF)
+    return rowToClassLabel(md, objId, class2D, Particle)
 
-    if md.containsLabel(xmipp.MDL_IMAGE):
-        index, filename = xmippToLocation(md.getValue(xmipp.MDL_IMAGE, objId))
-        img = Particle()
-        img.copyObjId(class2D)
-        img.setLocation(index, filename)
-        class2D.setRepresentative(img)
-    
-    return class2D
-    
+
 def rowToClass3D(md, objId, class3D):
-    """ Create a Class2D from a row of a metadata. """
-    setObjId(class3D, rowFromMd(md, objId), label=xmipp.MDL_REF)
+    """ Create a Class3D from a row of a metadata. """
+    return rowToClassLabel(md, objId, class3D, Particle)
 
-    if md.containsLabel(xmipp.MDL_IMAGE):
-        index, filename = xmippToLocation(md.getValue(xmipp.MDL_IMAGE, objId))
-        img = Volume()
-        img.copyObjId(class3D)
-        img.setLocation(index, filename)
-        class3D.setRepresentative(img)
-    
-    return class3D
-    
+
+def rowToClassVol(md, objId, classVol):
+    """ Create a ClassVol from a row of a metadata. """
+    return rowToClassLabel(md, objId, classVol, Volume)
+
+
 def class2DToRow(class2D, classRow):
     """ Set labels values from Class2D to md row. """
 
@@ -257,8 +262,6 @@ def class2DToRow(class2D, classRow):
     n = long(len(class2D))
     classRow.setValue(xmipp.MDL_CLASS_COUNT, n)
     classRow.setValue(xmipp.MDL_REF, int(class2D.getObjId()))
-    
-
     
         
 def ctfModelToRow(ctfModel, ctfRow):
@@ -511,7 +514,8 @@ def writeSetOfCTFs(ctfSet, mdCTF):
         
     md.write(mdCTF)
     ctfSet._xmippMd = String(mdCTF)
-    
+
+
 def writeSetOfDefocusGroups(defocusGroupSet, fnDefocusGroup): # also metadata
     """ Write a defocuGroupSet on metadata format. 
     Params:
@@ -532,7 +536,8 @@ def writeSetOfDefocusGroups(defocusGroupSet, fnDefocusGroup): # also metadata
         
     md.write(fnDefocusGroup)
     defocusGroupSet._xmippMd = String(fnDefocusGroup)
-    
+
+
 def writeSetOfClasses2D(classes2DSet, filename, classesBlock='classes'):    
     """ This function will write a SetOfClasses2D as Xmipp metadata.
     Params:
@@ -560,31 +565,10 @@ def writeSetOfClasses2D(classes2DSet, filename, classesBlock='classes'):
     classMd.write(classFn, xmipp.MD_APPEND) # Empty write to ensure the classes is the first block
     classes2DSet._xmippMd = String(filename)
 
-def writeSetOfMovies(moviesSet, filename, moviesBlock='movies'):    
-    """ This function will write a SetOfMovies as Xmipp metadata.
-    Params:
-        moviesSet: the SetOfMovies instance.
-        filename: the filename where to write the metadata.
-    """
-       
-    for movie in moviesSet:        
-        
-        ref = movie.getObjId()
-        micrographsFn = 'movie%06d_micrographs@%s' % (ref, filename)
-        micrographsMd = xmipp.MetaData()
-        micRow = XmippMdRow()
-        
-        for mic in movie:
-            micrographToRow(mic, micRow)
-            micRow.writeToMd(micrographsMd, micrographsMd.addObject())
-        micrographsMd.write(micrographsFn, xmipp.MD_APPEND)
-    
-    
-    moviesSet._xmippMd = String(filename)
 
 def readSetOfClasses2D(classes2DSet, filename, classesBlock='classes', **args):
     """read from Xmipp image metadata.
-        fnImages: The metadata filename where the particles properties are.
+        filename: The metadata filename where the particles properties are.
         imgSet: the SetOfParticles that will be populated.
         hasCtf: is True if the ctf information exists.
     """
@@ -620,12 +604,82 @@ def readSetOfClasses2D(classes2DSet, filename, classesBlock='classes', **args):
             averages.append(avg)
 
     classes2DSet._xmippMd = String(filename)
-    
 
-def writeSetOfClasses3D(classes3DSet, filename, classesBlock='classes'):    
-    """ This function will write a SetOfClasses3D as Xmipp metadata.
+
+# def writeSetOfClasses3D(classes3DSet, filename, classesBlock='classes'):    
+#     """ This function will write a SetOfClasses3D as Xmipp metadata.
+#     Params:
+#         classes3DSet: the SetOfClasses3D instance.
+#         filename: the filename where to write the metadata.
+#     """
+#     classFn = '%s@%s' % (classesBlock, filename)
+#     classMd = xmipp.MetaData()
+#     classMd.write(classFn) # Empty write to ensure the classes is the first block
+#     
+#     classRow = XmippMdRow()
+#     for class3D in classes3DSet:        
+#         class3DToRow(class3D, classRow)
+#         classRow.writeToMd(classMd, classMd.addObject())
+#         ref = class3D.getObjId()
+#         imagesFn = 'class%06d_images@%s' % (ref, filename)
+#         imagesMd = xmipp.MetaData()
+#         imgRow = XmippMdRow()
+#         
+#         for vol in class3D:
+#             volumeToRow(vol, imgRow)
+#             imgRow.writeToMd(imagesMd, imagesMd.addObject())
+#         imagesMd.write(imagesFn, xmipp.MD_APPEND)
+#     
+#     classMd.write(classFn, xmipp.MD_APPEND) # Empty write to ensure the classes is the first block
+#     classes3DSet._xmippMd = String(filename)
+
+
+def readSetOfClasses3D(classes3DSet, filename, classesBlock='classes', **args):
+    """read from Xmipp image metadata.
+        filename: The metadata filename where the particles properties are.
+        imgSet: the SetOfParticles that will be populated.
+        hasCtf: is True if the ctf information exists.
+    """
+    blocks = xmipp.getBlocksInMetaDataFile(filename)
+    classesMd = xmipp.MetaData('%s@%s' % (classesBlock, filename))
+    samplingRate = classes3DSet.getImages().getSamplingRate()
+    averages = None
+     
+    if classesMd.containsLabel(xmipp.MDL_IMAGE):
+        averages = classes3DSet.createRepresentatives()
+     
+    for objId in classesMd:
+        class3D = Class3D()
+        class3D = rowToClass3D(classesMd, objId, class3D)
+        classes3DSet.append(class3D)
+        ref = class3D.getObjId()
+        b = 'class%06d_images' % ref
+         
+        if b in blocks:
+            classImagesMd = xmipp.MetaData('%s@%s' % (b, filename))
+             
+            for imgId in classImagesMd:
+                img = rowToParticle(classImagesMd, imgId, hasCtf=False)
+                img.setSamplingRate(samplingRate)
+                class3D.append(img)
+                 
+        # Check if write function is necessary
+        class3D.write()
+    
+        if averages is not None:
+            index, avgFn = xmippToLocation(classesMd.getValue(xmipp.MDL_IMAGE, objId))
+            avg = Volume()
+            avg.setLocation(index, avgFn)
+            avg.copyObjId(class3D)
+            averages.append(avg)
+    
+    classes3DSet._xmippMd = String(filename)
+
+
+def writeSetOfClassesVol(classesVolSet, filename, classesBlock='classes'):    
+    """ This function will write a SetOfClassesVol as Xmipp metadata.
     Params:
-        classes3DSet: the SetOfClasses3D instance.
+        classesVolSet: the SetOfClassesVol instance.
         filename: the filename where to write the metadata.
     """
     classFn = '%s@%s' % (classesBlock, filename)
@@ -633,23 +687,24 @@ def writeSetOfClasses3D(classes3DSet, filename, classesBlock='classes'):
     classMd.write(classFn) # Empty write to ensure the classes is the first block
     
     classRow = XmippMdRow()
-    for class3D in classes3DSet:        
-        class3DToRow(class3D, classRow)
+    for classVol in classesVolSet:        
+        classVolToRow(classVol, classRow)
         classRow.writeToMd(classMd, classMd.addObject())
         ref = class3D.getObjId()
         imagesFn = 'class%06d_images@%s' % (ref, filename)
         imagesMd = xmipp.MetaData()
         imgRow = XmippMdRow()
         
-        for vol in class3D:
+        for vol in classVol:
             volumeToRow(vol, imgRow)
             imgRow.writeToMd(imagesMd, imagesMd.addObject())
         imagesMd.write(imagesFn, xmipp.MD_APPEND)
     
     classMd.write(classFn, xmipp.MD_APPEND) # Empty write to ensure the classes is the first block
-    classes3DSet._xmippMd = String(filename)
+    classesVolSet._xmippMd = String(filename)
 
-def readSetOfClasses3D(classes3DSet, filename, classesBlock='classes', **args):
+
+def readSetOfClassesVol(classesVolSet, filename, classesBlock='classes', **args):
     """read from Xmipp image metadata.
         fnImages: The metadata filename where the particles properties are.
         imgSet: the SetOfParticles that will be populated.
@@ -657,17 +712,17 @@ def readSetOfClasses3D(classes3DSet, filename, classesBlock='classes', **args):
     """
     blocks = xmipp.getBlocksInMetaDataFile(filename)
     classesMd = xmipp.MetaData('%s@%s' % (classesBlock, filename))
-    samplingRate = classes3DSet.getVolumes().getSamplingRate()
+    samplingRate = classesVolSet.getImages().getSamplingRate()
     averages = None
     
     if classesMd.containsLabel(xmipp.MDL_IMAGE):
-        averages = classes3DSet.createRepresentatives()
+        averages = classesVolSet.createRepresentatives()
     
     for objId in classesMd:
-        class3D = Class3D()
-        class3D = rowToClass3D(classesMd, objId, class3D)
-        classes3DSet.append(class3D)
-        ref = class3D.getObjId()
+        classVol = ClassVol()
+        classVol = rowToClassVol(classesMd, objId, classVol)
+        classesVolSet.append(classVol)
+        ref = classVol.getObjId()
         b = 'class%06d_images' % ref
         
         if b in blocks:
@@ -679,15 +734,38 @@ def readSetOfClasses3D(classes3DSet, filename, classesBlock='classes', **args):
                 class3D.append(img)
                 
         # Check if write function is necessary
-        class3D.write()
+        classVol.write()
     
         if averages is not None:
             index, avgFn = xmippToLocation(classesMd.getValue(xmipp.MDL_IMAGE, objId))
             avg = Volume()
             avg.setLocation(index, avgFn)
-            avg.copyObjId(class3D)
+            avg.copyObjId(classVol)
             averages.append(avg)
-    classes3DSet._xmippMd = String(filename)
+    classesVolSet._xmippMd = String(filename)
+
+
+def writeSetOfMovies(moviesSet, filename, moviesBlock='movies'):    
+    """ This function will write a SetOfMovies as Xmipp metadata.
+    Params:
+        moviesSet: the SetOfMovies instance.
+        filename: the filename where to write the metadata.
+    """
+       
+    for movie in moviesSet:        
+        
+        ref = movie.getObjId()
+        micrographsFn = 'movie%06d_micrographs@%s' % (ref, filename)
+        micrographsMd = xmipp.MetaData()
+        micRow = XmippMdRow()
+        
+        for mic in movie:
+            micrographToRow(mic, micRow)
+            micRow.writeToMd(micrographsMd, micrographsMd.addObject())
+        micrographsMd.write(micrographsFn, xmipp.MD_APPEND)
+    
+    moviesSet._xmippMd = String(filename)
+
 
 def createXmippInputImages(prot, imgSet, rowFunc=None, imagesFn=None):  
     imgsMd = getattr(imgSet, '_xmippMd', None)

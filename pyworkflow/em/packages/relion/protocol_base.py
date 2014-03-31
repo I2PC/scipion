@@ -335,7 +335,7 @@ class ProtRelionBase(EMProtocol):
         self._insertFunctionStep('convertInputStep')
         self._insertRelionStep()
         self._insertFunctionStep('createOutputStep')
- 
+    
     def _insertRelionStep(self):
         """ Prepare the command line arguments before calling Relion. """
         # Join in a single line all key, value pairs of the args dict    
@@ -377,7 +377,7 @@ class ProtRelionBase(EMProtocol):
             self.copyAttributes(self.continueRun.get(), 'regularisationParamT')
         self._setBasicArgs(args)
         args['--continue'] = self._getFileName('optimiser', iter=self.continueIter.get())
-            
+    
     def _setBasicArgs(self, args):
         """ Return a dictionary with basic arguments. """
         args.update({'--flatten_solvent': '',
@@ -431,10 +431,9 @@ class ProtRelionBase(EMProtocol):
         self._loadEnvironment()
         params += ' --j %d' % self.numberOfThreads.get()
         self.runJob(self._getProgram(), params)
-        
+    
     def createOutputStep(self):
         pass # should be implemented in subclasses
-        
     
     #--------------------------- INFO functions -------------------------------------------- 
     def _validate(self):
@@ -490,7 +489,7 @@ class ProtRelionBase(EMProtocol):
     def _loadEnvironment(self):
         """ Setup the environment variables needed to launch Relion. """
         RELION_BIN = join(os.environ['RELION_HOME'], 'bin')
-        RELION_LD = join(os.environ['RELION_HOME'], 'lib64')
+        RELION_LD = join(os.environ['RELION_HOME'], 'lib')
         environAdd('PATH', RELION_BIN)
         environAdd('LD_LIBRARY_PATH', RELION_LD)
     
@@ -526,7 +525,7 @@ class ProtRelionBase(EMProtocol):
             createClassesFromImages(data_star, data_classes, it, 
                                     self.CLASS_LABEL, self.ClassFnTemplate)
         return data_classes
-
+    
     def _getIterSortedData(self, it):
         """ Sort the it??.data.star file by the maximum likelihood. """
         data_sorted = self._getFileName('data_sorted_xmipp', iter=it)
