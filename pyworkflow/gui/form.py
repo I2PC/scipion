@@ -47,6 +47,7 @@ from widgets import Button, HotButton, IconButton
 from pyworkflow.protocol.params import *
 from pyworkflow.protocol import Protocol
 from dialog import showInfo, EditObjectDialog, ListDialog
+from canvas import Canvas
 from tree import TreeProvider, BoundTree
 #from pyworkflow.em import findViewers
 
@@ -130,7 +131,10 @@ class ComboVar():
         
     def set(self, value):
         self.value = value
-        self.tkVar.set(self.enum.choices[value])
+        if isinstance(value, int):
+            self.tkVar.set(self.enum.choices[value])
+        else:
+            self.tkVar.set(value) # also support string values
                     
     def get(self):
         v = self.tkVar.get()
@@ -262,16 +266,63 @@ class MultiPointerTreeProvider(TreeProvider):
             
    
 #---------------------- Other widgets ----------------------------------------
-         
+# http://tkinter.unpythonic.net/wiki/VerticalScrolledFrame
+
+class VerticalScrolledFrame(tk.Frame):
+    """A pure Tkinter scrollable frame that actually works!
+    * Use the 'interior' attribute to place widgets inside the scrollable frame
+    * Construct and pack/place/grid normally
+    * This frame only allows vertical scrolling
+
+    """
+    def __init__(self, parent, *args, **kw):
+        tk.Frame.__init__(self, parent, *args, **kw)            
+
+        # create a canvas object and a vertical scrollbar for scrolling it
+        vscrollbar = tk.Scrollbar(self, orient=tk.VERTICAL)
+        vscrollbar.pack(fill=tk.Y, side=tk.RIGHT, expand=tk.FALSE)
+        canvas = Canvas(self, bd=0, highlightthickness=0,
+                        yscrollcommand=vscrollbar.set)
+        canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=tk.TRUE)
+        vscrollbar.config(command=canvas.yview)
+
+        # reset the view
+        canvas.xview_moveto(0)
+        canvas.yview_moveto(0)
+
+        # create a frame inside the canvas which will be scrolled with it
+        self.interior = interior = tk.Frame(canvas)
+        interior_id = canvas.create_window(0, 0, window=interior,
+                                           anchor=tk.NW)
+
+        # track changes to the canvas and frame width and sync them,
+        # also updating the scrollbar
+        def _configure_interior(event):
+            # update the scrollbars to match the size of the inner frame
+            size = (interior.winfo_reqwidth(), interior.winfo_reqheight())
+            canvas.config(scrollregion="0 0 %s %s" % size)
+            if interior.winfo_reqwidth() != canvas.winfo_width():
+                # update the canvas's width to fit the inner frame
+                canvas.config(width=interior.winfo_reqwidth())
+        interior.bind('<Configure>', _configure_interior)
+
+        def _configure_canvas(event):
+            if interior.winfo_reqwidth() != canvas.winfo_width():
+                # update the inner frame's width to fill the canvas
+                canvas.itemconfigure(interior_id, width=canvas.winfo_width())
+        canvas.bind('<Configure>', _configure_canvas)
+        
+           
 class SectionFrame(tk.Frame):
     """This class will be used to create a frame for the Section
     That will have a header with red color and a content frame
     with white background
     """
-    def __init__(self, master, label, callback=None, **args):
+    def __init__(self, master, label, callback=None, height=15, **args):
         headerBgColor = args.get('headerBgColor', gui.cfgButtonBgColor)
         if 'headerBgColor' in args:
             del args['headerBgColor']
+        self.height = height
         tk.Frame.__init__(self, master, bg='white', **args)
         self._createHeader(label, headerBgColor)
         self._createContent()
@@ -286,19 +337,69 @@ class SectionFrame(tk.Frame):
         self.headerLabel.grid(row=0, column=0, sticky='nw')
         
     def _createContent(self):
-        self.contentFrame = tk.Frame(self, bg='white', bd=0)
-        self.contentFrame.grid(row=1, column=0, sticky='news', padx=5, pady=5)
-        configureWeigths(self.contentFrame)
+        canvasFrame = tk.Frame(self, bg='white')
+        configureWeigths(self, row=1)
+        configureWeigths(canvasFrame)
+        self.canvas = Canvas(canvasFrame, width=625, height=self.height, bg='white') 
+        #self.canvas.config(scrollregion=(10, 0, 600, self.height))
+        #TaggedText(self, width=90, height=self.height, bd=0, cursor='arrow')
+        self.canvas.grid(row=0, column=0, sticky='news')
+        canvasFrame.grid(row=1, column=0, sticky='news')
+        
+        configureWeigths(self.canvas)
+                
+        self.contentFrame = tk.Frame(self.canvas, bg='white', bd=0)
+        self.contentId = self.canvas.create_window(0, 0, anchor=tk.NW, window=self.contentFrame)
+        
+        self.contentFrame.bind('<Configure>', self._configure_interior)
+        self.canvas.bind('<Configure>', self._configure_canvas)
+        
+        self.contentFrame.columnconfigure(0, weight=1)
+        #configureWeigths(self.contentFrame)
         self.columnconfigure(0, weight=1)
+        
+        
+    def _getReqSize(self, widget):
+        return widget.winfo_reqwidth(), widget.winfo_reqheight()
+    
+    def _getSize(self, widget):
+        return widget.winfo_width(), widget.winfo_height()
+    # track changes to the canvas and frame width and sync them,
+    # also updating the scrollbar
+    def _configure_interior(self, event=None):
+        # update the scrollbars to match the size of the inner frame
+        fsize = self._getReqSize(self.contentFrame)
+        csize = self._getSize(self.canvas)
+        #if fsize[0] != self.canvas.winfo_width():
+        if fsize != csize:
+            # update the canvas's width to fit the inner frame
+            self.canvas.config(width=fsize[0], height=fsize[1])
+            self.canvas.config(scrollregion="0 0 %s %s" % fsize)
+
+    def _configure_canvas(self, event=None):
+        fsize = self._getReqSize(self.contentFrame)
+        csize = self._getSize(self.canvas)
+        #if self.contentFrame.winfo_reqwidth() != self.canvas.winfo_width():
+        if fsize != csize:
+            # update the inner frame's width to fill the canvas
+            self.canvas.itemconfigure(self.contentId, width=csize[0])
+            if csize[1] > fsize[1]:
+                self.canvas.itemconfigure(self.contentId, height=csize[1])
+                self.canvas.config(scrollregion="0 0 %s %s" % csize)
+                
+    def adjustContent(self):
+        self._configure_interior()
+        self.update_idletasks()
+        self._configure_canvas()
         
                     
 class SectionWidget(SectionFrame):
     """This class will be used to create a section in FormWindow"""
-    def __init__(self, form, master, section, callback=None, **args):
+    def __init__(self, form, master, section, height, callback=None, **args):
         self.form = form
         self.section = section
         self.callback = callback
-        SectionFrame.__init__(self, master, self.section.label.get(), **args)
+        SectionFrame.__init__(self, master, self.section.label.get(), height=height, **args)
         
     def _createHeader(self, label, bgColor):
         SectionFrame._createHeader(self, label, bgColor)        
@@ -391,7 +492,7 @@ class ParamWidget():
         
     def _addButton(self, text, imgPath, cmd):
         btn = IconButton(self.btnFrame, text, imgPath, command=cmd)
-        btn.grid(row=0, column=self._btnCol, sticky='e', padx=2)
+        btn.grid(row=0, column=self._btnCol, sticky='e', padx=2, pady=2)
         self.btnFrame.columnconfigure(self._btnCol, weight=1)
         self._btnCol += 1
         
@@ -415,29 +516,22 @@ class ParamWidget():
         """
         var = BoolVar()
         frame = tk.Frame(parent, **args)
-        frame.grid(row=0, column=0, sticky='w')
         rb1 = tk.Radiobutton(frame, text='Yes', variable=var.tkVar, value=1, **args)
         rb1.grid(row=0, column=0, padx=2, sticky='w')
         rb2 = tk.Radiobutton(frame, text='No', variable=var.tkVar, value=0, **args)
         rb2.grid(row=0, column=1, padx=2, sticky='w') 
         
-        return (var, frame)       
-        
+        return (var, frame)
+    
     def _createContentWidgets(self, param, content):
         """Create the specific widgets inside the content frame"""
         # Create widgets for each type of param
         t = type(param)
         entryWidth = 30
-        #TODO: Move this to a Renderer class to be more flexible
+
         if t is BooleanParam:
             var, frame = ParamWidget.createBoolWidget(content, bg='white')
-#            var = BoolVar()
-#            frame = tk.Frame(content, bg='white')
-#            frame.grid(row=0, column=0, sticky='w')
-#            rb1 = tk.Radiobutton(frame, text='Yes', bg='white', variable=var.tkVar, value=1)
-#            rb1.grid(row=0, column=0, padx=2, sticky='w')
-#            rb2 = tk.Radiobutton(frame, text='No', bg='white', variable=var.tkVar, value=0)
-#            rb2.grid(row=0, column=1, padx=2, sticky='w')
+            frame.grid(row=0, column=0, sticky='w')
             
         elif t is EnumParam:
             var = ComboVar(param)
@@ -622,10 +716,18 @@ class Binding():
             
     
 class FormWindow(Window):
-    """This class will create the Protocol params GUI to enter parameters.
-    The creaation of compoments will be based on the Protocol Form definition.
+    """ This class will create the Protocol params GUI to fill in the parameters.
+    The creation of input parameters will be based on the Protocol Form definition.
     This class will serve as a connection between the GUI variables (tk vars) and 
-    the Protocol variables."""
+    the Protocol variables.
+    
+    Layout:
+        There are 4 main blocks that goes each one in a different row1.
+        1. Header: will contains the logo, title and some link buttons.
+        2. Common: common execution parameters of each run.
+        3. Params: the expert level and tabs with the Protocol parameters.
+        4. Buttons: buttons at bottom for close, save and execute.
+    """
     def __init__(self, title, protocol, callback, master=None, hostList=['localhost'], **args):
         """ Constructor of the Form window. 
         Params:
@@ -636,11 +738,11 @@ class FormWindow(Window):
         Window.__init__(self, title, master, icon='scipion_bn.xbm', 
                         weight=False, minsize=(600, 450), **args)
 
+        # Some initialization
         self.callback = callback
         self.widgetDict = {} # Store tkVars associated with params
         self.visualizeDict = args.get('visualizeDict', {})
         self.bindings = []
-        self.protocol = protocol
         self.hostList = hostList
         self.protocol = protocol
         self.visualizeMode = args.get('visualizeMode', False)  # This control when to close or not after execute
@@ -649,61 +751,58 @@ class FormWindow(Window):
             self.headerBgColor = Color.DARK_GREY_COLOR
         self.childMode = args.get('childMode', False) # Allow to open child protocols form (for workflows)
         
-        
         from pyworkflow.em import findWizards
         self.wizards = findWizards(protocol, DESKTOP_TKINTER)
         
-        self.fontBig = tkFont.Font(size=12, family='helvetica', weight='bold')
-        self.font = tkFont.Font(size=10, family='helvetica')#, weight='bold')
-        self.fontBold = tkFont.Font(size=10, family='helvetica', weight='bold')        
+        self._createGUI()
         
-        headerFrame = tk.Frame(self.root)
+    def _createGUI(self):
+        mainFrame = tk.Frame(self.root)
+        configureWeigths(mainFrame, row=2)
+        self.root.rowconfigure(0, weight=1)
+        
+        headerFrame = self._createHeader(mainFrame)
         headerFrame.grid(row=0, column=0, sticky='new')
+        
+        if self.protocol.allowHeader:
+            commonFrame = self._createCommon(mainFrame)
+            commonFrame.grid(row=1, column=0, sticky='nw')
+            
+        paramsFrame = self._createParams(mainFrame)
+        paramsFrame.grid(row=2, column=0, sticky='news')
+        
+        buttonsFrame = self._createButtons(mainFrame)
+        buttonsFrame.grid(row=3, column=0, sticky='se')
+        
+        mainFrame.grid(row=0, column=0, sticky='ns')
+        
+        
+    def _createHeader(self, parent):
+        """ Fill the header frame with the logo, title and cite-help buttons. """
+        headerFrame = tk.Frame(parent)
+        #headerFrame.grid(row=0, column=0, sticky='new')
         headerFrame.columnconfigure(0, weight=1)
-        package = protocol._package
-        t = '  Protocol: %s' % (protocol.getClassLabel())
+        package = self.protocol._package
+        t = '  Protocol: %s' % (self.protocol.getClassLabel())
         logoPath = getattr(package, '_logo', None)
+        
         if logoPath:
-            headerLabel = tk.Label(headerFrame, text=t, font=self.fontBig, image=self.getImage(logoPath), compound=tk.LEFT)
+            headerLabel = tk.Label(headerFrame, text=t, font=self.fontBig, 
+                                   image=self.getImage(logoPath, maxheight=40), compound=tk.LEFT)
         else:
             headerLabel = tk.Label(headerFrame, text=t, font=self.fontBig)
-        headerLabel.grid(row=0, column=0, padx=5, pady=(5,0), columnspan=5)
+        headerLabel.grid(row=0, column=0, padx=5, pady=(5,0), sticky='nw')#, columnspan=5)
         
         def _addButton(text, icon, command, col):
             btn = tk.Label(headerFrame, text=text, image=self.getImage(icon), 
                        compound=tk.LEFT, cursor='hand2')
             btn.bind('<Button-1>', command)
-            btn.grid(row=1, column=col, padx=5, sticky='se')
+            btn.grid(row=0, column=col, padx=5, sticky='e')
         
-        _addButton(Message.TITLE_CITE, Icon.ACTION_REFERENCES, self._showReferences, 0)
-        _addButton(Message.TITLE_DOC ,Icon.ACTION_HELP, self._showHelp, 1)
+        _addButton(Message.LABEL_CITE, Icon.ACTION_REFERENCES, self._showReferences, 1)
+        _addButton(Message.LABEL_HELP ,Icon.ACTION_HELP, self._showHelp, 2)
         
-        if protocol.allowHeader:
-            commonFrame = self._createHeaderCommons(headerFrame)
-            commonFrame.grid(row=2, column=0, padx=5, pady=(0,5), 
-                             sticky='news', columnspan=5)
-        
-        text = TaggedText(self.root, width=40, height=15, bd=0, cursor='arrow')
-        text.grid(row=1, column=0, sticky='news')
-        text.config(state=tk.DISABLED)
-        contentFrame = self.createSections(text)
-        
-        bottomFrame = tk.Frame(self.root)
-        bottomFrame.grid(row=2, column=0, sticky='sew')
-        bottomFrame.columnconfigure(0, weight=1)
-        
-        btnFrame = tk.Frame(bottomFrame)
-        #btnFrame.columnconfigure(2, weight=1)
-        self._createButtons(btnFrame)
-        btnFrame.grid(row=1, column=0, sticky='se')
-        
-        
-        self.root.columnconfigure(0, weight=1)
-        self.root.rowconfigure(1, weight=1)
-        
-        # Resize windows to use more space if needed
-        self.desiredDimensions = lambda: self.resize(contentFrame)
-        #self.resize(contentFrame)
+        return headerFrame
         
     def _showReferences(self, e=None):
         """ Show the list of references of the protocol. """
@@ -711,10 +810,167 @@ class FormWindow(Window):
         
     def _showHelp(self, e=None):
         """ Show the list of references of the protocol. """
-        self.showInfo(self.protocol.getDoc(), "Help")        
+        self.showInfo(self.protocol.getDoc(), "Help")
         
-    def _createButtons(self, btnFrame):
+        
+    def _createCommon(self, parent):
+        """ Create the second section with some common parameters. """
+        commonFrame = tk.Frame(parent)
+        
+        ############# Create the run part ###############
+        runSection = SectionFrame(commonFrame, label=Message.TITLE_RUN, height=100,
+                                  headerBgColor=self.headerBgColor)
+        runFrame = tk.Frame(runSection.contentFrame, bg='white')
+        runFrame.grid(row=0, column=0, sticky='nw', padx=(0, 15))
+        #runFrame.columnconfigure(1, weight=1)
+        
+        r = 0 # Run name
+        self._createHeaderLabel(runFrame, Message.LABEL_RUNNAME, bold=True, sticky='ne')
+        entry = self._createBoundEntry(runFrame, Message.VAR_RUN_NAME, width=25, 
+                                       func=self.setProtocolLabel, value=self.protocol.getObjLabel())
+        entry.grid(row=r, column=1, padx=(0, 5), pady=5, sticky='new')#, columnspan=5)
+        btn = IconButton(runFrame, Message.TITLE_COMMENT, Icon.ACTION_EDIT, command=self._editObjParams)
+        btn.grid(row=r, column=2, padx=(10,0), pady=5, sticky='nw')
+        
+        c = 3 # Comment
+        self._createHeaderLabel(runFrame, Message.TITLE_COMMENT, sticky='ne', column=c)
+        entry = self._createBoundEntry(runFrame, Message.VAR_RUN_NAME, width=25, 
+                                       func=self.setProtocolLabel, value=self.protocol.getObjLabel())
+        entry.grid(row=r, column=c+1, padx=(0, 5), pady=5, sticky='new')#, columnspan=5)
+        btn = IconButton(runFrame, Message.TITLE_COMMENT, Icon.ACTION_EDIT, command=self._editObjParams)
+        btn.grid(row=r, column=c+2, padx=(10,0), pady=5, sticky='nw')
+                
+        r = 1 # Execution
+        self._createHeaderLabel(runFrame, Message.LABEL_EXECUTION, bold=True, sticky='ne', row=r, pady=0)
+        modeFrame = tk.Frame(runFrame, bg='white')
+        self._createHeaderLabel(modeFrame, "Mode", sticky='ne', row=0, pady=0, column=0)
+        runMode = self._createBoundCombo(modeFrame, Message.VAR_RUN_MODE, MODE_CHOICES, self._onRunModeChanged)   
+        runMode.grid(row=0, column=1, sticky='new', padx=(0, 5), pady=5)
+        btnHelp = IconButton(modeFrame, Message.TITLE_COMMENT, Icon.ACTION_HELP, 
+                             command=self._createHelpCommand(Message.HELP_RUNMODE))
+        btnHelp.grid(row=0, column=2, padx=(5, 0), pady=2, sticky='ne')
+        modeFrame.columnconfigure(0, minsize=60)
+        modeFrame.columnconfigure(1, weight=1)
+        modeFrame.grid(row=r, column=1, sticky='new', columnspan=2)
+        
+        # Host
+        self._createHeaderLabel(runFrame, Message.LABEL_HOST, row=r, column=c, pady=0, padx=(15,5), sticky='ne')
+        self._createBoundCombo(runFrame, Message.VAR_EXEC_HOST, self.hostList).grid(row=r, column=c+1, pady=5, sticky='nw')
+        
+        r = 2
+        # Parallel
+        if self.protocol.allowThreads or self.protocol.allowMpi:
+            self._createHeaderLabel(runFrame, Message.LABEL_PARALLEL, bold=True, sticky='ne', row=r, pady=0)
+            procFrame = tk.Frame(runFrame, bg='white')
+            r2 = 0
+            c2 = 0
+            sticky = 'ne'
+            # THREADS
+            if self.protocol.allowThreads:
+                self._createHeaderLabel(procFrame, Message.LABEL_THREADS, sticky=sticky, row=r2, column=c2, pady=0)
+                entry = self._createBoundEntry(procFrame, Message.VAR_THREADS)
+                entry.grid(row=r2, column=c2+1, padx=(0, 5), sticky='nw')
+                # Modify values to be used in MPI entry
+                c2 += 2
+                sticky = 'nw'
+            # MPI
+            if self.protocol.allowMpi:
+                self._createHeaderLabel(procFrame, Message.LABEL_MPI, sticky=sticky, row=r2, column=c2, pady=0)
+                entry = self._createBoundEntry(procFrame, Message.VAR_MPI)
+                entry.grid(row=r2, column=c2+1, padx=(0, 5), sticky='nw')
+                
+            btnHelp = IconButton(procFrame, Message.TITLE_COMMENT, Icon.ACTION_HELP, 
+                                 command=self._createHelpCommand(Message.HELP_MPI_THREADS))
+            btnHelp.grid(row=0, column=4, padx=(5, 0), pady=2, sticky='ne')
+            procFrame.columnconfigure(0, minsize=60)
+            procFrame.grid(row=r, column=1, sticky='new', columnspan=2)
+        
+        # Queue
+        self._createHeaderLabel(runFrame, Message.LABEL_QUEUE, row=r, sticky='ne', column=c, padx=(15,5), pady=0)
+        var, frame = ParamWidget.createBoolWidget(runFrame, bg='white')
+        self._addVarBinding(Message.VAR_QUEUE, var)
+        frame.grid(row=2, column=c+1, pady=5, sticky='nw')
+        btnHelp = IconButton(runFrame, Message.TITLE_COMMENT, Icon.ACTION_HELP, 
+                             command=self._createHelpCommand(Message.HELP_RUNMODE))
+        btnHelp.grid(row=2, column=c+2, padx=(5, 0), pady=2, sticky='ne')
+        
+        # Run Name not editable
+        #entry.configure(state='readonly')
+        # Run mode
+        self.protocol.getDefinitionParam('')
+        #self._createHeaderLabel(runFrame, Message.LABEL_RUNMODE).grid(row=1, column=0, sticky='ne', padx=5, pady=5)
+        #runSection.addContent()
+        runSection.grid(row=0, column=0, sticky='news', padx=5, pady=5)
+        
+        return commonFrame 
+ 
+    def _createHelpCommand(self, msg):
+        """ Show the help of some value of the header. """
+        return lambda: showInfo("Help", msg, self.root)
+    
+    def _editObjParams(self, e=None):
+        """ Show a Text area to edit the protocol label and comment. """
+        
+        d = EditObjectDialog(self.root, Message.TITLE_EDIT_OBJECT, self.protocol, self.protocol.mapper)
+        
+        if d.resultYes():
+            label = d.valueLabel
+            self.runNameVar.set(label)
+            self.protocol.setObjLabel(label)
+            self.protocol.setObjComment(d.valueComment)
+                            
+        
+    def _createParams(self, parent):
+        paramsFrame = tk.Frame(parent)
+        configureWeigths(paramsFrame, row=1, column=0)
+        # Expert level
+        expFrame = tk.Frame(paramsFrame)
+        expLabel = tk.Label(expFrame, text=Message.LABEL_EXPERT, font=self.fontBold)
+        expLabel.grid(row=0, column=0, sticky='nw', padx=5)
+        expCombo = self._createBoundCombo(expFrame, Message.VAR_EXPERT, LEVEL_CHOICES, self._onExpertLevelChanged) 
+        expCombo.grid(row=0, column=1, sticky='nw', pady=5)
+        expFrame.grid(row=0, column=0, sticky='nw')
+        
+        contentFrame = self.createSections(paramsFrame)
+        contentFrame.grid(row=1, column=0, sticky='news')
+        
+        return paramsFrame
+                
+    def createSections(self, parent):
+        """Create section widgets"""
+        r = 0
+        sectionsFrame = tk.Frame(parent) 
+        configureWeigths(sectionsFrame)
+        tab = ttk.Notebook(sectionsFrame) 
+        tab.grid(row=0, column=0, sticky='news',
+                 padx=5, pady=5)
+        self._sections = []
+        
+        for section in self.protocol.iterDefinitionSections():
+            label = section.getLabel()
+            if label != 'General' and label != 'Parallelization':
+                frame = SectionWidget(self, tab, section, height=150,
+                                      callback=self._checkChanges,
+                                      headerBgColor=self.headerBgColor)
+                
+                tab.add(frame, text=section.getLabel())
+                frame.columnconfigure(0, minsize=400)
+                self._fillSection(section, frame)
+                self._sections.append(frame)
+                r += 1
+        self._checkAllChanges()
+        
+        return sectionsFrame    
+        
+    def _createButtons(self, parent):
         """ Create the bottom buttons: Close, Save and Execute. """
+#         bottomFrame = tk.Frame(self.root)
+#         bottomFrame.grid(row=2, column=0, sticky='sew')
+#         bottomFrame.columnconfigure(0, weight=1)
+#         self.root.rowconfigure(2, minsize=50)
+        
+        btnFrame = tk.Frame(parent)
+        
         btnClose = Button(btnFrame, Message.LABEL_BUTTON_CLOSE, Icon.ACTION_CLOSE, 
                           command=self.close)
         btnClose.grid(row=0, column=0, padx=5, pady=5, sticky='se')
@@ -730,11 +986,9 @@ class FormWindow(Window):
         # Add Execute/Visualize button
         if not self.childMode:
             btnExecute = HotButton(btnFrame, t, icon, command=self.execute)
-                                    #activeforeground='white', activebackground='#A60C0C')
-#             btnExecute = Button(btnFrame, text=t, fg='white', bg=Color.RED_COLOR, font=self.font, 
-#                     image=self.getImage(icon), compound=tk.LEFT, 
-#                     activeforeground='white', activebackground='#A60C0C', command=self.execute)
             btnExecute.grid(row=0, column=2, padx=(5, 28), pady=5, sticky='se')
+            
+        return btnFrame
         
     def _addVarBinding(self, paramName, var, func=None, *callbacks):
         if func is None:
@@ -752,109 +1006,55 @@ class FormWindow(Window):
             var.set(value)
         return tk.Entry(parent, font=self.font, width=width, textvariable=var)
     
-    def _createBoundCombo(self, parent, paramName, choices, *callbacks):
-        # Create expert level combo
+    def _createEnumBinding(self, paramName, choices, *callbacks):
         param = EnumParam(choices=choices)
         var = ComboVar(param)
-        #self.protocol.expertLevel.set(0)
         self._addVarBinding(paramName, var, None, *callbacks)
-        #var.set(self.protocol.expertLevel.get())
-        combo = ttk.Combobox(parent, textvariable=var.tkVar, 
-                                state='readonly', width=10)
+        return param, var
+        
+    def _createBoundCombo(self, parent, paramName, choices, *callbacks):
+        param, var = self._createEnumBinding(paramName, choices, *callbacks)
+        combo = ttk.Combobox(parent, textvariable=var.tkVar, state='readonly', width=10)
         combo['values'] = param.choices
+        
         return combo
-            
-        
-    def _createHeaderLabel(self, parent, text):
-        return tk.Label(parent, text=text, font=self.font, bg='white')
     
-    def _createHeaderCommons(self, parent):
-        """ Create the header common values such as: runName, expertLevel, mpi... """
-        commonFrame = tk.Frame(parent)
-        commonFrame.columnconfigure(0, weight=1)
-        commonFrame.columnconfigure(1, weight=1)
+    def _createBoundOptions(self, parent, paramName, choices, *callbacks, **args):
+        param, var = self._createEnumBinding(paramName, choices, *callbacks)
+        frame = tk.Frame(parent, **args)
+        for i, opt in enumerate(param.choices):
+            rb = tk.Radiobutton(frame, text=opt, variable=var, value=opt)
+            rb.grid(row=0, column=i, sticky='nw', padx=(0, 5))  
         
-        ############# Create the run part ###############
-        # Run name
-        #runFrame = ttk.Labelframe(commonFrame, text='Run')
-        runSection = SectionFrame(commonFrame, label=Message.TITLE_RUN, 
-                                  headerBgColor=self.headerBgColor)
-        runFrame = runSection.contentFrame
-        self._createHeaderLabel(runFrame, Message.TITLE_RUN_NAME).grid(row=0, column=0, padx=5, pady=5, sticky='ne')
-        entry = self._createBoundEntry(runFrame, Message.VAR_RUN_NAME, width=15, 
-                                       func=self.setProtocolLabel, value=self.protocol.getObjLabel())
-        entry.grid(row=0, column=1, padx=(0, 5), pady=5, sticky='nw')
-        # Run Name not editable
-        entry.configure(state='readonly')
-        btnComment = IconButton(runFrame, Message.TITLE_COMMENT, Icon.ACTION_EDIT, command=self._editObjParams)
-        btnComment.grid(row=0, column=2, padx=(0, 5), pady=5, sticky='nw')
-        # Run mode
-        self.protocol.getDefinitionParam('')
-        self._createHeaderLabel(runFrame, Message.TITLE_RUN_MODE).grid(row=1, column=0, sticky='ne', padx=5, pady=5)
-        modeCombo = self._createBoundCombo(runFrame, Message.VAR_RUN_MODE, MODE_CHOICES, self._onRunModeChanged)   
-        modeCombo.grid(row=1, column=1, sticky='nw', padx=(0, 5), pady=5)        
-        # Expert level
-        self._createHeaderLabel(runFrame, Message.TITLE_EXPERT).grid(row=2, column=0, sticky='ne', padx=5, pady=5)
-        expCombo = self._createBoundCombo(runFrame, Message.VAR_EXPERT, LEVEL_CHOICES, self._onExpertLevelChanged)   
-        expCombo.grid(row=2, column=1, sticky='nw', padx=(0, 5), pady=5)
+        return frame
         
-        runSection.grid(row=0, column=0, sticky='news', padx=5, pady=5)
-        
-        ############## Create the execution part ############
-        # Host name
-        #execFrame = ttk.Labelframe(commonFrame, text='Execution')
-        execSection = SectionFrame(commonFrame, label=Message.TITLE_EXEC, 
-                                  headerBgColor=self.headerBgColor)
-        execFrame = execSection.contentFrame        
-        self._createHeaderLabel(execFrame, Message.TITLE_EXEC_HOST).grid(row=0, column=0, padx=5, pady=5, sticky='ne')
-        param = EnumParam(choices=self.hostList)
-        self.hostVar = tk.StringVar()
-        self._addVarBinding(Message.VAR_EXEC_HOST, self.hostVar)
-        #self.hostVar.set(self.protocol.getHostName())
-        expCombo = ttk.Combobox(execFrame, textvariable=self.hostVar, state='readonly', width=15)
-        expCombo['values'] = param.choices        
-        expCombo.grid(row=0, column=1, columnspan=3, padx=(0, 5), pady=5, sticky='nw')
-        # Threads and MPI
-        self._createHeaderLabel(execFrame, Message.TITLE_THREADS).grid(row=1, column=0, padx=5, pady=5, sticky='ne')
-        self._createBoundEntry(execFrame, Message.VAR_THREADS).grid(row=1, column=1, padx=(0, 5))
-        self._createHeaderLabel(execFrame, Message.TITLE_MPI).grid(row=1, column=2, padx=(0, 5))
-        self._createBoundEntry(execFrame, Message.VAR_MPI).grid(row=1, column=3, padx=(0, 5), pady=5, sticky='nw')
-        # Queue
-        self._createHeaderLabel(execFrame, Message.TITLE_QUEUE).grid(row=2, column=0, padx=5, pady=5, sticky='ne', columnspan=3)
-        var, frame = ParamWidget.createBoolWidget(execFrame, bg='white')
-        self._addVarBinding(Message.VAR_QUEUE, var)
-        frame.grid(row=2, column=3, padx=5, pady=5, sticky='nw')
-        
-        execSection.grid(row=0, column=1, sticky='news', padx=5, pady=5)
-        
-        return commonFrame
+    def _createHeaderLabel(self, parent, text, bold=False, **gridArgs):
+        font = self.font
+        if bold:
+            font = self.fontBold
+        label = tk.Label(parent, text=text, font=font, bg='white')
+        if gridArgs:
+            gridDefaults = {'row': 0, 'column': 0, 'padx': 5, 'pady': 5}
+            gridDefaults.update(gridArgs)
+            label.grid(**gridDefaults)
+        return label
     
-    def _editObjParams(self, e=None):
-        """ Show a Text area to edit the protocol label and comment. """
-        
-        d = EditObjectDialog(self.root, Message.TITLE_EDIT_OBJECT, self.protocol, self.protocol.mapper)
-        
-        if d.resultYes():
-            label = d.valueLabel
-            self.runNameVar.set(label)
-            self.protocol.setObjLabel(label)
-            self.protocol.setObjComment(d.valueComment)
-
-            
     def resize(self, frame):
         self.root.update_idletasks()
-        MaxHeight = 600
-        MaxWidth = 600
+        MaxHeight = 1200
+        MaxWidth = 1600
         rh = frame.winfo_reqheight()
         rw = frame.winfo_reqwidth()
         height = min(rh + 100, MaxHeight)
-        width = min(rw + 25, MaxWidth)
+        width = min(rw, MaxWidth)
         x = self.root.winfo_x()
         y = self.root.winfo_y()
         self.root.geometry("%dx%d%+d%+d" % (width, height, x, y))
 
         return (width, height)
-        
+    
+    def adjustSize(self):
+        self.resize(self.root)        
         
     def save(self, e=None):
         self._close(onlySave=True)
@@ -966,6 +1166,9 @@ class FormWindow(Window):
             
     def _onExpertLevelChanged(self, *args):
         self._checkAllChanges()
+        self.root.update_idletasks()
+        for s in self._sections:
+            s.adjustContent()
         
     def _onRunModeChanged(self, paramName):
         self.setParamFromVar(paramName)
@@ -1006,37 +1209,7 @@ class FormWindow(Window):
     def updateProtocolParams(self):
         for paramName, _ in self.protocol.iterDefinitionAttributes():
             self.setParamFromVar(paramName)
-                
-    def createSections(self, text):
-        """Create section widgets"""
-        r = 0
-        parent = tk.Frame(text) 
-        parent.columnconfigure(0, weight=1)
-        tab = ttk.Notebook(parent) 
-        tab.grid(row=0, column=0, sticky='news',
-                 padx=5, pady=5)
-        
-        for section in self.protocol.iterDefinitionSections():
-            label = section.getLabel()
-            if label != 'General' and label != 'Parallelization':
-                frame = SectionWidget(self, tab, section, 
-                                      callback=self._checkChanges,
-                                      headerBgColor=self.headerBgColor)
-            #frame.grid(row=r, column=0, padx=10, pady=5, sticky='new')
-                tab.add(frame, text=section.getLabel())
-                frame.columnconfigure(0, minsize=400)
-                self._fillSection(section, frame)
-                r += 1
-        self._checkAllChanges()
-        
-        # with Windows OS
-        self.root.bind("<MouseWheel>", lambda e: text.scroll(e))
-        # with Linux OS
-        self.root.bind("<Button-4>", lambda e: text.scroll(e))
-        self.root.bind("<Button-5>", lambda e: text.scroll(e)) 
-        text.window_create(tk.INSERT, window=parent)
-        
-        return parent
+
 
 def editObject(self, title, root, obj, mapper):
     """ Show a Text area to edit the protocol label and comment. """    

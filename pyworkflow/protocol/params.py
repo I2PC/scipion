@@ -242,7 +242,7 @@ class Form(object):
   
     def addParallelSection(self, threads=1, mpi=8, condition="",
                            hours=72, jobsize=0):
-        return
+
         self.addSection(label='Parallelization')
         self.addParam('hostName', StringParam, default="localhost",
                       label='Execution host',

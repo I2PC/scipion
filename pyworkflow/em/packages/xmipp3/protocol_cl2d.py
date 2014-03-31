@@ -51,9 +51,9 @@ class XmippProtCL2D(ProtClassify):
     _label = 'cl2d'
     
     def __init__(self, **args):
-        if 'numberOfMpi' not in args:
-            args['numberOfMpi'] = 2
-        Protocol.__init__(self, **args)        
+        Protocol.__init__(self, **args) 
+        if self.numberOfMpi.get() < 2:
+            self.numberOfMpi.set(2)       
 
     #--------------------------- DEFINE param functions --------------------------------------------
     def _defineParams(self, form):
@@ -103,7 +103,7 @@ class XmippProtCL2D(ProtClassify):
                            'Tolerance=0 means that an image must be in all previous levels with the rest of images in'
                            'the core.')          
         
-        form.addParallelSection(threads=0, mpi=2)
+        form.addParallelSection(threads=0, mpi=4)
         
     #--------------------------- INSERT steps functions --------------------------------------------                
     def _insertAllSteps(self):

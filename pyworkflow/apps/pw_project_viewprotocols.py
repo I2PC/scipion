@@ -351,17 +351,10 @@ class ProtocolsView(tk.Frame):
         self.style = ttk.Style()
         self.root.bind("<F5>", self.refreshRuns)
         self.__autoRefreshCounter = 3 # start by 3 secs  
-        # Hide the right-click menu
-        #self.root.bind('<FocusOut>', self._unpostMenu)
-        #self.root.bind("<Key>", self._unpostMenu)
-        #self.root.bind('<Button-1>', self._unpostMenu)
-        
-        #self.menuRun = tk.Menu(self.root, tearoff=0)
+
         c = self.createContent()
         gui.configureWeigths(self)
         c.grid(row=0, column=0, sticky='news')
-        
-        #self.viewer = XmippViewer()
         
     def createContent(self):
         """ Create the Protocols View for the Project.
@@ -438,18 +431,20 @@ class ProtocolsView(tk.Frame):
         btnAnalyze.grid(row=0, column=0, sticky='ne', padx=15)
         #self.style.configure("W.TNotebook")#, background='white')
         tab = ttk.Notebook(infoFrame)#, style='W.TNotebook')
-        # Data tab
-        dframe = tk.Frame(tab)
-        gui.configureWeigths(dframe)
-        provider = RunIOTreeProvider(self, self.selectedProtocol, self.project.mapper)
-        self.infoTree = BoundTree(dframe, provider) 
-        TaggedText(dframe, width=40, height=15, bg='white')
-        self.infoTree.grid(row=0, column=0, sticky='news')  
+
         # Summary tab
-        sframe = tk.Frame(tab)
-        gui.configureWeigths(sframe)
-        self.summaryText = TaggedText(sframe, width=40, height=15, bg='white')
-        self.summaryText.grid(row=0, column=0, sticky='news')        
+        dframe = tk.Frame(tab, bg='white')
+        gui.configureWeigths(dframe, row=0)
+        gui.configureWeigths(dframe, row=2)
+        provider = RunIOTreeProvider(self, self.selectedProtocol, self.project.mapper)
+        self.style.configure("NoBorder.Treeview", background='white', borderwidth=0, font=self.windows.font)
+        self.infoTree = BoundTree(dframe, provider, height=6, show='tree', style="NoBorder.Treeview") 
+        self.infoTree.grid(row=0, column=0, sticky='news')
+        label = tk.Label(dframe, text='Summary', bg='white', font=self.windows.fontBold)
+        label.grid(row=1, column=0, sticky='nw', padx=(15, 0))  
+        self.summaryText = TaggedText(dframe, width=40, height=5, bg='white', bd=0)
+        self.summaryText.grid(row=2, column=0, sticky='news', padx=(30, 0))        
+        
         # Method tab
         mframe = tk.Frame(tab)
         gui.configureWeigths(mframe)
@@ -473,8 +468,8 @@ class ProtocolsView(tk.Frame):
                                          bg='black', foreground='white')
         self.scipionLogText.grid(row=0, column=0, sticky='news')
         
-        tab.add(dframe, text=Message.LABEL_DATA)
-        tab.add(sframe, text=Message.LABEL_SUMMARY)   
+        #tab.add(dframe, text=Message.LABEL_DATA)
+        tab.add(dframe, text=Message.LABEL_SUMMARY)   
         tab.add(mframe, text=Message.LABEL_METHODS)
         tab.add(ologframe, text=Message.LABEL_LOGS_OUTPUT)
         tab.add(elogframe, text=Message.LABEL_LOGS_ERROR)
@@ -577,8 +572,7 @@ class ProtocolsView(tk.Frame):
         tree.tag_configure('protocol', image=self.getImage('python_file.gif'))
         tree.tag_bind('protocol', '<Double-1>', self._protocolItemClick)
         tree.tag_configure('protocol_base', image=self.getImage('class_obj.gif'))
-        f = tkFont.Font(family='helvetica', size='10', weight='bold')
-        tree.tag_configure('section', font=f)
+        tree.tag_configure('section', font=self.windows.fontBold)
         tree.grid(row=1, column=0, sticky='news')
         # Program automatic refresh
         tree.after(3000, self._automaticRefreshRuns)
@@ -714,7 +708,6 @@ class ProtocolsView(tk.Frame):
             self.selectedProtocol = prot
             # TODO self.settings.selectedProtocol.set(prot)
             self.updateActionToolbar()
-            self._fillData()
             self._fillSummary()
             self._fillMethod()
             self._fillLogs()
@@ -738,20 +731,11 @@ class ProtocolsView(tk.Frame):
         w = FormWindow(Message.TITLE_NAME_RUN + prot.getClassName(), prot, 
                        self._executeSaveProtocol, self.windows,
                        hostList=hosts)
+        w.adjustSize()
         w.show(center=True)
         
     def _browseSteps(self):
-#         g = self.selectedProtocol.getStepsGraph()
-#         w = gui.Window("Protocol steps", self.windows, minsize=(800, 600))
-#         root = w.root
-#         canvas = Canvas(root, width=600, height=500)
-#         canvas.grid(row=0, column=0, sticky='nsew')
-#         lt = LevelTree(g)
-#         lt.setCanvas(canvas)
-#         lt.paint()
-#         canvas.updateScrollRegion()
-#         w.show()
-        
+        """ Open a new window with the steps list. """
         window = StepsWindow(Message.TITLE_BROWSE_DATA, self.windows, 
                              self.selectedProtocol, icon=self.icon)
         window.show()        
@@ -763,12 +747,11 @@ class ProtocolsView(tk.Frame):
         window.itemConfig(self.selectedProtocol, open=True)  
         window.show()
         
-    def _fillData(self):
+    def _fillSummary(self):
+        # Update input/output tree
         provider = RunIOTreeProvider(self, self.selectedProtocol, self.project.mapper)
         self.infoTree.setProvider(provider)
-        #self.infoTree.itemConfig(self.selectedProtocol, open=True)  
-        
-    def _fillSummary(self):
+        # Update summary
         self.summaryText.clear()
         self.summaryText.addText(self.selectedProtocol.summary())
         

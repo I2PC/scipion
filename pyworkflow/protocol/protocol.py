@@ -265,10 +265,13 @@ class Protocol(Step):
         self.__project = args.get('project', None)
         
         # For non-parallel protocols mpi=1 and threads=1
-        if not hasattr(self, 'numberOfMpi'):
+        self.allowMpi = hasattr(self, 'numberOfMpi')
+        if not self.allowMpi:
             self.numberOfMpi = Integer(1)
         
-        if not hasattr(self, 'numberOfThreads'):
+        self.allowThreads = hasattr(self, 'numberOfThreads')
+        
+        if not self.allowThreads:
             self.numberOfThreads = Integer(1)
         
         # Check if MPI or threads are passed in **args, mainly used in tests
@@ -970,7 +973,10 @@ class Protocol(Step):
         baseSummary = self._summary()
         if not baseSummary:
             baseSummary = []
-        return baseSummary + ['', '*Comments:* ', self.getObjComment(), error]
+        comments = self.getObjComment()
+        if comments:
+            baseSummary += ['', '*Comments:* ', comments]
+        return baseSummary + ['', error]
     
     def _citations(self):
         """ Should be implemented in subclasses. See citations. """

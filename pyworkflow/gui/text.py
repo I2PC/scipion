@@ -483,6 +483,7 @@ class TextfileViewer(tk.Frame):
         text.tag_add('found_current', idx, lastidx)
         text.see(idx)
   
+  
 def showTextfileViewer(title, filelist, parent=None, main=False):
     if main:
         root = tk.Tk()

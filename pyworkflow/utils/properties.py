@@ -85,39 +85,56 @@ class Message():
     LABEL_LOGS_OUTPUT = 'Output Log'
     LABEL_LOGS_ERROR = 'Error Log'
     LABEL_LOGS_SCIPION = 'Scipion Log'
+    
+    LABEL_RUNNAME = 'Run name'
+    LABEL_EXECUTION = 'Execution'
+    LABEL_PARALLEL = 'Parallel'
+    
     NO_INFO_SUMMARY = 'No summary information.'
     NO_INFO_METHODS = 'No methods information.'
     NO_INFO_LOGS = 'No logs information'
     NO_SAVE_SETTINGS = 'Error try to save settings.'
     
-    # Protocol Form Template
-    TITLE_CITE = 'Cite'
-    TITLE_DOC = 'Help'
-    TITLE_NAME_RUN = ' Protocol Run: '
-    TITLE_RUN = 'Run'
-    TITLE_RUN_NAME = 'Run name'
-    VAR_RUN_NAME = 'runName'
-    TITLE_LABEL = 'Label'
-    LABEL_COMMENT = 'Describe your run here...'
-    TITLE_COMMENT = 'Comment'
-    TITLE_RUN_MODE = 'Run mode'
-    VAR_RUN_MODE = 'runMode'
-    LABEL_RUN_MODE_RESUME = 'resume'
-    LABEL_RUN_MODE_RESTART = 'restart'
-    TITLE_EXPERT = 'Expert Level'
-    VAR_EXPERT = 'expertLevel'
+    #-------- Protocol Form messages ----------
+    LABEL_CITE = 'Cite'
+    LABEL_HELP = 'Help'
+    LABEL_RUNNAME = 'Run name'
+    LABEL_RUNMODE = 'Mode' 
+    LABEL_HOST = 'Host'
+    LABEL_THREADS = 'Threads'
+    LABEL_MPI = 'MPI'
+    LABEL_QUEUE = 'Use queue?'
+    
+    LABEL_EXPERT = 'Expert Level'
     LABEL_EXPERT_NORMAL = 'Normal'
     LABEL_EXPERT_ADVANCE = 'Advanced'
     LABEL_EXPERT_EXPERT = 'Expert'
+    
+    HELP_RUNMODE = """  
+Normally, each protocol is composed by more atomic steps.
+Each step could be computationally intensive, that's why
+the *Resume* execution mode will try to continue from the
+last completed step. On the other hand, the *Restart* mode
+will clean the whole run directory and start from scratch.    
+    """    
+    HELP_MPI_THREADS = """  
+Define the number of processors to be used in the execution.
+*MPI*: This are a number of independent process 
+       that comunicates throught message passing 
+       over the network (or the same computer).
+*Threads*: This refers to different execution threads 
+       in the same process that can share memory. They run in
+       the same computer.     
+    """
+    
+    TITLE_NAME_RUN = ' Protocol Run: '
+    TITLE_RUN = 'Run'
+    TITLE_LABEL = 'Label'
+    LABEL_COMMENT = 'Describe your run here...'
+    TITLE_COMMENT = 'Comment'
+    LABEL_RUN_MODE_RESUME = 'resume'
+    LABEL_RUN_MODE_RESTART = 'restart'
     TITLE_EXEC = 'Execution'
-    TITLE_EXEC_HOST = 'Execution host'
-    VAR_EXEC_HOST = 'hostName'
-    TITLE_THREADS = 'Threads'
-    VAR_THREADS = 'numberOfThreads'
-    TITLE_MPI = 'MPI'
-    VAR_MPI = 'numberOfMpi'
-    TITLE_QUEUE = 'Launch to queue?'
-    VAR_QUEUE = '_useQueue'
     TITLE_BROWSE_DATA = 'Protocol data'
     LABEL_QUEUE_YES = 'Yes'
     LABEL_QUEUE_NO = 'No'
@@ -129,8 +146,16 @@ class Message():
     LABEL_BUTTON_VIS = 'Visualize'
     LABEL_BUTTON_WIZ = 'Wizard'
     LABEL_BUTTON_HELP = 'Help'
-#    LABEL_BUTTON_VIS_ACTION = '  Visualize  '
     LABEL_BUTTON_RETURN = 'Save'
+    # VARS
+    VAR_EXEC_HOST = 'hostName'
+    VAR_EXPERT = 'expertLevel'
+    VAR_MPI = 'numberOfMpi'
+    VAR_QUEUE = '_useQueue'
+    VAR_RUN_NAME = 'runName'
+    VAR_RUN_MODE = 'runMode'
+    VAR_THREADS = 'numberOfThreads'
+    
     
     LABEL_PATTERN = 'Pattern'
     TEXT_PATTERN = "The pattern (with wildcard expansion) of the files to import\n"+"For example: \n*data/particles/***.spi* \n or \n*~/Micrographs/mic/***.mrc*"
