@@ -269,7 +269,8 @@ function initializeImageLoad(forceRecall){
 		}
 	}, {
 		offset: '150%',
-		context: 'section'
+		// This is the div section name used in the scroll event
+		context: 'section' 
 	});
 }
 
