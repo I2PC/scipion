@@ -391,8 +391,8 @@ class TextFileViewer(tk.Frame):
     def clear(self):
         """ Remove all added files. """
         self.filelist = []
-        for i, _ in enumerate(self.taList):
-            self.notebook.forget(i)       
+        for _ in self.taList:
+            self.notebook.forget(0)       
         self.taList = []
         
     def _addFileTab(self, filename):

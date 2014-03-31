@@ -764,6 +764,7 @@ class ProtocolsView(tk.Frame):
         self.methodText.addText(self.selectedProtocol.methods())
         
     def _fillLogs(self):
+        self.outputViewer.clear()
         for f in self.selectedProtocol.getLogPaths():
             self.outputViewer.addFile(f)
         #TODO: REMOVE THIS...READ LOGS DIRECTLY FROM FILE
