@@ -1377,12 +1377,11 @@ decompressExternals()
       if [ -d ${INTERELEMARRAY} ]; then
         if ([ $DO_UNATTENDED -eq 0 ] && [ ${DELETE_ANSWER} != "Y" ] && [ ${DELETE_ANSWER} != "N" ]); then
           echo "${INTERELEMARRAY} folder exists, do you want to permanently remove it? (y)es/(n)o/(Y)es-to-all/(N)o-to-all"
+	  DELETE_ANSWER=""
           read DELETE_ANSWER
-        if [ -n ${DELETE_ANSWER} ]; then
-          DELETE_ANSWER="Y"
-        fi
-        else
-          DELETE_ANSWER="Y"
+          if [ -z ${DELETE_ANSWER} ]; then
+            DELETE_ANSWER="Y"
+          fi
         fi
 	if ([ ${DELETE_ANSWER} = "y" ] || [ ${DELETE_ANSWER} = "Y" ]); then
           echoExec "rm -rf ${INTERELEMARRAY}" "/dev/null"
@@ -1409,13 +1408,11 @@ decompressPython()
     if [ -d ${PYTHON_FOLDER} ]; then
       if ([ $DO_UNATTENDED -eq 0 ] && [ ${DELETE_ANSWER} != "Y" ] && [ ${DELETE_ANSWER} != "N" ]); then
         echo "${PYTHON_FOLDER} folder exists, do you want to permanently remove it? (y)es/(n)o/(Y)es-to-all/(N)o-to-all"
+	DELETE_ANSWER=""
         read DELETE_ANSWER
-        if [ -n ${DELETE_ANSWER} ]; then
+        if [ -z ${DELETE_ANSWER} ]; then
           DELETE_ANSWER="Y"
         fi
-
-      else
-        DELETE_ANSWER="Y"
       fi
       if ([ ${DELETE_ANSWER} = "y" ] || [ ${DELETE_ANSWER} = "Y" ]); then
         echoExec "rm -rf ${PYTHON_FOLDER}" "/dev/null"
@@ -1446,13 +1443,11 @@ decompressPythonModules()
         if ([ $DO_UNATTENDED -eq 0 ] && [ ${DELETE_ANSWER} != "Y" ] && [ ${DELETE_ANSWER} != "N" ]); then
           elemAt $lib "${PYTHON_MODULES}"
           echo "${INTERELEMARRAY} folder exists, do you want to permanently remove it? (y)es/(n)o/(Y)es-to-all/(N)o-to-all"
+	  DELETE_ANSWER=""
           read DELETE_ANSWER
-        if [ -n ${DELETE_ANSWER} ]; then
-          DELETE_ANSWER="Y"
-        fi
-
-        else
-          DELETE_ANSWER="Y"
+          if [ -z ${DELETE_ANSWER} ]; then
+            DELETE_ANSWER="Y"
+          fi
         fi
 	if ([ ${DELETE_ANSWER} = "y" ] || [ ${DELETE_ANSWER} = "Y" ]); then
           echoExec "rm -rf ${INTERELEMARRAY}" "/dev/null"
