@@ -62,7 +62,9 @@ public class XmippUtil {
 	}
         
 
+
     public static String executeCommand(String[] command) throws Exception {
+
                  
         StringBuffer output = new StringBuffer();
 

@@ -14,7 +14,7 @@ from xmipp import MetaData, MetaDataInfo, Image, MDL_IMAGE, MDL_ITER, MDL_LL, AG
 getBlocksInMetaDataFile, MDL_ANGLE_ROT, MDL_ANGLE_TILT, MDValueEQ, MDL_SAMPLINGRATE
 from protlib_utils import runShowJ, getListFromVector, getListFromRangeString
 from protlib_parser import ProtocolParser
-from protlib_xmipp import redStr, cyanStr
+from protlib_xmipp import redStr, cyanStr, validateInputSize, mdFirstRow
 from protlib_gui_ext import showWarning
 from protlib_filesystem import xmippExists, findAcquisitionInfo, moveFile, linkAcquisitionInfo
 from protocol_ml2d import lastIteration
@@ -101,10 +101,9 @@ class ProtML3D(XmippProtocol):
     def validate(self):
         errors = []
         
-        md = MetaData(self.ImgMd)
+        md = mdFirstRow(self.ImgMd)
         if md.containsLabel(MDL_IMAGE):
             # Check that have same size as images:
-            from protlib_xmipp import validateInputSize
             mdRef = MetaData(self.RefMd)
             references = mdRef.getColumnValues(MDL_IMAGE)
             for ref in references:
