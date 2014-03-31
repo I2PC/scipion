@@ -247,11 +247,13 @@ def runJavaIJapp(memory, appName, args, batchMode=True, env=None):
     runJob(None, "java", args, runInBackground=batchMode, env=env)
     
 def runShowJ(inputFiles, memory="1g", extraParams=""):
+    env = None
+    
     if inputFiles.endswith('star'):
         from pyworkflow.em.packages.relion.convert import addRelionLabelsToEnviron
         env = os.environ.copy()
         addRelionLabelsToEnviron(env)    
-    runJavaIJapp(memory, "'xmipp.viewer.Viewer'", "-i %s %s" % (inputFiles, extraParams), True)
+    runJavaIJapp(memory, "'xmipp.viewer.Viewer'", "-i %s %s" % (inputFiles, extraParams), True, env)
     
 def runScipionShowJ(inputFiles, type, projectid, objid, inputimagesid, memory="1g", extraParams=""):
     env = None
