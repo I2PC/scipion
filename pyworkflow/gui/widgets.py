@@ -41,6 +41,9 @@ class Button(tk.Button):
         defaults = {'font': gui.fontButton}
         defaults.update(opts)
         
+        if 'bg' in defaults and defaults['bg'] is None:
+            del defaults['bg']
+        
         if imagePath is not None:
             btnImage = gui.getImage(imagePath, Button._images)
         else:

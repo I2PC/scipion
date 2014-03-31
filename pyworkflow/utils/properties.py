@@ -273,6 +273,10 @@ Define the number of processors to be used in the execution.
     ERROR_DIMENSIONS = 'Incorrect table width or height: '
     ERROR_WEBGL = 'Your web browser does not support or is not configured for WebGL. See [[http://get.webgl.org/][WebGL Support]] for more information.'
     
+    TOOLTIP_SEARCH = 'Search a given world in the text. '
+    TOOLTIP_REFRESH = 'Reload the content of the files in the viewer. '
+    TOOLTIP_EXTERNAL = 'Open the viewer in an external window. '
+    
     
 class Icon():
     # Project Content Template

@@ -455,8 +455,9 @@ class ProtocolsView(tk.Frame):
         #TODO: join 3 logs in just one tab
         ologframe = tk.Frame(tab)
         gui.configureWeigths(ologframe)
-        self.outputViewer = TextFileViewer(ologframe)
+        self.outputViewer = TextFileViewer(ologframe, allowOpen=True)
         self.outputViewer.grid(row=0, column=0, sticky='news')
+        self.outputViewer.windows = self.windows
         
 #         self.outputLogText = TaggedText(ologframe, width=40, height=15, 
 #                                         bg='black', foreground='white')
