@@ -54,10 +54,10 @@ void MpiProgAngularClassAverage::readParams()
         limitF = getDoubleParam("--limitF");
 
     inFile = getParam("-i");
-
+#ifdef NEVERDEFINED
     do_pcaSorting = false;
     do_pcaSorting= checkParam("--pcaSorting");
-
+#endif
     do_limitRFclass = false;
     do_limitR0class = false;
     do_limitR0per = false;
@@ -138,8 +138,9 @@ void MpiProgAngularClassAverage::defineParams()
     addParamsLine("                           : if (lRc<0 && lR>-100): discard highest <lRc> % in each class");
     addParamsLine("   [--limitRper <lRp>]         : if (lRp>0 && lRp< 100): discard lowest  <lRa> %");
     addParamsLine("                           : if (lRp<0 && lRp>-100): discard highest <lRa> %");
+#ifdef NEVERDEFINED
     addParamsLine("   [--pcaSorting ]         : Perform PCA sorting to obtain the average classes");
-
+#endif
     addParamsLine("==+ REALIGNMENT OF CLASSES ==");
     addParamsLine("   [--iter <nr_iter=0>]      : Number of iterations for re-alignment");
     addParamsLine("   [--Ri <ri=1>]             : Inner radius to limit rotational search");
@@ -463,12 +464,12 @@ void MpiProgAngularClassAverage::mpi_process(double * Def_3Dref_2Dref_JobNo)
     avg = Iempty;
     avg1 = Iempty;
     avg2 = Iempty;
-
+#ifdef NEVERDEFINED
     PCAMahalanobisAnalyzer pcaAnalyzerSplit1,pcaAnalyzerSplit2,pcaAnalyzer;
     pcaAnalyzer.clear();
     pcaAnalyzerSplit1.clear();
     pcaAnalyzerSplit2.clear();
-
+#endif
     // Loop over all images in the input docfile
     FOR_ALL_OBJECTS_IN_METADATA(_DF)
     {
@@ -501,8 +502,11 @@ void MpiProgAngularClassAverage::mpi_process(double * Def_3Dref_2Dref_JobNo)
             exp_number.push_back(this_image);
         }
 
-        if ( (nr_iter > 0) || do_pcaSorting)
-        {
+        if ( (nr_iter > 0))
+#ifdef NEVERDEFINED
+|| do_pcaSorting)
+#endif
+		{
             exp_split.push_back(isplit);
         }
 
@@ -516,11 +520,12 @@ void MpiProgAngularClassAverage::mpi_process(double * Def_3Dref_2Dref_JobNo)
         FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(mImg)
         DIRECT_MULTIDIM_ELEM(auxImg,n)=(float)DIRECT_MULTIDIM_ELEM(mImg,n);
 
+#ifdef NEVERDEFINED
         if (do_pcaSorting)
         {
             pcaAnalyzer.addVector(auxImg);
         }
-
+#endif
         // Add to average
         if (isplit == 0)
         {
@@ -534,10 +539,12 @@ void MpiProgAngularClassAverage::mpi_process(double * Def_3Dref_2Dref_JobNo)
             SFclass1.setValue(MDL_REF3D, ref3d, id);
             SFclass1.setValue(MDL_DEFGROUP, defGroup, id);
             SFclass1.setValue(MDL_ORDER, order_number, id);
+#ifdef NEVERDEFINED
             if (do_pcaSorting)
             {
                 pcaAnalyzerSplit1.addVector(auxImg);
             }
+#endif
         }
         else
         {
@@ -551,10 +558,12 @@ void MpiProgAngularClassAverage::mpi_process(double * Def_3Dref_2Dref_JobNo)
             SFclass2.setValue(MDL_REF3D, ref3d, id);
             SFclass2.setValue(MDL_DEFGROUP, defGroup, id);
             SFclass2.setValue(MDL_ORDER, order_number, id);
+#ifdef NEVERDEFINED
             if (do_pcaSorting)
             {
                 pcaAnalyzerSplit2.addVector(auxImg);
             }
+#endif
         }
 
         //#define DEBUG
@@ -582,6 +591,7 @@ void MpiProgAngularClassAverage::mpi_process(double * Def_3Dref_2Dref_JobNo)
     }
 
     //this_image = 0;
+#ifdef NEVERDEFINED
     if (do_pcaSorting)
     {
         avg().initZeros();
@@ -745,7 +755,7 @@ void MpiProgAngularClassAverage::mpi_process(double * Def_3Dref_2Dref_JobNo)
             }
         }
     }
-
+#endif
     // Re-alignment of the class
     if (nr_iter > 0)
     {
@@ -781,6 +791,7 @@ void MpiProgAngularClassAverage::mpi_process(double * Def_3Dref_2Dref_JobNo)
 
     avg() = avg1() + avg2();
     w = w1+w2;
+#ifdef NEVERDEFINED
 
     double t1;
     double t2;
@@ -828,11 +839,11 @@ void MpiProgAngularClassAverage::mpi_process(double * Def_3Dref_2Dref_JobNo)
             avg().initZeros();
         }
     }
-
+#endif
     avg.setWeight(w);
     avg1.setWeight(w1);
     avg2.setWeight(w2);
-
+    //TODO ROB may I drop DFSCOre
     DFscore.unionAll(_DF);
     mpi_writeController(order_number, avg, avg1, avg2, SFclass, SFclass1, SFclass2,
                         SFclassDiscarded,_DF, w1, w2, w, lockIndex);
