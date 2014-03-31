@@ -59,7 +59,7 @@ public class XmippUtil {
 	}
         
         public static String executeCommand(String[] command) throws Exception {
-        System.out.println(Arrays.toString(command));
+        
                  
         StringBuffer output = new StringBuffer();
 
