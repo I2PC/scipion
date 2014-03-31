@@ -61,11 +61,7 @@ public class XmippUtil {
 		return icon;
 	}
         
-
-    public static String executeCommand(String[] command) throws Exception {
-
-        System.out.println(Arrays.toString(command));
-
+        public static String executeCommand(String[] command) throws Exception {
                  
         StringBuffer output = new StringBuffer();
 
