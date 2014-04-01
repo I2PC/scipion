@@ -70,14 +70,14 @@ class TestRelionClassify2D(TestRelionBase):
         setupTestProject(cls)
         TestRelionBase.setData('mda')
         cls.protImport = cls.runImportParticles(cls.particlesFn, 3.5)
-        cls.protNormalize = cls.runNormalizeParticles(cls.protImport.outputParticles)
+#         cls.protNormalize = cls.runNormalizeParticles(cls.protImport.outputParticles)
             
     def testRelion2D(self):
         print "Run relion2D"
         prot2D = ProtRelionClassify2D(doCTF=False, maskRadiusA=170, numberOfMpi=4, numberOfThreads=1)
         prot2D.numberOfClasses.set(4)
         prot2D.numberOfIterations.set(3)
-        prot2D.inputParticles.set(self.protNormalize.outputParticles)
+        prot2D.inputParticles.set(self.protImport.outputParticles)
         self.proj.launchProtocol(prot2D, wait=True)        
         
         self.assertIsNotNone(getattr(prot2D, 'outputClasses', None), 
@@ -90,14 +90,14 @@ class TestRelionClassify3D(TestRelionBase):
         setupTestProject(cls)
         TestRelionBase.setData('mda')
         cls.protImport = cls.runImportParticles(cls.particlesFn, 3.5)
-        cls.protNormalize = cls.runNormalizeParticles(cls.protImport.outputParticles)
+#         cls.protNormalize = cls.runNormalizeParticles(cls.protImport.outputParticles)
         cls.protImportVol = cls.runImportVolumes(cls.vol, 3.5)
     
     def testProtRelionClassify3D(self):
         print "Run ProtRelionClassify3D"
         relion3DClass = ProtRelionClassify3D(numberOfClasses=3, numberOfIterations=4, doCTF=False, runMode=1, 
                                  numberOfMpi=2, numberOfThreads=2)
-        relion3DClass.inputParticles.set(self.protNormalize.outputParticles)
+        relion3DClass.inputParticles.set(self.protImport.outputParticles)
         relion3DClass.referenceVolume.set(self.protImportVol.outputVolume)
         self.proj.launchProtocol(relion3DClass, wait=True)
         
