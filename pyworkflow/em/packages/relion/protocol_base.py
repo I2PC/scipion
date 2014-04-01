@@ -101,7 +101,6 @@ class ProtRelionBase(EMProtocol):
         # and is restricted to only 3 digits.
         self._iterRegex = re.compile('_it(\d{3,3})_')
         
-        
     #--------------------------- DEFINE param functions --------------------------------------------   
     def _defineParams(self, form):
         self.IS_3D = not self.IS_2D
@@ -119,6 +118,15 @@ class ProtRelionBase(EMProtocol):
                       condition='not doContinue',
                       label="Input particles",  
                       help='Select the input images from the project.')   
+        form.addParam('doNormalize', BooleanParam, default=True,
+                      condition='not doContinue',
+                      label='Normalize',
+                      help='If set to True, particles will be normalized in the way RELION prefers it.')
+        form.addParam('backRadius', IntParam, default=0,
+                      condition='doNormalize and not doContinue',
+                      label='Background radius',
+                      help='Pixels outside this circle are assumed to be noise and their stddev '
+                      'is set to 1. Radius for background circle definition (in pix.).')
         form.addParam('continueRun', PointerParam, pointerClass=self.getClassName(),
                       condition='doContinue', allowNull=True,
                       label='Select previous run',
@@ -327,7 +335,8 @@ class ProtRelionBase(EMProtocol):
                               help='In the automated procedure to increase the angular samplings,\n'
                                    'local angular searches of -6/+6 times the sampling rate will\n'
                                    'be used from this angular sampling rate onwards.')
-                
+            
+        form.addParallelSection(threads=1, mpi=3)
          
     #--------------------------- INSERT steps functions --------------------------------------------  
     def _insertAllSteps(self): 
@@ -422,10 +431,30 @@ class ProtRelionBase(EMProtocol):
         """ Create the input file in STAR format as expected by Relion.
         If the input particles comes from Relion, just link the file. 
         """
-        createRelionInputParticles(self.inputParticles.get(), 
-                                   self._getFileName('input_star'),
+        imgSet = self.inputParticles.get()
+        imgsStar = getattr(imgSet, '_relionStar', None)
+        Xdim = imgSet.getDimensions()[0]
+        
+        createRelionInputParticles(imgSet, self._getFileName('input_star'),
                                    self._getFileName('input_mrcs'))
         
+        if imgsStar is None and self.doNormalize.get():
+            
+            self._loadEnvironment()
+            self._enterDir(self._getTmpPath())
+            imgFn = os.path.relpath(self._getFileName('input_mrcs'), self._getTmpPath())
+            outFn = removeBaseExt(basename(imgFn))
+            radius = self.backRadius.get()
+            if radius <= 0:
+                radius = Xdim / 2
+            params = '--operate_on %(imgFn)s --norm True --bg_radius %(radius)s --o %(outFn)s'
+            self.runJob(self._getProgram('relion_preprocess'), params % locals())
+            
+            moveFile(basename(imgFn), imgFn)
+            self._leaveDir()
+        else:
+            pass # Do nothing if imgsStar is not None or doNormalize is set False
+    
     def runRelionStep(self, params):
         """ Execute the relion steps with the give params. """
         self._loadEnvironment()
@@ -476,12 +505,10 @@ class ProtRelionBase(EMProtocol):
         return summary messages for CONTINUE EXECUTION.
         """
         return []
-
-
+    
     #--------------------------- UTILS functions --------------------------------------------
-    def _getProgram(self):
+    def _getProgram(self, program='relion_refine'):
         """ Get the program name depending on the MPI use or not. """
-        program = 'relion_refine'
         if self.numberOfMpi > 1:
             program += '_mpi'
         return program
