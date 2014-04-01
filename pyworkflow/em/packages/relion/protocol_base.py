@@ -335,7 +335,8 @@ class ProtRelionBase(EMProtocol):
                               help='In the automated procedure to increase the angular samplings,\n'
                                    'local angular searches of -6/+6 times the sampling rate will\n'
                                    'be used from this angular sampling rate onwards.')
-                
+            
+        form.addParallelSection(threads=1, mpi=3)
          
     #--------------------------- INSERT steps functions --------------------------------------------  
     def _insertAllSteps(self): 
