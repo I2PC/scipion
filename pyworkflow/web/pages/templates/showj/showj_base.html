@@ -81,6 +81,11 @@ function setImageSize(refreshElement){
 	imageWidth_val = parseInt({{imageDimensions.0}})
 	ratio = imageHeight_val/imageWidth_val 
 	
+	console.log("width:"+imageWidth_val + "; height:"+ imageHeight_val)
+	
+	console.log("ratio:"+ratio)
+	
+	
 	/* Check if zoom in pixel */
 	if (zoom_element.val().indexOf('px')!=-1){
 		/*  Get zoom value*/			
@@ -95,7 +100,7 @@ function setImageSize(refreshElement){
 			tableImages_width=Math.round(zoom_val*(imageWidth_val/imageHeight_val))+1
 			zoom_val_perc=Math.round((zoom_val/imageHeight_val)*100)
 		}
-		
+		console.log("zoom_val_perc:"+zoom_val_perc)
 	}
 	else{
 		zoom_val_perc=zoom_element.val()
@@ -107,10 +112,16 @@ function setImageSize(refreshElement){
 			zoom_val_pixel=Math.round((zoom_val_perc*imageHeight_val)/100)
 			tableImages_width=zoom_val_pixel
 		}
+		console.log("zoom_val_pixel:"+zoom_val_pixel)
 	}
 	
 	/*  CHECK ZOOM VALUE IS A NUMBER BETWEEN MAX AND MIN*/
 	tableImages_height=tableImages_width*ratio
+	
+	
+	console.log("tableImages_width:"+tableImages_width)
+	console.log("tableImages_height:"+tableImages_height)
+	
 		
 	if (isNaN(tableImages_width) || tableImages_width>{{form.imageMaxWidth.value}} || tableImages_width<{{form.imageMinWidth.value}} || tableImages_height>{{form.imageMaxHeight.value}} || tableImages_height<{{form.imageMinHeight.value}}){
 		alert('{{msg.ERROR_DIMENSIONS}}' + tableImages_width + 'px x ' + tableImages_height +'px.')
@@ -143,7 +154,7 @@ function setImageSize(refreshElement){
 	   	else{
 			newSrc = $(this).data("real_src");   
 	   	}
-	   	$(this).attr("height",tableImages_width)
+	   	$(this).attr("height",tableImages_height)
 	   	$(this).attr("width",tableImages_width)
    	
    		realSrc = newSrc.concat("&dim="+tableImages_width).concat("&"+d.getTime())

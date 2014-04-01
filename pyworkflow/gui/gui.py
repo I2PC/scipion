@@ -108,7 +108,7 @@ def aliasFont(fontAlias, fontKey):
     g = globals()
     g[fontAlias] = g[fontKey] 
     
-def setCommonFonts():
+def setCommonFonts(windows=None):
     """Set some predifined common fonts.
     Same conditions of setFont applies here."""
     setFont('fontNormal', family=cfgFontName, size=cfgFontSize)
@@ -116,6 +116,10 @@ def setCommonFonts():
     setFont('fontBold', family=cfgFontName, size=cfgFontSize, weight='bold')
     setFont('fontItalic', family=cfgFontName, size=cfgFontSize, slant='italic')
     setFont('fontLabel', family=cfgFontName, size=cfgFontSize+1, weight='bold')
+    if windows:
+        windows.fontBig = tkFont.Font(size=cfgFontSize+2, family=cfgFontName, weight='bold')
+        windows.font = tkFont.Font(size=cfgFontSize, family=cfgFontName)
+        windows.fontBold = tkFont.Font(size=cfgFontSize, family=cfgFontName, weight='bold') 
 
 def changeFontSizeByDeltha(font, deltha, minSize=-999, maxSize=999):
     size = font['size']
@@ -133,7 +137,7 @@ def changeFontSize(font, event, minSize=-999, maxSize=999):
 IMAGE related variables and functions 
 """
 
-def getImage(imageName, imgDict=None, tkImage=True, percent=100):
+def getImage(imageName, imgDict=None, tkImage=True, percent=100, maxheight=None):
     """ Search for the image in the RESOURCES path list. """
     if imageName is None:
         return None
@@ -144,10 +148,14 @@ def getImage(imageName, imgDict=None, tkImage=True, percent=100):
     if imagePath:
         from PIL import Image, ImageTk
         image = Image.open(imagePath)
+        w, h = image.size
+        newSize = None
         if percent != 100: # Display image with other dimensions
-            (w, h) = image.size
             fp = float(percent)/100.0
             newSize = int(fp * w), int(fp * h)
+        elif maxheight and h > maxheight:
+            newSize = int(w * float(maxheight)/h), maxheight
+        if newSize:
             image.thumbnail(newSize, Image.ANTIALIAS)
         if tkImage:
             image = ImageTk.PhotoImage(image)
@@ -262,7 +270,7 @@ class Window():
         self._w, self._h, self._x, self._y = 0, 0, 0, 0
         self.root.bind("<Configure>", self._configure)
         self.master = masterWindow
-        setCommonFonts()
+        setCommonFonts(self)
         
     def desiredDimensions(self):
         """This method should be used by subclasses
@@ -320,8 +328,8 @@ class Window():
             self.master.root.focus_set()
         self.close()
         
-    def getImage(self, imgName, percent=100):
-        return getImage(imgName, self._images, percent=percent)
+    def getImage(self, imgName, percent=100, maxheight=None):
+        return getImage(imgName, self._images, percent=percent, maxheight=maxheight)
     
     def createMainMenu(self, menuConfig):
         """Create Main menu from a given configuration"""

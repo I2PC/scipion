@@ -39,8 +39,6 @@ from pyworkflow.gui.widgets import Button
 from pyworkflow.gui.graph import LevelTree
 from pyworkflow.gui.canvas import Canvas, ImageBox
 from pyworkflow.em.packages.xmipp3.viewer import XmippViewer, runShowJ
-from pyworkflow.gui.text import showTextfileViewer
-
 from protocol_ward import SpiderProtClassifyWard
 
 

@@ -30,8 +30,8 @@ Text based widgets.
 import Tkinter as tk
 import ttk, os, gui
 from pyworkflow.utils import *
-from widgets import Scrollable, Button
-from pyworkflow.utils.properties import Message, Color
+from widgets import Scrollable, Button, IconButton
+from pyworkflow.utils.properties import Message, Color, Icon
 
 
 
@@ -367,24 +367,39 @@ class OutputText(Text):
             self.refreshAlarm = None
 
   
-class TextfileViewer(tk.Frame):
+class TextFileViewer(tk.Frame):
     """ Implementation of a simple textfile viewer """
     
     LabelBgColor = "white"
     
-    def __init__(self, master, filelist):
+    def __init__(self, master, filelist=[], 
+                 allowSearch=True, allowRefresh=True, allowOpen=False):
         tk.Frame.__init__(self, master)
         self.searchList = None
         self.lastSearch = None
         self.refreshAlarm = None
-        self.filelist = filelist
+        self.filelist = []
         self.taList = []
         self.fontDict = {}
-        self.createWidgets()
+        self._allowSearch = allowSearch
+        self._allowRefresh = allowRefresh
+        self._allowOpen = allowOpen
+        self.createWidgets(filelist)
         self.master = master
         self.addBinding()
         
-    def addFileTab(self, filename):
+    def addFile(self, filename):
+        self.filelist.append(filename)
+        self._addFileTab(filename)
+        
+    def clear(self):
+        """ Remove all added files. """
+        self.filelist = []
+        for _ in self.taList:
+            self.notebook.forget(0)       
+        self.taList = []
+        
+    def _addFileTab(self, filename):
         tab = tk.Frame(self.notebook)
         tab.rowconfigure(0, weight=1)
         tab.columnconfigure(0, weight=1)
@@ -394,21 +409,45 @@ class TextfileViewer(tk.Frame):
         tabText = "   %s   " % os.path.basename(filename)
         self.notebook.add(tab, text=tabText)        
     
-    def createWidgets(self):
+    def createWidgets(self, filelist):
         #registerCommonFonts()
         self.columnconfigure(0, weight=1)
         self.rowconfigure(1, weight=1)        
-        
+
+        #Create toolbar frame
+        toolbarFrame = tk.Frame(self)
+        toolbarFrame.grid(column=0, row=0, padx=5, sticky='new')
+        gui.configureWeigths(toolbarFrame)
+        #Add the search box
+        right = tk.Frame(toolbarFrame)
+        right.grid(column=1, row=0, sticky='ne')        
+        self.searchVar = tk.StringVar()
+        if self._allowSearch:
+            tk.Label(right, text='Search:').grid(row=0, column=3, padx=5)
+            self.searchEntry = tk.Entry(right, textvariable=self.searchVar)
+            self.searchEntry.grid(row=0, column=4, sticky='ew', padx=5)
+            btn = IconButton(right, "Search", Icon.ACTION_SEARCH, tooltip=Message.TOOLTIP_SEARCH,
+                             command=self.findText, bg=None)
+            btn.grid(row=0, column=5, padx=(0, 5))
+        if self._allowRefresh:
+            btn = IconButton(right, "Refresh", Icon.ACTION_REFRESH, tooltip=Message.TOOLTIP_REFRESH, 
+                             command=self.refreshAll, bg=None)
+            btn.grid(row=0, column=6, padx=(0, 5), pady=2)
+        if self._allowOpen:
+            btn = IconButton(right, "Open external", Icon.ACTION_REFERENCES, tooltip=Message.TOOLTIP_EXTERNAL,
+                             command=self._openExternal, bg=None)
+            btn.grid(row=0, column=7, padx=(0, 5), pady=2)
+
         #Create tabs frame
         tabsFrame = tk.Frame(self)
-        tabsFrame.grid(column=0, row=1, padx=5, pady=5, sticky="nsew")
+        tabsFrame.grid(column=0, row=1, padx=5, pady=(0, 5), sticky="nsew")
         tabsFrame.columnconfigure(0, weight=1)
         tabsFrame.rowconfigure(0, weight=1)
         self.notebook = ttk.Notebook(tabsFrame)  
         self.notebook.rowconfigure(0, weight=1)
         self.notebook.columnconfigure(0, weight=1)      
-        for f in self.filelist:
-            self.addFileTab(f)
+        for f in filelist:
+            self._addFileTab(f)
         self.notebook.grid(column=0, row=0, sticky='nsew', padx=5, pady=5)        
 
     def addBinding(self):
@@ -482,23 +521,18 @@ class TextfileViewer(tk.Frame):
         text.tag_config('found_current', foreground='yellow', background='red')
         text.tag_add('found_current', idx, lastidx)
         text.see(idx)
+        
+    def _openExternal(self):
+        """ Open a new window with an external viewer. """
+        showTextFileViewer("File viewer", self.filelist, self.windows)
   
-def showTextfileViewer(title, filelist, parent=None, main=False):
-    if main:
-        root = tk.Tk()
-    else:
-        root = tk.Toplevel()
-    root.withdraw()
-    root.title(title)
-    from xmipp import FileName
-    files = [FileName(f).removeBlockName() for f in filelist]
-    l = TextfileViewer(root, files)
-    root.columnconfigure(0, weight=1)
-    root.rowconfigure(0, weight=1)
-    l.grid(column=0, row=0, sticky='nsew')
-    gui.centerWindows(root, refWindows=parent)
-    root.deiconify()
-    root.mainloop()
+  
+def showTextFileViewer(title, filelist, parent=None, main=False):
+    w = gui.Window(title, parent, minsize=(900, 800))
+    viewer = TextFileViewer(w.root, filelist)
+    viewer.grid(row=0, column=0, sticky='news')
+    gui.configureWeigths(w.root)
+    w.show()
 
     
 if __name__ == '__main__':
@@ -506,7 +540,7 @@ if __name__ == '__main__':
     root = tk.Tk()
     root.withdraw()
     root.title("View files")
-    l = TextfileViewer(root, filelist=sys.argv[1:])
+    l = TextFileViewer(root, filelist=sys.argv[1:])
     l.pack(side=tk.TOP, fill=tk.BOTH)
     gui.centerWindows(root)
     root.deiconify()

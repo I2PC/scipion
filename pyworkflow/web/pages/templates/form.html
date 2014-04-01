@@ -73,10 +73,10 @@
 				Protocol: {{protocol.getClassLabel}} 
 			</h3>
 			<a href="javascript:infoPopup('Documentation','{{protocol.htmlDoc|escapejs}}');" style="float:right">
-				<i class="fa fa-question-circle"></i>&nbsp;{{msg.TITLE_DOC}}&nbsp;	
+				<i class="fa fa-question-circle"></i>&nbsp;{{msg.LABEL_HELP}}&nbsp;	
 			</a>
 			<a href="javascript:infoPopup('Cite','{{protocol.htmlCitations|escapejs}}');" style="float:right">
-				<i class="fa fa-external-link"></i>&nbsp;{{msg.TITLE_CITE}}&nbsp;
+				<i class="fa fa-external-link"></i>&nbsp;{{msg.LABEL_CITE}}&nbsp;
 			</a>
 		</div>
 		
@@ -126,7 +126,7 @@
 						</tr>
 						<tr>
 							<td>
-								{{msg.TITLE_RUN_MODE}}
+								{{msg.LABEL_RUNMODE}}
 							</td>
 							<td>
 								<select id="{{msg.VAR_RUN_MODE}}_select" name="{{msg.VAR_RUN_MODE}}" size="1" onchange="javascript:onChangeEnumParamCombo('runMode_select', '{{msg.VAR_RUN_MODE}}');">
@@ -137,7 +137,7 @@
 						</tr>
 						<tr>
 							<td>
-								{{msg.TITLE_EXPERT}}
+								{{msg.LABEL_EXPERT}}
 							</td>
 							<td>
 								<select name="{{msg.VAR_EXPERT}}" size=1
@@ -158,7 +158,7 @@
 					<table>
 						<tr>
 							<td>
-								{{msg.TITLE_EXEC_HOST}}
+								{{msg.LABEL_HOST}}
 							</td>
 							<td>
 								<select name="{{msg.VAR_EXEC_HOST}}" size=1 onChange="">
@@ -170,17 +170,17 @@
 						</tr>
 						<tr>
 							<td>
-								{{msg.TITLE_THREADS}}&nbsp;		
+								{{msg.LABEL_THREADS}}&nbsp;		
 								<input type="text" id="{{msg.VAR_THREADS}}_input" name="{{msg.VAR_THREADS}}" value="{{numberOfThreads}}" style="width:3em;">
 							</td>
 							<td >
-								{{msg.TITLE_MPI}}&nbsp;		
+								{{msg.LABEL_MPI}}&nbsp;		
 								<input type="text" id="{{msg.VAR_MPI}}_input" name="{{msg.VAR_MPI}}" value="{{numberOfMpi}}" style="width:3em;">
 							</td>
 						</tr>
 						<tr>
 							<td>
-								{{msg.TITLE_QUEUE}}
+								{{msg.LABEL_QUEUE}}
 							</td>
 							<td>
 							  <input type="radio" id="queue_yes" name="{{msg.VAR_QUEUE}}" value="yes"/>{{msg.LABEL_QUEUE_YES}}

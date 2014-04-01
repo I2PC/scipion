@@ -265,10 +265,13 @@ class Protocol(Step):
         self.__project = args.get('project', None)
         
         # For non-parallel protocols mpi=1 and threads=1
-        if not hasattr(self, 'numberOfMpi'):
+        self.allowMpi = hasattr(self, 'numberOfMpi')
+        if not self.allowMpi:
             self.numberOfMpi = Integer(1)
         
-        if not hasattr(self, 'numberOfThreads'):
+        self.allowThreads = hasattr(self, 'numberOfThreads')
+        
+        if not self.allowThreads:
             self.numberOfThreads = Integer(1)
         
         # Check if MPI or threads are passed in **args, mainly used in tests
@@ -758,7 +761,7 @@ class Protocol(Step):
         Otherwise append the new content to the old one.
         Also open logs files and redirect the systems streams.
         """
-        self._log = ScipionLogger(self.__getLogPaths()[2]) 
+        self._log = ScipionLogger(self.getLogPaths()[2]) 
                
         if self.runMode.get() == MODE_RESTART:
             mode = 'w+'
@@ -772,12 +775,12 @@ class Protocol(Step):
         sys.stdout = self.__fOut
         sys.stderr = self.__fErr
     
-    def __getLogPaths(self):
+    def getLogPaths(self):
         return self._getLogsPath('run.stdout'), self._getLogsPath('run.stderr'), self._getLogsPath('run.log')
     
     def __openLogsFiles(self, mode):
-        self.__fOut = open(self.__getLogPaths()[0], mode)
-        self.__fErr = open(self.__getLogPaths()[1], mode)
+        self.__fOut = open(self.getLogPaths()[0], mode)
+        self.__fErr = open(self.getLogPaths()[1], mode)
         
     def __closeLogsFiles(self):       
         self.__fOut.close()
@@ -792,13 +795,13 @@ class Protocol(Step):
         
     def getLogsAsStrings(self):
         fOutString = fErrString = fScpnString = ''
-        if os.path.exists(self.__getLogPaths()[0]) and os.path.exists(self.__getLogPaths()[1]) and os.path.exists(self.__getLogPaths()[2]):
+        if os.path.exists(self.getLogPaths()[0]) and os.path.exists(self.getLogPaths()[1]) and os.path.exists(self.getLogPaths()[2]):
             self.__openLogsFiles('r')
             fOutString = self.__fOut.read()
             fErrString = self.__fErr.read()
             self.__closeLogsFiles()
             
-            fScpn = open(self.__getLogPaths()[2], 'r')
+            fScpn = open(self.getLogPaths()[2], 'r')
             fScpnString = fScpn.read()
             fScpn.close()
             
@@ -970,7 +973,10 @@ class Protocol(Step):
         baseSummary = self._summary()
         if not baseSummary:
             baseSummary = []
-        return baseSummary + ['', '*Comments:* ', self.getObjComment(), error]
+        comments = self.getObjComment()
+        if comments:
+            baseSummary += ['', '*Comments:* ', comments]
+        return baseSummary + ['', error]
     
     def _citations(self):
         """ Should be implemented in subclasses. See citations. """

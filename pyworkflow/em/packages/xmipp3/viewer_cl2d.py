@@ -83,7 +83,7 @@ class XmippCL2DViewer(ProtocolViewer):
         fnSubset = self._getSubset()
         fnHierarchy = self.protocol._getExtraPath("classes%s_hierarchy.txt" % fnSubset)
         if os.path.exists(fnHierarchy):
-            showTextfileViewer(fnHierarchy,[fnHierarchy]) 
+            showTextFileViewer(fnHierarchy,[fnHierarchy]) 
             
     def _viewLevelFiles(self, e=None):
 

@@ -190,7 +190,7 @@ function changeMode(mode){
 		{% if not form.mirrorY.is_hidden or not form.applyTransformMatrix.is_hidden or not form.onlyShifts.is_hidden or not form.wrap.is_hidden %}
 			<div id="optionsContainer" class="sectionMenu">
 				<a id="optionsButton" href="javascript:showHideOptionMenu();" class="btn buttonGrey" style="padding: 5px 10px;"><i class="fa fa-wrench"></i></a>
-				<ul id="optionsList">
+				<ul id="optionsList" style="position:initial;">
 					<li>{{ form.mirrorY }} {{ form.mirrorY.label_tag }}</li>
 					<li>{{ form.applyTransformMatrix }} {{ form.applyTransformMatrix.label_tag }}</li>
 					<li>{{ form.onlyShifts }} {{ form.onlyShifts.label_tag }}</li>
