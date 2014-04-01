@@ -323,6 +323,13 @@ class ProtFrealignBase(EMProtocol):
         line.addParam('lowResolRefine', FloatParam, default='200.0', label='Low')
         line.addParam('highResolRefine', FloatParam, default='25.0', label='High')
 
+        form.addParam('resolClass', FloatParam, default='25.0', 
+                      label='High resolution for classification (A):',
+                      help='Parameter *RCLAS* in FREALIGN\n\n'
+                            'High-resolution limit used for classification.\n'
+                            'It should typically be set to the same resolution\n'
+                            'limit used also for the refinement, or a bit lower.\n'
+                            'Resolution of the data included in the search/refine')
         form.addParam('defocusUncertainty', FloatParam, default='200.0', 
                       label='Defocus uncertainty (A):', expertLevel=LEVEL_EXPERT,
                       help='Parameter *DFSIG* in FREALIGN\n\n'
@@ -425,7 +432,6 @@ class ProtFrealignBase(EMProtocol):
             lastPart = lastPart + blockParticles[block]
             params['finalParticle'] = lastPart
             numberOfBlock = block + 1
-            params['frealignOut'] = 'frealign_Output_%02d.log' % numberOfBlock
             paramDic = self._setParamsRefineParticles(iter, numberOfBlock)
             paramsRefine = dict(initParamsDict.items() + params.items() + paramDic.items())
             f = self.__openParamFile(block + 1, paramsRefine)
@@ -474,7 +480,6 @@ class ProtFrealignBase(EMProtocol):
         param['inputParFn'] = 'particles_%02d_' % block + 'iter_%03d.par' % prevIter
         param['initParticle'] = iniPart
         param['finalParticle'] = lastPart
-        param['frealignOut'] = 'frealign_Output_%02d.log' % block
 
         paramDic = self._setParamsRefineParticles(iter, block)
         initParamsDict = self._getParamsIteration(imgSet, iter)
@@ -786,14 +791,13 @@ class ProtFrealignBase(EMProtocol):
         paramDic['FSC3DR2'] = 'volume_2_iter_%03d.mrc' % iter
         paramDic['VolPhResidual'] = 'volume_phasediffs_iter_%03d' % iter
         paramDic['VolpointSpread'] = 'volume_pointspread_iter_%03d' % iter
-        paramDic['frealignOut'] = 'fralign_volume_reconstruct_iter_%03d' % iter
         return paramDic
         
     def __openParamFile(self, blockNumber, paramsDict):
         """ Open the file and write the first part of the block param file. """
         if not exists(FREALIGN_PATH):
             raise Exception('Missing ' + FREALIGN)
-        initaLines = """%(frealign)s << eot > %(frealignOut)s
+        initaLines = """%(frealign)s << eot
 M,%(mode2)s,%(doMagRefinement)s,%(doDefocusRef)s,%(doAstigRef)s,%(doDefocusPartRef)s,%(metEwaldSphere)s,%(doExtraRealSpaceSym)s,%(doWienerFilter)s,%(doBfactor)s,%(writeMatchProj)s,%(metFsc)s,%(doAditionalStatisFSC)s,%(memory)s,%(interpolation)s
 %(outerRadius)s,%(innerRadius)s,%(sampling3DR)s,%(molMass)s,%(ampContrast)s,%(ThresholdMask)s,%(pseudoBFactor)s,%(avePhaseResidual)s,%(angStepSize)s,%(numberRandomSearch)s,%(numberPotentialMatches)s
 %(paramRefine)s
@@ -834,7 +838,7 @@ eot
 
         if not exists(FREALIGN_PATH):
             raise Exception('Missing ' + FREALIGN)
-        args = """%(frealign)s  << eot >> %(frealignOut)s
+        args = """%(frealign)s  << eot
 M,%(mode)s,%(doMagRefinement)s,%(doDefocusRef)s,%(doAstigRef)s,%(doDefocusPartRef)s,%(metEwaldSphere)s,%(doExtraRealSpaceSym)s,%(doWienerFilter)s,%(doBfactor)s,%(writeMatchProj)s,%(metFsc)s,%(doAditionalStatisFSC)s,%(memory)s,%(interpolation)s
 %(outerRadius)s,%(innerRadius)s,%(sampling3DR)s,%(molMass)s,%(ampContrast)s,%(ThresholdMask)s,%(pseudoBFactor)s,%(avePhaseResidual)s,%(angStepSize)s,%(numberRandomSearch)s,%(numberPotentialMatches)s
 %(paramRefine)s
