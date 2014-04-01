@@ -180,20 +180,20 @@ class ProtFrealignBase(EMProtocol):
         
         form.addSection(label='General Parameters')
         
-        form.addParam('innerRadius', FloatParam, default='0.0', 
-                      label='Inner radius of reconstruction (A):', 
-                      help='Parameter *RI* in FREALIGN\n\n'
+        line = form.addLine('Reconstruction radius (A):',
+                      help='Parameters *RI* and *RO* in FREALIGN\n\n'
                            'In Angstroms from centre of particle.\n'
-                           'Enter the inner radius of the volume to be reconstructed.\n' 
+                           'Enter the inner and outer radius of the volume to be reconstructed.\n' 
                            'This is useful for reconstructions of viruses and other\n' 
-                           'particles that might be hollow or have a disordered core.')
-        form.addParam('outerRadius', FloatParam, default='108.0', 
-                      label='Outer radius of reconstruction (A):', 
-                      help='Parameter *RO* in FREALIGN\n\n'
-                           'In Angstroms from centre of particle.\n'
-                           'Enter the outer radius of the volume to be reconstructed.\n'
-                           'The program will also apply a mask with a cosine edge to the particle image\n'
-                           'before processing (done inside *CTFAPPLY* using  *HALFW=6* pixels for cosine bell).')
+                           'particles that might be hollow or have a disordered core.\n'
+                           'The program will also apply a mask with a cosine edge to \n'
+                           'the particle image before processing \n'
+                           '(done inside *CTFAPPLY* using  *HALFW=6* pixels for cosine bell).')
+        line.addParam('innerRadius', FloatParam, default='0.0', 
+                      label='Inner')
+        line.addParam('outerRadius', FloatParam, default='108.0', 
+                      label='Outer')
+                       
         form.addParam('molMass', FloatParam, default='500.0', 
                       label='Molecular mass of the specimen (kDa):',
                       condition="doWienerFilter",
@@ -301,35 +301,28 @@ class ProtFrealignBase(EMProtocol):
                       label='Beam tilt in Y direction (in mrad):', expertLevel=LEVEL_EXPERT,
                       help='Parameter *TY* in FREALIGN.')
         form.addParam('resolution', FloatParam, default='10.0', 
-                      label='Resol. of reconstruction (A):',
+                      label='Resolution of reconstruction (A):',
                       help='Parameter *RREC* in FREALIGN\n\n'
                            'Resolution to which the reconstruction is calculated.\n'
                            'If several datasets have different values, the data is individually\n'
                            'limited in the summation to the RREC resolution but symmetry is\n'
                            'applied, statistics output and the final map calculated to the\n'
                            'maximum resolution requested for any dataset.')
-        form.addParam('lowResolRefine', FloatParam, default='200.0', 
-                      label='Low resolution in refinement (A):',
-                      help='Parameter *RMAX1* in FREALIGN\n\n'
+        
+        line = form.addLine('Resolution in refinement (A)',
+                      help='Parameters *RMIN* and *RMAX* in FREALIGN\n\n'
                            'Resolution of the data included in the search/refinement. These\n'
-                           'two parameters (RMAX1,RMAX2) are very important.  The successful\n'
+                           'two parameters (RMIN,RMAX) are very important.  The successful\n'
                            'alignment of particles depends critically on the signal-to-noise\n'
                            'ratio of thecross-correlation or phase residual calculation, and\n'
                            'exclusion of weak data at high resolution or spurious, very strong\n'
                            'artefacts at low resolution can make a big difference.  Success can\n'
                            'be judged by whether the X,Y coordinates of the particle centres are\n'
                            'reasonable.')
-        form.addParam('highResolRefine', FloatParam, default='25.0', 
-                      label='High resolution in refinement (A):',
-                      help='Parameter *RMAX2* in FREALIGN\n\n'
-                           'Resolution of the data included in the search/refinement. These\n'
-                           'two parameters (RMAX1,RMAX2) are very important.  The successful\n'
-                           'alignment of particles depends critically on the signal-to-noise\n'
-                           'ratio of thecross-correlation or phase residual calculation, and\n'
-                           'exclusion of weak data at high resolution or spurious, very strong\n'
-                           'artefacts at low resolution can make a big difference.  Success can\n'
-                           'be judged by whether the X,Y coordinates of the particle centres are\n'
-                           'reasonable.')
+        
+        line.addParam('lowResolRefine', FloatParam, default='200.0', label='Low')
+        line.addParam('highResolRefine', FloatParam, default='25.0', label='High')
+
         form.addParam('defocusUncertainty', FloatParam, default='200.0', 
                       label='Defocus uncertainty (A):', expertLevel=LEVEL_EXPERT,
                       help='Parameter *DFSIG* in FREALIGN\n\n'
@@ -349,7 +342,7 @@ class ProtFrealignBase(EMProtocol):
                            'high values in the FSC curve (se publication #2 above). FREALIGN uses an\n'
                            'automatic weighting scheme and RBFACT should normally be set to 0.0.')
 
-        form.addParallelSection(threads=1, mpi=1)
+        form.addParallelSection(threads=1, mpi=0)
     
     #--------------------------- INSERT steps functions --------------------------------------------
     def _insertAllSteps(self):
@@ -503,7 +496,7 @@ class ProtFrealignBase(EMProtocol):
         finalParticle = imgSet.getSize()
         params = self._getParamsIteration(imgSet, iter)
         
-        os.environ['NCPUS'] = self.numberOfThreads.get()
+        os.environ['NCPUS'] = str(self.numberOfThreads.get())
         params['frealign'] = FREALIGNMP_PATH
         params['outputParFn'] = 'output_param_file_%06d' % initParticle + '_%06d_' % finalParticle + 'iter_%03d.par' % iter
         params['initParticle'] = initParticle
@@ -585,6 +578,7 @@ class ProtFrealignBase(EMProtocol):
                         'resol': self.resolution.get(),
                         'lowRes': self.lowResolRefine.get(),
                         'highRes': self.highResolRefine.get(),
+                        'resolClass': self.resolClass.get(),
                         'defocusUncertainty': self.defocusUncertainty.get(),
                         'Bfactor': self.Bfactor.get(),
                         'sampling3DR': samplingRate3DR
@@ -806,7 +800,7 @@ M,%(mode2)s,%(doMagRefinement)s,%(doDefocusRef)s,%(doAstigRef)s,%(doDefocusPartR
 %(initParticle)s,%(finalParticle)s
 %(sym)s
 %(relMagnification)s,%(scannedPixelSize)s,%(targetScore)s,%(score)s,%(sphericalAberration)s,%(voltage)s,%(beamTiltX)s,%(beamTiltY)s
-%(resol)s,%(lowRes)s,%(highRes)s,%(defocusUncertainty)s,%(Bfactor)s
+%(resol)s,%(lowRes)s,%(highRes)s,%(resolClass)s,%(defocusUncertainty)s,%(Bfactor)s
 %(imageFn)s
 %(imgFnMatch)s
 """
@@ -847,7 +841,7 @@ M,%(mode)s,%(doMagRefinement)s,%(doDefocusRef)s,%(doAstigRef)s,%(doDefocusPartRe
 %(initParticle)s,%(finalParticle)s
 %(sym)s
 %(relMagnification)s,%(scannedPixelSize)s,%(targetScore)s,%(score)s,%(sphericalAberration)s,%(voltage)s,%(beamTiltX)s,%(beamTiltY)s
-%(resol)s,%(lowRes)s,%(highRes)s,%(defocusUncertainty)s,%(Bfactor)s
+%(resol)s,%(lowRes)s,%(highRes)s,%(resolClass)s,%(defocusUncertainty)s,%(Bfactor)s
 %(imageFn)s
 %(imgFnMatch)s
 %(inputParFn)s

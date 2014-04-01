@@ -45,6 +45,8 @@ class FormElement(OrderedObject):
         self.label = String(args.get('label', None))
         self.expertLevel = Integer(args.get('expertLevel', LEVEL_NORMAL))
         self.condition = String(args.get('condition', None))
+        self._isImportant = Boolean(args.get('important', False))
+        self.help = String(args.get('help', None))
         # This two list will be filled by the Form
         # which have a global-view of all parameters
         self._dependants = [] # All param names in which condition appears this param
@@ -52,6 +54,9 @@ class FormElement(OrderedObject):
         
     def isExpert(self):
         return self.expertLevel > LEVEL_NORMAL
+    
+    def isImportant(self):
+        return self._isImportant.get()
     
     def hasCondition(self):
         return self.condition.hasValue()
@@ -68,9 +73,7 @@ class Param(FormElement):
         self.default = String(args.get('default', None))
         #from pyworkflow.web.app.views_util import parseText
         #self.help = parseText(String(args.get('help', None)))
-        self.help = String(args.get('help', None))
 
-        self.isImportant = Boolean(args.get('important', False))
         self.validators = args.get('validators', [])
         
     def __str__(self):
@@ -90,13 +93,49 @@ class Param(FormElement):
         return errors
     
     
-class Section(FormElement):
-    """Definition of a section to hold other params"""
-    def __init__(self, form, **args):
+class ElementGroup(FormElement):
+    """ Class to group some params in the form.
+    Such as: Labeled group or params in the same line. 
+    """
+    def __init__(self, form=None, **args):
         FormElement.__init__(self, **args)
         self._form = form
+        self._paramList = []    
+    
+    def iterParams(self):
+        """ Return key and param for every child param. """
+        for name in self._paramList:
+            yield (name, self._form.getParam(name))
+
+    def addParam(self, paramName, ParamClass, **args):
+        """Add a new param to the group"""
+        param = ParamClass(**args)
+        self._paramList.append(paramName)
+        self._form.registerParam(paramName, param)
+        return param
+    
+    def addHidden(self, paramName, ParamClass, **args):
+        """Add a hidden parameter to be used in conditions. """
+        args.update({'label': '', 'condition': 'False'})
+        self.addParam(paramName, ParamClass, **args)
+    
+    
+# ----------- Some type of ElementGroup --------------------------
+class Line(ElementGroup):
+    """ Group to put some parameters in the same line. """
+    pass
+
+
+class Group(ElementGroup):
+    """ Group some parameters with a labeled frame. """
+    pass
+
+    
+class Section(ElementGroup):
+    """Definition of a section to hold other params"""
+    def __init__(self, form, **args):
+        ElementGroup.__init__(self, form, **args)
         self.questionParam = String(args.get('questionParam', ''))
-        self._paramList = []
     
     def hasQuestion(self):
         """Return True if a question param was set"""
@@ -107,18 +146,18 @@ class Section(FormElement):
         return self.questionParam.get()
     
     def getQuestion(self):
-        """Return the question param"""
+        """ Return the question param"""
         return self._form.getParam(self.questionParam.get())
-    
-    def addParam(self, name):
-        """Add a new param to last section"""
-        self._paramList.append(name)
-    
-    def iterParams(self):
-        """Return key and param for every child param"""
-        for name in self._paramList:
-            yield (name, self._form.getParam(name))
 
+    def addGroup(self, groupName, **kwargs):
+        return self.addParam(groupName, Group, form=self._form, 
+                             label=groupName, **kwargs)
+
+    def addLine(self, lineName, **kwargs):
+        return self.addParam(lineName, Line, form=self._form, 
+                             label=lineName, **kwargs)        
+    
+            
                     
 class Form(object):
     """Store all sections and parameters"""
@@ -137,18 +176,24 @@ class Form(object):
         self.lastSection = Section(self, label=label, **args)
         self._sectionList.append(self.lastSection)
         return self.lastSection
-
-    def addParam(self, paramName, ParamClass, **args):
-        """Add a new param to last section"""
-        param = ParamClass(**args)
-        self._paramsDict[paramName] = param
-        self._analizeCondition(paramName, param)
-        return self.lastSection.addParam(paramName)
     
-    def addHidden(self, paramName, ParamClass, **args):
-        """Add a hidden parameter to be used in conditions. """
-        args.update({'label': '', 'condition': 'False'})
-        self.addParam(paramName, ParamClass, **args)
+    def addGroup(self, *args, **kwargs):
+        return self.lastSection.addGroup(*args, **kwargs)
+    
+    def addLine(self, *args, **kwargs):
+        return self.lastSection.addLine(*args, **kwargs)      
+
+    def registerParam(self, paramName, param):
+        """ Register a given param in the form. """
+        self._paramsDict[paramName] = param        
+        self._analizeCondition(paramName, param)
+        
+    def addParam(self, *args, **kwargs):
+        """Add a new param to last section"""
+        return self.lastSection.addParam(*args, **kwargs)
+    
+    def addHidden(self, *args, **kwargs):
+        return self.lastSection.addHidden(*args, **kwargs)
     
     def _analizeCondition(self, paramName, param):
         if param.hasCondition():
@@ -158,10 +203,6 @@ class Form(object):
                 if self.hasParam(t):
                     param._conditionParams.append(t)
                     self.getParam(t)._dependants.append(paramName)
-                    #print "tokens found: ", self.getParam(t)._dependants
-#                else:
-#                    raise Exception("Invalid token '%s' used in param '%s' condition" 
-#                                    % (t, paramName))
 
     def escapeLiteral(self, value):
         if isinstance(value, str):
@@ -215,9 +256,16 @@ class Form(object):
     def iterSections(self):
         return self._sectionList
     
-    def iterParams(self):
+    def iterAllParams(self):
+        """ Iter all parameters, including ElementGroups. """
         return self._paramsDict.iteritems()
     
+    def iterParams(self):
+        """ Iter parameters disregarding the ElementGroups. """
+        for k, v in self._paramsDict.iteritems():
+            if not isinstance(v, ElementGroup):
+                yield k, v
+        
     def iterPointerParams(self):
         for paramName, param in self._paramsDict.iteritems():
             if isinstance(param, PointerParam):

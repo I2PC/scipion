@@ -99,6 +99,8 @@ def setFont(fontKey, update=False, **opts):
     created."""
     if not hasFont(fontKey) or update:
         globals()[fontKey] = tkFont.Font(**opts)
+        
+    return globals()[fontKey] 
     
 def hasFont(fontKey):
     return fontKey in globals()
@@ -111,15 +113,16 @@ def aliasFont(fontAlias, fontKey):
 def setCommonFonts(windows=None):
     """Set some predifined common fonts.
     Same conditions of setFont applies here."""
-    setFont('fontNormal', family=cfgFontName, size=cfgFontSize)
+    f = setFont('fontNormal', family=cfgFontName, size=cfgFontSize)
     aliasFont('fontButton', 'fontNormal')
-    setFont('fontBold', family=cfgFontName, size=cfgFontSize, weight='bold')
-    setFont('fontItalic', family=cfgFontName, size=cfgFontSize, slant='italic')
+    fb = setFont('fontBold', family=cfgFontName, size=cfgFontSize, weight='bold')
+    fi = setFont('fontItalic', family=cfgFontName, size=cfgFontSize, slant='italic')
     setFont('fontLabel', family=cfgFontName, size=cfgFontSize+1, weight='bold')
     if windows:
         windows.fontBig = tkFont.Font(size=cfgFontSize+2, family=cfgFontName, weight='bold')
-        windows.font = tkFont.Font(size=cfgFontSize, family=cfgFontName)
-        windows.fontBold = tkFont.Font(size=cfgFontSize, family=cfgFontName, weight='bold') 
+        windows.font = f
+        windows.fontBold = fb
+        windows.fontItalic = fi 
 
 def changeFontSizeByDeltha(font, deltha, minSize=-999, maxSize=999):
     size = font['size']
