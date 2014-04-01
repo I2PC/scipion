@@ -10,6 +10,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.io.File;
+import java.util.HashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JButton;
@@ -37,6 +38,8 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
     private String python;
     private String inputimagesid;
     private String inputid;
+    private HashMap<String, String> fields;
+    private final String runNameKey = "Run name:";
 
     public ScipionGalleryJFrame(String filename, MetaData md, ScipionParams parameters) {
         super(filename, md, parameters);
@@ -48,6 +51,9 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
             inputid = parameters.inputid;
             inputimagesid = parameters.inputimagesid;
             selectionmdfile = String.format("%s%sselection%s", projectid, File.separator, getFileExtension());
+            fields = new HashMap<String, String>();
+            fields.put(runNameKey, "ProtUserSubset");
+            
 
             initComponents();
         } catch (Exception ex) {
@@ -65,10 +71,11 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
                 public void actionPerformed(ActionEvent ae) {
                     saveSelection();
                     MetaData selectionmd = new MetaData(selectionmdfile);
-                    String msg = String.format("Are you sure you want to create a new set of %s %s ?\n", selectionmd.size(), type);
-                    int create = ScipionMessageDialog.showQuestion(ScipionGalleryJFrame.this, msg);
+                    String question = String.format("<html>Are you sure you want to create a new SetOf%s with <font color=red>%s</font> %s?", type, selectionmd.size(), (selectionmd.size() > 1)?"elements":"element");
+                    ScipionMessageDialog dlg = new ScipionMessageDialog(ScipionGalleryJFrame.this, "Question", question, fields);
+                    int create = dlg.action;
                     if (create == ScipionMessageDialog.OK_OPTION) {
-                        createSubset();
+                        createSubset(dlg.getFieldValue(runNameKey));
                     }
                     selectionmd.destroy();
                 }
@@ -80,10 +87,11 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
                     public void actionPerformed(ActionEvent ae) {
                         saveClassSelection(selectionmdfile);
                         MetaData selectionmd = new MetaData(selectionmdfile);
-                        String msg = String.format("Are you sure you want to create a new set of %s Classes2D ?", selectionmd.size());
-                        int create = ScipionMessageDialog.showQuestion(ScipionGalleryJFrame.this, msg);
+                        String msg = String.format("<html>Are you sure you want to create a new SetOfClasses2D with <font color=red>%s</font> %s?", selectionmd.size(), (selectionmd.size() > 1)?"elements":"element");
+                        ScipionMessageDialog dlg = new ScipionMessageDialog(ScipionGalleryJFrame.this, "Question", msg, fields);
+                        int create = dlg.action;
                         if (create == ScipionMessageDialog.OK_OPTION) {
-                            createSubsetOfClasses();
+                            createSubsetOfClasses(dlg.getFieldValue(runNameKey));
                         }
                         selectionmd.destroy();
                     }
@@ -164,11 +172,11 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
         }
     }
 
-    public void createSubset() {
+    public void createSubset(String runname) {
         try {
             final String inputType = is2DClassificationMd() ? "Classes2D" : type;
-
-            String[] command = new String[]{python, script, selectionmdfile, inputType, type, projectid, inputid, inputimagesid};
+           
+            String[] command = new String[]{python, script, runname, selectionmdfile, inputType, type, projectid, inputid, inputimagesid};
             runCommand(command);
 
         } catch (Exception ex) {
@@ -189,10 +197,10 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
         }
     }
 
-    public void createSubsetOfClasses() {
+    public void createSubsetOfClasses(String runname) {
         try {
             
-            String[] command = new String[]{python, script, selectionmdfile, "Classes2D", "Classes2D", projectid, inputid, inputimagesid};
+            String[] command = new String[]{python, script, runname, selectionmdfile, "Classes2D", "Classes2D", projectid, inputid, inputimagesid};
             runCommand(command);
         } catch (Exception ex) {
             Logger.getLogger(ScipionGalleryJFrame.class.getName()).log(Level.SEVERE, null, ex);
