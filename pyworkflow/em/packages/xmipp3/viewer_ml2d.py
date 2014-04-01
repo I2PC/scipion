@@ -49,19 +49,21 @@ class XmippML2DViewer(ProtocolViewer):
     
     def _defineParams(self, form):
         form.addSection(label='Visualization')
-        form.addParam('doShowClasses', BooleanParam, label="Visualize last iter references", default=True, 
+        group = form.addGroup('Overall results')
+        group.addParam('doShowClasses', BooleanParam, label="Visualize last iter references", default=True, 
                       help='Visualize last iteration references.')
-        form.addParam('doShowPlots', BooleanParam, label="Show all plots per iteration?", default=True,
+        group.addParam('doShowPlots', BooleanParam, label="Show all plots per iteration?", default=True,
                       help='Visualize several plots.')
         
-        form.addSection(label='Iteration plots')    
-        form.addParam('doShowLL', BooleanParam, label="Show Log-Likehood over iterations?", default=False, 
+        group = form.addGroup('Iteration plots', condition='doShowPlots')
+        #form.addSection(label='Iteration plots')    
+        group.addParam('doShowLL', BooleanParam, label="Show Log-Likehood over iterations?", default=False, 
                       help='The Log-Likelihood value should increase.')      
-        form.addParam('doShowPmax', BooleanParam, label="Show maximum model probability?", default=False, 
+        group.addParam('doShowPmax', BooleanParam, label="Show maximum model probability?", default=False, 
                       help='Show the maximum probability for a model, this should tend to be a deltha function.')      
-        form.addParam('doShowSignalChange', BooleanParam, label="Show plot for signal change?", default=False, 
+        group.addParam('doShowSignalChange', BooleanParam, label="Show plot for signal change?", default=False, 
                       help='Should approach to zero when convergence.')      
-        form.addParam('doShowMirror', BooleanParam, label="Show mirror fraction for last iteration?", default=False, 
+        group.addParam('doShowMirror', BooleanParam, label="Show mirror fraction for last iteration?", default=False, 
                       help='he the mirror fraction of each reference in last iteration.')      
         
     

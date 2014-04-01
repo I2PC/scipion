@@ -40,7 +40,7 @@ from pyworkflow.utils.path import replaceExt, makeFilePath, join, missingPaths, 
 from pyworkflow.utils.log import *
 from executor import StepExecutor, ThreadStepExecutor, MPIStepExecutor
 from constants import *
-from params import Form
+from params import Form, Group
 
 
 
@@ -419,7 +419,6 @@ class Protocol(Step):
         else:
             print "FIXME: Protocol '%s' has not DEFINITION" % self.getClassName()
         
-    
     def _getFilename(self, key, **args):
         return self._templateDict[key] % args
     

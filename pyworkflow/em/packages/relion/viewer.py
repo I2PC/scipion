@@ -83,6 +83,7 @@ Examples:
                           help='Display the classes and the images associated.')
             changesLabel = 'Changes in Offset, Angles and Classes'
         
+        group = form.addGroup()
         form.addParam('showLL', BooleanParam, label="Show maximum model probability?", default=False, 
                       help='Max likelihood per image may be used to delete images with smaller value.'
                            'The higher, the better. Consider remove particles with low values.')      
