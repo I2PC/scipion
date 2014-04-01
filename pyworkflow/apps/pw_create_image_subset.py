@@ -15,18 +15,19 @@ from xmipp import *
 
 if __name__ == '__main__':
 
-    mdfile = sys.argv[1]
-    inputType = sys.argv[2]
-    setType = sys.argv[3]
-    projectid = sys.argv[4]
-    inputid = sys.argv[5]
-    inputimagesid = sys.argv[6]
+    protlabel = sys.argv[1]
+    mdfile = sys.argv[2]
+    inputType = sys.argv[3]
+    setType = sys.argv[4]
+    projectid = sys.argv[5]
+    inputid = sys.argv[6]
+    inputimagesid = sys.argv[7]
     mdname = mdfile[mdfile.rfind(os.sep) + 1:]
     
     
     project = Manager().loadProject(projectid)
     
-    prot = ProtUserSubSet(inputType=inputType, outputType=setType)
+    prot = ProtUserSubSet(label=protlabel, inputType=inputType, outputType=setType)
     input = project.mapper.selectById(int(inputid))
     inputimages = project.mapper.selectById(int(inputimagesid))
     
