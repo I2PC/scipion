@@ -54,6 +54,7 @@ class KendersomBaseClassify(ProtClassify):
         form.addParam('Mask', StringParam , condition='useMask',
                       label="Mask",
                       help='Mask image will serve to enhance the classification')
+        
         line = form.addLine('Dimension of the map', 
                             help='Josue tiene que meter el help')
         line.addParam('SomXdim', IntParam, default=7,

@@ -476,18 +476,28 @@ class ParamWidget():
         self.parent = parent
         self.visualizeCallback = visualizeCallback
         
-        self._createLabel() # self.label should be set after this 
         self._btnCol = 0
-        if showButtons:
+        self._labelFont = self.window.font
+
+        # Show buttons = False means the widget is inside a Line group
+        # then, some of the properties change accordingly
+        if showButtons: 
             self._labelSticky = 'ne'
-            self._pad = 2
+            self._padx, self._pady = 2, 2
+            self._entryWidth = 10
+            if param.isImportant():
+                self._labelFont = self.window.fontBold
             self.parent.columnconfigure(0, minsize=250)
             self.parent.columnconfigure(1, minsize=250)
             self.btnFrame = tk.Frame(self.parent, bg='white') # self.btnFrame should be set after this
         else:
             self.btnFrame = None
             self._labelSticky = 'nw'
-            self._pad = 0
+            self._padx, self._pady = 2, 0
+            self._labelFont = self.window.fontItalic
+            self._entryWidth = 8
+            
+        self._createLabel() # self.label should be set after this 
         self._createContent() # self.content and self.var should be set after this
         
         if self.var: # Groups have not self.var
@@ -497,18 +507,13 @@ class ParamWidget():
         
         
     def _createLabel(self):
-        f = self.window.font
-
-        if self.param.isImportant():
-            f = self.window.fontBold
-            
         bgColor = 'white'
         
         if self.param.isExpert():
             bgColor = 'grey'
         
         self.label = tk.Label(self.parent, text=self.param.label.get(), 
-                              bg=bgColor, font=f, wraplength=300)
+                              bg=bgColor, font=self._labelFont, wraplength=300)
                
     def _createContent(self):
         self.content = tk.Frame(self.parent, bg='white')
@@ -608,13 +613,12 @@ class ParamWidget():
             #btn = Button(content, "Edit", command=self._openProtocolForm)
             #btn.grid(row=1, column=0)
         elif t is Line:
-            self.content.config(bg='red')
             var = None
         else:
             #v = self.setVarValue(paramName)
             var = tk.StringVar()
             if t is FloatParam or t is IntParam:
-                entryWidth = 10 # Reduce the entry width for numbers entries
+                entryWidth = self._entryWidth # Reduce the entry width for numbers entries
             entry = tk.Entry(content, width=entryWidth, textvariable=var)
             entry.grid(row=0, column=0, sticky='w')
             
@@ -712,11 +716,11 @@ class ParamWidget():
     def show(self):
         """Grid the label and content in the specified row"""
         c = self.column
-        p = self._pad
-        self.label.grid(row=self.row, column=c, sticky=self._labelSticky, padx=p, pady=p)
-        self.content.grid(row=self.row, column=c+1, padx=p, pady=p, sticky='news')
+        self.label.grid(row=self.row, column=c, sticky=self._labelSticky, padx=self._padx, pady=self._pady)
+        self.content.grid(row=self.row, column=c+1, sticky='news', 
+                          padx=self._padx, pady=self._pady)
         if self.btnFrame:
-            self.btnFrame.grid(row=self.row, column=c+2, padx=p, sticky='new')
+            self.btnFrame.grid(row=self.row, column=c+2, padx=self._padx, sticky='new')
         
     def hide(self):
         self.label.grid_remove()
@@ -741,6 +745,8 @@ class LineWidget(ParamWidget):
     def show(self):
         self.label.grid(row=self.row, column=0, sticky=self._labelSticky)
         self.content.grid(row=self.row, column=1, sticky='nw', columnspan=6, padx=5)
+        if self.btnFrame:
+            self.btnFrame.grid(row=self.row, column=2, padx=2, sticky='new')
         
     def hide(self):
         self.content.grid_remove()  

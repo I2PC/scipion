@@ -97,7 +97,7 @@ class ElementGroup(FormElement):
     """ Class to group some params in the form.
     Such as: Labeled group or params in the same line. 
     """
-    def __init__(self, form, **args):
+    def __init__(self, form=None, **args):
         FormElement.__init__(self, **args)
         self._form = form
         self._paramList = []    
