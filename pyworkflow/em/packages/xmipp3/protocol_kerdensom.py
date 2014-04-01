@@ -54,10 +54,14 @@ class KendersomBaseClassify(ProtClassify):
         form.addParam('Mask', StringParam , condition='useMask',
                       label="Mask",
                       help='Mask image will serve to enhance the classification')
-        form.addParam('SomXdim', IntParam, default=7,
-                      label='X-dimension of the map:')
-        form.addParam('SomYdim', IntParam, default=7,
-                      label='Y-dimension of the map:')
+        
+        line = form.addLine('Dimension of the map', 
+                            help='Josue tiene que meter el help')
+        line.addParam('SomXdim', IntParam, default=7,
+                      label='X')
+        line.addParam('SomYdim', IntParam, default=7,
+                      label='Y')
+               
         form.addParam('SomReg0', IntParam, default=1000, expertLevel=LEVEL_ADVANCED,
                       label='Initial regularization factor', 
                       help='The kerdenSOM algorithm anneals from an initial high regularization factor'
@@ -144,9 +148,12 @@ class KendersomBaseClassify(ProtClassify):
         return summary
     
     def _methods(self):
-        messages = []      
-        messages.append("*Kendersom classification*")
-        messages.append('The particles %s were classified to obtain the classes %s.' % (self.inputImages.get().getNameId(), self.outputClasses.getNameId()))
+        messages = []  
+        if not hasattr(self, 'outputClasses'):
+            messages.append("Output classification not ready yet.")
+        else:    
+            messages.append("*Kendersom classification*")
+            messages.append('The particles %s were classified to obtain the classes %s.' % (self.inputImages.get().getNameId(), self.outputClasses.getNameId()))
         return messages
 
 

@@ -312,7 +312,22 @@ class VerticalScrolledFrame(tk.Frame):
                 canvas.itemconfigure(interior_id, width=canvas.winfo_width())
         canvas.bind('<Configure>', _configure_canvas)
         
-           
+
+
+class GroupWidget(tk.LabelFrame):
+    def __init__(self, row, paramName, param, window, parent):
+        self.window = window
+        tk.LabelFrame.__init__(self, parent, text=paramName, bg='white')
+        self.row = row
+        self.show()
+        
+    def show(self):
+        self.grid(row=self.row, column=0, sticky='news', columnspan=6, padx=5, pady=5)
+        
+    def hide(self):
+        self.grid_remove()  
+                 
+             
 class SectionFrame(tk.Frame):
     """This class will be used to create a frame for the Section
     That will have a header with red color and a content frame
@@ -451,39 +466,54 @@ class ParamWidget():
     A Frame(buttons): a container for available actions buttons
     It will also have a Variable that should be set when creating 
       the specific components"""
-    def __init__(self, row, paramName, param, window, parent, value, callback=None, visualizeCallback=None):
+    def __init__(self, row, paramName, param, window, parent, value, 
+                 callback=None, visualizeCallback=None, column=0, showButtons=True):
         self.window = window
         self.row = row
+        self.column = column
         self.paramName = paramName
         self.param = param
         self.parent = parent
         self.visualizeCallback = visualizeCallback
         
-        self.parent.columnconfigure(0, minsize=250)
-        self.parent.columnconfigure(1, minsize=250)
-        self._createLabel() # self.label should be set after this 
         self._btnCol = 0
-        self._createButtonsFrame() # self.btnFrame should be set after this
+        self._labelFont = self.window.font
+
+        # Show buttons = False means the widget is inside a Line group
+        # then, some of the properties change accordingly
+        if showButtons: 
+            self._labelSticky = 'ne'
+            self._padx, self._pady = 2, 2
+            self._entryWidth = 10
+            if param.isImportant():
+                self._labelFont = self.window.fontBold
+            self.parent.columnconfigure(0, minsize=250)
+            self.parent.columnconfigure(1, minsize=250)
+            self.btnFrame = tk.Frame(self.parent, bg='white') # self.btnFrame should be set after this
+        else:
+            self.btnFrame = None
+            self._labelSticky = 'nw'
+            self._padx, self._pady = 2, 0
+            self._labelFont = self.window.fontItalic
+            self._entryWidth = 8
+            
+        self._createLabel() # self.label should be set after this 
         self._createContent() # self.content and self.var should be set after this
         
-        self.set(value)
-        self.callback = callback
-        self.var.trace('w', self._onVarChanged)
+        if self.var: # Groups have not self.var
+            self.set(value)
+            self.callback = callback
+            self.var.trace('w', self._onVarChanged)
         
         
     def _createLabel(self):
-        f = self.window.font
-
-        if self.param.isImportant:
-            f = self.window.fontBold
-            
         bgColor = 'white'
         
         if self.param.isExpert():
             bgColor = 'grey'
         
         self.label = tk.Label(self.parent, text=self.param.label.get(), 
-                              bg=bgColor, font=f, wraplength=300)
+                              bg=bgColor, font=self._labelFont, wraplength=300)
                
     def _createContent(self):
         self.content = tk.Frame(self.parent, bg='white')
@@ -491,13 +521,11 @@ class ParamWidget():
         self._createContentWidgets(self.param, self.content) # self.var should be set after this
         
     def _addButton(self, text, imgPath, cmd):
-        btn = IconButton(self.btnFrame, text, imgPath, command=cmd)
-        btn.grid(row=0, column=self._btnCol, sticky='e', padx=2, pady=2)
-        self.btnFrame.columnconfigure(self._btnCol, weight=1)
-        self._btnCol += 1
-        
-    def _createButtonsFrame(self):
-        self.btnFrame = tk.Frame(self.parent, bg='white')
+        if self.btnFrame:
+            btn = IconButton(self.btnFrame, text, imgPath, command=cmd)
+            btn.grid(row=0, column=self._btnCol, sticky='e', padx=2, pady=2)
+            self.btnFrame.columnconfigure(self._btnCol, weight=1)
+            self._btnCol += 1
         
     def _showHelpMessage(self, e=None):
         showInfo("Help", self.param.help.get(), self.parent)
@@ -583,12 +611,14 @@ class ParamWidget():
             
             self._addButton("Edit", Icon.ACTION_EDIT, self._openProtocolForm)
             #btn = Button(content, "Edit", command=self._openProtocolForm)
-            #btn.grid(row=1, column=0)          
+            #btn.grid(row=1, column=0)
+        elif t is Line:
+            var = None
         else:
             #v = self.setVarValue(paramName)
             var = tk.StringVar()
             if t is FloatParam or t is IntParam:
-                entryWidth = 10 # Reduce the entry width for numbers entries
+                entryWidth = self._entryWidth # Reduce the entry width for numbers entries
             entry = tk.Entry(content, width=entryWidth, textvariable=var)
             entry.grid(row=0, column=0, sticky='w')
             
@@ -685,14 +715,18 @@ class ParamWidget():
         
     def show(self):
         """Grid the label and content in the specified row"""
-        self.label.grid(row=self.row, column=0, sticky='ne', padx=2, pady=2)
-        self.content.grid(row=self.row, column=1, padx=2, pady=2, sticky='news')
-        self.btnFrame.grid(row=self.row, column=2, padx=2, sticky='new')
+        c = self.column
+        self.label.grid(row=self.row, column=c, sticky=self._labelSticky, padx=self._padx, pady=self._pady)
+        self.content.grid(row=self.row, column=c+1, sticky='news', 
+                          padx=self._padx, pady=self._pady)
+        if self.btnFrame:
+            self.btnFrame.grid(row=self.row, column=c+2, padx=self._padx, sticky='new')
         
     def hide(self):
         self.label.grid_remove()
         self.content.grid_remove()
-        self.btnFrame.grid_remove()
+        if self.btnFrame:
+            self.btnFrame.grid_remove()
         
     def set(self, value):
         if value is not None:
@@ -700,7 +734,23 @@ class ParamWidget():
         
     def get(self):
         return self.var.get()
+
+
+class LineWidget(ParamWidget):
+    def __init__(self, row, paramName, param, window, parent, value, 
+                 callback=None, visualizeCallback=None, column=0, showButtons=True):
+        ParamWidget.__init__(self, row, paramName, param, window, parent, None)
+        self.show()
         
+    def show(self):
+        self.label.grid(row=self.row, column=0, sticky=self._labelSticky)
+        self.content.grid(row=self.row, column=1, sticky='nw', columnspan=6, padx=5)
+        if self.btnFrame:
+            self.btnFrame.grid(row=self.row, column=2, padx=2, sticky='new')
+        
+    def hide(self):
+        self.content.grid_remove()  
+       
 
 class Binding():
     def __init__(self, paramName, var, protocol, *callbacks):
@@ -931,12 +981,12 @@ class FormWindow(Window):
         expCombo.grid(row=0, column=1, sticky='nw', pady=5)
         expFrame.grid(row=0, column=0, sticky='nw')
         
-        contentFrame = self.createSections(paramsFrame)
+        contentFrame = self._createSections(paramsFrame)
         contentFrame.grid(row=1, column=0, sticky='news')
         
         return paramsFrame
                 
-    def createSections(self, parent):
+    def _createSections(self, parent):
         """Create section widgets"""
         r = 0
         sectionsFrame = tk.Frame(parent) 
@@ -1112,32 +1162,85 @@ class FormWindow(Window):
         parent = sectionWidget.contentFrame
         r = 0
         for paramName, param in sectionParam.iterParams():
-            protVar = getattr(self.protocol, paramName, None)
-            
-            if protVar is None:
-                raise Exception("_fillSection: param '%s' not found in protocol" % paramName)
-            
-            if sectionParam.getQuestionName() == paramName:
-                widget = sectionWidget
-                if not protVar:
-                    widget.hide() # Show only if question var is True
+            if isinstance(param, Group):
+                widget = GroupWidget(r, paramName, param, self, parent)
+                self._fillGroup(param, widget)
+            elif isinstance (param, Line):
+                widget = LineWidget(r, paramName, param, self, parent, None)
+                self._fillLine(param, widget)
             else:
-                if isinstance(param, PointerParam):
-                    visualizeCallback = self._visualize # Add visualize icon for pointer params
-                else:
-                    visualizeCallback = self.visualizeDict.get(paramName, None)
+                protVar = getattr(self.protocol, paramName, None)
                 
-                widget = ParamWidget(r, paramName, param, self, parent, 
-                                                         value=self.getWidgetValue(protVar, param),
-                                                         callback=self._checkChanges,
-                                                         visualizeCallback=visualizeCallback)
-                widget.show() # Show always, conditions will be checked later
-                r += 1         
+                if protVar is None:
+                    raise Exception("_fillSection: param '%s' not found in protocol" % paramName)
+                
+                if sectionParam.getQuestionName() == paramName:
+                    widget = sectionWidget
+                    if not protVar:
+                        widget.hide() # Show only if question var is True
+                else:
+                    if isinstance(param, PointerParam):
+                        visualizeCallback = self._visualize # Add visualize icon for pointer params
+                    else:
+                        visualizeCallback = self.visualizeDict.get(paramName, None)
+                    
+                    widget = ParamWidget(r, paramName, param, self, parent, 
+                                                             value=self.getWidgetValue(protVar, param),
+                                                             callback=self._checkChanges,
+                                                             visualizeCallback=visualizeCallback)
+                        
+                    widget.show() # Show always, conditions will be checked later
+            r += 1         
             self.widgetDict[paramName] = widget
         # Ensure width and height needed
         w, h = parent.winfo_reqwidth(), parent.winfo_reqheight()
         sectionWidget.columnconfigure(0, minsize=w)
         sectionWidget.rowconfigure(0, minsize=h)
+
+    def _fillGroup(self, groupParam, groupWidget):
+        parent = groupWidget#groupWidget.contentFrame
+        r = 0
+        for paramName, param in groupParam.iterParams():
+            protVar = getattr(self.protocol, paramName, None)
+            
+            if protVar is None:
+                raise Exception("_fillSection: param '%s' not found in protocol" % paramName)
+            
+            if isinstance(param, PointerParam):
+                visualizeCallback = self._visualize # Add visualize icon for pointer params
+            else:
+                visualizeCallback = self.visualizeDict.get(paramName, None)
+            
+            widget = ParamWidget(r, paramName, param, self, parent, 
+                                                     value=self.getWidgetValue(protVar, param),
+                                                     callback=self._checkChanges,
+                                                     visualizeCallback=visualizeCallback)
+            widget.show() # Show always, conditions will be checked later
+            r += 1         
+            self.widgetDict[paramName] = widget
+ 
+    def _fillLine(self, groupParam, groupWidget):
+        parent = groupWidget.content#groupWidget.contentFrame
+        r = 0
+        for paramName, param in groupParam.iterParams():
+            protVar = getattr(self.protocol, paramName, None)
+            
+            if protVar is None:
+                raise Exception("_fillSection: param '%s' not found in protocol" % paramName)
+            
+            if isinstance(param, PointerParam):
+                visualizeCallback = self._visualize # Add visualize icon for pointer params
+            else:
+                visualizeCallback = self.visualizeDict.get(paramName, None)
+            
+            widget = ParamWidget(0, paramName, param, self, parent, 
+                                 value=self.getWidgetValue(protVar, param),
+                                 callback=self._checkChanges, visualizeCallback=visualizeCallback,
+                                 column=r, showButtons=False)
+            widget.show() # Show always, conditions will be checked later
+            r += 2         
+            self.widgetDict[paramName] = widget           
+
         
     def _checkCondition(self, paramName):
         """Check if the condition of a param is statisfied 

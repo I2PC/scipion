@@ -180,20 +180,20 @@ class ProtFrealignBase(EMProtocol):
         
         form.addSection(label='General Parameters')
         
-        form.addParam('innerRadius', FloatParam, default='0.0', 
-                      label='Inner radius of reconstruction (A):', 
-                      help='Parameter *RI* in FREALIGN\n\n'
+        line = form.addLine('Reconstruction radius (A):',
+                      help='Parameters *RI* and *RO* in FREALIGN\n\n'
                            'In Angstroms from centre of particle.\n'
-                           'Enter the inner radius of the volume to be reconstructed.\n' 
+                           'Enter the inner and outer radius of the volume to be reconstructed.\n' 
                            'This is useful for reconstructions of viruses and other\n' 
-                           'particles that might be hollow or have a disordered core.')
-        form.addParam('outerRadius', FloatParam, default='108.0', 
-                      label='Outer radius of reconstruction (A):', 
-                      help='Parameter *RO* in FREALIGN\n\n'
-                           'In Angstroms from centre of particle.\n'
-                           'Enter the outer radius of the volume to be reconstructed.\n'
-                           'The program will also apply a mask with a cosine edge to the particle image\n'
-                           'before processing (done inside *CTFAPPLY* using  *HALFW=6* pixels for cosine bell).')
+                           'particles that might be hollow or have a disordered core.\n'
+                           'The program will also apply a mask with a cosine edge to \n'
+                           'the particle image before processing \n'
+                           '(done inside *CTFAPPLY* using  *HALFW=6* pixels for cosine bell).')
+        line.addParam('innerRadius', FloatParam, default='0.0', 
+                      label='Inner')
+        line.addParam('outerRadius', FloatParam, default='108.0', 
+                      label='Outer')
+                       
         form.addParam('molMass', FloatParam, default='500.0', 
                       label='Molecular mass of the specimen (kDa):',
                       condition="doWienerFilter",
@@ -301,16 +301,16 @@ class ProtFrealignBase(EMProtocol):
                       label='Beam tilt in Y direction (in mrad):', expertLevel=LEVEL_EXPERT,
                       help='Parameter *TY* in FREALIGN.')
         form.addParam('resolution', FloatParam, default='10.0', 
-                      label='Resol. of reconstruction (A):',
+                      label='Resolution of reconstruction (A):',
                       help='Parameter *RREC* in FREALIGN\n\n'
                            'Resolution to which the reconstruction is calculated.\n'
                            'If several datasets have different values, the data is individually\n'
                            'limited in the summation to the RREC resolution but symmetry is\n'
                            'applied, statistics output and the final map calculated to the\n'
                            'maximum resolution requested for any dataset.')
-        form.addParam('lowResolRefine', FloatParam, default='200.0', 
-                      label='Low resolution in refinement (A):',
-                      help='Parameter *RMIN* in FREALIGN\n\n'
+        
+        line = form.addLine('Resolution in refinement (A)',
+                      help='Parameters *RMIN* and *RMAX* in FREALIGN\n\n'
                            'Resolution of the data included in the search/refinement. These\n'
                            'two parameters (RMIN,RMAX) are very important.  The successful\n'
                            'alignment of particles depends critically on the signal-to-noise\n'
@@ -319,24 +319,10 @@ class ProtFrealignBase(EMProtocol):
                            'artefacts at low resolution can make a big difference.  Success can\n'
                            'be judged by whether the X,Y coordinates of the particle centres are\n'
                            'reasonable.')
-        form.addParam('highResolRefine', FloatParam, default='25.0', 
-                      label='High resolution in refinement (A):',
-                      help='Parameter *RMAX* in FREALIGN\n\n'
-                           'Resolution of the data included in the search/refinement. These\n'
-                           'two parameters (RMIN,RMAX) are very important.  The successful\n'
-                           'alignment of particles depends critically on the signal-to-noise\n'
-                           'ratio of thecross-correlation or phase residual calculation, and\n'
-                           'exclusion of weak data at high resolution or spurious, very strong\n'
-                           'artefacts at low resolution can make a big difference.  Success can\n'
-                           'be judged by whether the X,Y coordinates of the particle centres are\n'
-                           'reasonable.')
-        form.addParam('resolClass', FloatParam, default='25.0', 
-                      label='High resolution for classification (A):',
-                      help='Parameter *RCLAS* in FREALIGN\n\n'
-                            'High-resolution limit used for classification.\n'
-                            'It should typically be set to the same resolution\n'
-                            'limit used also for the refinement, or a bit lower.\n'
-                            'Resolution of the data included in the search/refine')
+        
+        line.addParam('lowResolRefine', FloatParam, default='200.0', label='Low')
+        line.addParam('highResolRefine', FloatParam, default='25.0', label='High')
+
         form.addParam('defocusUncertainty', FloatParam, default='200.0', 
                       label='Defocus uncertainty (A):', expertLevel=LEVEL_EXPERT,
                       help='Parameter *DFSIG* in FREALIGN\n\n'

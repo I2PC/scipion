@@ -95,43 +95,43 @@ Examples:
 
          
         if self.protocol.IS_3D:
-            form.addSection('3D analysis')
+            group = form.addGroup('3D analysis')
             
             if self.protocol.IS_CLASSIFY:
-                form.addParam('showClasses3D', EnumParam, choices=['selection', 'all'], default=0,
+                group.addParam('showClasses3D', EnumParam, choices=['selection', 'all'], default=0,
                               display=EnumParam.DISPLAY_LIST,
                               label='CLASS 3D to visualize',
                               help='')
-                form.addParam('class3DSelection', NumericRangeParam, default='1',
+                group.addParam('class3DSelection', NumericRangeParam, default='1',
                               condition='showClasses3D == 0',
                               label='Classes list',
                               help='')
             else:
-                form.addParam('showHalves', EnumParam, choices=['half1', 'half2', 'both'], default=0,
+                group.addParam('showHalves', EnumParam, choices=['half1', 'half2', 'both'], default=0,
                               label='Half to visualize',
                               help='Select which half do you want to visualize.')
             
-            form.addParam('displayVol', EnumParam, choices=['slices', 'chimera'], 
+            group.addParam('displayVol', EnumParam, choices=['slices', 'chimera'], 
                           display=EnumParam.DISPLAY_LIST, default=0,
                           label='Display volume with',
                           help='*slices*: display volumes as 2D slices along z axis.\n'
                                '*chimera*: display volumes as surface with Chimera.')
-            form.addParam('displayAngDist', EnumParam, choices=['2D plot', 'chimera'], 
+            group.addParam('displayAngDist', EnumParam, choices=['2D plot', 'chimera'], 
                           display=EnumParam.DISPLAY_LIST, default=0,
                           label='Display angular distribution',
                           help='*2D plot*: display angular distribution as interative 2D in matplotlib.\n'
                                '*chimera*: display angular distribution using Chimera with red spheres.') 
-            form.addParam('spheresScale', IntParam, default=-1, 
+            group.addParam('spheresScale', IntParam, default=-1, 
                           expertLevel=LEVEL_ADVANCED,
                           label='',
                           help='')
-            form.addParam('resolutionPlotsSSNR', BooleanParam, default=True,
+            group.addParam('resolutionPlotsSSNR', BooleanParam, default=True,
                           label='Display SSNR plots?',
                           help='Display signal to noise ratio plots (SSNR) ')
-            form.addParam('resolutionPlotsFSC', BooleanParam, default=True,
+            group.addParam('resolutionPlotsFSC', BooleanParam, default=True,
                           label='Display resolution plots (FSC) ?',
                           help='')
-            form.addParam('resolutionThresholdFSC', FloatParam, default=0.5, 
+            group.addParam('resolutionThresholdFSC', FloatParam, default=0.5, 
                           expertLevel=LEVEL_ADVANCED,
                           label='Threshold in resolution plots',
                           help='')                                      

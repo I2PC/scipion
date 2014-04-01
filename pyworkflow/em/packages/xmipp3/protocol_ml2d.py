@@ -56,33 +56,35 @@ class XmippProtML2D(ProtClassify):
        
     #--------------------------- DEFINE param functions --------------------------------------------   
     def _defineParams(self, form):
-        form.addSection(label='Input')
-        form.addParam('inputParticles', PointerParam, label="Input particles", important=True, 
+        form.addSection(label='Params')
+        group = form.addGroup('Input')
+        group.addParam('inputParticles', PointerParam, label="Input particles", important=True, 
                       pointerClass='SetOfParticles',
                       help='Select the input images from the project.')        
-        form.addParam('doGenerateReferences', BooleanParam, default=True,
+        group.addParam('doGenerateReferences', BooleanParam, default=True,
                       label='Generate references?', 
                       help='If you set to *No*, you should provide references images'
                            'If *Yes*, the default generation is done by averaging'
                            'subsets of the input images. (less bias introduced)')
-        form.addParam('numberOfReferences', IntParam, default=3, condition='doGenerateReferences',
+        group.addParam('numberOfReferences', IntParam, default=3, condition='doGenerateReferences',
                       label='Number of references:',
                       help='Number of references to be generated.')
-        form.addParam('referenceParticles', PointerParam, condition='not doGenerateReferences',
+        group.addParam('referenceParticles', PointerParam, condition='not doGenerateReferences',
                       label="Reference image(s)", 
                       pointerClass='SetOfParticles',
                       help='Image(s) that will serve as initial 2D references')
         
-        form.addParam('doMlf', BooleanParam, default=False, important=True,
+        group = form.addGroup('ML-Fourier')
+        group.addParam('doMlf', BooleanParam, default=False, important=True,
                       label='Use MLF2D instead of ML2D?')
-        form.addParam('doCorrectAmplitudes', BooleanParam, default=True, condition='doMlf',
+        group.addParam('doCorrectAmplitudes', BooleanParam, default=True, condition='doMlf',
                       label='Use CTF-amplitude correction?',
                       help='If set to *Yes*, the input images file should contains'
                            'If set to *No*, provide the images pixel size in Angstrom.')
-        form.addParam('areImagesPhaseFlipped', BooleanParam, default=True, condition='doMlf',
+        group.addParam('areImagesPhaseFlipped', BooleanParam, default=True, condition='doMlf',
                       label='Are the images CTF phase flipped?',
                       help='You can run MLF with or without having phase flipped the images.')        
-        form.addParam('highResLimit', IntParam, default=20, condition='doMlf',
+        group.addParam('highResLimit', IntParam, default=20, condition='doMlf',
                       label='High-resolution limit (Ang)',
                       help='No frequencies higher than this limit will be taken into account.'
                            'If zero is given, no limit is imposed.')
