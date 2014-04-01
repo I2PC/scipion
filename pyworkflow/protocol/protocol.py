@@ -88,7 +88,7 @@ class Step(OrderedObject):
         return self._error
     
     def getErrorMessage(self):
-        return self.getError().get()
+        return self.getError().get('')
         
     def setFailed(self, msg):
         """ Set the run failed and store an error message. """
