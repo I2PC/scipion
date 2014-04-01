@@ -135,7 +135,11 @@ class XmippProcessVolumes(XmippProcess):
     #--------------------------- UTILS functions ---------------------------------------------------
     def _defineFilenames(self):
         """ Prepare the files to process """
-        self.outputStk = self._getPath("output_volumes.stk")
+        volSet = self.inputVolumes.get()
+        if isinstance(volSet, Volume):
+            self.outputStk = self._getPath("output_volume.vol")
+        else:
+            self.outputStk = self._getPath("output_volumes.stk")
         self.inputFn = self.outputStk
         self.outputMd = None
     
