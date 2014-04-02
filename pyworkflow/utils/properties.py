@@ -82,6 +82,7 @@ class Message():
     LABEL_INPUT = 'Input'
     LABEL_OUTPUT = 'Output'
     LABEL_METHODS = 'Methods'
+    LABEL_LOGS = 'Output Logs'
     LABEL_LOGS_OUTPUT = 'Output Log'
     LABEL_LOGS_ERROR = 'Error Log'
     LABEL_LOGS_SCIPION = 'Scipion Log'

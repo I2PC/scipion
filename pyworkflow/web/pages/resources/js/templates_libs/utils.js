@@ -117,6 +117,23 @@ function customPopup(URL, widthValue, heightValue) {
 			+ "', 'toolbar=0,scrollbars=1,location=0,statusbar=0,menubar=0,resizable=0,width='+widthValue+',height='+heightValue+'');");
 }
 
+function customPopupFileHTML(html, title, widthValue, heightValue) {
+	/*
+	 * Launch a popup with the HTML code passed by argument.
+	 * The size of the popup is customized with the width and height chosen.
+	 */
+	day = new Date();
+	id = day.getTime();
+	var popup = window.open('', id, 'height='+heightValue+',width='+widthValue);
+	
+	style = "background-color:black;color:white;font-family:Monospace;padding:1em;font-size:90%;"
+    title = "<title>"+ title + "</title>"
+    body = "<div style="+ style +">" + title + html + "</div>"
+
+	popup.document.write(body);
+	popup.document.close();
+}
+
 function customPopupHTML(html, widthValue, heightValue) {
 	/*
 	 * Launch a popup with the HTML code passed by argument.
@@ -128,6 +145,7 @@ function customPopupHTML(html, widthValue, heightValue) {
 	popup.document.write(html);
 	popup.document.close();
 }
+
 
 function popUpJSON(json){
 	/*

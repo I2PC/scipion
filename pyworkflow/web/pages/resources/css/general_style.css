@@ -495,14 +495,16 @@ span #analyzeTool{
 	float: right;
 	margin: 0.25em 0.25em 0em 0.35em;
 	color:white;
+}
 
-/* 	border-radius: 5px; */
-/* 	font-weight:bold; */
-/* 	text-align: center; */
-/* 	background-color: #f2f2f2; */
-/* 	width: 10em; */
-/* 	height:1.4em; */
-/* 	border: 1px solid #727272; */
+span #externalTool{
+	float: right;
+	margin: 0em 0.5em 0em 0.35em;
+	color:black;
+}
+
+span #externalTool:hover{
+	color:Firebrick;
 }
 
 

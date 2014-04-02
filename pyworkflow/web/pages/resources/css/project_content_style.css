@@ -6,7 +6,7 @@
 	max-width: 35%;
 	overflow-y: auto;
 	overflow-x: hidden;
-	background-color: white;;
+	background-color: white;
 }
 
 .layout-outer>.center {
@@ -272,3 +272,43 @@
 .dragActive {
 	border: 3px solid #346789;
 }
+
+.header-logs {
+	color:black;
+	margin-top: 1em;
+	padding: 0.6em 0 0.25em 0.2em;
+	border: 1px solid #aaaaaa;
+	border-radius: 0.2em;
+	background: #cccccc url(/resources/showj/ui-bg_highlight-soft_75_cccccc_1x100.png) 50% 50% repeat-x;
+	color: #222222;
+}
+
+.elm-header-log {
+	color:black;
+	margin-bottom: 1px;
+	padding: 0.4em 0.8em 0.4em 0.8em;
+	background-color: #e6e6e6;
+	border-radius: 0.3em 0.3em 0 0;
+	border: 1px solid #d3d3d3;
+	background: #e6e6e6 url(../../../resources/showj/ui-bg_glass_75_e6e6e6_1x400.png) 50% 50% repeat-x;
+	font-size:medium;
+	color: #555555;
+	
+}
+
+.elm-header-log:hover{
+	border: 1px solid #999999;
+	background: #dadada url(../../../resources/showj/ui-bg_glass_75_dadada_1x400.png) 50% 50% repeat-x;
+}
+
+.elm-header-log_selected {
+	margin-bottom: 1px;
+	padding: 0.4em 0.8em 0.35em 0.8em;
+	border-radius: 0.3em 0.3em 0 0;
+	border: 1px solid #d3d3d3;
+	font-size:medium;
+	color:white !important;
+	background: Firebrick  50% 50% repeat-x;
+	font-weight: bold;
+}
+
