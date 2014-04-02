@@ -24,14 +24,30 @@
 # *
 # **************************************************************************
 """
-In this module are protocol base classes related to EM.
-There should be sub-classes in the different packages from
-each EM-software package.
-"""
-from protocol import *
-from protocol_import import *
-from protocol_micrographs import *
-from protocol_particles import *
-from protocol_2d import *
-from protocol_3d import *
+In this module are protocol base classes related to 2D processing
 
+"""
+from pyworkflow.em.protocol import *
+
+
+class ProtAlign(EMProtocol):
+    """ This class will serve as a base for all protocols that align a set of 2D images.
+    All Align protocols receive as input:
+        A set of partices
+    and will allow the option to generate the aligned particles.
+    """
+    def _defineParams(self, form):
+        form.addSection(label='Input')
+        
+        form.addParam('inputParticles', PointerParam, important=True,
+                      label=Message.LABEL_INPUT_PART, pointerClass='SetOfParticles')
+        form.addParam('writeAlignedParticles', BooleanParam, default=True,
+                      label=Message.LABEL_ALIG_PART, 
+                      help=Message.TEXT_ALIG_PART)
+        # Hook that should be implemented in subclasses
+        self._defineAlignParams(form)
+        
+    def _defineAlignParams(self, form):
+        """ This method should be implemented by subclasses
+        to add other parameter relatives to the specific align protocol."""
+        pass 
