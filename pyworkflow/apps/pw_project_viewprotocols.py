@@ -765,23 +765,11 @@ class ProtocolsView(tk.Frame):
         self.methodText.addText(self.selectedProtocol.methods())
         
     def _fillLogs(self):
+        i = self.outputViewer.getIndex()
         self.outputViewer.clear()
         for f in self.selectedProtocol.getLogPaths():
             self.outputViewer.addFile(f)
-        #TODO: REMOVE THIS...READ LOGS DIRECTLY FROM FILE
-#         fOutString, fErrString, fScipionString = self.selectedProtocol.getLogsAsStrings()
-#         
-#         self.outputLogText.clear()
-#         self.outputLogText.addText(fOutString)
-#         self.outputLogText.goEnd()
-#         
-#         self.errorLogText.clear()
-#         self.errorLogText.addText(fErrString)
-#         self.errorLogText.goEnd()
-#         
-#         self.scipionLogText.clear()
-#         self.scipionLogText.addText(fScipionString)
-#         self.scipionLogText.goEnd()
+        self.outputViewer.setIndex(i) # Preserve the last selected tab
         
     def _scheduleRunsUpdate(self, secs=1):
         self.runsTree.after(secs*1000, self.refreshRuns)
