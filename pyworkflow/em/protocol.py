@@ -872,6 +872,8 @@ class ProtUserSubSet(EMProtocol):
         EMProtocol.__init__(self, **args)
         self._inputType = String(args.get('inputType', None))
         self._outputType = String(args.get('outputType', None))
+        self.setObjLabel(args.get('label', self.getClassName()))
+        
         
     def getInputType(self):
         return self._inputType.get()

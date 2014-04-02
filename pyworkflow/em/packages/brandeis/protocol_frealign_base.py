@@ -308,10 +308,11 @@ class ProtFrealignBase(EMProtocol):
                            'limited in the summation to the RREC resolution but symmetry is\n'
                            'applied, statistics output and the final map calculated to the\n'
                            'maximum resolution requested for any dataset.')
+        
         line = form.addLine('Resolution in refinement (A)',
-                      help='Parameters *RMAX1* and *RMAX2* in FREALIGN\n\n'
+                      help='Parameters *RMIN* and *RMAX* in FREALIGN\n\n'
                            'Resolution of the data included in the search/refinement. These\n'
-                           'two parameters (RMAX1,RMAX2) are very important.  The successful\n'
+                           'two parameters (RMIN,RMAX) are very important.  The successful\n'
                            'alignment of particles depends critically on the signal-to-noise\n'
                            'ratio of thecross-correlation or phase residual calculation, and\n'
                            'exclusion of weak data at high resolution or spurious, very strong\n'
@@ -322,6 +323,13 @@ class ProtFrealignBase(EMProtocol):
         line.addParam('lowResolRefine', FloatParam, default='200.0', label='Low')
         line.addParam('highResolRefine', FloatParam, default='25.0', label='High')
 
+        form.addParam('resolClass', FloatParam, default='25.0', 
+                      label='High resolution for classification (A):',
+                      help='Parameter *RCLAS* in FREALIGN\n\n'
+                            'High-resolution limit used for classification.\n'
+                            'It should typically be set to the same resolution\n'
+                            'limit used also for the refinement, or a bit lower.\n'
+                            'Resolution of the data included in the search/refine')
         form.addParam('defocusUncertainty', FloatParam, default='200.0', 
                       label='Defocus uncertainty (A):', expertLevel=LEVEL_EXPERT,
                       help='Parameter *DFSIG* in FREALIGN\n\n'
@@ -341,7 +349,7 @@ class ProtFrealignBase(EMProtocol):
                            'high values in the FSC curve (se publication #2 above). FREALIGN uses an\n'
                            'automatic weighting scheme and RBFACT should normally be set to 0.0.')
 
-        form.addParallelSection(threads=1, mpi=1)
+        form.addParallelSection(threads=1, mpi=0)
     
     #--------------------------- INSERT steps functions --------------------------------------------
     def _insertAllSteps(self):
@@ -424,7 +432,6 @@ class ProtFrealignBase(EMProtocol):
             lastPart = lastPart + blockParticles[block]
             params['finalParticle'] = lastPart
             numberOfBlock = block + 1
-            params['frealignOut'] = 'frealign_Output_%02d.log' % numberOfBlock
             paramDic = self._setParamsRefineParticles(iter, numberOfBlock)
             paramsRefine = dict(initParamsDict.items() + params.items() + paramDic.items())
             f = self.__openParamFile(block + 1, paramsRefine)
@@ -473,7 +480,6 @@ class ProtFrealignBase(EMProtocol):
         param['inputParFn'] = 'particles_%02d_' % block + 'iter_%03d.par' % prevIter
         param['initParticle'] = iniPart
         param['finalParticle'] = lastPart
-        param['frealignOut'] = 'frealign_Output_%02d.log' % block
 
         paramDic = self._setParamsRefineParticles(iter, block)
         initParamsDict = self._getParamsIteration(imgSet, iter)
@@ -495,7 +501,7 @@ class ProtFrealignBase(EMProtocol):
         finalParticle = imgSet.getSize()
         params = self._getParamsIteration(imgSet, iter)
         
-        os.environ['NCPUS'] = self.numberOfThreads.get()
+        os.environ['NCPUS'] = str(self.numberOfThreads.get())
         params['frealign'] = FREALIGNMP_PATH
         params['outputParFn'] = 'output_param_file_%06d' % initParticle + '_%06d_' % finalParticle + 'iter_%03d.par' % iter
         params['initParticle'] = initParticle
@@ -577,6 +583,7 @@ class ProtFrealignBase(EMProtocol):
                         'resol': self.resolution.get(),
                         'lowRes': self.lowResolRefine.get(),
                         'highRes': self.highResolRefine.get(),
+                        'resolClass': self.resolClass.get(),
                         'defocusUncertainty': self.defocusUncertainty.get(),
                         'Bfactor': self.Bfactor.get(),
                         'sampling3DR': samplingRate3DR
@@ -784,21 +791,20 @@ class ProtFrealignBase(EMProtocol):
         paramDic['FSC3DR2'] = 'volume_2_iter_%03d.mrc' % iter
         paramDic['VolPhResidual'] = 'volume_phasediffs_iter_%03d' % iter
         paramDic['VolpointSpread'] = 'volume_pointspread_iter_%03d' % iter
-        paramDic['frealignOut'] = 'fralign_volume_reconstruct_iter_%03d' % iter
         return paramDic
         
     def __openParamFile(self, blockNumber, paramsDict):
         """ Open the file and write the first part of the block param file. """
         if not exists(FREALIGN_PATH):
             raise Exception('Missing ' + FREALIGN)
-        initaLines = """%(frealign)s << eot > %(frealignOut)s
+        initaLines = """%(frealign)s << eot
 M,%(mode2)s,%(doMagRefinement)s,%(doDefocusRef)s,%(doAstigRef)s,%(doDefocusPartRef)s,%(metEwaldSphere)s,%(doExtraRealSpaceSym)s,%(doWienerFilter)s,%(doBfactor)s,%(writeMatchProj)s,%(metFsc)s,%(doAditionalStatisFSC)s,%(memory)s,%(interpolation)s
 %(outerRadius)s,%(innerRadius)s,%(sampling3DR)s,%(molMass)s,%(ampContrast)s,%(ThresholdMask)s,%(pseudoBFactor)s,%(avePhaseResidual)s,%(angStepSize)s,%(numberRandomSearch)s,%(numberPotentialMatches)s
 %(paramRefine)s
 %(initParticle)s,%(finalParticle)s
 %(sym)s
 %(relMagnification)s,%(scannedPixelSize)s,%(targetScore)s,%(score)s,%(sphericalAberration)s,%(voltage)s,%(beamTiltX)s,%(beamTiltY)s
-%(resol)s,%(lowRes)s,%(highRes)s,%(defocusUncertainty)s,%(Bfactor)s
+%(resol)s,%(lowRes)s,%(highRes)s,%(resolClass)s,%(defocusUncertainty)s,%(Bfactor)s
 %(imageFn)s
 %(imgFnMatch)s
 """
@@ -832,14 +838,14 @@ eot
 
         if not exists(FREALIGN_PATH):
             raise Exception('Missing ' + FREALIGN)
-        args = """%(frealign)s  << eot >> %(frealignOut)s
+        args = """%(frealign)s  << eot
 M,%(mode)s,%(doMagRefinement)s,%(doDefocusRef)s,%(doAstigRef)s,%(doDefocusPartRef)s,%(metEwaldSphere)s,%(doExtraRealSpaceSym)s,%(doWienerFilter)s,%(doBfactor)s,%(writeMatchProj)s,%(metFsc)s,%(doAditionalStatisFSC)s,%(memory)s,%(interpolation)s
 %(outerRadius)s,%(innerRadius)s,%(sampling3DR)s,%(molMass)s,%(ampContrast)s,%(ThresholdMask)s,%(pseudoBFactor)s,%(avePhaseResidual)s,%(angStepSize)s,%(numberRandomSearch)s,%(numberPotentialMatches)s
 %(paramRefine)s
 %(initParticle)s,%(finalParticle)s
 %(sym)s
 %(relMagnification)s,%(scannedPixelSize)s,%(targetScore)s,%(score)s,%(sphericalAberration)s,%(voltage)s,%(beamTiltX)s,%(beamTiltY)s
-%(resol)s,%(lowRes)s,%(highRes)s,%(defocusUncertainty)s,%(Bfactor)s
+%(resol)s,%(lowRes)s,%(highRes)s,%(resolClass)s,%(defocusUncertainty)s,%(Bfactor)s
 %(imageFn)s
 %(imgFnMatch)s
 %(inputParFn)s
