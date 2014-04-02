@@ -781,9 +781,9 @@ class ProtocolsView(tk.Frame):
 #            msg = "Protocol sucessfully saved."
         else:
             self.project.launchProtocol(prot)
+            self._scheduleRunsUpdate()
             msg = ""
             
-        self._scheduleRunsUpdate()
         
         return msg
         

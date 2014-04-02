@@ -212,6 +212,7 @@ Define the number of processors to be used in the execution.
     TITLE_SAVED_FORM = 'Success'
     LABEL_SAVED_FORM = 'The protocol was saved successfuly.'
     TITLE_DELETE_FORM = 'Confirm DELETE'
+    TITLE_RESTART_FORM = 'Confirm DELETE'
     LABEL_DELETE_FORM = '*ALL DATA* related to this _protocol run_ will be *DELETED*.\nDo you really want to continue?'    
     TITLE_STOP_FORM = 'Confirm STOP'
     LABEL_STOP_FORM = 'Do you really want to *STOP* this run?'

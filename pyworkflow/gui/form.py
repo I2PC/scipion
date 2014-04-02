@@ -46,7 +46,7 @@ from text import TaggedText
 from widgets import Button, HotButton, IconButton
 from pyworkflow.protocol.params import *
 from pyworkflow.protocol import Protocol
-from dialog import showInfo, EditObjectDialog, ListDialog
+from dialog import showInfo, EditObjectDialog, ListDialog, askYesNo
 from canvas import Canvas
 from tree import TreeProvider, BoundTree
 #from pyworkflow.em import findViewers
@@ -1110,12 +1110,14 @@ class FormWindow(Window):
         self._close(onlySave=True)
         
     def execute(self, e=None):
-        errors = self.protocol.validate()
-        
-        if len(errors):
-            self.showError(errors)
-        else:
-            self._close()
+        if (self.protocol.getRunMode() == MODE_RESTART and 
+            askYesNo(Message.TITLE_RESTART_FORM, Message.LABEL_DELETE_FORM, self.root)):
+            errors = self.protocol.validate()
+            
+            if len(errors):
+                self.showError(errors)
+            else:
+                self._close()
         
     def _close(self, onlySave=False):
         try:

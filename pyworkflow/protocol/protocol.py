@@ -920,6 +920,10 @@ class Protocol(Step):
         
         return msg
     
+    def getRunMode(self):
+        """ Return the mode of execution, either: MODE_RESTART or MODE_RESUME. """
+        return self.runMode.get()
+    
     # Methods that should be implemented in subclasses
     def _validate(self):
         """ This function can be overwritten by subclasses.
