@@ -20,6 +20,7 @@ import java.awt.event.WindowEvent;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -61,6 +62,7 @@ import xmipp.utils.XmippWindowUtil;
 import xmipp.viewer.particlepicker.extract.ExtractPickerJFrame;
 import xmipp.viewer.particlepicker.training.model.Mode;
 import xmipp.viewer.scipion.ScipionGalleryJFrame;
+import xmipp.viewer.scipion.ScipionMessageDialog;
 
 public abstract class ParticlePickerJFrame extends JFrame implements ActionListener
 {
@@ -172,12 +174,15 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 					getParticlePicker().saveData();
                                 if(getParticlePicker().isScipionSave())
                                 {
-                                    boolean create = XmippDialog.showQuestion(ParticlePickerJFrame.this, "Are you sure you want to create a new set of coordinates ?");
-                                    if(create)
-                                    {
-                                        executeScipionSaveAndExit();
-                                        
-                                    }
+                                    HashMap<String, String> msgfields = new HashMap<String, String>();
+                                    msgfields.put("Run name:", "ProtUserSubset");
+                                    int count = getParticlePicker().getParticlesCount();
+                                    String msg = String.format("<html>Are you sure you want to create a new SetOfCoordinates with <font color=red>%s</font> %s?", count, (count > 1)?"elements":"element");
+                                    ScipionMessageDialog dlg = new ScipionMessageDialog(ParticlePickerJFrame.this, "Question", msg, msgfields);
+                                    int create = dlg.action;
+                                    if (create == ScipionMessageDialog.OK_OPTION)
+                                        executeScipionSaveAndExit(dlg.getFieldValue("Run name:"));
+                                       
                                 }
                                 else
                                     close();
@@ -849,7 +854,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		return map;
 	}
         
-        protected void executeScipionSaveAndExit()
+        protected void executeScipionSaveAndExit(final String protlabel)
         {
             
             getCanvas().setEnabled(false);
@@ -860,7 +865,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
                 public void run() {
 
                     try {
-                        String[] cmd = getParticlePicker().getScipionSaveCommand();
+                        String[] cmd = getParticlePicker().getScipionSaveCommand(protlabel);
                         String output = XmippUtil.executeCommand(cmd);
                         XmippWindowUtil.releaseGUI(ParticlePickerJFrame.this.getRootPane());
                         getCanvas().setEnabled(true);

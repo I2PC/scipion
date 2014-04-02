@@ -625,14 +625,14 @@ public abstract class ParticlePicker {
          return scipionsave != null;
      }
 
-    public String[] getScipionSaveCommand() {
+    public String[] getScipionSaveCommand(String protlabel) {
         
             
-            String[] cmd = new String[]{scipionsave.python, scipionsave.script, outputdir, scipionsave.projectid, scipionsave.inputid};
+            String[] cmd = new String[]{scipionsave.python, scipionsave.script, protlabel, outputdir, scipionsave.projectid, scipionsave.inputid};
             return cmd;
         }
      
-     
+    public abstract int getParticlesCount();
 
     class ScipionSave {
 

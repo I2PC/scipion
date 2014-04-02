@@ -38,7 +38,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
     private String python;
     private String inputimagesid;
     private String inputid;
-    private HashMap<String, String> fields;
+    private HashMap<String, String> msgfields;
     private final String runNameKey = "Run name:";
 
     public ScipionGalleryJFrame(String filename, MetaData md, ScipionParams parameters) {
@@ -51,8 +51,8 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
             inputid = parameters.inputid;
             inputimagesid = parameters.inputimagesid;
             selectionmdfile = String.format("%s%sselection%s", projectid, File.separator, getFileExtension());
-            fields = new HashMap<String, String>();
-            fields.put(runNameKey, "ProtUserSubset");
+            msgfields = new HashMap<String, String>();
+            msgfields.put(runNameKey, "ProtUserSubset");
             
 
             initComponents();
@@ -72,7 +72,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
                     saveSelection();
                     MetaData selectionmd = new MetaData(selectionmdfile);
                     String question = String.format("<html>Are you sure you want to create a new SetOf%s with <font color=red>%s</font> %s?", type, selectionmd.size(), (selectionmd.size() > 1)?"elements":"element");
-                    ScipionMessageDialog dlg = new ScipionMessageDialog(ScipionGalleryJFrame.this, "Question", question, fields);
+                    ScipionMessageDialog dlg = new ScipionMessageDialog(ScipionGalleryJFrame.this, "Question", question, msgfields);
                     int create = dlg.action;
                     if (create == ScipionMessageDialog.OK_OPTION) {
                         createSubset(dlg.getFieldValue(runNameKey));
@@ -88,7 +88,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
                         saveClassSelection(selectionmdfile);
                         MetaData selectionmd = new MetaData(selectionmdfile);
                         String msg = String.format("<html>Are you sure you want to create a new SetOfClasses2D with <font color=red>%s</font> %s?", selectionmd.size(), (selectionmd.size() > 1)?"elements":"element");
-                        ScipionMessageDialog dlg = new ScipionMessageDialog(ScipionGalleryJFrame.this, "Question", msg, fields);
+                        ScipionMessageDialog dlg = new ScipionMessageDialog(ScipionGalleryJFrame.this, "Question", msg, msgfields);
                         int create = dlg.action;
                         if (create == ScipionMessageDialog.OK_OPTION) {
                             createSubsetOfClasses(dlg.getFieldValue(runNameKey));

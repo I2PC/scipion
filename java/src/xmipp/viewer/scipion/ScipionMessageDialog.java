@@ -37,7 +37,7 @@ public class ScipionMessageDialog extends JDialog implements ActionListener {
     private JFrame frame;
     private JButton cancelbt;
     private JButton okbt;
-    int action;
+    public int action;
     public static final String firebrick = "#B22222";
     public static final String lightgrey = "#EAEBEC";
     public static final int OK_OPTION = 1;
