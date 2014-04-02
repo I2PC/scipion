@@ -9,7 +9,7 @@ import unittest
 
 from pyworkflow.tests import *
 from pyworkflow.em.data import Acquisition, Micrograph, SetOfMicrographs, CTFModel
-import pyworkflow.em.emx as emx
+import pyworkflow.em.packages.emx as emx
 
 try:
     import xml.etree.cElementTree as ET

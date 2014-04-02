@@ -32,7 +32,7 @@ import pyworkflow as pw
 from pyworkflow.utils.reflection import getSubclassesFromModules, getSubclasses, getModules
 from data import *
 from protocol import *
-from emx import ProtEmxImport, ProtEmxExport
+from pyworkflow.em.packages.emx import ProtEmxImport, ProtEmxExport
 from constants import *
 from convert import *
 from pyworkflow.viewer import Viewer
