@@ -126,7 +126,7 @@ function customPopupFileHTML(html, title, widthValue, heightValue) {
 	id = day.getTime();
 	var popup = window.open('', id, 'height='+heightValue+',width='+widthValue);
 	
-	style = "background-color:black;color:white;font-family:Monospace;padding:1em;font-size:90%;"
+	style = "background-color:black;color:white;font-family:Monospace;padding:1em;"
     title = "<title>"+ title + "</title>"
     body = "<div style="+ style +">" + title + html + "</div>"
 
