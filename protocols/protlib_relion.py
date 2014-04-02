@@ -751,7 +751,7 @@ def runNormalizeRelion(log, inputMd, outputMd, normType, bgRadius, Nproc,):
     if exists(outputMd):
         os.remove(outputMd)
     program = "xmipp_transform_normalize"
-    args = "-i %(stack)s -o %(outputMd)s --dont_apply_geo"
+    args = "-i %(stack)s -o %(outputMd)s --dont_apply_geo "
 
     if bgRadius <= 0:
         particleSize = MetaDataInfo(stack)[0]
