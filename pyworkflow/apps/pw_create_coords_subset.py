@@ -17,17 +17,17 @@ from pyworkflow.em.packages.xmipp3 import readSetOfCoordinates
 
 if __name__ == '__main__':
 
-    
-    outputdir = sys.argv[1]
+    protlabel = sys.argv[1]
+    outputdir = sys.argv[2]
     type = 'Coordinates'
-    projectid = sys.argv[2]
-    inputid = sys.argv[3]
+    projectid = sys.argv[3]
+    inputid = sys.argv[4]
 
     
     
     project = Manager().loadProject(projectid)
     
-    prot = ProtUserSubSet(inputType=type, outputType=type)
+    prot = ProtUserSubSet(label=protlabel, inputType=type, outputType=type)
     
     inputset = project.mapper.selectById(int(inputid))
     prot.createInputPointer(inputset)

@@ -35,8 +35,8 @@ from glob import glob
 from pyworkflow.object import String, Float
 from pyworkflow.protocol import *
 from pyworkflow.protocol.params import *
-from constants import *
-from data import *
+from pyworkflow.em.constants import *
+from pyworkflow.em.data import *
 from pyworkflow.utils.path import removeBaseExt, join, basename, cleanPath
 from pyworkflow.utils.properties import Message, Icon 
 
