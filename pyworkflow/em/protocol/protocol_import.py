@@ -31,9 +31,11 @@ In this module are protocol base classes related to EM imports of Micrographs, P
 
 from pyworkflow.em.protocol import *
 
+class ProtImport(EMProtocol):
+    #TODO: getFiles and getFilesPath may be refactorized
+    pass
 
-
-class ProtImportImages(EMProtocol):
+class ProtImportImages(ProtImport):
     """Common protocol to import a set of images in the project"""
         
     #--------------------------- DEFINE param functions --------------------------------------------
@@ -219,7 +221,7 @@ class ProtImportParticles(ProtImportImages):
         return self.outputParticles.getFiles()
 
 
-class ProtImportVolumes(EMProtocol):
+class ProtImportVolumes(ProtImport):
     """Protocol to import a set of volumes in the project"""
     _label = Message.LABEL_IMPORT_VOL
     _path = join('Volumes', 'Import')
@@ -323,7 +325,7 @@ class ProtImportVolumes(EMProtocol):
         return errors
 
 
-class ProtImportPdb(EMProtocol):
+class ProtImportPdb(ProtImport):
     """Protocol to import a set of volumes in the project"""
     _label = 'Import volumes'
     _path = join('Volumes', 'Import')

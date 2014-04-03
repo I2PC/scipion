@@ -125,8 +125,6 @@ class ProtCreateMask(EMProtocol):
  
 
 
-class ProtClassify(EMProtocol):
-    pass
 
 
 
@@ -176,8 +174,7 @@ class ProtUserSubSet(EMProtocol):
     
        
 
-class ProtAlignClassify(EMProtocol):
-    pass
+
 
 
 

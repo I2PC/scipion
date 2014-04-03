@@ -29,7 +29,10 @@ In this module are protocol base classes related to EM Micrographs
 """
 from pyworkflow.em.protocol import *
 
-class ProtCTFMicrographs(EMProtocol):
+class ProtMicrographs(EMProtocol):
+    pass
+
+class ProtCTFMicrographs(ProtMicrographs):
     """ Base class for all protocols that estimates the CTF"""
     def __init__(self, **args):
         EMProtocol.__init__(self, **args)
@@ -159,5 +162,5 @@ class ProtCTFMicrographs(EMProtocol):
         self.methodsInfo.set(msg)
 
 
-class ProtPreprocessMicrographs(EMProtocol):
+class ProtPreprocessMicrographs(ProtMicrographs):
     pass

@@ -30,12 +30,13 @@ This sub-package contains wrapper around Screen Classes Xmipp program
 """
 
 from pyworkflow.em import *  
+from pyworkflow.em.protocol import *
 import xmipp
 from xmipp3 import ProjMatcher
 from convert import readSetOfClasses2D   
 
         
-class XmippProtScreenClasses(ProtAlignClassify, ProjMatcher):
+class XmippProtScreenClasses(Prot2DAnalysis, ProjMatcher):
     """ Protocol to screen a set of classes in the project using a volume as reference """
     _label = 'screen classes'
     

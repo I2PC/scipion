@@ -29,8 +29,11 @@ In this module are protocol base classes related to 2D processing
 """
 from pyworkflow.em.protocol import *
 
+class Prot2D(EMProtocol):
+    pass
 
-class ProtAlign(EMProtocol):
+
+class ProtAlign(Prot2D):
     """ This class will serve as a base for all protocols that align a set of 2D images.
     All Align protocols receive as input:
         A set of partices
@@ -51,3 +54,9 @@ class ProtAlign(EMProtocol):
         """ This method should be implemented by subclasses
         to add other parameter relatives to the specific align protocol."""
         pass 
+
+class ProtClassify(Prot2D):
+    pass
+
+class Prot2DAnalysis(Prot2D):
+    pass

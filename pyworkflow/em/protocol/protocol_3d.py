@@ -29,7 +29,11 @@ In this module are protocol base classes related to 2D processing
 """
 from pyworkflow.em.protocol import *
 
-class ProtPreprocessVolumes(EMProtocol):
+
+class Prot3D(EMProtocol):
+    pass
+
+class ProtPreprocessVolumes(Prot3D):
     """ This class will serve as a base for all protocol
     that performs some operation on Volumes (i.e. filters, mask, resize, etc)
     It is mainly defined by an inputVolumes and outputVolumes.
@@ -63,19 +67,19 @@ class ProtMaskVolumes(ProtPreprocessVolumes):
 #class ProtInitialVolume(EMProtocol):
 #    pass
 
-class ProtRefine3D(EMProtocol):
+class ProtRefine3D(Prot3D):
     pass
 
-class ProtClassify3D(EMProtocol):
+class ProtClassify3D(Prot3D):
     pass
 
-class ProtValidate3D(EMProtocol):
+class ProtValidate3D(Prot3D):
     pass
 
-class ProtCreateMask3D(EMProtocol):
+class ProtCreateMask3D(Prot3D):
     pass
 
-class ProtProcessMovies(EMProtocol):
+class ProtProcessMovies(Prot3D):
     """Protocol base for protocols to process movies from direct detectors cameras"""
     
     #--------------------------- DEFINE param functions --------------------------------------------
@@ -149,10 +153,10 @@ class ProtOpticalAlignment(ProtProcessMovies):
         self._program = join(os.environ['OPT_ALIGN_HOME'], XMP_OPT_ALIGN)
 
 
-class ProtInitialVolume(EMProtocol):
+class ProtInitialVolume(Prot3D):
     """Protocol base for Initial volumes protocols"""
     pass
 
-class ProtAlignVolume(EMProtocol):
+class ProtAlignVolume(Prot3D):
     """Protocol base for Align volumes protocols"""
     pass
