@@ -29,7 +29,11 @@ In this module are protocol base classes related to 2D processing
 """
 from pyworkflow.em.protocol import *
 
-class ProtPreprocessVolumes(EMProtocol):
+
+class Prot3D(EMProtocol):
+    pass
+
+class ProtPreprocessVolumes(Prot3D):
     """ This class will serve as a base for all protocol
     that performs some operation on Volumes (i.e. filters, mask, resize, etc)
     It is mainly defined by an inputVolumes and outputVolumes.
@@ -60,99 +64,38 @@ class ProtMaskVolumes(ProtPreprocessVolumes):
     between the ProtPreprocessVolumes """
     pass
 
+
 #class ProtInitialVolume(EMProtocol):
 #    pass
 
-class ProtRefine3D(EMProtocol):
+
+class ProtRefine3D(Prot3D):
     pass
 
-class ProtClassify3D(EMProtocol):
+
+class ProtClassify3D(Prot3D):
     pass
 
-class ProtValidate3D(EMProtocol):
+
+class ProtValidate3D(Prot3D):
     pass
 
-class ProtCreateMask3D(EMProtocol):
+
+class ProtCreateMask3D(Prot3D):
     pass
 
-class ProtProcessMovies(EMProtocol):
-    """Protocol base for protocols to process movies from direct detectors cameras"""
-    
-    #--------------------------- DEFINE param functions --------------------------------------------
-    def _defineParams(self, form):
-        form.addSection(label=Message.LABEL_INPUT)
-        
-        form.addParam('inputMovies', PointerParam, important=True,
-                      label=Message.LABEL_INPUT_MOVS, pointerClass='SetOfMovies')
-        form.addParallelSection(threads=1, mpi=1)
-    
-    #--------------------------- INSERT steps functions --------------------------------------------
-    def _insertAllSteps(self):
-        movSet = self.inputMovies.get()
-        self._micList = []
-        for mov in movSet:
-            movFn = mov.getFirstItem().getFileName()
-            self._insertFunctionStep('processMoviesStep', movFn)
-        self._insertFunctionStep('createOutputStep')
-    
-    #--------------------------- STEPS functions ---------------------------------------------------
-    def processMoviesStep(self, movFn):
-        movName = removeBaseExt(movFn)
-        
-        self._createMovWorkingDir(movName)
-        movDir = self._movWorkingDir(movName)
-        
-        self._enterDir(movDir)
-        self._defineProgram()
-        movRelFn = os.path.relpath(movFn, movDir)
-        args = "%s" % movRelFn
-        self.runJob(self._program, args)
-        self._leaveDir()
-        
-        micJob = join(movDir, "justtest.mrc")
-        micFn = self._getExtraPath(movName + ".mrc")
-        moveFile(micJob, micFn)
-        self._micList.append(micFn)
-    
-    def createOutputStep(self):
-        micSet = self._createSetOfMicrographs()
-        movSet = self.inputMovies.get()
-        micSet.setAcquisition(movSet.getAcquisition())
-        micSet.setSamplingRate(movSet.getSamplingRate())
-        
-        for m in self._micList:
-            mic = Micrograph()
-            mic.setFileName(m)
-            micSet.append(mic)
-        self._defineOutputs(outputMicrographs=micSet)
-    
-    #--------------------------- UTILS functions ---------------------------------------------------
-    def _createMovWorkingDir(self, movFn):
-        """create a new directory for the movie and change to this directory.
-        """
-        workDir = self._movWorkingDir(movFn)
-        makePath(workDir)   # Create a directory for a current iteration
-    
-    def _movWorkingDir(self, movFn):
-        """ Define which is the directory for the current movie"""
-        movDir = '%s' % movFn
-        workDir = self._getTmpPath(movFn)
-        return workDir
-    
-class ProtOpticalAlignment(ProtProcessMovies):
-    """ Protocol to align movies, from direct detectors cameras, into micrographs.
-    """
-    _label = 'optical alignment'
-    
-    def _defineProgram(self):
-        XMP_OPT_ALIGN = 'xmipp_optical_alignment'
-        self._program = join(os.environ['OPT_ALIGN_HOME'], XMP_OPT_ALIGN)
 
 
-class ProtInitialVolume(EMProtocol):
+
+class ProtInitialVolume(Prot3D):
     """Protocol base for Initial volumes protocols"""
     pass
 
-class ProtAlignVolume(EMProtocol):
+
+class ProtAlignVolume(Prot3D):
     """Protocol base for Align volumes protocols"""
+    pass
+
+
+class ProtAnalysis3D(Prot3D):
     pass

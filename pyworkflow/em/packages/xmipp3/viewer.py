@@ -61,7 +61,7 @@ class XmippViewer(Viewer):
     _environments = [DESKTOP_TKINTER, WEB_DJANGO]
     _targets = [Image, SetOfImages, SetOfCoordinates, SetOfClasses2D, SetOfClasses3D, 
                 SetOfMovies, ProtExtractParticles,
-                ProtAlign, XmippProtKerdensom, XmippProtRotSpectra,  XmippProtCreateMask3D,
+                ProtAlign2D, XmippProtKerdensom, XmippProtRotSpectra,  XmippProtCreateMask3D,
                 SetOfCTF, NormalModes, XmippProtScreenClasses,
                 XmippProtConvertToPseudoAtoms, XmippProtIdentifyOutliers]
     
@@ -181,7 +181,7 @@ class XmippViewer(Viewer):
                     xplotter.show()
             # If Zscore on output images plot Zscore particle sorting
     
-        elif issubclass(cls, ProtAlign):
+        elif issubclass(cls, ProtAlign2D):
             self.visualize(obj.outputAverage)
             self.visualize(obj.outputParticles) 
             

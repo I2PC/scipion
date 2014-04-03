@@ -29,7 +29,10 @@ In this module are protocol base classes related to EM Micrographs
 """
 from pyworkflow.em.protocol import *
 
-class ProtCTFMicrographs(EMProtocol):
+class ProtMicrographs(EMProtocol):
+    pass
+
+class ProtCTFMicrographs(ProtMicrographs):
     """ Base class for all protocols that estimates the CTF"""
     def __init__(self, **args):
         EMProtocol.__init__(self, **args)
@@ -159,5 +162,81 @@ class ProtCTFMicrographs(EMProtocol):
         self.methodsInfo.set(msg)
 
 
-class ProtPreprocessMicrographs(EMProtocol):
+class ProtPreprocessMicrographs(ProtMicrographs):
     pass
+
+
+class ProtProcessMovies(ProtMicrographs):
+    """Protocol base for protocols to process movies from direct detectors cameras"""
+    
+    #--------------------------- DEFINE param functions --------------------------------------------
+    def _defineParams(self, form):
+        form.addSection(label=Message.LABEL_INPUT)
+        
+        form.addParam('inputMovies', PointerParam, important=True,
+                      label=Message.LABEL_INPUT_MOVS, pointerClass='SetOfMovies')
+        form.addParallelSection(threads=1, mpi=1)
+    
+    #--------------------------- INSERT steps functions --------------------------------------------
+    def _insertAllSteps(self):
+        movSet = self.inputMovies.get()
+        self._micList = []
+        for mov in movSet:
+            movFn = mov.getFirstItem().getFileName()
+            self._insertFunctionStep('processMoviesStep', movFn)
+        self._insertFunctionStep('createOutputStep')
+    
+    #--------------------------- STEPS functions ---------------------------------------------------
+    def processMoviesStep(self, movFn):
+        movName = removeBaseExt(movFn)
+        
+        self._createMovWorkingDir(movName)
+        movDir = self._movWorkingDir(movName)
+        
+        self._enterDir(movDir)
+        self._defineProgram()
+        movRelFn = os.path.relpath(movFn, movDir)
+        args = "%s" % movRelFn
+        self.runJob(self._program, args)
+        self._leaveDir()
+        
+        micJob = join(movDir, "justtest.mrc")
+        micFn = self._getExtraPath(movName + ".mrc")
+        moveFile(micJob, micFn)
+        self._micList.append(micFn)
+    
+    def createOutputStep(self):
+        micSet = self._createSetOfMicrographs()
+        movSet = self.inputMovies.get()
+        micSet.setAcquisition(movSet.getAcquisition())
+        micSet.setSamplingRate(movSet.getSamplingRate())
+        
+        for m in self._micList:
+            mic = Micrograph()
+            mic.setFileName(m)
+            micSet.append(mic)
+        self._defineOutputs(outputMicrographs=micSet)
+    
+    #--------------------------- UTILS functions ---------------------------------------------------
+    def _createMovWorkingDir(self, movFn):
+        """create a new directory for the movie and change to this directory.
+        """
+        workDir = self._movWorkingDir(movFn)
+        makePath(workDir)   # Create a directory for a current iteration
+    
+    def _movWorkingDir(self, movFn):
+        """ Define which is the directory for the current movie"""
+        movDir = '%s' % movFn
+        workDir = self._getTmpPath(movFn)
+        return workDir
+    
+    
+    
+class ProtOpticalAlignment(ProtProcessMovies):
+    """ Protocol to align movies, from direct detectors cameras, into micrographs.
+    """
+    _label = 'optical alignment'
+    
+    def _defineProgram(self):
+        XMP_OPT_ALIGN = 'xmipp_optical_alignment'
+        self._program = join(os.environ['OPT_ALIGN_HOME'], XMP_OPT_ALIGN)

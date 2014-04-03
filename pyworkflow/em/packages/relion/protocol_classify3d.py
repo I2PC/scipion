@@ -30,6 +30,7 @@ This module contains the protocol for 3d classification with relion.
 from protocol_base import *
 from pyworkflow.utils.which import which
 from pyworkflow.utils.path import makePath, replaceBaseExt, join, basename
+from pyworkflow.em.protocol import *
 
 
 
@@ -75,7 +76,20 @@ class ProtRelionClassify3D(ProtClassify3D, ProtRelionBase):
         """ Should be overriden in subclasses to
         return summary messages for CONTINUE EXECUTION.
         """
-        return []
+        errors = []
+        continueRun = self.continueRun.get()
+        continueRun._initialize()
+        lastIter = continueRun._lastIter()
+        
+        if self.continueIter.get() == 'last':
+            continueIter = lastIter
+        else:
+            continueIter = int(self.continueIter.get())
+        
+        if continueIter > lastIter:
+            errors += ["The iteration from you want to continue must be %01d or less" % lastIter]
+        
+        return errors
     
     def _summaryNormal(self):
         """ Should be overriden in subclasses to 

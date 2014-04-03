@@ -36,7 +36,7 @@ from convert import createXmippInputImages, readSetOfClasses2D
 from glob import glob
 
 
-class KendersomBaseClassify(ProtClassify):
+class KendersomBaseClassify(ProtClassify2D):
     """ Class to create a base template for Kendersom and rotational spectra protocols that share
     a common structure. 
     """

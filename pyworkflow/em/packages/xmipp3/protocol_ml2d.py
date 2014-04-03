@@ -33,7 +33,7 @@ import xmipp
 from convert import createXmippInputImages, readSetOfClasses2D, readSetOfParticles
 
         
-class XmippProtML2D(ProtClassify):
+class XmippProtML2D(ProtClassify2D):
     """
     Perform (multi-reference) 2D-alignment using 
     a maximum-likelihood ( *ML* ) target function.
@@ -50,7 +50,7 @@ class XmippProtML2D(ProtClassify):
     _label = 'ml2d'
     
     def __init__(self, **args):
-        ProtClassify.__init__(self, **args)        
+        ProtClassify2D.__init__(self, **args)        
         self.progId = "ml"
         self.oroot = ""
        

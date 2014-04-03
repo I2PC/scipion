@@ -37,14 +37,14 @@ from glob import glob
         
 
       
-class SpiderProtAlignAPSR(ProtAlign, SpiderProtocol):
+class SpiderProtAlignAPSR(ProtAlign2D, SpiderProtocol):
     """ Reference-free alignment shift and rotational alignment of an image series. 
     Uses Spider AP SR command.
     """
     _label = 'align APSR'
     
     def __init__(self, **args):
-        ProtAlign.__init__(self, **args)
+        ProtAlign2D.__init__(self, **args)
         SpiderProtocol.__init__(self, **args)
         
         self._params = {'ext': 'stk',

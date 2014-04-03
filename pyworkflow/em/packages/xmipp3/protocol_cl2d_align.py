@@ -36,7 +36,7 @@ from convert import createXmippInputImages, readSetOfParticles
 from glob import glob
        
         
-class XmippProtCL2DAlign(ProtAlign):
+class XmippProtCL2DAlign(ProtAlign2D):
     """ Protocol to align a set of particles. """
     _label = 'cl2d align'
 

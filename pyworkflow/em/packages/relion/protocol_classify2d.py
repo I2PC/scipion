@@ -35,7 +35,7 @@ from convert import addRelionLabels
 import xmipp
 
 
-class ProtRelionClassify2D(ProtRelionBase, ProtClassify):
+class ProtRelionClassify2D(ProtRelionBase, ProtClassify2D):
     """ This class implements the wrapper to Relion 2D - class averages program.
     """
     _label = '2d classify'
@@ -79,7 +79,20 @@ class ProtRelionClassify2D(ProtRelionBase, ProtClassify):
         """ Should be overriden in subclasses to
         return summary messages for CONTINUE EXECUTION.
         """
-        return []
+        errors = []
+        continueRun = self.continueRun.get()
+        continueRun._initialize()
+        lastIter = continueRun._lastIter()
+        
+        if self.continueIter.get() == 'last':
+            continueIter = lastIter
+        else:
+            continueIter = int(self.continueIter.get())
+        
+        if continueIter > lastIter:
+            errors += ["The iteration from you want to continue must be %01d or less" % lastIter]
+        
+        return errors
     
     def _summaryNormal(self):
         """ Should be overriden in subclasses to 

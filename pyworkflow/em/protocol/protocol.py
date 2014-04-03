@@ -123,19 +123,14 @@ class EMProtocol(Protocol):
 
 
 
-class ProtCreateMask(EMProtocol):
-    """ For those protocols who create mask as output. """
-    pass
-
  
-
-
-class ProtClassify(EMProtocol):
+class ProtSets(EMProtocol):
     pass
 
 
 
-class ProtUserSubSet(EMProtocol):
+
+class ProtUserSubSet(ProtSets):
     
     def __init__(self, **args):
         EMProtocol.__init__(self, **args)
@@ -181,12 +176,11 @@ class ProtUserSubSet(EMProtocol):
     
        
 
-class ProtAlignClassify(EMProtocol):
-    pass
 
 
 
-class ProtJoinSets(EMProtocol):
+
+class ProtJoinSets(ProtSets):
     """ Protocol to join two sets. """
     _label = 'join sets'
 
