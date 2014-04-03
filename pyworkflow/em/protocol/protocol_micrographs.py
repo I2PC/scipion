@@ -166,7 +166,7 @@ class ProtPreprocessMicrographs(ProtMicrographs):
     pass
 
 
-class ProtProcessMovies(ProtMicrographs):
+class ProtProcessMovies(ProtPreprocessMicrographs):
     """Protocol base for protocols to process movies from direct detectors cameras"""
     
     #--------------------------- DEFINE param functions --------------------------------------------

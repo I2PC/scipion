@@ -39,7 +39,7 @@ MICS_SAMEASPICKING = 0
 MICS_OTHER = 1
 
 class XmippParticlePickingAutomatic(ProtParticlePicking, XmippProtocol):
-    """Protocol to pick particles automatically in a set of micrographs of the project using previous training """
+    """Protocol to pick particles automatically in a set of micrographs using previous training """
     _label = 'automatic picking'
   
     
