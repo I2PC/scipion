@@ -43,6 +43,12 @@ class ProjectInfo(object):
         self.projName = projName
         self.mTime = mTime
         
+    def getName(self):
+        return self.projName
+    
+    def getModificationTime(self):
+        return self.mTime
+        
         
 class Manager(object):
     """This class will handle the creation, modification

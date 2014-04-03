@@ -30,9 +30,13 @@ This script will generate the pw.bashrc and pw.cshrc file to include
 """
 import os
 
+from pyworkflow import SETTINGS
+from pyworkflow.utils.path import makePath, copyFile
+from pyworkflow.apps.config import writeDefaults
+from pyworkflow.manager import Manager
+
 if __name__ == '__main__':
-    from pyworkflow.utils.path import makePath
-    from pyworkflow.apps.config import writeDefaults
+    
     
     SCIPION_HOME = os.environ['SCIPION_HOME']
     SCIPION_DIRS = ['SCIPION_DATA', 'SCIPION_LOGS', 'SCIPION_TESTS', 'SCIPION_USER_DATA']
@@ -47,4 +51,15 @@ if __name__ == '__main__':
         
     # Write default configurations
     writeDefaults()
+    
+    # Update the settings to all existing projects
+    manager = Manager()
+    projects = manager.listProjects()
+    
+    for p in projects:
+        proj = manager.loadProject(p.getName())
+        projSettings = proj.settingsPath
+        print "Copying settings to: ", projSettings
+        copyFile(SETTINGS, projSettings)
+        
     
