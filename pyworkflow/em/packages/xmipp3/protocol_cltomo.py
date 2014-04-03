@@ -66,7 +66,7 @@ class XmippProtCLTomo(ProtClassify3D):
         form.addParam('symmetry',StringParam,default='c1',label='Symmetry group',
                       help="See http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Symmetry for a description of the symmetry groups format."
                            "If no symmetry is present, give c1")
-        form.addParam('inputMask', PointerParam, pointerClass="VolumeMask", label="Spatial mask", allowNull=True)
+        form.addParam('inputMask', PointerParam, pointerClass="VolumeMask", label="Spatial mask", allowsNull=True)
         form.addParam('maximumResolution',FloatParam,default=0.25,label='Maximum resolution (pixels^-1)',
                       help="The maximum (Nyquist) resolution is 0.5. Use smaller values, e.g. 0.45, to prevent high-resolution artifacts.")
         form.addParam('sparsity',FloatParam,default=90,label='Sparsity in Fourier space',

@@ -92,8 +92,7 @@ class ProtEmxExport(ProtClassify):
                       label="Set to export",
                       help='Select the microgrpahs, coordinates or particles set to be exported to EMX.')
         form.addParam('ctfRelations', RelationParam, 
-                      allowNull=True, relationName=RELATION_CTF, 
-                      relationParent='getInputSet', relationReverse=True, 
+                      allowsNull=True, relationName=RELATION_CTF, attributeName='getInputSet', 
                       label='Include CTF from', 
                       help='You can select a CTF estimation associated with these\n'
                            'micrographs to be included in the EMX file')   

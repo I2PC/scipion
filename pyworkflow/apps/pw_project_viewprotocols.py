@@ -707,7 +707,7 @@ class ProtocolsView(tk.Frame):
         self._openProtocolForm(prot)
         
     def _selectProtocol(self, prot):
-        if prot is not None:
+        if prot is not None and prot != self.selectedProtocol:
             prot.mapper = self.project.mapper
             del self.selectedProtocol
             self.selectedProtocol = prot
