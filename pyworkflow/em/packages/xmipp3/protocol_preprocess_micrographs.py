@@ -34,7 +34,7 @@ import xmipp
 
 
 class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
-    """Protocol to preprocess a set of micrographs in the project"""
+    """Protocol to preprocess a set of micrographs in the project. You can crop borders, remove bad pixels, etc. """
     _label = 'preprocess micrographs'
 
 

@@ -285,8 +285,7 @@ def addProtocols(settings):
                   tag='protocol_base')
     m1.addSubMenu('CTF estimation', value='ProtCTFMicrographs',
                   tag='protocol_base')
-    m1.addSubMenu('Process', value='ProtProcessMovies',
-                  tag='protocol_base')
+ 
     
         
     # ------------------- Particles ----------------------------

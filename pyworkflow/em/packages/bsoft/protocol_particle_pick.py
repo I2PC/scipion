@@ -37,7 +37,7 @@ import bsoft
 
 class BsoftProtParticlePicking(ProtParticlePicking):
 
-    """Bsoft protocol to pick particles in a set of micrographs of the project"""
+    """Protocol to pick particles in a set of micrographs using bsoft"""
     _label = 'particle picking'
 
     
