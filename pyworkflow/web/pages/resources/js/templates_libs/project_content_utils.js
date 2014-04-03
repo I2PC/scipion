@@ -186,13 +186,14 @@ function fillTabs(id) {
 		dataType : "json",
 		success : function(json) {
 			
-			// DATA
+			// DATA SUMMARY
 			fillUL("input", json.inputs, "protocol_input", "fa-sign-in");
 			fillUL("output", json.outputs, "protocol_output", "fa-sign-out");
 			
-			// SUMMARY
-			$("#tab-summary").empty();
-			$("#tab-summary").append(json.summary);
+			var summary = $("#protocol_summary");
+			
+			summary.empty();
+			summary.append(json.summary);
 
 			// METHODS
 			$("#tab-methods").empty();
@@ -226,6 +227,48 @@ function fillTabs(id) {
 		}
 	});
 }
+
+function showLog(log_type){
+	
+	if(log_type=="output_log"){
+		$("#tab-logs-output").css("display","")
+		html = $("#tab-logs-output").html()
+		$("#output_log").attr("class", "elm-header-log_selected")
+		$("#externalTool").attr("href","javascript:customPopupFileHTML('" + html +"','Output Log',1024,768)")
+		
+		$("#tab-logs-error").css("display","none")
+		$("#error_log").attr("class", "elm-header-log")
+		
+		$("#tab-logs-scipion").css("display","none")
+		$("#scipion_log").attr("class", "elm-header-log")
+		
+	}else if(log_type=="error_log"){
+		$("#tab-logs-output").css("display","none")
+		$("#output_log").attr("class", "elm-header-log")
+		
+		$("#tab-logs-error").css("display","")
+		html = $("#tab-logs-error").html()
+		$("#error_log").attr("class", "elm-header-log_selected")
+		$("#externalTool").attr("href","javascript:customPopupFileHTML('" + html +"','Error Log',1024,768)")
+		
+		$("#tab-logs-scipion").css("display","none")
+		$("#scipion_log").attr("class", "elm-header-log")
+		
+	}else if(log_type=="scipion_log"){
+		$("#tab-logs-output").css("display","none")
+		$("#output_log").attr("class", "elm-header-log")
+		
+		$("#tab-logs-error").css("display","none")
+		$("#error_log").attr("class", "elm-header-log")
+		
+		$("#tab-logs-scipion").css("display","")
+		html = $("#tab-logs-scipion").html()
+		$("#scipion_log").attr("class", "elm-header-log_selected")
+		$("#externalTool").attr("href","javascript:customPopupFileHTML('" + html +"','Scipion Log',1024,768)")
+	}
+	
+}
+
 
 function fillUL(type, list, ulId, icon) {
 	/*
