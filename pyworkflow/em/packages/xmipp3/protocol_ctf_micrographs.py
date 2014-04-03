@@ -38,7 +38,7 @@ from xmipp3 import XmippMdRow
 
 
 class XmippProtCTFMicrographs(ProtCTFMicrographs):
-    """Protocol to perform CTF estimation on a set of micrographs in the project"""
+    """Protocol to estimate CTF on a set of micrographs using xmipp3"""
     _label = 'ctf estimation'
     __prefix = join('%(micDir)s','xmipp_ctf')
     _templateDict = {

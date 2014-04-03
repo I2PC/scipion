@@ -263,29 +263,35 @@ def addProtocols(settings):
     """ Write protocols configuration. """
     menu = ProtocolConfig("Protocols SPA")
     
-    # ------------------- DD cameras ----------------------------
-    m1 = menu.addSubMenu('DDCameras', tag='section')
+     # ------------------- Imports ----------------------------
+    m1 = menu.addSubMenu('Imports', tag='section')
     
-    m1.addSubMenu(' Import', value='ProtImportMovies', 
+    m1.addSubMenu('xmipp3-import micrographs', value='ProtImportMicrographs', 
                   tag='protocol', icon='bookmark.png')
-    m1.addSubMenu('Process', value='ProtProcessMovies',
-                  tag='protocol_base')
+    m1.addSubMenu('xmipp3-import particles', value='ProtImportParticles', 
+                  tag='protocol', icon='bookmark.png')
+    
+    m1.addSubMenu('xmipp3-import volumes', value='ProtImportVolumes', 
+                 tag='protocol', icon='bookmark.png')   
+    m1.addSubMenu('xmipp3-import pdb volumes', value='ProtImportPdb', 
+                 tag='protocol', icon='bookmark.png')  
+    m1.addSubMenu(' xmipp3-import movies', value='ProtImportMovies', 
+                  tag='protocol', icon='bookmark.png')
     
     # ------------------- Micrographs ----------------------------
     m1 = menu.addSubMenu('Micrographs', tag='section')
     
-    m1.addSubMenu(' Import', value='ProtImportMicrographs', 
-                  tag='protocol', icon='bookmark.png')
     m1.addSubMenu('Preprocess', value='ProtPreprocessMicrographs',
                   tag='protocol_base')
     m1.addSubMenu('CTF estimation', value='ProtCTFMicrographs',
                   tag='protocol_base')
+    m1.addSubMenu('Process', value='ProtProcessMovies',
+                  tag='protocol_base')
     
+        
     # ------------------- Particles ----------------------------
     m1 = menu.addSubMenu('Particles', tag='section')
-    
-    m1.addSubMenu('Import', value='ProtImportParticles', 
-                  tag='protocol', icon='bookmark.png')
+
     
     m1.addSubMenu('Join Sets', value='ProtJoinSets', 
                   tag='protocol', icon='bookmark.png')
@@ -312,8 +318,6 @@ def addProtocols(settings):
     # ------------------- 3D ----------------------------
     m1 = menu.addSubMenu('3D', tag='section')
     
-    m1.addSubMenu(' Import', value='ProtImportVolumes', 
-                 tag='protocol', icon='bookmark.png')   
     m1.addSubMenu('Initial volume', value='ProtInitialVolume',
                   tag='protocol_base')
     m1.addSubMenu('Preprocess', value='ProtPreprocessVolumes',

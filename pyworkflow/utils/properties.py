@@ -175,10 +175,7 @@ Define the number of processors to be used in the execution.
     LABEL_MAGNI_RATE = 'Magnification rate'
     LABEL_SCANNED = 'Scanned pixel size'
     
-    LABEL_IMPORT_MIC = 'Import micrographs'
-    LABEL_IMPORT_MOV = 'Import movies'
-    LABEL_IMPORT_PART = 'Import particles'
-    LABEL_IMPORT_VOL = 'Import volumes'
+    
     ERROR_IMPORT_VOL = 'importVolumes:There is not filePaths matching pattern'
     
     LABEL_CTF_ESTI = 'CTF Estimation'
