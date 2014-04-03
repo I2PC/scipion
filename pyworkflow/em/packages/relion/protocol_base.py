@@ -67,8 +67,7 @@ class ProtRelionBase(EMProtocol):
         self.ClassFnTemplate = '%(rootDir)s/relion_it%(iter)03d_class%(ref)03d.mrc:mrc'
         self.outputClasses = 'classes_ref3D.xmd'
         self.outputVols = 'volumes.xmd'
-        
-        
+    
     def _createFilenameTemplates(self):
         """ Centralize how files are called for iterations and references. """
         self.extraIter = self._getExtraPath('relion_it%(iter)03d_')
@@ -228,7 +227,10 @@ class ProtRelionBase(EMProtocol):
                           label='Number of iterations',
                           help='Number of iterations to be performed. Note that the current implementation does NOT '
                                'comprise a convergence criterium. Therefore, the calculations will need to be stopped'
-                               'by the user if further iterations do not yield improvements in resolution or classes.') 
+                               'by the user if further iterations do not yield improvements in resolution or classes.'
+                               'If continue option is True, you going to do this number of new iterations (e.g. if'
+                               '*Continue from iteration* is set 3 and this param is set 25, the final iteration of the'
+                               'protocol will be the 28th.')
             form.addParam('regularisationParamT', IntParam, default=1,
                           label='Regularisation parameter T',
                           help='Bayes law strictly determines the relative weight between the contribution of the '
@@ -337,7 +339,7 @@ class ProtRelionBase(EMProtocol):
                                    'be used from this angular sampling rate onwards.')
             
         form.addParallelSection(threads=1, mpi=3)
-         
+    
     #--------------------------- INSERT steps functions --------------------------------------------  
     def _insertAllSteps(self): 
         self._initialize()
@@ -381,11 +383,19 @@ class ProtRelionBase(EMProtocol):
         self._setBasicArgs(args)
         
     def _setContinueArgs(self, args):
-        args = {}
+        continueRun = self.continueRun.get()
+        continueRun._initialize()
+        
         if self.IS_CLASSIFY:
-            self.copyAttributes(self.continueRun.get(), 'regularisationParamT')
+            self.copyAttributes(continueRun, 'regularisationParamT')
         self._setBasicArgs(args)
-        args['--continue'] = self._getFileName('optimiser', iter=self.continueIter.get())
+        
+        if self.continueIter.get() == 'last':
+            continueIter = continueRun._lastIter()
+        else:
+            continueIter = int(self.continueIter.get())
+            
+        args['--continue'] = continueRun._getFileName('optimiser', iter=continueIter)
     
     def _setBasicArgs(self, args):
         """ Return a dictionary with basic arguments. """
@@ -459,6 +469,7 @@ class ProtRelionBase(EMProtocol):
         """ Execute the relion steps with the give params. """
         self._loadEnvironment()
         params += ' --j %d' % self.numberOfThreads.get()
+        print "PARAMS: ", params
         self.runJob(self._getProgram(), params)
     
     def createOutputStep(self):
@@ -472,7 +483,7 @@ class ProtRelionBase(EMProtocol):
         else:
             errors += self._validateNormal()
         return errors
-            
+    
     def _validateNormal(self):
         """ Should be overriden in subclasses to 
         return summary message for NORMAL EXECUTION. 
