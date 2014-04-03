@@ -29,7 +29,7 @@ This sub-package contains protocols for performing subtomogram averaging.
 
 from pyworkflow.em import *  
 from constants import *
-from convert import createXmippInputVolumes, readSetOfClasses3D, readSetOfVolumes
+from convert import createXmippInputVolumes, readSetOfClassesVol, readSetOfVolumes
 from xmipp import MetaData
 
 
@@ -88,15 +88,45 @@ class XmippProtCLTomo(ProtClassify3D):
         self._insertFunctionStep('createOutput')
     
     #--------------------------- STEPS functions --------------------------------------------
+    def runCLTomo(self):
+        params= ' -i '            + createXmippInputVolumes(self,self.volumelist.get()) + \
+                ' --oroot '       + self._getExtraPath("results") + \
+                ' --iter '        + str(self.numberOfIterations.get()) + \
+                ' --nref '        + str(self.numberOfReferences.get()) + \
+                ' --sym '         + self.symmetry.get() + \
+                ' --maxFreq '     + str(self.maximumResolution.get()) + \
+                ' --sparsity '    + str(self.sparsity.get()/100.0) + \
+                ' --DWTsparsity ' + str(self.dwtSparsity.get()/100.0) + \
+                ' --maxShiftX '   + str(self.maxShiftX.get()) + \
+                ' --maxShiftY '   + str(self.maxShiftY.get()) + \
+                ' --maxShiftZ '   + str(self.maxShiftZ.get()) + \
+                ' --maxRot '      + str(self.maxRot.get()) + \
+                ' --maxTilt '     + str(self.maxTilt.get()) + \
+                ' --maxPsi '      + str(self.maxPsi.get())
+        if self.doGenerateInitial.get():
+            params+=' --nref0 '+str(self.numberOfReferences0.get())
+            if self.randomizeOrientation.get():
+                params+=' --randomizeStartingOrientation'
+        else:
+            params+=' --ref0 '+createXmippInputVolumes(self,self.referenceList.get(),self._getPath('references.xmd'))
+        if self.inputMask.hasValue():
+            params+=' --mask binary_file '+self.inputMask.get().getLocation()
+        if self.generateAligned.get():
+            params+=" --generateAlignedVolumes"
+        if self.dontAlign.get():
+            params+=" --dontAlign"
+
+        self.runJob('xmipp_mpi_classify_CLTomo','%d %s'%(self.numberOfMpi.get(),params))
+    
     def createOutput(self):
         import glob
         levelFiles=glob.glob(self._getExtraPath("results_classes_level*.xmd"))
         if levelFiles:
             levelFiles.sort()
             lastLevelFile=levelFiles[-1]
-            setOfClasses = self._createSetOfClasses3D()
-            setOfClasses.setVolumes(self.volumelist.get())
-            readSetOfClasses3D(setOfClasses,lastLevelFile)
+            setOfClasses = self._createSetOfClassesVol()
+            setOfClasses.setImages(self.volumelist.get())
+            readSetOfClassesVol(setOfClasses,lastLevelFile)
             self._defineOutputs(outputClasses=setOfClasses)
             self._defineSourceRelation(self.volumelist, self.outputClasses)
         if self.generateAligned.get():
@@ -111,7 +141,7 @@ class XmippProtCLTomo(ProtClassify3D):
             setOfVolumes.setSamplingRate(volumeList.getSamplingRate())
             self._defineOutputs(alignedVolumes=setOfVolumes)
             self._defineTransformRelation(self.volumelist, self.alignedVolumes)
-            
+    
     #--------------------------- INFO functions --------------------------------------------
     def _summary(self):
         messages = []
@@ -149,32 +179,3 @@ class XmippProtCLTomo(ProtClassify3D):
         return ['Chen2013']
 
     #--------------------------- UTILS functions --------------------------------------------
-    def runCLTomo(self):
-        params= ' -i '            + createXmippInputVolumes(self,self.volumelist.get()) + \
-                ' --oroot '       + self._getExtraPath("results") + \
-                ' --iter '        + str(self.numberOfIterations.get()) + \
-                ' --nref '        + str(self.numberOfReferences.get()) + \
-                ' --sym '         + self.symmetry.get() + \
-                ' --maxFreq '     + str(self.maximumResolution.get()) + \
-                ' --sparsity '    + str(self.sparsity.get()/100.0) + \
-                ' --DWTsparsity ' + str(self.dwtSparsity.get()/100.0) + \
-                ' --maxShiftX '   + str(self.maxShiftX.get()) + \
-                ' --maxShiftY '   + str(self.maxShiftY.get()) + \
-                ' --maxShiftZ '   + str(self.maxShiftZ.get()) + \
-                ' --maxRot '      + str(self.maxRot.get()) + \
-                ' --maxTilt '     + str(self.maxTilt.get()) + \
-                ' --maxPsi '      + str(self.maxPsi.get())
-        if self.doGenerateInitial.get():
-            params+=' --nref0 '+str(self.numberOfReferences0.get())
-            if self.randomizeOrientation.get():
-                params+=' --randomizeStartingOrientation'
-        else:
-            params+=' --ref0 '+createXmippInputVolumes(self,self.referenceList.get(),self._getPath('references.xmd'))
-        if self.inputMask.hasValue():
-            params+=' --mask binary_file '+self.inputMask.get().getLocation()
-        if self.generateAligned.get():
-            params+=" --generateAlignedVolumes"
-        if self.dontAlign.get():
-            params+=" --dontAlign"
-
-        self.runJob('xmipp_mpi_classify_CLTomo','%d %s'%(self.numberOfMpi.get(),params))
