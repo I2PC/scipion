@@ -300,12 +300,14 @@ def addProtocols(settings):
     # ------------------- 2D ----------------------------
     m1 = menu.addSubMenu('2D', tag='section')
     
-    m1.addSubMenu('Align', value='ProtAlign',
+    m1.addSubMenu('Align', value='ProtAlign2D',
                   tag = 'protocol_base', icon='class_obj.gif')
-    m1.addSubMenu('Classify', value='ProtClassify',
+    m1.addSubMenu('Classify', value='ProtClassify2D',
                   tag = 'protocol_base', icon='class_obj.gif')
-    m1.addSubMenu('Align+Classify', value='ProtAlignClassify',
-                  tag = 'protocol_base', icon='class_obj.gif')
+    
+    m1.addSubMenu('Analysis', value='ProtAnalysis2D',
+                  tag = 'protocol_base')
+
     
     # ------------------- 3D ----------------------------
     m1 = menu.addSubMenu('3D', tag='section')
@@ -326,6 +328,8 @@ def addProtocols(settings):
                   tag='protocol_base')
     m1.addSubMenu('Mask', value='ProtCreateMask3D',
                   tag='protocol_base')
+    m1.addSubMenu('Analysis', value='ProtAnalysis3D',
+                  tag = 'protocol_base')
     
     settings.addProtocolMenu(menu)
     
@@ -346,7 +350,7 @@ def addSpiderMDAProtocols(settings):
     m1.addSubMenu(' Filter (optional)', tag='protocol',
                   value='SpiderProtFilter')
     m1.addSubMenu(' Align', tag='protocol_base', openItem=True, 
-                  value='ProtAlign')
+                  value='ProtAlign2D')
     m1.addSubMenu(' Create mask (optional)', tag='protocol',
                   value='SpiderProtCustomMask')
     m1.addSubMenu(' Dimension reduction', tag='protocol',  

@@ -36,12 +36,12 @@ from xmipp3 import ProjMatcher
 from convert import readSetOfClasses2D   
 
         
-class XmippProtScreenClasses(Prot2DAnalysis, ProjMatcher):
+class XmippProtScreenClasses(ProtAnalysis2D, ProjMatcher):
     """ Protocol to screen a set of classes in the project using a volume as reference """
     _label = 'screen classes'
     
     def __init__(self, **args):
-        ProtAlignClassify.__init__(self, **args)
+        ProtAnalysis2D.__init__(self, **args)
     
     #--------------------------- DEFINE param functions --------------------------------------------
     def _defineParams(self, form):
