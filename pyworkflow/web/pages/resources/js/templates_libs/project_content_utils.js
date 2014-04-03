@@ -232,9 +232,8 @@ function showLog(log_type){
 	
 	if(log_type=="output_log"){
 		$("#tab-logs-output").css("display","")
-		html = $("#tab-logs-output").html()
 		$("#output_log").attr("class", "elm-header-log_selected")
-		$("#externalTool").attr("href","javascript:customPopupFileHTML('" + html +"','Output Log',1024,768)")
+		html = $("#tab-logs-output").html()
 		
 		$("#tab-logs-error").css("display","none")
 		$("#error_log").attr("class", "elm-header-log")
@@ -247,9 +246,8 @@ function showLog(log_type){
 		$("#output_log").attr("class", "elm-header-log")
 		
 		$("#tab-logs-error").css("display","")
-		html = $("#tab-logs-error").html()
 		$("#error_log").attr("class", "elm-header-log_selected")
-		$("#externalTool").attr("href","javascript:customPopupFileHTML('" + html +"','Error Log',1024,768)")
+		html = $("#tab-logs-error").html()
 		
 		$("#tab-logs-scipion").css("display","none")
 		$("#scipion_log").attr("class", "elm-header-log")
@@ -262,11 +260,11 @@ function showLog(log_type){
 		$("#error_log").attr("class", "elm-header-log")
 		
 		$("#tab-logs-scipion").css("display","")
-		html = $("#tab-logs-scipion").html()
 		$("#scipion_log").attr("class", "elm-header-log_selected")
-		$("#externalTool").attr("href","javascript:customPopupFileHTML('" + html +"','Scipion Log',1024,768)")
+		html = $("#tab-logs-scipion").html()
 	}
 	
+	$("#externalTool").attr("href","javascript:customPopupFileHTML('" + html +"','"+ log_type + "',1024,768)")
 }
 
 
