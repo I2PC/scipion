@@ -52,7 +52,7 @@ class ProtCTFMicrographs(ProtMicrographs):
         line = form.addLine('Resolution', help=Message.TEXT_RES)
         line.addParam('lowRes', FloatParam, default=0.05,
                       label='Lowest' )
-        line.addParam('highest', FloatParam, default=0.35,
+        line.addParam('highRes', FloatParam, default=0.35,
                       label='Highest')
 #        form.addParam('lowRes', FloatParam, default=0.05,
 #                      label=Message.LABEL_LOW_RES,
