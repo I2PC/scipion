@@ -169,31 +169,6 @@
 	font-weight: bold;
 }
 
-/* .filetree li.expandable span.section { */
-/* 	font-size: 1.2em; */
-/* 	font-weight: bold; */
-/* } */
-
-/* .filetree span.protocol_base { */
-/* 	background: url(../../../../resources/class_obj.gif) 0 0 no-repeat; */
-/* 	padding-left: 20px; */
-/* } */
-
-/* .filetree li.expandable span.protocol_base { */
-/* 	background: url(../../../../resources/class_obj.gif) 0 0 no-repeat; */
-/* 	padding-left: 20px; */
-/* } */
-
-/* .filetree span.protocol { */
-/* 	background: url(../../../../resources/bookmark.gif) 0 0 no-repeat; */
-/* 	padding-left: 20px; */
-/* } */
-
-/* .filetree span.protocol_class { */
-/* 	background: url(../../../../resources/python_file.gif) 0 0 no-repeat; */
-/* 	padding-left: 20px; */
-/* } */
-
 /*	List inside the tab container	*/
 #listEx li {
 	float: none;
@@ -203,7 +178,6 @@
 #listEx ul {
 	position: inherit;
 	margin: 10px 0px 0px 10px;
-	/* 	font-size: 0.9em; */
 }
 
 #listEx li a {
@@ -217,18 +191,9 @@
 }
 
 .tabContents,.referenceLink {
-	/* 	max-height:10em; */
-	/* 	min-height:10em; */
-	/* 	height:10em; */
-	/* 	max-height:100%; */
 	height: auto;
-	/* 	overflow-y:scroll; */
-	/* 	overflow: auto; */
 	padding: 1em;
 	font-size: 90%;
-
-	/* 	min-height:14em; */
-	/* 	height:14em; */
 }
 
 .tabContents a:hover {
@@ -245,11 +210,10 @@
 	font-size: 90%;
 	background-color: black;
 	color: white;
+}
 
-	/* 	After change the font-family the height is modified due to the font adjust size, fix here. */
-	/* 	max-height:12.8em; */
-	/* 	min-height:12.8em; */
-	/* 	height:12.8em; */
+#tab-logs{
+	margin:0.5em 0.5em 0 0.5em;
 }
 
 /* jsPlumb */
@@ -305,7 +269,7 @@
 	margin-bottom: 1px;
 	padding: 0.4em 0.8em 0.35em 0.8em;
 	border-radius: 0.3em 0.3em 0 0;
-	border: 1px solid #d3d3d3;
+	border: 1px solid #aaaaaa;
 	font-size:medium;
 	color:white !important;
 	background: Firebrick  50% 50% repeat-x;
