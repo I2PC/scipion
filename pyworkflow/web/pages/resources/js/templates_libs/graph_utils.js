@@ -212,7 +212,7 @@ function paintBox(nodeSource, id, msg) {
 
 	if (id != "graph_PROJECT") {
 		var objId = id.replace("graph_", "");
-		var href = "javascript:popup('/form/?protocolId=" + objId + "')";
+		var href = "javascript:customPopup('/form/?protocolId=" + objId + "',620,591)";
 		var projName = $("div#graphActiv").attr("data-project");
 //		var onclick = "updateTabs('" + projName + "', '" + objId + "',($(this)))";
 		var onclick = "launchToolbarTree('" + objId	+ "',($(this)))";
