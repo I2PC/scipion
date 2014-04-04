@@ -171,8 +171,7 @@
 									</td>
 								{% elif param.getClassName == "ProtocolClassParam" %}
 									<td class="ico">
-										<a href="javascript:browseObjects('{{paramName}}','{{projectName}}','protClassName' ,'{{param.protocolClassName.get}}');">
-											<i class="fa fa-search" style="font-size:1.1em;"></i>
+										<a class="fa fa-search" href="javascript:browseObjects('{{paramName}}','{{projectName}}','protClassName' ,'{{param.protocolClassName.get}}');">
 										</a>
 									</td>
 									<td class="ico">
@@ -182,7 +181,7 @@
 									</td>
 								{% elif param.hasWizard %}
 									<td class="ico">
-										<a href="javascript:putModeWiz('{{param.wizardName}}','{{param.wizardClassName}}' );"><i class="fa fa-magic" style="font-size:1.2em;"></i></a>
+										<a class="fa fa-magic" href="javascript:putModeWiz('{{param.wizardName}}','{{param.wizardClassName}}' );"></a>
 									</td>
 								{% elif param.hasViewer %}
 									<td class="ico">
@@ -193,7 +192,9 @@
 									</td>
 								{% endif %}
 								{% if param.htmlHelp %}
-									<td class="ico"><a href="javascript:infoPopup('Help {{param.label.get}}','{{param.htmlHelp|escapejs}}');"><i class="fa fa-question-circle" style="font-size:1.3em;"></i></a></td>
+									<td class="ico">
+										<a class="fa fa-question-circle" href="javascript:infoPopup('Help {{param.label.get}}','{{param.htmlHelp|escapejs}}');"></a>
+									</td>
 								{% endif %}
 								</tr>
 								{% endfor %}

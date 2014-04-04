@@ -68,7 +68,7 @@
 					</select>		
 				</td>
 				<td>
-					.ico
+					<a class="fa fa-question-circle" href="javascript:infoPopup('Help {{msg.LABEL_RUNMODE}}','{{msg.HELP_RUNMODE|escapejs}}');"></a>
 				</td>
 				<td>
 					{{msg.LABEL_HOST}}
@@ -81,7 +81,7 @@
 					</select>
 				</td>
 				<td>
-					.ico
+					<!-- .ico -->
 				</td>
 			</tr>
 			<tr>
@@ -98,7 +98,7 @@
 					<input type="text" id="{{msg.VAR_MPI}}_input" name="{{msg.VAR_MPI}}" value="{{numberOfMpi}}" style="width:2em;">
 				</td>
 				<td>
-					.ico
+					<a class="fa fa-question-circle" href="javascript:infoPopup('Help {{msg.LABEL_PARALLEL}}','{{msg.HELP_MPI_THREADS|escapejs}}');"></a>
 				</td>
 				<td>
 					{{msg.LABEL_QUEUE}}
@@ -108,7 +108,7 @@
 				  <input type="radio" id="queue_no" name="{{msg.VAR_QUEUE}}" value="no"/>{{msg.LABEL_QUEUE_NO}}
 				</td>
 				<td>
-					.ico
+					<a class="fa fa-question-circle" href="javascript:infoPopup('Help {{msg.LABEL_RUNMODE}}','{{msg.HELP_RUNMODE|escapejs}}');"></a>
 				</td>
 			</tr>
 			<tr>
