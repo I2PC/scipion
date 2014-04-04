@@ -93,7 +93,7 @@ class Message():
     
     NO_INFO_SUMMARY = 'No summary information.'
     NO_INFO_METHODS = 'No methods information.'
-    NO_INFO_LOGS = 'No logs information'
+    NO_INFO_LOGS = 'No logs information.'
     NO_SAVE_SETTINGS = 'Error try to save settings.'
     
     #-------- Protocol Form messages ----------

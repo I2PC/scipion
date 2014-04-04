@@ -65,19 +65,21 @@
 	</head>
 	<body onload="evalElements();">
 
-		<div style="text-align:center;margin-bottom:30px;">
+		<div>
 			{% if package_logo != ''%}
-				<img src='{{package_logo}}' style="float:left;"/>
+				<img src='{{package_logo}}' style="margin:5px;width:auto;height:2.5em;float:left;"/>
 			{% endif %}
-			<h3 id="protName" style="padding-top:25px;">
+			<h3 id="protName" style="">
 				Protocol: {{protocol.getClassLabel}} 
 			</h3>
-			<a href="javascript:infoPopup('Documentation','{{protocol.htmlDoc|escapejs}}');" style="float:right">
-				<i class="fa fa-question-circle"></i>&nbsp;{{msg.LABEL_HELP}}&nbsp;	
-			</a>
-			<a href="javascript:infoPopup('Cite','{{protocol.htmlCitations|escapejs}}');" style="float:right">
-				<i class="fa fa-external-link"></i>&nbsp;{{msg.LABEL_CITE}}&nbsp;
-			</a>
+			<div style="float:right;">
+				<a href="javascript:infoPopup('Documentation','{{protocol.htmlDoc|escapejs}}');">
+					<i class="fa fa-question-circle"></i>&nbsp;{{msg.LABEL_HELP}}&nbsp;	
+				</a>
+				<a href="javascript:infoPopup('Cite','{{protocol.htmlCitations|escapejs}}');">
+					<i class="fa fa-external-link"></i>&nbsp;{{msg.LABEL_CITE}}&nbsp;
+				</a>
+			</div>
 		</div>
 		
 		<form id="protocolForm" action="/protocol/" method="POST" data-mode="">{% csrf_token %}
@@ -93,105 +95,8 @@
 <!-- 			<input type="hidden" id="comment" name="comment" value="{{protocol.getObjComment}}"/> -->
 			<input type="hidden" id="paramProt" name="paramProt" value="{{paramProt}}"/>
 			
-			{% if visualize == 0 %}
-			<div id="main">
-				<div id="mainNode1" class="mainNode floatLeft">
-					<div class="title">
-						{{msg.TITLE_RUN}}
-					</div>
-					<table>
-						<tr>
-							<td>
-								{{msg.TITLE_RUN_NAME}}
-							</td>
-							<td>
-								<input type="text" id="{{msg.VAR_RUN_NAME}}" name="{{msg.VAR_RUN_NAME}}" value="{{protocol.getObjLabel}}" disabled>
-							</td>
-							<td class="ico">
-								<a id="editTool" 
-								href="javascript:editObjParam(
-										{% if protocol.getObjId == None %}
-														'new',
-										{% else %}
-														{{protocol.getObjId}},
-										{% endif %}		
-														'{{msg.TITLE_LABEL}}',
-														'{{protocol.getObjLabel}}',
-														'{{msg.TITLE_COMMENT}}',
-														'{{comment}}',
-														'{{msg.LABEL_COMMENT}}',
-														'protocol');">				
-								<i class="fa fa-pencil"></i></a>
-							</td>
-						</tr>
-						<tr>
-							<td>
-								{{msg.LABEL_RUNMODE}}
-							</td>
-							<td>
-								<select id="{{msg.VAR_RUN_MODE}}_select" name="{{msg.VAR_RUN_MODE}}" size="1" onchange="javascript:onChangeEnumParamCombo('runMode_select', '{{msg.VAR_RUN_MODE}}');">
-									<option value="0">{{msg.LABEL_RUN_MODE_RESUME}}</option>
-									<option value="1" selected="selected">{{msg.LABEL_RUN_MODE_RESTART}}</option>
-								</select>		
-							</td>
-						</tr>
-						<tr>
-							<td>
-								{{msg.LABEL_EXPERT}}
-							</td>
-							<td>
-								<select name="{{msg.VAR_EXPERT}}" size=1
-								onChange="javascript:evalElements();">
-									<option value="0" {% if expertLevel == 0 %} selected="selected" {% endif %}>{{msg.LABEL_EXPERT_NORMAL}}</option>
-									<option value="1" {% if expertLevel == 1 %} selected="selected" {% endif %}>{{msg.LABEL_EXPERT_ADVANCE}}</option>
-									<option value="2" {% if expertLevel == 2 %} selected="selected" {% endif %}>{{msg.LABEL_EXPERT_EXPERT}}</option>
-								</select>
-							</td>
-						</tr>					
-					</table>			
-				</div>
-								
-				<div id="mainNode2" class="mainNode floatRight">
-					<div class="title">
-						{{msg.TITLE_EXEC}}
-					</div>
-					<table>
-						<tr>
-							<td>
-								{{msg.LABEL_HOST}}
-							</td>
-							<td>
-								<select name="{{msg.VAR_EXEC_HOST}}" size=1 onChange="">
-								{% for h in hosts %}
-									<option value="{{h}}" {% if h == hostName %} selected="selected" {% endif %}>{{h}}</option>
-								{% endfor %}
-								</select>
-							</td>
-						</tr>
-						<tr>
-							<td>
-								{{msg.LABEL_THREADS}}&nbsp;		
-								<input type="text" id="{{msg.VAR_THREADS}}_input" name="{{msg.VAR_THREADS}}" value="{{numberOfThreads}}" style="width:3em;">
-							</td>
-							<td >
-								{{msg.LABEL_MPI}}&nbsp;		
-								<input type="text" id="{{msg.VAR_MPI}}_input" name="{{msg.VAR_MPI}}" value="{{numberOfMpi}}" style="width:3em;">
-							</td>
-						</tr>
-						<tr>
-							<td>
-								{{msg.LABEL_QUEUE}}
-							</td>
-							<td>
-							  <input type="radio" id="queue_yes" name="{{msg.VAR_QUEUE}}" value="yes"/>{{msg.LABEL_QUEUE_YES}}
-							  <input type="radio" id="queue_no" name="{{msg.VAR_QUEUE}}" value="no"/>{{msg.LABEL_QUEUE_NO}}
-							</td>
-						</tr>
-					</table>
-				</div>
-			</div>
-			{% endif %}
- 
+			{% include "header_form.html" %}
+			
 			<div id="tabs">
 				<ul>
 				 {% for section in definition.iterSections %}
