@@ -97,7 +97,7 @@ class XmippPreprocess():
 
 
 class XmippProtPreprocessParticles(ProtProcessParticles, XmippProcessParticles, XmippPreprocess):
-    """ Apply some filter to SetOfParticles """
+    """ Preprocess a set of particles. You can remove dust, normalize, apply threshold, etc """
     _label = 'preprocess particles'
 
     # Automatic Particle rejection enum

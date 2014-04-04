@@ -182,8 +182,8 @@ class XmippProtResize():
 
 
 class XmippProtCropResizeParticles(ProtProcessParticles, XmippProtResize, XmippProcessParticles):
-    """ Change the dimensions to SetOfParticles object """
-    _label = 'resize crop particles'
+    """ Crop or resize a set of particles """
+    _label = 'crop or resize particles'
     
     def __init__(self, **args):
         ProtProcessParticles.__init__(self, **args)
