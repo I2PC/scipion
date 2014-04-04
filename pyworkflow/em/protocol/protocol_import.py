@@ -31,9 +31,11 @@ In this module are protocol base classes related to EM imports of Micrographs, P
 
 from pyworkflow.em.protocol import *
 
+class ProtImport(EMProtocol):
+    #TODO: getFiles and getFilesPath may be refactorized
+    pass
 
-
-class ProtImportImages(EMProtocol):
+class ProtImportImages(ProtImport):
     """Common protocol to import a set of images in the project"""
         
     #--------------------------- DEFINE param functions --------------------------------------------
@@ -142,10 +144,10 @@ class ProtImportImages(EMProtocol):
 
 
 class ProtImportMicrographs(ProtImportImages):
-    """Protocol to import a set of micrographs in the project"""
+    """Protocol to import a set of micrographs to the project"""
 
     _className = 'Micrograph'
-    _label = Message.LABEL_IMPORT_MIC
+    _label = 'import micrographs'
     
     def _defineParams(self, form):
         ProtImportImages._defineParams(self, form)
@@ -195,10 +197,10 @@ class ProtImportMicrographs(ProtImportImages):
 
 
 class ProtImportParticles(ProtImportImages):
-    """Protocol to import a set of particles in the project"""
+    """Protocol to import a set of particles to the project"""
  
     _className = 'Particle'
-    _label = Message.LABEL_IMPORT_PART
+    _label = 'import particles'
         
     def _defineParams(self, form):
         ProtImportImages._defineParams(self, form)
@@ -219,9 +221,9 @@ class ProtImportParticles(ProtImportImages):
         return self.outputParticles.getFiles()
 
 
-class ProtImportVolumes(EMProtocol):
-    """Protocol to import a set of volumes in the project"""
-    _label = Message.LABEL_IMPORT_VOL
+class ProtImportVolumes(ProtImport):
+    """Protocol to import a set of volumes to the project"""
+    _label = 'import volumes'
     _path = join('Volumes', 'Import')
     
     def __init__(self, **args):
@@ -323,9 +325,9 @@ class ProtImportVolumes(EMProtocol):
         return errors
 
 
-class ProtImportPdb(EMProtocol):
-    """Protocol to import a set of volumes in the project"""
-    _label = 'Import volumes'
+class ProtImportPdb(ProtImport):
+    """Protocol to import a set of pdb volumes to the project"""
+    _label = 'import pdb volumes'
     _path = join('Volumes', 'Import')
     
     def __init__(self, **args):
@@ -363,10 +365,10 @@ class ProtImportPdb(EMProtocol):
 
 
 class ProtImportMovies(ProtImportImages):
-    """Protocol to import a set of movies (from direct detector cameras) in the project"""
+    """Protocol to import a set of movies (from direct detector cameras) to the project"""
     
     _className = 'Movie'
-    _label = Message.LABEL_IMPORT_MOV
+    _label = 'import movies'
     
     #--------------------------- DEFINE param functions --------------------------------------------
     def _defineParams(self, form):

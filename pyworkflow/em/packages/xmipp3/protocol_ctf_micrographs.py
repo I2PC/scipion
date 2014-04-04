@@ -38,7 +38,7 @@ from xmipp3 import XmippMdRow
 
 
 class XmippProtCTFMicrographs(ProtCTFMicrographs):
-    """Protocol to perform CTF estimation on a set of micrographs in the project"""
+    """Protocol to estimate CTF on a set of micrographs using xmipp3"""
     _label = 'ctf estimation'
     __prefix = join('%(micDir)s','xmipp_ctf')
     _templateDict = {
@@ -110,9 +110,7 @@ class XmippProtCTFMicrographs(ProtCTFMicrographs):
         # Copy result to output metadata
         moveFile(auxMdFn, mdFn)        
         self._defineOutputs(outputCTF=ctfSet)
-        self._defineSourceRelation(self.inputMics, ctfSet)
-        self._defineRelation(RELATION_CTF, self.inputMics, ctfSet)
-    
+        self._defineCtfRelation(self.inputMics, ctfSet)
 
     def _citations(self):
         return ['Vargas2013']

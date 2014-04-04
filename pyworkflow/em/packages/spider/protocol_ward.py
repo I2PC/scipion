@@ -37,14 +37,14 @@ from convert import locationToSpider
 from glob import glob
 
       
-# TODO: Remove from ProtAlign, and put in other category     
-class SpiderProtClassifyWard(ProtClassify, SpiderProtocol):
+# TODO: Remove from ProtAlign2D, and put in other category     
+class SpiderProtClassifyWard(ProtClassify2D, SpiderProtocol):
     """ Ward's method, using 'CL HC' 
     """
     _label = 'ward'
     
     def __init__(self):
-        ProtClassify.__init__(self)
+        ProtClassify2D.__init__(self)
         SpiderProtocol.__init__(self)
         
         self._params = {'ext': 'stk',

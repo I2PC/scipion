@@ -95,6 +95,11 @@ class EMProtocol(Protocol):
         self._defineRelation(RELATION_TRANSFORM, srcObj, dstObj)
         # A transform relation allways implies a source relation
         self._defineSourceRelation(srcObj, dstObj)
+        
+    def _defineCtfRelation(self, srcObj, dstObj):
+        self._defineRelation(RELATION_CTF, srcObj, dstObj)
+        # A ctf relation allways implies a source relation
+        self._defineSourceRelation(srcObj, dstObj)
     
     def _insertChild(self, key, child):
         if isinstance(child, Set):
@@ -118,19 +123,14 @@ class EMProtocol(Protocol):
 
 
 
-class ProtCreateMask(EMProtocol):
-    """ For those protocols who create mask as output. """
-    pass
-
  
-
-
-class ProtClassify(EMProtocol):
+class ProtSets(EMProtocol):
     pass
 
 
 
-class ProtUserSubSet(EMProtocol):
+
+class ProtUserSubSet(ProtSets):
     
     def __init__(self, **args):
         EMProtocol.__init__(self, **args)
@@ -176,12 +176,11 @@ class ProtUserSubSet(EMProtocol):
     
        
 
-class ProtAlignClassify(EMProtocol):
-    pass
 
 
 
-class ProtJoinSets(EMProtocol):
+
+class ProtJoinSets(ProtSets):
     """ Protocol to join two sets. """
     _label = 'join sets'
 

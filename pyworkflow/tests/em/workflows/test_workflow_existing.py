@@ -54,8 +54,7 @@ class TestXmippWorkflow(unittest.TestCase):
 #            p.printAll()
 
     def test_findRowById(self):
-        projName = "TestXmippWorkflow"
-        project = Manager().loadProject(projName) # Now it will be loaded if exists
+        project = self.loadProject("TestXmippWorkflow") # Now it will be loaded if exists
         
         coords = project.mapper.selectByClass('SetOfCoordinates')[0]
 
@@ -64,8 +63,7 @@ class TestXmippWorkflow(unittest.TestCase):
             
         
     def test_sets(self):
-        projName = "TestXmippWorkflow"
-        project = Manager().loadProject(projName) # Now it will be loaded if exists
+        project = self.loadProject("TestXmippWorkflow") # Now it will be loaded if exists
         
         sets = project.mapper.selectByClass('Set')
         
@@ -90,7 +88,7 @@ class TestXmippWorkflow(unittest.TestCase):
             
     def test_xmippWriteImages(self):
         projName = "relion_ribo"
-        project = Manager().loadProject(projName) # Now it will be loaded if exists
+        project = self.loadProject(projName) # Now it will be loaded if exists
         
         sets = project.mapper.selectByClass('SetOfParticles')
         
@@ -225,13 +223,13 @@ class TestXmippWorkflow(unittest.TestCase):
         
     def test_relations(self):
         projName = "TestXmippWorkflow"
-        project = Manager().loadProject(projName)
+        project = self.loadProject(projName)
         
         project.getTransformGraph()
     
     def test_exportEMX(self):
         projName = "TestXmippWorkflow"
-        project = Manager().loadProject(projName)
+        project = self.loadProject(projName)
         
         protExtract = project.mapper.selectByClass('XmippProtExtractParticles')[0]
         
@@ -245,7 +243,7 @@ class TestXmippWorkflow(unittest.TestCase):
         
     def test_classesWard(self):
         projName = "high throughput"
-        project = Manager().loadProject(projName)
+        project = self.loadProject(projName)
         
         protName = 'XmippProtCL2D'
         protName = 'SpiderProtClassifyWard'
@@ -295,8 +293,7 @@ class TestXmippWorkflow(unittest.TestCase):
     
     def test_cleanDay2(self):
         """ Delete all runs from Day2. """
-        projName = "HighThroughputTest"
-        project = Manager().loadProject(projName)
+        project = self.loadProject("HighThroughputTest")
         protocols = project.getRuns()
         for prot in reversed(protocols):
             if 'Day2' in prot.getObjLabel():
@@ -305,8 +302,7 @@ class TestXmippWorkflow(unittest.TestCase):
         
         
     def test_autoDay2(self):
-        projName = "HighThroughputTest"
-        project = Manager().loadProject(projName)
+        project = self.loadProject("HighThroughputTest")
         
         def getProtocol(className):
             """ Return the first protocol found from a give className. """
@@ -390,6 +386,26 @@ class TestXmippWorkflow(unittest.TestCase):
         protWard2.pcaFilePointer.set(protCAPCA2.imcFile)
         project.launchProtocol(protWard2, wait=True)        
              
+    def test_browseRelations(self):
+        """ Check that relation are correctly retrieved. """
+        project = self.loadProject("TestXmippExtractParticles")
+        graph = project.getTransformGraph()
+        obj = project.mapper.selectByClass('SetOfMicrographs')[1]
+        
+        #print "obj: ", obj
+        #print "graph:"
+        #graph.printDot()
+        
+        objs = project._getConnectedObjects(obj, graph)
+        for o in objs.values():
+            print "o.label = ", o
+            
+        related = project.getRelatedObjects(RELATION_CTF, obj)
+        for r in related:
+            print "r: ", r
+        
+        #graph.printNodes()
+        
              
 class ConditionFilter():
     def __init__(self, condition):

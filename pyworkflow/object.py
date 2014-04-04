@@ -29,6 +29,13 @@ The Object class is the root in the hierarchy and some other
 basic classes.
 """
 
+# Binary relations always involve two objects, we 
+# call them parent-child objects, the following
+# constants reflect which direction of the relation we refer
+RELATION_CHILDS = 0
+RELATION_PARENTS = 1
+
+
 class Object(object):
     """ All objects in our Domain should inherit from this class
     that will contains all base properties"""

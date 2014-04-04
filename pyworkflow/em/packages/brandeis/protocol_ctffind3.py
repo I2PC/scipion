@@ -35,7 +35,7 @@ from brandeis import *
 
 
 class ProtCTFFind(ProtCTFMicrographs):
-    """Protocol to perform CTF estimation on a set of micrographs
+    """Protocol to estimate CTF on a set of micrographs
     using the ctffind3 program"""
     _label = 'ctffind3'
     _references = ['[[http://www.ncbi.nlm.nih.gov/pubmed/12781660][Mindell JA & Grigorieff N., J Struct Biol. (2003)]]']
@@ -70,7 +70,7 @@ class ProtCTFFind(ProtCTFMicrographs):
         
         self._defocusMaxMin(defocusList)
         self._defineOutputs(outputCTF=ctfSet)
-        self._defineRelation(RELATION_CTF, ctfSet, self.inputMics)
+        self._defineCtfRelation(self.inputMics, ctfSet)
     
     #--------------------------- INFO functions ----------------------------------------------------
     def _validate(self):

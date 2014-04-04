@@ -156,7 +156,6 @@ class Section(ElementGroup):
     def addLine(self, lineName, **kwargs):
         return self.addParam(lineName, Line, form=self._form, 
                              label=lineName, **kwargs)        
-    
             
                     
 class Form(object):
@@ -314,9 +313,6 @@ class Form(object):
                                'Set to 1 for large images (e.g. 500x500)'
                                'and to 10 for small images (e.g. 100x100)')
 
-        
-
-# More Param sub-classes
 
 class StringParam(Param):
     """Param with underlying String value"""
@@ -395,7 +391,7 @@ class PointerParam(Param):
 
         # Some conditions on the pointed candidates
         self.pointerCondition = String(args.get('pointerCondition', None))
-        self.allowNull = Boolean(args.get('allowNull', False))
+        self.allowsNull = Boolean(args.get('allowsNull', False))
 
 
 class MultiPointerParam(PointerParam):
@@ -409,14 +405,32 @@ class MultiPointerParam(PointerParam):
 
         
 class RelationParam(Param):
+    """ This type of Param is very similar to PointerParam, since it will
+    hold a pointer to another object. But, in the PointerParam, we search
+    for objects of some Class (maybe with some conditions).
+    Here, we search for objects related to a given attribute of a protocol
+    by a given relation.
+    """
     def __init__(self, **args):
         Param.__init__(self, paramClass=Pointer, **args)
         # This will be the name of the relation
-        self.relationName = String(args.get('relationName'))
-        # This will be the parent param
-        self.relationParent = String(args.get('relationParent'))
-        self.relationReverse = Boolean(args.get('relationReverse', False))
-        self.allowNull = Boolean(args.get('allowNull', False))
+        self._relationName = String(args.get('relationName'))
+        # We will store the attribute name in the protocol to be 
+        # used as the object for which relations will be search
+        self._attributeName = String(args.get('attributeName'))
+        # This specify if we want to search for childs or parents
+        # of the given attribute of the protocol
+        self._direction = Integer(args.get('direction', RELATION_CHILDS))
+        self.allowsNull = Boolean(args.get('allowsNull', False))
+        
+    def getName(self):
+        return self._relationName.get()
+    
+    def getAttributeName(self):
+        return self._attributeName.get()
+    
+    def getDirection(self):
+        return self._direction.get()       
         
         
 class ProtocolClassParam(StringParam):
@@ -464,10 +478,11 @@ class TupleParam(Param):
     """
     def __init__(self, **args):
         Param.__init__(self, **args)
+
+
 # ------------------------------------------------------------------------
 #         Validators
 #-------------------------------------------------------------------------
-
 class Validator(object):
     pass
 
@@ -486,6 +501,7 @@ class Conditional(Validator):
             errors.append(self.error)
         return errors   
     
+    
 class Format(Conditional):
     """ Check if the format is right. """
     def __init__(self, valueType, error='Value have not a correct format'):
@@ -499,35 +515,42 @@ class Format(Conditional):
         except Exception:
             return False
 
+
 class NonEmptyCondition(Conditional):
     def __init__(self, error='Value cannot be empty'):
         Conditional.__init__(self, error)
         self._condition = lambda value: len(value) > 0
+        
         
 class LT(Conditional):
     def __init__(self, thresold, error='Value should be less than the thresold'):
         Conditional.__init__(self, error)
         self._condition = lambda value: value < thresold
         
+        
 class LE(Conditional):
     def __init__(self, thresold, error='Value should be less or equal than the thresold'):
         Conditional.__init__(self, error)
         self._condition = lambda value: value <= thresold        
+        
         
 class GT(Conditional):
     def __init__(self, thresold, error='Value should be greater than the thresold'):
         Conditional.__init__(self, error)
         self._condition = lambda value: value > thresold
 
+
 class GE(Conditional):
     def __init__(self, thresold, error='Value should be greater or equal than the thresold'):
         Conditional.__init__(self, error)
         self._condition = lambda value: value >= thresold               
 
+
 class Range(Conditional):
     def __init__(self, minValue, maxValue, error='Value is outside range'):
         Conditional.__init__(self, error)
         self._condition = lambda value: value >= minValue and value <= maxValue
+        
         
 class NumericListValidator(Conditional):
     """ Validator for ListParam. See ListParam. """
@@ -544,6 +567,7 @@ class NumericListValidator(Conditional):
         except Exception:
             return False    
 
+
 #--------- Some constants validators ---------------------
 
 Positive = GT(0.0, error='Value should be greater than zero')
@@ -552,7 +576,4 @@ FreqValidator = Range(0., 0.5,
                       error="Digital frequencies should be between 0. and 0.5")
 
 NonEmpty = NonEmptyCondition()
-            
-
-        
         

@@ -45,7 +45,7 @@ CL_ROBUST = 1
 
         
         
-class XmippProtCL2D(ProtClassify):
+class XmippProtCL2D(ProtClassify2D):
     """ Protocol to preprocess a set of micrographs in the project. """
     
     _label = 'cl2d'

@@ -131,6 +131,7 @@ MODE_INSTALL = 'install'
 MODE_APACHE_VARS = 'apache_vars'
 MODE_VERSION = 'version'
 MODE_STATS = 'stats'
+MODE_DOWNLOAD = 'download'
 
 
 if __name__ == '__main__':
@@ -231,6 +232,13 @@ if __name__ == '__main__':
             if n == 5:
                 args = ' '.join(sys.argv[2:5])
                 runApp('pw_protocol_run.py', args)
+                
+        elif mode == MODE_DOWNLOAD:
+            if n > 2:
+                args = sys.argv[2]
+            else:
+                args = ''
+            runApp('pw_download_packages.py', args)
                 
     # If reach this point, bad arguments passed
     print """

@@ -46,7 +46,7 @@ from text import TaggedText
 from widgets import Button, HotButton, IconButton
 from pyworkflow.protocol.params import *
 from pyworkflow.protocol import Protocol
-from dialog import showInfo, EditObjectDialog, ListDialog
+from dialog import showInfo, EditObjectDialog, ListDialog, askYesNo
 from canvas import Canvas
 from tree import TreeProvider, BoundTree
 #from pyworkflow.em import findViewers
@@ -229,12 +229,10 @@ class RelationsTreeProvider(SubclassesTreeProvider):
     def __init__(self, protocol, relationParam, selected=None):
         self.mapper = protocol.mapper
         self.selected = selected
-        parentObject = protocol.getAttributeValue(relationParam.relationParent.get())
-        if parentObject is not None:
-            queryFunc =  protocol.mapper.getRelationChilds      
-            if relationParam.relationReverse:
-                queryFunc =  protocol.mapper.getRelationParents
-            self.getObjects = lambda: queryFunc(relationParam.relationName.get(), parentObject)
+        item = protocol.getAttributeValue(relationParam.getAttributeName())
+        direction = relationParam.getDirection()
+        if item is not None:
+            self.getObjects = lambda: protocol.getProject().getRelatedObjects(relationParam.getName(), item, direction)
         else:
             self.getObjects = lambda: [] 
             
@@ -885,7 +883,7 @@ class FormWindow(Window):
         c = 3 # Comment
         self._createHeaderLabel(runFrame, Message.TITLE_COMMENT, sticky='ne', column=c)
         entry = self._createBoundEntry(runFrame, Message.VAR_RUN_NAME, width=25, 
-                                       func=self.setProtocolLabel, value=self.protocol.getObjLabel())
+                                       func=self.setProtocolLabel, value=self.protocol.getObjComment())
         entry.grid(row=r, column=c+1, padx=(0, 5), pady=5, sticky='new')#, columnspan=5)
         btn = IconButton(runFrame, Message.TITLE_COMMENT, Icon.ACTION_EDIT, command=self._editObjParams)
         btn.grid(row=r, column=c+2, padx=(10,0), pady=5, sticky='nw')
@@ -1110,6 +1108,10 @@ class FormWindow(Window):
         self._close(onlySave=True)
         
     def execute(self, e=None):
+        if (self.protocol.getRunMode() == MODE_RESTART and 
+            not askYesNo(Message.TITLE_RESTART_FORM, Message.LABEL_DELETE_FORM, self.root)):
+            return
+            
         errors = self.protocol.validate()
         
         if len(errors):

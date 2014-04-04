@@ -96,7 +96,7 @@ class XmippProtConvertPdb(ProtInitialVolume):
         form.addParam('sampling', FloatParam, default=1.0, label="Sampling rate (A/px)",
                       help='Sampling rate (Angstroms/pixel)')
         form.addParam('setSize', BooleanParam, label='Set final size?', default=False)
-        form.addParam('size', IntParam, label="Final size (px)", condition='setSize', allowNull=True,
+        form.addParam('size', IntParam, label="Final size (px)", condition='setSize', allowsNull=True,
                       help='Final size in pixels. If no value is provided, protocol will estimate it.')
         form.addParam('centerPdb', BooleanParam, label="Center PDB", default=True, expertLevel=LEVEL_EXPERT,
                       help='Center PDB with the center of mass')

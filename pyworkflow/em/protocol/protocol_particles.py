@@ -29,7 +29,10 @@ In this module are protocol base classes related to EM Particles
 """
 from pyworkflow.em.protocol import *
 
-class ProtProcessParticles(EMProtocol):
+class ProtParticles(EMProtocol):
+    pass
+
+class ProtProcessParticles(ProtParticles):
     """ This class will serve as a base for all protocol
     that performs some operation on Partices (i.e. filters, mask, resize, etc)
     It is mainly defined by an inputParticles and outputParticles.
@@ -64,7 +67,7 @@ class ProtMaskParticles(ProtProcessParticles):
     pass
 
 
-class ProtParticlePicking(EMProtocol):
+class ProtParticlePicking(ProtParticles):
     #--------------------------- INFO functions ----------------------------------------------------
     def _summary(self):
         summary = []
@@ -88,5 +91,5 @@ class ProtParticlePicking(EMProtocol):
 
 
 
-class ProtExtractParticles(EMProtocol):
+class ProtExtractParticles(ProtParticles):
     pass

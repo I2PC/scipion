@@ -36,12 +36,12 @@ from convert import locationToSpider
 from glob import glob
 
 
-class SpiderProtCustomMask(ProtCreateMask, SpiderProtocol):
+class SpiderProtCustomMask(ProtCreateMask2D, SpiderProtocol):
     """ Create custom mask. """
     _label = 'custom mask'
     
     def __init__(self):
-        ProtCreateMask.__init__(self)
+        ProtCreateMask2D.__init__(self)
         SpiderProtocol.__init__(self)
         
         self._params = {'ext': 'stk',

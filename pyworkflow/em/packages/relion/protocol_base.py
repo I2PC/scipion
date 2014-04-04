@@ -67,8 +67,7 @@ class ProtRelionBase(EMProtocol):
         self.ClassFnTemplate = '%(rootDir)s/relion_it%(iter)03d_class%(ref)03d.mrc:mrc'
         self.outputClasses = 'classes_ref3D.xmd'
         self.outputVols = 'volumes.xmd'
-        
-        
+    
     def _createFilenameTemplates(self):
         """ Centralize how files are called for iterations and references. """
         self.extraIter = self._getExtraPath('relion_it%(iter)03d_')
@@ -128,7 +127,7 @@ class ProtRelionBase(EMProtocol):
                       help='Pixels outside this circle are assumed to be noise and their stddev '
                       'is set to 1. Radius for background circle definition (in pix.).')
         form.addParam('continueRun', PointerParam, pointerClass=self.getClassName(),
-                      condition='doContinue', allowNull=True,
+                      condition='doContinue', allowsNull=True,
                       label='Select previous run',
                       help='Select a previous run to continue from.')
         form.addParam('continueIter', StringParam, default='last',
@@ -228,7 +227,10 @@ class ProtRelionBase(EMProtocol):
                           label='Number of iterations',
                           help='Number of iterations to be performed. Note that the current implementation does NOT '
                                'comprise a convergence criterium. Therefore, the calculations will need to be stopped'
-                               'by the user if further iterations do not yield improvements in resolution or classes.') 
+                               'by the user if further iterations do not yield improvements in resolution or classes.'
+                               'If continue option is True, you going to do this number of new iterations (e.g. if'
+                               '*Continue from iteration* is set 3 and this param is set 25, the final iteration of the'
+                               'protocol will be the 28th.')
             form.addParam('regularisationParamT', IntParam, default=1,
                           label='Regularisation parameter T',
                           help='Bayes law strictly determines the relative weight between the contribution of the '
@@ -260,7 +262,7 @@ class ProtRelionBase(EMProtocol):
                                'correlations.High-resolution refinements (e.g. in 3D auto-refine) tend to work better when filling ' 
                                'the solvent area with random noise, some classifications go better when using zeros.') 
         form.addParam('referenceMask', PointerParam, pointerClass='Mask',
-                      label='Reference mask (optional)', allowNull=True,
+                      label='Reference mask (optional)', allowsNull=True,
                       help='A volume mask containing a (soft) mask with the same dimensions ' 
                            'as the reference(s), and values between 0 and 1, with 1 being 100% protein '
                            'and 0 being 100% solvent. The reconstructed reference map will be multiplied '
@@ -269,7 +271,7 @@ class ProtRelionBase(EMProtocol):
                            'In some cases, for example for non-empty icosahedral viruses, it is also useful ' 
                            'to use a second mask. Use <More options> and check <Solvent mask> parameter. ') 
         form.addParam('solventMask', PointerParam, pointerClass='Mask',
-                      expertLevel=LEVEL_EXPERT, allowNull=True,
+                      expertLevel=LEVEL_EXPERT, allowsNull=True,
                       label='Solvent mask (optional)',
                       help='For all white (value 1) pixels in this second mask the '
                            'corresponding pixels in the reconstructed map are set to the average value of '
@@ -337,7 +339,7 @@ class ProtRelionBase(EMProtocol):
                                    'be used from this angular sampling rate onwards.')
             
         form.addParallelSection(threads=1, mpi=3)
-         
+    
     #--------------------------- INSERT steps functions --------------------------------------------  
     def _insertAllSteps(self): 
         self._initialize()
@@ -381,11 +383,19 @@ class ProtRelionBase(EMProtocol):
         self._setBasicArgs(args)
         
     def _setContinueArgs(self, args):
-        args = {}
+        continueRun = self.continueRun.get()
+        continueRun._initialize()
+        
         if self.IS_CLASSIFY:
-            self.copyAttributes(self.continueRun.get(), 'regularisationParamT')
+            self.copyAttributes(continueRun, 'regularisationParamT')
         self._setBasicArgs(args)
-        args['--continue'] = self._getFileName('optimiser', iter=self.continueIter.get())
+        
+        if self.continueIter.get() == 'last':
+            continueIter = continueRun._lastIter()
+        else:
+            continueIter = int(self.continueIter.get())
+            
+        args['--continue'] = continueRun._getFileName('optimiser', iter=continueIter)
     
     def _setBasicArgs(self, args):
         """ Return a dictionary with basic arguments. """
@@ -459,6 +469,7 @@ class ProtRelionBase(EMProtocol):
         """ Execute the relion steps with the give params. """
         self._loadEnvironment()
         params += ' --j %d' % self.numberOfThreads.get()
+        print "PARAMS: ", params
         self.runJob(self._getProgram(), params)
     
     def createOutputStep(self):
@@ -472,7 +483,7 @@ class ProtRelionBase(EMProtocol):
         else:
             errors += self._validateNormal()
         return errors
-            
+    
     def _validateNormal(self):
         """ Should be overriden in subclasses to 
         return summary message for NORMAL EXECUTION. 
@@ -516,9 +527,11 @@ class ProtRelionBase(EMProtocol):
     def _loadEnvironment(self):
         """ Setup the environment variables needed to launch Relion. """
         RELION_BIN = join(os.environ['RELION_HOME'], 'bin')
-        RELION_LD = join(os.environ['RELION_HOME'], 'lib')
+        RELION_LIB = join(os.environ['RELION_HOME'], 'lib')
+        RELION_LIB64 = join(os.environ['RELION_HOME'], 'lib64')
         environAdd('PATH', RELION_BIN)
-        environAdd('LD_LIBRARY_PATH', RELION_LD)
+        environAdd('LD_LIBRARY_PATH', RELION_LIB)
+        environAdd('LD_LIBRARY_PATH', RELION_LIB64)
     
     def _getFileName(self, key, **args):
         """ Retrieve a filename from the templates. """

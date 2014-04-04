@@ -36,13 +36,13 @@ from convert import locationToSpider
 from glob import glob
 
       
-class SpiderWfMDA(ProtClassify, SpiderProtocol):
+class SpiderWfMDA(ProtClassify2D, SpiderProtocol):
     """ Ward's method, using 'CL HC' 
     """
     _label = 'workflow mda'
     
     def __init__(self, **args):
-        ProtClassify.__init__(self, **args)
+        ProtClassify2D.__init__(self, **args)
         EMProtocol.__init__(self, **args)
         
         self._params = {'ext': 'stk',
@@ -67,7 +67,7 @@ class SpiderWfMDA(ProtClassify, SpiderProtocol):
         
         #form.addSection(label='2.Align')      
         form.addParam('align', ProtocolClassParam, allowSubclasses=True,
-                      protocolClassName='ProtAlign',
+                      protocolClassName='ProtAlign2D',
                       label="2.Align protocol", 
                       help='Select which Filter Protocol do you want to use')  
            

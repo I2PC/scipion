@@ -707,7 +707,7 @@ class ProtocolsView(tk.Frame):
         self._openProtocolForm(prot)
         
     def _selectProtocol(self, prot):
-        if prot is not None:
+        if prot is not None and prot != self.selectedProtocol:
             prot.mapper = self.project.mapper
             del self.selectedProtocol
             self.selectedProtocol = prot
@@ -765,23 +765,11 @@ class ProtocolsView(tk.Frame):
         self.methodText.addText(self.selectedProtocol.methods())
         
     def _fillLogs(self):
+        i = self.outputViewer.getIndex()
         self.outputViewer.clear()
         for f in self.selectedProtocol.getLogPaths():
             self.outputViewer.addFile(f)
-        #TODO: REMOVE THIS...READ LOGS DIRECTLY FROM FILE
-#         fOutString, fErrString, fScipionString = self.selectedProtocol.getLogsAsStrings()
-#         
-#         self.outputLogText.clear()
-#         self.outputLogText.addText(fOutString)
-#         self.outputLogText.goEnd()
-#         
-#         self.errorLogText.clear()
-#         self.errorLogText.addText(fErrString)
-#         self.errorLogText.goEnd()
-#         
-#         self.scipionLogText.clear()
-#         self.scipionLogText.addText(fScipionString)
-#         self.scipionLogText.goEnd()
+        self.outputViewer.setIndex(i) # Preserve the last selected tab
         
     def _scheduleRunsUpdate(self, secs=1):
         self.runsTree.after(secs*1000, self.refreshRuns)
@@ -793,9 +781,9 @@ class ProtocolsView(tk.Frame):
 #            msg = "Protocol sucessfully saved."
         else:
             self.project.launchProtocol(prot)
+            self._scheduleRunsUpdate()
             msg = ""
             
-        self._scheduleRunsUpdate()
         
         return msg
         

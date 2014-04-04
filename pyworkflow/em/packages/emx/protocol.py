@@ -28,11 +28,12 @@ In this module are two protocols to Import/Export data from/to EMX.
 """
 
 from pyworkflow.em import *
+from pyworkflow.em.protocol import *
 import emx
 from convert import *
 
 
-class ProtEmxImport(ProtClassify):
+class ProtEmxImport(ProtClassify2D):
     """
     Import micrographs, coordinates or particles from EMX file.
     
@@ -76,7 +77,7 @@ class ProtEmxImport(ProtClassify):
         return self._summary()  # summary is quite explicit and serve as methods
     
     
-class ProtEmxExport(ProtClassify):
+class ProtEmxExport(ProtClassify2D):
     """
     Export micrographs, coordinates or particles to EMX format.
     
@@ -92,8 +93,7 @@ class ProtEmxExport(ProtClassify):
                       label="Set to export",
                       help='Select the microgrpahs, coordinates or particles set to be exported to EMX.')
         form.addParam('ctfRelations', RelationParam, 
-                      allowNull=True, relationName=RELATION_CTF, 
-                      relationParent='getInputSet', relationReverse=True, 
+                      allowsNull=True, relationName=RELATION_CTF, attributeName='getInputSet', 
                       label='Include CTF from', 
                       help='You can select a CTF estimation associated with these\n'
                            'micrographs to be included in the EMX file')   

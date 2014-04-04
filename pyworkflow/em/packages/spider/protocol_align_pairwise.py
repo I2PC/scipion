@@ -38,12 +38,12 @@ from glob import glob
         
 
       
-class SpiderProtAlignPairwise(ProtAlign, SpiderProtocol):
+class SpiderProtAlignPairwise(ProtAlign2D, SpiderProtocol):
     """ Reference-free alignment shift and rotational alignment of an image series. """
     _label = 'align pairwise'
     
     def __init__(self, **args):
-        ProtAlign.__init__(self, **args)
+        ProtAlign2D.__init__(self, **args)
         SpiderProtocol.__init__(self, **args)
         self.alignDir = 'pairwise'
          
