@@ -44,7 +44,7 @@ class SpiderProtFilter(ProtFilterParticles, SpiderProtocol):
     See more documentation in: 
     [[http://spider.wadsworth.org/spider_doc/spider/docs/man/fq.html][FQ Spider online manual]]
     """
-    _label = 'filter'
+    _label = 'filter particles'
     
     def __init__(self, **args):
         ProtFilterParticles.__init__(self)

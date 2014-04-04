@@ -52,7 +52,7 @@ REJECT_PERCENTAGE = 2
 
                 
 class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
-    """Protocol to extract particles from a set of coordinates in the project"""
+    """Protocol to extract particles from a set of coordinates"""
     _label = 'extract particles'
     
     def __init__(self, **args):

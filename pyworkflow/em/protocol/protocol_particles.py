@@ -51,9 +51,9 @@ class ProtProcessParticles(ProtParticles):
         to add other parameter relatives to the specific operation."""
         pass  
 
-class ProtDenoiseParticles(ProtProcessParticles):
-   
-    pass
+#class ProtDenoiseParticles(ProtProcessParticles):
+#   
+#    pass
 
 class ProtFilterParticles(ProtProcessParticles):
     """ This is the base for the branch of filters, 
