@@ -48,12 +48,18 @@ class ProtCTFMicrographs(ProtMicrographs):
 #        form.addParam('ampContrast', FloatParam, default=0.1,
 #                      label='Amplitude Contrast',
 #                      help='It should be a positive number, typically between 0.05 and 0.3.')
-        form.addParam('lowRes', FloatParam, default=0.05,
-                      label=Message.LABEL_LOW_RES,
-                      help=Message.TEXT_LOW_RES)
-        form.addParam('highRes', FloatParam, default=0.35,
-                      label=Message.LABEL_HIGH_RES, 
-                      help=Message.TEXT_HIGH_RES)
+
+        line = form.addLine('Resolution', help=Message.TEXT_RES)
+        line.addParam('lowRes', FloatParam, default=0.05,
+                      label='Lowest' )
+        line.addParam('highest', FloatParam, default=0.35,
+                      label='Highest')
+#        form.addParam('lowRes', FloatParam, default=0.05,
+#                      label=Message.LABEL_LOW_RES,
+#                      help=Message.TEXT_LOW_RES)
+#        form.addParam('highRes', FloatParam, default=0.35,
+#                      label=Message.LABEL_HIGH_RES, 
+#                      help=Message.TEXT_HIGH_RES)
         form.addParam('minDefocus', FloatParam, default=0.5,
                       label=Message.LABEL_MIN_FOCUS,
                       help=Message.TEXT_MIN_FOCUS,

@@ -101,7 +101,7 @@ class XmippProtFilter():
 
 
 class XmippProtFilterParticles(ProtFilterParticles, XmippProcessParticles, XmippProtFilter):
-    """ Apply some filter to SetOfParticles """
+    """ Apply Fourier filters to a set of particles  """
     _label = 'filter particles'
     
     def __init__(self, **args):
