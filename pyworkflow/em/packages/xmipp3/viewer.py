@@ -60,7 +60,7 @@ class XmippViewer(Viewer):
     """
     _environments = [DESKTOP_TKINTER, WEB_DJANGO]
     _targets = [Image, SetOfImages, SetOfCoordinates, SetOfClasses2D, SetOfClasses3D, 
-                SetOfMovies, ProtExtractParticles,
+                SetOfMovies, ProtExtractParticles,EMXObject,
                 ProtAlign2D, XmippProtKerdensom, XmippProtRotSpectra,  XmippProtCreateMask3D,
                 SetOfCTF, NormalModes, XmippProtScreenClasses,
                 XmippProtConvertToPseudoAtoms, XmippProtIdentifyOutliers]
@@ -72,7 +72,12 @@ class XmippViewer(Viewer):
         
         cls = type(obj)
 
-        if issubclass(cls, Volume):
+        if issubclass(cls, EMXObject):
+            from pyworkflow.gui.text import showTextFileViewer
+            #showTextFileViewer("EMX Xml file", [obj.getXmlFile()])
+            os.system('kwrite %s &' % obj.getXmlFile()) 
+        
+        elif issubclass(cls, Volume):
             fn = locationToXmipp(*obj.getLocation())
             if fn.endswith('.mrc'):
                 fn += ":mrc"

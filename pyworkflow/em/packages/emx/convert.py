@@ -32,11 +32,14 @@ import emx
 from collections import OrderedDict
     
         
-def exportData(emxDir, inputSet, ctfSet=None):
+def exportData(emxDir, inputSet, ctfSet=None, xmlFile='data.emx', binaryFile=None):
     """ Export micrographs, coordinates or particles to  EMX format. """
     cleanPath(emxDir)
     makePath(emxDir) 
     emxData = emx.EmxData()
+    
+    if binaryFile is None:
+        binaryFile = xmlFile.replace('.emx', '.mrc')
 
     if isinstance(inputSet, SetOfMicrographs):
         emxSetOfMicrographs(emxData, inputSet, emxDir, ctfSet)
@@ -50,10 +53,10 @@ def exportData(emxDir, inputSet, ctfSet=None):
         if inputSet.hasCoordinates():
             micSet = inputSet.getCoordinates().getMicrographs()
             emxSetOfMicrographs(emxData, micSet, emxDir, writeData=False)
-        fnMrcs = join(emxDir, 'data.mrc')
+        fnMrcs = join(emxDir, binaryFile)
         emxSetOfParticles(emxData, inputSet, fnMrcs, micSet)
         
-    fnXml = join(emxDir, 'data.emx')
+    fnXml = join(emxDir, xmlFile)
     emxData.write(fnXml)
     
     
@@ -77,10 +80,7 @@ def importData(protocol, emxFile):
         if emxMic.has('acceleratingVoltage'):
             mic.setCTF(CTFModel())
         _micrographFromEmx(emxMic, mic)
-        acq = mic.getAcquisition().clone()
-        if acq.getMagnification() is None:
-            acq.setMagnification(6000)
-            acq.setScannedPixel
+        acq = mic.getAcquisition().clone()        
         micSet.setAcquisition(acq)        
         micSet.setSamplingRate(mic.getSamplingRate())
     
@@ -104,8 +104,10 @@ def _writeDict(emxObj, dictValues):
             
 def _writeCTF(emxObj, ctf):
     """ Write the CTF values in the EMX object. """
-    _writeDict(emxObj, {'defocusU': ctf.getDefocusU(),
-                        'defocusV': ctf.getDefocusV(),
+    # Divide by 10 the defocus, since we have them in A
+    # and EMX wants it in nm
+    _writeDict(emxObj, {'defocusU': ctf.getDefocusU()/10.0,
+                        'defocusV': ctf.getDefocusV()/10.0,
                         'defocusUAngle': ctf.getDefocusAngle()
                         })
     
@@ -245,8 +247,9 @@ def _ctfFromEmx(emxObj, ctf):
     for tag in ['defocusU', 'defocusV', 'defocusUAngle']:
         if not emxObj.has(tag):
             return None
-    ctf.setDefocusU(emxObj.get('defocusU'))
-    ctf.setDefocusV(emxObj.get('defocusV'))
+    # Multiply by 10 to convert from nm to A
+    ctf.setDefocusU(emxObj.get('defocusU')*10.0)
+    ctf.setDefocusV(emxObj.get('defocusV')*10.0)
     ctf.setDefocusAngle(emxObj.get('defocusUAngle'))
     
 def _imageFromEmx(emxObj, img):

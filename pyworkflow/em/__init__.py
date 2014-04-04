@@ -38,6 +38,7 @@ from convert import *
 from pyworkflow.viewer import Viewer
 from pyworkflow.wizard import Wizard
 from viewer import *
+from pprint import pprint
 #from packages import *
 
 PACKAGES_PATH = os.path.join(pw.HOME, 'em', 'packages')
