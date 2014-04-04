@@ -11,7 +11,7 @@
 					<strong>{{msg.LABEL_RUNNAME}}</strong>
 				</td>
 				<td colspan="4">
-					<input type="text" id="{{msg.VAR_RUN_NAME}}" name="{{msg.VAR_RUN_NAME}}" value="{{protocol.getObjLabel}}" disabled>
+					<input type="text" id="{{msg.VAR_RUN_NAME}}" name="{{msg.VAR_RUN_NAME}}" value="{{protocol.getObjLabel}}">
 				</td>
 				<td class="">
 					<a id="editTool" 
@@ -34,7 +34,7 @@
 					{{msg.TITLE_COMMENT}}
 				</td>
 				<td>
-					<input type="text" id="{{msg.VAR_RUN_NAME}}" name="{{msg.VAR_RUN_NAME}}" value="{{protocol.getObjLabel}}" disabled>
+					<input type="text" id="{{msg.VAR_COMMENT}}" name="{{msg.VAR_COMMENT}}" value="{{comment}}">
 				</td>
 				<td>
 					<a id="editTool" 
@@ -85,21 +85,31 @@
 				</td>
 			</tr>
 			<tr>
+				{% if protocol.allowThreads or protocol.allowMpi %}
 				<td>
 					<strong>{{msg.LABEL_PARALLEL}}</strong>
 				</td>
 				<td colspan="4">
-					{{msg.LABEL_THREADS}}
-					&nbsp;		
-					<input type="text" id="{{msg.VAR_THREADS}}_input" name="{{msg.VAR_THREADS}}" value="{{numberOfThreads}}" style="width:2em;">
-					&nbsp;		
-					{{msg.LABEL_MPI}}
-					&nbsp;		
-					<input type="text" id="{{msg.VAR_MPI}}_input" name="{{msg.VAR_MPI}}" value="{{numberOfMpi}}" style="width:2em;">
+					{% if protocol.allowThreads %}
+						{{msg.LABEL_THREADS}}
+						&nbsp;		
+						<input type="text" id="{{msg.VAR_THREADS}}_input" name="{{msg.VAR_THREADS}}" value="{{numberOfThreads}}" style="width:2em;">
+					{% endif %}
+						&nbsp;
+					{% if protocol.allowMpi %}
+						{{msg.LABEL_MPI}}
+						&nbsp;		
+						<input type="text" id="{{msg.VAR_MPI}}_input" name="{{msg.VAR_MPI}}" value="{{numberOfMpi}}" style="width:2em;">
+					{% endif %}
 				</td>
 				<td>
 					<a class="fa fa-question-circle" href="javascript:infoPopup('Help {{msg.LABEL_PARALLEL}}','{{msg.HELP_MPI_THREADS|escapejs}}');"></a>
 				</td>
+				{% else %}
+				<td></td>
+				<td colspan="4"></td>
+				<td></td>
+				{% endif %}
 				<td>
 					{{msg.LABEL_QUEUE}}
 				</td>

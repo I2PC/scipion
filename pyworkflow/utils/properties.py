@@ -154,6 +154,7 @@ Define the number of processors to be used in the execution.
     VAR_MPI = 'numberOfMpi'
     VAR_QUEUE = '_useQueue'
     VAR_RUN_NAME = 'runName'
+    VAR_COMMENT = 'comment'
     VAR_RUN_MODE = 'runMode'
     VAR_THREADS = 'numberOfThreads'
     
