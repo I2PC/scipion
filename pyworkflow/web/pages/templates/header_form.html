@@ -4,9 +4,10 @@
 		<div class="title">
 			{{msg.TITLE_RUN}}
 		</div>
+<!-- HEADER FORM -->
 		<table>
 			<tr>
-			<!-- RUN NAME -->
+<!-- RUN NAME -->
 				<td  colspan="1">
 					<strong>{{msg.LABEL_RUNNAME}}</strong>
 				</td>
@@ -30,6 +31,7 @@
 						<i class="fa fa-pencil"></i>
 					</a>
 				</td>
+<!-- COMMENT -->
 				<td>
 					{{msg.TITLE_COMMENT}}
 				</td>
@@ -58,6 +60,7 @@
 				<td>
 					<strong>{{msg.LABEL_EXECUTION}}<strong>
 				</td>
+<!-- RUN MODE -->
 				<td>
 					{{msg.LABEL_RUNMODE}}
 				</td>
@@ -70,6 +73,7 @@
 				<td>
 					<a class="fa fa-question-circle" href="javascript:infoPopup('Help {{msg.LABEL_RUNMODE}}','{{msg.HELP_RUNMODE|escapejs}}');"></a>
 				</td>
+<!-- HOST -->
 				<td>
 					{{msg.LABEL_HOST}}
 				</td>
@@ -86,6 +90,7 @@
 			</tr>
 			<tr>
 				{% if protocol.allowThreads or protocol.allowMpi %}
+<!-- PARALLEL (THREAD & MPI) -->
 				<td>
 					<strong>{{msg.LABEL_PARALLEL}}</strong>
 				</td>
@@ -110,6 +115,7 @@
 				<td colspan="4"></td>
 				<td></td>
 				{% endif %}
+<!-- QUEUE -->
 				<td>
 					{{msg.LABEL_QUEUE}}
 				</td>
@@ -121,14 +127,11 @@
 					<a class="fa fa-question-circle" href="javascript:infoPopup('Help {{msg.LABEL_RUNMODE}}','{{msg.HELP_RUNMODE|escapejs}}');"></a>
 				</td>
 			</tr>
-			<tr>
-				
-			</tr>
-			
 		</table>
 	</div>
 	{% endif %}
 	
+<!-- EXPERT LEVEL -->
 	<table>
 		<tr>
 			<td>
@@ -144,6 +147,7 @@
 			</td>
 		</tr>
 	</table>
+	
 </div>
 			
  

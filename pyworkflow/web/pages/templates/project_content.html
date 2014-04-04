@@ -155,13 +155,13 @@
 				<span id="buttonAnalyzeResult">
 					<a id="externalTool" class="fa fa-external-link" href="javascript:errorPopup('Log was not selected','Please select a log before.');"></a>
 				</span>
-				<a id="output_log" class="elm-header-log" href="javascript:showLog('output_log');">{{msg.LABEL_LOGS_OUTPUT}}</a>
+				<a id="output_log" class="elm-header-log_selected" href="javascript:showLog('output_log');">{{msg.LABEL_LOGS_OUTPUT}}</a>
 				<a id="error_log" class="elm-header-log" href="javascript:showLog('error_log');">{{msg.LABEL_LOGS_ERROR}}</a>
 				<a id="scipion_log" class="elm-header-log" href="javascript:showLog('scipion_log');">{{msg.LABEL_LOGS_SCIPION}}</a>
 			</div>
 			
 			<div id="tab-logs-content">
-				<div id="tab-logs-output" class="tabContents" style="display:none;"><p>{{msg.NO_INFO_LOGS}}</p></div>
+				<div id="tab-logs-output" class="tabContents"><p>{{msg.NO_INFO_LOGS}}</p></div>
 				<div id="tab-logs-error" class="tabContents" style="display:none;"><p>{{msg.NO_INFO_LOGS}}</p></div>
 				<div id="tab-logs-scipion" class="tabContents" style="display:none;"><p>{{msg.NO_INFO_LOGS}}</p></div>
 			</div>
