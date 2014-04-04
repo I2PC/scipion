@@ -43,18 +43,6 @@ class Node(object):
         if label is None:
             label = name
         self._label = label
-        
-    def getChilds(self):
-        return self._childs
-    
-    def addChild(self, *nodes):
-        for n in nodes:
-            if not n in self._childs:
-                self._childs.append(n)
-                n._parents.append(self)
-            
-    def isRoot(self):
-        return len(self._parents) == 0
     
     def getName(self):
         return self._name
@@ -64,9 +52,42 @@ class Node(object):
     
     def setLabel(self, newLabel):
         self._label = newLabel
+            
+    def isRoot(self):
+        return len(self._parents) == 0
+        
+    def getChilds(self):
+        return self._childs
+    
+    def addChild(self, *nodes):
+        for n in nodes:
+            if not n in self._childs:
+                self._childs.append(n)
+                n._parents.append(self)
+                
+    def getParent(self):
+        """ Return the first parent in the list,
+        if the node isRoot, None is returned.
+        """
+        if self.isRoot():
+            return None
+        
+        return self._parents[0]
+    
+    def getParents(self):
+        return self._parents
+    
+    def iterChilds(self):
+        """ Iterate over all childs and subchilds. """
+        for child in self._childs:
+            for c in child.iterChilds():
+                yield c
+        
+        yield self
+        
     
     def __str__(self):
-        return self._name
+        return "Node (id=%s, label=%s, root=%s)" % (self._name, self.getLabel(), self.isRoot())
     
     
 class Graph(object):
@@ -112,7 +133,7 @@ class Graph(object):
     def printNodes(self):
         for node in self.getNodes():
             print "Node: ", node
-            print " Childs: ", ','.join([str(c) for c in node.getChilds()])
+            print " Childs: ", ','.join([c.getLabel() for c in node.getChilds()])
             
     def _escape(self, label):
         return label.replace('.', '_').replace(' ', '_')
@@ -121,6 +142,8 @@ class Graph(object):
         print "\ndigraph {"
         for node in self.getNodes():
             for child in node.getChilds():
-                print "   %s -> %s; " % (self._escape(node.label), self._escape(child.label))
+                nodeLabel = self._escape(node.getLabel())
+                childLabel = self._escape(child.getLabel())
+                print "   %s -> %s; " % (nodeLabel, childLabel)
         print "}"
         

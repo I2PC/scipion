@@ -81,9 +81,12 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
                       pointerClass='SetOfMicrographs',
                       help='Select the original SetOfMicrographs')
 
-        form.addParam('ctfRelations', RelationParam, allowNull=True,
-                      label='CTF relations', relationName=RELATION_CTF, relationParent='getInputMicrographs', 
-                      relationReverse=True, help='Choose the CTF.  \n  ')     
+        form.addParam('ctfRelations', RelationParam, allowsNull=True,
+                      relationName=RELATION_CTF, attributeName='getInputMicrographs',
+                      label='CTF estimation', 
+                      help='Choose some CTF estimation related to input micrographs. \n'
+                           'CTF estimation is need if you want to do phase flipping or \n'
+                           'you want to associate CTF information to the particles.')     
 
         form.addParam('boxSize', IntParam, default=0,
                       label='Particle box size', validators=[Positive],

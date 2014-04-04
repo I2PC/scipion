@@ -119,7 +119,7 @@ class DataView(tk.Frame):
         self.showGraph = self.settings.graphView.get()
         self.style = ttk.Style()
 
-        self._dataGraph = windows.project.getDataGraph()
+        self._dataGraph = windows.project.getSourceGraph()
 
         c = self._createContent()
         

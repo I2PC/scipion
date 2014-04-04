@@ -127,7 +127,7 @@ class ProtRelionBase(EMProtocol):
                       help='Pixels outside this circle are assumed to be noise and their stddev '
                       'is set to 1. Radius for background circle definition (in pix.).')
         form.addParam('continueRun', PointerParam, pointerClass=self.getClassName(),
-                      condition='doContinue', allowNull=True,
+                      condition='doContinue', allowsNull=True,
                       label='Select previous run',
                       help='Select a previous run to continue from.')
         form.addParam('continueIter', StringParam, default='last',
@@ -262,7 +262,7 @@ class ProtRelionBase(EMProtocol):
                                'correlations.High-resolution refinements (e.g. in 3D auto-refine) tend to work better when filling ' 
                                'the solvent area with random noise, some classifications go better when using zeros.') 
         form.addParam('referenceMask', PointerParam, pointerClass='Mask',
-                      label='Reference mask (optional)', allowNull=True,
+                      label='Reference mask (optional)', allowsNull=True,
                       help='A volume mask containing a (soft) mask with the same dimensions ' 
                            'as the reference(s), and values between 0 and 1, with 1 being 100% protein '
                            'and 0 being 100% solvent. The reconstructed reference map will be multiplied '
@@ -271,7 +271,7 @@ class ProtRelionBase(EMProtocol):
                            'In some cases, for example for non-empty icosahedral viruses, it is also useful ' 
                            'to use a second mask. Use <More options> and check <Solvent mask> parameter. ') 
         form.addParam('solventMask', PointerParam, pointerClass='Mask',
-                      expertLevel=LEVEL_EXPERT, allowNull=True,
+                      expertLevel=LEVEL_EXPERT, allowsNull=True,
                       label='Solvent mask (optional)',
                       help='For all white (value 1) pixels in this second mask the '
                            'corresponding pixels in the reconstructed map are set to the average value of '
@@ -527,9 +527,11 @@ class ProtRelionBase(EMProtocol):
     def _loadEnvironment(self):
         """ Setup the environment variables needed to launch Relion. """
         RELION_BIN = join(os.environ['RELION_HOME'], 'bin')
-        RELION_LD = join(os.environ['RELION_HOME'], 'lib')
+        RELION_LIB = join(os.environ['RELION_HOME'], 'lib')
+        RELION_LIB64 = join(os.environ['RELION_HOME'], 'lib64')
         environAdd('PATH', RELION_BIN)
-        environAdd('LD_LIBRARY_PATH', RELION_LD)
+        environAdd('LD_LIBRARY_PATH', RELION_LIB)
+        environAdd('LD_LIBRARY_PATH', RELION_LIB64)
     
     def _getFileName(self, key, **args):
         """ Retrieve a filename from the templates. """

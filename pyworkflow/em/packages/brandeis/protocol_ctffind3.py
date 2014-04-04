@@ -70,7 +70,7 @@ class ProtCTFFind(ProtCTFMicrographs):
         
         self._defocusMaxMin(defocusList)
         self._defineOutputs(outputCTF=ctfSet)
-        self._defineRelation(RELATION_CTF, ctfSet, self.inputMics)
+        self._defineCtfRelation(self.inputMics, ctfSet)
     
     #--------------------------- INFO functions ----------------------------------------------------
     def _validate(self):

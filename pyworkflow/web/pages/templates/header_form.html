@@ -1,0 +1,139 @@
+<div id="main">
+	{% if visualize == 0 %}
+	<div id="mainNode1" class="mainNode">
+		<div class="title">
+			{{msg.TITLE_RUN}}
+		</div>
+		<table>
+			<tr>
+			<!-- RUN NAME -->
+				<td  colspan="1">
+					<strong>{{msg.LABEL_RUNNAME}}</strong>
+				</td>
+				<td colspan="4">
+					<input type="text" id="{{msg.VAR_RUN_NAME}}" name="{{msg.VAR_RUN_NAME}}" value="{{protocol.getObjLabel}}" disabled>
+				</td>
+				<td class="">
+					<a id="editTool" 
+					href="javascript:editObjParam(
+							{% if protocol.getObjId == None %}
+											'new',
+							{% else %}
+											{{protocol.getObjId}},
+							{% endif %}		
+											'{{msg.TITLE_LABEL}}',
+											'{{protocol.getObjLabel}}',
+											'{{msg.TITLE_COMMENT}}',
+											'{{comment}}',
+											'{{msg.LABEL_COMMENT}}',
+											'protocol');">				
+						<i class="fa fa-pencil"></i>
+					</a>
+				</td>
+				<td>
+					{{msg.TITLE_COMMENT}}
+				</td>
+				<td>
+					<input type="text" id="{{msg.VAR_RUN_NAME}}" name="{{msg.VAR_RUN_NAME}}" value="{{protocol.getObjLabel}}" disabled>
+				</td>
+				<td>
+					<a id="editTool" 
+					href="javascript:editObjParam(
+							{% if protocol.getObjId == None %}
+											'new',
+							{% else %}
+											{{protocol.getObjId}},
+							{% endif %}		
+											'{{msg.TITLE_LABEL}}',
+											'{{protocol.getObjLabel}}',
+											'{{msg.TITLE_COMMENT}}',
+											'{{comment}}',
+											'{{msg.LABEL_COMMENT}}',
+											'protocol');">				
+						<i class="fa fa-pencil"></i>
+					</a>
+				</td>
+			</tr>
+			<tr>
+				<td>
+					<strong>{{msg.LABEL_EXECUTION}}<strong>
+				</td>
+				<td>
+					{{msg.LABEL_RUNMODE}}
+				</td>
+				<td colspan="3">
+					<select id="{{msg.VAR_RUN_MODE}}_select" name="{{msg.VAR_RUN_MODE}}" size="1" onchange="javascript:onChangeEnumParamCombo('runMode_select', '{{msg.VAR_RUN_MODE}}');">
+						<option value="0">{{msg.LABEL_RUN_MODE_RESUME}}</option>
+						<option value="1" selected="selected">{{msg.LABEL_RUN_MODE_RESTART}}</option>
+					</select>		
+				</td>
+				<td>
+					.ico
+				</td>
+				<td>
+					{{msg.LABEL_HOST}}
+				</td>
+				<td>
+					<select name="{{msg.VAR_EXEC_HOST}}" size=1 onChange="">
+					{% for h in hosts %}
+						<option value="{{h}}" {% if h == hostName %} selected="selected" {% endif %}>{{h}}</option>
+					{% endfor %}
+					</select>
+				</td>
+				<td>
+					.ico
+				</td>
+			</tr>
+			<tr>
+				<td>
+					<strong>{{msg.LABEL_PARALLEL}}</strong>
+				</td>
+				<td colspan="4">
+					{{msg.LABEL_THREADS}}
+					&nbsp;		
+					<input type="text" id="{{msg.VAR_THREADS}}_input" name="{{msg.VAR_THREADS}}" value="{{numberOfThreads}}" style="width:2em;">
+					&nbsp;		
+					{{msg.LABEL_MPI}}
+					&nbsp;		
+					<input type="text" id="{{msg.VAR_MPI}}_input" name="{{msg.VAR_MPI}}" value="{{numberOfMpi}}" style="width:2em;">
+				</td>
+				<td>
+					.ico
+				</td>
+				<td>
+					{{msg.LABEL_QUEUE}}
+				</td>
+				<td>
+				  <input type="radio" id="queue_yes" name="{{msg.VAR_QUEUE}}" value="yes"/>{{msg.LABEL_QUEUE_YES}}
+				  <input type="radio" id="queue_no" name="{{msg.VAR_QUEUE}}" value="no"/>{{msg.LABEL_QUEUE_NO}}
+				</td>
+				<td>
+					.ico
+				</td>
+			</tr>
+			<tr>
+				
+			</tr>
+			
+		</table>
+	</div>
+	{% endif %}
+	
+	<table>
+		<tr>
+			<td>
+				<strong>{{msg.LABEL_EXPERT}}</strong>
+			</td>
+			<td>
+				<select name="{{msg.VAR_EXPERT}}" size=1
+				onChange="javascript:evalElements();">
+					<option value="0" {% if expertLevel == 0 %} selected="selected" {% endif %}>{{msg.LABEL_EXPERT_NORMAL}}</option>
+					<option value="1" {% if expertLevel == 1 %} selected="selected" {% endif %}>{{msg.LABEL_EXPERT_ADVANCE}}</option>
+					<option value="2" {% if expertLevel == 2 %} selected="selected" {% endif %}>{{msg.LABEL_EXPERT_EXPERT}}</option>
+				</select>
+			</td>
+		</tr>
+	</table>
+</div>
+			
+ 

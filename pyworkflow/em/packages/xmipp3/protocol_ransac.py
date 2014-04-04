@@ -89,7 +89,7 @@ class XmippProtRansac(ProtInitialVolume):
                       label='Number of iterations to refine the volumes',
                       help='Number of iterations to refine the best volumes using projection matching approach and the input classes')
         form.addParam('initialVolume', PointerParam, label="Initial volume",  
-                      pointerClass='SetOfVolumes', allowNull=True,
+                      pointerClass='SetOfVolumes', allowsNull=True,
                       help='You may provide a very rough initial volume as a way to constraint the angular search.'
                             'For instance, when reconstructing a fiber, you may provide a cylinder so that side views'
                             'are assigned to the correct tilt angle, although the rotational angle may be completely wrong')           

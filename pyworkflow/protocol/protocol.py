@@ -920,6 +920,10 @@ class Protocol(Step):
         
         return msg
     
+    def getRunMode(self):
+        """ Return the mode of execution, either: MODE_RESTART or MODE_RESUME. """
+        return self.runMode.get()
+    
     # Methods that should be implemented in subclasses
     def _validate(self):
         """ This function can be overwritten by subclasses.
@@ -939,7 +943,7 @@ class Protocol(Step):
             condition = self.evalParamCondition(paramName)
             if attr.isPointer():
                 obj = attr.get()
-                if condition and obj is None and not param.allowNull:
+                if condition and obj is None and not param.allowsNull:
                     paramErrors.append('cannot be EMPTY.')
             else:
                 if condition:

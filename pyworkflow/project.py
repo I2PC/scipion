@@ -62,6 +62,8 @@ class Project(object):
         self.settingsPath = self.addPath(PROJECT_SETTINGS)
         self.runs = None
         self._runsGraph = None
+        self._transformGraph = None
+        self._sourceGraph = None
         
     def getObjId(self):
         """ Return the unique id assigned to this project. """
@@ -355,7 +357,7 @@ class Project(object):
             
         return self._runsGraph
     
-    def getDataGraph(self, relation=RELATION_SOURCE, refresh=False):
+    def _getRelationGraph(self, relation=RELATION_SOURCE, refresh=False):
         """ Retrieve objects produced as outputs and
         make a graph taking into account the SOURCE relation. """
         relations = self.mapper.getRelationsByName(relation)
@@ -389,10 +391,59 @@ class Project(object):
             
         return g
                
-    def getTransformGraph(self):
+    def getTransformGraph(self, refresh=False):
         """ Get the graph from the TRASNFORM relation. """
-        relations = self.mapper.getRelationsByName(RELATION_TRANSFORM)
+        if refresh or not self._transformGraph:
+            self._transformGraph = self._getRelationGraph(RELATION_TRANSFORM, refresh)
+            
+        return self._transformGraph
+            
+    def getSourceGraph(self, refresh=False):
+        """ Get the graph from the SOURCE relation. """
+        if refresh or not self._sourceGraph:
+            self._sourceGraph = self._getRelationGraph(RELATION_SOURCE, refresh)
+            
+        return self._sourceGraph
+                
+    def getRelatedObjects(self, relation, obj, direction=RELATION_CHILDS):
+        """ Get all objects related to obj by a give relation.
+        Params:
+            relation: the relation name to search for.
+            obj: object from which the relation will be search,
+                actually not only this, but all other objects connected
+                to this one by the RELATION_TRANSFORM.
+            direction: this say if search for childs or parents in the relation.
+        """
+        graph = self.getTransformGraph()
+        relations = self.mapper.getRelationsByName(relation)
+        connection = self._getConnectedObjects(obj, graph)
+        objects = []
         
         for rel in relations:
-            print rel
+            pid = str(rel['object_parent_id'])
+            parent = connection.get(pid, None)
+            if parent:
+                cid = str(rel['object_child_id'])
+                child = graph.getNode(cid).object
+                objects.append(child)
+                
+        return objects
+    
+    def _getConnectedObjects(self, obj, graph):
+        """ Give a TRANSFORM graph, return the elements that
+        are connected, either childs, ancestors or siblings. 
+        """
+        n = graph.getNode(obj.strId())
+        # Get the oldest ancestor of a node, before 
+        # reaching the root node
+        while not n.getParent().isRoot():
+            n = n.getParent()
+            
+        connection = {}
+        for node in n.iterChilds():
+            connection[node.getName()] = node.object
+        
+        return connection
+            
+        
         

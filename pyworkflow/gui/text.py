@@ -248,6 +248,7 @@ def configureColorTags(text):
         print "Colors still not available"
     return False
        
+       
 class TaggedText(Text):  
     """
     Implement a Text that will recognized some basic tags
@@ -448,20 +449,36 @@ class TextFileViewer(tk.Frame):
         self.notebook.columnconfigure(0, weight=1)      
         for f in filelist:
             self._addFileTab(f)
-        self.notebook.grid(column=0, row=0, sticky='nsew', padx=5, pady=5)        
+        self.notebook.grid(column=0, row=0, sticky='nsew', padx=5, pady=5)   
+        self.notebook.bind('<<NotebookTabChanged>>', self._tabChanged)
+        
+    def _tabChanged(self, e=None):
+        self._lastTabIndex = self.notebook.select() 
 
     def addBinding(self):
         self.master.bind('<Control_L><Home>', lambda e: self.changePosition(1.0))
         self.master.bind('<Control_L><End>', lambda e: self.changePosition(tk.END))
-        self.master.bind('<Alt_L><c>', lambda e: self.master.destroy())
-        self.master.bind('<Return>', lambda e: self.findText())
+        #self.master.bind('<Alt_L><c>', lambda e: self.master.destroy())
+        #self.master.bind('<Return>', lambda e: self.findText())
         self.master.bind('<Control_L><n>', lambda e: self.findText())
         self.master.bind('<Control_L><p>', lambda e: self.findText(-1))
-        self.master.bind('<Alt_L><plus>', self.changeFont)
-        self.master.bind('<Alt_L><minus>', self.changeFont)
+        #self.master.bind('<Alt_L><plus>', self.changeFont)
+        #self.master.bind('<Alt_L><minus>', self.changeFont)
+    
+    def getIndex(self):
+        """ Return the index of the selected tab. """
+        selected = self.notebook.select()
+        if selected:
+            return self.notebook.index(selected)
+        return None
+    
+    def setIndex(self, index):
+        """ Select the tab with the given index. """
+        if index is not None:
+            self.notebook.select(self.notebook.tabs()[index])
     
     def selectedText(self):
-        return self.taList[self.notebook.index(self.notebook.select())]
+        return self.taList[self.getIndex()]
     
     def changeFont(self, event=""):
         for font in self.fontDict.values():
@@ -472,6 +489,7 @@ class TextFileViewer(tk.Frame):
         for ta in self.taList:
             ta.readFile(clear=True)
             ta.goEnd()
+        self.notebook.select(self._lastTabIndex)
         
     def refreshOutput(self, e=None):
         if self.refreshAlarm:

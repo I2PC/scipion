@@ -2,7 +2,6 @@
 # **************************************************************************
 # *
 # * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
-# *              Josue Gomez Blanco     (jgomez@cnb.csic.es)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -26,40 +25,36 @@
 # *
 # **************************************************************************
 """
-This script will generate the pw.bashrc and pw.cshrc file to include
+This module serve to download the needed software packages.
 """
-import os
+import os, sys
 
-from pyworkflow import SETTINGS
-from pyworkflow.utils.path import makePath, copyFile
-from pyworkflow.apps.config import writeDefaults
-from pyworkflow.manager import Manager
+
+PACKAGES_URL = "http://scipionwiki.cnb.csic.es/files/scipion/software/em/"
+PACKAGES_DICT = {
+                 'xmipp': "xmipp.tgz",
+                 'brandeis': "brandeis.tgz",
+                 'eman': "eman2.pre2-1.linux64.tar.gz",
+                 'spider': "spiderweb.21.13.tar.gz",
+                 'relion': "relion-1.2.tar.bz2"                 
+                 }
+
+
+def download(package):
+    os.system("wget " + PACKAGES_URL + PACKAGES_DICT[package])
+    
+def downloadAll():
+    for package in PACKAGES_DICT:
+        download(package)
+
 
 if __name__ == '__main__':
+    # Enter to EM packages directory
+    os.chdir(os.path.join(os.environ['SCIPION_HOME'], 'software', 'em'))
     
-    
-    SCIPION_HOME = os.environ['SCIPION_HOME']
-    SCIPION_DIRS = ['SCIPION_DATA', 'SCIPION_LOGS', 'SCIPION_TESTS', 'SCIPION_USER_DATA']
-    
-    print "Installing Scipion in : ", SCIPION_HOME
-    
-    # Create DATA folders
-    for d in SCIPION_DIRS:
-        path = os.environ[d]
-        print "  creating %s folder: %s" % (d, path)
-        makePath(path)
-        
-    # Write default configurations
-    writeDefaults()
-    
-    # Update the settings to all existing projects
-    manager = Manager()
-    projects = manager.listProjects()
-    
-    for p in projects:
-        proj = manager.loadProject(p.getName())
-        projSettings = proj.settingsPath
-        print "Copying settings to: ", projSettings
-        copyFile(SETTINGS, projSettings)
-        
-    
+    n = len(sys.argv)
+    if n > 1:
+        package = sys.argv[1]
+        download(package)
+    else:
+        downloadAll()
