@@ -28,12 +28,11 @@ In this module are two protocols to Import/Export data from/to EMX.
 """
 
 from pyworkflow.em import *
-from pyworkflow.em.protocol import *
 import emx
-from convert import *
+from convert import importData, exportData
 
 
-class ProtEmxImport(ProtClassify2D):
+class ProtEmxImport(ProtImport):
     """
     Import micrographs, coordinates or particles from EMX file.
     
@@ -57,8 +56,8 @@ class ProtEmxImport(ProtClassify2D):
         """ Export micrographs to EMX file.
         micsId is only passed to force redone of this step if micrographs change.
         """
-        outputDict = importData(self, emxFile)
-        self.defineOutputs(**outputDict)
+        outputDict = importData(self, emxFile, outputDir=self._getPath())
+        #self._defineOutputs(**outputDict)
     
     #--------------------------- INFO functions -------------------------------------------- 
     def _validate(self):
@@ -77,7 +76,7 @@ class ProtEmxImport(ProtClassify2D):
         return self._summary()  # summary is quite explicit and serve as methods
     
     
-class ProtEmxExport(ProtClassify2D):
+class ProtEmxExport(EMProtocol):
     """
     Export micrographs, coordinates or particles to EMX format.
     

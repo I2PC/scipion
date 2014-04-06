@@ -33,7 +33,7 @@ from constants import *
 from convert import ImageHandler
 from pyworkflow.object import *
 from pyworkflow.mapper.sqlite import SqliteMapper, SqliteFlatMapper
-from pyworkflow.utils.path import cleanPath, dirname, join, replaceExt
+from pyworkflow.utils.path import cleanPath, dirname, join, replaceExt, exists
 import xmipp
 
 
@@ -172,8 +172,8 @@ class ImageDim(CsvList):
         if x is not None and y is not None:
             self.append(x)
             self.append(y)
-        if z is not None:
-            self.append(z)
+            if z is not None:
+                self.append(z)
         
     def getX(self):
         return self[0]
@@ -185,9 +185,12 @@ class ImageDim(CsvList):
         return self[2]
     
     def __str__(self):
-        s = '%dx%d' % (self.getX(), self.getY())
-        if self.getZ() > 1:
-            s += 'x%d' % self.getZ()
+        if self.isEmpty():
+            s = 'No-Dim'
+        else:
+            s = '%dx%d' % (self.getX(), self.getY())
+            if self.getZ() > 1:
+                s += 'x%d' % self.getZ()
         return s
 
     
@@ -217,8 +220,11 @@ class Image(EMObject):
     
     def getDim(self):
         """Return image dimensions as tuple: (Xdim, Ydim, Zdim, N)"""
-        x, y, z, n = ImageHandler().getDimensions(self.getLocation())
-        return (x, y, z)
+        i, fn = self.getLocation()
+        if exists(fn):
+            x, y, z, n = ImageHandler().getDimensions(self.getLocation())
+            return x, y, z
+        return None
     
     def getIndex(self):
         return self._index.get()
@@ -623,6 +629,8 @@ class SetOfImages(Set):
     
     def getDim(self):
         """ Return the dimensions of the first image in the set. """
+        if self._firstDim.isEmpty():
+            return None
         x, y, z = self._firstDim
         return x, y, z
     

@@ -278,6 +278,9 @@ def addProtocols(settings):
                   tag='protocol')
     m1.addSubMenu('import from EMX', value='ProtEmxImport', 
                   tag='protocol')
+    m1.addSubMenu('export to EMX', value='ProtEmxExport', 
+                  tag='protocol')
+    
     
     # ------------------- Micrographs ----------------------------
     m1 = menu.addSubMenu('Micrographs', tag='section')

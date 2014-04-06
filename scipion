@@ -34,6 +34,8 @@ import __builtin__
 
 __version__ = 'v.0.1.2 Magnesium'
 
+
+
 def findHome():
     """ Find Scipion home from the __file__ location. """
     absPath = os.path.abspath(__file__)
@@ -230,7 +232,8 @@ if __name__ == '__main__':
             
         elif mode == 'runprotocol':
             if n == 5:
-                args = ' '.join(sys.argv[2:5])
+                params = ['"%s"' % s for s in sys.argv[2:5]]
+                args = ' '.join(params)
                 runApp('pw_protocol_run.py', args)
                 
         elif mode == MODE_DOWNLOAD:
