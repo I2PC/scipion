@@ -40,7 +40,7 @@ REJ_PERCENTAGE =2
         
         
 class XmippProtScreenParticles(ProtProcessParticles):
-    """ Protocol to screen a set of particles in the project. """
+    """ Screen a set of particles """
     _label = 'screen particles'
     
     #--------------------------- DEFINE param functions --------------------------------------------
