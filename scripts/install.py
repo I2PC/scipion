@@ -31,7 +31,7 @@ This script will generate the pw.bashrc and pw.cshrc file to include
 import os
 
 from pyworkflow import SETTINGS
-from pyworkflow.utils.path import makePath, copyFile
+from pyworkflow.utils.path import makePath, copyFile, join
 from pyworkflow.apps.config import writeDefaults
 from pyworkflow.manager import Manager
 
@@ -59,7 +59,7 @@ if __name__ == '__main__':
     for p in projects:
         proj = manager.loadProject(p.getName())
         projSettings = proj.settingsPath
-        print "Copying settings to: ", projSettings
+        print "Copying settings to: ", join(p.getName(), projSettings)
         copyFile(SETTINGS, projSettings)
         
     
