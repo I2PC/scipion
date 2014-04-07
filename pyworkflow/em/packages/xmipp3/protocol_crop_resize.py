@@ -250,7 +250,7 @@ class XmippProtCropResizeParticles(ProtProcessParticles, XmippProtResize, XmippP
 
 
 class XmippProtCropResizeVolumes(ProtPreprocessVolumes, XmippProtResize, XmippProcessVolumes):
-    """ Change the dimensions to either Volume or SetOfVolumes objects """
+    """ Crop or resize a set of volumes """
     _label = 'resize crop volumes'
     
     def __init__(self, **args):

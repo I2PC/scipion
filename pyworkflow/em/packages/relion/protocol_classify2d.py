@@ -36,7 +36,7 @@ import xmipp
 
 
 class ProtRelionClassify2D(ProtRelionBase, ProtClassify2D):
-    """ This class implements the wrapper to Relion 2D - class averages program.
+    """ Wrapper to Relion 2D - class averages program.
     """
     _label = '2d classify'
     IS_2D = True

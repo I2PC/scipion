@@ -30,7 +30,7 @@
 from protocol_convert_to_pseudoatoms_base import *
 
 class XmippProtConvertToPseudoAtoms(XmippProtConvertToPseudoAtomsBase):
-    """ Protocol for converting an EM volume into pseudoatoms """
+    """ Converts an EM volume into pseudoatoms """
     _label = 'convert to pseudoatoms'
     
     #--------------------------- DEFINE param functions --------------------------------------------
