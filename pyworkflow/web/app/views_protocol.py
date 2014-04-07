@@ -77,52 +77,113 @@ def form(request):
         for paramName, param in section.iterParams():
             protVar = getattr(protocol, paramName, None)
             if protVar is None:
-                raise Exception("_fillSection: param '%s' not found in protocol" % paramName)
+#                raise Exception("_fillSection: param '%s' not found in protocol" % paramName)
+               
                 # Create the label
-            
-            if isinstance(param, MultiPointerParam):
-                htmlValueList = []
-                htmlIdValueList = []
-                for pointer in protVar:
-                    htmlValue, htmlIdValue = getPointerHtml(pointer)
-                    htmlValueList.append(htmlValue)
-                    htmlIdValueList.append(htmlIdValue)
+                if isinstance(param, Group):
+                    print "Found GROUP param"
                     
-                param.htmlValueIdZip = zip(htmlValueList,htmlIdValueList)    
-            elif isinstance(param, PointerParam):
-                param.htmlValue, param.htmlIdValue = getPointerHtml(protVar)
-            else:
-                param.htmlValue = protVar.get(param.default.get(""))
-                if isinstance(protVar, Boolean):
-                    if param.htmlValue:
-                        param.htmlValue = 'true'
-                    else:
-                        param.htmlValue = 'false'
-            
-            if paramName in wizards:
-                param.hasWizard = True
-                param.wizardName = wizards[paramName].getView()
-                param.wizardClassName = wizards[paramName].__name__
-#                print "param: ", paramName, " has wizard", " view: "
-            
-            if visualize == 1:
-                if paramName in viewerDict:
-                    param.hasViewer = True
-#                    print "param: ", paramName, " has viewer"
+                    for paramGroupName, paramGroup in param.iterParams():
+                        protVar = getattr(protocol, paramGroupName, None)
+                        
+                        if protVar is None:
+                            pass
+                        
+                        else:
+                        
+## INI GROUP ###########################  
+                            if isinstance(paramGroup, MultiPointerParam):
+                                htmlValueList = []
+                                htmlIdValueList = []
+                                for pointer in protVar:
+                                    htmlValue, htmlIdValue = getPointerHtml(pointer)
+                                    htmlValueList.append(htmlValue)
+                                    htmlIdValueList.append(htmlIdValue)
+                                    
+                                paramGroup.htmlValueIdZip = zip(htmlValueList,htmlIdValueList)    
+                            elif isinstance(paramGroup, PointerParam):
+                                paramGroup.htmlValue, paramGroup.htmlIdValue = getPointerHtml(protVar)
+                            else:
+                                paramGroup.htmlValue = protVar.get(paramGroup.default.get(""))
+                                if isinstance(protVar, Boolean):
+                                    if paramGroup.htmlValue:
+                                        paramGroup.htmlValue = 'true'
+                                    else:
+                                        paramGroup.htmlValue = 'false'
+                            
+                            if paramGroupName in wizards:
+                                paramGroup.hasWizard = True
+                                paramGroup.wizardName = wizards[paramGroupName].getView()
+                                paramGroup.wizardClassName = wizards[paramGroupName].__name__
+                #                print "paramGroup: ", paramGroupName, " has wizard", " view: "
+                            
+                            if visualize == 1:
+                                if paramGroupName in viewerDict:
+                                    paramGroup.hasViewer = True
+                #                    print "paramGroup: ", paramGroupName, " has viewer"
+                                
+                            paramGroup.htmlCond = paramGroup.condition.get()
+                            paramGroup.htmlDepend = ','.join(paramGroup._dependants)
+                            paramGroup.htmlCondParams = ','.join(paramGroup._conditionParams)
+                            
+                            if not paramGroup.help.empty():
+                                paramGroup.htmlHelp = parseText(paramGroup.help.get())
+                #            paramGroup.htmlExpertLevel = paramGroup.expertLevel.get()   
                 
-            param.htmlCond = param.condition.get()
-            param.htmlDepend = ','.join(param._dependants)
-            param.htmlCondParams = ','.join(param._conditionParams)
-            
-            if not param.help.empty():
-                param.htmlHelp = parseText(param.help.get())
-#            param.htmlExpertLevel = param.expertLevel.get()   
-
-            """ Workflow Addon """
-            valueURL = request.GET.get(paramName, None)            
-            if valueURL is not None:
-                if valueURL is not param.htmlValue:
-                    param.htmlValue = valueURL
+                            """ Workflow Addon """
+                            valueURL = request.GET.get(paramGroupName, None)            
+                            if valueURL is not None:
+                                if valueURL is not paramGroup.htmlValue:
+                                    paramGroup.htmlValue = valueURL
+## END GROUP ###########################  
+                
+                if isinstance(param, Line):
+                    print "Found LINE param"
+                    
+            else:
+                if isinstance(param, MultiPointerParam):
+                    htmlValueList = []
+                    htmlIdValueList = []
+                    for pointer in protVar:
+                        htmlValue, htmlIdValue = getPointerHtml(pointer)
+                        htmlValueList.append(htmlValue)
+                        htmlIdValueList.append(htmlIdValue)
+                        
+                    param.htmlValueIdZip = zip(htmlValueList,htmlIdValueList)    
+                elif isinstance(param, PointerParam):
+                    param.htmlValue, param.htmlIdValue = getPointerHtml(protVar)
+                else:
+                    param.htmlValue = protVar.get(param.default.get(""))
+                    if isinstance(protVar, Boolean):
+                        if param.htmlValue:
+                            param.htmlValue = 'true'
+                        else:
+                            param.htmlValue = 'false'
+                
+                if paramName in wizards:
+                    param.hasWizard = True
+                    param.wizardName = wizards[paramName].getView()
+                    param.wizardClassName = wizards[paramName].__name__
+    #                print "param: ", paramName, " has wizard", " view: "
+                
+                if visualize == 1:
+                    if paramName in viewerDict:
+                        param.hasViewer = True
+    #                    print "param: ", paramName, " has viewer"
+                    
+                param.htmlCond = param.condition.get()
+                param.htmlDepend = ','.join(param._dependants)
+                param.htmlCondParams = ','.join(param._conditionParams)
+                
+                if not param.help.empty():
+                    param.htmlHelp = parseText(param.help.get())
+    #            param.htmlExpertLevel = param.expertLevel.get()   
+    
+                """ Workflow Addon """
+                valueURL = request.GET.get(paramName, None)            
+                if valueURL is not None:
+                    if valueURL is not param.htmlValue:
+                        param.htmlValue = valueURL
     
     context = {'projectName':project.getName(),
                'package_logo': logoPath,
