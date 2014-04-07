@@ -154,29 +154,35 @@ void ProgPSDSort::show()
 /* Compute Correlation ----------------------------------------------------- */
 void ProgPSDSort::processImage(const FileName &fnImg, const FileName &fnImgOut, const MDRow &rowIn, MDRow &rowOut)
 {
+    CTFDescription CTF1, CTF2;
 	PSDEvaluation evaluation;
+    FileName fnMicrograph, fnPSD, fnCTF, fnCTF2;
 
 	evaluation.ctf_envelope_ssnr = fn_in.getDir()+"envelope.xmd";
 
-    FileName fnMicrograph, fnPSD, fnCTF, fnCTF2;
-    rowIn.getValue(MDL_MICROGRAPH,fnMicrograph);
+    rowIn.getValue(MDL_MICROGRAPH, fnMicrograph);
     rowIn.getValue(MDL_PSD,fnPSD);
-    if (fnPSD=="NA")
+
+    if (fnPSD == "NA")
     	return;
-    //rowIn.getValue(MDL_CTF_MODEL,fnCTF);
-    if (rowIn.containsLabel(MDL_CTF_MODEL2))
-    	rowIn.getValue(MDL_CTF_MODEL2,fnCTF2);
+
+    if (rowIn.containsLabel(MDL_CTF_MODEL))
+    {
+      rowIn.getValue(MDL_CTF_MODEL, fnCTF);
+      CTF1.read(fnCTF);
+    }
+    else
+      CTF1.readFromMdRow(rowIn);
 
     FileName fnRoot = fnMicrograph.withoutExtension();
 
-    // Read input data
-    Image<double> PSD;
-    PSD.read(fnPSD);
-    CTFDescription CTF1, CTF2;
-    CTF1.readFromMdRow(rowIn);
     CTF1.produceSideInfo();
     evaluation.defocusU=CTF1.DeltafU;
     evaluation.defocusV=CTF1.DeltafV;
+
+    if (rowIn.containsLabel(MDL_CTF_MODEL2))
+    	rowIn.getValue(MDL_CTF_MODEL2,fnCTF2);
+
     if (!fnCTF2.empty() && fnCTF2 != "NA")
     {
     	CTF2.read(fnCTF2);
@@ -205,6 +211,9 @@ void ProgPSDSort::processImage(const FileName &fnImg, const FileName &fnImgOut, 
      */
     evaluation.beating=1.0/sqrt(PI/(CTF1.K1*abs(CTF1.DeltafU-CTF1.DeltafV)));
 
+    // Read input PSD data
+    Image<double> PSD;
+    PSD.read(fnPSD);
     // Enhance the PSD
     ProgCTFEnhancePSD enhancePSD;
     enhancePSD.filter_w1 = filter_w1;

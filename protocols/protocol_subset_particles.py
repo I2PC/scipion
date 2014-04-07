@@ -12,6 +12,7 @@
 from protlib_base import *
 import glob
 import os
+from protlib_xmipp import mdFirstRow
 from protlib_utils import runJob, runShowJ
 from protlib_filesystem import createLink, linkAcquisitionInfo
 from xmipp import MetaData, MDL_ITEM_ID
@@ -27,17 +28,18 @@ class ProtSubsetParticles(XmippProtocol):
         self.Db.insertStep('createSubset',inputFile=self.InputFile,subsetFile=self.SubsetFile,outputFile=self.outputFile)
                 
     def summary(self):
-        message=[]
+        message = []
         message.append("Input  file: [%s]" % self.InputFile)
         message.append("Subset file: [%s]" % self.SubsetFile)
         return message
     
     def validate(self):
-        errors=[]
-        mdIn=MetaData(self.InputFile)
+        errors = []
+        mdIn = mdFirstRow(self.InputFile)
         if not mdIn.containsLabel(MDL_ITEM_ID):
-            errors.append(self.InputFile+" does not contain an item_id column")
-        mdSubset=MetaData(self.SubsetFile)
+            errors.append(self.InputFile + " does not contain an item_id column")
+        
+        mdSubset = mdFirstRow(self.SubsetFile)
         if not mdSubset.containsLabel(MDL_ITEM_ID):
             errors.append(self.SubsetFile+" does not contain an item_id column")
         return errors
