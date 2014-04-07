@@ -2,7 +2,7 @@
 	<ul>
 	 {% for section in definition.iterSections %}
 	 	{% if section.label.get != "General" and section.label.get != "Parallelization" %}	
-	 		<li ><a href="#tabs-{{forloop.counter0}}">{{section.label.get}}</a></li>
+	 		<li><a href="#tabs-{{forloop.counter0}}">{{section.label.get}}</a></li>
 	 	{% endif %}
 	 {% endfor %}
 	 </ul>
@@ -13,11 +13,30 @@
  			<div class="box">
 				<table class="section">				
 					{% for paramName, param in section.iterParams %}
+					
 					<tr {% if param.expertLevel.get > 0 %} class="advance" {% else %} class="element" {% endif %} id="{{paramName}}" name="{{paramName}}" data-type="{{param.getClassName}}" data-cond="{{param.condition.get}}" data-params="{{param.htmlCondParams}}" 
 					data-depen="{{param.htmlDepend}}" value="{{param.htmlValue}}" data-enum="{{param.display}}" data-expert="{{param.expertLevel.get}}">
-						<td id="inputName" {% if param.isImportant.get %} class="recommended" 
-						{% else %} class="normal" {% endif %}>{{param.label.get}}</td>
-						<td>
+						
+					{% if param.getClassName == "Group" %}
+						{% include "content_group_form.html" %}
+					
+					{% elif param.getClassName == "Line" %}
+						
+						
+					{% else %}
+							
+						
+<!-- INPUT NAME  -->
+							<td id="inputName" 
+							{% if param.isImportant.get %} 
+								class="recommended" 
+							{% else %} 
+								class="normal" 
+							{% endif %}>
+							{{param.label.get}}
+							</td>
+							
+							<td>
 <!-- BOOLEAN PARAM -->
 							{% if param.getClassName == "BooleanParam" %}
 							  <input type="radio" id="{{paramName}}_yes" name={{paramName}} onChange="javascript:onChangeParam('true','{{paramName}}');" value="true" 
@@ -37,69 +56,72 @@
 										{% for choice in param.choices %}
 										<option value="{{forloop.counter0}}" {% if param.htmlValue == forloop.counter0 %} selected="selected" {% endif %}>{{choice}}</option>
 									{% endfor %}
-								</select>
-							{% endif %}				
-						{% else %}
-<!-- MULTIPOINTER PARAM -->
-							{% if param.getClassName == "MultiPointerParam" %}
-								<select multiple id="{{paramName}}_input" name={{paramName}} class="multipleSelect" style="height:25px;min-width:230px;width:100%;">
-								{% for htmlValue, htmlIdValue in param.htmlValueIdZip %} 
-									<option value="{{htmlIdValue}}">{{htmlValue}}</option>
-								{% endfor %}
-								</select>
-<!-- TEXT PARAM -->
-							{% else %}			
-								<input type="text" id="{{paramName}}_input" data-objId="{{param.htmlIdValue}}" name="{{paramName}}" value="{{param.htmlValue}}" >	
-							{% endif %}	
-						{% endif %}
-						</td>
-					{% if param.getClassName == "PointerParam"%}
-						<td class="ico">
-							<a href="javascript:browseObjects('{{paramName}}','{{projectName}}','objClass','{{param.pointerClass.get}}','{{param.pointerCondition.get}}');">
-								<i class="fa fa-search" style="font-size:1.1em;"></i>
-							</a> 
-						</td>
-						<td class="ico">
-							<a href="javascript:loadPreviewImage('{{paramName}}_input');">
-								<i class="fa fa-eye" style="font-size:1.1em;"></i>
-							</a> 
-						</td>
-					{% elif param.getClassName == "MultiPointerParam" %}
-						<td class="ico">
-							<a href="javascript:browseObjects('{{paramName}}','{{projectName}}','objClass','{{param.pointerClass.get}}','{{param.pointerCondition.get}}','{{param.maxNumObjects}}');">
-								<i class="fa fa-search" style="font-size:1.1em;"></i>
-							</a>
-							<a href="javascript:removeObjects('{{paramName}}');">
-								<i class="fa fa-trash-o" style="font-size:1.1em;"></i>
-							</a>  
-						</td>
+									</select>
+								{% endif %}				
+							{% else %}
+
+<!-- INPUTS ELEMENTS -->
+								{% if param.getClassName == "MultiPointerParam" %}
+									<select multiple id="{{paramName}}_input" name={{paramName}} class="multipleSelect" style="height:25px;min-width:230px;width:100%;">
+									{% for htmlValue, htmlIdValue in param.htmlValueIdZip %} 
+										<option value="{{htmlIdValue}}">{{htmlValue}}</option>
+									{% endfor %}
+									</select>
+								{% else %}			
+									<input type="text" id="{{paramName}}_input" data-objId="{{param.htmlIdValue}}" name="{{paramName}}" value="{{param.htmlValue}}" >	
+								{% endif %}	
+							{% endif %}
+							</td>
+							
+							
+						{% if param.getClassName == "PointerParam"%}
+							<td class="ico">
+								<a href="javascript:browseObjects('{{paramName}}','{{projectName}}','objClass','{{param.pointerClass.get}}','{{param.pointerCondition.get}}');">
+									<i class="fa fa-search" style="font-size:1.1em;"></i>
+								</a> 
+							</td>
+							<td class="ico">
+								<a href="javascript:loadPreviewImage('{{paramName}}_input');">
+									<i class="fa fa-eye" style="font-size:1.1em;"></i>
+								</a> 
+							</td>
+						{% elif param.getClassName == "MultiPointerParam" %}
+							<td class="ico">
+								<a href="javascript:browseObjects('{{paramName}}','{{projectName}}','objClass','{{param.pointerClass.get}}','{{param.pointerCondition.get}}','{{param.maxNumObjects}}');">
+									<i class="fa fa-search" style="font-size:1.1em;"></i>
+								</a>
+								<a href="javascript:removeObjects('{{paramName}}');">
+									<i class="fa fa-trash-o" style="font-size:1.1em;"></i>
+								</a>  
+							</td>
 <!-- PROTOCOL CLASS PARAM -->
-					{% elif param.getClassName == "ProtocolClassParam" %}
-						<td class="ico">
-							<a class="fa fa-search" href="javascript:browseObjects('{{paramName}}','{{projectName}}','protClassName' ,'{{param.protocolClassName.get}}');">
-							</a>
-						</td>
-						<td class="ico">
-							<a href="javascript:formProtSimple('{{paramName}}','{{projectName}}');" class="iconEdit">
-								<i class="fa fa-pencil" style="font-size:1.1em;"></i>
-							</a>										
-						</td>
-					{% elif param.hasWizard %}
-						<td class="ico">
-							<a class="fa fa-magic" href="javascript:putModeWiz('{{param.wizardName}}','{{param.wizardClassName}}' );"></a>
-						</td>
-					{% elif param.hasViewer %}
-						<td class="ico">
-							<a id="analyzeTool" href="javascript:putModeViewElm('{{paramName}}');" class="fa fa-eye"></a>
-						</td>
-					{% else %}
-						<td>
-						</td>
-					{% endif %}
-					{% if param.htmlHelp %}
-						<td class="ico">
-							<a class="fa fa-question-circle" href="javascript:infoPopup('Help {{param.label.get}}','{{param.htmlHelp|escapejs}}');"></a>
-						</td>
+						{% elif param.getClassName == "ProtocolClassParam" %}
+							<td class="ico">
+								<a class="fa fa-search" href="javascript:browseObjects('{{paramName}}','{{projectName}}','protClassName' ,'{{param.protocolClassName.get}}');">
+								</a>
+							</td>
+							<td class="ico">
+								<a href="javascript:formProtSimple('{{paramName}}','{{projectName}}');" class="iconEdit">
+									<i class="fa fa-pencil" style="font-size:1.1em;"></i>
+								</a>										
+							</td>
+						{% elif param.hasWizard %}
+							<td class="ico">
+								<a class="fa fa-magic" href="javascript:putModeWiz('{{param.wizardName}}','{{param.wizardClassName}}' );"></a>
+							</td>
+						{% elif param.hasViewer %}
+							<td class="ico">
+								<a id="analyzeTool" href="javascript:putModeViewElm('{{paramName}}');" class="fa fa-eye"></a>
+							</td>
+						{% else %}
+							<td>
+							</td>
+						{% endif %}
+						{% if param.htmlHelp %}
+							<td class="ico">
+								<a class="fa fa-question-circle" href="javascript:infoPopup('Help {{param.label.get}}','{{param.htmlHelp|escapejs}}');"></a>
+							</td>
+						{% endif %}
 					{% endif %}
 					</tr>
 					{% endfor %}
