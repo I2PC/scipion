@@ -1,3 +1,4 @@
+# coding: latin-1
 # **************************************************************************
 # *
 # * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
@@ -24,19 +25,31 @@
 # *
 # **************************************************************************
 """
-This sub-package contains data and protocol classes
-wrapping Grigrorieff Lab programs at Brandeis
+Bibtex string file for Xmipp package.
 """
-from bibtex import _bibtex # Load bibtex dict with references
 
-_logo = "brandeis_logo.png"
+_bibtexStr = """
 
-from brandeis import *
+@article{Mindell2003,
+title = "Accurate determination of local defocus and specimen tilt in electron microscopy ",
+journal = "Journal of Structural Biology ",
+volume = "142",
+number = "3",
+pages = "334 - 347",
+year = "2003",
+note = "",
+issn = "1047-8477",
+doi = "http://dx.doi.org/10.1016/S1047-8477(03)00069-8",
+url = "http://www.sciencedirect.com/science/article/pii/S1047847703000698",
+author = "Joseph A. Mindell and Nikolaus Grigorieff",
+keywords = "Electron microscopy, Contrast transfer function, Algorithm, Tilt determination "
+}
 
-from viewer import FrealignViewer
-from protocol_ctffind3 import ProtCTFFind
-from protocol_refinement import ProtFrealign
-from protocol_ml_classification import ProtFrealignClassify
 
-# Wizards
-from wizard import *
+"""
+
+
+
+from pyworkflow.utils import parseBibTex
+
+_bibtex = parseBibTex(_bibtexStr)  
