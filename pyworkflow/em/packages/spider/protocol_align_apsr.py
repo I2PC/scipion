@@ -53,14 +53,22 @@ class SpiderProtAlignAPSR(ProtAlign2D, SpiderProtocol):
                         }    
     
     def _defineAlignParams(self, form):
-        form.addParam('innerRadius', IntParam, default=5,
-                      label='Inner radius(px):',
-                      help='In the rotational alignment, only rings between\n'
+        line = form.addLine('Radius', help='In the rotational alignment, only rings between\n'
                            '<innerRadius> and <outerRadius> (in pixel units) will be analyzed.')
-        form.addParam('outerRadius', IntParam, default=50, 
-                      label='Outer radius(px):',
-                      help='In the rotational alignment, only rings between\n'
-                           '<innerRadius> and <outerRadius> (in pixel units) will be analyzed.')
+        line.addParam('innerRadius', IntParam, default=5,
+                      label='Inner')
+        line.addParam('outerRadius', 
+                      IntParam, default=50, 
+                      label='Outer')
+        
+#        form.addParam('innerRadius', IntParam, default=5,
+#                      label='Inner radius(px):',
+#                      help='In the rotational alignment, only rings between\n'
+#                           '<innerRadius> and <outerRadius> (in pixel units) will be analyzed.')
+#        form.addParam('outerRadius', IntParam, default=50, 
+#                      label='Outer radius(px):',
+#                      help='In the rotational alignment, only rings between\n'
+#                           '<innerRadius> and <outerRadius> (in pixel units) will be analyzed.')
         
     def _insertAllSteps(self):
         # Insert processing steps
