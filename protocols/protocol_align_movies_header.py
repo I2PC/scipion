@@ -31,8 +31,6 @@ WinSize = 150
 """
 DoGPU =True
 
-# {eval} expandParallel(threads=0,hours=12)
-
 # {eval} expandExpert()
 
 #------------------------------------------------------------------------------------------------

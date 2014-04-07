@@ -28,7 +28,7 @@ class ProtAlignMovies(XmippProtocol):
         self.setPreviousRun(self.ImportRun) 
         self.inputFilename('microscope', 'acquisition','micrographs')        
         self.MicrographsMD = self.Input['micrographs']
-        self.micrographs= _getFilename('micrographs',workingDir=self.workingDirPath())
+        self.micrographs= 'classes@'+_getFilename('micrographs',workingDir=self.workingDirPath())
 
     def defineSteps(self):
         extraDir=self.workingDirPath('extra')
@@ -45,13 +45,12 @@ class ProtAlignMovies(XmippProtocol):
             movieName = os.path.splitext(movieNameList)[0]
             #micrographDir = os.path.join(extraDir,shortname)                    
             
-            self.insertParallelStep('alignSingleMovie'
+            self.insertStep('alignSingleMovie1'
                                     , verifyfiles=[_getFilename('movieAverage',movieDir=extraDir,baseName=movieName)]
                                     , WorkingDir=self.WorkingDir
                                     , inputMovie=inputMovie 
-                                    , movieAverage = [_getFilename('movieAverage',movieDir=extraDir,baseName=movieName)]                                   
+                                    , movieAverage = _getFilename('movieAverage',movieDir=extraDir,baseName=movieName)                                   
                                     , WinSize=self.WinSize
-                                    , parent_step_id=XmippProjectDb.FIRST_STEP
                                     , DoGPU = self.DoGPU
                                     )
         
@@ -88,32 +87,32 @@ class ProtAlignMovies(XmippProtocol):
         else:
             showWarning('Warning', 'There are not results yet',self.master)
     
-def alignSingleMovie(log,WorkingDir
+def alignSingleMovie1(log,WorkingDir
                      , inputMovie   
                      , movieAverage                                 
                      , WinSize
-                     , doGPU
+                     , DoGPU
                      ):
 
         # Align estimation with Xmipp
-        args= ("%s %s %d")%(inputMovie,movieAverage,WinSize)
-        
-        print args
-        if doGPU:
-            args += ' '
-        else:
-            args += ' '
+        args= (" %s %s %d")%(inputMovie,movieAverage,WinSize)
+        #if DoGPU:
+        #    args += ' '
+        #else:
+        #    args += ' '
             
         runJob(log,'xmipp_optical_alignment', args)
                 
 def gatherResults(log, WorkingDir,extraDir,summaryFile):
     
     import glob
-    fnList=glob.glob(os.path.join(WorkingDir,extraDir,'*_aligned.spi'))
-    md=xmipp.MetaData()
-    for file in fnList:
-        id=md.addObject()
+    fnList=glob.glob(os.path.join(extraDir,'*_aligned.spi'))
+    md=xmipp.MetaData(summaryFile)
+    for id  in md:
+        inputMovie = md.getValue(xmipp.MDL_MICROGRAPH, id)
+        movieNameList = os.path.basename(inputMovie)
+        movieName = os.path.splitext(movieNameList)[0]
+        file = _getFilename('movieAverage',movieDir=extraDir,baseName=movieName) 
         md.setValue(xmipp.MDL_MICROGRAPH,file,id)
-#TODO: ADD CTF
     md.sort(xmipp.MDL_MICROGRAPH)
-    md.write(summaryFile)
+    md.write(summaryFile,xmipp.MD_APPEND)
