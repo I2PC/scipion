@@ -403,9 +403,15 @@ class TestXmippWorkflow(unittest.TestCase):
         related = project.getRelatedObjects(RELATION_CTF, obj)
         for r in related:
             print "r: ", r
+             
+    def test_importEMX(self):
+        manager = Manager()
+        project = manager.createProject("emx import")
         
-        #graph.printNodes()
-        
+        prot = ProtEmxImport()
+        prot.inputEMX.set('/home/josem/emxDataMicrographs/data.emx')
+        project.launchProtocol(prot, wait=True)
+
              
 class ConditionFilter():
     def __init__(self, condition):

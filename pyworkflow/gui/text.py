@@ -379,6 +379,7 @@ class TextFileViewer(tk.Frame):
         self.searchList = None
         self.lastSearch = None
         self.refreshAlarm = None
+        self._lastTabIndex = None
         self.filelist = []
         self.taList = []
         self.fontDict = {}
@@ -489,7 +490,8 @@ class TextFileViewer(tk.Frame):
         for ta in self.taList:
             ta.readFile(clear=True)
             ta.goEnd()
-        self.notebook.select(self._lastTabIndex)
+        if self._lastTabIndex is not None:
+            self.notebook.select(self._lastTabIndex)
         
     def refreshOutput(self, e=None):
         if self.refreshAlarm:

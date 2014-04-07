@@ -33,7 +33,7 @@ from constants import *
 from convert import ImageHandler
 from pyworkflow.object import *
 from pyworkflow.mapper.sqlite import SqliteMapper, SqliteFlatMapper
-from pyworkflow.utils.path import cleanPath, dirname, join, replaceExt
+from pyworkflow.utils.path import cleanPath, dirname, join, replaceExt, exists
 import xmipp
 
 
@@ -172,8 +172,8 @@ class ImageDim(CsvList):
         if x is not None and y is not None:
             self.append(x)
             self.append(y)
-        if z is not None:
-            self.append(z)
+            if z is not None:
+                self.append(z)
         
     def getX(self):
         return self[0]
@@ -185,9 +185,12 @@ class ImageDim(CsvList):
         return self[2]
     
     def __str__(self):
-        s = '%dx%d' % (self.getX(), self.getY())
-        if self.getZ() > 1:
-            s += 'x%d' % self.getZ()
+        if self.isEmpty():
+            s = 'No-Dim'
+        else:
+            s = '%dx%d' % (self.getX(), self.getY())
+            if self.getZ() > 1:
+                s += 'x%d' % self.getZ()
         return s
 
     
@@ -217,8 +220,11 @@ class Image(EMObject):
     
     def getDim(self):
         """Return image dimensions as tuple: (Xdim, Ydim, Zdim, N)"""
-        x, y, z, n = ImageHandler().getDimensions(self.getLocation())
-        return (x, y, z)
+        i, fn = self.getLocation()
+        if exists(fn):
+            x, y, z, n = ImageHandler().getDimensions(self.getLocation())
+            return x, y, z
+        return None
     
     def getIndex(self):
         return self._index.get()
@@ -337,12 +343,11 @@ class VolumeMask(Volume):
     pass
 
 
-class PdbFile(EMObject):
-    """Represents an EM Image object"""
-    def __init__(self, filename=None, pseudoatoms=False, **args):
+class EMFile(EMObject):
+    """ Class to link usually to text files. """
+    def __init__(self, filename=None, **args):
         EMObject.__init__(self, **args)
         self._filename = String(filename)
-        self._pseudoatoms = Boolean(pseudoatoms)
         
     def getFileName(self):
         """ Use the _objValue attribute to store filename. """
@@ -350,7 +355,14 @@ class PdbFile(EMObject):
     
     def setFileName(self, filename):
         """ Use the _objValue attribute to store filename. """
-        self._filename.set(filename)
+        self._filename.set(filename)    
+
+    
+class PdbFile(EMFile):
+    """Represents an PDB file. """
+    def __init__(self, filename=None, pseudoatoms=False, **args):
+        EMFile.__init__(self, filename, **args)
+        self._pseudoatoms = Boolean(pseudoatoms)
         
     def getPseudoAtoms(self):
         return self._pseudoatoms.get()
@@ -360,7 +372,24 @@ class PdbFile(EMObject):
         
     def __str__(self):
         return "%s (pseudoatoms=%s)" % (self.getClassName(), self.getPseudoAtoms())
+    
+    
+class EMXObject(EMObject):
+    """Represents EMX data object, mainly comprising two files:
+    1- XML file specifiying metadata information
+    2- A binary data file of either Micrographs or Particles.
+    """
+    def __init__(self, xmlFile=None, binaryFile=None, **args):
+        EMObject.__init__(self, **args)
+        self._xmlFile = String(xmlFile)
+        self._binaryFile = String(binaryFile)
         
+    def getXmlFile(self):
+        return self._xmlFile.get()
+    
+    def getBinaryFile(self):
+        return self._binaryFile.get()        
+                
         
 class Set(EMObject):
     """ This class will be a container implementation for elements.
@@ -600,6 +629,8 @@ class SetOfImages(Set):
     
     def getDim(self):
         """ Return the dimensions of the first image in the set. """
+        if self._firstDim.isEmpty():
+            return None
         x, y, z = self._firstDim
         return x, y, z
     
@@ -642,15 +673,22 @@ class SetOfMicrographs(SetOfImages):
     def setSamplingRate(self, samplingRate):
         """ Set the sampling rate and adjust the scannedPixelSize. """
         self._samplingRate.set(samplingRate)
-        self._scannedPixelSize.set(1e-4 * samplingRate * self._acquisition.getMagnification())
+        mag = self._acquisition.getMagnification()
+        if mag is None:
+            self._scannedPixelSize.set(None)
+        else:
+            self._scannedPixelSize.set(1e-4 * samplingRate * mag)
     
     def getScannedPixelSize(self):
         return self._scannedPixelSize.get()
     
     def setScannedPixelSize(self, scannedPixelSize):
         """ Set scannedPixelSize and update samplingRate. """
+        mag = self._acquisition.getMagnification()
+        if mag is None:
+            raise Exception("SetOfMicrographs: cannot set scanned pixel size if Magnification is not set.")
         self._scannedPixelSize.set(scannedPixelSize)
-        self._samplingRate.set((1e+4 * scannedPixelSize) / self._acquisition.getMagnification())
+        self._samplingRate.set((1e+4 * scannedPixelSize) / mag)
 
 
 class SetOfParticles(SetOfImages):

@@ -620,7 +620,7 @@ class ParamWidget():
             entry = tk.Entry(content, width=entryWidth, textvariable=var)
             entry.grid(row=0, column=0, sticky='w')
             
-            if t is PathParam:
+            if issubclass(t, PathParam):
                 self._addButton('Browse', Icon.ACTION_BROWSE, self._browsePath)
 
         if self.visualizeCallback is not None:

@@ -113,7 +113,7 @@ class Project(object):
         # Create project path if not exists
         makePath(self.path)
         os.chdir(self.path) #Before doing nothing go to project dir
-        self.clean()
+        self._cleanData()
         print abspath(self.dbPath)
         # Create db throught the mapper
         self.mapper = SqliteMapper(self.dbPath, globals())
@@ -129,7 +129,7 @@ class Project(object):
             else:
                 makePath(p)
         
-    def clean(self):
+    def _cleanData(self):
         """Clean all project data"""
         cleanPath(*self.pathList)      
                 
