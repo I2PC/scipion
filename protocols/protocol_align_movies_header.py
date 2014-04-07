@@ -16,9 +16,9 @@
 #{eval} expandCommentRun()
 
 #-----------------------------------------------------------------------------
-# {section} CTF Estimation
+# {section} Input Data
 #-----------------------------------------------------------------------------
-# {run}(import_movies, screen_micrograph) Import Movie Run
+# {run}(import_movies) Import Movie Run
 ImportRun = ''
 # {expert} Window size
 """ 

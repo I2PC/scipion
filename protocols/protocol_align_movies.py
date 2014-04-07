@@ -93,9 +93,9 @@ def alignSingleMovie(log,WorkingDir
                      ):
 
         # Align estimation with Xmipp
-        args="-i "+ inputMovie +\
-             "-o "+ movieAverage +\
-             " --windowSize "+str(WinSize)
+        args="-i "+ inputMovie #+\
+             #"-o "+ movieAverage +\
+             #" --windowSize "+str(WinSize)
         
         print args
         runJob(log,'xmipp_image_header', args)
