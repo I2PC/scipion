@@ -76,7 +76,7 @@ class ProtPreprocessParticles(ProtParticlesBase):
                 self.Substitute = str(self.SubstituteValue)
             params = "--substitute %s --mask %s " % (self.Substitute, self.MaskType)
             if self.MaskType == 'raised_cosine':
-                params += "-%d -%d" % (self.MaskRadius, self.MaskRadius + self.MaskRadiusOuter)
+                params += "-%d -%d" % (self.MaskRadius, self.MaskRadiusOuter)
             elif self.MaskType == 'circular':
                 params += '-%d' % self.MaskRadius
             else: # from file:
