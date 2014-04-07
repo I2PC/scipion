@@ -112,7 +112,7 @@ def alignSingleMovie1(log,WorkingDir
         #else:
         #    args += ' '
             
-        ###runJob(log,'xmipp_optical_alignment', args)
+        runJob(log,'xmipp_optical_alignment', args)
                 
 def gatherResults(log, 
                   WorkingDir,
