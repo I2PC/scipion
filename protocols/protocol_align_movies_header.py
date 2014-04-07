@@ -26,6 +26,11 @@ Window size (shifts are assumed to be constant within this window).
 """
 WinSize = 150
 
+# Use GPU version
+""" Set to true if you want the GPU implementation
+"""
+DoGPU =True
+
 # {eval} expandParallel(threads=0,hours=12)
 
 # {eval} expandExpert()
