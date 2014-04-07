@@ -80,7 +80,7 @@ def form(request):
             if protVar is None:
 #                raise Exception("_fillSection: param '%s' not found in protocol" % paramName)
                
-                # Create the label
+                # GROUP PARAM
                 if isinstance(param, Group):
                     print "Found GROUP param"
                     
@@ -92,10 +92,24 @@ def form(request):
                         else:
                             paramGroup = PreprocessParamForm(request, paramGroup, paramGroupName, wizards, viewerDict, visualize, protVar)
                 
+                # LINE PARAM
                 if isinstance(param, Line):
                     print "Found LINE param"
                     
+                    for paramLineName, paramLine in param.iterParams():
+                        protVar = getattr(protocol, paramLineName, None)
+                        
+                        if protVar is None:
+                            pass
+                        else:
+                            paramLine = PreprocessParamForm(request, paramLine, paramLineName, wizards, viewerDict, visualize, protVar)
+                            print paramLine 
+                            
+                    if not param.help.empty():
+                        param.htmlHelp = parseText(param.help.get())
+                    
             else:
+                #OTHER PARAM
                 param = PreprocessParamForm(request, param, paramName, wizards, viewerDict, visualize, protVar)
     
     context = {'projectName':project.getName(),

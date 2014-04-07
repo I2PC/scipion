@@ -20,9 +20,29 @@
 					{% if param.getClassName == "Group" %}
 						{% include "content_group_form.html" %}
 					
-						
+					{% elif param.getClassName == "Line" %}
+						<td id="inputName" 
+							{% if param.isImportant.get %} 
+								class="recommended" 
+							{% else %} 
+								class="normal" 
+							{% endif %}>
+							{{param.label.get}}
+							</td>
+							<td style="width: 1em;">
+						{% for paramLineName, paramLine in param.iterParams %}
+							{{paramLine.label.get}}
+							<input type="text" style="width: 2em;" id="{{paramLineName}}_input" data-objId="{{paramLine.htmlIdValue}}" name="{{paramLineName}}" value="{{paramLine.htmlValue}}" >
+						{% endfor %}
+							</td>
+							<td>
+							</td>
+						{% if param.htmlHelp %}
+							<td class="ico">
+								<a class="fa fa-question-circle" href="javascript:infoPopup('Help {{param.label.get}}','{{param.htmlHelp|escapejs}}');"></a>
+							</td>
+						{% endif %}
 					{% else %}
-							
 						
 <!-- INPUT NAME  -->
 							<td id="inputName" 
