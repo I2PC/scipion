@@ -45,6 +45,35 @@ author = "Joseph A. Mindell and Nikolaus Grigorieff",
 keywords = "Electron microscopy, Contrast transfer function, Algorithm, Tilt determination "
 }
 
+@article{Grigorieff2007,
+title = "FREALIGN: High-resolution refinement of single particle structures ",
+journal = "Journal of Structural Biology ",
+volume = "157",
+number = "1",
+pages = "117 - 125",
+year = "2007",
+note = "Software tools for macromolecular microscopy ",
+issn = "1047-8477",
+doi = "http://dx.doi.org/10.1016/j.jsb.2006.05.004",
+url = "http://www.sciencedirect.com/science/article/pii/S1047847706001699",
+author = "Nikolaus Grigorieff",
+keywords = "Image processing, Electron microscopy, Protein structure,\{FREALIGN\} "
+
+@article{Wolf2006,
+title = "Ewald sphere correction for single-particle electron microscopy ",
+journal = "Ultramicroscopy ",
+volume = "106",
+number = "4-5",
+pages = "376 - 382",
+year = "2006",
+note = "",
+issn = "0304-3991",
+doi = "http://dx.doi.org/10.1016/j.ultramic.2005.11.001",
+url = "http://www.sciencedirect.com/science/article/pii/S0304399105002342",
+author = "Matthias Wolf and David J. DeRosier and Nikolaus Grigorieff",
+keywords = "Three-dimensional reconstruction, Resolution, Depth of field, \{FREALIGN\} "
+}
+
 
 """
 

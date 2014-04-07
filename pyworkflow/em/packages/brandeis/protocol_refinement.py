@@ -38,13 +38,17 @@ from protocol_frealign_base import ProtFrealignBase
 class ProtFrealign(ProtFrealignBase, ProtRefine3D):
     """ This class implements the wrapper to single particle refinement protocol with frealign."""
     _label = 'frealign'
-    _references = ['[[http://dx.doi.org/10.1016/j.jsb.2006.05.004][Grigorieff N,  JSB (2007)]]',
-                   '[[http://www.ncbi.nlm.nih.gov/pubmed/16384646][Wolf M, et.al, Ultramicroscopy (2006)]]',
-                   '[[http://www.ncbi.nlm.nih.gov/pubmed/15556702][Stewart A & Grigorieff N, Ultramicroscopy (2004)]]',
-                   '[[http://www.ncbi.nlm.nih.gov/pubmed/9571020][Grigorieff N, JMB (1998)]]',
-                   '[[http://www.sciencedirect.com/science/article/pii/S104784771200144X][Sindelar CV & Grigorieff N, Ultramicroscopy (2012)]]',
-                   '[[http://www.sciencedirect.com/science/article/pii/S1047847713001858][Lyumkis D, et. al, JSB (2013)]]'
-                    ]
+#    _references = ['[[http://dx.doi.org/10.1016/j.jsb.2006.05.004][Grigorieff N,  JSB (2007)]]',
+#                   '[[http://www.ncbi.nlm.nih.gov/pubmed/16384646][Wolf M, et.al, Ultramicroscopy (2006)]]',
+#                   '[[http://www.ncbi.nlm.nih.gov/pubmed/15556702][Stewart A & Grigorieff N, Ultramicroscopy (2004)]]',
+#                   '[[http://www.ncbi.nlm.nih.gov/pubmed/9571020][Grigorieff N, JMB (1998)]]',
+#                   '[[http://www.sciencedirect.com/science/article/pii/S104784771200144X][Sindelar CV & Grigorieff N, Ultramicroscopy (2012)]]',
+#                   '[[http://www.sciencedirect.com/science/article/pii/S1047847713001858][Lyumkis D, et. al, JSB (2013)]]'
+#                    ]
     
     def __init__(self, **args):
         ProtFrealignBase.__init__(self, **args)
+        
+        
+    def _citations(self):
+        return ['Grigorieff2007', 'Wolf2006' ]
