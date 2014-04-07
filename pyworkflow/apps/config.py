@@ -263,20 +263,24 @@ def addProtocols(settings):
     """ Write protocols configuration. """
     menu = ProtocolConfig("Protocols SPA")
     
-     # ------------------- Imports ----------------------------
-    m1 = menu.addSubMenu('Imports', tag='section')
+    # ------------------- Imports ----------------------------
+    m1 = menu.addSubMenu('Imports', tag='section', icon='bookmark.png')
     
-    m1.addSubMenu('xmipp3-import micrographs', value='ProtImportMicrographs', 
-                  tag='protocol', icon='bookmark.png')
-    m1.addSubMenu('xmipp3-import particles', value='ProtImportParticles', 
-                  tag='protocol', icon='bookmark.png')
+    m1.addSubMenu('import micrographs', value='ProtImportMicrographs', 
+                  tag='protocol')
+    m1.addSubMenu('import particles', value='ProtImportParticles', 
+                  tag='protocol')    
+    m1.addSubMenu('import volumes', value='ProtImportVolumes', 
+                 tag='protocol')   
+    m1.addSubMenu('import PDB', value='ProtImportPdb', 
+                 tag='protocol')  
+    m1.addSubMenu('import movies', value='ProtImportMovies', 
+                  tag='protocol')
+    m1.addSubMenu('import from EMX', value='ProtEmxImport', 
+                  tag='protocol')
+    m1.addSubMenu('export to EMX', value='ProtEmxExport', 
+                  tag='protocol')
     
-    m1.addSubMenu('xmipp3-import volumes', value='ProtImportVolumes', 
-                 tag='protocol', icon='bookmark.png')   
-    m1.addSubMenu('xmipp3-import pdb volumes', value='ProtImportPdb', 
-                 tag='protocol', icon='bookmark.png')  
-    m1.addSubMenu(' xmipp3-import movies', value='ProtImportMovies', 
-                  tag='protocol', icon='bookmark.png')
     
     # ------------------- Micrographs ----------------------------
     m1 = menu.addSubMenu('Micrographs', tag='section')
@@ -321,15 +325,9 @@ def addProtocols(settings):
                   tag='protocol_base')
     m1.addSubMenu('Preprocess', value='ProtPreprocessVolumes',
                   tag='protocol_base')
-    m1.addSubMenu('Align volume', value='ProtAlignVolume',
-                  tag='protocol_base')
     m1.addSubMenu('Refine', value='ProtRefine3D',
                   tag='protocol_base')
     m1.addSubMenu('Classify', value='ProtClassify3D',
-                  tag='protocol_base')
-    m1.addSubMenu('Validate', value='ProtValidate3D',
-                  tag='protocol_base')
-    m1.addSubMenu('Mask', value='ProtCreateMask3D',
                   tag='protocol_base')
     m1.addSubMenu('Analysis', value='ProtAnalysis3D',
                   tag = 'protocol_base')

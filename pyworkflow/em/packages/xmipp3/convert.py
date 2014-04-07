@@ -508,7 +508,8 @@ def writeSetOfCTFs(ctfSet, mdCTF):
         objId = md.addObject()
         ctfRow = XmippMdRow()
         ctfRow.setValue(xmipp.MDL_MICROGRAPH, ctfModel.getMicFile())
-        ctfRow.setValue(xmipp.MDL_PSD, ctfModel.getPsdFile())
+        if ctfModel.getPsdFile():
+            ctfRow.setValue(xmipp.MDL_PSD, ctfModel.getPsdFile())
         ctfModelToRow(ctfModel, ctfRow)
         ctfRow.writeToMd(md, objId)
         

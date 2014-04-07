@@ -65,8 +65,13 @@ class ProtMaskVolumes(ProtPreprocessVolumes):
     pass
 
 
-#class ProtInitialVolume(EMProtocol):
-#    pass
+class ProtCreateMask3D(ProtPreprocessVolumes):
+    pass
+
+
+class ProtAlignVolume(ProtPreprocessVolumes):
+    """Protocol base for Align volumes protocols"""
+    pass
 
 
 class ProtRefine3D(Prot3D):
@@ -77,23 +82,8 @@ class ProtClassify3D(Prot3D):
     pass
 
 
-class ProtValidate3D(Prot3D):
-    pass
-
-
-class ProtCreateMask3D(Prot3D):
-    pass
-
-
-
-
 class ProtInitialVolume(Prot3D):
     """Protocol base for Initial volumes protocols"""
-    pass
-
-
-class ProtAlignVolume(Prot3D):
-    """Protocol base for Align volumes protocols"""
     pass
 
 

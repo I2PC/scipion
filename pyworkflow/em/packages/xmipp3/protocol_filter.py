@@ -57,14 +57,22 @@ class XmippProtFilter():
                            '_low pass_: components below *High freq.* are preserved. \n '
                            '_high pass_: components above *Low freq.* are preserved. \n '
                            '_band pass_: components between *Low freq.* and *High freq.* are preserved. \n ')
-        form.addParam('lowFreq', DigFreqParam, default=0.02, 
+        line = form.addLine('Frequency', help='Range to apply the filter')
+        line.addParam('lowFreq', DigFreqParam, default=0.02, 
                       condition='filterType == %d and fourierMode != %d' % (FILTER_FOURIER, FILTER_LOW_PASS),
-                      label='Low frequency (0 < f < 0.5)',
-                      help='Low frequency cuttoff to apply the filter. \n ')          
-        form.addParam('highFreq', DigFreqParam, default=0.35, 
+                      label='Lowest')
+        line.addParam('highFreq', 
+                      DigFreqParam, default=0.35, 
                       condition='filterType == %d and fourierMode != %d' % (FILTER_FOURIER, FILTER_HIGH_PASS),
-                      label='High frequency (0 < f < 0.5)', 
-                      help='High frequency cuttoff to apply the filter.')          
+                      label='Highest')
+#        form.addParam('lowFreq', DigFreqParam, default=0.02, 
+#                      condition='filterType == %d and fourierMode != %d' % (FILTER_FOURIER, FILTER_LOW_PASS),
+#                      label='Low frequency (0 < f < 0.5)',
+#                      help='Low frequency cuttoff to apply the filter. \n ')          
+#        form.addParam('highFreq', DigFreqParam, default=0.35, 
+#                      condition='filterType == %d and fourierMode != %d' % (FILTER_FOURIER, FILTER_HIGH_PASS),
+#                      label='High frequency (0 < f < 0.5)', 
+#                      help='High frequency cuttoff to apply the filter.')          
         form.addParam('freqDecay', FloatParam, default=0.02, 
                       condition='filterType == %d' % FILTER_FOURIER, 
                       label='Frequency decay',
@@ -101,7 +109,7 @@ class XmippProtFilter():
 
 
 class XmippProtFilterParticles(ProtFilterParticles, XmippProcessParticles, XmippProtFilter):
-    """ Apply some filter to SetOfParticles """
+    """ Apply Fourier filters to a set of particles  """
     _label = 'filter particles'
     
     def __init__(self, **args):
@@ -115,7 +123,7 @@ class XmippProtFilterParticles(ProtFilterParticles, XmippProcessParticles, Xmipp
 
 
 class XmippProtFilterVolumes(ProtFilterVolumes, XmippProcessVolumes, XmippProtFilter):
-    """ Apply some filter to SetOfParticles """
+    """ Apply Fourier filters to a set of volumes """
     _label = 'filter volumes'
     
     def __init__(self, **args):

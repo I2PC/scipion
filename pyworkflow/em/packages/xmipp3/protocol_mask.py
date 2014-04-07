@@ -96,7 +96,7 @@ class XmippProtMask():
 
 
 class XmippProtMaskParticles(ProtMaskParticles, XmippProcessParticles, XmippProtMask, XmippGeometricalMask2D):
-    """ Apply some filter to SetOfParticles """
+    """ Apply mask to a set of particles """
     _label = 'mask particles'
     
     def __init__(self, **args):
@@ -134,7 +134,7 @@ class XmippProtMaskParticles(ProtMaskParticles, XmippProcessParticles, XmippProt
 
 
 class XmippProtMaskVolumes(ProtMaskVolumes, XmippProcessVolumes, XmippProtMask, XmippGeometricalMask3D):
-    """ Apply mask to volume or SetOfVolumes """
+    """ Apply mask to a volume """
     _label = 'apply mask'
     
     def __init__(self, **args):

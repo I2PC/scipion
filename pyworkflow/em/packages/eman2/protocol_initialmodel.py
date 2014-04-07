@@ -37,6 +37,7 @@ from glob import glob
 import eman2
 
 class EmanProtInitModel(ProtInitialVolume):
+    """No help?"""
     _label = 'initial model'
     
     def _defineParams(self, form):

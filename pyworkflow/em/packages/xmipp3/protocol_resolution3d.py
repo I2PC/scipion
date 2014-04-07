@@ -35,7 +35,7 @@ from xmipp3 import XmippProtocol
 from convert import createXmippInputVolumes, readSetOfVolumes, locationToXmipp
 
 
-class XmippProtResolution3D(ProtValidate3D):
+class XmippProtResolution3D(ProtAnalysis3D):
     """ Protocol for Xmipp-based resolution3D """
     _label = 'resolution 3D'
       

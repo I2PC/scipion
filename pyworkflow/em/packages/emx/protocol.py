@@ -28,12 +28,11 @@ In this module are two protocols to Import/Export data from/to EMX.
 """
 
 from pyworkflow.em import *
-from pyworkflow.em.protocol import *
 import emx
-from convert import *
+from convert import importData, exportData
 
 
-class ProtEmxImport(ProtClassify2D):
+class ProtEmxImport(ProtImport):
     """
     Import micrographs, coordinates or particles from EMX file.
     
@@ -57,8 +56,8 @@ class ProtEmxImport(ProtClassify2D):
         """ Export micrographs to EMX file.
         micsId is only passed to force redone of this step if micrographs change.
         """
-        outputDict = importData(self, emxFile)
-        self.defineOutputs(**outputDict)
+        outputDict = importData(self, emxFile, outputDir=self._getPath())
+        #self._defineOutputs(**outputDict)
     
     #--------------------------- INFO functions -------------------------------------------- 
     def _validate(self):
@@ -77,7 +76,7 @@ class ProtEmxImport(ProtClassify2D):
         return self._summary()  # summary is quite explicit and serve as methods
     
     
-class ProtEmxExport(ProtClassify2D):
+class ProtEmxExport(EMProtocol):
     """
     Export micrographs, coordinates or particles to EMX format.
     
@@ -92,11 +91,18 @@ class ProtEmxExport(ProtClassify2D):
                       pointerClass='SetOfMicrographs,SetOfCoordinates,SetOfParticles', 
                       label="Set to export",
                       help='Select the microgrpahs, coordinates or particles set to be exported to EMX.')
-        form.addParam('ctfRelations', RelationParam, 
+        form.addParam('ctfEstimation', RelationParam, 
                       allowsNull=True, relationName=RELATION_CTF, attributeName='getInputSet', 
                       label='Include CTF from', 
                       help='You can select a CTF estimation associated with these\n'
-                           'micrographs to be included in the EMX file')   
+                           'micrographs to be included in the EMX file')
+        
+        form.addParam('outputPrefix', StringParam, default='data',
+                      label='EMX files prefix',
+                      help='Select how do you want to name the EMX files.'
+                           'For example, if you use "data" as prefix, two'
+                           'files will be generated:\n'
+                           '_data.emx_ and _data.mrc_')
                  
     def getInputSet(self):
         return self.inputSet.get()
@@ -111,7 +117,13 @@ class ProtEmxExport(ProtClassify2D):
         micsId is only passed to force redone of this step if micrographs change.
         """
         emxDir = self._getPath('emxData')
-        exportData(emxDir, self.inputSet.get(), ctfSet=None)
+        xmlFile = self.outputPrefix.get() + '.emx'
+        binaryFile = self.outputPrefix.get() + '.mrc'
+        exportData(emxDir, self.inputSet.get(), ctfSet=self.ctfEstimation.get(), 
+                   xmlFile=xmlFile, binaryFile=binaryFile)
+        
+        self._defineOutputs(emxOutput=EMXObject(join(emxDir, xmlFile), 
+                                                join(emxDir, binaryFile)))
     
     #--------------------------- INFO functions -------------------------------------------- 
     def _validate(self):
