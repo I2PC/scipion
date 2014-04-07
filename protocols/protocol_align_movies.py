@@ -26,15 +26,15 @@ class ProtAlignMovies(XmippProtocol):
         XmippProtocol.__init__(self, protDict.align_movies.name, scriptname, project)
         self.Import = "from protocol_align_movies import *"
         self.setPreviousRun(self.ImportRun) 
-        self.inputFilename('microscope', 'acquisition','movies')        
-        self.MoviesMd = self.Input['movies']
+        self.inputFilename('microscope', 'acquisition','micrographs')        
+        self.MicrographsMD = self.Input['micrographs']
         self.micrographs= _getFilename('micrographs',workingDir=self.workingDirPath())
 
     def defineSteps(self):
         extraDir=self.workingDirPath('extra')
         parent_id = self.insertStep('createDir',verifyfiles=[extraDir],path=extraDir)
         # Create verifyFiles for the MPI and output directories
-        MD = xmipp.MetaData(self.MoviesMd)
+        MD = xmipp.MetaData(self.MicrographsMD)
         #if removed in import do not process them
         MD.removeDisabled()
     
@@ -70,7 +70,7 @@ class ProtAlignMovies(XmippProtocol):
     def summary(self):
         message = []
         from protlib_xmipp import getMdSize
-        size = getMdSize(self.Input['movies'])
+        size = getMdSize(self.Input['micrographs'])
         message.append("Movies aligned <%d>" % (size))
         message.append("Input directory: [%s]" % self.PrevRun.WorkingDir)
         return message
