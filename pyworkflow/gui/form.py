@@ -615,7 +615,7 @@ class ParamWidget():
         else:
             #v = self.setVarValue(paramName)
             var = tk.StringVar()
-            if t is FloatParam or t is IntParam:
+            if issubclass(t, FloatParam) or issubclass(t, IntParam):
                 entryWidth = self._entryWidth # Reduce the entry width for numbers entries
             entry = tk.Entry(content, width=entryWidth, textvariable=var)
             entry.grid(row=0, column=0, sticky='w')
