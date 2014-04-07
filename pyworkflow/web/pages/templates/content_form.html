@@ -20,8 +20,6 @@
 					{% if param.getClassName == "Group" %}
 						{% include "content_group_form.html" %}
 					
-					{% elif param.getClassName == "Line" %}
-						
 						
 					{% else %}
 							
@@ -57,7 +55,11 @@
 										<option value="{{forloop.counter0}}" {% if param.htmlValue == forloop.counter0 %} selected="selected" {% endif %}>{{choice}}</option>
 									{% endfor %}
 									</select>
-								{% endif %}				
+								{% endif %}	
+								
+							{% elif param.getClassName == "Line" %}
+								
+										
 							{% else %}
 
 <!-- INPUTS ELEMENTS -->
