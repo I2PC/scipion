@@ -17,7 +17,7 @@ class ProtImportMovies(XmippProtocol):
         XmippProtocol.__init__(self, protDict.import_movies.name, scriptname, project)
         self.Import = "from protocol_import_movies import *"
         self.PatternMovies = join(self.DirMovies, self.ExtMovies)
-        self.MoviesMd = self.getFilename('movies')
+        self.MicrographsMd = self.getFilename('micrographs')
             
     def defineSteps(self):
         # Create microscope
@@ -71,7 +71,7 @@ class ProtImportMovies(XmippProtocol):
         return glob(self.PatternMovies)
     
     def visualize(self):
-        summaryFile = self.getFilename('movies')
+        summaryFile = self.MicrographsMd
         if os.path.exists(summaryFile):
             from protlib_utils import runShowJ
             runShowJ(summaryFile)
@@ -88,7 +88,7 @@ class ProtImportMovies(XmippProtocol):
                         Magnification=self.Magnification)
             
     def insertCreateResults(self, filenameDict):
-        micFn = self.getFilename('movies')
+        micFn = self.MicrographsMd
         self.insertStep('createResults', 
                         verifyfiles=[micFn], 
                         WorkingDir=self.WorkingDir, 
@@ -119,7 +119,7 @@ def createMicroscope(log, fnOut, Voltage, SphericalAberration, SamplingRate, Sam
 def createResults(log, WorkingDir, FilenameDict, MicrographFn, PixelSize):
     ''' Create a metadata movies.xmd with all movies
     '''
-        
+    
     movies = FilenameDict.values()
     movies.sort()
     md = MetaData()
@@ -129,15 +129,15 @@ def createResults(log, WorkingDir, FilenameDict, MicrographFn, PixelSize):
     md.write("classes@"+MicrographFn,MD_OVERWRITE)
     for m in movies:
         id = md.addObject()
-        md.setValue(MDL_REF, int(id), id)
-        md.setValue(MDL_MICROGRAPH_MOVIE, m, id)
+        md.setValue(MDL_REF, int(id), id)        
+        md.setValue(MDL_MICROGRAPH, ('%05d@%s'%(1,m)), id)
         md.setValue(MDL_ENABLED, 1, id)
+        md.setValue(MDL_MICROGRAPH_MOVIE, m, id)        
         
-        print ndim
         mdClass.clear()
-        for num in range(0,ndim+1):
+        for num in range(1,ndim+1):
             idClass = mdClass.addObject()
-            mdClass.setValue(MDL_MICROGRAPH, ('%05d@%s'%(id,m)), idClass)
+            mdClass.setValue(MDL_MICROGRAPH, ('%05d@%s'%(num,m)), idClass)
             mdClass.setValue(MDL_MICROGRAPH_MOVIE, m, idClass)
             mdClass.setValue(MDL_REF, int(id), idClass)
             mdClass.write('class%05d_movies@%s'%(id,MicrographFn),MD_APPEND)                 

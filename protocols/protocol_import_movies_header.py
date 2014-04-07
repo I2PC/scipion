@@ -27,6 +27,13 @@ If you do preprocessing this option will be ignored.
 """
 CopyMovies = False
 
+# {condition} Average along each movie?
+""" 
+Set to <True> if you want to obtain an average 
+for each movie.
+"""
+AverageMovies = True
+
 #------------------------------------------------------------------------------------------------
 # {section} Acquisition information
 #------------------------------------------------------------------------------------------------
