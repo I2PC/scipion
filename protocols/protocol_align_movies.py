@@ -5,7 +5,7 @@
 #from config_protocols import protDict
 from protlib_base import *
 from protlib_utils import which, runJob, runShowJ,printLog
-from protlib_filesystem import deleteFile, createLink2, exists, replaceFilenameExt, createDir
+from protlib_filesystem import deleteFile, createLink2, exists, replaceFilenameExt, createDir, copyFile
 import xmipp 
 from protlib_gui_ext import showWarning
 
@@ -15,7 +15,6 @@ _templateDict = {
         # This templates are relative to a micrographDir
         'movieAverage': join('%(movieDir)s','%(baseName)s_aligned.spi'),
         'moviesFlows': join('%(movieDir)s','%(baseName)s_flow.spi'),
-        'micrographs': join('%(workingDir)s','micrographs.xmd')
         }
 
 def _getFilename(key, **args):
@@ -27,8 +26,13 @@ class ProtAlignMovies(XmippProtocol):
         self.Import = "from protocol_align_movies import *"
         self.setPreviousRun(self.ImportRun) 
         self.inputFilename('microscope', 'acquisition','micrographs')        
-        self.MicrographsMD = self.Input['micrographs']
-        self.micrographs= 'classes@'+_getFilename('micrographs',workingDir=self.workingDirPath())
+        self.MicrographsMD   = self.Input['micrographs']
+        self.MicroscopeMD     = self.Input['microscope']
+        self.AcquisitionMD   = self.Input['acquisition']
+        self.micrographs = self.getFilename('micrographs',workingDir=self.workingDirPath())
+        self.micrographsClass = 'classes@'+self.getFilename('micrographs',workingDir=self.workingDirPath())
+        self.microscope  = self.getFilename('microscope',workingDir=self.workingDirPath())
+        self.acquisition = self.getFilename('acquisition',workingDir=self.workingDirPath())
 
     def defineSteps(self):
         extraDir=self.workingDirPath('extra')
@@ -55,10 +59,17 @@ class ProtAlignMovies(XmippProtocol):
                                     )
         
         # Gather results after external actions
-        self.insertStep('gatherResults',verifyfiles=[self.micrographs],
+        self.insertStep('gatherResults',verifyfiles=[self.micrographs,self.microscope,self.acquisition],
                            WorkingDir=self.WorkingDir,
                            extraDir=extraDir,
-                           summaryFile=self.micrographs)
+                           currProtMicrographClass=self.micrographsClass,
+                           currProtMicrograph=self.micrographs,
+                           currProtMicroscope=self.microscope,
+                           currProtAcquisitionInfo=self.acquisition,
+                           prevProtMicrograph=self.MicrographsMD,
+                           prevProtMicroscope=self.MicroscopeMD,
+                           prevProtAcquisitionInfo=self.AcquisitionMD
+                           )
     
     def createFilenameTemplates(self):
         return _templateDict
@@ -101,13 +112,26 @@ def alignSingleMovie1(log,WorkingDir
         #else:
         #    args += ' '
             
-        runJob(log,'xmipp_optical_alignment', args)
+        ###runJob(log,'xmipp_optical_alignment', args)
                 
-def gatherResults(log, WorkingDir,extraDir,summaryFile):
+def gatherResults(log, 
+                  WorkingDir,
+                  extraDir,
+                  currProtMicrographClass,
+                  currProtMicrograph,
+                  currProtMicroscope,
+                  currProtAcquisitionInfo,
+                  prevProtMicrograph,
+                  prevProtMicroscope,
+                  prevProtAcquisitionInfo
+                  ):
     
     import glob
     fnList=glob.glob(os.path.join(extraDir,'*_aligned.spi'))
-    md=xmipp.MetaData(summaryFile)
+    copyFile(log,prevProtMicrograph,currProtMicrograph) 
+    copyFile(log,prevProtMicroscope,currProtMicroscope) 
+    copyFile(log,prevProtAcquisitionInfo,currProtAcquisitionInfo) 
+    md=xmipp.MetaData(currProtMicrograph)
     for id  in md:
         inputMovie = md.getValue(xmipp.MDL_MICROGRAPH, id)
         movieNameList = os.path.basename(inputMovie)
@@ -115,4 +139,4 @@ def gatherResults(log, WorkingDir,extraDir,summaryFile):
         file = _getFilename('movieAverage',movieDir=extraDir,baseName=movieName) 
         md.setValue(xmipp.MDL_MICROGRAPH,file,id)
     md.sort(xmipp.MDL_MICROGRAPH)
-    md.write(summaryFile,xmipp.MD_APPEND)
+    md.write(currProtMicrographClass,xmipp.MD_APPEND)
