@@ -56,6 +56,10 @@ public:
     /// Define params
     void defineParams();
 
+    void preProcess()
+    {
+        create_empty_stackfile = false;
+    }
     /** Really downsample.*/
     void processImage(const FileName &fnImg, const FileName &fnImgOut, const MDRow &rowIn, MDRow &rowOut);
 };
