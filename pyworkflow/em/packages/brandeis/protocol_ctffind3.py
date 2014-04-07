@@ -38,7 +38,6 @@ class ProtCTFFind(ProtCTFMicrographs):
     """Protocol to estimate CTF on a set of micrographs
     using the ctffind3 program"""
     _label = 'ctffind3'
-    _references = ['[[http://www.ncbi.nlm.nih.gov/pubmed/12781660][Mindell JA & Grigorieff N., J Struct Biol. (2003)]]']
     
     #--------------------------- STEPS functions ---------------------------------------------------
     def _estimateCTF(self, micFn, micDir):
@@ -121,3 +120,7 @@ class ProtCTFFind(ProtCTFMicrographs):
         ctf.setPsdFile(psdFile)
         
         return ctf
+
+
+    def _citations(self):
+        return ['Mindell2003']
