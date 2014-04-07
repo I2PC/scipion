@@ -92,16 +92,24 @@ See detailed description of the filter in [[http://spider.wadsworth.org/spider_d
                       label='Filter radius (0 < f < 0.5)',
                       condition='filterType <= %d' % FILTER_GAUSSIAN,
                       help='Low frequency cuttoff to apply the filter.\n')  
-        form.addParam('lowFreq', DigFreqParam, default=0.1, 
-                 
-         label='Low Frequency (0 < f < 0.5)',
+        line = form.addLine('Frequency', help='Range to apply the filter. Expected values between 0 and 0.5.')
+        line.addParam('lowFreq', DigFreqParam, default=0.1, 
                       condition='filterType > %d' % FILTER_GAUSSIAN,
-                      help='Low frequency cuttoff to apply the filter.\n')          
-        form.addParam('highFreq', DigFreqParam, default=0.2, 
-                      label='High Frequency (0 < f < 0.5)', 
+                      label='Lowest')
+        line.addParam('highFreq', 
+                      DigFreqParam, default=0.2, 
                       condition='filterType > %d' % FILTER_GAUSSIAN,
-                      help='High frequency cuttoff to apply the filter.\n'
-                           'Set to 0.5 for a <high pass> filter.')          
+                      label='Highest')
+#        form.addParam('lowFreq', DigFreqParam, default=0.1, 
+#                 
+#         label='Low Frequency (0 < f < 0.5)',
+#                      condition='filterType > %d' % FILTER_GAUSSIAN,
+#                      help='Low frequency cuttoff to apply the filter.\n')          
+#        form.addParam('highFreq', DigFreqParam, default=0.2, 
+#                      label='High Frequency (0 < f < 0.5)', 
+#                      condition='filterType > %d' % FILTER_GAUSSIAN,
+#                      help='High frequency cuttoff to apply the filter.\n'
+#                           'Set to 0.5 for a <high pass> filter.')          
         form.addParam('temperature', FloatParam, default=0.3, 
                       label='Temperature T:',
                       condition='filterType == %d' % FILTER_FERMI,
