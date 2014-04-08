@@ -36,7 +36,6 @@ def viewerFrealign(request, protocolViewer):
     if protocolViewer.selectedIters:
         pass
     if protocolViewer.doShow3DRefsVolumes:
-        print "entra aqui!!"
         typeUrl, url = doShow3DRefsVolumes(request, protocolViewer)
         ioDict[typeUrl]= url
     if protocolViewer.doShow3DReconsVolumes:
@@ -92,8 +91,5 @@ def plotShowAngDist(request, protocolViewer):
 
 def doShowDataDist(request, protocolViewer):
     pass
-
-
-
 
 

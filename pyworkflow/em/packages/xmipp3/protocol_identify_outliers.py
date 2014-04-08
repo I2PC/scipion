@@ -35,7 +35,7 @@ from xmipp3 import ProjMatcher
 from pyworkflow.utils.path import cleanPath
 
 class XmippProtIdentifyOutliers(ProtClassify3D, ProjMatcher):
-    """ Protocol for screening a number of classes comparing them to a volume. """
+    """ Identifies outliers by comparing images with projections of a reference volume"""
     _label = 'identify outliers'
     
     def __init__(self, **args):

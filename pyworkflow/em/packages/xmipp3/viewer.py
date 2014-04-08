@@ -71,6 +71,7 @@ class XmippViewer(Viewer):
     def visualize(self, obj, **args):
         
         cls = type(obj)
+        protocol = args.get('protocol', self.protocol)
 
         if issubclass(cls, EMXObject):
             from pyworkflow.gui.text import showTextFileViewer
@@ -127,7 +128,7 @@ class XmippViewer(Viewer):
             else:
                 writeSetOfCoordinates(tmpDir, obj)   
                            
-            runScipionParticlePicker(fn, tmpDir, self._project.getName(), obj.strId())
+            runScipionParticlePicker(fn, tmpDir, self._project.getName(), obj.strId(), protocol.getStatus())
         
         elif issubclass(cls, SetOfParticles) or issubclass(cls, SetOfVolumes):
             mdFn = getattr(obj, '_xmippMd', None)
@@ -279,9 +280,10 @@ def runScipionShowJ(inputFiles, type, projectid, objid, inputimagesid, memory="1
 def runParticlePicker(inputMics, inputCoords, memory="1g", extraParams=""):
     runJavaIJapp(memory, "xmipp.viewer.particlepicker.training.SupervisedPickerRunner", "--input %s --output %s %s" % (inputMics, inputCoords, extraParams), True)
     
-def runScipionParticlePicker(inputMics, inputCoords,  projectid, objid, memory="1g"):
-    script = pw.join('apps', 'pw_create_coords_subset.py')
-    runJavaIJapp(memory, "xmipp.viewer.particlepicker.training.SupervisedPickerRunner", "--input %s --output %s --mode review --scipion %s %s \"%s\" %s" % (inputMics, inputCoords, pw.PYTHON, script, projectid, objid), True)
+def runScipionParticlePicker(inputMics, inputCoords,  projectid, objid, state, memory="1g"):
+    if(state == 'finished'):
+        script = pw.join('apps', 'pw_create_coords_subset.py')
+        runJavaIJapp(memory, "xmipp.viewer.particlepicker.training.SupervisedPickerRunner", "--input %s --output %s --mode review --scipion %s %s \"%s\" %s %s" % (inputMics, inputCoords, pw.PYTHON, script, projectid, objid, state), True)
 
 
 

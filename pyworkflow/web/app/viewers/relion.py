@@ -67,14 +67,12 @@ def doShowPMax(request, protocolViewer):
 
 def doShowChanges(request, protocolViewer):
     fn = protocolViewer._createChanges()
-    pass
-#    urls = buildShowjPath(fn)
-#    return "showjs", urls
+    return "showj","/visualize_object/?path="+ fn
     
 def doShowVolumes(request, protocolViewer):
     files = protocolViewer._createVolumes()
-    pass
-#    return xplotter
+    urls = buildShowjPath(files)
+    return "showjs", urls
 
 def doShowAngularDistribution(request, protocolViewer):
     plotters, arguments = protocolViewer._createAngularDistribution()

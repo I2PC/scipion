@@ -280,7 +280,7 @@ class RunIOTreeProvider(TreeProvider):
         return objs
     
     def _visualizeObject(self, Viewer, obj):
-        viewer = Viewer(project=self.protocol.getProject())
+        viewer = Viewer(project=self.protocol.getProject(), protocol=self.protocol)
         viewer.visualize(obj)
         
     def _editObject(self, obj):

@@ -46,7 +46,7 @@ ALIGN_ALGORITHM_EXHAUSTIVE_LOCAL = 2
 ALIGN_ALGORITHM_FAST_FOURIER = 3
 
 class XmippProtAlignVolume(ProtAlignVolume):
-    """ Protocol to align a set of volumes. """
+    """ Aligns a set of volumes using cross correlation """
     _label = 'align volume'
     
     def __init__(self, **args):
