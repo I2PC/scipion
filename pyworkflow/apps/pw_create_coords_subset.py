@@ -37,8 +37,7 @@ if __name__ == '__main__':
     
     extradir = prot._getExtraPath()
     moveTree(outputdir, extradir)
-    outputset = prot._createSetOfCoordinates()
-    outputset.setMicrographs(inputset.getMicrographs())
+    outputset = prot._createSetOfCoordinates(inputset.getMicrographs())
     readSetOfCoordinates(extradir, outputset.getMicrographs(), outputset)
     
 
