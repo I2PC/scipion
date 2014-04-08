@@ -50,6 +50,13 @@ def form(request):
     action = request.GET.get('action', None)
     paramProt = request.GET.get('paramProt', None)
     protRunIdViewer = request.GET.get('protRunIdViewer', None)
+    
+    # Patch : to fix the relion dynamic way to generate the viewer form
+    #         For this is necessary to call setProtocol method
+    if protRunIdViewer is not None:
+        protocol_parent = project.mapper.selectById(int(protRunIdViewer))
+        protocol.setProtocol(protocol_parent)
+    
     hosts = [host.getLabel() for host in project.getSettings().getHosts()]
     
     visualize = 0
@@ -82,8 +89,6 @@ def form(request):
                
                 # GROUP PARAM
                 if isinstance(param, Group):
-                    print "Found GROUP param"
-                    
                     for paramGroupName, paramGroup in param.iterParams():
                         protVar = getattr(protocol, paramGroupName, None)
                         
@@ -94,8 +99,6 @@ def form(request):
                 
                 # LINE PARAM
                 if isinstance(param, Line):
-                    print "Found LINE param"
-                    
                     for paramLineName, paramLine in param.iterParams():
                         protVar = getattr(protocol, paramLineName, None)
                         
@@ -103,7 +106,6 @@ def form(request):
                             pass
                         else:
                             paramLine = PreprocessParamForm(request, paramLine, paramLineName, wizards, viewerDict, visualize, protVar)
-                            print paramLine 
                             
                     if not param.help.empty():
                         param.htmlHelp = parseText(param.help.get())
