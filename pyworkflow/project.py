@@ -89,7 +89,9 @@ class Project(object):
         return self.settings
     
     def saveSettings(self):
-        self.settings.write()
+        # Read only mode
+        if not isReadOnly():
+            self.settings.write()
     
     def load(self):
         """Load project data and settings
@@ -120,18 +122,23 @@ class Project(object):
         self.mapper.commit()
         # Write settings to disk
         self.settings = defaultSettings
-        self.settings.write(self.settingsPath)
         
-        # Create other paths inside project
-        for p in self.pathList:
-            if '.' in p:
-                makeFilePath(p)
-            else:
-                makePath(p)
+        # Read only mode
+        if not isReadOnly():
+            
+            self.settings.write(self.settingsPath)
+            # Create other paths inside project
+            for p in self.pathList:
+                if '.' in p:
+                    makeFilePath(p)
+                else:
+                    makePath(p)
         
     def _cleanData(self):
         """Clean all project data"""
-        cleanPath(*self.pathList)      
+        # Read only mode
+        if not isReadOnly():
+            cleanPath(*self.pathList)      
                 
     def launchProtocol(self, protocol, wait=False):
         """ In this function the action of launching a protocol
@@ -140,54 +147,60 @@ class Project(object):
         2. Create the working dir and also the protocol independent db
         3. Call the launch method in protocol.job to handle submition: mpi, thread, queue,
         and also take care if the execution is remotely."""
-        self._checkProtocolDependencies(protocol, 'Cannot RE-LAUNCH protocol')
         
-        protocol.setStatus(STATUS_LAUNCHED)
-        self._setupProtocol(protocol)
-        
-        #protocol.setMapper(self.mapper) # mapper is used in makePathAndClean
-        protocol.makePathsAndClean() # Create working dir if necessary
-        self.mapper.commit()
-        
-        # Prepare a separate db for this run
-        # NOTE: now we are simply copying the entire project db, this can be changed later
-        # to only create a subset of the db need for the run
-        copyFile(self.dbPath, protocol.getDbPath())
-        
-        # Launch the protocol, the jobId should be set after this call
-        jobs.launch(protocol, wait)
-        
-        # Commit changes
-        if wait: # This is only useful for launching tests...
-            self._updateProtocol(protocol)
-        else:
-            self.mapper.store(protocol)
-        self.mapper.commit()
+        # Read only mode
+        if not isReadOnly():
+            
+            self._checkProtocolDependencies(protocol, 'Cannot RE-LAUNCH protocol')
+            
+            protocol.setStatus(STATUS_LAUNCHED)
+            self._setupProtocol(protocol)
+            
+            #protocol.setMapper(self.mapper) # mapper is used in makePathAndClean
+            protocol.makePathsAndClean() # Create working dir if necessary
+            self.mapper.commit()
+            
+            # Prepare a separate db for this run
+            # NOTE: now we are simply copying the entire project db, this can be changed later
+            # to only create a subset of the db need for the run
+            copyFile(self.dbPath, protocol.getDbPath())
+            
+            # Launch the protocol, the jobId should be set after this call
+            jobs.launch(protocol, wait)
+            
+            # Commit changes
+            if wait: # This is only useful for launching tests...
+                self._updateProtocol(protocol)
+            else:
+                self.mapper.store(protocol)
+            self.mapper.commit()
         
     def _updateProtocol(self, protocol, tries=0):
-        try:
-            # FIXME: this will not work for a real remote host
-            jobId = protocol.getJobId() # Preserve the jobId before copy
-            dbPath = self.getPath(protocol.getDbPath())
-            #join(protocol.getHostConfig().getHostPath(), protocol.getDbPath())
-            prot2 = getProtocolFromDb(dbPath, protocol.getObjId())
-            # Copy is only working for db restored objects
-            protocol.setMapper(self.mapper)
-            protocol.copy(prot2, copyId=False)
-            # Restore jobId
-            protocol.setJobId(jobId)
-            self.mapper.store(protocol)
-        except Exception, ex:
-            print "Error trying to update protocol: %s(jobId=%s)\n ERROR: %s, tries=%d" % (protocol.getName(), jobId, ex, tries)
-            if tries == 2: # 3 tries have been failed
-                import traceback
-                traceback.print_exc()
-                # If any problem happens, the protocol will be marked wih a status fail
-                protocol.setFailed(str(ex))
+        # Read only mode
+        if not isReadOnly():
+            try:
+                # FIXME: this will not work for a real remote host
+                jobId = protocol.getJobId() # Preserve the jobId before copy
+                dbPath = self.getPath(protocol.getDbPath())
+                #join(protocol.getHostConfig().getHostPath(), protocol.getDbPath())
+                prot2 = getProtocolFromDb(dbPath, protocol.getObjId())
+                # Copy is only working for db restored objects
+                protocol.setMapper(self.mapper)
+                protocol.copy(prot2, copyId=False)
+                # Restore jobId
+                protocol.setJobId(jobId)
                 self.mapper.store(protocol)
-            else:
-                time.sleep(1)
-                self._updateProtocol(protocol, tries+1)
+            except Exception, ex:
+                print "Error trying to update protocol: %s(jobId=%s)\n ERROR: %s, tries=%d" % (protocol.getName(), jobId, ex, tries)
+                if tries == 2: # 3 tries have been failed
+                    import traceback
+                    traceback.print_exc()
+                    # If any problem happens, the protocol will be marked wih a status fail
+                    protocol.setFailed(str(ex))
+                    self.mapper.store(protocol)
+                else:
+                    time.sleep(1)
+                    self._updateProtocol(protocol, tries+1)
         
     def stopProtocol(self, protocol):
         """ Stop a running protocol """
@@ -228,17 +241,19 @@ class Project(object):
             raise Exception(msg + '\n'.join(deps))
         
     def deleteProtocol(self, protocol):
-        self._checkProtocolDependencies(protocol, 'Cannot DELETE protocol')
-        
-        self.mapper.delete(protocol) # Delete from database
-        wd = protocol.workingDir.get()
-        
-        if wd.startswith(PROJECT_RUNS):
-            cleanPath(wd)
-        else:
-            print "Error path: ", wd 
-      
-        self.mapper.commit()     
+        # Read only mode
+        if not isReadOnly():
+            self._checkProtocolDependencies(protocol, 'Cannot DELETE protocol')
+            
+            self.mapper.delete(protocol) # Delete from database
+            wd = protocol.workingDir.get()
+            
+            if wd.startswith(PROJECT_RUNS):
+                cleanPath(wd)
+            else:
+                print "Error path: ", wd 
+          
+            self.mapper.commit()     
         
     def newProtocol(self, protocolClass):
         """ Create a new protocol from a given class. """
@@ -256,13 +271,15 @@ class Project(object):
         return newProt
     
     def saveProtocol(self, protocol):
-        self._checkProtocolDependencies(protocol, 'Cannot SAVE protocol')
-        
-        protocol.setStatus(STATUS_SAVED)
-        if protocol.hasObjId():
-            self._storeProtocol(protocol)
-        else:
-            self._setupProtocol(protocol)
+        # Read only mode
+        if not isReadOnly():
+            self._checkProtocolDependencies(protocol, 'Cannot SAVE protocol')
+            
+            protocol.setStatus(STATUS_SAVED)
+            if protocol.hasObjId():
+                self._storeProtocol(protocol)
+            else:
+                self._setupProtocol(protocol)
         
     def _setHostConfig(self, protocol):
         """ Set the appropiate host config to the protocol
@@ -277,21 +294,27 @@ class Project(object):
         protocol.setHostConfig(hostConfig)
     
     def _storeProtocol(self, protocol):
-        self.mapper.store(protocol)
-        self.mapper.commit()
+        # Read only mode
+        if not isReadOnly():
+            self.mapper.store(protocol)
+            self.mapper.commit()
     
     def _setupProtocol(self, protocol):
         """Insert a new protocol instance in the database"""
-        self._storeProtocol(protocol) # Store first to get a proper id
-        # Set important properties of the protocol
-        name = protocol.getClassName() + protocol.strId()
-        protocol.setProject(self)
-        protocol.setName(name)
-        protocol.setWorkingDir(self.getPath(PROJECT_RUNS, name))
-        protocol.setMapper(self.mapper)
-        self._setHostConfig(protocol)
-        # Update with changes
-        self._storeProtocol(protocol)
+        
+        # Read only mode
+        if not isReadOnly():
+        
+            self._storeProtocol(protocol) # Store first to get a proper id
+            # Set important properties of the protocol
+            name = protocol.getClassName() + protocol.strId()
+            protocol.setProject(self)
+            protocol.setName(name)
+            protocol.setWorkingDir(self.getPath(PROJECT_RUNS, name))
+            protocol.setMapper(self.mapper)
+            self._setHostConfig(protocol)
+            # Update with changes
+            self._storeProtocol(protocol)
         
     def getRuns(self, iterate=False, refresh=True):
         """ Return the existing protocol runs in the project. 
@@ -445,5 +468,11 @@ class Project(object):
         
         return connection
             
-        
+
+def isReadOnly():
+    """ Auxiliar method to keep a read-only mode for the environment. """
+    mode = os.environ['READONLY']
+    if mode:
+        print "Operation not valid for read-only mode."
+    return mode
         
