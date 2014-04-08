@@ -50,6 +50,7 @@ class Viewer(object):
     def __init__(self, tmpPath='./Tmp', **args):
         self._tmpPath = tmpPath
         self._project = args.get('project', None)
+        self.protocol = args.get('protocol', None)
         
     def _getTmpPath(self, *paths):
         return join(self._tmpPath, *paths)
@@ -82,6 +83,7 @@ class ProtocolViewer(Protocol, Viewer):
         Viewer.__init__(self, **args)
         self.allowHeader.set(False)
         self.showPlot = True # This flag will be used to display a plot or return the plotter
+        
         
     def setProtocol(self, protocol):
         self.protocol = protocol

@@ -37,7 +37,7 @@ from protlib_xmipp import getMdSize
 #from xmipp3 import projMatch
 
 class XmippProtRansac(ProtInitialVolume):
-    """ Computes from a set of projections/classes an initial volume using RANSAC algorithm """
+    """ Computes from a set of projections/classes using RANSAC algorithm """
     _label = 'ransac'
     
     def __init__(self, **args):

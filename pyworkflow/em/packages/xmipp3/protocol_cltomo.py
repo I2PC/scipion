@@ -34,7 +34,7 @@ from xmipp import MetaData
 
 
 class XmippProtCLTomo(ProtClassify3D):
-    """ Perform subtomogram averaging """
+    """ Averages a set of subtomograms taking into account the missing edge """
     _label = 'cltomo'
     
     #--------------------------- DEFINE param functions --------------------------------------------

@@ -36,7 +36,7 @@ from convert import createXmippInputVolumes, readSetOfVolumes, locationToXmipp
 
 
 class XmippProtResolution3D(ProtAnalysis3D):
-    """ Protocol for Xmipp-based resolution3D """
+    """ Computes resolution by Fourier shell correlation """
     _label = 'resolution 3D'
       
     #--------------------------- DEFINE param functions --------------------------------------------   
