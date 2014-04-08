@@ -212,7 +212,7 @@ Examples:
                 prefixes = ['half2_']
         return prefixes
                 
-    def _showImagesInClasses(self, paramName):
+    def _showImagesInClasses(self, paramName=None):
         """ Read Relion _data.star images file and 
         generate a new metadata with the Xmipp classification standard:
         a 'classes' block and a 'class00000?_images' block per class.
@@ -224,7 +224,7 @@ Examples:
             data_classes = self.protocol._getIterClasses(it)
             self.displayScipion(data_classes, extraParams='--mode metadata --render first')
           
-    def _createLL(self, paramName):
+    def _createLL(self):
         self._load()
         import xmipp
         from pyworkflow.em.packages.xmipp3.plotter import XmippPlotter
@@ -243,13 +243,13 @@ Examples:
             
         return plotters, files
      
-    def _showLL(self, paramName):
-        plotters, files = self._createLL(paramName)
+    def _showLL(self, paramName=None):
+        plotters, files = self._createLL()
         for xplotter, fn in zip(plotters, files):
             self.display2D(fn)
             xplotter.show()
         
-    def _createPMax(self, paramName):
+    def _createPMax(self):
         self._load()
         import xmipp
         from pyworkflow.em.packages.xmipp3.plotter import XmippPlotter
@@ -281,12 +281,12 @@ Examples:
         
         return xplotter, fn
         
-    def _showPMax(self, paramName):
-        xplotter, fn = self._createPMax(paramName)
+    def _showPMax(self, paramName=None):
+        xplotter, fn = self._createPMax()
         self.display2D(fn)                    
         xplotter.show()
         
-    def _createChanges(self, paramName):
+    def _createChanges(self):
         self._load()
         import xmipp
         from pyworkflow.em.packages.xmipp3.plotter import XmippPlotter
@@ -311,11 +311,11 @@ Examples:
         mdIters.write(fn)
         return fn
 
-    def _showChanges(self, paramName):
-        fn = self._createChanges(paramName)
+    def _showChanges(self, paramName=None):
+        fn = self._createChanges()
         self.display2D(fn)
         
-    def _createVolumes(self, paramName):
+    def _createVolumes(self):
         files = []
         self._load()
         prefixes = self._getPrefixes()
@@ -327,11 +327,11 @@ Examples:
         return files
         
     def _showVolumes(self, paramName=None):
-        files = self._createVolumes(paramName)
+        files = self._createVolumes()
         for volFn in files:
             os.system('xmipp_chimera_client --input "%s" --mode projector 256 &' % volFn)
                             
-    def _createAngularDistribution(self, paramName):
+    def _createAngularDistribution(self):
         self._load()
         import xmipp
         from pyworkflow.em.packages.xmipp3.plotter import XmippPlotter
@@ -373,8 +373,8 @@ Examples:
                 
         return plotters, arguments
     
-    def _showAngularDistribution(self, paramName):
-        plotters, arguments = self._createAngularDistribution(paramName)
+    def _showAngularDistribution(self, paramName=None):
+        plotters, arguments = self._createAngularDistribution()
         
         if arguments:
             for args in arguments:
