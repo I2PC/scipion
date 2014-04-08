@@ -109,7 +109,6 @@ class Object(object):
         to another object"""
         return self._objIsPointer
         
-    # does nothing?
     def _convertValue(self, value):
         """Convert a value to desired scalar type"""
         return value
@@ -375,12 +374,12 @@ class Object(object):
         for k, v in self.getAttributes():
             v.printAll(k, level + 1)
             
-    
     def printObjDict(self):
         """Print object dictionary. Main for debugging"""
         import pprint
         pp = pprint.PrettyPrinter(indent=4)
         pp.pprint(self.getObjDict())        
+
 
 class OrderedObject(Object):
     """This is based on Object, but keep the list
@@ -389,9 +388,28 @@ class OrderedObject(Object):
     def __init__(self, value=None, **args):
         object.__setattr__(self, '_attributes', [])
         Object.__init__(self, value, **args)
-        
+
+    def __attrPointed(self, name, value):
+        """ Check if a value is already pointed by other
+        attribute. This will prevent to storing pointed
+        attributes such as:
+        self.inputMics = self.inputMicrographs.get()
+        In this case we want to avoid to store self.inputMics as 
+        another attribute of this object.
+        """
+        for key in self._attributes:
+            attr = getattr(self, key)
+            if attr.isPointer() and attr.get() is value:
+                print "already pointed value of: ", name, "key: ", key
+                print "  attr.get()=", attr.get(), 'type=', type(attr.get())
+                print "  value=", value, "type=", type(value)
+                return True
+        return False
+    
     def __setattr__(self, name, value):
-        if not name in self._attributes and issubclass(value.__class__, Object) and value._objDoStore:
+        if (not name in self._attributes and
+            issubclass(value.__class__, Object) and
+            not self.__attrPointed(name, value) and value._objDoStore):
             self._attributes.append(name)
         Object.__setattr__(self, name, value)
     
@@ -406,6 +424,7 @@ class OrderedObject(Object):
         if attrName in self._attributes:
             self._attributes.remove(attrName)
             delattr(self, attrName)
+            
             
 class FakedObject(Object):
     """This is based on Object, but will hide the set and get
@@ -542,9 +561,12 @@ class Pointer(Scalar):
     def _convertValue(self, value):
         """Avoid storing _objValue and future objects
         obtained from .get()"""
-        value.setStore(False)
+        #value.setStore(False)
         return value
-
+    
+    def getAttributesToStore(self):
+        return []
+    
 
 class List(Object, list):
     ITEM_PREFIX = '__item__'
