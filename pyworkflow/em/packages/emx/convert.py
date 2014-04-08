@@ -339,7 +339,8 @@ def _particlesFromEmx(protocol, emxData, emxFile, outputDir):
                 part.setCTF(CTFModel())
             if emxParticle.has('centerCoord__X'):
                 part.setCoordinate(Coordinate())
-            partSet.setSamplingRate(1.) #FIXME
+            _particleFromEmx(emxParticle, part)
+            partSet.setSamplingRate(part.getSamplingRate()) #FIXME
             particles = True
         else: # if not binary data, the coordinate case
             if micSet is None:
