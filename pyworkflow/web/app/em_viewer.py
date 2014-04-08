@@ -47,6 +47,8 @@ from viewers.spider_capca import *
 from viewers.spider_ward import *
 # BRANDEIS
 from viewers.brandeis_frealign import *
+# RELION
+from viewers.relion import *
 
 ############## 1ST STEP: LAUNCH VIEWER METHODS ##############
 def launch_viewer(request):
@@ -120,17 +122,17 @@ def viewerSpider(project, protocol, viewer):
         
     return ioDict
 
-def viewerRelion(project, protocol, viewer):
-    ioDict={}    
-        
-    if isinstance(protocol, ProtRelionClassify3D):
-        
-        volumes = protocol.outputVolumes
-        url1 = "/visualize_object/?objectId="+str(volumes.getObjId())
-            
-        ioDict["urls"] = [url1] 
-        
-    return ioDict
+#def viewerRelion(project, protocol, viewer):
+#    ioDict={}    
+#        
+#    if isinstance(protocol, ProtRelionClassify3D):
+#        
+#        volumes = protocol.outputVolumes
+#        url1 = "/visualize_object/?objectId="+str(volumes.getObjId())
+#            
+#        ioDict["urls"] = [url1] 
+#        
+#    return ioDict
 
 
 def viewerForm(project, protocol, viewer):
