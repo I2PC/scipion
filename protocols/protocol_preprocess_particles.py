@@ -159,7 +159,7 @@ def joinMetaDatas(log,InputFile,UntiltedMetadata,TiltedMetadata):
     mDstack.removeLabel(MDL_XCOOR)
     mDstack.removeLabel(MDL_YCOOR)
     mdPart1=MetaData()
-    mdPart1.join(mDstack,mDInput,MDL_IMAGE_ORIGINAL,MDL_IMAGE,INNER_JOIN)
+    mdPart1.join2(mDstack,mDInput,MDL_IMAGE_ORIGINAL,MDL_IMAGE,INNER_JOIN)
     mdPart1.removeLabel(MDL_IMAGE_ORIGINAL)
 
     mDstack = MetaData(TiltedMetadata)
@@ -168,6 +168,6 @@ def joinMetaDatas(log,InputFile,UntiltedMetadata,TiltedMetadata):
     mDstack.removeLabel(MDL_YCOOR)
     mDstack.renameColumn(MDL_IMAGE,MDL_IMAGE_TILTED)
     mdJoined=MetaData()
-    mdJoined.join(mDstack,mdPart1,MDL_IMAGE_ORIGINAL,MDL_IMAGE_TILTED,INNER_JOIN)
+    mdJoined.join2(mDstack,mdPart1,MDL_IMAGE_ORIGINAL,MDL_IMAGE_TILTED,INNER_JOIN)
     mdJoined.removeLabel(MDL_IMAGE_ORIGINAL)
     mdJoined.write(InputFile)

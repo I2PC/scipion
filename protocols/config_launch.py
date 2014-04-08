@@ -39,7 +39,7 @@ QueryArgsTemplate = "%(jobid)d"
 # Mpi executable
 MpiProgram = "mpirun"
 # Mpi run arguments template
-MpiArgsTemplate = "-np %(nodes)d %(command)s"
+MpiArgsTemplate = "-np %(nodes)d --bynode %(command)s"
 
 # Other templates for other environments: 
 # Using nodefile setted as environment variable or at home
@@ -70,8 +70,13 @@ FileTemplate = """
 # Use as working dir the path where qsub was launched
 WORKDIR=$PBS_O_WORKDIR
 #################################
+
 ### Set environment varible to know running mode is non interactive
 export XMIPP_IN_QUEUE=1
+
+### Load the current Xmipp bash.rc
+source %(XMIPP_HOME)s/.xmipp.bashrc
+
 ### Switch to the working directory;
 cd $WORKDIR
 # Make a copy of PBS_NODEFILE 

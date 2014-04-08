@@ -16,7 +16,7 @@ import os
 from os.path import exists, join
 from protlib_utils import runShowJ
 from protlib_gui_ext import showWarning, showError
-from protlib_xmipp import greenStr, redStr
+from protlib_xmipp import greenStr, redStr, mdFirstRow
 from protlib_filesystem import deleteFile, xmippExists, renameFile, findAcquisitionInfo
 
 def lastIteration(self, key='iter_logs'):
@@ -95,7 +95,7 @@ class ProtML2D(XmippProtocol):
     def validate(self):
         errors = []
         
-        md = MetaData(self.ImgMd)
+        md = mdFirstRow(self.ImgMd)
         if md.containsLabel(MDL_IMAGE):
             # If using reference check that have same size as images:
             if not self.DoGenerateReferences:

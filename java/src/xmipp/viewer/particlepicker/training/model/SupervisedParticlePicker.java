@@ -34,13 +34,13 @@ public class SupervisedParticlePicker extends ParticlePicker
 
 	protected List<SupervisedParticlePickerMicrograph> micrographs;
 	private SupervisedParticlePickerMicrograph micrograph;
-	public static final int defAutoPickPercent = 50;
-	private int autopickpercent = defAutoPickPercent;
+	protected int autopickpercent;
 
-
+        //used in previous versions
 	private int threads = 1;
 	private boolean fastmode = true;
 	private boolean incore = false;
+        ///////////////////////////
 
 	public static int dtemplatesnum = 1;
 	private ImageGeneric templates;
@@ -74,9 +74,8 @@ public class SupervisedParticlePicker extends ParticlePicker
 				radialtemplates = new ImageGeneric(ImageGeneric.Float);
 				radialtemplates.resize(getSize(), getSize(), 1, getTemplatesNumber());
 			}
-                        templates.printShape();
-                        radialtemplates.printShape();
-			templates.getRadialAvg(radialtemplates);
+            templates.getRadialAvg(radialtemplates);
+
 
 			for (SupervisedParticlePickerMicrograph m : micrographs)
 				loadMicrographData(m);
@@ -534,9 +533,11 @@ public class SupervisedParticlePicker extends ParticlePicker
 		return true;
 	}
 
+        @Override
 	public void loadConfig()
 	{
 		super.loadConfig();
+                autopickpercent = 50;
 		String file = configfile;
 		if (!new File(file).exists())
 			return;
@@ -546,21 +547,21 @@ public class SupervisedParticlePicker extends ParticlePicker
 			MetaData md = new MetaData(file);
 			Mode configmode;
 			boolean hasautopercent = md.containsLabel(MDLabel.MDL_PICKING_AUTOPICKPERCENT);
-			for (long id : md.findObjects())
-			{
-				if (hasautopercent)
-					autopickpercent = md.getValueInt(MDLabel.MDL_PICKING_AUTOPICKPERCENT, id);
-				dtemplatesnum = md.getValueInt(MDLabel.MDL_PICKING_TEMPLATES, id);
-				if (dtemplatesnum == 0)
-					dtemplatesnum = 1;// for compatibility with previous
-										// projects
-				configmode = Mode.valueOf(md.getValueString(MDLabel.MDL_PICKING_STATE, id));
-				if (mode == Mode.Supervised && configmode == Mode.Manual)
-					throw new IllegalArgumentException("Cannot switch to Supervised mode from the command line");
-				if (mode == Mode.Manual && configmode == Mode.Supervised)
-					mode = Mode.Supervised;
+                        long id = md.firstObject();
 
-			}
+                        if(hasautopercent) 
+                            autopickpercent = md.getValueInt(MDLabel.MDL_PICKING_AUTOPICKPERCENT, id);
+                        
+                        dtemplatesnum = md.getValueInt(MDLabel.MDL_PICKING_TEMPLATES, id);
+                        if (dtemplatesnum == 0)
+                                dtemplatesnum = 1;// for compatibility with previous
+                                                                        // projects
+                        configmode = Mode.valueOf(md.getValueString(MDLabel.MDL_PICKING_STATE, id));
+                        if (mode == Mode.Supervised && configmode == Mode.Manual)
+                                throw new IllegalArgumentException("Cannot switch to Supervised mode from the command line");
+                        if (mode == Mode.Manual && configmode == Mode.Supervised)
+                                mode = Mode.Supervised;
+
 			md.destroy();
 		}
 		catch (Exception e)
@@ -772,6 +773,7 @@ public class SupervisedParticlePicker extends ParticlePicker
 			importAllParticles(particlesfile);
 			return "";
 		}
+
 		importSize(path, f);
 		for (SupervisedParticlePickerMicrograph m : micrographs)
 		{
@@ -784,6 +786,8 @@ public class SupervisedParticlePicker extends ParticlePicker
 
 		return result;
 	}// function importParticlesFromFolder
+        
+        
 
 	/** Return the number of particles imported from a file */
 	public String importParticlesFromFile(String path, Format f, SupervisedParticlePickerMicrograph m, float scale, boolean invertx, boolean inverty)
@@ -970,7 +974,7 @@ public class SupervisedParticlePicker extends ParticlePicker
 		{
 			String file = getOutputPath(micrograph.getPosFile());
 			MicrographState state;
-			Integer autopickpercent;
+			int micautopickpercent;
 			if (!new File(file).exists())
 				return;
 			if (MetaData.containsBlock(file, "header"))
@@ -979,14 +983,11 @@ public class SupervisedParticlePicker extends ParticlePicker
 				boolean hasautopercent = md.containsLabel(MDLabel.MDL_PICKING_AUTOPICKPERCENT);
 				long id = md.firstObject();
 				state = MicrographState.valueOf(md.getValueString(MDLabel.MDL_PICKING_MICROGRAPH_STATE, id));
-				if (hasautopercent)
-					autopickpercent = md.getValueInt(MDLabel.MDL_PICKING_AUTOPICKPERCENT, id);
-				else
-					autopickpercent = 50;// compatibility with previous projects
+				micautopickpercent = hasautopercent ? md.getValueInt(MDLabel.MDL_PICKING_AUTOPICKPERCENT, id) : getAutopickpercent();
 				double threshold = md.getValueDouble(MDLabel.MDL_COST, id);
 				micrograph.setThreshold(threshold);
 				micrograph.setState(state);
-				micrograph.setAutopickpercent(autopickpercent);
+				micrograph.setAutopickpercent(micautopickpercent);
 				md.destroy();
 			}
 			loadManualParticles(micrograph, file);
@@ -1072,6 +1073,8 @@ public class SupervisedParticlePicker extends ParticlePicker
 
 	}
 
+       
+
 	public class TrainRunnable implements Runnable
 	{
 
@@ -1134,6 +1137,7 @@ public class SupervisedParticlePicker extends ParticlePicker
 		}
 	}
 
+
 	public void autopick(SupervisedParticlePickerJFrame frame, SupervisedParticlePickerMicrograph next)
 	{
 		next.setState(MicrographState.Supervised);
@@ -1152,7 +1156,6 @@ public class SupervisedParticlePicker extends ParticlePicker
 		private SupervisedParticlePickerJFrame frame;
 		private MetaData outputmd;
 		private SupervisedParticlePickerMicrograph micrograph;
-
 		public AutopickRunnable(SupervisedParticlePickerJFrame frame, SupervisedParticlePickerMicrograph micrograph)
 		{
 			this.frame = frame;
@@ -1218,6 +1221,7 @@ public class SupervisedParticlePicker extends ParticlePicker
 
 		private MetaData manualmd;
 		private MetaData automaticmd;
+
 		private SupervisedParticlePickerMicrograph next;
 		private SupervisedParticlePickerJFrame frame;
 		private MetaData outputmd;

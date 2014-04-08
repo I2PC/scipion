@@ -154,29 +154,34 @@ void ProgPSDSort::show()
 /* Compute Correlation ----------------------------------------------------- */
 void ProgPSDSort::processImage(const FileName &fnImg, const FileName &fnImgOut, const MDRow &rowIn, MDRow &rowOut)
 {
+    CTFDescription CTF1, CTF2;
 	PSDEvaluation evaluation;
+    FileName fnMicrograph, fnPSD, fnCTF, fnCTF2;
 
 	evaluation.ctf_envelope_ssnr = fn_in.getDir()+"envelope.xmd";
 
-    FileName fnMicrograph, fnPSD, fnCTF, fnCTF2;
-    rowIn.getValue(MDL_MICROGRAPH,fnMicrograph);
+    rowIn.getValue(MDL_MICROGRAPH, fnMicrograph);
     rowIn.getValue(MDL_PSD,fnPSD);
-    if (fnPSD=="NA")
+
+    if (fnPSD == "NA")
     	return;
-    rowIn.getValue(MDL_CTF_MODEL,fnCTF);
-    if (rowIn.containsLabel(MDL_CTF_MODEL2))
-    	rowIn.getValue(MDL_CTF_MODEL2,fnCTF2);
+
+    if (rowIn.containsLabel(MDL_CTF_MODEL))
+    {
+      rowIn.getValue(MDL_CTF_MODEL, fnCTF);
+      CTF1.read(fnCTF);
+    }
+    else
+      CTF1.readFromMdRow(rowIn);
 
     FileName fnRoot = fnMicrograph.withoutExtension();
 
-    // Read input data
-    Image<double> PSD;
-    PSD.read(fnPSD);
-    CTFDescription CTF1, CTF2;
-    CTF1.read(fnCTF);
     CTF1.produceSideInfo();
     evaluation.defocusU=CTF1.DeltafU;
     evaluation.defocusV=CTF1.DeltafV;
+
+    if (rowIn.containsLabel(MDL_CTF_MODEL2))
+    	rowIn.getValue(MDL_CTF_MODEL2,fnCTF2);
 
     if (!fnCTF2.empty() && fnCTF2 != "NA")
     {
@@ -206,6 +211,9 @@ void ProgPSDSort::processImage(const FileName &fnImg, const FileName &fnImgOut, 
      */
     evaluation.beating=1.0/sqrt(PI/(CTF1.K1*abs(CTF1.DeltafU-CTF1.DeltafV)));
 
+    // Read input PSD data
+    Image<double> PSD;
+    PSD.read(fnPSD);
     // Enhance the PSD
     ProgCTFEnhancePSD enhancePSD;
     enhancePSD.filter_w1 = filter_w1;
@@ -231,15 +239,15 @@ void ProgPSDSort::processImage(const FileName &fnImg, const FileName &fnImgOut, 
     evaluation.PSDcorrelation90=correlationIndex(PSD(), PSDrotated());
 
     // Get the fitting score
-    MetaData MD;
-    MD.read(fnCTF);
-    size_t objId = MD.firstObject();
-    MD.getValue(MDL_CTF_CRIT_FITTINGSCORE,evaluation.fittingScore,objId);
-    MD.getValue(MDL_CTF_CRIT_FITTINGCORR13,evaluation.fittingCorr13,objId);
-    MD.getValue(MDL_CTF_CRIT_PSDVARIANCE,evaluation.PSDVariance,objId);
-    MD.getValue(MDL_CTF_CRIT_PSDPCA1VARIANCE,evaluation.PSDPC1Variance,objId);
-    MD.getValue(MDL_CTF_CRIT_PSDPCARUNSTEST,evaluation.PSDPCRunsTest,objId);
+    //MetaData MD;
+    //MD.read(fnCTF);
 
+    //size_t objId = MD.firstObject();
+    rowIn.getValue(MDL_CTF_CRIT_FITTINGSCORE,evaluation.fittingScore);
+    rowIn.getValue(MDL_CTF_CRIT_FITTINGCORR13,evaluation.fittingCorr13);
+    rowIn.getValue(MDL_CTF_CRIT_PSDVARIANCE,evaluation.PSDVariance);
+    rowIn.getValue(MDL_CTF_CRIT_PSDPCA1VARIANCE,evaluation.PSDPC1Variance);
+    rowIn.getValue(MDL_CTF_CRIT_PSDPCARUNSTEST,evaluation.PSDPCRunsTest);
     // Explore the CTF
     Matrix1D<double> u(2), freqZero1(2), freqZero2(2), freqMin1(2), pixelZero1(2), pixelMin1(2);
     double wmax=0.5/CTF1.Tm;
@@ -308,7 +316,7 @@ void ProgPSDSort::processImage(const FileName &fnImg, const FileName &fnImgOut, 
         	if (normalizedDamping>0.1)
         		evaluation.maxFreq=std::min(evaluation.maxFreq,1.0/w);
 
-        	VEC_ELEM(envelope,idx) += double(normalizedDamping);
+        	VEC_ELEM(envelope,idx) += double(fabs(CTF1.getValueDampingAt()));
     		idx++;
     	}
 
@@ -394,8 +402,10 @@ void ProgPSDSort::processImage(const FileName &fnImg, const FileName &fnImgOut, 
     rowOut.setValue(MDL_CTF_CRIT_PSDPCARUNSTEST,evaluation.PSDPCRunsTest);
     rowOut.setValue(MDL_CTF_CRIT_NORMALITY, evaluation.histogramNormality);
 
+
     //mdEnvelope.write(evaluation.ctf_envelope_ssnr,MD_OVERWRITE);
     mdEnvelope.write(evaluation.ctf_envelope_ssnr,MD_OVERWRITE);
     //std::cout << mdEnvelope << std::endl;
+
 }
 

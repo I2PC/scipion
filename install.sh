@@ -1377,12 +1377,11 @@ decompressExternals()
       if [ -d ${INTERELEMARRAY} ]; then
         if ([ $DO_UNATTENDED -eq 0 ] && [ ${DELETE_ANSWER} != "Y" ] && [ ${DELETE_ANSWER} != "N" ]); then
           echo "${INTERELEMARRAY} folder exists, do you want to permanently remove it? (y)es/(n)o/(Y)es-to-all/(N)o-to-all"
+	  DELETE_ANSWER=""
           read DELETE_ANSWER
-        if [ -n ${DELETE_ANSWER} ]; then
-          DELETE_ANSWER="Y"
-        fi
-        else
-          DELETE_ANSWER="Y"
+          if [ -z ${DELETE_ANSWER} ]; then
+            DELETE_ANSWER="Y"
+          fi
         fi
 	if ([ ${DELETE_ANSWER} = "y" ] || [ ${DELETE_ANSWER} = "Y" ]); then
           echoExec "rm -rf ${INTERELEMARRAY}" "/dev/null"
@@ -1409,13 +1408,11 @@ decompressPython()
     if [ -d ${PYTHON_FOLDER} ]; then
       if ([ $DO_UNATTENDED -eq 0 ] && [ ${DELETE_ANSWER} != "Y" ] && [ ${DELETE_ANSWER} != "N" ]); then
         echo "${PYTHON_FOLDER} folder exists, do you want to permanently remove it? (y)es/(n)o/(Y)es-to-all/(N)o-to-all"
+	DELETE_ANSWER=""
         read DELETE_ANSWER
-        if [ -n ${DELETE_ANSWER} ]; then
+        if [ -z ${DELETE_ANSWER} ]; then
           DELETE_ANSWER="Y"
         fi
-
-      else
-        DELETE_ANSWER="Y"
       fi
       if ([ ${DELETE_ANSWER} = "y" ] || [ ${DELETE_ANSWER} = "Y" ]); then
         echoExec "rm -rf ${PYTHON_FOLDER}" "/dev/null"
@@ -1446,13 +1443,11 @@ decompressPythonModules()
         if ([ $DO_UNATTENDED -eq 0 ] && [ ${DELETE_ANSWER} != "Y" ] && [ ${DELETE_ANSWER} != "N" ]); then
           elemAt $lib "${PYTHON_MODULES}"
           echo "${INTERELEMARRAY} folder exists, do you want to permanently remove it? (y)es/(n)o/(Y)es-to-all/(N)o-to-all"
+	  DELETE_ANSWER=""
           read DELETE_ANSWER
-        if [ -n ${DELETE_ANSWER} ]; then
-          DELETE_ANSWER="Y"
-        fi
-
-        else
-          DELETE_ANSWER="Y"
+          if [ -z ${DELETE_ANSWER} ]; then
+            DELETE_ANSWER="Y"
+          fi
         fi
 	if ([ ${DELETE_ANSWER} = "y" ] || [ ${DELETE_ANSWER} = "Y" ]); then
           echoExec "rm -rf ${INTERELEMARRAY}" "/dev/null"
@@ -1755,8 +1750,8 @@ if [ $? -eq 1 ]; then
   fi
   if [ $DO_COMPILE  -eq 1 ]; then
     FC=${FC:-gfortran}
-    FFLAGS=${fc:-'-O3'}
-    echoExec "make FC=${FC} FFLAGS=${FFLAGS}" "${XMIPP_HOME}/build/make_NMA.log" 1
+    FFLAGS=${FFLAGS:-'-O3'}
+    echoExec "make FC=${FC} FFLAGS=\"${FFLAGS}\"" "${XMIPP_HOME}/build/make_NMA.log" 1
     echoExec "cp nma_* ${XMIPP_HOME}/bin" "${XMIPP_HOME}/build/make_NMA.log"
     echoExec "cd -" "${XMIPP_HOME}/build/make_NMA.log"  1
     echoExec "cd ${XMIPP_HOME}/external/NMA/NMA_cart" "${XMIPP_HOME}/build/make_NMA.log" 1
@@ -1903,7 +1898,7 @@ if [ $DO_PYTHON -eq 1 ]; then
     printf "PYTHON_FOLDER=${PYTHON_FOLDER} \n" >> $PYTHON_BIN
     printf "VTCLTK=${VTCLTK} \n\n" >> $PYTHON_BIN
     printf 'EXT_PYTHON=$XMIPP_HOME/external/python \n' >> $PYTHON_BIN
-    printf 'export LD_LIBRARY_PATH=$EXT_PYTHON/$PYTHON_FOLDER:$EXT_PYTHON/tcl$VTCLTK/unix:$EXT_PYTHON/tk$VTCLTK/unix:$LD_LIBRARY_PATH \n' >> $PYTHON_BIN
+    printf 'export LD_LIBRARY_PATH=$EXT_PYTHON/$PYTHON_FOLDER:$LD_LIBRARY_PATH \n' >> $PYTHON_BIN
     printf 'export PYTHONPATH=$XMIPP_HOME/lib:$XMIPP_HOME/protocols:$XMIPP_HOME/applications/tests/pythonlib:$XMIPP_HOME/lib/python2.7/site-packages:$PYTHONPATH \n' >> $PYTHON_BIN
     printf 'export TCL_LIBRARY=$EXT_PYTHON/tcl$VTCLTK/library \n' >> $PYTHON_BIN
     printf 'export TK_LIBRARY=$EXT_PYTHON/tk$VTCLTK/library \n\n' >> $PYTHON_BIN

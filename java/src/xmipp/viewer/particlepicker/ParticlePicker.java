@@ -17,6 +17,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.swing.JOptionPane;
+import xmipp.ij.commons.XmippUtil;
 
 import xmipp.jni.Filename;
 import xmipp.jni.MDLabel;
@@ -44,8 +45,8 @@ public abstract class ParticlePicker {
     protected String selfile;
     protected String command;
     protected String configfile;
-    public static final int defAutoPickPercent = 90;
-    protected int autopickpercent = defAutoPickPercent;
+
+
     String[] commonfilters = new String[]{"Install...", "Duplicate", "Bandpass Filter...", "Anisotropic Diffusion...", "Mean Shift",
         "Subtract Background...", "Gaussian Blur...", "Brightness/Contrast...", "Invert LUT"};
     static String xmippsmoothfilter = "Xmipp Smooth Filter";
@@ -94,6 +95,7 @@ public abstract class ParticlePicker {
         return getParticlesBlock(Format.Xmipp301, file);
 
     }
+    private ScipionSave scipionsave;
 
     public String getParticlesAutoBlock(String file) {
         return particlesAutoBlock + "@" + file;
@@ -489,7 +491,8 @@ public abstract class ParticlePicker {
                 }
                 break;
             case Xmipp301:
-                 fillParticlesMdFromXmipp301File(path, m, md);
+                fillParticlesMdFromXmipp301File(path, m, md);
+
                 break;
             case Eman:
                 fillParticlesMdFromEmanFile(path, m, md, scale);
@@ -510,22 +513,24 @@ public abstract class ParticlePicker {
         }
 
     }// function importParticlesFromFile
-
     
     public void fillParticlesMdFromXmipp301File(String file, Micrograph m, MetaData md) {
-        String blockname = getParticlesBlockName(Format.Xmipp301); //only used with Xmipp
-               if (MetaData.containsBlock(file, blockname)) {
-                   md.read(getParticlesBlock(Format.Xmipp301, file));
-               }
-               if (MetaData.containsBlock(file, particlesAutoBlock)) {
-                   MetaData mdAuto = new MetaData();
-                   mdAuto.read(getParticlesAutoBlock(file));
-                   mdAuto.removeDisabled();
-                   md.unionAll(mdAuto);
-                   mdAuto.destroy();
-               }
-               
-   }
+         String blockname = getParticlesBlockName(Format.Xmipp301); //only used with Xmipp
+                if (MetaData.containsBlock(file, blockname)) {
+                    md.read(getParticlesBlock(Format.Xmipp301, file));
+                }
+                if (MetaData.containsBlock(file, particlesAutoBlock)) {
+                    MetaData mdAuto = new MetaData();
+                    mdAuto.read(getParticlesAutoBlock(file));
+                    mdAuto.removeDisabled();
+                    md.unionAll(mdAuto);
+                    mdAuto.destroy();
+                }
+                
+    }
+
+    
+
     
     public void fillParticlesMdFromEmanFile(String file, Micrograph m, MetaData md, float scale) {
         // inverty = true;
@@ -609,6 +614,39 @@ public abstract class ParticlePicker {
                     }
                 }
     }
+
+
+     public void addScipionSave(String python, String script, String projectid, String inputid) {
+            scipionsave = new ScipionSave(python, script, projectid, inputid);
+     }
+     
+     public boolean isScipionSave()
+     {
+         return scipionsave != null;
+     }
+
+    public String[] getScipionSaveCommand() {
+        
+            
+            String[] cmd = new String[]{scipionsave.python, scipionsave.script, outputdir, scipionsave.projectid, scipionsave.inputid};
+            return cmd;
+        }
+     
+     
+
+    class ScipionSave {
+
+        public String python, script, projectid, inputid;
+        
+
+        public ScipionSave(String python, String script, String projectid, String inputid) {
+            this.python = python;
+            this.script = script;
+            this.projectid = projectid;
+            this.inputid = inputid;
+        }
+    }
+    
 
 
 }

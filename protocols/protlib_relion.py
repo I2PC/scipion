@@ -24,6 +24,8 @@ from protlib_gui_ext import showWarning, showTable, showError
 from protlib_gui_figure import XmippPlotter
 from protlib_xmipp import getSampling, validateInputSize
 
+HEALPIX_LIST = ['30','15','7.5','3.7','1.8', '0.9','0.5','0.2','0.1']
+
 
 class ProtRelionBase(XmippProtocol):
     def __init__(self, protDictName, scriptname, project):
@@ -42,7 +44,8 @@ class ProtRelionBase(XmippProtocol):
         
         if self.DoContinue:
             if os.path.exists(self.optimiserFileName):
-                self.setPreviousRunFromFile(self.optimiserFileName)
+                if not self.optimiserFileName.startswith(self.WorkingDir):
+                    self.setPreviousRunFromFile(self.optimiserFileName)
             try:
                 self.inputProperty('ImgMd')
             except:
@@ -153,10 +156,22 @@ class ProtRelionBase(XmippProtocol):
         """
         return []
     
-    def _validateContinue(self):
+    def __validateContinue(self):
         """ Should be overriden in subclasses to
         return summary messages for CONTINUE EXECUTION.
         """
+        #check if continue from the very same protocol
+        #get protocol
+        #check if this is my protocol
+        #print error
+        
+        if self.optimiserFileName.startswith(self.WorkingDir):
+            return [''' Input for continue cannot be an optimiser 
+ file produced by the same Run.
+ 
+ If you want to use the continue option 
+ create a NEW run and select the appropiate optimiser file''']
+        
         return []
                
     def validate(self):
@@ -183,7 +198,9 @@ class ProtRelionBase(XmippProtocol):
                              Are you sure you have relion version 1.2?.''') 
         
         if self.DoContinue:
-            errors += self._validateContinue()
+            errors += self.__validateContinue()
+            if self.PrevRun:
+                errors += self._validateContinue()
         else:
             errors += self._validate()
             
@@ -197,33 +214,33 @@ class ProtRelionBase(XmippProtocol):
         self.insertStep("linkAcquisitionInfo", InputFile=self.ImgMd, dirDest=self.WorkingDir) 
         #normalize data
 
-        if self.DoNormalizeInputImage:
-            images_stk = join(self.ExtraDir, 'images_normalized.stk')
-            images_xmd = join(self.ExtraDir, 'images_normalized.xmd')
-            self.insertStep('runNormalizeRelion', verifyfiles=[images_stk, images_xmd],
-                            inputMd  = self.ImgMd,
-                            outputMd = images_stk,
-                            normType = 'NewXmipp',
-                            bgRadius = int(self.MaskRadiusA/self.SamplingRate),
-                            Nproc    = self.NumberOfMpi*self.NumberOfThreads
-                            )
-        else:
-            imgFn = FileName(self.ImgMd).removeBlockName()
-            self.insertStep('createLink',
-                               verifyfiles=[images_xmd],
-                               source=imgFn,
-                               dest=images_xmd)
-        # convert input metadata to relion model
-        self.ImgStar = self.extraPath(replaceBasenameExt(images_xmd, '.star'))
-        self.insertStep('convertImagesMd', verifyfiles=[self.ImgStar],
-                        inputMd=images_xmd, 
-                        outputRelion=self.ImgStar                            
-                        )
         
         if self.DoContinue:
             self._insertStepsContinue()
             firstIteration = getIteration(self.optimiserFileName)
         else:
+            if self.DoNormalizeInputImage:
+        	images_stk = join(self.ExtraDir, 'images_normalized.stk')
+        	images_xmd = join(self.ExtraDir, 'images_normalized.xmd')
+        	self.insertStep('runNormalizeRelion', verifyfiles=[images_stk, images_xmd],
+                        	inputMd  = self.ImgMd,
+                        	outputMd = images_stk,
+                        	normType = 'NewXmipp',
+                        	bgRadius = int(self.MaskRadiusA/self.SamplingRate),
+                        	Nproc    = self.NumberOfMpi*self.NumberOfThreads
+                        	)
+            else:
+        	imgFn = FileName(self.ImgMd).removeBlockName()
+        	self.insertStep('createLink',
+                        	   verifyfiles=[images_xmd],
+                        	   source=imgFn,
+                        	   dest=images_xmd)
+            # convert input metadata to relion model
+            self.ImgStar = self.extraPath(replaceBasenameExt(images_xmd, '.star'))
+            self.insertStep('convertImagesMd', verifyfiles=[self.ImgStar],
+                            inputMd=images_xmd, 
+                            outputRelion=self.ImgStar                            
+                            )
             self._insertSteps()
             firstIteration = 1
             
@@ -376,6 +393,9 @@ class ProtRelionBase(XmippProtocol):
 
         if doPlot('Likelihood'):
             self._visualizeLikelihood()
+
+        if doPlot('DisplayFinalReconstruction'):
+            self._visualizeDisplayFinalReconstruction()
 #            
 #        if xplotter:
 #            xplotter.show()
@@ -673,8 +693,7 @@ class ProtRelionBase(XmippProtocol):
                     mdIters.setValue(labels[i], pmax, objId)
             fn = self.getFilename('all_avgPmax_xmipp')
             mdIters.write(fn)
-            self.display2D(fn, extraParams='--label_relion')                    
-            #self.display2D(fn, extraParams)
+            #self.display2D(fn, extraParams='--label_relion') //do not display table since labels are confussing                   
             xplotter = XmippPlotter()
             xplotter.createSubPlot("Avg PMax per Iterations", "Iterations", "Avg PMax")
             for label, color in zip(labels, colors):
@@ -732,7 +751,7 @@ def runNormalizeRelion(log, inputMd, outputMd, normType, bgRadius, Nproc,):
     if exists(outputMd):
         os.remove(outputMd)
     program = "xmipp_transform_normalize"
-    args = "-i %(stack)s -o %(outputMd)s "
+    args = "-i %(stack)s -o %(outputMd)s --dont_apply_geo "
 
     if bgRadius <= 0:
         particleSize = MetaDataInfo(stack)[0]

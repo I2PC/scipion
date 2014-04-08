@@ -29,6 +29,7 @@
 from xmipp import *
 import os
 from os.path import  exists
+from xmipp import addLabelAlias
 
 CTF_BASIC_LABELS = [
                      MDL_CTF_CA
@@ -138,6 +139,9 @@ XMIPP_RELION_LABELS_EXTRA = {
 
 
                        }
+
+
+
 # from data.star
 #WARNING: Ignoring unknown column: rlnMaxValueProbDistribution
 
@@ -326,6 +330,8 @@ def relionLabelString():
     for k, v in XMIPP_RELION_LABELS_EXTRA.iteritems():
         pairs.append('%s=%s' % (label2Str(k), v))        
     return ';'.join(pairs)
+
+
         
 def exportReliontoMetadataFile(inputRelion,outputXmipp):
     """ This function will receive a relion file and will

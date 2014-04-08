@@ -1408,17 +1408,7 @@ void MetaData::fillExpand(MDLabel label)
     }
 	//join
     MetaData md(*this);
-    join(md, mdCTFs, label);
-
-	//that is all
-
-//     MDExpandGenerator generator;
-//    FOR_ALL_OBJECTS_IN_METADATA(md)
-//    {
-//        fillValue(md, __iter.objId);
-//    }
-
-//    SET_AND_FILL();
+    join1(md, mdCTFs, label);
 
 }
 
@@ -1705,16 +1695,21 @@ void MetaData::subtraction(const MetaData &mdIn, const MDLabel label)
     _setOperates(mdIn, label, SUBSTRACTION);
 }
 
-void MetaData::join(const MetaData &mdInLeft, const MetaData &mdInRight, const MDLabel label, JoinType type)
+void MetaData::join1(const MetaData &mdInLeft, const MetaData &mdInRight, const MDLabel label, JoinType type)
 {
-    join(mdInLeft, mdInRight, label, label, type);
+    join2(mdInLeft, mdInRight, label, label, type);
 }
 
-void MetaData::join(const MetaData &mdInLeft, const MetaData &mdInRight, const MDLabel labelLeft,
+void MetaData::join2(const MetaData &mdInLeft, const MetaData &mdInRight, const MDLabel labelLeft,
                     const MDLabel labelRight, JoinType type)
 {
     clear();
     _setOperates(mdInLeft, mdInRight, labelLeft,labelRight, (SetOperation)type);
+}
+
+void MetaData::joinNatural(const MetaData &mdInLeft, const MetaData &mdInRight)
+{
+    join2(mdInLeft, mdInRight, MDL_UNDEFINED, MDL_UNDEFINED, NATURAL);
 }
 
 void MetaData::operate(const String &expression)

@@ -237,8 +237,8 @@ def extractParticles(log,
                      doNorm, 
                      normType, 
                      bgRadius):
-    md=readPosCoordinates(micrographPos)
-    fnTmpPos=os.path.join(ExtraDir,"tmp_%s.pos"%micrographName)
+    md = readPosCoordinates(micrographPos)
+    fnTmpPos = os.path.join(ExtraDir, "tmp_%s.pos"%micrographName)
     md.write(fnTmpPos)
 
     # Extract 
@@ -314,5 +314,5 @@ def avgZscore(log,WorkingDir,micrographSelfile):
     oldMicrographsSel.removeLabel(MDL_ZSCORE)
     newMicrographsSel = MetaData()
     # Make copy of metadata because removeLabel leaves the values in the table
-    newMicrographsSel.join(oldMicrographsSel,mdavgZscore,MDL_MICROGRAPH,MDL_MICROGRAPH,LEFT)
+    newMicrographsSel.join2(oldMicrographsSel, mdavgZscore, MDL_MICROGRAPH, MDL_MICROGRAPH,LEFT)
     newMicrographsSel.write(micrographSelfile)

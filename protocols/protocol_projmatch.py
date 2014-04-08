@@ -85,7 +85,7 @@ class ProtProjMatch(XmippProtocol):
            self.MaskRadius = Xdim/2
     
     def validate(self):
-        from protlib_xmipp import validateInputSize
+        from protlib_xmipp import validateInputSize, validateVolumeZdim
         errors = []
         
 #        # Check reference and projection size match
@@ -103,7 +103,7 @@ class ProtProjMatch(XmippProtocol):
             errors.append("Can not find input file: %s"% self.SelFileNameInitial)
         md.read(self.SelFileNameInitial, 1)
         validateInputSize(self.ReferenceFileNames, self.SelFileNameInitial, md, errors)
-        
+        validateVolumeZdim(self.ReferenceFileNames[0], errors)
         # Check there are enough images to avoid overfitting through the FSC
         if md.getParsedLines() < 100 and self.ConstantToAddToFiltration < 0:
             errors.append("You have less than 100 images. The constant to be added to the estimated resolution should be non-negative.")
@@ -600,7 +600,7 @@ data_noname
                 md2.addLabel(MDL_SHIFT_Y_DIFF)
                 md2.addLabel(MDL_SHIFT_DIFF)
                 tdEnd = datetime.now() - dtBegin
-                mdIter.join (md1, md2, MDL_IMAGE, MDL_IMAGE, INNER_JOIN)
+                mdIter.join1(md1, md2, MDL_IMAGE, INNER_JOIN)
                 tdEnd = datetime.now() - dtBegin
                 SL.computeDistance(mdIter,False,False,False)
                 #md1.write("kk1.xmd")
