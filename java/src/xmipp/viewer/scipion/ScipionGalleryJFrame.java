@@ -65,13 +65,13 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
     private void initComponents() {
         if (type != null) {
 
-            cmdbutton = getScipionButton("Create New Set Of " + type, new ActionListener() {
+            cmdbutton = getScipionButton("Create " + type, new ActionListener() {
 
                 @Override
                 public void actionPerformed(ActionEvent ae) {
                     saveSelection();
                     MetaData selectionmd = new MetaData(selectionmdfile);
-                    String question = String.format("<html>Are you sure you want to create a new SetOf%s with <font color=red>%s</font> %s?", type, selectionmd.size(), (selectionmd.size() > 1)?"elements":"element");
+                    String question = String.format("<html>Are you sure you want to create a new set of %s with <font color=red>%s</font> %s?", type, selectionmd.size(), (selectionmd.size() > 1)?"elements":"element");
                     ScipionMessageDialog dlg = new ScipionMessageDialog(ScipionGalleryJFrame.this, "Question", question, msgfields);
                     int create = dlg.action;
                     if (create == ScipionMessageDialog.OK_OPTION) {
@@ -81,13 +81,13 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
                 }
             });
             if (is2DClassificationMd()) {
-                classcmdbutton = getScipionButton("Create New Set Of Classes", new ActionListener() {
+                classcmdbutton = getScipionButton("Create Classes", new ActionListener() {
 
                     @Override
                     public void actionPerformed(ActionEvent ae) {
                         saveClassSelection(selectionmdfile);
                         MetaData selectionmd = new MetaData(selectionmdfile);
-                        String msg = String.format("<html>Are you sure you want to create a new SetOfClasses2D with <font color=red>%s</font> %s?", selectionmd.size(), (selectionmd.size() > 1)?"elements":"element");
+                        String msg = String.format("<html>Are you sure you want to create a new set of Classes with <font color=red>%s</font> %s?", selectionmd.size(), (selectionmd.size() > 1)?"elements":"element");
                         ScipionMessageDialog dlg = new ScipionMessageDialog(ScipionGalleryJFrame.this, "Question", msg, msgfields);
                         int create = dlg.action;
                         if (create == ScipionMessageDialog.OK_OPTION) {

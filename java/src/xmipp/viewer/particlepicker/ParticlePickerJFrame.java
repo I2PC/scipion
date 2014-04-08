@@ -2,7 +2,6 @@ package xmipp.viewer.particlepicker;
 
 import ij.IJ;
 import ij.WindowManager;
-import ij3d.behaviors.Picker;
 
 import java.awt.Color;
 import java.awt.Dimension;
@@ -61,7 +60,6 @@ import xmipp.utils.XmippResource;
 import xmipp.utils.XmippWindowUtil;
 import xmipp.viewer.particlepicker.extract.ExtractPickerJFrame;
 import xmipp.viewer.particlepicker.training.model.Mode;
-import xmipp.viewer.scipion.ScipionGalleryJFrame;
 import xmipp.viewer.scipion.ScipionMessageDialog;
 
 public abstract class ParticlePickerJFrame extends JFrame implements ActionListener
@@ -175,9 +173,9 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
                                 if(getParticlePicker().isScipionSave())
                                 {
                                     HashMap<String, String> msgfields = new HashMap<String, String>();
-                                    msgfields.put("Run name:", "ProtUserSubset");
+                                    msgfields.put("Run name:", "ProtUserCoordinates");
                                     int count = getParticlePicker().getParticlesCount();
-                                    String msg = String.format("<html>Are you sure you want to create a new SetOfCoordinates with <font color=red>%s</font> %s?", count, (count > 1)?"elements":"element");
+                                    String msg = String.format("<html>Are you sure you want to create a new set of Coordinates with <font color=red>%s</font> %s?", count, (count > 1)?"elements":"element");
                                     ScipionMessageDialog dlg = new ScipionMessageDialog(ParticlePickerJFrame.this, "Question", msg, msgfields);
                                     int create = dlg.action;
                                     if (create == ScipionMessageDialog.OK_OPTION)
@@ -192,7 +190,11 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
                 if(picker.isScipionSave())
                 {
                     savebt.setVisible(false);
-                    saveandexitbt.setText("Create New Set Of Coordinates And Exit");
+                    saveandexitbt.setText("Create Coordinates");
+                    Color color = Color.decode(ScipionMessageDialog.firebrick); 
+                    saveandexitbt.setBackground(color);
+                    saveandexitbt.setForeground(Color.WHITE);
+                    
                 }
 		micrographstb = new JTable();
 		micrographstb.getSelectionModel().addListSelectionListener(new ListSelectionListener()

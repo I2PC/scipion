@@ -121,7 +121,7 @@ public class GalleryData {
 				mode = Mode.TABLE_MD;
 			else if (param.mode.equalsIgnoreCase(Param.OPENING_MODE_ROTSPECTRA))
 				mode = Mode.GALLERY_ROTSPECTRA;
-                        System.out.println("mode " + param.mode);
+                        
 			setFileName(fn);
 
 			if (md == null) {
