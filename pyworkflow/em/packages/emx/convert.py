@@ -265,6 +265,8 @@ def _particleFromEmx(emxObj, particle):
 def _coordinateFromEmx(emxObj, coordinate):
     #_imageFromEmx(emxObj, coordinate)
     _setCoordinatesFromEmx(emxObj, coordinate)
+    emxMic = emxObj.getMicrograph()
+    coordinate.setMicId(emxMic._micId)
     
     
 def _micrographsFromEmx(protocol, emxData, emxFile, outputDir):
@@ -304,6 +306,7 @@ def _micrographsFromEmx(protocol, emxData, emxFile, outputDir):
                 #raise Exception("Missing micrograph '%s' while importing from EMX" % micFn)
             mic.setLocation(newFn)                
             micSet.append(mic)
+            emxMic._micId = mic.getObjId()
             mic.cleanObjId()
             if ctfSet is not None:
                 ctf = mic.getCTF().clone()
