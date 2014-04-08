@@ -31,6 +31,7 @@ import os
 
 from pyworkflow.viewer import Viewer, ProtocolViewer, DESKTOP_TKINTER, WEB_DJANGO
 from protocol_classify2d import ProtRelionClassify2D
+from protocol_classify3d import ProtRelionClassify3D
 from protocol_refine3d import ProtRelionRefine3D
 from pyworkflow.protocol.params import *
 
@@ -41,7 +42,7 @@ ITER_SELECTION = 1
     
 class RelionViewer(ProtocolViewer):
     """ Class to visualize Relion protocols """
-    _targets = [ProtRelionClassify2D, ProtRelionRefine3D]
+    _targets = [ProtRelionClassify2D, ProtRelionClassify3D, ProtRelionRefine3D]
     _environments = [DESKTOP_TKINTER, WEB_DJANGO]
     
     _label = 'viewer relion'
@@ -222,23 +223,33 @@ Examples:
         for it in self._iterations:
             data_classes = self.protocol._getIterClasses(it)
             self.displayScipion(data_classes, extraParams='--mode metadata --render first')
-                  
-    def _showLL(self, paramName):
+          
+    def _createLL(self, paramName):
         self._load()
         import xmipp
         from pyworkflow.em.packages.xmipp3.plotter import XmippPlotter
         from convert import addRelionLabels
+        plotters = []
+        files = []
         for it in self._iterations:
             fn = self.protocol._getIterSortedData(it)
             addRelionLabels()
             md = xmipp.MetaData(fn)
-            self.display2D(fn)
+            files.append(fn)
             xplotter = XmippPlotter(windowTitle="max Likelihood particles sorting Iter_%d" % it)
             xplotter.createSubPlot("Particle sorting: Iter_%d" % it, "Particle number", "maxLL")
             xplotter.plotMd(md, False, mdLabelY=xmipp.MDL_LL)
+            plotters.append(xplotter)
+            
+        return plotters, files
+     
+    def _showLL(self, paramName):
+        plotters, files = self._createLL(paramName)
+        for xplotter, fn in zip(plotters, files):
+            self.display2D(fn)
             xplotter.show()
         
-    def _showPMax(self, paramName):
+    def _createPMax(self, paramName):
         self._load()
         import xmipp
         from pyworkflow.em.packages.xmipp3.plotter import XmippPlotter
@@ -259,7 +270,6 @@ Examples:
                 mdIters.setValue(labels[i], pmax, objId)
         fn = self.protocol._getFileName('all_avgPmax_xmipp')
         mdIters.write(fn)
-        self.display2D(fn)                    
         #self.display2D(fn, extraParams)
         xplotter = XmippPlotter()
         xplotter.createSubPlot("Avg PMax per Iterations", "Iterations", "Avg PMax")
@@ -268,9 +278,15 @@ Examples:
         
         if len(self.protocol.PREFIXES) > 1:
             xplotter.showLegend(self.protocol.PREFIXES)
+        
+        return xplotter, fn
+        
+    def _showPMax(self, paramName):
+        xplotter, fn = self._createPMax(paramName)
+        self.display2D(fn)                    
         xplotter.show()
-            
-    def _showChanges(self, paramName):
+        
+    def _createChanges(self, paramName):
         self._load()
         import xmipp
         from pyworkflow.em.packages.xmipp3.plotter import XmippPlotter
@@ -293,25 +309,36 @@ Examples:
                 mdIters.setValue(label, md.getValue(label, firstId), objId)
         fn = self.protocol._getFileName('all_changes_xmipp')
         mdIters.write(fn)
-        self.display2D(fn)  
+        return fn
+
+    def _showChanges(self, paramName):
+        fn = self._createChanges(paramName)
+        self.display2D(fn)
         
-    def _showVolumes(self, paramName=None):
+    def _createVolumes(self, paramName):
+        files = []
         self._load()
         prefixes = self._getPrefixes()
         for it in self._iterations:
             for ref3d in self._refsList:
                 for prefix in prefixes:
                     volFn = self.protocol._getFileName(prefix + 'volume', iter=it, ref3d=ref3d)
-                    #print "runChimeraClient(%s, %s) " % (volFn, args)
-                    os.system('xmipp_chimera_client --input "%s" --mode projector 256 &' % volFn)
+                    files.append(volFn)
+        return files
+        
+    def _showVolumes(self, paramName=None):
+        files = self._createVolumes(paramName)
+        for volFn in files:
+            os.system('xmipp_chimera_client --input "%s" --mode projector 256 &' % volFn)
                             
-    def _showAngularDistribution(self, paramName):
+    def _createAngularDistribution(self, paramName):
         self._load()
         import xmipp
         from pyworkflow.em.packages.xmipp3.plotter import XmippPlotter
-        sphere = self.spheresScale.get()      
-        
+        sphere = self.spheresScale.get()
         prefixes = self._getPrefixes()
+        arguments = []
+        plotters = []
         
         if self.displayAngDist == 1:
             # FIXME
@@ -324,12 +351,11 @@ Examples:
                 for ref3d in self._refsList:
                     for prefix in prefixes:
                         volFn = self.protocol._getFileName(prefix + 'volume', iter=it, ref3d=ref3d)
-                        args = " --mode projector 256 -a %sclass%06d_angularDist@%s red %f " % (prefix, ref3d, data_angularDist, radius)
+                        args = "--input '%s' --mode projector 256 -a %sclass%06d_angularDist@%s red %f " % (volFn, prefix, ref3d, data_angularDist, radius)
                         if sphere > 0:
                             args += ' %f ' % sphere
-                        #print "runChimeraClient(%s, %s) " % (volFn, args)
-                        os.system('xmipp_chimera_client --input "%s" %s &' % (volFn, args))
-                    
+                        arguments.append(args)
+                        
         elif self.displayAngDist == 0:
             nrefs = len(self._refsList)
             n = nrefs * len(prefixes)
@@ -343,7 +369,30 @@ Examples:
                         md = xmipp.MetaData("class%06d_angularDist@%s" % (ref3d, data_angularDist))
                         plot_title = '%sclass %d' % (prefix, ref3d)
                         xplotter.plotMdAngularDistribution(plot_title, md)
-                xplotter.show(interactive=True) 
+                plotters.append(xplotter)
+                
+        return plotters, arguments
+    
+    def _showAngularDistribution(self, paramName):
+        plotters, arguments = self._createAngularDistribution(paramName)
+        
+        if arguments:
+            for args in arguments:
+                os.system('xmipp_chimera_client %s &' % args)
+        
+        if plotters:
+            for xplotter in plotters:
+                xplotter.show()
+            
+            
+    def getVisualizeDictWeb(self):
+        return {'showImagesInClasses': 'doShowImagesInClasses',
+                'showLL': 'doShowLL',
+                'showPMax': 'doShowPMax',
+                'showChanges': 'doShowChanges',
+                'displayVol': 'doShowVolumes',
+                'displayAngDist': 'doShowAngularDistribution'
+                }
 
     @classmethod
     def getView(cls):
@@ -354,6 +403,6 @@ Examples:
     def getViewFunction(cls):
         """ This will return the name of the function to view
         in web one (or all) params of the protocol"""
-        return "viewerML2D"
+        return "viewerRelion"
 
         
