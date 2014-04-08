@@ -895,7 +895,17 @@ class SetOfCoordinates(Set):
         filePaths = set()
         filePaths.add(self.getFileName())
         return filePaths
-
+    
+    def __str__(self):
+        """ String representation of a set of coordinates. """
+        if self._boxSize.hasValue():
+            boxStr = ' %d x %d' % self._boxSize.get()
+        else:
+            boxStr = 'No-Box'
+        s = "%s (%d items, %s)" % (self.getClassName(), self.getSize(), boxStr)
+        
+        return s
+    
 
 class Transform(EMObject):
     """ This class will contain a transformation matrix
