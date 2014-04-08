@@ -253,9 +253,7 @@ function evalElements() {
 		var type = jQuery(this).attr('data-type');
 		var param = jQuery(this).attr('id');
 		
-		// console.log(value)
-		// console.log(type)
-		// console.log(param)
+		console.log("value:"+value+", type:"+type+", param:"+param+";")
 
 //		alert(value +" - "+type+" - "+param);
 
