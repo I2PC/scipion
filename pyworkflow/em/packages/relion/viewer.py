@@ -23,6 +23,7 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
+from pyworkflow.utils.path import cleanPath
 """
 This module implement the wrappers around xmipp_showj
 visualization program.
@@ -38,6 +39,12 @@ from pyworkflow.protocol.params import *
 
 ITER_LAST = 0
 ITER_SELECTION = 1
+
+ANGDIST_2DPLOT = 0
+ANGDIST_CHIMERA = 1
+
+VOLUME_SLICES = 0
+VOLUME_CHIMERA = 1
 
     
 class RelionViewer(ProtocolViewer):
@@ -113,12 +120,12 @@ Examples:
                               help='Select which half do you want to visualize.')
             
             group.addParam('displayVol', EnumParam, choices=['slices', 'chimera'], 
-                          display=EnumParam.DISPLAY_LIST, default=0,
+                          display=EnumParam.DISPLAY_LIST, default=VOLUME_SLICES,
                           label='Display volume with',
                           help='*slices*: display volumes as 2D slices along z axis.\n'
                                '*chimera*: display volumes as surface with Chimera.')
             group.addParam('displayAngDist', EnumParam, choices=['2D plot', 'chimera'], 
-                          display=EnumParam.DISPLAY_LIST, default=0,
+                          display=EnumParam.DISPLAY_LIST, default=ANGDIST_2DPLOT,
                           label='Display angular distribution',
                           help='*2D plot*: display angular distribution as interative 2D in matplotlib.\n'
                                '*chimera*: display angular distribution using Chimera with red spheres.') 
@@ -160,17 +167,9 @@ Examples:
 
     def _load(self):
         """ Load selected iterations and classes 3D for visualization mode. """
-#        DisplayRef3DNo = self.parser.getTkValue('DisplayRef3DNo')
-#        VisualizeIter = self.parser.getTkValue('VisualizeIter')
-#        
-#        if DisplayRef3DNo == 'all':
-#            self._visualizeRef3Ds = range(1, self.NumberOfClasses + 1)
-#        else:
-#            self._visualizeRef3Ds = getListFromRangeString(self.parser.getTkValue('SelectedRef3DNo'))
-#        
-#        self._visualizeNrefs = len(self._visualizeRef3Ds)
-
         self._refsList = [1] #FIXME: Change this for classify 2d and 3d
+        if self.protocol.IS_3D and self.protocol.IS_CLASSIFY:
+            self._refsList = self._getListFromRangeString(self.class3DSelection.get())
         self.protocol._initialize() # Load filename templates
         self.firstIter = self.protocol._firstIter()
         self.lastIter = self.protocol._lastIter()
@@ -179,14 +178,6 @@ Examples:
             self._iterations = [self.lastIter]
         else:
             self._iterations = self._getListFromRangeString(self.iterSelection.get())
-
-#        self._visualizeLastIteration = self._iterations[-1]
-#        self._visualizeLastRef3D = self._visualizeRef3Ds[-1]
-#        
-#        self._visualizeVolumesMode = self.parser.getTkValue('DisplayReconstruction')
-#        
-#        from matplotlib.ticker import FuncFormatter
-#        self._plotFormatter = FuncFormatter(self._formatFreq) 
 
     def _getGridSize(self, n=None):
         """ Figure out the layout of the plots given the number of references. """
@@ -315,21 +306,60 @@ Examples:
         fn = self._createChanges()
         self.display2D(fn)
         
+    def _createVolumesMd(self):
+        import xmipp
+        self._load()
+        prefixes = self._getPrefixes()
+        
+        mdPath = self.protocol._getExtraPath('relion_viewer_volumes.xmd')
+        cleanPath(mdPath)
+        md = xmipp.MetaData()
+        
+        for it in self._iterations:
+            md.clear()
+            for ref3d in self._refsList:
+                for prefix in prefixes:
+                    volFn = self.protocol._getFileName(prefix + 'volume', iter=it, ref3d=ref3d)
+                    md.setValue(xmipp.MDL_IMAGE, volFn, md.addObject())
+            md.write('iter%03d@%s' % (it, mdPath), xmipp.MD_APPEND)
+        return mdPath
+    
     def _createVolumes(self):
         files = []
         self._load()
         prefixes = self._getPrefixes()
+        
+        if self.displayVol == VOLUME_SLICES:
+            return self._createVolumesMd()
+        
         for it in self._iterations:
             for ref3d in self._refsList:
                 for prefix in prefixes:
                     volFn = self.protocol._getFileName(prefix + 'volume', iter=it, ref3d=ref3d)
                     files.append(volFn)
-        return files
-        
+        return files   
+         
     def _showVolumes(self, paramName=None):
         files = self._createVolumes()
-        for volFn in files:
-            os.system('xmipp_chimera_client --input "%s" --mode projector 256 &' % volFn)
+        import xmipp
+        if self.displayVol == VOLUME_CHIMERA:
+            if len(files) > 1:
+                tmpFile = self.protocol._getExtraPath('chimera_volumes.cmd')
+                f = open(tmpFile, 'w+')
+                for volFn in files:
+                    # We assume that the chimera script will be generated
+                    # at the same folder than relion volumes
+                    localVol = os.path.basename(volFn.replace(':mrc', ''))
+                    f.write("open %s\n" % localVol)
+                f.write('tile\n')
+                f.close()
+                os.system('chimera %s &' % tmpFile)                    
+            else:
+                os.system('xmipp_chimera_client --input "%s" --mode projector 256 &' % files[0])
+        
+        elif self.displayVol == VOLUME_SLICES:
+            mdPath = self._createVolumesMd()
+            self.display2D(mdPath)
                             
     def _createAngularDistribution(self):
         self._load()
@@ -340,7 +370,7 @@ Examples:
         arguments = []
         plotters = []
         
-        if self.displayAngDist == 1:
+        if self.displayAngDist == ANGDIST_CHIMERA:
             # FIXME
             #outerRadius = int(float(self.MaskRadiusA)/self.SamplingRate)
             outerRadius = 30
@@ -356,7 +386,7 @@ Examples:
                             args += ' %f ' % sphere
                         arguments.append(args)
                         
-        elif self.displayAngDist == 0:
+        elif self.displayAngDist == ANGDIST_2DPLOT:
             nrefs = len(self._refsList)
             n = nrefs * len(prefixes)
             gridsize = self._getGridSize(n)
