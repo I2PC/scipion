@@ -276,9 +276,9 @@ def runScipionShowJ(inputFiles, type, projectid, objid, inputimagesid, memory="1
 def runParticlePicker(inputMics, inputCoords, memory="1g", extraParams=""):
     runJavaIJapp(memory, "xmipp.viewer.particlepicker.training.SupervisedPickerRunner", "--input %s --output %s %s" % (inputMics, inputCoords, extraParams), True)
     
-def runScipionParticlePicker(inputMics, inputCoords,  projectid, objid, memory="1g"):
+def runScipionParticlePicker(inputMics, inputCoords,  projectid, objid, state, memory="1g"):
     script = pw.join('apps', 'pw_create_coords_subset.py')
-    runJavaIJapp(memory, "xmipp.viewer.particlepicker.training.SupervisedPickerRunner", "--input %s --output %s --mode review --scipion %s %s \"%s\" %s" % (inputMics, inputCoords, pw.PYTHON, script, projectid, objid), True)
+    runJavaIJapp(memory, "xmipp.viewer.particlepicker.training.SupervisedPickerRunner", "--input %s --output %s --mode review --scipion %s %s \"%s\" %s %s" % (inputMics, inputCoords, pw.PYTHON, script, projectid, objid, state), True)
 
 
 

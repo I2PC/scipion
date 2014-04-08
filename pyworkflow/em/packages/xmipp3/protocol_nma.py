@@ -30,7 +30,7 @@
 from protocol_nma_base import *
         
 class XmippProtNMA(XmippProtNMABase):
-    """ Protocol for flexible analysis using NMA. """
+    """ Flexible angular alignment using normal modes """
     _label = 'nma analysis'
     
     def _defineParams(self, form):
