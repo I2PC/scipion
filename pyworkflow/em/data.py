@@ -826,6 +826,9 @@ class Coordinate(EMObject):
     def getMicId(self):
         return self._micId.get()
     
+    def setMicId(self, micId):
+        self._micId.set(micId)
+    
     def invertY(self):
         if not self.getMicrograph() is None:
             dims = self.getMicrograph().getDim()

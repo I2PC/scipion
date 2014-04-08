@@ -323,12 +323,14 @@ def writeSetOfCoordinates(posDir, coordSet):
         coordSet: the SetOfCoordinates that will be read.
     """
     posFiles = []
-    boxSize = coordSet.getBoxSize()   
+    boxSize = coordSet.getBoxSize() or 100  
     
+    print "writing coordinates to folder: ", posDir
     # Write pos metadatas (one per micrograph)    
     for mic in coordSet.iterMicrographs():
         micName = mic.getFileName()
         posFn = join(posDir, replaceBaseExt(micName, "pos"))
+        print " posFn: ", posFn
         
         md = xmipp.MetaData()
         for coord in coordSet.iterCoordinates(micrograph=mic):
