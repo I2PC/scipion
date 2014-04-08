@@ -471,7 +471,11 @@ class Project(object):
 
 def isReadOnly():
     """ Auxiliar method to keep a read-only mode for the environment. """
-    mode = os.environ['READONLY']
+    try:
+        mode = os.environ['READONLY']
+    except Exception, ex:
+        mode = False
+    
     if mode:
         print "Operation not valid for read-only mode."
     return mode
