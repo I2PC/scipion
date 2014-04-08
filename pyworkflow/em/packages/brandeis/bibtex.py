@@ -41,7 +41,7 @@ note = "",
 issn = "1047-8477",
 doi = "http://dx.doi.org/10.1016/S1047-8477(03)00069-8",
 url = "http://www.sciencedirect.com/science/article/pii/S1047847703000698",
-author = "Joseph A. Mindell and Nikolaus Grigorieff",
+author = "Mindell, Joseph A. and Grigorieff, Nikolaus",
 keywords = "Electron microscopy, Contrast transfer function, Algorithm, Tilt determination "
 }
 
@@ -70,8 +70,68 @@ note = "",
 issn = "0304-3991",
 doi = "http://dx.doi.org/10.1016/j.ultramic.2005.11.001",
 url = "http://www.sciencedirect.com/science/article/pii/S0304399105002342",
-author = "Matthias Wolf and David J. DeRosier and Nikolaus Grigorieff",
+author = "Wolf, Matthias and DeRosier, David J. and Grigorieff, Nikolaus",
 keywords = "Three-dimensional reconstruction, Resolution, Depth of field, \{FREALIGN\} "
+}
+
+@article{Grigorieff1998,
+title = "Three-dimensional structure of bovine NADH:ubiquinone oxidoreductase (complex I) at 22 å in ice ",
+journal = "Journal of Molecular Biology ",
+volume = "277",
+number = "5",
+pages = "1033 - 1046",
+year = "1998",
+note = "",
+issn = "0022-2836",
+doi = "http://dx.doi.org/10.1006/jmbi.1998.1668",
+url = "http://www.sciencedirect.com/science/article/pii/S0022283698916680",
+author = "Grigorieff, N ",
+keywords = "complex I, mitochondria, respiratory chain, single particle analysis, electron cryo-microscopy "
+}
+
+@article{Stewart2004,
+title = "Noise bias in the refinement of structures derived from single particles ",
+journal = "Ultramicroscopy ",
+volume = "102",
+number = "1",
+pages = "67 - 84",
+year = "2004",
+note = "",
+issn = "0304-3991",
+doi = "http://dx.doi.org/10.1016/j.ultramic.2004.08.008",
+url = "http://www.sciencedirect.com/science/article/pii/S0304399104001706",
+author = "Stewart, Alex and Grigorieff, Nikolaus",
+keywords = "Image processing, Electron microscopy, Protein structure, \{FREALIGN\} "
+}
+
+@article{Sindelar2012,
+title = "Optimal noise reduction in 3D reconstructions of single particles using a volume-normalized filter ",
+journal = "Journal of Structural Biology ",
+volume = "180",
+number = "1",
+pages = "26 - 38",
+year = "2012",
+note = "",
+issn = "1047-8477",
+doi = "http://dx.doi.org/10.1016/j.jsb.2012.05.005",
+url = "http://www.sciencedirect.com/science/article/pii/S104784771200144X",
+author = "Sindelar, Charles V. and Grigorieff, Nikolaus ",
+keywords = "Electron microscopy, Wiener filter, Single particle, Protein structure, \{SNR\}, \{SSNR\}, Spectral signal-to-noise ratio "
+}
+
+@article{Lyumkis2013,
+title = "Likelihood-based classification of cryo-EM images using \{FREALIGN\} ",
+journal = "Journal of Structural Biology ",
+volume = "183",
+number = "3",
+pages = "377 - 388",
+year = "2013",
+note = "",
+issn = "1047-8477",
+doi = "http://dx.doi.org/10.1016/j.jsb.2013.07.005",
+url = "http://www.sciencedirect.com/science/article/pii/S1047847713001858",
+author = "Lyumkis, Dmitry  and Brilot, Axel F.  and Theobald, Douglas L.  and Grigorieff, Nikolaus ",
+keywords = "Electron microscopy, Maximum likelihood, Classification, Single particle, Protein structure "
 }
 
 

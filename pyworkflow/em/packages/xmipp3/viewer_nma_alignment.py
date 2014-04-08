@@ -50,9 +50,8 @@ class XmippAlignmentNMAViewer(ProtocolViewer):
     """ Visualization of results from the NMA protocol
     """
     _label = 'viewer nma alignment'
-    _references = ["[[http://www.ncbi.nlm.nih.gov/pubmed/15885434][Jonic, et.al, Ultramic (2005)]]",
-                   "[[http://www.ncbi.nlm.nih.gov/pubmed/15099579][Sorzano, et.al, JSB (2004)]]"
-                   ]
+
+                   
     _targets = [XmippProtAlignmentNMA]
     _environments = [DESKTOP_TKINTER, WEB_DJANGO]
         
@@ -143,6 +142,8 @@ class XmippAlignmentNMAViewer(ProtocolViewer):
         in web one (or all) params of the protocol"""
         return "viewerNMAAlign"
 
+    def _citations(self):
+        return ['Sorzano2004b', 'Jonic2005']
 
 class XmippNmaPlotter(XmippPlotter):
     """ Add some extra plot utilities to XmippPlotter class, mainly for
@@ -202,3 +203,5 @@ class XmippNmaPlotter(XmippPlotter):
         ax.set_zlabel(zlabel)
         a = self._data
         ax.scatter3D(a[:,colX], a[:,colY], a[:,colZ])
+        
+
