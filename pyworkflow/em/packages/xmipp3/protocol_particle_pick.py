@@ -111,8 +111,7 @@ class XmippProtParticlePicking(ProtParticlePicking, XmippProtocol):
         
     def createOutputStep(self):
         posDir = self._getExtraPath()
-        coordSet = self._createSetOfCoordinates()
-        coordSet.setMicrographs(self.inputMics)
+        coordSet = self._createSetOfCoordinates(self.inputMics)
         readSetOfCoordinates(posDir, self.inputMics, coordSet)
         self._defineOutputs(outputCoordinates=coordSet)
         

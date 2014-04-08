@@ -85,8 +85,7 @@ class BsoftProtParticlePicking(ProtParticlePicking):
         
     def createOutputStep(self):
         outputDir = self._getExtraPath()
-        coordSet = self._createSetOfCoordinates()
-        coordSet.setMicrographs(self.inputMics)
+        coordSet = self._createSetOfCoordinates(self.inputMics)
         readSetOfCoordinates(outputDir, self.inputMics, coordSet)
         self._defineOutputs(outputCoordinates=coordSet)        
         self._defineSourceRelation(self.inputMics, coordSet)

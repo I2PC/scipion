@@ -59,8 +59,10 @@ class EMProtocol(Protocol):
     def _createSetOfMicrographs(self, suffix=''):
         return self.__createSet(SetOfMicrographs, 'micrographs%s.sqlite', suffix)
     
-    def _createSetOfCoordinates(self, suffix=''):
-        return self.__createSet(SetOfCoordinates, 'coordinates%s.sqlite', suffix)
+    def _createSetOfCoordinates(self, micSet, suffix=''):
+        coordSet = self.__createSet(SetOfCoordinates, 'coordinates%s.sqlite', suffix)
+        coordSet.setMicrographs(micSet)       
+        return coordSet
     
     def _createSetOfParticles(self, suffix=''):
         return self.__createSet(SetOfParticles, 'particles%s.sqlite', suffix)
