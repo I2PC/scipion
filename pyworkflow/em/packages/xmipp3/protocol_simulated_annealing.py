@@ -36,7 +36,7 @@ from convert import createXmippInputClasses2D, createXmippInputVolumes
         
         
 class XmippProtInitVolSimAnneal(ProtInitialVolume):
-    """ Protocol for Xmipp-based Initial Volume Simulated Annealing. """
+    """ Computes from a set of projections/classes an initial volume using Simulated Annealing. """
     _label = 'simulated annealing'
 
 

@@ -35,7 +35,7 @@ from brandeis import *
 
 
 class ProtCTFFind(ProtCTFMicrographs):
-    """Protocol to estimate CTF on a set of micrographs
+    """Estimates CTF on a set of micrographs
     using the ctffind3 program"""
     _label = 'ctffind3'
     
