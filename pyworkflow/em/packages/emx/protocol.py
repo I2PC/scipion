@@ -56,8 +56,7 @@ class ProtEmxImport(ProtImport):
         """ Export micrographs to EMX file.
         micsId is only passed to force redone of this step if micrographs change.
         """
-        outputDict = importData(self, emxFile, outputDir=self._getPath())
-        #self._defineOutputs(**outputDict)
+        importData(self, emxFile, outputDir=self._getPath())
     
     #--------------------------- INFO functions -------------------------------------------- 
     def _validate(self):
