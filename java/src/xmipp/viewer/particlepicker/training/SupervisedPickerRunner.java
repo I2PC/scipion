@@ -36,7 +36,7 @@ public class SupervisedPickerRunner implements Runnable {
     public String inputid;
     public String inputfile;
     public String outputdir;
-    public String protstate;
+    public String protid;
     public Mode mode;
     public int threads;
     public boolean fast;
@@ -96,7 +96,10 @@ public class SupervisedPickerRunner implements Runnable {
             script = cmdargs[1];
             projectid = cmdargs[2];
             inputid = cmdargs[3];
-            protstate = cmdargs[4];
+            if(cmdargs.length == 5 && !cmdargs[4].isEmpty())
+                protid = cmdargs[4];
+            
+            
         }
 
     }
@@ -111,7 +114,7 @@ public class SupervisedPickerRunner implements Runnable {
             else 
                 ppicker = new SupervisedParticlePicker(inputfile, outputdir, mode);
             if(isscipionsave)
-                ppicker.addScipionSave(python, script, projectid, inputid, protstate);
+                ppicker.addScipionSave(python, script, projectid, inputid, protid);
 
             new SupervisedParticlePickerJFrame(ppicker);
         } catch (Exception e) {

@@ -42,7 +42,7 @@ public abstract class ParticlePicker {
     protected String selfile;
     protected String command;
     protected String configfile;
-
+    ScipionSave scipionsave;
 
     String[] commonfilters = new String[]{"Install...", "Duplicate", "Bandpass Filter...", "Anisotropic Diffusion...", "Mean Shift",
         "Subtract Background...", "Gaussian Blur...", "Brightness/Contrast...", "Invert LUT"};
@@ -92,7 +92,7 @@ public abstract class ParticlePicker {
         return getParticlesBlock(Format.Xmipp301, file);
 
     }
-    private ScipionSave scipionsave;
+    
 
     public String getParticlesAutoBlock(String file) {
         return particlesAutoBlock + "@" + file;
@@ -613,8 +613,8 @@ public abstract class ParticlePicker {
     }
 
 
-     public void addScipionSave(String python, String script, String projectid, String inputid, String protstate) {
-            scipionsave = new ScipionSave(python, script, projectid, inputid, protstate);
+     public void addScipionSave(String python, String script, String projectid, String inputid, String protid) {
+            scipionsave = new ScipionSave(python, script, projectid, inputid, protid);
      }
      
      public boolean isScipionSave()
@@ -622,28 +622,40 @@ public abstract class ParticlePicker {
          return scipionsave != null;
      }
 
-    public String[] getScipionSaveCommand(String protlabel) {
-        
-            
-            String[] cmd = new String[]{scipionsave.python, scipionsave.script, protlabel, outputdir, scipionsave.projectid, scipionsave.inputid, scipionsave.protstate};
-            return cmd;
-        }
+    public String[] getScipionSaveCommand() {
+        String[] cmd;
+        if(scipionsave.isProtocolFinished())
+            cmd = new String[]{scipionsave.python, scipionsave.script, outputdir, scipionsave.projectid, scipionsave.inputid, scipionsave.protlabel};
+        else
+            cmd = new String[]{scipionsave.python, scipionsave.script, outputdir, scipionsave.projectid, scipionsave.inputid, scipionsave.protid};
+        System.out.println(Arrays.toString(cmd));
+        return cmd;
+       }
      
+    
     public abstract int getParticlesCount();
 
     class ScipionSave {
 
-        public String python, script, projectid, inputid, protstate;
+        public String python, script, projectid, inputid, protid, protlabel;
         
 
-        public ScipionSave(String python, String script, String projectid, String inputid, String protstate) {
+        public ScipionSave(String python, String script, String projectid, String inputid, String protid) {
             this.python = python;
             this.script = script;
             this.projectid = projectid;
             this.inputid = inputid;
-            this.protstate = protstate;
+            this.protid = protid;
             
         }
+        
+        public boolean isProtocolFinished()
+        {
+            
+            return protid == null;//When protocol opened is finished protid does not need to be provided new protocol is created to register output
+        }
+        
+        
     }
     
 
