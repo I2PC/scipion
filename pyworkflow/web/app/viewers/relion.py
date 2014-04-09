@@ -28,6 +28,9 @@ import os
 from pyworkflow.web.app.views_util import *
 from pyworkflow.em.packages.relion.viewer import *
 
+#===============================================================================
+# doShowImagesInClasses
+#===============================================================================
 
 def doShowImagesInClasses(request, protocolViewer):
     paths = protocolViewer._createImagesInClasses()
@@ -111,7 +114,11 @@ def doShowVolumes(request, protocolViewer):
     urls = buildShowjPath(files)
     return "showjs", urls
 
-def doShowAngularDistribution(request, protocolViewer):
+#===============================================================================
+# doShowAngularDistributionRelion
+#===============================================================================
+
+def doShowAngularDistributionRelion(request, protocolViewer):
     plotters, arguments = protocolViewer._createAngularDistribution()
     return "",""
 

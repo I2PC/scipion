@@ -223,6 +223,10 @@ Examples:
                 prefixes = ['half2_']
         return prefixes
                 
+
+#===============================================================================
+# showImagesInClasses     
+#===============================================================================
     
     def _createImagesInClasses(self, paramName=None):    
         """ Read Relion _data.star images file and 
@@ -287,9 +291,10 @@ Examples:
         
     def _createPMax(self):
         self._load()
-
-        fn = self._createFilePMax()
         
+        # FILE
+        fn = self._createFilePMax()
+        # PLOT
         xplotter = self._createPlotPMax(fn)
         
         return xplotter, fn
@@ -423,6 +428,10 @@ Examples:
         elif self.displayVol == VOLUME_SLICES:
             mdPath = self._createVolumesMd()
             self.display2D(mdPath)
+            
+#===============================================================================
+# showAngularDistribution
+#===============================================================================
                             
     def _createAngularDistribution(self):
         self._load()
@@ -571,7 +580,7 @@ Examples:
                 'showPMax': 'doShowPMax',
                 'showChanges': 'doShowChanges',
                 'displayVol': 'doShowVolumes',
-                'displayAngDist': 'doShowAngularDistribution',
+                'displayAngDist': 'doShowAngularDistributionRelion',
                 'resolutionPlotsSSNR': 'doPlotsSSNR',
                 'resolutionPlotsFSC': 'doPlotsFSC'
                 }
