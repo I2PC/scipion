@@ -188,9 +188,9 @@ class ImageDim(CsvList):
         if self.isEmpty():
             s = 'No-Dim'
         else:
-            s = '%dx%d' % (self.getX(), self.getY())
+            s = '%d x %d' % (self.getX(), self.getY())
             if self.getZ() > 1:
-                s += 'x%d' % self.getZ()
+                s += ' x %d' % self.getZ()
         return s
 
     
@@ -899,7 +899,8 @@ class SetOfCoordinates(Set):
     def __str__(self):
         """ String representation of a set of coordinates. """
         if self._boxSize.hasValue():
-            boxStr = ' %d x %d' % self._boxSize.get()
+            boxSize = self._boxSize.get()
+            boxStr = ' %d x %d' % (boxSize, boxSize)
         else:
             boxStr = 'No-Box'
         s = "%s (%d items, %s)" % (self.getClassName(), self.getSize(), boxStr)
