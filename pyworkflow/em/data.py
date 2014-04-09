@@ -899,7 +899,8 @@ class SetOfCoordinates(Set):
     def __str__(self):
         """ String representation of a set of coordinates. """
         if self._boxSize.hasValue():
-            boxStr = ' %d x %d' % self._boxSize.get()
+            boxSize = self._boxSize.get()
+            boxStr = ' %d x %d' % (boxSize, boxSize)
         else:
             boxStr = 'No-Box'
         s = "%s (%d items, %s)" % (self.getClassName(), self.getSize(), boxStr)

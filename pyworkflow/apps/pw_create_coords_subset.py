@@ -22,6 +22,8 @@ if __name__ == '__main__':
     type = 'Coordinates'
     projectid = sys.argv[3]
     inputid = sys.argv[4]
+    protstate = sys.argv[5]
+    
 
     
     
