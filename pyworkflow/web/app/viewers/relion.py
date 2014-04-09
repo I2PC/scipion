@@ -28,46 +28,83 @@ import os
 from pyworkflow.web.app.views_util import *
 from pyworkflow.em.packages.relion.viewer import *
 
-def viewerRelion(request, protocolViewer):
-    
-    ioDict = {}
-    
-    if protocolViewer.showImagesInClasses:
-#        typeUrl, url = doShowImagesInClasses(request, protocolViewer)
-#        ioDict[typeUrl]= url
-        pass
-    if protocolViewer.showLL:
-        typeUrl, url = doShowLL(request, protocolViewer)
-        ioDict[typeUrl]= url
-    if protocolViewer.showPMax:
-        typeUrl, url = doShowPMax(request, protocolViewer)
-        ioDict[typeUrl]= url
-    if protocolViewer.showChanges:
-        typeUrl, url = doShowChanges(request, protocolViewer)
-        ioDict[typeUrl]= url
-    if protocolViewer.displayVol:
-        typeUrl, url = doShowVolumes(request, protocolViewer)
-        ioDict[typeUrl]= url
-    if protocolViewer.displayAngDist:
-        typeUrl, url = doShowAngularDistribution(request, protocolViewer)
-        ioDict[typeUrl]= url
-    
-    return ioDict
 
 def doShowImagesInClasses(request, protocolViewer):
-    pass
+    paths = protocolViewer._createImagesInClasses()
+    urls = buildShowjPath(paths)
+    return "showjs", urls
 
-def doShowLL(request, protocolViewer):
-    plotters, files = protocolViewer._createLL()
-    pass
+#===============================================================================
+# doShowLLRelion
+#===============================================================================
+
+def doShowLLRelion(request, protocolViewer):
+    protViewerClass = str(protocolViewer.getClassName())
+    protId = str(protocolViewer.protocol.getObjId())
+    width, height = getSizePlotter(1)
+    
+    # Need to set iterations
+    protocolViewer._load()
+    
+    urls = []
+
+    for it in protocolViewer._iterations:
+        
+        # FILES
+        path = protocolViewer._getFilesPerIterationLL(it)
+        url_showj = "/visualize_object/?path="+ path
+        # PLOTTERS
+        url_plot = "/view_plots/?function=plotShowLLRelion&protViewerClass="+ protViewerClass + "&path="+ path + "&iter="+ str(it) + "&protId="+ protId + "&width=" + str(width) + "&height="+ str(height)
+        
+        # Add to the url list
+        urls.append(str(url_showj))
+        urls.append(str(url_plot))
+        
+    return "urls", urls
+
+def plotShowLLRelion(request, protocolViewer):
+    iter = request.GET.get('iter', None)
+    path = request.GET.get('path', None)
+    xplotter = protocolViewer._createPlotPerIterationLL(int(iter), path)
+    return xplotter
+
+#===============================================================================
+# doShowPMax
+#===============================================================================
 
 def doShowPMax(request, protocolViewer):
-    xplotter, fn = protocolViewer._createPMax()
-    pass
+    protViewerClass = str(protocolViewer.getClassName())
+    protId = str(protocolViewer.protocol.getObjId())
+    width, height = getSizePlotter(1)
+    
+    # Need to set iterations
+    protocolViewer._load()
+
+    # FILE
+    path = protocolViewer._createFilePMax()
+    url_showj = "/visualize_object/?path="+ path
+    # PLOT
+    url_plot = "/view_plots/?function=plotShowPMax&protViewerClass="+ protViewerClass + "&path="+ path + "&protId="+ protId + "&width=" + str(width) + "&height="+ str(height)
+    
+    return "urls", [url_showj, url_plot]
+
+def plotShowPMax(request, protocolViewer):
+    path = request.GET.get('path', None)
+    xplotter = protocolViewer._createPlotPMax(path)
+    return xplotter
+
+
+#===============================================================================
+# doShowChanges        
+#===============================================================================
 
 def doShowChanges(request, protocolViewer):
-    fn = protocolViewer._createChanges()
-    return "showj","/visualize_object/?path="+ fn
+    filename = protocolViewer._createChanges()
+    return "showj","/visualize_object/?path="+ filename
+    
+#===============================================================================
+# doShowVolumes
+#===============================================================================
     
 def doShowVolumes(request, protocolViewer):
     files = protocolViewer._createVolumes()
@@ -76,6 +113,8 @@ def doShowVolumes(request, protocolViewer):
 
 def doShowAngularDistribution(request, protocolViewer):
     plotters, arguments = protocolViewer._createAngularDistribution()
-    pass
+    return "",""
+
+
 
 

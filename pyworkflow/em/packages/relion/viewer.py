@@ -184,7 +184,7 @@ Examples:
         self.firstIter = self.protocol._firstIter()
         self.lastIter = self.protocol._lastIter()
         
-        if self.viewIter == ITER_LAST:
+        if self.viewIter.get() == ITER_LAST:
             self._iterations = [self.lastIter]
         else:
             self._iterations = self._getListFromRangeString(self.iterSelection.get())
@@ -223,7 +223,8 @@ Examples:
                 prefixes = ['half2_']
         return prefixes
                 
-    def _showImagesInClasses(self, paramName=None):
+    
+    def _createImagesInClasses(self, paramName=None):    
         """ Read Relion _data.star images file and 
         generate a new metadata with the Xmipp classification standard:
         a 'classes' block and a 'class00000?_images' block per class.
@@ -231,40 +232,75 @@ Examples:
         """
         self._load()
         
+        data_classes = []
+        
         for it in self._iterations:
-            data_classes = self.protocol._getIterClasses(it)
-            self.displayScipion(data_classes, extraParams='--mode metadata --render first')
+            data_classes.append(self.protocol._getIterClasses(it))
+        
+        return data_classes
+            
+    def _showImagesInClasses(self, paramName=None):
+            data_classes = self._createImagesInClasses()
+            for data in data_classes:
+                self.displayScipion(data, extraParams='--mode metadata --render first')
+          
+#=====================================================================
+# showLLRelion
+#=====================================================================
           
     def _createLL(self):
         self._load()
         plotters = []
         files = []
         for it in self._iterations:
-            fn = self.protocol._getIterSortedData(it)
-            addRelionLabels()
-            md = xmipp.MetaData(fn)
+            # FILES
+            fn = self._getFilesPerIterationLL(it)
             files.append(fn)
-            xplotter = XmippPlotter(windowTitle="max Likelihood particles sorting Iter_%d" % it)
-            xplotter.createSubPlot("Particle sorting: Iter_%d" % it, "Particle number", "maxLL")
-            xplotter.plotMd(md, False, mdLabelY=xmipp.MDL_LL)
+            # PLOTTERS
+            xplotter = self._createPlotPerIterationLL(it, fn)
             plotters.append(xplotter)
             
         return plotters, files
+    
+    def _getFilesPerIterationLL(self, it):
+        fn = self.protocol._getIterSortedData(it)
+        addRelionLabels()
+        return fn
+    
+    def _createPlotPerIterationLL(self, it, fn):
+        md = xmipp.MetaData(fn)
+        xplotter = XmippPlotter(windowTitle="max Likelihood particles sorting Iter_%d" % it)
+        xplotter.createSubPlot("Particle sorting: Iter_%d" % it, "Particle number", "maxLL")
+        xplotter.plotMd(md, False, mdLabelY=xmipp.MDL_LL)
+        
+        return xplotter
      
     def _showLL(self, paramName=None):
         plotters, files = self._createLL()
         for xplotter, fn in zip(plotters, files):
             self.display2D(fn)
             xplotter.show()
+            
+#===============================================================================
+# ShowPMax
+#===============================================================================
         
     def _createPMax(self):
         self._load()
+
+        fn = self._createFilePMax()
+        
+        xplotter = self._createPlotPMax(fn)
+        
+        return xplotter, fn
+    
+    def _createFilePMax(self):
+        labels = [xmipp.MDL_AVGPMAX, xmipp.MDL_PMAX]
         addRelionLabels(extended=True)  
-                  
+        
         mdIters = xmipp.MetaData()
         iterations = range(self.firstIter, self.lastIter+1)
-        labels = [xmipp.MDL_AVGPMAX, xmipp.MDL_PMAX]
-        colors = ['g', 'b']
+        
         for it in iterations: # range (firstIter,self._visualizeLastIteration+1): #alwaya list all iteration
             objId = mdIters.addObject()
             mdIters.setValue(xmipp.MDL_ITER, it, objId)
@@ -275,22 +311,36 @@ Examples:
                 mdIters.setValue(labels[i], pmax, objId)
         fn = self.protocol._getFileName('all_avgPmax_xmipp')
         mdIters.write(fn)
-        #self.display2D(fn, extraParams)
+            
+        return fn
+    
+    def _createPlotPMax(self, fn):
+        labels = [xmipp.MDL_AVGPMAX, xmipp.MDL_PMAX]
+        colors = ['g', 'b']
+
+        md = xmipp.MetaData(fn)
+        
         xplotter = XmippPlotter()
         xplotter.createSubPlot("Avg PMax per Iterations", "Iterations", "Avg PMax")
+        
         for label, color in zip(labels, colors):
-            xplotter.plotMd(mdIters, xmipp.MDL_ITER, label, color)
+            xplotter.plotMd(md, xmipp.MDL_ITER, label, color)
         
         if len(self.protocol.PREFIXES) > 1:
             xplotter.showLegend(self.protocol.PREFIXES)
         
-        return xplotter, fn
+        return xplotter
         
     def _showPMax(self, paramName=None):
         xplotter, fn = self._createPMax()
         self.display2D(fn)                    
         xplotter.show()
         
+    
+#===============================================================================
+# ShowChanges    
+#===============================================================================    
+
     def _createChanges(self):
         self._load()
         addRelionLabels(extended=True)  
@@ -316,6 +366,10 @@ Examples:
     def _showChanges(self, paramName=None):
         fn = self._createChanges()
         self.display2D(fn)
+        
+#===============================================================================
+# ShowVolumes
+#===============================================================================
         
     def _createVolumesMd(self):
         """ Write a metadata with all volumes selected for visualization. """
@@ -509,13 +563,17 @@ Examples:
         for xplotter in plots:
             xplotter.show()
             
+### WEB UTILS ################################################# 
+
     def getVisualizeDictWeb(self):
         return {'showImagesInClasses': 'doShowImagesInClasses',
-                'showLL': 'doShowLL',
+                'showLL': 'doShowLLRelion',
                 'showPMax': 'doShowPMax',
                 'showChanges': 'doShowChanges',
                 'displayVol': 'doShowVolumes',
-                'displayAngDist': 'doShowAngularDistribution'
+                'displayAngDist': 'doShowAngularDistribution',
+                'resolutionPlotsSSNR': 'doPlotsSSNR',
+                'resolutionPlotsFSC': 'doPlotsFSC'
                 }
 
     @classmethod
