@@ -32,6 +32,7 @@ from pyworkflow.em import *
 from pyworkflow.utils.path import *  
 import xmipp
 from xmipp3 import XmippProtocol
+from pyworkflow.em.packages.xmipp3.viewer import runJavaIJapp
 
 from convert import createXmippInputMicrographs, readSetOfCoordinates
 
@@ -55,7 +56,7 @@ class XmippProtParticlePicking(ProtParticlePicking, XmippProtocol):
         form.addParam('inputMicrographs', PointerParam, label="Micrographs",
                       pointerClass='SetOfMicrographs',
                       help='Select the SetOfMicrograph ')
-        form.addParam('memory', FloatParam, default=2,
+        form.addParam('memory', IntParam, default=2,
                    label='Memory to use (In Gb)', expertLevel=2)  
               
     #--------------------------- INSERT steps functions --------------------------------------------    
@@ -85,21 +86,26 @@ class XmippProtParticlePicking(ProtParticlePicking, XmippProtocol):
         # Get the converted input micrographs in Xmipp format
         # if not exists, means the input was already in Xmipp
         micFn = createXmippInputMicrographs(self, self.inputMics)
-        self._params = {'memory': self.memory.get(),
-                        'inputMicsXmipp': micFn,
+        inputid = self.inputMics.strId()
+        self._params = {'inputMicsXmipp': micFn,
                         'extraDir': self._getExtraPath(),
-                        'pickingMode': 'manual'
+                        'pickingMode': 'manual',
+                        'scipion': "%s %s \"%s\" %s %s" % ( pw.PYTHON, pw.join('apps', 'pw_create_coords_subset.py'), '/home/airen/ScipionUserData/projects/TestXmippWorkflow', inputid, self.strId())
                         }
         
         # Launch the particle picking GUI
-        program = "xmipp_micrograph_particle_picking"
-        arguments = "-i %(inputMicsXmipp)s -o %(extraDir)s --mode %(pickingMode)s --memory %(memory)dg"
+        
+        app = "xmipp.viewer.particlepicker.training.SupervisedPickerRunner"
+        args = "--input %(inputMicsXmipp)s --output %(extraDir)s --mode %(pickingMode)s  --scipion %(scipion)s"%self._params
         # TiltPairs
 #        if self.inputMics.hasTiltPairs():
 #            self._params['inputMicsXmipp'] = "TiltedPairs@" + fn
 #            program = "xmipp_micrograph_tiltpair_picking"
         # Run the command with formatted parameters
-        self.runJob(program, arguments % self._params)
+        
+        #self.runJob(program, arguments % self._params)
+        
+        runJavaIJapp("%sg"%(self.memory.get()), app, args, True)
         
     def _importFromFolderStep(self):
         """ This function will copy Xmipp .pos files for
