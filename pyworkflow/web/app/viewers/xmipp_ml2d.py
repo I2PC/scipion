@@ -27,21 +27,6 @@
 from pyworkflow.em.packages.xmipp3.viewer_ml2d import createPlots
 from pyworkflow.web.app.views_util import *
 
-def viewerML2D(request, protocolViewer):
-    ioDict = {}
-
-    if protocolViewer.doShowClasses:
-        typeUrl, url = doShowClasses(request, protocolViewer)
-        ioDict[typeUrl]= url
-    if protocolViewer.doShowPlots:
-        typeUrl, url = doAllPlotsML2D(request, protocolViewer)
-        ioDict[typeUrl]= url
-    else:
-        typeUrl, url = doSomePlotsML2D(protocolViewer)
-        if url != None:
-            ioDict[typeUrl]= url
-        
-    return ioDict
 
 def doShowClasses(request, protocolViewer):
     objId = str(protocolViewer.protocol.outputClasses.getObjId())
@@ -68,7 +53,7 @@ def doSomePlotsML2D(protocolViewer):
     else:
         return "", None
 
-def doShowLL(request, protocolViewer):
+def doShowLLML2D(request, protocolViewer):
     protViewerClass = str(protocolViewer.getClassName())
     protId = str(protocolViewer.protocol.getObjId())
     width, height = getSizePlotter(1)
