@@ -1,6 +1,7 @@
+# coding: latin-1
 # **************************************************************************
 # *
-# * Authors:     Josue Gomez Blanco (jgomez@cnb.csic.es)
+# * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -20,29 +21,32 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jgomez@cnb.csic.es'
+# *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
 """
-This module contains the protocol to obtain a refined 3D recontruction from a set of particles using Frealign
+Bibtex string file for Xmipp package.
 """
-import os
-from pyworkflow.utils import *
-from pyworkflow.em import *
-from data import *
-from brandeis import *
-from constants import *
-from protocol_frealign_base import ProtFrealignBase
+
+_bibtexStr = """
+
+@article{kucukelbir2014,
+  title={Quantifying the local resolution of cryo-EM density maps},
+  author={Kucukelbir, Alp and Sigworth, Fred J and Tagare, Hemant D},
+  journal={Nature methods},
+  volume={11},
+  number={1},
+  pages={63--65},
+  year={2014},
+  publisher={Nature Publishing Group},
+  doi = {http://dx.doi.org/10.1038/nmeth.2727}
+}
 
 
-class ProtFrealign(ProtFrealignBase, ProtRefine3D):
-    """ This class implements the wrapper to single particle refinement protocol with frealign."""
-    _label = 'frealign'
+"""
 
-    
-    def __init__(self, **args):
-        ProtFrealignBase.__init__(self, **args)
-            
-    def _citations(self):
-        return ['Grigorieff2007', 'Wolf2006', 'Stewart2004', 'Grigorieff1998', 'Sindelar2012', 'Lyumkis2013']
-    
+
+
+from pyworkflow.utils import parseBibTex
+
+_bibtex = parseBibTex(_bibtexStr)  

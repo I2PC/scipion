@@ -47,6 +47,8 @@ from viewers.spider_capca import *
 from viewers.spider_ward import *
 # BRANDEIS
 from viewers.brandeis_frealign import *
+# RELION
+from viewers.relion import *
 
 ############## 1ST STEP: LAUNCH VIEWER METHODS ##############
 def launch_viewer(request):
@@ -120,18 +122,6 @@ def viewerSpider(project, protocol, viewer):
         
     return ioDict
 
-def viewerRelion(project, protocol, viewer):
-    ioDict={}    
-        
-    if isinstance(protocol, ProtRelionClassify3D):
-        
-        volumes = protocol.outputVolumes
-        url1 = "/visualize_object/?objectId="+str(volumes.getObjId())
-            
-        ioDict["urls"] = [url1] 
-        
-    return ioDict
-
 
 def viewerForm(project, protocol, viewer):
     protId = protocol.getObjId()
@@ -144,27 +134,6 @@ def viewerForm(project, protocol, viewer):
     return ioDict
  
 ############## 2ND STEP: VIEWER FUNCTION METHODS ##############
-def viewer(request):
-    project, protocolViewer = loadProtocolProject(request)
-    updateProtocolParams(request, protocolViewer, project)
-    protId = request.POST.get('protRunIdViewer', None)
-    protocol = project.mapper.selectById(int(protId))
-    protocolViewer.setProtocol(protocol)
-    protocolViewer.showPlot = False # Get xplotter instead of show()
-    functionName = protocolViewer.getViewFunction()
-    
-    function = globals().get(functionName, None)
-    
-    if function is None:
-        pass  # redirect to error: viewer not found
-    elif not callable(function):
-        pass  # redirect to error: name is not a function
-    else:
-        ioDict = function(request, protocolViewer)
-    
-    jsonStr = json.dumps(ioDict, ensure_ascii=False)
-#    print jsonStr
-    return HttpResponse(jsonStr, mimetype='application/javascript')
 
 def viewerElement(request):
     project, protocolViewer = loadProtocolProject(request)
@@ -173,6 +142,7 @@ def viewerElement(request):
     viewerParam = request.POST.get('viewerParam', None)
     protocol = project.mapper.selectById(int(protId))
     protocolViewer.setProtocol(protocol)
+    
     protocolViewer.showPlot = False # Get xplotter instead of show()
     functionName = protocolViewer.getVisualizeDictWeb()[viewerParam]
     function = globals().get(functionName, None)

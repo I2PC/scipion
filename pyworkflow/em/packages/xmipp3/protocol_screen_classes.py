@@ -37,7 +37,7 @@ from convert import readSetOfClasses2D
 
         
 class XmippProtScreenClasses(ProtAnalysis2D, ProjMatcher):
-    """ Protocol to screen a set of classes in the project using a volume as reference """
+    """Compares a set of classes/images with the corresponding projections of a reference volume """
     _label = 'screen classes'
     
     def __init__(self, **args):

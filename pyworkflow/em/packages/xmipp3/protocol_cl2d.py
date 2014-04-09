@@ -46,7 +46,9 @@ CL_ROBUST = 1
         
         
 class XmippProtCL2D(ProtClassify2D):
-    """ Protocol to preprocess a set of micrographs in the project. """
+    """ Classifies a set of images using a clustering algorithm 
+            aiming at subdividing the original dataset
+             into a given number of subclasses """
     
     _label = 'cl2d'
     

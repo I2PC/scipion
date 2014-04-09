@@ -239,9 +239,9 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
     
     
 class ProtOpticalAlignment(ProtProcessMovies):
-    """ Protocol to align movies, from direct detectors cameras, into micrographs.
+    """ Aligns movies, from direct detectors cameras, into micrographs.
     """
-    _label = 'optical alignment'
+    _label = 'movies optical alignment'
     
     def _defineProgram(self):
         XMP_OPT_ALIGN = 'xmipp_optical_alignment'

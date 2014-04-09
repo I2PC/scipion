@@ -27,6 +27,7 @@
 This sub-package contains data and protocol classes
 wrapping Grigrorieff Lab programs at Brandeis
 """
+from bibtex import _bibtex # Load bibtex dict with references
 
 _logo = "brandeis_logo.png"
 

@@ -71,6 +71,7 @@ class XmippViewer(Viewer):
     def visualize(self, obj, **args):
         
         cls = type(obj)
+        protocol = args.get('protocol', self.protocol)
 
         if issubclass(cls, EMXObject):
             from pyworkflow.gui.text import showTextFileViewer
@@ -108,23 +109,26 @@ class XmippViewer(Viewer):
             runScipionShowJ(fn, "Micrographs", self._project.getName(), obj.strId(). obj.strId())  
                 
         elif issubclass(cls, SetOfCoordinates):
-            obj_mics = obj.getMicrographs()#accessing mics to provide metadata file
-            mdFn = getattr(obj_mics, '_xmippMd', None)
+            micSet = obj.getMicrographs()#accessing mics to provide metadata file
+            if micSet is None:
+                raise Exception('visualize: SetOfCoordinates has not micrographs set.')
+            
+            mdFn = getattr(micSet, '_xmippMd', None)
             tmpDir = self._getTmpPath(obj.getName()) 
             makePath(tmpDir)
             
             if mdFn:
                 fn = mdFn.get()
             else: # happens if protocol is not an xmipp one
-                fn = self._getTmpPath(obj_mics.getName() + '_micrographs.xmd')
-                writeSetOfMicrographs(obj_mics, fn)
+                fn = self._getTmpPath(micSet.getName() + '_micrographs.xmd')
+                writeSetOfMicrographs(micSet, fn)
             posDir = getattr(obj, '_xmippMd', None)#extra dir istead of md file for SetOfCoordinates
             if posDir:
                 copyTree(posDir.get(), tmpDir)
             else:
                 writeSetOfCoordinates(tmpDir, obj)   
                            
-            runScipionParticlePicker(fn, tmpDir, self._project.getName(), obj.strId())
+            runScipionParticlePicker(fn, tmpDir, self._project.getName(), obj.strId(), protocol.getStatus())
         
         elif issubclass(cls, SetOfParticles) or issubclass(cls, SetOfVolumes):
             mdFn = getattr(obj, '_xmippMd', None)
@@ -276,9 +280,10 @@ def runScipionShowJ(inputFiles, type, projectid, objid, inputimagesid, memory="1
 def runParticlePicker(inputMics, inputCoords, memory="1g", extraParams=""):
     runJavaIJapp(memory, "xmipp.viewer.particlepicker.training.SupervisedPickerRunner", "--input %s --output %s %s" % (inputMics, inputCoords, extraParams), True)
     
-def runScipionParticlePicker(inputMics, inputCoords,  projectid, objid, memory="1g"):
-    script = pw.join('apps', 'pw_create_coords_subset.py')
-    runJavaIJapp(memory, "xmipp.viewer.particlepicker.training.SupervisedPickerRunner", "--input %s --output %s --mode review --scipion %s %s \"%s\" %s" % (inputMics, inputCoords, pw.PYTHON, script, projectid, objid), True)
+def runScipionParticlePicker(inputMics, inputCoords,  projectid, objid, state, memory="1g"):
+    if(state == 'finished'):
+        script = pw.join('apps', 'pw_create_coords_subset.py')
+        runJavaIJapp(memory, "xmipp.viewer.particlepicker.training.SupervisedPickerRunner", "--input %s --output %s --mode review --scipion %s %s \"%s\" %s %s" % (inputMics, inputCoords, pw.PYTHON, script, projectid, objid, state), True)
 
 
 

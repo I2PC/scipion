@@ -37,7 +37,7 @@ from glob import glob
        
         
 class XmippProtCL2DAlign(ProtAlign2D):
-    """ Protocol to align a set of particles. """
+    """ Aligns a set of particles using the CL2D algorithm. """
     _label = 'cl2d align'
 
     #--------------------------- DEFINE param functions --------------------------------------------

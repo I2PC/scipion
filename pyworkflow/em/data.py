@@ -188,9 +188,9 @@ class ImageDim(CsvList):
         if self.isEmpty():
             s = 'No-Dim'
         else:
-            s = '%dx%d' % (self.getX(), self.getY())
+            s = '%d x %d' % (self.getX(), self.getY())
             if self.getZ() > 1:
-                s += 'x%d' % self.getZ()
+                s += ' x %d' % self.getZ()
         return s
 
     
@@ -826,6 +826,9 @@ class Coordinate(EMObject):
     def getMicId(self):
         return self._micId.get()
     
+    def setMicId(self, micId):
+        self._micId.set(micId)
+    
     def invertY(self):
         if not self.getMicrograph() is None:
             dims = self.getMicrograph().getDim()
@@ -892,7 +895,18 @@ class SetOfCoordinates(Set):
         filePaths = set()
         filePaths.add(self.getFileName())
         return filePaths
-
+    
+    def __str__(self):
+        """ String representation of a set of coordinates. """
+        if self._boxSize.hasValue():
+            boxSize = self._boxSize.get()
+            boxStr = ' %d x %d' % (boxSize, boxSize)
+        else:
+            boxStr = 'No-Box'
+        s = "%s (%d items, %s)" % (self.getClassName(), self.getSize(), boxStr)
+        
+        return s
+    
 
 class Transform(EMObject):
     """ This class will contain a transformation matrix

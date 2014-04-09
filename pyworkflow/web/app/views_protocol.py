@@ -50,10 +50,18 @@ def form(request):
     action = request.GET.get('action', None)
     paramProt = request.GET.get('paramProt', None)
     protRunIdViewer = request.GET.get('protRunIdViewer', None)
+    
+    # Patch : to fix the relion dynamic way to generate the viewer form
+    #         For this is necessary to call setProtocol method
+    if protRunIdViewer is not None:
+        protocol_parent = project.mapper.selectById(int(protRunIdViewer))
+        protocol.setProtocol(protocol_parent)
+    
     hosts = [host.getLabel() for host in project.getSettings().getHosts()]
     
     visualize = 0
     
+    viewerDict = None
     if action == 'visualize':
         visualize = 1
         viewerDict = protocol.getVisualizeDictWeb()
@@ -77,52 +85,34 @@ def form(request):
         for paramName, param in section.iterParams():
             protVar = getattr(protocol, paramName, None)
             if protVar is None:
-                raise Exception("_fillSection: param '%s' not found in protocol" % paramName)
-                # Create the label
-            
-            if isinstance(param, MultiPointerParam):
-                htmlValueList = []
-                htmlIdValueList = []
-                for pointer in protVar:
-                    htmlValue, htmlIdValue = getPointerHtml(pointer)
-                    htmlValueList.append(htmlValue)
-                    htmlIdValueList.append(htmlIdValue)
-                    
-                param.htmlValueIdZip = zip(htmlValueList,htmlIdValueList)    
-            elif isinstance(param, PointerParam):
-                param.htmlValue, param.htmlIdValue = getPointerHtml(protVar)
-            else:
-                param.htmlValue = protVar.get(param.default.get(""))
-                if isinstance(protVar, Boolean):
-                    if param.htmlValue:
-                        param.htmlValue = 'true'
-                    else:
-                        param.htmlValue = 'false'
-            
-            if paramName in wizards:
-                param.hasWizard = True
-                param.wizardName = wizards[paramName].getView()
-                param.wizardClassName = wizards[paramName].__name__
-#                print "param: ", paramName, " has wizard", " view: "
-            
-            if visualize == 1:
-                if paramName in viewerDict:
-                    param.hasViewer = True
-#                    print "param: ", paramName, " has viewer"
+#                raise Exception("_fillSection: param '%s' not found in protocol" % paramName)
+               
+                # GROUP PARAM
+                if isinstance(param, Group):
+                    for paramGroupName, paramGroup in param.iterParams():
+                        protVar = getattr(protocol, paramGroupName, None)
+                        
+                        if protVar is None:
+                            pass
+                        else:
+                            paramGroup = PreprocessParamForm(request, paramGroup, paramGroupName, wizards, viewerDict, visualize, protVar)
                 
-            param.htmlCond = param.condition.get()
-            param.htmlDepend = ','.join(param._dependants)
-            param.htmlCondParams = ','.join(param._conditionParams)
-            
-            if not param.help.empty():
-                param.htmlHelp = parseText(param.help.get())
-#            param.htmlExpertLevel = param.expertLevel.get()   
-
-            """ Workflow Addon """
-            valueURL = request.GET.get(paramName, None)            
-            if valueURL is not None:
-                if valueURL is not param.htmlValue:
-                    param.htmlValue = valueURL
+                # LINE PARAM
+                if isinstance(param, Line):
+                    for paramLineName, paramLine in param.iterParams():
+                        protVar = getattr(protocol, paramLineName, None)
+                        
+                        if protVar is None:
+                            pass
+                        else:
+                            paramLine = PreprocessParamForm(request, paramLine, paramLineName, wizards, viewerDict, visualize, protVar)
+                            
+                    if not param.help.empty():
+                        param.htmlHelp = parseText(param.help.get())
+                    
+            else:
+                #OTHER PARAM
+                param = PreprocessParamForm(request, param, paramName, wizards, viewerDict, visualize, protVar)
     
     context = {'projectName':project.getName(),
                'package_logo': logoPath,
@@ -149,6 +139,53 @@ def form(request):
     context = base_form(request, context)
     
     return render_to_response('form.html', context)
+
+def PreprocessParamForm(request, param, paramName, wizards, viewerDict, visualize, protVar):
+    if isinstance(param, MultiPointerParam):
+        htmlValueList = []
+        htmlIdValueList = []
+        for pointer in protVar:
+            htmlValue, htmlIdValue = getPointerHtml(pointer)
+            htmlValueList.append(htmlValue)
+            htmlIdValueList.append(htmlIdValue)
+            
+        param.htmlValueIdZip = zip(htmlValueList,htmlIdValueList)    
+    elif isinstance(param, PointerParam):
+        param.htmlValue, param.htmlIdValue = getPointerHtml(protVar)
+    else:
+        param.htmlValue = protVar.get(param.default.get(""))
+        if isinstance(protVar, Boolean):
+            if param.htmlValue:
+                param.htmlValue = 'true'
+            else:
+                param.htmlValue = 'false'
+    
+    if paramName in wizards:
+        param.hasWizard = True
+        param.wizardName = wizards[paramName].getView()
+        param.wizardClassName = wizards[paramName].__name__
+    #                print "param: ", paramName, " has wizard", " view: "
+    
+    if visualize == 1:
+        if paramName in viewerDict:
+            param.hasViewer = True
+    #                    print "param: ", paramName, " has viewer"
+        
+    param.htmlCond = param.condition.get()
+    param.htmlDepend = ','.join(param._dependants)
+    param.htmlCondParams = ','.join(param._conditionParams)
+    
+    if not param.help.empty():
+        param.htmlHelp = parseText(param.help.get())
+    #            param.htmlExpertLevel = param.expertLevel.get()   
+    
+    """ Workflow Addon """
+    valueURL = request.GET.get(paramName, None) 
+    if valueURL is not None:
+        if valueURL is not param.htmlValue:
+            param.htmlValue = valueURL
+            
+    return param
     
 # Method to launch a protocol #
 def protocol(request):

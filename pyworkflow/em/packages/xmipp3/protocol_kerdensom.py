@@ -159,7 +159,8 @@ class KendersomBaseClassify(ProtClassify2D):
 
 class XmippProtKerdensom(KendersomBaseClassify):
     """
-    Perform Kernel Probability Density Estimator Self-Organizing Map.
+    Classifies a set of images using  Kohonen's Self-Organizing Feature Maps (SOM) 
+    and Fuzzy c-means clustering technique (FCM) .
     
     The kerdenSOM algorithm anneals from an initial high regularization factor
     to a final lower one, in a user-defined number of steps.

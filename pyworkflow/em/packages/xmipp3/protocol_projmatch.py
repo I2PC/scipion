@@ -43,7 +43,7 @@ from convert import createXmippInputImages, readSetOfVolumes, createXmippInputVo
 
         
 class XmippProtProjMatch(xmipp3.XmippProtocol, ProtRefine3D, ProtClassify3D):
-    """ Protocol for Xmipp-based ProjMatch/MLF3D classification. """
+    """ 3D reconstruction and classification using multireference projection matching"""
     _label = 'projection matching'
     
     # Reconstruction method constants

@@ -32,10 +32,10 @@ from pyworkflow.em.constants import NO_INDEX
 from pyworkflow.utils import removeExt, removeBaseExt, makePath, getLastFile
 
       
-class ProtResMap(ProtValidate3D):
-    """ 
-    """
-        
+class ProtResMap(ProtAnalysis3D):
+    """ Computes the local resolution of 3D density maps """
+    _label = 'resolution map'
+             
     def _defineParams(self, form):
         form.addSection(label='Input')
         form.addParam('inputVolume', PointerParam, label="Input volume", important=True, 

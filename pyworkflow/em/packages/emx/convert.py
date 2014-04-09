@@ -69,54 +69,9 @@ def importData(protocol, emxFile, outputDir):
     emxData = emx.EmxData()
     emxData.read(emxFile)
     
-    emxMic = emxData.getFirstObject(emx.MICROGRAPH)
+    _micrographsFromEmx(protocol, emxData, emxFile, outputDir)
+    _particlesFromEmx(protocol, emxData, emxFile, outputDir)
     
-    if emxMic is not None:
-        hasMicrographs = True
-        micSet = protocol._createSetOfMicrographs()
-        mic = Micrograph()
-        mic.setAcquisition(Acquisition())
-        
-        if emxMic.has('defocusU'):
-            mic.setCTF(CTFModel())
-            ctfSet = protocol._createSetOfCTF()
-            print "creating ctfSet"
-        else:
-            print "ctf is none"
-            ctfSet = None
-            
-        _micrographFromEmx(emxMic, mic)
-        acq = mic.getAcquisition().clone()        
-        micSet.setAcquisition(acq)
-        micSet.setSamplingRate(mic.getSamplingRate())
-        micDir = dirname(emxFile)
-        
-        ih = ImageHandler()
-        
-        for emxMic in emxData.iterClasses(emx.MICROGRAPH):
-            _micrographFromEmx(emxMic, mic)
-            i, fn = mic.getLocation()
-            micFn = join(micDir, fn)
-            micBase = basename(micFn)
-            if not exists(micFn):
-                raise Exception("Missing micrograph '%s' while importing from EMX" % micFn)
-            newFn = join(outputDir, micBase)
-            ih.convert((i, micFn), (NO_INDEX, newFn))
-            mic.setLocation(newFn)
-                
-            micSet.append(mic)
-            mic.cleanObjId()
-            if ctfSet is not None:
-                ctf = mic.getCTF().clone()
-                ctf.setMicFile(mic.getFileName()) # FIXME, better to use location
-                ctfSet.append(ctf)
-            
-        micSet.printAll()
-            
-        protocol._defineOutputs(outputMicrographs=micSet)
-        if ctfSet is not None:
-            protocol._defineOutputs(outputCTF=ctfSet)
-            protocol._defineCtfRelation(micSet, ctfSet)
 
 
 #---------------- Export related functions -------------------------------
@@ -252,8 +207,8 @@ def _particlesToEmx(emxData, partSet, stackFn=None, micSet=None):
 def _setLocationFromEmx(emxObj, img):
     """ Set image location from attributes "index" and "fileName". """
     index = emxObj.get(emx.INDEX, 1)
-    if index == 1:
-        index = NO_INDEX
+#     if index == 1:
+#         index = NO_INDEX
         
     img.setLocation(index, emxObj.get(emx.FILENAME))
     
@@ -280,14 +235,12 @@ def _ctfFromEmx(emxObj, ctf):
     """ Create a CTF model from the values in elem. """
     for tag in ['defocusU', 'defocusV', 'defocusUAngle']:
         if not emxObj.has(tag):
-            print "missing tag: ", tag, "return None"
             return None
     # Multiply by 10 to convert from nm to A
     ctf.setDefocusU(emxObj.get('defocusU')*10.0)
     ctf.setDefocusV(emxObj.get('defocusV')*10.0)
     ctf.setDefocusAngle(emxObj.get('defocusUAngle'))
-    print "_ctfFromEmx: ", ctf
-    
+
     
 def _imageFromEmx(emxObj, img):
     """ Create either Micrograph or Particle from xml elem. """
@@ -312,5 +265,116 @@ def _particleFromEmx(emxObj, particle):
 def _coordinateFromEmx(emxObj, coordinate):
     #_imageFromEmx(emxObj, coordinate)
     _setCoordinatesFromEmx(emxObj, coordinate)
+    emxMic = emxObj.getMicrograph()
+    coordinate.setMicId(emxMic._micId)
+    
+    
+def _micrographsFromEmx(protocol, emxData, emxFile, outputDir):
+    """ Create the output SetOfMicrographs given an EMXData object.
+    If there is information of the CTF, also the SetOfCTF will
+    be registered as output of the protocol.
+    """
+    emxMic = emxData.getFirstObject(emx.MICROGRAPH)
+    
+    if emxMic is not None:        
+        micSet = protocol._createSetOfMicrographs()
+        mic = Micrograph()
+        mic.setAcquisition(Acquisition())
+        
+        if emxMic.has('defocusU'):
+            mic.setCTF(CTFModel())
+            ctfSet = protocol._createSetOfCTF()
+        else:
+            ctfSet = None
+            
+        _micrographFromEmx(emxMic, mic)
+        acq = mic.getAcquisition().clone()        
+        micSet.setAcquisition(acq)
+        micSet.setSamplingRate(mic.getSamplingRate())
+        micDir = dirname(emxFile)
+        
+        for emxMic in emxData.iterClasses(emx.MICROGRAPH):
+            _micrographFromEmx(emxMic, mic)
+            _, fn = mic.getLocation()
+            micFn = join(micDir, fn)
+            micBase = basename(micFn)
+            newFn = join(outputDir, micBase)
+            if exists(micFn):
+                copyFile(micFn, newFn)
+            else:
+                pass #TODO: what to if not file found
+                #raise Exception("Missing micrograph '%s' while importing from EMX" % micFn)
+            mic.setLocation(newFn)                
+            micSet.append(mic)
+            emxMic._micId = mic.getObjId()
+            mic.cleanObjId()
+            if ctfSet is not None:
+                ctf = mic.getCTF().clone()
+                ctf.setMicFile(newFn) 
+                ctfSet.append(ctf)
+            
+        micSet.printAll()
+            
+        protocol._defineOutputs(outputMicrographs=micSet)
+        if ctfSet is not None:
+            protocol._defineOutputs(outputCTF=ctfSet)
+            protocol._defineCtfRelation(micSet, ctfSet)
+
   
-   
+def _particlesFromEmx(protocol, emxData, emxFile, outputDir):
+    """ Create the output SetOfCoordinates or SetOfParticles given an EMXData object.
+    Add CTF information to the particles if present.
+    """    
+    emxParticle = emxData.getFirstObject(emx.PARTICLE)
+    partDir = dirname(emxFile)
+    micSet = getattr(protocol, 'outputMicrographs', None)
+    
+    if emxParticle is not None:     
+        # Check if there are particles or coordinates
+        fn = emxParticle.get(emx.FILENAME)
+        if exists(join(partDir, fn)): # if the particles has binary data, means particles case
+            partSet = protocol._createSetOfParticles()
+            part = Particle()
+            if emxParticle.has('defocusU'):
+                part.setCTF(CTFModel())
+            if emxParticle.has('centerCoord__X'):
+                part.setCoordinate(Coordinate())
+            _particleFromEmx(emxParticle, part)
+            partSet.setSamplingRate(part.getSamplingRate()) #FIXME
+            particles = True
+        else: # if not binary data, the coordinate case
+            if micSet is None:
+                raise Exception('Could not import Coordinates from EMX, micrographs not imported.')
+            partSet = protocol._createSetOfCoordinates(micSet)
+            part = Coordinate()
+            particles = False
+            
+        ih = ImageHandler()
+        
+        for emxParticle in emxData.iterClasses(emx.PARTICLE):
+            if particles:
+                _particleFromEmx(emxParticle, part)
+                i, fn = part.getLocation()
+                partFn = join(partDir, fn)
+                partBase = basename(partFn)
+                newLoc = (i, join(outputDir, partBase))
+                ih.convert((i, partFn), newLoc)
+                part.setLocation(newLoc)                
+            else:
+                _coordinateFromEmx(emxParticle, part)
+                
+            partSet.append(part)
+            part.cleanObjId()
+            
+        if particles:
+            protocol._defineOutputs(outputParticles=partSet)
+        else:
+            protocol._defineOutputs(outputCoordinates=partSet)
+        
+        if micSet is not None:
+            protocol._defineSourceRelation(micSet, partSet)
+            
+        micSet.setStore(True)
+        print "="*100
+        for key, attr in protocol.getAttributesToStore():
+            print key

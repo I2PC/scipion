@@ -36,8 +36,10 @@ from math import pi
 # TODO: change the base class to a more apropiated one
 class XmippProtCTFDefocusGroup(ProtProcessParticles):
     """
-    Create a list of defocus values that delimite 
-    defocus groups.
+    Given a set of CTFs group them by defocus value.
+    The output is a metadata file containing 
+     a list of defocus values that delimite 
+    each defocus group.
     """
     _label = 'defocus group'
     

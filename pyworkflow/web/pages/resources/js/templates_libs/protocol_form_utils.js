@@ -196,7 +196,7 @@ $(document).ready(function() {
 					customPopupHTML(html,790,480);
 				}
 			});
-		} else if (mode == 'viewer' || mode == 'viewerElement') {
+		} else if (mode == 'viewerElement') {
 			
 			new Messi("<i class='fa fa-eye'/> Loading Viewer...",{
 				modal : true
@@ -253,9 +253,7 @@ function evalElements() {
 		var type = jQuery(this).attr('data-type');
 		var param = jQuery(this).attr('id');
 		
-		// console.log(value)
-		// console.log(type)
-		// console.log(param)
+		console.log("value:"+value+", type:"+type+", param:"+param+";")
 
 //		alert(value +" - "+type+" - "+param);
 

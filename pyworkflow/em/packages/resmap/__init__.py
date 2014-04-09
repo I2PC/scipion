@@ -26,9 +26,9 @@
 """
 This sub-package contains protocol for ResMap
 """
-
+from bibtex import _bibtex # Load bibtex dict with references
 _logo = "resmap_logo.png"
-_references = ['A. Kucukelbir, F.J. Sigworth, and H.D. Tagare, Quantifying the Local Resolution of Cryo-EM Density Maps, Nature Methods. In Press, 2013.']
+_references = ['kucukelbir2014']
 
 from protocol_resmap import ProtResMap
 

@@ -408,11 +408,19 @@ class TestXmippWorkflow(unittest.TestCase):
         manager = Manager()
         project = manager.createProject("emx import")
         
-        prot = ProtEmxImport()
+        prot = ProtEmxImport(objLabel='emx import mics')
         prot.inputEMX.set('/home/josem/emxDataMicrographs/data.emx')
         project.launchProtocol(prot, wait=True)
 
-             
+        prot = ProtEmxImport(objLabel='emx import parts')
+        prot.inputEMX.set('/home/josem/emxDataParticles/data.emx')
+        project.launchProtocol(prot, wait=True)
+
+        prot = ProtEmxImport(objLabel='emx import coords')
+        prot.inputEMX.set('/home/josem/emxDataCoordinates/data.emx')
+        project.launchProtocol(prot, wait=True)        
+        
+                    
 class ConditionFilter():
     def __init__(self, condition):
         self.condition = condition

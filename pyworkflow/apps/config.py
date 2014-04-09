@@ -325,15 +325,9 @@ def addProtocols(settings):
                   tag='protocol_base')
     m1.addSubMenu('Preprocess', value='ProtPreprocessVolumes',
                   tag='protocol_base')
-    m1.addSubMenu('Align volume', value='ProtAlignVolume',
-                  tag='protocol_base')
     m1.addSubMenu('Refine', value='ProtRefine3D',
                   tag='protocol_base')
     m1.addSubMenu('Classify', value='ProtClassify3D',
-                  tag='protocol_base')
-    m1.addSubMenu('Validate', value='ProtValidate3D',
-                  tag='protocol_base')
-    m1.addSubMenu('Mask', value='ProtCreateMask3D',
                   tag='protocol_base')
     m1.addSubMenu('Analysis', value='ProtAnalysis3D',
                   tag = 'protocol_base')
