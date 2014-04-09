@@ -17,15 +17,12 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.swing.JOptionPane;
-import xmipp.ij.commons.XmippUtil;
 
 import xmipp.jni.Filename;
 import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
 import xmipp.jni.Program;
-import xmipp.utils.XmippMessage;
 import xmipp.viewer.particlepicker.training.model.Mode;
-import xmipp.viewer.particlepicker.training.model.SupervisedParticlePickerMicrograph;
 
 /**
  * Business object for ParticlePicker common GUI. SingleParticlePicker and
@@ -616,8 +613,8 @@ public abstract class ParticlePicker {
     }
 
 
-     public void addScipionSave(String python, String script, String projectid, String inputid) {
-            scipionsave = new ScipionSave(python, script, projectid, inputid);
+     public void addScipionSave(String python, String script, String projectid, String inputid, String protstate) {
+            scipionsave = new ScipionSave(python, script, projectid, inputid, protstate);
      }
      
      public boolean isScipionSave()
@@ -628,7 +625,7 @@ public abstract class ParticlePicker {
     public String[] getScipionSaveCommand(String protlabel) {
         
             
-            String[] cmd = new String[]{scipionsave.python, scipionsave.script, protlabel, outputdir, scipionsave.projectid, scipionsave.inputid};
+            String[] cmd = new String[]{scipionsave.python, scipionsave.script, protlabel, outputdir, scipionsave.projectid, scipionsave.inputid, scipionsave.protstate};
             return cmd;
         }
      
@@ -636,14 +633,16 @@ public abstract class ParticlePicker {
 
     class ScipionSave {
 
-        public String python, script, projectid, inputid;
+        public String python, script, projectid, inputid, protstate;
         
 
-        public ScipionSave(String python, String script, String projectid, String inputid) {
+        public ScipionSave(String python, String script, String projectid, String inputid, String protstate) {
             this.python = python;
             this.script = script;
             this.projectid = projectid;
             this.inputid = inputid;
+            this.protstate = protstate;
+            
         }
     }
     
