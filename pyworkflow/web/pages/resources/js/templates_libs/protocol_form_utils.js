@@ -196,7 +196,7 @@ $(document).ready(function() {
 					customPopupHTML(html,790,480);
 				}
 			});
-		} else if (mode == 'viewer' || mode == 'viewerElement') {
+		} else if (mode == 'viewerElement') {
 			
 			new Messi("<i class='fa fa-eye'/> Loading Viewer...",{
 				modal : true

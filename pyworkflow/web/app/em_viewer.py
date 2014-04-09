@@ -134,27 +134,6 @@ def viewerForm(project, protocol, viewer):
     return ioDict
  
 ############## 2ND STEP: VIEWER FUNCTION METHODS ##############
-def viewer(request):
-    project, protocolViewer = loadProtocolProject(request)
-    updateProtocolParams(request, protocolViewer, project)
-    protId = request.POST.get('protRunIdViewer', None)
-    protocol = project.mapper.selectById(int(protId))
-    protocolViewer.setProtocol(protocol)
-    protocolViewer.showPlot = False # Get xplotter instead of show()
-    functionName = protocolViewer.getViewFunction()
-    
-    function = globals().get(functionName, None)
-    
-    if function is None:
-        pass  # redirect to error: viewer not found
-    elif not callable(function):
-        pass  # redirect to error: name is not a function
-    else:
-        ioDict = function(request, protocolViewer)
-    
-    jsonStr = json.dumps(ioDict, ensure_ascii=False)
-#    print jsonStr
-    return HttpResponse(jsonStr, mimetype='application/javascript')
 
 def viewerElement(request):
     project, protocolViewer = loadProtocolProject(request)
@@ -163,6 +142,7 @@ def viewerElement(request):
     viewerParam = request.POST.get('viewerParam', None)
     protocol = project.mapper.selectById(int(protId))
     protocolViewer.setProtocol(protocol)
+    
     protocolViewer.showPlot = False # Get xplotter instead of show()
     functionName = protocolViewer.getVisualizeDictWeb()[viewerParam]
     function = globals().get(functionName, None)

@@ -527,9 +527,9 @@ def parseText(text, func=replacePattern):
     return parsedText[:-6]    
 
 
-def buildShowjPath(files):
+def buildShowjPath(paths):
     urls = []
-    for f in files:
+    for f in paths:
         url = "/visualize_object/?path="+ f
         urls.append(url)
     return urls
