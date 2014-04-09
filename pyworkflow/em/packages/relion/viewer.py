@@ -46,6 +46,9 @@ ANGDIST_CHIMERA = 1
 VOLUME_SLICES = 0
 VOLUME_CHIMERA = 1
 
+CLASSES_ALL = 0
+CLASSES_SEL = 1
+
     
 class RelionViewer(ProtocolViewer):
     """ Class to visualize Relion protocols """
@@ -106,12 +109,12 @@ Examples:
             group = form.addGroup('3D analysis')
             
             if self.protocol.IS_CLASSIFY:
-                group.addParam('showClasses3D', EnumParam, choices=['selection', 'all'], default=0,
+                group.addParam('showClasses3D', EnumParam, choices=['all', 'selection'], default=CLASSES_ALL,
                               display=EnumParam.DISPLAY_LIST,
                               label='CLASS 3D to visualize',
                               help='')
                 group.addParam('class3DSelection', NumericRangeParam, default='1',
-                              condition='showClasses3D == 0',
+                              condition='showClasses3D == %d' % CLASSES_SEL,
                               label='Classes list',
                               help='')
             else:
@@ -167,9 +170,12 @@ Examples:
 
     def _load(self):
         """ Load selected iterations and classes 3D for visualization mode. """
-        self._refsList = [1] #FIXME: Change this for classify 2d and 3d
+        self._refsList = [1] 
         if self.protocol.IS_3D and self.protocol.IS_CLASSIFY:
-            self._refsList = self._getListFromRangeString(self.class3DSelection.get())
+            if self.showClasses3D == CLASSES_ALL:
+                self._refsList = range(1, self.protocol.numberOfClasses.get()+1)
+            else:
+                self._refsList = self._getListFromRangeString(self.class3DSelection.get())
         self.protocol._initialize() # Load filename templates
         self.firstIter = self.protocol._firstIter()
         self.lastIter = self.protocol._lastIter()
@@ -307,6 +313,7 @@ Examples:
         self.display2D(fn)
         
     def _createVolumesMd(self):
+        """ Write a metadata with all volumes selected for visualization. """
         import xmipp
         self._load()
         prefixes = self._getPrefixes()
@@ -324,38 +331,35 @@ Examples:
             md.write('iter%03d@%s' % (it, mdPath), xmipp.MD_APPEND)
         return mdPath
     
-    def _createVolumes(self):
-        files = []
+    def _showVolumesChimera(self):
+        """ Create a chimera script to visualize selected volumes. """
         self._load()
         prefixes = self._getPrefixes()
-        
-        if self.displayVol == VOLUME_SLICES:
-            return self._createVolumesMd()
+        volumes = []
         
         for it in self._iterations:
             for ref3d in self._refsList:
                 for prefix in prefixes:
                     volFn = self.protocol._getFileName(prefix + 'volume', iter=it, ref3d=ref3d)
-                    files.append(volFn)
-        return files   
-         
+                    volumes.append(volFn)
+                    
+        if len(volumes) > 1:
+            cmdFile = self.protocol._getExtraPath('chimera_volumes.cmd')
+            f = open(cmdFile, 'w+')
+            for volFn in volumes:
+                # We assume that the chimera script will be generated
+                # at the same folder than relion volumes
+                localVol = os.path.basename(volFn.replace(':mrc', ''))
+                f.write("open %s\n" % localVol)
+            f.write('tile\n')
+            f.close()
+            os.system('chimera %s &' % cmdFile)                    
+        else:
+            os.system('xmipp_chimera_client --input "%s" --mode projector 256 &' % volumes[0])
+            
     def _showVolumes(self, paramName=None):
-        files = self._createVolumes()
-        import xmipp
         if self.displayVol == VOLUME_CHIMERA:
-            if len(files) > 1:
-                tmpFile = self.protocol._getExtraPath('chimera_volumes.cmd')
-                f = open(tmpFile, 'w+')
-                for volFn in files:
-                    # We assume that the chimera script will be generated
-                    # at the same folder than relion volumes
-                    localVol = os.path.basename(volFn.replace(':mrc', ''))
-                    f.write("open %s\n" % localVol)
-                f.write('tile\n')
-                f.close()
-                os.system('chimera %s &' % tmpFile)                    
-            else:
-                os.system('xmipp_chimera_client --input "%s" --mode projector 256 &' % files[0])
+            self._showVolumesChimera()
         
         elif self.displayVol == VOLUME_SLICES:
             mdPath = self._createVolumesMd()
