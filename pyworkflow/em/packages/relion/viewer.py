@@ -483,6 +483,10 @@ Examples:
         if plotters:
             for xplotter in plotters:
                 xplotter.show()
+                
+#===============================================================================
+# plotSSNR              
+#===============================================================================
                
     def _plotSSNR(self, a, fn):
         mdOut = xmipp.MetaData(fn)
@@ -524,7 +528,12 @@ Examples:
     def _showSSNR(self, paramName=None):
         xplotter = self._createSSNR()
         xplotter.show()
-        
+            
+            
+#===============================================================================
+# plotFSC            
+#===============================================================================
+
     def _plotFSC(self, a, model_star):
         md = xmipp.MetaData(model_star)
         resolution_inv = [md.getValue(xmipp.MDL_RESOLUTION_FREQ, id) for id in md]
@@ -565,10 +574,10 @@ Examples:
                     a.plot([self.minInv, self.maxInv],[threshold, threshold], color='black', linestyle='--')
                 a.grid(True)
             
-        return [xplotter]
+        return xplotter
         
     def _showFSC(self, paramName=None):
-        plots = self._createFSC()
+        plots = [self._createFSC()]
         for xplotter in plots:
             xplotter.show()
             

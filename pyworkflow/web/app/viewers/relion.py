@@ -122,6 +122,42 @@ def doShowAngularDistributionRelion(request, protocolViewer):
     plotters, arguments = protocolViewer._createAngularDistribution()
     return "",""
 
+#===============================================================================
+# doPlotsSSNR
+#===============================================================================
+
+def doPlotsSSNR(request, protocolViewer):
+    protViewerClass = str(protocolViewer.getClassName())
+    protId = str(protocolViewer.protocol.getObjId())
+    width, height = getSizePlotter(1)
+    
+    # PLOT
+    url_plot = "/view_plots/?function=plotSSNR&protViewerClass="+ protViewerClass + "&protId="+ protId + "&width=" + str(width) + "&height="+ str(height)
+    
+    return "plot", url_plot
+
+def plotSSNR(request, protocolViewer):
+    xplotter = protocolViewer._createSSNR()
+    return xplotter
+
+#===============================================================================
+# doPlotsFSC
+#===============================================================================
+
+def doPlotsFSC(request, protocolViewer):
+    protViewerClass = str(protocolViewer.getClassName())
+    protId = str(protocolViewer.protocol.getObjId())
+    width, height = getSizePlotter(1)
+    
+    # PLOT
+    url_plot = "/view_plots/?function=plotFSC&protViewerClass="+ protViewerClass + "&protId="+ protId + "&width=" + str(width) + "&height="+ str(height)
+    
+    return "plot", url_plot
+
+def plotFSC(request, protocolViewer):
+    xplotter = protocolViewer._createFSC()
+    return xplotter
+
 
 
 
