@@ -50,7 +50,7 @@ import org.jfree.data.xy.XYDataset;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 
-import xmipp.ij.commons.XmippIJUtil;
+import xmipp.ij.commons.XmippUtil;
 import xmipp.ij.commons.XmippImageConverter;
 import xmipp.jni.CTFDescription;
 import xmipp.jni.ImageGeneric;
@@ -127,7 +127,7 @@ public class CTFProfileWindow extends JFrame implements ItemListener, ActionList
                 }
             });
             
-            iconbt = new JButton(XmippIJUtil.getImageIcon(imp, 300, 300));
+            iconbt = new JButton(XmippUtil.getImageIcon(imp, 300, 300));
     		iconbt.setToolTipText("Load CTF Profile");
     		iconbt.setBorderPainted(false);
     		iconbt.setContentAreaFilled(false);

@@ -49,7 +49,7 @@ import javax.swing.event.MenuListener;
 
 import xmipp.ij.commons.Tool;
 import xmipp.ij.commons.XmippApplication;
-import xmipp.ij.commons.XmippIJUtil;
+import xmipp.ij.commons.XmippUtil;
 import xmipp.utils.ColorIcon;
 import xmipp.utils.QuickHelpJDialog;
 import xmipp.utils.XmippDialog;
@@ -291,7 +291,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 			@Override
 			public void actionPerformed(ActionEvent e)
 			{
-				XmippIJUtil.showImageJ(Tool.PICKER);
+				XmippUtil.showImageJ(Tool.PICKER);
 			}
 		});
 
