@@ -590,22 +590,25 @@ class ProtRelionBase(EMProtocol):
     
     def _writeIterAngularDist(self, it):
         """ Write the angular distribution. Should be overriden in subclasses. """
-        from convert import addRelionLabels
+        from convert import addRelionLabels, restoreXmippLabels
         addRelionLabels()
         
         data_star = self._getFileName('data', iter=it)
         md = xmipp.MetaData(data_star)
         data_angularDist = self._getFileName('angularDist_xmipp', iter=it)
         
-        for group in [1, 2]:
-            mdGroup = xmipp.MetaData()
-            mdGroup.importObjects(md, xmipp.MDValueEQ(xmipp.MDL_RANDOMSEED, group))
-            mdDist = xmipp.MetaData()
-            mdDist.aggregateMdGroupBy(mdGroup, xmipp.AGGR_COUNT, 
-                                      [xmipp.MDL_ANGLE_ROT, xmipp.MDL_ANGLE_TILT], 
-                                      xmipp.MDL_ANGLE_ROT, xmipp.MDL_WEIGHT)
-            mdDist.setValueCol(xmipp.MDL_ANGLE_PSI, 0.0)
-            blockName = 'half%d_class%06d_angularDist@' % (group, 1)
-            print "Writing angular distribution to: ", blockName + data_angularDist
-            mdDist.write(blockName + data_angularDist, xmipp.MD_APPEND)   
-                 
+        refsList = range(1, self.numberOfClasses.get()+1) 
+        print "refsList: ", refsList
+        for ref3d in refsList:
+            for prefix in self.PREFIXES:
+                mdGroup = xmipp.MetaData()
+                mdGroup.importObjects(md, xmipp.MDValueEQ(xmipp.MDL_REF, ref3d))
+                mdDist = xmipp.MetaData()
+                mdDist.aggregateMdGroupBy(mdGroup, xmipp.AGGR_COUNT, 
+                                          [xmipp.MDL_ANGLE_ROT, xmipp.MDL_ANGLE_TILT], 
+                                          xmipp.MDL_ANGLE_ROT, xmipp.MDL_WEIGHT)
+                mdDist.setValueCol(xmipp.MDL_ANGLE_PSI, 0.0)
+                blockName = '%sclass%06d_angularDist@' % (prefix, ref3d)
+                print "Writing angular distribution to: ", blockName + data_angularDist
+                mdDist.write(blockName + data_angularDist, xmipp.MD_APPEND)  
+           
