@@ -156,7 +156,8 @@ Examples:
                 'showChanges': self._showChanges,
                 'displayVol': self._showVolumes,
                 'displayAngDist': self._showAngularDistribution,
-                'resolutionPlotsSSNR': self._showSSNR
+                'resolutionPlotsSSNR': self._showSSNR,
+                'resolutionPlotsFSC': self._showFSC
                 }
         
     def _viewAll(self, *args):
@@ -459,7 +460,54 @@ Examples:
         
     def _showSSNR(self, paramName=None):
         xplotter = self._createSSNR()
-        xplotter.show() 
+        xplotter.show()
+        
+    def _plotFSC(self, a, model_star):
+        md = xmipp.MetaData(model_star)
+        resolution_inv = [md.getValue(xmipp.MDL_RESOLUTION_FREQ, id) for id in md]
+        frc = [md.getValue(xmipp.MDL_RESOLUTION_FRC, id) for id in md]
+        self.maxFrc = max(frc)
+        self.minInv = min(resolution_inv)
+        self.maxInv = max(resolution_inv)
+        a.plot(resolution_inv, frc)
+        a.xaxis.set_major_formatter(self._plotFormatter)
+        a.set_ylim([-0.1, 1.1])
+            
+    def _createFSC(self):
+        self._load()
+        threshold = self.resolutionThresholdFSC.get()
+        prefixes = self._getPrefixes()        
+        nrefs = len(self._refsList)
+        n = nrefs * len(prefixes)
+        gridsize = self._getGridSize(n)
+        
+        xmipp.activateMathExtensions()
+        addRelionLabels()
+        
+        xplotter = XmippPlotter(*gridsize, windowTitle='Resolution FSC')
+
+        for prefix in prefixes:
+            for ref3d in self._refsList:
+                plot_title = prefix + 'class %s' % ref3d
+                a = xplotter.createSubPlot(plot_title, 'Armstrongs^-1', 'FSC', yformat=False)
+                legends = []
+                blockName = 'model_class_%d@' % ref3d
+                for it in self._iterations:
+                    model_star = self.protocol._getFileName(prefix + 'model', iter=it)
+                    if os.path.exists(model_star):
+                        self._plotFSC(a, blockName + model_star)
+                        legends.append('iter %d' % it)
+                xplotter.showLegend(legends)
+                if threshold < self.maxFrc:
+                    a.plot([self.minInv, self.maxInv],[threshold, threshold], color='black', linestyle='--')
+                a.grid(True)
+            
+        return [xplotter]
+        
+    def _showFSC(self, paramName=None):
+        plots = self._createFSC()
+        for xplotter in plots:
+            xplotter.show()
             
     def getVisualizeDictWeb(self):
         return {'showImagesInClasses': 'doShowImagesInClasses',
