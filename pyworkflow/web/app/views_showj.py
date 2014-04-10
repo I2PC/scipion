@@ -160,7 +160,11 @@ def showj(request, inputParameters=None, extraParameters=None, firstTime=False):
     volPath = None
     
     if not firstTime:
-        inputParameters = request.POST.copy()
+        updateParams = request.POST.copy()
+        if inputParameters is None:
+            inputParameters = updateParams
+        else:
+            inputParameters.update(updateParams)
 
     if inputParameters["typeVolume"] != 'pdb':
         
@@ -177,6 +181,7 @@ def showj(request, inputParameters=None, extraParameters=None, firstTime=False):
 #            print "val!! ", col.columnLayoutProperties.getValues() 
     
         #If no label is set to render, set the first one if exists
+        
         dataset, tableDataset = setLabelToRender(request, dataset, tableDataset, inputParameters, extraParameters, firstTime)
         
         if inputParameters['labelsToRenderComboBox'] == '':
@@ -455,6 +460,7 @@ def visualizeObject(request):
     
     elif "path" in request.GET:
         inputParameters.update({'path':os.path.join(projectPath, request.GET.get("path"))})
+        
     else:
         raise Exception('Showj Web visualizer: No object identifier or path found')         
 
