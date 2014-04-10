@@ -137,11 +137,13 @@ def viewerForm(project, protocol, viewer):
 
 def viewerElement(request):
     project, protocolViewer = loadProtocolProject(request)
-    updateProtocolParams(request, protocolViewer, project)
     protId = request.POST.get('protRunIdViewer', None)
     viewerParam = request.POST.get('viewerParam', None)
+    
     protocol = project.mapper.selectById(int(protId))
     protocolViewer.setProtocol(protocol)
+    
+    updateProtocolParams(request, protocolViewer, project)
     
     protocolViewer.showPlot = False # Get xplotter instead of show()
     functionName = protocolViewer.getVisualizeDictWeb()[viewerParam]
