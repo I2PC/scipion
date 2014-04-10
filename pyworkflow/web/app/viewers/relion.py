@@ -110,17 +110,34 @@ def doShowChanges(request, protocolViewer):
 #===============================================================================
     
 def doShowVolumes(request, protocolViewer):
-    files = protocolViewer._createVolumes()
-    urls = buildShowjPath(files)
-    return "showjs", urls
+    path = protocolViewer._createVolumesMd()
+    return "showj","/visualize_object/?path="+ path
 
 #===============================================================================
 # doShowAngularDistributionRelion
 #===============================================================================
 
 def doShowAngularDistributionRelion(request, protocolViewer):
-    plotters, arguments = protocolViewer._createAngularDistribution()
-    return "",""
+    protViewerClass = str(protocolViewer.getClassName())
+    protId = str(protocolViewer.protocol.getObjId())
+    width, height = getSizePlotter(1)
+    
+    # Need to set iterations
+    protocolViewer._load()
+    
+    urls = []
+    
+    if protocolViewer.displayAngDist == ANGDIST_2DPLOT:
+        for it in protocolViewer._iterations:
+            url_plot = "/view_plots/?function=plotAngDist2D&protViewerClass="+ str(protViewerClass) + "&iter="+ str(it) + "&protId="+ protId + "&width=" + str(width) + "&height="+ str(height)
+            urls.append(url_plot)
+            
+    return "urls", urls
+
+
+def plotAngDist2D(request, protocolViewer):
+    xplotter = protocolViewer._createFSC()
+    return xplotter
 
 #===============================================================================
 # doPlotsSSNR
