@@ -56,7 +56,7 @@ class XmippProtParticlePicking(ProtParticlePicking, XmippProtocol):
         form.addParam('inputMicrographs', PointerParam, label="Micrographs",
                       pointerClass='SetOfMicrographs',
                       help='Select the SetOfMicrograph ')
-        form.addParam('memory', IntParam, default=2,
+        form.addParam('memory', FloatParam, default=2,
                    label='Memory to use (In Gb)', expertLevel=2)  
               
     #--------------------------- INSERT steps functions --------------------------------------------    
