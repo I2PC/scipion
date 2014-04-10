@@ -105,7 +105,7 @@ class XmippProtParticlePicking(ProtParticlePicking, XmippProtocol):
         
         #self.runJob(program, arguments % self._params)
         
-        runJavaIJapp("%sg"%(self.memory.get()), app, args, True)
+        runJavaIJapp("%dg"%(self.memory.get()), app, args, True)
         
     def _importFromFolderStep(self):
         """ This function will copy Xmipp .pos files for
