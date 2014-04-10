@@ -93,13 +93,14 @@ def viewerXmipp(project, protocol, viewer):
     elif getattr(protocol, 'outputCTF', False):
         objId = protocol.outputCTF.getObjId()
     
-    
     ioDict["url"] = "/visualize_object/?objectId="+str(objId)
     
     if isinstance(protocol, XmippProtKerdensom):
         ioDict['url'] += '&mode=gallery&colRowMode=On&cols=%d' % protocol.SomXdim.get()
     if isinstance(protocol, XmippProtRotSpectra):
         ioDict['url'] += '&classCount___renderable=True&classCount___renderFunc=getTestPlot'
+    if isinstance(protocol, XmippProtCTFMicrographs):
+        ioDict['url'] += '&mode=table'
     
     return ioDict
 
