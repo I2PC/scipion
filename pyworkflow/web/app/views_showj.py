@@ -45,7 +45,7 @@ from views_base import *
 def initDataSet(request, inputParameters, extraParameters, firstTime):
     """ Initial Dataset """
     
-    if 'dataset' not in request.session and firstTime is True:
+    if 'dataset' not in request.session or firstTime:
         dataset = loadDatasetXmipp(inputParameters['path'])
 #        request.session['dataset'] = dataset
     else:
