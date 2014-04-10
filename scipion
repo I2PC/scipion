@@ -2,6 +2,7 @@
 # **************************************************************************
 # *
 # * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
+# *              I. Foche Perez (ifoche@cnb.csic.es)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -86,7 +87,8 @@ SCIPION_DATA = join(SCIPION_HOME, 'data')
 SCIPION_LOGS = join(SCIPION_DATA, 'logs')
 SCIPION_TESTS = join(SCIPION_DATA, 'tests')
 SCIPION_USER_DATA = getUserDataPath()
-SCIPION_DIRS = ['SCIPION_DATA', 'SCIPION_LOGS', 'SCIPION_TESTS', 'SCIPION_USER_DATA']
+SCIPION_TMP = join(SCIPION_USER_DATA, '')
+SCIPION_DIRS = ['SCIPION_DATA', 'SCIPION_LOGS', 'SCIPION_TESTS', 'SCIPION_USER_DATA', 'SCIPION_TMP']
 
 SCIPION_PYTHON = join(XMIPP_BIN, 'xmipp_python')
 
@@ -205,7 +207,34 @@ if __name__ == '__main__':
                     os.chdir(path)
                     
         elif mode == MODE_TESTS_DATA:
-            runCmd('scripts/sync_data.py')
+            if n > 2:
+                dataset = sys.argv[2]
+                if n > 3:
+                    print "dataset selected"
+                    option = sys.argv[3]
+                    if option == "up-sync":
+                        print "Synchronizing dataset %s with local data" % dataset
+                        runCmd('scripts/sync_data.py -f %s -r' % dataset)
+                    elif option == "down-sync":
+                        print "Synchronizing local dataset %s with remote data" % dataset
+                        runCmd('scripts/sync_data.py -f %s' % dataset)
+                    elif option == "raw":
+                        args = ' '.join(sys.argv[4:]) # We leave here a way to pass arguments directly to the script
+                        runCmd('scripts/sync_data.py %s' % args)
+                    else:
+                        print "Bad option: " + option
+                        sys.exit(1)
+                elif dataset == "list-local-datasets":
+                    args = '-l'
+                    runCmd('scripts/sync_data.py %s' % args)
+                elif dataset == "list-remote-datasets":
+                    args = '-x'
+                    runCmd('scripts/sync_data.py %s' % args)
+                else:
+                    print "Asuming up-sync action. Synchronizing dataset %s with local data" % dataset
+            else:
+                print "Gathering all tests data from default dataset..."
+                runCmd('scripts/sync_data.py')
             
         elif mode == MODE_DBBROWSE:
             if n > 2:
@@ -267,6 +296,16 @@ USAGE:
                                   script will be used. 
                                   Further options are: 
                                   path=VALUE case=VALUE pattern="test*py" mode=[modules|classes|all]
+        
+        testdata [OPTION]      Synchronize tests data from/to remote server to/from SCIPION_USER_DATA folder
+                               OPTION can be:
+                                  list-local-datasets: list the datasets already in the local computer
+                                  list-remote-datasets: list the datasets available in the remote server
+                                  dataset [OPERATION]: if no list command is passed, it is mandatory to pass the name of a dataset to use
+                                     OPERATION can be:
+                                        up-sync: synchronize remote dataset with your local working copy. This is default behaviour if no operation is given
+                                        down-sync: synchronize local dataset with the remote dataset
+                                        raw: directly pass the rest of the arguments to the sync_data script
                               
         viewer [FILE]          Open a file with Scipion showj program.
          
