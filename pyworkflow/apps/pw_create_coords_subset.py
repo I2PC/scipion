@@ -20,19 +20,28 @@ if __name__ == '__main__':
     
     outputdir = sys.argv[1]
     type = 'Coordinates'
-    projectid = sys.argv[2]
-    inputid = sys.argv[3]
-    protid = sys.argv[4]
-    
-    
-    project = Manager().loadProject(projectid)
-    prot = project.mapper.selectById(protid)
-    inputset = project.mapper.selectById(int(inputid))
-    extradir = prot._getExtraPath()
-    
-    if(prot is None):
-        print 'prot is finished'
-        protlabel = protid
+    updateprot = sys.argv[2].endswith('.db')
+    if updateprot:
+        dbpath = sys.argv[2]
+        protid = sys.argv[3]
+        prot = getProtocolFromDb(dbpath, protid)
+        inputset = prot.inputMicrographs.get()
+        extradir = prot._getExtraPath()
+        count = 0;
+        for key, output in prot.iterOutputAttributes(EMObject):
+            print key
+            count += 1
+        print 'count %s'%(count)
+        suffix = str(count + 1) if count > 0 else ''
+        outputName = 'output' + type + suffix
+        outputset = prot._createSetOfCoordinates(inputset, suffix=suffix)#micrographs are the input set if protocol is not finished
+    else:
+        projectid = sys.argv[2]
+        inputid = sys.argv[3]
+        protlabel = sys.argv[4]
+        project = Manager().loadProject(projectid)
+        inputset = project.mapper.selectById(int(inputid))
+        
         prot = ProtUserSubSet(label=protlabel, inputType=type, outputType=type)        
         prot.createInputPointer(inputset)
         project._setupProtocol(prot)
@@ -42,19 +51,15 @@ if __name__ == '__main__':
         prot.setStatus(STATUS_FINISHED)
         outputName = 'output' + type
         outputset = prot._createSetOfCoordinates(inputset.getMicrographs())
-    else:
-        print 'prot output will be updated'
-        count = 0;
-        for key, output in prot.iterOutputAttributes(EMObject):
-            print key
-            count += 1
-        suffix = str(count) if count > 1 else ''
-        outputName = 'output' + type + suffix
-        outputset = prot._createSetOfCoordinates(inputset)#micrographs are the input set if protocol is not finished
-    print outputset.printAll()
+    
+    
     readSetOfCoordinates(extradir, outputset.getMicrographs(), outputset)
     outputs = {outputName: outputset}
     prot._defineOutputs(**outputs)
     prot._defineSourceRelation(inputset, outputset)
-    project._storeProtocol(prot)
+    if not updateprot:
+        project._storeProtocol(prot)
+    else:
+        prot._store()
+        
     
