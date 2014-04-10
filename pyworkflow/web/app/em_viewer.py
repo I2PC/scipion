@@ -144,6 +144,7 @@ def viewerElement(request):
     protocolViewer.setProtocol(protocol)
     
     updateProtocolParams(request, protocolViewer, project)
+    #protocolViewer.printObjDict()
     
     protocolViewer.showPlot = False # Get xplotter instead of show()
     functionName = protocolViewer.getVisualizeDictWeb()[viewerParam]
