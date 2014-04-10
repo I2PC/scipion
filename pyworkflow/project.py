@@ -257,10 +257,9 @@ class Project(object):
         
     def newProtocol(self, protocolClass):
         """ Create a new protocol from a given class. """
-        newProt = protocolClass()
+        newProt = protocolClass(project=self)
         newProt.setMapper(self.mapper)
         newProt.setProject(self)
-
         return newProt
         
     def copyProtocol(self, protocol):

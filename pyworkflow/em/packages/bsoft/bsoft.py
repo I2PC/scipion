@@ -39,3 +39,4 @@ def loadEnvironment():
     os.environ['PATH'] = "%(BSOFT_HOME)s/bin" % locals() + os.pathsep + os.environ['PATH']
     
     
+    

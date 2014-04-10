@@ -330,7 +330,10 @@ class Protocol(Step):
         return self.__project
     
     def setProject(self, project):
+    
         self.__project = project
+        
+        
                 
     @staticmethod
     def hasDefinition(cls):
