@@ -33,10 +33,22 @@ import os
 from pyworkflow import SETTINGS
 from pyworkflow.utils.path import makePath, copyFile, join
 from pyworkflow.apps.config import writeDefaults
-from pyworkflow.manager import Manager
+
+
+def updateProjectSettings():
+    # Update the settings to all existing projects
+    from pyworkflow.manager import Manager
+    manager = Manager()
+    projects = manager.listProjects()
+    
+    for p in projects:
+        proj = manager.loadProject(p.getName())
+        projSettings = proj.settingsPath
+        print "Copying settings to: ", join(p.getName(), projSettings)
+        copyFile(SETTINGS, projSettings)
+
 
 if __name__ == '__main__':
-    
     
     SCIPION_HOME = os.environ['SCIPION_HOME']
     SCIPION_DIRS = ['SCIPION_DATA', 'SCIPION_LOGS', 'SCIPION_TESTS', 'SCIPION_USER_DATA']
@@ -52,14 +64,8 @@ if __name__ == '__main__':
     # Write default configurations
     writeDefaults()
     
-    # Update the settings to all existing projects
-    manager = Manager()
-    projects = manager.listProjects()
+    updateProjectSettings()
     
-    for p in projects:
-        proj = manager.loadProject(p.getName())
-        projSettings = proj.settingsPath
-        print "Copying settings to: ", join(p.getName(), projSettings)
-        copyFile(SETTINGS, projSettings)
+    
         
     

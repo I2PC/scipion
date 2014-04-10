@@ -244,9 +244,9 @@ Examples:
         return data_classes
             
     def _showImagesInClasses(self, paramName=None):
-            data_classes = self._createImagesInClasses()
-            for data in data_classes:
-                self.displayScipion(data, extraParams='--mode metadata --render first')
+        data_classes = self._createImagesInClasses()
+        for data in data_classes:
+            self.displayScipion(data, extraParams='--mode metadata --render first')
           
 #=====================================================================
 # showLLRelion
@@ -435,43 +435,59 @@ Examples:
                             
     def _createAngularDistribution(self):
         self._load()
-        sphere = self.spheresScale.get()
-        prefixes = self._getPrefixes()
+        
         arguments = []
         plotters = []
         
         if self.displayAngDist == ANGDIST_CHIMERA:
-            # FIXME
-            #outerRadius = int(float(self.MaskRadiusA)/self.SamplingRate)
-            outerRadius = 30
-            radius = float(outerRadius) * 1.1
-
             for it in self._iterations:
-                data_angularDist = self.protocol._getIterAngularDist(it)
-                for ref3d in self._refsList:
-                    for prefix in prefixes:
-                        volFn = self.protocol._getFileName(prefix + 'volume', iter=it, ref3d=ref3d)
-                        args = "--input '%s' --mode projector 256 -a %sclass%06d_angularDist@%s red %f " % (volFn, prefix, ref3d, data_angularDist, radius)
-                        if sphere > 0:
-                            args += ' %f ' % sphere
-                        arguments.append(args)
+                arguments = self._createAngDistChimera(it)
                         
         elif self.displayAngDist == ANGDIST_2DPLOT:
-            nrefs = len(self._refsList)
-            n = nrefs * len(prefixes)
-            gridsize = self._getGridSize(n)
-            
             for it in self._iterations:
-                data_angularDist = self.protocol._getIterAngularDist(it)
-                xplotter = XmippPlotter(*gridsize, mainTitle='Iteration %d' % it, windowTitle="Angular Distribution")
-                for ref3d in self._refsList:
-                    for prefix in prefixes:
-                        md = xmipp.MetaData("class%06d_angularDist@%s" % (ref3d, data_angularDist))
-                        plot_title = '%sclass %d' % (prefix, ref3d)
-                        xplotter.plotMdAngularDistribution(plot_title, md)
+                xplotter = self._createAngDist2D(it)
                 plotters.append(xplotter)
                 
         return plotters, arguments
+    
+    def _createAngDistChimera(self, it):
+        arguments = []
+        # FIXME
+        #outerRadius = int(float(self.MaskRadiusA)/self.SamplingRate)
+        outerRadius = 30
+        radius = float(outerRadius) * 1.1
+        # Common variables to use
+        sphere = self.spheresScale.get()
+        prefixes = self._getPrefixes()
+
+        data_angularDist = self.protocol._getIterAngularDist(it)
+        for ref3d in self._refsList:
+            for prefix in prefixes:
+                volFn = self.protocol._getFileName(prefix + 'volume', iter=it, ref3d=ref3d)
+                args = "--input '%s' --mode projector 256 -a %sclass%06d_angularDist@%s red %f " % (volFn, prefix, ref3d, data_angularDist, radius)
+                if sphere > 0:
+                    args += ' %f ' % sphere
+                arguments.append(args)
+                    
+        return arguments
+        
+    
+    def _createAngDist2D(self, it):
+        # Common variables to use
+        prefixes = self._getPrefixes()
+        nrefs = len(self._refsList)
+        n = nrefs * len(prefixes)
+        gridsize = self._getGridSize(n)
+        
+        data_angularDist = self.protocol._getIterAngularDist(it)
+        xplotter = XmippPlotter(*gridsize, mainTitle='Iteration %d' % it, windowTitle="Angular Distribution")
+        for ref3d in self._refsList:
+            for prefix in prefixes:
+                md = xmipp.MetaData("class%06d_angularDist@%s" % (ref3d, data_angularDist))
+                plot_title = '%sclass %d' % (prefix, ref3d)
+                xplotter.plotMdAngularDistribution(plot_title, md)
+        
+        return xplotter
     
     def _showAngularDistribution(self, paramName=None):
         plotters, arguments = self._createAngularDistribution()
