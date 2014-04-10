@@ -63,7 +63,8 @@ class XmippViewer(Viewer):
                 SetOfMovies, ProtExtractParticles,EMXObject,
                 ProtAlign2D, XmippProtKerdensom, XmippProtRotSpectra,  XmippProtCreateMask3D,
                 SetOfCTF, NormalModes, XmippProtScreenClasses,
-                XmippProtConvertToPseudoAtoms, XmippProtIdentifyOutliers]
+                XmippProtConvertToPseudoAtoms, XmippProtIdentifyOutliers, 
+                XmippProtCTFMicrographs]
     
     def __init__(self, **args):
         Viewer.__init__(self, **args)
