@@ -37,6 +37,7 @@ public class SupervisedPickerRunner implements Runnable {
     public String inputfile;
     public String outputdir;
     public String protid;
+    public String dbpath;
     public Mode mode;
     public int threads;
     public boolean fast;
@@ -69,7 +70,7 @@ public class SupervisedPickerRunner implements Runnable {
         options.addOption(INCOREOPT, true, "");
 
         Option cmdoption = new Option(SCIPIONOPT, "");
-        cmdoption.setArgs(5);
+        cmdoption.setArgs(4);
         options.addOption(cmdoption);
     }
 
@@ -94,11 +95,18 @@ public class SupervisedPickerRunner implements Runnable {
             cmdargs = cmdLine.getOptionValues(SCIPIONOPT);
             python = cmdargs[0];
             script = cmdargs[1];
-            projectid = cmdargs[2];
-            inputid = cmdargs[3];
-            if(cmdargs.length == 5 && !cmdargs[4].isEmpty())
-                protid = cmdargs[4];
             
+            
+            if(!cmdargs[2].contains(".db"))
+            {
+                projectid = cmdargs[2];
+                inputid = cmdargs[3];
+            }
+            else
+            { 
+                dbpath = cmdargs[2];
+                protid = cmdargs[3];
+            }
             
         }
 
@@ -113,8 +121,12 @@ public class SupervisedPickerRunner implements Runnable {
                 ppicker = new SupervisedParticlePicker(inputfile, outputdir, threads, fast, incore);
             else 
                 ppicker = new SupervisedParticlePicker(inputfile, outputdir, mode);
-            if(isscipionsave)
-                ppicker.addScipionSave(python, script, projectid, inputid, protid);
+            ppicker.setPython(python);
+            ppicker.setScipionScript(script);
+            ppicker.setProjectId(projectid);
+            ppicker.setInputId(inputid);
+            ppicker.setDbPath(dbpath);
+            ppicker.setProtId(protid);
 
             new SupervisedParticlePickerJFrame(ppicker);
         } catch (Exception e) {
