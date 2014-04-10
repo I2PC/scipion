@@ -42,7 +42,7 @@ class ProtFrealign(ProtFrealignBase, ProtRefine3D):
     
     def __init__(self, **args):
         ProtFrealignBase.__init__(self, **args)
-        
-        
+            
     def _citations(self):
         return ['Grigorieff2007', 'Wolf2006', 'Stewart2004', 'Grigorieff1998', 'Sindelar2012', 'Lyumkis2013']
+    

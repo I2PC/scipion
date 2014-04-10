@@ -188,9 +188,9 @@ class ImageDim(CsvList):
         if self.isEmpty():
             s = 'No-Dim'
         else:
-            s = '%dx%d' % (self.getX(), self.getY())
+            s = '%d x %d' % (self.getX(), self.getY())
             if self.getZ() > 1:
-                s += 'x%d' % self.getZ()
+                s += ' x %d' % self.getZ()
         return s
 
     

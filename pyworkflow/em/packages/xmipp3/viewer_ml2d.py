@@ -105,7 +105,7 @@ class XmippML2DViewer(ProtocolViewer):
     def getVisualizeDictWeb(self):
         return {'doShowClasses': "doShowClasses",
                 'doShowPlots': "doAllPlotsML2D",
-                'doShowLL': "doShowLL",
+                'doShowLL': "doShowLLML2D",
                 'doShowPmax': "doShowPmax",
                 'doShowSignalChange': "doShowSignalChange",
                 'doShowMirror': "doShowMirror"}

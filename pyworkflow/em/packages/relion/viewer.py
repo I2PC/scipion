@@ -35,7 +35,9 @@ from protocol_classify2d import ProtRelionClassify2D
 from protocol_classify3d import ProtRelionClassify3D
 from protocol_refine3d import ProtRelionRefine3D
 from pyworkflow.protocol.params import *
-
+from convert import addRelionLabels, restoreXmippLabels
+import xmipp
+from pyworkflow.em.packages.xmipp3.plotter import XmippPlotter
 
 ITER_LAST = 0
 ITER_SELECTION = 1
@@ -45,6 +47,9 @@ ANGDIST_CHIMERA = 1
 
 VOLUME_SLICES = 0
 VOLUME_CHIMERA = 1
+
+CLASSES_ALL = 0
+CLASSES_SEL = 1
 
     
 class RelionViewer(ProtocolViewer):
@@ -106,12 +111,12 @@ Examples:
             group = form.addGroup('3D analysis')
             
             if self.protocol.IS_CLASSIFY:
-                group.addParam('showClasses3D', EnumParam, choices=['selection', 'all'], default=0,
+                group.addParam('showClasses3D', EnumParam, choices=['all', 'selection'], default=CLASSES_ALL,
                               display=EnumParam.DISPLAY_LIST,
                               label='CLASS 3D to visualize',
                               help='')
                 group.addParam('class3DSelection', NumericRangeParam, default='1',
-                              condition='showClasses3D == 0',
+                              condition='showClasses3D == %d' % CLASSES_SEL,
                               label='Classes list',
                               help='')
             else:
@@ -150,7 +155,9 @@ Examples:
                 'showPMax': self._showPMax,
                 'showChanges': self._showChanges,
                 'displayVol': self._showVolumes,
-                'displayAngDist': self._showAngularDistribution
+                'displayAngDist': self._showAngularDistribution,
+                'resolutionPlotsSSNR': self._showSSNR,
+                'resolutionPlotsFSC': self._showFSC
                 }
         
     def _viewAll(self, *args):
@@ -167,17 +174,30 @@ Examples:
 
     def _load(self):
         """ Load selected iterations and classes 3D for visualization mode. """
-        self._refsList = [1] #FIXME: Change this for classify 2d and 3d
+        self._refsList = [1] 
         if self.protocol.IS_3D and self.protocol.IS_CLASSIFY:
-            self._refsList = self._getListFromRangeString(self.class3DSelection.get())
+            if self.showClasses3D == CLASSES_ALL:
+                self._refsList = range(1, self.protocol.numberOfClasses.get()+1)
+            else:
+                self._refsList = self._getListFromRangeString(self.class3DSelection.get())
         self.protocol._initialize() # Load filename templates
         self.firstIter = self.protocol._firstIter()
         self.lastIter = self.protocol._lastIter()
         
-        if self.viewIter == ITER_LAST:
+        if self.viewIter.get() == ITER_LAST:
             self._iterations = [self.lastIter]
         else:
             self._iterations = self._getListFromRangeString(self.iterSelection.get())
+            
+        from matplotlib.ticker import FuncFormatter
+        self._plotFormatter = FuncFormatter(self._formatFreq) 
+        
+    def _formatFreq(self, value, pos):
+        """ Format function for Matplotlib formatter. """
+        inv = 999
+        if value:
+            inv = int(1/value)
+        return "1/%d" % inv
 
     def _getGridSize(self, n=None):
         """ Figure out the layout of the plots given the number of references. """
@@ -203,7 +223,12 @@ Examples:
                 prefixes = ['half2_']
         return prefixes
                 
-    def _showImagesInClasses(self, paramName=None):
+
+#===============================================================================
+# showImagesInClasses     
+#===============================================================================
+    
+    def _createImagesInClasses(self, paramName=None):    
         """ Read Relion _data.star images file and 
         generate a new metadata with the Xmipp classification standard:
         a 'classes' block and a 'class00000?_images' block per class.
@@ -211,46 +236,76 @@ Examples:
         """
         self._load()
         
+        data_classes = []
+        
         for it in self._iterations:
-            data_classes = self.protocol._getIterClasses(it)
-            self.displayScipion(data_classes, extraParams='--mode metadata --render first')
+            data_classes.append(self.protocol._getIterClasses(it))
+        
+        return data_classes
+            
+    def _showImagesInClasses(self, paramName=None):
+            data_classes = self._createImagesInClasses()
+            for data in data_classes:
+                self.displayScipion(data, extraParams='--mode metadata --render first')
+          
+#=====================================================================
+# showLLRelion
+#=====================================================================
           
     def _createLL(self):
         self._load()
-        import xmipp
-        from pyworkflow.em.packages.xmipp3.plotter import XmippPlotter
-        from convert import addRelionLabels
         plotters = []
         files = []
         for it in self._iterations:
-            fn = self.protocol._getIterSortedData(it)
-            addRelionLabels()
-            md = xmipp.MetaData(fn)
+            # FILES
+            fn = self._getFilesPerIterationLL(it)
             files.append(fn)
-            xplotter = XmippPlotter(windowTitle="max Likelihood particles sorting Iter_%d" % it)
-            xplotter.createSubPlot("Particle sorting: Iter_%d" % it, "Particle number", "maxLL")
-            xplotter.plotMd(md, False, mdLabelY=xmipp.MDL_LL)
+            # PLOTTERS
+            xplotter = self._createPlotPerIterationLL(it, fn)
             plotters.append(xplotter)
             
         return plotters, files
+    
+    def _getFilesPerIterationLL(self, it):
+        fn = self.protocol._getIterSortedData(it)
+        addRelionLabels()
+        return fn
+    
+    def _createPlotPerIterationLL(self, it, fn):
+        md = xmipp.MetaData(fn)
+        xplotter = XmippPlotter(windowTitle="max Likelihood particles sorting Iter_%d" % it)
+        xplotter.createSubPlot("Particle sorting: Iter_%d" % it, "Particle number", "maxLL")
+        xplotter.plotMd(md, False, mdLabelY=xmipp.MDL_LL)
+        
+        return xplotter
      
     def _showLL(self, paramName=None):
         plotters, files = self._createLL()
         for xplotter, fn in zip(plotters, files):
             self.display2D(fn)
             xplotter.show()
+            
+#===============================================================================
+# ShowPMax
+#===============================================================================
         
     def _createPMax(self):
         self._load()
-        import xmipp
-        from pyworkflow.em.packages.xmipp3.plotter import XmippPlotter
-        from convert import addRelionLabels
+        
+        # FILE
+        fn = self._createFilePMax()
+        # PLOT
+        xplotter = self._createPlotPMax(fn)
+        
+        return xplotter, fn
+    
+    def _createFilePMax(self):
+        labels = [xmipp.MDL_AVGPMAX, xmipp.MDL_PMAX]
         addRelionLabels(extended=True)  
-                  
+        
         mdIters = xmipp.MetaData()
         iterations = range(self.firstIter, self.lastIter+1)
-        labels = [xmipp.MDL_AVGPMAX, xmipp.MDL_PMAX]
-        colors = ['g', 'b']
+        
         for it in iterations: # range (firstIter,self._visualizeLastIteration+1): #alwaya list all iteration
             objId = mdIters.addObject()
             mdIters.setValue(xmipp.MDL_ITER, it, objId)
@@ -261,27 +316,38 @@ Examples:
                 mdIters.setValue(labels[i], pmax, objId)
         fn = self.protocol._getFileName('all_avgPmax_xmipp')
         mdIters.write(fn)
-        #self.display2D(fn, extraParams)
+            
+        return fn
+    
+    def _createPlotPMax(self, fn):
+        labels = [xmipp.MDL_AVGPMAX, xmipp.MDL_PMAX]
+        colors = ['g', 'b']
+
+        md = xmipp.MetaData(fn)
+        
         xplotter = XmippPlotter()
         xplotter.createSubPlot("Avg PMax per Iterations", "Iterations", "Avg PMax")
+        
         for label, color in zip(labels, colors):
-            xplotter.plotMd(mdIters, xmipp.MDL_ITER, label, color)
+            xplotter.plotMd(md, xmipp.MDL_ITER, label, color)
         
         if len(self.protocol.PREFIXES) > 1:
             xplotter.showLegend(self.protocol.PREFIXES)
         
-        return xplotter, fn
+        return xplotter
         
     def _showPMax(self, paramName=None):
         xplotter, fn = self._createPMax()
         self.display2D(fn)                    
         xplotter.show()
         
+    
+#===============================================================================
+# ShowChanges    
+#===============================================================================    
+
     def _createChanges(self):
         self._load()
-        import xmipp
-        from pyworkflow.em.packages.xmipp3.plotter import XmippPlotter
-        from convert import addRelionLabels
         addRelionLabels(extended=True)  
         
         mdIters = xmipp.MetaData()
@@ -306,7 +372,12 @@ Examples:
         fn = self._createChanges()
         self.display2D(fn)
         
+#===============================================================================
+# ShowVolumes
+#===============================================================================
+        
     def _createVolumesMd(self):
+        """ Write a metadata with all volumes selected for visualization. """
         import xmipp
         self._load()
         prefixes = self._getPrefixes()
@@ -324,47 +395,46 @@ Examples:
             md.write('iter%03d@%s' % (it, mdPath), xmipp.MD_APPEND)
         return mdPath
     
-    def _createVolumes(self):
-        files = []
+    def _showVolumesChimera(self):
+        """ Create a chimera script to visualize selected volumes. """
         self._load()
         prefixes = self._getPrefixes()
-        
-        if self.displayVol == VOLUME_SLICES:
-            return self._createVolumesMd()
+        volumes = []
         
         for it in self._iterations:
             for ref3d in self._refsList:
                 for prefix in prefixes:
                     volFn = self.protocol._getFileName(prefix + 'volume', iter=it, ref3d=ref3d)
-                    files.append(volFn)
-        return files   
-         
+                    volumes.append(volFn)
+                    
+        if len(volumes) > 1:
+            cmdFile = self.protocol._getExtraPath('chimera_volumes.cmd')
+            f = open(cmdFile, 'w+')
+            for volFn in volumes:
+                # We assume that the chimera script will be generated
+                # at the same folder than relion volumes
+                localVol = os.path.basename(volFn.replace(':mrc', ''))
+                f.write("open %s\n" % localVol)
+            f.write('tile\n')
+            f.close()
+            os.system('chimera %s &' % cmdFile)                    
+        else:
+            os.system('xmipp_chimera_client --input "%s" --mode projector 256 &' % volumes[0])
+            
     def _showVolumes(self, paramName=None):
-        files = self._createVolumes()
-        import xmipp
         if self.displayVol == VOLUME_CHIMERA:
-            if len(files) > 1:
-                tmpFile = self.protocol._getExtraPath('chimera_volumes.cmd')
-                f = open(tmpFile, 'w+')
-                for volFn in files:
-                    # We assume that the chimera script will be generated
-                    # at the same folder than relion volumes
-                    localVol = os.path.basename(volFn.replace(':mrc', ''))
-                    f.write("open %s\n" % localVol)
-                f.write('tile\n')
-                f.close()
-                os.system('chimera %s &' % tmpFile)                    
-            else:
-                os.system('xmipp_chimera_client --input "%s" --mode projector 256 &' % files[0])
+            self._showVolumesChimera()
         
         elif self.displayVol == VOLUME_SLICES:
             mdPath = self._createVolumesMd()
             self.display2D(mdPath)
+            
+#===============================================================================
+# showAngularDistribution
+#===============================================================================
                             
     def _createAngularDistribution(self):
         self._load()
-        import xmipp
-        from pyworkflow.em.packages.xmipp3.plotter import XmippPlotter
         sphere = self.spheresScale.get()
         prefixes = self._getPrefixes()
         arguments = []
@@ -413,15 +483,115 @@ Examples:
         if plotters:
             for xplotter in plotters:
                 xplotter.show()
+                
+#===============================================================================
+# plotSSNR              
+#===============================================================================
+               
+    def _plotSSNR(self, a, fn):
+        mdOut = xmipp.MetaData(fn)
+        md = xmipp.MetaData()
+        # only cross by 1 is important
+        md.importObjects(mdOut, xmipp.MDValueGT(xmipp.MDL_RESOLUTION_SSNR, 0.9))
+        md.operate("resolutionSSNR=log(resolutionSSNR)")
+        resolution_inv = [md.getValue(xmipp.MDL_RESOLUTION_FREQ, id) for id in md]
+        frc = [md.getValue(xmipp.MDL_RESOLUTION_SSNR, id) for id in md]
+        a.plot(resolution_inv, frc)
+        a.xaxis.set_major_formatter(self._plotFormatter)               
+ 
+    def _createSSNR(self, paramName=None):
+        self._load()
+        prefixes = self._getPrefixes()        
+        nrefs = len(self._refsList)
+        n = nrefs * len(prefixes)
+        gridsize = self._getGridSize(n)
+        addRelionLabels()
+        xmipp.activateMathExtensions()
+        xplotter = XmippPlotter(*gridsize)
+        
+        for prefix in prefixes:
+            for ref3d in self._refsList:
+                plot_title = 'Resolution SSNR %s, for Class %s' % (prefix, ref3d)
+                a = xplotter.createSubPlot(plot_title, 'Armstrongs^-1', 'log(SSNR)', yformat=False)
+                blockName = 'model_class_%d@' % ref3d
+                legendName = []
+                for it in self._iterations:
+                    fn = self.protocol._getFileName(prefix + 'model', iter=it)
+                    if os.path.exists(fn):
+                        self._plotSSNR(a, blockName+fn)
+                    legendName.append('iter %d' % it)
+                xplotter.showLegend(legendName)
+                a.grid(True)
+        
+        return xplotter
+        
+    def _showSSNR(self, paramName=None):
+        xplotter = self._createSSNR()
+        xplotter.show()
             
             
+#===============================================================================
+# plotFSC            
+#===============================================================================
+
+    def _plotFSC(self, a, model_star):
+        md = xmipp.MetaData(model_star)
+        resolution_inv = [md.getValue(xmipp.MDL_RESOLUTION_FREQ, id) for id in md]
+        frc = [md.getValue(xmipp.MDL_RESOLUTION_FRC, id) for id in md]
+        self.maxFrc = max(frc)
+        self.minInv = min(resolution_inv)
+        self.maxInv = max(resolution_inv)
+        a.plot(resolution_inv, frc)
+        a.xaxis.set_major_formatter(self._plotFormatter)
+        a.set_ylim([-0.1, 1.1])
+            
+    def _createFSC(self):
+        self._load()
+        threshold = self.resolutionThresholdFSC.get()
+        prefixes = self._getPrefixes()        
+        nrefs = len(self._refsList)
+        n = nrefs * len(prefixes)
+        gridsize = self._getGridSize(n)
+        
+        xmipp.activateMathExtensions()
+        addRelionLabels()
+        
+        xplotter = XmippPlotter(*gridsize, windowTitle='Resolution FSC')
+
+        for prefix in prefixes:
+            for ref3d in self._refsList:
+                plot_title = prefix + 'class %s' % ref3d
+                a = xplotter.createSubPlot(plot_title, 'Armstrongs^-1', 'FSC', yformat=False)
+                legends = []
+                blockName = 'model_class_%d@' % ref3d
+                for it in self._iterations:
+                    model_star = self.protocol._getFileName(prefix + 'model', iter=it)
+                    if os.path.exists(model_star):
+                        self._plotFSC(a, blockName + model_star)
+                        legends.append('iter %d' % it)
+                xplotter.showLegend(legends)
+                if threshold < self.maxFrc:
+                    a.plot([self.minInv, self.maxInv],[threshold, threshold], color='black', linestyle='--')
+                a.grid(True)
+            
+        return xplotter
+        
+    def _showFSC(self, paramName=None):
+        plots = [self._createFSC()]
+        for xplotter in plots:
+            xplotter.show()
+            
+### WEB UTILS ################################################# 
+
     def getVisualizeDictWeb(self):
         return {'showImagesInClasses': 'doShowImagesInClasses',
-                'showLL': 'doShowLL',
+                'showLL': 'doShowLLRelion',
                 'showPMax': 'doShowPMax',
                 'showChanges': 'doShowChanges',
                 'displayVol': 'doShowVolumes',
-                'displayAngDist': 'doShowAngularDistribution'
+                'displayAngDist': 'doShowAngularDistributionRelion',
+                'resolutionPlotsSSNR': 'doPlotsSSNR',
+                'resolutionPlotsFSC': 'doPlotsFSC'
                 }
 
     @classmethod
