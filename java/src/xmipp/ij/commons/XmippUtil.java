@@ -61,8 +61,11 @@ public class XmippUtil {
 		return icon;
 	}
         
-        public static String executeCommand(String[] command) throws Exception {
-                 
+
+
+    public static String executeCommand(String[] command) throws Exception {
+
+        
         StringBuffer output = new StringBuffer();
 
         Process p;

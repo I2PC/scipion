@@ -685,6 +685,14 @@ public class SupervisedParticlePicker extends ParticlePicker
 			count += m.getAutomaticParticlesNumber(threshold);
 		return count;
 	}
+        
+        public int getAutomaticParticlesNumber()
+	{
+		int count = 0;
+		for (SupervisedParticlePickerMicrograph m : micrographs)
+			count += m.getAutomaticParticlesNumber();
+		return count;
+	}
 
 	public void loadAutomaticParticles(SupervisedParticlePickerMicrograph m, MetaData md)
 	{
@@ -1072,6 +1080,11 @@ public class SupervisedParticlePicker extends ParticlePicker
 		md.setValueString(MDLabel.MDL_MICROGRAPH_PARTICLES, posfile, id);
 
 	}
+
+    @Override
+    public int getParticlesCount() {
+        return getManualParticlesNumber() + getAutomaticParticlesNumber(0);
+    }
 
        
 
