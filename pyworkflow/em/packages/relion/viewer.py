@@ -244,9 +244,9 @@ Examples:
         return data_classes
             
     def _showImagesInClasses(self, paramName=None):
-            data_classes = self._createImagesInClasses()
-            for data in data_classes:
-                self.displayScipion(data, extraParams='--mode metadata --render first')
+        data_classes = self._createImagesInClasses()
+        for data in data_classes:
+            self.displayScipion(data, extraParams='--mode metadata --render first')
           
 #=====================================================================
 # showLLRelion
