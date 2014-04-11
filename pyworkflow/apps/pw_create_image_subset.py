@@ -39,7 +39,7 @@ if __name__ == '__main__':
 
 
     createSetFun = getattr(prot, '_createSetOf' + setType)
-    if setType != 'Classes2D':
+    if not 'Classes' in setType:
         outputset = createSetFun()
         readSetFun = getattr(xmipp3, 'readSetOf' + setType )
         outputset.copyInfo(inputimages)    
