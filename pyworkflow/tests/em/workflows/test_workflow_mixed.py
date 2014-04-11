@@ -41,7 +41,7 @@ class TestMixedBPV(TestWorkflow):
         
         # Estimate CTF on the downsampled micrographs
         print "Performing CTFfind..."   
-        protCTF = ProtCTFFind(numberOfThreads=3)
+        protCTF = ProtCTFFind(numberOfThreads=4)
         protCTF.inputMicrographs.set(protDownsampling.outputMicrographs)        
         self.proj.launchProtocol(protCTF, wait=True)
         self.assertIsNotNone(protCTF.outputCTF, "There was a problem with the CTF estimation")
@@ -55,7 +55,7 @@ class TestMixedBPV(TestWorkflow):
         self.assertIsNotNone(protPP.outputCoordinates, "There was a problem with the faked picking")
 #         self.protDict['protPP'] = protPP
         
-        # Extract the SetOfParticles.    
+        # Extract the SetOfParticles.
         print "Run extract particles with other downsampling factor"
         protExtract = XmippProtExtractParticles(boxSize=64, downsampleType=2, doFlip=False, downFactor=4, runMode=1, doInvert=False)
         protExtract.inputCoordinates.set(protPP.outputCoordinates)
@@ -65,14 +65,14 @@ class TestMixedBPV(TestWorkflow):
         self.assertIsNotNone(protExtract.outputParticles, "There was a problem with the extract particles")
 #         self.validateFiles('protExtract', protExtract)
         
-        # Refine the SetOfParticles and reconstruct a refined volume.    
+        # Refine the SetOfParticles and reconstruct a refined volume.
         print "Running Frealign..."
         protFrealign = ProtFrealign(angStepSize=15, numberOfIterations=2, mode=1, doExtraRealSpaceSym=True,
-                                    innerRadius=150, outerRadius=315, symmetry='I2', PhaseResidual=30,molMass=19400,
-                                    resolution=20, runMode=1, numberOfMpi=1, numberOfThreads=4)
+                                    innerRadius=100, outerRadius=320, symmetry='I2', PhaseResidual=30,molMass=19400,
+                                    score=5, resolution=20, runMode=1, numberOfMpi=1, numberOfThreads=4)
         protFrealign.inputParticles.set(protExtract.outputParticles)
-        protFrealign.input3DReferences.set(protImportVol.outputVolume)
-        self.proj.launchProtocol(protFrealign, wait=True)        
+        protFrealign.input3DReference.set(protImportVol.outputVolume)
+        self.proj.launchProtocol(protFrealign, wait=True)
         self.assertIsNotNone(protFrealign.outputVolume, "There was a problem with Frealign")
 #         self.validateFiles('protFrealign', protFrealign)
 
@@ -283,6 +283,7 @@ class TestMixedBPV2(TestWorkflow):
 
 
 class TestMixedRelionTutorial(TestWorkflow):
+    @classmethod
     def setUpClass(cls):
         setupTestProject(cls)
         cls.dataset = DataSet.getDataSet('relion_tutorial')
@@ -352,7 +353,7 @@ class TestMixedRelionTutorial(TestWorkflow):
                                     outerRadius=180, PhaseResidual=65, lowResolRefine=300, highResolRefine=15,
                                     resolution=15, runMode=1, numberOfMpi=1, numberOfThreads=16)
         protFrealign.inputParticles.set(protExtract.outputParticles)
-        protFrealign.input3DReferences.set(protImportVol.outputVolume)
+        protFrealign.input3DReference.set(protImportVol.outputVolume)
         protFrealign.setObjLabel('Frealign')
         self.proj.launchProtocol(protFrealign, wait=True)        
         self.assertIsNotNone(protFrealign.outputVolume, "There was a problem with Frealign")
@@ -389,6 +390,75 @@ class TestMixedRelionTutorial(TestWorkflow):
         prot2D.setObjLabel('relion 2D')
         self.proj.launchProtocol(prot2D, wait=True)        
         self.assertIsNotNone(prot2D.outputClasses, "There was a problem with Relion 2D:\n" + (prot2D.getErrorMessage() or "No error set"))
+
+
+class TestMixedFrealignClassify(TestWorkflow):
+    @classmethod
+    def setUpClass(cls):
+        setupTestProject(cls)
+        cls.dataset = DataSet.getDataSet('relion_tutorial')
+        cls.crdsEmanDir = cls.dataset.getFile('boxingDir')
+        cls.crdsXmippDir = cls.dataset.getFile('posAllDir')
+        cls.micsFn = cls.dataset.getFile('allMics')
+        cls.vol = cls.dataset.getFile('volume')
+    
+    def test_workflow(self):
+        #First, import a set of micrographs
+        print "Importing a set of micrographs..."
+        protImport = ProtImportMicrographs(pattern=self.micsFn, samplingRateMode=1, magnification=79096,
+                                           scannedPixelSize=56, voltage=300, sphericalAberration=2.0)
+        protImport.setObjLabel('import 20 mics')
+        self.proj.launchProtocol(protImport, wait=True)
+        self.assertIsNotNone(protImport.outputMicrographs, "There was a problem with the import")
+        
+        print "Importing a volume..."
+        protImportVol = ProtImportVolumes(pattern=self.vol, samplingRate=7.08)
+        protImportVol.setObjLabel('import single vol')
+        self.proj.launchProtocol(protImportVol, wait=True)
+        self.assertIsNotNone(protImportVol.outputVolume, "There was a problem with the import")
+        
+        print "Preprocessing the micrographs..."
+        protPreprocess = XmippProtPreprocessMicrographs(doCrop=True, cropPixels=50)
+        protPreprocess.inputMicrographs.set(protImport.outputMicrographs)
+        protPreprocess.setObjLabel('crop 50px')
+        self.proj.launchProtocol(protPreprocess, wait=True)
+        self.assertIsNotNone(protPreprocess.outputMicrographs, "There was a problem with the downsampling")
+
+        # Now estimate CTF on the micrographs with ctffind 
+        print "Performing CTFfind..."   
+        protCTF = ProtCTFFind(lowRes=0.04, highRes=0.45, minDefocus=1.2, maxDefocus=3,
+                              runMode=1, numberOfMpi=1, numberOfThreads=5)         
+        protCTF.inputMicrographs.set(protPreprocess.outputMicrographs)
+        protCTF.setObjLabel('CTF ctffind')
+        self.proj.launchProtocol(protCTF, wait=True)
+        
+        print "Running Eman fake particle picking..."
+        protPP = EmanProtBoxing(importFolder=self.crdsEmanDir, runMode=1)                
+        protPP.inputMicrographs.set(protPreprocess.outputMicrographs)  
+        protPP.boxSize.set(60)
+        protPP.setObjLabel('Eman boxing') 
+        self.proj.launchProtocol(protPP, wait=True)
+        self.assertIsNotNone(protPP.outputCoordinates, "There was a problem with the Eman faked picking")
+        
+        print "Run extract particles with <Same as picking> option"
+        protExtract = XmippProtExtractParticles(boxSize=60, downsampleType=1, doRemoveDust=False,
+                                                doFlip=False, backRadius=28, runMode=1)
+        protExtract.inputCoordinates.set(protPP.outputCoordinates)
+        protExtract.ctfRelations.set(protCTF.outputCTF)
+        protExtract.setObjLabel('Extract particles')
+        self.proj.launchProtocol(protExtract, wait=True)
+        self.assertIsNotNone(protExtract.outputParticles, "There was a problem with the extract particles")
+        
+        # Classify the SetOfParticles.
+        print "Running Frealign Classification..."
+        protFrealign = ProtFrealignClassify(numberOfClasses=3, itRefineAngles=2, itRefineShifts=3, angStepSize=20, numberOfIterations=6, mode=1, doExtraRealSpaceSym=True,
+                                    outerRadius=180, PhaseResidual=65, lowResolRefine=300, highResolRefine=15,
+                                    resolution=15, runMode=1, numberOfThreads=5)
+        protFrealign.inputParticles.set(protExtract.outputParticles)
+        protFrealign.input3DReference.set(protImportVol.outputVolume)
+        protFrealign.setObjLabel('Frealign')
+        self.proj.launchProtocol(protFrealign, wait=True)        
+        self.assertIsNotNone(protFrealign.outputVolume, "There was a problem with Frealign")
 
 
 if __name__ == "__main__":
