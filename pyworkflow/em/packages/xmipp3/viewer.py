@@ -155,7 +155,7 @@ class XmippViewer(Viewer):
                 fn = self._getTmpPath(obj.getName() + '_classes.xmd')
                 writeSetOfClasses2D(obj, fn)
             
-            runScipionShowJ(fn, "Particles", self._project.getName(), obj.strId(), obj.getImages().strId())  
+            runScipionShowJ(fn, "Classes2D", self._project.getName(), obj.strId(), obj.getImages().strId())  
             #runShowJ(fn, extraParams=args.get('extraParams', ''))  
             
         elif issubclass(cls, SetOfClasses3D):
@@ -166,7 +166,7 @@ class XmippViewer(Viewer):
                 fn = self._getTmpPath(obj.getName() + '_classes.xmd')
                 writeSetOfClasses3D(obj, fn, self._getTmpPath())
 
-            runScipionShowJ("classes@"+fn, "Particles", self._project.getName(), obj.strId(), obj.getImages().strId(), extraParams=args.get('extraParams', ''))
+            runScipionShowJ("classes@"+fn, "Classes3D", self._project.getName(), obj.strId(), obj.getImages().strId(), extraParams=args.get('extraParams', ''))
               
         elif issubclass(cls, SetOfCTF):
             mdFn = getattr(obj, '_xmippMd', None)

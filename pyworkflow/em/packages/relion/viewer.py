@@ -167,10 +167,10 @@ Examples:
         from pyworkflow.em.packages.xmipp3.viewer import runShowJ
         runShowJ(filename, extraParams=extraParams)
         
-    def displayScipion(self, filename, extraParams=''):
+    def displayScipion(self, filename, output, extraParams=''):
         inputParticlesId = self.protocol.inputParticles.get().strId()
         from pyworkflow.em.packages.xmipp3.viewer import runScipionShowJ        
-        runScipionShowJ(filename, "Particles", self._project.getName(), self.protocol.strId(), inputParticlesId)
+        runScipionShowJ(filename, output, self._project.getName(), self.protocol.strId(), inputParticlesId)
 
     def _load(self):
         """ Load selected iterations and classes 3D for visualization mode. """
@@ -244,9 +244,10 @@ Examples:
         return data_classes
             
     def _showImagesInClasses(self, paramName=None):
+        output = "Classes2D" if self.protocol.IS_2D else "Classes3D"
         data_classes = self._createImagesInClasses()
         for data in data_classes:
-            self.displayScipion(data, extraParams='--mode metadata --render first')
+            self.displayScipion(data, output, extraParams='--mode metadata --render first')
           
 #=====================================================================
 # showLLRelion
