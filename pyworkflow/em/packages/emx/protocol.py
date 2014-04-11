@@ -27,9 +27,8 @@
 In this module are two protocols to Import/Export data from/to EMX.
 """
 
-from pyworkflow.em import *
-import emx
-from convert import importData, exportData
+from pyworkflow.em.protocol import *
+from pyworkflow.protocol.params import *
 
 
 class ProtEmxImport(ProtImport):
@@ -56,6 +55,7 @@ class ProtEmxImport(ProtImport):
         """ Export micrographs to EMX file.
         micsId is only passed to force redone of this step if micrographs change.
         """
+        from convert import importData
         importData(self, emxFile, outputDir=self._getPath())
     
     #--------------------------- INFO functions -------------------------------------------- 
@@ -115,6 +115,7 @@ class ProtEmxExport(EMProtocol):
         """ Export micrographs to EMX file.
         micsId is only passed to force redone of this step if micrographs change.
         """
+        from convert import exportData
         emxDir = self._getPath('emxData')
         xmlFile = self.outputPrefix.get() + '.emx'
         binaryFile = self.outputPrefix.get() + '.mrc'

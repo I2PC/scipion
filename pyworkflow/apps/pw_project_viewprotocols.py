@@ -264,7 +264,6 @@ class RunIOTreeProvider(TreeProvider):
         self.parent = parent
         self.protocol = protocol
         self.mapper = mapper
-        self.viewer = XmippViewer()
 
     def getColumns(self):
         return [('Attribute', 200), ('Info', 100)]
@@ -279,8 +278,10 @@ class RunIOTreeProvider(TreeProvider):
             objs = [self.inputStr, self.outputStr] + inputs + outputs                
         return objs
     
-    def _visualizeObject(self, Viewer, obj):
-        viewer = Viewer(project=self.protocol.getProject(), protocol=self.protocol)
+    def _visualizeObject(self, ViewerClass, obj):
+        viewer = ViewerClass(project=self.protocol.getProject(),
+                             protocol=self.protocol,
+                             parent=self.parent.windows)
         viewer.visualize(obj)
         
     def _editObject(self, obj):
@@ -801,8 +802,7 @@ class ProtocolsView(tk.Frame):
             self.project.stopProtocol(prot)
             self._scheduleRunsUpdate()
 
-    def _analyzeResults(self, prot):
-        
+    def _analyzeResults(self, prot):        
 
         viewers = findViewers(prot.getClassName(), DESKTOP_TKINTER)
         if len(viewers):

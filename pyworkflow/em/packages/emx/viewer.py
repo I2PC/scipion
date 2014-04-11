@@ -32,7 +32,7 @@ import os
 
 from pyworkflow.gui.text import showTextFileViewer
 from pyworkflow.viewer import Viewer, DESKTOP_TKINTER, WEB_DJANGO
-from pyworkflow.em.data import *
+from pyworkflow.em.data import EMXObject
 
 
 class EMXViewer(Viewer):
@@ -45,7 +45,8 @@ class EMXViewer(Viewer):
         Viewer.__init__(self, **args)
 
     def visualize(self, obj, **args):
-        showTextFileViewer("EMX Xml file", [obj.getXmlFile()])    
+        #os.system('kwrite %s &' % obj.getXmlFile()) 
+        showTextFileViewer("EMX Xml file", [obj.getXmlFile()], self.getParent())    
 
     @classmethod
     def getView(cls):
