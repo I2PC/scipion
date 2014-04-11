@@ -87,7 +87,7 @@ public class GalleryData {
 	// flag to wrapping
 	public boolean wrap;
 	// flag to check if is 2d classification
-	public boolean is2dClassification = false;
+	public boolean isClassification = false;
 	public int refLabel;
 	// Store the selection state for each item
 	public boolean[] selection;
@@ -207,9 +207,9 @@ public class GalleryData {
 		if (!containsGeometryInfo())
 			useGeo = false;
 		selection = new boolean[ids.length];
-		is2dClassification = checkifIs2DClassificationMd();
+		isClassification = checkifIsClassificationMd();
 
-		if (is2dClassification) {
+		if (isClassification) {
 			classes = new ClassInfo[ids.length];
 			classesArray = new ArrayList<ClassInfo>();
 			loadClassesInfo();
@@ -578,12 +578,12 @@ public class GalleryData {
 		return false;
 	}
 
-	public boolean is2DClassificationMd() {
-		return is2dClassification;
+	public boolean isClassificationMd() {
+		return isClassification;
 	}
 
 	/** Return true if current metadata comes from 2d classification */
-	public boolean checkifIs2DClassificationMd() {
+	public boolean checkifIsClassificationMd() {
 		try {
 			boolean valid = selectedBlock.startsWith("classes") && 
 					(md.containsLabel(MDLabel.MDL_REF) || md.containsLabel(MDLabel.MDL_REF3D)) &&
@@ -612,7 +612,7 @@ public class GalleryData {
 
 	/** Get the assigned class of some element */
 	public ClassInfo getItemClassInfo(int index) {
-		if (is2dClassification && index < classes.length) {
+		if (isClassification && index < classes.length) {
 			return classes[index];
 		}
 		return null;
@@ -834,7 +834,7 @@ public class GalleryData {
 		if (filename != null) {
 			String fnVectors = filename.replace("classes", "vectors");
 			String fnVectorsData = fnVectors.replace(".xmd", ".vec");
-			if (is2DClassificationMd() && Filename.exists(fnVectors)
+			if (isClassificationMd() && Filename.exists(fnVectors)
 					&& Filename.exists(fnVectorsData))
 				return true;
 		}

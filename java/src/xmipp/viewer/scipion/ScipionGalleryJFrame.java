@@ -68,13 +68,13 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
                         createSubset();
                 }
             });
-            if(is2DClassificationMd())
+            if(isClassificationMd())
             {
                 classcmdbutton = getScipionButton("Create New Set Of Classes", new ActionListener() {
 
                     @Override
                     public void actionPerformed(ActionEvent ae) {
-                        boolean create = XmippDialog.showQuestion(ScipionGalleryJFrame.this, "Are you sure you want to create a new set of Classes2D ?");
+                        boolean create = XmippDialog.showQuestion(ScipionGalleryJFrame.this, "Are you sure you want to create a new set of Classes ?");
                         if(create)
                             createSubsetOfClasses();
                     }
@@ -156,7 +156,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
         cmdbutton.setForeground(forecolor);
         if(classcmdbutton != null)
         {
-            isenabled = is2DClassificationMd() && isenabled;
+            isenabled = isClassificationMd() && isenabled;
             color = Color.decode(isenabled? firebrick: lightgrey); 
             forecolor = isenabled? Color.WHITE: Color.GRAY;
             classcmdbutton.setEnabled( isenabled);
@@ -168,12 +168,12 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
     public void createSubset()
     {
         try {
-            final String inputType = is2DClassificationMd()? "Classes2D": type;            
-            if(is2DClassSelection())
+                 
+            if(isClassSelection())
                 saveImagesFromClassSelection(selectionmdfile);
             else
                 saveSelection(selectionmdfile, true);
-            String[] command = new String[]{python, script, selectionmdfile, inputType, type, projectid, inputid, inputimagesid};
+            String[] command = new String[]{python, script, selectionmdfile, getInputType(), type, projectid, inputid, inputimagesid};
             runCommand(command);
 
 
@@ -187,13 +187,23 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
     {
         try 
         {
+            String type = getInputType();
             saveClassSelection(selectionmdfile);
-            String[] command = new String[]{python, script, selectionmdfile, "Classes2D", "Classes2D", projectid, inputid, inputimagesid};
+            String[] command = new String[]{python, script, selectionmdfile, type, type, projectid, inputid, inputimagesid};
             runCommand(command);
         } catch (Exception ex) {
             Logger.getLogger(ScipionGalleryJFrame.class.getName()).log(Level.SEVERE, null, ex);
         }
     
+    }
+
+    public String getInputType() {
+        if(!isClassificationMd())
+            return type;
+        if(is3DClassificationMd())
+            return "Classes3D";
+        return "Classes2D";
+        
     }
 
 }
