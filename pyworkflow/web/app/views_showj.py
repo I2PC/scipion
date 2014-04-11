@@ -421,6 +421,7 @@ def visualizeObject(request):
             
 #            writeSetOfVolumes(obj, fn)
 #            inputParameters['path']= os.path.join(projectPath, fn)
+
         elif isinstance(obj, PdbFile):
             inputParameters['path'] = obj.getFileName()
             inputParameters['mode'] = 'volume_astex'
@@ -451,6 +452,14 @@ def visualizeObject(request):
         elif isinstance(obj, SetOfCTF):
             fn = project.getTmpPath(obj.getName() + '_ctfs.xmd')
             inputParameters['path'] = os.path.join(projectPath, createXmippInputCTF(None, obj, ctfFn=os.path.join(projectPath, fn)))
+            
+            extraParameters["itemId___visible"]= False
+            extraParameters["psd___visible"]= False
+            extraParameters["psdEnhanced___renderable"]= True
+            extraParameters["micrograph___renderable"]= True
+            extraParameters["image1___renderable"]= True
+            extraParameters["image2___renderable"]= True
+            
 #            writeSetOfCTFs(obj, fn)
 #            inputParameters['path']= os.path.join(projectPath, fn)
         elif isinstance(obj, NormalModes):
