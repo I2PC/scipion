@@ -32,11 +32,13 @@ import os, sys
 
 PACKAGES_URL = "http://scipionwiki.cnb.csic.es/files/scipion/software/em/"
 PACKAGES_DICT = {
-                 'xmipp': "xmipp.tgz",
-                 'brandeis': "brandeis.tgz",
+                 #'xmipp': "xmipp.tgz", 
+                 'bsoft': 'bsoft1_8_8_Fedora_12.tgz',
+                 'ctffind': 'ctffind_V3.5.tgz',
                  'eman': "eman2.pre2-1.linux64.tar.gz",
-                 'spider': "spiderweb.21.13.tar.gz",
-                 'relion': "relion-1.2.tar.bz2"                 
+                 'frealign': 'frealign_v9.07.tgz',                 
+                 'relion': "relion-1.2.tgz",
+                 'spider': "spiderweb.21.13.tar.gz"                 
                  }
 
 
