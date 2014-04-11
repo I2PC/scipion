@@ -38,7 +38,7 @@ PACKAGES_DICT = {
                  'eman': "eman2.pre2-1.linux64.tar.gz",
                  'frealign': 'frealign_v9.07.tgz',                 
                  'relion': "relion-1.2.tgz",
-                 'spider': "spiderweb.21.13.tar.gz"                 
+                 'spider': "spider-web-21.13.tgz"                 
                  }
 
 
