@@ -10,9 +10,11 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.io.File;
+import java.util.HashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JButton;
+import javax.swing.JOptionPane;
 import xmipp.ij.commons.XmippUtil;
 import xmipp.jni.MetaData;
 import xmipp.utils.XmippDialog;
@@ -32,11 +34,12 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
     private JButton cmdbutton;
     private String selectionmdfile;
     private JButton classcmdbutton;
-    private String firebrick = "#B22222";
-    private String lightgrey = "#EAEBEC";
+
     private String python;
     private String inputimagesid;
     private String inputid;
+    private HashMap<String, String> msgfields;
+    private final String runNameKey = "Run name:";
 
     public ScipionGalleryJFrame(String filename, MetaData md, ScipionParams parameters) {
         super(filename, md, parameters);
@@ -48,7 +51,10 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
             inputid = parameters.inputid;
             inputimagesid = parameters.inputimagesid;
             selectionmdfile = String.format("%s%sselection%s", projectid, File.separator, getFileExtension());
+            msgfields = new HashMap<String, String>();
+            msgfields.put(runNameKey, "ProtUserSubset");
             
+
             initComponents();
         } catch (Exception ex) {
             Logger.getLogger(ScipionGalleryJFrame.class.getName()).log(Level.SEVERE, null, ex);
@@ -58,29 +64,43 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
 
     private void initComponents() {
         if (type != null) {
-            
-            cmdbutton = getScipionButton("Create New Set Of " + type, new ActionListener() {
+
+            cmdbutton = getScipionButton("Create " + type, new ActionListener() {
 
                 @Override
                 public void actionPerformed(ActionEvent ae) {
-                    boolean create = XmippDialog.showQuestion(ScipionGalleryJFrame.this, "Are you sure you want to create a new set of " + type + "?");
-                    if(create)
-                        createSubset();
+                    saveSelection();
+                    MetaData selectionmd = new MetaData(selectionmdfile);
+                    String question = String.format("<html>Are you sure you want to create a new set of %s with <font color=red>%s</font> %s?", type, selectionmd.size(), (selectionmd.size() > 1)?"elements":"element");
+                    ScipionMessageDialog dlg = new ScipionMessageDialog(ScipionGalleryJFrame.this, "Question", question, msgfields);
+                    int create = dlg.action;
+                    if (create == ScipionMessageDialog.OK_OPTION) {
+                        createSubset(dlg.getFieldValue(runNameKey));
+                    }
+                    selectionmd.destroy();
                 }
             });
+
             if(isClassificationMd())
             {
-                classcmdbutton = getScipionButton("Create New Set Of Classes", new ActionListener() {
+                classcmdbutton = getScipionButton("Create Classes", new ActionListener() {
 
                     @Override
                     public void actionPerformed(ActionEvent ae) {
-                        boolean create = XmippDialog.showQuestion(ScipionGalleryJFrame.this, "Are you sure you want to create a new set of Classes ?");
-                        if(create)
-                            createSubsetOfClasses();
+                        saveClassSelection(selectionmdfile);
+                        MetaData selectionmd = new MetaData(selectionmdfile);
+                        String msg = String.format("<html>Are you sure you want to create a new set of Classes with <font color=red>%s</font> %s?", selectionmd.size(), (selectionmd.size() > 1)?"elements":"element");
+                        ScipionMessageDialog dlg = new ScipionMessageDialog(ScipionGalleryJFrame.this, "Question", msg, msgfields);
+                        int create = dlg.action;
+                        if (create == ScipionMessageDialog.OK_OPTION) {
+                            createSubsetOfClasses(dlg.getFieldValue(runNameKey));
+                        }
+                        selectionmd.destroy();
+
                     }
                 });
                 buttonspn.add(classcmdbutton);
-                
+
             }
             buttonspn.add(cmdbutton);
             enableActions();
@@ -92,11 +112,10 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
                 }
             });
         }
-       
+
     }
-    
-    protected void runCommand(final String[] command)
-    {
+
+    protected void runCommand(final String[] command) {
         XmippWindowUtil.blockGUI(ScipionGalleryJFrame.this, "Creating set ...");
         new Thread(new Runnable() {
 
@@ -104,15 +123,14 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
             public void run() {
 
                 try {
-                    
+
                     String output = XmippUtil.executeCommand(command);
                     XmippWindowUtil.releaseGUI(ScipionGalleryJFrame.this.getRootPane());
-                    if(output != null && !output.isEmpty())
-                    {
+                    if (output != null && !output.isEmpty()) {
                         XmippDialog.showInfo(ScipionGalleryJFrame.this, output);
                         System.out.println(output);
                     }
-                    
+
                 } catch (Exception ex) {
                     throw new IllegalArgumentException(ex.getMessage());
                 }
@@ -120,62 +138,55 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
             }
         }).start();
     }
-    
-    public JButton getScipionButton(String text, ActionListener listener)
-    {
-    
+
+    public JButton getScipionButton(String text, ActionListener listener) {
+
         JButton button = new JButton(text);
         button.addActionListener(listener);
-   
-       
+
         return button;
     }
-    
-   
 
-    public void selectItem(int row, int col)
-    {
+    public void selectItem(int row, int col) {
         super.selectItem(row, col);
         enableActions();
-       
+
     }
 
-    protected void tableMouseClicked(MouseEvent evt)
-    {
+    protected void tableMouseClicked(MouseEvent evt) {
         super.tableMouseClicked(evt);
         enableActions();
     }
 
-    protected void enableActions()
-    {
+    protected void enableActions() {
         boolean isenabled = isImageSelected();
-        Color color = Color.decode(isenabled? firebrick: lightgrey); 
-        Color forecolor = isenabled? Color.WHITE: Color.GRAY;
+        Color color = Color.decode(isenabled ? ScipionMessageDialog.firebrick : ScipionMessageDialog.lightgrey);
+        Color forecolor = isenabled ? Color.WHITE : Color.GRAY;
         cmdbutton.setEnabled(isenabled);
         cmdbutton.setBackground(color);
         cmdbutton.setForeground(forecolor);
         if(classcmdbutton != null)
         {
             isenabled = isClassificationMd() && isenabled;
-            color = Color.decode(isenabled? firebrick: lightgrey); 
+            color = Color.decode(isenabled? ScipionMessageDialog.firebrick: ScipionMessageDialog.lightgrey); 
             forecolor = isenabled? Color.WHITE: Color.GRAY;
             classcmdbutton.setEnabled( isenabled);
+
             classcmdbutton.setBackground(color);
             classcmdbutton.setForeground(forecolor);
         }
     }
-    
-    public void createSubset()
-    {
+
+    public void createSubset(String runname) {
         try {
                  
             if(isClassSelection())
                 saveImagesFromClassSelection(selectionmdfile);
             else
                 saveSelection(selectionmdfile, true);
-            String[] command = new String[]{python, script, selectionmdfile, getInputType(), type, projectid, inputid, inputimagesid};
-            runCommand(command);
+            String[] command = new String[]{python, script, runname, selectionmdfile, getInputType(), type, projectid, inputid, inputimagesid};
 
+            runCommand(command);
 
         } catch (Exception ex) {
             Logger.getLogger(ScipionGalleryJFrame.class.getName()).log(Level.SEVERE, null, ex);
@@ -183,18 +194,32 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
         }
     }
     
-    public void createSubsetOfClasses()
+    public void saveSelection() {
+        try {
+            if (isClassSelection()) {
+                saveImagesFromClassSelection(selectionmdfile);
+            } else {
+                saveSelection(selectionmdfile, true);
+            }
+        } catch (Exception ex) {
+            throw new IllegalArgumentException(ex.getMessage());
+        }
+    }
+
+    
+    public void createSubsetOfClasses(String runname)
     {
         try 
         {
             String type = getInputType();
             saveClassSelection(selectionmdfile);
-            String[] command = new String[]{python, script, selectionmdfile, type, type, projectid, inputid, inputimagesid};
+            String[] command = new String[]{python, script, runname, selectionmdfile, type, type, projectid, inputid, inputimagesid};
+
             runCommand(command);
         } catch (Exception ex) {
             Logger.getLogger(ScipionGalleryJFrame.class.getName()).log(Level.SEVERE, null, ex);
         }
-    
+
     }
 
     public String getInputType() {

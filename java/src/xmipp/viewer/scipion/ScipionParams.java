@@ -23,6 +23,7 @@ public class ScipionParams extends Param {
     public String projectid;
     public String inputimagesid;
     public String inputid;
+    
 
     public ScipionParams(String args[]) {
         super(args);

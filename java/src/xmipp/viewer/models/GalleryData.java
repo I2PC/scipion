@@ -116,12 +116,12 @@ public class GalleryData {
 			resliceView = param.resliceView;
 			useGeo = param.useGeo;
 			wrap = param.wrap;
-
+                        
 			if (param.mode.equalsIgnoreCase(Param.OPENING_MODE_METADATA))
 				mode = Mode.TABLE_MD;
 			else if (param.mode.equalsIgnoreCase(Param.OPENING_MODE_ROTSPECTRA))
 				mode = Mode.GALLERY_ROTSPECTRA;
-
+                        
 			setFileName(fn);
 
 			if (md == null) {
@@ -721,6 +721,7 @@ public class GalleryData {
 	/** Return the number of selected elements */
 	public int getSelectionCount() {
 		int count = 0;
+                
 		if (!isVolumeMode()) {
 			for (int i = 0; i < ids.length; ++i)
 				if (selection[i])
@@ -832,10 +833,14 @@ public class GalleryData {
 	/** Return true if current metadata is a rotspectra classes */
 	public boolean isRotSpectraMd() {
 		if (filename != null) {
+                    if(!filename.contains("classes"))
+                        return false;
 			String fnVectors = filename.replace("classes", "vectors");
 			String fnVectorsData = fnVectors.replace(".xmd", ".vec");
 			if (isClassificationMd() && Filename.exists(fnVectors)
+
 					&& Filename.exists(fnVectorsData))
+                            
 				return true;
 		}
 		return false;
