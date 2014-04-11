@@ -274,6 +274,9 @@ class Window():
         self.master = masterWindow
         setCommonFonts(self)
         
+    def getRoot(self):
+        return self.root
+    
     def desiredDimensions(self):
         """This method should be used by subclasses
         to calculate desired dimensions"""

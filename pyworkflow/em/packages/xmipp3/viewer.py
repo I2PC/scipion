@@ -60,7 +60,7 @@ class XmippViewer(Viewer):
     """
     _environments = [DESKTOP_TKINTER, WEB_DJANGO]
     _targets = [Image, SetOfImages, SetOfCoordinates, SetOfClasses2D, SetOfClasses3D, 
-                SetOfMovies, ProtExtractParticles,EMXObject,
+                SetOfMovies, ProtExtractParticles,
                 ProtAlign2D, XmippProtKerdensom, XmippProtRotSpectra,  XmippProtCreateMask3D,
                 SetOfCTF, NormalModes, XmippProtScreenClasses,
                 XmippProtConvertToPseudoAtoms, XmippProtIdentifyOutliers, 
