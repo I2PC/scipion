@@ -104,6 +104,16 @@ def viewerXmipp(project, protocol, viewer):
     
     return ioDict
 
+def viewerBrandeis(project, protocol, viewer):
+    ioDict={}
+    
+#    if isinstance(protocol, ProtCTFFind):
+    if getattr(protocol, 'outputCTF', False):
+        objId = protocol.outputCTF.getObjId()
+        ioDict["url"] = "/visualize_object/?objectId="+str(objId)+'&mode=table'+'&psd___renderable=True'
+    
+    return ioDict
+
 def viewerSpider(project, protocol, viewer):
     ioDict={}    
         

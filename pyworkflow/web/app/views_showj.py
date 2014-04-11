@@ -454,7 +454,7 @@ def visualizeObject(request):
             inputParameters['path'] = os.path.join(projectPath, createXmippInputCTF(None, obj, ctfFn=os.path.join(projectPath, fn)))
             
             extraParameters["itemId___visible"]= False
-            extraParameters["psd___visible"]= False
+#            extraParameters["psd___visible"]= False
             extraParameters["psdEnhanced___renderable"]= True
             extraParameters["micrograph___renderable"]= True
             extraParameters["image1___renderable"]= True
