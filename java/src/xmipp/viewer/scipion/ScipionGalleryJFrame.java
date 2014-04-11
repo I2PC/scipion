@@ -64,8 +64,9 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
 
     private void initComponents() {
         if (type != null) {
-
-            cmdbutton = getScipionButton("Create " + type, new ActionListener() {
+            boolean isclassificationmd = isClassificationMd();
+            String output = isclassificationmd? "Particles": type;   
+            cmdbutton = getScipionButton("Create " + output, new ActionListener() {
 
                 @Override
                 public void actionPerformed(ActionEvent ae) {
@@ -81,7 +82,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
                 }
             });
 
-            if(isClassificationMd())
+            if(isclassificationmd)
             {
                 classcmdbutton = getScipionButton("Create Classes", new ActionListener() {
 
@@ -179,12 +180,16 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
 
     public void createSubset(String runname) {
         try {
-                 
+            String output = type;     
             if(isClassSelection())
+            {
                 saveImagesFromClassSelection(selectionmdfile);
+                output = "Particles";
+            }
             else
                 saveSelection(selectionmdfile, true);
-            String[] command = new String[]{python, script, runname, selectionmdfile, getInputType(), type, projectid, inputid, inputimagesid};
+            
+            String[] command = new String[]{python, script, runname, selectionmdfile, type, output, projectid, inputid, inputimagesid};
 
             runCommand(command);
 
@@ -211,7 +216,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
     {
         try 
         {
-            String type = getInputType();
+
             saveClassSelection(selectionmdfile);
             String[] command = new String[]{python, script, runname, selectionmdfile, type, type, projectid, inputid, inputimagesid};
 
@@ -222,13 +227,6 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
 
     }
 
-    public String getInputType() {
-        if(!isClassificationMd())
-            return type;
-        if(is3DClassificationMd())
-            return "Classes3D";
-        return "Classes2D";
-        
-    }
+    
 
 }

@@ -2382,9 +2382,5 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
            return XmippStringUtils.getFileExtension(data.getFileName());
        }
 
-       public boolean is3DClassificationMd() {
-           if(!isClassificationMd())
-               return false;
-           return data.md.containsLabel(MDLabel.MDL_REF3D);
-       }
+       
 }// class JFrameGallery
