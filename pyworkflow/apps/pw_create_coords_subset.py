@@ -29,9 +29,8 @@ if __name__ == '__main__':
         extradir = prot._getExtraPath()
         count = 0;
         for key, output in prot.iterOutputAttributes(EMObject):
-            print key
             count += 1
-        print 'count %s'%(count)
+        
         suffix = str(count + 1) if count > 0 else ''
         outputName = 'output' + type + suffix
         outputset = prot._createSetOfCoordinates(inputset, suffix=suffix)#micrographs are the input set if protocol is not finished

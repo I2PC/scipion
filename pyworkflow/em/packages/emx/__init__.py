@@ -30,7 +30,6 @@ Basically two files:
 emx.py : which is the EMX library provided at: 
 convert.py : which provides conversions between EMObjects and EMX objects.
 """
-from viewer import *
-from emx import *
 from convert import *
 from protocol import *
+from viewer import *

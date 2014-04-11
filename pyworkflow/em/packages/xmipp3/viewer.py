@@ -60,10 +60,11 @@ class XmippViewer(Viewer):
     """
     _environments = [DESKTOP_TKINTER, WEB_DJANGO]
     _targets = [Image, SetOfImages, SetOfCoordinates, SetOfClasses2D, SetOfClasses3D, 
-                SetOfMovies, ProtExtractParticles,EMXObject,
+                SetOfMovies, ProtExtractParticles,
                 ProtAlign2D, XmippProtKerdensom, XmippProtRotSpectra,  XmippProtCreateMask3D,
                 SetOfCTF, NormalModes, XmippProtScreenClasses,
-                XmippProtConvertToPseudoAtoms, XmippProtIdentifyOutliers]
+                XmippProtConvertToPseudoAtoms, XmippProtIdentifyOutliers, 
+                XmippProtCTFMicrographs]
     
     def __init__(self, **args):
         Viewer.__init__(self, **args)
@@ -165,7 +166,7 @@ class XmippViewer(Viewer):
                 fn = self._getTmpPath(obj.getName() + '_classes.xmd')
                 writeSetOfClasses3D(obj, fn, self._getTmpPath())
 
-            runShowJ("classes@"+fn, extraParams=args.get('extraParams', ''))
+            runScipionShowJ("classes@"+fn, "Particles", self._project.getName(), obj.strId(), obj.getImages().strId(), extraParams=args.get('extraParams', ''))
               
         elif issubclass(cls, SetOfCTF):
             mdFn = getattr(obj, '_xmippMd', None)
@@ -198,7 +199,6 @@ class XmippViewer(Viewer):
         elif issubclass(cls, XmippProtRotSpectra):
             self.visualize(obj.outputClasses, extraParams='--mode rotspectra --columns %d' % obj.SomXdim.get())
 
-        
         elif issubclass(cls, XmippProtScreenClasses):
             runShowJ(obj.getVisualizeInfo().get(), extraParams=' --mode metadata --render first')
         
@@ -214,6 +214,10 @@ class XmippViewer(Viewer):
         elif issubclass(cls, XmippProtConvertToPseudoAtoms):
             from protlib_gui_ext import chimera
             chimera(obj._getPath('chimera.cmd'))
+            
+        #THIS IS NEEDED HERE BECAUSE IN WEB WE DONT HAVE DEFAULT OUTPUT VIEWER
+        elif issubclass(cls, XmippProtCTFMicrographs):
+            self.visualize(obj.outputCTF)
         else:
             raise Exception('XmippViewer.visualize: can not visualize class: %s' % obj.getClassName())
         

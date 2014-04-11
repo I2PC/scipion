@@ -51,6 +51,7 @@ class Viewer(object):
         self._tmpPath = tmpPath
         self._project = args.get('project', None)
         self.protocol = args.get('protocol', None)
+        self._parent = args.get('parent', None)
         
     def _getTmpPath(self, *paths):
         return join(self._tmpPath, *paths)
@@ -74,6 +75,10 @@ class Viewer(object):
     
     def setProject(self, project):
         self._project = project
+        
+    def getParent(self):
+        """ Get the Tk parent widget. """
+        return self._parent
     
     
 class ProtocolViewer(Protocol, Viewer):

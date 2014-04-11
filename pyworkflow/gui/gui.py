@@ -27,15 +27,14 @@
 This module contains all configuration
 settings and gui general functions 
 """
-import os, sys
+import os
 import Tkinter as tk
 import tkFont
 
 from pyworkflow.object import OrderedObject
 from pyworkflow.utils.path import findResource
-from pyworkflow.utils.properties import Message, Color
-
-from os.path import join, exists, basename
+from pyworkflow.utils.properties import Message, Color, Icon
+from widgets import Button
 
 """
 Some GUI CONFIGURATION parameters
@@ -275,6 +274,9 @@ class Window():
         self.master = masterWindow
         setCommonFonts(self)
         
+    def getRoot(self):
+        return self.root
+    
     def desiredDimensions(self):
         """This method should be used by subclasses
         to calculate desired dimensions"""
@@ -359,6 +361,13 @@ class Window():
     def showInfo(self, msg, header="Info"):
         from dialog import showInfo
         showInfo(header, msg, self.root)
+        
+    def createCloseButton(self, parent):
+        """ Create a button for closing the window, setting
+        the proper label and icon. 
+        """
+        return Button(parent, Message.LABEL_BUTTON_CLOSE, Icon.ACTION_CLOSE, 
+                          command=self.close)
 
 
 #TODO Move this to a less basic module such as: scipion-gui or similar

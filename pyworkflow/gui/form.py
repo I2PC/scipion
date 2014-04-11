@@ -1012,28 +1012,17 @@ class FormWindow(Window):
         
     def _createButtons(self, parent):
         """ Create the bottom buttons: Close, Save and Execute. """
-#         bottomFrame = tk.Frame(self.root)
-#         bottomFrame.grid(row=2, column=0, sticky='sew')
-#         bottomFrame.columnconfigure(0, weight=1)
-#         self.root.rowconfigure(2, minsize=50)
-        
         btnFrame = tk.Frame(parent)
         
-        btnClose = Button(btnFrame, Message.LABEL_BUTTON_CLOSE, Icon.ACTION_CLOSE, 
-                          command=self.close)
+        btnClose = self.createCloseButton(btnFrame)
         btnClose.grid(row=0, column=0, padx=5, pady=5, sticky='se')
-        t = Message.LABEL_BUTTON_VIS
-        icon = Icon.ACTION_VISUALIZE
         # Save button is not added in VISUALIZE or CHILD modes
         if not self.visualizeMode and not self.childMode:
             btnSave = Button(btnFrame, Message.LABEL_BUTTON_RETURN, Icon.ACTION_SAVE, 
                                 command=self.save)
             btnSave.grid(row=0, column=1, padx=5, pady=5, sticky='se')
-            t = Message.LABEL_BUTTON_EXEC
-            icon = Icon.ACTION_EXECUTE
-        # Add Execute/Visualize button
-        if not self.childMode:
-            btnExecute = HotButton(btnFrame, t, icon, command=self.execute)
+            btnExecute = HotButton(btnFrame, Message.LABEL_BUTTON_EXEC, 
+                                   Icon.ACTION_EXECUTE, command=self.execute)
             btnExecute.grid(row=0, column=2, padx=(5, 28), pady=5, sticky='se')
             
         return btnFrame

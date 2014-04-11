@@ -1,9 +1,35 @@
 #!/usr/bin/env python
+# **************************************************************************
+# *
+# * Authors:     I. Foche Perez (ifoche@cnb.csic.es)
+# *
+# * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
+# *
+# * This program is free software; you can redistribute it and/or modify
+# * it under the terms of the GNU General Public License as published by
+# * the Free Software Foundation; either version 2 of the License, or
+# * (at your option) any later version.
+# *
+# * This program is distributed in the hope that it will be useful,
+# * but WITHOUT ANY WARRANTY; without even the implied warranty of
+# * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# * GNU General Public License for more details.
+# *
+# * You should have received a copy of the GNU General Public License
+# * along with this program; if not, write to the Free Software
+# * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+# * 02111-1307  USA
+# *
+# *  All comments concerning this program package may be sent to the
+# *  e-mail address 'ifoche@cnb.csic.es'
+# *
+# **************************************************************************
 import os
 import subprocess
 import getopt
 import sys
 import argparse
+import urllib
 
 def scipion_logo():
     print ""
@@ -46,6 +72,10 @@ def main(argv):
     parser.add_argument('-m', '--mod-log-file', 
         default="modifications.log",
         help="File that contain the whole modifications log to keep a tracking of what has been done in the Scipion tests data. The path given must be relative to $SCIPION_HOME")
+    
+    parser.add_argument('-u', '--url',
+        default="http://scipionwiki.cnb.csic.es/files/scipion/tests",
+        help="String storing the url where remote datasets will be looked for")
 
     exclusive.add_argument('-q', '--query-for-modifications', 
         action="store_true",
@@ -58,6 +88,18 @@ def main(argv):
     exclusive.add_argument('-r', '--reverse-sync', 
         nargs='+',
         help="Synchronize from the local data to scipion machine. When wildcard 'all' is given, it will synchronize all the local folder with the remote one. When a set of locations is given, they're synchronized one by one against the remote scipion server. File path must be given from $SCIPION_HOME/tests folder")
+    
+    parser.add_argument('-f', '--dataset',
+        action="store_true",
+        help="Determine the dataset to use. The selected operation will be applied to this dataset.")
+    
+    parser.add_argument('-l', '--list-local-datasets',
+        action="store_true",
+        help="Look for local datasets in $SCIPION_HOME/data/tests folder.")
+    
+    parser.add_argument('-x', '--list-remote-datasets',
+        action="store_true",
+        help="Look for remote datasets in http://scipionwiki.cnb.csic.es/files/tests folder.")
 
     args = parser.parse_args()
 
@@ -67,8 +109,36 @@ def main(argv):
     deleteFlag=""
     if args.delete:
         deleteFlag=" -f"
-
-    if args.query_for_modifications:
+    if args.list_local_datasets:
+        if os.path.exists(os.path.join(os.environ['SCIPION_USER_DATA'], 'data', 'tests', 'MANIFEST')):
+            print "List of local datasets in %(datasetsFolder)s" % ({'datasetsFolder': os.path.join(os.environ['SCIPION_USER_DATA'], 'data', 'tests')})
+            manifestFile = open(os.path.join(os.environ['SCIPION_USER_DATA'], 'data', 'tests', 'MANIFEST'), 'r+')
+            manifestLines = manifestFile.readlines()
+            for line in manifestLines:
+                print "\t * "+os.path.split(line.replace("\n","").replace("dataset_",""))[1]
+            print "-"*40
+    elif args.list_remote_datasets:
+        from pyworkflow.utils.path import moveFile
+        print "updating remote info..."
+        if os.path.exists(os.path.join(os.environ['SCIPION_TMP'], 'MANIFEST')):
+            moveFile(os.path.join(os.environ['SCIPION_TMP'], 'MANIFEST'), os.path.join(os.environ['SCIPION_TMP'], '.MANIFEST.backup'))
+        try:
+            urllib.urlretrieve(args.url+'/MANIFEST', os.path.join(os.environ['SCIPION_TMP'],'MANIFEST'))
+            print "done."
+        except:
+            traceback.print_exc()
+            moveFile(os.path.join(os.environ['SCIPION_TMP'], '.MANIFEST.backup'), os.path.join(os.environ['SCIPION_TMP'], 'MANIFEST'))
+        if os.path.exists(os.path.join(os.environ['SCIPION_TMP'], 'MANIFEST')):
+            print "List of remote datasets in %(urlAddress)s" % ({'urlAddress': args.url})
+            manifestFile = open(os.path.join(os.environ['SCIPION_TMP'], 'MANIFEST'), 'r+')
+            manifestLines = manifestFile.readlines()
+            for line in manifestLines:
+                print "\t * "+os.path.split(line.replace("\n","").replace("dataset_",""))[1]
+            print "-"*40
+        if os.path.exists(os.path.join(os.environ['SCIPION_TMP'], '.MANIFEST.backup')):
+            os.remove(os.path.join(os.environ['SCIPION_TMP'], '.MANIFEST.backup'))
+            
+    elif args.query_for_modifications:
         print "Querying the modifications log file..."
         if os.path.exists(os.path.join(os.environ['SCIPION_HOME'],args.last_mod_file)):
             print "File " + args.last_mod_file + " exists. Checking its content..."

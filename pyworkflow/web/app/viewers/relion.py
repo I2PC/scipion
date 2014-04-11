@@ -136,7 +136,7 @@ def doShowAngularDistributionRelion(request, protocolViewer):
 
 
 def plotAngDist2D(request, protocolViewer):
-    xplotter = protocolViewer._createFSC()
+    xplotter = protocolViewer._createAngDist2D()
     return xplotter
 
 #===============================================================================

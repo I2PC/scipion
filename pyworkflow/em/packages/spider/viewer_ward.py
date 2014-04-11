@@ -35,7 +35,7 @@ from pyworkflow.protocol.params import *
 from pyworkflow.viewer import Viewer, ProtocolViewer, DESKTOP_TKINTER, WEB_DJANGO
 from pyworkflow.utils.graph import Graph
 from pyworkflow.gui import Window
-from pyworkflow.gui.widgets import Button
+from pyworkflow.gui.widgets import HotButton
 from pyworkflow.gui.graph import LevelTree
 from pyworkflow.gui.canvas import Canvas, ImageBox
 from pyworkflow.em.packages.xmipp3.viewer import XmippViewer, runShowJ
@@ -134,12 +134,12 @@ class SpiderViewerWard(ProtocolViewer):
         root.grid_rowconfigure(0, weight=1) 
         
         self.buttonframe = Frame(root)
-        self.buttonframe.grid(row=2, column=0, columnspan=2)   
-        saveparticlesbtn = Button(self.buttonframe, "Create New Set Of Particles", command=self.saveParticles)
-        saveparticlesbtn.grid(row=0, column=0, sticky='n', padx=5, pady=5)  
-        btn = Button(self.buttonframe, "Create New Set Of Classes", command=self.saveClasses)
-        btn.grid(row=0, column=1)
-              
+        self.buttonframe.grid(row=2, column=0, columnspan=2)  
+        self.win.createCloseButton(self.buttonframe).grid(row=0, column=0, sticky='n', padx=5, pady=5) 
+        saveparticlesbtn = HotButton(self.buttonframe, "Create Particles", command=self.saveParticles)
+        saveparticlesbtn.grid(row=0, column=1, sticky='n', padx=5, pady=5)  
+        btn = HotButton(self.buttonframe, "Create Classes", command=self.saveClasses)
+        btn.grid(row=0, column=2, sticky='n', padx=5, pady=5)
             
         lt = LevelTree(g)
         lt.DY = 135 # TODO: change in percent of the image size

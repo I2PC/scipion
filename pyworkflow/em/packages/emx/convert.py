@@ -28,7 +28,7 @@ This module implement the import/export of Micrographs and Particles to EMX
 """
 from pyworkflow.utils import *
 from pyworkflow.em.data import *
-import emx
+import emxlib
 from collections import OrderedDict
     
         
@@ -36,7 +36,7 @@ def exportData(emxDir, inputSet, ctfSet=None, xmlFile='data.emx', binaryFile=Non
     """ Export micrographs, coordinates or particles to  EMX format. """
     cleanPath(emxDir)
     makePath(emxDir) 
-    emxData = emx.EmxData()
+    emxData = emxlib.EmxData()
     
     if binaryFile is None:
         binaryFile = xmlFile.replace('.emx', '.mrc')
@@ -66,7 +66,7 @@ def importData(protocol, emxFile, outputDir):
         a dictionary with key and values as outputs sets
         (Micrographs, Coordinates or Particles)
     """
-    emxData = emx.EmxData()
+    emxData = emxlib.EmxData()
     emxData.read(emxFile)
     
     _micrographsFromEmx(protocol, emxData, emxFile, outputDir)
@@ -111,7 +111,7 @@ def _micrographToEmx(mic):
     """ Create an EMX micrograph and fill all the values. """
     index, fn = mic.getLocation()
     i = index or 1
-    emxMic = emx.EmxMicrograph(fileName=fn, index=i)
+    emxMic = emxlib.EmxMicrograph(fileName=fn, index=i)
     _acquisitionToEmx(emxMic, mic.getAcquisition())
     _samplingToEmx(emxMic, mic.getSamplingRate())
     if mic.hasCTF():
@@ -129,7 +129,7 @@ def _setupEmxParticle(emxData, coordinate, index, filename, micSet):
     of Coordinate and Particle, actually, in EMX both are 'particles'
     """
     i = index or 1
-    emxParticle = emx.EmxParticle(fileName=filename, index=i)
+    emxParticle = emxlib.EmxParticle(fileName=filename, index=i)
     if coordinate:
         mic = micSet[coordinate.getMicId()] # get micrograph
         index, filename = mic.getLocation()
@@ -206,11 +206,11 @@ def _particlesToEmx(emxData, partSet, stackFn=None, micSet=None):
 
 def _setLocationFromEmx(emxObj, img):
     """ Set image location from attributes "index" and "fileName". """
-    index = emxObj.get(emx.INDEX, 1)
+    index = emxObj.get(emxlib.INDEX, 1)
 #     if index == 1:
 #         index = NO_INDEX
         
-    img.setLocation(index, emxObj.get(emx.FILENAME))
+    img.setLocation(index, emxObj.get(emxlib.FILENAME))
     
     
 def _setSamplingFromEmx(emxObj, img):
@@ -274,7 +274,7 @@ def _micrographsFromEmx(protocol, emxData, emxFile, outputDir):
     If there is information of the CTF, also the SetOfCTF will
     be registered as output of the protocol.
     """
-    emxMic = emxData.getFirstObject(emx.MICROGRAPH)
+    emxMic = emxData.getFirstObject(emxlib.MICROGRAPH)
     
     if emxMic is not None:        
         micSet = protocol._createSetOfMicrographs()
@@ -293,7 +293,7 @@ def _micrographsFromEmx(protocol, emxData, emxFile, outputDir):
         micSet.setSamplingRate(mic.getSamplingRate())
         micDir = dirname(emxFile)
         
-        for emxMic in emxData.iterClasses(emx.MICROGRAPH):
+        for emxMic in emxData.iterClasses(emxlib.MICROGRAPH):
             _micrographFromEmx(emxMic, mic)
             _, fn = mic.getLocation()
             micFn = join(micDir, fn)
@@ -325,13 +325,13 @@ def _particlesFromEmx(protocol, emxData, emxFile, outputDir):
     """ Create the output SetOfCoordinates or SetOfParticles given an EMXData object.
     Add CTF information to the particles if present.
     """    
-    emxParticle = emxData.getFirstObject(emx.PARTICLE)
+    emxParticle = emxData.getFirstObject(emxlib.PARTICLE)
     partDir = dirname(emxFile)
     micSet = getattr(protocol, 'outputMicrographs', None)
     
     if emxParticle is not None:     
         # Check if there are particles or coordinates
-        fn = emxParticle.get(emx.FILENAME)
+        fn = emxParticle.get(emxlib.FILENAME)
         if exists(join(partDir, fn)): # if the particles has binary data, means particles case
             partSet = protocol._createSetOfParticles()
             part = Particle()
@@ -351,7 +351,7 @@ def _particlesFromEmx(protocol, emxData, emxFile, outputDir):
             
         ih = ImageHandler()
         
-        for emxParticle in emxData.iterClasses(emx.PARTICLE):
+        for emxParticle in emxData.iterClasses(emxlib.PARTICLE):
             if particles:
                 _particleFromEmx(emxParticle, part)
                 i, fn = part.getLocation()
