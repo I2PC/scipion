@@ -31,6 +31,7 @@ from pyworkflow.viewer import ProtocolViewer, DESKTOP_TKINTER, WEB_DJANGO
 from pyworkflow.em import *
 from pyworkflow.gui.form import FormWindow
 from protocol_refinement import ProtFrealign
+from protocol_ctffind3 import ProtCTFFind
 from pyworkflow.em.packages.xmipp3.viewer import runShowJ
 from pyworkflow.em.plotter import EmPlotter
 
@@ -208,4 +209,14 @@ class FrealignViewer(ProtocolViewer):
         """ This will return the name of the function to view
         in web one (or all) params of the protocol"""
         return "viewerFrealign"
+
+class BrandeisViewer(Viewer):
+    """ Wrapper to visualize different type of objects
+    with the Xmipp program xmipp_showj. """
     
+    _environments = [DESKTOP_TKINTER, WEB_DJANGO]
+    _targets = [ProtCTFFind]
+    
+    @classmethod
+    def getView(self):
+        return "viewerBrandeis"

@@ -33,7 +33,7 @@ _logo = "brandeis_logo.png"
 
 from brandeis import *
 
-from viewer import FrealignViewer
+from viewer import *
 from protocol_ctffind3 import ProtCTFFind
 from protocol_refinement import ProtFrealign
 from protocol_ml_classification import ProtFrealignClassify
