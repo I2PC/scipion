@@ -802,8 +802,7 @@ class ProtocolsView(tk.Frame):
             self.project.stopProtocol(prot)
             self._scheduleRunsUpdate()
 
-    def _analyzeResults(self, prot):
-        
+    def _analyzeResults(self, prot):        
 
         viewers = findViewers(prot.getClassName(), DESKTOP_TKINTER)
         if len(viewers):

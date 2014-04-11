@@ -199,7 +199,6 @@ class XmippViewer(Viewer):
         elif issubclass(cls, XmippProtRotSpectra):
             self.visualize(obj.outputClasses, extraParams='--mode rotspectra --columns %d' % obj.SomXdim.get())
 
-        
         elif issubclass(cls, XmippProtScreenClasses):
             runShowJ(obj.getVisualizeInfo().get(), extraParams=' --mode metadata --render first')
         
@@ -215,6 +214,10 @@ class XmippViewer(Viewer):
         elif issubclass(cls, XmippProtConvertToPseudoAtoms):
             from protlib_gui_ext import chimera
             chimera(obj._getPath('chimera.cmd'))
+            
+        #THIS IS NEEDED HERE BECAUSE IN WEB WE DONT HAVE DEFAULT OUTPUT VIEWER
+        elif issubclass(cls, XmippProtCTFMicrographs):
+            self.visualize(obj.outputCTF)
         else:
             raise Exception('XmippViewer.visualize: can not visualize class: %s' % obj.getClassName())
         
