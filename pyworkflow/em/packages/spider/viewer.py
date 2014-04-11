@@ -56,11 +56,11 @@ class SpiderViewer(Viewer):
             showTextFileViewer("PCA file", [obj.filename.get()])
         
         elif isinstance(obj, SpiderProtFilter):
-            XmippViewer().visualize(obj.outputParticles)
+            XmippViewer(project=self.getProject()).visualize(obj.outputParticles)
             
         elif isinstance(obj, SpiderProtCustomMask):
             mask = obj.outputMask
-            XmippViewer().visualize(mask)
+            XmippViewer(project=self.getProject()).visualize(mask)
             # Remove location to visualize the whole stack
             runShowJ(mask.getFileName())
             
