@@ -27,16 +27,14 @@
 from collections import OrderedDict
 import json
 
+
 class TableLayoutConfiguration():
     def __init__(self, ds, tableDataset, allowRender=True, defaultColumnsLayoutProperties=None):
         
         self.columnsLayout = OrderedDict() 
          
         for col in tableDataset.iterColumns():
-#            self.columnsLayout[col.getName()]=ColumnLayoutConfiguration(col, ds.getTypeOfColumn(col.getName()), allowRender, defaultColumnsLayoutProperties[col.getName()] if defaultColumnsLayoutProperties != None else {})
             self.columnsLayout[col.getName()]=ColumnLayoutConfiguration(col, ds, allowRender, defaultColumnsLayoutProperties[col.getName()] if defaultColumnsLayoutProperties != None else {})
-            
-        self.colsOrder = defineColsLayout(self.columnsLayout.keys())
         
     def getLabelsToRenderComboBoxValues(self):
         labelsToRender = [columnLayout.label for columnLayout in self.columnsLayout.values() if (columnLayout.columnLayoutProperties.renderable or columnLayout.columnLayoutProperties.allowSetRenderable)]
@@ -94,14 +92,6 @@ class ColumnLayoutProperties():
                 "renderFunc":self.renderFunc,
                 "extraRenderFunc":self.extraRenderFunc
                 }
-
-        
-def defineColsLayout(labels):
-    colsOrder = range(len(labels))
-    if 'enabled' in labels:
-        colsOrder.insert(0, colsOrder.pop(labels.index('enabled')))
-    return colsOrder
-
 
 class ColumnLayoutConfigurationEncoder(json.JSONEncoder):
     def default(self, columnLayoutConfiguration):

@@ -42,8 +42,9 @@ class DataSet(object):
         self._numberSlices = numberSlices 
         
         
-    def setTableName(self, tableName):    
-        self._tableName = tableName
+    def currentTable(self):
+        """ Returns the name of the last selected table. """    
+        return self._tableName
         
     def setVolumeName(self, volumeName):    
         self._volumeName = volumeName
@@ -65,13 +66,14 @@ class DataSet(object):
         return self._tables
     
     def getTable(self, tableName=None):
-        if tableName == None:
-            tableName = self._tableName
-            
+        if tableName is None:
+            tableName = self.listTables()[0]
         if not tableName in self._tables:
             raise Exception("DataSet: table '%s' not found.\n   Current tables: %s" % 
                             (tableName, self._tables))
         table = self._loadTable(tableName)
+        self._tableName = tableName
+        
         return table
     
     def getTypeOfColumn(self, label):

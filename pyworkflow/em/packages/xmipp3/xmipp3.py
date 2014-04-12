@@ -266,15 +266,14 @@ class XmippSet():
     
     
 class XmippDataSet(ds.DataSet):
-    """ this class will implement a dataset base on
-    a metadata file, which can contains several blocks.
-    Each block is a table on the dataset and is read
-    as a Xmipp metadata. 
+    """ Provide a DataSet implementation base on Xmipp xmd file.
+    The tables of the dataset will be the blocks in the metadata.
+    Each block is a table on the dataset and is read as a Xmipp metadata. 
     """
     def __init__(self, filename):
         self._filename = filename
         blocks = xmipp.getBlocksInMetaDataFile(filename)
-        if len(blocks) == 0: # If there are no block, at an empty one
+        if not blocks: # If there are no block, add an empty one
             blocks = ['']
         ds.DataSet.__init__(self, blocks)
         
@@ -344,26 +343,18 @@ class XmippDataSet(ds.DataSet):
         return False
         
     def _getTransformation(self, md, objId):
-        rot  = md.getValue(xmipp.MDL_ANGLE_ROT,objId)
-        tilt = md.getValue(xmipp.MDL_ANGLE_TILT,objId)
-        psi  = md.getValue(xmipp.MDL_ANGLE_PSI,objId)
-        if rot is  None:
-            rot = 0
-        if tilt is  None:
-            tilt = 0
-        if psi is  None:
-            psi = 0
+        rot  = md.getValue(xmipp.MDL_ANGLE_ROT, objId) or 0.
+        tilt = md.getValue(xmipp.MDL_ANGLE_TILT, objId) or 0.
+        psi  = md.getValue(xmipp.MDL_ANGLE_PSI, objId) or 0.
 
-        tMatrix=xmipp.Euler_angles2matrix(rot,tilt,psi)
-        x = md.getValue(xmipp.MDL_SHIFT_X, objId)
-        y = md.getValue(xmipp.MDL_SHIFT_Y, objId)
-        z = md.getValue(xmipp.MDL_SHIFT_Z, objId)
+        tMatrix = xmipp.Euler_angles2matrix(rot, tilt, psi)
+        x = md.getValue(xmipp.MDL_SHIFT_X, objId) or 0.
+        y = md.getValue(xmipp.MDL_SHIFT_Y, objId) or 0.
+        z = md.getValue(xmipp.MDL_SHIFT_Z, objId) or 0.
 
-        matrix = [tMatrix[0][0], tMatrix[0][1], tMatrix[0][2], x if x!=None else 0,
-                tMatrix[1][0], tMatrix[1][1], tMatrix[1][2], y if y!=None else 0,
-                tMatrix[2][0], tMatrix[2][1], tMatrix[2][2], z if z!=None else 0]
-        
-#        print matrix
+        matrix = [tMatrix[0][0], tMatrix[0][1], tMatrix[0][2], x,
+                  tMatrix[1][0], tMatrix[1][1], tMatrix[1][2], y,
+                  tMatrix[2][0], tMatrix[2][1], tMatrix[2][2], z]
 
         return matrix
         
