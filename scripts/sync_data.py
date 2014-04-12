@@ -24,12 +24,14 @@
 # *  e-mail address 'ifoche@cnb.csic.es'
 # *
 # **************************************************************************
+from __future__ import division
 import os
 import subprocess
 import getopt
 import sys
 import argparse
 import urllib
+from pyworkflow.utils.path import moveFile, makePath, makeFilePath
 
 def scipion_logo():
     print ""
@@ -56,6 +58,90 @@ def scipion_logo():
     print "QL jmQQQgmQQQQQQmaaaQWQQQ"
     print ""
 
+def backupFile(basePath, fileName='MANIFEST'):
+    filePath = os.path.join(basePath, fileName)
+    backPath = os.path.join(basePath, "."+fileName+".backup")
+    if os.path.exists(filePath):
+        moveFile(filePath, backPath)
+        
+def restoreFile(basePath, fileName='MANIFEST'):
+    filePath = os.path.join(basePath, fileName)
+    backPath = os.path.join(basePath, "."+fileName+".backup")
+    if os.path.exists(backPath):
+        if os.path.exists(filePath):
+            os.remove(filePath)
+        moveFile(backPath, filePath)
+            
+def delBackFile(basePath, fileName='MANIFEST'):
+    filePath = os.path.join(basePath, fileName)
+    backPath = os.path.join(basePath, "."+fileName+".backup")
+    if os.path.exists(backPath):
+        os.remove(backPath)
+        
+def downloadDataset(datasetName, destination=os.path.join(os.environ['SCIPION_USER_DATA'],'data','tests'), url="http://scipionwiki.cnb.csic.es/files/scipion/data/tests/NACHOTESTS_PLEASEDONOTREMOVE/tests", verbose=False):
+    datasetFolder = os.path.join(destination, "dataset_%(dataset)s" % ({'dataset': datasetName}))
+    makePath(datasetFolder)
+    try:
+        if verbose:
+            print "retreiving MANIFEST file"
+        urllib.urlretrieve(url+'/dataset_'+datasetName+'/MANIFEST', getManifestPath(dataset=datasetName))
+    except:
+        print "URL could not be retreived"
+        if verbose:
+            print "URL: " + url+'/dataset_'+datasetName+'/MANIFEST'
+            print "destination:" + getManifestPath(dataset=datasetName)
+    manifestFile = open(getManifestPath(dataset=datasetName), 'r+')
+    manifestLines = manifestFile.readlines()
+    print "Fetching dataset %(dataset)s files..." % ({'dataset': datasetName})
+    totalNumber = len(manifestLines)*2.0
+    percent = prevPercent = 0
+    downloadBarWidth = 100
+    if not verbose:
+        sys.stdout.write("[%s]" % (" " * downloadBarWidth))
+        sys.stdout.flush()
+        sys.stdout.write("\b" * (downloadBarWidth+1))
+    for number, line in enumerate(manifestLines):
+        for indx, fileOption in enumerate([ os.path.normpath(line.replace("\n","")), os.path.normpath(os.path.join('md5', os.path.relpath(line.replace("\n",""), 'data') + ".md5")) ]):
+            file = fileOption
+            md5 = ''
+            if indx == 1:
+                md5 = 'md5'
+            makeFilePath(os.path.join(datasetFolder, file))
+            try:
+                urllib.urlretrieve(url+'/dataset_'+datasetName+'/'+md5+'/'+file, os.path.join(datasetFolder, file))
+                percent = ((number*2+indx+1)/(totalNumber*1.0))*100
+                if verbose:
+                    print "\t "+file+" ...OK ( %(percent)02d " % ({'percent': percent}) + ' %)'
+                else:
+                    progress = percent-prevPercent
+                    remaining = downloadBarWidth-progress
+                    for x in range(0, (int)(progress//1)):
+                        sys.stdout.write("-")
+                        sys.stdout.flush()
+                        progress-=1
+                    if progress != 0:
+                        if ((percent-progress)//1) != ((percent)//1):
+                            sys.stdout.write("-")
+                            sys.stdout.flush()
+                prevPercent = percent
+            except:
+                print "\t "+ file+" ...ERROR"
+                print "URL: "+url+'/dataset_'+datasetName+file
+                print "destination: "+os.path.join(datasetFolder, file)
+    if not verbose:
+            sys.stdout.write("\n")
+    print "done"
+    print ""
+    #print "Executing bash script " + args.syncfile + "..."
+    #print "bash " + args.syncfile + " -l " + args.last_mod_file + deleteFlag
+    #subprocess.call("bash " + args.syncfile, shell=True)
+
+def getManifestPath(basePath=os.path.join(os.environ['SCIPION_USER_DATA'],'data','tests'), dataset=""):
+    datasetName = "dataset_"+ dataset
+    if dataset == "":
+        datasetName = ""
+    return os.path.join(basePath, datasetName, 'MANIFEST')
+
 def main(argv):
     # Arguments parsing
     parser = argparse.ArgumentParser(description="*"*5 + "Sync Data Python Bash Executor (WRAPPER)" + "*"*5)
@@ -74,7 +160,7 @@ def main(argv):
         help="File that contain the whole modifications log to keep a tracking of what has been done in the Scipion tests data. The path given must be relative to $SCIPION_HOME")
     
     parser.add_argument('-u', '--url',
-        default="http://scipionwiki.cnb.csic.es/files/scipion/tests",
+        default="http://scipionwiki.cnb.csic.es/files/scipion/data/tests/NACHOTESTS_PLEASEDONOTREMOVE/tests",
         help="String storing the url where remote datasets will be looked for")
 
     exclusive.add_argument('-q', '--query-for-modifications', 
@@ -90,7 +176,6 @@ def main(argv):
         help="Synchronize from the local data to scipion machine. When wildcard 'all' is given, it will synchronize all the local folder with the remote one. When a set of locations is given, they're synchronized one by one against the remote scipion server. File path must be given from $SCIPION_HOME/tests folder")
     
     parser.add_argument('-f', '--dataset',
-        action="store_true",
         help="Determine the dataset to use. The selected operation will be applied to this dataset.")
     
     parser.add_argument('-l', '--list-local-datasets',
@@ -100,6 +185,10 @@ def main(argv):
     parser.add_argument('-x', '--list-remote-datasets',
         action="store_true",
         help="Look for remote datasets in http://scipionwiki.cnb.csic.es/files/tests folder.")
+    
+    parser.add_argument('-v', '--verbose',
+        action="store_true",
+        help="Verbose mode. This will print more detailed messages")
 
     args = parser.parse_args()
 
@@ -110,33 +199,30 @@ def main(argv):
     if args.delete:
         deleteFlag=" -f"
     if args.list_local_datasets:
-        if os.path.exists(os.path.join(os.environ['SCIPION_USER_DATA'], 'data', 'tests', 'MANIFEST')):
+        if os.path.exists(getManifestPath()):
             print "List of local datasets in %(datasetsFolder)s" % ({'datasetsFolder': os.path.join(os.environ['SCIPION_USER_DATA'], 'data', 'tests')})
-            manifestFile = open(os.path.join(os.environ['SCIPION_USER_DATA'], 'data', 'tests', 'MANIFEST'), 'r+')
+            manifestFile = open(getManifestPath(), 'r+')
             manifestLines = manifestFile.readlines()
             for line in manifestLines:
                 print "\t * "+os.path.split(line.replace("\n","").replace("dataset_",""))[1]
             print "-"*40
     elif args.list_remote_datasets:
-        from pyworkflow.utils.path import moveFile
         print "updating remote info..."
-        if os.path.exists(os.path.join(os.environ['SCIPION_TMP'], 'MANIFEST')):
-            moveFile(os.path.join(os.environ['SCIPION_TMP'], 'MANIFEST'), os.path.join(os.environ['SCIPION_TMP'], '.MANIFEST.backup'))
+        backupFile(getManifestPath(basePath=os.environ['SCIPION_TMP']))
         try:
-            urllib.urlretrieve(args.url+'/MANIFEST', os.path.join(os.environ['SCIPION_TMP'],'MANIFEST'))
+            urllib.urlretrieve(args.url+'/MANIFEST', getManifestPath(basePath=os.environ['SCIPION_TMP']))
             print "done."
         except:
             traceback.print_exc()
-            moveFile(os.path.join(os.environ['SCIPION_TMP'], '.MANIFEST.backup'), os.path.join(os.environ['SCIPION_TMP'], 'MANIFEST'))
-        if os.path.exists(os.path.join(os.environ['SCIPION_TMP'], 'MANIFEST')):
+            restoreFile(getManifestPath(basePath=os.environ['SCIPION_TMP']))
+        if os.path.exists(getManifestPath(basePath=os.environ['SCIPION_TMP'])):
             print "List of remote datasets in %(urlAddress)s" % ({'urlAddress': args.url})
-            manifestFile = open(os.path.join(os.environ['SCIPION_TMP'], 'MANIFEST'), 'r+')
+            manifestFile = open(getManifestPath(basePath=os.environ['SCIPION_TMP']), 'r+')
             manifestLines = manifestFile.readlines()
             for line in manifestLines:
                 print "\t * "+os.path.split(line.replace("\n","").replace("dataset_",""))[1]
             print "-"*40
-        if os.path.exists(os.path.join(os.environ['SCIPION_TMP'], '.MANIFEST.backup')):
-            os.remove(os.path.join(os.environ['SCIPION_TMP'], '.MANIFEST.backup'))
+        delBackFile(getManifestPath(basePath=os.environ['SCIPION_TMP']))
             
     elif args.query_for_modifications:
         print "Querying the modifications log file..."
@@ -161,32 +247,38 @@ def main(argv):
             print "File " + args.last_mod_file + " doesn't exist. Creating it..."
             open(os.path.join(os.environ['SCIPION_HOME'],args.last_mod_file), 'w').close()
             sys.exit(2) #We return with 2, to let Buildbot know that no modification was made (when failure there was modification)
-
-    elif args.reverse_sync:
-        print "Reverse synchronizing, BE CAREFUL!!! OPERATION EXTREMELY DANGEROUS!!!"
-        ans = ""
-        if "".join(args.reverse_sync) == "all":
-            while ans != "y" and ans != "Y" and ans != "n" and ans != "N":
-                ans = raw_input("You're about to synchronize all your data with the remote data. Are you sure you want to continue? (y/n): ")
+    elif args.dataset:
+        print "Selected dataset: %(dataset)s" % ({'dataset': args.dataset})
+        if args.reverse_sync:
+            print "Reverse synchronizing, BE CAREFUL!!! OPERATION EXTREMELY DANGEROUS!!!"
+            ans = ""
+            if "".join(args.reverse_sync) == "all":
+                while ans != "y" and ans != "Y" and ans != "n" and ans != "N":
+                    ans = raw_input("You're about to synchronize all your data with the remote data. Are you sure you want to continue? (y/n): ")
+            else:
+                print "Following files/folders are going to be upload to the remote scipion repository:"
+                for sfile in args.reverse_sync:
+                    print sfile
+                while ans != "y" and ans != "Y" and ans != "n" and ans != "N":
+                    ans = raw_input("You're about to synchronize all of them. Are you sure you want to smash 'em all? (y/n): ")
+            if ans == ("y" or "Y"):
+                print "You've chosen to proceed. Executing bash script " + args.syncfile + " -r ..."
+                print "bash " + args.syncfile + deleteFlag + " -r " + " ".join(args.reverse_sync)
+                #subprocess.call("bash " + args.syncfile + " -l " + args.last_mod_file + deleteFlag + " -r " + " ".join(args.reverse_sync), shell=True)
+            else:
+                print "You've chosen to abort. Goodbye!."
+                sys.exit(3)
         else:
-            print "Following files/folders are going to be upload to the remote scipion repository:"
-            for sfile in args.reverse_sync:
-                print sfile
-            while ans != "y" and ans != "Y" and ans != "n" and ans != "N":
-                ans = raw_input("You're about to synchronize all of them. Are you sure you want to smash 'em all? (y/n): ")
-        if ans == ("y" or "Y"):
-            print "You've chosen to proceed. Executing bash script " + args.syncfile + " -r ..."
-            print "bash " + args.syncfile + deleteFlag + " -r " + " ".join(args.reverse_sync)
-            subprocess.call("bash " + args.syncfile + " -l " + args.last_mod_file + deleteFlag + " -r " + " ".join(args.reverse_sync), shell=True)
-        else:
-            print "You've chosen to abort. Goodbye!."
-            sys.exit(3)
-
-    else:
-        scipion_logo()
-        print "Executing bash script " + args.syncfile + "..."
-        print "bash " + args.syncfile + " -l " + args.last_mod_file + deleteFlag
-        subprocess.call("bash " + args.syncfile, shell=True)
+            datasetFolder = os.path.join(os.environ['SCIPION_USER_DATA'],'data','tests',"dataset_%(dataset)s" % ({'dataset': args.dataset}))
+            if(os.path.exists(datasetFolder)):
+                print "checking checksum for updates..."
+                
+                print "local checksum: " 
+            else:
+                scipion_logo()
+                print "dataset not in local machine, trying to download..."
+                downloadDataset(args.dataset, url=args.url)
+                
         
 
 if __name__ == "__main__":
