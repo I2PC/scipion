@@ -216,8 +216,12 @@ if __name__ == '__main__':
                         print "Synchronizing dataset %s with local data" % dataset
                         runCmd('scripts/sync_data.py -f %s -r' % dataset)
                     elif option == "down-sync":
+                        verbosity = ""
+                        if n > 4:
+                            if sys.argv[4] == "verbose":
+                                verbosity = "-v"
                         print "Synchronizing local dataset %s with remote data" % dataset
-                        runCmd('scripts/sync_data.py -f %s' % dataset)
+                        runCmd('scripts/sync_data.py -f %s %s' % (dataset, verbosity))
                     elif option == "raw":
                         args = ' '.join(sys.argv[4:]) # We leave here a way to pass arguments directly to the script
                         runCmd('scripts/sync_data.py %s' % args)

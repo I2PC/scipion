@@ -31,6 +31,7 @@ import getopt
 import sys
 import argparse
 import urllib
+import hashlib
 from pyworkflow.utils.path import moveFile, makePath, makeFilePath
 
 def scipion_logo():
@@ -108,7 +109,7 @@ def downloadDataset(datasetName, destination=os.path.join(os.environ['SCIPION_US
                 md5 = 'md5'
             makeFilePath(os.path.join(datasetFolder, file))
             try:
-                urllib.urlretrieve(url+'/dataset_'+datasetName+'/'+md5+'/'+file, os.path.join(datasetFolder, file))
+                urllib.urlretrieve(url+'/dataset_'+datasetName+'/'+file, os.path.join(datasetFolder, file))
                 percent = ((number*2+indx+1)/(totalNumber*1.0))*100
                 if verbose:
                     print "\t "+file+" ...OK ( %(percent)02d " % ({'percent': percent}) + ' %)'
@@ -116,20 +117,43 @@ def downloadDataset(datasetName, destination=os.path.join(os.environ['SCIPION_US
                     progress = percent-prevPercent
                     remaining = downloadBarWidth-progress
                     for x in range(0, (int)(progress//1)):
-                        sys.stdout.write("-")
+                        sys.stdout.write("#")
                         sys.stdout.flush()
                         progress-=1
                     if progress != 0:
                         if ((percent-progress)//1) != ((percent)//1):
-                            sys.stdout.write("-")
+                            sys.stdout.write("#")
                             sys.stdout.flush()
                 prevPercent = percent
             except:
                 print "\t "+ file+" ...ERROR"
                 print "URL: "+url+'/dataset_'+datasetName+file
                 print "destination: "+os.path.join(datasetFolder, file)
+                answer = "-"
+                while answer != "y" and answer != "n" and answer != "":
+                    answer = raw_input("continue downloading? (y/[n]): ")
+                    if answer == "n" or answer == "":
+                        sys.exit(1)
+        md5sum = 0
+        with open(os.path.join(datasetFolder, os.path.normpath(line.replace("\n",""))),'r+') as fileToCheck:
+            data = fileToCheck.read()
+            md5sum = hashlib.md5(data).hexdigest()
+        md5file = open(os.path.normpath(os.path.join(datasetFolder, 'md5', os.path.relpath(line.replace("\n",""), 'data') + ".md5")),'r+')
+        md5calc = md5file.readlines()[0].split(" ")[0]
+        if verbose:
+            print "\t \t md5 verification...%(md5sum)s %(md5calc)s" % ({'md5sum': md5sum, 'md5calc': md5calc})
+        if md5sum != md5calc:
+            print "ERROR in md5 verification"
+            answer = "-"
+            while answer != "y" and answer != "n" and answer != "":
+                answer = raw_input("continue downloading? (y/[n]): ")
+                if answer == "n" or answer == "":
+                    sys.exit(1)
+        elif verbose:
+            print "md5 verification...OK"
+            print ""
     if not verbose:
-            sys.stdout.write("\n")
+        sys.stdout.write("\n")
     print "done"
     print ""
     #print "Executing bash script " + args.syncfile + "..."
@@ -277,7 +301,7 @@ def main(argv):
             else:
                 scipion_logo()
                 print "dataset not in local machine, trying to download..."
-                downloadDataset(args.dataset, url=args.url)
+                downloadDataset(args.dataset, url=args.url, verbose=args.verbose)
                 
         
 
