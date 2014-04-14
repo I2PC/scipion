@@ -56,14 +56,31 @@ MODE_TABLE = 'table'
 MODE_VOL_ASTEX = 'volume_astex'
 MODE_VOL_CHIMERA = 'volume_chimera'
 
+GOTO = 'goto'
+ROWS = 'rows'
+COLS = 'cols'
 ALLOW_RENDER = 'allowRender'
-VOL_VALUES = 'volumesToRenderComboBox'
+MANUAL_ADJUST = 'colRowMode'
+
+VOL_SELECTED = 'volumesToRenderComboBox'
+VOL_TYPE = 'typeVolume'
+VOL_VIEW = 'resliceComboBox'
+
 IMG_DIMS = 'imageDimensions'
 IMG_ZOOM = 'zoom'
 IMG_ZOOM_DEFAULT = 'defaultZoom'
+IMG_MIRRORY = 'mirrorY'
+IMG_APPLY_TRANSFORM = 'applyTransformMatrix'
+IMG_ONLY_SHIFTS = 'onlyShifts'
+IMG_WRAP = 'wrap'
+IMG_MAX_WIDTH = 'imageMaxWidth'
+IMG_MIN_WIDTH = 'imageMinWidth'
+IMG_MAX_HEIGHT = 'imageMaxHeight'
+IMG_MIN_HEIGHT  = 'imageMinHeight'
 
 PROJECT_NAME = 'projectName'
 PROJECT_PATH = 'projectPath'
+OBJECT_ID = 'objectId'
 
 
 def loadDataSet(request, filename, firstTime):
@@ -83,29 +100,26 @@ def loadDataSet(request, filename, firstTime):
 
 def loadColumnsConfig(request, dataset, table, inputParams, extraParams, firstTime):
     """ Load table layout configuration. How to display columns and attributes (visible, render, editable) """ 
+    tableChanged = request.session.get(TABLE_NAME, None) != inputParams.get(TABLE_NAME, None)
+    print 'tableChanged: ', tableChanged
     
-    if firstTime:
+    if firstTime or tableChanged:
         columns_properties = getExtraParameters(extraParams, table)
         request.session[COLS_CONFIG_DEFAULT] = columns_properties
 
-        print "loadColumnsConfig: creating ColumnsConfig"
-        layoutConfig = ColumnsConfig(dataset, table, inputParams[ALLOW_RENDER], columns_properties)
-        request.session[COLS_CONFIG] = layoutConfig
-        
-    
+        columnsConfig = ColumnsConfig(dataset, table, inputParams[ALLOW_RENDER], columns_properties)
+        request.session[COLS_CONFIG] = columnsConfig
     else:
-        layoutConfig = request.session[COLS_CONFIG] 
+        columnsConfig = request.session[COLS_CONFIG] 
             
-            
-    return layoutConfig
-
+    inputParams[COLS_CONFIG] = columnsConfig
+    setLabelToRender(request, table, inputParams, extraParams, firstTime)
+        
 
 def setLabelToRender(request, table, inputParams, extraParams, firstTime):
     """ If no label is set to render, set the first one if exists """
     if (not inputParams.get(LABEL_SELECTED, False) or 
         request.session.get(TABLE_NAME, None) != inputParams.get(TABLE_NAME, None)):
-        print "-"*50, "HERE"
-        inputParams[COLS_CONFIG].printColumns()
         labelsToRender = inputParams[COLS_CONFIG].getRenderableColumns()
         
         if labelsToRender:
@@ -114,17 +128,17 @@ def setLabelToRender(request, table, inputParams, extraParams, firstTime):
             # If there is no image to display and it is initial load, switch to table mode 
             if firstTime and inputParams[MODE] != MODE_TABLE:
                 inputParams[MODE] = MODE_TABLE
+                # FIXME: we really need this other call to showj???
                 showj(request, inputParams, extraParams)
             inputParams[LABEL_SELECTED] = None
     
-    print "label: ", inputParams[LABEL_SELECTED]
     table.setLabelToRender(inputParams[LABEL_SELECTED]) 
     
 
-def setRenderingOptions(request, dataset, tableDataset, inputParams):
+def setRenderingOptions(request, dataset, table, inputParams):
     
     #Setting the _imageVolName
-    _imageVolName = inputParams[VOL_VALUES] if (VOL_VALUES in inputParams and inputParams[VOL_VALUES] != '') else tableDataset.getElementById(0,inputParams[LABEL_SELECTED])
+    _imageVolName = inputParams.get(VOL_SELECTED, None) or table.getElementById(0, inputParams[LABEL_SELECTED])
  
     #Setting the _typeOfColumnToRender
     label = inputParams[LABEL_SELECTED]
@@ -133,24 +147,33 @@ def setRenderingOptions(request, dataset, tableDataset, inputParams):
     #Setting the _imageDimensions
     _imageDimensions = readDimensions(request, _imageVolName, _typeOfColumnToRender)
     
+    print "="*100
+    print "IMAGE VOL NAME = ", _imageVolName
+    print "DIMENSIONS = ", _imageDimensions
+    print "="*100
+    
     dataset.setNumberSlices(_imageDimensions[2])
     
     if _typeOfColumnToRender == "image":
         isVol = dataset.getNumberSlices() > 1
+        is3D = inputParams[MODE]==MODE_VOL_ASTEX or inputParams[MODE]==MODE_VOL_CHIMERA
         #Setting the _convert 
-        _convert = isVol and (inputParams[MODE]==MODE_GALLERY or inputParams[MODE]==MODE_VOL_ASTEX or inputParams[MODE]==MODE_VOL_CHIMERA)
+        _convert = isVol and (inputParams[MODE]==MODE_GALLERY or is3D)
         #Setting the _reslice 
         _reslice = isVol and inputParams[MODE]==MODE_GALLERY
         #Setting the _getStats 
-        _getStats = isVol and (inputParams[MODE]==MODE_VOL_ASTEX or inputParams[MODE]==MODE_VOL_CHIMERA)
+        _getStats = isVol and is3D
         #Setting the _dataType 
         _dataType = xmipp.DT_FLOAT if isVol and inputParams[MODE]==MODE_VOL_ASTEX else xmipp.DT_UCHAR
         #Setting the _imageVolName and _stats     
-        _imageVolName, _stats = readImageVolume(request, _imageVolName, _convert, _dataType, _reslice, int(inputParams['resliceComboBox']), _getStats)
+        _imageVolName, _stats = readImageVolume(request, _imageVolName, _convert, _dataType, _reslice, int(inputParams[VOL_VIEW]), _getStats)
         
         if isVol:
             inputParams[COLS_CONFIG].configColumn(label, renderFunc="get_slice")
             dataset.setVolumeName(_imageVolName)
+        else:
+            inputParams[COLS_CONFIG].configColumn(label, renderFunc="get_image")
+            dataset.setVolumeName(None)           
             
     volPath = os.path.join(request.session[PROJECT_PATH], _imageVolName)
     
@@ -181,7 +204,7 @@ def showj(request, inputParams=None, extraParams=None, firstTime=False):
         else:
             inputParams.update(updateParams)
 
-    if inputParams["typeVolume"] != 'pdb':
+    if inputParams[VOL_TYPE] != 'pdb':
         # Load the initial dataset from file or session
         dataset =  loadDataSet(request, inputParams[PATH], firstTime)
         # Load the requested table (or the first if no specified)
@@ -190,15 +213,8 @@ def showj(request, inputParams=None, extraParams=None, firstTime=False):
         inputParams[TABLE_NAME] = dataset.currentTable()
         
         # Load columns configuration. How to display columns and attributes (visible, render, editable)  
-        inputParams[COLS_CONFIG] = loadColumnsConfig(request, dataset, table, inputParams, extraParams, firstTime)
+        loadColumnsConfig(request, dataset, table, inputParams, extraParams, firstTime)
     
-#        for col in inputParams[COLS_CONFIG].columnsLayout.values():
-#            print "val!! ", col.columnLayoutProperties.getValues() 
-    
-        #If no label is set to render, set the first one if exists
-        
-        setLabelToRender(request, table, inputParams, extraParams, firstTime)
-        
         if not inputParams[LABEL_SELECTED]:
             inputParams[IMG_ZOOM] = 0
             _imageDimensions = None
@@ -260,8 +276,8 @@ def createContext(dataset, table, columnsConfig, request, showjForm):
     #Create context to be send
     
     context = {
-            IMG_DIMS: request.session[IMG_DIMS] if IMG_DIMS in request.session else 0,
-            IMG_ZOOM_DEFAULT: request.session[IMG_ZOOM_DEFAULT] if IMG_ZOOM_DEFAULT in request.session else 0,
+            IMG_DIMS: request.session.get(IMG_DIMS, 0),
+            IMG_ZOOM_DEFAULT: request.session.get(IMG_ZOOM_DEFAULT, 0),
             PROJECT_NAME: request.session[PROJECT_NAME],
             'form': showjForm
             }
@@ -322,8 +338,8 @@ def save_showj_table(request):
         
 #        print "jsonChanges",jsonChanges 
         
-        dataset=request.session[DATASET]
-        blockComboBox=request.session[TABLE_NAME]
+        dataset = request.session[DATASET]
+        blockComboBox = request.session[TABLE_NAME]
 #        columnsConfig=request.session[COLS_CONFIG]
         
         table=dataset.getTable(blockComboBox)
@@ -353,29 +369,31 @@ def save_showj_table(request):
 ###################################################################  
 def visualizeObject(request):
     #Initialize default values
-    inputParams = {'objectId': '',
-                       PATH: '',
-                       ALLOW_RENDER: True,                 # Image can be displayed, depending on column layout 
-                       MODE: MODE_GALLERY,                   # Mode Options: gallery, table, column, volume_astex, volume_chimera
-                       IMG_ZOOM: '128px',                     # Zoom set by default
-                       TABLE_NAME: None,                    # Table name to display. If None the first one will be displayed
-                       LABEL_SELECTED: None,        # Column to be displayed in gallery mode. If None the first one will be displayed
-                       VOL_VALUES: '',       # If 3D, Volume to be displayed in gallery, volume_astex and volume_chimera mode. If None the first one will be displayed
+    inputParams = {OBJECT_ID: '',
+                   PATH: '',
+                   ALLOW_RENDER: True,                 # Image can be displayed, depending on column layout 
+                   MODE: MODE_GALLERY,                   # Mode Options: gallery, table, column, volume_astex, volume_chimera
+                   TABLE_NAME: None,                    # Table name to display. If None the first one will be displayed
+                   LABEL_SELECTED: None,        # Column to be displayed in gallery mode. If None the first one will be displayed
+                   VOL_SELECTED: None,       # If 3D, Volume to be displayed in gallery, volume_astex and volume_chimera mode. If None the first one will be displayed
 #                       'dims': '2d',                        # Object Dimensions
-                       'goto': 1,                           # Element selected (metadata record) by default. It can be a row in table mode or an image in gallery mode
-                       'colRowMode': 'Off',                 # In gallery mode 'On' means columns can be adjust manually by the user. When 'Off' columns are adjusted automatically to screen width.
-                       'cols':  '',                         # In gallery mode (and colRowMode set to 'On') cols define number of columns to be displayed
-                       'rows': '',                          # In gallery mode (and colRowMode set to 'On') rows define number of columns to be displayed
-                       'mirrorY': False,                    # When 'True' image are mirrored in Y Axis 
-                       'applyTransformMatrix': False,       # When 'True' if there is transform matrix, it will be applied
-                       'onlyShifts': False,                 # When 'True' if there is transform matrix, only shifts will be applied
-                       'wrap': False,                       # When 'True' if there is transform matrix, only shifts will be applied
-                       'resliceComboBox': xmipp.VIEW_Z_NEG, # If 3D, axis to slice volume 
-                       'imageMaxWidth': 512,                # Maximum image width (in pixels)
-                       'imageMinWidth': 64,                 # Minimum image width (in pixels)
-                       'imageMaxHeight': 512,               # Maximum image height (in pixels)
-                       'imageMinHeight': 64,                # Minimum image height (in pixels)
-                       'typeVolume': 'map'}                 # If map, it will be displayed normally, else if pdb only astexViewer and chimera display will be available
+                   GOTO: 1,                           # Element selected (metadata record) by default. It can be a row in table mode or an image in gallery mode
+                   MANUAL_ADJUST: 'Off',                 # In gallery mode 'On' means columns can be adjust manually by the user. When 'Off' columns are adjusted automatically to screen width.
+                   COLS:  '',                         # In gallery mode (and colRowMode set to 'On') cols define number of columns to be displayed
+                   ROWS: '',                          # In gallery mode (and colRowMode set to 'On') rows define number of columns to be displayed
+                   
+                   IMG_ZOOM: '128px',                     # Zoom set by default
+                   IMG_MIRRORY: False,                    # When 'True' image are mirrored in Y Axis 
+                   IMG_APPLY_TRANSFORM: False,       # When 'True' if there is transform matrix, it will be applied
+                   IMG_ONLY_SHIFTS: False,                 # When 'True' if there is transform matrix, only shifts will be applied
+                   IMG_WRAP: False,                       # When 'True' if there is transform matrix, only shifts will be applied
+                   IMG_MAX_WIDTH: 512,                # Maximum image width (in pixels)
+                   IMG_MIN_WIDTH: 64,                 # Minimum image width (in pixels)
+                   IMG_MAX_HEIGHT: 512,               # Maximum image height (in pixels)
+                   IMG_MIN_HEIGHT: 64,                # Minimum image height (in pixels)
+                   
+                   VOL_VIEW: xmipp.VIEW_Z_NEG, # If 3D, axis to slice volume 
+                   VOL_TYPE: 'map'}                 # If map, it will be displayed normally, else if pdb only astexViewer and chimera display will be available
 
 
     # Extra parameters can be used to configure table layout and set render function for a column
@@ -415,11 +433,11 @@ def visualizeObject(request):
             extraParams[key]=value
     
     
-    if "objectId" in request.GET: 
+    if OBJECT_ID in request.GET: 
         project = Project(projectPath)
         project.load()
         
-        obj = project.mapper.selectById(int(inputParams["objectId"]))
+        obj = project.mapper.selectById(int(inputParams[OBJECT_ID]))
         if obj.isPointer():
             obj = obj.get()
 
@@ -444,7 +462,7 @@ def visualizeObject(request):
         elif isinstance(obj, PdbFile):
             inputParams[PATH] = obj.getFileName()
             inputParams[MODE] = MODE_VOL_ASTEX
-            inputParams['typeVolume'] = 'pdb'
+            inputParams[VOL_TYPE] = 'pdb'
 
         elif isinstance(obj, SetOfImages):
             fn = project.getTmpPath(obj.getName() + '_images.xmd')
@@ -518,7 +536,7 @@ def create_context_volume(request, inputParams, volPath, param_stats):
                     'maxStats':param_stats[3] if param_stats != None else 1 }
     
     if inputParams[MODE] == MODE_VOL_ASTEX:
-        context.update(create_context_astex(request, inputParams['typeVolume'], volPath))
+        context.update(create_context_astex(request, inputParams[VOL_TYPE], volPath))
 
 #   'volType': 2, #0->byte, 1 ->Integer, 2-> Float
         
@@ -532,7 +550,7 @@ def create_context_astex(request, typeVolume, volPath):
 #   volPath='/home/adrian/Scipion/tests/input/showj/emd_1042.map'        
 #   fileName, fileExtension = os.path.splitext(_imageVolName)
             
-#    linkName = 'test_link_' + request.session._session_key + '.' + inputParams["typeVolume"]
+#    linkName = 'test_link_' + request.session._session_key + '.' + inputParams[VOL_TYPE]
 
     linkName = 'test_link_' + request.session._session_key + '.' + typeVolume
     volLinkPath = os.path.join(pw.WEB_RESOURCES, 'astex', 'tmp', linkName)
