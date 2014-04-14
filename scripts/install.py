@@ -51,7 +51,7 @@ def updateProjectSettings():
 if __name__ == '__main__':
     
     SCIPION_HOME = os.environ['SCIPION_HOME']
-    SCIPION_DIRS = ['SCIPION_DATA', 'SCIPION_LOGS', 'SCIPION_TESTS', 'SCIPION_USER_DATA']
+    SCIPION_DIRS = ['SCIPION_DATA', 'SCIPION_LOGS', 'SCIPION_TESTS', 'SCIPION_USER_DATA', 'SCIPION_TMP']
     
     print "Installing Scipion in : ", SCIPION_HOME
     

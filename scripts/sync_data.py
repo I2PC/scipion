@@ -315,7 +315,6 @@ def main(argv):
             manifestLines = manifestFile.readlines()
             for line in manifestLines:
                 print "\t * "+os.path.split(line.replace("\n","").replace("dataset_",""))[1]
-            print "-"*40
     elif args.list_remote_datasets:
         print "updating remote info..."
         backupFile(getManifestPath(basePath=os.environ['SCIPION_TMP']))
@@ -331,7 +330,6 @@ def main(argv):
             manifestLines = manifestFile.readlines()
             for line in manifestLines:
                 print "\t * "+os.path.split(line.replace("\n","").replace("dataset_",""))[1]
-            print "-"*40
         delBackFile(getManifestPath(basePath=os.environ['SCIPION_TMP']))
             
     elif args.query_for_modifications:
