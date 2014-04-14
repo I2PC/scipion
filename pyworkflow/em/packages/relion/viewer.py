@@ -23,19 +23,20 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
-from pyworkflow.utils.path import cleanPath
 """
 This module implement the wrappers around xmipp_showj
 visualization program.
 """
 import os
 
+from pyworkflow.utils.path import cleanPath
 from pyworkflow.viewer import Viewer, ProtocolViewer, DESKTOP_TKINTER, WEB_DJANGO
+from pyworkflow.em.viewer import DataView, ObjectView
 from protocol_classify2d import ProtRelionClassify2D
 from protocol_classify3d import ProtRelionClassify3D
 from protocol_refine3d import ProtRelionRefine3D
 from pyworkflow.protocol.params import *
-from convert import addRelionLabels, restoreXmippLabels
+from convert import addRelionLabels, addRelionLabelsToEnviron, restoreXmippLabels
 import xmipp
 from pyworkflow.em.packages.xmipp3.plotter import XmippPlotter
 
@@ -67,6 +68,8 @@ class RelionViewer(ProtocolViewer):
         ProtocolViewer.setProtocol(self, protocol)
         self.__defineParams(self._form)
         self._createVarsFromDefinition()
+        self._env = os.environ.copy()
+        addRelionLabelsToEnviron(self._env)
         
     def _defineParams(self, form):
         self._form = form
@@ -162,15 +165,21 @@ Examples:
         
     def _viewAll(self, *args):
         pass
+    
+    def _visualizeParam(self, paramName=None):
+        # Override class method to load things
+        # before any visualization
+        self._load()
+        ProtocolViewer._visualizeParam(self, paramName)        
         
-    def display2D(self, filename, extraParams=''):
-        from pyworkflow.em.packages.xmipp3.viewer import runShowJ
-        runShowJ(filename, extraParams=extraParams)
+    def createDataView(self, filename, extraParams=''):
+        return DataView(filename, env=self._env)
         
-    def displayScipion(self, filename, output, extraParams=''):
+    def createScipionView(self, filename, output, extraParams=''):
         inputParticlesId = self.protocol.inputParticles.get().strId()
-        from pyworkflow.em.packages.xmipp3.viewer import runScipionShowJ        
-        runScipionShowJ(filename, output, self._project.getName(), self.protocol.strId(), inputParticlesId)
+        return ObjectView(filename, output, self._project.getName(), 
+                          self.protocol.strId(), inputParticlesId,
+                          env=self._env)
 
     def _load(self):
         """ Load selected iterations and classes 3D for visualization mode. """
@@ -222,56 +231,42 @@ Examples:
             elif halves == 1:
                 prefixes = ['half2_']
         return prefixes
-                
 
 #===============================================================================
 # showImagesInClasses     
 #===============================================================================
-    
-    def _createImagesInClasses(self, paramName=None):    
+            
+    def _showImagesInClasses(self, paramName=None):
         """ Read Relion _data.star images file and 
         generate a new metadata with the Xmipp classification standard:
         a 'classes' block and a 'class00000?_images' block per class.
         If the new metadata was already written, it is just shown.
         """
-        self._load()
-        
-        data_classes = []
+        output = "Classes2D" if self.protocol.IS_2D else "Classes3D"
+        views = []
         
         for it in self._iterations:
-            data_classes.append(self.protocol._getIterClasses(it))
+            fn = self.protocol._getIterClasses(it)
+            v = self.createScipionView(fn, output, extraParams='--mode metadata --render first')
+            views.append(v)
         
-        return data_classes
-            
-    def _showImagesInClasses(self, paramName=None):
-        output = "Classes2D" if self.protocol.IS_2D else "Classes3D"
-        data_classes = self._createImagesInClasses()
-        for data in data_classes:
-            self.displayScipion(data, output, extraParams='--mode metadata --render first')
+        return views
           
 #=====================================================================
 # showLLRelion
 #=====================================================================
           
-    def _createLL(self):
-        self._load()
-        plotters = []
-        files = []
-        for it in self._iterations:
-            # FILES
-            fn = self._getFilesPerIterationLL(it)
-            files.append(fn)
-            # PLOTTERS
-            xplotter = self._createPlotPerIterationLL(it, fn)
-            plotters.append(xplotter)
-            
-        return plotters, files
-    
-    def _getFilesPerIterationLL(self, it):
-        fn = self.protocol._getIterSortedData(it)
+    def _showLL(self, paramName=None):
         addRelionLabels()
-        return fn
-    
+        views = []
+        for it in self._iterations:
+            fn = self.protocol._getIterSortedData(it)
+            xplotter = self._createPlotPerIterationLL(it, fn)
+            views.append(xplotter)
+            views.append(self.createDataView(fn))
+            
+        return views
+
     def _createPlotPerIterationLL(self, it, fn):
         md = xmipp.MetaData(fn)
         xplotter = XmippPlotter(windowTitle="max Likelihood particles sorting Iter_%d" % it)
@@ -280,27 +275,11 @@ Examples:
         
         return xplotter
      
-    def _showLL(self, paramName=None):
-        plotters, files = self._createLL()
-        for xplotter, fn in zip(plotters, files):
-            self.display2D(fn)
-            xplotter.show()
-            
 #===============================================================================
 # ShowPMax
 #===============================================================================
         
-    def _createPMax(self):
-        self._load()
-        
-        # FILE
-        fn = self._createFilePMax()
-        # PLOT
-        xplotter = self._createPlotPMax(fn)
-        
-        return xplotter, fn
-    
-    def _createFilePMax(self):
+    def _showPMax(self):
         labels = [xmipp.MDL_AVGPMAX, xmipp.MDL_PMAX]
         addRelionLabels(extended=True)  
         
@@ -318,9 +297,6 @@ Examples:
         fn = self.protocol._getFileName('all_avgPmax_xmipp')
         mdIters.write(fn)
             
-        return fn
-    
-    def _createPlotPMax(self, fn):
         labels = [xmipp.MDL_AVGPMAX, xmipp.MDL_PMAX]
         colors = ['g', 'b']
 
@@ -334,21 +310,14 @@ Examples:
         
         if len(self.protocol.PREFIXES) > 1:
             xplotter.showLegend(self.protocol.PREFIXES)
-        
-        return xplotter
-        
-    def _showPMax(self, paramName=None):
-        xplotter, fn = self._createPMax()
-        self.display2D(fn)                    
-        xplotter.show()
-        
+
+        return [self.createDataView(fn), xplotter]
     
 #===============================================================================
 # ShowChanges    
 #===============================================================================    
 
-    def _createChanges(self):
-        self._load()
+    def _showChanges(self, paramName=None):
         addRelionLabels(extended=True)  
         
         mdIters = xmipp.MetaData()
@@ -367,11 +336,8 @@ Examples:
                 mdIters.setValue(label, md.getValue(label, firstId), objId)
         fn = self.protocol._getFileName('all_changes_xmipp')
         mdIters.write(fn)
-        return fn
-
-    def _showChanges(self, paramName=None):
-        fn = self._createChanges()
-        self.display2D(fn)
+        
+        return [self.createDataView(fn)]
         
 #===============================================================================
 # ShowVolumes
@@ -380,7 +346,6 @@ Examples:
     def _createVolumesMd(self):
         """ Write a metadata with all volumes selected for visualization. """
         import xmipp
-        self._load()
         prefixes = self._getPrefixes()
         
         mdPath = self.protocol._getExtraPath('relion_viewer_volumes.xmd')
@@ -398,7 +363,6 @@ Examples:
     
     def _showVolumesChimera(self):
         """ Create a chimera script to visualize selected volumes. """
-        self._load()
         prefixes = self._getPrefixes()
         volumes = []
         
@@ -428,15 +392,13 @@ Examples:
         
         elif self.displayVol == VOLUME_SLICES:
             mdPath = self._createVolumesMd()
-            self.display2D(mdPath)
+            self.createDataView(mdPath)
             
 #===============================================================================
 # showAngularDistribution
 #===============================================================================
                             
     def _createAngularDistribution(self):
-        self._load()
-        
         arguments = []
         plotters = []
         
@@ -517,7 +479,6 @@ Examples:
         a.xaxis.set_major_formatter(self._plotFormatter)               
  
     def _createSSNR(self, paramName=None):
-        self._load()
         prefixes = self._getPrefixes()        
         nrefs = len(self._refsList)
         n = nrefs * len(prefixes)
@@ -563,7 +524,6 @@ Examples:
         a.set_ylim([-0.1, 1.1])
             
     def _createFSC(self):
-        self._load()
         threshold = self.resolutionThresholdFSC.get()
         prefixes = self._getPrefixes()        
         nrefs = len(self._refsList)

@@ -28,13 +28,36 @@ This module implement viewers for some type of common objects.
 """
 
 import os
-from pyworkflow.viewer import Viewer, DESKTOP_TKINTER
+from pyworkflow.viewer import View, Viewer, DESKTOP_TKINTER
 from pyworkflow.em.data import *
 from pyworkflow.em.protocol import *
 from showj import *
 
 
-#------------------------ Some other viewers ------------------------
+#------------------------ Some common Views ------------------
+
+class DataView(View):
+    """ Wrapper the arguments to showj (either web or desktop). """
+    def __init__(self, path, **kwargs):
+        View.__init__(self)
+        self._path = path
+        self._env = kwargs.get('env', None)
+        
+    def show(self):
+        runShowJ(self._path, env=self._env)
+        
+        
+class ObjectView(DataView):
+    """ Wrapper to View but for displaying Scipion objects. """
+    def __init__(self, path, *args, **kwargs):
+        DataView.__init__(self, path, **kwargs)
+        self._args = args
+        
+    def show(self):
+        runScipionShowJ(self._path, *self._args, env=self._env)    
+        
+
+#------------------------ Some viewers ------------------------
 
 class ChimeraViewer(Viewer):
     """ Wrapper to visualize PDB object with Chimera. """

@@ -75,11 +75,12 @@ class Viewer(object):
     
     def visualize(self, obj):
         """ This method should make the necessary convertions
-        and call the command line utilities to visualize this
-        particular object.
+        and return the list of Views that will be used to 
+        visualize the object
         """
         pass
     
+    #FIXME: REMOVE THIS METHOD AFTER RE-FACTORING
     def getView(self):
         """ This method should return the string value of the view in web
         that will respond to this viewer. This method only should be implemented
@@ -121,13 +122,28 @@ class ProtocolViewer(Protocol, Viewer):
         self.windows = args.get('windows', None)
         self.formWindow = FormWindow("Protocol Viewer: " + self.getClassName(), self, 
                        self._viewAll, self.windows,
-                       visualizeDict=self._getVisualizeDict(),
+                       visualizeDict=self.__getVisualizeWrapperDict(),
                        visualizeMode=True)
         self.formWindow.visualizeMode = True
         self.showInfo = self.formWindow.showInfo
         self.showError = self.formWindow.showError
         self.formWindow.show(center=True)     
 
+    def _visualizeParam(self, paramName=None):
+        """ Call handler to get viewers and visualize each one. """
+        views = self._getVisualizeDict()[paramName]()
+        if views:
+            for v in views:
+                v.show()
+            
+    def __getVisualizeWrapperDict(self):
+        """ Replace the True attributes handler by the generic one. """
+        d = {}
+        for k in self._getVisualizeDict():
+            d[k] = self._visualizeParam
+            
+        return d        
+        
     def _showPlots(self, plots, errors):
         if len(errors):
             self.showError('\n'.join(errors))
