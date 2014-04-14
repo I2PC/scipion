@@ -46,13 +46,11 @@ class ColumnsConfig():
         self._columnsDict = OrderedDict() 
          
         for col in table.iterColumns():
-            print "   col.getName() = ", col.getName()
             self._columnsDict[col.getName()] = ColumnProperties(col, ds, allowRender, defaultColumnsLayoutProperties[col.getName()] if defaultColumnsLayoutProperties != None else {})
         
     def getRenderableColumns(self):
         """ Return a list with the name of renderable columns. """
         columns = [col.getLabel() for col in self._columnsDict.values() if col.isRenderable()]
-        print "renderable columns: ", columns
         return columns
     
     def hasEnableColumn(self):
