@@ -32,6 +32,7 @@ from pyworkflow.object import List
 import json
 import xmipp
 from pyworkflow.utils.properties import Message
+from pyworkflow.em.viewer import *
 
 #from pyworkflow.web.app.views_showj import get_image_dimensions 
 
@@ -328,8 +329,8 @@ class ShowjForm(forms.Form):
     mirrorY = forms.BooleanField(label=messagesForm.LABEL_MIRRORY, required=False)
 #    applyTransformation = forms.BooleanField(label='Apply Transform', required=False)
     
-#    CHOICES = (('transformMatrix', 'Apply Transform Matrix',), ('onlyShifts', 'Only Shifts',), ('wrap', 'Wrap',))
-#    transformationChoice = forms.ChoiceField(widget=forms.RadioSelect, choices=(('transformMatrix', 'Apply Transform Matrix',), ('onlyShifts', 'Only Shifts',), ('wrap', 'Wrap',))
+#    CHOICES = (('transformMatrix', 'Apply Transform Matrix',), (IMG_ONLY_SHIFTS, 'Only Shifts',), ('wrap', 'Wrap',))
+#    transformationChoice = forms.ChoiceField(widget=forms.RadioSelect, choices=(('transformMatrix', 'Apply Transform Matrix',), (IMG_ONLY_SHIFTS, 'Only Shifts',), ('wrap', 'Wrap',))
 #                                             )
     applyTransformMatrix = forms.BooleanField(label=messagesForm.LABEL_APPLY_TRANSFORM, required=False)
     onlyShifts = forms.BooleanField(label=messagesForm.LABEL_ONLY_SHIFTS, required=False)
@@ -352,50 +353,50 @@ class ShowjForm(forms.Form):
             labelsToRender = tableLayoutConfiguration.getRenderableColumns()
             if labelsToRender:
                 labelChoices = tuple(zip(labelsToRender, labelsToRender))
-                self.fields['labelsToRenderComboBox'] = forms.ChoiceField(label=messagesForm.LABEL_LABEL_SELECTION,
+                self.fields[LABEL_SELECTED] = forms.ChoiceField(label=messagesForm.LABEL_LABEL_SELECTION,
                                                                 required=False,
                                                                 choices=labelChoices)
-                if self.data['mode'] != 'gallery':
-                    self.fields['labelsToRenderComboBox'].widget = forms.HiddenInput()
+                if self.data[MODE] != MODE_GALLERY:
+                    self.fields[LABEL_SELECTED].widget = forms.HiddenInput()
             else:
-                self.fields['zoom'].widget.attrs['readonly'] = True
-                if self.data['mode'] == 'gallery':
-                    self.fields['goto'].widget.attrs['readonly'] = True
+                self.fields[IMG_ZOOM].widget.attrs['readonly'] = True
+                if self.data[MODE] == MODE_GALLERY:
+                    self.fields[GOTO].widget.attrs['readonly'] = True
                 
             if dataset.getNumberSlices() > 1:    
-                volumesToRenderComboBoxValues = tuple(zip(dataset.getTable().getColumnValues(self.data['labelsToRenderComboBox']), dataset.getTable().getColumnValues(self.data['labelsToRenderComboBox'])))
-                self.fields['volumesToRenderComboBox'] = forms.ChoiceField(label=messagesForm.LABEL_VOLUME_SELECTION,
+                volumesToRenderComboBoxValues = tuple(zip(dataset.getTable().getColumnValues(self.data[LABEL_SELECTED]), dataset.getTable().getColumnValues(self.data[LABEL_SELECTED])))
+                self.fields[VOL_SELECTED] = forms.ChoiceField(label=messagesForm.LABEL_VOLUME_SELECTION,
                                                                 required=False,
                                                                 choices=volumesToRenderComboBoxValues)
-                if self.data['mode'] == 'table':
-                    self.fields['volumesToRenderComboBox'].widget = forms.HiddenInput()
-                if self.data['mode'] != 'gallery':                
-                    self.fields['resliceComboBox'].widget = forms.HiddenInput()
+                if self.data[MODE] == MODE_TABLE:
+                    self.fields[VOL_SELECTED].widget = forms.HiddenInput()
+                if self.data[MODE] != MODE_GALLERY:                
+                    self.fields[VOL_VIEW].widget = forms.HiddenInput()
             else:
-                self.fields['resliceComboBox'].widget = forms.HiddenInput()
+                self.fields[VOL_VIEW].widget = forms.HiddenInput()
                 
         else:
-            self.fields['zoom'].widget = forms.HiddenInput()
-            self.fields['goto'].widget = forms.HiddenInput()
+            self.fields[IMG_ZOOM].widget = forms.HiddenInput()
+            self.fields[GOTO].widget = forms.HiddenInput()
             
-            self.fields['resliceComboBox'].widget = forms.HiddenInput()
+            self.fields[VOL_VIEW].widget = forms.HiddenInput()
 
-            self.fields['mirrorY'].widget = forms.HiddenInput()
-            self.fields['applyTransformMatrix'].widget = forms.HiddenInput()
-            self.fields['onlyShifts'].widget = forms.HiddenInput()
-            self.fields['wrap'].widget = forms.HiddenInput()
+            self.fields[IMG_MIRRORY].widget = forms.HiddenInput()
+            self.fields[IMG_APPLY_TRANSFORM].widget = forms.HiddenInput()
+            self.fields[IMG_ONLY_SHIFTS].widget = forms.HiddenInput()
+            self.fields[IMG_WRAP].widget = forms.HiddenInput()
                
         
-        if self.data['mode'] != 'gallery': 
-            self.fields['cols'].widget = forms.HiddenInput()
-            self.fields['rows'].widget = forms.HiddenInput()
+        if self.data[MODE] != MODE_GALLERY: 
+            self.fields[COLS].widget = forms.HiddenInput()
+            self.fields[ROWS].widget = forms.HiddenInput()
         
-        if self.data['colRowMode'] == 'Off':
-            self.fields['cols'].widget.attrs['readonly'] = True
-            self.fields['rows'].widget.attrs['readonly'] = True
+        if self.data[MANUAL_ADJUST] == 'Off':
+            self.fields[COLS].widget.attrs['readonly'] = True
+            self.fields[ROWS].widget.attrs['readonly'] = True
             
-        if self.data['mode'] == 'column':    
-            self.fields['goto'].widget.attrs['readonly'] = True
+        if self.data[MODE] == 'column':    
+            self.fields[GOTO].widget.attrs['readonly'] = True
         
                                   
 class VolVisualizationForm(forms.Form):   

@@ -26,7 +26,6 @@
 # *
 # **************************************************************************
 
-
 import os
 import xmipp
 from django.http import HttpResponse
@@ -37,50 +36,9 @@ from pyworkflow.web.app.views_util import *
 from forms import VolVisualizationForm, ShowjForm
 from pyworkflow.em import *
 from pyworkflow.em.packages.xmipp3.convert import *
+from pyworkflow.em.viewer import *
 from layout_configuration import *
-
 from views_base import * 
-
-# Define some constants
-PATH = 'path'
-DATASET = 'dataset'
-
-TABLE_NAME = 'blockComboBox'
-COLS_CONFIG = 'tableLayoutConfiguration'
-COLS_CONFIG_DEFAULT = 'defaultColumnsLayoutProperties'
-LABEL_SELECTED = 'labelsToRenderComboBox'
-
-MODE = 'mode'
-MODE_GALLERY = 'gallery'
-MODE_TABLE = 'table'
-MODE_VOL_ASTEX = 'volume_astex'
-MODE_VOL_CHIMERA = 'volume_chimera'
-
-GOTO = 'goto'
-ROWS = 'rows'
-COLS = 'cols'
-ALLOW_RENDER = 'allowRender'
-MANUAL_ADJUST = 'colRowMode'
-
-VOL_SELECTED = 'volumesToRenderComboBox'
-VOL_TYPE = 'typeVolume'
-VOL_VIEW = 'resliceComboBox'
-
-IMG_DIMS = 'imageDimensions'
-IMG_ZOOM = 'zoom'
-IMG_ZOOM_DEFAULT = 'defaultZoom'
-IMG_MIRRORY = 'mirrorY'
-IMG_APPLY_TRANSFORM = 'applyTransformMatrix'
-IMG_ONLY_SHIFTS = 'onlyShifts'
-IMG_WRAP = 'wrap'
-IMG_MAX_WIDTH = 'imageMaxWidth'
-IMG_MIN_WIDTH = 'imageMinWidth'
-IMG_MAX_HEIGHT = 'imageMaxHeight'
-IMG_MIN_HEIGHT  = 'imageMinHeight'
-
-PROJECT_NAME = 'projectName'
-PROJECT_PATH = 'projectPath'
-OBJECT_ID = 'objectId'
 
 
 def loadDataSet(request, filename, firstTime):

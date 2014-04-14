@@ -31,7 +31,10 @@ import os
 from pyworkflow.viewer import Viewer, DESKTOP_TKINTER
 from pyworkflow.em.data import *
 from pyworkflow.em.protocol import *
+from showj import *
 
+
+#------------------------ Some other viewers ------------------------
 
 class ChimeraViewer(Viewer):
     """ Wrapper to visualize PDB object with Chimera. """

@@ -35,10 +35,27 @@ DESKTOP_TKINTER = 'tkinter'
 WEB_DJANGO = 'django'
 
 
+class View(object):
+    """ Represents a visualization result for some object or file.
+    Views can be plots, table views, chimera scripts, commands or messages.
+    """
+    def show(self):
+        """ This method should be overriden to implement how
+        this particular view will be displayed in desktop.
+        """
+        pass
+    
+    def toUrl(self):
+        """ If the view have web implementation, this method
+        should be implented to build the url with parameters
+        that will be used to respond.
+        """
+        pass
+    
+    
 class Viewer(object):
-    """ All visualization wrappers should user the Viewer class
-    as base and provide the implementation to launch specific 
-    command line tools in order to visualize objects.
+    """ A Viewer will provide several Views to visualize
+    the data associated to data objects or protocol.
     
     The _targets class property should contains a list of string
     with the class names that this viewer is able to visualize.
@@ -82,7 +99,11 @@ class Viewer(object):
     
     
 class ProtocolViewer(Protocol, Viewer):
-    """ This class will serve as base for viewers that will have form and parameters. """
+    """ Special kind of viewer that have a Form to organize better
+    complex visualization associated with protocol results.
+    If should provide a mapping between form params and the corresponding
+    functions that will return the corresponding Views.
+    """
     def __init__(self, **args):
         Protocol.__init__(self, **args)
         Viewer.__init__(self, **args)
