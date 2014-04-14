@@ -28,59 +28,85 @@ from collections import OrderedDict
 import json
 
 
-class TableLayoutConfiguration():
-    def __init__(self, ds, tableDataset, allowRender=True, defaultColumnsLayoutProperties=None):
+class ColumnsConfig():
+    """ Store the configuration of the columsn for a given table in a dataset.
+    The order of the columns will be stored and configuration for each columns.
+    For each column, we store properties:
+    - visible
+    - allowSetVisible
+    - renderable
+    - allowSetRenderable
+    - editable
+    - allowSetEditable
+    - renderFunc
+    - renderFuncExtra
+    """
+    def __init__(self, ds, table, allowRender=True, defaultColumnsLayoutProperties=None):
         
-        self.columnsLayout = OrderedDict() 
+        self._columnsDict = OrderedDict() 
          
-        for col in tableDataset.iterColumns():
-            self.columnsLayout[col.getName()]=ColumnLayoutConfiguration(col, ds, allowRender, defaultColumnsLayoutProperties[col.getName()] if defaultColumnsLayoutProperties != None else {})
+        for col in table.iterColumns():
+            print "   col.getName() = ", col.getName()
+            self._columnsDict[col.getName()] = ColumnProperties(col, ds, allowRender, defaultColumnsLayoutProperties[col.getName()] if defaultColumnsLayoutProperties != None else {})
         
-    def getLabelsToRenderComboBoxValues(self):
-        labelsToRender = [columnLayout.label for columnLayout in self.columnsLayout.values() if (columnLayout.columnLayoutProperties.renderable or columnLayout.columnLayoutProperties.allowSetRenderable)]
-        return tuple(zip(labelsToRender,labelsToRender))
+    def getRenderableColumns(self):
+        """ Return a list with the name of renderable columns. """
+        columns = [col.getLabel() for col in self._columnsDict.values() if col.isRenderable()]
+        print "renderable columns: ", columns
+        return columns
     
     def hasEnableColumn(self):
-        for columnLayout in self.columnsLayout.values():
+        for columnLayout in self._columnsDict.values():
             if "enable" == columnLayout.label:
                 return True
         return False;
+    
+    def getColumnProperty(self, colName, propName):
+        """ Get some property value of a given column. """
+        col = self._columnsDict[colName]
+        return getattr(col, propName)
+    
+    def configColumn(self, colName, **kwargs):
+        """ Configure properties of a given column. """
+        col = self._columnsDict[colName]
+        for k, v in kwargs.iteritems():
+            setattr(col, k, v)
+            
+    def printColumns(self):
+        for col in self._columnsDict.values():
+            print "column: ", col.getLabel()
+            print "  values: ", col.getValues()
         
             
-class ColumnLayoutConfiguration():
+class ColumnProperties():
     def __init__(self, col, ds, allowRender, defaultColumnLayoutProperties):
-        self.columns = col
+        self._column = col        
+        self.columnType = ds.getTypeOfColumn(col.getName())
         
-        self.label = col.getName()
-        self.typeOfColumn = ds.getTypeOfColumn(col.getName())
-        
-        self.columnLayoutProperties = ColumnLayoutProperties(self.typeOfColumn, allowRender)
-        self.columnLayoutProperties.setValues(defaultColumnLayoutProperties)
-        
-#        print "columnLayoutProperties",self.columnLayoutProperties
-        
-        
-#NAPA DE LUXE: Y si lo pasamos a una namedtupple
-class ColumnLayoutProperties():
-    def __init__(self, typeOfColumn, allowRender=True):
-        #self.visible = defaultColumnLayoutProperties["visible"] if "visible" in defaultColumnLayoutProperties else not(typeOfColumn == 'id')
-        self.visible = not(typeOfColumn == 'id')
+        self.visible = not(self.columnType == 'id')
         self.allowSetVisible = True 
         
-        self.editable = (typeOfColumn == 'text')
+        self.editable = (self.columnType == 'text')
         self.allowSetEditable = self.editable
         
         self.renderable = False
-        self.allowSetRenderable = (typeOfColumn == 'image' and allowRender)
+        self.allowSetRenderable = (self.columnType == 'image' and allowRender)
 
         self.renderFunc = "get_image"
         self.extraRenderFunc = ""
         
+    def getLabel(self):
+        return self._column.getName()
+    
+    def getColumnType(self):
+        return self.columnType
+    
+    def isRenderable(self):
+        return self.renderable or self.allowSetRenderable
+        
     def setValues(self, defaultColumnLayoutProperties):
-#        print "defaultColumnLayoutProperties",defaultColumnLayoutProperties
         for key in defaultColumnLayoutProperties:
             setattr(self, key, defaultColumnLayoutProperties[key])
-            
     
     def getValues(self):
         return {"visible":self.visible,
@@ -90,14 +116,16 @@ class ColumnLayoutProperties():
                 "renderable":self.renderable,
                 "allowSetRenderable":self.allowSetRenderable,
                 "renderFunc":self.renderFunc,
-                "extraRenderFunc":self.extraRenderFunc
+                "extraRenderFunc":self.extraRenderFunc,
+                'columnType': self.columnType
                 }
-
-class ColumnLayoutConfigurationEncoder(json.JSONEncoder):
-    def default(self, columnLayoutConfiguration):
         
-        return {"typeOfColumn":columnLayoutConfiguration.typeOfColumn,
-                "columnLayoutProperties":columnLayoutConfiguration.columnLayoutProperties.getValues()
+
+class ColumnPropertiesEncoder(json.JSONEncoder):
+    def default(self, columnProperties):
+        
+        return {"typeOfColumn":columnProperties.getColumnType(),
+                "columnLayoutProperties":columnProperties.getValues()
                 }
         
     

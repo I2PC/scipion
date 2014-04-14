@@ -349,11 +349,12 @@ class ShowjForm(forms.Form):
                                                              required=False,
                                                              choices=tuple(zip(dataset.listTables(), dataset.listTables())))
             
-            labelsToRenderComboBoxValues = tableLayoutConfiguration.getLabelsToRenderComboBoxValues()
-            if len(labelsToRenderComboBoxValues) > 0:
+            labelsToRender = tableLayoutConfiguration.getRenderableColumns()
+            if labelsToRender:
+                labelChoices = tuple(zip(labelsToRender, labelsToRender))
                 self.fields['labelsToRenderComboBox'] = forms.ChoiceField(label=messagesForm.LABEL_LABEL_SELECTION,
                                                                 required=False,
-                                                                choices=labelsToRenderComboBoxValues)
+                                                                choices=labelChoices)
                 if self.data['mode'] != 'gallery':
                     self.fields['labelsToRenderComboBox'].widget = forms.HiddenInput()
             else:
@@ -396,8 +397,6 @@ class ShowjForm(forms.Form):
         if self.data['mode'] == 'column':    
             self.fields['goto'].widget.attrs['readonly'] = True
         
-            
-
                                   
 class VolVisualizationForm(forms.Form):   
     volPath = forms.CharField(label='Volume path',
