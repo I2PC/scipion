@@ -87,7 +87,7 @@ SCIPION_DATA = join(SCIPION_HOME, 'data')
 SCIPION_LOGS = join(SCIPION_DATA, 'logs')
 SCIPION_TESTS = join(SCIPION_DATA, 'tests')
 SCIPION_USER_DATA = getUserDataPath()
-SCIPION_TMP = join(SCIPION_USER_DATA, '')
+SCIPION_TMP = join(SCIPION_USER_DATA, 'tmp')
 SCIPION_DIRS = ['SCIPION_DATA', 'SCIPION_LOGS', 'SCIPION_TESTS', 'SCIPION_USER_DATA', 'SCIPION_TMP']
 
 SCIPION_PYTHON = join(XMIPP_BIN, 'xmipp_python')
@@ -307,9 +307,9 @@ USAGE:
                                   list-remote-datasets: list the datasets available in the remote server
                                   dataset [OPERATION]: if no list command is passed, it is mandatory to pass the name of a dataset to use
                                      OPERATION can be:
-                                        up-sync: synchronize remote dataset with your local working copy. This is default behaviour if no operation is given
-                                        down-sync: synchronize local dataset with the remote dataset
-                                        raw: directly pass the rest of the arguments to the sync_data script
+                                        up-sync [verbose]: synchronize remote dataset with your local working copy. This is default behaviour if no operation is given. If verbose argument is given, process will be more detailed.
+                                        down-sync [verbose]: synchronize local dataset with the remote dataset. If verbose argument is given, process will be more detailed.
+                                        raw: directly pass the rest of the arguments to the sync_data script.
                               
         viewer [FILE]          Open a file with Scipion showj program.
          

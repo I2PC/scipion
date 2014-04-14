@@ -32,7 +32,7 @@ import sys
 import argparse
 import urllib
 import hashlib
-from pyworkflow.utils.path import moveFile, makePath, makeFilePath
+from pyworkflow.utils.path import moveFile, makePath, makeFilePath, copyFile, cleanPath
 
 def scipion_logo():
     print ""
@@ -79,30 +79,81 @@ def delBackFile(basePath, fileName='MANIFEST'):
     if os.path.exists(backPath):
         os.remove(backPath)
         
-def downloadDataset(datasetName, destination=os.path.join(os.environ['SCIPION_USER_DATA'],'data','tests'), url="http://scipionwiki.cnb.csic.es/files/scipion/data/tests/NACHOTESTS_PLEASEDONOTREMOVE/tests", verbose=False):
+def initDownloadBar(len):
+    sys.stdout.write("[%s]" % (" " * len))
+    sys.stdout.flush()
+    sys.stdout.write("\b" * (len+1))
+    
+def backDownloadBar(number):
+    sys.stdout.write("\b" * (number))
+    sys.stdout.flush()
+    
+def forwardDownloadbar(percent, progress):
+    for x in range(0, (int)(progress//1)):
+        sys.stdout.write("#")
+        sys.stdout.flush()
+        progress-=1
+    if progress != 0:
+        if ((percent-progress)//1) != ((percent)//1):
+            sys.stdout.write("#")
+            sys.stdout.flush()
+    
+def downloadFile(datasetName, file, fileMd5, workingCopy=os.path.join(os.environ['SCIPION_USER_DATA'],'data','tests'), tmpMd5copy=os.environ['SCIPION_TMP'], askMsg="download it?", url="http://scipionwiki.cnb.csic.es/files/scipion/data/tests/NACHOTESTS_PLEASEDONOTREMOVE/tests", verbose=False):
+    fileDownloaded = 0
+    datasetFolder = os.path.join(workingCopy, "dataset_%(dataset)s" % ({'dataset': datasetName}))
+    datasetFolderTmp = os.path.join(tmpMd5copy, "dataset_%(dataset)s" % ({'dataset': datasetName}))
+    answer = "-"
+    if verbose:
+        while answer != "y" and answer != "n" and answer != "":
+            answer = raw_input("\t "+askMsg + " ([y]/n): ")
+    if answer == "y" or answer == "" or not verbose:
+        if verbose:
+            print "\t Downloading file..."
+        makeFilePath(os.path.join(datasetFolder, file))
+        try:
+            urllib.urlretrieve(url+'/dataset_'+datasetName+'/'+file, os.path.join(datasetFolder, file))
+            if verbose:
+                print "\t ...done."
+        except:
+            print "\t "+ file+" ...ERROR"
+            print "URL: "+url+'/dataset_'+datasetName+file
+            print "destination: "+os.path.join(datasetFolder, file)
+        if verbose:
+            print "\t Copying md5..."
+        makeFilePath(os.path.join(datasetFolder, fileMd5))
+        copyFile(os.path.join(datasetFolderTmp, fileMd5), os.path.join(datasetFolder, fileMd5))
+        if verbose:
+            print "\t ...done."
+        fileDownloaded = 1
+    return fileDownloaded
+
+def downloadDataset(datasetName, destination=os.path.join(os.environ['SCIPION_USER_DATA'],'data','tests'), url="http://scipionwiki.cnb.csic.es/files/scipion/data/tests/NACHOTESTS_PLEASEDONOTREMOVE/tests", verbose=False, onlyMd5=False):
     datasetFolder = os.path.join(destination, "dataset_%(dataset)s" % ({'dataset': datasetName}))
     makePath(datasetFolder)
     try:
         if verbose:
             print "retreiving MANIFEST file"
-        urllib.urlretrieve(url+'/dataset_'+datasetName+'/MANIFEST', getManifestPath(dataset=datasetName))
+        urllib.urlretrieve(url+'/dataset_'+datasetName+'/MANIFEST', getManifestPath(basePath=destination, dataset=datasetName))
     except:
         print "URL could not be retreived"
         if verbose:
             print "URL: " + url+'/dataset_'+datasetName+'/MANIFEST'
-            print "destination:" + getManifestPath(dataset=datasetName)
-    manifestFile = open(getManifestPath(dataset=datasetName), 'r+')
+            print "destination:" + getManifestPath(basePath=destination, dataset=datasetName)
+    manifestFile = open(getManifestPath(basePath=destination, dataset=datasetName), 'r+')
     manifestLines = manifestFile.readlines()
     print "Fetching dataset %(dataset)s files..." % ({'dataset': datasetName})
-    totalNumber = len(manifestLines)*2.0
+    totalNumber = len(manifestLines)*(2-1.0*onlyMd5)
     percent = prevPercent = 0
     downloadBarWidth = 100
     if not verbose:
-        sys.stdout.write("[%s]" % (" " * downloadBarWidth))
-        sys.stdout.flush()
-        sys.stdout.write("\b" * (downloadBarWidth+1))
+        initDownloadBar(downloadBarWidth)
     for number, line in enumerate(manifestLines):
-        for indx, fileOption in enumerate([ os.path.normpath(line.replace("\n","")), os.path.normpath(os.path.join('md5', os.path.relpath(line.replace("\n",""), 'data') + ".md5")) ]):
+        fileOptions = []
+        if not onlyMd5:
+            fileOptions = [ os.path.normpath(line.replace("\n","")), os.path.normpath(os.path.join('md5', os.path.relpath(line.replace("\n",""), 'data') + ".md5")) ]
+        else:
+            fileOptions = [ os.path.normpath(os.path.join('md5', os.path.relpath(line.replace("\n",""), 'data') + ".md5")) ]
+        for indx, fileOption in enumerate(fileOptions):
             file = fileOption
             md5 = ''
             if indx == 1:
@@ -110,20 +161,13 @@ def downloadDataset(datasetName, destination=os.path.join(os.environ['SCIPION_US
             makeFilePath(os.path.join(datasetFolder, file))
             try:
                 urllib.urlretrieve(url+'/dataset_'+datasetName+'/'+file, os.path.join(datasetFolder, file))
-                percent = ((number*2+indx+1)/(totalNumber*1.0))*100
+                percent = ((number*(2-1.0*onlyMd5)+indx+1)/(totalNumber*1.0))*100
                 if verbose:
                     print "\t "+file+" ...OK ( %(percent)02d " % ({'percent': percent}) + ' %)'
                 else:
                     progress = percent-prevPercent
                     remaining = downloadBarWidth-progress
-                    for x in range(0, (int)(progress//1)):
-                        sys.stdout.write("#")
-                        sys.stdout.flush()
-                        progress-=1
-                    if progress != 0:
-                        if ((percent-progress)//1) != ((percent)//1):
-                            sys.stdout.write("#")
-                            sys.stdout.flush()
+                    forwardDownloadbar(percent, progress)
                 prevPercent = percent
             except:
                 print "\t "+ file+" ...ERROR"
@@ -134,31 +178,73 @@ def downloadDataset(datasetName, destination=os.path.join(os.environ['SCIPION_US
                     answer = raw_input("continue downloading? (y/[n]): ")
                     if answer == "n" or answer == "":
                         sys.exit(1)
-        md5sum = 0
-        with open(os.path.join(datasetFolder, os.path.normpath(line.replace("\n",""))),'r+') as fileToCheck:
-            data = fileToCheck.read()
-            md5sum = hashlib.md5(data).hexdigest()
-        md5file = open(os.path.normpath(os.path.join(datasetFolder, 'md5', os.path.relpath(line.replace("\n",""), 'data') + ".md5")),'r+')
-        md5calc = md5file.readlines()[0].split(" ")[0]
-        if verbose:
-            print "\t \t md5 verification...%(md5sum)s %(md5calc)s" % ({'md5sum': md5sum, 'md5calc': md5calc})
-        if md5sum != md5calc:
-            print "ERROR in md5 verification"
-            answer = "-"
-            while answer != "y" and answer != "n" and answer != "":
-                answer = raw_input("continue downloading? (y/[n]): ")
-                if answer == "n" or answer == "":
-                    sys.exit(1)
-        elif verbose:
-            print "md5 verification...OK"
-            print ""
+        if not onlyMd5:
+            md5sum = 0
+            with open(os.path.join(datasetFolder, os.path.normpath(line.replace("\n",""))),'r+') as fileToCheck:
+                data = fileToCheck.read()
+                md5sum = hashlib.md5(data).hexdigest()
+            md5file = open(os.path.normpath(os.path.join(datasetFolder, 'md5', os.path.relpath(line.replace("\n",""), 'data') + ".md5")),'r+')
+            md5calc = md5file.readlines()[0].split(" ")[0]
+            if verbose:
+                print "\t \t md5 verification...%(md5sum)s %(md5calc)s" % ({'md5sum': md5sum, 'md5calc': md5calc})
+            if md5sum != md5calc:
+                print "ERROR in md5 verification"
+                answer = "-"
+                while answer != "y" and answer != "n" and answer != "":
+                    answer = raw_input("continue downloading? (y/[n]): ")
+                    if answer == "n" or answer == "":
+                        sys.exit(1)
+            elif verbose:
+                print "md5 verification...OK"
+                print ""
     if not verbose:
         sys.stdout.write("\n")
-    print "done"
+    print "\t ...done"
     print ""
-    #print "Executing bash script " + args.syncfile + "..."
-    #print "bash " + args.syncfile + " -l " + args.last_mod_file + deleteFlag
-    #subprocess.call("bash " + args.syncfile, shell=True)
+
+def checkForUpdates(datasetName, workingCopy=os.path.join(os.environ['SCIPION_USER_DATA'],'data','tests'), tmpMd5copy=os.environ['SCIPION_TMP'], url="http://scipionwiki.cnb.csic.es/files/scipion/data/tests/NACHOTESTS_PLEASEDONOTREMOVE/tests", verbose=False):
+    
+    # Check with local copy
+    datasetFolder = os.path.join(workingCopy, "dataset_%(dataset)s" % ({'dataset': datasetName}))
+    datasetFolderTmp = os.path.join(tmpMd5copy, "dataset_%(dataset)s" % ({'dataset': datasetName}))
+    manifestFileTmp = open(getManifestPath(basePath=os.environ['SCIPION_TMP'], dataset=datasetName), 'r+')
+    manifestLinesTmp = manifestFileTmp.readlines()
+    filesUpdated = 0
+    print "Verifying MD5..."
+    for number, line in enumerate(manifestLinesTmp):
+        file = os.path.normpath(line.replace("\n",""))
+        fileMd5 = os.path.normpath(os.path.join('md5', os.path.relpath(line.replace("\n",""), 'data') + ".md5"))
+        if verbose:
+            print "\t checking file %(file)s..." % ({'file': file})
+        if os.path.exists(os.path.join(datasetFolder, file)):
+            if os.path.join(os.path.join(datasetFolder, fileMd5)):
+                md5f = open(os.path.normpath(os.path.join(datasetFolder, fileMd5)))
+                md5Tmpf = open(os.path.normpath(os.path.join(datasetFolderTmp, fileMd5)))
+                md5fcalc = md5f.readlines()[0].split(" ")[0]
+                md5Tmpfcalc = md5Tmpf.readlines()[0].split(" ")[0]
+                if md5fcalc == md5Tmpfcalc:
+                    if verbose:
+                        print "\t md5 checked and OK!"
+                else:
+                    if verbose:
+                        print ""
+                        print "\t file %(file)s checksum differs." % ({'file': file})
+                    filesUpdated += downloadFile(datasetName, file, fileMd5, workingCopy, tmpMd5copy, askMsg="update it?", url=url, verbose=verbose)
+            else: #file exists, but its md5 file doesn't
+                print "ERROR: file %(fileMd5)s doesn't exists. Dataset corrupt, please delete it and download it again." % ({'fileMd5': fileMd5})
+                sys.exit(1)
+        else: #file does not exist, show option for downloading it
+            if verbose:
+                print ""
+                print "\t file %(file)s doesn't exist." % ({'file': file})
+            filesUpdated += downloadFile(datasetName, file, fileMd5, workingCopy, tmpMd5copy, askMsg="download it?", url=url, verbose=verbose)
+    copyFile(os.path.join(datasetFolderTmp, 'MANIFEST'), os.path.join(datasetFolder, 'MANIFEST'))
+    if filesUpdated == 0:
+        print "\t ...done. Nothing changed."
+    elif filesUpdated == 1:
+        print "\t ...done. 1 file was updated."
+    else:
+        print "\t ...done. %(filesUpdated)d files were updated." % ({'filesUpdated': filesUpdated})
 
 def getManifestPath(basePath=os.path.join(os.environ['SCIPION_USER_DATA'],'data','tests'), dataset=""):
     datasetName = "dataset_"+ dataset
@@ -295,9 +381,11 @@ def main(argv):
         else:
             datasetFolder = os.path.join(os.environ['SCIPION_USER_DATA'],'data','tests',"dataset_%(dataset)s" % ({'dataset': args.dataset}))
             if(os.path.exists(datasetFolder)):
-                print "checking checksum for updates..."
-                
-                print "local checksum: " 
+                scipion_logo()
+                print "Dataset working copy detected. Checking checksum for updates..."
+                downloadDataset(args.dataset, destination=os.environ['SCIPION_TMP'], url=args.url, verbose=args.verbose, onlyMd5=True)
+                checkForUpdates(args.dataset, url=args.url, verbose=args.verbose)
+                cleanPath(os.path.join(os.environ['SCIPION_TMP'], "dataset_%(dataset)s" % ({'dataset': args.dataset})))
             else:
                 scipion_logo()
                 print "dataset not in local machine, trying to download..."
