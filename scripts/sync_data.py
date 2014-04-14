@@ -288,13 +288,9 @@ def main(argv):
     parser.add_argument('-f', '--dataset',
         help="Determine the dataset to use. The selected operation will be applied to this dataset.")
     
-    parser.add_argument('-l', '--list-local-datasets',
+    parser.add_argument('-l', '--list',
         action="store_true",
-        help="Look for local datasets in $SCIPION_HOME/data/tests folder.")
-    
-    parser.add_argument('-x', '--list-remote-datasets',
-        action="store_true",
-        help="Look for remote datasets in http://scipionwiki.cnb.csic.es/files/tests folder.")
+        help="Look for local datasets in $SCIPION_TESTS folder and for remote datasets in http://scipionwiki.cnb.csic.es/files/tests.")
     
     parser.add_argument('-v', '--verbose',
         action="store_true",
@@ -308,14 +304,12 @@ def main(argv):
     deleteFlag=""
     if args.delete:
         deleteFlag=" -f"
-    if args.list_local_datasets:
-        if os.path.exists(getManifestPath()):
-            print "List of local datasets in %(datasetsFolder)s" % ({'datasetsFolder': os.environ['SCIPION_TESTS']})
-            manifestFile = open(getManifestPath(), 'r+')
-            manifestLines = manifestFile.readlines()
-            for line in manifestLines:
-                print "\t * "+os.path.split(line.replace("\n","").replace("dataset_",""))[1]
-    elif args.list_remote_datasets:
+    if args.list:
+        print "List of local datasets in %(datasetsFolder)s" % ({'datasetsFolder': os.environ['SCIPION_TESTS']})
+        folders = os.listdir(os.environ['SCIPION_TESTS'])
+        for folder in folders:
+            if os.path.isdir(os.path.join(os.environ['SCIPION_TESTS'], folder)):
+                print "\t * " + folder.replace("dataset_", "")
         print "updating remote info..."
         backupFile(getManifestPath(basePath=os.environ['SCIPION_TMP']))
         try:
