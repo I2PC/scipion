@@ -212,10 +212,10 @@ if __name__ == '__main__':
                 if n > 3:
                     print "dataset selected"
                     option = sys.argv[3]
-                    if option == "up-sync":
+                    if option == "upload":
                         print "Synchronizing dataset %s with local data" % dataset
                         runCmd('scripts/sync_data.py -f %s -r' % dataset)
-                    elif option == "down-sync":
+                    elif option == "download":
                         verbosity = ""
                         if n > 4:
                             if sys.argv[4] == "verbose":
@@ -228,11 +228,8 @@ if __name__ == '__main__':
                     else:
                         print "Bad option: " + option
                         sys.exit(1)
-                elif dataset == "list-local-datasets":
+                elif dataset == "list":
                     args = '-l'
-                    runCmd('scripts/sync_data.py %s' % args)
-                elif dataset == "list-remote-datasets":
-                    args = '-x'
                     runCmd('scripts/sync_data.py %s' % args)
                 else:
                     print "Asuming up-sync action. Synchronizing dataset %s with local data" % dataset
@@ -303,12 +300,11 @@ USAGE:
         
         testdata [OPTION]      Synchronize tests data from/to remote server to/from SCIPION_USER_DATA folder
                                OPTION can be:
-                                  list-local-datasets: list the datasets already in the local computer
-                                  list-remote-datasets: list the datasets available in the remote server
+                                  list: list the datasets already in the local computer and in the remote server
                                   dataset [OPERATION]: if no list command is passed, it is mandatory to pass the name of a dataset to use
                                      OPERATION can be:
-                                        up-sync [verbose]: synchronize remote dataset with your local working copy. This is default behaviour if no operation is given. If verbose argument is given, process will be more detailed.
-                                        down-sync [verbose]: synchronize local dataset with the remote dataset. If verbose argument is given, process will be more detailed.
+                                        upload [verbose]: synchronize remote dataset with your local working copy. This is default behaviour if no operation is given. If verbose argument is given, process will be more detailed.
+                                        download [verbose]: synchronize local dataset with the remote dataset. If verbose argument is given, process will be more detailed.
                                         raw: directly pass the rest of the arguments to the sync_data script.
                               
         viewer [FILE]          Open a file with Scipion showj program.
