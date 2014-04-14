@@ -101,8 +101,10 @@ def loadDataSet(request, filename, firstTime):
 def loadColumnsConfig(request, dataset, table, inputParams, extraParams, firstTime):
     """ Load table layout configuration. How to display columns and attributes (visible, render, editable) """ 
     tableChanged = request.session.get(TABLE_NAME, None) != inputParams.get(TABLE_NAME, None)
-    print 'tableChanged: ', tableChanged
     
+    if not firstTime and tableChanged: # Clear selected volume to properly read items 
+        inputParams[VOL_SELECTED] = None
+        
     if firstTime or tableChanged:
         columns_properties = getExtraParameters(extraParams, table)
         request.session[COLS_CONFIG_DEFAULT] = columns_properties
@@ -126,58 +128,65 @@ def setLabelToRender(request, table, inputParams, extraParams, firstTime):
             inputParams[LABEL_SELECTED] = labelsToRender[0]
         else:
             # If there is no image to display and it is initial load, switch to table mode 
-            if firstTime and inputParams[MODE] != MODE_TABLE:
+            if firstTime:
                 inputParams[MODE] = MODE_TABLE
                 # FIXME: we really need this other call to showj???
-                showj(request, inputParams, extraParams)
+                #showj(request, inputParams, extraParams)
             inputParams[LABEL_SELECTED] = None
     
     table.setLabelToRender(inputParams[LABEL_SELECTED]) 
     
 
 def setRenderingOptions(request, dataset, table, inputParams):
-    
-    #Setting the _imageVolName
-    _imageVolName = inputParams.get(VOL_SELECTED, None) or table.getElementById(0, inputParams[LABEL_SELECTED])
- 
+    """ Read the first renderizable item and setup some variables.
+    For example, if we are in volume mode or not.
+    """
     #Setting the _typeOfColumnToRender
     label = inputParams[LABEL_SELECTED]
-    _typeOfColumnToRender = inputParams[COLS_CONFIG].getColumnProperty(label, 'columnType')
     
-    #Setting the _imageDimensions
-    _imageDimensions = readDimensions(request, _imageVolName, _typeOfColumnToRender)
-    
-    print "="*100
-    print "IMAGE VOL NAME = ", _imageVolName
-    print "DIMENSIONS = ", _imageDimensions
-    print "="*100
-    
-    dataset.setNumberSlices(_imageDimensions[2])
-    
-    if _typeOfColumnToRender == "image":
-        isVol = dataset.getNumberSlices() > 1
-        is3D = inputParams[MODE]==MODE_VOL_ASTEX or inputParams[MODE]==MODE_VOL_CHIMERA
-        #Setting the _convert 
-        _convert = isVol and (inputParams[MODE]==MODE_GALLERY or is3D)
-        #Setting the _reslice 
-        _reslice = isVol and inputParams[MODE]==MODE_GALLERY
-        #Setting the _getStats 
-        _getStats = isVol and is3D
-        #Setting the _dataType 
-        _dataType = xmipp.DT_FLOAT if isVol and inputParams[MODE]==MODE_VOL_ASTEX else xmipp.DT_UCHAR
-        #Setting the _imageVolName and _stats     
-        _imageVolName, _stats = readImageVolume(request, _imageVolName, _convert, _dataType, _reslice, int(inputParams[VOL_VIEW]), _getStats)
+    if not label:
+        volPath = None
+        _imageDimensions = None
+        _stats = None
+        inputParams[IMG_ZOOM] = 0
+        dataset.setNumberSlices(0)
+    else:
+        #Setting the _imageVolName
+        _imageVolName = inputParams.get(VOL_SELECTED, None) or table.getElementById(0, label)
+     
+        _typeOfColumnToRender = inputParams[COLS_CONFIG].getColumnProperty(label, 'columnType')
         
-        if isVol:
-            inputParams[COLS_CONFIG].configColumn(label, renderFunc="get_slice")
-            dataset.setVolumeName(_imageVolName)
-        else:
-            inputParams[COLS_CONFIG].configColumn(label, renderFunc="get_image")
-            dataset.setVolumeName(None)           
+        #Setting the _imageDimensions
+        _imageDimensions = readDimensions(request, _imageVolName, _typeOfColumnToRender)
+        
+        dataset.setNumberSlices(_imageDimensions[2])
+        
+        if _typeOfColumnToRender == "image":
+            isVol = dataset.getNumberSlices() > 1
+            is3D = inputParams[MODE]==MODE_VOL_ASTEX or inputParams[MODE]==MODE_VOL_CHIMERA
+            #Setting the _convert 
+            _convert = isVol and (inputParams[MODE]==MODE_GALLERY or is3D)
+            #Setting the _reslice 
+            _reslice = isVol and inputParams[MODE]==MODE_GALLERY
+            #Setting the _getStats 
+            _getStats = isVol and is3D
+            #Setting the _dataType 
+            _dataType = xmipp.DT_FLOAT if isVol and inputParams[MODE]==MODE_VOL_ASTEX else xmipp.DT_UCHAR
+            #Setting the _imageVolName and _stats     
+            _imageVolName, _stats = readImageVolume(request, _imageVolName, _convert, _dataType, _reslice, int(inputParams[VOL_VIEW]), _getStats)
             
-    volPath = os.path.join(request.session[PROJECT_PATH], _imageVolName)
+            if isVol:
+                inputParams[COLS_CONFIG].configColumn(label, renderFunc="get_slice")
+                dataset.setVolumeName(_imageVolName)
+            else:
+                inputParams[MODE] = MODE_GALLERY
+                inputParams[COLS_CONFIG].configColumn(label, renderFunc="get_image")
+                #dataset.setVolumeName(None)  
+                #dataset.setNumberSlices(0)         
+                
+        volPath = os.path.join(request.session[PROJECT_PATH], _imageVolName)
     
-    return dataset, volPath, _stats, _imageDimensions
+    return volPath, _stats, _imageDimensions
     
 
 def showj(request, inputParams=None, extraParams=None, firstTime=False):
@@ -199,6 +208,7 @@ def showj(request, inputParams=None, extraParams=None, firstTime=False):
     
     if not firstTime:
         updateParams = request.POST.copy()
+        
         if inputParams is None:
             inputParams = updateParams
         else:
@@ -206,7 +216,7 @@ def showj(request, inputParams=None, extraParams=None, firstTime=False):
 
     if inputParams[VOL_TYPE] != 'pdb':
         # Load the initial dataset from file or session
-        dataset =  loadDataSet(request, inputParams[PATH], firstTime)
+        dataset = loadDataSet(request, inputParams[PATH], firstTime)
         # Load the requested table (or the first if no specified)
         table = dataset.getTable(inputParams[TABLE_NAME])
         # Update inputParams to make sure have a valid table name (if using first table)
@@ -215,12 +225,7 @@ def showj(request, inputParams=None, extraParams=None, firstTime=False):
         # Load columns configuration. How to display columns and attributes (visible, render, editable)  
         loadColumnsConfig(request, dataset, table, inputParams, extraParams, firstTime)
     
-        if not inputParams[LABEL_SELECTED]:
-            inputParams[IMG_ZOOM] = 0
-            _imageDimensions = None
-            dataset.setNumberSlices(0)
-        else:
-            dataset, volPath, _stats, _imageDimensions = setRenderingOptions(request, dataset, table, inputParams)
+        volPath, _stats, _imageDimensions = setRenderingOptions(request, dataset, table, inputParams)
     
         #Store variables into session 
         request = storeToSession(request, inputParams, dataset, _imageDimensions)
@@ -302,7 +307,6 @@ def createContext(dataset, table, columnsConfig, request, showjForm):
 
 
 def getExtraParameters(extraParams, table):
-#    print "extraParams",extraParams 
     defaultColumnsLayoutProperties = None
     if extraParams != None and extraParams != {}:
         defaultColumnsLayoutProperties = {k.getName(): {} for k in table.iterColumns()}
@@ -336,11 +340,8 @@ def save_showj_table(request):
         changes = request.POST.get('changes')
         jsonChanges = json.loads(changes)
         
-#        print "jsonChanges",jsonChanges 
-        
         dataset = request.session[DATASET]
         blockComboBox = request.session[TABLE_NAME]
-#        columnsConfig=request.session[COLS_CONFIG]
         
         table=dataset.getTable(blockComboBox)
         
@@ -593,7 +594,5 @@ def updateSessionTable(request):
     elif type == "editable":    
         request.session["columnsConfig"].columnsLayout[label].editable = option
         
-#    print request.session["columnsConfig"].columnsLayout[label].renderable
-     
     return HttpResponse(mimetype='application/javascript')
 
