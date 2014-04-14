@@ -98,7 +98,7 @@ def forwardDownloadbar(percent, progress):
             sys.stdout.write("#")
             sys.stdout.flush()
     
-def downloadFile(datasetName, file, fileMd5, workingCopy=os.path.join(os.environ['SCIPION_USER_DATA'],'data','tests'), tmpMd5copy=os.environ['SCIPION_TMP'], askMsg="download it?", url="http://scipionwiki.cnb.csic.es/files/scipion/data/tests/NACHOTESTS_PLEASEDONOTREMOVE/tests", verbose=False):
+def downloadFile(datasetName, file, fileMd5, workingCopy=os.environ['SCIPION_TESTS'], tmpMd5copy=os.environ['SCIPION_TMP'], askMsg="download it?", url="http://scipionwiki.cnb.csic.es/files/scipion/data/tests/NACHOTESTS_PLEASEDONOTREMOVE/tests", verbose=False):
     fileDownloaded = 0
     datasetFolder = os.path.join(workingCopy, "dataset_%(dataset)s" % ({'dataset': datasetName}))
     datasetFolderTmp = os.path.join(tmpMd5copy, "dataset_%(dataset)s" % ({'dataset': datasetName}))
@@ -127,7 +127,7 @@ def downloadFile(datasetName, file, fileMd5, workingCopy=os.path.join(os.environ
         fileDownloaded = 1
     return fileDownloaded
 
-def downloadDataset(datasetName, destination=os.path.join(os.environ['SCIPION_USER_DATA'],'data','tests'), url="http://scipionwiki.cnb.csic.es/files/scipion/data/tests/NACHOTESTS_PLEASEDONOTREMOVE/tests", verbose=False, onlyMd5=False):
+def downloadDataset(datasetName, destination=os.environ['SCIPION_TESTS'], url="http://scipionwiki.cnb.csic.es/files/scipion/data/tests/NACHOTESTS_PLEASEDONOTREMOVE/tests", verbose=False, onlyMd5=False):
     datasetFolder = os.path.join(destination, "dataset_%(dataset)s" % ({'dataset': datasetName}))
     makePath(datasetFolder)
     try:
@@ -150,9 +150,9 @@ def downloadDataset(datasetName, destination=os.path.join(os.environ['SCIPION_US
     for number, line in enumerate(manifestLines):
         fileOptions = []
         if not onlyMd5:
-            fileOptions = [ os.path.normpath(line.replace("\n","")), os.path.normpath(os.path.join('md5', os.path.relpath(line.replace("\n",""), 'data') + ".md5")) ]
+            fileOptions = [ os.path.normpath(line.replace("\n","")), os.path.normpath(line.replace("\n","") + ".md5") ]
         else:
-            fileOptions = [ os.path.normpath(os.path.join('md5', os.path.relpath(line.replace("\n",""), 'data') + ".md5")) ]
+            fileOptions = [ os.path.normpath(line.replace("\n","") + ".md5") ]
         for indx, fileOption in enumerate(fileOptions):
             file = fileOption
             md5 = ''
@@ -183,7 +183,7 @@ def downloadDataset(datasetName, destination=os.path.join(os.environ['SCIPION_US
             with open(os.path.join(datasetFolder, os.path.normpath(line.replace("\n",""))),'r+') as fileToCheck:
                 data = fileToCheck.read()
                 md5sum = hashlib.md5(data).hexdigest()
-            md5file = open(os.path.normpath(os.path.join(datasetFolder, 'md5', os.path.relpath(line.replace("\n",""), 'data') + ".md5")),'r+')
+            md5file = open(os.path.join(datasetFolder, os.path.normpath(line.replace("\n","")+".md5")),'r+')
             md5calc = md5file.readlines()[0].split(" ")[0]
             if verbose:
                 print "\t \t md5 verification...%(md5sum)s %(md5calc)s" % ({'md5sum': md5sum, 'md5calc': md5calc})
@@ -202,7 +202,7 @@ def downloadDataset(datasetName, destination=os.path.join(os.environ['SCIPION_US
     print "\t ...done"
     print ""
 
-def checkForUpdates(datasetName, workingCopy=os.path.join(os.environ['SCIPION_USER_DATA'],'data','tests'), tmpMd5copy=os.environ['SCIPION_TMP'], url="http://scipionwiki.cnb.csic.es/files/scipion/data/tests/NACHOTESTS_PLEASEDONOTREMOVE/tests", verbose=False):
+def checkForUpdates(datasetName, workingCopy=os.environ['SCIPION_TESTS'], tmpMd5copy=os.environ['SCIPION_TMP'], url="http://scipionwiki.cnb.csic.es/files/scipion/data/tests/NACHOTESTS_PLEASEDONOTREMOVE/tests", verbose=False):
     
     # Check with local copy
     datasetFolder = os.path.join(workingCopy, "dataset_%(dataset)s" % ({'dataset': datasetName}))
@@ -213,7 +213,7 @@ def checkForUpdates(datasetName, workingCopy=os.path.join(os.environ['SCIPION_US
     print "Verifying MD5..."
     for number, line in enumerate(manifestLinesTmp):
         file = os.path.normpath(line.replace("\n",""))
-        fileMd5 = os.path.normpath(os.path.join('md5', os.path.relpath(line.replace("\n",""), 'data') + ".md5"))
+        fileMd5 = os.path.normpath(line.replace("\n","")+".md5")
         if verbose:
             print "\t checking file %(file)s..." % ({'file': file})
         if os.path.exists(os.path.join(datasetFolder, file)):
@@ -246,7 +246,7 @@ def checkForUpdates(datasetName, workingCopy=os.path.join(os.environ['SCIPION_US
     else:
         print "\t ...done. %(filesUpdated)d files were updated." % ({'filesUpdated': filesUpdated})
 
-def getManifestPath(basePath=os.path.join(os.environ['SCIPION_USER_DATA'],'data','tests'), dataset=""):
+def getManifestPath(basePath=os.environ['SCIPION_TESTS'], dataset=""):
     datasetName = "dataset_"+ dataset
     if dataset == "":
         datasetName = ""
@@ -310,7 +310,7 @@ def main(argv):
         deleteFlag=" -f"
     if args.list_local_datasets:
         if os.path.exists(getManifestPath()):
-            print "List of local datasets in %(datasetsFolder)s" % ({'datasetsFolder': os.path.join(os.environ['SCIPION_USER_DATA'], 'data', 'tests')})
+            print "List of local datasets in %(datasetsFolder)s" % ({'datasetsFolder': os.environ['SCIPION_TESTS']})
             manifestFile = open(getManifestPath(), 'r+')
             manifestLines = manifestFile.readlines()
             for line in manifestLines:
@@ -377,7 +377,7 @@ def main(argv):
                 print "You've chosen to abort. Goodbye!."
                 sys.exit(3)
         else:
-            datasetFolder = os.path.join(os.environ['SCIPION_USER_DATA'],'data','tests',"dataset_%(dataset)s" % ({'dataset': args.dataset}))
+            datasetFolder = os.path.join(os.environ['SCIPION_TESTS'],"dataset_%(dataset)s" % ({'dataset': args.dataset}))
             if(os.path.exists(datasetFolder)):
                 scipion_logo()
                 print "Dataset working copy detected. Checking checksum for updates..."
