@@ -212,14 +212,14 @@ if __name__ == '__main__':
                 if n > 3:
                     print "dataset selected"
                     option = sys.argv[3]
+                    verbosity = ""
+                    if n > 4:
+                        if sys.argv[4] == "verbose":
+                            verbosity = "-v"
                     if option == "upload":
                         print "Synchronizing dataset %s with local data" % dataset
-                        runCmd('scripts/sync_data.py -f %s -r' % dataset)
+                        runCmd('scripts/sync_data.py -f %s %s -r -d' % (dataset, verbosity))
                     elif option == "download":
-                        verbosity = ""
-                        if n > 4:
-                            if sys.argv[4] == "verbose":
-                                verbosity = "-v"
                         print "Synchronizing local dataset %s with remote data" % dataset
                         runCmd('scripts/sync_data.py -f %s %s' % (dataset, verbosity))
                     elif option == "raw":
