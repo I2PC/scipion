@@ -55,21 +55,17 @@ class SpiderViewerCAPCA(ProtocolViewer):
                       label="Show reconstitued images?", default=True)
         form.addParam('doShowHistogram', BooleanParam, 
                       label="Show eigenvalue histogram?", default=True)
-        form.addParam('doShowPcaFile', BooleanParam, #expertLevel=LEVEL_ADVANCED,
+        form.addParam('doShowPcaFile', BooleanParam, expertLevel=LEVEL_ADVANCED,
                       label="Show IMC file?", default=True)        
-                      
-        form.addSection(label='Factor maps')
+                  
         form.addParam('doShowFactorMaps', BooleanParam, #expertLevel=LEVEL_ADVANCED,
-                      label="Show factor maps?", default=True)
-        form.addParam('firstFactor', IntParam, #expertLevel=LEVEL_ADVANCED,
-                      label="First factor", default=1,
-                      help='') 
-        form.addParam('secondFactor', IntParam, #expertLevel=LEVEL_ADVANCED,
-                      label="Second factor", default=2,
-                      help='')
+                      label="Show factor maps?", default=True)        
+        line = form.addLine('Factors')
+        line.addParam('firstFactor', IntParam, #expertLevel=LEVEL_ADVANCED,
+                      label="First", default=1) 
+        line.addParam('secondFactor', IntParam, #expertLevel=LEVEL_ADVANCED,
+                      label="Second", default=2)
                       
-
-
     def _getVisualizeDict(self):
         return {'doShowEigenImages': self._viewParam,
                 'doShowReconsImages': self._viewParam,
@@ -123,7 +119,7 @@ class SpiderViewerCAPCA(ProtocolViewer):
                 ha='center', va='bottom')
         a.set_ylim([0, percents[0] + 5])
         
-        return self._showOrReturn(xplotter)
+        return [xplotter]
         
     def _plotFactorMaps(self, param=None):
         from pyworkflow.em.packages.xmipp3.plotter import XmippPlotter
@@ -156,7 +152,7 @@ class SpiderViewerCAPCA(ProtocolViewer):
                                    "Factor %d" % x, "Factor %d" % y)
         a.plot(xFactors, yFactors, 'o')
         
-        return self._showOrReturn(xplotter)
+        return [xplotter]
         
     def getVisualizeDictWeb(self):
         return {'doShowEigenImages': 'doShowEigenImages',
