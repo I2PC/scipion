@@ -28,7 +28,7 @@ This module implement viewers for some type of common objects.
 """
 
 import os
-from pyworkflow.viewer import View, Viewer, DESKTOP_TKINTER
+from pyworkflow.viewer import View, MessageView, CommandView, Viewer, DESKTOP_TKINTER
 from pyworkflow.em.data import *
 from pyworkflow.em.protocol import *
 from showj import *
@@ -54,9 +54,9 @@ class ObjectView(DataView):
         self._args = args
         
     def show(self):
-        runScipionShowJ(self._path, *self._args, env=self._env)    
+        runScipionShowJ(self._path, *self._args, env=self._env)   
         
-
+        
 #------------------------ Some viewers ------------------------
 
 class ChimeraViewer(Viewer):

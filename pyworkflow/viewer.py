@@ -53,6 +53,42 @@ class View(object):
         pass
     
     
+class CommandView(View):
+    """ View for calling an external command. """
+    def __init__(self, cmd, **kwargs):
+        View.__init__(self)
+        self._cmd = cmd
+        self._env = kwargs.get('env', None)
+        
+    def show(self):
+        from subprocess import call
+        call(self._cmd, shell=True, env=self._env)
+        
+
+MSG_INFO = 0
+MSG_WARN = 1
+MSG_ERROR = 2
+
+MSG_DICT = {MSG_INFO: 'showInfo',
+            MSG_WARN: 'showWarning',
+            MSG_ERROR: 'showError'}
+
+
+class MessageView(View):
+    """ View for some message. """
+    def __init__(self, msg, title='', msgType=MSG_INFO, tkParent=None, **kwargs):
+        View.__init__(self)
+        self._msg = msg
+        self._title = title
+        self._msgType = msgType
+        self._tkParent = tkParent
+        
+    def show(self):
+        import pyworkflow.gui.dialog as dialog
+        func = getattr(dialog, MSG_DICT[self._msgType])
+        func(self._title, self._msg, self._tkParent)
+    
+    
 class Viewer(object):
     """ A Viewer will provide several Views to visualize
     the data associated to data objects or protocol.
@@ -111,7 +147,6 @@ class ProtocolViewer(Protocol, Viewer):
         self.allowHeader.set(False)
         self.showPlot = True # This flag will be used to display a plot or return the plotter
         
-        
     def setProtocol(self, protocol):
         self.protocol = protocol
     
@@ -128,13 +163,31 @@ class ProtocolViewer(Protocol, Viewer):
         self.showInfo = self.formWindow.showInfo
         self.showError = self.formWindow.showError
         self.formWindow.show(center=True)     
-
+        self._tkRoot = self.formWindow.root
+        
+    def infoMessage(self, msg, title='',):
+        """ Build a message View of type INFO. """
+        return MessageView(msg, title, msgType=MSG_INFO, tkParent=self._tkRoot)
+    
+    def errorMessage(self, msg, title=''):
+        """ Build a message View of type INFO. """
+        return MessageView(msg, title, msgType=MSG_ERROR, tkParent=self._tkRoot)  
+    
+    def warnMessage(self, msg, title=''):
+        """ Build a message View of type INFO. """
+        return MessageView(msg, title, msgType=MSG_WARN, tkParent=self._tkRoot)     
+    
     def _visualizeParam(self, paramName=None):
         """ Call handler to get viewers and visualize each one. """
-        views = self._getVisualizeDict()[paramName]()
-        if views:
-            for v in views:
-                v.show()
+        errors = self.validate()
+        if errors:
+            errorMsg = '\n'.join(errors)
+            self.showError(errorMsg, "Validation errors")
+        else:
+            views = self._getVisualizeDict()[paramName]()
+            if views:
+                for v in views:
+                    v.show()
             
     def __getVisualizeWrapperDict(self):
         """ Replace the True attributes handler by the generic one. """
@@ -143,18 +196,6 @@ class ProtocolViewer(Protocol, Viewer):
             d[k] = self._visualizeParam
             
         return d        
-        
-    def _showPlots(self, plots, errors):
-        if len(errors):
-            self.showError('\n'.join(errors))
-        if len(plots):
-            plots[0].show() # Show from any plot, 0 or any other
-            
-    def _showOrReturn(self, xplotter):
-        if self.showPlot:
-            xplotter.show()
-        else:
-            return xplotter
         
     def _getVisualizeDict(self):
         """ Create the visualization dict for view individual params. """
@@ -167,6 +208,9 @@ class ProtocolViewer(Protocol, Viewer):
             if self.getAttributeValue(k, False):
                 print "   calling v..."
                 v(k)
+                
+    def _citations(self):
+        return self.protocol._citations()
     
     #TODO: This method should not be necessary, instead NumericListParam should return a list and not a String 
     def _getListFromRangeString(self, rangeStr):

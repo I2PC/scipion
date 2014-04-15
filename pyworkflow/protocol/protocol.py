@@ -952,8 +952,10 @@ class Protocol(Step):
                     paramErrors = param.validate(attr.get())
             label = param.label.get()
             errors += ['*%s* %s' % (label, err) for err in paramErrors]                
-        # Validate specific for the subclass
-        errors += self._validate()
+        # Validate specific for the subclass 
+        childErrors = self._validate()        
+        if childErrors:
+            errors += childErrors
         
         return errors 
     

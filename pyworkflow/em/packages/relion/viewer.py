@@ -31,7 +31,7 @@ import os
 
 from pyworkflow.utils.path import cleanPath
 from pyworkflow.viewer import Viewer, ProtocolViewer, DESKTOP_TKINTER, WEB_DJANGO
-from pyworkflow.em.viewer import DataView, ObjectView
+from pyworkflow.em.viewer import DataView, ObjectView, CommandView
 from protocol_classify2d import ProtRelionClassify2D
 from protocol_classify3d import ProtRelionClassify3D
 from protocol_refine3d import ProtRelionRefine3D
@@ -166,9 +166,12 @@ Examples:
     def _viewAll(self, *args):
         pass
     
+    def _validate(self):
+        if self.lastIter is None:
+            return ['There are not iterations completed.'] 
+    
     def _visualizeParam(self, paramName=None):
-        # Override class method to load things
-        # before any visualization
+        # Override class method to load things before any visualization
         self._load()
         ProtocolViewer._visualizeParam(self, paramName)        
         
@@ -261,20 +264,15 @@ Examples:
         views = []
         for it in self._iterations:
             fn = self.protocol._getIterSortedData(it)
-            xplotter = self._createPlotPerIterationLL(it, fn)
+            md = xmipp.MetaData(fn)
+            xplotter = XmippPlotter(windowTitle="max Likelihood particles sorting Iter_%d" % it)
+            xplotter.createSubPlot("Particle sorting: Iter_%d" % it, "Particle number", "maxLL")
+            xplotter.plotMd(md, False, mdLabelY=xmipp.MDL_LL)
             views.append(xplotter)
             views.append(self.createDataView(fn))
             
         return views
 
-    def _createPlotPerIterationLL(self, it, fn):
-        md = xmipp.MetaData(fn)
-        xplotter = XmippPlotter(windowTitle="max Likelihood particles sorting Iter_%d" % it)
-        xplotter.createSubPlot("Particle sorting: Iter_%d" % it, "Particle number", "maxLL")
-        xplotter.plotMd(md, False, mdLabelY=xmipp.MDL_LL)
-        
-        return xplotter
-     
 #===============================================================================
 # ShowPMax
 #===============================================================================
@@ -359,7 +357,7 @@ Examples:
                     volFn = self.protocol._getFileName(prefix + 'volume', iter=it, ref3d=ref3d)
                     md.setValue(xmipp.MDL_IMAGE, volFn, md.addObject())
             md.write('iter%03d@%s' % (it, mdPath), xmipp.MD_APPEND)
-        return mdPath
+        return [self.createDataView(mdPath)]
     
     def _showVolumesChimera(self):
         """ Create a chimera script to visualize selected volumes. """
@@ -382,36 +380,35 @@ Examples:
                 f.write("open %s\n" % localVol)
             f.write('tile\n')
             f.close()
-            os.system('chimera %s &' % cmdFile)                    
+            view = CommandView('chimera %s &' % cmdFile)                    
         else:
-            os.system('xmipp_chimera_client --input "%s" --mode projector 256 &' % volumes[0])
+            view = CommandView('xmipp_chimera_client --input "%s" --mode projector 256 &' % volumes[0])
+            
+        return [view]
             
     def _showVolumes(self, paramName=None):
         if self.displayVol == VOLUME_CHIMERA:
-            self._showVolumesChimera()
+            return self._showVolumesChimera()
         
         elif self.displayVol == VOLUME_SLICES:
-            mdPath = self._createVolumesMd()
-            self.createDataView(mdPath)
+            return self._createVolumesMd()
             
 #===============================================================================
 # showAngularDistribution
 #===============================================================================
                             
-    def _createAngularDistribution(self):
-        arguments = []
-        plotters = []
+    def _showAngularDistribution(self, paramName=None):
+        views = []
         
         if self.displayAngDist == ANGDIST_CHIMERA:
             for it in self._iterations:
-                arguments = self._createAngDistChimera(it)
+                views.append(self._createAngDistChimera(it))
                         
         elif self.displayAngDist == ANGDIST_2DPLOT:
             for it in self._iterations:
-                xplotter = self._createAngDist2D(it)
-                plotters.append(xplotter)
+                views.append(self._createAngDist2D(it))
                 
-        return plotters, arguments
+        return views
     
     def _createAngDistChimera(self, it):
         arguments = []
@@ -431,8 +428,8 @@ Examples:
                 if sphere > 0:
                     args += ' %f ' % sphere
                 arguments.append(args)
-                    
-        return arguments
+                   
+        return CommandView('xmipp_chimera_client %s &' % args)
         
     
     def _createAngDist2D(self, it):
@@ -451,17 +448,6 @@ Examples:
                 xplotter.plotMdAngularDistribution(plot_title, md)
         
         return xplotter
-    
-    def _showAngularDistribution(self, paramName=None):
-        plotters, arguments = self._createAngularDistribution()
-        
-        if arguments:
-            for args in arguments:
-                os.system('xmipp_chimera_client %s &' % args)
-        
-        if plotters:
-            for xplotter in plotters:
-                xplotter.show()
                 
 #===============================================================================
 # plotSSNR              
@@ -478,7 +464,7 @@ Examples:
         a.plot(resolution_inv, frc)
         a.xaxis.set_major_formatter(self._plotFormatter)               
  
-    def _createSSNR(self, paramName=None):
+    def _showSSNR(self, paramName=None):
         prefixes = self._getPrefixes()        
         nrefs = len(self._refsList)
         n = nrefs * len(prefixes)
@@ -501,13 +487,8 @@ Examples:
                 xplotter.showLegend(legendName)
                 a.grid(True)
         
-        return xplotter
+        return [xplotter]
         
-    def _showSSNR(self, paramName=None):
-        xplotter = self._createSSNR()
-        xplotter.show()
-            
-            
 #===============================================================================
 # plotFSC            
 #===============================================================================
@@ -523,7 +504,7 @@ Examples:
         a.xaxis.set_major_formatter(self._plotFormatter)
         a.set_ylim([-0.1, 1.1])
             
-    def _createFSC(self):
+    def _showFSC(self, paramName=None):
         threshold = self.resolutionThresholdFSC.get()
         prefixes = self._getPrefixes()        
         nrefs = len(self._refsList)
@@ -551,13 +532,8 @@ Examples:
                     a.plot([self.minInv, self.maxInv],[threshold, threshold], color='black', linestyle='--')
                 a.grid(True)
             
-        return xplotter
+        return [xplotter]
         
-    def _showFSC(self, paramName=None):
-        plots = [self._createFSC()]
-        for xplotter in plots:
-            xplotter.show()
-            
 ### WEB UTILS ################################################# 
 
     def getVisualizeDictWeb(self):
