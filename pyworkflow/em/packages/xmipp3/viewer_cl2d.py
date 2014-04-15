@@ -59,11 +59,12 @@ class XmippCL2DViewer(ProtocolViewer):
         form.addSection(label='Visualization')
         form.addParam('classesToShow', EnumParam, choices=CLASS_CHOICES,
                       label="What to show", default=CLASS_CORES,
-                      display=EnumParam.DISPLAY_COMBO)
+                      display=EnumParam.DISPLAY_LIST)
         form.addParam('doShowClassHierarchy', BooleanParam, default=True, 
                       label="Visualize class hierarchy.")      
         form.addParam('doShowLastLevel', EnumParam, default=LEVEL_LAST, 
                       choices=LEVEL_CHOICES,
+                      display=EnumParam.DISPLAY_LIST,
                       label="Level to visualize")     
         form.addParam('showSeveralLevels', StringParam, default='',
               label='Levels selection', condition='doShowLastLevel==%d' % LEVEL_SEL,
@@ -127,7 +128,7 @@ class XmippCL2DViewer(ProtocolViewer):
                         views.append(ObjectView(fn, "Particles", 
                                                 self._project.getName(), 
                                                 self.protocol.strId(), inputImagesId))
-                                     
+        
         if errors:
             views.append(self.errorMessage('\n'.join(errors), "Visualization errors"))
             
