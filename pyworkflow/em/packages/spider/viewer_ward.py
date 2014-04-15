@@ -85,7 +85,7 @@ class SpiderViewerWard(ProtocolViewer):
         self.plt.set_xlim(0., self.rightMost + self.step)
         self.plt.set_ylim(-10, 105)
         
-        return self._showOrReturn(xplotter)
+        return [xplotter]
     
     def plotNode(self, node, minHeight=-1):
         childs = node.getChilds()
@@ -146,7 +146,8 @@ class SpiderViewerWard(ProtocolViewer):
         lt.setCanvas(canvas)
         lt.paint(self._createNode, maxLevel=self.maxLevel.get()-1)
         canvas.updateScrollRegion()
-        self.win.show()
+        
+        return [self.win]
         
     def saveClasses(self, e=None):
         """ Store selected classes. """

@@ -35,10 +35,81 @@ DESKTOP_TKINTER = 'tkinter'
 WEB_DJANGO = 'django'
 
 
+class View(object):
+    """ Represents a visualization result for some object or file.
+    Views can be plots, table views, chimera scripts, commands or messages.
+    """
+    def show(self):
+        """ This method should be overriden to implement how
+        this particular view will be displayed in desktop.
+        """
+        pass
+    
+    def toUrl(self):
+        """ If the view have web implementation, this method
+        should be implented to build the url with parameters
+        that will be used to respond.
+        """
+        pass
+    
+    
+class CommandView(View):
+    """ View for calling an external command. """
+    def __init__(self, cmd, **kwargs):
+        View.__init__(self)
+        self._cmd = cmd
+        self._env = kwargs.get('env', None)
+        
+    def show(self):
+        from subprocess import call
+        call(self._cmd, shell=True, env=self._env)
+        
+
+MSG_INFO = 0
+MSG_WARN = 1
+MSG_ERROR = 2
+
+MSG_DICT = {MSG_INFO: 'showInfo',
+            MSG_WARN: 'showWarning',
+            MSG_ERROR: 'showError'}
+
+
+class MessageView(View):
+    """ View for some message. """
+    def __init__(self, msg, title='', msgType=MSG_INFO, tkParent=None, **kwargs):
+        View.__init__(self)
+        self._msg = msg
+        self._title = title
+        self._msgType = msgType
+        self._tkParent = tkParent
+        
+    def show(self):
+        import pyworkflow.gui.dialog as dialog
+        func = getattr(dialog, MSG_DICT[self._msgType])
+        func(self._title, self._msg, self._tkParent)
+
+
+class TextView(View):
+    """ View for display some text file. """
+    def __init__(self, filelist, title='', tkParent=None, **kwargs):
+        View.__init__(self)
+        self._filelist = filelist
+        if title:
+            self._title = title
+        else:
+            self._title = filelist[0]
+        self._tkParent = tkParent
+        
+    def show(self):
+        from pyworkflow.gui.text import showTextFileViewer
+        showTextFileViewer(self._title, self._filelist, self._tkParent)
+
+
+#----------------- Viewers ----------------------------------------
+    
 class Viewer(object):
-    """ All visualization wrappers should user the Viewer class
-    as base and provide the implementation to launch specific 
-    command line tools in order to visualize objects.
+    """ A Viewer will provide several Views to visualize
+    the data associated to data objects or protocol.
     
     The _targets class property should contains a list of string
     with the class names that this viewer is able to visualize.
@@ -58,11 +129,12 @@ class Viewer(object):
     
     def visualize(self, obj):
         """ This method should make the necessary convertions
-        and call the command line utilities to visualize this
-        particular object.
+        and return the list of Views that will be used to 
+        visualize the object
         """
         pass
     
+    #FIXME: REMOVE THIS METHOD AFTER RE-FACTORING
     def getView(self):
         """ This method should return the string value of the view in web
         that will respond to this viewer. This method only should be implemented
@@ -82,13 +154,16 @@ class Viewer(object):
     
     
 class ProtocolViewer(Protocol, Viewer):
-    """ This class will serve as base for viewers that will have form and parameters. """
+    """ Special kind of viewer that have a Form to organize better
+    complex visualization associated with protocol results.
+    If should provide a mapping between form params and the corresponding
+    functions that will return the corresponding Views.
+    """
     def __init__(self, **args):
         Protocol.__init__(self, **args)
         Viewer.__init__(self, **args)
         self.allowHeader.set(False)
         self.showPlot = True # This flag will be used to display a plot or return the plotter
-        
         
     def setProtocol(self, protocol):
         self.protocol = protocol
@@ -100,24 +175,48 @@ class ProtocolViewer(Protocol, Viewer):
         self.windows = args.get('windows', None)
         self.formWindow = FormWindow("Protocol Viewer: " + self.getClassName(), self, 
                        self._viewAll, self.windows,
-                       visualizeDict=self._getVisualizeDict(),
+                       visualizeDict=self.__getVisualizeWrapperDict(),
                        visualizeMode=True)
         self.formWindow.visualizeMode = True
         self.showInfo = self.formWindow.showInfo
         self.showError = self.formWindow.showError
+        self._tkRoot = self.formWindow
         self.formWindow.show(center=True)     
-
-    def _showPlots(self, plots, errors):
-        if len(errors):
-            self.showError('\n'.join(errors))
-        if len(plots):
-            plots[0].show() # Show from any plot, 0 or any other
-            
-    def _showOrReturn(self, xplotter):
-        if self.showPlot:
-            xplotter.show()
+        
+    def infoMessage(self, msg, title='',):
+        """ Build a message View of type INFO. """
+        return MessageView(msg, title, msgType=MSG_INFO, tkParent=self._tkRoot.root)
+    
+    def errorMessage(self, msg, title=''):
+        """ Build a message View of type INFO. """
+        return MessageView(msg, title, msgType=MSG_ERROR, tkParent=self._tkRoot.root)  
+    
+    def warnMessage(self, msg, title=''):
+        """ Build a message View of type INFO. """
+        return MessageView(msg, title, msgType=MSG_WARN, tkParent=self._tkRoot.root)
+    
+    def textView(self, filelist, title=''):
+        return TextView(filelist, title, tkParent=self._tkRoot)   
+    
+    def _visualizeParam(self, paramName=None):
+        """ Call handler to get viewers and visualize each one. """
+        errors = self.validate()
+        if errors:
+            errorMsg = '\n'.join(errors)
+            self.showError(errorMsg, "Validation errors")
         else:
-            return xplotter
+            views = self._getVisualizeDict()[paramName]()
+            if views:
+                for v in views:
+                    v.show()
+            
+    def __getVisualizeWrapperDict(self):
+        """ Replace the True attributes handler by the generic one. """
+        d = {}
+        for k in self._getVisualizeDict():
+            d[k] = self._visualizeParam
+            
+        return d        
         
     def _getVisualizeDict(self):
         """ Create the visualization dict for view individual params. """
@@ -130,6 +229,9 @@ class ProtocolViewer(Protocol, Viewer):
             if self.getAttributeValue(k, False):
                 print "   calling v..."
                 v(k)
+                
+    def _citations(self):
+        return self.protocol._citations()
     
     #TODO: This method should not be necessary, instead NumericListParam should return a list and not a String 
     def _getListFromRangeString(self, rangeStr):

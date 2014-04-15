@@ -118,6 +118,10 @@ class ElementGroup(FormElement):
         """Add a hidden parameter to be used in conditions. """
         args.update({'label': '', 'condition': 'False'})
         self.addParam(paramName, ParamClass, **args)
+
+    def addLine(self, lineName, **kwargs):
+        return self.addParam(lineName, Line, form=self._form, 
+                             label=lineName, **kwargs)        
     
     
 # ----------- Some type of ElementGroup --------------------------
@@ -152,10 +156,6 @@ class Section(ElementGroup):
     def addGroup(self, groupName, **kwargs):
         return self.addParam(groupName, Group, form=self._form, 
                              label=groupName, **kwargs)
-
-    def addLine(self, lineName, **kwargs):
-        return self.addParam(lineName, Line, form=self._form, 
-                             label=lineName, **kwargs)        
             
                     
 class Form(object):

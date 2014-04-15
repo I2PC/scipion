@@ -27,9 +27,11 @@
 This module implement the classes to create plots on xmipp.
 """
 
+from pyworkflow.viewer import View
 
-class Plotter(object):
-    ''' Class to create several plots'''
+
+class Plotter(View):
+    """ Create different types of plots using the matplotlib library. """
     plt = None
     backend = None
     interactive = False
