@@ -32,7 +32,6 @@ from pyworkflow.em import *
 from pyworkflow.gui.form import FormWindow
 from protocol_refinement import ProtFrealign
 from protocol_ctffind3 import ProtCTFFind
-from pyworkflow.em.packages.xmipp3.viewer import runShowJ
 from pyworkflow.em.plotter import EmPlotter
 
 import numpy as np
@@ -42,12 +41,10 @@ ALL_ITER = 1
 SELECTED_ITERS = 2
 
 class FrealignViewer(ProtocolViewer):
-    """ Visualization of Frealign."""
-    
-    _targets = [ProtFrealign]
+    """ Visualization of Frealign."""    
     _environments = [DESKTOP_TKINTER, WEB_DJANGO]
-    
     _label = 'viewer Frealign'
+    _targets = [ProtFrealign]    
     
     def _defineParams(self, form):
         form.addSection(label='Results per Iteration')
@@ -85,30 +82,24 @@ class FrealignViewer(ProtocolViewer):
     
     def _view3DRefsVolumes(self, e=None):
         files = self._getIterationFile("reference_volume_iter_%03d.mrc")
-        self._doShowJ(files)
-        
-        #self._viewIterationFile("reference_volume_iter_%03d.mrc")
+        #TODO: Instead of opening a showj separated with each volume, write a md 
+        return [self.createDataView(files[0])]
         
     def _view3DReconVolumes(self, e=None):
+        #TODO: Instead of opening a showj separated with each volume, write a md
         files = self._getIterationFile("volume_iter_%03d.mrc")
-        self._doShowJ(files)
+        return [self.createDataView(files[0])]
     
     def _viewMatchProj(self, e=None):
         files = self._getIterationFile("particles_match_iter_%03d.mrc")
-        self._doShowJ(files)
+        return [self.createDataView(files[0])]
     
     def _plotAngularDistribution(self, e=None):
-        plots, errors = self._createAngularDistributionPlots()
-        self._showPlots(plots, errors)
-        
-            
-    def _createAngularDistributionPlots(self):
         """ Plot the angular distributions for each reference and each iteration.
         Returns:
-            plots: a list of all angular distribution plots.
-            errors: a list of errors (if some iteration does not exists.
+            views: a list of all angular distribution plots or some errors.
         """
-        plots = []
+        views = []
         errors = self.setVisualizeIterations()
         
         if len(errors) == 0:
@@ -120,10 +111,12 @@ class FrealignViewer(ProtocolViewer):
                     errors.append('Iteration %s does not exist.' % iteration)
                 else:
                     xplotter = self._createIterAngularDistributionPlot(iteration, pathFile)
-                    xplotter.draw()
-                    plots.append(xplotter)
+                    views.append(xplotter)
+                    
+        if errors:
+            views.append(self.errorMessage('\n'.join(errors), "Visualization errors"))
 
-        return plots, errors
+        return views
     
     def _createIterAngularDistributionPlot(self, iteration, pathFile):
         # Create Angular plot for one iteration
@@ -147,10 +140,8 @@ class FrealignViewer(ProtocolViewer):
         return xplotter
     
     
-    def _doShowJ(self, files):
-        if len(files) != 0:
-            for f in files:
-                runShowJ(f)
+    def createDataView(self, filename):
+        return DataView(filename)
     
     def _getIterationFile(self, filePath):
         self.setVisualizeIterations()
@@ -168,7 +159,6 @@ class FrealignViewer(ProtocolViewer):
                 self.formWindow.showError('Iteration %s does not exist.' % iter)
         
         return path
-        
         
     def setVisualizeIterations(self):
         '''Validate and set the set of iterations to visualize.
