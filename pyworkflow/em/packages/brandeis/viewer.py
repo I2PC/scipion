@@ -24,21 +24,19 @@
 # *
 # **************************************************************************
 """
-This module implement the wrappers around xmipp_showj
-visualization program.
+Visualization of the results of the Frealign protocol.
 """
 from pyworkflow.viewer import ProtocolViewer, DESKTOP_TKINTER, WEB_DJANGO
 from pyworkflow.em import *
-from pyworkflow.gui.form import FormWindow
 from protocol_refinement import ProtFrealign
 from protocol_ctffind3 import ProtCTFFind
 from pyworkflow.em.plotter import EmPlotter
 
-import numpy as np
 
 LAST_ITER = 0
 ALL_ITER = 1
 SELECTED_ITERS = 2
+
 
 class FrealignViewer(ProtocolViewer):
     """ Visualization of Frealign."""    

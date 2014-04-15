@@ -87,7 +87,25 @@ class MessageView(View):
         import pyworkflow.gui.dialog as dialog
         func = getattr(dialog, MSG_DICT[self._msgType])
         func(self._title, self._msg, self._tkParent)
-    
+
+
+class TextView(View):
+    """ View for display some text file. """
+    def __init__(self, filelist, title='', tkParent=None, **kwargs):
+        View.__init__(self)
+        self._filelist = filelist
+        if title:
+            self._title = title
+        else:
+            self._title = filelist[0]
+        self._tkParent = tkParent
+        
+    def show(self):
+        from pyworkflow.gui.text import showTextFileViewer
+        showTextFileViewer(self._title, self._filelist, self._tkParent)
+
+
+#----------------- Viewers ----------------------------------------
     
 class Viewer(object):
     """ A Viewer will provide several Views to visualize
@@ -162,20 +180,23 @@ class ProtocolViewer(Protocol, Viewer):
         self.formWindow.visualizeMode = True
         self.showInfo = self.formWindow.showInfo
         self.showError = self.formWindow.showError
+        self._tkRoot = self.formWindow
         self.formWindow.show(center=True)     
-        self._tkRoot = self.formWindow.root
         
     def infoMessage(self, msg, title='',):
         """ Build a message View of type INFO. """
-        return MessageView(msg, title, msgType=MSG_INFO, tkParent=self._tkRoot)
+        return MessageView(msg, title, msgType=MSG_INFO, tkParent=self._tkRoot.root)
     
     def errorMessage(self, msg, title=''):
         """ Build a message View of type INFO. """
-        return MessageView(msg, title, msgType=MSG_ERROR, tkParent=self._tkRoot)  
+        return MessageView(msg, title, msgType=MSG_ERROR, tkParent=self._tkRoot.root)  
     
     def warnMessage(self, msg, title=''):
         """ Build a message View of type INFO. """
-        return MessageView(msg, title, msgType=MSG_WARN, tkParent=self._tkRoot)     
+        return MessageView(msg, title, msgType=MSG_WARN, tkParent=self._tkRoot.root)
+    
+    def textView(self, filelist, title=''):
+        return TextView(filelist, title, tkParent=self._tkRoot)   
     
     def _visualizeParam(self, paramName=None):
         """ Call handler to get viewers and visualize each one. """

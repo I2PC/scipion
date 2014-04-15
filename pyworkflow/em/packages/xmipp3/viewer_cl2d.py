@@ -37,8 +37,12 @@ import glob
 
 CLASSES = 0
 CLASS_CORES = 1
-CLASS_STABLE_CORES = 2
-   
+CLASS_STABLE_CORES = 2   
+CLASS_CHOICES = ['Classes', 'Class Cores', 'Class Stable Cores']
+
+LEVEL_LAST = 0
+LEVEL_SEL = 1
+LEVEL_CHOICES = ['last', 'selection']
         
 class XmippCL2DViewer(ProtocolViewer):
     """ Wrapper to visualize different type of data objects
@@ -47,21 +51,22 @@ class XmippCL2DViewer(ProtocolViewer):
     _label = 'viewer cl2d'
     _targets = [XmippProtCL2D]
     _environments = [DESKTOP_TKINTER, WEB_DJANGO]
-    choices=['Classes', 'Class Cores', 'Class Stable Cores']
     
     def __init__(self, **args):
         ProtocolViewer.__init__(self, **args)
-        self.choices = ['Classes', 'Class Cores', 'Class Stable Cores']
 
     def _defineParams(self, form):
         form.addSection(label='Visualization')
-        form.addParam('classesToShow', EnumParam, choices=self.choices,
+        form.addParam('classesToShow', EnumParam, choices=CLASS_CHOICES,
                       label="What to show", default=CLASS_CORES,
                       display=EnumParam.DISPLAY_COMBO)
-        form.addParam('doShowClassHierarchy', BooleanParam, label="Visualize class hierarchy.", default=True)      
-        form.addParam('doShowLastLevel', BooleanParam, label="Visualize last level.", default=True)     
+        form.addParam('doShowClassHierarchy', BooleanParam, default=True, 
+                      label="Visualize class hierarchy.")      
+        form.addParam('doShowLastLevel', EnumParam, default=LEVEL_LAST, 
+                      choices=LEVEL_CHOICES,
+                      label="Level to visualize")     
         form.addParam('showSeveralLevels', StringParam, default='',
-              label='Visualize several levels', condition='not doShowLastLevel',
+              label='Levels selection', condition='doShowLastLevel==%d' % LEVEL_SEL,
               help='Specify a  list of levels like: 0,1,3 or 0-3 ')    
     
     def _getVisualizeDict(self):
@@ -83,53 +88,51 @@ class XmippCL2DViewer(ProtocolViewer):
         fnSubset = self._getSubset()
         fnHierarchy = self.protocol._getExtraPath("classes%s_hierarchy.txt" % fnSubset)
         if os.path.exists(fnHierarchy):
-            showTextFileViewer(fnHierarchy,[fnHierarchy]) 
+            return [self.textView([fnHierarchy])] 
             
     def _viewLevelFiles(self, e=None):
-
-        
-        
         fnSubset = self._getSubset()
-        
+        views = []
+        errors = []
         obj = getattr(self.protocol, "outputClasses" + fnSubset)
         levelFiles = self.protocol._getLevelMdFiles(fnSubset)
+        
         if levelFiles:
             levelFiles.sort()
-            lastLevelFile = levelFiles[-1]
-            if self.doShowLastLevel:
-                #runShowJ("classes@"+lastLevelFile)
-                
-                runScipionShowJ("classes@"+lastLevelFile, "Particles", self._project.getName(), obj.strId(), obj.getImages().strId())  
+            
+            if self.doShowLastLevel == LEVEL_LAST:
+                views.append(ObjectView("classes@"+levelFiles[-1], "Particles", 
+                                        self._project.getName(), obj.strId(), 
+                                        obj.getImages().strId()))
             else:
                 if self.showSeveralLevels.empty():
-                    self.formWindow.showError('Please select the levels that you want to visualize.')
+                    errors.append('Please select the levels that you want to visualize.')
                 else:
                     listOfLevels = []
                     try:
                         listOfLevels = self._getListFromRangeString(self.showSeveralLevels.get())
                     except Exception, ex:
-                        self.formWindow.showError('Invalid levels range.')
+                        errors.append('Invalid levels range.')
                         
-                    #lastLevel = int(re.search('level_(\d\d)',lastLevelFile).group(1))
-                    #if max(listOfLevels) <= lastLevel:
-                    files = "";
+                    files = []
                     for level in listOfLevels:
                         fn = self.protocol._getExtraPath("level_%02d/level_classes%s.xmd"%(level,fnSubset))
                         if os.path.exists(fn):
-                            files += "classes_sorted@"+fn+" "
+                            files.append("classes_sorted@%s " % fn)
                         else:
-                            self.formWindow.showError('Level %s does not exist.' % level)
-                    if files != "":
-                        #runShowJ(files)
-                        inputImagesId = self.protocol.inputImages.get().strId()
-                        runScipionShowJ(files, "Particles", self._project.getName(), self.protocol.strId(), inputImagesId)          
-        
-    def _viewAll(self, *args):
-
-        self._viewLevelFiles()
+                            errors.append('Level %s does not exist.' % level)
+                    
+                    inputImagesId = self.protocol.inputImages.get().strId()
+                    for fn in files:                        
+                        views.append(ObjectView(fn, "Particles", 
+                                                self._project.getName(), 
+                                                self.protocol.strId(), inputImagesId))
+                                     
+        if errors:
+            views.append(self.errorMessage('\n'.join(errors), "Visualization errors"))
             
-        if self.doShowClassHierarchy:
-            self._viewClassHierarchy()
+        return views        
+
 
     def getVisualizeDictWeb(self):
         return {'doShowClassHierarchy': "viewClassHierarchy",
