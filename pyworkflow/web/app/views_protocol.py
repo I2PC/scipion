@@ -64,7 +64,7 @@ def form(request):
     viewerDict = None
     if action == 'visualize':
         visualize = 1
-        viewerDict = protocol.getVisualizeDictWeb()
+        viewerDict = protocol._getVisualizeDict()
     elif action == 'protSimple':
         visualize = 2
     elif action == 'copy':
