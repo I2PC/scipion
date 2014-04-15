@@ -100,8 +100,8 @@ def forwardDownloadbar(percent, progress):
     
 def downloadFile(datasetName, file, fileMd5, workingCopy=os.environ['SCIPION_TESTS'], tmpMd5copy=os.environ['SCIPION_TMP'], askMsg="download it?", url="http://scipionwiki.cnb.csic.es/files/scipion/data/tests/NACHOTESTS_PLEASEDONOTREMOVE/tests", verbose=False):
     fileDownloaded = 0
-    datasetFolder = os.path.join(workingCopy, "dataset_%(dataset)s" % ({'dataset': datasetName}))
-    datasetFolderTmp = os.path.join(tmpMd5copy, "dataset_%(dataset)s" % ({'dataset': datasetName}))
+    datasetFolder = os.path.join(workingCopy, "%(dataset)s" % ({'dataset': datasetName}))
+    datasetFolderTmp = os.path.join(tmpMd5copy, "%(dataset)s" % ({'dataset': datasetName}))
     answer = "-"
     if verbose:
         while answer != "y" and answer != "n" and answer != "":
@@ -111,12 +111,12 @@ def downloadFile(datasetName, file, fileMd5, workingCopy=os.environ['SCIPION_TES
             print "\t Downloading file..."
         makeFilePath(os.path.join(datasetFolder, file))
         try:
-            urllib.urlretrieve(url+'/dataset_'+datasetName+'/'+file, os.path.join(datasetFolder, file))
+            urllib.urlretrieve(url+'/'+datasetName+'/'+file, os.path.join(datasetFolder, file))
             if verbose:
                 print "\t ...done."
         except:
             print "\t "+ file+" ...ERROR"
-            print "URL: "+url+'/dataset_'+datasetName+file
+            print "URL: "+url+'/'+datasetName+file
             print "destination: "+os.path.join(datasetFolder, file)
         if verbose:
             print "\t Copying md5..."
@@ -128,16 +128,16 @@ def downloadFile(datasetName, file, fileMd5, workingCopy=os.environ['SCIPION_TES
     return fileDownloaded
 
 def downloadDataset(datasetName, destination=os.environ['SCIPION_TESTS'], url="http://scipionwiki.cnb.csic.es/files/scipion/data/tests/NACHOTESTS_PLEASEDONOTREMOVE/tests", verbose=False, onlyMd5=False):
-    datasetFolder = os.path.join(destination, "dataset_%(dataset)s" % ({'dataset': datasetName}))
+    datasetFolder = os.path.join(destination, "%(dataset)s" % ({'dataset': datasetName}))
     makePath(datasetFolder)
     try:
         if verbose:
             print "retreiving MANIFEST file"
-        urllib.urlretrieve(url+'/dataset_'+datasetName+'/MANIFEST', getManifestPath(basePath=destination, dataset=datasetName))
+        urllib.urlretrieve(url+'/'+datasetName+'/MANIFEST', getManifestPath(basePath=destination, dataset=datasetName))
     except:
         print "URL could not be retreived"
         if verbose:
-            print "URL: " + url+'/dataset_'+datasetName+'/MANIFEST'
+            print "URL: " + url+'/'+datasetName+'/MANIFEST'
             print "destination:" + getManifestPath(basePath=destination, dataset=datasetName)
     manifestFile = open(getManifestPath(basePath=destination, dataset=datasetName), 'r+')
     manifestLines = manifestFile.readlines()
@@ -157,7 +157,7 @@ def downloadDataset(datasetName, destination=os.environ['SCIPION_TESTS'], url="h
             file = fileOption
             makeFilePath(os.path.join(datasetFolder, file))
             try:
-                urllib.urlretrieve(url+'/dataset_'+datasetName+'/'+file, os.path.join(datasetFolder, file))
+                urllib.urlretrieve(url+'/'+datasetName+'/'+file, os.path.join(datasetFolder, file))
                 percent = ((number*(2-1.0*onlyMd5)+indx+1)/(totalNumber*1.0))*100
                 if verbose:
                     print "\t "+file+" ...OK ( %(percent)02d " % ({'percent': percent}) + ' %)'
@@ -168,7 +168,7 @@ def downloadDataset(datasetName, destination=os.environ['SCIPION_TESTS'], url="h
                 prevPercent = percent
             except:
                 print "\t "+ file+" ...ERROR"
-                print "URL: "+url+'/dataset_'+datasetName+file
+                print "URL: "+url+'/'+datasetName+file
                 print "destination: "+os.path.join(datasetFolder, file)
                 answer = "-"
                 while answer != "y" and answer != "n" and answer != "":
@@ -206,8 +206,8 @@ def downloadDataset(datasetName, destination=os.environ['SCIPION_TESTS'], url="h
 def checkForUpdates(datasetName, workingCopy=os.environ['SCIPION_TESTS'], tmpMd5copy=os.environ['SCIPION_TMP'], url="http://scipionwiki.cnb.csic.es/files/scipion/data/tests/NACHOTESTS_PLEASEDONOTREMOVE/tests", verbose=False):
     
     # Check with local copy
-    datasetFolder = os.path.join(workingCopy, "dataset_%(dataset)s" % ({'dataset': datasetName}))
-    datasetFolderTmp = os.path.join(tmpMd5copy, "dataset_%(dataset)s" % ({'dataset': datasetName}))
+    datasetFolder = os.path.join(workingCopy, "%(dataset)s" % ({'dataset': datasetName}))
+    datasetFolderTmp = os.path.join(tmpMd5copy, "%(dataset)s" % ({'dataset': datasetName}))
     manifestFileTmp = open(getManifestPath(basePath=os.environ['SCIPION_TMP'], dataset=datasetName), 'r+')
     manifestLinesTmp = manifestFileTmp.readlines()
     filesUpdated = 0
@@ -248,10 +248,7 @@ def checkForUpdates(datasetName, workingCopy=os.environ['SCIPION_TESTS'], tmpMd5
         print "\t ...done. %(filesUpdated)d files were updated." % ({'filesUpdated': filesUpdated})
 
 def getManifestPath(basePath=os.environ['SCIPION_TESTS'], dataset=""):
-    datasetName = "dataset_"+ dataset
-    if dataset == "":
-        datasetName = ""
-    return os.path.join(basePath, datasetName, 'MANIFEST')
+    return os.path.join(basePath, dataset, 'MANIFEST')
 
 def main(argv):
     # Arguments parsing
@@ -310,7 +307,7 @@ def main(argv):
         folders = os.listdir(os.environ['SCIPION_TESTS'])
         for folder in folders:
             if os.path.isdir(os.path.join(os.environ['SCIPION_TESTS'], folder)):
-                print "\t * " + folder.replace("dataset_", "")
+                print "\t * " + folder
         print "updating remote info..."
         backupFile(getManifestPath(basePath=os.environ['SCIPION_TMP']))
         try:
@@ -326,7 +323,7 @@ def main(argv):
             manifestFile = open(getManifestPath(basePath=os.environ['SCIPION_TMP']), 'r+')
             manifestLines = manifestFile.readlines()
             for line in manifestLines:
-                print "\t * "+os.path.split(line.replace("\n","").replace("dataset_",""))[1]
+                print "\t * "+os.path.split(line.replace("\n",""))[1]
         delBackFile(getManifestPath(basePath=os.environ['SCIPION_TMP']))
             
     elif args.query_for_modifications:
@@ -374,13 +371,13 @@ def main(argv):
                 print "You've chosen to abort. Goodbye!."
                 sys.exit(3)
         else:
-            datasetFolder = os.path.join(os.environ['SCIPION_TESTS'],"dataset_%(dataset)s" % ({'dataset': args.dataset}))
+            datasetFolder = os.path.join(os.environ['SCIPION_TESTS'],"%(dataset)s" % ({'dataset': args.dataset}))
             if(os.path.exists(datasetFolder)):
                 scipion_logo()
                 print "Dataset working copy detected. Checking checksum for updates..."
                 downloadDataset(args.dataset, destination=os.environ['SCIPION_TMP'], url=args.url, verbose=args.verbose, onlyMd5=True)
                 checkForUpdates(args.dataset, url=args.url, verbose=args.verbose)
-                cleanPath(os.path.join(os.environ['SCIPION_TMP'], "dataset_%(dataset)s" % ({'dataset': args.dataset})))
+                cleanPath(os.path.join(os.environ['SCIPION_TMP'], "%(dataset)s" % ({'dataset': args.dataset})))
             else:
                 scipion_logo()
                 print "dataset not in local machine, trying to download..."
