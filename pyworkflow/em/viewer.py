@@ -46,6 +46,9 @@ class DataView(View):
     def show(self):
         runShowJ(self._path, env=self._env)
         
+    def getPath(self):
+        return self._path
+        
         
 class ObjectView(DataView):
     """ Wrapper to View but for displaying Scipion objects. """

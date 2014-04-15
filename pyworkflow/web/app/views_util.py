@@ -150,9 +150,12 @@ def loadProtocolProject(request, requestType='POST'):
     if protId and protId != 'None':  # Case of new protocol
         protId = requestDict.get('protocolId', None)
         protocol = project.mapper.selectById(int(protId))
+        
+        # Remove this and create loadProtocol method in project class
+        protocol.setProject(project) 
     else:
         protocolClass = emProtocolsDict.get(protClass, None)
-        protocol = protocolClass()
+        protocol = project.newProtocol(protocolClass)
         
     return (project, protocol)
 
@@ -560,17 +563,15 @@ def buildShowjPath(paths):
         urls.append(url)
     return urls
 
-def savePlots(request, plots):
-    count = 0
-    urls = []
+def savePlot(request, plot):
+    
     projectPath = request.session['projectPath']
-    for xplotter in plots:
-        name_img = 'image' + str(count) + '.png'
+    
+    name_img = 'image%s.png' % id(plot)
 #        fn = os.path.join('plots', name_img)
-        fn = os.path.join(projectPath,'Tmp', 'plots', name_img)
-        xplotter.savefig(fn)
-        url_plot = "/get_image_plot/?image=" + fn
-        urls.append(url_plot)
-        count +=1
+    fn = os.path.join(projectPath,'Tmp', 'plots', name_img)
+    plot.savefig(fn)
+    url_plot = "/get_image_plot/?image=" + fn
+    
         
-    return urls
+    return url_plot

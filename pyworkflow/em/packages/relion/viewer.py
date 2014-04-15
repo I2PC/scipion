@@ -70,6 +70,7 @@ class RelionViewer(ProtocolViewer):
         self._createVarsFromDefinition()
         self._env = os.environ.copy()
         addRelionLabelsToEnviron(self._env)
+        self._load()
         
     def _defineParams(self, form):
         self._form = form

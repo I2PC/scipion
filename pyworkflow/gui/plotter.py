@@ -162,5 +162,6 @@ class Plotter(View):
         self.plt.draw()
         
     def savefig(self, *args, **kwargs):
+        self.plt.tight_layout()
         self.figure.savefig(*args, **kwargs)
         
