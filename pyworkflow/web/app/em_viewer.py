@@ -32,6 +32,8 @@ from pyworkflow.manager import Manager
 from pyworkflow.em import emProtocolsDict
 from django.http import HttpResponse
 
+from pyworkflow.gui.plotter import Plotter
+
 from pyworkflow.em.packages.xmipp3.convert import writeSetOfParticles
 from pyworkflow.em.packages.xmipp3.plotter import XmippPlotter
 from pyworkflow.viewer import WEB_DJANGO
@@ -149,6 +151,15 @@ def viewerForm(project, protocol, viewer):
  
 ############## 2ND STEP: VIEWER FUNCTION METHODS ##############
 
+def viewToUrl(request, view):
+    
+    if isinstance(view, Plotter):
+        url = savePlot(request, view)
+    if isinstance(view, DataView):
+        url = "/visualize_object/?path="+ view.getPath()
+    
+    return url
+
 def viewerElement(request):
     project, protocolViewer = loadProtocolProject(request)
     protId = request.POST.get('protRunIdViewer', None)
@@ -158,65 +169,15 @@ def viewerElement(request):
     protocolViewer.setProtocol(protocol)
     
     updateProtocolParams(request, protocolViewer, project)
-    #protocolViewer.printObjDict()
     
-    protocolViewer.showPlot = False # Get xplotter instead of show()
-    functionName = protocolViewer.getVisualizeDictWeb()[viewerParam]
-    function = globals().get(functionName, None)
+    views = protocolViewer._getVisualizeDict()[viewerParam]()
     
-    if function is None:
-        pass  # redirect to error: viewer not found
-    elif not callable(function):
-        pass  # redirect to error: name is not a function
-    else:
-        ioDict= {}
-        typeUrl, url = function(request, protocolViewer)
-        ioDict[typeUrl] = url
+    urls = [viewToUrl(request, v) for v in views]
     
-    jsonStr = json.dumps(ioDict, ensure_ascii=False)
+    jsonStr = json.dumps({'urls':urls}, ensure_ascii=False)
     return HttpResponse(jsonStr, mimetype='application/javascript')
 
 ############## AUX METHODS ##############
-def view_plots(request):
-    from pyworkflow.em.packages.xmipp3.plotter import XmippPlotter
-    XmippPlotter.setInteractive(False)
-#    print "plotter.interactive: ", XmippPlotter.interactive
-    
-    projectName = request.session['projectName']
-    project = loadProject(projectName)
-    protId = request.GET.get('protId', None)
-    protocol = project.mapper.selectById(int(protId))
-    
-    protViewerClass = request.GET.get('protViewerClass', None)
-    protocolClass = emProtocolsDict.get(protViewerClass, None)
-    protocolViewer = protocolClass()
-    protocolViewer.setProtocol(protocol)
-    protocolViewer.showPlot = False # Get xplotter instead of show()
-    
-    updateProtocolParams(request, protocolViewer, project)
-    
-    functionName = request.GET.get('function', None)
-    function = globals().get(functionName, None)
-    
-    xplotter = function(request, protocolViewer)
-    
-#    figure = xplotter.getFigure()
-#    print "width:", figure.get_figwidth()*100
-#    print "height:", figure.get_figheight()*100
-        
-    canvas = xplotter.getCanvas()
-    
-    # Adding this line the space between plots is fixed
-#    try:
-#        xplotter.show()
-#    except:
-#        pass
-    
-    response = HttpResponse(content_type='image/png')
-    canvas.print_png(response)
-    
-    return response
-
     
 def view_plot_xmipp(request):
     projectName = request.session['projectName']
