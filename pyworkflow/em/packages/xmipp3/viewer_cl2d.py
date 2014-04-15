@@ -35,6 +35,7 @@ from pyworkflow.gui.text import *
 from pyworkflow.gui.dialog import showError, showWarning
 import glob
 
+
 CLASSES = 0
 CLASS_CORES = 1
 CLASS_STABLE_CORES = 2   
@@ -43,6 +44,7 @@ CLASS_CHOICES = ['Classes', 'Class Cores', 'Class Stable Cores']
 LEVEL_LAST = 0
 LEVEL_SEL = 1
 LEVEL_CHOICES = ['last', 'selection']
+        
         
 class XmippCL2DViewer(ProtocolViewer):
     """ Wrapper to visualize different type of data objects
@@ -134,19 +136,3 @@ class XmippCL2DViewer(ProtocolViewer):
             
         return views        
 
-
-    def getVisualizeDictWeb(self):
-        return {'doShowClassHierarchy': "viewClassHierarchy",
-                'doShowLastLevel': "viewLevelFiles"}
-        
-    @classmethod
-    def getView(cls):
-        """ This function will notify the web viewer for this protocol"""
-        return "viewerForm"
-    
-    @classmethod
-    def getViewFunction(cls):
-        """ This will return the name of the function to view
-        in web one (or all) params of the protocol"""
-        return "viewerCL2D"
-        

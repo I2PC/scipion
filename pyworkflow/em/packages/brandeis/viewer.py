@@ -179,32 +179,3 @@ class FrealignViewer(ProtocolViewer):
                     return ['Invalid iterations range.']
         return [] # No errors resulted
 
-    def getVisualizeDictWeb(self):
-        return {'doShow3DRefsVolumes': 'doShow3DRefsVolumes',
-                'doShow3DReconsVolumes': 'doShow3DReconsVolumes',
-                'doShow3DMatchProj': 'doShow3DMatchProj',
-                'doShowAngDist': 'doShowAngDist',
-                'doShowDataDist': 'doShowDataDist'
-                }
-
-    @classmethod
-    def getView(cls):
-        """ This function will notify the web viewer for this protocol"""
-        return "viewerForm"
-    
-    @classmethod
-    def getViewFunction(cls):
-        """ This will return the name of the function to view
-        in web one (or all) params of the protocol"""
-        return "viewerFrealign"
-
-class BrandeisViewer(Viewer):
-    """ Wrapper to visualize different type of objects
-    with the Xmipp program xmipp_showj. """
-    
-    _environments = [DESKTOP_TKINTER, WEB_DJANGO]
-    _targets = [ProtCTFFind]
-    
-    @classmethod
-    def getView(self):
-        return "viewerBrandeis"

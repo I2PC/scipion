@@ -52,7 +52,9 @@ from viewers.brandeis_frealign import *
 # RELION
 from viewers.relion import *
 
+
 ############## 1ST STEP: LAUNCH VIEWER METHODS ##############
+
 def launch_viewer(request):
     if request.is_ajax():
         projectName = request.session['projectName']
@@ -63,92 +65,36 @@ def launch_viewer(request):
         viewers = findViewers(protocol.getClassName(), WEB_DJANGO)
         
         if len(viewers) == 0:
-            msg = "There is not viewer for protocol: <strong>" + protocol.getClassName() +"</strong>"
-            ioDict = {'error': msg}
+            urls = []
+            for _, output in protocol.iterOutputAttributes(EMObject):
+                urls.append("/visualize_object/?objectId=%s" % output.getObjId())
+                
+            #msg = "There is not viewer for protocol: <strong>" + protocol.getClassName() +"</strong>"
+            ioDict = {'urls': urls}
         else:
             viewer = viewers[0]()
-            functionName = viewer.getView()
-            function = globals().get(functionName, None)
-            
-            if function is None:
-                pass  # redirect to error: viewer not found
-            elif not callable(function):
-                pass  # redirect to error: name is not a function
+            # Lets assume if there is a viewer for the protocol
+            # it will be a ProtocolViewer with a Form
+            if isinstance(viewer, ProtocolViewer):
+                ioDict = viewerForm(project, protocol, viewer)
             else:
-                ioDict = function(project, protocol, viewer)
-           
+                views = viewer.visualize(protocol)
+                urls =  [viewToUrl(request, v) for v in views]
+                ioDict = {'urls': urls}
+                
         jsonStr = json.dumps(ioDict, ensure_ascii=False)
         
     return HttpResponse(jsonStr, mimetype='application/javascript')
-
-def viewerXmipp(project, protocol, viewer):
-    ioDict={}
-    
-    if getattr(protocol, 'outputMicrographs', False):
-        objId = protocol.outputMicrographs.getObjId()
-    elif getattr(protocol, 'outputClasses', False):
-        objId = protocol.outputClasses.getObjId()
-    elif getattr(protocol, 'outputParticles', False):
-        objId = protocol.outputParticles.getObjId()
-        protId = protocol.getObjId()
-        ioDict["plot"] = "/view_plot_xmipp/?protocolId="+ str(protId) +"&width=800&height=600"
-    elif getattr(protocol, 'outputCTF', False):
-        objId = protocol.outputCTF.getObjId()
-    
-    ioDict["url"] = "/visualize_object/?objectId="+str(objId)
-    
-    if isinstance(protocol, XmippProtKerdensom):
-        ioDict['url'] += '&mode=gallery&colRowMode=On&cols=%d' % protocol.SomXdim.get()
-    if isinstance(protocol, XmippProtRotSpectra):
-        ioDict['url'] += '&classCount___renderable=True&classCount___renderFunc=getTestPlot'
-    if isinstance(protocol, XmippProtCTFMicrographs):
-        ioDict['url'] += '&mode=table'
-    
-    return ioDict
-
-def viewerBrandeis(project, protocol, viewer):
-    ioDict={}
-    
-#    if isinstance(protocol, ProtCTFFind):
-    if getattr(protocol, 'outputCTF', False):
-        objId = protocol.outputCTF.getObjId()
-        ioDict["url"] = "/visualize_object/?objectId="+str(objId)+'&mode=table'+'&psd___renderable=True'
-    
-    return ioDict
-
-def viewerSpider(project, protocol, viewer):
-    ioDict={}    
-        
-    if isinstance(protocol, PcaFile):
-        print "PcaFile"
-        html = textfileViewer("PCA files", [protocol.filename.get()])
-        ioDict["html"] = html
-        
-    elif isinstance(protocol, SpiderProtFilter):
-        particles = protocol.outputParticles
-        url = "/visualize_object/?objectId="+str(particles.getObjId())
-        ioDict["url"] = url
-        
-    elif isinstance(protocol, SpiderProtCustomMask):
-        mask = protocol.outputMask
-        url1 = "/visualize_object/?objectId="+str(mask.getObjId())
-        url2 = "/visualize_object/?path="+str(mask.getFileName())    
-            
-        ioDict["urls"] = [url1, url2] 
-        
-    return ioDict
 
 
 def viewerForm(project, protocol, viewer):
     protId = protocol.getObjId()
     viewerClassName = viewer.getClassName()
     
-    ioDict = {"url_form": "/form/?protocolClass="+ viewerClassName +
+    return {"url_form": "/form/?protocolClass="+ viewerClassName +
               "&protRunIdViewer="+ str(protId) +
               "&action=visualize"}
     
-    return ioDict
- 
 ############## 2ND STEP: VIEWER FUNCTION METHODS ##############
 
 def viewToUrl(request, view):
@@ -206,6 +152,3 @@ def view_plot_xmipp(request):
         canvas.print_png(response)
         return response
     
-
-
-

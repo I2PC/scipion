@@ -27,6 +27,7 @@
 This module implement the wrappers around xmipp_showj
 visualization program.
 """
+
 import Tkinter as tk
 from pyworkflow.protocol.params import *
 from pyworkflow.viewer import Viewer, ProtocolViewer, DESKTOP_TKINTER, WEB_DJANGO
@@ -37,9 +38,7 @@ from pyworkflow.em.packages.xmipp3.viewer import XmippViewer, runShowJ
 from pyworkflow.gui.text import showTextFileViewer
 
 from spider import PcaFile
-from protocol_filters import SpiderProtFilter
 from protocol_custommask import SpiderProtCustomMask
-from protocol_align_apsr import SpiderProtAlignAPSR
 
     
 class SpiderViewer(Viewer):
@@ -55,16 +54,9 @@ class SpiderViewer(Viewer):
         if isinstance(obj, PcaFile):
             showTextFileViewer("PCA file", [obj.filename.get()])
         
-        elif isinstance(obj, SpiderProtFilter):
-            XmippViewer(project=self.getProject()).visualize(obj.outputParticles)
-            
         elif isinstance(obj, SpiderProtCustomMask):
             mask = obj.outputMask
             XmippViewer(project=self.getProject()).visualize(mask)
             # Remove location to visualize the whole stack
             runShowJ(mask.getFileName())
-            
-    @classmethod
-    def getView(self):
-        return "viewerSpider"
-            
+           

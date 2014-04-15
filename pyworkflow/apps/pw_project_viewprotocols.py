@@ -810,12 +810,11 @@ class ProtocolsView(tk.Frame):
             firstViewer = viewers[0](project=self.project) # Instanciate the first available viewer
             firstViewer.visualize(prot, windows=self.windows)
         else:
-            for key, output in prot.iterOutputAttributes(EMObject):
+            for _, output in prot.iterOutputAttributes(EMObject):
                 viewers = findViewers(output.getClassName(), DESKTOP_TKINTER)
                 if len(viewers):
                     #TODO: If there are more than one viewer we should display a selection menu
                     viewerclass = viewers[0]
-                    print viewerclass
                     firstViewer = viewerclass(project=self.project) # Instanciate the first available viewer
                     firstViewer.visualize(output, windows=self.windows, protocol=prot)
             
