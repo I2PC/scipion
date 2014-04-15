@@ -38,6 +38,7 @@ urlpatterns = patterns('',
     
     #UTILS
     url(r'^render_column/', 'app.views_util.render_column'), # Load images dynamically
+    url(r'^get_image_plot/', 'app.views_util.get_image_plot'), # Load plots images dynamically
     url(r'^get_image/', 'app.views_util.get_image'), # Load images dynamically
     url(r'^get_slice/', 'app.views_util.get_slice'), # Load slices dynamically
     url(r'^browse_objects/$', 'app.views_util.browse_objects'), # Browse objects from the database

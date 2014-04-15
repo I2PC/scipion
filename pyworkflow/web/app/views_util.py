@@ -302,6 +302,32 @@ def render_column(request):
         return getTestPlot(request)
 #    return getattr(self, renderFunction)
 
+
+#def get_image_plot(request):
+#    from pyworkflow.gui import getImage
+#    
+#    imagePath = request.GET.get('image')
+#    
+#    img = getImage(imagePath, tk=False)
+#    
+#    response = HttpResponse(mimetype="image/png")
+#    img.save(response, "PNG")
+#    return response
+    
+    
+def get_image_plot(request):
+    from PIL import Image
+    
+    imagePath = os.path.join(request.GET.get('image'))
+    
+    print "PATH :", imagePath
+    
+    img = Image.open(imagePath)
+    
+    response = HttpResponse(mimetype="image/png")
+    img.save(response, "PNG")
+    return response
+    
 def get_image(request):
 #    from django.http import HttpResponse
     from pyworkflow.gui import getImage, getPILImage
@@ -534,3 +560,17 @@ def buildShowjPath(paths):
         urls.append(url)
     return urls
 
+def savePlots(request, plots):
+    count = 0
+    urls = []
+    projectPath = request.session['projectPath']
+    for xplotter in plots:
+        name_img = 'image' + str(count) + '.png'
+#        fn = os.path.join('plots', name_img)
+        fn = os.path.join(projectPath,'Tmp', 'plots', name_img)
+        xplotter.savefig(fn)
+        url_plot = "/get_image_plot/?image=" + fn
+        urls.append(url_plot)
+        count +=1
+        
+    return urls

@@ -163,6 +163,11 @@ function popUpJSON(json){
 			for(var x=0;x<value.length;x++){
 				customPopup(value[x],1024,600);
 			}
+		} else if(key=="images"){
+			for(var x=0;x<value.length;x++){
+				var html = "<img src='" + value[x] + "'/>"
+				customPopupHTML(html,600, 500);
+			}
 		} else if(key=="url"){
 			customPopup(value,1024,600);
 		} else if(key=="html"){
@@ -183,9 +188,7 @@ function popUpJSON(json){
 
 function showPlot(url){
 	/*
-	 * Function to show a xplotter(PNG) in a function br2nl(str) {
-    return str.replace(/<br\s*\/?>/mg,"\n");
-}adjusted popup.
+	 * Function to show a xplotter(PNG) in a adjusted popup.
 	 */
 	width = getUrlParameters("width", url, true)
 	height = getUrlParameters("height", url, true)

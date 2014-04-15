@@ -118,63 +118,25 @@ def doShowVolumes(request, protocolViewer):
 #===============================================================================
 
 def doShowAngularDistributionRelion(request, protocolViewer):
-    protViewerClass = str(protocolViewer.getClassName())
-    protId = str(protocolViewer.protocol.getObjId())
-    width, height = getSizePlotter(1)
-    
-    # Need to set iterations
-    protocolViewer._load()
-    
-    urls = []
-    
-    if protocolViewer.displayAngDist == ANGDIST_2DPLOT:
-        for it in protocolViewer._iterations:
-            url_plot = "/view_plots/?function=plotAngDist2D&protViewerClass="+ str(protViewerClass) + "&iter="+ str(it) + "&protId="+ protId + "&width=" + str(width) + "&height="+ str(height)
-            urls.append(url_plot)
-            
+    plots , _ = protocolViewer._createAngularDistribution()
+    urls = savePlots(request, plots)
     return "urls", urls
-
-
-def plotAngDist2D(request, protocolViewer):
-    xplotter = protocolViewer._createAngDist2D()
-    return xplotter
 
 #===============================================================================
 # doPlotsSSNR
 #===============================================================================
 
 def doPlotsSSNR(request, protocolViewer):
-    protViewerClass = str(protocolViewer.getClassName())
-    protId = str(protocolViewer.protocol.getObjId())
-    width, height = getSizePlotter(1)
-    
-    # PLOT
-    url_plot = "/view_plots/?function=plotSSNR&protViewerClass="+ protViewerClass + "&protId="+ protId + "&width=" + str(width) + "&height="+ str(height)
-    
-    return "plot", url_plot
-
-def plotSSNR(request, protocolViewer):
-    xplotter = protocolViewer._createSSNR()
-    return xplotter
+    plots = [protocolViewer._createSSNR()]
+    urls = savePlots(request, plots)
+    return "urls", urls
 
 #===============================================================================
 # doPlotsFSC
 #===============================================================================
 
 def doPlotsFSC(request, protocolViewer):
-    protViewerClass = str(protocolViewer.getClassName())
-    protId = str(protocolViewer.protocol.getObjId())
-    width, height = getSizePlotter(1)
-    
-    # PLOT
-    url_plot = "/view_plots/?function=plotFSC&protViewerClass="+ protViewerClass + "&protId="+ protId + "&width=" + str(width) + "&height="+ str(height)
-    
-    return "plot", url_plot
-
-def plotFSC(request, protocolViewer):
-    xplotter = protocolViewer._createFSC()
-    return xplotter
-
-
-
+    plots = [protocolViewer._createFSC()]
+    urls = savePlots(request, plots)
+    return "urls", urls
 
