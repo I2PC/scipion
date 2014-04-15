@@ -155,9 +155,6 @@ def downloadDataset(datasetName, destination=os.environ['SCIPION_TESTS'], url="h
             fileOptions = [ os.path.normpath(line.replace("\n","") + ".md5") ]
         for indx, fileOption in enumerate(fileOptions):
             file = fileOption
-            md5 = ''
-            if indx == 1:
-                md5 = 'md5'
             makeFilePath(os.path.join(datasetFolder, file))
             try:
                 urllib.urlretrieve(url+'/dataset_'+datasetName+'/'+file, os.path.join(datasetFolder, file))
@@ -180,9 +177,13 @@ def downloadDataset(datasetName, destination=os.environ['SCIPION_TESTS'], url="h
                         sys.exit(1)
         if not onlyMd5:
             md5sum = 0
+            md5 = hashlib.md5()
             with open(os.path.join(datasetFolder, os.path.normpath(line.replace("\n",""))),'r+') as fileToCheck:
-                data = fileToCheck.read()
-                md5sum = hashlib.md5(data).hexdigest()
+                for chunk in iter(lambda: fileToCheck.read(128*md5.block_size), b''):
+                    md5.update(chunk)
+            md5sum = md5.hexdigest()
+                #data = fileToCheck.read()
+                #md5sum = hashlib.md5(data).hexdigest()
             md5file = open(os.path.join(datasetFolder, os.path.normpath(line.replace("\n","")+".md5")),'r+')
             md5calc = md5file.readlines()[0].split(" ")[0]
             if verbose:
@@ -316,7 +317,9 @@ def main(argv):
             urllib.urlretrieve(args.url+'/MANIFEST', getManifestPath(basePath=os.environ['SCIPION_TMP']))
             print "done."
         except:
-            traceback.print_exc()
+            print "MANIFEST"+" ...ERROR"
+            print "URL: "+args.url+'/MANIFEST'
+            print "destination: "+getManifestPath(basePath=os.environ['SCIPION_TMP'])
             restoreFile(getManifestPath(basePath=os.environ['SCIPION_TMP']))
         if os.path.exists(getManifestPath(basePath=os.environ['SCIPION_TMP'])):
             print "List of remote datasets in %(urlAddress)s" % ({'urlAddress': args.url})
