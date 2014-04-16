@@ -39,21 +39,6 @@ from pyworkflow.em.packages.xmipp3.plotter import XmippPlotter
 from pyworkflow.viewer import WEB_DJANGO
 from pyworkflow.em.viewer import PATH, TABLE_NAME
 
-# XMIPP
-from viewers.xmipp_ml2d import *
-from viewers.xmipp_cl2d import *
-#from viewers.xmipp_ml3d import *
-from viewers.xmipp_nma import *
-from viewers.xmipp_nma_align import *
-# SPIDER
-from viewers.spider_capca import *
-from viewers.spider_ward import *
-# BRANDEIS
-from viewers.brandeis_frealign import *
-# RELION
-from viewers.relion import *
-
-
 ############## 1ST STEP: LAUNCH VIEWER METHODS ##############
 
 def launch_viewer(request):
