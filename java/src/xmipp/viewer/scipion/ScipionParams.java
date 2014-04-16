@@ -32,6 +32,7 @@ public class ScipionParams extends Param {
     public void defineArgs() {
         super.defineArgs();
         Option cmdoption = new Option(SCIPION, "");
+        
         cmdoption.setArgs(6);
         options.addOption(cmdoption);
     }
