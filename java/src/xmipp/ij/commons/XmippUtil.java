@@ -10,24 +10,13 @@ import ij.ImagePlus;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
-<<<<<<< HEAD
-import java.io.FileOutputStream;
+
 import java.io.FileWriter;
-import java.io.IOException;
-=======
-import java.io.FileWriter;
->>>>>>> 3.1
+
 import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
-import java.nio.file.Files;
-import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-<<<<<<< HEAD
-import xmipp.ij.commons.XmippUtil;
-=======
->>>>>>> 3.1
-import xmipp.jni.Filename;
+
 import xmipp.jni.ImageGeneric;
 
 
