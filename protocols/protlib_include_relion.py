@@ -180,10 +180,10 @@ IgnoreCTFUntilFirstPeak = False
 
 
 #------------------------------------------------------------------------------------------------
-# {condition}(not DoContinue) {section} Optimisation
+# {section} Optimisation
 #------------------------------------------------------------------------------------------------
 
-# {wizard}(wizardChooseLowPassFilter) {condition}(not Is2D) Initial low-pass filter (A): 
+# {wizard}(wizardChooseLowPassFilter) {condition}(not Is2D and not DoContinue) Initial low-pass filter (A): 
 """
 It is recommended to strongly low-pass filter your initial reference map. 
 If it has not yet been low-pass filtered, it may be done internally using this option. 
@@ -200,7 +200,7 @@ or classes.
 """
 NumberOfIterations = 25
 
-# {condition}(DoClassify) Regularisation paramter T:
+# {condition}(DoClassify and not DoContinue) Regularisation paramter T:
 """
 Bayes law strictly determines the relative weight between the contribution of the experimental data and the prior.
 However, in practice one may need to adjust this weight to put slightly more weight on the experimental 
@@ -212,7 +212,7 @@ over-estimated resolutions and overfitting.
 """
 RegularisationParamT = 1
 
-# {wizard}(wizardSetMaskRadiusRelion) Particles mask RADIUS (A):
+# {condition}(not DoContinue){wizard}(wizardSetMaskRadiusRelion) Particles mask RADIUS (A):
 """
 The experimental images will be masked with a soft circular mask
 with this <radius> (Note that in Relion GUI the diameter is used).
@@ -226,7 +226,7 @@ If -1 is used, then half of the particles size will be used as radius.
 """
 MaskRadiusA = 180
 
-# {condition}(DoClassify) {list_combo}(Yes: fill with zeros,No: fill with random noise) Mask individual particles with zero?
+# {condition}(DoClassify and not DoContinue) {list_combo}(Yes: fill with zeros,No: fill with random noise) Mask individual particles with zero?
 """
 If set to <Yes>, then in the individual particles, the area outside a circle with the radius 
 of the particle will be set to zeros prior to taking the Fourier transform. 
@@ -238,7 +238,7 @@ the solvent area with random noise, some classifications go better when using ze
 """
 MaskZero = "Yes: fill with zeros"
 
-#  {file} Reference mask (optional)
+#  {condition}(not DoContinue) {file} Reference mask (optional)
 """
 A Spider/mrc map containing a (soft) mask with the same dimensions 
 as the reference(s), and values between 0 and 1, with 1 being 100% protein
@@ -251,7 +251,7 @@ to use a second mask. Use <More options> and check <Solvent mask> parameter.
 """
 ReferenceMask = ""
 
-# {expert} {file} Solvent mask (optional)
+# {expert} {condition}(not DoContinue) {file} Solvent mask (optional)
 """
 For all white (value 1) pixels in this second mask the 
 corresponding pixels in the reconstructed map are set to the average value of 
@@ -456,7 +456,19 @@ AvgPMAX = False
 # {view} ''' + changesStr + '''
 """ Visualize changes in orientation, offset and number images assigned to each class"""
 TableChange = False
+    
+# {condition}(not DoClassify) {view}{list_combo}(slices, chimera, none) Display final 3D map
+"""
+Display final 3D map computed using ALL the images
+<slices>: display volumes as 2D slices along z axis
+(you can change the view to x or y axis)
+<chimera>: display volumes as surface with Chimera.
+(you will need Chimera installed in your computer)
+<none>: Do not display any volume.
+"""
+DisplayFinalReconstruction = "slices"
     '''
+
     return linesStr# % locals()    
  
  

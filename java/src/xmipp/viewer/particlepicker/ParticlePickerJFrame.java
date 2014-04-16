@@ -19,6 +19,7 @@ import java.awt.event.WindowEvent;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -49,7 +50,7 @@ import javax.swing.event.MenuListener;
 
 import xmipp.ij.commons.Tool;
 import xmipp.ij.commons.XmippApplication;
-import xmipp.ij.commons.XmippIJUtil;
+import xmipp.ij.commons.XmippUtil;
 import xmipp.utils.ColorIcon;
 import xmipp.utils.QuickHelpJDialog;
 import xmipp.utils.XmippDialog;
@@ -59,6 +60,7 @@ import xmipp.utils.XmippResource;
 import xmipp.utils.XmippWindowUtil;
 import xmipp.viewer.particlepicker.extract.ExtractPickerJFrame;
 import xmipp.viewer.particlepicker.training.model.Mode;
+import xmipp.viewer.scipion.ScipionMessageDialog;
 
 public abstract class ParticlePickerJFrame extends JFrame implements ActionListener
 {
@@ -168,11 +170,36 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 			{
 				if (getParticlePicker().getMode() != Mode.ReadOnly)
 					getParticlePicker().saveData();
-				close();
+                                if(getParticlePicker().isScipionSave())
+                                {
+                                    HashMap<String, String> msgfields = new HashMap<String, String>();
+                                    boolean createprot = getParticlePicker().getProtId() == null;
+                                    if(createprot)
+                                        msgfields.put("Run name:", "ProtUserCoordinates");
+                                    int count = getParticlePicker().getParticlesCount();
+                                    String msg = String.format("<html>Are you sure you want to create a new set of Coordinates with <font color=red>%s</font> %s?", count, (count != 1)?"elements":"element");
+                                    ScipionMessageDialog dlg = new ScipionMessageDialog(ParticlePickerJFrame.this, "Question", msg, msgfields);
+                                    int create = dlg.action;
+                                    if(createprot)
+                                        getParticlePicker().protlabel = dlg.getFieldValue("Run name:");
+                                    if (create == ScipionMessageDialog.OK_OPTION)
+                                        executeScipionSaveAndExit();
+                                       
+                                }
+                                else
+                                    close();
 
 			}
 		});
-
+                if(picker.isScipionSave())
+                {
+                    savebt.setVisible(false);
+                    saveandexitbt.setText("Create Coordinates");
+                    Color color = Color.decode(ScipionMessageDialog.firebrick); 
+                    saveandexitbt.setBackground(color);
+                    saveandexitbt.setForeground(Color.WHITE);
+                    
+                }
 		micrographstb = new JTable();
 		micrographstb.getSelectionModel().addListSelectionListener(new ListSelectionListener()
 		{
@@ -291,7 +318,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 			@Override
 			public void actionPerformed(ActionEvent e)
 			{
-				XmippIJUtil.showImageJ(Tool.PICKER);
+				XmippUtil.showImageJ(Tool.PICKER);
 			}
 		});
 
@@ -724,9 +751,8 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 			@Override
 			public void actionPerformed(ActionEvent e)
 			{
-				if (sizesl.getValue() == ((Number) sizetf.getValue()).intValue())// event
-																					// from
-																					// sizesl
+                            // event from sizesl
+				if (((Number)sizetf.getValue()).intValue() == getParticlePicker().getSize())
 					return;
 
 				int size = ((Number) sizetf.getValue()).intValue();
@@ -749,7 +775,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 			{
 				if (sizesl.getValueIsAdjusting()) 
 					return;
-				if (sizesl.getValue() == ((Number) sizetf.getValue()).intValue())// event
+				if (sizesl.getValue() == getParticlePicker().getSize())// event
 																					// from
 																					// sizetf
 					return;
@@ -809,8 +835,10 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		dispose();
 		if (getCanvas() != null)
 			getCanvas().getIw().close();
+
 		
 		XmippApplication.removeInstance(false);
+
 	}
 
 	public abstract String importParticles(Format format, String dir, float scale, boolean invertx, boolean inverty);
@@ -831,5 +859,36 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		map.put("Down", "Moves selected particle down");
 		return map;
 	}
+        
+        protected void executeScipionSaveAndExit()
+        {
+            
+            getCanvas().setEnabled(false);
+            XmippWindowUtil.blockGUI(ParticlePickerJFrame.this, "Creating set ...");
+            new Thread(new Runnable() {
+
+                @Override
+                public void run() {
+
+                    try {
+                        String[] cmd = getParticlePicker().getScipionSaveCommand();
+                        String output = XmippUtil.executeCommand(cmd);
+                        XmippWindowUtil.releaseGUI(ParticlePickerJFrame.this.getRootPane());
+                        getCanvas().setEnabled(true);
+                        if(output != null && !output.isEmpty())
+                        {
+                            XmippDialog.showInfo(ParticlePickerJFrame.this, output);
+                            System.out.println(output);
+                        }
+                        close();
+
+                    } catch (Exception ex) {
+                        ex.printStackTrace();
+                        throw new IllegalArgumentException(ex.getMessage());
+                    }
+
+                }
+            }).start();
+        }
 
 }

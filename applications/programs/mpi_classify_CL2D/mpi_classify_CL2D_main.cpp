@@ -33,7 +33,7 @@
 ProgClassifyCL2D *prm = NULL;
 FILE * _logCL2D = NULL;
 
-#define DEBUG_WITH_LOG
+//#define DEBUG_WITH_LOG
 #ifdef DEBUG_WITH_LOG
 #define CREATE_LOG() _logCL2D = fopen(formatString("nodo%02d.log", node->rank).c_str(), "w+")
 #define LOG(msg) do{fprintf(_logCL2D, "%s\t%s\n", getCurrentTimeString(), msg); fflush(_logCL2D); }while(0)
@@ -1724,7 +1724,7 @@ void ProgClassifyCL2D::run()
         SFaux = SF;
         SFaux.subtraction(SFclassified, MDL_IMAGE);
         SFaux.fillConstant(MDL_ENABLED, "-1");
-        SFaux2.join(SFclassified, SF, MDL_IMAGE, LEFT);
+        SFaux2.join1(SFclassified, SF, MDL_IMAGE, LEFT);
         SFclassified.clear();
         SFaux2.unionAll(SFaux);
         SFaux.clear();

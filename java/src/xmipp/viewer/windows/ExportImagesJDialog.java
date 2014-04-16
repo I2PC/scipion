@@ -12,12 +12,16 @@ import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
+import xmipp.ij.commons.XmippUtil;
 import xmipp.jni.Filename;
 import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippFileChooser;
@@ -108,7 +112,7 @@ public class ExportImagesJDialog extends JDialog{
         });
         actionspn.add(cancelbt);
                 
-        savebt = XmippWindowUtil.getTextButton("Save", new ActionListener() {
+        savebt = XmippWindowUtil.getTextButton("Export", new ActionListener() {
 
             @Override
             public void actionPerformed(ActionEvent ae) {
@@ -135,18 +139,51 @@ public class ExportImagesJDialog extends JDialog{
             path = pathtf.getText();
             File tmpfile = File.createTempFile("temp", ".xmd");
             frame.saveMd(tmpfile.getAbsolutePath(), false, true, false);//remove disabled on tmpfile to export afterwords
-            String command = String.format("xmipp_transform_geometry %s -o %s", tmpfile, path);
+            String[] command = new String[]{"xmipp_transform_geometry", tmpfile.getAbsolutePath(), "-o", path, "--label", frame.data.getRenderColumn().labelName};
             if(applygeochb.isSelected())
-                command += " --apply_transform";
+                command = new String[]{"xmipp_transform_geometry", tmpfile.getAbsolutePath(), "-o", path, "--label", frame.data.getRenderColumn().labelName, "--apply_transform"};
+                       
+            executeCommand(command);
             
-            Runtime.getRuntime().exec(command);
         } catch (Exception ex) {
             String msg = ex.getMessage();
-            if(msg.isEmpty())
+            if(msg == null || msg.isEmpty())
+
                 ex.printStackTrace();
             else
                 XmippDialog.showError(null, msg);
         }
     }
+    
+    protected void executeCommand(final String[] command)
+    {
+
+
+        XmippWindowUtil.blockGUI(frame, "Exporting images ...");
+        new Thread(new Runnable() {
+
+            @Override
+            public void run() {
+
+                try {
+
+                    String output = XmippUtil.executeCommand(command);
+                    XmippWindowUtil.releaseGUI(ExportImagesJDialog.this.frame.getRootPane());
+
+                    if(output != null && !output.isEmpty())
+                    {
+                        System.out.println(output);
+                        
+                    }
+                    close();
+
+                } catch (Exception ex) {
+                    throw new IllegalArgumentException(ex.getMessage());
+                }
+
+            }
+        }).start();
+    }
+
     
 }

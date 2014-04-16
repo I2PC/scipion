@@ -199,14 +199,16 @@ public class TiltPairPicker extends ParticlePicker
 		return count;
 	}
 
+
 	public void saveData()
 	{
 		super.saveData();
 		saveData(micrograph);//every time you switch micrograph data is saved
 		setChanged(false);
 	}
+
 	
-	private void saveMicrographAngles(UntiltedMicrograph m)
+	public void saveMicrographAngles(UntiltedMicrograph m)
 	{
 		try
 		{
@@ -287,7 +289,7 @@ public class TiltPairPicker extends ParticlePicker
 				mdT.destroy();
                                 saveMicrographAngles(um);
 			}
-
+                        saveMicrographAngles(um);
 		}
 		catch (Exception e)
 		{
@@ -315,7 +317,7 @@ public class TiltPairPicker extends ParticlePicker
 			{
 				result += importParticlesFromFiles(uFn, tFn, f, um, scale, invertx, inverty);
 				saveData(um);
-                                
+
 			}
 		}
                 super.saveData();
@@ -384,5 +386,12 @@ public class TiltPairPicker extends ParticlePicker
 				return false;
 		return true;
 	}
+
+    @Override
+    public int getParticlesCount() {
+        return getUntiltedNumber();
+            
+            
+    }
 
 }// class TiltPairPicker

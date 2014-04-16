@@ -210,6 +210,7 @@ public class XmippMenuBar extends MenuBar
 			
 			@Override
 			public void actionPerformed(ActionEvent e) {
+
 				close();
 			}
 		});
@@ -262,6 +263,7 @@ public class XmippMenuBar extends MenuBar
 
 		// image filters menu
 		addIJMenuItem(filtersmn, "Bandpass Filter", "Bandpass Filter...");
+                addIJMenuItem(filtersmn, "Gaussian Blur", "Gaussian Blur...");
 		addIJMenuItem(filtersmn, "Anisotropic Diffusion", "Anisotropic Diffusion...", IJRequirement.EIGHTBIT);
 		addIJMenuItem(filtersmn, "Mean Shift", "Mean Shift");
 
@@ -359,20 +361,21 @@ public class XmippMenuBar extends MenuBar
 			@Override
 			public void actionPerformed(ActionEvent e)
 			{
-				XmippIJUtil.showImageJ(Tool.VIEWER);
+				XmippUtil.showImageJ(Tool.VIEWER);
 			}
 		});
 
 	}
         
-         protected void close()
+
+        protected void close()
         {
             Frame w = (Frame)xw;
             w.setVisible(false);
             w.dispose();
             XmippApplication.removeInstance(false);
         }
-	
+
 	
 	protected void useGeometry(boolean ug)
 	{
@@ -486,7 +489,7 @@ public class XmippMenuBar extends MenuBar
 				switch (requirement)
 				{
 				case IMAGEJ:
-					XmippIJUtil.showImageJ(Tool.VIEWER);
+					XmippUtil.showImageJ(Tool.VIEWER);
 					break;
 				case BINARY:
 					IJ.run("Make Binary");

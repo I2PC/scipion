@@ -174,6 +174,13 @@ public class SupervisedParticlePickerMicrograph extends Micrograph
 			return 0;
 		return autoparticles.size() - getAutomaticParticlesDeleted(threshold);
 	}
+        
+        public int getAutomaticParticlesNumber()
+	{
+		if (autoparticles.isEmpty())
+			return 0;
+		return autoparticles.size() - getAutomaticParticlesDeleted();
+	}
 
 	public void addAutomaticParticle(AutomaticParticle p)
 	{

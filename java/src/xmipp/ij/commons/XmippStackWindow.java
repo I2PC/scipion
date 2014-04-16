@@ -75,11 +75,10 @@ public class XmippStackWindow extends StackWindow implements XmippIJWindow{
 	
 	@Override
 	public void windowClosing(WindowEvent e) {
-		 
+ 
 		 super.windowClosing(e);
                  XmippApplication.removeInstance(true);
                
-		
 	}
 
 	@Override

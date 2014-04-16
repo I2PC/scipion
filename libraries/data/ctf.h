@@ -30,6 +30,44 @@
 #include "xmipp_filename.h"
 #include "metadata.h"
 
+
+const int CTF_BASIC_LABELS_SIZE = 5;
+const MDLabel CTF_BASIC_LABELS[] =
+	{
+		MDL_CTF_DEFOCUSU, MDL_CTF_DEFOCUSV, MDL_CTF_DEFOCUS_ANGLE, MDL_CTF_CS, MDL_CTF_Q0
+	};
+
+const int CTF_ALL_LABELS_SIZE = 13;
+const MDLabel CTF_ALL_LABELS[] =
+    {
+        MDL_CTF_VOLTAGE,
+        MDL_CTF_DEFOCUSU,
+        MDL_CTF_DEFOCUSV,
+        MDL_CTF_DEFOCUS_ANGLE,
+        MDL_CTF_CS,
+        MDL_CTF_CA,
+        MDL_CTF_ENERGY_LOSS,
+        MDL_CTF_LENS_STABILITY,
+        MDL_CTF_CONVERGENCE_CONE,
+        MDL_CTF_LONGITUDINAL_DISPLACEMENT,
+        MDL_CTF_TRANSVERSAL_DISPLACEMENT,
+        MDL_CTF_Q0,
+        MDL_CTF_K
+    };
+
+/** Check that a metadata contains ALL CTF_BASIC_LABELS labels */
+bool containsCTFBasicLabels(const MetaData &md);
+
+/** From a give images metadata, group by CTF_BASIC_LABELS and fill a ctfs metadata.
+ * Params:
+ *  imgMd: input images metadata.
+ *  ctfMd: the ctfs metadata that will be filled.
+ *
+ * Raise error if neither CTF_MODEL or ALL CTF_BASIC_LABELS are found
+ * in input images metadata.
+ * */
+void groupCTFMetaData(const MetaData &imgMd, MetaData &ctfMd);
+
 /**@defgroup CTFSupport CTF support classes
    @ingroup DataLibrary */
 //@{
@@ -478,6 +516,23 @@ public:
             << -K*(Ksin*sine_part - Kcos*cosine_part)*E << std::endl;
         }
         return -K*(Ksin*sine_part - Kcos*cosine_part)*E;
+    }
+
+    /// Compute CTF pure at (U,V). Continuous frequencies
+    inline double getValuePureNoKAt() const
+    {
+        double argument = K1 * precomputed.deltaf * precomputed.u2 + K2 *precomputed.u4;
+        double sine_part, cosine_part;
+        sincos(argument,&sine_part, &cosine_part); // OK
+        double Eespr = exp(-K3 * precomputed.u4); // OK
+        //CO: double Eispr=exp(-K4*u4); // OK
+        double EdeltaF = bessj0(K5 * precomputed.u2); // OK
+        double EdeltaR = SINC(precomputed.u * DeltaR); // OK
+        double aux=(K7 * precomputed.u2 * precomputed.u + precomputed.deltaf * precomputed.u);
+        double Ealpha = exp(-K6 * aux * aux); // OK
+        // CO: double E=Eespr*Eispr*EdeltaF*EdeltaR*Ealpha;
+        double E = Eespr * EdeltaF * EdeltaR * Ealpha;
+        return -(Ksin*sine_part - Kcos*cosine_part)*E;
     }
 
     /// Compute CTF pure at (U,V). Continuous frequencies

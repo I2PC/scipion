@@ -66,5 +66,16 @@ public class XmippStringUtils {
 		
 		return prefix;
 	}
+        
+        public static String getFileExtension(String filename) {
+
+            try {
+                return filename.substring(filename.lastIndexOf("."));
+
+            } catch (Exception e) {
+                return "";
+        }
+
+}
 
 }

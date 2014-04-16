@@ -30,6 +30,8 @@ import java.awt.Window;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import xmipp.ij.commons.XmippApplication;
 import xmipp.jni.Filename;
@@ -40,6 +42,7 @@ import xmipp.jni.MDRow;
 import xmipp.utils.DEBUG;
 import xmipp.utils.Param;
 import xmipp.utils.XmippStringUtils;
+import xmipp.viewer.windows.GalleryJFrame;
 
 /** This class will serve to store important data about the gallery */
 public class GalleryData {
@@ -58,6 +61,8 @@ public class GalleryData {
 	public int zoom;
 	private String filename;
 	public int resliceView;
+
+
 
 	public enum Mode {
 		GALLERY_MD, GALLERY_VOL, TABLE_MD, GALLERY_ROTSPECTRA
@@ -82,7 +87,7 @@ public class GalleryData {
 	// flag to wrapping
 	public boolean wrap;
 	// flag to check if is 2d classification
-	public boolean is2dClassification = false;
+	public boolean isClassification = false;
 	public int refLabel;
 	// Store the selection state for each item
 	public boolean[] selection;
@@ -111,12 +116,12 @@ public class GalleryData {
 			resliceView = param.resliceView;
 			useGeo = param.useGeo;
 			wrap = param.wrap;
-
+                        
 			if (param.mode.equalsIgnoreCase(Param.OPENING_MODE_METADATA))
 				mode = Mode.TABLE_MD;
 			else if (param.mode.equalsIgnoreCase(Param.OPENING_MODE_ROTSPECTRA))
 				mode = Mode.GALLERY_ROTSPECTRA;
-
+                        
 			setFileName(fn);
 
 			if (md == null) {
@@ -202,9 +207,9 @@ public class GalleryData {
 		if (!containsGeometryInfo())
 			useGeo = false;
 		selection = new boolean[ids.length];
-		is2dClassification = checkifIs2DClassificationMd();
+		isClassification = checkifIsClassificationMd();
 
-		if (is2dClassification) {
+		if (isClassification) {
 			classes = new ClassInfo[ids.length];
 			classesArray = new ArrayList<ClassInfo>();
 			loadClassesInfo();
@@ -573,12 +578,12 @@ public class GalleryData {
 		return false;
 	}
 
-	public boolean is2DClassificationMd() {
-		return is2dClassification;
+	public boolean isClassificationMd() {
+		return isClassification;
 	}
 
 	/** Return true if current metadata comes from 2d classification */
-	public boolean checkifIs2DClassificationMd() {
+	public boolean checkifIsClassificationMd() {
 		try {
 			boolean valid = selectedBlock.startsWith("classes") && 
 					(md.containsLabel(MDLabel.MDL_REF) || md.containsLabel(MDLabel.MDL_REF3D)) &&
@@ -607,7 +612,7 @@ public class GalleryData {
 
 	/** Get the assigned class of some element */
 	public ClassInfo getItemClassInfo(int index) {
-		if (is2dClassification && index < classes.length) {
+		if (isClassification && index < classes.length) {
 			return classes[index];
 		}
 		return null;
@@ -716,6 +721,7 @@ public class GalleryData {
 	/** Return the number of selected elements */
 	public int getSelectionCount() {
 		int count = 0;
+                
 		if (!isVolumeMode()) {
 			for (int i = 0; i < ids.length; ++i)
 				if (selection[i])
@@ -742,6 +748,8 @@ public class GalleryData {
 		}
 		return selectionMd;
 	}
+        
+       
 
 	/**
 	 * Compute the metadatas
@@ -804,6 +812,7 @@ public class GalleryData {
 		return null;
 	}
 	
+        
 	/** Get all the images assigned to all selected classes */
 	public MetaData getImagesFromClassSelection(){
 		MetaData mdImages = new MetaData();
@@ -824,10 +833,14 @@ public class GalleryData {
 	/** Return true if current metadata is a rotspectra classes */
 	public boolean isRotSpectraMd() {
 		if (filename != null) {
+                    if(!filename.contains("classes"))
+                        return false;
 			String fnVectors = filename.replace("classes", "vectors");
 			String fnVectorsData = fnVectors.replace(".xmd", ".vec");
-			if (is2DClassificationMd() && Filename.exists(fnVectors)
+			if (isClassificationMd() && Filename.exists(fnVectors)
+
 					&& Filename.exists(fnVectorsData))
+                            
 				return true;
 		}
 		return false;
@@ -1001,4 +1014,31 @@ public class GalleryData {
 				+ "Size: " + Filename.humanReadableByteCount(file.length());
 		return fileInfo;
 	}
+        
+       public void saveClassSelection(String path)
+       {
+            try {
+                
+                MetaData imagesmd;
+                // Fill the classX_images blocks
+                for (int i = 0; i < ids.length; ++i) 
+                    if(selection[i])
+                    {
+                        long id = ids[i];
+                        int ref = md.getValueInt(MDLabel.MDL_REF, id);
+                        String blockName = Filename.getClassBlockName(ref);
+                        if (containsBlock(blockName)) {
+                                imagesmd = new MetaData(blockName + Filename.SEPARATOR + filename);
+                                imagesmd.writeBlock(blockName + Filename.SEPARATOR + path);
+                                imagesmd.destroy();
+                        }
+                    }
+                
+                
+                
+            } catch (Exception ex) {
+                Logger.getLogger(GalleryJFrame.class.getName()).log(Level.SEVERE, null, ex);
+            }
+       }
+      
 }// class GalleryDaa

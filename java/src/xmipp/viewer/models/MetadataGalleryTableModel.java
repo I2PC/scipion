@@ -185,7 +185,7 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel
 		{
 			int index = getIndex(row, col);
 			long objId = data.ids[index];
-			if (data.is2dClassification)
+			if (data.isClassification)
 			{
 				int ref = data.md.getValueInt(MDLabel.MDL_REF, objId);
 				long count = data.md.getValueLong(MDLabel.MDL_CLASS_COUNT, objId);

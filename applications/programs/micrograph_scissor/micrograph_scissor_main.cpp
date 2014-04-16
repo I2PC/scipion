@@ -67,6 +67,7 @@ protected:
         addParamsLine("     requires --tiltfn;                                                         ");
         addParamsLine("  [--tiltPos <position_file>]         : file with particle coordinates");
         addParamsLine("     requires --tiltfn;                                                         ");
+        addParamsLine("  [--ctfparam <ctfparam>]             : metadata with ctf parameters for the micrograph.");
 
         addExampleLine ("   xmipp_micrograph_scissor -i g7107.raw --pos g7107.raw.Common.pos --oroot images --Xdim 64");
         addExampleLine ("   xmipp_micrograph_scissor --untilted Preprocessing/untilt/down1_untilt.raw --tilted Preprocessing/tilt/down1_tilt.raw --untiltfn untilt --tiltfn tilt --Xdim 60 --tiltAngles ParticlePicking/down1_untilt.raw.angles.txt --pos ParticlePicking/down1_untilt.raw.Common.pos --tiltPos ParticlePicking/down1_untilt.raw.tilted.Common.pos");
@@ -126,6 +127,14 @@ public:
             m.add_label("");
             m.set_transmitance_flag(compute_transmitance);
             m.set_inverse_flag(compute_inverse);
+
+            if (checkParam("--ctfparam"))
+            {
+              MetaData ctfparam(getParam("--ctfparam"));
+              MDRow ctfRow;
+              ctfparam.getRow(ctfRow, ctfparam.firstObject());
+              m.set_ctfparams(ctfRow);
+            }
             m.produce_all_images(0, -1, fn_out, fn_orig, 0.,0.,0., rmStack);
         }
         else

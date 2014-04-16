@@ -28,7 +28,7 @@
 
 import os
 import xmipp
-from xmipp import Program, FileName
+from xmipp import Program, FileName, MetaData
 from protlib_utils import runImageJPlugin, runJavaIJapp
 from protlib_filesystem import getXmippPath, xmippExists, findAcquisitionInfo
 
@@ -162,7 +162,7 @@ def getImageData(img):
     
 def getFirstImage(mdFn):
     ''' Read the first image from Metadata'''
-    md = xmipp.MetaData(mdFn)
+    md = MetaData(mdFn)
     return md.getValue(xmipp.MDL_IMAGE, md.firstObject())
 
 #------------- FUNCTION TO WORK WITH PROGRAMS META-INFORMATION -----------------
@@ -518,13 +518,19 @@ def findColor(color):
             return (k, fx, fy, color)
     return None
 
-def getMdSize(filename):
-    """ Return the metadata size without parsing entirely. """
-    from xmipp import MetaData
+def mdFirstRow(filename):
+    """ Create a MetaData but only read the first row.
+    This method should be used for validations of labels
+    or metadata size, but the full metadata is not needed.
+    """
     md = MetaData()
     md.read(filename, 1)
     
-    return md.getParsedLines()
+    return md
+
+def getMdSize(filename):
+    """ Return the metadata size without parsing entirely. """
+    return mdFirstRow(filename).getParsedLines()
 
 def emptyMd(filename):
     """ Use getMdSize to check if metadata is empty. """
@@ -605,4 +611,51 @@ def getSampling(InputFile, default=None):
             raise Exception('Cannot find acquisition_info.xmd from path %s.' % InputFile)
         sampling = float(default)
     return sampling
+
+class ScriptShowJ(ScriptAppIJ):
+    def __init__(self, viewer='xmipp.viewer.Viewer'):
+        ScriptAppIJ.__init__(self, viewer)
+        
+    def defineOtherParams(self):
+        self.addParamsLine('  [--mode <mode_value=image>]           : List of params ')
+        self.addParamsLine('     where <mode_value> image gallery metadata rotspectra')
+        self.addParamsLine('         alias -d;')
+        self.addParamsLine('  [--poll]                            : Keeps checking for changes on input files  (for image mode only!)')
+        self.addParamsLine('         alias -p;')
+        self.addParamsLine('  [--render <label=first>]    : Activates images rendering (for metadata mode only)')
+        self.addParamsLine('                               : you can pass which label to render, by default the first one that can be visualized')
+        self.addParamsLine('         alias -e;')
+        self.addParamsLine('  [--rows <rows>]                            : number of rows in table')
+        self.addParamsLine('         alias -r;')
+        self.addParamsLine('  [--columns <columns>]                            : number of columns in table')
+        self.addParamsLine('         alias -c;')
+        self.addParamsLine('  [--zoom <zoom>]                            : zoom for images')
+        self.addParamsLine('         alias -z;')
+        self.addParamsLine('  [--view <axis="z">]                        : Viewer position (for volumes only)')
+        self.addParamsLine('     where <axis> z y x z_pos y_pos x_pos')
+        self.addParamsLine('  [--dont_apply_geo]                        : Does not read geometrical information(for metadata only)')
+        self.addParamsLine('  [--dont_wrap]                             : Does not wrap (for metadata only)')
+        self.addParamsLine('  [--debug] : debug')
+        self.addParamsLine('  [--mask_toolbar] : Open mask toolbar (only valid for images)')
+        self.addParamsLine('  [--label_alias <alias_string>]  : Activate some metadata label alias, for example')
+        self.addParamsLine('                                  : anglePsi=aPsi;shiftX=sX;shiftY:sY')
+        self.addParamsLine('  [--label_relion]                : Activates the mapping to Relion labels')
+        
+    def readOtherParams(self):
+        params = ['--mode', '--rows', '--columns', '--zoom', '--view', '--render']
+        for p in params:
+            if self.checkParam(p):
+                self.args += " %s %s" % (p, self.getParam(p))
+        params = ['--poll', '--debug', '--dont_apply_geo', '--dont_wrap', '--mask_toolbar']
+        for p in params:
+            if self.checkParam(p):
+                self.args += " %s" % p
+                
+        # Set environment var for extra label alias
+        if self.checkParam('--label_alias'):
+            os.environ['XMIPP_EXTRA_ALIASES'] = self.getParam('--label_alias')
+
+        if self.checkParam('--label_relion') or self.getParam('-i').endswith('.star'):
+            from protlib_import import relionLabelString
+            os.environ['XMIPP_EXTRA_ALIASES'] = relionLabelString()
  
