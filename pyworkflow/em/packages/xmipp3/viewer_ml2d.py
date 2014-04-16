@@ -32,9 +32,11 @@ from pyworkflow.em import *
 from pyworkflow.gui.form import FormWindow
 from protocol_ml2d import XmippProtML2D
 from viewer import runShowJ
-
 import numpy as np
 
+ITER_LAST = 0
+ITER_SEL = 1
+ITER_CHOICES = ['last', 'selection']
 
 
 class XmippML2DViewer(ProtocolViewer):
@@ -49,14 +51,20 @@ class XmippML2DViewer(ProtocolViewer):
     
     def _defineParams(self, form):
         form.addSection(label='Visualization')
+
         group = form.addGroup('Overall results')
-        group.addParam('doShowClasses', BooleanParam, label="Visualize last iter references", default=True, 
-                      help='Visualize last iteration references.')
+        group.addParam('classesToShow', EnumParam, choices=ITER_CHOICES,
+                      default=ITER_LAST, display=EnumParam.DISPLAY_LIST,
+                      label="Visualize 2D references from iter", 
+                      help="Select from which iteration do you want to visualize classes"
+                      )
+        group.addParam('iterSelection', StringParam, condition='classesToShow==%d' % ITER_SEL,
+                      label="Iter selection"
+                      )        
         group.addParam('doShowPlots', BooleanParam, label="Show all plots per iteration?", default=True,
                       help='Visualize several plots.')
         
         group = form.addGroup('Iteration plots', condition='doShowPlots')
-        #form.addSection(label='Iteration plots')    
         group.addParam('doShowLL', BooleanParam, label="Show Log-Likehood over iterations?", default=False, 
                       help='The Log-Likelihood value should increase.')      
         group.addParam('doShowPmax', BooleanParam, label="Show maximum model probability?", default=False, 
@@ -68,58 +76,26 @@ class XmippML2DViewer(ProtocolViewer):
         
     
     def _getVisualizeDict(self):
-        return {'doShowClasses': self._viewIterRefs,
+        return {'classesToShow': self._viewIterRefs,
                 'doShowPlots': self._viewAllPlots,
                 'doShowLL': self._viewPlot,
                 'doShowPmax': self._viewPlot,
                 'doShowSignalChange': self._viewPlot,
                 'doShowMirror': self._viewPlot}
         
-    def _viewAll(self, *args):
-        if self.doShowClasses:
-            self._viewIterRefs()
-        if self.doShowPlots:
-            self._viewAllPlots()
-        else:
-            plots = [p for p in  self._plotVars if self.getAttributeValue(p)]
-            print plots
-            xplotter = createPlots(self.protocol, plots)
-            if xplotter:
-                xplotter.show()
-        
     def _viewAllPlots(self, e=None):
-        xplotter = createPlots(self.protocol, self._plotVars)
-        if xplotter:
-            xplotter.show()
+        return createPlots(self.protocol, self._plotVars)
         
     def _viewPlot(self, paramName):
-        xplotter = createPlots(self.protocol, [paramName])
-        if xplotter:
-            xplotter.show()
+        return createPlots(self.protocol, [paramName])
         
     def _viewIterRefs(self, e=None):
-        lastIter = self.protocol._lastIteration()
-        runShowJ('classes@' + self.protocol._getIterClasses())
-        print "lastIter: ", lastIter
-    
-    def getVisualizeDictWeb(self):
-        return {'doShowClasses': "doShowClasses",
-                'doShowPlots': "doAllPlotsML2D",
-                'doShowLL': "doShowLLML2D",
-                'doShowPmax': "doShowPmax",
-                'doShowSignalChange': "doShowSignalChange",
-                'doShowMirror': "doShowMirror"}
-
-    @classmethod
-    def getView(cls):
-        """ This function will notify the web viewer for this protocol"""
-        return "viewerForm"
-    
-    @classmethod
-    def getViewFunction(cls):
-        """ This will return the name of the function to view
-        in web one (or all) params of the protocol"""
-        return "viewerML2D"
+        if self.classesToShow == ITER_LAST:
+            iterations = [self.protocol._lastIteration()]
+        else:
+            iterations = self._getListFromRangeString(self.iterSelection.get())
+        
+        return [DataView('classes@' + self.protocol._getIterClasses(it)) for it in iterations]
 
         
 def createPlots(protML, selectedPlots):
@@ -209,5 +185,5 @@ def createPlots(protML, selectedPlots):
         xplotter.createSubPlot('Maximum signal change', 'iterations', 'signal change')
         xplotter.plot(iters, signal_change, color='green')
     
-    return xplotter
+    return [xplotter]
     
