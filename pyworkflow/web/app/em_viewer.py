@@ -109,33 +109,4 @@ def viewerElement(request):
     
     jsonStr = json.dumps({'urls':urls}, ensure_ascii=False)
     return HttpResponse(jsonStr, mimetype='application/javascript')
-
-############## AUX METHODS ##############
-    
-def view_plot_xmipp(request):
-    projectName = request.session['projectName']
-    project = loadProject(projectName)
-    protId = request.GET.get('protocolId', None)
-    protocol = project.mapper.selectById(int(protId))
-    
-    mdFn = getattr(protocol.outputParticles, '_xmippMd', None)
-    if mdFn:
-        fn = mdFn.get()
-    else:
-        fn = project.getTmpPath(protocol.outputParticles.getName() + '_images.xmd')
-        writeSetOfParticles(protocol.outputParticles, fn, protocol.getTmpPath())
-        
-    md = xmipp.MetaData(fn)
-    if md.containsLabel(xmipp.MDL_ZSCORE):
-               
-#        print "MD contains ZSCORE"
-        xplotter = XmippPlotter(windowTitle="Zscore particles sorting")
-        xplotter.createSubPlot("Particle sorting", "Particle number", "Zscore")
-        xplotter.plotMd(md, False, mdLabelY=xmipp.MDL_ZSCORE)
-        figFn = fn.replace('.xmd', '.png')
-        canvas = xplotter.getCanvas()
-        
-        response= HttpResponse(content_type='image/png')
-        canvas.print_png(response)
-        return response
     
