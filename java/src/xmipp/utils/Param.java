@@ -56,7 +56,7 @@ public class Param {
     public String mode = OPENING_MODE_DEFAULT;
     public boolean poll;
     public int zoom = 0;
-    public boolean renderImages = false;
+    public boolean renderImages = true;
     public String[] renderLabels = new String[]{"first"}; //Label to render, by default first
     public String renderLabel;
     public boolean debug = false;
@@ -166,8 +166,8 @@ public class Param {
                 zoom = Integer.parseInt(cmdLine.getOptionValue(ZOOM));
             }
 
-            renderImages = cmdLine.hasOption(RENDER_IMAGES);
-            if (renderImages){
+            if(cmdLine.hasOption(RENDER_IMAGES))
+            {
             	renderLabels = cmdLine.getOptionValues(RENDER_IMAGES);
             }
             
@@ -239,6 +239,7 @@ public class Param {
             		resliceView = ImageGeneric.X_POS;
             }
             renderLabel = renderLabels[0];
+            
            
         } catch (Exception ex) {
         	ex.printStackTrace();

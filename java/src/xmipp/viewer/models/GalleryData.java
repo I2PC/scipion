@@ -98,7 +98,8 @@ public class GalleryData {
 	// Flags to check if md or classes has changed
 	private boolean hasMdChanges, hasClassesChanges;
 	public Window window;
-
+        
+        
 	/**
 	 * The constructor receive the filename of a metadata The metadata can also
 	 * be passed, if null, it will be readed from filename
@@ -333,6 +334,7 @@ public class GalleryData {
 				if ((ciFirstRenderVisible == null || ci.getLabel() == MDLabel.MDL_IMAGE)
 						&& ci.allowRender && ci.visible)
 					ciFirstRenderVisible = ci;
+                                
 			}
 			if (ciFirstRenderVisible != null) {
 				ciFirstRender = ciFirstRenderVisible;
@@ -347,7 +349,7 @@ public class GalleryData {
 					md.setEnabled(true, id);
 				// hasMdChanges = true;
 			}
-
+                        
 			labels = newLabels;
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -420,7 +422,7 @@ public class GalleryData {
 				// previous case
 				if (!md.isColumnFormat())
 					return new MetadataRowTableModel(this);
-				if (md.containsMicrographsInfo())
+				if ( md.containsMicrographsInfo() && parameters.renderLabel.equalsIgnoreCase("first"))//otherwise specific view is setted
 					return new MicrographsTableModel(this);
 				return new MetadataTableModel(this);
 			case GALLERY_ROTSPECTRA:

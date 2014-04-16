@@ -20,7 +20,7 @@ public class MicrographsTableModel extends MetadataTableModel {
 	
 	//Setup columns options
 	protected void setupColumns(){
-		data.globalRender = true;
+		
 		ColumnInfo ctfModel = null;
 		ColumnInfo ctfModel2 = null;
 		ColumnInfo firstRender = null;
@@ -35,6 +35,8 @@ public class MicrographsTableModel extends MetadataTableModel {
 				if (firstRender == null)
 					firstRender = ci;
 			}
+                        else
+                            ci.render = false;
 			if (ci.getLabel() == MDLabel.MDL_CTF_MODEL)
 				ctfModel = ci;
 			if (ci.getLabel() == MDLabel.MDL_CTF_MODEL2)
@@ -45,7 +47,7 @@ public class MicrographsTableModel extends MetadataTableModel {
 			//Set invisible some colums by default
 			if (ci.labelName.startsWith("Psd") || ci.labelName.startsWith("Normality") || ci.labelName.equals("FirstMinFirstZeroRatio"))
 				ci.visible = false;
-				
+                        
 		}
 		//Move CTF_MODEL column to the end
 		if (ctfModel != null){
@@ -62,6 +64,7 @@ public class MicrographsTableModel extends MetadataTableModel {
 			data.ciFirstRender = firstRender;
 			data.zoom = 50;
 		}
+                
 	}
 	
 	@Override
