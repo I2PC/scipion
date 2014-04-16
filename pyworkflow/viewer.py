@@ -191,6 +191,11 @@ class ProtocolViewer(Protocol, Viewer):
         """ Build a message View of type INFO. """
         return MessageView(msg, title, msgType=MSG_ERROR, tkParent=self._tkRoot.root)  
     
+    def errorList(self, errors, views, title='Visualization errors'):
+        """ Convert an error list in a single Error message. """
+        if errors:
+            views.append(self.errorMessage('\n'.join(errors), title))
+    
     def warnMessage(self, msg, title=''):
         """ Build a message View of type INFO. """
         return MessageView(msg, title, msgType=MSG_WARN, tkParent=self._tkRoot.root)

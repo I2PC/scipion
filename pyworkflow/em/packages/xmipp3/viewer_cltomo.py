@@ -82,8 +82,7 @@ class XmippCLTomoViewer(ProtocolViewer):
                             views.append(DataView("classes@" + fn))
                         else:
                             self.formWindow.showError('Level %s does not exist.' % level)
-            if errors:
-                views.append(self.errorMessage('\n'.join(errors), "Visualization errors"))
+            self.errorList(errors, views)
                 
         return views      
         
