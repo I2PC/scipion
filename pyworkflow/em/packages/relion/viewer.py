@@ -70,7 +70,7 @@ class RelionViewer(ProtocolViewer):
         self._createVarsFromDefinition()
         self._env = os.environ.copy()
         addRelionLabelsToEnviron(self._env)
-        self._load()
+#        self._load()
         
     def _defineParams(self, form):
         self._form = form
@@ -154,6 +154,7 @@ Examples:
                           help='')                                      
         
     def _getVisualizeDict(self):
+        self._load()
         return {'showImagesInClasses': self._showImagesInClasses,
                 'showLL': self._showLL,
                 'showPMax': self._showPMax,
@@ -171,11 +172,6 @@ Examples:
         if self.lastIter is None:
             return ['There are not iterations completed.'] 
     
-    def _visualizeParam(self, paramName=None):
-        # Override class method to load things before any visualization
-        self._load()
-        ProtocolViewer._visualizeParam(self, paramName)        
-        
     def createDataView(self, filename, extraParams=''):
         return DataView(filename, env=self._env)
         
