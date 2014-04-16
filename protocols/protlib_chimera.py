@@ -185,6 +185,7 @@ class XmippProjectionExplorer(XmippChimeraClient):
             self.size = self.xdim if self.xdim > 128 else 128
         else:
             self.size = float(size) 
+        
         import ntpath
         self.iw = ImageWindow(filename=ntpath.basename(volfile),image=self.projection, dim=self.size, label="Projection")
         self.iw.root.protocol("WM_DELETE_WINDOW", self.exitClient)
