@@ -572,6 +572,5 @@ def savePlot(request, plot):
     fn = os.path.join(projectPath,'Tmp', 'plots', name_img)
     plot.savefig(fn)
     url_plot = "/get_image_plot/?image=" + fn
-    
         
     return url_plot

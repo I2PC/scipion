@@ -113,7 +113,6 @@ def viewerElement(request):
     
     protocol = project.mapper.selectById(int(protId))
     protocolViewer.setProtocol(protocol)
-    
     updateProtocolParams(request, protocolViewer, project)
     
     views = protocolViewer._getVisualizeDict()[viewerParam]()

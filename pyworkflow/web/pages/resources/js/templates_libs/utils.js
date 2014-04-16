@@ -82,7 +82,7 @@
  * 
  ******************************************************************************/
 
-/** METHODS ******************************************************************/
+/** METHODS *******************************************************************/
 
 function startsWith(str, pattern){
 	return str.lastIndexOf(pattern, 0) === 0
@@ -153,47 +153,23 @@ function popUpJSON(json){
 	 * diferent popups with diferent settings.
 	 * This function in the analyze results of the protocols runs.
 	 */
+
 	// Open pop-ups depending of JSON parameters
 	$.each(json, function(key, value) {
 		if(key=="url_form"){
-			customPopup(value,500,350);
-		} else if(key=="showj"){
-			customPopup(value,1024,600);
-		} else if(key=="showjs" || key=="urls"){
+			popup(value);
+		} else if(key=="urls"){
 			for(var x=0;x<value.length;x++){
-				customPopup(value[x],1024,600);
+				popup(value[x]);
 			}
-		} else if(key=="images"){
-			for(var x=0;x<value.length;x++){
-				var html = "<img src='" + value[x] + "'/>"
-				customPopupHTML(html,600, 500);
-			}
-		} else if(key=="url"){
-			customPopup(value,1024,600);
 		} else if(key=="html"){
 			customPopupHTML(value,600,500);
-		} else if(key=="plots"){
-			for(var x=0;x<value.length;x++){
-				showPlot(value[x]);
-			}
-		} else if(key=="plotsComposite" || key=="plot"){
-			showPlot(value);
 		} else if(key=="error"){
 			errorPopup("Error",value);
 		} else {
-			customPopup(value,800,600);
+			popup(value);
 		}
 	});
-}
-
-function showPlot(url){
-	/*
-	 * Function to show a xplotter(PNG) in a adjusted popup.
-	 */
-	width = getUrlParameters("width", url, true)
-	height = getUrlParameters("height", url, true)
-//	alert(width +"x" + height)
-	customPopup(url,width,height);
 }
 
 function getUrlParameters(parameter, staticURL, decode){
