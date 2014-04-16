@@ -70,7 +70,7 @@ urlpatterns = patterns('',
     url(r'^view_plot_xmipp/$', 'app.em_viewer.view_plot_xmipp'),
     
     #SHOWJ
-    url(r'^showj/', 'app.views_showj.showj'), #Load web
+    url(r'^showj/$', 'app.views_showj.showj'), #Load web
     url(r'^showj_pdb/', 'app.views_showj.showj_pdb'), #Load web
     url(r'^save_showj_table/', 'app.views_showj.save_showj_table'), # Save table to session variable dynamically
     url(r'^showVolVisualization/', 'app.views_showj.showVolVisualization'),

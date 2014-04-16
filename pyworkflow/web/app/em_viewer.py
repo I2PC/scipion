@@ -37,21 +37,7 @@ from pyworkflow.gui.plotter import Plotter
 from pyworkflow.em.packages.xmipp3.convert import writeSetOfParticles
 from pyworkflow.em.packages.xmipp3.plotter import XmippPlotter
 from pyworkflow.viewer import WEB_DJANGO
-
-# XMIPP
-from viewers.xmipp_ml2d import *
-from viewers.xmipp_cl2d import *
-#from viewers.xmipp_ml3d import *
-from viewers.xmipp_nma import *
-from viewers.xmipp_nma_align import *
-# SPIDER
-from viewers.spider_capca import *
-from viewers.spider_ward import *
-# BRANDEIS
-from viewers.brandeis_frealign import *
-# RELION
-from viewers.relion import *
-
+from pyworkflow.em.viewer import PATH, TABLE_NAME
 
 ############## 1ST STEP: LAUNCH VIEWER METHODS ##############
 
@@ -102,7 +88,9 @@ def viewToUrl(request, view):
     if isinstance(view, Plotter):
         url = savePlot(request, view)
     if isinstance(view, DataView):
-        url = "/visualize_object/?path="+ view.getPath()
+        url = "/showj/?%s=%s" % (PATH, view.getPath())
+        if view.getTableName():
+            url += '&%s=%s' % (TABLE_NAME, view.getTableName())
     
     return url
 
@@ -113,7 +101,6 @@ def viewerElement(request):
     
     protocol = project.mapper.selectById(int(protId))
     protocolViewer.setProtocol(protocol)
-    
     updateProtocolParams(request, protocolViewer, project)
     
     views = protocolViewer._getVisualizeDict()[viewerParam]()
@@ -122,33 +109,4 @@ def viewerElement(request):
     
     jsonStr = json.dumps({'urls':urls}, ensure_ascii=False)
     return HttpResponse(jsonStr, mimetype='application/javascript')
-
-############## AUX METHODS ##############
-    
-def view_plot_xmipp(request):
-    projectName = request.session['projectName']
-    project = loadProject(projectName)
-    protId = request.GET.get('protocolId', None)
-    protocol = project.mapper.selectById(int(protId))
-    
-    mdFn = getattr(protocol.outputParticles, '_xmippMd', None)
-    if mdFn:
-        fn = mdFn.get()
-    else:
-        fn = project.getTmpPath(protocol.outputParticles.getName() + '_images.xmd')
-        writeSetOfParticles(protocol.outputParticles, fn, protocol.getTmpPath())
-        
-    md = xmipp.MetaData(fn)
-    if md.containsLabel(xmipp.MDL_ZSCORE):
-               
-#        print "MD contains ZSCORE"
-        xplotter = XmippPlotter(windowTitle="Zscore particles sorting")
-        xplotter.createSubPlot("Particle sorting", "Particle number", "Zscore")
-        xplotter.plotMd(md, False, mdLabelY=xmipp.MDL_ZSCORE)
-        figFn = fn.replace('.xmd', '.png')
-        canvas = xplotter.getCanvas()
-        
-        response= HttpResponse(content_type='image/png')
-        canvas.print_png(response)
-        return response
     

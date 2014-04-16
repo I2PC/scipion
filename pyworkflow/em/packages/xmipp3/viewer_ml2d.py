@@ -59,7 +59,8 @@ class XmippML2DViewer(ProtocolViewer):
                       help="Select from which iteration do you want to visualize classes"
                       )
         group.addParam('iterSelection', StringParam, condition='classesToShow==%d' % ITER_SEL,
-                      label="Iter selection"
+                      label="Iter selection",
+                      help="Select several iterations such as: 1,3,4 or 3-5 "
                       )        
         group.addParam('doShowPlots', BooleanParam, label="Show all plots per iteration?", default=True,
                       help='Visualize several plots.')
@@ -86,7 +87,7 @@ class XmippML2DViewer(ProtocolViewer):
     def _viewAllPlots(self, e=None):
         return createPlots(self.protocol, self._plotVars)
         
-    def _viewPlot(self, paramName):
+    def _viewPlot(self, paramName=None):
         return createPlots(self.protocol, [paramName])
         
     def _viewIterRefs(self, e=None):
@@ -95,7 +96,19 @@ class XmippML2DViewer(ProtocolViewer):
         else:
             iterations = self._getListFromRangeString(self.iterSelection.get())
         
-        return [DataView('classes@' + self.protocol._getIterClasses(it)) for it in iterations]
+        views = []
+        errors = []
+        
+        for it in iterations:
+            fn = self.protocol._getIterClasses(it)
+            if exists(fn):
+                views.append(DataView('classes@' + fn))
+            else:
+                errors.append("Iteration file '%s' doesn't exist." % fn)
+             
+        self.errorList(errors, views)   
+
+        return views 
 
         
 def createPlots(protML, selectedPlots):

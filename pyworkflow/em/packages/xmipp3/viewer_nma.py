@@ -27,17 +27,13 @@
 This module implement the wrappers around Xmipp NMA protocol
 visualization program.
 """
+
 from pyworkflow.viewer import ProtocolViewer, DESKTOP_TKINTER, WEB_DJANGO
 from plotter import XmippPlotter
 from pyworkflow.em import *
 from protocol_nma import XmippProtNMA
-from protocol_nma_alignment import XmippProtAlignmentNMA
-from viewer import runShowJ
-from pyworkflow.gui.text import *
-from pyworkflow.gui.dialog import showError, showWarning
-# FIXME: REMOVE DEPENDENCIES FROM XMIPP
-from protlib_gui_ext import chimera, showj
 import glob
+
 
 CLASSES = 0
 CLASS_CORES = 1
@@ -45,8 +41,7 @@ CLASS_STABLE_CORES = 2
 
         
 class XmippNMAViewer(ProtocolViewer):
-    """ Visualization of results from the NMA protocol.
-    
+    """ Visualization of results from the NMA protocol.    
         Normally, NMA modes with high collectivity and low NMA score are preferred.
     """
     _label = 'viewer nma'
@@ -77,34 +72,6 @@ class XmippNMAViewer(ProtocolViewer):
                       label="Plot distance profile?")
         form.addParam('singleMode', IntParam, default=7,
               label='Open specific mode', condition='True')   
-    
-                        
-    def _viewParam(self, paramName):
-        if paramName == 'displayPseudoAtom':
-            chimera(self.protocol._getPath("chimera.cmd"))
-        elif paramName == 'displayPseudoAtomAproximation':
-            files = self.protocol.inputStructure.get().getFirstItem().getFileName()
-            files += " " + self.protocol._getExtraPath('pseudoatoms_approximation.vol')
-            showj(files)
-        elif paramName == 'displayModes':
-            showj(self.protocol._getPath('modes.xmd'))
-        elif paramName == 'displayMaxDistanceProfile':
-            fn = self.protocol._getExtraPath("maxAtomShifts.xmd")
-            self._createShiftPlot(fn, "Maximum atom shifts", "maximum shift").show()
-        elif paramName == 'displayDistanceProfile':
-            mode = self.singleMode.get()
-            fn = self.protocol._getExtraPath("distanceProfiles","vec%d.xmd" % mode)
-            self._createShiftPlot(fn, "Atom shifts for mode %d" % mode, "shift").show()
-        elif paramName == 'singleMode':
-            if self.singleMode.hasValue():
-                vmdFile = self.protocol._getExtraPath("animations", "animated_mode_%03d.vmd" % self.singleMode.get())
-                os.system("vmd -e %s" % vmdFile)
-    
-    def _createShiftPlot(self, mdFn, title, ylabel):
-        plotter = XmippPlotter()
-        plotter.createSubPlot(title, 'atom index', ylabel)
-        plotter.plotMdFile(mdFn, None, xmipp.MDL_NMA_ATOMSHIFT)
-        return plotter
         
     def _getVisualizeDict(self):
         return {'displayPseudoAtom': self._viewParam,
@@ -114,24 +81,31 @@ class XmippNMAViewer(ProtocolViewer):
                 'displayDistanceProfile': self._viewParam,
                 'singleMode': self._viewParam,
                 } 
+                        
+    def _viewParam(self, paramName):
+        views = []
+        if paramName == 'displayPseudoAtom':
+            views.append(CommandView('chimera ' + self.protocol._getPath("chimera.cmd")))
+        elif paramName == 'displayPseudoAtomAproximation':
+            views.append(DataView(self.protocol.inputStructure.get().getFirstItem().getFileName()))
+            views.append(DataView(self.protocol._getExtraPath('pseudoatoms_approximation.vol')))
+        elif paramName == 'displayModes':
+            views.append(self.protocol._getPath('modes.xmd'))
+        elif paramName == 'displayMaxDistanceProfile':
+            fn = self.protocol._getExtraPath("maxAtomShifts.xmd")
+            views.append(self._createShiftPlot(fn, "Maximum atom shifts", "maximum shift"))
+        elif paramName == 'displayDistanceProfile':
+            mode = self.singleMode.get()
+            fn = self.protocol._getExtraPath("distanceProfiles","vec%d.xmd" % mode)
+            views.append(self._createShiftPlot(fn, "Atom shifts for mode %d" % mode, "shift"))
+        elif paramName == 'singleMode':
+            if self.singleMode.hasValue():
+                vmdFile = self.protocol._getExtraPath("animations", "animated_mode_%03d.vmd" % self.singleMode.get())
+                views.append(CommandView("vmd -e %s" % vmdFile))
     
-    def getVisualizeDictWeb(self):
-        return {'displayPseudoAtom': 'doDisplayPseudoAtom',
-                'displayPseudoAtomAproximation': 'doDisplayPseudoAtomAproximation',
-                'displayModes': 'doDisplayModes',
-                'displayMaxDistanceProfile': 'doDisplayMaxDistanceProfile',
-                'displayDistanceProfile': 'doDisplayDistanceProfile',
-                'singleMode': 'doSingleMode',
-                } 
-        
-    @classmethod
-    def getView(cls):
-        """ This function will notify the web viewer for this protocol"""
-        return "viewerForm"
+    def _createShiftPlot(self, mdFn, title, ylabel):
+        plotter = XmippPlotter()
+        plotter.createSubPlot(title, 'atom index', ylabel)
+        plotter.plotMdFile(mdFn, None, xmipp.MDL_NMA_ATOMSHIFT)
+        return plotter
     
-    @classmethod
-    def getViewFunction(cls):
-        """ This will return the name of the function to view
-        in web one (or all) params of the protocol"""
-        return "viewerNMA"
-        
