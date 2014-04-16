@@ -40,7 +40,7 @@ import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
 import xmipp.jni.MDRow;
 import xmipp.utils.DEBUG;
-import xmipp.utils.Param;
+import xmipp.utils.Params;
 import xmipp.utils.XmippStringUtils;
 import xmipp.viewer.windows.GalleryJFrame;
 
@@ -64,7 +64,7 @@ public class GalleryData {
         private Mode mode;
 	public boolean showLabel = false;
 	public boolean renderImages;
-	public Param parameters;
+	public Params parameters;
 	private int numberOfVols = 0;
 
 	// flag to perform global normalization
@@ -87,6 +87,7 @@ public class GalleryData {
 	public Window window;
         private String[] renderLabels;
     private String renderLabel;
+    private String[] visibleLabels;
 
     
 
@@ -110,7 +111,7 @@ public class GalleryData {
 	 * 
 	 * @param jFrameGallery
 	 */
-	public GalleryData(Window window, String fn, Param parameters, MetaData md) {
+	public GalleryData(Window window, String fn, Params parameters, MetaData md) {
 		this.window = window;
 		try {
 			selectedBlock = "";
@@ -118,15 +119,16 @@ public class GalleryData {
 			zoom = parameters.zoom;
 			this.renderImages = parameters.renderImages;//always true, customized by models or renderLabels
                         this.renderLabels = parameters.renderLabels;
+                        this.visibleLabels = parameters.visibleLabels;
                         this.renderLabel = parameters.renderLabel;
 			mode = Mode.GALLERY_MD;
 			resliceView = parameters.resliceView;
 			useGeo = parameters.useGeo;
 			wrap = parameters.wrap;
                         
-			if (parameters.mode.equalsIgnoreCase(Param.OPENING_MODE_METADATA))
+			if (parameters.mode.equalsIgnoreCase(Params.OPENING_MODE_METADATA))
 				mode = Mode.TABLE_MD;
-			else if (parameters.mode.equalsIgnoreCase(Param.OPENING_MODE_ROTSPECTRA))
+			else if (parameters.mode.equalsIgnoreCase(Params.OPENING_MODE_ROTSPECTRA))
 				mode = Mode.GALLERY_ROTSPECTRA;
                         
 			setFileName(fn);
@@ -325,20 +327,23 @@ public class GalleryData {
 						if (ci.label == ci2.label)
 							ci.updateInfo(ci2);
 				} else 
+                                {
 					ci.render = isRenderLabel(ci);
+                                        ci.visible = isVisibleLabel(ci);
+                                }
 				newLabels.add(ci);
-				if (inputRenderLabel == labelids[i] && ci.allowRender) {
+				if (inputRenderLabel == labelids[i] && ci.render) {
 					ciFirstRender = ci;
 					if (ci.visible)
 						ciFirstRenderVisible = ci;
 				}
 				if ((ciFirstRender == null || ci.getLabel() == MDLabel.MDL_IMAGE)
-						&& ci.allowRender)// favor mdl_image over mdl_micrograph
+						&& ci.render)// favor mdl_image over mdl_micrograph
 				{
 					ciFirstRender = ci;
 				}
 				if ((ciFirstRenderVisible == null || ci.getLabel() == MDLabel.MDL_IMAGE)
-						&& ci.allowRender && ci.visible)
+						&& ci.render && ci.visible)
 					ciFirstRenderVisible = ci;
                                 
 			}
@@ -1053,6 +1058,15 @@ public class GalleryData {
            if(renderLabel.equals("first"))
                return ci.allowRender;
            for(String i: renderLabels)
+               if(i.equals(ci.labelName))
+                   return true;
+           return false;
+       }
+       
+       public boolean isVisibleLabel(ColumnInfo ci) {
+           if(visibleLabels == null)
+               return true;
+           for(String i: visibleLabels)
                if(i.equals(ci.labelName))
                    return true;
            return false;

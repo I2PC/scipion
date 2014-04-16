@@ -13,7 +13,7 @@ import xmipp.jni.ImageGeneric;
  *
  * @author Juanjo Vega
  */
-public class Param {
+public class Params {
 
 	//Some constants definitions
     public final static String FILE = "i";
@@ -32,6 +32,7 @@ public class Param {
     public final static String OPENING_MODE_METADATA = "metadata";
     public final static String OPENING_MODE_ROTSPECTRA = "rotspectra";
     public final static String RENDER_IMAGES = "render";
+    public final static String VISIBLE_LABELS = "visible";
     public final static String FILTER = "filter";
     public final static String FILTERS_SEPARATOR = ",";
     public final static String PORT = "port";
@@ -76,15 +77,16 @@ public class Param {
     public boolean wrap = true;
     protected Options options;
     protected CommandLine cmdLine;
+    public String[] visibleLabels;
 
     
     
     
 
-    public Param() {
+    public Params() {
     }
 
-    public Param(String args[]) {
+    public Params(String args[]) {
         options = new Options();
         defineArgs();
         processArgs(args);
@@ -104,6 +106,9 @@ public class Param {
         options.addOption(POLL, false, "");
         options.addOption(ZOOM, true, "");
         Option opt = new Option(RENDER_IMAGES, "");
+        opt.setArgs(Integer.MAX_VALUE);
+        options.addOption(opt);
+        opt = new Option(VISIBLE_LABELS, "");
         opt.setArgs(Integer.MAX_VALUE);
         options.addOption(opt);
         
@@ -169,6 +174,10 @@ public class Param {
             if(cmdLine.hasOption(RENDER_IMAGES))
             {
             	renderLabels = cmdLine.getOptionValues(RENDER_IMAGES);
+            }
+            if(cmdLine.hasOption(VISIBLE_LABELS))
+            {
+            	visibleLabels = cmdLine.getOptionValues(VISIBLE_LABELS);
             }
             
             debug = cmdLine.hasOption(DEBUG);
