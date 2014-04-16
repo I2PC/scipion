@@ -176,7 +176,8 @@ class XmippViewer(Viewer):
             else:
                 fn = self._getTmpPath(obj.getName() + '_ctfs.xmd')
                 writeSetOfCTFs(obj, fn)
-            self.runShowJ(fn, extraParams=' --mode metadata --render first')  
+
+            runShowJ(fn, extraParams=' --mode metadata --render psd psdEnhanced image1 image2')  
          
         elif issubclass(cls, XmippProtExtractParticles):
             self._visualize(obj.outputParticles)
