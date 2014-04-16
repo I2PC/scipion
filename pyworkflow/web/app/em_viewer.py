@@ -37,6 +37,7 @@ from pyworkflow.gui.plotter import Plotter
 from pyworkflow.em.packages.xmipp3.convert import writeSetOfParticles
 from pyworkflow.em.packages.xmipp3.plotter import XmippPlotter
 from pyworkflow.viewer import WEB_DJANGO
+from pyworkflow.em.viewer import PATH, TABLE_NAME
 
 # XMIPP
 from viewers.xmipp_ml2d import *
@@ -102,7 +103,9 @@ def viewToUrl(request, view):
     if isinstance(view, Plotter):
         url = savePlot(request, view)
     if isinstance(view, DataView):
-        url = "/visualize_object/?path="+ view.getPath()
+        url = "/showj/?%s=%s" % (PATH, view.getPath())
+        if view.getTableName():
+            url += '&%s=%s' % (TABLE_NAME, view.getTableName())
     
     return url
 

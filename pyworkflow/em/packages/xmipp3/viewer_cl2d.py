@@ -131,8 +131,7 @@ class XmippCL2DViewer(ProtocolViewer):
                                                 self._project.getName(), 
                                                 self.protocol.strId(), inputImagesId))
         
-        if errors:
-            views.append(self.errorMessage('\n'.join(errors), "Visualization errors"))
+        self.errorList(errors, views)
             
         return views        
 

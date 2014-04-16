@@ -50,8 +50,6 @@ class XmippAlignmentNMAViewer(ProtocolViewer):
     """ Visualization of results from the NMA protocol
     """
     _label = 'viewer nma alignment'
-
-                   
     _targets = [XmippProtAlignmentNMA]
     _environments = [DESKTOP_TKINTER, WEB_DJANGO]
         
@@ -76,17 +74,19 @@ class XmippAlignmentNMAViewer(ProtocolViewer):
     def _viewWithMatlab(self, paramName):
         xmippLib = join(os.environ['XMIPP_HOME'], 'libraries', 'bindings', 'matlab')
         command = "path(path, '%s');xmipp_nma_selection_tool('%s')" % (xmippLib, self._getPath())
-        os.system('matlab -r "%s"' % command)
+        return [CommandView('matlab -r "%s"' % command)]
         
     def _viewRawDeformation(self, paramName):
         components = self.displayRawDeformation.get()
         plotter = self._doViewRawDeformation(components)
-        plotter.show()
+        return [plotter]
         
     def _doViewRawDeformation(self, components):
 #        components = map(int, self.displayRawDeformation.get().split())
         components = map(int, components.split())
         dim = len(components)
+        views = []
+        
         if dim > 0:
             modeList = []
             modeNameList = []
@@ -96,6 +96,7 @@ class XmippAlignmentNMAViewer(ProtocolViewer):
             
             for mode in components:
                 if mode > md.size():
+                    views.append
                     showWarning('Warning', "You don't have so many modes",parent=self.master)
                 else:
                     mode -= 1
@@ -104,7 +105,6 @@ class XmippAlignmentNMAViewer(ProtocolViewer):
                         modeName = md.getValue(xmipp.MDL_NMA_MODEFILE, objId)
                         if i == mode:
                             break
-                    print modeName
                     modeNameList.append(modeName)
                     modeList.append(mode)
             
@@ -123,28 +123,11 @@ class XmippAlignmentNMAViewer(ProtocolViewer):
             elif dim == 3:
                 plotter.plotArray3D("Modes %s %s %s" % tuple(baseList), 
                                     modeList[0], modeList[1], modeList[2], *baseList)
-            return plotter
+            views.append(plotter)
+            
+        return views
 
     
-    def getVisualizeDictWeb(self):
-        return {'displayRawDeformation': 'doDisplayRawDeformation',
-                'analyzeMatlab': 'doAnalyzeMatlab'
-                } 
-        
-    @classmethod
-    def getView(cls):
-        """ This function will notify the web viewer for this protocol"""
-        return "viewerForm"
-    
-    @classmethod
-    def getViewFunction(cls):
-        """ This will return the name of the function to view
-        in web one (or all) params of the protocol"""
-        return "viewerNMAAlign"
-
-    def _citations(self):
-        return ['Sorzano2004b', 'Jonic2005']
-
 class XmippNmaPlotter(XmippPlotter):
     """ Add some extra plot utilities to XmippPlotter class, mainly for
     NMA vectors plotting of the deformations.txt file.

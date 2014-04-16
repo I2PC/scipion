@@ -40,14 +40,23 @@ class DataView(View):
     """ Wrapper the arguments to showj (either web or desktop). """
     def __init__(self, path, **kwargs):
         View.__init__(self)
-        self._path = path
+        self._loadPath(path)
         self._env = kwargs.get('env', None)
         
+    def _loadPath(self, path):
+        if '@' in path:
+            self._tableName, self._path = path.split('@')
+        else:
+            self._tableName, self._path = None, path
+            
     def show(self):
         runShowJ(self._path, env=self._env)
         
     def getPath(self):
         return self._path
+    
+    def getTableName(self):
+        return self._tableName
         
         
 class ObjectView(DataView):
