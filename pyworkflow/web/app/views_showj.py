@@ -56,14 +56,18 @@ def loadDataSet(request, filename, firstTime):
     return dataset
 
 
+def hasTableChanged(request, inputParams):
+    return request.session.get(inputParams[PATH], {}).get(TABLE_NAME, None) != inputParams.get(TABLE_NAME, None)    
+    
+    
 def loadColumnsConfig(request, dataset, table, inputParams, extraParams, firstTime):
     """ Load table layout configuration. How to display columns and attributes (visible, render, editable) """ 
-    tableChanged = request.session.get(TABLE_NAME, None) != inputParams.get(TABLE_NAME, None)
+    tableChanged = hasTableChanged(request, inputParams)
     
     # Clear table name and selected volume after a table change
     if not firstTime and tableChanged: 
+        print "setting VOL_SELECTED = None"
         inputParams[VOL_SELECTED] = None
-        #inputParams[TABLE_NAME] = request.session.get(TABLE_NAME, None)
         
     if firstTime or tableChanged:
         columns_properties = getExtraParameters(extraParams, table)
@@ -91,7 +95,7 @@ def addProjectPrefix(request, fn):
 def setLabelToRender(request, table, inputParams, extraParams, firstTime):
     """ If no label is set to render, set the first one if exists """
     if (not inputParams.get(LABEL_SELECTED, False) or 
-        request.session.get(TABLE_NAME, None) != inputParams.get(TABLE_NAME, None)):
+        hasTableChanged(request, inputParams)):
         labelsToRender = inputParams[COLS_CONFIG].getRenderableColumns()
         
         if labelsToRender:
@@ -162,16 +166,15 @@ def setRenderingOptions(request, dataset, table, inputParams):
     
 #Initialize default values
 DEFAULT_PARAMS = {
-               PATH: '',
+               PATH: None,
                ALLOW_RENDER: True,                 # Image can be displayed, depending on column layout 
                MODE: MODE_GALLERY,                   # Mode Options: gallery, table, column, volume_astex, volume_chimera
                TABLE_NAME: None,                    # Table name to display. If None the first one will be displayed
                LABEL_SELECTED: None,        # Column to be displayed in gallery mode. If None the first one will be displayed
-               VOL_SELECTED: None,       # If 3D, Volume to be displayed in gallery, volume_astex and volume_chimera mode. If None the first one will be displayed
                GOTO: 1,                           # Element selected (metadata record) by default. It can be a row in table mode or an image in gallery mode
                MANUAL_ADJUST: 'Off',                 # In gallery mode 'On' means columns can be adjust manually by the user. When 'Off' columns are adjusted automatically to screen width.
-               COLS:  '',                         # In gallery mode (and colRowMode set to 'On') cols define number of columns to be displayed
-               ROWS: '',                          # In gallery mode (and colRowMode set to 'On') rows define number of columns to be displayed
+               COLS: None,                         # In gallery mode (and colRowMode set to 'On') cols define number of columns to be displayed
+               ROWS: None,                          # In gallery mode (and colRowMode set to 'On') rows define number of columns to be displayed
                
                IMG_ZOOM: '128px',                     # Zoom set by default
                IMG_MIRRORY: False,                    # When 'True' image are mirrored in Y Axis 
@@ -183,6 +186,7 @@ DEFAULT_PARAMS = {
                IMG_MAX_HEIGHT: 512,               # Maximum image height (in pixels)
                IMG_MIN_HEIGHT: 64,                # Minimum image height (in pixels)
                
+               VOL_SELECTED: None,       # If 3D, Volume to be displayed in gallery, volume_astex and volume_chimera mode. If None the first one will be displayed
                VOL_VIEW: xmipp.VIEW_Z_NEG,      # If 3D, axis to slice volume 
                VOL_TYPE: 'map'}                 # If map, it will be displayed normally, else if pdb only astexViewer and chimera display will be available
 
@@ -196,7 +200,6 @@ def showj(request):
          be store also in SESSION
     """
     firstTime = request.method == 'GET'
-    print "request.method: ", request.method
     
     #=TIME CONTROL==============================================================
 #    from datetime import datetime
@@ -233,8 +236,8 @@ def showj(request):
         
     request.session[IMG_ZOOM_DEFAULT] = inputParams[IMG_ZOOM]    
     
-    #from pprint import pprint
-    #pprint(inputParams)
+    from pprint import pprint
+    pprint(inputParams)
 
     if inputParams[VOL_TYPE] != 'pdb':
         # Load the initial dataset from file or session

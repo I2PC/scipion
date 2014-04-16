@@ -69,8 +69,8 @@ class XmippViewer(Viewer):
     def runShowJ(self, filename, **args):
         self._views.append(DataView(filename, **args))
         
-    def runScipionShowJ(self, filename, *args):
-        self._views.append(ObjectView(filename, *args))
+    def runScipionShowJ(self, filename, *args, **kwargs):
+        self._views.append(ObjectView(filename, *args, **kwargs))
         
     def visualize(self, obj, **args):
         self._visualize(obj, **args)
@@ -176,7 +176,8 @@ class XmippViewer(Viewer):
             else:
                 fn = self._getTmpPath(obj.getName() + '_ctfs.xmd')
                 writeSetOfCTFs(obj, fn)
-            self.runShowJ(fn, extraParams=' --mode metadata --render first')  
+
+            runShowJ(fn, extraParams=' --mode metadata --render psd psdEnhanced image1 image2')  
          
         elif issubclass(cls, XmippProtExtractParticles):
             self._visualize(obj.outputParticles)

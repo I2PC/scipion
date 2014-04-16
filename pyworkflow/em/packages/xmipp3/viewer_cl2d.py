@@ -121,7 +121,7 @@ class XmippCL2DViewer(ProtocolViewer):
                     for level in listOfLevels:
                         fn = self.protocol._getExtraPath("level_%02d/level_classes%s.xmd"%(level,fnSubset))
                         if os.path.exists(fn):
-                            files.append("classes_sorted@%s " % fn)
+                            files.append("classes_sorted@%s" % fn)
                         else:
                             errors.append('Level %s does not exist.' % level)
                     

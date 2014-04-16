@@ -71,6 +71,7 @@ urlpatterns = patterns('',
     url(r'^showj_pdb/', 'app.views_showj.showj_pdb'), #Load web
     url(r'^save_showj_table/', 'app.views_showj.save_showj_table'), # Save table to session variable dynamically
     url(r'^showVolVisualization/', 'app.views_showj.showVolVisualization'),
+
     
     url(r'^update_session_table/$', 'app.views_showj.updateSessionTable'),
     

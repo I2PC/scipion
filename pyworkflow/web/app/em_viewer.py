@@ -42,33 +42,38 @@ from pyworkflow.em.viewer import PATH, TABLE_NAME
 ############## 1ST STEP: LAUNCH VIEWER METHODS ##############
 
 def launch_viewer(request):
-    if request.is_ajax():
-        projectName = request.session['projectName']
-        project = loadProject(projectName)
-        protId = request.GET.get('protocolId', None)
-        protocol = project.mapper.selectById(int(protId))
+    #if request.is_ajax():
+    projectName = request.session['projectName']
+    project = loadProject(projectName)
+    protId = request.GET.get('protocolId', None)
+    protocol = project.mapper.selectById(int(protId))
+    
+    viewers = findViewers(protocol.getClassName(), WEB_DJANGO)
+    
+    if len(viewers) == 0:
+        views = []
         
-        viewers = findViewers(protocol.getClassName(), WEB_DJANGO)
-        
-        if len(viewers) == 0:
-            urls = []
+        if isinstance(protocol, EMProtocol):
             for _, output in protocol.iterOutputAttributes(EMObject):
-                urls.append("/visualize_object/?objectId=%s" % output.getObjId())
-                
-            #msg = "There is not viewer for protocol: <strong>" + protocol.getClassName() +"</strong>"
-            ioDict = {'urls': urls}
+                objViewers = findViewers(output.getClassName(), WEB_DJANGO)
+                if objViewers:
+                    views += objViewers[0](project=project)._visualize(output) or []
+
+        if not views:
+            views = [MessageView("No viewers found for object type: %s" % protocol.getClassName())]                    
+        
+        urls = [viewToUrl(request, view) for view in views]
+    else:
+        viewer = viewers[0](project=project)
+        # Lets assume if there is a viewer for the protocol
+        # it will be a ProtocolViewer with a Form
+        if isinstance(viewer, ProtocolViewer):
+            urls = [viewerForm(project, protocol, viewer)]
         else:
-            viewer = viewers[0]()
-            # Lets assume if there is a viewer for the protocol
-            # it will be a ProtocolViewer with a Form
-            if isinstance(viewer, ProtocolViewer):
-                ioDict = viewerForm(project, protocol, viewer)
-            else:
-                views = viewer.visualize(protocol)
-                urls =  [viewToUrl(request, v) for v in views]
-                ioDict = {'urls': urls}
-                
-        jsonStr = json.dumps(ioDict, ensure_ascii=False)
+            views = viewer._visualize(protocol)
+            urls = [viewToUrl(request, v) for v in views]
+            
+    jsonStr = json.dumps(urls, ensure_ascii=False)
         
     return HttpResponse(jsonStr, mimetype='application/javascript')
 
@@ -77,21 +82,39 @@ def viewerForm(project, protocol, viewer):
     protId = protocol.getObjId()
     viewerClassName = viewer.getClassName()
     
-    return {"url_form": "/form/?protocolClass="+ viewerClassName +
-              "&protRunIdViewer="+ str(protId) +
-              "&action=visualize"}
+    return "url:/form/?protocolClass=%s&protRunIdViewer=%s&action=visualize" % (viewerClassName, protId)
     
+    
+    objId = request.GET.get('objectId')
+    obj = project.mapper.selectById(int(objId))
+    viewers = findViewers(obj.getClassName(), WEB_DJANGO)
+    
+    if viewers:
+        viewer = viewers[0](project=project)
+        views = viewer._visualize(obj)
+    else:
+        views = [MessageView("No viewers found for object type: %s" % obj.getClassName())]
+        
+    urls =  [viewToUrl(request, v) for v in views]
+            
+    jsonStr = json.dumps(urls, ensure_ascii=False)
+        
+    return HttpResponse(jsonStr, mimetype='application/javascript')
+
 ############## 2ND STEP: VIEWER FUNCTION METHODS ##############
 
 def viewToUrl(request, view):
     
     if isinstance(view, Plotter):
-        url = savePlot(request, view)
-    if isinstance(view, DataView):
+        url = 'url:' + savePlot(request, view)
+    elif isinstance(view, DataView):
         url = "/showj/?%s=%s" % (PATH, view.getPath())
         if view.getTableName():
             url += '&%s=%s' % (TABLE_NAME, view.getTableName())
-    
+        url = 'url:' + url
+    elif isinstance(view, MessageView):
+        url = 'error:' + view.getMessage()
+        
     return url
 
 def viewerElement(request):
@@ -107,6 +130,6 @@ def viewerElement(request):
     
     urls = [viewToUrl(request, v) for v in views]
     
-    jsonStr = json.dumps({'urls':urls}, ensure_ascii=False)
+    jsonStr = json.dumps(urls, ensure_ascii=False)
     return HttpResponse(jsonStr, mimetype='application/javascript')
     

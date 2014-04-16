@@ -280,8 +280,8 @@ function fillUL(type, list, ulId, icon) {
 //		inihtml = "<table><tr><td><strong>Attribute</strong></td><td><strong>&nbsp;&nbsp;&nbsp;Info</strong></td></tr>"
 		
 		// Visualize Object
-		var visualize_html = '<a href="javascript:customPopup(\'/visualize_object/?objectId=' + list[i].id
-		+ '\',1200,800);"><i class="fa ' + icon + '" style="margin-right:10px;"></i>'+ list[i].name
+		var visualize_html = '<a href="javascript:launchViewer(' + list[i].id
+		+ ');"><i class="fa ' + icon + '" style="margin-right:10px;"></i>'+ list[i].name
 
 		if(type=="input"){
 			visualize_html += ' (from ' + list[i].nameId +')</a>'
