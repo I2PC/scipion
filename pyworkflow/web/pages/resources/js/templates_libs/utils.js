@@ -155,8 +155,13 @@ function popUpJSON(json){
 	 */
 
 	// Open pop-ups depending of JSON parameters
-	$.each(json, function(key, value) {
-		if(key=="url_form"){
+	$.each(json, function(i, item) {
+		array = item.split(':')
+		key = array[0]
+		value = array[1]
+		//alert("item=" + item + " key=" + key + " value="+value)
+
+		if (key=="url_form"){
 			popup(value);
 		} else if(key=="urls"){
 			for(var x=0;x<value.length;x++){

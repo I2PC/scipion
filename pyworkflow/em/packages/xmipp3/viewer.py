@@ -69,8 +69,8 @@ class XmippViewer(Viewer):
     def runShowJ(self, filename, **args):
         self._views.append(DataView(filename, **args))
         
-    def runScipionShowJ(self, filename, *args):
-        self._views.append(ObjectView(filename, *args))
+    def runScipionShowJ(self, filename, *args, **kwargs):
+        self._views.append(ObjectView(filename, *args, **kwargs))
         
     def visualize(self, obj, **args):
         self._visualize(obj, **args)

@@ -68,13 +68,13 @@ urlpatterns = patterns('',
     url(r'^viewerElement/$', 'app.em_viewer.viewerElement'),
     url(r'^view_plots/$', 'app.em_viewer.view_plots'),
     url(r'^view_plot_xmipp/$', 'app.em_viewer.view_plot_xmipp'),
+    url(r'^visualize_object/$', 'app.em_viewer.visualizeObject'),
     
     #SHOWJ
     url(r'^showj/$', 'app.views_showj.showj'), #Load web
     url(r'^showj_pdb/', 'app.views_showj.showj_pdb'), #Load web
     url(r'^save_showj_table/', 'app.views_showj.save_showj_table'), # Save table to session variable dynamically
     url(r'^showVolVisualization/', 'app.views_showj.showVolVisualization'),
-    url(r'^visualize_object/$', 'app.views_showj.visualizeObject'),
     url(r'^visualize_volume/$', 'app.views_showj.visualizeVolume'),
     
     url(r'^update_session_table/$', 'app.views_showj.updateSessionTable'),

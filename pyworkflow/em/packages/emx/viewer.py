@@ -38,7 +38,7 @@ from pyworkflow.em.data import EMXObject
 class EMXViewer(Viewer):
     """ Class to visualize Relion protocols """
     _environments = [DESKTOP_TKINTER, WEB_DJANGO]
-    _targets = [EMXObject]
+    #_targets = [EMXObject]
     _label = 'viewer emx'
     
     def __init__(self, **args):
