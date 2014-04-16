@@ -61,22 +61,9 @@ public class GalleryData {
 	public int zoom;
 	private String filename;
 	public int resliceView;
-
-
-
-	public enum Mode {
-		GALLERY_MD, GALLERY_VOL, TABLE_MD, GALLERY_ROTSPECTRA
-	};
-
-	// define min and max render dimensions
-	public static int MIN_SIZE = 16;
-	public static int MAX_SIZE = 256;
-
-	// max dimension allowed to render images
-
-	private Mode mode;
+        private Mode mode;
 	public boolean showLabel = false;
-	public boolean globalRender;
+	public boolean renderImages;
 	public Param parameters;
 	private int numberOfVols = 0;
 
@@ -98,6 +85,23 @@ public class GalleryData {
 	// Flags to check if md or classes has changed
 	private boolean hasMdChanges, hasClassesChanges;
 	public Window window;
+        private String[] renderLabels;
+    private String renderLabel;
+
+    
+
+
+	public enum Mode {
+		GALLERY_MD, GALLERY_VOL, TABLE_MD, GALLERY_ROTSPECTRA
+	};
+
+	// define min and max render dimensions
+	public static int MIN_SIZE = 16;
+	public static int MAX_SIZE = 256;
+
+	// max dimension allowed to render images
+
+
         
         
 	/**
@@ -106,21 +110,23 @@ public class GalleryData {
 	 * 
 	 * @param jFrameGallery
 	 */
-	public GalleryData(Window window, String fn, Param param, MetaData md) {
+	public GalleryData(Window window, String fn, Param parameters, MetaData md) {
 		this.window = window;
 		try {
 			selectedBlock = "";
-			parameters = param;
-			zoom = param.zoom;
-			globalRender = param.renderImages;
+			this.parameters = parameters;
+			zoom = parameters.zoom;
+			this.renderImages = parameters.renderImages;//always true, customized by models or renderLabels
+                        this.renderLabels = parameters.renderLabels;
+                        this.renderLabel = parameters.renderLabel;
 			mode = Mode.GALLERY_MD;
-			resliceView = param.resliceView;
-			useGeo = param.useGeo;
-			wrap = param.wrap;
+			resliceView = parameters.resliceView;
+			useGeo = parameters.useGeo;
+			wrap = parameters.wrap;
                         
-			if (param.mode.equalsIgnoreCase(Param.OPENING_MODE_METADATA))
+			if (parameters.mode.equalsIgnoreCase(Param.OPENING_MODE_METADATA))
 				mode = Mode.TABLE_MD;
-			else if (param.mode.equalsIgnoreCase(Param.OPENING_MODE_ROTSPECTRA))
+			else if (parameters.mode.equalsIgnoreCase(Param.OPENING_MODE_ROTSPECTRA))
 				mode = Mode.GALLERY_ROTSPECTRA;
                         
 			setFileName(fn);
@@ -301,27 +307,27 @@ public class GalleryData {
 	public void loadLabels() {
 		ColumnInfo ci;
 		try {
-			int[] lab = md.getActiveLabels();
+			int[] labelids = md.getActiveLabels();
 			ArrayList<ColumnInfo> newLabels = new ArrayList<ColumnInfo>(
-					lab.length);
+					labelids.length);
 			ciFirstRender = null;
 			ColumnInfo ciFirstRenderVisible = null;
 			int inputRenderLabel = MDLabel.MDL_UNDEFINED;
 
-			if (!parameters.renderLabel.equalsIgnoreCase("first")) {
+			if (!renderLabel.equalsIgnoreCase("first")) {
 				inputRenderLabel = MetaData.str2Label(parameters.renderLabel);
 			}
 
-			for (int i = 0; i < lab.length; ++i) {
-				ci = new ColumnInfo(lab[i]);
+			for (int i = 0; i < labelids.length; ++i) {
+				ci = new ColumnInfo(labelids[i]);
 				if (labels != null) {
 					for (ColumnInfo ci2 : labels)
 						if (ci.label == ci2.label)
 							ci.updateInfo(ci2);
-				} else if (ci.allowRender)
-					ci.render = globalRender;
+				} else 
+					ci.render = isRenderLabel(ci);
 				newLabels.add(ci);
-				if (inputRenderLabel == lab[i] && ci.allowRender) {
+				if (inputRenderLabel == labelids[i] && ci.allowRender) {
 					ciFirstRender = ci;
 					if (ci.visible)
 						ciFirstRenderVisible = ci;
@@ -1042,5 +1048,15 @@ public class GalleryData {
                 Logger.getLogger(GalleryJFrame.class.getName()).log(Level.SEVERE, null, ex);
             }
        }
+       
+       public boolean isRenderLabel(ColumnInfo ci) {
+           if(renderLabel.equals("first"))
+               return ci.allowRender;
+           for(String i: renderLabels)
+               if(i.equals(ci.labelName))
+                   return true;
+           return false;
+       }
+
       
 }// class GalleryDaa

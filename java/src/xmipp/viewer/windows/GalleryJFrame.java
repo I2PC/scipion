@@ -1562,7 +1562,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			setItemSelected(DISPLAY_WRAP, data.wrap);
 			setItemSelected(DISPLAY_APPLYGEO, data.useGeo);
 			setItemEnabled(DISPLAY_RENDERIMAGES, !galMode && data.hasRenderLabel());
-			setItemSelected(DISPLAY_RENDERIMAGES, data.globalRender);
+			setItemSelected(DISPLAY_RENDERIMAGES, data.renderImages);
 			setItemEnabled(DISPLAY_RENDERIMAGECOLUMN, galMode);
 			for (int i = 0; i < ImageGeneric.VIEWS.length; ++i)
 				setItemSelected(DISPLAY_RESLICE_VIEWS[i], (data.resliceView == ImageGeneric.VIEWS[i]));
@@ -1619,7 +1619,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 						isUpdating = true;
 						((MetadataGalleryTableModel) gallery).updateColumnInfo(columns);
 						gallery.fireTableDataChanged();
-						setItemEnabled(DISPLAY_RENDERIMAGES, data.globalRender);
+						setItemEnabled(DISPLAY_RENDERIMAGES, data.renderImages);
 						// menu.enableRenderImages(data.globalRender);
 						isUpdating = false;
 					}

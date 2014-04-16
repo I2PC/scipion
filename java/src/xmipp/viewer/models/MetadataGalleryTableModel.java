@@ -66,7 +66,7 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel
 	{
 		int n = newInfo.size();
 		boolean changed = false;
-		data.globalRender = false;
+		data.renderImages = false;
 		data.ciFirstRender = null;
 
 		for (int i = 0; i < n; ++i)
@@ -86,7 +86,7 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel
 							data.ciFirstRender = ci1;
 					}
 					if (ci1.render)
-						data.globalRender = true;
+						data.renderImages = true;
 					if (i != j)
 						changed = true;
 				}
