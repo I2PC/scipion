@@ -57,7 +57,7 @@ class ProtRelionPostProcess(XmippProtocol):
             args += ' --autob_lowres %f' % self.AutobLowres
             args += ' --autob_highres %f' % self.AutobHighres
         else:
-            args += ' --adhoc_bfac'
+            args += ' --adhoc_bfac %f' % self.AdhocBfac
             
         if not self.UseFscWeighting:
             args += ' --skip_fsc_weighting'

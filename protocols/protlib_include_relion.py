@@ -180,10 +180,10 @@ IgnoreCTFUntilFirstPeak = False
 
 
 #------------------------------------------------------------------------------------------------
-# {condition}(not DoContinue) {section} Optimisation
+# {section} Optimisation
 #------------------------------------------------------------------------------------------------
 
-# {wizard}(wizardChooseLowPassFilter) {condition}(not Is2D) Initial low-pass filter (A): 
+# {wizard}(wizardChooseLowPassFilter) {condition}(not Is2D and not DoContinue) Initial low-pass filter (A): 
 """
 It is recommended to strongly low-pass filter your initial reference map. 
 If it has not yet been low-pass filtered, it may be done internally using this option. 
@@ -191,13 +191,16 @@ If set to 0, no low-pass filter will be applied to the initial reference(s).
 """
 InitialLowPassFilterA = 60
 
-# Number of iterations:
+# {condition}(DoClassify) Number of iterations:
 """
-Number of iterations to be performed. Note that the current implementation does NOT comprise a convergence criterium. Therefore, the calculations will need to be stopped by the user if further iterations do not yield improvements in resolution or classes.
+Number of iterations to be performed. Note that the current implementation does 
+NOT comprise a convergence criterium. Therefore, the calculations will need to be
+stopped by the user if further iterations do not yield improvements in resolution 
+or classes.
 """
 NumberOfIterations = 25
 
-# Regularisation paramter T:
+# {condition}(DoClassify and not DoContinue) Regularisation paramter T:
 """
 Bayes law strictly determines the relative weight between the contribution of the experimental data and the prior.
 However, in practice one may need to adjust this weight to put slightly more weight on the experimental 
@@ -209,7 +212,7 @@ over-estimated resolutions and overfitting.
 """
 RegularisationParamT = 1
 
-# {wizard}(wizardSetMaskRadiusRelion) Particles mask RADIUS (A):
+# {condition}(not DoContinue){wizard}(wizardSetMaskRadiusRelion) Particles mask RADIUS (A):
 """
 The experimental images will be masked with a soft circular mask
 with this <radius> (Note that in Relion GUI the diameter is used).
@@ -221,9 +224,9 @@ The same radius will also be used for a spherical mask of the
 reference structures if no user-provided mask is specified.
 If -1 is used, then half of the particles size will be used as radius.
 """
-MaskRadiusA = -1
+MaskRadiusA = 180
 
-# {condition}(DoClassify) {list_combo}(Yes: fill with zeros,No: fill with random noise) Mask individual particles with zero?
+# {condition}(DoClassify and not DoContinue) {list_combo}(Yes: fill with zeros,No: fill with random noise) Mask individual particles with zero?
 """
 If set to <Yes>, then in the individual particles, the area outside a circle with the radius 
 of the particle will be set to zeros prior to taking the Fourier transform. 
@@ -235,7 +238,7 @@ the solvent area with random noise, some classifications go better when using ze
 """
 MaskZero = "Yes: fill with zeros"
 
-#  {file} Reference mask (optional)
+#  {condition}(not DoContinue) {file} Reference mask (optional)
 """
 A Spider/mrc map containing a (soft) mask with the same dimensions 
 as the reference(s), and values between 0 and 1, with 1 being 100% protein
@@ -248,7 +251,7 @@ to use a second mask. Use <More options> and check <Solvent mask> parameter.
 """
 ReferenceMask = ""
 
-# {expert} {file} Solvent mask (optional)
+# {expert} {condition}(not DoContinue) {file} Solvent mask (optional)
 """
 For all white (value 1) pixels in this second mask the 
 corresponding pixels in the reconstructed map are set to the average value of 
@@ -275,6 +278,14 @@ two Euler angles on the sphere. The samplings are approximate numbers
 and vary slightly over the sphere.
 """
 AngularSamplingDeg = '7.5'
+
+# {condition}(not DoClassify){list_combo}(30,15,7.5,3.7,1.8,0.9,0.5,0.2,0.1) Local search from auto-sampling (deg):
+"""
+In the automated procedure to increase the angular samplings, 
+local angular searches of -6/+6 times the sampling rate will 
+be used from this angular sampling rate onwards.
+"""
+LocalSearchAutoSamplingDeg = '1.8'
 '''
     else:
         linesStr += '''
@@ -292,28 +303,49 @@ InPlaneAngularSamplingDeg = 5
 '''
     linesStr += '''
 # {condition}(DoClassify or not DoContinue) Offset search range (pix):
-"""Probabilities will be calculated only for translations in a circle with this radius (in pixels). The center of this circle changes at every iteration and is placed at the optimal translation for each image in the previous iteration.
+"""
+Probabilities will be calculated only for translations in a 
+circle with this radius (in pixels). The center of this circle changes at
+every iteration and is placed at the optimal translation for each image 
+in the previous iteration.
 """
 OffsetSearchRangePix = 5
 
 # {condition}(DoClassify or not DoContinue) Offset search step (pix):
-"""Translations will be sampled with this step-size (in pixels).Translational sampling is also done using the adaptive approach. Therefore, if adaptive=1, the translations will first be evaluated on a 2x coarser grid.
+"""
+Translations will be sampled with this step-size (in pixels).
+Translational sampling is also done using the adaptive approach. 
+Therefore, if adaptive=1, the translations will first be evaluated 
+on a 2x coarser grid.
 """
 OffsetSearchStepPix = 1
 
 
-# {condition}(not Is2D) Perform local angular search? 
-"""If set to Yes, then rather than performing exhaustive angular searches, local searches within the range given below will be performed. A prior Gaussian distribution centered at the optimal orientation in the previous iteration and with a stddev of 1/3 of the range given below will be enforced.
+# {condition}(DoClassify and not Is2D) Perform local angular search? 
+"""If set to Yes, then rather than performing exhaustive angular 
+searches, local searches within the range given below will be performed. 
+A prior Gaussian distribution centered at the optimal orientation in the 
+previous iteration and with a stddev of 1/3 of the range given below will 
+be enforced.
 """
 PerformLocalAngularSearch = False
 
-# {condition}(not Is2D and PerformLocalAngularSearch)Local angular search range
+# {condition}(DoClassify and not Is2D and PerformLocalAngularSearch)Local angular search range (deg)
 """
+Local angular searches will be performed within +/- the given 
+amount (in degrees) from the optimal orientation in the previous 
+iteration. A Gaussian prior (also see previous option) will be 
+applied, so that orientations closer to the optimal orientation 
+in the previous iteration will get higher weights than those 
+further away.
 """
 LocalAngularSearchRange = 5.0
 
 # {expert} Additional arguments
-"""In this box command-line arguments may be provided that are not generated by the GUI. This may be useful for testing developmental options and/or expert use of the program. The command 'relion_refine' will print a list of possible options.
+"""In this box command-line arguments may be provided that are not 
+generated by the GUI. This may be useful for testing developmental 
+options and/or expert use of the program. The command 'relion_refine' 
+will print a list of possible options.
 """
 AdditionalArguments = ""
 
@@ -424,7 +456,19 @@ AvgPMAX = False
 # {view} ''' + changesStr + '''
 """ Visualize changes in orientation, offset and number images assigned to each class"""
 TableChange = False
+    
+# {condition}(not DoClassify) {view}{list_combo}(slices, chimera, none) Display final 3D map
+"""
+Display final 3D map computed using ALL the images
+<slices>: display volumes as 2D slices along z axis
+(you can change the view to x or y axis)
+<chimera>: display volumes as surface with Chimera.
+(you will need Chimera installed in your computer)
+<none>: Do not display any volume.
+"""
+DisplayFinalReconstruction = "slices"
     '''
+
     return linesStr# % locals()    
  
  

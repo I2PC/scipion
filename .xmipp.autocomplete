@@ -1,5 +1,5 @@
 
-_setup.py() 
+_setup_py() 
 {
     local cur prev opts base
     COMPREPLY=()
@@ -20,7 +20,7 @@ _setup.py()
     esac
     return 0
 }
-complete -F _setup.py  setup.py
+complete -F _setup_py  setup.py
 
 _xcompile() 
 {
