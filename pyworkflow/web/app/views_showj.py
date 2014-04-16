@@ -51,7 +51,7 @@ def loadDataSet(request, filename, firstTime):
     if firstTime or not DATASET in request.session:
         dataset = loadDatasetXmipp(filename)
     else:
-        dataset = request.session[DATASET]
+        dataset = request.session[filename][DATASET]
         
     return dataset
 
@@ -60,8 +60,10 @@ def loadColumnsConfig(request, dataset, table, inputParams, extraParams, firstTi
     """ Load table layout configuration. How to display columns and attributes (visible, render, editable) """ 
     tableChanged = request.session.get(TABLE_NAME, None) != inputParams.get(TABLE_NAME, None)
     
-    if not firstTime and tableChanged: # Clear selected volume to properly read items 
+    # Clear table name and selected volume after a table change
+    if not firstTime and tableChanged: 
         inputParams[VOL_SELECTED] = None
+        #inputParams[TABLE_NAME] = request.session.get(TABLE_NAME, None)
         
     if firstTime or tableChanged:
         columns_properties = getExtraParameters(extraParams, table)
@@ -70,11 +72,21 @@ def loadColumnsConfig(request, dataset, table, inputParams, extraParams, firstTi
         columnsConfig = ColumnsConfig(dataset, table, inputParams[ALLOW_RENDER], columns_properties)
         request.session[COLS_CONFIG] = columnsConfig
     else:
-        columnsConfig = request.session[COLS_CONFIG] 
+        columnsConfig = request.session[COLS_CONFIG]
             
     inputParams[COLS_CONFIG] = columnsConfig
     setLabelToRender(request, table, inputParams, extraParams, firstTime)
-        
+     
+     
+def addProjectPrefix(request, fn):
+    """ Split path in block and filename and add the project path to filename. """
+    if PROJECT_PATH in request.session:
+        projectPath = request.session[PROJECT_PATH]
+    else:         
+        raise Exception('Showj Web visualizer: No project loaded')
+    
+    return join(projectPath, fn)
+
 
 def setLabelToRender(request, table, inputParams, extraParams, firstTime):
     """ If no label is set to render, set the first one if exists """
@@ -107,6 +119,7 @@ def setRenderingOptions(request, dataset, table, inputParams):
         _imageDimensions = None
         _stats = None
         inputParams[IMG_ZOOM] = 0
+        inputParams[MODE] = MODE_TABLE
         dataset.setNumberSlices(0)
     else:
         #Setting the _imageVolName
@@ -137,7 +150,8 @@ def setRenderingOptions(request, dataset, table, inputParams):
                 inputParams[COLS_CONFIG].configColumn(label, renderFunc="get_slice")
                 dataset.setVolumeName(_imageVolName)
             else:
-                inputParams[MODE] = MODE_GALLERY
+                if inputParams[MODE] != MODE_TABLE:
+                    inputParams[MODE] = MODE_GALLERY
                 inputParams[COLS_CONFIG].configColumn(label, renderFunc="get_image")
                 #dataset.setVolumeName(None)  
                 #dataset.setNumberSlices(0)         
@@ -146,8 +160,43 @@ def setRenderingOptions(request, dataset, table, inputParams):
     
     return volPath, _stats, _imageDimensions
     
+#Initialize default values
+DEFAULT_PARAMS = {
+               PATH: '',
+               ALLOW_RENDER: True,                 # Image can be displayed, depending on column layout 
+               MODE: MODE_GALLERY,                   # Mode Options: gallery, table, column, volume_astex, volume_chimera
+               TABLE_NAME: None,                    # Table name to display. If None the first one will be displayed
+               LABEL_SELECTED: None,        # Column to be displayed in gallery mode. If None the first one will be displayed
+               VOL_SELECTED: None,       # If 3D, Volume to be displayed in gallery, volume_astex and volume_chimera mode. If None the first one will be displayed
+               GOTO: 1,                           # Element selected (metadata record) by default. It can be a row in table mode or an image in gallery mode
+               MANUAL_ADJUST: 'Off',                 # In gallery mode 'On' means columns can be adjust manually by the user. When 'Off' columns are adjusted automatically to screen width.
+               COLS:  '',                         # In gallery mode (and colRowMode set to 'On') cols define number of columns to be displayed
+               ROWS: '',                          # In gallery mode (and colRowMode set to 'On') rows define number of columns to be displayed
+               
+               IMG_ZOOM: '128px',                     # Zoom set by default
+               IMG_MIRRORY: False,                    # When 'True' image are mirrored in Y Axis 
+               IMG_APPLY_TRANSFORM: False,       # When 'True' if there is transform matrix, it will be applied
+               IMG_ONLY_SHIFTS: False,                 # When 'True' if there is transform matrix, only shifts will be applied
+               IMG_WRAP: False,                       # When 'True' if there is transform matrix, only shifts will be applied
+               IMG_MAX_WIDTH: 512,                # Maximum image width (in pixels)
+               IMG_MIN_WIDTH: 64,                 # Minimum image width (in pixels)
+               IMG_MAX_HEIGHT: 512,               # Maximum image height (in pixels)
+               IMG_MIN_HEIGHT: 64,                # Minimum image height (in pixels)
+               
+               VOL_VIEW: xmipp.VIEW_Z_NEG,      # If 3D, axis to slice volume 
+               VOL_TYPE: 'map'}                 # If map, it will be displayed normally, else if pdb only astexViewer and chimera display will be available
 
-def showj(request, inputParams=None, extraParams=None, firstTime=False):
+
+def showj(request):
+    """ This method will visualize data objects in table or gallery mode.
+    Columns can be customized to be rendered, visible or more...
+    This method can be called in two modes:
+    GET: the first time the parameters will be parsed from GET request.
+    POST: next call to the method will be done throgh POST, some paramters will
+         be store also in SESSION
+    """
+    firstTime = request.method == 'GET'
+    print "request.method: ", request.method
     
     #=TIME CONTROL==============================================================
 #    from datetime import datetime
@@ -164,13 +213,28 @@ def showj(request, inputParams=None, extraParams=None, firstTime=False):
     table = None
     volPath = None
     
-    if not firstTime:
-        updateParams = request.POST.copy()
+    inputParams = DEFAULT_PARAMS.copy()
+    extraParams = {}
+    
+    if firstTime:
+        for key, value in request.GET.iteritems():
+            if key in inputParams:
+                inputParams[key] = value
+            else:
+                extraParams[key] = value   
+        inputParams[PATH] = addProjectPrefix(request, inputParams[PATH])
         
-        if inputParams is None:
-            inputParams = updateParams
-        else:
-            inputParams.update(updateParams)
+        cleanSession(request, inputParams[PATH])
+    else:
+        for key, value in request.POST.iteritems():
+            if key in inputParams:
+                inputParams[key] = value
+        # extraParams will be readed from SESSION
+        
+    request.session[IMG_ZOOM_DEFAULT] = inputParams[IMG_ZOOM]    
+    
+    #from pprint import pprint
+    #pprint(inputParams)
 
     if inputParams[VOL_TYPE] != 'pdb':
         # Load the initial dataset from file or session
@@ -186,7 +250,7 @@ def showj(request, inputParams=None, extraParams=None, firstTime=False):
         volPath, _stats, _imageDimensions = setRenderingOptions(request, dataset, table, inputParams)
     
         #Store variables into session 
-        request = storeToSession(request, inputParams, dataset, _imageDimensions)
+        storeToSession(request, inputParams, dataset, _imageDimensions)
         
     else:
         inputParams[COLS_CONFIG] = None
@@ -203,14 +267,25 @@ def showj(request, inputParams=None, extraParams=None, firstTime=False):
     return render_var
 
 
+def cleanSession(request, filename):
+    """ Clean data stored in session for a new visualization. """
+    #Store dataset and labelsToRender in session 
+    if filename in request.session:
+        del request.session[filename]
+        
+#     for key in [DATASET, LABEL_SELECTED, TABLE_NAME, IMG_DIMS]:
+#         if key in request.session:
+#             del request.session[key]
+       
 def storeToSession(request, inputParams, dataset, _imageDimensions):
     #Store dataset and labelsToRender in session 
-    request.session[DATASET] = dataset
-    request.session[LABEL_SELECTED] = inputParams[LABEL_SELECTED]
-    request.session[TABLE_NAME] = inputParams[TABLE_NAME]
-    request.session[IMG_DIMS] = _imageDimensions
+    datasetDict = {}
+    datasetDict[DATASET] = dataset
+    datasetDict[LABEL_SELECTED] = inputParams[LABEL_SELECTED]
+    datasetDict[TABLE_NAME] = inputParams[TABLE_NAME]
+    datasetDict[IMG_DIMS] = _imageDimensions
     
-    return request
+    request.session[inputParams[PATH]] = datasetDict
 
 
 def createContextShowj(request, inputParams, dataset, table, paramStats, volPath=None):
@@ -221,7 +296,7 @@ def createContextShowj(request, inputParams, dataset, table, paramStats, volPath
     if showjForm.is_valid() is False:
         print showjForm.errors
 
-    context = createContext(dataset, table, inputParams[COLS_CONFIG], request, showjForm)
+    context = createContext(dataset, table, inputParams[COLS_CONFIG], request, showjForm, inputParams)
 
     if inputParams[MODE]==MODE_VOL_ASTEX or inputParams[MODE]==MODE_VOL_CHIMERA:
         context.update(create_context_volume(request, inputParams, volPath, paramStats))
@@ -235,11 +310,11 @@ def createContextShowj(request, inputParams, dataset, table, paramStats, volPath
     return context, return_page
     
 
-def createContext(dataset, table, columnsConfig, request, showjForm):
+def createContext(dataset, table, columnsConfig, request, showjForm, inputParams):
     #Create context to be send
     
     context = {
-            IMG_DIMS: request.session.get(IMG_DIMS, 0),
+            IMG_DIMS: request.session[inputParams[PATH]].get(IMG_DIMS, 0),
             IMG_ZOOM_DEFAULT: request.session.get(IMG_ZOOM_DEFAULT, 0),
             PROJECT_NAME: request.session[PROJECT_NAME],
             'form': showjForm
@@ -322,163 +397,6 @@ def save_showj_table(request):
 ###################################################################    
 
 
-
-###################################################################
-######################## DISPATCHER ###############################    
-###################################################################  
-def visualizeObject(request):
-    #Initialize default values
-    inputParams = {OBJECT_ID: '',
-                   PATH: '',
-                   ALLOW_RENDER: True,                 # Image can be displayed, depending on column layout 
-                   MODE: MODE_GALLERY,                   # Mode Options: gallery, table, column, volume_astex, volume_chimera
-                   TABLE_NAME: None,                    # Table name to display. If None the first one will be displayed
-                   LABEL_SELECTED: None,        # Column to be displayed in gallery mode. If None the first one will be displayed
-                   VOL_SELECTED: None,       # If 3D, Volume to be displayed in gallery, volume_astex and volume_chimera mode. If None the first one will be displayed
-#                       'dims': '2d',                        # Object Dimensions
-                   GOTO: 1,                           # Element selected (metadata record) by default. It can be a row in table mode or an image in gallery mode
-                   MANUAL_ADJUST: 'Off',                 # In gallery mode 'On' means columns can be adjust manually by the user. When 'Off' columns are adjusted automatically to screen width.
-                   COLS:  '',                         # In gallery mode (and colRowMode set to 'On') cols define number of columns to be displayed
-                   ROWS: '',                          # In gallery mode (and colRowMode set to 'On') rows define number of columns to be displayed
-                   
-                   IMG_ZOOM: '128px',                     # Zoom set by default
-                   IMG_MIRRORY: False,                    # When 'True' image are mirrored in Y Axis 
-                   IMG_APPLY_TRANSFORM: False,       # When 'True' if there is transform matrix, it will be applied
-                   IMG_ONLY_SHIFTS: False,                 # When 'True' if there is transform matrix, only shifts will be applied
-                   IMG_WRAP: False,                       # When 'True' if there is transform matrix, only shifts will be applied
-                   IMG_MAX_WIDTH: 512,                # Maximum image width (in pixels)
-                   IMG_MIN_WIDTH: 64,                 # Minimum image width (in pixels)
-                   IMG_MAX_HEIGHT: 512,               # Maximum image height (in pixels)
-                   IMG_MIN_HEIGHT: 64,                # Minimum image height (in pixels)
-                   
-                   VOL_VIEW: xmipp.VIEW_Z_NEG, # If 3D, axis to slice volume 
-                   VOL_TYPE: 'map'}                 # If map, it will be displayed normally, else if pdb only astexViewer and chimera display will be available
-
-
-    # Extra parameters can be used to configure table layout and set render function for a column
-    # Default layout configuration is set in ColumnLayoutProperties method in layout_configuration.py
-    # 
-    # Parameters are formed by: [label]___[property]: [value]. E.g.: id___visible:True or micrograph___renderFunc:"get_image_psd"
-    # Properties to be configured are:
-    #    visible: Defines if this column is displayed
-    #    allowSetVisible: Defines if user can change visible property (show/hide this column).
-    #    editable: Defines if this column is editable, ie user can change field value.
-    #    allowSetEditable: Defines if user can change editable property (allow editing this column).
-    #    renderable: Defines if this column is renderizable, ie it renders data column using renderFunc
-    #    allowSetRenderable: Defines if user can change renderable property.
-    #    renderFunc: Function to be used when this field is rendered. (it has to be inserted in render_column method)
-    #    extraRenderFunc: Any extra parameters needed for rendering. Parameters are passed like in a url ie downsample=2&lowPass=3.5
-    #
-    # Example:
-    # extraParams["id___visible"]=True
-    # extraParams["micrograph___renderFunc"]="get_image_psd"
-    # extraParams["micrograph___extraRenderFunc"]="downsample=2"
-            
-    extraParams = {}
-    
-# NAPA DE LUXE: PARA probarlo sin sesion iniciada    
-#    request.session[PROJECT_PATH] = "/home/adrian/Scipion/projects/TestXmippWorkflow/"
-#    request.session[PROJECT_NAME] = "Juanitpo"
-    
-    if PROJECT_PATH in request.session:
-        projectPath = request.session[PROJECT_PATH]
-    else:         
-        raise Exception('Showj Web visualizer: No project loaded')
-    
-    for key, value in request.GET.iteritems():
-        if key in inputParams:
-            inputParams[key]=value
-        else:
-            extraParams[key]=value
-    
-    
-    if OBJECT_ID in request.GET: 
-        project = Project(projectPath)
-        project.load()
-        
-        obj = project.mapper.selectById(int(inputParams[OBJECT_ID]))
-        if obj.isPointer():
-            obj = obj.get()
-
-        if isinstance(obj, SetOfMicrographs):
-            fn = project.getTmpPath(obj.getName() + '_micrographs.xmd')
-            fn = createXmippInputMicrographs(None, obj, micsFn=os.path.join(projectPath, fn))
-            inputParams[PATH] = os.path.join(projectPath, fn)
-#            writeSetOfMicrographs(obj, fn)
-#            inputParams[PATH]= os.path.join(projectPath, fn)
-        elif isinstance(obj, SetOfMovies):
-            fn = project.getTmpPath(obj.getName() + '_movies.xmd')
-            writeSetOfMovies(obj, fn)
-            inputParams[PATH]= os.path.join(projectPath, fn)
-        elif isinstance(obj, SetOfVolumes):
-            fn = project.getTmpPath(obj.getName()+ '_volumes.xmd')
-            inputParams[PATH] = os.path.join(projectPath, createXmippInputVolumes(None, obj, volsFn=os.path.join(projectPath, fn))) 
-            inputParams[MODE]= MODE_TABLE
-            
-#            writeSetOfVolumes(obj, fn)
-#            inputParams[PATH]= os.path.join(projectPath, fn)
-
-        elif isinstance(obj, PdbFile):
-            inputParams[PATH] = obj.getFileName()
-            inputParams[MODE] = MODE_VOL_ASTEX
-            inputParams[VOL_TYPE] = 'pdb'
-
-        elif isinstance(obj, SetOfImages):
-            fn = project.getTmpPath(obj.getName() + '_images.xmd')
-            inputParams[PATH] = os.path.join(projectPath, createXmippInputImages(None, obj, imagesFn=os.path.join(projectPath, fn)))
-#            writeSetOfParticles(obj, fn)
-#            inputParams[PATH]= os.path.join(projectPath, fn)
-        elif isinstance(obj, Image):  
-            fn = project.getTmpPath(obj.getName() + '_image.xmd')
-            
-            md = xmipp.MetaData()
-            imgFn = getImageLocation(obj)
-            if isinstance(obj, Volume) and imgFn.endswith('.mrc'):
-                imgFn += ':mrc'
-            md.setValue(xmipp.MDL_IMAGE, imgFn, md.addObject())
-            md.write(fn)
-            
-            inputParams[PATH] = os.path.join(projectPath, fn)
-            
-        elif isinstance(obj, SetOfClasses2D):
-            fn = project.getTmpPath(obj.getName() + '_classes.xmd')
-#            writeSetOfClasses2D(obj, fn)
-#            inputParams[PATH]= os.path.join(projectPath, fn)
-            inputParams[PATH] = os.path.join(projectPath, createXmippInputClasses2D(None, obj, classFn=os.path.join(projectPath, fn)))
-        
-        elif isinstance(obj, SetOfCTF):
-            fn = project.getTmpPath(obj.getName() + '_ctfs.xmd')
-            inputParams[PATH] = os.path.join(projectPath, createXmippInputCTF(None, obj, ctfFn=os.path.join(projectPath, fn)))
-            
-            extraParams["itemId___visible"]= False
-#            extraParams["psd___visible"]= False
-            extraParams["psdEnhanced___renderable"]= True
-            extraParams["micrograph___renderable"]= True
-            extraParams["image1___renderable"]= True
-            extraParams["image2___renderable"]= True
-            
-#            writeSetOfCTFs(obj, fn)
-#            inputParams[PATH]= os.path.join(projectPath, fn)
-        elif isinstance(obj, NormalModes):
-            inputParams[PATH] = os.path.join(projectPath, obj.getFileName())
-        else:
-            raise Exception('Showj Web visualizer: can not visualize class: %s' % obj.getClassName())
-    
-    elif PATH in request.GET:
-        inputParams.update({PATH:os.path.join(projectPath, request.GET.get(PATH))})
-        
-    else:
-        raise Exception('Showj Web visualizer: No object identifier or path found')         
-
-    request.session[IMG_ZOOM_DEFAULT] = inputParams[IMG_ZOOM]
-    
-    # Clean the dataset if exist 
-    if DATASET in request.session:
-        request.session.__delitem__(DATASET)
-    
-    return showj(request, inputParams, extraParams, firstTime=True)  
-
-
 def testingSSH(request):
     context = {}
 #    return render_to_response("testing_ssh.html", RequestContext(request, context))
@@ -491,8 +409,8 @@ def create_context_volume(request, inputParams, volPath, param_stats):
     threshold = calculateThreshold(param_stats)
     
     context = {"threshold":threshold,
-                    'minStats':param_stats[2] if param_stats != None else 1,
-                    'maxStats':param_stats[3] if param_stats != None else 1 }
+               'minStats':param_stats[2] if param_stats != None else 1,
+               'maxStats':param_stats[3] if param_stats != None else 1 }
     
     if inputParams[MODE] == MODE_VOL_ASTEX:
         context.update(create_context_astex(request, inputParams[VOL_TYPE], volPath))

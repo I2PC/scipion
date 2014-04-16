@@ -87,7 +87,7 @@ class XmippML2DViewer(ProtocolViewer):
     def _viewAllPlots(self, e=None):
         return createPlots(self.protocol, self._plotVars)
         
-    def _viewPlot(self, paramName):
+    def _viewPlot(self, paramName=None):
         return createPlots(self.protocol, [paramName])
         
     def _viewIterRefs(self, e=None):
