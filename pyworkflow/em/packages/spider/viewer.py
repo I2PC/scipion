@@ -46,7 +46,7 @@ class SpiderViewer(Viewer):
     with the Xmipp program xmipp_showj. """
     
     _environments = [DESKTOP_TKINTER, WEB_DJANGO]
-    _targets = [PcaFile, SpiderProtCustomMask, SpiderProtFilter]
+    _targets = [PcaFile, SpiderProtCustomMask]
     _label = 'viewer'
 
     def visualize(self, obj, **args):

@@ -27,6 +27,7 @@
 This module implement the wrappers aroung Xmipp CL2D protocol
 visualization program.
 """
+
 from pyworkflow.viewer import ProtocolViewer, DESKTOP_TKINTER, WEB_DJANGO
 from pyworkflow.em import *
 from protocol_cltomo import XmippProtCLTomo
@@ -35,10 +36,9 @@ from pyworkflow.gui.text import *
 from pyworkflow.gui.dialog import showError, showWarning
 import glob
 
+
 class XmippCLTomoViewer(ProtocolViewer):
-    """ Wrapper to visualize different type of data objects
-    with the Xmipp program xmipp_showj
-    """
+    """ Visualization of the CLTomo results. """
     _label = 'viewer cltomo'
     _targets = [XmippProtCLTomo]
     _environments = [DESKTOP_TKINTER, WEB_DJANGO]
@@ -54,13 +54,16 @@ class XmippCLTomoViewer(ProtocolViewer):
         return {'doShowLastLevel': self._viewLevelFiles}        
 
     def _viewLevelFiles(self, e=None):
-        import glob
-        levelFiles=glob.glob(self.protocol._getExtraPath("results_classes_level*.xmd"))
+        views = []
+        errors = []
+        levelFiles = glob.glob(self.protocol._getExtraPath("results_classes_level*.xmd"))
+        
+        
         if levelFiles:
             levelFiles.sort()
             lastLevelFile = levelFiles[-1]
             if self.doShowLastLevel:
-                runShowJ("classes@"+lastLevelFile)
+                views.append(DataView("classes@" + lastLevelFile))
             else:
                 if self.showSeveralLevels.empty():
                     self.formWindow.showError('Please select the levels that you want to visualize.')
@@ -69,34 +72,18 @@ class XmippCLTomoViewer(ProtocolViewer):
                     try:
                         listOfLevels = self._getListFromRangeString(self.showSeveralLevels.get())
                     except Exception, ex:
-                        self.formWindow.showError('Invalid levels range.')
+                        errors.append('Invalid levels range.')
                         
                     #lastLevel = int(re.search('level_(\d\d)',lastLevelFile).group(1))
                     #if max(listOfLevels) <= lastLevel:
-                    files = "";
                     for level in listOfLevels:
                         fn = self.protocol._getExtraPath("results_classes_level_%02d.xmd"%level)
                         if os.path.exists(fn):
-                            files += "classes@"+fn+" "
+                            views.append(DataView("classes@" + fn))
                         else:
                             self.formWindow.showError('Level %s does not exist.' % level)
-                    if files != "":
-                        runShowJ(files)        
-        
-    def _viewAll(self, *args):
-        self._viewLevelFiles()
-
-    def getVisualizeDictWeb(self):
-        return {'doShowLastLevel': "viewLevelFiles"}
-        
-    @classmethod
-    def getView(cls):
-        """ This function will notify the web viewer for this protocol"""
-        return "viewerForm"
-    
-    @classmethod
-    def getViewFunction(cls):
-        """ This will return the name of the function to view
-        in web one (or all) params of the protocol"""
-        return "viewerCLTomo"
+            if errors:
+                views.append(self.errorMessage('\n'.join(errors), "Visualization errors"))
+                
+        return views      
         

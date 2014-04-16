@@ -535,28 +535,3 @@ Examples:
             
         return [xplotter]
         
-### WEB UTILS ################################################# 
-
-    def getVisualizeDictWeb(self):
-        return {'showImagesInClasses': 'doShowImagesInClasses',
-                'showLL': 'doShowLLRelion',
-                'showPMax': 'doShowPMax',
-                'showChanges': 'doShowChanges',
-                'displayVol': 'doShowVolumes',
-                'displayAngDist': 'doShowAngularDistributionRelion',
-                'resolutionPlotsSSNR': 'doPlotsSSNR',
-                'resolutionPlotsFSC': 'doPlotsFSC'
-                }
-
-    @classmethod
-    def getView(cls):
-        """ This function will notify the web viewer for this protocol"""
-        return "viewerForm"
-    
-    @classmethod
-    def getViewFunction(cls):
-        """ This will return the name of the function to view
-        in web one (or all) params of the protocol"""
-        return "viewerRelion"
-
-        
