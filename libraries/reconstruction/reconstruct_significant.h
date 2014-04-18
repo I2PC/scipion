@@ -70,8 +70,11 @@ public: // Internal members
     // Projection matching metadata
     std::vector<MetaData> mdProjectionMatching;
 
-    // Set of correlations
+    // Set of all correlations
     MultidimArray<double> cc;
+
+    // Set of all weights
+    MultidimArray<double> weight;
 
     // Set of images in the gallery, it should be a metadata but metadatas do not support threads
     std::vector< std::vector<GalleryImage> > mdGallery;

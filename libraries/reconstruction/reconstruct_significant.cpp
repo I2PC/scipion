@@ -115,7 +115,7 @@ void progReconstructSignificantThreadAlign(ThreadArgument &thArg)
 			fnImg=prm.mdInp[nImg];
 			allM.clear();
 
-			double bestCorr=-2, bestRot, bestTilt;
+			double bestCorr=-2, bestRot, bestTilt, bestImed=1e38;
 			Matrix2D<double> bestM;
 			int bestVolume=-1;
 
@@ -153,6 +153,9 @@ void progReconstructSignificantThreadAlign(ThreadArgument &thArg)
 						bestRot=prm.mdGallery[nVolume][nDir].rot;
 						bestTilt=prm.mdGallery[nVolume][nDir].tilt;
 					}
+
+					if (imed<bestImed)
+						bestImed=imed;
 				}
 
 	    	// Keep the best assignment for the projection matching
@@ -197,7 +200,8 @@ void progReconstructSignificantThreadAlign(ThreadArgument &thArg)
 						transformationMatrix2Parameters2D(allM[nVolume*Ndirs+nDir],flip,scale,shiftX,shiftY,anglePsi);
 
 						anglePsi*=-1;
-						double weight=cdfccthis*(1-cdfimedthis);
+						double weight=cdfccthis*(1-cdfimedthis)*(bestImed/imed)*(cc/bestCorr);
+						DIRECT_A3D_ELEM(prm.weight,nImg,nVolume,nDir)=weight;
 						double angleRot=prm.mdGallery[nVolume][nDir].rot;
 						double angleTilt=prm.mdGallery[nVolume][nDir].tilt;
 			#ifdef DEBUG
@@ -217,6 +221,9 @@ void progReconstructSignificantThreadAlign(ThreadArgument &thArg)
 						mdPartial.setValue(MDL_SHIFT_X,shiftX,recId);
 						mdPartial.setValue(MDL_SHIFT_Y,shiftY,recId);
 						mdPartial.setValue(MDL_FLIP,flip,recId);
+						mdPartial.setValue(MDL_IMAGE_IDX,(size_t)nImg,recId);
+						mdPartial.setValue(MDL_REF,(int)nDir,recId);
+						mdPartial.setValue(MDL_REF3D,(int)nVolume,recId);
 						mdPartial.setValue(MDL_WEIGHT,weight,recId);
 					}
 				}
@@ -248,12 +255,17 @@ void ProgReconstructSignificant::run()
     	deltaAlpha=0;
 
     MetaData mdReconstruction, mdPM;
+	size_t Nimgs=mdInp.size();
+	Image<double> save;
     for (iter=1; iter<=Niter; iter++)
     {
     	// Generate projections from the different volumes
     	generateProjections();
 
-    	cc.initZeros(mdInp.size(),mdGallery.size(),mdGallery[0].size()); // Nimgs, Nvols, Ndirections
+    	size_t Nvols=mdGallery.size();
+    	size_t Ndirs=mdGallery[0].size();
+    	cc.initZeros(Nimgs,Nvols,Ndirs);
+    	weight=cc;
 
     	// Align the input images to the projections
     	std::cout << "Current significance: " << 1-currentAlpha << std::endl;
@@ -262,6 +274,27 @@ void ProgReconstructSignificant::run()
     	thMgr.run(progReconstructSignificantThreadAlign);
     	progress_bar(mdIn.size());
 
+    	// Reweight according to each direction
+		for (size_t nVolume=0; nVolume<Nvols; ++nVolume)
+			for (size_t nDir=0; nDir<Ndirs; ++nDir)
+			{
+				// Look for the best correlation for this direction
+				double bestCorr=-2;
+				for (size_t nImg=0; nImg<Nimgs; ++nImg)
+				{
+					double ccimg=DIRECT_A3D_ELEM(cc,nImg,nVolume,nDir);
+					if (ccimg>bestCorr)
+						bestCorr=ccimg;
+				}
+
+				// Reweight all images for this direction
+				for (size_t nImg=0; nImg<Nimgs; ++nImg)
+				{
+					double ccimg=DIRECT_A3D_ELEM(cc,nImg,nVolume,nDir);
+					DIRECT_A3D_ELEM(weight,nImg,nVolume,nDir)*=ccimg/bestCorr;
+				}
+			}
+
     	// Write the corresponding angular metadata
 		for (size_t nVolume=0; nVolume<mdInit.size(); ++nVolume)
 		{
@@ -269,7 +302,20 @@ void ProgReconstructSignificant::run()
 			mdPM.clear();
 			for (int thr=0; thr<Nthr; thr++)
 			{
-				mdReconstruction.unionAll(mdReconstructionPartial[nVolume*Nthr+thr]);
+				// Readjust weights with direction weights
+				MetaData &mdThr=mdReconstructionPartial[nVolume*Nthr+thr];
+				FOR_ALL_OBJECTS_IN_METADATA(mdThr)
+				{
+					size_t nImg;
+					int nVol, nDir;
+					mdThr.getValue(MDL_IMAGE_IDX,nImg,__iter.objId);
+					mdThr.getValue(MDL_REF,nDir,__iter.objId);
+					mdThr.getValue(MDL_REF3D,nVol,__iter.objId);
+					mdThr.setValue(MDL_WEIGHT,DIRECT_A3D_ELEM(weight,nImg,nVol,nDir),__iter.objId);
+				}
+
+				// Union all
+				mdReconstruction.unionAll(mdThr);
 				mdPM.unionAll(mdProjectionMatching[nVolume*Nthr+thr]);
 			}
 			if (mdReconstruction.size()>0)
@@ -280,6 +326,14 @@ void ProgReconstructSignificant::run()
 	    	deleteFile(formatString("%s/gallery_iter%02d_%02d_sampling.xmd",fnDir.c_str(),iter,nVolume));
 	    	deleteFile(formatString("%s/gallery_iter%02d_%02d.doc",fnDir.c_str(),iter,nVolume));
 	    	deleteFile(formatString("%s/gallery_iter%02d_%02d.stk",fnDir.c_str(),iter,nVolume));
+		}
+
+		if (verbose>=2)
+		{
+			save()=cc;
+			save.write(formatString("%s/cc_iter%02d.vol",fnDir.c_str(),iter));
+			save()=weight;
+			save.write(formatString("%s/weight_iter%02d.vol",fnDir.c_str(),iter));
 		}
 
     	// Reconstruct
