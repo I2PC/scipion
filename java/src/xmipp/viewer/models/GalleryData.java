@@ -86,7 +86,7 @@ public class GalleryData {
         private String[] renderLabels;
         private String renderLabel;
         private String[] visibleLabels;
-        private String[] firstLabels;
+        private String[] orderLabels;
 
     
 
@@ -120,7 +120,7 @@ public class GalleryData {
                         this.renderLabels = parameters.renderLabels;
                         this.renderLabel = parameters.renderLabel;
                         this.visibleLabels = parameters.visibleLabels;
-                        this.firstLabels = parameters.firstLabels;
+                        this.orderLabels = parameters.orderLabels;
 			mode = Mode.GALLERY_MD;
 			resliceView = parameters.resliceView;
 			useGeo = parameters.useGeo;
@@ -1075,20 +1075,19 @@ public class GalleryData {
 
        public void orderLabels()
        {
-           if(firstLabels == null)
+           if(orderLabels == null)
                return;
            
            ColumnInfo aux;
            int j;
-           for(int i = 0; i < firstLabels.length; i ++)
+           for(int i = 0; i < orderLabels.length; i ++)
                for(ColumnInfo ci: labels)
-                   if(ci.labelName.equals(firstLabels[i]))
+                   if(ci.labelName.equals(orderLabels[i]))
                    {
                        
                        aux = labels.get(i);
                        j = labels.indexOf(ci);
                        labels.set(i, ci);
-                       System.out.println(ci);
                        labels.set(j, aux);
                        
                    }
