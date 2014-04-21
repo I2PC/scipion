@@ -31,7 +31,6 @@ visualization program.
 from pyworkflow.viewer import ProtocolViewer, DESKTOP_TKINTER, WEB_DJANGO
 from pyworkflow.em import *
 from protocol_cltomo import XmippProtCLTomo
-from viewer import runShowJ
 from pyworkflow.gui.text import *
 from pyworkflow.gui.dialog import showError, showWarning
 import glob

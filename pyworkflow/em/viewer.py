@@ -38,10 +38,12 @@ from showj import *
 
 class DataView(View):
     """ Wrapper the arguments to showj (either web or desktop). """
-    def __init__(self, path, **kwargs):
+    def __init__(self, path, viewParams={}, **kwargs):
         View.__init__(self)
+        self._memory = '1g'
         self._loadPath(path)
         self._env = kwargs.get('env', None)
+        self._viewParams = viewParams
         
     def _loadPath(self, path):
         if '@' in path:
@@ -50,7 +52,13 @@ class DataView(View):
             self._tableName, self._path = None, path
             
     def show(self):
-        runShowJ(self._path, env=self._env)
+        runJavaIJapp(self._memory, 'xmipp.viewer.Viewer', self.getShowJParams(), True, env=self._env)
+    
+    def getShowJParams(self):
+        params = '-i ' + self._path
+        for key, value in self._viewParams.items():
+            params = "%s --%s %s"%(params, key, value)
+        return params
         
     def getPath(self):
         return self._path
@@ -61,13 +69,41 @@ class DataView(View):
         
 class ObjectView(DataView):
     """ Wrapper to View but for displaying Scipion objects. """
-    def __init__(self, path, *args, **kwargs):
+    def __init__(self, path, type, projectid, inputid, imagesid, viewParams={}, **kwargs):
         DataView.__init__(self, path, **kwargs)
-        self._args = args
+        self.python = pw.PYTHON
+        self.script = pw.join('apps', 'pw_create_image_subset.py')
+        self.type = type
+        self.projectid = projectid
+        self.inputid = inputid
+        self.imagesid = imagesid
         
+        
+    def getShowJParams(self):
+        params = DataView.getShowJParams(self) + ' --scipion %s %s %s \"%s\" %s %s'%(self.type, self.python, self.script,  self.projectid, self.inputid, self.imagesid)#mandatory to provide scipion params
+        return params
+    
     def show(self):
-        runScipionShowJ(self._path, *self._args, env=self._env)   
+        runJavaIJapp(self._memory, 'xmipp.viewer.scipion.ScipionViewer', self.getShowJParams(), True, env=self._env)
         
+class CoordinatesObjectView(DataView):
+    """ Wrapper to View but for displaying Scipion objects. """
+    def __init__(self, path, outputdir, mode, projectid, inputid, viewParams={}, **kwargs):
+        DataView.__init__(self, path, **kwargs)
+        self.python = pw.PYTHON
+        self.script = pw.join('apps', 'pw_create_coords_subset.py')
+        self.projectid = projectid
+        self.inputid = inputid
+        self.outputdir = outputdir
+        self.mode = mode
+        
+        
+    def getShowJParams(self):
+        params = params = '--input %s --output %s --mode %s --scipion %s %s \"%s\" %s'%(self._path, self.outputdir, self.mode, self.python, self.script,  self.projectid, self.inputid)#mandatory to provide scipion params
+        return params
+    
+    def show(self):
+        runJavaIJapp(self._memory, 'xmipp.viewer.particlepicker.training.SupervisedPickerRunner', self.getShowJParams(), True, env=self._env)
         
 #------------------------ Some viewers ------------------------
 

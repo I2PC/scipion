@@ -204,16 +204,4 @@ def runJavaIJapp(memory, appName, args, batchMode=True, env=None):
     args = getJavaIJappArguments(memory, appName, args)
     runJob(None, "java", args, runInBackground=batchMode, env=env)
     
-def runShowJ(inputFiles, memory="1g", extraParams="", env=None):
-    runJavaIJapp(memory, "'xmipp.viewer.Viewer'", "-i %s %s" % (inputFiles, extraParams), True, env)
-    
-def runScipionShowJ(inputFiles, type, projectid, objid, inputimagesid, memory="1g", extraParams="", env=None):
-    script = pw.join('apps', 'pw_create_image_subset.py')
-    runJavaIJapp(memory, "'xmipp.viewer.scipion.ScipionViewer'", "-i %s %s --scipion %s %s %s \"%s\" %s %s" % (inputFiles, extraParams, type, pw.PYTHON, script, projectid, objid, inputimagesid), True, env)
-    
-def runScipionParticlePicker(inputMics, inputCoords,  projectid, objid, memory="1g"):
-    
-    script = pw.join('apps', 'pw_create_coords_subset.py')
-    command = "xmipp.viewer.particlepicker.training.SupervisedPickerRunner --input %s --output %s  --mode review --scipion %s %s \"%s\" %s" % (inputMics, inputCoords, pw.PYTHON, script, projectid, objid)
-                                                                                                                                      
-    runJavaIJapp(memory, command, True)
+

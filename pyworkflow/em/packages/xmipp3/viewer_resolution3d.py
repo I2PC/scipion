@@ -28,7 +28,6 @@ from pyworkflow.viewer import ProtocolViewer, DESKTOP_TKINTER, WEB_DJANGO
 from pyworkflow.em import *
 from pyworkflow.gui.form import FormWindow
 from protocol_resolution3d import *
-from viewer import runShowJ
 from plotter import XmippPlotter
 from xmipp import *
 import numpy as np
@@ -75,7 +74,7 @@ class XmippResolution3DViewer(ProtocolViewer):
         md = MetaData(fscFn)
         return [self._viewPlot("Fourier Shell Correlation", FREQ_LABEL, 'FSC', 
                                md, MDL_RESOLUTION_FREQ, MDL_RESOLUTION_FRC, color='r'),
-                self._showJ(fscFn)]
+                DataView(fscFn)]
         
     def _viewDpr(self, e=None):
         fscFn = self.protocol._defineFscName()
@@ -88,9 +87,7 @@ class XmippResolution3DViewer(ProtocolViewer):
         xplotter.createSubPlot(title, xTitle, yTitle)
         xplotter.plotMdFile(md, mdLabelX, mdLabelY, color)
         return xplotter
-        
-    def _showJ(self, filename):
-        return DataView(filename)
+
     
     def _viewEstructureFactor(self, e=None):
         strFactFn = self.protocol._defineStructFactorName()
@@ -99,7 +96,7 @@ class XmippResolution3DViewer(ProtocolViewer):
                                md, MDL_RESOLUTION_FREQ, MDL_RESOLUTION_STRUCTURE_FACTOR),
                 self._viewPlot("Structure Factor", FREQ_LABEL, 'log(Structure Factor)', 
                                md, MDL_RESOLUTION_FREQ, MDL_RESOLUTION_LOG_STRUCTURE_FACTOR),
-                self._showJ(strFactFn)]        
+                DataView(strFactFn)]        
     
     def _viewSsnr(self, e=None):
         pass

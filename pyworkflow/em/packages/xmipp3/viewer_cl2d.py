@@ -30,7 +30,6 @@ visualization program.
 from pyworkflow.viewer import ProtocolViewer, DESKTOP_TKINTER, WEB_DJANGO
 from pyworkflow.em import *
 from protocol_cl2d import XmippProtCL2D
-from viewer import runScipionShowJ
 from pyworkflow.gui.text import *
 from pyworkflow.gui.dialog import showError, showWarning
 import glob
