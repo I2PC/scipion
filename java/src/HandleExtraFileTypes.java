@@ -8,7 +8,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import xmipp.utils.Param;
+import xmipp.utils.Params;
 import xmipp.viewer.windows.ImagesWindowFactory;
 
 // Plugin to handle file types which are not implemented
@@ -323,7 +323,7 @@ public class HandleExtraFileTypes extends ImagePlus implements PlugIn {
         // is not available..."
         try{
             System.err.println(path);
-            Param param=new Param();
+            Params param=new Params();
         	imp=ImagesWindowFactory.openFileAsImagePlus(path, param);
             if (imp == null) {
                 width = PLUGIN_NOT_FOUND;

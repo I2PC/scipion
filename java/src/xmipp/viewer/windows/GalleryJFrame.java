@@ -100,7 +100,7 @@ import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
 import xmipp.jni.MDRow;
 import xmipp.utils.DEBUG;
-import xmipp.utils.Param;
+import xmipp.utils.Params;
 import xmipp.utils.QuickHelpJDialog;
 import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippFileChooser;
@@ -236,13 +236,13 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 	}
 
 	/** Constructors */
-	public GalleryJFrame(String filename, Param parameters)
+	public GalleryJFrame(String filename, Params parameters)
 	{
 		super();
 		init(new GalleryData(this, filename, parameters, null));
 	}
 
-	public GalleryJFrame(String filename, MetaData md, Param parameters)
+	public GalleryJFrame(String filename, MetaData md, Params parameters)
 	{
 		super();
 		init(new GalleryData(this, filename, parameters, md));
@@ -253,7 +253,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 	 */
 	public void openMetadata(MetaData md)
 	{
-		new GalleryJFrame(null, md, new Param());
+		new GalleryJFrame(null, md, new Params());
 	}
 
 	/**
@@ -1562,13 +1562,13 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			setItemSelected(DISPLAY_WRAP, data.wrap);
 			setItemSelected(DISPLAY_APPLYGEO, data.useGeo);
 			setItemEnabled(DISPLAY_RENDERIMAGES, !galMode && data.hasRenderLabel());
-			setItemSelected(DISPLAY_RENDERIMAGES, data.globalRender);
+			setItemSelected(DISPLAY_RENDERIMAGES, data.renderImages);
 			setItemEnabled(DISPLAY_RENDERIMAGECOLUMN, galMode);
 			for (int i = 0; i < ImageGeneric.VIEWS.length; ++i)
 				setItemSelected(DISPLAY_RESLICE_VIEWS[i], (data.resliceView == ImageGeneric.VIEWS[i]));
 			setItemEnabled(DISPLAY_COLUMNS, !galMode);
 			setItemEnabled(DISPLAY_RESLICE, volMode);
-			setItemEnabled(MD_CLASSES, data.is2DClassificationMd());
+			setItemEnabled(MD_CLASSES, data.isClassificationMd());
 			setItemEnabled(MD_PLOT, data.isTableMode());
 			boolean isCol = data.isColumnFormat();
 			setItemEnabled(STATS, isCol && !volMode);
@@ -1619,7 +1619,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 						isUpdating = true;
 						((MetadataGalleryTableModel) gallery).updateColumnInfo(columns);
 						gallery.fireTableDataChanged();
-						setItemEnabled(DISPLAY_RENDERIMAGES, data.globalRender);
+						setItemEnabled(DISPLAY_RENDERIMAGES, data.renderImages);
 						// menu.enableRenderImages(data.globalRender);
 						isUpdating = false;
 					}
@@ -1859,10 +1859,10 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 
 		public void show(Component cmpnt, Point location)
 		{
-			setItemVisible(SET_CLASS, data.is2DClassificationMd());
+			setItemVisible(SET_CLASS, data.isClassificationMd());
 			// This item visibility depends on current selection
-			setItemVisible(SAVE_IMAGES, data.is2DClassificationMd() && gallery.getSelectionCount() > 0);
-			setItemVisible(OPEN_IMAGES, data.is2DClassificationMd() && gallery.getSelectionCount() == 1);
+			setItemVisible(SAVE_IMAGES, data.isClassificationMd() && gallery.getSelectionCount() > 0);
+			setItemVisible(OPEN_IMAGES, data.isClassificationMd() && gallery.getSelectionCount() == 1);
 					
 			// Update menu items status depending on item.
 			row = table.rowAtPoint(location);
@@ -2342,18 +2342,19 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
        {
            if(!data.allowGallery())
                return false;
+           
            //what if there are no images on metadata??
            return gallery.getSelectionCount() > 0;
        }
        
-       public boolean is2DClassSelection()
+       public boolean isClassSelection()
         {
-            return data.is2DClassificationMd() && gallery.getSelectionCount() > 0;
+            return data.isClassificationMd() && gallery.getSelectionCount() > 0;
         }
        
-       public boolean is2DClassificationMd()
+       public boolean isClassificationMd()
        {
-           return data.is2DClassificationMd();
+           return data.isClassificationMd();
        }
        
        public void saveImagesFromClassSelection(String path)
@@ -2381,4 +2382,5 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
            return XmippStringUtils.getFileExtension(data.getFileName());
        }
 
+       
 }// class JFrameGallery

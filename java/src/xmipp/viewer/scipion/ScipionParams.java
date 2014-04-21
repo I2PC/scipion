@@ -7,14 +7,14 @@ package xmipp.viewer.scipion;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
-import xmipp.utils.Param;
+import xmipp.utils.Params;
 
 
 /**
  *
  * @author airen
  */
-public class ScipionParams extends Param {
+public class ScipionParams extends Params {
 
     public final static String SCIPION = "scipion";
     public String python;
@@ -23,6 +23,7 @@ public class ScipionParams extends Param {
     public String projectid;
     public String inputimagesid;
     public String inputid;
+    
 
     public ScipionParams(String args[]) {
         super(args);
@@ -31,6 +32,7 @@ public class ScipionParams extends Param {
     public void defineArgs() {
         super.defineArgs();
         Option cmdoption = new Option(SCIPION, "");
+        
         cmdoption.setArgs(6);
         options.addOption(cmdoption);
     }

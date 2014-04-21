@@ -191,7 +191,7 @@ public class ExtractPickerJFrame extends ParticlePickerJFrame
 		micrographpn.add(sp, XmippWindowUtil.getConstraints(constraints, 0, 0, 1));
 		micrographpn.add(ctfpn, XmippWindowUtil.getConstraints(constraints, 1, 0, 1));
 		JPanel infopn = new JPanel();
-		particleslb = new JLabel(Integer.toString(picker.getParticlesTotal()));
+		particleslb = new JLabel(Integer.toString(picker.getParticlesCount()));
 		
 		infopn.add(new JLabel("Particles:"));
 		infopn.add(particleslb);
@@ -298,7 +298,7 @@ public class ExtractPickerJFrame extends ParticlePickerJFrame
 			micrographsmd.fireTableRowsUpdated(index, index);
 
 		micrographstb.setRowSelectionInterval(index, index);
-		particleslb.setText(Integer.toString(picker.getParticlesTotal()));
+		particleslb.setText(Integer.toString(picker.getParticlesCount()));
 
 	}
 

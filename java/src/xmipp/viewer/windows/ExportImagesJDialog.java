@@ -72,6 +72,7 @@ public class ExportImagesJDialog extends JDialog{
         pathtf = new JTextField(path);
         pathtf.setColumns(50);
         add(pathtf, XmippWindowUtil.getConstraints(c, 1, 0));
+
         fc = new XmippFileChooser(path);
         if(path.contains(File.separator))
         {
@@ -147,7 +148,8 @@ public class ExportImagesJDialog extends JDialog{
             
         } catch (Exception ex) {
             String msg = ex.getMessage();
-            if(msg== null || msg.isEmpty())
+            if(msg == null || msg.isEmpty())
+
                 ex.printStackTrace();
             else
                 XmippDialog.showError(null, msg);
