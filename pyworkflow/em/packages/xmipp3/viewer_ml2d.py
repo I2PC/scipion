@@ -102,7 +102,7 @@ class XmippML2DViewer(ProtocolViewer):
         for it in iterations:
             fn = self.protocol._getIterClasses(it)
             if exists(fn):
-                views.append(ProjectDataView('classes@' + fn))
+                views.append(DataView('classes@' + fn))
             else:
                 errors.append("Iteration file '%s' doesn't exist." % fn)
              

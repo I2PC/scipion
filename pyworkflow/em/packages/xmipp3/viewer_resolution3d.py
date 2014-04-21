@@ -90,7 +90,7 @@ class XmippResolution3DViewer(ProtocolViewer):
         return xplotter
         
     def _showJ(self, filename):
-        return ProjectDataView(filename)
+        return DataView(filename)
     
     def _viewEstructureFactor(self, e=None):
         strFactFn = self.protocol._defineStructFactorName()

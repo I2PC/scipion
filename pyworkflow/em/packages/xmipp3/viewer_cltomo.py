@@ -63,7 +63,7 @@ class XmippCLTomoViewer(ProtocolViewer):
             levelFiles.sort()
             lastLevelFile = levelFiles[-1]
             if self.doShowLastLevel:
-                views.append(ProjectDataView("classes@" + lastLevelFile))
+                views.append(DataView("classes@" + lastLevelFile))
             else:
                 if self.showSeveralLevels.empty():
                     self.formWindow.showError('Please select the levels that you want to visualize.')
@@ -79,7 +79,7 @@ class XmippCLTomoViewer(ProtocolViewer):
                     for level in listOfLevels:
                         fn = self.protocol._getExtraPath("results_classes_level_%02d.xmd"%level)
                         if os.path.exists(fn):
-                            views.append(ProjectDataView("classes@" + fn))
+                            views.append(DataView("classes@" + fn))
                         else:
                             self.formWindow.showError('Level %s does not exist.' % level)
             self.errorList(errors, views)
