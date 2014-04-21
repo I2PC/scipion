@@ -36,7 +36,6 @@ import operator
 from widgets import Scrollable
 
 
-
 DEFAULT_CONNECTOR_FILL = "blue"
 DEFAULT_CONNECTOR_OUTLINE = "black"
 
@@ -54,9 +53,12 @@ class Canvas(tk.Canvas, Scrollable):
         self.lastItem = None # Track last item selected
         self.lastPos = (0, 0) # Track last clicked position
         self.items = {} # Keep a dictionary with high-level items
+        self.cleanSelected = True
+        
         self.onClickCallback = None
         self.onDoubleClickCallback = None
         self.onRightClickCallback = None
+        self.onControlClickCallback = None
         
         # Add bindings
         self.bind("<Button-1>", self.onClick)
@@ -66,6 +68,7 @@ class Canvas(tk.Canvas, Scrollable):
                 # Hide the right-click menu
         self.bind('<FocusOut>', self._unpostMenu)
         self.bind("<Key>", self._unpostMenu)
+        self.bind("<Control-1>", self.onControlClick)
         #self.bind("<MouseWheel>", self.onScroll)
         self._menu = tk.Menu(self, tearoff=0)
         
@@ -92,22 +95,27 @@ class Canvas(tk.Canvas, Scrollable):
         xc, yc = self.getCoordinates(event)
         items = self.find_overlapping(xc-1, yc-1,  xc+1, yc+1)
         if self.lastItem:
-            self.lastItem.setSelected(False)
             self.lastItem = None
         self.callbackResults = None
         self.lastPos = (0, 0)
         for i in items:
             if i in self.items:
                 self.lastItem = self.items[i]
-                self.lastItem.setSelected(True)
+                #self.lastItem.setSelected(True)
                 if callback:
                     self.callbackResults = callback(self.lastItem)
                 self.lastPos = (xc, yc)
                 break
         
     def onClick(self, event):
+        self.cleanSelected = True
         self._unpostMenu()
         self._handleMouseEvent(event, self.onClickCallback)
+        
+    def onControlClick(self, event):
+        self.cleanSelected = False
+        self._unpostMenu()
+        self._handleMouseEvent(event, self.onControlClickCallback)
             
     def onRightClick(self, e=None):
         # RightClick callback will not work not, as it need
@@ -322,7 +330,6 @@ class Item(object):
         bw = 1
         if value:
             bw = 2
-        #print "id=%d, width=%d, run=%s" % (self.id, bw, self.run.getRunName())
         self.canvas.itemconfig(self.id, width=bw)
 
 

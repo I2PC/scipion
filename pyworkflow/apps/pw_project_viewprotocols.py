@@ -349,6 +349,9 @@ class ProtocolsView(tk.Frame):
         self.settings = windows.getSettings()
         self.showGraph = self.settings.graphView.get()
         
+        self._selection = self.settings.runSelection
+        self._items = {}
+        
         self.style = ttk.Style()
         self.root.bind("<F5>", self.refreshRuns)
         self.__autoRefreshCounter = 3 # start by 3 secs  
@@ -625,7 +628,6 @@ class ProtocolsView(tk.Frame):
         self.updateRunsTreeSelection()
 
     def updateRunsTreeSelection(self):
-        
         if not self.showGraph:
             if self.selectedProtocol is not None:
                 for i, obj in enumerate(self.runsTree._objects):
@@ -638,7 +640,7 @@ class ProtocolsView(tk.Frame):
         self.runsGraph.onClickCallback = self._runItemClick
         self.runsGraph.onDoubleClickCallback = self._runItemDoubleClick
         self.runsGraph.onRightClickCallback = lambda e: self.provider.getObjectActions(e.node.run)
-        
+        self.runsGraph.onControlClickCallback = self._runItemControlClick
         parent.grid_columnconfigure(0, weight=1)
         parent.grid_rowconfigure(0, weight=1)
         
@@ -651,18 +653,18 @@ class ProtocolsView(tk.Frame):
         self.runsGraph.clear()
         lt.setCanvas(self.runsGraph)
         lt.paint(self.createRunItem)
-        self.updateRunsGraphSelection()
+        #self.updateRunsGraphSelection()
         self.runsGraph.updateScrollRegion()
 
-    def updateRunsGraphSelection(self):
-        if self.showGraph:
-            if self.selectedProtocol is not None:
-                for item in self.runsGraph.items.values():
-                    #item.setSelected(True)
-                    run = item.run
-                    if run and self.selectedProtocol.getObjId() == run.getObjId():
-                        self.runsGraph.selectItem(item)
-                        break
+#     def updateRunsGraphSelection(self):
+#         if self.showGraph:
+#             if self.selectedProtocol is not None:
+#                 for item in self.runsGraph.items.values():
+#                     #item.setSelected(True)
+#                     run = item.run
+#                     if run and self.selectedProtocol.getObjId() == run.getObjId():
+#                         self.runsGraph.selectItem(item)
+#                         break
                             
     def createRunItem(self, canvas, node, y):
         """ If not nodeBuildFunc is specified, this one will be used by default."""
@@ -677,6 +679,8 @@ class ProtocolsView(tk.Frame):
         
         item = self.runsGraph.createTextbox(nodeText, 100, y, bgColor=color, textColor=textColor)
         item.run = node.run
+        if node.run and node.run.getObjId() in self._selection:
+            item.setSelected(True)
         return item
         
     
@@ -687,7 +691,7 @@ class ProtocolsView(tk.Frame):
             ActionIcons[ACTION_TREE] = RUNS_LIST
             show = self.runsGraph.frame
             hide = self.runsTree
-            self.updateRunsGraphSelection()
+            #self.updateRunsGraphSelection()
         else:
             ActionIcons[ACTION_TREE] = RUNS_TREE
             show = self.runsTree
@@ -720,16 +724,22 @@ class ProtocolsView(tk.Frame):
         else:
             pass #TODO: implement what to do
                     
-    def _runItemClick(self, e=None):
+    def _runItemClick(self, item=None):
         # Get last selected item for tree or graph
         if self.showGraph:
-            prot = e.node.run
+            prot = item.node.run
+            item.setSelected(True)
         else:
             prot = self.project.mapper.selectById(int(self.runsTree.getFirst()))
         self._selectProtocol(prot)
         
     def _runItemDoubleClick(self, e=None):
         self._runActionClicked(ACTION_EDIT)
+        
+    def _runItemControlClick(self, item=None):
+        
+        self._selection.append(self.selectedProtocol.getObjId())
+        print "selection: ", self._selection
         
     def _openProtocolForm(self, prot):
         """Open the Protocol GUI Form given a Protocol instance"""
