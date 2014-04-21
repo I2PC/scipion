@@ -1,5 +1,6 @@
 package xmipp.utils;
 
+import java.util.Arrays;
 import org.apache.commons.cli.BasicParser;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
@@ -12,7 +13,7 @@ import xmipp.jni.ImageGeneric;
  *
  * @author Juanjo Vega
  */
-public class Param {
+public class Params {
 
 	//Some constants definitions
     public final static String FILE = "i";
@@ -31,11 +32,7 @@ public class Param {
     public final static String OPENING_MODE_METADATA = "metadata";
     public final static String OPENING_MODE_ROTSPECTRA = "rotspectra";
     public final static String RENDER_IMAGES = "render";
-    public final static String SINGLE_SELECTION = "singlesel";
-    public final static String SELECTION_TYPE = "seltype";
-    public final static String SELECTION_TYPE_ANY = "any";
-    public final static String SELECTION_TYPE_FILE = "file";
-    public final static String SELECTION_TYPE_DIR = "dir";
+    public final static String VISIBLE_LABELS = "visible";
     public final static String FILTER = "filter";
     public final static String FILTERS_SEPARATOR = ",";
     public final static String PORT = "port";
@@ -56,14 +53,13 @@ public class Param {
     public String directory;
     public String files[];
     public int port;
-    public String filter;
     public boolean singleSelection;
-    public String selectionType = SELECTION_TYPE_ANY;
     public String mode = OPENING_MODE_DEFAULT;
     public boolean poll;
     public int zoom = 0;
-    public boolean renderImages = false;
-    public String renderLabel = "first"; //Label to render, by default first
+    public boolean renderImages = true;
+    public String[] renderLabels = new String[]{"first"}; //Label to render, by default first
+    public String renderLabel;
     public boolean debug = false;
     public boolean mask_toolbar = false;
     public int rows = -1, columns = -1;
@@ -81,15 +77,16 @@ public class Param {
     public boolean wrap = true;
     protected Options options;
     protected CommandLine cmdLine;
+    public String[] visibleLabels;
 
     
     
     
 
-    public Param() {
+    public Params() {
     }
 
-    public Param(String args[]) {
+    public Params(String args[]) {
         options = new Options();
         defineArgs();
         processArgs(args);
@@ -104,14 +101,17 @@ public class Param {
 
         options.addOption(DIRECTORY, true, "");
         options.addOption(PORT, true, "");
-        options.addOption(SINGLE_SELECTION, false, "");
-        options.addOption(SELECTION_TYPE, true, "");
-        options.addOption(FILTER, true, "");
 
         options.addOption(OPENING_MODE, true, "");
         options.addOption(POLL, false, "");
         options.addOption(ZOOM, true, "");
-        options.addOption(RENDER_IMAGES, true, "");
+        Option opt = new Option(RENDER_IMAGES, "");
+        opt.setArgs(Integer.MAX_VALUE);
+        options.addOption(opt);
+        opt = new Option(VISIBLE_LABELS, "");
+        opt.setArgs(Integer.MAX_VALUE);
+        options.addOption(opt);
+        
         options.addOption(DEBUG, false, "");
         options.addOption(MASKTOOLBAR, false, "");
         options.addOption(TABLE_ROWS, true, "");
@@ -159,24 +159,6 @@ public class Param {
                 port = Integer.parseInt(cmdLine.getOptionValue(PORT));
             }
 
-            singleSelection = cmdLine.hasOption(SINGLE_SELECTION);
-
-            if (cmdLine.hasOption(SELECTION_TYPE)) {
-                selectionType = cmdLine.getOptionValue(SELECTION_TYPE);
-            }
-
-            if (cmdLine.hasOption(FILTER)) {
-                String filters[] = cmdLine.getOptionValue(FILTER).split(FILTERS_SEPARATOR);
-
-                filter = "";
-                for (int i = 0; i < filters.length; i++) {
-                    filter += filters[i];
-                    if (i < filters.length - 1) {
-                        filter += " ";
-                    }
-                }
-            }
-
             if (cmdLine.hasOption(OPENING_MODE)) {
                 mode = cmdLine.getOptionValue(OPENING_MODE);
             } else {
@@ -189,9 +171,13 @@ public class Param {
                 zoom = Integer.parseInt(cmdLine.getOptionValue(ZOOM));
             }
 
-            renderImages = cmdLine.hasOption(RENDER_IMAGES);
-            if (renderImages){
-            	renderLabel = cmdLine.getOptionValue(RENDER_IMAGES);
+            if(cmdLine.hasOption(RENDER_IMAGES))
+            {
+            	renderLabels = cmdLine.getOptionValues(RENDER_IMAGES);
+            }
+            if(cmdLine.hasOption(VISIBLE_LABELS))
+            {
+            	visibleLabels = cmdLine.getOptionValues(VISIBLE_LABELS);
             }
             
             debug = cmdLine.hasOption(DEBUG);
@@ -261,6 +247,7 @@ public class Param {
             	else if (view.equals("x_pos"))
             		resliceView = ImageGeneric.X_POS;
             }
+            renderLabel = renderLabels[0];
             
            
         } catch (Exception ex) {

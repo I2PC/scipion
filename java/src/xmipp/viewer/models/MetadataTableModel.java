@@ -256,7 +256,7 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 				changed = true;
 			}
 		if (changed) {
-			data.globalRender = value;
+			data.renderImages = value;
 			calculateCellSize();
 			fireTableDataChanged();
 		}
@@ -277,7 +277,7 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 	@Override
 	protected void calculateCellSize() {
 		// DEBUG.printMessage(String.format("MetadataTable:calculateSize"));
-		if (data.globalRender) {
+		if (data.renderImages) {
 			super.calculateCellSize();
 			// DEBUG.printMessage(String.format(
 			// "MetadataTable:calculateSize w:%d, h:%d", cellDim.width,

@@ -166,7 +166,7 @@ public abstract class ImageGalleryTableModel extends AbstractTableModel {
 					cache.put(key, item);
 				}
 				setupItem(item, index);
-
+                                System.out.println(item.getClass().getName());
 				return item;
 			} catch (Exception e) {
 				e.printStackTrace();
