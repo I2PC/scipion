@@ -107,7 +107,7 @@ def viewToUrl(request, view):
     
     if isinstance(view, Plotter):
         url = 'url:' + savePlot(request, view)
-    elif isinstance(view, DataView):
+    elif isinstance(view, ProjectDataView):
         url = "/showj/?%s=%s" % (PATH, view.getPath())
         if view.getTableName():
             url += '&%s=%s' % (TABLE_NAME, view.getTableName())

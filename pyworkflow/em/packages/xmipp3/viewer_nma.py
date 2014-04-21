@@ -87,8 +87,8 @@ class XmippNMAViewer(ProtocolViewer):
         if paramName == 'displayPseudoAtom':
             views.append(CommandView('chimera ' + self.protocol._getPath("chimera.cmd")))
         elif paramName == 'displayPseudoAtomAproximation':
-            views.append(DataView(self.protocol.inputStructure.get().getFirstItem().getFileName()))
-            views.append(DataView(self.protocol._getExtraPath('pseudoatoms_approximation.vol')))
+            views.append(ProjectDataView(self.protocol.inputStructure.get().getFirstItem().getFileName()))
+            views.append(ProjectDataView(self.protocol._getExtraPath('pseudoatoms_approximation.vol')))
         elif paramName == 'displayModes':
             views.append(self.protocol._getPath('modes.xmd'))
         elif paramName == 'displayMaxDistanceProfile':

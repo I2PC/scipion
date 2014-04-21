@@ -105,7 +105,7 @@ def populateTree(tree, elements, parentId=''):
                 tree.item(node.nodeId, tags='non-empty')
 
     
-class DataView(tk.Frame):
+class ProjectDataView(tk.Frame):
     def __init__(self, parent, windows, **args):
         tk.Frame.__init__(self, parent, **args)
         # Load global configuration

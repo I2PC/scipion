@@ -173,7 +173,7 @@ Examples:
             return ['There are not iterations completed.'] 
     
     def createDataView(self, filename, extraParams=''):
-        return DataView(filename, env=self._env)
+        return ProjectDataView(filename, env=self._env)
         
     def createScipionView(self, filename, output, extraParams=''):
         inputParticlesId = self.protocol.inputParticles.get().strId()
