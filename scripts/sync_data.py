@@ -280,10 +280,11 @@ def main(argv):
         help="Only valid when -r option enabled. This deletes remote files not existing in local. In the nutshell, it leaves the remote scipion data directory as it is the local one. Extremely dangerous option!.")
 
     exclusive.add_argument('-r', '--reverse-sync', 
-        nargs='+',
+        action='store_true',
         help="Synchronize from the local data to scipion machine. When wildcard 'all' is given, it will synchronize all the local folder with the remote one. When a set of locations is given, they're synchronized one by one against the remote scipion server. File path must be given from $SCIPION_HOME/tests folder")
     
     parser.add_argument('-f', '--dataset',
+        nargs='+',
         help="Determine the dataset to use. The selected operation will be applied to this dataset.")
     
     parser.add_argument('-l', '--list',
@@ -299,9 +300,7 @@ def main(argv):
 
     # Depending on the arguments selected, doing one thing or another
 
-    deleteFlag=""
-    if args.delete:
-        deleteFlag=" -f"
+    scipion_logo()
     if args.list:
         print "List of local datasets in %(datasetsFolder)s" % ({'datasetsFolder': os.environ['SCIPION_TESTS']})
         folders = os.listdir(os.environ['SCIPION_TESTS'])
@@ -350,38 +349,49 @@ def main(argv):
             open(os.path.join(os.environ['SCIPION_HOME'],args.last_mod_file), 'w').close()
             sys.exit(2) #We return with 2, to let Buildbot know that no modification was made (when failure there was modification)
     elif args.dataset:
-        print "Selected dataset: %(dataset)s" % ({'dataset': args.dataset})
-        if args.reverse_sync:
-            print "Reverse synchronizing, BE CAREFUL!!! OPERATION EXTREMELY DANGEROUS!!!"
-            ans = ""
-            if "".join(args.reverse_sync) == "all":
-                while ans != "y" and ans != "Y" and ans != "n" and ans != "N":
-                    ans = raw_input("You're about to synchronize all your data with the remote data. Are you sure you want to continue? (y/n): ")
+        print "Selected dataset(s): %(dataset)s" % ({'dataset': " ".join(args.dataset)})
+        ans = ""
+        if len(args.dataset) == 1 and " ".join(args.dataset) == "all" and args.reverse_sync:
+            while ans != "y" and ans != "Y" and ans != "n" and ans != "N":
+                ans = raw_input("You've selected to synchronize all your data with the remote data. You will squash all remote data. Are you sure you want to continue? (y/n): ")
+            if ans != ("y" or "Y"):
+                sys.exit(1)
+        for dataset in args.dataset:
+            if args.reverse_sync:
+                deleteFlag=""
+                if args.delete:
+                    deleteFlag="--delete "
+                remoteUser = 'scipion'
+                remoteServer = 'ramanujan.cnb.csic.es'
+                remoteFolder = os.path.join('/home', 'twiki', 'public_html', 'files', 'scipion', 'data', 'tests', 'NACHOTESTS_PLEASEDONOTREMOVE', 'tests')
+                print "Reverse synchronizing, BE CAREFUL!!! OPERATION EXTREMELY DANGEROUS!!!"
+                ans = ''
+                while ans != 'y' and ans != 'Y' and ans != 'n' and ans != 'N':
+                    ans = raw_input("You're going to be connected to %(remoteServer)s server as %(remoteUser)s user to write in %(remoteFolder)s folder for %(dataset)s dataset. Only authorized users shall pass. Continue? (y/n): " % ({'remoteServer': remoteServer, 'remoteUser': remoteUser, 'remoteFolder': remoteFolder, 'dataset': dataset}))
+                if ans != ('y' or 'Y'):
+                    sys.exit(1)
+                #print "bash " + args.syncfile + deleteFlag + " -r " + dataset
+                #subprocess.call("bash " + args.syncfile + " -l " + args.last_mod_file + deleteFlag + " -r " + dataset, shell=True)
+                # Synchronize files
+                command = 'rsync -av '+ deleteFlag + os.path.join(os.environ['SCIPION_TESTS'], dataset) + ' ' + remoteUser + '@' + remoteServer + ':' + remoteFolder
+                print command
+                subprocess.call(command, shell=True)
+                # Regenerate remote MANIFEST
+                command = "ssh " + remoteUser + '@' + remoteServer + " \"cd " + remoteFolder + ' && ' + "find -maxdepth 1 -type d -type d ! -iname '.' > MANIFEST" + "\""
+                print "Regenerating remote MANIFEST file..."
+                subprocess.call(command, shell=True)
+                print "...done."
+                # Leave last_m.txt file indicating modifications have been done, to let buildbot trigger its automatic testing system
             else:
-                print "Following files/folders are going to be upload to the remote scipion repository:"
-                for sfile in args.reverse_sync:
-                    print sfile
-                while ans != "y" and ans != "Y" and ans != "n" and ans != "N":
-                    ans = raw_input("You're about to synchronize all of them. Are you sure you want to smash 'em all? (y/n): ")
-            if ans == ("y" or "Y"):
-                print "You've chosen to proceed. Executing bash script " + args.syncfile + " -r ..."
-                print "bash " + args.syncfile + deleteFlag + " -r " + " ".join(args.reverse_sync)
-                #subprocess.call("bash " + args.syncfile + " -l " + args.last_mod_file + deleteFlag + " -r " + " ".join(args.reverse_sync), shell=True)
-            else:
-                print "You've chosen to abort. Goodbye!."
-                sys.exit(3)
-        else:
-            datasetFolder = os.path.join(os.environ['SCIPION_TESTS'],"%(dataset)s" % ({'dataset': args.dataset}))
-            if(os.path.exists(datasetFolder)):
-                scipion_logo()
-                print "Dataset working copy detected. Checking checksum for updates..."
-                downloadDataset(args.dataset, destination=os.environ['SCIPION_TMP'], url=args.url, verbose=args.verbose, onlyMd5=True)
-                checkForUpdates(args.dataset, url=args.url, verbose=args.verbose)
-                cleanPath(os.path.join(os.environ['SCIPION_TMP'], "%(dataset)s" % ({'dataset': args.dataset})))
-            else:
-                scipion_logo()
-                print "dataset not in local machine, trying to download..."
-                downloadDataset(args.dataset, url=args.url, verbose=args.verbose)
+                datasetFolder = os.path.join(os.environ['SCIPION_TESTS'],"%(dataset)s" % ({'dataset': dataset}))
+                if(os.path.exists(datasetFolder)):
+                    print "Dataset working copy detected. Checking checksum for updates..."
+                    downloadDataset(dataset, destination=os.environ['SCIPION_TMP'], url=args.url, verbose=args.verbose, onlyMd5=True)
+                    checkForUpdates(dataset, url=args.url, verbose=args.verbose)
+                    cleanPath(os.path.join(os.environ['SCIPION_TMP'], "%(dataset)s" % ({'dataset': dataset})))
+                else:
+                    print "dataset not in local machine, trying to download..."
+                    downloadDataset( dataset, url=args.url, verbose=args.verbose)
                 
         
 

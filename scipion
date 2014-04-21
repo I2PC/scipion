@@ -208,27 +208,31 @@ if __name__ == '__main__':
                     
         elif mode == MODE_TESTS_DATA:
             if n > 2:
-                dataset = sys.argv[2]
+                dataset = sys.argv[2:-1]
                 if n > 3:
                     print "dataset selected"
-                    option = sys.argv[3]
+                    option = sys.argv[-1]
+                    dataset = sys.argv[2]
                     verbosity = ""
                     if n > 4:
-                        if sys.argv[4] == "verbose":
+                        dataset = sys.argv[2:-1]
+                        if sys.argv[-1] == "verbose":
                             verbosity = "-v"
+                            option = sys.argv[-2]
+                            dataset = sys.argv[2:-2]
                     if option == "upload":
-                        print "Synchronizing dataset %s with local data" % dataset
-                        runCmd('scripts/sync_data.py -f %s %s -r -d' % (dataset, verbosity))
+                        print "Synchronizing dataset %s with local data" % " ".join(dataset)
+                        runCmd('scripts/sync_data.py -f %s %s -r -d' % (" ".join(dataset), verbosity))
                     elif option == "download":
-                        print "Synchronizing local dataset %s with remote data" % dataset
-                        runCmd('scripts/sync_data.py -f %s %s' % (dataset, verbosity))
+                        print "Synchronizing local dataset(s) %s with remote data" % " ".join(dataset)
+                        runCmd('scripts/sync_data.py -f %s %s' % (" ".join(dataset), verbosity))
                     elif option == "raw":
                         args = ' '.join(sys.argv[4:]) # We leave here a way to pass arguments directly to the script
                         runCmd('scripts/sync_data.py %s' % args)
                     else:
                         print "Bad option: " + option
                         sys.exit(1)
-                elif dataset == "list":
+                elif sys.argv[2] == "list":
                     args = '-l'
                     runCmd('scripts/sync_data.py %s' % args)
                 else:
