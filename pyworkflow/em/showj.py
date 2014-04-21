@@ -51,6 +51,8 @@ MODE_GALLERY = 'gallery'
 MODE_TABLE = 'table'
 MODE_VOL_ASTEX = 'volume_astex'
 MODE_VOL_CHIMERA = 'volume_chimera'
+RENDER = 'render'
+ORDER = 'order'
 
 GOTO = 'goto'
 ROWS = 'rows'

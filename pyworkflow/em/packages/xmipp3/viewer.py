@@ -174,7 +174,7 @@ class XmippViewer(Viewer):
                 fn = self._getTmpPath(obj.getName() + '_ctfs.xmd')
                 writeSetOfCTFs(obj, fn)
 
-            self._views.append(DataView(fn, viewParams={'mode': 'metadata', 'render': 'psd psdEnhanced image1 image2'}))  
+            self._views.append(DataView(fn, viewParams={MODE: 'metadata', RENDER: 'psd psdEnhanced image1 image2', ORDER:'id psd psdEnhanced image1 image2'}))  
          
         elif issubclass(cls, XmippProtExtractParticles):
             self._visualize(obj.outputParticles)

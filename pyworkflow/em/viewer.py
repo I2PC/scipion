@@ -78,13 +78,13 @@ class ObjectView(DataView):
         self.inputid = inputid
         self.imagesid = imagesid
         
-        
     def getShowJParams(self):
         params = DataView.getShowJParams(self) + ' --scipion %s %s %s \"%s\" %s %s'%(self.type, self.python, self.script,  self.projectid, self.inputid, self.imagesid)#mandatory to provide scipion params
         return params
     
     def show(self):
         runJavaIJapp(self._memory, 'xmipp.viewer.scipion.ScipionViewer', self.getShowJParams(), True, env=self._env)
+        
         
 class CoordinatesObjectView(DataView):
     """ Wrapper to View but for displaying Scipion objects. """
@@ -99,7 +99,7 @@ class CoordinatesObjectView(DataView):
         
         
     def getShowJParams(self):
-        params = params = '--input %s --output %s --mode %s --scipion %s %s \"%s\" %s'%(self._path, self.outputdir, self.mode, self.python, self.script,  self.projectid, self.inputid)#mandatory to provide scipion params
+        params = '--input %s --output %s --mode %s --scipion %s %s \"%s\" %s'%(self._path, self.outputdir, self.mode, self.python, self.script,  self.projectid, self.inputid)#mandatory to provide scipion params
         return params
     
     def show(self):
