@@ -17,15 +17,12 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.swing.JOptionPane;
-import xmipp.ij.commons.XmippUtil;
 
 import xmipp.jni.Filename;
 import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
 import xmipp.jni.Program;
-import xmipp.utils.XmippMessage;
 import xmipp.viewer.particlepicker.training.model.Mode;
-import xmipp.viewer.particlepicker.training.model.SupervisedParticlePickerMicrograph;
 
 /**
  * Business object for ParticlePicker common GUI. SingleParticlePicker and
@@ -45,7 +42,7 @@ public abstract class ParticlePicker {
     protected String selfile;
     protected String command;
     protected String configfile;
-
+    public String python, script, projectid, inputid, protid, protlabel, dbpath;//scipion params
 
     String[] commonfilters = new String[]{"Install...", "Duplicate", "Bandpass Filter...", "Anisotropic Diffusion...", "Mean Shift",
         "Subtract Background...", "Gaussian Blur...", "Brightness/Contrast...", "Invert LUT"};
@@ -95,7 +92,7 @@ public abstract class ParticlePicker {
         return getParticlesBlock(Format.Xmipp301, file);
 
     }
-    private ScipionSave scipionsave;
+    
 
     public String getParticlesAutoBlock(String file) {
         return particlesAutoBlock + "@" + file;
@@ -616,37 +613,62 @@ public abstract class ParticlePicker {
     }
 
 
-     public void addScipionSave(String python, String script, String projectid, String inputid) {
-            scipionsave = new ScipionSave(python, script, projectid, inputid);
+     public void setPython(String python)
+     {
+         this.python = python;
+     }
+     
+     public void setScipionScript(String script)
+     {
+         this.script = script;
+     }
+     
+     public void setProjectId(String projectid)
+     {
+         this.projectid = projectid;
+     }
+     
+     public void setInputId(String inputid)
+     {
+         this.inputid = inputid;
+     }
+     
+     public void setDbPath(String dbpath)
+     {
+         this.dbpath = dbpath;
+     }
+     
+     public void setProtId(String protid)
+     {
+         this.protid = protid;
      }
      
      public boolean isScipionSave()
      {
-         return scipionsave != null;
+         return script != null;
      }
 
     public String[] getScipionSaveCommand() {
+        String[] cmd;
+        if(protid == null)
+            cmd = new String[]{python, script, outputdir, projectid, inputid, protlabel};
+        else
+            cmd = new String[]{python, script, outputdir, dbpath, protid};
         
-            
-            String[] cmd = new String[]{scipionsave.python, scipionsave.script, outputdir, scipionsave.projectid, scipionsave.inputid};
-            return cmd;
-        }
+        return cmd;
+       }
      
-     
+    
+    public abstract int getParticlesCount();
 
-    class ScipionSave {
-
-        public String python, script, projectid, inputid;
-        
-
-        public ScipionSave(String python, String script, String projectid, String inputid) {
-            this.python = python;
-            this.script = script;
-            this.projectid = projectid;
-            this.inputid = inputid;
-        }
+    public String getProtId() {
+        return protid;
     }
+
     
 
+     
+
+   
 
 }

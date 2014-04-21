@@ -10,7 +10,7 @@ import xmipp.jni.Filename;
 import xmipp.jni.ImageGeneric;
 import xmipp.jni.MetaData;
 import xmipp.utils.DEBUG;
-import xmipp.utils.Param;
+import xmipp.utils.Params;
 import xmipp.utils.XmippDialog;
 import xmipp.viewer.Viewer;
 import xmipp.viewer.windows.GalleryJFrame;
@@ -53,10 +53,10 @@ public class ScipionViewer extends Viewer {
     public static void openFile(String filename, ScipionParams parameters) {
         try {
             if (Filename.isMetadata(filename)) {
-                if (parameters.mode.equalsIgnoreCase(Param.OPENING_MODE_IMAGE)) {
+                if (parameters.mode.equalsIgnoreCase(Params.OPENING_MODE_IMAGE)) {
                     openFileAsImage(null, filename, parameters);
                 } else {
-                    parameters.mode = Param.OPENING_MODE_GALLERY;
+                    parameters.mode = Params.OPENING_MODE_GALLERY;
                     openScipionGalleryJFrame(filename, parameters);
                 }
             } else {
@@ -66,10 +66,10 @@ public class ScipionViewer extends Viewer {
                     openFileAsImage(null, filename, parameters);
                 } else if (img.isStackOrVolume()) {
                     if (parameters.mode
-                            .equalsIgnoreCase(Param.OPENING_MODE_IMAGE)) {
+                            .equalsIgnoreCase(Params.OPENING_MODE_IMAGE)) {
                         openFileAsImage(null, filename, parameters);
                     } else {
-                        parameters.mode = Param.OPENING_MODE_GALLERY;
+                        parameters.mode = Params.OPENING_MODE_GALLERY;
                         openScipionGalleryJFrame(filename, parameters);
                     }
                 }

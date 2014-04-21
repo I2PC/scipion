@@ -215,7 +215,8 @@ public class ExtractParticlePicker extends ParticlePicker
 		return new ExtractPickerJFrame(picker, galleryfr);
 	}
 
-	public int getParticlesTotal()
+        @Override
+	public int getParticlesCount()
 	{
 		int particles = 0;
 		for (ExtractMicrograph m : micrographs)
@@ -244,5 +245,7 @@ public class ExtractParticlePicker extends ParticlePicker
 	{
 		return null;
 	}
+
+  
 
 }
