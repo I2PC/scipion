@@ -33,6 +33,7 @@ public class Params {
     public final static String OPENING_MODE_ROTSPECTRA = "rotspectra";
     public final static String RENDER_IMAGES = "render";
     public final static String VISIBLE_LABELS = "visible";
+    public final static String FIRST_LABELS = "first";
     public final static String FILTER = "filter";
     public final static String FILTERS_SEPARATOR = ",";
     public final static String PORT = "port";
@@ -78,6 +79,7 @@ public class Params {
     protected Options options;
     protected CommandLine cmdLine;
     public String[] visibleLabels;
+    public String[] firstLabels;
 
     
     
@@ -109,6 +111,9 @@ public class Params {
         opt.setArgs(Integer.MAX_VALUE);
         options.addOption(opt);
         opt = new Option(VISIBLE_LABELS, "");
+        opt.setArgs(Integer.MAX_VALUE);
+        options.addOption(opt);
+        opt = new Option(FIRST_LABELS, "");
         opt.setArgs(Integer.MAX_VALUE);
         options.addOption(opt);
         
@@ -178,6 +183,10 @@ public class Params {
             if(cmdLine.hasOption(VISIBLE_LABELS))
             {
             	visibleLabels = cmdLine.getOptionValues(VISIBLE_LABELS);
+            }
+            if(cmdLine.hasOption(FIRST_LABELS))
+            {
+            	firstLabels = cmdLine.getOptionValues(FIRST_LABELS);
             }
             
             debug = cmdLine.hasOption(DEBUG);

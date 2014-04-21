@@ -38,6 +38,10 @@ class ProtScreenMicrographs(XmippProtocol):
             self.MDL_TYPE = xmipp.MDL_MICROGRAPH_MOVIE
             self.inputProperty('MicrographsMd')
             self.TiltPairs = None
+        elif self.PrevRun.Name == 'align_movies':
+            self.MDL_TYPE = xmipp.MDL_MICROGRAPH
+            self.MicrographsMd=os.path.join(self.PrevRun.WorkingDir,"micrographs.xmd")
+            self.TiltPairs = None
         else:
             self.inputProperty('TiltPairs', 'MicrographsMd')
             self.MDL_TYPE = xmipp.MDL_MICROGRAPH

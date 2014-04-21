@@ -32,8 +32,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import xmipp.ij.commons.XmippApplication;
 import xmipp.jni.Filename;
 import xmipp.jni.ImageGeneric;
 import xmipp.jni.MDLabel;
@@ -86,8 +84,9 @@ public class GalleryData {
 	private boolean hasMdChanges, hasClassesChanges;
 	public Window window;
         private String[] renderLabels;
-    private String renderLabel;
-    private String[] visibleLabels;
+        private String renderLabel;
+        private String[] visibleLabels;
+        private String[] firstLabels;
 
     
 
@@ -119,8 +118,9 @@ public class GalleryData {
 			zoom = parameters.zoom;
 			this.renderImages = parameters.renderImages;//always true, customized by models or renderLabels
                         this.renderLabels = parameters.renderLabels;
-                        this.visibleLabels = parameters.visibleLabels;
                         this.renderLabel = parameters.renderLabel;
+                        this.visibleLabels = parameters.visibleLabels;
+                        this.firstLabels = parameters.firstLabels;
 			mode = Mode.GALLERY_MD;
 			resliceView = parameters.resliceView;
 			useGeo = parameters.useGeo;
@@ -362,6 +362,7 @@ public class GalleryData {
 			}
                         
 			labels = newLabels;
+                        orderLabels();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -1072,5 +1073,27 @@ public class GalleryData {
            return false;
        }
 
+       public void orderLabels()
+       {
+           if(firstLabels == null)
+               return;
+           
+           ColumnInfo aux;
+           int j;
+           for(int i = 0; i < firstLabels.length; i ++)
+               for(ColumnInfo ci: labels)
+                   if(ci.labelName.equals(firstLabels[i]))
+                   {
+                       
+                       aux = labels.get(i);
+                       j = labels.indexOf(ci);
+                       labels.set(i, ci);
+                       System.out.println(ci);
+                       labels.set(j, aux);
+                       
+                   }
+               
+       
+       }
       
 }// class GalleryDaa
