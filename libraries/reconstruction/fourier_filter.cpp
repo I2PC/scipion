@@ -41,6 +41,7 @@ void FourierFilter::init()
     ctf.enable_CTFnoise = false;
     do_correct_phase = false;
     do_generate_3dmask = false;
+    sampling_rate = -1.;
 }
 
 /* Empty constructor ---------------------------------------------------------*/
@@ -72,7 +73,8 @@ void FourierFilter::defineParams(XmippProgram *program)
     program->addParamsLine("            bfactor <B>                      : Exponential filter (positive values for decay) ");
     program->addParamsLine("               requires --sampling;                                                         ");
     program->addParamsLine("         alias -f;");
-    program->addParamsLine("  [--sampling <sampling_rate>]               : If provided pass frequencies are taken in Ang ");
+    program->addParamsLine("  [--sampling <sampling_rate>]               : If provided pass frequencies are taken in Ang and for the CTF case");
+    program->addParamsLine("                                             : and for the CTF case this is the sampling used to compute the CTF");
     program->addParamsLine("         alias -s;");
     program->addParamsLine("         requires --fourier;");
     program->addParamsLine("  [--save <filename=\"\"> ]                  : Do not apply just save the mask");
@@ -85,6 +87,9 @@ void FourierFilter::readParams(XmippProgram *program)
     init();
     if (program->checkParam("--save"))
         maskFn = program->getParam("--save");
+    if (program->checkParam("--sampling"))
+        sampling_rate = program->getDoubleParam("--sampling");
+
     // Filter shape .........................................................
     String filter_type;
     filter_type = program->getParam("--fourier");
@@ -157,6 +162,12 @@ void FourierFilter::readParams(XmippProgram *program)
         FilterShape = FilterBand = CTF;
         ctf.enable_CTFnoise = false;
         ctf.read( program->getParam("--fourier", "ctf") );
+        if (sampling_rate > 0.)
+        {
+            std::cerr << "CTF was optaned at sampling rate: " << ctf.Tm << std::endl;
+            std::cerr << "Image sampling rate is: " << sampling_rate << std::endl;
+            ctf.Tm=sampling_rate;
+        }
         ctf.produceSideInfo();
     }
     else if (filter_type == "ctfpos")
@@ -176,9 +187,8 @@ void FourierFilter::readParams(XmippProgram *program)
     else
         REPORT_ERROR(ERR_DEBUG_IMPOSIBLE, "This couldn't happen, check argument parser or params definition");
 
-    if (!(FilterBand == BFACTOR) && program->checkParam("--sampling"))
+    if (!(FilterBand == BFACTOR) && sampling_rate > 0.)
     {
-        double sampling_rate = program->getDoubleParam("--sampling");
         if (w1 != 0)
             w1 = sampling_rate / w1;
         if (w2 != 0)
@@ -365,12 +375,12 @@ double FourierFilter::maskValue(const Matrix1D<double> &w)
         break;
     case BFACTOR:
         {
-        double R = absw / w2;
-        return exp( - (w1 / 4.)  * R * R);
+            double R = absw / w2;
+            return exp( - (w1 / 4.)  * R * R);
         }
         break;
     default:
-    	REPORT_ERROR(ERR_ARG_INCORRECT,"Unknown mask type");
+        REPORT_ERROR(ERR_ARG_INCORRECT,"Unknown mask type");
     }
     return 0;
 }
@@ -378,8 +388,8 @@ double FourierFilter::maskValue(const Matrix1D<double> &w)
 /* Generate mask ----------------------------------------------------------- */
 void FourierFilter::generateMask(MultidimArray<double> &v)
 {
-	if (FilterShape==SPARSIFY)
-		return;
+    if (FilterShape==SPARSIFY)
+        return;
     if (do_generate_3dmask)
     {
         transformer.setReal(v);
@@ -465,13 +475,13 @@ void FourierFilter::applyMaskFourierSpace(const MultidimArray<double> &v, Multid
     }
     else if (XSIZE(maskFourierd)!=0)
     {
-    	double *ptrV=(double*)&DIRECT_MULTIDIM_ELEM(V,0);
-    	double *ptrMask=(double*)&DIRECT_MULTIDIM_ELEM(maskFourierd,0);
+        double *ptrV=(double*)&DIRECT_MULTIDIM_ELEM(V,0);
+        double *ptrMask=(double*)&DIRECT_MULTIDIM_ELEM(maskFourierd,0);
         FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(V)
-    	{
-        	*ptrV++ *= *ptrMask;
-        	*ptrV++ *= *ptrMask++;
-    	}
+        {
+            *ptrV++ *= *ptrMask;
+            *ptrV++ *= *ptrMask++;
+        }
     }
     else if (FilterShape==SPARSIFY)
     {
@@ -514,7 +524,7 @@ double FourierFilter::maskPower()
     else if (XSIZE(maskFourierd) != 0)
         return maskFourierd.sum2()/MULTIDIM_SIZE(maskFourierd);
     else
-    	return 0;
+        return 0;
 }
 
 // Correct phase -----------------------------------------------------------

@@ -41,6 +41,7 @@ class ScriptImportEMX(XmippScript):
         self.addParamsLine(' [--mode <mode=micCTF>]          : information to extract')
         self.addParamsLine("         where <mode>")
         self.addParamsLine("             alignment           : export particle shift and rotations")
+        self.addParamsLine("             reconst             : export projection shift and rotations")
         self.addParamsLine("             coordinates         : import particle coordinates (so far only works for a single micrograph)")
         self.addParamsLine("             mic                 : import list of micrographs")
         self.addParamsLine("     alias -m;")
@@ -102,7 +103,10 @@ class ScriptImportEMX(XmippScript):
                 emxCoordsToXmipp(emxData, '.')
             elif mode == 'alignment':
                 xmdFileName = emxFileName.replace(".emx",".xmd")
-                alignEMXToXmipp(emxData,PARTICLE,xmdFileName)
+                alignEMXToXmipp(emxData,PARTICLE,xmdFileName,True)
+            elif mode == 'reconst':
+                xmdFileName = emxFileName.replace(".emx",".xmd")
+                alignEMXToXmipp(emxData,PARTICLE,xmdFileName,False)
         except Exception, e:
                     print >> sys.stderr, "XMIPP_ERROR -1:", str(e)
                     exit(-1)
