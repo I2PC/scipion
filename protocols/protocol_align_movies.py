@@ -57,6 +57,7 @@ class ProtAlignMovies(XmippProtocol):
                                     , WinSize=self.WinSize
                                     , DoGPU = self.DoGPU
                                     , GPUCore = self.GPUCore
+                                    , parent_step_id=parent_id
                                     )
         
         # Gather results after external actions
@@ -105,17 +106,18 @@ def alignSingleMovie1(log,WorkingDir
                      , WinSize
                      , DoGPU
                      , GPUCore
+                     , parent_step_id
                      ):
 
         # Align estimation with Xmipp
-        args += '-i %s -o %s --winSize %d'%(inputMovie,movieAverage,WinSize)
+        args = '-i %s -o %s --winSize %d'%(inputMovie,movieAverage,WinSize)
         if DoGPU:
             progName = 'xmipp_optical_alignment_gpu'
             args += ' --gpu %d'%(GPUCore)
         else:
             progName = 'xmipp_optical_alignment_cpu'
 
-        runJob(log,'xmipp_optical_alignment', args)
+        runJob(log,progName, args)
                 
 def gatherResults(log, 
                   WorkingDir,
