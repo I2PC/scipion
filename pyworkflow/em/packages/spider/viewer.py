@@ -34,7 +34,7 @@ from pyworkflow.viewer import Viewer, ProtocolViewer, DESKTOP_TKINTER, WEB_DJANG
 from pyworkflow.utils.graph import Graph
 from pyworkflow.gui.graph import LevelTree
 from pyworkflow.gui.canvas import Canvas, ImageBox
-from pyworkflow.em.packages.xmipp3.viewer import XmippViewer, runShowJ
+from pyworkflow.em.packages.xmipp3.viewer import XmippViewer
 from pyworkflow.gui.text import showTextFileViewer
 
 from spider import PcaFile
@@ -58,5 +58,5 @@ class SpiderViewer(Viewer):
             mask = obj.outputMask
             XmippViewer(project=self.getProject()).visualize(mask)
             # Remove location to visualize the whole stack
-            runShowJ(mask.getFileName())
+            self._views.append(DataView(mask.getFileName()))
            

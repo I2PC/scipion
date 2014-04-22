@@ -37,6 +37,14 @@
  * function launchToolbarList(id, elm)
  * 	->	Toolbar used in the project content template for the run list view.
  * 
+ * function enableMultipleMarkGraph(elm)
+ * 	->	Used to highlight a node in the protocol graph.
+ * 		This method is used to multiples marked nodes.
+ * 
+ * function disableMultipleMarkGraph(elm)
+ * 	->	Used to remove the highlight applied to a node in the protocol graph.
+ * 		This method is used to multiples marked nodes.
+ * 
  * function launchToolbarTree(id, elm)
  * 	->	Toolbar used in the project content template for the runs tree view.
  * 
@@ -48,12 +56,12 @@
  * 	->	Fill the content of the tabs for a protocol run selected 
  * 		(Data / Summary / Methods / Status)
  * 
+ * function showLog(log_type)
+ * 	->	This function is used to show or hide differents logs about a protocol selected.
+ * 
  * function fillUL(list, ul_id, icon)
  * 	->	Fill an UL element with items from a list items, should contains id and 
  * 		name properties.
- * 
- * function launchViewer(id)
- * 	->	Launch the viewers to analyze the results for a protocol run.
  * 
  * function updateButtons(id, elm)
  * 	->	Function to update the buttons in the toolbar and the tabs, after choose
@@ -114,6 +122,14 @@
  * 
  * function refreshRuns(mode)
  * 	->	Method to refresh the run list/graph checking changes. 
+ * 
+ * function checkStatusNode(id, status)
+ * 	->	Function to check the status for a node (protocol) in the protocol graph.
+ * 
+ * 
+ * function checkStatusRow(id, status, time)
+ * 	-> Function to check the status for a node (protocol) in the protocol list.
+ * 
  * 
  ******************************************************************************/
 
@@ -300,21 +316,6 @@ function fillUL(type, list, ulId, icon) {
 //		ul.append(inihtml+'<tr><td>' + visualize_html +"</td><td>&nbsp;&nbsp;&nbsp;" + list[i].info + edit_html + '</td></tr>' + endhtml);
 		
 	}
-}
-
-function launchViewer(id){
-	/*
-	 * Launch the viewers to analyze the results of the protocol run
-	 */
-	$.ajax({
-		type : "GET",
-		// Execute the viewer 
-		url : "/launch_viewer/?protocolId=" + id,
-		dataType : "json",
-		success : function(json) {
-			popUpJSON(json);
-		}
-	});	
 }
 
 function updateButtons(id, elm){
@@ -696,8 +697,4 @@ function checkStatusRow(id, status, time){
 	row.find(".time").html(time);
 		
 }
-
-
-
-
 

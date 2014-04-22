@@ -31,7 +31,6 @@ from pyworkflow.viewer import ProtocolViewer, DESKTOP_TKINTER, WEB_DJANGO
 from pyworkflow.em import *
 from pyworkflow.gui.form import FormWindow
 from protocol_ml2d import XmippProtML2D
-from viewer import runShowJ
 import numpy as np
 
 ITER_LAST = 0

@@ -54,7 +54,8 @@
 	}
 	function loadPreviewImage(param){
 		var objId = $("#"+ param).attr("data-objId");
-		customPopup('/visualize_object/?objectId='+objId,1024,600)
+		launchViewer(objId);
+// 		customPopup('/visualize_object/?objectId='+objId,1024,600)
 	}
 	</script>
 	 <script>
@@ -100,8 +101,8 @@
 			{% include "content_form.html" %}
 			
 			<div class="boxBottom">
-				{% if visualize == 0 %}
 				<a href="javascript:window.close()" class="btn buttonGrey"><i class="fa fa-times"></i>{{msg.LABEL_BUTTON_CLOSE}}</a>
+				{% if visualize == 0 %}
 				<a href="javascript:putMode('save');" class="btn buttonGrey"><i class="fa fa-save"></i>{{msg.LABEL_BUTTON_SAVE}}</a>
 				<a href="javascript:putMode('execute');" class="btn buttonRed"><i class="fa fa-cogs"></i>{{msg.LABEL_BUTTON_EXEC}}</a>
 				{% elif visualize == 1 %}
