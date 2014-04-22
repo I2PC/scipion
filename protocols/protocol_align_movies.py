@@ -49,7 +49,7 @@ class ProtAlignMovies(XmippProtocol):
             movieName = os.path.splitext(movieNameList)[0]
             #micrographDir = os.path.join(extraDir,shortname)                    
             
-            self.insertStep('alignSingleMovie1'
+            self.insertParallelStep('alignSingleMovie1'
                                     , verifyfiles=[_getFilename('movieAverage',movieDir=extraDir,baseName=movieName)]
                                     , WorkingDir=self.WorkingDir
                                     , inputMovie=inputMovie 
@@ -57,7 +57,7 @@ class ProtAlignMovies(XmippProtocol):
                                     , WinSize=self.WinSize
                                     , DoGPU = self.DoGPU
                                     , GPUCore = self.GPUCore
-                                    , parent_step_id=parent_id
+                                    , parent_step_id=XmippProjectDb.FIRST_STEP
                                     )
         
         # Gather results after external actions
@@ -100,13 +100,13 @@ class ProtAlignMovies(XmippProtocol):
         else:
             showWarning('Warning', 'There are not results yet',self.master)
     
+
 def alignSingleMovie1(log,WorkingDir
                      , inputMovie   
                      , movieAverage                                 
                      , WinSize
                      , DoGPU
                      , GPUCore
-                     , parent_step_id
                      ):
 
         # Align estimation with Xmipp

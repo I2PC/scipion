@@ -31,12 +31,13 @@ WinSize = 150
 """
 DoGPU=True
 
-# Choose GPU core
-""" {condition}(DoGPU) GPU may have several cores. Set it to zero if you do not know 
+#  {condition}(DoGPU) Choose GPU core
+"""GPU may have several cores. Set it to zero if you do not know 
 what we are talking about. 
 """
 GPUCore = 0
 
+# {eval} expandParallel(threads=0,hours=12)
 # {eval} expandExpert()
 
 #------------------------------------------------------------------------------------------------
