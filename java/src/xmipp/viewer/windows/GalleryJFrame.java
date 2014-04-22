@@ -114,13 +114,11 @@ import xmipp.utils.XmippWindowUtil;
 import xmipp.viewer.RowHeaderRenderer;
 import xmipp.viewer.ctf.TasksEngine;
 import xmipp.viewer.ctf.iCTFGUI;
-import xmipp.viewer.models.ClassInfo;
 import xmipp.viewer.models.ColumnInfo;
 import xmipp.viewer.models.GalleryData;
 import xmipp.viewer.models.GalleryRowHeaderModel;
 import xmipp.viewer.models.ImageGalleryTableModel;
 import xmipp.viewer.models.MetadataGalleryTableModel;
-import xmipp.viewer.models.MicrographsTableModel;
 import xmipp.viewer.particlepicker.extract.ExtractParticlePicker;
 import xmipp.viewer.particlepicker.extract.ExtractPickerJFrame;
 
@@ -1914,8 +1912,8 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		{
 			setItemVisible(OPEN, false);
 			setItemVisible(OPEN_ASTEXT, false);
-			setItemVisible(CTF_PROFILE, false);
-			setItemVisible(CTF_RECALCULATE, false);
+			setItemVisible(CTF_PROFILE, data.isCTFMd());
+			setItemVisible(CTF_RECALCULATE, data.isCTFMd());
 		}
 
 		@Override
@@ -2030,13 +2028,13 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 	public void setRowBusy(int row)
 	{
 
-		((MicrographsTableModel) gallery).setRowBusy(row);
+		gallery.setRowBusy(row);
 	}
 
 	@Override
 	public void setRowIdle(int row)
 	{
-		((MicrographsTableModel) gallery).setRowIdle(row);
+		gallery.setRowIdle(row);
 
 	}
 
@@ -2051,7 +2049,6 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 	protected void saveMd() throws Exception
 	{
 		saveMd(dlgSave.getMdFilename(), false, dlgSave.isOverwrite(), true );
-                
 	}
         
       

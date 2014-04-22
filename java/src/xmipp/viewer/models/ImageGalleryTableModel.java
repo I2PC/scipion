@@ -30,12 +30,16 @@ import ij.ImagePlus;
 import java.awt.Dimension;
 import java.awt.Image;
 import java.awt.Insets;
+import java.util.ArrayList;
 import javax.swing.JTable;
 import javax.swing.border.Border;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.JTableHeader;
 import xmipp.ij.commons.ImagePlusLoader;
 import xmipp.jni.Filename;
+import xmipp.jni.MDLabel;
+import xmipp.jni.MDRow;
+import xmipp.jni.MetaData;
 import xmipp.utils.Cache;
 import xmipp.utils.DEBUG;
 import xmipp.utils.XmippPopupMenuCreator;
@@ -43,6 +47,8 @@ import xmipp.viewer.ImageDimension;
 import xmipp.viewer.ImageItemRenderer;
 
 public abstract class ImageGalleryTableModel extends AbstractTableModel {
+    
+    protected ArrayList<Integer> busyRows = new ArrayList<Integer>();
 
 	private static final long serialVersionUID = 1L;
 	// Store the number of rows and columns
@@ -166,7 +172,7 @@ public abstract class ImageGalleryTableModel extends AbstractTableModel {
 					cache.put(key, item);
 				}
 				setupItem(item, index);
-                                System.out.println(item.getClass().getName());
+                
 				return item;
 			} catch (Exception e) {
 				e.printStackTrace();
@@ -192,23 +198,7 @@ public abstract class ImageGalleryTableModel extends AbstractTableModel {
 		}
 	}
 
-	/** Function to force the refresh of some row */
-	public void refreshRow(int row) {
-		try {
-			int n = getColumnCount();
-			int index;
-			String key;
-			for (int col = 0; col < n; ++col) {
-				index = getIndex(row, col);
-				key = getItemKey(index);
-				DEBUG.printFormat("Removing item: %s from cache", key);
-				cache.remove(key);
-			}
-			fireTableRowsUpdated(row, row);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
+
 
 	protected void setupItem(ImageItem item, int index) {
 		ImagePlus imp = item.getImagePlus();
@@ -563,11 +553,7 @@ public abstract class ImageGalleryTableModel extends AbstractTableModel {
 		return String.format(format, index, thumb_width, thumb_height);
 	}
 
-	/** Check if the item is busy */
-	public boolean isBusy(int row, int col) {
-		return false;
-	}
-
+	
 	/**
 	 * Return the main title to be used on windows
 	 */
@@ -684,5 +670,53 @@ public abstract class ImageGalleryTableModel extends AbstractTableModel {
 	{
 		return cols;
 	}
+
+        
+                /** Check if the item is busy */
+	public boolean isBusy(int row, int col){
+		return busyRows.contains(row);
+	}
+    
+	public void setRowBusy(int row) {
+		DEBUG.printFormat("setting busy row: %d", row);
+		busyRows.add(new Integer(row));
+		fireTableRowsUpdated(row, row);
+	}
+
+	public void setRowIdle(int row) {
+		DEBUG.printFormat("setting idle row: %d", row);
+		busyRows.remove(new Integer(row));	
+		long objId = data.ids[row];
+		String psdFile = data.md.getValueString(MDLabel.MDL_PSD, objId);
+		String sortFn = psdFile.replace(".psd", ".xmd");
+		MetaData mdRow = new MetaData(sortFn);
+		MDRow row2 = new MDRow();
+		mdRow.getRow(row2, mdRow.firstObject());
+		data.setRow(row2, objId);
+		mdRow.destroy();
+		refreshRow(row);
+	}
+	
+	/** Function to force the refresh of some row */
+	public void refreshRow(int row) {
+		try {
+			int n = getColumnCount();
+			int index;
+			String key;
+			ColumnInfo ci;
+			for (int col = 0; col < n; ++col) {
+				ci = data.getColumnInfo(col);
+				if (ci.allowRender){
+					key = getItemKey(row, ci.getLabel());
+					DEBUG.printFormat("Removing item: %s from cache", key);
+					cache.remove(key);
+				}
+			}
+			fireTableRowsUpdated(row, row);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+        
 
 }

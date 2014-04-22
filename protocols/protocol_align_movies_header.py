@@ -37,7 +37,7 @@ what we are talking about.
 """
 GPUCore = 0
 
-# {eval} expandParallel(threads=0,hours=12)
+# {condition}(DoGPU){eval} expandParallel(mpi=1,threads=0,hours=12)
 # {eval} expandExpert()
 
 #------------------------------------------------------------------------------------------------

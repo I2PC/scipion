@@ -48,8 +48,11 @@ class ProtAlignMovies(XmippProtocol):
             movieNameList = os.path.basename(inputMovie)
             movieName = os.path.splitext(movieNameList)[0]
             #micrographDir = os.path.join(extraDir,shortname)                    
-            
-            self.insertParallelStep('alignSingleMovie1'
+            if self.DoGPU:
+                func = self.insertStep
+            else:
+                func = self.insertParallelStep   
+            func('alignSingleMovie1'
                                     , verifyfiles=[_getFilename('movieAverage',movieDir=extraDir,baseName=movieName)]
                                     , WorkingDir=self.WorkingDir
                                     , inputMovie=inputMovie 
