@@ -29,10 +29,10 @@ WinSize = 150
 # Use GPU version
 """ Set to true if you want the GPU implementation
 """
-DoGPU = True
+DoGPU=True
 
 # Choose GPU core
-""" {condition}{DoGPU} GPU may have several cores. Set it to zero if you do not know 
+""" {condition}(DoGPU) GPU may have several cores. Set it to zero if you do not know 
 what we are talking about. 
 """
 GPUCore = 0
