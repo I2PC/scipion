@@ -284,7 +284,7 @@ def emxCTFToXmipp(emxData,
     #mdMic.write('Micrographs@' + outputFileName)
     return voltage, cs, samplingRate
 
-def emxCoordsToXmipp(emxData, filesRoot):
+def emxCoordsToXmipp(emxData, filesRoot, mdFn=None):
     """ This function will iterate for each particle and 
     create several .pos metadata (one per micrograph) where 
     the coordinates will written.
@@ -312,9 +312,10 @@ def emxCoordsToXmipp(emxData, filesRoot):
     for mic in emxData.iterClasses(MICROGRAPH):
         micFileName = mic.get(FILENAME)
         md = mdDict[micFileName]
-        mdFn = join(filesRoot, replaceBasenameExt(micFileName, POSENDING))
+        if mdFn is None:
+            mdFn = join(filesRoot, replaceBasenameExt(micFileName, POSENDING))
         md.write('particles@' + mdFn)
-        
+
     #save boxsize
     part = emxData.iterClasses(PARTICLE)[0]
     if part.has('boxSize__X'):

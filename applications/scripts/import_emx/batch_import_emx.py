@@ -54,7 +54,8 @@ class ScriptImportEMX(XmippScript):
         self.addParamsLine(' [--schema <schema=default>]     : validate again this schema ');
         self.addParamsLine("     alias -s;")
         self.addExampleLine(' default= http://sourceforge.net/p/emexchange/code/ci/master/tree/trunk/resourcesEmx/schemas/emx.xsd?format=raw>');
-        self.addParamsLine(' [--oroot <outputdir=".">]     : where to generate output files ');
+        self.addParamsLine(' [--oroot <outputdir=".">]       : where to generate output files ');
+        self.addParamsLine(' [-o <outputFileName>]           : expert parameter for web page, ignore it ');
         self.addExampleLine("Import information from EMX file to Xmipp", False);
         self.addExampleLine("xmipp_import_emx -i particlePicking.emx -m micCTF ");
       
@@ -71,7 +72,11 @@ class ScriptImportEMX(XmippScript):
         doNotValidate= self.checkParam('-n')
         onlyValidate = self.checkParam('-y')
         schema       = self.getParam('-s')
-        oroot = self.getParam('--oroot')
+        oroot        = self.getParam('--oroot')
+        if self.checkParam('-o'):
+            fnOut    = self.getParam('-o')
+        else:
+            fnOut    = None
         print "oroot: ", oroot
         #validate emx file
         if not doNotValidate:
@@ -100,7 +105,7 @@ class ScriptImportEMX(XmippScript):
             if mode == 'mic':
                 emxMicsToXmipp(emxData)
             elif mode == 'coordinates':
-                emxCoordsToXmipp(emxData, '.')
+                emxCoordsToXmipp(emxData, oroot, fnOut)
             elif mode == 'alignment':
                 xmdFileName = emxFileName.replace(".emx",".xmd")
                 alignEMXToXmipp(emxData,PARTICLE,xmdFileName,True)
