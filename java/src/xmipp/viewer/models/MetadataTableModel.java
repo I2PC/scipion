@@ -28,6 +28,7 @@ package xmipp.viewer.models;
 import java.awt.Component;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.util.ArrayList;
 
 import javax.swing.JTable;
 import javax.swing.table.JTableHeader;
@@ -38,6 +39,7 @@ import javax.swing.table.TableColumnModel;
 import xmipp.ij.commons.ImagePlusLoader;
 import xmipp.ij.commons.XmippImageWindow;
 import xmipp.jni.MDLabel;
+import xmipp.jni.MDRow;
 import xmipp.jni.MetaData;
 import xmipp.utils.DEBUG;
 import xmipp.utils.XmippDialog;
@@ -51,6 +53,7 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 
 	int sortColumnIndex = -1;
 	boolean ascending = true;
+        
 
 	public MetadataTableModel(GalleryData data) throws Exception {
 		super(data);
@@ -325,13 +328,16 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 	@Override
 	public boolean handleRightClick(int row, int col,
 			XmippPopupMenuCreator xpopup) {
+             if (isBusy(row, col))
+                    return false;
 		xpopup.initItems();
-
+               
 		if (data.isFile(visibleLabels.get(col))) {
 			xpopup.setItemVisible(XmippPopupMenuCreator.OPEN, true);
 			if (!data.isImageFile(visibleLabels.get(col)))
 				xpopup.setItemVisible(XmippPopupMenuCreator.OPEN_ASTEXT, true);
 		}
+                
 		return true;
 	}
 
@@ -443,5 +449,7 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 			// fireTableDataChanged();
 		}
 	}
-
+        
+        
+        
 }// class MetadataTable

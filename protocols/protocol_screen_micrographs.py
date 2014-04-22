@@ -177,7 +177,7 @@ class ProtScreenMicrographs(XmippProtocol):
         
         if exists(summaryFile):
             self.regenerateSummary(summaryFile)
-            runShowJ(summaryFile, extraParams = "--mode metadata")
+            runShowJ(summaryFile, extraParams = "--mode metadata --render psd psdEnhanced image1 image2 --order psd psdEnhanced image1 image2 --zoom 50")
         else:
             showWarning('Warning', 'There are not results yet',self.master)
     

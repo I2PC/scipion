@@ -307,6 +307,7 @@ public class GalleryData {
 	 * visible on same columns
 	 */
 	public void loadLabels() {
+                
 		ColumnInfo ci;
 		try {
 			int[] labelids = md.getActiveLabels();
@@ -434,8 +435,7 @@ public class GalleryData {
 				// previous case
 				if (!md.isColumnFormat())
 					return new MetadataRowTableModel(this);
-				if ( md.containsMicrographsInfo() && parameters.renderLabel.equalsIgnoreCase("first"))//otherwise specific view is setted
-					return new MicrographsTableModel(this);
+				
 				return new MetadataTableModel(this);
 			case GALLERY_ROTSPECTRA:
 				return new RotSpectraGalleryTableModel(this);
@@ -1091,8 +1091,16 @@ public class GalleryData {
                        labels.set(j, aux);
                        
                    }
-               
-       
        }
+       
+       
+	public boolean isCTFMd() {
+		try {
+			return md.containsLabel(MDLabel.MDL_PSD_ENHANCED) && md.containsLabel(MDLabel.MDL_PSD) && md.containsLabel(MDLabel.MDL_CTF_MODEL);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return false;
+	}
       
 }// class GalleryDaa
