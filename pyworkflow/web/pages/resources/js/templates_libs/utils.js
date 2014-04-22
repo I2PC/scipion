@@ -168,7 +168,7 @@ function popUpJSON(json){
 			popup(value);
 		} else if(key=="urls"){
 			for(var x=0;x<value.length;x++){
-				popup(value[x]);
+				customPopup(value[x],1000,900);
 			}
 		} else if(key=="html"){
 			customPopupHTML(value,600,500);

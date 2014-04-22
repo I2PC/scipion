@@ -320,16 +320,17 @@ def render_column(request):
     
 def get_image_plot(request):
     from PIL import Image
-    
     imagePath = os.path.join(request.GET.get('image'))
-    
-    print "PATH :", imagePath
-    
     img = Image.open(imagePath)
     
     response = HttpResponse(mimetype="image/png")
+    
+    # Create and save the image
     img.save(response, "PNG")
-    return response
+    # after the image is removed from the file system
+    os.remove(imagePath)
+    
+    return response   
     
 def get_image(request):
 #    from django.http import HttpResponse

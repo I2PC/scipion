@@ -112,6 +112,10 @@ def viewToUrl(request, view):
             url += '&%s=%s' % (TABLE_NAME, view.getTableName())
         url = 'url:' + url
     
+    # TEXT VIEWER
+    
+    # COMMAND
+    
     # MESSAGE
     elif isinstance(view, MessageView):
         url = 'error:' + view.getMessage()
