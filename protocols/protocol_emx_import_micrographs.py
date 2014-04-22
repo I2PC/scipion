@@ -53,6 +53,7 @@ class ProtEmxImportMicrographs(XmippProtocol):
         _verifyFiles=[]
         #createMicrographs
         micsFn       = self.getFilename('micrographs')
+        partFn       = self.getFilename('images')
         _verifyFiles.append(micsFn)
         #createAcquisition
         acqFn        = self.getFilename('acquisition')
@@ -64,6 +65,7 @@ class ProtEmxImportMicrographs(XmippProtocol):
                         verifyfiles=_verifyFiles,
                         emxFileName=self.EmxFileName,
                         micsFileName=micsFn,
+                        partFileName=partFn,
                         acqFn=acqFn, 
                         ctfDir=self.ExtraDir,
                         SamplingRate=self.SamplingRate,
@@ -156,7 +158,8 @@ def validateSchema(log, emxFileName):
 
 def createMicrographs(log,
                       emxFileName, 
-                      micsFileName, 
+                      micsFileName,
+                      partFileName,
                       acqFn,
                       ctfDir,
                       SamplingRate,
@@ -172,13 +175,16 @@ def createMicrographs(log,
                                    micsFileName, 
                                    filesPrefix,
                                    ctfDir)
-    
+    print "emxData", emxData
     if _SamplingRate > 0:
         SamplingRate = _SamplingRate
-
+    #acquisition and micrograph will be always created
     createAcquisition(log, acqFn, SamplingRate )
-    emxCTFToXmipp(emxData, micsFileName, filesPrefix, ctfDir,Voltage, SphericalAberration, SamplingRate, AmplitudeContrast)
     createMicroscope(log, microscopeFn, Voltage, SphericalAberration, SamplingRate, AmplitudeContrast)
+    #if CTF information availalble for microgrpah create ctf_param
+    emxCTFToXmipp(emxData, micsFileName, filesPrefix, ctfDir,Voltage, SphericalAberration, SamplingRate, AmplitudeContrast)
+    ####if pos information available
+    emxParticlesToXmipp(emxData, partFileName, filesPrefix, ctfDir,True)
     
 def createAcquisition(log, acqFn, SamplingRate):
         # Create the acquisition info file
