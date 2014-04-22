@@ -302,21 +302,6 @@ function fillUL(type, list, ulId, icon) {
 	}
 }
 
-function launchViewer(id){
-	/*
-	 * Launch the viewers to analyze the results of the protocol run
-	 */
-	$.ajax({
-		type : "GET",
-		// Execute the viewer 
-		url : "/launch_viewer/?protocolId=" + id,
-		dataType : "json",
-		success : function(json) {
-			popUpJSON(json);
-		}
-	});	
-}
-
 function updateButtons(id, elm){
 	/*
 	 * Function to update the buttons in the toolbar and the tabs, after choose a new protocol run.
@@ -696,8 +681,5 @@ function checkStatusRow(id, status, time){
 	row.find(".time").html(time);
 		
 }
-
-
-
 
 

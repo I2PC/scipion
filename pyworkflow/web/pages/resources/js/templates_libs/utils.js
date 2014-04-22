@@ -389,3 +389,18 @@ function updateLabelComment(){
 function replaceAll(find, replace, str) {
 	return str.replace(new RegExp(find, 'g'), replace);
 }
+
+function launchViewer(id){
+	/*
+	 * Launch the viewers to analyze the results of the protocol run
+	 */
+	$.ajax({
+		type : "GET",
+		// Execute the viewer 
+		url : "/launch_viewer/?protocolId=" + id,
+		dataType : "json",
+		success : function(json) {
+			popUpJSON(json);
+		}
+	});	
+}
