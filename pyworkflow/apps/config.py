@@ -87,6 +87,7 @@ class ProjectSettings(OrderedObject):
         self.protMenuList = SettingList() # Store different protocol configurations
         self.mapper = None # This should be set when load, or write 
         self.graphView = Boolean(False)
+        self.runSelection = CsvList(int) # Store selected runs
         
     def commit(self):
         """ Commit changes made. """
