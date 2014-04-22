@@ -59,6 +59,56 @@ class DataView(View):
         for key, value in self._viewParams.items():
             params = "%s --%s %s"%(params, key, value)
         return params
+    
+    def getShowJWebParams(self):
+    
+    #=OLD SHOWJ WEB DOCUMENTATION===============================================
+    # Extra parameters can be used to configure table layout and set render function for a column
+    # Default layout configuration is set in ColumnLayoutProperties method in layout_configuration.py
+    # 
+    # Parameters are formed by: [label]___[property]: [value]. E.g.: id___visible:True or micrograph___renderFunc:"get_image_psd"
+    # Properties to be configured are:
+    #    visible: Defines if this column is displayed
+    #    allowSetVisible: Defines if user can change visible property (show/hide this column).
+    #    editable: Defines if this column is editable, ie user can change field value.
+    #    allowSetEditable: Defines if user can change editable property (allow editing this column).
+    #    renderable: Defines if this column is renderizable, ie it renders data column using renderFunc
+    #    allowSetRenderable: Defines if user can change renderable property.
+    #    renderFunc: Function to be used when this field is rendered. (it has to be inserted in render_column method)
+    #    extraRenderFunc: Any extra parameters needed for rendering. Parameters are passed like in a url ie downsample=2&lowPass=3.5
+    # 
+    # Example:
+    # extraParameters["id___visible"]=True
+    # extraParameters["micrograph___renderFunc"]="get_image_psd"
+    # extraParameters["micrograph___extraRenderFunc"]="downsample=2"
+    #===========================================================================
+    
+        parameters = {
+            'visible':'visible',
+            'allowSetVisible':'allowSetVisible',
+            'editable':'editable',
+            'allowSetEditable':'allowSetEditable',
+            'render': 'renderable',
+            'allowSetRenderable':'allowSetRenderable',
+            'renderFunc':'renderFunc',
+            'extraRenderFunc':'extraRenderFunc',        
+            
+            # FOR MODE TABLE OR GALLERY
+            'mode': 'mode'
+        }
+        
+        params = {}
+        for key, value in self._viewParams.items():
+            
+            if key in parameters:
+                if key == 'mode':
+                    if value=='metadata':
+                        params[key]='table'
+                else:    
+                    for val in value.split(' '):
+                        params[val] = '%s___%s' % (val, parameters[key])
+                                
+        return params
         
     def getPath(self):
         return self._path

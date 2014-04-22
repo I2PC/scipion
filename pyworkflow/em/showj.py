@@ -99,7 +99,9 @@ class ColumnsConfig():
         self._columnsDict = OrderedDict() 
          
         for col in table.iterColumns():
+            
             self._columnsDict[col.getName()] = ColumnProperties(col, ds, allowRender, defaultColumnsLayoutProperties[col.getName()] if defaultColumnsLayoutProperties != None else {})
+        
         
     def getRenderableColumns(self):
         """ Return a list with the name of renderable columns. """
@@ -137,13 +139,22 @@ class ColumnProperties():
         self._column = col        
         self.columnType = ds.getTypeOfColumn(col.getName())
         
-        self.visible = not(self.columnType == 'id')
+        self.visible = not (self.columnType == 'id')
         self.allowSetVisible = True 
         
         self.editable = (self.columnType == 'text')
         self.allowSetEditable = self.editable
         
         self.renderable = False
+        
+        for k in defaultColumnLayoutProperties:
+            if k == 'renderable':
+                self.renderable = True
+            else:
+                self.renderable = False
+
+#        self.renderable = False
+            
         self.allowSetRenderable = (self.columnType == 'image' and allowRender)
 
         self.renderFunc = "get_image"

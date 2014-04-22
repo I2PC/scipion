@@ -28,16 +28,11 @@ import json
 from pyworkflow.em import *
 from views_util import *
 from views_protocol import updateProtocolParams
-from pyworkflow.manager import Manager
-from pyworkflow.em import emProtocolsDict
 from django.http import HttpResponse
-
 from pyworkflow.gui.plotter import Plotter
-
-from pyworkflow.em.packages.xmipp3.convert import writeSetOfParticles
-from pyworkflow.em.packages.xmipp3.plotter import XmippPlotter
 from pyworkflow.viewer import WEB_DJANGO
-from pyworkflow.em.viewer import PATH, TABLE_NAME
+from pyworkflow.em.viewer import *
+
 
 ############## 1ST STEP: LAUNCH VIEWER METHODS ##############
 
@@ -84,37 +79,43 @@ def viewerForm(project, protocol, viewer):
     
     return "url:/form/?protocolClass=%s&protRunIdViewer=%s&action=visualize" % (viewerClassName, protId)
     
-    
-    objId = request.GET.get('objectId')
-    obj = project.mapper.selectById(int(objId))
-    viewers = findViewers(obj.getClassName(), WEB_DJANGO)
-    
-    if viewers:
-        viewer = viewers[0](project=project)
-        views = viewer._visualize(obj)
-    else:
-        views = [MessageView("No viewers found for object type: %s" % obj.getClassName())]
-        
-    urls =  [viewToUrl(request, v) for v in views]
-            
-    jsonStr = json.dumps(urls, ensure_ascii=False)
-        
-    return HttpResponse(jsonStr, mimetype='application/javascript')
+
+#def viewerXmipp(project, protocol, viewer):
+#    
+#    if isinstance(protocol, XmippProtKerdensom):
+#        ioDict['url'] += '&mode=gallery&colRowMode=On&cols=%d' % protocol.SomXdim.get()
+#    if isinstance(protocol, XmippProtRotSpectra):
+#        ioDict['url'] += '&classCount___renderable=True&classCount___renderFunc=getTestPlot'
+#    return ioDict
 
 ############## 2ND STEP: VIEWER FUNCTION METHODS ##############
 
 def viewToUrl(request, view):
     
+    # PLOT
     if isinstance(view, Plotter):
         url = 'url:' + savePlot(request, view)
+    
+    # SHOWJ
     elif isinstance(view, DataView):
         url = "/showj/?%s=%s" % (PATH, view.getPath())
+        
+        if view.getShowJWebParams():
+            params = view.getShowJWebParams()
+            for key in params:
+                if key == 'mode':
+                    url += '&mode=%s' % params[key]
+                else:
+                    url += '&%s=True' % params[key]
+        
         if view.getTableName():
             url += '&%s=%s' % (TABLE_NAME, view.getTableName())
         url = 'url:' + url
+    
+    # MESSAGE
     elif isinstance(view, MessageView):
         url = 'error:' + view.getMessage()
-        
+    
     return url
 
 def viewerElement(request):

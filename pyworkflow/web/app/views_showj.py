@@ -71,14 +71,17 @@ def loadColumnsConfig(request, dataset, table, inputParams, extraParams, firstTi
         
     if firstTime or tableChanged:
         columns_properties = getExtraParameters(extraParams, table)
+        
         request.session[COLS_CONFIG_DEFAULT] = columns_properties
 
         columnsConfig = ColumnsConfig(dataset, table, inputParams[ALLOW_RENDER], columns_properties)
+        
         request.session[COLS_CONFIG] = columnsConfig
     else:
         columnsConfig = request.session[COLS_CONFIG]
             
     inputParams[COLS_CONFIG] = columnsConfig
+    
     setLabelToRender(request, table, inputParams, extraParams, firstTime)
      
      
@@ -234,10 +237,14 @@ def showj(request):
                 inputParams[key] = value
         # extraParams will be readed from SESSION
         
+        
     request.session[IMG_ZOOM_DEFAULT] = inputParams[IMG_ZOOM]    
     
-    from pprint import pprint
-    pprint(inputParams)
+    #=DEBUG=====================================================================
+#    from pprint import pprint
+#    pprint(inputParams)
+#    pprint(extraParams)
+    #===========================================================================
 
     if inputParams[VOL_TYPE] != 'pdb':
         # Load the initial dataset from file or session
@@ -347,7 +354,6 @@ def getExtraParameters(extraParams, table):
     if extraParams != None and extraParams != {}:
         defaultColumnsLayoutProperties = {k.getName(): {} for k in table.iterColumns()}
         for key, value in extraParams.iteritems():
-
             try:
                 label, attribute = key.rsplit('___')
             except Exception, ex:
