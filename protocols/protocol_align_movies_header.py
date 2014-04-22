@@ -29,14 +29,15 @@ WinSize = 150
 # Use GPU version
 """ Set to true if you want the GPU implementation
 """
-DoGPU = True
+DoGPU=True
 
-# Choose GPU core
-""" {condition}{DoGPU} GPU may have several cores. Set it to zero if you do not know 
+#  {condition}(DoGPU) Choose GPU core
+"""GPU may have several cores. Set it to zero if you do not know 
 what we are talking about. 
 """
 GPUCore = 0
 
+# {condition}(DoGPU){eval} expandParallel(mpi=1,threads=0,hours=12)
 # {eval} expandExpert()
 
 #------------------------------------------------------------------------------------------------
