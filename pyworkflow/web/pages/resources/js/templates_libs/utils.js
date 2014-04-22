@@ -80,6 +80,9 @@
  * function updateLabelComment()
  * 	->	Method to store the label and comment for an object.
  * 
+ *  * function launchViewer(id)
+ * 	->	Launch the viewers to analyze the results for an object (protocol or object).
+ * 
  ******************************************************************************/
 
 /** METHODS *******************************************************************/
