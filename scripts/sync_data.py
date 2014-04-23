@@ -32,6 +32,7 @@ import sys
 import argparse
 import urllib
 import hashlib
+import types
 from pyworkflow.utils.path import moveFile, makePath, makeFilePath, copyFile, cleanPath
 
 def scipion_logo():
@@ -306,12 +307,15 @@ def main(argv):
         folders = os.listdir(os.environ['SCIPION_TESTS'])
         for folder in folders:
             if os.path.isdir(os.path.join(os.environ['SCIPION_TESTS'], folder)):
-                print "\t * " + folder
+                if os.path.exists(os.path.join(os.environ['SCIPION_TESTS'], folder, 'MANIFEST')):
+                    print "\t * " + folder
+                else:
+                    print "\t * " + folder + ' (not in dataset format)'
+        print ""
         print "updating remote info..."
         backupFile(getManifestPath(basePath=os.environ['SCIPION_TMP']))
         try:
             urllib.urlretrieve(args.url+'/MANIFEST', getManifestPath(basePath=os.environ['SCIPION_TMP']))
-            print "done."
         except:
             print "MANIFEST"+" ...ERROR"
             print "URL: "+args.url+'/MANIFEST'
@@ -349,7 +353,10 @@ def main(argv):
             open(os.path.join(os.environ['SCIPION_HOME'],args.last_mod_file), 'w').close()
             sys.exit(2) #We return with 2, to let Buildbot know that no modification was made (when failure there was modification)
     elif args.dataset:
-        print "Selected dataset(s): %(dataset)s" % ({'dataset': " ".join(args.dataset)})
+        if len(args.dataset) == 1:
+            print "Selected datasets: %(datasets)s" % ({'datasets': " ".join(args.dataset)})
+        else:
+            print "Selected datasets: %(datasets)s" % ({'datasets': args.dataset})
         ans = ""
         if len(args.dataset) == 1 and " ".join(args.dataset) == "all" and args.reverse_sync:
             while ans != "y" and ans != "Y" and ans != "n" and ans != "N":
@@ -361,27 +368,37 @@ def main(argv):
                 deleteFlag=""
                 if args.delete:
                     deleteFlag="--delete "
+                localFolder = os.path.join(os.environ['SCIPION_TESTS'], dataset)
                 remoteUser = 'scipion'
                 remoteServer = 'ramanujan.cnb.csic.es'
                 remoteFolder = os.path.join('/home', 'twiki', 'public_html', 'files', 'scipion', 'data', 'tests', 'NACHOTESTS_PLEASEDONOTREMOVE', 'tests')
+                
+                if not os.path.exists(localFolder):
+                    print "ERROR: local folder %(localFolder)s doesn't exist." % ({'localFolder': localFolder})
+                    sys.exit(1)
                 print "Reverse synchronizing, BE CAREFUL!!! OPERATION EXTREMELY DANGEROUS!!!"
                 ans = ''
                 while ans != 'y' and ans != 'Y' and ans != 'n' and ans != 'N':
                     ans = raw_input("You're going to be connected to %(remoteServer)s server as %(remoteUser)s user to write in %(remoteFolder)s folder for %(dataset)s dataset. Only authorized users shall pass. Continue? (y/n): " % ({'remoteServer': remoteServer, 'remoteUser': remoteUser, 'remoteFolder': remoteFolder, 'dataset': dataset}))
                 if ans != ('y' or 'Y'):
                     sys.exit(1)
-                #print "bash " + args.syncfile + deleteFlag + " -r " + dataset
-                #subprocess.call("bash " + args.syncfile + " -l " + args.last_mod_file + deleteFlag + " -r " + dataset, shell=True)
+                
+                # If the folder is not in the proper format, create the format and then upload
+                command = '%(scipionPython)s scripts/generate_md5.py %(dataset)s %(datasetPath)s' % ({'scipionPython': os.environ['SCIPION_PYTHON'], 'dataset': dataset, 'datasetPath': os.environ['SCIPION_TESTS']})
+                print ">>>>>", command
+                subprocess.call(command, shell=True)
                 # Synchronize files
-                command = 'rsync -av '+ deleteFlag + os.path.join(os.environ['SCIPION_TESTS'], dataset) + ' ' + remoteUser + '@' + remoteServer + ':' + remoteFolder
-                print command
+                command = 'rsync -av '+ deleteFlag + localFolder + ' ' + remoteUser + '@' + remoteServer + ':' + remoteFolder
+                print ">>>>>", command
                 subprocess.call(command, shell=True)
                 # Regenerate remote MANIFEST
                 command = "ssh " + remoteUser + '@' + remoteServer + " \"cd " + remoteFolder + ' && ' + "find -maxdepth 1 -type d -type d ! -iname '.' > MANIFEST" + "\""
                 print "Regenerating remote MANIFEST file..."
+                print ">>>>>", command
                 subprocess.call(command, shell=True)
                 print "...done."
                 # Leave last_m.txt file indicating modifications have been done, to let buildbot trigger its automatic testing system
+                #TODO: this step
             else:
                 datasetFolder = os.path.join(os.environ['SCIPION_TESTS'],"%(dataset)s" % ({'dataset': dataset}))
                 if(os.path.exists(datasetFolder)):

@@ -32,23 +32,33 @@ under a given directory.
 import os, sys
 import hashlib
 from os.path import join
+from pyworkflow.utils import getExt
 
 if __name__ == '__main__':
     path = sys.argv[1]
-    
-    md5Fn = join(path, 'data.md5')
-    f = open(md5Fn, 'w+')
-    
-    for root, dirs, files in os.walk(path):
+    datasetPath = sys.argv[2]
+    absPath = os.path.join(datasetPath, path)
+    if not os.path.exists(absPath):
+        print "ERROR: %(path)s folder doesn't exist in datasets folder %(datasetsFolder)s." % ({'path': path, 'datasetsFolder': datasetPath})
+        sys.exit(1)
+    manifestPath = join(absPath, 'MANIFEST')
+    manifestFile = open(manifestPath, 'w+')
+    for root, dirs, files in os.walk(absPath):
         for filename in files:
             fn = join(root, filename)
-            if fn != md5Fn:
-                with open(fn) as fileToCheck:
-                    data = fileToCheck.read()
-                    md5sum = hashlib.md5(data).hexdigest()
-                f.write('%s %s\n' % (md5sum, fn))
-
-    f.close()                
+            if fn != manifestPath and getExt(fn) != ".md5":
+                md5Path = fn + '.md5'
+                md5File = open(md5Path, 'w+')
+                md5sum = 0
+                md5 = hashlib.md5()
+                with open(fn, 'r+') as fileToCheck:
+                    for chunk in iter(lambda: fileToCheck.read(128*md5.block_size), b''):
+                        md5.update(chunk)
+                md5sum = md5.hexdigest()
+                manifestFile.write('%(fn)s\n' % ({'fn': os.path.relpath(fn, absPath)}))
+                md5File.write('%(md5sum)s %(fn)s\n' % ({'md5sum': md5sum, 'fn': os.path.relpath(fn, absPath)}))
+                md5File.close()
+    manifestFile.close()                
 
         
     

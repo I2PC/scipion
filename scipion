@@ -210,22 +210,24 @@ if __name__ == '__main__':
             if n > 2:
                 dataset = sys.argv[2:-1]
                 if n > 3:
-                    print "dataset selected"
                     option = sys.argv[-1]
                     dataset = sys.argv[2]
                     verbosity = ""
                     if n > 4:
-                        dataset = sys.argv[2:-1]
+                        dataset = " ".join(sys.argv[2:-1])
                         if sys.argv[-1] == "verbose":
                             verbosity = "-v"
                             option = sys.argv[-2]
                             dataset = sys.argv[2:-2]
                     if option == "upload":
-                        print "Synchronizing dataset %s with local data" % " ".join(dataset)
-                        runCmd('scripts/sync_data.py -f %s %s -r -d' % (" ".join(dataset), verbosity))
+                        print "Synchronizing dataset %s with local data" % dataset
+                        runCmd('scripts/sync_data.py -f %s %s -r -d' % (dataset, verbosity))
                     elif option == "download":
-                        print "Synchronizing local dataset(s) %s with remote data" % " ".join(dataset)
-                        runCmd('scripts/sync_data.py -f %s %s' % (" ".join(dataset), verbosity))
+                        print "Synchronizing local dataset(s) %s with remote data" % dataset
+                        runCmd('scripts/sync_data.py -f %s %s' % (dataset, verbosity))
+                    elif option == "format":
+                        print "Formatting local dataset(s) %s" % dataset
+                        runCmd('scripts/generate_md5.py %s %s' % (dataset, os.environ['SCIPION_TESTS']))
                     elif option == "raw":
                         args = ' '.join(sys.argv[4:]) # We leave here a way to pass arguments directly to the script
                         runCmd('scripts/sync_data.py %s' % args)
@@ -309,6 +311,7 @@ USAGE:
                                      OPERATION can be:
                                         upload [verbose]: synchronize remote dataset with your local working copy. This is default behaviour if no operation is given. If verbose argument is given, process will be more detailed.
                                         download [verbose]: synchronize local dataset with the remote dataset. If verbose argument is given, process will be more detailed.
+                                        format: format a dataset to give it the expected structure
                                         raw: directly pass the rest of the arguments to the sync_data script.
                               
         viewer [FILE]          Open a file with Scipion showj program.
