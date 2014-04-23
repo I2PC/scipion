@@ -10,11 +10,10 @@ import java.awt.event.ComponentEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.util.List;
-import javax.swing.JDialog;
 import xmipp.utils.XmippWindowUtil;
 import xmipp.utils.XmippMessage;
 
-public class ParticlesJDialog extends Dialog
+public class ParticlesDialog extends Dialog
 {
 
 	protected ParticlePickerJFrame frame;
@@ -23,7 +22,7 @@ public class ParticlesJDialog extends Dialog
 	protected GridBagConstraints constraints;
 	protected int width, height, rows, columns, side;
 
-	public ParticlesJDialog(ParticlePickerJFrame frame)
+	public ParticlesDialog(ParticlePickerJFrame frame)
 	{
 		super(frame);
 		this.frame = frame;

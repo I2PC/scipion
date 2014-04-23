@@ -7,11 +7,11 @@ import xmipp.utils.XmippMessage;
 import xmipp.utils.XmippWindowUtil;
 import xmipp.viewer.particlepicker.ParticleCanvas;
 import xmipp.viewer.particlepicker.ParticlePickerJFrame;
-import xmipp.viewer.particlepicker.ParticlesJDialog;
+import xmipp.viewer.particlepicker.ParticlesDialog;
 import xmipp.viewer.particlepicker.PickerParticle;
 import xmipp.viewer.particlepicker.tiltpair.model.UntiltedParticle;
 
-public class TiltPairParticlesJDialog extends ParticlesJDialog
+public class TiltPairParticlesJDialog extends ParticlesDialog
 {
 
 	public TiltPairParticlesJDialog(ParticlePickerJFrame frame)
