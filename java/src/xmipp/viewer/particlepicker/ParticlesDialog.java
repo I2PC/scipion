@@ -47,8 +47,7 @@ public class ParticlesDialog extends Dialog
 
 	public void loadParticles(boolean changesize)
 	{
-		
-                
+
 		List<? extends PickerParticle> particles = frame.getAvailableParticles();
 		side = frame.getSide(frame.getParticlePicker().getSize());
 
@@ -104,9 +103,10 @@ public class ParticlesDialog extends Dialog
                 particlespn.revalidate();
                 sp.setScrollPosition(sp.getScrollPosition().x, Integer.MAX_VALUE);
 		pack();
-                
-		
+
 	}
+        
+        
 
 	private void initComponents()
 	{
