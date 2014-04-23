@@ -368,7 +368,7 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame {
 
 	@Override
 	public ParticlesDialog initParticlesJDialog() {
-		return new TiltPairParticlesJDialog(this);
+		return new TiltPairParticlesDialog(this);
 	}
 
 }// class TiltPairPickerJFrame

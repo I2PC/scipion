@@ -10,12 +10,8 @@ import java.awt.event.ComponentEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.util.List;
-
-import javax.swing.JDialog;
-
 import xmipp.utils.XmippWindowUtil;
 import xmipp.utils.XmippMessage;
-import xmipp.viewer.particlepicker.training.model.ManualParticle;
 
 public class ParticlesDialog extends Dialog
 {
@@ -36,14 +32,14 @@ public class ParticlesDialog extends Dialog
 		{
 			public void windowClosing(WindowEvent winEvt)
 			{
-				resetParticlesJDialog();
+				resetParticlesDialog();
                                 close();
 			}
 
 		});
 	}
 
-	protected void resetParticlesJDialog()
+	protected void resetParticlesDialog()
 	{
 		frame.particlesdialog = null;
 
