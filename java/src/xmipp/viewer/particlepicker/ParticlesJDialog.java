@@ -104,9 +104,6 @@ public class ParticlesJDialog extends Dialog
 			}
                 particlespn.revalidate();
                 sp.setScrollPosition(sp.getScrollPosition().x, Integer.MAX_VALUE);
-                
-                System.out.printf("width:%s height:%s rows:%s cols:%s side:%s scrollx:%s scrolly:%s index:%s\n", width, height, rows, columns, side, sp.getScrollPosition().x, sp.getScrollPosition().y, index);
-                
 		pack();
                 
 		
