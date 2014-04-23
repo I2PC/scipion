@@ -32,14 +32,14 @@ public class ParticlesDialog extends Dialog
 		{
 			public void windowClosing(WindowEvent winEvt)
 			{
-				resetParticlesJDialog();
+				resetParticlesDialog();
                                 close();
 			}
 
 		});
 	}
 
-	protected void resetParticlesJDialog()
+	protected void resetParticlesDialog()
 	{
 		frame.particlesdialog = null;
 
