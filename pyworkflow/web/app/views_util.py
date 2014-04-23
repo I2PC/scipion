@@ -83,13 +83,6 @@ jsDict = {'jquery': 'jquery/jquery.js',
           'jquery_ui_touch': 'jquery/jquery.ui.touch-punch.min.js',
           'jquery_hover_intent': 'jquery/jquery.hoverIntent.minified.js',
           'jsplumb': 'jsPlumb/jquery.jsPlumb.js',
-          
-          #==== JQuery Layout ==================================================
-           'jquery_': 'jquery_layout/jquery.js',
-           'layout_': 'jquery_layout/jquery.layout.min.js',
-           'jquery_ui_all_':'jquery_layout/jquery.ui.all.js',
-          #=====================================================================
-          
           'utils': 'templates_libs/utils.js',
           'host_utils': 'templates_libs/host_utils.js',
           'graph_utils': 'templates_libs/graph_utils.js',
@@ -251,22 +244,15 @@ def set_attributes(request):
         
     return HttpResponse(return_id, mimetype='application/javascript')
 
-def getSizePlotter(plots):
-    figsize = (800, 600)
+def file_viewer(request):
+    file = request.GET.get("path")
     
-    if plots == -1:
-        figsize = (800, 400)
-    if plots == 1:
-        figsize = (600, 500)
-    elif plots == 2:
-        figsize = (600, 400)
-    elif plots == 3 or plots == 4:
-        figsize = (800, 600)
+    html = textfileViewer('title', file)
     
-    return figsize
+    return html
 
-def textfileViewer(title, fileList):
-    f = open(fileList[0], 'r')
+def textfileViewer(title, file):
+    f = open(file, 'r')
         
     style = "background-color:black;color:white;font-family:Monospace;padding:1em;font-size:90%;"
     title = "<title>"+ title + "</title>"
@@ -283,6 +269,7 @@ def textfileViewer(title, fileList):
             html = html +"<p><span style='color:cyan;'>" + str(x) + ":    </span>"+ line +" </p>"
             
     html = html + "</div>"
+    
     return html
 
 def convertTktoHtml(text):

@@ -65,6 +65,7 @@ urlpatterns = patterns('',
     #VIEWERS
     url(r'^launch_viewer/$', 'app.em_viewer.launch_viewer'),
     url(r'^viewerElement/$', 'app.em_viewer.viewerElement'),
+    url(r'^file_viewer/$', 'app.views_util.file_viewer'),
     
     #SHOWJ
     url(r'^showj/$', 'app.views_showj.showj'), #Load web

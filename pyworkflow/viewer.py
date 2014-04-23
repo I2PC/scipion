@@ -103,6 +103,9 @@ class TextView(View):
             self._title = filelist[0]
         self._tkParent = tkParent
         
+    def getFileList(self):
+        return self._filelist
+        
     def show(self):
         from pyworkflow.gui.text import showTextFileViewer
         showTextFileViewer(self._title, self._filelist, self._tkParent)

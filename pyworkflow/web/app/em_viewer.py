@@ -30,7 +30,7 @@ from views_util import *
 from views_protocol import updateProtocolParams
 from django.http import HttpResponse
 from pyworkflow.gui.plotter import Plotter
-from pyworkflow.viewer import WEB_DJANGO
+from pyworkflow.viewer import *
 from pyworkflow.em.viewer import *
 
 
@@ -113,6 +113,10 @@ def viewToUrl(request, view):
         url = 'url:' + url
     
     # TEXT VIEWER
+    elif isinstance(view, TextView):
+        file  = view.getFileList()[0]
+        url = "/file_viewer/?%s=%s" % (PATH, file)
+        url = 'url:' + url
     
     # COMMAND
     
