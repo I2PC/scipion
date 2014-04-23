@@ -135,7 +135,7 @@ def viewerElement(request):
     protocolViewer.setProtocol(protocol)
     updateProtocolParams(request, protocolViewer, project)
     
-    views = protocolViewer._getVisualizeDict()[viewerParam]()
+    views = protocolViewer._getVisualizeDict()[viewerParam](viewerParam)
     
     urls = [viewToUrl(request, v) for v in views]
     

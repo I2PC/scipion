@@ -217,7 +217,7 @@ class ProtocolViewer(Protocol, Viewer):
             errorMsg = '\n'.join(errors)
             self.showError(errorMsg, "Validation errors")
         else:
-            views = self._getVisualizeDict()[paramName]()
+            views = self._getVisualizeDict()[paramName](paramName)
             if views:
                 for v in views:
                     v.show()
