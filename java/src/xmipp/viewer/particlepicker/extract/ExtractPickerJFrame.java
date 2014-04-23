@@ -34,7 +34,7 @@ import xmipp.viewer.particlepicker.Micrograph;
 import xmipp.viewer.particlepicker.ParticlePicker;
 import xmipp.viewer.particlepicker.ParticlePickerCanvas;
 import xmipp.viewer.particlepicker.ParticlePickerJFrame;
-import xmipp.viewer.particlepicker.ParticlesJDialog;
+import xmipp.viewer.particlepicker.ParticlesDialog;
 import xmipp.viewer.particlepicker.PickerParticle;
 import xmipp.viewer.particlepicker.training.model.Mode;
 import xmipp.viewer.windows.GalleryJFrame;
@@ -379,9 +379,9 @@ public class ExtractPickerJFrame extends ParticlePickerJFrame
 		
 	}
 	@Override
-	public ParticlesJDialog initParticlesJDialog()
+	public ParticlesDialog initParticlesJDialog()
 	{
-		return new ParticlesJDialog(this);
+		return new ParticlesDialog(this);
 	}
 
 	public void refreshActive(long id, boolean b)
