@@ -33,6 +33,7 @@ import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
 import xmipp.utils.DEBUG;
 import xmipp.utils.Param;
+import xmipp.utils.StopWatch;
 import xmipp.utils.XmippDialog;
 import xmipp.viewer.ctf.CTFAnalyzerJFrame;
 import xmipp.viewer.ctf.CTFRecalculateImageWindow;
@@ -186,7 +187,11 @@ public class ImagesWindowFactory {
 
 	public static GalleryJFrame openMetadata(String filename, Param parameters,
 			String mode) throws Exception {
-		return openMetadata(filename, new MetaData(filename), parameters, mode);
+                StopWatch stopWatch = StopWatch.getInstance();
+                stopWatch.printElapsedTime("creating md");
+                MetaData md = new MetaData(filename);
+                stopWatch.printElapsedTime("opening md");
+		return openMetadata(filename, md, parameters, mode);
 	}
 
 	public static GalleryJFrame openFilesAsGallery(String filenames[],

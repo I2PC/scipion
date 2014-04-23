@@ -30,6 +30,7 @@ import java.util.Arrays;
 import java.util.logging.Level;
 
 import xmipp.jni.MDRow;
+import xmipp.utils.StopWatch;
 
 //import xmipp.utils.DEBUG;
 
@@ -465,6 +466,7 @@ public class MetaData {
 	public MetaData(String filename) {
 		//DEBUG.printFormat("Java: Creating metadata from filename: %s\n", filename);
 		//DEBUG.printStackTrace();
+            
 		create();
 		read(filename);
 	}
