@@ -101,7 +101,7 @@ public class ParticlesDialog extends Dialog
 				c = p.getParticleCanvas(frame);
 				particlespn.add(c, XmippWindowUtil.getConstraints(constraints, j, i, 1));
 			}
-                particlespn.revalidate();
+                // particlespn.revalidate();
                 sp.setScrollPosition(sp.getScrollPosition().x, Integer.MAX_VALUE);
 		pack();
 	}
