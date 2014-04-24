@@ -410,7 +410,7 @@ def main(argv):
                 Cmd(command)
                 
                 print "Registering modification attempt in last_m.txt file"
-                command = "ssh " + remoteUser + '@' + remoteServer + " \"echo '++++' >> " + lastmFile + " && echo 'Modification made at' >> " + lastmFile + " && date >> " + lastmFile + " && echo 'by " + localUser + " at " + localHostname +"' >> " + lastmFile + " && echo '----' >> " + lastmFile + "\""
+                command = "ssh " + remoteUser + '@' + remoteServer + " \"echo '++++' >> " + lastmFile + " && echo 'Modification to " + dataset + " dataset made at' >> " + lastmFile + " && date >> " + lastmFile + " && echo 'by " + localUser + " at " + localHostname +"' >> " + lastmFile + " && echo '----' >> " + lastmFile + "\""
                 Cmd(command)
                 print "...done."
                 # Leave last_m.txt file indicating modifications have been done, to let buildbot trigger its automatic testing system
