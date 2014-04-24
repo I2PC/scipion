@@ -30,6 +30,7 @@ import java.util.Arrays;
 import java.util.logging.Level;
 
 import xmipp.jni.MDRow;
+import xmipp.utils.StopWatch;
 
 //import xmipp.utils.DEBUG;
 
@@ -88,6 +89,21 @@ public class MetaData {
 		// storeIds();
 	}
 
+        	/** Create empty metadata */
+	public MetaData() {
+		//DEBUG.printFormat("Java: Creating metadata\n");
+		//DEBUG.printStackTrace();
+		create();
+	}
+
+	/** Create a metadata and read data from filename */
+	public MetaData(String filename) {
+		//DEBUG.printFormat("Java: Creating metadata from filename: %s\n", filename);
+		//DEBUG.printStackTrace();
+            
+		create();
+		read(filename);
+	}
 	// caching some ids
 	// private static native void storeIds();
 	// functions to create images
@@ -454,20 +470,7 @@ public class MetaData {
 	public native void enableDebug();
 
 	/*********** Non-native functions ********************/
-	/** Create empty metadata */
-	public MetaData() {
-		//DEBUG.printFormat("Java: Creating metadata\n");
-		//DEBUG.printStackTrace();
-		create();
-	}
 
-	/** Create a metadata and read data from filename */
-	public MetaData(String filename) {
-		//DEBUG.printFormat("Java: Creating metadata from filename: %s\n", filename);
-		//DEBUG.printStackTrace();
-		create();
-		read(filename);
-	}
 
 	/**
 	 * Will be called by GarbageCollector before destroying. Needed to free C++
