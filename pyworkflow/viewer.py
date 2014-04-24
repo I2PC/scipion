@@ -171,6 +171,7 @@ class ProtocolViewer(Protocol, Viewer):
         self.allowHeader.set(False)
         self.showPlot = True # This flag will be used to display a plot or return the plotter
         self._tkRoot = None
+        self.formWindow = None
         
     def setProtocol(self, protocol):
         self.protocol = protocol
