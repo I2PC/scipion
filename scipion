@@ -218,7 +218,7 @@ if __name__ == '__main__':
                         if sys.argv[-1] == "verbose":
                             verbosity = "-v"
                             option = sys.argv[-2]
-                            dataset = sys.argv[2:-2]
+                            dataset = " ".join(sys.argv[2:-2])
                     if option == "upload":
                         print "Synchronizing dataset %s with local data" % dataset
                         runCmd('scripts/sync_data.py -f %s %s -r -d' % (dataset, verbosity))

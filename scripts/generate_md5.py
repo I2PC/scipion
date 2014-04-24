@@ -38,6 +38,7 @@ if __name__ == '__main__':
     datasets = sys.argv[1:-1]
     datasetPath = sys.argv[-1]
     for path in datasets:
+        print "Formatting %(dataset)s" % ({'dataset': path})
         absPath = os.path.join(datasetPath, path)
         if not os.path.exists(absPath):
             print "ERROR: %(path)s folder doesn't exist in datasets folder %(datasetsFolder)s." % ({'path': path, 'datasetsFolder': datasetPath})

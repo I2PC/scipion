@@ -143,11 +143,13 @@ def downloadDataset(datasetName, destination=os.environ['SCIPION_TESTS'], url="h
         downloadBarWidth = 100
         if not verbose:
             initDownloadBar(downloadBarWidth)
-        for number, line in enumerate(os.path.normpath(manifestLines.replace("\n","").split(" ")[0])):
+        for number, lineExt in enumerate(manifestLines):
+            line = os.path.normpath(lineExt.replace("\n","").split(" ")[0])
+            md5InLine = lineExt.replace("\n","").split(" ")[1] 
             makeFilePath(os.path.join(datasetFolder, line))
             try:
                 urllib.urlretrieve(url+'/'+datasetName+'/'+line, os.path.join(datasetFolder, line))
-                percent = (number/(totalNumber*1.0))*100
+                percent = ((number+1)/(totalNumber*1.0))*100
                 if verbose:
                     print "\t "+line+" ...OK ( %(percent)02d " % ({'percent': percent}) + ' %)'
                 else:
@@ -172,11 +174,9 @@ def downloadDataset(datasetName, destination=os.environ['SCIPION_TESTS'], url="h
             md5sum = md5.hexdigest()
                 #data = fileToCheck.read()
                 #md5sum = hashlib.md5(data).hexdigest()
-            md5file = open(os.path.join(datasetFolder, os.path.normpath(line.replace("\n","").split(" ")[0])),'r+')
-            md5calc = md5file.readlines()[0].split(" ")[1]
             if verbose:
-                print "\t \t md5 verification...%(md5sum)s %(md5calc)s" % ({'md5sum': md5sum, 'md5calc': md5calc})
-            if md5sum != md5calc:
+                print "\t \t md5 verification...%(md5sum)s %(md5InLine)s" % ({'md5sum': md5sum, 'md5InLine': md5InLine})
+            if md5sum != md5InLine:
                 print "ERROR in md5 verification"
                 answer = "-"
                 while answer != "y" and answer != "n" and answer != "":
@@ -205,10 +205,7 @@ def checkForUpdates(datasetName, workingCopy=os.environ['SCIPION_TESTS'], tmpMd5
     filesUpdated = 0
     print "Verifying MD5..."
     for number, line in enumerate(manifestLinesTmp):
-        file = os.path.normpath(line.replace("\n",""))
-        # TODO: refactoring to eliminate md5 files. I'm opening and following downloaded MANIFEST. I need to parse old MANIFEST in order to find the old checksum there
-        
-        
+        file = os.path.normpath(line.replace("\n","").split(" ")[0])
         if verbose:
             print "\t checking file %(file)s..." % ({'file': file})
         if os.path.exists(os.path.join(datasetFolder, file)):
@@ -218,7 +215,7 @@ def checkForUpdates(datasetName, workingCopy=os.environ['SCIPION_TESTS'], tmpMd5
                     print ""
                     print "\t ERROR: file %(file)s not found in MANIFEST" % ({'file': file})
                     sys.exit(1)
-            md5fcalc = mainfestFile.readlines()[lineInManifest].split(" ")[1]
+            md5fcalc = (manifestLines[lineInManifest]).split(" ")[1]
             md5Tmpfcalc = line.split(" ")[1]
             if md5fcalc == md5Tmpfcalc:
                 if verbose:
@@ -240,6 +237,7 @@ def checkForUpdates(datasetName, workingCopy=os.environ['SCIPION_TESTS'], tmpMd5
         print "\t ...done. 1 file was updated."
     else:
         print "\t ...done. %(filesUpdated)d files were updated." % ({'filesUpdated': filesUpdated})
+    print ""
 
 def findLineInFile(text, filePath):
     file = open(filePath, 'r')
@@ -251,6 +249,10 @@ def findLineInFile(text, filePath):
 
 def getManifestPath(basePath=os.environ['SCIPION_TESTS'], dataset=""):
     return os.path.join(basePath, dataset, 'MANIFEST')
+
+def Cmd(command):
+    print ">>>>>", command
+    subprocess.call(command, shell=True)
 
 def main(argv):
     # Arguments parsing
@@ -354,10 +356,10 @@ def main(argv):
             open(os.path.join(os.environ['SCIPION_HOME'],args.last_mod_file), 'w').close()
             sys.exit(2) #We return with 2, to let Buildbot know that no modification was made (when failure there was modification)
     elif args.dataset:
-        if len(args.dataset) == 1:
+        if len(args.dataset) != 1:
             print "Selected datasets: %(datasets)s" % ({'datasets': " ".join(args.dataset)})
         else:
-            print "Selected datasets: %(datasets)s" % ({'datasets': args.dataset})
+            print "Selected datasets: %(datasets)s" % ({'datasets': args.dataset[0]})
         ans = ""
         if len(args.dataset) == 1 and " ".join(args.dataset) == "all" and args.reverse_sync:
             while ans != "y" and ans != "Y" and ans != "n" and ans != "N":
@@ -373,6 +375,18 @@ def main(argv):
                 remoteUser = 'scipion'
                 remoteServer = 'ramanujan.cnb.csic.es'
                 remoteFolder = os.path.join('/home', 'twiki', 'public_html', 'files', 'scipion', 'data', 'tests', 'NACHOTESTS_PLEASEDONOTREMOVE', 'tests')
+                lastmFile = os.path.join("Scipion", 'last_m.txt')
+                localUser = None
+                localHostname = " ".join(os.uname())
+                try:
+                    import pwd
+                except ImportError:
+                    import getpass
+                    pwd = None
+                if pwd:
+                    localUser = pwd.getpwuid(os.geteuid()).pw_name
+                else:
+                    localUser = getpass.getuser()
                 
                 if not os.path.exists(localFolder):
                     print "ERROR: local folder %(localFolder)s doesn't exist." % ({'localFolder': localFolder})
@@ -386,30 +400,31 @@ def main(argv):
                 
                 # If the folder is not in the proper format, create the format and then upload
                 command = '%(scipionPython)s scripts/generate_md5.py %(dataset)s %(datasetPath)s' % ({'scipionPython': os.environ['SCIPION_PYTHON'], 'dataset': dataset, 'datasetPath': os.environ['SCIPION_TESTS']})
-                print ">>>>>", command
-                subprocess.call(command, shell=True)
+                Cmd(command)
                 # Synchronize files
                 command = 'rsync -av '+ deleteFlag + localFolder + ' ' + remoteUser + '@' + remoteServer + ':' + remoteFolder
-                print ">>>>>", command
-                subprocess.call(command, shell=True)
+                Cmd(command)
                 # Regenerate remote MANIFEST
-                command = "ssh " + remoteUser + '@' + remoteServer + " \"cd " + remoteFolder + ' && ' + "find -maxdepth 1 -type d -type d ! -iname '.' > MANIFEST" + "\""
                 print "Regenerating remote MANIFEST file..."
-                print ">>>>>", command
-                subprocess.call(command, shell=True)
+                command = "ssh " + remoteUser + '@' + remoteServer + " \"cd " + remoteFolder + ' && ' + "find -maxdepth 1 -type d -type d ! -iname '.' > MANIFEST" + "\""
+                Cmd(command)
+                
+                print "Registering modification attempt in last_m.txt file"
+                command = "ssh " + remoteUser + '@' + remoteServer + " \"echo '++++' >> " + lastmFile + " && echo 'Modification made at' >> " + lastmFile + " && date >> " + lastmFile + " && echo 'by " + localUser + " at " + localHostname +"' >> " + lastmFile + " && echo '----' >> " + lastmFile + "\""
+                Cmd(command)
                 print "...done."
                 # Leave last_m.txt file indicating modifications have been done, to let buildbot trigger its automatic testing system
                 #TODO: this step
             else:
                 datasetFolder = os.path.join(os.environ['SCIPION_TESTS'],"%(dataset)s" % ({'dataset': dataset}))
                 if(os.path.exists(datasetFolder)):
-                    print "Dataset working copy detected. Checking checksum for updates..."
-                    downloadDataset(dataset, destination=os.environ['SCIPION_TMP'], url=args.url, verbose=args.verbose, onlyMd5=True)
+                    print "Dataset %(dataset)s working copy detected. Checking checksum for updates..." % ({'dataset': dataset})
+                    downloadDataset(dataset, destination=os.environ['SCIPION_TMP'], url=args.url, verbose=args.verbose, onlyManifest=True)
                     checkForUpdates(dataset, url=args.url, verbose=args.verbose)
                     cleanPath(os.path.join(os.environ['SCIPION_TMP'], "%(dataset)s" % ({'dataset': dataset})))
                 else:
-                    print "dataset not in local machine, trying to download..."
-                    downloadDataset( dataset, url=args.url, verbose=args.verbose)
+                    print "dataset %(dataset)s not in local machine, trying to download..." % ({'dataset': dataset})
+                    downloadDataset(dataset, url=args.url, verbose=args.verbose)
                 
         
 
