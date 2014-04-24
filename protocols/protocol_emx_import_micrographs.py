@@ -122,8 +122,8 @@ class ProtEmxImportMicrographs(XmippProtocol):
                 if self.binaryFile is None:
                     errors.append('Cannot find binary data <%s> associated with EMX metadata file' % self.binaryFile)
                 for k, v in self.propDict.iteritems():
-                        if len(getattr(self, k)) == 0:
-                            errors.append('<%s> was left empty and <%s> does not have this property' % (k, self.classElement))
+                    if len(getattr(self, k)) == 0:
+                        errors.append('<%s> was left empty and <%s> does not have this property' % (k, self.classElement))
         
         return errors
 
@@ -175,7 +175,6 @@ def createMicrographs(log,
                                    micsFileName, 
                                    filesPrefix,
                                    ctfDir)
-    print "emxData", emxData
     if _SamplingRate > 0:
         SamplingRate = _SamplingRate
     #acquisition and micrograph will be always created
