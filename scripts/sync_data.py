@@ -99,7 +99,7 @@ def forwardDownloadbar(percent, progress):
             sys.stdout.write("#")
             sys.stdout.flush()
     
-def downloadFile(datasetName, file, workingCopy=os.environ['SCIPION_TESTS'], tmpMd5copy=os.environ['SCIPION_TMP'], askMsg="download it?", url="http://scipionwiki.cnb.csic.es/files/scipion/data/tests/NACHOTESTS_PLEASEDONOTREMOVE/tests", verbose=False):
+def downloadFile(datasetName, file, workingCopy=os.environ['SCIPION_TESTS'], tmpMd5copy=os.environ['SCIPION_TMP'], askMsg="download it?", url="http://scipionwiki.cnb.csic.es/files/scipion/data/tests", verbose=False):
     fileDownloaded = 0
     datasetFolder = os.path.join(workingCopy, "%(dataset)s" % ({'dataset': datasetName}))
     datasetFolderTmp = os.path.join(tmpMd5copy, "%(dataset)s" % ({'dataset': datasetName}))
@@ -122,7 +122,7 @@ def downloadFile(datasetName, file, workingCopy=os.environ['SCIPION_TESTS'], tmp
         fileDownloaded = 1
     return fileDownloaded
 
-def downloadDataset(datasetName, destination=os.environ['SCIPION_TESTS'], url="http://scipionwiki.cnb.csic.es/files/scipion/data/tests/NACHOTESTS_PLEASEDONOTREMOVE/tests", verbose=False, onlyManifest=False):
+def downloadDataset(datasetName, destination=os.environ['SCIPION_TESTS'], url="http://scipionwiki.cnb.csic.es/files/scipion/data/tests", verbose=False, onlyManifest=False):
     datasetFolder = os.path.join(destination, "%(dataset)s" % ({'dataset': datasetName}))
     makePath(datasetFolder)
     try:
@@ -191,7 +191,7 @@ def downloadDataset(datasetName, destination=os.environ['SCIPION_TESTS'], url="h
     print "\t ...done"
     print ""
 
-def checkForUpdates(datasetName, workingCopy=os.environ['SCIPION_TESTS'], tmpMd5copy=os.environ['SCIPION_TMP'], url="http://scipionwiki.cnb.csic.es/files/scipion/data/tests/NACHOTESTS_PLEASEDONOTREMOVE/tests", verbose=False):    
+def checkForUpdates(datasetName, workingCopy=os.environ['SCIPION_TESTS'], tmpMd5copy=os.environ['SCIPION_TMP'], url="http://scipionwiki.cnb.csic.es/files/scipion/data/tests", verbose=False):    
     # We need to download the remote manifest file
     datasetFolderTmp = os.path.join(tmpMd5copy, "%(dataset)s" % ({'dataset': datasetName}))
     manifestFileTmp = open(getManifestPath(basePath=os.environ['SCIPION_TMP'], dataset=datasetName), 'r+')
@@ -272,7 +272,7 @@ def main(argv):
         help="File that contain the whole modifications log to keep a tracking of what has been done in the Scipion tests data. The path given must be relative to $SCIPION_HOME")
     
     parser.add_argument('-u', '--url',
-        default="http://scipionwiki.cnb.csic.es/files/scipion/data/tests/NACHOTESTS_PLEASEDONOTREMOVE/tests",
+        default="http://scipionwiki.cnb.csic.es/files/scipion/data/tests",
         help="String storing the url where remote datasets will be looked for")
 
     exclusive.add_argument('-q', '--query-for-modifications', 
@@ -374,7 +374,7 @@ def main(argv):
                 localFolder = os.path.join(os.environ['SCIPION_TESTS'], dataset)
                 remoteUser = 'scipion'
                 remoteServer = 'ramanujan.cnb.csic.es'
-                remoteFolder = os.path.join('/home', 'twiki', 'public_html', 'files', 'scipion', 'data', 'tests', 'NACHOTESTS_PLEASEDONOTREMOVE', 'tests')
+                remoteFolder = os.path.join('/home', 'twiki', 'public_html', 'files', 'scipion', 'data', 'tests')
                 lastmFile = os.path.join("Scipion", 'last_m.txt')
                 localUser = None
                 localHostname = " ".join(os.uname())
