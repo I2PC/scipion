@@ -287,12 +287,21 @@ TEST_F( MetadataTest, Copy)
 
 TEST_F( MetadataTest, MDInfo)
 {
-    char sfn[64] = "";
-    strncpy(sfn, "/tmp/MDInfo_XXXXXX", sizeof sfn);
-    if (mkstemp(sfn)==-1)
-    	REPORT_ERROR(ERR_IO_NOTOPEN,"Cannot create temporary file");
-    FileName fnDB   =(String)sfn+".sqlite";
-    FileName fnSTAR =(String)sfn+".xmd";
+//    char sfn[64] = "";
+//    strncpy(sfn, "/tmp/MDInfo_XXXXXX", sizeof sfn);
+//    if (mkstemp(sfn)==-1)
+//    	REPORT_ERROR(ERR_IO_NOTOPEN,"Cannot create temporary file");
+
+    char sfnStar[64] = "";
+    char sfnSqlite[64] = "";
+    strncpy(sfnStar, "/tmp/MDInfo_XXXXXX.xmd", sizeof sfnStar);
+    if (mkstemps(sfnStar,4)==-1)
+    	REPORT_ERROR(ERR_IO_NOTOPEN,"Cannot create temporary STAR file");
+    strncpy(sfnSqlite, "/tmp/MDInfo_XXXXXX.sqlite", sizeof sfnSqlite);
+    if (mkstemps(sfnSqlite,7)==-1)
+    	REPORT_ERROR(ERR_IO_NOTOPEN,"Cannot create temporary SQLITE file");
+    FileName fnDB   =(String)sfnSqlite;
+    FileName fnSTAR =(String)sfnStar;
 
     XMIPP_TRY
 
@@ -319,20 +328,29 @@ TEST_F( MetadataTest, MDInfo)
 
     XMIPP_CATCH
 
-
     unlink(fnDB.c_str());
     unlink(fnSTAR.c_str());
 }
 
 TEST_F( MetadataTest,multiWrite)
 {
-    char sfn[64] = "";
-    strncpy(sfn, "/tmp/multiWrite_XXXXXX", sizeof sfn);
-    if (mkstemp(sfn)==-1)
-    	REPORT_ERROR(ERR_IO_NOTOPEN,"Cannot create temporary file");
-    FileName fnDB   =(String)sfn+".sqlite";
-    FileName fnXML  =(String)sfn+".xml";
-    FileName fnSTAR =(String)sfn+".xmd";
+	char sfnStar[64] = "";
+	char sfnSqlite[64] = "";
+	char sfnXML[64] = "";
+    strncpy(sfnStar, "/tmp/testReadMultipleBlocks_XXXXXX.xmd", sizeof sfnStar);
+    if (mkstemps(sfnStar,4)==-1)
+	    REPORT_ERROR(ERR_IO_NOTOPEN,"Cannot create temporary STAR file");
+    strncpy(sfnSqlite, "/tmp/testReadMultipleBlocks_XXXXXX.sqlite", sizeof sfnSqlite);
+    if (mkstemps(sfnSqlite,7)==-1)
+    	REPORT_ERROR(ERR_IO_NOTOPEN,"Cannot create temporary SQLITE file");
+    strncpy(sfnXML, "/tmp/testReadMultipleBlocks_XXXXXX.xml", sizeof sfnXML);
+    if (mkstemps(sfnXML,4)==-1)
+    	REPORT_ERROR(ERR_IO_NOTOPEN,"Cannot create temporary XML file");
+
+
+    FileName fnDB   =(String)sfnSqlite;
+    FileName fnXML  =(String)sfnXML;
+    FileName fnSTAR =(String)sfnStar;
     FileName fnDBref   =(String)"metadata/mDsource.sqlite";
     FileName fnXMLref  =(String)"metadata/mDsource.xml";
     FileName fnSTARref =(String)"metadata/mDsource.xmd";
@@ -355,10 +373,10 @@ TEST_F( MetadataTest,multiWrite)
 TEST_F( MetadataTest,multiWriteSqlite)
 {
     char sfn[64] = "";
-    strncpy(sfn, "/tmp/multiWriteSqlite_XXXXXX", sizeof sfn);
-    if (mkstemp(sfn)==-1)
+    strncpy(sfn, "/tmp/multiWriteSqlite_XXXXXX.sqlite", sizeof sfn);
+    if (mkstemps(sfn,7)==-1)
     	REPORT_ERROR(ERR_IO_NOTOPEN,"Cannot create temporary file");
-    FileName fnDB   =(String)sfn+".sqlite";
+    FileName fnDB   =(String)sfn;
     FileName fnDBref   =(String)"metadata/mDsource.sqlite";
 
     MetaData md = MetaData();
@@ -869,6 +887,68 @@ TEST_F( MetadataTest, OperateExt)
     }
 
     EXPECT_EQ(auxMetadata,auxMetadata2);
+}
+
+TEST_F( MetadataTest, RegularExp)
+{
+    XMIPP_TRY
+
+    //create temporal file with three metadas
+    char sfnStar[64] = "";
+    char sfnSqlite[64] = "";
+    strncpy(sfnStar, "/tmp/testReadMultipleBlocks_XXXXXX.xmd", sizeof sfnStar);
+    if (mkstemps(sfnStar,4)==-1)
+    	REPORT_ERROR(ERR_IO_NOTOPEN,"Cannot create temporary STAR file");
+//    strncpy(sfnSqlite, "/tmp/testReadMultipleBlocks_XXXXXX.sqlite", sizeof sfnSqlite);
+//    if (mkstemps(sfnSqlite,7)==-1)
+//    	REPORT_ERROR(ERR_IO_NOTOPEN,"Cannot create temporary SQLITE file");
+
+    MetaData auxMetadata;
+    auxMetadata.setValue(MDL_IMAGE,(String)"image_1.xmp",auxMetadata.addObject());
+    auxMetadata.setValue(MDL_IMAGE,(String)"image_2.xmp",auxMetadata.addObject());
+    auxMetadata.write(sfnStar,MD_OVERWRITE);
+//    auxMetadata.write(sfnSqlite,MD_OVERWRITE);
+    auxMetadata.clear();
+    auxMetadata.setValue(MDL_IMAGE,(String)"image_data_1_1.xmp",auxMetadata.addObject());
+    auxMetadata.setValue(MDL_IMAGE,(String)"image_data_1_2.xmp",auxMetadata.addObject());
+    auxMetadata.write((String)"block_000001@"+sfnStar,MD_APPEND);
+//    auxMetadata.write((String)"block_000001@"+sfnSqlite,MD_APPEND);
+    auxMetadata.clear();
+    auxMetadata.setValue(MDL_IMAGE,(String)"image_data_2_1.xmp",auxMetadata.addObject());
+    auxMetadata.setValue(MDL_IMAGE,(String)"image_data_2_2.xmp",auxMetadata.addObject());
+    auxMetadata.write((String)"block_000002@"+sfnStar,MD_APPEND);
+//    auxMetadata.write((String)"block_000002@"+sfnSqlite,MD_APPEND);
+    auxMetadata.clear();
+    auxMetadata.setValue(MDL_IMAGE,(String)"image_data_no_1.xmp",auxMetadata.addObject());
+    auxMetadata.setValue(MDL_IMAGE,(String)"image_data_no_2.xmp",auxMetadata.addObject());
+    auxMetadata.write((String)"noblock@"+sfnStar,MD_APPEND);
+//    auxMetadata.write((String)"noblock@"+sfnSqlite,MD_APPEND);
+    auxMetadata.clear();
+    auxMetadata.setValue(MDL_IMAGE,(String)"image_data_3_1.xmp",auxMetadata.addObject());
+    auxMetadata.setValue(MDL_IMAGE,(String)"image_data_3_2.xmp",auxMetadata.addObject());
+    auxMetadata.write((String)"block_000003@"+sfnStar,MD_APPEND);
+//    auxMetadata.write((String)"block_000003@"+sfnSqlite,MD_APPEND);
+    auxMetadata.clear();
+    MetaData auxMetadata2;
+    auxMetadata2.setValue(MDL_IMAGE,(String)"image_data_1_1.xmp",auxMetadata2.addObject());
+    auxMetadata2.setValue(MDL_IMAGE,(String)"image_data_1_2.xmp",auxMetadata2.addObject());
+    auxMetadata2.setValue(MDL_IMAGE,(String)"image_data_2_1.xmp",auxMetadata2.addObject());
+    auxMetadata2.setValue(MDL_IMAGE,(String)"image_data_2_2.xmp",auxMetadata2.addObject());
+    MDSql::activateRegExtensions();
+    auxMetadata2.write("/tmp/kk.sqlite");
+    //query file
+    MetaData md;
+    FileName blockFileName;
+    md.read((String)"block_000001@"+sfnStar);
+    //compare with reference metada
+//    EXPECT_EQ(md,auxMetadata2);
+//    md.read((String)"block_000001@"+sfnSqlite);
+    //compare with reference metada
+//    EXPECT_EQ(md,auxMetadata2);
+    unlink(sfnStar);
+    //unlink(sfnSqlite);
+
+    XMIPP_CATCH
 }
 
 TEST_F( MetadataTest, Query)

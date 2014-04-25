@@ -208,6 +208,9 @@ protected:
         if (checkParam("--mode")
             && STR_EQUAL(getParam("--mode"), "append"))
             mode = MD_APPEND;
+		MDSql::activateMathExtensions();
+        MDSql::activateRegExtensions();
+
     }
 
     void doSet()
@@ -272,7 +275,6 @@ protected:
         }
         else if (operation == "modify_values")// modify_values
         {
-            MDSql::activateMathExtensions();
             mdIn.operate(getParam("--operate", 1));
         }
         else if (operation == "expand")// modify_values
