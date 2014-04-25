@@ -22,7 +22,7 @@ class TestObject(BaseTest):
     @classmethod
     def setUpClass(cls):
         setupTestOutput(cls)
-        cls.dataset = DataSet.getDataSet('model')  
+        cls.dataset = DataSet.getDataSet('model')
         cls.modelGoldSqlite = cls.dataset.getFile( 'modelGoldSqlite')
         cls.modelGoldXml = cls.dataset.getFile( 'modelGoldXml')
 
