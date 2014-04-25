@@ -40,8 +40,8 @@ def launch_viewer(request):
     #if request.is_ajax():
     projectName = request.session['projectName']
     project = loadProject(projectName)
-    protId = request.GET.get('protocolId', None)
-    obj = project.mapper.selectById(int(protId))
+    objId = request.GET.get('objectId', None)
+    obj = project.mapper.selectById(int(objId))
     
     if obj.isPointer():
         obj = obj.get()

@@ -416,7 +416,7 @@ function launchViewer(id){
 	$.ajax({
 		type : "GET",
 		// Execute the viewer 
-		url : "/launch_viewer/?protocolId=" + id,
+		url : "/launch_viewer/?objectId=" + id,
 		dataType : "json",
 		success : function(json) {
 			popUpJSON(json);
