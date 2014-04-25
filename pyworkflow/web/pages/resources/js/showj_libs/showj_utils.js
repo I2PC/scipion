@@ -256,6 +256,7 @@ function initializeZoomEvents(){
 function initializeImageLoad(forceRecall){
 	forceRecallServer = forceRecall
 
+	// This waypoint affect to the section with images.
 	$('.tableImages').waypoint(function(direction){
 		element=$(this)
 		if (element.data('real_src') != element.attr("src") || forceRecallServer){ 
@@ -273,6 +274,7 @@ function initializeImageLoad(forceRecall){
 		context: 'section' 
 	});
 	
+	// This waypoint affect to the entire page.
 	$('.tableImages').waypoint(function(direction){
 		element=$(this)
 		if (element.data('real_src') != element.attr("src") || forceRecallServer){ 
@@ -287,7 +289,6 @@ function initializeImageLoad(forceRecall){
 	}, {
 		offset: '150%'
 	});
-	
 }
 
 function saveShowjTable(csrf_token){
