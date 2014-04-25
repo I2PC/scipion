@@ -775,6 +775,24 @@ xmipp_activateMathExtensions(PyObject *obj, PyObject *args, PyObject *kwargs)
     return NULL;
 }
 
+/* activateRegExtensions */
+PyObject *
+xmipp_activateRegExtensions(PyObject *obj, PyObject *args, PyObject *kwargs)
+{
+    try
+    {
+        if (MDSql::activateRegExtensions())
+            Py_RETURN_TRUE;
+        else
+            Py_RETURN_FALSE;
+    }
+    catch (XmippError &xe)
+    {
+        PyErr_SetString(PyXmippError, xe.msg.c_str());
+    }
+    return NULL;
+}
+
 PyObject *
 xmipp_errorBetween2CTFs(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
@@ -958,6 +976,8 @@ xmipp_methods[] =
           "converts euler angles to direction" },
         { "activateMathExtensions", (PyCFunction) xmipp_activateMathExtensions,
           METH_VARARGS, "activate math function in metadatas" },
+        { "activateRegExtensions", (PyCFunction) xmipp_activateRegExtensions,
+          METH_VARARGS, "activate regular expressions in metadatas" },
         { "errorBetween2CTFs", (PyCFunction) xmipp_errorBetween2CTFs,
           METH_VARARGS, "difference between two metadatas" },
         { "errorMaxFreqCTFs", (PyCFunction) xmipp_errorMaxFreqCTFs,
