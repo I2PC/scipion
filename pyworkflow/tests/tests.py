@@ -39,6 +39,14 @@ class DataSet:
     
     @classmethod
     def getDataSet(cls, name):
+        """
+        This method is called everytime the dataset want to be retreived
+        """
+        import os
+        os.chdir(os.environ['SCIPION_HOME'])
+        command = os.environ['SCIPION_PYTHON'] + " scipion testdata " + name + " download"
+        print ">>>> " + command
+        os.system(command)
         return cls._datasetDict[name]
 
 
