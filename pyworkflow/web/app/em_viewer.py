@@ -83,14 +83,6 @@ def viewerForm(project, protocol, viewer):
     return "url:/form/?protocolClass=%s&protRunIdViewer=%s&action=visualize" % (viewerClassName, protId)
     
 
-#def viewerXmipp(project, protocol, viewer):
-#    
-#    if isinstance(protocol, XmippProtKerdensom):
-#        ioDict['url'] += '&mode=gallery&colRowMode=On&cols=%d' % protocol.SomXdim.get()
-#    if isinstance(protocol, XmippProtRotSpectra):
-#        ioDict['url'] += '&classCount___renderable=True&classCount___renderFunc=getTestPlot'
-#    return ioDict
-
 ############## 2ND STEP: VIEWER FUNCTION METHODS ##############
 
 def viewToUrl(request, view):
