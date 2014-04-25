@@ -46,7 +46,11 @@ class DataView(View):
         self._viewParams = viewParams
         
     def _loadPath(self, path):
-        if '@' in path:
+        # Check if there is a table name with @ in path
+        # in that case split table name and path
+        # table names can never starts with a number
+        # this is considering an image inside an stack
+        if '@' in path and path[0] not in '0123456789':
             self._tableName, self._path = path.split('@')
         else:
             self._tableName, self._path = None, path

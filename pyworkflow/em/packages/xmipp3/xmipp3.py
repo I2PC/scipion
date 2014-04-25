@@ -273,12 +273,13 @@ class XmippDataSet(ds.DataSet):
     def __init__(self, filename):
         self._filename = filename
         blocks = xmipp.getBlocksInMetaDataFile(filename)
+        
         if not blocks: # If there are no block, add an empty one
             blocks = ['']
         ds.DataSet.__init__(self, blocks)
         
     def _loadTable(self, tableName):
-        if len(tableName):
+        if tableName:
             mdFn = tableName + "@" + self._filename
         else:
             mdFn = self._filename
