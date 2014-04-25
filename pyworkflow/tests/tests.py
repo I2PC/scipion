@@ -44,7 +44,9 @@ class DataSet:
         """
         import os
         os.chdir(os.environ['SCIPION_HOME'])
-        command = os.environ['SCIPION_PYTHON'] + " scipion testdata " + name + " download"
+        assert name in cls._datasetDict, "Dataset: %s dataset doesn't exist." % name
+        folder = cls._datasetDict[name].folder
+        command = os.environ['SCIPION_PYTHON'] + " scipion testdata " + folder + " download"
         print ">>>> " + command
         os.system(command)
         return cls._datasetDict[name]
