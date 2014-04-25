@@ -1200,6 +1200,7 @@ void MetaData::readDB(const FileName &filename,
     	StringVector sv;
     	getBlocksInMetaDataFileDB(filename,sv);
     	blockname =sv[0];
+    	std::cerr << "WARNING: You have ask for a metadata without specifying a block name. I return the first one" <<std::endl;
     	//TODO
         //add regular expressions here
     }
