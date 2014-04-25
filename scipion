@@ -140,182 +140,182 @@ MODE_DOWNLOAD = 'download'
 
 if __name__ == '__main__':
     n = len(sys.argv)
-    if n:
-        mode = MODE_MANAGER
-            
-        if n > 1:
-            mode = sys.argv[1]
-        
-        # Create SCIPION_HOME folder if not exists
-        if mode != MODE_INSTALL:
-            error = ''
-            for d in SCIPION_DIRS:
-                path = os.environ[d]
-                if not exists(path):
-                    error += "Missing %s folder: '%s'\n" % (d, path)
-            if error:
-                print error + 'RUN:  scipion install'
-                sys.exit(1) 
-            
-        if mode == MODE_MANAGER:
-            runApp('pw_manager.py')
-        
-        elif mode == MODE_PROJECT:
-            if n > 2:
-                projectName = sys.argv[2]
-                runApp('pw_project.py', args=projectName)
-        
-        elif mode == MODE_WEBSERVER:
-            if n > 2:
-                option = sys.argv[2]
+    mode = sys.argv[1] if n > 1 else MODE_MANAGER
+
+    # Create SCIPION_HOME folder if not exists
+    if mode != MODE_INSTALL:
+        error = ''
+        for d in SCIPION_DIRS:
+            path = os.environ[d]
+            if not exists(path):
+                error += "Missing %s folder: '%s'\n" % (d, path)
+        if error:
+            print error + 'RUN:  scipion install'
+            sys.exit(1)
+
+    if mode == MODE_MANAGER:
+        runApp('pw_manager.py')
+
+    elif mode == MODE_PROJECT:
+        if n > 2:
+            projectName = sys.argv[2]
+            runApp('pw_project.py', args=projectName)
+
+    elif mode == MODE_WEBSERVER:
+        if n > 2:
+            option = sys.argv[2]
+        else:
+            option = 'django'
+
+        if option == 'apache_vars':
+            # WSGI needs some variables set on apache start (/etc/apache2/envvars):
+            #   * SCIPION_HOME: is required to find this script, so it has to be declared "manually" in envvars
+            #   * HOME: so it can reach Scipion directory
+            #   * LD_LIBRARY_PATH:  set it with a call to this mode. For example,
+            #       scipion_ld_library_path=$( ${SCIPION_HOME}/scipion apache_vars)
+            #       export LD_LIBRARY_PATH=${scipion_ld_library_path}:${LD_LIBRARY_PATH}
+            print VARS["LD_LIBRARY_PATH"]
+            sys.exit(0)
+
+        elif option in ['django', 'collectstatic']:
+            manage = join(SCIPION_HOME, 'pyworkflow', 'web', 'manage.py')
+            if option == 'django':
+                args = 'runserver 0.0.0.0:8000'
             else:
-                option = 'django'
-            
-            if option == 'apache_vars':
-                # WSGI needs some variables set on apache start (/etc/apache2/envvars):
-                #   * SCIPION_HOME: is required to find this script, so it has to be declared "manually" in envvars
-                #   * HOME: so it can reach Scipion directory
-                #   * LD_LIBRARY_PATH:  set it with a call to this mode. For example,
-                #       scipion_ld_library_path=$( ${SCIPION_HOME}/scipion apache_vars)
-                #       export LD_LIBRARY_PATH=${scipion_ld_library_path}:${LD_LIBRARY_PATH}
-                print VARS["LD_LIBRARY_PATH"]
-                sys.exit(0)
-                
-            elif option in ['django', 'collectstatic']:
-                manage = join(SCIPION_HOME, 'pyworkflow', 'web', 'manage.py')
-                if option == 'django':
-                    args = 'runserver 0.0.0.0:8000'
-                else:
-                    args = 'collectstatic'
-                runCmd('%s %s' % (manage, args))
-            else:
-                print "\nERROR: invalid option '%s' for mode %s." % (option, MODE_WEBSERVER)   
-            
-        elif mode == MODE_TESTS:
-            if n > 2:
-                option = sys.argv[2]
-                if option in ["show", "run"]: # only show available tests
-                    args = ' '.join(sys.argv[3:])
-                    if option == 'show':
-                        args += " print"
-                    runCmd('scripts/run_tests.py %s' % args)
-                    f = open(join(SCIPION_HOME, 'scripts', 'batch_tests'))
-                else: # run the desired test
-                    path = os.getcwd()
-                    os.chdir(SCIPION_HOME)
-                    runCmd('-m unittest pyworkflow.tests.%s' % option)
-                    os.chdir(path)
-                    
-        elif mode == MODE_TESTS_DATA:
-            if n > 2:
-                dataset = sys.argv[2:-1]
-                if n > 3:
-                    option = sys.argv[-1]
-                    dataset = sys.argv[2]
-                    verbosity = ""
-                    if n > 4:
-                        dataset = " ".join(sys.argv[2:-1])
-                        if sys.argv[-1] == "verbose":
-                            verbosity = "-v"
-                            option = sys.argv[-2]
-                            dataset = " ".join(sys.argv[2:-2])
-                    if option == "upload":
-                        print "Synchronizing dataset %s with local data" % dataset
-                        runCmd('scripts/sync_data.py -f %s %s -r -d' % (dataset, verbosity))
-                    elif option == "download":
-                        print "Synchronizing local dataset(s) %s with remote data" % dataset
-                        runCmd('scripts/sync_data.py -f %s %s' % (dataset, verbosity))
-                    elif option == "format":
-                        print "Formatting local dataset(s) %s" % dataset
-                        runCmd('scripts/generate_md5.py %s %s' % (dataset, os.environ['SCIPION_TESTS']))
-                    elif option == "raw":
-                        args = ' '.join(sys.argv[4:]) # We leave here a way to pass arguments directly to the script
-                        runCmd('scripts/sync_data.py %s' % args)
-                    else:
-                        print "Bad option: " + option
-                        sys.exit(1)
-                elif sys.argv[2] == "list":
-                    args = '-l'
+                args = 'collectstatic'
+            runCmd('%s %s' % (manage, args))
+        else:
+            print "\nERROR: invalid option '%s' for mode %s." % (option, MODE_WEBSERVER)
+
+    elif mode == MODE_TESTS:
+        if n > 2:
+            option = sys.argv[2]
+            if option in ["show", "run"]: # only show available tests
+                args = ' '.join(sys.argv[3:])
+                if option == 'show':
+                    args += " print"
+                runCmd('scripts/run_tests.py %s' % args)
+                f = open(join(SCIPION_HOME, 'scripts', 'batch_tests'))
+            else: # run the desired test
+                path = os.getcwd()
+                os.chdir(SCIPION_HOME)
+                runCmd('-m unittest pyworkflow.tests.%s' % option)
+                os.chdir(path)
+
+    elif mode == MODE_TESTS_DATA:
+        if n > 2:
+            dataset = sys.argv[2:-1]
+            if n > 3:
+                option = sys.argv[-1]
+                dataset = sys.argv[2]
+                verbosity = ""
+                if n > 4:
+                    dataset = " ".join(sys.argv[2:-1])
+                    if sys.argv[-1] == "verbose":
+                        verbosity = "-v"
+                        option = sys.argv[-2]
+                        dataset = " ".join(sys.argv[2:-2])
+                if option == "upload":
+                    print "Synchronizing dataset %s with local data" % dataset
+                    runCmd('scripts/sync_data.py -f %s %s -r -d' % (dataset, verbosity))
+                elif option == "download":
+                    print "Synchronizing local dataset(s) %s with remote data" % dataset
+                    runCmd('scripts/sync_data.py -f %s %s' % (dataset, verbosity))
+                elif option == "format":
+                    print "Formatting local dataset(s) %s" % dataset
+                    runCmd('scripts/generate_md5.py %s %s' % (dataset, os.environ['SCIPION_TESTS']))
+                elif option == "raw":
+                    args = ' '.join(sys.argv[4:]) # We leave here a way to pass arguments directly to the script
                     runCmd('scripts/sync_data.py %s' % args)
                 else:
-                    print "Asuming up-sync action. Synchronizing dataset %s with local data" % dataset
+                    print "Bad option: " + option
+                    sys.exit(1)
+            elif sys.argv[2] == "list":
+                args = '-l'
+                runCmd('scripts/sync_data.py %s' % args)
             else:
-                print "Gathering all tests data from default dataset..."
-                runCmd('scripts/sync_data.py')
-            
-        elif mode == MODE_DBBROWSE:
-            if n > 2:
-                browserArgs = " ".join(sys.argv[2:])
-                runApp('pw_browser.py', args=browserArgs)
-             
-        elif mode == MODE_VIEWER:
-            if n > 2:
-                viewerArgs = ' '.join(sys.argv[2:])
-                runApp('pw_viewer.py', args=viewerArgs)  
-             
-        elif mode == MODE_INSTALL:
-            runCmd('scripts/install.py')
-            
-        elif mode == MODE_STATS:
-            statsDir = join(SCIPION_HOME, 'data', 'stats')
-            if not exists(statsDir):
-                os.makedirs(statsDir)
-            runApp('gitstats/gitstats', args='%s %s' % (SCIPION_HOME, statsDir))
-            
-        elif mode == MODE_VERSION:
-            print __version__
-            sys.exit(0)
-            
-        elif mode == 'runprotocol':
-            if n == 5:
-                params = ['"%s"' % s for s in sys.argv[2:5]]
-                args = ' '.join(params)
-                runApp('pw_protocol_run.py', args)
-                
-        elif mode == MODE_DOWNLOAD:
-            if n > 2:
-                args = sys.argv[2]
-            else:
-                args = ''
-            runApp('pw_download_packages.py', args)
-                
-    # If reach this point, bad arguments passed
+                print "Asuming up-sync action. Synchronizing dataset %s with local data" % dataset
+        else:
+            print "Gathering all tests data from default dataset..."
+            runCmd('scripts/sync_data.py')
+
+    elif mode == MODE_DBBROWSE:
+        if n > 2:
+            browserArgs = " ".join(sys.argv[2:])
+            runApp('pw_browser.py', args=browserArgs)
+
+    elif mode == MODE_VIEWER:
+        if n > 2:
+            viewerArgs = ' '.join(sys.argv[2:])
+            runApp('pw_viewer.py', args=viewerArgs)
+
+    elif mode == MODE_INSTALL:
+        runCmd('scripts/install.py')
+
+    elif mode == MODE_STATS:
+        statsDir = join(SCIPION_HOME, 'data', 'stats')
+        if not exists(statsDir):
+            os.makedirs(statsDir)
+        runApp('gitstats/gitstats', args='%s %s' % (SCIPION_HOME, statsDir))
+
+    elif mode == MODE_VERSION:
+        print __version__
+        sys.exit(0)
+
+    elif mode == 'runprotocol':
+        if n == 5:
+            params = ['"%s"' % s for s in sys.argv[2:5]]
+            args = ' '.join(params)
+            runApp('pw_protocol_run.py', args)
+
+    elif mode == MODE_DOWNLOAD:
+        if n > 2:
+            args = sys.argv[2]
+        else:
+            args = ''
+        runApp('pw_download_packages.py', args)
+
+    # If we reach this point, bad arguments were passed
     print """
-USAGE: 
+USAGE:
     scipion [MODE] [ARGUMENTS]
     where MODE can be:
         browser                Browser a dir or an sqlite database. (TODO: merge with viewer)
-        
+
         help                   Print this help message.
-        
+
         install                Create needed folders and settings to run Scipion.
-        
+
         manager                Open the manager with list of all projects.
-        
+
         project [PROJECT_NAME] Open the specified project, special name 'last' can be used. 
-         
+
         stats                  Write git statistics to data/stats folder.
-        
+
         tests [OPTION]         Run a test starting from pyworkflow.tests
                                OPTION can be:
                                   test name: the specified tests will be run.
                                   [show|run]: in this case a more sofisticated run tests 
-                                  script will be used. 
-                                  Further options are: 
+                                  script will be used.
+                                  Further options are:
                                   path=VALUE case=VALUE pattern="test*py" mode=[modules|classes|all]
-        
+
         testdata [OPTION]      Synchronize tests data from/to remote server to/from SCIPION_USER_DATA folder
                                OPTION can be:
                                   list: list the datasets already in the local computer and in the remote server
-                                  dataset [OPERATION]: if no list command is passed, it is mandatory to pass the name of a dataset to use
+                                  dataset [OPERATION]: if no list command is passed, it is mandatory to pass the
+                                                       name of a dataset to use
                                      OPERATION can be:
-                                        upload [verbose]: synchronize remote dataset with your local working copy. This is default behaviour if no operation is given. If verbose argument is given, process will be more detailed.
-                                        download [verbose]: synchronize local dataset with the remote dataset. If verbose argument is given, process will be more detailed.
+                                        upload [verbose]: synchronize remote dataset with your local working copy.
+                                                          This is default behaviour if no operation is given. If
+                                                          verbose argument is given, process will be more detailed.
+                                        download [verbose]: synchronize local dataset with the remote dataset. If
+                                                            verbose argument is given, process will be more detailed.
                                         format: format a dataset to give it the expected structure
                                         raw: directly pass the rest of the arguments to the sync_data script.
-                              
+
         viewer [FILE]          Open a file with Scipion showj program.
-         
+
         webserver [OPTION]     webserver management OPTION can be:
                                django: open local django webserver (default)
                                collectstatic: copy static files for django server
@@ -340,4 +340,3 @@ elif __name__.startswith('_mod_wsgi'):
     # default name for the function that WSGI calls is "application"
     # you can change it wsgi.conf
     application = django.core.handlers.wsgi.WSGIHandler()
-

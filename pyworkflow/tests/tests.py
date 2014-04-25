@@ -42,9 +42,11 @@ class DataSet:
         """
         This method is called everytime the dataset want to be retreived
         """
-        import os
-        os.chdir(os.environ['SCIPION_HOME'])
-        command = os.environ['SCIPION_PYTHON'] + " scipion testdata " + name + " download"
+        assert name in cls._datasetDict, "Dataset: %s dataset doesn't exist." % name
+        folder = cls._datasetDict[name].folder
+        command = "%s %s/scipion testdata %s download" % (os.environ['SCIPION_PYTHON'],
+                                                          os.environ['SCIPION_HOME'],
+                                                          folder)
         print ">>>> " + command
         os.system(command)
         return cls._datasetDict[name]

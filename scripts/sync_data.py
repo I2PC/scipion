@@ -166,18 +166,16 @@ def downloadDataset(datasetName, destination=os.environ['SCIPION_TESTS'], url="h
                     answer = raw_input("continue downloading? (y/[n]): ")
                     if answer == "n" or answer == "":
                         sys.exit(1)
-            md5sum = 0
-            md5 = hashlib.md5()
-            with open(os.path.join(datasetFolder, os.path.normpath(line.replace("\n","").split(" ")[0])),'r+') as fileToCheck:
-                for chunk in iter(lambda: fileToCheck.read(128*md5.block_size), b''):
-                    md5.update(chunk)
-            md5sum = md5.hexdigest()
+            md5sum = md5Sum(os.path.join(datasetFolder, os.path.normpath(line.replace("\n","").split(" ")[0])))
                 #data = fileToCheck.read()
                 #md5sum = hashlib.md5(data).hexdigest()
             if verbose:
                 print "\t \t md5 verification...%(md5sum)s %(md5InLine)s" % ({'md5sum': md5sum, 'md5InLine': md5InLine})
             if md5sum != md5InLine:
-                print "ERROR in md5 verification"
+                print "ERROR in md5 verification for file %(file)s" % ({'file': line})
+                print "md5 sum calculated for downloaded file is %(md5sum)s" % ({'md5sum': md5sum})
+                print "md5 sum that file should have is %(md5sum)s" % ({'md5sum': md5InLine})
+                print ""
                 answer = "-"
                 while answer != "y" and answer != "n" and answer != "":
                     answer = raw_input("continue downloading? (y/[n]): ")
@@ -191,6 +189,15 @@ def downloadDataset(datasetName, destination=os.environ['SCIPION_TESTS'], url="h
     print "\t ...done"
     print ""
 
+def md5Sum(file):
+    md5sum = 0
+    md5 = hashlib.md5()
+    with open(file,'r+') as fileToCheck:
+        for chunk in iter(lambda: fileToCheck.read(128*md5.block_size), b''):
+            md5.update(chunk)
+    md5sum = md5.hexdigest()
+    return md5sum
+    
 def checkForUpdates(datasetName, workingCopy=os.environ['SCIPION_TESTS'], tmpMd5copy=os.environ['SCIPION_TMP'], url="http://scipionwiki.cnb.csic.es/files/scipion/data/tests", verbose=False):    
     # We need to download the remote manifest file
     datasetFolderTmp = os.path.join(tmpMd5copy, "%(dataset)s" % ({'dataset': datasetName}))
