@@ -149,6 +149,18 @@ function customPopupHTML(html, widthValue, heightValue) {
 	popup.document.close();
 }
 
+function customPopUpFile(url){
+	$.ajax({
+		type : "GET",
+		url : url,
+		dataType : "html",
+		success : function(html) {
+			customPopupHTML(html,600,500);
+		}
+	});	
+}
+
+
 
 function popUpJSON(json){
 	/*
@@ -162,7 +174,7 @@ function popUpJSON(json){
 		array = item.split(':')
 		key = array[0]
 		value = array[1]
-		alert("item=" + item + " key=" + key + " value="+value)
+//		alert("item=" + item + " key=" + key + " value="+value)
 
 		if (key=="url_form"){
 			popup(value);
@@ -173,14 +185,7 @@ function popUpJSON(json){
 		} else if(key=="html"){
 			customPopupHTML(value,600,500);
 		} else if(key=="file"){
-			$.ajax({
-				type : "GET",
-				url : value,
-				dataType : "html",
-				success : function(html) {
-					customPopupHTML(html,600,500);
-				}
-			});	
+			customPopUpFile(value);
 		} else if(key=="error"){
 			errorPopup("Error",value);
 		} else {

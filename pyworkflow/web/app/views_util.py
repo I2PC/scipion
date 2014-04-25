@@ -245,11 +245,8 @@ def set_attributes(request):
     return HttpResponse(return_id, mimetype='application/javascript')
 
 def file_viewer(request):
-    print "AQUIIIIIIII!!!"
     file = request.GET.get("path")
-    print "FILE:", file
     html = textfileViewer('title', file)
-    print "HTML:", html
     return HttpResponse(html, mimetype='application/javascript')
 
 def textfileViewer(title, file):

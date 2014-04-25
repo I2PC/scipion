@@ -115,7 +115,7 @@ def viewToUrl(request, view):
     # TEXT VIEWER
     elif isinstance(view, TextView):
         file  = view.getFileList()[0]
-        url = "'file:/file_viewer/?%s=%s" % (PATH, file)
+        url = "file:/file_viewer/?%s=%s" % (PATH, file)
         
     # MESSAGE
     elif isinstance(view, MessageView):
