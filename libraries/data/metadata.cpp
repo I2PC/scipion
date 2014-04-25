@@ -1195,6 +1195,15 @@ void MetaData::readDB(const FileName &filename,
                       bool decomposeStack)//what is decompose stack for?
 {
     String blockname = blockRegExp;
+    if (blockname.empty())
+    {
+    	StringVector sv;
+    	getBlocksInMetaDataFileDB(filename,sv);
+    	blockname =sv[0];
+    	std::cerr << "WARNING: You have ask for a metadata without specifying a block name. I return the first one" <<std::endl;
+    	//TODO
+        //add regular expressions here
+    }
     myMDSql->copyTableFromFileDB(blockname, filename, desiredLabels, _maxRows);
 }
 void MetaData::readStar(const FileName &filename,

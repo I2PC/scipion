@@ -77,7 +77,7 @@ class ScriptImportEMX(XmippScript):
             fnOut    = self.getParam('-o')
         else:
             fnOut    = None
-        print "oroot: ", oroot
+
         #validate emx file
         if not doNotValidate:
             try:

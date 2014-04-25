@@ -49,12 +49,14 @@ class ProtEmxImportParticles(XmippProtocol):
                         path=self.ExtraDir)
         
         imgsFn = self.getFilename('images')
-        self.insertStep("createParticles", verifyfiles=[imgsFn],
-                        emxFileName=self.EmxFileName,
-                        binaryFilename=self.binaryFile,
-                        micsFileName=imgsFn,
-                        projectDir=self.projectDir,
-                        ctfDir=self.ExtraDir,
+        self.insertStep("createParticles"
+                        , verifyfiles=[imgsFn]
+                        , binaryFilename=self.binaryFile
+                        , ctfDir=self.ExtraDir
+                        , doAlign=self.DoAlign
+                        , emxFileName=self.EmxFileName
+                        , micsFileName=imgsFn
+                        , projectDir=self.projectDir
                         )
         
         acqFn = self.getFilename('acquisition')
@@ -124,8 +126,10 @@ class ProtEmxImportParticles(XmippProtocol):
         return papers
 
     def visualize(self):
-        pass
-
+        partFn = self.getFilename('images')
+        if exists(partFn):
+            from protlib_utils import runShowJ
+            runShowJ(partFn)
 
 
 def loadEmxData(emxFileName):
@@ -144,18 +148,24 @@ def validateSchema(log, emxFileName):
         raise Exception(err) 
     
     
-def createParticles(log, emxFileName, binaryFilename, micsFileName, projectDir, ctfDir):
+def createParticles(log
+                    , binaryFilename
+                    , ctfDir
+                    , doAlign
+                    , emxFileName
+                    , micsFileName
+                    , projectDir
+                    ):
     filesPrefix = dirname(emxFileName)
     emxData = loadEmxData(emxFileName)
-    emxParticlesToXmipp(emxData, micsFileName, filesPrefix, ctfDir)
-    
+    #is this 2D
+    emxParticlesToXmipp(emxData, micsFileName, filesPrefix, ctfDir, doAlign)
     
 def createAcquisition(log, fnOut, SamplingRate):
         # Create the acquisition info file
     mdAcq = RowMetaData()
     mdAcq.setValue(xmipp.MDL_SAMPLINGRATE, float(SamplingRate))
     mdAcq.write(fnOut)
-    
     
 def createMicroscope(log, fnOut, Voltage, SphericalAberration, SamplingRate):
     md = RowMetaData()

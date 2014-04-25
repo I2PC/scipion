@@ -49,8 +49,7 @@ int getBlocksInMetaDataFileDB(const FileName &inFile, StringVector& blockList)
 
     sqlite3 *db1;
     String sql = (String)"SELECT name FROM sqlite_master\
-                 WHERE type='table'\
-                 ORDER BY name;";
+                 WHERE type='table';";
     if ((rc=sqlite3_open(inFile.c_str(), &db1)))
         REPORT_ERROR(ERR_MD_SQL,formatString("Error opening database code: %d message: %s",rc,sqlite3_errmsg(db1)));
     if ((rc=sqlite3_get_table (db1, sql.c_str(), &results, &rows, &columns, NULL)) != SQLITE_OK)

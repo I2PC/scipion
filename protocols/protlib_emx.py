@@ -28,7 +28,7 @@ import sys
 from os.path import exists, join
 from xmipp import *
 from emx.emx import *
-from numpy import eye, linalg
+from numpy import eye, linalg, array
 
 
 from protlib_filesystem import join, dirname, abspath, replaceBasenameExt, findAcquisitionInfo
@@ -296,7 +296,6 @@ def emxCoordsToXmipp(emxData, filesRoot, mdFn=None):
 
         if micFileName is None:
             raise Exception("emxCoordsToXmipp: Xmipp doesn't support Micrograph without filename")
-        
         mdDict[micFileName] = MetaData()
         
     #loop through particles and save coordinates in the right place
@@ -309,11 +308,15 @@ def emxCoordsToXmipp(emxData, filesRoot, mdFn=None):
         md.setValue(MDL_YCOOR, int(part.get('centerCoord__Y')), objId)        
     
     #save metadtas with coordinates
+    createFn = False
+    if mdFn is None:
+        createFn=True
     for mic in emxData.iterClasses(MICROGRAPH):
         micFileName = mic.get(FILENAME)
         md = mdDict[micFileName]
-        if mdFn is None:
+        if createFn:
             mdFn = join(filesRoot, replaceBasenameExt(micFileName, POSENDING))
+        #else reading single file in which I give the filename
         md.write('particles@' + mdFn)
 
     #save boxsize
@@ -432,7 +435,6 @@ def emxParticlesToXmipp(emxData,
                         md.setValue(label, float(v), objId)
 
                 md.setValue(MDL_CTF_K, 1.0, objId)
-        #####
 
         if particle.has('centerCoord__X'):
             md.setValue(MDL_XCOOR, int(particle.get('centerCoord__X')), objId)
@@ -466,18 +468,25 @@ def emxTransformToXmipp(md, objId, particle, _2D):
     if _2D:
         for i, j, label in iterTransformationMatrix():
             if particle.has(label):
-                _array[i][j] = particle.get(label)
+                _array[j][i] = particle.get(label)
     else:
         for i, j, label in iterTransformationMatrix():
             if particle.has(label):
-                _array[j][i] = particle.get(label)
-            
+                _array[i][j] = particle.get(label)
+
     rot, tilt, psi = Euler_matrix2angles(_array)
     
     _X = particle.get('transformationMatrix__t14', 0.)
     _Y = particle.get('transformationMatrix__t24', 0.)
     _Z = particle.get('transformationMatrix__t34', 0.)
-
+    if _2D:
+        _shift = array ([_X,_Y,_Z])
+        _X = -_shift[0]
+        _Y = -_shift[1]
+        _Z = -_shift[2]
+        #_array = linalg.inv(_array)
+        #_shift = _array.dot(_shift)
+        
     md.setValue(MDL_ANGLE_ROT , rot , objId)
     md.setValue(MDL_ANGLE_TILT, tilt, objId)
     md.setValue(MDL_ANGLE_PSI , psi , objId)
@@ -564,9 +573,7 @@ def xmippMicrographsToEmx(micMd, emxData, emxDir):
         posFile = join(filesRoot, 'extra', replaceBasenameExt(fnIn, POSENDING))
         
         if exists(posFile):
-            mdPos = readPosCoordinates(posFile)
-            print "mdPos.size: ", mdPos.size()
-            
+            mdPos = readPosCoordinates(posFile)            
             for pId in mdPos:
                 pIndex += 1
                 # We are using here a dummy filename, since not make sense
@@ -689,10 +696,7 @@ def iterTransformationMatrix():
         for j in r:
             label = "transformationMatrix__t%d%d" % (i+1, j+1)
             yield (i, j, label)
-    
-    
-    
-    
+
 ################ Old Roberto convertion functions ############
 
 
