@@ -58,10 +58,13 @@ emViewersDict = getSubclassesFromModules(Viewer, PACKAGES_DICT)
 emWizardsDict = getSubclassesFromModules(Wizard, PACKAGES_DICT)
         
 def findClass(className):
+    
     if className in emProtocolsDict:
         return emProtocolsDict[className]
+    
     if className in emObjectsDict:
         return emObjectsDict[className]
+    
     raise Exception("findClass: class '%s' not found." % className)
 
 def findSubClasses(classDict, className):
@@ -100,7 +103,7 @@ def findWizards(protocol, environment):
                 if cls in baseClasses:
                     for p in params:
                         wizards[p] = wiz
-    return wizards    
+    return wizards
 
 # Update global dictionary with variables found
 globals().update(emProtocolsDict)

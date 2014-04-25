@@ -41,21 +41,24 @@ def launch_viewer(request):
     projectName = request.session['projectName']
     project = loadProject(projectName)
     protId = request.GET.get('protocolId', None)
-    protocol = project.mapper.selectById(int(protId))
+    obj = project.mapper.selectById(int(protId))
     
-    viewers = findViewers(protocol.getClassName(), WEB_DJANGO)
+    if obj.isPointer():
+        obj = obj.get()
+        
+    viewers = findViewers(obj.getClassName(), WEB_DJANGO)
     
     if len(viewers) == 0:
         views = []
         
-        if isinstance(protocol, EMProtocol):
-            for _, output in protocol.iterOutputAttributes(EMObject):
+        if isinstance(obj, EMProtocol):
+            for _, output in obj.iterOutputAttributes(EMObject):
                 objViewers = findViewers(output.getClassName(), WEB_DJANGO)
                 if objViewers:
                     views += objViewers[0](project=project)._visualize(output) or []
 
         if not views:
-            views = [MessageView("No viewers found for object type: %s" % protocol.getClassName())]                    
+            views = [MessageView("No viewers found for object type: %s" % obj.getClassName())]                    
         
         urls = [viewToUrl(request, view) for view in views]
     else:
@@ -63,9 +66,9 @@ def launch_viewer(request):
         # Lets assume if there is a viewer for the protocol
         # it will be a ProtocolViewer with a Form
         if isinstance(viewer, ProtocolViewer):
-            urls = [viewerForm(project, protocol, viewer)]
+            urls = [viewerForm(project, obj, viewer)]
         else:
-            views = viewer._visualize(protocol)
+            views = viewer._visualize(obj)
             urls = [viewToUrl(request, v) for v in views]
             
     jsonStr = json.dumps(urls, ensure_ascii=False)
