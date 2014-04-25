@@ -113,7 +113,7 @@ def viewToUrl(request, view):
         
         if view.getTableName():
             url += '&%s=%s' % (TABLE_NAME, view.getTableName())
-        url = 'url:' + url
+        url = 'showj:' + url
     
     # TEXT VIEWER
     elif isinstance(view, TextView):

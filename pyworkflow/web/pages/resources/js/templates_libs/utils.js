@@ -188,6 +188,8 @@ function popUpJSON(json){
 			customPopUpFile(value);
 		} else if(key=="error"){
 			errorPopup("Error",value);
+		} else if(key=="showj"){
+			customPopup(value,1024,800);
 		} else {
 			popup(value);
 		}
