@@ -1056,65 +1056,67 @@ _rlnDefocusU #2
 #read(random) star took 28.91 seconds
 #
 #
-#    def test_metadata_stress(self):
-#        #create set and save 1000 block with 100 lines each
-#        numberMetadatas=1000+1
-#        numberLines=100+1
-#        md = MetaData()
-#        fnStar = self.getTmpName('.xmd')
-#        fnSqlite = self.getTmpName('.sqlite')
-#        outFileName=""
-#        #fill buffers so comparison is fair
-#        #if you do not fill buffers first meassurements will be muchfaster
-#        print "fill buffers so comparisons are fair"
-#        tmpFn="/tmp/deleteme.xmd"
-#        timestamp1 = time()
-#        if exists(tmpFn):
-#            os.remove(tmpFn)
-#        for met in range(1, numberMetadatas):
-#            outFileName = "b%06d@%s" % (met,tmpFn)
-#            for lin in range(1, numberLines):
-#                id = md.addObject() 
-#                
-#                md.setValue(MDL_IMAGE, '%06d@proj.stk' % met, id)
-#                md.setValue(MDL_XCOOR,   lin+met*numberLines, id)
-#                md.setValue(MDL_YCOOR, 1+lin+met*numberLines, id)
-#            md.write(outFileName,MD_APPEND)
-#            md.clear()
-#        timestamp2 = time()
-#        print "\nBUFFER FILLING took %.2f seconds" % (timestamp2 - timestamp1)
-#        
-#
-#        #write sqlite lineal
-#        timestamp1 = time()
-#        for met in range(1, numberMetadatas):
-#            outFileName = "b%06d@%s" % (met,fnSqlite)
-#            for lin in range(1, numberLines):
-#                id = md.addObject() 
-#                
-#                md.setValue(MDL_IMAGE, '%06d@proj.stk' % met, id)
-#                md.setValue(MDL_XCOOR,   lin+met*numberLines, id)
-#                md.setValue(MDL_YCOOR, 1+lin+met*numberLines, id)
-#            md.write(outFileName,MD_APPEND) 
-#            md.clear()
-#        timestamp2 = time()
-#        print "\nwrite(append) sqlite took %.2f seconds" % (timestamp2 - timestamp1)
-#        #write star lineal
-#        timestamp1 = time()
-#        for met in range(1, numberMetadatas):
-#            outFileName = "b%06d@%s" % (met,fnStar)
-#            for lin in range(1, numberLines):
-#                id = md.addObject() 
-#                
-#                md.setValue(MDL_IMAGE, '%06d@proj.stk' % met, id)
-#                md.setValue(MDL_XCOOR,   lin+met*numberLines, id)
-#                md.setValue(MDL_YCOOR, 1+lin+met*numberLines, id)
-#            md.write(outFileName,MD_APPEND) 
-#            md.clear()
-#        timestamp2 = time()
-#        print "\nwrite(append) star took %.2f seconds" % (timestamp2 - timestamp1)
-#        self.assertEqual(1, 1)
-#        #sqlite random print
+    def test_metadata_stress(self):
+        #create set and save 1000 block with 100 lines each
+        #numberMetadatas=1000+1
+        #numberLines=100+1
+        numberMetadatas=1000+1
+        numberLines=100+1
+        md = MetaData()
+        fnStar   = self.getTmpName('.xmd')
+        fnSqlite = self.getTmpName('.sqlite')
+        outFileName=""
+        #fill buffers so comparison is fair
+        #if you do not fill buffers first meassurements will be muchfaster
+        print "fill buffers so comparisons are fair"
+        tmpFn="/tmp/deleteme.xmd"
+        timestamp1 = time()
+        if exists(tmpFn):
+            os.remove(tmpFn)
+        for met in range(1, numberMetadatas):
+            outFileName = "b%06d@%s" % (met,tmpFn)
+            for lin in range(1, numberLines):
+                id = md.addObject() 
+                
+                md.setValue(MDL_IMAGE, '%06d@proj.stk' % met, id)
+                md.setValue(MDL_XCOOR,   lin+met*(numberLines-1), id)
+                md.setValue(MDL_YCOOR, 1+lin+met*(numberLines-1), id)
+            md.write(outFileName,MD_APPEND)
+            md.clear()
+        timestamp2 = time()
+        print "\nBUFFER FILLING took %.2f seconds" % (timestamp2 - timestamp1)
+
+        #write sqlite lineal
+        timestamp1 = time()
+        for met in range(1, numberMetadatas):
+            outFileName = "b%06d@%s" % (met,fnSqlite)
+            for lin in range(1, numberLines):
+                id = md.addObject() 
+                
+                md.setValue(MDL_IMAGE, '%06d@proj.stk' % met, id)
+                md.setValue(MDL_XCOOR,   lin+met*(numberLines-1), id)
+                md.setValue(MDL_YCOOR, 1+lin+met*(numberLines-1), id)
+            md.write(outFileName,MD_APPEND) 
+            md.clear()
+        timestamp2 = time()
+        print "\nwrite(append) sqlite took %.2f seconds" % (timestamp2 - timestamp1)
+        #write star lineal
+        timestamp1 = time()
+        for met in range(1, numberMetadatas):
+            outFileName = "b%06d@%s" % (met,fnStar)
+            for lin in range(1, numberLines):
+                id = md.addObject() 
+                
+                md.setValue(MDL_IMAGE, '%06d@proj.stk' % met, id)
+                md.setValue(MDL_XCOOR,   lin+met*(numberLines-1), id)
+                md.setValue(MDL_YCOOR, 1+lin+met*(numberLines-1), id)
+            md.write(outFileName,MD_APPEND) 
+            md.clear()
+        timestamp2 = time()
+        print "\nwrite(append) star took %.2f seconds" % (timestamp2 - timestamp1)
+        self.assertEqual(1, 1)
+
+#        #sqlite random write
 #        timestamp1 = time()
 #        for met in range(1, numberMetadatas):
 #            outFileName = "b%06d@%s" % (randint(1,numberMetadatas),fnSqlite)
@@ -1122,13 +1124,14 @@ _rlnDefocusU #2
 #                id = md.addObject() 
 #                
 #                md.setValue(MDL_IMAGE, '%06d@proj.stk' % met, id)
-#                md.setValue(MDL_XCOOR,   lin+met*numberLines, id)
-#                md.setValue(MDL_YCOOR, 1+lin+met*numberLines, id)
+#                md.setValue(MDL_XCOOR,   lin+met*(numberLines-1), id)
+#                md.setValue(MDL_YCOOR, 1+lin+met*(numberLines-1), id)
 #            md.write(outFileName,MD_APPEND) 
 #            md.clear()
 #        timestamp2 = time()
 #        print "\nwrite(random) sqlite took %.2f seconds" % (timestamp2 - timestamp1)
-#        #star random
+#
+#        #star random write
 #        timestamp1 = time()
 #        for met in range(1, numberMetadatas):
 #            outFileName = "b%06d@%s" % (randint(1,numberMetadatas),fnStar)
@@ -1136,30 +1139,30 @@ _rlnDefocusU #2
 #                id = md.addObject() 
 #                
 #                md.setValue(MDL_IMAGE, '%06d@proj.stk' % met, id)
-#                md.setValue(MDL_XCOOR,   lin+met*numberLines, id)
-#                md.setValue(MDL_YCOOR, 1+lin+met*numberLines, id)
+#                md.setValue(MDL_XCOOR,   lin+met*(numberLines-1), id)
+#                md.setValue(MDL_YCOOR, 1+lin+met*(numberLines-1), id)
 #            md.write(outFileName,MD_APPEND) 
 #            md.clear()
 #        timestamp2 = time()
 #        print "\nwrite(random) star took %.2f seconds" % (timestamp2 - timestamp1)
-#
-#        #read random 
-#        timestamp1 = time()
-#        for met in range(1, numberMetadatas):
-#            outFileName = "b%06d@%s" % (randint(1,numberMetadatas),fnSqlite)
-#            md.read(outFileName) 
-#            md.clear()
-#        timestamp2 = time()
-#        print "\nread(random) sqlite took %.2f seconds" % (timestamp2 - timestamp1)
-#
-#        timestamp1 = time()
-#        for met in range(1, numberMetadatas):
-#            outFileName = "b%06d@%s" % (randint(1,numberMetadatas),fnStar)
-#            md.read(outFileName) 
-#            md.clear()
-#        timestamp2 = time()
-#        print "\nread(random) star took %.2f seconds" % (timestamp2 - timestamp1)
-#        
+
+        #read random ///////////////////////////////////////////////////7
+        timestamp1 = time()
+        for met in range(1, numberMetadatas):
+            outFileName = "b%06d@%s" % (met,fnSqlite)
+            md.read(outFileName) 
+            md.clear()
+        timestamp2 = time()
+        print "\nread(secuential) sqlite took %.2f seconds" % (timestamp2 - timestamp1)
+
+        timestamp1 = time()
+        for met in range(1, numberMetadatas):
+            outFileName = "b%06d@%s" % (met,fnStar)
+            md.read(outFileName) 
+            md.clear()
+        timestamp2 = time()
+        print "\nread(secuential) star took %.2f seconds" % (timestamp2 - timestamp1)
+
     def test_SymList_readSymmetryFile(self):
         '''readSymmetryFile'''
         a = SymList()
