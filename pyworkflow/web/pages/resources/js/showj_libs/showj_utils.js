@@ -272,6 +272,22 @@ function initializeImageLoad(forceRecall){
 		// This is the div section name used in the scroll event
 		context: 'section' 
 	});
+	
+	$('.tableImages').waypoint(function(direction){
+		element=$(this)
+		if (element.data('real_src') != element.attr("src") || forceRecallServer){ 
+			element.attr(
+				"src",
+				element.data('real_src').concat($("#id_mirrorY").is(':checked')?"&mirrorY":"").
+				concat($("#id_applyTransformMatrix").is(':checked')?"&applyTransformMatrix":"").
+				concat($("#id_onlyShifts").is(':checked')?"&onlyShifts":"").
+				concat($("#id_wrap").is(':checked')?"&wrap":"")
+				)
+		}
+	}, {
+		offset: '150%'
+	});
+	
 }
 
 function saveShowjTable(csrf_token){
