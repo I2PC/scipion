@@ -1083,7 +1083,7 @@ AddXmippProgram('matrix_dimred', ['XmippDimred'])
 AddXmippProgram('metadata_convert_to_spider', ['XmippInterface'])
 AddXmippProgram('metadata_histogram')
 AddXmippProgram('metadata_import')
-AddXmippProgram('metadata_split')
+AddXmippProgram('metadata_split', ['XmippRecons'])
 AddXmippProgram('metadata_utilities')
 AddXmippProgram('metadata_xml')
 AddXmippProgram('micrograph_scissor'),
