@@ -76,6 +76,12 @@ class ProjectWindow(gui.WindowBase):
         
         self.switchView(gui.VIEW_PROTOCOLS)
     
+    def createHeaderFrame(self, parent):
+        """Create the header and add the view selection frame at the right."""
+        header = gui.WindowBase.createHeaderFrame(self, parent)
+        self.addViewList(header)
+        return header
+
     def getSettings(self):
         return self.settings
     
