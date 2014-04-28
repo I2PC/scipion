@@ -67,12 +67,6 @@ class SpiderViewerWard(ProtocolViewer):
                 'doShowClasses': self.visualizeClasses
                 }
         
-    def _viewAll(self, *args):
-        if self.doShowClasses:
-            self.visualizeClasses()
-        if self.doShowDendrogram:
-            self._plotDendrogram()
-            
     def _plotDendrogram(self, e=None):
         from pyworkflow.em.packages.xmipp3.plotter import XmippPlotter
         xplotter = XmippPlotter()

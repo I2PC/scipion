@@ -64,9 +64,7 @@ class XmippViewer(Viewer):
     
     def __init__(self, **args):
         Viewer.__init__(self, **args)
-        self._views = []
-    
-
+        self._views = []   
         
     def visualize(self, obj, **args):
         self._visualize(obj, **args)
