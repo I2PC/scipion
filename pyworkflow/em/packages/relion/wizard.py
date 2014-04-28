@@ -35,28 +35,28 @@ from pyworkflow.em.wizard import *
 from protocol_classify3d import ProtRelionClassify3D
 
 
-class RelionVolMaskRadiusWizard(volumeMaskRadiusWizard):
+class RelionVolMaskRadiusWizard(VolumeMaskRadiusWizard):
     _targets = [(ProtRelionClassify3D, ['maskRadius'])]
     
     def _getProvider(self, protocol):
         _objs = protocol.initial3DReference    
-        return volumeMaskRadiusWizard._getListProvider(self, _objs)
+        return VolumeMaskRadiusWizard._getListProvider(self, _objs)
     
     def show(self, form):
         _label = "maskRadius"
         _value = form.protocol.maskRadius.get()
-        volumeMaskRadiusWizard.show(self, form, _value, _label, UNIT_PIXEL)
+        VolumeMaskRadiusWizard.show(self, form, _value, _label, UNIT_PIXEL)
     
     @classmethod    
     def getView(self):
         return "wiz_relion_volume_mask_radius" 
 
-class RelionBandpassWizard(filterParticlesWizard):
+class RelionBandpassWizard(FilterParticlesWizard):
     _targets = [(ProtRelionClassify3D, ['iniLowPassFilter'])]
 
     def _getProvider(self, protocol):
         _objs = protocol.inputParticles
-        return filterParticlesWizard._getListProvider(self, _objs)
+        return FilterParticlesWizard._getListProvider(self, _objs)
   
     def show(self, form):
         protocol = form.protocol
@@ -73,7 +73,7 @@ class RelionBandpassWizard(filterParticlesWizard):
             args['showLowFreq'] = False
             args['showDecay'] = False
 
-            d = bandPassFilterDialog(form.root, provider, **args)
+            d = BandPassFilterDialog(form.root, provider, **args)
             
             if d.resultYes():
                 form.setVar('iniLowPassFilter', 1/d.getHighFreq()*d.itemDim)

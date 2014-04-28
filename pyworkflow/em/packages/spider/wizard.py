@@ -47,44 +47,44 @@ from spider import SpiderShell
 from convert import locationToSpider
 
 
-class SpiderProtMaskWizard(particleMaskRadiusWizard):
+class SpiderProtMaskWizard(ParticleMaskRadiusWizard):
     _targets = [(SpiderProtCAPCA, ['radius'])]
     
     def _getProvider(self, protocol):
         _objs = protocol.inputParticles
-        return particleMaskRadiusWizard._getListProvider(self, _objs)
+        return ParticleMaskRadiusWizard._getListProvider(self, _objs)
     
     def show(self, form):
         _value = form.protocol.maskRadius.get()
         _label = "radius"
-        particleMaskRadiusWizard.show(self, form, _value, _label, UNIT_PIXEL)
+        ParticleMaskRadiusWizard.show(self, form, _value, _label, UNIT_PIXEL)
         
     @classmethod    
     def getView(self):
         return "wiz_spider_particle_mask_radius"
     
-class SpiderParticlesMaskRadiiWizard(particlesMaskRadiiWizard):
+class SpiderParticlesMaskRadiiWizard(ParticlesMaskRadiiWizard):
     _targets = [(SpiderProtAlignAPSR, ['innerRadius', 'outerRadius'])]        
     
     def _getProvider(self, protocol):
         _objs = protocol.inputParticles
-        return particlesMaskRadiiWizard._getListProvider(self, _objs)
+        return ParticlesMaskRadiiWizard._getListProvider(self, _objs)
     
     def show(self, form):
         _value = [form.protocol.innerRadius.get(), form.protocol.outerRadius.get()]
         _label = ["innerRadius", "outerRadius"]
-        particlesMaskRadiiWizard.show(self, form, _value, _label, UNIT_PIXEL)
+        ParticlesMaskRadiiWizard.show(self, form, _value, _label, UNIT_PIXEL)
     
     @classmethod    
     def getView(self):
         return "wiz_spider_particle_mask_radii"
 
-class SpiderFilterParticlesWizard(filterParticlesWizard):    
+class SpiderFilterParticlesWizard(FilterParticlesWizard):    
     _targets = [(SpiderProtFilter, ['filterRadius', 'lowFreq', 'highFreq', 'temperature'])]
     
     def _getProvider(self, protocol):
         _objs = protocol.inputParticles
-        return filterParticlesWizard._getListProvider(self, _objs)
+        return FilterParticlesWizard._getListProvider(self, _objs)
     
     def show(self, form):
         protocol = form.protocol
@@ -113,10 +113,10 @@ class SpiderFilterParticlesWizard(filterParticlesWizard):
 #--------------- Dialogs used by Wizards --------------------------        
        
 #class SpiderGaussianFilterDialog(XmippDownsampleDialog):
-class SpiderFilterDialog(downsampleDialog):
+class SpiderFilterDialog(DownsampleDialog):
     
     def _beforePreview(self):
-        imagePreviewDialog._beforePreview(self)
+        ImagePreviewDialog._beforePreview(self)
         self.lastObj = None
         self.rightPreviewLabel = "Filtered particle"
         self.message = "Filtering particle..."
