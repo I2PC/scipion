@@ -35,7 +35,6 @@ from pyworkflow.utils.graph import Graph
 from pyworkflow.gui.graph import LevelTree
 from pyworkflow.gui.canvas import Canvas, ImageBox
 from pyworkflow.em.packages.xmipp3.viewer import XmippViewer
-from pyworkflow.gui.text import showTextFileViewer
 from pyworkflow.em.viewer import DataView
 
 from spider import PcaFile

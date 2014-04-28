@@ -222,6 +222,9 @@ class PcaFile(EMObject):
         
         self.filename = String()
         
+    def getFileName(self):
+        return self.filename.get()
+        
      
 class SpiderProtocol(EMProtocol):
     """ Sub-class of EMProtocol to group some common Spider utils. """

@@ -128,7 +128,8 @@ class Viewer(object):
         self._tmpPath = tmpPath
         self._project = args.get('project', None)
         self.protocol = args.get('protocol', None)
-        self._parent = args.get('parent', None)
+        self.formWindow = args.get('parent', None)
+        self._tkRoot = self.formWindow.root if self.formWindow else None
         
     def _getTmpPath(self, *paths):
         return join(self._tmpPath, *paths)
@@ -156,8 +157,28 @@ class Viewer(object):
         
     def getParent(self):
         """ Get the Tk parent widget. """
-        return self._parent
+        return self.formWindow
+        
+    def infoMessage(self, msg, title='',):
+        """ Build a message View of type INFO. """
+        return MessageView(msg, title, msgType=MSG_INFO, tkParent=self._tkRoot)
     
+    def errorMessage(self, msg, title=''):
+        """ Build a message View of type INFO. """
+        return MessageView(msg, title, msgType=MSG_ERROR, tkParent=self._tkRoot)  
+    
+    def errorList(self, errors, views, title='Visualization errors'):
+        """ Convert an error list in a single Error message. """
+        if errors:
+            views.append(self.errorMessage('\n'.join(errors), title))
+    
+    def warnMessage(self, msg, title=''):
+        """ Build a message View of type INFO. """
+        return MessageView(msg, title, msgType=MSG_WARN, tkParent=self._tkRoot)
+
+    def textView(self, filelist, title=''):
+        return TextView(filelist, title, tkParent=self.formWindow)      
+
     
 class ProtocolViewer(Protocol, Viewer):
     """ Special kind of viewer that have a Form to organize better
@@ -190,26 +211,6 @@ class ProtocolViewer(Protocol, Viewer):
         self.showError = self.formWindow.showError
         self._tkRoot = self.formWindow.root
         self.formWindow.show(center=True)     
-        
-    def infoMessage(self, msg, title='',):
-        """ Build a message View of type INFO. """
-        return MessageView(msg, title, msgType=MSG_INFO, tkParent=self._tkRoot)
-    
-    def errorMessage(self, msg, title=''):
-        """ Build a message View of type INFO. """
-        return MessageView(msg, title, msgType=MSG_ERROR, tkParent=self._tkRoot)  
-    
-    def errorList(self, errors, views, title='Visualization errors'):
-        """ Convert an error list in a single Error message. """
-        if errors:
-            views.append(self.errorMessage('\n'.join(errors), title))
-    
-    def warnMessage(self, msg, title=''):
-        """ Build a message View of type INFO. """
-        return MessageView(msg, title, msgType=MSG_WARN, tkParent=self._tkRoot)
-    
-    def textView(self, filelist, title=''):
-        return TextView(filelist, title, tkParent=self.formWindow)   
     
     def _visualizeParam(self, paramName=None):
         """ Call handler to get viewers and visualize each one. """

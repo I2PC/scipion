@@ -28,20 +28,14 @@ This module implement the wrappers around xmipp_showj
 visualization program.
 """
 
-import Tkinter as tk
-from pyworkflow.protocol.params import *
-from pyworkflow.viewer import Viewer, ProtocolViewer, DESKTOP_TKINTER, WEB_DJANGO
-from pyworkflow.utils.graph import Graph
-from pyworkflow.gui.graph import LevelTree
-from pyworkflow.gui.canvas import Canvas, ImageBox
+from pyworkflow.viewer import DESKTOP_TKINTER, WEB_DJANGO
 from pyworkflow.em.packages.xmipp3.viewer import XmippViewer
-from pyworkflow.gui.text import showTextFileViewer
-
+from pyworkflow.em.viewer import DataView
 from spider import PcaFile
 from protocol_custommask import SpiderProtCustomMask
 
     
-class SpiderViewer(Viewer):
+class SpiderViewer(XmippViewer):
     """ Wrapper to visualize different type of objects
     with the Xmipp program xmipp_showj. """
     
@@ -49,14 +43,19 @@ class SpiderViewer(Viewer):
     _targets = [PcaFile, SpiderProtCustomMask]
     _label = 'viewer'
 
-    def visualize(self, obj, **args):
+    def _visualize(self, obj, **args):
         
         if isinstance(obj, PcaFile):
-            showTextFileViewer("PCA file", [obj.filename.get()])
+            self._views.append(self.textView([obj.getFileName()], "PCA file"))
         
         elif isinstance(obj, SpiderProtCustomMask):
             mask = obj.outputMask
-            XmippViewer(project=self.getProject()).visualize(mask)
+            self._visualize(mask)
+            #XmippViewer(project=self.getProject()).visualize(mask)
             # Remove location to visualize the whole stack
             self._views.append(DataView(mask.getFileName()))
+            
+        else:
+            XmippViewer._visualize(self, obj)
            
+        return self._views
