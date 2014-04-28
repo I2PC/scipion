@@ -46,7 +46,7 @@ from protocol_mask import XmippProtMaskParticles, XmippProtMaskVolumes
 from pyworkflow.em.wizard import * 
 
 
-class XmippDownsampleWizard(downsampleWizard):
+class XmippDownsampleWizard(DownsampleWizard):
     _targets = [(XmippProtPreprocessMicrographs, ['downFactor'])]
     
     def _getParameters(self, protocol):
@@ -59,21 +59,23 @@ class XmippDownsampleWizard(downsampleWizard):
 
     def _getProvider(self, protocol):
         _objs = self._getParameters(protocol)['input']
-        return downsampleWizard._getListProvider(self, _objs)
+        return DownsampleWizard._getListProvider(self, _objs)
     
     def show(self, form):
         params = self._getParameters(form.protocol)
         _value = params['value']
         _label = params['label']
-        downsampleWizard.show(self, form, _value, _label, UNIT_PIXEL)
-        
-    @classmethod
-    def getView(self):
-        return "wiz_xmipp_downsampling"
-        
+        DownsampleWizard.show(self, form, _value, _label, UNIT_PIXEL)
     
-class XmippCTFWizard(ctfWizard):
-    _targets = [(ProtCTFMicrographs, ['lowRes', 'highRes'])]
+    """ Method to run the web wizard. """
+    def _run(self, protocol):
+        protParams = self._getParameters(protocol)
+        
+        return "wiz_downsampling", protParams
+    
+        
+class XmippCTFWizard(CtfWizard):
+    _targets = [(ProtCTFMicrographs, ['Resolution'])]
     
     def _getParameters(self, protocol):
         protParams = {}
@@ -84,156 +86,229 @@ class XmippCTFWizard(ctfWizard):
     
     def _getProvider(self, protocol):
         _objs = self._getParameters(protocol)['input']
-        return ctfWizard._getListProvider(self, _objs)
+        return CtfWizard._getListProvider(self, _objs)
     
     def show(self, form):
         params = self._getParameters(form.protocol)
         _value = params['value']
         _label = params['label']
-        ctfWizard.show(self, form, _value, _label, UNIT_PIXEL)
+        CtfWizard.show(self, form, _value, _label, UNIT_PIXEL)
     
-    @classmethod
-    def getView(self):
-        return "wiz_xmipp_ctf"
+    """ Method to run the web wizard. """
+    def _run(self, protocol):
+        protParams = self._getParameters(protocol)
+        return "wiz_ctf", protParams
         
 
-class XmippParticleMaskRadiusWizard(particleMaskRadiusWizard):
+class XmippParticleMaskRadiusWizard(ParticleMaskRadiusWizard):
     _targets = [(XmippProtMaskParticles, ['radius'])]
     
+    def _getParameters(self, protocol):
+        protParams = {}
+        protParams['input']= protocol.inputParticles
+        protParams['label']= "radius"
+        protParams['value']= protocol.radius.get()
+        return protParams
+    
     def _getProvider(self, protocol):
-        _objs = protocol.inputParticles
-        return particleMaskRadiusWizard._getListProvider(self, _objs)
+        _objs = self._getParameters(protocol)['input']
+        return ParticleMaskRadiusWizard._getListProvider(self, _objs)
     
     def show(self, form):
-        _value = form.protocol.radius.get()
-        _label = "radius"
-        particleMaskRadiusWizard.show(self, form, _value, _label, UNIT_PIXEL)
+        params = self._getParameters(form.protocol)
+        _value = params['value']
+        _label = params['label']
+        ParticleMaskRadiusWizard.show(self, form, _value, _label, UNIT_PIXEL)
     
-    @classmethod
-    def getView(self):
-        return "wiz_xmipp_particle_mask_radius"
+    """ Method to run the web wizard. """
+    def _run(self, protocol):
+        protParams = self._getParameters(protocol)
+        return "wiz_xmipp_particle_mask_radius", protParams
     
-class XmippVolumeMaskRadiusWizard(volumeMaskRadiusWizard):
+    
+class XmippVolumeMaskRadiusWizard(VolumeMaskRadiusWizard):
     _targets = [(XmippProtMaskVolumes, ['radius'])]
-      
+    
+    def _getParameters(self, protocol):
+        protParams = {}
+        protParams['input']= protocol.inputVolumes
+        protParams['label']= "radius"
+        protParams['value']= protocol.radius.get()
+        return protParams  
+    
     def _getProvider(self, protocol):
-        _objs = protocol.inputVolumes
-        return volumeMaskRadiusWizard._getListProvider(self, _objs)
+        _objs = self._getParameters(protocol)['input']
+        return VolumeMaskRadiusWizard._getListProvider(self, _objs)
     
     def show(self, form):
-        _label = "radius"
-        _value = form.protocol.radius.get()
-        volumeMaskRadiusWizard.show(self, form, _value, _label, UNIT_PIXEL)
+        params = self._getParameters(form.protocol)
+        _value = params['value']
+        _label = params['label']
+        VolumeMaskRadiusWizard.show(self, form, _value, _label, UNIT_PIXEL)
+    
+    """ Method to run the web wizard. """
+    def _run(self, protocol):
+        protParams = self._getParameters(protocol)
+        return "wiz_xmipp_volume_mask_radius", protParams
+    
  
-    @classmethod
-    def getView(self):
-        return "wiz_xmipp_volume_mask_radius"
- 
-class XmippParticleMaskRadiiWizard(particlesMaskRadiiWizard):
+class XmippParticleMaskRadiiWizard(ParticlesMaskRadiiWizard):
     _targets = [(XmippProtMaskParticles, ['innerRadius', 'outerRadius'])]
     
+    def _getParameters(self, protocol):
+        protParams = {}
+        protParams['input']= protocol.inputVolumes
+        protParams['label']= ["innerRadius", "outerRadius"]
+        protParams['value']= [protocol.innerRadius.get(), protocol.outerRadius.get()]
+        return protParams  
+    
     def _getProvider(self, protocol):
-        _objs = protocol.inputParticles
-        return particlesMaskRadiiWizard._getListProvider(self, _objs)
+        _objs = self._getParameters(protocol)['input']
+        return ParticlesMaskRadiiWizard._getListProvider(self, _objs)
     
     def show(self, form):
-        _value = [form.protocol.innerRadius.get(), form.protocol.outerRadius.get()]
-        _label = ["innerRadius", "outerRadius"]
-        particlesMaskRadiiWizard.show(self, form, _value, _label, UNIT_PIXEL)
+        params = self._getParameters(form.protocol)
+        _value = params['value']
+        _label = params['label']
+        ParticlesMaskRadiiWizard.show(self, form, _value, _label, UNIT_PIXEL)
     
-    @classmethod
-    def getView(self):
-        return "wiz_xmipp_particle_mask_radii"
+    """ Method to run the web wizard. """
+    def _run(self, protocol):
+        protParams = self._getParameters(protocol)
+        return "wiz_xmipp_particle_mask_radii", protParams
 
-class XmippVolumeRadiiWizard(volumeMaskRadiiWizard):
+
+class XmippVolumeRadiiWizard(VolumeMaskRadiiWizard):
     _targets = [(XmippProtMaskVolumes, ['innerRadius', 'outerRadius'])]
- 
+    
+    def _getParameters(self, protocol):
+        protParams = {}
+        protParams['input']= protocol.inputVolumes
+        protParams['label']= ["innerRadius", "outerRadius"]
+        protParams['value']= [protocol.innerRadius.get(), protocol.outerRadius.get()]
+        return protParams  
+    
     def _getProvider(self, protocol):
-        _objs = protocol.inputVolumes  
-        return volumeMaskRadiiWizard._getListProvider(self, _objs)
+        _objs = self._getParameters(protocol)['input'] 
+        return VolumeMaskRadiiWizard._getListProvider(self, _objs)
     
     def show(self, form):
-        _value = [form.protocol.innerRadius.get(), form.protocol.outerRadius.get()]
-        _label = ["innerRadius", "outerRadius"]
-        volumeMaskRadiiWizard.show(self, form, _value, _label, UNIT_PIXEL)
+        params = self._getParameters(form.protocol)
+        _value = params['value']
+        _label = params['label']
+        VolumeMaskRadiiWizard.show(self, form, _value, _label, UNIT_PIXEL)
     
     @classmethod
     def getView(self):
         return "wiz_xmipp_volume_mask_radii"
         
-class XmippFilterParticlesWizard(filterParticlesWizard):   
+        
+class XmippFilterParticlesWizard(FilterParticlesWizard):   
     _targets = [(XmippProtFilterParticles, ['lowFreq', 'highFreq', 'freqDecay'])]
     
+    def _getParameters(self, protocol):
+        protParams = {}
+        protParams['input']= protocol.inputParticles
+        protParams['label']= ["lowFreq", "highFreq","freqDecay"]
+        protParams['value']= [protocol.lowFreq.get(), protocol.highFreq.get(), protocol.freqDecay.get()]
+        protParams['mode'] = protocol.fourierMode.get()
+        return protParams  
+    
     def _getProvider(self, protocol):
-        _objs = protocol.inputParticles
-        return filterParticlesWizard._getListProvider(self, _objs)
+        _objs = self._getParameters(protocol)['input']
+        return FilterParticlesWizard._getListProvider(self, _objs)
     
     def show(self, form):
-        _value = [form.protocol.lowFreq.get(), 
-                  form.protocol.highFreq.get(), 
-                  form.protocol.freqDecay.get()]
-        _label = ["lowFreq", 
-                  "highFreq", 
-                  "freqDecay"]
-        _mode = form.protocol.fourierMode.get()
-        
-        filterParticlesWizard.show(self, form, _value, _label, _mode, UNIT_PIXEL_FOURIER)
+        params = self._getParameters(form.protocol)
+        _value = params['value']
+        _label = params['label']
+        _mode = params['mode']
+        FilterParticlesWizard.show(self, form, _value, _label, _mode, UNIT_PIXEL_FOURIER)
     
-    @classmethod
-    def getView(self):
-        return "wiz_xmipp_filter_particle"
+    """ Method to run the web wizard. """
+    def _run(self, protocol):
+        protParams = self._getParameters(protocol)
+        return "wiz_xmipp_filter_particle", protParams
 
-class XmippGaussianParticlesWizard(gaussianParticlesWizard):
+
+class XmippGaussianParticlesWizard(GaussianParticlesWizard):
     _targets = [(XmippProtFilterParticles, ['freqSigma'])]
     
+    def _getParameters(self, protocol):
+        protParams = {}
+        protParams['input']= protocol.inputParticles
+        protParams['label']= "freqSigma"
+        protParams['value']= protocol.freqSigma.get()
+        return protParams  
+    
     def _getProvider(self, protocol):
-        _objs = protocol.inputParticles
-        return gaussianParticlesWizard._getListProvider(self, _objs)
+        _objs = self._getParameters(protocol)['input']
+        return GaussianParticlesWizard._getListProvider(self, _objs)
     
     def show(self, form):
-        _value = form.protocol.freqSigma.get()
-        _label = "freqSigma"
-        gaussianParticlesWizard.show(self, form, _value, _label, UNIT_PIXEL_FOURIER)
+        params = self._getParameters(form.protocol)
+        _value = params['value']
+        _label = params['label']
+        GaussianParticlesWizard.show(self, form, _value, _label, UNIT_PIXEL_FOURIER)
     
-    @classmethod
-    def getView(self):
-        return "wiz_xmipp_gaussian_particle"
+    """ Method to run the web wizard. """
+    def _run(self, protocol):
+        protParams = self._getParameters(protocol)
+        return "wiz_xmipp_gaussian_particle", protParams
+
+
     
-class XmippFilterVolumesWizard(filterVolumesWizard):   
+class XmippFilterVolumesWizard(FilterVolumesWizard):   
     _targets = [(XmippProtFilterVolumes, ['lowFreq', 'highFreq', 'freqDecay'])]
     
+    def _getParameters(self, protocol):
+        protParams = {}
+        protParams['input']= protocol.inputParticles
+        protParams['label']= ["lowFreq", "highFreq","freqDecay"]
+        protParams['value']= [protocol.lowFreq.get(), protocol.highFreq.get(), protocol.freqDecay.get()]
+        protParams['mode'] = protocol.fourierMode.get()
+        return protParams  
+    
     def _getProvider(self, protocol):
-        _objs = protocol.inputVolumes    
-        return filterVolumesWizard._getListProvider(self, _objs)
+        _objs = self._getParameters(protocol)['input']
+        return FilterVolumesWizard._getListProvider(self, _objs)
     
     def show(self, form):
-        _value = [form.protocol.lowFreq.get(), 
-                  form.protocol.highFreq.get(), 
-                  form.protocol.freqDecay.get()]
-        _label = ["lowFreq", 
-                  "highFreq", 
-                  "freqDecay"]
-        _mode = form.protocol.fourierMode.get()
-        
-        filterVolumesWizard.show(self, form, _value, _label, _mode, UNIT_PIXEL_FOURIER)
-     
-    @classmethod
-    def getView(self):
-        return "wiz_xmipp_filter_volume"
-     
-class XmippGaussianVolumesWizard(gaussianVolumesWizard):
+        params = self._getParameters(form.protocol)
+        _value = params['value']
+        _label = params['label']
+        _mode = params['mode']
+        FilterVolumesWizard.show(self, form, _value, _label, _mode, UNIT_PIXEL_FOURIER)
+    
+    """ Method to run the web wizard. """  
+    def _run(self, protocol):
+        protParams = self._getParameters(protocol)
+        return "wiz_xmipp_filter_volume", protParams
+
+
+
+class XmippGaussianVolumesWizard(GaussianVolumesWizard):
     _targets = [(XmippProtFilterVolumes, ['freqSigma'])]
     
+    def _getParameters(self, protocol):
+        protParams = {}
+        protParams['input']= protocol.inputParticles
+        protParams['label']= "freqSigma"
+        protParams['value']= protocol.freqSigma.get()
+        return protParams  
+    
     def _getProvider(self, protocol):
-        _objs = protocol.inputVolumes
-        return gaussianVolumesWizard._getListProvider(self, _objs)
+        _objs = self._getParameters(protocol)['input']
+        return GaussianVolumesWizard._getListProvider(self, _objs)
     
     def show(self, form):
-        _value = form.protocol.freqSigma.get()
-        _label = "freqSigma"
-        gaussianVolumesWizard.show(self, form, _value, _label, UNIT_PIXEL_FOURIER)
-
-    @classmethod
-    def getView(self):
-        return "wiz_xmipp_gaussian_volume"
-  
+        params = self._getParameters(form.protocol)
+        _value = params['value']
+        _label = params['label']
+        GaussianVolumesWizard.show(self, form, _value, _label, UNIT_PIXEL_FOURIER)
+    
+    """ Method to run the web wizard. """  
+    def _run(self, protocol):
+        protParams = self._getParameters(protocol)
+        return "wiz_xmipp_gaussian_volume", protParams
+    

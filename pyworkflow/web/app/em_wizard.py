@@ -50,28 +50,40 @@ from xmipp_wizard import *
 #from relion_wizard import *
 
 
+#===============================================================================
+#    Wizard base function (to call the others)
+#===============================================================================
+
 def wizard(request):
     # Get the Wizard Name
     requestDict = getattr(request, "POST")
-    functionName = requestDict.get("wizName")
-#    className = requestDict.get("wizClassName")
-    function = globals().get(functionName, None)
-    
-    print "======================= in wizard: " + functionName
-    
+#    functionName = requestDict.get("wizName")
+
+    # Get and instance the wizard class
+    className = requestDict.get("wizClassName")
+    wizClass = globals().get(className, None)()
+
     # Get the protocol object
     project, protocol = loadProtocolProject(request)
     updateProtocolParams(request, protocol, project)
+    
+    # Obtain the parameters for the wizard
+    functionName, params = wizClass._run(protocol)
+    function = globals().get(functionName, None)
+    
+    print "======================= in wizard: " + functionName
     
     if function is None:
         pass  # redirect to error: wizard not found
     elif not callable(function):
         pass  # redirect to error: name is not a function
     else:
-        return function(protocol, request)
-#        return function(className)
-    
-    
+        return function(protocol, params, request)
+
+#===============================================================================
+#    Wizard common resources (to build the context)    
+#===============================================================================
+
 def wiz_base(request, context):
     context_base = {'general_style': getResourceCss('general'),
                'wizard_style': getResourceCss('wizard'),
@@ -88,9 +100,16 @@ def wiz_base(request, context):
     context.update(context_base)
     return context
 
+#===============================================================================
+#    Wizard classes (to execute differents wizards)
+#===============================================================================
+
 def wiz_downsampling(protocol, params, request):
+    
+    # Get params
     micrographs = params['input'].get()
-    value = params['value']    
+    label = params['label']
+    value = params['value']
     
     res = validateSet(micrographs)
     
@@ -102,7 +121,7 @@ def wiz_downsampling(protocol, params, request):
             m.basename = basename(m.getFileName())
              
         context = {'objects': mics,
-                   'downFactor': value
+                   label : value
                    }
 
         context = wiz_base(request, context)
@@ -110,9 +129,12 @@ def wiz_downsampling(protocol, params, request):
 
 
 def wiz_ctf(protocol, params, request):
-    micrographs = params['input'].get()
-    value = params['value']
     
+    # Get params
+    micrographs = params['input'].get()
+    label = params['label']
+    value = params['value']
+
     res = validateSet(micrographs)
     
     if res is not 1:
@@ -123,15 +145,18 @@ def wiz_ctf(protocol, params, request):
             m.basename = basename(m.getFileName())    
         
         context = {'objects': mics,
-                   'low_res': value[0],
-                   'high_res' : value [1],
+                   label[0]: value[0],
+                   label[1] : value[1],
                    }
         
         context = wiz_base(request, context)
         return render_to_response('wizards/wiz_ctf.html', context)
 
 def wiz_particle_mask_radius(protocol, params, request):
+    
+    # Get params
     particles = params['input'].get()
+    label = params['label']
     value = params['value']
     
     res = validateParticles(particles) 
@@ -154,7 +179,7 @@ def wiz_particle_mask_radius(protocol, params, request):
                 mask_radius = xdim/2
                 
             context = {'objects': parts,
-                       'maskRadius': mask_radius,
+                       label: mask_radius,
                        'xdim':xdim,
                        }
 
@@ -162,7 +187,10 @@ def wiz_particle_mask_radius(protocol, params, request):
             return render_to_response('wizards/wiz_particle_mask_radius.html', context)
 
 def wiz_particles_mask_radii(protocol, params, request):
+    
+    # Get params
     particles = params['input'].get()
+    label = params['label']
     value = params['value']
     
     res = validateParticles(particles) 
@@ -176,12 +204,10 @@ def wiz_particles_mask_radii(protocol, params, request):
             return HttpResponse("errorIterate")
         else:
             xdim = getImageXdim(request, parts[0].text)
-            inner_radius = value[0]
-            outer_radius = value[1]
                 
             context = {'objects': parts,
-                       'innerRadius': inner_radius,
-                       'outerRadius': outer_radius,
+                       label[0]: value[0],
+                       label[1]: value[1],
                        'xdim':xdim,
                        }
             
@@ -190,7 +216,10 @@ def wiz_particles_mask_radii(protocol, params, request):
             return render_to_response('wizards/wiz_particles_mask_radii.html', context)
 
 def wiz_volume_mask_radius(protocol, params, request):
+    
+    # Get params
     volumes = params['input'].get()
+    label = params['label']
     value = params['value']
     
     res = validateSet(volumes)
@@ -217,7 +246,7 @@ def wiz_volume_mask_radius(protocol, params, request):
             mask_radius = xdim/2
             
         context = {'objects': vols,
-                   'maskRadius': mask_radius,
+                   label: mask_radius,
                    'xdim': xdim,
                    }
         
@@ -226,7 +255,10 @@ def wiz_volume_mask_radius(protocol, params, request):
         return render_to_response('wizards/wiz_volume_mask_radius.html', context)
 
 def wiz_volumes_mask_radii(protocol, params, request):
+
+    # Get params
     volumes = params['input'].get()
+    label = params['label']
     value = params['value']
     
     res = validateSet(volumes)
@@ -246,8 +278,8 @@ def wiz_volumes_mask_radii(protocol, params, request):
         xdim = getImageXdim(request, vols[0].getFileName())
             
         context = {'objects': vols,
-                   'innerRadius': value[0],
-                   'outerRadius': value[1],
+                   label[0]: value[0],
+                   label[1]: value[1],
                    'xdim': xdim,
                    }
         
@@ -256,7 +288,10 @@ def wiz_volumes_mask_radii(protocol, params, request):
         return render_to_response('wizards/wiz_volumes_mask_radii.html', context)
 
 def wiz_filter_particle(protocol, params, request):
+    
+    # Get params
     particles = params['input'].get()
+    label = params['label']
     value = params['value']
     mode = params['mode']
     
@@ -288,9 +323,9 @@ def wiz_filter_particle(protocol, params, request):
         else:
             context = {'objects': parts,
                        'mode': mode,
-                       'lowFreq': lowFreq,
-                       'highFreq': highFreq,
-                       'decayFreq': decay,
+                       label[0]: lowFreq,
+                       label[1]: highFreq,
+                       label[2]: decay,
                        }
             
             context = wiz_base(request, context)
@@ -298,10 +333,12 @@ def wiz_filter_particle(protocol, params, request):
             return render_to_response('wizards/wiz_filter_particles.html', context)
         
 def wiz_filter_volume(protocol, params, request):
+    
+    # Get params
     volumes = params['input'].get()
+    label = params['label']
     value = params['value']
     mode = params['mode']
-    
     
     if mode == 0:
         # low pass
@@ -338,9 +375,9 @@ def wiz_filter_volume(protocol, params, request):
         else:
             context = {'objects': vols,
                        'mode': mode,
-                       'lowFreq': lowFreq,
-                       'highFreq': highFreq,
-                       'decayFreq': decay,
+                       label[0]: lowFreq,
+                       label[1]: highFreq,
+                       label[2]: decay,
                        'unit': UNIT_PIXEL
                        }
             
@@ -350,7 +387,10 @@ def wiz_filter_volume(protocol, params, request):
 
 
 def wiz_particle_gaussian(protocol, params, request):
+    
+    # Get params
     particles = params['input'].get()
+    label = params['label']
     value = params['value']
     
     res = validateParticles(particles) 
@@ -364,7 +404,7 @@ def wiz_particle_gaussian(protocol, params, request):
             return HttpResponse("errorIterate")
         else:
             context = {'objects': parts,
-                       'freqSigma': value,
+                       label: value,
                        }
             
             context = wiz_base(request, context)
@@ -373,7 +413,10 @@ def wiz_particle_gaussian(protocol, params, request):
         
         
 def wiz_volume_gaussian(protocol, params, request):
+    
+    # Get params
     volumes = params['input'].get()
+    label = params['label']
     value = params['value']
     
     res = validateSet(volumes)
@@ -394,13 +437,17 @@ def wiz_volume_gaussian(protocol, params, request):
             return HttpResponse("errorIterate")
         else:
             context = {'objects': vols,
-                       'freqSigma': value,
+                       label: value,
                        }
             
             context = wiz_base(request, context)
             
             return render_to_response('wizards/wiz_gaussian_vol.html', context)
     
+    
+#===============================================================================
+#    Methods for utils
+#===============================================================================
 
 def getParticleSubset(particles, num):
     """

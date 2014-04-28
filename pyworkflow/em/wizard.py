@@ -125,7 +125,7 @@ class ListTreeProvider(TreeProvider):
 #    Wizards base classes
 #===============================================================================
 
-class downsampleWizard(EmWizard):
+class DownsampleWizard(EmWizard):
     
     def show(self, form, value, label, units=UNIT_PIXEL):
         protocol = form.protocol
@@ -136,7 +136,7 @@ class downsampleWizard(EmWizard):
                     'downsample': value
                     }
             
-            d = downsampleDialog(form.root, provider, **args)
+            d = DownsampleDialog(form.root, provider, **args)
             if d.resultYes():
                 form.setVar(label, d.getDownsample())
         else:
@@ -147,7 +147,7 @@ class downsampleWizard(EmWizard):
         return "wiz_downsampling"
         
     
-class ctfWizard(EmWizard):
+class CtfWizard(EmWizard):
         
     def show(self, form, value, label, units=UNIT_PIXEL):
         protocol = form.protocol
@@ -159,7 +159,7 @@ class ctfWizard(EmWizard):
                     'lf': value[0],
                     'hf': value[1]
                     }
-            d = ctfDialog(form.root, provider, **args)
+            d = CtfDialog(form.root, provider, **args)
 
             if d.resultYes():
                 form.setVar(label[0], d.getLowFreq())
@@ -171,14 +171,14 @@ class ctfWizard(EmWizard):
     def getView(self):
         return "wiz_ctf"           
     
-class maskRadiusWizard(EmWizard):
+class MaskRadiusWizard(EmWizard):
         
     def show(self, form, value, label, units=UNIT_PIXEL):
         protocol = form.protocol
         provider = self._getProvider(protocol)
 
         if provider is not None:
-            d = maskPreviewDialog(form.root, 
+            d = MaskPreviewDialog(form.root, 
                                        provider, 
                                        maskRadius = value, 
                                        unit=units)
@@ -187,14 +187,14 @@ class maskRadiusWizard(EmWizard):
         else:
             dialog.showWarning("Empty input", "Select elements first", form.root)
 
-class maskRadiiWizard(EmWizard):
+class MaskRadiiWizard(EmWizard):
     
     def show(self, form, value, label, units=UNIT_PIXEL):
         protocol = form.protocol
         provider = self._getProvider(protocol)
         
         if provider is not None:
-            d = maskRadiiPreviewDialog(form.root, 
+            d = MaskRadiiPreviewDialog(form.root, 
                                             provider, 
                                             innerRadius=value[0], 
                                             outerRadius=value[1],
@@ -209,19 +209,19 @@ class maskRadiiWizard(EmWizard):
     def getView(self):
         return "wiz_volume_mask_radii"   
                 
-class particleMaskRadiusWizard(maskRadiusWizard):
+class ParticleMaskRadiusWizard(MaskRadiusWizard):
     pass       
     
-class volumeMaskRadiusWizard(maskRadiusWizard):
+class VolumeMaskRadiusWizard(MaskRadiusWizard):
     pass       
 
-class particlesMaskRadiiWizard(maskRadiiWizard):
+class ParticlesMaskRadiiWizard(MaskRadiiWizard):
     pass
         
-class volumeMaskRadiiWizard(maskRadiiWizard):
+class VolumeMaskRadiiWizard(MaskRadiiWizard):
     pass
 
-class filterWizard(EmWizard):
+class FilterWizard(EmWizard):
                 
     def show(self, form, value, label, mode, units=UNIT_PIXEL):
         protocol = form.protocol
@@ -255,7 +255,7 @@ class filterWizard(EmWizard):
             else:
                 print "Not Mode"
                 
-            d = bandPassFilterDialog(form.root, provider, **args)
+            d = BandPassFilterDialog(form.root, provider, **args)
             
             if d.resultYes():
                 lowFreq = d.getLowFreq() 
@@ -275,13 +275,13 @@ class filterWizard(EmWizard):
             dialog.showWarning("Empty input", "Select elements first", form.root)
             
 
-class filterParticlesWizard(filterWizard):
+class FilterParticlesWizard(FilterWizard):
     pass
     
-class filterVolumesWizard(filterWizard):    
+class FilterVolumesWizard(FilterWizard):    
     pass
     
-class gaussianWizard(EmWizard):
+class GaussianWizard(EmWizard):
     
     def show(self, form, value, label, units=UNIT_PIXEL_FOURIER):
         protocol = form.protocol
@@ -292,18 +292,18 @@ class gaussianWizard(EmWizard):
                     'unit': units
                     }
             
-            d = gaussianFilterDialog(form.root, provider, **args)
+            d = GaussianFilterDialog(form.root, provider, **args)
             if d.resultYes():
                 form.setVar(label, d.getFreqSigma())
         else:
             dialog.showWarning("Empty input", "Select elements first", form.root)
             
 
-class gaussianParticlesWizard(gaussianWizard):
+class GaussianParticlesWizard(GaussianWizard):
     pass
 
     
-class gaussianVolumesWizard(gaussianWizard):
+class GaussianVolumesWizard(GaussianWizard):
     pass   
     
 
@@ -382,7 +382,7 @@ class previewDialog(dialog.Dialog):
         
     
 
-class imagePreviewDialog(previewDialog):
+class ImagePreviewDialog(previewDialog):
     
     def _beforePreview(self):
         self.dim = 256
@@ -418,10 +418,10 @@ class imagePreviewDialog(previewDialog):
         self.preview.updateData(self.Z)
        
         
-class downsampleDialog(imagePreviewDialog):
+class DownsampleDialog(ImagePreviewDialog):
     
     def _beforePreview(self):
-        imagePreviewDialog._beforePreview(self)
+        ImagePreviewDialog._beforePreview(self)
         self.lastObj = None
         self.rightPreviewLabel = "PSD"
         self.message = "Computing PSD..."
@@ -438,7 +438,7 @@ class downsampleDialog(imagePreviewDialog):
         rightFrame = tk.Frame(frame)
         rightFrame.grid(row=0, column=1)
         
-        imagePreviewDialog._createPreview(self, leftFrame)
+        ImagePreviewDialog._createPreview(self, leftFrame)
         self.rightPreview = self._createRightPreview(rightFrame)
         self.rightPreview.grid(row=0, column=0) 
                 
@@ -463,7 +463,7 @@ class downsampleDialog(imagePreviewDialog):
 
     def _itemSelected(self, obj):
         self.lastObj = obj
-        imagePreviewDialog._itemSelected(self, obj)
+        ImagePreviewDialog._itemSelected(self, obj)
         
         dialog.FlashMessage(self, self.message, func=self._computeRightPreview)
         #self._computeRightPreview(obj)
@@ -482,7 +482,7 @@ class downsampleDialog(imagePreviewDialog):
         xmipp.fastEstimateEnhancedPSD(self.rightImage, self.lastObj.getFileName(), self.getDownsample(), self.dim, 2)
         
 
-class ctfDialog(downsampleDialog):
+class CtfDialog(DownsampleDialog):
     
     def _createRightPreview(self, rightFrame):
         from pyworkflow.gui.matplotlib_image import PsdPreview  
@@ -511,10 +511,10 @@ class ctfDialog(downsampleDialog):
     def getHighFreq(self):
         return self.hfSlider.get()
 
-class bandPassFilterDialog(downsampleDialog):
+class BandPassFilterDialog(DownsampleDialog):
     
     def _beforePreview(self):
-        imagePreviewDialog._beforePreview(self)
+        ImagePreviewDialog._beforePreview(self)
         self.lastObj = None
         self.rightPreviewLabel = "Filtered"
         self.message = "Computing filtered image..."
@@ -603,7 +603,7 @@ class bandPassFilterDialog(downsampleDialog):
                 return self.freqDecaySlider.get()
         return 0.    
     
-class gaussianFilterDialog(bandPassFilterDialog):
+class GaussianFilterDialog(BandPassFilterDialog):
     
     def _createControls(self, frame):
         self.freqVar = tk.StringVar()
@@ -625,7 +625,7 @@ class gaussianFilterDialog(bandPassFilterDialog):
         xmipp.gaussianFilter(self.rightImage, "%03d@%s" % (self.lastObj.getIndex(), self.lastObj.getFileName()), self.getFreqSigma(), self.dim)
 
 
-class maskPreviewDialog(imagePreviewDialog):
+class MaskPreviewDialog(ImagePreviewDialog):
     
     def _beforePreview(self):
         self.dim = 256
@@ -667,7 +667,7 @@ class maskPreviewDialog(imagePreviewDialog):
         return int(self.radiusSlider.get())
     
 
-class maskRadiiPreviewDialog(maskPreviewDialog):
+class MaskRadiiPreviewDialog(MaskPreviewDialog):
 
     def _createPreview(self, frame):
         """ Should be implemented by subclasses to 

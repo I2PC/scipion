@@ -41,29 +41,29 @@ from protocol_refinement import ProtFrealign
 from pyworkflow import findResource
 
 
-class FrealignVolRadiiWizard(volumeMaskRadiiWizard):
+class FrealignVolRadiiWizard(VolumeMaskRadiiWizard):
     _targets = [(ProtFrealign, ['innerRadius', 'outerRadius'])]
     
     def _getProvider(self, protocol):
         _objs = protocol.input3DReferences.get()    
-        return volumeMaskRadiiWizard._getProvider(self, protocol, _objs)
+        return VolumeMaskRadiiWizard._getProvider(self, protocol, _objs)
     
     def show(self, form):
         _value = [form.protocol.innerRadius.get(), form.protocol.outerRadius.get()]
         _label = ["innerRadius", "outerRadius"]
-        volumeMaskRadiiWizard.show(self, form, _value, _label, UNIT_PIXEL)
+        VolumeMaskRadiiWizard.show(self, form, _value, _label, UNIT_PIXEL)
         
     @classmethod    
     def getView(self):
         return "wiz_frealign_volume_mask_radii" 
 
  
-class FrealignBandpassWizard(filterParticlesWizard):
+class FrealignBandpassWizard(FilterParticlesWizard):
     _targets = [(ProtFrealign, ['lowResolRefine', 'highResolRefine'])]
     
     def _getProvider(self, protocol):
         _objs = protocol.inputParticles.get()
-        return filterParticlesWizard._getProvider(self, protocol, _objs)
+        return FilterParticlesWizard._getProvider(self, protocol, _objs)
     
     def show(self, form):
         protocol = form.protocol
@@ -80,7 +80,7 @@ class FrealignBandpassWizard(filterParticlesWizard):
             
             args['showDecay'] = False
 
-            d = bandPassFilterDialog(form.root, provider, **args)
+            d = BandPassFilterDialog(form.root, provider, **args)
             
             if d.resultYes():               
                 form.setVar('highResolRefine', 1/d.getHighFreq()*d.itemDim)
@@ -95,12 +95,12 @@ class FrealignBandpassWizard(filterParticlesWizard):
         return "wiz_frealign_filter_particle" 
  
  
-class FrealignVolBandpassWizard(filterVolumesWizard):
+class FrealignVolBandpassWizard(FilterVolumesWizard):
     _targets = [(ProtFrealign, ['resolution'])]
     
     def _getProvider(self, protocol):
         _objs = protocol.input3DReferences.get()    
-        return filterVolumesWizard._getProvider(self, protocol, _objs)
+        return FilterVolumesWizard._getProvider(self, protocol, _objs)
     
     def show(self, form):
         protocol = form.protocol
@@ -117,7 +117,7 @@ class FrealignVolBandpassWizard(filterVolumesWizard):
             args['showHighFreq'] = False
             args['showDecay'] = False
 
-            d = bandPassFilterDialog(form.root, provider, **args)
+            d = BandPassFilterDialog(form.root, provider, **args)
             
             if d.resultYes():
 #                print "SAMPLING RATE !!", d.samplingRate
