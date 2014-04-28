@@ -204,7 +204,6 @@ class Table(object):
     def __str__(self):
         return '\n'.join([str(row) for row in self.iterRows()])
     
-    
         
 class Column(object):
     def __init__(self, colName, colType=None, default=None):
