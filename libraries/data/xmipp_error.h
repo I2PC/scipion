@@ -137,7 +137,7 @@ enum ErrorType
 
     ERR_IO,                 ///< Input/Output general error.
     ERR_IO_NOCLOSED,        ///< File cannot be closed.
-    ERR_IO_NOTEXIST,        ///< File or directory does not exists.
+    ERR_IO_NOTEXIST,        ///< File or directory does not exist.
     ERR_IO_NOTOPEN,         ///< File cannot be open.
     ERR_IO_NOPERM,          ///< Insufficient permissions to perform operation.
     ERR_IO_NOREAD,          ///< Couldn't read from file.

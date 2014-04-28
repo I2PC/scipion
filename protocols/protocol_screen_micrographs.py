@@ -38,6 +38,10 @@ class ProtScreenMicrographs(XmippProtocol):
             self.MDL_TYPE = xmipp.MDL_MICROGRAPH_MOVIE
             self.inputProperty('MicrographsMd')
             self.TiltPairs = None
+        elif self.PrevRun.Name == 'align_movies':
+            self.MDL_TYPE = xmipp.MDL_MICROGRAPH
+            self.MicrographsMd=os.path.join(self.PrevRun.WorkingDir,"micrographs.xmd")
+            self.TiltPairs = None
         else:
             self.inputProperty('TiltPairs', 'MicrographsMd')
             self.MDL_TYPE = xmipp.MDL_MICROGRAPH
@@ -173,7 +177,7 @@ class ProtScreenMicrographs(XmippProtocol):
         
         if exists(summaryFile):
             self.regenerateSummary(summaryFile)
-            runShowJ(summaryFile, extraParams = "--mode metadata")
+            runShowJ(summaryFile, extraParams = "--mode metadata --render psd psdEnhanced image1 image2 --order psd psdEnhanced image1 image2 --zoom 50")
         else:
             showWarning('Warning', 'There are not results yet',self.master)
     
@@ -350,5 +354,16 @@ def automaticRejection(log,WorkingDir,condition,MDL_TYPE):
 
 def copyTiltPairs(log,WorkingDir,inputMicrographs):
     md=xmipp.MetaData(inputMicrographs)
-    md.write("micrographPairs@"+os.path.join(WorkingDir,"micrographs.xmd"),xmipp.MD_APPEND)
-
+    fnOut=os.path.join(WorkingDir,"micrographs.xmd")
+    mdOut=xmipp.MetaData(fnOut)
+    
+    # Add the tilted micrographs to the list of screened micrographs 
+    for id in md:
+        fnTilted=md.getValue(xmipp.MDL_MICROGRAPH_TILTED,id)
+        idOut=mdOut.addObject()
+        mdOut.setValue(xmipp.MDL_MICROGRAPH,fnTilted,idOut)
+        mdOut.setValue(xmipp.MDL_ENABLED,1,idOut)
+    mdOut.write(fnOut,xmipp.MD_APPEND)
+    
+    # Copy the pairs block
+    md.write("micrographPairs@"+fnOut,xmipp.MD_APPEND)

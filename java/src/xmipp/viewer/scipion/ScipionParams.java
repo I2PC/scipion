@@ -7,14 +7,14 @@ package xmipp.viewer.scipion;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
-import xmipp.utils.Param;
+import xmipp.utils.Params;
 
 
 /**
  *
  * @author airen
  */
-public class ScipionParams extends Param {
+public class ScipionParams extends Params {
 
     public final static String SCIPION = "scipion";
     public String python;

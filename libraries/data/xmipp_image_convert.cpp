@@ -60,7 +60,7 @@ void  ProgConvImg::defineParams()
     comments.addComment("++ Supported read formats are:");
     comments.addComment("++ dm3 : Digital Micrograph 3");
     comments.addComment("++ em  : Electron Microscopy");
-    comments.addComment("++ jpg : JEPG");
+    comments.addComment("++ jpg : JPEG");
     comments.addComment("++ img : Imagic");
     comments.addComment("++ inf,raw : RAW file with header INF file");
     comments.addComment("++ mrc, map : CCP4");

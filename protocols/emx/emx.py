@@ -89,7 +89,6 @@ class EmxLabel:
 
 #Dictionary with attribute names, data types and units
 #By default an attribute does not has unit assign to it
-
 emxDataTypes={
               FILENAME:EmxLabel(str)
               ,INDEX:EmxLabel(int)
@@ -407,6 +406,17 @@ class EmxData():
     def readFirstObject(self, className, emxFile):
         """ Read only the first object of a given className from file."""
         return self._mapper.firstObject(className, emxFile)
+    
+    def getFirstObject(self, className):
+        """ Return the first object of a given className.
+        This function should be called after read.
+        """
+        objList = self.objLists[className]
+        
+        if len(objList):
+            return objList[0]
+        
+        return None 
         
     def write(self, emxFile):
         """ Write data to an emxFile. """
@@ -481,17 +491,6 @@ class EmxXmlMapper():
             xmlString += ' %(key)s="%(value)s"' % ({'key':key, 'value':str(value)})
         xmlString += ">\n"
         
-        # write foreign key
-        if len(object.dictForeignKeys) and\
-               object.dictForeignKeys[object.dictForeignKeys.keys()[0]]:
-            pointedObject = object.dictForeignKeys[object.dictForeignKeys.keys()[0]]
-            xmlString += "    <%s" % pointedObject._name
-            for key, value in pointedObject.dictPrimaryKeys.iteritems():
-                if value is None:
-                    continue
-                xmlString += ' %(key)s="%(value)s"' % ({'key':key, 'value':str(value)})
-            xmlString += "/>\n"
-
         # write attributes
         oldParent = ""
         for key, value in object.iterAttributes():
@@ -533,6 +532,16 @@ class EmxXmlMapper():
                 else:
                     xmlString += '    <%(key)s unit="%(unit)s">%(value)s</%(key)s>\n' % ({'key':key, 'value':str(value), 'unit':unit})
                     
+        # write foreign key
+        if len(object.dictForeignKeys) and\
+               object.dictForeignKeys[object.dictForeignKeys.keys()[0]]:
+            pointedObject = object.dictForeignKeys[object.dictForeignKeys.keys()[0]]
+            xmlString += "    <%s" % pointedObject._name
+            for key, value in pointedObject.dictPrimaryKeys.iteritems():
+                if value is None:
+                    continue
+                xmlString += ' %(key)s="%(value)s"' % ({'key':key, 'value':str(value)})
+            xmlString += "/>\n"
         xmlString += "  </%s>\n" % object._name
         # print xmlString
         return xmlString

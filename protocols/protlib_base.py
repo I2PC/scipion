@@ -57,7 +57,7 @@ class XmippProject():
         exists'''
         for filename in [self.logsDir, self.runsDir, self.tmpDir, self.cfgName, self.dbName]:
             if not exists(filename):
-                print "Not exists: ", filename
+                print "Nonexistent path:", filename
                 return False
         return True
     
@@ -439,7 +439,6 @@ _baseProtocolNames = {
         'family':       join('%(WorkingDir)s', '%(family)s.xmd'),
         'macros':       join('%(ExtraDir)s', 'macros.xmd'), 
         'micrographs':  join('%(WorkingDir)s','micrographs.xmd'),
-#        'movies':       join('%(WorkingDir)s','movies.xmd'),
         'microscope':   join('%(WorkingDir)s','microscope.xmd'),
         'images':       join('%(WorkingDir)s', 'images.xmd'),
         'images_stk':       join('%(WorkingDir)s', 'images.stk'),

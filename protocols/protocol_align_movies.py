@@ -48,14 +48,19 @@ class ProtAlignMovies(XmippProtocol):
             movieNameList = os.path.basename(inputMovie)
             movieName = os.path.splitext(movieNameList)[0]
             #micrographDir = os.path.join(extraDir,shortname)                    
-            
-            self.insertStep('alignSingleMovie1'
+            if self.DoGPU:
+                func = self.insertStep
+            else:
+                func = self.insertParallelStep   
+            func('alignSingleMovie1'
                                     , verifyfiles=[_getFilename('movieAverage',movieDir=extraDir,baseName=movieName)]
                                     , WorkingDir=self.WorkingDir
                                     , inputMovie=inputMovie 
                                     , movieAverage = _getFilename('movieAverage',movieDir=extraDir,baseName=movieName)                                   
                                     , WinSize=self.WinSize
                                     , DoGPU = self.DoGPU
+                                    , GPUCore = self.GPUCore
+                                    , parent_step_id=XmippProjectDb.FIRST_STEP
                                     )
         
         # Gather results after external actions
@@ -98,21 +103,24 @@ class ProtAlignMovies(XmippProtocol):
         else:
             showWarning('Warning', 'There are not results yet',self.master)
     
+
 def alignSingleMovie1(log,WorkingDir
                      , inputMovie   
                      , movieAverage                                 
                      , WinSize
                      , DoGPU
+                     , GPUCore
                      ):
 
         # Align estimation with Xmipp
-        args= (" %s %s %d")%(inputMovie,movieAverage,WinSize)
-        #if DoGPU:
-        #    args += ' '
-        #else:
-        #    args += ' '
-            
-        runJob(log,'xmipp_optical_alignment', args)
+        args = '-i %s -o %s --winSize %d'%(inputMovie,movieAverage,WinSize)
+        if DoGPU:
+            progName = 'xmipp_optical_alignment_gpu'
+            args += ' --gpu %d'%(GPUCore)
+        else:
+            progName = 'xmipp_optical_alignment_cpu'
+
+        runJob(log,progName, args)
                 
 def gatherResults(log, 
                   WorkingDir,

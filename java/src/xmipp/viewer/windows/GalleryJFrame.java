@@ -100,7 +100,7 @@ import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
 import xmipp.jni.MDRow;
 import xmipp.utils.DEBUG;
-import xmipp.utils.Param;
+import xmipp.utils.Params;
 import xmipp.utils.QuickHelpJDialog;
 import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippFileChooser;
@@ -114,13 +114,11 @@ import xmipp.utils.XmippWindowUtil;
 import xmipp.viewer.RowHeaderRenderer;
 import xmipp.viewer.ctf.TasksEngine;
 import xmipp.viewer.ctf.iCTFGUI;
-import xmipp.viewer.models.ClassInfo;
 import xmipp.viewer.models.ColumnInfo;
 import xmipp.viewer.models.GalleryData;
 import xmipp.viewer.models.GalleryRowHeaderModel;
 import xmipp.viewer.models.ImageGalleryTableModel;
 import xmipp.viewer.models.MetadataGalleryTableModel;
-import xmipp.viewer.models.MicrographsTableModel;
 import xmipp.viewer.particlepicker.extract.ExtractParticlePicker;
 import xmipp.viewer.particlepicker.extract.ExtractPickerJFrame;
 
@@ -236,13 +234,13 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 	}
 
 	/** Constructors */
-	public GalleryJFrame(String filename, Param parameters)
+	public GalleryJFrame(String filename, Params parameters)
 	{
 		super();
 		init(new GalleryData(this, filename, parameters, null));
 	}
 
-	public GalleryJFrame(String filename, MetaData md, Param parameters)
+	public GalleryJFrame(String filename, MetaData md, Params parameters)
 	{
 		super();
 		init(new GalleryData(this, filename, parameters, md));
@@ -253,7 +251,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 	 */
 	public void openMetadata(MetaData md)
 	{
-		new GalleryJFrame(null, md, new Param());
+		new GalleryJFrame(null, md, new Params());
 	}
 
 	/**
@@ -1562,7 +1560,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			setItemSelected(DISPLAY_WRAP, data.wrap);
 			setItemSelected(DISPLAY_APPLYGEO, data.useGeo);
 			setItemEnabled(DISPLAY_RENDERIMAGES, !galMode && data.hasRenderLabel());
-			setItemSelected(DISPLAY_RENDERIMAGES, data.globalRender);
+			setItemSelected(DISPLAY_RENDERIMAGES, data.renderImages);
 			setItemEnabled(DISPLAY_RENDERIMAGECOLUMN, galMode);
 			for (int i = 0; i < ImageGeneric.VIEWS.length; ++i)
 				setItemSelected(DISPLAY_RESLICE_VIEWS[i], (data.resliceView == ImageGeneric.VIEWS[i]));
@@ -1619,7 +1617,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 						isUpdating = true;
 						((MetadataGalleryTableModel) gallery).updateColumnInfo(columns);
 						gallery.fireTableDataChanged();
-						setItemEnabled(DISPLAY_RENDERIMAGES, data.globalRender);
+						setItemEnabled(DISPLAY_RENDERIMAGES, data.renderImages);
 						// menu.enableRenderImages(data.globalRender);
 						isUpdating = false;
 					}
@@ -1914,8 +1912,8 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		{
 			setItemVisible(OPEN, false);
 			setItemVisible(OPEN_ASTEXT, false);
-			setItemVisible(CTF_PROFILE, false);
-			setItemVisible(CTF_RECALCULATE, false);
+			setItemVisible(CTF_PROFILE, data.isCTFMd());
+			setItemVisible(CTF_RECALCULATE, data.isCTFMd());
 		}
 
 		@Override
@@ -2030,13 +2028,13 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 	public void setRowBusy(int row)
 	{
 
-		((MicrographsTableModel) gallery).setRowBusy(row);
+		gallery.setRowBusy(row);
 	}
 
 	@Override
 	public void setRowIdle(int row)
 	{
-		((MicrographsTableModel) gallery).setRowIdle(row);
+		gallery.setRowIdle(row);
 
 	}
 
@@ -2051,7 +2049,6 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 	protected void saveMd() throws Exception
 	{
 		saveMd(dlgSave.getMdFilename(), false, dlgSave.isOverwrite(), true );
-                
 	}
         
       

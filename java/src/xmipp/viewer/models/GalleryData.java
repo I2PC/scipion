@@ -32,15 +32,13 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import xmipp.ij.commons.XmippApplication;
 import xmipp.jni.Filename;
 import xmipp.jni.ImageGeneric;
 import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
 import xmipp.jni.MDRow;
 import xmipp.utils.DEBUG;
-import xmipp.utils.Param;
+import xmipp.utils.Params;
 import xmipp.utils.XmippStringUtils;
 import xmipp.viewer.windows.GalleryJFrame;
 
@@ -61,23 +59,10 @@ public class GalleryData {
 	public int zoom;
 	private String filename;
 	public int resliceView;
-
-
-
-	public enum Mode {
-		GALLERY_MD, GALLERY_VOL, TABLE_MD, GALLERY_ROTSPECTRA
-	};
-
-	// define min and max render dimensions
-	public static int MIN_SIZE = 16;
-	public static int MAX_SIZE = 256;
-
-	// max dimension allowed to render images
-
-	private Mode mode;
+        private Mode mode;
 	public boolean showLabel = false;
-	public boolean globalRender;
-	public Param parameters;
+	public boolean renderImages;
+	public Params parameters;
 	private int numberOfVols = 0;
 
 	// flag to perform global normalization
@@ -98,28 +83,52 @@ public class GalleryData {
 	// Flags to check if md or classes has changed
 	private boolean hasMdChanges, hasClassesChanges;
 	public Window window;
+        private String[] renderLabels;
+        private String renderLabel;
+        private String[] visibleLabels;
+        private String[] orderLabels;
 
+    
+
+
+	public enum Mode {
+		GALLERY_MD, GALLERY_VOL, TABLE_MD, GALLERY_ROTSPECTRA
+	};
+
+	// define min and max render dimensions
+	public static int MIN_SIZE = 16;
+	public static int MAX_SIZE = 256;
+
+	// max dimension allowed to render images
+
+
+        
+        
 	/**
 	 * The constructor receive the filename of a metadata The metadata can also
 	 * be passed, if null, it will be readed from filename
 	 * 
 	 * @param jFrameGallery
 	 */
-	public GalleryData(Window window, String fn, Param param, MetaData md) {
+	public GalleryData(Window window, String fn, Params parameters, MetaData md) {
 		this.window = window;
 		try {
 			selectedBlock = "";
-			parameters = param;
-			zoom = param.zoom;
-			globalRender = param.renderImages;
+			this.parameters = parameters;
+			zoom = parameters.zoom;
+			this.renderImages = parameters.renderImages;//always true, customized by models or renderLabels
+                        this.renderLabels = parameters.renderLabels;
+                        this.renderLabel = parameters.renderLabel;
+                        this.visibleLabels = parameters.visibleLabels;
+                        this.orderLabels = parameters.orderLabels;
 			mode = Mode.GALLERY_MD;
-			resliceView = param.resliceView;
-			useGeo = param.useGeo;
-			wrap = param.wrap;
+			resliceView = parameters.resliceView;
+			useGeo = parameters.useGeo;
+			wrap = parameters.wrap;
                         
-			if (param.mode.equalsIgnoreCase(Param.OPENING_MODE_METADATA))
+			if (parameters.mode.equalsIgnoreCase(Params.OPENING_MODE_METADATA))
 				mode = Mode.TABLE_MD;
-			else if (param.mode.equalsIgnoreCase(Param.OPENING_MODE_ROTSPECTRA))
+			else if (parameters.mode.equalsIgnoreCase(Params.OPENING_MODE_ROTSPECTRA))
 				mode = Mode.GALLERY_ROTSPECTRA;
                         
 			setFileName(fn);
@@ -298,41 +307,46 @@ public class GalleryData {
 	 * visible on same columns
 	 */
 	public void loadLabels() {
+                
 		ColumnInfo ci;
 		try {
-			int[] lab = md.getActiveLabels();
+			int[] labelids = md.getActiveLabels();
 			ArrayList<ColumnInfo> newLabels = new ArrayList<ColumnInfo>(
-					lab.length);
+					labelids.length);
 			ciFirstRender = null;
 			ColumnInfo ciFirstRenderVisible = null;
 			int inputRenderLabel = MDLabel.MDL_UNDEFINED;
 
-			if (!parameters.renderLabel.equalsIgnoreCase("first")) {
+			if (!renderLabel.equalsIgnoreCase("first")) {
 				inputRenderLabel = MetaData.str2Label(parameters.renderLabel);
 			}
 
-			for (int i = 0; i < lab.length; ++i) {
-				ci = new ColumnInfo(lab[i]);
+			for (int i = 0; i < labelids.length; ++i) {
+				ci = new ColumnInfo(labelids[i]);
 				if (labels != null) {
 					for (ColumnInfo ci2 : labels)
 						if (ci.label == ci2.label)
 							ci.updateInfo(ci2);
-				} else if (ci.allowRender)
-					ci.render = globalRender;
+				} else 
+                                {
+					ci.render = isRenderLabel(ci);
+                                        ci.visible = isVisibleLabel(ci);
+                                }
 				newLabels.add(ci);
-				if (inputRenderLabel == lab[i] && ci.allowRender) {
+				if (inputRenderLabel == labelids[i] && ci.render) {
 					ciFirstRender = ci;
 					if (ci.visible)
 						ciFirstRenderVisible = ci;
 				}
 				if ((ciFirstRender == null || ci.getLabel() == MDLabel.MDL_IMAGE)
-						&& ci.allowRender)// favor mdl_image over mdl_micrograph
+						&& ci.render)// favor mdl_image over mdl_micrograph
 				{
 					ciFirstRender = ci;
 				}
 				if ((ciFirstRenderVisible == null || ci.getLabel() == MDLabel.MDL_IMAGE)
-						&& ci.allowRender && ci.visible)
+						&& ci.render && ci.visible)
 					ciFirstRenderVisible = ci;
+                                
 			}
 			if (ciFirstRenderVisible != null) {
 				ciFirstRender = ciFirstRenderVisible;
@@ -347,8 +361,9 @@ public class GalleryData {
 					md.setEnabled(true, id);
 				// hasMdChanges = true;
 			}
-
+                        
 			labels = newLabels;
+                        orderLabels();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -420,8 +435,7 @@ public class GalleryData {
 				// previous case
 				if (!md.isColumnFormat())
 					return new MetadataRowTableModel(this);
-				if (md.containsMicrographsInfo())
-					return new MicrographsTableModel(this);
+				
 				return new MetadataTableModel(this);
 			case GALLERY_ROTSPECTRA:
 				return new RotSpectraGalleryTableModel(this);
@@ -1040,5 +1054,53 @@ public class GalleryData {
                 Logger.getLogger(GalleryJFrame.class.getName()).log(Level.SEVERE, null, ex);
             }
        }
+       
+       public boolean isRenderLabel(ColumnInfo ci) {
+           if(renderLabel.equals("first"))
+               return ci.allowRender;
+           for(String i: renderLabels)
+               if(i.equals(ci.labelName))
+                   return true;
+           return false;
+       }
+       
+       public boolean isVisibleLabel(ColumnInfo ci) {
+           if(visibleLabels == null)
+               return true;
+           for(String i: visibleLabels)
+               if(i.equals(ci.labelName))
+                   return true;
+           return false;
+       }
+
+       public void orderLabels()
+       {
+           if(orderLabels == null)
+               return;
+           
+           ColumnInfo aux;
+           int j;
+           for(int i = 0; i < orderLabels.length; i ++)
+               for(ColumnInfo ci: labels)
+                   if(ci.labelName.equals(orderLabels[i]))
+                   {
+                       
+                       aux = labels.get(i);
+                       j = labels.indexOf(ci);
+                       labels.set(i, ci);
+                       labels.set(j, aux);
+                       
+                   }
+       }
+       
+       
+	public boolean isCTFMd() {
+		try {
+			return md.containsLabel(MDLabel.MDL_PSD_ENHANCED) && md.containsLabel(MDLabel.MDL_PSD) && md.containsLabel(MDLabel.MDL_CTF_MODEL);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return false;
+	}
       
 }// class GalleryDaa
