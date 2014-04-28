@@ -515,7 +515,8 @@ function getTableFormatted(node, json, id, previsualize) {
 		// value is the name of the object
 		if(previsualize){
 //			var func = "<td class='ico'><a href='javascript:customPopup('/visualize_object/?objectId="+ key +"',1024,600);'><i class='fa fa-eye' style='font-size:1.1em;'></i></a></td>"
-			var func = first + 'customPopup("/showj/?objectId='+ key +'",1024,600)' + second;
+//			var func = first + 'customPopup("/showj/?objectId='+ key +'",1024,600)' + second;
+			var func = first + 'launchViewer("'+ key +'")' + second;
 		}
 				
 //		res += "<tr><td id='" + id + x + "' class='" + key + "' value='"
