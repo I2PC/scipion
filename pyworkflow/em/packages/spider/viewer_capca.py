@@ -29,12 +29,14 @@ visualization program.
 """
 import Tkinter as tk
 from pyworkflow.protocol.params import *
-from pyworkflow.viewer import Viewer, ProtocolViewer, DESKTOP_TKINTER, WEB_DJANGO
+from pyworkflow.viewer import Viewer, ProtocolViewer, DESKTOP_TKINTER, WEB_DJANGO,\
+    TextView
 from pyworkflow.utils.graph import Graph
 from pyworkflow.gui.graph import LevelTree
 from pyworkflow.gui.canvas import Canvas, ImageBox
 from pyworkflow.em.packages.xmipp3.viewer import XmippViewer
 from pyworkflow.gui.text import showTextFileViewer
+from pyworkflow.em.viewer import DataView
 
 from spider import PcaFile
 from protocol_ca_pca import SpiderProtCAPCA
@@ -76,11 +78,13 @@ class SpiderViewerCAPCA(ProtocolViewer):
         
     def _viewParam(self, param=None):
         if param == 'doShowEigenImages':
-            self._views.append(DataView(self.protocol._getFileName('eigenimages')))
+            view = DataView(self.protocol._getFileName('eigenimages'))
         elif param == 'doShowReconsImages':
-            self._views.append(DataView(self.protocol._getFileName('reconstituted')))
+            view = DataView(self.protocol._getFileName('reconstituted'))
         elif param == 'doShowPcaFile':
-            showTextFileViewer("PCA files", [self.protocol.imcFile.filename.get()])
+            view = self.textView([self.protocol.imcFile.filename.get()], "PCA file")
+            
+        return [view]
             
     def _plotHistogram(self, param=None):
         """ First we parse the cas_EIG file and we read:
