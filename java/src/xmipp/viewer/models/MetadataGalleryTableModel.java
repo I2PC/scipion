@@ -241,6 +241,7 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel
 			String file = data.getValueFromLabel(index, label);
 			String mddir = data.md.getBaseDir();
 			file = Filename.findImagePath(file, mddir, true);
+                        
 			return file;
 		}
 		catch (Exception e)

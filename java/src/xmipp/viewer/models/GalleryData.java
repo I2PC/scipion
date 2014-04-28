@@ -55,11 +55,11 @@ public class GalleryData {
 
 	public ArrayList<ColumnInfo> labels = null;
 	// First label that can be rendered
-	ColumnInfo ciFirstRender = null;
+	public ColumnInfo ciFirstRender = null;
 	public int zoom;
-	private String filename;
+	protected String filename;
 	public int resliceView;
-        private Mode mode;
+        protected Mode mode;
 	public boolean showLabel = false;
 	public boolean renderImages;
 	public Params parameters;
@@ -83,10 +83,10 @@ public class GalleryData {
 	// Flags to check if md or classes has changed
 	private boolean hasMdChanges, hasClassesChanges;
 	public Window window;
-        private String[] renderLabels;
-        private String renderLabel;
-        private String[] visibleLabels;
-        private String[] orderLabels;
+        protected String[] renderLabels;
+        protected String renderLabel;
+        protected String[] visibleLabels;
+        protected String[] orderLabels;
 
     
 
@@ -248,6 +248,7 @@ public class GalleryData {
 			for (int i = 0; i < ids.length && image == null; ++i) {
 				imageFn = Filename.findImagePath(
 						md.getValueString(renderLabel, ids[i]), filename, true);
+                                System.out.println(imageFn);
 				// DEBUG.printFormat("imageFn1: %s", imageFn);
 				// imageFn = Filename.fixPath(md.getValueString(renderLabel,
 				// ids[i]), filename, false);
@@ -514,6 +515,7 @@ public class GalleryData {
 			mode = Mode.GALLERY_VOL;
 		else
 			mode = Mode.GALLERY_MD;
+                
 	}
 
 	/** following function only should be used in VolumeGallery mode */

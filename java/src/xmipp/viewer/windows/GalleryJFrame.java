@@ -249,6 +249,12 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		super();
 		init(new GalleryData(this, filename, parameters, md));
 	}
+        
+        public GalleryJFrame(GalleryData data)
+	{
+		super();
+		init(data);
+	}
 
 	/**
 	 * Open another metadata separataly *
@@ -372,6 +378,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		buttonspn = new JPanel(new FlowLayout(FlowLayout.TRAILING));
 		
 		container.add(buttonspn, XmippWindowUtil.getConstraints(c, 0, 3, 1, 1, GridBagConstraints.HORIZONTAL));
+                
 						
 		// Create the menu for table
 		menu = new GalleryMenu();
