@@ -17,7 +17,13 @@ void mexFunction( int nlhs, mxArray *plhs[],
 
     /* Read image */
     Image<double> I;
-    I.read(fnImg);
+    try {
+    	I.read(fnImg);
+    } catch (XmippError XE)
+    {
+    	mexPrintf("%s",XE.msg.c_str());
+    	return;
+    }
     MultidimArray<double> &mI=I();
 
     /*  set the output pointer to the output matrix */
