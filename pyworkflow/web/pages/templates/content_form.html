@@ -37,6 +37,15 @@
 							</td>
 							<td>
 							</td>
+						{% if param.hasWizard %}
+							<td class="ico">
+								<a class="fa fa-magic" href="javascript:putModeWiz('{{param.wizardName}}','{{param.wizardClassName}}' );"></a>
+							</td>
+						{% elif param.hasViewer %}
+							<td class="ico">
+								<a id="analyzeTool" href="javascript:putModeViewElm('{{paramName}}');" class="fa fa-eye"></a>
+							</td>
+						{% endif %}
 						{% if param.htmlHelp %}
 							<td class="ico">
 								<a class="fa fa-question-circle" href="javascript:infoPopup('Help {{param.label.get}}','{{param.htmlHelp|escapejs}}');"></a>

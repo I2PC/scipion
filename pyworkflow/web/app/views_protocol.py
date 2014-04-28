@@ -106,7 +106,15 @@ def form(request):
                             pass
                         else:
                             paramLine = PreprocessParamForm(request, paramLine, paramLineName, wizards, viewerDict, visualize, protVar)
-                            
+                        
+                    if paramName in wizards:
+                        param.hasWizard = True
+                        param.wizardClassName = wizards[paramName].__name__
+                        
+                    if visualize == 1:
+                        if paramName in viewerDict:
+                            param.hasViewer = True
+                    
                     if not param.help.empty():
                         param.htmlHelp = parseText(param.help.get())
                     
@@ -162,9 +170,9 @@ def PreprocessParamForm(request, param, paramName, wizards, viewerDict, visualiz
     
     if paramName in wizards:
         param.hasWizard = True
-        param.wizardName = wizards[paramName].getView()
+#       param.wizardName = wizards[paramName].getView()
         param.wizardClassName = wizards[paramName].__name__
-    #                print "param: ", paramName, " has wizard", " view: "
+#       print "param: ", paramName, " has wizard", " view: "
     
     if visualize == 1:
         if paramName in viewerDict:
