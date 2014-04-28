@@ -107,10 +107,10 @@ String XmippError::getDefaultMessage(ErrorType e)
         return " Just for debugging: situation that can't happens";
 
     case ERR_DOCFILE:
-        return " Error in docfile format";
+        return " Error in docfile format.";
 
     case ERR_GRID:
-        return " Grid general error";
+        return " Grid general error.";
     case ERR_GRID_SIZE:
         return " Incorrect number of GRID volumes or shapes.";
 
@@ -119,10 +119,10 @@ String XmippError::getDefaultMessage(ErrorType e)
     case ERR_IMG_NOWRITE:
         return " Image cannot be written to file.";
     case ERR_IMG_UNKNOWN:
-        return " Unknown image type";
+        return " Unknown image type.";
 
     case ERR_INDEX_OUTOFBOUNDS:
-        return " Index out of bounds";
+        return " Index out of bounds.";
 
     case ERR_IO:
         return " Input/output general error.";
@@ -133,35 +133,35 @@ String XmippError::getDefaultMessage(ErrorType e)
     case ERR_IO_NOPERM:
         return " Insufficient permissions to perform operation.";
     case ERR_IO_NOREAD:
-        return " Couldn't read from file";
+        return " Couldn't read from file.";
     case ERR_IO_NOTDIR:
-        return " It is not a directory";
+        return " It is not a directory.";
     case ERR_IO_NOTEXIST:
-        return " File or directory does not exists";
+        return " File or directory does not exist.";
     case ERR_IO_NOTFILE:
         return " It is not a file";
     case ERR_IO_NOTOPEN:
         return "File cannot be open.";
     case ERR_IO_NOWRITE:
-        return " Couldn't write to file";
+        return " Couldn't write to file.";
     case ERR_IO_SIZE:
         return " Incorrect file size.";
 
     case ERR_MATRIX:
-        return " Matrix error";
+        return " Matrix error.";
     case ERR_MATRIX_DIM:
         return " Incorrect matrix dimensions.";
     case ERR_MATRIX_EMPTY:
-        return " The matrix is empty";
+        return " The matrix is empty.";
     case ERR_MATRIX_SIZE:
-        return " Incorrect matrix size";
+        return " Incorrect matrix size.";
 
     case ERR_MD:
         return " MetaData error.";
     case ERR_MD_BADLABEL:
         return " Unexpected label.";
     case ERR_MD_MISSINGLABEL:
-        return " Missing expected label";
+        return " Missing expected label.";
     case ERR_MD_BADTYPE:
         return " Bad label type.";
     case ERR_MD_NOACTIVE:
@@ -184,7 +184,7 @@ String XmippError::getDefaultMessage(ErrorType e)
     case ERR_MEM_NOTDEALLOC:
         return " Memory has not been deallocated.";
     case ERR_MEM_NULLPOINTER:
-        return " Null pointer passed as parameter";
+        return " Null pointer passed as parameter.";
 
     case ERR_MMAP:
         return " Global mmap error.";

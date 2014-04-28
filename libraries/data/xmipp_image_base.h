@@ -248,7 +248,7 @@ protected:
     int                 swapWrite;   // Perform byte swapping upon writing
     TransformType       transform;   // Transform type
     size_t              replaceNsize;// Stack size in the replace case
-    bool                _exists;     // does target file exists?  // equal 0 is not exists or not a stack
+    bool                _exists;     // does target file exists?  // equal 0 if not exists or not a stack
     bool                mmapOnRead;  // Mapping when reading from file
     bool                mmapOnWrite; // Mapping when writing to file
     int                 mFd;         // Handle the file in reading method and mmap

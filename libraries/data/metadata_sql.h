@@ -64,6 +64,8 @@ enum JoinType
 /* return number of tables from a metadata file saved as sqlite */
 int getBlocksInMetaDataFileDB(const FileName &inFile, StringVector& blockList);
 
+/*support for the REGEXP operator in sqlite*/
+void sqlite_regexp(sqlite3_context* context, int argc, sqlite3_value** values);
 
 /** This class will manage SQL database interactions.
  * This class is designed to used inside a MetaData.
@@ -91,6 +93,10 @@ upper_quartile.
      *
      */
     static bool activateMathExtensions(void);
+
+    /* activate regular expressions in sql */
+    static bool activateRegExtensions(void);
+
 /** activate UNSAFED Multi-thread mode
  * SQLite support three different threading modes:
 
