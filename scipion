@@ -142,8 +142,14 @@ if __name__ == '__main__':
     n = len(sys.argv)
     mode = sys.argv[1] if n > 1 else MODE_MANAGER
 
-    # Create SCIPION_HOME folder if not exists
-    if mode != MODE_INSTALL:
+    if mode == MODE_INSTALL:
+        if n > 2:
+            args = ' '.join(sys.argv[2:])
+        else:
+            args = ''
+        runCmd('scripts/install.py ' + args)
+    else:
+        # Validate installation
         error = ''
         for d in SCIPION_DIRS:
             path = os.environ[d]
@@ -248,9 +254,6 @@ if __name__ == '__main__':
         if n > 2:
             viewerArgs = ' '.join(sys.argv[2:])
             runApp('pw_viewer.py', args=viewerArgs)
-
-    elif mode == MODE_INSTALL:
-        runCmd('scripts/install.py')
 
     elif mode == MODE_STATS:
         statsDir = join(SCIPION_HOME, 'data', 'stats')
