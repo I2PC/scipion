@@ -51,8 +51,8 @@ class SpiderProtCAPCA(SpiderProtocol):
     """
     _label = 'CAPCA'
     
-    def __init__(self):
-        SpiderProtocol.__init__(self)
+    def __init__(self, **kwargs):
+        SpiderProtocol.__init__(self, **kwargs)
         self._params = {'ext': 'stk',
                         'spiderParticles': 'particles_spider',
                         'spiderSel': 'particles_selfile',

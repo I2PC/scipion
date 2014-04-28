@@ -46,9 +46,9 @@ class SpiderProtFilter(ProtFilterParticles, SpiderProtocol):
     """
     _label = 'filter particles'
     
-    def __init__(self, **args):
-        ProtFilterParticles.__init__(self)
-        SpiderProtocol.__init__(self)
+    def __init__(self, **kwargs):
+        ProtFilterParticles.__init__(self, **kwargs)
+        SpiderProtocol.__init__(self, **kwargs)
         self._op = "FQ"
         self._params = {'ext': 'stk', 
                         'particles': 'particles_filtered',
