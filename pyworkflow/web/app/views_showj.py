@@ -66,7 +66,6 @@ def loadColumnsConfig(request, dataset, table, inputParams, extraParams, firstTi
     
     # Clear table name and selected volume after a table change
     if not firstTime and tableChanged: 
-        print "setting VOL_SELECTED = None"
         inputParams[VOL_SELECTED] = None
         
     if firstTime or tableChanged:
@@ -92,7 +91,11 @@ def addProjectPrefix(request, fn):
     else:         
         raise Exception('Showj Web visualizer: No project loaded')
     
-    return join(projectPath, fn)
+    if '@' in fn:
+        parts = fn.split('@')
+        return join('%s@%s' % (parts[0], join(projectPath, parts[1])))
+    else:
+        return join(projectPath, fn)
 
 
 def setLabelToRender(request, table, inputParams, extraParams, firstTime):
@@ -120,7 +123,7 @@ def setRenderingOptions(request, dataset, table, inputParams):
     """
     #Setting the _typeOfColumnToRender
     label = inputParams[LABEL_SELECTED]
-    
+
     if not label:
         volPath = None
         _imageDimensions = None
@@ -131,7 +134,7 @@ def setRenderingOptions(request, dataset, table, inputParams):
     else:
         #Setting the _imageVolName
         _imageVolName = inputParams.get(VOL_SELECTED, None) or table.getElementById(0, label)
-     
+        
         _typeOfColumnToRender = inputParams[COLS_CONFIG].getColumnProperty(label, 'columnType')
         
         #Setting the _imageDimensions

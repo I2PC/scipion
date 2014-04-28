@@ -87,7 +87,6 @@ class XmippProtocol():
         inputXmipp = xmippClass.convert(inputAttr, resultFn)
          
         if inputXmipp is not inputAttr:
-            print "======== CONVERTING........."
             self._insertChild(inputName + 'Xmipp', inputXmipp)
             return [resultFn] # validate resultFn was produced if converted
          
@@ -284,6 +283,7 @@ class XmippDataSet(ds.DataSet):
         else:
             mdFn = self._filename
         md = xmipp.MetaData(mdFn)
+        
         return self._convertMdToTable(md)
         
     def _convertLabelToColumn(self, label):
