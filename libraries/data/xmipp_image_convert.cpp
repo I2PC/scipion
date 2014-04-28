@@ -183,7 +183,7 @@ void ProgConvImg::readParams()
             depth = "%" + depthTemp;
     }
 
-    if ( swap = checkParam("--swap") )
+    if ( (swap = checkParam("--swap")) )
     {
         String swapType = getParam("--swap");
 
