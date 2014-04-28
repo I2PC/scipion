@@ -75,6 +75,17 @@ public:
  	 * 3     weighted average linkage
 	 */
 	void clusterData(const Matrix2D<double> &X, int numberOfClusters=2, int distance=2, int linkageType=1);
+
+	/** Cluster given a distance matrix.
+	 * X is the data to classify, each row is an observation. Columns are features of that observation.
+	 *
+	 * For linkage:
+	 * 0     complete linkage (default algorithm)
+	 * 1     single linkage
+ 	 * 2     unweighted average linkage
+ 	 * 3     weighted average linkage
+	 */
+	void clusterWithDistance(const Matrix2D<double> &D, int numberOfClusters=2, int linkageType=1);
 };
 //@}
 #endif
