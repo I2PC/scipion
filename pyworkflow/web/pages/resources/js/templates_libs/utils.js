@@ -160,8 +160,6 @@ function customPopUpFile(url){
 	});	
 }
 
-
-
 function popUpJSON(json){
 	/*
 	 * This method receive a JSON, and depending of the key content, open a 
@@ -171,10 +169,10 @@ function popUpJSON(json){
 
 	// Open pop-ups depending of JSON parameters
 	$.each(json, function(i, item) {
-		array = item.split(':')
+		array = item.split('::')
 		key = array[0]
 		value = array[1]
-//		alert("item=" + item + " key=" + key + " value="+value)
+		//alert("item=" + item + " key=" + key + " value="+value)
 
 		if (key=="url_form"){
 			popup(value);
