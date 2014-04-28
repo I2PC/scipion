@@ -1,9 +1,9 @@
 # **************************************************************************
 # *
-# * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
-# *              Jose Gutierrez (jose.gutierrez@cnb.csic.es)
-# *
-# * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
+# * Authors:     Jose Gutierrez (jose.gutierrez@cnb.csic.es)
+# *              J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
+# *              
+# * Unidad de Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
 # * This program is free software; you can redistribute it and/or modify
 # * it under the terms of the GNU General Public License as published by
@@ -44,6 +44,10 @@ from pyworkflow.gui.tree import BoundTree, TreeProvider
 from pyworkflow import findResource
 
 import xmipp
+
+#===============================================================================
+#    Wizard EM base class
+#===============================================================================
 
 class EmWizard(Wizard):    
     
@@ -97,6 +101,9 @@ class EmWizard(Wizard):
             return provider
         return None
     
+#===============================================================================
+#    Provider class (for objects used in the wizards)
+#===============================================================================
 
 class ListTreeProvider(TreeProvider):
     """ Simple list tree provider. """
@@ -114,8 +121,12 @@ class ListTreeProvider(TreeProvider):
         return os.path.basename(obj.getFileName())
 
 
+#===============================================================================
+#    Wizards base classes
+#===============================================================================
+
 class downsampleWizard(EmWizard):
-        
+    
     def show(self, form, value, label, units=UNIT_PIXEL):
         protocol = form.protocol
         provider = self._getProvider(protocol)
@@ -296,8 +307,10 @@ class gaussianVolumesWizard(gaussianWizard):
     pass   
     
 
-#--------------- Dialogs used by Wizards --------------------------
-    
+#===============================================================================
+#  Dialogs used by wizards
+#===============================================================================
+
 class previewDialog(dialog.Dialog):
     """ This will be the base class for several wizards.
     The layout of this wizard will be:
