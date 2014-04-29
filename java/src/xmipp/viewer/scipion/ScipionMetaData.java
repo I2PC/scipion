@@ -12,6 +12,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import javax.swing.SwingUtilities;
+import xmipp.jni.ImageGeneric;
 import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
 import xmipp.utils.StopWatch;
@@ -74,7 +75,7 @@ public class ScipionMetaData extends MetaData{
                    index_alias = alias;
                labels.put(name, labels.size());
                label = labels.get(name);
-               allowRender = isImage(self) && name.equals("_filename");
+               allowRender = isImage(self, name);
                ci = new ColumnInfo(label, name, alias, type, allowRender);
                columns.add(ci);
             }
@@ -182,7 +183,9 @@ public class ScipionMetaData extends MetaData{
     }
 
     public static boolean isPointer(String name) {
-        if(name.equals("Particle") || name.equals("Coordinate") || name.equals("Micrograph") || name.equals("CTFModel") || name.equals("Acquisition"))
+        if(name.equals("Particle") || name.equals("Coordinate") 
+                || name.equals("Micrograph") || name.equals("CTFModel") 
+                || name.equals("Acquisition") || name.equals("Class2D"))
             return true;
         return false;
     }
@@ -272,10 +275,23 @@ public class ScipionMetaData extends MetaData{
         return columns;
     }
     
-    public static boolean isImage(String self)
+    public static boolean isImage(String self, String label)
     {
         if(self.equals("Micrograph") || self.equals("Particle"))
-            return true;
+        {
+            if(label.equals("_filename"))
+                return true;
+        }
+        else if (self.equals("CTFModel"))
+        {
+            if(label.equals("_micFile"))
+                return true;
+        }
+        else if (self.equals("Class2D"))
+        {
+            if(label.equals("_representative._filename"))
+                return true;
+        }
         return false;
     }
     
@@ -334,5 +350,8 @@ public class ScipionMetaData extends MetaData{
     {
         return emobjects.size();
     }
+    
+
+
             
 }

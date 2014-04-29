@@ -7,8 +7,6 @@
 package xmipp.viewer.scipion;
 
 import java.awt.Window;
-import java.util.ArrayList;
-import xmipp.jni.Filename;
 import xmipp.jni.MetaData;
 import xmipp.utils.Params;
 import xmipp.viewer.models.ColumnInfo;
@@ -29,29 +27,24 @@ public class ScipionGalleryData extends GalleryData{
     public void setFileName(String file) {
 		filename = file;
                 
-
-
     }
     
     public void loadLabels() {
         
             ScipionMetaData smd = (ScipionMetaData)md;
-            if(zoom == 0)
-                zoom = 100;
+            
             labels = smd.getColumnsInfo();
             orderLabels();
             for(ColumnInfo ci :labels)
             {
-                ci.render = isRenderLabel(ci);
+                
                 ci.visible = isVisibleLabel(ci);
-                System.out.println(ci.visible);
+                ci.render = isRenderLabel(ci);
                 if(ci.render && ciFirstRender == null)
-                {
                     ciFirstRender = ci;
-                    break;
-                }
             }
-    
+            if(ciFirstRender == null)
+                zoom = 100;
     }
 
     void setWindow(ScipionGalleryJFrame frame) {

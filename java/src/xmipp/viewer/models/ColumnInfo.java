@@ -60,7 +60,6 @@ public class ColumnInfo {
 		this(label, MetaData.getLabelName(label), MetaData.getLabelComment(label), MetaData.getLabelType(label), MetaData.isImage(label), true, false);
 	}
         
-        
 	
 	public ColumnInfo(int label, boolean visible){
 		this(label, MetaData.getLabelName(label), MetaData.getLabelComment(label), MetaData.getLabelType(label), MetaData.isImage(label), visible, false);
