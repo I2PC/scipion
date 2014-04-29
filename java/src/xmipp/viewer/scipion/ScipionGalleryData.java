@@ -41,12 +41,16 @@ public class ScipionGalleryData extends GalleryData{
             labels = smd.getColumnsInfo();
             orderLabels();
             for(ColumnInfo ci :labels)
+            {
+                ci.render = isRenderLabel(ci);
+                ci.visible = isVisibleLabel(ci);
+                System.out.println(ci.visible);
                 if(ci.render && ciFirstRender == null)
                 {
                     ciFirstRender = ci;
                     break;
                 }
-            
+            }
     
     }
 

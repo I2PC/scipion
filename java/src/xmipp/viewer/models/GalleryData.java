@@ -1058,6 +1058,7 @@ public class GalleryData {
        }
        
        public boolean isRenderLabel(ColumnInfo ci) {
+           
            if(renderLabel.equals("first"))
                return ci.allowRender;
            for(String i: renderLabels)

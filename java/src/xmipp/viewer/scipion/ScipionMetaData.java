@@ -41,6 +41,7 @@ public class ScipionMetaData extends MetaData{
         try {
             String name, alias, clsname, index_alias = null; 
             int type;
+            boolean allowRender;
             ColumnInfo ci;
             int label = 0;
             Class.forName("org.sqlite.JDBC");
@@ -73,7 +74,8 @@ public class ScipionMetaData extends MetaData{
                    index_alias = alias;
                labels.put(name, labels.size());
                label = labels.get(name);
-               ci = new ColumnInfo(label, name, alias, type, true, isImage(self) && name.equals("_filename"));
+               allowRender = isImage(self) && name.equals("_filename");
+               ci = new ColumnInfo(label, name, alias, type, allowRender);
                columns.add(ci);
             }
             

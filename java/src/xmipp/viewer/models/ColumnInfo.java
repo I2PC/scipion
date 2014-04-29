@@ -40,40 +40,34 @@ public class ColumnInfo {
         public int type;
 	
 	/** Constructors */
-	public ColumnInfo(int label, String name, boolean visible, boolean render){
+	
+	public ColumnInfo(int label, String name, String comment, int type, boolean allowRender, boolean visible, boolean render){
 		this.label = label;
 		this.labelName = name;
 		this.visible = visible;
 		this.render = render;
-		try {
-			this.allowRender = MetaData.isImage(label);
-			comment = MetaData.getLabelComment(label);
-		} catch (Exception e){
-			e.printStackTrace();
-		}
-	}
-        
-        /** Constructors */
-	public ColumnInfo(int label, String name, String comment, int type, boolean visible, boolean render){
-		this(label, name, visible, render);
+		this.allowRender = allowRender;
                 this.comment = comment;
                 this.type = type;
                 
 	}
 	
+        public ColumnInfo(int label, String name, String comment, int type, boolean allowRender){
+            this(label, name, comment, type, allowRender, true, allowRender);
+        }
 	
 	public ColumnInfo(int label){
-		this(label, MetaData.getLabelName(label), MetaData.getLabelComment(label), MetaData.getLabelType(label), true, false);
+		this(label, MetaData.getLabelName(label), MetaData.getLabelComment(label), MetaData.getLabelType(label), MetaData.isImage(label), true, false);
 	}
         
         
 	
 	public ColumnInfo(int label, boolean visible){
-		this(label, MetaData.getLabelName(label), MetaData.getLabelComment(label), MetaData.getLabelType(label), visible, false);
+		this(label, MetaData.getLabelName(label), MetaData.getLabelComment(label), MetaData.getLabelType(label), MetaData.isImage(label), visible, false);
 	}
 	
 	public ColumnInfo(int label, boolean visible, boolean render){
-		this(label, MetaData.getLabelName(label), MetaData.getLabelComment(label), MetaData.getLabelType(label), visible, render);
+		this(label, MetaData.getLabelName(label), MetaData.getLabelComment(label), MetaData.getLabelType(label), MetaData.isImage(label), visible, render);
 	}	
 	
 	/** Update the column information with the provided one
@@ -130,7 +124,7 @@ public class ColumnInfo {
 	}
 	
 	public ColumnInfo clone(){
-		return new ColumnInfo(label, labelName, comment, type, visible, render);
+		return new ColumnInfo(label, labelName, comment, type, allowRender, visible, render);
 	}
 	
 	@Override
