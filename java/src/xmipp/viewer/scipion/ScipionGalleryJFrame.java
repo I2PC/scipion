@@ -176,9 +176,12 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
         boolean isenabled = isImageSelected();
         Color color = Color.decode(isenabled ? ScipionMessageDialog.firebrick : ScipionMessageDialog.lightgrey);
         Color forecolor = isenabled ? Color.WHITE : Color.GRAY;
-        cmdbutton.setEnabled(isenabled);
-        cmdbutton.setBackground(color);
-        cmdbutton.setForeground(forecolor);
+        if(cmdbutton != null)
+        {
+            cmdbutton.setEnabled(isenabled);
+            cmdbutton.setBackground(color);
+            cmdbutton.setForeground(forecolor);
+        }
         if(classcmdbutton != null)
         {
             isenabled = isClassificationMd() && isenabled;

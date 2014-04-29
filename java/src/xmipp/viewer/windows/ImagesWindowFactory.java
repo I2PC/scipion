@@ -186,10 +186,9 @@ public class ImagesWindowFactory {
 
 	public static GalleryJFrame openMetadata(String filename, Params parameters,
 			String mode) throws Exception {
-                StopWatch stopWatch = StopWatch.getInstance();
-                stopWatch.printElapsedTime("creating md");
+                
                 MetaData md = new MetaData(filename);
-                stopWatch.printElapsedTime("opening md");
+                
 		return openMetadata(filename, md, parameters, mode);
 	}
 

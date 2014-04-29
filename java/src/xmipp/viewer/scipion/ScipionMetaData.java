@@ -33,14 +33,14 @@ public class ScipionMetaData extends MetaData{
     
     public ScipionMetaData(String dbfile)
     {
-        StopWatch.getInstance().printElapsedTime("creating Scipion MetaData");
+        
         this.dbfile = dbfile;
         columns = new ArrayList<ColumnInfo>();
         emobjects = new ArrayList<EMObject>();
         Connection c = null;
         Statement stmt = null;
         try {
-            String name, alias, clsname, index_alias = null; 
+            String name, alias, clsname; 
             int type;
             boolean allowRender;
             ColumnInfo ci;
@@ -71,8 +71,7 @@ public class ScipionMetaData extends MetaData{
                         type = MetaData.LABEL_STRING;
                 }
                
-               if(name.equals("_index"))
-                   index_alias = alias;
+               
                labels.put(name, labels.size());
                label = labels.get(name);
                allowRender = isImage(self, name);
@@ -84,6 +83,7 @@ public class ScipionMetaData extends MetaData{
            
             EMObject emo;
             int id;
+            ci = getColumnInfo("_index");
             rs = stmt.executeQuery( "SELECT * FROM OBJECTS;" );
             while ( rs.next() ) {
                 id = rs.getInt("Id");
@@ -105,8 +105,9 @@ public class ScipionMetaData extends MetaData{
                             value = rs.getString(alias);
                             if(name.equals("_filename"))
                             {
-                                if(column.render && hasIndex(self))
-                                    value = rs.getInt(index_alias) + "@" + value;
+                                
+                                if(column.render && ci != null)
+                                    value = rs.getInt(ci.comment) + "@" + value;
                             }
                             break;
                         default:
@@ -122,7 +123,6 @@ public class ScipionMetaData extends MetaData{
             stmt.close();
             c.close();
             
-            StopWatch.getInstance().printElapsedTime("created Scipion MetaData");
         } 
         catch ( Exception e ) {
             e.printStackTrace();
@@ -188,6 +188,13 @@ public class ScipionMetaData extends MetaData{
                 || name.equals("Acquisition") || name.equals("Class2D"))
             return true;
         return false;
+    }
+
+    private ColumnInfo getColumnInfo(String labelName) {
+        for(ColumnInfo ci: columns)
+            if(ci.labelName.equals(labelName))
+                return ci;
+        return null;
     }
     public class EMObject
     {

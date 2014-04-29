@@ -39,6 +39,7 @@ import xmipp.jni.MetaData;
 import xmipp.jni.MDRow;
 import xmipp.utils.DEBUG;
 import xmipp.utils.Params;
+import xmipp.utils.StopWatch;
 import xmipp.utils.XmippStringUtils;
 import xmipp.viewer.windows.GalleryJFrame;
 
@@ -113,6 +114,8 @@ public class GalleryData {
 	public GalleryData(Window window, String fn, Params parameters, MetaData md) {
 		this.window = window;
 		try {
+                        StopWatch stopWatch = StopWatch.getInstance();
+                        stopWatch.printElapsedTime("loading data");
 			selectedBlock = "";
 			this.parameters = parameters;
 			zoom = parameters.zoom;
