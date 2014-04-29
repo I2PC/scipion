@@ -439,14 +439,20 @@ class WindowBase(Window):
                              borderwidth=0, anchor='nw', bg='white', fg=Color.DARK_GREY_COLOR)
         projLabel.grid(row=0, column=1, sticky='sw', padx=(20, 5), pady=10)
         
-        # Create view selection frame
-        viewFrame = tk.Frame(header, bg='white')
-        viewFrame.grid(row=0, column=2, sticky='se', padx=5, pady=10)
-        
         # Create gradient
         from widgets import GradientFrame
         GradientFrame(header, height=8, borderwidth=0).grid(row=1, column=0, columnspan=3, sticky='new')
-        
+
+        return header
+
+    def addViewList(self, header):
+        """Create the view selection frame (Protocols|Data|Hosts) in the header."""
+
+        # This function is called from createHeaderFrame() in ProjectWindow
+
+        viewFrame = tk.Frame(header, bg='white')
+        viewFrame.grid(row=0, column=2, sticky='se', padx=5, pady=10)
+
         def addLink(elementText):
             btn = tk.Label(viewFrame, text=elementText, cursor='hand2', fg="#6F3232", bg="white")
             btn.bind('<Button-1>', lambda e:self._viewComboSelected(elementText))
@@ -456,7 +462,6 @@ class WindowBase(Window):
             tube = tk.Label(viewFrame, text="|", fg="#6F3232", bg="white", padx=5)
             return tube
         
-        #Commented until this functionality it is fully developed
         for i, elementText in enumerate(VIEW_LIST):
             btn = addLink(elementText)
             btn.grid(row=0, column=i*2)
@@ -464,8 +469,6 @@ class WindowBase(Window):
             if i < len(VIEW_LIST)-1:
                 tube = addTube()
                 tube.grid(row=0, column=(i*2)+1)
-        
-        return header
     
     def _viewComboSelected(self, elementText):
         if elementText != self.view:
