@@ -23,7 +23,6 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
-from pyworkflow.protocol.constants import STATUS_RUNNING, STATUS_FAILED
 """
 This modules contains classes required for the workflow
 execution and tracking like: Step and Protocol
@@ -34,6 +33,7 @@ import sys
 import datetime as dt
 import pickle
 import time
+from collections import OrderedDict
 
 from pyworkflow.object import *
 from pyworkflow.utils.path import replaceExt, makeFilePath, join, missingPaths, cleanPath, getFiles
@@ -974,16 +974,16 @@ class Protocol(Step):
         
     def summary(self):
         """ Return a summary message to provide some information to users. """
-        error = ''
-        if self.getError().hasValue():
-            error = '*ERROR:*\n' + self.getError().get()
-        baseSummary = self._summary()
-        if not baseSummary:
-            baseSummary = []
+        baseSummary = self._summary() or []        
+            
         comments = self.getObjComment()
         if comments:
-            baseSummary += ['', '*Comments:* ', comments]
-        return baseSummary + ['', error]
+            baseSummary += ['', '*COMMENTS:* ', comments]
+            
+        if self.getError().hasValue():
+            baseSummary += ['', '*ERROR:*', self.getError().get()]
+            
+        return baseSummary
     
     def _citations(self):
         """ Should be implemented in subclasses. See citations. """
@@ -1020,19 +1020,36 @@ class Protocol(Step):
                 newCitations.append(c)
         return newCitations
     
+    def __getCitationsDict(self, citationList):
+        """ Return a dictionary with Cite keys and the citation links. """
+        bibtex = self.__getPackageBibTex()
+        od = OrderedDict()
+        for c in citationList:
+            if c in bibtex:
+                od[c] = self._getCiteText(bibtex[c])
+            else:
+                od[c] = c
+            
+        return od
+        
+    def getCitations(self):
+        return self.__getCitationsDict(self._citations() or [])
+            
+    def getPackageCitations(self):
+        return self.__getCitationsDict(getattr(self._package, "_references", []))
+    
     def citations(self):
         """ Return a citation message to provide some information to users. """
-        citations = self._citations()
-        if not citations:
-            citationsFinal = []
-        else:
-            citationsFinal = ['*References:* '] + citations
-
-        packageCitations = getattr(self._package, "_references", [])
-        if packageCitations:
-            citationsFinal = citationsFinal +['*Package References:*'] + packageCitations   
+        citations = self.getCitations().values()
+        if citations:
+            citations.insert(0, '*References:* ')
             
-        return self.__getCitations(citationsFinal)    
+        packageCitations = self.getPackageCitations().values()
+        if packageCitations:
+            citations.append('*Package References:*')
+            citations += packageCitations   
+            
+        return citations
 
     def _methods(self):
         """ Should be implemented in subclasses. See methods. """
@@ -1045,24 +1062,24 @@ class Protocol(Step):
             baseMethods = []
         return baseMethods + [''] + self.citations()
         
+    def getParsedMethods(self):
+        """ Get the _methods results and parse possible cites. """
+        baseMethods = self._methods() or []
+        bibtex = self.__getPackageBibTex()
+        parsedMethods = []
+        for m in baseMethods:
+            for bibId, cite in bibtex.iteritems():
+                k = '[%s]' % bibId
+                link = self._getCiteText(cite, useKeyLabel=True)
+                m = m.replace(k, link)
+            parsedMethods.append(m)
+        
+        return parsedMethods
+        
     def methods(self):
         """ Return a description about methods about current protocol execution. """
         # TODO: Maybe store the methods and not computing all times??
-        baseMethods = self._methods()
-        if not baseMethods:
-            baseMethods = []
-        else:
-            bibtex = self.__getPackageBibTex()
-            parsedMethods = []
-            for m in baseMethods:
-                for bibId, cite in bibtex.iteritems():
-                    k = '[%s]' % bibId
-                    link = self._getCiteText(cite, useKeyLabel=True)
-                    m = m.replace(k, link)
-                parsedMethods.append(m)
-            baseMethods = parsedMethods
-            
-        return baseMethods + [''] + self.citations()
+        return self.getParsedMethods() + [''] + self.citations()
         
     def runProtocol(self, protocol):
         """ Setup another protocol to be run from a workflow. """

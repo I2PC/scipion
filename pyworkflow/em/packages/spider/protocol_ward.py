@@ -43,9 +43,9 @@ class SpiderProtClassifyWard(ProtClassify2D, SpiderProtocol):
     """
     _label = 'ward'
     
-    def __init__(self):
-        ProtClassify2D.__init__(self)
-        SpiderProtocol.__init__(self)
+    def __init__(self, **kwargs):
+        ProtClassify2D.__init__(self, **kwargs)
+        SpiderProtocol.__init__(self, **kwargs)
         
         self._params = {'ext': 'stk',
                         'particles': 'particles',

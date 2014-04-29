@@ -40,9 +40,9 @@ class SpiderProtCustomMask(ProtCreateMask2D, SpiderProtocol):
     """ Create custom mask. """
     _label = 'custom mask'
     
-    def __init__(self):
-        ProtCreateMask2D.__init__(self)
-        SpiderProtocol.__init__(self)
+    def __init__(self, **kwargs):
+        ProtCreateMask2D.__init__(self, **kwargs)
+        SpiderProtocol.__init__(self, **kwargs)
         
         self._params = {'ext': 'stk',
                         'inputImage': 'input_image',
