@@ -106,6 +106,15 @@ def prettyDelta(timedelta):
     """ Remove the milliseconds of the timedelta. """
     return str(timedelta).split('.')[0]
 
+
+class Timer(object):
+    """ Simple Timer base in datetime.now and timedelta. """
+    def tic(self):
+        self._dt = datetime.now()
+        
+    def toc(self, message='Elapsed:'):
+        print message, prettyDelta(datetime.now()-self._dt) 
+        
     
 def prettyDict(d):
     import pprint
