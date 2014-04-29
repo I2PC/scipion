@@ -114,8 +114,7 @@ public class GalleryData {
 	public GalleryData(Window window, String fn, Params parameters, MetaData md) {
 		this.window = window;
 		try {
-                        StopWatch stopWatch = StopWatch.getInstance();
-                        stopWatch.printElapsedTime("loading data");
+                        
 			selectedBlock = "";
 			this.parameters = parameters;
 			zoom = parameters.zoom;
@@ -251,7 +250,7 @@ public class GalleryData {
 			for (int i = 0; i < ids.length && image == null; ++i) {
 				imageFn = Filename.findImagePath(
 						md.getValueString(renderLabel, ids[i]), filename, true);
-                                System.out.println(imageFn);
+                                
 				// DEBUG.printFormat("imageFn1: %s", imageFn);
 				// imageFn = Filename.fixPath(md.getValueString(renderLabel,
 				// ids[i]), filename, false);

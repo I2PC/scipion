@@ -122,6 +122,7 @@ import xmipp.viewer.models.ImageGalleryTableModel;
 import xmipp.viewer.models.MetadataGalleryTableModel;
 import xmipp.viewer.particlepicker.extract.ExtractParticlePicker;
 import xmipp.viewer.particlepicker.extract.ExtractPickerJFrame;
+import xmipp.viewer.scipion.ScipionGalleryJFrame;
 
 
 /**
@@ -223,6 +224,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 	{
 		try
 		{
+                    
 			this.data = data;
                         StopWatch stopWatch = StopWatch.getInstance();
 			createModel();
@@ -1587,6 +1589,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			setItemEnabled(MD_SAVE_SELECTION, isCol);
 			setItemEnabled(MD_FIND_REPLACE, isCol && !galMode);
 			reslicebt.setEnabled(volMode);
+                        setItemEnabled(METADATA, !(GalleryJFrame.this instanceof ScipionGalleryJFrame));
 		}// function update
 
 		@Override

@@ -10,6 +10,7 @@ import xmipp.jni.ImageGeneric;
 import xmipp.jni.MetaData;
 import xmipp.utils.DEBUG;
 import xmipp.utils.Params;
+import xmipp.utils.StopWatch;
 import xmipp.utils.XmippDialog;
 import xmipp.viewer.Viewer;
 import xmipp.viewer.windows.GalleryJFrame;
@@ -22,6 +23,8 @@ import static xmipp.viewer.windows.ImagesWindowFactory.openFileAsImage;
 public class ScipionViewer extends Viewer {
 
     public static void main(String args[]) {
+        StopWatch stopWatch = StopWatch.getInstance();
+        stopWatch.printElapsedTime("starting app");
         // Schedule a job for the event dispatch thread:
         // creating and showing this application's GUI.
         final String[] myargs = args;

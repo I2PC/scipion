@@ -46,6 +46,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
     public ScipionGalleryJFrame(String filename, MetaData md, ScipionParams parameters) {
         super(filename, md, parameters);
         readScipionParams(parameters);
+       
     }
     
       public ScipionGalleryJFrame(ScipionGalleryData data) {
