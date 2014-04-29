@@ -40,7 +40,7 @@ import xmipp.viewer.particlepicker.Format;
 import xmipp.viewer.particlepicker.Micrograph;
 import xmipp.viewer.particlepicker.ParticlePickerCanvas;
 import xmipp.viewer.particlepicker.ParticlePickerJFrame;
-import xmipp.viewer.particlepicker.ParticlesJDialog;
+import xmipp.viewer.particlepicker.ParticlesDialog;
 import xmipp.viewer.particlepicker.training.model.ManualParticle;
 import xmipp.viewer.particlepicker.training.model.MicrographState;
 import xmipp.viewer.particlepicker.training.model.Mode;
@@ -99,8 +99,8 @@ public class SupervisedParticlePickerJFrame extends ParticlePickerJFrame {
     }
 
     @Override
-    public ParticlesJDialog initParticlesJDialog() {
-        return new ParticlesJDialog(this);
+    public ParticlesDialog initParticlesJDialog() {
+        return new ParticlesDialog(this);
     }
 
     public SupervisedParticlePickerMicrograph getMicrograph() {

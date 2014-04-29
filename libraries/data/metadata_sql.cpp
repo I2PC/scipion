@@ -29,6 +29,7 @@
 #include "metadata_sql.h"
 #include "xmipp_threads.h"
 #include <sys/time.h>
+#include <regex.h>
 //#define DEBUG
 
 //This is needed for static memory allocation
@@ -40,6 +41,29 @@ const char *MDSql::zLeftover;
 int MDSql::rc;
 Mutex sqlMutex; //Mutex to syncronize db access
 
+void sqlite_regexp(sqlite3_context* context, int argc, sqlite3_value** values) {
+    int ret;
+    regex_t regex;
+    char* reg = (char*)sqlite3_value_text(values[0]);
+    char* text = (char*)sqlite3_value_text(values[1]);
+
+    if ( argc != 2 || reg == 0 || text == 0) {
+        sqlite3_result_error(context, "SQL function regexp() called with invalid arguments.\n", -1);
+        return;
+    }
+
+    ret = regcomp(&regex, reg, REG_EXTENDED | REG_NOSUB);
+    if ( ret != 0 ) {
+        sqlite3_result_error(context, "error compiling regular expression", -1);
+        return;
+    }
+
+    ret = regexec(&regex, text , 0, NULL, 0);
+    regfree(&regex);
+
+    sqlite3_result_int(context, (ret != REG_NOMATCH));
+}
+
 int getBlocksInMetaDataFileDB(const FileName &inFile, StringVector& blockList)
 {
     char **results;
@@ -49,8 +73,7 @@ int getBlocksInMetaDataFileDB(const FileName &inFile, StringVector& blockList)
 
     sqlite3 *db1;
     String sql = (String)"SELECT name FROM sqlite_master\
-                 WHERE type='table'\
-                 ORDER BY name;";
+                 WHERE type='table';";
     if ((rc=sqlite3_open(inFile.c_str(), &db1)))
         REPORT_ERROR(ERR_MD_SQL,formatString("Error opening database code: %d message: %s",rc,sqlite3_errmsg(db1)));
     if ((rc=sqlite3_get_table (db1, sql.c_str(), &results, &rows, &columns, NULL)) != SQLITE_OK)
@@ -155,6 +178,14 @@ bool  MDSql::activateMathExtensions(void)
     const char* lib = "libXmippSqliteExt.so";
     sqlite3_enable_load_extension(db, 1);
     if( sqlite3_load_extension(db, lib, 0, 0)!= SQLITE_OK)
+        REPORT_ERROR(ERR_MD_SQL,"Cannot activate sqlite extensions");
+    else
+        return true;
+}
+
+bool  MDSql::activateRegExtensions(void)
+{
+	if( sqlite3_create_function(db, "regexp", 2, SQLITE_ANY,0, &sqlite_regexp,0,0)!= SQLITE_OK)
         REPORT_ERROR(ERR_MD_SQL,"Cannot activate sqlite extensions");
     else
         return true;
@@ -899,17 +930,25 @@ void MDSql::copyTableFromFileDB(const FileName blockname,
     int columns;
     char *Labels;
 
-    String _blockname;
-    if(blockname.empty())
-        _blockname=DEFAULT_BLOCK_NAME;
-    else
-        _blockname=blockname;
     sqlite3 *db1;
-    String sql = (String)"PRAGMA table_info(" + _blockname +")";
     if (sqlite3_open(filename.c_str(), &db1))
         REPORT_ERROR(ERR_MD_SQL,formatString("Error opening database code: %d message: %s",rc,sqlite3_errmsg(db1)));
+    String _blockname;
+    String sql;
+    if(blockname.empty())
+    {
+    	sql = (String)"SELECT name FROM sqlite_master\
+    	                 WHERE type='table' LIMIT 1;";
+        if ((rc=sqlite3_get_table (db1, sql.c_str(), &results, &rows, &columns, NULL)) != SQLITE_OK)
+            REPORT_ERROR(ERR_MD_SQL,formatString("Error accessing table code: %d message: %s. SQL command %s",rc,sqlite3_errmsg(db1),sql.c_str()));
+        else
+        	_blockname=(String)results[1];
+    }
+    else
+        _blockname=blockname;
+    sql = (String)"PRAGMA table_info(" + _blockname +")";
     if (sqlite3_get_table (db1, sql.c_str(), &results, &rows, &columns, NULL) != SQLITE_OK)
-        REPORT_ERROR(ERR_MD_SQL,formatString("Error accesing table code: %d message: %s. SQL command %s",rc,sqlite3_errmsg(db1),sql.c_str()));
+        REPORT_ERROR(ERR_MD_SQL,formatString("Error accessing table code: %d message: %s. SQL command %s",rc,sqlite3_errmsg(db1),sql.c_str()));
     //This pragma returns one row for each column in the named table.
     //Columns in the result set include the column name,
     //data type, whether or not the column can be NULL, and the default value for the column.
@@ -975,11 +1014,9 @@ void MDSql::copyTableFromFileDB(const FileName blockname,
         std::stringstream ss;
         ss << "SELECT COUNT(objId) FROM load." << _blockname;
         myMd->_parsedLines = execSingleIntStmt(ss);
-        std::cerr << ss.str() << " = " << myMd->_parsedLines << std::endl;
+        //std::cerr << ss.str() << " = " << myMd->_parsedLines << std::endl;
 
         sqlCommand += formatString(" LIMIT %lu", maxRows);
-
-        std::cerr << sqlCommand << std::endl;
     }
 
     if (sqlite3_exec(db, sqlCommand.c_str(),NULL,NULL,&errmsg) != SQLITE_OK)

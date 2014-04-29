@@ -57,7 +57,7 @@ class XmippProject():
         exists'''
         for filename in [self.logsDir, self.runsDir, self.tmpDir, self.cfgName, self.dbName]:
             if not exists(filename):
-                print "Not exists: ", filename
+                print "Nonexistent path:", filename
                 return False
         return True
     
