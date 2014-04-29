@@ -31,6 +31,7 @@ This module implement some wizards
 import os
 import Tkinter as tk
 import ttk
+from os.path import basename
 from pyworkflow.em.constants import *
 from pyworkflow.em.convert import ImageHandler
 
@@ -52,15 +53,45 @@ import xmipp
 class EmWizard(Wizard):    
     
     def _getMics(self, objs):
-        return [mic.clone() for mic in objs]
+        mics = [mic.clone() for mic in objs]
+        for m in mics:
+            m.basename = basename(m.getFileName())
+            
+        return mics
     
-    def _getParticles(self, objs):
+    def _getParticles(self, objs, num=100):
         particles = [] 
         for i, par in enumerate(objs):
-            particles.append(par.clone())
-            if i == 100: # Limit the maximum number of particles to display
+            
+            # Cloning the particle
+            particle = par.clone() 
+            
+            if i == num: # Only load up to NUM particles
                 break
+            
+            particle.text = particle.getFileName()
+            particle.basename = basename(particle.text)
+            
+            index = particle.getIndex()
+            if index:
+                particle.text = "%03d@%s" % (index, particle.text)
+                particle.basename = "%03d@%s" % (index, particle.basename)
+        
+            particles.append(particle)
+
         return particles
+    
+    def _getVols(self, objs):    
+        vols = []
+        if isinstance(objs, Volume):
+            vols.append(objs)
+        else: 
+            vols = [vol.clone() for vol in objs]
+        
+        for v in vols:
+            v.basename = basename(v.getFileName())
+        
+        return vols
     
     def _getText(self, obj):
         index = obj.getIndex()
@@ -69,13 +100,6 @@ class EmWizard(Wizard):
             return "%03d@%s" % (index, text)
         return text
     
-    def _getVols(self, objs):    
-        vols = []
-        if isinstance(objs, Volume):
-            vols.append(objs)
-        else: 
-            vols = [vol.clone() for vol in objs]
-        return vols
     
     def _getListProvider(self, objs):
         """ This should be implemented to return the list
@@ -119,6 +143,10 @@ class ListTreeProvider(TreeProvider):
     def getText(self, obj):
         """ Get the text to display for an object. """
         return os.path.basename(obj.getFileName())
+    
+    def getObjs(self):
+        """ Get the objects. """
+        return self.objList
 
 
 #===============================================================================

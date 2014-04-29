@@ -67,12 +67,6 @@ class XmippDownsampleWizard(DownsampleWizard):
         _label = params['label']
         DownsampleWizard.show(self, form, _value, _label, UNIT_PIXEL)
     
-    """ Method to run the web wizard. """
-    def _run(self, protocol):
-        protParams = self._getParameters(protocol)
-        
-        return "wiz_downsampling", protParams
-    
         
 class XmippCTFWizard(CtfWizard):
     _targets = [(ProtCTFMicrographs, ['Resolution'])]
@@ -93,12 +87,7 @@ class XmippCTFWizard(CtfWizard):
         _value = params['value']
         _label = params['label']
         CtfWizard.show(self, form, _value, _label, UNIT_PIXEL)
-    
-    """ Method to run the web wizard. """
-    def _run(self, protocol):
-        protParams = self._getParameters(protocol)
-        return "wiz_ctf", protParams
-        
+
 
 class XmippParticleMaskRadiusWizard(ParticleMaskRadiusWizard):
     _targets = [(XmippProtMaskParticles, ['radius'])]
@@ -120,44 +109,13 @@ class XmippParticleMaskRadiusWizard(ParticleMaskRadiusWizard):
         _label = params['label']
         ParticleMaskRadiusWizard.show(self, form, _value, _label, UNIT_PIXEL)
     
-    """ Method to run the web wizard. """
-    def _run(self, protocol):
-        protParams = self._getParameters(protocol)
-        return "wiz_xmipp_particle_mask_radius", protParams
     
-    
-class XmippVolumeMaskRadiusWizard(VolumeMaskRadiusWizard):
-    _targets = [(XmippProtMaskVolumes, ['radius'])]
-    
-    def _getParameters(self, protocol):
-        protParams = {}
-        protParams['input']= protocol.inputVolumes
-        protParams['label']= "radius"
-        protParams['value']= protocol.radius.get()
-        return protParams  
-    
-    def _getProvider(self, protocol):
-        _objs = self._getParameters(protocol)['input']
-        return VolumeMaskRadiusWizard._getListProvider(self, _objs)
-    
-    def show(self, form):
-        params = self._getParameters(form.protocol)
-        _value = params['value']
-        _label = params['label']
-        VolumeMaskRadiusWizard.show(self, form, _value, _label, UNIT_PIXEL)
-    
-    """ Method to run the web wizard. """
-    def _run(self, protocol):
-        protParams = self._getParameters(protocol)
-        return "wiz_xmipp_volume_mask_radius", protParams
-    
- 
 class XmippParticleMaskRadiiWizard(ParticlesMaskRadiiWizard):
     _targets = [(XmippProtMaskParticles, ['innerRadius', 'outerRadius'])]
     
     def _getParameters(self, protocol):
         protParams = {}
-        protParams['input']= protocol.inputVolumes
+        protParams['input']= protocol.inputParticles
         protParams['label']= ["innerRadius", "outerRadius"]
         protParams['value']= [protocol.innerRadius.get(), protocol.outerRadius.get()]
         return protParams  
@@ -172,10 +130,28 @@ class XmippParticleMaskRadiiWizard(ParticlesMaskRadiiWizard):
         _label = params['label']
         ParticlesMaskRadiiWizard.show(self, form, _value, _label, UNIT_PIXEL)
     
-    """ Method to run the web wizard. """
-    def _run(self, protocol):
-        protParams = self._getParameters(protocol)
-        return "wiz_xmipp_particle_mask_radii", protParams
+
+class XmippVolumeMaskRadiusWizard(VolumeMaskRadiusWizard):
+    _targets = [(XmippProtMaskVolumes, ['radius'])]
+    
+    def _getParameters(self, protocol):
+        protParams = {}
+        protParams['input']= protocol.inputVolumes
+        protParams['label']= "radius"
+        protParams['value']= protocol.radius.get()
+        return protParams
+    
+    def _getProvider(self, protocol):
+        _objs = self._getParameters(protocol)['input']
+        return VolumeMaskRadiusWizard._getListProvider(self, _objs)
+    
+    def show(self, form):
+        params = self._getParameters(form.protocol)
+        _value = params['value']
+        _label = params['label']
+        VolumeMaskRadiusWizard.show(self, form, _value, _label, UNIT_PIXEL)
+    
+ 
 
 
 class XmippVolumeRadiiWizard(VolumeMaskRadiiWizard):
@@ -198,9 +174,7 @@ class XmippVolumeRadiiWizard(VolumeMaskRadiiWizard):
         _label = params['label']
         VolumeMaskRadiiWizard.show(self, form, _value, _label, UNIT_PIXEL)
     
-    @classmethod
-    def getView(self):
-        return "wiz_xmipp_volume_mask_radii"
+
         
         
 class XmippFilterParticlesWizard(FilterParticlesWizard):   
@@ -225,10 +199,6 @@ class XmippFilterParticlesWizard(FilterParticlesWizard):
         _mode = params['mode']
         FilterParticlesWizard.show(self, form, _value, _label, _mode, UNIT_PIXEL_FOURIER)
     
-    """ Method to run the web wizard. """
-    def _run(self, protocol):
-        protParams = self._getParameters(protocol)
-        return "wiz_xmipp_filter_particle", protParams
 
 
 class XmippGaussianParticlesWizard(GaussianParticlesWizard):
@@ -250,11 +220,6 @@ class XmippGaussianParticlesWizard(GaussianParticlesWizard):
         _value = params['value']
         _label = params['label']
         GaussianParticlesWizard.show(self, form, _value, _label, UNIT_PIXEL_FOURIER)
-    
-    """ Method to run the web wizard. """
-    def _run(self, protocol):
-        protParams = self._getParameters(protocol)
-        return "wiz_xmipp_gaussian_particle", protParams
 
 
     
@@ -279,12 +244,6 @@ class XmippFilterVolumesWizard(FilterVolumesWizard):
         _label = params['label']
         _mode = params['mode']
         FilterVolumesWizard.show(self, form, _value, _label, _mode, UNIT_PIXEL_FOURIER)
-    
-    """ Method to run the web wizard. """  
-    def _run(self, protocol):
-        protParams = self._getParameters(protocol)
-        return "wiz_xmipp_filter_volume", protParams
-
 
 
 class XmippGaussianVolumesWizard(GaussianVolumesWizard):
@@ -307,8 +266,5 @@ class XmippGaussianVolumesWizard(GaussianVolumesWizard):
         _label = params['label']
         GaussianVolumesWizard.show(self, form, _value, _label, UNIT_PIXEL_FOURIER)
     
-    """ Method to run the web wizard. """  
-    def _run(self, protocol):
-        protParams = self._getParameters(protocol)
-        return "wiz_xmipp_gaussian_volume", protParams
+
     

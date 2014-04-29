@@ -45,7 +45,7 @@ class Wizard(object):
     _environments = [DESKTOP_TKINTER, WEB_DJANGO]
     """
     _targets = []
-    _environments = [DESKTOP_TKINTER, WEB_DJANGO]
+    _environments = [DESKTOP_TKINTER]
     
     def show(self, form, *params):
         """ This will show up the wizard to select parameters.

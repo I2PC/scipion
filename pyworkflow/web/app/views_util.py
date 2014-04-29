@@ -53,7 +53,8 @@ iconDict = {
             'list_toolbar': 'md_view.gif',
             'analyze_toolbar': 'visualize.gif',
             'new_toolbar': 'new_object.gif',
-            'no_image': 'no-image.png'
+            'no_image': 'no-image.png',
+            'loading' : 'loading.gif'
             }
 
 cssDict = {'project_content': 'project_content_style.css',
@@ -449,8 +450,9 @@ def getImageXdim(request, imagePath):
     return getImageDim(request, imagePath)[0]
 
 def getImageDim(request, imagePath):
+    projectPath = request.session['projectPath']
     img = xmipp.Image()
-    imgFn = os.path.join(request.session['projectPath'], imagePath)
+    imgFn = os.path.join(projectPath, imagePath)
     img.read(str(imgFn), xmipp.HEADER)
     return img.getDimensions()
 

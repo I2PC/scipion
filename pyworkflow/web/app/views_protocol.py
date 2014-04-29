@@ -37,14 +37,27 @@ from django.core.context_processors import csrf
 from django.shortcuts import render_to_response
 from django.http import HttpResponse
 
+# Load all subclasses of Wizards
+
 SPECIAL_PARAMS = ['numberOfMpi', 'numberOfThreads', 'hostName', 'expertLevel', '_useQueue']
 OBJ_PARAMS =['runName', 'comment']
+
 
 def getPointerHtml(protVar):
     if protVar.hasValue():
         return protVar.get().getNameId(), protVar.get().getObjId()
     return '',''
-            
+
+        
+def findWizardsWeb(protocol):   
+    import em_wizard
+    webWizardsDict = getSubclassesFromModules(Wizard, {'em_wizard': em_wizard})
+#    for wiz in webWizardsDict.values():
+#        print "wiz: %s, targets=%s, environments=%s" % (wiz.__name__, wiz._targets, wiz._environments)
+    
+    return findWizardsFromDict(protocol, WEB_DJANGO, webWizardsDict)
+
+     
 def form(request):
     project, protocol = loadProtocolProject(request, requestType='GET')
     action = request.GET.get('action', None)
@@ -76,7 +89,8 @@ def form(request):
     if path != '': 
         logoPath = getResourceLogo(path)
             
-    wizards = findWizards(protocol, WEB_DJANGO)
+    wizards = findWizardsWeb(protocol)
+#    pprint(wizards)
     
     protocol.htmlCitations = parseText(protocol.citations())
     protocol.htmlDoc = parseText(protocol.getDoc())

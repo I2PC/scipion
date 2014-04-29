@@ -45,9 +45,7 @@ from pyworkflow.em.packages.spider.convert import locationToSpider
 from pyworkflow.em.packages.spider.wizard import filter_spider
 from pyworkflow.em.packages.xmipp3.constants import *
 
-from xmipp_wizard import *
-#from spider_wizard import *
-#from relion_wizard import *
+from pyworkflow.em.packages.xmipp3.wizard import * 
 
 
 #===============================================================================
@@ -66,19 +64,12 @@ def wizard(request):
     # Get the protocol object
     project, protocol = loadProtocolProject(request)
     updateProtocolParams(request, protocol, project)
+
+    print "======================= in wizard: " + str(wizClass)
     
     # Obtain the parameters for the wizard
-    functionName, params = wizClass._run(protocol)
-    function = globals().get(functionName, None)
-    
-    print "======================= in wizard: " + functionName
-    
-    if function is None:
-        pass  # redirect to error: wizard not found
-    elif not callable(function):
-        pass  # redirect to error: name is not a function
-    else:
-        return function(protocol, params, request)
+    return wizClass._run(protocol, request)
+
 
 #===============================================================================
 #    Wizard common resources (to build the context)    
@@ -94,7 +85,8 @@ def wiz_base(request, context):
                'jquery_ui_touch': getResourceJs('jquery_ui_touch'),
                'wizard_utils': getResourceJs('wizard_utils'),
                'raphael':getResourceJs('raphael'),
-               'projectName': request.session['projectName']
+               'projectName': request.session['projectName'],
+               'loading' : getResourceIcon('loading'),
                }
     
     context.update(context_base)
@@ -104,188 +96,179 @@ def wiz_base(request, context):
 #    Wizard classes (to execute differents wizards)
 #===============================================================================
 
-def wiz_downsampling(protocol, params, request):
+class XmippDownsamplingWeb(XmippDownsampleWizard):
+    _environments = [WEB_DJANGO]
     
-    # Get params
-    micrographs = params['input'].get()
-    label = params['label']
-    value = params['value']
-    
-    res = validateSet(micrographs)
-    
-    if res is not 1:
-        return HttpResponse(res)
-    else:           
-        mics = [mic.clone() for mic in micrographs]
-        for m in mics:
-            m.basename = basename(m.getFileName())
-             
-        context = {'objects': mics,
-                   label : value
-                   }
-
-        context = wiz_base(request, context)
-        return render_to_response('wizards/wiz_downsampling.html', context)
-
-
-def wiz_ctf(protocol, params, request):
-    
-    # Get params
-    micrographs = params['input'].get()
-    label = params['label']
-    value = params['value']
-
-    res = validateSet(micrographs)
-    
-    if res is not 1:
-        return HttpResponse(res)
-    else:
-        mics = [mic.clone() for mic in micrographs]
-        for m in mics:
-            m.basename = basename(m.getFileName())    
+    def _run(self, protocol, request):
+        params = self._getParameters(protocol)     
+        objs = params['input'].get()
         
-        context = {'objects': mics,
-                   label[0]: value[0],
-                   label[1] : value[1],
-                   }
+        res = validateSet(objs)
         
-        context = wiz_base(request, context)
-        return render_to_response('wizards/wiz_ctf.html', context)
-
-def wiz_particle_mask_radius(protocol, params, request):
-    
-    # Get params
-    particles = params['input'].get()
-    label = params['label']
-    value = params['value']
-    
-    res = validateParticles(particles) 
-    
-    if res is not 1:
-        return HttpResponse(res)
-    else:
-        parts = getParticleSubset(particles,100)
-        
-        if len(parts) == 0:
-            return HttpResponse("errorIterate")
-        else:
-            xdim = getImageXdim(request, parts[0].text)
-    
-            mask_radius = value
-             
-            if mask_radius > xdim :
-                mask_radius = xdim
-            elif mask_radius == -1 :
-                mask_radius = xdim/2
-                
-            context = {'objects': parts,
-                       label: mask_radius,
-                       'xdim':xdim,
+        if res is not 1:
+            return HttpResponse(res)
+        else:           
+            
+            context = {'typeObj': 'Micrographs',
+                       'objects': self._getMics(objs),
+                       'params': params
                        }
-
+    
             context = wiz_base(request, context)
-            return render_to_response('wizards/wiz_particle_mask_radius.html', context)
+            return render_to_response('wizards/wiz_downsampling.html', context)
 
-def wiz_particles_mask_radii(protocol, params, request):
+
+
+class XmippCTFWeb(XmippCTFWizard):
+    _environments = [WEB_DJANGO]
     
-    # Get params
-    particles = params['input'].get()
-    label = params['label']
-    value = params['value']
-    
-    res = validateParticles(particles) 
-    
-    if res is not 1:
-        return HttpResponse(res)
-    else:
-        parts = getParticleSubset(particles,100)
+    def _run(self, protocol, request):
+        params = self._getParameters(protocol)     
+        objs = params['input'].get()
         
-        if len(parts) == 0:
-            return HttpResponse("errorIterate")
+        res = validateSet(objs)
+        
+        if res is not 1:
+            return HttpResponse(res)
+        else:           
+
+            context = {'typeObj': 'Micrographs',
+                       'objects': self._getMics(objs),
+                       'params': params
+                   }
+        
+            context = wiz_base(request, context)
+            return render_to_response('wizards/wiz_ctf.html', context)
+        
+
+class XmippParticleMaskRadiusWeb(XmippParticleMaskRadiusWizard):
+    _environments = [WEB_DJANGO]
+    
+    def _run(self, protocol, request):
+        params = self._getParameters(protocol)
+        objs = params['input'].get()
+        
+        res = validateParticles(objs) 
+        
+        if res is not 1:
+            return HttpResponse(res)
         else:
-            xdim = getImageXdim(request, parts[0].text)
-                
-            context = {'objects': parts,
-                       label[0]: value[0],
-                       label[1]: value[1],
+            particles = self._getParticles(objs)
+            xdim = getImageXdim(request, particles[0].text)
+    
+            if params['value'] > xdim :
+                params['value'] = xdim
+            elif params['value'] == -1 :
+                params['value'] = xdim/2
+            
+            context = {'typeObj': 'Particles',
+                       'objects': self._getParticles(objs),
                        'xdim':xdim,
+                       'params': params
                        }
-            
+        
             context = wiz_base(request, context)
-            
-            return render_to_response('wizards/wiz_particles_mask_radii.html', context)
+            return render_to_response('wizards/wiz_particle_mask_radius.html', context)    
 
-def wiz_volume_mask_radius(protocol, params, request):
-    
-    # Get params
-    volumes = params['input'].get()
-    label = params['label']
-    value = params['value']
-    
-    res = validateSet(volumes)
-    
-    if res is not 1:
-        return HttpResponse(res)
-    else:
-        vols = []
-        if isinstance(volumes, Volume):
-            vols.append(volumes)
-        else: 
-            vols = [vol.clone() for vol in volumes]
-        
-        for v in vols:
-            v.basename = basename(v.getFileName())
-                    
-        xdim = getImageXdim(request, vols[0].getFileName())
-    
-        mask_radius = value
-         
-        if mask_radius > xdim :
-            mask_radius = xdim
-        elif mask_radius == -1 :
-            mask_radius = xdim/2
-            
-        context = {'objects': vols,
-                   label: mask_radius,
-                   'xdim': xdim,
-                   }
-        
-        context = wiz_base(request, context)
-        
-        return render_to_response('wizards/wiz_volume_mask_radius.html', context)
 
-def wiz_volumes_mask_radii(protocol, params, request):
-
-    # Get params
-    volumes = params['input'].get()
-    label = params['label']
-    value = params['value']
+class XmippParticleMaskRadiiWeb(XmippParticleMaskRadiiWizard):
+    _environments = [WEB_DJANGO]
     
-    res = validateSet(volumes)
-    
-    if res is not 1:
-        return HttpResponse(res)
-    else:
-        vols = []
-        if isinstance(volumes, Volume):
-            vols.append(volumes)
-        else: 
-            vols = [vol.clone() for vol in volumes]
+    def _run(self, protocol, request):
+        params = self._getParameters(protocol)
+        objs = params['input'].get()
         
-        for v in vols:
-            v.basename = basename(v.getFileName())
-                    
-        xdim = getImageXdim(request, vols[0].getFileName())
+        res = validateParticles(objs) 
+        
+        if res is not 1:
+            return HttpResponse(res)
+        else:
+            particles = self._getParticles(objs)
+            xdim = getImageXdim(request, particles[0].text)
             
-        context = {'objects': vols,
-                   label[0]: value[0],
-                   label[1]: value[1],
-                   'xdim': xdim,
-                   }
+            if params['value'][0] > xdim :
+                params['value'][0] = xdim
+            elif params['value'][1] > xdim :
+                params['value'][1] = xdim
+            elif params['value'][0] == -1 :
+                params['value'][0] = xdim/2
+            elif params['value'][1] == -1 :
+                params['value'][1] = xdim/2
+                
+            
+            context = {'typeObj': 'Particles',
+                       'objects': particles,
+                       'xdim':xdim,
+                       'params': params
+                       }
         
-        context = wiz_base(request, context)
+            context = wiz_base(request, context)
+            return render_to_response('wizards/wiz_particles_mask_radii.html', context)    
+
+
+class XmippVolumeMaskRadiusWeb(XmippVolumeMaskRadiusWizard):
+    _environments = [WEB_DJANGO]
+    
+    def _run(self, protocol, request):
+        params = self._getParameters(protocol)
+        objs = params['input'].get()
         
-        return render_to_response('wizards/wiz_volumes_mask_radii.html', context)
+        res = validateSet(objs) 
+        
+        if res is not 1:
+            return HttpResponse(res)
+        else:
+            vols = self._getVols(objs)
+            xdim = getImageXdim(request, vols[0].getFileName())
+    
+            if params['value'] > xdim :
+                params['value'] = xdim
+            elif params['value'] == -1 :
+                params['value'] = xdim/2
+            
+            context = {'typeObj': 'Volumes',
+                       'objects': vols,
+                       'xdim':xdim,
+                       'params': params
+                       }
+        
+            context = wiz_base(request, context)
+            return render_to_response('wizards/wiz_volume_mask_radius.html', context)    
+
+class XmippVolumeMaskRadiiWeb(XmippVolumeRadiiWizard):
+    _environments = [WEB_DJANGO]
+    
+    def _run(self, protocol, request):
+        params = self._getParameters(protocol)
+        objs = params['input'].get()
+        
+        res = validateSet(objs) 
+        
+        if res is not 1:
+            return HttpResponse(res)
+        else:
+            vols = self._getVols(objs)
+            xdim = getImageXdim(request, vols[0].getFileName())
+            
+            if params['value'][0] > xdim :
+                params['value'][0] = xdim
+            elif params['value'][1] > xdim :
+                params['value'][1] = xdim
+            elif params['value'][0] == -1 :
+                params['value'][0] = xdim/2
+            elif params['value'][1] == -1 :
+                params['value'][1] = xdim/2
+                
+            
+            context = {'typeObj': 'Volumes',
+                       'objects': vols,
+                       'xdim':xdim,
+                       'params': params
+                       }
+        
+            context = wiz_base(request, context)
+            return render_to_response('wizards/wiz_volumes_mask_radii.html', context)    
+
 
 def wiz_filter_particle(protocol, params, request):
     
