@@ -27,13 +27,15 @@
 In this module are protocol base classes related to EM imports of Micrographs, Particles, Volumes...
 
 """
-
-
+import sys
 from pyworkflow.em.protocol import *
+from pyworkflow.utils import Timer
+
 
 class ProtImport(EMProtocol):
     #TODO: getFiles and getFilesPath may be refactorized
     pass
+
 
 class ProtImportImages(ProtImport):
     """Common protocol to import a set of images in the project"""
@@ -72,27 +74,35 @@ class ProtImportImages(ProtImport):
         
         outFiles = [imgSet.getFileName()]
         imgh = ImageHandler()
+        img = imgSet.ITEM_TYPE()
         n = 1
+        size = len(filePaths)
         
         filePaths.sort()
         
-        for f in filePaths:
+        for i, fn in enumerate(filePaths):
 #             ext = os.path.splitext(basename(f))[1]
-            dst = self._getPath(basename(f))
-            shutil.copyfile(f, dst)
+            dst = self._getPath(basename(fn))
+            copyFile(fn, dst)
+
             if self.checkStack:
                 _, _, _, n = imgh.getDimensions(dst)
             if n > 1:
-                for i in range(1, n+1):
-                    img = findClass(self._className)()
+                for index in range(1, n+1):
+                    img.cleanObjId()
                     img.setFileName(dst)
-                    img.setIndex(i)
+                    img.setIndex(index)
                     imgSet.append(img)
             else:
-                img = findClass(self._className)()
+                img.cleanObjId()
                 img.setFileName(dst)
                 imgSet.append(img)
             outFiles.append(dst)
+            
+            sys.stdout.write("\rImported %d/%d" % (i+1, size))
+            sys.stdout.flush()
+            
+        print "\n"
         
         args = {}
         outputSet = self._getOutputSet(self._className)
