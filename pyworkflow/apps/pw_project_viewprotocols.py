@@ -444,7 +444,7 @@ class ProtocolsView(tk.Frame):
         self.style.configure("NoBorder.Treeview", background='white', borderwidth=0, font=self.windows.font)
         self.infoTree = BoundTree(dframe, provider, height=6, show='tree', style="NoBorder.Treeview") 
         self.infoTree.grid(row=0, column=0, sticky='news')
-        label = tk.Label(dframe, text='Summary', bg='white', font=self.windows.fontBold)
+        label = tk.Label(dframe, text='SUMMARY', bg='white', font=self.windows.fontBold)
         label.grid(row=1, column=0, sticky='nw', padx=(15, 0))  
         self.summaryText = TaggedText(dframe, width=40, height=5, bg='white', bd=0)
         self.summaryText.grid(row=2, column=0, sticky='news', padx=(30, 0))        
@@ -463,6 +463,7 @@ class ProtocolsView(tk.Frame):
         self.outputViewer.grid(row=0, column=0, sticky='news')
         self.outputViewer.windows = self.windows
         
+        self._updateSelection()
 #         self.outputLogText = TaggedText(ologframe, width=40, height=15, 
 #                                         bg='black', foreground='white')
 #         self.outputLogText.grid(row=0, column=0, sticky='news')
@@ -644,7 +645,7 @@ class ProtocolsView(tk.Frame):
         parent.grid_columnconfigure(0, weight=1)
         parent.grid_rowconfigure(0, weight=1)
         
-        self.updateRunsGraph()
+        self.updateRunsGraph()        
 
     def updateRunsGraph(self, refresh=False):      
         g = self.project.getRunsGraph(refresh=refresh)
@@ -667,7 +668,6 @@ class ProtocolsView(tk.Frame):
 #                         break
                             
     def createRunItem(self, canvas, node, y):
-        """ If not nodeBuildFunc is specified, this one will be used by default."""
         nodeText = node.label
         textColor = 'black'
         color = '#ADD8E6' #Lightblue
@@ -679,6 +679,8 @@ class ProtocolsView(tk.Frame):
         
         item = self.runsGraph.createTextbox(nodeText, 100, y, bgColor=color, textColor=textColor)
         item.run = node.run
+        node.item = item
+        
         if node.run and node.run.getObjId() in self._selection:
             item.setSelected(True)
         return item
@@ -711,16 +713,15 @@ class ProtocolsView(tk.Frame):
         prot = self.project.newProtocol(protClass)
         self._openProtocolForm(prot)
         
-    def _selectProtocol(self, prot):
+    def _updateSelection(self, prot=None):
+        self._fillSummary()
+        self._fillMethod()
+        self._fillLogs()
+        
         if prot is not None and prot != self.selectedProtocol:
             prot.mapper = self.project.mapper
-            del self.selectedProtocol
             self.selectedProtocol = prot
-            # TODO self.settings.selectedProtocol.set(prot)
             self.updateActionToolbar()
-            self._fillSummary()
-            self._fillMethod()
-            self._fillLogs()
         else:
             pass #TODO: implement what to do
                     
@@ -728,18 +729,32 @@ class ProtocolsView(tk.Frame):
         # Get last selected item for tree or graph
         if self.showGraph:
             prot = item.node.run
+            g = self.project.getRunsGraph(refresh=False)
+            for node in g.getNodes():
+                if node.run and node.run.getObjId() in self._selection:
+                    node.item.setSelected(False)
             item.setSelected(True)
         else:
             prot = self.project.mapper.selectById(int(self.runsTree.getFirst()))
-        self._selectProtocol(prot)
+        
+        self._selection.clear()
+        self._selection.append(prot.getObjId())
+        self._updateSelection(prot)
+        self.runsGraph.update_idletasks()
         
     def _runItemDoubleClick(self, e=None):
         self._runActionClicked(ACTION_EDIT)
         
     def _runItemControlClick(self, item=None):
+        # Get last selected item for tree or graph
+        if self.showGraph:
+            prot = item.node.run
+            item.setSelected(True)
+            self._selection.append(prot.getObjId())
+        else:
+            prot = self.project.mapper.selectById(int(self.runsTree.getFirst()))        
         
-        self._selection.append(self.selectedProtocol.getObjId())
-        print "selection: ", self._selection
+        self._updateSelection(prot)
         
     def _openProtocolForm(self, prot):
         """Open the Protocol GUI Form given a Protocol instance"""
@@ -763,24 +778,54 @@ class ProtocolsView(tk.Frame):
         window.itemConfig(self.selectedProtocol, open=True)  
         window.show()
         
+    def _iterSelectedProtocols(self):
+        for protId in sorted(self._selection):
+            prot = self.project.getProtocol(protId)
+            yield prot
+            
     def _fillSummary(self):
-        # Update input/output tree
-        provider = RunIOTreeProvider(self, self.selectedProtocol, self.project.mapper)
-        self.infoTree.setProvider(provider)
-        # Update summary
         self.summaryText.clear()
-        self.summaryText.addText(self.selectedProtocol.summary())
+        # Update input/output tree
+        n = len(self._selection)
+        
+        if n == 1:
+            prot = self.project.getProtocol(self._selection[0])
+            provider = RunIOTreeProvider(self, self.selectedProtocol, self.project.mapper)
+            self.infoTree.setProvider(provider)
+            #self.infoTree.grid(row=0, column=0, sticky='news')
+            # Update summary
+            self.summaryText.addText(prot.summary())
+        
+        elif n > 1:
+            self.infoTree.clear()
+            for prot in self._iterSelectedProtocols():
+                self.summaryText.addLine('*%s*' % prot.getRunName())
+                for line in prot.summary():
+                    self.summaryText.addLine(line)
+                self.summaryText.addLine('')
         
     def _fillMethod(self):
         self.methodText.clear()
-        self.methodText.addText(self.selectedProtocol.methods())
+        self.methodText.addLine("*METHODS:*")
+        
+        for prot in self._iterSelectedProtocols():
+            self.methodText.addLine('*%s*' % prot.getRunName())
+            for line in prot.getParsedMethods():
+                self.methodText.addLine(line)
+            self.methodText.addLine('')
+        
+        self.methodText.setReadOnly(True)
         
     def _fillLogs(self):
-        i = self.outputViewer.getIndex()
-        self.outputViewer.clear()
-        for f in self.selectedProtocol.getLogPaths():
-            self.outputViewer.addFile(f)
-        self.outputViewer.setIndex(i) # Preserve the last selected tab
+        n = len(self._selection)
+        
+        if n == 1:
+            prot = self.project.getProtocol(self._selection[0])
+            i = self.outputViewer.getIndex()
+            self.outputViewer.clear()
+            for f in prot.getLogPaths():
+                self.outputViewer.addFile(f)
+            self.outputViewer.setIndex(i) # Preserve the last selected tab
         
     def _scheduleRunsUpdate(self, secs=1):
         self.runsTree.after(secs*1000, self.refreshRuns)

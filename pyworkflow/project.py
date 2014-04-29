@@ -279,6 +279,9 @@ class Project(object):
                 self._storeProtocol(protocol)
             else:
                 self._setupProtocol(protocol)
+                
+    def getProtocol(self, protId):
+        return self.mapper.selectById(protId)
         
     def _setHostConfig(self, protocol):
         """ Set the appropiate host config to the protocol
