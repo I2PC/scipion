@@ -143,37 +143,38 @@ class RunsTreeProvider(ProjectRunsTreeProvider):
     def __init__(self, project, actionFunc):
         ProjectRunsTreeProvider.__init__(self, project)
         self.actionFunc = actionFunc
+        self._selection = project.getSettings().runSelection
     
-    def getObjectActions(self, obj):
-        prot = obj # Object should be a protocol
-        actionsList = [(ACTION_EDIT, Message.LABEL_EDIT_ACTION),
-                       (ACTION_COPY, Message.LABEL_COPY_ACTION),
-                       (ACTION_DELETE, Message.LABEL_DELETE_ACTION),
-                       #(None, None),
-                       #(ACTION_STOP, 'Stop'),
-                       (ACTION_STEPS, Message.LABEL_STEPS),
-                       (ACTION_BROWSE, Message.LABEL_BROWSE_ACTION)
-                       ]
-        status = prot.getStatus()
-        if status == STATUS_RUNNING:
-            actionsList.insert(0, (ACTION_STOP, Message.LABEL_STOP_ACTION))
-            actionsList.insert(1, None)
-        elif status == STATUS_WAITING_APPROVAL:
-            actionsList.insert(0, (ACTION_CONTINUE, Message.LABEL_CONTINUE_ACTION))
-            actionsList.insert(1, None)
+    def getActionsFromSelection(self):
+        """ Return the list of options available for selection. """
+        n = len(self._selection)
+        single = n == 1
+        if n:
+            prot = self.project.getProtocol(self._selection[0]) 
+            status = prot.getStatus()
+        else:
+            status = None
         
-        actions = []
-        def appendAction(a):
-            v = a
-            if v is not None:
-                action = a[0]
-                text = a[1]
-                v = (text, lambda: self.actionFunc(action), ActionIcons[action])
-            actions.append(v)
+        return [   (ACTION_EDIT, single),
+                   (ACTION_COPY, True), 
+                   (ACTION_DELETE, status != STATUS_RUNNING),
+                   (ACTION_STEPS, single),
+                   (ACTION_BROWSE, single),
+                   (ACTION_STOP, status == STATUS_RUNNING and single),
+                   (ACTION_CONTINUE, status == STATUS_WAITING_APPROVAL and single)
+                   ]
+        
+    def getObjectActions(self, obj):
+        
+        def addAction(a):
+            if a:
+                text = a
+                action = a
+                a = (text, lambda: self.actionFunc(action), ActionIcons[action])
+            return a
             
-        for a in actionsList:
-            appendAction(a)
-            
+        actions = [addAction(a) for a, cond in self.getActionsFromSelection() if cond]
+        
         return actions 
     
     
@@ -545,24 +546,19 @@ class ProtocolsView(tk.Frame):
             self.viewButtons[action] = btn
         
             
-    def updateActionToolbar(self):
+    def _updateActionToolbar(self):
         """ Update which action buttons should be visible. """
-        status = self.getSelectedProtocol().getStatus()
         
         def displayAction(action, i, cond=True):
             """ Show/hide the action button if the condition is met. """
             if cond:
                 self.actionButtons[action].grid(row=0, column=i, sticky='sw', padx=(0, 5), ipadx=0)
             else:
-                self.actionButtons[action].grid_remove()            
+                self.actionButtons[action].grid_remove()  
                 
-        for i, action in enumerate(self.actionList[:-2]):
-            displayAction(action, i)            
-            
-        displayAction(ACTION_DELETE, 2, status != STATUS_RUNNING)     
-        displayAction(ACTION_STOP, 4, status == STATUS_RUNNING)
-        displayAction(ACTION_CONTINUE, 5, status == STATUS_WAITING_APPROVAL)
-#        displayAction(ACTION_RESULTS, 6, status != STATUS_RUNNING)
+        for i, actionTuple in enumerate(self.provider.getActionsFromSelection()):
+            action, cond = actionTuple
+            displayAction(action, i, cond)          
         
     def createProtocolsTree(self, parent, bgColor):
         """Create the protocols Tree displayed in left panel"""
@@ -646,7 +642,6 @@ class ProtocolsView(tk.Frame):
 
     def updateRunsGraph(self, refresh=False):      
         g = self.project.getRunsGraph(refresh=refresh)
-        #g.printDot()
         lt = LevelTree(g)
         self.runsGraph.clear()
         lt.setCanvas(self.runsGraph)
@@ -703,7 +698,7 @@ class ProtocolsView(tk.Frame):
         self._fillLogs()
         
         #FIXME:
-        #self.updateActionToolbar()
+        self._updateActionToolbar()
         
     def _runTreeItemClick(self, item=None):
         self._selection.clear()
