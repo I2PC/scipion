@@ -28,25 +28,17 @@ package xmipp.viewer.models;
 import java.awt.Component;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.util.ArrayList;
-
 import javax.swing.JTable;
 import javax.swing.table.JTableHeader;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
 import javax.swing.table.TableColumnModel;
-
-import xmipp.ij.commons.ImagePlusLoader;
-import xmipp.ij.commons.XmippImageWindow;
 import xmipp.jni.MDLabel;
-import xmipp.jni.MDRow;
 import xmipp.jni.MetaData;
-import xmipp.utils.DEBUG;
 import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippMessage;
 import xmipp.utils.XmippPopupMenuCreator;
 import xmipp.viewer.FloatRenderer;
-import xmipp.viewer.windows.ImagesWindowFactory;
 
 public class MetadataTableModel extends MetadataGalleryTableModel {
 	private static final long serialVersionUID = 1L;
@@ -103,6 +95,7 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 		// DEBUG.printMessage(String.format("MetadataTable.getValueAt(%d, %d)",
 		// row, column));
 		try {
+                        
 			ColumnInfo ci = visibleLabels.get(column);
 			if (ci.render) {
 				String key = getItemKey(row, ci.getLabel());
@@ -121,7 +114,8 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 			}
 			int label = ci.getLabel();
 			long id = data.ids[row];
-			int type = MetaData.getLabelType(label);
+			int type = ci.type;
+                        
 			MetaData md = data.md;
 			switch (type) {
 			case MetaData.LABEL_INT:

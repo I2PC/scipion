@@ -28,9 +28,9 @@ import xmipp.viewer.windows.GalleryJFrame;
  */
 public class ScipionGalleryJFrame extends GalleryJFrame {
 
-    private final String type;
-    private final String script;
-    private final String projectid;
+    private String type;
+    private String script;
+    private String projectid;
     private JButton cmdbutton;
     private String selectionmdfile;
     private JButton classcmdbutton;
@@ -40,9 +40,22 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
     private String inputid;
     private HashMap<String, String> msgfields;
     private final String runNameKey = "Run name:";
+    
+   
 
     public ScipionGalleryJFrame(String filename, MetaData md, ScipionParams parameters) {
         super(filename, md, parameters);
+        readScipionParams(parameters);
+       
+    }
+    
+      public ScipionGalleryJFrame(ScipionGalleryData data) {
+        super(data);
+        readScipionParams((ScipionParams)data.parameters);
+    }
+
+    protected void readScipionParams(ScipionParams parameters)
+    {
         try {
             type = parameters.type;
             python = parameters.python;
@@ -61,7 +74,6 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
             throw new IllegalArgumentException(ex.getMessage());
         }
     }
-
     private void initComponents() {
         if (type != null) {
             boolean isclassificationmd = isClassificationMd();
@@ -100,9 +112,11 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
 
                     }
                 });
+                
                 buttonspn.add(classcmdbutton);
 
             }
+            
             buttonspn.add(cmdbutton);
             enableActions();
             jcbBlocks.addActionListener(new ActionListener() {
@@ -163,9 +177,12 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
         boolean isenabled = isImageSelected();
         Color color = Color.decode(isenabled ? ScipionMessageDialog.firebrick : ScipionMessageDialog.lightgrey);
         Color forecolor = isenabled ? Color.WHITE : Color.GRAY;
-        cmdbutton.setEnabled(isenabled);
-        cmdbutton.setBackground(color);
-        cmdbutton.setForeground(forecolor);
+        if(cmdbutton != null)
+        {
+            cmdbutton.setEnabled(isenabled);
+            cmdbutton.setBackground(color);
+            cmdbutton.setForeground(forecolor);
+        }
         if(classcmdbutton != null)
         {
             isenabled = isClassificationMd() && isenabled;

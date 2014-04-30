@@ -102,6 +102,7 @@ import xmipp.jni.MDRow;
 import xmipp.utils.DEBUG;
 import xmipp.utils.Params;
 import xmipp.utils.QuickHelpJDialog;
+import xmipp.utils.StopWatch;
 import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippFileChooser;
 import xmipp.utils.XmippLabel;
@@ -121,6 +122,7 @@ import xmipp.viewer.models.ImageGalleryTableModel;
 import xmipp.viewer.models.MetadataGalleryTableModel;
 import xmipp.viewer.particlepicker.extract.ExtractParticlePicker;
 import xmipp.viewer.particlepicker.extract.ExtractPickerJFrame;
+import xmipp.viewer.scipion.ScipionGalleryJFrame;
 
 
 /**
@@ -222,9 +224,13 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 	{
 		try
 		{
+                    
 			this.data = data;
+                        StopWatch stopWatch = StopWatch.getInstance();
 			createModel();
+                        stopWatch.printElapsedTime("creating gui");
 			createGUI();
+                        stopWatch.printElapsedTime("done init");
 			XmippApplication.addInstance(false);
 		}
 		catch (Exception e)
@@ -244,6 +250,12 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 	{
 		super();
 		init(new GalleryData(this, filename, parameters, md));
+	}
+        
+        public GalleryJFrame(GalleryData data)
+	{
+		super();
+		init(data);
 	}
 
 	/**
@@ -368,6 +380,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		buttonspn = new JPanel(new FlowLayout(FlowLayout.TRAILING));
 		
 		container.add(buttonspn, XmippWindowUtil.getConstraints(c, 0, 3, 1, 1, GridBagConstraints.HORIZONTAL));
+                
 						
 		// Create the menu for table
 		menu = new GalleryMenu();
@@ -1576,6 +1589,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			setItemEnabled(MD_SAVE_SELECTION, isCol);
 			setItemEnabled(MD_FIND_REPLACE, isCol && !galMode);
 			reslicebt.setEnabled(volMode);
+                        setItemEnabled(METADATA, !(GalleryJFrame.this instanceof ScipionGalleryJFrame));
 		}// function update
 
 		@Override
