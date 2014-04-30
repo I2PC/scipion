@@ -151,7 +151,7 @@ class Project(object):
         # Read only mode
         if not isReadOnly():
             
-            self._checkProtocolDependencies(protocol, 'Cannot RE-LAUNCH protocol')
+            self._checkProtocolsDependencies([protocol], 'Cannot RE-LAUNCH protocol')
             
             protocol.setStatus(STATUS_LAUNCHED)
             self._setupProtocol(protocol)
@@ -225,33 +225,47 @@ class Project(object):
                 break
         self.launchProtocol(protocol)
         
-    def _checkProtocolDependencies(self, protocol, msg):
-        """ Raise an exception if the protocol have dependencies.
-        The message will be prefixed to the exception error. 
+    def __protocolInList(self, prot, protocolList):
+        """ Check if a protocol is in a list comparing the ids. """
+        for p in protocolList:
+            if p.getObjId() == prot.getObjId():
+                return True
+        return False
+    
+    def _checkProtocolsDependencies(self, protocols, msg):
+        """ Check if the protocols have depencies (not in allowedChilds).
+        This method is used before delete or save protocols to be sure
+        it is not referenced from other runs. (an Exception is raised)
+        Params:
+             protocols: protocol list to be analyzed.
+             msg: String message to be prefixed to Exception error.
         """
         # Check if the protocol have any dependencies
-        node = self.getRunsGraph().getNode(protocol.strId())
-        if node is None:
-            return
-        childs = node.getChilds()
-        if len(childs):
-            deps = [' ' + c.run.getRunName() for c in childs]
-            msg += ' <%s>\n' % protocol.getRunName()
-            msg += 'It is referenced from:\n'
-            raise Exception(msg + '\n'.join(deps))
+        error = ''
+        for prot in protocols:
+            node = self.getRunsGraph().getNode(prot.strId())
+            if node:
+                childs = [node.run for node in node.getChilds() if not self.__protocolInList(node.run, protocols)]
+                if childs:
+                    deps = [' ' + c.getRunName() for c in childs]
+                    error += '\n *%s* is referenced from:\n   - ' % prot.getRunName()
+                    error += '\n   - '.join(deps) 
+        if error:
+            raise Exception(msg + error)
         
-    def deleteProtocol(self, protocol):
+    def deleteProtocol(self, *protocols):
         # Read only mode
         if not isReadOnly():
-            self._checkProtocolDependencies(protocol, 'Cannot DELETE protocol')
+            self._checkProtocolsDependencies(protocols, 'Cannot DELETE protocols')
             
-            self.mapper.delete(protocol) # Delete from database
-            wd = protocol.workingDir.get()
-            
-            if wd.startswith(PROJECT_RUNS):
-                cleanPath(wd)
-            else:
-                print "Error path: ", wd 
+            for prot in protocols:
+                self.mapper.delete(prot) # Delete from database
+                wd = prot.workingDir.get()
+                
+                if wd.startswith(PROJECT_RUNS):
+                    cleanPath(wd)
+                else:
+                    print "Error path: ", wd 
           
             self.mapper.commit()     
         
@@ -272,7 +286,7 @@ class Project(object):
     def saveProtocol(self, protocol):
         # Read only mode
         if not isReadOnly():
-            self._checkProtocolDependencies(protocol, 'Cannot SAVE protocol')
+            self._checkProtocolsDependencies([protocol], 'Cannot SAVE protocol')
             
             protocol.setStatus(STATUS_SAVED)
             if protocol.hasObjId():

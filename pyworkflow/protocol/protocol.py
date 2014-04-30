@@ -102,10 +102,7 @@ class Step(OrderedObject):
         self.status.set(STATUS_ABORTED)
 
     def getStatus(self):
-        status = self.status.get()
-        if status == None:
-            status= "new"
-        return status
+        return self.status.get('new')
     
     def getElapsedTime(self):
         """ Return the time that took to run 

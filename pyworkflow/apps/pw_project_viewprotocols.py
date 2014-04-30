@@ -154,7 +154,7 @@ class RunsTreeProvider(ProjectRunsTreeProvider):
                        (ACTION_STEPS, Message.LABEL_STEPS),
                        (ACTION_BROWSE, Message.LABEL_BROWSE_ACTION)
                        ]
-        status = prot.status.get()
+        status = prot.getStatus()
         if status == STATUS_RUNNING:
             actionsList.insert(0, (ACTION_STOP, Message.LABEL_STOP_ACTION))
             actionsList.insert(1, None)
@@ -339,7 +339,6 @@ class ProtocolsView(tk.Frame):
     def __init__(self, parent, windows, **args):
         tk.Frame.__init__(self, parent, **args)
         # Load global configuration
-        self.selectedProtocol = None
         self.windows = windows
         self.project = windows.project
         self.root = windows.root
@@ -440,7 +439,7 @@ class ProtocolsView(tk.Frame):
         dframe = tk.Frame(tab, bg='white')
         gui.configureWeigths(dframe, row=0)
         gui.configureWeigths(dframe, row=2)
-        provider = RunIOTreeProvider(self, self.selectedProtocol, self.project.mapper)
+        provider = RunIOTreeProvider(self, self.getSelectedProtocol(), self.project.mapper)
         self.style.configure("NoBorder.Treeview", background='white', borderwidth=0, font=self.windows.font)
         self.infoTree = BoundTree(dframe, provider, height=6, show='tree', style="NoBorder.Treeview") 
         self.infoTree.grid(row=0, column=0, sticky='news')
@@ -548,7 +547,7 @@ class ProtocolsView(tk.Frame):
             
     def updateActionToolbar(self):
         """ Update which action buttons should be visible. """
-        status = self.selectedProtocol.status.get()
+        status = self.getSelectedProtocol().getStatus()
         
         def displayAction(action, i, cond=True):
             """ Show/hide the action button if the condition is met. """
@@ -760,31 +759,40 @@ class ProtocolsView(tk.Frame):
     def _browseSteps(self):
         """ Open a new window with the steps list. """
         window = StepsWindow(Message.TITLE_BROWSE_DATA, self.windows, 
-                             self.selectedProtocol, icon=self.icon)
+                             self.getSelectedProtocol(), icon=self.icon)
         window.show()        
     
     def _browseRunData(self):
-        provider = ProtocolTreeProvider(self.selectedProtocol)
+        provider = ProtocolTreeProvider(self.getSelectedProtocol())
         window = BrowserWindow(Message.TITLE_BROWSE_DATA, self.windows, icon=self.icon)
         window.setBrowser(ObjectBrowser(window.root, provider))
-        window.itemConfig(self.selectedProtocol, open=True)  
+        window.itemConfig(self.getSelectedProtocol(), open=True)  
         window.show()
         
     def _iterSelectedProtocols(self):
         for protId in sorted(self._selection):
             prot = self.project.getProtocol(protId)
-            yield prot
+            if prot:
+                yield prot
+            
+    def _getSelectedProtocols(self):
+        return [prot for prot in self._iterSelectedProtocols()]
+            
+    def getSelectedProtocol(self):
+        if self._selection:
+            return self.project.getProtocol(self._selection[0])
+        return None
             
     def _fillSummary(self):
         self.summaryText.clear()
-        # Update input/output tree
         n = len(self._selection)
         
         if n == 1:
-            prot = self.project.getProtocol(self._selection[0])
-            provider = RunIOTreeProvider(self, self.selectedProtocol, self.project.mapper)
+            prot = self.getSelectedProtocol()
+            provider = RunIOTreeProvider(self, prot, self.project.mapper)
             self.infoTree.setProvider(provider)
-            #self.infoTree.grid(row=0, column=0, sticky='news')
+            self.infoTree.grid(row=0, column=0, sticky='news')
+            self.infoTree.update_idletasks()
             # Update summary
             self.summaryText.addText(prot.summary())
         
@@ -847,9 +855,10 @@ class ProtocolsView(tk.Frame):
         self.project.continueProtocol(prot)
         self._scheduleRunsUpdate()
         
-    def _deleteProtocol(self, prot):
+    def _deleteProtocol(self):
         if askYesNo(Message.TITLE_DELETE_FORM, Message.LABEL_DELETE_FORM, self.root):
-            self.project.deleteProtocol(prot)
+            self.project.deleteProtocol(*self._getSelectedProtocols())
+            self._selection.clear()
             self._scheduleRunsUpdate()
             
     def _stopProtocol(self, prot):
@@ -876,10 +885,10 @@ class ProtocolsView(tk.Frame):
         
     def _analyzeResultsClicked(self, e=None):
         """ this method should be called when button "Analyze results" is called. """
-        self._analyzeResults(self.selectedProtocol)
+        self._analyzeResults(self.getSelectedProtocol())
                 
     def _runActionClicked(self, action):
-        prot = self.selectedProtocol
+        prot = self.getSelectedProtocol()
         if prot:
             try:
                 if action == ACTION_DEFAULT:
@@ -890,7 +899,7 @@ class ProtocolsView(tk.Frame):
                     newProt = self.project.copyProtocol(prot)
                     self._openProtocolForm(newProt)
                 elif action == ACTION_DELETE:
-                    self._deleteProtocol(prot)
+                    self._deleteProtocol()
                 elif action == ACTION_STEPS:
                     self._browseSteps()                    
                 elif action == ACTION_BROWSE:
