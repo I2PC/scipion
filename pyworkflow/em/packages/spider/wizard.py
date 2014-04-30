@@ -50,41 +50,62 @@ from convert import locationToSpider
 class SpiderProtMaskWizard(ParticleMaskRadiusWizard):
     _targets = [(SpiderProtCAPCA, ['radius'])]
     
+    def _getParameters(self, protocol):
+        protParams = {}
+        protParams['input']= protocol.inputParticles
+        protParams['label']= "radius"
+        protParams['value']= protocol.maskRadius.get()
+        return protParams
+    
     def _getProvider(self, protocol):
-        _objs = protocol.inputParticles
+        _objs = self._getParameters(protocol)['input'] 
         return ParticleMaskRadiusWizard._getListProvider(self, _objs)
     
     def show(self, form):
-        _value = form.protocol.maskRadius.get()
-        _label = "radius"
+        params = self._getParameters(form.protocol)
+        _value = params['value']
+        _label = params['label']
         ParticleMaskRadiusWizard.show(self, form, _value, _label, UNIT_PIXEL)
         
-    @classmethod    
-    def getView(self):
-        return "wiz_spider_particle_mask_radius"
+
     
 class SpiderParticlesMaskRadiiWizard(ParticlesMaskRadiiWizard):
     _targets = [(SpiderProtAlignAPSR, ['innerRadius', 'outerRadius'])]        
     
+    def _getParameters(self, protocol):
+        protParams = {}
+        protParams['input']= protocol.inputParticles
+        protParams['label']= ["innerRadius", "outerRadius"]
+        protParams['value']= [protocol.innerRadius.get(), protocol.outerRadius.get()]
+        return protParams
+    
     def _getProvider(self, protocol):
-        _objs = protocol.inputParticles
+        _objs = self._getParameters(protocol)['input']
         return ParticlesMaskRadiiWizard._getListProvider(self, _objs)
     
     def show(self, form):
-        _value = [form.protocol.innerRadius.get(), form.protocol.outerRadius.get()]
-        _label = ["innerRadius", "outerRadius"]
+        params = self._getParameters(form.protocol)
+        _value = params['value']
+        _label = params['label']
         ParticlesMaskRadiiWizard.show(self, form, _value, _label, UNIT_PIXEL)
     
-    @classmethod    
-    def getView(self):
-        return "wiz_spider_particle_mask_radii"
+
+
 
 class SpiderFilterParticlesWizard(FilterParticlesWizard):    
     _targets = [(SpiderProtFilter, ['filterRadius', 'lowFreq', 'highFreq', 'temperature'])]
     
+    def _getParameters(self, protocol):
+        protParams = {}
+        protParams['input']= protocol.inputParticles
+        protParams['label']= ["lowFreq", "highFreq", "temperature"]
+        protParams['value']= [protocol.innerRadius.get(), protocol.outerRadius.get()]
+        return protParams
+    
     def _getProvider(self, protocol):
-        _objs = protocol.inputParticles
+        _objs = self._getParameters(protocol)['input']
         return FilterParticlesWizard._getListProvider(self, _objs)
+        
     
     def show(self, form):
         protocol = form.protocol
@@ -105,9 +126,7 @@ class SpiderFilterParticlesWizard(FilterParticlesWizard):
             dialog.showWarning("Input particles", "Select particles first", form.root)  
     
     
-    @classmethod    
-    def getView(self):
-        return "wiz_filter_spider"
+
 
 
 #--------------- Dialogs used by Wizards --------------------------        

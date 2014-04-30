@@ -176,7 +176,6 @@ class XmippVolumeRadiiWizard(VolumeMaskRadiiWizard):
     
 
         
-        
 class XmippFilterParticlesWizard(FilterParticlesWizard):   
     _targets = [(XmippProtFilterParticles, ['lowFreq', 'highFreq', 'freqDecay'])]
     
@@ -200,28 +199,6 @@ class XmippFilterParticlesWizard(FilterParticlesWizard):
         FilterParticlesWizard.show(self, form, _value, _label, _mode, UNIT_PIXEL_FOURIER)
     
 
-
-class XmippGaussianParticlesWizard(GaussianParticlesWizard):
-    _targets = [(XmippProtFilterParticles, ['freqSigma'])]
-    
-    def _getParameters(self, protocol):
-        protParams = {}
-        protParams['input']= protocol.inputParticles
-        protParams['label']= "freqSigma"
-        protParams['value']= protocol.freqSigma.get()
-        return protParams  
-    
-    def _getProvider(self, protocol):
-        _objs = self._getParameters(protocol)['input']
-        return GaussianParticlesWizard._getListProvider(self, _objs)
-    
-    def show(self, form):
-        params = self._getParameters(form.protocol)
-        _value = params['value']
-        _label = params['label']
-        GaussianParticlesWizard.show(self, form, _value, _label, UNIT_PIXEL_FOURIER)
-
-
     
 class XmippFilterVolumesWizard(FilterVolumesWizard):   
     _targets = [(XmippProtFilterVolumes, ['lowFreq', 'highFreq', 'freqDecay'])]
@@ -244,6 +221,29 @@ class XmippFilterVolumesWizard(FilterVolumesWizard):
         _label = params['label']
         _mode = params['mode']
         FilterVolumesWizard.show(self, form, _value, _label, _mode, UNIT_PIXEL_FOURIER)
+
+
+
+class XmippGaussianParticlesWizard(GaussianParticlesWizard):
+    _targets = [(XmippProtFilterParticles, ['freqSigma'])]
+    
+    def _getParameters(self, protocol):
+        protParams = {}
+        protParams['input']= protocol.inputParticles
+        protParams['label']= "freqSigma"
+        protParams['value']= protocol.freqSigma.get()
+        return protParams  
+    
+    def _getProvider(self, protocol):
+        _objs = self._getParameters(protocol)['input']
+        return GaussianParticlesWizard._getListProvider(self, _objs)
+    
+    def show(self, form):
+        params = self._getParameters(form.protocol)
+        _value = params['value']
+        _label = params['label']
+        GaussianParticlesWizard.show(self, form, _value, _label, UNIT_PIXEL_FOURIER)
+
 
 
 class XmippGaussianVolumesWizard(GaussianVolumesWizard):

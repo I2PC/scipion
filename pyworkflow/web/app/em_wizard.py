@@ -47,6 +47,9 @@ from pyworkflow.em.packages.xmipp3.constants import *
 
 from pyworkflow.em.packages.xmipp3.wizard import * 
 
+# Imports for web wizards
+from pyworkflow.web.app.wizards.xmipp_wizard import *
+
 
 #===============================================================================
 #    Wizard base function (to call the others)
@@ -92,345 +95,42 @@ def wiz_base(request, context):
     context.update(context_base)
     return context
 
-#===============================================================================
-#    Wizard classes (to execute differents wizards)
-#===============================================================================
 
-class XmippDownsamplingWeb(XmippDownsampleWizard):
-    _environments = [WEB_DJANGO]
-    
-    def _run(self, protocol, request):
-        params = self._getParameters(protocol)     
-        objs = params['input'].get()
-        
-        res = validateSet(objs)
-        
-        if res is not 1:
-            return HttpResponse(res)
-        else:           
-            
-            context = {'typeObj': 'Micrographs',
-                       'objects': self._getMics(objs),
-                       'params': params
-                       }
-    
-            context = wiz_base(request, context)
-            return render_to_response('wizards/wiz_downsampling.html', context)
-
-
-
-class XmippCTFWeb(XmippCTFWizard):
-    _environments = [WEB_DJANGO]
-    
-    def _run(self, protocol, request):
-        params = self._getParameters(protocol)     
-        objs = params['input'].get()
-        
-        res = validateSet(objs)
-        
-        if res is not 1:
-            return HttpResponse(res)
-        else:           
-
-            context = {'typeObj': 'Micrographs',
-                       'objects': self._getMics(objs),
-                       'params': params
-                   }
-        
-            context = wiz_base(request, context)
-            return render_to_response('wizards/wiz_ctf.html', context)
-        
-
-class XmippParticleMaskRadiusWeb(XmippParticleMaskRadiusWizard):
-    _environments = [WEB_DJANGO]
-    
-    def _run(self, protocol, request):
-        params = self._getParameters(protocol)
-        objs = params['input'].get()
-        
-        res = validateParticles(objs) 
-        
-        if res is not 1:
-            return HttpResponse(res)
-        else:
-            particles = self._getParticles(objs)
-            xdim = getImageXdim(request, particles[0].text)
-    
-            if params['value'] > xdim :
-                params['value'] = xdim
-            elif params['value'] == -1 :
-                params['value'] = xdim/2
-            
-            context = {'typeObj': 'Particles',
-                       'objects': self._getParticles(objs),
-                       'xdim':xdim,
-                       'params': params
-                       }
-        
-            context = wiz_base(request, context)
-            return render_to_response('wizards/wiz_particle_mask_radius.html', context)    
-
-
-class XmippParticleMaskRadiiWeb(XmippParticleMaskRadiiWizard):
-    _environments = [WEB_DJANGO]
-    
-    def _run(self, protocol, request):
-        params = self._getParameters(protocol)
-        objs = params['input'].get()
-        
-        res = validateParticles(objs) 
-        
-        if res is not 1:
-            return HttpResponse(res)
-        else:
-            particles = self._getParticles(objs)
-            xdim = getImageXdim(request, particles[0].text)
-            
-            if params['value'][0] > xdim :
-                params['value'][0] = xdim
-            elif params['value'][1] > xdim :
-                params['value'][1] = xdim
-            elif params['value'][0] == -1 :
-                params['value'][0] = xdim/2
-            elif params['value'][1] == -1 :
-                params['value'][1] = xdim/2
-                
-            
-            context = {'typeObj': 'Particles',
-                       'objects': particles,
-                       'xdim':xdim,
-                       'params': params
-                       }
-        
-            context = wiz_base(request, context)
-            return render_to_response('wizards/wiz_particles_mask_radii.html', context)    
-
-
-class XmippVolumeMaskRadiusWeb(XmippVolumeMaskRadiusWizard):
-    _environments = [WEB_DJANGO]
-    
-    def _run(self, protocol, request):
-        params = self._getParameters(protocol)
-        objs = params['input'].get()
-        
-        res = validateSet(objs) 
-        
-        if res is not 1:
-            return HttpResponse(res)
-        else:
-            vols = self._getVols(objs)
-            xdim = getImageXdim(request, vols[0].getFileName())
-    
-            if params['value'] > xdim :
-                params['value'] = xdim
-            elif params['value'] == -1 :
-                params['value'] = xdim/2
-            
-            context = {'typeObj': 'Volumes',
-                       'objects': vols,
-                       'xdim':xdim,
-                       'params': params
-                       }
-        
-            context = wiz_base(request, context)
-            return render_to_response('wizards/wiz_volume_mask_radius.html', context)    
-
-class XmippVolumeMaskRadiiWeb(XmippVolumeRadiiWizard):
-    _environments = [WEB_DJANGO]
-    
-    def _run(self, protocol, request):
-        params = self._getParameters(protocol)
-        objs = params['input'].get()
-        
-        res = validateSet(objs) 
-        
-        if res is not 1:
-            return HttpResponse(res)
-        else:
-            vols = self._getVols(objs)
-            xdim = getImageXdim(request, vols[0].getFileName())
-            
-            if params['value'][0] > xdim :
-                params['value'][0] = xdim
-            elif params['value'][1] > xdim :
-                params['value'][1] = xdim
-            elif params['value'][0] == -1 :
-                params['value'][0] = xdim/2
-            elif params['value'][1] == -1 :
-                params['value'][1] = xdim/2
-                
-            
-            context = {'typeObj': 'Volumes',
-                       'objects': vols,
-                       'xdim':xdim,
-                       'params': params
-                       }
-        
-            context = wiz_base(request, context)
-            return render_to_response('wizards/wiz_volumes_mask_radii.html', context)    
-
-
-def wiz_filter_particle(protocol, params, request):
-    
-    # Get params
-    particles = params['input'].get()
-    label = params['label']
-    value = params['value']
-    mode = params['mode']
-    
-    if mode == 0:
-        # low pass
-        lowFreq = 0.
-        highFreq = value[1]
-        decay = value[2]
-    elif mode == 1:
-        # high pass
-        lowFreq = value[0]
-        highFreq = 1.0
-        decay = value[2]
-    elif mode== 2:
-        #band pass
-        highFreq = value[0]
-        lowFreq = value[1]
-        decay = value[2]
-    
-    res = validateParticles(particles)
-    
-    if res is not 1:
-        return HttpResponse(res)
-    else:
-        parts = getParticleSubset(particles,100)
-        
-        if len(parts) == 0:
-            return HttpResponse("errorIterate")
-        else:
-            context = {'objects': parts,
-                       'mode': mode,
-                       label[0]: lowFreq,
-                       label[1]: highFreq,
-                       label[2]: decay,
-                       }
-            
-            context = wiz_base(request, context)
-            
-            return render_to_response('wizards/wiz_filter_particles.html', context)
-        
-def wiz_filter_volume(protocol, params, request):
-    
-    # Get params
-    volumes = params['input'].get()
-    label = params['label']
-    value = params['value']
-    mode = params['mode']
-    
-    if mode == 0:
-        # low pass
-        lowFreq = 0.
-        highFreq = value[1]
-        decay = value[2]
-    elif mode == 1:
-        # high pass
-        lowFreq = value[0]
-        highFreq = 1.0
-        decay = value[2]
-    elif mode== 2:
-        #band pass
-        highFreq = value[0]
-        lowFreq = value[1]
-        decay = value[2]
-    
-    res = validateSet(volumes)
-    
-    if res is not 1:
-        return HttpResponse(res)
-    else:
-        vols = []
-        if isinstance(volumes, Volume):
-            vols.append(volumes)
-        else: 
-            vols = [vol.clone() for vol in volumes]
-        
-        for v in vols:
-            v.basename = basename(v.getFileName())
-                
-        if len(vols) == 0:
-            return HttpResponse("errorIterate")
-        else:
-            context = {'objects': vols,
-                       'mode': mode,
-                       label[0]: lowFreq,
-                       label[1]: highFreq,
-                       label[2]: decay,
-                       'unit': UNIT_PIXEL
-                       }
-            
-            context = wiz_base(request, context)
-            
-            return render_to_response('wizards/wiz_filter_volumes.html', context)
-
-
-def wiz_particle_gaussian(protocol, params, request):
-    
-    # Get params
-    particles = params['input'].get()
-    label = params['label']
-    value = params['value']
-    
-    res = validateParticles(particles) 
-    
-    if res is not 1:
-        return HttpResponse(res)
-    else:
-        parts = getParticleSubset(particles.clone(),100)
-        
-        if len(parts) == 0:
-            return HttpResponse("errorIterate")
-        else:
-            context = {'objects': parts,
-                       label: value,
-                       }
-            
-            context = wiz_base(request, context)
-            
-            return render_to_response('wizards/wiz_gaussian_particle.html', context)
-        
-        
-def wiz_volume_gaussian(protocol, params, request):
-    
-    # Get params
-    volumes = params['input'].get()
-    label = params['label']
-    value = params['value']
-    
-    res = validateSet(volumes)
-    
-    if res is not 1:
-        return HttpResponse(res)
-    else:
-        vols = []
-        if isinstance(volumes, Volume):
-            vols.append(volumes)
-        else: 
-            vols = [vol.clone() for vol in volumes]
-        
-        for v in vols:
-            v.basename = basename(v.getFileName())
-        
-        if len(vols) == 0:
-            return HttpResponse("errorIterate")
-        else:
-            context = {'objects': vols,
-                       label: value,
-                       }
-            
-            context = wiz_base(request, context)
-            
-            return render_to_response('wizards/wiz_gaussian_vol.html', context)
-    
-    
 #===============================================================================
 #    Methods for utils
 #===============================================================================
+
+def proccessModeFilter(mode, value):
+    # Order : low - high - decay
+    
+    if mode == 0:
+        # low pass
+        value[0] = 0.
+    elif mode == 1:
+        # high pass
+        value[1] = 1.0
+    elif mode== 2:
+        #band pass
+        pass
+    
+#     if mode == 0:
+#        # low pass
+#        lowFreq = 0.
+#        highFreq = value[1]
+#        decay = value[2]
+#    elif mode == 1:
+#        # high pass
+#        lowFreq = value[0]
+#        highFreq = 1.0
+#        decay = value[2]
+#    elif mode== 2:
+#        #band pass
+#        highFreq = value[0]
+#        lowFreq = value[1]
+#        decay = value[2]
+#    
+    return value
+
 
 def getParticleSubset(particles, num):
     """
@@ -456,6 +156,7 @@ def getParticleSubset(particles, num):
 
     return particleList
 
+
 def validateSet(setOf):
     """Validation for a set of micrographs."""
     if setOf is None:
@@ -463,6 +164,7 @@ def validateSet(setOf):
     else:
         res = 1
     return res
+
 
 def validateParticles(particles):
     """Validation for a set of particles."""
@@ -497,6 +199,7 @@ def get_image_psd(request):
     img.save(response, "PNG")
     return response
 
+
 def get_image_bandpass(request):
     """
     Function to get the computing image with a fourier filter applied
@@ -520,6 +223,7 @@ def get_image_bandpass(request):
     img.save(response, "PNG")
     
     return response
+
 
 def get_image_gaussian(request):
     """
