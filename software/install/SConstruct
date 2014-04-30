@@ -1,0 +1,113 @@
+# **************************************************************************
+# *
+# * Authors:     I. Foche Perez (ifoche@cnb.csic.es)
+# *
+# * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
+# *
+# * This program is free software; you can redistribute it and/or modify
+# * it under the terms of the GNU General Public License as published by
+# * the Free Software Foundation; either version 2 of the License, or
+# * (at your option) any later version.
+# *
+# * This program is distributed in the hope that it will be useful,
+# * but WITHOUT ANY WARRANTY; without even the implied warranty of
+# * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# * GNU General Public License for more details.
+# *
+# * You should have received a copy of the GNU General Public License
+# * along with this program; if not, write to the Free Software
+# * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+# * 02111-1307  USA
+# *
+# *  All comments concerning this program package may be sent to the
+# *  e-mail address 'ifoche@cnb.csic.es'
+# *
+# **************************************************************************
+
+#
+# Brief summary: This file is intended to be the main skeleton which will guide all the installation process using a SCons python-based system.
+#
+
+#############
+# VARIABLES #
+#############
+
+
+#################
+# PREREQUISITES #
+#################
+
+Already compiled scons (using install.sh)
+Python at any version (if 2.7.6, this will be used, otherwise, a new one will be compiled)
+
+
+############################
+# FIRST LEVEL DEPENDENCIES #
+############################
+
+# Tcl/Tk
+
+# sqlite
+
+
+#############################
+# SECOND LEVEL DEPENDENCIES #
+#############################
+
+# python 2.7.6
+
+
+############################
+# THIRD LEVEL DEPENDENCIES #
+############################
+
+# numpy
+
+# matplotlib
+
+# psutils
+
+# mpi4py
+
+# scipy
+
+# bibtex
+
+# django
+
+# paramiko
+
+
+######################
+# AUXILIAR FUNCTIONS #
+######################
+
+def scipion_logo():
+    print ""
+    print "QQQQQQQQQT!^'::\"\"?$QQQQQQ" + "  S   S   S"
+    print "QQQQQQQY`          ]4QQQQ"   + "  C   C   C"
+    print "QQQQQD'              \"$QQ"  + "  I   I   I"
+    print "QQQQP                 \"4Q"  + "  P   P   P"
+    print "QQQP        :.,        -$"   + "  I   I   I"
+    print "QQD       awQQQQwp      )"   + "  O   O   O"
+    print "QQ'     qmQQQWQQQQg,   jm"   + "  N   N   N"
+    print "Qf     QQQD^   -?$QQp jQQ"   + " ################################################"
+    print "Q`    qQQ!        4WQmQQQ"   + " # Integrating image processing packages for EM #"
+    print "F     QQ[          ~)WQQQ"   + " ################################################"
+    print "[    ]QP             4WQQ"   + ""
+    print "f    dQ(             -$QQ"   + " Installation SCons system"
+    print "'    QQ              qQQQ"
+    print ".   )QW            _jQQQQ"
+    print "-   =QQ           jmQQQQQ"
+    print "/   -QQ           QQQQQQQ"
+    print "f    4Qr    jQk   )WQQQQQ"
+    print "[    ]Qm    ]QW    \"QQQQQ"
+    print "h     $Qc   jQQ     ]$QQQ"
+    print "Q,  :aQQf qyQQQL    _yQQQ"
+    print "QL jmQQQgmQQQQQQmaaaQWQQQ"
+    print ""
+
+
+Object('hello.c')
+Program('hello.c')
+Library('hello.c')
