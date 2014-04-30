@@ -37,8 +37,8 @@
 # PREREQUISITES #
 #################
 
-Already compiled scons (using install.sh)
-Python at any version (if 2.7.6, this will be used, otherwise, a new one will be compiled)
+#Already compiled scons (using install.sh)
+#Python at any version (if 2.7.6, this will be used, otherwise, a new one will be compiled)
 
 
 ############################
@@ -108,6 +108,3 @@ def scipion_logo():
     print ""
 
 
-Object('hello.c')
-Program('hello.c')
-Library('hello.c')
