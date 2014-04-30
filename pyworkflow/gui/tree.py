@@ -270,6 +270,10 @@ class BoundTree(Tree):
         """ Configure inserted items. """
         self.item(obj._treeId, **args)
         
+    def iterSelectedObjects(self):
+        for treeId in self.selection():
+            yield self._objDict[treeId]
+        
               
 class ObjectTreeProvider(TreeProvider):
     """ Populate Tree from Objects. """
@@ -342,12 +346,16 @@ class ProjectRunsTreeProvider(TreeProvider):
     """ Provide run list from a project
     to populate a tree.
     """
-    def __init__(self, project):
+    def __init__(self, project, **kwargs):
         self.project = project
         self._objDict = {}
+        self._refresh = True
+        
+    def setRefresh(self, value):
+        self._refresh = value
     
     def getObjects(self):
-        return self.project.getRuns() 
+        return self.project.getRuns(refresh=self._refresh) 
         
     def getColumns(self):
         return [('Run', 250), ('State', 100), ('Time', 100)]
@@ -362,3 +370,6 @@ class ProjectRunsTreeProvider(TreeProvider):
             info['parent'] = self._objDict[objPid]
       
         return info
+    
+    def getObjectFromId(self, objId):
+        return self._objDict[objId]

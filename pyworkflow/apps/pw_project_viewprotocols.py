@@ -501,7 +501,7 @@ class ProtocolsView(tk.Frame):
         
     def refreshRuns(self, e=None, autoRefresh=False):
         """ Refresh the status of diplayed runs. """
-        self.updateRunsTree()
+        self.updateRunsTree(True)
         self.updateRunsGraph(True)
         if not autoRefresh:
             self.__autoRefreshCounter = 3 # start by 3 secs  
@@ -620,21 +620,19 @@ class ProtocolsView(tk.Frame):
         self.provider = RunsTreeProvider(self.project, self._runActionClicked)
         tree = BoundTree(parent, self.provider)        
         tree.itemDoubleClick = self._runItemDoubleClick
-        tree.itemClick = self._runItemClick
+        tree.itemClick = self._runTreeItemClick
             
         return tree
    
-    def updateRunsTree(self):
+    def updateRunsTree(self, refresh=False):
+        self.provider.setRefresh(refresh)
         self.runsTree.update()
         self.updateRunsTreeSelection()
 
     def updateRunsTreeSelection(self):
-        if not self.showGraph:
-            if self.selectedProtocol is not None:
-                for i, obj in enumerate(self.runsTree._objects):
-                    if self.selectedProtocol.getObjId() == obj.getObjId():
-                        self.runsTree.selectChildByIndex(i)
-                        break
+        for prot in self._iterSelectedProtocols():
+            treeId = self.provider.getObjectFromId(prot.getObjId())._treeId
+            self.runsTree.selection_add(treeId)
     
     def createRunsGraph(self, parent):
         self.runsGraph = Canvas(parent, width=400, height=400)
@@ -657,16 +655,6 @@ class ProtocolsView(tk.Frame):
         #self.updateRunsGraphSelection()
         self.runsGraph.updateScrollRegion()
 
-#     def updateRunsGraphSelection(self):
-#         if self.showGraph:
-#             if self.selectedProtocol is not None:
-#                 for item in self.runsGraph.items.values():
-#                     #item.setSelected(True)
-#                     run = item.run
-#                     if run and self.selectedProtocol.getObjId() == run.getObjId():
-#                         self.runsGraph.selectItem(item)
-#                         break
-                            
     def createRunItem(self, canvas, node, y):
         nodeText = node.label
         textColor = 'black'
@@ -685,7 +673,6 @@ class ProtocolsView(tk.Frame):
             item.setSelected(True)
         return item
         
-    
     def switchRunsView(self):
         self.showGraph = not self.showGraph
         
@@ -704,8 +691,6 @@ class ProtocolsView(tk.Frame):
         hide.grid_remove()
         show.grid(row=0, column=0, sticky='news')
         self.settings.graphView.set(self.showGraph)
-        #self.settings.write()
-        
     
     def _protocolItemClick(self, e=None):
         protClassName = self.protTree.getFirst().split('.')[-1]
@@ -718,13 +703,15 @@ class ProtocolsView(tk.Frame):
         self._fillMethod()
         self._fillLogs()
         
-        if prot is not None and prot != self.selectedProtocol:
-            prot.mapper = self.project.mapper
-            self.selectedProtocol = prot
-            self.updateActionToolbar()
-        else:
-            pass #TODO: implement what to do
-                    
+        #FIXME:
+        #self.updateActionToolbar()
+        
+    def _runTreeItemClick(self, item=None):
+        self._selection.clear()
+        for prot in self.runsTree.iterSelectedObjects():
+            self._selection.append(prot.getObjId())
+        self._updateSelection()
+                         
     def _runItemClick(self, item=None):
         # Get last selected item for tree or graph
         if self.showGraph:
@@ -749,8 +736,13 @@ class ProtocolsView(tk.Frame):
         # Get last selected item for tree or graph
         if self.showGraph:
             prot = item.node.run
-            item.setSelected(True)
-            self._selection.append(prot.getObjId())
+            protId = prot.getObjId()
+            if protId in self._selection:
+                item.setSelected(False)
+                self._selection.remove(protId)
+            else:
+                item.setSelected(True)
+                self._selection.append(prot.getObjId())
         else:
             prot = self.project.mapper.selectById(int(self.runsTree.getFirst()))        
         
@@ -799,7 +791,7 @@ class ProtocolsView(tk.Frame):
         elif n > 1:
             self.infoTree.clear()
             for prot in self._iterSelectedProtocols():
-                self.summaryText.addLine('*%s*' % prot.getRunName())
+                self.summaryText.addLine('> _%s_' % prot.getRunName())
                 for line in prot.summary():
                     self.summaryText.addLine(line)
                 self.summaryText.addLine('')
@@ -807,12 +799,20 @@ class ProtocolsView(tk.Frame):
     def _fillMethod(self):
         self.methodText.clear()
         self.methodText.addLine("*METHODS:*")
+        cites = OrderedDict()
         
         for prot in self._iterSelectedProtocols():
-            self.methodText.addLine('*%s*' % prot.getRunName())
+            self.methodText.addLine('> _%s_' % prot.getRunName())
             for line in prot.getParsedMethods():
                 self.methodText.addLine(line)
+            cites.update(prot.getCitations())
+            cites.update(prot.getPackageCitations())
             self.methodText.addLine('')
+        
+        if cites:
+            self.methodText.addLine('*REFERENCES:*')
+            for cite in cites.values():
+                self.methodText.addLine(cite)
         
         self.methodText.setReadOnly(True)
         
