@@ -339,6 +339,7 @@ class Project(object):
             self.runs = self.mapper.selectByClass("Protocol", iterate=False)
             for r in self.runs:
                 r.setProject(self)
+                r.setMapper(self.mapper)
                 # Update nodes that are running and are not invoked by other protocols
                 if r.isActive():
                     if not r.isChild():
