@@ -41,7 +41,7 @@ class Object(object):
     that will contains all base properties"""
     def __init__(self, value=None, **args):
         object.__init__(self)
-        self.set(value)
+        self._objIsPointer =  args.get('objIsPointer', False) # True if will be treated as a reference for storage
         self._objId =  args.get('objId', None) # Unique identifier of this object in some context
         self._objParentId =  args.get('objParentId', None) # identifier of the parent object
         self._objName =  args.get('objName', '') # The name of the object will contains the whole path of ancestors
@@ -49,9 +49,9 @@ class Object(object):
         self._objComment = args.get('objComment', '')
         self._objTag =  args.get('objTag', None) # This attribute serve to make some annotation on the object.
         self._objDoStore =  args.get('objDoStore', True) # True if this object will be stored from his parent
-        self._objIsPointer =  args.get('objIsPointer', False) # True if will be treated as a reference for storage
         self._objCreationTime = None
         self._objParent = None # Reference to parent object
+        self.set(value)
         
     def getClassName(self):
         return self.__class__.__name__
@@ -399,11 +399,12 @@ class OrderedObject(Object):
         """
         for key in self._attributes:
             attr = getattr(self, key)
-            if attr.isPointer() and attr.get() is value:
-                print "already pointed value of: ", name, "key: ", key
-                print "  attr.get()=", attr.get(), 'type=', type(attr.get())
-                print "  value=", value, "type=", type(value)
-                return True
+            if attr.isPointer():
+                if attr.get() is value:
+                    print "already pointed value of: ", name, "key: ", key
+                    print "  attr.get()=", attr.get(), 'type=', type(attr.get())
+                    print "  value=", value, "type=", type(value)
+                    return True
         return False
     
     def __setattr__(self, name, value):
@@ -547,25 +548,56 @@ class Boolean(Scalar):
         return self.get()  
     
     
-class Pointer(Scalar):
+class Pointer(Object):
     """Reference object to other one"""
     def __init__(self, value=None, **args):
-        Object.__init__(self, value, objIsPointer=True, **args)   
+        Object.__init__(self, value, objIsPointer=True, **args)
+        # this will be used to point to attributes of a pointed object
+        # or the id of an item inside a set
+        self._extended = None
        
     def __str__(self):
         """String representation of a pointer"""
         if self.hasValue():
             return '-> %s (%s)' % (self.get().getClassName(), self.get().strId())
         return '-> None'
+
+    def hasValue(self):
+        return self._objValue is not None
     
-    def _convertValue(self, value):
-        """Avoid storing _objValue and future objects
-        obtained from .get()"""
-        #value.setStore(False)
+    def get(self, default=None):
+        """ Get the pointed object. 
+        If the _extended property is set, then the extended attribute or item id
+        will be retrieved by the call to get().
+        """
+        if self._extended is not None:
+            if isinstance(self._extended, String):
+                value = self._objValue.getAttributeValue(self._extended.get())
+            elif isinstance(self._extended, Integer):
+                print "Pointer.get: self._extended=", self._extended.get()
+                value = self._objValue[self._extended.get()]
+            else:
+                raise Exception("Invalid type '%s' for pointer._extended property." % type(self._extended))
+        else:
+            value = self._objValue
+            
         return value
     
-    def getAttributesToStore(self):
-        return []
+    def setExtendedAttribute(self, attributeName):
+        """ Point to an attribute of the pointed object. """
+        if not self._extended:
+            self._extended = String()
+        self._extended.set(attributeName)
+        
+    def setExtendedItemId(self, itemId):
+        """ Point to an specific item of a pointed Set. """
+        if not self._extended:
+            self._extended = Integer()
+        self._extended.set(itemId)
+        
+    def getAttributes(self):
+        if self._extended:
+            yield ('_extended', getattr(self, '_extended'))
     
 
 class List(Object, list):
@@ -698,6 +730,130 @@ class Array(Object):
     
     def __len__(self):
         return self._objValue
+    
+    
+class Set(OrderedObject):
+    """ This class will be a container implementation for elements.
+    It will use an extra sqlite file to store the elements.
+    All items will have an unique id that identifies each element in the set.
+    """
+    ITEM_TYPE = None # This property should be defined to know the item type
+    
+    def __init__(self, filename=None, prefix='', mapperClass=None, **args):
+        # Use the object value to store the filename
+        OrderedObject.__init__(self, **args)
+        self._mapper = None
+        self._idCount = 0
+        self._size = Integer(0) # cached value of the number of images  
+        #self._idMap = {}#FIXME, remove this after id is the one in mapper
+        self.setMapperClass(mapperClass)
+        self._mapperPath = CsvList() # sqlite filename
+        self._mapperPath.trace(self.load) # Load the mapper whenever the filename is changed
+        self._representative = None
+
+        # If filename is passed in the constructor, it means that
+        # we want to create a new object, so we need to delete it if
+        # the file exists
+        if filename:
+            self._mapperPath.set('%s, %s' % (filename, prefix)) # This will cause the creation of the mapper           
+        
+    def setMapperClass(self, MapperClass):
+        """ Set the mapper to be used for storage. """
+        if MapperClass is None:
+            from pyworkflow.mapper.sqlite import SqliteFlatMapper
+            MapperClass = SqliteFlatMapper
+        Object.__setattr__(self, '_MapperClass', MapperClass)
+        
+    def __getitem__(self, itemId):
+        """ Get the image with the given id. """
+        return self._mapper.selectById(itemId)
+
+    def _iterItems(self):        
+        return self._mapper.selectAll()#has flat mapper, iterate is true
+    
+    def getFirstItem(self):
+        """ Return the first item in the Set. """
+        return self._mapper.selectFirst()
+    
+    def __iter__(self):
+        """ Iterate over the set of images. """
+        return self._iterItems()
+       
+    def __len__(self):
+        return self._size.get()
+    
+    def getSize(self):
+        """Return the number of images"""
+        return self._size.get()
+    
+    def getFileName(self):
+        if len(self._mapperPath):
+            return self._mapperPath[0]
+        return None
+    
+    def getPrefix(self):
+        if len(self._mapperPath) > 1:
+            return self._mapperPath[1]
+        return None
+    
+    def write(self):
+        """This method will be used to persist in a file the
+        list of images path contained in this Set
+        path: output file path
+        images: list with the images path to be stored
+        """
+        #TODO: If mapper is in memory, do commit and dump to disk
+        self._mapper.commit()
+    
+    def _loadClassesDict(self):
+        return globals()
+    
+    def load(self):
+        """ Load extra data from files. """
+        if self._mapperPath.isEmpty():
+            raise Exception("Set.load:  mapper path and prefix not set.")
+        fn, prefix = self._mapperPath
+        self._mapper = self._MapperClass(fn, self._loadClassesDict(), prefix)
+        # TODO: updated size with the real size from the mapper
+            
+    def append(self, item):
+        """ Add a image to the set. """
+        if not item.hasObjId():
+            self._idCount += 1
+            item.setObjId(self._idCount)
+        self._insertItem(item)
+        self._size.increment()
+#        self._idMap[item.getObjId()] = item
+        
+    def _insertItem(self, item):
+        self._mapper.insert(item)
+        
+    def update(self, item):
+        """ Update an existing item. """
+        self._mapper.update(item)
+                
+    def __str__(self):
+        return "%-20s (%d items)" % (self.getClassName(), self.getSize())
+    
+    def getSubset(self, n):
+        """ Return a subset of n element, making a clone of each. """
+        subset = []
+        for i, item in enumerate(self):
+            subset.append(item.clone())
+            if i == n:
+                break
+        return subset
+    
+    def setRepresentative(self, representative):
+        self._representative = representative
+    
+    def getRepresentative(self):
+       
+        return self._representative
+    
+    def hasRepresentative(self):
+        """ Return true if have a representative image. """
+        return self._representative is not None
     
     
 def ObjectWrap(value):
