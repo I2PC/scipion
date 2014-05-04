@@ -401,9 +401,6 @@ class OrderedObject(Object):
             attr = getattr(self, key)
             if attr.isPointer():
                 if attr.get() is value:
-                    print "already pointed value of: ", name, "key: ", key
-                    print "  attr.get()=", attr.get(), 'type=', type(attr.get())
-                    print "  value=", value, "type=", type(value)
                     return True
         return False
     
@@ -574,7 +571,6 @@ class Pointer(Object):
             if isinstance(self._extended, String):
                 value = self._objValue.getAttributeValue(self._extended.get())
             elif isinstance(self._extended, Integer):
-                print "Pointer.get: self._extended=", self._extended.get()
                 value = self._objValue[self._extended.get()]
             else:
                 raise Exception("Invalid type '%s' for pointer._extended property." % type(self._extended))

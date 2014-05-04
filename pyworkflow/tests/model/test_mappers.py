@@ -9,7 +9,7 @@ import os.path
 import unittest
 from pyworkflow.mapper import *
 from pyworkflow.object import *
-from pyworkflow.em.data import Acquisition
+from pyworkflow.em.data import Acquisition, SetOfImages, Image
 from pyworkflow.tests import *
 import pyworkflow.dataset as ds
 
@@ -293,14 +293,14 @@ class TestSqliteMapper(BaseTest):
     def setUpClass(cls):
         setupTestOutput(cls)
         cls.dataset = DataSet.getDataSet('model')  
-        cls.modelGoldSqlite = cls.dataset.getFile( 'modelGoldSqlite')
+        cls.modelGoldSqlite = cls.dataset.getFile('modelGoldSqlite')
 
 
     def test_SqliteMapper(self):
         fn = self.getOutputPath("basic.sqlite")
         mapper = SqliteMapper(fn)
         # Insert a Complex
-        c = Complex.createComplex()
+        c = Complex.createComplex() # real = 1, imag = 1
         mapper.insert(c)
         # Insert an Integer
         i = Integer(1)
@@ -314,7 +314,6 @@ class TestSqliteMapper(BaseTest):
         p = Pointer()
         p.set(c)
         mapper.insert(p)
-        
         
         # Store list
         strList = ['1', '2', '3']
