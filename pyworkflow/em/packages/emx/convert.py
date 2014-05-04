@@ -71,7 +71,6 @@ def importData(protocol, emxFile, outputDir):
     
     _micrographsFromEmx(protocol, emxData, emxFile, outputDir)
     _particlesFromEmx(protocol, emxData, emxFile, outputDir)
-    
 
 
 #---------------- Export related functions -------------------------------

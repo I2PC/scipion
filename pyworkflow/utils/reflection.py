@@ -60,9 +60,9 @@ def getSubclassesFromModules(BaseClass, modules, debug=False):
     for m in modules.values():
         if debug:
             print "loading module: ", m.__name__
-            if m.__name__ == 'emx':
-                from pprint import pprint
-                pprint(m.__dict__)
+#             if m.__name__ == 'emx':
+#                 from pprint import pprint
+#                 pprint(m.__dict__)
         subDict = getSubclasses(BaseClass, m.__dict__)
         for subclass in subDict.values():
             subclass._package = m
