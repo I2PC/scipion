@@ -44,11 +44,12 @@ class DataSet:
         """
         assert name in cls._datasetDict, "Dataset: %s dataset doesn't exist." % name
         folder = cls._datasetDict[name].folder
-        command = "%s %s/scipion testdata %s download" % (os.environ['SCIPION_PYTHON'],
-                                                          os.environ['SCIPION_HOME'],
-                                                          folder)
-        print ">>>> " + command
-        os.system(command)
+        if not 'SCIPION_DATA_NOSYNC' in os.environ:
+            command = "%s %s/scipion testdata %s download" % (os.environ['SCIPION_PYTHON'],
+                                                              os.environ['SCIPION_HOME'],
+                                                              folder)
+            print ">>>> " + command
+            os.system(command)
         return cls._datasetDict[name]
 
 
@@ -93,13 +94,11 @@ class Complex(Object):
     
     cGold = complex(1.0, 1.0)
     
-    
     def __init__(self, imag=0., real=0., **args):
         Object.__init__(self, **args)
         self.imag = Float(imag)
         self.real = Float(real)
         # Create reference complex values
-        
         
     def __str__(self):
         return '(%s, %s)' % (self.imag, self.real)
@@ -112,12 +111,12 @@ class Complex(Object):
         return True
     
     @classmethod
-    def createComplex(self):
+    def createComplex(cls):
         """Create a Complex object and set
-        values with self.cGold standard"""
+        values with cls.cGold standard"""
         c = Complex() # Create Complex object and set values
-        c.imag.set(self.cGold.imag)
-        c.real.set(self.cGold.real)
+        c.imag.set(cls.cGold.imag)
+        c.real.set(cls.cGold.real)
         return c
     
         
