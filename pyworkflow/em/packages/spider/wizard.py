@@ -54,7 +54,7 @@ class SpiderProtMaskWizard(ParticleMaskRadiusWizard):
         protParams = {}
         protParams['input']= protocol.inputParticles
         protParams['label']= "radius"
-        protParams['value']= protocol.maskRadius.get()
+        protParams['value']= protocol.radius.get()
         return protParams
     
     def _getProvider(self, protocol):
@@ -91,7 +91,6 @@ class SpiderParticlesMaskRadiiWizard(ParticlesMaskRadiiWizard):
     
 
 
-
 class SpiderFilterParticlesWizard(FilterParticlesWizard):    
     _targets = [(SpiderProtFilter, ['filterRadius', 'lowFreq', 'highFreq', 'temperature'])]
     
@@ -101,6 +100,7 @@ class SpiderFilterParticlesWizard(FilterParticlesWizard):
         protParams['label']= ["lowFreq", "highFreq", "temperature"]
         protParams['value']= [protocol.innerRadius.get(), protocol.outerRadius.get()]
         return protParams
+    
     
     def _getProvider(self, protocol):
         _objs = self._getParameters(protocol)['input']
@@ -126,7 +126,6 @@ class SpiderFilterParticlesWizard(FilterParticlesWizard):
             dialog.showWarning("Input particles", "Select particles first", form.root)  
     
     
-
 
 
 #--------------- Dialogs used by Wizards --------------------------        

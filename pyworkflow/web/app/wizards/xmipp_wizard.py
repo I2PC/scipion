@@ -31,6 +31,7 @@ import xmipp
 from pyworkflow.em.wizard import EmWizard
 from django.shortcuts import render_to_response
 from django.http import HttpResponse
+from pyworkflow.em.packages.xmipp3.wizard import * 
 from pyworkflow.web.app.em_wizard import *
 
 
@@ -54,7 +55,6 @@ class XmippDownsamplingWeb(XmippDownsampleWizard):
     
             context = wiz_base(request, context)
             return render_to_response('wizards/wiz_downsampling.html', context)
-
 
 
 class XmippCTFWeb(XmippCTFWizard):
@@ -160,7 +160,7 @@ class XmippVolumeMaskRadiusWeb(XmippVolumeMaskRadiusWizard):
             
             xdim = getImageXdim(request, vols[0].getFileName())
             
-            params['value'] = validateMaskRadius(params['value'], xdim, radius=1)  
+            params['value'] = validateMaskRadius(params['value'], xdim, radius=1)
                
             context = {'typeObj': 'Volumes',
                        'objects': vols,

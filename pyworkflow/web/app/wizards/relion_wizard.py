@@ -31,33 +31,35 @@ import xmipp
 from pyworkflow.em.wizard import EmWizard
 from django.shortcuts import render_to_response
 from django.http import HttpResponse
+from pyworkflow.em.packages.relion.wizard import * 
 from pyworkflow.web.app.em_wizard import *
 
 
-
-def wiz_relion_bandpass(protocol, request):
-    particles = protocol.inputParticles.get()
+class RelionBandpassWeb(RelionBandpassWizard):
+    _environments = [WEB_DJANGO]
     
-    highFreq = protocol.iniLowPassFilter.get()
-    
-    res = validateParticles(particles)
-    
-    if res is not 1:
-        return HttpResponse(res)
-    else:
-        parts = getParticleSubset(particles.clone(),100)
+    def _run(self, protocol, request):
+        params = self._getParameters(protocol)
+        objs = params['input'].get()
         
-        if len(parts) == 0:
-            return HttpResponse("errorIterate")
+        res = validateParticles(objs)
+        
+        if res is not 1:
+            return HttpResponse(res)
         else:
-            context = {'objects': parts,
-                       'lowFreq': 0,
-                       'highFreq': highFreq,
-                       'decayFreq': 0,
-                       'unit': UNIT_PIXEL
+            particles = self._getParticles(objs)
+            
+            if len(particles) == 0:
+                return HttpResponse("errorIterate")
+            
+            context = {'typeObj':'Particles',
+                       'objects': particles,
+                       'params':params
                        }
             
             context = wiz_base(request, context)
             
             return render_to_response('wizards/wiz_relion_bandpass.html', context)
+
+
     
