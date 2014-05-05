@@ -29,7 +29,10 @@
 							{% endif %}>
 							{{param.label.get}}
 							</td>
-							<td style="width: 1em;">
+							
+<!-- 						<td style="1em;"> -->
+							<td>
+							
 						{% for paramLineName, paramLine in param.iterParams %}
 							{{paramLine.label.get}}
 							<input type="text" style="width: 2em;" id="{{paramLineName}}_input" data-objId="{{paramLine.htmlIdValue}}" name="{{paramLineName}}" value="{{paramLine.htmlValue}}" >
