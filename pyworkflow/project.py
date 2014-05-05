@@ -379,7 +379,7 @@ class Project(object):
                 node = g.getNode(r.strId())
                 for _, attr in r.iterInputAttributes():
                     if attr.hasValue():
-                        pointed = attr.get()
+                        pointed = attr.getObjValue()
                         # Only checking pointed object and its parent, if more levels
                         # we need to go up to get the correct dependencies
                         (#_checkInputAttr(node, attr) or 

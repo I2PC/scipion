@@ -295,7 +295,7 @@ class Object(object):
         the references should be updated.
         """
         for ptr in copyDict['internalPointers']:
-            pointedId = ptr.get().getObjId()
+            pointedId = ptr.getObjValue().getObjId()
             if  pointedId in copyDict:
                 ptr.set(copyDict[pointedId])
         
@@ -569,7 +569,7 @@ class Pointer(Object):
         """
         if self._extended is not None:
             if isinstance(self._extended, String):
-                value = self._objValue.getAttributeValue(self._extended.get())
+                value = getattr(self._objValue, self._extended.get(), default)
             elif isinstance(self._extended, Integer):
                 value = self._objValue[self._extended.get()]
             else:
