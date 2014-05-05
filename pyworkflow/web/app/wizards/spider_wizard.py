@@ -26,54 +26,107 @@
 
 import os
 from os.path import basename
+import xmipp
 
 from pyworkflow.em.wizard import EmWizard
 from django.shortcuts import render_to_response
 from django.http import HttpResponse
+from pyworkflow.em.packages.spider.wizard import * 
 from pyworkflow.web.app.em_wizard import *
 
 
-
-def wiz_spider_particle_mask_radius(protocol, request):
-    protParams = {}
-    protParams['input']= protocol.inputParticles
-    protParams['label']= "radius"
-    protParams['value']= protocol.radius.get()
-#    return em_wizard.wiz_particle_mask_radius(protocol, protParams, request)
-    return wiz_particle_mask_radius(protocol, protParams, request)
-
-
-def wiz_spider_particle_mask_radii(protocol, request):
-    protParams = {}
-    protParams['input']= protocol.inputParticles
-    protParams['label']= ["innerRadius", "outerRadius"]
-    protParams['value']= [protocol.innerRadius.get(), protocol.outerRadius.get()]
-#    return em_wizard.wiz_particles_mask_radii(protocol, protParams, request)
-    return wiz_particles_mask_radii(protocol, protParams, request)
-
-def wiz_filter_spider(protocol, request):
-    particles = protocol.inputParticles.get()
+class SpiderProtMaskWeb(SpiderProtMaskWizard):
+    _environments = [WEB_DJANGO]
     
-    res = validateParticles(particles) 
-    
-    if res is not 1:
-        return HttpResponse(res)
-    else:
-        parts = getParticleSubset(particles,100)
+    def _run(self, protocol, request):
+        params = self._getParameters(protocol)
+        objs = params['input'].get()
         
-        if len(parts) == 0:
-            return HttpResponse("errorIterate")
+        res = validateParticles(objs) 
+        
+        if res is not 1:
+            return HttpResponse(res)
         else:
-            context = {'objects': parts,
-                       'filterType': protocol.filterType.get(),
-                       'filterMode': protocol.filterMode.get(),
-                       'usePadding': protocol.usePadding.get(),
-                       'protocol': protocol,
+            particles = self._getParticles(objs)
+            
+            if len(particles) == 0:
+                return HttpResponse("errorIterate")
+            
+            xdim = getImageXdim(request, particles[0].text)
+            
+            params['value'] = validateMaskRadius(params['value'], xdim, radius=1)
+            
+            context = {'typeObj': 'Particles',
+                       'objects': self._getParticles(objs),
+                       'xdim':xdim,
+                       'params': params
+                       }
+        
+            context = wiz_base(request, context)
+            return render_to_response('wizards/wiz_particle_mask_radius.html', context)    
+
+
+class SpiderParticlesMaskRadiiWeb(SpiderParticlesMaskRadiiWizard):
+    _environments = [WEB_DJANGO]
+    
+    def _run(self, protocol, request):
+        params = self._getParameters(protocol)
+        objs = params['input'].get()
+        
+        res = validateParticles(objs) 
+        
+        if res is not 1:
+            return HttpResponse(res)
+        else:
+            particles = self._getParticles(objs)
+            
+            if len(particles) == 0:
+                return HttpResponse("errorIterate")
+            
+            xdim = getImageXdim(request, particles[0].text)
+
+            params['value'] = validateMaskRadius(params['value'], xdim, radius=2)               
+            
+            context = {'typeObj': 'Particles',
+                       'objects': particles,
+                       'xdim':xdim,
+                       'params': params
+                       }
+        
+            context = wiz_base(request, context)
+            return render_to_response('wizards/wiz_particles_mask_radii.html', context)    
+
+
+
+class SpiderFilterParticlesWeb(SpiderFilterParticlesWizard):
+    _environments = [WEB_DJANGO]
+    
+    def _run(self, protocol, request):
+        params = self._getParameters(protocol)
+        objs = params['input'].get()
+        
+        res = validateParticles(objs)
+        
+        if res is not 1:
+            return HttpResponse(res)
+        else:
+            particles = self._getParticles(objs)
+            
+            if len(particles) == 0:
+                return HttpResponse("errorIterate")
+            
+            params['value'] = proccessModeFilter(params['mode'], params['value'])
+            
+            context = {'typeObj':'Particles',
+                       'objects': particles,
+                       'params':params
                        }
             
             context = wiz_base(request, context)
             
             return render_to_response('wizards/wiz_filter_spider.html', context)
+
+
         
 #===============================================================================
 # UTILS

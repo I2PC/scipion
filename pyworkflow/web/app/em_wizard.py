@@ -45,7 +45,6 @@ from pyworkflow.em.packages.spider.convert import locationToSpider
 from pyworkflow.em.packages.spider.wizard import filter_spider
 from pyworkflow.em.packages.xmipp3.constants import *
 
-from pyworkflow.em.packages.xmipp3.wizard import * 
 
 # Imports for web wizards
 from pyworkflow.web.app.wizards.xmipp_wizard import *

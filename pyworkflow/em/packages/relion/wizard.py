@@ -36,29 +36,43 @@ from protocol_classify3d import ProtRelionClassify3D
 
 
 class RelionVolMaskRadiusWizard(VolumeMaskRadiusWizard):
-    _targets = [(ProtRelionClassify3D, ['maskRadius'])]
+    _targets = [(ProtRelionClassify3D, ['radius'])]
+    
+    def _getParameters(self, protocol):
+        protParams = {}
+        protParams['input']= protocol.inputVolumes
+        protParams['label']= ["radius"]
+        protParams['value']= protocol.radius.get()
+        return protParams  
     
     def _getProvider(self, protocol):
-        _objs = protocol.initial3DReference    
+        _objs = self._getParameters(protocol)['input']    
         return VolumeMaskRadiusWizard._getListProvider(self, _objs)
     
     def show(self, form):
-        _label = "maskRadius"
-        _value = form.protocol.maskRadius.get()
+        params = self._getParameters(form.protocol)
+        _value = params['value']
+        _label = params['label']
         VolumeMaskRadiusWizard.show(self, form, _value, _label, UNIT_PIXEL)
     
-    @classmethod    
-    def getView(self):
-        return "wiz_relion_volume_mask_radius" 
+
 
 class RelionBandpassWizard(FilterParticlesWizard):
     _targets = [(ProtRelionClassify3D, ['iniLowPassFilter'])]
-
+    
+    def _getParameters(self, protocol):
+        protParams = {}
+        protParams['input']= protocol.inputParticles
+        protParams['label']= ["radius"]
+        protParams['value']= protocol.radius.get()
+        return protParams  
+    
     def _getProvider(self, protocol):
-        _objs = protocol.inputParticles
+        _objs = self._getParameters(protocol)['input']
         return FilterParticlesWizard._getListProvider(self, _objs)
   
     def show(self, form):
+        params = self._getParameters(form.protocol)
         protocol = form.protocol
         provider = self._getProvider(protocol)
 
@@ -66,7 +80,7 @@ class RelionBandpassWizard(FilterParticlesWizard):
             self.mode = FILTER_LOW_PASS_NO_DECAY
             
             args = {'mode':  self.mode,                   
-                    'highFreq': protocol.iniLowPassFilter.get(),
+                    'highFreq': params['value'],
                     'unit': UNIT_ANGSTROM
                     }
             
@@ -79,8 +93,4 @@ class RelionBandpassWizard(FilterParticlesWizard):
                 form.setVar('iniLowPassFilter', 1/d.getHighFreq()*d.itemDim)
         else:
             dialog.showWarning("Input particles", "Select particles first", form.root)  
-    
-    @classmethod    
-    def getView(self):
-        return "wiz_relion_filter_particles"   
 
