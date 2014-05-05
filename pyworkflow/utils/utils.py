@@ -115,6 +115,26 @@ class Timer(object):
     def toc(self, message='Elapsed:'):
         print message, prettyDelta(datetime.now()-self._dt) 
         
+
+def timeit(func):
+    """ Decorator function to have a simple measurement
+    of the execution time of a given function.
+    Just use:
+    @timeit
+    def func(...)
+        ...
+    to use it.
+    """
+    def timedFunc(*args, **kwargs):
+        t = Timer()
+        t.tic()
+        result = func(*args, **kwargs)
+        t.toc("Function '%s' took" % func)
+        
+        return result
+        
+    return timedFunc
+        
     
 def prettyDict(d):
     import pprint
