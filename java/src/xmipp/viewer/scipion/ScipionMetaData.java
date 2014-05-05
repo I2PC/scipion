@@ -59,18 +59,18 @@ public class ScipionMetaData extends MetaData{
                        self = clsname;
                    continue;
                }
-               switch(clsname)
-                {
-                    case "Integer":
+               if (clsname.equals("Integer"))
+               {
                         type = MetaData.LABEL_INT;
-                        break;
-                    case "Float":
+               } 
+               else if (clsname.equals("Float"))
+               {
                         type = MetaData.LABEL_DOUBLE;
-                        break;
-                    default:
+               }
+               else
+               {
                         type = MetaData.LABEL_STRING;
-                }
-               
+               }
                
                labels.put(name, labels.size());
                label = labels.get(name);
