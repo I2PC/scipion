@@ -29,8 +29,8 @@ Text based widgets.
         
 import Tkinter as tk
 import ttk, os, gui
-from pyworkflow.utils import *
-from widgets import Scrollable, Button, IconButton
+from widgets import Scrollable, IconButton
+from pyworkflow.utils import HYPER_BOLD, HYPER_ITALIC, HYPER_LINK1, HYPER_LINK2, parseHyperText
 from pyworkflow.utils.properties import Message, Color, Icon
 
 
@@ -340,7 +340,7 @@ class OutputText(Text):
             
         self.config(state=tk.NORMAL)
         #self.clear()
-        if exists(self.filename):
+        if os.path.exists(self.filename):
             textfile = open(self.filename)
             lineNo = 1
             for line in textfile:
