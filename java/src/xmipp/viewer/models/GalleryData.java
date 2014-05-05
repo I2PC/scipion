@@ -39,6 +39,7 @@ import xmipp.jni.MetaData;
 import xmipp.jni.MDRow;
 import xmipp.utils.DEBUG;
 import xmipp.utils.Params;
+import xmipp.utils.StopWatch;
 import xmipp.utils.XmippStringUtils;
 import xmipp.viewer.windows.GalleryJFrame;
 
@@ -55,11 +56,11 @@ public class GalleryData {
 
 	public ArrayList<ColumnInfo> labels = null;
 	// First label that can be rendered
-	ColumnInfo ciFirstRender = null;
+	public ColumnInfo ciFirstRender = null;
 	public int zoom;
-	private String filename;
+	protected String filename;
 	public int resliceView;
-        private Mode mode;
+        protected Mode mode;
 	public boolean showLabel = false;
 	public boolean renderImages;
 	public Params parameters;
@@ -83,10 +84,10 @@ public class GalleryData {
 	// Flags to check if md or classes has changed
 	private boolean hasMdChanges, hasClassesChanges;
 	public Window window;
-        private String[] renderLabels;
-        private String renderLabel;
-        private String[] visibleLabels;
-        private String[] orderLabels;
+        protected String[] renderLabels;
+        protected String renderLabel;
+        protected String[] visibleLabels;
+        protected String[] orderLabels;
 
     
 
@@ -113,6 +114,7 @@ public class GalleryData {
 	public GalleryData(Window window, String fn, Params parameters, MetaData md) {
 		this.window = window;
 		try {
+                        
 			selectedBlock = "";
 			this.parameters = parameters;
 			zoom = parameters.zoom;
@@ -248,6 +250,7 @@ public class GalleryData {
 			for (int i = 0; i < ids.length && image == null; ++i) {
 				imageFn = Filename.findImagePath(
 						md.getValueString(renderLabel, ids[i]), filename, true);
+                                
 				// DEBUG.printFormat("imageFn1: %s", imageFn);
 				// imageFn = Filename.fixPath(md.getValueString(renderLabel,
 				// ids[i]), filename, false);
@@ -514,6 +517,7 @@ public class GalleryData {
 			mode = Mode.GALLERY_VOL;
 		else
 			mode = Mode.GALLERY_MD;
+                
 	}
 
 	/** following function only should be used in VolumeGallery mode */
@@ -1056,6 +1060,7 @@ public class GalleryData {
        }
        
        public boolean isRenderLabel(ColumnInfo ci) {
+           
            if(renderLabel.equals("first"))
                return ci.allowRender;
            for(String i: renderLabels)
