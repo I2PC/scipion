@@ -147,7 +147,7 @@ class Text(tk.Text, Scrollable):
         try:
             self.selection = self.selection_get()
             self.menu.post(e.x_root, e.y_root)    
-        except TclError, e:
+        except tk.TclError, e:
             pass
     
     def copyToClipboard(self, e=None):
