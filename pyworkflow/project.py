@@ -34,7 +34,7 @@ from pyworkflow.em import *
 from pyworkflow.apps.config import *
 from pyworkflow.protocol import *
 from pyworkflow.mapper import SqliteMapper
-from pyworkflow.utils import cleanPath, makePath, makeFilePath, join, exists, runJob, copyFile
+from pyworkflow.utils import cleanPath, makePath, makeFilePath, join, exists, runJob, copyFile, timeit
 from pyworkflow.utils.graph import Graph
 from pyworkflow.hosts import HostMapper, HostConfig
 import pyworkflow.protocol.launch as jobs
@@ -47,6 +47,7 @@ PROJECT_TMP = 'Tmp'
 PROJECT_SETTINGS = 'settings.sqlite'
 
 
+        
 class Project(object):
     """This class will handle all information 
     related with a Project"""
@@ -282,14 +283,68 @@ class Project(object):
         newProt = protocolClass(project=self)
         newProt.setMapper(self.mapper)
         newProt.setProject(self)
+        
         return newProt
+                      
+    def __getIOMatches(self, node, childNode):
+        """ Check if some output of node is used as input in childNode.
+        Return the list of attribute names that matches.
+        Used from self.copyProtocol
+        """
+        matches = []
+        for oKey, oAttr in node.run.iterOutputAttributes(EMObject):
+            for iKey, iAttr in childNode.run.iterInputAttributes():
+                if oAttr is iAttr.get():
+                    matches.append((oKey, iKey))
+        
+        return matches                    
         
     def copyProtocol(self, protocol):
         """ Make a copy of the protocol, return a new one with copied values. """
-        newProt = self.newProtocol(protocol.getClass())
-        newProt.copyDefinitionAttributes(protocol)
+        result = None
         
-        return newProt
+        if isinstance(protocol, Protocol):
+            newProt = self.newProtocol(protocol.getClass())
+            newProt.copyDefinitionAttributes(protocol)
+            result = newProt
+    
+        elif isinstance(protocol, list):
+            # Handle the copy of a list of protocols
+            # for this case we need to update the references of input/outputs
+            newDict = {}
+                        
+            for prot in protocol:
+                newProt = self.newProtocol(prot.getClass())
+                newProt.copyDefinitionAttributes(prot)
+                newDict[prot.getObjId()] = newProt
+                self.saveProtocol(newProt)
+                         
+            g = self.getRunsGraph(refresh=False)
+            
+            for prot in protocol:
+                node = g.getNode(prot.strId())
+                newProt = newDict[prot.getObjId()]
+                
+                for childNode in node.getChilds():
+                    newChildProt = newDict.get(childNode.run.getObjId(), None)
+                    
+                    if newChildProt:
+                        # Get the matches between outputs/inputs of node and childNode
+                        matches = self.__getIOMatches(node, childNode)
+                        #print "%s -> %s, matches: %s" % (prot.getRunName(), childNode.runmatches
+                        # For each match, set the pointer and the extend attribute
+                        # to reproduce the dependencies in the new workflow
+                        for oKey, iKey in matches:
+                            childPointer = getattr(newChildProt, iKey)
+                            childPointer.set(newProt)
+                            childPointer.setExtendedAttribute(oKey)
+                        self.mapper.store(newChildProt)                   
+
+            self.mapper.commit()
+        else:
+            raise Exception("Project.copyProtocol: invalid input protocol type '%s'." % type(protocol))
+    
+        return result
     
     def saveProtocol(self, protocol):
         # Read only mode
@@ -390,8 +445,7 @@ class Project(object):
                         pointed = attr.getObjValue()
                         # Only checking pointed object and its parent, if more levels
                         # we need to go up to get the correct dependencies
-                        (#_checkInputAttr(node, attr) or 
-                         _checkInputAttr(node, pointed) or 
+                        (_checkInputAttr(node, pointed) or 
                          _checkInputAttr(node, self.mapper.getParent(pointed))
                         )
             rootNode = g.getRoot()
