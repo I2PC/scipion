@@ -236,7 +236,7 @@ def get_image_gaussian(request):
     # from PIL import Image
     img = getPILImage(imgXmipp, dim)
         
-    response = HttpResponse(mimetype="imag($(this))e/png")
+    response = HttpResponse(mimetype="image/png")
     img.save(response, "PNG")
     return response
 
