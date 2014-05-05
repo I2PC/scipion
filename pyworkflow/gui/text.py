@@ -78,7 +78,7 @@ class Text(tk.Text, Scrollable):
         defaults.update(opts)
         Scrollable.__init__(self, master, tk.Text, wrap=tk.WORD, **opts)
         self._createWidgets(master, **defaults)
-        self.configureTags()        
+        self.configureTags()
 
     def _createWidgets(self, master, **opts):
         """This is an internal function to create the Text, the Scrollbar and the Frame"""
@@ -153,10 +153,7 @@ class Text(tk.Text, Scrollable):
     def copyToClipboard(self, e=None):
         self.clipboard_clear()
         self.clipboard_append(self.selection)
-        
-    def openFile(self):
-        openFile(self.selection)
-        
+
     def updateMenu(self, e=None):
         state = 'normal'
         #if not xmippExists(self.selection):
@@ -197,8 +194,8 @@ class Text(tk.Text, Scrollable):
 from xmipp import XMIPP_MAGENTA, XMIPP_BLUE, XMIPP_GREEN, XMIPP_RED, XMIPP_YELLOW, XMIPP_CYAN, colorStr
 
 colorMap = {'red': XMIPP_RED, 'blue': XMIPP_BLUE,
-                'green': XMIPP_GREEN, 'magenta': XMIPP_MAGENTA,
-                'yellow': XMIPP_YELLOW, 'cyan': XMIPP_CYAN}
+            'green': XMIPP_GREEN, 'magenta': XMIPP_MAGENTA,
+            'yellow': XMIPP_YELLOW, 'cyan': XMIPP_CYAN}
 
 
 blueStr = lambda s: colorStr(XMIPP_BLUE, s)
@@ -207,7 +204,7 @@ greenLowStr = lambda s: colorStr(XMIPP_GREEN, s, 0)
 failStr = redStr = lambda s: colorStr(XMIPP_RED, s)
 headerStr = magentaStr = lambda s: colorStr(XMIPP_MAGENTA, s)
 yellowStr = lambda s: colorStr(XMIPP_YELLOW, s)
-cyanStr = warnStr = cyanStr = lambda s: colorStr(XMIPP_CYAN, s)
+cyanStr = warnStr = lambda s: colorStr(XMIPP_CYAN, s)
 
 
 def findColor(color):
