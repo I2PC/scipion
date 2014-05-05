@@ -49,6 +49,8 @@ from pyworkflow.em.packages.xmipp3.wizard import *
 
 # Imports for web wizards
 from pyworkflow.web.app.wizards.xmipp_wizard import *
+from pyworkflow.web.app.wizards.spider_wizard import *
+from pyworkflow.web.app.wizards.relion_wizard import *
 
 
 #===============================================================================
@@ -75,7 +77,7 @@ def wizard(request):
 
 
 #===============================================================================
-#    Wizard common resources (to build the context)    
+#    Wizard common resources (to build the context)
 #===============================================================================
 
 def wiz_base(request, context):
@@ -131,31 +133,24 @@ def proccessModeFilter(mode, value):
 #    
     return value
 
-
-def getParticleSubset(particles, num):
-    """
-    Method to prepare the particles to use a wizard
-    """
-    particleList = []
-    for i, part in enumerate(particles):
-        
-        # Cloning the particle
-        particle = part.clone() 
-        
-        if i == num: # Only load up to NUM particles
-            break
-        particle.text = particle.getFileName()
-        particle.basename = basename(particle.text)
-        
-        index = particle.getIndex()
-        if index:
-            particle.text = "%03d@%s" % (index, particle.text)
-            particle.basename = "%03d@%s" % (index, particle.basename)
-        
-        particleList.append(particle)
-
-    return particleList
-
+def validateMaskRadius(value, xdim, radius):
+    if radius == 1:
+        if value > xdim :
+            value = xdim
+        elif value == -1 :
+            value = xdim/2
+    elif radius == 2:
+        if value[0] > xdim :
+            value[0] = xdim
+        elif value[1] > xdim :
+            value[1] = xdim
+        elif value[0] == -1 :
+            value[0] = xdim/2
+        elif value[1] == -1 :
+            value[1] = xdim/2
+    
+    return value
+    
 
 def validateSet(setOf):
     """Validation for a set of micrographs."""
@@ -241,131 +236,7 @@ def get_image_gaussian(request):
     # from PIL import Image
     img = getPILImage(imgXmipp, dim)
         
-    response = HttpResponse(mimetype="imag($(this))e/png")
-    img.save(response, "PNG")
-    return response
-
-
-def wiz_filter_spider(protocol, request):
-    particles = protocol.inputParticles.get()
-    
-    res = validateParticles(particles) 
-    
-    if res is not 1:
-        return HttpResponse(res)
-    else:
-        parts = getParticleSubset(particles,100)
-        
-        if len(parts) == 0:
-            return HttpResponse("errorIterate")
-        else:
-            context = {'objects': parts,
-                       'filterType': protocol.filterType.get(),
-                       'filterMode': protocol.filterMode.get(),
-                       'usePadding': protocol.usePadding.get(),
-                       'protocol': protocol,
-                       }
-            
-            context = wiz_base(request, context)
-            
-            return render_to_response('wizards/wiz_filter_spider.html', context)
-       
-       
-#========================================================================
-# SPIDER
-#========================================================================
-
-def get_image_filter_spider(request):
-    """
-    Function to get the computing image with a spider filter applied
-    """
-    pars={}
-    
-    imagePath = request.GET.get('image', None)
-    dim = request.GET.get('dim', None)
-    filterType = int(request.GET.get('filterType', None))
-    pars["filterType"] = filterType
-    pars["filterMode"] = int(request.GET.get('filterMode', None))
-    pars["usePadding"] = request.GET.get('usePadding', None)    
-    pars["op"]="FQ"
-    
-    # Copy image to filter to Tmp project folder
-    outputName = os.path.join("Tmp", "filtered_particle")
-    outputPath = outputName + ".spi"
-    
-    outputLoc = (1, outputPath)
-    ih = ImageHandler()
-    ih.convert(xmippToLocation(imagePath), outputLoc)
-    outputLocSpiStr = locationToSpider(1, outputName)
-    
-    # check values
-    if filterType < 2:
-        pars["filterRadius"] = request.GET.get('radius', None)
-    else: 
-        pars["highFreq"] = float(request.GET.get('highFreq', None))
-        pars["lowFreq"] = float(request.GET.get('lowFreq', None))
-        if filterType == 2:
-            pars["temperature"] = request.GET.get('temperature', None)    
-
-    filter_spider(outputLocSpiStr, outputLocSpiStr, **pars)
-    
-    # Get output image and update filtered image
-    img = xmipp.Image()
-    locXmippStr = locationToXmipp(1, outputPath)
-    img.read(locXmippStr)
-    
-    # from PIL import Image
-    img = getPILImage(img, dim)
-    
     response = HttpResponse(mimetype="image/png")
     img.save(response, "PNG")
     return response
 
-def wiz_spider_particle_mask_radius(protocol, request):
-    protParams = {}
-    protParams['input']= protocol.inputParticles
-    protParams['label']= "radius"
-    protParams['value']= protocol.radius.get()
-#    return em_wizard.wiz_particle_mask_radius(protocol, protParams, request)
-    return wiz_particle_mask_radius(protocol, protParams, request)
-
-
-def wiz_spider_particle_mask_radii(protocol, request):
-    protParams = {}
-    protParams['input']= protocol.inputParticles
-    protParams['label']= ["innerRadius", "outerRadius"]
-    protParams['value']= [protocol.innerRadius.get(), protocol.outerRadius.get()]
-#    return em_wizard.wiz_particles_mask_radii(protocol, protParams, request)
-    return wiz_particles_mask_radii(protocol, protParams, request)
-
-
-#===============================================================================
-# RELION
-#===============================================================================
-
-def wiz_relion_bandpass(protocol, request):
-    particles = protocol.inputParticles.get()
-    
-    highFreq = protocol.iniLowPassFilter.get()
-    
-    res = validateParticles(particles)
-    
-    if res is not 1:
-        return HttpResponse(res)
-    else:
-        parts = getParticleSubset(particles.clone(),100)
-        
-        if len(parts) == 0:
-            return HttpResponse("errorIterate")
-        else:
-            context = {'objects': parts,
-                       'lowFreq': 0,
-                       'highFreq': highFreq,
-                       'decayFreq': 0,
-                       'unit': UNIT_PIXEL
-                       }
-            
-            context = wiz_base(request, context)
-            
-            return render_to_response('wizards/wiz_relion_bandpass.html', context)
-    

@@ -363,7 +363,7 @@ def project_content(request):
     
     context = base_flex(request, context)
     
-    return render_to_response('project_content.html', context)
+    return render_to_response('project_content/project_content.html', context)
 
 def protocol_info(request):
     from pyworkflow.web.app.views_util import parseText

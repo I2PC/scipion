@@ -160,7 +160,7 @@ def form(request):
     
     context = base_form(request, context)
     
-    return render_to_response('form.html', context)
+    return render_to_response('form/form.html', context)
 
 def PreprocessParamForm(request, param, paramName, wizards, viewerDict, visualize, protVar):
     if isinstance(param, MultiPointerParam):
