@@ -178,7 +178,6 @@ function launchToolbarProject(id, elm, type){
 	
 /** Graph Methods ***********************************************/
 
-
 function enableMultipleMarkGraph(elm){
 	if (elm.attr("selected") == "selected"){
 		elm.css("border", "");
@@ -232,7 +231,6 @@ function markElmGraph(node_id, graph){
 
 var event = jQuery("div#runTable").trigger(jQuery.Event("click"));
 
-
 function enableMultipleMarkList(elm){
 	if (elm.hasClass("selected")){
 		elm.removeClass("selected");
@@ -240,7 +238,6 @@ function enableMultipleMarkList(elm){
 		elm.addClass("selected");
 	}
 }
-
 
 function disableMultipleMarkList(id){
 	$.each($("tr"), function(){
@@ -250,7 +247,6 @@ function disableMultipleMarkList(id){
 		}
 	}) 
 }
-
 	
 function markElmList(row_id, graph){
 	/*
