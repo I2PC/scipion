@@ -304,17 +304,17 @@ class OutputText(Text):
     Implement a Text that will show file content
     and handle console metacharacter for colored output
     """
-    def __init__(self, master, filename, colors=True, refresh=0, goEnd=True, **opts):
+    def __init__(self, master, filename, colors=True, t_refresh=0, goEnd=True, **opts):
         """ colors flag indicate if try to parse color meta-characters
-            refresh is the refresh timedeltha in seconds, 0 means no refresh
+            t_refresh is the refresh time in seconds, 0 means no refresh
         """
         self.filename = filename
         self.colors = colors
-        self.refresh = refresh
-        self.refreshAlarm = None
+        self.t_refresh = t_refresh
+        self.refreshAlarm = None  # Identifier returned by after()
         self.lineNo = 0
         Text.__init__(self, master, **opts)
-        self.doRefresh(refresh)
+        self.doRefresh()
 
     def getDefaults(self):
         return {'bg': "black", 'fg':'white', 'bd':0, 'font': gui.fontNormal, 
@@ -354,49 +354,50 @@ class OutputText(Text):
         #if self.isAtEnd():
         self.goEnd();
         #if goEnd:
-        #    self.goEnd()        
+        #    self.goEnd()
       
-    def doRefresh(self, seconds):
-        self.stopRefresh() #Stop pending refreshes
-        self.readFile()
-        if seconds:
-            self.refreshAlarm = self.after(seconds*1000, self.doRefresh, seconds)
-    
-    def stopRefresh(self):
+    def doRefresh(self):
+        # First stop pending refreshes
         if self.refreshAlarm:
             self.after_cancel(self.refreshAlarm)
             self.refreshAlarm = None
 
-  
+        self.readFile()
+
+        if self.t_refresh > 0:
+            self.refreshAlarm = self.after(self.t_refresh*1000, self.doRefresh)
+
+
 class TextFileViewer(tk.Frame):
-    """ Implementation of a simple textfile viewer """
+    """ Implementation of a simple text file viewer """
     
     LabelBgColor = "white"
     
-    def __init__(self, master, filelist=[], 
+    def __init__(self, master, fileList=[],
                  allowSearch=True, allowRefresh=True, allowOpen=False):
         tk.Frame.__init__(self, master)
         self.searchList = None
         self.lastSearch = None
         self.refreshAlarm = None
         self._lastTabIndex = None
-        self.filelist = []
-        self.taList = []
+        self.fileList = []  # Files being visualized
+        self.taList = []  # Text areas (OutputText, a scrollable TkText)
         self.fontDict = {}
         self._allowSearch = allowSearch
         self._allowRefresh = allowRefresh
         self._allowOpen = allowOpen
-        self.createWidgets(filelist)
+
+        self.createWidgets(fileList)
         self.master = master
         self.addBinding()
         
     def addFile(self, filename):
-        self.filelist.append(filename)
+        self.fileList.append(filename)
         self._addFileTab(filename)
         
     def clear(self):
         """ Remove all added files. """
-        self.filelist = []
+        self.fileList = []
         for _ in self.taList:
             self.notebook.forget(0)       
         self.taList = []
@@ -411,7 +412,7 @@ class TextFileViewer(tk.Frame):
         tabText = "   %s   " % os.path.basename(filename)
         self.notebook.add(tab, text=tabText)        
     
-    def createWidgets(self, filelist):
+    def createWidgets(self, fileList):
         #registerCommonFonts()
         self.columnconfigure(0, weight=1)
         self.rowconfigure(1, weight=1)        
@@ -448,7 +449,7 @@ class TextFileViewer(tk.Frame):
         self.notebook = ttk.Notebook(tabsFrame)  
         self.notebook.rowconfigure(0, weight=1)
         self.notebook.columnconfigure(0, weight=1)      
-        for f in filelist:
+        for f in fileList:
             self._addFileTab(f)
         self.notebook.grid(column=0, row=0, sticky='nsew', padx=5, pady=5)   
         self.notebook.bind('<<NotebookTabChanged>>', self._tabChanged)
@@ -544,7 +545,7 @@ class TextFileViewer(tk.Frame):
         
     def _openExternal(self):
         """ Open a new window with an external viewer. """
-        showTextFileViewer("File viewer", self.filelist, self.windows)
+        showTextFileViewer("File viewer", self.fileList, self.windows)
   
   
 def showTextFileViewer(title, filelist, parent=None, main=False):
