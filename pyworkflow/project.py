@@ -225,15 +225,23 @@ class Project(object):
                 break
         self.launchProtocol(protocol)
         
-    def __protocolInList(self, prot, protocolList):
+    def __protocolInList(self, prot, protocols):
         """ Check if a protocol is in a list comparing the ids. """
-        for p in protocolList:
+        for p in protocols:
             if p.getObjId() == prot.getObjId():
                 return True
         return False
     
+    def __validDependency(self, prot, child, protocols):
+        """ Check if the given child is a true dependency of the protocol
+        in order to avoid any modification.
+        """
+        return (not self.__protocolInList(child, protocols) and
+                not child.isSaved()) 
+        
+    
     def _checkProtocolsDependencies(self, protocols, msg):
-        """ Check if the protocols have depencies (not in allowedChilds).
+        """ Check if the protocols have depencies.
         This method is used before delete or save protocols to be sure
         it is not referenced from other runs. (an Exception is raised)
         Params:
@@ -245,7 +253,7 @@ class Project(object):
         for prot in protocols:
             node = self.getRunsGraph().getNode(prot.strId())
             if node:
-                childs = [node.run for node in node.getChilds() if not self.__protocolInList(node.run, protocols)]
+                childs = [node.run for node in node.getChilds() if self.__validDependency(prot, node.run, protocols)]
                 if childs:
                     deps = [' ' + c.getRunName() for c in childs]
                     error += '\n *%s* is referenced from:\n   - ' % prot.getRunName()
