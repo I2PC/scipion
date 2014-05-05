@@ -22,7 +22,8 @@ class TestSpiderWorkflow(TestWorkflow):
             raise Exception('Import of images: %s, failed. outputParticles is None.' % pattern)
         
         protFilter = SpiderProtFilter()
-        protFilter.inputParticles.set(protImport.outputParticles)
+        protFilter.inputParticles.set(protImport)
+        protFilter.inputParticles.setExtendedAttribute('outputParticles')
         self.proj.launchProtocol(protFilter, wait=True)
         
         protAPSR = SpiderProtAlignAPSR()
