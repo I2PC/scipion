@@ -97,11 +97,8 @@ class XmippParticleMaskRadiusWeb(XmippParticleMaskRadiusWizard):
                 return HttpResponse("errorIterate")
             
             xdim = getImageXdim(request, particles[0].text)
-    
-            if params['value'] > xdim :
-                params['value'] = xdim
-            elif params['value'] == -1 :
-                params['value'] = xdim/2
+            
+            params['value'] = validateMaskRadius(params['value'], xdim, radius=1)
             
             context = {'typeObj': 'Particles',
                        'objects': self._getParticles(objs),
@@ -131,16 +128,8 @@ class XmippParticleMaskRadiiWeb(XmippParticleMaskRadiiWizard):
                 return HttpResponse("errorIterate")
             
             xdim = getImageXdim(request, particles[0].text)
-            
-            if params['value'][0] > xdim :
-                params['value'][0] = xdim
-            elif params['value'][1] > xdim :
-                params['value'][1] = xdim
-            elif params['value'][0] == -1 :
-                params['value'][0] = xdim/2
-            elif params['value'][1] == -1 :
-                params['value'][1] = xdim/2
-                
+
+            params['value'] = validateMaskRadius(params['value'], xdim, radius=2)               
             
             context = {'typeObj': 'Particles',
                        'objects': particles,
@@ -170,12 +159,9 @@ class XmippVolumeMaskRadiusWeb(XmippVolumeMaskRadiusWizard):
                 return HttpResponse("errorIterate")
             
             xdim = getImageXdim(request, vols[0].getFileName())
-    
-            if params['value'] > xdim :
-                params['value'] = xdim
-            elif params['value'] == -1 :
-                params['value'] = xdim/2
             
+            params['value'] = validateMaskRadius(params['value'], xdim, radius=1)  
+               
             context = {'typeObj': 'Volumes',
                        'objects': vols,
                        'xdim':xdim,
@@ -204,15 +190,7 @@ class XmippVolumeMaskRadiiWeb(XmippVolumeRadiiWizard):
             
             xdim = getImageXdim(request, vols[0].getFileName())
             
-            if params['value'][0] > xdim :
-                params['value'][0] = xdim
-            elif params['value'][1] > xdim :
-                params['value'][1] = xdim
-            elif params['value'][0] == -1 :
-                params['value'][0] = xdim/2
-            elif params['value'][1] == -1 :
-                params['value'][1] = xdim/2
-                
+            params['value'] = validateMaskRadius(params['value'], xdim, radius=2)  
             
             context = {'typeObj': 'Volumes',
                        'objects': vols,
@@ -300,8 +278,6 @@ class XmippGaussianParticlesWeb(XmippGaussianParticlesWizard):
             if len(particles) == 0:
                 return HttpResponse("errorIterate")
 
-            #params['value'] = proccessModeFilter(params['mode'], params['value'])
-            
             context = {'typeObj':'Particles',
                        'objects': particles,
                        'params':params
@@ -328,8 +304,6 @@ class XmippGaussianVolumesWeb(XmippGaussianVolumesWizard):
             
             if len(volumes) == 0:
                 return HttpResponse("errorIterate")
-            
-            params['value'] = proccessModeFilter(params['mode'], params['value'])
             
             context = {'typeObj':'Volumes',
                        'objects': volumes,
