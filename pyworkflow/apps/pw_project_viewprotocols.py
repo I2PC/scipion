@@ -326,6 +326,8 @@ class RunIOTreeProvider(TreeProvider):
             
             if isinstance(obj, Pointer):
                 obj = obj.get()
+                if obj is None:
+                    return None
                 image = Icon.ACTION_IN
                 parent = self.inputStr
 #                objName = self.mapper.getFullName(obj)
