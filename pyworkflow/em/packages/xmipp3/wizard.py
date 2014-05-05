@@ -251,7 +251,7 @@ class XmippGaussianVolumesWizard(GaussianVolumesWizard):
     
     def _getParameters(self, protocol):
         protParams = {}
-        protParams['input']= protocol.inputParticles
+        protParams['input']= protocol.inputVolumes
         protParams['label']= "freqSigma"
         protParams['value']= protocol.freqSigma.get()
         return protParams  
