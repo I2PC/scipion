@@ -180,7 +180,7 @@ function launchToolbarProject(id, elm, type){
 		    break;
 	}
 	    
-	updateButtons(id, elm);
+	updateButtons(id, elm, "single");
 	row.show(); // Show toolbar
 }
 
@@ -212,9 +212,9 @@ function transposeElmMarked(status){
 			var elmToMark = $("tr#"+id);
 			
 			if(elm.attr("selected") == "selected"){
-				elmToMark.addClass("selected");
+				markSingleNodeList(elmToMark);
 			} else if (elm.attr("selected") != "selected" && elmToMark.hasClass("selected")){
-				elmToMark.removeClass("selected");
+				dismarkSingleNodeList(elmToMark);
 			}
 		});
 	}
@@ -253,36 +253,23 @@ function disableMultipleMarkGraph(id){
 	}) 
 }
 
-//function markElmGraphSingle(node_id, graph){
-//	/*
-//	 * Function used to mark the same protocol run when one is selected in the
-//	 * protocol run list and the view is changed to protocol run tree.
-//	 */
-//	var s = "graph_" + node_id;
-//
-//	if (s != "" || s != undefined) {
-//		// Get the node to be dismarked
-//		var nodeClear = graph.attr("data-option");
-//		
-//		if (nodeClear.length>0 && nodeClear != undefined) {
-//			// Clear the node
-//			dismarkSingleNodeGraph($("div#" + nodeClear));
-//		} 
-//		// setElement in graph
-//		graph.attr("data-option", s);
-//	
-//		// Highlight the node selected
-//		markSingleNodeGraph($("div#" + s));
-//	}
-//}
-
 /** List Methods ***********************************************/
+
+function markSingleNodeList(elm){
+	// Highlight the node
+	elm.addClass("selected");
+}
+
+function dismarkSingleNodeList(elm){
+	// Clear the node
+	elm.removeClass("selected");
+}
 
 function enableMultipleMarkList(elm){
 	if (elm.hasClass("selected")){
-		elm.removeClass("selected");
+		dismarkSingleNodeList(elm);
 	} else {
-		elm.addClass("selected");
+		markSingleNodeList(elm);
 	}
 }
 
@@ -290,32 +277,11 @@ function disableMultipleMarkList(id){
 	$.each($("tr"), function(){
 		var elm = $(this)
 		if(elm.hasClass("selected")){
-			elm.removeClass("selected")
+			dismarkSingleNodeList(elm);
 		}
 	}) 
 }
 	
-
-//function markElmListSingle(row_id, graph){
-//	/*
-//	 * Function used to mark the same protocol run when one is selected in the
-//	 * protocol run tree and the view is changed to protocol run list.
-//	 */
-//	var rowClear = $("tr.selected").attr("id");
-//	if (rowClear != "") {
-//		if (rowClear != row_id) {
-//			// Clear the row selected
-//			var elmClear = $("tr.selected");
-//			elmClear.removeClass("selected");
-//
-//			// setElement in table
-//			var elm = $("tr#" + row_id + ".runtr");
-////			launchToolbarList(row_id, elm);
-//			launchToolbarProject(row_id, elm, "list")
-//		}
-//	}
-//}	
-
 /******************************************************************************/
 
 
@@ -374,41 +340,52 @@ function fillTabs(id) {
 
 function showLog(log_type){
 	
-	if(log_type=="output_log"){
-		$("#tab-logs-output").css("display","")
-		$("#output_log").attr("class", "elm-header-log_selected")
-		html = $("#tab-logs-output").html()
+	switch (log_type) {
+		case "output_log":
+			
+			$("#tab-logs-output").css("display","")
+			$("#output_log").attr("class", "elm-header-log_selected")
+			html = $("#tab-logs-output").html()
+			
+			$("#tab-logs-error").css("display","none")
+			$("#error_log").attr("class", "elm-header-log")
+			
+			$("#tab-logs-scipion").css("display","none")
+			$("#scipion_log").attr("class", "elm-header-log")
+			
+		    break;
+		    
+		case "error_log":
+			
+			$("#tab-logs-output").css("display","none")
+			$("#output_log").attr("class", "elm-header-log")
+			
+			$("#tab-logs-error").css("display","")
+			$("#error_log").attr("class", "elm-header-log_selected")
+			html = $("#tab-logs-error").html()
+			
+			$("#tab-logs-scipion").css("display","none")
+			$("#scipion_log").attr("class", "elm-header-log")
 		
-		$("#tab-logs-error").css("display","none")
-		$("#error_log").attr("class", "elm-header-log")
+		    break;
+		    
+		case "scipion_log":
+			
+			$("#tab-logs-output").css("display","none")
+			$("#output_log").attr("class", "elm-header-log")
+			
+			$("#tab-logs-error").css("display","none")
+			$("#error_log").attr("class", "elm-header-log")
+			
+			$("#tab-logs-scipion").css("display","")
+			$("#scipion_log").attr("class", "elm-header-log_selected")
+			html = $("#tab-logs-scipion").html()
 		
-		$("#tab-logs-scipion").css("display","none")
-		$("#scipion_log").attr("class", "elm-header-log")
-		
-	}else if(log_type=="error_log"){
-		$("#tab-logs-output").css("display","none")
-		$("#output_log").attr("class", "elm-header-log")
-		
-		$("#tab-logs-error").css("display","")
-		$("#error_log").attr("class", "elm-header-log_selected")
-		html = $("#tab-logs-error").html()
-		
-		$("#tab-logs-scipion").css("display","none")
-		$("#scipion_log").attr("class", "elm-header-log")
-		
-	}else if(log_type=="scipion_log"){
-		$("#tab-logs-output").css("display","none")
-		$("#output_log").attr("class", "elm-header-log")
-		
-		$("#tab-logs-error").css("display","none")
-		$("#error_log").attr("class", "elm-header-log")
-		
-		$("#tab-logs-scipion").css("display","")
-		$("#scipion_log").attr("class", "elm-header-log_selected")
-		html = $("#tab-logs-scipion").html()
+		    break;
 	}
 	
 	$("#externalTool").attr("href","javascript:customPopupFileHTML('" + html +"','"+ log_type + "',1024,768)")
+
 }
 
 
@@ -446,27 +423,46 @@ function fillUL(type, list, ulId, icon) {
 	}
 }
 
-function updateButtons(id, elm){
+function updateButtons(id, elm, mode){
 	/*
 	 * Function to update the buttons in the toolbar and the tabs, after choose a new protocol run.
 	 */
-	// Action Edit Button
-	$("a#editTool").attr('href',
-	'javascript:popup("/form/?protocolId=' + id + '")');
 	
-	// Action Copy Button
-	$("a#copyTool").attr('href',
-	'javascript:popup("/form/?protocolId=' + id + '&action=copy' + '")');
-
-	// Action Delete Button
-	$("a#deleteTool").attr('href',
-			'javascript:deleteProtocolForm("' + id + '")');
-
-	// Action Browse Button
-	var aux = "javascript:alert('Not implemented yet')";
-	$("a#browseTool").attr('href', aux);
+	 if(mode == undefined){
+		 mode="single";
+	 }
 	
-	fillTabs(id);
+	 switch (mode){
+	 
+	 	case "single":
+	 		
+			// Action Edit Button
+			$("a#editTool").attr('href',
+			'javascript:popup("/form/?protocolId=' + id + '")');
+			
+			// Action Copy Button
+			$("a#copyTool").attr('href',
+			'javascript:popup("/form/?protocolId=' + id + '&action=copy' + '")');
+		
+			// Action Delete Button
+			$("a#deleteTool").attr('href',
+					'javascript:deleteProtocolForm("' + id + '")');
+		
+			// Action Browse Button
+			var aux = "javascript:alert('Not implemented yet')";
+			$("a#browseTool").attr('href', aux);
+	 		
+			break;
+			
+	 	case "multiple":
+	 		
+	 		//TODO
+	 		
+	 		break;
+	
+	 }
+	
+	 fillTabs(id);
 }
 
 function updateRow(id, elm, row){	
@@ -476,9 +472,9 @@ function updateRow(id, elm, row){
 	 */
 	if (row.attr('value') != undefined && row.attr('value') != id) {
 		var rowOld = $("tr#" + row.attr('value'));
-		rowOld.removeClass('selected')
+		dismarkSingleNodeList(rowOld);
 	}
-	elm.addClass('selected')
+	markSingleNodeList(elm)
 
 	// add id value into the toolbar
 	row.attr('value', id);
@@ -495,13 +491,11 @@ function updateTree(id, elm, row){
 	if (oldSelect != selected) {
 		if (oldSelect != "") {
 			var aux = "div#" + oldSelect + ".window";
-			$(aux).css("border", "");
-			elm.removeAttr("selected")
+			dismarkSingleNodeGraph($(aux))
 		}
 		row.attr('value', id);
 		$("div#graphActiv").attr("data-option", selected);
-		elm.css("border", "2.5px solid Firebrick");
-		elm.attr("selected", "selected")
+		markSingleNodeGraph(elm)
 	}
 }
 
@@ -590,9 +584,10 @@ function switchGraph() {
 		graph.attr("data-time", "not");
 	} 
 	
+	// Keep the consistency about the selected elements between
+	// the list and graph views.
 	transposeElmMarked(status);
-	//markElmGraphSingle(id, graph);
-	//markElmListSingle(id, graph);
+
 }
 
 function updateGraphView(status) {
