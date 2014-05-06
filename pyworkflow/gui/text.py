@@ -36,7 +36,7 @@ from pyworkflow.utils.properties import Message, Color, Icon
 
 
 class HyperlinkManager:
-    """ Tkinter Text Widget Hyperlink Manager, take from:
+    """ Tkinter Text Widget Hyperlink Manager, taken from:
     http://effbot.org/zone/tkinter-text-hyperlink.htm """
     def __init__(self, text):
         self.text = text
@@ -260,7 +260,7 @@ def configureColorTags(text):
        
 class TaggedText(Text):  
     """
-    Implement a Text that will recognized some basic tags
+    Implement a Text that will recognize some basic tags
     *some_text* will display some_text in bold
     _some_text_ will display some_text in italic
     some_link or [[some_link][some_label]] will display some_link as hiperlink or some_label as hiperlink to some_link
