@@ -119,8 +119,6 @@ function callPaintGraph() {
 	 * This function paint the protocol graph in the template project_content.html
 	 */ 
 	
-//	$("img#loading").show();
-	
 	// Draw the boxes
 	var nodeSource = $("div#graphActiv");
 	
@@ -138,7 +136,6 @@ function callPaintGraph() {
 		var id = jQuery(this).attr('id');
 		var idNew = "graph_" + id;
 
-//		var name = jQuery(this).attr('data-name');
 		var name = jQuery(this).attr('data-label');
 		if (name==""){
 			name = jQuery(this).attr('data-name');
@@ -185,23 +182,9 @@ function callPaintGraph() {
 				}
 			}
 			
-			// If you choose first a element in the table, the equivalent node
-			// must be flashlighted in the graph
-			
-			if ($("tr.selected").attr("id") != undefined) {
-				var selected = "graph_" + $("tr.selected").attr("id");
-				$("div#graphActiv").attr("data-option", selected);
-				var elm = $("div#" + selected + ".window");
-				var aux = elm.attr("style");
-				aux += "border:2.5px solid Firebrick;"
-				elm.attr("style", aux);
-			}
-			
-//			$("img#loading").hide();
-			nodeSource.css("margin-top","0")
-			
 		}
 	});
+	
 	jsPlumb.draggable($(".window"));
 }
 
@@ -215,7 +198,6 @@ function paintBox(nodeSource, id, msg) {
 		var objId = id.replace("graph_", "");
 		var href = "javascript:customPopup('/form/?protocolId=" + objId + "',620,591)";
 		var projName = $("div#graphActiv").attr("data-project");
-//		var onclick = "updateTabs('" + projName + "', '" + objId + "',($(this)))";
 		var onclick = "launchToolbarTree('" + objId	+ "',($(this)))";
 		var aux = '<div class="window" style="" onclick="' + onclick + '" id="'
 				+ id + '"><a href="' + href + '"><strong>' + msg
@@ -224,9 +206,8 @@ function paintBox(nodeSource, id, msg) {
 		var aux = '<div class="window" style="" id="' + id + '"><strong>' + msg
 				+ '</strong><br /></div>';
 	}
-	// + '</strong><br /><span id="nodeStatus" data-val="hola"></span></div>';
+	
 	nodeSource.append(aux);
-//	var oldSelect = $("div#graphActiv").attr("data-option");
 }
 
 function addStatusBox(id, status) {
@@ -234,7 +215,6 @@ function addStatusBox(id, status) {
 	 * Function add a new status in a node from the protocol graph.
 	 */
 	
-//	$("div#" + id + ".window").append(status);
 	$("div#" + id + ".window").find("#nodeStatus").html(status);
 }
 
