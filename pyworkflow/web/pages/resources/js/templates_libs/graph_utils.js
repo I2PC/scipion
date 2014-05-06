@@ -119,7 +119,7 @@ function callPaintGraph() {
 	 * This function paint the protocol graph in the template project_content.html
 	 */ 
 	
-	$("img#loading").show();
+//	$("img#loading").show();
 	
 	// Draw the boxes
 	var nodeSource = $("div#graphActiv");
@@ -155,6 +155,7 @@ function callPaintGraph() {
 		type : "GET",
 		url : '/project_graph/?list=' + aux,
 		dataType : "json",
+		async: false,
 		success : function(json) {
 		
 			// Iterate over the nodes and position in the screen
@@ -196,7 +197,7 @@ function callPaintGraph() {
 				elm.attr("style", aux);
 			}
 			
-			$("img#loading").hide();
+//			$("img#loading").hide();
 			nodeSource.css("margin-top","0")
 			
 		}

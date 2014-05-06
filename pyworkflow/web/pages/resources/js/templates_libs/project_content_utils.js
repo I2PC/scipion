@@ -183,6 +183,42 @@ function launchToolbarProject(id, elm, type){
 	updateButtons(id, elm);
 	row.show(); // Show toolbar
 }
+
+function transposeElmMarked(status){
+
+	if (status == 'inactive') {
+		// Transpose elements in the list marked to the graph
+		
+		$.each($("tr"), function(){
+			var elm = $(this);
+			var id = elm.attr("id");
+			var elmToMark = $("#graph_"+id);
+			
+//			if(elm.hasClass("selected") && elmToMark.attr("selected")!="selected"){
+			if(elm.hasClass("selected")){
+				markSingleNodeGraph(elmToMark);
+			} else if(!elm.hasClass("selected") && elmToMark.attr("selected")=="selected"){
+				dismarkSingleNodeGraph(elmToMark);
+			} 
+			
+		});
+	}
+	else if (status == 'active') {
+		// Transpose elements in the graph marked to the list
+		
+		$.each($(".window"), function(){
+			var elm = $(this);
+			var id = elm.attr("id").split("_").pop();
+			var elmToMark = $("tr#"+id);
+			
+			if(elm.attr("selected") == "selected"){
+				elmToMark.addClass("selected");
+			} else if (elm.attr("selected") != "selected" && elmToMark.hasClass("selected")){
+				elmToMark.removeClass("selected");
+			}
+		});
+	}
+}
 	
 /** Graph Methods ***********************************************/
 
@@ -210,35 +246,35 @@ function enableMultipleMarkGraph(elm){
 
 function disableMultipleMarkGraph(id){
 	$.each($(".window"), function(){
-		elm = $(this)
+		var elm = $(this)
 		if (elm.attr("id") != "graph_"+id && elm.attr("selected") != undefined){
 			dismarkSingleNodeGraph(elm)
 		}
 	}) 
 }
 
-function markElmGraphSingle(node_id, graph){
-	/*
-	 * Function used to mark the same protocol run when one is selected in the
-	 * protocol run list and the view is changed to protocol run tree.
-	 */
-	var s = "graph_" + node_id;
-
-	if (s != "" || s != undefined) {
-		// Get the node to dismark
-		var nodeClear = graph.attr("data-option");
-		
-		if (nodeClear.length>0 && nodeClear != undefined) {
-			// Clear the node
-			dismarkSingleNodeGraph($("div#" + nodeClear));
-		} 
-		// setElement in graph
-		graph.attr("data-option", s);
-	
-		// Highlight the node selected
-		markSingleNodeGraph($("div#" + s));
-	}
-}
+//function markElmGraphSingle(node_id, graph){
+//	/*
+//	 * Function used to mark the same protocol run when one is selected in the
+//	 * protocol run list and the view is changed to protocol run tree.
+//	 */
+//	var s = "graph_" + node_id;
+//
+//	if (s != "" || s != undefined) {
+//		// Get the node to be dismarked
+//		var nodeClear = graph.attr("data-option");
+//		
+//		if (nodeClear.length>0 && nodeClear != undefined) {
+//			// Clear the node
+//			dismarkSingleNodeGraph($("div#" + nodeClear));
+//		} 
+//		// setElement in graph
+//		graph.attr("data-option", s);
+//	
+//		// Highlight the node selected
+//		markSingleNodeGraph($("div#" + s));
+//	}
+//}
 
 /** List Methods ***********************************************/
 
@@ -252,34 +288,35 @@ function enableMultipleMarkList(elm){
 
 function disableMultipleMarkList(id){
 	$.each($("tr"), function(){
-		elm = $(this)
+		var elm = $(this)
 		if(elm.hasClass("selected")){
 			elm.removeClass("selected")
 		}
 	}) 
 }
 	
-function markElmListSingle(row_id, graph){
-	/*
-	 * Function used to mark the same protocol run when one is selected in the
-	 * protocol run tree and the view is changed to protocol run list.
-	 */
-	var rowClear = $("tr.selected").attr("id");
-	if (rowClear != "") {
-		if (rowClear != row_id) {
-			// Clear the row selected
-			var elmClear = $("tr.selected");
-			elmClear.removeClass("selected");
 
-			// setElement in table
-			var elm = $("tr#" + row_id + ".runtr");
-			launchToolbarList(row_id, elm);
-		}
-	}
-}	
+//function markElmListSingle(row_id, graph){
+//	/*
+//	 * Function used to mark the same protocol run when one is selected in the
+//	 * protocol run tree and the view is changed to protocol run list.
+//	 */
+//	var rowClear = $("tr.selected").attr("id");
+//	if (rowClear != "") {
+//		if (rowClear != row_id) {
+//			// Clear the row selected
+//			var elmClear = $("tr.selected");
+//			elmClear.removeClass("selected");
+//
+//			// setElement in table
+//			var elm = $("tr#" + row_id + ".runtr");
+////			launchToolbarList(row_id, elm);
+//			launchToolbarProject(row_id, elm, "list")
+//		}
+//	}
+//}	
 
 /******************************************************************************/
-	
 
 
 function fillTabs(id) {
@@ -468,13 +505,6 @@ function updateTree(id, elm, row){
 	}
 }
 
-//function selectElmGraph(elm){
-//	if(elm.css("border") == ""){
-//		elm.css("border", "2.5px solid Firebrick");
-//	} else {
-//		elm.css("border", "");
-//	}
-//}
 
 function graphON(graph, icon_graph, list, icon_list){
 	/*
@@ -552,7 +582,7 @@ function switchGraph() {
 	var list = $("div#runTable");
 	var listTool = $("span#listTool");
 	
-	changeStatusGraph(status, graph, graphTool, list, listTool)
+	changeStatusGraph(status, graph, graphTool, list, listTool);
 		
 	// Graph will be painted once
 	if (graph.attr("data-time") == 'first') {
@@ -560,9 +590,9 @@ function switchGraph() {
 		graph.attr("data-time", "not");
 	} 
 	
-	
-	markElmGraphSingle(id, graph);
-	markElmListSingle(id, graph);
+	transposeElmMarked(status);
+	//markElmGraphSingle(id, graph);
+	//markElmListSingle(id, graph);
 }
 
 function updateGraphView(status) {
