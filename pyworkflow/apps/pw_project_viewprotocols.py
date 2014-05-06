@@ -512,7 +512,7 @@ class ProtocolsView(tk.Frame):
         self.updateRunsTree(True)
         self.updateRunsGraph(True)
         if not autoRefresh:
-            self.__autoRefreshCounter = 3 # start by 3 secs  
+            self.__autoRefreshCounter = 3 # start by 3 secs
             if self.__autoRefresh:
                 self.runsTree.after_cancel(self.__autoRefresh)
                 self.__autoRefresh = self.runsTree.after(self.__autoRefreshCounter*1000, self._automaticRefreshRuns)

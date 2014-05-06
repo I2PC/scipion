@@ -334,6 +334,8 @@ class OutputText(Text):
             self.open = lambda path: os.startfile(path)
         elif os.name == 'posix':
             self.open = lambda path: subprocess.call(['xdg-open', path])
+        else:  # oops
+            self.open = lambda path: sys.stdout.write('Unknown system\n')
 
     def getDefaults(self):
         return {'bg': "black", 'fg':'white', 'bd':0, 'font': gui.fontNormal, 
@@ -631,7 +633,6 @@ def showTextFileViewer(title, filelist, parent=None, main=False):
 
     
 if __name__ == '__main__':
-    import sys
     root = tk.Tk()
     root.withdraw()
     root.title("View files")
