@@ -555,7 +555,7 @@ def isReadOnly():
     except Exception, ex:
         mode = False
     
-    if mode:
+    if mode is True:
         print "Operation not valid for read-only mode."
     return mode
         
