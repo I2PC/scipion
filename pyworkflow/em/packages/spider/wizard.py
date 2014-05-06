@@ -98,14 +98,13 @@ class SpiderFilterParticlesWizard(FilterParticlesWizard):
         protParams = {}
         protParams['input']= protocol.inputParticles
         protParams['label']= ["lowFreq", "highFreq", "temperature"]
-        protParams['value']= [protocol.innerRadius.get(), protocol.outerRadius.get()]
+        protParams['value']= [protocol.getAttributeValue(a) for a in protParams['label']]
+        
         return protParams
-    
     
     def _getProvider(self, protocol):
         _objs = self._getParameters(protocol)['input']
         return FilterParticlesWizard._getListProvider(self, _objs)
-        
     
     def show(self, form):
         protocol = form.protocol
@@ -126,8 +125,6 @@ class SpiderFilterParticlesWizard(FilterParticlesWizard):
             dialog.showWarning("Input particles", "Select particles first", form.root)  
     
     
-
-
 #--------------- Dialogs used by Wizards --------------------------        
        
 #class SpiderGaussianFilterDialog(XmippDownsampleDialog):
