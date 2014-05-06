@@ -29,6 +29,9 @@ Text based widgets.
         
 import Tkinter as tk
 import ttk, os, gui
+import sys
+import webbrowser
+import subprocess
 from widgets import Scrollable, IconButton
 from pyworkflow.utils import HYPER_BOLD, HYPER_ITALIC, HYPER_LINK1, HYPER_LINK2, parseHyperText
 from pyworkflow.utils.properties import Message, Color, Icon
@@ -36,7 +39,7 @@ from pyworkflow.utils.properties import Message, Color, Icon
 
 
 class HyperlinkManager:
-    """ Tkinter Text Widget Hyperlink Manager, take from:
+    """ Tkinter Text Widget Hyperlink Manager, taken from:
     http://effbot.org/zone/tkinter-text-hyperlink.htm """
     def __init__(self, text):
         self.text = text
@@ -260,7 +263,7 @@ def configureColorTags(text):
        
 class TaggedText(Text):  
     """
-    Implement a Text that will recognized some basic tags
+    Implement a Text that will recognize some basic tags
     *some_text* will display some_text in bold
     _some_text_ will display some_text in italic
     some_link or [[some_link][some_label]] will display some_link as hiperlink or some_label as hiperlink to some_link
@@ -282,8 +285,7 @@ class TaggedText(Text):
             self.colors = configureColorTags(self) # Color can be unavailable, so disable use of colors    
         
     def openLink(self, link):
-        from  webbrowser import open
-        open(link, new=0) # Open in the same browner, new tab
+        webbrowser.open(link, new=0) # Open in the same browser, new tab
         
     def matchHyperText(self, match, tag):
         """ Process when a match a found and store indexes inside string."""
@@ -324,7 +326,14 @@ class OutputText(Text):
         self.lineNo = 0
         self.offset = 0
         Text.__init__(self, master, **opts)
+        self.hm = HyperlinkManager(self)
         self.doRefresh()
+        if sys.platform.startswith('darwin'):
+            self.open = lambda path: subprocess.call(['open', path])
+        elif os.name == 'nt':
+            self.open = lambda path: os.startfile(path)
+        elif os.name == 'posix':
+            self.open = lambda path: subprocess.call(['xdg-open', path])
 
     def getDefaults(self):
         return {'bg': "black", 'fg':'white', 'bd':0, 'font': gui.fontNormal, 
@@ -398,14 +407,16 @@ class OutputText(Text):
             textfile.seek(self.offset)
             size = (os.stat(self.filename).st_size - self.offset) / 1024  # in kB
             if size > 100:  # max size that we want to read (in kB)
-                self.addLines(textfile.read(10000).splitlines(True))
-                self.insert(tk.END, """
+                self.addLines(textfile.read(20000).splitlines(True))
+                self.insert(tk.END, """\n
+    ==> Too much data to read (%d kB) -- %d kB omitted
+    ==> Click """ % (size, size - 40))
+                self.insert(tk.END, self.filename,
+                            self.hm.add(lambda: self.open(self.filename)))
+                self.insert(tk.END, """ to open it with the default viewer
+    ==> Line numbers below are not in sync with the input data\n\n""")
 
-    [Too much data to read (%d kB) -- %d kB omitted]
-    [Line numbers below this line are not in sync with the input data]
-
-""" % (size, size - 20))
-                textfile.seek(-10000, 2)  # also show the last 10000 bytes
+                textfile.seek(-20000, 2)  # also show the last 10000 bytes
                 self.addLines(textfile)
             else:
                 self.addLines(textfile)
