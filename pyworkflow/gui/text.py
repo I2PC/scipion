@@ -29,6 +29,9 @@ Text based widgets.
         
 import Tkinter as tk
 import ttk, os, gui
+import sys
+import webbrowser
+import subprocess
 from widgets import Scrollable, IconButton
 from pyworkflow.utils import HYPER_BOLD, HYPER_ITALIC, HYPER_LINK1, HYPER_LINK2, parseHyperText
 from pyworkflow.utils.properties import Message, Color, Icon
@@ -36,7 +39,7 @@ from pyworkflow.utils.properties import Message, Color, Icon
 
 
 class HyperlinkManager:
-    """ Tkinter Text Widget Hyperlink Manager, take from:
+    """ Tkinter Text Widget Hyperlink Manager, taken from:
     http://effbot.org/zone/tkinter-text-hyperlink.htm """
     def __init__(self, text):
         self.text = text
@@ -206,17 +209,29 @@ headerStr = magentaStr = lambda s: colorStr(XMIPP_MAGENTA, s)
 yellowStr = lambda s: colorStr(XMIPP_YELLOW, s)
 cyanStr = warnStr = lambda s: colorStr(XMIPP_CYAN, s)
 
+# Console (and XMIPP) escaped colors, and the related tags that we create
+# with Text.tag_config(). This dict is used in OutputText:addLines(),
+# to avoid using findColor() et al
+color_tag = {'30': 'tag_gray',
+             '31': 'tag_red',
+             '32': 'tag_green',
+             '33': 'tag_yellow',
+             '34': 'tag_blue',
+             '35': 'tag_magenta',
+             '36': 'tag_cyan',
+             '37': 'tag_white'}
 
-def findColor(color):
+
+def findColor(line):
     '''This function will search if there are color characters present
     on string and return the color and positions on string'''
     for k, v in colorMap.iteritems():
         x, y = colorStr(v, "_..._").split("_..._")
-        fx = color.find(x)
-        fy = color.find(y)
+        fx = line.find(x)
+        fy = line.find(y)
         if fx != -1 and fy != -1:
-            color = color.replace(x, '').replace(y, '')
-            return (k, fx, fy, color)
+            line = line.replace(x, '').replace(y, '')
+            return (k, fx, fy, line)
     return None
 
 def insertColoredLine(text, line, tag=""):
@@ -248,7 +263,7 @@ def configureColorTags(text):
        
 class TaggedText(Text):  
     """
-    Implement a Text that will recognized some basic tags
+    Implement a Text that will recognize some basic tags
     *some_text* will display some_text in bold
     _some_text_ will display some_text in italic
     some_link or [[some_link][some_label]] will display some_link as hiperlink or some_label as hiperlink to some_link
@@ -270,8 +285,7 @@ class TaggedText(Text):
             self.colors = configureColorTags(self) # Color can be unavailable, so disable use of colors    
         
     def openLink(self, link):
-        from  webbrowser import open
-        open(link, new=0) # Open in the same browner, new tab
+        webbrowser.open(link, new=0) # Open in the same browser, new tab
         
     def matchHyperText(self, match, tag):
         """ Process when a match a found and store indexes inside string."""
@@ -310,8 +324,16 @@ class OutputText(Text):
         self.t_refresh = t_refresh
         self.refreshAlarm = None  # Identifier returned by after()
         self.lineNo = 0
+        self.offset = 0
         Text.__init__(self, master, **opts)
+        self.hm = HyperlinkManager(self)
         self.doRefresh()
+        if sys.platform.startswith('darwin'):
+            self.open = lambda path: subprocess.call(['open', path])
+        elif os.name == 'nt':
+            self.open = lambda path: os.startfile(path)
+        elif os.name == 'posix':
+            self.open = lambda path: subprocess.call(['xdg-open', path])
 
     def getDefaults(self):
         return {'bg': "black", 'fg':'white', 'bd':0, 'font': gui.fontNormal, 
@@ -321,32 +343,87 @@ class OutputText(Text):
         if self.colors:
             configureColorTags(self)
 
-    def addLine(self, line): 
+    def add(self, txt, tag=None):
+        if self.colors and tag:
+            self.insert(tk.END, txt, tag)
+        else:
+            self.insert(tk.END, txt)
+
+    def addLineNo(self):
         self.lineNo += 1
+        self.add("%05d:   " % self.lineNo, "tag_cyan")
+
+    def addLine(self, line):
+        self.addLineNo()
         if self.colors:
-            self.insert(tk.END, "%05d:   " % self.lineNo, "tag_cyan")  
             insertColoredLine(self, line)
         else:
-            self.insert(tk.END, "%05d:   " % self.lineNo)
-            self.insert(tk.END, line)   
-        
+            self.insert(tk.END, line)
+
+    def addLines(self, lines):
+        """Like addLine() but adds many at a time"""
+
+        # More efficient, allows several colors in the same line and
+        # does not rely on insertColoredLine() nor findColor()
+
+        # It would be much faster if we didn't have to prepend the
+        # line number (with addLineNo()) -- we wouldn't need the first "for"!
+
+        for line in lines:
+            self.addLineNo()  # 00001:   blah blah
+
+            # iter 1\riter 2\riter 3  -->  iter 3
+            if '\r' in line:
+                line = line[line.rfind('\r')+1:]  # overwriting!
+
+            # Find all the console escape codes and use the appropriate
+            # tag instead.
+            pos = 0
+            while True:
+                start = line.find('\x1b[', pos)
+                if start < 0:
+                    self.add(line[pos:])
+                    break
+                color_code = line[start+4:start+6]
+                end = line.find('\x1b[0m', start + 7)
+                if end < 0:  # what, no end for color formatting?
+                    # maybe we should also warn the user...
+                    self.add(line[start+7:], color_tag[color_code])
+                    break
+                self.add(line[start+7:end], color_tag[color_code])
+                pos = end + 4
+
     def readFile(self, clear=False):
         if clear:
+            self.offset = 0
             self.lineNo = 0
             self.clear()
-            
+
         self.config(state=tk.NORMAL)
         #self.clear()
         if os.path.exists(self.filename):
             textfile = open(self.filename)
-            lineNo = 1
-            for line in textfile:
-                if lineNo > self.lineNo:
-                    self.addLine(line)
-                lineNo += 1
+
+            textfile.seek(self.offset)
+            size = (os.stat(self.filename).st_size - self.offset) / 1024  # in kB
+            if size > 100:  # max size that we want to read (in kB)
+                self.addLines(textfile.read(20000).splitlines(True))
+                self.insert(tk.END, """\n
+    ==> Too much data to read (%d kB) -- %d kB omitted
+    ==> Click """ % (size, size - 40))
+                self.insert(tk.END, self.filename,
+                            self.hm.add(lambda: self.open(self.filename)))
+                self.insert(tk.END, """ to open it with the default viewer
+    ==> Line numbers below are not in sync with the input data\n\n""")
+
+                textfile.seek(-20000, 2)  # also show the last 10000 bytes
+                self.addLines(textfile)
+            else:
+                self.addLines(textfile)
+            self.offset = textfile.tell()  # save last position in file
             textfile.close()
         else:
-            self.addLine("File '%s' doesn't exist" % self.filename)
+            self.insert(tk.END, "File '%s' doesn't exist" % self.filename)
         self.config(state=tk.DISABLED)
         #if self.isAtEnd():
         self.goEnd();

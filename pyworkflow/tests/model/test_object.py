@@ -6,6 +6,7 @@ import unittest
 import filecmp
 
 from pyworkflow.object import *
+from pyworkflow.em.data import *
 from pyworkflow.tests import *
 
     
@@ -13,8 +14,6 @@ class ListContainer(Object):
     def __init__(self, **args):
         Object.__init__(self, **args)
         self.csv = CsvList() 
-
-
     
     
 class TestObject(BaseTest):
@@ -25,7 +24,6 @@ class TestObject(BaseTest):
         cls.dataset = DataSet.getDataSet('model')
         cls.modelGoldSqlite = cls.dataset.getFile( 'modelGoldSqlite')
         cls.modelGoldXml = cls.dataset.getFile( 'modelGoldXml')
-
             
     def test_Object(self):
         value = 2
@@ -40,20 +38,6 @@ class TestObject(BaseTest):
         f = Float(value)
         # make sure the shuffled sequence does not lose any elements
         self.assertEqual(value, f.get())
-        value = 'thisisanstring'
-        s = String(value)
-        self.assertEqual(value, s.get())
-        self.assertEqual(s.hasValue(), True)
-        
-        s2 = String()
-        # None value is considered empty
-        self.assertTrue(s2.empty(), "s2 string should be empty if None")
-        s2.set(' ')
-        # Only spaces is also empty
-        self.assertTrue(s2.empty(), "s2 string should be empty if only spaces")
-        s2.set('something')
-        # No empty after some value
-        self.assertFalse(s2.empty(), "s2 string should not be empty after value")
         
         a = Integer()
         self.assertEqual(a.hasValue(), False)
@@ -79,7 +63,62 @@ class TestObject(BaseTest):
         self.assertEqual(len(l), 0)
         
 
-
+    def test_String(self):
+        value = 'thisisanstring'
+        s = String(value)
+        self.assertEqual(value, s.get())
+        self.assertEqual(s.hasValue(), True)
+        
+        s2 = String()
+        # None value is considered empty
+        self.assertTrue(s2.empty(), "s2 string should be empty if None")
+        s2.set(' ')
+        # Only spaces is also empty
+        self.assertTrue(s2.empty(), "s2 string should be empty if only spaces")
+        s2.set('something')
+        # No empty after some value
+        self.assertFalse(s2.empty(), "s2 string should not be empty after value")
+        
+    def test_Pointer(self):
+        c = Complex.createComplex()
+        p = Pointer()
+        p.set(c)
+        p.setExtendedAttribute('Name')
+        c.Name = String('Paquito')
+        
+        self.assertEqual(p.get(), 'Paquito')
+        
+        fn = self.getOutputPath('test_images.sqlite')
+        imgSet = SetOfImages(filename=fn)
+        imgSet.setSamplingRate(1.0)
+        for i in range(10):
+            img = Image()
+            img.setLocation(i+1, "images.stk")
+            imgSet.append(img)
+         
+        imgSet.write()
+        
+        # Read again the set to be able to retrieve elements
+        imgSet = SetOfImages(filename=fn)
+        imgSet.setSamplingRate(1.0)
+        
+        print 'item1: ', imgSet[1]
+            
+        o = OrderedObject()
+        
+        o.pointer = Pointer()
+        o.pointer.set(imgSet)
+        
+        o.refC = o.pointer.get()
+        attrNames = [k for k, a in o.getAttributes()]
+        # Check that 'refC' should not appear in attributes
+        # since it is only an "alias" to an existing pointed value
+        self.assertNotIn('refC', attrNames)
+        
+        o.pointer.setExtendedItemId(7)
+        # Check that the Item 7 of the set is properly
+        # retrieved by the pointer after setting the extendedItemId to 7
+        self.assertEqual(imgSet[7], o.pointer.get())
         
         
 if __name__ == '__main__':

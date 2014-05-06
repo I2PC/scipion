@@ -532,8 +532,23 @@ class ParamWidget():
         showInfo("Info", msg, self.parent)
         
     def _showWizard(self, e=None):
-        wizClass = self.window.wizards[self.paramName]
+        wizClass = self.window.wizards[self.wizParamName]
         wizClass().show(self.window)
+        
+    def _findParamWizard(self):
+        """ Search if there are registered wizards for this param
+        or any of its subparams (for the case of Line groups)
+        """
+        if self.paramName in self.window.wizards:
+            self.wizParamName = self.paramName
+            return True
+        
+        if isinstance(self.param, Line):
+            for name, _ in self.param.iterParams():
+                self.wizParamName = name
+                return True
+        # Search in sub-params
+        return False
                
     @staticmethod
     def createBoolWidget(parent, **args):
@@ -625,10 +640,13 @@ class ParamWidget():
 
         if self.visualizeCallback is not None:
             self._addButton(Message.LABEL_BUTTON_VIS, Icon.ACTION_VISUALIZE, self._visualizeVar)    
-        if self.paramName in self.window.wizards:
+        
+        if self._findParamWizard():
             self._addButton(Message.LABEL_BUTTON_WIZ, Icon.ACTION_WIZ, self._showWizard)
+        
         if param.help.hasValue():
             self._addButton(Message.LABEL_BUTTON_HELP, Icon.ACTION_HELP, self._showHelpMessage)
+        
         self.var = var
         
     def _visualizeVar(self, e=None):

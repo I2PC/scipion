@@ -136,6 +136,9 @@ class Step(OrderedObject):
     def isFailed(self):
         return self.getStatus() == STATUS_FAILED
     
+    def isSaved(self):
+        return self.getStatus() == STATUS_SAVED
+    
     def run(self):
         """ Do the job of this step"""
         self.setRunning() 

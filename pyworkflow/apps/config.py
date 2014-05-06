@@ -39,6 +39,7 @@ from pyworkflow.mapper import SqliteMapper, XmlMapper
 PATH = os.path.dirname(__file__)
 SETTINGS = join(pw.HOME,'..','settings')
 
+
 def getConfigPath(filename):
     """Return a configuration filename from settings folder"""
     return join(SETTINGS, filename)
@@ -49,6 +50,7 @@ def loadSettings(dbPath):
     mapper = SqliteMapper(dbPath, globals())
     settingList = mapper.selectByClass('ProjectSettings')
     n = len(settingList)
+    
     if n == 0:
         raise Exception("Can't load ProjectSettings from %s" % dbPath)
     elif n > 1:
@@ -161,13 +163,12 @@ class ProjectSettings(OrderedObject):
         self.setName('ProjectSettings')
         if dbPath is not None:
             self.mapper = SqliteMapper(dbPath, globals())
-            self.mapper.deleteAll()
-            self.mapper.insert(self)
         else:
             if self.mapper is None:
                 raise Exception("Can't write ProjectSettings without mapper or dbPath")
-            self.mapper.store(self)
         
+        self.mapper.deleteAll()
+        self.mapper.insert(self)
         self.mapper.commit()
 
 

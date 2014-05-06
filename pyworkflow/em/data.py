@@ -390,141 +390,18 @@ class EMXObject(EMObject):
     def getBinaryFile(self):
         return self._binaryFile.get()        
                 
-        
-class Set(EMObject):
-    """ This class will be a container implementation for elements.
-    It will use an extra sqlite file to store the elements.
-    All items will have an unique id that identifies each element in the set.
-    """
-    ITEM_TYPE = None # This property should be defined to know the item type
-    
-    def __init__(self, filename=None, prefix='', mapperClass=SqliteFlatMapper, **args):
-        # Use the object value to store the filename
-        EMObject.__init__(self, **args)
-        self._mapper = None
-        self._idCount = 0
-        self._size = Integer(0) # cached value of the number of images  
-        #self._idMap = {}#FIXME, remove this after id is the one in mapper
-        self.setMapperClass(mapperClass)
-        self._mapperPath = CsvList() # sqlite filename
-        self._mapperPath.trace(self.load) # Load the mapper whenever the filename is changed
-        self._representative = None
-
-#TODO
-#        self.itemType
-# ESta propierdad indicara que tipo de objeto guarda el set. Tiene que ser inicializada cuando el primer objeto es insertado/cargado.
-# Esta variable sera guardada en la DB y la utilizaremos para preguntar. ie si preguntamos por volume tb buscaremos todos los set que tenga
-# esta propiedad inicialida a volume
-# En caso de que el usuario seleccione uno de los volume del set hay que ver como guardarmos ese value. ie. si el set tiene id = 3 y el volumen 
-# que cogemos tiene id=100, se podria guardar como 3, 100
-
-
-        # If filename is passed in the constructor, it means that
-        # we want to create a new object, so we need to delete it if
-        # the file exists
-        if filename:
-            self._mapperPath.set('%s, %s' % (filename, prefix)) # This will cause the creation of the mapper           
-        
-    def setMapperClass(self, MapperClass):
-        """ Set the mapper to be used for storage. """
-        Object.__setattr__(self, '_MapperClass', MapperClass)
-        
-    def __getitem__(self, itemId):
-        """ Get the image with the given id. """
-        return self._mapper.selectById(itemId)
-
-    def _iterItems(self):
-        
-        return self._mapper.selectAll()#has flat mapper, iterate is true
-    
-    def getFirstItem(self):
-        """ Return the first item in the Set. """
-        return self._mapper.selectFirst()
-    
-    def __iter__(self):
-        """ Iterate over the set of images. """
-        return self._iterItems()
-       
-    def __len__(self):
-        return self._size.get()
-    
-    def getSize(self):
-        """Return the number of images"""
-        return self._size.get()
-    
-    def getFileName(self):
-        if len(self._mapperPath):
-            return self._mapperPath[0]
-        return None
-    
-    def getPrefix(self):
-        if len(self._mapperPath) > 1:
-            return self._mapperPath[1]
-        return None
-    
-    def write(self):
-        """This method will be used to persist in a file the
-        list of images path contained in this Set
-        path: output file path
-        images: list with the images path to be stored
-        """
-        #TODO: If mapper is in memory, do commit and dump to disk
-        self._mapper.commit()
-    
-    def load(self):
-        """ Load extra data from files. """
-        if self._mapperPath.isEmpty():
-            raise Exception("Set.load:  mapper path and prefix not set.")
-        fn, prefix = self._mapperPath
-        self._mapper = self._MapperClass(fn, globals(), prefix)
-        # TODO: updated size with the real size from the mapper
-            
-    def append(self, item):
-        """ Add a image to the set. """
-        if not item.hasObjId():
-            self._idCount += 1
-            item.setObjId(self._idCount)
-        self._insertItem(item)
-        self._size.increment()
-#        self._idMap[item.getObjId()] = item
-        
-    def _insertItem(self, item):
-        self._mapper.insert(item)
-        
-    def update(self, item):
-        """ Update an existing item. """
-        self._mapper.update(item)
-                
-    def __str__(self):
-        return "%-20s (%d items)" % (self.getClassName(), self.getSize())
-    
-    def getSubset(self, n):
-        """ Return a subset of n element, making a clone of each. """
-        subset = []
-        for i, item in enumerate(self):
-            subset.append(item.clone())
-            if i == n:
-                break
-        return subset
-    
-    def setRepresentative(self, representative):
-        self._representative = representative
-    
-    def getRepresentative(self):
-       
-        return self._representative
-    
-    def hasRepresentative(self):
-        """ Return true if have a representative image. """
-        return self._representative is not None
-
-
-class SetOfImages(Set):
+      
+class EMSet(Set, EMObject):
+    def _loadClassesDict(self):
+        return globals()
+  
+  
+class SetOfImages(EMSet):
     """ Represents a set of Images """
     ITEM_TYPE = Image
     
     def __init__(self, **args):
-        Set.__init__(self, **args)
+        EMSet.__init__(self, **args)
         self._samplingRate = Float()
         self._hasCtf = Boolean(args.get('ctf', False))
         self._hasAlignment = Boolean(args.get('alignmet', False))
@@ -577,7 +454,7 @@ class SetOfImages(Set):
             image.setSamplingRate(self.getSamplingRate())
         if self._firstDim.isEmpty():
             self._firstDim.set(image.getDim())
-        Set.append(self, image)
+        EMSet.append(self, image)
     
     def copyInfo(self, other):
         """ Copy basic information (sampling rate, scannedPixelSize and ctf)
@@ -733,15 +610,15 @@ class SetOfVolumes(SetOfImages):
         SetOfImages.__init__(self, **args)
 
 
-class SetOfCTF(Set):
+class SetOfCTF(EMSet):
     """ Contains a set of CTF models estimated for a set of images."""
     ITEM_TYPE = CTFModel
     
     def __init__(self, **args):
-        Set.__init__(self, **args)    
+        EMSet.__init__(self, **args)    
         
         
-class SetOfDefocusGroup(Set):
+class SetOfDefocusGroup(EMSet):
     """ Contains a set of DefocusGroup.
         id min/max/avg exists the corresponding flaf must be
         set to true.
@@ -749,7 +626,7 @@ class SetOfDefocusGroup(Set):
     ITEM_TYPE = DefocusGroup
         
     def __init__(self, **args):
-        Set.__init__(self, **args) 
+        EMSet.__init__(self, **args) 
         self._minSet=False
         self._maxSet=False
         self._avgSet=False
@@ -837,7 +714,7 @@ class Coordinate(EMObject):
         #else: error TODO
 
 
-class SetOfCoordinates(Set):
+class SetOfCoordinates(EMSet):
     """ Encapsulate the logic of a set of particles coordinates.
     Each coordinate has a (x,y) position and is related to a Micrograph
     The SetOfCoordinates can also have information about TiltPairs.
@@ -845,7 +722,7 @@ class SetOfCoordinates(Set):
     ITEM_TYPE = Coordinate
     
     def __init__(self, **args):
-        Set.__init__(self, **args)
+        EMSet.__init__(self, **args)
         self._micrographsPointer = Pointer()
         self._boxSize = Integer()
 
@@ -855,8 +732,7 @@ class SetOfCoordinates(Set):
         return self._boxSize.get()
     
     def setBoxSize(self, boxSize):
-        """ Set the box size of the particles.
-        """
+        """ Set the box size of the particles. """
         self._boxSize.set(boxSize)
     
     def iterMicrographs(self):
@@ -957,13 +833,13 @@ class ClassVol(SetOfVolumes):
     pass
 
 
-class SetOfClasses(Set):
+class SetOfClasses(EMSet):
     """ Store results from a classification. """
     ITEM_TYPE = None # type of classes stored in the set
     REP_TYPE = None # type of the representatives of each class
     
     def __init__(self, **args):
-        Set.__init__(self, **args)
+        EMSet.__init__(self, **args)
         self._representatives = None # Store the average images of each class(SetOfParticles)
         self._imagesPointer = Pointer()
 
@@ -1012,13 +888,13 @@ class SetOfClasses(Set):
         if classItem.getFileName() is None:
             classPrefix = 'Class%03d' % classItem.getObjId()
             classItem._mapperPath.set('%s,%s' % (self.getFileName(), classPrefix))
-        Set._insertItem(self, classItem)
+        EMSet._insertItem(self, classItem)
         classItem.write()#Set.write(self)
            
     
     def write(self):
         """ Override super method to also write the representatives. """
-        Set.write(self)
+        EMSet.write(self)
         if self._representatives: # Write if not None
             self._representatives.write()
             
@@ -1066,12 +942,12 @@ class Movie(SetOfMicrographs):
         SetOfMicrographs.__init__(self, **args)
 
 
-class SetOfMovies(Set):
+class SetOfMovies(EMSet):
     """ Represents a set of Movies. """
     ITEM_TYPE = Movie
     
     def __init__(self, **args):
-        Set.__init__(self, **args)
+        EMSet.__init__(self, **args)
         self._acquisition = Acquisition()
         self._samplingRate = Float()
         self._scannedPixelSize = Float()
@@ -1151,5 +1027,5 @@ class SetOfMovies(Set):
         if movie.getFileName() is None:
             moviePrefix = 'Movie%03d' % movie.getObjId()
             movie._mapperPath.set('%s,%s' % (self.getFileName(), moviePrefix))
-        Set._insertItem(self, movie)
+        EMSet._insertItem(self, movie)
         movie.write()#Set.write(self)

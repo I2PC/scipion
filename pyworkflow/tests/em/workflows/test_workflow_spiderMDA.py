@@ -16,34 +16,61 @@ class TestSpiderWorkflow(TestWorkflow):
     def test_mdaWorkflow(self):
         """ Run an Import particles protocol. """
         protImport = ProtImportParticles(pattern=self.particlesFn, samplingRate=3.5)
-        self.proj.launchProtocol(protImport, wait=True)
+        self.launchProtocol(protImport)
         # check that input images have been imported (a better way to do this?)
         if protImport.outputParticles is None:
             raise Exception('Import of images: %s, failed. outputParticles is None.' % pattern)
         
         protFilter = SpiderProtFilter()
-        protFilter.inputParticles.set(protImport.outputParticles)
-        self.proj.launchProtocol(protFilter, wait=True)
+        protFilter.inputParticles.set(protImport)
+        protFilter.inputParticles.setExtendedAttribute('outputParticles')
+        self.launchProtocol(protFilter)
         
         protAPSR = SpiderProtAlignAPSR()
         protAPSR.inputParticles.set(protFilter.outputParticles)
-        self.proj.launchProtocol(protAPSR, wait=True)
+        self.launchProtocol(protAPSR)
          
         protMask = SpiderProtCustomMask()
         protMask.inputImage.set(protAPSR.outputAverage)
-        self.proj.launchProtocol(protMask, wait=True)       
+        self.launchProtocol(protMask)       
               
         protCAPCA = SpiderProtCAPCA()
         protCAPCA.maskType.set(1)
         protCAPCA.maskImage.set(protMask.outputMask)
         protCAPCA.inputParticles.set(protAPSR.outputParticles)
-        self.proj.launchProtocol(protCAPCA, wait=True)
+        self.launchProtocol(protCAPCA)
         
         protWard = SpiderProtClassifyWard()
         protWard.pcaFilePointer.set(protCAPCA.imcFile)
         protWard.inputParticles.set(protAPSR.outputParticles)
-        self.proj.launchProtocol(protWard, wait=True)
-
+        self.launchProtocol(protWard)
+        
+    def test_StoredPointers(self):
+        """ Test the usage of pointer extensions to store a 
+        workflow dependencies before the current execution 
+        of the protocols.
+        """
+        protImport = ProtImportParticles(pattern=self.particlesFn, samplingRate=3.5)
+        self.saveProtocol(protImport)
+        
+        protFilter = SpiderProtFilter()
+        protFilter.inputParticles.set(protImport)
+        protFilter.inputParticles.setExtendedAttribute('outputParticles')
+        self.saveProtocol(protFilter)
+        
+        protAPSR = SpiderProtAlignAPSR()
+        protAPSR.inputParticles.set(protFilter)
+        protAPSR.inputParticles.setExtendedAttribute('outputParticles')
+        self.saveProtocol(protAPSR)
+        
+        return 
+        # Launch all stored protocol runs
+        self.launchProtocol(protImport)
+        # check that input images have been imported (a better way to do this?)
+        if protImport.outputParticles is None:
+            raise Exception('Import of images: %s, failed. outputParticles is None.' % pattern)
+        self.launchProtocol(protFilter)
+        self.launchProtocol(protAPSR)       
 
 if __name__ == "__main__":
     unittest.main()

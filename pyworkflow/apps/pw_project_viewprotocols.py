@@ -326,6 +326,8 @@ class RunIOTreeProvider(TreeProvider):
             
             if isinstance(obj, Pointer):
                 obj = obj.get()
+                if obj is None:
+                    return None
                 image = Icon.ACTION_IN
                 parent = self.inputStr
 #                objName = self.mapper.getFullName(obj)
@@ -349,7 +351,7 @@ class ProtocolsView(tk.Frame):
         self.settings = windows.getSettings()
         self.showGraph = self.settings.graphView.get()
         
-        self._selection = self.settings.runSelection
+        self._loadSelection()        
         self._items = {}
         
         self.style = ttk.Style()
@@ -498,6 +500,12 @@ class ProtocolsView(tk.Frame):
         
         return p
         
+    def _loadSelection(self):
+        """ Load selected items, remove if some do not exists. """
+        self._selection = self.settings.runSelection
+        for protId in list(self._selection):
+            if not self.project.getProtocol(protId):
+                self._selection.remove(protId)
         
     def refreshRuns(self, e=None, autoRefresh=False):
         """ Refresh the status of diplayed runs. """
@@ -784,12 +792,15 @@ class ProtocolsView(tk.Frame):
         
         if n == 1:
             prot = self.getSelectedProtocol()
-            provider = RunIOTreeProvider(self, prot, self.project.mapper)
-            self.infoTree.setProvider(provider)
-            self.infoTree.grid(row=0, column=0, sticky='news')
-            self.infoTree.update_idletasks()
-            # Update summary
-            self.summaryText.addText(prot.summary())
+            if prot:
+                provider = RunIOTreeProvider(self, prot, self.project.mapper)
+                self.infoTree.setProvider(provider)
+                self.infoTree.grid(row=0, column=0, sticky='news')
+                self.infoTree.update_idletasks()
+                # Update summary
+                self.summaryText.addText(prot.summary())
+            else:
+                self.infoTree.clear()
         
         elif n > 1:
             self.infoTree.clear()
@@ -821,14 +832,17 @@ class ProtocolsView(tk.Frame):
         
     def _fillLogs(self):
         n = len(self._selection)
-        
+
         if n == 1:
             prot = self.project.getProtocol(self._selection[0])
-            i = self.outputViewer.getIndex()
-            self.outputViewer.clear()
-            for f in prot.getLogPaths():
-                self.outputViewer.addFile(f)
-            self.outputViewer.setIndex(i) # Preserve the last selected tab
+            if prot:
+                i = self.outputViewer.getIndex()
+                self.outputViewer.clear()
+                for f in prot.getLogPaths():
+                    self.outputViewer.addFile(f)
+                self.outputViewer.setIndex(i) # Preserve the last selected tab
+            else:
+                self.outputViewer.clear()
         
     def _scheduleRunsUpdate(self, secs=1):
         self.runsTree.after(secs*1000, self.refreshRuns)
@@ -855,6 +869,14 @@ class ProtocolsView(tk.Frame):
             self.project.deleteProtocol(*self._getSelectedProtocols())
             self._selection.clear()
             self._scheduleRunsUpdate()
+            
+    def _copyProtocols(self):
+        protocols = self._getSelectedProtocols()
+        if len(protocols) == 1:
+            newProt = self.project.copyProtocol(protocols[0])
+            self._openProtocolForm(newProt)
+        else:
+            self.project.copyProtocol(protocols)
             
     def _stopProtocol(self, prot):
         if askYesNo(Message.TITLE_STOP_FORM, Message.LABEL_STOP_FORM, self.root):
@@ -891,8 +913,7 @@ class ProtocolsView(tk.Frame):
                 elif action == ACTION_EDIT:
                     self._openProtocolForm(prot)
                 elif action == ACTION_COPY:
-                    newProt = self.project.copyProtocol(prot)
-                    self._openProtocolForm(newProt)
+                    self._copyProtocols()
                 elif action == ACTION_DELETE:
                     self._deleteProtocol()
                 elif action == ACTION_STEPS:
