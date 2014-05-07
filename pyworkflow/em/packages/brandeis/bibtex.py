@@ -32,7 +32,7 @@ _bibtexStr = """
 
 @article{Mindell2003,
 title = "Accurate determination of local defocus and specimen tilt in electron microscopy ",
-journal = "Journal of Structural Biology ",
+journal = "JSB ",
 volume = "142",
 number = "3",
 pages = "334 - 347",
@@ -47,7 +47,7 @@ keywords = "Electron microscopy, Contrast transfer function, Algorithm, Tilt det
 
 @article{Grigorieff2007,
 title = "FREALIGN: High-resolution refinement of single particle structures ",
-journal = "Journal of Structural Biology ",
+journal = "JSB ",
 volume = "157",
 number = "1",
 pages = "117 - 125",
@@ -56,7 +56,7 @@ note = "Software tools for macromolecular microscopy ",
 issn = "1047-8477",
 doi = "http://dx.doi.org/10.1016/j.jsb.2006.05.004",
 url = "http://www.sciencedirect.com/science/article/pii/S1047847706001699",
-author = "Nikolaus Grigorieff",
+author = "Grigorieff, N",
 keywords = "Image processing, Electron microscopy, Protein structure,\{FREALIGN\} "
 
 @article{Wolf2006,
@@ -76,7 +76,7 @@ keywords = "Three-dimensional reconstruction, Resolution, Depth of field, \{FREA
 
 @article{Grigorieff1998,
 title = "Three-dimensional structure of bovine NADH:ubiquinone oxidoreductase (complex I) at 22 å in ice ",
-journal = "Journal of Molecular Biology ",
+journal = "JSB ",
 volume = "277",
 number = "5",
 pages = "1033 - 1046",
@@ -85,7 +85,7 @@ note = "",
 issn = "0022-2836",
 doi = "http://dx.doi.org/10.1006/jmbi.1998.1668",
 url = "http://www.sciencedirect.com/science/article/pii/S0022283698916680",
-author = "Grigorieff, N ",
+author = "Grigorieff, N",
 keywords = "complex I, mitochondria, respiratory chain, single particle analysis, electron cryo-microscopy "
 }
 
@@ -106,7 +106,7 @@ keywords = "Image processing, Electron microscopy, Protein structure, \{FREALIGN
 
 @article{Sindelar2012,
 title = "Optimal noise reduction in 3D reconstructions of single particles using a volume-normalized filter ",
-journal = "Journal of Structural Biology ",
+journal = "JSB ",
 volume = "180",
 number = "1",
 pages = "26 - 38",
@@ -121,7 +121,7 @@ keywords = "Electron microscopy, Wiener filter, Single particle, Protein structu
 
 @article{Lyumkis2013,
 title = "Likelihood-based classification of cryo-EM images using \{FREALIGN\} ",
-journal = "Journal of Structural Biology ",
+journal = "JSB ",
 volume = "183",
 number = "3",
 pages = "377 - 388",
