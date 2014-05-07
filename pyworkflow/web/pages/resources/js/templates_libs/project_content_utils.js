@@ -198,9 +198,10 @@ function transposeElmMarked(status){
 			var elm = $(this);
 			var id = elm.attr("id");
 			var elmToMark = $("#graph_"+id);
+			var selected = elmToMark.attr("selected"); 
 			
-//			if(elm.hasClass("selected") && elmToMark.attr("selected")!="selected"){
-			if(elm.hasClass("selected")){
+			if(elm.hasClass("selected") && (selected != "selected" || selected == undefined)){
+//				console.log("adding "+ id)
 				markSingleNodeGraph(elmToMark);
 				list_marked.push(id);
 			} else if(!elm.hasClass("selected") && elmToMark.attr("selected")=="selected"){
@@ -217,7 +218,8 @@ function transposeElmMarked(status){
 			var id = elm.attr("id").split("_").pop();
 			var elmToMark = $("tr#"+id);
 			
-			if(elm.attr("selected") == "selected"){
+			if(elm.attr("selected") == "selected" && !elmToMark.hasClass("selected")){
+//				console.log("adding "+ id)
 				markSingleNodeList(elmToMark);
 				list_marked.push(id);
 			} else if (elm.attr("selected") != "selected" && elmToMark.hasClass("selected")){
@@ -226,9 +228,10 @@ function transposeElmMarked(status){
 		});
 	}
 	
-	// Update the runs selected in the DB
-	refreshSelectedRuns(list_marked);
-	
+	if (list_marked.length > 0){
+		// Update the runs selected in the DB
+		refreshSelectedRuns(list_marked);
+	}
 }
 
 function refreshSelectedRuns(list_marked){
