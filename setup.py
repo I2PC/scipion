@@ -150,6 +150,20 @@ def detectMatlab():
         matlab_home = dirname(dirname(findRealFile(matlab)))
     return matlab_home
     
+def detectOpenCV():
+    from protlib_filesystem import findFiles
+    from os.path import dirname
+    typicalPaths = [os.path.join('/usr', 'lib'), os.path.join('/usr', 'lib64'), os.path.join('/usr', 'local', 'lib')]
+    opencvPaths = os.environ['LD_LIBRARY_PATH'].split(":")+typicalPaths
+    print os.environ['LD_LIBRARY_PATH']
+    opencv_home = None
+    for p in opencvPaths:
+        opencv = findFiles(p, 'libopencv*')
+        if len(opencv) != 0:
+            opencv_home = dirname(opencv[0])
+    return opencv_home
+    
+    
 def addTabOption(tab, option, comment, default, group=None, cond=None, wiz=None, browse=False):
     defaultsDic = globals()
     if defaultsDic.has_key(option):
@@ -199,6 +213,13 @@ def wizardMatlab(tab_matlab):
         return ""
     return "MATLAB_DIR could not be found."  
 
+def wizardOpenCV(tab_opencv):
+    opencv_home=detectOpenCV()
+    if opencv_home:
+        tab_opencv.setValue('OPENCV_LIBDIR', opencv_home)
+        return ""
+    return "OPENCV_LIBDIR could not be found"
+
 def addTabs(nb):
     tab = nb.addTab("Compilers")
     tab.addGroupPanel("C/C++")
@@ -246,8 +267,10 @@ def addTabs(nb):
     addTabOption(tab,'static', 'Prevent dynamic linking?', 'no')
     addTabOption(tab, 'gtest', 'Build tests?', 'yes')
     addTabOption(tab, 'cuda', 'Build CUDA support?', 'no')
-    addTabOption(tab, 'matlab', 'Build Matlab support', 'no')
+    addTabOption(tab, 'matlab', 'Build Matlab support?', 'no')
     addTabOption(tab,'MATLAB_DIR', 'Matlab dir ', '/usr/local/MATLAB/R2011a', None, 'matlab', wizardMatlab, True)
+    addTabOption(tab,'opencv', 'Build OpenCV-dependent programs?', 'no')
+    addTabOption(tab,'OPENCV_LIBDIR', 'OpenCV library dir ', '/usr/lib64', None, 'opencv', wizardOpenCV, True)
     addTabOption(tab, 'release', 'Release mode', 'yes')
 
     defaultsDic = globals()    
