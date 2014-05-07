@@ -53,6 +53,7 @@ urlpatterns = patterns('',
     url(r'^protocol/$', 'app.views_protocol.protocol'),
     url(r'^stop_protocol/$', 'app.views_protocol.stop_protocol'),
     url(r'^delete_protocol/$', 'app.views_protocol.delete_protocol'),
+    url(r'^copy_protocol/$', 'app.views_protocol.copy_protocol'),
     url(r'^form/$', 'app.views_protocol.form'),
     
 

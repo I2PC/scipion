@@ -160,7 +160,7 @@ def project_graph(request):
                 
                 info = ""
                 if str(node.id) != "PROJECT":
-                    protocol = project.mapper.selectById(int(node.id))
+                    protocol = project.getProtocol(int(node.id))
                     info = provider.getObjectInfo(protocol)["values"][0]
                 
                 nodeList.append({'id': node.getName(), 'x': node.item.x - hx, 'y': node.item.y - hy,
@@ -403,7 +403,7 @@ def protocol_info(request):
         protId = request.GET.get('protocolId', None)
 
         project = loadProject(projectName)
-        protocol = project.mapper.selectById(int(protId))
+        protocol = project.getProtocol(int(protId))
         
         # PROTOCOL IO
         input_obj = [{'name':name, 'nameId': attr.getNameId(), 'id': attr.getObjId(), 'info': str(attr)} for name, attr in protocol.iterInputAttributes()]

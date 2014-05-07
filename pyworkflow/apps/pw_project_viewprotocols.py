@@ -353,6 +353,7 @@ class ProtocolsView(tk.Frame):
         
         self._loadSelection()        
         self._items = {}
+        self._lastSelected = None
         
         self.style = ttk.Style()
         self.root.bind("<F5>", self.refreshRuns)
@@ -507,19 +508,26 @@ class ProtocolsView(tk.Frame):
             if not self.project.getProtocol(protId):
                 self._selection.remove(protId)
         
-    def refreshRuns(self, e=None, autoRefresh=False):
-        """ Refresh the status of diplayed runs. """
+    def refreshRuns(self, e=None, initRefreshCounter=True):
+        """ Refresh the status of displayed runs.
+         Params:
+            e: Tk event input
+            initRefreshCounter: if True the refresh counter will be set to 3 secs
+             then only case when False is from _automaticRefreshRuns where the
+             refresh time is doubled each time to avoid refreshing too often.
+        """
         self.updateRunsTree(True)
         self.updateRunsGraph(True)
-        if not autoRefresh:
+
+        if initRefreshCounter:
             self.__autoRefreshCounter = 3 # start by 3 secs
             if self.__autoRefresh:
                 self.runsTree.after_cancel(self.__autoRefresh)
                 self.__autoRefresh = self.runsTree.after(self.__autoRefreshCounter*1000, self._automaticRefreshRuns)
         
     def _automaticRefreshRuns(self, e=None):
-        # Schedule an automatic refresh after 1 sec
-        self.refreshRuns(autoRefresh=True)
+        """ Schedule automatic refresh increasing the time between refreshes. """
+        self.refreshRuns(initRefreshCounter=False)
         secs = self.__autoRefreshCounter
         # double the number of seconds up to 30 min
         self.__autoRefreshCounter = min(2*secs, 1800)
@@ -704,6 +712,8 @@ class ProtocolsView(tk.Frame):
         self._fillSummary()
         self._fillMethod()
         self._fillLogs()
+        self._lastSelected = self.getSelectedProtocol()
+
         self._updateActionToolbar()
         
     def _runTreeItemClick(self, item=None):
@@ -790,6 +800,7 @@ class ProtocolsView(tk.Frame):
         
         if n == 1:
             prot = self.getSelectedProtocol()
+
             if prot:
                 provider = RunIOTreeProvider(self, prot, self.project.mapper)
                 self.infoTree.setProvider(provider)
@@ -829,19 +840,17 @@ class ProtocolsView(tk.Frame):
         self.methodText.setReadOnly(True)
         
     def _fillLogs(self):
-        n = len(self._selection)
+        prot = self.getSelectedProtocol()
 
-        if n == 1:
-            prot = self.project.getProtocol(self._selection[0])
-            if prot:
-                i = self.outputViewer.getIndex()
-                self.outputViewer.clear()
-                for f in prot.getLogPaths():
-                    self.outputViewer.addFile(f)
-                self.outputViewer.setIndex(i) # Preserve the last selected tab
-            else:
-                self.outputViewer.clear()
-        
+        if len(self._selection) != 1 or not prot:
+            self.outputViewer.clear()
+        elif prot != self._lastSelected:
+            i = self.outputViewer.getIndex()
+            self.outputViewer.clear()
+            for f in prot.getLogPaths():
+                self.outputViewer.addFile(f)
+            self.outputViewer.setIndex(i) # Preserve the last selected tab
+
     def _scheduleRunsUpdate(self, secs=1):
         self.runsTree.after(secs*1000, self.refreshRuns)
         

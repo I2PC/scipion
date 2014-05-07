@@ -158,7 +158,6 @@ function launchToolbarTree(id, elm) {
 	/*
 	 * Toolbar used in the project content template for graph view
 	 */
-	
 	if (event.ctrlKey){
 		enableMultipleMarkGraph(elm);
 	} else {
@@ -181,12 +180,50 @@ function launchToolbarProject(id, elm, type){
 	}
 	    
 	// Update the buttons functionalities into the toolbar
-	updateButtons(id, elm, "single");
-	row.show(); // Show toolbar
+	refreshToolbarSingleMark(id, elm)
 	
 	// Update the content for the tabs
 	updateTabs(id);
 }
+
+function refreshToolbarSingleMark(id, elm){
+	// Update the buttons functionalities into the toolbar
+	updateButtons(id, "single");
+}
+
+function refreshToolbarMultipleMark(list_id){
+	// Update the buttons functionalities into the toolbar
+	updateButtons(list_id, "multiple");
+}
+
+function getElmMarkedList(){
+	var list_marked = [];
+
+	$.each($("tr"), function(){
+		var elm = $(this);
+		var id = elm.attr("id");
+		
+		if(elm.hasClass("selected")){
+			list_marked.push(id);
+		}
+	});
+	return list_marked;
+}
+
+function getElmMarkedGraph(){
+	var list_marked = [];
+
+	$.each($(".window"), function(){
+		var elm = $(this);
+		var id = elm.attr("id").split("_").pop();
+		
+		if(elm.attr("selected") == "selected"){
+			list_marked.push(id);
+		} 
+	});
+	return list_marked;
+}
+
 
 function transposeElmMarked(status){
 	var list_marked = [];
@@ -232,17 +269,15 @@ function transposeElmMarked(status){
 		// Update the runs selected in the DB
 		refreshSelectedRuns(list_marked);
 	}
+	
 }
 
 function refreshSelectedRuns(list_marked){
-	var mark = listToString(list_marked)
-	
 	$.ajax({
 		type : "GET", 
-		url : '/save_selection/?mark=' + mark,
+		url : '/save_selection/?mark=' + listToString(list_marked),
 		async: false
 	});
-	
 }
 
 	
@@ -268,6 +303,8 @@ function enableMultipleMarkGraph(elm){
 		markSingleNodeGraph(elm);
 		$("div#graphActiv").attr("data-option", elm.attr("id"));
 	}
+	var list_marked = getElmMarkedGraph()
+	refreshToolbarMultipleMark(list_marked);
 } 	
 
 function disableMultipleMarkGraph(id){
@@ -297,6 +334,8 @@ function enableMultipleMarkList(elm){
 	} else {
 		markSingleNodeList(elm);
 	}
+	var list_marked = getElmMarkedList()
+	refreshToolbarMultipleMark(list_marked);
 }
 
 function disableMultipleMarkList(id){
@@ -449,7 +488,7 @@ function fillUL(type, list, ulId, icon) {
 	}
 }
 
-function updateButtons(id, elm, mode){
+function updateButtons(id, mode){
 	/*
 	 * Function to update the buttons in the toolbar after choose a new protocol run.
 	 */
@@ -465,28 +504,52 @@ function updateButtons(id, elm, mode){
 			// Action Edit Button
 			$("a#editTool").attr('href',
 			'javascript:popup("/form/?protocolId=' + id + '")');
+			$("span#editTool").show();
 			
 			// Action Copy Button
 			$("a#copyTool").attr('href',
 			'javascript:popup("/form/?protocolId=' + id + '&action=copy' + '")');
+			$("span#copyTool").show();
 		
 			// Action Delete Button
 			$("a#deleteTool").attr('href',
-					'javascript:deleteProtocolForm("' + id + '")');
-		
+				'javascript:deleteProtocolForm("' + id + '","single")');
+			$("span#deleteTool").show();
+			
 			// Action Browse Button
 			var aux = "javascript:alert('Not implemented yet')";
 			$("a#browseTool").attr('href', aux);
+			$("span#browseTool").show();
 	 		
 			break;
 			
 	 	case "multiple":
 	 		
-	 		//TODO
+	 		var list_id = id
+	 	
+			// Action Edit Button
+			$("a#editTool").attr('href','#');
+			$("span#editTool").hide();
 	 		
+	 		// Action Copy Button
+			$("a#copyTool").attr('href',
+				'javascript:copyProtocol("' + list_id + '")');
+			$("span#copyTool").show();
+		
+			// Action Delete Button
+			$("a#deleteTool").attr('href',
+				'javascript:deleteProtocolForm("' + id + '","multiple")');
+			$("span#deleteTool").show();
+			
+			// Action Browse Button
+			$("a#browseTool").attr('href', '#');
+			$("span#browseTool").hide();
+
 	 		break;
 	
 	 }
+	 // Show toolbar
+	 $("div#toolbar").show(); 
 }
 
 function updateRow(id, elm, row){	
@@ -643,29 +706,61 @@ function editObject(objId){
 	});
 }
 
-function deleteProtocolForm(protocolId) {
+function deleteProtocolForm(id, mode) {
 	/*
 	 * Dialog web form based in messi.js to verify the option to delete.
 	 */
-	var msg = "</td><td class='content' value='"
-			+ protocolId
-			+ "'><strong>ALL DATA</strong> related to this <strong>protocol run</strong>"
-			+ " will be <strong>DELETED</strong>. Do you really want to continue?</td></tr></table>";
 	
+	 var msg = "</td><td class='content' value='"+ id
+	 
+	 switch(mode){
+	 	case "single":
+			msg += "'><strong>ALL DATA</strong> related to this <strong>protocol run</strong>"
+			break;
+	 	case "multiple":
+			msg += "'><strong>ALL DATA</strong> related to the <strong>selected protocols run</strong>"
+	 		break;
+	 }
+	 msg += " will be <strong>DELETED</strong>. Do you really want to continue?</td></tr></table>";
+	 
 	warningPopup('Confirm DELETE',msg, 'deleteProtocol')
 	
 }
+
 
 function deleteProtocol(elm) {
 	/*
 	 * Method to execute a delete for a protocol
 	 */
-	var protId = elm.attr('value');
+	var id = elm.attr('value');
 	
 	$.ajax({
 		type : "GET",
-		url : "/delete_protocol/?protocolId=" + protId,
+		url : "/delete_protocol/?id=" + id,
 		dataType : "json",
+		async :false,
+		success : function(json) {
+			if(json.errors != undefined){
+				// Show errors in the validation
+				errorPopup('Errors found',json.errors);
+			} else if(json.success!= undefined){
+	//				launchMessiSimple("Successful", messiInfo(json.success));
+	//				window.location.reload()
+			}
+		},
+		error: function(){
+			alert("error")
+		}
+	});
+	
+}
+
+function copyProtocol(id){
+	$.ajax({
+		type : "GET",
+		url : "/copy_protocol/?id=" + id,
+		dataType : "json",
+		async :false,
 		success : function(json) {
 			if(json.errors != undefined){
 				// Show errors in the validation
