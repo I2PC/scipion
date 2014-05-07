@@ -229,7 +229,7 @@ class ProtFrealignClassify(ProtFrealignBase, ProtClassify3D):
         params['initParticle'] = initParticle
         params['finalParticle'] = finalParticle
 
-        params2 = self._setParams3DR(iter)
+        params2 = self._setParams3DR(iter, ref)
         
         params3DR = dict(params.items() + params2.items())
         
@@ -302,7 +302,7 @@ class ProtFrealignClassify(ProtFrealignBase, ProtClassify3D):
         paramDics['VolpointSpread'] = self._getFileName('spread_block', block=block, iter=iter, ref=ref)
         return paramDics
     
-    def _setParams3DR(self, iter):
+    def _setParams3DR(self, iter, ref):
         """ Setting the parameters to reconstruct a new 3DR"""
         paramDics = {}
         paramDics['mode'] = 0
