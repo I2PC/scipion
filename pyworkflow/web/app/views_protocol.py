@@ -313,6 +313,25 @@ def delete_protocol(request):
             res = {'errors' : errors}
             
     jsonStr = json.dumps(res, ensure_ascii=False)
+    return HttpResponse(jsonStr, mimetype='application/javascript')
+
+# Method to copy a protocol #
+def copy_protocol(request):
+    # Project Id(or Name) should be stored in SESSION
+    if request.is_ajax():
+        projectName = request.session['projectName']
+        project = loadProject(projectName)
+        protId = request.GET.get('protocolId', None)
+        protocol = project.getProtocol(int(protId))
+        try:
+            protocol = project.copyProtocol(protocol)
+            project.saveProtocol(protocol)
+            res = {'success' : 'Protocol copied successful'}
+        except Exception, ex:
+            errors = [convertTktoHtml(str(ex))]
+            res = {'errors' : errors}
+            
+    jsonStr = json.dumps(res, ensure_ascii=False)
     return HttpResponse(jsonStr, mimetype='application/javascript')   
 
 # Method to stop a protocol #

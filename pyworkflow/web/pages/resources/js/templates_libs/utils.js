@@ -391,7 +391,7 @@ function updateLabelComment(){
 	var value_label = $("input#label_new").val()
 	var value_comment= $("textarea#comment_new").val()
 	
-	url_param = "/set_attributes/?" +
+	var url_param = "/set_attributes/?" +
 		"id=" + id + 
 		"&label=" + value_label + 
 		"&comment=" + value_comment +
