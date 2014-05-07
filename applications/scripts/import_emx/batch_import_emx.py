@@ -38,7 +38,7 @@ class ScriptImportEMX(XmippScript):
     def defineParams(self):
         self.addUsageLine("Convert  from EMX metadata files")
         self.addParamsLine(' -i <text_file_emx>              : Input metadata file ')
-        self.addParamsLine(' [--mode <mode=micCTF>]          : information to extract')
+        self.addParamsLine(' [--mode <mode=mic>]          : information to extract')
         self.addParamsLine("         where <mode>")
         self.addParamsLine("             alignment           : export particle shift and rotations")
         self.addParamsLine("             coordinates         : import particle coordinates (so far only works for a single micrograph)")
