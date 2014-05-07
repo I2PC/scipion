@@ -52,7 +52,7 @@
  * 	->	Function to check a protocol run, depend on the status two button will be
  * 		switching in the toolbar (Stop / Analyze Results).
  * 
- * function fillTabs(id)
+ * function updateTabs(id)
  * 	->	Fill the content of the tabs for a protocol run selected 
  * 		(Data / Summary / Methods / Status)
  * 
@@ -64,7 +64,7 @@
  * 		name properties.
  * 
  * function updateButtons(id, elm)
- * 	->	Function to update the buttons in the toolbar and the tabs, after choose
+ * 	->	Function to update the buttons in the toolbar, after choose
  *  	a new protocol run.
  * 
  * function updateRow(id, elm, row)
@@ -180,11 +180,16 @@ function launchToolbarProject(id, elm, type){
 		    break;
 	}
 	    
+	// Update the buttons functionalities into the toolbar
 	updateButtons(id, elm, "single");
 	row.show(); // Show toolbar
+	
+	// Update the content for the tabs
+	updateTabs(id);
 }
 
 function transposeElmMarked(status){
+	var list_marked = [];
 
 	if (status == 'inactive') {
 		// Transpose elements in the list marked to the graph
@@ -193,10 +198,12 @@ function transposeElmMarked(status){
 			var elm = $(this);
 			var id = elm.attr("id");
 			var elmToMark = $("#graph_"+id);
+			var selected = elmToMark.attr("selected"); 
 			
-//			if(elm.hasClass("selected") && elmToMark.attr("selected")!="selected"){
-			if(elm.hasClass("selected")){
+			if(elm.hasClass("selected") && (selected != "selected" || selected == undefined)){
+//				console.log("adding "+ id)
 				markSingleNodeGraph(elmToMark);
+				list_marked.push(id);
 			} else if(!elm.hasClass("selected") && elmToMark.attr("selected")=="selected"){
 				dismarkSingleNodeGraph(elmToMark);
 			} 
@@ -211,17 +218,33 @@ function transposeElmMarked(status){
 			var id = elm.attr("id").split("_").pop();
 			var elmToMark = $("tr#"+id);
 			
-			if(elm.attr("selected") == "selected"){
+			if(elm.attr("selected") == "selected" && !elmToMark.hasClass("selected")){
+//				console.log("adding "+ id)
 				markSingleNodeList(elmToMark);
+				list_marked.push(id);
 			} else if (elm.attr("selected") != "selected" && elmToMark.hasClass("selected")){
 				dismarkSingleNodeList(elmToMark);
 			}
 		});
 	}
 	
-	refreshSelectedRuns()
+	if (list_marked.length > 0){
+		// Update the runs selected in the DB
+		refreshSelectedRuns(list_marked);
+	}
+}
+
+function refreshSelectedRuns(list_marked){
+	var mark = listToString(list_marked)
+	
+	$.ajax({
+		type : "GET", 
+		url : '/save_selection/?mark=' + mark,
+		async: false
+	});
 	
 }
+
 	
 /** Graph Methods ***********************************************/
 
@@ -288,7 +311,7 @@ function disableMultipleMarkList(id){
 /******************************************************************************/
 
 
-function fillTabs(id) {
+function updateTabs(id) {
 	/*
 	 * Fill the content of the summary tab for a protocol run selected 
 	 * (Data / Summary / Methods / Status)
@@ -428,7 +451,7 @@ function fillUL(type, list, ulId, icon) {
 
 function updateButtons(id, elm, mode){
 	/*
-	 * Function to update the buttons in the toolbar and the tabs, after choose a new protocol run.
+	 * Function to update the buttons in the toolbar after choose a new protocol run.
 	 */
 	
 	 if(mode == undefined){
@@ -464,8 +487,6 @@ function updateButtons(id, elm, mode){
 	 		break;
 	
 	 }
-	
-	 fillTabs(id);
 }
 
 function updateRow(id, elm, row){	
@@ -549,7 +570,7 @@ function graphOFF(graph, icon_graph, list, icon_list){
 }
 
 function changeStatusGraph(status, graph, graphTool, list, listTool){
-	/*
+	/*	
 	 * Function to switch between the graph/list view depending on the status.
 	 */
 	if (status == 'inactive') {
@@ -603,7 +624,8 @@ function updateGraphView(status) {
 	 */
 	$.ajax({
 		type : "GET", 
-		url : "/update_graph_view/?status=" + status
+		url : "/update_graph_view/?status=" + status,
+		async: false
 	});
 }
 

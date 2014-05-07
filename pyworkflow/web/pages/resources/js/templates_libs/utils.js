@@ -309,6 +309,25 @@ function errorPopup(title, msgText){
 	});
 }
 
+function listToString(list){
+	var res = "";
+	
+	for (var x=0;x<list.length;x++){
+		var elm = list[x];
+		if(res.length == 0){
+			res += elm;
+		} else{
+			res += "," + elm;
+		}
+	}
+	
+	if(res.length == 0){
+		res="None";
+	}
+	
+	return res;
+}
+
 function isNaturalNumber(n) {
     n = n.toString(); // force the value incase it is not
     var n1 = Math.abs(n),
