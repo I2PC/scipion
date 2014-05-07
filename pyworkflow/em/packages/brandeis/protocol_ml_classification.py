@@ -65,6 +65,7 @@ class ProtFrealignClassify(ProtFrealignBase, ProtClassify3D):
                   'phase' : 'volume_phasediffs_iter_%(iter)03d.mrc',
                   'spread' : 'volume_pointspread_iter_%(iter)03d.mrc',
                   # each class volumes for the iteration
+                  'ref_vol_class': self._iterWorkingDir(iter, 'reference_volume_iter_%(iter)03d_class_%(ref)02d.mrc'),
                   'iter_vol_class': self._iterWorkingDir(iter, 'volume_iter_%(iter)03d_class_%(ref)02d.mrc'),
                   'prev_vol_class': self._iterWorkingDir(prevIter, 'volume_iter_%(iter)03d_class_%(ref)02d.mrc'),
                   'output_vol_class_par': 'output_vol_iter_%(iter)03d_class_%(ref)02d.par',
@@ -155,29 +156,30 @@ class ProtFrealignClassify(ProtFrealignBase, ProtClassify3D):
         
         self._createIterWorkingDir(iter) # create the working directory for the current iteration.
         prevIter = iter - 1
+        self._createFilenameTemplates(iter)
         
+        cpusRefs = self._cpusPerClass(numberOfBlocks, self.numberOfRef)
+            
+            
         if iter==1:
-            ProtFrealignBase._createFilenameTemplates(self, iter)
             imgSet = self.inputParticles.get()
             vol = self.input3DReference.get()
             
             imgFn = self._getFileName('particles')
             volFn = self._getFileName('init_vol')
-            refVol = self._getFileName('ref_vol', iter=1) # reference volume of the step.
-            iterVol =  self._getFileName('iter_vol', iter=1) # refined volume of the step
             imgSet.writeStack(imgFn) # convert the SetOfParticles into a mrc stack.
             ImageHandler().convert(vol.getLocation(), volFn) # convert the reference volume into a mrc volume
-            copyFile(volFn, refVol)  #Copy the initial volume in the current directory.
-            copyFile(refVol, iterVol)   #Copy the reference volume as refined volume.
-        else:
-            self._createFilenameTemplates(iter)
-            cpusRefs = self._cpusPerClass(numberOfBlocks, self.numberOfRef)
-            for ref in range(1, self.numberOfRef + 1):
-                iterVol =  self._getFileName('iter_vol_class', iter=1, ref=ref) # refined volumes of the step
-                prevIterVol = self._getFileName('prev_vol_class', iter=prevIter) # volumes of the previous iteration
+            
+        for ref in range(1, self.numberOfRef + 1):
+            refVol = self._getFileName('ref_vol_class', iter=iter, ref=ref) # reference volume of the step.
+            iterVol =  self._getFileName('iter_vol_class', iter=iter, ref=ref) # refined volumes of the step
+            if iter==1:
+                copyFile(volFn, refVol)  #Copy the initial volume in the current directory.
+            else:
                 self._splitParFile(iter, ref, cpusRef[ref-1])
+                prevIterVol = self._getFileName('prev_vol_class', iter=prevIter, ref=ref) # volumes of the previous iteration
                 copyFile(prevIterVol, refVol)   #Copy the reference volume as refined volume.
-                copyFile(refVol, iterVol)   #Copy the reference volume as refined volume.
+            copyFile(refVol, iterVol)   #Copy the reference volume as refined volume.
     
     def refineParticlesStep(self, iter, ref, block, parRefine):
         """Only refine the parameters of the SetOfParticles
@@ -290,7 +292,7 @@ class ProtFrealignClassify(ProtFrealignBase, ProtClassify3D):
     def _setParamsClassRefineParticles(self, iter, ref, block):
         paramDics = {}
         paramDics['stopParam'] = -100
-        paramDics['volume'] = self._getFile('ref_vol', iter=iter)
+        paramDics['volume'] = self._getFile('ref_vol_class', iter=iter, ref=ref)
         paramDics['outputParFn'] = self._getFile('output_par_block', iter=iter, ref=ref, block=block)
         paramDics['inputParFn'] = paramDics['outputParFn']
         paramDics['imgFnMatch'] = self._getFileName('match_block', block=block, iter=iter, ref=ref)
@@ -307,7 +309,7 @@ class ProtFrealignClassify(ProtFrealignBase, ProtClassify3D):
         paramDics = {}
         paramDics['mode'] = 0
         paramDics['stopParam'] = 0   #The stopParam must be 0 if you want obtain a 3D reconstruction.
-        paramDics['volume'] = self._getFile('iter_vol', iter=iter)
+        paramDics['volume'] = self._getFile('iter_vol_class', iter=iter, ref=ref)
         paramDics['inputParFn'] = self._getFile('output_par_class', iter=iter, ref=ref)
         paramDics['imgFnMatch'] = self._getFileName('match_class', iter=iter, ref=ref)
         paramDics['outputShiftFn'] = self._getFileName('shift_class', iter=iter, ref=ref)
