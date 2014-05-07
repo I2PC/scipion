@@ -82,7 +82,7 @@ public class TiltPairParticlesDialog extends ParticlesDialog
 					particlespn.add(up.getTiltedParticle().getParticleCanvas(frame), XmippWindowUtil.getConstraints(constraints, j + 1, i, 1));
 			}
 		
-		 particlespn.revalidate();
+		 // particlespn.revalidate();
                  sp.setScrollPosition(sp.getScrollPosition().x, Integer.MAX_VALUE);
 		 pack();
 		

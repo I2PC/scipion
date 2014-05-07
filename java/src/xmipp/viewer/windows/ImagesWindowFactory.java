@@ -188,7 +188,6 @@ public class ImagesWindowFactory {
 			String mode) throws Exception {
                 
                 MetaData md = new MetaData(filename);
-                
 		return openMetadata(filename, md, parameters, mode);
 	}
 
