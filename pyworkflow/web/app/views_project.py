@@ -412,9 +412,22 @@ def protocol_info(request):
                   'logs_out': parseText(fOutString),
                   'logs_error': parseText(fErrString),
                   'logs_scipion': parseText(fScpnString)
-                  
                   }
         
         jsonStr = json.dumps(ioDict, ensure_ascii=False)
     return HttpResponse(jsonStr, mimetype='application/javascript')
 
+def save_selection(request):
+    if request.is_ajax():
+        mark = request.GET.get('mark', None)
+        
+        projectName = request.session['projectName']
+        project = loadProject(projectName)
+        settings = project.getSettings()
+        
+        # Set the selected runs stored in BD    
+        settings.runSelection.set(mark)
+        
+        settings.write()
+        
+    return HttpResponse(mimetype='application/javascript')
