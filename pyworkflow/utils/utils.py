@@ -29,6 +29,7 @@ This module contains utilities functions and classes.
 
 import os, sys, re
 from datetime import datetime
+import traceback
 
 
 def prettyDate(time=False):
@@ -134,14 +135,35 @@ def timeit(func):
         return result
         
     return timedFunc
-        
+
+
+def trace(nlevels, separator=' --> ', stream=sys.stdout):
+    # Example:
+    #   @trace(3)
+    #   def doRefresh(...
+    # gives as output whenever doRefresh is called lines like:
+    #   text.py:486 _addFileTab --> text.py:330 __init__ --> text.py:442 doRefresh
+
+    def realTrace(func):
+        """ Decorator function to print stack call
+        in a human readable way.
+        """
+        def tracedFunc(*args, **kwargs):
+            stack = traceback.extract_stack()[-nlevels-1:-1]
+            fmt = lambda x: '%s:%d %s' % (os.path.basename(x[0]), x[1], x[2])
+            stream.write(separator.join(map(fmt, stack)) + '\n')
+            return func(*args, **kwargs)
+
+        return tracedFunc
+    return realTrace
+
     
 def prettyDict(d):
     import pprint
     pp = pprint.PrettyPrinter(indent=4)
     pp.pprint(d)
-    
-    
+
+
 def prettyXml(elem, level=0):
     """ Add indentation for XML elements for more human readable text. """
     i = "\n" + level*"  "
