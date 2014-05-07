@@ -700,12 +700,10 @@ class ProtocolsView(tk.Frame):
         prot = self.project.newProtocol(protClass)
         self._openProtocolForm(prot)
         
-    def _updateSelection(self, prot=None):
+    def _updateSelection(self):
         self._fillSummary()
         self._fillMethod()
         self._fillLogs()
-        
-        #FIXME:
         self._updateActionToolbar()
         
     def _runTreeItemClick(self, item=None):
@@ -728,7 +726,7 @@ class ProtocolsView(tk.Frame):
         
         self._selection.clear()
         self._selection.append(prot.getObjId())
-        self._updateSelection(prot)
+        self._updateSelection()
         self.runsGraph.update_idletasks()
         
     def _runItemDoubleClick(self, e=None):
@@ -748,7 +746,7 @@ class ProtocolsView(tk.Frame):
         else:
             prot = self.project.mapper.selectById(int(self.runsTree.getFirst()))        
         
-        self._updateSelection(prot)
+        self._updateSelection()
         
     def _openProtocolForm(self, prot):
         """Open the Protocol GUI Form given a Protocol instance"""
