@@ -218,6 +218,9 @@ function transposeElmMarked(status){
 			}
 		});
 	}
+	
+	refreshSelectedRuns()
+	
 }
 	
 /** Graph Methods ***********************************************/
@@ -587,6 +590,7 @@ function switchGraph() {
 	// Keep the consistency about the selected elements between
 	// the list and graph views.
 	transposeElmMarked(status);
+	
 
 }
 
