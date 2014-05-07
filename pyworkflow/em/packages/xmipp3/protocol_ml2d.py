@@ -74,17 +74,18 @@ class XmippProtML2D(ProtClassify2D):
                       pointerClass='SetOfParticles',
                       help='Image(s) that will serve as initial 2D references')
         
-        group = form.addGroup('ML-Fourier')
-        group.addParam('doMlf', BooleanParam, default=False, important=True,
+        form.addParam('doMlf', BooleanParam, default=False, important=True,
                       label='Use MLF2D instead of ML2D?')
-        group.addParam('doCorrectAmplitudes', BooleanParam, default=True, condition='doMlf',
+        
+        group = form.addGroup('ML-Fourier', condition='doMlf')
+        group.addParam('doCorrectAmplitudes', BooleanParam, default=True,
                       label='Use CTF-amplitude correction?',
                       help='If set to *Yes*, the input images file should contains'
                            'If set to *No*, provide the images pixel size in Angstrom.')
-        group.addParam('areImagesPhaseFlipped', BooleanParam, default=True, condition='doMlf',
+        group.addParam('areImagesPhaseFlipped', BooleanParam, default=True,
                       label='Are the images CTF phase flipped?',
                       help='You can run MLF with or without having phase flipped the images.')        
-        group.addParam('highResLimit', IntParam, default=20, condition='doMlf',
+        group.addParam('highResLimit', IntParam, default=20,
                       label='High-resolution limit (Ang)',
                       help='No frequencies higher than this limit will be taken into account.'
                            'If zero is given, no limit is imposed.')

@@ -369,10 +369,14 @@ class Protocol(Step):
         return self._definition.evalParamCondition(self, paramName)
     
     def evalExpertLevel(self, paramName):
+        """ Return the expert level evaluation for a param with the given name. """
+        return self.evalParamExpertLevel(self.getDefinitionParam(paramName))
+    
+    def evalParamExpertLevel(self, param):
         """ Return True if the param has an expert level is less than 
         the one for the whole protocol. 
         """
-        return self.getDefinitionParam(paramName).expertLevel.get() <= self.expertLevel.get()
+        return param.expertLevel.get() <= self.expertLevel.get()
     
     def iterDefinitionAttributes(self):
         """ Iterate over all the attributes from definition. """
