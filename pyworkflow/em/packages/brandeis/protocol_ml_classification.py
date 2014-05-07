@@ -229,7 +229,7 @@ class ProtFrealignClassify(ProtFrealignBase, ProtClassify3D):
         params['initParticle'] = initParticle
         params['finalParticle'] = finalParticle
 
-        params2 = self._setParams3DR(iter)
+        params2 = self._setParams3DR(iter, ref)
         
         params3DR = dict(params.items() + params2.items())
         
