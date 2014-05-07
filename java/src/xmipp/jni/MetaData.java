@@ -27,7 +27,6 @@ package xmipp.jni;
 
 import java.io.File;
 import java.util.Arrays;
-import xmipp.jni.MDRow;
 
 //import xmipp.utils.DEBUG;
 
