@@ -703,9 +703,6 @@ class CsvList(Scalar, list):
     def clear(self):
         del self[:]
         
-    def getList(self):
-        return [int(x) for x in self.get().split(',')]
-        
         
 class Array(Object):
     """Class for holding fixed len array"""

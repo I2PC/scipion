@@ -241,7 +241,7 @@ def update_graph_view(request):
     settings.write()
     return HttpResponse(mimetype='application/javascript')
 
-    
+
 def save_selection(request):
     if request.is_ajax():
         mark = request.GET.get('mark', None)
@@ -294,7 +294,7 @@ def run_table_graph(request):
             request.session['runs'] = runsNew
             
             # Get the selected runs stored in BD    
-            selectedRuns = settings.runSelection.getList()
+            selectedRuns = settings.runSelection
     
             # Get the mode view (list or graph) stored in BD
             graphView = settings.graphView.get()
@@ -353,7 +353,7 @@ def project_content(request):
     request.session['runs'] = runs
 
     # Get the selected runs stored in BD    
-    selectedRuns = settings.runSelection.getList()
+    selectedRuns = settings.runSelection
 
     # Get the mode view (list or graph) stored in BD
     graphView = settings.graphView.get()
