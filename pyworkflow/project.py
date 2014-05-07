@@ -149,32 +149,29 @@ class Project(object):
         3. Call the launch method in protocol.job to handle submition: mpi, thread, queue,
         and also take care if the execution is remotely."""
         
-        # Read only mode
-        if not isReadOnly():
-            
-            self._checkProtocolsDependencies([protocol], 'Cannot RE-LAUNCH protocol')
-            
-            protocol.setStatus(STATUS_LAUNCHED)
-            self._setupProtocol(protocol)
-            
-            #protocol.setMapper(self.mapper) # mapper is used in makePathAndClean
-            protocol.makePathsAndClean() # Create working dir if necessary
-            self.mapper.commit()
-            
-            # Prepare a separate db for this run
-            # NOTE: now we are simply copying the entire project db, this can be changed later
-            # to only create a subset of the db need for the run
-            copyFile(self.dbPath, protocol.getDbPath())
-            
-            # Launch the protocol, the jobId should be set after this call
-            jobs.launch(protocol, wait)
-            
-            # Commit changes
-            if wait: # This is only useful for launching tests...
-                self._updateProtocol(protocol)
-            else:
-                self.mapper.store(protocol)
-            self.mapper.commit()
+        self._checkModificationAllowed([protocol], 'Cannot RE-LAUNCH protocol')
+        
+        protocol.setStatus(STATUS_LAUNCHED)
+        self._setupProtocol(protocol)
+        
+        #protocol.setMapper(self.mapper) # mapper is used in makePathAndClean
+        protocol.makePathsAndClean() # Create working dir if necessary
+        self.mapper.commit()
+        
+        # Prepare a separate db for this run
+        # NOTE: now we are simply copying the entire project db, this can be changed later
+        # to only create a subset of the db need for the run
+        copyFile(self.dbPath, protocol.getDbPath())
+        
+        # Launch the protocol, the jobId should be set after this call
+        jobs.launch(protocol, wait)
+        
+        # Commit changes
+        if wait: # This is only useful for launching tests...
+            self._updateProtocol(protocol)
+        else:
+            self.mapper.store(protocol)
+        self.mapper.commit()
         
     def _updateProtocol(self, protocol, tries=0):
         # Read only mode
@@ -262,21 +259,28 @@ class Project(object):
         if error:
             raise Exception(msg + error)
         
+    def _checkModificationAllowed(self, protocols, msg):
+        """ Check if any modification operation is allowed for
+        this group of protocols. 
+        """
+        if isReadOnly():
+            raise Exception(msg + " Running in READ-ONLY mode.")
+        
+        self._checkProtocolsDependencies(protocols, msg)        
+        
     def deleteProtocol(self, *protocols):
-        # Read only mode
-        if not isReadOnly():
-            self._checkProtocolsDependencies(protocols, 'Cannot DELETE protocols')
+        self._checkModificationAllowed(protocols, 'Cannot DELETE protocols')
+        
+        for prot in protocols:
+            self.mapper.delete(prot) # Delete from database
+            wd = prot.workingDir.get()
             
-            for prot in protocols:
-                self.mapper.delete(prot) # Delete from database
-                wd = prot.workingDir.get()
-                
-                if wd.startswith(PROJECT_RUNS):
-                    cleanPath(wd)
-                else:
-                    print "Error path: ", wd 
-          
-            self.mapper.commit()     
+            if wd.startswith(PROJECT_RUNS):
+                cleanPath(wd)
+            else:
+                print "Error path: ", wd 
+      
+        self.mapper.commit()     
         
     def newProtocol(self, protocolClass):
         """ Create a new protocol from a given class. """
@@ -347,15 +351,13 @@ class Project(object):
         return result
     
     def saveProtocol(self, protocol):
-        # Read only mode
-        if not isReadOnly():
-            self._checkProtocolsDependencies([protocol], 'Cannot SAVE protocol')
-            
-            protocol.setStatus(STATUS_SAVED)
-            if protocol.hasObjId():
-                self._storeProtocol(protocol)
-            else:
-                self._setupProtocol(protocol)
+        self._checkModificationAllowed([protocol], 'Cannot SAVE protocol')
+        
+        protocol.setStatus(STATUS_SAVED)
+        if protocol.hasObjId():
+            self._storeProtocol(protocol)
+        else:
+            self._setupProtocol(protocol)
                 
     def getProtocol(self, protId):
         return self.mapper.selectById(protId)
@@ -550,12 +552,5 @@ class Project(object):
 
 def isReadOnly():
     """ Auxiliar method to keep a read-only mode for the environment. """
-    try:
-        mode = os.environ['READONLY']
-    except Exception, ex:
-        mode = False
-    
-    if mode is True:
-        print "Operation not valid for read-only mode."
-    return mode
+    return 'SCIPION_READONLY' in os.environ
         
