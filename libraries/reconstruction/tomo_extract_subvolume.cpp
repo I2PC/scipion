@@ -202,8 +202,13 @@ void ProgTomoExtractSubvolume::preProcess()
             rotations_subvolumes.push_back(R);
         }
     }
+//#define DEBUG
 #ifdef  DEBUG
-    std::cerr<<"End produceSideInfo"<<std::endl;
+    for (int isym = 0; isym < SL.symsNo(); isym++)
+    {
+    std::cerr << "centers_subvolumes" << centers_subvolumes[isym] << std::endl;
+    std::cerr << "rotations_subvolumes" << rotations_subvolumes[isym] << std::endl;
+    }    std::cerr<<"End produceSideInfo"<<std::endl;
 #endif
 
     center.resizeNoCopy(3);
