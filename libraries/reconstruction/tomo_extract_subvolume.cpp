@@ -214,7 +214,10 @@ void ProgTomoExtractSubvolume::preProcess()
     I.initIdentity();
 }
 
-void ProgTomoExtractSubvolume::processImage(const FileName &fnImg, const FileName &fnImgOut, const MDRow &rowIn, MDRow &rowOut)
+void ProgTomoExtractSubvolume::processImage(const FileName &fnImg2
+		                                  , const FileName &fnImgOut
+		                                  , const MDRow &rowIn
+		                                  , MDRow &rowOut)
 {
 
 #ifdef  DEBUG
@@ -235,8 +238,10 @@ void ProgTomoExtractSubvolume::processImage(const FileName &fnImg, const FileNam
     ZZ(doccenter) = auxD;
 
     // Read volume
-    vol.read(fnImg);
+    vol.read(fnImg2);
     vol().setXmippOrigin();
+    FileName fnImg;
+    fnImg = fnImg2.removeFileFormat().removeLastExtension();
 
     x0 = FIRST_XMIPP_INDEX(size);
     xF = LAST_XMIPP_INDEX(size);
@@ -245,7 +250,7 @@ void ProgTomoExtractSubvolume::processImage(const FileName &fnImg, const FileNam
 
     size_t image_num;
     FileName dump;
-    if (mdInSize > 1)// Other case, is a unique volume name so there is no need of add the number
+    if (mdInSize > 1)// Other case, is a unique volume name so there is no need to add the number
     {
         if (oroot.empty())
         {
@@ -268,7 +273,7 @@ void ProgTomoExtractSubvolume::processImage(const FileName &fnImg, const FileNam
     else if (!oroot.empty())
         fn_aux = oroot;
     else
-        fn_aux = fnImg.insertBeforeExtension("_sub");
+        fn_aux = fnImg+"_sub";
 
     if (mdInSize > 1)
     {
@@ -303,7 +308,7 @@ void ProgTomoExtractSubvolume::processImage(const FileName &fnImg, const FileNam
         //vol().translate(-center, volout(), DONT_WRAP);
         //4. Window operation and write subvolume to disc
         volout().selfWindow(x0,x0,x0,xF,xF,xF);
-
+        //remove type if present
         fnOutStack.compose(i+1,fn_aux,"stk");
         volout.write(fnOutStack);
 
