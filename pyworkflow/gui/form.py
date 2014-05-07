@@ -24,7 +24,6 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
-from pyworkflow.utils.path import getHomePath
 """
 This modules implements the automatic
 creation of protocol form GUI from its
@@ -33,19 +32,15 @@ params definition.
 import os
 import Tkinter as tk
 import ttk
-import tkFont
 
-from pyworkflow.mapper.mapper import Mapper
-from pyworkflow.mapper import mapper
+from pyworkflow.utils.path import getHomePath
 from pyworkflow.utils.properties import Message, Icon, Color
 from pyworkflow.viewer import DESKTOP_TKINTER
 import gui
 from gui import configureWeigths, Window
 from browser import FileBrowserWindow
-from text import TaggedText
 from widgets import Button, HotButton, IconButton
 from pyworkflow.protocol.params import *
-from pyworkflow.protocol import Protocol
 from dialog import showInfo, EditObjectDialog, ListDialog, askYesNo
 from canvas import Canvas
 from tree import TreeProvider, BoundTree
@@ -354,8 +349,6 @@ class SectionFrame(tk.Frame):
         configureWeigths(self, row=1)
         configureWeigths(canvasFrame)
         self.canvas = Canvas(canvasFrame, width=625, height=self.height, bg='white') 
-        #self.canvas.config(scrollregion=(10, 0, 600, self.height))
-        #TaggedText(self, width=90, height=self.height, bd=0, cursor='arrow')
         self.canvas.grid(row=0, column=0, sticky='news')
         canvasFrame.grid(row=1, column=0, sticky='news')
         
@@ -765,6 +758,7 @@ class LineWidget(ParamWidget):
             self.btnFrame.grid(row=self.row, column=2, padx=2, sticky='new')
         
     def hide(self):
+        print "hidding LineWidget..."
         self.content.grid_remove()  
        
 
@@ -892,19 +886,21 @@ class FormWindow(Window):
         
         r = 0 # Run name
         self._createHeaderLabel(runFrame, Message.LABEL_RUNNAME, bold=True, sticky='ne')
-        entry = self._createBoundEntry(runFrame, Message.VAR_RUN_NAME, width=25, 
-                                       func=self.setProtocolLabel, value=self.protocol.getObjLabel())
+        self.runNameVar = tk.StringVar()
+        entry = tk.Entry(runFrame, font=self.font, width=25, textvariable=self.runNameVar)
         entry.grid(row=r, column=1, padx=(0, 5), pady=5, sticky='new')#, columnspan=5)
         btn = IconButton(runFrame, Message.TITLE_COMMENT, Icon.ACTION_EDIT, command=self._editObjParams)
         btn.grid(row=r, column=2, padx=(10,0), pady=5, sticky='nw')
         
         c = 3 # Comment
         self._createHeaderLabel(runFrame, Message.TITLE_COMMENT, sticky='ne', column=c)
-        entry = self._createBoundEntry(runFrame, Message.VAR_RUN_NAME, width=25, 
-                                       func=self.setProtocolLabel, value=self.protocol.getObjComment())
+        self.commentVar = tk.StringVar()
+        entry = tk.Entry(runFrame, font=self.font, width=25, textvariable=self.commentVar)
         entry.grid(row=r, column=c+1, padx=(0, 5), pady=5, sticky='new')#, columnspan=5)
         btn = IconButton(runFrame, Message.TITLE_COMMENT, Icon.ACTION_EDIT, command=self._editObjParams)
         btn.grid(row=r, column=c+2, padx=(10,0), pady=5, sticky='nw')
+        
+        self.updateLabelAndComment()
                 
         r = 1 # Execution
         self._createHeaderLabel(runFrame, Message.LABEL_EXECUTION, bold=True, sticky='ne', row=r, pady=0)
@@ -976,15 +972,11 @@ class FormWindow(Window):
     
     def _editObjParams(self, e=None):
         """ Show a Text area to edit the protocol label and comment. """
-        
+        self.setProtocolLabel()        
         d = EditObjectDialog(self.root, Message.TITLE_EDIT_OBJECT, self.protocol, self.protocol.mapper)
         
         if d.resultYes():
-            label = d.valueLabel
-            self.runNameVar.set(label)
-            self.protocol.setObjLabel(label)
-            self.protocol.setObjComment(d.valueComment)
-                            
+            self.updateLabelAndComment()
         
     def _createParams(self, parent):
         paramsFrame = tk.Frame(parent)
@@ -1128,6 +1120,9 @@ class FormWindow(Window):
         
     def _close(self, onlySave=False):
         try:
+            # Set the protocol label
+            self.setProtocolLabel()
+            
             message = self.callback(self.protocol, onlySave)
             if not self.visualizeMode:
                 if len(message):
@@ -1255,8 +1250,10 @@ class FormWindow(Window):
         """Check if the condition of a param is statisfied 
         hide or show it depending on the result"""
         widget = self.widgetDict.get(paramName, None)
+        print "Checking condition for '%s'" % paramName
         
         if isinstance(widget, ParamWidget): # Special vars like MPI, threads or runName are not real widgets
+            print "  is ParamWidget"
             v = self.protocol.evalParamCondition(paramName) and self.protocol.evalExpertLevel(paramName)
             if v:
                 widget.show()
@@ -1273,7 +1270,9 @@ class FormWindow(Window):
             self._checkCondition(d)
             
     def _checkAllChanges(self):
-        for paramName, _ in self.protocol.iterDefinitionAttributes():
+        print ">>>>> Checking All Changes..."
+        #for paramName, _ in self.protocol.iterDefinitionAttributes():
+        for paramName in self.widgetDict:
             self._checkCondition(paramName)
             
     def _onExpertLevelChanged(self, *args):
@@ -1310,13 +1309,19 @@ class FormWindow(Window):
                     print "Error setting param for: ", paramName, "value: '%s'" % var.get()
                 param.set(None)
                 
-    def setProtocolLabel(self, paramName):
-        label = self.widgetDict[paramName].get()
-        self.protocol.setObjLabel(label)
+    def updateLabelAndComment(self):
+        """ Read the label and comment first line to update
+        the entry boxes in the form.
+        """
+        self.runNameVar.set(self.protocol.getObjLabel())
+        # Get only the first comment line
+        comment = self.protocol.getObjComment()
+        if comment:
+            comment = comment.split()[0]
+        self.commentVar.set(comment)
         
-    def setProtocolComment(self, paramName):
-        label = self.widgetDict[paramName].get()
-        self.protocol.setObjLabel(label)       
+    def setProtocolLabel(self):
+        self.protocol.setObjLabel(self.runNameVar.get())
              
     def updateProtocolParams(self):
         for paramName, _ in self.protocol.iterDefinitionAttributes():
