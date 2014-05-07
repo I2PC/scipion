@@ -67,7 +67,7 @@ def form(request):
     # Patch : to fix the relion dynamic way to generate the viewer form
     #         For this is necessary to call setProtocol method
     if protRunIdViewer is not None:
-        protocol_parent = project.mapper.selectById(int(protRunIdViewer))
+        protocol_parent = project.getProtocol(int(protRunIdViewer))
         protocol.setProtocol(protocol_parent)
     
     hosts = [host.getLabel() for host in project.getSettings().getHosts()]
@@ -246,7 +246,7 @@ def updateProtocolParams(request, protocol, project):
 def getPointerValue(project, attr, value, paramName):
     if len(value.strip()) > 0:
       
-        obj = project.mapper.selectById(value)  # Get the object from its id
+        obj = project.getProtocol(value)  # Get the object from its id
         id1 = attr.getObjId()
         id2 = obj.getObjId()
         
@@ -304,7 +304,7 @@ def delete_protocol(request):
         projectName = request.session['projectName']
         project = loadProject(projectName)
         protId = request.GET.get('protocolId', None)
-        protocol = project.mapper.selectById(int(protId))
+        protocol = project.getProtocol(int(protId))
         try:
             project.deleteProtocol(protocol)
             res = {'success' : 'Protocol deleted successful'}
@@ -322,7 +322,7 @@ def stop_protocol(request):
         projectName = request.session['projectName']
         project = loadProject(projectName)
         protId = request.GET.get('protocolId', None)
-        protocol = project.mapper.selectById(int(protId))
+        protocol = project.getProtocol(int(protId))
      
         project.stopProtocol(protocol)
         

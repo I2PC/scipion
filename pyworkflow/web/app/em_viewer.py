@@ -41,7 +41,8 @@ def launch_viewer(request):
     projectName = request.session['projectName']
     project = loadProject(projectName)
     objId = request.GET.get('objectId', None)
-    obj = project.mapper.selectById(int(objId))
+#    obj = project.mapper.selectById(int(objId))
+    obj = project.getProtocol(int(objId))
     
     if obj.isPointer():
         obj = obj.get()
@@ -122,7 +123,7 @@ def viewerElement(request):
     protId = request.POST.get('protRunIdViewer', None)
     viewerParam = request.POST.get('viewerParam', None)
     
-    protocol = project.mapper.selectById(int(protId))
+    protocol = project.getProtocol(int(protId))
     protocolViewer.setProtocol(protocol)
     updateProtocolParams(request, protocolViewer, project)
     

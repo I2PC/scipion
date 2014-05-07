@@ -143,7 +143,7 @@ def loadProtocolProject(request, requestType='POST'):
     # Create the protocol object
     if protId and protId != 'None':  # Case of new protocol
         protId = requestDict.get('protocolId', None)
-        protocol = project.mapper.selectById(int(protId))
+        protocol = project.getProtocol(int(protId))
         
         # Remove this and create loadProtocol method in project class
         protocol.setProject(project) 
@@ -200,9 +200,9 @@ def get_attributes(request):
         project = loadProject(projectName)
         objId = request.GET.get('objId', None)
         
-        obj = project.mapper.selectById(int(objId))
+        obj = project.getProtocol(int(objId))
         if obj is None:
-            obj = project.mapper.selectById(int(objId)).get()
+            obj = project.getProtocol(int(objId)).get()
             
         res = obj.getObjLabel() + "_-_" + obj.getObjComment()
         return HttpResponse(res, mimetype='application/javascript')
@@ -221,9 +221,9 @@ def set_attributes(request):
             className = request.GET.get('className', None)
             obj = emProtocolsDict.get(className, None)()
         else:
-            obj = project.mapper.selectById(int(id))
+            obj = project.getProtocol(int(id))
             if obj is None:
-                obj = project.mapper.selectById(int(id)).get()
+                obj = project.getProtocol(int(id)).get()
                 
 #            if typeObj=='object':
 #                print obj
