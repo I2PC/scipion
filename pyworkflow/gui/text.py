@@ -59,6 +59,22 @@ class HyperlinkManager:
         self.links[tag] = action
         return "hyper", tag
 
+    def addOpen(self, url):
+        """ Like add(), but the action is set to open the given url
+            (which can be a file).
+        """
+        # Define a function to open files cleanly in a system-dependent way
+        if sys.platform.startswith('darwin'):  # macs use the "open" command
+            open = lambda path: subprocess.call(['open', path])
+        elif os.name == 'nt':  # there is a function os.startfile for windows
+            open = lambda path: os.startfile(path)
+        elif os.name == 'posix':  # linux systems with a xdg-compliant wm
+            open = lambda path: subprocess.call(['xdg-open', path])
+        else:
+            raise RuntimeError('Unknown system, so cannot open %s' % url)
+
+        return self.add(lambda: open(url))
+
     def _enter(self, event):
         self.text.config(cursor="hand2")
 
@@ -328,14 +344,6 @@ class OutputText(Text):
         Text.__init__(self, master, **opts)
         self.hm = HyperlinkManager(self)
         self.doRefresh()
-        if sys.platform.startswith('darwin'):
-            self.open = lambda path: subprocess.call(['open', path])
-        elif os.name == 'nt':
-            self.open = lambda path: os.startfile(path)
-        elif os.name == 'posix':
-            self.open = lambda path: subprocess.call(['xdg-open', path])
-        else:  # oops
-            self.open = lambda path: sys.stdout.write('Unknown system\n')
 
     def getDefaults(self):
         return {'bg': "black", 'fg':'white', 'bd':0, 'font': gui.fontNormal, 
@@ -403,22 +411,22 @@ class OutputText(Text):
 
         self.config(state=tk.NORMAL)
         #self.clear()
-        if os.path.exists(self.filename):
-            textfile = open(self.filename)
+        fname = self.filename  # short notation
+        if os.path.exists(fname):
+            textfile = open(fname)
 
             textfile.seek(self.offset)
-            size = (os.stat(self.filename).st_size - self.offset) / 1024  # in kB
+            size = (os.stat(fname).st_size - self.offset) / 1024  # in kB
             if size > 100:  # max size that we want to read (in kB)
                 self.addLines(textfile.read(20000).splitlines(True))
                 self.insert(tk.END, """\n
     ==> Too much data to read (%d kB) -- %d kB omitted
     ==> Click """ % (size, size - 40))
-                self.insert(tk.END, self.filename,
-                            self.hm.add(lambda: self.open(self.filename)))
+                self.insert(tk.END, fname, self.hm.addOpen(fname))
                 self.insert(tk.END, """ to open it with the default viewer
     ==> Line numbers below are not in sync with the input data\n\n""")
 
-                textfile.seek(-20000, 2)  # also show the last 10000 bytes
+                textfile.seek(-20000, 2)  # also show the last 20000 bytes
                 self.addLines(textfile)
             else:
                 self.addLines(textfile)
