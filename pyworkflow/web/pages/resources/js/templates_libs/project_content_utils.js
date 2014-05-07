@@ -513,7 +513,7 @@ function updateButtons(id, mode){
 		
 			// Action Delete Button
 			$("a#deleteTool").attr('href',
-				'javascript:deleteProtocolForm("' + id + '")');
+				'javascript:deleteProtocolForm("' + id + '","single")');
 			$("span#deleteTool").show();
 			
 			// Action Browse Button
@@ -533,12 +533,12 @@ function updateButtons(id, mode){
 	 		
 	 		// Action Copy Button
 			$("a#copyTool").attr('href',
-				'javascript:copyMultipleProtocolsForm("' + list_id + '")');
+				'javascript:copyProtocol("' + list_id + '")');
 			$("span#copyTool").show();
 		
 			// Action Delete Button
 			$("a#deleteTool").attr('href',
-				'javascript:deleteMultipleProtocolsForm("' + list_id + '")');
+				'javascript:deleteProtocolForm("' + id + '","multiple")');
 			$("span#deleteTool").show();
 			
 			// Action Browse Button
@@ -706,31 +706,59 @@ function editObject(objId){
 	});
 }
 
-function deleteProtocolForm(protocolId) {
+function deleteProtocolForm(id, mode) {
 	/*
 	 * Dialog web form based in messi.js to verify the option to delete.
 	 */
-	var msg = "</td><td class='content' value='"
-			+ protocolId
-			+ "'><strong>ALL DATA</strong> related to this <strong>protocol run</strong>"
-			+ " will be <strong>DELETED</strong>. Do you really want to continue?</td></tr></table>";
 	
+	 var msg = "</td><td class='content' value='"+ id
+	 
+	 switch(mode){
+	 	case "single":
+			msg += "'><strong>ALL DATA</strong> related to this <strong>protocol run</strong>"
+			break;
+	 	case "multiple":
+			msg += "'><strong>ALL DATA</strong> related to the <strong>selected protocols run</strong>"
+	 		break;
+	 }
+	 msg += " will be <strong>DELETED</strong>. Do you really want to continue?</td></tr></table>";
+	 
 	warningPopup('Confirm DELETE',msg, 'deleteProtocol')
 	
 }
+
 
 function deleteProtocol(elm) {
 	/*
 	 * Method to execute a delete for a protocol
 	 */
-	var protId = elm.attr('value');
-	deleteProtocolById(protId);
-}
-
-function deleteProtocolById(protId){
+	var id = elm.attr('value');
+	
 	$.ajax({
 		type : "GET",
-		url : "/delete_protocol/?protocolId=" + protId,
+		url : "/delete_protocol/?id=" + id,
+		dataType : "json",
+		async :false,
+		success : function(json) {
+			if(json.errors != undefined){
+				// Show errors in the validation
+				errorPopup('Errors found',json.errors);
+			} else if(json.success!= undefined){
+	//				launchMessiSimple("Successful", messiInfo(json.success));
+	//				window.location.reload()
+			}
+		},
+		error: function(){
+			alert("error")
+		}
+	});
+	
+}
+
+function copyProtocol(id){
+	$.ajax({
+		type : "GET",
+		url : "/copy_protocol/?id=" + id,
 		dataType : "json",
 		async :false,
 		success : function(json) {
@@ -747,78 +775,6 @@ function deleteProtocolById(protId){
 		}
 	});
 }
-
-function deleteMultipleProtocolsForm(list_id) {
-	/*
-	 * Dialog web form based in messi.js to verify the option to delete
-	 * a set of protocols by id's.
-	 */
-	 var msg = "</td><td class='content' value='"
-			+ list_id
-			+ "'><strong>ALL DATA</strong> related to the <strong>selected protocols run</strong>"
-			+ " will be <strong>DELETED</strong>. Do you really want to continue?</td></tr></table>";
-	
-	 warningPopup('Confirm DELETE',msg, 'deleteMultipleProtocols')	
-}
-
-function deleteMultipleProtocols(elm) {
-	/*
-	 * Method to execute a delete for a set of protocols
-	 */
-	var list_id = elm.attr('value').split(',');
-	
-	for (var x=0;x<list_id.length;x++){
-		console.log("deleting protocol with id:" + list_id[x]);
-		deleteProtocolById(list_id[x]);
-	}
-}
-
-function copyMultipleProtocolsForm(list_id) {
-	/*
-	 * Dialog web form based in messi.js to verify the option to copy
-	 * a set of protocols by id's.
-	 */
-	 var msg = "</td><td class='content' value='"
-			+ list_id
-			+ "'><strong>ALL DATA</strong> related to the <strong>selected protocols run</strong>"
-			+ " will be <strong>COPIED</strong>. Do you really want to continue?</td></tr></table>";
-	
-	 warningPopup('Confirm COPY',msg, 'copyMultipleProtocols')	
-}
-
-function copyProtocolById(protId){
-	$.ajax({
-		type : "GET",
-		url : "/copy_protocol/?protocolId=" + protId,
-		dataType : "json",
-		async :false,
-		success : function(json) {
-			if(json.errors != undefined){
-				// Show errors in the validation
-				errorPopup('Errors found',json.errors);
-			} else if(json.success!= undefined){
-//				launchMessiSimple("Successful", messiInfo(json.success));
-//				window.location.reload()
-			}
-		},
-		error: function(){
-			alert("error")
-		}
-	});
-}
-
-function copyMultipleProtocols(elm) {
-	/*
-	 * Method to execute a copy for a set of protocols
-	 */
-	var list_id = elm.attr('value').split(',');
-	
-	for (var x=0;x<list_id.length;x++){
-		console.log("copying protocol with id:" + list_id[x]);
-		copyProtocolById(list_id[x]);
-	}
-}
-
 
 function stopProtocolForm(protocolId) {
 	/*

@@ -272,7 +272,7 @@ def textfileViewer(title, file):
     return html
 
 def convertTktoHtml(text):
-    text = text.replace('\n', '<br/>')
+    text = parseText(text.replace('\n', '<br/>'));
     return text
 
 def render_column(request):

@@ -299,14 +299,18 @@ def save_protocol(request):
 
 # Method to delete a protocol #
 def delete_protocol(request):
-    # Project Id(or Name) should be stored in SESSION
     if request.is_ajax():
         projectName = request.session['projectName']
         project = loadProject(projectName)
-        protId = request.GET.get('protocolId', None)
-        protocol = project.getProtocol(int(protId))
+        list_id = request.GET.get('id', None).split(",")
+        
+        list_protocols = []
+        for id in list_id:        
+            protocol = project.getProtocol(int(id))
+            list_protocols.append(protocol)
+            
         try:
-            project.deleteProtocol(protocol)
+            project.deleteProtocol(*list_protocols)
             res = {'success' : 'Protocol deleted successful'}
         except Exception, ex:
             errors = [convertTktoHtml(str(ex))]
@@ -317,15 +321,19 @@ def delete_protocol(request):
 
 # Method to copy a protocol #
 def copy_protocol(request):
-    # Project Id(or Name) should be stored in SESSION
     if request.is_ajax():
         projectName = request.session['projectName']
         project = loadProject(projectName)
-        protId = request.GET.get('protocolId', None)
-        protocol = project.getProtocol(int(protId))
+        list_id = request.GET.get('id', None).split(",")
+        
+        list_protocols = []
+        for id in list_id:        
+            protocol = project.getProtocol(int(id))
+            list_protocols.append(protocol)
+        
         try:
-            protocol = project.copyProtocol(protocol)
-            project.saveProtocol(protocol)
+            protocol = project.copyProtocol(list_protocols)
+            
             res = {'success' : 'Protocol copied successful'}
         except Exception, ex:
             errors = [convertTktoHtml(str(ex))]
@@ -336,7 +344,6 @@ def copy_protocol(request):
 
 # Method to stop a protocol #
 def stop_protocol(request):
-    # Project Id(or Name) should be stored in SESSION
     if request.is_ajax():
         projectName = request.session['projectName']
         project = loadProject(projectName)
