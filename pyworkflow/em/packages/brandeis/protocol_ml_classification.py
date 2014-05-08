@@ -122,7 +122,7 @@ class ProtFrealignClassify(ProtFrealignBase, ProtClassify3D):
         for ref in range(1, self.numberOfRef + 1):
             refVol = self._getFileName('ref_vol_class', iter=iter, ref=ref) # reference volume of the step.
             iterVol =  self._getFileName('iter_vol_class', iter=iter, ref=ref) # refined volumes of the step
-            if iter != 1:
+            if iter == 1:
                 copyFile(volFn, iterVol)  #Copy the initial volume in the current directory.
             else:
                 self._splitParFile(iter, ref, cpusRef[ref-1])
