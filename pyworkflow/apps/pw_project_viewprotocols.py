@@ -888,7 +888,7 @@ class ProtocolsView(tk.Frame):
         viewers = findViewers(prot.getClassName(), DESKTOP_TKINTER)
         if len(viewers):
             #TODO: If there are more than one viewer we should display a selection menu
-            firstViewer = viewers[0](project=self.project) # Instanciate the first available viewer
+            firstViewer = viewers[0](project=self.project, protocol=prot) # Instanciate the first available viewer
             firstViewer.visualize(prot, windows=self.windows)
         else:
             for _, output in prot.iterOutputAttributes(EMObject):
@@ -896,8 +896,8 @@ class ProtocolsView(tk.Frame):
                 if len(viewers):
                     #TODO: If there are more than one viewer we should display a selection menu
                     viewerclass = viewers[0]
-                    firstViewer = viewerclass(project=self.project) # Instanciate the first available viewer
-                    firstViewer.visualize(output, windows=self.windows, protocol=prot)
+                    firstViewer = viewerclass(project=self.project, protocol=prot) # Instanciate the first available viewer
+                    firstViewer.visualize(output, windows=self.windows, protocol=prot)#FIXME:Probably o longer needed protocol on args, already provided on init
             
         
     def _analyzeResultsClicked(self, e=None):
