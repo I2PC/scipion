@@ -67,10 +67,13 @@ Libraries = {'fftw': {INCS: [join('external','fftw-3.3.1')],
                      },
              'hdf5': {INCS: [join('external','hdf5-1.8.10','src')],
                         LIBS: ['hdf5']
-                     },        
+                     },
              'hdf5_cpp': {INCS: [join('external','hdf5-1.8.10','c++')],
                         LIBS: ['hdf5_cpp']
-                     },        
+                     },
+             'opencv': {INCS: [],
+                        LIBS: ['opencv_core', 'opencv_legacy', 'opencv_imgproc', 'opencv_video']
+                     },
 #             'python': {INCS: [PYTHON_DIR],
 #                        LIBS: ['']
 #                     },
@@ -1182,7 +1185,7 @@ if int(env['gtest']):
      AddXmippCTest('test_euler')
      AddXmippCTest('test_fftw')
      AddXmippCTest('test_filters')
-     AddXmippCTest('test_fringe_processing')          
+     AddXmippCTest('test_fringe_processing')
      AddXmippCTest('test_funcs')
      AddXmippCTest('test_geometry')
      AddXmippCTest('test_image')
@@ -1191,7 +1194,7 @@ if int(env['gtest']):
      AddXmippCTest('test_metadata')
      AddXmippCTest('test_multidim')
      AddXmippCTest('test_polar')
-     AddXmippCTest('test_polynomials')          
+     AddXmippCTest('test_polynomials')
      AddXmippCTest('test_sampling')
      AddXmippCTest('test_symmetries')
      AddXmippCTest('test_transformation')
@@ -1226,6 +1229,7 @@ if int(env['matlab']):
 
 # Optical Alignment program
 if int(env['opencv']):
+    print 
+    AddXmippProgram('optical_alignment', getLibraryDict('opencv').get(LIBS))
     if int(env['cuda']):
-        AddXmippProgram('optical_alignment_gpu')
-    AddXmippProgram('optical_alignment_cpu')
+        AddXmippProgram('optical_alignment_gpu', getLibraryDict('opencv').get(LIBS) + ['cuda'])
