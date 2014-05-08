@@ -190,22 +190,22 @@ class ProtFrealignClassify(ProtFrealignBase, ProtClassify3D):
     
     def calculateOCCStep(self, iter, leaveDir, numberOfBlocks):
         imgSet = self.inputParticles.get()
+        numberOfClasses = self.numberOfRef
+        cpusRef = self._cpusPerClass(numberOfBlocks, numberOfClasses)
         
         if iter == 1 and not leaveDir:
             ProtFrealignBase._mergeAllParFiles(self, iter, numberOfBlocks)
             parFile = self._getFile('output_par', iter=iter)
             samplingRate = imgSet.getSamplingRate()
-            numberOfClasses = self.numberOfRef
             rootFn = self._getFile('output_par_class_tmp', iter=iter)
             args  = self._rsampleCommand()
             program = RSAMPLE_PATH
         else:
             args = self._occCommand()
             tmp = ''
-            numberOfRef = self.numberOfRef
-            for ref in range(1, self.numberOfRef + 1):
+            for ref in range(1, numberOfClasses + 1):
                 if not leaveDir:
-                    self._mergeAllParFiles(iter, ref, numberOfBlocks)
+                    self._mergeAllParFiles(iter, ref, cpusRef[ref-1])
                 args += '%s\n' % self._getFile('output_par_class', iter=iter, ref=ref)
                 tmp += '%s\n' % self._getFile('output_par_class', iter=iter, ref=ref)
             args = args + tmp + 'eot'
@@ -344,7 +344,7 @@ eot
     
     def _occCommand(self):
         args = """ << eot
-%(numberOfRef)d
+%(numberOfClasses)d
 1.0
 """
         return args
