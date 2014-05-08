@@ -346,3 +346,4 @@ eot
 %(numberOfRef)d
 1.0
 """
+        return args
