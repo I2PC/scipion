@@ -24,7 +24,7 @@
 # *
 # **************************************************************************
 """
-This module contains the protocol to obtain a refined 3D recontruction from a set of particles using Frealign
+This module contains the protocol to obtain a refined 3D reconstruction from a set of particles using Frealign
 """
 import os
 from pyworkflow.utils import *
@@ -43,58 +43,6 @@ class ProtFrealignClassify(ProtFrealignBase, ProtClassify3D):
     def __init__(self, **args):
         ProtFrealignBase.__init__(self, **args)
     
-    def _createFilenameTemplates(self, iter):
-        """ Centralize how files are called for iterations and references. """
-        prevIter = iter - 1
-        myDict = {
-                  'particles': self._getTmpPath('particles.mrc'),
-                  'init_vol': self._getTmpPath('volume.mrc'),
-                  # Volumes for the iteration
-                  'ref_vol': self._iterWorkingDir(iter, 'reference_volume_iter_%(iter)03d.mrc'),
-                  'iter_vol': self._iterWorkingDir(iter, 'volume_iter_%(iter)03d.mrc'),
-                  'prev_vol': self._iterWorkingDir(prevIter, 'volume_iter_%(iter)03d.mrc'),
-                  'output_vol_par': 'output_vol_iter_%(iter)03d.par',
-                  # dictionary for all set
-                  'input_par': self._iterWorkingDir(prevIter, 'particles_iter_%(iter)03d.par'),
-                  'output_par': self._iterWorkingDir(iter, 'particles_iter_%(iter)03d.par'),
-                  'shift' : 'particles_shifts_iter_%(iter)03d.shft',
-                  'match' : 'particles_match_iter_%(iter)03d.mrc',
-                  'weight' : 'volume_weights_iter_%(iter)03d.mrc',
-                  'vol1' : 'volume_1_iter_%(iter)03d.mrc',
-                  'vol2' : 'volume_2_iter_%(iter)03d.mrc',
-                  'phase' : 'volume_phasediffs_iter_%(iter)03d.mrc',
-                  'spread' : 'volume_pointspread_iter_%(iter)03d.mrc',
-                  # each class volumes for the iteration
-                  'ref_vol_class': self._iterWorkingDir(iter, 'reference_volume_iter_%(iter)03d_class_%(ref)02d.mrc'),
-                  'iter_vol_class': self._iterWorkingDir(iter, 'volume_iter_%(iter)03d_class_%(ref)02d.mrc'),
-                  'prev_vol_class': self._iterWorkingDir(prevIter, 'volume_iter_%(iter)03d_class_%(ref)02d.mrc'),
-                  'output_vol_class_par': 'output_vol_iter_%(iter)03d_class_%(ref)02d.par',
-                  # dictionary for each class
-                  'input_par_class': self._iterWorkingDir(prevIter, 'particles_iter_%(iter)03d_class_%(ref)02d.par'),
-                  'output_par_class': self._iterWorkingDir(iter, 'particles_iter_%(iter)03d_class_%(ref)02d.par'),
-                  'output_par_class_tmp': self._iterWorkingDir(iter, 'particles_iter_%(iter)03d_class_0.par'),
-                  'shift_class' : 'particles_shifts_iter_%(iter)03d_class_%(ref)02d.shft',
-                  'match_class' : 'particles_match_iter_%(iter)03d_class_%(ref)02d.mrc',
-                  'weight_class' : 'volume_weights_iter_%(iter)03d_class_%(ref)02d.mrc',
-                  'vol1_class' : 'volume_1_iter_%(iter)03d_class_%(ref)02d.mrc',
-                  'vol2_class' : 'volume_2_iter_%(iter)03d_class_%(ref)02d.mrc',
-                  'phase_class' : 'volume_phasediffs_iter_%(iter)03d_class_%(ref)02d.mrc',
-                  'spread_class' : 'volume_pointspread_iter_%(iter)03d_class_%(ref)02d.mrc',
-                  # dictionary for each processing block and class
-                  'input_par_block': self._iterWorkingDir(prevIter, 'particles_iter_%(iter)03d_class_%(ref)02d_%(block)02d.par'),
-                  'output_par_block': self._iterWorkingDir(iter, 'particles_iter_%(iter)03d_class_%(ref)02d_%(block)02d.par'),
-                  'shift_block' : 'particles_shifts_iter_%(iter)03d_class_%(ref)02d_%(block)02d.shft',
-                  'match_block' : 'particles_match_iter_%(iter)03d_class_%(ref)02d_%(block)02d.mrc', 
-                  'weight_block' : 'volume_weights_iter_%(iter)03d_class_%(ref)02d_%(block)02d',
-                  'vol1_block' : 'volume_1_%(iter)03d_class_%(ref)02d_%(block)02d_iter',
-                  'vol2_block' : 'volume_2_iter_%(iter)03d_class_%(ref)02d_%(block)02d',
-                  'phase_block' : 'volume_phasediffs_iter_%(iter)03d_class_%(ref)02d_%(block)02d',
-                  'spread_block' : 'volume_pointspread_iter_%(iter)03d_class_%(ref)02d_%(block)02d',
-                  'output_vol_par': 'output_vol_iter_%(iter)03d.par',
-                  }
-        
-        self._fnDict = myDict
-    
   #--------------------------- INSERT steps functions --------------------------------------------
     def _insertAllSteps(self):
         """Insert the steps to refine orientations and shifts of the SetOfParticles
@@ -111,7 +59,7 @@ class ProtFrealignClassify(ProtFrealignBase, ProtClassify3D):
             firstOccId = self._insertFunctionStep("calculateOCCStep", iter, False, numberOfBlocks, prerequisites=depsRefine)
             for ref in range(1, self.numberOfRef + 1):
                 reconsId = self._insertFunctionStep("reconstructVolumeStep", iter, ref, cpuList, prerequisites=[firstOccId])
-                depsRecons = depsRecons + [reconsId]
+                depsRecons.append(reconsId)
             secondOccId = self._insertFunctionStep("calculateOCCStep", iter, True, numberOfBlocks, prerequisites=depsRecons)
             depsOcc = [secondOccId]
         self._insertFunctionStep("createOutputStep", prerequisites=depsOcc)
@@ -160,7 +108,6 @@ class ProtFrealignClassify(ProtFrealignBase, ProtClassify3D):
         
         cpusRefs = self._cpusPerClass(numberOfBlocks, self.numberOfRef)
             
-            
         if iter==1:
             imgSet = self.inputParticles.get()
             vol = self.input3DReference.get()
@@ -193,7 +140,7 @@ class ProtFrealignClassify(ProtFrealignBase, ProtClassify3D):
         
         iniPart, lastPart = self._particlesInBlock(block)
         prevIter = iter - 1
-        param['inputParFn'] = self._getFile('input_par_block', iter=prevIter, ref=ref, block=block)
+        param['inputParFn'] = self._getFile('input_par_block_class', iter=prevIter, ref=ref, block=block)
         param['initParticle'] = iniPart
         param['finalParticle'] = lastPart
         
@@ -227,7 +174,7 @@ class ProtFrealignClassify(ProtFrealignBase, ProtClassify3D):
         
         os.environ['NCPUS'] = str(cpuList[ref-1])
         params['frealign'] = FREALIGNMP_PATH
-        params['outputParFn'] = self._getFileName('output_vol_par', iter=iter)
+        params['outputParFn'] = self._getFileName('output_vol_par_class', iter=iter, ref=ref)
         params['initParticle'] = initParticle
         params['finalParticle'] = finalParticle
 
@@ -243,15 +190,11 @@ class ProtFrealignClassify(ProtFrealignBase, ProtClassify3D):
         imgSet = self.inputParticles.get()
         
         if iter == 1 and not leaveDir:
-            ProtFrealignBase._createFilenameTemplates(self, iter)
             ProtFrealignBase._mergeAllParFiles(self, iter, numberOfBlocks)
             parFile = self._getFile('output_par', iter=iter)
             samplingRate = imgSet.getSamplingRate()
             numberOfClasses = self.numberOfRef
-            
-            self._createFilenameTemplates(iter)
             rootFn = self._getFile('output_par_class_tmp', iter=iter)
-            
             args  = self._rsampleCommand()
             program = RSAMPLE_PATH
         else:
@@ -293,15 +236,15 @@ class ProtFrealignClassify(ProtFrealignBase, ProtClassify3D):
         paramDics = {}
         paramDics['stopParam'] = -100
         paramDics['volume'] = self._getFile('ref_vol_class', iter=iter, ref=ref)
-        paramDics['outputParFn'] = self._getFile('output_par_block', iter=iter, ref=ref, block=block)
+        paramDics['outputParFn'] = self._getFile('output_par_block_class', iter=iter, ref=ref, block=block)
         paramDics['inputParFn'] = paramDics['outputParFn']
-        paramDics['imgFnMatch'] = self._getFileName('match_block', block=block, iter=iter, ref=ref)
-        paramDics['outputShiftFn'] = self._getFileName('shift_block', block=block, iter=iter, ref=ref)
-        paramDics['3Dweigh'] = self._getFileName('weight_block', block=block, iter=iter, ref=ref)
-        paramDics['FSC3DR1'] = self._getFileName('vol1_block', block=block, iter=iter, ref=ref)
-        paramDics['FSC3DR2'] = self._getFileName('vol2_block', block=block, iter=iter, ref=ref)
-        paramDics['VolPhResidual'] = self._getFileName('phase_block', block=block, iter=iter, ref=ref)
-        paramDics['VolpointSpread'] = self._getFileName('spread_block', block=block, iter=iter, ref=ref)
+        paramDics['imgFnMatch'] = self._getFileName('match_block_class', block=block, iter=iter, ref=ref)
+        paramDics['outputShiftFn'] = self._getFileName('shift_block_class', block=block, iter=iter, ref=ref)
+        paramDics['3Dweigh'] = self._getFileName('weight_block_class', block=block, iter=iter, ref=ref)
+        paramDics['FSC3DR1'] = self._getFileName('vol1_block_class', block=block, iter=iter, ref=ref)
+        paramDics['FSC3DR2'] = self._getFileName('vol2_block_class', block=block, iter=iter, ref=ref)
+        paramDics['VolPhResidual'] = self._getFileName('phase_block_class', block=block, iter=iter, ref=ref)
+        paramDics['VolpointSpread'] = self._getFileName('spread_block_class', block=block, iter=iter, ref=ref)
         return paramDics
     
     def _setParams3DR(self, iter, ref):
@@ -344,7 +287,7 @@ class ProtFrealignClassify(ProtFrealignBase, ProtClassify3D):
             f2 = open(file2, 'w+')
             
             for block in range(1, numberOfBlocks + 1):
-                file1 = self._getFile('output_par_block', block=block, iter=iter, ref=ref)
+                file1 = self._getFile('output_par_block_class', block=block, iter=iter, ref=ref)
                 f1 = open(file1)
                 
                 for l in f1:
@@ -353,7 +296,7 @@ class ProtFrealignClassify(ProtFrealignBase, ProtClassify3D):
                 f1.close()
             f2.close()
         else:
-            file1 = self._getFile('output_par_block', block=1, iter=iter, ref=ref)
+            file1 = self._getFile('output_par_block_class', block=1, iter=iter, ref=ref)
             copyFile(file1, file2)
     
     def _splitParFile(self, iter, ref, numberOfBlocks):
@@ -364,7 +307,7 @@ class ProtFrealignClassify(ProtFrealignBase, ProtClassify3D):
         if numberOfBlocks != 1:
             for block in range(1, numberOfBlocks + 1):
                 f1 = open(file1)
-                file2 = self._getFileName('output_par_block', block= block, iter=prevIter, ref=ref)
+                file2 = self._getFileName('output_par_block_class', block= block, iter=prevIter, ref=ref)
                 f2 = open(file2, 'w+')
                 initpart, finalPart = self._particlesInBlock(block)
                 
@@ -383,7 +326,7 @@ class ProtFrealignClassify(ProtFrealignBase, ProtClassify3D):
                 f2.close()
                 f1.close()
         else:
-            file2 = self._getFileName('output_par_block', block=1, iter=prevIter, ref=ref)
+            file2 = self._getFileName('output_par_block_class', block=1, iter=prevIter, ref=ref)
             copyFile(file1, file2)
     
     def _rsampleCommand(self):

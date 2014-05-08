@@ -73,7 +73,33 @@ class ProtFrealignBase(EMProtocol):
                   'vol1_block' : 'volume_1_%(iter)03d_%(block)02d_iter',
                   'vol2_block' : 'volume_2_iter_%(iter)03d_%(block)02d',
                   'phase_block' : 'volume_phasediffs_iter_%(iter)03d_%(block)02d',
-                  'spread_block' : 'volume_pointspread_iter_%(iter)03d_%(block)02d'
+                  'spread_block' : 'volume_pointspread_iter_%(iter)03d_%(block)02d',
+                  # each class volumes for the iteration
+                  'ref_vol_class': self._iterWorkingDir(iter, 'reference_volume_iter_%(iter)03d_class_%(ref)02d.mrc'),
+                  'iter_vol_class': self._iterWorkingDir(iter, 'volume_iter_%(iter)03d_class_%(ref)02d.mrc'),
+                  'prev_vol_class': self._iterWorkingDir(prevIter, 'volume_iter_%(iter)03d_class_%(ref)02d.mrc'),
+                  'output_vol_par_class': 'output_vol_iter_%(iter)03d_class_%(ref)02d.par',
+                  # dictionary for each class
+                  'input_par_class': self._iterWorkingDir(prevIter, 'particles_iter_%(iter)03d_class_%(ref)02d.par'),
+                  'output_par_class': self._iterWorkingDir(iter, 'particles_iter_%(iter)03d_class_%(ref)02d.par'),
+                  'output_par_class_tmp': self._iterWorkingDir(iter, 'particles_iter_%(iter)03d_class_0.par'),
+                  'shift_class' : 'particles_shifts_iter_%(iter)03d_class_%(ref)02d.shft',
+                  'match_class' : 'particles_match_iter_%(iter)03d_class_%(ref)02d.mrc',
+                  'weight_class' : 'volume_weights_iter_%(iter)03d_class_%(ref)02d.mrc',
+                  'vol1_class' : 'volume_1_iter_%(iter)03d_class_%(ref)02d.mrc',
+                  'vol2_class' : 'volume_2_iter_%(iter)03d_class_%(ref)02d.mrc',
+                  'phase_class' : 'volume_phasediffs_iter_%(iter)03d_class_%(ref)02d.mrc',
+                  'spread_class' : 'volume_pointspread_iter_%(iter)03d_class_%(ref)02d.mrc',
+                  # dictionary for each processing block and class
+                  'input_par_block_class': self._iterWorkingDir(prevIter, 'particles_iter_%(iter)03d_class_%(ref)02d_%(block)02d.par'),
+                  'output_par_block_class': self._iterWorkingDir(iter, 'particles_iter_%(iter)03d_class_%(ref)02d_%(block)02d.par'),
+                  'shift_block_class' : 'particles_shifts_iter_%(iter)03d_class_%(ref)02d_%(block)02d.shft',
+                  'match_block_class' : 'particles_match_iter_%(iter)03d_class_%(ref)02d_%(block)02d.mrc', 
+                  'weight_block_class' : 'volume_weights_iter_%(iter)03d_class_%(ref)02d_%(block)02d',
+                  'vol1_block_class' : 'volume_1_%(iter)03d_class_%(ref)02d_%(block)02d_iter',
+                  'vol2_block_class' : 'volume_2_iter_%(iter)03d_class_%(ref)02d_%(block)02d',
+                  'phase_block_class' : 'volume_phasediffs_iter_%(iter)03d_class_%(ref)02d_%(block)02d',
+                  'spread_block_class' : 'volume_pointspread_iter_%(iter)03d_class_%(ref)02d_%(block)02d'
                   }
         
         self._fnDict = myDict
