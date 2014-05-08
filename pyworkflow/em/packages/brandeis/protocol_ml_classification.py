@@ -114,14 +114,16 @@ class ProtFrealignClassify(ProtFrealignBase, ProtClassify3D):
             
             imgFn = self._getFileName('particles')
             volFn = self._getFileName('init_vol')
+            refVol = self._getFileName('ref_vol', iter=iter) # reference volume of the step.
             imgSet.writeStack(imgFn) # convert the SetOfParticles into a mrc stack.
             ImageHandler().convert(vol.getLocation(), volFn) # convert the reference volume into a mrc volume
+            copyFile(volFn, refVol)  #Copy the initial volume in the current directory.
             
         for ref in range(1, self.numberOfRef + 1):
             refVol = self._getFileName('ref_vol_class', iter=iter, ref=ref) # reference volume of the step.
             iterVol =  self._getFileName('iter_vol_class', iter=iter, ref=ref) # refined volumes of the step
-            if iter==1:
-                copyFile(volFn, refVol)  #Copy the initial volume in the current directory.
+            if iter != 1:
+                copyFile(volFn, iterVol)  #Copy the initial volume in the current directory.
             else:
                 self._splitParFile(iter, ref, cpusRef[ref-1])
                 prevIterVol = self._getFileName('prev_vol_class', iter=prevIter, ref=ref) # volumes of the previous iteration
