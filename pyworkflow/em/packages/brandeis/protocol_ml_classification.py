@@ -82,6 +82,7 @@ class ProtFrealignClassify(ProtFrealignBase, ProtClassify3D):
                 pass
         else:
             blocks = self._cpusPerClass(numberOfBlocks, self.numberOfRef)
+            cpuList = self._cpusPerClass(numberOfBlocks, self.numberOfRef)
             for ref in range(1, self.numberOfRef + 1):
                 for block in range(1, blocks[ref-1] + 1):
                     restIterAngle = iter % self.itRefineAngles.get()
@@ -94,7 +95,7 @@ class ProtFrealignClassify(ProtFrealignBase, ProtClassify3D):
                         parRefine = 2
                     else:
                         parRefine = 3
-                    refineId = self._insertFunctionStep("refineParticlesStep", iter, ref, block, parRefine, prerequisites=depsInitId)
+                    refineId = self._insertFunctionStep("refineParticlesStep", iter, ref, block, parRefine, cpuList[ref-1], prerequisites=depsInitId)
                     depsRefine.append(refineId)
         return depsRefine
     
@@ -130,7 +131,7 @@ class ProtFrealignClassify(ProtFrealignBase, ProtClassify3D):
                 copyFile(prevIterVol, refVol)   #Copy the reference volume as refined volume.
                 copyFile(refVol, iterVol)   #Copy the reference volume as refined volume.
     
-    def refineParticlesStep(self, iter, ref, block, parRefine):
+    def refineParticlesStep(self, iter, ref, block, parRefine, numberOfBlocks):
         """Only refine the parameters of the SetOfParticles
         """
         param = {}
@@ -140,7 +141,7 @@ class ProtFrealignClassify(ProtFrealignBase, ProtClassify3D):
         if ref ==1 and block==1:
             self._enterDir(iterDir) # enter to the working directory for the current iteration.
         
-        iniPart, lastPart = self._particlesInBlock(block)
+        iniPart, lastPart = self._particlesInBlock(block, numberOfBlocks)
         prevIter = iter - 1
         param['inputParFn'] = self._getFile('input_par_block_class', iter=prevIter, ref=ref, block=block)
         param['initParticle'] = iniPart
@@ -312,7 +313,7 @@ class ProtFrealignClassify(ProtFrealignBase, ProtClassify3D):
                 f1 = open(file1)
                 file2 = self._getFileName('output_par_block_class', block= block, iter=prevIter, ref=ref)
                 f2 = open(file2, 'w+')
-                initpart, finalPart = self._particlesInBlock(block)
+                initpart, finalPart = self._particlesInBlock(block, numberOfBlocks)
                 
                 for l in f1:
                     
