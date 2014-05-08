@@ -304,7 +304,7 @@ def run_table_graph(request):
                        'graphView': graphView, 
                        'selectedRuns' : selectedRuns}
             
-            return render_to_response('run_table_graph.html', context)
+            return render_to_response('project_content/run_table_graph.html', context)
         
         elif listNewElm:
             request.session['runs'] = runsNew
@@ -406,8 +406,17 @@ def protocol_info(request):
         protocol = project.getProtocol(int(protId))
         
         # PROTOCOL IO
-        input_obj = [{'name':name, 'nameId': attr.getNameId(), 'id': attr.getObjId(), 'info': str(attr)} for name, attr in protocol.iterInputAttributes()]
-        output_obj = [{'name':name, 'nameId': attr.getNameId(), 'id': attr.getObjId(), 'info': str(attr)} for name, attr in protocol.iterOutputAttributes(EMObject)]
+        input_obj = [{'name':name, 
+                      'nameId': attr.getNameId(), 
+                      'id': attr.getObjId(), 
+                      'info': str(attr)} 
+                     for name, attr in protocol.iterInputAttributes()]
+        
+        output_obj = [{'name':name, 
+                       'nameId': attr.getNameId(), 
+                       'id': attr.getObjId(), 
+                       'info': str(attr)} 
+                      for name, attr in protocol.iterOutputAttributes(EMObject)]
 
         # PROTOCOL SUMMARY
         summary = parseText(protocol.summary())

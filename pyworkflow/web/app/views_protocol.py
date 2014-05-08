@@ -37,7 +37,6 @@ from django.core.context_processors import csrf
 from django.shortcuts import render_to_response
 from django.http import HttpResponse
 
-# Load all subclasses of Wizards
 
 SPECIAL_PARAMS = ['numberOfMpi', 'numberOfThreads', 'hostName', 'expertLevel', '_useQueue']
 OBJ_PARAMS =['runName', 'comment']
@@ -51,9 +50,8 @@ def getPointerHtml(protVar):
         
 def findWizardsWeb(protocol):   
     import em_wizard
+    
     webWizardsDict = getSubclassesFromModules(Wizard, {'em_wizard': em_wizard})
-#    for wiz in webWizardsDict.values():
-#        print "wiz: %s, targets=%s, environments=%s" % (wiz.__name__, wiz._targets, wiz._environments)
     
     return findWizardsFromDict(protocol, WEB_DJANGO, webWizardsDict)
 
@@ -90,7 +88,6 @@ def form(request):
         logoPath = getResourceLogo(path)
             
     wizards = findWizardsWeb(protocol)
-#    pprint(wizards)
     
     protocol.htmlCitations = parseText(protocol.citations())
     protocol.htmlDoc = parseText(protocol.getDoc())
@@ -151,6 +148,7 @@ def form(request):
                'hosts':hosts,
                'comment': parseText(protocol.getObjComment())
                }
+    
     # Update the context dictionary with the special params
     for paramName in SPECIAL_PARAMS:
         context[paramName] = protocol.getAttributeValue(paramName, '')
@@ -184,7 +182,6 @@ def PreprocessParamForm(request, param, paramName, wizards, viewerDict, visualiz
     
     if paramName in wizards:
         param.hasWizard = True
-#       param.wizardName = wizards[paramName].getView()
         param.wizardClassName = wizards[paramName].__name__
 #       print "param: ", paramName, " has wizard", " view: "
     
@@ -291,7 +288,7 @@ def save_protocol(request):
         protId = protocol.getObjId()
         res = {'success' : protId}
     except Exception, ex:
-        errors = [convertTktoHtml(str(ex))]
+        errors = [parseText(str(ex))]
         res = {'errors' : errors}
     
     jsonStr = json.dumps(res, ensure_ascii=False)
@@ -313,7 +310,7 @@ def delete_protocol(request):
             project.deleteProtocol(*list_protocols)
             res = {'success' : 'Protocol deleted successful'}
         except Exception, ex:
-            errors = [convertTktoHtml(str(ex))]
+            errors = [parseText(str(ex))]
             res = {'errors' : errors}
             
     jsonStr = json.dumps(res, ensure_ascii=False)
@@ -336,7 +333,7 @@ def copy_protocol(request):
             
             res = {'success' : 'Protocol copied successful'}
         except Exception, ex:
-            errors = [convertTktoHtml(str(ex))]
+            errors = [parseText(str(ex))]
             res = {'errors' : errors}
             
     jsonStr = json.dumps(res, ensure_ascii=False)
