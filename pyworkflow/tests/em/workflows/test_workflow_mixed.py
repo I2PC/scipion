@@ -427,7 +427,7 @@ class TestMixedFrealignClassify(TestWorkflow):
         # Now estimate CTF on the micrographs with ctffind 
         print "Performing CTFfind..."   
         protCTF = ProtCTFFind(lowRes=0.04, highRes=0.45, minDefocus=1.2, maxDefocus=3,
-                              runMode=1, numberOfMpi=1, numberOfThreads=5)         
+                              runMode=1, numberOfMpi=1, numberOfThreads=16)         
         protCTF.inputMicrographs.set(protPreprocess.outputMicrographs)
         protCTF.setObjLabel('CTF ctffind')
         self.proj.launchProtocol(protCTF, wait=True)
@@ -453,7 +453,7 @@ class TestMixedFrealignClassify(TestWorkflow):
         print "Running Frealign Classification..."
         protFrealign = ProtFrealignClassify(numberOfClasses=3, itRefineAngles=2, itRefineShifts=3, angStepSize=20, numberOfIterations=6, mode=1, doExtraRealSpaceSym=True,
                                     outerRadius=180, PhaseResidual=65, lowResolRefine=300, highResolRefine=15,
-                                    resolution=15, runMode=1, numberOfThreads=5)
+                                    resolution=15, runMode=1, numberOfThreads=16)
         protFrealign.inputParticles.set(protExtract.outputParticles)
         protFrealign.input3DReference.set(protImportVol.outputVolume)
         protFrealign.setObjLabel('Frealign')
