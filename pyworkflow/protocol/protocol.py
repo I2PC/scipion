@@ -781,8 +781,8 @@ class Protocol(Step):
         sys.stderr = self.__fErr
     
     def getLogPaths(self):
-        return self._getLogsPath('run.stdout'), self._getLogsPath('run.stderr'), self._getLogsPath('run.log')
-    
+        return map(self._getLogsPath, ['run.stdout', 'run.stderr', 'run.log'])
+
     def __openLogsFiles(self, mode):
         self.__fOut = open(self.getLogPaths()[0], mode)
         self.__fErr = open(self.getLogPaths()[1], mode)
@@ -799,8 +799,7 @@ class Protocol(Step):
         self.__closeLogsFiles()
         
     def getLogsAsStrings(self):
-        fOutString = fErrString = fScpnString = ''
-        if os.path.exists(self.getLogPaths()[0]) and os.path.exists(self.getLogPaths()[1]) and os.path.exists(self.getLogPaths()[2]):
+        if all(os.path.exists(x) for x in self.getLogPaths()):
             self.__openLogsFiles('r')
             fOutString = self.__fOut.read()
             fErrString = self.__fErr.read()
@@ -809,9 +808,11 @@ class Protocol(Step):
             fScpn = open(self.getLogPaths()[2], 'r')
             fScpnString = fScpn.read()
             fScpn.close()
-            
-        return fOutString, fErrString, fScpnString
-    
+
+            return fOutString, fErrString, fScpnString
+        else:
+            return '', '', ''
+
     def warning(self, message, redirectStandard=True):
         self._log.warning(message, redirectStandard)
         
