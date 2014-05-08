@@ -35,6 +35,7 @@ urlpatterns = patterns('',
     url(r'^project_graph/$', 'app.views_project.project_graph'),
     url(r'^update_graph_view/$', 'app.views_project.update_graph_view'),
     url(r'^update_prot_tree/$', 'app.views_project.update_prot_tree'),
+    url(r'^save_selection/$', 'app.views_project.save_selection'),
     
     #UTILS
     url(r'^render_column/', 'app.views_util.render_column'), # Load images dynamically
@@ -52,6 +53,7 @@ urlpatterns = patterns('',
     url(r'^protocol/$', 'app.views_protocol.protocol'),
     url(r'^stop_protocol/$', 'app.views_protocol.stop_protocol'),
     url(r'^delete_protocol/$', 'app.views_protocol.delete_protocol'),
+    url(r'^copy_protocol/$', 'app.views_protocol.copy_protocol'),
     url(r'^form/$', 'app.views_protocol.form'),
     
 

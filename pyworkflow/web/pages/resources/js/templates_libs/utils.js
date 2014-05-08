@@ -309,6 +309,25 @@ function errorPopup(title, msgText){
 	});
 }
 
+function listToString(list){
+	var res = "";
+	
+	for (var x=0;x<list.length;x++){
+		var elm = list[x];
+		if(res.length == 0){
+			res += elm;
+		} else{
+			res += "," + elm;
+		}
+	}
+	
+	if(res.length == 0){
+		res="None";
+	}
+	
+	return res;
+}
+
 function isNaturalNumber(n) {
     n = n.toString(); // force the value incase it is not
     var n1 = Math.abs(n),
@@ -372,7 +391,7 @@ function updateLabelComment(){
 	var value_label = $("input#label_new").val()
 	var value_comment= $("textarea#comment_new").val()
 	
-	url_param = "/set_attributes/?" +
+	var url_param = "/set_attributes/?" +
 		"id=" + id + 
 		"&label=" + value_label + 
 		"&comment=" + value_comment +

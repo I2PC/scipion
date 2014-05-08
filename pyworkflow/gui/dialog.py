@@ -342,13 +342,19 @@ class EditObjectDialog(Dialog):
         self.textComment.grid(row=1, column=1, sticky='news', padx=5, pady=5)
         self.initial_focus = self.textComment
         
+    def getLabel(self):
+        return self.textLabel.get()
+    
+    def getComment(self):
+        return self.textComment.getText()
+    
     def apply(self):
-        self.valueLabel = self.textLabel.get()
-        self.valueComment = self.textComment.getText()
+        self.obj.setObjLabel(self.getLabel())
+        self.obj.setObjComment(self.getComment())
         
-        self.obj.setObjLabel(self.valueLabel)
-        self.obj.setObjComment(self.valueComment)
-        self.mapper.store(self.obj)
+        if self.obj.hasObjId():
+            self.mapper.store(self.obj)
+            self.mapper.commit()
         
         
     def buttonbox(self, btnFrame):

@@ -25,12 +25,14 @@
 # **************************************************************************
 """
 In this module are protocol base classes related to EM Micrographs
-
 """
+
 from pyworkflow.em.protocol import *
+
 
 class ProtMicrographs(EMProtocol):
     pass
+
 
 class ProtCTFMicrographs(ProtMicrographs):
     """ Base class for all protocols that estimates the CTF"""
@@ -45,33 +47,33 @@ class ProtCTFMicrographs(ProtMicrographs):
         
         form.addParam('inputMicrographs', PointerParam, important=True,
                       label=Message.LABEL_INPUT_MIC, pointerClass='SetOfMicrographs')
-#        form.addParam('ampContrast', FloatParam, default=0.1,
-#                      label='Amplitude Contrast',
-#                      help='It should be a positive number, typically between 0.05 and 0.3.')
 
-        line = form.addLine('Resolution', help=Message.TEXT_RES)
+        line = form.addLine('Resolution', 
+                            help='Give a value in digital frequency (i.e. between 0.0 and 0.5). '
+                                 'These cut-offs prevent the typical peak at the center of the PSD and high-resolution'
+                                 'terms where only noise exists, to interfere with CTF estimation. The default lowest '
+                                 'value is 0.05 but for micrographs with a very fine sampling this may be lowered towards 0.'
+                                 'The default highest value is 0.35, but it should '+'be increased for micrographs with '
+                                 'signals extending beyond this value. However, if your micrographs extend further than '
+                                 '0.35, you should consider sampling them at a finer rate.')
         line.addParam('lowRes', FloatParam, default=0.05,
                       label='Lowest' )
         line.addParam('highRes', FloatParam, default=0.35,
                       label='Highest')
-#        form.addParam('lowRes', FloatParam, default=0.05,
-#                      label=Message.LABEL_LOW_RES,
-#                      help=Message.TEXT_LOW_RES)
-#        form.addParam('highRes', FloatParam, default=0.35,
-#                      label=Message.LABEL_HIGH_RES, 
-#                      help=Message.TEXT_HIGH_RES)
-        form.addParam('minDefocus', FloatParam, default=0.5,
-                      label=Message.LABEL_MIN_FOCUS,
-                      help=Message.TEXT_MIN_FOCUS,
-                      expertLevel=LEVEL_ADVANCED)
-        form.addParam('maxDefocus', FloatParam, default=10.,
-                      label=Message.LABEL_MAX_FOCUS,
-                      help=Message.TEXT_MAX_FOCUS,
-                      expertLevel=LEVEL_ADVANCED)
-        form.addParam('windowSize', IntParam, default=256,
-                      label=Message.LABEL_WINDOW_SIZE,
-                      help=Message.TEXT_WINDOW_SIZE,
-                      expertLevel=LEVEL_ADVANCED)
+        
+        line = form.addLine('Defocus search range (microns)', expertLevel=LEVEL_ADVANCED,
+                            help='Select _minimum_ and _maximum_ values for defocus search range (in microns).'
+                                 'Underfocus is represented by a positive number.')
+        line.addParam('minDefocus', FloatParam, default=0.5, 
+                      label='Min')
+        line.addParam('maxDefocus', FloatParam, default=10.,
+                      label='Max')
+        
+        form.addParam('windowSize', IntParam, default=256, expertLevel=LEVEL_ADVANCED,
+                      label='Window size', 
+                      help='The PSD is estimated from small patches of this size. Bigger patches '
+                           'allow identifying more details. However, since there are fewer windows, '
+                           'estimations are noisier.')
         
         form.addParallelSection(threads=2, mpi=0)       
     
@@ -237,7 +239,6 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
         return workDir
     
     
-    
 class ProtOpticalAlignment(ProtProcessMovies):
     """ Aligns movies, from direct detectors cameras, into micrographs.
     """
@@ -246,3 +247,4 @@ class ProtOpticalAlignment(ProtProcessMovies):
     def _defineProgram(self):
         XMP_OPT_ALIGN = 'xmipp_optical_alignment'
         self._program = join(os.environ['OPT_ALIGN_HOME'], XMP_OPT_ALIGN)
+        

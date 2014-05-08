@@ -125,6 +125,7 @@ class ElementGroup(FormElement):
     
     
 # ----------- Some type of ElementGroup --------------------------
+
 class Line(ElementGroup):
     """ Group to put some parameters in the same line. """
     pass
@@ -236,7 +237,6 @@ class Form(object):
         
         return errors
         
-        
     def getParam(self, paramName):
         """Retrieve a param given a the param name
         None is returned if not found
@@ -274,10 +274,6 @@ class Form(object):
         self.addSection(label='General')
         self.addParam('runName', StringParam, label="Run name:", important=True, 
                       help='Select run name label to identify this run.')
-#        self.addParam('showComment', BooleanParam, default=False, 
-#                      label="Show comment?")
-#        self.addParam('comment', StringParam, condition="showComment",
-#                      label="Comment:", help='Make some annotations on this run.')
         self.addParam('runMode', EnumParam, choices=['resume', 'restart'],
                       label="Run mode", display=EnumParam.DISPLAY_COMBO, default=0,
                       help='The <resume> mode will try to start the execution'

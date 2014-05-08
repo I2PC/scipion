@@ -67,7 +67,7 @@ def form(request):
     # Patch : to fix the relion dynamic way to generate the viewer form
     #         For this is necessary to call setProtocol method
     if protRunIdViewer is not None:
-        protocol_parent = project.mapper.selectById(int(protRunIdViewer))
+        protocol_parent = project.getProtocol(int(protRunIdViewer))
         protocol.setProtocol(protocol_parent)
     
     hosts = [host.getLabel() for host in project.getSettings().getHosts()]
@@ -246,7 +246,7 @@ def updateProtocolParams(request, protocol, project):
 def getPointerValue(project, attr, value, paramName):
     if len(value.strip()) > 0:
       
-        obj = project.mapper.selectById(value)  # Get the object from its id
+        obj = project.getProtocol(value)  # Get the object from its id
         id1 = attr.getObjId()
         id2 = obj.getObjId()
         
@@ -299,15 +299,42 @@ def save_protocol(request):
 
 # Method to delete a protocol #
 def delete_protocol(request):
-    # Project Id(or Name) should be stored in SESSION
     if request.is_ajax():
         projectName = request.session['projectName']
         project = loadProject(projectName)
-        protId = request.GET.get('protocolId', None)
-        protocol = project.mapper.selectById(int(protId))
+        list_id = request.GET.get('id', None).split(",")
+        
+        list_protocols = []
+        for id in list_id:        
+            protocol = project.getProtocol(int(id))
+            list_protocols.append(protocol)
+            
         try:
-            project.deleteProtocol(protocol)
+            project.deleteProtocol(*list_protocols)
             res = {'success' : 'Protocol deleted successful'}
+        except Exception, ex:
+            errors = [convertTktoHtml(str(ex))]
+            res = {'errors' : errors}
+            
+    jsonStr = json.dumps(res, ensure_ascii=False)
+    return HttpResponse(jsonStr, mimetype='application/javascript')
+
+# Method to copy a protocol #
+def copy_protocol(request):
+    if request.is_ajax():
+        projectName = request.session['projectName']
+        project = loadProject(projectName)
+        list_id = request.GET.get('id', None).split(",")
+        
+        list_protocols = []
+        for id in list_id:        
+            protocol = project.getProtocol(int(id))
+            list_protocols.append(protocol)
+        
+        try:
+            protocol = project.copyProtocol(list_protocols)
+            
+            res = {'success' : 'Protocol copied successful'}
         except Exception, ex:
             errors = [convertTktoHtml(str(ex))]
             res = {'errors' : errors}
@@ -317,12 +344,11 @@ def delete_protocol(request):
 
 # Method to stop a protocol #
 def stop_protocol(request):
-    # Project Id(or Name) should be stored in SESSION
     if request.is_ajax():
         projectName = request.session['projectName']
         project = loadProject(projectName)
         protId = request.GET.get('protocolId', None)
-        protocol = project.mapper.selectById(int(protId))
+        protocol = project.getProtocol(int(protId))
      
         project.stopProtocol(protocol)
         
