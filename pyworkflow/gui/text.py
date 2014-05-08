@@ -207,75 +207,28 @@ class Text(tk.Text, Scrollable):
             self.mark_set("matchEnd", "%s+%sc" % (index,count.get()))
             self.tag_add(tag, "matchStart","matchEnd")
 
-#---------------------------------------------------------------------------
-# Colors from Xmipp binding
-#--------------------------------------------------------------------------- 
-from xmipp import XMIPP_MAGENTA, XMIPP_BLUE, XMIPP_GREEN, XMIPP_RED, XMIPP_YELLOW, XMIPP_CYAN, colorStr
-
-colorMap = {'red': XMIPP_RED, 'blue': XMIPP_BLUE,
-            'green': XMIPP_GREEN, 'magenta': XMIPP_MAGENTA,
-            'yellow': XMIPP_YELLOW, 'cyan': XMIPP_CYAN}
-
-
-blueStr = lambda s: colorStr(XMIPP_BLUE, s)
-greenStr = lambda s: colorStr(XMIPP_GREEN, s)
-greenLowStr = lambda s: colorStr(XMIPP_GREEN, s, 0)
-failStr = redStr = lambda s: colorStr(XMIPP_RED, s)
-headerStr = magentaStr = lambda s: colorStr(XMIPP_MAGENTA, s)
-yellowStr = lambda s: colorStr(XMIPP_YELLOW, s)
-cyanStr = warnStr = lambda s: colorStr(XMIPP_CYAN, s)
 
 # Console (and XMIPP) escaped colors, and the related tags that we create
-# with Text.tag_config(). This dict is used in OutputText:addLines(),
-# to avoid using findColor() et al
-color_tag = {'30': 'tag_gray',
-             '31': 'tag_red',
-             '32': 'tag_green',
-             '33': 'tag_yellow',
-             '34': 'tag_blue',
-             '35': 'tag_magenta',
-             '36': 'tag_cyan',
-             '37': 'tag_white'}
+# with Text.tag_config(). This dict is used in OutputText:addLine()
+colorName = {'30': 'gray',
+             '31': 'red',
+             '32': 'green',
+             '33': 'yellow',
+             '34': 'blue',
+             '35': 'magenta',
+             '36': 'cyan',
+             '37': 'white'}
 
-
-def findColor(line):
-    '''This function will search if there are color characters present
-    on string and return the color and positions on string'''
-    for k, v in colorMap.iteritems():
-        x, y = colorStr(v, "_..._").split("_..._")
-        fx = line.find(x)
-        fy = line.find(y)
-        if fx != -1 and fy != -1:
-            line = line.replace(x, '').replace(y, '')
-            return (k, fx, fy, line)
-    return None
-
-def insertColoredLine(text, line, tag=""):
-    """ Check if the color codes are present in a line
-    and use the corresponding tags. The colors tags should 
-    be already configured on text object"""
-    ctuple = findColor(line)
-    if ctuple is None:
-        line = line[line.rfind("\r")+1:]
-        text.insert(tk.END, line, tag)  
-    else:
-        color,idxInitColor,idxFinishColor,cleanText=ctuple
-        if idxInitColor>0:
-            text.insert(tk.END, cleanText[:(idxInitColor-1)]+" ")
-        text.insert(tk.END, cleanText[idxInitColor:idxFinishColor-1], "tag_" + color)
-        text.insert(tk.END, cleanText[idxFinishColor:])
-        
 def configureColorTags(text):
-    """ Function to configure tag_colorX for all supported colors.
-    It is applicable to an Text text """
+    """ Create tags in text (of type tk.Text) for all the supported colors. """
     try:
-        for color in colorMap.keys():
-            text.tag_config("tag_" + color, foreground=color)
+        for color in colorName.values():
+            text.tag_config(color, foreground=color)
         return True
-    except Exception, e:
-        print "Colors still not available"
-    return False
-       
+    except Exception as e:
+        print "Colors still not available (%s)" % e
+        return False
+
        
 class TaggedText(Text):  
     """
@@ -359,49 +312,36 @@ class OutputText(Text):
         else:
             self.insert(tk.END, txt)
 
-    def addLineNo(self):
-        self.lineNo += 1
-        self.add("%05d:   " % self.lineNo, "tag_cyan")
+    def addLine(self, line, numberLines=True):
+        """ Add line to the OutputText, with colors if appropriate.
+            If numberLines == True, prepend the line number to it.
+        """
+        # Prepend line number
+        if numberLines:
+            self.lineNo += 1
+            self.add("%05d:   " % self.lineNo, "cyan")
 
-    def addLine(self, line):
-        self.addLineNo()
-        if self.colors:
-            insertColoredLine(self, line)
-        else:
-            self.insert(tk.END, line)
+        # iter 1\riter 2\riter 3  -->  iter 3
+        if '\r' in line:
+            line = line[line.rfind('\r')+1:]  # overwriting!
 
-    def addLines(self, lines):
-        """Like addLine() but adds many at a time"""
-
-        # More efficient, allows several colors in the same line and
-        # does not rely on insertColoredLine() nor findColor()
-
-        # It would be much faster if we didn't have to prepend the
-        # line number (with addLineNo()) -- we wouldn't need the first "for"!
-
-        for line in lines:
-            self.addLineNo()  # 00001:   blah blah
-
-            # iter 1\riter 2\riter 3  -->  iter 3
-            if '\r' in line:
-                line = line[line.rfind('\r')+1:]  # overwriting!
-
-            # Find all the console escape codes and use the appropriate
-            # tag instead.
-            pos = 0
-            while True:
-                start = line.find('\x1b[', pos)
-                if start < 0:
-                    self.add(line[pos:])
-                    break
-                color_code = line[start+4:start+6]
-                end = line.find('\x1b[0m', start + 7)
-                if end < 0:  # what, no end for color formatting?
-                    # maybe we should also warn the user...
-                    self.add(line[start+7:], color_tag[color_code])
-                    break
-                self.add(line[start+7:end], color_tag[color_code])
-                pos = end + 4
+        # Find all console escape codes and use the appropriate tag instead.
+        pos = 0  # current position in the line we are parsing
+        while True:
+            # line looks like: 'blah blah \x1b[X;YYmremark\x1b[0m blah blah'
+            # where YY is the color code (31 is red, for example).
+            start = line.find('\x1b[', pos)
+            if start < 0:
+                self.add(line[pos:])
+                return
+            colorCode = line[start+4:start+6]
+            end = line.find('\x1b[0m', start + 7)
+            if end < 0:  # what, no end for color formatting?
+                # maybe we should also warn the user...
+                self.add(line[start+7:])
+                return
+            self.add(line[start+7:end], colorName[colorCode])
+            pos = end + 4
 
     def readFile(self, clear=False):
         if clear:
@@ -418,7 +358,8 @@ class OutputText(Text):
             textfile.seek(self.offset)
             size = (os.stat(fname).st_size - self.offset) / 1024  # in kB
             if size > 100:  # max size that we want to read (in kB)
-                self.addLines(textfile.read(20000).splitlines(True))
+                for line in textfile.read(20000).splitlines(True):
+                    self.addLine(line)
                 self.insert(tk.END, """\n
     ==> Too much data to read (%d kB) -- %d kB omitted
     ==> Click """ % (size, size - 40))
@@ -426,10 +367,11 @@ class OutputText(Text):
                 self.insert(tk.END, """ to open it with the default viewer
     ==> Line numbers below are not in sync with the input data\n\n""")
 
-                textfile.seek(-20000, 2)  # also show the last 20000 bytes
-                self.addLines(textfile)
-            else:
-                self.addLines(textfile)
+                textfile.seek(-20000, 2)  # ready to show the last 20000 bytes
+
+            # Add the remaining lines (from our last offset)
+            for line in textfile:
+                self.addLine(line)
             self.offset = textfile.tell()  # save last position in file
             textfile.close()
         else:
