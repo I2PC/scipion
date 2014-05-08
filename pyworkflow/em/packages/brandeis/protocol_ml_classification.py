@@ -128,7 +128,7 @@ class ProtFrealignClassify(ProtFrealignBase, ProtClassify3D):
                 self._splitParFile(iter, ref, cpusRef[ref-1])
                 prevIterVol = self._getFileName('prev_vol_class', iter=prevIter, ref=ref) # volumes of the previous iteration
                 copyFile(prevIterVol, refVol)   #Copy the reference volume as refined volume.
-            copyFile(refVol, iterVol)   #Copy the reference volume as refined volume.
+                copyFile(refVol, iterVol)   #Copy the reference volume as refined volume.
     
     def refineParticlesStep(self, iter, ref, block, parRefine):
         """Only refine the parameters of the SetOfParticles
