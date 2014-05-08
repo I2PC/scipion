@@ -106,7 +106,7 @@ class ProtFrealignClassify(ProtFrealignBase, ProtClassify3D):
         prevIter = iter - 1
         self._createFilenameTemplates(iter)
         
-        cpusRefs = self._cpusPerClass(numberOfBlocks, self.numberOfRef)
+        cpusRef = self._cpusPerClass(numberOfBlocks, self.numberOfRef)
             
         if iter==1:
             imgSet = self.inputParticles.get()
