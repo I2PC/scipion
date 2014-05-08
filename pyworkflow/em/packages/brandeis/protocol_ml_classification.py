@@ -137,7 +137,7 @@ class ProtFrealignClassify(ProtFrealignBase, ProtClassify3D):
         imgSet = self.inputParticles.get()
         
         iterDir = self._iterWorkingDir(iter)
-        if block==1:
+        if ref ==1 and block==1:
             self._enterDir(iterDir) # enter to the working directory for the current iteration.
         
         iniPart, lastPart = self._particlesInBlock(block)
