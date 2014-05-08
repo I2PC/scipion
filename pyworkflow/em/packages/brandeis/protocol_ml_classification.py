@@ -201,6 +201,7 @@ class ProtFrealignClassify(ProtFrealignBase, ProtClassify3D):
             program = RSAMPLE_PATH
         else:
             args = self._occCommand()
+            tmp = ''
             numberOfRef = self.numberOfRef
             for ref in range(1, self.numberOfRef + 1):
                 if not leaveDir:
