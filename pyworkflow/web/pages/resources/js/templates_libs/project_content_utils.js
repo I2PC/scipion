@@ -820,10 +820,10 @@ function refreshRuns(mode){
 		$.ajax({
 			url : '/run_table_graph/',
 			success : function(data) {
-			
+				
 				if (typeof data == 'string' || data instanceof String){
 					
-					if (data=='stop'){
+					if (data == 'stop'){
 						window.clearTimeout(updatetimer);
 						// stop the script
 					}

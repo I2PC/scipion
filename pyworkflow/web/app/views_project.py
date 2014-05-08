@@ -304,7 +304,7 @@ def run_table_graph(request):
                        'graphView': graphView, 
                        'selectedRuns' : selectedRuns}
             
-            return render_to_response('run_table_graph.html', context)
+            return render_to_response('project_content/run_table_graph.html', context)
         
         elif listNewElm:
             request.session['runs'] = runsNew
