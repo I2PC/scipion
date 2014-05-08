@@ -79,7 +79,7 @@ public class PlotJDialog extends XmippDialog {
 		rows = new ArrayList<ColumnInfo>();
 		rowsExtra = new ArrayList<ColumnInfo.ColumnExtraInfo>();
 		int i = 0;
-		for (ColumnInfo ci : parent.getData().labels)
+		for (ColumnInfo ci : parent.getData().getLabelsInfo())
 			if (ci.getType() == 2 || ci.getLabel() == 0) {// int or double
 				ColumnInfo ci2 = new ColumnInfo(ci.getLabel());
 				rows.add(ci2);

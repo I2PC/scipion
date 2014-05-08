@@ -229,6 +229,20 @@ public class ScipionMetaData extends MetaData{
             return values.get(c);
         }
 
+        public boolean setValue(int label, Object value) {
+            int i = 0;
+            for(ColumnInfo ci: columns)
+            {
+                if(ci.label == label)
+                {
+                    values.set(i, value);
+                    return true;
+                }
+                i ++;
+            }       
+            return false;
+        }
+
        
     }
 
@@ -364,6 +378,11 @@ public class ScipionMetaData extends MetaData{
         return emobjects.size();
     }
     
+    public boolean setValueString(int label, String value, long id)
+    {
+        EMObject emo = getEMObject(id);
+        return emo.setValue(label, value);
+    }
 
 
             

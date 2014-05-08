@@ -56,7 +56,7 @@ public class AddObjectJDialog extends XmippDialog {
 	public AddObjectJDialog(GalleryJFrame parent) {
 		super(parent, "Classes", true);
 		this.gallery = parent.gallery;
-		this.md = gallery.data.md.getMetaDataRow();
+		this.md = gallery.data.getMetaDataRow();
 		initComponents();
 	}// constructor AddObjectJDialog
 	
@@ -72,7 +72,7 @@ public class AddObjectJDialog extends XmippDialog {
 		groupstbpn.add(sp);
 		sp.setOpaque(true);
 		try {
-			model = new MetadataRowTableModel(this, md);
+			model = new MetadataRowTableModel((GalleryJFrame)parent, md);
 			JList rowHeader = new JList();
 			rowHeader.setModel(new GalleryRowHeaderModel(model.data));
 			LookAndFeel.installColorsAndFont(rowHeader, "TableHeader.background",

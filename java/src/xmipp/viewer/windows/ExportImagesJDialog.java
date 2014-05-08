@@ -99,7 +99,7 @@ public class ExportImagesJDialog extends JDialog{
         
 
         applygeochb = new JCheckBox();
-        applygeochb.setSelected(frame.data.useGeo);
+        applygeochb.setSelected(frame.data.useGeo());
         add(applygeochb, XmippWindowUtil.getConstraints(c, 1, 1));
         add(new JLabel(note1), XmippWindowUtil.getConstraints(c, 0, 2, GridBagConstraints.HORIZONTAL));
         add(new JLabel(note2), XmippWindowUtil.getConstraints(c, 0, 3, GridBagConstraints.HORIZONTAL));

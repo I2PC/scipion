@@ -80,7 +80,7 @@ public class ColumnsJDialog extends XmippDialog {
 				.createTitledBorder("Column properties"));
 		groupstbpn.add(sp);
 		sp.setOpaque(true);
-		model = new ColumnsTableModel(((GalleryJFrame)parent).getData().labels);
+		model = new ColumnsTableModel(((GalleryJFrame)parent).getData().getLabelsInfo());
 		tableColumns = new JTable(model);
 		tableColumns
 				.setPreferredScrollableViewportSize(new Dimension(350, 200));

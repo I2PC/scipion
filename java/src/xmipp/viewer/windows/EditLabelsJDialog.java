@@ -60,7 +60,7 @@ public class EditLabelsJDialog extends XmippDialog {
 
 	public EditLabelsJDialog(GalleryJFrame parent) {
 		super(parent, "Edit labels", true);
-		this.rows = parent.getData().labels;
+		this.rows = parent.getData().getLabelsInfo();
 		this.gallery = parent.gallery;
 		btnOkText = "Close";
 		btnCancelDisplay = false;
@@ -121,7 +121,7 @@ public class EditLabelsJDialog extends XmippDialog {
 	}// function enableUpDown
 
 	private void rowsChanged() {
-		this.rows = ((GalleryJFrame) parent).getData().labels;
+		this.rows = ((GalleryJFrame) parent).getData().getLabelsInfo();
 		model.fireTableDataChanged();
 	}
 

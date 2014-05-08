@@ -7,10 +7,12 @@
 package xmipp.viewer.scipion;
 
 import java.awt.Window;
+import java.io.File;
 import xmipp.jni.MetaData;
 import xmipp.utils.Params;
 import xmipp.viewer.models.ColumnInfo;
 import xmipp.viewer.models.GalleryData;
+import xmipp.viewer.windows.SaveJDialog;
 
 /**
  *
@@ -18,7 +20,7 @@ import xmipp.viewer.models.GalleryData;
  */
 public class ScipionGalleryData extends GalleryData{
 
-    public ScipionGalleryData(Window window, String fn, Params parameters, MetaData md) {
+    public ScipionGalleryData(ScipionGalleryJFrame window, String fn, Params parameters, MetaData md) {
         super(window, fn, parameters, md);
         selectedBlock = ((ScipionMetaData)md).getSelf() + "s";
         mdBlocks = new String[]{selectedBlock};
@@ -62,4 +64,48 @@ public class ScipionGalleryData extends GalleryData{
         return false;
     }
     
+   
+        
+        /** Save selected items as a metadata */
+	public void saveSelection() throws Exception
+	{
+		MetaData md = getSelectionMd();
+		SaveJDialog dlg = new SaveJDialog(window, "selection.xmd", true);
+		boolean save = dlg.showDialog();
+		if (save)
+		{
+			boolean overwrite= dlg.isOverwrite();
+			String path = dlg.getMdFilename();
+			saveSelection(path, overwrite);
+		}
+		md.destroy();
+	}
+        
+        	/** Save selected items as a metadata */
+	public void saveSelection(String path, boolean overwrite) throws Exception
+	{
+		MetaData md = getSelectionMd();
+
+                String file = path.substring(path.lastIndexOf("@") + 1, path.length());
+                if (!new File(file).exists())// overwrite or append, save selection
+                        md.write(path);
+                else
+                {
+                        if (overwrite)
+                                md.write(path);// overwrite with active block only, other
+                                                                // blocks were dismissed
+                        else
+                                md.writeBlock(path);// append selection
+
+                }
+		
+		md.destroy();
+	}
+        
+        public boolean isColumnFormat()
+        {
+            return true;
+        }
+    
+        
 }

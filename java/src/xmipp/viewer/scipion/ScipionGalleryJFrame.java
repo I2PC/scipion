@@ -30,7 +30,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
     private String script;
     private String projectid;
     private JButton cmdbutton;
-    private String selectionmdfile;
+    private String selfile;
     private JButton classcmdbutton;
 
     private String python;
@@ -61,7 +61,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
             projectid = parameters.projectid;
             inputid = parameters.inputid;
             inputimagesid = parameters.inputimagesid;
-            selectionmdfile = String.format("%s%sselection%s", projectid, File.separator, getFileExtension());
+            selfile = String.format("%s%sselection%s", projectid, File.separator, getFileExtension());
             msgfields = new HashMap<String, String>();
             msgfields.put(runNameKey, "ProtUserSubset");
             
@@ -81,7 +81,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
                 @Override
                 public void actionPerformed(ActionEvent ae) {
                     saveSelection();
-                    MetaData selectionmd = new MetaData(selectionmdfile);
+                    MetaData selectionmd = new MetaData(selfile);
                     String question = String.format("<html>Are you sure you want to create a new set of %s with <font color=red>%s</font> %s?", type, selectionmd.size(), (selectionmd.size() > 1)?"elements":"element");
                     ScipionMessageDialog dlg = new ScipionMessageDialog(ScipionGalleryJFrame.this, "Question", question, msgfields);
                     int create = dlg.action;
@@ -98,8 +98,8 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
 
                     @Override
                     public void actionPerformed(ActionEvent ae) {
-                        saveClassSelection(selectionmdfile);
-                        MetaData selectionmd = new MetaData(selectionmdfile);
+                        saveClassSelection(selfile);
+                        MetaData selectionmd = new MetaData(selfile);
                         String msg = String.format("<html>Are you sure you want to create a new set of Classes with <font color=red>%s</font> %s?", selectionmd.size(), (selectionmd.size() > 1)?"elements":"element");
                         ScipionMessageDialog dlg = new ScipionMessageDialog(ScipionGalleryJFrame.this, "Question", msg, msgfields);
                         int create = dlg.action;
@@ -198,13 +198,13 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
             String output = type;     
             if(isClassSelection())
             {
-                saveImagesFromClassSelection(selectionmdfile);
+                saveImagesFromClassSelection(selfile);
                 output = "Particles";
             }
             else
-                saveSelection(selectionmdfile, true);
+                data.saveSelection(selfile, true);
             
-            String[] command = new String[]{python, script, runname, selectionmdfile, type, output, projectid, inputid, inputimagesid};
+            String[] command = new String[]{python, script, runname, selfile, type, output, projectid, inputid, inputimagesid};
 
             runCommand(command);
 
@@ -217,9 +217,9 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
     public void saveSelection() {
         try {
             if (isClassSelection()) {
-                saveImagesFromClassSelection(selectionmdfile);
+                saveImagesFromClassSelection(selfile);
             } else {
-                saveSelection(selectionmdfile, true);
+                data.saveSelection(selfile, true);
             }
         } catch (Exception ex) {
             throw new IllegalArgumentException(ex.getMessage());
@@ -232,8 +232,8 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
         try 
         {
 
-            saveClassSelection(selectionmdfile);
-            String[] command = new String[]{python, script, runname, selectionmdfile, type, type, projectid, inputid, inputimagesid};
+            saveClassSelection(selfile);
+            String[] command = new String[]{python, script, runname, selfile, type, type, projectid, inputid, inputimagesid};
 
             runCommand(command);
         } catch (Exception ex) {

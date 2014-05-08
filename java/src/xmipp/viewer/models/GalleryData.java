@@ -25,13 +25,14 @@
 
 package xmipp.viewer.models;
 
+import ij.ImagePlus;
 import java.awt.Color;
-import java.awt.Window;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import xmipp.ij.commons.XmippImageConverter;
 import xmipp.jni.Filename;
 import xmipp.jni.ImageGeneric;
 import xmipp.jni.MDLabel;
@@ -39,59 +40,63 @@ import xmipp.jni.MetaData;
 import xmipp.jni.MDRow;
 import xmipp.utils.DEBUG;
 import xmipp.utils.Params;
+import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippStringUtils;
+import xmipp.viewer.ctf.TasksEngine;
+import xmipp.viewer.windows.AddObjectJDialog;
 import xmipp.viewer.windows.GalleryJFrame;
+import xmipp.viewer.windows.ImagesWindowFactory;
+import xmipp.viewer.windows.SaveJDialog;
 
 /** This class will serve to store important data about the gallery */
 public class GalleryData {
-	public MetaData md;
-	public long[] ids;
-	public String[] mdBlocks = null;
-	public String selectedBlock;
+	protected MetaData md;
+	protected long[] ids;
+	protected String[] mdBlocks = null;
+	protected String selectedBlock;
 	// The following is only used in VolumeGallery mode
-	public String selectedVolFn = "";
-	public String commonVolPrefix = "";
-	public String[] volumes = null;
+	protected String selectedVolFn = "";
+	protected String commonVolPrefix = "";
+	protected String[] volumes = null;
 
-	public ArrayList<ColumnInfo> labels = null;
+	protected ArrayList<ColumnInfo> labels = null;
 	// First label that can be rendered
-	public ColumnInfo ciFirstRender = null;
-	public int zoom;
+	protected ColumnInfo ciFirstRender = null;
+	protected int zoom;
 	protected String filename;
-	public int resliceView;
+	protected int resliceView;
         protected Mode mode;
-	public boolean showLabel = false;
-	public boolean renderImages;
-	public Params parameters;
-	private int numberOfVols = 0;
+	protected boolean showLabel = false;
+	protected boolean renderImages;
+	public final Params parameters;
+	protected int numberOfVols = 0;
 
 	// flag to perform global normalization
-	public boolean normalize = false;
+	protected boolean normalize = false;
 	// flag to use geometry info
-	public boolean useGeo;
+	protected boolean useGeo;
 	// flag to wrapping
-	public boolean wrap;
+	protected boolean wrap;
 	// flag to check if is 2d classification
-	public boolean isClassification = false;
-	public int refLabel;
+	protected boolean isClassification = false;
+	protected int refLabel;
 	// Store the selection state for each item
-	public boolean[] selection;
+	protected boolean[] selection;
 	// Array with all ClassInfo
-	public ArrayList<ClassInfo> classesArray;
+	protected ArrayList<ClassInfo> classesArray;
 	// ClassInfo reference for each element
-	public ClassInfo[] classes;
+	protected ClassInfo[] classes;
 	// Flags to check if md or classes has changed
-	private boolean hasMdChanges, hasClassesChanges;
-	public Window window;
+	protected boolean hasMdChanges, hasClassesChanges;
+	protected GalleryJFrame window;
         protected String[] renderLabels;
         protected String renderLabel;
         protected String[] visibleLabels;
         protected String[] orderLabels;
 
-    
-
-
-	public enum Mode {
+  
+ 
+ 	public enum Mode {
 		GALLERY_MD, GALLERY_VOL, TABLE_MD, GALLERY_ROTSPECTRA
 	};
 
@@ -110,12 +115,13 @@ public class GalleryData {
 	 * 
 	 * @param jFrameGallery
 	 */
-	public GalleryData(Window window, String fn, Params parameters, MetaData md) {
+	public GalleryData(GalleryJFrame window, String fn, Params parameters, MetaData md) {
 		this.window = window;
+                this.parameters = parameters;
 		try {
                         
 			selectedBlock = "";
-			this.parameters = parameters;
+			
 			zoom = parameters.zoom;
 			this.renderImages = parameters.renderImages;//always true, customized by models or renderLabels
                         this.renderLabels = parameters.renderLabels;
@@ -1107,5 +1113,197 @@ public class GalleryData {
 		}
 		return false;
 	}
+        
+        /** Save selected items as a metadata */
+	public void saveSelection() throws Exception
+	{
+		MetaData md = getSelectionMd();
+		SaveJDialog dlg = new SaveJDialog(window, "selection.xmd", true);
+		boolean save = dlg.showDialog();
+		if (save)
+		{
+			boolean overwrite= dlg.isOverwrite();
+			String path = dlg.getMdFilename();
+			saveSelection(path, overwrite);
+		}
+		md.destroy();
+	}
+        
+        	/** Save selected items as a metadata */
+	public void saveSelection(String path, boolean overwrite) throws Exception
+	{
+		MetaData md = getSelectionMd();
+
+                String file = path.substring(path.lastIndexOf("@") + 1, path.length());
+                if (!new File(file).exists())// overwrite or append, save selection
+                        md.write(path);
+                else
+                {
+                        if (overwrite)
+                                md.write(path);// overwrite with active block only, other
+                                                                // blocks were dismissed
+                        else
+                                md.writeBlock(path);// append selection
+
+                }
+		
+		md.destroy();
+	}
+        
+        public boolean isSelected(int index)
+        {
+            return selection[index];
+        }
+        
+        public int size()
+        {
+            return ids.length;
+        }
+        
+        public int getZoom() {
+            return zoom;
+        }
+        
+        public boolean useGeo()
+        {
+            return useGeo;
+        }
       
+        public void fillConstant(int label, String value) {
+            md.fillConstant(label, value);
+        }
+        
+        public void fillLinear(int label, Double start, Double step) {
+            md.fillLinear(label, start, step);
+        }
+        
+        public void fillRandom(int label, String mode, double op1, double op2) {
+            md.fillRandom(label, mode, op1, op2);
+        }
+        
+        public void removeDisabled() {
+            md.removeDisabled();
+        }
+        
+        public void removeLabel(int label) {
+            md.removeLabel(label);
+        }
+
+        public long[] getIds() {
+            return ids;
+        }
+        
+        public int[] getLabels() {
+            return md.getActiveLabels();
+        }
+
+        public String getValueString(int label, long id) {
+            return md.getValueString(label, id);
+        }
+  
+        public boolean setValueString(int label, String newValue, long l) {
+            return md.setValueString(label, newValue, l);
+        }
+        
+        public Object getSelectedBlock() {
+            return selectedBlock;
+        }
+
+        public String getCommonVolPrefix() {
+            return commonVolPrefix;
+        }
+
+        public String getSelVolumeFile() {
+            return selectedVolFn;
+        }
+
+        public void setResliceView(int view) {
+            resliceView = view;
+        }
+        
+        public boolean getWrap() {
+            return wrap;
+        }
+        
+        public boolean renderImages() {
+            return renderImages;
+        }
+        
+        public int getResliceView() {
+            return resliceView;
+        }
+
+        public boolean addObject() {
+            AddObjectJDialog dlg = new AddObjectJDialog(window);
+            if (dlg.showDialog())
+            {
+                    md.unionAll(dlg.md);
+                    return true;
+            }
+            return false;
+        }
+          
+        public void write(String path) {
+            md.write(path);
+        }
+
+        public void writeBlock(String path) {
+            md.writeBlock(filename);
+        }
+        
+        public String[] getBlocks() {
+            return mdBlocks;
+        }
+
+        public long getId(int i) {
+            return ids[i];
+        }
+        
+        public void showCTF(boolean profile, int row, TasksEngine ctfTasks)
+		{
+			try
+			{
+				String ctfModel = getValueString(MDLabel.MDL_CTF_MODEL, getId(row));
+				String displayFilename = getValueString(MDLabel.MDL_PSD_ENHANCED, getId(row));
+				String psdFile = getValueString(MDLabel.MDL_PSD, getId(row));
+
+				ImageGeneric img = new ImageGeneric(displayFilename);
+				ImagePlus imp = XmippImageConverter.readToImagePlus(img);
+
+				if (profile)
+					ImagesWindowFactory.openCTFWindow(imp, ctfModel, psdFile);
+				else
+				{
+					MetaData mdRow = new MetaData(); 
+					MDRow row2 = new MDRow();
+					md.getRow(row2, getId(row));
+					mdRow.setRow(row2, mdRow.addObject());
+					String sortFn = psdFile.replace(".psd", ".xmd");
+					mdRow.write(sortFn);
+					mdRow.destroy();
+					ImagesWindowFactory.openCTFImage(imp, ctfModel, psdFile, ctfTasks, getFileName(), row, sortFn);
+				}
+
+			}
+			catch (Exception e)
+			{
+				XmippDialog.showError(window, e.getMessage());
+			}
+		}
+        
+    public ArrayList<ClassInfo> getClasses() {
+        return classesArray;
+    }
+    
+    public ArrayList<ColumnInfo> getLabelsInfo()
+    {
+        return labels;
+    }
+    
+    public MetaData getMetaDataRow() {
+        return md.getMetaDataRow();
+    }
+
+
+
 }// class GalleryDaa

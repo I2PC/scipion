@@ -39,7 +39,7 @@ import xmipp.jni.MetaData;
 public class FSCJFrame extends JFrame {
 
     public FSCJFrame(GalleryData data, MetaData imagesmd) {
-        super(XmippLabel.TITLE_FSC + data.md.getFilename());
+        super(XmippLabel.TITLE_FSC + data.getFileName());
 
         try {
         	setDefaultCloseOperation(DISPOSE_ON_CLOSE);
