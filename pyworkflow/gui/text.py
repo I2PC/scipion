@@ -319,7 +319,7 @@ class OutputText(Text):
                 fname = tag.split(':', 1)[-1]
                 self.insert(tk.END, fname, self.hm.addOpen(fname))
             else:
-                self.insert(tk.END, txt, colorName[colorCode])
+                self.insert(tk.END, txt, colorName[tag])
         else:
             self.insert(tk.END, txt)
 
