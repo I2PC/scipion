@@ -36,7 +36,14 @@ from protocol_frealign_base import ProtFrealignBase
 
 
 class ProtFrealignClassify(ProtFrealignBase, ProtClassify3D):
-    """ This class implements the wrapper to single particle refinement protocol with frealign."""
+    """ Protocol to classify 3D using Frealign. Frealign employs
+maximum likelihood classification for single particle electron
+cryo-microscopy.
+Particle alignment parameters are determined by maximizing a
+joint likelihood that can include hierarchical priors, while
+classification is performed by expectation maximization of a
+marginal likelihood.
+    """
     _label = 'frealign classify'
     IS_REFINE = False
     

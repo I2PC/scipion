@@ -36,7 +36,11 @@ from protocol_frealign_base import ProtFrealignBase
 
 
 class ProtFrealign(ProtFrealignBase, ProtRefine3D):
-    """ This class implements the wrapper to single particle refinement protocol with frealign."""
+    """ Protocol to refine a 3D map using Frealign. The algorithms implemented
+are optimized to perform  efficiently the correction for the contrast
+transfer function of the microscope and refinement of three-dimensional
+reconstructions.
+    """
     _label = 'frealign'
 
     
