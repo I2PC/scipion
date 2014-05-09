@@ -558,15 +558,17 @@ class Protocol(Step):
         """
         self._leaveDir()
         
-    def __backupSteps(self):
-        """ Store the Steps list in another variable to prevent
-        overriden of stored steps when calling _insertAllSteps function.
-        This is need to later find in which Step will start the run
-        if the RESUME mode is used.
+    def __loadPrevSteps(self):
+        """ Load the Steps stored from a previous run
+        in the steps.sqlite file.
         """
-        self._steps.setStore(False)
-        self._prevSteps = self._steps
-        self._steps = List() # create a new object for steps
+        prevSteps = []
+        if exists(self.getStepsFile()):
+            stepsSet = Set(filename=self.getStepsFile())
+            for step in stepsSet:
+                prevSteps.append(step.clone())
+                
+        return prevSteps
         
     def __findStartingStep(self):
         """ From a previous run, compare self._steps and self._prevSteps
@@ -576,6 +578,8 @@ class Protocol(Step):
         """
         if self.runMode == MODE_RESTART:
             return 0
+        
+        self._prevSteps = self._loadPrevSteps()
         
         n = min(len(self._steps), len(self._prevSteps))
         self.info("len(steps) " + str(len(self._steps)) + " len(prevSteps) " + str(len(self._prevSteps)))
@@ -783,6 +787,10 @@ class Protocol(Step):
     def getLogPaths(self):
         return map(self._getLogsPath, ['run.stdout', 'run.stderr', 'run.log'])
 
+    def getStepsFile(self):
+        """ Return the steps.sqlite file under logs directory. """
+        return self._getLogsPath('steps.sqlite')
+    
     def __openLogsFiles(self, mode):
         self.__fOut = open(self.getLogPaths()[0], mode)
         self.__fErr = open(self.getLogPaths()[1], mode)
