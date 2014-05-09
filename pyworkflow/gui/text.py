@@ -26,14 +26,17 @@
 """
 Text based widgets.
 """
-        
-import Tkinter as tk
-import ttk, os, gui
+import os
 import sys
 import webbrowser
 import subprocess
+import Tkinter as tk
+import ttk
+
+import gui
 from widgets import Scrollable, IconButton
-from pyworkflow.utils import HYPER_BOLD, HYPER_ITALIC, HYPER_LINK1, HYPER_LINK2, parseHyperText
+from pyworkflow.utils import (HYPER_BOLD, HYPER_ITALIC, HYPER_LINK1, HYPER_LINK2,
+                              parseHyperText, renderLine, renderTextFile)
 from pyworkflow.utils.properties import Message, Color, Icon
 
 
@@ -306,42 +309,19 @@ class OutputText(Text):
         if self.colors:
             configureColorTags(self)
 
-    def add(self, txt, tag=None):
+    def addLine(self, line):
+        self.lineNo += 1
+        renderLine(line, self._addChunk, self.lineNo)
+
+    def _addChunk(self, txt, tag=None):
         if self.colors and tag:
-            self.insert(tk.END, txt, tag)
+            if tag.startswith('link:'):
+                fname = tag.split(':', 1)[-1]
+                self.insert(tk.END, fname, self.hm.addOpen(fname))
+            else:
+                self.insert(tk.END, txt, colorName[colorCode])
         else:
             self.insert(tk.END, txt)
-
-    def addLine(self, line, numberLines=True):
-        """ Add line to the OutputText, with colors if appropriate.
-            If numberLines == True, prepend the line number to it.
-        """
-        # Prepend line number
-        if numberLines:
-            self.lineNo += 1
-            self.add("%05d:   " % self.lineNo, "cyan")
-
-        # iter 1\riter 2\riter 3  -->  iter 3
-        if '\r' in line:
-            line = line[line.rfind('\r')+1:]  # overwriting!
-
-        # Find all console escape codes and use the appropriate tag instead.
-        pos = 0  # current position in the line we are parsing
-        while True:
-            # line looks like: 'blah blah \x1b[X;YYmremark\x1b[0m blah blah'
-            # where YY is the color code (31 is red, for example).
-            start = line.find('\x1b[', pos)
-            if start < 0:
-                self.add(line[pos:])
-                return
-            colorCode = line[start+4:start+6]
-            end = line.find('\x1b[0m', start + 7)
-            if end < 0:  # what, no end for color formatting?
-                # maybe we should also warn the user...
-                self.add(line[start+7:])
-                return
-            self.add(line[start+7:end], colorName[colorCode])
-            pos = end + 4
 
     def readFile(self, clear=False):
         if clear:
@@ -351,29 +331,10 @@ class OutputText(Text):
 
         self.config(state=tk.NORMAL)
         #self.clear()
-        fname = self.filename  # short notation
-        if os.path.exists(fname):
-            textfile = open(fname)
-
-            textfile.seek(self.offset)
-            size = (os.stat(fname).st_size - self.offset) / 1024  # in kB
-            if size > 100:  # max size that we want to read (in kB)
-                for line in textfile.read(20000).splitlines(True):
-                    self.addLine(line)
-                self.insert(tk.END, """\n
-    ==> Too much data to read (%d kB) -- %d kB omitted
-    ==> Click """ % (size, size - 40))
-                self.insert(tk.END, fname, self.hm.addOpen(fname))
-                self.insert(tk.END, """ to open it with the default viewer
-    ==> Line numbers below are not in sync with the input data\n\n""")
-
-                textfile.seek(-20000, 2)  # ready to show the last 20000 bytes
-
-            # Add the remaining lines (from our last offset)
-            for line in textfile:
-                self.addLine(line)
-            self.offset = textfile.tell()  # save last position in file
-            textfile.close()
+        if os.path.exists(self.filename):
+            self.offset, self.lineNo = \
+                renderTextFile(self.filename, self._addChunk,
+                               offset=self.offset, lineNo=self.lineNo)
         else:
             self.insert(tk.END, "File '%s' doesn't exist" % self.filename)
         self.config(state=tk.DISABLED)
