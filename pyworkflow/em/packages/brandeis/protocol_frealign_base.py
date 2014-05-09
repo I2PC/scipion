@@ -461,7 +461,7 @@ class ProtFrealignBase(EMProtocol):
                 pass
         else:
             for block in range(1, numberOfBlocks + 1):
-                refineId = self._insertFunctionStep("refineParticlesStep", iter, block, prerequisites=depsInitId)
+                refineId = self._insertFunctionStep("refineParticlesStep", iter, block, numberOfBlocks, prerequisites=depsInitId)
                 depsRefine.append(refineId)
         return depsRefine
     
@@ -540,7 +540,7 @@ class ProtFrealignBase(EMProtocol):
         os.chmod(program, 0775)
         self.runJob(program, "")
     
-    def refineParticlesStep(self, iter, block):
+    def refineParticlesStep(self, iter, block, numberOfBlocks):
         """Only refine the parameters of the SetOfParticles
         """
         param = {}
@@ -550,12 +550,12 @@ class ProtFrealignBase(EMProtocol):
         if block==1:
             self._enterDir(iterDir) # enter to the working directory for the current iteration.
         
-        iniPart, lastPart = self._particlesInBlock(block)
+        iniPart, lastPart = self._particlesInBlock(block, numberOfBlocks)
         prevIter = iter - 1
         param['inputParFn'] = self._getFile('input_par_block', iter=prevIter, block=block)
         param['initParticle'] = iniPart
         param['finalParticle'] = lastPart
-
+        
         paramDic = self._setParamsRefineParticles(iter, block)
         initParamsDict = self._getParamsIteration(imgSet, iter)
         
@@ -828,11 +828,10 @@ class ProtFrealignBase(EMProtocol):
         """ Remove the folders and return the file from the filename. """
         return getFile(self._getFileName(key, **args))
     
-    def _particlesInBlock(self, block):
+    def _particlesInBlock(self, block, numberOfBlocks):
         """calculate the initial and final particles that belongs to this block"""
         
         imgSet = self.inputParticles.get()
-        numberOfBlocks = self.numberOfThreads.get()
         
         blockParticles = self._particlesPerBlock(numberOfBlocks, imgSet.getSize())
         initPart = 0
@@ -977,7 +976,7 @@ eot
                 f1 = open(file1)
                 file2 = self._getFileName('output_par_block', block= block, iter=prevIter)
                 f2 = open(file2, 'w+')
-                initpart, finalPart = self._particlesInBlock(block)
+                initpart, finalPart = self._particlesInBlock(block, numberOfBlocks)
                 
                 for l in f1:
                     

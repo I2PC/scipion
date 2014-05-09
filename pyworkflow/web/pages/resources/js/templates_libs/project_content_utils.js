@@ -461,9 +461,8 @@ function fillUL(type, list, ulId, icon) {
 	 */
 	var ul = $("#" + ulId);
 	ul.empty();
+	
 	for ( var i = 0; i < list.length; i++) {
-		
-//		inihtml = "<table><tr><td><strong>Attribute</strong></td><td><strong>&nbsp;&nbsp;&nbsp;Info</strong></td></tr>"
 		
 		// Visualize Object
 		var visualize_html = '<a href="javascript:launchViewer(' + list[i].id
@@ -480,10 +479,7 @@ function fillUL(type, list, ulId, icon) {
 		var edit_html = '<a href="javascript:editObject('+ list[i].id + ');"> '+
 		'<i class="fa fa-pencil" style="margin-left:0px;"></i></a>'
 		
-//		endhtml = "</table>"
-		
 		ul.append('<li>' + visualize_html + edit_html +"&nbsp;&nbsp;&nbsp;" +list[i].info+ '</li>');
-//		ul.append(inihtml+'<tr><td>' + visualize_html +"</td><td>&nbsp;&nbsp;&nbsp;" + list[i].info + edit_html + '</td></tr>' + endhtml);
 		
 	}
 }
@@ -525,15 +521,13 @@ function updateButtons(id, mode){
 			
 	 	case "multiple":
 	 		
-	 		var list_id = id
-	 	
 			// Action Edit Button
 			$("a#editTool").attr('href','#');
 			$("span#editTool").hide();
 	 		
 	 		// Action Copy Button
 			$("a#copyTool").attr('href',
-				'javascript:copyProtocol("' + list_id + '")');
+				'javascript:copyProtocol("' + id + '")');
 			$("span#copyTool").show();
 		
 			// Action Delete Button
@@ -594,20 +588,16 @@ function graphON(graph, icon_graph, list, icon_list){
 	
 	// Graph ON
 	graph.attr("data-mode", "active");
-//	graph.removeAttr("style");
 	graph.show();
-	graph.css("margin-top","-50em")
 	icon_graph.hide();
 	
 	// Table OFF
 	list.attr("data-mode", "inactive");
-//	list.attr("style", "display:none;");
 	list.hide();
 	icon_list.show();
 
 	// Update Graph View
 	updateGraphView("True");
-	
 }
 
 function graphOFF(graph, icon_graph, list, icon_list){
@@ -617,15 +607,12 @@ function graphOFF(graph, icon_graph, list, icon_list){
 	
 	// Table ON	
 	list.attr("data-mode", "active");
-//	list.removeAttr("style");
 	list.show();
 	icon_list.hide();
 	
 	// Graph OFF
 	graph.attr("data-mode", "inactive");
-//	graph.attr("style", "display:none;");
 	graph.hide();
-	$("img#loading").hide();
 	icon_graph.show();
 	
 	// Update Graph View
@@ -833,10 +820,10 @@ function refreshRuns(mode){
 		$.ajax({
 			url : '/run_table_graph/',
 			success : function(data) {
-			
+				
 				if (typeof data == 'string' || data instanceof String){
 					
-					if (data=='stop'){
+					if (data == 'stop'){
 						window.clearTimeout(updatetimer);
 						// stop the script
 					}

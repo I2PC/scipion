@@ -271,10 +271,6 @@ def textfileViewer(title, file):
     
     return html
 
-def convertTktoHtml(text):
-    text = parseText(text.replace('\n', '<br/>'));
-    return text
-
 def render_column(request):
     
     renderFunction = request.GET.get("renderFunc")
@@ -291,19 +287,7 @@ def render_column(request):
         return getTestPlot(request)
 #    return getattr(self, renderFunction)
 
-
-#def get_image_plot(request):
-#    from pyworkflow.gui import getImage
-#    
-#    imagePath = request.GET.get('image')
-#    
-#    img = getImage(imagePath, tk=False)
-#    
-#    response = HttpResponse(mimetype="image/png")
-#    img.save(response, "PNG")
-#    return response
-    
-    
+      
 def get_image_plot(request):
     from PIL import Image
     imagePath = os.path.join(request.GET.get('image'))
@@ -406,7 +390,7 @@ def get_slice(request):
         if not '@' in imagePath:
             raise Exception('Slice number required.')
         
-        parts = imagePath.split('@',1)
+        parts = imagePath.split('@', 1)
         sliceNo = parts[0]
         imagePath = parts[1]
 
@@ -414,8 +398,6 @@ def get_slice(request):
                 parts = imagePath.split('@')
                 imageNo = parts[0]
                 imagePath = parts[1]
-    
-        
     
         if 'projectPath' in request.session:
             imagePathTmp = os.path.join(request.session['projectPath'], imagePath)
@@ -481,7 +463,7 @@ def readImageVolume(request, path, convert, dataType, reslice, axis, getStats):
         img.convert2DataType(dataType, xmipp.CW_ADJUST)
          
     if reslice:
-        if axis !=xmipp.VIEW_Z_NEG:
+        if axis != xmipp.VIEW_Z_NEG:
             img.reslice(axis)    
     
     if getStats:
@@ -544,19 +526,10 @@ def parseText(text, func=replacePattern):
     return parsedText[:-6]    
 
 
-def buildShowjPath(paths):
-    urls = []
-    for f in paths:
-        url = "/visualize_object/?path="+ f
-        urls.append(url)
-    return urls
-
 def savePlot(request, plot):
-    
     projectPath = request.session['projectPath']
     
     name_img = 'image%s.png' % id(plot)
-#        fn = os.path.join('plots', name_img)
     fn = os.path.join(projectPath,'Tmp', name_img)
     plot.savefig(fn)
     url_plot = "/get_image_plot/?image=" + fn

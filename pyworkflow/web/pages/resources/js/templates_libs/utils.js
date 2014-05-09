@@ -265,7 +265,7 @@ function warningPopup(title, msgText, funcName){
 	 * It is used to show any warning message
 	 */
 	
-	//HTML to be used in the warning popup
+	// HTML to be used in the warning popup
 	msg = "<table><tr><td><i class=\"fa fa-warning fa-4x\" style=\"color:#fad003;\"></i>"
 		+ "</td><td>"+ msgText +"</td></tr></table>"
 
