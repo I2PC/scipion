@@ -6,13 +6,15 @@
 
 package xmipp.viewer.scipion;
 
-import java.awt.Window;
-import java.io.File;
+import java.awt.Color;
+import java.util.List;
+import xmipp.jni.Filename;
+import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
 import xmipp.utils.Params;
+import xmipp.viewer.models.ClassInfo;
 import xmipp.viewer.models.ColumnInfo;
 import xmipp.viewer.models.GalleryData;
-import xmipp.viewer.windows.SaveJDialog;
 
 /**
  *
@@ -20,10 +22,11 @@ import xmipp.viewer.windows.SaveJDialog;
  */
 public class ScipionGalleryData extends GalleryData{
 
-    public ScipionGalleryData(ScipionGalleryJFrame window, String fn, Params parameters, MetaData md) {
+    public ScipionGalleryData(ScipionGalleryJFrame window, String fn, Params parameters, ScipionMetaData md) {
         super(window, fn, parameters, md);
         selectedBlock = ((ScipionMetaData)md).getSelf() + "s";
         mdBlocks = new String[]{selectedBlock};
+        isClassification = mdBlocks.length > 1;//FIXME:Temporarily
     }
     
     public void setFileName(String file) {
@@ -64,48 +67,62 @@ public class ScipionGalleryData extends GalleryData{
         return false;
     }
     
-   
+            /** Save selected items as a metadata */
+    public void saveSelection(String path, boolean overwrite) throws Exception
+    {
+            ((ScipionMetaData)md).writeBlock(selectedBlock, path, getSelIds());
         
-        /** Save selected items as a metadata */
-	public void saveSelection() throws Exception
-	{
-		MetaData md = getSelectionMd();
-		SaveJDialog dlg = new SaveJDialog(window, "selection.xmd", true);
-		boolean save = dlg.showDialog();
-		if (save)
-		{
-			boolean overwrite= dlg.isOverwrite();
-			String path = dlg.getMdFilename();
-			saveSelection(path, overwrite);
-		}
-		md.destroy();
-	}
-        
-        	/** Save selected items as a metadata */
-	public void saveSelection(String path, boolean overwrite) throws Exception
-	{
-		MetaData md = getSelectionMd();
+    }
 
-                String file = path.substring(path.lastIndexOf("@") + 1, path.length());
-                if (!new File(file).exists())// overwrite or append, save selection
-                        md.write(path);
-                else
-                {
-                        if (overwrite)
-                                md.write(path);// overwrite with active block only, other
-                                                                // blocks were dismissed
-                        else
-                                md.writeBlock(path);// append selection
-
-                }
-		
-		md.destroy();
-	}
-        
-        public boolean isColumnFormat()
-        {
-            return true;
-        }
+    public boolean isColumnFormat()
+    {
+        return true;
+    }
     
+
+    /** Create a metadata just with selected items */
+    public ScipionMetaData getSelectionMd() {
+            ScipionMetaData selectionMd = null;
+            try
+            {
+                selectionMd = new ScipionMetaData("selection.sqlite");
+                selectionMd.importObjects(md, getSelIds());//import objects, if classes afterwords should import particles
+            } catch (Exception e) {
+                    e.printStackTrace();
+            }
+            return selectionMd;
+    }
         
+    	/** Get all the images assigned to all selected classes */
+	public MetaData getSelClassesImages(){
+		ScipionMetaData mdImages = new ScipionMetaData();
+		MetaData md;
+		for (int i = 0; i < ids.length; ++i){
+			if (selection[i]){
+				md = getClassImages(i);
+				if(md != null)
+                                {
+                                    mdImages.unionAll(md);
+                                    md.destroy();
+                                }
+			}
+		}
+		return mdImages;
+	}   
+        
+        /** Get the metadata with assigned images to this classes */
+	public MetaData getClassImages(int index) {
+		try {
+			long id = ids[index];
+			return ((ScipionMetaData)md).getEMObject(id).childmd;
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return null;
+	}
+        
+       
+
+        
+
 }

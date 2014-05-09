@@ -31,6 +31,7 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.util.ArrayList;
+import java.util.List;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -54,7 +55,7 @@ public class ColumnsJDialog extends XmippDialog {
 	private JButton btnDown;
 	private ColumnsTableModel model;
 	// This will be used for check for results from the dialog
-	private ArrayList<ColumnInfo> rows;
+	private List<ColumnInfo> rows;
 	boolean fireEvent = true;
 
 	public ColumnsJDialog(GalleryJFrame parent) {
@@ -62,7 +63,7 @@ public class ColumnsJDialog extends XmippDialog {
 		initComponents();
 	}// constructor ColumnsJDialog
 
-	public ArrayList<ColumnInfo> getColumnsResult() {
+	public List<ColumnInfo> getColumnsResult() {
 		return rows;
 	}
 
@@ -144,7 +145,7 @@ public class ColumnsJDialog extends XmippDialog {
 				rows.add(new ColumnInfo(labels[i]));
 		}
 
-		public ColumnsTableModel(ArrayList<ColumnInfo> labelsInfo) {
+		public ColumnsTableModel(List<ColumnInfo> labelsInfo) {
 			int n = labelsInfo.size();
 			rows = new ArrayList<ColumnInfo>(n);
 			for (int i = 0; i < n; ++i)

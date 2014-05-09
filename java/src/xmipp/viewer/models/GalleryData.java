@@ -29,7 +29,9 @@ import ij.ImagePlus;
 import java.awt.Color;
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import xmipp.ij.commons.XmippImageConverter;
@@ -59,7 +61,7 @@ public class GalleryData {
 	protected String commonVolPrefix = "";
 	protected String[] volumes = null;
 
-	protected ArrayList<ColumnInfo> labels = null;
+	protected List<ColumnInfo> labels = null;
 	// First label that can be rendered
 	protected ColumnInfo ciFirstRender = null;
 	protected int zoom;
@@ -155,7 +157,7 @@ public class GalleryData {
 
 	}// constructor GalleryData
 
-	public ArrayList<ColumnInfo> getColumns() {
+	public List<ColumnInfo> getColumns() {
 		return labels;
 	}
 
@@ -838,7 +840,7 @@ public class GalleryData {
 	
         
 	/** Get all the images assigned to all selected classes */
-	public MetaData getImagesFromClassSelection(){
+	public MetaData getSelClassesImages(){
 		MetaData mdImages = new MetaData();
 		MetaData md;
 		for (int i = 0; i < ids.length; ++i){
@@ -1117,7 +1119,7 @@ public class GalleryData {
         /** Save selected items as a metadata */
 	public void saveSelection() throws Exception
 	{
-		MetaData md = getSelectionMd();
+		
 		SaveJDialog dlg = new SaveJDialog(window, "selection.xmd", true);
 		boolean save = dlg.showDialog();
 		if (save)
@@ -1126,7 +1128,7 @@ public class GalleryData {
 			String path = dlg.getMdFilename();
 			saveSelection(path, overwrite);
 		}
-		md.destroy();
+	
 	}
         
         	/** Save selected items as a metadata */
@@ -1295,7 +1297,7 @@ public class GalleryData {
         return classesArray;
     }
     
-    public ArrayList<ColumnInfo> getLabelsInfo()
+    public List<ColumnInfo> getLabelsInfo()
     {
         return labels;
     }
@@ -1304,6 +1306,22 @@ public class GalleryData {
         return md.getMetaDataRow();
     }
 
+    public long[] getSelIds()
+    {
+        long[] selids = new long[selection.length];
+        int count = 0; 
+        for(int i = 0; i < selection.length; i ++)
+            if(selection[i] && md.getEnabled(ids[i]))
+            {
+                selids[count] = ids[i];
+                count ++;
+            }
+        return Arrays.copyOfRange(selids, 0, count);
+    }
+    
+    public long[] getChilds(long[] ids)
+    {
+        return new long[]{};
+    }
 
-
-}// class GalleryDaa
+}// class GalleryData

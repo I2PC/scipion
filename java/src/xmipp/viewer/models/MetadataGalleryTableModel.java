@@ -29,6 +29,7 @@ import ij.ImagePlus;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.List;
 
 import xmipp.ij.commons.ImagePlusLoader;
 import xmipp.ij.commons.XmippImageConverter;
@@ -62,7 +63,7 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel
 	}
 
 	/** Update the columns display information */
-	public void updateColumnInfo(ArrayList<ColumnInfo> newInfo)
+	public void updateColumnInfo(List<ColumnInfo> newInfo)
 	{
 		int n = newInfo.size();
 		boolean changed = false;

@@ -53,6 +53,7 @@ import java.util.Collections;
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -1593,7 +1594,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 					boolean result = dialog.showDialog();
 					if (result)
 					{
-						ArrayList<ColumnInfo> columns = dialog.getColumnsResult();
+						List<ColumnInfo> columns = dialog.getColumnsResult();
 						isUpdating = true;
 						((MetadataGalleryTableModel) gallery).updateColumnInfo(columns);
 						gallery.fireTableDataChanged();
@@ -2296,28 +2297,6 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
             return data.isClassificationMd() && gallery.getSelectionCount() > 0;
         }
        
-       public boolean isClassificationMd()
-       {
-           return data.isClassificationMd();
-       }
-       
-       public void saveImagesFromClassSelection(String path)
-       {
-            MetaData imagesMd = gallery.data.getImagesFromClassSelection();
-            imagesMd.write(path);
-            imagesMd.destroy();
-       }
-       
-       public void saveClassSelection(String path)
-       {
-            try {
-                String classesmdfile = "classes" + Filename.SEPARATOR + path;
-                data.saveSelection(classesmdfile, true);
-                data.saveClassSelection(path);
-            } catch (Exception ex) {
-                Logger.getLogger(GalleryJFrame.class.getName()).log(Level.SEVERE, null, ex);
-            }
-       }
        
        public String getFileExtension()
        {

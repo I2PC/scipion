@@ -24,12 +24,23 @@ import xmipp.viewer.models.ColumnInfo;
  */
 public class ScipionMetaData extends MetaData{
     private String dbfile;
-    private ArrayList<ColumnInfo> columns;
+    private List<ColumnInfo> columns;
     private String self;
     private int cellwidth = 100, cellheight = 100;
-    private ArrayList<EMObject> emobjects;
+    private List<EMObject> emobjects;
     private static Map<String, Integer> labels = new HashMap<String, Integer>();
     
+    public ScipionMetaData()
+    {
+        columns = new ArrayList<ColumnInfo>();
+        emobjects = new ArrayList<EMObject>();
+    }
+    
+    public ScipionMetaData(List<ColumnInfo> columns, List<EMObject> emobjects)
+    {
+        this.columns = columns;
+        this.emobjects = emobjects;
+    }
     
     public ScipionMetaData(String dbfile)
     {
@@ -202,12 +213,15 @@ public class ScipionMetaData extends MetaData{
                 return ci;
         return null;
     }
+
+    
     public class EMObject
     {
         long id;
         List<Object> values;
        
         boolean isenabled;
+        ScipionMetaData childmd;
         
         public EMObject(long id)
         {
@@ -289,6 +303,13 @@ public class ScipionMetaData extends MetaData{
         return true;
     }
     
+    public boolean getEnabled(long id)
+    {
+        EMObject emo = getEMObject(id);
+        return emo.isenabled;
+    
+    }
+    
     public static String getLabelName(int label)
     {
         for(Map.Entry<String, Integer> e: labels.entrySet())
@@ -297,7 +318,7 @@ public class ScipionMetaData extends MetaData{
         return null;
     }
     
-    public ArrayList<ColumnInfo> getColumnsInfo()
+    public List<ColumnInfo> getColumnsInfo()
     {
         return columns;
     }
@@ -384,6 +405,44 @@ public class ScipionMetaData extends MetaData{
         return emo.setValue(label, value);
     }
 
-
-            
+    public  void write(String path)
+    {
+        //save data on sqlite db path
+    }
+    
+    public  void writeBlock(String path)
+    {
+        //save block data on sqlite db path
+    }
+    
+    public void writeBlock(String block, String path, long[] ids)
+    {
+        for(Long id: ids)
+            System.out.println(id);
+    }
+         
+    public void importObjects(MetaData md, long [] ids)
+    {
+    }
+    
+    public List<EMObject> getChilds(long[] ids)
+    {
+        ArrayList<EMObject> childs = new ArrayList<EMObject>();
+        EMObject emo;
+        for(int i = 0; i < ids.length; i++)
+        {
+            emo = getEMObject(ids[i]);
+            if(emo.childmd != null)
+                childs.addAll(emo.childmd.getEMObjects());
+        }
+        return childs;
+    }
+    
+    public void unionAll(MetaData md)
+    {
+        emobjects.addAll(((ScipionMetaData)md).getEMObjects());
+    }
+    
+    public void destroy()
+    {}
 }
