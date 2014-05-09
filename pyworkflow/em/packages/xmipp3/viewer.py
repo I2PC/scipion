@@ -93,9 +93,11 @@ class XmippViewer(Viewer):
             mdFn = getattr(obj, '_xmippMd', None)
             if mdFn:
                 fn = mdFn.get()
+#            else:
+#                fn = self._getTmpPath(obj.getName() + '_micrographs.xmd')
+#                writeSetOfMicrographs(obj, fn)
             else:
-                fn = self._getTmpPath(obj.getName() + '_micrographs.xmd')
-                writeSetOfMicrographs(obj, fn)
+                fn = obj.getFileName()
             self._views.append(ObjectView(fn, "Micrographs", self._project.getName(), obj.strId(), obj.strId(), **args))
             
             
@@ -108,7 +110,7 @@ class XmippViewer(Viewer):
         elif issubclass(cls, SetOfCoordinates):
             micSet = obj.getMicrographs()#accessing mics to provide metadata file
             if micSet is None:
-                raise Exception('visualize: SetOfCoordinates has not micrographs set.')
+                raise Exception('visualize: SetOfCoordinates has no micrographs set.')
             
             mdFn = getattr(micSet, '_xmippMd', None)
             tmpDir = self._getTmpPath(obj.getName()) 
