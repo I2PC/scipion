@@ -2,7 +2,7 @@
 <script type="text/javascript">
 	$(function() {
 		{% if graphView %}
-			switchGraph()
+			switchGraph();
 		{% endif %}
 	});
 </script>
@@ -46,6 +46,5 @@
 	<div id="graphActiv" style="display:none;" data-mode="inactive"
 		data-time="first" data-project="{{projectName}}" data-option="">
 		<!-- data-option: Used to remove the last highlighted node. -->
-		<!-- <h3>History</h3> -->
 	</div>
 </div>

@@ -253,7 +253,7 @@ class TestMixedBPV2(TestWorkflow):
         print "<Run extract particles with Same as picking>"
         protExtract = XmippProtExtractParticles(boxSize=550, downsampleType=1, doFlip=True, doInvert=True, runMode=1)
         protExtract.inputCoordinates.set(protPP.outputCoordinates)
-#         protExtract.ctfRelations.set(protCTF.outputCTF)
+        protExtract.ctfRelations.set(protCTF.outputCTF)
         self.proj.launchProtocol(protExtract, wait=True)
         self.assertIsNotNone(protExtract.outputParticles, "There was a problem with the extract particles")
         #self.validateFiles('protExtract', protExtract)
