@@ -149,10 +149,11 @@ class XmippViewer(Viewer):
             mdFn = getattr(obj, '_xmippMd', None)
             if mdFn:
                 fn = mdFn.get()
+#            else:
+#                fn = self._getTmpPath(obj.getName() + '_classes.xmd')
+#                writeSetOfClasses2D(obj, fn)
             else:
-                fn = self._getTmpPath(obj.getName() + '_classes.xmd')
-                writeSetOfClasses2D(obj, fn)
-            
+                fn = obj.getFileName()
             self._views.append(ObjectView(fn, "Classes2D", self._project.getName(), obj.strId(), obj.getImages().strId()))  
             
         elif issubclass(cls, SetOfClasses3D):
