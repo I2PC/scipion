@@ -75,7 +75,7 @@ class ProtCTFMicrographs(ProtMicrographs):
                            'allow identifying more details. However, since there are fewer windows, '
                            'estimations are noisier.')
         
-        form.addParallelSection(threads=2, mpi=0)       
+        form.addParallelSection(threads=2, mpi=1)       
     
     #--------------------------- INSERT steps functions --------------------------------------------
     def _insertAllSteps(self):
