@@ -507,7 +507,7 @@ def writeDefaults():
     print "Writing default settings to: ", dbPath
     if exists(dbPath):
         dbPathBackup = '%s.%s' % (dbPath, time.time())
-        print "File %s exist, renaming to %s ..." % (dbPath, dbPathBackup)
+        print "File %s exists, moving to %s ..." % (dbPath, dbPathBackup)
         os.rename(dbPath, dbPathBackup)
     settings.write(dbPath)
     
