@@ -172,10 +172,7 @@ class SubclassesTreeProvider(TreeProvider):
         self.mapper = protocol.mapper
         
     def getObjects(self):
-        objs = []
-        for objClass in self.className.split(","):
-            for obj in self.mapper.selectByClass(objClass.strip(), objectFilter=self.objFilter):
-                objs.append(obj)
+        objs = list(self.protocol.getProject().iterSubclasses(self.className, self.objFilter))
         return objs        
 #        return self.mapper.selectByClass(self.className, objectFilter=self.objFilter)
             
