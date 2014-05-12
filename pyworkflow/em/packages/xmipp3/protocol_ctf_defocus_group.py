@@ -115,7 +115,6 @@ class XmippProtCTFDefocusGroup(ProtProcessParticles):
         for idGroup in mdGroups:
             defocusU = mdGroups.getValue(xmipp.MDL_CTF_DEFOCUSU,idGroup)
             mdCTFAux.setValue(xmipp.MDL_CTF_DEFOCUSV, defocusU, idCTFAux);
-            counter += 1
             resolution = xmipp.errorMaxFreqCTFs(mdCTFAux,pi/2.)
             if  resolution > resolutionError/ctfGroupMaxDiff:
                 avgDef /=  counter
@@ -123,6 +122,7 @@ class XmippProtCTFDefocusGroup(ProtProcessParticles):
                 df.setDefocusMin(minDef)
                 df.setDefocusMax(maxDef)
                 df.setDefocusAvg(avgDef)
+                df.setSize(counter)
                 setOfDefocus.append(df)
                 counter = 0
                 minDef = defocusU
@@ -132,6 +132,7 @@ class XmippProtCTFDefocusGroup(ProtProcessParticles):
                 avgDef  += defocusU
                 
             maxDef = defocusU
+            counter += 1
         ###
         setOfDefocus.printAll()
         ###
