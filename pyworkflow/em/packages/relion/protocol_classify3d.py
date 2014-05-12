@@ -35,8 +35,12 @@ from pyworkflow.em.protocol import *
 
 
 class ProtRelionClassify3D(ProtClassify3D, ProtRelionBase):
-    """Protocol to classify 3D using Relion. 
-    """    
+    """Protocol to classify 3D using Relion. Relion employs an empirical
+Bayesian approach to refinement of (multiple) 3D reconstructions
+or 2D class averages in electron cryo-microscopy (cryo-EM). Many
+parameters of a statistical model are learned from the data,which
+leads to objective and high-quality results.
+    """
     _label = '3D classify'
     CHANGE_LABELS = [xmipp.MDL_AVG_CHANGES_ORIENTATIONS, 
                      xmipp.MDL_AVG_CHANGES_OFFSETS]
