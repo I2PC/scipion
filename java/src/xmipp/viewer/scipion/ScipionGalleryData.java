@@ -25,10 +25,10 @@ public class ScipionGalleryData extends GalleryData{
     public ScipionGalleryData(ScipionGalleryJFrame window, String fn, Params parameters, ScipionMetaData md) {
         super(window, fn, parameters, md);
         
-        classes = ((ScipionMetaData)md).getClasses();
-        selectedBlock = classes[0].getComment();
-        mdBlocks = new String[]{selectedBlock};
+        mdBlocks = md.getBlocks();
+        selectedBlock = mdBlocks[0];
         isClassification = mdBlocks.length > 1;//FIXME:Temporarily
+        classes = ((ScipionMetaData)md).getClasses();
     }
     
     public void setFileName(String file) {
@@ -123,7 +123,34 @@ public class ScipionGalleryData extends GalleryData{
 		return null;
 	}
         
-       
+        public String getLabel(long objId, int label)
+        {
+            try
+                    {
+                            if (isClassification)
+                            {
+                                ScipionMetaData.EMObject emo = ((ScipionMetaData)md).getEMObject(objId);
+                                return String.format("Class %s (%d images)", emo.id, emo.childmd.size());
+                            }
+                            else
+                                    return md.getValueString(label, objId);
+                    }
+                    catch (Exception e)
+                    {
+                            e.printStackTrace();
+                    }
+                    return null;
+        }
+        
+        public void readMd() {
+                
+		for(ScipionMetaData child: ((ScipionMetaData)md).getChilds())
+                    if(child.getBlock().equals(selectedBlock))
+                        md = child;
+                ScipionMetaData parent = ((ScipionMetaData)md).getParent();
+                if(parent.getBlock().equals(selectedBlock))
+                    md = parent;
+	}
 
         
 

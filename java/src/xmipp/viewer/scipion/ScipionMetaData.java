@@ -26,12 +26,15 @@ public class ScipionMetaData extends MetaData{
     private String self;
     private List<EMObject> emobjects;
     private static Map<String, Integer> labels = new HashMap<String, Integer>();
-    private ClassInfo[] classes;
+    private List<ScipionMetaData> childmds;
+    private ScipionMetaData parent;
+    private List<ClassInfo> classes;
     
     public ScipionMetaData()
     {
         columns = new ArrayList<ColumnInfo>();
         emobjects = new ArrayList<EMObject>();
+        
     }
     
     public ScipionMetaData(List<ColumnInfo> columns, List<EMObject> emobjects)
@@ -42,23 +45,27 @@ public class ScipionMetaData extends MetaData{
     
     public ScipionMetaData(String dbfile)
     {
-        this(dbfile, "Classes", "Objects");
+        this.dbfile = dbfile;
+        columns = new ArrayList<ColumnInfo>();
+        emobjects = new ArrayList<EMObject>();
+        
+        loadData("Classes", "Objects");
         if(self.equals("Class2D"))
         {
-            classes = new ClassInfo[emobjects.size()];
             
-            long id;
-            String name, comment;
+            childmds = new ArrayList<ScipionMetaData>();
+            classes = new ArrayList<ClassInfo>();
+            String parentid;
             String classestb = "%s_Classes";
             String objectstb = "%s_Objects";
             
-            int count = 0;
             for(EMObject emo: emobjects)
             {
-                name = String.format("Class00%s", emo.id);
-                emo.childmd = new ScipionMetaData(dbfile, String.format(classestb, name), String.format(objectstb, name));
-                classes[count] = new ClassInfo(name, Color.red, emo.childmd.size());
-                count ++;
+                parentid = String.format("Class00%s", emo.id);
+                emo.childmd = new ScipionMetaData(dbfile, String.format(classestb, parentid), String.format(objectstb, parentid));
+                emo.childmd.setParent(this);
+                childmds.add(emo.childmd);
+                classes.add(new ClassInfo(emo.childmd.getBlock(), Color.red, emo.childmd.size()));
             }
         }
         
@@ -71,7 +78,6 @@ public class ScipionMetaData extends MetaData{
         this.dbfile = dbfile;
         columns = new ArrayList<ColumnInfo>();
         emobjects = new ArrayList<EMObject>();
-        
         loadData(classestb, objectstb);
         
     }
@@ -127,7 +133,7 @@ public class ScipionMetaData extends MetaData{
            
             EMObject emo;
             int id;
-            ci = getColumnInfo("_index");
+            
             query =  String.format("SELECT * FROM %s;", objectstb);
             rs = stmt.executeQuery( query );
             while ( rs.next() ) {
@@ -148,9 +154,9 @@ public class ScipionMetaData extends MetaData{
                             break;
                         case MetaData.LABEL_STRING:
                             value = rs.getString(alias);
-                            if(name.equals("_filename"))
+                            if(name.endsWith("_filename"))
                             {
-                                
+                                ci = getColumnInfo(name.replace("_filename", "_index"));
                                 if(column.render && ci != null)
                                     value = rs.getInt(ci.comment) + "@" + value;
                             }
@@ -175,12 +181,30 @@ public class ScipionMetaData extends MetaData{
         }
     }
     
-    public ClassInfo[] getClasses()
+    public void setParent(ScipionMetaData parent)
     {
-        return classes;
+        this.parent = parent;
     }
     
+    public String[] getBlocks()
+    {
+        if(childmds == null)
+            return new String[]{getBlock()};
+        String[] blocks = new String[childmds.size() + 1];
+        blocks[0] = getBlock();
+        for(int i = 1; i < blocks.length; i  ++)
+            blocks[i] = childmds.get(i - 1).getBlock();
+        return blocks;
+            
+    }
     
+    public String getBlock()
+    {
+        if (parent == null)
+            return self + "s";
+         return parent.getBlock() + self + "s";
+            
+    }
    
     public String getDBFile()
     {
@@ -230,6 +254,14 @@ public class ScipionMetaData extends MetaData{
             if(ci.labelName.equals(labelName))
                 return ci;
         return null;
+    }
+
+    public ClassInfo[] getClasses() {
+        return classes.toArray(new ClassInfo[]{});
+    }
+
+    public List<ScipionMetaData> getChilds() {
+        return childmds;
     }
 
     
@@ -462,4 +494,8 @@ public class ScipionMetaData extends MetaData{
     
     public void destroy()
     {}
+    
+    public ScipionMetaData getParent() {
+        return parent;
+    }
 }

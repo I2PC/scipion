@@ -26,14 +26,10 @@
 package xmipp.viewer.models;
 
 import ij.ImagePlus;
-
-import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-
 import xmipp.ij.commons.ImagePlusLoader;
 import xmipp.ij.commons.XmippImageConverter;
-import xmipp.ij.commons.XmippImageWindow;
 import xmipp.jni.Filename;
 import xmipp.jni.ImageGeneric;
 import xmipp.jni.MDLabel;
@@ -186,14 +182,7 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel
 		{
 			int index = getIndex(row, col);
 			long objId = data.ids[index];
-			if (data.isClassification)
-			{
-				int ref = data.md.getValueInt(MDLabel.MDL_REF, objId);
-				long count = data.md.getValueLong(MDLabel.MDL_CLASS_COUNT, objId);
-				return String.format("class %d (%d images)", ref, count);
-			}
-			else
-				return data.md.getValueString(displayLabel.getLabel(), objId);
+			return data.getLabel(objId, displayLabel.getLabel());
 		}
 		catch (Exception e)
 		{
@@ -242,7 +231,6 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel
 			String file = data.getValueFromLabel(index, label);
 			String mddir = data.md.getBaseDir();
 			file = Filename.findImagePath(file, mddir, true);
-                        
 			return file;
 		}
 		catch (Exception e)

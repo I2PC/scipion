@@ -85,6 +85,7 @@ XMIPP_RELION_LABELS = {
                        ,MDL_SAMPLINGRATE:       'rlnPixelSize'
                        #,MDL_SAMPLINGRATE_ORIGINAL: 'rlnPixelSize'
                        ,MDL_SCALE:              'rlnMagnificationCorrection'
+                       ,MDL_SERIE:              'rlnGroupName'
                        ,MDL_ORIGIN_X:           'rlnOriginX'
                        ,MDL_ORIGIN_Y:           'rlnOriginY'
                        ,MDL_ORIGIN_Z:           'rlnOriginZ'

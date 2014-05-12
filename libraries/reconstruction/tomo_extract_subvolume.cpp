@@ -202,8 +202,13 @@ void ProgTomoExtractSubvolume::preProcess()
             rotations_subvolumes.push_back(R);
         }
     }
+//#define DEBUG
 #ifdef  DEBUG
-    std::cerr<<"End produceSideInfo"<<std::endl;
+    for (int isym = 0; isym < SL.symsNo(); isym++)
+    {
+    std::cerr << "centers_subvolumes" << centers_subvolumes[isym] << std::endl;
+    std::cerr << "rotations_subvolumes" << rotations_subvolumes[isym] << std::endl;
+    }    std::cerr<<"End produceSideInfo"<<std::endl;
 #endif
 
     center.resizeNoCopy(3);
@@ -321,12 +326,16 @@ void ProgTomoExtractSubvolume::processImage(const FileName &fnImg2
         DFout.setValue(MDL_ANGLE_ROT,rotp,oId);
         DFout.setValue(MDL_ANGLE_TILT,tiltp,oId);
         DFout.setValue(MDL_ANGLE_PSI,psip,oId);
+        DFout.setValue(MDL_SHIFT_X,XX(center),oId);
+        DFout.setValue(MDL_SHIFT_Y,YY(center),oId);
+        DFout.setValue(MDL_SHIFT_Z,ZZ(center),oId);
     }
     // 6. Output translations will be zero because subvolumes are centered by definition
     DFout.setValueCol(MDL_ORIGIN_X,0.);
     DFout.setValueCol(MDL_ORIGIN_Y,0.);
     DFout.setValueCol(MDL_ORIGIN_Z,0.);
-
+    
+    DFout.setComment("shift keeps the center of the box in the original virus");
     DFout.write(fnOutMd);
     DFout.clear();
 

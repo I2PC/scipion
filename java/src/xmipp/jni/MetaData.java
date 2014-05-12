@@ -506,6 +506,8 @@ public class MetaData {
 	
 
 	public native double getColumnMax(int column);
+
+    
 	
 	
 	

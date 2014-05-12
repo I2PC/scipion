@@ -1324,4 +1324,23 @@ public class GalleryData {
         return new long[]{};
     }
 
+    public String getLabel(long objId, int label)
+    {
+        try
+		{
+			if (isClassification)
+			{
+				int ref = md.getValueInt(MDLabel.MDL_REF, objId);
+				long count = md.getValueLong(MDLabel.MDL_CLASS_COUNT, objId);
+				return String.format("class %d (%d images)", ref, count);
+			}
+			else
+				return md.getValueString(label, objId);
+		}
+		catch (Exception e)
+		{
+			e.printStackTrace();
+		}
+		return null;
+    }
 }// class GalleryData
