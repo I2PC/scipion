@@ -43,6 +43,17 @@ CTF_BASIC_LABELS = [
                     ,MDL_CTF_VOLTAGE
                     ]
 
+OLD_CTF_BASIC_DICT = {
+                        'chromatic_aberration': MDL_CTF_CA, 
+                        'spherical_aberration': MDL_CTF_CS, 
+                        'azimuthal_angle': MDL_CTF_DEFOCUS_ANGLE,
+                        'defocusU': MDL_CTF_DEFOCUSU, 
+                        'defocusV': MDL_CTF_DEFOCUSV, 
+                        'K': MDL_CTF_K,
+                        'Q0': MDL_CTF_Q0, 
+                        'sampling_rate': MDL_CTF_SAMPLING_RATE, 
+                        'voltage': MDL_CTF_VOLTAGE, 
+                        }  
 # Map from Xmipp labels to Relion labels names
 XMIPP_RELION_LABELS = {
                         MDL_ANGLE_ROT:         'rlnAngleRot'
@@ -149,10 +160,6 @@ XMIPP_RELION_LABELS_EXTRA = {
 def convertCtfparam(oldCtf):
     '''Convert the old format (Xmipp2.4) of the CTF 
     and return a new MetaData'''
-    oldLabelsName = ['sampling_rate', 'voltage', 'defocusU', 'defocusV', 'azimuthal_angle', 
-                     'spherical_aberration', 'chromatic_aberration', 'Q0', 'K']                   
-    conversionDict = dict(zip(oldLabelsName, CTF_BASIC_LABELS))
-    
     f = open(oldCtf)
     md = MetaData()
     md.setColumnFormat(False)
@@ -163,9 +170,12 @@ def convertCtfparam(oldCtf):
         if len(line) and not line.startswith('#'):
             parts = line.split('=')
             old_key = parts[0].strip()
-            value = float(parts[1].strip())
-            label = conversionDict[old_key]
-            md.setValue(label, value, objId)
+            if old_key in OLD_CTF_BASIC_DICT:
+                value = float(parts[1].strip())
+                label = OLD_CTF_BASIC_DICT[old_key]
+                md.setValue(label, value, objId)
+            else:
+                print "WARNING: Ignoring old ctfparam key:", old_key
 
     f.close()
   
