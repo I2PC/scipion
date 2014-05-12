@@ -6,16 +6,14 @@
 
 package xmipp.viewer.scipion;
 
+import java.awt.Color;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import javax.swing.SwingUtilities;
-import xmipp.jni.ImageGeneric;
-import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
-import xmipp.utils.StopWatch;
+import xmipp.viewer.models.ClassInfo;
 import xmipp.viewer.models.ColumnInfo;
 
 /**
@@ -26,9 +24,9 @@ public class ScipionMetaData extends MetaData{
     private String dbfile;
     private List<ColumnInfo> columns;
     private String self;
-    private int cellwidth = 100, cellheight = 100;
     private List<EMObject> emobjects;
     private static Map<String, Integer> labels = new HashMap<String, Integer>();
+    private ClassInfo[] classes;
     
     public ScipionMetaData()
     {
@@ -44,10 +42,42 @@ public class ScipionMetaData extends MetaData{
     
     public ScipionMetaData(String dbfile)
     {
+        this(dbfile, "Classes", "Objects");
+        if(self.equals("Class2D"))
+        {
+            classes = new ClassInfo[emobjects.size()];
+            
+            long id;
+            String name, comment;
+            String classestb = "%s_Classes";
+            String objectstb = "%s_Objects";
+            
+            int count = 0;
+            for(EMObject emo: emobjects)
+            {
+                name = String.format("Class00%s", emo.id);
+                emo.childmd = new ScipionMetaData(dbfile, String.format(classestb, name), String.format(objectstb, name));
+                classes[count] = new ClassInfo(name, Color.red, emo.childmd.size());
+                count ++;
+            }
+        }
+        
+        
+    }
+    
+    public ScipionMetaData(String dbfile, String classestb, String objectstb)
+    {
         
         this.dbfile = dbfile;
         columns = new ArrayList<ColumnInfo>();
         emobjects = new ArrayList<EMObject>();
+        
+        loadData(classestb, objectstb);
+        
+    }
+    
+    public void loadData(String classestb, String objectstb)
+    {
         Connection c = null;
         Statement stmt = null;
         try {
@@ -60,12 +90,9 @@ public class ScipionMetaData extends MetaData{
             c = DriverManager.getConnection("jdbc:sqlite:" + dbfile);
             stmt = c.createStatement();
             ResultSet rs;
-            rs = stmt.executeQuery("SELECT name FROM sqlite_master WHERE type='table' AND name like '%Classes';");
-            while ( rs.next() ) {
-                name = rs.getString("name");
-                System.out.println(name);
-            }
-            rs = stmt.executeQuery( "SELECT * FROM CLASSES;" );
+            
+            String query = String.format( "SELECT * FROM %s;", classestb);
+            rs = stmt.executeQuery(query );
             while ( rs.next() ) {
                name = rs.getString("label_property");
                alias = rs.getString("column_name");
@@ -101,7 +128,8 @@ public class ScipionMetaData extends MetaData{
             EMObject emo;
             int id;
             ci = getColumnInfo("_index");
-            rs = stmt.executeQuery( "SELECT * FROM OBJECTS;" );
+            query =  String.format("SELECT * FROM %s;", objectstb);
+            rs = stmt.executeQuery( query );
             while ( rs.next() ) {
                 id = rs.getInt("Id");
                 emo = new EMObject(id);
@@ -145,23 +173,13 @@ public class ScipionMetaData extends MetaData{
             e.printStackTrace();
             
         }
-      
     }
     
-    public static void main( String[] args )
+    public ClassInfo[] getClasses()
     {
-        final String dbfile = args[1];
-        
-        SwingUtilities.invokeLater(new Runnable() {
-
-            @Override
-            public void run() {
-                ScipionMetaData md = new ScipionMetaData(dbfile);
-                new ScipionViewerJFrame(md);
-            }
-        });
-        
+        return classes;
     }
+    
     
    
     public String getDBFile()
@@ -260,16 +278,7 @@ public class ScipionMetaData extends MetaData{
        
     }
 
-    public int getCellHeight()
-    {
-        return cellheight;
-    }
-    
-    public int getCellWidth()
-    {
-        return cellwidth;
-    }
-    
+
     public long[] findObjects()
     {
         long[] ids = new long[emobjects.size()];
@@ -423,6 +432,14 @@ public class ScipionMetaData extends MetaData{
          
     public void importObjects(MetaData md, long [] ids)
     {
+        ScipionMetaData smd = (ScipionMetaData)md;
+        EMObject emo;
+        for(int i = 0; i < ids.length; i++)
+        {
+            emo = smd.getEMObject(ids[i]);
+            emobjects.add(emo);
+            System.out.println(emo.id);
+        }
     }
     
     public List<EMObject> getChilds(long[] ids)

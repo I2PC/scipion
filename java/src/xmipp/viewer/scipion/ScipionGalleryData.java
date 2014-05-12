@@ -24,13 +24,15 @@ public class ScipionGalleryData extends GalleryData{
 
     public ScipionGalleryData(ScipionGalleryJFrame window, String fn, Params parameters, ScipionMetaData md) {
         super(window, fn, parameters, md);
-        selectedBlock = ((ScipionMetaData)md).getSelf() + "s";
+        
+        classes = ((ScipionMetaData)md).getClasses();
+        selectedBlock = classes[0].getComment();
         mdBlocks = new String[]{selectedBlock};
         isClassification = mdBlocks.length > 1;//FIXME:Temporarily
     }
     
     public void setFileName(String file) {
-		filename = file;
+	filename = file;
                 
     }
     

@@ -31,8 +31,8 @@ import xmipp.utils.ColorIcon;
 
 /** Structure to store class info */
 public class ClassInfo {
-	private String comment;
-	private ColorIcon icon;
+	public String comment;
+	public ColorIcon icon;
 	public int index; // index of the class
 	public int numberOfClasses; // Classes assigned to superclass
 	public long numberOfImages; // total images assigned to superclass
@@ -41,6 +41,13 @@ public class ClassInfo {
 	public ClassInfo(String name, Color c) {
 		comment = name;
 		icon = new ColorIcon(c, 16, 16, 3, true, true);
+	}
+        
+        /** Constructor */
+	public ClassInfo(String name, Color c, int numberOfImages) {
+		comment = name;
+		icon = new ColorIcon(c, 16, 16, 3, true, true);
+                this.numberOfImages = numberOfImages;
 	}
 
 	public String getComment() {
