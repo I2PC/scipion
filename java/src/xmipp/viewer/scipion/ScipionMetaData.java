@@ -29,7 +29,7 @@ public class ScipionMetaData extends MetaData{
     private int cellwidth = 100, cellheight = 100;
     private ArrayList<EMObject> emobjects;
     private static Map<String, Integer> labels = new HashMap<String, Integer>();
-
+    
     
     public ScipionMetaData(String dbfile)
     {
@@ -48,7 +48,13 @@ public class ScipionMetaData extends MetaData{
             Class.forName("org.sqlite.JDBC");
             c = DriverManager.getConnection("jdbc:sqlite:" + dbfile);
             stmt = c.createStatement();
-            ResultSet rs = stmt.executeQuery( "SELECT * FROM CLASSES;" );
+            ResultSet rs;
+            rs = stmt.executeQuery("SELECT name FROM sqlite_master WHERE type='table' AND name like '%Classes';");
+            while ( rs.next() ) {
+                name = rs.getString("name");
+                System.out.println(name);
+            }
+            rs = stmt.executeQuery( "SELECT * FROM CLASSES;" );
             while ( rs.next() ) {
                name = rs.getString("label_property");
                alias = rs.getString("column_name");
@@ -59,18 +65,18 @@ public class ScipionMetaData extends MetaData{
                        self = clsname;
                    continue;
                }
-               switch(clsname)
-                {
-                    case "Integer":
+               if (clsname.equals("Integer"))
+               {
                         type = MetaData.LABEL_INT;
-                        break;
-                    case "Float":
+               } 
+               else if (clsname.equals("Float"))
+               {
                         type = MetaData.LABEL_DOUBLE;
-                        break;
-                    default:
+               }
+               else
+               {
                         type = MetaData.LABEL_STRING;
-                }
-               
+               }
                
                labels.put(name, labels.size());
                label = labels.get(name);

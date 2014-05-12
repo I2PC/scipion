@@ -27,7 +27,7 @@ package xmipp.jni;
 
 import java.io.File;
 import java.util.Arrays;
-import xmipp.jni.MDRow;
+
 
 //import xmipp.utils.DEBUG;
 
@@ -93,14 +93,7 @@ public class MetaData {
 		create();
 	}
 
-	/** Create a metadata and read data from filename */
-	public MetaData(String filename) {
-		//DEBUG.printFormat("Java: Creating metadata from filename: %s\n", filename);
-		//DEBUG.printStackTrace();
-            
-		create();
-		read(filename);
-	}
+	
 	// caching some ids
 	// private static native void storeIds();
 	// functions to create images
@@ -468,6 +461,14 @@ public class MetaData {
 
 	/*********** Non-native functions ********************/
 
+	/** Create a metadata and read data from filename */
+	public MetaData(String filename) {
+		//DEBUG.printFormat("Java: Creating metadata from filename: %s\n", filename);
+		//DEBUG.printStackTrace();
+            
+		create();
+		read(filename);
+	}
 
 	/**
 	 * Will be called by GarbageCollector before destroying. Needed to free C++

@@ -39,7 +39,6 @@ import xmipp.jni.MetaData;
 import xmipp.jni.MDRow;
 import xmipp.utils.DEBUG;
 import xmipp.utils.Params;
-import xmipp.utils.StopWatch;
 import xmipp.utils.XmippStringUtils;
 import xmipp.viewer.windows.GalleryJFrame;
 
@@ -301,8 +300,9 @@ public class GalleryData {
 		} else {
 			// force this mode when there aren't render label
 			mode = Mode.TABLE_MD;
+                        zoom = 100;
 		}
-
+                
 	}// function loadMd
 
 	/**
