@@ -118,9 +118,12 @@ def form(request):
                         else:
                             paramLine = PreprocessParamForm(request, paramLine, paramLineName, wizards, viewerDict, visualize, protVar)
                         
-                    if paramName in wizards:
-                        param.hasWizard = True
-                        param.wizardClassName = wizards[paramName].__name__
+                    # PATCH: This is applied to all the params in the line, maybe just need for the first one.
+                    for name, _ in param.iterParams():
+                        wizParamName = name
+                        if wizParamName in wizards:
+                            param.hasWizard = True
+                            param.wizardClassName = wizards[wizParamName].__name__
                         
                     if visualize == 1:
                         if paramName in viewerDict:
