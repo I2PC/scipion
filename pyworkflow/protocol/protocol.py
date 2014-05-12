@@ -35,9 +35,10 @@ import pickle
 import time
 from collections import OrderedDict
 
+import pyworkflow as pw
 from pyworkflow.object import *
-from pyworkflow.utils.path import replaceExt, makeFilePath, join, missingPaths, cleanPath, getFiles
-from pyworkflow.utils.log import *
+from pyworkflow.utils.path import replaceExt, makePath, join, missingPaths, cleanPath, getFiles
+from pyworkflow.utils.log import ScipionLogger
 from executor import StepExecutor, ThreadStepExecutor, MPIStepExecutor
 from constants import *
 from params import Form, Group
@@ -164,7 +165,7 @@ class Step(OrderedObject):
 class FunctionStep(Step):
     """ This is a Step wrapper around a normal function
     This class will ease the insertion of Protocol function steps
-    throught the function _insertFunctionStep""" 
+    through the function _insertFunctionStep"""
     
     def __init__(self, func=None, funcName=None, *funcArgs, **args):
         """ 
