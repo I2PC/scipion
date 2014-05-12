@@ -712,7 +712,9 @@ class ProtocolsView(tk.Frame):
         self._fillSummary()
         self._fillMethod()
         self._fillLogs()
-        self._lastSelectedProtId = self.getSelectedProtocol().getObjId()
+
+        last = self.getSelectedProtocol()
+        self._lastSelectedProtId = last.getObjId() if last else None
 
         self._updateActionToolbar()
         
