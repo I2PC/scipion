@@ -608,8 +608,10 @@ class ProtFrealignBase(EMProtocol):
     
     def _summary(self):
         summary = []
-        summary.append("Number of particles:  %d" % self.inputParticles.get().getSize())
-        summary.append("Input volume:  %s" % self.input3DReference.get().getFileName())
+        if self.inputParticles.hasValue():
+            summary.append("Number of particles:  %d" % self.inputParticles.get().getSize())
+        if self.input3DReference.hasValue():
+            summary.append("Input volume:  %s" % self.input3DReference.get().getFileName())
         
         if not hasattr(self, 'outputVolume'):
             summary.append("Output volumes not ready yet.")
