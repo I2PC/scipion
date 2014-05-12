@@ -230,15 +230,22 @@ def _acquisitionFromEmx(emxObj, acquisition):
     acquisition.setSphericalAberration(emxObj.get('cs'))    
     
     
+def _hasCtfLabels(emxObj):
+    """ Check that needed labels for CTF are present in object dict. """
+    return (emxObj is not None and 
+            all([emxObj.has(tag) for tag in ['defocusU', 'defocusV', 'defocusUAngle']]))
+    
+    
 def _ctfFromEmx(emxObj, ctf):
     """ Create a CTF model from the values in elem. """
-    for tag in ['defocusU', 'defocusV', 'defocusUAngle']:
-        if not emxObj.has(tag):
-            return None
-    # Multiply by 10 to convert from nm to A
-    ctf.setDefocusU(emxObj.get('defocusU')*10.0)
-    ctf.setDefocusV(emxObj.get('defocusV')*10.0)
-    ctf.setDefocusAngle(emxObj.get('defocusUAngle'))
+    if _hasCtfLabels(emxObj):
+        # Multiply by 10 to convert from nm to A
+        ctf.setDefocusU(emxObj.get('defocusU')*10.0)
+        ctf.setDefocusV(emxObj.get('defocusV')*10.0)
+        ctf.setDefocusAngle(emxObj.get('defocusUAngle'))
+    else: # Consider the case of been a Particle and take CTF from Micrograph
+        if isinstance(emxObj, emxlib.EmxParticle):
+            _ctfFromEmx(emxObj.getMicrograph(), ctf)
 
     
 def _imageFromEmx(emxObj, img):
@@ -280,7 +287,7 @@ def _micrographsFromEmx(protocol, emxData, emxFile, outputDir):
         mic = Micrograph()
         mic.setAcquisition(Acquisition())
         
-        if emxMic.has('defocusU'):
+        if _hasCtfLabels(emxMic):
             mic.setCTF(CTFModel())
             ctfSet = protocol._createSetOfCTF()
         else:
@@ -334,7 +341,7 @@ def _particlesFromEmx(protocol, emxData, emxFile, outputDir):
         if exists(join(partDir, fn)): # if the particles has binary data, means particles case
             partSet = protocol._createSetOfParticles()
             part = Particle()
-            if emxParticle.has('defocusU'):
+            if _hasCtfLabels(emxParticle) or _hasCtfLabels(emxParticle.getMicrograph()):
                 part.setCTF(CTFModel())
             if emxParticle.has('centerCoord__X'):
                 part.setCoordinate(Coordinate())
