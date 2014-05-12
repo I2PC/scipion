@@ -114,7 +114,10 @@ if __name__ == '__main__':
             projName = manager.listProjects()[0].projName
             
         projPath = manager.getProjectPath(projName)
-        projWindow = ProjectWindow(projPath)
-        projWindow.show()
+        try:
+            projWindow = ProjectWindow(projPath)
+            projWindow.show()
+        except Exception as e:
+            print e
     else:
         print "usage: pw_project.py PROJECT_NAME"

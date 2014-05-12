@@ -99,7 +99,7 @@ class Project(object):
         from the project dir."""
         
         if not exists(self.path):
-            raise Exception("Project doesn't exists in '%s'" % self.path)
+            raise Exception("Cannot load project, path doesn't exist: %s" % self.path)
         os.chdir(self.path) #Before doing nothing go to project dir
         if not exists(self.dbPath):
             raise Exception("Project database not found in '%s'" % self.dbPath)
