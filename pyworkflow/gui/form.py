@@ -101,7 +101,6 @@ class MultiPointerVar():
         if isinstance(value, Object):
             self.provider.addObject(value)
             self.tree.update()
-        print "MultiPointerVar.set, value=%s, type=%s" % (value, type(value))
           
     def remove(self):
         """ Remove first element selected. """
@@ -525,8 +524,9 @@ class ParamWidget():
         
         if isinstance(self.param, Line):
             for name, _ in self.param.iterParams():
-                self.wizParamName = name
-                return True
+                if name in self.window.wizards:
+                    self.wizParamName = name
+                    return True
         # Search in sub-params
         return False
                

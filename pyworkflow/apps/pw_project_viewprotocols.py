@@ -353,7 +353,7 @@ class ProtocolsView(tk.Frame):
         
         self._loadSelection()        
         self._items = {}
-        self._lastSelected = None
+        self._lastSelectedProtId = None
         
         self.style = ttk.Style()
         self.root.bind("<F5>", self.refreshRuns)
@@ -712,7 +712,9 @@ class ProtocolsView(tk.Frame):
         self._fillSummary()
         self._fillMethod()
         self._fillLogs()
-        self._lastSelected = self.getSelectedProtocol()
+
+        last = self.getSelectedProtocol()
+        self._lastSelectedProtId = last.getObjId() if last else None
 
         self._updateActionToolbar()
         
@@ -844,7 +846,7 @@ class ProtocolsView(tk.Frame):
 
         if len(self._selection) != 1 or not prot:
             self.outputViewer.clear()
-        elif prot != self._lastSelected:
+        elif prot.getObjId() != self._lastSelectedProtId:
             i = self.outputViewer.getIndex()
             self.outputViewer.clear()
             for f in prot.getLogPaths():
