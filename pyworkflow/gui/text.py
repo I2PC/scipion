@@ -313,13 +313,18 @@ class OutputText(Text):
         self.lineNo += 1
         renderLine(line, self._addChunk, self.lineNo)
 
-    def _addChunk(self, txt, tag=None):
-        if self.colors and tag:
-            if tag.startswith('link:'):
-                fname = tag.split(':', 1)[-1]
-                self.insert(tk.END, fname, self.hm.addOpen(fname))
+    def _addChunk(self, txt, fmt=None):
+        """
+        Add text txt to the widget, with format fmt.
+        fmt can be a console color code (like '31' for red) or a link
+        that looks like 'link:url'.
+        """
+        if self.colors and fmt is not None:
+            if fmt.startswith('link:'):
+                fname = fmt.split(':', 1)[-1]
+                self.insert(tk.END, txt, self.hm.addOpen(fname))
             else:
-                self.insert(tk.END, txt, colorName[tag])
+                self.insert(tk.END, txt, colorName[fmt])
         else:
             self.insert(tk.END, txt)
 
