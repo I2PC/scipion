@@ -55,11 +55,27 @@ marginal likelihood.
         """Insert the steps to refine orientations and shifts of the SetOfParticles
         """
         numberOfBlocks = self.numberOfThreads.get() - 1
-        self.numberOfRef = self.numberOfClasses.get()
-        cpuList = self._cpusPerClass(numberOfBlocks, self.numberOfRef)
         depsOcc = []
         
-        for iter in range(1, self.numberOfIterations.get() + 1):
+        if self.doContinue:
+            continueRun = self.continueRun.get()
+            self.inputParticles.set(continueRun.inputParticles.get())
+            self.input3DReference.set(None)
+            self.numberOfRef = continueRun.numberOfClasses.get()
+            if self.continueIter.get() == 'last':
+                initIter = continueRun._getLastIter() + 1
+            else:
+                initIter = int(self.continueIter.get()) + 1
+            self._setLastIter(initIter-1)
+            self._insertFunctionStep('continueStep', initIter)
+        else:
+            initIter = 1
+            self.numberOfRef = self.numberOfClasses.get()
+        
+        lastIter = initIter + self.numberOfIterations.get()
+        cpuList = self._cpusPerClass(numberOfBlocks, self.numberOfRef)
+        
+        for iter in range(initIter, lastIter):
             depsRecons = []
             initId = self._insertFunctionStep('initIterStep', iter, numberOfBlocks, prerequisites=depsOcc)
             depsRefine = self._insertRefineIterStep(iter, numberOfBlocks, [initId])

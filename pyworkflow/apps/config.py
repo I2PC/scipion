@@ -30,7 +30,8 @@ mainly for project GUI
 
 import os
 from os.path import join, exists
-from pyworkflow.utils.path import getHomePath, makeFilePath, cleanPath
+import time
+from pyworkflow.utils.path import getHomePath, makeFilePath
 import pyworkflow as pw
 from pyworkflow.object import *
 from pyworkflow.hosts import *
@@ -505,8 +506,9 @@ def writeDefaults():
     dbPath = pw.SETTINGS
     print "Writing default settings to: ", dbPath
     if exists(dbPath):
-        print "File exist, deleting..."
-        cleanPath(dbPath)
+        dbPathBackup = '%s.%s' % (dbPath, time.time())
+        print "File %s exists, moving to %s ..." % (dbPath, dbPathBackup)
+        os.rename(dbPath, dbPathBackup)
     settings.write(dbPath)
     
     
