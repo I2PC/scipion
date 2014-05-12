@@ -153,7 +153,6 @@ class XmippVolumeMaskRadiusWizard(VolumeMaskRadiusWizard):
     
  
 
-
 class XmippVolumeRadiiWizard(VolumeMaskRadiiWizard):
     _targets = [(XmippProtMaskVolumes, ['innerRadius', 'outerRadius'])]
     
@@ -205,7 +204,7 @@ class XmippFilterVolumesWizard(FilterVolumesWizard):
     
     def _getParameters(self, protocol):
         protParams = {}
-        protParams['input']= protocol.inputParticles
+        protParams['input']= protocol.inputVolumes
         protParams['label']= ["lowFreq", "highFreq","freqDecay"]
         protParams['value']= [protocol.lowFreq.get(), protocol.highFreq.get(), protocol.freqDecay.get()]
         protParams['mode'] = protocol.fourierMode.get()
