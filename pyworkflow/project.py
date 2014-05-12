@@ -420,7 +420,7 @@ class Project(object):
             classesName: String with commas separated values of classes name. 
             objectFilter: a filter function to discard some of the retrieved objects."""
         for objClass in classesName.split(","):
-            for obj in self.mapper.selectByClass(objClass.strip(), objectFilter=objectFilter):
+            for obj in self.mapper.selectByClass(objClass.strip(), iterate=True, objectFilter=objectFilter):
                 yield obj
     
     def getRunsGraph(self, refresh=True):

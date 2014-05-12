@@ -164,6 +164,7 @@ def form(request):
     return render_to_response('form/form.html', context)
 
 def PreprocessParamForm(request, param, paramName, wizards, viewerDict, visualize, protVar):
+    
     if isinstance(param, MultiPointerParam):
         htmlValueList = []
         htmlIdValueList = []
@@ -175,6 +176,11 @@ def PreprocessParamForm(request, param, paramName, wizards, viewerDict, visualiz
         param.htmlValueIdZip = zip(htmlValueList,htmlIdValueList)    
     elif isinstance(param, PointerParam):
         param.htmlValue, param.htmlIdValue = getPointerHtml(protVar)
+    elif isinstance(param, RelationParam):
+        param.htmlValue, param.htmlIdValue = getPointerHtml(protVar)
+        param.relationName = param.getName()
+        param.attributeName = param.getAttributeName()
+        param.direction = param.getDirection()
     else:
         param.htmlValue = protVar.get(param.default.get(""))
         if isinstance(protVar, Boolean):
@@ -221,7 +227,7 @@ def protocol(request):
             project.launchProtocol(protocol)
             
         except Exception, ex:
-            errors = [convertTktoHtml(str(ex))]
+            errors = [parseText(str(ex))]
             
     jsonStr = json.dumps({'errors' : parseText(errors)}, ensure_ascii=False)
     

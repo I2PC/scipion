@@ -43,6 +43,7 @@ urlpatterns = patterns('',
     url(r'^get_image/', 'app.views_util.get_image'), # Load images dynamically
     url(r'^get_slice/', 'app.views_util.get_slice'), # Load slices dynamically
     url(r'^browse_objects/$', 'app.views_util.browse_objects'), # Browse objects from the database
+    url(r'^browse_relations/$', 'app.views_util.browse_relations'), # Browse relation objects from the database
     url(r'^browse_protocol_class/$', 'app.views_util.browse_protocol_class'), # Browse objects from the database
     url(r'^get_attributes/$', 'app.views_util.get_attributes'), # Get Label and Comment for an Object
     url(r'^set_attributes/$', 'app.views_util.set_attributes'), # Set Label and Comment for an Object

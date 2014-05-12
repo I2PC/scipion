@@ -171,9 +171,7 @@ class SubclassesTreeProvider(TreeProvider):
         self.mapper = protocol.mapper
         
     def getObjects(self):
-        objs = list(self.protocol.getProject().iterSubclasses(self.className, self.objFilter))
-        return objs        
-#        return self.mapper.selectByClass(self.className, objectFilter=self.objFilter)
+        return list(self.protocol.getProject().iterSubclasses(self.className, self.objFilter))
             
     def objFilter(self, obj):
         result = True
@@ -651,7 +649,7 @@ class ParamWidget():
                         
     def _browseRelation(self, e=None):
         """Select a relation from DB
-        This function is suppose to be used only for RelationParam"""
+        This function is suppose to be used only for RelationParam. """
         tp = RelationsTreeProvider(self.window.protocol, self.param, selected=self.get())
         dlg = ListDialog(self.parent, "Select object", tp)
         if dlg.value is not None:

@@ -153,27 +153,44 @@ def loadProtocolProject(request, requestType='POST'):
         
     return (project, protocol)
 
+def browse_relations(request):
+    """ Browse relation objects from the database. """
+    if request.is_ajax():
+        projectName = request.session['projectName']
+        project = loadProject(projectName)
+
+        relationName = request.GET.get('relationName')
+        attributeName = request.GET.get('attributeName')
+        direction = request.GET.get('direction')
+        
+        item = protocol.getAttributeValue(attributeName)
+        
+        objs = {}
+        for obj in project.getRelatedObjects(relationName, item, direction):
+            objs[obj.getObjId()] = {"nameId":obj.getNameId(), "info": str(obj)}
+
+
+        jsonStr = json.dumps(objs, ensure_ascii=False)
+        return HttpResponse(jsonStr, mimetype='application/javascript')
+
 def browse_objects(request):
     """ Browse objects from the database. """
     if request.is_ajax():
         objClassList = request.GET.get('objClass')
-        projectName = request.GET.get('projectName')
+        projectName = request.session['projectName']
         
-        objFilterParam = request.GET.get('objFilter',None)
+        objFilterParam = request.GET.get('objFilter', None)
         filterObject = FilterObject(objFilterParam)
         
-        project = loadProject(projectName)    
+        project = loadProject(projectName)
 
         objs = {}
-        for objClass in objClassList.split(","):
-            for obj in project.mapper.selectByClass(objClass.strip(), 
-                                                    objectFilter=filterObject.objFilter, 
-                                                    iterate=True):
-                objs[obj.getObjId()]={"nameId":obj.getNameId(), "info": str(obj)} 
-#                objs.append(obj.getNameId())
+        for obj in project.iterSubclasses(objClassList, filterObject.objFilter):
+                objs[obj.getObjId()] = {"nameId":obj.getNameId(), "info": str(obj)} 
         
         jsonStr = json.dumps(objs, ensure_ascii=False)
         return HttpResponse(jsonStr, mimetype='application/javascript')
+   
 
 class FilterObject():
     def __init__(self, condition):
