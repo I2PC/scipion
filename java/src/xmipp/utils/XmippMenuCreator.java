@@ -71,6 +71,7 @@ public abstract class XmippMenuCreator implements ActionListener {
 				group = new ButtonGroup();
 			item = new JRadioButtonMenuItem();
 			group.add(item);
+                        
 		}
 		else if (name.endsWith("mi"))
 			item = new JMenuItem();
@@ -182,7 +183,7 @@ public abstract class XmippMenuCreator implements ActionListener {
 	public final String DISPLAY_SHOWLABELS = "Display.ShowLabels_cb";
 	public final String DISPLAY_RENDERIMAGES = "Display.RenderImages_cb";
 	
-	public final String DISPLAY_RENDERIMAGECOLUMN = "Display.RenderImagesColumn";
+	public final String DISPLAY_RENDERIMAGECOLUMN = "Display.RenderImageColumn";
 	
 	
 	public final String DISPLAY_APPLYGEO = "Display.ApplyGeo_cb";

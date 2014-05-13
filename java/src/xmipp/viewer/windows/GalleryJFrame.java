@@ -1759,7 +1759,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			
 			imagecolumns = new Hashtable<String, ColumnInfo>();
 			for (ColumnInfo column : data.getColumns())
-				if (column.allowRender)
+				if (column.render)
 					imagecolumns.put(column.toString(), column);
 			boolean rendercolumn = imagecolumns.size() > 0;
 			setItemEnabled(DISPLAY_RENDERIMAGECOLUMN, rendercolumn);
@@ -1771,7 +1771,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 				while (keys.hasMoreElements())
 				{
 					column = keys.nextElement();
-					id = String.format("Display.RenderImagesColumn.%s_rb", column);
+					id = String.format("Display.RenderImageColumn.%s_rb", column.replace(".", ""));
 					mi = addItem(id, column);
 					mi.addActionListener(new RenderColumnActionListener());
 					if(data.getRenderColumn().toString().equals(column))

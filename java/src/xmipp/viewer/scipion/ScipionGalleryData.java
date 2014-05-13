@@ -6,13 +6,8 @@
 
 package xmipp.viewer.scipion;
 
-import java.awt.Color;
-import java.util.List;
-import xmipp.jni.Filename;
-import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
 import xmipp.utils.Params;
-import xmipp.viewer.models.ClassInfo;
 import xmipp.viewer.models.ColumnInfo;
 import xmipp.viewer.models.GalleryData;
 
@@ -37,10 +32,10 @@ public class ScipionGalleryData extends GalleryData{
     }
     
     public void loadLabels() {
-        
             ScipionMetaData smd = (ScipionMetaData)md;
             
             labels = smd.getColumnsInfo();
+            ciFirstRender = null;
             orderLabels();
             for(ColumnInfo ci :labels)
             {
@@ -143,13 +138,24 @@ public class ScipionGalleryData extends GalleryData{
         }
         
         public void readMd() {
-                
-		for(ScipionMetaData child: ((ScipionMetaData)md).getChilds())
-                    if(child.getBlock().equals(selectedBlock))
-                        md = child;
+                hasMdChanges = false;
+                hasClassesChanges = false;
+                ScipionMetaData child = ((ScipionMetaData)md).getChild(selectedBlock);
+                if(child != null)
+                {
+                    md = child;
+                }
                 ScipionMetaData parent = ((ScipionMetaData)md).getParent();
-                if(parent.getBlock().equals(selectedBlock))
+                if(parent.getBlock().equals(selectedBlock))// from child to parent
+                {
                     md = parent;
+                    return;
+                }
+                child = parent.getChild(selectedBlock);
+                if(child != null)
+                    md = child;
+                
+                
 	}
 
         

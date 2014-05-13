@@ -543,6 +543,7 @@ public abstract class ImageGalleryTableModel extends AbstractTableModel {
 	 * Return a key string using label
 	 */
 	public String getItemKey(int index, int label) throws Exception {
+                
 		String format = data.getValueFromLabel(index, label) + "_i_(%d,%d)";
 		if (data.useGeo)
 			format += "_geo";
