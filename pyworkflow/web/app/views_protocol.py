@@ -168,19 +168,23 @@ def PreprocessParamForm(request, param, paramName, wizards, viewerDict, visualiz
     if isinstance(param, MultiPointerParam):
         htmlValueList = []
         htmlIdValueList = []
+        
         for pointer in protVar:
             htmlValue, htmlIdValue = getPointerHtml(pointer)
             htmlValueList.append(htmlValue)
             htmlIdValueList.append(htmlIdValue)
             
-        param.htmlValueIdZip = zip(htmlValueList,htmlIdValueList)    
+        param.htmlValueIdZip = zip(htmlValueList,htmlIdValueList)
+        
     elif isinstance(param, PointerParam):
         param.htmlValue, param.htmlIdValue = getPointerHtml(protVar)
+        
     elif isinstance(param, RelationParam):
         param.htmlValue, param.htmlIdValue = getPointerHtml(protVar)
         param.relationName = param.getName()
         param.attributeName = param.getAttributeName()
         param.direction = param.getDirection()
+        
     else:
         param.htmlValue = protVar.get(param.default.get(""))
         if isinstance(protVar, Boolean):
