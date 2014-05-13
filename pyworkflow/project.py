@@ -413,6 +413,16 @@ class Project(object):
         
         return self.runs
     
+    def iterSubclasses(self, classesName, objectFilter):
+        """ Retrieve all objects from the project that are instances
+            of any of the classes in classesName list.
+        Params: 
+            classesName: String with commas separated values of classes name. 
+            objectFilter: a filter function to discard some of the retrieved objects."""
+        for objClass in classesName.split(","):
+            for obj in self.mapper.selectByClass(objClass.strip(), iterate=True, objectFilter=objectFilter):
+                yield obj
+    
     def getRunsGraph(self, refresh=True):
         """ Build a graph taking into account the dependencies between
         different runs, ie. which outputs serves as inputs of other protocols. 
