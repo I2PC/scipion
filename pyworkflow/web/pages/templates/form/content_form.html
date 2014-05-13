@@ -106,11 +106,10 @@
 								{% endif %}	
 							{% endif %}
 							</td>
-							
-							
-						{% if param.getClassName == "PointerParam"%}
+<!-- POINTER PARAM -->
+						{% if param.getClassName == "PointerParam" %}
 							<td class="ico">
-								<a href="javascript:browseObjects('{{paramName}}','{{projectName}}','objClass','{{param.pointerClass.get}}','{{param.pointerCondition.get}}');">
+								<a href="javascript:browseObjects('{{paramName}}','objClass','{{param.pointerClass.get}}','{{param.pointerCondition.get}}');">
 									<i class="fa fa-search" style="font-size:1.1em;"></i>
 								</a> 
 							</td>
@@ -119,29 +118,42 @@
 									<i class="fa fa-eye" style="font-size:1.1em;"></i>
 								</a> 
 							</td>
+<!-- MULTI POINTER PARAM -->
 						{% elif param.getClassName == "MultiPointerParam" %}
 							<td class="ico">
-								<a href="javascript:browseObjects('{{paramName}}','{{projectName}}','objClass','{{param.pointerClass.get}}','{{param.pointerCondition.get}}','{{param.maxNumObjects}}');">
+								<a href="javascript:browseObjects('{{paramName}}','objClass','{{param.pointerClass.get}}','{{param.pointerCondition.get}}','{{param.maxNumObjects}}');">
 									<i class="fa fa-search" style="font-size:1.1em;"></i>
 								</a>
 								<a href="javascript:removeObjects('{{paramName}}');">
 									<i class="fa fa-trash-o" style="font-size:1.1em;"></i>
 								</a>  
 							</td>
+<!-- RELATION PARAM -->
+						{% elif param.getClassName == "RelationParam" %}
+							<td class="ico">
+								<a href="javascript:browseObjects('{{paramName}}','relationClassName','{{param.relationName}},{{param.attributeName}},{{param.direction}}');">
+									<i class="fa fa-search" style="font-size:1.1em;"></i>
+								</a> 
+							</td>
+							<td class="ico">
+								<a href="javascript:loadPreviewImage('{{paramName}}_input');">
+									<i class="fa fa-eye" style="font-size:1.1em;"></i>
+								</a> 
+							</td>
 <!-- PROTOCOL CLASS PARAM -->
 						{% elif param.getClassName == "ProtocolClassParam" %}
 							<td class="ico">
-								<a class="fa fa-search" href="javascript:browseObjects('{{paramName}}','{{projectName}}','protClassName' ,'{{param.protocolClassName.get}}');">
+								<a class="fa fa-search" href="javascript:browseObjects('{{paramName}}','protClassName' ,'{{param.protocolClassName.get}}');">
 								</a>
 							</td>
 							<td class="ico">
-								<a href="javascript:formProtSimple('{{paramName}}','{{projectName}}');" class="iconEdit">
+								<a href="javascript:formProtSimple('{{paramName}}');" class="iconEdit">
 									<i class="fa fa-pencil" style="font-size:1.1em;"></i>
 								</a>										
 							</td>
 						{% elif param.hasWizard %}
 							<td class="ico">
-								<a class="fa fa-magic" href="javascript:putModeWiz('{{param.wizardName}}','{{param.wizardClassName}}' );"></a>
+								<a class="fa fa-magic" href="javascript:putModeWiz('{{param.wizardName}}','{{param.wizardClassName}}');"></a>
 							</td>
 						{% elif param.hasViewer %}
 							<td class="ico">

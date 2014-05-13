@@ -118,9 +118,12 @@ def form(request):
                         else:
                             paramLine = PreprocessParamForm(request, paramLine, paramLineName, wizards, viewerDict, visualize, protVar)
                         
-                    if paramName in wizards:
-                        param.hasWizard = True
-                        param.wizardClassName = wizards[paramName].__name__
+                    # PATCH: This is applied to all the params in the line, maybe just need for the first one.
+                    for name, _ in param.iterParams():
+                        wizParamName = name
+                        if wizParamName in wizards:
+                            param.hasWizard = True
+                            param.wizardClassName = wizards[wizParamName].__name__
                         
                     if visualize == 1:
                         if paramName in viewerDict:
@@ -161,6 +164,7 @@ def form(request):
     return render_to_response('form/form.html', context)
 
 def PreprocessParamForm(request, param, paramName, wizards, viewerDict, visualize, protVar):
+    
     if isinstance(param, MultiPointerParam):
         htmlValueList = []
         htmlIdValueList = []
@@ -172,6 +176,11 @@ def PreprocessParamForm(request, param, paramName, wizards, viewerDict, visualiz
         param.htmlValueIdZip = zip(htmlValueList,htmlIdValueList)    
     elif isinstance(param, PointerParam):
         param.htmlValue, param.htmlIdValue = getPointerHtml(protVar)
+    elif isinstance(param, RelationParam):
+        param.htmlValue, param.htmlIdValue = getPointerHtml(protVar)
+        param.relationName = param.getName()
+        param.attributeName = param.getAttributeName()
+        param.direction = param.getDirection()
     else:
         param.htmlValue = protVar.get(param.default.get(""))
         if isinstance(protVar, Boolean):
@@ -218,7 +227,7 @@ def protocol(request):
             project.launchProtocol(protocol)
             
         except Exception, ex:
-            errors = [convertTktoHtml(str(ex))]
+            errors = [parseText(str(ex))]
             
     jsonStr = json.dumps({'errors' : parseText(errors)}, ensure_ascii=False)
     

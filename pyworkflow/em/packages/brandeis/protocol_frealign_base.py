@@ -42,6 +42,7 @@ class ProtFrealignBase(EMProtocol):
     def __init__(self, **args):
         EMProtocol.__init__(self, **args)
         self.stepsExecutionMode = STEPS_PARALLEL
+        self._lastIter = Integer(1)
     
     def _createFilenameTemplates(self, iter):
         """ Centralize how files are called for iterations and references. """
@@ -108,20 +109,41 @@ class ProtFrealignBase(EMProtocol):
     def _defineParams(self, form):
         form.addSection(label='Input')
         
+        form.addParam('doContinue', BooleanParam, default=False,
+              label='Continue from a previous run?',
+              help='If you set to *Yes*, you should select a previous'
+              'run of type *%s* class and most of the input parameters'
+              'will be taken from it.' % self.getClassName())
+        form.addParam('continueRun', PointerParam, pointerClass=self.getClassName(),
+                      condition='doContinue', allowsNull=True,
+                      label='Select previous run',
+                      help='Select a previous run to continue from.')
+        form.addParam('continueIter', StringParam, default='last',
+                      condition='doContinue', 
+                      label='Continue from iteration',
+                      help='Select from which iteration do you want to continue.'
+                           'if you use *last*, then the last iteration will be used.'
+                           'otherwise, a valid iteration number should be provided.')        
         form.addParam('inputParticles', PointerParam, label="Input particles", important=True,
                       pointerClass='SetOfParticles',pointerCondition='hasCTF',
+                      condition='not doContinue',
                       help='Select the input particles.\n')  
         form.addParam('input3DReference', PointerParam,
                       pointerClass='Volume',
-                      label='Initial 3D reference volume:', 
+                      label='Initial 3D reference volume:',
+                      condition='not doContinue', 
                       help='Input 3D reference reconstruction.\n')
         form.addParam('numberOfIterations', IntParam, default=10,
                       label='Number of iterations:',
-                      help='Number of iterations to perform.')
+                      help='Number of iterations to perform. If continue option is True,'
+                           'you going to do this number of new iterations (e.g. if'
+                           '*Continue from iteration* is set 3 and this param is set 10,'
+                           ' the final iteration of the protocol will be the 13th.')
         
         if not self.IS_REFINE:
             form.addParam('numberOfClasses', IntParam, default=3, 
                           label='Number of classes:',
+                          condition='not doContinue',
                           help='The number of classes (K) for a multi-reference refinement.'
                                'These classes will be made in a random manner from a single'
                                'reference by division of the data into random subsets during the'
@@ -145,7 +167,8 @@ class ProtFrealignBase(EMProtocol):
         
         form.addSection(label='Flow Control')
         
-        form.addParam('Firstmode', EnumParam, condition='not useInitialAngles', choices=['Simple search & Refine', 'Search, Refine, Randomise'],
+        form.addParam('Firstmode', EnumParam, condition='not useInitialAngles and not doContinue',
+                      choices=['Simple search & Refine', 'Search, Refine, Randomise'],
                       label="Operation mode for iteration 1:", default=MOD2_SIMPLE_SEARCH_REFINEMENT,
                       display=EnumParam.DISPLAY_COMBO,
                       help='Parameter *IFLAG* in FREALIGN\n\n'
@@ -372,12 +395,12 @@ class ProtFrealignBase(EMProtocol):
                            'is often used with IFLAG=0 in separate runs to calculate maps\n'
                            'using various values of THRESH to find the optimum value to produce\n'
                            'the best map as judged from the statistics.')
-        form.addParam('beamTiltX', FloatParam, default='0.0',
-                      label='Beam tilt in X direction (in mrad):', expertLevel=LEVEL_EXPERT,
-                      help='Parameter *TX* in FREALIGN.')
-        form.addParam('beamTiltY', FloatParam, default='0.0',
-                      label='Beam tilt in Y direction (in mrad):', expertLevel=LEVEL_EXPERT,
-                      help='Parameter *TY* in FREALIGN.')
+
+        line = form.addLine('Beam tilt in direction: ',
+                      help='Parameters *TX* and *TY* in FREALIGN in mrad')
+        line.addParam('beamTiltX', FloatParam, default='0.0', label='X ')
+        line.addParam('beamTiltY', FloatParam, default='0.0', label='Y ')
+        
         form.addParam('resolution', FloatParam, default='10.0', 
                       label='Resolution of reconstruction (A):',
                       help='Parameter *RREC* in FREALIGN\n\n'
@@ -397,7 +420,6 @@ class ProtFrealignBase(EMProtocol):
                            'artefacts at low resolution can make a big difference.  Success can\n'
                            'be judged by whether the X,Y coordinates of the particle centres are\n'
                            'reasonable.')
-        
         line.addParam('lowResolRefine', FloatParam, default='200.0', label='Low')
         line.addParam('highResolRefine', FloatParam, default='25.0', label='High')
 
@@ -436,12 +458,26 @@ class ProtFrealignBase(EMProtocol):
         numberOfBlocks = self.numberOfThreads.get() - 1
         depsRecons = []
         
-        for iter in range(1, self.numberOfIterations.get() + 1):
+        if self.doContinue:
+            continueRun = self.continueRun.get()
+            self.inputParticles.set(continueRun.inputParticles.get())
+            self.input3DReference.set(None)
+            if self.continueIter.get() == 'last':
+                initIter = continueRun._getLastIter() + 1
+            else:
+                initIter = int(self.continueIter.get()) + 1
+            self._setLastIter(initIter-1)
+            self._insertFunctionStep('continueStep', initIter)
+        else:
+            initIter = 1
+        lastIter = initIter + self.numberOfIterations.get()
+        
+        for iter in range(initIter, lastIter):
             initId = self._insertFunctionStep('initIterStep', iter, numberOfBlocks, prerequisites=depsRecons)
             depsRefine = self._insertRefineIterStep(iter, numberOfBlocks, [initId])
             reconsId = self._insertFunctionStep("reconstructVolumeStep", iter, numberOfBlocks, prerequisites=depsRefine)
             depsRecons = [reconsId]
-        self._insertFunctionStep("createOutputStep", prerequisites=depsRecons)
+        self._insertFunctionStep("createOutputStep",lastIter-1, prerequisites=depsRecons)
     
     def _insertRefineIterStep(self, iter, numberOfBlocks, depsInitId):
         """ execute the refinement for the current iteration """
@@ -466,6 +502,19 @@ class ProtFrealignBase(EMProtocol):
         return depsRefine
     
     #--------------------------- STEPS functions ---------------------------------------------------
+    def continueStep(self, initIter):
+        """Create a simbolic link of a previous iteration from a previous run."""
+        continueRun = self.continueRun.get()
+        iter = initIter - 1
+        prevDir = continueRun._iterWorkingDir(iter)
+        currDir = self._iterWorkingDir(iter)
+        createLink(prevDir, currDir)
+        
+        imgSet = self.inputParticles.get()
+        self._createFilenameTemplates(iter)
+        imgFn = self._getFileName('particles')
+        imgSet.writeStack(imgFn)
+        
     def initIterStep(self, iter, numberOfBlocks):
         """ Prepare files and directories for the current iteration """
         
@@ -588,10 +637,10 @@ class ProtFrealignBase(EMProtocol):
         args = self._prepareCommand()
         # frealign program is already in the args script, that's why runJob('')
         self.runJob('', args % params3DR)
+        self._setLastIter(iter)
         self._leaveDir()
     
-    def createOutputStep(self):
-        lastIter = self.numberOfIterations.get()
+    def createOutputStep(self, lastIter):
         lastIterDir = self._iterWorkingDir(lastIter)
         volFn = join(lastIterDir, 'volume_iter_%03d.mrc' % lastIter)
         vol = Volume()
@@ -997,3 +1046,10 @@ eot
         else:
             file2 = self._getFileName('output_par_block', block=1, iter=prevIter)
             copyFile(file1, file2)
+    
+    def _setLastIter(self, iter):
+        self._lastIter.set(iter)
+    
+    def _getLastIter(self):
+        return self._lastIter.get()
+

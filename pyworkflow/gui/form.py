@@ -101,7 +101,6 @@ class MultiPointerVar():
         if isinstance(value, Object):
             self.provider.addObject(value)
             self.tree.update()
-        print "MultiPointerVar.set, value=%s, type=%s" % (value, type(value))
           
     def remove(self):
         """ Remove first element selected. """
@@ -172,12 +171,7 @@ class SubclassesTreeProvider(TreeProvider):
         self.mapper = protocol.mapper
         
     def getObjects(self):
-        objs = []
-        for objClass in self.className.split(","):
-            for obj in self.mapper.selectByClass(objClass.strip(), objectFilter=self.objFilter):
-                objs.append(obj)
-        return objs        
-#        return self.mapper.selectByClass(self.className, objectFilter=self.objFilter)
+        return list(self.protocol.getProject().iterSubclasses(self.className, self.objFilter))
             
     def objFilter(self, obj):
         result = True
@@ -525,8 +519,9 @@ class ParamWidget():
         
         if isinstance(self.param, Line):
             for name, _ in self.param.iterParams():
-                self.wizParamName = name
-                return True
+                if name in self.window.wizards:
+                    self.wizParamName = name
+                    return True
         # Search in sub-params
         return False
                
@@ -654,7 +649,7 @@ class ParamWidget():
                         
     def _browseRelation(self, e=None):
         """Select a relation from DB
-        This function is suppose to be used only for RelationParam"""
+        This function is suppose to be used only for RelationParam. """
         tp = RelationsTreeProvider(self.window.protocol, self.param, selected=self.get())
         dlg = ListDialog(self.parent, "Select object", tp)
         if dlg.value is not None:
