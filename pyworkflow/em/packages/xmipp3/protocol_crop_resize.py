@@ -130,7 +130,7 @@ class XmippProtResize():
             else:
                 args = self._args + " --dim %(size)d"
             
-        elif resizeOption == RESIZE_FACTOR:
+        elif self.resizeOption == RESIZE_FACTOR:
             factor = self.resizeFactor.get()                                               
             self.samplingRate = samplingRate / factor
             args = self._args + " --factor %(factor)f"

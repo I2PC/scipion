@@ -143,6 +143,7 @@ class DefocusGroup(EMObject):
         self._defocusMin = Float()
         self._defocusMax = Float()
         self._defocusAvg = Float()
+        self._size = Integer()
         
     def getDefocusMin(self):
         return self._defocusMin.get()
@@ -161,6 +162,12 @@ class DefocusGroup(EMObject):
         
     def setDefocusAvg(self, value):
         self._defocusAvg.set(value)
+        
+    def setSize(self, value):
+        self._size.set(value)
+        
+    def getSize(self):
+        return self._size.get()
 
 
 class ImageDim(CsvList):
