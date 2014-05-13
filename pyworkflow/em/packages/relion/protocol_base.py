@@ -29,7 +29,7 @@ This module contains the protocol base class for Relion protocols
 
 import xmipp
 from pyworkflow.protocol.params import BooleanParam, PointerParam, IntParam
-from pyworkflow.utils import environAdd, path
+from pyworkflow.utils import environAdd, moveFile
 from pyworkflow.em import *
 from constants import ANGULAR_SAMPLING_LIST, MASK_FILL_ZERO
 from convert import createRelionInputParticles, createClassesFromImages
