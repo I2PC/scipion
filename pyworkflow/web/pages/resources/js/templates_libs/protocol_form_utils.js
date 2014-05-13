@@ -253,7 +253,7 @@ function evalElements() {
 		var type = jQuery(this).attr('data-type');
 		var param = jQuery(this).attr('id');
 		
-		console.log("value:"+value+", type:"+type+", param:"+param+";")
+//		console.log("value:"+value+", type:"+type+", param:"+param+";")
 
 //		alert(value +" - "+type+" - "+param);
 
@@ -414,18 +414,40 @@ function normalizeConditions(cond){
 	return cond;
 }
 
-function browseObjects(param, projName, type_param, value_param, pointerCondition, maxNumObjects) {
+function browseObjects(paramName, type_param, value_param, pointerCondition, maxNumObjects) {
 	/*
 	 * Browse object in the database. 
 	 * Params: objClass: the class to get instances from (also subclasses)
 	 * protClassName: class refered to a protocol
 	 */
 	
-	var url_param = "/browse_objects/?projectName=" + projName + "&objClass=" + value_param + "&objFilter=" + pointerCondition
-	if (type_param == 'protClassName'){
-		url_param = "/browse_protocol_class/?projectName=" + projName + "&protClassName=" + value_param
-	}
+	 var url_param = ""
+	 
+    switch (type_param){
+    
+    	case "objClass":
+			url_param = "/browse_objects/?"
+				+ "&objClass=" + value_param 
+				+ "&objFilter=" + pointerCondition
+    		break;
+    	
+    	case "protClassName":
+			url_param = "/browse_protocol_class/?"
+				+ "&protClassName=" + value_param
+			break;
+			
+    	case "relationClassName":
+    		var res = value_param.split(",")
+    		
+			url_param = "/browse_relations/?"
+				+ "&relationName=" + res[0]
+				+ "&attributeName=" + res[1]
+				+ "&direction=" + res[2]
+    		break;
+		
+    }
 	
+	console.log("URL:", url_param)
 		
 	$.ajax({
 		type : "GET",
@@ -434,17 +456,17 @@ function browseObjects(param, projName, type_param, value_param, pointerConditio
 		success : function(json) {
 			// specifying a dataType of json makes jQuery pre-eval the response
 			// for us
-			var res = getTableFormatted(param, json, value_param, 1);
+			var res = getTableFormatted(paramName, json, value_param, 1);
 			var selectionFunc = "processSelectionTable"
 			if (maxNumObjects == 0 || maxNumObjects > 1){
 				selectionFunc = "processMultipleSelectionTable"
 			}
-			selectDialog(param, res, selectionFunc);
+			selectDialog(paramName, res, selectionFunc);
 		}
 	});
 }
 
-function formProtSimple(param, projName){
+function formProtSimple(param){
 	/*
 	 * Launch a custom protocol form with less options, thought for workflows
 	 * where some options not need to be chosen.
@@ -486,16 +508,6 @@ function setParamProt(paramProt, params){
 	$("#"+paramProt+"_input").attr("data-prot", params)
 }
 
-//function getListFormatted(node, list, id) {
-//	var res = "<div class='content' style='overflow:auto' data-node='" + node
-//			+ "'>";
-//	for ( var x = 0; x < list.length; x++) {
-//		res += "<input type='radio' id ='" + id + x + "' name='" + id
-//				+ "'  value='" + list[x] + "' />" + list[x] + "<br />";
-//	}
-//	res = res + "</div>";
-//	return res;
-//}
 
 function getTableFormatted(node, json, id, previsualize) {
 	/*

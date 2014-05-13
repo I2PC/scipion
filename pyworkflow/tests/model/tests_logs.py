@@ -2,13 +2,13 @@
 
 import os
 from os.path import join, dirname, exists
+import logging
 import unittest
 import filecmp
 
 from pyworkflow.object import *
 from pyworkflow.protocol import *
 from pyworkflow.mapper import *
-from pyworkflow.utils.log import *
 from pyworkflow.utils.utils import getLineInFile, isInFile
 from pyworkflow.tests import *
 
@@ -26,7 +26,7 @@ class TestSqliteMapper(BaseTest):
         logTestCode = random.randint(1, 100000)
         
         genLogFn = logPath
-        log = getGeneralLogger('pyworkflow.test.log.test_scipon_log')        
+        log = logging.getLogger('pyworkflow.test.log.test_scipon_log')
         genInfoTest = 'General info [' + str(logTestCode) + ']'
         genDebugTest = 'General debug [' + str(logTestCode) + ']'
         genWarningTest = 'General warning [' + str(logTestCode) + ']'
@@ -45,7 +45,7 @@ class TestSqliteMapper(BaseTest):
         log.debug(fileDebugTest)
         log.warning(fileWarningTest)
         
-        log = getGeneralLogger('pyworkflow.tests.log')
+        log = logging.getLogger('pyworkflow.tests.log')
         log.error(genErrorTest)
         
         log = getFileLogger(logFn)

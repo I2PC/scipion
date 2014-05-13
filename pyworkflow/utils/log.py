@@ -25,18 +25,19 @@
 # *
 # **************************************************************************
 
+import sys
+import os
 import logging
 import logging.config
-import os
-from pyworkflow.utils.path import *
-import sys
+from pyworkflow.utils.path import makeFilePath
 
 
-""" Get general log file path """
-LOG_FILE = join (os.environ['SCIPION_LOGS'], 'scipion.log')
+
+# Get general log file path
+LOG_FILE = os.path.join(os.environ['SCIPION_LOGS'], 'scipion.log')
 
 
-""" Config the log """
+# Log configuration
 config = {  'version': 1,              
             'disable_existing_loggers': False,
             'formatters': {
@@ -73,11 +74,6 @@ config = {  'version': 1,
 
 logging.config.dictConfig(config)
 
-
-def getGeneralLogger(classPath):
-    """ Method that returns the general log """
-    return logging.getLogger(classPath)
-    
 
 class ScipionLogger():
     def __init__(self, filePath):
