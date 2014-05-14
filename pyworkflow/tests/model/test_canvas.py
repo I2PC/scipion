@@ -7,12 +7,11 @@ import unittest
 import pyworkflow.gui.canvas
 import Tkinter
 import math
-from sets import Set
 from pyworkflow.tests import *
 
 class TestCanvas(BaseTest):
     # IMPORTANT: Tk requires at least that DISPLAY is defined
-    # hence in some environments (like builbot) the test may fail,
+    # hence in some environments (like buildbot) the test may fail,
     # check for the TclError exception
     
     @classmethod
@@ -26,7 +25,7 @@ class TestCanvas(BaseTest):
         return not list or list.count(list[0]) == len(list)
 
     def allDifferent(self,list):
-        return not list or len(list) == len(Set(list))
+        return not list or len(list) == len(set(list))
 
     def test_connectorsCoords(self):
         try:
