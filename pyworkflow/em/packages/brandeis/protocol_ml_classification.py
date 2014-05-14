@@ -60,6 +60,7 @@ marginal likelihood.
         if self.doContinue:
             continueRun = self.continueRun.get()
             self.inputParticles.set(continueRun.inputParticles.get())
+            self.symmetry.set(continueRun.symmetry.get())
             self.input3DReference.set(None)
             self.numberOfRef = continueRun.numberOfClasses.get()
             if self.continueIter.get() == 'last':
@@ -85,7 +86,7 @@ marginal likelihood.
                 depsRecons.append(reconsId)
             secondOccId = self._insertFunctionStep("calculateOCCStep", iter, True, numberOfBlocks, prerequisites=depsRecons)
             depsOcc = [secondOccId]
-        self._insertFunctionStep("createOutputStep", prerequisites=depsOcc)
+        self._insertFunctionStep("createOutputStep", lastIter-1, prerequisites=depsOcc)
     
     def _insertRefineIterStep(self, iter, numberOfBlocks, depsInitId):
         """ execute the refinement for the current iteration """
@@ -240,14 +241,23 @@ marginal likelihood.
         if leaveDir:
             self._leaveDir()
     
-    def createOutputStep(self):
-        lastIter = self.numberOfIterations.get()
-        lastIterDir = self._iterWorkingDir(lastIter)
-        volFn = join(lastIterDir, 'volume_iter_%03d.mrc' % lastIter)
-        vol = Volume()
-        vol.setSamplingRate(self.inputParticles.get().getSamplingRate())
-        vol.setFileName(volFn)
-        self._defineOutputs(outputVolume=vol)
+    def createOutputStep(self, lastIter):
+        from convert import readSetOfClasses3D
+        numberOfClasses = self.numberOfRef
+        imgSet = self.inputParticles.get()
+        fileparList = []
+        volumeList = []
+        
+        for ref in range(1, numberOfClasses + 1):
+            filepar = self._getFileName('output_par_class', iter=lastIter, ref=ref)
+            volFn = self._getFileName('iter_vol_class', iter=lastIter, ref=ref)
+            fileparList.append(filepar)
+            volumeList.append(voLFn)
+        
+        classes = self._createSetOfClasses3D(imgSet)
+        readSetOfClasses3D(classes, fileparList, volumeList)
+        self._defineOutputs(outputClasses=classes)
+        self._defineSourceRelation(imgSet, classes)
     
     #--------------------------- INFO functions ----------------------------------------------------
     def _validate(self):
