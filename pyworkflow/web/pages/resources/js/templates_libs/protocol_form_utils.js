@@ -442,12 +442,14 @@ function browseObjects(paramName, type_param, value_param, pointerCondition, max
 			url_param = "/browse_relations/?"
 				+ "&relationName=" + res[0]
 				+ "&attributeName=" + res[1]
-				+ "&direction=" + res[2]
+				+ "&protId=" + res[2]
+				+ "&direction=" + res[3]
+				                      
     		break;
 		
     }
 	
-	console.log("URL:", url_param)
+//	console.log("URL:", url_param)
 		
 	$.ajax({
 		type : "GET",
