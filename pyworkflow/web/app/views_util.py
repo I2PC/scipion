@@ -161,10 +161,12 @@ def browse_relations(request):
 
         relationName = request.GET.get('relationName')
         attributeName = request.GET.get('attributeName')
+        protId = request.GET.get('protId')
         direction = request.GET.get('direction')
         
+        protocol = project.getProtocol(int(protId))
         item = protocol.getAttributeValue(attributeName)
-        
+
         objs = {}
         for obj in project.getRelatedObjects(relationName, item, direction):
             objs[obj.getObjId()] = {"nameId":obj.getNameId(), "info": str(obj)}

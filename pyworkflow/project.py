@@ -52,7 +52,8 @@ class Project(object):
     """This class will handle all information 
     related with a Project"""
     def __init__(self, path):
-        """For create a Project, the path is required""" 
+        """Create a project associated with a given path"""
+        # To create a Project, a path is required
         self.name = path
         self.path = abspath(path)
         self.pathList = [] # Store all related paths
