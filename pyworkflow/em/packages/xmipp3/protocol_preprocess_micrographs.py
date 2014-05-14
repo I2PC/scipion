@@ -42,8 +42,8 @@ class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
         ProtPreprocessMicrographs.__init__(self, **args)
         self.stepsExecutionMode = STEPS_PARALLEL
     
+    #--------------------------- DEFINE params functions --------------------------------------------
     
-    #--------------------------- DEFINE param functions --------------------------------------------
     def _defineParams(self, form):
         form.addSection(label='Preprocess')
         form.addParam('inputMicrographs', PointerParam, label="Input micrographs", isImportant=True,
@@ -88,28 +88,11 @@ class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
                       help='Non-integer downsample factors are possible. Must be larger than 1.')
     
         form.addParallelSection(threads=2, mpi=1)
-    
-    #--------------------------- INSERT steps functions --------------------------------------------
-    def _insertAllSteps(self):
-        '''for each micrograph insert the steps to preprocess it
-        '''
-        IOTable = {}
-        
-        self._defineInputs()
-        
-        # For each micrograph insert the steps to preprocess it
-        pre = []
-        for mic in self.inputMics:
-            fn = mic.getFileName()
-            fnOut = self._getExtraPath(os.path.basename(fn))
-            stepId = self.__insertStepsForMicrograph(fn, fnOut)
-            pre.append(stepId)
-            IOTable[fn] = fnOut
-        
-        # Insert step to create output objects       
-        self._insertFunctionStep('createOutputStep', IOTable, prerequisites=pre)
 
     def _defineInputs(self):
+        """ Store some of the input parameter in a dictionary for
+        an easy replacement in the programs command line. 
+        """
         # Get pointer to input micrographs 
         self.inputMics = self.inputMicrographs.get() 
         
@@ -120,6 +103,20 @@ class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
                        'logB': self.logB.get(),
                        'logC': self.logC.get(),
                        'stddev': self.mulStddev.get()}
+    
+    #--------------------------- INSERT steps functions --------------------------------------------
+    
+    def _insertAllSteps(self):
+        """ Insert one or many processing steps per micrograph. """
+        self._defineInputs()
+        # For each micrograph insert the steps to preprocess it
+        pre = []
+        for mic in self.inputMics:
+            fnOut = self._getOutputMicrograph(mic)
+            stepId = self.__insertStepsForMicrograph(mic.getFileName(), fnOut)
+            pre.append(stepId)
+        # Insert step to create output objects       
+        self._insertFunctionStep('createOutputStep', prerequisites=pre)
     
     def __insertOneStep(self, condition, program, arguments):
         """Insert operation if the condition is met.
@@ -141,7 +138,6 @@ class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
         self.params['outputMic'] = outputMic
         self.lastStepId = None
         self.prerequisites = [] # First operation should not depend on nothing before
-        
         # Crop
         self.__insertOneStep(self.doCrop, "xmipp_transform_window",
                             " -i %(inputMic)s --crop %(cropPixels)d -v 0")
@@ -158,7 +154,8 @@ class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
         return self.lastStepId
     
     #--------------------------- STEPS functions ---------------------------------------------------
-    def createOutputStep(self, IOTable):        
+    
+    def createOutputStep(self):        
         outputMics = self._createSetOfMicrographs()
         outputMics.copyInfo(self.inputMics)
         
@@ -167,13 +164,14 @@ class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
 
         for mic in self.inputMics:
             # Update micrograph name and append to the new Set
-            mic.setFileName(IOTable[mic.getFileName()])
+            mic.setFileName(self._getOutputMicrograph(mic))
             outputMics.append(mic)
 
         self._defineOutputs(outputMicrographs=outputMics)
         self._defineTransformRelation(self.inputMics, outputMics)
         
     #--------------------------- INFO functions ----------------------------------------------------
+    
     def _validate(self):
         validateMsgs = []
         # Some prepocessing option need to be marked
@@ -220,3 +218,12 @@ class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
                 methods.append("removed pixels with standard deviation beyond %d times" % self.mulStddev.get())
         return methods
     
+    #--------------------------- UTILS functions --------------------------------------------
+    def _getOutputMicrograph(self, mic):
+        """ Return the name of the output micrograph, given
+        the input Micrograph object.
+        """
+        fn = mic.getFileName()
+        fnOut = self._getExtraPath(os.path.basename(fn))
+        
+        return fnOut

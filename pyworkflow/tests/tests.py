@@ -65,9 +65,24 @@ class BaseTest(unittest.TestCase):
     def getRelPath(cls, basedir, filename):
         """Return the path relative to SCIPION_HOME/tests"""
         return relpath(filename, basedir)
-       
-
+    
+    @classmethod
+    def launchProtocol(cls, prot):
+        """ Launch a given protocol using cls.proj and the
+        flag wait=True.
+        """
+        cls.proj.launchProtocol(prot, wait=True)
         
+        if prot.isFailed():
+            print "\n>>> ERROR running protocol %s" % prot.getRunName()
+            print "    FAILED with error: %s\n" % prot.getErrorMessage()
+            raise Exception("ERROR launching protocol.")
+    
+    @classmethod    
+    def saveProtocol(cls, prot):
+        """ Save protocol using cls.proj """
+        cls.proj.saveProtocol(prot)        
+
  
 def setupTestOutput(cls):
     """ Create the output folder for a give Test class. """

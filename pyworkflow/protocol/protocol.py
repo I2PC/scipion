@@ -522,12 +522,12 @@ class Protocol(Step):
         """
         return self._getPath(os.path.basename(path))
         
-    def _insertFunctionStep(self, funcName, *funcArgs, **args):
+    def _insertFunctionStep(self, funcName, *funcArgs, **kwargs):
         """ 
          Params:
            funcName: the string name of the function to be run in the Step.
            *funcArgs: the variable list of arguments to pass to the function.
-           **args: see __insertStep
+           **kwargs: see __insertStep
         """
         # Get the function give its name
         func = getattr(self, funcName, None)
@@ -537,15 +537,15 @@ class Protocol(Step):
             raise Exception("Protocol._insertFunctionStep: '%s' function is not member of the protocol" % funcName)
         if not callable(func):
             raise Exception("Protocol._insertFunctionStep: '%s' is not callable" % funcName)
-        step = FunctionStep(func, funcName, *funcArgs, **args)
+        step = FunctionStep(func, funcName, *funcArgs, **kwargs)
         
-        return self.__insertStep(step, **args)
+        return self.__insertStep(step, **kwargs)
         
-    def _insertRunJobStep(self, progName, progArguments, resultFiles=[], **args):
+    def _insertRunJobStep(self, progName, progArguments, resultFiles=[], **kwargs):
         """ Insert an Step that will simple call runJob function
         **args: see __insertStep
         """
-        return self._insertFunctionStep('runJob', progName, progArguments)
+        return self._insertFunctionStep('runJob', progName, progArguments, **kwargs)
             
     def _enterDir(self, path):
         """ Enter into a new directory path and store the current path.
@@ -685,11 +685,8 @@ class Protocol(Step):
         self._store()
         
         self.lastStatus = self.status.get()
-        #status = STATUS_FINISHED # Just for the case doesn't enter in the loop
-        self.info("_runSteps:  executor.runSteps...")
-        self._stepsExecutor.runSteps(self._steps[startIndex:], 
-                                     self._stepStarted, self._stepFinished)
-        self.status.set(self.lastStatus)
+        self._stepsExecutor.runSteps(self._steps, self._stepStarted, self._stepFinished)
+        self.setStatus(self.lastStatus)
         self._store(self.status)
         
     def __deleteOutputs(self):
