@@ -252,7 +252,7 @@ marginal likelihood.
             filepar = self._getFileName('output_par_class', iter=lastIter, ref=ref)
             volFn = self._getFileName('iter_vol_class', iter=lastIter, ref=ref)
             fileparList.append(filepar)
-            volumeList.append(voLFn)
+            volumeList.append(volFn)
         
         classes = self._createSetOfClasses3D(imgSet)
         readSetOfClasses3D(classes, fileparList, volumeList)
