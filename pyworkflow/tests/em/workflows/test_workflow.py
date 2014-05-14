@@ -1,7 +1,8 @@
-import unittest
+
+from pyworkflow.tests import BaseTest
     
     
-class TestWorkflow(unittest.TestCase):
+class TestWorkflow(BaseTest):
     
     protDict = {}
         
@@ -36,15 +37,5 @@ class TestWorkflow(unittest.TestCase):
             if filename.startswith(k):
                 return filename.replace(k, v.getWorkingDir())
         return filename
-    
-    def launchProtocol(self, prot):
-        """ Launch a given protocol using self.proj and the
-        flag wait=True.
-        """
-        self.proj.launchProtocol(prot, wait=True)
-        
-    def saveProtocol(self, prot):
-        """ Save protocol using self.proj """
-        self.proj.saveProtocol(prot)
                 
 

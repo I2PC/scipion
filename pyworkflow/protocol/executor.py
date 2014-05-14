@@ -118,11 +118,13 @@ class ThreadStepExecutor(StepExecutor):
         self.stepStartedCallback = stepStartedCallback
         self.stepFinishedCallback = stepFinishedCallback
         self.steps = steps
-        self.stepsLeft = len(steps)
+        self.stepsLeft = 0
         self.condition = Condition() # Condition over global state
         
         for s in steps:
-            s.status.set(STATUS_WAITING_OTHERS)
+            if not s.isFinished():
+                s.status.set(STATUS_WAITING_OTHERS)
+                self.stepsLeft += 1
         
         self.thList = []
         
@@ -173,10 +175,12 @@ class ThreadStepExecutor(StepExecutor):
         """ Check if a step has all prerequisites done. """
         if step.status != STATUS_WAITING_OTHERS:
             return False
+
         for i in step._prerequisites:
-            if self.steps[i-1].status != STATUS_FINISHED:
+            if not self.steps[i-1].isFinished():
                 #print "main: prerequisite ", i, " is not finished!!!"
                 return False
+
         return True
                     
     def _launchThreads(self):
