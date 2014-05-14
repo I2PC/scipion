@@ -131,7 +131,7 @@
 <!-- RELATION PARAM -->
 						{% elif param.getClassName == "RelationParam" %}
 							<td class="ico">
-								<a href="javascript:browseObjects('{{paramName}}','relationClassName','{{param.relationName}},{{param.attributeName}},{{param.direction}}');">
+								<a href="javascript:browseObjects('{{paramName}}','relationClassName','{{param.relationName}},{{param.attributeName}},{{protocol.getObjId}},{{param.direction}}');">
 									<i class="fa fa-search" style="font-size:1.1em;"></i>
 								</a> 
 							</td>
