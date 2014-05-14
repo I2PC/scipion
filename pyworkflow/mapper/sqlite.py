@@ -24,8 +24,10 @@
 # *
 # **************************************************************************
 
+import sys
 from collections import OrderedDict
 from pyworkflow.utils.path import replaceExt, joinExt, exists
+from pyworkflow.utils import trace
 from mapper import Mapper
 
 
@@ -511,6 +513,9 @@ class SqliteFlatMapper(Mapper):
     def commit(self):
         self.db.commit()
         
+    def close(self):
+        self.db.close()
+        
     def insert(self, obj):
         if self.doCreateTables:
             self.db.createTables(obj.getObjDict(True))
@@ -626,8 +631,7 @@ class SqliteFlatMapper(Mapper):
         objRows = self.db.selectObjectsBy(**args)
         return self.__objectsFromRows(objRows, iterate, objectFilter)
     
-    def selectAll(self, iterate=True, objectFilter=None):
-        
+    def selectAll(self, iterate=True, objectFilter=None):        
         if self._objTemplate is None:
             self.__loadObjDict()
         objRows = self.db.selectAll()
@@ -660,15 +664,22 @@ class SqliteFlatDb():
         self.INSERT_CLASS = "INSERT INTO %sClasses (label_property, column_name, class_name) VALUES (?, ?, ?)" % tablePrefix
         self.SELECT_CLASS = "SELECT * FROM %sClasses;" % tablePrefix
         self.tablePrefix = tablePrefix
+        self._dbName = dbName
         self.__createConnection(dbName, timeout)
     
+    def close(self):
+        self.connection.close()
+        del self.OPEN_CONNECTIONS[self._dbName]
+        
     def selectCmd(self, whereStr, orderByStr=' ORDER BY id'):
         return self.SELECT + whereStr + orderByStr
         
     def missingTables(self):
         """ Return True is the needed Objects and Classes table are not created yet. """
         self.executeCommand(self.CHECK_TABLES)
-        return self.cursor.fetchone() is None
+        result = self.cursor.fetchone()
+        
+        return result is None
         
     def __createConnection(self, dbName, timeout):
         """Establish db connection"""
@@ -708,6 +719,7 @@ class SqliteFlatDb():
                       comment   TEXT DEFAULT NULL   -- object comment, text used for annotations
                       """ % self.tablePrefix
         self.INSERT_OBJECT = "INSERT INTO %sObjects (id, label, comment" % self.tablePrefix
+        self.UPDATE_OBJECT = "UPDATE %sObjects SET label=?, comment=?" % self.tablePrefix 
         c = 0
         for k, v in objDict.iteritems():
             colName = 'c%02d' % c
@@ -716,9 +728,11 @@ class SqliteFlatDb():
             self.executeCommand(self.INSERT_CLASS, (k, colName, className))
             if k != "self":
                 self.INSERT_OBJECT += ',%s' % colName
+                self.UPDATE_OBJECT += ', %s=?' % colName
                 CREATE_OBJECT_TABLE += ',%s  %s DEFAULT NULL' % (colName, self.CLASS_MAP.get(className, 'TEXT'))
         
         self.INSERT_OBJECT += ') VALUES (?,?' + ',?' * c + ')'
+        self.UPDATE_OBJECT += ' WHERE id=?'
         CREATE_OBJECT_TABLE += ')'
         # Create the Objects table
         self.executeCommand(CREATE_OBJECT_TABLE)
@@ -737,9 +751,9 @@ class SqliteFlatDb():
         """
         self.executeCommand(self.INSERT_OBJECT, args)
 
-    def updateObject(self, objId, label, comment, *args):
+    def updateObject(self, *args):
         """Update object data """
-        pass
+        self.executeCommand(self.UPDATE_OBJECT, args)
         
     def selectObjectById(self, objId):
         """Select an object give its id"""

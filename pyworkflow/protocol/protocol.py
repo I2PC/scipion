@@ -37,7 +37,8 @@ from collections import OrderedDict
 
 import pyworkflow as pw
 from pyworkflow.object import *
-from pyworkflow.utils.path import replaceExt, makePath, join, missingPaths, cleanPath, getFiles
+from pyworkflow.utils import trace
+from pyworkflow.utils.path import makePath, join, missingPaths, cleanPath, getFiles, exists
 from pyworkflow.utils.log import ScipionLogger
 from executor import StepExecutor, ThreadStepExecutor, MPIStepExecutor
 from constants import *
@@ -140,6 +141,9 @@ class Step(OrderedObject):
     def isSaved(self):
         return self.getStatus() == STATUS_SAVED
     
+    def isAborted(self):
+        return self.getStatus() == STATUS_ABORTED
+    
     def run(self):
         """ Do the job of this step"""
         self.setRunning() 
@@ -166,7 +170,6 @@ class FunctionStep(Step):
     """ This is a Step wrapper around a normal function
     This class will ease the insertion of Protocol function steps
     through the function _insertFunctionStep"""
-    
     def __init__(self, func=None, funcName=None, *funcArgs, **args):
         """ 
          Params:
@@ -242,15 +245,22 @@ class RunJobStep(FunctionStep):
     def __str__(self):
         return self._args[0] # return program name         
                 
+                
+class StepSet(Set):
+    """ Special type of Set for storing steps. """
+    def __init__(self, filename=None, prefix='', 
+                 mapperClass=None, **args):
+        Set.__init__(self, filename, prefix, mapperClass, classesDict=globals(), **args)
+        
+                
 class Protocol(Step):
     """ The Protocol is a higher type of Step.
     It also have the inputs, outputs and other Steps properties,
     but contains a list of steps that are executed
-    """
-    
+    """    
     def __init__(self, **args):
         Step.__init__(self, **args)        
-        self._steps = List() # List of steps that will be executed
+        self._steps = [] # List of steps that will be executed
         self.workingDir = String(args.get('workingDir', '.')) # All generated filePaths should be inside workingDir
         self.mapper = args.get('mapper', None)
         self._inputs = []
@@ -298,6 +308,8 @@ class Protocol(Step):
         self._jobId = String() # Store queue job id
         self._pid = Integer()
         self._stepsExecutor = None
+        self._stepsDone = Integer()
+        self._numberOfSteps = Integer()
         
         # For visualization
         self.allowHeader = Boolean(True)        
@@ -334,8 +346,6 @@ class Protocol(Step):
     
         self.__project = project
         
-        
-                
     @staticmethod
     def hasDefinition(cls):
         """ Check if the protocol has some definition.
@@ -483,7 +493,8 @@ class Protocol(Step):
                 
         self._steps.append(step)
         # Setup and return step index
-        step._index = len(self._steps)        
+        step._index = len(self._steps)
+                
         return step._index
         
     def _getPath(self, *paths):
@@ -520,6 +531,7 @@ class Protocol(Step):
         """
         # Get the function give its name
         func = getattr(self, funcName, None)
+        
         # Ensure the protocol instance have it and is callable
         if not func:
             raise Exception("Protocol._insertFunctionStep: '%s' function is not member of the protocol" % funcName)
@@ -559,16 +571,17 @@ class Protocol(Step):
         """
         self._leaveDir()
         
-    def __loadPrevSteps(self):
-        """ Load the Steps stored from a previous run
-        in the steps.sqlite file.
+    def loadSteps(self):
+        """ Load the Steps stored in the steps.sqlite file.
         """
         prevSteps = []
+        
         if exists(self.getStepsFile()):
-            stepsSet = Set(filename=self.getStepsFile())
+            stepsSet = StepSet(filename=self.getStepsFile())
             for step in stepsSet:
                 prevSteps.append(step.clone())
-                
+            stepsSet.close()
+              
         return prevSteps
         
     def __findStartingStep(self):
@@ -578,9 +591,10 @@ class Protocol(Step):
         from the previous run storage.
         """
         if self.runMode == MODE_RESTART:
+            self._prevSteps = []
             return 0
         
-        self._prevSteps = self._loadPrevSteps()
+        self._prevSteps = self.loadSteps()
         
         n = min(len(self._steps), len(self._prevSteps))
         self.info("len(steps) " + str(len(self._steps)) + " len(prevSteps) " + str(len(self._prevSteps)))
@@ -592,7 +606,7 @@ class Protocol(Step):
 #            print " oldStep.status: ", str(oldStep.status)
 #            print " oldStep!=newStep", oldStep != newStep
 #            print " not post: ", not oldStep._postconditions()
-            if (oldStep.status.get() != STATUS_FINISHED or
+            if (not oldStep.isFinished() or
                 newStep != oldStep or 
                 not oldStep._postconditions()):
                 return i
@@ -605,13 +619,26 @@ class Protocol(Step):
         with steps from self._prevSteps (<index) and self._prevSteps is 
         deleted since is no longer needed.
         """
-        self._steps[:index] = self._prevSteps[:index]
+        if self._prevSteps and index:
+            self._steps[:index] = self._prevSteps[:index]
+            del self._prevSteps
         
-        #for oldStep in self._prevSteps[index:]:
-        for oldStep in self._prevSteps: # This delete all and insert them later
-            self.mapper.delete(oldStep)
+        stepsFn = self.getStepsFile()
+        
+        self.info("DEBUG_JM: stepsFn: %s" % stepsFn)
+        if exists(stepsFn):
+            self.info("DEBUG_JM:     cleanning...")
+            cleanPath(stepsFn)
             
-        self._prevSteps = []
+        self._stepsSet = StepSet(filename=stepsFn)
+        self._stepsSet.setStore(False)
+        
+        self.info("Iterating steps")
+        for step in self._steps[:index]:
+            self._stepsSet.append(step)
+            
+        self.info("Writing steps changes")
+        self._stepsSet.write()
         
     def _stepStarted(self, step):
         """This function will be called whenever an step
@@ -619,7 +646,8 @@ class Protocol(Step):
         """
         self.info("STARTED: " + step.funcName.get())
         self.status.set(step.status)
-        self._store(step)
+        #self._steps
+        #self._store(step)
     
     def _stepFinished(self, step):
         """This function will be called whenever an step
@@ -631,23 +659,34 @@ class Protocol(Step):
             doContinue = False
         elif step.status == STATUS_FAILED:
             doContinue = False
-            self.setFailed("Protocol failed: " + step.getError().get())
-            self.error("Protocol failed: " + step.getError().get())
-        self.lastStatus = step.status.get()
+            errorMsg = "Protocol failed: " + step.getErrorMessage()
+            self.setFailed(errorMsg)
+            self.error(errorMsg)
+        self.lastStatus = step.getStatus()
         self.info("FINISHED: " + step.funcName.get())
+        
+        self._stepsSet.append(step)
+        self._stepsSet.write()
+        self._stepsDone.increment()
+        self._store(self._stepsDone)
+        
         return doContinue
     
     def _runSteps(self, startIndex):
         """ Run all steps defined in self._steps. """
-        self._steps.setStore(True) # Set steps to be stored
+        #self._steps.setStore(True) # Set steps to be stored
+        self.info("_runSteps: Updating state")
+        self._stepsDone.set(startIndex)
+        self._numberOfSteps.set(len(self._steps))
         self.setRunning()
         self._originalRunMode = self.runMode.get() # Keep the original value to set in sub-protocols
         self.runMode.set(MODE_RESUME) # Always set to resume, even if set to restart
+        self.info("_runSteps:  Storing...")
         self._store()
         
         self.lastStatus = self.status.get()
         #status = STATUS_FINISHED # Just for the case doesn't enter in the loop
-        
+        self.info("_runSteps:  executor.runSteps...")
         self._stepsExecutor.runSteps(self._steps[startIndex:], 
                                      self._stepStarted, self._stepFinished)
         self.status.set(self.lastStatus)
@@ -719,12 +758,13 @@ class Protocol(Step):
         if len(errors):
             raise Exception('Protocol.run: Validation errors:\n' + '\n'.join(errors))
         
-        self.__backupSteps() # Prevent from overriden previous stored steps
+        #self.__backupSteps() # Prevent from overriden previous stored steps
         self._insertAllSteps() # Define steps for execute later
         #self._makePathsAndClean() This is done now in project
         startIndex = self.__findStartingStep() # Find at which step we need to start
         self.info(" Starting at index: %d" % startIndex)
         self.__cleanStepsFrom(startIndex) # 
+        self.info(" Running steps ")
         self._runSteps(startIndex)
     
     def runJob(self, program, arguments, **kwargs):
@@ -808,7 +848,7 @@ class Protocol(Step):
         self.__closeLogsFiles()
         
     def getLogsAsStrings(self):
-        if all(os.path.exists(x) for x in self.getLogPaths()):
+        if all(exists(x) for x in self.getLogPaths()):
             self.__openLogsFiles('r')
             fOutString = self.__fOut.read()
             fErrString = self.__fErr.read()
@@ -918,21 +958,20 @@ class Protocol(Step):
         """ Return True if the protocol should be launched throught a queue. """
         return self._useQueue.get()
         
+    def getNumberOfSteps(self):
+        return self._numberOfSteps.get()
+    
     def getStepsDone(self):
         """ Return the number of steps executed. """
-        done = 0
-        for s in self._steps:
-            if s.isFinished():
-                done += 1
-        return done
+        return self._stepsDone.get()
             
     def getStatusMessage(self):
         """ Return the status string and if running the steps done. 
         """
         msg = self.getStatus()
-        if self.isRunning():
+        if self.isRunning() or self.isAborted() or self.isFailed():
             done = self.getStepsDone()
-            msg += " (done %d/%d)" % (done, len(self._steps))
+            msg += " (done %d/%d)" % (done, self.getNumberOfSteps())
         
         return msg
     
@@ -1120,8 +1159,9 @@ class Protocol(Step):
         root = g.getRoot()
         root.label = 'Protocol'
         stepsDict = {}
+        steps = self.loadSteps()
         
-        for i, s in enumerate(self._steps):
+        for i, s in enumerate(steps):
             index = s._index or (i+1)
             sid = str(index)
             n = g.createNode(sid)
@@ -1147,11 +1187,11 @@ def runProtocolMain(projectPath, protDbPath, protId):
         protDbPath: path to protocol db relative to projectPath
         protId: id of the protocol object in db.
     """
-    if not os.path.exists(projectPath):
+    if not exists(projectPath):
         print "ERROR: project path '%s' does not exist. " % projectPath
         sys.exit(1)
     fullDbPath = os.path.join(projectPath, protDbPath)
-    if not os.path.exists(fullDbPath):
+    if not exists(fullDbPath):
         print "ERROR: protocol database '%s' does not exist. " % fullDbPath
         sys.exit(1)
         

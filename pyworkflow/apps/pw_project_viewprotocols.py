@@ -229,7 +229,7 @@ class StepsTreeProvider(TreeProvider):
 class StepsWindow(BrowserWindow):
     def __init__(self, title, parentWindow, protocol, **args):
         self._protocol = protocol
-        provider = StepsTreeProvider(protocol._steps)
+        provider = StepsTreeProvider(protocol.loadSteps())
         BrowserWindow.__init__(self, title, parentWindow, weight=False, **args)
         # Create buttons toolbar
         self.root.columnconfigure(0, weight=1)
