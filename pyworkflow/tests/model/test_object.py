@@ -87,22 +87,36 @@ class TestObject(BaseTest):
         c.Name = String('Paquito')
         
         self.assertEqual(p.get(), 'Paquito')
-        
+        stackFn = "images.stk"
+        mrcsFn = "images.mrcs"
         fn = self.getOutputPath('test_images.sqlite')
         imgSet = SetOfImages(filename=fn)
         imgSet.setSamplingRate(1.0)
         for i in range(10):
             img = Image()
-            img.setLocation(i+1, "images.stk")
+            img.setLocation(i+1, stackFn)
             imgSet.append(img)
          
         imgSet.write()
         
+        # Test that image number 7 is correctly retrieved
+        # from the set
+        img7 = imgSet[7]
+        self.assertEqual(img7.getFileName(), stackFn)
+        
+        # Modify some properties of image 7 to test update
+        img7.setFileName(mrcsFn)
+        img7.setSamplingRate(2.0)
+        imgSet.update(img7)
+        # Write changes after the image 7 update
+        imgSet.write()
+        
         # Read again the set to be able to retrieve elements
         imgSet = SetOfImages(filename=fn)
-        imgSet.setSamplingRate(1.0)
-        
-        print 'item1: ', imgSet[1]
+
+        # Validate that image7 was properly updated        
+        img7 = imgSet[7]
+        self.assertEqual(img7.getFileName(), mrcsFn)
             
         o = OrderedObject()
         

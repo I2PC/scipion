@@ -533,7 +533,9 @@ class SqliteFlatMapper(Mapper):
         self.db.deleteObject(obj.getObjId())
     
     def updateTo(self, obj, level=1):
-        pass
+        args = list(obj.getObjDict().values())
+        args.append(obj.getObjId())
+        self.db.updateObject(obj.getObjLabel(), obj.getObjComment(), *args)
             
     def selectById(self, objId):
         """Build the object which id is objId"""
@@ -543,7 +545,6 @@ class SqliteFlatMapper(Mapper):
         else:
             obj = self.__objFromRow(objRow)
         return obj
-
 
     def __loadObjDict(self):
         """ Load object properties and classes from db. """
@@ -592,6 +593,9 @@ class SqliteFlatMapper(Mapper):
         return obj
         
     def __objFromRow(self, objRow):
+        if self._objTemplate is None:
+            self.__loadObjDict()
+            
         obj = self._objTemplate #self.__buildAndFillObj()
         obj.setObjId(objRow['id'])
         obj.setObjLabel(self._getStrValue(objRow['label']))
