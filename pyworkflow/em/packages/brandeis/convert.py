@@ -1,8 +1,8 @@
 # **************************************************************************
 # *
-# * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
-# *              Laura del Cano (ldelcano@cnb.csic.es)
-# *              Josue Gomez Blanco (ldelcano@cnb.csic.es)
+# * Authors:     Josue Gomez Blanco (jgomez@cnb.csic.es)
+# *
+# *
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -31,84 +31,9 @@ This module contains converter functions that will serve to:
 2. Read from Grigo packs files to base classes
 """
 
-import subprocess
 from data import *
 from brandeis import *
-import glob
-from pyworkflow.em.constants import NO_INDEX
-from os.path import abspath
 
-
-
-def objectToRow(obj, row, attrDict):
-    pass
-
-
-def _rowToObject(row, obj, attrDict):
-    pass
-
-    
-def rowToObject(md, objId, obj, attrDict):
-    pass
-
-    
-def readCTFModel(filename):
-    pass
-
-
-def writeCTFModel(ctfObj, filename):
-    """ Write a CTFModel object as Xmipp .ctfparam"""
-    pass
-
-
-def readMicrograph(md, objId):
-    """ Create a Micrograph object from a row of Xmipp metadata. """
-    pass
-
-
-def locationToEman(index, filename):
-    pass
-
-
-def micrographToRow(mic, micRow):
-    pass
-
-
-def rowToCoordinate(md, objId):
-    """ Create a Coordinate from a json. """
-    pass
-
-
-def readSetOfMicrographs(filename):
-    pass
-
-
-def writeSetOfMicrographs(micSet, filename, rowFunc=None):
-    pass
-
-    
-def readPosCoordinates(posFile):
-    pass
-
-            
-def readSetOfCoordinates(workDir, micSet, coordSet):
-    pass
-
-
-def writeSetOfCoordinates():
-    pass
-
-
-def readSetOfParticles(filename):
-    pass
-
-
-def writeSetOfParticles(partSet, filename, inputdir):
-    pass
-
-
-def writeSetOfClasses3D(classes3DSet, filename, classesBlock='classes'):    
-    pass
 
 
 def readSetOfClasses3D(classes3DSet, fileparList, volumeList):
@@ -122,7 +47,7 @@ def readSetOfClasses3D(classes3DSet, fileparList, volumeList):
     for ref, volFn in enumerate(volumeList):
         class3D = Class3D()
         class3D.setObjId(ref+1)
-        vol = volume()
+        vol = Volume()
         vol.copyObjId(class3D)
         vol.setLocation(volFn)
         
