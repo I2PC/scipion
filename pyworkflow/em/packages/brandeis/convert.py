@@ -63,8 +63,10 @@ def readSetOfClasses3D(classes3DSet, fileparList, volumeList):
                 prob = float(values[11])
                 if prob > 0:
                     img = Particle()
-                    particle = imgSet[int(values[7])]
-                    img.copy(particle)
+                    id = int(values[7])
+                    print "Esta es la particula con id:", id
+                    particle = imgSet[id]
+                    img.copyInfo(particle)
                     class3D.append(img)
         f1.close()
         
