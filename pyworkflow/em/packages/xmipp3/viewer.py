@@ -96,7 +96,6 @@ class XmippViewer(Viewer):
             else:
                 fn = self._getTmpPath(obj.getName() + '_micrographs.xmd')
                 writeSetOfMicrographs(obj, fn)
-                
             self._views.append(ObjectView(fn, "Micrographs", self._project.getName(), obj.strId(), obj.strId(), **args))
             
             
