@@ -362,6 +362,7 @@ class ProtFrealignBase(EMProtocol):
                            'Parameters to include in refinement')
         form.addParam('symmetry', TextParam, default='C1',
                       label='Point group symmetry:',
+                      condition='not doContinue',
                       help='Parameter *ASYM* in FREALIGN\n\n'
                            'Specify the symmetry.Choices are: Cn,Dn,T,O,I,I1,I2,N or H (can be zero)\n'
                            'n  = rotational symmetry required in pointgroup C(n) or D(n)\n'
@@ -461,6 +462,7 @@ class ProtFrealignBase(EMProtocol):
         if self.doContinue:
             continueRun = self.continueRun.get()
             self.inputParticles.set(continueRun.inputParticles.get())
+            self.symmetry.set(continueRun.symmetry.get())
             self.input3DReference.set(None)
             if self.continueIter.get() == 'last':
                 initIter = continueRun._getLastIter() + 1

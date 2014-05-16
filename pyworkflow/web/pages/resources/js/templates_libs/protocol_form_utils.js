@@ -245,35 +245,42 @@ function evalElements() {
 	 */
 	
 	$("tr").each(function(index) {
-//		
-		var value = jQuery(this).val();
-		if(value.length == 0){
-			var value = jQuery(this).attr('value');
-		}
-		var type = jQuery(this).attr('data-type');
-		var param = jQuery(this).attr('id');
+
+		// Get the identifier (id) for the parameter
+		var param = $(this).attr('id');
+		// Get the value for the parameter
+		var value = $(this).val();
+		if(value.length == 0){value = $(this).attr('value');}
+		// Get the type (data-type)
+		var type = $(this).attr('data-type');
 		
-//		console.log("value:"+value+", type:"+type+", param:"+param+";")
-
-//		alert(value +" - "+type+" - "+param);
-
-//		if (type == "BooleanParam" || type == "FloatParam" || type == "IntParam") {
-//			onChangeBooleanParam(value, param);
-//		} else 
-		if (type == "EnumParam") {
-			var typeEnum = jQuery(this).attr('data-enum');
-			if (typeEnum == '0') {
-				onChangeEnumParamList(value, param);
-			} else if (typeEnum == '1') {
-				onChangeEnumParamCombo(param + "_select", param);
-			}
-		} 
-		else if (type== "MultiPointerParam"){
-			recalculateSelectDim('#' + param + '_input')
-		}
-		else {
-//			alert("before:"+value);
-			onChangeParam(value, param);
+		// DEBUG -----------------------------
+//		var debug_param = "PARAM:"+param;
+//		var debug_value = "VALUE:"+value;
+//		var debug_type = "TYPE:"+type;
+//		console.log(debug_param + "," +debug_value + "," +debug_type);
+		
+		// Depending of the parameter is processed
+		switch (type){
+			
+			case "EnumParam":
+				// Get the kind of EnumParam
+				var typeEnum = parseInt($(this).attr('data-enum'));
+				
+				if(typeEnum){
+					onChangeEnumParamCombo(param + "_select", param);
+				} else {
+					onChangeEnumParamList(value, param);
+				}
+				break;
+				
+			case "MultiPointerParam":
+				recalculateSelectDim('#' + param + '_input');
+				break;
+				
+			default:
+				onChangeParam(value, param);
+				break;
 		}
 	});
 }
@@ -282,8 +289,6 @@ function onChangeParam(value, paramId) {
 	/* 
 	 * Update the parameter for an element.
 	 */
-	
-//	alert(paramId + "-"+value);
 	setParamValue(paramId, value);
 }
 	
@@ -307,14 +312,22 @@ function setParamValue(paramId, value) {
 	/*
 	 * Put the new value in an attribute of the parent node.
 	 */
-	var row = jQuery("tr#" + paramId);
-	//	alert("before:"+row.val());
-	row.val(value);	
-	//	alert("after:"+row.val());
 	
+	// Get the row affected
+	var row = $("tr#" + paramId);
+	// Update the value for the row
+	row.val(value);
+	
+	// Get the new expertise level
 	var newLevel = $("select[name=expertLevel]").val();
+	
+	// DEBUG
+//	console.log("PARAM TO EVALUATE: " +paramId + " WITH LEVEL: " + newLevel)
+	
+	// Evaluate the dependencies for the new expert level and the row affected
 	evalDependencies(row, newLevel);
 
+	// Get the params affected with the changes
 	var params = row.attr('data-params');
 
 	if (params != undefined && params.length <= 0) {
@@ -322,63 +335,90 @@ function setParamValue(paramId, value) {
 		var expLevel = row.attr('data-expert');
 	
 		if (expLevel > newLevel) {
+//			console.log("hide by expLevel!")
 			row.hide();
 		} else {
+//			console.log("show by expLevel!")
 			row.show();			
 		}
 	}
+	
+	// To process the hidden elements into protocol form
+	// is necessary to be evaluated hiself.
+	evalRow(row)
 }
+
+function evalRow(row){
+	var evalThis = row.attr("data-cond")
+	
+	switch (evalThis){
+		case "False":
+			row.css('display', 'none')
+			break;
+		case "True":
+			row.css('display', 'table-row')
+			break;
+	}
+}
+
 
 function evalDependencies(row, newLevel) {
 	/*
 	 * Function to evaluate the parameters dependencies for a expertise level.
 	 */
 	
-	//	var newLevel = $("select[name=expLevel]").val();
+	// Get dependencies for the parameter
 	var dependencies = row.attr('data-depen');
 	if (dependencies!= undefined && dependencies.length > 0) {
+		
+		// Dependencies splitted to be looked over the elements
 		var arrayDepends = dependencies.split(",");
-		for ( var cont = 0; cont < arrayDepends.length; cont++) {
 
-			var row2 = jQuery("tr#" + arrayDepends[cont]);
+		for (var cont = 0; cont < arrayDepends.length; cont++) {
+			
+			// Get params affected with the dependencies
+			var row2 = $("tr#" + arrayDepends[cont]);
+			
+			// Evaluate the new parameter affected
 			var res = evalCondition(row2);
-			
-			var expLevel = row2.attr('data-expert');
-			
-//			alert("level:"+expLevel+", newlevel:"+newLevel)
 
+			// Get the expertise level for the row affected
+			var expLevel = row2.attr('data-expert');
 			if (res == false || expLevel > newLevel) {
+//				console.log("hide!")
 				row2.hide();
 			} else if (res == true) {
+//				console.log("show!")
 				row2.show();
+				
+				// Evaluate the dependencies for the new row affected
 				evalDependencies(row2, newLevel);
 			}
 		}
-	}
+	}	
 }
 
 function evalCondition(row) {
 	/*
 	 * Function to evaluate a condition given a row of the form.
 	 */
-
 	var cond = row.attr('data-cond');
+	
+//	console.log("condition: " + cond)
+	
 	var params = row.attr('data-params');
-
 	var arrayParams = params.split(",");
 
 	// Get value of the element with name=itenName
 	var param = null;
 	var value = null;
 	var cond_eval = cond;
-	// var params = '';
 
-	for ( var cont = 0; cont < arrayParams.length; cont++) {
+	for (var cont = 0; cont < arrayParams.length; cont++) {
 		param = arrayParams[cont];
-		// value = getValueByName(param);
-		value = jQuery("tr#" + param).val();
+		value = $("tr#" + param).val();
 		if (!value){
-			value = jQuery("tr#" + param).attr("value");
+			value = $("tr#" + param).attr("value");
 			if (!value){
 				value="''";
 			}
@@ -387,17 +427,12 @@ function evalCondition(row) {
 		cond_eval = cond_eval.replace(param, value);
 	}
 	
-//	if (row.attr("name")=="comment") {
-//		alert("condition: " + cond + " \nparams:\n" + params + "\n eval: " + cond_eval);
-//	}
+//	console.log("condition: " + cond + " \nparams:\n" + params + "\n eval: " + cond_eval);
 	
 	cond_eval = normalizeConditions(cond_eval)
 	
-//	alert(cond_eval + "/"+eval(cond_eval))
-
-//	var foundAnd = cond.indexOf("'0'") != -1;
-//	if (foundAnd)
-//		alert("condition: " + cond + " \neval: " + cond_eval+ " \nparams:"+ params );
+	//	To check a good eval
+	//console.log(cond_eval + "/"+eval(cond_eval))
 
 	return eval(cond_eval);
 }

@@ -458,7 +458,7 @@ class TestMixedFrealignClassify(TestWorkflow):
         protFrealign.input3DReference.set(protImportVol.outputVolume)
         protFrealign.setObjLabel('Frealign')
         self.proj.launchProtocol(protFrealign, wait=True)        
-        self.assertIsNotNone(protFrealign.outputVolume, "There was a problem with Frealign")
+        self.assertIsNotNone(protFrealign.outputClasses, "There was a problem with Frealign")
 
 
 if __name__ == "__main__":

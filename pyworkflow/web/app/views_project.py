@@ -265,7 +265,7 @@ def tree_prot_view(request):
     # load the protocol tree current active
     root = loadProtTree(project)
     
-    return render_to_response('tree_prot_view.html', {'sections': root.childs})
+    return render_to_response('project_content/tree_prot_view.html', {'sections': root.childs})
     
 def run_table_graph(request):
     try:
