@@ -1120,7 +1120,7 @@ public class GalleryData {
 	public void saveSelection() throws Exception
 	{
 		
-		SaveJDialog dlg = new SaveJDialog(window, "selection.xmd", true);
+		SaveJDialog dlg = new SaveJDialog(window, "selection" + getFileExtension(), true);
 		boolean save = dlg.showDialog();
 		if (save)
 		{
@@ -1343,4 +1343,11 @@ public class GalleryData {
 		}
 		return null;
     }
+    
+    public String getFileExtension()
+       {
+           if(getFileName() == null)
+               return "";
+           return XmippStringUtils.getFileExtension(getFileName());
+       }
 }// class GalleryData

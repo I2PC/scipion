@@ -2298,12 +2298,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
         }
        
        
-       public String getFileExtension()
-       {
-           if(data.getFileName() == null)
-               return "";
-           return XmippStringUtils.getFileExtension(data.getFileName());
-       }
+       
 
        
 }// class JFrameGallery

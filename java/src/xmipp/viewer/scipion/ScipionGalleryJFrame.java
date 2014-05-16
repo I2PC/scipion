@@ -62,7 +62,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
             projectid = parameters.projectid;
             inputid = parameters.inputid;
             inputimagesid = parameters.inputimagesid;
-            selfile = String.format("%s%sselection%s", projectid, File.separator, getFileExtension());
+            selfile = String.format("%s%sselection%s", projectid, File.separator, data.getFileExtension());
             msgfields = new HashMap<String, String>();
             msgfields.put(runNameKey, "ProtUserSubset");
             
@@ -134,28 +134,29 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
 
     }
 
-    protected void runCommand(final String[] command) {
-        XmippWindowUtil.blockGUI(ScipionGalleryJFrame.this, "Creating set ...");
-        new Thread(new Runnable() {
+    protected void runCommand(final String[] command) 
+    {
+//        XmippWindowUtil.blockGUI(ScipionGalleryJFrame.this, "Creating set ...");
+//        new Thread(new Runnable() {
+//
+//            @Override
+//            public void run() {
 
-            @Override
-            public void run() {
+//                try {
+//
+//                    String output = XmippUtil.executeCommand(command);
+//                    XmippWindowUtil.releaseGUI(ScipionGalleryJFrame.this.getRootPane());
+//                    if (output != null && !output.isEmpty()) {
+//                        XmippDialog.showInfo(ScipionGalleryJFrame.this, output);
+//                        System.out.println(output);
+//                    }
+//
+//                } catch (Exception ex) {
+//                    throw new IllegalArgumentException(ex.getMessage());
+//                }
 
-                try {
-
-                    String output = XmippUtil.executeCommand(command);
-                    XmippWindowUtil.releaseGUI(ScipionGalleryJFrame.this.getRootPane());
-                    if (output != null && !output.isEmpty()) {
-                        XmippDialog.showInfo(ScipionGalleryJFrame.this, output);
-                        System.out.println(output);
-                    }
-
-                } catch (Exception ex) {
-                    throw new IllegalArgumentException(ex.getMessage());
-                }
-
-            }
-        }).start();
+//            }
+//        }).start();
     }
 
     public JButton getScipionButton(String text, ActionListener listener) {

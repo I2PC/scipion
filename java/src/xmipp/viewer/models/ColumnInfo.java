@@ -51,6 +51,7 @@ public class ColumnInfo {
                 this.type = type;
                 
 	}
+        
 	
         public ColumnInfo(int label, String name, String comment, int type, boolean allowRender){
             this(label, name, comment, type, allowRender, true, allowRender);

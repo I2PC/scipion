@@ -7,11 +7,13 @@
 package xmipp.viewer.scipion;
 
 import java.awt.Color;
+import java.io.File;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
 import xmipp.viewer.models.ClassInfo;
 import xmipp.viewer.models.ColumnInfo;
@@ -23,23 +25,29 @@ import xmipp.viewer.models.ColumnInfo;
 public class ScipionMetaData extends MetaData{
     private String dbfile;
     private List<ColumnInfo> columns;
-    private String self;
+    private String self, selfalias;
     private List<EMObject> emobjects;
     private Map<String, Integer> labels = new HashMap<String, Integer>();
     private List<ScipionMetaData> childmds;
     private ScipionMetaData parent;
     private List<ClassInfo> classes;
     private String id;
+    private String classestb, objectstb;
     
     public ScipionMetaData()
     {
         columns = new ArrayList<ColumnInfo>();
         emobjects = new ArrayList<EMObject>();
-        
+        classestb = "Classes";
+        objectstb = "Objects";
     }
     
-    public ScipionMetaData(List<ColumnInfo> columns, List<EMObject> emobjects)
+    public ScipionMetaData(String classestb, String objectstb, String self, String selfalias, List<ColumnInfo> columns, List<EMObject> emobjects)
     {
+        this.classestb = classestb;
+        this.objectstb = objectstb;
+        this.self = self;
+        this.selfalias = selfalias;
         this.columns = columns;
         this.emobjects = emobjects;
     }
@@ -49,8 +57,9 @@ public class ScipionMetaData extends MetaData{
         this.dbfile = dbfile;
         columns = new ArrayList<ColumnInfo>();
         emobjects = new ArrayList<EMObject>();
-        
-        loadData("Classes", "Objects");
+        classestb = "Classes";
+        objectstb = "Objects";
+        loadData(classestb, objectstb);
         if(self.equals("Class2D"))
         {
             childmds = new ArrayList<ScipionMetaData>();
@@ -88,6 +97,8 @@ public class ScipionMetaData extends MetaData{
         this.dbfile = dbfile;
         columns = new ArrayList<ColumnInfo>();
         emobjects = new ArrayList<EMObject>();
+        this.classestb = classestb;
+        this.objectstb = objectstb;
         loadData(classestb, objectstb);
         
     }
@@ -113,24 +124,13 @@ public class ScipionMetaData extends MetaData{
                name = rs.getString("label_property");
                alias = rs.getString("column_name");
                clsname = rs.getString("class_name");
-               if(isPointer(clsname))
+               if(isPointer(clsname) && name.equals("self"))
                {
-                   if(name.equals("self"))
-                       self = clsname;
+                    self = clsname;
+                    selfalias = alias;
                    continue;
                }
-               if (clsname.equals("Integer"))
-               {
-                        type = MetaData.LABEL_INT;
-               } 
-               else if (clsname.equals("Float"))
-               {
-                        type = MetaData.LABEL_DOUBLE;
-               }
-               else
-               {
-                        type = MetaData.LABEL_STRING;
-               }
+               type = getTypeMapping(clsname);
                
                labels.put(name, labels.size());
                label = labels.get(name);
@@ -283,6 +283,16 @@ public class ScipionMetaData extends MetaData{
         return childmds;
     }
 
+    public List<EMObject> getEMObjects(long[] selIds) {
+        ArrayList<EMObject> emos = new ArrayList<EMObject>();
+        for(long id: selIds)
+            emos.add(getEMObject(id));
+        return emos;
+    }
+
+    ScipionMetaData getSelectionMd(long[] selIds) {
+        return new ScipionMetaData(classestb, objectstb, self, selfalias, columns, getEMObjects(selIds));
+    }
     
     public class EMObject
     {
@@ -461,21 +471,10 @@ public class ScipionMetaData extends MetaData{
         return emo.setValue(label, value);
     }
 
-    public  void write(String path)
-    {
-        //save data on sqlite db path
-    }
+   
+   
     
-    public  void writeBlock(String path)
-    {
-        //save block data on sqlite db path
-    }
     
-    public void writeBlock(String block, String path, long[] ids)
-    {
-        for(Long id: ids)
-            System.out.println(id);
-    }
          
     public void importObjects(MetaData md, long [] ids)
     {
@@ -523,5 +522,96 @@ public class ScipionMetaData extends MetaData{
                 return child;
         return null;
         
+    }
+    
+     public  void write(String path)
+    {
+        
+    }
+     
+    public  void writeBlock(String path)
+    {//overwrites file if exists, does not save recursively metadata childs
+        
+        Connection c = null;
+        Statement stmt = null;
+        try {
+            new File(path).delete();
+            Class.forName("org.sqlite.JDBC");
+            c = DriverManager.getConnection("jdbc:sqlite:" + path);
+            String sql = String.format("CREATE TABLE %s(\n"
+                    + "id        INTEGER PRIMARY KEY AUTOINCREMENT,\n" +
+"                      label_property      TEXT UNIQUE,\n" +
+"                      column_name TEXT UNIQUE,\n" +
+"                      class_name TEXT DEFAULT NULL\n" +
+"                      )", classestb);
+                
+            stmt = c.createStatement();
+            stmt.executeUpdate(sql);
+            sql = String.format("INSERT INTO %s(id, label_property, column_name, class_name) values (1, \'self\', \'%s\', \'%s\')", classestb, selfalias, self);
+            String line = ", (%s, \'%s\', \'%s\', \'%s\')";
+            ColumnInfo ci;
+            String createcols = "", cols = "id, label, comment", type;
+            for(int i = 0; i < columns.size(); i ++)
+            {
+                ci = columns.get(i);
+                type = getTypeMapping(ci.type);
+                sql += String.format(line, i + 2, ci.labelName, ci.comment, type);
+                createcols += String.format(",\n%s %s DEFAULT NULL", ci.comment, type);
+                cols += String.format(", %s", ci.comment);
+            }
+            stmt.executeUpdate(sql);
+            sql = String.format("CREATE TABLE %s(\n"
+                    + "id        INTEGER PRIMARY KEY AUTOINCREMENT,\n" +
+"                      label      TEXT DEFAULT NULL,\n" +
+"                      comment TEXT DEFAULT NULL" +
+"                      %s)", objectstb, createcols);
+                
+            
+            stmt.executeUpdate(sql);
+            sql = String.format("INSERT INTO %s(%s) VALUES ", objectstb, cols);
+            Object value;
+            for(EMObject emo: emobjects)
+            {
+                sql += String.format("(%s, '', ''", emo.id);
+                for(int i = 0; i < columns.size(); i ++)
+                {
+                    ci = columns.get(i);
+                    value = emo.values.get(i);
+                    if(ci.type == MetaData.LABEL_STRING)
+                        sql += String.format(", '%s'", value);
+                    else
+                        sql += String.format(", %s", value);
+                }
+                sql += "),";
+            }
+            sql = sql.substring(0, sql.length() - 1);//remove first comma
+            stmt.executeUpdate(sql);
+            stmt.close();
+            c.close();
+            
+        } 
+        catch ( Exception e ) {
+            e.printStackTrace();
+            
+        }
+    }
+    
+    public static String getTypeMapping(int type)
+    {
+         if (type == MetaData.LABEL_INT)
+            return "Integer";
+        if (type == MetaData.LABEL_DOUBLE)
+            return "Float";
+        return "String";
+    }
+    
+    public static int getTypeMapping(String type)
+    {
+        int result;
+         if (type.equals("Integer"))
+            return MetaData.LABEL_INT;
+        if (type.equals("Float"))
+            return MetaData.LABEL_DOUBLE;
+        return MetaData.LABEL_STRING;
     }
 }

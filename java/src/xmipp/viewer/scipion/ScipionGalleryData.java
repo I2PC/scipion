@@ -67,7 +67,7 @@ public class ScipionGalleryData extends GalleryData{
             /** Save selected items as a metadata */
     public void saveSelection(String path, boolean overwrite) throws Exception
     {
-            ((ScipionMetaData)md).writeBlock(selectedBlock, path, getSelIds());
+        getSelectionMd().writeBlock(path);
         
     }
 
@@ -82,8 +82,9 @@ public class ScipionGalleryData extends GalleryData{
             ScipionMetaData selectionMd = null;
             try
             {
-                selectionMd = new ScipionMetaData("selection.sqlite");
-                selectionMd.importObjects(md, getSelIds());//import objects, if classes afterwords should import particles
+                selectionMd = ((ScipionMetaData)md).getSelectionMd(getSelIds());
+                System.out.println(selectionMd.size());
+                return selectionMd;
             } catch (Exception e) {
                     e.printStackTrace();
             }
@@ -95,7 +96,7 @@ public class ScipionGalleryData extends GalleryData{
 		ScipionMetaData mdImages = new ScipionMetaData();
 		MetaData md;
 		for (int i = 0; i < ids.length; ++i){
-			if (selection[i]){
+			if (selection[i] && isEnabled(i)){
 				md = getClassImages(i);
 				if(md != null)
                                 {
