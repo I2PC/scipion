@@ -199,7 +199,7 @@ def symmetrize(log,OutModel,Symmetry,SymmetryAggregation):
         runJob(log,"xmipp_transform_symmetrize",args)
 
 def adjust(log,OutModel,SetOfImages):
-    runJob(log,"xmipp_adjust_volume_grey_levels","-i %s -m %s"%(OutModel,SetOfImages))
+    runJob(log,"xmipp_transform_adjust_volume_grey_levels","-i %s -m %s"%(OutModel,SetOfImages))
 
 def normalize(log,OutModel,MaskRadius):
     if MaskRadius==-1:
