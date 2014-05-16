@@ -39,7 +39,6 @@ from brandeis import *
 def readSetOfClasses3D(classes3DSet, fileparList, volumeList):
     """read from frealign .par.
     """
-    import re
     imgSet = classes3DSet.getImages()
     samplingRate = imgSet.getSamplingRate()
     averages = classes3DSet.createRepresentatives()
@@ -59,14 +58,11 @@ def readSetOfClasses3D(classes3DSet, fileparList, volumeList):
         f1 = open(file1)
         for l in f1:
             if not l.startswith('C'):
-                values = re.split(" +", l)
+                values = l.split()
                 prob = float(values[11])
                 if prob > 0:
-                    img = Particle()
                     id = int(values[7])
-                    print "Esta es la particula con id:", id
-                    particle = imgSet[id]
-                    img.copyInfo(particle)
+                    img = imgSet[id]
                     class3D.append(img)
         f1.close()
         
