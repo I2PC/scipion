@@ -60,6 +60,7 @@ class Step(OrderedObject):
         self.endTime = String()
         self._error = String()
         self.isInteractive = Boolean(False)
+        self._resultFiles = String()
         self._index = None
         
     def _preconditions(self):
@@ -196,14 +197,14 @@ class FunctionStep(Step):
             missingFiles = missingPaths(*resultFiles)
             if len(missingFiles):
                 raise Exception('Missing filePaths: ' + ' '.join(missingFiles))
-            self.resultFiles = String(pickle.dumps(resultFiles))
+            self._resultFiles.set(pickle.dumps(resultFiles))
     
     def _postconditions(self):
         """ This type of Step, will simply check
         as postconditions that the result filePaths exists""" 
-        if not hasattr(self, 'resultFiles'):
+        if not self._resultFiles.hasValue():
             return True
-        filePaths = pickle.loads(self.resultFiles.get())
+        filePaths = pickle.loads(self._resultFiles.get())
 
         return len(missingPaths(*filePaths)) == 0
     
@@ -580,7 +581,7 @@ class Protocol(Step):
             stepsSet = StepSet(filename=self.getStepsFile())
             for step in stepsSet:
                 prevSteps.append(step.clone())
-            stepsSet.close()
+            stepsSet.close() # Close the connection
               
         return prevSteps
         
@@ -602,58 +603,51 @@ class Protocol(Step):
         for i in range(n):
             newStep = self._steps[i]
             oldStep = self._prevSteps[i]
-#            print "i: ", i
-#            print " oldStep.status: ", str(oldStep.status)
-#            print " oldStep!=newStep", oldStep != newStep
-#            print " not post: ", not oldStep._postconditions()
+#             self.info(">>> i: %s" % i)
+#             self.info(" oldStep.status: %s" % str(oldStep.status))
+#             self.info(" oldStep!=newStep %s" % (oldStep != newStep))
+#             self.info(" not post: %s" % (not oldStep._postconditions()))
             if (not oldStep.isFinished() or
                 newStep != oldStep or 
                 not oldStep._postconditions()):
+#                 self.info(" returning i: %s" % i)
                 return i
+            newStep.copy(oldStep)
             
         return n
     
-    def __cleanStepsFrom(self, index):
-        """ Clean from the persistence all steps in self._prevSteps
-        from that index. After this function self._steps is updated
-        with steps from self._prevSteps (<index) and self._prevSteps is 
-        deleted since is no longer needed.
+    def __storeSteps(self):
+        """ Store the new steps list that can be retrieved 
+        in further execution of this protocol.
         """
-        if self._prevSteps and index:
-            self._steps[:index] = self._prevSteps[:index]
-            del self._prevSteps
-        
         stepsFn = self.getStepsFile()
-        
-        self.info("DEBUG_JM: stepsFn: %s" % stepsFn)
-        if exists(stepsFn):
-            self.info("DEBUG_JM:     cleanning...")
-            cleanPath(stepsFn)
-            
+           
         self._stepsSet = StepSet(filename=stepsFn)
         self._stepsSet.setStore(False)
+        self._stepsSet.clear()
         
-        self.info("Iterating steps")
-        for step in self._steps[:index]:
+        for step in self._steps:
+            step.cleanObjId()
             self._stepsSet.append(step)
-            
-        self.info("Writing steps changes")
+
+        self._stepsSet.write()
+        
+    def __updateStep(self, step):
+        """ Store a given step and write changes. """
+        self._stepsSet.update(step)
         self._stepsSet.write()
         
     def _stepStarted(self, step):
         """This function will be called whenever an step
         has started running.
         """
-        self.info("STARTED: " + step.funcName.get())
-        self.status.set(step.status)
-        #self._steps
-        #self._store(step)
-    
+        self.info("STARTED: %s, index: %d" % (step.funcName.get(), step._index))
+        self.__updateStep(step)
+        
     def _stepFinished(self, step):
         """This function will be called whenever an step
         has finished its run.
         """
-        self._store(step)
         doContinue = True
         if step.status == STATUS_WAITING_APPROVAL:
             doContinue = False
@@ -663,25 +657,22 @@ class Protocol(Step):
             self.setFailed(errorMsg)
             self.error(errorMsg)
         self.lastStatus = step.getStatus()
-        self.info("FINISHED: " + step.funcName.get())
         
-        self._stepsSet.append(step)
-        self._stepsSet.write()
+        self.__updateStep(step)
         self._stepsDone.increment()
         self._store(self._stepsDone)
+        
+        self.info("FINISHED: %s, index: %d" % (step.funcName.get(), step._index))
         
         return doContinue
     
     def _runSteps(self, startIndex):
         """ Run all steps defined in self._steps. """
-        #self._steps.setStore(True) # Set steps to be stored
-        self.info("_runSteps: Updating state")
         self._stepsDone.set(startIndex)
         self._numberOfSteps.set(len(self._steps))
         self.setRunning()
         self._originalRunMode = self.runMode.get() # Keep the original value to set in sub-protocols
         self.runMode.set(MODE_RESUME) # Always set to resume, even if set to restart
-        self.info("_runSteps:  Storing...")
         self._store()
         
         self.lastStatus = self.status.get()
@@ -759,8 +750,8 @@ class Protocol(Step):
         self._insertAllSteps() # Define steps for execute later
         #self._makePathsAndClean() This is done now in project
         startIndex = self.__findStartingStep() # Find at which step we need to start
-        self.info(" Starting at index: %d" % startIndex)
-        self.__cleanStepsFrom(startIndex) # 
+        self.info(" Starting at step: %d" % (startIndex + 1))
+        self.__storeSteps() 
         self.info(" Running steps ")
         self._runSteps(startIndex)
     
@@ -781,26 +772,13 @@ class Protocol(Step):
         self.__initLogs()
         
         self.info('RUNNING PROTOCOL -----------------')
-#        self.info('RUNNING PROTOCOL info -----------------')
-#        self.warning('RUNNING PROTOCOL warning-----------------')
-#        self.error('RUNNING PROTOCOL error-----------------')
-#        self.info('RUNNING PROTOCOL info red-----------------', True)
-#        self.warning('RUNNING PROTOCOL warning red-----------------', True)
-#        self.error('RUNNING PROTOCOL error red-----------------', True)
-#        self.info('        jobId: %s' % self.getJobId())
-#        self.info('          pid: %s' % os.getpid())
-#        self.info('         ppid: %s' % os.getppid())
         self._pid.set(os.getpid())
         self.info('   currentDir: %s' % os.getcwd())
         self.info('   workingDir: ' + self.workingDir.get())
         self.info('      runMode: %d' % self.runMode.get())
-        #self.namePrefix = replaceExt(self._steps.getName(), self._steps.strId()) #keep
-        #self._run()
-        Step.run(self)
-        
-        #outputs = [getattr(self, o) for o in self._outputs]
+        Step.run(self)        
         self._store()
-        self.info('------------------- PROTOCOL FINISHED')
+        self.info('------------------- PROTOCOL ' + self.getStatusMessage().upper())
         self.__closeLogs()
         
     def __initLogs(self):
@@ -927,7 +905,6 @@ class Protocol(Step):
     def getDefaultRunName(self):
         return '%s.%s' % (self.getClassName(), self.strId())
         
-    
     @classmethod
     def getClassLabel(cls):
         """ Return a more readable string representing the protocol class """
@@ -1169,9 +1146,8 @@ class Protocol(Step):
             else:
                 for p in s._prerequisites:
                     stepsDict[p].addChild(n)
-            
         return g
-        
+
                 
 #---------- Helper functions related to Protocols --------------------
 

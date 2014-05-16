@@ -821,6 +821,11 @@ class Set(OrderedObject):
            
     def close(self):
         self._mapper.close()
+        
+    def clear(self):
+        self._mapper.clear()
+        self._idCount = 0
+        self._size.set(0)
          
     def append(self, item):
         """ Add a image to the set. """

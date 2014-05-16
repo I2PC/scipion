@@ -58,12 +58,13 @@ class StepExecutor():
     def runSteps(self, steps, stepStartedCallback, stepFinishedCallback):
         """ Simply iterate over the steps and run each one. """
         for s in steps:
-            s.setRunning()
-            stepStartedCallback(s)
-            s.run()
-            doContinue = stepFinishedCallback(s)
-            if not doContinue:
-                break
+            if not s.isFinished():
+                s.setRunning()
+                stepStartedCallback(s)
+                s.run()
+                doContinue = stepFinishedCallback(s)
+                if not doContinue:
+                    break
 
 
 class StepThread(Thread):
