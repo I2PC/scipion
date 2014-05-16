@@ -244,7 +244,7 @@ def rowToClass2D(md, objId, class2D):
 
 def rowToClass3D(md, objId, class3D):
     """ Create a Class3D from a row of a metadata. """
-    return rowToClassLabel(md, objId, class3D, Particle)
+    return rowToClassLabel(md, objId, class3D, Volume)
 
 
 def rowToClassVol(md, objId, classVol):
