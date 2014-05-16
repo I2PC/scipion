@@ -28,22 +28,19 @@
 This module is responsible for launching protocol executions.
 """
 import sys
-from os.path import basename
-from pyworkflow.protocol import runProtocolMainMPI
-from pyworkflow.em import *
-from pyworkflow.apps.config import *
 from mpi4py import MPI
+
+from pyworkflow.protocol import runProtocolMainMPI
+from pyworkflow.utils.mpi import runJobMPISlave
 
 
 if __name__ == '__main__':
     comm = MPI.COMM_WORLD
     rank = comm.Get_rank()
-    
+
     if rank == 0:
         dbPath = sys.argv[1]
         protId = int(sys.argv[2])
         runProtocolMainMPI(dbPath, protId, comm)
-        
     else:
-        from pyworkflow.utils.mpi import runJobMPISlave
         runJobMPISlave(comm)
