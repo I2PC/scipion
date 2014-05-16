@@ -30,10 +30,10 @@ This sub-package contains the XmippCtfMicrographs protocol
 
 
 from pyworkflow.em import *  
+from pyworkflow.utils.path import makePath, moveFile
 
 from convert import *
 from xmipp3 import XmippMdRow
-#from pyworkflow.utils.path import makePath, basename, join, exists
 #import xmipp
 
 

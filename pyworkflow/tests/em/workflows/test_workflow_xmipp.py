@@ -215,6 +215,8 @@ class TestXmippWorkflow(TestWorkflow):
         self.proj.launchProtocol(protDownsampling, wait=True)
         self.assertIsNotNone(protDownsampling.outputMicrographs, "There was a problem with the downsampling")
         self.validateFiles('protDownsampling', protDownsampling)
+        
+        return 
      
         # Now estimate CTF on the downsampled micrographs 
         print "Performing CTF..."   
