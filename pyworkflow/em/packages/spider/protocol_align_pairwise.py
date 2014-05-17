@@ -29,13 +29,7 @@ This sub-package contains protocol for particles filters operations
 """
 
 from pyworkflow.em import *  
-from pyworkflow.em.constants import NO_INDEX
-from pyworkflow.utils import removeExt, removeBaseExt, makePath, getLastFile
-from constants import *
-from spider import SpiderShell, SpiderProtocol, runSpiderTemplate
-from convert import locationToSpider
-from glob import glob
-        
+from spider import SpiderProtocol
 
       
 class SpiderProtAlignPairwise(ProtAlign2D, SpiderProtocol):
@@ -52,6 +46,8 @@ class SpiderProtAlignPairwise(ProtAlign2D, SpiderProtocol):
                         'particlesSel': 'particles_aligned_sel',
                         'average': join(self.alignDir, 'rfreeavg001') # If change the name, change it in template batch
                         }    
+    
+    #--------------------------- DEFINE param functions --------------------------------------------
     
     def _defineAlignParams(self, form):
         form.addParam('innerRadius', IntParam, default=5,
@@ -70,17 +66,21 @@ class SpiderProtAlignPairwise(ProtAlign2D, SpiderProtocol):
                       label='Step size(px):',
                       help='In the translational alignment, shifts will be analyzed\n'
                            'in units of <stepSize> (in pixel units).')        
+    
+    #--------------------------- INSERT steps functions --------------------------------------------  
+    
     def _insertAllSteps(self):
         # Insert processing steps
         self._insertFunctionStep('convertInput', 'inputParticles', 
                                  self._getFileName('particles'), self._getFileName('particlesSel'))
-        self._insertFunctionStep('alignParticles', 
+        self._insertFunctionStep('alignParticlesStep', 
                                  self.innerRadius.get(), self.diameter.get())
-        self._insertFunctionStep('createOutput')
+        #self._insertFunctionStep('createOutputStep')
 
-    def alignParticles(self, innerRadius, diameter):
-        """ Apply the selected filter to particles. 
-        Create the set of particles.
+    #--------------------------- STEPS functions --------------------------------------------       
+    
+    def alignParticlesStep(self, innerRadius, diameter):
+        """ Execute the pairwise.msa script to alignm the particles.
         """
         particles = self.inputParticles.get()
         n = particles.getSize()
@@ -92,41 +92,20 @@ class SpiderProtAlignPairwise(ProtAlign2D, SpiderProtocol):
         makePath(self.alignDir)
 
         self._params.update({
-                             'dim': xdim,
-                             'diameter': self.diameter.get(),
-                             'innerRadius': self.innerRadius.get(),
-                             'searchRange': self.searchRange.get(),
-                             'stepSize': self.stepSize.get()
+                             '[idim-header]': xdim,
+                             '[inner-rad]': self.innerRadius.get(),
+                             '[obj-diam]': self.diameter.get(),
+                             '[search-range]': self.searchRange.get(),
+                             '[step-size]': self.stepSize.get(),
+                             '[selection_list]': 'particles_aligned_sel',
+                             '[unaligned_image]': 'particles_aligned@*****',
                             })
-        runSpiderTemplate('pairwise.txt', self._params['ext'], self._params)
-                    
         
-#        spi = SpiderShell(ext='stk', log='script2.log') # Create the Spider process to send commands
-#        
-#        lastAvg = getLastFile(avgPattern)
-#        avg = Particle()
-#        avg.copyInfo(particles)
-#        avg.setLocation(NO_INDEX, self._getPath(lastAvg))
-#        self._defineOutputs(outputAverage=avg)
-#        
-#        lastDoc = getLastFile(docPattern)
-#        f = open(lastDoc) # Open last doc
-#        particlesPrefix = self._params['particles']
-#        
-#        for i, line in enumerate(f):
-#            line = line.strip()
-#            if len(line) and not line.startswith(';'):
-#                angle, shiftX, shiftY = [float(s) for s in line.split()[2:]]
-#                inLoc = locationToSpider(i, particlesPrefix)
-#                incore = "_1"
-#                spi.runFunction('RT SQ', inLoc, incore, angle, (shiftX, shiftY))
-#                spi.runFunction('CP', incore, inLoc)
-#            
-#        spi.close()
-            
+        self.runScript('mda/pairwise.msa', self._params['ext'], self._params)
+                    
         self._leaveWorkingDir() # Go back to project dir
             
-    def createOutput(self):
+    def createOutputStep(self):
         """ Register the output (the alignment and the aligned particles.)
         """
         particles = self.inputParticles.get()
@@ -149,9 +128,7 @@ class SpiderProtAlignPairwise(ProtAlign2D, SpiderProtocol):
             imgSet.append(img)
         self._defineOutputs(outputParticles=imgSet)
         
-    def _summary(self):
-        summary = []
-        return summary
+    #--------------------------- INFO functions -------------------------------------------- 
     
     def _validate(self):
         errors = []
@@ -166,5 +143,9 @@ class SpiderProtAlignPairwise(ProtAlign2D, SpiderProtocol):
     
     def _citations(self):
         return ['Marco1996']
+    
+    def _summary(self):
+        summary = []
+        return summary
     
 

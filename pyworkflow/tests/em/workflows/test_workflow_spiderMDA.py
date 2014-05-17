@@ -45,6 +45,18 @@ class TestSpiderWorkflow(TestWorkflow):
         protWard.inputParticles.set(protAPSR.outputParticles)
         self.launchProtocol(protWard)
         
+    def test_mdaPairwise(self):
+        protImport = ProtImportParticles(pattern=self.particlesFn, samplingRate=3.5)
+        self.launchProtocol(protImport)
+        # check that input images have been imported (a better way to do this?)
+        if protImport.outputParticles is None:
+            raise Exception('Import of images: %s, failed. outputParticles is None.' % pattern)
+        
+        protPairwise = SpiderProtAlignPairwise()
+        protPairwise.inputParticles.set(protImport.outputParticles)
+        protPairwise.innerRadius.set(48)
+        self.launchProtocol(protPairwise)
+        
     def test_StoredPointers(self):
         """ Test the usage of pointer extensions to store a 
         workflow dependencies before the current execution 

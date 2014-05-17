@@ -27,17 +27,32 @@
 This sub-package will contains Spider protocols
 """
 import os
+import subprocess
+import re
+
 from os.path import join, dirname, abspath, exists, basename
 from pyworkflow.object import String
 from pyworkflow.em.data import EMObject
 from pyworkflow.em import EMProtocol
-from pyworkflow.utils.path import copyFile, removeExt, replaceExt
+from pyworkflow.utils.path import copyFile, removeExt, replaceExt, replaceBaseExt
 from pyworkflow.utils import runJob
-import subprocess
+
 
 END_HEADER = 'END BATCH HEADER'
-
 SPIDER = 'spider_linux_mp_intel64'
+
+PATH = abspath(dirname(__file__))
+TEMPLATE_DIR = 'templates'
+SCRIPTS_DIR = 'scripts'
+
+# Regular expressions for parsing vars in scripts header
+
+# Match strings of the type
+# key = value ; some comment
+REGEX_KEYVALUE = re.compile("(?P<var>\[?[a-zA-Z0-9_-]+\]?)(?P<s1>\s*)=(?P<s2>\s*)(?P<value>\S+)(?P<rest>\s+.*)")
+# Match strings of the type [key]value
+# just before a 'fr l' line
+REGEX_KEYFRL = re.compile("(?P<var>\[?[a-zA-Z0-9_-]+\]?)(?P<value>\S+)(?P<rest>\s+.*)")
 
 def loadEnvironment():
     """ Load the environment variables needed for Spider.
@@ -70,28 +85,33 @@ def loadEnvironment():
         msg += "\n named 'spider' or define the SPIDER environment variable"
         raise Exception(msg)
         
-    #
-    #TODO: maybe validate that the 
     os.environ['PATH'] = os.environ['PATH'] + os.pathsep + os.environ['SPBIN_DIR']
     
     
+def getFile(*paths):
+    return join(PATH, *paths)
 
-TEMPLATE_DIR = abspath(join(dirname(__file__), 'templates'))
-        
-def getTemplate(templateName):
+# DEPECRATED
+def getTemplate(*paths):
     """ Return the path to the template file given its name. """
-    templateFile = join(TEMPLATE_DIR, templateName)
+    templateFile = getFile(TEMPLATE_DIR, *paths)
+    
     if not exists(templateFile):
-        raise Exception("getTemplate: template '%s' was not found in templates directory" % templateName)
+        raise Exception("spider.getTemplate: template '%s' was not found in templates directory" % templateName)
     
     return templateFile
 
+def getScript(*paths):
+    return getFile(SCRIPTS_DIR, *paths)
+
+# DEPECRATED
 def copyTemplate(templateName, destDir):
     """ Copy a template file to a diretory """
     template = getTemplate(templateName)
     templateDest = join(destDir, basename(template))
     copyFile(template, templateDest)
     
+# DEPECRATED
 def runSpiderTemplate(templateName, ext, paramsDict):
     """ This function will create a valid Spider script
     by copying the template and replacing the values in dictionary.
@@ -120,6 +140,33 @@ def runSpiderTemplate(templateName, ext, paramsDict):
 
     scriptName = removeExt(scriptName)  
     runJob(None, SPIDER, "%(ext)s @%(scriptName)s" % locals())
+            
+    
+def parseHeaderVars(script, replace={}):
+    """ Parse the variables of the header of spider scripts. 
+    Params:
+        script: the script name to be parsed.
+        replace: a dictionary with key-value to substitute.
+    """
+    f = open(script)
+    
+    for line in f:
+        line = line.strip()
+            
+        if END_HEADER in line:
+            break
+            
+        if not line.startswith(';'): # Skip comment lines
+            m = REGEX_KEYVALUE.match(line)
+            if m:
+                print line
+                
+                varName = m.groupdict()['var']
+                if varName in replace:
+                    d = m.groupdict()
+                    d['value'] = replace[varName]
+                    print " FOUND VAR: ", varName
+                    print " NEW LINE: ", "%(var)s = %(value)s%(rest)s" % d
 
 
 class SpiderShell(object):
@@ -240,7 +287,6 @@ class SpiderProtocol(EMProtocol):
         from convert import writeSetOfImages
         writeSetOfImages(imgSetPointer.get(), stackFn, selFn)
         
-        
     def _getFileName(self, key):
         """ Give a key, append the extension
         and prefix the protocol working dir. 
@@ -248,8 +294,52 @@ class SpiderProtocol(EMProtocol):
         template = '%(' + key + ')s.%(ext)s'
         
         return self._getPath(template % self._params)
-    
 
+    
+    
+    def __substituteVar(self, match, paramsDict, lineTemplate):
+        if match and match.groupdict()['var'] in paramsDict:
+            d = match.groupdict()
+            d['value'] = paramsDict[d['var']]
+            return lineTemplate % d
+        return None
+    
+    def runScript(self, inputScript, ext, paramsDict):
+        """ This function will create a valid Spider script
+        by copying the template and replacing the values in dictionary.
+        After the new file is read, the Spider interpreter is invoked.
+        """
+        loadEnvironment()
+        outputScript = replaceBaseExt(inputScript, ext)
+    
+        fIn = open(getScript(inputScript), 'r')
+        fOut = open(outputScript, 'w')
+        inHeader = True # After the end of header, not more value replacement
+        inFrL = False
+        
+        for i, line in enumerate(fIn):
+            if END_HEADER in line:
+                inHeader = False
+            if inHeader:
+                try:
+                    newLine = self.__substituteVar(REGEX_KEYVALUE.match(line), paramsDict, 
+                                              "%(var)s%(s1)s=%(s2)s%(value)s%(rest)s\n")
+                    if newLine is None and inFrL:
+                        newLine = self.__substituteVar(REGEX_KEYFRL.match(line), paramsDict, 
+                                                  "%(var)s%(value)s%(rest)s\n")
+                    if newLine:
+                        line = newLine
+                except Exception, ex:
+                    print ex, "on line (%d): %s" % (i+1, line)
+                    raise ex
+                inFrL = line.lower().startswith("fr l")
+            fOut.write(line)
+        fIn.close()
+        fOut.close()    
+    
+        scriptName = removeExt(outputScript)  
+        runJob(self._log, SPIDER, "%(ext)s @%(scriptName)s" % locals())
+    
 def getDocsLink(op, label):
     """ Return a label for documentation url of a given command. """
     from constants import SPIDER_DOCS
