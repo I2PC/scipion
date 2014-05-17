@@ -55,6 +55,7 @@ class XmippProtML2D(ProtClassify2D):
         self.oroot = ""
        
     #--------------------------- DEFINE param functions --------------------------------------------   
+    
     def _defineParams(self, form):
         form.addSection(label='Params')
         group = form.addGroup('Input')
@@ -127,6 +128,7 @@ class XmippProtML2D(ProtClassify2D):
         form.addParallelSection(threads=2, mpi=4)
            
     #--------------------------- INSERT steps functions --------------------------------------------  
+    
     def _insertAllSteps(self):        
         self.oroot = self._getOroot()
         self.program = "xmipp_%s_align2d" % self.progId       
@@ -174,6 +176,7 @@ class XmippProtML2D(ProtClassify2D):
         self._insertRunJobStep(self.program, params)
         
     #--------------------------- STEPS functions --------------------------------------------       
+    
     def createOutputStep(self):
         imgSet = self.inputParticles.get()
         classes2DSet = self._createSetOfClasses2D(imgSet)
@@ -182,6 +185,7 @@ class XmippProtML2D(ProtClassify2D):
         self._defineSourceRelation(imgSet, classes2DSet)
     
     #--------------------------- INFO functions -------------------------------------------- 
+    
     def _validate(self):
         errors = []
         return errors
@@ -218,6 +222,7 @@ class XmippProtML2D(ProtClassify2D):
         return self._summary()  # summary is quite explicit and serve as methods
     
     #--------------------------- UTILS functions --------------------------------------------
+    
     def _getIterClasses(self, it=None, block=None):
         """ Return the classes metadata for this iteration.
         block parameter can be 'info' or 'classes'.
