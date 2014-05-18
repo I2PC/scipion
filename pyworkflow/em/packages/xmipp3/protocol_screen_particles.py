@@ -30,7 +30,7 @@ This sub-package contains wrapper around Screen Particles Xmipp program
 
 from pyworkflow.em import *  
 import xmipp
-
+from pyworkflow.utils.path import replaceBaseExt
 from convert import createXmippInputImages, readSetOfParticles
 
 # Automatic Particle rejection enum
@@ -72,20 +72,21 @@ class XmippProtScreenParticles(ProtProcessParticles):
 
     #--------------------------- STEPS functions --------------------------------------------
     def sortImages(self, inputFile):
-        from xmipp import MetaDataInfo
-        #(Xdim, Ydim, Zdim, Ndim, _) = MetaDataInfo(inputFile)
-        args=""
+        outputMd = self._getPath(replaceBaseExt(inputFile, 'xmd'))
+        args = "-i %s --addToInput " % outputMd
         # copy file to run path
-        self.outputMd = String(self._getPath(replaceBaseExt(inputFile, 'xmd')))
-        self.outputMd._objDoStore = True
-        if inputFile != self.outputMd.get():
-            copyFile(inputFile, self.outputMd.get())
-        if self.autoParRejection.get()==REJ_MAXZSCORE:
-            args+=" --zcut "+str(self.maxZscore.get())
-        elif self.autoParRejection.get()==REJ_PERCENTAGE:
-            args+=" --percent "+str(self.percentage.get())
-        #if Ndim > 0:
-        self.runJob("xmipp_image_sort_by_statistics", "-i " + self.outputMd.get() + " --addToInput"+args)
+        if inputFile != outputMd:
+            copyFile(inputFile, outputMd)
+        
+        if self.autoParRejection == REJ_MAXZSCORE:
+            args += "--zcut " + str(self.maxZscore.get())
+        
+        elif self.autoParRejection == REJ_PERCENTAGE:
+            args += "--percent " + str(self.percentage.get())
+
+        self.runJob("xmipp_image_sort_by_statistics", args)
+        
+        self.ouputMd = String(outputMd)
 
     def createOutputStep(self):
         imgSet = self._createSetOfParticles()
