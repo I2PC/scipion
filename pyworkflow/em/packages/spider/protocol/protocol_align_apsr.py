@@ -27,17 +27,18 @@
 This sub-package contains protocol for particles filters operations
 """
 
-from pyworkflow.em import *  
-from pyworkflow.em.constants import NO_INDEX
-from pyworkflow.utils import removeExt, removeBaseExt, makePath, getLastFile
-from constants import *
-from spider import SpiderShell, SpiderProtocol, runSpiderTemplate
-from convert import locationToSpider
 from glob import glob
+
+from pyworkflow.em import *  
+from pyworkflow.utils import getLastFile
+
+from ..constants import *
+from ..spider import SpiderShell, SpiderProtocol, runSpiderTemplate
+from ..convert import locationToSpider
         
 
       
-class SpiderProtAlignAPSR(ProtAlign2D, SpiderProtocol):
+class SpiderProtAlignAPSR_new(ProtAlign2D, SpiderProtocol):
     """ Reference-free alignment shift and rotational alignment of an image series. 
     Uses Spider AP SR command.
     """
@@ -53,22 +54,11 @@ class SpiderProtAlignAPSR(ProtAlign2D, SpiderProtocol):
                         }    
     
     def _defineAlignParams(self, form):
-        line = form.addLine('Radius', help='In the rotational alignment, only rings between\n'
-                           '<innerRadius> and <outerRadius> (in pixel units) will be analyzed.')
-        line.addParam('innerRadius', IntParam, default=5,
-                      label='Inner')
-        line.addParam('outerRadius', 
-                      IntParam, default=50, 
-                      label='Outer')
-        
-#        form.addParam('innerRadius', IntParam, default=5,
-#                      label='Inner radius(px):',
-#                      help='In the rotational alignment, only rings between\n'
-#                           '<innerRadius> and <outerRadius> (in pixel units) will be analyzed.')
-#        form.addParam('outerRadius', IntParam, default=50, 
-#                      label='Outer radius(px):',
-#                      help='In the rotational alignment, only rings between\n'
-#                           '<innerRadius> and <outerRadius> (in pixel units) will be analyzed.')
+        line = form.addLine('Radius', 
+                            help='In the rotational alignment, only rings between\n'
+                                 '_innerRadius_ and _outerRadius_ (in pixel units) will be analyzed.')
+        line.addParam('innerRadius', IntParam, default=5, label='Inner')
+        line.addParam('outerRadius', IntParam, default=50, label='Outer')
         
     def _insertAllSteps(self):
         # Insert processing steps
@@ -158,9 +148,11 @@ class SpiderProtAlignAPSR(ProtAlign2D, SpiderProtocol):
         innerRadius = self.innerRadius.get()
         outerRadius = self.outerRadius.get()
         if innerRadius > r or innerRadius < 0:
-            errors.append("<innerRadius> should be between 0 and %d" % r)        
+            errors.append("*innerRadius* should be between 0 and %d." % r)        
         if outerRadius > r or outerRadius < 0:
-            errors.append("<outerRadius> should be between 0 and %d" % r)
+            errors.append("*outerRadius* should be between 0 and %d." % r)
+        if innerRadius >= outerRadius:
+            errors.append("*innerRadius* should be less than *outerRadius*.")
         
         return errors
     

@@ -27,13 +27,11 @@
 This sub-package contains protocol for particles filters operations
 """
 
-
 from pyworkflow.em import *  
-from pyworkflow.utils import removeExt, removeBaseExt, makePath, moveFile
+
 from constants import *
-from spider import SpiderShell, SpiderProtocol
-from convert import locationToSpider
-from glob import glob
+from ..spider import SpiderShell, SpiderProtocol
+
 
 
 class SpiderProtCustomMask(ProtCreateMask2D, SpiderProtocol):

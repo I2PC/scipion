@@ -23,18 +23,15 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
-from pyworkflow.em.packages.spider.spider import PcaFile
 """
 This sub-package contains protocol for 
 Correspondence Analysis or Principal Component Analysis
 """
 
 from pyworkflow.em import *  
-from pyworkflow.utils import removeExt, removeBaseExt, makePath, moveFile
-from constants import *
-from spider import SpiderShell, SpiderDocFile, SpiderProtocol, copyTemplate, runSpiderTemplate
-from convert import locationToSpider
-from glob import glob
+
+from ..constants import *
+from ..spider import SpiderProtocol, copyTemplate, runSpiderTemplate, PcaFile
 
 
 
@@ -47,7 +44,8 @@ class SpiderProtCAPCA(SpiderProtocol):
     CA is superior here because it ignores differences in exposure 
     between images, eliminating the need to rescale between images.
     
-    See [[http://spider.wadsworth.org/spider_doc/spider/docs/techs/classification/tutorial.html#CAPCA][Spider documentation]] for more info. 
+    For more info see:
+    [[http://spider.wadsworth.org/spider_doc/spider/docs/techs/classification/tutorial.html#CAPCA][Spider documentation]] 
     """
     _label = 'CAPCA'
     
@@ -125,12 +123,6 @@ class SpiderProtCAPCA(SpiderProtocol):
                                 
         self._enterWorkingDir() # Do operations inside the run working dir
         
-#        spi = SpiderShell(ext=self._params['ext'], log='script.stk') # Create the Spider process to send commands 
-#        
-#        spi.runScript('ca_pca.txt', self._params)
-#        
-#        spi.close(end=False)   
-
         runSpiderTemplate('ca_pca.txt', self._params['ext'], self._params)
         
         self._leaveWorkingDir() # Go back to project dir
@@ -138,6 +130,7 @@ class SpiderProtCAPCA(SpiderProtocol):
         # Generate outputs
         imc = PcaFile()
         imc.filename.set(self._getFileName('imcFile'))
+        
         seq = PcaFile()
         seq.filename.set(self._getFileName('seqFile'))
         

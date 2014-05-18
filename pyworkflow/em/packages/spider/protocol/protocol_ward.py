@@ -23,25 +23,20 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
-"""
-This sub-package contains Spider protocol for PCA.
-"""
-
 
 from pyworkflow.em import *  
-from pyworkflow.utils import removeExt, removeBaseExt, makePath, moveFile, copyFile, basename
+from pyworkflow.utils import removeExt
 import pyworkflow.utils.graph as graph
-from constants import *
-from spider import SpiderShell, SpiderDocFile, SpiderProtocol
-from convert import locationToSpider
-from glob import glob
+
+from ..constants import *
+from ..spider import SpiderShell, SpiderDocFile, SpiderProtocol
 
       
-# TODO: Remove from ProtAlign2D, and put in other category     
+
 class SpiderProtClassifyWard(ProtClassify2D, SpiderProtocol):
     """ Ward's method, using 'CL HC' 
     """
-    _label = 'ward'
+    _label = 'classify ward'
     
     def __init__(self, **kwargs):
         ProtClassify2D.__init__(self, **kwargs)
@@ -55,7 +50,8 @@ class SpiderProtClassifyWard(ProtClassify2D, SpiderProtocol):
                         'averages': 'averages'
                         }
     
-    #--------------------------- DEFINE param functions --------------------------------------------   
+    #--------------------------- DEFINE param functions --------------------------------------------  
+     
     def _defineParams(self, form):
         form.addSection(label='Input')
         form.addParam('inputParticles', PointerParam, label="Input particles", important=True, 
@@ -74,6 +70,7 @@ class SpiderProtClassifyWard(ProtClassify2D, SpiderProtocol):
                            'whill be cut after this level.')
         
     #--------------------------- INSERT steps functions --------------------------------------------  
+    
     def _insertAllSteps(self):
         pcaFile = self.pcaFilePointer.get().filename.get()
         
@@ -82,7 +79,8 @@ class SpiderProtClassifyWard(ProtClassify2D, SpiderProtocol):
         self._insertFunctionStep('classifyWardStep', pcaFile, self.numberOfFactors.get())
         self._insertFunctionStep('createOutputStep')
             
-    #--------------------------- STEPS functions --------------------------------------------       
+    #--------------------------- STEPS functions --------------------------------------------    
+       
     def classifyWardStep(self, imcFile, numberOfFactors):
         """ Apply the selected filter to particles. 
         Create the set of particles.
@@ -115,6 +113,7 @@ class SpiderProtClassifyWard(ProtClassify2D, SpiderProtocol):
         self._defineOutputs(outputClasses=classes)
          
     #--------------------------- INFO functions -------------------------------------------- 
+    
     def _validate(self):
         errors = []
         return errors
@@ -131,6 +130,7 @@ class SpiderProtClassifyWard(ProtClassify2D, SpiderProtocol):
         return self._summary()  # summary is quite explicit and serve as methods
     
     #--------------------------- UTILS functions --------------------------------------------
+    
     def _getFileName(self, key):
         #TODO: Move to a base Spider protocol
         template = '%(' + key + ')s.%(ext)s'

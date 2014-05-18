@@ -24,16 +24,14 @@
 # *
 # **************************************************************************
 """
-This sub-package contains Spider protocol for PCA.
+This sub-package contains Spider protocol for MDA workflow.
 """
 
-
 from pyworkflow.em import *  
-from pyworkflow.utils import removeExt, removeBaseExt, makePath, moveFile, copyFile, basename
+
 from constants import *
-from spider import SpiderShell, SpiderDocFile, SpiderProtocol
-from convert import locationToSpider
-from glob import glob
+from ..spider import SpiderProtocol
+
 
       
 class SpiderWfMDA(ProtClassify2D, SpiderProtocol):
