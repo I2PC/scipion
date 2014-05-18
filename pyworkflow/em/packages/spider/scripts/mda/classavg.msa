@@ -1,0 +1,111 @@
+; PARES DENDROGRAM TO DESIRED NUMBER OF CLASSES
+
+; -------------- Parameters --------------
+x20 = 16   ; desired number of classes
+
+; ---------------- Inputs ----------------
+fr l
+[class_dir]HC                            ; input/output directory
+fr l
+[dendrogram_doc][class_dir]/docdendro    ; particle-assignment doc
+fr l
+[particles]stkfiltered@*****             ; particle file-pattern
+
+; --------------- Outputs ---------------
+fr l
+[threshold_doc][class_dir]/docthreshold  ; threshold doc, showing threshold-attempts vs. number of classes
+fr l
+[class_doc][class_dir]/docclass          ; class-membership doc prefix, for each class
+fr l
+[class_avg][class_dir]/classavg          ; class average prefix, for each class
+fr l
+[class_var][class_dir]/classvar          ; class variance prefix, for each class
+
+; ----------- END BATCH HEADER -----------
+
+md
+set mp
+0
+
+; DETERMINE THRESHOLD THAT YIELDS APPOPRIATE NUMBER OF CLASSES
+; (This uses a binary search.  If anyone knows a better way, let me know. --Tapu)
+
+de
+[threshold_doc]
+SD /      VIEW#     TARGET_CLASS# ACTUAL_CLASS# THRESHOLD
+[threshold_doc]
+
+x35=0.5   ; initialize threshold
+x33=0.25  ; initialize threshold-increment
+
+vm
+echo "Finding threshold"; date
+
+; loop through threshold-attempts
+do lb3 x30=1,25
+    x31=x35  ; x35==candidate threshold, x31==actually-used threshold
+
+    de
+    tmpclasssize
+
+    cl hd
+    x31               ; threshold
+    [dendrogram_doc]  ; INPUT: dendrogram doc
+    tmpclasssize      ; OUTPUT (temporary): class-size doc
+
+    ud n,x34
+    tmpclasssize
+
+    sd x30,x34,x20,x31
+    [threshold_doc]
+    ; x34==current #classes, x20==desired #classes, x31==current threshold
+
+    if(x34.eq.x20) goto lb4    ; exit loop when at correct #classes
+    if(x34.gt.x20)x35=x35+x33  ; too many classes --> increase threshold
+    if(x34.lt.x20)x35=x35-x33  ; too few classes --> decrease threshold
+    x33=x33/2                  ; halve search increment
+lb3
+; end threshold-loop
+
+lb4  ; jump here after correct #classes
+
+vm
+echo "Target number of classes: {***x20}; actual number: {***x34}"
+
+x20=x34  ; if loop can't find correct #classes, use last attempt
+
+de
+tmpclasssize
+
+; generate class-lists
+cl he
+x31               ; threshold
+[dendrogram_doc]  ; INPUT: dendrogram doc
+[class_doc]***    ; OUTPUT: class-list file-pattern
+
+
+; GENERATE CLASS AVERAGES
+
+vm
+echo "Generating class averages"
+
+; loop through classes
+do lb2 x16=1,x20
+    ; calculate unlabeled average
+    as r
+    [particles]
+    [class_doc]{***x16}  ; INPUT: class-list doc
+    A                    ; _A_ll images
+    [class_avg]{***x16}  ; OUTPUT: class average
+    [class_var]{***x16}  ; OUTPUT: class variance
+lb2
+; end class-loop
+
+vm
+echo "Done"; date
+
+en d
+
+; Modified 2014-04-11
+;    2014-04-11 (trs) -- Using stacks
+;    2004-04-09 (trs) -- Adapted from M.Radermacher's evalclacla2.two

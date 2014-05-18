@@ -1,0 +1,56 @@
+; CLUSTERS USING DIDAY'S METHOD
+
+; ------------- Parameters -------------
+x27 = 9                                ; number of eigenfactors to use
+
+; --------------- Inputs ---------------
+fr l
+[cas_prefix]CA/cas                     ; correspondence-analysis output prefix
+
+; -------------- Outputs --------------
+fr l
+[class_dir]CLA                         ; output directory
+fr l
+[ps_dendrogram][class_dir]/ps_dendro   ; dendrogram, PostScript, without .ps suffix
+fr l
+[dendrogram_doc][class_dir]/docdendro  ; particle-assignment doc
+fr l
+[cluster_doc][class_dir]/doccluster
+
+; --------- END BATCH HEADER ----------
+
+vm
+echo "if(! -d [class_dir]) mkdir [class_dir]"|csh
+
+; clean up
+
+de
+[dendrogram_doc]
+
+vm
+echo "Classifying"; date
+
+md
+set mp
+0
+
+cl cla
+[cas_prefix]        ; INPUT
+[cluster_doc]       ; OUTPUT (temp)
+(1-x27)             ; #eigenfactors to use
+(8,8)               ; #iterations, centers/partition
+(8)                 ; #partitions
+                    ; occupancy cutoff
+[ps_dendrogram].ps  ; OUTPUT
+(1)                 ; plot cutoff
+[dendrogram_doc]    ; OUTPUT
+
+vm
+echo "Done" ; date
+
+en d
+
+; Modified 2012-08-31
+;    2012-08-31 (trs) -- cluster doc now saved
+;    2012-08-31 (trs) -- reflects syntax change in CL CLA
+;    2009-05-27 (trs) -- reflects syntax change in CL CLA
