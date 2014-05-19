@@ -40,7 +40,6 @@ from pyworkflow.utils import (HYPER_BOLD, HYPER_ITALIC, HYPER_LINK1, HYPER_LINK2
 from pyworkflow.utils.properties import Message, Color, Icon
 
 
-
 class HyperlinkManager:
     """ Tkinter Text Widget Hyperlink Manager, taken from:
     http://effbot.org/zone/tkinter-text-hyperlink.htm """
@@ -344,7 +343,7 @@ class OutputText(Text):
             self.insert(tk.END, "File '%s' doesn't exist" % self.filename)
         self.config(state=tk.DISABLED)
         #if self.isAtEnd():
-        self.goEnd();
+        self.goEnd()
         #if goEnd:
         #    self.goEnd()
       
