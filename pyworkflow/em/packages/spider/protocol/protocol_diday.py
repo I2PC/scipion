@@ -66,7 +66,7 @@ class SpiderProtClassifyDiday(SpiderProtClassify):
         self._insertFunctionStep('convertInput', 'inputParticles',
                                  self._getFileName('particles'), self._getFileName('particlesSel'))
         self._insertFunctionStep('classifyWardStep', pcaFile, self.numberOfFactors.get())
-        #self._insertFunctionStep('createOutputStep')
+        ####self._insertFunctionStep('createOutputStep')
             
     #--------------------------- STEPS functions --------------------------------------------    
        
