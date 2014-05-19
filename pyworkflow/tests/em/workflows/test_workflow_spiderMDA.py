@@ -41,9 +41,15 @@ class TestSpiderWorkflow(TestWorkflow):
         self.launchProtocol(protCAPCA)
         
         protWard = SpiderProtClassifyWard()
-        protWard.pcaFilePointer.set(protCAPCA.imcFile)
+        protWard.pcaFile.set(protCAPCA.imcFile)
         protWard.inputParticles.set(protAPSR.outputParticles)
         self.launchProtocol(protWard)
+        
+        protKmeans = SpiderProtClassifyKmeans()
+        protKmeans.pcaFile.set(protCAPCA.imcFile)
+        protKmeans.inputParticles.set(protAPSR.outputParticles)
+        protKmeans.numberOfClasses.set(4)
+        self.launchProtocol(protKmeans)        
         
     def test_mdaPairwise(self):
         protImport = ProtImportParticles(pattern=self.particlesFn, samplingRate=3.5)
