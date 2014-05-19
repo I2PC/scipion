@@ -68,9 +68,9 @@ fr l
 md
 vb off
 
-; get parameters
-ud 17,[idim-header]    ; window dimension
-[parameter_doc]
+;; get parameters
+;ud 17,[idim-header]    ; window dimension
+;[parameter_doc]
 
 if([obj-diam].le.0) then
 ;    ud 18,[obj-diam]   ; particle diameter
