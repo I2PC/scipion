@@ -27,10 +27,13 @@
 """
 This sub-package contains protocol for particles filters operations
 """
+from os.path import join
 
-from pyworkflow.em import *  
+from pyworkflow.em import ProtAlign2D, IntParam 
+from pyworkflow.utils import makePath
 
-from ..spider import SpiderProtocol
+from protocol_base import SpiderProtocol
+
 
       
 class SpiderProtAlignPairwise(ProtAlign2D, SpiderProtocol):

@@ -30,8 +30,8 @@ This sub-package contains protocol for particles filters operations
 from pyworkflow.em import *  
 
 from ..constants import FILTER_GAUSSIAN, FILTER_FERMI
-from ..spider import SpiderProtocol, SpiderShell
-        
+from ..spider import SpiderShell
+from protocol_base import SpiderProtocol
         
       
 class SpiderProtFilter(ProtFilterParticles, SpiderProtocol):

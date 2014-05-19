@@ -33,10 +33,11 @@ from pyworkflow.em import *
 from pyworkflow.utils import getLastFile
 
 from ..constants import *
-from ..spider import SpiderShell, SpiderProtocol, runSpiderTemplate
+from ..spider import SpiderShell, runSpiderTemplate
 from ..convert import locationToSpider
-        
+from protocol_base import SpiderProtocol        
 
+      
       
 class SpiderProtAlignAPSR_new(ProtAlign2D, SpiderProtocol):
     """ Reference-free alignment shift and rotational alignment of an image series. 

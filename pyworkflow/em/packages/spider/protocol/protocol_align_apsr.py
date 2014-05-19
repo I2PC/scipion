@@ -26,16 +26,16 @@
 """
 This sub-package contains protocol for particles filters operations
 """
+from os.path import join
 
-from glob import glob
-
-from pyworkflow.em import *  
-from pyworkflow.utils import getLastFile
+from pyworkflow.em import ProtAlign2D, IntParam, Image, Particle, NO_INDEX
+from pyworkflow.utils import getLastFile, makePath
 
 from ..constants import *
-from ..spider import SpiderShell, SpiderProtocol, runSpiderTemplate
+from ..spider import SpiderShell, runSpiderTemplate
 from ..convert import locationToSpider
-        
+from protocol_base import SpiderProtocol
+
 
       
 class SpiderProtAlignAPSR(ProtAlign2D, SpiderProtocol):

@@ -33,8 +33,7 @@ import re
 from os.path import join, dirname, abspath, exists, basename
 from pyworkflow.object import String
 from pyworkflow.em.data import EMObject
-from pyworkflow.em import EMProtocol
-from pyworkflow.utils.path import copyFile, removeExt, replaceExt, replaceBaseExt
+from pyworkflow.utils.path import copyFile, removeExt, replaceExt
 from pyworkflow.utils import runJob
 
 
@@ -53,6 +52,7 @@ REGEX_KEYVALUE = re.compile("(?P<var>\[?[a-zA-Z0-9_-]+\]?)(?P<s1>\s*)=(?P<s2>\s*
 # Match strings of the type [key]value
 # just before a 'fr l' line
 REGEX_KEYFRL = re.compile("(?P<var>\[?[a-zA-Z0-9_-]+\]?)(?P<value>\S+)(?P<rest>\s+.*)")
+
 
 def loadEnvironment():
     """ Load the environment variables needed for Spider.
@@ -273,73 +273,6 @@ class PcaFile(EMObject):
         return self.filename.get()
         
      
-class SpiderProtocol(EMProtocol):
-    """ Sub-class of EMProtocol to group some common Spider utils. """
-            
-    def convertInput(self, attrName, stackFn, selFn):
-        """ Convert from an input pointer of SetOfImages to Spider.
-        Params:
-            attrName: the attribute name of the input pointer
-            stackFn: the name of the stack for converted images
-            selFn: the name of the selection file.
-        """
-        imgSetPointer = getattr(self, attrName)
-        from convert import writeSetOfImages
-        writeSetOfImages(imgSetPointer.get(), stackFn, selFn)
-        
-    def _getFileName(self, key):
-        """ Give a key, append the extension
-        and prefix the protocol working dir. 
-        """
-        template = '%(' + key + ')s.%(ext)s'
-        
-        return self._getPath(template % self._params)
-
-    
-    
-    def __substituteVar(self, match, paramsDict, lineTemplate):
-        if match and match.groupdict()['var'] in paramsDict:
-            d = match.groupdict()
-            d['value'] = paramsDict[d['var']]
-            return lineTemplate % d
-        return None
-    
-    def runScript(self, inputScript, ext, paramsDict):
-        """ This function will create a valid Spider script
-        by copying the template and replacing the values in dictionary.
-        After the new file is read, the Spider interpreter is invoked.
-        """
-        loadEnvironment()
-        outputScript = replaceBaseExt(inputScript, ext)
-    
-        fIn = open(getScript(inputScript), 'r')
-        fOut = open(outputScript, 'w')
-        inHeader = True # After the end of header, not more value replacement
-        inFrL = False
-        
-        for i, line in enumerate(fIn):
-            if END_HEADER in line:
-                inHeader = False
-            if inHeader:
-                try:
-                    newLine = self.__substituteVar(REGEX_KEYVALUE.match(line), paramsDict, 
-                                              "%(var)s%(s1)s=%(s2)s%(value)s%(rest)s\n")
-                    if newLine is None and inFrL:
-                        newLine = self.__substituteVar(REGEX_KEYFRL.match(line), paramsDict, 
-                                                  "%(var)s%(value)s%(rest)s\n")
-                    if newLine:
-                        line = newLine
-                except Exception, ex:
-                    print ex, "on line (%d): %s" % (i+1, line)
-                    raise ex
-                inFrL = line.lower().startswith("fr l")
-            fOut.write(line)
-        fIn.close()
-        fOut.close()    
-    
-        scriptName = removeExt(outputScript)  
-        runJob(self._log, SPIDER, "%(ext)s @%(scriptName)s" % locals())
-    
 def getDocsLink(op, label):
     """ Return a label for documentation url of a given command. """
     from constants import SPIDER_DOCS

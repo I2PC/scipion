@@ -30,9 +30,9 @@ This sub-package contains Spider protocol for MDA workflow.
 from pyworkflow.em import *  
 
 from ..constants import *
-from ..spider import SpiderProtocol
+from protocol_base import SpiderProtocol
 
-
+      
       
 class SpiderWfMDA(ProtClassify2D, SpiderProtocol):
     """ Ward's method, using 'CL HC' 

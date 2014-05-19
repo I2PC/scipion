@@ -31,8 +31,8 @@ Correspondence Analysis or Principal Component Analysis
 from pyworkflow.em import *  
 
 from ..constants import *
-from ..spider import SpiderProtocol, copyTemplate, runSpiderTemplate, PcaFile
-
+from ..spider import copyTemplate, runSpiderTemplate, PcaFile
+from protocol_base import SpiderProtocol
 
 
 class SpiderProtCAPCA(SpiderProtocol):

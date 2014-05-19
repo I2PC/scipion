@@ -29,8 +29,8 @@ This sub-package contains protocol for particles filters operations
 
 from pyworkflow.em import *  
 
-from ..spider import SpiderShell, SpiderProtocol
-
+from ..spider import SpiderShell
+from protocol_base import SpiderProtocol
 
 
 class SpiderProtCustomMask(ProtCreateMask2D, SpiderProtocol):

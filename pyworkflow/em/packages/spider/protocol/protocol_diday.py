@@ -28,28 +28,16 @@ from pyworkflow.em import *
 from pyworkflow.utils import removeExt
 import pyworkflow.utils.graph as graph
 
+from ..spider import SpiderDocFile
 from ..constants import *
-from ..spider import SpiderShell, SpiderDocFile
-from protocol_base import SpiderProtocol
-      
+from protocol_base import SpiderProtClassify
+
       
 
-class SpiderProtClassifyWard(ProtClassify2D, SpiderProtocol):
-    """ Ward's method, using 'CL HC' 
+class SpiderProtClassifyDiday(SpiderProtClassify):
+    """ Diday's method, using 'CL CLA' 
     """
-    _label = 'classify ward'
-    
-    def __init__(self, **kwargs):
-        ProtClassify2D.__init__(self, **kwargs)
-        SpiderProtocol.__init__(self, **kwargs)
-        
-        self._params = {'ext': 'stk',
-                        'particles': 'particles',
-                        'particlesSel': 'particles_sel',
-                        'dendroPs': 'dendrogram',
-                        'dendroDoc': 'docdendro',
-                        'averages': 'averages'
-                        }
+    _label = 'classify diday'
     
     #--------------------------- DEFINE param functions --------------------------------------------  
      
@@ -58,7 +46,7 @@ class SpiderProtClassifyWard(ProtClassify2D, SpiderProtocol):
         form.addParam('inputParticles', PointerParam, label="Input particles", important=True, 
                       pointerClass='SetOfParticles',
                       help='Input images to perform PCA')
-        form.addParam('pcaFilePointer', PointerParam, pointerClass='PcaFile',
+        form.addParam('pcaFile', PointerParam, pointerClass='PcaFile',
                       label="PCA file", 
                       help='IMC or SEQ file generated in CA-PCA')        
         form.addParam('numberOfFactors', IntParam, default=10,
@@ -73,12 +61,12 @@ class SpiderProtClassifyWard(ProtClassify2D, SpiderProtocol):
     #--------------------------- INSERT steps functions --------------------------------------------  
     
     def _insertAllSteps(self):
-        pcaFile = self.pcaFilePointer.get().filename.get()
+        pcaFile = self.pcaFile.get().filename.get()
         
         self._insertFunctionStep('convertInput', 'inputParticles',
                                  self._getFileName('particles'), self._getFileName('particlesSel'))
         self._insertFunctionStep('classifyWardStep', pcaFile, self.numberOfFactors.get())
-        self._insertFunctionStep('createOutputStep')
+        #self._insertFunctionStep('createOutputStep')
             
     #--------------------------- STEPS functions --------------------------------------------    
        
@@ -86,23 +74,18 @@ class SpiderProtClassifyWard(ProtClassify2D, SpiderProtocol):
         """ Apply the selected filter to particles. 
         Create the set of particles.
         """
-        self._params.update(locals()) # Store input params in dict
-        
         # Copy file to working directory, it could be also a link
         imcLocalFile = basename(imcFile)
         copyFile(imcFile, self._getPath(imcLocalFile))
-        print "copy from '%s' to '%s' " % (imcFile, imcLocalFile)
-        imcLocalFile = removeExt(imcLocalFile)
-
-        self._enterWorkingDir() # Do operations inside the run working dir
-
-        spi = SpiderShell(ext=self._params['ext'], log='script.stk') # Create the Spider process to send commands 
-        spi.runFunction('CL HC', imcLocalFile, '1-%d' % numberOfFactors, 0, 5, 
-                        'Y', self._params['dendroPs'], 'Y', self._params['dendroDoc'])
-        spi.close()
+        self.info("Copied file '%s' to '%s' " % (imcFile, imcLocalFile))
         
-        self._leaveWorkingDir() # Go back to project dir
-        
+        self._params = {'ext': 'stk',
+                        'x27': numberOfFactors,
+                        '[cas_prefix]': removeExt(imcLocalFile),
+                }
+
+        self.runScript('mda/cluster.msa', self._params['ext'], self._params)
+
     def createOutputStep(self):
         rootNode = self.buildDendrogram(True)
         classes = self._createSetOfClasses2D(self.inputParticles.get())
