@@ -45,6 +45,7 @@ class SpiderProtClassifyKmeans(SpiderProtClassify):
         self._params = {'ext': 'stk',
                         'particles': 'input_particles',
                         'particlesSel': 'input_particles_sel',
+                        'classDir': 'KM',
                         }        
 
     #--------------------------- DEFINE param functions --------------------------------------------  
@@ -62,7 +63,7 @@ class SpiderProtClassifyKmeans(SpiderProtClassify):
                       help='After running, examine the eigenimages and decide which ones to use.\n'
                            'Typically all but the first few are noisy.')
         form.addParam('numberOfClasses', IntParam, default=4, 
-                      label='Number of levels',
+                      label='Number of classes',
                       help='Desired number of classes.')
         
     #--------------------------- INSERT steps functions --------------------------------------------  
@@ -76,7 +77,8 @@ class SpiderProtClassifyKmeans(SpiderProtClassify):
         
         self._insertFunctionStep('classifyKmeansStep', pcaFile, 
                                  self.numberOfFactors.get(), self.numberOfClasses.get())
-        ####self._insertFunctionStep('createOutputStep')
+        
+        self._insertFunctionStep('createOutputStep')
             
     #--------------------------- STEPS functions --------------------------------------------    
        
@@ -94,20 +96,42 @@ class SpiderProtClassifyKmeans(SpiderProtClassify):
         self._params.update({'x20': numberOfClasses,
                              'x27': numberOfFactors,
                              '[cas_prefix]': imcBase,
-                             '[particles]': self._params['particles'] + '@******'
+                             '[particles]': self._params['particles'] + '@******',
+                             '[class_dir]': self._params['classDir'],
                              })
 
         self.runScript('mda/kmeans.msa', self._params['ext'], self._params)
 
     def createOutputStep(self):
-        rootNode = self.buildDendrogram(True)
-        classes = self._createSetOfClasses2D(self.inputParticles.get())
-        averages = classes.createRepresentatives()
-        g = graph.Graph(root=rootNode)  
+        """ Create the SetOfClass from the docfiles with the images-class
+        assigment, the averages for each class.
+        """
+        particles = self.inputParticles.get()
+        sampling = particles.getSamplingRate()
+        classes2D = self._createSetOfClasses2D(particles)
             
-        self._fillClassesFromNodes(classes, averages, g.getNodes())
-        
-        self._defineOutputs(outputClasses=classes)
+        for classId in range(1, self.numberOfClasses.get()+1):
+            class2D = Class2D()
+            class2D.setObjId(classId)
+            
+            avgImg = Particle()
+            avgImg.setSamplingRate(sampling)
+            avgFn = self._getPath(self._params['classDir'], 'classavg%03d.stk' % classId)
+            avgImg.setLocation(1, avgFn)
+            
+            class2D.setRepresentative(avgImg)
+            classes2D.append(class2D)
+            
+            docClass = self._getPath(self._params['classDir'], 
+                                     'docclass%03d.stk' % classId)
+            doc = SpiderDocFile(docClass)
+            
+            for values in doc.iterValues():
+                imgId = int(values[0])
+                img = particles[imgId]
+                class2D.append(img)
+                
+        self._defineOutputs(outputClasses=classes2D)
          
     #--------------------------- INFO functions -------------------------------------------- 
     

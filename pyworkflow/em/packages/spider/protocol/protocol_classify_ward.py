@@ -57,7 +57,7 @@ class SpiderProtClassifyWard(SpiderProtClassify):
         form.addParam('inputParticles', PointerParam, label="Input particles", important=True, 
                       pointerClass='SetOfParticles',
                       help='Input images to perform PCA')
-        form.addParam('pcaFilePointer', PointerParam, pointerClass='PcaFile',
+        form.addParam('pcaFile', PointerParam, pointerClass='PcaFile',
                       label="PCA file", 
                       help='IMC or SEQ file generated in CA-PCA')        
         form.addParam('numberOfFactors', IntParam, default=10,
@@ -73,7 +73,7 @@ class SpiderProtClassifyWard(SpiderProtClassify):
     
     def _insertAllSteps(self):
         
-        pcaFile = self.pcaFilePointer.get().filename.get()
+        pcaFile = self.pcaFile.get().filename.get()
         
         self._insertFunctionStep('convertInput', 'inputParticles',
                                  self._getFileName('particles'), self._getFileName('particlesSel'))
