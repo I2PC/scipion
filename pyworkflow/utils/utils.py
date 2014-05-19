@@ -142,17 +142,16 @@ def trace(nlevels, separator=' --> ', stream=sys.stdout):
     #   @trace(3)
     #   def doRefresh(...
     # gives as output whenever doRefresh is called lines like:
-    #   text.py:486 _addFileTab --> text.py:330 __init__ --> text.py:442 doRefresh
+    #   text.py:486 _addFileTab --> text.py:330 __init__ --> doRefresh
 
-    def realTrace(func):
-        """ Decorator function to print stack call
-        in a human readable way.
+    def realTrace(f):
+        """ Decorator function to print stack call in a human-readable way.
         """
         def tracedFunc(*args, **kwargs):
             stack = traceback.extract_stack()[-nlevels-1:-1]
             fmt = lambda x: '%s:%d %s' % (os.path.basename(x[0]), x[1], x[2])
-            stream.write(separator.join(map(fmt, stack)) + '\n')
-            return func(*args, **kwargs)
+            stream.write(separator.join(map(fmt, stack)+[f.__name__]) + '\n')
+            return f(*args, **kwargs)
 
         return tracedFunc
     return realTrace

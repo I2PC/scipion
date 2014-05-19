@@ -728,6 +728,8 @@ class ProtocolsView(tk.Frame):
         # Get last selected item for tree or graph
         if self.showGraph:
             prot = item.node.run
+            if prot is None:  # in case it is the main "Project" node
+                return
             g = self.project.getRunsGraph(refresh=False)
             for node in g.getNodes():
                 if node.run and node.run.getObjId() in self._selection:

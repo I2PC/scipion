@@ -243,6 +243,7 @@ marginal likelihood.
     
     def createOutputStep(self, lastIter):
         from convert import readSetOfClasses3D
+        self._createFilenameTemplates(lastIter)
         numberOfClasses = self.numberOfRef
         imgSet = self.inputParticles.get()
         fileparList = []

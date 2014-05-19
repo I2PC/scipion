@@ -26,25 +26,30 @@
 """
 This module contains some MPI utilities
 """
-import os, sys
+
+from time import sleep
 from process import buildRunCommand, runCommand
+
 
 TAG_RUN_JOB = 1000
 
-def runJobMPI(log, programname, params, mpiComm, mpiDest,        
-           numberOfMpi=1, numberOfThreads=1, 
-           runInBackground=False, hostConfig=None):
-    """ Send the command to the MPI node in which will be executed. """
+def runJobMPI(log, programname, params, mpiComm, mpiDest,
+              numberOfMpi=1, numberOfThreads=1,
+              runInBackground=False, hostConfig=None):
+    """ Send the command to the MPI node in which it will be executed. """
     print "runJobMPI: hostConfig: ", hostConfig
     command = buildRunCommand(log, programname, params,
                               numberOfMpi, numberOfThreads, 
                               runInBackground, hostConfig)
     print "Sending command: %s to %d" % (command, mpiDest)
     mpiComm.send(command, dest=mpiDest, tag=TAG_RUN_JOB + mpiDest)
-    result = mpiComm.recv(source=mpiDest, tag=TAG_RUN_JOB + mpiDest)
-    if result == 999:
-        result = runCommand(command)
-    
+    request = mpiComm.irecv(dest=mpiDest, tag=TAG_RUN_JOB + mpiDest)
+    while True:
+        done, result = request.test()
+        if done:
+            break
+        sleep(1)
+
     if isinstance(result, str):
         raise Exception(result)
     
