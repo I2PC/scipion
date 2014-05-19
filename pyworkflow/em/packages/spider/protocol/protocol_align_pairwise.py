@@ -29,7 +29,7 @@ This sub-package contains protocol for particles filters operations
 """
 from os.path import join
 
-from pyworkflow.em import ProtAlign2D, IntParam 
+from pyworkflow.em import ProtAlign2D, IntParam, Image, Particle, NO_INDEX
 from pyworkflow.utils import makePath
 
 from protocol_base import SpiderProtocol
@@ -46,9 +46,10 @@ class SpiderProtAlignPairwise(ProtAlign2D, SpiderProtocol):
         self.alignDir = 'pairwise'
          
         self._params = {'ext': 'stk',
-                        'particles': 'particles_aligned',
-                        'particlesSel': 'particles_aligned_sel',
-                        'average': join(self.alignDir, 'rfreeavg001') # If change the name, change it in template batch
+                        'particles': 'input_particles',
+                        'particlesSel': 'input_particles_sel',
+                        'average': join(self.alignDir, 'rfreeavg001'), # If change the name, change it in template batch
+                        'particlesAligned': join(self.alignDir, 'stkaligned')
                         }    
     
     #--------------------------- DEFINE param functions --------------------------------------------
@@ -79,7 +80,7 @@ class SpiderProtAlignPairwise(ProtAlign2D, SpiderProtocol):
                                  self._getFileName('particles'), self._getFileName('particlesSel'))
         self._insertFunctionStep('alignParticlesStep', 
                                  self.innerRadius.get(), self.diameter.get())
-        #self._insertFunctionStep('createOutputStep')
+        self._insertFunctionStep('createOutputStep')
 
     #--------------------------- STEPS functions --------------------------------------------       
     
@@ -90,24 +91,20 @@ class SpiderProtAlignPairwise(ProtAlign2D, SpiderProtocol):
         n = particles.getSize()
         xdim = particles.getDimensions()[0]
         
-        self._enterWorkingDir() # Do operations inside the run working dir
-        
-        # Align images
-        makePath(self.alignDir)
-
+       
         self._params.update({
                              '[idim-header]': xdim,
                              '[inner-rad]': self.innerRadius.get(),
                              '[obj-diam]': self.diameter.get(),
                              '[search-range]': self.searchRange.get(),
                              '[step-size]': self.stepSize.get(),
-                             '[selection_list]': 'particles_aligned_sel',
-                             '[unaligned_image]': 'particles_aligned@*****',
+                             '[selection_list]': self._params['particlesSel'],
+                             '[unaligned_image]': self._params['particles'] + '@*****',
                             })
         
         self.runScript('mda/pairwise.msa', self._params['ext'], self._params)
                     
-        self._leaveWorkingDir() # Go back to project dir
+        
             
     def createOutputStep(self):
         """ Register the output (the alignment and the aligned particles.)
@@ -125,11 +122,12 @@ class SpiderProtAlignPairwise(ProtAlign2D, SpiderProtocol):
         imgSet = self._createSetOfParticles()
         imgSet.copyInfo(particles)
         
-        outputStk = self._getFileName('particles')
+        outputStk = self._getFileName('particlesAligned')
         for i in range(1, n+1):
-            img = Image()
+            img = Particle()
             img.setLocation(i, outputStk)
             imgSet.append(img)
+            
         self._defineOutputs(outputParticles=imgSet)
         
     #--------------------------- INFO functions -------------------------------------------- 
