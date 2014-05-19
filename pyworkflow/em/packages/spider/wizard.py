@@ -37,9 +37,9 @@ from constants import *
 from pyworkflow.em.wizard import *
 from pyworkflow.em.convert import ImageHandler
 
-from protocol_filters import *
-from protocol_ca_pca import SpiderProtCAPCA
-from protocol_align_apsr import SpiderProtAlignAPSR
+from protocol.protocol_filters import *
+from protocol.protocol_ca_pca import SpiderProtCAPCA
+from protocol.protocol_align_apsr import SpiderProtAlignAPSR
 
 import pyworkflow.gui.dialog as dialog
 from pyworkflow.gui.widgets import LabelSlider

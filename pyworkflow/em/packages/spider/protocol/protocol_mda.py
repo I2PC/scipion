@@ -29,7 +29,7 @@ This sub-package contains Spider protocol for MDA workflow.
 
 from pyworkflow.em import *  
 
-from constants import *
+from ..constants import *
 from ..spider import SpiderProtocol
 
 

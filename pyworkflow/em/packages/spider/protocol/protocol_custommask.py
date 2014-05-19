@@ -29,7 +29,6 @@ This sub-package contains protocol for particles filters operations
 
 from pyworkflow.em import *  
 
-from constants import *
 from ..spider import SpiderShell, SpiderProtocol
 
 

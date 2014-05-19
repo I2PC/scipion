@@ -23,15 +23,17 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
-from pyworkflow.protocol.constants import STATUS_FINISHED
 """
 This module implement the wrappers around xmipp_showj
 visualization program.
 """
+
 import Tkinter as tk
 from Tkinter import *
+
 from pyworkflow.em import ProtUserSubSet
 from pyworkflow.protocol.params import *
+from pyworkflow.protocol.constants import STATUS_FINISHED
 from pyworkflow.viewer import Viewer, ProtocolViewer, DESKTOP_TKINTER, WEB_DJANGO
 from pyworkflow.utils.graph import Graph
 from pyworkflow.gui import Window
@@ -39,7 +41,8 @@ from pyworkflow.gui.widgets import HotButton
 from pyworkflow.gui.graph import LevelTree
 from pyworkflow.gui.canvas import Canvas, ImageBox
 from pyworkflow.em.packages.xmipp3.viewer import XmippViewer
-from protocol_ward import SpiderProtClassifyWard
+from protocol.protocol_ward import SpiderProtClassifyWard
+
 
 
 class SpiderViewerWard(ProtocolViewer):

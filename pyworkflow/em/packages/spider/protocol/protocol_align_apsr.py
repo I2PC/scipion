@@ -38,7 +38,7 @@ from ..convert import locationToSpider
         
 
       
-class SpiderProtAlignAPSR_new(ProtAlign2D, SpiderProtocol):
+class SpiderProtAlignAPSR(ProtAlign2D, SpiderProtocol):
     """ Reference-free alignment shift and rotational alignment of an image series. 
     Uses Spider AP SR command.
     """
