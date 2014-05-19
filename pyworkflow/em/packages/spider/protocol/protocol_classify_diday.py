@@ -39,6 +39,17 @@ class SpiderProtClassifyDiday(SpiderProtClassify):
     """
     _label = 'classify diday'
     
+    def __init__(self, **kwargs):
+        SpiderProtClassify.__init__(self, **kwargs)
+        
+        self._params = {'ext': 'stk',
+                        'particles': 'input_particles',
+                        'particlesSel': 'input_particles_sel',
+                        'dendroPs': 'dendrogram',
+                        'dendroDoc': 'CLA/docdendro',
+                        'averages': 'averages',
+                        }        
+
     #--------------------------- DEFINE param functions --------------------------------------------  
      
     def _defineParams(self, form):
@@ -60,17 +71,19 @@ class SpiderProtClassifyDiday(SpiderProtClassify):
         
     #--------------------------- INSERT steps functions --------------------------------------------  
     
-    def _insertAllSteps(self):
+    def _insertAllSteps(self):    
+        
         pcaFile = self.pcaFile.get().filename.get()
         
         self._insertFunctionStep('convertInput', 'inputParticles',
                                  self._getFileName('particles'), self._getFileName('particlesSel'))
-        self._insertFunctionStep('classifyWardStep', pcaFile, self.numberOfFactors.get())
+        
+        self._insertFunctionStep('classifyDidayStep', pcaFile, self.numberOfFactors.get())
         ####self._insertFunctionStep('createOutputStep')
             
     #--------------------------- STEPS functions --------------------------------------------    
        
-    def classifyWardStep(self, imcFile, numberOfFactors):
+    def classifyDidayStep(self, imcFile, numberOfFactors):
         """ Apply the selected filter to particles. 
         Create the set of particles.
         """
@@ -78,11 +91,12 @@ class SpiderProtClassifyDiday(SpiderProtClassify):
         imcLocalFile = basename(imcFile)
         copyFile(imcFile, self._getPath(imcLocalFile))
         self.info("Copied file '%s' to '%s' " % (imcFile, imcLocalFile))
+        # Spider automatically add _IMC to the ca-pca result file
+        imcBase = removeExt(imcLocalFile).replace('_IMC', '')
         
-        self._params = {'ext': 'stk',
-                        'x27': numberOfFactors,
-                        '[cas_prefix]': removeExt(imcLocalFile),
-                }
+        self._params.update({'x27': numberOfFactors,
+                             '[cas_prefix]': imcBase,
+                             })
 
         self.runScript('mda/cluster.msa', self._params['ext'], self._params)
 

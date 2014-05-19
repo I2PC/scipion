@@ -30,22 +30,21 @@ import pyworkflow.utils.graph as graph
 
 from ..constants import *
 from ..spider import SpiderShell, SpiderDocFile
-from protocol_base import SpiderProtocol
+from protocol_base import SpiderProtClassify
       
       
 
-class SpiderProtClassifyWard(ProtClassify2D, SpiderProtocol):
+class SpiderProtClassifyWard(SpiderProtClassify):
     """ Ward's method, using 'CL HC' 
     """
     _label = 'classify ward'
     
     def __init__(self, **kwargs):
-        ProtClassify2D.__init__(self, **kwargs)
-        SpiderProtocol.__init__(self, **kwargs)
+        SpiderProtClassify.__init__(self, **kwargs)
         
         self._params = {'ext': 'stk',
-                        'particles': 'particles',
-                        'particlesSel': 'particles_sel',
+                        'particles': 'input_particles',
+                        'particlesSel': 'input_particles_sel',
                         'dendroPs': 'dendrogram',
                         'dendroDoc': 'docdendro',
                         'averages': 'averages'
@@ -73,6 +72,7 @@ class SpiderProtClassifyWard(ProtClassify2D, SpiderProtocol):
     #--------------------------- INSERT steps functions --------------------------------------------  
     
     def _insertAllSteps(self):
+        
         pcaFile = self.pcaFilePointer.get().filename.get()
         
         self._insertFunctionStep('convertInput', 'inputParticles',

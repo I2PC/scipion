@@ -99,7 +99,7 @@ class SpiderProtAlignPairwise(ProtAlign2D, SpiderProtocol):
                              '[search-range]': self.searchRange.get(),
                              '[step-size]': self.stepSize.get(),
                              '[selection_list]': self._params['particlesSel'],
-                             '[unaligned_image]': self._params['particles'] + '@*****',
+                             '[unaligned_image]': self._params['particles'] + '@******',
                             })
         
         self.runScript('mda/pairwise.msa', self._params['ext'], self._params)

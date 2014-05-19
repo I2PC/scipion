@@ -41,7 +41,7 @@ from pyworkflow.gui.widgets import HotButton
 from pyworkflow.gui.graph import LevelTree
 from pyworkflow.gui.canvas import Canvas, ImageBox
 from pyworkflow.em.packages.xmipp3.viewer import XmippViewer
-from protocol.protocol_ward import SpiderProtClassifyWard
+from protocol import SpiderProtClassifyWard, SpiderProtClassifyDiday
 
 
 
@@ -49,7 +49,7 @@ class SpiderViewerWard(ProtocolViewer):
     """ Visualization of Classify Ward. """
            
     _environments = [DESKTOP_TKINTER, WEB_DJANGO]
-    _targets = [SpiderProtClassifyWard]
+    _targets = [SpiderProtClassifyWard, SpiderProtClassifyDiday]
     _label = "viewer ward"
     
     def _defineParams(self, form):
