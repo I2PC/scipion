@@ -28,12 +28,14 @@
 import os
 import xmipp
 import json
+import mimetypes
 from pyworkflow.em import emProtocolsDict
 from pyworkflow.web.pages import settings
 from pyworkflow.manager import Manager
 from pyworkflow.project import Project
 from django.shortcuts import render_to_response
 from django.http import HttpResponse
+from django.core.servers.basehttp import FileWrapper
 from pyworkflow.utils import *
 
 
@@ -285,6 +287,17 @@ def textfileViewer(title, file):
     html = html + "</div>"
     
     return html
+
+def file_downloader(request):
+    "Return a response with the content of the file mentioned in ?path=fname"
+    # Got the idea from here:
+    # https://stackoverflow.com/questions/8600843/serving-large-files-with-high-loads-in-django
+    path = request.GET.get("path")
+    response = HttpResponse(FileWrapper(open(path)),
+                            content_type=mimetypes.guess_type(path)[0])
+    response['Content-Length'] = os.path.getsize(path)
+    response['Content-Disposition'] = 'attachment; filename=%s' % path
+    return response
 
 def render_column(request):
     
