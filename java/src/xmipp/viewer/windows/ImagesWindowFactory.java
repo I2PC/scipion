@@ -39,6 +39,8 @@ import xmipp.utils.XmippDialog;
 import xmipp.viewer.ctf.CTFAnalyzerJFrame;
 import xmipp.viewer.ctf.CTFRecalculateImageWindow;
 import xmipp.viewer.ctf.TasksEngine;
+import xmipp.viewer.scipion.ScipionGalleryData;
+import xmipp.viewer.scipion.ScipionMetaData;
 
 /**
  * 
@@ -186,9 +188,13 @@ public class ImagesWindowFactory {
 
 	public static GalleryJFrame openMetadata(String filename, Params parameters,
 			String mode) throws Exception {
-                
-                MetaData md = new MetaData(filename);
-		return openMetadata(filename, md, parameters, mode);
+                if(filename.endsWith(".sqlite") || filename.endsWith(".db"))
+                {
+                    ScipionGalleryData data = new ScipionGalleryData(null, filename, parameters, new ScipionMetaData(filename));
+                    return new GalleryJFrame(data);
+                }
+                else
+                    return openMetadata(filename, new MetaData(filename), parameters, mode);
 	}
 
 	public static GalleryJFrame openFilesAsGallery(String filenames[],

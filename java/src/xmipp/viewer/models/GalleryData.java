@@ -550,7 +550,7 @@ public class GalleryData {
 	/** Check if an item is enabled or not */
 	public boolean isEnabled(int index) {
 		try {
-			if (isVolumeMode() || !md.containsLabel(MDLabel.MDL_ENABLED))
+			if (isVolumeMode() )
 				return true;
 			return md.getEnabled(ids[index]);
 		} catch (Exception e) {
@@ -861,13 +861,10 @@ public class GalleryData {
 		if (filename != null) {
                     if(!filename.contains("classes"))
                         return false;
-			String fnVectors = filename.replace("classes", "vectors");
-			String fnVectorsData = fnVectors.replace(".xmd", ".vec");
-			if (isClassificationMd() && Filename.exists(fnVectors)
-
-					&& Filename.exists(fnVectorsData))
-                            
-				return true;
+                    String fnVectors = filename.replace("classes", "vectors");
+                    String fnVectorsData = fnVectors.replace(".xmd", ".vec");
+                    if (isClassificationMd() && Filename.exists(fnVectors) && Filename.exists(fnVectorsData))
+                            return true;
 		}
 		return false;
 	}
@@ -1044,7 +1041,7 @@ public class GalleryData {
        public void saveClassSelection(String path)
        {
             try {
-                
+                saveSelection("classes" + Filename.SEPARATOR + path, true);
                 MetaData imagesmd;
                 // Fill the classX_images blocks
                 for (int i = 0; i < ids.length; ++i) 

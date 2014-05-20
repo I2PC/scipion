@@ -110,14 +110,15 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
                         ScipionMessageDialog dlg = new ScipionMessageDialog(ScipionGalleryJFrame.this, "Question", msg, msgfields);
                         int create = dlg.action;
                         if (create == ScipionMessageDialog.OK_OPTION) {
-                            createSubsetOfClasses(dlg.getFieldValue(runNameKey));
+                            data.saveClassSelection(selfile);
+                            String[] command = new String[]{python, script, dlg.getFieldValue(runNameKey), selfile, type, type, projectid, inputid, inputimagesid};
+                            runCommand(command);
                         }
 
                     }
                 });
                 
                 buttonspn.add(classcmdbutton);
-
             }
             
             buttonspn.add(cmdbutton);
@@ -136,27 +137,27 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
 
     protected void runCommand(final String[] command) 
     {
-//        XmippWindowUtil.blockGUI(ScipionGalleryJFrame.this, "Creating set ...");
-//        new Thread(new Runnable() {
-//
-//            @Override
-//            public void run() {
+        XmippWindowUtil.blockGUI(ScipionGalleryJFrame.this, "Creating set ...");
+        new Thread(new Runnable() {
 
-//                try {
-//
-//                    String output = XmippUtil.executeCommand(command);
-//                    XmippWindowUtil.releaseGUI(ScipionGalleryJFrame.this.getRootPane());
-//                    if (output != null && !output.isEmpty()) {
-//                        XmippDialog.showInfo(ScipionGalleryJFrame.this, output);
-//                        System.out.println(output);
-//                    }
-//
-//                } catch (Exception ex) {
-//                    throw new IllegalArgumentException(ex.getMessage());
-//                }
+            @Override
+            public void run() {
 
-//            }
-//        }).start();
+                try {
+
+                    String output = XmippUtil.executeCommand(command);
+                    XmippWindowUtil.releaseGUI(ScipionGalleryJFrame.this.getRootPane());
+                    if (output != null && !output.isEmpty()) {
+                        XmippDialog.showInfo(ScipionGalleryJFrame.this, output);
+                        System.out.println(output);
+                    }
+
+                } catch (Exception ex) {
+                    throw new IllegalArgumentException(ex.getMessage());
+                }
+
+            }
+        }).start();
     }
 
     public JButton getScipionButton(String text, ActionListener listener) {
@@ -194,7 +195,6 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
             color = Color.decode(isenabled? ScipionMessageDialog.firebrick: ScipionMessageDialog.lightgrey); 
             forecolor = isenabled? Color.WHITE: Color.GRAY;
             classcmdbutton.setEnabled( isenabled);
-
             classcmdbutton.setBackground(color);
             classcmdbutton.setForeground(forecolor);
         }
@@ -202,7 +202,8 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
 
     public void createSubset(String runname) {
         try {
-            String output = type;     
+            String output = type;    
+            
             if(isClassSelection())
             {
                 MetaData imagesMd = gallery.data.getSelClassesImages();
@@ -224,24 +225,5 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
     }
     
    
-    
-    public void createSubsetOfClasses(String runname)
-    {
-        try 
-        {
-
-            String classesmdfile = "classes" + Filename.SEPARATOR + selfile;
-            data.saveSelection(classesmdfile, true);
-            data.saveClassSelection(selfile);
-            String[] command = new String[]{python, script, runname, selfile, type, type, projectid, inputid, inputimagesid};
-
-            runCommand(command);
-        } catch (Exception ex) {
-            Logger.getLogger(ScipionGalleryJFrame.class.getName()).log(Level.SEVERE, null, ex);
-        }
-
-    }
-
-    
 
 }

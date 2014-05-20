@@ -6,6 +6,10 @@
 
 package xmipp.viewer.scipion;
 
+import java.util.ArrayList;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
 import xmipp.utils.Params;
 import xmipp.viewer.models.ColumnInfo;
@@ -67,9 +71,18 @@ public class ScipionGalleryData extends GalleryData{
             /** Save selected items as a metadata */
     public void saveSelection(String path, boolean overwrite) throws Exception
     {
-        getSelectionMd().writeBlock(path);
+        getSelectionMd().write(path);
         
     }
+    
+     public void saveClassSelection(String path)
+     {
+        try {
+            saveSelection(path, true);//Scipion metadata saves recursively
+        } catch (Exception ex) {
+            Logger.getLogger(ScipionGalleryData.class.getName()).log(Level.SEVERE, null, ex);
+        }
+     }
 
     public boolean isColumnFormat()
     {
@@ -83,7 +96,6 @@ public class ScipionGalleryData extends GalleryData{
             try
             {
                 selectionMd = ((ScipionMetaData)md).getSelectionMd(getSelIds());
-                System.out.println(selectionMd.size());
                 return selectionMd;
             } catch (Exception e) {
                     e.printStackTrace();
@@ -93,20 +105,25 @@ public class ScipionGalleryData extends GalleryData{
         
     	/** Get all the images assigned to all selected classes */
 	public MetaData getSelClassesImages(){
-		ScipionMetaData mdImages = new ScipionMetaData();
+		ScipionMetaData mdImages = null; 
 		MetaData md;
 		for (int i = 0; i < ids.length; ++i){
 			if (selection[i] && isEnabled(i)){
 				md = getClassImages(i);
+                                
 				if(md != null)
                                 {
+                                    if(mdImages == null)
+                                        mdImages = ((ScipionMetaData)md).getStructure("Classes", "Objects");
                                     mdImages.unionAll(md);
                                     md.destroy();
                                 }
 			}
 		}
+                System.out.println(mdImages);
 		return mdImages;
 	}   
+        
         
         /** Get the metadata with assigned images to this classes */
 	public MetaData getClassImages(int index) {

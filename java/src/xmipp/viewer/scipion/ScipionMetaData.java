@@ -13,7 +13,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
 import xmipp.viewer.models.ClassInfo;
 import xmipp.viewer.models.ColumnInfo;
@@ -28,18 +27,22 @@ public class ScipionMetaData extends MetaData{
     private String self, selfalias;
     private List<EMObject> emobjects;
     private Map<String, Integer> labels = new HashMap<String, Integer>();
-    private List<ScipionMetaData> childmds;
     private ScipionMetaData parent;
     private List<ClassInfo> classes;
     private String id;
     private String classestb, objectstb;
+    private ScipionMetaData representativesmd;
+    private boolean haschilds;
     
-    public ScipionMetaData()
+    public ScipionMetaData(String classestb, String objectstb, String self, String selfalias, List<ColumnInfo> columns)
     {
-        columns = new ArrayList<ColumnInfo>();
-        emobjects = new ArrayList<EMObject>();
-        classestb = "Classes";
-        objectstb = "Objects";
+        this(classestb, objectstb, self, selfalias, columns, new ArrayList<EMObject>());
+    }
+    
+    public ScipionMetaData(String classestb, String objectstb, String self, String selfalias, List<ColumnInfo> columns, ScipionMetaData representativesstruct)
+    {
+        this(classestb, objectstb, self, selfalias, columns, new ArrayList<EMObject>());
+        representativesmd = representativesstruct;
     }
     
     public ScipionMetaData(String classestb, String objectstb, String self, String selfalias, List<ColumnInfo> columns, List<EMObject> emobjects)
@@ -50,6 +53,7 @@ public class ScipionMetaData extends MetaData{
         this.selfalias = selfalias;
         this.columns = columns;
         this.emobjects = emobjects;
+
     }
     
     public ScipionMetaData(String dbfile)
@@ -62,26 +66,24 @@ public class ScipionMetaData extends MetaData{
         loadData(classestb, objectstb);
         if(self.equals("Class2D"))
         {
-            childmds = new ArrayList<ScipionMetaData>();
+            haschilds = true;
             classes = new ArrayList<ClassInfo>();
             String id;
             String classestb = "%s_Classes";
             String objectstb = "%s_Objects";
-            
+            id = "Representatives";
+            representativesmd = new ScipionMetaData(dbfile, String.format(classestb, id), String.format(objectstb, id));
+            int i = 0;
             for(EMObject emo: emobjects)
             {
                 id = String.format("Class00%s", emo.id);
                 emo.childmd = new ScipionMetaData(dbfile, String.format(classestb, id), String.format(objectstb, id), id);
                
                 emo.childmd.setParent(this);
-                childmds.add(emo.childmd);
                 classes.add(new ClassInfo(emo.childmd.getBlock(), Color.red, emo.childmd.size()));
+                emo.representative = representativesmd.getEMObjects().get(i);
+                i ++;
             }
-            id = "Representatives";
-            ScipionMetaData childmd = new ScipionMetaData(dbfile, String.format(classestb, id), String.format(objectstb, id), id);
-            childmd.setParent(this);
-            childmds.add(childmd);
-            
         }
     }
     
@@ -196,6 +198,7 @@ public class ScipionMetaData extends MetaData{
         }
     }
     
+
     public void setParent(ScipionMetaData md)
     {
         this.parent = md;
@@ -203,12 +206,16 @@ public class ScipionMetaData extends MetaData{
     
     public String[] getBlocks()
     {
-        if(childmds == null)
+        if(!haschilds)
             return new String[]{getBlock()};
-        String[] blocks = new String[childmds.size() + 1];
+        List<String> childblocks = new ArrayList<String>();
+        for(EMObject emo: emobjects)
+            if(emo.childmd != null)
+                childblocks.add(emo.childmd.getBlock());
+        String[] blocks = new String[childblocks.size() + 1];
         blocks[0] = getBlock();
-        for(int i = 1; i < blocks.length; i  ++)
-            blocks[i] = childmds.get(i - 1).getBlock();
+        for(int i = 0; i < childblocks.size(); i  ++)
+            blocks[i + 1] = childblocks.get(i);
         return blocks;
             
     }
@@ -279,19 +286,35 @@ public class ScipionMetaData extends MetaData{
         return classes.toArray(new ClassInfo[]{});
     }
 
-    public List<ScipionMetaData> getChilds() {
-        return childmds;
-    }
-
-    public List<EMObject> getEMObjects(long[] selIds) {
-        ArrayList<EMObject> emos = new ArrayList<EMObject>();
-        for(long id: selIds)
-            emos.add(getEMObject(id));
-        return emos;
-    }
-
+   
     ScipionMetaData getSelectionMd(long[] selIds) {
-        return new ScipionMetaData(classestb, objectstb, self, selfalias, columns, getEMObjects(selIds));
+        ScipionMetaData selmd;
+        if(representativesmd != null)
+            selmd = new ScipionMetaData(classestb, objectstb, self, selfalias, columns, representativesmd.getStructure(representativesmd.classestb, representativesmd.objectstb));
+        else
+            selmd = new ScipionMetaData(classestb, objectstb, self, selfalias, columns);
+        for(long id: selIds)
+            selmd.add(getEMObject(id));
+
+        return selmd;
+    }
+    
+    public void add(EMObject emo)
+    {
+        emobjects.add(emo);
+        if(emo.childmd != null)
+            haschilds = true;
+        if(representativesmd != null)
+            representativesmd.add(emo.representative);
+
+            
+    }
+
+    public ScipionMetaData getStructure(String classestb, String objectstb) {
+        if(representativesmd == null)
+            return new ScipionMetaData(classestb, objectstb, self, selfalias, columns);
+        else
+            return new ScipionMetaData(classestb, objectstb, self, selfalias, columns, representativesmd.getStructure(representativesmd.classestb, representativesmd.objectstb));
     }
     
     public class EMObject
@@ -302,6 +325,7 @@ public class ScipionMetaData extends MetaData{
         boolean isenabled;
         ScipionMetaData childmd;
         ScipionMetaData md;
+        EMObject representative;
         
         public EMObject(long id, ScipionMetaData md)
         {
@@ -310,6 +334,7 @@ public class ScipionMetaData extends MetaData{
             values = new ArrayList<Object>();
             this.md = md;
         }
+        
         
         public void addValue(Object value)
         {
@@ -471,11 +496,6 @@ public class ScipionMetaData extends MetaData{
         return emo.setValue(label, value);
     }
 
-   
-   
-    
-    
-         
     public void importObjects(MetaData md, long [] ids)
     {
         ScipionMetaData smd = (ScipionMetaData)md;
@@ -484,7 +504,6 @@ public class ScipionMetaData extends MetaData{
         {
             emo = smd.getEMObject(ids[i]);
             emobjects.add(emo);
-            System.out.println(emo.id);
         }
     }
     
@@ -515,17 +534,30 @@ public class ScipionMetaData extends MetaData{
     
     public ScipionMetaData getChild(String block)
     {
-        if(childmds == null)
+        if(!haschilds)
             return null;
-        for(ScipionMetaData child: childmds)
-            if(child.getBlock().equals(block))//from parent to child
-                return child;
+        for(EMObject emo: emobjects)
+            if(emo.childmd != null && emo.childmd.getBlock().equals(block))//from parent to child
+                return emo.childmd;
         return null;
         
     }
     
      public  void write(String path)
     {
+        new File(path).delete();//overwrite file
+        if (parent != null)
+        {
+            parent.write(path);//this will write parent and siblings
+            return;
+        }
+        writeBlock(path);
+        if(haschilds)
+            for(EMObject emo: emobjects)
+                if(emo.childmd != null)
+                    emo.childmd.writeBlock(path);
+        if(representativesmd != null)
+            representativesmd.writeBlock(path);
         
     }
      
@@ -535,10 +567,10 @@ public class ScipionMetaData extends MetaData{
         Connection c = null;
         Statement stmt = null;
         try {
-            new File(path).delete();
+            
             Class.forName("org.sqlite.JDBC");
             c = DriverManager.getConnection("jdbc:sqlite:" + path);
-            String sql = String.format("CREATE TABLE %s(\n"
+            String sql = String.format("DROP TABLE IF EXISTS %1$s; CREATE TABLE %1$s(\n"
                     + "id        INTEGER PRIMARY KEY AUTOINCREMENT,\n" +
 "                      label_property      TEXT UNIQUE,\n" +
 "                      column_name TEXT UNIQUE,\n" +
@@ -547,6 +579,7 @@ public class ScipionMetaData extends MetaData{
                 
             stmt = c.createStatement();
             stmt.executeUpdate(sql);
+            System.out.println(sql);
             sql = String.format("INSERT INTO %s(id, label_property, column_name, class_name) values (1, \'self\', \'%s\', \'%s\')", classestb, selfalias, self);
             String line = ", (%s, \'%s\', \'%s\', \'%s\')";
             ColumnInfo ci;
@@ -560,14 +593,16 @@ public class ScipionMetaData extends MetaData{
                 cols += String.format(", %s", ci.comment);
             }
             stmt.executeUpdate(sql);
-            sql = String.format("CREATE TABLE %s(\n"
+            System.out.println(sql);
+            sql = String.format("DROP TABLE IF EXISTS %1$s; CREATE TABLE %1$s(\n"
                     + "id        INTEGER PRIMARY KEY AUTOINCREMENT,\n" +
 "                      label      TEXT DEFAULT NULL,\n" +
 "                      comment TEXT DEFAULT NULL" +
-"                      %s)", objectstb, createcols);
+"                      %2$s)", objectstb, createcols);
                 
             
             stmt.executeUpdate(sql);
+            System.out.println(sql);
             sql = String.format("INSERT INTO %s(%s) VALUES ", objectstb, cols);
             Object value;
             for(EMObject emo: emobjects)
@@ -578,7 +613,16 @@ public class ScipionMetaData extends MetaData{
                     ci = columns.get(i);
                     value = emo.values.get(i);
                     if(ci.type == MetaData.LABEL_STRING)
+                    {
+                        if(value != null)
+                        {
+                            String str = (String)value;
+                            if( str.contains("@"))
+                                str = str.substring(str.lastIndexOf("@") + 1);
+                            value = str;
+                        }
                         sql += String.format(", '%s'", value);
+                    }
                     else
                         sql += String.format(", %s", value);
                 }
@@ -586,6 +630,7 @@ public class ScipionMetaData extends MetaData{
             }
             sql = sql.substring(0, sql.length() - 1);//remove first comma
             stmt.executeUpdate(sql);
+            System.out.println(sql);
             stmt.close();
             c.close();
             
@@ -613,5 +658,15 @@ public class ScipionMetaData extends MetaData{
         if (type.equals("Float"))
             return MetaData.LABEL_DOUBLE;
         return MetaData.LABEL_STRING;
+    }
+    
+    public String getColumnsTable()
+    {
+        return classestb;
+    }
+    
+    public String getObjectsTable()
+    {
+        return objectstb;
     }
 }

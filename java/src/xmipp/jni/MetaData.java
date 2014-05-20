@@ -378,7 +378,9 @@ public class MetaData {
 	}
 
 	public boolean getEnabled(long objId) {
-		return getValueInt(MDLabel.MDL_ENABLED, objId) > 0;
+            if(!containsLabel(MDLabel.MDL_ENABLED))
+                return true;
+            return getValueInt(MDLabel.MDL_ENABLED, objId) > 0;
 	}
 
 	public native boolean setValueInt(int label, int value, long objId);

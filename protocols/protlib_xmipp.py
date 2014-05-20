@@ -622,8 +622,11 @@ class ScriptShowJ(ScriptAppIJ):
         self.addParamsLine('         alias -d;')
         self.addParamsLine('  [--poll]                            : Keeps checking for changes on input files  (for image mode only!)')
         self.addParamsLine('         alias -p;')
-        self.addParamsLine('  [--render <label=first>]    : Activates images rendering (for metadata mode only)')
-        self.addParamsLine('                               : you can pass which label to render, by default the first one that can be visualized')
+        self.addParamsLine('  [--render <columns>]    : Specifies image columns to render (for metadata mode only)')
+        self.addParamsLine('                          : by default the first one that can be visualized is rendered')
+        self.addParamsLine('  [--visible <columns>]    : Specifies visible labels')
+        self.addParamsLine('  [--order <columns>]    : Specifies labels order')
+        
         self.addParamsLine('         alias -e;')
         self.addParamsLine('  [--rows <rows>]                            : number of rows in table')
         self.addParamsLine('         alias -r;')
@@ -642,7 +645,8 @@ class ScriptShowJ(ScriptAppIJ):
         self.addParamsLine('  [--label_relion]                : Activates the mapping to Relion labels')
         
     def readOtherParams(self):
-        params = ['--mode', '--rows', '--columns', '--zoom', '--view', '--render']
+        #FIXME: params seems to be they cannot be passed directly to java
+        params = ['--mode', '--rows', '--columns', '--zoom', '--view', '--render', '--visible', '--order']
         for p in params:
             if self.checkParam(p):
                 self.args += " %s %s" % (p, self.getParam(p))
