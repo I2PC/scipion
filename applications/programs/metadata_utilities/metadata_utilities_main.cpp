@@ -83,6 +83,7 @@ protected:
         addParamsLine("    randomize                           : Randomize elements of metadata");
         addParamsLine("    keep_column <labels>                : Keep some columns(label list) from metadata");
         addParamsLine("    drop_column <labels>                : Drop some columns(label list) from metadata");
+        addParamsLine("    remove_duplicates <label>           : Remove duplicates on a given label");
         addParamsLine("    rename_column <labels>              : Rename a column");
         addParamsLine("    modify_values <expression>          : Use an SQLite expression to modify the metadata");
         addParamsLine("                                        : This option requires knowledge of basic SQL syntax(more specific SQLite");
@@ -267,6 +268,12 @@ protected:
             MDL::str2LabelVector(getParam("--operate", 1), labels);
             for (size_t i = 0; i < labels.size(); ++i)
                 mdIn.removeLabel(labels[i]);
+        }
+        else if ( operation == "remove_duplicates")
+        {
+        	MetaData aux;
+        	aux.removeDuplicates(mdIn,MDL::str2Label(getParam("--operate", 1)));
+        	mdIn=aux;
         }
         else if ( operation == "rename_column")
         {
