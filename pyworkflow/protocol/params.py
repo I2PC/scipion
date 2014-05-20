@@ -120,7 +120,12 @@ class ElementGroup(FormElement):
         self.addParam(paramName, ParamClass, **args)
 
     def addLine(self, lineName, **kwargs):
-        return self.addParam(lineName, Line, form=self._form, 
+        
+        # Patch used to avoid the blanks spaces in the names
+        # because the jquery getting elements are not permitted.
+        labelName = lineName.split()[0]
+        
+        return self.addParam(labelName, Line, form=self._form, 
                              label=lineName, **kwargs)        
     
     

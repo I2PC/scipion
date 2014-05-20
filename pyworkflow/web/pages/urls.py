@@ -88,4 +88,7 @@ urlpatterns = patterns('',
     
     #TESTING
     url(r'^testingSSH/', 'app.views_showj.testingSSH'), #Load web
+
+    # If no path given, load the projects view
+    url(r'^$', 'app.views_project.projects'),
 )

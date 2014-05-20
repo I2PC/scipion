@@ -69,7 +69,7 @@ class XmippDownsampleWizard(DownsampleWizard):
     
         
 class XmippCTFWizard(CtfWizard):
-    _targets = [(ProtCTFMicrographs, ['Resolution'])]
+    _targets = [(ProtCTFMicrographs, ['lowRes', 'highRes'])]
     
     def _getParameters(self, protocol):
         protParams = {}

@@ -62,7 +62,7 @@ class Object(object):
         return type(self)
     
     def getDoc(self):
-        return self.__doc__
+        return self.__doc__ or ''
     
     def hasAttribute(self, attrName):
         return hasattr(self, attrName)

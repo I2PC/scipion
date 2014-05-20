@@ -245,7 +245,6 @@ class SpiderViewerDiday(SpiderViewerClassify):
                   }
         
         prot.runScript('mda/classavg.msa', prot.getExt(), params)
-        files = [prot._getPath('classavg.stk')]
 
         particles = prot.inputParticles.get()
         sampling = particles.getSamplingRate()

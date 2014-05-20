@@ -29,7 +29,7 @@ In this module are protocol base classes related to EM imports of Micrographs, P
 """
 import sys
 from pyworkflow.em.protocol import *
-from pyworkflow.utils import expandPattern, copyFile
+from pyworkflow.utils import expandPattern, createLink, copyFile
 
 
 class ProtImport(EMProtocol):
@@ -46,6 +46,7 @@ class ProtImportImages(ProtImport):
         form.addParam('pattern', PathParam, label=Message.LABEL_PATTERN,
                       help=Message.TEXT_PATTERN)
         form.addParam('checkStack', BooleanParam, label=Message.LABEL_CHECKSTACK, default=False)
+        form.addParam('copyToProj', BooleanParam, label=Message.LABEL_COPYFILES, default=False)
         form.addParam('voltage', FloatParam, default=200,
                    label=Message.LABEL_VOLTAGE)
         form.addParam('sphericalAberration', FloatParam, default=2.26,
@@ -82,11 +83,15 @@ class ProtImportImages(ProtImport):
         
         for i, fn in enumerate(filePaths):
 #             ext = os.path.splitext(basename(f))[1]
-            dst = self._getPath(basename(fn))
-            copyFile(fn, dst)
-
-            if self.checkStack:
+            dst = self._getExtraPath(basename(fn))
+            if self.copyToProj:
+                copyFile(fn, dst)
+            else:
+                createLink(fn, dst)
+            
+            if checkStack:
                 _, _, _, n = imgh.getDimensions(dst)
+            
             if n > 1:
                 for index in range(1, n+1):
                     img.cleanObjId()
@@ -126,10 +131,11 @@ class ProtImportImages(ProtImport):
     
     def _summary(self):
         summary = []
-
         outputSet = self._getOutputSet(self._className)
         if not hasattr(self, outputSet):
             summary.append("Output " + self._className + "s not ready yet.") 
+            if self.copyToProj:
+                summary.append("*Warning*: Import step could be take a long time due to the images are copying in the project.")
         else:
             summary.append("Import of %d " % getattr(self, outputSet).getSize() + self._className + "s from %s" % self.pattern.get())
             summary.append("Sampling rate : %0.2f A/px" % getattr(self, outputSet).getSamplingRate())
@@ -174,16 +180,16 @@ class ProtImportMicrographs(ProtImportImages):
                    label=Message.LABEL_SCANNED,
                    condition='samplingRateMode==%d' % SAMPLING_FROM_SCANNER)
     
-    def _validate(self):
-        errors = ProtImportImages._validate(self)
-        if self._checkMrcStack():
-            errors.append("The micrographs can't be a mrc stack")
-        return errors
-    
     def _insertAllSteps(self):
         self._createSet = self._createSetOfMicrographs
         self._insertFunctionStep('importImages', self.pattern.get(), self.checkStack.get(), 
                                  self.voltage.get(), self.sphericalAberration.get(), self.ampContrast.get()) #, self.samplingRate.get(),
+    
+    def _validate(self):
+        errors = ProtImportImages._validate(self)
+#         if self._checkMrcStack():
+#             errors.append("The micrographs can't be a mrc stack")
+        return errors
     
     def _setOtherPars(self, micSet):
         micSet.getAcquisition().setMagnification(self.magnification.get())
@@ -253,7 +259,7 @@ class ProtImportVolumes(ProtImport):
         the volumen object.
         """
         dst = self._getPath(basename(volumePath))            
-        shutil.copyfile(volumePath, dst)
+        createLink(volumePath, dst)
         vol = Volume()
         vol.setFileName(dst)
         vol.setSamplingRate(self.samplingRate.get())
@@ -424,7 +430,10 @@ class ProtImportMovies(ProtImportImages):
         
         for f in filePaths:
             dst = self._getPath(basename(f))
-            copyFile(f, dst)
+            if self.copyToProj:
+                copyFile(f, dst)
+            else:
+                createLink(f, dst)
             _, _, _, n = imgh.getDimensions(dst)
             
             mov = Movie()
