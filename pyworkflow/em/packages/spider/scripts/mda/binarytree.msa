@@ -1,19 +1,19 @@
 ; GENERATE FILES FOR BINARY-TREE
 ;
-; REQUIRES averagenode.msa and update_lut.msa
+; REQUIRES averagenode.spi and update_lut.spi
 
 ; ----------------- Parameters -----------------
 [start-depth] = 1    ; starting depth (TO DO: be able to start from >1)
-[end-depth]   = 9    ; ending depth (--> 2**[end-depth] class averages)
+[end-depth]   = 7    ; ending depth (--> 2**[end-depth] class averages)
 
 [top-branch] = 100   ; height of top two branches in dendrogram
 ;                    ; (Starting with version 17.13 it's 100.  Previously it was 1.)
 
 ; --------------------- Inputs ---------------------
 fr l 
-[dendro_doc]HC/docdendro           ; dendrogram document
+[dendro_doc]HC/docdendro               ; dendrogram document
 fr g
-[particles]stkfiltered@*****       ; particle template
+[particles]stkaligned@*****            ; particle template
 
 ; -------------------- Outputs --------------------
 fr g
@@ -23,8 +23,7 @@ fr g
 fr g
 [node_doc][binary_dir]/docclass***     ; particles-per-node list template
 fr g
-[node_avg][binary_dir]/classavg***      ; node average
-;[node_avg][binary_dir]/avgnode***      ; node average
+[node_avg][binary_dir]/avgnode***      ; node average
 fr g
 [labeled_avg][binary_dir]/labeled***   ; labeled node average
 fr g
@@ -68,12 +67,6 @@ if([num-digits].eq.7) [label-dim] = 128
 if([num-digits].ge.8) [label-dim] = 136
 ; (If there are more than 10,000 particles or classes, things are going to break.)
 
-; old assignment
-;[label-dim]   = 136  ; temporary dimension for labelling (3-digit class, 5-digit population)
-;;[label-dim]   = 128  ; temporary dimension for labelling (3-digit class, 4-digit population)
-;;[label-dim]   = 115  ; temporary dimension for labelling (3-digit class, 3-digit population)
-;; NOTE: accordingly change label syntax in AVERAGENODE.SPI at LA B call
-
 ;; diagnostic
 ;vm
 ;echo "num-digits: {***[num-digits]}, label-dim: {***[label-dim]}" ; echo
@@ -88,8 +81,8 @@ de a
 [node_doc][node-num]
 de a
 [node_avg][node-num]
-de a
-[labeled_avg][node-num]
+;de a
+;[labeled_avg][node-num]
 de
 [node_lut]
 de
@@ -334,13 +327,11 @@ echo "Depth completed: {**[current-depth]}" ; echo
 ;vm
 ;echo "Last node avg.:  [node_avg][last-node].$DATEXT" ; echo
 
-en d
+en 
 
-; Modified 2014-04-11
+; Modified 2012-12-14
 ;    TO DO: add ability to start correctly from depth >1
 ;    TO DO: change TEMP_LUT to in-core file
-;    2014-03-06 (trs) -- reading images from stacks
-;    2012-12-14 (trs) -- automatic label dimension
 ;    2012-12-14 (trs) -- added list of classes for verifybyview
 ;    2009-06-02 (trs) -- leaves gap in image series if parent node can't be split
 ;    2009-06-02 (trs) -- improved annotation
