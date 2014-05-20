@@ -1,7 +1,6 @@
 # **************************************************************************
 # *
 # * Authors:     Jose Gutierrez (jose.gutierrez@cnb.csic.es)
-# *              J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
 # *
 # * Unidad de Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -45,6 +44,9 @@ from protocol_mask import XmippProtMaskParticles, XmippProtMaskVolumes
 
 from pyworkflow.em.wizard import * 
 
+#===============================================================================
+# DOWNSAMPLING
+#===============================================================================
 
 class XmippDownsampleWizard(DownsampleWizard):
     _targets = [(XmippProtPreprocessMicrographs, ['downFactor'])]
@@ -66,7 +68,10 @@ class XmippDownsampleWizard(DownsampleWizard):
         _value = params['value']
         _label = params['label']
         DownsampleWizard.show(self, form, _value, _label, UNIT_PIXEL)
-    
+
+#===============================================================================
+# CTFS
+#===============================================================================
         
 class XmippCTFWizard(CtfWizard):
     _targets = [(ProtCTFMicrographs, ['lowRes', 'highRes'])]
@@ -88,6 +93,9 @@ class XmippCTFWizard(CtfWizard):
         _label = params['label']
         CtfWizard.show(self, form, _value, _label, UNIT_PIXEL)
 
+#===============================================================================
+# MASKS 
+#===============================================================================
 
 class XmippParticleMaskRadiusWizard(ParticleMaskRadiusWizard):
     _targets = [(XmippProtMaskParticles, ['radius'])]
@@ -174,6 +182,9 @@ class XmippVolumeRadiiWizard(VolumeMaskRadiiWizard):
         VolumeMaskRadiiWizard.show(self, form, _value, _label, UNIT_PIXEL)
     
 
+#===============================================================================
+#  FILTERS
+#===============================================================================
         
 class XmippFilterParticlesWizard(FilterParticlesWizard):   
     _targets = [(XmippProtFilterParticles, ['lowFreq', 'highFreq', 'freqDecay'])]
