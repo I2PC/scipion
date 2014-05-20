@@ -40,4 +40,4 @@ from wizard import SpiderProtMaskWizard, SpiderParticlesMaskRadiiWizard, SpiderF
 
 from viewer import SpiderViewer
 from viewer_capca import SpiderViewerCAPCA
-from viewer_ward import SpiderViewerWard
+from viewer_classify import SpiderViewerWard, SpiderViewerDiday

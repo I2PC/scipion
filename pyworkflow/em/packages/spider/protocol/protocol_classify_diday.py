@@ -43,11 +43,13 @@ class SpiderProtClassifyDiday(SpiderProtClassify):
         SpiderProtClassify.__init__(self, **kwargs)
         
         self._params = {'ext': 'stk',
+                        'classDir': 'CLA',
                         'particles': 'input_particles',
                         'particlesSel': 'input_particles_sel',
                         'dendroPs': 'dendrogram',
                         'dendroDoc': 'CLA/docdendro',
                         'averages': 'averages',
+                        
                         }        
 
     #--------------------------- DEFINE param functions --------------------------------------------  
@@ -98,7 +100,7 @@ class SpiderProtClassifyDiday(SpiderProtClassify):
                              '[cas_prefix]': imcBase,
                              })
 
-        self.runScript('mda/cluster.msa', self._params['ext'], self._params)
+        self.runScript('mda/cluster.msa', self.getExt(), self._params)
 
     def createOutputStep(self):
         rootNode = self.buildDendrogram(True)

@@ -56,6 +56,12 @@ class SpiderProtocol(EMProtocol):
         
         return self._getPath(template % self._params)
     
+    def getExt(self):
+        """ Return the extension used in the script,
+        stored in a dictionary called self._params. 
+        """
+        return self._params['ext']
+    
     def __substituteVar(self, match, paramsDict, lineTemplate):
         if match and match.groupdict()['var'] in paramsDict:
             d = match.groupdict()
@@ -98,8 +104,10 @@ class SpiderProtocol(EMProtocol):
         fIn.close()
         fOut.close()    
     
-        scriptName = removeExt(outputScript)  
-        runJob(self._log, SPIDER, "%(ext)s @%(scriptName)s" % locals())
+        scriptName = removeExt(outputScript)
+        log = getattr(self, '_log', None)        
+        runJob(log, SPIDER, "%(ext)s @%(scriptName)s" % locals())
+        
         self._leaveWorkingDir()
     
     
@@ -109,3 +117,6 @@ class SpiderProtClassify(ProtClassify2D, SpiderProtocol):
     def __init__(self, **kwargs):
         ProtClassify2D.__init__(self, **kwargs)
         SpiderProtocol.__init__(self, **kwargs)
+        
+    def getClassDir(self):
+        return self._params['classDir']

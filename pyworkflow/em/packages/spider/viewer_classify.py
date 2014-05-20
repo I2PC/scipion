@@ -31,45 +31,45 @@ visualization program.
 import Tkinter as tk
 from Tkinter import *
 
-from pyworkflow.em import ProtUserSubSet
-from pyworkflow.protocol.params import *
+from pyworkflow.em import ProtUserSubSet, Class2D, Particle, SetOfClasses2D
+from pyworkflow.protocol.params import IntParam, FloatParam, BooleanParam
 from pyworkflow.protocol.constants import STATUS_FINISHED
 from pyworkflow.viewer import Viewer, ProtocolViewer, DESKTOP_TKINTER, WEB_DJANGO
 from pyworkflow.utils.graph import Graph
+from pyworkflow.utils.path import cleanPath
 from pyworkflow.gui import Window
 from pyworkflow.gui.widgets import HotButton
 from pyworkflow.gui.graph import LevelTree
 from pyworkflow.gui.canvas import Canvas, ImageBox
+from pyworkflow.em.viewer import DataView, ObjectView
 from pyworkflow.em.packages.xmipp3.viewer import XmippViewer
 from protocol import SpiderProtClassifyWard, SpiderProtClassifyDiday
 
+from spider import SpiderDocFile
 
 
-class SpiderViewerWard(ProtocolViewer):
-    """ Visualization of Classify Ward. """
+class SpiderViewerClassify(ProtocolViewer):
+    """ Visualization of some Classification protocols in Spider. """
            
     _environments = [DESKTOP_TKINTER, WEB_DJANGO]
-    _targets = [SpiderProtClassifyWard, SpiderProtClassifyDiday]
-    _label = "viewer ward"
     
     def _defineParams(self, form):
         form.addSection(label='Visualization')
-        form.addParam('doShowDendrogram', BooleanParam, label="Show dendrogram?", default=True,
+        group1 = form.addGroup('Dendogram')
+        group1.addParam('doShowDendrogram', BooleanParam, label="Show dendrogram?", default=True,
                       help='')
-        form.addParam('minHeight', FloatParam, default=0.5,
+        group1.addParam('minHeight', FloatParam, default=0.5,
                       label='Minimum height',
                       help='The dendrogram will be show until that height')
-        form.addParam('doShowClasses', BooleanParam, label="Visualize class averages?", default=True, 
+        self.groupClass = form.addGroup('Classes')
+        self.groupClass.addParam('doShowClasses', BooleanParam, label="Visualize class averages?", default=True, 
                       help='')
-        form.addParam('maxLevel', IntParam, default=4,
-                      label='Maximum level',
-                      help='Maximum level of classes to show')
 
     def _getVisualizeDict(self):
         return {'doShowDendrogram': self._plotDendrogram,
                 'doShowClasses': self.visualizeClasses
                 }
-        
+
     def _plotDendrogram(self, e=None):
         from pyworkflow.em.packages.xmipp3.plotter import XmippPlotter
         xplotter = XmippPlotter()
@@ -111,6 +111,19 @@ class SpiderViewerWard(ProtocolViewer):
         node.selected = False
         node.box = SpiderImageBox(canvas, node, y)
         return node.box
+            
+            
+class SpiderViewerWard(SpiderViewerClassify):
+    _targets = [SpiderProtClassifyWard]
+    _label = "viewer ward"
+    
+    def _defineParams(self, form):
+        SpiderViewerClassify._defineParams(self, form)
+
+        self.groupClass.addParam('maxLevel', IntParam, default=4,
+                      label='Maximum level',
+                      help='Maximum level of classes to show')
+
 
     def visualizeClasses(self, e=None):
         classTemplate = "class_%03d"
@@ -210,3 +223,63 @@ class SpiderImageBox(ImageBox):
             self.label.config(bd=0, bg='grey')
             
             
+class SpiderViewerDiday(SpiderViewerClassify):
+    _targets = [SpiderProtClassifyDiday]
+    _label = "viewer diday"
+    
+    def _defineParams(self, form):
+        SpiderViewerClassify._defineParams(self, form)
+
+        self.groupClass.addParam('numberOfClasses', IntParam, default=4,
+                      label='Number of classes',
+                      help='Desired number of classes.')
+
+
+    def visualizeClasses(self, e=None):
+        prot = self.protocol
+        classDir = prot.getClassDir()
+        
+        params = {'[class_dir]': classDir,
+                  '[desired-classes]': self.numberOfClasses.get(),
+                  '[particles]': prot._params['particles'] + '@******',                  
+                  }
+        
+        prot.runScript('mda/classavg.msa', prot.getExt(), params)
+        files = [prot._getPath('classavg.stk')]
+
+        particles = prot.inputParticles.get()
+        sampling = particles.getSamplingRate()
+        
+        setFn = self._getPath('classes2D.sqlite')
+        cleanPath(setFn)
+        classes2D = SetOfClasses2D(filename=setFn)
+        classes2D.setImages(particles)
+            
+        for classId in range(1, self.numberOfClasses.get()+1):
+            class2D = Class2D()
+            class2D.setObjId(classId)
+            
+            avgImg = Particle()
+            avgImg.setSamplingRate(sampling)
+            avgFn = prot._getPath(classDir, 'classaverage%03d.stk' % classId)
+            avgImg.setLocation(1, avgFn)
+            
+            class2D.setRepresentative(avgImg)
+            classes2D.append(class2D)
+            
+            docClass = prot._getPath(classDir, 'docclass%03d.stk' % classId)
+            doc = SpiderDocFile(docClass)
+            
+            for values in doc.iterValues():
+                imgId = int(values[0])
+                img = particles[imgId]
+                class2D.append(img)
+                
+        from pyworkflow.em.packages.xmipp3.convert import writeSetOfClasses2D
+        fn = self._getPath('classes.xmd')
+        writeSetOfClasses2D(classes2D, fn)
+        import os
+        print "cwd: ", os.getcwd() 
+        
+        return [DataView(fn)]
+                              

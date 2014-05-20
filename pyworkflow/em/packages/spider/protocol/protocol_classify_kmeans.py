@@ -43,9 +43,9 @@ class SpiderProtClassifyKmeans(SpiderProtClassify):
         SpiderProtClassify.__init__(self, **kwargs)
         
         self._params = {'ext': 'stk',
+                        'classDir': 'KM',
                         'particles': 'input_particles',
                         'particlesSel': 'input_particles_sel',
-                        'classDir': 'KM',
                         }        
 
     #--------------------------- DEFINE param functions --------------------------------------------  

@@ -43,6 +43,7 @@ class SpiderProtClassifyWard(SpiderProtClassify):
         SpiderProtClassify.__init__(self, **kwargs)
         
         self._params = {'ext': 'stk',
+                        'classDir': 'HC',
                         'particles': 'input_particles',
                         'particlesSel': 'input_particles_sel',
                         'dendroPs': 'dendrogram',
