@@ -90,7 +90,6 @@ class SpiderProtAlignPairwise(ProtAlign2D, SpiderProtocol):
         n = particles.getSize()
         xdim = particles.getDimensions()[0]
         
-       
         self._params.update({
                              '[idim-header]': xdim,
                              '[inner-rad]': innerRadius,

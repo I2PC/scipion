@@ -27,7 +27,7 @@
 Some Spider protocol base classes.
 """
 
-from pyworkflow.em import EMProtocol, ProtClassify2D
+from pyworkflow.em import EMProtocol
 from pyworkflow.utils import removeExt, replaceBaseExt, runJob
 
 from ..spider import loadEnvironment, getScript, END_HEADER, REGEX_KEYFRL, REGEX_KEYVALUE, SPIDER
@@ -110,13 +110,3 @@ class SpiderProtocol(EMProtocol):
         
         self._leaveWorkingDir()
     
-    
-class SpiderProtClassify(ProtClassify2D, SpiderProtocol):
-    """ Diday's method, using 'CL CLA' 
-    """
-    def __init__(self, **kwargs):
-        ProtClassify2D.__init__(self, **kwargs)
-        SpiderProtocol.__init__(self, **kwargs)
-        
-    def getClassDir(self):
-        return self._params['classDir']

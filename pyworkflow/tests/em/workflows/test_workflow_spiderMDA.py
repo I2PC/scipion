@@ -29,6 +29,10 @@ class TestSpiderWorkflow(TestWorkflow):
         protAPSR = SpiderProtAlignAPSR()
         protAPSR.inputParticles.set(protFilter.outputParticles)
         self.launchProtocol(protAPSR)
+        
+        protPairwise = SpiderProtAlignPairwise()
+        protPairwise.inputParticles.set(protFilter.outputParticles)
+        self.launchProtocol(protPairwise)       
          
         protMask = SpiderProtCustomMask()
         protMask.inputImage.set(protAPSR.outputAverage)
@@ -49,7 +53,12 @@ class TestSpiderWorkflow(TestWorkflow):
         protKmeans.pcaFile.set(protCAPCA.imcFile)
         protKmeans.inputParticles.set(protAPSR.outputParticles)
         protKmeans.numberOfClasses.set(4)
-        self.launchProtocol(protKmeans)        
+        self.launchProtocol(protKmeans)
+        
+        protDiday = SpiderProtClassifyDiday()
+        protDiday.pcaFile.set(protCAPCA.imcFile)
+        protDiday.inputParticles.set(protAPSR.outputParticles)
+        self.launchProtocol(protDiday)               
         
     def test_mdaPairwise(self):
         protImport = ProtImportParticles(pattern=self.particlesFn, samplingRate=3.5)
