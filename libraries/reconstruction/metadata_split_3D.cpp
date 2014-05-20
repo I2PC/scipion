@@ -76,12 +76,14 @@ void getNeighbours(MetaData &mdIn, const Matrix1D<double> &projectionDir, MetaDa
 	mdNeighbours.clear();
 	MetaData mdAux;
 	size_t refno;
+	double cc;
 	FOR_ALL_OBJECTS_IN_METADATA(mdIn)
 	{
 		double rot, tilt;
 		mdIn.getValue(MDL_ANGLE_ROT,rot,__iter.objId);
 		mdIn.getValue(MDL_ANGLE_TILT,tilt,__iter.objId);
 		mdIn.getValue(MDL_IMAGE_IDX,refno,__iter.objId);
+		mdIn.getValue(MDL_MAXCC,cc,__iter.objId);
 		Euler_direction(rot,tilt,0,projectionDir2);
 
 		double angle=acos(dotProduct(projectionDir,projectionDir2));
@@ -91,12 +93,13 @@ void getNeighbours(MetaData &mdIn, const Matrix1D<double> &projectionDir, MetaDa
 			size_t id=mdAux.addObject();
 			mdAux.setValue(MDL_IMAGE,fnImg,id);
 			mdAux.setValue(MDL_IMAGE_IDX,refno,id);
+			mdAux.setValue(MDL_MAXCC,cc,id);
 		}
 	}
 	mdNeighbours.removeDuplicates(mdAux,MDL_IMAGE_IDX);
 }
 
-//#define DEBUG
+#define DEBUG
 void analyzeNeighbours(MetaData &mdNeighbours, const FileName &fnRef, const MultidimArray<int> &imask)
 {
     MultidimArray<float> v;
@@ -199,7 +202,7 @@ void analyzeNeighbours(MetaData &mdNeighbours, const FileName &fnRef, const Mult
 	int idx=0;
 	FOR_ALL_OBJECTS_IN_METADATA(mdNeighbours)
 	{
-		mdNeighbours.setValue(MDL_MAXCC,MAT_ELEM(proj,0,idx)/maskArea,__iter.objId);
+		mdNeighbours.setValue(MDL_COST,MAT_ELEM(proj,0,idx)/maskArea,__iter.objId);
 		++idx;
 	}
 #ifdef DEBUG
@@ -210,6 +213,24 @@ void analyzeNeighbours(MetaData &mdNeighbours, const FileName &fnRef, const Mult
 #endif
 }
 #undef DEBUG
+
+void analyzeNeighbours2(MetaData &mdNeighbours, const FileName &fnRef, const MultidimArray<int> &imask)
+{
+	std::vector<double> cc;
+	mdNeighbours.getColumnValues(MDL_MAXCC,cc);
+	std::sort(cc.begin(),cc.end());
+
+	double ccMedian=cc[cc.size()/2];
+	FOR_ALL_OBJECTS_IN_METADATA(mdNeighbours)
+	{
+		double cci;
+		mdNeighbours.getValue(MDL_MAXCC,cci,__iter.objId);
+		if (cci>ccMedian)
+			mdNeighbours.setValue(MDL_COST,1.0,__iter.objId);
+		else
+			mdNeighbours.setValue(MDL_COST,-1.0,__iter.objId);
+	}
+}
 
 // usage ===================================================================
 void ProgMetadataSplit3D::run()
@@ -272,9 +293,10 @@ void ProgMetadataSplit3D::run()
 		if (mdNeighbours.size()>0)
 		{
 			mdRef.getValue(MDL_IMAGE,fnImg,__iter.objId);
-			analyzeNeighbours(mdNeighbours,fnImg,imask);
+			//analyzeNeighbours(mdNeighbours,fnImg,imask);
+			analyzeNeighbours2(mdNeighbours,fnImg,imask);
 			mdNeighbours.getColumnValues(MDL_IMAGE_IDX,refs);
-			mdNeighbours.getColumnValues(MDL_MAXCC,pcaProjection);
+			mdNeighbours.getColumnValues(MDL_COST,pcaProjection);
 
 			size_t imax=refs.size();
 			for (size_t i=0; i<imax; ++i)
