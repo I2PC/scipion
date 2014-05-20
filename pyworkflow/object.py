@@ -29,6 +29,8 @@ The Object class is the root in the hierarchy and some other
 basic classes.
 """
 
+import sys
+
 # Binary relations always involve two objects, we 
 # call them parent-child objects, the following
 # constants reflect which direction of the relation we refer
@@ -735,7 +737,8 @@ class Set(OrderedObject):
     """
     ITEM_TYPE = None # This property should be defined to know the item type
     
-    def __init__(self, filename=None, prefix='', mapperClass=None, **args):
+    def __init__(self, filename=None, prefix='', 
+                 mapperClass=None, classesDict=None, **args):
         # Use the object value to store the filename
         OrderedObject.__init__(self, **args)
         self._mapper = None
@@ -746,7 +749,7 @@ class Set(OrderedObject):
         self._mapperPath = CsvList() # sqlite filename
         self._mapperPath.trace(self.load) # Load the mapper whenever the filename is changed
         self._representative = None
-
+        self._classesDict = classesDict 
         # If filename is passed in the constructor, it means that
         # we want to create a new object, so we need to delete it if
         # the file exists
@@ -802,7 +805,11 @@ class Set(OrderedObject):
         self._mapper.commit()
     
     def _loadClassesDict(self):
-        return globals()
+        return self._classesDict or globals()
+    
+    def setClassesDict(self, classesDict):
+        """ Set the dictionary with classes where to look for classes names. """
+        self._classesDict = classesDict
     
     def load(self):
         """ Load extra data from files. """
@@ -811,7 +818,15 @@ class Set(OrderedObject):
         fn, prefix = self._mapperPath
         self._mapper = self._MapperClass(fn, self._loadClassesDict(), prefix)
         # TODO: updated size with the real size from the mapper
-            
+           
+    def close(self):
+        self._mapper.close()
+        
+    def clear(self):
+        self._mapper.clear()
+        self._idCount = 0
+        self._size.set(0)
+         
     def append(self, item):
         """ Add a image to the set. """
         if not item.hasObjId():
@@ -843,8 +858,7 @@ class Set(OrderedObject):
     def setRepresentative(self, representative):
         self._representative = representative
     
-    def getRepresentative(self):
-       
+    def getRepresentative(self):       
         return self._representative
     
     def hasRepresentative(self):

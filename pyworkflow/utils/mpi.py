@@ -64,7 +64,12 @@ def runJobMPISlave(mpiComm):
     rank = mpiComm.Get_rank()
     print "Running runJobMPISlave: ", rank
     while True:
-        command = mpiComm.recv(source=0, tag=TAG_RUN_JOB + rank)
+        request = mpiComm.irecv(dest=0, tag=TAG_RUN_JOB + rank)
+        while True:
+            done, command = request.test()
+            if done:
+                break
+            sleep(1)
         print "Slave %d, received command: %s" % (rank, command)
         if command == 'None':
             break
