@@ -471,7 +471,10 @@ class TextFileViewer(tk.Frame):
             self.notebook.select(self.notebook.tabs()[index])
     
     def selectedText(self):
-        return self.taList[self.getIndex()]
+        index = self.getIndex()
+        if index:
+            return self.taList[index]
+        return None
     
     def changeFont(self, event=""):
         for font in self.fontDict.values():
@@ -489,7 +492,9 @@ class TextFileViewer(tk.Frame):
         if self.refreshAlarm:
             self.after_cancel(self.refreshAlarm)
             self.refreshAlarm = None
-        self.selectedText().readFile()
+        text = self.selectedText()
+        if text:
+            text.readFile()
         #self.refreshAlarm = self.after(2000, self.refreshOutput)
         
     def changePosition(self, index):
