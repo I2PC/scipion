@@ -37,8 +37,8 @@ from collections import OrderedDict
 
 import pyworkflow as pw
 from pyworkflow.object import *
-from pyworkflow.utils import trace
-from pyworkflow.utils.path import makePath, join, missingPaths, cleanPath, getFiles, exists
+from pyworkflow.utils.path import (makePath, join, missingPaths, cleanPath,
+                                   getFiles, exists, renderTextFile)
 from pyworkflow.utils.log import ScipionLogger
 from executor import StepExecutor, ThreadStepExecutor, MPIStepExecutor
 from constants import *
@@ -273,6 +273,7 @@ class Protocol(Step):
         self.__stdErr = None
         self.__fOut = None
         self.__fErr = None
+        self._buffer = ''  # text buffer for reading log files
         # Project to which the protocol belongs
         self.__project = args.get('project', None)
         
@@ -822,20 +823,31 @@ class Protocol(Step):
         sys.stdout = self.__stdOut
         self.__closeLogsFiles()
         
-    def getLogsAsStrings(self):
-        if all(exists(x) for x in self.getLogPaths()):
-            self.__openLogsFiles('r')
-            fOutString = self.__fOut.read()
-            fErrString = self.__fErr.read()
-            self.__closeLogsFiles()
-            
-            fScpn = open(self.getLogPaths()[2], 'r')
-            fScpnString = fScpn.read()
-            fScpn.close()
+    def _addChunk(self, txt, fmt=None):
+        """
+        Add text txt to self._buffer, with format fmt.
+        fmt can be a console color code (like '31' for red) or a link
+        that looks like 'link:url'.
+        """
+        if fmt is None:
+            self._buffer += txt
+        elif fmt.startswith('link:'):
+            self._buffer += ('[[/file_downloader/?path=%s][%s]]' %
+                             (fmt[len('link:'):], txt))  # twiki style
+        else:  # independent from the color, we put it as bold!
+            self._buffer += '<strong>%s</strong>' % txt
 
-            return fOutString, fErrString, fScpnString
-        else:
-            return '', '', ''
+    def getLogsAsStrings(self):
+
+        outputs = []
+        for fname in self.getLogPaths():
+            if exists(fname):
+                self._buffer = ''
+                renderTextFile(fname, self._addChunk)
+                outputs.append(self._buffer)
+            else:
+                outputs.append('File "%s" does not exist' % fname)
+        return outputs
 
     def warning(self, message, redirectStandard=True):
         self._log.warning(message, redirectStandard)

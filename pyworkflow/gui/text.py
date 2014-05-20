@@ -40,7 +40,6 @@ from pyworkflow.utils import (HYPER_BOLD, HYPER_ITALIC, HYPER_LINK1, HYPER_LINK2
 from pyworkflow.utils.properties import Message, Color, Icon
 
 
-
 class HyperlinkManager:
     """ Tkinter Text Widget Hyperlink Manager, taken from:
     http://effbot.org/zone/tkinter-text-hyperlink.htm """
@@ -344,7 +343,7 @@ class OutputText(Text):
             self.insert(tk.END, "File '%s' doesn't exist" % self.filename)
         self.config(state=tk.DISABLED)
         #if self.isAtEnd():
-        self.goEnd();
+        self.goEnd()
         #if goEnd:
         #    self.goEnd()
       
@@ -472,7 +471,10 @@ class TextFileViewer(tk.Frame):
             self.notebook.select(self.notebook.tabs()[index])
     
     def selectedText(self):
-        return self.taList[self.getIndex()]
+        index = self.getIndex()
+        if index:
+            return self.taList[index]
+        return None
     
     def changeFont(self, event=""):
         for font in self.fontDict.values():
@@ -490,7 +492,9 @@ class TextFileViewer(tk.Frame):
         if self.refreshAlarm:
             self.after_cancel(self.refreshAlarm)
             self.refreshAlarm = None
-        self.selectedText().readFile()
+        text = self.selectedText()
+        if text:
+            text.readFile()
         #self.refreshAlarm = self.after(2000, self.refreshOutput)
         
     def changePosition(self, index):

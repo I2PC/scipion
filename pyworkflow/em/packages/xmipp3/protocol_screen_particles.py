@@ -28,9 +28,9 @@
 This sub-package contains wrapper around Screen Particles Xmipp program
 """
 
-from pyworkflow.em import *  
-import xmipp
-from pyworkflow.utils.path import replaceBaseExt
+from pyworkflow.em import *
+from pyworkflow.utils import replaceBaseExt
+
 from convert import createXmippInputImages, readSetOfParticles
 
 # Automatic Particle rejection enum
@@ -62,7 +62,6 @@ class XmippProtScreenParticles(ProtProcessParticles):
     #--------------------------- INSERT steps functions --------------------------------------------            
     def _insertAllSteps(self):
         """ Mainly prepare the command line for call cl2d program"""
-        
         # Convert input images if necessary
         imgsFn = createXmippInputImages(self, self.inputParticles.get())
         

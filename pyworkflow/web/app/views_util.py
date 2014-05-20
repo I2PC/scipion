@@ -28,12 +28,14 @@
 import os
 import xmipp
 import json
+import mimetypes
 from pyworkflow.em import emProtocolsDict
 from pyworkflow.web.pages import settings
 from pyworkflow.manager import Manager
 from pyworkflow.project import Project
 from django.shortcuts import render_to_response
 from django.http import HttpResponse
+from django.core.servers.basehttp import FileWrapper
 from pyworkflow.utils import *
 
 
@@ -152,6 +154,9 @@ def loadProtocolProject(request, requestType='POST'):
         protocol = project.newProtocol(protocolClass)
         
     return (project, protocol)
+#===============================================================================
+# Browse to relations objects
+#===============================================================================
 
 def browse_relations(request):
     """ Browse relation objects from the database. """
@@ -174,6 +179,10 @@ def browse_relations(request):
 
         jsonStr = json.dumps(objs, ensure_ascii=False)
         return HttpResponse(jsonStr, mimetype='application/javascript')
+    
+#===============================================================================
+# Browse objects
+#===============================================================================
 
 def browse_objects(request):
     """ Browse objects from the database. """
@@ -203,7 +212,11 @@ class FilterObject():
         if self.condition:
             result = obj.evalCondition(self.condition)
         return result
-
+    
+#===============================================================================
+# Browse protocols like objects
+#===============================================================================
+    
 def browse_protocol_class(request):
     if request.is_ajax():
         protClassName = request.GET.get('protClassName')
@@ -229,40 +242,25 @@ def get_attributes(request):
 def set_attributes(request):
     if request.is_ajax():
         id = request.GET.get('id', None)
+        
+        # New values
         label = request.GET.get('label', None)
         comment = request.GET.get('comment', None)
-        typeObj = request.GET.get('typeObj', None)
 
         projectName = request.session['projectName']
         project = loadProject(projectName)
-        
-        if id=='new':
-            className = request.GET.get('className', None)
-            obj = emProtocolsDict.get(className, None)()
-        else:
-            obj = project.getProtocol(int(id))
-            if obj is None:
-                obj = project.getProtocol(int(id)).get()
+
+        obj = project.getProtocol(int(id))
+        if obj is None:
+            obj = project.getProtocol(int(id)).get()
                 
-#            if typeObj=='object':
-#                print obj
-#            elif typeObj=='protocol':
-        
         obj.setObjLabel(label)
         obj.setObjComment(comment)
         
-#        if typeObj=='object':
-#            project._storeProtocol(obj)
-#        elif typeObj=='protocol':
-#            project.saveProtocol(obj)
-
+        # Save the protocol 
         project._storeProtocol(obj)
-
-    return_id = "reload"
-    if typeObj=='protocol':
-        return_id = obj.getObjId()
         
-    return HttpResponse(return_id, mimetype='application/javascript')
+    return HttpResponse(mimetype='application/javascript')
 
 def file_viewer(request):
     file = request.GET.get("path")
@@ -289,6 +287,17 @@ def textfileViewer(title, file):
     html = html + "</div>"
     
     return html
+
+def file_downloader(request):
+    "Return a response with the content of the file mentioned in ?path=fname"
+    # Got the idea from here:
+    # https://stackoverflow.com/questions/8600843/serving-large-files-with-high-loads-in-django
+    path = request.GET.get("path")
+    response = HttpResponse(FileWrapper(open(path)),
+                            content_type=mimetypes.guess_type(path)[0])
+    response['Content-Length'] = os.path.getsize(path)
+    response['Content-Disposition'] = 'attachment; filename=%s' % path
+    return response
 
 def render_column(request):
     

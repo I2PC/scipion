@@ -336,6 +336,20 @@ function isNaturalNumber(n) {
     return !isNaN(n1) && n2 === n1 && n1.toString() === n && n2>0;
 }
 
+
+function processObjParam(id, title_label, title_comment,
+                      msg_comment, typeObj) {
+	
+	// New values
+	var value_label = $("input#runName").val();
+	var value_comment= $("input#comment").val();
+		
+	editObjParam(id, title_label, value_label, 
+	    title_comment, value_comment,
+	    msg_comment, typeObj);
+
+}
+
 function editObjParam(id, title_label, value_label, 
                       title_comment, value_comment,
                       msg_comment, typeObj) {
@@ -343,13 +357,8 @@ function editObjParam(id, title_label, value_label,
 	 * Launch a messi popup with an input and textarea to edit the label and comment
 	 * for an object.
 	 */
-
-	if(value_comment == ""){
-		value_comment = msg_comment;
-	}
 	
-//	alert(value_comment)
-
+	// Create the form table to edit label and comment
 	var html = "<table id='params' data-type='"+ typeObj +"'value='"+ id +"'>" + 
 		 	"<tr>" +
 		 	"<td>" +"<h3>"+ title_label +"</h3>" +"</td>" +
@@ -361,8 +370,9 @@ function editObjParam(id, title_label, value_label,
 			"</tr>"+
 			"</table>"
 	
-	// &#013;&#010;
+	// Some replaces to note up: &#013;&#010;
 	
+	// Launch the form with messi.js to start the edition
 	new Messi(html, {
 		title : 'Object Editor',
 		modal : true,
@@ -381,46 +391,48 @@ function editObjParam(id, title_label, value_label,
 	});
 }
 
+
 function updateLabelComment(){
 	/*
 	 * Method to store the label and comment for an object.
 	 */
-	var elm_table = $("table#params")
-	var id = elm_table.attr('value')
-	var typeObj = elm_table.attr('data-type')
-	var value_label = $("input#label_new").val()
-	var value_comment= $("textarea#comment_new").val()
+	var elm_table = $("table#params");
+	var id = elm_table.attr('value');
+	var typeObj = elm_table.attr('data-type');
 	
-	var url_param = "/set_attributes/?" +
-		"id=" + id + 
-		"&label=" + value_label + 
-		"&comment=" + value_comment +
-		"&typeObj=" + typeObj
+	// New values
+	var value_label = $("input#label_new").val();
+	var value_comment= $("textarea#comment_new").val();
 		
 	if (id == 'new'){
-		var className = $("input#protocolClass").val()
-		url_param += "&className=" + className
-	}
+		// Return the new values to the source form
+		returnLabelComment(value_label, value_comment);
 		
-	$.ajax({
-		type : "GET",
-		url : encodeURI(url_param),
-		dataType: "text",
-		success : function(txt) {
-			if(txt=='reload'){
-				window.location.reload()
-			} else {
-				infoPopup('Success', 
-					"The protocol was saved successfuly",
-					1,
-					'window.opener.popup(\'/form/?protocolId='+txt+'\')');
+	} else {
+		var url_param = "/set_attributes/?" +
+			"id=" + id + 
+			"&label=" + value_label + 
+			"&comment=" + value_comment 
+			
+		$.ajax({
+			type : "GET",
+			url : encodeURI(url_param),
+			async: false,
+			success : function() {
+				// Return the new values to the source form
+				returnLabelComment(value_label, value_comment);
 			}
-		},
-		error: function(){
-			alert("Fallo")
-		}
-	});
+		});
+		
+	}
 }
+
+function returnLabelComment(label, comment){
+	// Return the new values to the source form
+	$("input#runName").val(label);
+	$("input#comment").val(comment);
+}
+
 
 function replaceAll(find, replace, str) {
 	return str.replace(new RegExp(find, 'g'), replace);

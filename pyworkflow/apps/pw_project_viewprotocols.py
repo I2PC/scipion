@@ -707,7 +707,7 @@ class ProtocolsView(tk.Frame):
         protClass = emProtocolsDict.get(protClassName)
         prot = self.project.newProtocol(protClass)
         self._openProtocolForm(prot)
-        
+
     def _updateSelection(self):
         self._fillSummary()
         self._fillMethod()
@@ -862,12 +862,13 @@ class ProtocolsView(tk.Frame):
         if onlySave:
             self.project.saveProtocol(prot)
             msg = Message.LABEL_SAVED_FORM
-#            msg = "Protocol sucessfully saved."
+#            msg = "Protocol successfully saved."
         else:
             self.project.launchProtocol(prot)
             self._scheduleRunsUpdate()
             msg = ""
-            
+            self.outputViewer.refreshOutput()
+
         
         return msg
         
