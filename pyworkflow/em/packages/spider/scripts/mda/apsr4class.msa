@@ -24,7 +24,7 @@ fr g
 fr g
 [aligned_stack]stkaligned                ; aligned-image stack (w/o "@")
 fr g
-[aligned_images][aligned_stack]*****     ; aligned particles
+[aligned_images][aligned_stack]@******     ; aligned particles
 ;;[aligned_images][aligned_dir]/sar******  ; aligned particles
 
 ; ------------- END BATCH HEADER -------------

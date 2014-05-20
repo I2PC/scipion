@@ -60,9 +60,6 @@ class SpiderProtClassify(ProtClassify2D, SpiderProtocol):
     def getClassDir(self):
         return self._classDir
     
-    def getScript(self):
-        return self._script
-    
     def getNumberOfClasses(self):
         return None
     

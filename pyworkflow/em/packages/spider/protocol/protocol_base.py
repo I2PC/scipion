@@ -62,6 +62,9 @@ class SpiderProtocol(EMProtocol):
         """
         return self._params['ext']
     
+    def getScript(self):
+        return getattr(self, '_script', None)
+    
     def __substituteVar(self, match, paramsDict, lineTemplate):
         if match and match.groupdict()['var'] in paramsDict:
             d = match.groupdict()
@@ -99,7 +102,7 @@ class SpiderProtocol(EMProtocol):
                 except Exception, ex:
                     print ex, "on line (%d): %s" % (i+1, line)
                     raise ex
-                inFrL = line.lower().startswith("fr l")
+                inFrL = line.lower().startswith("fr ")
             fOut.write(line)
         fIn.close()
         fOut.close()    
