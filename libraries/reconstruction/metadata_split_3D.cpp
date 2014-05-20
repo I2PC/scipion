@@ -96,7 +96,9 @@ void getNeighbours(MetaData &mdIn, const Matrix1D<double> &projectionDir, MetaDa
 			mdAux.setValue(MDL_MAXCC,cc,id);
 		}
 	}
+	std::cout << "mdAux\n" << mdAux << std::endl;
 	mdNeighbours.removeDuplicates(mdAux,MDL_IMAGE_IDX);
+	std::cout << "mdNeighbours\n" << mdNeighbours << std::endl;
 }
 
 #define DEBUG
