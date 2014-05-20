@@ -134,9 +134,7 @@ class XmippViewer(Viewer):
                 #Set hasCTF to False to avoid problems
                 writeSetOfParticles(obj, fn)
             self._views.append(ObjectView(fn, "Particles", self._project.getName(), obj.strId(), obj.strId()))
-                else:
-                    writeSetOfVolumes(obj, fn)
-                    self._views.append(DataView(fn))
+               
                     
         elif issubclass(cls, SetOfVolumes):
             mdFn = getattr(obj, '_xmippMd', None)
