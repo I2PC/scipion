@@ -3,8 +3,9 @@
 ; Using SPIDER command AP SR
 
 ; ---------------- Parameters ----------------
-x55 = 5        ; first ring radius for alignment, pixels
-x60 = 88       ; expected object diameter, pixels
+[inner-rad] = 5        ; first ring radius for alignment, pixels
+[outer-rad] = 44       ; expected object radius, pixels
+;;[obj-diam] = 88        ; expected object diameter, pixels
 
 ; ---------------- Input files ----------------
 fr g
@@ -24,7 +25,7 @@ fr g
 fr g
 [aligned_stack]stkaligned                ; aligned-image stack (w/o "@")
 fr g
-[aligned_images][aligned_stack]*****     ; aligned particles
+[aligned_images][aligned_stack]@*****    ; aligned particles
 ;;[aligned_images][aligned_dir]/sar******  ; aligned particles
 
 ; ------------- END BATCH HEADER -------------
@@ -34,8 +35,8 @@ echo "Performing reference-free alignment"; date
 
 vm
 echo "if(! -d [apsr_dir]) mkdir -p [apsr_dir]"|csh
-vm
-echo "if(! -d [aligned_dir]) mkdir -p [aligned_dir]"|csh
+;vm
+;echo "if(! -d [aligned_dir]) mkdir -p [aligned_dir]"|csh
 
 ; GET IMAGE DIMENSION
 
@@ -52,8 +53,9 @@ fi x65
 ; calculate center coordinate
 x32 = (x65+1)/2
 
-; calculate radius for last alignment ring
-x30=(x60-1)/2
+[obj-diam] = [outer-rad]*2
+;; calculate radius for last alignment ring
+;[outer-rad] = ([obj-diam]-1)/2
 
 
 ; GENERATE BLOB FOR CENTRATION
@@ -64,7 +66,7 @@ _1       ; OUTPUT
 x65,x65  ; dimensions
 C        ; _C_ircle
 x32,x32  ; center coords
-x30      ; object radius
+[outer-rad]
 N        ; continue?
 
 ; low-pass filter disc
@@ -83,8 +85,8 @@ _2      ; OUTPUT
 AP SR
 [unaligned]        ; particles to be aligned
 [group_particles]  ; selection file
-x60                ; expected size of the object
-x55,x30            ; first and last ring radius
+[obj-diam]         ; expected size of the object
+[inner-rad],[outer-rad]
 _2                 ; centering image
 [apsr_avg]
 [apsr_doc]
@@ -112,6 +114,9 @@ x88=x20-1  ; previous iteration's file exists
 
 vm
 echo "Aligning particles"; date
+
+de
+[aligned_stack]@
 
 ; get #particles
 ud n x11
@@ -145,7 +150,9 @@ echo "Done"; date
 
 en d
 
-; Modified 2009-06-12
+; Modified 2014-05-20
+;    2014-05-20 (trs) -- using radii consistently as input parameters (had mixed inner radius and outer diameter previously)
+;    2014-05-20 (trs) -- outputs are stacks
 ;    2008-11-12 (trs & th) -- generates centration reference
 ;    2008-04-10 (trs) -- seems to dump core if all processors used
 ;    2008-04-02 (trs & th) -- bug fix for AP SR iteration-counter

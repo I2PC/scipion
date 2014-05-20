@@ -7,14 +7,14 @@ x15 = 2.82  ; pixel size, Angstroms
 x21 = 37.6  ; filter parameter 1, Angstroms (pass-band if Butterworth, else filter radius)
 x22 = 28.2  ; filter parameter 2, Angstroms 
             ; stop band for Butterworth, temperature for Fermi, else not required
-x26 = 2     ; reduction/decimation factor (integer)
+x26 = 1     ; reduction/decimation factor (integer)
 x56 = 10000  ; progress interval -- message written to screen every (x56)th particle
 
 ; ------------------- Inputs -------------------
 fr l
 [group_particles]listparticles                  ; slice-to-particle lookup-table, for each group
 fr l
-[unfiltered]../Alignment/dala01_{***x77}@*****  ; unfiltered-image template (unstacked or stacked)
+[unfiltered]win/unt*****                        ; unfiltered-image template (unstacked or stacked)
 
 ; ------------------- Output -------------------
 fr g
@@ -115,7 +115,7 @@ echo "Done"; date
 
 EN D
 
-; Modified 2008-04-13
+; Modified 2014-05-20
 ;    2014-04-11 (trs) -- makes backup copy of output (in case of high-pass filtration)
 ;    2014-04-11 (trs) -- uses stacked images now
 ;    2008-04-06 (trs) -- adapted from filtershrink.spi
