@@ -277,8 +277,6 @@ class SpiderViewerDiday(SpiderViewerClassify):
         from pyworkflow.em.packages.xmipp3.convert import writeSetOfClasses2D
         fn = self._getPath('classes.xmd')
         writeSetOfClasses2D(classes2D, fn)
-        import os
-        print "cwd: ", os.getcwd() 
         
         return [DataView(fn)]
                               

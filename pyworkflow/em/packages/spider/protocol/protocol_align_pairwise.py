@@ -66,7 +66,7 @@ class SpiderProtAlignPairwise(SpiderProtAlign):
         self._params.update({
                              '[idim-header]': xdim,
                              '[inner-rad]': innerRadius,
-                             '[obj-diam]': outerRadius * 2, # convert radius to diameter
+                             '[outer-rad]': outerRadius, # convert radius to diameter
                              '[search-range]': self.searchRange.get(),
                              '[step-size]': self.stepSize.get(),
                              '[selection_list]': self._params['particlesSel'],

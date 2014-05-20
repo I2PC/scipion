@@ -66,7 +66,7 @@ class SpiderProtAlign(ProtAlign2D, SpiderProtocol):
                                  '_innerRadius_ and _outerRadius_ (in pixel units)\n'
                                  'will be analyzed.')
         line.addParam('innerRadius', IntParam, default=5, label='Inner')
-        line.addParam('outerRadius', IntParam, default=50, label='Outer')
+        line.addParam('outerRadius', IntParam, default=44, label='Outer')
 
         
     def _insertAllSteps(self):
