@@ -54,9 +54,10 @@ class SpiderProtAlignAPSR(ProtAlign2D, SpiderProtocol):
                         }    
     
     def _defineAlignParams(self, form):
-        line = form.addLine('Radius', 
+        line = form.addLine('Radius (px):', 
                             help='In the rotational alignment, only rings between\n'
-                                 '_innerRadius_ and _outerRadius_ (in pixel units) will be analyzed.')
+                                 '_innerRadius_ and _outerRadius_ (in pixel units)\n'
+                                 'will be analyzed.')
         line.addParam('innerRadius', IntParam, default=5, label='Inner')
         line.addParam('outerRadius', IntParam, default=50, label='Outer')
         

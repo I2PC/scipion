@@ -55,22 +55,21 @@ class SpiderProtAlignPairwise(ProtAlign2D, SpiderProtocol):
     #--------------------------- DEFINE param functions --------------------------------------------
     
     def _defineAlignParams(self, form):
-        form.addParam('innerRadius', IntParam, default=5,
-                      label='Inner radius(px):',
-                      help='In the rotational alignment, only rings between\n'
-                           '<innerRadius> and <diam>/2 (in pixel units) will be analyzed.')
-        form.addParam('diameter', IntParam, default=88, 
-                      label='Outer diameter(px):',
-                      help='In the rotational alignment, only rings between\n'
-                           '<innerRadius> and <diam>/2 (in pixel units) will be analyzed.')
+        line = form.addLine('Radius (px):', 
+                            help='In the rotational alignment, only rings between\n'
+                                 '_inner_ and _outer_ radius (in pixel units) \n'
+                                 'will be analyzed.')
+        line.addParam('innerRadius', IntParam, default=5, label='Inner')
+        line.addParam('outerRadius', IntParam, default=44, label='Outer')
+        
         form.addParam('searchRange', IntParam, default=8, 
-                      label='Search range(px):',
+                      label='Search range (px):',
                       help='In the translational alignment, shifts of up to\n'
-                           '<searchRange> will be allowed.')
+                           '_searchRange_ will be allowed.')
         form.addParam('stepSize', IntParam, default=2, 
                       label='Step size(px):',
                       help='In the translational alignment, shifts will be analyzed\n'
-                           'in units of <stepSize> (in pixel units).')        
+                           'in units of _stepSize_ (in pixel units).')        
     
     #--------------------------- INSERT steps functions --------------------------------------------  
     
@@ -79,12 +78,12 @@ class SpiderProtAlignPairwise(ProtAlign2D, SpiderProtocol):
         self._insertFunctionStep('convertInput', 'inputParticles', 
                                  self._getFileName('particles'), self._getFileName('particlesSel'))
         self._insertFunctionStep('alignParticlesStep', 
-                                 self.innerRadius.get(), self.diameter.get())
+                                 self.innerRadius.get(), self.outerRadius.get())
         self._insertFunctionStep('createOutputStep')
 
     #--------------------------- STEPS functions --------------------------------------------       
     
-    def alignParticlesStep(self, innerRadius, diameter):
+    def alignParticlesStep(self, innerRadius, outerRadius):
         """ Execute the pairwise.msa script to alignm the particles.
         """
         particles = self.inputParticles.get()
@@ -94,8 +93,8 @@ class SpiderProtAlignPairwise(ProtAlign2D, SpiderProtocol):
        
         self._params.update({
                              '[idim-header]': xdim,
-                             '[inner-rad]': self.innerRadius.get(),
-                             '[obj-diam]': self.diameter.get(),
+                             '[inner-rad]': innerRadius,
+                             '[obj-diam]': outerRadius * 2, # convert radius to diameter
                              '[search-range]': self.searchRange.get(),
                              '[step-size]': self.stepSize.get(),
                              '[selection_list]': self._params['particlesSel'],
