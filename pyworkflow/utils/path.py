@@ -188,6 +188,17 @@ def getLastFile(pattern):
     return None
 
 
+# Console (and XMIPP) escaped colors, and the related tags that we create
+# with Text.tag_config(). This dict is used in OutputText:addLine()
+colorName = {'30': 'gray',
+             '31': 'red',
+             '32': 'green',
+             '33': 'yellow',
+             '34': 'blue',
+             '35': 'magenta',
+             '36': 'cyan',
+             '37': 'white'}
+
 def renderTextFile(fname, add, offset=0, lineNo=0, numberLines=True,
                    maxSize=100, headSize=20, tailSize=None):
     """
@@ -209,7 +220,7 @@ def renderTextFile(fname, add, offset=0, lineNo=0, numberLines=True,
         else:
             add("""\n
     ==> Too much data to read (%d kB) -- %d kB omitted
-    ==> Click """ % (size, size - 40))
+    ==> Click on """ % (size, size - headSize - (tailSize or headSize)))
             add(fname, 'link:%s' % fname)
             add(' to open it with the default viewer\n\n')
             if numberLines:
@@ -229,7 +240,8 @@ def renderLine(line, add, lineNo=1, numberLines=True):
     """
     # Prepend line number
     if numberLines and lineNo:
-        add('%05d:   ' % lineNo, '36')  # 36 is color code for cyan
+        add('%05d:' % lineNo, 'cyan')
+        add('   ')
 
     # iter 1\riter 2\riter 3  -->  iter 3
     if '\r' in line:
@@ -253,7 +265,7 @@ def renderLine(line, add, lineNo=1, numberLines=True):
             # maybe we should also warn the user...
             add(line[start+8:])
             break
-        add(line[start+8:end], colorCode)
+        add(line[start+8:end], colorName[colorCode])
         pos = end + 4
 
 
@@ -276,8 +288,8 @@ def iterBigFile(textfile, offset=0, size=None,
 
     textfile.seek(offset)
     if sizeKb > maxSize:  # max size that we want to read (in kB)
-        for line in textfile.read(headSizeB).splitlines(True):
-            yield line
+        for line in textfile.read(headSizeB).split('\n'):
+            yield line + '\n'
         yield None  # Special result to mark omitting lines
         textfile.seek(-tailSizeB, 2)  # ready to show the last bytes
 
