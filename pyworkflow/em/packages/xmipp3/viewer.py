@@ -93,13 +93,9 @@ class XmippViewer(Viewer):
             mdFn = getattr(obj, '_xmippMd', None)
             if mdFn:
                 fn = mdFn.get()
-#            else:
-#                fn = self._getTmpPath(obj.getName() + '_micrographs.xmd')
-#                writeSetOfMicrographs(obj, fn)
             else:
                 fn = obj.getFileName()
             self._views.append(ObjectView(fn, "Micrographs", self._project.getName(), obj.strId(), obj.strId(), **args))
-            
             
         elif issubclass(cls, SetOfMovies):
             fn = self._getTmpPath(obj.getName() + '_movies.xmd')
@@ -129,31 +125,34 @@ class XmippViewer(Viewer):
                            
             self._views.append(CoordinatesObjectView(fn, tmpDir, 'review', self._project.getName(), obj.strId()))
         
-        elif issubclass(cls, SetOfParticles) or issubclass(cls, SetOfVolumes):
+        elif issubclass(cls, SetOfParticles):
             mdFn = getattr(obj, '_xmippMd', None)
             if mdFn:
                 fn = mdFn.get()
             else:
                 fn = self._getTmpPath(obj.getName() + '_images.xmd')
                 #Set hasCTF to False to avoid problems
-                if issubclass(cls, SetOfParticles):
-                    writeSetOfParticles(obj, fn)
+                writeSetOfParticles(obj, fn)
+            self._views.append(ObjectView(fn, "Particles", self._project.getName(), obj.strId(), obj.strId()))
                 else:
                     writeSetOfVolumes(obj, fn)
-            if issubclass(cls, SetOfParticles):
-                self._views.append(ObjectView(fn, "Particles", self._project.getName(), obj.strId(), obj.strId())) 
+                    self._views.append(DataView(fn))
+                    
+        elif issubclass(cls, SetOfVolumes):
+            mdFn = getattr(obj, '_xmippMd', None)
+            if mdFn:
+                fn = mdFn.get()
             else:
-                self._views.append(DataView(fn))
+                fn = self._getTmpPath(obj.getName() + '_images.xmd')
+                writeSetOfVolumes(obj, fn)
+            self._views.append(DataView(fn))
         
         elif issubclass(cls, SetOfClasses2D):
-#            mdFn = getattr(obj, '_xmippMd', None)
-#            if mdFn:
-#                fn = mdFn.get()
-##            else:
-##                fn = self._getTmpPath(obj.getName() + '_classes.xmd')
-##                writeSetOfClasses2D(obj, fn)
-#            else:
-            fn = obj.getFileName()
+            mdFn = getattr(obj, '_xmippMd', None)
+            if mdFn:
+                fn = mdFn.get()
+            else:
+                fn = obj.getFileName()
             self._views.append(ObjectView(fn, "Classes2D", self._project.getName(), obj.strId(), obj.getImages().strId()))  
             
         elif issubclass(cls, SetOfClasses3D):
@@ -161,8 +160,9 @@ class XmippViewer(Viewer):
             if mdFn:
                 fn = mdFn.get()
             else:
-                fn = self._getTmpPath(obj.getName() + '_classes.xmd')
-                writeSetOfClasses3D(obj, fn, self._getTmpPath())
+#                fn = self._getTmpPath(obj.getName() + '_classes.xmd')
+#                writeSetOfClasses3D(obj, fn, self._getTmpPath())
+                fn = obj.getFileName()
 
             self._views.append(ObjectView("classes@"+fn, "Classes3D", self._project.getName(), obj.strId(), obj.getImages().strId(), extraParams=args.get('extraParams', '')))
               
