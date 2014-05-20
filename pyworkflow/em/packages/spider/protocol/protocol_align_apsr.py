@@ -48,8 +48,8 @@ class SpiderProtAlignAPSR(SpiderProtAlign):
         Create the set of particles.
         """
         self._params.update({
-                             '[x55]': innerRadius,
-                             '[x60]': outerRadius * 2, # convert radius to diameter
+                             '[inner-rad]': innerRadius,
+                             '[outer-rad]': outerRadius,
                              '[group_particles]': self._params['particlesSel'],
                              '[unaligned]': self._params['particles'] + '@******',
                              '[aligned_stack]': self._params['particlesAligned'],
