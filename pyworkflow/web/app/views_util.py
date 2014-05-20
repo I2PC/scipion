@@ -34,7 +34,8 @@ from pyworkflow.web.pages import settings
 from pyworkflow.manager import Manager
 from pyworkflow.project import Project
 from django.shortcuts import render_to_response
-from django.http import HttpResponse
+from django.http import (HttpResponse,
+                         HttpResponseForbidden, HttpResponseNotFound)
 from django.core.servers.basehttp import FileWrapper
 from pyworkflow.utils import *
 
@@ -291,8 +292,16 @@ def textfileViewer(title, file):
 def file_downloader(request):
     "Return a response with the content of the file mentioned in ?path=fname"
     # Got the idea from here:
-    # https://stackoverflow.com/questions/8600843/serving-large-files-with-high-loads-in-django
+    # https://stackoverflow.com/questions/8600843
     path = request.GET.get("path")
+
+    # First some simple security: only allow to serve log files
+    if not any(path.endswith(x) for x in ['.log', '.stdout', '.stderr']):
+        return HttpResponseForbidden('Forbidden: Sorry, invalid path requested.')
+
+    if not os.path.exists(path):
+        return HttpResponseNotFound('Path not found: %s' % path)
+
     response = HttpResponse(FileWrapper(open(path)),
                             content_type=mimetypes.guess_type(path)[0])
     response['Content-Length'] = os.path.getsize(path)

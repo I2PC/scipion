@@ -832,10 +832,14 @@ class Protocol(Step):
         if fmt is None:
             self._buffer += txt
         elif fmt.startswith('link:'):
-            self._buffer += ('[[/file_downloader/?path=%s][%s]]' %
-                             (fmt[len('link:'):], txt))  # twiki style
-        else:  # independent from the color, we put it as bold!
-            self._buffer += '<strong>%s</strong>' % txt
+            url = fmt[len('link:'):]
+            # Add the url in the TWiki style
+            if url.startswith('http://'):
+                self._buffer += '[[%s][%s]]' % (url, txt)
+            else:
+                self._buffer += '[[/file_downloader/?path=%s][%s]]' % (url, txt)
+        else:
+            self._buffer += '<font color="%s">%s</font>' % (fmt, txt)
 
     def getLogsAsStrings(self):
 
