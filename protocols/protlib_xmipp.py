@@ -622,10 +622,10 @@ class ScriptShowJ(ScriptAppIJ):
         self.addParamsLine('         alias -d;')
         self.addParamsLine('  [--poll]                            : Keeps checking for changes on input files  (for image mode only!)')
         self.addParamsLine('         alias -p;')
-        self.addParamsLine('  [--render <columns>]    : Specifies image columns to render (for metadata mode only)')
+        self.addParamsLine('  [--render <...>]    : Specifies image columns to render (for metadata mode only)')
         self.addParamsLine('                          : by default the first one that can be visualized is rendered')
-        self.addParamsLine('  [--visible <columns>]    : Specifies visible labels')
-        self.addParamsLine('  [--order <columns>]    : Specifies labels order')
+        self.addParamsLine('  [--visible <...>]    : Specifies visible labels')
+        self.addParamsLine('  [--order <...>]    : Specifies labels order')
         
         self.addParamsLine('         alias -e;')
         self.addParamsLine('  [--rows <rows>]                            : number of rows in table')

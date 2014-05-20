@@ -126,7 +126,7 @@ public class ScipionMetaData extends MetaData{
                name = rs.getString("label_property");
                alias = rs.getString("column_name");
                clsname = rs.getString("class_name");
-               if(isPointer(clsname) && name.equals("self"))
+               if(name.equals("self"))
                {
                     self = clsname;
                     selfalias = alias;
@@ -182,7 +182,7 @@ public class ScipionMetaData extends MetaData{
                        
                     }
                     //System.out.printf("%s: %s render: %s type: %s \n", column.labelName, value, column.render, MetaData.getLabelTypeString(column.type));
-                    emo.addValue(value);
+                    emo.setValue(column, value);
                     
                 }
                 emobjects.add(emo);
@@ -247,31 +247,20 @@ public class ScipionMetaData extends MetaData{
         if(index >= size())
             return null;
         EMObject emo = emobjects.get(index);
-        return emo.getValue(getColumnIndex(label)).toString();
+        return emo.getValue(getColumnInfo(label)).toString();
     }
     
-    
-  
-    public int getColumnIndex(int label)
+    public ColumnInfo getColumnInfo(int label)
     {
         
-        int index = 0;
         for(ColumnInfo ci: columns)
         {
             if(ci.label == label)
-                return index;
-            index ++;
+                return ci;
         }
-        return -1;
+        return null;
     }
 
-    public static boolean isPointer(String name) {
-        if(name.equals("Particle") || name.equals("Coordinate") 
-                || name.equals("Micrograph") || name.equals("CTFModel") 
-                || name.equals("Acquisition") || name.equals("Class2D"))
-            return true;
-        return false;
-    }
 
     private ColumnInfo getColumnInfo(String labelName) {
         for(ColumnInfo ci: columns)
@@ -320,7 +309,7 @@ public class ScipionMetaData extends MetaData{
     public class EMObject
     {
         long id;
-        List<Object> values;
+        Map<ColumnInfo, Object> values;
        
         boolean isenabled;
         ScipionMetaData childmd;
@@ -331,36 +320,24 @@ public class ScipionMetaData extends MetaData{
         {
             this.id = id;
             this.isenabled = true;
-            values = new ArrayList<Object>();
+            values = new HashMap<ColumnInfo, Object>();
             this.md = md;
         }
         
         
-        public void addValue(Object value)
-        {
-            values.add(value);
-        }
+        
 
-        List<Object> getValues() {
+        Map<ColumnInfo, Object> getValues() {
             return values;
         }    
 
-        Object getValue(int c) {
+        Object getValue(ColumnInfo c) {
             return values.get(c);
         }
 
-        public boolean setValue(int label, Object value) {
-            int i = 0;
-            for(ColumnInfo ci: columns)
-            {
-                if(ci.label == label)
-                {
-                    values.set(i, value);
-                    return true;
-                }
-                i ++;
-            }       
-            return false;
+        public boolean setValue(ColumnInfo ci, Object value) {
+            values.put(ci, value);
+            return true;
         }
 
        
@@ -416,7 +393,7 @@ public class ScipionMetaData extends MetaData{
     
     public static boolean isImage(String self, String label)
     {
-        if(self.equals("Micrograph") || self.equals("Particle"))
+        if(self.equals("Micrograph") || self.equals("Particle") || self.equals("Volume"))
         {
             if(label.equals("_filename"))
                 return true;
@@ -426,7 +403,7 @@ public class ScipionMetaData extends MetaData{
             if(label.equals("_micFile"))
                 return true;
         }
-        else if (self.equals("Class2D"))
+        else if (self.equals("Class2D") || self.equals("Class3D"))
         {
             if(label.equals("_representative._filename"))
                 return true;
@@ -454,8 +431,8 @@ public class ScipionMetaData extends MetaData{
     public Object getValueObject(int label, long id)
     {
         EMObject emo = getEMObject(id);
-        int c = getColumnIndex(label);
-        if(c != -1)
+        ColumnInfo c = getColumnInfo(label);
+        if(c != null)
             return emo.getValue(c);
         return null;
     }
@@ -492,8 +469,24 @@ public class ScipionMetaData extends MetaData{
     
     public boolean setValueString(int label, String value, long id)
     {
+        return setValueObject(label, value, id);
+    }
+    
+    public boolean setValueDouble(int label, double value, long id)
+    {
+        return setValueObject(label, new Double(value).floatValue(), id);
+    }
+    
+    public boolean setValueInt(int label, int value, long id)
+    {
+        return setValueObject(label, value, id);
+    }
+    
+     public boolean setValueObject(int label, Object value, long id)
+    {
         EMObject emo = getEMObject(id);
-        return emo.setValue(label, value);
+        ColumnInfo ci = getColumnInfo(label);
+        return emo.setValue(ci, value);
     }
 
     public void importObjects(MetaData md, long [] ids)
@@ -579,7 +572,7 @@ public class ScipionMetaData extends MetaData{
                 
             stmt = c.createStatement();
             stmt.executeUpdate(sql);
-            System.out.println(sql);
+            //System.out.println(sql);
             sql = String.format("INSERT INTO %s(id, label_property, column_name, class_name) values (1, \'self\', \'%s\', \'%s\')", classestb, selfalias, self);
             String line = ", (%s, \'%s\', \'%s\', \'%s\')";
             ColumnInfo ci;
@@ -593,7 +586,7 @@ public class ScipionMetaData extends MetaData{
                 cols += String.format(", %s", ci.comment);
             }
             stmt.executeUpdate(sql);
-            System.out.println(sql);
+            //System.out.println(sql);
             sql = String.format("DROP TABLE IF EXISTS %1$s; CREATE TABLE %1$s(\n"
                     + "id        INTEGER PRIMARY KEY AUTOINCREMENT,\n" +
 "                      label      TEXT DEFAULT NULL,\n" +
@@ -602,7 +595,7 @@ public class ScipionMetaData extends MetaData{
                 
             
             stmt.executeUpdate(sql);
-            System.out.println(sql);
+            //System.out.println(sql);
             sql = String.format("INSERT INTO %s(%s) VALUES ", objectstb, cols);
             Object value;
             for(EMObject emo: emobjects)
@@ -630,7 +623,7 @@ public class ScipionMetaData extends MetaData{
             }
             sql = sql.substring(0, sql.length() - 1);//remove first comma
             stmt.executeUpdate(sql);
-            System.out.println(sql);
+            //System.out.println(sql);
             stmt.close();
             c.close();
             
