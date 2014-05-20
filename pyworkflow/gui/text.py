@@ -36,7 +36,7 @@ import ttk
 import gui
 from widgets import Scrollable, IconButton
 from pyworkflow.utils import (HYPER_BOLD, HYPER_ITALIC, HYPER_LINK1, HYPER_LINK2,
-                              parseHyperText, renderLine, renderTextFile)
+                              parseHyperText, renderLine, renderTextFile, colorName)
 from pyworkflow.utils.properties import Message, Color, Icon
 
 
@@ -210,17 +210,6 @@ class Text(tk.Text, Scrollable):
             self.tag_add(tag, "matchStart","matchEnd")
 
 
-# Console (and XMIPP) escaped colors, and the related tags that we create
-# with Text.tag_config(). This dict is used in OutputText:addLine()
-colorName = {'30': 'gray',
-             '31': 'red',
-             '32': 'green',
-             '33': 'yellow',
-             '34': 'blue',
-             '35': 'magenta',
-             '36': 'cyan',
-             '37': 'white'}
-
 def configureColorTags(text):
     """ Create tags in text (of type tk.Text) for all the supported colors. """
     try:
@@ -315,15 +304,14 @@ class OutputText(Text):
     def _addChunk(self, txt, fmt=None):
         """
         Add text txt to the widget, with format fmt.
-        fmt can be a console color code (like '31' for red) or a link
-        that looks like 'link:url'.
+        fmt can be a color (like 'red') or a link that looks like 'link:url'.
         """
         if self.colors and fmt is not None:
             if fmt.startswith('link:'):
                 fname = fmt.split(':', 1)[-1]
                 self.insert(tk.END, txt, self.hm.addOpen(fname))
             else:
-                self.insert(tk.END, txt, colorName[fmt])
+                self.insert(tk.END, txt, fmt)
         else:
             self.insert(tk.END, txt)
 
