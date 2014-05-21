@@ -266,7 +266,7 @@ def renderLine(line, add, lineNo=1, numberLines=True):
         code = line[start+2:end]
 
         # See what attribute to use from now on, and update pos
-        if code == 0:
+        if code == '0':
             attribute = 'normal'
         else:
             attribute = colorName.get(code[-2:], 'normal')
