@@ -62,7 +62,7 @@ $(".slider_inner").slider({
 	value : "{{params.value.0}}",
 	min : 0,
 	max : {{xdim}},
-	step : 1,
+	step : 2,
 	//this gets a live reading of the value and prints it on the page
 	slide : function(event, ui) {
 		$("#slider_inner_radius").html(ui.value/2);
@@ -82,7 +82,7 @@ $(".slider_outer").slider({
 	value : "{{params.value.1}}",
 	min : 0,
 	max : {{xdim}},
-	step : 1,
+	step : 2,
 	//this gets a live reading of the value and prints it on the page
 	slide : function(event, ui) {
 		$("#slider_outer_radius").html(ui.value/2);

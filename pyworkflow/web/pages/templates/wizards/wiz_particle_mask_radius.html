@@ -49,7 +49,7 @@ $(".slider_radius").slider({
 	value : "{{params.value}}",
 	min : 0,
 	max : "{{xdim}}",
-	step : 1,
+	step : 2,
 	//this gets a live reading of the value and prints it on the page
 	slide : function(event, ui) {
 		$("#slider_radius_result").html(ui.value/2);
