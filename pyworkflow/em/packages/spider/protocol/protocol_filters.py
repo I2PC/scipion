@@ -29,7 +29,7 @@ This sub-package contains protocol for particles filters operations
 
 from pyworkflow.em import *  
 
-from ..constants import FILTER_GAUSSIAN, FILTER_FERMI
+from ..constants import FILTER_GAUSSIAN, FILTER_FERMI, FILTER_BUTTERWORTH, FILTER_LOWPASS
 from ..spider import SpiderShell
 from protocol_base import SpiderProtocol
         
@@ -58,7 +58,7 @@ class SpiderProtFilter(ProtFilterParticles, SpiderProtocol):
     #--------------------------- DEFINE param functions --------------------------------------------   
     def _defineProcessParams(self, form):
         form.addParam('filterType', EnumParam, choices=['Top-hat', 'Gaussian', 'Fermi', 'Butterworth', 'Raised cosine'],
-                      label="Filter type", default=3,
+                      label="Filter type", default=FILTER_BUTTERWORTH,
                       help="""Select what type of filter do you want to apply.
                       
 *Top-hat*: Filter is a "top-hat" function 
@@ -81,7 +81,7 @@ if Flow < F < Fup, 1 if F < Flow, and 0 if F > Fup
 See detailed description of the filter in [[http://spider.wadsworth.org/spider_doc/spider/docs/man/fq.html][FQ Spider online manual]]
                            """)
         form.addParam('filterMode', EnumParam, choices=['low-pass', 'high-pass'],
-                      label='Filter mode', default=0,
+                      label='Filter mode', default=FILTER_LOWPASS,
                       )
         form.addParam('usePadding', BooleanParam, default=True, 
                       label='Use padding?',
@@ -92,26 +92,18 @@ See detailed description of the filter in [[http://spider.wadsworth.org/spider_d
                            'artifacts near boundary of image.')
         form.addParam('filterRadius', DigFreqParam, default=0.12, 
                       label='Filter radius (0 < f < 0.5)',
-                      condition='filterType <= %d' % FILTER_GAUSSIAN,
-                      help='Low frequency cutoff to apply the filterv.\n')  
-        line = form.addLine('Frequency', help='Range to apply the filter. Expected values between 0 and 0.5.')
+                      condition='filterType <= %d or filterType == %d' % (FILTER_GAUSSIAN,FILTER_FERMI),
+                      help='Low frequency cutoff to apply the filter.\n')  
+        
+        line = form.addLine('Frequency', 
+                            condition='filterType > %d and filterType != %d' % (FILTER_GAUSSIAN,FILTER_FERMI),
+                            help='Range to apply the filter. Expected values between 0 and 0.5.')
         line.addParam('lowFreq', DigFreqParam, default=0.1, 
-                      condition='filterType > %d' % FILTER_GAUSSIAN,
-                      label='Lowest')
+                    label='Lowest')
         line.addParam('highFreq', 
-                      DigFreqParam, default=0.2, 
-                      condition='filterType > %d' % FILTER_GAUSSIAN,
-                      label='Highest')
-#        form.addParam('lowFreq', DigFreqParam, default=0.1, 
-#                 
-#         label='Low Frequency (0 < f < 0.5)',
-#                      condition='filterType > %d' % FILTER_GAUSSIAN,
-#                      help='Low frequency cuttoff to apply the filter.\n')          
-#        form.addParam('highFreq', DigFreqParam, default=0.2, 
-#                      label='High Frequency (0 < f < 0.5)', 
-#                      condition='filterType > %d' % FILTER_GAUSSIAN,
-#                      help='High frequency cuttoff to apply the filter.\n'
-#                           'Set to 0.5 for a <high pass> filter.')          
+                    DigFreqParam, default=0.2, 
+                    label='Highest')
+         
         form.addParam('temperature', FloatParam, default=0.3, 
                       label='Temperature T:',
                       condition='filterType == %d' % FILTER_FERMI,
@@ -158,7 +150,7 @@ See detailed description of the filter in [[http://spider.wadsworth.org/spider_d
 
         self._enterWorkingDir() # Do operations inside the run working dir
         
-        spi = SpiderShell(ext=self._params['ext']) # Create the Spider process to send commands        
+        spi = SpiderShell(ext=self.getExt()) # Create the Spider process to send commands        
         particlesStk = removeBaseExt(self.particlesStk)
         
         # Run a loop for filtering
@@ -190,10 +182,38 @@ See detailed description of the filter in [[http://spider.wadsworth.org/spider_d
     
     def _summary(self):
         summary = []
+        summary.append('Used filter: *%s %s*' % (self.getEnumText('filterType'), self.getEnumText('filterMode')))
+ 
+        if self.filterType <= FILTER_GAUSSIAN or self.filterType == FILTER_FERMI: 
+            summary.append('Filter radius: *%s*' % self.filterRadius.get())
+        else:
+            summary.append('Frequency range: *%s - %s*' % (self.lowFreq.get(), self.highFreq.get()))
+
+        if self.filterType == FILTER_FERMI:
+            summary.append('Temperature factor: *%s*' % self.temperature.get())
+
+        summary.append('Padding set to: *%s*' % self.usePadding)
         return summary
     
     def _methods(self):
-        return self._summary()  # summary is quite explicit and serve as methods
+        methods = []
+        msg = '\nParticles were %s filtered using a %s filter' % (self.getEnumText('filterMode'),self.getEnumText('filterType'))
+
+        if self.filterType <= FILTER_GAUSSIAN or self.filterType == FILTER_FERMI: 
+            msg += ' using a radius of %s px^-1' % self.filterRadius.get()
+        else:
+            msg += ' using a frequency range of %s to %s px^-1' % (self.lowFreq.get(), self.highFreq.get())
+
+        if self.filterType == FILTER_FERMI: 
+            msg += ' and a temperature factor of of %s px^-1' % self.temperature.get()
+            
+        if self.usePadding:
+            msg += ', padding the images by a factor of two.'
+        else:
+            msg += ' with no padding.'
+            
+        methods.append(msg)            
+        return methods
     
     
     
