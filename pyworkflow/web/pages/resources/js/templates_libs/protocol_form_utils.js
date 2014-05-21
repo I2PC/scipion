@@ -381,18 +381,21 @@ function evalDependencies(row, newLevel) {
 			
 			// Evaluate the new parameter affected
 			var res = evalCondition(row2);
+			
+			if (res != undefined){
 
-			// Get the expertise level for the row affected
-			var expLevel = row2.attr('data-expert');
-			if (res == false || expLevel > newLevel) {
-//				console.log("hide!")
-				row2.hide();
-			} else if (res == true) {
-//				console.log("show!")
-				row2.show();
-				
-				// Evaluate the dependencies for the new row affected
-				evalDependencies(row2, newLevel);
+				// Get the expertise level for the row affected
+				var expLevel = row2.attr('data-expert');
+				if (res == false || expLevel > newLevel) {
+	//				console.log("hide!")
+					row2.hide();
+				} else if (res == true) {
+	//				console.log("show!")
+					row2.show();
+					
+					// Evaluate the dependencies for the new row affected
+					evalDependencies(row2, newLevel);
+				}
 			}
 		}
 	}	
@@ -402,39 +405,45 @@ function evalCondition(row) {
 	/*
 	 * Function to evaluate a condition given a row of the form.
 	 */
+	
+	var res = undefined;
 	var cond = row.attr('data-cond');
 	
-//	console.log("condition: " + cond)
+	if(cond != undefined){
 	
-	var params = row.attr('data-params');
-	var arrayParams = params.split(",");
-
-	// Get value of the element with name=itenName
-	var param = null;
-	var value = null;
-	var cond_eval = cond;
-
-	for (var cont = 0; cont < arrayParams.length; cont++) {
-		param = arrayParams[cont];
-		value = $("tr#" + param).val();
-		if (!value){
-			value = $("tr#" + param).attr("value");
+		var params = row.attr('data-params');
+		var arrayParams = params.split(",");
+	
+		// Get value of the element with name=itenName
+		var param = null;
+		var value = null;
+		var cond_eval = cond;
+	
+		for (var cont = 0; cont < arrayParams.length; cont++) {
+			param = arrayParams[cont];
+			value = $("tr#" + param).val();
 			if (!value){
-				value="''";
+				value = $("tr#" + param).attr("value");
+				if (!value){
+					value="''";
+				}
 			}
+	//		params += "param: " + param + " value: " + value + "\n";
+			cond_eval = cond_eval.replace(param, value);
 		}
-//		params += "param: " + param + " value: " + value + "\n";
-		cond_eval = cond_eval.replace(param, value);
+		
+	//	console.log("condition: " + cond + " \nparams:\n" + params + "\n eval: " + cond_eval);
+		
+		cond_eval = normalizeConditions(cond_eval)
+		
+		//	To check a good eval
+		//console.log(cond_eval + "/"+eval(cond_eval))
+	
+		res = eval(cond_eval);
 	}
 	
-//	console.log("condition: " + cond + " \nparams:\n" + params + "\n eval: " + cond_eval);
+	return res;
 	
-	cond_eval = normalizeConditions(cond_eval)
-	
-	//	To check a good eval
-	//console.log(cond_eval + "/"+eval(cond_eval))
-
-	return eval(cond_eval);
 }
 
 function normalizeConditions(cond){
