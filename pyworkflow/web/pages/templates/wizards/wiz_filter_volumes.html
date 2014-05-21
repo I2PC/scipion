@@ -4,9 +4,9 @@
 {% block head %}
 	<script>
 		function returnParams(){
-			putSelection('input#high_val', 'highFreq_input');
-			putSelection('input#low_val', 'lowFreq_input');
-			putSelection('input#decay_val', 'freqDecay_input');
+			putSelection('input#high_val', '{{params.label.1}}_input');
+			putSelection('input#low_val', '{{params.label.0}}_input');
+			putSelection('input#decay_val', '{{params.label.2}}_input');
 		}		
 	</script>
 {% endblock %} 
@@ -43,34 +43,34 @@
 		<tr>
 			<td>
 				<div id="highFou">
-					{% if mode == 0  or mode == 2 %}
+					{% if params.mode == 0  or params.mode == 2 %}
 					<span id="title_freq">High freq<span>
 					<div id="sliderLite" class="slider_high"></div>
-					<div id="slider_high_result">{{highFreq}}</div>
+					<div id="slider_high_result">{{params.value.1}}</div>
 					{% else %}
-					<div id="slider_high_result" style="display:none;">{{highFreq}}</div>
+					<div id="slider_high_result" style="display:none;">{{params.value.1}}</div>
 					{% endif %}
-					<input id="high_val" type="hidden" value="{{highFreq}}"/>
+					<input id="high_val" type="hidden" value="{{params.value.1}}"/>
 				</div>
 			</td>
 			<td>
 				<div id="lowFou">
-					{% if mode == 1 or mode == 2 %}
+					{% if params.mode == 1 or params.mode == 2 %}
 					<span id="title_freq">Low freq<span>
 					<div id="sliderLite" class="slider_low"></div>
-					<div id="slider_low_result">{{lowFreq}}</div>
+					<div id="slider_low_result">{{params.value.0}}</div>
 					{% else %}
-					<div id="slider_low_result" style="display:none;">{{lowFreq}}</div>
+					<div id="slider_low_result" style="display:none;">{{params.value.0}}</div>
 					{% endif %}
-					<input id="low_val" type="hidden" value="{{lowFreq}}"/>
+					<input id="low_val" type="hidden" value="{{params.value.0}}"/>
 				</div>
 			</td>
 			<td>
 				<div id="decayFou">
 					<span id="title_freq">Decay<span>
 					<div id="sliderLite" class="slider_decay"></div>
-					<div id="slider_decay_result">{{decayFreq}}</div>
-					<input id="decay_val" type="hidden" value="{{decayFreq}}"/>
+					<div id="slider_decay_result">{{params.value.2}}</div>
+					<input id="decay_val" type="hidden" value="{{params.value.2}}"/>
 				</div>
 			</td>
 		</tr>
@@ -80,7 +80,7 @@
 $(".slider_low").slider({
 	animate : true,
 	range : "min",
-	value : "{{lowFreq}}",
+	value : "{{params.value.0}}",
 	min : 0.00,
 	max : 0.50,
 	step : 0.01,
@@ -98,7 +98,7 @@ $(".slider_low").slider({
 $(".slider_high").slider({
 	animate : true,
 	range : "min",
-	value : "{{highFreq}}",
+	value : "{{params.value.1}}",
 	min : 0.00,
 	max : 0.50,
 	step : 0.01,
@@ -116,7 +116,7 @@ $(".slider_high").slider({
 $(".slider_decay").slider({
 	animate : true,
 	range : "min",
-	value : "{{decayFreq}}",
+	value : "{{params.value.2}}",
 	min : 0.00,
 	max : 0.50,
 	step : 0.01,
