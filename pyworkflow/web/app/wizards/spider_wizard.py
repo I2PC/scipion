@@ -34,7 +34,6 @@ from django.http import HttpResponse
 from pyworkflow.em.packages.spider.wizard import * 
 from pyworkflow.web.app.em_wizard import *
 
-
 class SpiderProtMaskWeb(SpiderProtMaskWizard):
     _environments = [WEB_DJANGO]
     
@@ -42,7 +41,7 @@ class SpiderProtMaskWeb(SpiderProtMaskWizard):
         params = self._getParameters(protocol)
         objs = params['input'].get()
         
-        res = validateParticles(objs) 
+        res = validateParticles(objs)
         
         if res is not 1:
             return HttpResponse(res)
@@ -56,11 +55,9 @@ class SpiderProtMaskWeb(SpiderProtMaskWizard):
             
             params['value'] = validateMaskRadius(params['value'], xdim, radius=1)
             
-            context = {'typeObj': 'Particles',
-                       'objects': self._getParticles(objs),
+            context = {'objects': self._getParticles(objs),
                        'xdim':xdim,
-                       'params': params
-                       }
+                       'params': params}
         
             context = wiz_base(request, context)
             return render_to_response('wizards/wiz_particle_mask_radius.html', context)    
@@ -87,11 +84,9 @@ class SpiderParticlesMaskRadiiWeb(SpiderParticlesMaskRadiiWizard):
 
             params['value'] = validateMaskRadius(params['value'], xdim, radius=2)               
             
-            context = {'typeObj': 'Particles',
-                       'objects': particles,
+            context = {'objects': particles,
                        'xdim':xdim,
-                       'params': params
-                       }
+                       'params': params}
         
             context = wiz_base(request, context)
             return render_to_response('wizards/wiz_particles_mask_radii.html', context)    

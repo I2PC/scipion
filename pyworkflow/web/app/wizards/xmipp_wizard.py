@@ -34,6 +34,9 @@ from django.http import HttpResponse
 from pyworkflow.em.packages.xmipp3.wizard import * 
 from pyworkflow.web.app.em_wizard import *
 
+#===============================================================================
+# DOWNSAMPLING
+#===============================================================================
 
 class XmippDownsamplingWeb(XmippDownsampleWizard):
     _environments = [WEB_DJANGO]
@@ -48,14 +51,15 @@ class XmippDownsamplingWeb(XmippDownsampleWizard):
             return HttpResponse(res)
         else:           
             
-            context = {'typeObj': 'Micrographs',
-                       'objects': self._getMics(objs),
-                       'params': params
-                       }
+            context = {'objects': self._getMics(objs),
+                       'params': params}
     
             context = wiz_base(request, context)
             return render_to_response('wizards/wiz_downsampling.html', context)
 
+#===============================================================================
+# CTFS
+#===============================================================================
 
 class XmippCTFWeb(XmippCTFWizard):
     _environments = [WEB_DJANGO]
@@ -70,14 +74,15 @@ class XmippCTFWeb(XmippCTFWizard):
             return HttpResponse(res)
         else:           
 
-            context = {'typeObj': 'Micrographs',
-                       'objects': self._getMics(objs),
-                       'params': params
-                   }
+            context = {'objects': self._getMics(objs),
+                       'params': params}
         
             context = wiz_base(request, context)
             return render_to_response('wizards/wiz_ctf.html', context)
         
+#===============================================================================
+# MASKS
+#===============================================================================
 
 class XmippParticleMaskRadiusWeb(XmippParticleMaskRadiusWizard):
     _environments = [WEB_DJANGO]
@@ -100,11 +105,9 @@ class XmippParticleMaskRadiusWeb(XmippParticleMaskRadiusWizard):
             
             params['value'] = validateMaskRadius(params['value'], xdim, radius=1)
             
-            context = {'typeObj': 'Particles',
-                       'objects': self._getParticles(objs),
+            context = {'objects': self._getParticles(objs),
                        'xdim':xdim,
-                       'params': params
-                       }
+                       'params': params}
         
             context = wiz_base(request, context)
             return render_to_response('wizards/wiz_particle_mask_radius.html', context)    
@@ -131,11 +134,9 @@ class XmippParticleMaskRadiiWeb(XmippParticleMaskRadiiWizard):
 
             params['value'] = validateMaskRadius(params['value'], xdim, radius=2)               
             
-            context = {'typeObj': 'Particles',
-                       'objects': particles,
+            context = {'objects': particles,
                        'xdim':xdim,
-                       'params': params
-                       }
+                       'params': params}
         
             context = wiz_base(request, context)
             return render_to_response('wizards/wiz_particles_mask_radii.html', context)    
@@ -162,11 +163,9 @@ class XmippVolumeMaskRadiusWeb(XmippVolumeMaskRadiusWizard):
             
             params['value'] = validateMaskRadius(params['value'], xdim, radius=1)
                
-            context = {'typeObj': 'Volumes',
-                       'objects': vols,
+            context = {'objects': vols,
                        'xdim':xdim,
-                       'params': params
-                       }
+                       'params': params}
         
             context = wiz_base(request, context)
             return render_to_response('wizards/wiz_volume_mask_radius.html', context)    
@@ -192,16 +191,17 @@ class XmippVolumeMaskRadiiWeb(XmippVolumeRadiiWizard):
             
             params['value'] = validateMaskRadius(params['value'], xdim, radius=2)  
             
-            context = {'typeObj': 'Volumes',
-                       'objects': vols,
+            context = {'objects': vols,
                        'xdim':xdim,
-                       'params': params
-                       }
+                       'params': params}
         
             context = wiz_base(request, context)
             return render_to_response('wizards/wiz_volumes_mask_radii.html', context)    
 
     
+#===============================================================================
+# FILTERS
+#===============================================================================
 
 class XmippFilterParticlesWeb(XmippFilterParticlesWizard):
     _environments = [WEB_DJANGO]
@@ -222,10 +222,8 @@ class XmippFilterParticlesWeb(XmippFilterParticlesWizard):
             
             params['value'] = proccessModeFilter(params['mode'], params['value'])
             
-            context = {'typeObj':'Particles',
-                       'objects': particles,
-                       'params':params
-                       }
+            context = {'objects': particles,
+                       'params':params}
             
             context = wiz_base(request, context)
             
@@ -251,10 +249,8 @@ class XmippFilterVolumesWeb(XmippFilterVolumesWizard):
             
             params['value'] = proccessModeFilter(params['mode'], params['value'])
             
-            context = {'typeObj':'Volumes',
-                       'objects': volumes,
-                       'params':params
-                       }
+            context = {'objects': volumes,
+                       'params':params}
             
             context = wiz_base(request, context)
             
@@ -278,10 +274,8 @@ class XmippGaussianParticlesWeb(XmippGaussianParticlesWizard):
             if len(particles) == 0:
                 return HttpResponse("errorIterate")
 
-            context = {'typeObj':'Particles',
-                       'objects': particles,
-                       'params':params
-                       }
+            context = {'objects': particles,
+                       'params':params}
             
             context = wiz_base(request, context)
             
@@ -305,10 +299,8 @@ class XmippGaussianVolumesWeb(XmippGaussianVolumesWizard):
             if len(volumes) == 0:
                 return HttpResponse("errorIterate")
             
-            context = {'typeObj':'Volumes',
-                       'objects': volumes,
-                       'params':params
-                       }
+            context = {'objects': volumes,
+                       'params':params}
             
             context = wiz_base(request, context)
             
