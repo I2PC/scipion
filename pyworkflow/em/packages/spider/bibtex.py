@@ -35,7 +35,7 @@ _bibtexStr = """
     Boisset, N. and Leith, A. and Frank, J.},
   title = {SPIDER image processing for single-particle reconstruction of biological
     macromolecules from electron micrographs},
-  journal = {Nature protocols},
+  journal = {Nature Protocols},
   year = {2008},
   volume = {3},
   pages = {1941--1974},
@@ -70,8 +70,8 @@ _bibtexStr = """
   doi = {http://dx.doi.org/10.1006/jsbi.1996.0030}
 }
 
-@artiche{Marco1996,
-  author = {S., Marco and Chagoyen, M. and {de la Fraga}, {L. G.} and Carazo,
+@article{Marco1996,
+  author = {Marco, S. and Chagoyen, M. and {de la Fraga}, {L. G.} and Carazo,
     {J. M.} and Carrascosa, {J. L.}},
   title = {A variant to the "random approximation" of the reference-free alignment
     algorithm},

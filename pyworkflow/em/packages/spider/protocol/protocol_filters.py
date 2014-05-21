@@ -69,13 +69,14 @@ where F is the frequency.
               
 *Fermi*: Filter is: 1 / (1 + EXP((F - SPF) / T)) which negotiates 
 between "Top-hat" and Gaussian characteristics, depending on 
-the value of the temperature.
+the value of the temperature T.
 
 *Butterworth* Filter is: 1 / (SQRT(1 + F / RAD)**(2 * ORDER)) 
 The ORDER determines the filter fall off and RAD corresponds 
 to the cut-off radius. 
 
-*Raised cosine* Filter is: 
+*Raised cosine* Filter is: 0.5 * (COS(PI * (F - Flow) / (Flow - Fup)) + 1) 
+if Flow < F < Fup, 1 if F < Flow, and 0 if F > Fup
 
 See detailed description of the filter in [[http://spider.wadsworth.org/spider_doc/spider/docs/man/fq.html][FQ Spider online manual]]
                            """)
@@ -92,7 +93,7 @@ See detailed description of the filter in [[http://spider.wadsworth.org/spider_d
         form.addParam('filterRadius', DigFreqParam, default=0.12, 
                       label='Filter radius (0 < f < 0.5)',
                       condition='filterType <= %d' % FILTER_GAUSSIAN,
-                      help='Low frequency cuttoff to apply the filter.\n')  
+                      help='Low frequency cutoff to apply the filterv.\n')  
         line = form.addLine('Frequency', help='Range to apply the filter. Expected values between 0 and 0.5.')
         line.addParam('lowFreq', DigFreqParam, default=0.1, 
                       condition='filterType > %d' % FILTER_GAUSSIAN,
