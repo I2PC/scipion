@@ -250,7 +250,7 @@ def renderLine(line, add, lineNo=1, numberLines=True):
 
     # Find all console escape codes and use the appropriate tag instead.
     pos = 0  # current position in the line we are parsing
-    attribute = 'normal'
+    attribute = None
     while True:
         # line looks like:
         #   'blah blah \x1b[{attr1};...;{attrn}mTEXT\x1b[0m blah blah'
@@ -267,9 +267,9 @@ def renderLine(line, add, lineNo=1, numberLines=True):
 
         # See what attribute to use from now on, and update pos
         if code == '0':
-            attribute = 'normal'
+            attribute = None
         else:
-            attribute = colorName.get(code[-2:], 'normal')
+            attribute = colorName.get(code[-2:], None)
         pos = end + 1  # go to the character next to "m", the closing char
 
 
