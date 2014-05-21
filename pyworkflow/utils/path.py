@@ -265,7 +265,7 @@ def renderLine(line, add, lineNo=1, numberLines=True):
             # maybe we should also warn the user...
             add(line[start+8:])
             break
-        add(line[start+8:end], colorName[colorCode])
+        add(line[start+8:end], colorName.get(colorCode, 'normal'))
         pos = end + 4
 
 
