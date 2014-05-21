@@ -140,33 +140,6 @@ def runSpiderTemplate(templateName, ext, paramsDict):
 
     scriptName = removeExt(scriptName)  
     runJob(None, SPIDER, "%(ext)s @%(scriptName)s" % locals())
-            
-    
-def parseHeaderVars(script, replace={}):
-    """ Parse the variables of the header of spider scripts. 
-    Params:
-        script: the script name to be parsed.
-        replace: a dictionary with key-value to substitute.
-    """
-    f = open(script)
-    
-    for line in f:
-        line = line.strip()
-            
-        if END_HEADER in line:
-            break
-            
-        if not line.startswith(';'): # Skip comment lines
-            m = REGEX_KEYVALUE.match(line)
-            if m:
-                print line
-                
-                varName = m.groupdict()['var']
-                if varName in replace:
-                    d = m.groupdict()
-                    d['value'] = replace[varName]
-                    print " FOUND VAR: ", varName
-                    print " NEW LINE: ", "%(var)s = %(value)s%(rest)s" % d
 
 
 class SpiderShell(object):

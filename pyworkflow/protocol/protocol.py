@@ -826,8 +826,7 @@ class Protocol(Step):
     def _addChunk(self, txt, fmt=None):
         """
         Add text txt to self._buffer, with format fmt.
-        fmt can be a console color code (like '31' for red) or a link
-        that looks like 'link:url'.
+        fmt can be a color (like 'red') or a link that looks like 'link:url'.
         """
         if fmt is None:
             self._buffer += txt
