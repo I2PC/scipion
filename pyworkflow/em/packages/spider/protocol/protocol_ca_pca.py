@@ -54,17 +54,22 @@ class SpiderProtCAPCA(SpiderProtocol):
     
     def __init__(self, **kwargs):
         SpiderProtocol.__init__(self, **kwargs)
+        self._caDir = 'CA'
+        self._caPrefix = 'cas' 
+        
+        caFilePrefix = join(self._caDir, self._caPrefix + '_')
         
         self._params = {'ext': 'stk',
                         'particles': 'input_particles',
                         'particlesSel': 'input_particles_sel',
                         'outputParticles': 'output_particles',
                         'mask': 'mask',
-                        'imcFile': join('CA', 'cas_IMC'),
-                        'seqFile': join('CA', 'cas_SEQ'),
-                        'eigFile': join('CA', 'cas_EIG'),
-                        'eigenimages': join('CA', 'eigenimg'),
-                        'reconstituted': join('CA', 'reconstituted')
+                        # TO DO: read tags in case filenames change in SPIDER procedure
+                        'imcFile': caFilePrefix + 'IMC',
+                        'seqFile': caFilePrefix + 'SEQ',
+                        'eigFile': caFilePrefix + 'EIG',
+                        'eigenimages': join(self._caDir, 'stkeigenimg'),
+                        'reconstituted': join(self._caDir, 'stkreconstituted')
                         }
     
     def _defineParams(self, form):
@@ -126,7 +131,10 @@ class SpiderProtCAPCA(SpiderProtocol):
                              '[num-factors]': numberOfFactors,
                              '[selection_doc]': self._params['particlesSel'],
                              '[particles]': self._params['particles'] + '@******',
-                             '[custom_mask]': self._params['mask'] + '@1'
+                             '[custom_mask]': self._params['mask'] + '@1',
+                             '[ca_dir]': self._caDir,
+                             '[eigen_img]': self._params['eigenimages'], 
+                             '[reconstituted_img]': self._params['reconstituted']
                              })
                    
         self.runScript('mda/ca-pca.msa', self.getExt(), self._params)
