@@ -3,6 +3,13 @@
 {% block name %} Volume Mask Radius {% endblock %} 
 {% block head %}
 	<script type="text/javascript" src="{{raphael}}"></script>
+	<script>
+		function initialLoad() {
+			compositeVol($("tr#"+firstElm));
+			putCircle(({{params.value}}*125)/{{xdim}}, "canvas", "blue");
+			$("#slider_radius_result").html({{params.value}}/2);
+		}
+	</script>
 {% endblock %} 
 {% block list %}
 
@@ -57,7 +64,7 @@ $(".slider_radius").slider({
 	}
 });
 //Load the First Element of the list
-window.onload = compositeVol($("tr#"+firstElm));putCircle(({{params.value}}*125)/{{xdim}}, "canvas", "blue");$("#slider_radius_result").html({{params.value}}/2);
+window.onload = initialLoad();
 </script>
 {% endblock %}
 {% block function %}

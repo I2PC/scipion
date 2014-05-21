@@ -4,10 +4,16 @@
 {% block head %}
 	<script type="text/javascript" src="{{raphael}}"></script>
 	<script>
+	
+		function initialLoad(){
+			compositeVol($("tr#"+firstElm));putCircle(({{params.value.1}}*125)/{{xdim}}, "canvas_high", "blue");putCircle(({{params.value.0}}*125)/{{xdim}}, "canvas_low", "red");$("#slider_outer_radius").html({{params.value.1}}/2);$("#slider_inner_radius").html({{params.value.0}}/2);
+		}
+		
 		function returnParams(){
 			putSelection('input#inner_val', '{{params.label.0}}_input');
 			putSelection('input#outer_val', '{{params.label.1}}_input');
 		}		
+		
 	</script>
 {% endblock %} 
 {% block list %}
@@ -90,7 +96,7 @@ $(".slider_outer").slider({
 	}
 });
 //Load the First Element of the list
-window.onload = compositeVol($("tr#"+firstElm));putCircle(({{params.value.1}}*125)/{{xdim}}, "canvas_high", "blue");putCircle(({{params.value.0}}*125)/{{xdim}}, "canvas_low", "red");$("#slider_outer_radius").html({{params.value.1}}/2);$("#slider_inner_radius").html({{params.value.0}}/2);
+window.onload = initialLoad();
 </script>
 {% endblock %}
 {% block function %}

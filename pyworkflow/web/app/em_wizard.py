@@ -105,31 +105,35 @@ def proccessModeFilter(mode, value):
     # Order : low - high - decay
     
     if mode == 0:
-        # low pass
+        print "filter low pass"
         value[0] = 0.
-    elif mode == 1:
-        # high pass
-        value[1] = 1.0
-    elif mode== 2:
-        #band pass
-        pass
+        
+    #     if mode == 0:
+    #        # low pass
+    #        lowFreq = 0.
+    #        highFreq = value[1]
+    #        decay = value[2]
     
-#     if mode == 0:
-#        # low pass
-#        lowFreq = 0.
-#        highFreq = value[1]
-#        decay = value[2]
-#    elif mode == 1:
-#        # high pass
-#        lowFreq = value[0]
-#        highFreq = 1.0
-#        decay = value[2]
-#    elif mode== 2:
-#        #band pass
-#        highFreq = value[0]
-#        lowFreq = value[1]
-#        decay = value[2]
-#    
+    elif mode == 1:
+        print "filter high pass"
+        value[1] = 1.0
+        
+    #    elif mode == 1:
+    #        # high pass
+    #        lowFreq = value[0]
+    #        highFreq = 1.0
+    #        decay = value[2]
+    
+    elif mode== 2:
+        print "filter band pass"
+    
+    #    elif mode== 2:
+    #        #band pass
+    #        highFreq = value[0]
+    #        lowFreq = value[1]
+    #        decay = value[2]
+
+    print "Value:", value
     return value
 
 def validateMaskRadius(value, xdim, radius):
