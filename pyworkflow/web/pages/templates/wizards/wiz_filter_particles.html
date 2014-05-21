@@ -43,7 +43,7 @@
 		<tr>
 			<td>
 				<div id="highFou">
-					{% if mode == 0  or mode == 2 %}
+					{% if params.mode == 0  or params.mode == 2 %}
 					<span id="title_freq">High freq<span>
 					<div id="sliderLite" class="slider_high"></div>
 					<div id="slider_high_result">{{params.value.1}}</div>
@@ -55,7 +55,7 @@
 			</td>
 			<td>
 				<div id="lowFou">
-					{% if mode == 1 or mode == 2 %}
+					{% if params.mode == 1 or params.mode == 2 %}
 					<span id="title_freq">Low freq<span>
 					<div id="sliderLite" class="slider_low"></div>
 					<div id="slider_low_result">{{params.value.0}}</div>
