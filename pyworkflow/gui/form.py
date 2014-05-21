@@ -67,24 +67,29 @@ class BoolVar():
     
 class PointerVar():
     """Wrapper around tk.StringVar to hold object pointers"""
-    def __init__(self):
+    def __init__(self, protocol):
         self.tkVar = tk.StringVar()
         self.value = None
         self.trace = self.tkVar.trace
+        self._protocol = protocol
         
     def set(self, value):
         self.value = value
-        v = ''
-
-        label = value.getObjLabel()
-
-        if len(label) > 0:
-            v = label
-        else:
-            v = '%s.%s' % (value.getName(), value.strId())
-            
-        self.tkVar.set(v)   
-            
+        self.tkVar.set(self.getObjectLabel())   
+     
+    def getObjectLabel(self):
+        """ We will try to show in the list the string representation
+        that is more readable for the user to pick the desired object.
+        """
+        label = ''
+        obj = self.value
+        if obj:
+            label = obj.getObjLabel()
+            if not len(label.strip()):
+                parent = self._protocol.mapper.getParent(obj)
+                label = "%s -> %s" % (parent.getObjLabel(), obj.getLastName())
+        return label
+           
     def get(self):
         return self.value
     
@@ -195,8 +200,18 @@ class SubclassesTreeProvider(TreeProvider):
                     return True
         return False
     
+    def getObjectLabel(self, obj):
+        """ We will try to show in the list the string representation
+        that is more readable for the user to pick the desired object.
+        """
+        label = obj.getObjLabel()
+        if not len(label.strip()):
+            parent = self.mapper.getParent(obj)
+            label = "%s -> %s" % (parent.getObjLabel(), obj.getLastName())
+        return label
+        
     def getObjectInfo(self, obj):
-        return {'key': obj.strId(), 'text': obj.getNameId(),
+        return {'key': obj.strId(), 'text': self.getObjectLabel(obj),
                 'values': (str(obj),), 'selected': self.isSelected(obj)}
 
     def getObjectActions(self, obj):
@@ -439,6 +454,7 @@ class ParamWidget():
     def __init__(self, row, paramName, param, window, parent, value, 
                  callback=None, visualizeCallback=None, column=0, showButtons=True):
         self.window = window
+        self._protocol = self.window.protocol
         self.row = row
         self.column = column
         self.paramName = paramName
@@ -571,7 +587,7 @@ class ParamWidget():
             self._addButton("Remove", Icon.ACTION_DELETE, self._removeObject)
         
         elif t is PointerParam or t is RelationParam:
-            var = PointerVar()
+            var = PointerVar(self._protocol)
             entry = tk.Entry(content, width=entryWidth, textvariable=var.tkVar, state="readonly")
             entry.grid(row=0, column=0, sticky='w')
             btnFunc = self._browseObject
@@ -637,7 +653,7 @@ class ParamWidget():
             selected = value
         elif selected is not None:
             selected = [value]
-        tp = SubclassesTreeProvider(self.window.protocol, self.param, selected=selected)
+        tp = SubclassesTreeProvider(self._protocol, self.param, selected=selected)
         dlg = ListDialog(self.parent, "Select object", tp, 
                          "Double click an item to preview the object")
         if dlg.value is not None:
@@ -650,7 +666,7 @@ class ParamWidget():
     def _browseRelation(self, e=None):
         """Select a relation from DB
         This function is suppose to be used only for RelationParam. """
-        tp = RelationsTreeProvider(self.window.protocol, self.param, selected=self.get())
+        tp = RelationsTreeProvider(self._protocol, self.param, selected=self.get())
         dlg = ListDialog(self.parent, "Select object", tp)
         if dlg.value is not None:
             self.set(dlg.value)
@@ -681,7 +697,7 @@ class ParamWidget():
         
         if len(className):
             instanceName = self.paramName + "Instance"
-            protocol = self.window.protocol
+            protocol = self._protocol
             #TODO check if is present and is selected a different
             # class, so we need to delete that and create a new instance
             if not hasattr(protocol, instanceName):
