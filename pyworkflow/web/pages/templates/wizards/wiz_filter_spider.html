@@ -5,16 +5,23 @@
 	<script type="text/javascript" src="{{raphael}}"></script>
 	<script>
 		function returnParams(){
-			if ({{protocol.filterType.get}} < 2){
+			if ({{params.mode.0}} < 2){
 				putSelection('input#radius_val', '{{params.label.0}}_input');
 			} else {
 				putSelection('input#high_val', '{{params.label.2}}_input');
 				putSelection('input#low_val', '{{params.label.1}}_input');
-				if ({{protocol.filterType.get}} == 2){
+				if ({{params.mode.0}} == 2){
 					putSelection('input#temp_val', '{{params.label.3}}_input');
 				}
 			}
-		}
+		};
+		
+		function loadFilter(elm){
+			var type = {{params.mode.0}}
+			var mode = {{params.mode.1}}
+			var padding = '{{params.mode.2}}'
+			compositeSpiderFilter(elm, type, mode, padding);
+		};
 	</script>
 {% endblock %}	
 {% block list %}
@@ -26,7 +33,7 @@
 </script>
 {% endif %}
 <tr id="{{obj.getObjId}}" class="no-selected"
-	onclick="compositeSpiderFilter(($(this)), {{params.mode.0}}, {{params.mode.1}}, '{{params.mode.3}}')" 
+	onclick="loadFilter($(this))" 
 	value="{{obj.text}}">
 	<td>{{obj.basename}}</td>
 </tr>
@@ -93,7 +100,7 @@ $(".slider_radius").slider({
 	//this updates the hidden form field so we can submit the data using a form
 	change : function(event, ui) {
 		$('#radius_val').attr('value', ui.value);
-		previewSpiderFilter({{params.mode.0}}, {{params.mode.1}}, '{{params.mode.3}}');
+		previewSpiderFilter({{params.mode.0}}, {{params.mode.1}}, '{{params.mode.2}}');
 	}
 });
 
@@ -111,7 +118,7 @@ $(".slider_low").slider({
 	//this updates the hidden form field so we can submit the data using a form
 	change : function(event, ui) {
 		$('#low_val').attr('value', ui.value);
-		previewSpiderFilter({{params.mode.0}}, {{params.mode.1}}, '{{params.mode.3}}');
+		previewSpiderFilter({{params.mode.0}}, {{params.mode.1}}, '{{params.mode.2}}');
 	}
 });
 $(".slider_high").slider({
@@ -128,7 +135,7 @@ $(".slider_high").slider({
 	//this updates the hidden form field so we can submit the data using a form
 	change : function(event, ui) {
 		$('#high_val').attr('value', ui.value);
-		previewSpiderFilter({{params.mode.0}}, {{params.mode.1}}, '{{params.mode.3}}');
+		previewSpiderFilter({{params.mode.0}}, {{params.mode.1}}, '{{params.mode.2}}');
 	}
 });
 
@@ -146,12 +153,12 @@ $(".slider_temp").slider({
 	//this updates the hidden form field so we can submit the data using a form
 	change : function(event, ui) {
 		$('#temp_val').attr('value', ui.value);
-		previewSpiderFilter({{params.mode.0}}, {{params.mode.1}}, '{{params.mode.3}}');
+		previewSpiderFilter({{params.mode.0}}, {{params.mode.1}}, '{{params.mode.2}}');
 	}
 });
 
 //Load the First Element of the list
-window.onload = compositeSpiderFilter($("tr#"+firstElm), {{params.mode.0}}, {{params.mode.1}}, '{{params.mode.3}}')
+window.onload = loadFilter($("tr#"+firstElm))
 </script>
 
 {% endblock %}

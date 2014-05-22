@@ -38,6 +38,9 @@ from tools import *
 from pyworkflow.web.app.views_util import getImageXdim
 from pyworkflow.web.app.views_base import base_wiz
 
+from pyworkflow.em.packages.xmipp3.convert import xmippToLocation, locationToXmipp
+from pyworkflow.em.packages.spider.convert import locationToSpider
+
 #===============================================================================
 # MASKS 
 #===============================================================================
@@ -109,6 +112,7 @@ class SpiderFilterParticlesWeb(SpiderFilterParticlesWizard):
     
     def _run(self, protocol, request):
         params = self._getParameters(protocol)
+        
         objs = params['input'].get()
         
         res = validateParticles(objs)
