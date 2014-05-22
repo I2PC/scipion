@@ -6,12 +6,12 @@
 	<script>
 		function returnParams(){
 			if ({{protocol.filterType.get}} < 2){
-				putSelection('input#radius_val', 'filterRadius_input');
+				putSelection('input#radius_val', '{{params.label.0}}_input');
 			} else {
-				putSelection('input#high_val', 'highFreq_input');
-				putSelection('input#low_val', 'lowFreq_input');
+				putSelection('input#high_val', '{{params.label.2}}_input');
+				putSelection('input#low_val', '{{params.label.1}}_input');
 				if ({{protocol.filterType.get}} == 2){
-					putSelection('input#temp_val', 'temperature_input');
+					putSelection('input#temp_val', '{{params.label.3}}_input');
 				}
 			}
 		}
@@ -26,7 +26,7 @@
 </script>
 {% endif %}
 <tr id="{{obj.getObjId}}" class="no-selected"
-	onclick="compositeSpiderFilter(($(this)), {{filterType}}, {{filterMode}}, '{{usePadding}}')" 
+	onclick="compositeSpiderFilter(($(this)), {{params.mode.0}}, {{params.mode.1}}, '{{params.mode.3}}')" 
 	value="{{obj.text}}">
 	<td>{{obj.basename}}</td>
 </tr>
@@ -47,33 +47,32 @@
 {% block options %}
 <fieldset id="sliderOptions">
 	<legend>Frequencies</legend>
-	{% if protocol.filterType.get < 2 %}
+	{% if params.mode.0 < 2 %}
 	<div id="radius">
 		<span id="title_freq">Radius<span>
 		<div id="slider" class="slider_radius"></div>
-		<div id="slider_radius_result">{{protocol.filterRadius.get}}</div>
-		<input id="radius_val" type="hidden" value="{{protocol.filterRadius.get}}"/>
+		<div id="slider_radius_result">{{params.value.0}}</div>
+		<input id="radius_val" type="hidden" value="{{params.value.0}}"/>
 	</div>
 	{% else %}
 		<div id="lowFreq">
 			<span id="title_freq">Low freq<span>
 			<div id="slider" class="slider_low"></div>
-			<div id="slider_low_result">{{protocol.lowFreq.get}}</div>
-			<input id="low_val" type="hidden" value="{{protocol.lowFreq.get}}"/>
+			<div id="slider_low_result">{{params.value.1}}</div>
+			<input id="low_val" type="hidden" value="{{params.value.1}}"/>
 		</div>
-		
 		<div id="highFreq">
 			<span id="title_freq">High freq<span>
 			<div id="slider" class="slider_high"></div>
-			<div id="slider_high_result">{{protocol.highFreq.get}}</div>
-			<input id="high_val" type="hidden" value="{{protocol.highFreq.get}}"/>
+			<div id="slider_high_result">{{params.value.2}}</div>
+			<input id="high_val" type="hidden" value="{{params.value.2}}"/>
 		</div>
-		{% if protocol.filterType.get == 2 %}
+		{% if params.mode.0 == 2 %}
 		<div id="temp">
 			<span id="title_freq">Temperature<span>
 			<div id="slider" class="slider_temp"></div>
-			<div id="slider_temp_result">{{protocol.temperature.get}}</div>
-			<input id="temp_val" type="hidden" value="{{protocol.temperature.get}}"/>
+			<div id="slider_temp_result">{{params.value.3}}</div>
+			<input id="temp_val" type="hidden" value="{{params.value.3}}"/>
 		</div>
 		{% endif %}
 	{% endif %}
@@ -83,7 +82,7 @@
 $(".slider_radius").slider({
 	animate : true,
 	range : "min",
-	value : "{{protocol.filterRadius.get}}",
+	value : "{{params.value.0}}",
 	min : 0.00,
 	max : 0.50,
 	step : 0.01,
@@ -94,14 +93,14 @@ $(".slider_radius").slider({
 	//this updates the hidden form field so we can submit the data using a form
 	change : function(event, ui) {
 		$('#radius_val').attr('value', ui.value);
-		previewSpiderFilter({{filterType}}, {{filterMode}}, '{{usePadding}}');
+		previewSpiderFilter({{params.mode.0}}, {{params.mode.1}}, '{{params.mode.3}}');
 	}
 });
 
 $(".slider_low").slider({
 	animate : true,
 	range : "min",
-	value : "{{protocol.lowFreq.get}}",
+	value : "{{params.value.1}}",
 	min : 0.00,
 	max : 0.50,
 	step : 0.01,
@@ -112,13 +111,13 @@ $(".slider_low").slider({
 	//this updates the hidden form field so we can submit the data using a form
 	change : function(event, ui) {
 		$('#low_val').attr('value', ui.value);
-		previewSpiderFilter({{filterType}}, {{filterMode}}, '{{usePadding}}');
+		previewSpiderFilter({{params.mode.0}}, {{params.mode.1}}, '{{params.mode.3}}');
 	}
 });
 $(".slider_high").slider({
 	animate : true,
 	range : "min",
-	value : "{{protocol.highFreq.get}}",
+	value : "{{params.value.2}}",
 	min : 0.00,
 	max : 0.50,
 	step : 0.01,
@@ -129,14 +128,14 @@ $(".slider_high").slider({
 	//this updates the hidden form field so we can submit the data using a form
 	change : function(event, ui) {
 		$('#high_val').attr('value', ui.value);
-		previewSpiderFilter({{filterType}}, {{filterMode}}, '{{usePadding}}');
+		previewSpiderFilter({{params.mode.0}}, {{params.mode.1}}, '{{params.mode.3}}');
 	}
 });
 
 $(".slider_temp").slider({
 	animate : true,
 	range : "min",
-	value : "{{protocol.temperature.get}}",
+	value : "{{params.value.3}}",
 	min : 0.00,
 	max : 0.50,
 	step : 0.01,
@@ -147,12 +146,12 @@ $(".slider_temp").slider({
 	//this updates the hidden form field so we can submit the data using a form
 	change : function(event, ui) {
 		$('#temp_val').attr('value', ui.value);
-		previewSpiderFilter({{filterType}}, {{filterMode}}, '{{usePadding}}');
+		previewSpiderFilter({{params.mode.0}}, {{params.mode.1}}, '{{params.mode.3}}');
 	}
 });
 
 //Load the First Element of the list
-window.onload = compositeSpiderFilter($("tr#"+firstElm), {{filterType}}, {{filterMode}}, '{{usePadding}}')
+window.onload = compositeSpiderFilter($("tr#"+firstElm), {{params.mode.0}}, {{params.mode.1}}, '{{params.mode.3}}')
 </script>
 
 {% endblock %}
