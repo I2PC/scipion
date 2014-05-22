@@ -24,6 +24,7 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
+from pyworkflow.utils.path import removeExt
 """
 This module implement some wizards
 """
@@ -36,11 +37,11 @@ from pyworkflow.em.constants import UNIT_PIXEL
 from pyworkflow.em.convert import ImageHandler
 from pyworkflow.em.wizard import (EmWizard, ParticleMaskRadiusWizard, ParticlesMaskRadiiWizard,
                                   FilterParticlesWizard, DownsampleDialog, ImagePreviewDialog,
-    ListTreeProvider)
+                                  ListTreeProvider)
 import pyworkflow.gui.dialog as dialog
-from pyworkflow.gui.widgets import LabelSlider
+from pyworkflow.gui.widgets import LabelSlider, HotButton
 
-from spider import SpiderShell
+from spider import SpiderShell, runScript
 from constants import FILTER_GAUSSIAN, FILTER_FERMI
 from convert import locationToSpider
 from protocol import (SpiderProtCAPCA, SpiderProtAlignAPSR, SpiderProtAlignPairwise, 
@@ -247,7 +248,16 @@ def filter_spider(inputLocStr, outputLocStr, **pars):
 #-------------- Custom mask Wizard -----------------------------
 
 CUSTOMMASK_VARS = ['filterRadius1', 'sdFactor', 'filterRadius2', 'maskThreshold']
-
+# Map between the index in the result stack
+# and the label to the given image
+MASKRESULT_LABELS = ['input image',
+                     'thresholded',
+                     'filtered mask',
+                     'final mask',
+                     'mask * image',
+                     'inverted mask',
+                     'inverted \nmask * image',
+                     ]
 
 class SpiderCustomMaskWizard(EmWizard):    
     _targets = [(SpiderProtCustomMask, CUSTOMMASK_VARS)]
@@ -276,13 +286,13 @@ class SpiderCustomMaskWizard(EmWizard):
             dialog.showWarning("Input error", "Select the input image first", form.root)  
 
 
-class CustomMaskDialog(DownsampleDialog):
+class CustomMaskDialog(ImagePreviewDialog):
         
     def _beforePreview(self):
         imgLocation = self.protocolParent.inputImage.get().getLocation()
         self.dim = ImageHandler().getDimensions(imgLocation)[0]
         self.lastObj = None
-        self.rightPreviewLabel = "Output mask"
+        self.rightPreviewLabel = "Final mask"
         self.message = "Generating mask..."
         self.rightImage = ImageHandler()._img
         
@@ -291,49 +301,58 @@ class CustomMaskDialog(DownsampleDialog):
         create the items preview. 
         """
         self._previews = []
-        for i in range(4):
-            self.previewLabel = 'image %s' % i
+        for i, label in enumerate(MASKRESULT_LABELS):
+            self.previewLabel = label
             previewFrame = tk.Frame(frame)
             ImagePreviewDialog._createPreview(self, previewFrame)
             self._previews.append(self.preview) # store all previews created
-            previewFrame.grid(row=0, column=i)
+            previewFrame.grid(row=i/4, column=i%4)
             
-        leftFrame = tk.Frame(frame)
-        leftFrame.grid(row=1, column=0)
-        
-        rightFrame = tk.Frame(frame)
-        rightFrame.grid(row=1, column=3)
-        
-        self.previewLabel = "Input average"
-        ImagePreviewDialog._createPreview(self, leftFrame)
-        self.rightPreview = self._createRightPreview(rightFrame)
-        self.rightPreview.grid(row=0, column=0) 
-          
-    def _createVarWidgets(self, parent, varName, row):
+    def _itemSelected(self, obj):
+        self.lastObj = obj
+        dialog.FlashMessage(self, self.message, func=self._computeRightPreview)
+           
+    def _createVarWidgets(self, parent, varName, row, col):
         var = tk.StringVar()
         self._vars[varName] = var
         var.set(self.protocolParent.getAttributeValue(varName))
         varLabel = tk.Label(parent, text=varName)
-        varLabel.grid(row=row, column=0, padx=5, pady=5)
+        varLabel.grid(row=row, column=col*2, padx=5, pady=5)
         varEntry = tk.Entry(parent, width=10, textvariable=var)
-        varEntry.grid(row=row, column=1, padx=5, pady=5)
+        varEntry.grid(row=row, column=col*2+1, padx=5, pady=5)
     
     def _createControls(self, frame):
         self._vars = {}
+        inputFrame = tk.Frame(frame)
+        inputFrame.grid(row=0, column=0)
         
         for i, varName in enumerate(CUSTOMMASK_VARS):
-            self._createVarWidgets(frame, varName, i)
+            self._createVarWidgets(inputFrame, varName, i%2, i/2)
+            
+        previewBtn = HotButton(frame, text='Preview', command=self._computeRightPreview)
+        previewBtn.grid(row=1, column=1, padx=5, pady=5)
             
     def getVarValue(self, varName):
         return self._vars[varName].get()
-        
-    def _computeRightPreview(self):
+    
+    def _computeRightPreview(self, e=None):
         """ This function should compute the right preview
         using the self.lastObj that was selected
         """
-        self.rightImage.read(self.lastObj.getFileName())
-        for preview in self._previews:
+        
+        #TODO, enter in project/Tmp folter
+        params = {'[filter-radius1]': self.getVarValue('filterRadius1'),
+                  '[sd-factor]': self.getVarValue('sdFactor'),
+                  '[filter-radius2]': self.getVarValue('filterRadius2'),
+                  '[mask-threshold2]': self.getVarValue('maskThreshold'),
+                  '[input_image]': removeExt(self.lastObj.getFileName()),
+                  '[output_mask]': 'stkmask',
+                  }
+        ext = self.protocolParent.getExt()
+        runScript('mda/custommask.msa', ext, params)
+        
+        for i, preview in enumerate(self._previews):
+            self.rightImage.read('%d@stkmask.%s' % (i+1, ext))
             preview.updateData(self.rightImage.getData())
-        #xmipp.fastEstimateEnhancedPSD(self.rightImage, self.lastObj.getFileName(), self.getDownsample(), self.dim, 2)
         
     
