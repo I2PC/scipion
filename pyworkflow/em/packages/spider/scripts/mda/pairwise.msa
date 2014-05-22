@@ -7,10 +7,11 @@
 ; Ultramicroscopy. Vol 66: pg. 5-10.
 
 ; ---------------- Parameters ----------------
-[idim-header]  = 80                      ; image dimension
+[idim-header]  = 100                     ; image dimension
 [cg-option]    = 1                       ; center-of-gravity option (0==None, 1==CG PH, 2=RT180)
 [inner-rad]    = 1                       ; inner radius for alignment, pixels
-[obj-diam]     = -1                      ; object diameter, pixels (<0 == get from PARAMS)
+[outer-rad]    = -1                      ; object radius, pixels (<0 == use whole image)
+;;[obj-diam]     = -1                      ; object diameter, pixels (<0 == get from PARAMS)
 [search-range] = 8                       ; translation search range, for AP SH (for alignment to final average)
 [step-size]    = 2                       ; translation step size, for AP SH
 
@@ -72,12 +73,16 @@ vb off
 ;ud 17,[idim-header]    ; window dimension
 ;[parameter_doc]
 
-if([obj-diam].le.0) then
+;;if([obj-diam].le.0) then
+if([outer-rad].le.0) then
 ;    ud 18,[obj-diam]   ; particle diameter
 ;    [parameter_doc]
 ;    
-    [obj-diam] = [idim-header]/2
+    [obj-diam] = [idim-header]
+else
+    [obj-diam] = [outer-rad]*2
 endif
+; (Will check later that outer ring remains within image.)
 
 ud e
 
@@ -110,7 +115,7 @@ if([idim-header].ne.[idim-first]) then
         vm
         echo "WARNING:"
         vm
-        echo "Image dimension from [parameter_doc], {***[idim-header]}, {*[ratio]} times that from [unaligned_image][first-particle]"
+        echo "Image dimension {***[idim-header]} {*[ratio]} times that from first particle [unaligned_image][first-particle]"
         vm
         echo "Reducing object diameter by a factor of {*[ratio]} also, to {***[obj-diam]}" ; echo
     ; if ratio is not an integer
@@ -119,7 +124,7 @@ if([idim-header].ne.[idim-first]) then
         vm
         echo "ERROR"
         vm
-        echo "Image dimension from [parameter_doc], {***[idim-header]}, different from [unaligned_image][first-particle], {***[idim-first]}"
+        echo "Image dimension from  {***[idim-header]} different from first particle [unaligned_image][first-particle], {***[idim-first]}"
         vm
         echo "Fix and re-start"
 
@@ -372,8 +377,11 @@ do lb8 [pair-depth] = 1,[last-depth]
     vm
     echo "if(! -d [depth_dir]{***[next-depth]}) mkdir [depth_dir]{***[next-depth]}"|csh
     
+;    de
+;    [depth_dir]{***[pair-depth]}/[intermed_avg]@
     de
-    [depth_dir]{***[pair-depth]}/[intermed_avg]@
+    [depth_dir]{***[next-depth]}/[intermed_avg_stack]@
+
 
     ; get number of pairs
     ud n [num-pairs]
@@ -574,9 +582,10 @@ A                 ; average _A_ll images
 vm
 echo "Done"; date
 
-en d
+en 
 
-; Modified 2014-04-11
+; Modified 2014-05-20
+;    2014-05-20 (trs) -- using radii consistently as input parameters (had mixed inner radius and outer diameter previously)
 ;    2014-03-25 (trs) -- can override object diameter from PARAMS
 ;    2014-03-05 (trs) -- making master copy of aligned stack
 ;    2014-03-05 (trs) -- writing images in stacks

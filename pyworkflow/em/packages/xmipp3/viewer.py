@@ -200,10 +200,3 @@ class XmippViewer(Viewer):
 
         return self._views
         
-
-    
-
-    
-
-
-

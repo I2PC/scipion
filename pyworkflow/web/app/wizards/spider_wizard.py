@@ -31,8 +31,19 @@ import xmipp
 from pyworkflow.em.wizard import EmWizard
 from django.shortcuts import render_to_response
 from django.http import HttpResponse
+
 from pyworkflow.em.packages.spider.wizard import * 
 from pyworkflow.web.app.em_wizard import *
+from tools import *
+from pyworkflow.web.app.views_util import getImageXdim
+from pyworkflow.web.app.views_base import base_wiz
+
+from pyworkflow.em.packages.xmipp3.convert import xmippToLocation, locationToXmipp
+from pyworkflow.em.packages.spider.convert import locationToSpider
+
+#===============================================================================
+# MASKS 
+#===============================================================================
 
 class SpiderProtMaskWeb(SpiderProtMaskWizard):
     _environments = [WEB_DJANGO]
@@ -57,9 +68,9 @@ class SpiderProtMaskWeb(SpiderProtMaskWizard):
             
             context = {'objects': self._getParticles(objs),
                        'xdim':xdim,
-                       'params': params}
+                       'params': params }
         
-            context = wiz_base(request, context)
+            context = base_wiz(request, context)
             return render_to_response('wizards/wiz_particle_mask_radius.html', context)    
 
 
@@ -86,18 +97,22 @@ class SpiderParticlesMaskRadiiWeb(SpiderParticlesMaskRadiiWizard):
             
             context = {'objects': particles,
                        'xdim':xdim,
-                       'params': params}
+                       'params': params }
         
-            context = wiz_base(request, context)
+            context = base_wiz(request, context)
             return render_to_response('wizards/wiz_particles_mask_radii.html', context)    
 
 
+#===============================================================================
+# FILTERS
+#===============================================================================
 
 class SpiderFilterParticlesWeb(SpiderFilterParticlesWizard):
     _environments = [WEB_DJANGO]
     
     def _run(self, protocol, request):
         params = self._getParameters(protocol)
+        
         objs = params['input'].get()
         
         res = validateParticles(objs)
@@ -112,19 +127,16 @@ class SpiderFilterParticlesWeb(SpiderFilterParticlesWizard):
             
             params['value'] = proccessModeFilter(params['mode'], params['value'])
             
-            context = {'typeObj':'Particles',
-                       'objects': particles,
-                       'params':params
-                       }
+            context = {'objects': particles,
+                       'params':params }
             
-            context = wiz_base(request, context)
+            context = base_wiz(request, context)
             
             return render_to_response('wizards/wiz_filter_spider.html', context)
 
 
-        
 #===============================================================================
-# UTILS
+# SPIDER UTILS 
 #===============================================================================
 
 def get_image_filter_spider(request):
