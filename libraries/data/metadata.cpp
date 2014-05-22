@@ -1202,8 +1202,6 @@ void MetaData::readStar(const FileName &filename,
                         bool decomposeStack)
 {
     //First try to open the file as a metadata
-
-
     size_t id;
 
     FileName inFile = filename.removeBlockName();
