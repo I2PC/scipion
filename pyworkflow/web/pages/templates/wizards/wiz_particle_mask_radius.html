@@ -3,6 +3,13 @@
 {% block name %} Particle Mask Radius {% endblock %} 
 {% block head %}
 	<script type="text/javascript" src="{{raphael}}"></script>
+	<script>
+		function initialLoad(){
+			compositeParticle($("tr#"+firstElm));
+			putCircle((({{params.value}}*125)/{{xdim}}), "canvas", "blue");
+			$("#slider_radius_result").html({{params.value}}/2);
+		}
+	</script>
 {% endblock %} 
 {% block list %}
 
@@ -42,7 +49,7 @@ $(".slider_radius").slider({
 	value : "{{params.value}}",
 	min : 0,
 	max : "{{xdim}}",
-	step : 1,
+	step : 2,
 	//this gets a live reading of the value and prints it on the page
 	slide : function(event, ui) {
 		$("#slider_radius_result").html(ui.value/2);
@@ -56,7 +63,7 @@ $(".slider_radius").slider({
 	}
 });
 //Load the First Element of the list
-window.onload = compositeParticle($("tr#"+firstElm));putCircle((({{params.value}}*125)/{{xdim}}), "canvas", "blue");$("#slider_radius_result").html({{params.value}}/2);
+window.onload = initialLoad();
 </script>
 {% endblock %}
 {% block function %}

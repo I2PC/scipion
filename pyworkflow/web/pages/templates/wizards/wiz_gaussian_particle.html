@@ -36,7 +36,7 @@
 			Sigma Freq	
 		</td>
 		<td>
-			<input id="sigma" type="text" value="{{freqSigma}}"/>
+			<input id="sigma" type="text" value="{{params.value}}"/>
 		</td>
 		<td>
 			<a href="javascript:previewSigma();" class="buttonGrey">Preview</a>
@@ -50,5 +50,5 @@
 </script>
 {% endblock %}
 {% block function %}
-	onclick="putSelection('input#sigma', 'freqSigma_input')"
+	onclick="putSelection('input#sigma', '{{params.label}}_input')"
 {% endblock %}
