@@ -233,6 +233,8 @@ def get_image_custom_mask_spider(request):
               '[output_mask]': 'stkmask',
               }
     
-    
+    ext = protocolParent.getExt()
+        
+    runScript('mda/custommask.msa', ext, params)
     
     pass

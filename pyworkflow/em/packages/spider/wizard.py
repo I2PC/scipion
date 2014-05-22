@@ -363,6 +363,7 @@ class CustomMaskDialog(ImagePreviewDialog):
                   '[output_mask]': 'stkmask',
                   }
         ext = self.protocolParent.getExt()
+        
         runScript('mda/custommask.msa', ext, params)
         
         for i, preview in enumerate(self._previews):
