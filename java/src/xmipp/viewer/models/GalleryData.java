@@ -31,6 +31,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.Hashtable;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -1347,4 +1348,101 @@ public class GalleryData {
                return "";
            return XmippStringUtils.getFileExtension(getFileName());
        }
+    
+    public void saveAll(String path, boolean overwrite) throws Exception
+	{
+		String from = getFileName();
+		String blockto = path;
+		String to;
+		if (blockto.contains("@"))
+			to = blockto.substring(blockto.lastIndexOf("@") + 1, blockto.length());
+		else
+		{
+			to = blockto;
+			blockto = selectedBlock + "@" + blockto;
+		}
+		
+		if (from != null)
+		{
+			MetaData md;
+			Hashtable<String, MetaData> mds = new Hashtable<String, MetaData>();
+			for (String blockit : getBlocks())
+				mds.put(blockit, getMetaData(blockit));
+			File file = new File(to);
+			if (overwrite)
+				file.delete();
+			if (!file.exists() && file.getParentFile() != null)
+				file.getParentFile().mkdirs();
+			for (String blockit : getBlocks())
+			{
+				md = mds.get(blockit);
+				if (blockit.equals(selectedBlock))
+					saveMd(blockto, true, overwrite);
+				else
+					md.writeBlock(blockit + "@" + to);
+				md.destroy();
+			}
+		}
+		else {
+			saveMd(blockto, true, overwrite);
+		}
+
+		setMdChanges(false);
+		setFileName(to);
+		if (blockto.contains("@"))
+			selectBlock(blockto.substring(0, blockto.lastIndexOf("@")));
+	}
+    
+    
+    public void saveMd(String path, boolean saveall, boolean isoverwrite) throws Exception
+	{
+		try
+		{
+			if (path == null)
+				throw new IllegalArgumentException();
+
+			boolean overwritewithblock;
+			String file;
+			if (path.contains("@"))
+				file = path.substring(path.lastIndexOf("@") + 1, path.length());
+			else
+			{
+				file = path;
+				path = selectedBlock + "@" + file;
+			}
+
+			File iofile = new File(file);
+			if (!iofile.exists())// overwrite or append, save active
+			{
+				if (iofile.getParentFile() != null)
+					iofile.getParentFile().mkdirs();
+				write(path);
+			}
+			else
+			{
+				overwritewithblock = isoverwrite && !saveall;
+				if (overwritewithblock)
+					write(path);// overwrite with active block only,
+										// other blocks were dismissed
+				else
+					writeBlock(path);// either if save active block or all, save active, other blocks where already managed
+
+			}
+			
+		}
+		catch (Exception e)
+		{
+			e.printStackTrace();
+		}
+	}// function saveMd
+
+
+        
+	public MetaData getMetaData(String block)
+        {
+            return new MetaData(block + "@" + filename);
+        }
+        
+        
+	
 }// class GalleryData

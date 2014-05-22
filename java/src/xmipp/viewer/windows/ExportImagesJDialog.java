@@ -139,7 +139,7 @@ public class ExportImagesJDialog extends JDialog{
         try {
             path = pathtf.getText();
             File tmpfile = File.createTempFile("temp", ".xmd");
-            frame.saveMd(tmpfile.getAbsolutePath(), false, true, false);//remove disabled on tmpfile to export afterwords
+            frame.saveMd(tmpfile.getAbsolutePath(), false, true);//remove disabled on tmpfile to export afterwords
             String[] command = new String[]{"xmipp_transform_geometry", tmpfile.getAbsolutePath(), "-o", path, "--label", frame.data.getRenderColumn().labelName};
             if(applygeochb.isSelected())
                 command = new String[]{"xmipp_transform_geometry", tmpfile.getAbsolutePath(), "-o", path, "--label", frame.data.getRenderColumn().labelName, "--apply_transform"};

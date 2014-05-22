@@ -1996,54 +1996,29 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 
 	protected void saveMd() throws Exception
 	{
-		saveMd(dlgSave.getMdFilename(), false, dlgSave.isOverwrite(), true );
+		saveMd(dlgSave.getMdFilename(), false, dlgSave.isOverwrite() );
 	}
         
       
 
-	protected void saveMd(String path, boolean saveall, boolean isoverwrite, boolean reload) throws Exception
+	protected void saveMd(String path, boolean saveall, boolean isoverwrite) throws Exception
 	{
 		try
 		{
-			if (path == null)
-				throw new IllegalArgumentException();
-
-			boolean overwritewithblock;
-			String file;
-			if (path.contains("@"))
-				file = path.substring(path.lastIndexOf("@") + 1, path.length());
-			else
-			{
-				file = path;
-				path = getBlock() + "@" + file;
-			}
-
-			File iofile = new File(file);
-			if (!iofile.exists())// overwrite or append, save active
-			{
-				if (iofile.getParentFile() != null)
-					iofile.getParentFile().mkdirs();
-				data.write(path);
-			}
-			else
-			{
-				overwritewithblock = isoverwrite && !saveall;
-				if (overwritewithblock)
-					data.write(path);// overwrite with active block only,
-										// other blocks were dismissed
-				else
-					data.writeBlock(path);// either if save active block or all, save active, other blocks where already managed
-
-			}
-			if (reload)
-			{
-				
-				gallery.data.setFileName(file);
-				if (path.contains("@"))
-					gallery.data.selectBlock(path.substring(0, path.lastIndexOf("@")));
-				reloadFile(file, false);
-				setGalleryTitle();
-			}
+			data.saveMd(path, saveall, isoverwrite);
+                        String file;
+                        if (path.contains("@"))
+                                file = path.substring(path.lastIndexOf("@") + 1, path.length());
+                        else
+                        {
+                                file = path;
+                                path = getBlock() + "@" + file;
+                        }
+                        gallery.data.setFileName(file);
+                        if (path.contains("@"))
+                                gallery.data.selectBlock(path.substring(0, path.lastIndexOf("@")));
+                        reloadFile(file, false);
+                        setGalleryTitle();
 		}
 		catch (Exception e)
 		{
@@ -2061,46 +2036,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
         
 	private void saveAll() throws Exception
 	{
-		String from = data.getFileName();
-		String blockto = dlgSave.getMdFilename();
-		String to;
-		if (blockto.contains("@"))
-			to = blockto.substring(blockto.lastIndexOf("@") + 1, blockto.length());
-		else
-		{
-			to = blockto;
-			blockto = getBlock() + "@" + blockto;
-		}
-		
-		if (from != null)
-		{
-			MetaData md;
-			Hashtable<String, MetaData> mds = new Hashtable<String, MetaData>();
-			for (String blockit : data.getBlocks())
-				mds.put(blockit, new MetaData(blockit + "@" + from));
-			File file = new File(to);
-			if (dlgSave.isOverwrite())
-				file.delete();
-			if (!file.exists() && file.getParentFile() != null)
-				file.getParentFile().mkdirs();
-			for (String blockit : data.getBlocks())
-			{
-				md = mds.get(blockit);
-				if (blockit.equals(getBlock()))
-					saveMd(blockto, true, dlgSave.isOverwrite(), false );
-				else
-					md.writeBlock(blockit + "@" + to);
-				md.destroy();
-			}
-		}
-		else {
-			saveMd(blockto, true, dlgSave.isOverwrite(), false );
-		}
-
-		data.setMdChanges(false);
-		gallery.data.setFileName(to);
-		if (blockto.contains("@"))
-			gallery.data.selectBlock(blockto.substring(0, blockto.lastIndexOf("@")));
+                data.saveAll(dlgSave.getMdFilename(), dlgSave.isOverwrite());
 		this.saved = true;
 //		reloadFile(to, false);
 		reloadCombos();

@@ -539,6 +539,11 @@ public class ScipionMetaData extends MetaData{
      public  void write(String path)
     {
         new File(path).delete();//overwrite file
+        if(path.contains("@"))
+        {
+            writeBlock(path.substring(path.lastIndexOf("@") + 1));
+            return;
+        }
         if (parent != null)
         {
             parent.write(path);//this will write parent and siblings
@@ -604,7 +609,7 @@ public class ScipionMetaData extends MetaData{
                 for(int i = 0; i < columns.size(); i ++)
                 {
                     ci = columns.get(i);
-                    value = emo.values.get(i);
+                    value = emo.values.get(ci);
                     if(ci.type == MetaData.LABEL_STRING)
                     {
                         if(value != null)

@@ -6,10 +6,8 @@
 
 package xmipp.viewer.scipion;
 
-import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
 import xmipp.utils.Params;
 import xmipp.viewer.models.ColumnInfo;
@@ -31,6 +29,12 @@ public class ScipionGalleryData extends GalleryData{
     }
     
     public void setFileName(String file) {
+        if(file.contains("@"))
+        {
+            int sep = file.lastIndexOf("@");
+            selectedBlock = file.substring(0, sep);
+            filename = file.substring(sep + 1);
+        }
 	filename = file;
                 
     }
@@ -120,7 +124,7 @@ public class ScipionGalleryData extends GalleryData{
                                 }
 			}
 		}
-                System.out.println(mdImages);
+                
 		return mdImages;
 	}   
         
@@ -158,24 +162,23 @@ public class ScipionGalleryData extends GalleryData{
         public void readMd() {
                 hasMdChanges = false;
                 hasClassesChanges = false;
-                ScipionMetaData child = ((ScipionMetaData)md).getChild(selectedBlock);
-                if(child != null)
-                {
-                    md = child;
-                }
-                ScipionMetaData parent = ((ScipionMetaData)md).getParent();
-                if(parent.getBlock().equals(selectedBlock))// from child to parent
-                {
-                    md = parent;
-                    return;
-                }
-                child = parent.getChild(selectedBlock);
-                if(child != null)
-                    md = child;
+                md = getMetaData(selectedBlock);
                 
                 
 	}
 
-        
+        public MetaData getMetaData(String block)
+        {
+            if(md.getBlock().equals(block))
+                    return md;
+                ScipionMetaData child = ((ScipionMetaData)md).getChild(block);
+                if(child != null)
+                    return child;
+                ScipionMetaData parent = ((ScipionMetaData)md).getParent();
+                if(parent.getBlock().equals(selectedBlock))// from child to parent
+                    return parent;
+                return parent.getChild(selectedBlock);
+                
+        }
 
 }
