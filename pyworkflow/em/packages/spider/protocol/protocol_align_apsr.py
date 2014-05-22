@@ -42,6 +42,11 @@ class SpiderProtAlignAPSR(SpiderProtAlign):
     
     def __init__(self, **args):
         SpiderProtAlign.__init__(self, 'mda/apsr4class.msa', 'apsr', **args)
+
+    def _defineAlignParams(self, form):
+        SpiderProtAlign._defineAlignParams(self, form)
+        
+        form.addParallelSection(threads=0, mpi=0) 
         
     def alignParticlesStep(self, innerRadius, outerRadius):
         """ Apply the selected filter to particles. 

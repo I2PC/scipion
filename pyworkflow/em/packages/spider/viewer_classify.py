@@ -28,6 +28,7 @@ This module implement the wrappers around xmipp_showj
 visualization program.
 """
 
+from os.path import join
 import Tkinter as tk
 from Tkinter import *
 
@@ -238,10 +239,17 @@ class SpiderViewerDiday(SpiderViewerClassify):
     def visualizeClasses(self, e=None):
         prot = self.protocol
         classDir = prot.getClassDir()
+        classAvg = 'classavg'
+        classVar = 'classvar'
+        classDoc = 'docclass'
+        ext = prot.getExt()
         
         params = {'[class_dir]': classDir,
                   '[desired-classes]': self.numberOfClasses.get(),
-                  '[particles]': prot._params['particles'] + '@******',                  
+                  '[particles]': prot._params['particles'] + '@******',
+                  '[class_doc]': join(classDir, classDoc + '***'), 
+                  '[class_avg]': join(classDir, classAvg + '***'),
+                  '[class_var]': join(classDir, classVar + '***'),        
                   }
         
         prot.runScript('mda/classavg.msa', prot.getExt(), params)
@@ -260,13 +268,14 @@ class SpiderViewerDiday(SpiderViewerClassify):
             
             avgImg = Particle()
             avgImg.setSamplingRate(sampling)
-            avgFn = prot._getPath(classDir, 'classaverage%03d.stk' % classId)
+            avgFn = prot._getPath(classDir, classAvg + '%03d.stk' % classId)
             avgImg.setLocation(1, avgFn)
+            #avgImg.setLocation(classId, 'classavg.stk')
             
             class2D.setRepresentative(avgImg)
             classes2D.append(class2D)
             
-            docClass = prot._getPath(classDir, 'docclass%03d.stk' % classId)
+            docClass = prot._getPath(classDir, classDoc + '%03d.stk' % classId)
             doc = SpiderDocFile(docClass)
             
             for values in doc.iterValues():
@@ -277,6 +286,7 @@ class SpiderViewerDiday(SpiderViewerClassify):
         from pyworkflow.em.packages.xmipp3.convert import writeSetOfClasses2D
         fn = self._getPath('classes.xmd')
         writeSetOfClasses2D(classes2D, fn)
+        classes2D.close()
         
         return [DataView(fn)]
                               

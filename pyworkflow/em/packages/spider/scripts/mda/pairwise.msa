@@ -14,6 +14,7 @@
 ;;[obj-diam]     = -1                      ; object diameter, pixels (<0 == get from PARAMS)
 [search-range] = 8                       ; translation search range, for AP SH (for alignment to final average)
 [step-size]    = 2                       ; translation step size, for AP SH
+[nummps]       = 0                       ; number of processors to use
 
 ; --------------- Input files ---------------
 ;;fr l
@@ -218,7 +219,7 @@ sd e
 ; use all processors
 md
 set mp
-0
+[nummps]
 
 ; loop through pair-depths
 do lb4 [pair-depth] = 1,999
@@ -585,6 +586,7 @@ echo "Done"; date
 en 
 
 ; Modified 2014-05-20
+;    2014-05-22 (trs) -- added input variable for number of processors to use
 ;    2014-05-20 (trs) -- using radii consistently as input parameters (had mixed inner radius and outer diameter previously)
 ;    2014-03-25 (trs) -- can override object diameter from PARAMS
 ;    2014-03-05 (trs) -- making master copy of aligned stack

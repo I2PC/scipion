@@ -43,3 +43,8 @@ CA = 0
 PCA = 1
 IPCA = 2
 
+# Center of gravity values
+CG_NONE = 0
+CG_PH = 1
+CG_RT180 = 2
+

@@ -29,7 +29,8 @@ This sub-package contains protocol for particles filters operations
 """
 from os.path import join
 
-from pyworkflow.em import ProtAlign2D, IntParam, Image, Particle, NO_INDEX
+from pyworkflow.protocol.params import IntParam, EnumParam, LEVEL_ADVANCED
+from pyworkflow.em import ProtAlign2D, Image, Particle, NO_INDEX
 from pyworkflow.utils import getLastFile, makePath
 
 from ..constants import *
@@ -67,7 +68,11 @@ class SpiderProtAlign(ProtAlign2D, SpiderProtocol):
                                  'will be analyzed.')
         line.addParam('innerRadius', IntParam, default=5, label='Inner')
         line.addParam('outerRadius', IntParam, default=44, label='Outer')
-
+        
+        form.addParam('cgOption', EnumParam, default=CG_PH, 
+                      choices=['None', 'CG PH', 'RT180'], 
+                      label='Center of gravity option',
+                      help='help needed')
         
     def _insertAllSteps(self):
         # Insert processing steps

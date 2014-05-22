@@ -53,7 +53,9 @@ class SpiderProtAlignPairwise(SpiderProtAlign):
         form.addParam('stepSize', IntParam, default=2, 
                       label='Step size(px):',
                       help='In the translational alignment, shifts will be analyzed\n'
-                           'in units of _stepSize_ (in pixel units).')        
+                           'in units of _stepSize_ (in pixel units).')    
+        
+        form.addParallelSection(threads=2, mpi=0)    
     
     #--------------------------- STEPS functions --------------------------------------------       
     
@@ -65,12 +67,14 @@ class SpiderProtAlignPairwise(SpiderProtAlign):
         
         self._params.update({
                              '[idim-header]': xdim,
+                             '[cg-option]': self.cgOption.get(),
                              '[inner-rad]': innerRadius,
                              '[outer-rad]': outerRadius, # convert radius to diameter
                              '[search-range]': self.searchRange.get(),
                              '[step-size]': self.stepSize.get(),
                              '[selection_list]': self._params['particlesSel'],
                              '[unaligned_image]': self._params['particles'] + '@******',
+                             '[nummps]': self.numberOfThreads.get(),
                             })
         
         self.runScript(self.getScript(), self.getExt(), self._params)
