@@ -46,7 +46,7 @@ from protocol_identify_outliers import XmippProtIdentifyOutliers
 from protocol_preprocess import XmippProtPreprocessVolumes
 from convert import *
 from os.path import dirname, join
-from pyworkflow.utils import makePath, runJob
+from pyworkflow.utils import makePath, runJob, copyTree
 import pyworkflow as pw
 import xmipp
 
