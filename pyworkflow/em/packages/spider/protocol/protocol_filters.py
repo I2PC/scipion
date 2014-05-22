@@ -1,6 +1,7 @@
 # **************************************************************************
 # *
 # * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
+# *              Tapu Shaikh            (shaikh@ceitec.muni.cz)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -42,8 +43,8 @@ class SpiderProtFilter(ProtFilterParticles, SpiderProtocol):
     with the average value to twice the original size 
     during filtration if padding is selected.  
     
-    See more documentation in: 
-    [[http://spider.wadsworth.org/spider_doc/spider/docs/man/fq.html][FQ Spider online manual]]
+    See more documentation at: 
+    [[http://spider.wadsworth.org/spider_doc/spider/docs/man/fq.html][SPIDER's FQ online manual]]
     """
     _label = 'filter particles'
     
@@ -78,7 +79,7 @@ to the cut-off radius.
 *Raised cosine* Filter is: 0.5 * (COS(PI * (F - Flow) / (Flow - Fup)) + 1) 
 if Flow < F < Fup, 1 if F < Flow, and 0 if F > Fup
 
-See detailed description of the filter in [[http://spider.wadsworth.org/spider_doc/spider/docs/man/fq.html][FQ Spider online manual]]
+See detailed description of the filter at [[http://spider.wadsworth.org/spider_doc/spider/docs/man/fq.html][SPIDER's FQ online manual]]
                            """)
         form.addParam('filterMode', EnumParam, choices=['low-pass', 'high-pass'],
                       label='Filter mode', default=FILTER_LOWPASS,
@@ -214,6 +215,3 @@ See detailed description of the filter in [[http://spider.wadsworth.org/spider_d
             
         methods.append(msg)            
         return methods
-    
-    
-    
