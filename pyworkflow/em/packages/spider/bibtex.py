@@ -2,6 +2,7 @@
 # **************************************************************************
 # *
 # * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
+# *              Tapu Shaikh            (shaikh@ceitec.muni.cz)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -35,7 +36,7 @@ _bibtexStr = """
     Boisset, N. and Leith, A. and Frank, J.},
   title = {SPIDER image processing for single-particle reconstruction of biological
     macromolecules from electron micrographs},
-  journal = {Nature protocols},
+  journal = {Nature Protocols},
   year = {2008},
   volume = {3},
   pages = {1941--1974},
@@ -59,7 +60,7 @@ _bibtexStr = """
 }
 
 @article{Frank1996b,
-  author = {J. Frank and M. Radermacher and P. Penczek and J. Zhu and Y. Li and
+  author = {Frank, J. and Radermacher, M. and Penczek, P. and Zhu, J. and Li, Y. and
     et.al.},
   title = {{SPIDER} and {WEB}: {P}rocessing and visualization of images in 3{D}
     electron microscopy and related fields.},
@@ -70,8 +71,8 @@ _bibtexStr = """
   doi = {http://dx.doi.org/10.1006/jsbi.1996.0030}
 }
 
-@artiche{Marco1996,
-  author = {S., Marco and Chagoyen, M. and {de la Fraga}, {L. G.} and Carazo,
+@article{Marco1996,
+  author = {Marco, S. and Chagoyen, M. and {de la Fraga}, {L. G.} and Carazo,
     {J. M.} and Carrascosa, {J. L.}},
   title = {A variant to the "random approximation" of the reference-free alignment
     algorithm},
@@ -83,6 +84,21 @@ _bibtexStr = """
   doi = {http://dx.doi.org/10.1016/S0304-3991(96)00083-6}
 }
 
+@article{Penczek1992,
+        abstract = {Single particles embedded in ice pose new challenges for image processing because of the intrinsically low signal-to-noise ratio of such particles in electron micrographs. We have developed new techniques that address some of these problems and have applied these techniques to electron micrographs of the Escherichia coli ribosome. Data collection and reconstruction follow the protocol of the random-conical technique of Radermacher et al. [J. Microscopy 146 (1987) 113]. A reference-free alignment algorithm has been developed to overcome the propensity of reference-based algorithms to reinforce the reference motif in very noisy situations. In addition, an iterative 3D reconstruction method based on a chi-square minimization constraint has been developed and tested. This algorithm tends to reduce the effects of the missing angular range on the reconstruction, thereby facilitating the merging of random-conical data sets obtained from differently oriented particles}, 
+        number = {1}, 
+        month = {Jan}, 
+        year = {1992}, 
+        author = {Penczek, P and Radermacher, M and Frank, J}, 
+        howpublished = {Journal}, 
+        journal = {Ultramicroscopy}, 
+        volume = {40}, 
+        address = {Wadsworth Center, New York State Department of Health, Albany 12201-0509}, 
+        pages = {33-53}, 
+        url = {http://view.ncbi.nlm.nih.gov/pubmed/1580010}, 
+        title = {Three-dimensional reconstruction of single particles embedded in ice}, 
+        doi = {http://dx.doi.org/10.1016/0304-3991(92)90233-A}
+}
 
 """
 

@@ -110,10 +110,10 @@ class SpiderProtAlign(ProtAlign2D, SpiderProtocol):
         r = xdim / 2
         innerRadius = self.innerRadius.get()
         outerRadius = self.outerRadius.get()
-        if innerRadius > r or innerRadius < 0:
-            errors.append("*innerRadius* should be between 0 and %d." % r)        
-        if outerRadius > r or outerRadius < 0:
-            errors.append("*outerRadius* should be between 0 and %d." % r)
+        if innerRadius > r or innerRadius < 1:
+            errors.append("*innerRadius* should be between 1 and %d." % r)        
+        if outerRadius > r or outerRadius < 1:
+            errors.append("*outerRadius* should be between 1 and %d." % r)
         if innerRadius >= outerRadius:
             errors.append("*innerRadius* should be less than *outerRadius*.")
         

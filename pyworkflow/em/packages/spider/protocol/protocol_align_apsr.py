@@ -37,6 +37,9 @@ from protocol_align_base import SpiderProtAlign
 class SpiderProtAlignAPSR(SpiderProtAlign):
     """ Reference-free alignment shift and rotational alignment of an image series. 
     Uses Spider AP SR command.
+    
+    See detailed description at [[http://spider.wadsworth.org/spider_doc/spider/docs/man/apsr.html][SPIDER's AP SR online manual]]
+
     """
     _label = 'align apsr'
     
@@ -68,5 +71,18 @@ class SpiderProtAlignAPSR(SpiderProtAlign):
     
     def _summary(self):
         summary = []
+        summary.append('Radius range: *%s - %s*' % (self.innerRadius.get(), self.outerRadius.get() ) )
+        
         return summary
     
+    def _methods(self):
+        methods = []
+        
+        msg  = '\nParticles were initially subjected to reference-free alignment using SPIDER\'s \'AP SR\' '
+        msg += 'command, using radii %s to %s pixels. ' % (self.innerRadius.get(), self.outerRadius.get() )
+        
+        methods.append(msg)
+        return methods
+
+    def _citations(self):
+        return ['Penczek1992']

@@ -35,7 +35,16 @@ from protocol_align_base import SpiderProtAlign
 
       
 class SpiderProtAlignPairwise(SpiderProtAlign):
-    """ Reference-free alignment shift and rotational alignment of an image series. """
+    """ Reference-free alignment shift and rotational alignment of an image series. 
+    
+    This alignment scheme aligns a pair of images at a time and then averages 
+    them. Then, the averages of each of those pairs is aligned and averages, 
+    and then pairs of those pairs, etc. Compared to [[http://spider.wadsworth.org/spider_doc/spider/docs/man/apsr.html][AP SR]], this alignment 
+    scheme appears to be less random, which chooses seed images as alignment 
+    references.
+    
+    For more information, see Step 2b at [[http://spider.wadsworth.org/spider_doc/spider/docs/techs/MSA/index.html#pairwise][SPIDER's MDA online manual]]
+    """
     _label = 'align pairwise'
     
     def __init__(self, **args):
@@ -49,12 +58,11 @@ class SpiderProtAlignPairwise(SpiderProtAlign):
         form.addParam('searchRange', IntParam, default=8, 
                       label='Search range (px):',
                       help='In the translational alignment, shifts of up to\n'
-                           '_searchRange_ will be allowed.')
+                           '_searchRange_ (in pixel units) will be allowed.')
         form.addParam('stepSize', IntParam, default=2, 
-                      label='Step size(px):',
-                      help='In the translational alignment, shifts will be analyzed\n'
-                           'in units of _stepSize_ (in pixel units).')    
-        
+                      label='Step size (px):',
+                      help='Alignments will be evaluated in units of _stepSize_ \n'
+                           '(in pixel units) up to a maximum of +/- _searchRange_.')        
         form.addParallelSection(threads=2, mpi=0)    
     
     #--------------------------- STEPS functions --------------------------------------------       
@@ -89,6 +97,21 @@ class SpiderProtAlignPairwise(SpiderProtAlign):
     
     def _summary(self):
         summary = []
+        summary.append('Radius range: *%s - %s*' % (self.innerRadius.get(), self.outerRadius.get() ) )
+        summary.append('Search range (px): *%s*' % self.searchRange.get() )
+        summary.append('Step size (px): *%s*' % self.stepSize.get() )
+        
         return summary
     
-
+    def _methods(self):
+        methods = []
+        
+        msg  = '\nParticles were subjected to a pariwise reference-free alignment using the "pyramidal system for '
+        msg += 'prealignment construction" (Marco et al., 1996), using radii %s to %s pixels. ' % \
+                (self.innerRadius.get(), self.outerRadius.get())
+        msg += 'Particles were then aligned to this initial reference-free average using SPIDER command \'AP SH\' '
+        msg += 'using a search range of %s pixels and a step size of %s pixels.' % \
+                (self.searchRange.get(), self.stepSize.get() )
+        
+        methods.append(msg)
+        return methods
