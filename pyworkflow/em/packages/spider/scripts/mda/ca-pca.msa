@@ -5,8 +5,8 @@
 
 ; ---------------- Parameters ----------------
 
-[idim]          = 80    ; image dimension (before downsampling)
-[reduce-factor] = 2     ; downsampling factor applied to input images
+[idim]          = 100   ; image dimension (before downsampling)
+[reduce-factor] = 1     ; downsampling factor applied to input images
 [radius]        = -1    ; particle radius (pixels, used if no custom mask, <0==IDIM/2)
 [cas-option]    = 1     ; correspondence analysis (1), PCA (2), IPCA (3)
 [add-constant]  = 0     ; additive constant if using correspondence analysis (0==automatic)
@@ -21,14 +21,14 @@
 fr l
 [selection_doc]listparticles             ; selection doc file
 fr l
-[particles]stkfiltered@*****             ; particle file-pattern
+[particles]stkaligned@*****              ; particle file-pattern
 fr l
 [custom_mask]stkmask@4                   ; (optional) custom mask
 
 ; ------------------ Outputs ------------------
 
 fr l
-[ca_dir]MSA                                    ; output directory
+[ca_dir]CA                                     ; output directory
 fr l
 [cas_prefix][ca_dir]/cas                       ; correspondence-analysis output prefix
 fr l
@@ -345,7 +345,7 @@ echo "Done"; date
 
 en d
 
-; Modified 2014-04-11
+; Modified 2014-05-20
 ;    2014-03-06 (trs) -- writing images in stacks
 ;    2014-02-06 (trs) -- changed default range for factormap to +/- 3 s.d. -- SPIDER dumps core if too small
 ;    2014-02-04 (trs) -- number of standard deviations to plot in factor maps is now user-specified

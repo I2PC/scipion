@@ -36,7 +36,8 @@ _references = ['Shaikh2008', 'Frank1996b']
 from spider import *
 from protocol import *
 
-from wizard import SpiderProtMaskWizard, SpiderParticlesMaskRadiiWizard, SpiderFilterParticlesWizard
+from wizard import (SpiderProtMaskWizard, SpiderParticlesMaskRadiiWizard,
+                    SpiderFilterParticlesWizard, SpiderCustomMaskWizard)
 
 from viewer import SpiderViewer
 from viewer_capca import SpiderViewerCAPCA

@@ -14,7 +14,7 @@ x56 = 100                                            ; progress interval -- mess
 fr l
 [parameter_doc]params                                ; parameter doc file
 fr l
-[group_particles]filenums                            ; list of images
+[group_particles]listparticles                       ; list of images
 fr l
 [unfiltered_images]stkfilt-backup@*****              ; image template (check number of digits)
 
@@ -121,7 +121,7 @@ echo ; echo "Done"; date
 
 EN D
 
-; Modified 2014-04-11
+; Modified 2014-05-20
 ;    2014-03-05 (trs) -- writing images in stacks
 ;    2013-03-15 (trs & cjh) -- fixed Butterworth option
 ;    2012-08-31 (trs) -- moves original directory

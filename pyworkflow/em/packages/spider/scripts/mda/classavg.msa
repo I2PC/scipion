@@ -1,17 +1,15 @@
 ; PARES DENDROGRAM TO DESIRED NUMBER OF CLASSES
 
 ; -------------- Parameters --------------
-[desired-classes] = 4                    ; desired number of classes
+[desired-classes] = 16                   ; desired number of classes
 
 ; ---------------- Inputs ----------------
 fr l
-[class_dir].  ; HC                            ; input/output directory
-;[class_dir]HC                            ; input/output directory
+[class_dir]HC                            ; input/output directory
 fr l
 [dendrogram_doc][class_dir]/docdendro    ; particle-assignment doc
 fr l
-[particles]../SpiderProtAlignAPSR134/particles_aligned@*****  ; particle file-pattern
-;[particles]ali/sar******                 ; particle file-pattern
+[particles]stkfiltered@*****             ; particle file-pattern
 
 ; --------------- Outputs ---------------
 fr l
@@ -19,9 +17,9 @@ fr l
 fr l
 [class_doc][class_dir]/docclass***       ; class-membership doc template, for each class
 fr l
-[class_avg][class_dir]/classaverage***   ; class average prefix, for each class
+[class_avg][class_dir]/classavg***       ; class average prefix, for each class
 fr l
-[class_var][class_dir]/classvariance***  ; class variance prefix, for each class
+[class_var][class_dir]/classvar***       ; class variance prefix, for each class
 
 ; ----------- END BATCH HEADER -----------
 
@@ -144,6 +142,6 @@ echo "Done"; date
 
 en d
 
-; Modified 2014-05-19
-;    2014-05-19 (trs) -- Finds exact number of requested classes (usually)
+; Modified 2014-05-20
+;    2014-05-19 (trs) -- Finds number of requested classes by sorting the dendrogram rather than a binary search
 ;    2004-04-09 (trs) -- Adapted from M.Radermacher's evalclacla2.two
