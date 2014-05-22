@@ -8,6 +8,41 @@
 			putSelection('input#low_val', '{{params.label.0}}_input');
 			putSelection('input#decay_val', '{{params.label.2}}_input');
 		}		
+		
+		function compositeLoad(elm){
+// 			var first = $("tr#"+firstElm);
+			var low = $('#low_val').attr('value')
+			var high = $('#high_val').attr('value')
+			var decay = $('#decay_val').attr('value')
+			
+			compositeBandpassVol(elm, low, high, decay);
+		}
+		
+		function loadPreview(type, value){
+			
+			switch (type){
+			
+				case "low":
+					var low = value;
+					var high = $('#high_val').attr('value');
+					var decay = $('#decay_val').attr('value');
+					break;
+					
+				case "high":
+					var low = $('#low_val').attr('value');
+					var high = value
+					var decay = $('#decay_val').attr('value');
+					break;
+					
+				case "decay":
+					var low = $('#low_val').attr('value');
+					var high = $('#high_val').attr('value');
+					var decay = value;
+					break;
+				}
+			
+			previewBandpassFilter(low, high, decay);
+		}
 	</script>
 {% endblock %} 
 {% block list %}
@@ -15,11 +50,11 @@
 {% for obj in objects %}
 {% if forloop.counter0 == 0 %} 
 <script>
-	firstElm  = {{obj.getObjId}};
+	firstElm = {{obj.getObjId}};
 </script>
 {% endif %}
 <tr id="{{obj.getObjId}}" class="no-selected"
-	onclick="compositeBandpassVol(($(this)),$('#low_val').attr('value'),$('#high_val').attr('value'),$('#decay_val').attr('value'));" value="{{obj.getFileName}}">
+	onclick="compositeLoad($(this));" value="{{obj.getFileName}}">
 	<td>{{obj.basename}}</td>
 </tr>
 {% endfor %} {% endblock %} {% block images %}
@@ -91,8 +126,9 @@ $(".slider_low").slider({
 	//this updates the hidden form field so we can submit the data using a form
 	change : function(event, ui) {
 		$('#low_val').attr('value', ui.value);
+		
 		//update the image filtered
- 		previewBandpassFilter(ui.value,$('#high_val').attr('value'),$('#decay_val').attr('value'));
+		loadPreview("low", ui.value);
 	}
 });
 $(".slider_high").slider({
@@ -109,8 +145,9 @@ $(".slider_high").slider({
 	//this updates the hidden form field so we can submit the data using a form
 	change : function(event, ui) {
 		$('#high_val').attr('value', ui.value);
+		
 		//update the image filtered
-		previewBandpassFilter($('#low_val').attr('value'),ui.value,$('#decay_val').attr('value'));	
+		loadPreview("high", ui.value);
 	}
 });
 $(".slider_decay").slider({
@@ -127,12 +164,13 @@ $(".slider_decay").slider({
 	//this updates the hidden form field so we can submit the data using a form
 	change : function(event, ui) {
 		$('#decay_val').attr('value', ui.value);
+		
 		//update the image filtered
-		previewBandpassFilter($('#low_val').attr('value'),$('#high_val').attr('value'),ui.value);
+		loadPreview("decay", ui.value);
 	}
 });
 //Load the First Element of the list
-window.onload = compositeBandpassVol($("tr#"+firstElm),$('#low_val').attr('value'),$('#high_val').attr('value'),$('#decay_val').attr('value'));
+window.onload = compositeLoad($("tr#"+firstElm));
 </script>
 {% endblock %}
 {% block function %}
