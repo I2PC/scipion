@@ -140,9 +140,11 @@ class XmippViewer(Viewer):
             mdFn = getattr(obj, '_xmippMd', None)
             if mdFn:
                 fn = mdFn.get()
+#            else:
+#                fn = self._getTmpPath(obj.getName() + '_images.xmd')
+#                writeSetOfVolumes(obj, fn)
             else:
-                fn = self._getTmpPath(obj.getName() + '_images.xmd')
-                writeSetOfVolumes(obj, fn)
+                fn = obj.getFileName()
             self._views.append(DataView(fn))
         
         elif issubclass(cls, SetOfClasses2D):
@@ -154,24 +156,25 @@ class XmippViewer(Viewer):
             self._views.append(ObjectView(fn, "Classes2D", self._project.getName(), obj.strId(), obj.getImages().strId()))  
             
         elif issubclass(cls, SetOfClasses3D):
-            mdFn = getattr(obj, '_xmippMd', None)
-            if mdFn:
-                fn = mdFn.get()
-            else:
+#            mdFn = getattr(obj, '_xmippMd', None)
+#            if mdFn:
+#                fn = mdFn.get()
+#            else:
 #                fn = self._getTmpPath(obj.getName() + '_classes.xmd')
 #                writeSetOfClasses3D(obj, fn, self._getTmpPath())
-                fn = obj.getFileName()
+            fn = obj.getFileName()
 
-            self._views.append(ObjectView("classes@"+fn, "Classes3D", self._project.getName(), obj.strId(), obj.getImages().strId(), extraParams=args.get('extraParams', '')))
+            self._views.append(ObjectView(fn, "Classes3D", self._project.getName(), obj.strId(), obj.getImages().strId(), extraParams=args.get('extraParams', '')))
               
         elif issubclass(cls, SetOfCTF):
-            mdFn = getattr(obj, '_xmippMd', None)
-            if mdFn:
-                fn = mdFn.get()
-            else:
-                fn = self._getTmpPath(obj.getName() + '_ctfs.xmd')
-                writeSetOfCTFs(obj, fn)
-
+#            mdFn = getattr(obj, '_xmippMd', None)
+#            if mdFn:
+#                fn = mdFn.get()
+##            else:
+##                fn = self._getTmpPath(obj.getName() + '_ctfs.xmd')
+##                writeSetOfCTFs(obj, fn)
+#            else:
+            fn = obj.getFileName()
             self._views.append(DataView(fn, viewParams={MODE: 'metadata', RENDER: 'psd psdEnhanced image1 image2', ORDER:'id psd psdEnhanced image1 image2', ZOOM: 50}))  
          
         elif issubclass(cls, XmippProtExtractParticles):
