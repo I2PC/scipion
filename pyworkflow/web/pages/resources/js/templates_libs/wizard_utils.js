@@ -458,3 +458,19 @@ function previewSpiderFilter(filterType, filterMode, usePadding) {
 }
 
 
+function previewSpiderCustomMask(path, radius1, sdFactor, radius2, maskThreshold) {
+	/*
+	 * This function get a image using a spider custom mask with some parameters.
+	 */
+	
+	// load and set the image
+	var uri = "/get_images_custom_mask_spider/?" + 
+				"image=" + path + 
+				"&radius1=" + radius1 + 
+				"&sdFactor=" + sdFactor + 
+				"&radius2=" + radius2
+	
+	putImage(uri, "filteredParticle", 250, 250);
+}
+
+

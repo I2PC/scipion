@@ -131,3 +131,21 @@ def base_showj(request, context):
     context.update(context_base)
     return context
 
+
+
+def base_wiz(request, context):
+    context_base = {'general_style': getResourceCss('general'),
+               'wizard_style': getResourceCss('wizard'),
+               'jquery_ui_style': getResourceCss('jquery_ui'),
+               'font_awesome': getResourceCss('font_awesome'),
+               'jquery': getResourceJs('jquery'),
+               'jquery_ui': getResourceJs('jquery_ui'),
+               'jquery_ui_touch': getResourceJs('jquery_ui_touch'),
+               'wizard_utils': getResourceJs('wizard_utils'),
+               'raphael':getResourceJs('raphael'),
+               'projectName': request.session['projectName'],
+               'loading' : getResourceIcon('loading'),
+               }
+    
+    context.update(context_base)
+    return context

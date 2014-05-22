@@ -48,6 +48,9 @@ from protocol import (SpiderProtCAPCA, SpiderProtAlignAPSR, SpiderProtAlignPairw
                       SpiderProtFilter, SpiderProtCustomMask)
 
 
+#===============================================================================
+# MASKS
+#===============================================================================
 
 class SpiderProtMaskWizard(ParticleMaskRadiusWizard):
     _targets = [(SpiderProtCAPCA, ['radius'])]
@@ -92,15 +95,21 @@ class SpiderParticlesMaskRadiiWizard(ParticlesMaskRadiiWizard):
         ParticlesMaskRadiiWizard.show(self, form, _value, _label, UNIT_PIXEL)
     
 
+#===============================================================================
+# FILTERS
+#===============================================================================
+
+
 class SpiderFilterParticlesWizard(FilterParticlesWizard):    
     _targets = [(SpiderProtFilter, ['filterRadius', 'lowFreq', 'highFreq', 'temperature'])]
     
     def _getParameters(self, protocol):
         protParams = {}
         protParams['input']= protocol.inputParticles
-        protParams['label']= ["lowFreq", "highFreq", "temperature"]
+        protParams['label']= ["filterRadius", "lowFreq", "highFreq", "temperature"]
         protParams['value']= [protocol.getAttributeValue(a) for a in protParams['label']]
-        
+        protParams['mode']= [protocol.filterType.get(), protocol.filterMode.get(), protocol.usePadding.get()]
+
         return protParams
     
     def _getProvider(self, protocol):
@@ -125,10 +134,12 @@ class SpiderFilterParticlesWizard(FilterParticlesWizard):
         else:
             dialog.showWarning("Input particles", "Select particles first", form.root)  
     
+#===============================================================================
+# UTILS
+#===============================================================================
     
 #--------------- Dialogs used by Wizards --------------------------        
        
-#class SpiderGaussianFilterDialog(XmippDownsampleDialog):
 class SpiderFilterDialog(DownsampleDialog):
     
     def _beforePreview(self):
@@ -225,8 +236,10 @@ def filter_spider(inputLocStr, outputLocStr, **pars):
      
     spi = SpiderShell(ext='spi') # Create the Spider process to send commands         
     filterNumber = pars["filterType"] * 2 + 1
+    
     # Consider low-pass or high-pass
     filterNumber += pars["filterMode"]
+    
     OP = pars["op"]
     if not pars["usePadding"]:
         OP += ' NP'
@@ -350,6 +363,7 @@ class CustomMaskDialog(ImagePreviewDialog):
                   '[output_mask]': 'stkmask',
                   }
         ext = self.protocolParent.getExt()
+        
         runScript('mda/custommask.msa', ext, params)
         
         for i, preview in enumerate(self._previews):

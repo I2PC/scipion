@@ -1,0 +1,121 @@
+{% extends 'wizards/wiz_base.html' %} 
+{% block title %} Spider Custom Mask {% endblock %}
+{% block name %} Spider Custom Mask {% endblock %}
+{% block head %}
+	<script type="text/javascript" src="{{raphael}}"></script>
+	<script>
+		function returnParams(){
+			putSelection('input#firstRadius_val', '{{params.label.0}}_input');
+			putSelection('input#sdFactor_val', '{{params.label.1}}_input');
+			putSelection('input#secondRadius_val', '{{params.label.2}}_input');
+			putSelection('input#maskThreshold_val', '{{params.label.3}}_input');
+		};
+		
+		function loadFilter(){
+// 			var type = {{params.mode.0}}
+// 			var mode = {{params.mode.1}}
+// 			var padding = '{{params.mode.2}}'
+// 			compositeSpiderFilter(elm, type, mode, padding);
+		};
+		
+		function previewCustomMask(){
+			var path = {{obj.text}};
+			var firstRadius = {{params.label.0}};
+			var sdFactor = {{params.label.1}};
+			var secondRadius = {{params.label.2}};
+			var maskThreshold = {{params.label.3}};
+			
+				
+		}
+	</script>
+{% endblock %}	
+{% block list %}
+	<tr id="{{obj.getObjId}}" class="no-selected" value="{{obj.text}}">
+		<td>{{obj.basename}}</td>
+	</tr>
+{% endblock %} 
+
+{% block images %}
+	<tr>
+		<td>
+			<div id="wrapper" class="small_image">
+				<div id="image1"></div>
+			</div>IMAGE 1
+		</td>
+		<td>
+			<div id="wrapper" class="small_image">
+				<div id="image2"></div>
+			</div>IMAGE 2
+		</td>
+		<td>
+			<div id="wrapper" class="small_image">
+				<div id="image3"></div>
+			</div>IMAGE 3
+		</td>
+		<td>
+			<div id="wrapper" class="small_image">
+				<div id="image4"></div>
+			</div>IMAGE 4
+		</td>
+	</tr>
+	<tr>
+		<td>
+			<div id="wrapper" class="small_image">
+				<div id="image5"></div>
+			</div>IMAGE 5
+		</td>
+		<td>
+			<div id="wrapper" class="small_image">
+				<div id="image6"></div>
+			</div>IMAGE 6
+		</td>
+		<td>
+			<div id="wrapper" class="small_image">
+				<div id="image7"></div>
+			</div>IMAGE 7
+		</td>
+		<td>
+			<div id="wrapper" class="small_image">
+				<div id="image8"></div>
+			</div>IMAGE 8
+		</td>
+	</tr>
+{% endblock %} 
+
+{% block options %}
+<table>
+	<tr>
+		<td>
+			First Radius
+			<input id="firstRadius_val" type="text" value="{{params.value.0}}"/>
+		</td>
+		<td>
+			First Threshold
+			<input id="sdFactor_val" type="text" value="{{params.value.1}}"/>
+		</td>
+	</tr>
+	<tr>
+		<td>
+			Second Radius
+			<input id="secondRadius_val" type="text" value="{{params.value.2}}"/>
+		</td>
+		<td>
+			Mask Threshold
+			<input id="maskThreshold_val" type="text" value="{{params.value.3}}"/>
+		</td>
+	</tr>
+	<tr>
+		<td>
+			<a href="javascript:previewCustomMask();" class="buttonGrey">Preview</a>
+		</td>
+	</tr>
+</table>
+<script>
+	// Apply the masks at the beginning
+	window.onload = previewCustomMask();
+</script>
+{% endblock %}
+
+{% block function %}
+	onclick="returnParams()"
+{% endblock %}
