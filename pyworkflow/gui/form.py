@@ -523,7 +523,8 @@ class ParamWidget():
         
     def _showWizard(self, e=None):
         wizClass = self.window.wizards[self.wizParamName]
-        wizClass().show(self.window)
+        wizard = wizClass()
+        wizard.show(self.window)
         
     def _findParamWizard(self):
         """ Search if there are registered wizards for this param

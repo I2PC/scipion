@@ -195,6 +195,7 @@ class ProtocolViewer(Protocol, Viewer):
         self.showPlot = True # This flag will be used to display a plot or return the plotter
         self._tkRoot = None
         self.formWindow = None
+        self.setWorkingDir(self.getProject().getTmpPath())
         
     def setProtocol(self, protocol):
         self.protocol = protocol

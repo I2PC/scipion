@@ -28,9 +28,8 @@ Some Spider protocol base classes.
 """
 
 from pyworkflow.em import EMProtocol
-from pyworkflow.utils import removeExt, replaceBaseExt, runJob
 
-from ..spider import loadEnvironment, getScript, END_HEADER, REGEX_KEYFRL, REGEX_KEYVALUE, SPIDER
+from ..spider import runScript
 from ..convert import writeSetOfImages
 
 
@@ -65,51 +64,15 @@ class SpiderProtocol(EMProtocol):
     def getScript(self):
         return getattr(self, '_script', None)
     
-    def __substituteVar(self, match, paramsDict, lineTemplate):
-        if match and match.groupdict()['var'] in paramsDict:
-            d = match.groupdict()
-            d['value'] = paramsDict[d['var']]
-            return lineTemplate % d
-        return None
-    
     def runScript(self, inputScript, ext, paramsDict):
         """ This function will create a valid Spider script
         by copying the template and replacing the values in dictionary.
         After the new file is read, the Spider interpreter is invoked.
         """
-        loadEnvironment()
         self._enterWorkingDir()
         
-        outputScript = replaceBaseExt(inputScript, ext)
-    
-        fIn = open(getScript(inputScript), 'r')
-        fOut = open(outputScript, 'w')
-        inHeader = True # After the end of header, not more value replacement
-        inFrL = False
-        
-        for i, line in enumerate(fIn):
-            if END_HEADER in line:
-                inHeader = False
-            if inHeader:
-                try:
-                    newLine = self.__substituteVar(REGEX_KEYVALUE.match(line), paramsDict, 
-                                              "%(var)s%(s1)s=%(s2)s%(value)s%(rest)s\n")
-                    if newLine is None and inFrL:
-                        newLine = self.__substituteVar(REGEX_KEYFRL.match(line), paramsDict, 
-                                                  "%(var)s%(value)s%(rest)s\n")
-                    if newLine:
-                        line = newLine
-                except Exception, ex:
-                    print ex, "on line (%d): %s" % (i+1, line)
-                    raise ex
-                inFrL = line.lower().startswith("fr ")
-            fOut.write(line)
-        fIn.close()
-        fOut.close()    
-    
-        scriptName = removeExt(outputScript)
         log = getattr(self, '_log', None)        
-        runJob(log, SPIDER, "%(ext)s @%(scriptName)s" % locals())
+        runScript(inputScript, ext, paramsDict, log)
         
         self._leaveWorkingDir()
     
