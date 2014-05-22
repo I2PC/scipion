@@ -251,6 +251,7 @@ CUSTOMMASK_VARS = ['filterRadius1', 'sdFactor', 'filterRadius2', 'maskThreshold'
 # Map between the index in the result stack
 # and the label to the given image
 MASKRESULT_LABELS = ['input image',
+                     'filtered',
                      'thresholded',
                      'filtered mask',
                      'final mask',
@@ -352,7 +353,10 @@ class CustomMaskDialog(ImagePreviewDialog):
         runScript('mda/custommask.msa', ext, params)
         
         for i, preview in enumerate(self._previews):
-            self.rightImage.read('%d@stkmask.%s' % (i+1, ext))
+            if i == 0:
+                self.rightImage.read(self.lastObj.getFileName())
+            else:
+                self.rightImage.read('%d@stkmask.%s' % (i, ext))
             preview.updateData(self.rightImage.getData())
         
     
