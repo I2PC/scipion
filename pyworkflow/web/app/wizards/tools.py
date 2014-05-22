@@ -30,31 +30,6 @@ from pyworkflow.gui import getPILImage
 import xmipp
 
 
-#import os
-#from os.path import basename
-#from views_util import * 
-#from views_protocol import updateProtocolParams
-#from pyworkflow.manager import Manager
-#from pyworkflow.project import Project
-#from django.shortcuts import render_to_response
-#from pyworkflow.em.convert import ImageHandler
-#from pyworkflow.em.constants import *
-#
-#from pyworkflow.em import SetOfImages, SetOfMicrographs, Volume, SetOfParticles, SetOfVolumes, ProtCTFMicrographs
-#from pyworkflow.em.wizard import EmWizard
-#
-#from pyworkflow.em.packages.xmipp3.convert import xmippToLocation, locationToXmipp
-#from pyworkflow.em.packages.spider.convert import locationToSpider
-#from pyworkflow.em.packages.spider.wizard import filter_spider
-#from pyworkflow.em.packages.xmipp3.constants import *
-#
-#
-## Imports for web wizards
-#from pyworkflow.web.app.wizards.xmipp_wizard import *
-#from pyworkflow.web.app.wizards.spider_wizard import *
-#from pyworkflow.web.app.wizards.relion_wizard import *
-
-
 #===============================================================================
 #    Methods for utils
 #===============================================================================

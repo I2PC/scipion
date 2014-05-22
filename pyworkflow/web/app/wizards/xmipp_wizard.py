@@ -35,6 +35,7 @@ from django.http import HttpResponse
 from pyworkflow.em.packages.xmipp3.wizard import * 
 from pyworkflow.web.app.em_wizard import *
 from tools import *
+from pyworkflow.web.app.views_base import base_wiz
 
 #===============================================================================
 # DOWNSAMPLING
@@ -56,7 +57,7 @@ class XmippDownsamplingWeb(XmippDownsampleWizard):
             context = {'objects': self._getMics(objs),
                        'params': params}
     
-            context = wiz_base(request, context)
+            context = base_wiz(request, context)
             return render_to_response('wizards/wiz_downsampling.html', context)
 
 #===============================================================================
@@ -79,7 +80,7 @@ class XmippCTFWeb(XmippCTFWizard):
             context = {'objects': self._getMics(objs),
                        'params': params}
         
-            context = wiz_base(request, context)
+            context = base_wiz(request, context)
             return render_to_response('wizards/wiz_ctf.html', context)
         
 #===============================================================================
@@ -111,7 +112,7 @@ class XmippParticleMaskRadiusWeb(XmippParticleMaskRadiusWizard):
                        'xdim':xdim,
                        'params': params}
         
-            context = wiz_base(request, context)
+            context = base_wiz(request, context)
             return render_to_response('wizards/wiz_particle_mask_radius.html', context)    
 
 
@@ -140,7 +141,7 @@ class XmippParticleMaskRadiiWeb(XmippParticleMaskRadiiWizard):
                        'xdim':xdim,
                        'params': params}
         
-            context = wiz_base(request, context)
+            context = base_wiz(request, context)
             return render_to_response('wizards/wiz_particles_mask_radii.html', context)    
 
 
@@ -169,7 +170,7 @@ class XmippVolumeMaskRadiusWeb(XmippVolumeMaskRadiusWizard):
                        'xdim':xdim,
                        'params': params}
         
-            context = wiz_base(request, context)
+            context = base_wiz(request, context)
             return render_to_response('wizards/wiz_volume_mask_radius.html', context)    
 
 class XmippVolumeMaskRadiiWeb(XmippVolumeRadiiWizard):
@@ -197,7 +198,7 @@ class XmippVolumeMaskRadiiWeb(XmippVolumeRadiiWizard):
                        'xdim':xdim,
                        'params': params}
         
-            context = wiz_base(request, context)
+            context = base_wiz(request, context)
             return render_to_response('wizards/wiz_volumes_mask_radii.html', context)    
 
     
@@ -227,7 +228,7 @@ class XmippFilterParticlesWeb(XmippFilterParticlesWizard):
             context = {'objects': particles,
                        'params':params}
             
-            context = wiz_base(request, context)
+            context = base_wiz(request, context)
             
             return render_to_response('wizards/wiz_filter_particles.html', context)
 
@@ -254,7 +255,7 @@ class XmippFilterVolumesWeb(XmippFilterVolumesWizard):
             context = {'objects': volumes,
                        'params':params}
             
-            context = wiz_base(request, context)
+            context = base_wiz(request, context)
             
             return render_to_response('wizards/wiz_filter_volumes.html', context)            
     
@@ -279,7 +280,7 @@ class XmippGaussianParticlesWeb(XmippGaussianParticlesWizard):
             context = {'objects': particles,
                        'params':params}
             
-            context = wiz_base(request, context)
+            context = base_wiz(request, context)
             
             return render_to_response('wizards/wiz_gaussian_particle.html', context)
     
@@ -304,7 +305,7 @@ class XmippGaussianVolumesWeb(XmippGaussianVolumesWizard):
             context = {'objects': volumes,
                        'params':params}
             
-            context = wiz_base(request, context)
+            context = base_wiz(request, context)
             
             return render_to_response('wizards/wiz_gaussian_vol.html', context)     
 

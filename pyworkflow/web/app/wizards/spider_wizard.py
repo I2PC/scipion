@@ -36,7 +36,7 @@ from pyworkflow.em.packages.spider.wizard import *
 from pyworkflow.web.app.em_wizard import *
 from tools import *
 from pyworkflow.web.app.views_util import getImageXdim
-
+from pyworkflow.web.app.views_base import base_wiz
 
 #===============================================================================
 # MASKS 
@@ -67,7 +67,7 @@ class SpiderProtMaskWeb(SpiderProtMaskWizard):
                        'xdim':xdim,
                        'params': params }
         
-            context = wiz_base(request, context)
+            context = base_wiz(request, context)
             return render_to_response('wizards/wiz_particle_mask_radius.html', context)    
 
 
@@ -96,7 +96,7 @@ class SpiderParticlesMaskRadiiWeb(SpiderParticlesMaskRadiiWizard):
                        'xdim':xdim,
                        'params': params }
         
-            context = wiz_base(request, context)
+            context = base_wiz(request, context)
             return render_to_response('wizards/wiz_particles_mask_radii.html', context)    
 
 
@@ -126,7 +126,7 @@ class SpiderFilterParticlesWeb(SpiderFilterParticlesWizard):
             context = {'objects': particles,
                        'params':params }
             
-            context = wiz_base(request, context)
+            context = base_wiz(request, context)
             
             return render_to_response('wizards/wiz_filter_spider.html', context)
 
