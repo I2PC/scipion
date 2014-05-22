@@ -40,6 +40,7 @@ from pyworkflow.web.app.views_base import base_wiz
 
 from pyworkflow.em.packages.xmipp3.convert import xmippToLocation, locationToXmipp
 from pyworkflow.em.packages.spider.convert import locationToSpider
+from pyworkflow.utils.path import removeExt
 
 #===============================================================================
 # MASKS 
@@ -101,6 +102,33 @@ class SpiderParticlesMaskRadiiWeb(SpiderParticlesMaskRadiiWizard):
         
             context = base_wiz(request, context)
             return render_to_response('wizards/wiz_particles_mask_radii.html', context)    
+
+
+
+class SpiderCustomMaskWeb(SpiderCustomMaskWizard):
+    _environments = [WEB_DJANGO]
+    
+    def _run(self, protocol, request):
+        params = self._getParameters(protocol)
+        obj = params['input'].get()
+        
+        if obj is None:
+            return HttpResponse("errorInput")
+        else:
+            # Single particle
+            particle = obj.clone()
+            particle.text = particle.getFileName()
+            particle.basename = basename(particle.text)
+                    
+            xdim = getImageXdim(request, particle.text)
+    
+            context = {'obj': particle,
+                       'xdim':xdim,
+                       'params': params }
+        
+            context = base_wiz(request, context)
+            
+            return render_to_response('wizards/wiz_custom_mask_spider.html', context)    
 
 
 #===============================================================================
@@ -185,3 +213,26 @@ def get_image_filter_spider(request):
     img.save(response, "PNG")
     return response
 
+
+def get_image_custom_mask_spider(request):
+    """
+    Function to get the computing image with a spider custom mask applied
+    """
+    
+    imagePath = request.GET.get('image', None)
+    radius1 = request.GET.get('radius1', None)
+    sdFactor = request.GET.get('sdFactor', None)
+    radius2 = request.GET.get('radius2', None)
+    maskThreshold = request.GET.get('maskThreshold', None)
+    
+    params = {'[filter-radius1]': radius1,
+              '[sd-factor]': sdFactor,
+              '[filter-radius2]': radius2,
+              '[mask-threshold2]': maskThreshold,
+              '[input_image]': removeExt(imagePath),
+              '[output_mask]': 'stkmask',
+              }
+    
+    
+    
+    pass

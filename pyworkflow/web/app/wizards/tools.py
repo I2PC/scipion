@@ -85,9 +85,9 @@ def validateParticles(particles):
         res = "errorEmpty"
     else:
         res = 1
-#        else:
-#            res = parts
+        
     return res
+
 
 def get_image_psd(request):
     """
