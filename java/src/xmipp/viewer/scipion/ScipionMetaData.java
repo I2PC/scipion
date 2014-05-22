@@ -559,15 +559,8 @@ public class ScipionMetaData extends MetaData{
         
     }
      
-    public  void writeBlock(String path)
-    {//overwrites file if exists, does not save recursively metadata childs
-        
-        Connection c = null;
-        Statement stmt = null;
-        try {
-            
-            Class.forName("org.sqlite.JDBC");
-            c = DriverManager.getConnection("jdbc:sqlite:" + path);
+    public String toString()
+    {
             String sql = String.format("DROP TABLE IF EXISTS %1$s; CREATE TABLE %1$s(\n"
                     + "id        INTEGER PRIMARY KEY AUTOINCREMENT,\n" +
 "                      label_property      TEXT UNIQUE,\n" +
@@ -575,10 +568,7 @@ public class ScipionMetaData extends MetaData{
 "                      class_name TEXT DEFAULT NULL\n" +
 "                      )", classestb);
                 
-            stmt = c.createStatement();
-            stmt.executeUpdate(sql);
-            //System.out.println(sql);
-            sql = String.format("INSERT INTO %s(id, label_property, column_name, class_name) values (1, \'self\', \'%s\', \'%s\')", classestb, selfalias, self);
+            sql += String.format(";INSERT INTO %s(id, label_property, column_name, class_name) values (1, \'self\', \'%s\', \'%s\')", classestb, selfalias, self);
             String line = ", (%s, \'%s\', \'%s\', \'%s\')";
             ColumnInfo ci;
             String createcols = "", cols = "id, label, comment", type;
@@ -590,18 +580,14 @@ public class ScipionMetaData extends MetaData{
                 createcols += String.format(",\n%s %s DEFAULT NULL", ci.comment, type);
                 cols += String.format(", %s", ci.comment);
             }
-            stmt.executeUpdate(sql);
-            //System.out.println(sql);
-            sql = String.format("DROP TABLE IF EXISTS %1$s; CREATE TABLE %1$s(\n"
+            sql += String.format(";DROP TABLE IF EXISTS %1$s; CREATE TABLE %1$s(\n"
                     + "id        INTEGER PRIMARY KEY AUTOINCREMENT,\n" +
 "                      label      TEXT DEFAULT NULL,\n" +
 "                      comment TEXT DEFAULT NULL" +
 "                      %2$s)", objectstb, createcols);
                 
             
-            stmt.executeUpdate(sql);
-            //System.out.println(sql);
-            sql = String.format("INSERT INTO %s(%s) VALUES ", objectstb, cols);
+            sql += String.format(";INSERT INTO %s(%s) VALUES ", objectstb, cols);
             Object value;
             for(EMObject emo: emobjects)
             {
@@ -627,8 +613,19 @@ public class ScipionMetaData extends MetaData{
                 sql += "),";
             }
             sql = sql.substring(0, sql.length() - 1);//remove first comma
-            stmt.executeUpdate(sql);
-            //System.out.println(sql);
+            return sql;
+    }
+    public  void writeBlock(String path)
+    {//overwrites file if exists, does not save recursively metadata childs
+        
+        Connection c = null;
+        Statement stmt = null;
+        try {
+            
+            Class.forName("org.sqlite.JDBC");
+            c = DriverManager.getConnection("jdbc:sqlite:" + path);
+            stmt = c.createStatement();
+            stmt.executeUpdate(toString());
             stmt.close();
             c.close();
             
@@ -666,5 +663,10 @@ public class ScipionMetaData extends MetaData{
     public String getObjectsTable()
     {
         return objectstb;
+    }
+    
+    public void print()
+    {
+        System.out.println(toString());
     }
 }

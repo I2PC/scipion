@@ -1243,13 +1243,7 @@ public class GalleryData {
             return false;
         }
           
-        public void write(String path) {
-            md.write(path);
-        }
-
-        public void writeBlock(String path) {
-            md.writeBlock(filename);
-        }
+       
         
         public String[] getBlocks() {
             return mdBlocks;
@@ -1354,12 +1348,18 @@ public class GalleryData {
 		String from = getFileName();
 		String blockto = path;
 		String to;
+                String block;
 		if (blockto.contains("@"))
-			to = blockto.substring(blockto.lastIndexOf("@") + 1, blockto.length());
+                {
+                        int sep = blockto.lastIndexOf("@");
+                        block = blockto.substring(0, sep);
+			to = blockto.substring(sep + 1, blockto.length());
+                }
 		else
 		{
 			to = blockto;
 			blockto = selectedBlock + "@" + blockto;
+                        block = selectedBlock;
 		}
 		
 		if (from != null)
@@ -1390,7 +1390,7 @@ public class GalleryData {
 		setMdChanges(false);
 		setFileName(to);
 		if (blockto.contains("@"))
-			selectBlock(blockto.substring(0, blockto.lastIndexOf("@")));
+			selectBlock(block);
 	}
     
     
@@ -1398,34 +1398,36 @@ public class GalleryData {
 	{
 		try
 		{
+                    
 			if (path == null)
 				throw new IllegalArgumentException();
 
 			boolean overwritewithblock;
 			String file;
 			if (path.contains("@"))
-				file = path.substring(path.lastIndexOf("@") + 1, path.length());
+				file = path.substring(path.lastIndexOf("@") + 1);
 			else
 			{
 				file = path;
 				path = selectedBlock + "@" + file;
 			}
-
+                        
 			File iofile = new File(file);
 			if (!iofile.exists())// overwrite or append, save active
 			{
 				if (iofile.getParentFile() != null)
 					iofile.getParentFile().mkdirs();
-				write(path);
+				md.write(path);
 			}
 			else
 			{
+                            
 				overwritewithblock = isoverwrite && !saveall;
 				if (overwritewithblock)
-					write(path);// overwrite with active block only,
+					md.write(path);// overwrite with active block only,
 										// other blocks were dismissed
-				else
-					writeBlock(path);// either if save active block or all, save active, other blocks where already managed
+                                else
+                                    md.writeBlock(path);// either if save active block or all, save active, other blocks where already managed
 
 			}
 			

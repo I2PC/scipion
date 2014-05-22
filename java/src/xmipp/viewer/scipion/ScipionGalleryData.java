@@ -163,8 +163,6 @@ public class ScipionGalleryData extends GalleryData{
                 hasMdChanges = false;
                 hasClassesChanges = false;
                 md = getMetaData(selectedBlock);
-                
-                
 	}
 
         public MetaData getMetaData(String block)
