@@ -68,8 +68,9 @@ class XmippParticlePickingAutomatic(ProtParticlePicking, XmippProtocol):
                       pointerClass='SetOfMicrographs', condition='micsToPick==%d' % MICS_OTHER,
                       help='Select other set of micrographs to pick using the trained picker.')
         form.addParam('memory', FloatParam, default=2,
-                   label='Memory to use (In Gb)', expertLevel=2)        
-    
+                   label='Memory to use (In Gb)', expertLevel=2)
+        form.addParallelSection(threads=1, mpi=1)
+        
     #--------------------------- INSERT steps functions --------------------------------------------    
     def _insertAllSteps(self):
         """The Particle Picking proccess is realized for a set of micrographs"""
