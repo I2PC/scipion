@@ -31,8 +31,10 @@ import xmipp
 from pyworkflow.em.wizard import EmWizard
 from django.shortcuts import render_to_response
 from django.http import HttpResponse
+
 from pyworkflow.em.packages.xmipp3.wizard import * 
 from pyworkflow.web.app.em_wizard import *
+from tools import *
 
 #===============================================================================
 # DOWNSAMPLING

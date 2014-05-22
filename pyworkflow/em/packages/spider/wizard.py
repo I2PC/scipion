@@ -45,6 +45,9 @@ from pyworkflow.gui.widgets import LabelSlider
 from spider import SpiderShell
 from convert import locationToSpider
 
+#===============================================================================
+# MASKS
+#===============================================================================
 
 class SpiderProtMaskWizard(ParticleMaskRadiusWizard):
     _targets = [(SpiderProtCAPCA, ['radius'])]
@@ -89,7 +92,9 @@ class SpiderParticlesMaskRadiiWizard(ParticlesMaskRadiiWizard):
         _label = params['label']
         ParticlesMaskRadiiWizard.show(self, form, _value, _label, UNIT_PIXEL)
     
-
+#===============================================================================
+# FILTERS
+#===============================================================================
 
 class SpiderFilterParticlesWizard(FilterParticlesWizard):    
     _targets = [(SpiderProtFilter, ['filterRadius', 'lowFreq', 'highFreq', 'temperature'])]
@@ -124,6 +129,9 @@ class SpiderFilterParticlesWizard(FilterParticlesWizard):
         else:
             dialog.showWarning("Input particles", "Select particles first", form.root)  
     
+#===============================================================================
+# UTILS
+#===============================================================================
     
 #--------------- Dialogs used by Wizards --------------------------        
        
