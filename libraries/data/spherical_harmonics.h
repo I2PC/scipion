@@ -28,6 +28,11 @@
 
 #include "multidim_array.h"
 #include "matrix2d.h"
+#include "../../external/alglib-3.8.0.cpp/src/specialfunctions.h"
+//#include "../../../kk/gsl-1.16/gsl/gsl_sf_gegenbauer.h"
+
+# define pi           3.14159265358979323846  /* pi */
+# define sampling  100;
 
 #endif /* SPHERICAL_HARMONICS_H_ */
 
@@ -37,8 +42,40 @@
 // physics space
 class PolySphericalHarmonics
 {
+private:
 
-	void shPols(int degree, MultidimArray<double> & im,
-			MultidimArray<bool> & ROI, int verbose=0);
+	bool save;
+
+public:
+
+	void shPols(int degree, MultidimArray<double> & im, int verbose=0);
+
+	inline double shPols(int degree, int m, double theta,double varphi);
+
+private:
+
+
+	//We store it as double because there is a lot of division between factorials in the
+	// SH implementation
+	inline  double factorial(size_t n)
+	{
+		double f=1;
+
+		for (size_t var = 1; var <= n; var++)
+			f *= var;
+
+		return f;
+	}
+
+public:
+
+	PolySphericalHarmonics(bool doSave=false)
+	{
+			save = doSave;
+	}
 
 };
+
+
+
+
