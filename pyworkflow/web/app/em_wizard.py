@@ -40,13 +40,12 @@ from pyworkflow.web.app.wizards.relion_wizard import *
 
 
 #===============================================================================
-#    Wizard base function (to call the others)
+# Wizard base function (to call the others)
 #===============================================================================
 
 def wizard(request):
-    # Get the Wizard Name
+    # Get the post-dictionary
     requestDict = getattr(request, "POST")
-#    functionName = requestDict.get("wizName")
 
     # Get and instance the wizard class
     className = requestDict.get("wizClassName")
