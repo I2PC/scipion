@@ -131,9 +131,8 @@ class SpiderFilterParticlesWeb(SpiderFilterParticlesWizard):
             return render_to_response('wizards/wiz_filter_spider.html', context)
 
 
-        
 #===============================================================================
-# UTILS
+# SPIDER UTILS 
 #===============================================================================
 
 def get_image_filter_spider(request):

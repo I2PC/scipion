@@ -106,9 +106,10 @@ class SpiderFilterParticlesWizard(FilterParticlesWizard):
     def _getParameters(self, protocol):
         protParams = {}
         protParams['input']= protocol.inputParticles
-        protParams['label']= ["lowFreq", "highFreq", "temperature"]
+        protParams['label']= ["filterRadius", "lowFreq", "highFreq", "temperature"]
         protParams['value']= [protocol.getAttributeValue(a) for a in protParams['label']]
-        
+        protParams['mode']= [protocol.filterType.get(), protocol.filterMode.get(), protocol.usePadding.get()]
+
         return protParams
     
     def _getProvider(self, protocol):
@@ -139,7 +140,6 @@ class SpiderFilterParticlesWizard(FilterParticlesWizard):
     
 #--------------- Dialogs used by Wizards --------------------------        
        
-#class SpiderGaussianFilterDialog(XmippDownsampleDialog):
 class SpiderFilterDialog(DownsampleDialog):
     
     def _beforePreview(self):
@@ -236,8 +236,10 @@ def filter_spider(inputLocStr, outputLocStr, **pars):
      
     spi = SpiderShell(ext='spi') # Create the Spider process to send commands         
     filterNumber = pars["filterType"] * 2 + 1
+    
     # Consider low-pass or high-pass
     filterNumber += pars["filterMode"]
+    
     OP = pars["op"]
     if not pars["usePadding"]:
         OP += ' NP'
