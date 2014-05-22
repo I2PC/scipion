@@ -43,8 +43,7 @@
 		$("#protocolForm").attr('data-mode', mode);
 		$('#protocolForm').submit();
 	}
-	function putModeWiz(functionName, className){
-// 		$("input#wizName").attr("value", functionName);
+	function putModeWiz(className){
 		$("input#wizClassName").attr("value", className);
 		putMode("wiz");
 	}
@@ -55,7 +54,6 @@
 	function loadPreviewImage(param){
 		var objId = $("#"+ param).attr("data-objId");
 		launchViewer(objId);
-// 		customPopup('/visualize_object/?objectId='+objId,1024,600)
 	}
 	</script>
 	 <script>
@@ -88,7 +86,7 @@
 			<input type="hidden" id="protocolClass" name="protocolClass" value="{{protocol.getClassName}}"/>
 			<input type="hidden" name="protocolId" value="{{protocol.getObjId}}"/>
 			<input type="hidden" name="protRunIdViewer" value="{{protRunIdViewer}}"/>
-			<input type="hidden" id="wizName" name="wizName" value=""/>
+<!-- 			<input type="hidden" id="wizName" name="wizName" value=""/> -->
 			<input type="hidden" id="wizClassName" name="wizClassName" value=""/>
 			<input type="hidden" id="viewerParam" name="viewerParam" value="None"/>
 			<input type="hidden" id="label" name="label" value="{{protocol.getObjLabel}}"/>
