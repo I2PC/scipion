@@ -29,7 +29,11 @@ import os.path
 
 HOME = os.path.abspath(os.path.dirname(__file__))
 
-RESOURCES = [os.path.join(HOME, 'resources')]
+def join(*paths):
+    """ join paths from HOME. """
+    return os.path.join(HOME, *paths)
+
+RESOURCES = [join('resources')]
 WEB_RESOURCES = os.path.join(HOME, 'web', 'pages', 'resources')
 
 if "SCIPION_USER_DATA" not in os.environ:
