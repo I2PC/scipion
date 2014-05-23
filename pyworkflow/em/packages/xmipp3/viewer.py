@@ -133,6 +133,8 @@ class XmippViewer(Viewer):
                 fn = self._getTmpPath(obj.getName() + '_images.xmd')
                 #Set hasCTF to False to avoid problems
                 writeSetOfParticles(obj, fn)
+#            else:
+#                fn = obj.getFileName()
             self._views.append(ObjectView(fn, "Particles", self._project.getName(), obj.strId(), obj.strId()))
                
                     
@@ -156,13 +158,13 @@ class XmippViewer(Viewer):
             self._views.append(ObjectView(fn, "Classes2D", self._project.getName(), obj.strId(), obj.getImages().strId()))  
             
         elif issubclass(cls, SetOfClasses3D):
-#            mdFn = getattr(obj, '_xmippMd', None)
-#            if mdFn:
-#                fn = mdFn.get()
-#            else:
-#                fn = self._getTmpPath(obj.getName() + '_classes.xmd')
-#                writeSetOfClasses3D(obj, fn, self._getTmpPath())
-            fn = obj.getFileName()
+            mdFn = getattr(obj, '_xmippMd', None)
+            if mdFn:
+                fn = mdFn.get()
+            else:
+                fn = self._getTmpPath(obj.getName() + '_classes.xmd')
+                writeSetOfClasses3D(obj, fn, self._getTmpPath())
+#            fn = obj.getFileName()
 
             self._views.append(ObjectView(fn, "Classes3D", self._project.getName(), obj.strId(), obj.getImages().strId(), extraParams=args.get('extraParams', '')))
               
