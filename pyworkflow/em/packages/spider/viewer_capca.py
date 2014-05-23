@@ -38,7 +38,7 @@ from pyworkflow.em.packages.xmipp3.viewer import XmippViewer
 from pyworkflow.em.viewer import DataView
 
 from spider import PcaFile
-from protocol_ca_pca import SpiderProtCAPCA
+from protocol.protocol_ca_pca import SpiderProtCAPCA
 
 
 

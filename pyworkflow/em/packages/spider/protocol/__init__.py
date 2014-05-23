@@ -1,6 +1,6 @@
 # **************************************************************************
 # *
-# * Authors:     Jose Gutierrez (jose.gutierrez@cnb.csic.es)
+# * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -23,4 +23,19 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
+"""
+Import of all protocols included in spider.
+"""
+from protocol_base import SpiderProtocol
+from protocol_classify_base import SpiderProtClassify
+from protocol_filters import SpiderProtFilter
+from protocol_align_apsr import SpiderProtAlignAPSR
+from protocol_custommask import SpiderProtCustomMask
+from protocol_ca_pca import SpiderProtCAPCA
+from protocol_classify_diday import SpiderProtClassifyDiday
+from protocol_classify_ward import SpiderProtClassifyWard
+from protocol_classify_kmeans import SpiderProtClassifyKmeans
+from protocol_mda import SpiderWfMDA
+from protocol_align_pairwise import SpiderProtAlignPairwise
+
 

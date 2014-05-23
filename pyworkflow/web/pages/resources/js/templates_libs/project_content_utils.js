@@ -408,50 +408,72 @@ function showLog(log_type){
 	switch (log_type) {
 		case "output_log":
 			
-			$("#tab-logs-output").css("display","")
-			$("#output_log").attr("class", "elm-header-log_selected")
-			html = $("#tab-logs-output").html()
+			$("div#tab-logs-output").css("display","")
+			$("a#output_log").attr("class", "elm-header-log_selected")
+			html = $("div#tab-logs-output").html()
 			
-			$("#tab-logs-error").css("display","none")
-			$("#error_log").attr("class", "elm-header-log")
+			$("div#tab-logs-error").css("display","none")
+			$("a#error_log").attr("class", "elm-header-log")
 			
-			$("#tab-logs-scipion").css("display","none")
-			$("#scipion_log").attr("class", "elm-header-log")
+			$("div#tab-logs-scipion").css("display","none")
+			$("a#scipion_log").attr("class", "elm-header-log")
 			
 		    break;
 		    
 		case "error_log":
 			
-			$("#tab-logs-output").css("display","none")
-			$("#output_log").attr("class", "elm-header-log")
+			$("div#tab-logs-output").css("display","none")
+			$("a#output_log").attr("class", "elm-header-log")
 			
-			$("#tab-logs-error").css("display","")
-			$("#error_log").attr("class", "elm-header-log_selected")
-			html = $("#tab-logs-error").html()
+			$("div#tab-logs-error").css("display","")
+			$("a#error_log").attr("class", "elm-header-log_selected")
+			html = $("div#tab-logs-error").html()
 			
-			$("#tab-logs-scipion").css("display","none")
-			$("#scipion_log").attr("class", "elm-header-log")
+			$("div#tab-logs-scipion").css("display","none")
+			$("a#scipion_log").attr("class", "elm-header-log")
 		
 		    break;
 		    
 		case "scipion_log":
 			
-			$("#tab-logs-output").css("display","none")
-			$("#output_log").attr("class", "elm-header-log")
+			$("div#tab-logs-output").css("display","none")
+			$("a#output_log").attr("class", "elm-header-log")
+				
+			$("div#tab-logs-error").css("display","none")
+			$("a#error_log").attr("class", "elm-header-log")
 			
-			$("#tab-logs-error").css("display","none")
-			$("#error_log").attr("class", "elm-header-log")
-			
-			$("#tab-logs-scipion").css("display","")
-			$("#scipion_log").attr("class", "elm-header-log_selected")
-			html = $("#tab-logs-scipion").html()
+			$("div#tab-logs-scipion").css("display","")
+			$("a#scipion_log").attr("class", "elm-header-log_selected")
+			html = $("div#tab-logs-scipion").html()
 		
 		    break;
 	}
 	
-	$("#externalTool").attr("href","javascript:customPopupFileHTML('" + html +"','"+ log_type + "',1024,768)")
+	// Fill the button to show the button in an external window
+	var log_func = "javascript:showExternalLog('"+ log_type +"');"
+	$("a#externalTool").attr("href",log_func)
 
 }
+
+function showExternalLog(log_id){
+	var html = "";
+
+	switch (log_id) {
+	
+		case "output_log":
+			html = $("div#tab-logs-output").html()
+			break;
+		case "error_log":
+			html = $("div#tab-logs-error").html()
+			break;
+		case "scipion_log":
+			html = $("div#tab-logs-scipion").html()
+			break;
+	}
+	customPopupFileHTML(html ,log_id,1024,768);
+
+}
+
 
 
 function fillUL(type, list, ulId, icon) {

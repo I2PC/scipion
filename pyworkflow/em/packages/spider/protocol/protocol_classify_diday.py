@@ -1,6 +1,6 @@
 # **************************************************************************
 # *
-# * Authors:     Jose Gutierrez (jose.gutierrez@cnb.csic.es)
+# * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -24,3 +24,32 @@
 # *
 # **************************************************************************
 
+from protocol_classify_base import SpiderProtClassifyCluster
+
+      
+
+class SpiderProtClassifyDiday(SpiderProtClassifyCluster):
+    """ Diday's method, using 'CL CLA' 
+    """
+    _label = 'classify diday'
+    
+    def __init__(self, **kwargs):
+        SpiderProtClassifyCluster.__init__(self, 'mda/cluster.msa', 'CLA',  **kwargs)
+
+    #--------------------------- INFO functions -------------------------------------------- 
+    
+    def _validate(self):
+        errors = []
+        return errors
+    
+    def _citations(self):
+        cites = []
+        return cites
+    
+    def _summary(self):
+        summary = []
+        return summary
+    
+    def _methods(self):
+        return self._summary()  # summary is quite explicit and serve as methods
+    

@@ -1,0 +1,173 @@
+; MAKES BINARY TREE AS SPIDER IMAGE
+
+; ------------------- Parameters -------------------
+[max-depth]    = 4  ; node depth (9 will present display problems)
+[margin-width] = 2  ; margin width
+
+; ------------------ Input files ------------------
+fr l
+[binary_dir]tree                                   ; input/output directory
+fr l
+[node_avg][binary_dir]/labeled{***[current-node]}  ; node-average template
+
+; ------------------ Output files ------------------
+fr l
+[tree][binary_dir]/tree{*[max-depth]}          ; SPIDER-format tree image
+fr l
+[coords_doc][binary_dir]/coords{*[max-depth]}  ; node-information doc file
+
+; ---------------- END BATCH HEADER ----------------
+
+fr l
+[coords]coords
+
+;de
+;[coords]
+;; will be in core
+
+; get image dimensions
+[current-node]=1  ; dummy variable
+fi [x-dim],x18,[bkgd]
+[node_avg]
+(12,2,8)  ; header positions for nsam, nrow, fmin
+
+; loop through node-depths
+do lb2 [depth-counter]=1,[max-depth]
+    [current-depth]=[max-depth]-[depth-counter]+1   ; start from deepest layer
+    x30=2**([current-depth]-1)  ; first node
+    [last-node]=2**[current-depth]-1    ; last node
+    [nodes-row]=[last-node]-x30+1   ; #nodes at current depth
+
+    vm
+    echo "Depth: {*[current-depth]}, first node: {***x30}, last node: {***[last-node]}"
+
+    ; if deepest layer, then initialize
+    if([depth-counter].eq.1) then
+        ; set up coordinate file
+        sd ic new
+        [coords]
+        (7,[last-node])
+
+        x13=[max-depth]*x18        ; y-dim
+        x12=[nodes-row]*([x-dim]+[margin-width])  ; x-dim
+
+        ; create blank image for tree
+        bl
+        _1
+        x12,x13     ; dimensions
+        N           ; get pixel value from image?
+        [bkgd]      ; minimum from [node_avg]001
+;        Y           ; get pixel value from image?
+;        [node_avg]  ; image to get background value
+    endif
+
+    ; y-position of image top
+    [top-left-y]=([current-depth]-1)*x18 + 1
+    ; [current-depth]==depth-from-bottom, x18==class-average y-dim
+
+    ; in x, split row into equally-sized bands for each node
+    [band-width]=x12/[nodes-row]
+    ; x12==tree-width
+
+    ; center class-average in band minus image half-width ([x-dim])
+    x33=[band-width]/2 - [x-dim]/2 + 1
+
+    ; loop through nodes
+    do lb3 x32=1,[nodes-row]
+        ; node#
+        [current-node]=x32+x30-1
+        ; x30==first node
+
+        ; check if image exists
+        IQ FI [node_avg_exist]
+        [node_avg]
+
+        ; if average exists, then insert average
+        IF([node_avg_exist].eq.1) THEN
+            ; position in x equals band-center plus #band-shifts
+            [top-left-x]=x33 + (x32-1)*[band-width]
+
+            ; get fmin, fmax
+            fs x87,[fmin]
+            [node_avg]
+
+            sd ic [current-node],[current-depth] ,[fmin],x87 ,[top-left-x],[top-left-y] ,[nodes-row],[band-width]
+            [coords]
+            ; x87==fmax
+
+            ; if not bottom depth, then draw lines to daughter nodes
+            if([current-depth].ne.[max-depth]) then
+                ; if [current-node]==n, then daughters are 2n and 2n+1
+                [daughter-node-1]=2*[current-node]
+                [daughter-node-2]=2*[current-node] + 1
+
+                ; get coordinates for daughter-nodes
+                ud ic [daughter-node-1], x99,x99,x99, [daughter-1-x]
+                [coords]
+                ud ic [daughter-node-2], x99,x99,x99, [daughter-2-x], [daughter-y]
+                [coords]
+
+                ; draw from centers rather than top-left
+                [parent-middle]=[top-left-x] + [x-dim]/2
+                [daughter-mid-1]=[daughter-1-x] + [x-dim]/2
+                [daughter-mid-2]=[daughter-2-x] + [x-dim]/2
+
+                ; draw lines
+                pt
+                _1
+                L                              ; _L_ine
+                [parent-middle],[top-left-y]   ; starting coord
+                [daughter-mid-1],[daughter-y]  ; ending coord
+                Y                              ; continue?
+                L
+                [parent-middle],[top-left-y]   ; starting coord
+                [daughter-mid-2],[daughter-y]  ; ending coord
+                N                              ; continue?
+            endif
+
+            ; insert average
+            in
+            [node_avg]
+            _1       ; tree-image
+            [top-left-x],[top-left-y]  ; top-left coordinates of small image
+
+;        IQ FI [node_avg_exist]
+;        [node_avg]
+
+         ; if average doesn't exist
+;        IF([node_avg_exist].ne.1) THEN
+         ELSE
+            BL   
+            [node_avg]
+            [x-dim] [x-dim]
+            N
+            [bkgd]   ; WAS 0
+        ENDIF 
+    lb3
+    ; end node-loop
+lb2
+; end depth-loop
+
+fs
+_1
+
+; write tree to disk
+cp
+_1
+[tree]
+
+; clean up
+sd ic copy
+[coords]
+[coords_doc]
+sd ic e
+[coords]
+SD /      DEPTH         FMIN         FMAX       X-COORD      Y-COORD       #NODES     BAND-WIDTH
+[coords_doc]
+sd e
+[coords_doc]
+
+en d
+
+; Modified 2014-04-11
+;    2013-04-24 (trs & db) -- leaves gap if no image present

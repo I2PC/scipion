@@ -71,21 +71,21 @@ class XmippProtScreenParticles(ProtProcessParticles):
 
     #--------------------------- STEPS functions --------------------------------------------
     def sortImages(self, inputFile):
-        args=""
+        outputMd = self._getPath(replaceBaseExt(inputFile, 'xmd'))
+        args = "-i %s --addToInput " % outputMd
         # copy file to run path
-        self.outputMd = String(self._getPath(replaceBaseExt(inputFile, 'xmd')))
-        self.outputMd._objDoStore = True
+        if inputFile != outputMd:
+            copyFile(inputFile, outputMd)
         
-        if inputFile != self.outputMd.get():
-            copyFile(inputFile, self.outputMd.get())
+        if self.autoParRejection == REJ_MAXZSCORE:
+            args += "--zcut " + str(self.maxZscore.get())
         
-        if self.autoParRejection.get()==REJ_MAXZSCORE:
-            args+=" --zcut "+str(self.maxZscore.get())
-        
-        elif self.autoParRejection.get()==REJ_PERCENTAGE:
-            args+=" --percent "+str(self.percentage.get())
+        elif self.autoParRejection == REJ_PERCENTAGE:
+            args += "--percent " + str(self.percentage.get())
 
-        self.runJob("xmipp_image_sort_by_statistics", "-i " + self.outputMd.get() + " --addToInput"+args)
+        self.runJob("xmipp_image_sort_by_statistics", args)
+        
+        self.ouputMd = String(outputMd)
 
     def createOutputStep(self):
         imgSet = self._createSetOfParticles()

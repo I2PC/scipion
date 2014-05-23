@@ -8,7 +8,8 @@ import os, sys
 from pyworkflow.manager import Manager
 
 from pyworkflow.em import *
-from pyworkflow.utils.path import moveFile
+from pyworkflow.utils import moveFile
+
 import pyworkflow.em.packages.xmipp3 as xmipp3
 from xmipp import *
 

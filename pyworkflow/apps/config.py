@@ -359,8 +359,10 @@ def addSpiderMDAProtocols(settings):
                   value='SpiderProtCustomMask')
     m1.addSubMenu(' Dimension reduction', tag='protocol',  
                   value='SpiderProtCAPCA')
-    m1.addSubMenu(' Classification', tag='protocol',
-                  value='SpiderProtClassifyWard')
+    m1.addSubMenu(' Classify', tag='protocol_base', openItem=True, 
+                  value='SpiderProtClassify')
+    #m1.addSubMenu(' Classification', tag='protocol',
+    #              value='SpiderProtClassifyWard')
     
     m2 = menu.addSubMenu('Protocol MDA', tag='protocol',
                          value='SpiderWfMDA')

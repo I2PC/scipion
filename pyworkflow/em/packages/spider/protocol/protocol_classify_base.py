@@ -24,86 +24,109 @@
 # *
 # **************************************************************************
 """
-This sub-package contains Spider protocol for PCA.
+Some Spider protocol base classes.
 """
+from os.path import basename
 
-
-from pyworkflow.em import *  
-from pyworkflow.utils import removeExt, removeBaseExt, makePath, moveFile, copyFile, basename
+from pyworkflow.em import ProtClassify2D, Particle, Class2D
+from pyworkflow.em.convert import ImageHandler
+from pyworkflow.protocol.params import PointerParam, IntParam
+from pyworkflow.utils import removeExt, copyFile
 import pyworkflow.utils.graph as graph
-from constants import *
-from spider import SpiderShell, SpiderDocFile, SpiderProtocol
-from convert import locationToSpider
-from glob import glob
 
-      
-# TODO: Remove from ProtAlign2D, and put in other category     
-class SpiderProtClassifyWard(ProtClassify2D, SpiderProtocol):
-    """ Ward's method, using 'CL HC' 
+from ..spider import SpiderDocFile
+from protocol_base import SpiderProtocol
+
+
+
+class SpiderProtClassify(ProtClassify2D, SpiderProtocol):
+    """ Base for Spider classification protocols
     """
-    _label = 'ward'
-    
-    def __init__(self, **kwargs):
+    def __init__(self, script, classDir, **kwargs):
         ProtClassify2D.__init__(self, **kwargs)
         SpiderProtocol.__init__(self, **kwargs)
+        self._script = script
+        self._classDir = classDir
         
         self._params = {'ext': 'stk',
-                        'particles': 'particles',
-                        'particlesSel': 'particles_sel',
+                        '[class_dir]': self._classDir,
+                        'particles': 'input_particles',
+                        'particlesSel': 'input_particles_sel',
                         'dendroPs': 'dendrogram',
-                        'dendroDoc': 'docdendro',
-                        'averages': 'averages'
-                        }
+                        'dendroDoc': '%s/docdendro' % self._classDir,
+                        'averages': 'averages',                        
+                        }  
+        
+    def getClassDir(self):
+        return self._classDir
     
-    #--------------------------- DEFINE param functions --------------------------------------------   
+    def getScript(self):
+        return self._script
+    
+    def getNumberOfClasses(self):
+        return None
+    
+    #--------------------------- DEFINE param functions --------------------------------------------  
+     
     def _defineParams(self, form):
         form.addSection(label='Input')
         form.addParam('inputParticles', PointerParam, label="Input particles", important=True, 
                       pointerClass='SetOfParticles',
                       help='Input images to perform PCA')
-        form.addParam('pcaFilePointer', PointerParam, pointerClass='PcaFile',
+        form.addParam('pcaFile', PointerParam, pointerClass='PcaFile',
                       label="PCA file", 
                       help='IMC or SEQ file generated in CA-PCA')        
         form.addParam('numberOfFactors', IntParam, default=10,
                       label='Number of factors',
                       help='After running, examine the eigenimages and decide which ones to use.\n'
                            'Typically all but the first few are noisy.')
-        form.addParam('numberOfLevels', IntParam, default=10, expertLevel=LEVEL_ADVANCED,
-                      label='Number of levels',
-                      help='When creating the set of classes, the classification tree.'
-                           'whill be cut after this level.')
-        
+    
     #--------------------------- INSERT steps functions --------------------------------------------  
-    def _insertAllSteps(self):
-        pcaFile = self.pcaFilePointer.get().filename.get()
+    
+    def _insertAllSteps(self):    
+        
+        pcaFile = self.pcaFile.get().filename.get()
         
         self._insertFunctionStep('convertInput', 'inputParticles',
                                  self._getFileName('particles'), self._getFileName('particlesSel'))
-        self._insertFunctionStep('classifyWardStep', pcaFile, self.numberOfFactors.get())
+        
+        self._insertFunctionStep('classifyStep', pcaFile, 
+                                 self.numberOfFactors.get(), self.getNumberOfClasses())
+        
         self._insertFunctionStep('createOutputStep')
-            
-    #--------------------------- STEPS functions --------------------------------------------       
-    def classifyWardStep(self, imcFile, numberOfFactors):
+        
+    #--------------------------- STEPS functions --------------------------------------------    
+
+    def _updateParams(self):   
+        pass 
+        
+    def classifyStep(self, imcFile, numberOfFactors, numberOfClasses):
         """ Apply the selected filter to particles. 
         Create the set of particles.
         """
-        self._params.update(locals()) # Store input params in dict
-        
         # Copy file to working directory, it could be also a link
         imcLocalFile = basename(imcFile)
         copyFile(imcFile, self._getPath(imcLocalFile))
-        print "copy from '%s' to '%s' " % (imcFile, imcLocalFile)
-        imcLocalFile = removeExt(imcLocalFile)
-
-        self._enterWorkingDir() # Do operations inside the run working dir
-
-        spi = SpiderShell(ext=self._params['ext'], log='script.stk') # Create the Spider process to send commands 
-        spi.runFunction('CL HC', imcLocalFile, '1-%d' % numberOfFactors, 0, 5, 
-                        'Y', self._params['dendroPs'], 'Y', self._params['dendroDoc'])
-        spi.close()
+        self.info("Copied file '%s' to '%s' " % (imcFile, imcLocalFile))
+        # Spider automatically add _IMC to the ca-pca result file
+        imcBase = removeExt(imcLocalFile).replace('_IMC', '')
         
-        self._leaveWorkingDir() # Go back to project dir
+        self._params.update({'x27': numberOfFactors,
+                             '[cas_prefix]': imcBase,
+                             })
+        self._updateParams()
+
+        self.runScript(self.getScript(), self.getExt(), self._params)   
         
+        
+class SpiderProtClassifyCluster(SpiderProtClassify):
+    """ Base for Clustering Spider classification protocols.
+    """
+    def __init__(self, script, classDir, **kwargs):
+        SpiderProtClassify.__init__(self, script, classDir, **kwargs)
+
+    #--------------------------- STEPS functions --------------------------------------------    
+       
     def createOutputStep(self):
         rootNode = self.buildDendrogram(True)
         classes = self._createSetOfClasses2D(self.inputParticles.get())
@@ -114,28 +137,8 @@ class SpiderProtClassifyWard(ProtClassify2D, SpiderProtocol):
         
         self._defineOutputs(outputClasses=classes)
          
-    #--------------------------- INFO functions -------------------------------------------- 
-    def _validate(self):
-        errors = []
-        return errors
-    
-    def _citations(self):
-        cites = []
-        return cites
-    
-    def _summary(self):
-        summary = []
-        return summary
-    
-    def _methods(self):
-        return self._summary()  # summary is quite explicit and serve as methods
-    
     #--------------------------- UTILS functions --------------------------------------------
-    def _getFileName(self, key):
-        #TODO: Move to a base Spider protocol
-        template = '%(' + key + ')s.%(ext)s'
-        return self._getPath(template % self._params)
-      
+    
     def _fillClassesFromNodes(self, classes, averages, nodeList):
         """ Create the SetOfClasses2D from the images of each node
         in the dendogram. 
@@ -167,7 +170,6 @@ class SpiderProtClassifyWard(ProtClassify2D, SpiderProtocol):
         """ Create the SetOfClasses2D from the images of each node
         in the dendogram. 
         """
-        
         img = Particle()
         
         for node in nodeList:
@@ -200,7 +202,7 @@ class SpiderProtClassifyWard(ProtClassify2D, SpiderProtocol):
         self.dendroImages = self._getFileName('particles')
         self.dendroAverages = self._getFileName('averages')
         self.dendroAverageCount = 0 # Write only the number of needed averages
-        self.dendroMaxLevel = self.numberOfLevels.get()
+        self.dendroMaxLevel = 10 # FIXME: remove hard coding if working the levels
         
         return self._buildDendrogram(0, len(values)-1, 1, writeAverages)
     
@@ -276,4 +278,4 @@ class DendroNode(graph.Node):
         
     def getChilds(self):
         return [c for c in self._childs if c.path]
-    
+          

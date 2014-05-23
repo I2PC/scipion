@@ -164,6 +164,7 @@ Define the number of processors to be used in the execution.
     ERROR_PATTERN_EMPTY = 'The *pattern* cannot be empty.'
     ERROR_PATTERN_FILES = 'There are no files matching the *pattern*'
     LABEL_CHECKSTACK = 'Check stack files?'
+    LABEL_COPYFILES = 'Copy files?'
     LABEL_VOLTAGE = 'Microscope voltage (in kV)'
     LABEL_SPH_ABERRATION = 'Spherical aberration (in mm)'
     LABEL_AMPLITUDE = 'Amplitude Contrast'

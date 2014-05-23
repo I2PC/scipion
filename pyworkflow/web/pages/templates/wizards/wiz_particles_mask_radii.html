@@ -3,11 +3,16 @@
 {% block name %} Particle Mask Radii {% endblock %} 
 {% block head %}
 	<script type="text/javascript" src="{{raphael}}"></script>
-	<script>
+	<script>		
+		function initialLoad(){
+			compositeParticle($("tr#"+firstElm));putCircle(({{params.value.0}}*125)/{{xdim}}, "canvas_low", "red");putCircle(({{params.value.1}}*125)/{{xdim}}, "canvas_high", "blue");$("#slider_outer_radius").html({{param.value.1}}/2);$("#slider_inner_radius").html({{params.value.0}}/2);
+		}
+
 		function returnParams(){
 			putSelection('input#inner_val', '{{params.label.0}}_input');
 			putSelection('input#outer_val', '{{params.label.1}}_input');
 		}
+		
 	</script>
 {% endblock %} 
 {% block list %}
@@ -57,7 +62,7 @@ $(".slider_inner").slider({
 	value : "{{params.value.0}}",
 	min : 0,
 	max : {{xdim}},
-	step : 1,
+	step : 2,
 	//this gets a live reading of the value and prints it on the page
 	slide : function(event, ui) {
 		$("#slider_inner_radius").html(ui.value/2);
@@ -77,7 +82,7 @@ $(".slider_outer").slider({
 	value : "{{params.value.1}}",
 	min : 0,
 	max : {{xdim}},
-	step : 1,
+	step : 2,
 	//this gets a live reading of the value and prints it on the page
 	slide : function(event, ui) {
 		$("#slider_outer_radius").html(ui.value/2);
@@ -90,8 +95,11 @@ $(".slider_outer").slider({
 		$('#outer_val').attr('value', ui.value/2);
 	}
 });
+
+
 //Load the First Element of the list
-window.onload = compositeParticle($("tr#"+firstElm));putCircle(({{params.value.0}}*125)/{{xdim}}, "canvas_low", "red");putCircle(({{params.value.1}}*125)/{{xdim}}, "canvas_high", "blue");$("#slider_outer_radius").html({{param.value.1}}/2);$("#slider_inner_radius").html({{params.value.0}}/2);
+window.onload = initialLoad();	
+
 </script>
 {% endblock %}
 {% block function %}

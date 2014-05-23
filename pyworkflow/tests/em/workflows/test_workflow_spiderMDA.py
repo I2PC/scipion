@@ -29,6 +29,10 @@ class TestSpiderWorkflow(TestWorkflow):
         protAPSR = SpiderProtAlignAPSR()
         protAPSR.inputParticles.set(protFilter.outputParticles)
         self.launchProtocol(protAPSR)
+        
+        protPairwise = SpiderProtAlignPairwise()
+        protPairwise.inputParticles.set(protFilter.outputParticles)
+        self.launchProtocol(protPairwise)       
          
         protMask = SpiderProtCustomMask()
         protMask.inputImage.set(protAPSR.outputAverage)
@@ -41,9 +45,32 @@ class TestSpiderWorkflow(TestWorkflow):
         self.launchProtocol(protCAPCA)
         
         protWard = SpiderProtClassifyWard()
-        protWard.pcaFilePointer.set(protCAPCA.imcFile)
+        protWard.pcaFile.set(protCAPCA.imcFile)
         protWard.inputParticles.set(protAPSR.outputParticles)
         self.launchProtocol(protWard)
+        
+        protKmeans = SpiderProtClassifyKmeans()
+        protKmeans.pcaFile.set(protCAPCA.imcFile)
+        protKmeans.inputParticles.set(protAPSR.outputParticles)
+        protKmeans.numberOfClasses.set(4)
+        self.launchProtocol(protKmeans)
+        
+        protDiday = SpiderProtClassifyDiday()
+        protDiday.pcaFile.set(protCAPCA.imcFile)
+        protDiday.inputParticles.set(protAPSR.outputParticles)
+        self.launchProtocol(protDiday)               
+        
+    def test_mdaPairwise(self):
+        protImport = ProtImportParticles(pattern=self.particlesFn, samplingRate=3.5)
+        self.launchProtocol(protImport)
+        # check that input images have been imported (a better way to do this?)
+        if protImport.outputParticles is None:
+            raise Exception('Import of images: %s, failed. outputParticles is None.' % pattern)
+        
+        protPairwise = SpiderProtAlignPairwise()
+        protPairwise.inputParticles.set(protImport.outputParticles)
+        protPairwise.innerRadius.set(48)
+        self.launchProtocol(protPairwise)
         
     def test_StoredPointers(self):
         """ Test the usage of pointer extensions to store a 

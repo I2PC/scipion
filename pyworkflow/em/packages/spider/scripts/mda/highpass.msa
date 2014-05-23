@@ -1,0 +1,128 @@
+; Adapted from PFILT.BAT 
+; apply low pass filter to and shrinks a set of particle images
+
+; ------------------ Parameters -------------------
+x26 = 1                                              ; reduction/decimation factor (integer) for output images
+x15 = 2.82                                           ; pixel size, Angstroms
+x11 = 6                                              ; filter type (8==Butterworth, 6==Fermi, 4==Gaussian, 2==tophat)
+x21 = 360                                            ; filter parameter 1, Angstroms (pass-band if Butterworth, else filter radius)
+x22 = 576                                            ; filter parameter 2, Angstroms
+;                                                    ; stop band for Butterworth, temperature for Fermi, else not required
+x56 = 100                                            ; progress interval -- message written to screen every (x56)th particle
+
+; --------------------- Inputs ---------------------
+fr l
+[parameter_doc]params                                ; parameter doc file
+fr l
+[group_particles]filenums                            ; list of images
+fr l
+[unfiltered_images]stkfilt-backup@*****              ; image template (check number of digits)
+
+; --------------------- Output ---------------------
+fr l
+[filtered_stack]stkfiltered                          ; filtered-image stack (w/o "@")
+fr l
+[filtered_images][filtered_stack]@*****              ; image template (check number of digits)
+
+; ---------------- END BATCH HEADER ----------------
+
+;fr l
+;[temp_dir]tmpfilt
+
+;vm
+;echo "if(! -d [temp_dir]) mkdir -p [temp_dir]"|csh
+
+;; get pixel-size
+;ud 5,x15
+;[parameter_doc]
+;ud e
+
+; change filter radii to reciprocal pixels
+x21 = x15/x21  ; pass-band
+x22 = x15/x22  ; stop-band
+; x15==pixel-size
+
+md
+set mp
+(0)
+
+;vm
+;echo "Filtering images in [original_dir]"; date
+
+; get #particles (x50)
+ud n,x50
+[group_particles]
+
+; loop through particles
+do lb1 x44=1,x50
+    ; get particle# (x55)
+    ud ic,x44,x55
+    [group_particles]
+
+    if (int(x44/x56).eq.x44/x56) then
+        vm
+        echo "Working on {******x44}th particle out of {******x50}"
+    endif
+
+    cp
+    [unfiltered_images]x55
+    _5
+
+    ; if Fermi filter
+    IF (x11.eq.6) THEN
+        ; high pass
+        FQ np
+        _5       ; input file
+        _4       ; output file
+        x11      ; filter type = Fermi
+        x21      ; filter radius
+        x22      ; temperature cutoff
+    endif
+
+    ; if Butterworth filter
+    IF (x11.eq.8) THEN
+        FQ np
+        _5       ; input file
+        _4       ; output file
+        x11      ; filter type = Butterworth high-pass
+        x21,x22  ; passband, stopband
+    endif
+
+    ; if Gaussian or top-hat filter
+    IF (x11.le.4) THEN
+        FQ np
+        _5       ; input file
+        _4       ; output file
+        x11      ; filter type = top hat, Gaussian
+        x21      ; filter radius
+    ENDIF
+
+    dc s
+    _4
+    [filtered_images]x55
+    x26,x26  ; reduction factor in x,y
+lb1
+; end particle-loop
+
+; close doc
+ud ice
+[group_particles]
+
+;; rename original directory
+;vm m
+;echo ; echo "Renaming [original_dir] to [renamed_dir]" ; 
+;mv -v [original_dir] [renamed_dir] ;
+;echo "Renaming temp directory to [original_dir]" ; 
+;mv -v [temp_dir] [original_dir]
+;.
+
+vm
+echo ; echo "Done"; date
+
+EN D
+
+; Modified 2014-04-11
+;    2014-03-05 (trs) -- writing images in stacks
+;    2013-03-15 (trs & cjh) -- fixed Butterworth option
+;    2012-08-31 (trs) -- moves original directory
+;    2008-04-06 (trs) -- adapted from filtershrink.spi

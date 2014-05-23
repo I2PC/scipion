@@ -527,7 +527,10 @@ class SetOfImages(EMSet):
         if self.getSamplingRate() is None:
             raise Exception("FATAL ERROR: Object %s has no sampling rate!!!" % self.getName())
         if self._firstDim.isEmpty():
-            self._firstDim.set(self.getFirstItem().getDim())
+            try:
+                self._firstDim.set(self.getFirstItem().getDim())
+            except Exception, ex:
+                print "Error reading dimension: ", ex
         s = "%s (%d items, %s, %0.2f A/px)" % (self.getClassName(), self.getSize(), self._firstDim, self.getSamplingRate())
         return s
 

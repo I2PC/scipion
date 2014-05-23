@@ -103,33 +103,17 @@ def wiz_base(request, context):
 
 def proccessModeFilter(mode, value):
     # Order : low - high - decay
-    
+
     if mode == 0:
-        # low pass
-        value[0] = 0.
+        print "filter low pass"
+#        value[0] = 0.
+        value[0] = 1.0
     elif mode == 1:
-        # high pass
+        print "filter high pass"
         value[1] = 1.0
-    elif mode== 2:
-        #band pass
-        pass
-    
-#     if mode == 0:
-#        # low pass
-#        lowFreq = 0.
-#        highFreq = value[1]
-#        decay = value[2]
-#    elif mode == 1:
-#        # high pass
-#        lowFreq = value[0]
-#        highFreq = 1.0
-#        decay = value[2]
-#    elif mode== 2:
-#        #band pass
-#        highFreq = value[0]
-#        lowFreq = value[1]
-#        decay = value[2]
-#    
+    elif mode == 2:
+        print "filter band pass"
+        
     return value
 
 def validateMaskRadius(value, xdim, radius):

@@ -1,0 +1,346 @@
+; GENERATE FILES FOR BINARY-TREE
+;
+; REQUIRES averagenode.msa and update_lut.msa
+
+; ----------------- Parameters -----------------
+[start-depth] = 1    ; starting depth (TO DO: be able to start from >1)
+[end-depth]   = 9    ; ending depth (--> 2**[end-depth] class averages)
+
+[top-branch] = 100   ; height of top two branches in dendrogram
+;                    ; (Starting with version 17.13 it's 100.  Previously it was 1.)
+
+; --------------------- Inputs ---------------------
+fr l 
+[dendro_doc]HC/docdendro           ; dendrogram document
+fr g
+[particles]stkfiltered@*****       ; particle template
+
+; -------------------- Outputs --------------------
+fr g
+[binary_dir]tree                       ; output directory
+fr g
+[node_lut][binary_dir]/node2termini    ; node-to-particle lookup table
+fr g
+[node_doc][binary_dir]/docclass***     ; particles-per-node list template
+fr g
+[node_avg][binary_dir]/classavg***      ; node average
+;[node_avg][binary_dir]/avgnode***      ; node average
+fr g
+[labeled_avg][binary_dir]/labeled***   ; labeled node average
+fr g
+[class_list][binary_dir]/listclasses   ; list of classes
+
+; --------------- END BATCH HEADER ---------------
+
+vm
+echo "if(! -d [binary_dir]) mkdir [binary_dir]"|csh
+
+fr g
+[temp_lut][node_lut]_unrenum
+
+
+; DETERMINE LABEL-DIMENSION
+
+if([end-depth].ge.10) then
+    vm
+    echo " WARNING: Requested tree depth, {**[end-depth]}, may require more than the default 3-digit filenumbers for the outputs of this batch file."
+    vm
+    echo "          Also, for the next step, multiref.rct, the input template [node_doc] will need to be updated."
+endif
+
+; get number of termini
+ud n [num-termini]
+[dendro_doc]
+
+; add number of digits in highest class# and in biggest class (node #1)
+[max-class-digits] = int(log(2**[end-depth])) + 1
+[max-class-digits]   ; diagnostic
+if([max-class-digits].lt.3) [max-class-digits] = 3
+
+[max-parts-digits] = int(log([num-termini])) + 1
+[max-parts-digits]   ; diagnostic
+if([max-parts-digits].lt.3) [max-parts-digits] = 3
+
+[num-digits]       = [max-class-digits] + [max-parts-digits]
+
+if([num-digits].le.6) [label-dim] = 115
+if([num-digits].eq.7) [label-dim] = 128
+if([num-digits].ge.8) [label-dim] = 136
+; (If there are more than 10,000 particles or classes, things are going to break.)
+
+; old assignment
+;[label-dim]   = 136  ; temporary dimension for labelling (3-digit class, 5-digit population)
+;;[label-dim]   = 128  ; temporary dimension for labelling (3-digit class, 4-digit population)
+;;[label-dim]   = 115  ; temporary dimension for labelling (3-digit class, 3-digit population)
+;; NOTE: accordingly change label syntax in AVERAGENODE.SPI at LA B call
+
+;; diagnostic
+;vm
+;echo "num-digits: {***[num-digits]}, label-dim: {***[label-dim]}" ; echo
+
+
+; initialize
+[node-num]       = 2**([start-depth]-1)
+[first-terminus] = 1
+
+; clean up pre-existing files
+de a
+[node_doc][node-num]
+de a
+[node_avg][node-num]
+de a
+[labeled_avg][node-num]
+de
+[node_lut]
+de
+[temp_lut]
+de
+[class_list]
+
+; WHOLE DENDROGRAM==CLASS #1, DEPTH==1
+
+if([start-depth].eq.1) then
+    vm
+    echo "Depth 01"; date
+
+    ; copy dendrogram to first node doc
+    doc ren
+    [dendro_doc]
+    [node_doc][node-num]
+
+    ; average images
+    @averagenode([node-num],[max-class-digits],[max-parts-digits])
+    (1)            ; PARAMETER: first terminus
+    [num-termini]  ; PARAMETER: last terminus
+    [label-dim]    ; PARAMETER: temporary dimension for labelling
+
+    ; update node-to-terminus lookup-table
+    @update_lut([node-num])
+    (1)            ; PARAMETER: first terminus
+    [num-termini]  ; PARAMETER: last terminus
+endif
+
+
+; LOOK FOR TWO PRIMARY BRANCHES, DEPTH==2
+
+vm
+echo "Depth 02"; date
+
+; initialize
+[terminus-counter] = 0
+[first-terminus]   = 1
+
+if([start-depth].le.2) then
+    ; loop through termini
+    do lb7 [dendrogram-key]=1,[num-termini]
+        ; get particle#, height
+        ud ic [dendrogram-key], [particle-num],[dendrogram-height]
+        [dendro_doc]
+
+        ; increment terminus-counter
+        [terminus-counter] = [terminus-counter] + 1
+
+        ; save particle# to node doc
+        sd [terminus-counter],[particle-num],[dendrogram-key]
+        [node_doc][node-num]
+
+        ; check for top two branches in dendrogram
+        ; (Height used to be 1, but now is 100.)
+        if([dendrogram-height].eq.[top-branch]) then
+            ; average images & update counters
+            @averagenode([node-num],[max-class-digits],[max-parts-digits])
+            [first-terminus]  ; PARAMETER: first terminus
+            [dendrogram-key]  ; PARAMETER: last terminus
+            [label-dim]       ; PARAMETER: temporary dimension for labelling
+
+            @update_lut([node-num])
+            [first-terminus]  ; PARAMETER: first terminus
+            [dendrogram-key]  ; PARAMETER: last terminus
+
+            ; reset terminus-counter, first-terminus
+            [terminus-counter] = 0
+            [first-terminus] = [dendrogram-key] + 1
+        endif
+    lb7
+    ; end terminus-loop
+endif
+
+
+; GENERATE BRANCHES FOR DEPTH>=3
+
+if([start-depth].lt.3) [start-depth]=3  ; start at depth at least 3
+
+; loop through node-depths
+do lb2 [current-depth]=3,[end-depth]
+    [continue-flag] = 0  ; will be set to 1 if there are splittable nodes remaining
+    ; This will be the case if any parents' nodes at a given depth have at least 3 particles.
+
+    ; calculate first and last parents nodes to split
+    [first-parent] = 2**([current-depth]-2)      ; first node at next highest depth
+    [last-parent]  = 2**([current-depth]-1) - 1  ; last node at next highest depth
+
+    vm
+    echo "Depth {**[current-depth]}"; date
+
+    ; loop through parent nodes
+    do lb3 [parent-node] = [first-parent],[last-parent]
+        ; initialize maximum height, corresponding terminus
+        [max-height]          = -9
+        [max-height-terminus] = 0
+
+        ; read first, last termini under parent node
+        ud [parent-node],[first-parent-terminus],[last-parent-terminus]
+        [temp_lut]
+        ud e
+
+        [last-search-terminus] = [last-parent-terminus] - 1
+
+;        ; diagnostic
+;        vm
+;        echo "Parent node {***[parent-node]}, searching termini {***[first-parent-terminus]} through {***[last-search-terminus]}"
+
+        [num-search-termini] = [last-parent-terminus] - [first-parent-terminus] + 1
+
+        ; if parent node has only one particle, write dummy entries to lookup table and skip
+;;        if([first-parent-terminus].eq.[last-parent-terminus]) then
+        if([num-search-termini].le.1) then
+            ; write empty left-hand node
+            @update_lut([node-num])
+            (0)   ; PARAMETER: first terminus
+            (0)   ; PARAMETER: last terminus
+
+            ; write empty right-hand node
+            @update_lut([node-num])
+            (0)   ; PARAMETER: first terminus
+            (0)   ; PARAMETER: last terminus
+
+            goto lb3  ; loop to next parent node
+        endif
+
+        if([num-search-termini].ge.3) [continue-flag] = 1
+        ; If any parents at this depth have at least 3 particles, at least one child can be split further.
+
+
+        ; SEARCH FOR BRANCH POINT IN PARENT
+
+        ; loop through termini
+        do lb4 [parent-terminus] = [first-parent-terminus],[last-search-terminus]
+            ; read height
+            ud ic [parent-terminus], [particle-num],[dendrogram-height]
+            [dendro_doc]
+
+            ; if height greater than maximum...
+            if([dendrogram-height].gt.[max-height]) then
+                ; update maximum
+                [max-height] = [dendrogram-height]
+
+                ; update corresponding terminus
+                [max-height-terminus] = [parent-terminus]
+            endif
+        lb4
+        ; end terminus-loop
+
+        [right-first-terminus] = [max-height-terminus] + 1
+        ; first terminus of eventual rightward branch
+
+
+        ; LEFT-BRANCH CHILD NODE
+
+        ; loop through left-branch termini
+        do lb5 x50 = [first-parent-terminus],[max-height-terminus]
+            ; read particle#
+            ud ic,x50,[particle-num],[dendrogram-height]
+            [dendro_doc]
+
+            [terminus-counter] = x50 - [first-parent-terminus] + 1
+
+            ; write particle#
+            sd [terminus-counter],[particle-num],[dendrogram-key]
+            [node_doc][node-num]
+        lb5
+        ; end left-loop
+
+        ; average images
+        @averagenode([node-num],[max-class-digits],[max-parts-digits])
+        [first-parent-terminus]  ; PARAMETER: first terminus
+        [max-height-terminus]    ; PARAMETER: last terminus
+        [label-dim]              ; PARAMETER: temporary dimension for labelling
+
+        @update_lut([node-num])
+        [first-parent-terminus]  ; PARAMETER: first terminus
+        [max-height-terminus]    ; PARAMETER: last terminus
+
+
+        ; RIGHT-BRANCH CHILD NODE
+
+        ; loop through right-branch termini
+        do lb6 x60 = [right-first-terminus],[last-parent-terminus]
+            ; read particle#
+            ud ic,x60,[particle-num],[dendrogram-height]
+            [dendro_doc]
+
+            [terminus-counter] = x60 - [right-first-terminus] + 1
+
+            ; write particle#
+            sd [terminus-counter], [particle-num],[dendrogram-key]
+            [node_doc][node-num]
+        lb6
+        ; end right-loop
+
+        ; average images
+        @averagenode([node-num],[max-class-digits],[max-parts-digits])
+        [right-first-terminus]  ; PARAMETER: first terminus
+        [last-parent-terminus]  ; PARAMETER: last terminus
+        [label-dim]             ; PARAMETER: temporary dimension for labelling
+
+        @update_lut([node-num])
+        [right-first-terminus]  ; PARAMETER: first terminus
+        [last-parent-terminus]  ; PARAMETER: last terminus
+
+;        [last-node] = [node-num] - 1
+    lb3
+    ; end parent-loop
+
+    if([continue-flag].eq.0) goto lb9
+lb2
+; end depth-loop
+
+lb9  ; jump here if parent node can't be split further
+
+; CLEAN UP
+
+doc ren
+[temp_lut]
+[node_lut]
+
+SD /       FIRST         LAST      POPULATION
+[node_lut]
+sd e
+[node_lut]
+de
+[temp_lut]
+ud ice
+[dendro_doc]
+SD /       NODENUM      NUM_PARTS
+[class_list]
+sd e
+[class_list]
+
+vm m
+echo ; echo "Done"; date ;
+echo "Depth requested: {**[end-depth]}" ; 
+echo "Depth completed: {**[current-depth]}" ; echo
+.
+;vm
+;echo "Last node avg.:  [node_avg][last-node].$DATEXT" ; echo
+
+en d
+
+; Modified 2014-04-11
+;    TO DO: add ability to start correctly from depth >1
+;    TO DO: change TEMP_LUT to in-core file
+;    2014-03-06 (trs) -- reading images from stacks
+;    2012-12-14 (trs) -- automatic label dimension
+;    2012-12-14 (trs) -- added list of classes for verifybyview
+;    2009-06-02 (trs) -- leaves gap in image series if parent node can't be split
+;    2009-06-02 (trs) -- improved annotation

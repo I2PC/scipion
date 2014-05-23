@@ -27,15 +27,13 @@
 """
 This sub-package contains protocol for particles filters operations
 """
+from os.path import join
 
-from pyworkflow.em import *  
-from pyworkflow.em.constants import NO_INDEX
-from pyworkflow.utils import removeExt, removeBaseExt, makePath, getLastFile
-from constants import *
-from spider import SpiderShell, SpiderProtocol, runSpiderTemplate
-from convert import locationToSpider
-from glob import glob
-        
+from pyworkflow.em import ProtAlign2D, IntParam, Image, Particle, NO_INDEX
+from pyworkflow.utils import makePath
+
+from protocol_base import SpiderProtocol
+
 
       
 class SpiderProtAlignPairwise(ProtAlign2D, SpiderProtocol):
@@ -48,85 +46,65 @@ class SpiderProtAlignPairwise(ProtAlign2D, SpiderProtocol):
         self.alignDir = 'pairwise'
          
         self._params = {'ext': 'stk',
-                        'particles': 'particles_aligned',
-                        'particlesSel': 'particles_aligned_sel',
-                        'average': join(self.alignDir, 'rfreeavg001') # If change the name, change it in template batch
+                        'particles': 'input_particles',
+                        'particlesSel': 'input_particles_sel',
+                        'average': join(self.alignDir, 'rfreeavg001'), # If change the name, change it in template batch
+                        'particlesAligned': join(self.alignDir, 'stkaligned')
                         }    
     
+    #--------------------------- DEFINE param functions --------------------------------------------
+    
     def _defineAlignParams(self, form):
-        form.addParam('innerRadius', IntParam, default=5,
-                      label='Inner radius(px):',
-                      help='In the rotational alignment, only rings between\n'
-                           '<innerRadius> and <diam>/2 (in pixel units) will be analyzed.')
-        form.addParam('diameter', IntParam, default=88, 
-                      label='Outer diameter(px):',
-                      help='In the rotational alignment, only rings between\n'
-                           '<innerRadius> and <diam>/2 (in pixel units) will be analyzed.')
+        line = form.addLine('Radius (px):', 
+                            help='In the rotational alignment, only rings between\n'
+                                 '_inner_ and _outer_ radius (in pixel units) \n'
+                                 'will be analyzed.')
+        line.addParam('innerRadius', IntParam, default=5, label='Inner')
+        line.addParam('outerRadius', IntParam, default=44, label='Outer')
+        
         form.addParam('searchRange', IntParam, default=8, 
-                      label='Search range(px):',
+                      label='Search range (px):',
                       help='In the translational alignment, shifts of up to\n'
-                           '<searchRange> will be allowed.')
+                           '_searchRange_ will be allowed.')
         form.addParam('stepSize', IntParam, default=2, 
                       label='Step size(px):',
                       help='In the translational alignment, shifts will be analyzed\n'
-                           'in units of <stepSize> (in pixel units).')        
+                           'in units of _stepSize_ (in pixel units).')        
+    
+    #--------------------------- INSERT steps functions --------------------------------------------  
+    
     def _insertAllSteps(self):
         # Insert processing steps
         self._insertFunctionStep('convertInput', 'inputParticles', 
                                  self._getFileName('particles'), self._getFileName('particlesSel'))
-        self._insertFunctionStep('alignParticles', 
-                                 self.innerRadius.get(), self.diameter.get())
-        self._insertFunctionStep('createOutput')
+        self._insertFunctionStep('alignParticlesStep', 
+                                 self.innerRadius.get(), self.outerRadius.get())
+        self._insertFunctionStep('createOutputStep')
 
-    def alignParticles(self, innerRadius, diameter):
-        """ Apply the selected filter to particles. 
-        Create the set of particles.
+    #--------------------------- STEPS functions --------------------------------------------       
+    
+    def alignParticlesStep(self, innerRadius, outerRadius):
+        """ Execute the pairwise.msa script to alignm the particles.
         """
         particles = self.inputParticles.get()
         n = particles.getSize()
         xdim = particles.getDimensions()[0]
         
-        self._enterWorkingDir() # Do operations inside the run working dir
-        
-        # Align images
-        makePath(self.alignDir)
-
         self._params.update({
-                             'dim': xdim,
-                             'diameter': self.diameter.get(),
-                             'innerRadius': self.innerRadius.get(),
-                             'searchRange': self.searchRange.get(),
-                             'stepSize': self.stepSize.get()
+                             '[idim-header]': xdim,
+                             '[inner-rad]': innerRadius,
+                             '[obj-diam]': outerRadius * 2, # convert radius to diameter
+                             '[search-range]': self.searchRange.get(),
+                             '[step-size]': self.stepSize.get(),
+                             '[selection_list]': self._params['particlesSel'],
+                             '[unaligned_image]': self._params['particles'] + '@******',
                             })
-        runSpiderTemplate('pairwise.txt', self._params['ext'], self._params)
+        
+        self.runScript('mda/pairwise.msa', self._params['ext'], self._params)
                     
         
-#        spi = SpiderShell(ext='stk', log='script2.log') # Create the Spider process to send commands
-#        
-#        lastAvg = getLastFile(avgPattern)
-#        avg = Particle()
-#        avg.copyInfo(particles)
-#        avg.setLocation(NO_INDEX, self._getPath(lastAvg))
-#        self._defineOutputs(outputAverage=avg)
-#        
-#        lastDoc = getLastFile(docPattern)
-#        f = open(lastDoc) # Open last doc
-#        particlesPrefix = self._params['particles']
-#        
-#        for i, line in enumerate(f):
-#            line = line.strip()
-#            if len(line) and not line.startswith(';'):
-#                angle, shiftX, shiftY = [float(s) for s in line.split()[2:]]
-#                inLoc = locationToSpider(i, particlesPrefix)
-#                incore = "_1"
-#                spi.runFunction('RT SQ', inLoc, incore, angle, (shiftX, shiftY))
-#                spi.runFunction('CP', incore, inLoc)
-#            
-#        spi.close()
             
-        self._leaveWorkingDir() # Go back to project dir
-            
-    def createOutput(self):
+    def createOutputStep(self):
         """ Register the output (the alignment and the aligned particles.)
         """
         particles = self.inputParticles.get()
@@ -142,16 +120,15 @@ class SpiderProtAlignPairwise(ProtAlign2D, SpiderProtocol):
         imgSet = self._createSetOfParticles()
         imgSet.copyInfo(particles)
         
-        outputStk = self._getFileName('particles')
+        outputStk = self._getFileName('particlesAligned')
         for i in range(1, n+1):
-            img = Image()
+            img = Particle()
             img.setLocation(i, outputStk)
             imgSet.append(img)
+            
         self._defineOutputs(outputParticles=imgSet)
         
-    def _summary(self):
-        summary = []
-        return summary
+    #--------------------------- INFO functions -------------------------------------------- 
     
     def _validate(self):
         errors = []
@@ -166,5 +143,9 @@ class SpiderProtAlignPairwise(ProtAlign2D, SpiderProtocol):
     
     def _citations(self):
         return ['Marco1996']
+    
+    def _summary(self):
+        summary = []
+        return summary
     
 

@@ -47,8 +47,10 @@ def getModules(path):
                 m = __import__(f)
                 modules[f] = m
             except Exception, ex:
-                print "Error loading module: '%s'" % f
-                print "Exception: ", ex
+                print ">>> Error loading module: '%s'" % f
+                print ">>> Exception: ", ex
+                import traceback
+                traceback.print_exc()
     
     return modules
     

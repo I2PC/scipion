@@ -188,6 +188,18 @@ def getLastFile(pattern):
     return None
 
 
+# Console (and XMIPP) escaped colors, and the related tags that we create
+# with Text.tag_config(). This dict is used in OutputText:addLine()
+# See also http://www.termsys.demon.co.uk/vtansi.htm#colors
+colorName = {'30': 'gray',
+             '31': 'red',
+             '32': 'green',
+             '33': 'yellow',
+             '34': 'blue',
+             '35': 'magenta',
+             '36': 'cyan',
+             '37': 'white'}
+
 def renderTextFile(fname, add, offset=0, lineNo=0, numberLines=True,
                    maxSize=100, headSize=20, tailSize=None):
     """
@@ -209,7 +221,7 @@ def renderTextFile(fname, add, offset=0, lineNo=0, numberLines=True,
         else:
             add("""\n
     ==> Too much data to read (%d kB) -- %d kB omitted
-    ==> Click """ % (size, size - 40))
+    ==> Click on """ % (size, size - headSize - (tailSize or headSize)))
             add(fname, 'link:%s' % fname)
             add(' to open it with the default viewer\n\n')
             if numberLines:
@@ -229,7 +241,8 @@ def renderLine(line, add, lineNo=1, numberLines=True):
     """
     # Prepend line number
     if numberLines and lineNo:
-        add('%05d:   ' % lineNo, '36')  # 36 is color code for cyan
+        add('%05d:' % lineNo, 'cyan')
+        add('   ')
 
     # iter 1\riter 2\riter 3  -->  iter 3
     if '\r' in line:
@@ -237,24 +250,27 @@ def renderLine(line, add, lineNo=1, numberLines=True):
 
     # Find all console escape codes and use the appropriate tag instead.
     pos = 0  # current position in the line we are parsing
+    attribute = None
     while True:
-        # line looks like: 'blah blah \x1b[XX;YYmremark\x1b[0m blah blah'
-        # where YY is the color code (31 is red, for example).
+        # line looks like:
+        #   'blah blah \x1b[{attr1};...;{attrn}mTEXT\x1b[0m blah blah'
+        # where {attrn} is the color code (31 is red, for example). See
+        # http://www.termsys.demon.co.uk/vtansi.htm#colors
         start = line.find('\x1b[', pos)
-        if start < 0:
-            add(line[pos:])
+        if start < 0:  # no more escape codes, just add the remaining text
+            add(line[pos:], attribute)
             break
-        add(line[pos:start])
-        if line[start+2:start+4] == '0m':
-            start += 4
-        colorCode = line[start+5:start+7]
-        end = line.find('\x1b[0m', start + 7)
-        if end < 0:  # what, no end for color formatting?
-            # maybe we should also warn the user...
-            add(line[start+8:])
-            break
-        add(line[start+8:end], colorCode)
-        pos = end + 4
+
+        add(line[pos:start], attribute)
+        end = line.find('m', start+2)
+        code = line[start+2:end]
+
+        # See what attribute to use from now on, and update pos
+        if code == '0':
+            attribute = None
+        else:
+            attribute = colorName.get(code[-2:], None)
+        pos = end + 1  # go to the character next to "m", the closing char
 
 
 def iterBigFile(textfile, offset=0, size=None,
@@ -276,8 +292,8 @@ def iterBigFile(textfile, offset=0, size=None,
 
     textfile.seek(offset)
     if sizeKb > maxSize:  # max size that we want to read (in kB)
-        for line in textfile.read(headSizeB).splitlines(True):
-            yield line
+        for line in textfile.read(headSizeB).split('\n'):
+            yield line + '\n'
         yield None  # Special result to mark omitting lines
         textfile.seek(-tailSizeB, 2)  # ready to show the last bytes
 

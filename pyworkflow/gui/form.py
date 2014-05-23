@@ -1320,7 +1320,9 @@ class FormWindow(Window):
         # Get only the first comment line
         comment = self.protocol.getObjComment()
         if comment:
-            comment = comment.split()[0]
+            lines = comment.split('\n')
+            if lines:
+                comment = lines[0]
         self.commentVar.set(comment)
         
     def setProtocolLabel(self):

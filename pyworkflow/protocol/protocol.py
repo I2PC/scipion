@@ -310,8 +310,8 @@ class Protocol(Step):
         self._jobId = String() # Store queue job id
         self._pid = Integer()
         self._stepsExecutor = None
-        self._stepsDone = Integer()
-        self._numberOfSteps = Integer()
+        self._stepsDone = Integer(0)
+        self._numberOfSteps = Integer(0)
         
         # For visualization
         self.allowHeader = Boolean(True)        
@@ -826,16 +826,19 @@ class Protocol(Step):
     def _addChunk(self, txt, fmt=None):
         """
         Add text txt to self._buffer, with format fmt.
-        fmt can be a console color code (like '31' for red) or a link
-        that looks like 'link:url'.
+        fmt can be a color (like 'red') or a link that looks like 'link:url'.
         """
         if fmt is None:
             self._buffer += txt
         elif fmt.startswith('link:'):
-            self._buffer += ('[[/file_downloader/?path=%s][%s]]' %
-                             (fmt[len('link:'):], txt))  # twiki style
-        else:  # independent from the color, we put it as bold!
-            self._buffer += '<strong>%s</strong>' % txt
+            url = fmt[len('link:'):]
+            # Add the url in the TWiki style
+            if url.startswith('http://'):
+                self._buffer += '[[%s][%s]]' % (url, txt)
+            else:
+                self._buffer += '[[/file_downloader/?path=%s][%s]]' % (url, txt)
+        else:
+            self._buffer += '<font color="%s">%s</font>' % (fmt, txt)
 
     def getLogsAsStrings(self):
 
@@ -945,11 +948,11 @@ class Protocol(Step):
         return self._useQueue.get()
         
     def getNumberOfSteps(self):
-        return self._numberOfSteps.get()
+        return self._numberOfSteps.get(0)
     
     def getStepsDone(self):
         """ Return the number of steps executed. """
-        return self._stepsDone.get()
+        return self._stepsDone.get(0)
             
     def getStatusMessage(self):
         """ Return the status string and if running the steps done. 
