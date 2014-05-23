@@ -112,6 +112,7 @@ class SpiderProtCustomMask(ProtCreateMask2D, SpiderProtocol):
         mask.copyInfo(self.inputImg)
         mask.setLocation(4, maskFn)
         self._defineOutputs(outputMask=mask)
+        self._defineSourceRelation(self.inputImg, mask)
             
     def _summary(self):
         pixelSize = self.inputImage.get().getSamplingRate()

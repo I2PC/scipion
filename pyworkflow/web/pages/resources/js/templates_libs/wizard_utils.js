@@ -205,13 +205,27 @@ function selectParticle(elm, mode) {
 	}
 }
 
-function putImage(url, canvas, width, height) {
+function putImage(url, canvas, width, height, mode) {
 	/*
 	 * Overwrite a canvas space with a new image using the library Raphael.js 
 	 */
+	 	 
 	$("div#" + canvas).empty();
 	var paper = Raphael(document.getElementById(canvas));
 	var img = paper.image(url, 0, 0, width, height);
+	
+}
+
+function putImageSrc(url, canvas) {
+	/*
+	 * Overwrite a canvas space with a new image using the library Raphael.js 
+	 */
+	
+	var img = $("img#" + canvas)
+	img.attr("src","")
+	img.attr("src", url)
+	
+	
 }
 
 function putCircle(radio, canvas, color) {
@@ -464,13 +478,29 @@ function previewSpiderCustomMask(path, radius1, sdFactor, radius2, maskThreshold
 	 */
 	
 	// load and set the image
-	var uri = "/get_images_custom_mask_spider/?" + 
+	var uri = "/run_custom_mask_spider/?" + 
 				"image=" + path + 
 				"&radius1=" + radius1 + 
 				"&sdFactor=" + sdFactor + 
-				"&radius2=" + radius2
+				"&radius2=" + radius2 +
+				"&maskThreshold="+ maskThreshold;
+				
+	var canvasList = ['image1', 'image2', 'image3', 
+	                  'image4', 'image5', 'image6',
+	                  'image7', 'image8']
+
+	 //	Generate the images               		  
+	 $.ajax({type : "GET", url : uri, async: false});
 	
-	putImage(uri, "filteredParticle", 250, 250);
+	// Put the images in his canvas associated
+	var url = "/get_image/?image=" + path + "&dim=100";
+	putImageSrc(url, canvasList[0]);
+	
+	for (var i=1;i < canvasList.length;i++){
+		url = "/get_image/?image=" + i + "@stkmask.stk&dim=100";
+		putImageSrc(url, canvasList[i]);
+	}
 }
+
 
 

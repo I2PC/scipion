@@ -59,11 +59,12 @@ urlpatterns = patterns('',
 
     #WIZARDS
     url(r'^wizard/$', 'app.em_wizard.wizard'),
+    url(r'^get_image_mask/$', 'app.wizards.tools.get_image_mask'),
     url(r'^get_image_psd/$', 'app.wizards.tools.get_image_psd'),
     url(r'^get_image_bandpass/$', 'app.wizards.tools.get_image_bandpass'),
     url(r'^get_image_gaussian/$', 'app.wizards.tools.get_image_gaussian'),
     url(r'^get_image_filter_spider/$', 'app.wizards.spider_wizard.get_image_filter_spider'),
-    url(r'^get_image_custom_mask_spider/$', 'app.wizards.spider_wizard.get_image_custom_mask_spider'),
+    url(r'^run_custom_mask_spider/$', 'app.wizards.spider_wizard.run_custom_mask_spider'),
     
     #VIEWERS
     url(r'^launch_viewer/$', 'app.em_viewer.launch_viewer'),

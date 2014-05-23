@@ -87,17 +87,20 @@ class SpiderProtAlign(ProtAlign2D, SpiderProtocol):
     def createOutputStep(self):
         """ Register the output (the alignment and the aligned particles.)
         """
+        particles = self.inputParticles.get()
         # Create the output average image
         avg = Particle()
         avg.copyInfo(self.inputParticles.get())
         avg.setLocation(NO_INDEX, self.getAverage())
         self._defineOutputs(outputAverage=avg)
+        self._defineSourceRelation(particles, avg)
         
         imgSet = self._createSetOfParticles()
-        imgSet.copyInfo(self.inputParticles.get())
+        imgSet.copyInfo(particles)
         outputStk = self._getFileName('particlesAligned')
         imgSet.readStack(outputStk)
         self._defineOutputs(outputParticles=imgSet)
+        self._defineTransformRelation(particles, imgSet)
         
     def _summary(self):
         summary = []

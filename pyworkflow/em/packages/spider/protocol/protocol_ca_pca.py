@@ -149,7 +149,9 @@ class SpiderProtCAPCA(SpiderProtocol):
         seq = PcaFile()
         seq.filename.set(self._getFileName('seqFile'))
         
-        self._defineOutputs(imcFile=imc, seqFile=seq)
+        self._defineOutputs(imcFile=imc, seqFile=seq)        
+        self._defineSourceRelation(self.inputParticles.get(), imc)
+        self._defineSourceRelation(self.inputParticles.get(), seq)
         
             
     def _summary(self):

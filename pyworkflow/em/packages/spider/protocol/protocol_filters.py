@@ -171,6 +171,7 @@ See detailed description of the filter at [[http://spider.wadsworth.org/spider_d
             imgSet.append(img)            
             
         self._defineOutputs(outputParticles=imgSet)
+        self._defineTransformRelation(particles, imgSet)
         
 #--------------------------- INFO functions -------------------------------------------- 
     def _validate(self):
