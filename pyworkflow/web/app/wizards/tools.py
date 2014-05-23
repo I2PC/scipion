@@ -156,3 +156,19 @@ def get_image_gaussian(request):
     img.save(response, "PNG")
     return response
 
+def get_image_mask(request):
+    """
+    Function to get the computing image with a mask filter applied
+    """
+    imagePath = request.GET.get('image', None)
+    dim = request.GET.get('dim', None)
+    
+    # create a xmipp image empty
+    imgXmipp = xmipp.Image()
+    
+    # from PIL import Image
+    img = getPILImage(imgXmipp, dim)
+        
+    response = HttpResponse(mimetype="image/png")
+    img.save(response, "PNG")
+    return response
