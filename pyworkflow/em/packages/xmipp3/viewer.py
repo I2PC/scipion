@@ -146,19 +146,19 @@ class XmippViewer(Viewer):
             self._views.append(DataView(fn))
         
         elif issubclass(cls, SetOfClasses2D):
-            mdFn = getattr(obj, '_xmippMd', None)
-            if mdFn:
-                fn = mdFn.get()
-            else:
-                fn = obj.getFileName()
+#            mdFn = getattr(obj, '_xmippMd', None)
+#            if mdFn:
+#                fn = mdFn.get()
+#            else:
+            fn = obj.getFileName()
             self._views.append(ObjectView(fn, "Classes2D", self._project.getName(), obj.strId(), obj.getImages().strId()))  
             
         elif issubclass(cls, SetOfClasses3D):
-            mdFn = getattr(obj, '_xmippMd', None)
-            if mdFn:
-                fn = mdFn.get()
-            else:
-                fn = obj.getFileName()
+#            mdFn = getattr(obj, '_xmippMd', None)
+#            if mdFn:
+#                fn = mdFn.get()
+#            else:
+            fn = obj.getFileName()
 
             self._views.append(ObjectView(fn, "Classes3D", self._project.getName(), obj.strId(), obj.getImages().strId(), extraParams=args.get('extraParams', '')))
               

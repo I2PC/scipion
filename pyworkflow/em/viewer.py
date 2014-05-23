@@ -45,7 +45,8 @@ class DataView(View):
         self._loadPath(path)
         self._env = kwargs.get('env', os.environ.copy())
         self._viewParams = viewParams
-        addRelionLabelsToEnviron(self._env)
+        if(self._path.endswith('.star')):
+            addRelionLabelsToEnviron(self._env)
             
     def _loadPath(self, path):
         # Check if there is a table name with @ in path
