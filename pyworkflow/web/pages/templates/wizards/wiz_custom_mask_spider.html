@@ -11,21 +11,20 @@
 			putSelection('input#maskThreshold_val', '{{params.label.3}}_input');
 		};
 		
-		function loadFilter(){
-// 			var type = {{params.mode.0}}
-// 			var mode = {{params.mode.1}}
-// 			var padding = '{{params.mode.2}}'
-// 			compositeSpiderFilter(elm, type, mode, padding);
-		};
-		
 		function previewCustomMask(){
-			var path = {{obj.text}};
-			var firstRadius = {{params.label.0}};
-			var sdFactor = {{params.label.1}};
-			var secondRadius = {{params.label.2}};
-			var maskThreshold = {{params.label.3}};
+			var path = $('tr#{{obj.getObjId}}').attr('value');
+			var firstRadius = $('input#firstRadius_val').val();
+			var sdFactor = $('input#sdFactor_val').val();
+			var secondRadius = $('input#secondRadius_val').val();
+			var maskThreshold = $('input#maskThreshold_val').val();
 			
-				
+			previewSpiderCustomMask(
+					path, 
+					firstRadius, 
+					sdFactor, 
+					secondRadius, 
+					maskThreshold
+			);
 		}
 	</script>
 {% endblock %}	
@@ -39,45 +38,53 @@
 	<tr>
 		<td>
 			<div id="wrapper" class="small_image">
-				<div id="image1"></div>
-			</div>IMAGE 1
+<!-- 				<div id="image1"></div> -->
+				<img id="image1"/>
+			</div>{{params.labelText.0}}
 		</td>
 		<td>
 			<div id="wrapper" class="small_image">
-				<div id="image2"></div>
-			</div>IMAGE 2
+<!-- 				<div id="image2"></div> -->
+				<img id="image2"/>
+			</div>{{params.labelText.1}}
 		</td>
 		<td>
 			<div id="wrapper" class="small_image">
-				<div id="image3"></div>
-			</div>IMAGE 3
+<!-- 				<div id="image3"></div> -->
+				<img id="image3"/>
+			</div>{{params.labelText.2}}
 		</td>
 		<td>
 			<div id="wrapper" class="small_image">
-				<div id="image4"></div>
-			</div>IMAGE 4
+<!-- 				<div id="image4"></div> -->
+				<img id="image4"/>
+			</div>{{params.labelText.3}}
 		</td>
 	</tr>
 	<tr>
 		<td>
 			<div id="wrapper" class="small_image">
-				<div id="image5"></div>
-			</div>IMAGE 5
+<!-- 				<div id="image5"></div> -->
+				<img id="image5"/>
+			</div>{{params.labelText.4}}
 		</td>
 		<td>
 			<div id="wrapper" class="small_image">
-				<div id="image6"></div>
-			</div>IMAGE 6
+<!-- 				<div id="image6"></div> -->
+				<img id="image6"/>
+			</div>{{params.labelText.5}}
 		</td>
 		<td>
 			<div id="wrapper" class="small_image">
-				<div id="image7"></div>
-			</div>IMAGE 7
+<!-- 				<div id="image7"></div> -->
+				<img id="image7"/>
+			</div>{{params.labelText.6}}
 		</td>
 		<td>
 			<div id="wrapper" class="small_image">
-				<div id="image8"></div>
-			</div>IMAGE 8
+<!-- 				<div id="image8"></div> -->
+				<img id="image8"/>
+			</div>{{params.labelText.7}}
 		</td>
 	</tr>
 {% endblock %} 
@@ -112,7 +119,7 @@
 </table>
 <script>
 	// Apply the masks at the beginning
-	window.onload = previewCustomMask();
+ 	window.onload = previewCustomMask();
 </script>
 {% endblock %}
 
