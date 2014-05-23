@@ -60,6 +60,8 @@ void FourierFilter::defineParams(XmippProgram *program)
     program->addParamsLine("            high_pass <w1> <raisedw=0.02>      : Cutoff freq (<1/2 or A)");
     program->addParamsLine("            band_pass <w1> <w2> <raisedw=0.02> : Cutoff freq (<1/2 or A)");
     program->addParamsLine("            stop_band <w1> <w2> <raisedw=0.02> : Cutoff freq (<1/2 or A)");
+    program->addParamsLine("            stop_lowbandx <w1> <raisedw=0.02>  : Cutoff freq (<1/2 or A)");
+    program->addParamsLine("            stop_lowbandy <w1> <raisedw=0.02>  : Cutoff freq (<1/2 or A)");
     program->addParamsLine("            wedge <th0> <thF> <rot=0> <tilt=0> <psi=0>  : Missing wedge (along y) for data between th0-thF ");
     program->addParamsLine("                                             : y is rotated by euler angles degrees");
     program->addParamsLine("            cone <th0>                       : Missing cone for tilt angles up to th0 ");
@@ -122,7 +124,21 @@ void FourierFilter::readParams(XmippProgram *program)
         w1 = program->getDoubleParam("--fourier", "stop_band");
         w2 = program->getDoubleParam("--fourier", "stop_band", 1);
         raised_w = program->getDoubleParam("--fourier", "stop_band",2);
-        FilterShape = FilterBand = STOPBAND;
+        FilterBand = STOPBAND;
+        FilterShape = RAISED_COSINE;
+    }
+    else if (filter_type == "stop_lowbandx")
+    {
+        w1 = program->getDoubleParam("--fourier", "stop_lowbandx");
+        raised_w = program->getDoubleParam("--fourier", "stop_lowbandx",1);
+        FilterBand = STOPLOWBANDX;
+        FilterShape = RAISED_COSINE;
+    }
+    else if (filter_type == "stop_lowbandy")
+    {
+        w1 = program->getDoubleParam("--fourier", "stop_lowbandy");
+        raised_w = program->getDoubleParam("--fourier", "stop_lowbandy",1);
+        FilterBand = STOPLOWBANDY;
         FilterShape = RAISED_COSINE;
     }
     else if (filter_type == "wedge")
@@ -215,6 +231,12 @@ void FourierFilter::show()
         case STOPBAND:
             std::cout << "Stopband between " << w1 << " and " << w2 << std::endl;
             break;
+        case STOPLOWBANDX:
+            std::cout << "Stop low band X up to " << w1 << std::endl;
+            break;
+        case STOPLOWBANDY:
+            std::cout << "Stop low band Y up to " << w1 << std::endl;
+            break;
         case CTF:
             std::cout << "CTF\n";
             break;
@@ -299,6 +321,8 @@ void FourierFilter::apply(MultidimArray<double> &img)
 double FourierFilter::maskValue(const Matrix1D<double> &w)
 {
     double absw = w.module();
+    double wx=fabs(XX(w));
+    double wy=fabs(YY(w));
 
     // Generate mask
     switch (FilterBand)
@@ -365,6 +389,32 @@ double FourierFilter::maskValue(const Matrix1D<double> &w)
             break;
         }
         break;
+	case STOPLOWBANDX:
+		switch (FilterShape)
+		{
+		case RAISED_COSINE:
+			if (wx<w1)
+				return 0;
+			else if (wx<w1+raised_w)
+				return (1+cos(PI/raised_w*(w1-wx)))/2;
+			else
+				return 1.0;
+			break;
+		}
+		break;
+	case STOPLOWBANDY:
+		switch (FilterShape)
+		{
+		case RAISED_COSINE:
+			if (wy<w1)
+				return 0;
+			else if (wy<w1+raised_w)
+				return (1+cos(PI/raised_w*(w1-wy)))/2;
+			else
+				return 1.0;
+			break;
+		}
+		break;
     case CTF:
         ctf.precomputeValues(XX(w)/ctf.Tm,YY(w)/ctf.Tm);
         return ctf.getValueAt();
