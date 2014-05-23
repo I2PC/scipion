@@ -65,7 +65,6 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
             selfile = String.format("%s%sselection%s", projectid, File.separator, data.getFileExtension());
             msgfields = new HashMap<String, String>();
             msgfields.put(runNameKey, "ProtUserSubset");
-            
 
             initComponents();
         } catch (Exception ex) {
@@ -75,14 +74,13 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
     }
     private void initComponents() {
         if (type != null) {
-            boolean isclassificationmd = data.isClassificationMd();
-            String output = isclassificationmd? "Particles": type;   
+            String output = data.hasClasses()? "Particles": type;   
             cmdbutton = getScipionButton("Create " + output, new ActionListener() {
 
                 @Override
                 public void actionPerformed(ActionEvent ae) {
                     int size;
-                    if(data.isClassificationMd())
+                    if(data.hasClasses())
                     {
                         MetaData childsmd = data.getSelClassesImages();
                         size = childsmd.size();
@@ -99,7 +97,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
                 }
             });
 
-            if(isclassificationmd)
+            if(data.hasClasses())
             {
                 classcmdbutton = getScipionButton("Create Classes", new ActionListener() {
 
@@ -191,7 +189,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
         }
         if(classcmdbutton != null)
         {
-            isenabled = data.isClassificationMd() && isenabled;
+            isenabled = data.hasClasses() && isenabled;
             color = Color.decode(isenabled? ScipionMessageDialog.firebrick: ScipionMessageDialog.lightgrey); 
             forecolor = isenabled? Color.WHITE: Color.GRAY;
             classcmdbutton.setEnabled( isenabled);
@@ -224,6 +222,9 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
         }
     }
     
-   
+    public boolean isClassSelection()
+        {
+            return data.hasClasses() && gallery.getSelectionCount() > 0;
+        }
 
 }

@@ -1445,6 +1445,14 @@ public class GalleryData {
             return new MetaData(block + "@" + filename);
         }
         
+        public boolean hasClasses()
+        {
+            return isClassification;
+        }
         
+        public boolean getNormalized()
+        {
+            return normalize;
+        }
 	
 }// class GalleryData

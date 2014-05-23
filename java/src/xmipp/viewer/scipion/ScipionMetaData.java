@@ -28,7 +28,6 @@ public class ScipionMetaData extends MetaData{
     private List<EMObject> emobjects;
     private Map<String, Integer> labels = new HashMap<String, Integer>();
     private ScipionMetaData parent;
-    private List<ClassInfo> classes;
     private String id;
     private String classestb, objectstb;
     private ScipionMetaData representativesmd;
@@ -67,7 +66,6 @@ public class ScipionMetaData extends MetaData{
         if(self.equals("Class2D"))
         {
             haschilds = true;
-            classes = new ArrayList<ClassInfo>();
             String id;
             String classestb = "%s_Classes";
             String objectstb = "%s_Objects";
@@ -80,7 +78,6 @@ public class ScipionMetaData extends MetaData{
                 emo.childmd = new ScipionMetaData(dbfile, String.format(classestb, id), String.format(objectstb, id), id);
                
                 emo.childmd.setParent(this);
-                classes.add(new ClassInfo(emo.childmd.getBlock(), Color.red, emo.childmd.size()));
                 emo.representative = representativesmd.getEMObjects().get(i);
                 i ++;
             }
@@ -269,11 +266,7 @@ public class ScipionMetaData extends MetaData{
         return null;
     }
 
-    public ClassInfo[] getClasses() {
-        if(classes == null)
-            return null;
-        return classes.toArray(new ClassInfo[]{});
-    }
+    
 
    
     ScipionMetaData getSelectionMd(long[] selIds) {
@@ -668,5 +661,10 @@ public class ScipionMetaData extends MetaData{
     public void print()
     {
         System.out.println(toString());
+    }
+    
+    public double[] getStatistics(boolean applyGeo)
+    {
+        return null;
     }
 }

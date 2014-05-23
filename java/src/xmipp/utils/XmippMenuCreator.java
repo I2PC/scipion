@@ -179,7 +179,7 @@ public abstract class XmippMenuCreator implements ActionListener {
 	public final String FILE_REFRESH = "File.Refresh_mi";
 	public final String FILE_EXIT = "File.Exit_mi";
 	public final String DISPLAY = "Display";
-	public final String DISPLAY_NORMALIZE = "Display.Normalize_cb";
+	public final String METADATA_NORMALIZE = "Metadata.Normalize_cb";
 	public final String DISPLAY_SHOWLABELS = "Display.ShowLabels_cb";
 	public final String DISPLAY_RENDERIMAGES = "Display.RenderImages_cb";
 	

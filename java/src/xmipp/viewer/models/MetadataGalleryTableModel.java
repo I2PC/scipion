@@ -271,7 +271,7 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel
                 boolean allowsGeometry = data.md.containsGeometryInfo();
                 ImagePlusLoader loader = new ImagePlusLoader(file, allowsGeometry, data.useGeo, data.wrap);
                 
-                if (getNormalized())
+                if (data.getNormalized())
                     loader.setNormalize(normalize_min, normalize_max);
                 ImagesWindowFactory.openXmippImageWindow(data.window, loader, loader.allowsPoll());
         }

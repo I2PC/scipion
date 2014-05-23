@@ -6,10 +6,13 @@
 
 package xmipp.viewer.scipion;
 
+import java.awt.Color;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
 import xmipp.utils.Params;
+import xmipp.viewer.models.ClassInfo;
 import xmipp.viewer.models.ColumnInfo;
 import xmipp.viewer.models.GalleryData;
 
@@ -24,8 +27,6 @@ public class ScipionGalleryData extends GalleryData{
         
         mdBlocks = md.getBlocks();
         selectedBlock = mdBlocks[0];
-        isClassification = mdBlocks.length > 1;//FIXME:Temporarily
-        classes = ((ScipionMetaData)md).getClasses();
     }
     
     public void setFileName(String file) {
@@ -178,5 +179,60 @@ public class ScipionGalleryData extends GalleryData{
                 return parent.getChild(selectedBlock);
                 
         }
+        
+        
+	/** Get the assigned class of some element */
+	public ClassInfo getItemClassInfo(int index) {
+		return null;
+	}
 
+	/** Set item class info in md */
+	private void setItemClassInfo(long id, ClassInfo cli) {
+		
+	}
+
+	/** Set the class of an element */
+	public void setItemClass(int index, ClassInfo cli) {
+		
+	}
+
+	public ClassInfo getClassInfo(int classNumber) {
+		return null;
+	}
+
+	/**
+	 * Compute and update the number of classes and images assigned to this
+	 * superclass
+	 */
+	public void updateClassesInfo() {
+		
+	}// function upateClassesInfo
+
+	/** Load classes structure if previously stored */
+	public void loadClassesInfo() {
+		
+	}// function loadClassesInfo
+        
+
+        public MetaData[] getClassesMd() 
+        {
+            return null;
+        }
+        
+        /** Add a new class */
+	public void addClass(ClassInfo ci) {
+		
+	}
+
+	/** Remove a class from the selection */
+	public void removeClass(int classNumber) 
+        {
+		
+	}
+        
+      
+         public boolean hasClasses()//for Scipion usage only
+        {
+            return mdBlocks.length > 1 && ((ScipionMetaData)md).getSelf().contains("Class");
+        }
 }

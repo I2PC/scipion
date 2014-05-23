@@ -140,7 +140,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 	// The following counter will be used to keep track of how many
 	// windows are opened, the last one, should do System.exit
 	// private static short windows_counter = 0;
-	public ImageGalleryTableModel gallery;
+	protected ImageGalleryTableModel gallery;
 	private GalleryRowHeaderModel rowHeaderModel;
 	private int previousSelectedRow, previousSelectedCol;
 	private JList rowHeader;
@@ -1490,7 +1490,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			addItem(FILE_EXIT, "Exit", null, "control released Q");
 			// Display
 			addItem(DISPLAY, "Display");
-			addItem(DISPLAY_NORMALIZE, "Global normalization", null, "control released N");
+			
 			addItem(DISPLAY_SHOWLABELS, "Display labels", null, "control released L");
 			addSeparator(DISPLAY);
 			addItem(DISPLAY_RENDERIMAGES, "Render images", null, "control released R");
@@ -1506,6 +1506,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 				addItem(DISPLAY_RESLICE_VIEWS[i], reslices[i]);
 			// Metadata operations
 			addItem(METADATA, "Metadata");
+                        addItem(METADATA_NORMALIZE, "Global normalization", null, "control released N");
 			addItem(STATS, "Statistics");
 			addItem(STATS_AVGSTD, "Avg & Std images");
 			addItem(STATS_PCA, "PCA");
@@ -1531,10 +1532,10 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			boolean volMode = data.isVolumeMode();
 			setItemEnabled(FILE_OPENWITH_CHIMERA, volMode);
 			setItemEnabled(FILE_OPENMICROGRAPHS, data.hasMicrographParticles());
-                        setItemEnabled(FILE_EXPORTIMAGES, data.hasRenderLabel() && !volMode);
+                        setItemEnabled(FILE_EXPORTIMAGES, data.hasRenderLabel() && !volMode && !(data instanceof ScipionGalleryData));
 			setItemEnabled(FILE_SAVE, !volMode);
 			setItemEnabled(FILE_SAVEAS, !volMode);
-			setItemSelected(DISPLAY_NORMALIZE, gallery.getNormalized());
+			
 			setItemEnabled(DISPLAY_APPLYGEO, data.containsGeometryInfo());
 			setItemEnabled(DISPLAY_WRAP, data.containsGeometryInfo() && data.useGeo());
 			setItemSelected(DISPLAY_WRAP, data.getWrap());
@@ -1546,6 +1547,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 				setItemSelected(DISPLAY_RESLICE_VIEWS[i], (data.getResliceView() == ImageGeneric.VIEWS[i]));
 			setItemEnabled(DISPLAY_COLUMNS, !galMode);
 			setItemEnabled(DISPLAY_RESLICE, volMode);
+                        setItemSelected(METADATA_NORMALIZE, data.getNormalized());
 			setItemEnabled(MD_CLASSES, data.isClassificationMd());
 			setItemEnabled(MD_PLOT, data.isTableMode());
 			boolean isCol = data.isColumnFormat();
@@ -1565,9 +1567,9 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			String cmd = evt.getActionCommand();
 			try
 			{
-				if (cmd.equals(DISPLAY_NORMALIZE))
+				if (cmd.equals(METADATA_NORMALIZE))
 				{
-					gallery.setNormalized(getItemSelected(DISPLAY_NORMALIZE));
+					gallery.setNormalized(getItemSelected(METADATA_NORMALIZE));
 				}
 				else if (cmd.equals(DISPLAY_APPLYGEO) || cmd.equals(DISPLAY_WRAP))
 				{
@@ -2228,10 +2230,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
            return gallery.getSelectionCount() > 0;
        }
        
-       public boolean isClassSelection()
-        {
-            return data.isClassificationMd() && gallery.getSelectionCount() > 0;
-        }
+       
        
        
        

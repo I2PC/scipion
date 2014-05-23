@@ -483,10 +483,7 @@ public abstract class ImageGalleryTableModel extends AbstractTableModel {
 		}
 	}
 
-	/** Check normalized state */
-	public boolean getNormalized() {
-		return data.normalize;
-	}
+	
 
 	/** Calculate min and max if needed for normalization */
 	public void calculateMinAndMax() {
