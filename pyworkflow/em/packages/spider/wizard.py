@@ -280,6 +280,7 @@ class SpiderCustomMaskWizard(EmWizard):
         protParams = {}
         protParams['input']= protocol.inputImage
         protParams['label']= CUSTOMMASK_VARS
+        protParams['labelText']= MASKRESULT_LABELS
         protParams['value']= [protocol.getAttributeValue(a) for a in protParams['label']]
         
         return protParams

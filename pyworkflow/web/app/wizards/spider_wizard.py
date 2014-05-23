@@ -32,6 +32,7 @@ from pyworkflow.em.wizard import EmWizard
 from django.shortcuts import render_to_response
 from django.http import HttpResponse
 
+from pyworkflow.em.packages.spider.spider import runScript
 from pyworkflow.em.packages.spider.wizard import * 
 from pyworkflow.web.app.em_wizard import *
 from tools import *
@@ -40,7 +41,7 @@ from pyworkflow.web.app.views_base import base_wiz
 
 from pyworkflow.em.packages.xmipp3.convert import xmippToLocation, locationToXmipp
 from pyworkflow.em.packages.spider.convert import locationToSpider
-from pyworkflow.utils.path import removeExt
+from pyworkflow.utils.path import removeExt, getExt
 
 #===============================================================================
 # MASKS 
@@ -91,7 +92,7 @@ class SpiderParticlesMaskRadiiWeb(SpiderParticlesMaskRadiiWizard):
             
             if len(particles) == 0:
                 return HttpResponse("errorIterate")
-            
+            removeExt
             xdim = getImageXdim(request, particles[0].text)
 
             params['value'] = validateMaskRadius(params['value'], xdim, radius=2)               
@@ -213,11 +214,7 @@ def get_image_filter_spider(request):
     img.save(response, "PNG")
     return response
 
-
-def get_image_custom_mask_spider(request):
-    """
-    Function to get the computing image with a spider custom mask applied
-    """
+def run_custom_mask_spider(request):
     
     imagePath = request.GET.get('image', None)
     radius1 = request.GET.get('radius1', None)
@@ -230,11 +227,21 @@ def get_image_custom_mask_spider(request):
               '[filter-radius2]': radius2,
               '[mask-threshold2]': maskThreshold,
               '[input_image]': removeExt(imagePath),
-              '[output_mask]': 'stkmask',
+              '[output_mask]': 'stkmask'
               }
     
-    ext = protocolParent.getExt()
+#    print "imagePath:",imagePath
+#    print "os.getcwd: ", os.getcwd()
         
-    runScript('mda/custommask.msa', ext, params)
+    runScript('mda/custommask.msa', "stk", params)
+    
+    return HttpResponse(mimetype='application/javascript')
+    
+    
+def get_image_custom_mask_spider(request):
+    """
+    Function to get the computing image with a spider custom mask applied
+    """
+    
     
     pass
