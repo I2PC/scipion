@@ -67,15 +67,42 @@ class HyperlinkManager:
         """
         # Define a function to open files cleanly in a system-dependent way
         if sys.platform.startswith('darwin'):  # macs use the "open" command
-            open = lambda path: subprocess.call(['open', path])
+            open_cmd = lambda path: subprocess.call(['open', path])
         elif os.name == 'nt':  # there is a function os.startfile for windows
-            open = lambda path: os.startfile(path)
-        elif os.name == 'posix':  # linux systems with a xdg-compliant wm
-            open = lambda path: subprocess.call(['xdg-open', path])
+            open_cmd = lambda path: os.startfile(path)
+        elif os.name == 'posix':  # linux systems and so on
+            def which(*args):
+                "Return the first argument that is a program in PATH"
+                for command in args:
+                    with open(os.devnull, 'w') as fnull:
+                        if subprocess.call(['which', command],
+                                           stdout=fnull, stderr=fnull) == 0:
+                            return command
+                return None
+
+            xdg_open = which('xdg-open', 'gnome-open', 'kde-open', 'gvfs-open')
+            editor = which('gedit', 'kate', 'emacs', 'nedit', 'mousepad')
+            browser = which('firefox', 'chromium', 'iceweasel', 'chrome',
+                            'midori', 'konqueror', 'dillo')
+
+            def open_cmd(path):
+                if xdg_open:
+                    if subprocess.call([xdg_open, path]) == 0:
+                        return  # yay! that's the way to do it!
+                # If we couldn't open it in a standard way, try web and editors
+                if path.startswith('http://'):
+                    if browser:
+                        if subprocess.call([browser, url]) == 0:
+                            return  # hope we found your fav browser :)
+                else:
+                    if editor:
+                        if subprocess.call([editor, url]) == 0:
+                            return  # hope we found your fav editor :)
+                print 'WARNING: Cannot open %s' % url  # nothing worked! :(
         else:
             raise RuntimeError('Unknown system, so cannot open %s' % url)
 
-        return self.add(lambda: open(url))
+        return self.add(lambda: open_cmd(url))
 
     def _enter(self, event):
         self.text.config(cursor="hand2")
