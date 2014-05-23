@@ -85,7 +85,7 @@ class XmippProtScreenParticles(ProtProcessParticles):
 
         self.runJob("xmipp_image_sort_by_statistics", args)
         
-        self.ouputMd = String(outputMd)
+        self.outputMd = String(outputMd)
 
     def createOutputStep(self):
         imgSet = self._createSetOfParticles()
