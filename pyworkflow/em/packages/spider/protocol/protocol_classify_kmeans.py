@@ -89,6 +89,7 @@ class SpiderProtClassifyKmeans(SpiderProtClassify):
                 class2D.append(img)
                 
         self._defineOutputs(outputClasses=classes2D)
+        self._defineSourceRelation(particles, classes2D)
          
     #--------------------------- INFO functions -------------------------------------------- 
     
