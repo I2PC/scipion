@@ -339,7 +339,7 @@ class GaussianVolumesWizard(GaussianWizard):
 #  Dialogs used by wizards
 #===============================================================================
 
-class previewDialog(dialog.Dialog):
+class PreviewDialog(dialog.Dialog):
     """ This will be the base class for several wizards.
     The layout of this wizard will be:
     1. Left panel(Items) that contains a list of items to preview
@@ -410,7 +410,7 @@ class previewDialog(dialog.Dialog):
         
     
 
-class ImagePreviewDialog(previewDialog):
+class ImagePreviewDialog(PreviewDialog):
     
     def _beforePreview(self):
         self.dim = 256
@@ -538,6 +538,7 @@ class CtfDialog(DownsampleDialog):
         
     def getHighFreq(self):
         return self.hfSlider.get()
+
 
 class BandPassFilterDialog(DownsampleDialog):
     

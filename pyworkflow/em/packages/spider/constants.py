@@ -38,8 +38,16 @@ FILTER_FERMI = 2
 FILTER_BUTTERWORTH = 3
 FILTER_RAISEDCOS = 4
 
+FILTER_LOWPASS = 0
+FILTER_HIGHPASS = 1
+
 # CA-PCA protocol
 CA = 0
 PCA = 1
 IPCA = 2
+
+# Center of gravity values
+CG_NONE = 0
+CG_PH = 1
+CG_RT180 = 2
 

@@ -27,125 +27,91 @@
 """
 This sub-package contains protocol for particles filters operations
 """
-from os.path import join
 
-from pyworkflow.em import ProtAlign2D, IntParam, Image, Particle, NO_INDEX
-from pyworkflow.utils import makePath
+from pyworkflow.em import IntParam
 
-from protocol_base import SpiderProtocol
+from protocol_align_base import SpiderProtAlign
 
 
       
-class SpiderProtAlignPairwise(ProtAlign2D, SpiderProtocol):
-    """ Reference-free alignment shift and rotational alignment of an image series. """
+class SpiderProtAlignPairwise(SpiderProtAlign):
+    """ Reference-free alignment shift and rotational alignment of an image series. 
+    
+    This alignment scheme aligns a pair of images at a time and then averages 
+    them. Then, the averages of each of those pairs is aligned and averages, 
+    and then pairs of those pairs, etc. Compared to [[http://spider.wadsworth.org/spider_doc/spider/docs/man/apsr.html][AP SR]], this alignment 
+    scheme appears to be less random, which chooses seed images as alignment 
+    references.
+    
+    For more information, see Step 2b at [[http://spider.wadsworth.org/spider_doc/spider/docs/techs/MSA/index.html#pairwise][SPIDER's MDA online manual]]
+    """
     _label = 'align pairwise'
     
     def __init__(self, **args):
-        ProtAlign2D.__init__(self, **args)
-        SpiderProtocol.__init__(self, **args)
-        self.alignDir = 'pairwise'
-         
-        self._params = {'ext': 'stk',
-                        'particles': 'input_particles',
-                        'particlesSel': 'input_particles_sel',
-                        'average': join(self.alignDir, 'rfreeavg001'), # If change the name, change it in template batch
-                        'particlesAligned': join(self.alignDir, 'stkaligned')
-                        }    
+        SpiderProtAlign.__init__(self, 'mda/pairwise.msa', 'pairwise', **args)
     
     #--------------------------- DEFINE param functions --------------------------------------------
     
     def _defineAlignParams(self, form):
-        line = form.addLine('Radius (px):', 
-                            help='In the rotational alignment, only rings between\n'
-                                 '_inner_ and _outer_ radius (in pixel units) \n'
-                                 'will be analyzed.')
-        line.addParam('innerRadius', IntParam, default=5, label='Inner')
-        line.addParam('outerRadius', IntParam, default=44, label='Outer')
+        SpiderProtAlign._defineAlignParams(self, form)
         
         form.addParam('searchRange', IntParam, default=8, 
                       label='Search range (px):',
                       help='In the translational alignment, shifts of up to\n'
-                           '_searchRange_ will be allowed.')
+                           '_searchRange_ (in pixel units) will be allowed.')
         form.addParam('stepSize', IntParam, default=2, 
-                      label='Step size(px):',
-                      help='In the translational alignment, shifts will be analyzed\n'
-                           'in units of _stepSize_ (in pixel units).')        
+                      label='Step size (px):',
+                      help='Alignments will be evaluated in units of _stepSize_ \n'
+                           '(in pixel units) up to a maximum of +/- _searchRange_.')        
+        form.addParallelSection(threads=2, mpi=0)    
     
-    #--------------------------- INSERT steps functions --------------------------------------------  
-    
-    def _insertAllSteps(self):
-        # Insert processing steps
-        self._insertFunctionStep('convertInput', 'inputParticles', 
-                                 self._getFileName('particles'), self._getFileName('particlesSel'))
-        self._insertFunctionStep('alignParticlesStep', 
-                                 self.innerRadius.get(), self.outerRadius.get())
-        self._insertFunctionStep('createOutputStep')
-
     #--------------------------- STEPS functions --------------------------------------------       
     
     def alignParticlesStep(self, innerRadius, outerRadius):
         """ Execute the pairwise.msa script to alignm the particles.
         """
         particles = self.inputParticles.get()
-        n = particles.getSize()
         xdim = particles.getDimensions()[0]
         
         self._params.update({
                              '[idim-header]': xdim,
+                             '[cg-option]': self.cgOption.get(),
                              '[inner-rad]': innerRadius,
-                             '[obj-diam]': outerRadius * 2, # convert radius to diameter
+                             '[outer-rad]': outerRadius, # convert radius to diameter
                              '[search-range]': self.searchRange.get(),
                              '[step-size]': self.stepSize.get(),
                              '[selection_list]': self._params['particlesSel'],
                              '[unaligned_image]': self._params['particles'] + '@******',
+                             '[nummps]': self.numberOfThreads.get(),
                             })
         
-        self.runScript('mda/pairwise.msa', self._params['ext'], self._params)
-                    
-        
-            
-    def createOutputStep(self):
-        """ Register the output (the alignment and the aligned particles.)
-        """
-        particles = self.inputParticles.get()
-        n = particles.getSize()
-
-        # Create the output average image
-        avg = Particle()
-        avg.copyInfo(particles)
-        avg.setLocation(NO_INDEX, self._getFileName('average'))
-        self._defineOutputs(outputAverage=avg)
-        
-        # Create the output aligned images        
-        imgSet = self._createSetOfParticles()
-        imgSet.copyInfo(particles)
-        
-        outputStk = self._getFileName('particlesAligned')
-        for i in range(1, n+1):
-            img = Particle()
-            img.setLocation(i, outputStk)
-            imgSet.append(img)
-            
-        self._defineOutputs(outputParticles=imgSet)
-        
+        self.runScript(self.getScript(), self.getExt(), self._params)
+                
+    def getAverage(self):
+        return self._getPath(self.getAlignDir(), 'rfreeavg001.%s' % self.getExt()) 
+       
     #--------------------------- INFO functions -------------------------------------------- 
-    
-    def _validate(self):
-        errors = []
-        particles = self.inputParticles.get()
-        xdim = particles.getDimensions()[0]
-        r = xdim / 2
-        innerRadius = self.innerRadius.get()
-        if innerRadius > r or innerRadius < 0:
-            errors.append("<innerRadius> should be between 0 and %d" % r)
-        
-        return errors
     
     def _citations(self):
         return ['Marco1996']
     
     def _summary(self):
         summary = []
+        summary.append('Radius range: *%s - %s*' % (self.innerRadius.get(), self.outerRadius.get() ) )
+        summary.append('Search range (px): *%s*' % self.searchRange.get() )
+        summary.append('Step size (px): *%s*' % self.stepSize.get() )
+        
         return summary
     
-
+    def _methods(self):
+        methods = []
+        
+        msg  = '\nParticles were subjected to a pariwise reference-free alignment using the "pyramidal system for '
+        msg += 'prealignment construction" (Marco et al., 1996), using radii %s to %s pixels. ' % \
+                (self.innerRadius.get(), self.outerRadius.get())
+        msg += 'Particles were then aligned to this initial reference-free average using SPIDER command \'AP SH\' '
+        msg += 'using a search range of %s pixels and a step size of %s pixels.' % \
+                (self.searchRange.get(), self.stepSize.get() )
+        
+        methods.append(msg)
+        return methods

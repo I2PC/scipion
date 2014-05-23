@@ -31,8 +31,20 @@ import xmipp
 from pyworkflow.em.wizard import EmWizard
 from django.shortcuts import render_to_response
 from django.http import HttpResponse
+
 from pyworkflow.em.packages.spider.wizard import * 
 from pyworkflow.web.app.em_wizard import *
+from tools import *
+from pyworkflow.web.app.views_util import getImageXdim
+from pyworkflow.web.app.views_base import base_wiz
+
+from pyworkflow.em.packages.xmipp3.convert import xmippToLocation, locationToXmipp
+from pyworkflow.em.packages.spider.convert import locationToSpider
+from pyworkflow.utils.path import removeExt
+
+#===============================================================================
+# MASKS 
+#===============================================================================
 
 class SpiderProtMaskWeb(SpiderProtMaskWizard):
     _environments = [WEB_DJANGO]
@@ -57,9 +69,9 @@ class SpiderProtMaskWeb(SpiderProtMaskWizard):
             
             context = {'objects': self._getParticles(objs),
                        'xdim':xdim,
-                       'params': params}
+                       'params': params }
         
-            context = wiz_base(request, context)
+            context = base_wiz(request, context)
             return render_to_response('wizards/wiz_particle_mask_radius.html', context)    
 
 
@@ -86,18 +98,49 @@ class SpiderParticlesMaskRadiiWeb(SpiderParticlesMaskRadiiWizard):
             
             context = {'objects': particles,
                        'xdim':xdim,
-                       'params': params}
+                       'params': params }
         
-            context = wiz_base(request, context)
+            context = base_wiz(request, context)
             return render_to_response('wizards/wiz_particles_mask_radii.html', context)    
 
 
+
+class SpiderCustomMaskWeb(SpiderCustomMaskWizard):
+    _environments = [WEB_DJANGO]
+    
+    def _run(self, protocol, request):
+        params = self._getParameters(protocol)
+        obj = params['input'].get()
+        
+        if obj is None:
+            return HttpResponse("errorInput")
+        else:
+            # Single particle
+            particle = obj.clone()
+            particle.text = particle.getFileName()
+            particle.basename = basename(particle.text)
+                    
+            xdim = getImageXdim(request, particle.text)
+    
+            context = {'obj': particle,
+                       'xdim':xdim,
+                       'params': params }
+        
+            context = base_wiz(request, context)
+            
+            return render_to_response('wizards/wiz_custom_mask_spider.html', context)    
+
+
+#===============================================================================
+# FILTERS
+#===============================================================================
 
 class SpiderFilterParticlesWeb(SpiderFilterParticlesWizard):
     _environments = [WEB_DJANGO]
     
     def _run(self, protocol, request):
         params = self._getParameters(protocol)
+        
         objs = params['input'].get()
         
         res = validateParticles(objs)
@@ -112,19 +155,16 @@ class SpiderFilterParticlesWeb(SpiderFilterParticlesWizard):
             
             params['value'] = proccessModeFilter(params['mode'], params['value'])
             
-            context = {'typeObj':'Particles',
-                       'objects': particles,
-                       'params':params
-                       }
+            context = {'objects': particles,
+                       'params':params }
             
-            context = wiz_base(request, context)
+            context = base_wiz(request, context)
             
             return render_to_response('wizards/wiz_filter_spider.html', context)
 
 
-        
 #===============================================================================
-# UTILS
+# SPIDER UTILS 
 #===============================================================================
 
 def get_image_filter_spider(request):
@@ -173,3 +213,28 @@ def get_image_filter_spider(request):
     img.save(response, "PNG")
     return response
 
+
+def get_image_custom_mask_spider(request):
+    """
+    Function to get the computing image with a spider custom mask applied
+    """
+    
+    imagePath = request.GET.get('image', None)
+    radius1 = request.GET.get('radius1', None)
+    sdFactor = request.GET.get('sdFactor', None)
+    radius2 = request.GET.get('radius2', None)
+    maskThreshold = request.GET.get('maskThreshold', None)
+    
+    params = {'[filter-radius1]': radius1,
+              '[sd-factor]': sdFactor,
+              '[filter-radius2]': radius2,
+              '[mask-threshold2]': maskThreshold,
+              '[input_image]': removeExt(imagePath),
+              '[output_mask]': 'stkmask',
+              }
+    
+    ext = protocolParent.getExt()
+        
+    runScript('mda/custommask.msa', ext, params)
+    
+    pass

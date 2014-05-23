@@ -60,9 +60,6 @@ class SpiderProtClassify(ProtClassify2D, SpiderProtocol):
     def getClassDir(self):
         return self._classDir
     
-    def getScript(self):
-        return self._script
-    
     def getNumberOfClasses(self):
         return None
     
@@ -128,14 +125,7 @@ class SpiderProtClassifyCluster(SpiderProtClassify):
     #--------------------------- STEPS functions --------------------------------------------    
        
     def createOutputStep(self):
-        rootNode = self.buildDendrogram(True)
-        classes = self._createSetOfClasses2D(self.inputParticles.get())
-        averages = classes.createRepresentatives()
-        g = graph.Graph(root=rootNode)  
-            
-        self._fillClassesFromNodes(classes, averages, g.getNodes())
-        
-        self._defineOutputs(outputClasses=classes)
+        self.buildDendrogram(True)
          
     #--------------------------- UTILS functions --------------------------------------------
     

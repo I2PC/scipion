@@ -81,7 +81,14 @@ class BaseTest(unittest.TestCase):
     @classmethod    
     def saveProtocol(cls, prot):
         """ Save protocol using cls.proj """
-        cls.proj.saveProtocol(prot)        
+        cls.proj.saveProtocol(prot)   
+        
+    @classmethod
+    def newProtocol(cls, protocolClass, **kwargs):
+        """ Create new protocols instances throught the project
+        and return a newly created protocol of the given class
+        """
+        return cls.proj.newProtocol(protocolClass, **kwargs)
 
  
 def setupTestOutput(cls):

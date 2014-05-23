@@ -33,7 +33,7 @@ import re
 from os.path import join, dirname, abspath, exists, basename
 from pyworkflow.object import String
 from pyworkflow.em.data import EMObject
-from pyworkflow.utils.path import copyFile, removeExt, replaceExt
+from pyworkflow.utils.path import copyFile, removeExt, replaceExt, replaceBaseExt
 from pyworkflow.utils import runJob
 
 
@@ -97,7 +97,7 @@ def getTemplate(*paths):
     templateFile = getFile(TEMPLATE_DIR, *paths)
     
     if not exists(templateFile):
-        raise Exception("spider.getTemplate: template '%s' was not found in templates directory" % templateName)
+        raise Exception("spider.getTemplate: template '%s' was not found in templates directory" % templateFile)
     
     return templateFile
 
@@ -140,34 +140,52 @@ def runSpiderTemplate(templateName, ext, paramsDict):
 
     scriptName = removeExt(scriptName)  
     runJob(None, SPIDER, "%(ext)s @%(scriptName)s" % locals())
-            
-    
-def parseHeaderVars(script, replace={}):
-    """ Parse the variables of the header of spider scripts. 
-    Params:
-        script: the script name to be parsed.
-        replace: a dictionary with key-value to substitute.
-    """
-    f = open(script)
-    
-    for line in f:
-        line = line.strip()
-            
-        if END_HEADER in line:
-            break
-            
-        if not line.startswith(';'): # Skip comment lines
-            m = REGEX_KEYVALUE.match(line)
-            if m:
-                print line
-                
-                varName = m.groupdict()['var']
-                if varName in replace:
-                    d = m.groupdict()
-                    d['value'] = replace[varName]
-                    print " FOUND VAR: ", varName
-                    print " NEW LINE: ", "%(var)s = %(value)s%(rest)s" % d
 
+def __substituteVar(match, paramsDict, lineTemplate):
+    if match and match.groupdict()['var'] in paramsDict:
+        d = match.groupdict()
+        d['value'] = paramsDict[d['var']]
+        return lineTemplate % d
+    return None
+    
+def runScript(inputScript, ext, paramsDict, log=None):
+    """ This function will create a valid Spider script
+    by copying the template and replacing the values in dictionary.
+    After the new file is read, the Spider interpreter is invoked.
+    Usually the execution should be done where the results will
+    be left.
+    """
+    loadEnvironment()
+    outputScript = replaceBaseExt(inputScript, ext)
+
+    fIn = open(getScript(inputScript), 'r')
+    fOut = open(outputScript, 'w')
+    inHeader = True # After the end of header, not more value replacement
+    inFrL = False
+    
+    for i, line in enumerate(fIn):
+        if END_HEADER in line:
+            inHeader = False
+        if inHeader:
+            try:
+                newLine = __substituteVar(REGEX_KEYVALUE.match(line), paramsDict, 
+                                          "%(var)s%(s1)s=%(s2)s%(value)s%(rest)s\n")
+                if newLine is None and inFrL:
+                    newLine = __substituteVar(REGEX_KEYFRL.match(line), paramsDict, 
+                                              "%(var)s%(value)s%(rest)s\n")
+                if newLine:
+                    line = newLine
+            except Exception, ex:
+                print ex, "on line (%d): %s" % (i+1, line)
+                raise ex
+            inFrL = line.lower().startswith("fr ")
+        fOut.write(line)
+    fIn.close()
+    fOut.close()    
+
+    scriptName = removeExt(outputScript)
+    runJob(log, SPIDER, "%(ext)s @%(scriptName)s" % locals())
+    
 
 class SpiderShell(object):
     """ This class will open a child process running Spider interpreter

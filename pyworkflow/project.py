@@ -28,6 +28,7 @@ This modules handles the Project management
 """
 
 import os
+import re
 from os.path import abspath, split
 
 from pyworkflow.em import *
@@ -45,6 +46,9 @@ PROJECT_LOGS = 'Logs'
 PROJECT_RUNS = 'Runs'
 PROJECT_TMP = 'Tmp'
 PROJECT_SETTINGS = 'settings.sqlite'
+
+# Regex to get numbering suffix and automatically propose runName
+REGEX_NUMBER_ENDING = re.compile('(?P<prefix>\D+)(?P<number>\d*)')
 
 
         
@@ -283,9 +287,36 @@ class Project(object):
       
         self.mapper.commit()     
         
-    def newProtocol(self, protocolClass):
+    def __setProtocolLabel(self, newProt):
+        """ Set a readable label to a newly created protocol.
+        We will try to find another existing protocol of the 
+        same class and set the label from it.
+        """
+        prevProt = None # protocol with same class as newProt
+        newProtClass = newProt.getClass()
+        
+        for prot in self.getRuns(iterate=True, refresh=False):
+            if newProtClass == prot.getClass():
+                prevProt = prot
+                
+        if prevProt: 
+            numberSuffix = 2
+            prevLabel = prevProt.getObjLabel()
+            m = REGEX_NUMBER_ENDING.match(prevLabel)
+            if m and m.groupdict()['number']:
+                numberSuffix = int(m.groupdict()['number']) + 1
+                prevLabel = m.groupdict()['prefix']
+            protLabel =  prevLabel + ' %s' % numberSuffix
+        else:
+            protLabel = newProt.getClassLabel()
+            
+        newProt.setObjLabel(protLabel)
+        
+    def newProtocol(self, protocolClass, **kwargs):
         """ Create a new protocol from a given class. """
-        newProt = protocolClass(project=self)
+        newProt = protocolClass(project=self, **kwargs)
+        self.__setProtocolLabel(newProt)
+        
         newProt.setMapper(self.mapper)
         newProt.setProject(self)
         

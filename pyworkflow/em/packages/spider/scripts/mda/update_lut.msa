@@ -40,20 +40,34 @@ sd e  ; close doc
 ; increment node#
 [node-num]=[node-num]+1
 
-; delete pre-existing files for next node#
+
+; DELETE PRE-EXISTING FILES FOR NEXT NODE#
+
 de
 [node_doc][node-num]
-de
+
+iq fi [unlabeled-exists]
 [node_avg][node-num]
-de
+
+if([unlabeled-exists].eq.1) then
+    de
+    [node_avg][node-num]
+endif
+
+iq fi [labeled-exists]
 [labeled_avg][node-num]
-; Since there are gaps now, DE A will give up after a gap of 10.
+
+if([labeled-exists].eq.1) then
+    de
+    [labeled_avg][node-num]
+endif
 
 md
 vb on
 
 re
 
-; Modified 2009-06-02
+; Modified 2014-05-20
+;    2014-05-20 (trs) -- checks for files before deleting (non-existing slices in stacks will crash DE command)
 ;    2009-06-02 (trs) -- first particle# of 0 creates dummy entries
 ;    2009-06-02 (trs) -- improved annotation
