@@ -121,10 +121,10 @@ class SpiderProtCustomMask(ProtCreateMask2D, SpiderProtocol):
         
         summary = []
         summary.append('Radius for initial Fourier filter: *%s px^-1*' % self.filterRadius1.get() )
-        summary.append('              On the object scale: *%s A*' % filter1Angstroms )
+        summary.append('              On the object scale: *%s Angstroms*' % filter1Angstroms )
         summary.append('Threshold for filtered image: *avg + %s s.d.*' % self.sdFactor.get() )
         summary.append('Radius for Fourier filter for intermediate mask: *%s px^-1*' % self.filterRadius2.get() )
-        summary.append('                            On the object scale: *%s A*' % filter2Angstroms )
+        summary.append('                            On the object scale: *%s Angstroms*' % filter2Angstroms )
         summary.append('Threshold for filtered mask: *%s*' % self.maskThreshold.get() )
         
         return summary

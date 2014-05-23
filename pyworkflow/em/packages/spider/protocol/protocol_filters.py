@@ -183,7 +183,7 @@ See detailed description of the filter at [[http://spider.wadsworth.org/spider_d
         return cites
     
     def _summary(self):
-        pixelSize = self.inputImage.get().getSamplingRate()
+        pixelSize = self.inputParticles.get().getSamplingRate()
         
         summary = []
         summary.append('Used filter: *%s %s*' % (self.getEnumText('filterType'), self.getEnumText('filterMode')))
