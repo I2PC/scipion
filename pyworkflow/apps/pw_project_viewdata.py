@@ -180,7 +180,7 @@ class ProjectDataView(tk.Frame):
             
             if not classNode:
                 classNode = classesGraph.createNode(className)
-                if className != 'EMObject':
+                if className != 'EMObject' and classObj.__bases__:
                     parent = createClassNode(classObj.__bases__[0])
                     parent.addChild(classNode)
                 classNode.count = 0
