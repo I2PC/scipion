@@ -87,7 +87,10 @@ class PointerVar():
             label = obj.getObjLabel()
             if not len(label.strip()):
                 parent = self._protocol.mapper.getParent(obj)
-                label = "%s -> %s" % (parent.getObjLabel(), obj.getLastName())
+                if parent:
+                    label = "%s -> %s" % (parent.getObjLabel(), obj.getLastName())
+                else:
+                    label = obj.getLastName()
         return label
            
     def get(self):
