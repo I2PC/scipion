@@ -31,7 +31,7 @@ import os, re
 from glob import glob
 
 from protocol_base import *
-from convert import addRelionLabels
+from pyworkflow.em.convert import addRelionLabels
 import xmipp
 
 

@@ -32,6 +32,7 @@ from pyworkflow.viewer import View, MessageView, CommandView, Viewer, DESKTOP_TK
 from pyworkflow.em.data import *
 from pyworkflow.em.protocol import *
 from showj import *
+from pyworkflow.em.convert import addRelionLabelsToEnviron
 
 
 #------------------------ Some common Views ------------------
@@ -42,9 +43,10 @@ class DataView(View):
         View.__init__(self)
         self._memory = '1g'
         self._loadPath(path)
-        self._env = kwargs.get('env', None)
+        self._env = kwargs.get('env', os.environ.copy())
         self._viewParams = viewParams
-        
+        addRelionLabelsToEnviron(self._env)
+            
     def _loadPath(self, path):
         # Check if there is a table name with @ in path
         # in that case split table name and path
@@ -56,6 +58,7 @@ class DataView(View):
             self._tableName, self._path = None, path
             
     def show(self):
+        
         runJavaIJapp(self._memory, 'xmipp.viewer.Viewer', self.getShowJParams(), True, env=self._env)
     
     def getShowJParams(self):
