@@ -27,9 +27,11 @@
 This sub-package contains protocol for particles filters operations
 """
 
-from pyworkflow.em import *  
+from pyworkflow.em import ProtCreateMask2D, Mask
+from pyworkflow.protocol.params import PointerParam, FloatParam
+from pyworkflow.em.convert import ImageHandler 
 
-from ..spider import SpiderShell
+from ..spider import runCustomMaskScript
 from protocol_base import SpiderProtocol
 
 
@@ -44,7 +46,7 @@ class SpiderProtCustomMask(ProtCreateMask2D, SpiderProtocol):
     custom-made mask, a circular mask will be used.  For non-globular structures, 
     this customized mask will reduce computational demand and the likelihood 
     of numerical inaccuracy in the next dimension-reduction step. On the other 
-    hand, given the power of moden computers, this step may be unnecessary.
+    hand, given the power of modern computers, this step may be unnecessary.
     """
     _label = 'custom mask'
     
@@ -77,37 +79,36 @@ class SpiderProtCustomMask(ProtCreateMask2D, SpiderProtocol):
                       help='The filtered intermediate mask will be thresholded to generate the final mask.')
         
     def _insertAllSteps(self):
-        # Define some names
-        # Insert processing steps
-        self.outFn = self._getPath('%(inputImage)s.%(ext)s' % self._params)
+        # Store references of input converted image filename
+        # and the input image object
+        self.outFn = self._getFileName('inputImage')
         self.inputImg = self.inputImage.get()
-        index, filename = self.inputImg.getLocation()
-        self._insertFunctionStep('convertInput', index, filename)
-        self._insertFunctionStep('createMask', 
+        # Convert the input image to Spider format
+        self._insertFunctionStep('convertInputStep', self.inputImg.getLocation(), 
+                                 self._getFileName('inputImage'))
+        # Run Spider script to generate the custom mask
+        self._insertFunctionStep('createMaskStep', 
                                  self.filterRadius1.get(), self.sdFactor.get(),
                                  self.filterRadius2.get(), self.maskThreshold.get())
-        #self._insertFunctionStep('createOutput')
+        # Create the output Mask object
+        self._insertFunctionStep('createOutputStep')
         
-    def convertInput(self, index, filename):
+    def convertInputStep(self, inputLoc, outputFn):
         """ Convert the input image to a Spider (with stk extension). """
-        ImageHandler().convert((index, filename), (1, self.outFn))
+        ImageHandler().convert(inputLoc, (1, outputFn))
         
-    def createMask(self, filterRadius1, sdFactor, filterRadius2, maskThreshold):
+    def createMaskStep(self, filterRadius1, sdFactor, filterRadius2, maskThreshold):
         """ Apply the selected filter to particles. 
         Create the set of particles.
         """
-        self._params.update(locals()) # Store input params in dict
-        
-
-        self._enterWorkingDir() # Do operations inside the run working dir
-
-        spi = SpiderShell(ext=self._params['ext'], log='script.stk') # Create the Spider process to send commands 
-        spi.runScript('custommask.txt', self._params)
-        spi.close(end=False)
-        
-        self._leaveWorkingDir() # Go back to project dir
-
-        maskFn = self._getPath('%(outputMask)s.%(ext)s' % self._params )
+        runCustomMaskScript(filterRadius1, sdFactor,
+                            filterRadius2, maskThreshold,
+                            workingDir=self._getPath(), ext=self.getExt(),
+                            inputImage=self._params['inputImage']+'@1',
+                            outputMask=self._params['outputMask'])
+                            
+    def createOutputStep(self):
+        maskFn = self._getFileName('outputMask')
         mask = Mask()
         mask.copyInfo(self.inputImg)
         mask.setLocation(4, maskFn)

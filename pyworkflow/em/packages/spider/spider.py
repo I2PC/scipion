@@ -187,6 +187,31 @@ def runScript(inputScript, ext, paramsDict, log=None):
     runJob(log, SPIDER, "%(ext)s @%(scriptName)s" % locals())
     
 
+def runCustomMaskScript(filterRadius1, sdFactor,
+                        filterRadius2, maskThreshold,
+                        workingDir, ext='stk',
+                        inputImage='input_image',
+                        outputMask='stkmask'):
+    """ Utility function to run the custommask.msa script.
+    This function will be called from the custom mask protocol
+    and from the wizards to create the mask.
+    """
+    params = {'[filter-radius1]': filterRadius1,
+              '[sd-factor]': sdFactor,
+              '[filter-radius2]': filterRadius2,
+              '[mask-threshold2]': maskThreshold,
+              '[input_image]': inputImage,
+              '[output_mask]': outputMask,
+              } 
+    # Store current directory and enter in the given workingDir
+    cwd = os.getcwd()
+    os.chdir(workingDir)
+    # Run the script with the given parameters
+    runScript('mda/custommask.msa', ext, params)
+    # Return to previous current directory
+    os.chdir(cwd)
+    
+    
 class SpiderShell(object):
     """ This class will open a child process running Spider interpreter
     and will keep conection to send commands. 
