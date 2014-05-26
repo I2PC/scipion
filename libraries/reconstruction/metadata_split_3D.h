@@ -54,8 +54,8 @@ public:
     // Metadata with experimental images
     MetaData mdIn;
 
-    // Coocurrence matrix
-    Matrix2D<double> coocurrence;
+    // Correlates_well vector
+    Matrix1D<int> correlatesWell;
 public:
     /// Read argument from command line
     void readParams();
