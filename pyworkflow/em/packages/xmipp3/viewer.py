@@ -129,12 +129,12 @@ class XmippViewer(Viewer):
             self._views.append(CoordinatesObjectView(fn, tmpDir, 'review', self._project.getName(), obj.strId()))
         
         elif issubclass(cls, SetOfParticles):
-#            mdFn = getattr(obj, '_xmippMd', None)
-#            if mdFn:
-#                fn = mdFn.get()
-#
-#            else:
-            fn = obj.getFileName()
+            mdFn = getattr(obj, '_xmippMd', None)
+            if mdFn:
+                fn = mdFn.get()
+
+            else:
+                fn = obj.getFileName()
             self._views.append(ObjectView(fn, "Particles", self._project.getName(), obj.strId(), obj.strId()))
                
                     
