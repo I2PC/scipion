@@ -30,7 +30,8 @@ This module contains converter functions related to Spider
 from pyworkflow.em.constants import NO_INDEX
 from pyworkflow.em.convert import ImageHandler
 from pyworkflow.utils.path import moveFile
-from spider import SpiderDocFile, runSpiderTemplate
+
+from spider import SpiderDocFile, runScript
 from os.path import splitext
    
     
@@ -72,7 +73,10 @@ def writeSetOfImages(imgSet, stackFn, selFn):
     
     fn, ext = splitext(stackFn)
     # Change to BigEndian
-    runSpiderTemplate("cp_endian.txt", ext[1:], {'particles': fn, 'numberOfParticles': imgSet.getSize()})
-    
+    runScript('cp_endian.spi', ext[1:], 
+              {'[particles]': fn + '@******', 
+               '[particles_big]': fn + '_big@******',
+               '[numberOfParticles]': imgSet.getSize()
+               })
     moveFile(fn + '_big' + ext, stackFn)
     

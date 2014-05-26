@@ -29,13 +29,10 @@ This sub-package contains protocol for particles filters operations
 """
 from os.path import join
 
-from pyworkflow.protocol.params import IntParam, EnumParam, LEVEL_ADVANCED
-from pyworkflow.em import ProtAlign2D, Image, Particle, NO_INDEX
-from pyworkflow.utils import getLastFile, makePath
+from pyworkflow.protocol.params import IntParam, EnumParam
+from pyworkflow.em import ProtAlign2D, Particle, NO_INDEX
 
 from ..constants import *
-from ..spider import SpiderShell, runSpiderTemplate
-from ..convert import locationToSpider
 from protocol_base import SpiderProtocol
 
 
@@ -87,17 +84,20 @@ class SpiderProtAlign(ProtAlign2D, SpiderProtocol):
     def createOutputStep(self):
         """ Register the output (the alignment and the aligned particles.)
         """
+        particles = self.inputParticles.get()
         # Create the output average image
         avg = Particle()
         avg.copyInfo(self.inputParticles.get())
         avg.setLocation(NO_INDEX, self.getAverage())
         self._defineOutputs(outputAverage=avg)
+        self._defineSourceRelation(particles, avg)
         
         imgSet = self._createSetOfParticles()
-        imgSet.copyInfo(self.inputParticles.get())
+        imgSet.copyInfo(particles)
         outputStk = self._getFileName('particlesAligned')
         imgSet.readStack(outputStk)
         self._defineOutputs(outputParticles=imgSet)
+        self._defineTransformRelation(particles, imgSet)
         
     def _summary(self):
         summary = []
