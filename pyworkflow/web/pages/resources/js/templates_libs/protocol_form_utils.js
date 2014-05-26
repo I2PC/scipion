@@ -369,6 +369,7 @@ function evalDependencies(row, newLevel) {
 	
 	// Get dependencies for the parameter
 	var dependencies = row.attr('data-depen');
+//	console.log("Dependencies:", dependencies)
 	if (dependencies!= undefined && dependencies.length > 0) {
 		
 		// Dependencies splitted to be looked over the elements
@@ -412,39 +413,44 @@ function evalCondition(row) {
 	if(cond != undefined){
 	
 		var params = row.attr('data-params');
-		var arrayParams = params.split(",");
+		
+		if (params.length > 0){
+			
+			var arrayParams = params.split(",");
+		
+			// Get value of the element with name=itenName
+			var param = null;
+			var value = null;
+			var cond_eval = cond;
 	
-		// Get value of the element with name=itenName
-		var param = null;
-		var value = null;
-		var cond_eval = cond;
-	
-		for (var cont = 0; cont < arrayParams.length; cont++) {
-			param = arrayParams[cont];
-			value = $("tr#" + param).val();
-			if (!value){
-				value = $("tr#" + param).attr("value");
+			for (var cont = 0; cont < arrayParams.length; cont++) {
+				
+				param = arrayParams[cont];
+				
+				value = $("tr#" + param).val();
 				if (!value){
-					value="''";
+					value = $("tr#" + param).attr("value");
+					if (!value){
+						value="''";
+					}
 				}
+		//		params += "param: " + param + " value: " + value + "\n";
+				cond_eval = cond_eval.replace(param, value);
 			}
-	//		params += "param: " + param + " value: " + value + "\n";
-			cond_eval = cond_eval.replace(param, value);
+			
+		//	console.log("condition: " + cond + " \nparams:\n" + params + "\n eval: " + cond_eval);
+			
+			cond_eval = normalizeConditions(cond_eval)
+			
+			//	To check a good eval
+			//console.log(cond_eval + "/"+eval(cond_eval))
+		
+			res = eval(cond_eval);
 		}
-		
-	//	console.log("condition: " + cond + " \nparams:\n" + params + "\n eval: " + cond_eval);
-		
-		cond_eval = normalizeConditions(cond_eval)
-		
-		//	To check a good eval
-		//console.log(cond_eval + "/"+eval(cond_eval))
-	
-		res = eval(cond_eval);
 	}
-	
 	return res;
-	
 }
+
 
 function normalizeConditions(cond){
 	/*
@@ -652,7 +658,7 @@ function processMultipleSelectionTable(elm) {
 		errorPopup("Selection Error","File already selected")
 	}
 	else{
-		var selectElementName = '#'+ elm.attr('data-node') + '_input'
+		var selectElementName = '#'+ elm.attr('data-node') + '_input' 
 		$(selectElementName).append('<option value='+value[1]+'>'+value[0]+'</option>')
 		recalculateSelectDim(selectElementName)
 	}	
