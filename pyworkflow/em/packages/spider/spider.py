@@ -91,55 +91,10 @@ def loadEnvironment():
 def getFile(*paths):
     return join(PATH, *paths)
 
-# DEPECRATED
-def getTemplate(*paths):
-    """ Return the path to the template file given its name. """
-    templateFile = getFile(TEMPLATE_DIR, *paths)
-    
-    if not exists(templateFile):
-        raise Exception("spider.getTemplate: template '%s' was not found in templates directory" % templateFile)
-    
-    return templateFile
 
 def getScript(*paths):
     return getFile(SCRIPTS_DIR, *paths)
 
-# DEPECRATED
-def copyTemplate(templateName, destDir):
-    """ Copy a template file to a diretory """
-    template = getTemplate(templateName)
-    templateDest = join(destDir, basename(template))
-    copyFile(template, templateDest)
-    
-# DEPECRATED
-def runSpiderTemplate(templateName, ext, paramsDict):
-    """ This function will create a valid Spider script
-    by copying the template and replacing the values in dictionary.
-    After the new file is read, the Spider interpreter is invoked.
-    """
-    loadEnvironment()
-    copyTemplate(templateName, '.')
-    scriptName = replaceExt(templateName, ext)
-
-    fIn = open(templateName, 'r')
-    fOut = open(scriptName, 'w')
-    replace = True # After the end of header, not more value replacement
-    
-    for i, line in enumerate(fIn):
-        if END_HEADER in line:
-            replace = False
-        if replace:
-            try:
-                line = line % paramsDict
-            except Exception, ex:
-                print ex, "on line (%d): %s" % (i+1, line)
-                raise ex
-        fOut.write(line)
-    fIn.close()
-    fOut.close()    
-
-    scriptName = removeExt(scriptName)  
-    runJob(None, SPIDER, "%(ext)s @%(scriptName)s" % locals())
 
 def __substituteVar(match, paramsDict, lineTemplate):
     if match and match.groupdict()['var'] in paramsDict:
@@ -242,32 +197,6 @@ class SpiderShell(object):
             print >> self._log, cmd
         print >> self._proc.stdin, cmd
         self._proc.stdin.flush()
-        
-    def runScript(self, templateName, paramsDict):
-        """ Run all lines in the template script after replace the params
-        with their values.
-        """
-        templateFile = getTemplate(templateName)        
-        f = open(templateFile, 'r')
-        replace = True # After the end of header, not more value replacement
-        
-        for line in f:
-            line = line.strip()
-            
-            if END_HEADER in line:
-                replace = False
-            
-            if not line.startswith(';'): # Skip comment lines
-                try:
-                    if replace:
-                        line = line % paramsDict
-                except Exception, ex:
-                    print ex, "on line: ", line
-            self.runCmd(line)
-        
-        f.close()
-        if self._debug and self._log:
-            self._log.close()
         
     def close(self, end=True):
         if end:
