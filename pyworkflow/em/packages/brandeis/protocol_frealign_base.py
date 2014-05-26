@@ -512,10 +512,12 @@ class ProtFrealignBase(EMProtocol):
         currDir = self._iterWorkingDir(iter)
         createLink(prevDir, currDir)
         
-        imgSet = self.inputParticles.get()
+#         imgSet = self.inputParticles.get()
         self._createFilenameTemplates(iter)
         imgFn = self._getFileName('particles')
-        imgSet.writeStack(imgFn)
+        imgSrc = continueRun._getFileName('particles')
+        createLink()
+#         imgSet.writeStack(imgFn)
         
     def initIterStep(self, iter, numberOfBlocks):
         """ Prepare files and directories for the current iteration """
