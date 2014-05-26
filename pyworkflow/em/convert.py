@@ -29,7 +29,8 @@ This module contains several conversion utilities
 
 import os
 from constants import NO_INDEX
-
+import xmipp
+from constants import *
 
 class ImageHandler(object):
     """ Class to provide several Image manipulation utilities. """
@@ -110,3 +111,29 @@ def transformToParams(transform):
     # TODO: Consider mirror and scale
     return p
 
+
+def addRelionLabels(replace=False, extended=False):
+    """ Add relion labels as aliases for Xmipp metadata. """
+    global _xmippLabelsDict
+    _xmippLabelsDict = {}
+    for k, v in XMIPP_RELION_LABELS.iteritems():
+        _xmippLabelsDict[k] = xmipp.label2Str(k) # store original label string
+        xmipp.addLabelAlias(k, v, replace)
+    if extended:
+        for k, v in XMIPP_RELION_LABELS_EXTRA.iteritems():    
+            _xmippLabelsDict[k] = xmipp.label2Str(k) # store original label string
+            xmipp.addLabelAlias(k, v, replace)
+
+            
+def addRelionLabelsToEnviron(env):
+    """ create an string that can be used for XMIPP_EXTRA_ALIASES
+    for adding the labels of Relion.
+    """
+    from xmipp import label2Str
+    pairs = []
+    for k, v in XMIPP_RELION_LABELS.iteritems():
+        pairs.append('%s=%s' % (label2Str(k), v))
+    for k, v in XMIPP_RELION_LABELS_EXTRA.iteritems():
+        pairs.append('%s=%s' % (label2Str(k), v))        
+    varStr = ';'.join(pairs)
+    env['XMIPP_EXTRA_ALIASES'] = varStr

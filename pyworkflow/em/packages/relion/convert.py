@@ -54,17 +54,7 @@ def locationToRelion(index, filename):
 
 _xmippLabelsDict = {} # Dictionary to store mappings replaced
 
-def addRelionLabels(replace=False, extended=False):
-    """ Add relion labels as aliases for Xmipp metadata. """
-    global _xmippLabelsDict
-    _xmippLabelsDict = {}
-    for k, v in XMIPP_RELION_LABELS.iteritems():
-        _xmippLabelsDict[k] = xmipp.label2Str(k) # store original label string
-        xmipp.addLabelAlias(k, v, replace)
-    if extended:
-        for k, v in XMIPP_RELION_LABELS_EXTRA.iteritems():    
-            _xmippLabelsDict[k] = xmipp.label2Str(k) # store original label string
-            xmipp.addLabelAlias(k, v, replace)
+
             
 def restoreXmippLabels():
     global _xmippLabelsDict
@@ -73,19 +63,7 @@ def restoreXmippLabels():
     _xmippLabelsDict = {}
 
             
-def addRelionLabelsToEnviron(env):
-    """ create an string that can be used for XMIPP_EXTRA_ALIASES
-    for adding the labels of Relion.
-    """
-    from xmipp import label2Str
-    pairs = []
-    for k, v in XMIPP_RELION_LABELS.iteritems():
-        pairs.append('%s=%s' % (label2Str(k), v))
-    for k, v in XMIPP_RELION_LABELS_EXTRA.iteritems():
-        pairs.append('%s=%s' % (label2Str(k), v))        
-    varStr = ';'.join(pairs)
-    env['XMIPP_EXTRA_ALIASES'] = varStr
-      
+
     
 class ParticleAdaptor():
     """ Class used to convert a set of particles for Relion.

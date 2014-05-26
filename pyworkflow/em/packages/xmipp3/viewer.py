@@ -52,6 +52,7 @@ import pyworkflow as pw
 import xmipp
 
 
+
 class XmippViewer(Viewer):
     """ Wrapper to visualize different type of objects
     with the Xmipp program xmipp_showj
@@ -66,6 +67,7 @@ class XmippViewer(Viewer):
     def __init__(self, **args):
         Viewer.__init__(self, **args)
         self._views = []   
+        
         
     def visualize(self, obj, **args):
         self._visualize(obj, **args)
@@ -91,14 +93,8 @@ class XmippViewer(Viewer):
               
         elif issubclass(cls, SetOfMicrographs):
             
-            mdFn = getattr(obj, '_xmippMd', None)
-            if mdFn:
-                fn = mdFn.get()
-            else:
-                fn = self._getTmpPath(obj.getName() + '_micrographs.xmd')
-                writeSetOfMicrographs(obj, fn)
+            fn = obj.getFileName()
             self._views.append(ObjectView(fn, "Micrographs", self._project.getName(), obj.strId(), obj.strId(), **args))
-            
             
         elif issubclass(cls, SetOfMovies):
             fn = self._getTmpPath(obj.getName() + '_movies.xmd')
@@ -109,7 +105,7 @@ class XmippViewer(Viewer):
         elif issubclass(cls, SetOfCoordinates):
             micSet = obj.getMicrographs()#accessing mics to provide metadata file
             if micSet is None:
-                raise Exception('visualize: SetOfCoordinates has not micrographs set.')
+                raise Exception('visualize: SetOfCoordinates has no micrographs set.')
             
             mdFn = getattr(micSet, '_xmippMd', None)
             tmpDir = self._getTmpPath(obj.getName()) 
@@ -128,50 +124,25 @@ class XmippViewer(Viewer):
                            
             self._views.append(CoordinatesObjectView(fn, tmpDir, 'review', self._project.getName(), obj.strId()))
         
-        elif issubclass(cls, SetOfParticles) or issubclass(cls, SetOfVolumes):
-            mdFn = getattr(obj, '_xmippMd', None)
-            if mdFn:
-                fn = mdFn.get()
-            else:
-                fn = self._getTmpPath(obj.getName() + '_images.xmd')
-                #Set hasCTF to False to avoid problems
-                if issubclass(cls, SetOfParticles):
-                    writeSetOfParticles(obj, fn)
-                else:
-                    writeSetOfVolumes(obj, fn)
-            if issubclass(cls, SetOfParticles):
-                self._views.append(ObjectView(fn, "Particles", self._project.getName(), obj.strId(), obj.strId())) 
-            else:
-                self._views.append(DataView(fn))
+        elif issubclass(cls, SetOfParticles):
+            fn = obj.getFileName()
+            self._views.append(ObjectView(fn, "Particles", self._project.getName(), obj.strId(), obj.strId()))
+               
+                    
+        elif issubclass(cls, SetOfVolumes):
+            fn = obj.getFileName()
+            self._views.append(DataView(fn))
         
         elif issubclass(cls, SetOfClasses2D):
-            mdFn = getattr(obj, '_xmippMd', None)
-            if mdFn:
-                fn = mdFn.get()
-            else:
-                fn = self._getTmpPath(obj.getName() + '_classes.xmd')
-                writeSetOfClasses2D(obj, fn)
-            
+            fn = obj.getFileName()
             self._views.append(ObjectView(fn, "Classes2D", self._project.getName(), obj.strId(), obj.getImages().strId()))  
             
         elif issubclass(cls, SetOfClasses3D):
-            mdFn = getattr(obj, '_xmippMd', None)
-            if mdFn:
-                fn = mdFn.get()
-            else:
-                fn = self._getTmpPath(obj.getName() + '_classes.xmd')
-                writeSetOfClasses3D(obj, fn, self._getTmpPath())
-
-            self._views.append(ObjectView("classes@"+fn, "Classes3D", self._project.getName(), obj.strId(), obj.getImages().strId(), extraParams=args.get('extraParams', '')))
+            fn = obj.getFileName()
+            self._views.append(ObjectView(fn, "Classes3D", self._project.getName(), obj.strId(), obj.getImages().strId(), extraParams=args.get('extraParams', '')))
               
         elif issubclass(cls, SetOfCTF):
-            mdFn = getattr(obj, '_xmippMd', None)
-            if mdFn:
-                fn = mdFn.get()
-            else:
-                fn = self._getTmpPath(obj.getName() + '_ctfs.xmd')
-                writeSetOfCTFs(obj, fn)
-
+            fn = obj.getFileName()
             self._views.append(DataView(fn, viewParams={MODE: 'metadata', RENDER: 'psd psdEnhanced image1 image2', ORDER:'id psd psdEnhanced image1 image2', ZOOM: 50}))  
          
         elif issubclass(cls, XmippProtExtractParticles) or issubclass(cls, XmippProtScreenParticles):

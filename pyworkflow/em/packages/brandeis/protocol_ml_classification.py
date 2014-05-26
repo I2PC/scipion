@@ -239,6 +239,7 @@ marginal likelihood.
         self.runJob(program, args % locals())
         
         if leaveDir:
+            self._setLastIter(iter)
             self._leaveDir()
     
     def createOutputStep(self, lastIter):
