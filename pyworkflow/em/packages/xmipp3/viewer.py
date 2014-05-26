@@ -35,6 +35,7 @@ from pyworkflow.em.protocol import *
 from xmipp3 import getXmippPath
 from protocol_preprocess_micrographs import XmippProtPreprocessMicrographs
 from protocol_extract_particles import XmippProtExtractParticles, ProtImportParticles
+from protocol_screen_particles import XmippProtScreenParticles
 from protocol_cl2d_align import XmippProtCL2DAlign
 from protocol_cl2d import XmippProtCL2D
 from protocol_kerdensom import XmippProtKerdensom
@@ -58,7 +59,7 @@ class XmippViewer(Viewer):
     """
     _environments = [DESKTOP_TKINTER, WEB_DJANGO]
     _targets = [Image, SetOfImages, SetOfCoordinates, SetOfClasses2D, SetOfClasses3D, 
-                SetOfMovies, ProtExtractParticles,
+                SetOfMovies, ProtExtractParticles, XmippProtScreenParticles, 
                 XmippProtKerdensom, XmippProtRotSpectra,  
                 SetOfCTF, NormalModes, XmippProtScreenClasses,
                 XmippProtConvertToPseudoAtoms, XmippProtIdentifyOutliers]
@@ -173,7 +174,7 @@ class XmippViewer(Viewer):
             fn = obj.getFileName()
             self._views.append(DataView(fn, viewParams={MODE: 'metadata', RENDER: 'psd psdEnhanced image1 image2', ORDER:'id psd psdEnhanced image1 image2', ZOOM: 50}))  
          
-        elif issubclass(cls, XmippProtExtractParticles):
+        elif issubclass(cls, XmippProtExtractParticles) or issubclass(cls, XmippProtScreenParticles):
             self._visualize(obj.outputParticles)
             fn = getattr(obj.outputParticles, '_xmippMd', None)
             if fn:
