@@ -34,8 +34,9 @@ from pyworkflow.protocol.params import IntParam, PointerParam, EnumParam, FloatP
 from pyworkflow.em.convert import ImageHandler
 
 from ..constants import CA
-from ..spider import copyTemplate, runSpiderTemplate, PcaFile
+from ..spider import PcaFile
 from protocol_base import SpiderProtocol
+
 
 
 class SpiderProtCAPCA(SpiderProtocol):
@@ -50,7 +51,7 @@ class SpiderProtCAPCA(SpiderProtocol):
     For more info see:
     [[http://spider.wadsworth.org/spider_doc/spider/docs/techs/classification/tutorial.html#CAPCA][Spider documentation]] 
     """
-    _label = 'CAPCA'
+    _label = 'capca'
     
     def __init__(self, **kwargs):
         SpiderProtocol.__init__(self, **kwargs)
@@ -72,6 +73,8 @@ class SpiderProtCAPCA(SpiderProtocol):
                         'reconstituted': join(self._caDir, 'stkreconstituted')
                         }
     
+    #--------------------------- DEFINE param functions --------------------------------------------  
+     
     def _defineParams(self, form):
         form.addSection(label='Input')
         
@@ -98,6 +101,8 @@ class SpiderProtCAPCA(SpiderProtocol):
                       pointerClass='Mask', 
                       help="Select a mask file")       
         
+    #--------------------------- INSERT steps functions --------------------------------------------  
+    
     def _insertAllSteps(self):
         # Insert processing steps
         self._insertFunctionStep('convertInput', 'inputParticles',
@@ -107,6 +112,8 @@ class SpiderProtCAPCA(SpiderProtocol):
                                  self.numberOfFactors.get(), self.maskType.get())
         self._insertFunctionStep('createOutputStep')
         
+    #--------------------------- STEPS functions --------------------------------------------    
+       
     def convertMaskStep(self, maskType):
         """ Convert the input mask if needed and
         copy some spider needed scripts. 
@@ -116,9 +123,6 @@ class SpiderProtCAPCA(SpiderProtocol):
             maskFn = self._getFileName('mask')
             ImageHandler().convert(self.maskImage.get().getLocation(), 
                        (1, maskFn))
-        # Copy template scripts
-        copyTemplate('ploteigen.gnu', self._getPath())
-        copyTemplate('eigendoc.py', self._getPath())
         
     def capcaStep(self, analysisType, numberOfFactors, maskType):
         """ Apply the selected filter to particles. 
@@ -149,9 +153,13 @@ class SpiderProtCAPCA(SpiderProtocol):
         seq = PcaFile()
         seq.filename.set(self._getFileName('seqFile'))
         
-        self._defineOutputs(imcFile=imc, seqFile=seq)
+        self._defineOutputs(imcFile=imc, seqFile=seq)        
+        self._defineSourceRelation(self.inputParticles.get(), imc)
+        self._defineSourceRelation(self.inputParticles.get(), seq)
         
             
+    #--------------------------- INFO functions -------------------------------------------- 
+    
     def _summary(self):
         summary = []
         return summary

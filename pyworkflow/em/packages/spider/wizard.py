@@ -41,7 +41,7 @@ from pyworkflow.em.wizard import (EmWizard, ParticleMaskRadiusWizard, ParticlesM
 import pyworkflow.gui.dialog as dialog
 from pyworkflow.gui.widgets import LabelSlider, HotButton
 
-from spider import SpiderShell, runScript
+from spider import SpiderShell, runScript, runCustomMaskScript
 from constants import FILTER_GAUSSIAN, FILTER_FERMI
 from convert import locationToSpider
 from protocol import (SpiderProtCAPCA, SpiderProtAlignAPSR, SpiderProtAlignPairwise, 
@@ -354,24 +354,21 @@ class CustomMaskDialog(ImagePreviewDialog):
         """ This function should compute the right preview
         using the self.lastObj that was selected
         """
-        
-        #TODO, enter in project/Tmp folter
-        params = {'[filter-radius1]': self.getVarValue('filterRadius1'),
-                  '[sd-factor]': self.getVarValue('sdFactor'),
-                  '[filter-radius2]': self.getVarValue('filterRadius2'),
-                  '[mask-threshold2]': self.getVarValue('maskThreshold'),
-                  '[input_image]': removeExt(self.lastObj.getFileName()),
-                  '[output_mask]': 'stkmask',
-                  }
+        tmp = '.'#self.project.getTmpPath()
         ext = self.protocolParent.getExt()
         
-        runScript('mda/custommask.msa', ext, params)
+        runCustomMaskScript(self.getVarValue('filterRadius1'), 
+                            self.getVarValue('sdFactor'), 
+                            self.getVarValue('filterRadius2'), 
+                            self.getVarValue('maskThreshold'), 
+                            workingDir=tmp, ext=ext,
+                            inputImage=removeExt(self.lastObj.getFileName()))
         
         for i, preview in enumerate(self._previews):
             if i == 0:
                 self.rightImage.read(self.lastObj.getFileName())
             else:
-                self.rightImage.read('%d@stkmask.%s' % (i, ext))
+                self.rightImage.read('%d@%s/stkmask.%s' % (i, tmp, ext))
             preview.updateData(self.rightImage.getData())
         
     

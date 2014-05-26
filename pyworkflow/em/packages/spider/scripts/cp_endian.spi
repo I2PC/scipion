@@ -7,11 +7,11 @@
 
 ; ---------------- Input files ----------------
 
-[numberOfParticles] = %(numberOfParticles)d  ; Pass the number of images instead of the selfile
+[numberOfParticles] = 0             ; Pass the number of images instead of the selfile
 fr g
-[particles]%(particles)s@******  ; input particles to change the endianess
+[particles]particles@******         ; input particles to change the endianess
 fr g
-[particlesBig]%(particles)s_big@****** ; output big endian particles
+[particles_big]particles_big@****** ; output big endian particles
 
 ; ------------- END BATCH HEADER -------------
 
@@ -21,7 +21,7 @@ fr g
 DO LB2 [i]=1,[numberOfParticles]
     CP
     [particles][i]
-    [particlesBig][i]
+    [particles_big][i]
 LB2
 ; end particle-loop
 

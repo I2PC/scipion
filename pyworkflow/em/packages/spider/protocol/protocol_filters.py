@@ -171,6 +171,7 @@ See detailed description of the filter at [[http://spider.wadsworth.org/spider_d
             imgSet.append(img)            
             
         self._defineOutputs(outputParticles=imgSet)
+        self._defineTransformRelation(particles, imgSet)
         
 #--------------------------- INFO functions -------------------------------------------- 
     def _validate(self):
@@ -182,11 +183,15 @@ See detailed description of the filter at [[http://spider.wadsworth.org/spider_d
         return cites
     
     def _summary(self):
+        pixelSize = self.inputParticles.get().getSamplingRate()
+        
         summary = []
         summary.append('Used filter: *%s %s*' % (self.getEnumText('filterType'), self.getEnumText('filterMode')))
  
         if self.filterType <= FILTER_GAUSSIAN or self.filterType == FILTER_FERMI: 
-            summary.append('Filter radius: *%s*' % self.filterRadius.get())
+            summary.append('Filter radius: *%s px^-1*' % self.filterRadius.get())
+            radiusAngstroms = pixelSize/self.filterRadius.get()
+            summary.append('Filter radius: *%s Angstroms*' % radiusAngstroms )
         else:
             summary.append('Frequency range: *%s - %s*' % (self.lowFreq.get(), self.highFreq.get()))
 
