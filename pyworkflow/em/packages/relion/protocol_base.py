@@ -590,7 +590,6 @@ class ProtRelionBase(EMProtocol):
     
     def _writeIterAngularDist(self, it):
         """ Write the angular distribution. Should be overriden in subclasses. """
-        from convert import addRelionLabels, restoreXmippLabels
         addRelionLabels()
         
         data_star = self._getFileName('data', iter=it)
