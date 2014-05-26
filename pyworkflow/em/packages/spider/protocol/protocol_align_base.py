@@ -29,13 +29,10 @@ This sub-package contains protocol for particles filters operations
 """
 from os.path import join
 
-from pyworkflow.protocol.params import IntParam, EnumParam, LEVEL_ADVANCED
-from pyworkflow.em import ProtAlign2D, Image, Particle, NO_INDEX
-from pyworkflow.utils import getLastFile, makePath
+from pyworkflow.protocol.params import IntParam, EnumParam
+from pyworkflow.em import ProtAlign2D, Particle, NO_INDEX
 
 from ..constants import *
-from ..spider import SpiderShell, runSpiderTemplate
-from ..convert import locationToSpider
 from protocol_base import SpiderProtocol
 
 
