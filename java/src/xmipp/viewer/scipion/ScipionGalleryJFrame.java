@@ -74,12 +74,13 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
     }
     private void initComponents() {
         if (type != null) {
-            String output = data.hasClasses()? "Particles": type;   
+            final String output = data.hasClasses()? "Particles": type;   
             cmdbutton = getScipionButton("Create " + output, new ActionListener() {
 
                 @Override
                 public void actionPerformed(ActionEvent ae) {
                     int size;
+                        
                     if(data.hasClasses())
                     {
                         MetaData childsmd = data.getSelClassesImages();
@@ -88,11 +89,11 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
                     }
                     else
                         size = data.getSelIds().length;
-                    String question = String.format("<html>Are you sure you want to create a new set of %s with <font color=red>%s</font> %s?", type, size, (size > 1)?"elements":"element");
+                    String question = String.format("<html>Are you sure you want to create a new set of %s with <font color=red>%s</font> %s?", output, size, (size > 1)?"elements":"element");
                     ScipionMessageDialog dlg = new ScipionMessageDialog(ScipionGalleryJFrame.this, "Question", question, msgfields);
                     int create = dlg.action;
                     if (create == ScipionMessageDialog.OK_OPTION) {
-                        createSubset(dlg.getFieldValue(runNameKey));
+                        createSimpleSubset(dlg.getFieldValue(runNameKey), output);
                     }
                 }
             });
@@ -198,16 +199,13 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
         }
     }
 
-    public void createSubset(String runname) {
+    public void createSimpleSubset(String runname, String output) {
         try {
-            String output = type;    
-            
             if(isClassSelection())
             {
                 MetaData imagesMd = gallery.data.getSelClassesImages();
                 imagesMd.write(selfile);
                 imagesMd.destroy();
-                output = "Particles";
             }
             else
                 data.saveSelection(selfile, true);

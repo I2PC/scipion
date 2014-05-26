@@ -30,7 +30,6 @@ public class ScipionMetaData extends MetaData{
     private ScipionMetaData parent;
     private String id;
     private String classestb, objectstb;
-    private ScipionMetaData representativesmd;
     private boolean haschilds;
     
     public ScipionMetaData(String classestb, String objectstb, String self, String selfalias, List<ColumnInfo> columns)
@@ -38,11 +37,6 @@ public class ScipionMetaData extends MetaData{
         this(classestb, objectstb, self, selfalias, columns, new ArrayList<EMObject>());
     }
     
-    public ScipionMetaData(String classestb, String objectstb, String self, String selfalias, List<ColumnInfo> columns, ScipionMetaData representativesstruct)
-    {
-        this(classestb, objectstb, self, selfalias, columns, new ArrayList<EMObject>());
-        representativesmd = representativesstruct;
-    }
     
     public ScipionMetaData(String classestb, String objectstb, String self, String selfalias, List<ColumnInfo> columns, List<EMObject> emobjects)
     {
@@ -65,12 +59,11 @@ public class ScipionMetaData extends MetaData{
         loadData(classestb, objectstb);
         if(self.equals("Class2D"))
         {
-            haschilds = true;
             String id;
+            haschilds = true;
             String classestb = "%s_Classes";
             String objectstb = "%s_Objects";
-            id = "Representatives";
-            representativesmd = new ScipionMetaData(dbfile, String.format(classestb, id), String.format(objectstb, id));
+            
             int i = 0;
             for(EMObject emo: emobjects)
             {
@@ -78,7 +71,6 @@ public class ScipionMetaData extends MetaData{
                 emo.childmd = new ScipionMetaData(dbfile, String.format(classestb, id), String.format(objectstb, id), id);
                
                 emo.childmd.setParent(this);
-                emo.representative = representativesmd.getEMObjects().get(i);
                 i ++;
             }
         }
@@ -271,13 +263,11 @@ public class ScipionMetaData extends MetaData{
    
     ScipionMetaData getSelectionMd(long[] selIds) {
         ScipionMetaData selmd;
-        if(representativesmd != null)
-            selmd = new ScipionMetaData(classestb, objectstb, self, selfalias, columns, representativesmd.getStructure(representativesmd.classestb, representativesmd.objectstb));
-        else
-            selmd = new ScipionMetaData(classestb, objectstb, self, selfalias, columns);
+        //either selection of classes or particles main selection will be saved on Classes and Objects table
+        selmd = new ScipionMetaData("Classes", "Objects", self, selfalias, columns);
         for(long id: selIds)
             selmd.add(getEMObject(id));
-
+        
         return selmd;
     }
     
@@ -286,28 +276,22 @@ public class ScipionMetaData extends MetaData{
         emobjects.add(emo);
         if(emo.childmd != null)
             haschilds = true;
-        if(representativesmd != null)
-            representativesmd.add(emo.representative);
 
             
     }
 
     public ScipionMetaData getStructure(String classestb, String objectstb) {
-        if(representativesmd == null)
-            return new ScipionMetaData(classestb, objectstb, self, selfalias, columns);
-        else
-            return new ScipionMetaData(classestb, objectstb, self, selfalias, columns, representativesmd.getStructure(representativesmd.classestb, representativesmd.objectstb));
+        return new ScipionMetaData(classestb, objectstb, self, selfalias, columns);
     }
     
     public class EMObject
     {
         long id;
-        Map<ColumnInfo, Object> values;
+        protected Map<ColumnInfo, Object> values;
        
         boolean isenabled;
         ScipionMetaData childmd;
         ScipionMetaData md;
-        EMObject representative;
         
         public EMObject(long id, ScipionMetaData md)
         {
@@ -320,15 +304,18 @@ public class ScipionMetaData extends MetaData{
         
         
 
-        Map<ColumnInfo, Object> getValues() {
-            return values;
-        }    
-
         Object getValue(ColumnInfo c) {
-            return values.get(c);
+            Object result = values.get(c);
+            if(result != null)
+                return result;
+            for(ColumnInfo ci: columns)
+                if(ci.labelName.equals(c.labelName))
+                    return values.get(ci);//when mergin metadatas required
+            return null;
         }
 
         public boolean setValue(ColumnInfo ci, Object value) {
+            
             values.put(ci, value);
             return true;
         }
@@ -508,6 +495,7 @@ public class ScipionMetaData extends MetaData{
     
     public void unionAll(MetaData md)
     {
+        
         emobjects.addAll(((ScipionMetaData)md).getEMObjects());
     }
     
@@ -547,8 +535,6 @@ public class ScipionMetaData extends MetaData{
             for(EMObject emo: emobjects)
                 if(emo.childmd != null)
                     emo.childmd.writeBlock(path);
-        if(representativesmd != null)
-            representativesmd.writeBlock(path);
         
     }
      
@@ -588,7 +574,7 @@ public class ScipionMetaData extends MetaData{
                 for(int i = 0; i < columns.size(); i ++)
                 {
                     ci = columns.get(i);
-                    value = emo.values.get(ci);
+                    value = emo.getValue(ci);
                     if(ci.type == MetaData.LABEL_STRING)
                     {
                         if(value != null)
@@ -618,7 +604,8 @@ public class ScipionMetaData extends MetaData{
             Class.forName("org.sqlite.JDBC");
             c = DriverManager.getConnection("jdbc:sqlite:" + path);
             stmt = c.createStatement();
-            stmt.executeUpdate(toString());
+            String sql = toString();
+            stmt.executeUpdate(sql);
             stmt.close();
             c.close();
             

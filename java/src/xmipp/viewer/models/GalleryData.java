@@ -1455,4 +1455,5 @@ public class GalleryData {
             return normalize;
         }
 	
+        
 }// class GalleryData

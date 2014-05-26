@@ -230,9 +230,18 @@ public class ScipionGalleryData extends GalleryData{
 		
 	}
         
-      
-         public boolean hasClasses()//for Scipion usage only
+        public boolean hasClasses()//for Scipion usage only
         {
             return mdBlocks.length > 1 && ((ScipionMetaData)md).getSelf().contains("Class");
         }
+         
+        public boolean isCTFMd() {
+		
+		return false;//fixme?? provide ctf information maybe
+	}
+        
+        public boolean hasMicrographParticles() {
+		return false;//fixme?? cannot open picker from sqlite
+	}
+
 }
