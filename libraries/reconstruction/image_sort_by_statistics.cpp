@@ -175,146 +175,147 @@ void ProgSortByStatistics::processInprocessInputPrepareSPTH(MetaData &SF, bool t
                 imgno++;
                 continue;
             }
+        }
 
-            img.readApplyGeo(SF,__iter.objId);
+        img.readApplyGeo(SF,__iter.objId);
 
-            MultidimArray<double> &mI=img();
-            mI.setXmippOrigin();
-            mI.statisticsAdjust(0,1);
-            mask.setXmippOrigin();
-            //The size of v1 depends on the image size and must be declared here
-            int numDescriptors1 = XSIZE(mI)/2; //=100;
-            MultidimArray<float> v1(numDescriptors1);
-            v1.initZeros(numDescriptors1);
+        MultidimArray<double> &mI=img();
+        mI.setXmippOrigin();
+        mI.statisticsAdjust(0,1);
+        mask.setXmippOrigin();
+        //The size of v1 depends on the image size and must be declared here
+        int numDescriptors1 = XSIZE(mI)/2; //=100;
+        MultidimArray<float> v1(numDescriptors1);
+        v1.initZeros(numDescriptors1);
 
-            double var = 1;
+        double var = 1;
+        normalize(transformer,mI,tempI,modI,0,var,mask);
+        modI.setXmippOrigin();
+        tempI.setXmippOrigin();
+        nI = sign*tempI*(modI*modI);
+        tempM = (modI*modI);
+
+        A1D_ELEM(v0,0) = (tempM*ROI).sum();
+        int index = 1;
+        var+=2;
+        while (index < numNorm)
+        {
             normalize(transformer,mI,tempI,modI,0,var,mask);
             modI.setXmippOrigin();
             tempI.setXmippOrigin();
-            nI = sign*tempI*(modI*modI);
-            tempM = (modI*modI);
-
-            A1D_ELEM(v0,0) = (tempM*ROI).sum();
-            int index = 1;
+            nI += sign*tempI*(modI*modI);
+            tempM += (modI*modI);
+            A1D_ELEM(v0,index) = (tempM*ROI).sum();
+            index++;
             var+=2;
-            while (index < numNorm)
-            {
-                normalize(transformer,mI,tempI,modI,0,var,mask);
-                modI.setXmippOrigin();
-                tempI.setXmippOrigin();
-                nI += sign*tempI*(modI*modI);
-                tempM += (modI*modI);
-                A1D_ELEM(v0,index) = (tempM*ROI).sum();
-                index++;
-                var+=2;
-            }
-
-            nI /= tempM;
-            tempPcaAnalyzer0.addVector(v0);
-            nI=(nI*ROI);
-
-            auto_correlation_matrix(mI,autoCorr);
-            if (first)
-            {
-                radialAveragePrecomputeDistance(autoCorr, center, distance, dim);
-                first=false;
-            }
-            fastRadialAverage(autoCorr, distance, dim, radial_avg, radial_count);
-
-            for (int n = 0; n < numDescriptors1; ++n)
-            	A1D_ELEM(v1,n)=(float)DIRECT_A1D_ELEM(radial_avg,n);
-
-            tempPcaAnalyzer1.addVector(v1);
-
-#ifdef DEBUG
-
-            //String name = "000005@Images/Extracted/run_002/extra/BPV_1386.stk";
-            String name = "000010@Images/Extracted/run_001/extra/KLH_Dataset_I_Training_0028.stk";
-            //String name = "001160@Images/Extracted/run_001/DefaultFamily5";
-
-            std::cout << img.name() << std::endl;
-
-            if (img.name()==name2)
-            {
-                FileName fpName    = "test_1.txt";
-                mI.write(fpName);
-                fpName    = "test_2.txt";
-                nI.write(fpName);
-                fpName    = "test_3.txt";
-                tempM.write(fpName);
-                fpName    = "test_4.txt";
-                ROI.write(fpName);
-                //exit(1);
-            }
-#endif
-            nI.binarize(0);
-            int im = labelImage2D(nI,nI,8);
-            compute_hist(nI, hist, 0, im, im+1);
-            size_t l;
-            int k,i,j;
-            hist.maxIndex(l,k,i,j);
-            A1D_ELEM(hist,j)=0;
-            hist.maxIndex(l,k,i,j);
-            nI.binarizeRange(j-1,j+1);
-
-            double x0=0,y0=0,majorAxis=0,minorAxis=0,ellipAng=0;
-            size_t area=0;
-            fitEllipse(nI,x0,y0,majorAxis,minorAxis,ellipAng,area);
-
-            A1D_ELEM(v2,0)=majorAxis/((img().xdim) );
-            A1D_ELEM(v2,1)=minorAxis/((img().xdim) );
-            A1D_ELEM(v2,2)= (fabs((img().xdim)/2-x0)+fabs((img().ydim)/2-y0))/((img().xdim)/2);
-            A1D_ELEM(v2,3)=area/( (double)((img().xdim)/2)*((img().ydim)/2) );
-
-            for (int n=0 ; n < numDescriptors2 ; n++)
-            {
-                if ( std::isnan(std::abs(A1D_ELEM(v2,n))))
-                    A1D_ELEM(v2,n)=0;
-            }
-
-            tempPcaAnalyzer2.addVector(v2);
-
-            //mI.setXmippOrigin();
-            //auto_correlation_matrix(mI*ROI,autoCorr);
-            //auto_correlation_matrix(nI,autoCorr);
-            autoCorr.window(smallAutoCorr,-5,-5, 5, 5);
-            smallAutoCorr.copy(temp);
-            svdcmp(temp,U,D,V);
-
-            for (int n = 0; n < numDescriptors3; ++n)
-                A1D_ELEM(v3,n)=(float)VEC_ELEM(D,n); //A1D_ELEM(v3,n)=(float)VEC_ELEM(D,n)/VEC_ELEM(D,0);
-
-            tempPcaAnalyzer3.addVector(v3);
-
-
-            double minVal=0.;
-            double maxVal=0.;
-            mI.computeDoubleMinMax(minVal,maxVal);
-            compute_hist(mI, hist, minVal, maxVal, 100);
-
-            for (int n=0 ; n <= numDescriptors4-1 ; n++)
-            {
-                A1D_ELEM(v4,n)= (hist.percentil((n+1)*10));
-            }
-            tempPcaAnalyzer4.addVector(v4);
-
-#ifdef DEBUG
-
-            if (img.name()==name1)
-            {
-                FileName fpName    = "test.txt";
-                mI.write(fpName);
-                fpName    = "test3.txt";
-                nI.write(fpName);
-            }
-#endif
-            imgno++;
-            imgnoPCA++;
-
-            if (imgno % c == 0 && verbose>0)
-                progress_bar(imgno);
         }
+
+        nI /= tempM;
+        tempPcaAnalyzer0.addVector(v0);
+        nI=(nI*ROI);
+
+        auto_correlation_matrix(mI,autoCorr);
+        if (first)
+        {
+            radialAveragePrecomputeDistance(autoCorr, center, distance, dim);
+            first=false;
+        }
+        fastRadialAverage(autoCorr, distance, dim, radial_avg, radial_count);
+
+        for (int n = 0; n < numDescriptors1; ++n)
+            A1D_ELEM(v1,n)=(float)DIRECT_A1D_ELEM(radial_avg,n);
+
+        tempPcaAnalyzer1.addVector(v1);
+
+#ifdef DEBUG
+
+        //String name = "000005@Images/Extracted/run_002/extra/BPV_1386.stk";
+        String name = "000010@Images/Extracted/run_001/extra/KLH_Dataset_I_Training_0028.stk";
+        //String name = "001160@Images/Extracted/run_001/DefaultFamily5";
+
+        std::cout << img.name() << std::endl;
+
+        if (img.name()==name2)
+        {
+            FileName fpName    = "test_1.txt";
+            mI.write(fpName);
+            fpName    = "test_2.txt";
+            nI.write(fpName);
+            fpName    = "test_3.txt";
+            tempM.write(fpName);
+            fpName    = "test_4.txt";
+            ROI.write(fpName);
+            //exit(1);
+        }
+#endif
+        nI.binarize(0);
+        int im = labelImage2D(nI,nI,8);
+        compute_hist(nI, hist, 0, im, im+1);
+        size_t l;
+        int k,i,j;
+        hist.maxIndex(l,k,i,j);
+        A1D_ELEM(hist,j)=0;
+        hist.maxIndex(l,k,i,j);
+        nI.binarizeRange(j-1,j+1);
+
+        double x0=0,y0=0,majorAxis=0,minorAxis=0,ellipAng=0;
+        size_t area=0;
+        fitEllipse(nI,x0,y0,majorAxis,minorAxis,ellipAng,area);
+
+        A1D_ELEM(v2,0)=majorAxis/((img().xdim) );
+        A1D_ELEM(v2,1)=minorAxis/((img().xdim) );
+        A1D_ELEM(v2,2)= (fabs((img().xdim)/2-x0)+fabs((img().ydim)/2-y0))/((img().xdim)/2);
+        A1D_ELEM(v2,3)=area/( (double)((img().xdim)/2)*((img().ydim)/2) );
+
+        for (int n=0 ; n < numDescriptors2 ; n++)
+        {
+            if ( std::isnan(std::abs(A1D_ELEM(v2,n))))
+                A1D_ELEM(v2,n)=0;
+        }
+
+        tempPcaAnalyzer2.addVector(v2);
+
+        //mI.setXmippOrigin();
+        //auto_correlation_matrix(mI*ROI,autoCorr);
+        //auto_correlation_matrix(nI,autoCorr);
+        autoCorr.window(smallAutoCorr,-5,-5, 5, 5);
+        smallAutoCorr.copy(temp);
+        svdcmp(temp,U,D,V);
+
+        for (int n = 0; n < numDescriptors3; ++n)
+            A1D_ELEM(v3,n)=(float)VEC_ELEM(D,n); //A1D_ELEM(v3,n)=(float)VEC_ELEM(D,n)/VEC_ELEM(D,0);
+
+        tempPcaAnalyzer3.addVector(v3);
+
+
+        double minVal=0.;
+        double maxVal=0.;
+        mI.computeDoubleMinMax(minVal,maxVal);
+        compute_hist(mI, hist, minVal, maxVal, 100);
+
+        for (int n=0 ; n <= numDescriptors4-1 ; n++)
+        {
+            A1D_ELEM(v4,n)= (hist.percentil((n+1)*10));
+        }
+        tempPcaAnalyzer4.addVector(v4);
+
+#ifdef DEBUG
+
+        if (img.name()==name1)
+        {
+            FileName fpName    = "test.txt";
+            mI.write(fpName);
+            fpName    = "test3.txt";
+            nI.write(fpName);
+        }
+#endif
+        imgno++;
+        imgnoPCA++;
+
+        if (imgno % c == 0 && verbose>0)
+            progress_bar(imgno);
     }
+
 
 
     tempPcaAnalyzer0.evaluateZScore(2,20,trained);
@@ -428,9 +429,9 @@ void ProgSortByStatistics::run()
     if (fn_train != "")
     {
         SFtrain.read(fn_train);
-    	processInprocessInputPrepareSPTH(SFtrain,trained);
-    	trained = true;
-    	processInprocessInputPrepareSPTH(SF,trained);
+        processInprocessInputPrepareSPTH(SFtrain,trained);
+        trained = true;
+        processInprocessInputPrepareSPTH(SF,trained);
     }
     else
         processInprocessInputPrepareSPTH(SF,trained);
@@ -497,7 +498,7 @@ void ProgSortByStatistics::run()
                 }
                 else
                 {
-                	A1D_ELEM(ZscoreHist,imgno) = pcaAnalyzer[num].getZscore(imgno);
+                    A1D_ELEM(ZscoreHist,imgno) = pcaAnalyzer[num].getZscore(imgno);
                 }
 
                 if(zScore < pcaAnalyzer[num].getZscore(imgno))
@@ -588,7 +589,7 @@ void ProgSortByStatistics::run()
     if (per > 0)
     {
         MultidimArray<int> sortedShape1,sortedShape2,sortedSNR1,sortedSNR2,sortedHist,
-        					sortedShapeSF1,sortedShapeSF2,sortedSNR1SF,sortedSNR2SF,sortedHistSF;
+        sortedShapeSF1,sortedShapeSF2,sortedSNR1SF,sortedSNR2SF,sortedHistSF;
 
         sortedZscoreShape1.indexSort(sortedShape1);
         sortedZscoreShape2.indexSort(sortedShape2);
@@ -664,14 +665,14 @@ void ProgSortByStatistics::run()
         fh_zind.close();
     if (!fn_out.empty())
     {
-    	MetaData SFsorted;
-    	SFsorted.sort(SFout,MDL_ZSCORE);
+        MetaData SFsorted;
+        SFsorted.sort(SFout,MDL_ZSCORE);
         SFout.write(fn_out,MD_OVERWRITE);
     }
     if (addToInput)
     {
-    	MetaData SFsorted;
-    	SFsorted.sort(SF,MDL_ZSCORE);
+        MetaData SFsorted;
+        SFsorted.sort(SF,MDL_ZSCORE);
         SFsorted.write(fn,MD_APPEND);
     }
 }

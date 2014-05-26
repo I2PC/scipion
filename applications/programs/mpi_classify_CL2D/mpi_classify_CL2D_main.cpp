@@ -137,7 +137,7 @@ void CL2DClass::transferUpdate(bool centerReference)
         Pupdate.initZeros(P);
 
         // Make sure the image is centered
-        if (centerReference)
+        if (centerReference && prm->alignImages)
         	centerImage(P,corrAux,rotAux);
         FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(P)
         if (!DIRECT_A2D_ELEM(prm->mask,i,j))

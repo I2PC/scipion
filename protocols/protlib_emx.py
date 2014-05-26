@@ -513,6 +513,9 @@ def xmippCtfToEmx(md, objId, micrograph):
     and set the attributes in micrograph.
     """
     ctfModel = md.getValue(MDL_CTF_MODEL, objId)
+    xmippCtfModelToEmx(ctfModel, micrograph)
+    
+def xmippCtfModelToEmx(ctfModel, micrograph):
     mdCTF = RowMetaData(ctfModel)
     ctf = CTF()
     # Set the variables in the dict
@@ -527,7 +530,7 @@ def xmippCtfToEmx(md, objId, micrograph):
     
     while ctf.defocusUAngle > 180.:
         ctf.defocusUAngle -= 180.; 
-    #this maust be ordered
+    #this must be ordered
     for var in CTF.ctfVarLabels.keys():
         micrograph.set(var, getattr(ctf, var))           
 
@@ -540,10 +543,11 @@ def _writeEmxData(emxData, filename):
 def xmippMicrographsToEmx(micMd, emxData, emxDir):
     """ Export micrographs from xmipp metadata to EMX.
     """
-    acquisionInfo = findAcquisitionInfo(self.SelFileNameInitial)
-
+    #acquisionInfo = findAcquisitionInfo(self.SelFileNameInitial)
+    print "wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww"
     from protlib_particles import readPosCoordinates
     md = MetaData(micMd)
+    acquisionInfo = findAcquisitionInfo(md.getValue(MDL_MICROGRAPH, md.firstObject()))
     micFn = 'mic%06d.mrc'
     index = 0
     pIndex = 0
@@ -578,7 +582,7 @@ def xmippMicrographsToEmx(micMd, emxData, emxDir):
                 pIndex += 1
                 # We are using here a dummy filename, since not make sense
                 # for particles with just coordinates
-                particle = EmxParticle(str(pIndex), pIndex)
+                particle = EmxParticle("", pIndex)
                 particle.set('centerCoord__X', mdPos.getValue(MDL_XCOOR, pId))
                 particle.set('centerCoord__Y', mdPos.getValue(MDL_YCOOR, pId))
                 particle.setMicrograph(micrograph)

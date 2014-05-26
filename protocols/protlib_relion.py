@@ -204,6 +204,20 @@ class ProtRelionBase(XmippProtocol):
         else:
             errors += self._validate()
             
+        if not findAcquisitionInfo(self.ImgMd):
+            errors.append("""Acquisition file for metadata %s is not available. 
+Either import images before using them
+or create a file named acquisition_info.xmd 
+(see example below) and place it in the same directory than 
+the %s file
+
+EXAMPLE:
+# XMIPP_STAR_1 *
+# change XXXXX by the sampling rate
+data_noname
+ _sampling_rate XXXXX
+""" %(self.ImgMd,self.ImgMd))
+
         return errors 
     
     def defineSteps(self): 
