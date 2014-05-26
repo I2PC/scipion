@@ -516,7 +516,7 @@ class ProtFrealignBase(EMProtocol):
         self._createFilenameTemplates(iter)
         imgFn = self._getFileName('particles')
         imgSrc = continueRun._getFileName('particles')
-        createLink()
+        createLink(imgSrc, imgFn)
 #         imgSet.writeStack(imgFn)
         
     def initIterStep(self, iter, numberOfBlocks):
