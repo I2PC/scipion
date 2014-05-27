@@ -268,6 +268,16 @@ def _particleFromEmx(emxObj, particle):
     _setCoordinatesFromEmx(emxObj, particle.getCoordinate())
     
     
+def _transformFromEmx(emxParticle, part, transform):
+    """ Read the transformation matrix values from EMX tags. """
+    m = transform.getMatrix()
+    
+    for i in range(3):
+        for j in range(4):
+            m.setValue(i, j, emxParticle.get('transformationMatrix__t%d%d' % (i+1, j+1)))
+    
+    transform.setObjId(part.getObjId())
+            
 def _coordinateFromEmx(emxObj, coordinate):
     #_imageFromEmx(emxObj, coordinate)
     _setCoordinatesFromEmx(emxObj, coordinate)
@@ -334,6 +344,7 @@ def _particlesFromEmx(protocol, emxData, emxFile, outputDir):
     emxParticle = emxData.getFirstObject(emxlib.PARTICLE)
     partDir = dirname(emxFile)
     micSet = getattr(protocol, 'outputMicrographs', None)
+    alignmentSet = None
     
     if emxParticle is not None:     
         # Check if there are particles or coordinates
@@ -346,7 +357,9 @@ def _particlesFromEmx(protocol, emxData, emxFile, outputDir):
             if emxParticle.has('centerCoord__X'):
                 part.setCoordinate(Coordinate())
             _particleFromEmx(emxParticle, part)
-            partSet.setSamplingRate(part.getSamplingRate()) #FIXME
+            if emxParticle.has('transformationMatrix__t11'):
+                alignmentSet = protocol._createSetOfAlignment(partSet)
+            partSet.setSamplingRate(part.getSamplingRate() or 1.0) #FIXME
             particles = True
         else: # if not binary data, the coordinate case
             if micSet is None:
@@ -365,7 +378,11 @@ def _particlesFromEmx(protocol, emxData, emxFile, outputDir):
                 partBase = basename(partFn)
                 newLoc = (i, join(outputDir, partBase))
                 ih.convert((i, partFn), newLoc)
-                part.setLocation(newLoc)                
+                part.setLocation(newLoc)
+                if alignmentSet is not None:
+                    transform = Transform()
+                    _transformFromEmx(emxParticle, part, transform)  
+                    alignmentSet.append(transform)               
             else:
                 _coordinateFromEmx(emxParticle, part)
                 
@@ -374,13 +391,15 @@ def _particlesFromEmx(protocol, emxData, emxFile, outputDir):
             
         if particles:
             protocol._defineOutputs(outputParticles=partSet)
+            if alignmentSet is not None:
+                protocol._defineOutputs(outputAlignment=alignmentSet)
         else:
             protocol._defineOutputs(outputCoordinates=partSet)
         
         if micSet is not None:
             protocol._defineSourceRelation(micSet, partSet)
             
-        micSet.setStore(True)
-        print "="*100
-        for key, attr in protocol.getAttributesToStore():
-            print key
+#         micSet.setStore(True)
+#         print "="*100
+#         for key, attr in protocol.getAttributesToStore():
+#             print key

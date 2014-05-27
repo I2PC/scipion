@@ -174,8 +174,11 @@ def rowToImage(md, objId, imgLabel, imgClass, hasCtf):
         #TODO: CHECK NEXT LINE
         #ctfModel.setMicFile(md.getValue(xmipp.MDL_MICROGRAPH, objId))
         img.setCTF(ctfModel)
-    setObjId(img, rowFromMd(md, objId))
     
+    if md.containsLabel(xmipp.MDL_ZSCORE):
+        img._xmippZscore = Float(md.getValue(xmipp.MDL_ZSCORE, objId))
+    
+    setObjId(img, rowFromMd(md, objId))
     return img
     
     
@@ -827,3 +830,9 @@ def createXmippInputCTF(prot, ctfSet, ctfFn=None):
     else:
         ctfFn = ctfMd.get()
     return ctfFn
+
+
+def xmippGeoFromMatrix(matrix):
+    from pyworkflow.em.transformations import translation_from_matrix, euler_from_matrix
+    shifts = -translation_from_matrix(matrix)
+    angles = euler_from_matrix(matrix)

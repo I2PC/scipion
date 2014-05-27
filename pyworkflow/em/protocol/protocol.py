@@ -89,6 +89,12 @@ class EMProtocol(Protocol):
     def _createSetOfMovies(self, suffix=''):
         return self.__createSet(SetOfMovies, 'movies%s.sqlite', suffix)
     
+    def _createSetOfAlignment(self, particles, suffix=''):
+        alignment = self.__createSet(SetOfAlignment, 'alignment%s.sqlite', suffix)
+        alignment.setParticles(particles)
+        
+        return alignment
+    
     def _defineSourceRelation(self, srcObj, dstObj):
         """ Add a DATASOURCE relation between srcObj and dstObj """
         self._defineRelation(RELATION_SOURCE, srcObj, dstObj)

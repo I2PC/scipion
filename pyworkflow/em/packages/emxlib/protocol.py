@@ -38,6 +38,7 @@ class ProtEmxImport(ProtImport):
     EMX is a joint initiative for data exchange format between different 
     EM software packages. See more about [[http://i2pc.cnb.csic.es/emx][EMX format]]
     """
+    _label = 'emx import'
         
     #--------------------------- DEFINE param functions --------------------------------------------   
     def _defineParams(self, form):
@@ -82,7 +83,8 @@ class ProtEmxExport(EMProtocol):
     EMX is a joint initiative for data exchange format between different 
     EM software packages. See more about [[http://i2pc.cnb.csic.es/emx][EMX format]]
     """
-        
+    _label = 'emx export'
+            
     #--------------------------- DEFINE param functions --------------------------------------------   
     def _defineParams(self, form):
         form.addSection(label='Input')

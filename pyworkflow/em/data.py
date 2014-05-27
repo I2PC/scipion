@@ -23,11 +23,13 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
-from pyworkflow.em.constants import NO_INDEX
 """
 This modules contains basic hierarchy
 for EM data objects like: Image, SetOfImage and others
 """
+
+import numpy as np
+import json
 
 from constants import *
 from convert import ImageHandler
@@ -794,6 +796,25 @@ class SetOfCoordinates(EMSet):
         return s
     
 
+class Matrix(Scalar):
+    def __init__(self, **args):
+        Scalar.__init__(self, **args)
+        self._matrix = np.eye(4)
+        
+    def _convertValue(self, value):
+        """Value should be a str with comman separated values
+        or a list.
+        """
+        self._matrix = np.array(json.loads(value))
+            
+    def getObjValue(self):
+        self._objValue = json.dumps(self._matrix.tolist())
+        return self._objValue
+    
+    def setValue(self, i, j, value):
+        self._matrix[i, j] = value
+    
+        
 class Transform(EMObject):
     """ This class will contain a transformation matrix
     that can be applied to 2D/3D objects like images and volumes.
@@ -802,9 +823,36 @@ class Transform(EMObject):
     """
     def __init__(self, **args):
         EMObject.__init__(self, **args)
-        from numpy import eye
-        self._matrix = eye(4)
-        self._matrix[3, 3] = 0.
+        self._matrix = Matrix()
+        
+    def getMatrix(self):
+        return self._matrix
+    
+    def setMatrix(self, matrix):
+        self._matrix = matrix
+
+
+class SetOfAlignment(EMSet):
+    """ An Aligment is an particular type of Transform.
+    A set of transform is usually the result of alignment or multi-reference
+    alignment of a SetOfPartices. Each Transformation modifies the original
+    image to be the same of a given reference.
+    """
+    ITEM_TYPE = Transform
+    
+    def __init__(self, **args):
+        EMSet.__init__(self, **args)
+        self._particlesPointer = Pointer()
+
+    def getParticles(self):
+        """ Return the SetOfParticles from which the SetOfAligment was obtained. """
+        return self._particlesPointer.get()
+    
+    def setParticles(self, particles):
+        """ Set the SetOfParticles associated with this SetOfAlignment..
+         """
+        self._particlesPointer.set(particles)
+        
 
 
 class TransformParams(object):
