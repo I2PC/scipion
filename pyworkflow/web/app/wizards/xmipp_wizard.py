@@ -108,7 +108,7 @@ class XmippParticleMaskRadiusWeb(XmippParticleMaskRadiusWizard):
             
             params['value'] = validateMaskRadius(params['value'], xdim, radius=1)
             
-            context = {'objects': self._getParticles(objs),
+            context = {'objects': particles,
                        'xdim': int(xdim/2),
                        'params': params}
         

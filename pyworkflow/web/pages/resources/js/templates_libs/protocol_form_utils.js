@@ -162,7 +162,6 @@ $(document).ready(function() {
 					// No errors in the process to save
 					protId = json.success;
 					infoPopup('Success', "The protocol was saved successfuly",1,'window.opener.popup(\'/form/?protocolId='+protId+'\')');
-					
 				}
 			},"json");
 		} else if (mode == 'wiz') {
