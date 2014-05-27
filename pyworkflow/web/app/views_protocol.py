@@ -108,6 +108,10 @@ def form(request):
                         else:
                             paramGroup = PreprocessParamForm(request, paramGroup, paramGroupName, wizards, viewerDict, visualize, protVar)
                 
+                    param.htmlCond = param.condition.get()
+                    param.htmlDepend = ','.join(param._dependants)
+                    param.htmlCondParams = ','.join(param._conditionParams)   
+                            
                 # LINE PARAM
                 if isinstance(param, Line):
                     for paramLineName, paramLine in param.iterParams():
@@ -116,7 +120,7 @@ def form(request):
                         if protVar is None:
                             pass
                         else:
-                            paramLine = PreprocessParamForm(request, paramLine, paramLineName, wizards, viewerDict, visualize, protVar)
+                            paramLine = PreprocessParamForm(request, paramLine, paramLineName, wizards, viewerDict, visualize, protVar)                  
                         
                     # PATCH: This is applied to all the params in the line, maybe just need for the first one.
                     for name, _ in param.iterParams():
@@ -131,7 +135,11 @@ def form(request):
                     
                     if not param.help.empty():
                         param.htmlHelp = parseText(param.help.get())
-                    
+                        
+                    param.htmlCond = param.condition.get()
+                    param.htmlDepend = ','.join(param._dependants)
+                    param.htmlCondParams = ','.join(param._conditionParams)   
+                                     
             else:
                 #OTHER PARAM
                 param = PreprocessParamForm(request, param, paramName, wizards, viewerDict, visualize, protVar)
@@ -201,15 +209,15 @@ def PreprocessParamForm(request, param, paramName, wizards, viewerDict, visualiz
     if visualize == 1:
         if paramName in viewerDict:
             param.hasViewer = True
-    #                    print "param: ", paramName, " has viewer"
-        
+    #       print "param: ", paramName, " has viewer"
+    
     param.htmlCond = param.condition.get()
     param.htmlDepend = ','.join(param._dependants)
     param.htmlCondParams = ','.join(param._conditionParams)
     
     if not param.help.empty():
         param.htmlHelp = parseText(param.help.get())
-    #            param.htmlExpertLevel = param.expertLevel.get()   
+    #   param.htmlExpertLevel = param.expertLevel.get()   
     
     """ Workflow Addon """
     valueURL = request.GET.get(paramName, None) 

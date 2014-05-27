@@ -218,7 +218,7 @@ class TestXmippWorkflow(TestWorkflow):
         
         # Now estimate CTF on the downsampled micrographs 
         print "Performing CTF..."   
-        protCTF = XmippProtCTFMicrographs(numberOfThreads=3)                
+        protCTF = XmippProtCTFMicrographs(numberOfThreads=4, minDefocus=2.2, maxDefocus=2.5)                
         protCTF.inputMicrographs.set(protDownsampling.outputMicrographs)        
         self.proj.launchProtocol(protCTF, wait=True)
         self.assertIsNotNone(protCTF.outputCTF, "There was a problem with the CTF estimation")

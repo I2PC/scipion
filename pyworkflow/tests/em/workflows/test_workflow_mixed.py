@@ -33,7 +33,7 @@ class TestMixedBPV(TestWorkflow):
         
         # Perform a downsampling on the micrographs
         print "Downsampling..."
-        protDownsampling = XmippProtPreprocessMicrographs(doDownsample=True, downFactor=2, doCrop=False, runMode=1)
+        protDownsampling = XmippProtPreprocessMicrographs(doDownsample=True, downFactor=5, doCrop=False, runMode=1)
         protDownsampling.inputMicrographs.set(protImport.outputMicrographs)
         self.proj.launchProtocol(protDownsampling, wait=True)
         self.assertIsNotNone(protDownsampling.outputMicrographs, "There was a problem with the downsampling")
@@ -41,7 +41,7 @@ class TestMixedBPV(TestWorkflow):
         
         # Estimate CTF on the downsampled micrographs
         print "Performing CTFfind..."   
-        protCTF = ProtCTFFind(numberOfThreads=4)
+        protCTF = ProtCTFFind(numberOfThreads=4, minDefocus=2.2, maxDefocus=2.5)
         protCTF.inputMicrographs.set(protDownsampling.outputMicrographs)        
         self.proj.launchProtocol(protCTF, wait=True)
         self.assertIsNotNone(protCTF.outputCTF, "There was a problem with the CTF estimation")
@@ -49,18 +49,18 @@ class TestMixedBPV(TestWorkflow):
         
         print "Running Eman fake particle picking..."
         protPP = EmanProtBoxing(importFolder=self.crdsDir, runMode=1) 
-        protPP.inputMicrographs.set(protImport.outputMicrographs)
-        protPP.boxSize.set(550)
+        protPP.inputMicrographs.set(protDownsampling.outputMicrographs)
+        protPP.boxSize.set(110)
         self.proj.launchProtocol(protPP, wait=True)
         self.assertIsNotNone(protPP.outputCoordinates, "There was a problem with the faked picking")
 #         self.protDict['protPP'] = protPP
         
         # Extract the SetOfParticles.
         print "Run extract particles with other downsampling factor"
-        protExtract = XmippProtExtractParticles(boxSize=64, downsampleType=2, doFlip=False, downFactor=4, runMode=1, doInvert=False)
+        protExtract = XmippProtExtractParticles(boxSize=64, downsampleType=2, doFlip=False, downFactor=5, runMode=1, doInvert=False)
         protExtract.inputCoordinates.set(protPP.outputCoordinates)
         protExtract.ctfRelations.set(protCTF.outputCTF)
-        protExtract.inputMicrographs.set(protDownsampling.outputMicrographs)
+        protExtract.inputMicrographs.set(protImport.outputMicrographs)
         self.proj.launchProtocol(protExtract, wait=True)
         self.assertIsNotNone(protExtract.outputParticles, "There was a problem with the extract particles")
 #         self.validateFiles('protExtract', protExtract)
@@ -236,7 +236,7 @@ class TestMixedBPV2(TestWorkflow):
         
         # Estimate CTF on the downsampled micrographs
         print "Performing CTFfind..."   
-        protCTF = ProtCTFFind(numberOfThreads=3)
+        protCTF = ProtCTFFind(numberOfThreads=4, minDefocus=2.2, maxDefocus=2.5)
         protCTF.inputMicrographs.set(protDownsampling.outputMicrographs)        
         self.proj.launchProtocol(protCTF, wait=True)
         self.assertIsNotNone(protCTF.outputCTF, "There was a problem with the CTF estimation")

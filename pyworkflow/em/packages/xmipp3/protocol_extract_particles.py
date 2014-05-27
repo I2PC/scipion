@@ -147,6 +147,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
                       'If this value is 0, then half the box size is used.', 
                       expertLevel=LEVEL_ADVANCED)
         
+        form.addParallelSection(threads=4, mpi=1)
     #--------------------------- INSERT steps functions --------------------------------------------  
     def _insertAllSteps(self):
         """for each micrograph insert the steps to preprocess it
@@ -175,7 +176,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
 #                                 self._getExtraPath('scipion_micrographs_coordinates.xmd'))
                 
         # Write pos files for each micrograph
-        self._insertFunctionStep('writePosFilesStep')
+        firstStepId = self._insertFunctionStep('writePosFilesStep')
                 
         #if self.doFlip.get():
         ctfSet = self.ctfRelations.get()
@@ -185,7 +186,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         
         deps = []
         for mic in self.inputMics:
-            localDeps = []
+            localDeps = [firstStepId]
             micrographToExtract = mic.getFileName()
             micName = removeBaseExt(mic.getFileName())
             micId = mic.getObjId()
