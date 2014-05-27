@@ -83,5 +83,22 @@ class TestEMX(BaseTest):
         emx.exportData(emxDir, micSet)
         
         
+    def test_Transform(self):
+        from pyworkflow.em.packages.xmipp3.convert import xmippGeoFromMatrix
+        
+        m = Manager()
+        p = m.loadProject('emx')
+        alignment = p.mapper.selectByClass('SetOfAlignment')[-1]
+        
+        for t in alignment:
+            print "="*100
+            print "matrix: \n", t.getMatrix()
+            shifts, angles = xmippGeoFromMatrix(t.getMatrix()._matrix)
+            print "shifts: ", shifts
+            print "angles: ", angles
+        
+        
+        
+        
     def test_readEMX(self):
         pass

@@ -813,6 +813,9 @@ class Matrix(Scalar):
     
     def setValue(self, i, j, value):
         self._matrix[i, j] = value
+        
+    def __str__(self):
+        return np.array_str(self._matrix)
     
         
 class Transform(EMObject):
@@ -830,7 +833,10 @@ class Transform(EMObject):
     
     def setMatrix(self, matrix):
         self._matrix = matrix
-
+        
+    def __str__(self):
+        return str(self._matrix)
+        
 
 class SetOfAlignment(EMSet):
     """ An Aligment is an particular type of Transform.
@@ -853,7 +859,6 @@ class SetOfAlignment(EMSet):
          """
         self._particlesPointer.set(particles)
         
-
 
 class TransformParams(object):
     """ Class to store transform parameters in the way
