@@ -175,7 +175,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
 #                                 self._getExtraPath('scipion_micrographs_coordinates.xmd'))
                 
         # Write pos files for each micrograph
-        self._insertFunctionStep('writePosFilesStep')
+        firstStepId = self._insertFunctionStep('writePosFilesStep')
                 
         #if self.doFlip.get():
         ctfSet = self.ctfRelations.get()
@@ -185,7 +185,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         
         deps = []
         for mic in self.inputMics:
-            localDeps = []
+            localDeps = [firstStepId]
             micrographToExtract = mic.getFileName()
             micName = removeBaseExt(mic.getFileName())
             micId = mic.getObjId()
