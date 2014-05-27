@@ -64,7 +64,7 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 		ColumnInfo ci = visibleLabels.get(column);
 		if (ci.render)
 			return ImageItem.class;
-		else if (ci.label == MDLabel.MDL_ENABLED)
+		else if (ci.isEnable())
 			return Boolean.class;//This way a JCheckBox is rendered
 		try {
 			return MetaData.getLabelClass(ci.type);
@@ -121,7 +121,7 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 			case MetaData.LABEL_INT:
 				int value = md.getValueInt(label, id);
 				// treat special case of MDL_ENABLED
-				if (label == MDLabel.MDL_ENABLED)
+				if (ci.isEnable())
 					return (value > 0);
 				return value;
 			case MetaData.LABEL_BOOL:
@@ -181,7 +181,7 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 				md.setValueBoolean(label, (Boolean) value, id);
 				break;
 			case MetaData.LABEL_INT:
-				if (label == MDLabel.MDL_ENABLED) {
+				if (ci.isEnable()) {
 					md.setEnabled((Boolean) value, id);
 				} else
 					md.setValueInt(label, ((Integer) value).intValue(), id);

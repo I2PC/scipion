@@ -25,6 +25,7 @@
 
 package xmipp.viewer.models;
 
+import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
 
 /** This class will store info about how to display label on gallery */
@@ -38,7 +39,6 @@ public class ColumnInfo {
 	public boolean allowEdit = true;
 	public String comment;
         public int type;
-        public boolean iswrite;
 	
 	/** Constructors */
 	
@@ -50,7 +50,6 @@ public class ColumnInfo {
 		this.allowRender = allowRender;
                 this.comment = comment;
                 this.type = type;
-                this.iswrite = true;
 	}
         
 	
@@ -110,6 +109,10 @@ public class ColumnInfo {
 				visible == col.visible && 
 				render == col.render;
 	}
+
+    public boolean isEnable() {
+        return label == MDLabel.MDL_ENABLED || labelName.equals("_enabled");
+    }
 	
 	public class ColumnExtraInfo {
 		public String color;

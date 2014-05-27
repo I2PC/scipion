@@ -132,7 +132,6 @@ public class ScipionMetaData extends MetaData{
             labels.put(name, labels.size());
             label = labels.get(name);
             enabledci = new ColumnInfo(label, name, alias, MetaData.LABEL_INT, false);
-            enabledci.iswrite = false;
             columns.add(enabledci);
             Object value = null;
            
@@ -146,7 +145,7 @@ public class ScipionMetaData extends MetaData{
                 emo = new EMObject(id, this);
                 for(ColumnInfo column: columns)
                 {
-                    if(column.iswrite)
+                    if(!column.isEnable())
                         {
                             name = column.labelName;
                             alias = column.comment;
@@ -575,7 +574,7 @@ public class ScipionMetaData extends MetaData{
             for(int i = 0; i < columns.size(); i ++)
             {
                 ci = columns.get(i);
-                if(ci.iswrite)
+                if(!ci.isEnable())
                 {
                     
                     type = getTypeMapping(ci.type);
@@ -597,7 +596,7 @@ public class ScipionMetaData extends MetaData{
             {
                 sql += String.format("(%s, '', ''", emo.id);
                 for (ColumnInfo column : columns) {
-                    if(column.iswrite)
+                    if(column.isEnable())
                     {
                         value = emo.getValue(column);
                         if(column.type == MetaData.LABEL_STRING)
