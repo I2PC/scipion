@@ -216,32 +216,18 @@ def get_image_filter_spider(request):
 
 def run_custom_mask_spider(request):
     
-    imagePath = request.GET.get('image', None)
+    imagePath = removeExt(request.GET.get('image', None))
     radius1 = request.GET.get('radius1', None)
     sdFactor = request.GET.get('sdFactor', None)
     radius2 = request.GET.get('radius2', None)
     maskThreshold = request.GET.get('maskThreshold', None)
     
-    params = {'[filter-radius1]': radius1,
-              '[sd-factor]': sdFactor,
-              '[filter-radius2]': radius2,
-              '[mask-threshold2]': maskThreshold,
-              '[input_image]': removeExt(imagePath),
-              '[output_mask]': 'stkmask'
-              }
+    runCustomMaskScript(radius1, sdFactor, radius2,
+                        maskThreshold, ".", inputImage=imagePath)
     
 #    print "imagePath:",imagePath
 #    print "os.getcwd: ", os.getcwd()
         
-    runScript('mda/custommask.msa', "stk", params)
-    
     return HttpResponse(mimetype='application/javascript')
     
     
-def get_image_custom_mask_spider(request):
-    """
-    Function to get the computing image with a spider custom mask applied
-    """
-    
-    
-    pass

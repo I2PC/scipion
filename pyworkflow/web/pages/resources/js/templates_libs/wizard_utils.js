@@ -217,15 +217,8 @@ function putImage(url, canvas, width, height, mode) {
 }
 
 function putImageSrc(url, canvas) {
-	/*
-	 * Overwrite a canvas space with a new image using the library Raphael.js 
-	 */
-	
 	var img = $("img#" + canvas)
-	img.attr("src","")
-	img.attr("src", url)
-	
-	
+	img.attr("src", url)	
 }
 
 function putCircle(radio, canvas, color) {
