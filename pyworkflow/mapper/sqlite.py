@@ -319,9 +319,9 @@ class SqliteMapper(Mapper):
         """ Return all relations stored of a given type. """
         return self.db.selectRelationsByName(relationName)
 
-    def deleteRelations(self, relationType):
+    def deleteRelations(self, creatorObj):
         """ Delete all relations created by object creatorObj """
-        pass
+        self.db.deleteRelationsByCreator(creatorObj.getObjId())
     
     def insertRelationData(self, relName, creatorId, parentId, childId):
         self.db.insertRelation(relName, creatorId, parentId, childId)
