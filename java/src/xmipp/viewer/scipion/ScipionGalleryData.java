@@ -269,7 +269,7 @@ public class ScipionGalleryData extends GalleryData{
         
         public List<ScipionMetaData.EMObject> getSelObjects()
         {
-            List<ScipionMetaData.EMObject> emos = new ArrayList<>();
+            List<ScipionMetaData.EMObject> emos = new ArrayList<ScipionMetaData.EMObject>();
             for(int i = 0; i < selection.length; i ++)
                 if(selection[i] && md.getEnabled(ids[i]))
                     emos.add(((ScipionMetaData)md).getEMObjects().get(i));

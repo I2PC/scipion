@@ -294,7 +294,7 @@ public class ScipionMetaData extends MetaData{
     }
 
     public List<EMObject> getEnabledObjects() {
-        List<EMObject> emos = new ArrayList<>();
+        List<EMObject> emos = new ArrayList<EMObject>();
         for(EMObject emo: emobjects)
             if(emo.isEnabled())
                 emos.add(emo);
