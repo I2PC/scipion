@@ -322,7 +322,8 @@ function setParamValue(paramId, value) {
 	var newLevel = $("select[name=expertLevel]").val();
 	
 	// DEBUG
-//	console.log("PARAM TO EVALUATE: " +paramId + " WITH LEVEL: " + newLevel)
+//	console.log("PARAM TO EVALUATE: " + paramId)
+//	console.log("WITH LEVEL: " + newLevel)
 	
 	// Evaluate the dependencies for the new expert level and the row affected
 	evalDependencies(row, newLevel);
@@ -330,21 +331,19 @@ function setParamValue(paramId, value) {
 	// Get the params affected with the changes
 	var params = row.attr('data-params');
 
+	// Evaluate the expert level
 	if (params != undefined && params.length <= 0) {
-					
 		var expLevel = row.attr('data-expert');
 	
 		if (expLevel > newLevel) {
-//			console.log("hide by expLevel!")
 			row.hide();
 		} else {
-//			console.log("show by expLevel!")
 			row.show();			
 		}
 	}
 	
 	// To process the hidden elements into protocol form
-	// is necessary to be evaluated hiself.
+	// is necessary to be evaluated himself.
 	evalRow(row)
 }
 
@@ -369,17 +368,20 @@ function evalDependencies(row, newLevel) {
 	
 	// Get dependencies for the parameter
 	var dependencies = row.attr('data-depen');
+	
 //	console.log("Dependencies:", dependencies)
-	if (dependencies!= undefined && dependencies.length > 0) {
+
+	if (dependencies != undefined && dependencies.length > 0) {
 		
 		// Dependencies splitted to be looked over the elements
 		var arrayDepends = dependencies.split(",");
 
 		for (var cont = 0; cont < arrayDepends.length; cont++) {
-			
 			// Get params affected with the dependencies
 			var row2 = $("tr#" + arrayDepends[cont]);
 			
+//			console.log("TO EVALUATE: tr#" + arrayDepends[cont])
+
 			// Evaluate the new parameter affected
 			var res = evalCondition(row2);
 			
@@ -410,21 +412,24 @@ function evalCondition(row) {
 	var res = undefined;
 	var cond = row.attr('data-cond');
 	
+//	console.log("data-cond:"+cond)
+	
 	if(cond != undefined){
 	
 		var params = row.attr('data-params');
+		
+//		console.log("Params:"+ params + " length:"+params.length)
 		
 		if (params.length > 0){
 			
 			var arrayParams = params.split(",");
 		
-			// Get value of the element with name=itenName
+			// Get value of the element with name=itemName
 			var param = null;
 			var value = null;
 			var cond_eval = cond;
 	
 			for (var cont = 0; cont < arrayParams.length; cont++) {
-				
 				param = arrayParams[cont];
 				
 				value = $("tr#" + param).val();
@@ -443,7 +448,7 @@ function evalCondition(row) {
 			cond_eval = normalizeConditions(cond_eval)
 			
 			//	To check a good eval
-			//console.log(cond_eval + "/"+eval(cond_eval))
+//			console.log(cond_eval + "/" + eval(cond_eval))
 		
 			res = eval(cond_eval);
 		}
@@ -466,7 +471,7 @@ function normalizeConditions(cond){
 
 function browseObjects(paramName, type_param, value_param, pointerCondition, maxNumObjects) {
 	/*
-	 * Browse object in the database. 
+	 * Browse object in the database.
 	 * Params: objClass: the class to get instances from (also subclasses)
 	 * protClassName: class refered to a protocol
 	 */
