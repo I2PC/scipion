@@ -32,6 +32,7 @@ each EM-software packages.
 import os
 import shutil
 from glob import glob
+
 from pyworkflow.object import String, Float
 from pyworkflow.protocol import *
 from pyworkflow.protocol.params import *
@@ -39,6 +40,7 @@ from pyworkflow.em.constants import *
 from pyworkflow.em.data import *
 from pyworkflow.utils.path import removeBaseExt, join, basename, cleanPath
 from pyworkflow.utils.properties import Message, Icon 
+
 
 
 class EMProtocol(Protocol):
@@ -128,14 +130,9 @@ class EMProtocol(Protocol):
             msg += 'which are %d and %d, respectively' % (d1, d2)
             errors.append(msg)
 
-
-
-
  
 class ProtSets(EMProtocol):
     pass
-
-
 
 
 class ProtUserSubSet(ProtSets):
@@ -181,11 +178,6 @@ class ProtUserSubSet(ProtSets):
 
     def _methods(self):
         return self._summary()
-    
-       
-
-
-
 
 
 class ProtJoinSets(ProtSets):

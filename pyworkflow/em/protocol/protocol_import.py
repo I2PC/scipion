@@ -28,8 +28,10 @@ In this module are protocol base classes related to EM imports of Micrographs, P
 
 """
 import sys
+
 from pyworkflow.em.protocol import *
 from pyworkflow.utils import expandPattern, createLink, copyFile
+
 
 
 class ProtImport(EMProtocol):
