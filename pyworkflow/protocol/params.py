@@ -368,7 +368,8 @@ class EnumParam(IntParam):
 class FloatParam(Param):
     def __init__(self, **args):
         Param.__init__(self, paramClass=Float, **args)
-        self.addValidator(Format(float, error="should have a float format"))
+        self.addValidator(Format(float, error="should have a float format", 
+                                 allowsNull=args.get('allowsNull', False)))
 
         
 class BooleanParam(Param):
@@ -493,20 +494,22 @@ class Conditional(Validator):
     If the value doesn't meet the condition,
     the error will be returned.
     """
-    def __init__(self, error):
+    def __init__(self, error, allowsNull=False):
         self.error = error
+        self._allowsNull = allowsNull
         
     def __call__(self, value):
         errors = []
-        if not self._condition(value):
-            errors.append(self.error)
+        if (value or not self._allowsNull):
+            if not self._condition(value):
+                errors.append(self.error)
         return errors   
     
     
 class Format(Conditional):
     """ Check if the format is right. """
-    def __init__(self, valueType, error='Value have not a correct format'):
-        Conditional.__init__(self, error)
+    def __init__(self, valueType, error='Value have not a correct format', allowsNull=False):
+        Conditional.__init__(self, error, allowsNull)
         self.valueType = valueType
         
     def _condition(self, value):

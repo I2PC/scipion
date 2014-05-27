@@ -60,7 +60,7 @@ def exportData(emxDir, inputSet, ctfSet=None, xmlFile='data.emx', binaryFile=Non
     emxData.write(fnXml)
     
     
-def importData(protocol, emxFile, outputDir):
+def importData(protocol, emxFile, outputDir, acquisition, samplingRate=None):
     """ Import objects into Scipion from a given EMX file. 
     Returns:
         a dictionary with key and values as outputs sets
@@ -69,8 +69,8 @@ def importData(protocol, emxFile, outputDir):
     emxData = emxlib.EmxData()
     emxData.read(emxFile)
     
-    _micrographsFromEmx(protocol, emxData, emxFile, outputDir)
-    _particlesFromEmx(protocol, emxData, emxFile, outputDir)
+    _micrographsFromEmx(protocol, emxData, emxFile, outputDir, acquisition, samplingRate)
+    _particlesFromEmx(protocol, emxData, emxFile, outputDir, acquisition, samplingRate)
 
 
 #---------------- Export related functions -------------------------------
@@ -98,7 +98,7 @@ def _samplingToEmx(emxObj, sampling):
     emxObj.set('pixelSpacing__X', sampling)
     emxObj.set('pixelSpacing__Y', sampling)
     
-    
+
 def _acquisitionToEmx(emxObj, acq):
     _dictToEmx(emxObj, {'acceleratingVoltage': acq.getVoltage(),
                         'amplitudeContrast': acq.getAmplitudeContrast(),
@@ -222,12 +222,17 @@ def _setCoordinatesFromEmx(emxObj, coordinate):
         coordinate.setX(emxObj.get('centerCoord__X'))
         coordinate.setY(emxObj.get('centerCoord__Y'))
     
+def _hasAcquisitionLabels(emxObj):
+    """ Check that needed labels for CTF are present in object dict. """
+    return (emxObj is not None and 
+            all([emxObj.has(tag) for tag in ['acceleratingVoltage', 'amplitudeContrast', 'cs']]))
     
 def _acquisitionFromEmx(emxObj, acquisition):
     """ Create an acquistion from elem. """
-    acquisition.setVoltage(emxObj.get('acceleratingVoltage'))
-    acquisition.setAmplitudeContrast(emxObj.get('amplitudeContrast'))
-    acquisition.setSphericalAberration(emxObj.get('cs'))    
+    if _hasAcquisitionLabels(emxObj):
+        acquisition.setVoltage(emxObj.get('acceleratingVoltage'))
+        acquisition.setAmplitudeContrast(emxObj.get('amplitudeContrast'))
+        acquisition.setSphericalAberration(emxObj.get('cs'))    
     
     
 def _hasCtfLabels(emxObj):
@@ -285,7 +290,7 @@ def _coordinateFromEmx(emxObj, coordinate):
     coordinate.setMicId(emxMic._micId)
     
     
-def _micrographsFromEmx(protocol, emxData, emxFile, outputDir):
+def _micrographsFromEmx(protocol, emxData, emxFile, outputDir, acquisition, samplingRate):
     """ Create the output SetOfMicrographs given an EMXData object.
     If there is information of the CTF, also the SetOfCTF will
     be registered as output of the protocol.
@@ -295,7 +300,7 @@ def _micrographsFromEmx(protocol, emxData, emxFile, outputDir):
     if emxMic is not None:        
         micSet = protocol._createSetOfMicrographs()
         mic = Micrograph()
-        mic.setAcquisition(Acquisition())
+        mic.setAcquisition(acquisition)
         
         if _hasCtfLabels(emxMic):
             mic.setCTF(CTFModel())
@@ -306,7 +311,9 @@ def _micrographsFromEmx(protocol, emxData, emxFile, outputDir):
         _micrographFromEmx(emxMic, mic)
         acq = mic.getAcquisition().clone()        
         micSet.setAcquisition(acq)
-        micSet.setSamplingRate(mic.getSamplingRate())
+        if not samplingRate:
+            samplingRate = mic.getSamplingRate()
+        micSet.setSamplingRate(samplingRate)
         micDir = dirname(emxFile)
         
         for emxMic in emxData.iterClasses(emxlib.MICROGRAPH):
@@ -337,7 +344,7 @@ def _micrographsFromEmx(protocol, emxData, emxFile, outputDir):
             protocol._defineCtfRelation(micSet, ctfSet)
 
   
-def _particlesFromEmx(protocol, emxData, emxFile, outputDir):
+def _particlesFromEmx(protocol, emxData, emxFile, outputDir, acquisition, samplingRate):
     """ Create the output SetOfCoordinates or SetOfParticles given an EMXData object.
     Add CTF information to the particles if present.
     """    
@@ -351,6 +358,8 @@ def _particlesFromEmx(protocol, emxData, emxFile, outputDir):
         fn = emxParticle.get(emxlib.FILENAME)
         if exists(join(partDir, fn)): # if the particles has binary data, means particles case
             partSet = protocol._createSetOfParticles()
+            partSet.setAcquisition(acquisition)
+            
             part = Particle()
             if _hasCtfLabels(emxParticle) or _hasCtfLabels(emxParticle.getMicrograph()):
                 part.setCTF(CTFModel())
@@ -359,7 +368,9 @@ def _particlesFromEmx(protocol, emxData, emxFile, outputDir):
             _particleFromEmx(emxParticle, part)
             if emxParticle.has('transformationMatrix__t11'):
                 alignmentSet = protocol._createSetOfAlignment(partSet)
-            partSet.setSamplingRate(part.getSamplingRate() or 1.0) #FIXME
+            if not samplingRate:
+                samplingRate = part.getSamplingRate()
+            partSet.setSamplingRate(samplingRate) 
             particles = True
         else: # if not binary data, the coordinate case
             if micSet is None:

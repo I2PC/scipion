@@ -834,5 +834,9 @@ def createXmippInputCTF(prot, ctfSet, ctfFn=None):
 
 def xmippGeoFromMatrix(matrix):
     from pyworkflow.em.transformations import translation_from_matrix, euler_from_matrix
+    from numpy import rad2deg
     shifts = -translation_from_matrix(matrix)
-    angles = euler_from_matrix(matrix)
+    angles = rad2deg(euler_from_matrix(matrix, axes='szyz'))
+    
+    return shifts, angles
+

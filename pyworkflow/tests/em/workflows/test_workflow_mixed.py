@@ -41,7 +41,7 @@ class TestMixedBPV(TestWorkflow):
         
         # Estimate CTF on the downsampled micrographs
         print "Performing CTFfind..."   
-        protCTF = ProtCTFFind(numberOfThreads=4)
+        protCTF = ProtCTFFind(numberOfThreads=4, minDefocus=2.2, maxDefocus=2.5)
         protCTF.inputMicrographs.set(protDownsampling.outputMicrographs)        
         self.proj.launchProtocol(protCTF, wait=True)
         self.assertIsNotNone(protCTF.outputCTF, "There was a problem with the CTF estimation")
@@ -236,7 +236,7 @@ class TestMixedBPV2(TestWorkflow):
         
         # Estimate CTF on the downsampled micrographs
         print "Performing CTFfind..."   
-        protCTF = ProtCTFFind(numberOfThreads=3)
+        protCTF = ProtCTFFind(numberOfThreads=4, minDefocus=2.2, maxDefocus=2.5)
         protCTF.inputMicrographs.set(protDownsampling.outputMicrographs)        
         self.proj.launchProtocol(protCTF, wait=True)
         self.assertIsNotNone(protCTF.outputCTF, "There was a problem with the CTF estimation")

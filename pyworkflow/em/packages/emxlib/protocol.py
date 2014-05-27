@@ -26,6 +26,7 @@
 """
 In this module are two protocols to Import/Export data from/to EMX.
 """
+import emxlib
 
 from pyworkflow.em.protocol import *
 from pyworkflow.protocol.params import *
@@ -39,6 +40,13 @@ class ProtEmxImport(ProtImport):
     EM software packages. See more about [[http://i2pc.cnb.csic.es/emx][EMX format]]
     """
     _label = 'emx import'
+    
+    # Mapping betwween form parameters and EMX tags
+    PARAM_DICT = {'voltage': 'acceleratingVoltage',
+                  'sphericalAberration': 'cs',
+                  'amplitudeContrast': 'amplitudeContrast',
+                  'samplingRate': 'pixelSpacing__X',                  
+                  }
         
     #--------------------------- DEFINE param functions --------------------------------------------   
     def _defineParams(self, form):
@@ -46,7 +54,57 @@ class ProtEmxImport(ProtImport):
         form.addParam('inputEMX', FileParam, 
                       label="Input EMX file",
                       help='Provide the path to a valid EMX file.')
-                 
+        
+        form.addParam('provideAcquisition', BooleanParam, default=False,
+                      label='Provide acquision info?',
+                      help='You can provide acquisition infomation such as:\n'
+                           'Voltage, spherical aberration, sampling rate, etc...\n'
+                           'and override the values from the EMX file.\n\n'
+                           'If such parameters are not present in the EMX file\n'
+                           'their values are mandatory and should be provided\n'
+                           'in the form entries.')
+        group = form.addGroup('Acquisition info', condition='provideAcquisition')
+        group.addParam('voltage', FloatParam, allowsNull=True,
+                   label=Message.LABEL_VOLTAGE)
+        group.addParam('sphericalAberration', FloatParam, allowsNull=True,
+                   label=Message.LABEL_SPH_ABERRATION)
+        group.addParam('amplitudeContrast', FloatParam, allowsNull=True,
+                      label=Message.LABEL_AMPLITUDE,
+                      help=Message.TEXT_AMPLITUDE)
+        group.addParam('samplingRate', FloatParam, allowsNull=True,  
+                   label=Message.LABEL_SAMP_RATE)
+
+    def _loadEmxInfo(self):
+        """ Load the EMX file and get some information about the type
+        of objects contained and the binary data.
+        """
+        self.emxFn = self.inputEMX.get()
+        emxData = emxlib.EmxData()
+        
+        emxDir = dirname(self.emxFn)
+        self.classElement = None
+        self.binaryFile = None
+        self.object = None
+        self.objDict = {}
+        
+        for classElement in emxlib.CLASSLIST:
+            obj = emxData.readFirstObject(classElement, self.emxFn)
+            if obj is not None:
+                self.objDict[classElement] = obj
+                #is the binary file of this type
+                binaryFile = join(emxDir, obj.get(emxlib.FILENAME))
+                
+                if exists(binaryFile):
+                    self.object = obj
+                    self.binaryFile = binaryFile
+                    self.classElement = classElement
+                    
+                    for k, v in self.PARAM_DICT.iteritems():
+                        # Read from the EMX files the values not set in the Form
+                        if not getattr(self, k).hasValue():
+                            if self.object.get(v) is not None:
+                                self.setAttributeValue(k, self.object.get(v))
+
     #--------------------------- INSERT steps functions --------------------------------------------  
     def _insertAllSteps(self):
         self._insertFunctionStep('importDataStep', self.inputEMX.get())       
@@ -56,12 +114,36 @@ class ProtEmxImport(ProtImport):
         """ Export micrographs to EMX file.
         micsId is only passed to force redone of this step if micrographs change.
         """
+        acquisition = Acquisition()
+        # Setting Acquisition properties
+        acquisition.setVoltage(self.voltage.get())
+        acquisition.setSphericalAberration(self.sphericalAberration.get())
+        acquisition.setAmplitudeContrast(self.amplitudeContrast.get())
+        
         from convert import importData
-        importData(self, emxFile, outputDir=self._getPath())
+        importData(self, emxFile, self._getPath(), 
+                   acquisition, self.samplingRate.get())
     
     #--------------------------- INFO functions -------------------------------------------- 
     def _validate(self):
         errors = []
+        self.emxFn = self.inputEMX.get()
+        # Check that input EMX file exist
+        if not exists(self.emxFn):
+                errors.append("Input EMX file *%s* doesn't exists" % self.emxFn)
+        else:
+            self._loadEmxInfo()   
+            
+            if self.object is None:
+                errors.append('Cannot find any object in EMX file *%s*' % self.emxFn)
+            else:
+                if self.binaryFile is None:
+                    errors.append('Cannot find binary data *%s* associated with EMX metadata file.\n' % self.binaryFile)
+                
+                for k, v in self.PARAM_DICT.iteritems():
+                    if not getattr(self, k).hasValue():
+                        errors.append('*%s* param was left empty and *%s* does not have attribute *%s*.\n' % (k, self.classElement, v))
+        
         return errors
     
     def _citations(self):

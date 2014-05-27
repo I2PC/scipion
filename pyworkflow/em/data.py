@@ -526,14 +526,16 @@ class SetOfImages(EMSet):
     
     def __str__(self):
         """ String representation of a set of images. """
-        if self.getSamplingRate() is None:
-            raise Exception("FATAL ERROR: Object %s has no sampling rate!!!" % self.getName())
+        sampling = self.getSamplingRate()
+        if not sampling:
+            print "FATAL ERROR: Object %s has no sampling rate!!!" % self.getName()
+            sampling = -999.0
         if self._firstDim.isEmpty():
             try:
                 self._firstDim.set(self.getFirstItem().getDim())
             except Exception, ex:
                 print "Error reading dimension: ", ex
-        s = "%s (%d items, %s, %0.2f A/px)" % (self.getClassName(), self.getSize(), self._firstDim, self.getSamplingRate())
+        s = "%s (%d items, %s, %0.2f A/px)" % (self.getClassName(), self.getSize(), self._firstDim, sampling)
         return s
 
     def __iter__(self):
@@ -813,6 +815,9 @@ class Matrix(Scalar):
     
     def setValue(self, i, j, value):
         self._matrix[i, j] = value
+        
+    def __str__(self):
+        return np.array_str(self._matrix)
     
         
 class Transform(EMObject):
@@ -830,7 +835,10 @@ class Transform(EMObject):
     
     def setMatrix(self, matrix):
         self._matrix = matrix
-
+        
+    def __str__(self):
+        return str(self._matrix)
+        
 
 class SetOfAlignment(EMSet):
     """ An Aligment is an particular type of Transform.
@@ -853,7 +861,6 @@ class SetOfAlignment(EMSet):
          """
         self._particlesPointer.set(particles)
         
-
 
 class TransformParams(object):
     """ Class to store transform parameters in the way
