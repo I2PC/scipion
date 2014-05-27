@@ -450,8 +450,8 @@ cat $PBS_NODEFILE
 
 %(JOB_COMMAND)s
 """)
-    queueSys.cancelCommand.set('canceljob %(JOB_ID)d')
-    queueSys.checkCommand.set('qstat %(JOB_ID)d')
+    queueSys.cancelCommand.set('canceljob %(JOB_ID)s')
+    queueSys.checkCommand.set('qstat %(JOB_ID)s')
     
     queue = QueueConfig()
     queue.maxCores.set(maxCores)
