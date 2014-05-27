@@ -830,3 +830,9 @@ def createXmippInputCTF(prot, ctfSet, ctfFn=None):
     else:
         ctfFn = ctfMd.get()
     return ctfFn
+
+
+def xmippGeoFromMatrix(matrix):
+    from pyworkflow.em.transformations import translation_from_matrix, euler_from_matrix
+    shifts = -translation_from_matrix(matrix)
+    angles = euler_from_matrix(matrix)

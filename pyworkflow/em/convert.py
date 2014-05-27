@@ -137,3 +137,4 @@ def addRelionLabelsToEnviron(env):
         pairs.append('%s=%s' % (label2Str(k), v))        
     varStr = ';'.join(pairs)
     env['XMIPP_EXTRA_ALIASES'] = varStr
+    
