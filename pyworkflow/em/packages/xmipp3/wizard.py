@@ -39,8 +39,11 @@ from constants import *
 from pyworkflow.em import SetOfImages, SetOfMicrographs, Volume, ProtCTFMicrographs
 from protocol_projmatch import XmippProtProjMatch 
 from protocol_preprocess_micrographs import XmippProtPreprocessMicrographs
+from protocol_preprocess import XmippProtPreprocessParticles, XmippProtPreprocessVolumes
 from protocol_filter import XmippProtFilterParticles, XmippProtFilterVolumes
 from protocol_mask import XmippProtMaskParticles, XmippProtMaskVolumes
+from protocol_align_volume import XmippProtAlignVolume
+
 
 from pyworkflow.em.wizard import * 
 
@@ -98,7 +101,8 @@ class XmippCTFWizard(CtfWizard):
 #===============================================================================
 
 class XmippParticleMaskRadiusWizard(ParticleMaskRadiusWizard):
-    _targets = [(XmippProtMaskParticles, ['radius'])]
+    _targets = [(XmippProtMaskParticles, ['radius']),
+                (XmippProtPreprocessParticles, ['backRadius'])]
     
     def _getParameters(self, protocol):
         protParams = {}
@@ -140,7 +144,9 @@ class XmippParticleMaskRadiiWizard(ParticlesMaskRadiiWizard):
     
 
 class XmippVolumeMaskRadiusWizard(VolumeMaskRadiusWizard):
-    _targets = [(XmippProtMaskVolumes, ['radius'])]
+    _targets = [(XmippProtMaskVolumes, ['radius']), 
+                (XmippProtAlignVolume, ['maskRadius']),
+                (XmippProtPreprocessVolumes, ['backRadius'])]
     
     def _getParameters(self, protocol):
         protParams = {}
@@ -231,7 +237,6 @@ class XmippFilterVolumesWizard(FilterVolumesWizard):
         _label = params['label']
         _mode = params['mode']
         FilterVolumesWizard.show(self, form, _value, _label, _mode, UNIT_PIXEL_FOURIER)
-
 
 
 class XmippGaussianParticlesWizard(GaussianParticlesWizard):

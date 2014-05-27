@@ -32,14 +32,16 @@ from pyworkflow.em.packages.xmipp3.constants import *
 from constants import *
 from pyworkflow.em import *
 from pyworkflow.em.wizard import *
-from protocol_classify3d import ProtRelionClassify3D
+from protocol_classify3d import ProtRelionClassify3D<
+from protocol_refine3d import ProtRelionRefine3D
+from protocol_classify2d import ProtRelionClassify2D
 
 #===============================================================================
 # MASKS
 #===============================================================================
 
 class RelionPartMaskRadiusWizard(ParticleMaskRadiusWizard):
-#    _targets = [(ProtRelionClassify3D, ['backRadius'])]
+    _targets = [(ProtRelionClassify2D, ['maskRadiusA'])]
     
     def _getParameters(self, protocol):
         protParams = {}
@@ -60,7 +62,8 @@ class RelionPartMaskRadiusWizard(ParticleMaskRadiusWizard):
     
     
 class RelionVolMaskRadiusWizard(VolumeMaskRadiusWizard):
-    _targets = [(ProtRelionClassify3D, ['backRadius'])]
+    _targets = [(ProtRelionClassify3D, ['maskRadiusA']),
+                (ProtRelionRefine3D, ['maskRadiusA'])]
     
     def _getParameters(self, protocol):
         protParams = {}
