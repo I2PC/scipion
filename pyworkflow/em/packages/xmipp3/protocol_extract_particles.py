@@ -147,6 +147,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
                       'If this value is 0, then half the box size is used.', 
                       expertLevel=LEVEL_ADVANCED)
         
+        form.addParallelSection(threads=4, mpi=1)
     #--------------------------- INSERT steps functions --------------------------------------------  
     def _insertAllSteps(self):
         """for each micrograph insert the steps to preprocess it
