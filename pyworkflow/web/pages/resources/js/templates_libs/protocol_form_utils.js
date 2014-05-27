@@ -162,7 +162,6 @@ $(document).ready(function() {
 					// No errors in the process to save
 					protId = json.success;
 					infoPopup('Success', "The protocol was saved successfuly",1,'window.opener.popup(\'/form/?protocolId='+protId+'\')');
-					
 				}
 			},"json");
 		} else if (mode == 'wiz') {
@@ -228,7 +227,6 @@ function fixInput(serialize_form){
 		if($("#"+aux[0]+"_input")){
 			var objId = $("#"+aux[0]+"_input").attr("data-objId");
 			if (objId){
-				// console.log("eybaby")
 				// console.log(paramName)
 				serialize_form = serialize_form.replace(paramName , aux[0]+"="+objId)
 			}
@@ -250,7 +248,9 @@ function evalElements() {
 		var param = $(this).attr('id');
 		// Get the value for the parameter
 		var value = $(this).val();
-		if(value.length == 0){value = $(this).attr('value');}
+		if(value.length == 0){
+			value = $(this).attr('value');
+		}
 		// Get the type (data-type)
 		var type = $(this).attr('data-type');
 		
@@ -390,10 +390,8 @@ function evalDependencies(row, newLevel) {
 				// Get the expertise level for the row affected
 				var expLevel = row2.attr('data-expert');
 				if (res == false || expLevel > newLevel) {
-	//				console.log("hide!")
 					row2.hide();
 				} else if (res == true) {
-	//				console.log("show!")
 					row2.show();
 					
 					// Evaluate the dependencies for the new row affected
@@ -583,12 +581,9 @@ function getTableFormatted(node, json, id, previsualize) {
 		// key is the param ObjId for the object
 		// value is the name of the object
 		if(previsualize){
-//			var func = "<td class='ico'><a href='javascript:customPopup('/visualize_object/?objectId="+ key +"',1024,600);'><i class='fa fa-eye' style='font-size:1.1em;'></i></a></td>"
-//			var func = first + 'customPopup("/showj/?objectId='+ key +'",1024,600)' + second;
 			var func = first + 'launchViewer("'+ key +'")' + second;
 		}
 				
-//		res += "<tr><td id='" + id + x + "' class='" + key + "' value='"
 		res += "<tr id='"+ x + "' class='" + key + "' value='"
 				+ value["nameId"]  + "' onclick=javascript:selTableMessi($(this)); ><td>" 
 				+ value["nameId"] + "</td><td>"  + value["info"]+"</td><td>"+ func +"</td></tr>";
@@ -639,7 +634,6 @@ function processSelectionTable(elm) {
 	 * storaged with this method.
 	 */
 	var value = getSelectedValue(elm);
-//	$('input#' + elm.attr('data-node') + '_input').val(value[0]);
 	$('input#' + elm.attr('data-node') + '_input').attr('value', value[0]);
 	$('input#' + elm.attr('data-node') + '_input').attr('data-objId', value[1]);
 }

@@ -41,29 +41,48 @@ from protocol_refinement import ProtFrealign
 from pyworkflow import findResource
 
 
+#===============================================================================
+# MASKS
+#===============================================================================
+
 class FrealignVolRadiiWizard(VolumeMaskRadiiWizard):
     _targets = [(ProtFrealign, ['innerRadius', 'outerRadius'])]
     
+    def _getParameters(self, protocol):
+        protParams = {}
+        protParams['input']= protocol.inputVolumes
+        protParams['label']= ["innerRadius", "outerRadius"]
+        protParams['value']= [protocol.innerRadius.get(), protocol.outerRadius.get()]
+        return protParams  
+    
     def _getProvider(self, protocol):
-        _objs = protocol.input3DReferences.get()    
-        return VolumeMaskRadiiWizard._getProvider(self, protocol, _objs)
+        _objs = self._getParameters(protocol)['input']
+        return VolumeMaskRadiiWizard._getProvider(self, _objs)
     
     def show(self, form):
-        _value = [form.protocol.innerRadius.get(), form.protocol.outerRadius.get()]
-        _label = ["innerRadius", "outerRadius"]
+        params = self._getParameters(form.protocol)
+        _value = params['value']
+        _label = params['label']
         VolumeMaskRadiiWizard.show(self, form, _value, _label, UNIT_PIXEL)
-        
-    @classmethod    
-    def getView(self):
-        return "wiz_frealign_volume_mask_radii" 
 
+
+#===============================================================================
+# FILTERS
+#===============================================================================
  
 class FrealignBandpassWizard(FilterParticlesWizard):
     _targets = [(ProtFrealign, ['lowResolRefine', 'highResolRefine'])]
     
+    def _getParameters(self, protocol):
+        protParams = {}
+        protParams['input']= protocol.inputParticles
+        protParams['label']= ['lowResolRefine', 'highResolRefine']
+        protParams['value']= [protocol.lowResolRefine.get(), protocol.highResolRefine.get()]
+        return protParams  
+    
     def _getProvider(self, protocol):
-        _objs = protocol.inputParticles.get()
-        return FilterParticlesWizard._getProvider(self, protocol, _objs)
+        _objs = self._getParameters(protocol)['input']
+        return FilterParticlesWizard._getProvider(self, _objs)
     
     def show(self, form):
         protocol = form.protocol
@@ -89,18 +108,21 @@ class FrealignBandpassWizard(FilterParticlesWizard):
         else:
             dialog.showWarning("Input particles", "Select particles first", form.root)  
             
-    
-    @classmethod    
-    def getView(self):
-        return "wiz_frealign_filter_particle" 
- 
  
 class FrealignVolBandpassWizard(FilterVolumesWizard):
     _targets = [(ProtFrealign, ['resolution'])]
     
+    def _getParameters(self, protocol):
+        protParams = {}
+        protParams['input']= protocol.inputVolumes
+        protParams['label']= "resolution"
+        protParams['value']= protocol.resolution.get()
+        return protParams  
+    
     def _getProvider(self, protocol):
-        _objs = protocol.input3DReferences.get()    
-        return FilterVolumesWizard._getProvider(self, protocol, _objs)
+        _objs = self._getParameters(protocol)['input']  
+        return FilterVolumesWizard._getProvider(self, _objs)
+    
     
     def show(self, form):
         protocol = form.protocol
@@ -128,9 +150,6 @@ class FrealignVolBandpassWizard(FilterVolumesWizard):
                 
         else:
             dialog.showWarning("Input volumes", "Select volumes first", form.root)  
-    
-    @classmethod    
-    def getView(self):
-        return "wiz_frealign_filter_volumes" 
+
     
     

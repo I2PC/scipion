@@ -33,15 +33,42 @@ from constants import *
 from pyworkflow.em import *
 from pyworkflow.em.wizard import *
 from protocol_classify3d import ProtRelionClassify3D
+from protocol_refine3d import ProtRelionRefine3D
+from protocol_classify2d import ProtRelionClassify2D
 
+#===============================================================================
+# MASKS
+#===============================================================================
 
+class RelionPartMaskRadiusWizard(ParticleMaskRadiusWizard):
+    _targets = [(ProtRelionClassify2D, ['maskRadiusA'])]
+    
+    def _getParameters(self, protocol):
+        protParams = {}
+        protParams['input']= protocol.inputParticles
+        protParams['label']= "radius"
+        protParams['value']= protocol.radius.get()
+        return protParams  
+    
+    def _getProvider(self, protocol):
+        _objs = self._getParameters(protocol)['input']    
+        return ParticleMaskRadiusWizard._getListProvider(self, _objs)
+    
+    def show(self, form):
+        params = self._getParameters(form.protocol)
+        _value = params['value']
+        _label = params['label']
+        ParticleMaskRadiusWizard.show(self, form, _value, _label, UNIT_PIXEL)
+    
+    
 class RelionVolMaskRadiusWizard(VolumeMaskRadiusWizard):
-    _targets = [(ProtRelionClassify3D, ['radius'])]
+    _targets = [(ProtRelionClassify3D, ['maskRadiusA']),
+                (ProtRelionRefine3D, ['maskRadiusA'])]
     
     def _getParameters(self, protocol):
         protParams = {}
         protParams['input']= protocol.inputVolumes
-        protParams['label']= ["radius"]
+        protParams['label']= "radius"
         protParams['value']= protocol.radius.get()
         return protParams  
     
@@ -54,8 +81,11 @@ class RelionVolMaskRadiusWizard(VolumeMaskRadiusWizard):
         _value = params['value']
         _label = params['label']
         VolumeMaskRadiusWizard.show(self, form, _value, _label, UNIT_PIXEL)
-    
+        
 
+#===============================================================================
+# FILTER
+#===============================================================================
 
 class RelionBandpassWizard(FilterParticlesWizard):
     _targets = [(ProtRelionClassify3D, ['iniLowPassFilter'])]
@@ -63,7 +93,7 @@ class RelionBandpassWizard(FilterParticlesWizard):
     def _getParameters(self, protocol):
         protParams = {}
         protParams['input']= protocol.inputParticles
-        protParams['label']= ["radius"]
+        protParams['label']= "radius"
         protParams['value']= protocol.radius.get()
         return protParams  
     
