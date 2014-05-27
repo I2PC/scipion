@@ -32,7 +32,7 @@ from pyworkflow.em.packages.xmipp3.constants import *
 from constants import *
 from pyworkflow.em import *
 from pyworkflow.em.wizard import *
-from protocol_classify3d import ProtRelionClassify3D<
+from protocol_classify3d import ProtRelionClassify3D
 from protocol_refine3d import ProtRelionRefine3D
 from protocol_classify2d import ProtRelionClassify2D
 
