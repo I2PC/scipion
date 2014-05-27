@@ -109,7 +109,7 @@ class XmippParticleMaskRadiusWeb(XmippParticleMaskRadiusWizard):
             params['value'] = validateMaskRadius(params['value'], xdim, radius=1)
             
             context = {'objects': self._getParticles(objs),
-                       'xdim':xdim,
+                       'xdim': int(xdim/2),
                        'params': params}
         
             context = base_wiz(request, context)
@@ -138,7 +138,7 @@ class XmippParticleMaskRadiiWeb(XmippParticleMaskRadiiWizard):
             params['value'] = validateMaskRadius(params['value'], xdim, radius=2)               
             
             context = {'objects': particles,
-                       'xdim':xdim,
+                       'xdim': int(xdim/2),
                        'params': params}
         
             context = base_wiz(request, context)
@@ -167,7 +167,7 @@ class XmippVolumeMaskRadiusWeb(XmippVolumeMaskRadiusWizard):
             params['value'] = validateMaskRadius(params['value'], xdim, radius=1)
                
             context = {'objects': vols,
-                       'xdim':xdim,
+                       'xdim': int(xdim/2),
                        'params': params}
         
             context = base_wiz(request, context)
@@ -195,7 +195,7 @@ class XmippVolumeMaskRadiiWeb(XmippVolumeRadiiWizard):
             params['value'] = validateMaskRadius(params['value'], xdim, radius=2)  
             
             context = {'objects': vols,
-                       'xdim':xdim,
+                       'xdim': int(xdim/2),
                        'params': params}
         
             context = base_wiz(request, context)

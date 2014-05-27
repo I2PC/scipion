@@ -50,11 +50,15 @@ def proccessModeFilter(mode, value):
     return value
 
 def validateMaskRadius(value, xdim, radius):
+    
+    # MASK RADIUS
     if radius == 1:
         if value > xdim :
             value = xdim
         elif value == -1 :
             value = xdim/2
+    
+    # MASK RADII
     elif radius == 2:
         if value[0] > xdim :
             value[0] = xdim

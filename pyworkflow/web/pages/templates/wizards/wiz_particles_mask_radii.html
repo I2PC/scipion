@@ -5,7 +5,7 @@
 	<script type="text/javascript" src="{{raphael}}"></script>
 	<script>		
 		function initialLoad(){
-			compositeParticle($("tr#"+firstElm));putCircle(({{params.value.0}}*125)/{{xdim}}, "canvas_low", "red");putCircle(({{params.value.1}}*125)/{{xdim}}, "canvas_high", "blue");$("#slider_outer_radius").html({{param.value.1}}/2);$("#slider_inner_radius").html({{params.value.0}}/2);
+			compositeParticle($("tr#"+firstElm));putCircle(({{params.value.0}}*125)/{{xdim}}, "canvas_low", "red");putCircle(({{params.value.1}}*125)/{{xdim}}, "canvas_high", "blue");$("#slider_outer_radius").html({{param.value.1}});$("#slider_inner_radius").html({{params.value.0}});
 		}
 
 		function returnParams(){
@@ -59,40 +59,40 @@
 $(".slider_inner").slider({
 	animate : true,
 	range : "min",
-	value : "{{params.value.0}}",
+	value : {{params.value.0}},
 	min : 0,
 	max : {{xdim}},
-	step : 2,
+	step : 1,
 	//this gets a live reading of the value and prints it on the page
 	slide : function(event, ui) {
-		$("#slider_inner_radius").html(ui.value/2);
+		$("#slider_inner_radius").html(ui.value);
 		
 		//update the circle
  		putCircle((ui.value*125)/{{xdim}}, "canvas_low", "red");
 	},
 	//this updates the hidden form field so we can submit the data using a form
 	change : function(event, ui) {
-		$('#inner_val').attr('value', ui.value/2);
+		$('#inner_val').attr('value', ui.value);
 	}
 });
 
 $(".slider_outer").slider({
 	animate : true,
 	range : "min",
-	value : "{{params.value.1}}",
+	value : {{params.value.1}},
 	min : 0,
 	max : {{xdim}},
-	step : 2,
+	step : 1,
 	//this gets a live reading of the value and prints it on the page
 	slide : function(event, ui) {
-		$("#slider_outer_radius").html(ui.value/2);
+		$("#slider_outer_radius").html(ui.value);
 		
 		//update the circle
  		putCircle((ui.value*125)/{{xdim}}, "canvas_high", "blue");
 	},
 	//this updates the hidden form field so we can submit the data using a form
 	change : function(event, ui) {
-		$('#outer_val').attr('value', ui.value/2);
+		$('#outer_val').attr('value', ui.value);
 	}
 });
 

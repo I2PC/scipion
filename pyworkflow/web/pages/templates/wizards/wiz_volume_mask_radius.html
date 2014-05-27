@@ -7,7 +7,7 @@
 		function initialLoad() {
 			compositeVol($("tr#"+firstElm));
 			putCircle(({{params.value}}*125)/{{xdim}}, "canvas", "blue");
-			$("#slider_radius_result").html({{params.value}}/2);
+			$("#slider_radius_result").html({{params.value}});
 		}
 	</script>
 {% endblock %} 
@@ -47,20 +47,20 @@
 $(".slider_radius").slider({
 	animate : true,
 	range : "min",
-	value : "{{params.value}}",
+	value : {{params.value}},
 	min : 0,
 	max : {{xdim}},
-	step : 2,
+	step : 1,
 	//this gets a live reading of the value and prints it on the page
 	slide : function(event, ui) {
-		$("#slider_radius_result").html(ui.value/2);
+		$("#slider_radius_result").html(ui.value);
 		
 		//update the circle
  		putCircle((ui.value*125)/{{xdim}}, "canvas", "blue");
 	},
 	//this updates the hidden form field so we can submit the data using a form
 	change : function(event, ui) {
-		$('#radius_val').attr('value', ui.value/2);
+		$('#radius_val').attr('value', ui.value);
 	}
 });
 //Load the First Element of the list

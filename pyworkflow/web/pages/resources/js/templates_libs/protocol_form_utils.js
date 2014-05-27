@@ -249,7 +249,9 @@ function evalElements() {
 		var param = $(this).attr('id');
 		// Get the value for the parameter
 		var value = $(this).val();
-		if(value.length == 0){value = $(this).attr('value');}
+		if(value.length == 0){
+			value = $(this).attr('value');
+		}
 		// Get the type (data-type)
 		var type = $(this).attr('data-type');
 		
