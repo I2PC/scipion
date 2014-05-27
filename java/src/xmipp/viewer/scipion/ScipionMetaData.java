@@ -6,7 +6,6 @@
 
 package xmipp.viewer.scipion;
 
-import java.awt.Color;
 import java.io.File;
 import java.sql.*;
 import java.util.ArrayList;
@@ -14,7 +13,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import xmipp.jni.MetaData;
-import xmipp.viewer.models.ClassInfo;
 import xmipp.viewer.models.ColumnInfo;
 
 /**
@@ -31,6 +29,7 @@ public class ScipionMetaData extends MetaData{
     private String id;
     private String classestb, objectstb;
     private boolean haschilds;
+    private ColumnInfo enabledci;
     
     public ScipionMetaData(String classestb, String objectstb, String self, String selfalias, List<ColumnInfo> columns)
     {
@@ -129,7 +128,12 @@ public class ScipionMetaData extends MetaData{
                ci = new ColumnInfo(label, name, alias, type, allowRender);
                columns.add(ci);
             }
-            
+            name = alias = "_enabled";
+            labels.put(name, labels.size());
+            label = labels.get(name);
+            enabledci = new ColumnInfo(label, name, alias, MetaData.LABEL_INT, false);
+            enabledci.iswrite = false;
+            columns.add(enabledci);
             Object value = null;
            
             EMObject emo;
@@ -142,38 +146,41 @@ public class ScipionMetaData extends MetaData{
                 emo = new EMObject(id, this);
                 for(ColumnInfo column: columns)
                 {
-                    name = column.labelName;
-                    alias = column.comment;
-                    switch(column.type)
-                    {
-                        
-                        case MetaData.LABEL_INT:
-                            value = rs.getInt(alias);
-                            break;
-                        case MetaData.LABEL_DOUBLE:
-                            value = rs.getFloat(alias);
-                            break;
-                        case MetaData.LABEL_STRING:
-                            value = rs.getString(alias);
-                            if(name.endsWith("_filename"))
+                    if(column.iswrite)
+                        {
+                            name = column.labelName;
+                            alias = column.comment;
+                            switch(column.type)
                             {
-                                indexci = getColumnInfo(name.replace("_filename", "_index"));
-                                if(column.render && indexci != null)
-                                {
-                                    index = rs.getInt(indexci.comment);
-                                    if(index > 0)
-                                        value = index + "@" + value;
-                                }
+
+                                case MetaData.LABEL_INT:
+                                    value = rs.getInt(alias);
+                                    break;
+                                case MetaData.LABEL_DOUBLE:
+                                    value = rs.getFloat(alias);
+                                    break;
+                                case MetaData.LABEL_STRING:
+                                    value = rs.getString(alias);
+                                    if(name.endsWith("_filename"))
+                                    {
+                                        indexci = getColumnInfo(name.replace("_filename", "_index"));
+                                        if(column.render && indexci != null)
+                                        {
+                                            index = rs.getInt(indexci.comment);
+                                            if(index > 0)
+                                                value = index + "@" + value;
+                                        }
+                                    }
+                                    break;
+                                default:
+                                    value = rs.getString(alias);
+
                             }
-                            break;
-                        default:
-                            value = rs.getString(alias);
-                       
-                    }
-                    //System.out.printf("%s: %s render: %s type: %s \n", column.labelName, value, column.render, MetaData.getLabelTypeString(column.type));
-                    emo.setValue(column, value);
-                    
+                            //System.out.printf("%s: %s render: %s type: %s \n", column.labelName, value, column.render, MetaData.getLabelTypeString(column.type));
+                            emo.setValue(column, value);
+                        }
                 }
+                emo.setValue(enabledci, 1);
                 emobjects.add(emo);
             }
             rs.close();
@@ -224,6 +231,8 @@ public class ScipionMetaData extends MetaData{
     public List<EMObject> getEMObjects() {
         return emobjects;
     }
+    
+     
 
     public EMObject getEMObject(long id) {
         for(EMObject emo: emobjects)
@@ -261,12 +270,12 @@ public class ScipionMetaData extends MetaData{
     
 
    
-    ScipionMetaData getSelectionMd(long[] selIds) {
+    public ScipionMetaData getMd(List<EMObject> emos) {
         ScipionMetaData selmd;
         //either selection of classes or particles main selection will be saved on Classes and Objects table
         selmd = new ScipionMetaData("Classes", "Objects", self, selfalias, columns);
-        for(long id: selIds)
-            selmd.add(getEMObject(id));
+        for(EMObject emo: emos)
+            selmd.add(emo);
         
         return selmd;
     }
@@ -283,27 +292,32 @@ public class ScipionMetaData extends MetaData{
     public ScipionMetaData getStructure(String classestb, String objectstb) {
         return new ScipionMetaData(classestb, objectstb, self, selfalias, columns);
     }
+
+    public List<EMObject> getEnabledObjects() {
+        List<EMObject> emos = new ArrayList<>();
+        for(EMObject emo: emobjects)
+            if(emo.isEnabled())
+                emos.add(emo);
+        return emos;
+    }
+
+    
     
     public class EMObject
     {
         long id;
         protected Map<ColumnInfo, Object> values;
        
-        boolean isenabled;
         ScipionMetaData childmd;
         ScipionMetaData md;
         
         public EMObject(long id, ScipionMetaData md)
         {
             this.id = id;
-            this.isenabled = true;
             values = new HashMap<ColumnInfo, Object>();
             this.md = md;
         }
         
-        
-        
-
         Object getValue(ColumnInfo c) {
             Object result = values.get(c);
             if(result != null)
@@ -319,10 +333,19 @@ public class ScipionMetaData extends MetaData{
             values.put(ci, value);
             return true;
         }
-
-       
+        
+        public boolean isEnabled()
+        {
+            Integer value = (Integer)getValue(enabledci);
+            return value.intValue() == 1;
+        }
+        
+        public void setEnabled(boolean isenabled)
+        {
+            int value = isenabled? 1: 0;
+            setValue(enabledci, value);
+        }
     }
-
 
     public long[] findObjects()
     {
@@ -353,18 +376,16 @@ public class ScipionMetaData extends MetaData{
     public boolean setEnabled(boolean isenabled, long id)
     {
         EMObject emo = getEMObject(id);
-        emo.isenabled = isenabled;
+        emo.setEnabled(isenabled);
         return true;
     }
     
     public boolean getEnabled(long id)
     {
         EMObject emo = getEMObject(id);
-        return emo.isenabled;
+        return emo.isEnabled();
     
     }
-    
-    
     
     public List<ColumnInfo> getColumnsInfo()
     {
@@ -476,7 +497,7 @@ public class ScipionMetaData extends MetaData{
         for(int i = 0; i < ids.length; i++)
         {
             emo = smd.getEMObject(ids[i]);
-            emobjects.add(emo);
+            add(emo);
         }
     }
     
@@ -554,44 +575,50 @@ public class ScipionMetaData extends MetaData{
             for(int i = 0; i < columns.size(); i ++)
             {
                 ci = columns.get(i);
-                type = getTypeMapping(ci.type);
-                sql += String.format(line, i + 2, ci.labelName, ci.comment, type);
-                createcols += String.format(",\n%s %s DEFAULT NULL", ci.comment, type);
-                cols += String.format(", %s", ci.comment);
+                if(ci.iswrite)
+                {
+                    
+                    type = getTypeMapping(ci.type);
+                    sql += String.format(line, i + 2, ci.labelName, ci.comment, type);
+                    createcols += String.format(",\n%s %s DEFAULT NULL", ci.comment, type);
+                    cols += String.format(", %s", ci.comment);
+                }
             }
             sql += String.format(";DROP TABLE IF EXISTS %1$s; CREATE TABLE %1$s(\n"
                     + "id        INTEGER PRIMARY KEY AUTOINCREMENT,\n" +
 "                      label      TEXT DEFAULT NULL,\n" +
 "                      comment TEXT DEFAULT NULL" +
 "                      %2$s)", objectstb, createcols);
-                
-            
+            if(size() == 0)    
+                return sql;
             sql += String.format(";INSERT INTO %s(%s) VALUES ", objectstb, cols);
             Object value;
             for(EMObject emo: emobjects)
             {
                 sql += String.format("(%s, '', ''", emo.id);
-                for(int i = 0; i < columns.size(); i ++)
-                {
-                    ci = columns.get(i);
-                    value = emo.getValue(ci);
-                    if(ci.type == MetaData.LABEL_STRING)
+                for (ColumnInfo column : columns) {
+                    if(column.iswrite)
                     {
-                        if(value != null)
+                        value = emo.getValue(column);
+                        if(column.type == MetaData.LABEL_STRING)
                         {
-                            String str = (String)value;
-                            if( str.contains("@"))
-                                str = str.substring(str.lastIndexOf("@") + 1);
-                            value = str;
+                            if(value != null)
+                            {
+                                String str = (String)value;
+                                if( str.contains("@"))
+                                    str = str.substring(str.lastIndexOf("@") + 1);
+                                value = str;
+                            }
+                            sql += String.format(", '%s'", value);
                         }
-                        sql += String.format(", '%s'", value);
+                        else
+                            sql += String.format(", %s", value);
                     }
-                    else
-                        sql += String.format(", %s", value);
                 }
                 sql += "),";
             }
             sql = sql.substring(0, sql.length() - 1);//remove first comma
+            
             return sql;
     }
     public  void writeBlock(String path)
@@ -632,6 +659,7 @@ public class ScipionMetaData extends MetaData{
             return MetaData.LABEL_INT;
         if (type.equals("Float"))
             return MetaData.LABEL_DOUBLE;
+        
         return MetaData.LABEL_STRING;
     }
     
@@ -654,4 +682,6 @@ public class ScipionMetaData extends MetaData{
     {
         return null;
     }
+    
+
 }

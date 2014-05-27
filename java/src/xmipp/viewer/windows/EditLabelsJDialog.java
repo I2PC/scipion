@@ -162,7 +162,7 @@ public class EditLabelsJDialog extends XmippDialog {
 	}
 
 	public int getSelectedLabel() {
-		return rows.get(getSelectedRow()).getLabel();
+		return rows.get(getSelectedRow()).label;
 	}
 
 	class ColumnsTableModel extends AbstractTableModel {
@@ -205,7 +205,7 @@ public class EditLabelsJDialog extends XmippDialog {
 			ColumnInfo col = rows.get(row);
 			switch (column) {
 			case 0:
-				return col.getLabelRealName();
+				return col.labelName;
 			case 1:
 				return col.getLabelTypeString();
 			}

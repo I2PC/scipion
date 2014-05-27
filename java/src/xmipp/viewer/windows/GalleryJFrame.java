@@ -1528,13 +1528,14 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 
 		public void update()
 		{
+                        boolean isscipion = (data instanceof ScipionGalleryData);
 			boolean galMode = data.isGalleryMode();
 			boolean volMode = data.isVolumeMode();
 			setItemEnabled(FILE_OPENWITH_CHIMERA, volMode);
 			setItemEnabled(FILE_OPENMICROGRAPHS, data.hasMicrographParticles());
                         setItemEnabled(FILE_EXPORTIMAGES, data.hasRenderLabel() && !volMode && !(data instanceof ScipionGalleryData));
-			setItemEnabled(FILE_SAVE, !volMode);
-			setItemEnabled(FILE_SAVEAS, !volMode);
+			setItemEnabled(FILE_SAVE, !volMode && !isscipion);
+			setItemEnabled(FILE_SAVEAS, !volMode && !isscipion);
 			
 			setItemEnabled(DISPLAY_APPLYGEO, data.containsGeometryInfo());
 			setItemEnabled(DISPLAY_WRAP, data.containsGeometryInfo() && data.useGeo());
@@ -1558,7 +1559,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			setItemEnabled(MD_SAVE_SELECTION, isCol);
 			setItemEnabled(MD_FIND_REPLACE, isCol && !galMode);
 			reslicebt.setEnabled(volMode);
-                        setItemEnabled(METADATA, !(data instanceof ScipionGalleryData));
+                        setItemVisible(METADATA, !isscipion);
 		}// function update
 
 		@Override
@@ -2221,14 +2222,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		return map;
 	}
         
-       public boolean isImageSelected()
-       {
-           if(!data.allowGallery())
-               return false;
-           
-           //what if there are no images on metadata??
-           return gallery.getSelectionCount() > 0;
-       }
+    
        
        
        

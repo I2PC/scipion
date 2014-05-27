@@ -97,6 +97,8 @@ public class GalleryData {
         protected String[] visibleLabels;
         protected String[] orderLabels;
 
+   
+
   
  
  	public enum Mode {
@@ -250,7 +252,7 @@ public class GalleryData {
 			mode = Mode.GALLERY_MD;
 
 		if (hasRenderLabel()) {
-			int renderLabel = ciFirstRender.getLabel();
+			int renderLabel = ciFirstRender.label;
 			ImageGeneric image = null;
 			String imageFn;
 			// Try to find at least one image to render
@@ -294,7 +296,7 @@ public class GalleryData {
 
 					for (int i = 0; i < numberOfVols; ++i) {
 						volumes[i] = md.getValueString(
-								ciFirstRender.getLabel(), ids[i]);
+								ciFirstRender.label, ids[i]);
 					}
 					commonVolPrefix = XmippStringUtils
 							.commonPathPrefix(volumes);
@@ -350,12 +352,12 @@ public class GalleryData {
 					if (ci.visible)
 						ciFirstRenderVisible = ci;
 				}
-				if ((ciFirstRender == null || ci.getLabel() == MDLabel.MDL_IMAGE)
+				if ((ciFirstRender == null || ci.label == MDLabel.MDL_IMAGE)
 						&& ci.render)// favor mdl_image over mdl_micrograph
 				{
 					ciFirstRender = ci;
 				}
-				if ((ciFirstRenderVisible == null || ci.getLabel() == MDLabel.MDL_IMAGE)
+				if ((ciFirstRenderVisible == null || ci.label == MDLabel.MDL_IMAGE)
 						&& ci.render && ci.visible)
 					ciFirstRenderVisible = ci;
                                 
@@ -478,7 +480,7 @@ public class GalleryData {
 
 	/** Return the label that is used for rendering */
 	public int getRenderLabel() {
-		return ciFirstRender.getLabel();
+		return ciFirstRender.label;
 	}
 
 	/** Return true if the gallery mode is allowed */
@@ -581,7 +583,7 @@ public class GalleryData {
 	/** This is only needed for metadata table galleries */
 	public boolean isFile(ColumnInfo ci) {
 		try {
-			return MetaData.isPathField(ci.getLabel());
+			return MetaData.isPathField(ci.label);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -598,7 +600,7 @@ public class GalleryData {
 
 	public boolean isImageFile(ColumnInfo ci) {
 		try {
-			return MetaData.isImage(ci.getLabel());
+			return MetaData.isImage(ci.label);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -841,11 +843,27 @@ public class GalleryData {
 	
         
 	/** Get all the images assigned to all selected classes */
-	public MetaData getSelClassesImages(){
+	public MetaData getClassesImages(){
 		MetaData mdImages = new MetaData();
 		MetaData md;
 		for (int i = 0; i < ids.length; ++i){
 			if (selection[i]){
+				md = getClassImages(i);
+				if(md != null)
+                                {
+                                    mdImages.unionAll(md);
+                                    md.destroy();
+                                }
+			}
+		}
+		return mdImages;
+	}
+        
+        public MetaData getEnabledClassesImages(){
+		MetaData mdImages = new MetaData();
+		MetaData md;
+		for (int i = 0; i < ids.length; ++i){
+			if (isEnabled(i)){
 				md = getClassImages(i);
 				if(md != null)
                                 {
@@ -899,7 +917,7 @@ public class GalleryData {
 	}
 
 	public int getLabelFromCol(int col) {
-		return labels.get(col).getLabel();
+		return labels.get(col).label;
 	}
 
 	public ColumnInfo getColumnInfo(int col) {
@@ -916,7 +934,7 @@ public class GalleryData {
 
 	public String getValueFromCol(int index, ColumnInfo ci) {
 		try {
-			return md.getValueString(ci.getLabel(), ids[index]);
+			return md.getValueString(ci.label, ids[index]);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -934,7 +952,7 @@ public class GalleryData {
 
 	public void setValueToCol(int index, ColumnInfo ci, String value) {
 		try {
-			md.setValueString(ci.getLabel(), value, ids[index]);
+			md.setValueString(ci.label, value, ids[index]);
 			setMdChanges(true);
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -1298,23 +1316,9 @@ public class GalleryData {
         return md.getMetaDataRow();
     }
 
-    public long[] getSelIds()
-    {
-        long[] selids = new long[selection.length];
-        int count = 0; 
-        for(int i = 0; i < selection.length; i ++)
-            if(selection[i] && md.getEnabled(ids[i]))
-            {
-                selids[count] = ids[i];
-                count ++;
-            }
-        return Arrays.copyOfRange(selids, 0, count);
-    }
+ 
     
-    public long[] getChilds(long[] ids)
-    {
-        return new long[]{};
-    }
+
 
     public String getLabel(long objId, int label)
     {
@@ -1455,5 +1459,27 @@ public class GalleryData {
             return normalize;
         }
 	
+        public List<Long> getEnabledIds() {
+             List<Long> result = new ArrayList<Long>();
+            for(int i = 0; i < ids.length; i ++)
+                if(isEnabled(i))
+                    result.add(ids[i]);
+            return result;
+        }
+        
+        public MetaData getMd(List<Long> ids)
+        {
+            MetaData selmd = null;
+            try {
+                    long[] ids2 = new long[ids.size()];
+                    for(int i = 0; i < ids.size(); i ++)
+                        ids2[i] = ids.get(i);
+                    selmd = new MetaData();
+                    selmd.importObjects(md, ids2);
+                } catch (Exception e) {
+                        e.printStackTrace();
+                }
+            return selmd;
+        }
         
 }// class GalleryData

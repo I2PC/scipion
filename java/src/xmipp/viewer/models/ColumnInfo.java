@@ -38,6 +38,7 @@ public class ColumnInfo {
 	public boolean allowEdit = true;
 	public String comment;
         public int type;
+        public boolean iswrite;
 	
 	/** Constructors */
 	
@@ -49,7 +50,7 @@ public class ColumnInfo {
 		this.allowRender = allowRender;
                 this.comment = comment;
                 this.type = type;
-                
+                this.iswrite = true;
 	}
         
 	
@@ -83,18 +84,9 @@ public class ColumnInfo {
 		return result;
 	}
 	
-	public int getLabel(){
-		return label;
-	}
 	
-	public int getType(){
-		try {
-			return type;
-		}catch(Exception e){
-			e.printStackTrace();
-		}
-		return -1;
-	}
+	
+	
 	
 	public String getLabelTypeString(){
 		try {
@@ -105,23 +97,7 @@ public class ColumnInfo {
 		}
 		return null;
 	}
-	
-	/** Return the name of the label */
-	public String getLabelName(){
-		return labelName;
-	}
-	
-	/** Return the real name of the label
-	 * This is read from metadata 
-	 * */
-	public String getLabelRealName(){
-		return MetaData.getLabelName(label);
-	}
-	
-	/** Change display name of the label */
-	public void changeLabelName(String newName){
-		labelName = newName;
-	}
+
 	
 	public ColumnInfo clone(){
 		return new ColumnInfo(label, labelName, comment, type, allowRender, visible, render);
@@ -149,7 +125,8 @@ public class ColumnInfo {
 	
 	public String toString()
 	{
-		return getLabelName();
+		return labelName;
 	}
-	
+        
+        
 }//class ColumnInfo

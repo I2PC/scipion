@@ -705,7 +705,7 @@ public abstract class ImageGalleryTableModel extends AbstractTableModel {
 			for (int col = 0; col < n; ++col) {
 				ci = data.getColumnInfo(col);
 				if (ci.allowRender){
-					key = getItemKey(row, ci.getLabel());
+					key = getItemKey(row, ci.label);
 					DEBUG.printFormat("Removing item: %s from cache", key);
 					cache.remove(key);
 				}

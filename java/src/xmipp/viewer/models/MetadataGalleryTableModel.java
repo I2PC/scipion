@@ -146,7 +146,7 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel
 			// if (renderLabels) {
 			for (int i = 0; i < data.ids.length; ++i)
 			{
-				String imageFn = getImageFilename(i, renderLabel.getLabel());
+				String imageFn = getImageFilename(i, renderLabel.label);
 				if (imageFn != null && Filename.exists(imageFn))
 				{
 					try
@@ -173,7 +173,7 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel
 	@Override
 	protected ImageItem createItem(int index, String key) throws Exception
 	{
-		return createImageItem(index, renderLabel.getLabel(), displayLabel.getLabel(), key);
+		return createImageItem(index, renderLabel.label, displayLabel.label, key);
 	}
 
 	public String getLabel(int row, int col)
@@ -182,7 +182,7 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel
 		{
 			int index = getIndex(row, col);
 			long objId = data.ids[index];
-			return data.getLabel(objId, displayLabel.getLabel());
+			return data.getLabel(objId, displayLabel.label);
 		}
 		catch (Exception e)
 		{
@@ -208,7 +208,7 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel
 	@Override
 	public String getItemKey(int index) throws Exception
 	{
-		return getItemKey(index, renderLabel.getLabel());
+		return getItemKey(index, renderLabel.label);
 
 	}
 
@@ -254,7 +254,7 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel
 			if (data.isImageFile(renderLabel))
 			{
                             int index = getIndex(row, col);
-                            String file = getImageFilename(index, renderLabel.getLabel());
+                            String file = getImageFilename(index, renderLabel.label);
                             openXmippImageWindow(file);
                             return true;
 			}
@@ -307,7 +307,7 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel
 	{
 		try
 		{
-                    ImagePlus imp = XmippImageConverter.readMetadataToImagePlus(renderLabel.getLabel(), data.md, data.useGeo, data.wrap);
+                    ImagePlus imp = XmippImageConverter.readMetadataToImagePlus(renderLabel.label, data.md, data.useGeo, data.wrap);
                     return new ImagePlusLoader(imp);
 		}
 		catch (Exception e)

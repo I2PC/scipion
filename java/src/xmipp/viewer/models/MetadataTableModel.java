@@ -56,7 +56,7 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 
 	@Override
 	public String getColumnName(int column) {
-		return visibleLabels.get(column).getLabelName();
+		return visibleLabels.get(column).labelName;
 	}
 
 	@Override
@@ -64,10 +64,10 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 		ColumnInfo ci = visibleLabels.get(column);
 		if (ci.render)
 			return ImageItem.class;
-		else if (ci.getLabel() == MDLabel.MDL_ENABLED)
+		else if (ci.label == MDLabel.MDL_ENABLED)
 			return Boolean.class;//This way a JCheckBox is rendered
 		try {
-			return MetaData.getLabelClass(ci.getLabel());
+			return MetaData.getLabelClass(ci.type);
 		} catch (Exception e) {
 			e.printStackTrace();
 			return null;
@@ -98,21 +98,21 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
                         
 			ColumnInfo ci = visibleLabels.get(column);
 			if (ci.render) {
-				String key = getItemKey(row, ci.getLabel());
+				String key = getItemKey(row, ci.label);
 				ImageItem item;
 				// If the element is on cache, just return it
 				if (cache.containsKey(key))
 					item = cache.get(key);
 				else {
 					// If not, create the item and store it for future
-					item = createImageItem(row, ci.getLabel(), ci.getLabel(),
+					item = createImageItem(row, ci.label, ci.label,
 							key);
 					cache.put(key, item);
 				}
 				setupItem(item, row);
 				return item;
 			}
-			int label = ci.getLabel();
+			int label = ci.label;
 			long id = data.ids[row];
 			int type = ci.type;
                         
@@ -152,7 +152,7 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 		ColumnInfo ci = visibleLabels.get(column);
 		if (value == null || value.equals("")) {
 			XmippDialog.showError(null,
-					XmippMessage.getEmptyFieldMsg(ci.getLabelName()));
+					XmippMessage.getEmptyFieldMsg(ci.labelName));
 			return;// empty values are not allowed
 		}
 		try {
@@ -173,8 +173,8 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 	protected void setMdValueAt(Object value, int row, int column,
 			ColumnInfo ci, long id) throws Exception {
 		if (!ci.render) {
-			int label = ci.getLabel();
-			int type = ci.getType();
+			int label = ci.label;
+			int type = ci.type;
 			MetaData md = data.md;
 			switch (type) {
 			case MetaData.LABEL_BOOL:
@@ -222,7 +222,7 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 			ColumnInfo ci = visibleLabels.get(col);
 			if (ci.allowRender && data.isImageFile(ci)) {
                                 int index = getIndex(row, col);
-				String file = getImageFilename(index, ci.getLabel());
+				String file = getImageFilename(index, ci.label);
                                 openXmippImageWindow(file);
 				return true;
 			}
@@ -263,7 +263,7 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 	public String getLabel(int row, int col) {
 		try {
 			long objId = data.ids[row];
-			return data.md.getValueString(visibleLabels.get(col).getLabel(),
+			return data.md.getValueString(visibleLabels.get(col).label,
 					objId);
 		} catch (Exception e) {
 			e.printStackTrace();

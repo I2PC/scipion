@@ -80,8 +80,8 @@ public class PlotJDialog extends XmippDialog {
 		rowsExtra = new ArrayList<ColumnInfo.ColumnExtraInfo>();
 		int i = 0;
 		for (ColumnInfo ci : parent.getData().getLabelsInfo())
-			if (ci.getType() == 2 || ci.getLabel() == 0) {// int or double
-				ColumnInfo ci2 = new ColumnInfo(ci.getLabel());
+			if (ci.type == 2 || ci.label == 0) {// int or double
+				ColumnInfo ci2 = new ColumnInfo(ci.label);
 				rows.add(ci2);
 				rowsExtra
 						.add(ci2.new ColumnExtraInfo(COLORS[i % COLORS.length]));
@@ -176,7 +176,7 @@ public class PlotJDialog extends XmippDialog {
 			ColumnInfo ci = rows.get(i);
 			ColumnInfo.ColumnExtraInfo cei = rowsExtra.get(i);
 			if (ci.render) {
-				labels += ci.getLabelRealName() + " ";
+				labels += ci.labelName + " ";
 				colors += "#" + cei.color + " ";
 				styles += cei.linestyle + " ";
 				markers += cei.marker + " ";
@@ -248,7 +248,7 @@ public class PlotJDialog extends XmippDialog {
 			ColumnInfo.ColumnExtraInfo cei = rowsExtra.get(row);
 			switch (column) {
 			case 0:
-				return ci.getLabelRealName();
+				return ci.labelName;
 			case 1:
 				return ci.render;
 			case 2:
