@@ -1,3 +1,28 @@
+# **************************************************************************
+# *
+# * Authors:     J.M. de la Rosa Trevin (jmdelarosa@cnb.csic.es)
+# *
+# * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
+# *
+# * This program is free software; you can redistribute it and/or modify
+# * it under the terms of the GNU General Public License as published by
+# * the Free Software Foundation; either version 2 of the License, or
+# * (at your option) any later version.
+# *
+# * This program is distributed in the hope that it will be useful,
+# * but WITHOUT ANY WARRANTY; without even the implied warranty of
+# * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# * GNU General Public License for more details.
+# *
+# * You should have received a copy of the GNU General Public License
+# * along with this program; if not, write to the Free Software
+# * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+# * 02111-1307  USA
+# *
+# *  All comments concerning this program package may be sent to the
+# *  e-mail address 'jgomez@cnb.csic.es'
+# *
+# **************************************************************************
 
 from pyworkflow.em import (SpiderProtFilter, SpiderProtAlignAPSR, SpiderProtAlignPairwise,
                            SpiderProtCustomMask, SpiderProtCAPCA, SpiderProtClassifyWard, 
@@ -64,45 +89,6 @@ class TestSpiderWorkflow(TestWorkflow):
         protDiday.inputParticles.set(protAPSR.outputParticles)
         self.launchProtocol(protDiday)               
         
-    def test_mdaPairwise(self):
-        protImport = ProtImportParticles(pattern=self.particlesFn, samplingRate=3.5)
-        self.launchProtocol(protImport)
-        # check that input images have been imported (a better way to do this?)
-        if protImport.outputParticles is None:
-            raise Exception('Import of images: %s, failed. outputParticles is None.' % pattern)
-        
-        protPairwise = SpiderProtAlignPairwise()
-        protPairwise.inputParticles.set(protImport.outputParticles)
-        protPairwise.innerRadius.set(48)
-        self.launchProtocol(protPairwise)
-        
-    def test_StoredPointers(self):
-        """ Test the usage of pointer extensions to store a 
-        workflow dependencies before the current execution 
-        of the protocols.
-        """
-        protImport = ProtImportParticles(pattern=self.particlesFn, samplingRate=3.5)
-        self.saveProtocol(protImport)
-        
-        protFilter = SpiderProtFilter()
-        protFilter.inputParticles.set(protImport)
-        protFilter.inputParticles.setExtendedAttribute('outputParticles')
-        self.saveProtocol(protFilter)
-        
-        protAPSR = SpiderProtAlignAPSR()
-        protAPSR.inputParticles.set(protFilter)
-        protAPSR.inputParticles.setExtendedAttribute('outputParticles')
-        self.saveProtocol(protAPSR)
-        
-        return 
-        # Launch all stored protocol runs
-        self.launchProtocol(protImport)
-        # check that input images have been imported (a better way to do this?)
-        if protImport.outputParticles is None:
-            raise Exception('Import of images: %s, failed. outputParticles is None.' % pattern)
-        self.launchProtocol(protFilter)
-        self.launchProtocol(protAPSR)       
-
 
 
 if __name__ == "__main__":
