@@ -220,12 +220,7 @@ class Project(object):
         to mark a protocol that have an interactive step
         waiting for approval that can continue
         """
-        for step in protocol._steps:
-            if step.status == STATUS_WAITING_APPROVAL:
-                step.setStatus(STATUS_FINISHED)
-                self.mapper.store(step)
-                self.mapper.commit()
-                break
+        protocol.continueFromInteractive()
         self.launchProtocol(protocol)
         
     def __protocolInList(self, prot, protocols):
