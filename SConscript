@@ -1223,6 +1223,7 @@ if int(env['matlab']):
         'resolution', 'rotate', 'scale', 'scale_pyramid', 'volume_segment']
     for i in range(len(bindings)):
         CompileMatlab('xmipp_read')
+        CompileMatlab('xmipp_write')
         CompileMatlab('xmipp_nma_read_alignment')
         CompileMatlab('xmipp_nma_save_cluster')
         CompileMatlab('xmipp_read_structure_factor')
