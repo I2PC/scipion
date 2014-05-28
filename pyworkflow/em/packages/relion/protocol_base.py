@@ -27,7 +27,7 @@
 This module contains the protocol base class for Relion protocols
 """
 
-from pyworkflow.utils import environAdd, moveFile
+from pyworkflow.utils import environAdd, moveFile, cleanPattern
 from pyworkflow.em import *
 
 from constants import ANGULAR_SAMPLING_LIST, MASK_FILL_ZERO
@@ -442,27 +442,29 @@ class ProtRelionBase(EMProtocol):
         If the input particles comes from Relion, just link the file. 
         """
         imgSet = self.inputParticles.get()
-        imgsStar = getattr(imgSet, '_relionStar', None)
+        imgStar = self._getFileName('input_star')
+        imgFn = self._getFileName('input_mrcs')
         Xdim = imgSet.getDimensions()[0]
         
-        createRelionInputParticles(imgSet, self._getFileName('input_star'),
-                                   self._getFileName('input_mrcs'))
+        createRelionInputParticles(imgSet, imgStar, imgFn)
         
-        if imgsStar is None and self.doNormalize.get():
+        if self.doNormalize:
             # Enter here to generate the star file or to normalize the images
             self._loadEnvironment()
-            #self._enterDir(self._getTmpPath())
-            #imgFn = os.path.relpath(self._getFileName('input_mrcs'), self._getTmpPath())
-            imgFn = self._getFileName('input_mrcs')
-            #outFn = removeBaseExt(basename(imgFn))
+            self._enterDir(self._getPath())
+            imgFn = os.path.relpath(imgFn, self._getPath())
             radius = self.backRadius.get()
             if radius <= 0:
                 radius = Xdim / 2
             params = '--operate_on %(imgFn)s --norm True --bg_radius %(radius)s'
             self.runJob(self._getProgram('relion_preprocess'), params % locals())
             
-            #moveFile(basename(imgFn), imgFn)
-            #self._leaveDir()
+            outFn = 'particles.mrcs'
+            outStar = 'particles.star'
+            
+            moveFile(outFn, imgFn)
+            cleanPattern(outStar)
+            self._leaveDir()
     
     def runRelionStep(self, params):
         """ Execute the relion steps with the give params. """
