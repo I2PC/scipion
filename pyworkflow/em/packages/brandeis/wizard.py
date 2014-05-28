@@ -84,6 +84,7 @@ class FrealignBandpassWizard(FilterParticlesWizard):
         protParams['input']= protocol.inputParticles
         protParams['label']= label
         protParams['value']= value
+        protParams['mode'] = FILTER_LOW_PASS_NO_DECAY
         return protParams  
     
     def _getProvider(self, protocol):
@@ -93,13 +94,13 @@ class FrealignBandpassWizard(FilterParticlesWizard):
     def show(self, form):
         protocol = form.protocol
         provider = self._getProvider(protocol)
+        params = self._getParameters(protocol)
 
         if provider is not None:
-            self.mode = FILTER_LOW_PASS_NO_DECAY
             
-            args = {'mode':  self.mode,                   
-                    'highFreq': protocol.highResolRefine.get(),
-                    'lowFreq': protocol.lowResolRefine.get(),
+            args = {'mode': params['mode'],                   
+                    'lowFreq': params['value'][0],
+                    'highFreq': params['value'][1],
                     'unit': UNIT_ANGSTROM
                     }
             
@@ -126,7 +127,8 @@ class FrealignVolBandpassWizard(FilterVolumesWizard):
         protParams['input']= protocol.input3DReference
         protParams['label']= label
         protParams['value']= value
-        return protParams  
+        protParams['mode'] = FILTER_LOW_PASS_NO_DECAY
+        return protParams
     
     def _getProvider(self, protocol):
         _objs = self._getParameters(protocol)['input']  
@@ -136,12 +138,12 @@ class FrealignVolBandpassWizard(FilterVolumesWizard):
     def show(self, form):
         protocol = form.protocol
         provider = self._getProvider(protocol)
+        params = self._getParameters(protocol)
 
         if provider is not None:
-            self.mode = FILTER_LOW_PASS_NO_DECAY
             
-            args = {'mode':  self.mode,                   
-                    'lowFreq': protocol.resolution.get(),
+            args = {'mode': params['mode'],                   
+                    'lowFreq': params['value'],
                     'unit': UNIT_ANGSTROM
                     }
             

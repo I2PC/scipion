@@ -32,11 +32,11 @@ from views_util import loadProtocolProject, getResourceCss, getResourceJs, getRe
 from views_protocol import updateProtocolParams
 from pyworkflow.em import * 
 
-
 # Imports for web wizards
 from pyworkflow.web.app.wizards.xmipp_wizard import *
 from pyworkflow.web.app.wizards.spider_wizard import *
 from pyworkflow.web.app.wizards.relion_wizard import *
+from pyworkflow.web.app.wizards.brandeis_wizard import *
 
 
 #===============================================================================
@@ -59,6 +59,4 @@ def wizard(request):
     
     # Obtain the parameters for the wizard
     return wizClass._run(protocol, request)
-
-
 
