@@ -333,7 +333,7 @@ def AddMPIProgram(name, basedir, sources_pattern='*.cpp', skip_list=[],
 
 # Add a program integrated in the Xmipp structure
 def AddXmippProgram(name, libs=[], folder='programs', incPaths=[], libPaths=[],
-                    useCudaEnvironment=False):
+                    useCudaEnvironment=False, cxxflags=[]):
     finalLibPath = ['lib']
     finalLibPath.append(libPaths)
     finalIncludePath = ['libraries', '#', '#'+HDF5Dir]
@@ -357,7 +357,7 @@ def AddXmippProgram(name, libs=[], folder='programs', incPaths=[], libPaths=[],
       finalLibs += PythonLibs
       finalIncludePath += PythonInc
     program = AddProgram(name, 'applications/%s/%s' % (folder, name), '*.cpp', [],
-        finalIncludePath, finalLibPath, finalLibs, [], [])
+        finalIncludePath, finalLibPath, finalLibs, cxxflags, [])
     env.Alias('xmipp_programs', program)
     return program
 	
@@ -1229,7 +1229,10 @@ if int(env['matlab']):
 
 # Optical Alignment program
 if int(env['opencv']):
-    print 
-    AddXmippProgram('optical_alignment', getLibraryDict('opencv').get(LIBS))
-    if int(env['cuda']):
-        AddXmippProgram('optical_alignment_gpu', getLibraryDict('opencv').get(LIBS) + getLibraryDict('cuda').get(LIBS))
+    gpu = env['CXXFLAGS']
+    libs = getLibraryDict('opencv').get(LIBS)
+    if int(env['cuda']):  
+        gpu += ['-DGPU' ]
+        libs += getLibraryDict('cuda').get(LIBS)
+    #AddXmippProgram('optical_alignment', , useCudaEnvironment=True, cxxflags=gpu)
+    AddXmippProgram('optical_alignment', libs , cxxflags=gpu)
