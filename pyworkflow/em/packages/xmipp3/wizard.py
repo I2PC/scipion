@@ -37,6 +37,7 @@ from pyworkflow.em.constants import *
 from constants import *
 
 from pyworkflow.em import SetOfImages, SetOfMicrographs, Volume, ProtCTFMicrographs
+from protocol_ctf_micrographs import XmippProtCTFMicrographs
 from protocol_projmatch import XmippProtProjMatch 
 from protocol_preprocess_micrographs import XmippProtPreprocessMicrographs
 from protocol_preprocess import XmippProtPreprocessParticles, XmippProtPreprocessVolumes
@@ -55,10 +56,13 @@ class XmippDownsampleWizard(DownsampleWizard):
     _targets = [(XmippProtPreprocessMicrographs, ['downFactor'])]
     
     def _getParameters(self, protocol):
+        
+        label, value = self._getInputProtocol(self._targets, protocol)
+        
         protParams = {}
         protParams['input']= protocol.inputMicrographs
-        protParams['label']= "downFactor"
-        protParams['value']= protocol.downFactor.get()
+        protParams['label']= label
+        protParams['value']= value
         
         return protParams
 
@@ -77,13 +81,16 @@ class XmippDownsampleWizard(DownsampleWizard):
 #===============================================================================
         
 class XmippCTFWizard(CtfWizard):
-    _targets = [(ProtCTFMicrographs, ['lowRes', 'highRes'])]
+    _targets = [(XmippProtCTFMicrographs, ['lowRes', 'highRes'])]
     
     def _getParameters(self, protocol):
+        
+        label, value = self._getInputProtocol(self._targets, protocol)
+        
         protParams = {}
         protParams['input']= protocol.inputMicrographs
-        protParams['label']= ["lowRes", "highRes"]
-        protParams['value']= [protocol.lowRes.get(), protocol.highRes.get()]
+        protParams['label']= label
+        protParams['value']= value
         return protParams
     
     def _getProvider(self, protocol):
@@ -105,10 +112,13 @@ class XmippParticleMaskRadiusWizard(ParticleMaskRadiusWizard):
                 (XmippProtPreprocessParticles, ['backRadius'])]
     
     def _getParameters(self, protocol):
+        
+        label, value = self._getInputProtocol(self._targets, protocol)
+        
         protParams = {}
         protParams['input']= protocol.inputParticles
-        protParams['label']= "radius"
-        protParams['value']= protocol.radius.get()
+        protParams['label']= label
+        protParams['value']= value
         return protParams
     
     def _getProvider(self, protocol):
@@ -120,16 +130,20 @@ class XmippParticleMaskRadiusWizard(ParticleMaskRadiusWizard):
         _value = params['value']
         _label = params['label']
         ParticleMaskRadiusWizard.show(self, form, _value, _label, UNIT_PIXEL)
-    
+
+
     
 class XmippParticleMaskRadiiWizard(ParticlesMaskRadiiWizard):
     _targets = [(XmippProtMaskParticles, ['innerRadius', 'outerRadius'])]
     
     def _getParameters(self, protocol):
+        
+        label, value = self._getInputProtocol(self._targets, protocol)
+        
         protParams = {}
         protParams['input']= protocol.inputParticles
-        protParams['label']= ["innerRadius", "outerRadius"]
-        protParams['value']= [protocol.innerRadius.get(), protocol.outerRadius.get()]
+        protParams['label']= label
+        protParams['value']= value
         return protParams  
     
     def _getProvider(self, protocol):
@@ -149,10 +163,13 @@ class XmippVolumeMaskRadiusWizard(VolumeMaskRadiusWizard):
                 (XmippProtPreprocessVolumes, ['backRadius'])]
     
     def _getParameters(self, protocol):
+        
+        label, value = self._getInputProtocol(self._targets, protocol)
+        
         protParams = {}
         protParams['input']= protocol.inputVolumes
-        protParams['label']= "radius"
-        protParams['value']= protocol.radius.get()
+        protParams['label']= label
+        protParams['value']= value
         return protParams
     
     def _getProvider(self, protocol):
@@ -171,10 +188,13 @@ class XmippVolumeRadiiWizard(VolumeMaskRadiiWizard):
     _targets = [(XmippProtMaskVolumes, ['innerRadius', 'outerRadius'])]
     
     def _getParameters(self, protocol):
+        
+        label, value = self._getInputProtocol(self._targets, protocol)
+        
         protParams = {}
         protParams['input']= protocol.inputVolumes
-        protParams['label']= ["innerRadius", "outerRadius"]
-        protParams['value']= [protocol.innerRadius.get(), protocol.outerRadius.get()]
+        protParams['label']= label
+        protParams['value']= value
         return protParams  
     
     def _getProvider(self, protocol):
@@ -196,10 +216,13 @@ class XmippFilterParticlesWizard(FilterParticlesWizard):
     _targets = [(XmippProtFilterParticles, ['lowFreq', 'highFreq', 'freqDecay'])]
     
     def _getParameters(self, protocol):
+        
+        label, value = self._getInputProtocol(self._targets, protocol)
+        
         protParams = {}
         protParams['input']= protocol.inputParticles
-        protParams['label']= ["lowFreq", "highFreq","freqDecay"]
-        protParams['value']= [protocol.lowFreq.get(), protocol.highFreq.get(), protocol.freqDecay.get()]
+        protParams['label']= label
+        protParams['value']= value
         protParams['mode'] = protocol.fourierMode.get()
         return protParams  
     
@@ -220,10 +243,13 @@ class XmippFilterVolumesWizard(FilterVolumesWizard):
     _targets = [(XmippProtFilterVolumes, ['lowFreq', 'highFreq', 'freqDecay'])]
     
     def _getParameters(self, protocol):
+        
+        label, value = self._getInputProtocol(self._targets, protocol)
+        
         protParams = {}
         protParams['input']= protocol.inputVolumes
-        protParams['label']= ["lowFreq", "highFreq","freqDecay"]
-        protParams['value']= [protocol.lowFreq.get(), protocol.highFreq.get(), protocol.freqDecay.get()]
+        protParams['label']= label
+        protParams['value']= value
         protParams['mode'] = protocol.fourierMode.get()
         return protParams  
     
@@ -243,10 +269,13 @@ class XmippGaussianParticlesWizard(GaussianParticlesWizard):
     _targets = [(XmippProtFilterParticles, ['freqSigma'])]
     
     def _getParameters(self, protocol):
+        
+        label, value = self._getInputProtocol(self._targets, protocol)
+        
         protParams = {}
         protParams['input']= protocol.inputParticles
-        protParams['label']= "freqSigma"
-        protParams['value']= protocol.freqSigma.get()
+        protParams['label']= label
+        protParams['value']= value
         return protParams  
     
     def _getProvider(self, protocol):
@@ -265,10 +294,13 @@ class XmippGaussianVolumesWizard(GaussianVolumesWizard):
     _targets = [(XmippProtFilterVolumes, ['freqSigma'])]
     
     def _getParameters(self, protocol):
+        
+        label, value = self._getInputProtocol(self._targets, protocol)
+        
         protParams = {}
         protParams['input']= protocol.inputVolumes
-        protParams['label']= "freqSigma"
-        protParams['value']= protocol.freqSigma.get()
+        protParams['label']= label
+        protParams['value']= value
         return protParams  
     
     def _getProvider(self, protocol):

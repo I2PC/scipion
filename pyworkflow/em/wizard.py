@@ -125,6 +125,21 @@ class EmWizard(Wizard):
             return provider
         return None
     
+    def _getInputProtocol(self, targets, protocol):
+        label = []
+        value = []
+        
+        for k, v in targets:
+            if k.__name__ == protocol.getClassName():
+                label = v
+                for val in v:
+                    value.append(protocol.getAttributeValue(val))
+        
+        if len(label) > 1:     
+            return label, value
+        else:
+            return label[0], value[0]
+    
 #===============================================================================
 #    Provider class (for objects used in the wizards)
 #===============================================================================
