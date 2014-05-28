@@ -36,8 +36,7 @@ from protocol_classify2d import ProtRelionClassify2D
 from protocol_classify3d import ProtRelionClassify3D
 from protocol_refine3d import ProtRelionRefine3D
 from pyworkflow.protocol.params import *
-from convert import restoreXmippLabels
-from pyworkflow.em.convert import addRelionLabels, addRelionLabelsToEnviron
+from convert import addRelionLabels, addRelionLabelsToEnviron
 import xmipp
 from pyworkflow.em.packages.xmipp3.plotter import XmippPlotter
 

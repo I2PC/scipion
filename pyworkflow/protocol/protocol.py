@@ -556,12 +556,14 @@ class Protocol(Step):
         """
         self._currentDir = os.getcwd()
         os.chdir(path)
+        self._log.info("Entered to dir: cd '%s'" % path)
         
     def _leaveDir(self): 
         """ This method should be called after a call to _enterDir
         to return to the previous location. 
         """
         os.chdir(self._currentDir)        
+        self._log.info("Returned to dir: cd '%s'" % self._currentDir)
                       
     def _enterWorkingDir(self):
         """ Change to the protocol working dir. """

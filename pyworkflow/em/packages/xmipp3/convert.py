@@ -797,7 +797,6 @@ def createXmippInputMicrographs(prot, micSet, rowFunc=None, micsFn=None):
     return micsFn
 
 
-
 def createXmippInputVolumes(prot, volSet, volsFn=None):    
     volsMd = getattr(volSet, '_xmippMd', None)
     if volsMd is None:
@@ -808,6 +807,7 @@ def createXmippInputVolumes(prot, volSet, volsFn=None):
     else:
         volsFn = volsMd.get()
     return volsFn
+
 
 def createXmippInputClasses2D(prot, classSet, classFn=None):
     classMd = getattr(classSet, '_xmippMd', None)
@@ -820,6 +820,7 @@ def createXmippInputClasses2D(prot, classSet, classFn=None):
         classFn = classMd.get()
     return classFn
     
+
 def createXmippInputCTF(prot, ctfSet, ctfFn=None):
     ctfMd = getattr(ctfSet, '_xmippMd', None)
     if ctfMd is None:
