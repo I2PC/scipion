@@ -49,10 +49,13 @@ class FrealignVolRadiiWizard(VolumeMaskRadiiWizard):
     _targets = [(ProtFrealign, ['innerRadius', 'outerRadius'])]
     
     def _getParameters(self, protocol):
+        
+        label, value = _getInputProtocol(self._targets, protocol)
+        
         protParams = {}
         protParams['input']= protocol.inputVolumes
-        protParams['label']= ["innerRadius", "outerRadius"]
-        protParams['value']= [protocol.innerRadius.get(), protocol.outerRadius.get()]
+        protParams['label']= label
+        protParams['value']= value
         return protParams  
     
     def _getProvider(self, protocol):
@@ -74,10 +77,13 @@ class FrealignBandpassWizard(FilterParticlesWizard):
     _targets = [(ProtFrealign, ['lowResolRefine', 'highResolRefine'])]
     
     def _getParameters(self, protocol):
+        
+        label, value = _getInputProtocol(self._targets, protocol)
+        
         protParams = {}
         protParams['input']= protocol.inputParticles
-        protParams['label']= ['lowResolRefine', 'highResolRefine']
-        protParams['value']= [protocol.lowResolRefine.get(), protocol.highResolRefine.get()]
+        protParams['label']= label
+        protParams['value']= value
         return protParams  
     
     def _getProvider(self, protocol):
@@ -113,10 +119,13 @@ class FrealignVolBandpassWizard(FilterVolumesWizard):
     _targets = [(ProtFrealign, ['resolution'])]
     
     def _getParameters(self, protocol):
+        
+        label, value = _getInputProtocol(self._targets, protocol)
+        
         protParams = {}
         protParams['input']= protocol.inputVolumes
-        protParams['label']= "resolution"
-        protParams['value']= protocol.resolution.get()
+        protParams['label']= label
+        protParams['value']= value
         return protParams  
     
     def _getProvider(self, protocol):

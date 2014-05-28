@@ -56,10 +56,13 @@ class SpiderProtMaskWizard(ParticleMaskRadiusWizard):
     _targets = [(SpiderProtCAPCA, ['radius'])]
     
     def _getParameters(self, protocol):
+        
+        label, value = self._getInputProtocol(self._targets, protocol)
+        
         protParams = {}
         protParams['input']= protocol.inputParticles
-        protParams['label']= "radius"
-        protParams['value']= protocol.radius.get()
+        protParams['label']= label
+        protParams['value']= value
         return protParams
     
     def _getProvider(self, protocol):
@@ -78,10 +81,13 @@ class SpiderParticlesMaskRadiiWizard(ParticlesMaskRadiiWizard):
                 (SpiderProtAlignPairwise, ['innerRadius', 'outerRadius'])]        
     
     def _getParameters(self, protocol):
+        
+        label, value = self._getInputProtocol(self._targets, protocol)
+        
         protParams = {}
         protParams['input']= protocol.inputParticles
-        protParams['label']= ["innerRadius", "outerRadius"]
-        protParams['value']= [protocol.innerRadius.get(), protocol.outerRadius.get()]
+        protParams['label']= label
+        protParams['value']= value
         return protParams
     
     def _getProvider(self, protocol):
@@ -104,10 +110,13 @@ class SpiderFilterParticlesWizard(FilterParticlesWizard):
     _targets = [(SpiderProtFilter, ['filterRadius', 'lowFreq', 'highFreq', 'temperature'])]
     
     def _getParameters(self, protocol):
+        
+        label, value = self._getInputProtocol(self._targets, protocol)
+        
         protParams = {}
         protParams['input']= protocol.inputParticles
-        protParams['label']= ["filterRadius", "lowFreq", "highFreq", "temperature"]
-        protParams['value']= [protocol.getAttributeValue(a) for a in protParams['label']]
+        protParams['label']= label
+        protParams['value']= value
         protParams['mode']= [protocol.filterType.get(), protocol.filterMode.get(), protocol.usePadding.get()]
 
         return protParams

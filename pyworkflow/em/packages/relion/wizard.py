@@ -44,10 +44,13 @@ class RelionPartMaskRadiusWizard(ParticleMaskRadiusWizard):
     _targets = [(ProtRelionClassify2D, ['maskRadiusA'])]
     
     def _getParameters(self, protocol):
+        
+        label, value = _getInputProtocol(self._targets, protocol)
+        
         protParams = {}
         protParams['input']= protocol.inputParticles
-        protParams['label']= "radius"
-        protParams['value']= protocol.radius.get()
+        protParams['label']= label
+        protParams['value']= value
         return protParams  
     
     def _getProvider(self, protocol):
@@ -66,10 +69,13 @@ class RelionVolMaskRadiusWizard(VolumeMaskRadiusWizard):
                 (ProtRelionRefine3D, ['maskRadiusA'])]
     
     def _getParameters(self, protocol):
+        
+        label, value = _getInputProtocol(self._targets, protocol)
+        
         protParams = {}
         protParams['input']= protocol.inputVolumes
-        protParams['label']= "radius"
-        protParams['value']= protocol.radius.get()
+        protParams['label']= label
+        protParams['value']= value
         return protParams  
     
     def _getProvider(self, protocol):
@@ -91,10 +97,13 @@ class RelionBandpassWizard(FilterParticlesWizard):
     _targets = [(ProtRelionClassify3D, ['iniLowPassFilter'])]
     
     def _getParameters(self, protocol):
+        
+        label, value = _getInputProtocol(self._targets, protocol)
+        
         protParams = {}
         protParams['input']= protocol.inputParticles
-        protParams['label']= "radius"
-        protParams['value']= protocol.radius.get()
+        protParams['label']= label
+        protParams['value']= value
         return protParams  
     
     def _getProvider(self, protocol):
@@ -122,5 +131,5 @@ class RelionBandpassWizard(FilterParticlesWizard):
             if d.resultYes():
                 form.setVar('iniLowPassFilter', 1/d.getHighFreq()*d.itemDim)
         else:
-            dialog.showWarning("Input particles", "Select particles first", form.root)  
+            dialog.showWarning("Input particles", "Select particles first", form.root)
 
