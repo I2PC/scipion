@@ -530,11 +530,9 @@ void frc_dpr(MultidimArray< double > & m1,
     }
 }
 
-
-
 void scaleToSizeFourier(int Zdim, int Ydim, int Xdim, MultidimArray<double> &mdaIn, MultidimArray<double> &mdaOut, int nThreads)
 {
-    //Mmem = *this
+	//Mmem = *this
     //memory for fourier transform output
     MultidimArray<std::complex<double> > MmemFourier;
     // Perform the Fourier transform
@@ -549,9 +547,9 @@ void scaleToSizeFourier(int Zdim, int Ydim, int Xdim, MultidimArray<double> &mda
     transformerMp.setReal(mdaOut);
     transformerMp.getFourierAlias(MpmemFourier);
 
-    size_t xsize = XMIPP_MIN(XSIZE(MmemFourier),XSIZE(MpmemFourier))*sizeof(std::complex<double>);
-    size_t yhalf = XMIPP_MIN((YSIZE(mdaIn)+1)/2,(YSIZE(mdaOut)+1)/2);
-    size_t zhalf = XMIPP_MIN((ZSIZE(mdaIn)+1)/2,(ZSIZE(mdaOut)+1)/2);
+    size_t xsize = std::min(XSIZE(MmemFourier),XSIZE(MpmemFourier))*sizeof(std::complex<double>);
+    size_t yhalf = std::min(std::min((YSIZE(mdaIn)+1)/2,(YSIZE(mdaOut)+1)/2),YSIZE(mdaIn)-1);
+    size_t zhalf = std::min(std::min((ZSIZE(mdaIn)+1)/2,(ZSIZE(mdaOut)+1)/2),ZSIZE(mdaIn)-1);
 
     size_t kp0=0;
     size_t kpF=zhalf;
@@ -564,6 +562,10 @@ void scaleToSizeFourier(int Zdim, int Ydim, int Xdim, MultidimArray<double> &mda
 
     //Init with zero
     MpmemFourier.initZeros();
+    mdaIn.printShape();
+    mdaOut.printShape();
+    MmemFourier.printShape();
+    MpmemFourier.printShape();
 
     for (size_t k = kp0; k<=kpF; ++k)
     {
@@ -590,7 +592,6 @@ void scaleToSizeFourier(int Zdim, int Ydim, int Xdim, MultidimArray<double> &mda
     // Transform data
     transformerMp.inverseFourierTransform();
 }
-
 
 void selfScaleToSizeFourier(int Zdim, int Ydim, int Xdim, MultidimArray<double> &mda, int nThreads)
 {
