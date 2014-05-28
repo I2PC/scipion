@@ -30,7 +30,6 @@ import java.awt.Window;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Date;
-
 import xmipp.jni.Filename;
 import xmipp.jni.ImageGeneric;
 import xmipp.jni.MDLabel;

@@ -26,12 +26,10 @@
 package xmipp.viewer.models;
 
 import xmipp.jni.MetaData;
-import xmipp.utils.DEBUG;
-
-import java.util.ArrayList;
 
 /** This class will store info about how to display label on gallery */
 public class ColumnInfo {
+    
 	protected int label;
 	public String labelName; //This is redundant, but for avoid a function call
 	public boolean visible; 
