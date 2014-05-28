@@ -84,7 +84,7 @@ class TestSetOfMicrographs(BaseTest):
         """ Create a SetOfMicrographs from a list of micrographs """
         micSet = SetOfMicrographs(filename=self.dbFn)
         
-        micSet.setAcquisition(acquisition)
+        micSet.setAcquisition(self.acquisition)
         micSet.setSamplingRate(1.2)
         for fn in self.mics:
             mic = Micrograph()
