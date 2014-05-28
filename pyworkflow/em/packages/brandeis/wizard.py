@@ -50,17 +50,17 @@ class FrealignVolRadiiWizard(VolumeMaskRadiiWizard):
     
     def _getParameters(self, protocol):
         
-        label, value = _getInputProtocol(self._targets, protocol)
+        label, value = self._getInputProtocol(self._targets, protocol)
         
         protParams = {}
-        protParams['input']= protocol.inputVolumes
+        protParams['input']= protocol.input3DReference
         protParams['label']= label
         protParams['value']= value
         return protParams  
     
     def _getProvider(self, protocol):
         _objs = self._getParameters(protocol)['input']
-        return VolumeMaskRadiiWizard._getProvider(self, _objs)
+        return VolumeMaskRadiiWizard._getListProvider(self, _objs)
     
     def show(self, form):
         params = self._getParameters(form.protocol)
@@ -78,7 +78,7 @@ class FrealignBandpassWizard(FilterParticlesWizard):
     
     def _getParameters(self, protocol):
         
-        label, value = _getInputProtocol(self._targets, protocol)
+        label, value = self._getInputProtocol(self._targets, protocol)
         
         protParams = {}
         protParams['input']= protocol.inputParticles
@@ -88,7 +88,7 @@ class FrealignBandpassWizard(FilterParticlesWizard):
     
     def _getProvider(self, protocol):
         _objs = self._getParameters(protocol)['input']
-        return FilterParticlesWizard._getProvider(self, _objs)
+        return FilterParticlesWizard._getListProvider(self, _objs)
     
     def show(self, form):
         protocol = form.protocol
@@ -120,17 +120,17 @@ class FrealignVolBandpassWizard(FilterVolumesWizard):
     
     def _getParameters(self, protocol):
         
-        label, value = _getInputProtocol(self._targets, protocol)
+        label, value = self._getInputProtocol(self._targets, protocol)
         
         protParams = {}
-        protParams['input']= protocol.inputVolumes
+        protParams['input']= protocol.input3DReference
         protParams['label']= label
         protParams['value']= value
         return protParams  
     
     def _getProvider(self, protocol):
         _objs = self._getParameters(protocol)['input']  
-        return FilterVolumesWizard._getProvider(self, _objs)
+        return FilterVolumesWizard._getListProvider(self, _objs)
     
     
     def show(self, form):

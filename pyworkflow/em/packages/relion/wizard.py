@@ -41,11 +41,14 @@ from protocol_classify2d import ProtRelionClassify2D
 #===============================================================================
 
 class RelionPartMaskRadiusWizard(ParticleMaskRadiusWizard):
-    _targets = [(ProtRelionClassify2D, ['maskRadiusA'])]
+    _targets = [(ProtRelionClassify2D, ['maskRadiusA']),
+                (ProtRelionRefine3D, ['backRadius']),
+                (ProtRelionClassify3D, ['backRadius']),
+                (ProtRelionClassify2D, ['backRadius'])]
     
     def _getParameters(self, protocol):
         
-        label, value = _getInputProtocol(self._targets, protocol)
+        label, value = self._getInputProtocol(self._targets, protocol)
         
         protParams = {}
         protParams['input']= protocol.inputParticles
@@ -70,10 +73,10 @@ class RelionVolMaskRadiusWizard(VolumeMaskRadiusWizard):
     
     def _getParameters(self, protocol):
         
-        label, value = _getInputProtocol(self._targets, protocol)
+        label, value = self._getInputProtocol(self._targets, protocol)
         
         protParams = {}
-        protParams['input']= protocol.inputVolumes
+        protParams['input']= protocol.referenceVolume
         protParams['label']= label
         protParams['value']= value
         return protParams  
@@ -98,7 +101,7 @@ class RelionBandpassWizard(FilterParticlesWizard):
     
     def _getParameters(self, protocol):
         
-        label, value = _getInputProtocol(self._targets, protocol)
+        label, value = self._getInputProtocol(self._targets, protocol)
         
         protParams = {}
         protParams['input']= protocol.inputParticles
