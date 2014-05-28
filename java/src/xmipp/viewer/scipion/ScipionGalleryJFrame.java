@@ -74,6 +74,14 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
         }
     }
     private void initComponents() {
+        JButton closebt = getScipionButton("Close", new ActionListener() {
+
+            @Override
+            public void actionPerformed(ActionEvent ae) {
+                close();
+            }
+        });
+        buttonspn.add(closebt);
         if (type != null) {
             final String output = data.hasClasses()? "Particles": type;   
             cmdbutton = getScipionButton("Create " + output, new ActionListener() {
