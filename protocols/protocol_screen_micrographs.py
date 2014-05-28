@@ -222,7 +222,7 @@ def estimateSingleCTF(log, WorkingDir, inputFile, DownsampleFactor, AutomaticDow
         if DownsampleFactor>=2:
             downsampleList.append(DownsampleFactor-1)
         else:
-            downsampleList.append(DownsampleFactor/2)
+            downsampleList.append(max(DownsampleFactor/2.,1.))
     
     for DownsampleFactor in downsampleList:
         # Downsample if necessary

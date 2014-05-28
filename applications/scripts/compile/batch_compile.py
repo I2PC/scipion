@@ -41,7 +41,6 @@ class ScriptCompile(XmippScript):
         self.addParamsLine(' -i <cpp_file>          : C++ file to compile')
         self.addParamsLine('   alias --input;')
         self.addParamsLine(' [--debug]              : Compile with debugging flags')
-        self.addParamsLine(' [--python]             : Add Python flags')
         ## examples
         self.addExampleLine('Compile myprogram.cpp', False)
         self.addExampleLine('xmipp_compile myprogram.cpp')
@@ -63,9 +62,8 @@ class ScriptCompile(XmippScript):
                  "-I"+xmippDir+"/libraries "+\
                  "-I"+xmippDir+" "+\
                  "-lXmippClassif -lXmippData -lXmippExternal -lXmippInterface -lXmippRecons -lfftw3 -lfftw3_threads -lsqlite3 -ltiff -ljpeg"
-        if self.checkParam("--python"):
-            command +=" -I"+xmippDir+"/external/python/Python-2.7.2/Include -I"+xmippDir+"/external/python/Python-2.7.2 -L"+\
-                      xmippDir+"/external/python/Python-2.7.2 -lpython2.7 -I"+xmippDir+"/lib/python2.7/site-packages/numpy/core/include"
+        command +=" -I"+xmippDir+"/external/python/Python-2.7.2/Include -I"+xmippDir+"/external/python/Python-2.7.2 -L"+\
+                  xmippDir+"/external/python/Python-2.7.2 -lpython2.7 -I"+xmippDir+"/lib/python2.7/site-packages/numpy/core/include"
         os.system(command)
 
 if __name__ == '__main__':

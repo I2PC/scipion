@@ -1,5 +1,33 @@
 #!/usr/bin/env python
 
+# **************************************************************************
+# *
+# * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
+# *              I. Foche Perez (ifoche@cnb.csic.es)
+# *
+# * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
+# *
+# * This program is free software; you can redistribute it and/or modify
+# * it under the terms of the GNU General Public License as published by
+# * the Free Software Foundation; either version 2 of the License, or
+# * (at your option) any later version.
+# *
+# * This program is distributed in the hope that it will be useful,
+# * but WITHOUT ANY WARRANTY; without even the implied warranty of
+# * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# * GNU General Public License for more details.
+# *
+# * You should have received a copy of the GNU General Public License
+# * along with this program; if not, write to the Free Software
+# * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+# * 02111-1307  USA
+# *
+# *  All comments concerning this program package may be sent to the
+# *  e-mail address 'ifoche@cnb.csic.es'
+# *
+# **************************************************************************
+
+
 # basic setup, import all environment and custom tools
 import os
 import platform 
@@ -108,8 +136,6 @@ opts.Add(BoolVariable('java', 'Build the java programs?', 'yes'))
 
 opts.Add(BoolVariable('gtest', 'Build tests?', 'yes'))
 
-#opts.Add(BoolVariable('mpi', 'Build the MPI programs?', 'yes'))
-
 opts.Add('MPI_CC', 'MPI C compiler', 'mpicc')
 opts.Add('MPI_CXX', 'MPI C++ compiler', 'mpiCC')
 opts.Add('MPI_LINKERFORPROGRAMS', 'MPI Linker for programs', 'mpiCC')
@@ -130,25 +156,15 @@ opts.Add(BoolVariable('cuda', 'Build GPU stuff?', 'no'))
 opts.Add('CUDA_SDK_PATH', 'CUDA SDK dir', '/root/NVIDIA_GPU_Computing_SDK')
 opts.Add('CUDA_LIB_PATH', 'CUDA RunTimeLib dir', '/usr/local/cuda/lib64')
 
-
-#opts.Add(BoolVariable('verbose_fftw', 'Verbose configuring of FFTW libraries?', 'no'))
-#opts.Add('FFTWFLAGS', 'Additional flags for FFTW configure', '--enable-threads')
-#
-#opts.Add(BoolVariable('verbose_tiff', 'Verbose configuring of TIFF libraries?', 'no'))
-#opts.Add('TIFFFLAGS', 'Additional flags for TIFF configure', 'CPPFLAGS=-w')
-#
-#opts.Add(BoolVariable('verbose_sqlite', 'Verbose configuring of SQLite libraries?', 'no'))
-#opts.Add('SQLITEFLAGS', 'Additional flags for SQLite configure', 'CPPFLAGS=-w CFLAGS=-DSQLITE_ENABLE_UPDATE_DELETE_LIMIT=1')
-#
-#opts.Add(BoolVariable('verbose_python', 'Verbose configuring of Python compilation?', 'no'))
-#opts.Add('PYTHONFLAGS', 'Additional flags for Python configure', '')
+opts.Add(BoolVariable('opencv', 'Build the OpenCV-dependent programs', 'no'))
+opts.Add('OPENCV_LIBDIR', 'OpenCV library dir', '/usr/lib64')
 
 opts.Add('JAVAC', 'Java compiler', 'javac')
 opts.Add('JAVA_HOME', 'Java installation directory', '')
 opts.Add('JNI_CPPPATH', 'Directory of jni.h', '')
-#print 'en opts-2', opts['MPI_LINKERFORPROGRAMS']
 
 opts.Update(env)
+
 # generate help for options
 Help(opts.GenerateHelpText(env, sort=cmp))
 
@@ -302,22 +318,10 @@ if (ARGUMENTS['mode'] == 'configure'):
         config_dir = base_dir + 'config.tests'
         config_log = base_dir + 'config.log'
 
-    # release?
-    # This is done in compile mode
-#    if int(env['release']):
-#        AppendIfNotExists(CCFLAGS='-DRELEASE_MODE')
-#        AppendIfNotExists(CXXFLAGS='-DRELEASE_MODE')
-
     # static?
     if int(env['static']):
         AppendIfNotExists(CCFLAGS='$STATIC_FLAG')
         AppendIfNotExists(LINKFLAGS='$STATIC_FLAG')
-
-    # osx?
-#    if env['PLATFORM'] == 'darwin':
-#        AppendIfNotExists(CCFLAGS='-m64')
-#        AppendIfNotExists(CXXFLAGS='-m64')
-#        AppendIfNotExists(LINKFLAGS='-m64')
 
     # mingw?
     if platform.system() == 'Windows':
@@ -355,42 +359,15 @@ if (ARGUMENTS['mode'] == 'configure'):
             env['matlab'] = 0
         else:
             print 'yes'
-
-#    def ConfigureExternalLibrary(libName, libFlags, libpath, verbose):
-#            
-#        libpath = os.path.join('external', libpath)
-#        if not GetOption("help"):
-#            if os.path.exists(os.path.join(libpath, 'Makefile')):
-#                command = 'cd %s ; make distclean > /dev/null' % libpath
-#                print command
-#                os.system(command)
-#    
-#        if not int(env['static']):
-#            libFlags += " --enable-shared"
-#    
-#        if env['PLATFORM'] == 'darwin':
-#            libFlags += " CFLAGS='-m64'"
-#        
-#        msg = "* Configuring " + libName
-#        cmd = "cd %s;./configure %s" % (libpath, libFlags)
-#        
-#        logFile = os.path.join("..", "..", "build", libName + "_configure.log")
-#        if not verbose:
-#            msg += "(see log file '%s' for details)" % logFile
-#            cmd += " > " + logFile
-#            
-#        print msg, "..."
-#        print "   command:  ", cmd
-#        os.system(cmd)        
     
-#    ConfigureExternalLibrary('sqlite', env['SQLITEFLAGS'], 
-#                             'sqlite-3.6.23', int(env['verbose_sqlite']))
-#    ConfigureExternalLibrary('python', env['PYTHONFLAGS'], 
-#                             'Python-2.7.2', int(env['verbose_python']))
-#    ConfigureExternalLibrary('fftw', env['FFTWFLAGS'], 
-#                             'fftw-3.2.2', int(env['verbose_fftw']))
-#    ConfigureExternalLibrary('tiff', env['TIFFFLAGS'], 
-#                             'tiff-3.9.4', int(env['verbose_tiff']))
+    # OpenCV
+    if int(env['opencv']):
+        print '* Checking for OpenCV ... ',
+        if not os.path.exists(env['OPENCV_LIBDIR']):
+            print 'Be carefull, opencv path seems not to be present'
+            print '* Proceeding anyway'
+        else:
+            print 'yes'
 
     # Finish configuration
     env = conf.Finish()
@@ -481,24 +458,14 @@ elif (ARGUMENTS['mode'] == 'compile'):
         AppendIfNotExists(CCFLAGS=['-I/usr/include/malloc'])
 #        AppendIfNotExists(LINKFLAGS=['-m64'])
 
-
-# stdout_handle = os.popen('svnversion -n .')
-#    svnver = stdout_handle.read()
-#    env.Append(CXXFLAGS="-D'SVN_REV=\""+ svnver +"\"'")
-#    env.Append(CCFLAGS="-D'SVN_REV=\""+ svnver +"\"'")
-
     # Add threads
     env.Append(LINKFLAGS=['-lpthread'])
-    #env.Append(CXXFLAGS=['-lpthread'])
-    #env.Append(CCFLAGS=['-lpthread'])
 
     # warnings?
     if int(env['warn']) or int(env['debug']):
         env.Append(CXXFLAGS=['-Wall','-pedantic','-Wno-variadic-macros','-Wno-long-long','-Wno-deprecated'])
     else:
         env.Append(CXXFLAGS=['-w'])
-        # TODO suppress linker warnings too... what's the flag?
-        # env.Append(LINKFLAGS = ['-Wl,???'])
 
     # fast?
     # COSS' work. I dont like this. Classic debug vs release (asolano)

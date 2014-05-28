@@ -14,11 +14,9 @@ import java.util.HashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JButton;
-import javax.swing.JOptionPane;
 import xmipp.ij.commons.XmippUtil;
 import xmipp.jni.MetaData;
 import xmipp.utils.XmippDialog;
-import xmipp.utils.XmippStringUtils;
 import xmipp.utils.XmippWindowUtil;
 import xmipp.viewer.windows.GalleryJFrame;
 

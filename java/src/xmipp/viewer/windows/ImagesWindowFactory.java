@@ -33,7 +33,7 @@ import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
 import xmipp.utils.DEBUG;
 import xmipp.utils.Params;
-import xmipp.utils.Param;
+//import xmipp.utils.Param;
 import xmipp.utils.StopWatch;
 import xmipp.utils.XmippDialog;
 import xmipp.viewer.ctf.CTFAnalyzerJFrame;
@@ -188,7 +188,6 @@ public class ImagesWindowFactory {
 			String mode) throws Exception {
                 
                 MetaData md = new MetaData(filename);
-                
 		return openMetadata(filename, md, parameters, mode);
 	}
 

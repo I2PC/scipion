@@ -111,7 +111,11 @@ public:
                     if (apply_mask)
                     {
                         mask.generate_mask(ZSIZE(img()),YSIZE(img()),XSIZE(img()));
-                        vectorSize=(int)mask.get_binary_mask().sum();
+                        // Make sure that the mask is between 0 and 1
+                        MultidimArray<int> &imask=mask.get_binary_mask();
+                        FOR_ALL_ELEMENTS_IN_ARRAY2D(imask)
+                        	A2D_ELEM(imask,i,j)=(A2D_ELEM(imask,i,j)!=0)?1:0;
+                        vectorSize=(int)imask.sum();
                     }
                     else
                         vectorSize=MULTIDIM_SIZE(img());

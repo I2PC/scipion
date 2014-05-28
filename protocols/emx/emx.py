@@ -790,3 +790,18 @@ def validateSchema(filename, schema_file=None):
             raise ValidateError(ERR_VALIDATION_WRONG, message)
     return p.returncode, stdout[:answerSize], stderr[:answerSize]
 
+
+def merge(files,outPutFile):
+    """Merge several emx files. files is a list with several files"""
+    first = None
+    for filename in files:
+        data = ET.parse(filename).getroot()
+        if first is None:
+            first = data
+        else:
+            first.extend(data)
+    if first is not None:
+        text_file = open("Output.txt", "w")
+        text_file.write(ET.tostring(first))
+        text_file.close()
+        #print ET.tostring(first)
