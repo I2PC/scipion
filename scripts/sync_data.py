@@ -218,6 +218,7 @@ def md5Sum(file):
 def checkForUpdates(datasetName, workingCopy=None, tmpMd5copy=None,
                     url="http://scipionwiki.cnb.csic.es/files/scipion/data/tests",
                     verbose=False):
+    # Get default values for variables if we got none
     workingCopy = workingCopy or os.environ['SCIPION_TESTS']
     tmpMd5copy = tmpMd5copy or os.environ['SCIPION_TMP']
 

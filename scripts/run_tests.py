@@ -1,22 +1,26 @@
 #!/usr/bin/env python
 
-import os, sys
+import sys
+import os
 from os.path import join, dirname, exists
 import unittest
 import pyworkflow as pw
 from pyworkflow.tests import *
+# TODO: import only what is necessary from pyworkflow.tests, not *
 
 
 def discoverTests(pathList, pattern):
     tests = unittest.TestSuite()
     for path in pathList:
-        testPath = join('pyworkflow','tests', path)
+        testPath = join('pyworkflow', 'tests', path)
         print "discovering '%s'" % testPath
         tests.addTests(unittest.defaultTestLoader.discover(testPath, pattern=pattern, top_level_dir=pw.HOME))
     return tests
 
+
 lastClass = None
 lastModule = None
+
 
 def printTests(tests, mode='modules'):
     global lastClass
