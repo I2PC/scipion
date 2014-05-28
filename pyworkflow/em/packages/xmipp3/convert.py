@@ -434,6 +434,7 @@ def readSetOfImages(filename, imgSet, rowToFunc, hasCtf):
         hasCtf: is True if the ctf information exists.
     """    
     imgMd = xmipp.MetaData(filename)
+    imgMd.removeDisabled()
     for objId in imgMd:
         img = rowToFunc(imgMd, objId, hasCtf)
         imgSet.append(img)
