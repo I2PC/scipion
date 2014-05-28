@@ -407,6 +407,7 @@ public class GalleryData {
 			md.sort(getLabelFromCol(col), ascending);
 			clearSelection();
 			hasMdChanges = true;
+                        ids = md.findObjects();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

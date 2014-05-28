@@ -114,6 +114,7 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 			}
 			int label = ci.label;
 			long id = data.ids[row];
+                        
 			int type = ci.type;
                         
 			MetaData md = data.md;

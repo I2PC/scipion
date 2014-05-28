@@ -103,6 +103,11 @@ public class ScipionMetaData extends MetaData{
             boolean allowRender;
             ColumnInfo ci;
             int label = 0;
+            name = alias = "_enabled";
+            labels.put(name, labels.size());
+            label = labels.get(name);
+            enabledci = new ColumnInfo(label, name, alias, MetaData.LABEL_INT, false);
+            columns.add(enabledci);
             Class.forName("org.sqlite.JDBC");
             c = DriverManager.getConnection("jdbc:sqlite:" + dbfile);
             stmt = c.createStatement();
@@ -128,11 +133,7 @@ public class ScipionMetaData extends MetaData{
                ci = new ColumnInfo(label, name, alias, type, allowRender);
                columns.add(ci);
             }
-            name = alias = "_enabled";
-            labels.put(name, labels.size());
-            label = labels.get(name);
-            enabledci = new ColumnInfo(label, name, alias, MetaData.LABEL_INT, false);
-            columns.add(enabledci);
+            
             Object value = null;
            
             EMObject emo;
@@ -172,6 +173,7 @@ public class ScipionMetaData extends MetaData{
                                     }
                                     break;
                                 default:
+                                    
                                     value = rs.getString(alias);
 
                             }
@@ -244,7 +246,10 @@ public class ScipionMetaData extends MetaData{
         if(index >= size())
             return null;
         EMObject emo = emobjects.get(index);
-        return emo.getValue(getColumnInfo(label)).toString();
+        Object value = emo.getValue(getColumnInfo(label));
+        if(value == null)
+            return null;
+        return value.toString();
     }
     
     public ColumnInfo getColumnInfo(int label)
@@ -265,9 +270,6 @@ public class ScipionMetaData extends MetaData{
                 return ci;
         return null;
     }
-
-    
-
    
     public ScipionMetaData getMd(List<EMObject> emos) {
         ScipionMetaData selmd;
@@ -284,8 +286,6 @@ public class ScipionMetaData extends MetaData{
         emobjects.add(emo);
         if(emo.childmd != null)
             haschilds = true;
-
-            
     }
 
     public ScipionMetaData getStructure(String classestb, String objectstb) {
@@ -299,8 +299,6 @@ public class ScipionMetaData extends MetaData{
                 emos.add(emo);
         return emos;
     }
-
-    
     
     public class EMObject
     {
@@ -400,7 +398,7 @@ public class ScipionMetaData extends MetaData{
         }
         else if (self.equals("CTFModel"))
         {
-            if(label.equals("_micFile"))
+            if(label.equals("_micFile") || label.equals("_psdFile"))
                 return true;
         }
         else if (self.equals("Class2D") || self.equals("Class3D"))
@@ -599,19 +597,24 @@ public class ScipionMetaData extends MetaData{
                     if(column.isEnable())
                     {
                         value = emo.getValue(column);
-                        if(column.type == MetaData.LABEL_STRING)
+                        if(value != null)
                         {
-                            if(value != null)
+                            if(column.type == MetaData.LABEL_STRING)
                             {
-                                String str = (String)value;
-                                if( str.contains("@"))
-                                    str = str.substring(str.lastIndexOf("@") + 1);
-                                value = str;
+
+                                    String str = (String)value;
+                                    if( str.contains("@"))
+                                        str = str.substring(str.lastIndexOf("@") + 1);
+                                    value = str;
+                                    sql += String.format(", '%s'", value);
+
+
                             }
-                            sql += String.format(", '%s'", value);
+                            else
+                                sql += String.format(", %s", value);
                         }
                         else
-                            sql += String.format(", %s", value);
+                            sql += ", NULL";
                     }
                 }
                 sql += "),";
@@ -683,4 +686,31 @@ public class ScipionMetaData extends MetaData{
     }
     
 
+    public void sort(int sortLabel, boolean ascending)
+    {
+        ColumnInfo ci = getColumnInfo(sortLabel);
+        Comparable valuei, valuej;
+        EMObject emo;
+        boolean bigger, exchange;
+        for(int i = 0; i < emobjects.size() - 1; i ++)
+        {
+            valuei = (Comparable)emobjects.get(i).getValue(ci);
+            for(int j = i + 1; j < emobjects.size(); j ++)
+            {
+                valuej = (Comparable)emobjects.get(j).getValue(ci);
+                bigger = valuei.compareTo(valuej) > 0;
+                exchange = ascending? bigger: !bigger;
+                if(exchange) 
+                {
+                    emo = emobjects.get(i);
+                    emobjects.set(i, emobjects.get(j));
+                    emobjects.set(j, emo);
+                    valuei = valuej;
+                }
+            }
+        }   
+       
+            
+        
+    }
 }
