@@ -103,9 +103,13 @@
 			</td>
 			<td>
 				<div id="decayFou">
+					{% if params.mode < 3 %}
 					<span id="title_freq">Decay<span>
 					<div id="sliderLite" class="slider_decay"></div>
 					<div id="slider_decay_result">{{params.value.2}}</div>
+					{% else %}
+					<div id="slider_decay_result" style="display:none;">{{params.value.2}}</div>
+					{% endif %}
 					<input id="decay_val" type="hidden" value="{{params.value.2}}"/>
 				</div>
 			</td>
