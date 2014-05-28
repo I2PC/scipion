@@ -32,6 +32,8 @@ from constants import NO_INDEX
 import xmipp
 from constants import *
 
+
+
 class ImageHandler(object):
     """ Class to provide several Image manipulation utilities. """
     def __init__(self):
@@ -39,7 +41,6 @@ class ImageHandler(object):
         # to read and write most of formats, in the future
         # if we want to be indepent of Xmipp, we should have
         # our own image library
-        import xmipp
         from packages.xmipp3 import locationToXmipp
         
         self._img = xmipp.Image()
@@ -88,7 +89,6 @@ def paramsToTransform(params):
     the Transform object (transformation matrix)
     """
     # TODO: Remove dependency to Xmipp
-    import xmipp
     from data import Transform
     t = Transform()
     e = xmipp.Euler_angles2matrix(params.angleRot, params.angleTilt, params.anglePsi)
@@ -101,7 +101,6 @@ def paramsToTransform(params):
        
 def transformToParams(transform):
     """ Inverse convertion from a Transform to param. """
-    import xmipp
     from data import TransformParams
     p = TransformParams()    
     m = transform._matrix
@@ -110,31 +109,4 @@ def transformToParams(transform):
     p.shiftX, p.shiftY, p.shiftZ = m[:, 3]
     # TODO: Consider mirror and scale
     return p
-
-
-def addRelionLabels(replace=False, extended=False):
-    """ Add relion labels as aliases for Xmipp metadata. """
-    global _xmippLabelsDict
-    _xmippLabelsDict = {}
-    for k, v in XMIPP_RELION_LABELS.iteritems():
-        _xmippLabelsDict[k] = xmipp.label2Str(k) # store original label string
-        xmipp.addLabelAlias(k, v, replace)
-    if extended:
-        for k, v in XMIPP_RELION_LABELS_EXTRA.iteritems():    
-            _xmippLabelsDict[k] = xmipp.label2Str(k) # store original label string
-            xmipp.addLabelAlias(k, v, replace)
-
-            
-def addRelionLabelsToEnviron(env):
-    """ create an string that can be used for XMIPP_EXTRA_ALIASES
-    for adding the labels of Relion.
-    """
-    from xmipp import label2Str
-    pairs = []
-    for k, v in XMIPP_RELION_LABELS.iteritems():
-        pairs.append('%s=%s' % (label2Str(k), v))
-    for k, v in XMIPP_RELION_LABELS_EXTRA.iteritems():
-        pairs.append('%s=%s' % (label2Str(k), v))        
-    varStr = ';'.join(pairs)
-    env['XMIPP_EXTRA_ALIASES'] = varStr
     

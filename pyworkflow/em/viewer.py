@@ -32,7 +32,7 @@ from pyworkflow.viewer import View, MessageView, CommandView, Viewer, DESKTOP_TK
 from pyworkflow.em.data import *
 from pyworkflow.em.protocol import *
 from showj import *
-from pyworkflow.em.convert import addRelionLabelsToEnviron
+
 
 
 #------------------------ Some common Views ------------------
@@ -45,7 +45,8 @@ class DataView(View):
         self._loadPath(path)
         self._env = kwargs.get('env', os.environ.copy())
         self._viewParams = viewParams
-        if(self._path.endswith('.star')):
+        if self._path.endswith('.star'):
+            from pyworkflow.em.packages.relion import addRelionLabelsToEnviron
             addRelionLabelsToEnviron(self._env)
             
     def _loadPath(self, path):
@@ -163,6 +164,7 @@ class CoordinatesObjectView(DataView):
     def show(self):
         runJavaIJapp(self._memory, 'xmipp.viewer.particlepicker.training.SupervisedPickerRunner', self.getShowJParams(), True, env=self._env)
         
+        
 #------------------------ Some viewers ------------------------
 
 class ChimeraViewer(Viewer):
@@ -191,7 +193,8 @@ class ChimeraViewer(Viewer):
                 f.close()
             chimera(fn)
         else:
-            raise Exception('XmippViewer.visualize: can not visualize class: %s' % obj.getClassName())
+            raise Exception('ChimeraViewer.visualize: can not visualize class: %s' % obj.getClassName())
+ 
  
 class VmdViewer(Viewer):
     """ Wrapper to visualize PDB objects with VMD viewer. """
@@ -208,5 +211,5 @@ class VmdViewer(Viewer):
             fn = obj.getFileName()
             os.system("vmd %s" % fn)
         else:
-            raise Exception('XmippViewer.visualize: can not visualize class: %s' % obj.getClassName())     
+            raise Exception('VmdViewer.visualize: can not visualize class: %s' % obj.getClassName())     
         

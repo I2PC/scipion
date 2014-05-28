@@ -27,12 +27,12 @@
 This module contains the protocol base class for Relion protocols
 """
 
-import xmipp
-from pyworkflow.protocol.params import BooleanParam, PointerParam, IntParam
 from pyworkflow.utils import environAdd, moveFile
 from pyworkflow.em import *
+
 from constants import ANGULAR_SAMPLING_LIST, MASK_FILL_ZERO
-from convert import createRelionInputParticles, createClassesFromImages
+from convert import createRelionInputParticles, createClassesFromImages, addRelionLabels
+
 
 
 class ProtRelionBase(EMProtocol):
@@ -449,21 +449,20 @@ class ProtRelionBase(EMProtocol):
                                    self._getFileName('input_mrcs'))
         
         if imgsStar is None and self.doNormalize.get():
-            
+            # Enter here to generate the star file or to normalize the images
             self._loadEnvironment()
-            self._enterDir(self._getTmpPath())
-            imgFn = os.path.relpath(self._getFileName('input_mrcs'), self._getTmpPath())
-            outFn = removeBaseExt(basename(imgFn))
+            #self._enterDir(self._getTmpPath())
+            #imgFn = os.path.relpath(self._getFileName('input_mrcs'), self._getTmpPath())
+            imgFn = self._getFileName('input_mrcs')
+            #outFn = removeBaseExt(basename(imgFn))
             radius = self.backRadius.get()
             if radius <= 0:
                 radius = Xdim / 2
-            params = '--operate_on %(imgFn)s --norm True --bg_radius %(radius)s --o %(outFn)s'
+            params = '--operate_on %(imgFn)s --norm True --bg_radius %(radius)s'
             self.runJob(self._getProgram('relion_preprocess'), params % locals())
             
-            moveFile(basename(imgFn), imgFn)
-            self._leaveDir()
-        else:
-            pass # Do nothing if imgsStar is not None or doNormalize is set False
+            #moveFile(basename(imgFn), imgFn)
+            #self._leaveDir()
     
     def runRelionStep(self, params):
         """ Execute the relion steps with the give params. """

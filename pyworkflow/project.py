@@ -220,12 +220,7 @@ class Project(object):
         to mark a protocol that have an interactive step
         waiting for approval that can continue
         """
-        for step in protocol._steps:
-            if step.status == STATUS_WAITING_APPROVAL:
-                step.setStatus(STATUS_FINISHED)
-                self.mapper.store(step)
-                self.mapper.commit()
-                break
+        protocol.continueFromInteractive()
         self.launchProtocol(protocol)
         
     def __protocolInList(self, prot, protocols):
@@ -292,16 +287,15 @@ class Project(object):
         We will try to find another existing protocol of the 
         same class and set the label from it.
         """
-        prevProt = None # protocol with same class as newProt
+        prevLabel = None # protocol with same class as newProt
         newProtClass = newProt.getClass()
         
         for prot in self.getRuns(iterate=True, refresh=False):
             if newProtClass == prot.getClass():
-                prevProt = prot
+                prevLabel = prot.getObjLabel().strip()
                 
-        if prevProt: 
+        if prevLabel: 
             numberSuffix = 2
-            prevLabel = prevProt.getObjLabel()
             m = REGEX_NUMBER_ENDING.match(prevLabel)
             if m and m.groupdict()['number']:
                 numberSuffix = int(m.groupdict()['number']) + 1

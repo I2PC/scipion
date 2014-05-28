@@ -63,8 +63,6 @@ def restoreXmippLabels():
     _xmippLabelsDict = {}
 
             
-
-    
 class ParticleAdaptor():
     """ Class used to convert a set of particles for Relion.
     It will write an stack in Spider format and also
@@ -86,6 +84,32 @@ class ParticleAdaptor():
         # Re-write the row with the new location
         self._particleToRow(img, imgRow)
         self._rowCount += 1
+    
+
+def addRelionLabels(replace=False, extended=False):
+    """ Add relion labels as aliases for Xmipp metadata. """
+    global _xmippLabelsDict
+    _xmippLabelsDict = {}
+    for k, v in XMIPP_RELION_LABELS.iteritems():
+        _xmippLabelsDict[k] = xmipp.label2Str(k) # store original label string
+        xmipp.addLabelAlias(k, v, replace)
+    if extended:
+        for k, v in XMIPP_RELION_LABELS_EXTRA.iteritems():    
+            _xmippLabelsDict[k] = xmipp.label2Str(k) # store original label string
+            xmipp.addLabelAlias(k, v, replace)
+
+            
+def addRelionLabelsToEnviron(env):
+    """ create an string that can be used for XMIPP_EXTRA_ALIASES
+    for adding the labels of Relion.
+    """
+    pairs = []
+    for k, v in XMIPP_RELION_LABELS.iteritems():
+        pairs.append('%s=%s' % (xmipp.label2Str(k), v))
+    for k, v in XMIPP_RELION_LABELS_EXTRA.iteritems():
+        pairs.append('%s=%s' % (xmipp.label2Str(k), v))        
+    varStr = ';'.join(pairs)
+    env['XMIPP_EXTRA_ALIASES'] = varStr
     
     
 def writeSetOfParticles(imgSet, starFile, stackFile):

@@ -556,12 +556,14 @@ class Protocol(Step):
         """
         self._currentDir = os.getcwd()
         os.chdir(path)
+        self._log.info("Entered to dir: cd '%s'" % path)
         
     def _leaveDir(self): 
         """ This method should be called after a call to _enterDir
         to return to the previous location. 
         """
         os.chdir(self._currentDir)        
+        self._log.info("Returned to dir: cd '%s'" % self._currentDir)
                       
     def _enterWorkingDir(self):
         """ Change to the protocol working dir. """
@@ -573,6 +575,22 @@ class Protocol(Step):
         """
         self._leaveDir()
         
+    def continueFromInteractive(self):
+        """ TODO: REMOVE this function.
+        Check if there is an interactive step and set
+        as finished, this is used now mainly in picking,
+        but we should remove this since is weird for users.
+        """
+        if exists(self.getStepsFile()):
+            stepsSet = StepSet(filename=self.getStepsFile())
+            for step in stepsSet:
+                if step.getStatus() == STATUS_WAITING_APPROVAL:
+                    step.setStatus(STATUS_FINISHED)
+                    stepsSet.update(step)
+                    break
+            stepsSet.write()
+            stepsSet.close() # Close the connection
+    
     def loadSteps(self):
         """ Load the Steps stored in the steps.sqlite file.
         """
@@ -702,6 +720,8 @@ class Protocol(Step):
     def copy(self, other, copyId=True):
         copyDict = Object.copy(self, other, copyId)
         self._store()
+        self.mapper.deleteRelations(self)
+        
         for r in other.getRelations():
             rName = r['name']
             rCreator = r['parent_id']
