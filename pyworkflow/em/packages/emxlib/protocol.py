@@ -73,7 +73,9 @@ class ProtEmxImport(ProtImport):
                       help=Message.TEXT_AMPLITUDE)
         group.addParam('samplingRate', FloatParam, allowsNull=True,  
                    label=Message.LABEL_SAMP_RATE)
-
+        group.addParam('magnification', FloatParam, default=60000,  
+                   label=Message.LABEL_MAGNI_RATE)
+        
     def _loadEmxInfo(self):
         """ Load the EMX file and get some information about the type
         of objects contained and the binary data.
@@ -116,6 +118,7 @@ class ProtEmxImport(ProtImport):
         """
         acquisition = Acquisition()
         # Setting Acquisition properties
+        acquisition.setMagnification(self.magnification.get())
         acquisition.setVoltage(self.voltage.get())
         acquisition.setSphericalAberration(self.sphericalAberration.get())
         acquisition.setAmplitudeContrast(self.amplitudeContrast.get())
