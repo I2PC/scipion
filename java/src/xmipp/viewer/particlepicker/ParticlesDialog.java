@@ -1,5 +1,6 @@
 package xmipp.viewer.particlepicker;
 
+import java.awt.Dialog;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
@@ -9,23 +10,19 @@ import java.awt.event.ComponentEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.util.List;
-
-import javax.swing.JDialog;
-
 import xmipp.utils.XmippWindowUtil;
 import xmipp.utils.XmippMessage;
-import xmipp.viewer.particlepicker.training.model.ManualParticle;
 
-public class ParticlesJDialog extends JDialog
+public class ParticlesDialog extends Dialog
 {
 
 	protected ParticlePickerJFrame frame;
 	protected Panel particlespn;
 	protected ScrollPane sp;
 	protected GridBagConstraints constraints;
-	protected int width, height;
+	protected int width, height, rows, columns, side;
 
-	public ParticlesJDialog(ParticlePickerJFrame frame)
+	public ParticlesDialog(ParticlePickerJFrame frame)
 	{
 		super(frame);
 		this.frame = frame;
@@ -35,21 +32,23 @@ public class ParticlesJDialog extends JDialog
 		{
 			public void windowClosing(WindowEvent winEvt)
 			{
-				resetParticlesJDialog();
+				resetParticlesDialog();
+                                close();
 			}
 
 		});
 	}
 
-	protected void resetParticlesJDialog()
+	protected void resetParticlesDialog()
 	{
 		frame.particlesdialog = null;
 
 	}
 
-	public void loadParticles(boolean resize)
+	public void loadParticles(boolean changesize)
 	{
-		int side, rows, columns, width = 0, height = 0;
+	
+		         
 		List<? extends PickerParticle> particles = frame.getAvailableParticles();
 		side = frame.getSide(frame.getParticlePicker().getSize());
 
@@ -59,12 +58,14 @@ public class ParticlesJDialog extends JDialog
 		if (particles.isEmpty())
 		{
 			particlespn.removeAll();
-			sp.setPreferredSize(new Dimension(200, 200));
+                        width = 200;
+                        height = 800;
+			sp.setPreferredSize(new Dimension(width, height));
 			pack();
 			return;
 		}
 
-		if (resize)
+		if (changesize)
 		{
 			columns = Math.min(200, particles.size() * side) / side;
 			rows = (int) Math.ceil(particles.size() / (float) columns);
@@ -73,15 +74,20 @@ public class ParticlesJDialog extends JDialog
 			boolean scroll = (height < rows * side);
 			width = width + (scroll ? 40 : 20);
 			height = height + (scroll ? 0 : 20);
-			sp.setPreferredSize(new Dimension(width, height));
+			
 		}
 		else
 		{
 			Dimension d = sp.getSize();
-			columns = (int) d.getWidth() / side;
+                        width = (int) d.getWidth();
+                        height = (int)d.getHeight();
+			columns = width / side;
 			rows = (int) Math.ceil((particles.size() / (float) columns));
+                        
 		}
+                sp.setPreferredSize(new Dimension(width, height));
 		particlespn.removeAll();
+                
 		particles = frame.getAvailableParticles();
 		int index = 0;
 		ParticleCanvas c;
@@ -95,14 +101,16 @@ public class ParticlesJDialog extends JDialog
 				c = p.getParticleCanvas(frame);
 				particlespn.add(c, XmippWindowUtil.getConstraints(constraints, j, i, 1));
 			}
-		if (resize)
-			pack();
-		particlespn.repaint();
+                // particlespn.revalidate();
+                sp.setScrollPosition(sp.getScrollPosition().x, Integer.MAX_VALUE);
+		pack();
 	}
+        
+        
 
 	private void initComponents()
 	{
-		setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+		
 		setTitle("Particles");
 		constraints = new GridBagConstraints();
 		sp = new ScrollPane();

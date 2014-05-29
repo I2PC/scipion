@@ -102,6 +102,7 @@ import xmipp.jni.MDRow;
 import xmipp.utils.DEBUG;
 import xmipp.utils.Param;
 import xmipp.utils.QuickHelpJDialog;
+import xmipp.utils.StopWatch;
 import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippFileChooser;
 import xmipp.utils.XmippLabel;
@@ -225,8 +226,11 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		try
 		{
 			this.data = data;
+                        StopWatch stopWatch = StopWatch.getInstance();
 			createModel();
+                        stopWatch.printElapsedTime("creating gui");
 			createGUI();
+                        stopWatch.printElapsedTime("done init");
 			XmippApplication.addInstance(false);
 		}
 		catch (Exception e)

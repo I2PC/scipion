@@ -549,38 +549,44 @@ void scaleToSizeFourier(int Zdim, int Ydim, int Xdim, MultidimArray<double> &mda
     transformerMp.setReal(mdaOut);
     transformerMp.getFourierAlias(MpmemFourier);
 
-    size_t ihalf = XMIPP_MIN((YSIZE(MpmemFourier)/2+1),(YSIZE(MmemFourier)/2+1));
-    size_t zhalf = XMIPP_MIN((ZSIZE(MpmemFourier)/2+1),(ZSIZE(MmemFourier)/2+1));
-    size_t xsize = XMIPP_MIN((XSIZE(MmemFourier)),(XSIZE(MpmemFourier)));
+    size_t xsize = std::min(XSIZE(MmemFourier),XSIZE(MpmemFourier))*sizeof(std::complex<double>);
+    size_t yhalf = std::min(std::min((YSIZE(mdaIn)+1)/2,(YSIZE(mdaOut)+1)/2),YSIZE(mdaIn)-1);
+    size_t zhalf = std::min(std::min((ZSIZE(mdaIn)+1)/2,(ZSIZE(mdaOut)+1)/2),ZSIZE(mdaIn)-1);
+
+    size_t kp0=0;
+    size_t kpF=zhalf;
+    size_t ip0=0;
+    size_t ipF=yhalf;
+    size_t km0=ZSIZE(MmemFourier)>=ZSIZE(MpmemFourier)?(kpF+1):(ZSIZE(MpmemFourier)-(ZSIZE(MmemFourier)-(zhalf+1)));
+    size_t kmF=ZSIZE(MpmemFourier)-1;
+    size_t im0=YSIZE(MmemFourier)>=YSIZE(MpmemFourier)?(ipF+1):(YSIZE(MpmemFourier)-(YSIZE(MmemFourier)-(yhalf+1)));
+    size_t imF=YSIZE(MpmemFourier)-1;
+
     //Init with zero
     MpmemFourier.initZeros();
 
-    //TODO: Check if we can accelerate the last loop by using memcpy ???
-    for (size_t k = 0; k < zhalf; ++k)
+    for (size_t k = kp0; k<=kpF; ++k)
     {
-        for (size_t i=0; i<ihalf; i++)
-            for (size_t j=0; j<xsize; j++)
-                dAkij(MpmemFourier,k,i,j) = dAkij(MmemFourier,k,i,j);
-        for (size_t i=YSIZE(MpmemFourier)-1; i>=ihalf; i--)
+        for (size_t i=ip0; i<=ipF; ++i)
+        	memcpy(&dAkij(MpmemFourier,k,i,0),&dAkij(MmemFourier,k,i,0),xsize);
+        for (size_t i=im0; i<=imF; ++i)
         {
             size_t ip = i + YSIZE(MmemFourier)-YSIZE(MpmemFourier) ;
-            for (size_t j=0; j<XSIZE(MpmemFourier); j++)
-                dAkij(MpmemFourier,k,i,j) = dAkij(MmemFourier,k,ip,j);
+        	memcpy(&dAkij(MpmemFourier,k,i,0),&dAkij(MmemFourier,k,ip,0),xsize);
         }
     }
-    for (size_t k = ZSIZE(MpmemFourier)-1; k >= zhalf; --k)
+    for (size_t k = km0; k<=kmF; ++k)
     {
         size_t kp = k + ZSIZE(MmemFourier)-ZSIZE(MpmemFourier) ;
-        for (size_t i=0; i<ihalf; i++)
-            for (size_t j=0; j<xsize; j++)
-                dAkij(MpmemFourier,k,i,j) = dAkij(MmemFourier,kp,i,j);
-        for (size_t i=YSIZE(MpmemFourier)-1; i>=ihalf; i--)
+        for (size_t i=ip0; i<=ipF; ++i)
+        	memcpy(&dAkij(MpmemFourier,k,i,0),&dAkij(MmemFourier,kp,i,0),xsize);
+        for (size_t i=im0; i<=imF; ++i)
         {
             size_t ip = i + YSIZE(MmemFourier)-YSIZE(MpmemFourier) ;
-            for (size_t j=0; j<XSIZE(MpmemFourier); j++)
-                dAkij(MpmemFourier,k,i,j) = dAkij(MmemFourier,kp,ip,j);
+        	memcpy(&dAkij(MpmemFourier,k,i,0),&dAkij(MmemFourier,kp,ip,0),xsize);
         }
     }
+
     // Transform data
     transformerMp.inverseFourierTransform();
 }
@@ -588,7 +594,9 @@ void scaleToSizeFourier(int Zdim, int Ydim, int Xdim, MultidimArray<double> &mda
 
 void selfScaleToSizeFourier(int Zdim, int Ydim, int Xdim, MultidimArray<double> &mda, int nThreads)
 {
-  scaleToSizeFourier(Zdim, Ydim, Xdim, mda, mda, nThreads);
+  MultidimArray<double> aux;
+  scaleToSizeFourier(Zdim, Ydim, Xdim, mda, aux, nThreads);
+  mda=aux;
 }
 
 

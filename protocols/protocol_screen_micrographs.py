@@ -221,7 +221,7 @@ def estimateSingleCTF(log, WorkingDir, inputFile, DownsampleFactor, AutomaticDow
         if DownsampleFactor>=2:
             downsampleList.append(DownsampleFactor-1)
         else:
-            downsampleList.append(DownsampleFactor/2)
+            downsampleList.append(max(DownsampleFactor/2.,1.))
     
     for DownsampleFactor in downsampleList:
         # Downsample if necessary
@@ -348,5 +348,16 @@ def automaticRejection(log,WorkingDir,condition,MDL_TYPE):
 
 def copyTiltPairs(log,WorkingDir,inputMicrographs):
     md=xmipp.MetaData(inputMicrographs)
-    md.write("micrographPairs@"+os.path.join(WorkingDir,"micrographs.xmd"),xmipp.MD_APPEND)
-
+    fnOut=os.path.join(WorkingDir,"micrographs.xmd")
+    mdOut=xmipp.MetaData(fnOut)
+    
+    # Add the tilted micrographs to the list of screened micrographs 
+    for id in md:
+        fnTilted=md.getValue(xmipp.MDL_MICROGRAPH_TILTED,id)
+        idOut=mdOut.addObject()
+        mdOut.setValue(xmipp.MDL_MICROGRAPH,fnTilted,idOut)
+        mdOut.setValue(xmipp.MDL_ENABLED,1,idOut)
+    mdOut.write(fnOut,xmipp.MD_APPEND)
+    
+    # Copy the pairs block
+    md.write("micrographPairs@"+fnOut,xmipp.MD_APPEND)

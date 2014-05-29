@@ -25,7 +25,7 @@ import xmipp.utils.XmippWindowUtil;
 import xmipp.viewer.particlepicker.Format;
 import xmipp.viewer.particlepicker.ParticlePickerCanvas;
 import xmipp.viewer.particlepicker.ParticlePickerJFrame;
-import xmipp.viewer.particlepicker.ParticlesJDialog;
+import xmipp.viewer.particlepicker.ParticlesDialog;
 import xmipp.viewer.particlepicker.tiltpair.model.TiltPairPicker;
 import xmipp.viewer.particlepicker.tiltpair.model.UntiltedMicrograph;
 import xmipp.viewer.particlepicker.tiltpair.model.UntiltedParticle;
@@ -368,8 +368,8 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame {
 	}
 
 	@Override
-	public ParticlesJDialog initParticlesJDialog() {
-		return new TiltPairParticlesJDialog(this);
+	public ParticlesDialog initParticlesJDialog() {
+		return new TiltPairParticlesDialog(this);
 	}
 
 }// class TiltPairPickerJFrame

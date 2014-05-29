@@ -65,7 +65,7 @@ import xmipp.viewer.scipion.ScipionGalleryJFrame;
 public abstract class ParticlePickerJFrame extends JFrame implements ActionListener
 {
 
-	protected ParticlesJDialog particlesdialog;
+	protected ParticlesDialog particlesdialog;
 
 	protected JMenuItem ijmi;
 	protected JCheckBox circlechb;
@@ -491,7 +491,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 
 	public abstract ParticlePickerCanvas getCanvas();
 
-	public abstract ParticlesJDialog initParticlesJDialog();
+	public abstract ParticlesDialog initParticlesJDialog();
 
 	public void loadParticles()
 	{
@@ -524,7 +524,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 
 	public abstract void updateMicrographsModel(boolean all);
 
-	public ParticlesJDialog getParticlesJDialog()
+	public ParticlesDialog getParticlesJDialog()
 	{
 		return particlesdialog;
 	}

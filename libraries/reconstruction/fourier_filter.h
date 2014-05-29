@@ -87,8 +87,12 @@ public:
 #define BFACTOR      11
 #define REALGAUSSIAN 12
 #define SPARSIFY     13
+#define STOPLOWBANDX 14
+#define STOPLOWBANDY 15
+
     /** Pass band. LOWPASS, HIGHPASS, BANDPASS, STOPBAND, CTF, CTFPOS,
-       WEDGE, CONE, GAUSSIAN, FROM_FILE, REALGAUSSIAN, BFACTOR, SPARSIFY */
+       WEDGE, CONE, GAUSSIAN, FROM_FILE, REALGAUSSIAN, BFACTOR, SPARSIFY,
+       STOPLOWBANDX, STOPLOWBANDY */
     int FilterBand;
 
     /** Cut frequency for Low and High pass filters, first freq for bandpass.

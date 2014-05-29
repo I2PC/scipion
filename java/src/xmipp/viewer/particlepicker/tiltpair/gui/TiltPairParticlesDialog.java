@@ -7,23 +7,23 @@ import xmipp.utils.XmippMessage;
 import xmipp.utils.XmippWindowUtil;
 import xmipp.viewer.particlepicker.ParticleCanvas;
 import xmipp.viewer.particlepicker.ParticlePickerJFrame;
-import xmipp.viewer.particlepicker.ParticlesJDialog;
+import xmipp.viewer.particlepicker.ParticlesDialog;
 import xmipp.viewer.particlepicker.PickerParticle;
 import xmipp.viewer.particlepicker.tiltpair.model.UntiltedParticle;
 
-public class TiltPairParticlesJDialog extends ParticlesJDialog
+public class TiltPairParticlesDialog extends ParticlesDialog
 {
 
-	public TiltPairParticlesJDialog(ParticlePickerJFrame frame)
+	public TiltPairParticlesDialog(ParticlePickerJFrame frame)
 	{
 
 		super(frame);
 
 	}
 
-	public void loadParticles(boolean resize)
+	public void loadParticles(boolean changesize)
 	{
-		int side, rows, columns, width = 0, height = 0;
+		
 		List<? extends PickerParticle> particles = frame.getAvailableParticles();
 		side = frame.getSide(frame.getParticlePicker().getSize());
 
@@ -33,12 +33,14 @@ public class TiltPairParticlesJDialog extends ParticlesJDialog
 		if (particles.isEmpty())
 		{
 			particlespn.removeAll();
-			sp.setPreferredSize(new Dimension(200, 200));
+			width = 200;
+                        height = 800;
+			sp.setPreferredSize(new Dimension(width, height));
 			pack();
 			return;
 		}
 
-		if (resize)
+		if (changesize)
 		{
 			columns = 1;//Math.min(200, particles.size() * side * 2) / (side * 2);
 			rows = (int) Math.ceil(particles.size() / (float) columns);
@@ -52,9 +54,12 @@ public class TiltPairParticlesJDialog extends ParticlesJDialog
 		else
 		{
 			Dimension d = sp.getSize();
+                        width = (int) d.getWidth();
+                        height = (int)d.getHeight();
 			columns = (int) d.getWidth() / (side * 2);
 			rows = (int) Math.ceil((particles.size() / (float) columns));
 		}
+                sp.setPreferredSize(new Dimension(width, height));
 		particlespn.removeAll();
 		particles = frame.getAvailableParticles();
 		int index = 0;
@@ -75,8 +80,10 @@ public class TiltPairParticlesJDialog extends ParticlesJDialog
 				if (up.getTiltedParticle() != null)
 					particlespn.add(up.getTiltedParticle().getParticleCanvas(frame), XmippWindowUtil.getConstraints(constraints, j + 1, i, 1));
 			}
-		if (resize)
-			pack();
+		
+		 // particlespn.revalidate();
+                 sp.setScrollPosition(sp.getScrollPosition().x, Integer.MAX_VALUE);
+		 pack();
 		
 	}
 }
