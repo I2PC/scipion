@@ -92,11 +92,8 @@ def parseArgs(args):
 
 
 if __name__ == '__main__':
-    if len(sys.argv) > 1:
-        argsDict = parseArgs(sys.argv[1:])
-    else:
-        argsDict = {}
-      
+    argsDict = parseArgs(sys.argv[1:])
+
     # CASE and PATH are excusive
     if CASE in argsDict:
         case = argsDict[CASE]

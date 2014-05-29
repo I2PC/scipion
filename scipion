@@ -110,9 +110,8 @@ for var in ['SPIDER_DIR', 'EMAN2DIR', 'CTFFIND_HOME', 'FREALIGN_HOME',
     VARS[var] = getConfigPath(var)
 
 def runApp(app, args=''):
-    cmd = PW_APPS_TEMP % app + ' ' + args
-    runCmd(cmd)
-    
+    runCmd('%s %s' % (PW_APPS_TEMP % app, args))
+
 def runCmd(cmd):
     os.environ.update(VARS)
     os.chdir(SCIPION_HOME)
@@ -120,6 +119,8 @@ def runCmd(cmd):
     print ">>>>>", cmd
     result = os.system(cmd)
     sys.exit(result)
+    # TODO: check that "result" is a number below 256, because if not
+    # the shell will interpret it as 0 (no error!)
 
 
 MODE_MANAGER = 'manager'
@@ -138,7 +139,7 @@ MODE_STATS = 'stats'
 MODE_DOWNLOAD = 'download'
 
 
-if __name__ == '__main__':
+def main():
     n = len(sys.argv)
     mode = sys.argv[1] if n > 1 else MODE_MANAGER
 
@@ -189,18 +190,15 @@ if __name__ == '__main__':
 
     elif mode == MODE_TESTS:
         if n > 2:
-            option = sys.argv[2]
-            if option in ["show", "run"]: # only show available tests
-                args = ' '.join(sys.argv[3:])
-                if option == 'show':
-                    args += " print"
-                runCmd('scripts/run_tests.py %s' % args)
-                f = open(join(SCIPION_HOME, 'scripts', 'batch_tests'))
-            else: # run the desired test
-                path = os.getcwd()
-                os.chdir(SCIPION_HOME)
-                runCmd('-m unittest pyworkflow.tests.%s' % option)
-                os.chdir(path)
+            if sys.argv[2] not in ["show", "run"]:
+                prepend = lambda x: x if x.startswith('tests.') else 'tests.'+x
+                runCmd('-m unittest pyworkflow.%s' % prepend(sys.argv[2]))
+            else:
+                if sys.argv[2] == "show":
+                    args = ["print"] + sys.argv[3:]
+                elif sys.argv[2] == "run":
+                    args = sys.argv[3:]
+                runCmd('scripts/run_tests.py %s' % ' '.join(args))
 
     elif mode == MODE_TESTS_DATA:
         if n > 2:
@@ -322,6 +320,13 @@ USAGE:
                                apache_vars: show the LD_LIBRARY_PATH needed by apache server
 """
 
+
+
+if __name__ == '__main__':
+    try:
+        main()
+    except Exception as e:
+        sys.exit(str(e))
 elif __name__.startswith('_mod_wsgi'):
     os.environ['DJANGO_SETTINGS_MODULE'] = 'pages.settings'
     os.environ.update(VARS)
