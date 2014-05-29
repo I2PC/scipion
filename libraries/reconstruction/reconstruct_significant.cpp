@@ -217,7 +217,7 @@ void progReconstructSignificantThreadAlign(ThreadArgument &thArg)
 								continue;
 
 						anglePsi*=-1;
-						double weight=cdfccthis*(1-cdfimedthis)*(bestImed/imed)*(cc/bestCorr);
+						double weight=cdfccthis*/*(1-cdfimedthis)*(bestImed/imed)**/(cc/bestCorr);
 						DIRECT_A3D_ELEM(prm.weight,nImg,nVolume,nDir)=weight;
 						double angleRot=prm.mdGallery[nVolume][nDir].rot;
 						double angleTilt=prm.mdGallery[nVolume][nDir].tilt;
