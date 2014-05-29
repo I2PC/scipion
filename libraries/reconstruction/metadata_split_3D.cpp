@@ -135,6 +135,9 @@ void ProgMetadataSplit3D::run()
 	mdIn.read(fn_in);
 	mdIn.removeDisabled();
 	mdRef.read(fn_oroot+"_gallery.doc");
+	deleteFile(fn_oroot+"_gallery.doc");
+	deleteFile(fn_oroot+"_gallery.stk");
+	deleteFile(fn_oroot+"_gallery_sampling.xmd");
 
 	// Get the maximum reference number
 	size_t maxRef=0, refno;
@@ -168,7 +171,7 @@ void ProgMetadataSplit3D::run()
 		// Get all images in the input metadata that are close to this one
 		getNeighbours(mdIn,projectionDir,mdNeighbours,maxDist);
 
-		// Compute the projection on the first PCA component
+		// Check if it is upper or lower half
 		if (mdNeighbours.size()>0)
 		{
 			mdRef.getValue(MDL_IMAGE,fnImg,__iter.objId);
@@ -184,11 +187,6 @@ void ProgMetadataSplit3D::run()
 		progress_bar(i);
 	}
 	progress_bar(mdRef.size());
-	correlatesWell.write("PPPcoocurrence.txt");
-
-	deleteFile(fn_oroot+"_gallery.doc");
-	deleteFile(fn_oroot+"_gallery.stk");
-	deleteFile(fn_oroot+"_gallery_sampling.xmd");
 
 	// Split in two metadatas
 	MetaData mdUpper, mdLower;
