@@ -285,10 +285,12 @@ Search5DStep ='2'
 DoRestricSearchbyTiltAngle = False
 
 # {expert} {condition}(DoRestricSearchbyTiltAngle) Lower-value for restricted tilt angle search
-Tilt0 = -91
+""" This may not work with certain symmetries other than Cn"""
+Tilt0 = 0
 
 # {expert} {condition}(DoRestricSearchbyTiltAngle) Higher-value for restricted tilt angle search
-TiltF = 91
+""" This may not work with certain symmetries other than Cn"""
+TiltF = 180
 
 # Symmetry group
 """ See [http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Symmetry]
