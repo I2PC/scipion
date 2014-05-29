@@ -29,14 +29,13 @@ import os, sys
 
 import pyworkflow as pw
 from tests import *
-from os.path import join, exists, isdir, relpath
-from pyworkflow.utils.path import cleanPath, makeFilePath
+from pyworkflow.utils.path import makeFilePath
 import model
 
 try:
-   from unittest.runner import _WritelnDecorator # Python 2.7+
+    from unittest.runner import _WritelnDecorator # Python 2.7+
 except ImportError:
-   from unittest import _WritelnDecorator # Python <2.6
+    from unittest import _WritelnDecorator # Python <2.6
 
     
 DataSet(name='xmipp_tutorial', folder='xmipp_tutorial', 
