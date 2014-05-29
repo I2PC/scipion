@@ -42,6 +42,9 @@ void ProgReconstructSignificant::defineParams()
     addParamsLine("  [--keepIntermediateVolumes]  : Keep the volume of each iteration");
     addParamsLine("  [--thr <n=1>]                : Number of threads");
     addParamsLine("  [--angularSampling <a=5>]    : Angular sampling in degrees for generating the projection gallery");
+    addParamsLine("  [--maxShift <s=-1>]          : Maximum shift allowed (+-this amount)");
+    addParamsLine("  [--minTilt <t=0>]            : Minimum tilt angle");
+    addParamsLine("  [--maxTilt <t=180>]          : Maximum tilt angle");
 }
 
 // Read arguments ==========================================================
@@ -57,6 +60,9 @@ void ProgReconstructSignificant::readParams()
     Nthr = getIntParam("--thr");
     keepIntermediateVolumes = checkParam("--keepIntermediateVolumes");
     angularSampling=getDoubleParam("--angularSampling");
+    maxShift=getDoubleParam("--maxShift");
+    tilt0=getDoubleParam("--minTilt");
+    tiltF=getDoubleParam("--maxTilt");
 }
 
 // Show ====================================================================
@@ -72,6 +78,9 @@ void ProgReconstructSignificant::show()
         std::cout << "Number of threads           : "  << Nthr        << std::endl;
         std::cout << "Keep intermediate volumes   : "  << keepIntermediateVolumes << std::endl;
         std::cout << "Angular sampling            : "  << angularSampling << std::endl;
+        std::cout << "Maximum shift               : "  << maxShift << std::endl;
+        std::cout << "Minimum tilt                : "  << tilt0 << std::endl;
+        std::cout << "Maximum tilt                : "  << tiltF << std::endl;
         if (fnSym != "")
             std::cout << "Symmetry for projections    : "  << fnSym << std::endl;
         if (fnInit !="")
@@ -88,10 +97,9 @@ void progReconstructSignificantThreadAlign(ThreadArgument &thArg)
 	Matrix2D<double> M;
 	std::vector< Matrix2D<double> > allM;
 
-	int Nimgs=ZSIZE(prm.cc);
-	int Nvols=YSIZE(prm.cc);
-	int Ndirs=XSIZE(prm.cc);
-	int Nbest=std::ceil(prm.currentAlpha*Ndirs*Nvols);
+	size_t Nimgs=ZSIZE(prm.cc);
+	size_t Nvols=YSIZE(prm.cc);
+	size_t Ndirs=XSIZE(prm.cc);
 	MultidimArray<double> imgcc(Nvols*Ndirs), imgimed(Nvols*Ndirs);
 	MultidimArray<double> cdfcc, cdfimed;
 	double one_alpha=1-prm.currentAlpha;
@@ -103,9 +111,9 @@ void progReconstructSignificantThreadAlign(ThreadArgument &thArg)
 	}
 
 	FileName fnImg;
-	for (int nImg=0; nImg<Nimgs; ++nImg)
+	for (size_t nImg=0; nImg<Nimgs; ++nImg)
 	{
-		if ((nImg+1)%prm.Nthr==thArg.thread_id)
+		if (((int)nImg+1)%prm.Nthr==thArg.thread_id)
 		{
 #ifdef DEBUG
 			std::cout << "Processing: " << prm.mdInp[nImg] << std::endl;
@@ -194,10 +202,19 @@ void progReconstructSignificantThreadAlign(ThreadArgument &thArg)
 					double cdfccthis=DIRECT_A1D_ELEM(cdfcc,idx);
 					double cdfimedthis=DIRECT_A1D_ELEM(cdfimed,idx);
 					double cc=DIRECT_A1D_ELEM(imgcc,idx);
-					if (cdfccthis>=one_alpha && cdfimedthis<=prm.currentAlpha && cc>ccl)
+//					if (cc>ccl)
+//						std::cout << "    " << prm.mdGallery[nVolume][nDir].fnImg << " ***cc=" << cc << " cdfcc=" << cdfccthis << " cdfimedthis=" << cdfimedthis << std::endl;
+//					if (cdfccthis>=one_alpha)
+//						std::cout << "    " << prm.mdGallery[nVolume][nDir].fnImg << " cc=" << cc << " ***cdfcc=" << cdfccthis << " cdfimedthis=" << cdfimedthis << std::endl;
+//					if (cdfimedthis<=prm.currentAlpha)
+//						std::cout << "    " << prm.mdGallery[nVolume][nDir].fnImg << " cc=" << cc << " cdfcc=" << cdfccthis << " ***cdfimedthis=" << cdfimedthis << std::endl;
+					if (cdfccthis>=one_alpha && /* cdfimedthis<=prm.currentAlpha &&*/  cc>ccl)
 					{
 						double imed=DIRECT_A1D_ELEM(imgimed,idx);
 						transformationMatrix2Parameters2D(allM[nVolume*Ndirs+nDir],flip,scale,shiftX,shiftY,anglePsi);
+						if (prm.maxShift>0)
+							if (fabs(shiftX)>prm.maxShift || fabs(shiftY)>prm.maxShift)
+								continue;
 
 						anglePsi*=-1;
 						double weight=cdfccthis*(1-cdfimedthis)*(bestImed/imed)*(cc/bestCorr);
@@ -374,8 +391,8 @@ void ProgReconstructSignificant::generateProjections()
 		fnGallery=formatString("%s/gallery_iter%02d_%02d.stk",fnDir.c_str(),iter,n);
 		fnAngles=formatString("%s/angles_iter%02d_%02d.xmd",fnDir.c_str(),iter-1,n);
 		fnGalleryMetaData=formatString("%s/gallery_iter%02d_%02d.doc",fnDir.c_str(),iter,n);
-		String args=formatString("-i %s -o %s --sampling_rate %f --sym %s --compute_neighbors --angular_distance -1 --experimental_images %s -v 0",
-				fnVol.c_str(),fnGallery.c_str(),angularSampling,fnSym.c_str(),fnAngles.c_str());
+		String args=formatString("-i %s -o %s --sampling_rate %f --sym %s --compute_neighbors --angular_distance -1 --experimental_images %s --min_tilt_angle %d --max_tilt_angle %d -v 0",
+				fnVol.c_str(),fnGallery.c_str(),angularSampling,fnSym.c_str(),fnAngles.c_str(),tilt0,tiltF);
 		String cmd=(String)"xmipp_angular_project_library "+args;
 		if (system(cmd.c_str())==-1)
 			REPORT_ERROR(ERR_UNCLASSIFIED,"Cannot open shell");

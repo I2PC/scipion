@@ -61,6 +61,15 @@ public:
     /** Angular sampling */
     double angularSampling;
 
+    /** Maxshift */
+    double maxShift;
+
+    /** Minimum tilt */
+    double tilt0;
+
+    /** Maximum tilt */
+    double tiltF;
+
 public: // Internal members
     MetaData mdIn, mdInit;
 
