@@ -44,7 +44,7 @@ class DataSet:
         """
         assert name in cls._datasetDict, "Dataset: %s dataset doesn't exist." % name
         folder = cls._datasetDict[name].folder
-        if not 'SCIPION_DATA_NOSYNC' in os.environ:
+        if not 'SCIPION_TEST_NOSYNC' in os.environ:
             command = "%s %s/scipion testdata %s download" % (os.environ['SCIPION_PYTHON'],
                                                               os.environ['SCIPION_HOME'],
                                                               folder)
@@ -71,7 +71,8 @@ class BaseTest(unittest.TestCase):
         """ Launch a given protocol using cls.proj and the
         flag wait=True.
         """
-        cls.proj.launchProtocol(prot, wait=True)
+        if getattr(prot, '_run', True):
+            cls.proj.launchProtocol(prot, wait=True)
         
         if prot.isFailed():
             print "\n>>> ERROR running protocol %s" % prot.getRunName()
@@ -88,6 +89,16 @@ class BaseTest(unittest.TestCase):
         """ Create new protocols instances throught the project
         and return a newly created protocol of the given class
         """
+        # Try to continue from previous execution
+        if os.environ.get('SCIPION_TEST_CONTINUE', None) == '1':
+            candidates = cls.proj.mapper.selectByClass(protocolClass.__name__)
+            if candidates:
+                c = candidates[0]
+                if c.isFinished():
+                    setattr(c, '_run', False)
+                else:
+                    c.runMode.set(MODE_RESTART)
+                return c
         return cls.proj.newProtocol(protocolClass, **kwargs)
 
  
@@ -101,7 +112,10 @@ def setupTestOutput(cls):
 def setupTestProject(cls):
     """ Create and setup a Project for a give Test class. """
     projName = cls.__name__
-    proj = Manager().createProject(projName) # Now it will be loaded if exists
+    if os.environ.get('SCIPION_TEST_CONTINUE', None) == '1':
+        proj = Manager().loadProject(projName)
+    else:
+        proj = Manager().createProject(projName) # Now it will be loaded if exists
     # Check that exists hosts for execution
     hosts = proj.getSettings().getHosts()
     if len(hosts) <= 0:
