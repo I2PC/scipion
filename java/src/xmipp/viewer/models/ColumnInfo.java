@@ -83,10 +83,6 @@ public class ColumnInfo {
 		return result;
 	}
 	
-	
-	
-	
-	
 	public String getLabelTypeString(){
 		try {
 			
