@@ -29,6 +29,8 @@ from django.http import HttpResponse
 from pyworkflow.gui import getPILImage
 import xmipp
 
+from pyworkflow.em.constants import *
+
 
 #===============================================================================
 # UTILS METHODS
@@ -37,15 +39,26 @@ import xmipp
 def proccessModeFilter(mode, value):
     # Order : low - high - decay
 
-    if mode == 0:
+    if mode == FILTER_LOW_PASS:
         print "filter low pass"
 #        value[0] = 0.
         value[0] = 1.0
-    elif mode == 1:
+    
+    elif mode == FILTER_HIGH_PASS:
         print "filter high pass"
         value[1] = 1.0
-    elif mode == 2:
+    
+    elif mode == FILTER_BAND_PASS:
         print "filter band pass"
+    
+    elif mode == FILTER_LOW_PASS_NO_DECAY:
+        print "filter low pass no decay"
+        value[0] = 1.0
+#        value[2] = 0
+    
+    elif mode == FILTER_NO_DECAY:
+        print "filter band pass no decay"
+        value[2] = 0
         
     return value
 

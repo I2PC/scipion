@@ -50,17 +50,17 @@ class FrealignVolRadiiWizard(VolumeMaskRadiiWizard):
     
     def _getParameters(self, protocol):
         
-        label, value = _getInputProtocol(self._targets, protocol)
+        label, value = self._getInputProtocol(self._targets, protocol)
         
         protParams = {}
-        protParams['input']= protocol.inputVolumes
+        protParams['input']= protocol.input3DReference
         protParams['label']= label
         protParams['value']= value
         return protParams  
     
     def _getProvider(self, protocol):
         _objs = self._getParameters(protocol)['input']
-        return VolumeMaskRadiiWizard._getProvider(self, _objs)
+        return VolumeMaskRadiiWizard._getListProvider(self, _objs)
     
     def show(self, form):
         params = self._getParameters(form.protocol)
@@ -78,28 +78,29 @@ class FrealignBandpassWizard(FilterParticlesWizard):
     
     def _getParameters(self, protocol):
         
-        label, value = _getInputProtocol(self._targets, protocol)
+        label, value = self._getInputProtocol(self._targets, protocol)
         
         protParams = {}
         protParams['input']= protocol.inputParticles
         protParams['label']= label
         protParams['value']= value
+        protParams['mode'] = FILTER_LOW_PASS_NO_DECAY
         return protParams  
     
     def _getProvider(self, protocol):
         _objs = self._getParameters(protocol)['input']
-        return FilterParticlesWizard._getProvider(self, _objs)
+        return FilterParticlesWizard._getListProvider(self, _objs)
     
     def show(self, form):
         protocol = form.protocol
         provider = self._getProvider(protocol)
+        params = self._getParameters(protocol)
 
         if provider is not None:
-            self.mode = FILTER_LOW_PASS_NO_DECAY
             
-            args = {'mode':  self.mode,                   
-                    'highFreq': protocol.highResolRefine.get(),
-                    'lowFreq': protocol.lowResolRefine.get(),
+            args = {'mode': params['mode'],                   
+                    'lowFreq': params['value'][0],
+                    'highFreq': params['value'][1],
                     'unit': UNIT_ANGSTROM
                     }
             
@@ -120,28 +121,29 @@ class FrealignVolBandpassWizard(FilterVolumesWizard):
     
     def _getParameters(self, protocol):
         
-        label, value = _getInputProtocol(self._targets, protocol)
+        label, value = self._getInputProtocol(self._targets, protocol)
         
         protParams = {}
-        protParams['input']= protocol.inputVolumes
+        protParams['input']= protocol.input3DReference
         protParams['label']= label
         protParams['value']= value
-        return protParams  
+        protParams['mode'] = FILTER_LOW_PASS_NO_DECAY
+        return protParams
     
     def _getProvider(self, protocol):
         _objs = self._getParameters(protocol)['input']  
-        return FilterVolumesWizard._getProvider(self, _objs)
+        return FilterVolumesWizard._getListProvider(self, _objs)
     
     
     def show(self, form):
         protocol = form.protocol
         provider = self._getProvider(protocol)
+        params = self._getParameters(protocol)
 
         if provider is not None:
-            self.mode = FILTER_LOW_PASS_NO_DECAY
             
-            args = {'mode':  self.mode,                   
-                    'lowFreq': protocol.resolution.get(),
+            args = {'mode': params['mode'],                   
+                    'lowFreq': params['value'],
                     'unit': UNIT_ANGSTROM
                     }
             

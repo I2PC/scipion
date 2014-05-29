@@ -29,6 +29,7 @@ Visualization of the results of the Frealign protocol.
 from pyworkflow.viewer import ProtocolViewer, DESKTOP_TKINTER, WEB_DJANGO
 from pyworkflow.em import *
 from protocol_refinement import ProtFrealign
+from protocol_ml_classification import ProtFrealignClassify
 from protocol_ctffind3 import ProtCTFFind
 from pyworkflow.em.plotter import EmPlotter
 
@@ -42,7 +43,7 @@ class FrealignViewer(ProtocolViewer):
     """ Visualization of Frealign."""    
     _environments = [DESKTOP_TKINTER, WEB_DJANGO]
     _label = 'viewer Frealign'
-    _targets = [ProtFrealign]    
+    _targets = [ProtFrealign, ProtFrealignClassify]    
     
     def _defineParams(self, form):
         form.addSection(label='Results per Iteration')
@@ -50,12 +51,20 @@ class FrealignViewer(ProtocolViewer):
                       choices=['last','all','selection'], display=EnumParam.DISPLAY_LIST)
         form.addParam('selectedIters', StringParam, default='',
               label='Selected iterations', condition='iterToShow==2',
-              help='Which iteration do you want to visualize.')     
+              help="""
+*last*: only the last iteration will be visualized.
+*all*: all iterations  will be visualized.
+*selection*: you may specify a range of iterations.
+Examples:
+"1,5-8,10" -> [1,5,6,7,8,10]
+"2,6,9-11" -> [2,6,9,10,11]
+"2 5, 6-8" -> [2,5,6,7,8]                      
+                   """)
         form.addParam('doShow3DRefsVolumes', BooleanParam, label="Visualize the 3D-references volumes?", default=True)
         form.addParam('doShow3DReconsVolumes', BooleanParam, label="Visualize the 3D-reconstructed volumes?", default=True)
         form.addParam('doShow3DMatchProj', BooleanParam, label="Visualize the matching projections of refinement?", default=True)
         form.addParam('doShowAngDist', BooleanParam, label="Plot angular distribution?", default=True)
-        form.addParam('doShowDataDist', BooleanParam, label="Plot data distribution over 3d-references?", default=True)     
+#         form.addParam('doShowDataDist', BooleanParam, label="Plot data distribution over 3d-references?", default=True)
         
 #         form.addSection(label='Overall Results')
 #         form.addParam('doShowStatistics', BooleanParam, label="Plot overall convergence statistics?", default=True)
@@ -69,14 +78,15 @@ class FrealignViewer(ProtocolViewer):
                 }
     
     def _viewAll(self, *args):
-        if self.doShow3DRefsVolumes:
-            self._view3DRefsVolumes()
-        if self.doShow3DReconsVolumes:
-            self._view3DReconVolumes()
-        if self._doShow3DMatchProj:
-            self._viewMatchProj()
-        if self.doShowAngDist:
-            self._plotAngularDistribution()
+        pass
+#         if self.doShow3DRefsVolumes:
+#             self._view3DRefsVolumes()
+#         if self.doShow3DReconsVolumes:
+#             self._view3DReconVolumes()
+#         if self._doShow3DMatchProj:
+#             self._viewMatchProj()
+#         if self.doShowAngDist:
+#             self._plotAngularDistribution()
     
     def _view3DRefsVolumes(self, e=None):
         files = self._getIterationFile("reference_volume_iter_%03d.mrc")

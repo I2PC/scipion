@@ -24,47 +24,54 @@
 # *  e-mail address 'ifoche@cnb.csic.es'
 # *
 # **************************************************************************
+
 from __future__ import division
+
 import os
 import subprocess
 import getopt
 import sys
 import argparse
-import urllib
 import hashlib
 import types
+from urllib2 import urlopen
+
 from pyworkflow.utils.path import moveFile, makePath, makeFilePath, copyFile, cleanPath
 
+
 def scipion_logo():
-    print ""
-    print "QQQQQQQQQT!^'::\"\"?$QQQQQQ" + "  S   S   S"
-    print "QQQQQQQY`          ]4QQQQ"   + "  C   C   C"
-    print "QQQQQD'              \"$QQ"  + "  I   I   I"
-    print "QQQQP                 \"4Q"  + "  P   P   P"
-    print "QQQP        :.,        -$"   + "  I   I   I"
-    print "QQD       awQQQQwp      )"   + "  O   O   O"
-    print "QQ'     qmQQQWQQQQg,   jm"   + "  N   N   N"
-    print "Qf     QQQD^   -?$QQp jQQ"   + " ################################################"
-    print "Q`    qQQ!        4WQmQQQ"   + " # Integrating image processing packages for EM #"
-    print "F     QQ[          ~)WQQQ"   + " ################################################"
-    print "[    ]QP             4WQQ"   + ""
-    print "f    dQ(             -$QQ"   + " Data synchronization script"
-    print "'    QQ              qQQQ"
-    print ".   )QW            _jQQQQ"
-    print "-   =QQ           jmQQQQQ"
-    print "/   -QQ           QQQQQQQ"
-    print "f    4Qr    jQk   )WQQQQQ"
-    print "[    ]Qm    ]QW    \"QQQQQ"
-    print "h     $Qc   jQQ     ]$QQQ"
-    print "Q,  :aQQf qyQQQL    _yQQQ"
-    print "QL jmQQQgmQQQQQQmaaaQWQQQ"
-    print ""
+    return """
+
+QQQQQQQQQT!^'::\"\"?$QQQQQQ  S   S   S
+QQQQQQQY`          ]4QQQQ  C   C   C
+QQQQQD'              \"$QQ  I   I   I
+QQQQP                 \"4Q  P   P   P
+QQQP        :.,        -$  I   I   I
+QQD       awQQQQwp      )  O   O   O
+QQ'     qmQQQWQQQQg,   jm  N   N   N
+Qf     QQQD^   -?$QQp jQQ ################################################
+Q`    qQQ!        4WQmQQQ # Integrating image processing packages for EM #
+F     QQ[          ~)WQQQ ################################################
+[    ]QP             4WQQ
+f    dQ(             -$QQ Data synchronization script
+'    QQ              qQQQ
+.   )QW            _jQQQQ
+-   =QQ           jmQQQQQ
+/   -QQ           QQQQQQQ
+f    4Qr    jQk   )WQQQQQ
+[    ]Qm    ]QW    \"QQQQQ
+h     $Qc   jQQ     ]$QQQ
+Q,  :aQQf qyQQQL    _yQQQ
+QL jmQQQgmQQQQQQmaaaQWQQQ
+"""
+
 
 def backupFile(basePath, fileName='MANIFEST'):
     filePath = os.path.join(basePath, fileName)
     backPath = os.path.join(basePath, "."+fileName+".backup")
     if os.path.exists(filePath):
         moveFile(filePath, backPath)
+
         
 def restoreFile(basePath, fileName='MANIFEST'):
     filePath = os.path.join(basePath, fileName)
@@ -73,36 +80,35 @@ def restoreFile(basePath, fileName='MANIFEST'):
         if os.path.exists(filePath):
             os.remove(filePath)
         moveFile(backPath, filePath)
+
             
 def delBackFile(basePath, fileName='MANIFEST'):
     filePath = os.path.join(basePath, fileName)
     backPath = os.path.join(basePath, "."+fileName+".backup")
     if os.path.exists(backPath):
         os.remove(backPath)
+
         
 def initDownloadBar(len):
     sys.stdout.write("[%s]" % (" " * len))
     sys.stdout.flush()
     sys.stdout.write("\b" * (len+1))
+
     
 def backDownloadBar(number):
     sys.stdout.write("\b" * (number))
     sys.stdout.flush()
-    
-def forwardDownloadbar(percent, progress):
-    for x in range(0, (int)(progress//1)):
-        sys.stdout.write("#")
-        sys.stdout.flush()
-        progress-=1
-    if progress != 0:
-        if ((percent-progress)//1) != ((percent)//1):
-            sys.stdout.write("#")
-            sys.stdout.flush()
-    
-def downloadFile(datasetName, file, workingCopy=os.environ['SCIPION_TESTS'], tmpMd5copy=os.environ['SCIPION_TMP'], askMsg="download it?", url="http://scipionwiki.cnb.csic.es/files/scipion/data/tests", verbose=False):
+
+
+def downloadFile(datasetName, fname,
+                 workingCopy=os.environ['SCIPION_TESTS'],
+                 tmpMd5copy=os.environ['SCIPION_TMP'],
+                 askMsg="download it?",
+                 url="http://scipionwiki.cnb.csic.es/files/scipion/data/tests",
+                 verbose=False):
     fileDownloaded = 0
-    datasetFolder = os.path.join(workingCopy, "%(dataset)s" % ({'dataset': datasetName}))
-    datasetFolderTmp = os.path.join(tmpMd5copy, "%(dataset)s" % ({'dataset': datasetName}))
+    datasetFolder = os.path.join(workingCopy, datasetName)
+    datasetFolderTmp = os.path.join(tmpMd5copy, datasetName)
     answer = "-"
     if verbose:
         while answer != "y" and answer != "n" and answer != "":
@@ -110,34 +116,38 @@ def downloadFile(datasetName, file, workingCopy=os.environ['SCIPION_TESTS'], tmp
     if answer == "y" or answer == "" or not verbose:
         if verbose:
             print "\t Downloading file..."
-        makeFilePath(os.path.join(datasetFolder, file))
+        makeFilePath(os.path.join(datasetFolder, fname))
         try:
-            urllib.urlretrieve(url+'/'+datasetName+'/'+file, os.path.join(datasetFolder, file))
+            data = urlopen('%s/%s/%s' % (url, datasetName, fname)).read()
+            open(os.path.join(datasetFolder, fname), 'w').write(data)
             if verbose:
                 print "\t ...done."
         except:
-            print "\t "+ file+" ...ERROR"
-            print "URL: "+url+'/'+datasetName+file
-            print "destination: "+os.path.join(datasetFolder, file)
+            print "\t "+ fname+" ...ERROR"
+            print "URL: "+url+'/'+datasetName+fname
+            print "destination: "+os.path.join(datasetFolder, fname)
         fileDownloaded = 1
     return fileDownloaded
+
 
 def downloadDataset(datasetName, destination=os.environ['SCIPION_TESTS'], url="http://scipionwiki.cnb.csic.es/files/scipion/data/tests", verbose=False, onlyManifest=False):
     datasetFolder = os.path.join(destination, "%(dataset)s" % ({'dataset': datasetName}))
     makePath(datasetFolder)
+    manifest = os.path.join(destination, datasetName, 'MANIFEST')
     try:
         if verbose:
             print "retrieving MANIFEST file"
-        urllib.urlretrieve(url+'/'+datasetName+'/MANIFEST', getManifestPath(basePath=destination, dataset=datasetName))
-    except:
-        print "URL could not be retrieved"
+        data = urlopen('%s/%s/MANIFEST' % (url, datasetName)).read()
+        open(manifest, 'w').write(data)
+    except Exception as e:
         if verbose:
             print "URL: " + url+'/'+datasetName+'/MANIFEST'
-            print "destination:" + getManifestPath(basePath=destination, dataset=datasetName)
+            print "destination:" + manifest
+        raise Exception("URL %s could not be retrieved (%s)" % (url, e))
     if not onlyManifest:
-        manifestFile = open(getManifestPath(basePath=destination, dataset=datasetName), 'r+')
+        manifestFile = open(manifest, 'r+')
         manifestLines = manifestFile.readlines()
-        print "Fetching dataset %(dataset)s files..." % ({'dataset': datasetName})
+        print "Fetching dataset %s files..." % datasetName
         totalNumber = len(manifestLines)
         percent = prevPercent = 0
         downloadBarWidth = 100
@@ -148,46 +158,52 @@ def downloadDataset(datasetName, destination=os.environ['SCIPION_TESTS'], url="h
             md5InLine = lineExt.replace("\n","").split(" ")[1] 
             makeFilePath(os.path.join(datasetFolder, line))
             try:
-                urllib.urlretrieve(url+'/'+datasetName+'/'+line, os.path.join(datasetFolder, line))
+                data = urlopen('%s/%s/%s' % (url, datasetName, line)).read()
+                open(os.path.join(datasetFolder, line), 'w').write(data)
                 percent = ((number+1)/(totalNumber*1.0))*100
                 if verbose:
-                    print "\t "+line+" ...OK ( %(percent)02d " % ({'percent': percent}) + ' %)'
+                    print "\t%s ...OK (%02d %%) " % (line, percent)
                 else:
-                    progress = percent-prevPercent
+                    progress = percent - prevPercent
                     remaining = downloadBarWidth-progress
-                    forwardDownloadbar(percent, progress)
+                    sys.stdout.write("#" * int(1 + progress))
+                    sys.stdout.flush()
                 prevPercent = percent
             except:
                 print "\t "+ line+" ...ERROR"
                 print "URL: "+url+'/'+datasetName+line
                 print "destination: "+os.path.join(datasetFolder, line)
-                answer = "-"
-                while answer != "y" and answer != "n" and answer != "":
+                while True:
                     answer = raw_input("continue downloading? (y/[n]): ")
-                    if answer == "n" or answer == "":
+                    if not answer or answer.lower() == 'n':
                         sys.exit(1)
+                    if answer in 'Yy':
+                        break
+
             md5sum = md5Sum(os.path.join(datasetFolder, os.path.normpath(line.replace("\n","").split(" ")[0])))
                 #data = fileToCheck.read()
                 #md5sum = hashlib.md5(data).hexdigest()
             if verbose:
-                print "\t \t md5 verification...%(md5sum)s %(md5InLine)s" % ({'md5sum': md5sum, 'md5InLine': md5InLine})
+                print "\t\tmd5 verification...%s %s" % (md5sum, md5InLine)
             if md5sum != md5InLine:
-                print "ERROR in md5 verification for file %(file)s" % ({'file': line})
-                print "md5 sum calculated for downloaded file is %(md5sum)s" % ({'md5sum': md5sum})
-                print "md5 sum that file should have is %(md5sum)s" % ({'md5sum': md5InLine})
-                print ""
-                answer = "-"
-                while answer != "y" and answer != "n" and answer != "":
+                print "ERROR in md5 verification for file %s" % line
+                print "md5 sum calculated for downloaded file is %s" % md5sum
+                print "md5 sum that file should have is %s" % md5InLine
+                print
+                while True:
                     answer = raw_input("continue downloading? (y/[n]): ")
-                    if answer == "n" or answer == "":
+                    if not answer or answer.lower() == "n":
                         sys.exit(1)
+                    if answer in 'Yy':
+                        break
             elif verbose:
                 print "md5 verification...OK"
-                print ""
+                print
         if not verbose:
-            sys.stdout.write("\n")
-    print "\t ...done"
-    print ""
+            print
+    print "\t...done"
+    print
+
 
 def md5Sum(file):
     md5sum = 0
@@ -197,73 +213,77 @@ def md5Sum(file):
             md5.update(chunk)
     md5sum = md5.hexdigest()
     return md5sum
-    
-def checkForUpdates(datasetName, workingCopy=os.environ['SCIPION_TESTS'], tmpMd5copy=os.environ['SCIPION_TMP'], url="http://scipionwiki.cnb.csic.es/files/scipion/data/tests", verbose=False):    
+
+
+def checkForUpdates(datasetName, workingCopy=None, tmpMd5copy=None,
+                    url="http://scipionwiki.cnb.csic.es/files/scipion/data/tests",
+                    verbose=False):
+    # Get default values for variables if we got none
+    workingCopy = workingCopy or os.environ['SCIPION_TESTS']
+    tmpMd5copy = tmpMd5copy or os.environ['SCIPION_TMP']
+
     # We need to download the remote manifest file
-    datasetFolderTmp = os.path.join(tmpMd5copy, "%(dataset)s" % ({'dataset': datasetName}))
-    manifestFileTmp = open(getManifestPath(basePath=os.environ['SCIPION_TMP'], dataset=datasetName), 'r+')
+    datasetFolderTmp = os.path.join(tmpMd5copy, datasetName)
+    manifest = os.path.join(os.environ['SCIPION_TMP'], datasetName, 'MANIFEST')
+    manifestFileTmp = open(manifest, 'r+')
     manifestLinesTmp = manifestFileTmp.readlines()
 
     # and check it with the local copy
-    datasetFolder = os.path.join(workingCopy, "%(dataset)s" % ({'dataset': datasetName}))
-    manifestFile = open(getManifestPath(dataset=datasetName))
+    datasetFolder = os.path.join(workingCopy, datasetName)
+    manifestFile = open(manifest)
     manifestLines = manifestFile.readlines()
     
     filesUpdated = 0
     print "Verifying MD5..."
     for number, line in enumerate(manifestLinesTmp):
-        file = os.path.normpath(line.replace("\n","").split(" ")[0])
+        fname = os.path.normpath(line.replace("\n","").split(" ")[0])
         if verbose:
-            print "\t checking file %(file)s..." % ({'file': file})
-        if os.path.exists(os.path.join(datasetFolder, file)):
-            lineInManifest = findLineInFile(line, getManifestPath(dataset=datasetName))
+            print '\t%s' % fname,
+        if os.path.exists(os.path.join(datasetFolder, fname)):
+            lineInManifest = findLineInFile(line, manifest)
             if lineInManifest == -1:
                 if verbose:
-                    print ""
-                    print "\t ERROR: file %(file)s not found in MANIFEST" % ({'file': file})
-                    sys.exit(1)
+                    print "\n\tERROR: file %s not found in MANIFEST" % fname
+                sys.exit(1)
             md5fcalc = (manifestLines[lineInManifest]).split(" ")[1]
             md5Tmpfcalc = line.split(" ")[1]
             if md5fcalc == md5Tmpfcalc:
                 if verbose:
-                    print "\t md5 checked and OK!"
+                    print "\r\tOK  %s" % fname
             else:
                 if verbose:
-                    print ""
-                    print "\t file %(file)s checksum differs." % ({'file': file})
-                filesUpdated += downloadFile(datasetName, file, workingCopy, tmpMd5copy, askMsg="update it?", url=url, verbose=verbose)
+                    print "\r\tBAD %s  \t==> checksum differs" % fname
+                filesUpdated += downloadFile(datasetName, fname, workingCopy, tmpMd5copy, askMsg="update it?", url=url, verbose=verbose)
         else: #file does not exist, show option for downloading it
             if verbose:
-                print ""
-                print "\t file %(file)s doesn't exist." % ({'file': file})
-            filesUpdated += downloadFile(datasetName, file, workingCopy, tmpMd5copy, askMsg="download it?", url=url, verbose=verbose)
+                print "\n\t file %s doesn't exist." % fname
+            filesUpdated += downloadFile(datasetName, fname, workingCopy, tmpMd5copy, askMsg="download it?", url=url, verbose=verbose)
     copyFile(os.path.join(datasetFolderTmp, 'MANIFEST'), os.path.join(datasetFolder, 'MANIFEST'))
     if filesUpdated == 0:
         print "\t ...done. Nothing changed."
     elif filesUpdated == 1:
         print "\t ...done. 1 file was updated."
     else:
-        print "\t ...done. %(filesUpdated)d files were updated." % ({'filesUpdated': filesUpdated})
-    print ""
+        print "\t ...done. %d files were updated." % filesUpdated
+    print
+
 
 def findLineInFile(text, filePath):
-    file = open(filePath, 'r')
-    lineFound = -1
-    for indx, line in enumerate(file.readlines()):
+    "Return the line number where text first appears in a file, or -1 if nowhere"
+    for i, line in enumerate(open(filePath)):
         if text in line:
-            lineFound = indx
-    return lineFound
+            return i  # yeah, found it!
+    return -1  # oh, we didn't find it :(
 
-def getManifestPath(basePath=os.environ['SCIPION_TESTS'], dataset=""):
-    return os.path.join(basePath, dataset, 'MANIFEST')
 
 def Cmd(command):
     print ">>>>>", command
     subprocess.call(command, shell=True)
 
-def main(argv):
+
+def main():
     # Arguments parsing
-    parser = argparse.ArgumentParser(description="*"*5 + "Sync Data Python Bash Executor (WRAPPER)" + "*"*5)
+    parser = argparse.ArgumentParser(description="Sync Data Python Bash Executor (WRAPPER)".center(5, '*'))
     exclusive = parser.add_mutually_exclusive_group()
 
     parser.add_argument('-s', '--syncfile', 
@@ -311,7 +331,7 @@ def main(argv):
 
     # Depending on the arguments selected, doing one thing or another
 
-    scipion_logo()
+    #print scipion_logo()
     if args.list:
         print "List of local datasets in %(datasetsFolder)s" % ({'datasetsFolder': os.environ['SCIPION_TESTS']})
         folders = os.listdir(os.environ['SCIPION_TESTS'])
@@ -321,24 +341,24 @@ def main(argv):
                     print "\t * " + folder
                 else:
                     print "\t * " + folder + ' (not in dataset format)'
-        print ""
+        print
         print "updating remote info..."
-        backupFile(getManifestPath(basePath=os.environ['SCIPION_TMP']))
+        manifest = os.path.join(os.environ['SCIPION_TMP'], 'MANIFEST')
+        backupFile(manifest)
         try:
-            urllib.urlretrieve(args.url+'/MANIFEST', getManifestPath(basePath=os.environ['SCIPION_TMP']))
+            data = urlopen(args.url + '/MANIFEST').read()
+            open(manifest, 'w').write(data)
         except:
             print "MANIFEST"+" ...ERROR"
             print "URL: "+args.url+'/MANIFEST'
-            print "destination: "+getManifestPath(basePath=os.environ['SCIPION_TMP'])
-            restoreFile(getManifestPath(basePath=os.environ['SCIPION_TMP']))
-        if os.path.exists(getManifestPath(basePath=os.environ['SCIPION_TMP'])):
+            print "destination: "+manifest
+            restoreFile(manifest)
+        if os.path.exists(manifest):
             print "List of remote datasets in %(urlAddress)s" % ({'urlAddress': args.url})
-            manifestFile = open(getManifestPath(basePath=os.environ['SCIPION_TMP']), 'r+')
-            manifestLines = manifestFile.readlines()
-            for line in manifestLines:
+            for line in open(manifest):
                 print "\t * "+os.path.split(line.replace("\n",""))[1]
-        delBackFile(getManifestPath(basePath=os.environ['SCIPION_TMP']))
-            
+        delBackFile(manifest)
+
     elif args.query_for_modifications:
         print "Querying the modifications log file..."
         if os.path.exists(os.path.join(os.environ['SCIPION_HOME'],args.last_mod_file)):
@@ -400,9 +420,9 @@ def main(argv):
                     sys.exit(1)
                 print "Reverse synchronizing, BE CAREFUL!!! OPERATION EXTREMELY DANGEROUS!!!"
                 ans = ''
-                while ans != 'y' and ans != 'Y' and ans != 'n' and ans != 'N':
+                while ans not in 'YyNn':
                     ans = raw_input("You're going to be connected to %(remoteServer)s server as %(remoteUser)s user to write in %(remoteFolder)s folder for %(dataset)s dataset. Only authorized users shall pass. Continue? (y/n): " % ({'remoteServer': remoteServer, 'remoteUser': remoteUser, 'remoteFolder': remoteFolder, 'dataset': dataset}))
-                if ans != ('y' or 'Y'):
+                if ans not in 'Yy':
                     sys.exit(1)
                 
                 # If the folder is not in the proper format, create the format and then upload
@@ -424,8 +444,8 @@ def main(argv):
                 #TODO: this step
             else:
                 datasetFolder = os.path.join(os.environ['SCIPION_TESTS'],"%(dataset)s" % ({'dataset': dataset}))
-                if(os.path.exists(datasetFolder)):
-                    print "Dataset %(dataset)s working copy detected. Checking checksum for updates..." % ({'dataset': dataset})
+                if os.path.exists(datasetFolder):
+                    print "Dataset %s working copy detected. Checking checksum for updates..." % dataset
                     downloadDataset(dataset, destination=os.environ['SCIPION_TMP'], url=args.url, verbose=args.verbose, onlyManifest=True)
                     checkForUpdates(dataset, url=args.url, verbose=args.verbose)
                     cleanPath(os.path.join(os.environ['SCIPION_TMP'], "%(dataset)s" % ({'dataset': dataset})))
@@ -436,4 +456,4 @@ def main(argv):
         
 
 if __name__ == "__main__":
-    main(sys.argv[1:])
+    main()
