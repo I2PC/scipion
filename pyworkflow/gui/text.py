@@ -74,6 +74,7 @@ class HyperlinkManager:
             def which(*args):
                 "Return the first argument that is a program in PATH"
                 for command in args:
+                    # TODO: use utils.which.which instead
                     with open(os.devnull, 'w') as fnull:
                         if subprocess.call(['which', command],
                                            stdout=fnull, stderr=fnull) == 0:
@@ -82,8 +83,6 @@ class HyperlinkManager:
 
             xdg_open = which('xdg-open', 'gnome-open', 'kde-open', 'gvfs-open')
             editor = which('gedit', 'kate', 'emacs', 'nedit', 'mousepad')
-            browser = which('firefox', 'chromium', 'iceweasel', 'chrome',
-                            'midori', 'konqueror', 'dillo')
 
             def open_cmd(path):
                 if xdg_open:
@@ -91,9 +90,9 @@ class HyperlinkManager:
                         return  # yay! that's the way to do it!
                 # If we couldn't open it in a standard way, try web and editors
                 if path.startswith('http://'):
-                    if browser:
-                        if subprocess.call([browser, url]) == 0:
-                            return  # hope we found your fav browser :)
+                    webbrowser.open_new(path)
+                    return  # hope we found your fav browser :)
+                    # TODO: check the return code of open_new() and see if it worked
                 else:
                     if editor:
                         if subprocess.call([editor, url]) == 0:
