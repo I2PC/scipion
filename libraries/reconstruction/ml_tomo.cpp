@@ -84,9 +84,9 @@ ProgMLTomo::defineParams()
     addParamsLine(
         " [ --limit_trans <float=-1.> ]   : Maximum allowed shifts (negative value means no restriction)");
     addParamsLine(
-        " [ --tilt0+ <float=-91.> ]       : Limit tilt angle search from tilt0 to tiltF (in degrees) ");
+        " [ --tilt0+ <float=0> ]          : Limit tilt angle search from tilt0 to tiltF (in degrees) ");
     addParamsLine(
-        " [ --tiltF+ <float=91.> ]        : Limit tilt angle search from tilt0 to tiltF (in degrees) ");
+        " [ --tiltF+ <float=180> ]        : Limit tilt angle search from tilt0 to tiltF (in degrees) ");
     addParamsLine(
         " [ --psi_sampling+ <float=-1.> ] : Angular sampling rate for the in-plane rotations(in degrees)");
 
@@ -845,7 +845,7 @@ ProgMLTomo::produceSideInfo()
                              "exhaustive psi-angle search only allowed for C1 symmetry");
         }
         mysampling.fillLRRepository();
-        // by default max_tilt= +91., min_tilt= -91.
+        // by default max_tilt= 180, min_tilt= 0
         mysampling.computeSamplingPoints(false, // half sphere?
                                          tilt_rangeF, tilt_range0);
         mysampling.removeRedundantPointsExhaustive(symmetry, sym_order, false, // half sphere?

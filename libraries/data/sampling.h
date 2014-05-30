@@ -142,8 +142,8 @@ public:
         if you are looking only for directtions set only_half_sphere = true
     */
     void computeSamplingPoints(bool only_half_sphere = true,
-                                 double max_tilt= +91.,
-                                 double min_tilt= -91.);
+                                 double max_tilt= 180,
+                                 double min_tilt= 0);
     /** fill edge */
     void fillEdge(Matrix1D<double> starting_point,
                    Matrix1D<double> ending_point,
