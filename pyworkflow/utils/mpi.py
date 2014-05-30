@@ -37,25 +37,35 @@ def runJobMPI(log, programname, params, mpiComm, mpiDest,
               numberOfMpi=1, numberOfThreads=1,
               runInBackground=False, hostConfig=None):
     """ Send the command to the MPI node in which it will be executed. """
+
     print "runJobMPI: hostConfig: ", hostConfig
     command = buildRunCommand(log, programname, params,
                               numberOfMpi, numberOfThreads, 
                               runInBackground, hostConfig)
+
+    # Send command in a non-blocking way (with isend())
     print "Sending command: %s to %d" % (command, mpiDest)
-    mpiComm.send(command, dest=mpiDest, tag=TAG_RUN_JOB + mpiDest)
-    request = mpiComm.irecv(dest=mpiDest, tag=TAG_RUN_JOB + mpiDest)
+    req_send = mpiComm.isend(command, dest=mpiDest, tag=TAG_RUN_JOB+mpiDest)
     while True:
-        done, result = request.test()
+        if req_send.test()[0]:
+            break
+        sleep(1)
+
+    # Receive the exit code in a non-blocking way (with irecv())
+    req_recv = mpiComm.irecv(dest=mpiDest, tag=TAG_RUN_JOB+mpiDest)
+    while True:
+        done, result = req_recv.test()
         if done:
             break
         sleep(1)
 
+    # Our convention: if we get a string, an error happened.
+    # Else, it is the return code of our command, which we return too.
     if isinstance(result, str):
         raise Exception(result)
-    
-    # If not string should be the retcode
-    return result
-    
+    else:
+        return result
+
 
 def runJobMPISlave(mpiComm):
     """ This slave will be receiving commands to execute
@@ -63,21 +73,32 @@ def runJobMPISlave(mpiComm):
     """
     rank = mpiComm.Get_rank()
     print "Running runJobMPISlave: ", rank
+
+    # Listen for commands until we get 'None'
     while True:
-        request = mpiComm.irecv(dest=0, tag=TAG_RUN_JOB + rank)
+        # Receive command in a non-blocking way
+        req_recv = mpiComm.irecv(dest=0, tag=TAG_RUN_JOB+rank)
         while True:
-            done, command = request.test()
+            done, command = req_recv.test()
             if done:
                 break
             sleep(1)
+
         print "Slave %d, received command: %s" % (rank, command)
         if command == 'None':
             break
+
+        # Run the command and get the result (exit code or exception)
         try:
             result = runCommand(command)
         except Exception, e:
             result = str(e)
-        mpiComm.send(result, dest=0, tag=TAG_RUN_JOB + rank)
-    print "finishing slave...", rank
-    
 
+        # Send result in a non-blocking way
+        req_send = mpiComm.isend(result, dest=0, tag=TAG_RUN_JOB+rank)
+        while True:
+            if req_send.test()[0]:
+                break
+            sleep(1)
+
+    print "finishing slave...", rank
