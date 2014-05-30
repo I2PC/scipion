@@ -200,7 +200,7 @@ void progReconstructSignificantThreadAlign(ThreadArgument &thArg)
 				{
 					size_t idx=nVolume*Ndirs+nDir;
 					double cdfccthis=DIRECT_A1D_ELEM(cdfcc,idx);
-					double cdfimedthis=DIRECT_A1D_ELEM(cdfimed,idx);
+					// double cdfimedthis=DIRECT_A1D_ELEM(cdfimed,idx);
 					double cc=DIRECT_A1D_ELEM(imgcc,idx);
 //					if (cc>ccl)
 //						std::cout << "    " << prm.mdGallery[nVolume][nDir].fnImg << " ***cc=" << cc << " cdfcc=" << cdfccthis << " cdfimedthis=" << cdfimedthis << std::endl;
@@ -274,6 +274,7 @@ void ProgReconstructSignificant::run()
     MetaData mdReconstruction, mdPM;
 	size_t Nimgs=mdInp.size();
 	Image<double> save;
+	MultidimArray<double> ccdir, cdfccdir;
     for (iter=1; iter<=Niter; iter++)
     {
     	// Generate projections from the different volumes
@@ -283,6 +284,7 @@ void ProgReconstructSignificant::run()
     	size_t Ndirs=mdGallery[0].size();
     	cc.initZeros(Nimgs,Nvols,Ndirs);
     	weight=cc;
+    	ccdir.initZeros(Ndirs);
 
     	// Align the input images to the projections
     	std::cout << "Current significance: " << 1-currentAlpha << std::endl;
@@ -300,15 +302,18 @@ void ProgReconstructSignificant::run()
 				for (size_t nImg=0; nImg<Nimgs; ++nImg)
 				{
 					double ccimg=DIRECT_A3D_ELEM(cc,nImg,nVolume,nDir);
+					DIRECT_A1D_ELEM(ccdir,nImg)=ccimg;
 					if (ccimg>bestCorr)
 						bestCorr=ccimg;
 				}
+				ccdir.cumlativeDensityFunction(cdfccdir);
 
 				// Reweight all images for this direction
+				double iBestCorr=1.0/bestCorr;
 				for (size_t nImg=0; nImg<Nimgs; ++nImg)
 				{
 					double ccimg=DIRECT_A3D_ELEM(cc,nImg,nVolume,nDir);
-					DIRECT_A3D_ELEM(weight,nImg,nVolume,nDir)*=ccimg/bestCorr;
+					DIRECT_A3D_ELEM(weight,nImg,nVolume,nDir)*=ccimg*iBestCorr*DIRECT_A1D_ELEM(cdfccdir,nImg);
 				}
 			}
 
