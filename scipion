@@ -141,7 +141,10 @@ MODE_DOWNLOAD = 'download'
 
 def main():
     n = len(sys.argv)
-    mode = sys.argv[1] if n > 1 else MODE_MANAGER
+    if n > 1:
+        mode = sys.argv[1]
+    else:
+        mode = MODE_MANAGER
 
     # Create SCIPION_HOME folder if not exists
     if mode != MODE_INSTALL:
@@ -190,13 +193,17 @@ def main():
 
     elif mode == MODE_TESTS:
         if n > 2:
-            if sys.argv[2] not in ["show", "run"]:
-                prepend = lambda x: x if x.startswith('tests.') else 'tests.'+x
-                runCmd('-m unittest pyworkflow.%s' % prepend(sys.argv[2]))
+            testValue = sys.argv[2]
+
+            if testValue not in ["show", "run"]:
+                if testValue.startswith('tests.'):
+                    runCmd('-m unittest pyworkflow.%s' % testValue)
+                else:
+                    runCmd('-m unittest pyworkflow.tests.%s' % testValue)
             else:
-                if sys.argv[2] == "show":
+                if testValue == "show":
                     args = ["print"] + sys.argv[3:]
-                elif sys.argv[2] == "run":
+                elif testValue == "run":
                     args = sys.argv[3:]
                 runCmd('scripts/run_tests.py %s' % ' '.join(args))
 
