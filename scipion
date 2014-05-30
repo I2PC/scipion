@@ -332,7 +332,7 @@ USAGE:
 if __name__ == '__main__':
     try:
         main()
-    except Exception as e:
+    except Exception, e:
         sys.exit(str(e))
 elif __name__.startswith('_mod_wsgi'):
     os.environ['DJANGO_SETTINGS_MODULE'] = 'pages.settings'
