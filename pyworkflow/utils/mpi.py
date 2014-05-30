@@ -46,9 +46,7 @@ def runJobMPI(log, programname, params, mpiComm, mpiDest,
     # Send command in a non-blocking way (with isend())
     print "Sending command: %s to %d" % (command, mpiDest)
     req_send = mpiComm.isend(command, dest=mpiDest, tag=TAG_RUN_JOB+mpiDest)
-    while True:
-        if req_send.test()[0]:
-            break
+    while not req_send.test()[0]:
         sleep(1)
 
     # Receive the exit code in a non-blocking way (with irecv())
@@ -96,9 +94,7 @@ def runJobMPISlave(mpiComm):
 
         # Send result in a non-blocking way
         req_send = mpiComm.isend(result, dest=0, tag=TAG_RUN_JOB+rank)
-        while True:
-            if req_send.test()[0]:
-                break
+        while not req_send.test()[0]:
             sleep(1)
 
     print "finishing slave...", rank
