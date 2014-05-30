@@ -452,6 +452,8 @@ public abstract class ParticlePicker {
     }// function isFilterSelected
 
     public Format detectFileFormat(String path) {
+        
+        System.out.println("detect file format");
         if (path.endsWith(".raw.Common.pos")) {
             return Format.Xmipp24;
         }
@@ -471,6 +473,7 @@ public abstract class ParticlePicker {
      * Return the number of particles imported from a file
      */
     public void fillParticlesMdFromFile(String path, Format f, Micrograph m, MetaData md, float scale, boolean invertx, boolean inverty) {
+        
         if (f == Format.Auto) {
             f = detectFileFormat(path);
         }
@@ -480,6 +483,7 @@ public abstract class ParticlePicker {
             case Xmipp24a:
             case Xmipp24b:
             case Xmipp24c:
+                
                 md.readPlain(path, "xcoor ycoor");
                 break;
             case Xmipp30:

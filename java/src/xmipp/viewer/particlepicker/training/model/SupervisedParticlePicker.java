@@ -804,6 +804,7 @@ public class SupervisedParticlePicker extends ParticlePicker
 		}
 		catch (Exception ex)
 		{
+                        ex.printStackTrace();
 			System.err.format("Error importing from file '%s' message: '%s'\n", path, ex.toString());
 		}
 		return result;

@@ -153,7 +153,7 @@ public class SupervisedParticlePickerJFrame extends ParticlePickerJFrame {
         if (!filename.equals(getMicrograph().getName())) {
             String msg = String.format("Are you sure you want to import data from file\n%s to micrograph %s ?", file, getMicrograph().getName());
             boolean importdata = XmippDialog.showQuestion(this, msg);
-            if (importdata) {
+            if (!importdata) {
                 return null;
             }
         }
