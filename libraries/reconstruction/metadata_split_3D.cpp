@@ -133,6 +133,8 @@ void ProgMetadataSplit3D::run()
 
 	// Read reference and input metadatas
 	mdIn.read(fn_in);
+	if (!mdIn.containsLabel(MDL_IMAGE_IDX))
+		REPORT_ERROR(ERR_MD_MISSINGLABEL,"Input metadata with images does not contain an imageIndex column");
 	mdIn.removeDisabled();
 	mdRef.read(fn_oroot+"_gallery.doc");
 	deleteFile(fn_oroot+"_gallery.doc");
