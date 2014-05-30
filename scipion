@@ -118,9 +118,9 @@ def runCmd(cmd):
     cmd = '%s %s' % (SCIPION_PYTHON, cmd)
     print ">>>>>", cmd
     result = os.system(cmd)
+    if not -256 < result < 256:
+        result = 1  # because if not, 256 is confused with 0 !
     sys.exit(result)
-    # TODO: check that "result" is a number below 256, because if not
-    # the shell will interpret it as 0 (no error!)
 
 
 MODE_MANAGER = 'manager'
