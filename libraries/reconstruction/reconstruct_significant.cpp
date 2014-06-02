@@ -275,6 +275,7 @@ void ProgReconstructSignificant::run()
 	size_t Nimgs=mdInp.size();
 	Image<double> save;
 	MultidimArray<double> ccdir, cdfccdir;
+	bool emptyVolumes=false;
     for (iter=1; iter<=Niter; iter++)
     {
     	// Generate projections from the different volumes
@@ -343,8 +344,14 @@ void ProgReconstructSignificant::run()
 			if (mdReconstruction.size()>0)
 				mdReconstruction.write(formatString("%s/angles_iter%02d_%02d.xmd",fnDir.c_str(),iter,nVolume));
 			else
-				REPORT_ERROR(ERR_UNCLASSIFIED,formatString("%s/angles_iter%02d_%02d.xmd is empty. Not written.",fnDir.c_str(),iter,nVolume));
-			mdPM.write(formatString("%s/images_iter%02d_%02d.xmd",fnDir.c_str(),iter,nVolume));
+			{
+				std::cout << formatString("%s/angles_iter%02d_%02d.xmd is empty. Not written.",fnDir.c_str(),iter,nVolume) << std::endl;
+				emptyVolumes=true;
+			}
+			if (mdPM.size()>0)
+				mdPM.write(formatString("%s/images_iter%02d_%02d.xmd",fnDir.c_str(),iter,nVolume));
+			else
+				std::cout << formatString("%s/images_iter%02d_%02d.xmd empty. Not written.",fnDir.c_str(),iter,nVolume) << std::endl;
 	    	deleteFile(formatString("%s/gallery_iter%02d_%02d_sampling.xmd",fnDir.c_str(),iter,nVolume));
 	    	deleteFile(formatString("%s/gallery_iter%02d_%02d.doc",fnDir.c_str(),iter,nVolume));
 	    	deleteFile(formatString("%s/gallery_iter%02d_%02d.stk",fnDir.c_str(),iter,nVolume));
@@ -362,6 +369,9 @@ void ProgReconstructSignificant::run()
     	reconstructCurrent();
 
     	currentAlpha+=deltaAlpha;
+
+    	if (emptyVolumes)
+    		break;
     }
 }
 
@@ -371,6 +381,8 @@ void ProgReconstructSignificant::reconstructCurrent()
 	for (size_t nVolume=0; nVolume<mdInit.size(); ++nVolume)
 	{
 		FileName fnAngles=formatString("%s/angles_iter%02d_%02d.xmd",fnDir.c_str(),iter,nVolume);
+		if (!fnAngles.exists())
+			continue;
 		FileName fnVolume=formatString("%s/volume_iter%02d_%02d.vol",fnDir.c_str(),iter,nVolume);
 		String args=formatString("-i %s -o %s --sym %s --weight --thr %d -v 0",fnAngles.c_str(),fnVolume.c_str(),fnSym.c_str(),Nthr);
 		String cmd=(String)"xmipp_reconstruct_fourier "+args;
