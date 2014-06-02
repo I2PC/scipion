@@ -816,6 +816,14 @@ class Matrix(Scalar):
     def setValue(self, i, j, value):
         self._matrix[i, j] = value
         
+    def getMatrix(self):
+        """ Return internal numpy matrix. """
+        return self._matrix
+    
+    def setMatrix(self, matrix):
+        """ Override internal numpy matrix. """
+        self._matrix = matrix
+        
     def __str__(self):
         return np.array_str(self._matrix)
     
@@ -831,10 +839,10 @@ class Transform(EMObject):
         self._matrix = Matrix()
         
     def getMatrix(self):
-        return self._matrix
+        return self._matrix.getMatrix()
     
     def setMatrix(self, matrix):
-        self._matrix = matrix
+        self._matrix.setMatrix(matrix)
         
     def __str__(self):
         return str(self._matrix)

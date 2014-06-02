@@ -48,7 +48,7 @@ PROJECT_TMP = 'Tmp'
 PROJECT_SETTINGS = 'settings.sqlite'
 
 # Regex to get numbering suffix and automatically propose runName
-REGEX_NUMBER_ENDING = re.compile('(?P<prefix>\D+)(?P<number>\d*)')
+REGEX_NUMBER_ENDING = re.compile('(?P<prefix>.+\D)(?P<number>\d*)\s*$')
 
 
         

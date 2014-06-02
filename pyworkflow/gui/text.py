@@ -36,8 +36,46 @@ import ttk
 import gui
 from widgets import Scrollable, IconButton
 from pyworkflow.utils import (HYPER_BOLD, HYPER_ITALIC, HYPER_LINK1, HYPER_LINK2,
-                              parseHyperText, renderLine, renderTextFile, colorName)
+                              parseHyperText, renderLine, renderTextFile, colorName, which)
 from pyworkflow.utils.properties import Message, Color, Icon
+
+
+
+# Define a function to open files cleanly in a system-dependent way
+if sys.platform.startswith('darwin'):  # macs use the "open" command
+    _open_cmd = lambda path: subprocess.call(['open', path])
+elif os.name == 'nt':  # there is a function os.startfile for windows
+    _open_cmd = lambda path: os.startfile(path)
+elif os.name == 'posix':  # linux systems and so on
+    def find_prog(*args):
+        "Return the first argument that is a program in PATH"
+        for command in args:
+            if which(command):
+                return command
+        return None
+
+    x_open = find_prog('xdg-open', 'gnome-open', 'kde-open', 'gvfs-open')
+    editor = find_prog('gedit', 'kate', 'emacs', 'nedit', 'mousepad')
+
+    def _open_cmd(path):
+        if x_open:
+            if subprocess.call([x_open, path]) == 0:
+                return  # yay! that's the way to do it!
+        # If we couldn't open it in a standard way, try web and editors
+        if path.startswith('http://'):
+            try:
+                webbrowser.open_new_tab(path)
+                return
+            except:
+                pass
+        else:
+            if editor:
+                if subprocess.call([editor, path]) == 0:
+                    return  # hope we found your fav editor :)
+        print 'WARNING: Cannot open %s' % path  # nothing worked! :(
+else:
+    def _open_cmd(path):
+        print 'Unknown system, so cannot open %s' % path
 
 
 class HyperlinkManager:
@@ -60,49 +98,6 @@ class HyperlinkManager:
         tag = "hyper-%d" % len(self.links)
         self.links[tag] = action
         return "hyper", tag
-
-    def addOpen(self, url):
-        """ Like add(), but the action is set to open the given url
-            (which can be a file).
-        """
-        # Define a function to open files cleanly in a system-dependent way
-        if sys.platform.startswith('darwin'):  # macs use the "open" command
-            open_cmd = lambda path: subprocess.call(['open', path])
-        elif os.name == 'nt':  # there is a function os.startfile for windows
-            open_cmd = lambda path: os.startfile(path)
-        elif os.name == 'posix':  # linux systems and so on
-            def which(*args):
-                "Return the first argument that is a program in PATH"
-                for command in args:
-                    with open(os.devnull, 'w') as fnull:
-                        if subprocess.call(['which', command],
-                                           stdout=fnull, stderr=fnull) == 0:
-                            return command
-                return None
-
-            xdg_open = which('xdg-open', 'gnome-open', 'kde-open', 'gvfs-open')
-            editor = which('gedit', 'kate', 'emacs', 'nedit', 'mousepad')
-            browser = which('firefox', 'chromium', 'iceweasel', 'chrome',
-                            'midori', 'konqueror', 'dillo')
-
-            def open_cmd(path):
-                if xdg_open:
-                    if subprocess.call([xdg_open, path]) == 0:
-                        return  # yay! that's the way to do it!
-                # If we couldn't open it in a standard way, try web and editors
-                if path.startswith('http://'):
-                    if browser:
-                        if subprocess.call([browser, url]) == 0:
-                            return  # hope we found your fav browser :)
-                else:
-                    if editor:
-                        if subprocess.call([editor, url]) == 0:
-                            return  # hope we found your fav editor :)
-                print 'WARNING: Cannot open %s' % url  # nothing worked! :(
-        else:
-            raise RuntimeError('Unknown system, so cannot open %s' % url)
-
-        return self.add(lambda: open_cmd(url))
 
     def _enter(self, event):
         self.text.config(cursor="hand2")
@@ -272,7 +267,7 @@ class TaggedText(Text):
             self.colors = configureColorTags(self) # Color can be unavailable, so disable use of colors    
         
     def openLink(self, link):
-        webbrowser.open(link, new=0) # Open in the same browser, new tab
+        webbrowser.open_new_tab(link)  # Open in the same browser, new tab
         
     def matchHyperText(self, match, tag):
         """ Process when a match a found and store indexes inside string."""
@@ -336,7 +331,7 @@ class OutputText(Text):
         if self.colors and fmt is not None:
             if fmt.startswith('link:'):
                 fname = fmt.split(':', 1)[-1]
-                self.insert(tk.END, txt, self.hm.addOpen(fname))
+                self.insert(tk.END, txt, self.hm.add(lambda: _open_cmd(fname)))
             else:
                 self.insert(tk.END, txt, fmt)
         else:
@@ -556,7 +551,12 @@ class TextFileViewer(tk.Frame):
         
     def _openExternal(self):
         """ Open a new window with an external viewer. """
-        showTextFileViewer("File viewer", self.fileList, self.windows)
+        if os.environ.get('SCIPION_EXTERNAL_VIEWER', None):
+            if not self.taList:
+                return
+            _open_cmd(self.taList[self.getIndex() or 0].filename)
+        else:
+            showTextFileViewer("File viewer", self.fileList, self.windows)
   
   
 def showTextFileViewer(title, filelist, parent=None, main=False):

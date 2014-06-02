@@ -834,11 +834,28 @@ def createXmippInputCTF(prot, ctfSet, ctfFn=None):
     return ctfFn
 
 
-def xmippGeoFromMatrix(matrix):
+def geometryFromMatrix(matrix):
     from pyworkflow.em.transformations import translation_from_matrix, euler_from_matrix
     from numpy import rad2deg
     shifts = -translation_from_matrix(matrix)
     angles = rad2deg(euler_from_matrix(matrix, axes='szyz'))
     
     return shifts, angles
+
+
+def matrixFromGeometry(shifts, angles):
+    """ Create the transformation matrix from a given
+    2D shifts in X and Y...and the 3 euler angles.
+    """
+    #TODO: CHECK THIS IS CORRECT
+    from pyworkflow.em.transformations import translation_matrix, euler_matrix, concatenate_matrices
+    from numpy import deg2rad
+    radAngles = deg2rad(angles)
+    
+    R = euler_matrix(radAngles[0], radAngles[1], radAngles[2], 'szyz')
+    T = translation_matrix(shifts)
+    
+    M = concatenate_matrices(R, T)
+    
+    return M  
 
