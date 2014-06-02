@@ -3,10 +3,13 @@ package xmipp.viewer.particlepicker.training.model;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.io.File;
+import java.io.FilenameFilter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Level;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import xmipp.jni.Filename;
 import xmipp.jni.ImageGeneric;
 import xmipp.jni.MDLabel;
@@ -775,13 +778,31 @@ public class SupervisedParticlePicker extends ParticlePicker
 			return "";
 		}
 		importSize(path, f);
+                
+               
+
+                File[] files = new File(path).listFiles(new FilenameFilter() {
+                    public boolean accept(File dir, String name) {
+                        String lowercasename = name.toLowerCase();
+                        return lowercasename.endsWith(".pos") || lowercasename.endsWith(".box");
+                    }
+                });
+        
+                boolean imported;
 		for (SupervisedParticlePickerMicrograph m : micrographs)
 		{
-			filename = getImportMicrographName(path, m.getFile(), f);
-			if (Filename.exists(filename))
-			{
-				result += importParticlesFromFile(filename, f, m, scale, invertx, inverty);
-			}
+                    imported = false;
+                    for(File fit: files)
+                        if(!imported && fit.getName().contains(m.getName()))
+                        {
+                            result += importParticlesFromFile(fit.getAbsolutePath(), f, m, scale, invertx, inverty);
+                            imported = true;
+                        }
+                
+
+//			filename = getImportMicrographName(path, m.getFile(), f);
+//			if (Filename.exists(filename))
+//				result += importParticlesFromFile(filename, f, m, scale, invertx, inverty);
 		}
 
 		return result;
