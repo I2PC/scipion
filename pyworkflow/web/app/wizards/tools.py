@@ -64,7 +64,7 @@ def proccessModeFilter(mode, value):
         
     elif mode == FILTER_NO_DECAY:
         print "filter band pass no decay"
-        value[2] = 0
+        value = [value[0], value[1], 0]
         
     return value
 

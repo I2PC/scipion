@@ -79,7 +79,7 @@
 		<tr>
 			<td>
 				<div id="lowFou">
-					{% if params.mode < 3 %}
+					{% if params.mode == 1 or params.mode == 2 or params.mode == 4 %}
 					<span id="title_freq">Low freq<span>
 					<div id="sliderLite" class="slider_low"></div>
 					<div id="slider_low_result">{{params.value.0}}</div>
@@ -91,7 +91,7 @@
 			</td>
 			<td>
 				<div id="highFou">
-					{% if params.mode <= 3 %}
+					{% if params.mode == 0 or params.mode == 2 or params.mode == 3 or params.mode == 4 %}
 					<span id="title_freq">High freq<span>
 					<div id="sliderLite" class="slider_high"></div>
 					<div id="slider_high_result">{{params.value.1}}</div>
@@ -103,7 +103,7 @@
 			</td>
 			<td>
 				<div id="decayFou">
-					{% if params.mode < 3 %}
+					{% if params.mode == 0  or params.mode == 1 or params.mode == 2 %}
 					<span id="title_freq">Decay<span>
 					<div id="sliderLite" class="slider_decay"></div>
 					<div id="slider_decay_result">{{params.value.2}}</div>
