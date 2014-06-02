@@ -37,6 +37,20 @@
 # PREREQUISITES #
 #################
 
+
+###########################
+# COMMON PRECONFIGURATION #
+###########################
+
+# We create the environment the whole build will use
+env = Environment()
+# To decide if a target must be rebuilt, both md5 and timestamp will be used together
+env.Decider('MD5-timestamp')
+# For certain files or folders which change could affect the compilation, here there could exist also a user-defined decider function. At this moment MD5-timestamp will be enough 
+
+# To avoid the scanning of new dependencies for every file each time you rebuild, we set an implicit cache. So once a file has been scanned (its #includes pointers) then it won't be scanned again unless the file is changed
+SetOption('implicit_cache', 1)
+
 #Already compiled scons (using install.sh)
 #Python at any version (if 2.7.6, this will be used, otherwise, a new one will be compiled)
 
