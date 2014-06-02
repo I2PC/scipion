@@ -163,7 +163,7 @@ def form(request):
     # Update the context dictionary with the special params
     for paramName in SPECIAL_PARAMS:
         context[paramName] = protocol.getAttributeValue(paramName, '')
-    
+
     # Cross Site Request Forgery protection is need it
     context.update(csrf(request))
     
