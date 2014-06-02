@@ -118,7 +118,6 @@ class FrealignVolBandpassWeb(FrealignVolBandpassWizard):
             if len(volumes) == 0:
                 return HttpResponse("errorIterate")
             
-            #careful with mode
             params['value'] = proccessModeFilter(params['mode'], params['value'])
             
             context = {'objects': volumes,
