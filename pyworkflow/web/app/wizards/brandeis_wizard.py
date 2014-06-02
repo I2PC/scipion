@@ -37,6 +37,32 @@ from pyworkflow.web.app.em_wizard import *
 from tools import *
 from pyworkflow.web.app.views_base import base_wiz
 
+
+
+#===============================================================================
+# CTFs
+#===============================================================================
+
+class BrandeisCTFWeb(BrandeisCTFWizard):
+    _environments = [WEB_DJANGO]
+    
+    def _run(self, protocol, request):
+        params = self._getParameters(protocol)     
+        objs = params['input'].get()
+        
+        res = validateSet(objs)
+        
+        if res is not 1:
+            return HttpResponse(res)
+        else:           
+
+            context = {'objects': self._getMics(objs),
+                       'params': params}
+        
+            context = base_wiz(request, context)
+            return render_to_response('wizards/wiz_ctf.html', context)
+
+
 #===============================================================================
 # MASKS
 #===============================================================================

@@ -34,12 +34,39 @@ import ttk
 from pyworkflow.em.constants import *
 from constants import *
 
+from protocol_ctffind3 import ProtCTFFind
 import pyworkflow.gui.dialog as dialog
 from pyworkflow.em.wizard import *
 from protocol_refinement import ProtFrealign
 
 from pyworkflow import findResource
 
+#===============================================================================
+# CTFs
+#===============================================================================
+
+class BrandeisCTFWizard(CtfWizard):
+    _targets = [(ProtCTFFind, ['lowRes', 'highRes'])]
+    
+    def _getParameters(self, protocol):
+        
+        label, value = self._getInputProtocol(self._targets, protocol)
+        
+        protParams = {}
+        protParams['input']= protocol.inputMicrographs
+        protParams['label']= label
+        protParams['value']= value
+        return protParams
+    
+    def _getProvider(self, protocol):
+        _objs = self._getParameters(protocol)['input']
+        return CtfWizard._getListProvider(self, _objs)
+    
+    def show(self, form):
+        params = self._getParameters(form.protocol)
+        _value = params['value']
+        _label = params['label']
+        CtfWizard.show(self, form, _value, _label, UNIT_PIXEL)
 
 #===============================================================================
 # MASKS
