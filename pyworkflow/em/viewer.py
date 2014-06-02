@@ -67,6 +67,7 @@ class DataView(View):
         params = '-i ' + self._path
         for key, value in self._viewParams.items():
             params = "%s --%s %s"%(params, key, value)
+        
         return params
     
     def getShowJWebParams(self):
@@ -127,9 +128,10 @@ class DataView(View):
         
         
 class ObjectView(DataView):
+    
     """ Wrapper to View but for displaying Scipion objects. """
     def __init__(self, path, type, projectid, inputid, imagesid, viewParams={}, **kwargs):
-        DataView.__init__(self, path, **kwargs)
+        DataView.__init__(self, path, viewParams, **kwargs)
         self.python = pw.PYTHON
         self.script = pw.join('apps', 'pw_create_image_subset.py')
         self.type = type

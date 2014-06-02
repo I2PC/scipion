@@ -267,7 +267,7 @@ class XmippSet():
 class XmippDataSet(ds.DataSet):
     """ Provide a DataSet implementation base on Xmipp xmd file.
     The tables of the dataset will be the blocks in the metadata.
-    Each block is a table on the dataset and is read as a Xmipp metadata. 
+    Each block is a table on the dataset and is read as an Xmipp metadata. 
     """
     def __init__(self, filename):
         self._filename = filename

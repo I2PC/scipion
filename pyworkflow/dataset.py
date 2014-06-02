@@ -228,3 +228,12 @@ class Column(object):
         return self._default
     
     
+class SqliteDataset(DataSet):
+    """ Provide a DataSet implementation base on sqlite file.
+    The tables of the dataset will be the object tables in database.
+    Each block is a table on the dataset. 
+    """
+    
+    def __init__(self, filename):
+        self._filename = filename
+    

@@ -140,10 +140,12 @@ class XmippViewer(Viewer):
         elif issubclass(cls, SetOfClasses3D):
             fn = obj.getFileName()
             self._views.append(ObjectView(fn, "Classes3D", self._project.getName(), obj.strId(), obj.getImages().strId(), extraParams=args.get('extraParams', '')))
+            
               
         elif issubclass(cls, SetOfCTF):
             fn = obj.getFileName()
-            self._views.append(DataView(fn, viewParams={MODE: 'metadata', RENDER: 'psd psdEnhanced image1 image2', ORDER:'id psd psdEnhanced image1 image2', ZOOM: 50}))  
+#            self._views.append(DataView(fn, viewParams={MODE: 'metadata'}))
+            self._views.append(ObjectView(fn, "Micrographs", self._project.getName(), obj.strId(), obj.strId(), viewParams={MODE: 'metadata'}))    
          
         elif issubclass(cls, XmippProtExtractParticles) or issubclass(cls, XmippProtScreenParticles):
             self._visualize(obj.outputParticles)
