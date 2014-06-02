@@ -84,7 +84,7 @@ class FrealignBandpassWizard(FilterParticlesWizard):
         protParams['input']= protocol.inputParticles
         protParams['label']= label
         protParams['value']= value
-        protParams['mode'] = FILTER_LOW_PASS_NO_DECAY
+        protParams['mode'] = FILTER_NO_DECAY
         return protParams  
     
     def _getProvider(self, protocol):
