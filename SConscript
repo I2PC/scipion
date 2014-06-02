@@ -78,7 +78,7 @@ Libraries = {'fftw': {INCS: [join('external','fftw-3.3.1')],
 #                        LIBS: ['']
 #                     },
              'cuda': {INCS: [CUDA_PATH + s for s in ['/CUDALibraries/common/inc', '/shared/inc']],
-                      LIBS: ['cudart', 'cutil', 'shrutil_x86_64']
+                      LIBS: ['cudart', 'cublas', 'cufft', 'curand', 'cusparse', 'npp', 'nvToolsExt', 'opencv_gpu' ]
                      },
              'XmippExternal': {INCS: [join('external','bilib') + s for s in ['', '/headers', '/types']],
                                LIBS: ['XmippExternal'],
@@ -333,14 +333,14 @@ def AddMPIProgram(name, basedir, sources_pattern='*.cpp', skip_list=[],
 
 # Add a program integrated in the Xmipp structure
 def AddXmippProgram(name, libs=[], folder='programs', incPaths=[], libPaths=[],
-                    useCudaEnvironment=False):
+                    useCudaEnvironment=False, cxxflags=[]):
     finalLibPath = ['lib']
     finalLibPath.append(libPaths)
     finalIncludePath = ['libraries', '#', '#'+HDF5Dir]
     finalIncludePath.append(incPaths)
     finalLibs = libs + ['XmippData', 'XmippExternal'] + FFTWLibs + SQLiteLibs + TIFFLibs + JPEGLibs + HDF5Libs
     if useCudaEnvironment:
-    	finalLibs += ['cudart', 'cutil', 'shrutil_x86_64' ]
+    	finalLibs += ['cudart', 'cublas', 'cufft', 'curand', 'cusparse', 'npp', 'nvToolsExt', 'opencv_gpu']
     	finalIncludePath += [join(env['CUDA_SDK_PATH'], "CUDALibraries","common","inc"),
                            join(env['CUDA_SDK_PATH'], "shared","inc")]
     	finalLibPath += [join(env['CUDA_SDK_PATH'],"CUDALibraries","common","lib"),
@@ -357,7 +357,7 @@ def AddXmippProgram(name, libs=[], folder='programs', incPaths=[], libPaths=[],
       finalLibs += PythonLibs
       finalIncludePath += PythonInc
     program = AddProgram(name, 'applications/%s/%s' % (folder, name), '*.cpp', [],
-        finalIncludePath, finalLibPath, finalLibs, [], [])
+        finalIncludePath, finalLibPath, finalLibs, cxxflags, [])
     env.Alias('xmipp_programs', program)
     return program
 	
@@ -488,7 +488,7 @@ def AddLibrary(name, basedir, sources, includes, libpath=[], libs=[],
         envToUse.Append(CXXFLAGS=['-DWITH_CUDA'])
 	if cudaFiles:
             envToUse.Append(NVCCFLAGS="-shared --compiler-options '-fPIC'")
-        libs += ['cutil_x86_64', 'shrutil_x86_64', 'cudart']
+        libs += ['cudart', 'cublas', 'cufft', 'curand', 'cusparse', 'npp', 'nvToolsExt', 'opencv_gpu']
     	includes += [join(env['CUDA_SDK_PATH'],"CUDALibraries","common","inc"),
                    join(env['CUDA_SDK_PATH'],"shared","inc")]
     	libpath += [join(env['CUDA_SDK_PATH'],"CUDALibraries","common","lib"),
@@ -581,7 +581,7 @@ def AddLibraryNG(name, mpi=False,#deps=[],
         envToUse.Append(CXXFLAGS=['-DWITH_CUDA'])
     if cudaFiles:
         envToUse.Append(NVCCFLAGS="-shared --compiler-options '-fPIC'")
-        libs += ['cutil_x86_64', 'shrutil_x86_64', 'cudart']
+        libs += ['cudart', 'cublas', 'cufft', 'curand', 'cusparse', 'npp', 'nvToolsExt', 'opencv_gpu']
         includes += [join(env['CUDA_SDK_PATH'],"CUDALibraries","common","inc"),
                    join(env['CUDA_SDK_PATH'],"shared","inc")]
         libpath += [join(env['CUDA_SDK_PATH'],"CUDALibraries","common","lib"),
@@ -1223,13 +1223,15 @@ if int(env['matlab']):
         'resolution', 'rotate', 'scale', 'scale_pyramid', 'volume_segment']
     for i in range(len(bindings)):
         CompileMatlab('xmipp_read')
+        CompileMatlab('xmipp_write')
         CompileMatlab('xmipp_nma_read_alignment')
         CompileMatlab('xmipp_nma_save_cluster')
         CompileMatlab('xmipp_read_structure_factor')
 
 # Optical Alignment program
 if int(env['opencv']):
-    print 
-    AddXmippProgram('optical_alignment', getLibraryDict('opencv').get(LIBS))
-    if int(env['cuda']):
-        AddXmippProgram('optical_alignment_gpu', getLibraryDict('opencv').get(LIBS) + ['cuda'])
+    libs = getLibraryDict('opencv').get(LIBS)
+    AddXmippProgram('optical_alignment_cpu', libs)
+    if int(env['cuda']):  
+        libs += getLibraryDict('cuda').get(LIBS)
+        AddXmippProgram('optical_alignment_gpu', libs)

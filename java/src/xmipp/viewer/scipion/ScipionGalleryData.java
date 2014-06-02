@@ -7,6 +7,9 @@
 package xmipp.viewer.scipion;
 
 import java.awt.Color;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import xmipp.jni.MDLabel;
@@ -69,10 +72,7 @@ public class ScipionGalleryData extends GalleryData{
         
     }
     
-    public boolean isFile(ColumnInfo ci) {
-        return false;
-    }
-    
+   
             /** Save selected items as a metadata */
     public void saveSelection(String path, boolean overwrite) throws Exception
     {
@@ -96,11 +96,12 @@ public class ScipionGalleryData extends GalleryData{
     
 
     /** Create a metadata just with selected items */
+    @Override
     public ScipionMetaData getSelectionMd() {
             ScipionMetaData selectionMd = null;
             try
             {
-                selectionMd = ((ScipionMetaData)md).getSelectionMd(getSelIds());
+                selectionMd = ((ScipionMetaData)md).getMd(getSelObjects());
                 return selectionMd;
             } catch (Exception e) {
                     e.printStackTrace();
@@ -109,7 +110,7 @@ public class ScipionGalleryData extends GalleryData{
     }
         
     	/** Get all the images assigned to all selected classes */
-	public MetaData getSelClassesImages(){
+	public MetaData getClassesImages(){
 		ScipionMetaData mdImages = null; 
 		MetaData md;
 		for (int i = 0; i < ids.length; ++i){
@@ -129,12 +130,34 @@ public class ScipionGalleryData extends GalleryData{
 		return mdImages;
 	}   
         
+         	/** Get all the images assigned to all selected classes */
+	public MetaData getEnabledClassesImages(){
+		ScipionMetaData mdImages = null; 
+		MetaData md;
+		for (int i = 0; i < ids.length; ++i){
+			if (isEnabled(i)){
+				md = getClassImages(i);
+                                
+				if(md != null)
+                                {
+                                    if(mdImages == null)
+                                        mdImages = ((ScipionMetaData)md).getStructure("Classes", "Objects");
+                                    mdImages.unionAll(md);
+                                    md.destroy();
+                                }
+			}
+		}
+                
+		return mdImages;
+	} 
+        
         
         /** Get the metadata with assigned images to this classes */
 	public MetaData getClassImages(int index) {
 		try {
 			long id = ids[index];
-			return ((ScipionMetaData)md).getEMObject(id).childmd;
+                        ScipionMetaData childmd = ((ScipionMetaData)md).getEMObject(id).childmd;
+			return childmd.getMd(childmd.getEnabledObjects());
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -243,5 +266,44 @@ public class ScipionGalleryData extends GalleryData{
         public boolean hasMicrographParticles() {
 		return false;//fixme?? cannot open picker from sqlite
 	}
+        
+        public List<ScipionMetaData.EMObject> getSelObjects()
+        {
+            List<ScipionMetaData.EMObject> emos = new ArrayList<ScipionMetaData.EMObject>();
+            for(int i = 0; i < selection.length; i ++)
+                if(selection[i] && md.getEnabled(ids[i]))
+                    emos.add(((ScipionMetaData)md).getEMObjects().get(i));
+            return emos;
+        }
+        
+        public List<ScipionMetaData.EMObject> getEnabledObjects()
+        {
+            return ((ScipionMetaData)md).getEnabledObjects();
+        }
+        
+        /** This is only needed for metadata table galleries */
+	public boolean isFile(ColumnInfo ci) {
+		return ci.labelName.contains("filename");
+	}
+        
+        public boolean isImageFile(ColumnInfo ci) {
+            return ci.allowRender;
+	}
+        
+        public MetaData getMd(List<Long> ids)
+        {
+            MetaData selmd = null;
+            try {
+                    long[] ids2 = new long[ids.size()];
+                    for(int i = 0; i < ids.size(); i ++)
+                        ids2[i] = ids.get(i);
+                    selmd = ((ScipionMetaData)md).getStructure("Classes", "Objects");
+                    selmd.importObjects(md, ids2);
+                } catch (Exception e) {
+                        e.printStackTrace();
+                }
+            return selmd;
+        }
+        
 
 }
