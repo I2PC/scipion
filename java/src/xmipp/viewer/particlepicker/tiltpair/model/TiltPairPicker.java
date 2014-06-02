@@ -387,4 +387,11 @@ public class TiltPairPicker extends ParticlePicker
 		return true;
 	}
 
+    @Override
+    public int getParticlesCount() {
+        return getUntiltedNumber();
+            
+            
+    }
+
 }// class TiltPairPicker

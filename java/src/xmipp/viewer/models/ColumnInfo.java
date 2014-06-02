@@ -30,38 +30,44 @@ import xmipp.jni.MetaData;
 /** This class will store info about how to display label on gallery */
 public class ColumnInfo {
     
-	protected int label;
+
+	public int label;
 	public String labelName; //This is redundant, but for avoid a function call
 	public boolean visible; 
 	public boolean render;
 	public boolean allowRender = false;
 	public boolean allowEdit = true;
 	public String comment;
+        public int type;
 	
 	/** Constructors */
-	public ColumnInfo(int label, String name, boolean visible, boolean render){
+	
+	public ColumnInfo(int label, String name, String comment, int type, boolean allowRender, boolean visible, boolean render){
 		this.label = label;
 		this.labelName = name;
 		this.visible = visible;
 		this.render = render;
-		try {
-			this.allowRender = MetaData.isImage(label);
-			comment = MetaData.getLabelComment(label);
-		} catch (Exception e){
-			e.printStackTrace();
-		}
+		this.allowRender = allowRender;
+                this.comment = comment;
+                this.type = type;
+                
 	}
+	
+        public ColumnInfo(int label, String name, String comment, int type, boolean allowRender){
+            this(label, name, comment, type, allowRender, true, allowRender);
+        }
 	
 	public ColumnInfo(int label){
-		this(label, MetaData.getLabelName(label), true, false);
+		this(label, MetaData.getLabelName(label), MetaData.getLabelComment(label), MetaData.getLabelType(label), MetaData.isImage(label), true, false);
 	}
+        
 	
 	public ColumnInfo(int label, boolean visible){
-		this(label, MetaData.getLabelName(label), visible, false);
+		this(label, MetaData.getLabelName(label), MetaData.getLabelComment(label), MetaData.getLabelType(label), MetaData.isImage(label), visible, false);
 	}
 	
 	public ColumnInfo(int label, boolean visible, boolean render){
-		this(label, MetaData.getLabelName(label), visible, render);
+		this(label, MetaData.getLabelName(label), MetaData.getLabelComment(label), MetaData.getLabelType(label), MetaData.isImage(label), visible, render);
 	}	
 	
 	/** Update the column information with the provided one
@@ -83,7 +89,7 @@ public class ColumnInfo {
 	
 	public int getType(){
 		try {
-			return MetaData.getLabelType(label);
+			return type;
 		}catch(Exception e){
 			e.printStackTrace();
 		}
@@ -92,7 +98,7 @@ public class ColumnInfo {
 	
 	public String getLabelTypeString(){
 		try {
-			int type = MetaData.getLabelType(label);
+			
 			return MetaData.getLabelTypeString(type);
 		}catch(Exception e){
 			e.printStackTrace();
@@ -118,7 +124,7 @@ public class ColumnInfo {
 	}
 	
 	public ColumnInfo clone(){
-		return new ColumnInfo(label, labelName, visible, render);
+		return new ColumnInfo(label, labelName, comment, type, allowRender, visible, render);
 	}
 	
 	@Override

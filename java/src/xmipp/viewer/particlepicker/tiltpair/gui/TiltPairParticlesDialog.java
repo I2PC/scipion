@@ -13,6 +13,7 @@ import xmipp.viewer.particlepicker.tiltpair.model.UntiltedParticle;
 
 public class TiltPairParticlesDialog extends ParticlesDialog
 {
+    
 
 	public TiltPairParticlesDialog(ParticlePickerJFrame frame)
 	{

@@ -15,6 +15,11 @@ EmxFileName = ''
 """ If left blank, the value will be read from the EMX file. """
 SamplingRate = ""
 
+# Is Alignment?
+""" Check if you what to align (true) versus reconstruct (false)
+"""
+DoAlign=True
+
 # Sort particles?
 """
 If set to Yes, the particles will be sorted by similarity.

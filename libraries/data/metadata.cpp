@@ -1194,8 +1194,7 @@ void MetaData::readDB(const FileName &filename,
                       const String & blockRegExp,
                       bool decomposeStack)//what is decompose stack for?
 {
-    String blockname = blockRegExp;
-    myMDSql->copyTableFromFileDB(blockname, filename, desiredLabels, _maxRows);
+    myMDSql->copyTableFromFileDB(blockRegExp, filename, desiredLabels, _maxRows);
 }
 void MetaData::readStar(const FileName &filename,
                         const std::vector<MDLabel> *desiredLabels,
@@ -1203,8 +1202,6 @@ void MetaData::readStar(const FileName &filename,
                         bool decomposeStack)
 {
     //First try to open the file as a metadata
-
-
     size_t id;
 
     FileName inFile = filename.removeBlockName();

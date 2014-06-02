@@ -1,5 +1,32 @@
 #!/usr/bin/env python
 
+# **************************************************************************
+# *
+# * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
+# *              I. Foche Perez (ifoche@cnb.csic.es)
+# *
+# * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
+# *
+# * This program is free software; you can redistribute it and/or modify
+# * it under the terms of the GNU General Public License as published by
+# * the Free Software Foundation; either version 2 of the License, or
+# * (at your option) any later version.
+# *
+# * This program is distributed in the hope that it will be useful,
+# * but WITHOUT ANY WARRANTY; without even the implied warranty of
+# * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# * GNU General Public License for more details.
+# *
+# * You should have received a copy of the GNU General Public License
+# * along with this program; if not, write to the Free Software
+# * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+# * 02111-1307  USA
+# *
+# *  All comments concerning this program package may be sent to the
+# *  e-mail address 'ifoche@cnb.csic.es'
+# *
+# **************************************************************************
+
 Import('env')
 
 # Required for custom functions
@@ -40,15 +67,18 @@ Libraries = {'fftw': {INCS: [join('external','fftw-3.3.1')],
                      },
              'hdf5': {INCS: [join('external','hdf5-1.8.10','src')],
                         LIBS: ['hdf5']
-                     },        
+                     },
              'hdf5_cpp': {INCS: [join('external','hdf5-1.8.10','c++')],
                         LIBS: ['hdf5_cpp']
-                     },        
+                     },
+             'opencv': {INCS: [],
+                        LIBS: ['opencv_core', 'opencv_legacy', 'opencv_imgproc', 'opencv_video']
+                     },
 #             'python': {INCS: [PYTHON_DIR],
 #                        LIBS: ['']
 #                     },
              'cuda': {INCS: [CUDA_PATH + s for s in ['/CUDALibraries/common/inc', '/shared/inc']],
-                      LIBS: ['cudart', 'cutil', 'shrutil_x86_64']
+                      LIBS: ['cudart', 'cublas', 'cufft', 'curand', 'cusparse', 'npp', 'nvToolsExt', 'opencv_gpu' ]
                      },
              'XmippExternal': {INCS: [join('external','bilib') + s for s in ['', '/headers', '/types']],
                                LIBS: ['XmippExternal'],
@@ -303,14 +333,14 @@ def AddMPIProgram(name, basedir, sources_pattern='*.cpp', skip_list=[],
 
 # Add a program integrated in the Xmipp structure
 def AddXmippProgram(name, libs=[], folder='programs', incPaths=[], libPaths=[],
-                    useCudaEnvironment=False):
+                    useCudaEnvironment=False, cxxflags=[]):
     finalLibPath = ['lib']
     finalLibPath.append(libPaths)
     finalIncludePath = ['libraries', '#', '#'+HDF5Dir]
     finalIncludePath.append(incPaths)
     finalLibs = libs + ['XmippData', 'XmippExternal'] + FFTWLibs + SQLiteLibs + TIFFLibs + JPEGLibs + HDF5Libs
     if useCudaEnvironment:
-    	finalLibs += ['cudart', 'cutil', 'shrutil_x86_64' ]
+    	finalLibs += ['cudart', 'cublas', 'cufft', 'curand', 'cusparse', 'npp', 'nvToolsExt', 'opencv_gpu']
     	finalIncludePath += [join(env['CUDA_SDK_PATH'], "CUDALibraries","common","inc"),
                            join(env['CUDA_SDK_PATH'], "shared","inc")]
     	finalLibPath += [join(env['CUDA_SDK_PATH'],"CUDALibraries","common","lib"),
@@ -327,7 +357,7 @@ def AddXmippProgram(name, libs=[], folder='programs', incPaths=[], libPaths=[],
       finalLibs += PythonLibs
       finalIncludePath += PythonInc
     program = AddProgram(name, 'applications/%s/%s' % (folder, name), '*.cpp', [],
-        finalIncludePath, finalLibPath, finalLibs, [], [])
+        finalIncludePath, finalLibPath, finalLibs, cxxflags, [])
     env.Alias('xmipp_programs', program)
     return program
 	
@@ -357,10 +387,7 @@ def AddXmippPythonTest(name):
     return test
 
 
-def AddXmippJavaTest(name):
-    #javac xmipp/ImageGeneric_Test.java -classpath ~/xmipp_svn/java/lib/XmippJNI.jar:/usr/share/java/junit4.jar
-    #mv xmipp/ImageGeneric_Test.class xmipp/jni/.
-    #java  -classpath :/usr/share/java/junit4.jar:xmipp:/home/roberto/xmipp_svn/java/lib/XmippJNI.jar   org.junit.runner.JUnitCore xmipp.jni.ImageGeneric_Test  
+def AddXmippJavaTest(name):  
     pass
 
     #env.Default(test)
@@ -397,8 +424,6 @@ def AddMPILibrary(name, basedir, sources, includes, libpath=[], libs=[]):
     # setup
     basedir = AddLastSlash(basedir)
     libprefix = join(env['prefix'], 'lib')
-    #for x in sources:
-    #    sources[sources.index(x)] = basedir + x
 
     # separate local and global includes
     for x in includes:
@@ -463,7 +488,7 @@ def AddLibrary(name, basedir, sources, includes, libpath=[], libs=[],
         envToUse.Append(CXXFLAGS=['-DWITH_CUDA'])
 	if cudaFiles:
             envToUse.Append(NVCCFLAGS="-shared --compiler-options '-fPIC'")
-        libs += ['cutil_x86_64', 'shrutil_x86_64', 'cudart']
+        libs += ['cudart', 'cublas', 'cufft', 'curand', 'cusparse', 'npp', 'nvToolsExt', 'opencv_gpu']
     	includes += [join(env['CUDA_SDK_PATH'],"CUDALibraries","common","inc"),
                    join(env['CUDA_SDK_PATH'],"shared","inc")]
     	libpath += [join(env['CUDA_SDK_PATH'],"CUDALibraries","common","lib"),
@@ -549,29 +574,14 @@ def AddLibraryNG(name, mpi=False,#deps=[],
             libs += depDict.get(LIBS, [])
         else:
             libs.append(d)
-        
-#    for i, s in enumerate(sources):
-#        # Add basedir prefix to each source if not starts with that 
-#        if not s.startswith(basedir):
-#            sources[i] = join(basedir, s)
 
-    # separate local and global includes
-#    for x in includes:
-#        if type(x) is ListType: 
-#            y=x
-#            includes.remove(x)
-#            for j in y:
-#                includes.append(j)
-#        else:
-#            if x[0] != '#' and x[0] != '/':
-#                includes[includes.index(x)] = basedir + x
     if useCudaEnvironment:
         envToUse = env.Clone()
         envToUse.Tool('cuda')
         envToUse.Append(CXXFLAGS=['-DWITH_CUDA'])
     if cudaFiles:
         envToUse.Append(NVCCFLAGS="-shared --compiler-options '-fPIC'")
-        libs += ['cutil_x86_64', 'shrutil_x86_64', 'cudart']
+        libs += ['cudart', 'cublas', 'cufft', 'curand', 'cusparse', 'npp', 'nvToolsExt', 'opencv_gpu']
         includes += [join(env['CUDA_SDK_PATH'],"CUDALibraries","common","inc"),
                    join(env['CUDA_SDK_PATH'],"shared","inc")]
         libpath += [join(env['CUDA_SDK_PATH'],"CUDALibraries","common","lib"),
@@ -671,11 +681,6 @@ def CompileJavaJar(target, source, env):
     if os.path.exists(join(srcDir, configFile)):
     	pluginDest = join(classDir, configFile)
     	Cmd('cp %s %s' % (join(srcDir, configFile), pluginDest))
-    # We need to create a txt file with the list of all .class files 
-    # with the following format:
-    # -C java/build xmipp/package/A.class
-    # -C java/build xmipp/package/B.class
-    # ...
     cmd = '$JAVA_HOME/bin/jar ' + env['JARFLAGS']
     CreateFileList(classDir, '*.class', classfile, buildDir + '/', '-C %(buildDir)s ' % locals())
     Cmd('%(cmd)s %(jarfile)s @%(classfile)s %(pluginDest)s' % locals())
@@ -803,31 +808,12 @@ if int(env['gtest']):
     AddLibrary('gtest', join('external','gtest-1.6.0','fused-src','gtest'), DataSources, ['#'],
                [], [])
 
-# Bilib
-#BilibSources = Glob('external/bilib/sources', '*.cc', [])
-#
-## INRIA
-#INRIASources = Glob('external/inria', '*.cc', [])
-#
-## Condor
-#CondorSources = Glob('external/condor', '*.cpp', [])
-#
-## AlgLib
-#AlglibSources = Glob('external/alglib/src', '*.cpp', [])
-
-#AddLibrary('XmippExternal', 'external',
-#   INRIASources + BilibSources + CondorSources + AlglibSources,
-#   ['bilib', 'bilib/headers', 'bilib/types', 'alglib-3.8.0.cpp/src'])
-
 AddLibraryNG('XmippExternal')
 
 # sqliteExt
-#SqliteExtSources = Glob('external/sqliteExt', '*.c', [])
 AddLibraryNG('XmippSqliteExt', shlibsuffix='.so')
 
 # XmippData
-#DataSources = Glob('libraries/data', '*.cpp', [])
-
 libraries=['#', '#'+HDF5Dir]
 if MINGW:
     import sys
@@ -839,22 +825,11 @@ elif MACOSX:
     AddLibrary('XmippData', 'libraries/data', DataSources, libraries,
                ['lib'], ['XmippExternal'] + FFTWLibs + TIFFLibs + JPEGLibs + HDF5Libs + SQLiteLibs)  
 else:
-#    AddLibrary('XmippData', 'libraries/data', DataSources, libraries,
-#               ['lib'], ['XmippExternal','rt'] + FFTWLibs + TIFFLibs + JPEGLibs + HDF5Libs + SQLiteLibs)  
-#    dataLibDict = getLibraryDict('XmippData')
-#    dataLibDict[DEPS].append('regex')
-#    dataLibDict[INCS].append(env['MINGW_PATHS'])
-#    AddLibrary('XmippData', '', DataSources, libraries, 
-#               ['lib'], ['XmippExternal','regex'] + FFTWLibs + TIFFLibs + JPEGLibs + HDF5Libs + SQLiteLibs)
-#else:
-#    AddLibrary('XmippData', 'libraries/data', DataSources, libraries,
-#               ['lib'], ['XmippExternal'] + FFTWLibs + TIFFLibs + JPEGLibs + HDF5Libs + SQLiteLibs)
     AddLibraryNG('XmippData')
 
 
 #Xmipp Python Extension
 PyExtSources = Glob('libraries/bindings/python', '*.cpp', [])
-#import distutils.sysconfig
 pythonLibName = 'xmipp'
 pythonIncludes = ["#" + join(PythonDir, dir) for dir in [".", "Include"]]
 pythonIncludes.append("#lib/python2.7/site-packages/numpy/core/include") 
@@ -880,20 +855,6 @@ if MACOSX:
 	env.Alias(pythonLibName, command)
 
 ## Reconstruction
-#ReconsSources = Glob('libraries/reconstruction', '*.cpp', ["angular_gcar.cpp"])
-#ReconsLib = ['XmippExternal', 'XmippData', 'pthread', 'XmippClassif'] + FFTWLibs + TIFFLibs + JPEGLibs + HDF5Libs + SQLiteLibs
-#ReconsIncDir = ['#libraries', '#external', '#', '#'+HDF5Dir]
-#ReconsLibDir = ['lib']
-
-#if int(env['arpack']):
-#    reconsLibDict = getLibraryDict('XmippRecons')
-#    reconsLibDict[DEPS] += ['arpack', 'lapack', 'blas']
-    # TODO: Filter angular_gcar.cpp and add it here
-    #ReconsSources.append("angular_gcar.cpp")
-
-#AddLibrary('XmippRecons', 'libraries/reconstruction', ReconsSources,
-#           ReconsIncDir, ReconsLibDir, ReconsLib, useCudaEnvironment=int(env['cuda']))
-
 AddLibraryNG('XmippRecons', useCudaEnvironment=int(env['cuda']))
 
 if int(env['cuda']):
@@ -902,15 +863,9 @@ if int(env['cuda']):
            ['#'], ['lib'], [], useCudaEnvironment=True)
 
 # Classification
-#ClassificationSources = Glob('libraries/classification', '*.cpp', [])
-#AddLibrary('XmippClassif', 'libraries/classification', ClassificationSources,
-#    ['#libraries', '#', '#'+HDF5Dir], ['lib'], ['XmippExternal', 'XmippData'])
 AddLibraryNG('XmippClassif')
 
 # Dimensionality reduction
-#DimRedSources = Glob('libraries/dimred', '*.cpp', [])
-#AddLibrary('XmippDimred', 'libraries/dimred', DimRedSources,
-#    ['#libraries', '#'], ['lib'], ['XmippExternal', 'XmippData'])
 AddLibraryNG('XmippDimred')
 
 # XmippParallel
@@ -919,15 +874,7 @@ AddMPILibrary("XmippParallel", 'libraries/parallel', ParallelSources, ["#", "#li
               ['lib'], ['XmippExternal', 'XmippData', 'XmippRecons', 'XmippClassif'] + FFTWLibs + TIFFLibs + JPEGLibs + HDF5Libs + SQLiteLibs)
 
 # Interface
-#InterfaceSources = Glob('libraries/interface', '*.cpp', [])
-#AddLibrary('XmippInterface', 'libraries/interface', InterfaceSources,
-#    ['#libraries', '#external', '#', '#'+HDF5Dir]+PythonInc, ['lib']+PythonLibDir, ['XmippExternal', 'XmippData', 'pthread']+PythonLibs)
-
 AddLibraryNG('XmippInterface')
-# Recons Interface
-#AddLibrary('XmippRecons_Interface', '#libraries/reconstruction',
-#           ReconsInterfaceSources, ['#libraries', '#external', '#'],['lib'],['XmippExternal','XmippData','XmippRecons','XmippInterface'])
-
 
 
 def WriteJavaEnum(class_name, header_file, pattern, log):
@@ -1022,7 +969,6 @@ if int(env['java']):
     AddJavaTest('FilenameTest')
     AddJavaTest('ImageGenericTest')
     AddJavaTest('MetadataTest')
-    #env.Default('run_java_tests')
     # Compile the HandleExtraFileTypes for ImageJ I/O
     compileHEFT = CompileJava('HandleExtraFileTypes', ['XmippViewer'])
     copyHandleExtraFileTypes = env.Install('external/imagej/plugins/', javaBuildName('HandleExtraFileTypes.class'))
@@ -1059,7 +1005,6 @@ AddXmippProgram('ctf_group', ['XmippRecons'])
 AddXmippProgram('ctf_phase_flip', ['XmippRecons'])
 AddXmippProgram('ctf_show', ['XmippRecons'])
 AddXmippProgram('ctf_sort_psds', ['XmippRecons'])
-#AddXmippProgram('denoise', ['XmippRecons'])
 if not int(env['release']):
     AddXmippProgram('idr_xray_tomo', ['XmippRecons'])
 AddXmippProgram('image_align', ['XmippRecons'])
@@ -1079,7 +1024,6 @@ AddXmippProgram('image_separate_objects')
 AddXmippProgram('image_statistics')
 AddXmippProgram('image_vectorize')
 AddXmippProgram('matrix_dimred', ['XmippDimred'])
-#AddXmippProgram('mean_shift')
 AddXmippProgram('metadata_convert_to_spider', ['XmippInterface'])
 AddXmippProgram('metadata_histogram')
 AddXmippProgram('metadata_import')
@@ -1129,9 +1073,6 @@ AddXmippProgram('transform_range_adjust')
 AddXmippProgram('transform_symmetrize', ['XmippRecons'])
 AddXmippProgram('transform_threshold', ['XmippRecons'])
 AddXmippProgram('transform_window')
-#AddXmippProgram('fourier_projection', ['XmippRecons'])
-#AddXmippProgram('test_sql')
-#AddXmippProgram('template_threads')
 if not int(env['release']):
 	AddXmippProgram('tomo_align_dual_tilt_series', ['XmippRecons'])
 	AddXmippProgram('tomo_align_refinement', ['XmippRecons'])
@@ -1171,13 +1112,11 @@ AddBatch('import_box', 'applications/scripts/import_box', '.py')
 AddBatch('import_ctfparam', 'applications/scripts/import_ctfparam', '.py')
 AddBatch('import_ctfdat', 'applications/scripts/import_ctfdat', '.py')
 AddBatch('import_emx', 'applications/scripts/import_emx', '.py')
-#AddBatch('metadata_operate', 'applications/scripts/metadata_operate','.py')
 AddBatch('metadata_plot', 'applications/scripts/metadata_plot', '.py')
 AddBatch('metadata_selfile_create', 'applications/scripts/metadata_selfile_create', '.py')
 protocols_main = AddBatch('protocols', 'protocols', '.py')
 env.Alias('protocols', protocols_main)
 AddBatch('browser', 'applications/scripts/browser', '.py')
-#AddBatch('browserj', 'applications/scripts/browserj', '.py')
 AddBatch('micrograph_particle_picking', 'applications/scripts/micrograph_particle_picking', '.py')
 AddBatch('chimera_client', 'applications/scripts/chimera_client', '.py')
 #AddBatch('metadata_showj', 'applications/scripts/metadata_showj', '.py')
@@ -1239,8 +1178,6 @@ AddXmippMPIProgram('mpi_transform_normalize')
 AddXmippMPIProgram('mpi_transform_threshold', ['XmippRecons'])
 if not int(env['release']):
     AddXmippMPIProgram('mpi_write_test', ['XmippRecons'])
-#    AddXmippMPIProgram('template_threads', ['XmippRecons'])
-#    AddXmippMPIProgram('template_mpi', ['XmippRecons'])
 
 #---- Tests
 if int(env['gtest']):
@@ -1248,7 +1185,7 @@ if int(env['gtest']):
      AddXmippCTest('test_euler')
      AddXmippCTest('test_fftw')
      AddXmippCTest('test_filters')
-     AddXmippCTest('test_fringe_processing')          
+     AddXmippCTest('test_fringe_processing')
      AddXmippCTest('test_funcs')
      AddXmippCTest('test_geometry')
      AddXmippCTest('test_image')
@@ -1257,22 +1194,19 @@ if int(env['gtest']):
      AddXmippCTest('test_metadata')
      AddXmippCTest('test_multidim')
      AddXmippCTest('test_polar')
-     AddXmippCTest('test_polynomials')          
+     AddXmippCTest('test_polynomials')
      AddXmippCTest('test_sampling')
      AddXmippCTest('test_symmetries')
      AddXmippCTest('test_transformation')
      AddXmippCTest('test_dimred')
      AddXmippCTest('test_wavelets')
      AddXmippCTest('test_filename')
-     #env.Depends('run_tests', [fftw, tiff, sqlite])
      #python tests
      test = AddXmippPythonTest('test_pythoninterface')
-     #AddXmippPythonTest('test_projectionmatching')
      AddXmippPythonTest('test_pysqlite')
      AddXmippPythonTest('test_emx')
      env.Depends(test, pythonbinding)
      env.Depends('run_tests', 'xmipp_programs')
-     #env.Default('run_tests'     )
 
 if int(env['matlab']):
     def CompileMatlab(name, dependencies=[]):
@@ -1289,13 +1223,15 @@ if int(env['matlab']):
         'resolution', 'rotate', 'scale', 'scale_pyramid', 'volume_segment']
     for i in range(len(bindings)):
         CompileMatlab('xmipp_read')
+        CompileMatlab('xmipp_write')
         CompileMatlab('xmipp_nma_read_alignment')
         CompileMatlab('xmipp_nma_save_cluster')
         CompileMatlab('xmipp_read_structure_factor')
 
-# Clean
-# Configuration or cleaning
-#if env.GetOption('clean'):
-#    print '* Cleaning  ...'
-#    os.system("( cd external/fftw-3.2.2    ; make clean >& /dev/null )");
-#    os.system("( cd external/sqlite-3.6.23 ; make clean >& /dev/null )");
+# Optical Alignment program
+if int(env['opencv']):
+    libs = getLibraryDict('opencv').get(LIBS)
+    AddXmippProgram('optical_alignment_cpu', libs)
+    if int(env['cuda']):  
+        libs += getLibraryDict('cuda').get(LIBS)
+        AddXmippProgram('optical_alignment_gpu', libs)

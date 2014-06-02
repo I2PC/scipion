@@ -28,29 +28,24 @@ package xmipp.viewer.models;
 import java.awt.Component;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-
 import javax.swing.JTable;
 import javax.swing.table.JTableHeader;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
 import javax.swing.table.TableColumnModel;
-
-import xmipp.ij.commons.ImagePlusLoader;
-import xmipp.ij.commons.XmippImageWindow;
 import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
-import xmipp.utils.DEBUG;
 import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippMessage;
 import xmipp.utils.XmippPopupMenuCreator;
 import xmipp.viewer.FloatRenderer;
-import xmipp.viewer.windows.ImagesWindowFactory;
 
 public class MetadataTableModel extends MetadataGalleryTableModel {
 	private static final long serialVersionUID = 1L;
 
 	int sortColumnIndex = -1;
 	boolean ascending = true;
+        
 
 	public MetadataTableModel(GalleryData data) throws Exception {
 		super(data);
@@ -100,6 +95,7 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 		// DEBUG.printMessage(String.format("MetadataTable.getValueAt(%d, %d)",
 		// row, column));
 		try {
+                        
 			ColumnInfo ci = visibleLabels.get(column);
 			if (ci.render) {
 				String key = getItemKey(row, ci.getLabel());
@@ -118,7 +114,8 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 			}
 			int label = ci.getLabel();
 			long id = data.ids[row];
-			int type = MetaData.getLabelType(label);
+			int type = ci.type;
+                        
 			MetaData md = data.md;
 			switch (type) {
 			case MetaData.LABEL_INT:
@@ -256,7 +253,7 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 				changed = true;
 			}
 		if (changed) {
-			data.globalRender = value;
+			data.renderImages = value;
 			calculateCellSize();
 			fireTableDataChanged();
 		}
@@ -277,7 +274,7 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 	@Override
 	protected void calculateCellSize() {
 		// DEBUG.printMessage(String.format("MetadataTable:calculateSize"));
-		if (data.globalRender) {
+		if (data.renderImages) {
 			super.calculateCellSize();
 			// DEBUG.printMessage(String.format(
 			// "MetadataTable:calculateSize w:%d, h:%d", cellDim.width,
@@ -325,13 +322,16 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 	@Override
 	public boolean handleRightClick(int row, int col,
 			XmippPopupMenuCreator xpopup) {
+             if (isBusy(row, col))
+                    return false;
 		xpopup.initItems();
-
+               
 		if (data.isFile(visibleLabels.get(col))) {
 			xpopup.setItemVisible(XmippPopupMenuCreator.OPEN, true);
 			if (!data.isImageFile(visibleLabels.get(col)))
 				xpopup.setItemVisible(XmippPopupMenuCreator.OPEN_ASTEXT, true);
 		}
+                
 		return true;
 	}
 
@@ -443,5 +443,7 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 			// fireTableDataChanged();
 		}
 	}
-
+        
+        
+        
 }// class MetadataTable

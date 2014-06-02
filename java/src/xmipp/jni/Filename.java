@@ -441,4 +441,14 @@ public class Filename {
 		String pre = "KMGTPE".charAt(exp - 1) + "i";
 		return String.format("%.1f %sB", bytes / Math.pow(unit, exp), pre);
 	}
+        
+        public static String putExtension(String file, String ext)
+        {
+            int sepindex = file.lastIndexOf(".");//-1 if separator does not exists
+            if(sepindex == -1)
+                return file + "." + ext;
+            String part1 = file.substring(0, sepindex);
+            return part1 + "." + ext;
+            
+        }
 }

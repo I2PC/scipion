@@ -86,6 +86,14 @@ public class MetaData {
 		// storeIds();
 	}
 
+        	/** Create empty metadata */
+	public MetaData() {
+		//DEBUG.printFormat("Java: Creating metadata\n");
+		//DEBUG.printStackTrace();
+		create();
+	}
+
+	
 	// caching some ids
 	// private static native void storeIds();
 	// functions to create images
@@ -452,12 +460,6 @@ public class MetaData {
 	public native void enableDebug();
 
 	/*********** Non-native functions ********************/
-	/** Create empty metadata */
-	public MetaData() {
-		//DEBUG.printFormat("Java: Creating metadata\n");
-		//DEBUG.printStackTrace();
-		create();
-	}
 
 	/** Create a metadata and read data from filename */
 	public MetaData(String filename) {

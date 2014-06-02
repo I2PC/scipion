@@ -28,7 +28,8 @@ import sys
 from os.path import exists, join
 from xmipp import *
 from emx.emx import *
-from numpy import eye
+from numpy import eye, linalg, array
+
 
 from protlib_filesystem import join, dirname, abspath, replaceBasenameExt, findAcquisitionInfo
 from protlib_xmipp import RowMetaData
@@ -198,20 +199,18 @@ def emxCTFToXmipp(emxData,
     oldCs           = -1.
     oldAmplitudeContrast = -1.0
     for micrograph in emxData.iterClasses(MICROGRAPH):
-        micIndex = micrograph.get(INDEX)
+        micIndex    = micrograph.get(INDEX)
         micFileName = micrograph.get(FILENAME)
 
         if micFileName is None:
             raise Exception("emxMicsToXmipp: Xmipp doesn't support Micrograph without filename")
-#
-        if micFileName is None:
-            raise Exception("emxCTFToXmipp: Xmipp doesn't support Objects without filename")
+#        if micFileName is None:
+#            raise Exception("emxCTFToXmipp: Xmipp doesn't support Objects without filename")
         elif micIndex is not None:
             objFileName = join(filesPrefix, "%06d@%s"%(int(micIndex),micFileName))
         else:
             objFileName = join(filesPrefix, "%s"%(micFileName))
 
-#
         ctfModelFileName = join(ctfRoot, replaceBasenameExt(micFileName, CTFENDING))
 
         ctf = CTF()
@@ -264,7 +263,6 @@ def emxCTFToXmipp(emxData,
             oldAmplitudeContrast           = amplitudeContrast
             
         # Create the .ctfparam, replacing the micrograph name
-        
         #write only if ctf information is available
         if (ctf.acceleratingVoltage is not None and
             ctf.cs is not None and
@@ -286,7 +284,7 @@ def emxCTFToXmipp(emxData,
     #mdMic.write('Micrographs@' + outputFileName)
     return voltage, cs, samplingRate
 
-def emxCoordsToXmipp(emxData, filesRoot):
+def emxCoordsToXmipp(emxData, filesRoot, mdFn=None):
     """ This function will iterate for each particle and 
     create several .pos metadata (one per micrograph) where 
     the coordinates will written.
@@ -298,7 +296,6 @@ def emxCoordsToXmipp(emxData, filesRoot):
 
         if micFileName is None:
             raise Exception("emxCoordsToXmipp: Xmipp doesn't support Micrograph without filename")
-        
         mdDict[micFileName] = MetaData()
         
     #loop through particles and save coordinates in the right place
@@ -311,12 +308,17 @@ def emxCoordsToXmipp(emxData, filesRoot):
         md.setValue(MDL_YCOOR, int(part.get('centerCoord__Y')), objId)        
     
     #save metadtas with coordinates
+    createFn = False
+    if mdFn is None:
+        createFn=True
     for mic in emxData.iterClasses(MICROGRAPH):
         micFileName = mic.get(FILENAME)
         md = mdDict[micFileName]
-        mdFn = join(filesRoot, replaceBasenameExt(micFileName, POSENDING))
+        if createFn:
+            mdFn = join(filesRoot, replaceBasenameExt(micFileName, POSENDING))
+        #else reading single file in which I give the filename
         md.write('particles@' + mdFn)
-        
+
     #save boxsize
     part = emxData.iterClasses(PARTICLE)[0]
     if part.has('boxSize__X'):
@@ -327,7 +329,11 @@ def emxCoordsToXmipp(emxData, filesRoot):
         md.write('properties@' + join(filesRoot, 'config.xmd'))
 
     
-def emxParticlesToXmipp(emxData, outputFileName=PARTFILE, filesPrefix=None, ctfRoot=''):
+def emxParticlesToXmipp(emxData, 
+                        outputFileName=PARTFILE, 
+                        filesPrefix=None, 
+                        ctfRoot='',
+                        _2D=False):
     """ This function will iterate over the EMX particles and create
     the equivalent Xmipp 'images.xmd' with the list of particles.
     If CTF information is found, for each particle will contains information about the CTF
@@ -339,7 +345,14 @@ def emxParticlesToXmipp(emxData, outputFileName=PARTFILE, filesPrefix=None, ctfR
         ctfRoot = dirname(outputFileName)
     
     samplingRate = 0.
+    voltage      = 0.
+    cs           = 0.
+    amplitudeContrast = 0.
     
+    oldSamplingRate = -1.
+    oldVoltage      = -1.
+    oldCs           = -1.
+    oldAmplitudeContrast = -1.0
     for particle in emxData.iterClasses(PARTICLE):
         pIndex = particle.get(INDEX)
         pFileName = particle.get(FILENAME)
@@ -366,15 +379,78 @@ def emxParticlesToXmipp(emxData, outputFileName=PARTFILE, filesPrefix=None, ctfR
             if filesPrefix is not None:
                 micFileName = join(filesPrefix, micFileName)
             md.setValue(MDL_MICROGRAPH, micFileName, objId)
+        ####
+            ctf = CTF()
+            for var in CTF.ctfVarLabels.keys():
+                setattr(ctf, var, mic.get(var))
 
+            # Now do some adjusments to vars        
+            if ctf.defocusU is not None:
+                ctf.defocusU *= 10.
+            
+            if ctf.defocusV is None:
+                ctf.defocusV = ctf.defocusU
+                ctf.defocusUAngle = 0.
+            else:
+                ctf.defocusV *= 10.
 
+#            if ctf.pixelSpacing__Y is not None:
+#                if ctf.pixelSpacing__X != ctf.pixelSpacing__Y:
+#                    raise Exception ('pixelSpacingX != pixelSpacingY. Xmipp does not support it')
+                
+            if ctf.pixelSpacing__X is not None:
+                samplingRate    = ctf.pixelSpacing__X
+                if (oldSamplingRate > -1):
+                    if oldSamplingRate != samplingRate:
+                        raise Exception ('Xmipp emx import cannot import emx files with different samplingRate') 
+                oldSamplingRate = samplingRate
+
+            if ctf.acceleratingVoltage is not None:
+                voltage         = ctf.acceleratingVoltage
+                if (oldVoltage > -1):
+                    if oldVoltage != voltage:
+                        raise Exception ('Xmipp emx import cannot import emx files with different voltage') 
+                oldVoltage      = voltage
+
+            if ctf.cs is not None:
+                cs              = ctf.cs
+                if (oldCs > -1):
+                    if oldCs != cs:
+                        raise Exception ('Xmipp emx import cannot import emx files with different cs') 
+                oldCs           = cs
+                
+            if ctf.amplitudeContrast is not None:
+                amplitudeContrast              = ctf.amplitudeContrast
+                if (oldAmplitudeContrast > -1):
+                    if oldAmplitudeContrast != amplitudeContrast:
+                        raise Exception ('Xmipp emx import cannot import emx files with different amplitudeContrast') 
+                oldAmplitudeContrast           = amplitudeContrast
+
+            # Create the .ctfparam, replacing the micrograph name
+            #write only if ctf information is available
+            if ctf.defocusU is not None:                
+                for var, label in CTF.ctfVarLabels.iteritems():
+                    v = getattr(ctf, var)
+                    if v is not None:
+                        md.setValue(label, float(v), objId)
+
+                md.setValue(MDL_CTF_K, 1.0, objId)
 
         if particle.has('centerCoord__X'):
             md.setValue(MDL_XCOOR, int(particle.get('centerCoord__X')), objId)
             md.setValue(MDL_YCOOR, int(particle.get('centerCoord__Y')), objId)
 
-        if particle.has('centerCoord__X'):
-            emxTransformToXmipp(md, objId, particle)
+        if particle.has('transformationMatrix__t11'):
+            emxTransformToXmipp(md, objId, particle,_2D)
+
+        if particle.has('defocusU'):
+            md.setValue(MDL_CTF_DEFOCUSU, particle.get('defocusU')*10., objId)
+            if particle.has('defocusV'):
+                md.setValue(MDL_CTF_DEFOCUSV, particle.get('defocusV')*10., objId)
+            else:
+                md.setValue(MDL_CTF_DEFOCUSV, particle.get('defocusU')*10., objId)
+            if particle.has('defocusUAngle'):
+                md.setValue(MDL_CTF_DEFOCUS_ANGLE, particle.get('defocusUAngle'), objId)
         
     # Sort metadata by particle name
     md.sort(MDL_IMAGE)
@@ -382,23 +458,35 @@ def emxParticlesToXmipp(emxData, outputFileName=PARTFILE, filesPrefix=None, ctfR
     md.write('Particles@' + outputFileName)   
     
     
-def emxTransformToXmipp(md, objId, particle):
+def emxTransformToXmipp(md, objId, particle, _2D):
     """ Transform the particle transformation matrix
     in the euler angles and shift as expected by Xmipp.
     """
     #eulerangle2matrix
     _array = eye(3)# unitary matrix
 
-    for i, j, label in iterTransformationMatrix():
-        if particle.has(label):
-            _array[i][j] = particle.get(label)
-            
+    if _2D:
+        for i, j, label in iterTransformationMatrix():
+            if particle.has(label):
+                _array[j][i] = particle.get(label)
+    else:
+        for i, j, label in iterTransformationMatrix():
+            if particle.has(label):
+                _array[i][j] = particle.get(label)
+
     rot, tilt, psi = Euler_matrix2angles(_array)
     
     _X = particle.get('transformationMatrix__t14', 0.)
     _Y = particle.get('transformationMatrix__t24', 0.)
     _Z = particle.get('transformationMatrix__t34', 0.)
-
+    if _2D:
+        _shift = array ([_X,_Y,_Z])
+        _X = -_shift[0]
+        _Y = -_shift[1]
+        _Z = -_shift[2]
+        #_array = linalg.inv(_array)
+        #_shift = _array.dot(_shift)
+        
     md.setValue(MDL_ANGLE_ROT , rot , objId)
     md.setValue(MDL_ANGLE_TILT, tilt, objId)
     md.setValue(MDL_ANGLE_PSI , psi , objId)
@@ -425,6 +513,9 @@ def xmippCtfToEmx(md, objId, micrograph):
     and set the attributes in micrograph.
     """
     ctfModel = md.getValue(MDL_CTF_MODEL, objId)
+    xmippCtfModelToEmx(ctfModel, micrograph)
+    
+def xmippCtfModelToEmx(ctfModel, micrograph):
     mdCTF = RowMetaData(ctfModel)
     ctf = CTF()
     # Set the variables in the dict
@@ -439,7 +530,7 @@ def xmippCtfToEmx(md, objId, micrograph):
     
     while ctf.defocusUAngle > 180.:
         ctf.defocusUAngle -= 180.; 
-    #this maust be ordered
+    #this must be ordered
     for var in CTF.ctfVarLabels.keys():
         micrograph.set(var, getattr(ctf, var))           
 
@@ -452,10 +543,11 @@ def _writeEmxData(emxData, filename):
 def xmippMicrographsToEmx(micMd, emxData, emxDir):
     """ Export micrographs from xmipp metadata to EMX.
     """
-    acquisionInfo = findAcquisitionInfo(self.SelFileNameInitial)
-
+    #acquisionInfo = findAcquisitionInfo(self.SelFileNameInitial)
+    print "wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww"
     from protlib_particles import readPosCoordinates
     md = MetaData(micMd)
+    acquisionInfo = findAcquisitionInfo(md.getValue(MDL_MICROGRAPH, md.firstObject()))
     micFn = 'mic%06d.mrc'
     index = 0
     pIndex = 0
@@ -485,14 +577,12 @@ def xmippMicrographsToEmx(micMd, emxData, emxDir):
         posFile = join(filesRoot, 'extra', replaceBasenameExt(fnIn, POSENDING))
         
         if exists(posFile):
-            mdPos = readPosCoordinates(posFile)
-            print "mdPos.size: ", mdPos.size()
-            
+            mdPos = readPosCoordinates(posFile)            
             for pId in mdPos:
                 pIndex += 1
                 # We are using here a dummy filename, since not make sense
                 # for particles with just coordinates
-                particle = EmxParticle(str(pIndex), pIndex)
+                particle = EmxParticle("", pIndex)
                 particle.set('centerCoord__X', mdPos.getValue(MDL_XCOOR, pId))
                 particle.set('centerCoord__Y', mdPos.getValue(MDL_YCOOR, pId))
                 particle.setMicrograph(micrograph)
@@ -610,10 +700,7 @@ def iterTransformationMatrix():
         for j in r:
             label = "transformationMatrix__t%d%d" % (i+1, j+1)
             yield (i, j, label)
-    
-    
-    
-    
+
 ################ Old Roberto convertion functions ############
 
 
@@ -721,7 +808,7 @@ def alignXmippToEmx(emxData,xmdFileName):
 
         emxData.addObject(p1)
         
-def alignEMXToXmipp(emxData,mode,xmdFileName):
+def alignEMXToXmipp(emxData,mode,xmdFileName,align=False):
     """import align related information
     DEPRECATED: Should be used the more general emxParticlesToXmipp
     """
@@ -770,6 +857,9 @@ def alignEMXToXmipp(emxData,mode,xmdFileName):
         t = particle.get('transformationMatrix__t33')
         _array[2][2]   = t if t is not None else 1.
 
+        if align:
+            _array = linalg.inv(_array)
+            
         rot,tilt,psi = Euler_matrix2angles(_array)
         
         t = particle.get('transformationMatrix__t14')

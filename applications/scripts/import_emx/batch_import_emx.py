@@ -41,6 +41,7 @@ class ScriptImportEMX(XmippScript):
         self.addParamsLine(' [--mode <mode=mic>]          : information to extract')
         self.addParamsLine("         where <mode>")
         self.addParamsLine("             alignment           : export particle shift and rotations")
+        self.addParamsLine("             reconst             : export projection shift and rotations")
         self.addParamsLine("             coordinates         : import particle coordinates (so far only works for a single micrograph)")
         self.addParamsLine("             mic                 : import list of micrographs")
         self.addParamsLine("     alias -m;")
@@ -53,7 +54,8 @@ class ScriptImportEMX(XmippScript):
         self.addParamsLine(' [--schema <schema=default>]     : validate again this schema ');
         self.addParamsLine("     alias -s;")
         self.addExampleLine(' default= http://sourceforge.net/p/emexchange/code/ci/master/tree/trunk/resourcesEmx/schemas/emx.xsd?format=raw>');
-        self.addParamsLine(' [--oroot <outputdir=".">]     : where to generate output files ');
+        self.addParamsLine(' [--oroot <outputdir=".">]       : where to generate output files ');
+        self.addParamsLine(' [-o <outputFileName>]           : expert parameter for web page, ignore it ');
         self.addExampleLine("Import information from EMX file to Xmipp", False);
         self.addExampleLine("xmipp_import_emx -i particlePicking.emx -m micCTF ");
       
@@ -70,8 +72,12 @@ class ScriptImportEMX(XmippScript):
         doNotValidate= self.checkParam('-n')
         onlyValidate = self.checkParam('-y')
         schema       = self.getParam('-s')
-        oroot = self.getParam('--oroot')
-        print "oroot: ", oroot
+        oroot        = self.getParam('--oroot')
+        if self.checkParam('-o'):
+            fnOut    = self.getParam('-o')
+        else:
+            fnOut    = None
+
         #validate emx file
         if not doNotValidate:
             try:
@@ -99,10 +105,13 @@ class ScriptImportEMX(XmippScript):
             if mode == 'mic':
                 emxMicsToXmipp(emxData)
             elif mode == 'coordinates':
-                emxCoordsToXmipp(emxData, '.')
+                emxCoordsToXmipp(emxData, oroot, fnOut)
             elif mode == 'alignment':
                 xmdFileName = emxFileName.replace(".emx",".xmd")
-                alignEMXToXmipp(emxData,PARTICLE,xmdFileName)
+                alignEMXToXmipp(emxData,PARTICLE,xmdFileName,True)
+            elif mode == 'reconst':
+                xmdFileName = emxFileName.replace(".emx",".xmd")
+                alignEMXToXmipp(emxData,PARTICLE,xmdFileName,False)
         except Exception, e:
                     print >> sys.stderr, "XMIPP_ERROR -1:", str(e)
                     exit(-1)

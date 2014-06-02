@@ -5,18 +5,16 @@
  */
 package xmipp.viewer.scipion;
 
-import javax.swing.SwingUtilities;
 import xmipp.jni.Filename;
 import xmipp.jni.ImageGeneric;
 import xmipp.jni.MetaData;
 import xmipp.utils.DEBUG;
-import xmipp.utils.Param;
+import xmipp.utils.Params;
+import xmipp.utils.StopWatch;
 import xmipp.utils.XmippDialog;
 import xmipp.viewer.Viewer;
 import xmipp.viewer.windows.GalleryJFrame;
-import static xmipp.viewer.windows.ImagesWindowFactory.openFileAsDefault;
 import static xmipp.viewer.windows.ImagesWindowFactory.openFileAsImage;
-import static xmipp.viewer.windows.ImagesWindowFactory.openMetadata;
 
 /**
  *
@@ -25,6 +23,8 @@ import static xmipp.viewer.windows.ImagesWindowFactory.openMetadata;
 public class ScipionViewer extends Viewer {
 
     public static void main(String args[]) {
+        StopWatch stopWatch = StopWatch.getInstance();
+        stopWatch.printElapsedTime("starting app");
         // Schedule a job for the event dispatch thread:
         // creating and showing this application's GUI.
         final String[] myargs = args;
@@ -51,13 +51,23 @@ public class ScipionViewer extends Viewer {
     }
 
     public static void openFile(String filename, ScipionParams parameters) {
+        
         try {
-            if (Filename.isMetadata(filename)) {
-                if (parameters.mode.equalsIgnoreCase(Param.OPENING_MODE_IMAGE)) {
+            
+            MetaData md;
+            if(filename.endsWith(".sqlite"))
+            {
+                ScipionGalleryData data = new ScipionGalleryData(null, filename, parameters, new ScipionMetaData(filename));
+                ScipionGalleryJFrame frame = new ScipionGalleryJFrame(data);
+                data.setWindow(frame);
+            }
+            else if (Filename.isMetadata(filename)) {
+                if (parameters.mode.equalsIgnoreCase(Params.OPENING_MODE_IMAGE)) {
                     openFileAsImage(null, filename, parameters);
                 } else {
-                    parameters.mode = Param.OPENING_MODE_GALLERY;
-                    openScipionGalleryJFrame(filename, parameters);
+                    parameters.mode = Params.OPENING_MODE_GALLERY;
+                    md = new MetaData(filename);
+                    new ScipionGalleryJFrame(filename, md, parameters);
                 }
             } else {
                 ImageGeneric img = new ImageGeneric(filename);
@@ -66,14 +76,15 @@ public class ScipionViewer extends Viewer {
                     openFileAsImage(null, filename, parameters);
                 } else if (img.isStackOrVolume()) {
                     if (parameters.mode
-                            .equalsIgnoreCase(Param.OPENING_MODE_IMAGE)) {
+                            .equalsIgnoreCase(Params.OPENING_MODE_IMAGE)) {
                         openFileAsImage(null, filename, parameters);
                     } else {
-                        parameters.mode = Param.OPENING_MODE_GALLERY;
-                        openScipionGalleryJFrame(filename, parameters);
+                        parameters.mode = Params.OPENING_MODE_GALLERY;
+                        new GalleryJFrame(filename, parameters);
                     }
                 }
             }
+            
         } catch (Exception e) {
             XmippDialog.showError(null, String.format(
                     "Couldn't open file: '%s'\nError: %s", filename,
@@ -82,14 +93,6 @@ public class ScipionViewer extends Viewer {
         }
     }
 
-    public static void openScipionGalleryJFrame(final String filename, final ScipionParams parameters) throws Exception {
-        SwingUtilities.invokeLater(new Runnable() {
-            public void run() {
-
-                new ScipionGalleryJFrame(filename, new MetaData(filename), parameters);
-            }
-        });
-
-    }
+   
 
 }

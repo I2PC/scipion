@@ -16,9 +16,9 @@
 #{eval} expandCommentRun()
 
 #-----------------------------------------------------------------------------
-# {section} CTF Estimation
+# {section} Input Data
 #-----------------------------------------------------------------------------
-# {run}(import_movies, screen_micrograph) Import Movie Run
+# {run}(import_movies) Import Movie Run
 ImportRun = ''
 # {expert} Window size
 """ 
@@ -26,8 +26,18 @@ Window size (shifts are assumed to be constant within this window).
 """
 WinSize = 150
 
-# {eval} expandParallel(threads=0,hours=12)
+# Use GPU version
+""" Set to true if you want the GPU implementation
+"""
+DoGPU=True
 
+#  {condition}(DoGPU) Choose GPU core
+"""GPU may have several cores. Set it to zero if you do not know 
+what we are talking about. 
+"""
+GPUCore = 0
+
+# {condition}(DoGPU){eval} expandParallel(mpi=1,threads=0,hours=12)
 # {eval} expandExpert()
 
 #------------------------------------------------------------------------------------------------

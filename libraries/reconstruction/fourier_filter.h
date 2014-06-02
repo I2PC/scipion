@@ -102,6 +102,9 @@ public:
     /** Second frequency for bandpass and stopband. Normalized to 1/2 */
     double w2;
 
+    /** Input Image sampling rate */
+    double sampling_rate;
+
     /** Wedge and cone filter parameters */
     double t1, t2,rot,tilt,psi;
 

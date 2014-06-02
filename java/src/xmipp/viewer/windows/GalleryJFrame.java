@@ -100,7 +100,7 @@ import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
 import xmipp.jni.MDRow;
 import xmipp.utils.DEBUG;
-import xmipp.utils.Param;
+import xmipp.utils.Params;
 import xmipp.utils.QuickHelpJDialog;
 import xmipp.utils.StopWatch;
 import xmipp.utils.XmippDialog;
@@ -115,15 +115,14 @@ import xmipp.utils.XmippWindowUtil;
 import xmipp.viewer.RowHeaderRenderer;
 import xmipp.viewer.ctf.TasksEngine;
 import xmipp.viewer.ctf.iCTFGUI;
-import xmipp.viewer.models.ClassInfo;
 import xmipp.viewer.models.ColumnInfo;
 import xmipp.viewer.models.GalleryData;
 import xmipp.viewer.models.GalleryRowHeaderModel;
 import xmipp.viewer.models.ImageGalleryTableModel;
 import xmipp.viewer.models.MetadataGalleryTableModel;
-import xmipp.viewer.models.MicrographsTableModel;
 import xmipp.viewer.particlepicker.extract.ExtractParticlePicker;
 import xmipp.viewer.particlepicker.extract.ExtractPickerJFrame;
+import xmipp.viewer.scipion.ScipionGalleryJFrame;
 
 
 /**
@@ -225,6 +224,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 	{
 		try
 		{
+                    
 			this.data = data;
                         StopWatch stopWatch = StopWatch.getInstance();
 			createModel();
@@ -240,16 +240,22 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 	}
 
 	/** Constructors */
-	public GalleryJFrame(String filename, Param parameters)
+	public GalleryJFrame(String filename, Params parameters)
 	{
 		super();
 		init(new GalleryData(this, filename, parameters, null));
 	}
 
-	public GalleryJFrame(String filename, MetaData md, Param parameters)
+	public GalleryJFrame(String filename, MetaData md, Params parameters)
 	{
 		super();
 		init(new GalleryData(this, filename, parameters, md));
+	}
+        
+        public GalleryJFrame(GalleryData data)
+	{
+		super();
+		init(data);
 	}
 
 	/**
@@ -257,7 +263,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 	 */
 	public void openMetadata(MetaData md)
 	{
-		new GalleryJFrame(null, md, new Param());
+		new GalleryJFrame(null, md, new Params());
 	}
 
 	/**
@@ -374,6 +380,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		buttonspn = new JPanel(new FlowLayout(FlowLayout.TRAILING));
 		
 		container.add(buttonspn, XmippWindowUtil.getConstraints(c, 0, 3, 1, 1, GridBagConstraints.HORIZONTAL));
+                
 						
 		// Create the menu for table
 		menu = new GalleryMenu();
@@ -1566,13 +1573,13 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			setItemSelected(DISPLAY_WRAP, data.wrap);
 			setItemSelected(DISPLAY_APPLYGEO, data.useGeo);
 			setItemEnabled(DISPLAY_RENDERIMAGES, !galMode && data.hasRenderLabel());
-			setItemSelected(DISPLAY_RENDERIMAGES, data.globalRender);
+			setItemSelected(DISPLAY_RENDERIMAGES, data.renderImages);
 			setItemEnabled(DISPLAY_RENDERIMAGECOLUMN, galMode);
 			for (int i = 0; i < ImageGeneric.VIEWS.length; ++i)
 				setItemSelected(DISPLAY_RESLICE_VIEWS[i], (data.resliceView == ImageGeneric.VIEWS[i]));
 			setItemEnabled(DISPLAY_COLUMNS, !galMode);
 			setItemEnabled(DISPLAY_RESLICE, volMode);
-			setItemEnabled(MD_CLASSES, data.is2DClassificationMd());
+			setItemEnabled(MD_CLASSES, data.isClassificationMd());
 			setItemEnabled(MD_PLOT, data.isTableMode());
 			boolean isCol = data.isColumnFormat();
 			setItemEnabled(STATS, isCol && !volMode);
@@ -1582,6 +1589,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			setItemEnabled(MD_SAVE_SELECTION, isCol);
 			setItemEnabled(MD_FIND_REPLACE, isCol && !galMode);
 			reslicebt.setEnabled(volMode);
+                        setItemEnabled(METADATA, !(GalleryJFrame.this instanceof ScipionGalleryJFrame));
 		}// function update
 
 		@Override
@@ -1623,7 +1631,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 						isUpdating = true;
 						((MetadataGalleryTableModel) gallery).updateColumnInfo(columns);
 						gallery.fireTableDataChanged();
-						setItemEnabled(DISPLAY_RENDERIMAGES, data.globalRender);
+						setItemEnabled(DISPLAY_RENDERIMAGES, data.renderImages);
 						// menu.enableRenderImages(data.globalRender);
 						isUpdating = false;
 					}
@@ -1863,10 +1871,10 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 
 		public void show(Component cmpnt, Point location)
 		{
-			setItemVisible(SET_CLASS, data.is2DClassificationMd());
+			setItemVisible(SET_CLASS, data.isClassificationMd());
 			// This item visibility depends on current selection
-			setItemVisible(SAVE_IMAGES, data.is2DClassificationMd() && gallery.getSelectionCount() > 0);
-			setItemVisible(OPEN_IMAGES, data.is2DClassificationMd() && gallery.getSelectionCount() == 1);
+			setItemVisible(SAVE_IMAGES, data.isClassificationMd() && gallery.getSelectionCount() > 0);
+			setItemVisible(OPEN_IMAGES, data.isClassificationMd() && gallery.getSelectionCount() == 1);
 					
 			// Update menu items status depending on item.
 			row = table.rowAtPoint(location);
@@ -1918,8 +1926,8 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		{
 			setItemVisible(OPEN, false);
 			setItemVisible(OPEN_ASTEXT, false);
-			setItemVisible(CTF_PROFILE, false);
-			setItemVisible(CTF_RECALCULATE, false);
+			setItemVisible(CTF_PROFILE, data.isCTFMd());
+			setItemVisible(CTF_RECALCULATE, data.isCTFMd());
 		}
 
 		@Override
@@ -2034,13 +2042,13 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 	public void setRowBusy(int row)
 	{
 
-		((MicrographsTableModel) gallery).setRowBusy(row);
+		gallery.setRowBusy(row);
 	}
 
 	@Override
 	public void setRowIdle(int row)
 	{
-		((MicrographsTableModel) gallery).setRowIdle(row);
+		gallery.setRowIdle(row);
 
 	}
 
@@ -2055,7 +2063,6 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 	protected void saveMd() throws Exception
 	{
 		saveMd(dlgSave.getMdFilename(), false, dlgSave.isOverwrite(), true );
-                
 	}
         
       
@@ -2346,18 +2353,19 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
        {
            if(!data.allowGallery())
                return false;
+           
            //what if there are no images on metadata??
            return gallery.getSelectionCount() > 0;
        }
        
-       public boolean is2DClassSelection()
+       public boolean isClassSelection()
         {
-            return data.is2DClassificationMd() && gallery.getSelectionCount() > 0;
+            return data.isClassificationMd() && gallery.getSelectionCount() > 0;
         }
        
-       public boolean is2DClassificationMd()
+       public boolean isClassificationMd()
        {
-           return data.is2DClassificationMd();
+           return data.isClassificationMd();
        }
        
        public void saveImagesFromClassSelection(String path)
@@ -2385,4 +2393,5 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
            return XmippStringUtils.getFileExtension(data.getFileName());
        }
 
+       
 }// class JFrameGallery

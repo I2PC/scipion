@@ -8,13 +8,16 @@ import javax.swing.UIManager;
 import ij.IJ;
 import xmipp.jni.Filename;
 import xmipp.utils.DEBUG;
-import xmipp.utils.Param;
+import xmipp.utils.Params;
+import xmipp.utils.StopWatch;
 import xmipp.viewer.windows.ImagesWindowFactory;
 
 public class Viewer
 {
 	public static void main(String args[])
 	{
+                StopWatch stopWatch = StopWatch.getInstance();
+                stopWatch.printElapsedTime("starting app");
 		// Schedule a job for the event dispatch thread:
 		// creating and showing this application's GUI.
 		final String[] myargs = args;
@@ -23,7 +26,7 @@ public class Viewer
 			public void run()
 			{
 				
-				Param parameters = new Param(myargs);
+				Params parameters = new Params(myargs);
 				try
 				{
 					if (parameters.debug)
@@ -44,7 +47,7 @@ public class Viewer
 		});
 	}
 
-	static void openFiles(Param parameters) throws Exception
+	static void openFiles(Params parameters) throws Exception
 	{
 		ImagesWindowFactory.openFilesAsDefault(parameters.files, parameters);
 	}

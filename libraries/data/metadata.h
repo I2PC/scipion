@@ -221,7 +221,7 @@ protected:
     std::vector<MDLabel> activeLabels;
 
     /** When reading a column formated file, if a label is found that
-     * does not exists as a MDLabel, it is ignored. For further
+     * does not exist as a MDLabel, it is ignored. For further
      * file processing, such columns must be ignored and this structure
      * allows to do that
      **/

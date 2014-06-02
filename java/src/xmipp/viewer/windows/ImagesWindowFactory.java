@@ -32,7 +32,8 @@ import xmipp.jni.ImageGeneric;
 import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
 import xmipp.utils.DEBUG;
-import xmipp.utils.Param;
+import xmipp.utils.Params;
+//import xmipp.utils.Param;
 import xmipp.utils.StopWatch;
 import xmipp.utils.XmippDialog;
 import xmipp.viewer.ctf.CTFAnalyzerJFrame;
@@ -47,24 +48,24 @@ public class ImagesWindowFactory {
 
 	private final static int UNIVERSE_W = 400, UNIVERSE_H = 400;
 
-	public static void openFilesAsDefault(String filenames[], Param parameters) {
+	public static void openFilesAsDefault(String filenames[], Params parameters) {
 		for (int i = 0; i < filenames.length; i++) {
 			openFileAsDefault(filenames[i], parameters);
 		}
 	}
 
 	public static void openFileAsDefault(String filename) {
-		openFileAsDefault(filename, new Param());
+		openFileAsDefault(filename, new Params());
 	}
 
-	public static void openFileAsDefault(String filename, Param parameters) {
+	public static void openFileAsDefault(String filename, Params parameters) {
 		try {
 			if (Filename.isMetadata(filename)) {
-				if (parameters.mode.equalsIgnoreCase(Param.OPENING_MODE_IMAGE))
+				if (parameters.mode.equalsIgnoreCase(Params.OPENING_MODE_IMAGE))
 					openFileAsImage(null, filename, parameters);
 				else
 					openMetadata(filename, parameters,
-							Param.OPENING_MODE_GALLERY);
+							Params.OPENING_MODE_GALLERY);
 			} else {
 				ImageGeneric img = new ImageGeneric(filename);
 
@@ -72,11 +73,11 @@ public class ImagesWindowFactory {
 					openFileAsImage(null, filename, parameters);
 				} else if (img.isStackOrVolume()) {
 					if (parameters.mode
-							.equalsIgnoreCase(Param.OPENING_MODE_IMAGE))
+							.equalsIgnoreCase(Params.OPENING_MODE_IMAGE))
 						openFileAsImage(null, filename, parameters);
 					else
 						openMetadata(filename, parameters,
-								Param.OPENING_MODE_GALLERY);
+								Params.OPENING_MODE_GALLERY);
 				}
 			}
 		} catch (Exception e) {
@@ -87,18 +88,18 @@ public class ImagesWindowFactory {
 		}
 	}
 
-	public static void openFilesAsImages(String filenames[], Param parameters) {
+	public static void openFilesAsImages(String filenames[], Params parameters) {
 		for (int i = 0; i < filenames.length; i++) {
 			openFileAsImage(null, filenames[i], parameters);
 		}
 	}
 
 	public static void openFileAsImage(String path) {
-		openFileAsImage(null, path, new Param());
+		openFileAsImage(null, path, new Params());
 	}
 
 	public static void openFileAsImage(Frame pframe, String filename,
-			Param parameters) {
+			Params parameters) {
 		try {
 			ImagePlusLoader ipl = new ImagePlusLoader(filename);
 			XmippIJWindow xiw = openXmippImageWindow(pframe, ipl,
@@ -113,7 +114,7 @@ public class ImagesWindowFactory {
 		}
 	}
 
-	public static ImagePlus openFileAsImagePlus(String path, Param parameters)
+	public static ImagePlus openFileAsImagePlus(String path, Params parameters)
 			throws Exception {
 		ImagePlus imp;
 		if (Filename.isMetadata(path)) {
@@ -176,29 +177,27 @@ public class ImagesWindowFactory {
 	 * parameters
 	 */
 	public static GalleryJFrame openMetadata(String filename, MetaData md,
-			Param parameters, String mode) {
+			Params parameters, String mode) {
 
-		if (parameters.mode.equalsIgnoreCase(Param.OPENING_MODE_DEFAULT))
+		if (parameters.mode.equalsIgnoreCase(Params.OPENING_MODE_DEFAULT))
 			parameters.mode = mode;
 		return new GalleryJFrame(filename, md, parameters);
 	}
 
-	public static GalleryJFrame openMetadata(String filename, Param parameters,
+	public static GalleryJFrame openMetadata(String filename, Params parameters,
 			String mode) throws Exception {
-                StopWatch stopWatch = StopWatch.getInstance();
-                stopWatch.printElapsedTime("creating md");
+                
                 MetaData md = new MetaData(filename);
-                stopWatch.printElapsedTime("opening md");
 		return openMetadata(filename, md, parameters, mode);
 	}
 
 	public static GalleryJFrame openFilesAsGallery(String filenames[],
 			boolean useSameTable) throws Exception {
-		return openFilesAsGallery(filenames, useSameTable, new Param());
+		return openFilesAsGallery(filenames, useSameTable, new Params());
 	}
 
 	public static GalleryJFrame openFilesAsGallery(String filenames[],
-			boolean useSameTable, Param parameters) throws Exception {
+			boolean useSameTable, Params parameters) throws Exception {
 		GalleryJFrame gallery = null;
 
 		if (useSameTable) {
@@ -210,7 +209,7 @@ public class ImagesWindowFactory {
 		} else {
 			for (int i = 0; i < filenames.length; i++) {
 				gallery = openMetadata(filenames[i], parameters,
-						Param.OPENING_MODE_GALLERY);
+						Params.OPENING_MODE_GALLERY);
 			}
 		}
 

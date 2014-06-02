@@ -13,7 +13,8 @@
 # {section} Subset parameters
 #-----------------------------------------------------------------------------
 #{hidden} Usage of the program
-Usage = """Generate a metadata that is a subset of the full image set using the itemIds of the subset
+Usage = """Generate a metadata that is a subset of the full image set
+           The output metadata contains all the columns in both input metadatas
 """
 
 # {file}(images*.xmd){validate}(PathExists) Full image set
@@ -21,10 +22,24 @@ Usage = """Generate a metadata that is a subset of the full image set using the 
 subset metadata will be selected."""
 InputFile=''
 
+#{expert} Column name
+"""Column label in first metadata. It will make equal to second metadata
+""" 
+InputFileLabel='itemId'
+
 # {file}(images*.xmd){validate}(PathExists) Subset
 """This metadata defines which items will be selected from the full image set. Those items in the full set whose items
 are in the list of itemsId given by this file will be selected"""
 SubsetFile=''
+
+#{expert} Column name
+"""Column label in second metadata. It will make equal to first metadata
+""" 
+SubsetFileLabel='itemId'
+
+#{expert} OutPut File Name
+"""Name of the outPut file"""
+OutputFile='images.xmd'
 
 #
 #------------------------------------------------------------------------------------------------

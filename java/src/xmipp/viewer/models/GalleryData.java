@@ -38,7 +38,7 @@ import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
 import xmipp.jni.MDRow;
 import xmipp.utils.DEBUG;
-import xmipp.utils.Param;
+import xmipp.utils.Params;
 import xmipp.utils.XmippStringUtils;
 import xmipp.viewer.windows.GalleryJFrame;
 
@@ -55,11 +55,40 @@ public class GalleryData {
 
 	public ArrayList<ColumnInfo> labels = null;
 	// First label that can be rendered
-	ColumnInfo ciFirstRender = null;
+	public ColumnInfo ciFirstRender = null;
 	public int zoom;
-	private String filename;
+	protected String filename;
 	public int resliceView;
+        protected Mode mode;
+	public boolean showLabel = false;
+	public boolean renderImages;
+	public Params parameters;
+	private int numberOfVols = 0;
 
+	// flag to perform global normalization
+	public boolean normalize = false;
+	// flag to use geometry info
+	public boolean useGeo;
+	// flag to wrapping
+	public boolean wrap;
+	// flag to check if is 2d classification
+	public boolean isClassification = false;
+	public int refLabel;
+	// Store the selection state for each item
+	public boolean[] selection;
+	// Array with all ClassInfo
+	public ArrayList<ClassInfo> classesArray;
+	// ClassInfo reference for each element
+	public ClassInfo[] classes;
+	// Flags to check if md or classes has changed
+	private boolean hasMdChanges, hasClassesChanges;
+	public Window window;
+        protected String[] renderLabels;
+        protected String renderLabel;
+        protected String[] visibleLabels;
+        protected String[] orderLabels;
+
+    
 
 
 	public enum Mode {
@@ -72,54 +101,37 @@ public class GalleryData {
 
 	// max dimension allowed to render images
 
-	private Mode mode;
-	public boolean showLabel = false;
-	public boolean globalRender;
-	public Param parameters;
-	private int numberOfVols = 0;
 
-	// flag to perform global normalization
-	public boolean normalize = false;
-	// flag to use geometry info
-	public boolean useGeo;
-	// flag to wrapping
-	public boolean wrap;
-	// flag to check if is 2d classification
-	public boolean is2dClassification = false;
-	public int refLabel;
-	// Store the selection state for each item
-	public boolean[] selection;
-	// Array with all ClassInfo
-	public ArrayList<ClassInfo> classesArray;
-	// ClassInfo reference for each element
-	public ClassInfo[] classes;
-	// Flags to check if md or classes has changed
-	private boolean hasMdChanges, hasClassesChanges;
-	public Window window;
-
+        
+        
 	/**
 	 * The constructor receive the filename of a metadata The metadata can also
 	 * be passed, if null, it will be readed from filename
 	 * 
 	 * @param jFrameGallery
 	 */
-	public GalleryData(Window window, String fn, Param param, MetaData md) {
+	public GalleryData(Window window, String fn, Params parameters, MetaData md) {
 		this.window = window;
 		try {
+                        
 			selectedBlock = "";
-			parameters = param;
-			zoom = param.zoom;
-			globalRender = param.renderImages;
+			this.parameters = parameters;
+			zoom = parameters.zoom;
+			this.renderImages = parameters.renderImages;//always true, customized by models or renderLabels
+                        this.renderLabels = parameters.renderLabels;
+                        this.renderLabel = parameters.renderLabel;
+                        this.visibleLabels = parameters.visibleLabels;
+                        this.orderLabels = parameters.orderLabels;
 			mode = Mode.GALLERY_MD;
-			resliceView = param.resliceView;
-			useGeo = param.useGeo;
-			wrap = param.wrap;
-
-			if (param.mode.equalsIgnoreCase(Param.OPENING_MODE_METADATA))
+			resliceView = parameters.resliceView;
+			useGeo = parameters.useGeo;
+			wrap = parameters.wrap;
+                        
+			if (parameters.mode.equalsIgnoreCase(Params.OPENING_MODE_METADATA))
 				mode = Mode.TABLE_MD;
-			else if (param.mode.equalsIgnoreCase(Param.OPENING_MODE_ROTSPECTRA))
+			else if (parameters.mode.equalsIgnoreCase(Params.OPENING_MODE_ROTSPECTRA))
 				mode = Mode.GALLERY_ROTSPECTRA;
-
+                        
 			setFileName(fn);
 
 			if (md == null) {
@@ -205,9 +217,9 @@ public class GalleryData {
 		if (!containsGeometryInfo())
 			useGeo = false;
 		selection = new boolean[ids.length];
-		is2dClassification = checkifIs2DClassificationMd();
+		isClassification = checkifIsClassificationMd();
 
-		if (is2dClassification) {
+		if (isClassification) {
 			classes = new ClassInfo[ids.length];
 			classesArray = new ArrayList<ClassInfo>();
 			loadClassesInfo();
@@ -237,6 +249,7 @@ public class GalleryData {
 			for (int i = 0; i < ids.length && image == null; ++i) {
 				imageFn = Filename.findImagePath(
 						md.getValueString(renderLabel, ids[i]), filename, true);
+                                
 				// DEBUG.printFormat("imageFn1: %s", imageFn);
 				// imageFn = Filename.fixPath(md.getValueString(renderLabel,
 				// ids[i]), filename, false);
@@ -287,8 +300,9 @@ public class GalleryData {
 		} else {
 			// force this mode when there aren't render label
 			mode = Mode.TABLE_MD;
+                        zoom = 100;
 		}
-
+                
 	}// function loadMd
 
 	/**
@@ -296,41 +310,46 @@ public class GalleryData {
 	 * visible on same columns
 	 */
 	public void loadLabels() {
+                
 		ColumnInfo ci;
 		try {
-			int[] lab = md.getActiveLabels();
+			int[] labelids = md.getActiveLabels();
 			ArrayList<ColumnInfo> newLabels = new ArrayList<ColumnInfo>(
-					lab.length);
+					labelids.length);
 			ciFirstRender = null;
 			ColumnInfo ciFirstRenderVisible = null;
 			int inputRenderLabel = MDLabel.MDL_UNDEFINED;
 
-			if (!parameters.renderLabel.equalsIgnoreCase("first")) {
+			if (!renderLabel.equalsIgnoreCase("first")) {
 				inputRenderLabel = MetaData.str2Label(parameters.renderLabel);
 			}
 
-			for (int i = 0; i < lab.length; ++i) {
-				ci = new ColumnInfo(lab[i]);
+			for (int i = 0; i < labelids.length; ++i) {
+				ci = new ColumnInfo(labelids[i]);
 				if (labels != null) {
 					for (ColumnInfo ci2 : labels)
 						if (ci.label == ci2.label)
 							ci.updateInfo(ci2);
-				} else if (ci.allowRender)
-					ci.render = globalRender;
+				} else 
+                                {
+					ci.render = isRenderLabel(ci);
+                                        ci.visible = isVisibleLabel(ci);
+                                }
 				newLabels.add(ci);
-				if (inputRenderLabel == lab[i] && ci.allowRender) {
+				if (inputRenderLabel == labelids[i] && ci.render) {
 					ciFirstRender = ci;
 					if (ci.visible)
 						ciFirstRenderVisible = ci;
 				}
 				if ((ciFirstRender == null || ci.getLabel() == MDLabel.MDL_IMAGE)
-						&& ci.allowRender)// favor mdl_image over mdl_micrograph
+						&& ci.render)// favor mdl_image over mdl_micrograph
 				{
 					ciFirstRender = ci;
 				}
 				if ((ciFirstRenderVisible == null || ci.getLabel() == MDLabel.MDL_IMAGE)
-						&& ci.allowRender && ci.visible)
+						&& ci.render && ci.visible)
 					ciFirstRenderVisible = ci;
+                                
 			}
 			if (ciFirstRenderVisible != null) {
 				ciFirstRender = ciFirstRenderVisible;
@@ -345,8 +364,9 @@ public class GalleryData {
 					md.setEnabled(true, id);
 				// hasMdChanges = true;
 			}
-
+                        
 			labels = newLabels;
+                        orderLabels();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -418,8 +438,7 @@ public class GalleryData {
 				// previous case
 				if (!md.isColumnFormat())
 					return new MetadataRowTableModel(this);
-				if (md.containsMicrographsInfo())
-					return new MicrographsTableModel(this);
+				
 				return new MetadataTableModel(this);
 			case GALLERY_ROTSPECTRA:
 				return new RotSpectraGalleryTableModel(this);
@@ -498,6 +517,7 @@ public class GalleryData {
 			mode = Mode.GALLERY_VOL;
 		else
 			mode = Mode.GALLERY_MD;
+                
 	}
 
 	/** following function only should be used in VolumeGallery mode */
@@ -576,12 +596,12 @@ public class GalleryData {
 		return false;
 	}
 
-	public boolean is2DClassificationMd() {
-		return is2dClassification;
+	public boolean isClassificationMd() {
+		return isClassification;
 	}
 
 	/** Return true if current metadata comes from 2d classification */
-	public boolean checkifIs2DClassificationMd() {
+	public boolean checkifIsClassificationMd() {
 		try {
 			boolean valid = selectedBlock.startsWith("classes") && 
 					(md.containsLabel(MDLabel.MDL_REF) || md.containsLabel(MDLabel.MDL_REF3D)) &&
@@ -610,7 +630,7 @@ public class GalleryData {
 
 	/** Get the assigned class of some element */
 	public ClassInfo getItemClassInfo(int index) {
-		if (is2dClassification && index < classes.length) {
+		if (isClassification && index < classes.length) {
 			return classes[index];
 		}
 		return null;
@@ -719,6 +739,7 @@ public class GalleryData {
 	/** Return the number of selected elements */
 	public int getSelectionCount() {
 		int count = 0;
+                
 		if (!isVolumeMode()) {
 			for (int i = 0; i < ids.length; ++i)
 				if (selection[i])
@@ -830,10 +851,14 @@ public class GalleryData {
 	/** Return true if current metadata is a rotspectra classes */
 	public boolean isRotSpectraMd() {
 		if (filename != null) {
+                    if(!filename.contains("classes"))
+                        return false;
 			String fnVectors = filename.replace("classes", "vectors");
 			String fnVectorsData = fnVectors.replace(".xmd", ".vec");
-			if (is2DClassificationMd() && Filename.exists(fnVectors)
+			if (isClassificationMd() && Filename.exists(fnVectors)
+
 					&& Filename.exists(fnVectorsData))
+                            
 				return true;
 		}
 		return false;
@@ -1033,5 +1058,54 @@ public class GalleryData {
                 Logger.getLogger(GalleryJFrame.class.getName()).log(Level.SEVERE, null, ex);
             }
        }
+       
+       public boolean isRenderLabel(ColumnInfo ci) {
+           
+           if(renderLabel.equals("first"))
+               return ci.allowRender;
+           for(String i: renderLabels)
+               if(i.equals(ci.labelName))
+                   return true;
+           return false;
+       }
+       
+       public boolean isVisibleLabel(ColumnInfo ci) {
+           if(visibleLabels == null)
+               return true;
+           for(String i: visibleLabels)
+               if(i.equals(ci.labelName))
+                   return true;
+           return false;
+       }
+
+       public void orderLabels()
+       {
+           if(orderLabels == null)
+               return;
+           
+           ColumnInfo aux;
+           int j;
+           for(int i = 0; i < orderLabels.length; i ++)
+               for(ColumnInfo ci: labels)
+                   if(ci.labelName.equals(orderLabels[i]))
+                   {
+                       
+                       aux = labels.get(i);
+                       j = labels.indexOf(ci);
+                       labels.set(i, ci);
+                       labels.set(j, aux);
+                       
+                   }
+       }
+       
+       
+	public boolean isCTFMd() {
+		try {
+			return md.containsLabel(MDLabel.MDL_PSD_ENHANCED) && md.containsLabel(MDLabel.MDL_PSD) && md.containsLabel(MDLabel.MDL_CTF_MODEL);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return false;
+	}
       
 }// class GalleryDaa
