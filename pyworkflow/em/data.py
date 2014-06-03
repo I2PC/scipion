@@ -309,7 +309,7 @@ class Image(EMObject):
         
     def __str__(self):
         """ String representation of an Image. """
-        return "%s (index=%d, filename=%s)" % (self.getClassName(), self.getIndex(), self.getFileName())
+        return "%s (%s, %0.2f A/px)" % (self.getClassName(), ImageDim(*self.getDim()), self.getSamplingRate())
 
 
 class Micrograph(Image):
