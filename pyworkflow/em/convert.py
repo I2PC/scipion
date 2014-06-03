@@ -72,8 +72,9 @@ class ImageHandler(object):
         """
         if isinstance(location, str):
             location = (NO_INDEX, location)
-        img = self.read(location)
-        return img.getDimensions()
+        self._img.read(self._locationToStr(*location), xmipp.HEADER)
+        
+        return self._img.getDimensions()
     
     def read(self, location):
         """ Read an image from a location. """
