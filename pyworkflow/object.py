@@ -51,7 +51,7 @@ class Object(object):
         self._objComment = args.get('objComment', '')
         self._objTag =  args.get('objTag', None) # This attribute serve to make some annotation on the object.
         self._objDoStore =  args.get('objDoStore', True) # True if this object will be stored from his parent
-        self._objCreationTime = None
+        self._objCreation = None
         self._objParent = None # Reference to parent object
         self.set(value)
         
@@ -191,6 +191,14 @@ class Object(object):
     def setObjComment(self, comment):
         """ Set the comment to better identify this object"""
         self._objComment = comment       
+        
+    def setObjCreation(self, creation):
+        """ Set the creation time of the object. """
+        self._objCreation = creation
+        
+    def getObjCreation(self):
+        """ Return the stored creation time of the object. """
+        return self._objCreation
     
     def strId(self):
         """String representation of id"""

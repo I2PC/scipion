@@ -193,7 +193,7 @@ class SubclassesTreeProvider(TreeProvider):
         return result
         
     def getColumns(self):
-        return [('Object', 400), ('Info', 250)]
+        return [('Object', 300), ('Info', 250), ('Creation', 150)]
     
     def isSelected(self, obj):
         """ Check if an object is selected or not. """
@@ -217,8 +217,9 @@ class SubclassesTreeProvider(TreeProvider):
         return label
         
     def getObjectInfo(self, obj):
+        
         return {'key': obj.strId(), 'text': self.getObjectLabel(obj),
-                'values': (str(obj),), 'selected': self.isSelected(obj)}
+                'values': (str(obj).replace(obj.getClassName(), ''), obj.getObjCreation()), 'selected': self.isSelected(obj)}
 
     def getObjectActions(self, obj):
         if isinstance(obj, Pointer):
