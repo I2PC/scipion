@@ -654,7 +654,7 @@ class ProtFrealignBase(EMProtocol):
     def _validate(self):
         errors = []
         if not exists(FREALIGN_PATH):
-            errors.append('Missing ' + FREALIGN)
+            errors.append('Missing ' + FREALIGN_PATH)
         return errors
     
     def _summary(self):
