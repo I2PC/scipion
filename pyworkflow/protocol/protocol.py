@@ -305,7 +305,7 @@ class Protocol(Step):
         # Run mode
         self.runMode = Integer(args.get('runMode', MODE_RESUME))
         # Use queue system?
-        self._useQueue = Boolean()
+        self._useQueue = Boolean(False)
         
         self._jobId = String() # Store queue job id
         self._pid = Integer()

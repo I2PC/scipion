@@ -38,6 +38,13 @@ from pyworkflow.em.constants import *
 
 def proccessModeFilter(mode, value):
     # Order : low - high - decay
+    
+    # FIX to use in case value is not an array
+    if (type(value) is int) or (type(value) is float):
+        assign = 0
+    else: 
+        assign = 1
+        
 
     if mode == FILTER_LOW_PASS:
         print "filter low pass"
@@ -53,12 +60,11 @@ def proccessModeFilter(mode, value):
     
     elif mode == FILTER_LOW_PASS_NO_DECAY:
         print "filter low pass no decay"
-        value[0] = 1.0
-#        value[2] = 0
-    
+        value = [1.0, value, 0]
+        
     elif mode == FILTER_NO_DECAY:
         print "filter band pass no decay"
-        value[2] = 0
+        value = [value[0], value[1], 0]
         
     return value
 
@@ -137,6 +143,13 @@ def get_image_bandpass(request):
     highFreq = request.GET.get('highFreq', 1.0)
     decay = request.GET.get('decayFreq', 0.)
     dim = request.GET.get('dim', None)
+    
+#    ** DEBUG **
+#    print str(imagePath)
+#    print float(lowFreq)
+#    print float(highFreq)
+#    print float(decay)
+#    print int(dim)
     
     # create a xmipp image empty
     imgXmipp = xmipp.Image()
