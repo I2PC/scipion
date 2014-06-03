@@ -15,6 +15,7 @@ import pyworkflow.dataset as ds
 
 
 
+
 # @see test_object.TestPyworkflow.test_SqliteMapper
 class TestPostgreSqlMapper(unittest.TestCase):
     mapper=None
@@ -457,6 +458,8 @@ class TestDataSet(BaseTest):
     @classmethod
     def setUpClass(cls):
         setupTestOutput(cls)
+        cls.dataset = DataSet.getDataSet('xmipp_tutorial')
+        cls.modelGoldSqlite = cls.dataset.getFile( 'micsGoldSqlite')
         
     def test_Table(self):
         table = ds.Table(ds.Column('x', int, 5),
@@ -484,23 +487,9 @@ class TestDataSet(BaseTest):
         print "Table:"
         print table
 
-#    def test_XmippDataSet(self):
-#        """ Create a table from a metadata. """
-#        from pyworkflow.em.packages.xmipp3 import XmippDataSet
-#        import xmipp
-#        mdPath = getInputPath('showj', 'tux_vol.xmd')
-#
-#        xds = XmippDataSet(mdPath)
-#        
-#        tableNames = xds.listTables()
-#        print '\ntables: ', tableNames
-#        
-#        tn = tableNames[0]
-#        
-#        table = xds.getTable(tn)
-#        
-#        print "\nTable '%s':" % tn
-#        print table
-#        
-#        md = xds._convertTableToMd(table)
-#        print md
+    def test_SqliteDataset(self):
+        """ Create a SqliteDataset """
+        print 'test_SqliteDataset'
+        sqliteds = ds.SqliteDataset(self.modelGoldSqlite)
+        
+        
