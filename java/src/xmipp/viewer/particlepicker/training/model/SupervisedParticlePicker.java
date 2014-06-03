@@ -531,7 +531,7 @@ public class SupervisedParticlePicker extends ParticlePicker
 	{
 		for (SupervisedParticlePickerMicrograph m : micrographs)
 			for (ManualParticle p : m.getParticles())
-				if (!micrograph.fits(p.getX(), p.getY(), size))
+				if (!m.fits(p.getX(), p.getY(), size))
 					return false;
 		return true;
 	}

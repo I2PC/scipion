@@ -50,10 +50,9 @@ public class ScipionMetaData extends MetaData{
             stmt = c.createStatement();
             ResultSet rs;
             rs = stmt.executeQuery("SELECT name FROM sqlite_master WHERE type='table' AND name like '%Classes';");
-            while ( rs.next() ) {
+            while ( rs.next() ) 
                 name = rs.getString("name");
-                System.out.println(name);
-            }
+            
             rs = stmt.executeQuery( "SELECT * FROM CLASSES;" );
             while ( rs.next() ) {
                name = rs.getString("label_property");
