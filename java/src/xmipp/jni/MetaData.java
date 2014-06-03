@@ -28,13 +28,13 @@ package xmipp.jni;
 import java.io.File;
 import java.util.Arrays;
 
-
 //import xmipp.utils.DEBUG;
 
 /**
  * Binding class for accessing C++ MetaData implementation.
  */
 public class MetaData {
+    
 	/** Enum values with Labels possible types */
 	public static final int LABEL_NOTYPE = -1;
 	public static final int LABEL_INT = 0;
