@@ -52,7 +52,7 @@ public abstract class ParticlePicker {
     protected Color color;
     protected int size;
 
-    public static final int sizemax = 1048;
+    public static final int sizemax = 2000;
     protected String block;
     Format[] formats = new Format[]{Format.Xmipp24, Format.Xmipp24a, Format.Xmipp24b, Format.Xmipp24c, Format.Xmipp30, Format.Xmipp301, Format.Eman};
 
@@ -564,9 +564,7 @@ public abstract class ParticlePicker {
     }
 
     public void setSize(int size) {
-        if (size > ParticlePicker.sizemax) {
-            throw new IllegalArgumentException(String.format("Max size is %s, %s not allowed", ParticlePicker.sizemax, size));
-        }
+       
         this.size = size;
     }
 

@@ -8,9 +8,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.swing.JFrame;
+import javax.swing.SwingWorker;
 import xmipp.jni.Filename;
 import xmipp.jni.ImageGeneric;
 import xmipp.jni.MDLabel;
@@ -25,6 +27,7 @@ import xmipp.viewer.particlepicker.Format;
 import xmipp.viewer.particlepicker.Micrograph;
 import xmipp.viewer.particlepicker.ParticlePicker;
 import xmipp.viewer.particlepicker.training.gui.SupervisedParticlePickerJFrame;
+import xmipp.viewer.particlepicker.training.gui.TemplatesJDialog;
 
 /**
  * Business object for Single Particle Picker GUI. Inherits from ParticlePicker
@@ -53,6 +56,8 @@ public class SupervisedParticlePicker extends ParticlePicker
 	private String templatesfile;
 	private int templateindex;
 	private PickingClassifier classifier;
+        private UpdateTemplatesTask uttask;
+        private TemplatesJDialog dialog;
 
 	// private String reviewfile;
 
@@ -202,7 +207,7 @@ public class SupervisedParticlePicker extends ParticlePicker
 			throw new IllegalArgumentException(
 					XmippMessage.getIllegalValueMsgWithInfo("Templates Number", Integer.valueOf(num), "Must have at least one template"));
 
-		new UpdateTemplatesTask(this, num).execute();
+		updateTemplatesStack();
                 saveConfig();
 	}
 
@@ -532,23 +537,31 @@ public class SupervisedParticlePicker extends ParticlePicker
 	@Override
 	public boolean isValidSize(JFrame parent, int size)
 	{
-            String msg = "";
+             if (size > ParticlePicker.sizemax) {
+                 XmippDialog.showInfo(parent, String.format("Max size is %s, %s not allowed", ParticlePicker.sizemax, size));
+                 return false;
+        }
+            String outmsg = "";
+            int count;
             boolean valid = true;
             List<ManualParticle> outlist = new ArrayList<ManualParticle>();
-		for (SupervisedParticlePickerMicrograph m : micrographs)
-			for (ManualParticle p : m.getParticles())
-				if (!m.fits(p.getX(), p.getY(), size))
-                                {
-                                        msg += XmippMessage.getOutOfBoundsMsg(p) + "\n";
-                                        outlist.add(p);
-                                        valid = false;
-					
-                                }
+            for (SupervisedParticlePickerMicrograph m : micrographs)
+            {
+                count = 0;
+                for (ManualParticle p : m.getParticles())
+                        if (!m.fits(p.getX(), p.getY(), size))
+                        {
+                                outlist.add(p);
+                                count ++;
+                                valid = false;
+                        }
+                outmsg += String.format("%s %s from micrograph %s will be dismissed.\n", count, (count == 1)? "particle": "particles", m.getName());
+            }
             if(valid)
                 return true;
             else
             {
-                msg +="Are you sure you want to continue?";
+                String msg = outmsg + "Are you sure you want to continue?";
                 valid = XmippDialog.showQuestion(parent, msg);
                 if(valid)
                     for(ManualParticle p: outlist)
@@ -656,7 +669,7 @@ public class SupervisedParticlePicker extends ParticlePicker
 		}
 
 		saveAllData();
-		new UpdateTemplatesTask(this, getTemplatesNumber()).execute();
+		updateTemplatesStack();
                 
 	}
 
@@ -856,7 +869,6 @@ public class SupervisedParticlePicker extends ParticlePicker
 	{
 
 		resetMicrograph(m);
-		m.loadDimensions();
 		long[] ids = md.findObjects();
 		int x, y;
 		String result = "";
@@ -1009,11 +1021,11 @@ public class SupervisedParticlePicker extends ParticlePicker
 
 
 
-	public void loadMicrographData(SupervisedParticlePickerMicrograph micrograph)
+	public void loadMicrographData(SupervisedParticlePickerMicrograph m)
 	{
 		try
 		{
-			String file = getOutputPath(micrograph.getPosFile());
+			String file = getOutputPath(m.getPosFile());
 			MicrographState state;
 			int micautopickpercent;
 			if (!new File(file).exists())
@@ -1026,13 +1038,13 @@ public class SupervisedParticlePicker extends ParticlePicker
 				state = MicrographState.valueOf(md.getValueString(MDLabel.MDL_PICKING_MICROGRAPH_STATE, id));
 				micautopickpercent = hasautopercent ? md.getValueInt(MDLabel.MDL_PICKING_AUTOPICKPERCENT, id) : getAutopickpercent();
 				double threshold = md.getValueDouble(MDLabel.MDL_COST, id);
-				micrograph.setThreshold(threshold);
-				micrograph.setState(state);
-				micrograph.setAutopickpercent(micautopickpercent);
+				m.setThreshold(threshold);
+				m.setState(state);
+				m.setAutopickpercent(micautopickpercent);
 				md.destroy();
 			}
-			loadManualParticles(micrograph, file);
-			loadAutomaticParticles(micrograph, file);
+			loadManualParticles(m, file);
+			loadAutomaticParticles(m, file);
 		}
 		catch (Exception e)
 		{
@@ -1042,7 +1054,7 @@ public class SupervisedParticlePicker extends ParticlePicker
 
 	}
 
-	public void loadManualParticles(SupervisedParticlePickerMicrograph micrograph, String file)
+	public void loadManualParticles(SupervisedParticlePickerMicrograph m, String file)
 	{
 		if (new File(file).exists() && MetaData.containsBlock(file, getParticlesBlockName(Format.Xmipp301)))
 		{
@@ -1058,8 +1070,8 @@ public class SupervisedParticlePicker extends ParticlePicker
 				{
 					x = md.getValueInt(MDLabel.MDL_XCOOR, id);
 					y = md.getValueInt(MDLabel.MDL_YCOOR, id);
-					particle = new ManualParticle(x, y, this, micrograph);
-					micrograph.addManualParticle(particle, this);
+					particle = new ManualParticle(x, y, this, m);
+					m.addManualParticle(particle, this);
 				}
 				md.destroy();
 			}
@@ -1322,6 +1334,54 @@ public class SupervisedParticlePicker extends ParticlePicker
         
     public int getParticlesThreshold() {
         return classifier.getParticlesThreshold();
+    }
+    
+    public void updateTemplatesStack()
+    {
+        if(uttask != null)
+        {
+            uttask.cancel(true);
+            new File(templatesfile).delete();
+            uttask = null;
+        }
+
+        uttask = new UpdateTemplatesTask();
+        
+        uttask.execute();
+    }
+    
+    public void setTemplatesDialog(TemplatesJDialog d)
+    {
+            dialog = d;
+    }
+    
+    public class UpdateTemplatesTask extends SwingWorker<String, Object>
+    {
+            @Override
+            protected String doInBackground() throws Exception
+            {
+                    try
+                    {
+                            updateTemplates(getTemplatesNumber());
+                    }
+                    catch (Exception e)
+                    {
+                            throw new IllegalArgumentException(e);
+                    }
+                    return "";
+            }
+
+            @Override
+            protected void done() {
+                        if(dialog != null && dialog.isVisible())
+                                       dialog.loadTemplates(true);
+            }
+
+
+            
+            
+            
+
     }
 
 }

@@ -68,7 +68,7 @@ class Main
 				{
 					System.out.println("Error catched on main");
 					ParticlePicker.getLogger().log(Level.SEVERE, e.getMessage(), e);
-					XmippDialog.showException(null, e);
+                                        XmippDialog.showError(null, e.getMessage());
 
 				}
 			}
