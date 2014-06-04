@@ -115,6 +115,7 @@ public class ScipionMetaData extends MetaData{
             
             String query = String.format( "SELECT * FROM %s;", classestb);
             rs = stmt.executeQuery(query );
+
             while ( rs.next() ) {
                name = rs.getString("label_property");
                alias = rs.getString("column_name");
