@@ -59,6 +59,7 @@ def runCommand(command, env=None):
     if debug and debug.lower() in ['true', '1']:
         resource.setrlimit(resource.RLIMIT_CORE,
                            (resource.RLIM_INFINITY, resource.RLIM_INFINITY))
+        # This is like "ulimit -u 99999999", so we can create core dumps
 
     retcode = 1000
     try:
