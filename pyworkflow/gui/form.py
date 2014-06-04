@@ -82,16 +82,27 @@ class PointerVar():
         that is more readable for the user to pick the desired object.
         """
         label = ''
-        obj = self.value
+
+        if hasattr(self.value, '_parentObject'):
+            obj = self.value._parentObject
+            suffix = ' (Item %d)' % self.value.getObjId()
+        else:
+            obj = self.value
+            suffix = ''
+            
         if obj:
-            label = obj.getObjLabel()
-            if not len(label.strip()):
-                parent = self._protocol.mapper.getParent(obj)
-                if parent:
-                    label = "%s -> %s" % (parent.getObjLabel(), obj.getLastName())
-                else:
-                    label = obj.getLastName()
-        return label
+            if hasattr(obj, '_parentObject'):
+                label = obj.strId()
+            else:
+                label = obj.getObjLabel()
+                if not len(label.strip()):
+                    parent = self._protocol.mapper.getParent(obj)
+                    if parent:
+                        label = "%s -> %s" % (parent.getObjLabel(), obj.getLastName())
+                    else:
+                        label = obj.getLastName()
+        
+        return label + suffix
            
     def get(self):
         return self.value
@@ -178,9 +189,32 @@ class SubclassesTreeProvider(TreeProvider):
         self.protocol = protocol
         self.mapper = protocol.mapper
         
-    def getObjects(self):
-        return list(self.protocol.getProject().iterSubclasses(self.className, self.objFilter))
+    def _containsObject(self, objects, obj):
+        for o in objects:
+            if o.getObjId() == obj.getObjId():
+                return True
+        return False
             
+    def getObjects(self):
+        objects = list(self.protocol.getProject().iterSubclasses(self.className, self.objFilter))
+        
+        for setObject in self.protocol.getProject().iterSubclasses("Set", self.classFilter):
+            if not self._containsObject(objects, setObject):
+                objects.append(setObject)
+                for item in setObject:
+                    newItem = item.clone()
+                    newItem.setObjId(item.getObjId())
+                    newItem._parentObject = setObject
+                    #print "   item, id=", item.getObjId()
+                    objects.append(newItem)
+        
+        return objects
+            
+    def classFilter(self, obj):
+        """ Filter Set with the specified class name. """
+        itemType = getattr(obj, 'ITEM_TYPE', None)        
+        return (itemType and itemType.__name__ == self.className)
+        
     def objFilter(self, obj):
         result = True
         # Do not allow to select objects that are childs of the protocol
@@ -207,19 +241,28 @@ class SubclassesTreeProvider(TreeProvider):
         """ We will try to show in the list the string representation
         that is more readable for the user to pick the desired object.
         """
-        label = obj.getObjLabel()
-        if not len(label.strip()):
-            parent = self.mapper.getParent(obj)
-            if parent:
-                label = "%s -> %s" % (parent.getObjLabel(), obj.getLastName())
-            else:
-                label = obj.getLastName()
+        if hasattr(obj, '_parentObject'):
+            label = "Item %s" % obj.strId()
+        else:
+            label = obj.getObjLabel()
+            if not len(label.strip()):
+                parent = self.mapper.getParent(obj)
+                if parent:
+                    label = "%s -> %s" % (parent.getObjLabel(), obj.getLastName())
+                else:
+                    label = obj.getLastName()
         return label
         
     def getObjectInfo(self, obj):
-        
-        return {'key': obj.strId(), 'text': self.getObjectLabel(obj),
-                'values': (str(obj).replace(obj.getClassName(), ''), obj.getObjCreation()), 'selected': self.isSelected(obj)}
+        parent = getattr(obj, '_parentObject', None)
+        if parent:
+            objId = "%s.%s" % (parent.getObjId(), obj.getObjId())
+        else:
+            objId = obj.strId()
+            
+        return {'key': objId, 'text': self.getObjectLabel(obj),
+                'values': (str(obj).replace(obj.getClassName(), ''), obj.getObjCreation()), 
+                'selected': self.isSelected(obj), 'parent': parent}
 
     def getObjectActions(self, obj):
         if isinstance(obj, Pointer):
@@ -665,6 +708,7 @@ class ParamWidget():
         dlg = ListDialog(self.parent, "Select object", tp, 
                          "Double click an item to preview the object")
         if dlg.value is not None:
+            print "dlg.value: ", dlg.value, "id=", dlg.value.getObjId()
             self.set(dlg.value)
         
     def _removeObject(self, e=None):
@@ -1330,7 +1374,17 @@ class FormWindow(Window):
         if param is not None:
             var = self.widgetDict[paramName]
             try:
-                param.set(var.get())
+                value = var.get()
+                
+                if hasattr(value, '_parentObject'): 
+                    # Handle the special case of pointer and extensions
+                    # If parent is not None, it means that the select object
+                    # is inside a Set, so the pointer should store the Set value
+                    # and then have a pointer extension to the item id
+                    param.set(value._parentObject)
+                    param.setExtendedItemId(value.getObjId())
+                else:
+                    param.set(value)
             except ValueError:
                 if len(var.get()):
                     print "Error setting param for: ", paramName, "value: '%s'" % var.get()

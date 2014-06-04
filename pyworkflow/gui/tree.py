@@ -272,7 +272,11 @@ class BoundTree(Tree):
         
     def iterSelectedObjects(self):
         for treeId in self.selection():
-            yield self._objDict[treeId]
+            yield self.getObjectFromId(treeId)
+            
+    def getObjectFromId(self, treeId):
+        """ Return the corresponding object from a given Tree item id. """
+        return self._objDict[treeId]
         
               
 class ObjectTreeProvider(TreeProvider):
