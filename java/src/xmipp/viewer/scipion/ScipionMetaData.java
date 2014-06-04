@@ -68,7 +68,6 @@ public class ScipionMetaData extends MetaData{
             {
                 id = String.format("Class00%s", emo.id);
                 emo.childmd = new ScipionMetaData(dbfile, String.format(classestb, id), String.format(objectstb, id), id);
-               
                 emo.childmd.setParent(this);
                 i ++;
             }
@@ -595,7 +594,7 @@ public class ScipionMetaData extends MetaData{
             {
                 sql += String.format("(%s, '', ''", emo.id);
                 for (ColumnInfo column : columns) {
-                    if(column.isEnable())
+                    if(!column.isEnable())
                     {
                         value = emo.getValue(column);
                         if(value != null)
@@ -621,7 +620,6 @@ public class ScipionMetaData extends MetaData{
                 sql += "),";
             }
             sql = sql.substring(0, sql.length() - 1);//remove first comma
-            
             return sql;
     }
     public  void writeBlock(String path)
