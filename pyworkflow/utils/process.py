@@ -29,7 +29,10 @@ This module handles process execution
 """
 import os
 import sys
+import resource
+
 from utils import greenStr
+
 
 # The job should be launched from the working directory!
 def runJob(log, programname, params,           
@@ -52,6 +55,11 @@ def runJob(log, programname, params,
 
 def runCommand(command, env=None):
     from subprocess import call
+    debug = env.get('SCIPION_DEBUG') if env else os.environ.get('SCIPION_DEBUG')
+    if debug and debug.lower() in ['true', '1']:
+        resource.setrlimit(resource.RLIMIT_CORE,
+                           (resource.RLIM_INFINITY, resource.RLIM_INFINITY))
+
     retcode = 1000
     try:
         retcode = call(command, shell=True, stdout=sys.stdout, stderr=sys.stderr, env=env)
