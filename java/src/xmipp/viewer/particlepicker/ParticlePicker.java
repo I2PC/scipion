@@ -6,7 +6,6 @@ import ij.IJ;
 import ij.ImageListener;
 import ij.ImagePlus;
 import ij.plugin.frame.Recorder;
-
 import java.awt.Color;
 import java.io.File;
 import java.lang.reflect.Field;
@@ -15,9 +14,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
+import javax.swing.JFrame;
 import javax.swing.JOptionPane;
-
 import xmipp.jni.Filename;
 import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
@@ -559,7 +557,7 @@ public abstract class ParticlePicker {
 
     public abstract void setMicrograph(Micrograph m);
 
-    public abstract boolean isValidSize(int size);
+    public abstract boolean isValidSize(JFrame parent, int size);
 
     public int getSize() {
         return size;

@@ -3,7 +3,7 @@ package xmipp.viewer.particlepicker.extract;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
-
+import javax.swing.JFrame;
 import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
 import xmipp.viewer.particlepicker.ColorHelper;
@@ -231,7 +231,7 @@ public class ExtractParticlePicker extends ParticlePicker
 	}
 
 	@Override
-	public boolean isValidSize(int size)
+	public boolean isValidSize(JFrame parent, int size)
 	{
 		for (ExtractParticle p : getMicrograph().getParticles())
 			if (!getMicrograph().fits(p.getX(), p.getY(), size))

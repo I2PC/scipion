@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import javax.swing.JFrame;
 import xmipp.jni.Filename;
 import xmipp.jni.ImageGeneric;
 import xmipp.jni.MDLabel;
@@ -17,6 +18,7 @@ import xmipp.jni.MetaData;
 import xmipp.jni.Particle;
 import xmipp.jni.PickingClassifier;
 import xmipp.utils.DEBUG;
+import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippMessage;
 import xmipp.utils.XmippWindowUtil;
 import xmipp.viewer.particlepicker.Format;
@@ -528,13 +530,32 @@ public class SupervisedParticlePicker extends ParticlePicker
 	}
 
 	@Override
-	public boolean isValidSize(int size)
+	public boolean isValidSize(JFrame parent, int size)
 	{
+            String msg = "";
+            boolean valid = true;
+            List<ManualParticle> outlist = new ArrayList<ManualParticle>();
 		for (SupervisedParticlePickerMicrograph m : micrographs)
 			for (ManualParticle p : m.getParticles())
 				if (!m.fits(p.getX(), p.getY(), size))
-					return false;
-		return true;
+                                {
+                                        msg += XmippMessage.getOutOfBoundsMsg(p) + "\n";
+                                        outlist.add(p);
+                                        valid = false;
+					
+                                }
+            if(valid)
+                return true;
+            else
+            {
+                msg +="Are you sure you want to continue?";
+                valid = XmippDialog.showQuestion(parent, msg);
+                if(valid)
+                    for(ManualParticle p: outlist)
+                        ((SupervisedParticlePickerMicrograph)p.getMicrograph()).removeParticle(p, this);
+                return valid;
+                        
+            }
 	}
 
         @Override

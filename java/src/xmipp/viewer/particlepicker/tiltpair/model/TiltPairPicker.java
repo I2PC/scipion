@@ -5,7 +5,7 @@ import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.logging.Level;
-
+import javax.swing.JFrame;
 import xmipp.jni.Filename;
 import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
@@ -373,7 +373,7 @@ public class TiltPairPicker extends ParticlePicker
 	}
 
 	@Override
-	public boolean isValidSize(int size)
+	public boolean isValidSize(JFrame parent, int size)
 	{
 		UntiltedMicrograph um = getMicrograph();
 		for (UntiltedParticle p : um.getParticles())

@@ -31,8 +31,6 @@ public class UpdateTemplatesTask extends SwingWorker<String, Object>
 		try
 		{
 			picker.updateTemplates(num);
-                        System.out.println("UpdateTemplates doInBackground() esta en el hilo " + Thread.currentThread().getName());
-			
 		}
 		catch (Exception e)
 		{

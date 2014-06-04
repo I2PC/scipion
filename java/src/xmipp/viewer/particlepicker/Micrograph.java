@@ -17,6 +17,7 @@ import xmipp.jni.Filename;
 import xmipp.jni.ImageGeneric;
 import xmipp.jni.Particle;
 import xmipp.utils.XmippMessage;
+import xmipp.viewer.particlepicker.training.model.SupervisedParticlePicker;
 
 public abstract class Micrograph {
 
@@ -244,5 +245,6 @@ public abstract class Micrograph {
 	}
 
 	public abstract boolean hasData();
+        
 
 }
