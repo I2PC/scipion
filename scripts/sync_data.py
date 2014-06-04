@@ -364,7 +364,7 @@ def main():
         print "Querying the modifications log file (%s)..." % last_mfile
         if os.path.exists(last_mfile):
             print "File %s exists. Checking its content..." % last_mfile
-            if os.stat(last_mfile)).st_size != 0: #File contains data
+            if os.stat(last_mfile).st_size != 0: #File contains data
                 print "File's not empty. Copying the content to log file " + args.mod_log_file
                 modif_file = open(os.path.join('Scipion', args.mod_log_file), 'a')
                 file_content = open(last_mfile).read()
@@ -379,7 +379,7 @@ def main():
                 sys.exit(1)
         else:
             print "File %s doesn't exist. Creating it..." % last_mfile
-            open(last_mfile), 'w').close()
+            open(last_mfile, 'w').close()  # wipe out contents
             sys.exit(2) #We return with 2, to let Buildbot know that no modification was made (when failure there was modification)
     elif args.dataset:
         if len(args.dataset) != 1:
