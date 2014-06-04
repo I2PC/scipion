@@ -228,7 +228,7 @@ class TestMixedBPV2(TestWorkflow):
         
         # Perform a downsampling on the micrographs
         print "Downsampling..."
-        protDownsampling = XmippProtPreprocessMicrographs(doDownsample=True, downFactor=2, doCrop=False, runMode=1)
+        protDownsampling = XmippProtPreprocessMicrographs(doDownsample=True, downFactor=5, doCrop=False, runMode=1)
         protDownsampling.inputMicrographs.set(protImport.outputMicrographs)
         self.proj.launchProtocol(protDownsampling, wait=True)
         self.assertIsNotNone(protDownsampling.outputMicrographs, "There was a problem with the downsampling")
@@ -237,21 +237,21 @@ class TestMixedBPV2(TestWorkflow):
         # Estimate CTF on the downsampled micrographs
         print "Performing CTFfind..."   
         protCTF = ProtCTFFind(numberOfThreads=4, minDefocus=2.2, maxDefocus=2.5)
-        protCTF.inputMicrographs.set(protDownsampling.outputMicrographs)        
+        protCTF.inputMicrographs.set(protImport.outputMicrographs)        
         self.proj.launchProtocol(protCTF, wait=True)
         self.assertIsNotNone(protCTF.outputCTF, "There was a problem with the CTF estimation")
 #         self.validateFiles('protCTF', protCTF)
         
         print "Running Eman fake particle picking..."
         protPP = EmanProtBoxing(importFolder=self.crdsDir, runMode=1) 
-        protPP.inputMicrographs.set(protImport.outputMicrographs)
+        protPP.inputMicrographs.set(protDownsampling.outputMicrographs)
         protPP.boxSize.set(550)
         self.proj.launchProtocol(protPP, wait=True)
         self.assertIsNotNone(protPP.outputCoordinates, "There was a problem with the faked picking")
 #         self.protDict['protPP'] = protPP
         
         print "<Run extract particles with Same as picking>"
-        protExtract = XmippProtExtractParticles(boxSize=550, downsampleType=1, doFlip=True, doInvert=True, runMode=1)
+        protExtract = XmippProtExtractParticles(boxSize=110, downsampleType=1, doFlip=True, doInvert=True, runMode=1)
         protExtract.inputCoordinates.set(protPP.outputCoordinates)
         protExtract.ctfRelations.set(protCTF.outputCTF)
         self.proj.launchProtocol(protExtract, wait=True)
