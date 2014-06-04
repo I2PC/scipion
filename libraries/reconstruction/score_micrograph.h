@@ -27,38 +27,45 @@
 #define SCORE_MICROGRAPH_H_
 
 #include <data/xmipp_program.h>
+#include "ctf_estimate_from_micrograph.h"
+
 
 /**@defgroup ScoreMicrograph score_micrograph (Evaluates the score of a micrograph)
    @ingroup ReconsLibrary */
 //@{
 /* Score Micrograph Program Parameters ------------------------------------------ */
 /** Parameter class for the project program */
-class ProgScoreMicrograph: public XmippMetadataProgram
+class ProgScoreMicrograph: public XmippProgram
 {
 public:
-	/// Method
-	String method;
 
-    /// Bandpass filter low frequency (in Fourier space, max 0.5)
-    double filter_w1;
+	//First we assume that the particle size is the same for the X and Y axis
+	int particleSize;
 
-    /// Bandpass filter high frequency (in Fourier space, max 0.5)
-    double filter_w2;
+	ProgCTFEstimateFromMicrograph prmEstimateCTFFromMicrograph;
 
-    /// Decay width (raised cosine)
-    double decay_width;
+    /// Micrograph filename
+    FileName                fn_micrograph;
+    /// Dimension of micrograph pieces
+    int                     pieceDim;
+    /** Overlap among pieces (0=No overlap, 1=Full overlap */
+    double                  overlap;
+    /** Skip borders.
+     * The number of pieces around the border that must be skipped. */
+    int                     skipBorders;
+    /** Number of pieces (Nsubpiece x Nsubpiece) for the piece averaging */
+    int                     Nsubpiece;
+    /** Bootstrap N */
+    int                     bootstrapN;
+    /// Estimate a CTF for each PSD
+    bool 					estimate_ctf;
 
-    /// Minimum number of fringes
-    int N0;
+    ProgCTFEstimateFromMicrograph::TPSD_mode PSDEstimator_mode;
 
-    /// Maximum number of fringes
-    int NF;
+    ProgCTFEstimateFromMicrograph::TPSD_mode psd_mode;
 
-    /// Lower frequency for the mask (in Fourier space, max 0.5)
-    double mask_w1;
 
-    /// Higher frequency for the mask (in Fourier space, max 0.5)
-    double mask_w2;
+
 public:
     /** Read from a command line.*/
     void readParams();
@@ -66,19 +73,10 @@ public:
     /** Define parameters. */
     void defineParams();
 
-    /** Show parameters. */
-    void show();
-
+    void run();
     /** Process one image */
-    void processImage(const FileName &fnImg, const FileName &fnImgOut, const MDRow &rowIn, MDRow &rowOut);
+    //void processImage(const FileName &fnImg, const FileName &fnImgOut, const MDRow &rowIn, MDRow &rowOut);
 
-    /** Apply filter method to a single PSD.
-        The steps are basically: outlier removal, band pass filtration, masking
-        and normalization. */
-    void applyFilter(MultidimArray<double> &PSD);
-
-    /** Apply SPHT to a single PSD.*/
-    void applySPHT(MultidimArray<double> &PSD);
 };
 
 //@}

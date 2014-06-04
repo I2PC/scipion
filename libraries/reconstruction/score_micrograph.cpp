@@ -25,7 +25,6 @@
 
 #include "score_micrograph.h"
 #include "fourier_filter.h"
-
 #include <data/args.h>
 #include <data/filters.h>
 #include <data/xmipp_fft.h>
@@ -33,184 +32,51 @@
 /* Read parameters --------------------------------------------------------- */
 void ProgScoreMicrograph::readParams()
 {
-    XmippMetadataProgram::readParams();
-    method = getParam("--method");
-/*    if (method == "filter")
-    {
-        filter_w1 = getDoubleParam("--method", 1);
-        filter_w2 = getDoubleParam("--method", 2);
-        decay_width = getDoubleParam("--method", 3);
-    }
-    else
-    {
-        N0 = getIntParam("--method", 1);
-        NF = getIntParam("--method", 2);
-    }
-    mask_w1 = getDoubleParam("--m1");
-    mask_w2 = getDoubleParam("--m2");
-*/
+
+	pieceDim = 256;
+	overlap = 0.5;
+	skipBorders = 2;
+	Nsubpiece = 1;
+	bootstrapN = -1;
+
+	fn_micrograph = getParam("--micrograph");
+	particleSize = getIntParam("--particleSize");
 
 }
 
 /* Usage ------------------------------------------------------------------- */
 void ProgScoreMicrograph::defineParams()
 {
-    each_image_produces_an_output = true;
-    defaultComments["-i"].clear();
-    defaultComments["-i"].addComment("Metadata with PSDs or a single PSD");
-    XmippMetadataProgram::defineParams();
-    addUsageLine(
-        "Enhances the visibility of the Thon rings in a Power Spectrum Density (PSD).");
-    addSeeAlsoLine("ctf_estimate_from_micrograph");
-    addParamsLine("[--method <mth=filter>]        : Choose enhancing method");
-    addParamsLine("       where <mth>");
-    addParamsLine("             filter <freq_low=0.05> <freq_high=0.2> <freq_decay=0.02>: Ad hoc filters. The algorithm is fully described at [[http://www.ncbi.nlm.nih.gov/pubmed/16987671][this article]]");
-    addParamsLine("                                                                     : The frequency limits define a raised-cosine bandpass filter, frequencies are normalized to 0.5");
-    addParamsLine("             spht   <N0=1> <NF=10> : Spiral phase transform normalization.");
-    addParamsLine("                                   : N0 and NF define the minimum and maximum number of fringes in the CTF");
-    addParamsLine("==+ Output parameters");
-    addParamsLine("  [--dont_center]            : By default, the output is centered");
-    addParamsLine("  [--dont_log]               : Don't take log10 before working");
-    addParamsLine("==+ Output mask parameters");
-    addParamsLine("  [--m1 <freq_low=0.025>]    : Low freq. for frequency mask, max 0.5");
-    addParamsLine("  [--m2 <freq_high=0.3>]     : High freq. for frequency mask, max 0.5");
-    addExampleLine("xmipp_ctf_enhance_psd -i myPSD.psd -o myPSD_enhanced.psd");
-}
-
-/* Show -------------------------------------------------------------------- */
-void ProgScoreMicrograph::show()
-{
-    XmippMetadataProgram::show();
-/*    std::cout << "Filter w1:    " << filter_w1 << std::endl << "Filter w2:    "
-    << filter_w2 << std::endl << "Filter decay: " << decay_width
-    << std::endl << "Mask w1:      " << mask_w1 << std::endl
-    << "Mask w2:      " << mask_w2 << std::endl;
-*/
+	addUsageLine("Estimate the score of a given Micrograph attending on different parameters.");
+    addParamsLine("   --micrograph <file>         : File with the micrograph");
+    addParamsLine("  [--particleSize <p=100>]       : Size of the particle");
 }
 
 /* Apply ------------------------------------------------------------------- */
-void ProgScoreMicrograph::processImage(const FileName &fnImg, const FileName &fnImgOut,
-									 const MDRow &rowIn,MDRow &rowOut)
+void ProgScoreMicrograph::run()
 {
-    Image<double> PSD;
-    PSD.read(fnImg);
-    if (ZSIZE(PSD()) != 1)
-        REPORT_ERROR(ERR_MATRIX_DIM,"This program is not intended for volumes");
-    if (method=="filter")
-        applyFilter(PSD());
-    else
-        applySPHT(PSD());
-    PSD.write(fnImgOut);
-}
 
-//#define DEBUG
-void ProgScoreMicrograph::applyFilter(MultidimArray<double> &PSD)
-{
-    // Take the logarithm
-/*    FOR_ALL_ELEMENTS_IN_ARRAY2D(PSD)
-    A2D_ELEM(PSD, i, j) = log10(1 + A2D_ELEM(PSD, i, j));
+	prmEstimateCTFFromMicrograph.pieceDim = pieceDim;
+	prmEstimateCTFFromMicrograph.overlap = overlap;
+	prmEstimateCTFFromMicrograph.skipBorders = skipBorders;
+	prmEstimateCTFFromMicrograph.Nsubpiece = 1;
+	prmEstimateCTFFromMicrograph.bootstrapN = bootstrapN;
+	prmEstimateCTFFromMicrograph.fn_micrograph = fn_micrograph;
+	prmEstimateCTFFromMicrograph.fn_root = "/home/jvargas/Linux/Proyectos/LUMC/set_001_challenge/kk";
 
-    // Remove single outliers
-    CenterFFT(PSD, true);
-    MultidimArray<double> aux;
-    medianFilter3x3(PSD, aux);
-    PSD = aux;
+	//prmEstimateCTFFromMicrograph.PSDEstimator_mode = ProgCTFEstimateFromMicrograph.TPSDEstimator_mode.Periodogram;
+	//	PSDEstimator_mode = prmEstimateCTFFromMicrograph.TPSDEstimator_mode->	Periodogram;
 
-    // Reject other outliers
-    reject_outliers(PSD, 2);
+/*
+	psd_mode = ProgCTFEstimateFromMicrograph::TPSD_mode::OnePerMicrograph;
+	prmEstimateCTFFromMicrograph.psd_mode = psd_mode;
 
-    // Band pass filter
-    FourierFilter Filter;
-    Filter.FilterShape = RAISED_COSINE;
-    Filter.FilterBand = BANDPASS;
-    Filter.w1 = filter_w1;
-    Filter.w2 = filter_w2;
-    Filter.raised_w = decay_width;
-    PSD.setXmippOrigin();
-    Filter.generateMask(PSD);
-    Filter.applyMaskSpace(PSD);
-    STARTINGX(PSD) = STARTINGY(PSD) = 0;
-    CenterFFT(PSD, false);
-
-    // Mask the input PSD
-    MultidimArray<int> mask;
-    mask.resize(PSD);
-    Matrix1D<double> freq(2); // Frequencies for Fourier plane
-    double limit0_2 = mask_w1;
-    limit0_2 = limit0_2 * limit0_2;
-    double limitF_2 = mask_w2;
-    limitF_2 = limitF_2 * limitF_2;
-    for (int i = STARTINGY(PSD); i <= FINISHINGY(PSD); ++i)
-    {
-        FFT_IDX2DIGFREQ(i, YSIZE(PSD), YY(freq));
-        double freqy2 = YY(freq) * YY(freq);
-        for (int j = STARTINGX(PSD); j <= FINISHINGX(PSD); ++j)
-        {
-            FFT_IDX2DIGFREQ(j, XSIZE(PSD), XX(freq));
-            double freq2 = XX(freq) * XX(freq) + freqy2;
-            if (freq2 < limit0_2 || freq2 > limitF_2)
-                A2D_ELEM(PSD, i, j) = 0;
-            else
-                A2D_ELEM(mask, i, j) = 1;
-        }
-    }
-
-    //Compute the mean and the standard deviation under a tighter mask
-    //close to the border and normalize the PSD image
-    MultidimArray<int> tighterMask;
-    tighterMask.resizeNoCopy(PSD);
-    limit0_2 = mask_w2 * 0.9;
-    limit0_2 = limit0_2 * limit0_2;
-    limitF_2 = mask_w2;
-    limitF_2 = limitF_2 * limitF_2;
-    for (int i = STARTINGY(PSD); i <= FINISHINGY(PSD); ++i)
-    {
-        FFT_IDX2DIGFREQ(i, YSIZE(PSD), YY(freq));
-        double freqy2 = YY(freq) * YY(freq);
-        for (int j = STARTINGX(PSD); j <= FINISHINGX(PSD); ++j)
-        {
-            FFT_IDX2DIGFREQ(j, XSIZE(PSD), XX(freq));
-            double freq2 = XX(freq) * XX(freq) + freqy2;
-            A2D_ELEM(tighterMask, i, j) = freq2 > limit0_2 && freq2 < limitF_2;
-        }
-    }
-
-    double avg, stddev;
-    PSD.computeAvgStdev_within_binary_mask(tighterMask, avg, stddev);
-    double istddev = 1.0 / stddev;
-    FOR_ALL_ELEMENTS_IN_ARRAY2D(PSD)
-    if (A2D_ELEM(mask, i, j))
-        A2D_ELEM(PSD, i, j) = (A2D_ELEM(PSD, i, j) - avg) * istddev;
-
-    // Mask again
-    limit0_2 = mask_w1;
-    limit0_2 = limit0_2 * limit0_2;
-    limitF_2 = mask_w2 * 0.9;
-    limitF_2 = limitF_2 * limitF_2;
-    for (int i = STARTINGY(PSD); i <= FINISHINGY(PSD); ++i)
-    {
-        FFT_IDX2DIGFREQ(i, YSIZE(PSD), YY(freq));
-        double freqy2 = YY(freq) * YY(freq);
-        for (int j = STARTINGX(PSD); j <= FINISHINGX(PSD); ++j)
-        {
-            FFT_IDX2DIGFREQ(j, XSIZE(PSD), XX(freq));
-            double freq2 = XX(freq) * XX(freq) + freqy2;
-            if (freq2 < limit0_2 || freq2 > limitF_2)
-                A2D_ELEM(PSD, i, j) = 0;
-        }
-    }
-
-    CenterFFT(PSD, true);
-    */
-}
-
-void ProgScoreMicrograph::applySPHT(MultidimArray<double> &PSD)
-{
- /*   FourierTransformer transformer;
-    MultidimArray< std::complex<double> > PSDfourier;
-    transformer.FourierTransform(PSD, PSDfourier, false);
-
-    transformer.inverseFourierTransform();
+	PSDEstimator_mode = ProgCTFEstimateFromMicrograph::TPSDEstimator_mode::Periodogram;
+	prmEstimateCTFFromMicrograph.PSDEstimator_mode = PSDEstimator_mode;
 */
+	std::cout << prmEstimateCTFFromMicrograph.PSDEstimator_mode << std::endl;
+	prmEstimateCTFFromMicrograph.run();
+
 }
+
 #undef DEBUG
