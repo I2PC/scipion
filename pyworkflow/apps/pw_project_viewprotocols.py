@@ -316,9 +316,15 @@ class RunIOTreeProvider(TreeProvider):
         """ We will try to show in the list the string representation
         that is more readable for the user to pick the desired object.
         """
-        label = obj.getObjLabel()
-        if not len(label.strip()):
-            label = "%s -> %s" % (parent.getObjLabel(), obj.getLastName())
+        label = 'None'
+        if obj:
+            label = obj.getObjLabel()
+            if not len(label.strip()):
+                if parent:
+                    parentLabel = parent.getObjLabel()
+                else:
+                    parentLabel = 'None'
+                label = "%s -> %s" % (parentLabel, obj.getLastName())
         return label
         
     def getObjectInfo(self, obj):
@@ -333,13 +339,22 @@ class RunIOTreeProvider(TreeProvider):
             parent = self.outputStr
             
             if isinstance(obj, Pointer):
+                ptr = obj
                 name = obj.getLastName()
                 obj = obj.get()
                 if obj is None:
                     return None
                 image = Icon.ACTION_IN
                 parent = self.inputStr
-                name += '   (from %s)' % self.getObjectLabel(obj, self.mapper.getParent(obj))
+                if ptr._extended:
+                    labelObj = ptr.getObjValue()
+                    suffix = '[Item %d]' % obj.getObjId() 
+                else:
+                    labelObj = obj
+                    suffix = ''
+                    
+                label = self.getObjectLabel(labelObj, self.mapper.getParent(labelObj))
+                name += '   (from %s %s)' % (label, suffix)
             else:
                 name = self.getObjectLabel(obj, self.protocol)
                 
