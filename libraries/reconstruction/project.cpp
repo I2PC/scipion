@@ -80,8 +80,8 @@ void ProgProject::readParams()
         rotSingle  = getDoubleParam("--angles",0);
         tiltSingle = getDoubleParam("--angles",1);
         psiSingle  = getDoubleParam("--angles",2);
-        xShift  = getDoubleParam("--angles",3);
-        yShift  = getDoubleParam("--angles",4);
+        xShift  = -1. * getDoubleParam("--angles",3);
+        yShift  = -1. * getDoubleParam("--angles",4);
     }
 }
 
