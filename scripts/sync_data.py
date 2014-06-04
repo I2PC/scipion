@@ -2,6 +2,7 @@
 # **************************************************************************
 # *
 # * Authors:     I. Foche Perez (ifoche@cnb.csic.es)
+# *              J. Burguet Castell (jburguet@cnb.csic.es)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -360,13 +361,13 @@ def main():
         delBackFile(manifest)
 
     elif args.query_for_modifications:
-        last_mfile = os.path.join('Scipion', args.last_mod_file)
+        last_mfile = os.path.join(os.environ['HOME'], 'Scipion', args.last_mod_file)
         print "Querying the modifications log file (%s)..." % last_mfile
         if os.path.exists(last_mfile):
             print "File %s exists. Checking its content..." % last_mfile
             if os.stat(last_mfile).st_size != 0: #File contains data
                 print "File's not empty. Copying the content to log file " + args.mod_log_file
-                modif_file = open(os.path.join('Scipion', args.mod_log_file), 'a')
+                modif_file = open(os.path.join(os.environ['HOME'], 'Scipion', args.mod_log_file), 'a')
                 file_content = open(last_mfile).read()
                 modif_file.write(file_content)
                 print "Last modifications file shows following content:"
