@@ -30,6 +30,7 @@ import xmipp.jni.MetaData;
 /** This class will store info about how to display label on gallery */
 public class ColumnInfo {
     
+
 	public int label;
 	public String labelName; //This is redundant, but for avoid a function call
 	public boolean visible; 

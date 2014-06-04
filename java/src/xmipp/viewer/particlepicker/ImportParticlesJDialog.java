@@ -7,6 +7,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
 import java.text.NumberFormat;
+import java.util.Locale;
 
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
@@ -93,7 +94,7 @@ public class ImportParticlesJDialog extends XmippDialog {
 		panel.add(browsebt, XmippWindowUtil.getConstraints(gbc, 2, 1, 1));
 		
 		panel.add(new JLabel("Scale To:"),	XmippWindowUtil.getConstraints(gbc, 0, 2, 1));
-		scaletf = new JFormattedTextField(NumberFormat.getNumberInstance());
+		scaletf = new JFormattedTextField(NumberFormat.getNumberInstance(Locale.ENGLISH));
 		scaletf.setColumns(3);
 		scaletf.setValue(1);
 		panel.add(scaletf, XmippWindowUtil.getConstraints(gbc, 1, 2));

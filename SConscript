@@ -1057,6 +1057,7 @@ AddXmippProgram('resolution_fsc')
 if not int(env['release']):
     AddXmippProgram('resolution_ibw', ['XmippRecons'])
 AddXmippProgram('resolution_ssnr', ['XmippRecons'])
+AddXmippProgram('score_micrograph', ['XmippRecons'])
 AddXmippProgram('transform_add_noise')
 AddXmippProgram('transform_adjust_volume_grey_levels', ['XmippRecons'])
 AddXmippProgram('transform_center_image')
@@ -1230,10 +1231,8 @@ if int(env['matlab']):
 
 # Optical Alignment program
 if int(env['opencv']):
-    gpu = env['CXXFLAGS']
     libs = getLibraryDict('opencv').get(LIBS)
+    AddXmippProgram('optical_alignment_cpu', libs)
     if int(env['cuda']):  
-        gpu += ['-DGPU' ]
         libs += getLibraryDict('cuda').get(LIBS)
-    #AddXmippProgram('optical_alignment', , useCudaEnvironment=True, cxxflags=gpu)
-    AddXmippProgram('optical_alignment', libs , cxxflags=gpu)
+        AddXmippProgram('optical_alignment_gpu', libs)
