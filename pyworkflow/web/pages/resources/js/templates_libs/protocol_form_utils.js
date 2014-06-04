@@ -171,12 +171,9 @@ $(document).ready(function() {
 				});
 			
 			/* Execute the wizard */
-			var action = "/wizard/";
-			var type_wiz = $("#wizName").attr("value");
-			
 			var serialize_form = fixInput($("#protocolForm").serialize());
 			
-			$.post(action, serialize_form, function(html) {
+			$.post("/wizard/", serialize_form, function(html) {
 				
 				$('.messi').remove();
 				$('.messi-modal').remove();
@@ -187,10 +184,6 @@ $(document).ready(function() {
 					errorPopup("Error", "Input particles selected are None");
 				} else if (html=="errorIterate"){
 					errorPopup("Error", "Error iterating over the set of particles");
-				} else if(type_wiz=='wiz_particle_mask' || type_wiz=='wiz_volume_mask'){
-					customPopupHTML(html,540,490);
-				} else if(type_wiz=='wiz_volume_mask_radii' || type_wiz=='wiz_particle_mask_radii'){
-					customPopupHTML(html,550,540);
 				} else{
 					customPopupHTML(html,790,480);
 				}

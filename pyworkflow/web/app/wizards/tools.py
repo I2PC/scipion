@@ -124,7 +124,8 @@ def get_image_psd(request):
     imgXmipp = xmipp.Image()
 
     # compute the PSD image
-    xmipp.fastEstimateEnhancedPSD(imgXmipp, str(imagePath), float(downsample), int(dim), 2)
+    xmipp.fastEstimateEnhancedPSD(imgXmipp, str(imagePath), 
+                                  float(downsample), int(dim), 2)
     
     # from PIL import Image
     img = getPILImage(imgXmipp, dim)
