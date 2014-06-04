@@ -913,7 +913,7 @@ class SetOfClasses(EMSet):
     
     def __init__(self, **args):
         EMSet.__init__(self, **args)
-        self._representatives = None # Store the average images of each class(SetOfParticles)
+        self._representatives = Boolean(False) # Store the average images of each class(SetOfParticles)
         self._imagesPointer = Pointer()
 
     def iterClassImages(self):
@@ -921,26 +921,26 @@ class SetOfClasses(EMSet):
         pass
     
     def hasRepresentatives(self):
-        return self._representatives is not None
+        return self._representatives.get()
     
-    def getRepresentatives(self):
-        """ Return a SetOfImages composed by all the representative images 
-        of the classes. """
-        return self._representatives
-    
-    def createRepresentatives(self, **args):
-        """ Create the empty set for storing the representative of each class.
-        Usually a SetOfParticles for 2D classification and SetOfVolumes for 3D.
-        """
-        self._representatives = self.REP_TYPE(filename=self.getFileName(), prefix='Representatives')
-        
-        if not self.getImages().hasValue():
-            raise Exception(self.getClassName() + ".createRepresentatives: you must set the input images before creating the representatives!!!")
-        
-        self._representatives.copyInfo(self.getImages())
-        self._representatives.setHasCTF(False)
-        
-        return self._representatives
+#     def getRepresentatives(self):
+#         """ Return a SetOfImages composed by all the representative images 
+#         of the classes. """
+#         return self._representatives
+#     
+#     def createRepresentatives(self, **args):
+#         """ Create the empty set for storing the representative of each class.
+#         Usually a SetOfParticles for 2D classification and SetOfVolumes for 3D.
+#         """
+#         self._representatives = self.REP_TYPE(filename=self.getFileName(), prefix='Representatives')
+#         
+#         if not self.getImages().hasValue():
+#             raise Exception(self.getClassName() + ".createRepresentatives: you must set the input images before creating the representatives!!!")
+#         
+#         self._representatives.copyInfo(self.getImages())
+#         self._representatives.setHasCTF(False)
+#         
+#         return self._representatives
     
     def getImages(self):
         """ Return the SetOFImages used to create the SetOfClasses. """
@@ -952,12 +952,16 @@ class SetOfClasses(EMSet):
     def getDimensions(self):
         """Return first image dimensions as a tuple: (xdim, ydim, zdim)"""
         if self.hasRepresentatives():
-            return self.getRepresentatives().getDimensions()
-        
+            return self.getFirstItem().getRepresentative().getDim()
+        return None
+    
     def _insertItem(self, classItem):
         """ Create the SetOfImages assigned to a class.
         If the file exists, it will load the Set.
         """
+        if classItem.hasRepresentative():
+            self._representatives.set(True)
+            
         if classItem.getFileName() is None:
             classPrefix = 'Class%03d' % classItem.getObjId()
             classItem._mapperPath.set('%s,%s' % (self.getFileName(), classPrefix))
@@ -968,8 +972,8 @@ class SetOfClasses(EMSet):
     def write(self):
         """ Override super method to also write the representatives. """
         EMSet.write(self)
-        if self._representatives: # Write if not None
-            self._representatives.write()
+#         if self._representatives: # Write if not None
+#             self._representatives.write()
             
     def getSamplingRate(self):
         return self.getImages().getSamplingRate()
