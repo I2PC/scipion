@@ -130,6 +130,7 @@ MODE_WEBSERVER = 'webserver'
 MODE_COLLECTSTATIC = 'collectstatic'
 MODE_TESTS = 'tests'
 MODE_TESTS_DATA = 'testdata'
+MODE_UPDATE_DATA = 'updatedata'
 MODE_HELP = 'help'
 MODE_DBBROWSE = 'browser'
 MODE_VIEWER = 'viewer'
@@ -244,6 +245,9 @@ def main():
         else:
             print "Gathering all tests data from default dataset..."
             runCmd('scripts/sync_data.py')
+
+    elif mode == MODE_UPDATE_DATA:
+        runCmd('scripts/sync_data.py -q')
 
     elif mode == MODE_DBBROWSE:
         if n > 2:

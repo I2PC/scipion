@@ -414,8 +414,7 @@ class ListDialog(Dialog):
         self.tree = BoundTree(parent, self.provider)
         
     def apply(self):
-        index = self.tree.index(self.tree.getFirst())
-        self.value = self.tree._objects[index]
+        self.value = self.tree.getObjectFromId(self.tree.getFirst())
     
     def validate(self):
         if self.tree.getFirst() is None:

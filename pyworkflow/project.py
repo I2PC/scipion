@@ -439,7 +439,7 @@ class Project(object):
         
         return self.runs
     
-    def iterSubclasses(self, classesName, objectFilter):
+    def iterSubclasses(self, classesName, objectFilter=None):
         """ Retrieve all objects from the project that are instances
             of any of the classes in classesName list.
         Params: 
