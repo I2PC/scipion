@@ -31,7 +31,6 @@ This module is responsible for launching protocol executions.
 import sys
 import os
 from os.path import join, isabs, exists
-import __builtin__
 
 __version__ = 'v.0.1.2 Magnesium'
 
@@ -57,16 +56,18 @@ PW_APPS_TEMP = join(PW_APPS, '%s')
 if not SCIPION_HOME in sys.path:
     sys.path.append(SCIPION_HOME)
 
+
 import config
 
 def getConfigPath(varName):
-    """ Read a path from the config.py, if is relative, 
-    append the SCIPION_HOME prefix. 
+    """ Return the value of varName from config.py, which is a path.
+    If relative, prepend SCIPION_HOME.
     """
     pathValue = getattr(config, varName)
     if not isabs(pathValue):
         pathValue = join(SCIPION_HOME, pathValue)
     return pathValue
+
 
 def getUserDataPath():
     # If SCIPION_USER_DATA is None or empty in config
@@ -83,20 +84,20 @@ XMIPP_LIB = join(XMIPP_HOME, 'lib')
 if not XMIPP_LIB in sys.path:
     sys.path.append(XMIPP_LIB)
 
-SCIPION_DATA = join(SCIPION_HOME, 'data')
-SCIPION_LOGS = join(SCIPION_DATA, 'logs')
-SCIPION_TESTS = join(SCIPION_DATA, 'tests')
-SCIPION_USER_DATA = getUserDataPath()
-SCIPION_TMP = join(SCIPION_USER_DATA, 'tmp')
-SCIPION_DIRS = ['SCIPION_DATA', 'SCIPION_LOGS', 'SCIPION_TESTS', 'SCIPION_USER_DATA', 'SCIPION_TMP']
+SCIPION_DIRS = {
+    'SCIPION_DATA': join(SCIPION_HOME, 'data'),
+    'SCIPION_LOGS': join(SCIPION_HOME, 'data', 'logs'),
+    'SCIPION_TESTS': join(SCIPION_HOME, 'data', 'tests'),
+    'SCIPION_USER_DATA': getUserDataPath(),
+    'SCIPION_TMP': join(getUserDataPath(), 'tmp')}
 
 SCIPION_PYTHON = join(XMIPP_BIN, 'xmipp_python')
 
 os.environ['SCIPION_HOME'] = SCIPION_HOME
 os.environ['SCIPION_PYTHON'] = SCIPION_PYTHON
 
-for var in SCIPION_DIRS:
-    os.environ[var] = globals()[var]
+for k,v in SCIPION_DIRS.iteritems():
+    os.environ[k] = v
 
 VARS = {
         'PYTHONPATH': os.pathsep.join([SCIPION_HOME, XMIPP_LIB, os.environ.get('PYTHONPATH', '')]),
@@ -146,7 +147,7 @@ def main():
     else:
         mode = MODE_MANAGER
 
-    # Create SCIPION_HOME folder if not exists
+    # Create SCIPION_HOME folder if it does not exist
     if mode != MODE_INSTALL:
         error = ''
         for d in SCIPION_DIRS:

@@ -334,7 +334,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         elif self.rejectionMethod == REJECT_PERCENTAGE:
             percentage = self.percentage.get()
             args += " --percent " + str(percentage)
-
+        
         self.runJob("xmipp_image_sort_by_statistics", args % locals())
         # Create output SetOfParticles
         imgSet = self._createSetOfParticles()
@@ -349,7 +349,6 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         imgSetAux = self._createSetOfParticles('aux')
         imgSetAux.copyInfo(imgSet)
         readSetOfParticles(fnImages, imgSetAux, imgSet.hasCTF())
-        imgSet._xmippMd = imgSetAux._xmippMd.clone()
         # For each particle retrieve micId from SetOFCoordinates and set it on the CTFModel
         for img in imgSetAux:
             #FIXME: This can be slow to make a query to grab the coord, maybe use zip(imgSet, coordSet)???

@@ -271,16 +271,18 @@ def ctfModelToRow(ctfModel, ctfRow):
     """ Set labels values from ctfModel to md row. """
     objectToRow(ctfModel, ctfRow, CTF_DICT)
 
+
 def defocusGroupSetToRow(defocusGroup, defocusGroupRow):
     """ Set labels values from ctfModel to md row. """
     objectToRow(defocusGroup, defocusGroupRow, CTF_DICT)
+
 
 def rowToCtfModel(md, objId):
     """ Create a CTFModel from a row of a metadata. """
     ctfModel = CTFModel()
     rowToObject(md, objId, ctfModel, CTF_DICT) 
     return ctfModel
-    
+
 
 def acquisitionToRow(acquisition, ctfRow):
     """ Set labels values from acquisition to md row. """
@@ -373,7 +375,8 @@ def writeSetOfCoordinates(posDir, coordSet):
     md.write('filters@%s' % configFn, xmipp.MD_APPEND)
     
     return posFiles
-    
+
+
 def readSetOfCoordinates(outputDir, micSet, coordSet):
     """ Read from Xmipp .pos files.
     Params:
@@ -426,6 +429,7 @@ def readPosCoordinates(posFile):
     
     return md
 
+
 def readSetOfImages(filename, imgSet, rowToFunc, hasCtf):
     """read from Xmipp image metadata.
         filename: The metadata filename where the image are.
@@ -447,9 +451,8 @@ def readSetOfImages(filename, imgSet, rowToFunc, hasCtf):
         imgSet.setSamplingRate(samplingRate)
     else:
         pass # TODO: what to do if not exists
-        
-    imgSet._xmippMd = String(filename)
- 
+
+
 def setOfImagesToMd(imgSet, md, imgToFunc, rowFunc):
     """ This function will fill Xmipp metadata from a SetOfMicrographs
     Params:
@@ -466,7 +469,8 @@ def setOfImagesToMd(imgSet, md, imgToFunc, rowFunc):
         if rowFunc:
             rowFunc(img, imgRow)
         imgRow.writeToMd(md, objId)
-            
+
+
 def writeSetOfImages(imgSet, filename, imgToFunc, rowFunc):
     """ This function will write a SetOfMicrographs as Xmipp metadata.
     Params:
@@ -478,8 +482,6 @@ def writeSetOfImages(imgSet, filename, imgToFunc, rowFunc):
     md = xmipp.MetaData()
     setOfImagesToMd(imgSet, md, imgToFunc, rowFunc)
     md.write(filename)
-    imgSet._xmippMd = String(filename)
-        
         
 def writeImgToMetadata(md, img, hasCtf, imgToFunc, rowFunc):
     objId = md.addObject()
@@ -492,15 +494,19 @@ def writeImgToMetadata(md, img, hasCtf, imgToFunc, rowFunc):
 
 def readSetOfParticles(filename, partSet, hasCtf=False):
     readSetOfImages(filename, partSet, rowToParticle, hasCtf)
-     
+
+
 def setOfParticlesToMd(imgSet, md, rowFunc=None):
     setOfImagesToMd(imgSet, md, particleToRow, rowFunc)
-      
+
+
 def setOfMicrographsToMd(imgSet, md, rowFunc=None):
     setOfImagesToMd(imgSet, md, micrographToRow, rowFunc)
-      
+
+
 def writeSetOfParticles(imgSet, filename, rowFunc=None):
     writeSetOfImages(imgSet, filename, particleToRow, rowFunc)
+
 
 def writeSetOfCTFs(ctfSet, mdCTF):
     """ Write a ctfSet on metadata format. 
@@ -570,7 +576,6 @@ def writeSetOfClasses2D(classes2DSet, filename, classesBlock='classes'):
         imagesMd.write(imagesFn, xmipp.MD_APPEND)
     
     classMd.write(classFn, xmipp.MD_APPEND) # Empty write to ensure the classes is the first block
-    classes2DSet._xmippMd = String(filename)
 
 
 def readSetOfClasses2D(classes2DSet, filename, classesBlock='classes', **args):
@@ -610,8 +615,6 @@ def readSetOfClasses2D(classes2DSet, filename, classesBlock='classes', **args):
             avg.copyObjId(class2D)
             averages.append(avg)
 
-    classes2DSet._xmippMd = String(filename)
-
 
 # def writeSetOfClasses3D(classes3DSet, filename, classesBlock='classes'):    
 #     """ This function will write a SetOfClasses3D as Xmipp metadata.
@@ -638,7 +641,6 @@ def readSetOfClasses2D(classes2DSet, filename, classesBlock='classes', **args):
 #         imagesMd.write(imagesFn, xmipp.MD_APPEND)
 #     
 #     classMd.write(classFn, xmipp.MD_APPEND) # Empty write to ensure the classes is the first block
-#     classes3DSet._xmippMd = String(filename)
 
 
 def readSetOfClasses3D(classes3DSet, filename, classesBlock='classes', **args):
@@ -679,8 +681,6 @@ def readSetOfClasses3D(classes3DSet, filename, classesBlock='classes', **args):
             avg.setLocation(index, avgFn)
             avg.copyObjId(class3D)
             averages.append(avg)
-    
-    classes3DSet._xmippMd = String(filename)
 
 
 def writeSetOfClassesVol(classesVolSet, filename, classesBlock='classes'):    
@@ -708,7 +708,6 @@ def writeSetOfClassesVol(classesVolSet, filename, classesBlock='classes'):
         imagesMd.write(imagesFn, xmipp.MD_APPEND)
     
     classMd.write(classFn, xmipp.MD_APPEND) # Empty write to ensure the classes is the first block
-    classesVolSet._xmippMd = String(filename)
 
 
 def readSetOfClassesVol(classesVolSet, filename, classesBlock='classes', **args):
@@ -749,7 +748,6 @@ def readSetOfClassesVol(classesVolSet, filename, classesBlock='classes', **args)
             avg.setLocation(index, avgFn)
             avg.copyObjId(classVol)
             averages.append(avg)
-    classesVolSet._xmippMd = String(filename)
 
 
 def writeSetOfMovies(moviesSet, filename, moviesBlock='movies'):    
@@ -770,55 +768,37 @@ def writeSetOfMovies(moviesSet, filename, moviesBlock='movies'):
             micrographToRow(mic, micRow)
             micRow.writeToMd(micrographsMd, micrographsMd.addObject())
         micrographsMd.write(micrographsFn, xmipp.MD_APPEND)
-    
-    moviesSet._xmippMd = String(filename)
 
 
 def createXmippInputImages(prot, imgSet, rowFunc=None, imagesFn=None):  
-    imgsMd = getattr(imgSet, '_xmippMd', None)
-    if imgsMd is None:
-        imgsFn = imagesFn    
-        if prot is not None:
-            imgsFn = prot._getPath(imagesFn or 'input_images.xmd')
-
-        writeSetOfParticles(imgSet, imgsFn, rowFunc)
-    else:
-        imgsFn = imgsMd.get()
+    if prot is not None:
+        imgsFn = prot._getPath(imagesFn or 'input_images.xmd')
+    
+    writeSetOfParticles(imgSet, imgsFn, rowFunc)
     return imgsFn
 
 
 def createXmippInputMicrographs(prot, micSet, rowFunc=None, micsFn=None):    
-    micsMd = getattr(micSet, '_xmippMd', None)
-    if micsMd is None:
-        if prot is not None:
-            micsFn = prot._getPath('input_micrographs.xmd')
-        writeSetOfMicrographs(micSet, micsFn, rowFunc)
-    else:
-        micsFn = micsMd.get()
+    if prot is not None:
+        micsFn = prot._getPath('input_micrographs.xmd')
+
+    writeSetOfMicrographs(micSet, micsFn, rowFunc)
     return micsFn
 
 
 def createXmippInputVolumes(prot, volSet, volsFn=None):    
-    volsMd = getattr(volSet, '_xmippMd', None)
-    if volsMd is None:
-        if volsFn is None:
-            volsFn = prot._getPath('input_volumes.xmd')
-        
-        writeSetOfVolumes(volSet, volsFn)
-    else:
-        volsFn = volsMd.get()
+    if volsFn is None:
+        volsFn = prot._getPath('input_volumes.xmd')
+    
+    writeSetOfVolumes(volSet, volsFn)
     return volsFn
 
 
 def createXmippInputClasses2D(prot, classSet, classFn=None):
-    classMd = getattr(classSet, '_xmippMd', None)
-    if classMd is None:
-        if prot is not None:
-            classFn = prot._getPath('input_classes.xmd')
-        
-        writeSetOfClasses2D(classSet, classFn)
-    else:
-        classFn = classMd.get()
+    if prot is not None:
+        classFn = prot._getPath('input_classes.xmd')
+    
+    writeSetOfClasses2D(classSet, classFn)
     return classFn
     
 
