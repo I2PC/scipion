@@ -70,6 +70,10 @@ public:
     double tiltSingle;
     /// Psi angle of a single projection
     double psiSingle;
+    //// X shift of a single projection
+    double xShift;
+    //// Y shift of a single projection
+    double yShift;
     /// Type of projection algorithm
     projectionType projType;
     /// The padding factor for Fourier projection
