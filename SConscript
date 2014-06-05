@@ -1057,6 +1057,7 @@ AddXmippProgram('resolution_fsc')
 if not int(env['release']):
     AddXmippProgram('resolution_ibw', ['XmippRecons'])
 AddXmippProgram('resolution_ssnr', ['XmippRecons'])
+AddXmippProgram('score_micrograph', ['XmippRecons'])
 AddXmippProgram('transform_add_noise')
 AddXmippProgram('transform_adjust_volume_grey_levels', ['XmippRecons'])
 AddXmippProgram('transform_center_image')
