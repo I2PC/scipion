@@ -80,6 +80,8 @@ void ProgProject::readParams()
         rotSingle  = getDoubleParam("--angles",0);
         tiltSingle = getDoubleParam("--angles",1);
         psiSingle  = getDoubleParam("--angles",2);
+        xShift  = -1. * getDoubleParam("--angles",3);
+        yShift  = -1. * getDoubleParam("--angles",4);
     }
 }
 
@@ -89,7 +91,7 @@ void ProgProject::defineParams()
     addUsageLine("This program is able to generate a set of projections from a volume. ");
     addUsageLine("++The projection is done using the information directly or from a file.");
     addSeeAlsoLine("tomo_project, xray_project, phantom_create");
-   
+
     addParamsLine("   -i <volume_file>                           : Voxel volume, PDB or description file");
     addParamsLine("   -o <image_file>                            : Output stack or image");
     addParamsLine("  [--sampling_rate <Ts=1>]                    : It is only used for PDB phantoms");
@@ -118,11 +120,11 @@ void ProgProject::defineParams()
     addParamsLine("  [--sym <sym_file>]                     : It is used for computing the assymetric unit");
     addParamsLine("  [--only_create_angles]                 : Do not create projections");
     addParamsLine("== Generating a single projection == ");
-    addParamsLine("  [--angles <rot> <tilt> <psi>]          : Angles for a single projection");
+    addParamsLine("  [--angles <rot> <tilt> <psi> <x=0.> <y=0.>]: Angles and shifts for a single projection");
     addParamsLine("  [--xdim <size=-1>]                     : Size of the projection");
     addParamsLine("                                         : For geometric descriptions and voxel volumes");
     addParamsLine("                                         : this parameter is not necessary");
-      addExampleLine("Generating a set of projections using fourier method",false);
+    addExampleLine("Generating a set of projections using fourier method",false);
     addExampleLine("xmipp_phantom_project -i volume.vol -o images.stk --method fourier 3 0.25 bspline --params uniformProjection_xmd.param");
     addExampleLine("Generating a set of projections using shears method",false);
     addExampleLine("xmipp_phantom_project -i volume.vol -o images.stk --method shears --params uniformProjection_xmd.param");
@@ -217,6 +219,11 @@ void ParametersProjection::read(const FileName &fn_proj_param)
     {
         MetaData MD;
         MD.read(fn_proj_param);
+        //if X and Y those not exists add them
+        if (!MD.containsLabel(MDL_SHIFT_X))
+            MD.addLabel(MDL_SHIFT_X);
+        if (!MD.containsLabel(MDL_SHIFT_Y))
+            MD.addLabel(MDL_SHIFT_Y);
         if (MD.isEmpty())
             REPORT_ERROR(ERR_IO_NOTOPEN,
                          (String)"Prog_Project_Parameters::read: There is a problem "
@@ -853,6 +860,8 @@ void PROJECT_Side_Info::produce_Side_Info(ParametersProjection &prm,
         DF.setValue(MDL_ANGLE_ROT,prog_prm.rotSingle,DFid);
         DF.setValue(MDL_ANGLE_TILT,prog_prm.tiltSingle,DFid);
         DF.setValue(MDL_ANGLE_PSI,prog_prm.psiSingle,DFid);
+        DF.setValue(MDL_SHIFT_X,prog_prm.xShift,DFid);
+        DF.setValue(MDL_SHIFT_Y,prog_prm.yShift,DFid);
     }
 
     // Load Phantom and set working mode
@@ -913,7 +922,7 @@ int PROJECT_Effectively_project(const FileName &fnOut,
     int NumProjs = 0;
     SF.clear();
     if (!fnOut.isInStack())
-    	fnOut.deleteFile();
+        fnOut.deleteFile();
     std::cerr << "Projecting ...\n";
     init_progress_bar(side.DF.size());
     SF.setComment("First set of angles=actual angles; Second set of angles=noisy angles");
@@ -952,7 +961,7 @@ int PROJECT_Effectively_project(const FileName &fnOut,
         Vshears=new RealShearsInfo(side.phantomVol());
     if (projType == FOURIER && side.phantomMode==PROJECT_Side_Info::VOXEL)//////////////////////
         Vfourier=new FourierProjector(side.phantomVol(),side.paddFactor,side.maxFrequency,side.BSplineDeg);
-                                     ///                   1              .5                        NEAREST
+    ///                   1              .5                        NEAREST
     fn_proj=fnOut;
     if (side.doCrystal)
         createEmptyFile(fn_proj, prm_crystal.crystal_Xdim, prm_crystal.crystal_Ydim,
@@ -969,10 +978,13 @@ int PROJECT_Effectively_project(const FileName &fnOut,
         SF.setValue(MDL_ENABLED,1,DFmov_objId);
 
         // Choose angles .....................................................
-        double rot, tilt, psi;         // Actual projecting angles
+        double rot, tilt, psi, x, y;    // Actual projecting angles
         side.DF.getValue(MDL_ANGLE_ROT,rot,__iter.objId);
         side.DF.getValue(MDL_ANGLE_TILT,tilt,__iter.objId);
         side.DF.getValue(MDL_ANGLE_PSI,psi,__iter.objId);
+        side.DF.getValue(MDL_SHIFT_X,x,__iter.objId);
+        side.DF.getValue(MDL_SHIFT_Y,y,__iter.objId);
+
         SF.setValue(MDL_ANGLE_ROT,realWRAP(rot, 0, 360),DFmov_objId);
         SF.setValue(MDL_ANGLE_TILT,realWRAP(tilt, 0, 360),DFmov_objId);
         SF.setValue(MDL_ANGLE_PSI,realWRAP(psi, 0, 360),DFmov_objId);
@@ -981,8 +993,8 @@ int PROJECT_Effectively_project(const FileName &fnOut,
             progress_bar(NumProjs);
 
         // Choose Center displacement ........................................
-        double shiftX = rnd_gaus(prm.Ncenter_avg, prm.Ncenter_dev);
-        double shiftY = rnd_gaus(prm.Ncenter_avg, prm.Ncenter_dev);
+        double shiftX = rnd_gaus(prm.Ncenter_avg, prm.Ncenter_dev)+x;
+        double shiftY = rnd_gaus(prm.Ncenter_avg, prm.Ncenter_dev)+y;
         SF.setValue(MDL_SHIFT_X,-shiftX,DFmov_objId);
         SF.setValue(MDL_SHIFT_Y,-shiftY,DFmov_objId);
 #ifdef DEBUG
