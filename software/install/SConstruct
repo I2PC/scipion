@@ -28,28 +28,109 @@
 # Brief summary: This file is intended to be the main skeleton which will guide all the installation process using a SCons python-based system.
 #
 
+import os
+import sys
+import platform
+
+
 #############
 # VARIABLES #
 #############
 
+# OS boolean vars
+MACOSX = platform.system() == 'Darwin'
+WINDOWS = platform.system() == 'Windows'
+LINUX = platform.system() == 'Linux'
+MANDATORY_PYVERSION = '2.7.7' #python version that is obligatory for executing Scipion
+PYVERSION = platform.python_version() #python version present in the machine
 
-#################
-# PREREQUISITES #
-#################
+# Big scipion structure dictionary and associated vars
+# indexes
+DEF = 0 # is built by default?
+INCS = 1 # includes
+LIBS = 2 # libraries to create
+SRC = 3 # source pattern
+DIR = 4 # folder name in temporal directory
+DEPS = 5 # explicit dependencies
+URL = 6 # URL to download from
+
+SCIPION = {
+    'FOLDERS': {'CONFIG_FOLDER': [os.path.join('software', 'cfg')],
+                'INSTALL_FOLDER': [os.path.join('software', 'install')],
+                'BIN_FOLDER': [os.path.join('software', 'bin')],
+                'PACKAGES_FOLDER': [os.path.join('software', 'em')],
+                'LIB_FOLDER': [os.path.join('software', 'lib')],
+                'MAN_FOLDER': [os.path.join('software', 'man')],
+                'TMP_FOLDER': [os.path.join('software', 'tmp')],
+                'INCLUDE_FOLDER': [os.path.join('software', 'include')]
+                }
+    'LIBS': {'tcl': {DEF: True,
+                     INCS: [],
+                     LIBS: [],
+                     SRC: [],
+                     DIR: [],
+                     DEPS: [],
+                     URL: ['http://scipionwiki.cnb.csic.es/downloads/software/external/tcl8.6.1-src.tar.gz']},
+             'tk': {DEF: True,
+                    INCS: [],
+                    LIBS: [],
+                    SRC: [],
+                    DIR: [],
+                    DEPS: [],
+                    URL: ['http://scipionwiki.cnb.csic.es/downloads/software/external/tk8.6.1-src.tar.gz']},
+             'python': {DEF: True,
+                        INCS: [],
+                        LIBS: [],
+                        SRC: [],
+                        DIR: [],
+                        DEPS: [],
+                        URL: ['http://scipionwiki.cnb.csic.es/downloads/software/external/Python-2.7.7.tgz']},
+             },
+    'PACKAGES': {
+                 }
+    }
 
 
-###########################
-# COMMON PRECONFIGURATION #
-###########################
+#########################
+# ENVIRONMENT AND TOOLS #
+#########################
 
 # We create the environment the whole build will use
-env = Environment()
+env = None
+env = Environment(tools=['URLDownload',
+                         'disttar',
+                         'Make',
+                         'Unpack'
+                         'AutoConfig',
+                         'ConfigureJNI',
+                         'install',
+                         'cuda'],
+                  toolpath=[os.path.join('software', 'install', 'scons-tools')])
 # To decide if a target must be rebuilt, both md5 and timestamp will be used together
 env.Decider('MD5-timestamp')
 # For certain files or folders which change could affect the compilation, here there could exist also a user-defined decider function. At this moment MD5-timestamp will be enough 
 
 # To avoid the scanning of new dependencies for every file each time you rebuild, we set an implicit cache. So once a file has been scanned (its #includes pointers) then it won't be scanned again unless the file is changed
 SetOption('implicit_cache', 1)
+
+#Depending on the system, we have to add to the environment, the path to where dynamic libraries are, so linker can find them 
+if LINUX:
+    env.AppendUnique(LIBPATH=os.environ['LD_LIBRARY_PATH'])
+elif MACOSX:
+    print "OS not tested yet"
+    env.AppendUnique(LIBPATH=os.environ['DYLD_FALLBACK_LIBRARY_PATH'])
+elif WINDOWS:
+    print "OS not tested yet"
+
+
+#################
+# PREREQUISITES #
+#################
+
+# Python is needed. Any kind of python, to be able to execute this, but 2.7.6 version os python will be the one to execute Scipion. If the person doesn't have 2.7.6, SCons will compile it. Otherwise, a virtual environment will be used on top of system one, just if the user selects it. By default, python will be built
+COMPILE_PYTHON = (PYVERSION != MANDATORY_PYVERSION) and not USER_COMMANDS
+# If python is not needed to be compiled, then a virtual environment is needed on top of the system python
+BUILD_VIRTUALENV = not COMPILE_PYTHON
 
 #Already compiled scons (using install.sh)
 #Python at any version (if 2.7.6, this will be used, otherwise, a new one will be compiled)
@@ -60,7 +141,7 @@ SetOption('implicit_cache', 1)
 ############################
 
 # Tcl/Tk
-
+env.SConscript()
 # sqlite
 
 
@@ -96,7 +177,10 @@ SetOption('implicit_cache', 1)
 # AUXILIAR FUNCTIONS #
 ######################
 
-def scipion_logo():
+def addLibrary():
+    print "This method is for adding a library to the main dict"
+
+def scipionLogo():
     print ""
     print "QQQQQQQQQT!^'::\"\"?$QQQQQQ" + "  S   S   S"
     print "QQQQQQQY`          ]4QQQQ"   + "  C   C   C"
