@@ -993,8 +993,8 @@ int PROJECT_Effectively_project(const FileName &fnOut,
             progress_bar(NumProjs);
 
         // Choose Center displacement ........................................
-        double shiftX = rnd_gaus(prm.Ncenter_avg, prm.Ncenter_dev)+x;
-        double shiftY = rnd_gaus(prm.Ncenter_avg, prm.Ncenter_dev)+y;
+        double shiftX = -rnd_gaus(prm.Ncenter_avg, prm.Ncenter_dev)-x;
+        double shiftY = -rnd_gaus(prm.Ncenter_avg, prm.Ncenter_dev)-y;
         SF.setValue(MDL_SHIFT_X,-shiftX,DFmov_objId);
         SF.setValue(MDL_SHIFT_Y,-shiftY,DFmov_objId);
 #ifdef DEBUG
@@ -1020,7 +1020,7 @@ int PROJECT_Effectively_project(const FileName &fnOut,
             if (projType == SHEARS)
                 projectVolume(*Vshears, proj, prm.proj_Ydim, prm.proj_Xdim,
                               rot, tilt, psi);
-            else if (projType == FOURIER)///////////////////////////////////////
+            else if (projType == FOURIER)
                 projectVolume(*Vfourier, proj, prm.proj_Ydim, prm.proj_Xdim,
                               rot, tilt, psi);
             else if (projType == REALSPACE)
@@ -1065,9 +1065,6 @@ int PROJECT_Effectively_project(const FileName &fnOut,
         rot  += rnd_gaus(prm.rot_range.Navg,  prm.rot_range.Ndev);
         tilt += rnd_gaus(prm.tilt_range.Navg, prm.tilt_range.Ndev);
         psi  += rnd_gaus(prm.psi_range.Navg,  prm.psi_range.Ndev);
-        //        SF.setValue(MDL_ANGLE_ROT,rot,DFmov_objId);
-        //        SF.setValue(MDL_ANGLE_TILT,tilt,DFmov_objId);
-        //        SF.setValue(MDL_ANGLE_PSI,psi,DFmov_objId);
         SF.setValue(MDL_ANGLE_ROT,realWRAP(rot, 0, 360),DFmov_objId);
         SF.setValue(MDL_ANGLE_TILT,realWRAP(tilt, 0, 360),DFmov_objId);
         SF.setValue(MDL_ANGLE_PSI,realWRAP(psi, 0, 360),DFmov_objId);
