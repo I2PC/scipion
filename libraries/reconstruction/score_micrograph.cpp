@@ -38,9 +38,12 @@ void ProgScoreMicrograph::readParams()
 	skipBorders = 2;
 	Nsubpiece = 1;
 	bootstrapN = -1;
+	estimate_ctf = true;
 
 	fn_micrograph = getParam("--micrograph");
 	particleSize = getIntParam("--particleSize");
+
+	 prmEstimateCTFFromPSD.readBasicParams(this);
 
 }
 
@@ -50,31 +53,24 @@ void ProgScoreMicrograph::defineParams()
 	addUsageLine("Estimate the score of a given Micrograph attending on different parameters.");
     addParamsLine("   --micrograph <file>         : File with the micrograph");
     addParamsLine("  [--particleSize <p=100>]       : Size of the particle");
+    ProgCTFEstimateFromPSD::defineBasicParams(this);
 }
 
 /* Apply ------------------------------------------------------------------- */
 void ProgScoreMicrograph::run()
 {
 
+	//prmEstimateCTFFromPSD.defocus_range = defocus_range;
+	prmEstimateCTFFromMicrograph.prmEstimateCTFFromPSD = prmEstimateCTFFromPSD;
 	prmEstimateCTFFromMicrograph.pieceDim = pieceDim;
 	prmEstimateCTFFromMicrograph.overlap = overlap;
 	prmEstimateCTFFromMicrograph.skipBorders = skipBorders;
 	prmEstimateCTFFromMicrograph.Nsubpiece = 1;
 	prmEstimateCTFFromMicrograph.bootstrapN = bootstrapN;
+	prmEstimateCTFFromMicrograph.estimate_ctf = estimate_ctf;
 	prmEstimateCTFFromMicrograph.fn_micrograph = fn_micrograph;
+
 	prmEstimateCTFFromMicrograph.fn_root = "/home/jvargas/Linux/Proyectos/LUMC/set_001_challenge/kk";
-
-	//prmEstimateCTFFromMicrograph.PSDEstimator_mode = ProgCTFEstimateFromMicrograph.TPSDEstimator_mode.Periodogram;
-	//	PSDEstimator_mode = prmEstimateCTFFromMicrograph.TPSDEstimator_mode->	Periodogram;
-
-/*
-	psd_mode = ProgCTFEstimateFromMicrograph::TPSD_mode::OnePerMicrograph;
-	prmEstimateCTFFromMicrograph.psd_mode = psd_mode;
-
-	PSDEstimator_mode = ProgCTFEstimateFromMicrograph::TPSDEstimator_mode::Periodogram;
-	prmEstimateCTFFromMicrograph.PSDEstimator_mode = PSDEstimator_mode;
-*/
-	std::cout << prmEstimateCTFFromMicrograph.PSDEstimator_mode << std::endl;
 	prmEstimateCTFFromMicrograph.run();
 
 }
