@@ -70,6 +70,9 @@ public:
     /** Maximum tilt */
     double tiltF;
 
+    /** Use imed */
+    bool useImed;
+
 public: // Internal members
     MetaData mdIn, mdInit;
 

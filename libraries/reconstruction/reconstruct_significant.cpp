@@ -44,7 +44,8 @@ void ProgReconstructSignificant::defineParams()
     addParamsLine("  [--angularSampling <a=5>]    : Angular sampling in degrees for generating the projection gallery");
     addParamsLine("  [--maxShift <s=-1>]          : Maximum shift allowed (+-this amount)");
     addParamsLine("  [--minTilt <t=0>]            : Minimum tilt angle");
-    addParamsLine("  [--maxTilt <t=180>]          : Maximum tilt angle");
+    addParamsLine("  [--maxTilt <t=90>]          : Maximum tilt angle");
+    addParamsLine("  [--useImed]                  : Use Imed for weighting");
 }
 
 // Read arguments ==========================================================
@@ -63,6 +64,7 @@ void ProgReconstructSignificant::readParams()
     maxShift=getDoubleParam("--maxShift");
     tilt0=getDoubleParam("--minTilt");
     tiltF=getDoubleParam("--maxTilt");
+    useImed=checkParam("--useImed");
 }
 
 // Show ====================================================================
@@ -81,6 +83,7 @@ void ProgReconstructSignificant::show()
         std::cout << "Maximum shift               : "  << maxShift << std::endl;
         std::cout << "Minimum tilt                : "  << tilt0 << std::endl;
         std::cout << "Maximum tilt                : "  << tiltF << std::endl;
+        std::cout << "Use Imed                    : "  << useImed << std::endl;
         if (fnSym != "")
             std::cout << "Symmetry for projections    : "  << fnSym << std::endl;
         if (fnInit !="")
@@ -123,7 +126,7 @@ void progReconstructSignificantThreadAlign(ThreadArgument &thArg)
 			fnImg=prm.mdInp[nImg];
 			allM.clear();
 
-			double bestCorr=-2, bestRot, bestTilt, bestImed=1e38;
+			double bestCorr=-2, bestRot, bestTilt, bestImed=1e38, worstImed=-1e38;
 			Matrix2D<double> bestM;
 			int bestVolume=-1;
 
@@ -135,9 +138,13 @@ void progReconstructSignificantThreadAlign(ThreadArgument &thArg)
 					mGalleryProjection.aliasImageInStack(prm.gallery[nVolume](),nDir);
 					mGalleryProjection.setXmippOrigin();
 					double corr=alignImagesConsideringMirrors(mGalleryProjection,mCurrentImageAligned,M,DONT_WRAP);
+					M=M.inv();
 					double imed=imedDistance(mGalleryProjection, mCurrentImageAligned);
 
+//					if (corr>0.99)
+//					{
 //					std::cout << prm.mdGallery[nVolume][nDir].fnImg << " corr= " << corr << " imed= " << imed << std::endl;
+//					std::cout << "Matrix=" << M << std::endl;
 //					Image<double> save;
 //					save()=mGalleryProjection;
 //					save.write("PPPgallery.xmp");
@@ -146,6 +153,7 @@ void progReconstructSignificantThreadAlign(ThreadArgument &thArg)
 //					save()=mCurrentImageAligned;
 //					save.write("PPPcurrentImageAligned.xmp");
 //					char c; std::cin >> c;
+//					}
 
 					DIRECT_A3D_ELEM(prm.cc,nImg,nVolume,nDir)=corr;
 					size_t idx=nVolume*Ndirs+nDir;
@@ -164,6 +172,8 @@ void progReconstructSignificantThreadAlign(ThreadArgument &thArg)
 
 					if (imed<bestImed)
 						bestImed=imed;
+					else if (imed>worstImed)
+						worstImed=imed;
 				}
 
 	    	// Keep the best assignment for the projection matching
@@ -171,7 +181,7 @@ void progReconstructSignificantThreadAlign(ThreadArgument &thArg)
 			double scale, shiftX, shiftY, anglePsi;
 			bool flip;
 			transformationMatrix2Parameters2D(bestM,flip,scale,shiftX,shiftY,anglePsi);
-			anglePsi*=-1;
+			// anglePsi*=-1;
 
 			// Compute lower limit of correlation
 			double rl=bestCorr*one_alpha;
@@ -186,8 +196,8 @@ void progReconstructSignificantThreadAlign(ThreadArgument &thArg)
 			mdProjectionMatching.setValue(MDL_ANGLE_ROT,bestRot,recId);
 			mdProjectionMatching.setValue(MDL_ANGLE_TILT,bestTilt,recId);
 			mdProjectionMatching.setValue(MDL_ANGLE_PSI,anglePsi,recId);
-			mdProjectionMatching.setValue(MDL_SHIFT_X,shiftX,recId);
-			mdProjectionMatching.setValue(MDL_SHIFT_Y,shiftY,recId);
+			mdProjectionMatching.setValue(MDL_SHIFT_X,-shiftX,recId);
+			mdProjectionMatching.setValue(MDL_SHIFT_Y,-shiftY,recId);
 			mdProjectionMatching.setValue(MDL_FLIP,flip,recId);
 
 	    	// Get the best images
@@ -200,7 +210,7 @@ void progReconstructSignificantThreadAlign(ThreadArgument &thArg)
 				{
 					size_t idx=nVolume*Ndirs+nDir;
 					double cdfccthis=DIRECT_A1D_ELEM(cdfcc,idx);
-					// double cdfimedthis=DIRECT_A1D_ELEM(cdfimed,idx);
+					double cdfimedthis=DIRECT_A1D_ELEM(cdfimed,idx);
 					double cc=DIRECT_A1D_ELEM(imgcc,idx);
 //					if (cc>ccl)
 //						std::cout << "    " << prm.mdGallery[nVolume][nDir].fnImg << " ***cc=" << cc << " cdfcc=" << cdfccthis << " cdfimedthis=" << cdfimedthis << std::endl;
@@ -208,23 +218,30 @@ void progReconstructSignificantThreadAlign(ThreadArgument &thArg)
 //						std::cout << "    " << prm.mdGallery[nVolume][nDir].fnImg << " cc=" << cc << " ***cdfcc=" << cdfccthis << " cdfimedthis=" << cdfimedthis << std::endl;
 //					if (cdfimedthis<=prm.currentAlpha)
 //						std::cout << "    " << prm.mdGallery[nVolume][nDir].fnImg << " cc=" << cc << " cdfcc=" << cdfccthis << " ***cdfimedthis=" << cdfimedthis << std::endl;
-					if (cdfccthis>=one_alpha && /* cdfimedthis<=prm.currentAlpha &&*/  cc>ccl)
+					bool condition=!prm.useImed || (prm.useImed && cdfimedthis<=prm.currentAlpha);
+					if (cdfccthis>=one_alpha && cc>ccl && condition)
 					{
 						double imed=DIRECT_A1D_ELEM(imgimed,idx);
 						transformationMatrix2Parameters2D(allM[nVolume*Ndirs+nDir],flip,scale,shiftX,shiftY,anglePsi);
 						if (prm.maxShift>0)
 							if (fabs(shiftX)>prm.maxShift || fabs(shiftY)>prm.maxShift)
 								continue;
+						if (flip)
+							shiftX*=-1;
 
-						anglePsi*=-1;
-						double weight=cdfccthis*/*(1-cdfimedthis)*(bestImed/imed)**/(cc/bestCorr);
+						// anglePsi*=-1;
+						double weight=cdfccthis*(cc/bestCorr);
+						if (prm.useImed)
+							weight*=(1-cdfimedthis)*(bestImed/imed);
 						DIRECT_A3D_ELEM(prm.weight,nImg,nVolume,nDir)=weight;
 						double angleRot=prm.mdGallery[nVolume][nDir].rot;
 						double angleTilt=prm.mdGallery[nVolume][nDir].tilt;
 			#ifdef DEBUG
 						std::cout << "   Getting Gallery: " << prm.mdGallery[nVolume][nDir].fnImg
 								  << " corr=" << cc << " imed=" << imed << " weight=" << weight << " rot=" << angleRot
-								  << " tilt=" << angleTilt << std::endl;
+								  << " tilt=" << angleTilt << std::endl
+						          << "Matrix=" << allM[nVolume*Ndirs+nDir] << std::endl
+						          << "shiftX=" << shiftX << " shiftY=" << shiftY << std::endl;
 			#endif
 
 						recId=mdPartial.addObject();
@@ -235,8 +252,8 @@ void progReconstructSignificantThreadAlign(ThreadArgument &thArg)
 						mdPartial.setValue(MDL_ANGLE_ROT,angleRot,recId);
 						mdPartial.setValue(MDL_ANGLE_TILT,angleTilt,recId);
 						mdPartial.setValue(MDL_ANGLE_PSI,anglePsi,recId);
-						mdPartial.setValue(MDL_SHIFT_X,shiftX,recId);
-						mdPartial.setValue(MDL_SHIFT_Y,shiftY,recId);
+						mdPartial.setValue(MDL_SHIFT_X,-shiftX,recId);
+						mdPartial.setValue(MDL_SHIFT_Y,-shiftY,recId);
 						mdPartial.setValue(MDL_FLIP,flip,recId);
 						mdPartial.setValue(MDL_IMAGE_IDX,(size_t)nImg,recId);
 						mdPartial.setValue(MDL_REF,(int)nDir,recId);
