@@ -527,15 +527,20 @@ class SetOfImages(EMSet):
     def __str__(self):
         """ String representation of a set of images. """
         sampling = self.getSamplingRate()
+        dimStr = "No Dim"
+        
         if not sampling:
             print "FATAL ERROR: Object %s has no sampling rate!!!" % self.getName()
             sampling = -999.0
         if self._firstDim.isEmpty():
             try:
                 self._firstDim.set(self.getFirstItem().getDim())
+                dimStr = str(self._firstDim)
             except Exception, ex:
                 print "Error reading dimension: ", ex
-        s = "%s (%d items, %s, %0.2f A/px)" % (self.getClassName(), self.getSize(), self._firstDim, sampling)
+                import traceback
+                traceback.print_exc()
+        s = "%s (%d items, %s, %0.2f A/px)" % (self.getClassName(), self.getSize(), dimStr, sampling)
         return s
 
     def __iter__(self):
