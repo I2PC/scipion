@@ -130,7 +130,7 @@ public class GalleryData {
 			zoom = parameters.zoom;
 			this.renderImages = parameters.renderImages;//always true, customized by models or renderLabels
                         this.renderLabels = parameters.renderLabels;
-                        this.renderLabel = parameters.renderLabel;
+                        this.renderLabel = parameters.getRenderLabel();
                         this.visibleLabels = parameters.visibleLabels;
                         this.orderLabels = parameters.orderLabels;
 			mode = Mode.GALLERY_MD;
@@ -332,7 +332,7 @@ public class GalleryData {
 			int inputRenderLabel = MDLabel.MDL_UNDEFINED;
 
 			if (!renderLabel.equalsIgnoreCase("first")) {
-				inputRenderLabel = MetaData.str2Label(parameters.renderLabel);
+				inputRenderLabel = MetaData.str2Label(renderLabel);
 			}
 
 			for (int i = 0; i < labelids.length; ++i) {

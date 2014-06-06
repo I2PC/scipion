@@ -47,16 +47,12 @@ import java.awt.event.MouseWheelListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
 import javax.swing.AbstractAction;
 import javax.swing.AbstractButton;
 import javax.swing.ActionMap;
@@ -96,8 +92,6 @@ import xmipp.ij.commons.XmippImageWindow;
 import xmipp.ij.commons.XmippUtil;
 import xmipp.jni.Filename;
 import xmipp.jni.ImageGeneric;
-import xmipp.jni.MDLabel;
-import xmipp.jni.MDRow;
 import xmipp.jni.MetaData;
 import xmipp.utils.DEBUG;
 import xmipp.utils.Params;
@@ -110,7 +104,6 @@ import xmipp.utils.XmippMenuBarCreator;
 import xmipp.utils.XmippPopupMenuCreator;
 import xmipp.utils.XmippQuestionDialog;
 import xmipp.utils.XmippResource;
-import xmipp.utils.XmippStringUtils;
 import xmipp.utils.XmippWindowUtil;
 import xmipp.viewer.RowHeaderRenderer;
 import xmipp.viewer.ctf.TasksEngine;
@@ -124,6 +117,7 @@ import xmipp.viewer.particlepicker.extract.ExtractParticlePicker;
 import xmipp.viewer.particlepicker.extract.ExtractPickerJFrame;
 import xmipp.viewer.scipion.ScipionGalleryData;
 import xmipp.viewer.scipion.ScipionGalleryJFrame;
+import xmipp.viewer.scipion.ScipionMetaData;
 
 
 /**
@@ -264,7 +258,15 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 	 */
 	public void openMetadata(MetaData md)
 	{
-		new GalleryJFrame(null, md, new Params());
+		
+                if(!(md instanceof ScipionMetaData))
+                    new GalleryJFrame(null, md, new Params());
+                else
+                {
+                    ScipionGalleryData data2 = new ScipionGalleryData(null, md.getFilename(), data.parameters, (ScipionMetaData)md);
+                    ScipionGalleryJFrame frame = new ScipionGalleryJFrame(data2);
+                    data2.setWindow(frame);
+                }
 	}
 
 	/**
@@ -1841,7 +1843,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			setItemVisible(SET_CLASS, data.isClassificationMd());
 			// This item visibility depends on current selection
 			setItemVisible(SAVE_IMAGES, data.isClassificationMd() && gallery.getSelectionCount() > 0);
-			setItemVisible(OPEN_IMAGES, data.isClassificationMd() && gallery.getSelectionCount() == 1);
+			setItemVisible(OPEN_IMAGES, data.hasClasses() && gallery.getSelectionCount() == 1);
 					
 			// Update menu items status depending on item.
 			row = table.rowAtPoint(location);

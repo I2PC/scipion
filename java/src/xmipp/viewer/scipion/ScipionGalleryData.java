@@ -18,6 +18,7 @@ import xmipp.utils.Params;
 import xmipp.viewer.models.ClassInfo;
 import xmipp.viewer.models.ColumnInfo;
 import xmipp.viewer.models.GalleryData;
+import xmipp.viewer.windows.GalleryJFrame;
 
 /**
  *
@@ -61,7 +62,7 @@ public class ScipionGalleryData extends GalleryData{
                 zoom = 100;
     }
 
-    void setWindow(ScipionGalleryJFrame frame) {
+    public void setWindow(GalleryJFrame frame) {
         window = frame;
     }
     
