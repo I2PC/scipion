@@ -158,7 +158,6 @@ class TestXmippWorkflow(unittest.TestCase):
         images.setSamplingRate(1.2)
         classes2DSet = SetOfClasses2D(filename=fn)
         classes2DSet.setImages(images)
-        averages = classes2DSet.createRepresentatives()
     
         for ref in range(1, 11):
             print "class: ", ref

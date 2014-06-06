@@ -649,6 +649,8 @@ class ProtFrealignBase(EMProtocol):
         vol.setSamplingRate(self.inputParticles.get().getSamplingRate())
         vol.setFileName(volFn)
         self._defineOutputs(outputVolume=vol)
+        self._defineSourceRelation(imgSet, outputVolume)
+        self._defineSourceRelation(self.input3DReference.get(), outputVolume)
     
     #--------------------------- INFO functions ----------------------------------------------------
     def _validate(self):
