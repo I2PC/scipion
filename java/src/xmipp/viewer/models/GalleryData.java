@@ -1483,4 +1483,8 @@ public class GalleryData {
             return selmd;
         }
         
+        public void openMetadata(MetaData md)
+        {
+            new GalleryJFrame(null, md, new Params());
+        }
 }// class GalleryData

@@ -258,15 +258,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 	 */
 	public void openMetadata(MetaData md)
 	{
-		
-                if(!(md instanceof ScipionMetaData))
-                    new GalleryJFrame(null, md, new Params());
-                else
-                {
-                    ScipionGalleryData data2 = new ScipionGalleryData(null, md.getFilename(), data.parameters, (ScipionMetaData)md);
-                    ScipionGalleryJFrame frame = new ScipionGalleryJFrame(data2);
-                    data2.setWindow(frame);
-                }
+            data.openMetadata(md);
 	}
 
 	/**

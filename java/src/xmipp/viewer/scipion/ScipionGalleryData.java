@@ -306,5 +306,12 @@ public class ScipionGalleryData extends GalleryData{
             return selmd;
         }
         
+    @Override
+        public void openMetadata(MetaData md)
+        {
+            ScipionGalleryData data2 = new ScipionGalleryData(null, md.getFilename(), new ScipionParams(), (ScipionMetaData)md);
+            ScipionGalleryJFrame frame = new ScipionGalleryJFrame(data2);
+            data2.setWindow(frame);
+        }
 
 }
