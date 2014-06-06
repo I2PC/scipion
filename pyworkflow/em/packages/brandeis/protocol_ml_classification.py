@@ -259,7 +259,8 @@ marginal likelihood.
         classes = self._createSetOfClasses3D(imgSet)
         readSetOfClasses3D(classes, fileparList, volumeList)
         self._defineOutputs(outputClasses=classes)
-        self._defineSourceRelation(imgSet, classes)
+        self._defineSourceRelation(imgSet, outputClasses)
+        self._defineSourceRelation(self.input3DReference.get(), outputClasses)
     
     #--------------------------- INFO functions ----------------------------------------------------
     def _validate(self):

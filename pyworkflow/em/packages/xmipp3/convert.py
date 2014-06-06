@@ -590,9 +590,6 @@ def readSetOfClasses2D(classes2DSet, filename, classesBlock='classes', **args):
     samplingRate = classes2DSet.getImages().getSamplingRate()
     averages = None
     
-    if classesMd.containsLabel(xmipp.MDL_IMAGE):
-        averages = classes2DSet.createRepresentatives()
-    
     for objId in classesMd:
         class2D = Class2D()
         class2D = rowToClass2D(classesMd, objId, class2D)
@@ -607,13 +604,6 @@ def readSetOfClasses2D(classes2DSet, filename, classesBlock='classes', **args):
                 img = rowToParticle(classImagesMd, imgId, hasCtf=False)
                 img.setSamplingRate(samplingRate)
                 class2D.append(img)
-                
-        if averages is not None:
-            index, avgFn = xmippToLocation(classesMd.getValue(xmipp.MDL_IMAGE, objId))
-            avg = Particle()
-            avg.setLocation(index, avgFn)
-            avg.copyObjId(class2D)
-            averages.append(avg)
 
 
 # def writeSetOfClasses3D(classes3DSet, filename, classesBlock='classes'):    
@@ -654,9 +644,6 @@ def readSetOfClasses3D(classes3DSet, filename, classesBlock='classes', **args):
     samplingRate = classes3DSet.getImages().getSamplingRate()
     averages = None
      
-    if classesMd.containsLabel(xmipp.MDL_IMAGE):
-        averages = classes3DSet.createRepresentatives()
-     
     for objId in classesMd:
         class3D = Class3D()
         class3D = rowToClass3D(classesMd, objId, class3D)
@@ -674,13 +661,6 @@ def readSetOfClasses3D(classes3DSet, filename, classesBlock='classes', **args):
                  
         # Check if write function is necessary
         class3D.write()
-    
-        if averages is not None:
-            index, avgFn = xmippToLocation(classesMd.getValue(xmipp.MDL_IMAGE, objId))
-            avg = Volume()
-            avg.setLocation(index, avgFn)
-            avg.copyObjId(class3D)
-            averages.append(avg)
 
 
 def writeSetOfClassesVol(classesVolSet, filename, classesBlock='classes'):    
@@ -721,9 +701,6 @@ def readSetOfClassesVol(classesVolSet, filename, classesBlock='classes', **args)
     samplingRate = classesVolSet.getImages().getSamplingRate()
     averages = None
     
-    if classesMd.containsLabel(xmipp.MDL_IMAGE):
-        averages = classesVolSet.createRepresentatives()
-    
     for objId in classesMd:
         classVol = ClassVol()
         classVol = rowToClassVol(classesMd, objId, classVol)
@@ -741,13 +718,6 @@ def readSetOfClassesVol(classesVolSet, filename, classesBlock='classes', **args)
                 
         # Check if write function is necessary
         classVol.write()
-    
-        if averages is not None:
-            index, avgFn = xmippToLocation(classesMd.getValue(xmipp.MDL_IMAGE, objId))
-            avg = Volume()
-            avg.setLocation(index, avgFn)
-            avg.copyObjId(classVol)
-            averages.append(avg)
 
 
 def writeSetOfMovies(moviesSet, filename, moviesBlock='movies'):    

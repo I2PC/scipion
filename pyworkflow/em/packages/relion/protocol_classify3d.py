@@ -65,9 +65,12 @@ leads to objective and high-quality results.
     def createOutputStep(self):
         from convert import readSetOfClasses3D
         classesStar = self._getIterClasses(self._lastIter())
-        classes = self._createSetOfClasses3D(self.inputParticles.get())
+        imgSet = self.inputParticles.get()
+        classes = self._createSetOfClasses3D(imgSet)
         readSetOfClasses3D(classes, classesStar)
         self._defineOutputs(outputClasses=classes)
+        self._defineSourceRelation(imgSet, classes)
+        self._defineSourceRelation(self.referenceVolume.get(), classes)
     
     #--------------------------- INFO functions -------------------------------------------- 
     def _validateNormal(self):

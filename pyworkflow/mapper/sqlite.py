@@ -610,7 +610,14 @@ class SqliteFlatMapper(Mapper):
         obj.setObjId(objRow['id'])
         obj.setObjLabel(self._getStrValue(objRow['label']))
         obj.setObjComment(self._getStrValue(objRow['comment']))
-        obj.setObjCreation(self._getStrValue(objRow['creation']))
+        
+        try:
+            obj.setObjCreation(self._getStrValue(objRow['creation']))
+        except Exception:
+            # THIS SHOULD NOT HAPPENS
+            print "WARNING: 'creation' column not found in object: %s" % obj.getObjId()
+            print "         db: %s" % self.db.getDbName()
+            print "         objRow: ", dict(objRow)
         
         for c, attrName in self._objColumns:
             if attrName == '_mapperPath':
@@ -684,6 +691,9 @@ class SqliteFlatDb():
         self.INSERT_OBJECT = None
         self.UPDATE_OBJECT = None 
         
+    def getDbName(self):
+        return self._dbName
+    
     def close(self):
         self.connection.close()
         del self.OPEN_CONNECTIONS[self._dbName]

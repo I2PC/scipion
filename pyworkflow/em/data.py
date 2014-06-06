@@ -527,15 +527,20 @@ class SetOfImages(EMSet):
     def __str__(self):
         """ String representation of a set of images. """
         sampling = self.getSamplingRate()
+        dimStr = "No Dim"
+        
         if not sampling:
             print "FATAL ERROR: Object %s has no sampling rate!!!" % self.getName()
             sampling = -999.0
         if self._firstDim.isEmpty():
             try:
                 self._firstDim.set(self.getFirstItem().getDim())
+                dimStr = str(self._firstDim)
             except Exception, ex:
                 print "Error reading dimension: ", ex
-        s = "%s (%d items, %s, %0.2f A/px)" % (self.getClassName(), self.getSize(), self._firstDim, sampling)
+                import traceback
+                traceback.print_exc()
+        s = "%s (%d items, %s, %0.2f A/px)" % (self.getClassName(), self.getSize(), dimStr, sampling)
         return s
 
     def __iter__(self):
@@ -923,25 +928,6 @@ class SetOfClasses(EMSet):
     def hasRepresentatives(self):
         return self._representatives.get()
     
-#     def getRepresentatives(self):
-#         """ Return a SetOfImages composed by all the representative images 
-#         of the classes. """
-#         return self._representatives
-#     
-#     def createRepresentatives(self, **args):
-#         """ Create the empty set for storing the representative of each class.
-#         Usually a SetOfParticles for 2D classification and SetOfVolumes for 3D.
-#         """
-#         self._representatives = self.REP_TYPE(filename=self.getFileName(), prefix='Representatives')
-#         
-#         if not self.getImages().hasValue():
-#             raise Exception(self.getClassName() + ".createRepresentatives: you must set the input images before creating the representatives!!!")
-#         
-#         self._representatives.copyInfo(self.getImages())
-#         self._representatives.setHasCTF(False)
-#         
-#         return self._representatives
-    
     def getImages(self):
         """ Return the SetOFImages used to create the SetOfClasses. """
         return self._imagesPointer.get()
@@ -1028,7 +1014,7 @@ class SetOfMovies(EMSet):
         self._acquisition = Acquisition()
         self._samplingRate = Float()
         self._scannedPixelSize = Float()
-        self._representatives = None # Store the averages images of each class(SetOfMicrographs)
+        self._representatives = Boolean(False)
         self._imagesPointer = Pointer()
     
     def setSamplingRate(self, samplingRate):
@@ -1071,19 +1057,7 @@ class SetOfMovies(EMSet):
         pass
     
     def hasRepresentatives(self):
-        return self._representatives is not None
-    
-    def getRepresentatives(self):
-        """ Return a SetOfMicrographs composed by all the representatives micrographs 
-        of the movies. """
-        return self._representatives
-    
-    def createRepresentatives(self):
-        self._representatives = SetOfMicrographs(filename=self.getFileName(), prefix='Representatives')
-        if not self.getMicrographs().hasValue():
-            raise Exception("SetOfMovies.createRepresentatives: you must set the micrographs before creating the representatives!!!")
-        self._representatives.copyInfo(self.getMicrographs())
-        return self._representatives
+        return self._representatives.get()
     
     def getMicrographs(self):
         """ Return the SetOfMicrographs used to create the SetOfMovies. """
