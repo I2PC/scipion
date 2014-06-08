@@ -44,7 +44,7 @@ void ProgReconstructSignificant::defineParams()
     addParamsLine("  [--angularSampling <a=5>]    : Angular sampling in degrees for generating the projection gallery");
     addParamsLine("  [--maxShift <s=-1>]          : Maximum shift allowed (+-this amount)");
     addParamsLine("  [--minTilt <t=0>]            : Minimum tilt angle");
-    addParamsLine("  [--maxTilt <t=90>]          : Maximum tilt angle");
+    addParamsLine("  [--maxTilt <t=90>]           : Maximum tilt angle");
     addParamsLine("  [--useImed]                  : Use Imed for weighting");
 }
 
@@ -181,7 +181,6 @@ void progReconstructSignificantThreadAlign(ThreadArgument &thArg)
 			double scale, shiftX, shiftY, anglePsi;
 			bool flip;
 			transformationMatrix2Parameters2D(bestM,flip,scale,shiftX,shiftY,anglePsi);
-			// anglePsi*=-1;
 
 			// Compute lower limit of correlation
 			double rl=bestCorr*one_alpha;
@@ -229,7 +228,6 @@ void progReconstructSignificantThreadAlign(ThreadArgument &thArg)
 						if (flip)
 							shiftX*=-1;
 
-						// anglePsi*=-1;
 						double weight=cdfccthis*(cc/bestCorr);
 						if (prm.useImed)
 							weight*=(1-cdfimedthis)*(bestImed/imed);
@@ -302,7 +300,6 @@ void ProgReconstructSignificant::run()
     	size_t Ndirs=mdGallery[0].size();
     	cc.initZeros(Nimgs,Nvols,Ndirs);
     	weight=cc;
-    	ccdir.initZeros(Ndirs);
 
     	// Align the input images to the projections
     	std::cout << "Current significance: " << 1-currentAlpha << std::endl;
@@ -312,6 +309,7 @@ void ProgReconstructSignificant::run()
     	progress_bar(mdIn.size());
 
     	// Reweight according to each direction
+    	ccdir.initZeros(Nimgs);
 		for (size_t nVolume=0; nVolume<Nvols; ++nVolume)
 			for (size_t nDir=0; nDir<Ndirs; ++nDir)
 			{
