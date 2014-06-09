@@ -188,18 +188,20 @@ class ProtJoinSets(ProtSets):
     def _defineParams(self, form):    
         form.addSection(label='Input')
         
-#        form.addParam('inputSet', MultiPointerParam, label="Input set of images", important=True, 
-#                      pointerClass='SetOfImages', minNumObjects=2, maxNumObjects=0,
-#                      help='Select the set of images (it can be a set of micrographs, particles o volumes) from the project.'
-#                           'They should 2 or more object classes')
-        form.addParam('inputSet1', PointerParam, label="Input set 1", 
-                      pointerClass='SetOfImages', 
-                      help='Select the set of images (it can be a set of micrographs, particles o volumes) from the project.'
-                           'They should 2 or more object classes')
-        form.addParam('inputSet2', PointerParam, label="Input set 2", 
-                      pointerClass='SetOfImages', 
-                      help='Select the set of images (it can be a set of micrographs, particles o volumes) from the project.'
-                           'They should 2 or more object classes')
+        form.addParam('inputSets', MultiPointerParam, label="Input set of images", important=True, 
+                      pointerClass='SetOfImages', minNumObjects=2, maxNumObjects=0,
+                      help='Select two or more set of images (micrographs, particles o volumes) to be joined.'
+                           'If you select 3 sets with 100, 200, 200 images, the final set should contans a '
+                           'total of 500 images. All sets should have the same sampling rate.'
+                           )
+#         form.addParam('inputSet1', PointerParam, label="Input set 1", 
+#                       pointerClass='SetOfImages', 
+#                       help='Select the set of images (it can be a set of micrographs, particles o volumes) from the project.'
+#                            'They should 2 or more object classes')
+#         form.addParam('inputSet2', PointerParam, label="Input set 2", 
+#                       pointerClass='SetOfImages', 
+#                       help='Select the set of images (it can be a set of micrographs, particles o volumes) from the project.'
+#                            'They should 2 or more object classes')
     
     #--------------------------- INSERT steps functions --------------------------------------------   
     def _insertAllSteps(self):
@@ -208,18 +210,19 @@ class ProtJoinSets(ProtSets):
     #--------------------------- STEPS functions --------------------------------------------
     def createOutput(self):
         #Read Classname and generate corresponding SetOfImages (SetOfParticles, SetOfVolumes, SetOfMicrographs)
-        #self.inputType = str(self.inputSet[0].get().getClassName())
-        self.inputType = str(self.inputSet1.get().getClassName())
-        func ="_create%s" % self.inputType
-        outputSetFunction = getattr(self, func)
+        self.inputSets.printAll()
+        
+        self.inputType = str(self.inputSets[0].get().getClassName())
+        #self.inputType = str(self.inputSet1.get().getClassName())
+        outputSetFunction = getattr(self, "_create%s" % self.inputType)
         outputSet = outputSetFunction()
         
         #Copy info from input (sampling rate, etc)
-        #outputSet.copyInfo(self.inputSet[0].get())
-        outputSet.copyInfo(self.inputSet1.get())
-        inputSets = [self.inputSet1, self.inputSet2]
+        outputSet.copyInfo(self.inputSets[0].get())
+        #outputSet.copyInfo(self.inputSet1.get())
+        #inputSets = [self.inputSet1, self.inputSet2]
        
-        for itemSet in inputSets:
+        for itemSet in self.inputSets:
             for itemObj in itemSet.get():
                 itemObj.cleanObjId()
                 outputSet.append(itemObj)
@@ -229,8 +232,8 @@ class ProtJoinSets(ProtSets):
     #--------------------------- INFO functions --------------------------------------------
     def _validate(self):
         classList = []
-        inputSets = [self.inputSet1, self.inputSet2]
-        for itemSet in inputSets:
+        #inputSets = [self.inputSet1, self.inputSet2]
+        for itemSet in self.inputSets:
             itemClassName = itemSet.get().getClassName()
             if len(classList) == 0 or itemClassName not in classList:
                 classList.append(itemClassName)
@@ -243,13 +246,13 @@ class ProtJoinSets(ProtSets):
 
     def _summary(self):
         summary = []
-        if not hasattr(self, 'outputImages'):
-            summary.append("Output set not ready yet.")
-        else:
-            summary.append("Input sets of type %s:" % self.outputImages.getClassName())
-            inputSets = [self.inputSet1, self.inputSet2]
-            for itemSet in inputSets:
-                summary.append("%s" % itemSet.get().getNameId())
+#         if not hasattr(self, 'outputImages'):
+#             summary.append("Output set not ready yet.")
+#         else:
+#             summary.append("Input sets of type %s:" % self.outputImages.getClassName())
+#             inputSets = [self.inputSet1, self.inputSet2]
+#             for itemSet in inputSets:
+#                 summary.append("%s" % itemSet.get().getNameId())
         return summary
         
     def _methods(self):
@@ -258,8 +261,8 @@ class ProtJoinSets(ProtSets):
             methods.append("Protocol has not finished yet.")
         else:
             m = "We have joint the following sets: "
-            inputSets = [self.inputSet1, self.inputSet2]
-            for itemSet in inputSets:
+            #inputSets = [self.inputSet1, self.inputSet2]
+            for itemSet in self.inputSets:
                 m += "%s, " % itemSet.get().getNameId()
             methods.append(m[:-2])
         

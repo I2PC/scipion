@@ -298,6 +298,8 @@ class TestSqliteMapper(BaseTest):
 
     def test_SqliteMapper(self):
         fn = self.getOutputPath("basic.sqlite")
+        print "Using db: >>>>>>>> fn: ", fn
+        
         mapper = SqliteMapper(fn)
         # Insert a Complex
         c = Complex.createComplex() # real = 1, imag = 1
@@ -315,11 +317,33 @@ class TestSqliteMapper(BaseTest):
         p.set(c)
         mapper.insert(p)
         
-        # Store list
+        # Store csv list
         strList = ['1', '2', '3']
         csv = CsvList()
         csv += strList
         mapper.insert(csv)
+        
+        # Test normal List
+        iList = List()
+        mapper.insert(iList) # Insert the list when empty        
+        
+        i1 = Integer(4)
+        i2 = Integer(3)
+        iList.append(i1)
+        iList.append(i2)
+        
+        mapper.update(iList) # now update with some items inside
+        
+        pList = PointerList()
+        p1 = Pointer()
+        p1.set(b)
+        p2 = Pointer()
+        p2.set(b2)
+        pList.append(p1)
+        pList.append(p2)
+        
+        mapper.store(pList)
+        
 
         # Test to add relations
         relName = 'testRelation'

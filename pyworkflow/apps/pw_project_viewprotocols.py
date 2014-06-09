@@ -965,6 +965,8 @@ class ProtocolsView(tk.Frame):
                     self._analyzeResults(prot)
             except Exception, ex:
                 self.windows.showError(str(ex))
+                import traceback
+                traceback.print_exc()
  
         # Following actions do not need a select run
         if action == ACTION_TREE:
