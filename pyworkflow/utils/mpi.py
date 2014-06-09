@@ -27,6 +27,7 @@
 This module contains some MPI utilities
 """
 
+import os
 from time import sleep
 from process import buildRunCommand, runCommand
 
@@ -35,13 +36,20 @@ TAG_RUN_JOB = 1000
 
 def runJobMPI(log, programname, params, mpiComm, mpiDest,
               numberOfMpi=1, numberOfThreads=1,
-              runInBackground=False, hostConfig=None):
+              runInBackground=False, hostConfig=None, cwd=None):
     """ Send the command to the MPI node in which it will be executed. """
 
     print "runJobMPI: hostConfig: ", hostConfig
     command = buildRunCommand(log, programname, params,
                               numberOfMpi, numberOfThreads, 
                               runInBackground, hostConfig)
+
+    # Send directory (cwd) in a non-blocking way (with isend())
+    if cwd is not None:  # we only mention it if we actually change directory
+        print "Asking to change to directory: %s" % cwd
+    req_cd = mpiComm.isend(str(cwd), dest=mpiDest, tag=TAG_RUN_JOB+mpiDest)
+    while not req_cd.test()[0]:
+        sleep(1)
 
     # Send command in a non-blocking way (with isend())
     print "Sending command: %s to %d" % (command, mpiDest)
@@ -74,7 +82,14 @@ def runJobMPISlave(mpiComm):
 
     # Listen for commands until we get 'None'
     while True:
-        # Receive command in a non-blocking way
+        # Receive dir (cwd) and command in a non-blocking way
+        req_cd = mpiComm.irecv(dest=0, tag=TAG_RUN_JOB+rank)
+        while True:
+            done, cwd = req_cd.test()
+            if done:
+                break
+            sleep(1)
+
         req_recv = mpiComm.irecv(dest=0, tag=TAG_RUN_JOB+rank)
         while True:
             done, command = req_recv.test()
@@ -88,6 +103,8 @@ def runJobMPISlave(mpiComm):
 
         # Run the command and get the result (exit code or exception)
         try:
+            if cwd != 'None':
+                os.chdir(cwd)
             result = runCommand(command)
         except Exception, e:
             result = str(e)

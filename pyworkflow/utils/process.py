@@ -37,7 +37,7 @@ from utils import greenStr
 # The job should be launched from the working directory!
 def runJob(log, programname, params,           
            numberOfMpi=1, numberOfThreads=1, 
-           runInBackground=False, hostConfig=None, env=None):
+           runInBackground=False, hostConfig=None, env=None, cwd=None):
 
     command = buildRunCommand(log, programname, params,
                               numberOfMpi, numberOfThreads, runInBackground,
@@ -50,10 +50,10 @@ def runJob(log, programname, params,
     else:
         log.info(gCommand, True)
 
-    return runCommand(command, env)
+    return runCommand(command, env, cwd)
         
 
-def runCommand(command, env=None):
+def runCommand(command, env=None, cwd=None):
     from subprocess import call
     debug = env.get('SCIPION_DEBUG') if env else os.environ.get('SCIPION_DEBUG')
     if debug and debug.lower() in ['true', '1']:
@@ -63,7 +63,7 @@ def runCommand(command, env=None):
 
     retcode = 1000
     try:
-        retcode = call(command, shell=True, stdout=sys.stdout, stderr=sys.stderr, env=env)
+        retcode = call(command, shell=True, stdout=sys.stdout, stderr=sys.stderr, env=env, cwd=cwd)
         if retcode != 0:
             raise Exception("Process returned with code %d, command: %s" % (retcode,command))
     except OSError, e:
@@ -81,7 +81,7 @@ def buildRunCommand(log, programname, params,
         if programname.startswith('xmipp'):
             programname = programname.replace('xmipp', 'xmipp_mpi')
         paramsDict = {'JOB_NODES': numberOfMpi,
-                      'COMMAND': "`which %(programname)s` %(params)s" % locals()
+                      'COMMAND': "`which %s` %s" % (programname, params)
                       }
         if hostConfig is None:
             raise Exception('buildRunCommand: hostConfig is needed to launch MPI processes.')
