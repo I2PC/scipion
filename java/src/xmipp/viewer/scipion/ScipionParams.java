@@ -25,6 +25,9 @@ public class ScipionParams extends Params {
     public String inputid;
     
 
+    public ScipionParams()
+    {}
+    
     public ScipionParams(String args[]) {
         super(args);
     }

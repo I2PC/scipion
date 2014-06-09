@@ -60,7 +60,6 @@ public class Params {
     public int zoom = 0;
     public boolean renderImages = true;
     public String[] renderLabels = new String[]{"first"}; //Label to render, by default first
-    public String renderLabel;
     public boolean debug = false;
     public boolean mask_toolbar = false;
     public int rows = -1, columns = -1;
@@ -256,11 +255,15 @@ public class Params {
             	else if (view.equals("x_pos"))
             		resliceView = ImageGeneric.X_POS;
             }
-            renderLabel = renderLabels[0];
             
            
         } catch (Exception ex) {
         	ex.printStackTrace();
         }
+    }
+    
+    public String getRenderLabel()
+    {
+        return renderLabels[0];
     }
 }

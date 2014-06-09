@@ -24,12 +24,12 @@ public class ScipionMetaData extends MetaData{
     private List<ColumnInfo> columns;
     private String self, selfalias;
     private List<EMObject> emobjects;
-    private Map<String, Integer> labels = new HashMap<String, Integer>();
     private ScipionMetaData parent;
     private String id;
     private String classestb, objectstb;
     private boolean haschilds;
     private ColumnInfo enabledci;
+    private static int labelscount = 0;
     
     public ScipionMetaData(String classestb, String objectstb, String self, String selfalias, List<ColumnInfo> columns)
     {
@@ -66,7 +66,7 @@ public class ScipionMetaData extends MetaData{
             int i = 0;
             for(EMObject emo: emobjects)
             {
-                id = String.format("Class00%s", emo.id);
+                id = String.format("Class%03d", emo.id);
                 emo.childmd = new ScipionMetaData(dbfile, String.format(classestb, id), String.format(objectstb, id), id);
                 emo.childmd.setParent(this);
                 i ++;
@@ -101,11 +101,9 @@ public class ScipionMetaData extends MetaData{
             int type;
             boolean allowRender;
             ColumnInfo ci;
-            int label = 0;
             name = alias = "_enabled";
-            labels.put(name, labels.size());
-            label = labels.get(name);
-            enabledci = new ColumnInfo(label, name, alias, MetaData.LABEL_INT, false);
+            labelscount ++;
+            enabledci = new ColumnInfo(labelscount, name, alias, MetaData.LABEL_INT, false);
             columns.add(enabledci);
             Class.forName("org.sqlite.JDBC");
             c = DriverManager.getConnection("jdbc:sqlite:" + dbfile);
@@ -127,10 +125,9 @@ public class ScipionMetaData extends MetaData{
                }
                type = getTypeMapping(clsname);
                
-               labels.put(name, labels.size());
-               label = labels.get(name);
+               labelscount ++;
                allowRender = isImage(self, name);
-               ci = new ColumnInfo(label, name, alias, type, allowRender);
+               ci = new ColumnInfo(labelscount, name, alias, type, allowRender);
                columns.add(ci);
             }
             
@@ -655,8 +652,7 @@ public class ScipionMetaData extends MetaData{
     
     public static int getTypeMapping(String type)
     {
-        int result;
-         if (type.equals("Integer"))
+        if (type.equals("Integer"))
             return MetaData.LABEL_INT;
         if (type.equals("Float"))
             return MetaData.LABEL_DOUBLE;

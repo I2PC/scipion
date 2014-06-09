@@ -18,6 +18,7 @@ import xmipp.utils.Params;
 import xmipp.viewer.models.ClassInfo;
 import xmipp.viewer.models.ColumnInfo;
 import xmipp.viewer.models.GalleryData;
+import xmipp.viewer.windows.GalleryJFrame;
 
 /**
  *
@@ -61,7 +62,7 @@ public class ScipionGalleryData extends GalleryData{
                 zoom = 100;
     }
 
-    void setWindow(ScipionGalleryJFrame frame) {
+    public void setWindow(GalleryJFrame frame) {
         window = frame;
     }
     
@@ -305,5 +306,12 @@ public class ScipionGalleryData extends GalleryData{
             return selmd;
         }
         
+    @Override
+        public void openMetadata(MetaData md)
+        {
+            ScipionGalleryData data2 = new ScipionGalleryData(null, md.getFilename(), new ScipionParams(), (ScipionMetaData)md);
+            ScipionGalleryJFrame frame = new ScipionGalleryJFrame(data2);
+            data2.setWindow(frame);
+        }
 
 }
