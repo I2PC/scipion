@@ -456,7 +456,7 @@ class ProtFrealignBase(EMProtocol):
     def _insertAllSteps(self):
         """Insert the steps to refine orientations and shifts of the SetOfParticles
         """
-        numberOfBlocks = self.numberOfThreads.get() - 1
+        numberOfBlocks = self.numberOfMpi.get() - 1
         depsRecons = []
         
         if self.doContinue:
@@ -626,7 +626,7 @@ class ProtFrealignBase(EMProtocol):
         finalParticle = imgSet.getSize()
         params = self._getParamsIteration(imgSet, iter)
         
-        os.environ['NCPUS'] = str(self.numberOfThreads.get())
+        os.environ['NCPUS'] = str(numberOfBlocks)
         params['frealign'] = FREALIGNMP_PATH
         params['outputParFn'] = self._getFileName('output_vol_par', iter=iter)
         params['initParticle'] = initParticle
