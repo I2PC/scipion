@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # **************************************************************************
 # *
 # * Authors:     I. Foche Perez (ifoche@cnb.csic.es)
@@ -46,47 +47,33 @@ PYVERSION = platform.python_version() #python version present in the machine
 
 # Big scipion structure dictionary and associated vars
 # indexes
-DEF = 0 # is built by default?
-INCS = 1 # includes
-LIBS = 2 # libraries to create
-SRC = 3 # source pattern
-DIR = 4 # folder name in temporal directory
-DEPS = 5 # explicit dependencies
-URL = 6 # URL to download from
+# folders & packages | libs  | index
+CONFIG_FOLDER =        DEF =   0 # is built by default?
+INSTALL_FOLDER =       INCS =  1 # includes
+BIN_FOLDER =           LIBS =  2 # libraries to create
+PACKAGES_FOLDER =      SRC =   3 # source pattern
+LIB_FOLDER =           DIR =   4 # folder name in temporal directory 
+MAN_FOLDER =           TAR =   5
+TMP_FOLDER =           DEPS =  6 # explicit dependencies
+INCLUDE_FOLDER =       URL =   7 # URL to download from
+FLAGS = 8 # Other flags for the compiler
+# indexes for LIBS
 
 SCIPION = {
-    'FOLDERS': {'CONFIG_FOLDER': [os.path.join('software', 'cfg')],
-                'INSTALL_FOLDER': [os.path.join('software', 'install')],
-                'BIN_FOLDER': [os.path.join('software', 'bin')],
-                'PACKAGES_FOLDER': [os.path.join('software', 'em')],
-                'LIB_FOLDER': [os.path.join('software', 'lib')],
-                'MAN_FOLDER': [os.path.join('software', 'man')],
-                'TMP_FOLDER': [os.path.join('software', 'tmp')],
-                'INCLUDE_FOLDER': [os.path.join('software', 'include')]
-                }
-    'LIBS': {'tcl': {DEF: True,
-                     INCS: [],
-                     LIBS: [],
-                     SRC: [],
-                     DIR: [],
-                     DEPS: [],
-                     URL: ['http://scipionwiki.cnb.csic.es/downloads/software/external/tcl8.6.1-src.tar.gz']},
-             'tk': {DEF: True,
-                    INCS: [],
-                    LIBS: [],
-                    SRC: [],
-                    DIR: [],
-                    DEPS: [],
-                    URL: ['http://scipionwiki.cnb.csic.es/downloads/software/external/tk8.6.1-src.tar.gz']},
-             'python': {DEF: True,
-                        INCS: [],
-                        LIBS: [],
-                        SRC: [],
-                        DIR: [],
-                        DEPS: [],
-                        URL: ['http://scipionwiki.cnb.csic.es/downloads/software/external/Python-2.7.7.tgz']},
-             },
-    'PACKAGES': {
+    'FOLDERS': {CONFIG_FOLDER: [os.path.join('software', 'cfg')],
+                INSTALL_FOLDER: [os.path.join('software', 'install')],
+                BIN_FOLDER: [os.path.join('software', 'bin')],
+                PACKAGES_FOLDER: [os.path.join('software', 'em')],
+                LIB_FOLDER: [os.path.join('software', 'lib')],
+                MAN_FOLDER: [os.path.join('software', 'man')],
+                TMP_FOLDER: [os.path.join('software', 'tmp')],
+                INCLUDE_FOLDER: [os.path.join('software', 'include')]
+                },
+    'LIBS': {},
+    'PACKAGES': {'xmipp': {INSTALL_FOLDER: 'xmipp',
+                           LIB_FOLDER: os.path.join('xmipp', 'lib'),
+                           BIN_FOLDER: os.path.join('xmipp', 'bin'),
+                           }
                  }
     }
 
@@ -122,63 +109,69 @@ elif MACOSX:
 elif WINDOWS:
     print "OS not tested yet"
 
+# Add pseudo-builder methods in order to perfectly manage what we want, and not depend only on the builders methods
+# Method
+env.AddMethod(downloadLibrary, "DownloadLibrary")
+env.AddMethod(untarLibrary, "UntarLibrary")
+env.AddMethod(compileLibrary, "CompileLibrary")
 
-#################
-# PREREQUISITES #
-#################
+# Add other auxiliar functions to environment
+env.AddMethod(scipionLogo, "ScipionLogo")
 
-# Python is needed. Any kind of python, to be able to execute this, but 2.7.6 version os python will be the one to execute Scipion. If the person doesn't have 2.7.6, SCons will compile it. Otherwise, a virtual environment will be used on top of system one, just if the user selects it. By default, python will be built
-COMPILE_PYTHON = (PYVERSION != MANDATORY_PYVERSION) and not USER_COMMANDS
-# If python is not needed to be compiled, then a virtual environment is needed on top of the system python
-BUILD_VIRTUALENV = not COMPILE_PYTHON
-
-#Already compiled scons (using install.sh)
-#Python at any version (if 2.7.6, this will be used, otherwise, a new one will be compiled)
-
-
-############################
-# FIRST LEVEL DEPENDENCIES #
-############################
-
-# Tcl/Tk
-env.SConscript()
-# sqlite
-
-
-#############################
-# SECOND LEVEL DEPENDENCIES #
-#############################
-
-# python 2.7.6
-
-
-############################
-# THIRD LEVEL DEPENDENCIES #
-############################
-
-# numpy
-
-# matplotlib
-
-# psutils
-
-# mpi4py
-
-# scipy
-
-# bibtex
-
-# django
-
-# paramiko
+# Add main dict to environment
+env.AppendUnique(SCIPION)
 
 
 ######################
 # AUXILIAR FUNCTIONS #
 ######################
+# TODO - AddExternalLibrary for auto-tools made compilation and addLibrary for ourself compiled libraries and 
+def addLibrary(name, dir, dft=True, src=[], incs=[], libs=[], tar=[], deps=[], url='', flags=[]):
+    """
+    This method is for adding a library to the main dict
+    """
+    SCIPION['LIBS'][name] = {DEF: dft,
+                     SRC: src,
+                     INCS: incs,
+                     LIBS: libs,
+                     DIR: dir,
+                     TAR: tar,
+                     DEPS: deps,
+                     URL: url,
+                     FLAGS: flags}
 
-def addLibrary():
-    print "This method is for adding a library to the main dict"
+def delLibrary(name):
+    """
+    This method is for removing a library from the main dict
+    """
+    del SCIPION['LIBS'][name]
+
+def addPackage(name, installFolder, libFolder, binFolder):
+    """
+    This method is for adding a package to the main dict
+    """
+    SCIPION['PACKAGES'][name] = {INSTALL_FOLDER: installFolder,
+                                 LIB_FOLDER: libFolder,
+                                 BIN_FOLDER: binFolder}
+
+def delPackage(name):
+    """
+    This method is for removing a package from the main dict
+    """
+    del SCIPION['PACKAGES'][name]
+
+def downloadLibrary(env, name):
+    """
+    This method is for downloading a library and placing it in tmp dir
+    """
+    library = SCIPION[LIBS].get(name)
+    env.URLDownload(library[LIB])
+
+def untarLibrary(name):
+    print "This method is for untar the downloaded library in the tmp directory"
+
+def compileLibrary(name):
+    print "This method is for compiling the library"
 
 def scipionLogo():
     print ""
