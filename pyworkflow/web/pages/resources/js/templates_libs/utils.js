@@ -33,6 +33,9 @@
  * 
  * METHODS LIST:
  * 
+ * function detectWebBrowser()
+ * 	->	Function to detect the web browser used in the navigation.
+ * 
  * function popup(URL)
  * 	-> Launch a basic popup (600x500) opening the URL passed by argument.
  * 
@@ -90,6 +93,39 @@
 function startsWith(str, pattern){
 	return str.lastIndexOf(pattern, 0) === 0
 }
+
+
+function detectWebBrowser(){
+	/*
+	 * Function to detect the web browser used in the navigation.
+	 */
+	
+	var res = ""
+
+	if(!!window.opera || navigator.userAgent.indexOf(' OPR/') >= 0){
+	    // Opera 8.0+ (UA detection to detect Blink/v8-powered Opera)
+		res = "opera";
+	}
+	else if(typeof InstallTrigger !== 'undefined'){
+		// Firefox 1.0+
+		res = "firefox";
+	}
+	else if(Object.prototype.toString.call(window.HTMLElement).indexOf('Constructor') > 0){
+		// At least Safari 3+: "[object HTMLElementConstructor]"
+		res = "safari"; 
+	}
+	else if(!!window.chrome && !isOpera){
+		// Chrome 1+
+		res = "chrome";
+	}
+	else if(/*@cc_on!@*/false || !!document.documentMode){
+		// At least IE6
+		res = "ie";
+	}
+	
+	return res;
+}
+
 
 function popup(URL) {
 	/*
