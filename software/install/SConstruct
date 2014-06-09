@@ -160,15 +160,23 @@ def delPackage(name):
     """
     del SCIPION['PACKAGES'][name]
 
-def downloadLibrary(env, name):
+def downloadLibrary(name):
     """
     This method is for downloading a library and placing it in tmp dir
     """
-    library = SCIPION[LIBS].get(name)
-    env.URLDownload(library[LIB])
+    library = SCIPION['LIBS'].get(name)
+    tar = os.path.join(SCIPION['FOLDERS'][TMP_FOLDER],library[TAR])
+    return env.URLDownload(tar, library[URL])
+    
 
 def untarLibrary(name):
-    print "This method is for untar the downloaded library in the tmp directory"
+    """
+    This method is for untar the downloaded library in the tmp directory
+    """
+    library = SCIPION['LIBS'].get(name)
+    tar = os.path.join(SCIPION['FOLDERS'][TMP_FOLDER],library[TAR])
+    folder = os.path.join(SCIPION['FOLDERS'][TMP_FOLDER],library[DIR])
+    return env.Unpack(folder, tar)
 
 def compileLibrary(name):
     print "This method is for compiling the library"
