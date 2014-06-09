@@ -584,12 +584,12 @@ class ProtFrealignBase(EMProtocol):
         """ This function execute the bash script for refine a subset(block) of images.
         It will enter in the iteration dir and execute the script there. 
         """
-        if block == 1:
-            self._enterDir(iterDir)
-            
-        program = "./block%03d.sh" % block
+#         if block == 1:
+#             self._enterDir(iterDir)
+        
+        program = "block%03d.sh" % block
         os.chmod(program, 0775)
-        self.runJob(program, "")
+        self.runJob(program, "", cwd=iterDir)
     
     def refineParticlesStep(self, iter, block, numberOfBlocks):
         """Only refine the parameters of the SetOfParticles
@@ -598,8 +598,8 @@ class ProtFrealignBase(EMProtocol):
         imgSet = self.inputParticles.get()
         
         iterDir = self._iterWorkingDir(iter)
-        if block==1:
-            self._enterDir(iterDir) # enter to the working directory for the current iteration.
+#         if block==1:
+#             self._enterDir(iterDir) # enter to the working directory for the current iteration.
         
         iniPart, lastPart = self._particlesInBlock(block, numberOfBlocks)
         prevIter = iter - 1
@@ -614,7 +614,7 @@ class ProtFrealignBase(EMProtocol):
         args = self._prepareCommand()
         
         # frealign program is already in the args script, that's why runJob('')
-        self.runJob('', args % paramsRefine)
+        self.runJob('', args % paramsRefine, cwd=iterDir)
     
     def reconstructVolumeStep(self, iter, numberOfBlocks):
         """Reconstruct a volume from a SetOfParticles with its current parameters refined
@@ -637,10 +637,11 @@ class ProtFrealignBase(EMProtocol):
         params3DR = dict(params.items() + params2.items())
         
         args = self._prepareCommand()
+        iterDir = self._iterWorkingDir(iter)
         # frealign program is already in the args script, that's why runJob('')
-        self.runJob('', args % params3DR)
+        self.runJob('', args % params3DR, cwd=iterDir)
         self._setLastIter(iter)
-        self._leaveDir()
+#         self._leaveDir()
     
     def createOutputStep(self, lastIter):
         pass # should be implemented in subclasses

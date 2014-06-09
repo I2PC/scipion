@@ -69,7 +69,7 @@ class TestMixedBPV(TestWorkflow):
         print "Running Frealign..."
         protFrealign = ProtFrealign(angStepSize=15, numberOfIterations=2, mode=1, doExtraRealSpaceSym=True,
                                     innerRadius=100, outerRadius=320, symmetry='I2', PhaseResidual=30,molMass=19400,
-                                    score=5, resolution=20, runMode=1, numberOfMpi=1, numberOfThreads=4)
+                                    score=5, resolution=20, runMode=1, numberOfMpi=5)
         protFrealign.inputParticles.set(protExtract.outputParticles)
         protFrealign.input3DReference.set(protImportVol.outputVolume)
         self.proj.launchProtocol(protFrealign, wait=True)
@@ -442,7 +442,7 @@ class TestMixedFrealignClassify(TestWorkflow):
         print "Running Frealign Classification..."
         protFrealign = ProtFrealignClassify(numberOfClasses=3, itRefineAngles=2, itRefineShifts=3, angStepSize=20, numberOfIterations=6, mode=1, doExtraRealSpaceSym=True,
                                     outerRadius=180, PhaseResidual=65, lowResolRefine=300, highResolRefine=15,
-                                    resolution=15, runMode=1, numberOfThreads=16)
+                                    resolution=15, runMode=1, numberOfMpi=16)
         protFrealign.inputParticles.set(protExtract.outputParticles)
         protFrealign.input3DReference.set(protImportVol.outputVolume)
         protFrealign.setObjLabel('Frealign')
