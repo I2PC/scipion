@@ -148,45 +148,49 @@ function callPaintGraph() {
 		aux.push(id + "-" + width + "-" + height);
 	});	
 	
+	// Move and connect the graph nodes
 	$.ajax({
 		type : "GET",
 		url : '/project_graph/?list=' + aux,
 		dataType : "json",
 		async: false,
 		success : function(json) {
-		
-			// Iterate over the nodes and position in the screen
-			// coordinates should come in the json response
-			
-			for ( var i = 0; i < json.length; i++) {
-				var top = json[i].y*0.8;
-				var left = json[i].x;
-				addStatusBox("graph_" + json[i].id,	json[i].status);
-				$("div#graph_" + json[i].id + ".window").attr(
-						"style",
-						"top:" + top + "px;left:" + left
-								+ "px;background-color:"
-								+ json[i].color + ";");
-			}
-			
-			// After all nodes are positioned, then create the edges
-			// between them
-
-			for ( var i = 0; i < json.length; i++) {
-				for ( var j = 0; j < json[i].childs.length; j++) {
-					var source = $("div#graph_" + json[i].id
-							+ ".window");
-					var target = $("div#graph_" + json[i].childs[j]
-							+ ".window");
-					connectNodes(source, target);
-				}
-			}
-			
+			processNodes(json)
 		}
 	});
 	
 	jsPlumb.draggable($(".window"));
 }
+
+function processNodes(json){
+	// Iterate over the nodes and position in the screen
+	// coordinates should come in the json response
+	
+	for ( var i = 0; i < json.length; i++) {
+		var top = json[i].y*0.8;
+		var left = json[i].x;
+		addStatusBox("graph_" + json[i].id,	json[i].status);
+		$("div#graph_" + json[i].id + ".window").attr(
+				"style",
+				"top:" + top + "px;left:" + left
+						+ "px;background-color:"
+						+ json[i].color + ";");
+	}
+	
+	// After all nodes are positioned, then create the edges
+	// between them
+
+	for ( var i = 0; i < json.length; i++) {
+		for ( var j = 0; j < json[i].childs.length; j++) {
+			var source = $("div#graph_" + json[i].id
+					+ ".window");
+			var target = $("div#graph_" + json[i].childs[j]
+					+ ".window");
+			connectNodes(source, target);
+		}
+	}
+}
+
 
 function paintBox(nodeSource, id, msg) {
 	/*
