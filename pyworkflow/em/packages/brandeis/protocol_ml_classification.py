@@ -107,6 +107,7 @@ marginal likelihood.
         else:
             blocks = self._cpusPerClass(numberOfBlocks, self.numberOfRef)
             cpuList = self._cpusPerClass(numberOfBlocks, self.numberOfRef)
+            
             for ref in range(1, self.numberOfRef + 1):
                 for block in range(1, blocks[ref-1] + 1):
                     restIterAngle = iter % self.itRefineAngles.get()
@@ -162,8 +163,8 @@ marginal likelihood.
         imgSet = self.inputParticles.get()
         
         iterDir = self._iterWorkingDir(iter)
-        if ref ==1 and block==1:
-            self._enterDir(iterDir) # enter to the working directory for the current iteration.
+#         if ref ==1 and block==1:
+#             self._enterDir(iterDir) # enter to the working directory for the current iteration.
         
         iniPart, lastPart = self._particlesInBlock(block, numberOfBlocks)
         prevIter = iter - 1
@@ -189,7 +190,7 @@ marginal likelihood.
         args = self._prepareCommand()
         
         # frealign program is already in the args script, that's why runJob('')
-        self.runJob('', args % paramsRefine)
+        self.runJob('', args % paramsRefine, cwd=iterDir)
     
     def reconstructVolumeStep(self, iter, ref, cpuList):
         """Reconstruct a volume from a SetOfParticles with its current parameters refined
@@ -197,6 +198,7 @@ marginal likelihood.
         imgSet = self.inputParticles.get()
         initParticle = 1
         finalParticle = imgSet.getSize()
+        iterDir = self._iterWorkingDir(iter)
         params = self._getParamsIteration(imgSet, iter)
         
         os.environ['NCPUS'] = str(cpuList[ref-1])
@@ -211,12 +213,13 @@ marginal likelihood.
         
         args = self._prepareCommand()
         # frealign program is already in the args script, that's why runJob('')
-        self.runJob('', args % params3DR)
+        self.runJob('', args % params3DR, cwd=iterDir)
     
     def calculateOCCStep(self, iter, leaveDir, numberOfBlocks):
         imgSet = self.inputParticles.get()
         numberOfClasses = self.numberOfRef
         cpusRef = self._cpusPerClass(numberOfBlocks, numberOfClasses)
+        iterDir = self._iterWorkingDir(iter)
         
         if iter == 1 and not leaveDir:
             ProtFrealignBase._mergeAllParFiles(self, iter, numberOfBlocks)
@@ -236,11 +239,11 @@ marginal likelihood.
             args = args + tmp + 'eot'
             program = CALC_OCC_PATH
         
-        self.runJob(program, args % locals())
+        self.runJob(program, args % locals(), cwd=iterDir)
         
         if leaveDir:
             self._setLastIter(iter)
-            self._leaveDir()
+#             self._leaveDir()
     
     def createOutputStep(self, lastIter):
         from convert import readSetOfClasses3D

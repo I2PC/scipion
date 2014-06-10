@@ -676,6 +676,14 @@ class List(Object, list):
 class PointerList(List):
     def __init__(self, **args):
         List.__init__(self, **args)
+        
+    def _convertValue(self, value):
+        if isinstance(value, list):
+            self.clear()
+            for obj in value:
+                self.append(Pointer(value=obj))
+        else:
+            raise Exception("Could not set a PointerList value to: %s" % value)
       
             
 class CsvList(Scalar, list):
