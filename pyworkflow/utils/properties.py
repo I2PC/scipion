@@ -208,6 +208,9 @@ Define the number of processors to be used in the execution.
     
     NO_VIEWER_FOUND = 'There is not viewer for protocol:'
     
+    TITLE_SAVE_OUTPUT = 'Save protocol output'
+    LABEL_SAVE_OUTPUT = 'Do you wish to save protocol output?'
+    
     # Hosts Template
     LABEL_HOSTS = 'Hosts'
     LABEL_HOSTS_ACTION = ' Hosts '
