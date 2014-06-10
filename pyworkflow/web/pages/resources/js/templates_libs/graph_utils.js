@@ -148,6 +148,7 @@ function callPaintGraph() {
 		aux.push(id + "-" + width + "-" + height);
 	});	
 	
+	
 	// Move and connect the graph nodes
 	$.ajax({
 		type : "GET",
@@ -196,6 +197,10 @@ function paintBox(nodeSource, id, msg) {
 	/*
 	 * Function to paint a box like a node inside the protocol graph.
 	 * The node source is passed by arguments.
+	 * 
+	 * FIX 1: Added the css property (display:none) to the divs to not show
+	 * in first instance the boxes in bad position, before to be processed.
+	 * 
 	 */
 
 	if (id != "graph_PROJECT") {
@@ -203,11 +208,13 @@ function paintBox(nodeSource, id, msg) {
 		var href = "javascript:customPopup('/form/?protocolId=" + objId + "',620,591)";
 		var projName = $("div#graphActiv").attr("data-project");
 		var onclick = "launchToolbarTree('" + objId	+ "',($(this)))";
-		var aux = '<div class="window" style="" onclick="' + onclick + '" id="'
+//		var aux = '<div class="window" style="" onclick="' + onclick + '" id="'
+		var aux = '<div class="window" style="display:none;" onclick="' + onclick + '" id="'
 				+ id + '"><a href="' + href + '"><strong>' + msg
 				+ '</strong></a><br/><span id="nodeStatus" data-val=""></span></div>';	
 	} else {
-		var aux = '<div class="window" style="" id="' + id + '"><strong>' + msg
+//		var aux = '<div class="window" style="" id="' + id + '"><strong>' + msg
+		var aux = '<div class="window" style="display:none;" id="' + id + '"><strong>' + msg
 				+ '</strong><br /></div>';
 	}
 	
