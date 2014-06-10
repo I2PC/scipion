@@ -28,6 +28,7 @@ This modules implements a DataSet, a container of several Tables.
 This will serve as an abstraction layer from where the data will be taken.
 """
 from collections import OrderedDict, namedtuple
+import sqlite3
 
 class DataSet(object):
     """ Holds several Tables
@@ -206,14 +207,19 @@ class Table(object):
     
         
 class Column(object):
-    def __init__(self, colName, colType=None, default=None):
+    def __init__(self, colName, colType=None, default=None, alias=None):
         self._name = colName
         self._type = colType
         self._default = default
+        self._alias = alias
         
     def getName(self):
         return self._name
-    
+
+
+    def getAlias(self):
+        return self._alias
+        
     def getType(self):
         return self._type
     
@@ -229,11 +235,48 @@ class Column(object):
     
     
 class SqliteDataset(DataSet):
-    """ Provide a DataSet implementation base on sqlite file.
+    """ Provide a DataSet implementation based on sqlite file.
     The tables of the dataset will be the object tables in database.
     Each block is a table on the dataset. 
     """
     
     def __init__(self, filename):
+        
         self._filename = filename
-    
+        columns = []
+        conn = sqlite3.connect(filename)
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+        for row in cursor.execute("SELECT * from Classes;"):
+            
+            name = 'col_' + row['label_property']
+            alias = row['column_name']
+            clsname = row["class_name"];
+            if(name == "self"):
+                self = clsname;
+                selfalias = alias;
+                continue;
+            column = Column(name, clsname, None, alias)
+            print column.getName()
+            columns.append(column)
+        table = Table(*columns)    
+        
+        for row in cursor.execute("SELECT * from Objects;"):
+            
+            name = 'col_' + row['label_property']
+            alias = row['column_name']
+            clsname = row["class_name"];
+            if(name == "self"):
+                self = clsname;
+                selfalias = alias;
+                continue;
+            column = Column(name, clsname, None, alias)
+            columns.append(column)
+        
+        conn.close()
+        
+        
+        
+        
+        
+        
