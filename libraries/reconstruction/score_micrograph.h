@@ -1,7 +1,6 @@
 /***************************************************************************
+ * Authors:     AUTHOR_NAME (jvargas@cnb.csic.es)
  *
- * Authors:     Javier Angel Velazquez Muriel (javi@cnb.csic.es)
- *              Carlos Oscar Sanchez Sorzano
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
@@ -24,37 +23,35 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#ifndef _PROG_CTF_ESTIMATE_FROM_MICROGRAPH
-#define _PROG_CTF_ESTIMATE_FROM_MICROGRAPH
+#ifndef SCORE_MICROGRAPH_H_
+#define SCORE_MICROGRAPH_H_
 
+#include <data/xmipp_program.h>
+#include "ctf_estimate_from_micrograph.h"
 #include "ctf_estimate_from_psd.h"
-#include "ctf_estimate_psd_with_arma.h"
+#include "ctf_sort_psds.h"
 
-/**@defgroup AssignCTF ctf_estimate_from_micrograph (CTF estimation from a micrograph)
-   @ingroup ReconsLibrary
-   This program assign different CTFs to the particles in a micrograph */
+
+
+/**@defgroup ScoreMicrograph score_micrograph (Evaluates the score of a micrograph)
+   @ingroup ReconsLibrary */
 //@{
-
-/** Assign CTF parameters. */
-class ProgCTFEstimateFromMicrograph: public XmippProgram
+/* Score Micrograph Program Parameters ------------------------------------------ */
+/** Parameter class for the project program */
+class ProgScoreMicrograph: public XmippProgram
 {
 public:
-    typedef enum {ARMA, Periodogram} TPSDEstimator_mode;
-    typedef enum {OnePerMicrograph, OnePerRegion, OnePerParticle} TPSD_mode;
 
-public:
+	//First we assume that the particle size is the same for the X and Y axis
+	int particleSize;
+
+	ProgCTFEstimateFromMicrograph prmEstimateCTFFromMicrograph;
+
     /// Parameters for adjust_CTF program
     ProgCTFEstimateFromPSD  prmEstimateCTFFromPSD;
-    /// Parameters for ARMA
-    ARMA_parameters         ARMA_prm;
-    /// Position file
-    FileName                fn_pos;
+
     /// Micrograph filename
     FileName                fn_micrograph;
-    /// Output rootname
-    FileName                fn_root;
-    /// Partition mode
-    TPSD_mode               psd_mode;
     /// Dimension of micrograph pieces
     int                     pieceDim;
     /** Overlap among pieces (0=No overlap, 1=Full overlap */
@@ -64,36 +61,35 @@ public:
     int                     skipBorders;
     /** Number of pieces (Nsubpiece x Nsubpiece) for the piece averaging */
     int                     Nsubpiece;
-    /** PSDEstimator_mode */
-    TPSDEstimator_mode      PSDEstimator_mode;
     /** Bootstrap N */
     int                     bootstrapN;
     /// Estimate a CTF for each PSD
     bool 					estimate_ctf;
+    /// Defocus range
+    double               defocus_range;
+
+    ProgCTFEstimateFromMicrograph::TPSD_mode PSDEstimator_mode;
+
+    ProgCTFEstimateFromMicrograph::TPSD_mode psd_mode;
+
+    ProgPSDSort prmPSDSort;
+
+
+
 public:
-    /** constructor**/
-    ProgCTFEstimateFromMicrograph();
-    /** Read parameters */
+    /** Read from a command line.*/
     void readParams();
 
-    /** Define parameters */
+    /** Define parameters. */
     void defineParams();
 
-    /** PSD averaging within a piece.
-        Compute the PSD of a piece by subdividing it in smaller pieces and
-        averaging their PSDs. The piece will be cut into 3x3 overlapping
-        pieces of size N/2 x N/2.*/
-    void PSD_piece_by_averaging(MultidimArray<double> &piece,
-                                MultidimArray<double> &psd);
-
-    /// Process the whole thing
     void run();
+    /** Process one image */
+    //void processImage(const FileName &fnImg, const FileName &fnImgOut, const MDRow &rowIn, MDRow &rowOut);
+
 };
 
-/** Fast estimate enhanced PSD.
- *  Set downsampling to 2 for halving the image size. */
-void fastEstimateEnhancedPSD(const FileName &fnMicrograph, double downsampling,
-		                     MultidimArray<double> &enhancedPSD, int numberOfThreads);
-
 //@}
-#endif
+
+
+#endif /* SCORE_MICROGRAPH_H_ */

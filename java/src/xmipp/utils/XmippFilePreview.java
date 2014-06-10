@@ -78,6 +78,8 @@ public class XmippFilePreview extends JComponent implements
 				thumbnail = null;
 				return;
 			}
+                        if(filename.endsWith(".pos"))
+                            return;// no image on it
 			if (Filename.isSingleImageExt(filename) ||
 					Filename.isStackExt(filename) ||
 					Filename.isVolumeExt(filename))

@@ -37,6 +37,11 @@
 #include <data/normalize.h>
 
 /* Read parameters ========================================================= */
+ProgCTFEstimateFromMicrograph::ProgCTFEstimateFromMicrograph()
+{
+    psd_mode = OnePerMicrograph; 
+    PSDEstimator_mode = Periodogram;
+}
 void ProgCTFEstimateFromMicrograph::readParams()
 {
     fn_micrograph = getParam("--micrograph");
@@ -353,10 +358,10 @@ void ProgCTFEstimateFromMicrograph::run()
     FourierTransformer transformer;
     int actualDiv_Number = 0;
 
-    for (int nIm = 1; nIm <= Ndim; nIm++)
+    for (size_t nIm = 1; nIm <= Ndim; nIm++)
 	{
         M_in.read(fn_micrograph,DATA,nIm);
-        std::cout << "micrograph num: " << nIm << std::endl;
+        std::cout << "Micrograph number: " << nIm << std::endl;
         while (N <= div_Number)
         {
         	bool skip = false;

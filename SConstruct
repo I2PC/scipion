@@ -47,7 +47,7 @@ else:
     env = Environment(ENV=os.environ,
           tools=['default', 'disttar'],
 	  toolpath=['external/scons/ToolsFromWiki'])
-    env.AppendUnique(LIBPATH=os.environ['LD_LIBRARY_PATH'])
+    env.AppendUnique(LIBPATH=(os.environ['LD_LIBRARY_PATH']).split(':'))
     env.AppendUnique(LIBPATH=['/usr/lib64/openmpi/lib','/usr/lib64/mpi/gcc/openmpi/lib64','/usr/lib/openmpi'])
 
 # avoid cruft in top dir

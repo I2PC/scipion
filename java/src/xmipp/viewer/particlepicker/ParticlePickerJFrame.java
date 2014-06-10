@@ -756,10 +756,9 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 					return;
 
 				int size = ((Number) sizetf.getValue()).intValue();
-				if (!getParticlePicker().isValidSize(size))
+				if (!getParticlePicker().isValidSize(ParticlePickerJFrame.this, size))
 				{
 					int prevsize = getParticlePicker().getSize();
-					XmippDialog.showInfo(ParticlePickerJFrame.this, XmippMessage.getOutOfBoundsMsg("Size " + size));
 					sizetf.setText(Integer.toString(prevsize));
 					return;
 				}
@@ -781,9 +780,8 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 					return;
 
 				int size = sizesl.getValue();
-				if (!getParticlePicker().isValidSize(size))
+				if (!getParticlePicker().isValidSize(ParticlePickerJFrame.this, size))
 				{
-					XmippDialog.showInfo(ParticlePickerJFrame.this, XmippMessage.getOutOfBoundsMsg("Size " + size));
 					sizesl.dispatchEvent(//trick to repaint slider after changing value
                             new MouseEvent(sizesl, 
                             MouseEvent.MOUSE_RELEASED,
@@ -807,7 +805,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		sizesl.setValue(size);
 		getCanvas().repaint();
 		getParticlePicker().setSize(size);
-
+                updateMicrographsModel();
 		if (particlesdialog != null)
 		{
 			for (PickerParticle p : getAvailableParticles())
