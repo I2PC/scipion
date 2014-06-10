@@ -188,16 +188,19 @@ void progReconstructSignificantThreadAlign(ThreadArgument &thArg)
 			double zl=z-2.96*sqrt(1.0/MULTIDIM_SIZE(mCurrentImage));
 			double ccl=tanh(zl);
 
-			size_t recId=mdProjectionMatching.addObject();
-			mdProjectionMatching.setValue(MDL_IMAGE,fnImg,recId);
-			mdProjectionMatching.setValue(MDL_ENABLED,1,recId);
-			mdProjectionMatching.setValue(MDL_MAXCC,bestCorr,recId);
-			mdProjectionMatching.setValue(MDL_ANGLE_ROT,bestRot,recId);
-			mdProjectionMatching.setValue(MDL_ANGLE_TILT,bestTilt,recId);
-			mdProjectionMatching.setValue(MDL_ANGLE_PSI,anglePsi,recId);
-			mdProjectionMatching.setValue(MDL_SHIFT_X,-shiftX,recId);
-			mdProjectionMatching.setValue(MDL_SHIFT_Y,-shiftY,recId);
-			mdProjectionMatching.setValue(MDL_FLIP,flip,recId);
+			if (prm.maxShift<0 || (prm.maxShift>0 && fabs(shiftX)<prm.maxShift && fabs(shiftY)<prm.maxShift))
+			{
+				size_t recId=mdProjectionMatching.addObject();
+				mdProjectionMatching.setValue(MDL_IMAGE,fnImg,recId);
+				mdProjectionMatching.setValue(MDL_ENABLED,1,recId);
+				mdProjectionMatching.setValue(MDL_MAXCC,bestCorr,recId);
+				mdProjectionMatching.setValue(MDL_ANGLE_ROT,bestRot,recId);
+				mdProjectionMatching.setValue(MDL_ANGLE_TILT,bestTilt,recId);
+				mdProjectionMatching.setValue(MDL_ANGLE_PSI,anglePsi,recId);
+				mdProjectionMatching.setValue(MDL_SHIFT_X,-shiftX,recId);
+				mdProjectionMatching.setValue(MDL_SHIFT_Y,-shiftY,recId);
+				mdProjectionMatching.setValue(MDL_FLIP,flip,recId);
+			}
 
 	    	// Get the best images
 			imgcc.cumlativeDensityFunction(cdfcc);
@@ -242,7 +245,7 @@ void progReconstructSignificantThreadAlign(ThreadArgument &thArg)
 						          << "shiftX=" << shiftX << " shiftY=" << shiftY << std::endl;
 			#endif
 
-						recId=mdPartial.addObject();
+						size_t recId=mdPartial.addObject();
 						mdPartial.setValue(MDL_IMAGE,fnImg,recId);
 						mdPartial.setValue(MDL_ENABLED,1,recId);
 						mdPartial.setValue(MDL_MAXCC,cc,recId);
