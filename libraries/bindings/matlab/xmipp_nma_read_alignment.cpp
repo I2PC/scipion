@@ -18,6 +18,36 @@ void mexFunction( int nlhs, mxArray *plhs[],
   /* Read images */
   MetaData mdImages;
   mdImages.read(((String)nmaDir)+"/images.xmd");
+  if (!mdImages.containsLabel(MDL_NMA))
+  {
+	  // May be it did not finish, try to load the nmaDone.xmd
+	  FileName fnDone=((String)nmaDir)+"/tmp/nmaDone.xmd";
+	  if (fileExists(fnDone))
+	  {
+		  mdImages.read(fnDone);
+		  if (!mdImages.containsLabel(MDL_NMA))
+		     REPORT_ERROR(ERR_MD_MISSINGLABEL,"Cannot find NMA displacements");
+		  // Write the deformations file because it does not exist yet
+		  std::vector< std::vector<double> > nmaDisplacements;
+		  mdImages.getColumnValues(MDL_NMA, nmaDisplacements);
+		  std::ofstream fhOut;
+		  fhOut.open((((String)nmaDir)+"/extra/deformations.txt").c_str());
+		  size_t nImages=nmaDisplacements.size();
+		  if (nImages>0)
+		  {
+			  size_t nDisplacements=nmaDisplacements[0].size();
+			  for (size_t n=0; n<nImages; ++n)
+			  {
+				  for (size_t i=0; i<nDisplacements; ++i)
+					  fhOut << nmaDisplacements[n][i] << " ";
+				  fhOut << std::endl;
+			  }
+		  }
+		  fhOut.close();
+	  }
+	  else
+		  REPORT_ERROR(ERR_MD_MISSINGLABEL,"Cannot find NMA displacements");
+  }
   mdImages.removeDisabled();
   int nImgs=(int)mdImages.size();
 
