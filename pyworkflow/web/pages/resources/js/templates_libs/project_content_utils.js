@@ -185,16 +185,22 @@
  /** METHODS ******************************************************************/
 
 /** EVENTS WITH TRIGGERS **/
-var event_graph = jQuery("div#graphActiv").trigger(jQuery.Event("click"));
-var event_list = jQuery("div#runTable").trigger(jQuery.Event("click"));
-var event = event_graph || event_list ; 
+
+//var event_graph = jQuery("div#graphActiv").trigger(jQuery.Event("click"));
+//var event_list = jQuery("div#runTable").trigger(jQuery.Event("click"));
+//var event = event_graph || event_list ; 
 
 
-function launchToolbarList(id, elm) {
+function isCtrlPress(event) {
+	return event.ctrlKey;
+}
+
+function launchToolbarList(id, elm, multi) {
 	/*
 	 * Toolbar used in the project content template for list view
 	 */
-	if (event.ctrlKey){
+	
+	if (multi){
 		enableMultipleMarkList(elm);
 	} else {
 		disableMultipleMarkList(id);
@@ -203,11 +209,12 @@ function launchToolbarList(id, elm) {
 }
 
 
-function launchToolbarTree(id, elm) {
+function launchToolbarTree(id, elm, multi) {
 	/*
 	 * Toolbar used in the project content template for graph view
 	 */
-	if (event.ctrlKey){
+	
+	if (multi){
 		enableMultipleMarkGraph(elm);
 	} else {
 		disableMultipleMarkGraph(id);
