@@ -7,14 +7,20 @@
 package xmipp.viewer.scipion;
 
 import java.awt.Color;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import xmipp.ij.commons.XmippUtil;
 import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
 import xmipp.utils.Params;
+import xmipp.utils.XmippDialog;
+import xmipp.utils.XmippWindowUtil;
 import xmipp.viewer.models.ClassInfo;
 import xmipp.viewer.models.ColumnInfo;
 import xmipp.viewer.models.GalleryData;
@@ -52,7 +58,6 @@ public class ScipionGalleryData extends GalleryData{
             orderLabels();
             for(ColumnInfo ci :labels)
             {
-                
                 ci.visible = isVisibleLabel(ci);
                 ci.render = isRenderLabel(ci);
                 if(ci.render && ciFirstRender == null)
@@ -62,15 +67,10 @@ public class ScipionGalleryData extends GalleryData{
                 zoom = 100;
     }
 
-    public void setWindow(GalleryJFrame frame) {
-        window = frame;
-    }
     
     public String getValueFromLabel(int index, int label)
     {
         return ((ScipionMetaData)md).getValueFromLabel(index, label);
-        
-        
     }
     
    
@@ -306,12 +306,19 @@ public class ScipionGalleryData extends GalleryData{
             return selmd;
         }
         
-    @Override
+        @Override
         public void openMetadata(MetaData md)
         {
             ScipionGalleryData data2 = new ScipionGalleryData(null, md.getFilename(), new ScipionParams(), (ScipionMetaData)md);
             ScipionGalleryJFrame frame = new ScipionGalleryJFrame(data2);
             data2.setWindow(frame);
         }
-
+        
+        
+       
+        public void overwrite(String path)
+        {
+            ((ScipionMetaData)md).overwrite(filename, path);
+        }
+    
 }
