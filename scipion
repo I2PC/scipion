@@ -47,8 +47,12 @@ def findHome():
             absPath = r   
     return os.path.dirname(absPath)
 
+SCIPION_ENV = {}
 SCIPION_HOME = findHome()
 os.environ['SCIPION_HOME'] = SCIPION_HOME
+
+SCIPION_ENV['SCIPION_HOME'] = SCIPION_HOME
+
 PW_APPS = join(SCIPION_HOME, 'pyworkflow', 'apps')
 PW_APPS_TEMP = join(PW_APPS, '%s')
 
@@ -96,8 +100,12 @@ SCIPION_PYTHON = join(XMIPP_BIN, 'xmipp_python')
 os.environ['SCIPION_HOME'] = SCIPION_HOME
 os.environ['SCIPION_PYTHON'] = SCIPION_PYTHON
 
+SCIPION_ENV['SCIPION_HOME'] = SCIPION_HOME
+SCIPION_ENV['SCIPION_PYTHON'] = SCIPION_PYTHON
+
 for k,v in SCIPION_DIRS.iteritems():
     os.environ[k] = v
+    SCIPION_ENV[k] = v
 
 VARS = {
         'PYTHONPATH': os.pathsep.join([SCIPION_HOME, XMIPP_LIB, os.environ.get('PYTHONPATH', '')]),
@@ -109,6 +117,9 @@ VARS = {
 for var in ['SPIDER_DIR', 'EMAN2DIR', 'CTFFIND_HOME', 'FREALIGN_HOME', 
             'OPT_ALIGN_HOME', 'RELION_HOME', 'BSOFT_HOME']:
     VARS[var] = getConfigPath(var)
+    
+for k,v in VARS.iteritems():
+    SCIPION_ENV[k] = v
 
 def runApp(app, args=''):
     runCmd('%s %s' % (PW_APPS_TEMP % app, args))
@@ -139,6 +150,7 @@ MODE_APACHE_VARS = 'apache_vars'
 MODE_VERSION = 'version'
 MODE_STATS = 'stats'
 MODE_DOWNLOAD = 'download'
+MODE_ENV = 'printenv'
 
 
 def main():
@@ -284,6 +296,12 @@ def main():
         else:
             args = ''
         runApp('pw_download_packages.py', args)
+        
+    elif mode == MODE_ENV:
+        for k,v in SCIPION_ENV.iteritems():
+            print "%s=%s" % (k, v)
+            
+        sys.exit(0)
 
     # If we reach this point, bad arguments were passed
     print """
@@ -330,6 +348,8 @@ USAGE:
                                django: open local django webserver (default)
                                collectstatic: copy static files for django server
                                apache_vars: show the LD_LIBRARY_PATH needed by apache server
+                               
+        printenv               Print the environmental variables used by the application 
 """
 
 
