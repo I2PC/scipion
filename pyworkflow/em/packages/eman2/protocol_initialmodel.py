@@ -83,7 +83,7 @@ class EmanProtInitModel(ProtInitialVolume):
 
     def getXmippStackFilename(self):
         for cls in self.inputClasses.get():
-            img = cls.getAverage()
+            img = cls.getRepresentative()
             return img.getFileName()
 
     def _insertSteps(self):

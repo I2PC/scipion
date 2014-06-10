@@ -205,6 +205,10 @@ class Object(object):
         return str(self._objId)
     
     def getName(self):
+        #TODO: REMOVE THIS FUNCTION, SINCE IT DOES NOT COMPLAIN WITH _objX naming
+        return self._objName
+    
+    def getObjName(self):
         return self._objName
     
     def getNameId(self):
@@ -582,6 +586,7 @@ class Pointer(Object):
                 value = getattr(self._objValue, self._extended.get(), default)
             elif isinstance(self._extended, Integer):
                 value = self._objValue[self._extended.get()]
+                value._parentObject = self._objValue
             else:
                 raise Exception("Invalid type '%s' for pointer._extended property." % type(self._extended))
         else:
@@ -671,6 +676,14 @@ class List(Object, list):
 class PointerList(List):
     def __init__(self, **args):
         List.__init__(self, **args)
+        
+    def _convertValue(self, value):
+        if isinstance(value, list):
+            self.clear()
+            for obj in value:
+                self.append(Pointer(value=obj))
+        else:
+            raise Exception("Could not set a PointerList value to: %s" % value)
       
             
 class CsvList(Scalar, list):

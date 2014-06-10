@@ -31,10 +31,9 @@ from convert import readSetOfClasses2D, createXmippInputClasses2D, createXmippIn
 from math import floor
 from xmipp import MetaData, MD_APPEND, MDL_MAXCC, MDL_WEIGHT, MDL_IMAGE, \
     MDL_VOLUME_SCORE_SUM, MDL_VOLUME_SCORE_SUM_TH, MDL_VOLUME_SCORE_MEAN, MDL_VOLUME_SCORE_MIN
-#    removeFilenamePrefix
 from pyworkflow.utils.path import moveFile, cleanPath, copyFile, removeExt
 from protlib_xmipp import getMdSize
-#from xmipp3 import projMatch
+
 
 class XmippProtRansac(ProtInitialVolume):
     """ Computes from a set of projections/classes using RANSAC algorithm """
@@ -184,7 +183,7 @@ class XmippProtRansac(ProtInitialVolume):
     
         # Low pass filter and resize        
         maxFreq = self.maxFreq.get()
-        ts = self.inputClasses.get().getRepresentatives().getSamplingRate()
+        ts = self.inputClasses.get().getSamplingRate()
         K = 0.25*(maxFreq/ts)
         if K<1:
             K=1
@@ -418,8 +417,8 @@ class XmippProtRansac(ProtInitialVolume):
         md.write(fn)
         
         volumesSet = self._createSetOfVolumes()
+        volumesSet.setSamplingRate(classes2DSet.getSamplingRate())
         readSetOfVolumes(fn, volumesSet)
-        volumesSet.setSamplingRate(self.inputClasses.get().getRepresentatives().getSamplingRate())
         
         self._defineOutputs(outputVolumes=volumesSet)
         self._defineSourceRelation(classes2DSet, volumesSet)
@@ -453,6 +452,9 @@ class XmippProtRansac(ProtInitialVolume):
     
     def _storeSummaryInfo(self, numVolumes):
         """ Store some information when the protocol finishes. """
+        msg1 = ''
+        msg2 = ''
+        
         for n in range(numVolumes):
             fnBase = 'proposedVolume%05d' % n
             fnRoot = self._getPath(fnBase + ".xmd")

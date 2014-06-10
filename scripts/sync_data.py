@@ -2,6 +2,7 @@
 # **************************************************************************
 # *
 # * Authors:     I. Foche Perez (ifoche@cnb.csic.es)
+# *              J. Burguet Castell (jburguet@cnb.csic.es)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -296,7 +297,7 @@ def main():
 
     parser.add_argument('-m', '--mod-log-file', 
         default="modifications.log",
-        help="File that contain the whole modifications log to keep a tracking of what has been done in the Scipion tests data. The path given must be relative to $SCIPION_HOME")
+        help="File that contain the whole modifications log to keep a tracking of what has been done in the Scipion tests data. The path given must be relative to the Scipion folder.")
     
     parser.add_argument('-u', '--url',
         default="http://scipionwiki.cnb.csic.es/files/scipion/data/tests",
@@ -312,7 +313,7 @@ def main():
 
     exclusive.add_argument('-r', '--reverse-sync', 
         action='store_true',
-        help="Synchronize from the local data to scipion machine. When wildcard 'all' is given, it will synchronize all the local folder with the remote one. When a set of locations is given, they're synchronized one by one against the remote scipion server. File path must be given from $SCIPION_HOME/tests folder")
+        help="Synchronize from the local data to scipion machine. When wildcard 'all' is given, it will synchronize all the local folder with the remote one. When a set of locations is given, they're synchronized one by one against the remote scipion server. File path must be given from the SCIPION_TESTS folder")
     
     parser.add_argument('-f', '--dataset',
         nargs='+',
@@ -360,31 +361,30 @@ def main():
         delBackFile(manifest)
 
     elif args.query_for_modifications:
-        print "Querying the modifications log file..."
-        if os.path.exists(os.path.join(os.environ['SCIPION_HOME'],args.last_mod_file)):
-            print "File " + args.last_mod_file + " exists. Checking its content..."
-            if os.stat(os.path.join(os.environ['SCIPION_HOME'],args.last_mod_file)).st_size != 0: #File contains data
+        last_mfile = os.path.join(os.environ['HOME'], 'Scipion', args.last_mod_file)
+        print "Querying the modifications log file (%s)..." % last_mfile
+        if os.path.exists(last_mfile):
+            print "File %s exists. Checking its content..." % last_mfile
+            if os.stat(last_mfile).st_size != 0: #File contains data
                 print "File's not empty. Copying the content to log file " + args.mod_log_file
-                last_file = open(os.path.join(os.environ['SCIPION_HOME'],args.last_mod_file), 'r+')
-                modif_file = open(os.path.join(os.environ['SCIPION_HOME'],args.mod_log_file), 'a')
-                file_content = last_file.read()
+                modif_file = open(os.path.join(os.environ['HOME'], 'Scipion', args.mod_log_file), 'a')
+                file_content = open(last_mfile).read()
                 modif_file.write(file_content)
                 print "Last modifications file shows following content:"
                 print file_content
                 #TODO: In case we want to add the responsible of the modifications to the blame list, this is the place to do it
-                last_file.close()
                 modif_file.close()
-                last_file = open(os.path.join(os.environ['SCIPION_HOME'],args.last_mod_file), 'w').close()
+                open(last_mfile, 'w').close()  # wipe out contents
             else: #File's empty
                 print "File's empty, so no modification since last check."
                 sys.exit(1)
         else:
-            print "File " + args.last_mod_file + " doesn't exist. Creating it..."
-            open(os.path.join(os.environ['SCIPION_HOME'],args.last_mod_file), 'w').close()
+            print "File %s doesn't exist. Creating it..." % last_mfile
+            open(last_mfile, 'w').close()  # wipe out contents
             sys.exit(2) #We return with 2, to let Buildbot know that no modification was made (when failure there was modification)
     elif args.dataset:
         if len(args.dataset) != 1:
-            print "Selected datasets: %(datasets)s" % ({'datasets': " ".join(args.dataset)})
+            print "Selected datasets: %s" % " ".join(args.dataset)
         else:
             print "Selected datasets: %(datasets)s" % ({'datasets': args.dataset[0]})
         ans = ""

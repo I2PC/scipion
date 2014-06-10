@@ -363,6 +363,7 @@ def _particlesFromEmx(protocol, emxData, emxFile, outputDir, acquisition, sampli
             part = Particle()
             if _hasCtfLabels(emxParticle) or _hasCtfLabels(emxParticle.getMicrograph()):
                 part.setCTF(CTFModel())
+                partSet.setHasCTF(True)
             if emxParticle.has('centerCoord__X'):
                 part.setCoordinate(Coordinate())
             _particleFromEmx(emxParticle, part)

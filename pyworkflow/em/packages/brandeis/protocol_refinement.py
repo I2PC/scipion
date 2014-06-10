@@ -47,6 +47,16 @@ reconstructions.
     def __init__(self, **args):
         ProtFrealignBase.__init__(self, **args)
     
+    def createOutputStep(self, lastIter):
+        lastIterDir = self._iterWorkingDir(lastIter)
+        volFn = join(lastIterDir, 'volume_iter_%03d.mrc' % lastIter)
+        vol = Volume()
+        vol.setSamplingRate(self.inputParticles.get().getSamplingRate())
+        vol.setFileName(volFn)
+        self._defineOutputs(outputVolume=vol)
+        self._defineSourceRelation(imgSet, outputVolume)
+        self._defineSourceRelation(self.input3DReference.get(), outputVolume)
+
     #--------------------------- INFO functions ----------------------------------------------------
     def _citations(self):
         return ['Lyumkis2013', 'Sindelar2012', 'Grigorieff2007', 'Wolf2006', 'Stewart2004', 'Grigorieff1998']

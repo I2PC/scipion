@@ -41,7 +41,6 @@ def readSetOfClasses3D(classes3DSet, fileparList, volumeList):
     """
     imgSet = classes3DSet.getImages()
     samplingRate = imgSet.getSamplingRate()
-    averages = classes3DSet.createRepresentatives()
     
     for ref, volFn in enumerate(volumeList):
         class3D = Class3D()
@@ -51,7 +50,6 @@ def readSetOfClasses3D(classes3DSet, fileparList, volumeList):
         vol.setLocation(volFn)
         
         class3D.setRepresentative(vol)
-        averages.append(vol)
         classes3DSet.append(class3D)
         
         file1 = fileparList[ref]

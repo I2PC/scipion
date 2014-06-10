@@ -157,7 +157,7 @@ class Complex(Object):
     
         
 class GTestResult(TestResult):
-    """ Subclass TestResult to ouput tests results with colors (green for success and red for failure)
+    """ Subclass TestResult to output tests results with colors (green for success and red for failure)
     and write a report on an .xml file. 
     """
     xml = None
@@ -175,13 +175,14 @@ class GTestResult(TestResult):
         
     def doReport(self):
         secs = time.time() - self.startTimeAll
-        print >> sys.stderr, greenStr("\n[==========]") + " run %d tests (%0.3f secs)" % (self.numberTests, secs)
+        sys.stderr.write("\n%s run %d tests (%0.3f secs)\n" %
+                         (greenStr("[==========]"), self.numberTests, secs))
         if self.testFailed:
             print >> sys.stderr, failStr("[  FAILED  ]") + " %d tests" % self.testFailed
         print >> sys.stdout, greenStr("[  PASSED  ]") + " %d tests" % (self.numberTests - self.testFailed)
         #self.xml.write('</testsuite>\n')
         #self.xml.close()
-             
+
     def tic(self):
         self.startTime = time.time()
         

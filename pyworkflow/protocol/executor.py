@@ -211,14 +211,14 @@ class MPIStepExecutor(ThreadStepExecutor):
     
     def runJob(self, log, programName, params,           
            numberOfMpi=1, numberOfThreads=1, 
-           runInBackground=False):
+           runInBackground=False, cwd=None):
         from pyworkflow.utils.mpi import runJobMPI
         node = current_thread().thId + 1
         print "==================calling runJobMPI=============================="
         print " to node: ", node
         runJobMPI(log, programName, params, self.comm, node,
                   numberOfMpi, numberOfThreads, 
-                  runInBackground, hostConfig=self.hostConfig)
+                  runInBackground, hostConfig=self.hostConfig, cwd=cwd)
         
     def finishThread(self, th):
         from pyworkflow.utils.mpi import TAG_RUN_JOB

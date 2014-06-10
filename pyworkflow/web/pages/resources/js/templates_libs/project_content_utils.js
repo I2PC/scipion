@@ -37,6 +37,21 @@
  * function launchToolbarList(id, elm)
  * 	->	Toolbar used in the project content template for the run list view.
  * 
+ * function launchToolbarTree(id, elm)
+ * 	->	Toolbar used in the project content template for graph view.
+ * 
+ * function launchToolbarProject(id, elm, type)
+ * 	->	Method used to update an element in the template depending on 
+ * 		view mode (list or graph).
+ * 
+ * function refreshToolbarSingleMark(id, elm)
+ * 	->	Update the buttons functionalities into the toolbar
+ * 		for single marks.
+ * 
+ * function refreshToolbarMultipleMark(id, elm)
+ * 	->	Update the buttons functionalities into the toolbar
+ * 		for multiple marks.
+ * 
  * function enableMultipleMarkGraph(elm)
  * 	->	Used to highlight a node in the protocol graph.
  * 		This method is used to multiples marked nodes.
@@ -45,8 +60,44 @@
  * 	->	Used to remove the highlight applied to a node in the protocol graph.
  * 		This method is used to multiples marked nodes.
  * 
- * function launchToolbarTree(id, elm)
- * 	->	Toolbar used in the project content template for the runs tree view.
+ * function getElmMarkedList()
+ * 	->	Return a list of elements marked in the view mode currently.
+ * 
+ * function getElmMarkedGraph()
+ * 	->	Return a list of elements marked in the graph view mode.
+ * 
+ * function transposeElmMarked(status)
+ * 	->	Switch the elements marked between graph and list view.
+ * 
+ * function refreshSelectedRuns(list_marked)
+ * 	->	Refresh the elements contained into the list.
+ * 
+ * --- GRAPH METHODS ---
+ * function markSingleNodeGraph(elm)
+ * ->	Method to mark a node selected in the graph.
+ * 
+ * dismarkSingleNodeGraph(elm)
+ * 	->	Method to dismark a node selected in the graph.
+ * 
+ * function enableMultipleMarkGraph(elm)
+ * 	->	Method to active the multiple selection.
+ * 
+ * function disableMultipleMarkGraph(id)
+ * 	->	Method to disactive the multiple selection.
+ * 
+ * --- LIST METHODS --- 
+ * function markSingleNodeList(elm)
+ * 	->	Method to mark a row selected in the list.
+ * 
+ * function dismarkSingleNodeList(elm)
+ * 	->	Method to dismark a row selected in the list.
+ * 
+ * function enableMultipleMarkList(elm)
+ * 	->	Method to activate the multiple selection.
+ * 
+ * function disableMultipleMarkList(id)
+ * 	->	Method to disactivate the multiple selection.
+ * --------------------
  * 
  * function checkRunStatus(id)
  * 	->	Function to check a protocol run, depend on the status two button will be
@@ -58,6 +109,9 @@
  * 
  * function showLog(log_type)
  * 	->	This function is used to show or hide differents logs about a protocol selected.
+ * 
+ *  * function showExtenalLog(log_type)
+ * 	->	This function is used to show in an external popup the log.
  * 
  * function fillUL(list, ul_id, icon)
  * 	->	Fill an UL element with items from a list items, should contains id and 
@@ -84,14 +138,6 @@
  * function changeStatusGraph(status, graph, icon_graph, list, icon_list)
  * 	->	Function to switch between the graph/list view depending on the status.
  * 
- * function markElmGraphSingle(node_id, graph)
- * 	->	Function used to mark the same protocol run when one is selected in the
- * 		protocol run list and the view is changed to protocol run graph.
- * 
- * function markElmListSingle(row_id, graph)
- * 	->	Function used to mark the same protocol run when one is selected in the
- * 		protocol run graph and the view is changed to protocol run list.
- * 
  * function switchGraph() 
  * 	->	Main function called to change between graph tree/list views.
  * 
@@ -110,6 +156,9 @@
  * 
  * function deleteProtocol(elm)
  * 	->	Method to execute a delete for a protocol.
+ * 
+ * function copyProtocol(id)
+ * 	-> Method to copy protocol.
  *
  * function stopProtocolForm(protocolId)
  * 	->	Dialog web form based in messi.js to verify the option to stop a protocol.
@@ -168,6 +217,10 @@ function launchToolbarTree(id, elm) {
 
 	
 function launchToolbarProject(id, elm, type){
+	/*
+	 * Method used to update an element in the template depending on 
+	 * view mode (list or graph)
+	 */
 	var row = $("div#toolbar");
 	
 	switch (type) {
@@ -187,16 +240,26 @@ function launchToolbarProject(id, elm, type){
 }
 
 function refreshToolbarSingleMark(id, elm){
-	// Update the buttons functionalities into the toolbar
+	/*
+	 * Update the buttons functionalities into the toolbar
+	 * for single marks.
+	 */
+	
 	updateButtons(id, "single");
 }
 
 function refreshToolbarMultipleMark(list_id){
-	// Update the buttons functionalities into the toolbar
+	/*
+	 * Update the buttons functionalities into the toolbar
+	 * for multiple marks.
+	 */
 	updateButtons(list_id, "multiple");
 }
 
 function getElmMarkedList(){
+	/*
+	 * Return a list of elements marked in the list view mode.
+	 */
 	var list_marked = [];
 
 	$.each($("tr"), function(){
@@ -211,6 +274,9 @@ function getElmMarkedList(){
 }
 
 function getElmMarkedGraph(){
+	/*
+	 * Return a list of elements marked in the graph view mode.
+	 */
 	var list_marked = [];
 
 	$.each($(".window"), function(){
@@ -226,6 +292,9 @@ function getElmMarkedGraph(){
 
 
 function transposeElmMarked(status){
+	/*
+	 * Switch the elements marked between graph and list view.
+	 */
 	var list_marked = [];
 
 	if (status == 'inactive') {
@@ -273,6 +342,9 @@ function transposeElmMarked(status){
 }
 
 function refreshSelectedRuns(list_marked){
+	/*
+	 * Refresh the elements contained into the list.
+	 */
 	$.ajax({
 		type : "GET", 
 		url : '/save_selection/?mark=' + listToString(list_marked),
@@ -284,18 +356,28 @@ function refreshSelectedRuns(list_marked){
 /** Graph Methods ***********************************************/
 
 function markSingleNodeGraph(elm){
+	/*
+	 * Method to mark a node selected in the graph.
+	 */
 	// Highlight the node
 	elm.css("border", "2.5px solid Firebrick");
 	elm.attr("selected", "selected");
 }
 
 function dismarkSingleNodeGraph(elm){
+	/*
+	 * Method to dismark a node selected in the graph.
+	 */
+	
 	// Clear the node
 	elm.css("border", "");
 	elm.removeAttr("selected")
 }
 
 function enableMultipleMarkGraph(elm){
+	/*
+	 * Method to activate the multiple selection.
+	 */
 	if (elm.attr("selected") == "selected"){
 		dismarkSingleNodeGraph(elm);
 		$("div#graphActiv").removeAttr("data-option");
@@ -308,6 +390,9 @@ function enableMultipleMarkGraph(elm){
 } 	
 
 function disableMultipleMarkGraph(id){
+	/*
+	 * Method to disactivate the multiple selection.
+	 */
 	$.each($(".window"), function(){
 		var elm = $(this)
 		if (elm.attr("id") != "graph_"+id && elm.attr("selected") != undefined){
@@ -319,16 +404,27 @@ function disableMultipleMarkGraph(id){
 /** List Methods ***********************************************/
 
 function markSingleNodeList(elm){
+	/*
+	 * Method to mark a row selected in the list.
+	 */
+	
 	// Highlight the node
 	elm.addClass("selected");
 }
 
 function dismarkSingleNodeList(elm){
+	/*
+	 * Method to dismark a row selected in the list.
+	 */
+	
 	// Clear the node
 	elm.removeClass("selected");
 }
 
 function enableMultipleMarkList(elm){
+	/*
+	 * Method to activate the multiple selection.
+	 */
 	if (elm.hasClass("selected")){
 		dismarkSingleNodeList(elm);
 	} else {
@@ -339,6 +435,9 @@ function enableMultipleMarkList(elm){
 }
 
 function disableMultipleMarkList(id){
+	/*
+	 * Method to disactivate the multiple selection.
+	 */
 	$.each($("tr"), function(){
 		var elm = $(this)
 		if(elm.hasClass("selected")){
@@ -404,6 +503,9 @@ function updateTabs(id) {
 }
 
 function showLog(log_type){
+	/*
+	 * This function is used to show or hide differents logs about a protocol selected.
+	 */
 	
 	switch (log_type) {
 		case "output_log":
@@ -456,6 +558,9 @@ function showLog(log_type){
 }
 
 function showExternalLog(log_id){
+	/*
+	 * This function is used to show in an external popup the log.
+	 */
 	var html = "";
 
 	switch (log_id) {
@@ -473,7 +578,6 @@ function showExternalLog(log_id){
 	customPopupFileHTML(html ,log_id,1024,768);
 
 }
-
 
 
 function fillUL(type, list, ulId, icon) {
@@ -683,7 +787,6 @@ function switchGraph() {
 	// Keep the consistency about the selected elements between
 	// the list and graph views.
 	transposeElmMarked(status);
-	
 
 }
 
@@ -765,6 +868,9 @@ function deleteProtocol(elm) {
 }
 
 function copyProtocol(id){
+	/*
+	 * Method to copy protocol.
+	 */
 	$.ajax({
 		type : "GET",
 		url : "/copy_protocol/?id=" + id,

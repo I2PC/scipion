@@ -16,7 +16,7 @@ from pyworkflow.tests import *
 
 #FIXME:Nacho
 
-class TestSqliteMapper(BaseTest):
+class TestLogs(BaseTest):
     
     @classmethod
     def setUpClass(cls):
@@ -33,7 +33,7 @@ class TestSqliteMapper(BaseTest):
         genWarningTest = 'General warning [%d]' % logTestCode
         genErrorTest = 'General error [%d]' % logTestCode
         log.info(genInfoTest)
-        log.debug(genDebugTest)
+        #log.debug(genDebugTest)
         log.warning(genWarningTest)
 
         logFn = 'fileLog.log'
@@ -43,7 +43,7 @@ class TestSqliteMapper(BaseTest):
         fileWarningTest = 'File warning [%d]' % logTestCode
         fileErrorTest = 'File error [%d]' % logTestCode
         log.info(fileInfoTest)
-        log.debug(fileDebugTest)
+        #log.debug(fileDebugTest)
         log.warning(fileWarningTest)
         log = logging.getLogger('pyworkflow.tests.log')
         log.error(genErrorTest)

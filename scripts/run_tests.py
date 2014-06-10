@@ -52,7 +52,7 @@ def printTests(tests, mode='modules'):
                 if mode == 'all':
                     print "    ", testName
 
-       
+
 def runTests(tests):
     result = GTestResult()
     tests.run(result)

@@ -551,7 +551,7 @@ class TextFileViewer(tk.Frame):
         
     def _openExternal(self):
         """ Open a new window with an external viewer. """
-        if os.environ.get('SCIPION_EXTERNAL_VIEWER', None):
+        if os.environ.get('SCIPION_EXTERNAL_VIEWER', 'False').lower() in ['true', '1']:
             if not self.taList:
                 return
             _open_cmd(self.taList[self.getIndex() or 0].filename)

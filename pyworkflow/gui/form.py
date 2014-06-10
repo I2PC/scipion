@@ -32,6 +32,8 @@ params definition.
 import os
 import Tkinter as tk
 import ttk
+from collections import OrderedDict
+from datetime import datetime
 
 from pyworkflow.utils.path import getHomePath
 from pyworkflow.utils.properties import Message, Icon, Color
@@ -62,7 +64,7 @@ class BoolVar():
             self.tkVar.set(0)    
             
     def get(self):
-        return self.tkVar.get() == 1   
+        return self.tkVar.get() == 1    
     
     
 class PointerVar():
@@ -82,16 +84,27 @@ class PointerVar():
         that is more readable for the user to pick the desired object.
         """
         label = ''
-        obj = self.value
+
+        if hasattr(self.value, '_parentObject'):
+            obj = self.value._parentObject
+            suffix = ' [Item %d]' % self.value.getObjId()
+        else:
+            obj = self.value
+            suffix = ''
+            
         if obj:
-            label = obj.getObjLabel()
-            if not len(label.strip()):
-                parent = self._protocol.mapper.getParent(obj)
-                if parent:
-                    label = "%s -> %s" % (parent.getObjLabel(), obj.getLastName())
-                else:
-                    label = obj.getLastName()
-        return label
+            if hasattr(obj, '_parentObject'):
+                label = obj.strId()
+            else:
+                label = obj.getObjLabel()
+                if not len(label.strip()):
+                    parent = self._protocol.mapper.getParent(obj)
+                    if parent:
+                        label = "%s -> %s" % (parent.getObjLabel(), obj.getLastName())
+                    else:
+                        label = obj.getLastName()
+        
+        return label + suffix
            
     def get(self):
         return self.value
@@ -105,20 +118,28 @@ class MultiPointerVar():
         self.tkVar = tk.StringVar()
         self.trace = self.tkVar.trace
         
+    def _updateObjectsList(self):
+        self.tkVar.set(str(datetime.now())) # cause a trace to notify changes
+        self.tree.update() # Update the tkinter tree gui
+        
     def set(self, value):
-        if isinstance(value, Object):
+        if isinstance(value, PointerList):
+            for pointer in value:
+                self.provider.addObject(pointer.get())
+            self._updateObjectsList()
+        elif isinstance(value, Object):
             self.provider.addObject(value)
-            self.tree.update()
+            self._updateObjectsList()
           
     def remove(self):
         """ Remove first element selected. """
         value = self.tree.getFirst()
         if value:
             self.provider.removeObject(value)
-            self.tree.update()   
+            self._updateObjectsList()
         
     def get(self):
-        return self.provider._objectList
+        return self.provider.getObjects()
     
    
 class ComboVar():
@@ -167,7 +188,24 @@ class ProtocolClassTreeProvider(TreeProvider):
         return {'key': obj.get(),
                 'values': (obj.get(),)}
     
+    
+def getObjectLabel(obj, mapper):
+    """ We will try to show in the list the string representation
+    that is more readable for the user to pick the desired object.
+    """
+    if hasattr(obj, '_parentObject'):
+        label = "Item %s" % obj.strId()
+    else:
+        label = obj.getObjLabel()
+        if not len(label.strip()):
+            parent = mapper.getParent(obj)
+            if parent:
+                label = "%s -> %s" % (parent.getObjLabel(), obj.getLastName())
+            else:
+                label = obj.getLastName()
+    return label
 
+    
 class SubclassesTreeProvider(TreeProvider):
     """Will implement the methods to provide the object info
     of subclasses objects(of className) found by mapper"""
@@ -178,9 +216,31 @@ class SubclassesTreeProvider(TreeProvider):
         self.protocol = protocol
         self.mapper = protocol.mapper
         
-    def getObjects(self):
-        return list(self.protocol.getProject().iterSubclasses(self.className, self.objFilter))
+    def _containsObject(self, objects, obj):
+        for o in objects:
+            if o.getObjId() == obj.getObjId():
+                return True
+        return False
             
+    def getObjects(self):
+        objects = list(self.protocol.getProject().iterSubclasses(self.className, self.objFilter))
+        
+        for setObject in self.protocol.getProject().iterSubclasses("Set", self.classFilter):
+            if not self._containsObject(objects, setObject):
+                objects.append(setObject)
+                for item in setObject:
+                    newItem = item.clone()
+                    newItem.setObjId(item.getObjId())
+                    newItem._parentObject = setObject
+                    objects.append(newItem)
+        
+        return objects
+            
+    def classFilter(self, obj):
+        """ Filter Set with the specified class name. """
+        itemType = getattr(obj, 'ITEM_TYPE', None)        
+        return (itemType and itemType.__name__ == self.className)
+        
     def objFilter(self, obj):
         result = True
         # Do not allow to select objects that are childs of the protocol
@@ -203,23 +263,16 @@ class SubclassesTreeProvider(TreeProvider):
                     return True
         return False
     
-    def getObjectLabel(self, obj):
-        """ We will try to show in the list the string representation
-        that is more readable for the user to pick the desired object.
-        """
-        label = obj.getObjLabel()
-        if not len(label.strip()):
-            parent = self.mapper.getParent(obj)
-            if parent:
-                label = "%s -> %s" % (parent.getObjLabel(), obj.getLastName())
-            else:
-                label = obj.getLastName()
-        return label
-        
     def getObjectInfo(self, obj):
-        
-        return {'key': obj.strId(), 'text': self.getObjectLabel(obj),
-                'values': (str(obj).replace(obj.getClassName(), ''), obj.getObjCreation()), 'selected': self.isSelected(obj)}
+        parent = getattr(obj, '_parentObject', None)
+        if parent:
+            objId = "%s.%s" % (parent.getObjId(), obj.getObjId())
+        else:
+            objId = obj.strId()
+            
+        return {'key': objId, 'text': getObjectLabel(obj, self.mapper),
+                'values': (str(obj).replace(obj.getClassName(), ''), obj.getObjCreation()), 
+                'selected': self.isSelected(obj), 'parent': parent}
 
     def getObjectActions(self, obj):
         if isinstance(obj, Pointer):
@@ -250,28 +303,26 @@ class RelationsTreeProvider(SubclassesTreeProvider):
 
 class MultiPointerTreeProvider(TreeProvider):
     """Store several objects to be used for Multipointer"""
-    def __init__(self):
-        self._objectList = []
+    def __init__(self, mapper):
+        self._objectDict = OrderedDict()
+        self._mapper = mapper
         
     def addObject(self, obj):
-        if not obj in self._objectList:
-            self._objectList.append(obj)
+        self._objectDict[obj.getObjId()] = obj 
         
     def removeObject(self, objId):
         objId = int(objId)
-        for obj in self._objectList:
-            if objId == obj.getObjId():
-                self._objectList.remove(obj)
-                break 
+        if objId in self._objectDict:
+            del self._objectDict[objId]
      
     def getObjects(self):
-        return self._objectList
+        return self._objectDict.values()
         
     def getColumns(self):
         return [('Object', 250)]
     
     def getObjectInfo(self, obj):
-        return {'key': obj.getObjId(), 'text': (obj.getNameId(),)}  
+        return {'key': obj.getObjId(), 'text': getObjectLabel(obj, self._mapper)}  
             
    
 #---------------------- Other widgets ----------------------------------------
@@ -462,6 +513,8 @@ class ParamWidget():
                  callback=None, visualizeCallback=None, column=0, showButtons=True):
         self.window = window
         self._protocol = self.window.protocol
+        if self._protocol.getProject() is None:
+            raise Exception("Project is None for protocol: %s" % self._protocol)
         self.row = row
         self.column = column
         self.paramName = paramName
@@ -587,7 +640,7 @@ class ParamWidget():
                 raise Exception("Invalid display value '%s' for EnumParam" % str(param.display))
         
         elif t is MultiPointerParam:
-            tp = MultiPointerTreeProvider()
+            tp = MultiPointerTreeProvider(self._protocol.mapper)
             tree = BoundTree(content, tp)
             var = MultiPointerVar(tp, tree)
             tree.grid(row=0, column=0, sticky='w')
@@ -1169,8 +1222,7 @@ class FormWindow(Window):
     def getWidgetValue(self, protVar, param):
         widgetValue = ""                
         if isinstance(param, MultiPointerParam):
-            for pointer in protVar:
-                widgetValue += pointer.get(param.default.get()) + ";"
+            widgetValue = protVar
         else:
             widgetValue = protVar.get(param.default.get())  
         return widgetValue
@@ -1330,7 +1382,16 @@ class FormWindow(Window):
         if param is not None:
             var = self.widgetDict[paramName]
             try:
-                param.set(var.get())
+                value = var.get()
+                if hasattr(value, '_parentObject'): 
+                    # Handle the special case of pointer and extensions
+                    # If parent is not None, it means that the select object
+                    # is inside a Set, so the pointer should store the Set value
+                    # and then have a pointer extension to the item id
+                    param.set(value._parentObject)
+                    param.setExtendedItemId(value.getObjId())
+                else:
+                    param.set(value)
             except ValueError:
                 if len(var.get()):
                     print "Error setting param for: ", paramName, "value: '%s'" % var.get()
@@ -1353,6 +1414,9 @@ class FormWindow(Window):
         self.protocol.setObjLabel(self.runNameVar.get())
              
     def updateProtocolParams(self):
+        """ This method is only used from WEB, since in Tk all params
+        are updated when they are changed.
+        """
         for paramName, _ in self.protocol.iterDefinitionAttributes():
             self.setParamFromVar(paramName)
 

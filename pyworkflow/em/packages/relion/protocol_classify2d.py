@@ -63,9 +63,11 @@ class ProtRelionClassify2D(ProtRelionBase, ProtClassify2D):
     def createOutputStep(self):
         from convert import readSetOfClasses2D
         classesStar = self._getIterClasses(self._lastIter())
-        classes = self._createSetOfClasses2D(self.inputParticles.get())
+        imgSet = self.inputParticles.get()
+        classes = self._createSetOfClasses2D(imgSet)
         readSetOfClasses2D(classes, classesStar)
         self._defineOutputs(outputClasses=classes)
+        self._defineSourceRelations(imgSet, outputClasses)
         
     #--------------------------- INFO functions -------------------------------------------- 
     def _validateNormal(self):
