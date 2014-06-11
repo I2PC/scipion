@@ -673,6 +673,10 @@ class SqliteFlatDb(SqliteDb):
         
         return result is None
         
+    def clear(self):
+        self.executeCommand("DROP TABLE IF EXISTS %sClasses;" % self.tablePrefix)
+        self.executeCommand("DROP TABLE IF EXISTS %sObjects;" % self.tablePrefix)
+                
     def createTables(self, objDict):
         """Create the Classes and Object table to store items of a Set.
         Each object will be stored in a single row.
