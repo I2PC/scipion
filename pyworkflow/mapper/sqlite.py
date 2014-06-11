@@ -26,6 +26,7 @@
 
 from pyworkflow.utils.path import replaceExt, joinExt
 from mapper import Mapper
+from sqlite_db import SqliteDb
 
 
 
@@ -36,7 +37,7 @@ class SqliteMapper(Mapper):
         self.__initObjDict()
         self.__initUpdateDict()
         try:
-            self.db = SqliteDb(dbName)
+            self.db = SqliteObjectsDb(dbName)
         except Exception, ex:
             raise Exception('Error creating SqliteMapper, dbName: %s\n error: %s' % (dbName, ex))
     
@@ -326,7 +327,7 @@ class SqliteMapper(Mapper):
         self.db.insertRelation(relName, creatorId, parentId, childId)
     
     
-class SqliteDb():
+class SqliteObjectsDb(SqliteDb):
     """Class to handle a Sqlite database.
     It will create connection, execute queries and commands"""
     
@@ -340,25 +341,10 @@ class SqliteDb():
         return self.SELECT + whereStr + orderByStr
     
     def __init__(self, dbName, timeout=1000):
-        self.__createConnection(dbName, timeout)
+        SqliteDb.__init__(self)
+        self._createConnection(dbName, timeout)
         self.__createTables()
 
-    def __createConnection(self, dbName, timeout):
-        """Establish db connection"""
-        from sqlite3 import dbapi2 as sqlite
-        self.connection = sqlite.Connection(dbName, timeout, check_same_thread = False)
-        self.connection.row_factory = sqlite.Row
-        self.cursor = self.connection.cursor()
-        # Define some shortcuts functions
-        self.executeCommand = self.cursor.execute
-        #self.executeCommand = self.__debugExecute
-        self.commit = self.connection.commit
-        
-    def __debugExecute(self, *args):
-        print "COMMAND: ", args[0]
-        print "ARGUMENTS: ", args[1:]
-        self.cursor.execute(*args)
-        
     def __createTables(self):
         """Create required tables if don't exists"""
         # Enable foreings keys
@@ -421,20 +407,6 @@ class SqliteDb():
         self.executeCommand(self.selectCmd("id=?"), (objId,))  
         return self.cursor.fetchone()
     
-    def _iterResults(self):
-        row = self.cursor.fetchone()
-        while row is not None:
-            yield row
-            row = self.cursor.fetchone()
-        
-    def _results(self, iterate=False):
-        """ Return the results to which cursor, point to. 
-        If iterates=True, iterate yielding each result independenly"""
-        if not iterate:
-            return self.cursor.fetchall()
-        else:
-            return self._iterResults()
-        
     def selectObjectsByParent(self, parent_id=None, iterate=False):
         """Select object with a given parent
         if the parent_id is None, all object with parent_id NULL
@@ -666,7 +638,7 @@ class SqliteFlatMapper(Mapper):
         return [self.selectById(rowId['id']) for rowId in objIds]
         
 
-class SqliteFlatDb():
+class SqliteFlatDb(SqliteDb):
     """Class to handle a Sqlite database.
     It will create connection, execute queries and commands"""
     
@@ -674,9 +646,10 @@ class SqliteFlatDb():
                  'Float': 'REAL',
                  'Boolean': 'INTEGER'
                  }
-    OPEN_CONNECTIONS = {}
     
     def __init__(self, dbName, tablePrefix, timeout=1000):
+        SqliteDb.__init__(self)
+        self._reuseConnections = True
         tablePrefix = tablePrefix.strip()
         if tablePrefix: # Avoid having _ for empty prefix
             tablePrefix += '_' 
@@ -686,17 +659,9 @@ class SqliteFlatDb():
         self.INSERT_CLASS = "INSERT INTO %sClasses (label_property, column_name, class_name) VALUES (?, ?, ?)" % tablePrefix
         self.SELECT_CLASS = "SELECT * FROM %sClasses;" % tablePrefix
         self.tablePrefix = tablePrefix
-        self._dbName = dbName
-        self.__createConnection(dbName, timeout)
+        self._createConnection(dbName, timeout)
         self.INSERT_OBJECT = None
         self.UPDATE_OBJECT = None 
-        
-    def getDbName(self):
-        return self._dbName
-    
-    def close(self):
-        self.connection.close()
-        del self.OPEN_CONNECTIONS[self._dbName]
         
     def selectCmd(self, whereStr, orderByStr=' ORDER BY id'):
         return self.SELECT + whereStr + orderByStr
@@ -707,30 +672,6 @@ class SqliteFlatDb():
         result = self.cursor.fetchone()
         
         return result is None
-        
-    def __createConnection(self, dbName, timeout):
-        """Establish db connection"""
-        from sqlite3 import dbapi2 as sqlite
-        if dbName in self.OPEN_CONNECTIONS:
-            self.connection = self.OPEN_CONNECTIONS[dbName]
-        else:
-            self.connection = sqlite.Connection(dbName, timeout, check_same_thread=False)
-            self.connection.row_factory = sqlite.Row
-            self.OPEN_CONNECTIONS[dbName] = self.connection
-        self.cursor = self.connection.cursor()
-        # Define some shortcuts functions
-        self.executeCommand = self.cursor.execute
-        #self.executeCommand = self.__debugExecute
-        self.commit = self.connection.commit
-        
-    def __debugExecute(self, *args):
-        print "COMMAND: ", args[0]
-        print "ARGUMENTS: ", args[1:]
-        self.cursor.execute(*args)
-        
-    def clear(self):
-        self.executeCommand("DROP TABLE IF EXISTS %sClasses;" % self.tablePrefix)
-        self.executeCommand("DROP TABLE IF EXISTS %sObjects;" % self.tablePrefix)
         
     def createTables(self, objDict):
         """Create the Classes and Object table to store items of a Set.
@@ -802,20 +743,6 @@ class SqliteFlatDb():
         """Select an object give its id"""
         self.executeCommand(self.selectCmd("id=?"), (objId,))  
         return self.cursor.fetchone()
-    
-    def _iterResults(self):
-        row = self.cursor.fetchone()
-        while row is not None:
-            yield row
-            row = self.cursor.fetchone()
-        
-    def _results(self, iterate=False):
-        """ Return the results to which cursor, point to. 
-        If iterates=True, iterate yielding each result independenly"""
-        if not iterate:
-            return self.cursor.fetchall()
-        else:
-            return self._iterResults()
     
     def selectAll(self, iterate=True):
         self.executeCommand(self.selectCmd('1'))

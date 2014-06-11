@@ -359,16 +359,6 @@ class XmippDataSet(ds.DataSet):
 
         return matrix
         
-    def getTypeOfColumn(self, label):
-        if (label == "id"):
-            return "id"
-        elif (label!='image_transformationMatrix' and xmipp.labelIsImage(str(label))):
-            return "image"
-        elif (label == "enabled"):
-            return "checkbox"
-        else:
-            return "text" 
-        
         
 class ProjMatcher():
     """ Base class for protocols that use a projection """
