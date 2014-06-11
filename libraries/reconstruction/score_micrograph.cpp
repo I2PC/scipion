@@ -60,11 +60,17 @@ void ProgScoreMicrograph::defineParams()
 /* Apply ------------------------------------------------------------------- */
 void ProgScoreMicrograph::run()
 {
-	char bufferDW[200];
-	FileName fn_micrographDwn;
 
+	std::cout << particleSize << std::endl;
+	char bufferDW[200];
+	FileName fn_micrographBadPxl;
+	fn_micrographBadPxl = fn_micrograph.withoutExtension()+"bp__tmp."+fn_micrograph.getExtension();
+	sprintf(bufferDW, "xmipp_transform_filter -i %s -o %s --bad_pixels outliers 2", fn_micrograph.c_str(), fn_micrographBadPxl.c_str());
+	system(bufferDW);
+
+	FileName fn_micrographDwn;
 	fn_micrographDwn = fn_micrograph.withoutExtension()+"_tmp."+fn_micrograph.getExtension();
-	sprintf(bufferDW, "xmipp_transform_downsample -i %s -o %s --step 2.0 --method fourier" , 	fn_micrograph.c_str(), fn_micrographDwn.c_str());
+	sprintf(bufferDW, "xmipp_transform_downsample -i %s -o %s --step 2.0 --method fourier" , 	fn_micrographBadPxl.c_str(), fn_micrographDwn.c_str());
 	system(bufferDW);
 
 	prmEstimateCTFFromPSD.defocus_range = defocus_range;
@@ -108,6 +114,7 @@ void ProgScoreMicrograph::run()
     Image<double> img;
     img.read(fn_micrographDwn);
     im = img();
+    im.statisticsAdjust(0,1);
     In.resizeNoCopy(im);
     Mod.resizeNoCopy(im);
     ROI.resizeNoCopy(im);
@@ -115,12 +122,23 @@ void ProgScoreMicrograph::run()
     FOR_ALL_ELEMENTS_IN_ARRAY2D(ROI)
     	A2D_ELEM(ROI,i,j)= true;
 
-
     //aprox there are 5 fringe in the image
-    double R = 35;
-    double S = 30;
+    size_t Xdim, Ydim, Zdim,Ndim;
+    im.getDimensions(Xdim, Ydim,Zdim,Ndim);
+
+    double avg, stdv;
+    im.computeAvgStdev(avg,stdv);
+    double R = Xdim/particleSize;
+    double S = Xdim/particleSize;
     FourierTransformer ftrans(FFTW_BACKWARD);
     normalize(ftrans,im,In,Mod, R, S, ROI);
+
+    double partDensity = (Mod.sum()/(Xdim*Ydim))*100;
+
+    std::cout << partDensity << std::endl;
+    std::cout << Xdim << std::endl;
+    std::cout << Ydim << std::endl;
+    std::cout << stdv << std::endl;
 
     img()=Mod;
     img.write("kk1.mrc");
