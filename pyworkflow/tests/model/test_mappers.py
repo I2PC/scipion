@@ -511,9 +511,13 @@ class TestDataSet(BaseTest):
         print "Table:"
         print table
 
-    def test_SqliteDataSet(self):
+    def test_SqliteDb(self):
         """ Create a SqliteDataset """
-        sqliteds = ds.SqliteDataSet(self.modelGoldSqlite)
-        print "Tables: ", sqliteds._db.getTables()
+        from pyworkflow.mapper.sqlite_db import SqliteDb
+        db = SqliteDb()
+        db._createConnection(self.modelGoldSqlite, timeout=1000)
+        
+        tables = ['Classes', 'Objects']
+        self.assertEqual(tables, db.getTables())
         
         

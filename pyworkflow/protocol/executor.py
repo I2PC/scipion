@@ -47,13 +47,13 @@ class StepExecutor():
     
     def runJob(self, log, programName, params,           
            numberOfMpi=1, numberOfThreads=1, 
-           runInBackground=False):
+           runInBackground=False, cwd=None):
         """ This function is a wrapper around runJob, 
         providing the host configuration. 
         """
         process.runJob(log, programName, params,
                        numberOfMpi, numberOfThreads, 
-                       runInBackground, self.hostConfig)
+                       runInBackground, self.hostConfig, cwd=cwd)
     
     def runSteps(self, steps, stepStartedCallback, stepFinishedCallback):
         """ Simply iterate over the steps and run each one. """
