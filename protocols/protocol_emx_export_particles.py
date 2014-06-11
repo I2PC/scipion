@@ -40,8 +40,11 @@ class ProtEmxExportParticles(XmippProtocol):
         
         emxParticles = join(emxDir, 'particles.emx')
         emxParticlesMrc = join(emxDir, 'particles.mrc')
-        self.insertStep("exportParticles", verifyfiles=[emxParticles, emxParticlesMrc],
-                        emxDir=emxDir, inputMd=self.ImagesMd,
+        self.insertStep("exportParticles"
+                        , verifyfiles=[emxParticles, emxParticlesMrc]
+                        , emxDir=emxDir
+                        , inputMd=self.ImagesMd
+                        , doAlign=self.DoAlign
                         )
         
     def validate(self):
@@ -75,7 +78,8 @@ class ProtEmxExportParticles(XmippProtocol):
 
 
 
-def exportParticles(log, emxDir, inputMd):
+def exportParticles(log, emxDir, inputMd, doAlign):
+    print "INSIDE: exportParticles"
     emxData = EmxData()
-    xmippParticlesToEmx(inputMd, emxData, emxDir)
+    xmippParticlesToEmx(inputMd, emxData, emxDir, doAlign)
 
