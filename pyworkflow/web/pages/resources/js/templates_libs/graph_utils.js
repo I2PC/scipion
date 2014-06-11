@@ -207,7 +207,8 @@ function paintBox(nodeSource, id, msg) {
 		var objId = id.replace("graph_", "");
 		var href = "javascript:customPopup('/form/?protocolId=" + objId + "',620,591)";
 		var projName = $("div#graphActiv").attr("data-project");
-		var onclick = "launchToolbarTree('" + objId	+ "',($(this)))";
+		var onclick = "launchToolbarTree('" + objId	+ "', $(this), isCtrlPress(event))";
+//		var onclick = "launchToolbarTreePatata(event)";
 //		var aux = '<div class="window" style="" onclick="' + onclick + '" id="'
 		var aux = '<div class="window" style="display:none;" onclick="' + onclick + '" id="'
 				+ id + '"><a href="' + href + '"><strong>' + msg
