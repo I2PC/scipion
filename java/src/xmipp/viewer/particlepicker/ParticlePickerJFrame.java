@@ -133,7 +133,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 
 		initMenuBar(picker);
 
-		resetbt = XmippWindowUtil.getTextButton("Reset", new ActionListener()
+		resetbt = XmippWindowUtil.getTextButton("Reset Micrograph", new ActionListener()
 		{
                     
 			@Override
