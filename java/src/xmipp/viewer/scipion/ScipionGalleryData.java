@@ -320,5 +320,14 @@ public class ScipionGalleryData extends GalleryData{
         {
             ((ScipionMetaData)md).overwrite(filename, path);
         }
+
+    public String getScipionType() {
+        if(hasClasses())
+            return "Particle";
+        String self = ((ScipionMetaData)md).getSelf();
+        if(self.equals("CTFModel"))
+            return "Micrograph";
+        return self;
+    }
     
 }

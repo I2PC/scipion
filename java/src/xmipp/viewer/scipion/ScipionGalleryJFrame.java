@@ -32,7 +32,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
     private String script;
     private String projectid;
     private JButton cmdbutton;
-    private String selfile;
+    private String sqlitefile;
     private JButton classcmdbutton;
 
     private String python;
@@ -57,12 +57,12 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
     protected void readScipionParams(ScipionParams parameters)
     {
         try {
-            type = parameters.type;
+            type = ((ScipionGalleryData)data).getScipionType() + "s";
             python = parameters.python;
             script = parameters.script;
             projectid = parameters.projectid;
             inputid = parameters.inputid;
-            selfile = String.format("%s%sselection%s", projectid, File.separator, data.getFileExtension());
+            sqlitefile = String.format("%s%sselection%s", projectid, File.separator, data.getFileExtension());
             msgfields = new HashMap<String, String>();
             msgfields.put(runNameKey, "ProtUserSubset");
 
@@ -82,8 +82,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
         });
         buttonspn.add(closebt);
         if (type != null) {
-            final String output = data.hasClasses()? "Particles": type;   
-            cmdbutton = getScipionButton("Create " + output, new ActionListener() {
+            cmdbutton = getScipionButton("Create " + type, new ActionListener() {
 
                 @Override
                 public void actionPerformed(ActionEvent ae) {
@@ -94,12 +93,12 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
                     else
                         imagesmd = data.getMd(data.getEnabledIds());
                     size = imagesmd.size();
-                    String question = String.format("<html>Are you sure you want to create a new set of %s with <font color=red>%s</font> %s?", output, size, (size > 1)?"elements":"element");
+                    String question = String.format("<html>Are you sure you want to create a new set of %s with <font color=red>%s</font> %s?", type, size, (size > 1)?"elements":"element");
                     ScipionMessageDialog dlg = new ScipionMessageDialog(ScipionGalleryJFrame.this, "Question", question, msgfields);
                     int create = dlg.action;
                     if (create == ScipionMessageDialog.OK_OPTION) 
                     {
-                        String[] command = new String[]{python, script, msgfields.get(runNameKey), selfile, type, output, projectid, inputid};
+                        String[] command = new String[]{python, script, projectid, inputid, sqlitefile, type, msgfields.get(runNameKey)};
                         createSubset(command);
                     }
                 }
@@ -116,7 +115,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
                         ScipionMessageDialog dlg = new ScipionMessageDialog(ScipionGalleryJFrame.this, "Question", msg, msgfields);
                         int create = dlg.action;
                         if (create == ScipionMessageDialog.OK_OPTION) {
-                            String[] command = new String[]{python, script, dlg.getFieldValue(runNameKey), selfile, type, type, projectid, inputid};
+                            String[] command = new String[]{python, script, projectid, inputid, sqlitefile, type, dlg.getFieldValue(runNameKey)};
                             createSubset(command);
                             
                         }
@@ -198,7 +197,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
             public void run() {
 
                 try {
-                    ((ScipionGalleryData)data).overwrite(selfile);
+                    ((ScipionGalleryData)data).overwrite(sqlitefile);
                     String output = XmippUtil.executeCommand(command);
                     XmippWindowUtil.releaseGUI(ScipionGalleryJFrame.this.getRootPane());
                     if (output != null && !output.isEmpty()) {

@@ -34,8 +34,8 @@ public class ScipionMetaData extends MetaData{
     private String id;
     private String classestb, objectstb;
     private boolean haschilds;
-    private ColumnInfo enabledci;
     private static int labelscount = 0;
+    private ColumnInfo enabledci;
     
     public ScipionMetaData(String classestb, String objectstb, String self, String selfalias, List<ColumnInfo> columns)
     {
@@ -107,7 +107,7 @@ public class ScipionMetaData extends MetaData{
             int type;
             boolean allowRender;
             ColumnInfo ci;
-            name = alias = "_enabled";
+            name = alias = "enabled";
             labelscount ++;
             enabledci = new ColumnInfo(labelscount, name, alias, MetaData.LABEL_INT, false);
             columns.add(enabledci);
@@ -141,12 +141,17 @@ public class ScipionMetaData extends MetaData{
            
             EMObject emo;
             int id, index;
+            String label, comment;
+            boolean enabled;
             ColumnInfo indexci;
             query =  String.format("SELECT * FROM %s;", objectstb);
             rs = stmt.executeQuery( query );
             while ( rs.next() ) {
-                id = rs.getInt("Id");
-                emo = new EMObject(id, this);
+                id = rs.getInt("id");
+                label = rs.getString("label");
+                comment = rs.getString("comment");
+                enabled = (rs.getInt("enabled") == 1)? true: false;
+                emo = new EMObject(id, label, comment, enabled, this);
                 for(ColumnInfo column: columns)
                 {
                     if(!column.isEnable())
@@ -201,15 +206,19 @@ public class ScipionMetaData extends MetaData{
     public class EMObject
     {
         long id;
+        String label, comment;
         protected Map<ColumnInfo, Object> values;
         boolean changed;
         ScipionMetaData childmd;
         ScipionMetaData md;
         
-        public EMObject(long id, ScipionMetaData md)
+        public EMObject(long id, String label, String comment, boolean enabled, ScipionMetaData md)
         {
             this.id = id;
+            this.label = label;
+            this.comment = comment;
             values = new HashMap<ColumnInfo, Object>();
+            setEnabled(enabled);
             this.md = md;
             changed = false;
         }

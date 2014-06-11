@@ -108,7 +108,7 @@ public class ColumnInfo {
 	}
 
     public boolean isEnable() {
-        return label == MDLabel.MDL_ENABLED || labelName.equals("_enabled");
+        return label == MDLabel.MDL_ENABLED || labelName.equals("enabled");
     }
 	
 	public class ColumnExtraInfo {
