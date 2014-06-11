@@ -61,6 +61,12 @@ class Dialog(tk.Toplevel):
         **args accepts:
             buttons -- list of buttons tuples containing which buttons to display
         """
+        
+        if parent is None:
+            parent = tk.Tk()
+            parent.withdraw()
+            gui.setCommonFonts()
+    
         tk.Toplevel.__init__(self, parent)
         
         self.withdraw() # remain invisible for now
