@@ -53,7 +53,9 @@ class Object(object):
         self._objDoStore =  args.get('objDoStore', True) # True if this object will be stored from his parent
         self._objCreation = None
         self._objParent = None # Reference to parent object
+        self._objEnabled = True
         self.set(value)
+    
         
     def getClassName(self):
         return self.__class__.__name__
@@ -210,6 +212,10 @@ class Object(object):
     
     def getObjName(self):
         return self._objName
+    
+    def isEnabled(self):
+        """Return if object is enabled"""
+        return self._objEnabled
     
     def getNameId(self):
         """ Return an unique and readable id that identifies this object. """

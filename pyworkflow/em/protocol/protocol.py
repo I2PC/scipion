@@ -156,7 +156,7 @@ class ProtUserSubSet(ProtSets):
         inputs = {'input' + self.getInputType(): inputsetpt}
         self._defineInputs(**inputs)
     
-    def createOutputSet(self, outputset):
+    def defineOutputSet(self, outputset):
         outputs = {'output' + self.getOutputType(): outputset}
         self._defineOutputs(**outputs)
         self._defineSourceRelation(self.getInput(), outputset)

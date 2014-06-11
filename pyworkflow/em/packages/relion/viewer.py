@@ -176,9 +176,8 @@ Examples:
         return DataView(filename, env=self._env)
         
     def createScipionView(self, filename, output, extraParams=''):
-        inputParticlesId = self.protocol.inputParticles.get().strId()
         return ObjectView(filename, output, self._project.getName(), 
-                          self.protocol.strId(), inputParticlesId,
+                          self.protocol.strId(),
                           env=self._env)
 
     def _load(self):

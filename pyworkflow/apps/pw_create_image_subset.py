@@ -29,15 +29,16 @@ def createSetFromMd(selfile, setType, inputimages):
     return outputset
 
 
-def createSetFromSqlite(selfile, setType, inputimages):
-    cls = getattr(my_import('pyworkflow.em.data'), 'SetOf' + setType)
-    outputset = cls(filename=selfile)
-    if not 'Classes' in setType:
-        outputset.copyInfo(inputimages)    
-    else:
-        outputset.setImages(inputimages)
-    return outputset
 
+
+#def createSetFromSqlite(selfile, setType, inputimages):
+#    cls = getattr(my_import('pyworkflow.em.data'), 'SetOf' + setType)
+#    outputset = cls(filename=selfile)
+#    if not 'Classes' in setType:
+#        outputset.copyInfo(inputimages)    
+#    else:
+#        outputset.setImages(inputimages)
+#    return outputset
 
 def my_import(name):
     mod = __import__(name)
@@ -48,27 +49,49 @@ def my_import(name):
 
 if __name__ == '__main__':
 
-    protlabel = sys.argv[1]
-    selfile = sys.argv[2]
-    inputType = sys.argv[3]
-    setType = sys.argv[4]
-    projectid = sys.argv[5]
-    inputid = sys.argv[6]
-    inputimagesid = sys.argv[7]
-    mdname = selfile[selfile.rfind(os.sep) + 1:]
+    projectid = sys.argv[1]
+    inputid = sys.argv[2]
+    sqlitefile = sys.argv[3] # Sqlite file with disabled objects
+    outputType = sys.argv[4] # Output set type
+    protlabel = sys.argv[5] #Protocol label 
+
+    inputType = None#to be readed
+    
+    selfilename = sqlitefile[sqlitefile.rfind(os.sep) + 1:]
     
     project = Manager().loadProject(projectid)
-    prot = ProtUserSubSet(label=protlabel, inputType=inputType, outputType=setType)
+    prot = ProtUserSubSet(label=protlabel, inputType=inputType, outputType=outputType)
     input = project.mapper.selectById(int(inputid))
-    inputimages = project.mapper.selectById(int(inputimagesid))
+
     
     prot.createInputPointer(input)
     project._setupProtocol(prot)
     prot.makePathsAndClean()
-    moveFile(selfile, prot._getExtraPath())
-    selfile = join(prot._getExtraPath(), mdname)
-    outputset = createSetFromSqlite(selfile, setType, inputimages) if selfile.endswith('.sqlite') else createSetFromMd(selfile, setType, inputimages)
-    prot.createOutputSet(outputset)
+    moveFile(sqlitefile, prot._getExtraPath())
+    selfile = join(prot._getExtraPath(), selfilename)
+    
+    readInputSetFun = getattr(prot, '_createSetOf' + inputType)
+    
+    inputset = readInputSetFun(filename=selfile)
+    outputcls = getattr(my_import('pyworkflow.em.data'), 'SetOf' + outputType)
+    outputset = outputcls()
+    for obj in inputset:
+        if(obj.isEnabled()):
+            outputset.add(obj)
+            
+    if isinstance(input, SetOfImages):
+        inputImages = input
+    elif isinstance(input, SetOfClasses):
+        inputImages = input.getImages()
+    elif isinstance(input, EMProtocol):
+        inputImages = input.getAttribute('inputParticles', None)
+        
+    if not 'Classes' in outputType:
+        outputset.copyInfo(inputImages)    
+    else:
+        outputset.setImages(inputImages)
+
+    prot.defineOutputSet(outputset)
    
     prot.setStatus(STATUS_FINISHED)
     project._storeProtocol(prot)

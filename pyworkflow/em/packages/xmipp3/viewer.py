@@ -94,12 +94,12 @@ class XmippViewer(Viewer):
         elif issubclass(cls, SetOfMicrographs):
             
             fn = obj.getFileName()
-            self._views.append(ObjectView(fn, "Micrographs", self._project.getName(), obj.strId(), obj.strId(), **args))
+            self._views.append(ObjectView(fn, "Micrographs", self._project.getName(), obj.strId(), **args))
             
         elif issubclass(cls, SetOfMovies):
             fn = self._getTmpPath(obj.getName() + '_movies.xmd')
             writeSetOfMovies(obj, fn)
-            self._views.append(ObjectView(fn, "Micrographs", self._project.getName(), obj.strId(), obj.strId(), **args))    
+            self._views.append(ObjectView(fn, "Micrographs", self._project.getName(), obj.strId(), **args))    
             
                 
         elif issubclass(cls, SetOfCoordinates):
@@ -123,10 +123,10 @@ class XmippViewer(Viewer):
                 writeSetOfCoordinates(tmpDir, obj)   
                            
             self._views.append(CoordinatesObjectView(fn, tmpDir, 'review', self._project.getName(), obj.strId()))
-        
+
         elif issubclass(cls, SetOfParticles):
             fn = obj.getFileName()
-            self._views.append(ObjectView(fn, "Particles", self._project.getName(), obj.strId(), obj.strId()))
+            self._views.append(ObjectView(fn, "Particles", self._project.getName(), obj.strId()))
                
                     
         elif issubclass(cls, SetOfVolumes):
@@ -135,17 +135,17 @@ class XmippViewer(Viewer):
         
         elif issubclass(cls, SetOfClasses2D):
             fn = obj.getFileName()
-            self._views.append(ObjectView(fn, "Classes2D", self._project.getName(), obj.strId(), obj.getImages().strId()))  
+            self._views.append(ObjectView(fn, "Classes2D", self._project.getName(), obj.strId() ))  
             
         elif issubclass(cls, SetOfClasses3D):
             fn = obj.getFileName()
-            self._views.append(ObjectView(fn, "Classes3D", self._project.getName(), obj.strId(), obj.getImages().strId(), extraParams=args.get('extraParams', '')))
+            self._views.append(ObjectView(fn, "Classes3D", self._project.getName(), obj.strId(), extraParams=args.get('extraParams', '')))
             
               
         elif issubclass(cls, SetOfCTF):
             fn = obj.getFileName()
 #            self._views.append(DataView(fn, viewParams={MODE: 'metadata'}))
-            self._views.append(ObjectView(fn, "Micrographs", self._project.getName(), obj.strId(), obj.strId(), viewParams={MODE: 'metadata'}))    
+            self._views.append(ObjectView(fn, "Micrographs", self._project.getName(), obj.strId(), viewParams={MODE: 'metadata'}))    
          
         elif issubclass(cls, XmippProtExtractParticles) or issubclass(cls, XmippProtScreenParticles):
             self._visualize(obj.outputParticles)
