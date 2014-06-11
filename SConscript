@@ -103,12 +103,9 @@ sqliteDownload = env.DownloadLibrary('sqlite')
 #tkDownload = env.DownloadLibrary('tk')
 #pythonDownload = env.DownloadLibrary('python')
 
-
 #########
 # UNTAR #
 #########
-if not os.path.exists(os.path.join('software', 'tmp', 'sqlite-2.6.23.tgz')):
-    print "Doesn't exist"
 sqliteUntar = env.UntarLibrary('sqlite', tar=sqliteDownload)
 #tclUntar = env.UntarLibrary('tcl', tar=tclDownload)
 #tkUntar = env.UntarLibrary('tk', tar=tkDownload)
@@ -124,5 +121,5 @@ Depends(sqliteUntar, sqliteDownload)
 # EXECUTING COMPILATIONS #
 ##########################
 
-env.Alias('sqlitePackage', sqliteDownload)
-env.Alias('sqliteDir', sqliteUntar)
+#env.Alias('sqlitePackage', sqliteDownload)
+#env.Alias('sqliteDir', sqliteUntar)

@@ -126,23 +126,27 @@ def untarLibrary(env, name, tar=None, folder=None):
     """
     This method is for untar the downloaded library in the tmp directory
     """
+    # Add builders to deal with source code, donwloads, etc 
     libraryDict = SCIPION['LIBS'].get(name)
     if tar is None:
-        tar = File(os.path.join(SCIPION['FOLDERS'][TMP_FOLDER],libraryDict[TAR]))
+        tar = File(os.path.join(SCIPION['FOLDERS'][TMP_FOLDER], libraryDict[TAR]))
     if folder is None:
-        folder = Dir(os.path.join(SCIPION['FOLDERS'][TMP_FOLDER],libraryDict[DIR]))
+        folder = Dir(os.path.join(SCIPION['FOLDERS'][TMP_FOLDER], libraryDict[DIR]))
 #    folder = Dir(os.path.join(SCIPION['FOLDERS'][TMP_FOLDER],libraryDict[DIR]))
-    print "Unpacking %s in folder %s..." % (tar, folder)
-    return env.Unpack(folder, tar)
+    print "Unpacking %s in folder %s" % (tar, folder)
+    return env.UnTar(folder, tar)
 
 def compileWithSetupPy(env, name, prefix=None):
     """
     This method enter in a folder where a setup.py file is placed and executes setup.py build and setup.py install with the given prefix
     """
-    
+    print "Not implemented yet"
 
 def compileLibrary(env, name):
-    print "This method is for compiling the library"
+    """
+    This method is for compiling the library
+    """
+    print "Not implemented yet"
 
 def scipionLogo(env):
     print ""
