@@ -175,9 +175,9 @@ Examples:
     def createDataView(self, filename, extraParams=''):
         return DataView(filename, env=self._env)
         
-    def createScipionView(self, filename, output, extraParams=''):
-        return ObjectView(filename, output, self._project.getName(), 
-                          self.protocol.strId(),
+    def createScipionView(self, filename, extraParams=''):
+        return ObjectView(self._project.getName(), 
+                          self.protocol.strId(), filename,
                           env=self._env)
 
     def _load(self):

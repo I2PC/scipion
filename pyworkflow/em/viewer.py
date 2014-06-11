@@ -130,7 +130,7 @@ class DataView(View):
 class ObjectView(DataView):
     
     """ Wrapper to View but for displaying Scipion objects. """
-    def __init__(self, path, type, projectid, inputid, viewParams={}, **kwargs):
+    def __init__(self, projectid, inputid, path, viewParams={}, **kwargs):
         DataView.__init__(self, path, viewParams, **kwargs)
         self.python = pw.PYTHON
         self.script = pw.join('apps', 'pw_create_image_subset.py')
@@ -139,7 +139,7 @@ class ObjectView(DataView):
         self.inputid = inputid
         
     def getShowJParams(self):
-        params = DataView.getShowJParams(self) + ' --scipion %s %s %s \"%s\" %s '%(self.type, self.python, self.script,  self.projectid, self.inputid)#mandatory to provide scipion params
+        params = DataView.getShowJParams(self) + ' --scipion %s %s \"%s\" %s'%(self.python, self.script,  self.projectid, self.inputid)#mandatory to provide scipion params
         return params
     
     def show(self):
