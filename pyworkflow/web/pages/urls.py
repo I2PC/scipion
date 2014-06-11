@@ -37,6 +37,9 @@ urlpatterns = patterns('',
     url(r'^update_prot_tree/$', 'app.views_project.update_prot_tree'),
     url(r'^save_selection/$', 'app.views_project.save_selection'),
     
+    #DATA (CONTENT)
+    url(r'^data_content/$', 'app.views_data.data_content'),
+    
     #UTILS
     url(r'^render_column/', 'app.views_util.render_column'), # Load images dynamically
     url(r'^get_image_plot/', 'app.views_util.get_image_plot'), # Load plots images dynamically

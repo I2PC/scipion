@@ -477,10 +477,12 @@ def getImageDim(request, imagePath):
 
 
 def readDimensions(request, path, typeOfColumn):
+    print "reading dimensions with ", typeOfColumn
     if typeOfColumn=="image":
         img = xmipp.Image()
         imgFn = os.path.join(request.session['projectPath'], path)
         img.read(str(imgFn), xmipp.HEADER)
+        print "from file ", path
         return img.getDimensions()
     return (300,300,1,1) 
 

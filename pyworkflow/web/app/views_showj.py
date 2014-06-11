@@ -73,7 +73,7 @@ def loadColumnsConfig(request, dataset, table, inputParams, extraParams, firstTi
         
         request.session[COLS_CONFIG_DEFAULT] = columns_properties
 
-        columnsConfig = ColumnsConfig(dataset, table, inputParams[ALLOW_RENDER], columns_properties)
+        columnsConfig = ColumnsConfig(table, inputParams[ALLOW_RENDER], columns_properties)
         
         request.session[COLS_CONFIG] = columnsConfig
     else:
@@ -112,7 +112,7 @@ def setLabelToRender(request, table, inputParams, extraParams, firstTime):
                 inputParams[MODE] = MODE_TABLE
                 # FIXME: we really need this other call to showj???
                 #showj(request, inputParams, extraParams)
-            inputParams[LABEL_SELECTED] = None
+            inputParams[LABEL_SELECTED] = ''
     
     table.setLabelToRender(inputParams[LABEL_SELECTED]) 
     
@@ -126,7 +126,7 @@ def setRenderingOptions(request, dataset, table, inputParams):
 
     if not label:
         volPath = None
-        _imageDimensions = None
+        _imageDimensions = ''
         _stats = None
         inputParams[IMG_ZOOM] = 0
         inputParams[MODE] = MODE_TABLE
@@ -142,7 +142,7 @@ def setRenderingOptions(request, dataset, table, inputParams):
         
         dataset.setNumberSlices(_imageDimensions[2])
         
-        if _typeOfColumnToRender == "image":
+        if _typeOfColumnToRender == COL_RENDER_IMAGE:
             isVol = dataset.getNumberSlices() > 1
             is3D = inputParams[MODE]==MODE_VOL_ASTEX or inputParams[MODE]==MODE_VOL_CHIMERA
             #Setting the _convert 
@@ -254,17 +254,17 @@ def showj(request):
         dataset = loadDataSet(request, inputParams[PATH], firstTime)
         # Load the requested table (or the first if no specified)
         table = dataset.getTable(inputParams[TABLE_NAME])
+        
         # Update inputParams to make sure have a valid table name (if using first table)
         inputParams[TABLE_NAME] = dataset.currentTable()
         
         # Load columns configuration. How to display columns and attributes (visible, render, editable)  
         loadColumnsConfig(request, dataset, table, inputParams, extraParams, firstTime)
-    
+        
         volPath, _stats, _imageDimensions = setRenderingOptions(request, dataset, table, inputParams)
     
         #Store variables into session 
         storeToSession(request, inputParams, dataset, _imageDimensions)
-        
     else:
         inputParams[COLS_CONFIG] = None
         volPath = inputParams[PATH]
@@ -299,6 +299,8 @@ def storeToSession(request, inputParams, dataset, _imageDimensions):
     datasetDict[IMG_DIMS] = _imageDimensions
     
     request.session[inputParams[PATH]] = datasetDict
+    
+    print "dataset dict: ", datasetDict
 
 
 def createContextShowj(request, inputParams, dataset, table, paramStats, volPath=None):
@@ -333,7 +335,6 @@ def createContext(dataset, table, columnsConfig, request, showjForm, inputParams
             'form': showjForm
             }
     
-    
     if dataset is not None:
         context.update({DATASET: dataset})
     if columnsConfig is not None:
@@ -353,7 +354,7 @@ def createContext(dataset, table, columnsConfig, request, showjForm, inputParams
 
 
 def getExtraParameters(extraParams, table):
-    defaultColumnsLayoutProperties = None
+    defaultColumnsLayoutProperties = {}
     if extraParams != None and extraParams != {}:
         defaultColumnsLayoutProperties = {k.getName(): {} for k in table.iterColumns()}
         for key, value in extraParams.iteritems():
@@ -373,6 +374,10 @@ def getExtraParameters(extraParams, table):
 #### Load an Xmipp Dataset ###
 def loadDatasetXmipp(path):
     """ Create a table from a metadata. """
+    if path.endswith('.sqlite'):
+        from pyworkflow.dataset import SqliteDataSet
+        return SqliteDataSet(path)
+    
     from pyworkflow.em.packages.xmipp3 import XmippDataSet
     if path.endswith('.star'):
         from pyworkflow.em.packages.relion import addRelionLabels
@@ -388,7 +393,7 @@ def save_showj_table(request):
         dataset = request.session[DATASET]
         blockComboBox = request.session[TABLE_NAME]
         
-        table=dataset.getTable(blockComboBox)
+        table = dataset.getTable(blockComboBox)
         
         for key in jsonChanges:
             element_split = key.rsplit('___')
