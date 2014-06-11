@@ -54,7 +54,7 @@ public:
     /// Output rootname
     FileName                fn_root;
     /// Partition mode
-    TPSD_mode               psd_mode = OnePerMicrograph;
+    TPSD_mode               psd_mode;
     /// Dimension of micrograph pieces
     int                     pieceDim;
     /** Overlap among pieces (0=No overlap, 1=Full overlap */
@@ -65,12 +65,14 @@ public:
     /** Number of pieces (Nsubpiece x Nsubpiece) for the piece averaging */
     int                     Nsubpiece;
     /** PSDEstimator_mode */
-    TPSDEstimator_mode      PSDEstimator_mode = Periodogram;
+    TPSDEstimator_mode      PSDEstimator_mode;
     /** Bootstrap N */
     int                     bootstrapN;
     /// Estimate a CTF for each PSD
     bool 					estimate_ctf;
 public:
+    /** constructor**/
+    ProgCTFEstimateFromMicrograph();
     /** Read parameters */
     void readParams();
 

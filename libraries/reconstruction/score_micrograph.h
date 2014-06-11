@@ -29,6 +29,7 @@
 #include <data/xmipp_program.h>
 #include "ctf_estimate_from_micrograph.h"
 #include "ctf_estimate_from_psd.h"
+#include "ctf_sort_psds.h"
 
 
 
@@ -70,6 +71,8 @@ public:
     ProgCTFEstimateFromMicrograph::TPSD_mode PSDEstimator_mode;
 
     ProgCTFEstimateFromMicrograph::TPSD_mode psd_mode;
+
+    ProgPSDSort prmPSDSort;
 
 
 
