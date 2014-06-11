@@ -511,9 +511,9 @@ class TestDataSet(BaseTest):
         print "Table:"
         print table
 
-    def test_SqliteDataset(self):
+    def test_SqliteDataSet(self):
         """ Create a SqliteDataset """
-        print 'test_SqliteDataset'
-        sqliteds = ds.SqliteDataset(self.modelGoldSqlite)
+        sqliteds = ds.SqliteDataSet(self.modelGoldSqlite)
+        print "Tables: ", sqliteds._db.getTables()
         
         
