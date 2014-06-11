@@ -101,7 +101,8 @@ class CTFModel(EMObject):
         self._defocusV = Float(args.get('defocusV', None))
         self._defocusAngle = Float(args.get('defocusAngle', None))
         self._psdFile = String()
-        self._micFile = String()
+#         self._micFile = String()
+        self._micObj  = None
         
     def getDefocusU(self):
         return self._defocusU.get()
@@ -131,11 +132,12 @@ class CTFModel(EMObject):
     def setPsdFile(self, value):
         self._psdFile.set(value)
         
-    def getMicFile(self):
-        return self._micFile.get()
+    def getMicrograph(self):
+        return self._micObj
     
-    def setMicFile(self, value):
-        self._micFile.set(value)
+    def setMicrograph(self, mic):
+        self._micObj = mic
+
 
 
 class DefocusGroup(EMObject):

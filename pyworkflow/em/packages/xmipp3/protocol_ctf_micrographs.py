@@ -69,48 +69,38 @@ class XmippProtCTFMicrographs(ProtCTFMicrographs):
         self.runJob(self._program, self._args % self._params)    
     
     def createOutputStep(self):
-        # Create the SetOfMicrographs 
-        micSet = self._createSetOfMicrographs()
         ctfSet = self._createSetOfCTF()
         defocusList = []
         
         for _, micDir, mic in self._iterMicrographs():
             ctfparam = self._getFilename('ctfparam', micDir=micDir)
-            ctfModel = readCTFModel(ctfparam)
-            mic.setCTF(ctfModel)
-            micSet.append(mic)
-            #TODO: WE need to use 2 objects cause same object cannot be inserted on
-            #2 different mappers: change this
             
-            ctfModel2 = readCTFModel(ctfparam)
-            ctfModel2.setMicFile(mic.getFileName())
-            ctfModel2.setObjId(mic.getObjId())
-            ctfSet.append(ctfModel2)
+            ctfModel = readCTFModel(ctfparam, mic)
+            ctfModel.setObjId(mic.getObjId())
+            ctfModel.setMicrograph(mic)
+            ctfSet.append(self._setPsdFiles(ctfModel, micDir))
             
             # save the values of defocus for each micrograph in a list
-            defocusList.append(ctfModel2.getDefocusU())
-            defocusList.append(ctfModel2.getDefocusV())
- 
-        self._defocusMaxMin(defocusList)
-        #Copy attributes from input to output micrographs
-        micSet.copyInfo(self.inputMics)
-        # Write as a Xmipp metadata
-        mdFn = self._getPath('micrographs_ctf.xmd')
-        writeSetOfMicrographs(micSet, mdFn, self.setupMicRow)
-                 
-        tmpFn = self._getPath('micrographs_backup.xmd')
-        writeSetOfMicrographs(micSet, tmpFn, self.setupMicRow)
-        # Mark flag of CTF as True
-        #micSet.setHasCTF(True)      
-        ctfSet._xmippMd = String(mdFn)
-
-        # Evaluate the PSD and add some criterias
-        auxMdFn = self._getTmpPath('micrographs.xmd')
-        self.runJob("xmipp_ctf_sort_psds","-i %s -o %s" % (mdFn, auxMdFn))
-        # Copy result to output metadata
-        moveFile(auxMdFn, mdFn)        
+            defocusList.append(ctfModel.getDefocusU())
+            defocusList.append(ctfModel.getDefocusV())
+        
         self._defineOutputs(outputCTF=ctfSet)
         self._defineCtfRelation(self.inputMics, ctfSet)
+        self._defocusMaxMin(defocusList)
+        
+#         # Write as a Xmipp metadata
+#         mdFn = self._getPath('micrographs_ctf.xmd')
+#         writeSetOfMicrographs(micSet, mdFn, self.setupMicRow)
+#                    
+#         tmpFn = self._getPath('micrographs_backup.xmd')
+#         writeSetOfMicrographs(micSet, tmpFn, self.setupMicRow)
+#   
+#         # Evaluate the PSD and add some criterias
+#         auxMdFn = self._getTmpPath('micrographs.xmd')
+#         self.runJob("xmipp_ctf_sort_psds","-i %s -o %s" % (mdFn, auxMdFn))
+#         # Copy result to output metadata
+#         moveFile(auxMdFn, mdFn)
+        
 
     def _citations(self):
         return ['Vargas2013']
@@ -136,19 +126,12 @@ class XmippProtCTFMicrographs(ProtCTFMicrographs):
         for par, val in self.__params.iteritems():
             self._args += " --%s %s" % (par, str(val))
 
-    def setupMicRow(self, mic, micRow):
-        """ Add extra labels to the micrograph row, not present
-        in the base class. 
-        """
-        micDir = self._getMicrographDir(mic)
-        labels = [xmipp.MDL_PSD, xmipp.MDL_PSD_ENHANCED, xmipp.MDL_IMAGE1, xmipp.MDL_IMAGE2]
-        # Filenames key related to ctf estimation
-        ctfParam = self._getFilename('ctfparam', micDir=micDir)
-        ctfRow = XmippMdRow()
-        ctfRow.readFromFile(ctfParam)
-        keys = ['psd', 'enhanced_psd', 'ctfmodel_quadrant', 'ctfmodel_halfplane']
-        values = [self._getFilename(key, micDir=micDir) for key in keys]
-        for l, v in zip(labels, values):
-            micRow.setValue(l, v)
-            
-        micRow.copyFromRow(ctfRow)  
+    def _setPsdFiles(self, ctfModel, micDir):
+        
+        ctfModel._psdFile = String(self._getFilename('psd', micDir=micDir))
+        ctfModel._xmipp_enhanced_psd = String(self._getFilename('enhanced_psd', micDir=micDir))
+        ctfModel._xmipp_ctfmodel_quadrant = String(self._getFilename('ctfmodel_quadrant', micDir=micDir))
+        ctfModel._xmipp_ctfmodel_halfplane = String(self._getFilename('ctfmodel_halfplane', micDir=micDir))
+        
+        return ctfModel
+    
