@@ -32,38 +32,37 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
     private String script;
     private String projectid;
     private JButton cmdbutton;
-    private String selfile;
+    private String sqlitefile;
     private JButton classcmdbutton;
 
     private String python;
-    private String inputimagesid;
     private String inputid;
     private HashMap<String, String> msgfields;
     private final String runNameKey = "Run name:";
     
    
 
-    public ScipionGalleryJFrame(String filename, MetaData md, ScipionParams parameters) {
+    public ScipionGalleryJFrame(String filename, ScipionMetaData md, ScipionParams parameters) {
         super(filename, md, parameters);
         readScipionParams(parameters);
-       
+        data.setWindow(this);
     }
     
       public ScipionGalleryJFrame(ScipionGalleryData data) {
         super(data);
         readScipionParams((ScipionParams)data.parameters);
+        data.setWindow(this);
     }
 
     protected void readScipionParams(ScipionParams parameters)
     {
         try {
-            type = parameters.type;
+            type = ((ScipionGalleryData)data).getScipionType() + "s";
             python = parameters.python;
             script = parameters.script;
             projectid = parameters.projectid;
             inputid = parameters.inputid;
-            inputimagesid = parameters.inputimagesid;
-            selfile = String.format("%s%sselection%s", projectid, File.separator, data.getFileExtension());
+            sqlitefile = String.format("%s%sselection%s", projectid, File.separator, data.getFileExtension());
             msgfields = new HashMap<String, String>();
             msgfields.put(runNameKey, "ProtUserSubset");
 
@@ -83,8 +82,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
         });
         buttonspn.add(closebt);
         if (type != null) {
-            final String output = data.hasClasses()? "Particles": type;   
-            cmdbutton = getScipionButton("Create " + output, new ActionListener() {
+            cmdbutton = getScipionButton("Create " + type, new ActionListener() {
 
                 @Override
                 public void actionPerformed(ActionEvent ae) {
@@ -95,23 +93,16 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
                     else
                         imagesmd = data.getMd(data.getEnabledIds());
                     size = imagesmd.size();
-                    String question = String.format("<html>Are you sure you want to create a new set of %s with <font color=red>%s</font> %s?", output, size, (size > 1)?"elements":"element");
+                    String question = String.format("<html>Are you sure you want to create a new set of %s with <font color=red>%s</font> %s?", type, size, (size > 1)?"elements":"element");
                     ScipionMessageDialog dlg = new ScipionMessageDialog(ScipionGalleryJFrame.this, "Question", question, msgfields);
                     int create = dlg.action;
                     if (create == ScipionMessageDialog.OK_OPTION) 
                     {
-                        try {
-                                imagesmd.write(selfile);
-                                imagesmd.destroy();
-                                String[] command = new String[]{python, script, msgfields.get(runNameKey), selfile, type, output, projectid, inputid, inputimagesid};
-                                runCommand(command);
-                        } catch (Exception ex) {
-                            Logger.getLogger(ScipionGalleryJFrame.class.getName()).log(Level.SEVERE, null, ex);
-                        }
-                        }
+                        String[] command = new String[]{python, script, projectid, inputid, sqlitefile, type, msgfields.get(runNameKey)};
+                        createSubset(command);
                     }
-                });
-
+                }
+            });
             if(data.hasClasses())
             {
                 classcmdbutton = getScipionButton("Create Classes", new ActionListener() {
@@ -124,10 +115,8 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
                         ScipionMessageDialog dlg = new ScipionMessageDialog(ScipionGalleryJFrame.this, "Question", msg, msgfields);
                         int create = dlg.action;
                         if (create == ScipionMessageDialog.OK_OPTION) {
-                            md.write(selfile);
-                            md.destroy();
-                            String[] command = new String[]{python, script, dlg.getFieldValue(runNameKey), selfile, type, type, projectid, inputid, inputimagesid};
-                            runCommand(command);
+                            String[] command = new String[]{python, script, projectid, inputid, sqlitefile, type, dlg.getFieldValue(runNameKey)};
+                            createSubset(command);
                             
                         }
 
@@ -151,31 +140,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
 
     }
 
-    protected void runCommand(final String[] command) 
-    {
-        XmippWindowUtil.blockGUI(ScipionGalleryJFrame.this, "Creating set ...");
-        new Thread(new Runnable() {
-
-            @Override
-            public void run() {
-
-                try {
-
-                    String output = XmippUtil.executeCommand(command);
-                    XmippWindowUtil.releaseGUI(ScipionGalleryJFrame.this.getRootPane());
-                    if (output != null && !output.isEmpty()) {
-                        System.out.println(output);
-                        XmippDialog.showInfo(ScipionGalleryJFrame.this, output);
-                        
-                    }
-
-                } catch (Exception ex) {
-                    throw new IllegalArgumentException(ex.getMessage());
-                }
-
-            }
-        }).start();
-    }
+    
 
     public JButton getScipionButton(String text, ActionListener listener) {
 
@@ -223,6 +188,32 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
             return true;//without asking for changes
 	}
     
-   
+   protected void createSubset(final String[] command) 
+    {
+        XmippWindowUtil.blockGUI(ScipionGalleryJFrame.this, "Creating set ...");
+        new Thread(new Runnable() {
+
+            @Override
+            public void run() {
+
+                try {
+                    ((ScipionGalleryData)data).overwrite(sqlitefile);
+                    String output = XmippUtil.executeCommand(command);
+                    XmippWindowUtil.releaseGUI(ScipionGalleryJFrame.this.getRootPane());
+                    if (output != null && !output.isEmpty()) {
+                        System.out.println(output);
+                        XmippDialog.showInfo(ScipionGalleryJFrame.this, output);
+                        
+                    }
+
+                } catch (Exception ex) {
+                    throw new IllegalArgumentException(ex.getMessage());
+                }
+
+            }
+        }).start();
+    }
+        
+
 
 }

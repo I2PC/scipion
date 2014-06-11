@@ -36,6 +36,7 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import xmipp.ij.commons.XmippImageConverter;
+import xmipp.ij.commons.XmippUtil;
 import xmipp.jni.Filename;
 import xmipp.jni.ImageGeneric;
 import xmipp.jni.MDLabel;
@@ -45,7 +46,10 @@ import xmipp.utils.DEBUG;
 import xmipp.utils.Params;
 import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippStringUtils;
+import xmipp.utils.XmippWindowUtil;
 import xmipp.viewer.ctf.TasksEngine;
+import xmipp.viewer.scipion.ScipionGalleryJFrame;
+import xmipp.viewer.scipion.ScipionMetaData;
 import xmipp.viewer.windows.AddObjectJDialog;
 import xmipp.viewer.windows.GalleryJFrame;
 import xmipp.viewer.windows.ImagesWindowFactory;
@@ -96,6 +100,8 @@ public class GalleryData {
         protected String renderLabel;
         protected String[] visibleLabels;
         protected String[] orderLabels;
+
+  
 
    
 
@@ -1487,4 +1493,17 @@ public class GalleryData {
         {
             new GalleryJFrame(null, md, new Params());
         }
+        
+        
+        
+        public void setWindow(GalleryJFrame frame) {
+        window = frame;
+        }
+        
+       public void write(String path)
+        {
+            md.write(path);
+        }
+    
+
 }// class GalleryData

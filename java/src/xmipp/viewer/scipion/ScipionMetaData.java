@@ -7,11 +7,17 @@
 package xmipp.viewer.scipion;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import xmipp.jni.MetaData;
 import xmipp.viewer.models.ColumnInfo;
 
@@ -28,8 +34,8 @@ public class ScipionMetaData extends MetaData{
     private String id;
     private String classestb, objectstb;
     private boolean haschilds;
-    private ColumnInfo enabledci;
     private static int labelscount = 0;
+    private ColumnInfo enabledci;
     
     public ScipionMetaData(String classestb, String objectstb, String self, String selfalias, List<ColumnInfo> columns)
     {
@@ -101,7 +107,7 @@ public class ScipionMetaData extends MetaData{
             int type;
             boolean allowRender;
             ColumnInfo ci;
-            name = alias = "_enabled";
+            name = alias = "enabled";
             labelscount ++;
             enabledci = new ColumnInfo(labelscount, name, alias, MetaData.LABEL_INT, false);
             columns.add(enabledci);
@@ -135,12 +141,17 @@ public class ScipionMetaData extends MetaData{
            
             EMObject emo;
             int id, index;
+            String label, comment;
+            boolean enabled;
             ColumnInfo indexci;
             query =  String.format("SELECT * FROM %s;", objectstb);
             rs = stmt.executeQuery( query );
             while ( rs.next() ) {
-                id = rs.getInt("Id");
-                emo = new EMObject(id, this);
+                id = rs.getInt("id");
+                label = rs.getString("label");
+                comment = rs.getString("comment");
+                enabled = (rs.getInt("enabled") == 1)? true: false;
+                emo = new EMObject(id, label, comment, enabled, this);
                 for(ColumnInfo column: columns)
                 {
                     if(!column.isEnable())
@@ -192,6 +203,59 @@ public class ScipionMetaData extends MetaData{
         }
     }
     
+    public class EMObject
+    {
+        long id;
+        String label, comment;
+        protected Map<ColumnInfo, Object> values;
+        boolean changed;
+        ScipionMetaData childmd;
+        ScipionMetaData md;
+        
+        public EMObject(long id, String label, String comment, boolean enabled, ScipionMetaData md)
+        {
+            this.id = id;
+            this.label = label;
+            this.comment = comment;
+            values = new HashMap<ColumnInfo, Object>();
+            setEnabled(enabled);
+            this.md = md;
+            changed = false;
+        }
+        
+        Object getValue(ColumnInfo c) {
+            Object result = values.get(c);
+            if(result != null)
+                return result;
+            for(ColumnInfo ci: columns)
+                if(ci.labelName.equals(c.labelName))
+                    return values.get(ci);//when mergin metadatas required
+            return null;
+        }
+
+        public void setValue(ColumnInfo ci, Object value) {
+            Object current = values.get(ci);
+            if(current == null || !current.equals(value))
+            {
+                if(values.containsKey(ci))
+                    changed = true;
+                values.put(ci, value);
+                
+            }
+        }
+        
+        public boolean isEnabled()
+        {
+            Integer value = (Integer)getValue(enabledci);
+            return value.intValue() == 1;
+        }
+        
+        public void setEnabled(boolean isenabled)
+        {
+            int value = isenabled? 1: 0;
+            setValue(enabledci, value);
+        }
+    }
 
     public void setParent(ScipionMetaData md)
     {
@@ -297,49 +361,7 @@ public class ScipionMetaData extends MetaData{
         return emos;
     }
     
-    public class EMObject
-    {
-        long id;
-        protected Map<ColumnInfo, Object> values;
-       
-        ScipionMetaData childmd;
-        ScipionMetaData md;
-        
-        public EMObject(long id, ScipionMetaData md)
-        {
-            this.id = id;
-            values = new HashMap<ColumnInfo, Object>();
-            this.md = md;
-        }
-        
-        Object getValue(ColumnInfo c) {
-            Object result = values.get(c);
-            if(result != null)
-                return result;
-            for(ColumnInfo ci: columns)
-                if(ci.labelName.equals(c.labelName))
-                    return values.get(ci);//when mergin metadatas required
-            return null;
-        }
-
-        public boolean setValue(ColumnInfo ci, Object value) {
-            
-            values.put(ci, value);
-            return true;
-        }
-        
-        public boolean isEnabled()
-        {
-            Integer value = (Integer)getValue(enabledci);
-            return value.intValue() == 1;
-        }
-        
-        public void setEnabled(boolean isenabled)
-        {
-            int value = isenabled? 1: 0;
-            setValue(enabledci, value);
-        }
-    }
+    
 
     public long[] findObjects()
     {
@@ -481,7 +503,8 @@ public class ScipionMetaData extends MetaData{
     {
         EMObject emo = getEMObject(id);
         ColumnInfo ci = getColumnInfo(label);
-        return emo.setValue(ci, value);
+        emo.setValue(ci, value);
+        return true;
     }
 
     public void importObjects(MetaData md, long [] ids)
@@ -532,8 +555,9 @@ public class ScipionMetaData extends MetaData{
         
     }
     
-     public  void write(String path)
+    public  void write(String path)
     {
+        System.out.println("writing file in " + path);
         new File(path).delete();//overwrite file
         if(path.contains("@"))
         {
@@ -569,14 +593,10 @@ public class ScipionMetaData extends MetaData{
             for(int i = 0; i < columns.size(); i ++)
             {
                 ci = columns.get(i);
-                if(!ci.isEnable())
-                {
-                    
-                    type = getTypeMapping(ci.type);
-                    sql += String.format(line, i + 2, ci.labelName, ci.comment, type);
-                    createcols += String.format(",\n%s %s DEFAULT NULL", ci.comment, type);
-                    cols += String.format(", %s", ci.comment);
-                }
+                type = getTypeMapping(ci.type);
+                sql += String.format(line, i + 2, ci.labelName, ci.comment, type);
+                createcols += String.format(",\n%s %s DEFAULT NULL", ci.comment, type);
+                cols += String.format(", %s", ci.comment);
             }
             sql += String.format(";DROP TABLE IF EXISTS %1$s; CREATE TABLE %1$s(\n"
                     + "id        INTEGER PRIMARY KEY AUTOINCREMENT,\n" +
@@ -591,8 +611,6 @@ public class ScipionMetaData extends MetaData{
             {
                 sql += String.format("(%s, '', ''", emo.id);
                 for (ColumnInfo column : columns) {
-                    if(!column.isEnable())
-                    {
                         value = emo.getValue(column);
                         if(value != null)
                         {
@@ -612,11 +630,11 @@ public class ScipionMetaData extends MetaData{
                         }
                         else
                             sql += ", NULL";
-                    }
                 }
                 sql += "),";
             }
             sql = sql.substring(0, sql.length() - 1);//remove first comma
+            System.out.println(sql);
             return sql;
     }
     public  void writeBlock(String path)
@@ -629,8 +647,79 @@ public class ScipionMetaData extends MetaData{
             Class.forName("org.sqlite.JDBC");
             c = DriverManager.getConnection("jdbc:sqlite:" + path);
             stmt = c.createStatement();
-            String sql = toString();
+               String sql = String.format("DROP TABLE IF EXISTS %1$s; CREATE TABLE %1$s(\n"
+                    + "id        INTEGER PRIMARY KEY AUTOINCREMENT,\n" +
+"                      label_property      TEXT UNIQUE,\n" +
+"                      column_name TEXT UNIQUE,\n" +
+"                      class_name TEXT DEFAULT NULL\n" +
+"                      )", classestb);
             stmt.executeUpdate(sql);
+            
+            sql = String.format("INSERT INTO %s(id, label_property, column_name, class_name) values (1, \'self\', \'%s\', \'%s\')", classestb, selfalias, self);
+            String line = ", (%s, \'%s\', \'%s\', \'%s\')";
+            ColumnInfo ci;
+            String createcols = "", cols = "id, label, comment", type;
+            for(int i = 0; i < columns.size(); i ++)
+            {
+                ci = columns.get(i);
+                type = getTypeMapping(ci.type);
+                sql += String.format(line, i + 2, ci.labelName, ci.comment, type);
+                createcols += String.format(",\n%s %s DEFAULT NULL", ci.comment, type);
+                cols += String.format(", %s", ci.comment);
+            }
+            stmt.executeUpdate(sql);
+            
+            sql = String.format("DROP TABLE IF EXISTS %1$s; CREATE TABLE %1$s(\n"
+                    + "id        INTEGER PRIMARY KEY AUTOINCREMENT,\n" +
+"                      label      TEXT DEFAULT NULL,\n" +
+"                      comment TEXT DEFAULT NULL" +
+"                      %2$s)", objectstb, createcols);
+            stmt.executeUpdate(sql);
+            if(size() == 0)    
+                return;
+            sql = String.format("INSERT INTO %s(%s) VALUES ", objectstb, cols);
+            Object value;
+            int count = 0;
+            for(EMObject emo: emobjects)
+            {
+                sql += String.format("(%s, '', ''", emo.id);
+                for (ColumnInfo column : columns) {
+                        value = emo.getValue(column);
+                        if(value != null)
+                        {
+                            if(column.type == MetaData.LABEL_STRING)
+                            {
+
+                                    String str = (String)value;
+                                    if( str.contains("@"))
+                                        str = str.substring(str.lastIndexOf("@") + 1);
+                                    value = str;
+                                    sql += String.format(", '%s'", value);
+
+
+                            }
+                            else
+                                sql += String.format(", %s", value);
+                        }
+                        else
+                            sql += ", NULL";
+                }
+                sql += "),";
+                count ++;
+                if(count == 200)
+                {
+                     
+                    sql = sql.substring(0, sql.length() - 1);//remove comma
+                    stmt.executeUpdate(sql);
+                    sql = String.format("INSERT INTO %s(%s) VALUES ", objectstb, cols);
+                    count = 0;
+                }
+            }
+            if(count > 0)
+            {
+                sql = sql.substring(0, sql.length() - 1);//remove comma
+                stmt.executeUpdate(sql);
+            }
             stmt.close();
             c.close();
             
@@ -704,8 +793,70 @@ public class ScipionMetaData extends MetaData{
                 }
             }
         }   
-       
-            
+    }
+    
+    public  void overwrite(String src, String path)
+    {
+        try {
+            Files.copy(Paths.get(src), Paths.get(path), StandardCopyOption.REPLACE_EXISTING);
+            if (parent != null)
+            {
+                parent.overwrite(src, path);//this will write parent and siblings
+                return;
+            }
+            overwriteBlock(path);
+            if(haschilds)
+                for(EMObject emo: emobjects)
+                    if(emo.childmd != null)
+                        emo.childmd.overwriteBlock(path);
+        } catch (IOException ex) {
+            Logger.getLogger(ScipionMetaData.class.getName()).log(Level.SEVERE, null, ex);
+        }
         
     }
+    
+    public  void overwriteBlock(String path)
+    {//overwrites enabled column in existing sqlite objects table
+        Connection c = null;
+        Statement stmt = null;
+        try {
+            
+            Class.forName("org.sqlite.JDBC");
+            c = DriverManager.getConnection("jdbc:sqlite:" + path);
+            stmt = c.createStatement();
+            String sql = String.format("ALTER TABLE %s ADD COLUMN _enabled INT NOT NULL DEFAULT 1", objectstb);
+            stmt.executeUpdate(sql);
+            String updatesql = "UPDATE %s SET _enabled=%s WHERE id=%s;";
+            sql = "";
+            int count = 0;
+            for(EMObject emo: emobjects)
+            {
+                if(emo.changed)
+                {
+                    sql+= String.format(updatesql, objectstb, (emo.isEnabled())? 1: 0, emo.id);
+                    count ++;
+                    if(count == 200)
+                    {
+                        
+                        stmt.executeUpdate(sql);
+                        sql = "";
+                        count = 0;
+                    }
+                }
+                
+            }
+            if(count > 0)
+                stmt.executeUpdate(sql);
+            stmt.close();
+            c.close();
+            
+        } 
+        catch ( Exception e ) {
+            e.printStackTrace();
+            
+        }
+    }
+    
+   
+   
 }

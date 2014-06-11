@@ -135,7 +135,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 
 		initMenuBar(picker);
 
-		resetbt = XmippWindowUtil.getTextButton("Reset", new ActionListener()
+		resetbt = XmippWindowUtil.getTextButton("Reset Micrograph", new ActionListener()
 		{
                     
 			@Override
@@ -193,7 +193,6 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		});
                 if(picker.isScipionSave())
                 {
-                    savebt.setVisible(false);
                     saveandexitbt.setText("Create Coordinates");
                     Color color = Color.decode(ScipionMessageDialog.firebrick); 
                     saveandexitbt.setBackground(color);

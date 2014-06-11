@@ -71,6 +71,8 @@ public:
     /// Estimate a CTF for each PSD
     bool 					estimate_ctf;
 public:
+    /** constructor**/
+    ProgCTFEstimateFromMicrograph();
     /** Read parameters */
     void readParams();
 

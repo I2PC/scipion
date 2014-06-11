@@ -413,6 +413,7 @@ public class SupervisedParticlePickerJFrame extends ParticlePickerJFrame {
         if (ppicker.getMode() != Mode.Review) {
             autopickchb.setEnabled(enable);
             thresholdpn.setEnabled(enable);
+            
         }
     }
 
@@ -723,13 +724,13 @@ public class SupervisedParticlePickerJFrame extends ParticlePickerJFrame {
             rectangle = getMicrograph().getParticlesRectangle(ppicker);
         }
         canvas.repaint();
-        boolean train = XmippDialog
-                .showQuestion(this, trainmsg);
-        if (!train) {
+        int result = XmippDialog
+                .showQuestionYesNoCancel(this, trainmsg);
+        if (result == XmippQuestionDialog.CANCEL_OPTION) {
             rectangle = null;
             canvas.repaint();
         }
-        return train;
+        return result == XmippQuestionDialog.YES_OPTION;
     }
 
     public Rectangle getParticlesRectangle() {
@@ -748,7 +749,7 @@ public class SupervisedParticlePickerJFrame extends ParticlePickerJFrame {
 
     public String getResetMsg() {
         String msg = super.getResetMsg();
-        if (autopickchb.isSelected()) {
+        if (ppicker.getMode() == Mode.Supervised) {
             msg += "\nParticles will be automatically picked again";
         }
         return msg;
