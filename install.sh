@@ -1861,6 +1861,15 @@ fi
 EXT_PYTHON=${EXT_PATH}/python
 
 if [ $DO_PYTHON -eq 1 ]; then
+  if [ $DO_CLEAN -eq 1 ]; then
+    if [ $IS_MAC -eq 1 ]; then
+      echoExec "${XMIPP_HOME}/lib/libpython2.7.dylib" "/dev/null"
+      echoExec "${XMIPP_HOME}/lib/libpython2.7.dylib.1.0" "/dev/null"
+    else
+      echoExec "${XMIPP_HOME}/lib/libpython2.7.so" "/dev/null"
+      echoExec "${XMIPP_HOME}/lib/libpython2.7.so.1.0" "/dev/null"
+    fi
+  fi
   echoGreen "PYTHON SETUP"
   export CPPFLAGS="-I${EXT_PATH}/${SQLITE_FOLDER} -I${EXT_PYTHON}/${TK_FOLDER}/generic -I${EXT_PYTHON}/${TCL_FOLDER}/generic"
   if [ $IS_MAC -eq 1 ]; then
@@ -1935,7 +1944,13 @@ if [ $DO_PYTHON -eq 1 ]; then
   echoExec "chmod a+x ${PYTHON_BIN}" 1
   #make python directory accesible by anybody
   echoExec "chmod -R a+x ${XMIPP_HOME}/external/python/Python-2.7.2" 1
-
+  if [ $IS_MAC -eq 1 ]; then
+    echoExec "ln -s ${XMIPP_HOME}/external/python/Python-2.7.2/libpython2.7.dylib ${XMIPP_HOME}/lib/libpython2.7.dylib"
+    echoExec "ln -s ${XMIPP_HOME}/external/python/Python-2.7.2/libpython2.7.dylib.1.0 ${XMIPP_HOME}/lib/libpython2.7.dylib.1.0"
+  else
+    echoExec "ln -s ${XMIPP_HOME}/external/python/Python-2.7.2/libpython2.7.so ${XMIPP_HOME}/lib/libpython2.7.so"
+    echoExec "ln -s ${XMIPP_HOME}/external/python/Python-2.7.2/libpython2.7.so.1.0 ${XMIPP_HOME}/lib/libpython2.7.so.1.0"
+  fi
 fi
 
 
