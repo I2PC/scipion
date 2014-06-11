@@ -1,28 +1,37 @@
+<script>
 
+function createSubset(mode){
+	
+	switch(mode){
+	
+	case "micrographs":
+		// create subsets with micrographs
+		break;
+
+	case "particles":
+		// create subsets with particles
+		break;
+		
+	case "volumes":
+		// create subsets with volumes
+		break;
+	
+	}
+}
+
+
+</script>
+	
+	
 <div id="asideMainContainer">
-	<form id="showjForm" action="/showj/" method="post"> {% csrf_token %}	
-		
-		<div id="saveContainer" class="sectionMenu">
-			<a id="saveButton" href="javascript:alert('create Subset in progress...')" class="btn buttonRed" style="padding: 5px 10px;">
-				Create Subsets
-			</a>
-		</div>
-		
-		<div class="sectionMenu">
-			<img src="/resources/showj/separator.png" class="menuIcon">
-		</div>
-		
-<!-- 		<div id="saveContainer" class="sectionMenu"> -->
-<!-- 			<a id="saveButton" href="javascript:alert('create Subset in progress...')" class="btn buttonRed" style="padding: 5px 10px;"> -->
-<!-- 				Create Subsets -->
-<!-- 			</a> -->
-<!-- 		</div> -->
-		
+	<div id="createContainer" class="sectionMenu" style="float:right;">
+		<a id="saveButton" href="javascript:createSubset('particles')" class="btn buttonRed" style="padding: 5px 10px;">
+			Create Particles
+		</a>
+	</div>
+	
 <!-- 		<div class="sectionMenu"> -->
 <!-- 			<img src="/resources/showj/separator.png" class="menuIcon"> -->
 <!-- 		</div> -->
-		
-		{% block content_menu %}{% endblock %}
-	    
-	</form>
+
 </div>	
