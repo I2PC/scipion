@@ -790,7 +790,6 @@ public class ScipionMetaData extends MetaData{
     {
         try {
             Files.copy(Paths.get(src), Paths.get(path), StandardCopyOption.REPLACE_EXISTING);
-            System.out.println("overwriting file in " + path);
             if (parent != null)
             {
                 parent.overwrite(src, path);//this will write parent and siblings
@@ -809,7 +808,6 @@ public class ScipionMetaData extends MetaData{
     
     public  void overwriteBlock(String path)
     {//overwrites enabled column in existing sqlite objects table
-        System.out.println("overwriting block");
         Connection c = null;
         Statement stmt = null;
         try {

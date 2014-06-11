@@ -36,7 +36,6 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
     private JButton classcmdbutton;
 
     private String python;
-    private String inputimagesid;
     private String inputid;
     private HashMap<String, String> msgfields;
     private final String runNameKey = "Run name:";
@@ -63,7 +62,6 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
             script = parameters.script;
             projectid = parameters.projectid;
             inputid = parameters.inputid;
-            inputimagesid = parameters.inputimagesid;
             selfile = String.format("%s%sselection%s", projectid, File.separator, data.getFileExtension());
             msgfields = new HashMap<String, String>();
             msgfields.put(runNameKey, "ProtUserSubset");
@@ -101,7 +99,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
                     int create = dlg.action;
                     if (create == ScipionMessageDialog.OK_OPTION) 
                     {
-                        String[] command = new String[]{python, script, msgfields.get(runNameKey), selfile, type, output, projectid, inputid, inputimagesid};
+                        String[] command = new String[]{python, script, msgfields.get(runNameKey), selfile, type, output, projectid, inputid};
                         createSubset(command);
                     }
                 }
@@ -118,7 +116,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
                         ScipionMessageDialog dlg = new ScipionMessageDialog(ScipionGalleryJFrame.this, "Question", msg, msgfields);
                         int create = dlg.action;
                         if (create == ScipionMessageDialog.OK_OPTION) {
-                            String[] command = new String[]{python, script, dlg.getFieldValue(runNameKey), selfile, type, type, projectid, inputid, inputimagesid};
+                            String[] command = new String[]{python, script, dlg.getFieldValue(runNameKey), selfile, type, type, projectid, inputid};
                             createSubset(command);
                             
                         }

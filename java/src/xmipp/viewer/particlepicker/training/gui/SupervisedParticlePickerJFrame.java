@@ -413,6 +413,7 @@ public class SupervisedParticlePickerJFrame extends ParticlePickerJFrame {
         if (ppicker.getMode() != Mode.Review) {
             autopickchb.setEnabled(enable);
             thresholdpn.setEnabled(enable);
+            
         }
     }
 
@@ -748,7 +749,7 @@ public class SupervisedParticlePickerJFrame extends ParticlePickerJFrame {
 
     public String getResetMsg() {
         String msg = super.getResetMsg();
-        if (autopickchb.isSelected()) {
+        if (ppicker.getMode() == Mode.Supervised) {
             msg += "\nParticles will be automatically picked again";
         }
         return msg;
