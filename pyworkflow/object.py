@@ -213,6 +213,9 @@ class Object(object):
     def getObjName(self):
         return self._objName
     
+    def setEnabled(self, enabled):
+        self._objEnabled = bool(enabled)
+        
     def isEnabled(self):
         """Return if object is enabled"""
         return self._objEnabled

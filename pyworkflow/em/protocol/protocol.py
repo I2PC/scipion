@@ -143,37 +143,41 @@ class ProtUserSubSet(ProtSets):
         self._outputType = String(args.get('outputType', None))
         self.setObjLabel(args.get('label', self.getClassName()))
         
+    def _defineParams(self, form):
+        form.addHidden('inputObject', PointerParam, pointerClass='EMObject')
+        form.addHidden('sqliteFile', FileParam)
+        form.addHidden('outputClassName', StringParam)
         
-    def getInputType(self):
-        return self._inputType.get()
+    def _insertAllSteps(self):
+        self._insertFunctionStep('createSetOfImagesStep')
     
-    def getOutputType(self):
-        return self._outputType.get()
-    
-    def createInputPointer(self, inputset):
-        inputsetpt = Pointer()
-        inputsetpt.set(inputset)
-        inputs = {'input' + self.getInputType(): inputsetpt}
-        self._defineInputs(**inputs)
-    
+    def createSetOfImagesStep(self):
+        inputObj = self.inputObject.get()
+        
+        if isinstance(inputObj, SetOfImages):
+            className = inputObj.getClassName()
+            createFunc = getattr(self, '_create' + className)
+            modifiedSet = inputObj.getClass()(filename=self.sqliteFile.get())
+            output = createFunc()
+            output.copyInfo(inputObj)
+            for img in modifiedSet:
+                if img.isEnabled():                
+                    output.append(img)
+            outputDict = {'output' + className.replace('SetOf', ''): output}
+            
+            self._defineOutputs(**outputDict)
+            
     def defineOutputSet(self, outputset):
         outputs = {'output' + self.getOutputType(): outputset}
         self._defineOutputs(**outputs)
         self._defineSourceRelation(self.getInput(), outputset)
     
-    def getOutputSet(self):
-        return getattr(self, 'output' + self._outputType.get())
-    
-    def getInput(self):
-        inputsetpt = getattr(self, 'input' + self._inputType.get())
-        return inputsetpt.get()
-    
     def _summary(self):
         summary = []
-        input = self.getInputType()
-        if hasattr(self.getInput(), "getSize"):
-            input = "%d %s"%(self.getInput().getSize(), input)
-        summary.append("From input set of %s created subset of %s %s"%(input, self.getOutputSet().getSize(), self.getOutputType()))
+#         input = self.getInputType()
+#         if hasattr(self.getInput(), "getSize"):
+#             input = "%d %s"%(self.getInput().getSize(), input)
+#         summary.append("From input set of %s created subset of %s %s"%(input, self.getOutputSet().getSize(), self.getOutputType()))
         return summary
 
     def _methods(self):

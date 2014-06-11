@@ -1,103 +1,65 @@
 #!/usr/bin/env python
-'''
-Created on Jan 27, 2014
+# **************************************************************************
+# *
+# * Authors:    Airen Zaldivar         (airenzp@gmail.com) 
+#               J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
+# *
+# * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
+# *
+# * This program is free software; you can redistribute it and/or modify
+# * it under the terms of the GNU General Public License as published by
+# * the Free Software Foundation; either version 2 of the License, or
+# * (at your option) any later version.
+# *
+# * This program is distributed in the hope that it will be useful,
+# * but WITHOUT ANY WARRANTY; without even the implied warranty of
+# * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# * GNU General Public License for more details.
+# *
+# * You should have received a copy of the GNU General Public License
+# * along with this program; if not, write to the Free Software
+# * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+# * 02111-1307  USA
+# *
+# *  All comments concerning this program package may be sent to the
+# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *
+# **************************************************************************
 
-@author: airen
-'''
-import os, sys
+import sys
+
 from pyworkflow.manager import Manager
+from pyworkflow.em import ProtUserSubSet
 
-from pyworkflow.em import *
-from pyworkflow.utils import moveFile
 
-import pyworkflow.em.packages.xmipp3 as xmipp3
-from xmipp import *
+def runSubsetProtocol(projectId, inputId, sqliteFile, 
+                      outputType, protocolLabel):
+    """ Load the project and launch the protocol to
+    create the subset.
+    """
+    # Retrieve project and input object from db
+    project = Manager().loadProject(projectId)
+    inputObject = project.mapper.selectById(int(inputId))
 
+    # Create the new protocol instance and set the input values
+    prot = project.newProtocol(ProtUserSubSet)
+    prot.inputObject.set(inputObject)
+    prot.setObjLabel(protocolLabel)
+    prot.sqliteFile.set(sqliteFile)
+    prot.outputClassName.set(outputType)
     
-def createSetFromMd(selfile, setType, inputimages):
-    createSetFun = getattr(prot, '_createSetOf' + setType)
-        
-    if not 'Classes' in setType:
-        outputset = createSetFun()
-        readSetFun = getattr(xmipp3, 'readSetOf' + setType )
-        outputset.copyInfo(inputimages)    
-        readSetFun(selfile, outputset, outputset.hasCTF())
-    else:
-        outputset = createSetFun(inputimages)
-        readSetFun = getattr(xmipp3, 'readSetOf' + setType )       
-        readSetFun(outputset, selfile)
-    return outputset
-
-
-
-
-#def createSetFromSqlite(selfile, setType, inputimages):
-#    cls = getattr(my_import('pyworkflow.em.data'), 'SetOf' + setType)
-#    outputset = cls(filename=selfile)
-#    if not 'Classes' in setType:
-#        outputset.copyInfo(inputimages)    
-#    else:
-#        outputset.setImages(inputimages)
-#    return outputset
-
-def my_import(name):
-    mod = __import__(name)
-    components = name.split('.')
-    for comp in components[1:]:
-        mod = getattr(mod, comp)
-    return mod
+    # Launch the protocol
+    project.launchProtocol(prot, wait=True)
+    
 
 if __name__ == '__main__':
+    #TODO: REMOVE THIS AFTER DEBUGGING
+    print "ARGS: ", sys.argv
+    
+    runSubsetProtocol(projectId=sys.argv[1],
+                      inputId=sys.argv[2],
+                      sqliteFile=sys.argv[3],
+                      outputType=sys.argv[4],
+                      protocolLabel=sys.argv[5])
+    sys.exit(0)
 
-    projectid = sys.argv[1]
-    inputid = sys.argv[2]
-    sqlitefile = sys.argv[3] # Sqlite file with disabled objects
-    outputType = sys.argv[4] # Output set type
-    protlabel = sys.argv[5] #Protocol label 
-
-    inputType = None#to be readed
-    
-    selfilename = sqlitefile[sqlitefile.rfind(os.sep) + 1:]
-    
-    project = Manager().loadProject(projectid)
-    prot = ProtUserSubSet(label=protlabel, inputType=inputType, outputType=outputType)
-    input = project.mapper.selectById(int(inputid))
-
-    
-    prot.createInputPointer(input)
-    project._setupProtocol(prot)
-    prot.makePathsAndClean()
-    moveFile(sqlitefile, prot._getExtraPath())
-    selfile = join(prot._getExtraPath(), selfilename)
-    
-    readInputSetFun = getattr(prot, '_createSetOf' + inputType)
-    
-    inputset = readInputSetFun(filename=selfile)
-    outputcls = getattr(my_import('pyworkflow.em.data'), 'SetOf' + outputType)
-    outputset = outputcls()
-    for obj in inputset:
-        if(obj.isEnabled()):
-            outputset.add(obj)
-            
-    if isinstance(input, SetOfImages):
-        inputImages = input
-    elif isinstance(input, SetOfClasses):
-        inputImages = input.getImages()
-    elif isinstance(input, EMProtocol):
-        inputImages = input.getAttribute('inputParticles', None)
-        
-    if not 'Classes' in outputType:
-        outputset.copyInfo(inputImages)    
-    else:
-        outputset.setImages(inputImages)
-
-    prot.defineOutputSet(outputset)
-   
-    prot.setStatus(STATUS_FINISHED)
-    project._storeProtocol(prot)
-    
-    
-  
-    
-
-    
