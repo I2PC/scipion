@@ -313,9 +313,11 @@ function transposeElmMarked(status){
 			var elmToMark = $("#graph_"+id);
 			var selected = elmToMark.attr("selected"); 
 			
-			if(elm.hasClass("selected") && (selected != "selected" || selected == undefined)){
+			if(elm.hasClass("selected")){
 //				console.log("adding "+ id)
-				markSingleNodeGraph(elmToMark);
+				if (selected != "selected" || selected == undefined){
+					markSingleNodeGraph(elmToMark);
+				}
 				list_marked.push(id);
 			} else if(!elm.hasClass("selected") && elmToMark.attr("selected")=="selected"){
 				dismarkSingleNodeGraph(elmToMark);
@@ -331,15 +333,19 @@ function transposeElmMarked(status){
 			var id = elm.attr("id").split("_").pop();
 			var elmToMark = $("tr#"+id);
 			
-			if(elm.attr("selected") == "selected" && !elmToMark.hasClass("selected")){
+			if(elm.attr("selected") == "selected"){
 //				console.log("adding "+ id)
-				markSingleNodeList(elmToMark);
+				if(!elmToMark.hasClass("selected")){
+					markSingleNodeList(elmToMark);
+				}
 				list_marked.push(id);
 			} else if (elm.attr("selected") != "selected" && elmToMark.hasClass("selected")){
 				dismarkSingleNodeList(elmToMark);
 			}
 		});
 	}
+	
+//	console.log(list_marked)
 	
 	if (list_marked.length > 0){
 		// Update the runs selected in the DB
