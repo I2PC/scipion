@@ -112,29 +112,76 @@ def delPackage(env, name):
     """
     del SCIPION['PACKAGES'][name]
 
-def downloadLibrary(env, name):
+def downloadLibrary(env, name, md5check=True, verbose=False):
     """
     This method is for downloading a library and placing it in tmp dir
+    It will download first the .md5
     """
+    import urllib2, urlparse
     library = SCIPION['LIBS'].get(name)
-    tar = File(os.path.join(SCIPION['FOLDERS'][TMP_FOLDER], library[TAR]))
-    folder = Dir(SCIPION['FOLDERS'][TMP_FOLDER])
-    print "Downloading %s in folder %s" % (library[URL], folder)
-    return env.URLDownload(folder, library[URL])
+    tar = os.path.join(SCIPION['FOLDERS'][TMP_FOLDER], library[TAR])
+    tarFile = File(tar)
+    md5 = "%s.md5" % tar
+    md5File = File(tar)
+    folder = SCIPION['FOLDERS'][TMP_FOLDER]
+    folderDir = Dir(folder)
+    url = library[URL]
+    urlMd5 = "%s.md5" % url
+    
+    go = True
+    if md5check:
+        print "Downloading md5 file for %s library..." % name
+        go, message = _downloadFile(urlMd5, md5)
+        print "Checking md5 checksum..."
+        if _checkMd5(tar, md5) == 1:
+            go = False
+    
+    if go:
+        print "Downloading %s in folder %s" % (url, folder)
+        while go:
+            _downloadFile(url, tar)
+            if _checkMd5(tar, md5) == 0:
+                if not _askContinue("Downloaded %s file doesn't match md5 its md5 checksum. Download it again?" % tar):
+                    go = False
+            else:
+                go = False
+        return tar
+    elif verbose:
+        if _askContinue("%s library was not downloaded. Proceed anyway?" % name):
+            return True
+        else:
+            raise SCons.Errors.StopError("User defined stop")
+    else:
+        print "%s not downloaded" % name
+        return tarFile
 
 def untarLibrary(env, name, tar=None, folder=None):
     """
     This method is for untar the downloaded library in the tmp directory
     """
+    import tarfile
     # Add builders to deal with source code, donwloads, etc 
     libraryDict = SCIPION['LIBS'].get(name)
     if tar is None:
-        tar = File(os.path.join(SCIPION['FOLDERS'][TMP_FOLDER], libraryDict[TAR]))
+        tar = os.path.join(SCIPION['FOLDERS'][TMP_FOLDER], libraryDict[TAR])
     if folder is None:
-        folder = Dir(os.path.join(SCIPION['FOLDERS'][TMP_FOLDER], libraryDict[DIR]))
-#    folder = Dir(os.path.join(SCIPION['FOLDERS'][TMP_FOLDER],libraryDict[DIR]))
+        #folder = Dir(SCIPION['FOLDERS'][TMP_FOLDER])
+        folder = os.path.join(SCIPION['FOLDERS'][TMP_FOLDER],libraryDict[DIR])
     print "Unpacking %s in folder %s" % (tar, folder)
-    return env.UnTar(folder, tar)
+    sourceTar = tarfile.open(tar,'r')
+    tarContents = sourceTar.getmembers()
+    tarFileContents = filter(lambda tarEntry: tarEntry.isfile(), tarContents)
+    tarFileContentsNames = map(_tarInfoToNode, tarFileContents)
+    for indx, item in enumerate(tarFileContentsNames): 
+        tarFileContentsNames[indx] = os.path.join(SCIPION['FOLDERS'][TMP_FOLDER], item)
+    sourceTar.close()
+    #result = env.Unpack('#software/tmp/sqlite-3.6.23.tar.gz')
+    env["UNPACK"]["EXTRACTDIR"] = SCIPION['FOLDERS'][TMP_FOLDER] 
+    result = env.Unpack(target=folder, source=tar, UNPACKLIST=tarFileContentsNames)
+    return result
+
+def _tarInfoToNode(tarInfoObject):
+    return tarInfoObject.name
 
 def compileWithSetupPy(env, name, prefix=None):
     """
@@ -173,6 +220,71 @@ def scipionLogo(env):
     print "QL jmQQQgmQQQQQQmaaaQWQQQ"
     print ""
 
+def _downloadFile(url, file):
+    """
+    Function that downloads the content of a URL into a file
+    Returns a boolean telling if the download succeed, and the htmllib.Message instance to the answer
+    """
+    import urllib
+    import htmllib
+    response, message = urllib.urlretrieve(url, file)
+    # If we get a html answer, then it is a server answer telling us that the file doesn't exist, but we return the message
+    if message.dict['content-type'] == 'text/html':
+        return False, message
+
+    return True, message
+
+def _checkMd5(file, md5):
+    """
+    Function that checks if the md5sum from a given file match the md5sum from a md5 file
+    md5 file should contain it as the first element.
+    The function will return True if both sums match, False otherwise
+    """
+    if not os.path.exists(file):
+        print "Checksum error. File %s doesn't exist" % file
+        return -1
+    if not os.path.exists(md5):
+        print "Checksum error. File %s doesn't exist" % md5
+        return -1
+    tarFileMd5 = _md5Sum(file)
+    md5File = open(md5, 'r+')
+    lines = md5File.readlines()
+    md5FileMd5 = lines[0].replace("\n","").split(" ")[0]
+    md5File.close()
+    
+    answer = 1 if tarFileMd5 == md5FileMd5 else 0
+
+    if not answer:
+        print "Checksum error. %s says %s, but %s says %s" % (file, tarFileMd5, md5, md5FileMd5)
+    else:
+        print "\t ...OK"
+    return answer
+
+def _askContinue(msg="continue?"):
+    """
+    Function that ask the user in command line and returns the answer
+    """
+    answer = "-"
+    while answer != "y" and answer != "n" and answer != "":
+        answer = raw_input("%s (y/[n]): " % msg)
+        if answer == "n" or answer == "N":
+            return False
+        elif answer == "y" or answer == "Y":
+            return True
+    return None
+
+def _md5Sum(file):
+    """
+    Function that calculates the md5 sum of a given file
+    """
+    import hashlib
+    md5sum = 0
+    md5 = hashlib.md5()
+    with open(file,'r+') as fileToCheck:
+        for chunk in iter(lambda: fileToCheck.read(128*md5.block_size), b''):
+            md5.update(chunk)
+    md5sum = md5.hexdigest()
+    return md5sum
 
 
 #########################
@@ -182,11 +294,8 @@ def scipionLogo(env):
 # We create the environment the whole build will use
 env = None
 env = Environment(ENV=os.environ,
-                  tools=['URLDownload',
-#                         'disttar',
-                         'Make',
-                         'untar',
-#                         'Unpack',
+                  tools=['Make',
+                         'Unpack',
                          'AutoConfig',
 #                         'ConfigureJNI',
 #                         'install',

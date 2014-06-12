@@ -93,29 +93,34 @@ env.AddLibrary('python', dft=True, tar='Python-2.7.7.tgz',    dir='Python-2.7.7'
 
 # paramiko
 
+######################
+# CONFIGURATION FILE #
+######################
+# TODO: At this point, it is time to read the configuration file in order to alter (or not) the previously hard-coded libraries
+
 
 #############
 # DOWNLOADS #
 #############
 
 sqliteDownload = env.DownloadLibrary('sqlite')
-#tclDownload = env.DownloadLibrary('tcl')
-#tkDownload = env.DownloadLibrary('tk')
-#pythonDownload = env.DownloadLibrary('python')
+tclDownload = env.DownloadLibrary('tcl')
+tkDownload = env.DownloadLibrary('tk')
+pythonDownload = env.DownloadLibrary('python')
 
 #########
 # UNTAR #
 #########
-sqliteUntar = env.UntarLibrary('sqlite', tar=sqliteDownload)
-#tclUntar = env.UntarLibrary('tcl', tar=tclDownload)
-#tkUntar = env.UntarLibrary('tk', tar=tkDownload)
-#pythonUntar = env.UntarLibrary('python', tar=pythonDownload)
+sqliteUntar = env.UntarLibrary('sqlite')
+tclUntar = env.UntarLibrary('tcl')
+tkUntar = env.UntarLibrary('tk')
+pythonUntar = env.UntarLibrary('python')
 
 # Explicitly write depends
 Depends(sqliteUntar, sqliteDownload)
-#Depends(tclUntar, tclDownload)
-#Depends(tkUntar, tkDownload)
-#Depends(pythonUntar, pythonDownload)
+Depends(tclUntar, tclDownload)
+Depends(tkUntar, tkDownload)
+Depends(pythonUntar, pythonDownload)
 
 ##########################
 # EXECUTING COMPILATIONS #
