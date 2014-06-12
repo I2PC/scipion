@@ -49,8 +49,10 @@ public:
     FileName fnRoot;
     /// Output Stack file
     FileName fnOut;
+    /// Input image size
+    ImageInfo imgInfo;
     /// Number of pixels to crop from each side. Set to 0 for no cropping
-    int cropSize;
+    int cropSizeX, cropSizeY;
     /// Number of threads
     int thrNum;
     /// Bad pixel factor
@@ -117,7 +119,7 @@ public:
     void run();
 
     /// Read an image and crop
-    void readAndCrop(const FileName &fn, Image<double> &I) const;
+    void readAndCrop(const FileName &fn, Image<double> &I, int xSize, int ySize) const;
 
     /// Read geometrical info
     void readGeoInfo(const FileName &fn, MDRow &rowGeo) const;

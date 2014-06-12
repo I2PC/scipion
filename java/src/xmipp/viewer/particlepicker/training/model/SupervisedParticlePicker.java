@@ -58,6 +58,7 @@ public class SupervisedParticlePicker extends ParticlePicker
 	private PickingClassifier classifier;
         private UpdateTemplatesTask uttask;
         private TemplatesJDialog dialog;
+        private boolean isautopick;
 
 	// private String reviewfile;
 
@@ -596,11 +597,13 @@ public class SupervisedParticlePicker extends ParticlePicker
                                 dtemplatesnum = 1;// for compatibility with previous
                                                                         // projects
                         configmode = Mode.valueOf(md.getValueString(MDLabel.MDL_PICKING_STATE, id));
+                        isautopick = configmode == Mode.Supervised || configmode == Mode.Review;
                         if (mode == Mode.Supervised && configmode == Mode.Manual)
                                 throw new IllegalArgumentException("Cannot switch to Supervised mode from the command line");
                         if (mode == Mode.Manual && configmode == Mode.Supervised)
                                 mode = Mode.Supervised;
-
+                        if (mode == Mode.Review && configmode == mode.Manual)//Review mode makes no sense if manual mode
+                            mode = Mode.Manual;
 			md.destroy();
 		}
 		catch (Exception e)
@@ -609,6 +612,13 @@ public class SupervisedParticlePicker extends ParticlePicker
 			throw new IllegalArgumentException(e.getMessage());
 		}
 	}
+        
+        public boolean isAutopick()
+        {
+            return isautopick;
+        }
+        
+        
 
 	protected void saveConfig(MetaData md, long id)
 	{
@@ -642,6 +652,8 @@ public class SupervisedParticlePicker extends ParticlePicker
 		if (mode == Mode.Supervised && getManualParticlesNumber() < classifier.getParticlesThreshold())
 			throw new IllegalArgumentException(String.format("You should have at least %s particles to go to %s mode", classifier.getParticlesThreshold(), Mode.Supervised));
 		this.mode = mode;
+                if(mode == Mode.Supervised)
+                    isautopick = true;
 		if (mode == Mode.Manual)
 			convertAutomaticToManual();
 
