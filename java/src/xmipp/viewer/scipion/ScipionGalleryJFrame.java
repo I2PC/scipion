@@ -98,7 +98,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
                     int create = dlg.action;
                     if (create == ScipionMessageDialog.OK_OPTION) 
                     {
-                        String[] command = new String[]{python, script, projectid, inputid, sqlitefile, type, msgfields.get(runNameKey)};
+                        String[] command = new String[]{python, script, projectid, inputid, sqlitefile, type, dlg.getFieldValue(runNameKey)};
                         createSubset(command);
                     }
                 }

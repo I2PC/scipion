@@ -234,14 +234,10 @@ public class ScipionMetaData extends MetaData{
         }
 
         public void setValue(ColumnInfo ci, Object value) {
-            Object current = values.get(ci);
-            if(current == null || !current.equals(value))
-            {
                 if(values.containsKey(ci))
                     changed = true;
                 values.put(ci, value);
                 
-            }
         }
         
         public boolean isEnabled()
@@ -826,19 +822,20 @@ public class ScipionMetaData extends MetaData{
             stmt = c.createStatement();
             String sql = String.format("ALTER TABLE %s ADD COLUMN _enabled INT NOT NULL DEFAULT 1", objectstb);
             stmt.executeUpdate(sql);
-            String updatesql = "UPDATE %s SET _enabled=%s WHERE id=%s;";
+            String updatesql = "UPDATE %s SET %s=%s WHERE id=%s;";
             sql = "";
             int count = 0;
             for(EMObject emo: emobjects)
             {
                 if(emo.changed)
                 {
-                    sql+= String.format(updatesql, objectstb, (emo.isEnabled())? 1: 0, emo.id);
+                    sql+= String.format(updatesql, objectstb, enabledci.labelName, (emo.isEnabled())? 1: 0, emo.id);
                     count ++;
                     if(count == 200)
                     {
                         
                         stmt.executeUpdate(sql);
+                        System.out.println(sql);
                         sql = "";
                         count = 0;
                     }
@@ -846,7 +843,10 @@ public class ScipionMetaData extends MetaData{
                 
             }
             if(count > 0)
+            {
                 stmt.executeUpdate(sql);
+                System.out.println(sql);
+            }
             stmt.close();
             c.close();
             
