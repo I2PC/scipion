@@ -1,7 +1,7 @@
 /***************************************************************************
  *
  * Authors:    Carlos Oscar            coss@cnb.csic.es (2010)
- *       Joaquin Oton      joton@cnb.csic.es (2013)
+ *             Joaquin Oton      joton@cnb.csic.es (2013)
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
@@ -85,7 +85,7 @@ void ProgXrayImport::defineParams()
     addParamsLine("                                     :+ rootname_flatfields_avg.xmp: average flatfield corrected by its darkfield");
     addParamsLine("                                     :+ rootname.xmd: selfile with the images in the stack");
     addParamsLine("                                     :+ rootname.tlt: list of angles");
-    addParamsLine("  [--crop <size=0>]                  : Number of pixels to crop from each side");
+    addParamsLine("  [--crop <sizeX=0> <sizeY=sizeX>]   : Number of pixels to crop from each side");
     addParamsLine("                                     : This is used to avoid some black pixels of some cameras");
     addParamsLine("  [--thr  <N=1>]                     : Number of threads");
     addParamsLine("   == Specific microscopes           ");
@@ -157,7 +157,14 @@ void ProgXrayImport::readParams()
     }
 
     fnRoot    = getParam("--oroot");
-    cropSize  = getIntParam("--crop");
+    cropSizeX  = getIntParam("--crop");
+
+    if ( STR_EQUAL(getParam("--crop", 1), "sizeX") )
+        cropSizeY = cropSizeX;
+    else
+        cropSizeY = getIntParam("--crop",1);
+
+
     thrNum    = getIntParam("--thr");
 
     String tempString = getParam("--bad_pixels");
@@ -181,18 +188,17 @@ void ProgXrayImport::show() const
     if (!fnFlat.empty())
         out << "Input flatfield directory  : " << fnFlat  << std::endl;
     out << "Output rootname            : " << fnRoot     << std::endl;
-    out << "Crop size                  : " << cropSize   << std::endl;
+    out << "Crop sizes                 : " << formatString("%dx%d",cropSizeX,cropSizeY).c_str()   << std::endl;
     out << "Number of threads          : " << thrNum     << std::endl;
     ;
 }
 
 // Really import ==========================================================
-void ProgXrayImport::readAndCrop(const FileName &fn, Image<double> &I) const
+void ProgXrayImport::readAndCrop(const FileName &fn, Image<double> &I, int xCropSize, int yCropSize) const
 {
     I.read(fn);
-    if (cropSize>0)
-        I().selfWindow(cropSize,cropSize,
-                       (int)(YSIZE(I())-cropSize-1),(int)(XSIZE(I())-cropSize-1));
+    I().selfWindow(yCropSize,xCropSize,
+                   (int)(YSIZE(I())-yCropSize-1),(int)(XSIZE(I())-xCropSize-1));
 
     I().resetOrigin();
 }
@@ -304,7 +310,7 @@ void ProgXrayImport::getDarkfield(const FileName &fnDir, Image<double> &IavgDark
                 if (!listDirDark[j].hasImageExtension())
                     continue;
                 Image<double> Iaux;
-                readAndCrop(fnDir+"/darkfields/"+listDirDark[j],Iaux);
+                readAndCrop(fnDir+"/darkfields/"+listDirDark[j],Iaux, cropSizeX, cropSizeY);
                 if (N==0)
                     IavgDark()=Iaux();
                 else
@@ -325,40 +331,53 @@ void ProgXrayImport::getFlatfield(const FileName &fnFFinput,
     // Process the flatfield images
 
     // Checking if fnFFinput is a single file to obtain the flatfield avg from
-    ImageInfo imInfo;
+    ImageInfo imFFInfo;
 
     if (isImage(fnFFinput))
-        getImageInfo(fnFFinput, imInfo);
+        getImageInfo(fnFFinput, imFFInfo);
 
     MultidimArray<double> &mdaIavg = Iavg();
 
-    if (imInfo.adim.ndim == 1)
-        readAndCrop(fnFFinput, Iavg);
+    DataSource ldSource = dSource;
+
+    int cropX = cropSizeX;
+    int cropY = cropSizeY;
+
+    if (imFFInfo.adim.ndim > 1 && !H5File.checkDataset(fnFFinput.getBlockName().c_str()))
+    {
+        fMD.read(fnFFinput);
+        ldSource = NONE;
+        cropX += (imFFInfo.adim.xdim - imgInfo.adim.xdim)/2;
+        cropY += (imFFInfo.adim.ydim - imgInfo.adim.ydim)/2;
+    }
     else
     {
 
         Matrix1D<double> expTimeArray, cBeamArray, slitWidthArray;
 
-        switch (dSource)
+        switch (ldSource)
         {
         case MISTRAL:
             if (!H5File.checkDataset(fnFFinput.getBlockName().c_str()))
                 break;
-            fMD.read(fnFFinput);
-            H5File.getDataset("NXtomo/instrument/bright_field/ExpTimes", expTimeArray, false);
-            H5File.getDataset("NXtomo/instrument/bright_field/current", cBeamArray, false);
+            {
+                fMD.read(fnFFinput);
+                H5File.getDataset("NXtomo/instrument/bright_field/ExpTimes", expTimeArray, false);
+                H5File.getDataset("NXtomo/instrument/bright_field/current", cBeamArray, false);
 
-            // If expTime is empty or only one single value in nexus file then we fill with 1
-            if (expTimeArray.size() < 2)
-            {
-                reportWarning("Input file does not contains flatfields' exposition time information.");
-                expTimeArray.initConstant(fMD.size(), 1.);
-            }
-            // If current is empty or only one single value in nexus file then we fill with 1
-            if (cBeamArray.size() < 2)
-            {
-                reportWarning("Input file does not contains flatfields' current beam information.");
-                cBeamArray.initConstant(fMD.size(), 1.);
+                // If expTime is empty or only one single value in nexus file then we fill with 1
+                if (expTimeArray.size() < 2)
+                {
+                    reportWarning("Input file does not contains flatfields' exposition time information.");
+                    expTimeArray.initConstant(fMD.size(), 1.);
+                }
+                // If current is empty or only one single value in nexus file then we fill with 1
+                if (cBeamArray.size() < 2)
+                {
+                    reportWarning("Input file does not contains flatfields' current beam information.");
+                    cBeamArray.initConstant(fMD.size(), 1.);
+                }
+
             }
 
             // Since Alba does not provide slit width, we set to ones
@@ -398,63 +417,64 @@ void ProgXrayImport::getFlatfield(const FileName &fnFFinput,
             }
             break;
         }
-
-        if ( fMD.size() == 0 )
-        {
-            reportWarning("XrayImport::getFlatfield: No images to process");
-            return;
-        }
-
-        int N  = 0;
-        Image<double> Iaux;
-        FileName fnImg;
-
-        FOR_ALL_OBJECTS_IN_METADATA(fMD)
-        {
-            fMD.getValue(MDL_IMAGE, fnImg, __iter.objId);
-
-            readAndCrop(fnImg, Iaux);
-
-            if ( darkFix )
-            {
-                Iaux() -= IavgDark();
-                forcePositive(Iaux());
-            }
-
-            double currentBeam = 1;
-            double expTime = 1;
-            double slitWidth = 1;
-
-            if ( dSource == MISTRAL )
-            {
-                size_t idx = fnImg.getPrefixNumber();
-                currentBeam = dMi(cBeamArray, idx-1);
-                expTime = dMi(expTimeArray, idx-1);
-                slitWidth = dMi(slitWidthArray, idx-1);
-            }
-            else
-                readCorrectionInfo(fnImg, currentBeam, expTime, slitWidth);
-
-            Iaux() *= 1.0/(currentBeam*expTime*slitWidth);
-
-            if ( N == 0 )
-                mdaIavg = Iaux();
-            else
-                mdaIavg += Iaux();
-            N++;
-        }
-
-        darkFix = false; // We reset just in case there is no dark field for tomo images
-
-        mdaIavg*=1.0/N;
     }
+
+    if ( fMD.size() == 0 )
+    {
+        reportWarning("XrayImport::getFlatfield: No images to process");
+        return;
+    }
+
+    int N  = 0;
+    Image<double> Iaux;
+    FileName fnImg;
+
+    FOR_ALL_OBJECTS_IN_METADATA(fMD)
+    {
+        fMD.getValue(MDL_IMAGE, fnImg, __iter.objId);
+
+        readAndCrop(fnImg, Iaux, cropX, cropY);
+
+        if ( darkFix )
+        {
+            Iaux() -= IavgDark();
+            forcePositive(Iaux());
+        }
+
+        double currentBeam = 1;
+        double expTime = 1;
+        double slitWidth = 1;
+
+        if ( ldSource == MISTRAL )
+        {
+            size_t idx = fnImg.getPrefixNumber();
+            currentBeam = dMi(cBeamArray, idx-1);
+            expTime = dMi(expTimeArray, idx-1);
+            slitWidth = dMi(slitWidthArray, idx-1);
+        }
+        else if (ldSource == BESSY)
+            readCorrectionInfo(fnImg, currentBeam, expTime, slitWidth);
+
+        Iaux() *= 1.0/(currentBeam*expTime*slitWidth);
+
+        if ( N == 0 )
+            mdaIavg = Iaux();
+        else
+            mdaIavg += Iaux();
+        N++;
+    }
+
+    darkFix = false; // We reset just in case there is no dark field for tomo images
+
+    mdaIavg*=1.0/N;
+
     /* Create a mask with zero valued pixels to apply boundaries median filter
      * to avoid dividing by zero when normalizing */
 
     MultidimArray<char> &mdaMask = MULTIDIM_ARRAY(bpMask);
 
     if ( !fnBPMask.empty() && !mdaIavg.sameShape(mdaMask) )
-    	REPORT_ERROR(ERR_MULTIDIM_SIZE, "XrayImport: Mask size does not match flat fields size.");
+        REPORT_ERROR(ERR_MULTIDIM_SIZE, "XrayImport: Mask size does not match flat fields size.");
 
     if (BPFactor > 0)
     {
@@ -493,7 +513,7 @@ void runThread(ThreadArgument &thArg)
 
             MDRow rowGeo;
             ptrProg->readGeoInfo(fnImgIn, rowGeo);
-            ptrProg->readAndCrop(fnImgIn, Iaux);
+            ptrProg->readAndCrop(fnImgIn, Iaux, ptrProg->cropSizeX, ptrProg->cropSizeY);
 
             if (XSIZE(ptrProg->IavgDark())!=0)
             {
@@ -572,23 +592,10 @@ void ProgXrayImport::run()
     {
         std::cerr << "Reading bad pixels mask from "+fnBPMask << "." << std::endl;
         bpMask.read(fnBPMask);
-        if ( cropSize > 0 )
-            bpMask().selfWindow(cropSize,cropSize,
-                                (int)(YSIZE(bpMask())-cropSize-1),(int)(XSIZE(bpMask())-cropSize-1));
+        if ( (cropSizeX + cropSizeY ) > 0 )
+            bpMask().selfWindow(cropSizeY,cropSizeX,
+                                (int)(YSIZE(bpMask())-cropSizeY-1),(int)(XSIZE(bpMask())-cropSizeX-1));
         STARTINGX(bpMask()) = STARTINGY(bpMask()) = 0;
-    }
-
-    // Get the flatfield
-    if (flatFix)
-    {
-        std::cout << "Getting flatfield from "+fnFlat << " ..." << std::endl;
-        getFlatfield(fnFlat,IavgFlat);
-        if ( XSIZE(IavgFlat()) != 0 )
-        {
-            FileName ffName = fnRoot+"_flatfield_avg.xmp";
-            IavgFlat.write(ffName);
-            fMD.setValue(MDL_IMAGE, ffName, fMD.addObject());
-        }
     }
 
 
@@ -666,10 +673,27 @@ void ProgXrayImport::run()
     size_t nIm = inMD.size();
 
     // Create empty output stack file
-    ImageInfo imgInfo;
+
     getImageInfo(inMD, imgInfo);
 
-    createEmptyFile(fnOut, imgInfo.adim.xdim-2*cropSize, imgInfo.adim.ydim-2*cropSize, 1, nIm);
+    createEmptyFile(fnOut, imgInfo.adim.xdim-2*cropSizeX, imgInfo.adim.ydim-2*cropSizeY, 1, nIm);
+
+
+    /* Get the flatfield:: We get the FF after the image list because we need the image size to adapt the FF
+     * in case they were already cropped.
+     */
+    if (flatFix)
+    {
+        std::cout << "Getting flatfield from "+fnFlat << " ..." << std::endl;
+        getFlatfield(fnFlat,IavgFlat);
+        if ( XSIZE(IavgFlat()) != 0 )
+        {
+            FileName ffName = fnRoot+"_flatfield_avg.xmp";
+            IavgFlat.write(ffName);
+            fMD.setValue(MDL_IMAGE, ffName, fMD.addObject());
+        }
+    }
+
 
     // Process images
     td = new ThreadTaskDistributor(nIm, XMIPP_MAX(1, nIm/30));
