@@ -81,14 +81,14 @@ public class ScipionGalleryData extends GalleryData{
         
     }
     
-     public void saveClassSelection(String path)
-     {
+    public void saveClassSelection(String path)
+    {
         try {
             saveSelection(path, true);//Scipion metadata saves recursively
         } catch (Exception ex) {
             Logger.getLogger(ScipionGalleryData.class.getName()).log(Level.SEVERE, null, ex);
         }
-     }
+    }
 
     public boolean isColumnFormat()
     {

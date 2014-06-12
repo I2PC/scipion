@@ -833,9 +833,7 @@ public class ScipionMetaData extends MetaData{
                     count ++;
                     if(count == 200)
                     {
-                        
                         stmt.executeUpdate(sql);
-                        System.out.println(sql);
                         sql = "";
                         count = 0;
                     }
@@ -843,10 +841,7 @@ public class ScipionMetaData extends MetaData{
                 
             }
             if(count > 0)
-            {
                 stmt.executeUpdate(sql);
-                System.out.println(sql);
-            }
             stmt.close();
             c.close();
             
