@@ -13,6 +13,11 @@ as EMX particles.
 """
 ImagesMd = ''
 
+# Is Alignment?
+""" Check if you what to align (true) versus reconstruct (false)
+"""
+DoAlign=True
+
 #------------------------------------------------------------------------------------------------
 #------------------------------------------------------------------------------------------------
 # {end_of_header} USUALLY YOU DO NOT NEED TO MODIFY ANYTHING BELOW THIS LINE ...

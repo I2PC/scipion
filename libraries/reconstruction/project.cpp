@@ -80,8 +80,8 @@ void ProgProject::readParams()
         rotSingle  = getDoubleParam("--angles",0);
         tiltSingle = getDoubleParam("--angles",1);
         psiSingle  = getDoubleParam("--angles",2);
-        xShift  = -1. * getDoubleParam("--angles",3);
-        yShift  = -1. * getDoubleParam("--angles",4);
+        xShift  = getDoubleParam("--angles",3);
+        yShift  = getDoubleParam("--angles",4);
     }
 }
 
@@ -993,8 +993,8 @@ int PROJECT_Effectively_project(const FileName &fnOut,
             progress_bar(NumProjs);
 
         // Choose Center displacement ........................................
-        double shiftX = -rnd_gaus(prm.Ncenter_avg, prm.Ncenter_dev)-x;
-        double shiftY = -rnd_gaus(prm.Ncenter_avg, prm.Ncenter_dev)-y;
+        double shiftX = rnd_gaus(prm.Ncenter_avg, prm.Ncenter_dev)+x;
+        double shiftY = rnd_gaus(prm.Ncenter_avg, prm.Ncenter_dev)+y;
         SF.setValue(MDL_SHIFT_X,-shiftX,DFmov_objId);
         SF.setValue(MDL_SHIFT_Y,-shiftY,DFmov_objId);
 #ifdef DEBUG
