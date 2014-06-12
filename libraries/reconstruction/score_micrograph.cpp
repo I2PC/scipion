@@ -109,20 +109,26 @@ void ProgScoreMicrograph::run()
 	system(buffer);
 
 	//Spiral Phase Transform
-    MultidimArray<double> im, In, Mod;
-    MultidimArray<bool> ROI;
+    MultidimArray<double> im, In, Mod, Part, Ice;
+    MultidimArray<bool> ROI1, ROI2;
     Image<double> img;
     img.read(fn_micrographDwn);
     im = img();
     im.statisticsAdjust(0,1);
     In.resizeNoCopy(im);
+    Part.resizeNoCopy(im);
+    Ice.resizeNoCopy(im);
     Mod.resizeNoCopy(im);
-    ROI.resizeNoCopy(im);
-    ROI.setXmippOrigin();
-    FOR_ALL_ELEMENTS_IN_ARRAY2D(ROI)
-    	A2D_ELEM(ROI,i,j)= true;
+    ROI1.resizeNoCopy(im);
+    ROI1.setXmippOrigin();
+    ROI2.resizeNoCopy(im);
+    ROI2.setXmippOrigin();
+    Ice.setXmippOrigin();
+    Part.setXmippOrigin();
+    FOR_ALL_ELEMENTS_IN_ARRAY2D(ROI1)
+    	A2D_ELEM(ROI1,i,j)= true;
 
-    //aprox there are 5 fringe in the image
+    //aprox  Xdim/particleSize is the particle frequency
     size_t Xdim, Ydim, Zdim,Ndim;
     im.getDimensions(Xdim, Ydim,Zdim,Ndim);
 
@@ -131,21 +137,55 @@ void ProgScoreMicrograph::run()
     double R = Xdim/particleSize;
     double S = Xdim/particleSize;
     FourierTransformer ftrans(FFTW_BACKWARD);
-    normalize(ftrans,im,In,Mod, R, S, ROI);
+    normalize(ftrans,im,In,Mod,R,S,ROI1);
 
     double partDensity = (Mod.sum()/(Xdim*Ydim))*100;
 
-    std::cout << partDensity << std::endl;
-    std::cout << Xdim << std::endl;
-    std::cout << Ydim << std::endl;
-    std::cout << stdv << std::endl;
+    double th=EntropyOtsuSegmentation(Mod,0.005,false);
+    //th *= 2;
+    FOR_ALL_ELEMENTS_IN_ARRAY2D(ROI1)
+    {
+    	if (A2D_ELEM(Mod,i,j) < th)
+    	{
+    		A2D_ELEM(ROI1,i,j) = false;
+    		A2D_ELEM(ROI2,i,j) = true;
+    	}
+    }
 
-    img()=Mod;
+    double min_val, max_val, avg1, avg2, stdv1, stdv2;
+    computeStats_within_binary_mask(ROI1, im, min_val, max_val,avg1,stdv1);
+    computeStats_within_binary_mask(ROI2, im, min_val, max_val,avg2,stdv2);
+    double snr = (stdv1/stdv2)*(stdv1/stdv2);
+
+
+    double maxFreq;
+    double fitting;
+    double psdCorr90;
+    double psdRadialInt;
+
+    std::cout << prmPSDSort.fn_in.c_str() << std::endl;
+    std::cout << prmPSDSort.fn_out.c_str() << std::endl;
+
+    MD.read(prmPSDSort.fn_out);
+    FOR_ALL_OBJECTS_IN_METADATA(MD)
+    {
+    	MD.getValue(MDL_CTF_CRIT_MAXFREQ,maxFreq,__iter.objId);
+    	MD.getValue(MDL_CTF_CRIT_FITTINGSCORE,fitting,__iter.objId);
+    	MD.getValue(MDL_CTF_CRIT_PSDCORRELATION90,psdCorr90,__iter.objId);
+    	MD.getValue(MDL_CTF_CRIT_PSDRADIALINTEGRAL,psdRadialInt,__iter.objId);
+    }
+
+    std::cout << "partDensity : " << partDensity << std::endl;
+    std::cout << "snr :" << snr << std::endl;
+    std::cout << "maxFreq :" << maxFreq << std::endl;
+    std::cout << "fitting :" << fitting << std::endl;
+    std::cout << "psdCorr90 :" << psdCorr90 << std::endl;
+    std::cout << "psdRadialInt :" << psdRadialInt << std::endl;
+
+    img()=Part;
     img.write("kk1.mrc");
-    img()=In;
+    img()=Ice;
     img.write("kk2.mrc");
-
-
 
 }
 
