@@ -15,10 +15,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JButton;
 import xmipp.ij.commons.XmippUtil;
-import xmipp.jni.Filename;
 import xmipp.jni.MetaData;
 import xmipp.utils.XmippDialog;
-import xmipp.utils.XmippQuestionDialog;
 import xmipp.utils.XmippWindowUtil;
 import xmipp.viewer.windows.GalleryJFrame;
 
@@ -34,7 +32,6 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
     private JButton cmdbutton;
     private String sqlitefile;
     private JButton classcmdbutton;
-
     private String python;
     private String inputid;
     private HashMap<String, String> msgfields;
@@ -98,7 +95,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
                     int create = dlg.action;
                     if (create == ScipionMessageDialog.OK_OPTION) 
                     {
-                        String[] command = new String[]{python, script, projectid, inputid, sqlitefile, type, dlg.getFieldValue(runNameKey)};
+                        String[] command = new String[]{python, script, projectid, inputid, sqlitefile + "," + ((ScipionGalleryData)data).getPrefix(), String.format("SetOf%s", type), dlg.getFieldValue(runNameKey)};
                         createSubset(command);
                     }
                 }
@@ -115,7 +112,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
                         ScipionMessageDialog dlg = new ScipionMessageDialog(ScipionGalleryJFrame.this, "Question", msg, msgfields);
                         int create = dlg.action;
                         if (create == ScipionMessageDialog.OK_OPTION) {
-                            String[] command = new String[]{python, script, projectid, inputid, sqlitefile, type, dlg.getFieldValue(runNameKey)};
+                            String[] command = new String[]{python, script, projectid, inputid, sqlitefile + "," + ((ScipionGalleryData)data).getPrefix(), String.format("SetOf%s", type), dlg.getFieldValue(runNameKey)};
                             createSubset(command);
                             
                         }

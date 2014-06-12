@@ -121,7 +121,7 @@ public class ScipionGalleryData extends GalleryData{
 				if(md != null)
                                 {
                                     if(mdImages == null)
-                                        mdImages = ((ScipionMetaData)md).getStructure("Classes", "Objects");
+                                        mdImages = ((ScipionMetaData)md).getStructure("");
                                     mdImages.unionAll(md);
                                     md.destroy();
                                 }
@@ -142,7 +142,7 @@ public class ScipionGalleryData extends GalleryData{
 				if(md != null)
                                 {
                                     if(mdImages == null)
-                                        mdImages = ((ScipionMetaData)md).getStructure("Classes", "Objects");
+                                        mdImages = ((ScipionMetaData)md).getStructure("");
                                     mdImages.unionAll(md);
                                     md.destroy();
                                 }
@@ -298,7 +298,7 @@ public class ScipionGalleryData extends GalleryData{
                     long[] ids2 = new long[ids.size()];
                     for(int i = 0; i < ids.size(); i ++)
                         ids2[i] = ids.get(i);
-                    selmd = ((ScipionMetaData)md).getStructure("Classes", "Objects");
+                    selmd = ((ScipionMetaData)md).getStructure("");
                     selmd.importObjects(md, ids2);
                 } catch (Exception e) {
                         e.printStackTrace();
@@ -328,6 +328,10 @@ public class ScipionGalleryData extends GalleryData{
         if(self.equals("CTFModel"))
             return "Micrograph";
         return self;
+    }
+
+    public String getPrefix() {
+        return ((ScipionMetaData)md).getPrefix();
     }
     
 }

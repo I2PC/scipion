@@ -31,22 +31,20 @@ public class ScipionMetaData extends MetaData{
     private String self, selfalias;
     private List<EMObject> emobjects;
     private ScipionMetaData parent;
-    private String id;
-    private String classestb, objectstb;
     private boolean haschilds;
     private static int labelscount = 0;
     private ColumnInfo enabledci;
+    private String prefix = "";
     
-    public ScipionMetaData(String classestb, String objectstb, String self, String selfalias, List<ColumnInfo> columns)
+    public ScipionMetaData(String prefix, String self, String selfalias, List<ColumnInfo> columns)
     {
-        this(classestb, objectstb, self, selfalias, columns, new ArrayList<EMObject>());
+        this(prefix, self, selfalias, columns, new ArrayList<EMObject>());
     }
     
     
-    public ScipionMetaData(String classestb, String objectstb, String self, String selfalias, List<ColumnInfo> columns, List<EMObject> emobjects)
+    public ScipionMetaData(String prefix, String self, String selfalias, List<ColumnInfo> columns, List<EMObject> emobjects)
     {
-        this.classestb = classestb;
-        this.objectstb = objectstb;
+        this.prefix = prefix;
         this.self = self;
         this.selfalias = selfalias;
         this.columns = columns;
@@ -59,46 +57,36 @@ public class ScipionMetaData extends MetaData{
         this.dbfile = dbfile;
         columns = new ArrayList<ColumnInfo>();
         emobjects = new ArrayList<EMObject>();
-        classestb = "Classes";
-        objectstb = "Objects";
-        loadData(classestb, objectstb);
+        loadData();
         if(self.equals("Class2D"))
         {
-            String id;
+            String prefix;
             haschilds = true;
-            String classestb = "%s_Classes";
-            String objectstb = "%s_Objects";
             
             int i = 0;
             for(EMObject emo: emobjects)
             {
-                id = String.format("Class%03d", emo.id);
-                emo.childmd = new ScipionMetaData(dbfile, String.format(classestb, id), String.format(objectstb, id), id);
+                prefix = String.format("Class%03d_", emo.id);
+                emo.childmd = new ScipionMetaData(dbfile, prefix);
                 emo.childmd.setParent(this);
                 i ++;
             }
         }
     }
     
-    public ScipionMetaData(String dbfile, String classestb, String objectstb, String id)
-    {
-        this(dbfile, classestb, objectstb);
-        this.id = id;
-    }
-    
-    public ScipionMetaData(String dbfile, String classestb, String objectstb)
+   
+    public ScipionMetaData(String dbfile, String prefix)
     {
         
         this.dbfile = dbfile;
         columns = new ArrayList<ColumnInfo>();
         emobjects = new ArrayList<EMObject>();
-        this.classestb = classestb;
-        this.objectstb = objectstb;
-        loadData(classestb, objectstb);
+        this.prefix = prefix;
+        loadData();
         
     }
     
-    public void loadData(String classestb, String objectstb)
+    public void loadData()
     {
         Connection c = null;
         Statement stmt = null;
@@ -116,7 +104,7 @@ public class ScipionMetaData extends MetaData{
             stmt = c.createStatement();
             ResultSet rs;
             
-            String query = String.format( "SELECT * FROM %s;", classestb);
+            String query = String.format( "SELECT * FROM %sClasses;", prefix);
             rs = stmt.executeQuery(query );
 
             while ( rs.next() ) {
@@ -144,7 +132,7 @@ public class ScipionMetaData extends MetaData{
             String label, comment;
             boolean enabled;
             ColumnInfo indexci;
-            query =  String.format("SELECT * FROM %s;", objectstb);
+            query =  String.format("SELECT * FROM %sObjects;", prefix);
             rs = stmt.executeQuery( query );
             while ( rs.next() ) {
                 id = rs.getInt("id");
@@ -276,9 +264,9 @@ public class ScipionMetaData extends MetaData{
     
     public String getBlock()
     {
-        if (id == null)
+        if (prefix == null)
             return self + "s";
-        return id + self + "s";
+        return prefix + self + "s";
     }
    
     public String getDBFile()
@@ -331,7 +319,7 @@ public class ScipionMetaData extends MetaData{
     public ScipionMetaData getMd(List<EMObject> emos) {
         ScipionMetaData selmd;
         //either selection of classes or particles main selection will be saved on Classes and Objects table
-        selmd = new ScipionMetaData("Classes", "Objects", self, selfalias, columns);
+        selmd = new ScipionMetaData("", self, selfalias, columns);
         for(EMObject emo: emos)
             selmd.add(emo);
         
@@ -345,8 +333,8 @@ public class ScipionMetaData extends MetaData{
             haschilds = true;
     }
 
-    public ScipionMetaData getStructure(String classestb, String objectstb) {
-        return new ScipionMetaData(classestb, objectstb, self, selfalias, columns);
+    public ScipionMetaData getStructure(String prefix) {
+        return new ScipionMetaData(prefix, self, selfalias, columns);
     }
 
     public List<EMObject> getEnabledObjects() {
@@ -575,14 +563,14 @@ public class ScipionMetaData extends MetaData{
      
     public String toString()
     {
-            String sql = String.format("DROP TABLE IF EXISTS %1$s; CREATE TABLE %1$s(\n"
+            String sql = String.format("DROP TABLE IF EXISTS %1$sClasses; CREATE TABLE %1$sClasses(\n"
                     + "id        INTEGER PRIMARY KEY AUTOINCREMENT,\n" +
 "                      label_property      TEXT UNIQUE,\n" +
 "                      column_name TEXT UNIQUE,\n" +
 "                      class_name TEXT DEFAULT NULL\n" +
-"                      )", classestb);
+"                      )", prefix);
                 
-            sql += String.format(";INSERT INTO %s(id, label_property, column_name, class_name) values (1, \'self\', \'%s\', \'%s\')", classestb, selfalias, self);
+            sql += String.format(";INSERT INTO %sClasses(id, label_property, column_name, class_name) values (1, \'self\', \'%s\', \'%s\')", prefix, selfalias, self);
             String line = ", (%s, \'%s\', \'%s\', \'%s\')";
             ColumnInfo ci;
             String createcols = "", cols = "id, label, comment", type;
@@ -594,14 +582,14 @@ public class ScipionMetaData extends MetaData{
                 createcols += String.format(",\n%s %s DEFAULT NULL", ci.comment, type);
                 cols += String.format(", %s", ci.comment);
             }
-            sql += String.format(";DROP TABLE IF EXISTS %1$s; CREATE TABLE %1$s(\n"
+            sql += String.format(";DROP TABLE IF EXISTS %1$sObjects; CREATE TABLE %1$sObjects(\n"
                     + "id        INTEGER PRIMARY KEY AUTOINCREMENT,\n" +
 "                      label      TEXT DEFAULT NULL,\n" +
 "                      comment TEXT DEFAULT NULL" +
-"                      %2$s)", objectstb, createcols);
+"                      %2$s)", prefix, createcols);
             if(size() == 0)    
                 return sql;
-            sql += String.format(";INSERT INTO %s(%s) VALUES ", objectstb, cols);
+            sql += String.format(";INSERT INTO %sObjects(%s) VALUES ", prefix, cols);
             Object value;
             for(EMObject emo: emobjects)
             {
@@ -643,15 +631,15 @@ public class ScipionMetaData extends MetaData{
             Class.forName("org.sqlite.JDBC");
             c = DriverManager.getConnection("jdbc:sqlite:" + path);
             stmt = c.createStatement();
-               String sql = String.format("DROP TABLE IF EXISTS %1$s; CREATE TABLE %1$s(\n"
+               String sql = String.format("DROP TABLE IF EXISTS %1$sClasses; CREATE TABLE %1$sClasses(\n"
                     + "id        INTEGER PRIMARY KEY AUTOINCREMENT,\n" +
 "                      label_property      TEXT UNIQUE,\n" +
 "                      column_name TEXT UNIQUE,\n" +
 "                      class_name TEXT DEFAULT NULL\n" +
-"                      )", classestb);
+"                      )", prefix);
             stmt.executeUpdate(sql);
             
-            sql = String.format("INSERT INTO %s(id, label_property, column_name, class_name) values (1, \'self\', \'%s\', \'%s\')", classestb, selfalias, self);
+            sql = String.format("INSERT INTO %sClasses(id, label_property, column_name, class_name) values (1, \'self\', \'%s\', \'%s\')", prefix, selfalias, self);
             String line = ", (%s, \'%s\', \'%s\', \'%s\')";
             ColumnInfo ci;
             String createcols = "", cols = "id, label, comment", type;
@@ -665,15 +653,15 @@ public class ScipionMetaData extends MetaData{
             }
             stmt.executeUpdate(sql);
             
-            sql = String.format("DROP TABLE IF EXISTS %1$s; CREATE TABLE %1$s(\n"
+            sql = String.format("DROP TABLE IF EXISTS %1$sObjects; CREATE TABLE %1$sObjects(\n"
                     + "id        INTEGER PRIMARY KEY AUTOINCREMENT,\n" +
 "                      label      TEXT DEFAULT NULL,\n" +
 "                      comment TEXT DEFAULT NULL" +
-"                      %2$s)", objectstb, createcols);
+"                      %2$s)", prefix, createcols);
             stmt.executeUpdate(sql);
             if(size() == 0)    
                 return;
-            sql = String.format("INSERT INTO %s(%s) VALUES ", objectstb, cols);
+            sql = String.format("INSERT INTO %sObjects(%s) VALUES ", prefix, cols);
             Object value;
             int count = 0;
             for(EMObject emo: emobjects)
@@ -707,7 +695,7 @@ public class ScipionMetaData extends MetaData{
                      
                     sql = sql.substring(0, sql.length() - 1);//remove comma
                     stmt.executeUpdate(sql);
-                    sql = String.format("INSERT INTO %s(%s) VALUES ", objectstb, cols);
+                    sql = String.format("INSERT INTO %sObjects(%s) VALUES ", prefix, cols);
                     count = 0;
                 }
             }
@@ -745,14 +733,10 @@ public class ScipionMetaData extends MetaData{
         return MetaData.LABEL_STRING;
     }
     
-    public String getColumnsTable()
-    {
-        return classestb;
-    }
     
-    public String getObjectsTable()
+    public String getPrefix()
     {
-        return objectstb;
+        return prefix;
     }
     
     public void print()
@@ -820,16 +804,15 @@ public class ScipionMetaData extends MetaData{
             Class.forName("org.sqlite.JDBC");
             c = DriverManager.getConnection("jdbc:sqlite:" + path);
             stmt = c.createStatement();
-            String sql = String.format("ALTER TABLE %s ADD COLUMN _enabled INT NOT NULL DEFAULT 1", objectstb);
-            stmt.executeUpdate(sql);
-            String updatesql = "UPDATE %s SET %s=%s WHERE id=%s;";
+            String sql = "";
+            String updatesql = "UPDATE %sObjects SET %s=%s WHERE id=%s;";
             sql = "";
             int count = 0;
             for(EMObject emo: emobjects)
             {
                 if(emo.changed)
                 {
-                    sql+= String.format(updatesql, objectstb, enabledci.labelName, (emo.isEnabled())? 1: 0, emo.id);
+                    sql+= String.format(updatesql, prefix, enabledci.labelName, (emo.isEnabled())? 1: 0, emo.id);
                     count ++;
                     if(count == 200)
                     {
