@@ -94,7 +94,7 @@ STATUS_COLORS = {
                STATUS_RUNNING: '#FCCE62', 
                STATUS_FINISHED: '#D2F5CB', 
                STATUS_FAILED: '#F5CCCB', 
-               STATUS_WAITING_APPROVAL: '#F3F5CB',
+               STATUS_CONTINUE: '#F3F5CB',
                STATUS_ABORTED: '#F5CCCB',
                #STATUS_SAVED: '#124EB0',
                }
@@ -161,7 +161,7 @@ class RunsTreeProvider(ProjectRunsTreeProvider):
                    (ACTION_STEPS, single),
                    (ACTION_BROWSE, single),
                    (ACTION_STOP, status == STATUS_RUNNING and single),
-                   (ACTION_CONTINUE, status == STATUS_WAITING_APPROVAL and single)
+                   #(ACTION_CONTINUE, status == STATUS_CONTINUE and single)
                    ]
         
     def getObjectActions(self, obj):

@@ -154,7 +154,7 @@ class Step(OrderedObject):
                 if self.isInteractive.get():
                     # If the Step is interactive, after run
                     # it will be waiting for use to mark it as DONE
-                    status = STATUS_WAITING_APPROVAL
+                    status = STATUS_CONTINUE
                 else:
                     status = STATUS_FINISHED
                 self.status.set(status)
@@ -584,7 +584,7 @@ class Protocol(Step):
         if exists(self.getStepsFile()):
             stepsSet = StepSet(filename=self.getStepsFile())
             for step in stepsSet:
-                if step.getStatus() == STATUS_WAITING_APPROVAL:
+                if step.getStatus() == STATUS_CONTINUE:
                     step.setStatus(STATUS_FINISHED)
                     stepsSet.update(step)
                     break
@@ -668,7 +668,7 @@ class Protocol(Step):
         has finished its run.
         """
         doContinue = True
-        if step.status == STATUS_WAITING_APPROVAL:
+        if step.status == STATUS_CONTINUE:
             doContinue = False
         elif step.status == STATUS_FAILED:
             doContinue = False
