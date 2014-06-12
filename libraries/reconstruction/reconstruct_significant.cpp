@@ -95,7 +95,11 @@ void ProgReconstructSignificant::show()
 //#define DEBUG
 void progReconstructSignificantThreadAlign(ThreadArgument &thArg)
 {
-	ProgReconstructSignificant &prm=*((ProgReconstructSignificant *)thArg.workClass);
+    AlignmentAux aux;
+    CorrelationAux aux2;
+    RotationalCorrelationAux aux3;
+
+    ProgReconstructSignificant &prm=*((ProgReconstructSignificant *)thArg.workClass);
 	MultidimArray<double> mGalleryProjection, mCurrentImage, mCurrentImageAligned;
 	Matrix2D<double> M;
 	std::vector< Matrix2D<double> > allM;
@@ -137,7 +141,8 @@ void progReconstructSignificantThreadAlign(ThreadArgument &thArg)
 					mCurrentImageAligned=mCurrentImage;
 					mGalleryProjection.aliasImageInStack(prm.gallery[nVolume](),nDir);
 					mGalleryProjection.setXmippOrigin();
-					double corr=alignImagesConsideringMirrors(mGalleryProjection,mCurrentImageAligned,M,DONT_WRAP);
+					double corr=alignImagesConsideringMirrors(mGalleryProjection,mCurrentImageAligned,M,aux,aux2,aux3,DONT_WRAP);
+					// double corr=alignImagesConsideringMirrors(mGalleryProjection,mCurrentImageAligned,M,DONT_WRAP);
 					M=M.inv();
 					double imed=imedDistance(mGalleryProjection, mCurrentImageAligned);
 
@@ -182,12 +187,6 @@ void progReconstructSignificantThreadAlign(ThreadArgument &thArg)
 			bool flip;
 			transformationMatrix2Parameters2D(bestM,flip,scale,shiftX,shiftY,anglePsi);
 
-			// Compute lower limit of correlation
-			double rl=bestCorr*one_alpha;
-			double z=0.5*log((1+rl)/(1-rl));
-			double zl=z-2.96*sqrt(1.0/MULTIDIM_SIZE(mCurrentImage));
-			double ccl=tanh(zl);
-
 			if (prm.maxShift<0 || (prm.maxShift>0 && fabs(shiftX)<prm.maxShift && fabs(shiftY)<prm.maxShift))
 			{
 				size_t recId=mdProjectionMatching.addObject();
@@ -201,6 +200,12 @@ void progReconstructSignificantThreadAlign(ThreadArgument &thArg)
 				mdProjectionMatching.setValue(MDL_SHIFT_Y,-shiftY,recId);
 				mdProjectionMatching.setValue(MDL_FLIP,flip,recId);
 			}
+
+			// Compute lower limit of correlation
+			double rl=bestCorr*one_alpha;
+			double z=0.5*log((1+rl)/(1-rl));
+			double zl=z-2.96*sqrt(1.0/MULTIDIM_SIZE(mCurrentImage));
+			double ccl=tanh(zl);
 
 	    	// Get the best images
 			imgcc.cumlativeDensityFunction(cdfcc);
