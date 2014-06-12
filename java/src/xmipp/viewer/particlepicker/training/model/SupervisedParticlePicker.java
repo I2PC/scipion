@@ -602,7 +602,7 @@ public class SupervisedParticlePicker extends ParticlePicker
                         if (mode == Mode.Manual && configmode == Mode.Supervised)
                                 mode = Mode.Supervised;
                         if (mode == Mode.Review && configmode == mode.Manual)//Review mode makes no sense if manual mode
-                            mode = Mode.Manual;
+                            throw new IllegalArgumentException("Cannot review picking in manual mode, use manual mode instead");
 			md.destroy();
 		}
 		catch (Exception e)
