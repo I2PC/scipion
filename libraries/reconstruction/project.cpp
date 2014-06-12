@@ -80,8 +80,8 @@ void ProgProject::readParams()
         rotSingle  = getDoubleParam("--angles",0);
         tiltSingle = getDoubleParam("--angles",1);
         psiSingle  = getDoubleParam("--angles",2);
-        xShift  = -1. * getDoubleParam("--angles",3);
-        yShift  = -1. * getDoubleParam("--angles",4);
+        xShift  = getDoubleParam("--angles",3);
+        yShift  = getDoubleParam("--angles",4);
     }
 }
 
@@ -1020,7 +1020,7 @@ int PROJECT_Effectively_project(const FileName &fnOut,
             if (projType == SHEARS)
                 projectVolume(*Vshears, proj, prm.proj_Ydim, prm.proj_Xdim,
                               rot, tilt, psi);
-            else if (projType == FOURIER)///////////////////////////////////////
+            else if (projType == FOURIER)
                 projectVolume(*Vfourier, proj, prm.proj_Ydim, prm.proj_Xdim,
                               rot, tilt, psi);
             else if (projType == REALSPACE)
@@ -1065,9 +1065,6 @@ int PROJECT_Effectively_project(const FileName &fnOut,
         rot  += rnd_gaus(prm.rot_range.Navg,  prm.rot_range.Ndev);
         tilt += rnd_gaus(prm.tilt_range.Navg, prm.tilt_range.Ndev);
         psi  += rnd_gaus(prm.psi_range.Navg,  prm.psi_range.Ndev);
-        //        SF.setValue(MDL_ANGLE_ROT,rot,DFmov_objId);
-        //        SF.setValue(MDL_ANGLE_TILT,tilt,DFmov_objId);
-        //        SF.setValue(MDL_ANGLE_PSI,psi,DFmov_objId);
         SF.setValue(MDL_ANGLE_ROT,realWRAP(rot, 0, 360),DFmov_objId);
         SF.setValue(MDL_ANGLE_TILT,realWRAP(tilt, 0, 360),DFmov_objId);
         SF.setValue(MDL_ANGLE_PSI,realWRAP(psi, 0, 360),DFmov_objId);

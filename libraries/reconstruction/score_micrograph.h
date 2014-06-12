@@ -28,6 +28,9 @@
 
 #include <data/xmipp_program.h>
 #include "ctf_estimate_from_micrograph.h"
+#include "ctf_estimate_from_psd.h"
+#include "ctf_sort_psds.h"
+
 
 
 /**@defgroup ScoreMicrograph score_micrograph (Evaluates the score of a micrograph)
@@ -44,6 +47,9 @@ public:
 
 	ProgCTFEstimateFromMicrograph prmEstimateCTFFromMicrograph;
 
+    /// Parameters for adjust_CTF program
+    ProgCTFEstimateFromPSD  prmEstimateCTFFromPSD;
+
     /// Micrograph filename
     FileName                fn_micrograph;
     /// Dimension of micrograph pieces
@@ -59,10 +65,14 @@ public:
     int                     bootstrapN;
     /// Estimate a CTF for each PSD
     bool 					estimate_ctf;
+    /// Defocus range
+    double               defocus_range;
 
     ProgCTFEstimateFromMicrograph::TPSD_mode PSDEstimator_mode;
 
     ProgCTFEstimateFromMicrograph::TPSD_mode psd_mode;
+
+    ProgPSDSort prmPSDSort;
 
 
 

@@ -723,13 +723,13 @@ public class SupervisedParticlePickerJFrame extends ParticlePickerJFrame {
             rectangle = getMicrograph().getParticlesRectangle(ppicker);
         }
         canvas.repaint();
-        boolean train = XmippDialog
-                .showQuestion(this, trainmsg);
-        if (!train) {
+        int result = XmippDialog
+                .showQuestionYesNoCancel(this, trainmsg);
+        if (result == XmippQuestionDialog.CANCEL_OPTION) {
             rectangle = null;
             canvas.repaint();
         }
-        return train;
+        return result == XmippQuestionDialog.YES_OPTION;
     }
 
     public Rectangle getParticlesRectangle() {

@@ -555,7 +555,8 @@ public class SupervisedParticlePicker extends ParticlePicker
                                 count ++;
                                 valid = false;
                         }
-                outmsg += String.format("%s %s from micrograph %s will be dismissed.\n", count, (count == 1)? "particle": "particles", m.getName());
+                if(count > 0)
+                    outmsg += String.format("%s %s from micrograph %s will be dismissed.\n", count, (count == 1)? "particle": "particles", m.getName());
             }
             if(valid)
                 return true;

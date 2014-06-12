@@ -37,6 +37,11 @@
 #include <data/normalize.h>
 
 /* Read parameters ========================================================= */
+ProgCTFEstimateFromMicrograph::ProgCTFEstimateFromMicrograph()
+{
+    psd_mode = OnePerMicrograph; 
+    PSDEstimator_mode = Periodogram;
+}
 void ProgCTFEstimateFromMicrograph::readParams()
 {
     fn_micrograph = getParam("--micrograph");
