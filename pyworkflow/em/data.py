@@ -133,6 +133,7 @@ class CTFModel(EMObject):
         self._psdFile.set(value)
         
     def getMicrograph(self):
+        self._micObj.copyObjId(self)
         return self._micObj
     
     def setMicrograph(self, mic):
@@ -311,7 +312,12 @@ class Image(EMObject):
         
     def __str__(self):
         """ String representation of an Image. """
-        return "%s (%s, %0.2f A/px)" % (self.getClassName(), ImageDim(*self.getDim()), self.getSamplingRate())
+        dim = self.getDim()
+        if dim:
+            dimStr = str(ImageDim(*dim))
+        else:
+            dimStr = 'No-Dim'
+        return "%s (%s, %0.2f A/px)" % (self.getClassName(), dimStr, self.getSamplingRate())
 
 
 class Micrograph(Image):

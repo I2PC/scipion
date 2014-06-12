@@ -508,9 +508,6 @@ class TestDataSet(BaseTest):
         print row
         self.assertEqual(row.name, 'pepe', "Error updating name in row")
 
-        print "Table:"
-        print table
-
     def test_SqliteDb(self):
         """ Create a SqliteDataset """
         from pyworkflow.mapper.sqlite_db import SqliteDb
@@ -520,4 +517,15 @@ class TestDataSet(BaseTest):
         tables = ['Classes', 'Objects']
         self.assertEqual(tables, db.getTables())
         
+        db.close()
+        
+    def test_SqliteFlatDb(self):
+        """ Create a SqliteDataset """
+        from pyworkflow.mapper.sqlite import SqliteFlatDb
+        db = SqliteFlatDb(self.modelGoldSqlite)
+        
+        # Test the 'self' class name is correctly retrieved
+        self.assertEqual('Micrograph', db.getSelfClassName())
+        
+        db.close()
         

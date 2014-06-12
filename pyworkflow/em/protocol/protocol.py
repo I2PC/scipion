@@ -151,21 +151,54 @@ class ProtUserSubSet(ProtSets):
     def _insertAllSteps(self):
         self._insertFunctionStep('createSetOfImagesStep')
     
+    def _createSubSetFromImages(self, inputImages):
+        className = inputImages.getClassName()
+        createFunc = getattr(self, '_create' + className)
+        fn, prefix = self.sqliteFile.get().split(',')
+        if prefix.endswith('_'):
+            prefix = prefix[:-1]
+        modifiedSet = inputImages.getClass()(filename=fn, prefix=prefix)
+        
+        output = createFunc()
+        output.copyInfo(inputImages)
+        for img in modifiedSet:
+            if img.isEnabled():                
+                output.append(img)
+        # Register outputs
+        outputDict = {'output' + className.replace('SetOf', ''): output}
+        self._defineOutputs(**outputDict)
+    
+    def _createSubSetFromCTF(self, inputCTFs):
+        """ Create a subset of Micrographs analyzing the CTFs. """
+        output = self._createSetOfMicrographs()
+        firstMic = inputCTFs.getFirstItem().getMicrograph()
+        SetOfImages.copyInfo(output, firstMic)
+        
+        fn, prefix = self.sqliteFile.get().split(',')
+        if prefix.endswith('_'):
+            prefix = prefix[:-1]
+        modifiedSet = SetOfCTF(filename=fn, prefix=prefix)
+        
+        for ctf in modifiedSet:
+            if ctf.isEnabled():
+                mic = ctf.getMicrograph()
+                print "ctfId = ", ctf.getObjId()
+                print "micId = ", mic.getObjId()
+                output.append(mic)
+                
+        self._defineOutputs(outputMicrographs=output)
+        
     def createSetOfImagesStep(self):
         inputObj = self.inputObject.get()
         
         if isinstance(inputObj, SetOfImages):
-            className = inputObj.getClassName()
-            createFunc = getattr(self, '_create' + className)
-            modifiedSet = inputObj.getClass()(filename=self.sqliteFile.get())
-            output = createFunc()
-            output.copyInfo(inputObj)
-            for img in modifiedSet:
-                if img.isEnabled():                
-                    output.append(img)
-            outputDict = {'output' + className.replace('SetOf', ''): output}
+            self._createSubSetFromImages(inputObj)
             
-            self._defineOutputs(**outputDict)
+        elif isinstance(inputObj, SetOfClasses):
+            self._createSubSetFromImages(inputObj.getImages())
+           
+        elif isinstance(inputObj, SetOfCTF):
+            self._createSubSetFromCTF(inputObj) 
             
     def defineOutputSet(self, outputset):
         outputs = {'output' + self.getOutputType(): outputset}

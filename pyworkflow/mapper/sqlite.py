@@ -538,7 +538,7 @@ class SqliteFlatMapper(Mapper):
         for r in rows:
             label = r['label_property']
 
-            if label == 'self':
+            if label == SELF:
                 self._objClassName = r['class_name']
                 self._objTemplate = self._buildObject(self._objClassName)
             else:
@@ -599,7 +599,6 @@ class SqliteFlatMapper(Mapper):
                 obj._mapperPath.trace(obj.load)
                 obj._mapperPath.set(objRow[c])
             else:
-                print "setting attribute '%s' with value '%s'" % (attrName, objRow[c])
                 obj.setAttributeValue(attrName, objRow[c])
 
         return obj
@@ -640,6 +639,8 @@ class SqliteFlatMapper(Mapper):
         return [self.selectById(rowId['id']) for rowId in objIds]
         
 
+SELF = 'self'
+
 class SqliteFlatDb(SqliteDb):
     """Class to handle a Sqlite database.
     It will create connection, execute queries and commands"""
@@ -649,12 +650,12 @@ class SqliteFlatDb(SqliteDb):
                  'Boolean': 'INTEGER'
                  }
     
-    def __init__(self, dbName, tablePrefix, timeout=1000):
+    def __init__(self, dbName, tablePrefix='', timeout=1000):
         SqliteDb.__init__(self)
         self._reuseConnections = True
         tablePrefix = tablePrefix.strip()
         if tablePrefix: # Avoid having _ for empty prefix
-            tablePrefix += '_' 
+            tablePrefix += '_'
         self.CHECK_TABLES = "SELECT name FROM sqlite_master WHERE type='table' AND name='%sObjects';" % tablePrefix
         self.SELECT = "SELECT * FROM %sObjects WHERE " % tablePrefix
         self.DELETE = "DELETE FROM %sObjects WHERE " % tablePrefix
@@ -704,7 +705,7 @@ class SqliteFlatDb(SqliteDb):
             className = v[0]
             c += 1
             self.executeCommand(self.INSERT_CLASS, (k, colName, className))
-            if k != "self":
+            if k != SELF:
                 CREATE_OBJECT_TABLE += ',%s  %s DEFAULT NULL' % (colName, self.CLASS_MAP.get(className, 'TEXT'))
         
         CREATE_OBJECT_TABLE += ')'
@@ -722,7 +723,7 @@ class SqliteFlatDb(SqliteDb):
         for k in objDict:
             colName = 'c%02d' % c
             c += 1
-            if k != "self":
+            if k != SELF:
                 self.INSERT_OBJECT += ',%s' % colName
                 self.UPDATE_OBJECT += ', %s=?' % colName
         
@@ -734,6 +735,17 @@ class SqliteFlatDb(SqliteDb):
         of the colums. """
         self.executeCommand(self.SELECT_CLASS)
         return self._results(iterate=False)
+    
+    def getSelfClassName(self):
+        """ Return the class name of the attribute named 'self'.
+        This is the class of the items stored in a Set.
+        """
+        self.executeCommand(self.SELECT_CLASS)
+        
+        for classRow in self._iterResults():
+            if classRow['label_property'] == SELF:
+                return classRow['class_name']
+        raise Exception("Row '%s' was not found in Classes table. " % SELF)
    
     def insertObject(self, *args):
         """Insert a new object as a row.
