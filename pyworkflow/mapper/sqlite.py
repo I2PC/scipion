@@ -495,7 +495,7 @@ class SqliteFlatMapper(Mapper):
             self.db.createTables(obj.getObjDict(includeClass=True))
             self.doCreateTables = False
         """Insert a new object into the system, the id will be set"""
-        self.db.insertObject(obj.getObjId(), obj.getObjLabel(), obj.getObjComment(), 
+        self.db.insertObject(obj.getObjId(), obj.isEnabled(), obj.getObjLabel(), obj.getObjComment(), 
                              *obj.getObjDict().values())
         
     def clear(self):
@@ -516,7 +516,7 @@ class SqliteFlatMapper(Mapper):
             self.db.setupCommands(obj.getObjDict(includeClass=True))
         args = list(obj.getObjDict().values())
         args.append(obj.getObjId())
-        self.db.updateObject(obj.getObjLabel(), obj.getObjComment(), *args)
+        self.db.updateObject(obj.isEnabled(), obj.getObjLabel(), obj.getObjComment(), *args)
             
     def selectById(self, objId):
         """Build the object which id is objId"""
@@ -557,7 +557,7 @@ class SqliteFlatMapper(Mapper):
                         setattr(o, a, attr)
                     o = attr
                     attrJoin += '.'
-        basicRows = 4
+        basicRows = 5
         n = len(rows) + basicRows - 1
         self._objColumns = zip(range(basicRows, n), columnList)
          
@@ -584,6 +584,7 @@ class SqliteFlatMapper(Mapper):
         obj.setObjComment(self._getStrValue(objRow['comment']))
         
         try:
+            obj.setEnabled(objRow['enabled'])
             obj.setObjCreation(self._getStrValue(objRow['creation']))
         except Exception:
             # THIS SHOULD NOT HAPPENS
@@ -598,6 +599,7 @@ class SqliteFlatMapper(Mapper):
                 obj._mapperPath.trace(obj.load)
                 obj._mapperPath.set(objRow[c])
             else:
+                print "setting attribute '%s' with value '%s'" % (attrName, objRow[c])
                 obj.setAttributeValue(attrName, objRow[c])
 
         return obj
@@ -691,6 +693,7 @@ class SqliteFlatDb(SqliteDb):
                       )""" % self.tablePrefix)
         CREATE_OBJECT_TABLE = """CREATE TABLE IF NOT EXISTS %sObjects
                      (id        INTEGER PRIMARY KEY,
+                      enabled   INTEGER DEFAULT 1,   -- used to selected/deselect items from a set
                       label     TEXT DEFAULT NULL,   -- object label, text used for display
                       comment   TEXT DEFAULT NULL,   -- object comment, text used for annotations
                       creation  DATE                 -- creation date and time of the object
@@ -713,8 +716,8 @@ class SqliteFlatDb(SqliteDb):
         
     def setupCommands(self, objDict):
         """ Setup the INSERT and UPDATE commands base on the object dictionray. """
-        self.INSERT_OBJECT = "INSERT INTO %sObjects (id, label, comment, creation" % self.tablePrefix
-        self.UPDATE_OBJECT = "UPDATE %sObjects SET label=?, comment=?" % self.tablePrefix 
+        self.INSERT_OBJECT = "INSERT INTO %sObjects (id, enabled, label, comment, creation" % self.tablePrefix
+        self.UPDATE_OBJECT = "UPDATE %sObjects SET enabled=?, label=?, comment=?" % self.tablePrefix 
         c = 0
         for k in objDict:
             colName = 'c%02d' % c
@@ -723,7 +726,7 @@ class SqliteFlatDb(SqliteDb):
                 self.INSERT_OBJECT += ',%s' % colName
                 self.UPDATE_OBJECT += ', %s=?' % colName
         
-        self.INSERT_OBJECT += ") VALUES (?,?,?, datetime('now')" + ',?' * (c-1) + ')'
+        self.INSERT_OBJECT += ") VALUES (?,?,?,?, datetime('now')" + ',?' * (c-1) + ')'
         self.UPDATE_OBJECT += ' WHERE id=?'
         
     def getClassRows(self):
