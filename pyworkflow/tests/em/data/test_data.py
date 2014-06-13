@@ -179,6 +179,31 @@ class TestSetOfParticles(BaseTest):
         print "writing particles to: ", outFn
         imgSet.write()
         
+    def test_hugeSet(self):
+        """ Create a set of a big number of particles to measure
+        creation time with sqlite operations. 
+        """
+        # Allow what huge means to be defined with environment var
+        n = int(os.environ.get('SCIPION_TEST_HUGE', 10000))
+        print ">>>> Creating a set of %d particles." % n
+        
+        dbFn = self.getOutputPath('huge_set.sqlite')
+        #dbFn = ':memory:'
+        
+        img = Particle()
+        imgSet = SetOfParticles(filename=dbFn)
+        imgSet.setSamplingRate(1.0)
+        
+        for i in range(1, n+1):
+            img.setLocation(i, "images.stk")
+            
+            imgSet.append(img)
+            img.cleanObjId()
+            
+        imgSet.write()
+        
+            
+        
 
 class TestSetOfClasses2D(BaseTest):
     
