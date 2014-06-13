@@ -216,7 +216,7 @@ def main():
                     runCmd('-m unittest pyworkflow.tests.%s' % testValue)
             else:
                 if testValue == "show":
-                    args = ["print"] + sys.argv[3:]
+                    args = ["show"] + sys.argv[3:]
                 elif testValue == "run":
                     args = sys.argv[3:]
                 runCmd('scripts/run_tests.py %s' % ' '.join(args))
@@ -326,7 +326,7 @@ USAGE:
                                   [show|run]: in this case a more sofisticated run tests 
                                   script will be used.
                                   Further options are:
-                                  path=VALUE case=VALUE pattern="test*py" mode=[modules|classes|all]
+                                  case=VALUE paths=VALUE pattern="test*py" mode=[modules|classes|all]
 
         testdata [OPTION]      Synchronize tests data from/to remote server to/from SCIPION_USER_DATA folder
                                OPTION can be:
