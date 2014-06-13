@@ -902,7 +902,12 @@ class Class2D(SetOfParticles):
     (some kind of average particle from the particles assigned
     to the class) 
     """
-    pass
+    def copyInfo(self, other):
+        """ Copy basic information (id and other properties) but not _mapperPath or _size
+        from other set of micrographs to current one.
+        """
+        self.copy(other, ignoreAttrs=['_mapperPath', '_size'])
+        self._mapperPath.clear()
         
     
 class Class3D(SetOfParticles):
@@ -962,7 +967,9 @@ class SetOfClasses(EMSet):
             classItem._mapperPath.set('%s,%s' % (self.getFileName(), classPrefix))
         EMSet._insertItem(self, classItem)
         classItem.write()#Set.write(self)
-           
+        
+    def updateClass(self, classItem):
+        self._mapper.update(classItem)           
     
     def write(self):
         """ Override super method to also write the representatives. """
