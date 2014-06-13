@@ -29,14 +29,12 @@ import ij.ImagePlus;
 import java.awt.Color;
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import xmipp.ij.commons.XmippImageConverter;
-import xmipp.ij.commons.XmippUtil;
 import xmipp.jni.Filename;
 import xmipp.jni.ImageGeneric;
 import xmipp.jni.MDLabel;
@@ -46,10 +44,7 @@ import xmipp.utils.DEBUG;
 import xmipp.utils.Params;
 import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippStringUtils;
-import xmipp.utils.XmippWindowUtil;
 import xmipp.viewer.ctf.TasksEngine;
-import xmipp.viewer.scipion.ScipionGalleryJFrame;
-import xmipp.viewer.scipion.ScipionMetaData;
 import xmipp.viewer.windows.AddObjectJDialog;
 import xmipp.viewer.windows.GalleryJFrame;
 import xmipp.viewer.windows.ImagesWindowFactory;
@@ -1020,7 +1015,7 @@ public class GalleryData {
 		return null;
 	}
 
-	public MetaData getImagesMd() {
+	public MetaData getImagesMd(MetaData md) {
 		int idlabel = getRenderLabel();
 		if (md == null)
 			return null;
@@ -1506,4 +1501,11 @@ public class GalleryData {
         }
     
 
-}// class GalleryData
+        public boolean hasSelection()
+        {
+            for(int i = 0; i < selection.length; i ++)
+                if(selection[i])
+                    return true;
+            return false;
+        }
+}// class GalleryDaa
