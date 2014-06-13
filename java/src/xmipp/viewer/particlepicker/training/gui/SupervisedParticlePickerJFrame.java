@@ -1,5 +1,6 @@
 package xmipp.viewer.particlepicker.training.gui;
 
+import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.GridBagConstraints;
@@ -48,6 +49,7 @@ import xmipp.viewer.particlepicker.training.model.ParticleToTemplatesTask;
 import xmipp.viewer.particlepicker.training.model.SupervisedParticlePicker;
 import xmipp.viewer.particlepicker.training.model.SupervisedParticlePicker.UpdateTemplatesTask;
 import xmipp.viewer.particlepicker.training.model.SupervisedParticlePickerMicrograph;
+import xmipp.viewer.scipion.ScipionMessageDialog;
 
 public class SupervisedParticlePickerJFrame extends ParticlePickerJFrame {
 
@@ -408,14 +410,15 @@ public class SupervisedParticlePickerJFrame extends ParticlePickerJFrame {
         return autopickchb.isSelected();
     }
 
-    protected void enableEdition(boolean enable) {
-        super.enableEdition(enable);
-        centerparticlebt.setEnabled(enable);
+    protected void enableEdition(boolean isenable) {
+        super.enableEdition(isenable);
+        centerparticlebt.setEnabled(isenable);
         if (ppicker.getMode() != Mode.Review) {
-            autopickchb.setEnabled(enable);
-            thresholdpn.setEnabled(enable);
+            autopickchb.setEnabled(isenable);
+            thresholdpn.setEnabled(isenable);
         }
-        saveandexitbt.setEnabled(enable);
+        saveandexitbt.setEnabled(isenable);
+       
     }
 
     public void initMenuBar() {
