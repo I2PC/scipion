@@ -59,8 +59,8 @@ public:
     double BPFactor;
     /// bad Pixel filter Mask
     FileName fnBPMask;
-    /// Flag to apply flat field correction
-    bool flatFix;
+    /// Flag to apply external flat field correction
+    bool extFlat;
     /// Flag to apply dark field correction
     bool darkFix;
     /// Flag to apply log corrections
@@ -70,7 +70,8 @@ public:
     /// Xray microscopy data origin;
     enum DataSource
     {
-        NONE,
+    	NONE,
+        GENERIC,
         MISTRAL,
         BESSY
     } dSource;
