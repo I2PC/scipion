@@ -807,24 +807,19 @@ public class ScipionMetaData extends MetaData{
             String sql = "";
             String updatesql = "UPDATE %sObjects SET %s=%s WHERE id=%s;";
             sql = "";
-            int count = 0;
+            stmt.execute("BEGIN TRANSANCTION;");
             for(EMObject emo: emobjects)
             {
                 if(emo.changed)
                 {
-                    sql+= String.format(updatesql, prefix, enabledci.labelName, (emo.isEnabled())? 1: 0, emo.id);
-                    count ++;
-                    if(count == 200)
-                    {
-                        stmt.executeUpdate(sql);
-                        sql = "";
-                        count = 0;
-                    }
+                    //sql+= String.format(updatesql, prefix, enabledci.labelName, (emo.isEnabled())? 1: 0, emo.id);
+                    sql= String.format(updatesql, prefix, enabledci.labelName, (emo.isEnabled())? 1: 0, emo.id);
+                    stmt.executeUpdate(sql);
+
                 }
                 
             }
-            if(count > 0)
-                stmt.executeUpdate(sql);
+            stmt.execute("END TRANSANCTION;");
             stmt.close();
             c.close();
             

@@ -16,6 +16,7 @@ import java.util.logging.Logger;
 import javax.swing.JButton;
 import xmipp.ij.commons.XmippUtil;
 import xmipp.jni.MetaData;
+import xmipp.utils.StopWatch;
 import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippWindowUtil;
 import xmipp.viewer.windows.GalleryJFrame;
@@ -70,6 +71,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
         }
     }
     private void initComponents() {
+        StopWatch.getInstance().printElapsedTime("starting viewer");
         JButton closebt = getScipionButton("Close", new ActionListener() {
 
             @Override
@@ -187,6 +189,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
     
    protected void createSubset(final String[] command) 
     {
+        StopWatch.getInstance().printElapsedTime("creating subset");
         XmippWindowUtil.blockGUI(ScipionGalleryJFrame.this, "Creating set ...");
         new Thread(new Runnable() {
 
@@ -202,6 +205,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
                         XmippDialog.showInfo(ScipionGalleryJFrame.this, output);
                         
                     }
+                    StopWatch.getInstance().printElapsedTime("done creating subset");
 
                 } catch (Exception ex) {
                     throw new IllegalArgumentException(ex.getMessage());

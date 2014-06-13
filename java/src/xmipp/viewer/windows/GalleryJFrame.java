@@ -793,12 +793,12 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
                     if(result == XmippQuestionDialog.YES_OPTION)
                         md = data.getSelectionMd();
                     else if(result == XmippQuestionDialog.NO_OPTION)
-                        md = data.md;
+                        md = data.getMd();
                     else
                         return;
                 }
                 else
-                    md = data.md;
+                    md = data.getMd();
                     
                 
                 imagesmd = data.getImagesMd(md);

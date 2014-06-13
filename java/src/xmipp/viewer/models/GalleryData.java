@@ -96,11 +96,7 @@ public class GalleryData {
         protected String[] visibleLabels;
         protected String[] orderLabels;
 
-  
-
-   
-
-  
+    
  
  	public enum Mode {
 		GALLERY_MD, GALLERY_VOL, TABLE_MD, GALLERY_ROTSPECTRA
@@ -1507,5 +1503,9 @@ public class GalleryData {
                 if(selection[i])
                     return true;
             return false;
+        }
+        
+        public MetaData getMd() {
+            return md;
         }
 }// class GalleryDaa
