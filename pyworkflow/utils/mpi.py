@@ -70,7 +70,7 @@ def runJobMPI(log, programname, params, mpiComm, mpiDest,
                               numberOfMpi, numberOfThreads,
                               runInBackground, hostConfig)
     if cwd is not None:
-        send("cd %s" % cwd, mpiComm, mpiDest, TAG_RUN_JOB+mpiDest)
+        send("cwd=%s" % cwd, mpiComm, mpiDest, TAG_RUN_JOB+mpiDest)
 
     return send(command, mpiComm, mpiDest, TAG_RUN_JOB+mpiDest)
 
@@ -83,6 +83,7 @@ def runJobMPISlave(mpiComm):
     print "Running runJobMPISlave: ", rank
 
     # Listen for commands until we get 'None'
+    cwd = None  # We run without changing directory by default
     while True:
         # Receive command in a non-blocking way
         req_recv = mpiComm.irecv(dest=0, tag=TAG_RUN_JOB+rank)
@@ -98,12 +99,12 @@ def runJobMPISlave(mpiComm):
 
         # Run the command and get the result (exit code or exception)
         try:
-            if command.startswith("cd "):
-                dirname = command.split(" ", 1)[-1]
-                os.chdir(dirname)
+            if command.startswith("cwd="):
+                cwd = command.split("=", 1)[-1]
                 result = 0
             else:
-                result = runCommand(command)
+                result = runCommand(command, cwd=cwd)
+                cwd = None  # unset directory
         except Exception, e:
             result = str(e)
 

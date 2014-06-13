@@ -154,7 +154,8 @@ class Project(object):
         3. Call the launch method in protocol.job to handle submition: mpi, thread, queue,
         and also take care if the execution is remotely."""
         
-        self._checkModificationAllowed([protocol], 'Cannot RE-LAUNCH protocol')
+        if protocol.getStatus() != STATUS_CONTINUE:
+            self._checkModificationAllowed([protocol], 'Cannot RE-LAUNCH protocol')
         
         protocol.setStatus(STATUS_LAUNCHED)
         self._setupProtocol(protocol)
