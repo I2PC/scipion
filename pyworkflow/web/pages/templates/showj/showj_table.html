@@ -131,7 +131,12 @@ $(document).ready(function() {
 		    		"aaData": generateDataForTable(),	
 		    		"aoColumnDefs": getColumnsDefinition(), 
 		            "bJQueryUI": true,
-		    		"sPaginationType": "full_numbers"
+		    		"sPaginationType": "full_numbers",
+		    		
+		    		/* Used to put an id for each row */
+		    		"fnCreatedRow": function( nRow, aData, iDataIndex ) {
+		    	        $(nRow).attr('id', 'row_container___'+aData[0]);
+		    	    }
 			    }		
 			);
 	
