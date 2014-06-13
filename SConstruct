@@ -165,9 +165,7 @@ def untarLibrary(env, name, tar=None, folder=None):
     if tar is None:
         tar = os.path.join(SCIPION['FOLDERS'][TMP_FOLDER], libraryDict[TAR])
     if folder is None:
-        #folder = Dir(SCIPION['FOLDERS'][TMP_FOLDER])
         folder = os.path.join(SCIPION['FOLDERS'][TMP_FOLDER],libraryDict[DIR])
-    print "Unpacking %s in folder %s" % (tar, folder)
     sourceTar = tarfile.open(tar,'r')
     tarContents = sourceTar.getmembers()
     tarFileContents = filter(lambda tarEntry: tarEntry.isfile(), tarContents)
@@ -175,7 +173,6 @@ def untarLibrary(env, name, tar=None, folder=None):
     for indx, item in enumerate(tarFileContentsNames): 
         tarFileContentsNames[indx] = os.path.join(SCIPION['FOLDERS'][TMP_FOLDER], item)
     sourceTar.close()
-    #result = env.Unpack('#software/tmp/sqlite-3.6.23.tar.gz')
     env["UNPACK"]["EXTRACTDIR"] = SCIPION['FOLDERS'][TMP_FOLDER] 
     result = env.Unpack(target=folder, source=tar, UNPACKLIST=tarFileContentsNames)
     return result
@@ -257,7 +254,7 @@ def _checkMd5(file, md5):
     if not answer:
         print "Checksum error. %s says %s, but %s says %s" % (file, tarFileMd5, md5, md5FileMd5)
     else:
-        print "\t ...OK"
+        print "\t ...md5 OK"
     return answer
 
 def _askContinue(msg="continue?"):

@@ -59,39 +59,47 @@ BUILD_VIRTUALENV = not COMPILE_PYTHON
 ############################
 
 # Tcl/Tk
-env.AddLibrary('tcl',    dft=True, tar='tcl8.6.1-src.tar.gz', dir='tcl8.6.1',      url='http://scipionwiki.cnb.csic.es/files/scipion/software/external/tcl8.6.1-src.tar.gz')
-env.AddLibrary('tk',     dft=True, tar='tk8.6.1-src.tar.gz',  dir='tk8.6.1',       url='http://scipionwiki.cnb.csic.es/files/scipion/software/external/tk8.6.1-src.tar.gz')
+env.AddLibrary('tcl', dft=True, tar='tcl8.6.1-src.tar.gz', dir='tcl8.6.1', url='http://scipionwiki.cnb.csic.es/files/scipion/software/external/tcl8.6.1-src.tar.gz')
+env.AddLibrary('tk', dft=True, tar='tk8.6.1-src.tar.gz', dir='tk8.6.1', url='http://scipionwiki.cnb.csic.es/files/scipion/software/external/tk8.6.1-src.tar.gz')
 
 # sqlite
-env.AddLibrary('sqlite', dft=True, tar='sqlite-3.6.23.tgz',   dir='sqlite-3.6.23', url='http://scipionwiki.cnb.csic.es/files/scipion/software/external/sqlite-3.6.23.tgz')
+env.AddLibrary('sqlite', dft=True, tar='sqlite-3.6.23.tgz', dir='sqlite-3.6.23', url='http://scipionwiki.cnb.csic.es/files/scipion/software/external/sqlite-3.6.23.tgz')
 
 
 #############################
 # SECOND LEVEL DEPENDENCIES #
 #############################
 
-# python 2.7.6
-env.AddLibrary('python', dft=True, tar='Python-2.7.7.tgz',    dir='Python-2.7.7',  url='http://scipionwiki.cnb.csic.es/files/scipion/software/python/Python-2.7.7.tgz')
+# python 2.7.7
+env.AddLibrary('python', dft=True, tar='Python-2.7.7.tgz', dir='Python-2.7.7', url='http://scipionwiki.cnb.csic.es/files/scipion/software/python/Python-2.7.7.tgz')
 
 ############################
 # THIRD LEVEL DEPENDENCIES #
 ############################
 
 # numpy
+env.AddLibrary('numpy', dft=True, tar='numpy-1.8.1.tar.gz', dir='numpy-1.8.1', url='http://scipionwiki.cnb.csic.es/files/scipion/software/python/numpy-1.8.1.tar.gz')
 
 # matplotlib
+env.AddLibrary('matplotlib', dft=True, tar='matplotlib-1.3.1.tar.gz', dir='matplotlib-1.3.1', url='http://scipionwiki.cnb.csic.es/files/scipion/software/python/matplotlib-1.3.1.tar.gz')
 
-# psutils
+# psutil
+env.AddLibrary('psutil', dft=True, tar='psutil-2.1.1.tar.gz', dir='psutil-2.1.1', url='http://scipionwiki.cnb.csic.es/files/scipion/software/python/psutil-2.1.1.tar.gz')
 
 # mpi4py
+env.AddLibrary('mpi4py', dft=True, tar='mpi4py-1.3.1.tar.gz', dir='mpi4py-1.3.1', url='http://scipionwiki.cnb.csic.es/files/scipion/software/python/mpi4py-1.3.1.tar.gz')
 
 # scipy
+env.AddLibrary('scipy', dft=False, tar='scipy-0.14.0.tar.gz', dir='scipy-0.14.0', url='http://scipionwiki.cnb.csic.es/files/scipion/software/python/scipy-0.14.0.tar.gz')
 
 # bibtex
+env.AddLibrary('bibtexparser', dft=True, tar='bibtexparser-0.5.tgz', dir='bibtexparser-0.5', url='http://scipionwiki.cnb.csic.es/files/scipion/software/python/bibtexparser-0.5.tgz')
 
 # django
+env.AddLibrary('django', dft=True, tar='Django-1.5.5.tgz', dir='Django-1.5.5', url='http://scipionwiki.cnb.csic.es/files/scipion/software/python/Django-1.5.5.tgz')
 
 # paramiko
+env.AddLibrary('paramiko', dft=False, tar='paramiko-1.14.0.tar.gz', dir='paramiko-1.14.0', url='http://scipionwiki.cnb.csic.es/files/scipion/software/python/paramiko-1.14.0.tar.gz')
 
 ######################
 # CONFIGURATION FILE #
@@ -107,6 +115,14 @@ sqliteDownload = env.DownloadLibrary('sqlite')
 tclDownload = env.DownloadLibrary('tcl')
 tkDownload = env.DownloadLibrary('tk')
 pythonDownload = env.DownloadLibrary('python')
+numpyDownload = env.DownloadLibrary('numpy')
+matplotlibDownload = env.DownloadLibrary('matplotlib')
+psutilDownload = env.DownloadLibrary('psutil')
+mpi4pyDownload = env.DownloadLibrary('mpi4py')
+scipyDownload = env.DownloadLibrary('scipy')
+bibtexparserDownload = env.DownloadLibrary('bibtexparser')
+djangoDownload = env.DownloadLibrary('django')
+paramikoDownload = env.DownloadLibrary('paramiko')
 
 #########
 # UNTAR #
@@ -115,12 +131,28 @@ sqliteUntar = env.UntarLibrary('sqlite')
 tclUntar = env.UntarLibrary('tcl')
 tkUntar = env.UntarLibrary('tk')
 pythonUntar = env.UntarLibrary('python')
+numpyUntar = env.UntarLibrary('numpy')
+matplotlibUntar = env.UntarLibrary('matplotlib')
+psutilUntar = env.UntarLibrary('psutil')
+mpi4pyUntar = env.UntarLibrary('mpi4py')
+scipyUntar = env.UntarLibrary('scipy')
+bibtexparserUntar = env.UntarLibrary('bibtexparser')
+djangoUntar = env.UntarLibrary('django')
+paramikoUntar = env.UntarLibrary('paramiko')
 
 # Explicitly write depends
 Depends(sqliteUntar, sqliteDownload)
 Depends(tclUntar, tclDownload)
 Depends(tkUntar, tkDownload)
 Depends(pythonUntar, pythonDownload)
+Depends(numpyUntar, numpyDownload)
+Depends(matplotlibUntar, matplotlibDownload)
+Depends(psutilUntar, psutilDownload)
+Depends(mpi4pyUntar, mpi4pyDownload)
+Depends(scipyUntar, scipyDownload)
+Depends(bibtexparserUntar, bibtexparserDownload)
+Depends(djangoUntar, djangoDownload)
+Depends(paramikoUntar, paramikoDownload)
 
 ##########################
 # EXECUTING COMPILATIONS #
