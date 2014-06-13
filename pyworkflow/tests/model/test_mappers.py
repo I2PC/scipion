@@ -300,7 +300,7 @@ class TestSqliteMapper(BaseTest):
     def test_SqliteMapper(self):
         fn = self.getOutputPath("basic.sqlite")
         print "Using db: >>>>>>>> fn: ", fn
-        
+
         mapper = SqliteMapper(fn)
         # Insert a Complex
         c = Complex.createComplex() # real = 1, imag = 1
@@ -361,16 +361,16 @@ class TestSqliteMapper(BaseTest):
         # Reading test
         fnGold = self.modelGoldSqlite
         mapper2 = SqliteMapper(fnGold, globals())
-        
+
         l = mapper2.selectByClass('Integer')[0]
         self.assertEqual(l.get(), 1)
-        
+
         c2 = mapper2.selectByClass('Complex')[0]
         self.assertTrue(c.equalAttributes(c2))
         
         b = mapper2.selectByClass('Boolean')[0]
         self.assertTrue(not b.get())
-        
+
         p = mapper2.selectByClass('Pointer')[0]
         self.assertEqual(c, p.get())
         
@@ -394,7 +394,7 @@ class TestSqliteMapper(BaseTest):
         # Iterate over all objects
         allObj = mapper2.selectAll()
         iterAllObj = mapper2.selectAll(iterate=True)
-        
+
         for a1, a2 in zip(allObj, iterAllObj):
             self.assertEqual(a1, a2)
             

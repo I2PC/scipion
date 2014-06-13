@@ -473,16 +473,16 @@ class TextFileViewer(tk.Frame):
         selected = self.notebook.select()
         if selected:
             return self.notebook.index(selected)
-        return None
+        return -1
     
     def setIndex(self, index):
         """ Select the tab with the given index. """
-        if index is not None:
+        if index != -1:
             self.notebook.select(self.notebook.tabs()[index])
     
     def selectedText(self):
         index = self.getIndex()
-        if index:
+        if index != -1:
             return self.taList[index]
         return None
     
@@ -554,7 +554,7 @@ class TextFileViewer(tk.Frame):
         if os.environ.get('SCIPION_EXTERNAL_VIEWER', 'False').lower() in ['true', '1']:
             if not self.taList:
                 return
-            _open_cmd(self.taList[self.getIndex() or 0].filename)
+            _open_cmd(self.taList[max(self.getIndex(), 0)].filename)
         else:
             showTextFileViewer("File viewer", self.fileList, self.windows)
   
