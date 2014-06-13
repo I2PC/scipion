@@ -118,8 +118,9 @@ void ProgXrayImport::defineParams()
 void ProgXrayImport::init()
 {
     tIni = tEnd = fIni = fEnd = 0;
-    flatFix = darkFix = false;
+    extFlat = darkFix = false;
     BPFactor = 0;
+    dSource = NONE;
 }
 
 // Read arguments ==========================================================
@@ -130,7 +131,6 @@ void ProgXrayImport::readParams()
     {
         fnInput = getParam("--mistral");
         fnFlat = "NXtomo/instrument/bright_field/data@" + fnInput;
-        flatFix = true;
         dSource = MISTRAL;
     }
     else if (checkParam("--bessy"))
@@ -141,19 +141,18 @@ void ProgXrayImport::readParams()
         fIni = getIntParam("--bessy", 3);
         fEnd = getIntParam("--bessy", 4);
         fnFlat = fnInput;
-        flatFix = true;
         dSource = BESSY;
     }
     else
     {
         fnInput = getParam("--input");
-        dSource = NONE;
+        dSource = GENERIC;
     }
     // If --flat is passed it forces the use of this flatfield
     if (checkParam("--flat"))
     {
         fnFlat = getParam("--flat");
-        flatFix = true;
+        extFlat = true;
     }
 
     fnRoot    = getParam("--oroot");
@@ -214,7 +213,7 @@ void ProgXrayImport::readGeoInfo(const FileName &fn, MDRow &rowGeo) const
         tiltAngle = dMi(anglesArray, fn.getPrefixNumber()-1);
         break;
     case BESSY:
-    case NONE:
+    case GENERIC:
         {
             FileName fnBase = fn.withoutExtension();
             std::ifstream fhPosition;
@@ -331,24 +330,16 @@ void ProgXrayImport::getFlatfield(const FileName &fnFFinput,
     // Process the flatfield images
 
     // Checking if fnFFinput is a single file to obtain the flatfield avg from
-    ImageInfo imFFInfo;
 
-    if (isImage(fnFFinput))
-        getImageInfo(fnFFinput, imFFInfo);
 
     MultidimArray<double> &mdaIavg = Iavg();
 
     DataSource ldSource = dSource;
 
-    int cropX = cropSizeX;
-    int cropY = cropSizeY;
-
-    if (imFFInfo.adim.ndim > 1 && !H5File.checkDataset(fnFFinput.getBlockName().c_str()))
+    if (extFlat && isImage(fnFFinput))
     {
         fMD.read(fnFFinput);
         ldSource = NONE;
-        cropX += (imFFInfo.adim.xdim - imgInfo.adim.xdim)/2;
-        cropY += (imFFInfo.adim.ydim - imgInfo.adim.ydim)/2;
     }
     else
     {
@@ -395,7 +386,7 @@ void ProgXrayImport::getFlatfield(const FileName &fnFFinput,
                 }
                 break;
             }
-        case NONE:
+        case GENERIC:
             {
                 // Get Darkfield
                 std::cout << "Getting darkfield from "+fnFFinput << " ..." << std::endl;
@@ -425,6 +416,23 @@ void ProgXrayImport::getFlatfield(const FileName &fnFFinput,
         return;
     }
 
+    ImageInfo imFFInfo;
+
+    getImageInfo(fMD, imFFInfo);
+
+    if ( (imFFInfo.adim.xdim != imgInfo.adim.xdim) || (imFFInfo.adim.ydim != imgInfo.adim.ydim) )
+    {
+        reportWarning(formatString("XrayImport:: Flatfield images size %dx%d different from Tomogram images size %dx%d",
+                                   imFFInfo.adim.xdim,imFFInfo.adim.ydim,imgInfo.adim.xdim,imgInfo.adim.ydim));
+        std::cout << "Setting crop values to fit the smallest dimensions." <<std::endl;
+
+        cropSizeX = (imgInfo.adim.xdim - std::min(imgInfo.adim.xdim-cropSizeX*2, imFFInfo.adim.xdim))/2;
+        cropSizeY = (imgInfo.adim.ydim - std::min(imgInfo.adim.ydim-cropSizeY*2, imFFInfo.adim.ydim))/2;
+    }
+
+    int cropX = (imFFInfo.adim.xdim - (imgInfo.adim.xdim-cropSizeX*2))/2;
+    int cropY = (imFFInfo.adim.ydim - (imgInfo.adim.ydim-cropSizeY*2))/2;
+
     int N  = 0;
     Image<double> Iaux;
     FileName fnImg;
@@ -445,15 +453,23 @@ void ProgXrayImport::getFlatfield(const FileName &fnFFinput,
         double expTime = 1;
         double slitWidth = 1;
 
-        if ( ldSource == MISTRAL )
+        switch (ldSource)
         {
-            size_t idx = fnImg.getPrefixNumber();
-            currentBeam = dMi(cBeamArray, idx-1);
-            expTime = dMi(expTimeArray, idx-1);
-            slitWidth = dMi(slitWidthArray, idx-1);
-        }
-        else if (ldSource == BESSY)
+        case MISTRAL:
+            {
+                size_t idx = fnImg.getPrefixNumber();
+                currentBeam = dMi(cBeamArray, idx-1);
+                expTime = dMi(expTimeArray, idx-1);
+                slitWidth = dMi(slitWidthArray, idx-1);
+            }
+            break;
+        case BESSY:
+        case GENERIC:
             readCorrectionInfo(fnImg, currentBeam, expTime, slitWidth);
+            break;
+        default:
+            break;
+        }
 
         Iaux() *= 1.0/(currentBeam*expTime*slitWidth);
 
@@ -645,7 +661,7 @@ void ProgXrayImport::run()
             }
             break;
         }
-    case NONE:
+    case GENERIC:
         {
             // Get Darkfield
             std::cerr << "Getting darkfield from "+fnInput << " ..." << std::endl;
@@ -676,13 +692,11 @@ void ProgXrayImport::run()
 
     getImageInfo(inMD, imgInfo);
 
-    createEmptyFile(fnOut, imgInfo.adim.xdim-2*cropSizeX, imgInfo.adim.ydim-2*cropSizeY, 1, nIm);
-
 
     /* Get the flatfield:: We get the FF after the image list because we need the image size to adapt the FF
      * in case they were already cropped.
      */
-    if (flatFix)
+    if (!fnFlat.empty())
     {
         std::cout << "Getting flatfield from "+fnFlat << " ..." << std::endl;
         getFlatfield(fnFlat,IavgFlat);
@@ -694,6 +708,7 @@ void ProgXrayImport::run()
         }
     }
 
+    createEmptyFile(fnOut, imgInfo.adim.xdim-2*cropSizeX, imgInfo.adim.ydim-2*cropSizeY, 1, nIm);
 
     // Process images
     td = new ThreadTaskDistributor(nIm, XMIPP_MAX(1, nIm/30));
