@@ -30,6 +30,7 @@ from os.path import join, abspath, dirname
 import sys
 import platform
 
+# for acceding SCIPION dict easily
 # folders & packages | libs  | index
 SOFTWARE_FOLDER =      DEF =   0 # is built by default?               
 CONFIG_FOLDER =        INCS =  1 # includes                           
