@@ -357,7 +357,7 @@ class SqliteObjectsDb(SqliteDb):
                       classname TEXT,                -- object's class name
                       value     TEXT DEFAULT NULL,   -- object value, used for Scalars
                       label     TEXT DEFAULT NULL,   -- object label, text used for display
-                      comment   TEXT DEFAULT NULL,    -- object comment, text used for annotations
+                      comment   TEXT DEFAULT NULL,   -- object comment, text used for annotations
                       creation  DATE                 -- creation date and time of the object
                       )""")
         # Create the Relations table
@@ -433,7 +433,7 @@ class SqliteObjectsDb(SqliteDb):
     
     def selectObjectsWhere(self, whereStr, iterate=False):
         self.executeCommand(self.selectCmd(whereStr))
-        return self._results(iterate)   
+        return self._results(iterate)
     
     def deleteObject(self, objId):
         """Delete an existing object"""

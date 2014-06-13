@@ -129,7 +129,7 @@ class DataView(View):
 class ObjectView(DataView):
     
     """ Wrapper to View but for displaying Scipion objects. """
-    def __init__(self, path, type, projectid, inputid, viewParams={}, **kwargs):
+    def __init__(self, projectid, inputid, path, viewParams={}, **kwargs):
         DataView.__init__(self, path, viewParams, **kwargs)
         self.python = pw.PYTHON
         self.script = pw.join('apps', 'pw_create_image_subset.py')

@@ -219,7 +219,7 @@ class ProtUserSubSet(ProtSets):
                 for img in cls:
                     if img.isEnabled():                
                         newCls.append(img)
-                output.updateClass(newCls)
+                output.update(newCls)
         # Register outputs
         self._defineOutput(className, output)
                

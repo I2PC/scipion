@@ -968,9 +968,6 @@ class SetOfClasses(EMSet):
         EMSet._insertItem(self, classItem)
         classItem.write()#Set.write(self)
         
-    def updateClass(self, classItem):
-        self._mapper.update(classItem)           
-    
     def write(self):
         """ Override super method to also write the representatives. """
         EMSet.write(self)

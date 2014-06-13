@@ -34,6 +34,9 @@
  * 
  * METHODS LIST:
  * 
+ * function preloadToolbar(list)
+ * 	->	Function to preload the nodes/rows selected.
+ * 
  * function launchToolbarList(id, elm)
  * 	->	Toolbar used in the project content template for the run list view.
  * 
@@ -44,7 +47,7 @@
  * 	->	Method used to update an element in the template depending on 
  * 		view mode (list or graph).
  * 
- * function refreshToolbarSingleMark(id, elm)
+ * function refreshToolbarSingleMark(id)
  * 	->	Update the buttons functionalities into the toolbar
  * 		for single marks.
  * 
@@ -184,16 +187,21 @@
 
  /** METHODS ******************************************************************/
 
-/** EVENTS WITH TRIGGERS **/
-
-//var event_graph = jQuery("div#graphActiv").trigger(jQuery.Event("click"));
-//var event_list = jQuery("div#runTable").trigger(jQuery.Event("click"));
-//var event = event_graph || event_list ; 
-
-
 function isCtrlPress(event) {
 	return event.ctrlKey;
 }
+
+function preloadToolbar(list){
+	/*
+	 * Function to preload the nodes/rows selected
+	 */
+	if (list.length > 1){
+		refreshToolbarMultipleMark(list)
+	} else {
+		refreshToolbarSingleMark(list)
+	}
+}
+
 
 function launchToolbarList(id, elm, multi) {
 	/*
@@ -207,7 +215,6 @@ function launchToolbarList(id, elm, multi) {
 		launchToolbarProject(id, elm, "list");
 	}
 }
-
 
 function launchToolbarTree(id, elm, multi) {
 	/*
@@ -240,19 +247,20 @@ function launchToolbarProject(id, elm, type){
 	}
 	    
 	// Update the buttons functionalities into the toolbar
-	refreshToolbarSingleMark(id, elm)
+	// and update the content for the tabs
+	refreshToolbarSingleMark(id)
 	
-	// Update the content for the tabs
-	updateTabs(id);
 }
 
-function refreshToolbarSingleMark(id, elm){
+function refreshToolbarSingleMark(id){
 	/*
 	 * Update the buttons functionalities into the toolbar
 	 * for single marks.
 	 */
-	
 	updateButtons(id, "single");
+	
+	// Update the content for the tabs
+	updateTabs(id);
 }
 
 function refreshToolbarMultipleMark(list_id){
