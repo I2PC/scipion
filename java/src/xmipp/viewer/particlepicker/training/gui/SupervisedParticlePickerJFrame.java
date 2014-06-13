@@ -282,15 +282,13 @@ public class SupervisedParticlePickerJFrame extends ParticlePickerJFrame {
             initShapePane();
             add(shapepn, XmippWindowUtil.getConstraints(constraints, 1, 1));
 
-            if (ppicker.getMode() != Mode.Review) {
-                autopicklb = new JLabel("Autopick:");
-                constraints.insets = new Insets(30, 5, 30, 5);
-                add(autopicklb, XmippWindowUtil.getConstraints(constraints, 0, 3));
-                constraints.insets = new Insets(0, 5, 0, 5);
-                initSupervisedPickerPane();
-                add(sppickerpn, XmippWindowUtil.getConstraints(constraints, 1, 3, 1, 1, GridBagConstraints.HORIZONTAL));
-                enableSupervised(ppicker.getMode() == Mode.Supervised);
-            }
+            autopicklb = new JLabel("Autopick:");
+            constraints.insets = new Insets(30, 5, 30, 5);
+            add(autopicklb, XmippWindowUtil.getConstraints(constraints, 0, 3));
+            constraints.insets = new Insets(0, 5, 0, 5);
+            initSupervisedPickerPane();
+            add(sppickerpn, XmippWindowUtil.getConstraints(constraints, 1, 3, 1, 1, GridBagConstraints.HORIZONTAL));
+            enableSupervised(ppicker.getMode() == Mode.Supervised);
             initMicrographsPane();
             add(micrographpn, XmippWindowUtil.getConstraints(constraints, 0, 4, 2, 1, GridBagConstraints.HORIZONTAL));
             JPanel actionspn = new JPanel(new FlowLayout(FlowLayout.RIGHT));
@@ -333,7 +331,7 @@ public class SupervisedParticlePickerJFrame extends ParticlePickerJFrame {
 		// sppickerpn.setBorder(BorderFactory.createTitledBorder("Supervised Picker"));
         JPanel steppn = new JPanel(new FlowLayout(FlowLayout.LEFT));
         autopickchb = new JCheckBox();
-        autopickchb.setSelected(ppicker.getMode() == Mode.Supervised);
+        autopickchb.setSelected(ppicker.isAutopick());
 
         autopickchb.addActionListener(new ActionListener() {
 
@@ -349,6 +347,7 @@ public class SupervisedParticlePickerJFrame extends ParticlePickerJFrame {
 
                         ppicker.setMode(Mode.Supervised);
                         ppicker.trainAndAutopick(SupervisedParticlePickerJFrame.this, rectangle);
+                        setTitle("Xmipp Particle Picker - " + ppicker.getMode());
 
                     } else if (autopickchb.isSelected()) {
                         autopickchb.setSelected(false);
@@ -365,6 +364,7 @@ public class SupervisedParticlePickerJFrame extends ParticlePickerJFrame {
                                 autopickchb.setSelected(false);
                             }
                             canvas.refreshActive(null);
+                            setTitle("Xmipp Particle Picker - " + ppicker.getMode());
                         } else {
                             autopickchb.setSelected(true);
                         }
@@ -392,7 +392,8 @@ public class SupervisedParticlePickerJFrame extends ParticlePickerJFrame {
 
     protected void enableSupervised(boolean selected) {
 
-        thresholdpn.setVisible(selected);
+        thresholdsl.setEnabled(selected);
+        thresholdtf.setEnabled(selected);
         sizesl.setEnabled(!selected);// not really, if there is some micrograph
         // in sup mode size cannot be changed
         sizetf.setEnabled(!selected);
@@ -738,7 +739,7 @@ public class SupervisedParticlePickerJFrame extends ParticlePickerJFrame {
     }
 
     public void close() {
-        if (ppicker.getMode() == Mode.Supervised && getMicrograph().getState() == MicrographState.Supervised) {
+        if (ppicker.getMode() == Mode.Supervised && getMicrograph().getState() == MicrographState.Supervised && ppicker.isChanged()) {
             boolean iscorrect = XmippDialog.showQuestion(this, "Would you like to correct training with added and deleted particles?");
             if (iscorrect) {
                 ppicker.correct(rectangle);
