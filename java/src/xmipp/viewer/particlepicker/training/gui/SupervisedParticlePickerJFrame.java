@@ -416,6 +416,7 @@ public class SupervisedParticlePickerJFrame extends ParticlePickerJFrame {
             autopickchb.setEnabled(enable);
             thresholdpn.setEnabled(enable);
         }
+        saveandexitbt.setEnabled(enable);
     }
 
     public void initMenuBar() {
