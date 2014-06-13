@@ -131,7 +131,12 @@ $(document).ready(function() {
 		    		"aaData": generateDataForTable(),	
 		    		"aoColumnDefs": getColumnsDefinition(), 
 		            "bJQueryUI": true,
-		    		"sPaginationType": "full_numbers"
+		    		"sPaginationType": "full_numbers",
+		    		
+		    		/* Used to put an id for each row */
+		    		"fnCreatedRow": function( nRow, aData, iDataIndex ) {
+		    	        $(nRow).attr('id', 'row_container___'+aData[0]);
+		    	    }
 			    }		
 			);
 	
@@ -221,4 +226,8 @@ function generateDataForTable(){
 	<table cellspacing="0" id="data_table" width="100%"></table>
 </div>
 			
+{% endblock %}
+
+{% block bottom_menu %}
+	{% include "showj/showj_bottom_menu.html" %}
 {% endblock %}
