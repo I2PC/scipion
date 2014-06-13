@@ -194,7 +194,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
                 if(picker.isScipionSave())
                 {
                     saveandexitbt.setText("Create Coordinates");
-                    Color color = Color.decode(ScipionMessageDialog.firebrick); 
+                    Color color = ScipionMessageDialog.firebrick; 
                     saveandexitbt.setBackground(color);
                     saveandexitbt.setForeground(Color.WHITE);
                     
