@@ -30,8 +30,19 @@ from os.path import join, abspath, dirname
 import sys
 import platform
 
+# folders & packages | libs  | index
+SOFTWARE_FOLDER =      DEF =   0 # is built by default?               
+CONFIG_FOLDER =        INCS =  1 # includes                           
+INSTALL_FOLDER =       LIBS =  2 # libraries to create                
+BIN_FOLDER =           SRC =   3 # source pattern                     
+PACKAGES_FOLDER =      DIR =   4 # folder name in temporal directory  
+LIB_FOLDER =           TAR =   5                                      
+MAN_FOLDER =           DEPS =  6 # explicit dependencies              
+TMP_FOLDER =           URL =   7 # URL to download from               
+INCLUDE_FOLDER =       FLAGS = 8 # Other flags for the compiler
+
 # We start importing the environment
-Import('env')
+Import('env', 'SCIPION')
 
 # Printing scipion Logo
 env.ScipionLogo()
@@ -158,5 +169,17 @@ Depends(paramikoUntar, paramikoDownload)
 # EXECUTING COMPILATIONS #
 ##########################
 
-#env.Alias('sqlitePackage', sqliteDownload)
-#env.Alias('sqliteDir', sqliteUntar)
+sqliteCompile = env.CompileLibrary('sqlite',
+                                   flags=['CPPFLAGS=-w', 
+                                          'CFLAGS=-DSQLITE_ENABLE_UPDATE_DELETE_LIMIT=1', 
+                                          '--prefix=%s' % os.path.join(Dir(SCIPION['FOLDERS'][SOFTWARE_FOLDER]).abspath)], 
+                                   libs=['.libs'])
+tclCompile = env.CompileLibrary('tcl', 
+                                flags=['--enable-threads', 
+                                       '--prefix=%s' % os.path.join(Dir(SCIPION['FOLDERS'][SOFTWARE_FOLDER]).abspath)],
+                                libs=['.libs'])
+tkCompile = env.CompileLibrary('tk', 
+                               flags=['--enable-threads', 
+                                      '--with-tcl="%s"' % os.path.join(Dir(SCIPION['LIBS']['tcl'][DIR]).abspath),
+                                       '--prefix=%s' % os.path.join(Dir(SCIPION['FOLDERS'][SOFTWARE_FOLDER]).abspath)], 
+                               libs=['.libs'])

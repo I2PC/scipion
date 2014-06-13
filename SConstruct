@@ -49,19 +49,22 @@ PYVERSION = platform.python_version() #python version present in the machine
 # Big scipion structure dictionary and associated vars
 # indexes
 # folders & packages | libs  | index
-CONFIG_FOLDER =        DEF =   0 # is built by default?
-INSTALL_FOLDER =       INCS =  1 # includes
-BIN_FOLDER =           LIBS =  2 # libraries to create
-PACKAGES_FOLDER =      SRC =   3 # source pattern
-LIB_FOLDER =           DIR =   4 # folder name in temporal directory 
-MAN_FOLDER =           TAR =   5
-TMP_FOLDER =           DEPS =  6 # explicit dependencies
-INCLUDE_FOLDER =       URL =   7 # URL to download from
-FLAGS = 8 # Other flags for the compiler
+SOFTWARE_FOLDER =      DEF =   0 # is built by default?               
+CONFIG_FOLDER =        INCS =  1 # includes                           
+INSTALL_FOLDER =       LIBS =  2 # libraries to create                
+BIN_FOLDER =           SRC =   3 # source pattern                     
+PACKAGES_FOLDER =      DIR =   4 # folder name in temporal directory  
+LIB_FOLDER =           TAR =   5                                      
+MAN_FOLDER =           DEPS =  6 # explicit dependencies              
+TMP_FOLDER =           URL =   7 # URL to download from               
+INCLUDE_FOLDER =       FLAGS = 8 # Other flags for the compiler
+
+
 # indexes for LIBS
 
 SCIPION = {
-    'FOLDERS': {CONFIG_FOLDER: os.path.join('software', 'cfg'),
+    'FOLDERS': {SOFTWARE_FOLDER: 'software',
+                CONFIG_FOLDER: os.path.join('software', 'cfg'),
                 INSTALL_FOLDER: os.path.join('software', 'install'),
                 BIN_FOLDER: os.path.join('software', 'bin'),
                 PACKAGES_FOLDER: os.path.join('software', 'em'),
@@ -77,8 +80,8 @@ SCIPION = {
 ######################
 # AUXILIAR FUNCTIONS #
 ######################
-# TODO - AddExternalLibrary for auto-tools made compilation and addLibrary for ourself compiled libraries and 
-def addLibrary(env, name, dir, dft=True, src=[], incs=[], libs=[], tar=[], deps=[], url='', flags=[]):
+# TODO - AddExternalLibrary for auto-tools made compilation and _addLibrary for ourself compiled libraries and 
+def _addLibrary(env, name, dir, dft=True, src=[], incs=[], libs=[], tar=[], deps=[], url='', flags=[]):
     """
     This method is for adding a library to the main dict
     """
@@ -92,13 +95,13 @@ def addLibrary(env, name, dir, dft=True, src=[], incs=[], libs=[], tar=[], deps=
                      URL: url,
                      FLAGS: flags}
 
-def delLibrary(env, name):
+def _delLibrary(env, name):
     """
     This method is for removing a library from the main dict
     """
     del SCIPION['LIBS'][name]
 
-def addPackage(env, name, installFolder, libFolder, binFolder):
+def _addPackage(env, name, installFolder, libFolder, binFolder):
     """
     This method is for adding a package to the main dict
     """
@@ -106,13 +109,13 @@ def addPackage(env, name, installFolder, libFolder, binFolder):
                                  LIB_FOLDER: libFolder,
                                  BIN_FOLDER: binFolder}
 
-def delPackage(env, name):
+def _delPackage(env, name):
     """
     This method is for removing a package from the main dict
     """
     del SCIPION['PACKAGES'][name]
 
-def downloadLibrary(env, name, md5check=True, verbose=False):
+def _downloadLibrary(env, name, md5check=True, verbose=False):
     """
     This method is for downloading a library and placing it in tmp dir
     It will download first the .md5
@@ -129,6 +132,7 @@ def downloadLibrary(env, name, md5check=True, verbose=False):
     urlMd5 = "%s.md5" % url
     
     go = True
+    message = message2 = ''
     if md5check:
         print "Downloading md5 file for %s library..." % name
         go, message = _downloadFile(urlMd5, md5)
@@ -139,7 +143,9 @@ def downloadLibrary(env, name, md5check=True, verbose=False):
     if go:
         print "Downloading %s in folder %s" % (url, folder)
         while go:
-            _downloadFile(url, tar)
+            down, message2 = _downloadFile(url, tar)
+            if not down:
+                print "\t ...Library %s not downloaded. Server says: \n %s" % (name, message2)
             if _checkMd5(tar, md5) == 0:
                 if not _askContinue("Downloaded %s file doesn't match md5 its md5 checksum. Download it again?" % tar):
                     go = False
@@ -147,15 +153,15 @@ def downloadLibrary(env, name, md5check=True, verbose=False):
                 go = False
         return tar
     elif verbose:
-        if _askContinue("%s library was not downloaded. Proceed anyway?" % name):
+        if _askContinue("\t ...%s library was not downloaded. Proceed anyway?" % name):
             return True
         else:
             raise SCons.Errors.StopError("User defined stop")
     else:
-        print "%s not downloaded" % name
+        print "\t ...%s not downloaded" % (name)
         return tarFile
 
-def untarLibrary(env, name, tar=None, folder=None):
+def _untarLibrary(env, name, tar=None, folder=None):
     """
     This method is for untar the downloaded library in the tmp directory
     """
@@ -169,7 +175,7 @@ def untarLibrary(env, name, tar=None, folder=None):
     sourceTar = tarfile.open(tar,'r')
     tarContents = sourceTar.getmembers()
     tarFileContents = filter(lambda tarEntry: tarEntry.isfile(), tarContents)
-    tarFileContentsNames = map(_tarInfoToNode, tarFileContents)
+    tarFileContentsNames = map(__tarInfoToNode, tarFileContents)
     for indx, item in enumerate(tarFileContentsNames): 
         tarFileContentsNames[indx] = os.path.join(SCIPION['FOLDERS'][TMP_FOLDER], item)
     sourceTar.close()
@@ -177,22 +183,45 @@ def untarLibrary(env, name, tar=None, folder=None):
     result = env.Unpack(target=folder, source=tar, UNPACKLIST=tarFileContentsNames)
     return result
 
-def _tarInfoToNode(tarInfoObject):
+def __tarInfoToNode(tarInfoObject):
     return tarInfoObject.name
 
-def compileWithSetupPy(env, name, prefix=None):
+def _compileLibrary(env, name, src=None, incs=None, libs=None, deps=None, flags=None, source=None, target=None, autoTarget=None, autoSource=None):
+    """
+    Function that implements pseudo-builder for executing AutoConfig and Make builders
+    """
+    libraryDict = SCIPION['LIBS'].get(name)
+    if src is None:
+        src = libraryDict[SRC]
+    if incs is None:
+        incs = libraryDict[INCS]
+    if libs is None:
+        libs = libraryDict[LIBS]
+    if deps is None:
+        deps = libraryDict[DEPS]
+    if flags is None:
+        flags = libraryDict[FLAGS]
+    if autoSource is None:
+        autoSource = 'Makefile.in'
+    if autoTarget is None:
+        autoTarget = 'config.h'
+    if source is None:
+        source = Dir(os.path.join(SCIPION['FOLDERS'][TMP_FOLDER], libraryDict[DIR]))
+    if target is None:
+        target = Dir(os.path.join(SCIPION['FOLDERS'][TMP_FOLDER], libraryDict[DIR]))
+    env['CROSS_BUILD'] = False
+    configure = env.AutoConfig(source=source, target=target, AutoConfigTarget=autoTarget, AutoConfigSource=autoSource, AutoConfigParams=flags)
+    make = env.Make(source=configure, target=target, MakePath=Dir(os.path.join(SCIPION['FOLDERS'][TMP_FOLDER], libraryDict[DIR])))
+    _installLibs(name, libs)
+    return make
+
+def _compileWithSetupPy(env, name, prefix=None):
     """
     This method enter in a folder where a setup.py file is placed and executes setup.py build and setup.py install with the given prefix
     """
     print "Not implemented yet"
 
-def compileLibrary(env, name):
-    """
-    This method is for compiling the library
-    """
-    print "Not implemented yet"
-
-def scipionLogo(env):
+def _scipionLogo(env):
     print ""
     print "QQQQQQQQQT!^'::\"\"?$QQQQQQ" + "  S   S   S"
     print "QQQQQQQY`          ]4QQQQ"   + "  C   C   C"
@@ -230,6 +259,13 @@ def _downloadFile(url, file):
         return False, message
 
     return True, message
+
+def _installLibs(name, libs):
+    """
+    Function that copies the generated libs to the proper folder in the scipion architecture
+    """
+    print "Not implemented yet"
+    return True
 
 def _checkMd5(file, md5):
     """
@@ -317,23 +353,23 @@ elif WINDOWS:
 
 
 # Add methods to manage main dict to the environment to put them available from SConscript
-env.AddMethod(addLibrary, "AddLibrary")
-env.AddMethod(delLibrary, "DelLibrary")
-env.AddMethod(addPackage, "AddPackage")
-env.AddMethod(delPackage, "DelPackage")
+env.AddMethod(_addLibrary, "AddLibrary")
+env.AddMethod(_delLibrary, "DelLibrary")
+env.AddMethod(_addPackage, "AddPackage")
+env.AddMethod(_delPackage, "DelPackage")
 
 # Add pseudo-builder methods in order to perfectly manage what we want, and not depend only on the builders methods
-env.AddMethod(downloadLibrary, "DownloadLibrary")
-env.AddMethod(untarLibrary, "UntarLibrary")
-env.AddMethod(compileLibrary, "CompileLibrary")
-env.AddMethod(compileWithSetupPy, "CompileWithSetupPy")
+env.AddMethod(_downloadLibrary, "DownloadLibrary")
+env.AddMethod(_untarLibrary, "UntarLibrary")
+env.AddMethod(_compileLibrary, "CompileLibrary")
+env.AddMethod(_compileWithSetupPy, "CompileWithSetupPy")
 
 # Add other auxiliar functions to environment
-env.AddMethod(scipionLogo, "ScipionLogo")
+env.AddMethod(_scipionLogo, "ScipionLogo")
 
 # Add main dict to environment
 env.AppendUnique(SCIPION)
 env['MANDATORY_PYVERSION'] = MANDATORY_PYVERSION
 env['PYVERSION'] = PYVERSION
-Export('env')
+Export('env', 'SCIPION')
 env.SConscript('SConscript')
