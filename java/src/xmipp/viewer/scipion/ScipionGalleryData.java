@@ -329,6 +329,11 @@ public class ScipionGalleryData extends GalleryData{
             return "Micrograph";
         return self;
     }
+    
+    public String getSelf() {
+        
+        return ((ScipionMetaData)md).getSelf();
+    }
 
     public String getPrefix() {
         return ((ScipionMetaData)md).getPrefix();

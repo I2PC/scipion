@@ -71,7 +71,6 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
         }
     }
     private void initComponents() {
-        StopWatch.getInstance().printElapsedTime("starting viewer");
         JButton closebt = getScipionButton("Close", new ActionListener() {
 
             @Override
@@ -114,7 +113,8 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
                         ScipionMessageDialog dlg = new ScipionMessageDialog(ScipionGalleryJFrame.this, "Question", msg, msgfields);
                         int create = dlg.action;
                         if (create == ScipionMessageDialog.OK_OPTION) {
-                            String[] command = new String[]{python, script, projectid, inputid, sqlitefile + "," + ((ScipionGalleryData)data).getPrefix(), String.format("SetOf%s", type), dlg.getFieldValue(runNameKey)};
+                            String output = ((ScipionGalleryData)data).getSelf().equals("Class2D")? "SetOfClasses2D":"SetOfClasses3D";
+                            String[] command = new String[]{python, script, projectid, inputid, sqlitefile + "," + ((ScipionGalleryData)data).getPrefix(), output , dlg.getFieldValue(runNameKey)};
                             createSubset(command);
                             
                         }
@@ -189,7 +189,6 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
     
    protected void createSubset(final String[] command) 
     {
-        StopWatch.getInstance().printElapsedTime("creating subset");
         XmippWindowUtil.blockGUI(ScipionGalleryJFrame.this, "Creating set ...");
         new Thread(new Runnable() {
 
@@ -205,7 +204,6 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
                         XmippDialog.showInfo(ScipionGalleryJFrame.this, output);
                         
                     }
-                    StopWatch.getInstance().printElapsedTime("done creating subset");
 
                 } catch (Exception ex) {
                     throw new IllegalArgumentException(ex.getMessage());

@@ -19,6 +19,7 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import xmipp.jni.MetaData;
+import xmipp.utils.StopWatch;
 import xmipp.viewer.models.ColumnInfo;
 
 /**
@@ -58,7 +59,7 @@ public class ScipionMetaData extends MetaData{
         columns = new ArrayList<ColumnInfo>();
         emobjects = new ArrayList<EMObject>();
         loadData();
-        if(self.equals("Class2D"))
+        if(self.equals("Class2D") || self.equals("Class3D"))
         {
             String prefix;
             haschilds = true;
@@ -630,15 +631,17 @@ public class ScipionMetaData extends MetaData{
             
             Class.forName("org.sqlite.JDBC");
             c = DriverManager.getConnection("jdbc:sqlite:" + path);
+            c.setAutoCommit(false);
             stmt = c.createStatement();
-               String sql = String.format("DROP TABLE IF EXISTS %1$sClasses; CREATE TABLE %1$sClasses(\n"
+            
+            String sql = String.format("DROP TABLE IF EXISTS %1$sClasses; CREATE TABLE %1$sClasses(\n"
                     + "id        INTEGER PRIMARY KEY AUTOINCREMENT,\n" +
 "                      label_property      TEXT UNIQUE,\n" +
 "                      column_name TEXT UNIQUE,\n" +
 "                      class_name TEXT DEFAULT NULL\n" +
 "                      )", prefix);
             stmt.executeUpdate(sql);
-            
+
             sql = String.format("INSERT INTO %sClasses(id, label_property, column_name, class_name) values (1, \'self\', \'%s\', \'%s\')", prefix, selfalias, self);
             String line = ", (%s, \'%s\', \'%s\', \'%s\')";
             ColumnInfo ci;
@@ -663,7 +666,6 @@ public class ScipionMetaData extends MetaData{
                 return;
             sql = String.format("INSERT INTO %sObjects(%s) VALUES ", prefix, cols);
             Object value;
-            int count = 0;
             for(EMObject emo: emobjects)
             {
                 sql += String.format("(%s, '', ''", emo.id);
@@ -689,21 +691,10 @@ public class ScipionMetaData extends MetaData{
                             sql += ", NULL";
                 }
                 sql += "),";
-                count ++;
-                if(count == 200)
-                {
-                     
-                    sql = sql.substring(0, sql.length() - 1);//remove comma
-                    stmt.executeUpdate(sql);
-                    sql = String.format("INSERT INTO %sObjects(%s) VALUES ", prefix, cols);
-                    count = 0;
-                }
             }
-            if(count > 0)
-            {
-                sql = sql.substring(0, sql.length() - 1);//remove comma
-                stmt.executeUpdate(sql);
-            }
+            sql = sql.substring(0, sql.length() - 1);//remove comma
+            stmt.executeUpdate(sql);
+            c.commit();
             stmt.close();
             c.close();
             
@@ -803,11 +794,12 @@ public class ScipionMetaData extends MetaData{
             
             Class.forName("org.sqlite.JDBC");
             c = DriverManager.getConnection("jdbc:sqlite:" + path);
+            c.setAutoCommit(false);
             stmt = c.createStatement();
             String sql = "";
             String updatesql = "UPDATE %sObjects SET %s=%s WHERE id=%s;";
             sql = "";
-            stmt.execute("BEGIN TRANSANCTION;");
+            
             for(EMObject emo: emobjects)
             {
                 if(emo.changed)
@@ -815,14 +807,11 @@ public class ScipionMetaData extends MetaData{
                     //sql+= String.format(updatesql, prefix, enabledci.labelName, (emo.isEnabled())? 1: 0, emo.id);
                     sql= String.format(updatesql, prefix, enabledci.labelName, (emo.isEnabled())? 1: 0, emo.id);
                     stmt.executeUpdate(sql);
-
                 }
-                
             }
-            stmt.execute("END TRANSANCTION;");
+            c.commit();
             stmt.close();
             c.close();
-            
         } 
         catch ( Exception e ) {
             e.printStackTrace();
