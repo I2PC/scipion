@@ -186,7 +186,7 @@ def _untarLibrary(env, name, tar=None, folder=None):
 def __tarInfoToNode(tarInfoObject):
     return tarInfoObject.name
 
-def _compileLibrary(env, name, src=None, incs=None, libs=None, deps=None, flags=None, source=None, target=None, autoTarget=None, autoSource=None):
+def _compileLibrary(env, name, src=None, incs=None, libs=None, deps=None, flags=None, source=None, target=None, autoTarget=None, autoSource=None, makePath=None):
     """
     Function that implements pseudo-builder for executing AutoConfig and Make builders
     """
@@ -209,9 +209,13 @@ def _compileLibrary(env, name, src=None, incs=None, libs=None, deps=None, flags=
         source = Dir(os.path.join(SCIPION['FOLDERS'][TMP_FOLDER], libraryDict[DIR]))
     if target is None:
         target = Dir(os.path.join(SCIPION['FOLDERS'][TMP_FOLDER], libraryDict[DIR]))
+    if makePath is None:
+        makePath = Dir(os.path.join(SCIPION['FOLDERS'][TMP_FOLDER], libraryDict[DIR]))
+    else:
+        makePath = Dir(os.path.join(SCIPION['FOLDERS'][TMP_FOLDER], libraryDict[DIR], makePath))
     env['CROSS_BUILD'] = False
     configure = env.AutoConfig(source=source, target=target, AutoConfigTarget=autoTarget, AutoConfigSource=autoSource, AutoConfigParams=flags)
-    make = env.Make(source=configure, target=target, MakePath=Dir(os.path.join(SCIPION['FOLDERS'][TMP_FOLDER], libraryDict[DIR])))
+    make = env.Make(source=configure, target=target, MakePath=makePath)
     _installLibs(name, libs)
     return make
 
