@@ -181,11 +181,15 @@ tclCompile = env.CompileLibrary('tcl',
                                 libs=['.libs'],
                                 autoSource=os.path.join('unix','Makefile.in'),
                                 makePath='unix')
-#                                autoTarget=os.path.join('unix'))
 tkCompile = env.CompileLibrary('tk', 
                                flags=['--enable-threads', 
-                                      '--with-tcl="%s"' % os.path.join(Dir(SCIPION['LIBS']['tcl'][DIR]).abspath),
+                                      '--with-tcl="%s"' % os.path.join(Dir(os.path.join(SCIPION['FOLDERS'][TMP_FOLDER], SCIPION['LIBS']['tcl'][DIR],'unix')).abspath),
                                        '--prefix=%s' % os.path.join(Dir(SCIPION['FOLDERS'][SOFTWARE_FOLDER]).abspath)], 
                                libs=['.libs'],
                                autoSource=os.path.join('unix','Makefile.in'),
+                               autoTarget=os.path.join('unix','config.h'),
                                makePath='unix')
+
+Depends(sqliteCompile, sqliteUntar)
+Depends(tclCompile, tclUntar)
+Depends(tkCompile, tkUntar)
