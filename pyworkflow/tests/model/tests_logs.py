@@ -1,55 +1,51 @@
 #!/usr/bin/env python
 
 import os
-from os.path import join, dirname, exists
 import logging
 import unittest
-import filecmp
 
-from pyworkflow.object import *
-from pyworkflow.protocol import *
-from pyworkflow.mapper import *
 from pyworkflow.utils.utils import getLineInFile, isInFile
 from pyworkflow.utils.log import ScipionLogger, LOG_FILE
-from pyworkflow.tests import *
+from pyworkflow.tests import BaseTest, setupTestOutput
 
 
 #FIXME:Nacho
+# Ok, Nacho and Airen, explain what you have to fix! :)
 
 class TestLogs(BaseTest):
     
     @classmethod
     def setUpClass(cls):
         setupTestOutput(cls)        
-        
+
     def testSimpleFileLog(self):
         import random
         logTestCode = random.randint(1, 100000)
 
         genLogFn = LOG_FILE
-        log = logging.getLogger('pyworkflow.test.log.test_scipon_log')
+        log1 = logging.getLogger('pyworkflow.test.log.test_scipon_log')
         genInfoTest = 'General info [%d]' % logTestCode
         genDebugTest = 'General debug [%d]' % logTestCode
         genWarningTest = 'General warning [%d]' % logTestCode
         genErrorTest = 'General error [%d]' % logTestCode
-        log.info(genInfoTest)
+        log1.info(genInfoTest)
         #log.debug(genDebugTest)
-        log.warning(genWarningTest)
+        log1.warning(genWarningTest)
 
-        logFn = 'fileLog.log'
-        log = ScipionLogger(logFn)
+        logFn = 'pyworkflow/tests/fileLog.log'
+        log2 = ScipionLogger(logFn)
         fileInfoTest = 'File info [%d]' % logTestCode
         fileDebugTest = 'File debug [%d]' % logTestCode
         fileWarningTest = 'File warning [%d]' % logTestCode
         fileErrorTest = 'File error [%d]' % logTestCode
-        log.info(fileInfoTest)
+        log2.info(fileInfoTest)
         #log.debug(fileDebugTest)
-        log.warning(fileWarningTest)
-        log = logging.getLogger('pyworkflow.tests.log')
-        log.error(genErrorTest)
+        log2.warning(fileWarningTest)
+        log3 = logging.getLogger('pyworkflow.tests.log')
+        log3.error(genErrorTest)
         
-        log = ScipionLogger(logFn)
-        log.error(fileErrorTest)
+        log4 = ScipionLogger(logFn)
+        log4.error(fileErrorTest)
         
         # Check general logs
         lineGenInfoTest = getLineInFile(genInfoTest, genLogFn)
@@ -107,9 +103,11 @@ class TestLogs(BaseTest):
             print ('General logs in file log!!!')
             fileLoggerChecked = False 
         
-        self.assertTrue(genLoggerChecked & fileLoggerChecked)  
+        self.assertTrue(genLoggerChecked & fileLoggerChecked)
+
+        print 'Removing log file %s' % logFn
+        os.remove(logFn)
         
         
 if __name__ == '__main__':
     unittest.main()
-    
