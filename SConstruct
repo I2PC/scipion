@@ -205,8 +205,6 @@ def _compileLibrary(env, name, src=None, incs=None, libs=None, deps=None, flags=
         incs = libraryDict[INCS]
     if libs is None:
         libs = libraryDict[LIBS]
-    if deps is None:
-        deps = libraryDict[DEPS]
     if flags is None:
         flags = libraryDict[FLAGS]
     if autoSource is None:
@@ -219,16 +217,14 @@ def _compileLibrary(env, name, src=None, incs=None, libs=None, deps=None, flags=
         target = os.path.join(SCIPION['FOLDERS'][TMP_FOLDER], libraryDict[DIR])
     if makePath is None:
         makePath = Dir(os.path.join(SCIPION['FOLDERS'][TMP_FOLDER], libraryDict[DIR]))
+#    if deps is None:
+#        Depends(target, deps)
     else:
         makePath = Dir(os.path.join(SCIPION['FOLDERS'][TMP_FOLDER], libraryDict[DIR], makePath))
     env['CROSS_BUILD'] = False
     configure = env.AutoConfig(Dir(os.path.join(SCIPION['FOLDERS'][TMP_FOLDER], libraryDict[DIR])), AutoConfigTarget=autoTarget, AutoConfigSource=autoSource, AutoConfigParams=flags)
-#    Depends(configure, deps)
     make = env.Make(source=source, target=target, MakePath=makePath, MakeEnv=os.environ, MakeTargets="all install")
-#    print "%s depends on %s" % (make, configure)
-#    Depends(make, configure)
 #    _installLibs(name, libs)
-#    return make
     return make
 
 def _compileWithSetupPy(env, name, prefix=None):
@@ -405,5 +401,5 @@ env['PYVERSION'] = PYVERSION
 Export('env', 'SCIPION')
 
 # Only in case user didn't select help message, we run SConscript
-if not GetOption('help'):
+if not GetOption('help') and not GetOption('clean'):
     env.SConscript('SConscript')

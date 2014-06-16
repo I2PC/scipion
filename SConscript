@@ -170,8 +170,6 @@ paramikoUntar = env.UntarLibrary('paramiko')
 # EXECUTING COMPILATIONS #
 ##########################
 
-print "\t target %s \n \tdepends on source %s" % (os.path.join(SCIPION['FOLDERS'][TMP_FOLDER], SCIPION['LIBS']['sqlite'][DIR], '.libs', 'libsqlite3.so'), Glob(os.path.join(SCIPION['FOLDERS'][TMP_FOLDER], SCIPION['LIBS']['sqlite'][DIR]), '*.c')[0])
-
 sqliteCompile = env.CompileLibrary('sqlite',
                                    flags=['CPPFLAGS=-w', 
                                           'CFLAGS=-DSQLITE_ENABLE_UPDATE_DELETE_LIMIT=1', 
@@ -189,14 +187,16 @@ tclCompile = env.CompileLibrary('tcl',
                                 autoSource=os.path.join('unix','Makefile.in'),
                                 autoTarget=os.path.join('unix','Makefile'),
                                 makePath='unix')
-#tkCompile = env.CompileLibrary('tk', 
-#                               flags=['--enable-threads', 
-#                                      '--with-tcl="%s"' % os.path.join(Dir(os.path.join(SCIPION['FOLDERS'][TMP_FOLDER], SCIPION['LIBS']['tcl'][DIR],'unix')).abspath),
-#                                      '--prefix=%s' % os.path.join(Dir(SCIPION['FOLDERS'][SOFTWARE_FOLDER]).abspath)], 
-#                               libs=['.libs'],
-#                               deps=tkUntar+tclUntar,
-#                               autoSource=os.path.join('unix','Makefile.in'),
-#                               autoTarget=os.path.join('unix','Makefile'),
-#                               makePath='unix')
+
+tkCompile = env.CompileLibrary('tk', 
+                               flags=['--enable-threads', 
+#                                      '--with-tcl="%s"' % os.path.join(Dir(os.path.join(SCIPION['FOLDERS'][SOFTWARE_FOLDER], 'lib64')).abspath),
+                                      '--prefix=%s' % os.path.join(Dir(SCIPION['FOLDERS'][SOFTWARE_FOLDER]).abspath)], 
+                               deps=File('libtcl.so'),
+                               source=Glob(os.path.join(SCIPION['FOLDERS'][TMP_FOLDER], SCIPION['LIBS']['tk'][DIR]), 'unix', '*.c'),
+                               target=File('libtk.so'),
+                               autoSource=os.path.join('unix','Makefile.in'),
+                               autoTarget=os.path.join('unix','Makefile'),
+                               makePath='unix')
 
 
