@@ -34,7 +34,7 @@ from pyworkflow.utils import timeit
 
 
 def runSubsetProtocol(projectId, inputId, sqliteFile, 
-                      outputType, protocolLabel):
+                      outputType, protocolLabel, other):
     """ Load the project and launch the protocol to
     create the subset.
     """
@@ -56,11 +56,12 @@ def runSubsetProtocol(projectId, inputId, sqliteFile,
 if __name__ == '__main__':
     #TODO: REMOVE THIS AFTER DEBUGGING
     print "ARGS: ", sys.argv
-    
+    other = sys.argv[6:]
     runSubsetProtocol(projectId=sys.argv[1],
                       inputId=sys.argv[2],
                       sqliteFile=sys.argv[3],
                       outputType=sys.argv[4],
-                      protocolLabel=sys.argv[5])
+                      protocolLabel=sys.argv[5], 
+                      other=other)
     sys.exit(0)
 

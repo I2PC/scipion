@@ -176,8 +176,9 @@ Examples:
         return DataView(filename, env=self._env)
         
     def createScipionView(self, filename, extraParams=''):
+        inputParticlesId = self.protocol.inputParticles.get().strId()
         return ObjectView(self._project.getName(), 
-                          self.protocol.strId(), filename,
+                          self.protocol.strId(), filename, other=inputParticlesId,
                           env=self._env)
 
     def _load(self):
@@ -246,7 +247,8 @@ Examples:
         
         for it in self._iterations:
             fn = self.protocol._getIterClasses(it)
-            v = self.createScipionView(fn, output, extraParams='--mode metadata --render first')
+            #should provide sqlite instead of metadata
+            v = self.createScipionView(fn, output)
             views.append(v)
         
         return views
