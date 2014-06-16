@@ -227,11 +227,16 @@ def _compileLibrary(env, name, src=None, incs=None, libs=None, deps=None, flags=
 #    _installLibs(name, libs)
     return make
 
-def _compileWithSetupPy(env, name, prefix=None):
+def _compileWithSetupPy(env, name, source=None, target=None):
     """
     This method enter in a folder where a setup.py file is placed and executes setup.py build and setup.py install with the given prefix
     """
-    print "Not implemented yet"
+    libraryDict = SCIPION['LIBS'].get(name)
+    if source is None:
+        source = Glob(os.path.join(SCIPION['FOLDER'][TMP_FOLDER], libraryDict[DIR], '*.py'))
+    if target is None:
+        target = os.path.join(SCIPION['FOLDERS'][TMP_FOLDER], libraryDict[DIR])
+    
 
 def _scipionLogo(env):
     print ""
@@ -392,14 +397,15 @@ env.AppendUnique(SCIPION)
 ########################
 
 AddOption('--update',
-              dest='update',
-              action='store_true',
-              help='Check for packages or libraries updates')
+          dest='update',
+          action='store_true',
+          help='Check for packages or libraries updates')
 
 env['MANDATORY_PYVERSION'] = MANDATORY_PYVERSION
 env['PYVERSION'] = PYVERSION
 Export('env', 'SCIPION')
 
 # Only in case user didn't select help message, we run SConscript
-if not GetOption('help') and not GetOption('clean'):
+#if not GetOption('help') and not GetOption('clean'):
+if not GetOption('help'):
     env.SConscript('SConscript')

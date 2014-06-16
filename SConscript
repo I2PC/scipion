@@ -123,80 +123,75 @@ env.AddLibrary('paramiko', dft=False, tar='paramiko-1.14.0.tar.gz', dir='paramik
 # DOWNLOADS #
 #############
 
-sqliteDownload = env.DownloadLibrary('sqlite')
-tclDownload = env.DownloadLibrary('tcl')
-tkDownload = env.DownloadLibrary('tk')
-pythonDownload = env.DownloadLibrary('python')
-numpyDownload = env.DownloadLibrary('numpy')
-matplotlibDownload = env.DownloadLibrary('matplotlib')
-psutilDownload = env.DownloadLibrary('psutil')
-mpi4pyDownload = env.DownloadLibrary('mpi4py')
-scipyDownload = env.DownloadLibrary('scipy')
-bibtexparserDownload = env.DownloadLibrary('bibtexparser')
-djangoDownload = env.DownloadLibrary('django')
-paramikoDownload = env.DownloadLibrary('paramiko')
+if not GetOption('clean'):
+    env.DownloadLibrary('sqlite')
+    env.DownloadLibrary('tcl')
+    env.DownloadLibrary('tk')
+    env.DownloadLibrary('python')
+    env.DownloadLibrary('numpy')
+    env.DownloadLibrary('matplotlib')
+    env.DownloadLibrary('psutil')
+    env.DownloadLibrary('mpi4py')
+    env.DownloadLibrary('scipy')
+    env.DownloadLibrary('bibtexparser')
+    env.DownloadLibrary('django')
+    env.DownloadLibrary('paramiko')
 
 #########
 # UNTAR #
 #########
-sqliteUntar = env.UntarLibrary('sqlite')
-tclUntar = env.UntarLibrary('tcl')
-tkUntar = env.UntarLibrary('tk')
-pythonUntar = env.UntarLibrary('python')
-numpyUntar = env.UntarLibrary('numpy')
-matplotlibUntar = env.UntarLibrary('matplotlib')
-psutilUntar = env.UntarLibrary('psutil')
-mpi4pyUntar = env.UntarLibrary('mpi4py')
-scipyUntar = env.UntarLibrary('scipy')
-bibtexparserUntar = env.UntarLibrary('bibtexparser')
-djangoUntar = env.UntarLibrary('django')
-paramikoUntar = env.UntarLibrary('paramiko')
-
-# Explicitly write depends
-#Depends(sqliteUntar, sqliteDownload)
-#Depends(tclUntar, tclDownload)
-#Depends(tkUntar, tkDownload)
-#Depends(pythonUntar, pythonDownload)
-#Depends(numpyUntar, numpyDownload)
-#Depends(matplotlibUntar, matplotlibDownload)
-#Depends(psutilUntar, psutilDownload)
-#Depends(mpi4pyUntar, mpi4pyDownload)
-#Depends(scipyUntar, scipyDownload)
-#Depends(bibtexparserUntar, bibtexparserDownload)
-#Depends(djangoUntar, djangoDownload)
-#Depends(paramikoUntar, paramikoDownload)
+env.UntarLibrary('sqlite')
+env.UntarLibrary('tcl')
+env.UntarLibrary('tk')
+env.UntarLibrary('python')
+env.UntarLibrary('numpy')
+env.UntarLibrary('matplotlib')
+env.UntarLibrary('psutil')
+env.UntarLibrary('mpi4py')
+env.UntarLibrary('scipy')
+env.UntarLibrary('bibtexparser')
+env.UntarLibrary('django')
+env.UntarLibrary('paramiko')
 
 ##########################
 # EXECUTING COMPILATIONS #
 ##########################
 
-sqliteCompile = env.CompileLibrary('sqlite',
-                                   flags=['CPPFLAGS=-w', 
-                                          'CFLAGS=-DSQLITE_ENABLE_UPDATE_DELETE_LIMIT=1', 
-                                          '--prefix=%s' % os.path.join(Dir(SCIPION['FOLDERS'][SOFTWARE_FOLDER]).abspath)], 
-                                   source=Glob(os.path.join(SCIPION['FOLDERS'][TMP_FOLDER], SCIPION['LIBS']['sqlite'][DIR]), '*.c'),
-                                   target=File('libsqlite3.so'),
-                                   autoSource='Makefile.in',
-                                   autoTarget='Makefile')
+env.CompileLibrary('sqlite',
+                   flags=['CPPFLAGS=-w', 
+                          'CFLAGS=-DSQLITE_ENABLE_UPDATE_DELETE_LIMIT=1', 
+                          '--prefix=%s' % os.path.join(Dir(SCIPION['FOLDERS'][SOFTWARE_FOLDER]).abspath)], 
+                   source=Glob(os.path.join(SCIPION['FOLDERS'][TMP_FOLDER], SCIPION['LIBS']['sqlite'][DIR]), '*.c'),
+                   target=File('libsqlite3.so'),
+                   autoSource='Makefile.in',
+                   autoTarget='Makefile')
 
-tclCompile = env.CompileLibrary('tcl', 
-                                flags=['--enable-threads', 
-                                       '--prefix=%s' % os.path.join(Dir(SCIPION['FOLDERS'][SOFTWARE_FOLDER]).abspath)],
-                                source=Glob(os.path.join(SCIPION['FOLDERS'][TMP_FOLDER], SCIPION['LIBS']['tcl'][DIR]), 'unix', '*.c'),
-                                target=File('libtcl.so'),
-                                autoSource=os.path.join('unix','Makefile.in'),
-                                autoTarget=os.path.join('unix','Makefile'),
-                                makePath='unix')
+env.CompileLibrary('tcl', 
+                   flags=['--enable-threads', 
+                          '--prefix=%s' % os.path.join(Dir(SCIPION['FOLDERS'][SOFTWARE_FOLDER]).abspath)],
+                   source=Glob(os.path.join(SCIPION['FOLDERS'][TMP_FOLDER], SCIPION['LIBS']['tcl'][DIR]), 'unix', '*.c'),
+                   target=File('libtcl.so'),
+                   autoSource=os.path.join('unix','Makefile.in'),
+                   autoTarget=os.path.join('unix','Makefile'),
+                   makePath='unix')
 
-tkCompile = env.CompileLibrary('tk', 
-                               flags=['--enable-threads', 
-#                                      '--with-tcl="%s"' % os.path.join(Dir(os.path.join(SCIPION['FOLDERS'][SOFTWARE_FOLDER], 'lib64')).abspath),
-                                      '--prefix=%s' % os.path.join(Dir(SCIPION['FOLDERS'][SOFTWARE_FOLDER]).abspath)], 
-                               deps=File('libtcl.so'),
-                               source=Glob(os.path.join(SCIPION['FOLDERS'][TMP_FOLDER], SCIPION['LIBS']['tk'][DIR]), 'unix', '*.c'),
-                               target=File('libtk.so'),
-                               autoSource=os.path.join('unix','Makefile.in'),
-                               autoTarget=os.path.join('unix','Makefile'),
-                               makePath='unix')
+env.CompileLibrary('tk', 
+                   flags=['--enable-threads', 
+#                          '--with-tcl="%s"' % os.path.join(Dir(os.path.join(SCIPION['FOLDERS'][SOFTWARE_FOLDER], 'lib64')).abspath),
+                          '--prefix=%s' % os.path.join(Dir(SCIPION['FOLDERS'][SOFTWARE_FOLDER]).abspath)], 
+                   deps=File('libtcl.so'),
+                   source=Glob(os.path.join(SCIPION['FOLDERS'][TMP_FOLDER], SCIPION['LIBS']['tk'][DIR]), 'unix', '*.c'),
+                   target=File('libtk.so'),
+                   autoSource=os.path.join('unix','Makefile.in'),
+                   autoTarget=os.path.join('unix','Makefile'),
+                   makePath='unix')
+
+env.CompileLibrary('python',
+                   flags=['--prefix=%s' % os.path.join(Dir(SCIPION['FOLDERS'][SOFTWARE_FOLDER]).abspath)],
+                   deps=[File('libtcl.so'), File('libtk.so'), File('libsqlite3.so')],
+                   source=Glob(os.path.join(SCIPION['FOLDERS'][TMP_FOLDER], SCIPION['LIBS']['python'][DIR]), '*.c'),
+                   target=File('libpython2.7.so'),
+                   autoSource='Makefile.pre.in',
+                   autoTarget='Makefile')
 
 
