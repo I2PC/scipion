@@ -1,11 +1,36 @@
 <script>
-function changeMode(mode){
-
+function changeMode(modeNew){
 	var form = document.forms['showjForm']
 	
-	if (mode != form.mode.value){
-		form.mode.value = mode;
+	var modeOld = form.mode.value
+	 
+	if (modeNew != modeOld){
+		list_selected=[];
+		switch(modeOld){
+	
+			case "gallery":
+				// To get the selected images
+				$.each($("div.image_selected"), function(){
+					var id = $(this).attr("id").split("___").pop()
+					list_selected.push(id)
+				});
+				break;
+				
+			case "table":
+				// To get the selected rows
+				$.each($("tr.row_selected"), function(){
+					var id = $(this).attr("id").split("___").pop()
+					list_selected.push(id)
+				});
+				break;
+		}
+		
+		console.log(list_selected)
+	
+	
+		form.mode.value = modeNew;
 		form.submit();
+		
 	}
 }
 </script>

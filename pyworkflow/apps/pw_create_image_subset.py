@@ -30,6 +30,7 @@ import sys
 
 from pyworkflow.manager import Manager
 from pyworkflow.em import ProtUserSubSet
+from pyworkflow.utils import timeit
 
 
 def runSubsetProtocol(projectId, inputId, sqliteFile, 

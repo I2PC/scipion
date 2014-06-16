@@ -59,8 +59,7 @@ class DataView(View):
         else:
             self._tableName, self._path = None, path
             
-    def show(self):
-        
+    def show(self):        
         runJavaIJapp(self._memory, 'xmipp.viewer.Viewer', self.getShowJParams(), True, env=self._env)
     
     def getShowJParams(self):

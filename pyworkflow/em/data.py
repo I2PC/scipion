@@ -133,6 +133,7 @@ class CTFModel(EMObject):
         self._psdFile.set(value)
         
     def getMicrograph(self):
+        self._micObj.copyObjId(self)
         return self._micObj
     
     def setMicrograph(self, mic):
@@ -311,7 +312,12 @@ class Image(EMObject):
         
     def __str__(self):
         """ String representation of an Image. """
-        return "%s (%s, %0.2f A/px)" % (self.getClassName(), ImageDim(*self.getDim()), self.getSamplingRate())
+        dim = self.getDim()
+        if dim:
+            dimStr = str(ImageDim(*dim))
+        else:
+            dimStr = 'No-Dim'
+        return "%s (%s, %0.2f A/px)" % (self.getClassName(), dimStr, self.getSamplingRate())
 
 
 class Micrograph(Image):
@@ -896,7 +902,12 @@ class Class2D(SetOfParticles):
     (some kind of average particle from the particles assigned
     to the class) 
     """
-    pass
+    def copyInfo(self, other):
+        """ Copy basic information (id and other properties) but not _mapperPath or _size
+        from other set of micrographs to current one.
+        """
+        self.copy(other, ignoreAttrs=['_mapperPath', '_size'])
+        self._mapperPath.clear()
         
     
 class Class3D(SetOfParticles):
@@ -956,8 +967,7 @@ class SetOfClasses(EMSet):
             classItem._mapperPath.set('%s,%s' % (self.getFileName(), classPrefix))
         EMSet._insertItem(self, classItem)
         classItem.write()#Set.write(self)
-           
-    
+        
     def write(self):
         """ Override super method to also write the representatives. """
         EMSet.write(self)

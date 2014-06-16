@@ -100,8 +100,8 @@ def loadHostConfig(host='localhost'):
     and how to submit jobs to the queue system if exists.
     """
     from pyworkflow.hosts import HostMapper
-    from pyworkflow.apps.config import getSettingsPath
-    fn = getSettingsPath()
+    from pyworkflow.apps.config import getConfigPath
+    fn = getConfigPath()
     mapper = HostMapper(fn)
     return mapper.selectByLabel(host)
 

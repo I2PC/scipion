@@ -137,7 +137,10 @@ class XmippViewer(Viewer):
         
         elif issubclass(cls, SetOfClasses2D):
             fn = obj.getFileName()
-            self._views.append(ObjectView(self._project.getName(), obj.strId(), fn))  
+            self._views.append(ObjectView(self._project.getName(), obj.strId(), fn,
+                                          viewParams={ORDER: 'enabled id _size _representative._filename',
+                                                      'visible': 'enabled id _size _representative._filename',
+                                                      }))
             
         elif issubclass(cls, SetOfClasses3D):
             fn = obj.getFileName()
