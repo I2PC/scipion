@@ -103,9 +103,7 @@ class XmippCL2DViewer(ProtocolViewer):
             levelFiles.sort()
             
             if self.doShowLastLevel == LEVEL_LAST:
-                views.append(ObjectView("classes@"+levelFiles[-1], "Particles", 
-                                        self._project.getName(), obj.strId(), 
-                                        obj.getImages().strId()))
+                views.append(DataView("classes@"+levelFiles[-1]))
             else:
                 if self.showSeveralLevels.empty():
                     errors.append('Please select the levels that you want to visualize.')

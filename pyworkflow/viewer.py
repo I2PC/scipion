@@ -179,9 +179,11 @@ class Viewer(object):
         return MessageView(msg, title, msgType=MSG_WARN, tkParent=self._tkRoot)
 
     def textView(self, filelist, title=''):
-        return TextView(filelist, title, tkParent=self.formWindow)      
+        return TextView(filelist, title, tkParent=self.formWindow)    
 
-    
+    def objectView(self, path, inputType):
+        pass
+        
 class ProtocolViewer(Protocol, Viewer):
     """ Special kind of viewer that have a Form to organize better
     complex visualization associated with protocol results.

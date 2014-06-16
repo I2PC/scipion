@@ -90,7 +90,7 @@ class XmippProtParticlePicking(ProtParticlePicking, XmippProtocol):
         self._params = {'inputMicsXmipp': micFn,
                         'extraDir': self._getExtraPath(),
                         'pickingMode': 'manual',
-                        'scipion': "%s %s \"%s\" %s" % ( pw.PYTHON, pw.join('apps', 'pw_create_coords_subset.py'), self.getDbPath(), self.strId())
+                        'scipion': "%s %s \"%s\" %s" % ( pw.PYTHON, pw.join('apps', 'pw_create_coords.py'), self.getDbPath(), self.strId())
                         }
         
         # Launch the particle picking GUI
@@ -150,8 +150,8 @@ class XmippProtParticlePicking(ProtParticlePicking, XmippProtocol):
         if not hasattr(self, 'outputCoordinates'):
             summary.append("Output coordinates not ready yet.") 
         else:
-            
-            summary.append("Particles picked: %d (from %d micrographs)" % (self.outputCoordinates.getSize(), self.inputMicrographs.get().getSize()))
+            for key, output in self.iterOutputAttributes(EMObject):
+                summary.append("Particles picked: %d (from %d micrographs)" % (output.getSize(), self.inputMicrographs.get().getSize()))
             # Read the picking state from the config.xmd metadata
             configfile = join(self._getExtraPath(), 'config.xmd')
             if exists(configfile):

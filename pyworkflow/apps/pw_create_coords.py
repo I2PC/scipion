@@ -2,7 +2,6 @@
 # **************************************************************************
 # *
 # * Authors:    Airen Zaldivar         (airenzp@gmail.com) 
-#               J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -26,42 +25,42 @@
 # *
 # **************************************************************************
 
-import sys
-
+import os, sys
 from pyworkflow.manager import Manager
-from pyworkflow.em import ProtUserSubSet
-from pyworkflow.utils import timeit
+
+from pyworkflow.em import *
+import pyworkflow.em.packages.xmipp3 as xmipp3
+from xmipp import *
+from pyworkflow.utils.path import moveTree
+from pyworkflow.em.packages.xmipp3 import readSetOfCoordinates
 
 
-def runSubsetProtocol(projectId, inputId, sqliteFile, 
-                      outputType, protocolLabel, other):
-    """ Load the project and launch the protocol to
-    create the subset.
-    """
-    # Retrieve project and input object from db
-    project = Manager().loadProject(projectId)
-    inputObject = project.mapper.selectById(int(inputId))
-
-    # Create the new protocol instance and set the input values
-    prot = project.newProtocol(ProtUserSubSet)
-    prot.inputObject.set(inputObject)
-    prot.setObjLabel(protocolLabel)
-    prot.sqliteFile.set(sqliteFile)
-    prot.outputClassName.set(outputType)
-    
-    # Launch the protocol
-    project.launchProtocol(prot, wait=True)
-    
 
 if __name__ == '__main__':
-    #TODO: REMOVE THIS AFTER DEBUGGING
-    print "ARGS: ", sys.argv
-    other = sys.argv[6:]
-    runSubsetProtocol(projectId=sys.argv[1],
-                      inputId=sys.argv[2],
-                      sqliteFile=sys.argv[3],
-                      outputType=sys.argv[4],
-                      protocolLabel=sys.argv[5], 
-                      other=other)
-    sys.exit(0)
 
+    projectId = sys.argv[1]
+    project = Manager().loadProject(projectId)
+    protId = int(sys.argv[2])
+    prot = project.getProtocol(protId)
+    
+    
+    outputdir = sys.argv[1]
+    dbpath = sys.argv[2]
+    
+    inputset = prot.inputMicrographs.get()
+    extradir = prot._getExtraPath()
+    count = 0;
+    for key, output in prot.iterOutputAttributes(EMObject):
+        count += 1
+    
+    suffix = str(count + 1) if count > 0 else ''
+    outputName = 'outputCoordinates' + suffix
+    outputset = prot._createSetOfCoordinates(inputset, suffix=suffix)#micrographs are the input set if protocol is not finished
+    readSetOfCoordinates(extradir, outputset.getMicrographs(), outputset)
+    outputs = {outputName: outputset}
+    prot._defineOutputs(**outputs)
+    prot._defineSourceRelation(inputset, outputset)
+    
+    project._updateProtocol(prot)
+        
+    

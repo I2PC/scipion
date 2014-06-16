@@ -143,42 +143,138 @@ class ProtUserSubSet(ProtSets):
         self._outputType = String(args.get('outputType', None))
         self.setObjLabel(args.get('label', self.getClassName()))
         
+    def _defineParams(self, form):
+        form.addHidden('inputObject', PointerParam, pointerClass='EMObject')
+        form.addHidden('sqliteFile', FileParam)
+        form.addHidden('outputClassName', StringParam)
         
-    def getInputType(self):
-        return self._inputType.get()
+    def _insertAllSteps(self):
+        self._insertFunctionStep('createSetOfImagesStep')
     
-    def getOutputType(self):
-        return self._outputType.get()
+    def _createSubSetFromImages(self, inputImages):
+        className = inputImages.getClassName()
+        createFunc = getattr(self, '_create' + className)
+        modifiedSet = inputImages.getClass()(filename=self._dbName, prefix=self._dbPrefix)
+        
+        output = createFunc()
+        output.copyInfo(inputImages)
+        for img in modifiedSet:
+            if img.isEnabled():                
+                output.append(img)
+        # Register outputs
+        self._defineOutput(className, output)
     
-    def createInputPointer(self, inputset):
-        inputsetpt = Pointer()
-        inputsetpt.set(inputset)
-        inputs = {'input' + self.getInputType(): inputsetpt}
-        self._defineInputs(**inputs)
-    
-    def createOutputSet(self, outputset):
+    def _createSubSetFromCTF(self, inputCTFs):
+        """ Create a subset of Micrographs analyzing the CTFs. """
+        output = self._createSetOfMicrographs()
+        firstMic = inputCTFs.getFirstItem().getMicrograph()
+        SetOfImages.copyInfo(output, firstMic)
+        
+        modifiedSet = SetOfCTF(filename=self._dbName, prefix=self._dbPrefix)
+        
+        for ctf in modifiedSet:
+            if ctf.isEnabled():
+                mic = ctf.getMicrograph()
+                output.append(mic)
+                
+        self._defineOutputs(outputMicrographs=output)
+
+    def _createImagesFromClasses(self, inputClasses):
+        """ Create a new set of images joining all images
+        assigned to each class.
+        """
+        inputImages = inputClasses.getImages()
+        className = inputImages.getClassName()
+        createFunc = getattr(self, '_create' + className)
+        modifiedSet = inputClasses.getClass()(filename=self._dbName, prefix=self._dbPrefix)
+        self.info("Creating subset of images from classes,  sqlite file: %s" % self._dbName)
+        
+        output = createFunc()
+        output.copyInfo(inputImages)
+        for cls in modifiedSet:
+            if cls.isEnabled():
+                for img in cls:
+                    if img.isEnabled():                
+                        output.append(img)
+        # Register outputs
+        self._defineOutput(className, output)
+ 
+    def _createClassesFromClasses(self, inputClasses):
+        """ Create a new set of images joining all images
+        assigned to each class.
+        """
+        #inputImages = inputClasses.getImages()
+        className = inputClasses.getClassName()
+        createFunc = getattr(self, '_create' + className)
+        modifiedSet = inputClasses.getClass()(filename=self._dbName, prefix=self._dbPrefix)
+        self.info("Creating subset of classes from classes,  sqlite file: %s" % self._dbName)
+        
+        output = createFunc(inputClasses.getImages())
+        #output.copyInfo(inputClasses)
+        for cls in modifiedSet:
+            if cls.isEnabled():
+                newCls = output.ITEM_TYPE()
+                newCls.copyInfo(cls)
+                output.append(newCls)
+                for img in cls:
+                    if img.isEnabled():                
+                        newCls.append(img)
+                output.update(newCls)
+        # Register outputs
+        self._defineOutput(className, output)
+               
+    def createSetOfImagesStep(self):
+        inputObj = self.inputObject.get()
+        self._loadDbNamePrefix() # load self._dbName and self._dbPrefix
+        
+        if isinstance(inputObj, SetOfImages):
+            self._createSubSetFromImages(inputObj)
+            
+        elif isinstance(inputObj, SetOfClasses):
+            outputClassName = self.outputClassName.get()
+            if outputClassName == 'SetOfParticles':
+                # We need to distinguish two cases:
+                # a) when we want to create images by grouping class images
+                # b) create a subset from a particular class images
+                from pyworkflow.mapper.sqlite import SqliteFlatDb
+                db = SqliteFlatDb(dbName=self._dbName, tablePrefix=self._dbPrefix)
+                itemClassName = db.getSelfClassName()
+                if itemClassName.startswith('Class'):
+                    self._createImagesFromClasses(inputObj)
+                else:
+                    self._createSubSetFromImages(inputObj.getImages())
+            elif outputClassName.startswith('SetOfClasses'):
+                self._createClassesFromClasses(inputObj)
+           
+        elif isinstance(inputObj, SetOfCTF):
+            self._createSubSetFromCTF(inputObj) 
+            
+    def defineOutputSet(self, outputset):
         outputs = {'output' + self.getOutputType(): outputset}
         self._defineOutputs(**outputs)
         self._defineSourceRelation(self.getInput(), outputset)
     
-    def getOutputSet(self):
-        return getattr(self, 'output' + self._outputType.get())
-    
-    def getInput(self):
-        inputsetpt = getattr(self, 'input' + self._inputType.get())
-        return inputsetpt.get()
-    
     def _summary(self):
         summary = []
-        input = self.getInputType()
-        if hasattr(self.getInput(), "getSize"):
-            input = "%d %s"%(self.getInput().getSize(), input)
-        summary.append("From input set of %s created subset of %s %s"%(input, self.getOutputSet().getSize(), self.getOutputType()))
+#         input = self.getInputType()
+#         if hasattr(self.getInput(), "getSize"):
+#             input = "%d %s"%(self.getInput().getSize(), input)
+#         summary.append("From input set of %s created subset of %s %s"%(input, self.getOutputSet().getSize(), self.getOutputType()))
         return summary
 
     def _methods(self):
         return self._summary()
 
+    def _defineOutput(self, className, output):
+        outputDict = {'output' + className.replace('SetOf', ''): output}
+        self._defineOutputs(**outputDict) 
+        
+    def _loadDbNamePrefix(self):
+        """ Setup filename and prefix for db connection. """
+        self._dbName, self._dbPrefix = self.sqliteFile.get().split(',')
+        if self._dbPrefix.endswith('_'):
+            self._dbPrefix = self._dbPrefix[:-1] 
+            
 
 class ProtJoinSets(ProtSets):
     """ Protocol to join two sets. """
@@ -210,8 +306,6 @@ class ProtJoinSets(ProtSets):
     #--------------------------- STEPS functions --------------------------------------------
     def createOutput(self):
         #Read Classname and generate corresponding SetOfImages (SetOfParticles, SetOfVolumes, SetOfMicrographs)
-        self.inputSets.printAll()
-        
         self.inputType = str(self.inputSets[0].get().getClassName())
         #self.inputType = str(self.inputSet1.get().getClassName())
         outputSetFunction = getattr(self, "_create%s" % self.inputType)

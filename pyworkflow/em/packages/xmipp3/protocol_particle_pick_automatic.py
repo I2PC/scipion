@@ -72,6 +72,18 @@ class XmippParticlePickingAutomatic(ProtParticlePicking, XmippProtocol):
         form.addParallelSection(threads=1, mpi=1)
         
     #--------------------------- INSERT steps functions --------------------------------------------    
+    def getInputMicrographs(self):
+        """ Return the input micrographs that can be the same of the supervised
+        picking or other ones selected by the user. (This can be used to pick
+        a new set of micrographs with the same properties than a previous trained
+        ones. )
+        """ 
+        # Get micrographs to pick
+        if self.micsToPick == MICS_SAMEASPICKING:
+            return self.xmippParticlePicking.get().inputMicrographs.get()
+        else:
+            return self.inputMicrographs.get()
+                
     def _insertAllSteps(self):
         """The Particle Picking proccess is realized for a set of micrographs"""
         
@@ -80,15 +92,10 @@ class XmippParticlePickingAutomatic(ProtParticlePicking, XmippProtocol):
         
         copyId = self._insertFunctionStep('copyInputFilesStep')
         # Get micrographs to pick
-        if self.micsToPick.get() == MICS_SAMEASPICKING:
-            self.micrographs = self.particlePickingRun.inputMicrographs.get()
-            # Store in DB inputMicrographs pointer to be used on summary
-            self.inputMicrographs.set(self.particlePickingRun.inputMicrographs.get())
-        else:
-            self.micrographs = self.inputMicrographs.get()
+        self.inputMicrographs.set(self.getInputMicrographs())
             
         deps = []
-        for mic in self.micrographs:
+        for mic in self.inputMicrographs.get():
             stepId = self._insertFunctionStep('autopickMicrographStep', mic.getFileName(), prerequisites=[copyId])
             deps.append(stepId)
                     

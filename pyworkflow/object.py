@@ -53,7 +53,9 @@ class Object(object):
         self._objDoStore =  args.get('objDoStore', True) # True if this object will be stored from his parent
         self._objCreation = None
         self._objParent = None # Reference to parent object
+        self._objEnabled = True
         self.set(value)
+    
         
     def getClassName(self):
         return self.__class__.__name__
@@ -211,6 +213,13 @@ class Object(object):
     def getObjName(self):
         return self._objName
     
+    def setEnabled(self, enabled):
+        self._objEnabled = bool(enabled)
+        
+    def isEnabled(self):
+        """Return if object is enabled"""
+        return self._objEnabled
+    
     def getNameId(self):
         """ Return an unique and readable id that identifies this object. """
         label = self.getObjLabel()
@@ -297,9 +306,16 @@ class Object(object):
         self.__getObjDict('', d, includeClass)
         return d
     
-    def copy(self, other, copyId=True):
+    def copy(self, other, copyId=True, ignoreAttrs=[]):
+        """ Copy all attributes values from one object to the other.
+        The attributes will be created if needed with the corresponding type.
+        Params:
+            other: the other object from which to make the copy.
+            copyId: if true, the _objId will be also copied.
+            ignoreAttrs: pass a list with attributes names to ignore.
+        """
         copyDict = {'internalPointers': []} 
-        self._copy(other, copyDict, copyId)
+        self._copy(other, copyDict, copyId, ignoreAttrs=ignoreAttrs)
         self._updatePointers(copyDict)
         return copyDict
         
@@ -313,7 +329,7 @@ class Object(object):
             if  pointedId in copyDict:
                 ptr.set(copyDict[pointedId])
         
-    def _copy(self, other, copyDict, copyId, level=1):
+    def _copy(self, other, copyDict, copyId, level=1, ignoreAttrs=[]):
         """ This method will recursively clone all attributes from one object to the other.
         NOTE: Currently, we are not deleting attributes missing in the 'other' object.
         copyDict: this dict is used to store the ids map between 'other' and 'self' attributes
@@ -329,21 +345,22 @@ class Object(object):
         self._objComment = other._objComment
         # Copy attributes recursively
         for name, attr in other.getAttributes():
-            myAttr = getattr(self, name, None)
-
-            if myAttr is None:
-                myAttr = attr.getClass()()
-                setattr(self, name, myAttr)
-                
-            myAttr._copy(attr, copyDict, copyId, level+2)
-            # Store the attr in the copyDict
-            if attr.hasObjId():
-                #" storing in copyDict with id=", attr.getObjId()
-                copyDict[attr.getObjId()] = myAttr
-            # Use the copyDict to fix the reference in the copying object
-            # if the pointed one is inside the same object
-            if myAttr.isPointer() and myAttr.hasValue():
-                copyDict['internalPointers'].append(myAttr)
+            if name not in ignoreAttrs:
+                myAttr = getattr(self, name, None)
+    
+                if myAttr is None:
+                    myAttr = attr.getClass()()
+                    setattr(self, name, myAttr)
+                    
+                myAttr._copy(attr, copyDict, copyId, level+2)
+                # Store the attr in the copyDict
+                if attr.hasObjId():
+                    #" storing in copyDict with id=", attr.getObjId()
+                    copyDict[attr.getObjId()] = myAttr
+                # Use the copyDict to fix the reference in the copying object
+                # if the pointed one is inside the same object
+                if myAttr.isPointer() and myAttr.hasValue():
+                    copyDict['internalPointers'].append(myAttr)
     
     def clone(self):
         clone = self.getClass()()
