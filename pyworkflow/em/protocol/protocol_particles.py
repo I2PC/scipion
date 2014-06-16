@@ -88,6 +88,19 @@ class ProtParticlePicking(ProtParticles):
             methods.append("Has been picked %d particles" % self.outputCoordinates.getSize())
             methods.append("from %d micrographs" % self.inputMicrographs.get().getSize())
         return methods
+    
+    def getCoordsSuffix(self):
+        count = 0;
+        for key, output in self.iterOutputAttributes(EMObject):
+            count += 1
+        
+        suffix = str(count) if count > 1 else ''
+        return suffix
+    
+    def getCoords(self):
+        suffix = self.getCoordsSuffix()
+        outputName = 'outputCoordinates' + suffix
+        return getattr(self, outputName)
 
 
 

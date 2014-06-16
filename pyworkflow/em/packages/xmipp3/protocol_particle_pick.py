@@ -90,7 +90,7 @@ class XmippProtParticlePicking(ProtParticlePicking, XmippProtocol):
         self._params = {'inputMicsXmipp': micFn,
                         'extraDir': self._getExtraPath(),
                         'pickingMode': 'manual',
-                        'scipion': "%s %s \"%s\" %s" % ( pw.PYTHON, pw.join('apps', 'pw_create_coords_subset.py'), self.getDbPath(), self.strId())
+                        'scipion': "%s %s \"%s\" %s" % ( pw.PYTHON, pw.join('apps', 'pw_create_coords.py'), self.getDbPath(), self.strId())
                         }
         
         # Launch the particle picking GUI

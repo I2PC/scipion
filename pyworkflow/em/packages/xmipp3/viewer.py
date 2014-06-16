@@ -44,6 +44,7 @@ from protocol_screen_classes import XmippProtScreenClasses
 from protocol_helical_parameters import XmippProtHelicalParameters
 from protocol_convert_to_pseudoatoms import XmippProtConvertToPseudoAtoms
 from protocol_identify_outliers import XmippProtIdentifyOutliers
+from protocol_particle_pick import XmippProtParticlePicking
 from protocol_particle_pick_automatic import XmippParticlePickingAutomatic
 from protocol_preprocess import XmippProtPreprocessVolumes
 from convert import *
@@ -59,11 +60,12 @@ class XmippViewer(Viewer):
     with the Xmipp program xmipp_showj
     """
     _environments = [DESKTOP_TKINTER, WEB_DJANGO]
-    _targets = [Image, SetOfImages, SetOfCoordinates, SetOfClasses2D, SetOfClasses3D, 
-                SetOfMovies, ProtExtractParticles, XmippProtScreenParticles, 
-                XmippProtKerdensom, XmippProtRotSpectra,  
+    _targets = [Image, SetOfImages, SetOfCoordinates, SetOfClasses2D, SetOfClasses3D,
+                SetOfMovies, ProtExtractParticles, XmippProtScreenParticles,
+                XmippProtKerdensom, XmippProtRotSpectra,
                 SetOfCTF, NormalModes, XmippProtScreenClasses,
-                XmippProtConvertToPseudoAtoms, XmippProtIdentifyOutliers, XmippParticlePickingAutomatic]
+                XmippProtConvertToPseudoAtoms, XmippProtIdentifyOutliers,
+                XmippProtParticlePicking, XmippParticlePickingAutomatic]
     
     def __init__(self, **args):
         Viewer.__init__(self, **args)
@@ -104,7 +106,7 @@ class XmippViewer(Viewer):
             
                 
         elif issubclass(cls, SetOfCoordinates):
-            micSet = obj.getMicrographs()#accessing mics to provide metadata file
+            micSet = obj.getMicrographs()  # accessing mics to provide metadata file
             if micSet is None:
                 raise Exception('visualize: SetOfCoordinates has no micrographs set.')
             
@@ -114,15 +116,15 @@ class XmippViewer(Viewer):
             
             if mdFn:
                 fn = mdFn.get()
-            else: # happens if protocol is not an xmipp one
+            else:  # happens if protocol is not an xmipp one
                 fn = self._getTmpPath(micSet.getName() + '_micrographs.xmd')
                 writeSetOfMicrographs(micSet, fn)
-            posDir = getattr(obj, '_xmippMd', None)#extra dir istead of md file for SetOfCoordinates
+            posDir = getattr(obj, '_xmippMd', None)  # extra dir istead of md file for SetOfCoordinates
             if posDir:
                 copyTree(posDir.get(), tmpDir)
             else:
                 writeSetOfCoordinates(tmpDir, obj)   
-            self._views.append(CoordinatesObjectView(fn, tmpDir, 'readonly', self._project.getName(), obj.strId()))
+            self._views.append(CoordinatesObjectView(fn, tmpDir))
 
         elif issubclass(cls, SetOfParticles):
             fn = obj.getFileName()
@@ -171,21 +173,22 @@ class XmippViewer(Viewer):
 
         elif issubclass(cls, XmippProtConvertToPseudoAtoms):
             self._views.append(CommandView(obj._getPath('chimera.cmd')))
+        elif issubclass(cls, XmippProtParticlePicking):
+            self._visualize(obj.getCoords())
         elif issubclass(cls, XmippParticlePickingAutomatic):
-            micSet = obj.inputMicrographs.get()
-            
-            mdFn = getattr(micSet, '_xmippMd', None)
-            if mdFn:
-                fn = mdFn.get()
-            else: # happens if protocol is not an xmipp one
-                fn = self._getTmpPath(micSet.getName() + '_micrographs.xmd')
-                writeSetOfMicrographs(micSet, fn)
-            coordsSet = obj.outputCoordinates
-            tmpDir = self._getTmpPath(obj.getName()) 
-            makePath(tmpDir)
-            posDir = getattr(coordsSet, '_xmippMd').get()#extra dir istead of md file for SetOfCoordinates
-            copyTree(posDir, tmpDir)
-            self._views.append(CoordinatesObjectView(fn, tmpDir, 'review', self._project.getName(), obj.strId()))
+        	micSet = obj.getInputMicrographs()
+        	mdFn = getattr(micSet, '_xmippMd', None)
+        	if mdFn:
+        		micsfn = mdFn.get()
+        	else:  # happens if protocol is not an xmipp one
+        		micsfn = self._getTmpPath(micSet.getName() + '_micrographs.xmd')
+                writeSetOfMicrographs(micSet, micsfn)
+           	posDir = getattr(obj.getCoords(), '_xmippMd').get()  # extra dir istead of md file for SetOfCoordinates
+           	scipion = "%s %s \"%s\" %s" % (pw.PYTHON, pw.join('apps', 'pw_create_coords.py'), obj.getDbPath(), obj.strId())
+        	app = "xmipp.viewer.particlepicker.training.SupervisedPickerRunner"# Launch the particle picking GUI
+        	args = "--input %(micsfn)s --output %(posDir)s --mode review  --scipion %(scipion)s" % locals()
+        	runJavaIJapp("%dg" % (2), app, args, True)
+            # self._views.append(CoordinatesObjectView(fn, tmpDir, 'review', self._project.getName(), obj.strId()))
 
         return self._views
         

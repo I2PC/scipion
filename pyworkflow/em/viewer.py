@@ -148,18 +148,15 @@ class ObjectView(DataView):
         
 class CoordinatesObjectView(DataView):
     """ Wrapper to View but for displaying Scipion objects. """
-    def __init__(self, path, outputdir, mode, projectid, inputid, viewParams={}, **kwargs):
+    def __init__(self, path, outputdir, viewParams={}, **kwargs):
         DataView.__init__(self, path, **kwargs)
         self.python = pw.PYTHON
         self.script = pw.join('apps', 'pw_create_coords_subset.py')
-        self.projectid = projectid
-        self.inputid = inputid
         self.outputdir = outputdir
-        self.mode = mode
         
         
     def getShowJParams(self):
-        params = '--input %s --output %s --mode %s --scipion %s %s \"%s\" %s'%(self._path, self.outputdir, self.mode, self.python, self.script,  self.projectid, self.inputid)#mandatory to provide scipion params
+        params = '--input %s --output %s --mode readonly'%(self._path, self.outputdir)
         return params
     
     def show(self):
