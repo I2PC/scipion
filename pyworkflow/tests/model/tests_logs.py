@@ -24,20 +24,20 @@ class TestLogs(BaseTest):
 
         genLogFn = LOG_FILE
         log1 = logging.getLogger('pyworkflow.test.log.test_scipon_log')
-        genInfoTest = 'General info [%d]' % logTestCode
-        genDebugTest = 'General debug [%d]' % logTestCode
-        genWarningTest = 'General warning [%d]' % logTestCode
-        genErrorTest = 'General error [%d]' % logTestCode
+        genInfoTest = 'Testing general info [%d]' % logTestCode
+        genDebugTest = 'Testing general debug [%d]' % logTestCode
+        genWarningTest = 'Testing general warning [%d]' % logTestCode
+        genErrorTest = 'Testing general error [%d]' % logTestCode
         log1.info(genInfoTest)
         #log.debug(genDebugTest)
         log1.warning(genWarningTest)
 
-        logFn = 'pyworkflow/tests/fileLog.log'
+        logFn = self.getOutputPath('fileLog.log')
         log2 = ScipionLogger(logFn)
-        fileInfoTest = 'File info [%d]' % logTestCode
-        fileDebugTest = 'File debug [%d]' % logTestCode
-        fileWarningTest = 'File warning [%d]' % logTestCode
-        fileErrorTest = 'File error [%d]' % logTestCode
+        fileInfoTest = 'Not really info, just testing logger  [%d]' % logTestCode
+        fileDebugTest = 'Not really debug, just testing logger  [%d]' % logTestCode
+        fileWarningTest = 'Not really a warning, just testing logger [%d]' % logTestCode
+        fileErrorTest = 'Not really an error, just testing logger [%d]' % logTestCode
         log2.info(fileInfoTest)
         #log.debug(fileDebugTest)
         log2.warning(fileWarningTest)
@@ -104,9 +104,6 @@ class TestLogs(BaseTest):
             fileLoggerChecked = False 
         
         self.assertTrue(genLoggerChecked & fileLoggerChecked)
-
-        print 'Removing log file %s' % logFn
-        os.remove(logFn)
         
         
 if __name__ == '__main__':
