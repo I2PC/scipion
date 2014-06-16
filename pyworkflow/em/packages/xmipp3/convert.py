@@ -626,11 +626,11 @@ def readSetOfClasses2D(classes2DSet, filename, classesBlock='classes', **args):
     
     classesMd = xmipp.MetaData('%s@%s' % (classesBlock, filename))
     samplingRate = classes2DSet.getImages().getSamplingRate()
-    averages = None
     
     for objId in classesMd:
         class2D = Class2D()
         class2D = rowToClass2D(classesMd, objId, class2D)
+        class2D.setSamplingRate(samplingRate)
         classes2DSet.append(class2D)
         ref = class2D.getObjId()
         b = 'class%06d_images' % ref
@@ -640,9 +640,9 @@ def readSetOfClasses2D(classes2DSet, filename, classesBlock='classes', **args):
             
             for imgId in classImagesMd:
                 img = rowToParticle(classImagesMd, imgId, hasCtf=False)
-                img.setSamplingRate(samplingRate)
                 class2D.append(img)
-
+        # Update with new properties of class2D such as _size
+        classes2DSet.update(class2D)
 
 # def writeSetOfClasses3D(classes3DSet, filename, classesBlock='classes'):    
 #     """ This function will write a SetOfClasses3D as Xmipp metadata.
@@ -680,11 +680,11 @@ def readSetOfClasses3D(classes3DSet, filename, classesBlock='classes', **args):
     blocks = xmipp.getBlocksInMetaDataFile(filename)
     classesMd = xmipp.MetaData('%s@%s' % (classesBlock, filename))
     samplingRate = classes3DSet.getImages().getSamplingRate()
-    averages = None
      
     for objId in classesMd:
         class3D = Class3D()
         class3D = rowToClass3D(classesMd, objId, class3D)
+        class3D.setSamplingRate(samplingRate)
         classes3DSet.append(class3D)
         ref = class3D.getObjId()
         b = 'class%06d_images' % ref
@@ -694,11 +694,9 @@ def readSetOfClasses3D(classes3DSet, filename, classesBlock='classes', **args):
              
             for imgId in classImagesMd:
                 img = rowToParticle(classImagesMd, imgId, hasCtf=False)
-                img.setSamplingRate(samplingRate)
                 class3D.append(img)
-                 
-        # Check if write function is necessary
-        class3D.write()
+        # Update with new properties of class2D such as _size
+        classes3DSet.update(class3D)
 
 
 def writeSetOfClassesVol(classesVolSet, filename, classesBlock='classes'):    
@@ -724,7 +722,7 @@ def writeSetOfClassesVol(classesVolSet, filename, classesBlock='classes'):
             volumeToRow(vol, imgRow)
             imgRow.writeToMd(imagesMd, imagesMd.addObject())
         imagesMd.write(imagesFn, xmipp.MD_APPEND)
-    
+  
     classMd.write(classFn, xmipp.MD_APPEND) # Empty write to ensure the classes is the first block
 
 
@@ -737,7 +735,6 @@ def readSetOfClassesVol(classesVolSet, filename, classesBlock='classes', **args)
     blocks = xmipp.getBlocksInMetaDataFile(filename)
     classesMd = xmipp.MetaData('%s@%s' % (classesBlock, filename))
     samplingRate = classesVolSet.getImages().getSamplingRate()
-    averages = None
     
     for objId in classesMd:
         classVol = ClassVol()
@@ -752,8 +749,9 @@ def readSetOfClassesVol(classesVolSet, filename, classesBlock='classes', **args)
             for imgId in classImagesMd:
                 img = rowToParticle(classImagesMd, imgId, hasCtf=False)
                 img.setSamplingRate(samplingRate)
-                class3D.append(img)
-                
+                classVol.append(img)
+        # Update with new properties of class2D such as _size
+        classesVolSet.update(classVol)                
         # Check if write function is necessary
         classVol.write()
 
