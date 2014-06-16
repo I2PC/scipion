@@ -73,16 +73,17 @@ public class ScipionMessageDialog extends JDialog implements ActionListener {
         add(msgLb, XmippWindowUtil.getConstraints(constraints, 0, 0, GridBagConstraints.HORIZONTAL));
         int index = 1;
         JTextField tf;
-        for(Map.Entry<String, String> e: fields.entrySet())
-        {
-            
-            add(new JLabel(e.getKey()), XmippWindowUtil.getConstraints(constraints, 0, index));
-            tf = new JTextField(e.getValue());
-            tf.setColumns(20);
-            fieldstfs.put(e.getKey(), tf);
-            add(tf, XmippWindowUtil.getConstraints(constraints, 1, index));
-            index ++;
-        }
+        if(fields != null)
+            for(Map.Entry<String, String> e: fields.entrySet())
+            {
+
+                add(new JLabel(e.getKey()), XmippWindowUtil.getConstraints(constraints, 0, index));
+                tf = new JTextField(e.getValue());
+                tf.setColumns(20);
+                fieldstfs.put(e.getKey(), tf);
+                add(tf, XmippWindowUtil.getConstraints(constraints, 1, index));
+                index ++;
+            }
         JPanel buttonspn = new JPanel();
         cancelbt = new JButton("Cancel");
         cancelbt.addActionListener(new ActionListener() {

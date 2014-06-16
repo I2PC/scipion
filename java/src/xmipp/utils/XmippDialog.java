@@ -234,6 +234,12 @@ public class XmippDialog extends JDialog implements ActionListener {
 		XmippMessageDialog dlg = new XmippQuestionDialog(parent, message);
 		return dlg.showDialog();
 	}
+        
+        public static boolean showYesNoQuestion(JFrame parent, String message) {
+		XmippMessageDialog dlg = new XmippQuestionDialog(parent, message, false);
+		return dlg.showDialog();
+	}
+
 
 	public static boolean showQuestion(JDialog parent, String message) {
 		XmippMessageDialog dlg = new XmippQuestionDialog(parent, message);

@@ -177,12 +177,10 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
                                     if(createprot)
                                         msgfields.put("Run name:", "ProtUserCoordinates");
                                     int count = getParticlePicker().getParticlesCount();
-                                    String msg = String.format("<html>Are you sure you want to create a new set of Coordinates with <font color=red>%s</font> %s?", count, (count != 1)?"elements":"element");
-                                    ScipionMessageDialog dlg = new ScipionMessageDialog(ParticlePickerJFrame.this, "Question", msg, msgfields);
-                                    int create = dlg.action;
-                                    if(createprot)
-                                        getParticlePicker().protlabel = dlg.getFieldValue("Run name:");
-                                    if (create == ScipionMessageDialog.OK_OPTION)
+                                    String msg = String.format("<html>Are you sure you want to register a new set of Coordinates with <font color=red>%s</font> %s?", count, (count != 1)?"elements":"element");
+                                    ScipionMessageDialog dlg = new ScipionMessageDialog(ParticlePickerJFrame.this, "Question", msg);
+                                    
+                                    if (dlg.action == ScipionMessageDialog.OK_OPTION)
                                         executeScipionSaveAndExit();
                                        
                                 }
