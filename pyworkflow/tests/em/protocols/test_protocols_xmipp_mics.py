@@ -176,6 +176,32 @@ class TestXmippCTFEstimation(TestXmippBase):
         self.assertIsNotNone(protCTF.outputCTF, "SetOfCTF has not been produced.") 
 
 
+class TestXmippCTFRestimation(TestXmippBase):
+    """This class check if the protocol to determine the CTF in Xmipp works properly."""
+    @classmethod
+    def setUpClass(cls):
+        setupTestProject(cls)
+        TestXmippBase.setData()
+        cls.protImport = cls.runImportMicrographBPV(cls.micsFn)
+        cls.protDown = cls.runDownsamplingMicrographs(cls.protImport.outputMicrographs, 3, 4)
+    
+    def testCTF(self):
+        # Estimate CTF on the downsampled micrographs
+        print "Performing CTF..."
+        protCTF = XmippProtCTFMicrographs(numberOfThreads=4)
+        protCTF.inputMicrographs.set(self.protDown.outputMicrographs)        
+        self.proj.launchProtocol(protCTF, wait=True)
+        self.assertIsNotNone(protCTF.outputCTF, "SetOfCTF has not been produced.")
+        
+        print "Performing CTF Recalculation..."
+        str = "1,22000,24000,0,0.05,0.26; 3,21000,23000,0,0.04,0.3"
+        protReCTF = XmippProtRecalculateCTF(numberOfTrheads=2)
+        protReCTF.inputCtf.set(protCTF.outputCTF)
+        protReCTF.inputValues.set(str)
+        self.proj.launchProtocol(protReCTF, wait=True)
+        self.assertIsNotNone(protReCTF.outputCTF, "SetOfCTF has not been produced in CTF Recalculation.")
+
+
 class TestXmippAutomaticPicking(TestXmippBase):
     """This class check if the protocol to pick the micrographs automatically in Xmipp works properly."""
     @classmethod
