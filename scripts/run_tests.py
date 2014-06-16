@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 
 """
-Launch tests.
+Run or show the selected tests. Tests can be selected by giving
+the "case", or by giving the paths and file pattern to use for
+searching them.
 """
 
 import sys
@@ -20,14 +22,15 @@ PATH_PATTERN = {'model': ('model em/data', 'test*.py'),
 
 
 def main():
-    # First a hack (add --) so we use argparse in spite of our peculiar syntax.
-    sys.argv[1:] = [x if x[0] == '-' else '--'+x for x in sys.argv[1:]]
-    # Also, if no parameters given at all, do as before, run only paths=model
-    if not sys.argv[1:]:
-        print 'No explicit paths given, running only tests in paths=model'
-        sys.argv[1:] = ['--paths=model']
+    # Hack: if no parameters given at all, do as before, run only paths=model
+    if sys.argv[1:] == ['--run']:
+        print 'No explicit paths given, running only tests in --paths=model'
+        sys.argv.append('--paths=model')
 
     parser = argparse.ArgumentParser(description=__doc__)
+    g = parser.add_mutually_exclusive_group(required=True)
+    g.add_argument('--run', action='store_true', help='run the selected tests')
+    g.add_argument('--show', action='store_true', help='show available tests')
     add = parser.add_argument  # shortcut
     add('--case', choices=['model', 'xmipp', 'mixed', 'protocols'],
         help='get pre-defined paths and patterns for the specified case')
@@ -35,7 +38,6 @@ def main():
         help='space-separated list of paths where the tests are searched')
     add('--pattern', default='test*.py',
         help='pattern for the files that will be used in the tests')
-    add('--show', action='store_true', help='show the tests available')
     add('--mode', default='modules', choices=['modules', 'classes', 'all'],
         help='how much detail to give in show mode')
     args = parser.parse_args()
@@ -49,7 +51,7 @@ def main():
 
     if args.show:
         printTests(tests, args.mode)
-    else:
+    elif args.run:
         runTests(tests)
 
 
